@@ -9,7 +9,6 @@ depends=(
     'zstd'
     'xz'
     'libicu'
-    'python3'
 )
 files="https://boostorg.jfrog.io/artifactory/main/release/${version}/source/boost_${version//./_}.tar.bz2 boost_${version//./_}.tar.bz2 1e19565d82e43bc59209a168f5ac899d3ba471d55c7610c677d4ccf2c9c500c0"
 auth_type='sha256'
@@ -20,7 +19,7 @@ bjamopts=(
 )
 
 configure() {
-    run ./bootstrap.sh --with-icu=${DESTDIR}/usr/local --prefix=${DESTDIR}/usr/local
+    run ./bootstrap.sh --with-icu=${DESTDIR}/usr/local --prefix=${DESTDIR}/usr/local --without-libraries=python
     echo "using gcc : : $CXX ;" >$workdir/user-config.jam
 }
 

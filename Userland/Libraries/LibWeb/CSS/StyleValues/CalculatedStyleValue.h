@@ -10,6 +10,7 @@
 #pragma once
 
 #include <LibWeb/CSS/Angle.h>
+#include <LibWeb/CSS/CSSNumericType.h>
 #include <LibWeb/CSS/Frequency.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Percentage.h>
@@ -64,51 +65,54 @@ public:
         Value m_value;
     };
 
-    static ErrorOr<ValueComparingNonnullRefPtr<CalculatedStyleValue>> create(NonnullOwnPtr<CalculationNode> calculation, ResolvedType resolved_type)
+    static ErrorOr<ValueComparingNonnullRefPtr<CalculatedStyleValue>> create(NonnullOwnPtr<CalculationNode> calculation, CSSNumericType resolved_type)
     {
         return adopt_nonnull_ref_or_enomem(new (nothrow) CalculatedStyleValue(move(calculation), resolved_type));
     }
 
     ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
-    ResolvedType resolved_type() const { return m_resolved_type; }
 
-    bool resolves_to_angle() const { return m_resolved_type == ResolvedType::Angle; }
+    bool resolves_to_angle() const { return m_resolved_type.matches_angle(); }
+    bool resolves_to_angle_percentage() const { return m_resolved_type.matches_angle_percentage(); }
     Optional<Angle> resolve_angle() const;
     Optional<Angle> resolve_angle_percentage(Angle const& percentage_basis) const;
 
-    bool resolves_to_frequency() const { return m_resolved_type == ResolvedType::Frequency; }
+    bool resolves_to_frequency() const { return m_resolved_type.matches_frequency(); }
+    bool resolves_to_frequency_percentage() const { return m_resolved_type.matches_frequency_percentage(); }
     Optional<Frequency> resolve_frequency() const;
     Optional<Frequency> resolve_frequency_percentage(Frequency const& percentage_basis) const;
 
-    bool resolves_to_length() const { return m_resolved_type == ResolvedType::Length; }
+    bool resolves_to_length() const { return m_resolved_type.matches_length(); }
+    bool resolves_to_length_percentage() const { return m_resolved_type.matches_length_percentage(); }
     [[nodiscard]] Optional<Length> resolve_length(Length::ResolutionContext const&) const;
     Optional<Length> resolve_length(Layout::Node const& layout_node) const;
     Optional<Length> resolve_length_percentage(Layout::Node const&, Length const& percentage_basis) const;
 
-    bool resolves_to_percentage() const { return m_resolved_type == ResolvedType::Percentage; }
+    bool resolves_to_percentage() const { return m_resolved_type.matches_percentage(); }
     Optional<Percentage> resolve_percentage() const;
 
-    bool resolves_to_time() const { return m_resolved_type == ResolvedType::Time; }
+    bool resolves_to_time() const { return m_resolved_type.matches_time(); }
+    bool resolves_to_time_percentage() const { return m_resolved_type.matches_time_percentage(); }
     Optional<Time> resolve_time() const;
     Optional<Time> resolve_time_percentage(Time const& percentage_basis) const;
 
-    bool resolves_to_integer() const { return m_resolved_type == ResolvedType::Integer; }
-    bool resolves_to_number() const { return resolves_to_integer() || m_resolved_type == ResolvedType::Number; }
+    bool resolves_to_number() const { return m_resolved_type.matches_number(); }
+    bool resolves_to_number_percentage() const { return m_resolved_type.matches_number_percentage(); }
     Optional<double> resolve_number() const;
     Optional<i64> resolve_integer();
 
     bool contains_percentage() const;
 
 private:
-    explicit CalculatedStyleValue(NonnullOwnPtr<CalculationNode> calculation, ResolvedType resolved_type)
+    explicit CalculatedStyleValue(NonnullOwnPtr<CalculationNode> calculation, CSSNumericType resolved_type)
         : StyleValue(Type::Calculated)
         , m_resolved_type(resolved_type)
         , m_calculation(move(calculation))
     {
     }
 
-    ResolvedType m_resolved_type;
+    CSSNumericType m_resolved_type;
     NonnullOwnPtr<CalculationNode> m_calculation;
 };
 
@@ -193,12 +197,43 @@ public:
 
     Type type() const { return m_type; }
 
+    // https://www.w3.org/TR/css-values-4/#calculation-tree-operator-nodes
     bool is_operator_node() const
     {
-        // FIXME: Check for operator node types once they exist
-        return is_calc_operator_node();
+        return is_calc_operator_node() || is_math_function_node();
     }
 
+    bool is_math_function_node() const
+    {
+        switch (m_type) {
+        case Type::Min:
+        case Type::Max:
+        case Type::Clamp:
+        case Type::Abs:
+        case Type::Sign:
+        case Type::Sin:
+        case Type::Cos:
+        case Type::Tan:
+        case Type::Asin:
+        case Type::Acos:
+        case Type::Atan:
+        case Type::Atan2:
+        case Type::Pow:
+        case Type::Sqrt:
+        case Type::Hypot:
+        case Type::Log:
+        case Type::Exp:
+        case Type::Round:
+        case Type::Mod:
+        case Type::Rem:
+            return true;
+
+        default:
+            return false;
+        }
+    }
+
+    // https://www.w3.org/TR/css-values-4/#calculation-tree-calc-operator-nodes
     bool is_calc_operator_node() const
     {
         return first_is_one_of(m_type, Type::Sum, Type::Product, Type::Negate, Type::Invert);
@@ -206,6 +241,7 @@ public:
 
     virtual ErrorOr<String> to_string() const = 0;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const = 0;
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const = 0;
     virtual bool contains_percentage() const = 0;
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const = 0;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) { return {}; }
@@ -226,6 +262,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
 
@@ -243,6 +280,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
@@ -261,6 +299,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
@@ -279,6 +318,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
@@ -297,6 +337,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
@@ -315,6 +356,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
@@ -333,6 +375,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
@@ -351,6 +394,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
@@ -371,6 +415,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
@@ -389,6 +434,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
@@ -407,7 +453,8 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
-    virtual bool contains_percentage() const override { return false; };
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
+    virtual bool contains_percentage() const override { return false; }
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
@@ -425,6 +472,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
@@ -443,6 +491,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
@@ -461,6 +510,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
@@ -479,6 +529,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
@@ -497,6 +548,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
@@ -515,6 +567,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
@@ -533,6 +586,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
@@ -552,7 +606,8 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
-    virtual bool contains_percentage() const override { return false; };
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
+    virtual bool contains_percentage() const override { return false; }
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
@@ -571,7 +626,8 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
-    virtual bool contains_percentage() const override { return false; };
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
+    virtual bool contains_percentage() const override { return false; }
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
@@ -589,6 +645,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
@@ -607,7 +664,8 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
-    virtual bool contains_percentage() const override { return false; };
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
+    virtual bool contains_percentage() const override { return false; }
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
@@ -626,7 +684,8 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
-    virtual bool contains_percentage() const override { return false; };
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
+    virtual bool contains_percentage() const override { return false; }
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
@@ -644,6 +703,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
@@ -664,6 +724,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;
@@ -683,6 +744,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
+    virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual ErrorOr<void> for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const&) override;

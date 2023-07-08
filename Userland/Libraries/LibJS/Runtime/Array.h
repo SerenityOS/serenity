@@ -58,7 +58,7 @@ public:
     virtual ThrowCompletionOr<bool> internal_delete(PropertyKey const&) override;
     virtual ThrowCompletionOr<MarkedVector<Value>> internal_own_property_keys() const override;
 
-    [[nodiscard]] bool length_is_writable() const { return m_length_writable; };
+    [[nodiscard]] bool length_is_writable() const { return m_length_writable; }
 
 protected:
     explicit Array(Object& prototype);

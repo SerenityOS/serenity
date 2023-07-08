@@ -5,6 +5,7 @@
         "center",
         "space-between",
         "space-around",
+        "space-evenly",
         "stretch"
     ],
     "align-items": [
@@ -172,7 +173,8 @@
         "flex-end",
         "center",
         "space-between",
-        "space-around"
+        "space-around",
+        "space-evenly"
     ],
     "line-style": [
         "none",

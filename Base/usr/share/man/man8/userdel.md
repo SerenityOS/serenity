@@ -39,5 +39,5 @@ This program must be run as root.
 ```
 
 ## See Also
-
+* [`usermod`(8)](help://man/8/usermod)
 * [`useradd`(8)](help://man/8/useradd)

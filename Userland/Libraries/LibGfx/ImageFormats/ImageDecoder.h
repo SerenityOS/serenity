@@ -31,9 +31,6 @@ public:
 
     virtual IntSize size() = 0;
 
-    virtual void set_volatile() = 0;
-    [[nodiscard]] virtual bool set_nonvolatile(bool& was_purged) = 0;
-
     virtual ErrorOr<void> initialize() = 0;
 
     virtual bool is_animated() = 0;
@@ -55,8 +52,6 @@ public:
     IntSize size() const { return m_plugin->size(); }
     int width() const { return size().width(); }
     int height() const { return size().height(); }
-    void set_volatile() { m_plugin->set_volatile(); }
-    [[nodiscard]] bool set_nonvolatile(bool& was_purged) { return m_plugin->set_nonvolatile(was_purged); }
     bool is_animated() const { return m_plugin->is_animated(); }
     size_t loop_count() const { return m_plugin->loop_count(); }
     size_t frame_count() const { return m_plugin->frame_count(); }

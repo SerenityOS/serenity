@@ -29,7 +29,7 @@ public:
     {
         struct sockaddr_in saddr;
         return receive(size, saddr);
-    };
+    }
 
     ErrorOr<size_t> send(ReadonlyBytes, sockaddr_in const& to);
 

@@ -30,7 +30,7 @@
 
 namespace JS {
 
-NonnullGCPtr<ECMAScriptFunctionObject> ECMAScriptFunctionObject::create(Realm& realm, DeprecatedFlyString name, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind kind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name)
+NonnullGCPtr<ECMAScriptFunctionObject> ECMAScriptFunctionObject::create(Realm& realm, DeprecatedFlyString name, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Vector<DeprecatedFlyString> local_variables_names, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind kind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name)
 {
     Object* prototype = nullptr;
     switch (kind) {
@@ -47,18 +47,19 @@ NonnullGCPtr<ECMAScriptFunctionObject> ECMAScriptFunctionObject::create(Realm& r
         prototype = realm.intrinsics().async_generator_function_prototype();
         break;
     }
-    return realm.heap().allocate<ECMAScriptFunctionObject>(realm, move(name), move(source_text), ecmascript_code, move(parameters), m_function_length, parent_environment, private_environment, *prototype, kind, is_strict, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function, move(class_field_initializer_name)).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<ECMAScriptFunctionObject>(realm, move(name), move(source_text), ecmascript_code, move(parameters), m_function_length, move(local_variables_names), parent_environment, private_environment, *prototype, kind, is_strict, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function, move(class_field_initializer_name)).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
-NonnullGCPtr<ECMAScriptFunctionObject> ECMAScriptFunctionObject::create(Realm& realm, DeprecatedFlyString name, Object& prototype, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind kind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name)
+NonnullGCPtr<ECMAScriptFunctionObject> ECMAScriptFunctionObject::create(Realm& realm, DeprecatedFlyString name, Object& prototype, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Vector<DeprecatedFlyString> local_variables_names, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind kind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name)
 {
-    return realm.heap().allocate<ECMAScriptFunctionObject>(realm, move(name), move(source_text), ecmascript_code, move(parameters), m_function_length, parent_environment, private_environment, prototype, kind, is_strict, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function, move(class_field_initializer_name)).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<ECMAScriptFunctionObject>(realm, move(name), move(source_text), ecmascript_code, move(parameters), m_function_length, move(local_variables_names), parent_environment, private_environment, prototype, kind, is_strict, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function, move(class_field_initializer_name)).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
-ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> formal_parameters, i32 function_length, Environment* parent_environment, PrivateEnvironment* private_environment, Object& prototype, FunctionKind kind, bool strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name)
+ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> formal_parameters, i32 function_length, Vector<DeprecatedFlyString> local_variables_names, Environment* parent_environment, PrivateEnvironment* private_environment, Object& prototype, FunctionKind kind, bool strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name)
     : FunctionObject(prototype)
     , m_name(move(name))
     , m_function_length(function_length)
+    , m_local_variables_names(move(local_variables_names))
     , m_environment(parent_environment)
     , m_private_environment(private_environment)
     , m_formal_parameters(move(formal_parameters))
@@ -93,7 +94,7 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Dep
             return false;
         if (parameter.default_value)
             return false;
-        if (!parameter.binding.template has<DeprecatedFlyString>())
+        if (!parameter.binding.template has<NonnullRefPtr<Identifier const>>())
             return false;
         return true;
     });
@@ -147,6 +148,8 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
     // NOTE: No-op, kept by the VM in its execution context stack.
 
     ExecutionContext callee_context(heap());
+
+    callee_context.local_variables.resize(m_local_variables_names.size());
 
     // Non-standard
     callee_context.arguments.extend(move(arguments_list));
@@ -216,6 +219,8 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ECMAScriptFunctionObject::internal_const
     }
 
     ExecutionContext callee_context(heap());
+
+    callee_context.local_variables.resize(m_local_variables_names.size());
 
     // Non-standard
     callee_context.arguments.extend(move(arguments_list));
@@ -348,8 +353,8 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
             has_parameter_expressions = true;
 
         parameter.binding.visit(
-            [&](DeprecatedFlyString const& name) {
-                if (parameter_names.set(name) != AK::HashSetResult::InsertedNewEntry)
+            [&](Identifier const& identifier) {
+                if (parameter_names.set(identifier.string()) != AK::HashSetResult::InsertedNewEntry)
                     has_duplicates = true;
             },
             [&](NonnullRefPtr<BindingPattern const> const& pattern) {
@@ -357,8 +362,8 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                     has_parameter_expressions = true;
 
                 // NOTE: Nothing in the callback throws an exception.
-                MUST(pattern->for_each_bound_name([&](auto& name) {
-                    if (parameter_names.set(name) != AK::HashSetResult::InsertedNewEntry)
+                MUST(pattern->for_each_bound_identifier([&](auto& identifier) {
+                    if (parameter_names.set(identifier.string()) != AK::HashSetResult::InsertedNewEntry)
                         has_duplicates = true;
                 }));
             });
@@ -473,13 +478,19 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 
                 Environment* used_environment = has_duplicates ? nullptr : environment;
 
-                if constexpr (IsSame<DeprecatedFlyString const&, decltype(param)>) {
-                    Reference reference = TRY(vm.resolve_binding(param, used_environment));
-                    // Here the difference from hasDuplicates is important
-                    if (has_duplicates)
-                        return reference.put_value(vm, argument_value);
-                    else
-                        return reference.initialize_referenced_binding(vm, argument_value);
+                if constexpr (IsSame<NonnullRefPtr<Identifier const> const&, decltype(param)>) {
+                    if ((vm.bytecode_interpreter_if_exists() || kind() == FunctionKind::Generator) && param->is_local()) {
+                        // NOTE: Local variables are supported only in bytecode interpreter
+                        callee_context.local_variables[param->local_variable_index()] = argument_value;
+                        return {};
+                    } else {
+                        Reference reference = TRY(vm.resolve_binding(param->string(), used_environment));
+                        // Here the difference from hasDuplicates is important
+                        if (has_duplicates)
+                            return reference.put_value(vm, argument_value);
+                        else
+                            return reference.initialize_referenced_binding(vm, argument_value);
+                    }
                 }
                 if constexpr (IsSame<NonnullRefPtr<BindingPattern const> const&, decltype(param)>) {
                     // Here the difference from hasDuplicates is important
@@ -498,10 +509,14 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         if (scope_body) {
             // NOTE: Due to the use of MUST with `create_mutable_binding` and `initialize_binding` below,
             //       an exception should not result from `for_each_var_declared_name`.
-            MUST(scope_body->for_each_var_declared_name([&](auto const& name) {
-                if (!parameter_names.contains(name) && instantiated_var_names.set(name) == AK::HashSetResult::InsertedNewEntry) {
-                    MUST(environment->create_mutable_binding(vm, name, false));
-                    MUST(environment->initialize_binding(vm, name, js_undefined(), Environment::InitializeBindingHint::Normal));
+            MUST(scope_body->for_each_var_declared_identifier([&](auto const& id) {
+                if (!parameter_names.contains(id.string()) && instantiated_var_names.set(id.string()) == AK::HashSetResult::InsertedNewEntry) {
+                    if (vm.bytecode_interpreter_if_exists() && id.is_local()) {
+                        callee_context.local_variables[id.local_variable_index()] = js_undefined();
+                    } else {
+                        MUST(environment->create_mutable_binding(vm, id.string(), false));
+                        MUST(environment->initialize_binding(vm, id.string(), js_undefined(), Environment::InitializeBindingHint::Normal));
+                    }
                 }
             }));
         }
@@ -513,18 +528,23 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         if (scope_body) {
             // NOTE: Due to the use of MUST with `create_mutable_binding`, `get_binding_value` and `initialize_binding` below,
             //       an exception should not result from `for_each_var_declared_name`.
-            MUST(scope_body->for_each_var_declared_name([&](auto const& name) {
-                if (instantiated_var_names.set(name) != AK::HashSetResult::InsertedNewEntry)
+            MUST(scope_body->for_each_var_declared_identifier([&](auto const& id) {
+                if (instantiated_var_names.set(id.string()) != AK::HashSetResult::InsertedNewEntry)
                     return;
-                MUST(var_environment->create_mutable_binding(vm, name, false));
+                MUST(var_environment->create_mutable_binding(vm, id.string(), false));
 
                 Value initial_value;
-                if (!parameter_names.contains(name) || function_names.contains(name))
+                if (!parameter_names.contains(id.string()) || function_names.contains(id.string()))
                     initial_value = js_undefined();
                 else
-                    initial_value = MUST(environment->get_binding_value(vm, name, false));
+                    initial_value = MUST(environment->get_binding_value(vm, id.string(), false));
 
-                MUST(var_environment->initialize_binding(vm, name, initial_value, Environment::InitializeBindingHint::Normal));
+                if (vm.bytecode_interpreter_if_exists() && id.is_local()) {
+                    // NOTE: Local variables are supported only in bytecode interpreter
+                    callee_context.local_variables[id.local_variable_index()] = initial_value;
+                } else {
+                    MUST(var_environment->initialize_binding(vm, id.string(), initial_value, Environment::InitializeBindingHint::Normal));
+                }
             }));
         }
     }
@@ -534,7 +554,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         // NOTE: Due to the use of MUST with `create_mutable_binding` and `initialize_binding` below,
         //       an exception should not result from `for_each_function_hoistable_with_annexB_extension`.
         MUST(scope_body->for_each_function_hoistable_with_annexB_extension([&](FunctionDeclaration& function_declaration) {
-            auto& function_name = function_declaration.name();
+            auto function_name = function_declaration.name();
             if (parameter_names.contains(function_name))
                 return;
             // The spec says 'initializedBindings' here but that does not exist and it then adds it to 'instantiatedVarNames' so it probably means 'instantiatedVarNames'.
@@ -581,17 +601,21 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     MUST(scope_body->for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
         // NOTE: Due to the use of MUST with `create_immutable_binding` and `create_mutable_binding` below,
         //       an exception should not result from `for_each_bound_name`.
-        MUST(declaration.for_each_bound_name([&](auto const& name) {
+        MUST(declaration.for_each_bound_identifier([&](auto const& id) {
+            if (vm.bytecode_interpreter_if_exists() && id.is_local()) {
+                // NOTE: Local variables are supported only in bytecode interpreter
+                return;
+            }
             if (declaration.is_constant_declaration())
-                MUST(lex_environment->create_immutable_binding(vm, name, true));
+                MUST(lex_environment->create_immutable_binding(vm, id.string(), true));
             else
-                MUST(lex_environment->create_mutable_binding(vm, name, false));
+                MUST(lex_environment->create_mutable_binding(vm, id.string(), false));
         }));
     }));
 
     auto private_environment = callee_context.private_environment;
     for (auto& declaration : functions_to_initialize) {
-        auto function = ECMAScriptFunctionObject::create(realm, declaration.name(), declaration.source_text(), declaration.body(), declaration.parameters(), declaration.function_length(), lex_environment, private_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object(), declaration.contains_direct_call_to_eval());
+        auto function = ECMAScriptFunctionObject::create(realm, declaration.name(), declaration.source_text(), declaration.body(), declaration.parameters(), declaration.function_length(), declaration.local_variables_names(), lex_environment, private_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object(), declaration.contains_direct_call_to_eval());
         MUST(var_environment->set_mutable_binding(vm, declaration.name(), function, false));
     }
 

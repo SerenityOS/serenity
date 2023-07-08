@@ -52,7 +52,7 @@ void ColorInput::set_color_internal(Color color, AllowCallback allow_callback, b
 void ColorInput::set_color(Color color, AllowCallback allow_callback)
 {
     set_color_internal(color, allow_callback, true);
-};
+}
 
 void ColorInput::mousedown_event(MouseEvent& event)
 {

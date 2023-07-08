@@ -20,6 +20,7 @@
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/StackingContext.h>
+#include <LibWeb/Painting/TableBordersPainting.h>
 
 namespace Web::Painting {
 
@@ -95,8 +96,11 @@ void StackingContext::paint_descendants(PaintContext& context, Layout::Node cons
         case StackingContextPaintPhase::BackgroundAndBorders:
             if (!child_is_inline_or_replaced && !child.is_floating()) {
                 paint_node(child, context, PaintPhase::Background);
-                paint_node(child, context, PaintPhase::Border);
+                if ((!child.display().is_table_cell() && !child.display().is_table_inside()) || child.computed_values().border_collapse() == CSS::BorderCollapse::Separate)
+                    paint_node(child, context, PaintPhase::Border);
                 paint_descendants(context, child, phase);
+                if (child.computed_values().border_collapse() == CSS::BorderCollapse::Collapse)
+                    paint_table_collapsed_borders(context, child);
             }
             break;
         case StackingContextPaintPhase::Floats:

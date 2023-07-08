@@ -123,7 +123,25 @@ public:
 
     bool is_out_of_view(PaintContext&) const;
 
-    void set_override_borders_data(BordersData const& override_borders_data) { m_override_borders_data = override_borders_data; };
+    void set_override_borders_data(BordersData const& override_borders_data) { m_override_borders_data = override_borders_data; }
+    auto const& override_borders_data() const { return m_override_borders_data; }
+
+    struct TableCellCoordinates {
+        size_t row_index;
+        size_t column_index;
+        size_t row_span;
+        size_t column_span;
+    };
+
+    void set_table_cell_coordinates(TableCellCoordinates const& table_cell_coordinates) { m_table_cell_coordinates = table_cell_coordinates; }
+    auto const& table_cell_coordinates() const { return m_table_cell_coordinates; }
+
+    enum class ShrinkRadiiForBorders {
+        Yes,
+        No
+    };
+
+    BorderRadiiData normalized_border_radii_data(ShrinkRadiiForBorders shrink = ShrinkRadiiForBorders::No) const;
 
 protected:
     explicit PaintableBox(Layout::Box const&);
@@ -135,13 +153,6 @@ protected:
 
     virtual CSSPixelRect compute_absolute_rect() const;
     virtual CSSPixelRect compute_absolute_paint_rect() const;
-
-    enum class ShrinkRadiiForBorders {
-        Yes,
-        No
-    };
-
-    BorderRadiiData normalized_border_radii_data(ShrinkRadiiForBorders shrink = ShrinkRadiiForBorders::No) const;
 
     Vector<ShadowData> resolve_box_shadow_data() const;
 
@@ -165,6 +176,7 @@ private:
     Optional<BorderRadiusCornerClipper> mutable m_overflow_corner_radius_clipper;
 
     Optional<BordersData> m_override_borders_data;
+    Optional<TableCellCoordinates> m_table_cell_coordinates;
 };
 
 class PaintableWithLines final : public PaintableBox {

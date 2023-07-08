@@ -36,17 +36,15 @@ struct MatchedRoute {
     Vector<String> parameters;
 };
 
-// clang-format off
-// This would be formatted rather badly.
-#define ROUTE(method, path, handler)                          \
-    Route {                                                   \
-        HTTP::HttpRequest::method,                            \
-        path,                                                 \
-        [](auto& client, auto parameters, auto payload) {     \
-            return client.handler(parameters, move(payload)); \
-        }                                                     \
+#define ROUTE(method, path, handler)                              \
+    Route                                                         \
+    {                                                             \
+        HTTP::HttpRequest::method,                                \
+            path,                                                 \
+            [](auto& client, auto parameters, auto payload) {     \
+                return client.handler(parameters, move(payload)); \
+            }                                                     \
     }
-// clang-format on
 
 // https://w3c.github.io/webdriver/#dfn-endpoints
 static constexpr auto s_webdriver_endpoints = Array {

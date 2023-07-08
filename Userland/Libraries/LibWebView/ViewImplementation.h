@@ -44,6 +44,7 @@ public:
         String resolved_style_json;
         String custom_properties_json;
         String node_box_sizing_json;
+        String aria_properties_state_json;
     };
 
     void set_url(Badge<WebContentClient>, AK::URL url) { m_url = move(url); }
@@ -110,7 +111,7 @@ public:
     Function<void(Gfx::Bitmap const&)> on_favicon_change;
     Function<void(const AK::URL&, DeprecatedString const&)> on_get_source;
     Function<void(DeprecatedString const&)> on_get_dom_tree;
-    Function<void(i32 node_id, DeprecatedString const& computed_style, DeprecatedString const& resolved_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing)> on_get_dom_node_properties;
+    Function<void(i32 node_id, DeprecatedString const& computed_style, DeprecatedString const& resolved_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing, DeprecatedString const& aria_properties_state)> on_get_dom_node_properties;
     Function<void(DeprecatedString const&)> on_get_accessibility_tree;
     Function<void(i32 message_id)> on_js_console_new_message;
     Function<void(i32 start_index, Vector<DeprecatedString> const& message_types, Vector<DeprecatedString> const& messages)> on_get_js_console_messages;

@@ -16,9 +16,9 @@ Subject: [PATCH] Fixup Vulkan/SDL platform quirks
  lib/graphics_engine/src/ge_vulkan_skybox_renderer.cpp    | 1 +
  lib/graphics_engine/src/ge_vulkan_texture.cpp            | 1 +
  lib/graphics_engine/src/ge_vulkan_texture_descriptor.cpp | 1 +
- lib/irrlicht/source/Irrlicht/CIrrDeviceSDL.cpp           | 4 ++--
+ lib/irrlicht/source/Irrlicht/CIrrDeviceSDL.cpp           | 2 +-
  src/graphics/irr_driver.cpp                              | 2 +-
- 14 files changed, 15 insertions(+), 3 deletions(-)
+ 14 files changed, 14 insertions(+), 2 deletions(-)
 
 diff --git a/lib/graphics_engine/include/ge_main.hpp b/lib/graphics_engine/include/ge_main.hpp
 index 83ba0084f32a5593a96f8e8f2f6be7b7a8846dac..13ce04d0345bd56b66cc612071c0b152b37c0ca6 100644
@@ -164,18 +164,9 @@ index 4fd8a2e8800e6620fb5980097fefefdab8150ab8..46b671ffdbe55e9be6f35eeb7d05857a
  #include <exception>
  
 diff --git a/lib/irrlicht/source/Irrlicht/CIrrDeviceSDL.cpp b/lib/irrlicht/source/Irrlicht/CIrrDeviceSDL.cpp
-index 1dfef29db82f1f32bde84086d923dcea6e514329..e3344d61dbb9946803c28af3b759c23b5d902478 100644
+index 1dfef29db82f1f32bde84086d923dcea6e514329..bb0dda63093fd793afa347b121e69dc344d9764c 100644
 --- a/lib/irrlicht/source/Irrlicht/CIrrDeviceSDL.cpp
 +++ b/lib/irrlicht/source/Irrlicht/CIrrDeviceSDL.cpp
-@@ -128,7 +128,7 @@ CIrrDeviceSDL::CIrrDeviceSDL(const SIrrlichtCreationParameters& param)
- 			SDL_VERSION(&Info.version);
- 
- 			// Switch doesn't support GetWindowWMInfo
--#ifndef __SWITCH__
-+#if !defined(__SWITCH__) && !defined(__serenity__)
- 			if (!SDL_GetWindowWMInfo(Window, &Info))
- 				return;
- #endif
 @@ -362,7 +362,7 @@ extern "C" void update_fullscreen_desktop(int val)
  // Used in OptionsScreenVideo for live updating vertical sync config
  extern "C" void update_swap_interval(int swap_interval)

@@ -4,7 +4,7 @@ Date: Sun, 2 Jul 2023 06:13:05 +0200
 Subject: [PATCH] Remove IPv6 support
 
 ---
- CMakeLists.txt                              |   6 +-
+ CMakeLists.txt                              |   2 +-
  lib/enet/unix.c                             |   5 +-
  src/network/network_config.cpp              |  24 +-
  src/network/network_console.cpp             |   1 +
@@ -14,26 +14,22 @@ Subject: [PATCH] Remove IPv6 support
  src/network/socket_address.cpp              |  57 +--
  src/network/stk_host.cpp                    |   4 +-
  src/network/stk_ipv6.cpp                    | 514 --------------------
- 10 files changed, 29 insertions(+), 629 deletions(-)
+ 10 files changed, 27 insertions(+), 627 deletions(-)
  delete mode 100644 src/network/stk_ipv6.cpp
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 98dd5dcaef4547717f92440b269216b8994a29f0..a68f38ec32e7d240dae28998caf5511e936533ea 100644
+index 98dd5dcaef4547717f92440b269216b8994a29f0..c71db3253748c169eedb855cc0374c051eea95e4 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -231,9 +231,9 @@ if((UNIX AND NOT APPLE) AND USE_SYSTEM_ENET AND NOT USE_IPV6)
-     pkg_check_modules(ENET libenet>=1.3.4)
- endif()
+@@ -30,7 +30,7 @@ option(CHECK_ASSETS "Check if assets are installed in ../stk-assets" ON)
+ option(USE_SYSTEM_ANGELSCRIPT "Use system angelscript instead of built-in angelscript. If you enable this option, make sure to use a compatible version." OFF)
+ option(USE_SYSTEM_ENET "Use system ENet instead of the built-in version, when available." ON)
+ CMAKE_DEPENDENT_OPTION(USE_IPV6 "Allow create or connect to game server with IPv6 address, system enet will not be used." ON
+-  "NOT USE_SWITCH" OFF)
++  "NOT USE_SWITCH;NOT SERENITYOS" OFF)
+ option(USE_SYSTEM_WIIUSE "Use system WiiUse instead of the built-in version, when available." OFF)
+ option(USE_SQLITE3 "Use sqlite to manage server stats and ban list." ON)
  
--if (USE_IPV6)
--   add_definitions(-DENABLE_IPV6)
--endif()
-+#if (USE_IPV6)
-+#   add_definitions(-DENABLE_IPV6)
-+#endif()
- 
- if(ENET_FOUND AND NOT USE_IPV6)
-     include_directories(${ENET_INCLUDE_DIRS})
 diff --git a/lib/enet/unix.c b/lib/enet/unix.c
 index c10a3d99d998abac64b2c4dce17c45728cabaf12..1cadc204a9a167e02f9f8d445ec42f524a1fd815 100644
 --- a/lib/enet/unix.c

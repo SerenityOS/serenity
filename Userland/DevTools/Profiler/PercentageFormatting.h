@@ -23,6 +23,6 @@ DeprecatedString format_percentage(auto value, auto total)
         "{}.{:02}",
         percentage_full_precision / percent_digits_rounding,
         percentage_full_precision % percent_digits_rounding);
-};
+}
 
 }

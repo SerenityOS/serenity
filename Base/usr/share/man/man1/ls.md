@@ -54,3 +54,5 @@ $ ls /etc
 $ ls -la /etc
 ```
 
+## See also
+* [`tree`(1)](help://man/1/tree) to show the contents of the directory and subdirectories in a tree visualization

@@ -43,20 +43,24 @@ static_assert(word_size == 32 || word_size == 64);
 constexpr size_t max_big_int_length = 1 << (word_size == 32 ? 26 : 29);
 
 // ===== Static storage for big integers =====
-// FIXME: remove once Clang formats these properly.
-// clang-format off
 template<typename T, typename WordType = NativeWord>
-concept IntegerStorage = requires(T storage, size_t index)
-{
-    { storage.is_negative() } -> SameAs<bool>;
-    { storage.size() } -> SameAs<size_t>;
-    { storage[index] } -> ConvertibleTo<WordType&>;
-    { storage.data() } -> ConvertibleTo<WordType*>;
+concept IntegerStorage = requires(T storage, size_t index) {
+    {
+        storage.is_negative()
+    } -> SameAs<bool>;
+    {
+        storage.size()
+    } -> SameAs<size_t>;
+    {
+        storage[index]
+    } -> ConvertibleTo<WordType&>;
+    {
+        storage.data()
+    } -> ConvertibleTo<WordType*>;
 };
 
 template<typename T>
 concept IntegerReadonlyStorage = IntegerStorage<T, NativeWord const>;
-// clang-format on
 
 struct NullAllocator {
     NativeWord* allocate(size_t) { VERIFY_NOT_REACHED(); }

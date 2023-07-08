@@ -125,6 +125,9 @@ void LayoutState::commit()
             if (used_values.override_borders_data().has_value()) {
                 paintable_box.set_override_borders_data(used_values.override_borders_data().value());
             }
+            if (used_values.table_cell_coordinates().has_value()) {
+                paintable_box.set_table_cell_coordinates(used_values.table_cell_coordinates().value());
+            }
 
             if (is<Layout::BlockContainer>(box)) {
                 for (auto& line_box : used_values.line_boxes) {
@@ -401,7 +404,7 @@ void LayoutState::UsedValues::set_max_content_width()
 {
     width_constraint = SizeConstraint::MaxContent;
     m_content_width = INFINITY;
-    m_has_definite_height = false;
+    m_has_definite_width = false;
 }
 
 }

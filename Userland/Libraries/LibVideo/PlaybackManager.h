@@ -207,17 +207,17 @@ private:
 
         virtual ErrorOr<void> on_enter() { return {}; }
 
-        virtual ErrorOr<void> play() { return {}; };
+        virtual ErrorOr<void> play() { return {}; }
         virtual bool is_playing() const = 0;
         virtual PlaybackState get_state() const = 0;
-        virtual ErrorOr<void> pause() { return {}; };
-        virtual ErrorOr<void> buffer() { return {}; };
+        virtual ErrorOr<void> pause() { return {}; }
+        virtual ErrorOr<void> buffer() { return {}; }
         virtual ErrorOr<void> seek(Duration target_timestamp, SeekMode);
         virtual ErrorOr<void> stop();
 
         virtual Duration current_time() const;
 
-        virtual ErrorOr<void> do_timed_state_update() { return {}; };
+        virtual ErrorOr<void> do_timed_state_update() { return {}; }
 
     protected:
         template<class T, class... Args>

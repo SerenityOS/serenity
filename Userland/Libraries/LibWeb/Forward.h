@@ -23,6 +23,12 @@ class ResourceLoader;
 class XMLDocumentBuilder;
 }
 
+namespace Web::ARIA {
+class AriaData;
+class ARIAMixin;
+enum class StateAndProperties;
+}
+
 namespace Web::Bindings {
 class Intrinsics;
 class OptionConstructor;
@@ -33,6 +39,7 @@ enum class CanvasFillRule;
 enum class DOMParserSupportedType;
 enum class EndingType;
 enum class ImageSmoothingQuality;
+enum class ReadableStreamReaderMode;
 enum class ReferrerPolicy;
 enum class RequestCache;
 enum class RequestCredentials;
@@ -444,6 +451,8 @@ class Performance;
 
 namespace Web::IntersectionObserver {
 class IntersectionObserver;
+class IntersectionObserverEntry;
+struct IntersectionObserverRegistration;
 }
 
 namespace Web::Layout {
@@ -553,6 +562,7 @@ class WritableStreamDefaultWriter;
 struct PullIntoDescriptor;
 struct QueuingStrategy;
 struct QueuingStrategyInit;
+struct ReadableStreamGetReaderOptions;
 struct UnderlyingSink;
 struct UnderlyingSource;
 }

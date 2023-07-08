@@ -231,7 +231,7 @@ public:
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
-    Expression const& expression() const { return m_expression; };
+    Expression const& expression() const { return m_expression; }
 
 private:
     virtual bool is_expression_statement() const override { return true; }
@@ -241,11 +241,11 @@ private:
 
 template<typename Func, typename... Args>
 concept ThrowCompletionOrVoidFunction = requires(Func func, Args... args) {
-                                            {
-                                                func(args...)
-                                                }
-                                                -> SameAs<ThrowCompletionOr<void>>;
-                                        };
+    {
+        func(args...)
+    }
+    -> SameAs<ThrowCompletionOr<void>>;
+};
 
 template<typename... Args>
 class ThrowCompletionOrVoidCallback : public Function<ThrowCompletionOr<void>(Args...)> {
@@ -308,15 +308,26 @@ public:
 
     ThrowCompletionOr<void> for_each_lexically_scoped_declaration(ThrowCompletionOrVoidCallback<Declaration const&>&& callback) const;
     ThrowCompletionOr<void> for_each_lexically_declared_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const;
+    ThrowCompletionOr<void> for_each_lexically_declared_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const;
 
     ThrowCompletionOr<void> for_each_var_declared_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const;
+    ThrowCompletionOr<void> for_each_var_declared_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const;
 
     ThrowCompletionOr<void> for_each_var_function_declaration_in_reverse_order(ThrowCompletionOrVoidCallback<FunctionDeclaration const&>&& callback) const;
+    ThrowCompletionOr<void> for_each_lexical_function_declaration_in_reverse_order(ThrowCompletionOrVoidCallback<FunctionDeclaration const&>&& callback) const;
     ThrowCompletionOr<void> for_each_var_scoped_variable_declaration(ThrowCompletionOrVoidCallback<VariableDeclaration const&>&& callback) const;
 
     void block_declaration_instantiation(VM&, Environment*) const;
 
     ThrowCompletionOr<void> for_each_function_hoistable_with_annexB_extension(ThrowCompletionOrVoidCallback<FunctionDeclaration&>&& callback) const;
+
+    Vector<DeprecatedFlyString> const& local_variables_names() const { return m_local_variables_names; }
+    size_t add_local_variable(DeprecatedFlyString name)
+    {
+        auto index = m_local_variables_names.size();
+        m_local_variables_names.append(name);
+        return index;
+    }
 
 protected:
     explicit ScopeNode(SourceRange source_range)
@@ -332,6 +343,8 @@ private:
     Vector<NonnullRefPtr<Declaration const>> m_var_declarations;
 
     Vector<NonnullRefPtr<FunctionDeclaration const>> m_functions_hoistable_with_annexB_extension;
+
+    Vector<DeprecatedFlyString> m_local_variables_names;
 };
 
 // ImportEntry Record, https://tc39.es/ecma262/#table-importentry-record-fields
@@ -598,6 +611,7 @@ public:
     }
 
     virtual ThrowCompletionOr<void> for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const = 0;
+    virtual ThrowCompletionOr<void> for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const = 0;
 
     // 8.1.3 Static Semantics: IsConstantDeclaration, https://tc39.es/ecma262/#sec-static-semantics-isconstantdeclaration
     virtual bool is_constant_declaration() const { return false; }
@@ -614,6 +628,11 @@ public:
     Completion execute(Interpreter&) const override { return {}; }
 
     ThrowCompletionOr<void> for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&&) const override
+    {
+        VERIFY_NOT_REACHED();
+    }
+
+    ThrowCompletionOr<void> for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&&) const override
     {
         VERIFY_NOT_REACHED();
     }
@@ -639,6 +658,7 @@ struct BindingPattern : RefCounted<BindingPattern> {
     void dump(int indent) const;
 
     ThrowCompletionOr<void> for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const;
+    ThrowCompletionOr<void> for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const;
 
     bool contains_expression() const;
 
@@ -646,19 +666,52 @@ struct BindingPattern : RefCounted<BindingPattern> {
     Kind kind { Kind::Object };
 };
 
+class Identifier final : public Expression {
+public:
+    explicit Identifier(SourceRange source_range, DeprecatedFlyString string)
+        : Expression(source_range)
+        , m_string(move(string))
+    {
+    }
+
+    DeprecatedFlyString const& string() const { return m_string; }
+
+    bool is_local() const { return m_local_variable_index.has_value(); }
+    size_t local_variable_index() const
+    {
+        VERIFY(m_local_variable_index.has_value());
+        return m_local_variable_index.value();
+    }
+    void set_local_variable_index(size_t index) { m_local_variable_index = index; }
+
+    virtual Completion execute(Interpreter&) const override;
+    virtual void dump(int indent) const override;
+    virtual ThrowCompletionOr<Reference> to_reference(Interpreter&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
+
+private:
+    virtual bool is_identifier() const override { return true; }
+
+    DeprecatedFlyString m_string;
+    mutable EnvironmentCoordinate m_cached_environment_coordinate;
+
+    Optional<size_t> m_local_variable_index;
+};
+
 struct FunctionParameter {
-    Variant<DeprecatedFlyString, NonnullRefPtr<BindingPattern const>> binding;
+    Variant<NonnullRefPtr<Identifier const>, NonnullRefPtr<BindingPattern const>> binding;
     RefPtr<Expression const> default_value;
     bool is_rest { false };
 };
 
 class FunctionNode {
 public:
-    DeprecatedFlyString const& name() const { return m_name; }
+    StringView name() const { return m_name ? m_name->string().view() : ""sv; }
     DeprecatedString const& source_text() const { return m_source_text; }
     Statement const& body() const { return *m_body; }
-    Vector<FunctionParameter> const& parameters() const { return m_parameters; };
+    Vector<FunctionParameter> const& parameters() const { return m_parameters; }
     i32 function_length() const { return m_function_length; }
+    Vector<DeprecatedFlyString> const& local_variables_names() const { return m_local_variables_names; }
     bool is_strict_mode() const { return m_is_strict_mode; }
     bool might_need_arguments_object() const { return m_might_need_arguments_object; }
     bool contains_direct_call_to_eval() const { return m_contains_direct_call_to_eval; }
@@ -666,7 +719,7 @@ public:
     FunctionKind kind() const { return m_kind; }
 
 protected:
-    FunctionNode(DeprecatedFlyString name, DeprecatedString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function)
+    FunctionNode(RefPtr<Identifier const> name, DeprecatedString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Vector<DeprecatedFlyString> local_variables_names)
         : m_name(move(name))
         , m_source_text(move(source_text))
         , m_body(move(body))
@@ -677,6 +730,7 @@ protected:
         , m_might_need_arguments_object(might_need_arguments_object)
         , m_contains_direct_call_to_eval(contains_direct_call_to_eval)
         , m_is_arrow_function(is_arrow_function)
+        , m_local_variables_names(local_variables_names)
     {
         if (m_is_arrow_function)
             VERIFY(!m_might_need_arguments_object);
@@ -684,8 +738,9 @@ protected:
 
     void dump(int indent, DeprecatedString const& class_name) const;
 
+    RefPtr<Identifier const> m_name { nullptr };
+
 private:
-    DeprecatedFlyString m_name;
     DeprecatedString m_source_text;
     NonnullRefPtr<Statement const> m_body;
     Vector<FunctionParameter> const m_parameters;
@@ -695,6 +750,8 @@ private:
     bool m_might_need_arguments_object : 1 { false };
     bool m_contains_direct_call_to_eval : 1 { false };
     bool m_is_arrow_function : 1 { false };
+
+    Vector<DeprecatedFlyString> m_local_variables_names;
 };
 
 class FunctionDeclaration final
@@ -703,9 +760,9 @@ class FunctionDeclaration final
 public:
     static bool must_have_name() { return true; }
 
-    FunctionDeclaration(SourceRange source_range, DeprecatedFlyString const& name, DeprecatedString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval)
+    FunctionDeclaration(SourceRange source_range, RefPtr<Identifier const> name, DeprecatedString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, Vector<DeprecatedFlyString> local_variables_names)
         : Declaration(source_range)
-        , FunctionNode(name, move(source_text), move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, false)
+        , FunctionNode(name, move(source_text), move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, false, move(local_variables_names))
     {
     }
 
@@ -714,6 +771,8 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
     virtual ThrowCompletionOr<void> for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const override;
+
+    ThrowCompletionOr<void> for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&&) const override;
 
     virtual bool is_function_declaration() const override { return true; }
 
@@ -729,9 +788,9 @@ class FunctionExpression final
 public:
     static bool must_have_name() { return false; }
 
-    FunctionExpression(SourceRange source_range, DeprecatedFlyString const& name, DeprecatedString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function = false)
+    FunctionExpression(SourceRange source_range, RefPtr<Identifier const> name, DeprecatedString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, Vector<DeprecatedFlyString> local_variables_names, bool is_arrow_function = false)
         : Expression(source_range)
-        , FunctionNode(name, move(source_text), move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function)
+        , FunctionNode(name, move(source_text), move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function, move(local_variables_names))
     {
     }
 
@@ -1244,28 +1303,6 @@ private:
     DeprecatedString m_flags;
 };
 
-class Identifier final : public Expression {
-public:
-    explicit Identifier(SourceRange source_range, DeprecatedFlyString string)
-        : Expression(source_range)
-        , m_string(move(string))
-    {
-    }
-
-    DeprecatedFlyString const& string() const { return m_string; }
-
-    virtual Completion execute(Interpreter&) const override;
-    virtual void dump(int indent) const override;
-    virtual ThrowCompletionOr<Reference> to_reference(Interpreter&) const override;
-    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
-
-private:
-    virtual bool is_identifier() const override { return true; }
-
-    DeprecatedFlyString m_string;
-    mutable EnvironmentCoordinate m_cached_environment_coordinate;
-};
-
 class PrivateIdentifier final : public Expression {
 public:
     explicit PrivateIdentifier(SourceRange source_range, DeprecatedFlyString string)
@@ -1308,7 +1345,7 @@ public:
     using ClassValue = Variant<ClassFieldDefinition, Completion, PrivateElement>;
     virtual ThrowCompletionOr<ClassValue> class_element_evaluation(VM&, Object& home_object) const = 0;
 
-    virtual Optional<DeprecatedFlyString> private_bound_identifier() const { return {}; };
+    virtual Optional<DeprecatedFlyString> private_bound_identifier() const { return {}; }
 
 private:
     bool m_is_static { false };
@@ -1399,13 +1436,14 @@ public:
 
     virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
     virtual bool is_super_expression() const override { return true; }
 };
 
 class ClassExpression final : public Expression {
 public:
-    ClassExpression(SourceRange source_range, DeprecatedString name, DeprecatedString source_text, RefPtr<FunctionExpression const> constructor, RefPtr<Expression const> super_class, Vector<NonnullRefPtr<ClassElement const>> elements)
+    ClassExpression(SourceRange source_range, RefPtr<Identifier const> name, DeprecatedString source_text, RefPtr<FunctionExpression const> constructor, RefPtr<Expression const> super_class, Vector<NonnullRefPtr<ClassElement const>> elements)
         : Expression(source_range)
         , m_name(move(name))
         , m_source_text(move(source_text))
@@ -1415,7 +1453,8 @@ public:
     {
     }
 
-    StringView name() const { return m_name; }
+    StringView name() const { return m_name ? m_name->string().view() : ""sv; }
+
     DeprecatedString const& source_text() const { return m_source_text; }
     RefPtr<FunctionExpression const> constructor() const { return m_constructor; }
 
@@ -1424,7 +1463,7 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode_with_lhs_name(Bytecode::Generator&, Optional<Bytecode::IdentifierTableIndex> lhs_name) const;
 
-    bool has_name() const { return !m_name.is_empty(); }
+    bool has_name() const { return m_name; }
 
     ThrowCompletionOr<ECMAScriptFunctionObject*> class_definition_evaluation(VM&, DeprecatedFlyString const& binding_name = {}, DeprecatedFlyString const& class_name = {}) const;
     ThrowCompletionOr<ECMAScriptFunctionObject*> create_class_constructor(VM&, Environment* class_environment, Environment* environment, Value super_class, DeprecatedFlyString const& binding_name = {}, DeprecatedFlyString const& class_name = {}) const;
@@ -1432,7 +1471,9 @@ public:
 private:
     virtual bool is_class_expression() const override { return true; }
 
-    DeprecatedString m_name;
+    friend ClassDeclaration;
+
+    RefPtr<Identifier const> m_name;
     DeprecatedString m_source_text;
     RefPtr<FunctionExpression const> m_constructor;
     RefPtr<Expression const> m_super_class;
@@ -1452,6 +1493,8 @@ public:
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
     virtual ThrowCompletionOr<void> for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const override;
+
+    ThrowCompletionOr<void> for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&&) const override;
 
     virtual bool is_lexical_declaration() const override { return true; }
 
@@ -1759,7 +1802,9 @@ public:
 
     virtual ThrowCompletionOr<void> for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const override;
 
-    virtual bool is_constant_declaration() const override { return m_declaration_kind == DeclarationKind::Const; };
+    ThrowCompletionOr<void> for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&&) const override;
+
+    virtual bool is_constant_declaration() const override { return m_declaration_kind == DeclarationKind::Const; }
 
     virtual bool is_lexical_declaration() const override { return m_declaration_kind != DeclarationKind::Var; }
 
@@ -1783,7 +1828,9 @@ public:
 
     virtual ThrowCompletionOr<void> for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const override;
 
-    virtual bool is_constant_declaration() const override { return true; };
+    ThrowCompletionOr<void> for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&&) const override;
+
+    virtual bool is_constant_declaration() const override { return true; }
 
     virtual bool is_lexical_declaration() const override { return true; }
 

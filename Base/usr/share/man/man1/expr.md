@@ -70,4 +70,5 @@ $ expr substr foobar 1 3  # foo
 ```
 
 ## See also
-
+* [`test`(1)](help://man/1/test)
+* [`js`(1)](help://man/1/js) for evaluating more complex expressions

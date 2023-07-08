@@ -23,7 +23,7 @@ struct BorderRadiusData {
             context.floored_device_pixels(horizontal_radius).value(),
             context.floored_device_pixels(vertical_radius).value()
         };
-    };
+    }
 
     inline operator bool() const
     {

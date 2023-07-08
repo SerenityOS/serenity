@@ -42,7 +42,7 @@ public:
     void apply_size_increments_to_window(GUI::Window&);
 
     void set_opacity(u8);
-    float opacity() { return m_opacity; };
+    float opacity() { return m_opacity; }
 
     void set_show_scrollbar(bool);
 
@@ -53,7 +53,7 @@ public:
     };
 
     BellMode bell_mode() { return m_bell_mode; }
-    void set_bell_mode(BellMode bm) { m_bell_mode = bm; };
+    void set_bell_mode(BellMode bm) { m_bell_mode = bm; }
 
     bool has_selection() const;
     bool selection_contains(const VT::Position&) const;

@@ -105,7 +105,7 @@ struct TokenInfo {
 #undef __SEMANTIC
         }
         VERIFY_NOT_REACHED();
-    };
+    }
 };
 
 struct TodoEntry {

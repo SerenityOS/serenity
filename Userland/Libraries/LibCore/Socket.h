@@ -179,8 +179,8 @@ public:
     virtual ErrorOr<Bytes> read_some(Bytes buffer) override { return m_helper.read(buffer, default_flags()); }
     virtual ErrorOr<size_t> write_some(ReadonlyBytes buffer) override { return m_helper.write(buffer, default_flags()); }
     virtual bool is_eof() const override { return m_helper.is_eof(); }
-    virtual bool is_open() const override { return m_helper.is_open(); };
-    virtual void close() override { m_helper.close(); };
+    virtual bool is_open() const override { return m_helper.is_open(); }
+    virtual void close() override { m_helper.close(); }
     virtual ErrorOr<size_t> pending_bytes() const override { return m_helper.pending_bytes(); }
     virtual ErrorOr<bool> can_read_without_blocking(int timeout = 0) const override { return m_helper.can_read_without_blocking(timeout); }
     virtual void set_notifications_enabled(bool enabled) override

@@ -220,6 +220,7 @@ ErrorOr<String> Selector::SimpleSelector::serialize() const
         case Selector::SimpleSelector::PseudoClass::Type::OnlyChild:
         case Selector::SimpleSelector::PseudoClass::Type::Empty:
         case Selector::SimpleSelector::PseudoClass::Type::Root:
+        case Selector::SimpleSelector::PseudoClass::Type::Host:
         case Selector::SimpleSelector::PseudoClass::Type::FirstOfType:
         case Selector::SimpleSelector::PseudoClass::Type::LastOfType:
         case Selector::SimpleSelector::PseudoClass::Type::OnlyOfType:
@@ -363,6 +364,8 @@ Optional<Selector::PseudoElement> pseudo_element_from_string(StringView name)
         return Selector::PseudoElement::ProgressValue;
     } else if (name.equals_ignoring_ascii_case("placeholder"sv)) {
         return Selector::PseudoElement::Placeholder;
+    } else if (name.equals_ignoring_ascii_case("selection"sv)) {
+        return Selector::PseudoElement::Selection;
     }
     return {};
 }

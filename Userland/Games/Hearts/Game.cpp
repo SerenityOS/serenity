@@ -91,7 +91,7 @@ Game::Game()
     };
 
     reset();
-};
+}
 
 void Game::reset()
 {

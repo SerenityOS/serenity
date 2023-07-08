@@ -32,9 +32,9 @@ namespace AK {
 // Concept to detect types which look like timespec without requiring the type.
 template<typename T>
 concept TimeSpecType = requires(T t) {
-                           t.tv_sec;
-                           t.tv_nsec;
-                       };
+    t.tv_sec;
+    t.tv_nsec;
+};
 
 constexpr bool is_leap_year(int year)
 {
@@ -221,9 +221,9 @@ public:
     [[nodiscard]] static Duration from_timespec(const struct timespec&);
     [[nodiscard]] static Duration from_timeval(const struct timeval&);
     // We don't pull in <stdint.h> for the pretty min/max definitions because this file is also included in the Kernel
-    [[nodiscard]] constexpr static Duration min() { return Duration(-__INT64_MAX__ - 1LL, 0); };
-    [[nodiscard]] constexpr static Duration zero() { return Duration(0, 0); };
-    [[nodiscard]] constexpr static Duration max() { return Duration(__INT64_MAX__, 999'999'999); };
+    [[nodiscard]] constexpr static Duration min() { return Duration(-__INT64_MAX__ - 1LL, 0); }
+    [[nodiscard]] constexpr static Duration zero() { return Duration(0, 0); }
+    [[nodiscard]] constexpr static Duration max() { return Duration(__INT64_MAX__, 999'999'999); }
 
     // Truncates towards zero (2.8s to 2s, -2.8s to -2s).
     [[nodiscard]] i64 to_truncated_seconds() const;
@@ -433,15 +433,15 @@ public:
     [[nodiscard]] i64 truncated_seconds_since_epoch() const { return m_offset.to_truncated_seconds(); }
 
     // Offsetting a UNIX time by a duration yields another UNIX time.
-    constexpr UnixDateTime operator+(Duration const& other) const { return UnixDateTime { m_offset + other }; };
+    constexpr UnixDateTime operator+(Duration const& other) const { return UnixDateTime { m_offset + other }; }
     constexpr UnixDateTime& operator+=(Duration const& other)
     {
         this->m_offset = this->m_offset + other;
         return *this;
-    };
-    constexpr UnixDateTime operator-(Duration const& other) const { return UnixDateTime { m_offset - other }; };
+    }
+    constexpr UnixDateTime operator-(Duration const& other) const { return UnixDateTime { m_offset - other }; }
     // Subtracting two UNIX times yields their time difference.
-    constexpr Duration operator-(UnixDateTime const& other) const { return m_offset - other.m_offset; };
+    constexpr Duration operator-(UnixDateTime const& other) const { return m_offset - other.m_offset; }
 
 #ifndef KERNEL
     [[nodiscard]] static UnixDateTime now();
@@ -487,9 +487,7 @@ public:
     [[nodiscard]] i64 truncated_seconds() const { return m_offset.to_truncated_seconds(); }
     [[nodiscard]] i64 nanoseconds_within_second() const { return to_timespec().tv_nsec; }
 
-    // clang-format off
     constexpr bool operator==(MonotonicTime const& other) const { return this->m_offset == other.m_offset; }
-    // clang-format on
     constexpr int operator<=>(MonotonicTime const& other) const { return this->m_offset <=> other.m_offset; }
 
     constexpr MonotonicTime operator+(Duration const& other) const { return MonotonicTime { m_offset + other }; }

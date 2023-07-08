@@ -48,7 +48,7 @@ Qt Creator should be set up correctly now, go ahead and explore the project and 
 
 ## Auto-Formatting
 
-You can use `clang-format` to help you with the [style guide](CodingStyle.md). Before you proceed, check that you're actually using clang-format version 15, as some OSes will ship older clang-format versions by default.
+You can use `clang-format` to help you with the [style guide](CodingStyle.md). Before you proceed, check that you're actually using clang-format version 16, as some OSes will ship older clang-format versions by default.
 
 - In QtCreator, go to "Help > About Plugins…"
 - Find the `Beautifier (experimental)` row (for example, by typing `beau` into the search)

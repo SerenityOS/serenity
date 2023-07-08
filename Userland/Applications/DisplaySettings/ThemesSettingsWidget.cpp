@@ -21,7 +21,7 @@ namespace DisplaySettings {
 static ErrorOr<String> get_color_scheme_name_from_pathname(StringView color_scheme_path)
 {
     return TRY(String::from_deprecated_string(color_scheme_path.replace("/res/color-schemes/"sv, ""sv, ReplaceMode::FirstOnly).replace(".ini"sv, ""sv, ReplaceMode::FirstOnly)));
-};
+}
 
 ErrorOr<NonnullRefPtr<ThemesSettingsWidget>> ThemesSettingsWidget::try_create(bool& background_settings_changed)
 {

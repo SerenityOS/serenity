@@ -54,7 +54,7 @@ public:
     TreeNode& root()
     {
         return m_root;
-    };
+    }
 
 private:
     Tree(DeprecatedString root_name)

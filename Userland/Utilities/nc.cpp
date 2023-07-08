@@ -42,7 +42,7 @@ static size_t get_maximum_tcp_buffer_size(size_t input_buf_size)
     if (input_buf_size > maximum_tcp_receive_buffer_size_upper_bound)
         return maximum_tcp_receive_buffer_size_upper_bound;
     return input_buf_size;
-};
+}
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

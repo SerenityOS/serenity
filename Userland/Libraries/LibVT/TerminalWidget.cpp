@@ -1303,7 +1303,7 @@ constexpr Gfx::Color TerminalWidget::terminal_color_to_rgb(VT::Color color) cons
     default:
         VERIFY_NOT_REACHED();
     }
-};
+}
 
 void TerminalWidget::set_font_and_resize_to_fit(Gfx::Font const& font)
 {

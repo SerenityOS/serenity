@@ -51,8 +51,8 @@ public:
         return 0;
     }
 
-    bool is_admin_queue_ready() { return m_admin_queue_ready; };
-    void set_admin_queue_ready_flag() { m_admin_queue_ready = true; };
+    bool is_admin_queue_ready() { return m_admin_queue_ready; }
+    void set_admin_queue_ready_flag() { m_admin_queue_ready = true; }
 
 private:
     NVMeController(PCI::DeviceIdentifier const&, u32 hardware_relative_controller_id);

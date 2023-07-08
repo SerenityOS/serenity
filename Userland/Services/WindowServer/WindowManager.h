@@ -193,7 +193,7 @@ public:
         if (active_window() && active_window()->is_fullscreen())
             return active_window();
         return nullptr;
-    };
+    }
 
     Window* active_fullscreen_window()
     {

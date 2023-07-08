@@ -52,7 +52,7 @@ public:
     void set_gid(gid_t gid) { m_gid = gid; }
     void set_shell(StringView shell) { m_shell = shell; }
     void set_gecos(StringView gecos) { m_gecos = gecos; }
-    void set_deleted() { m_deleted = true; };
+    void set_deleted() { m_deleted = true; }
     void set_extra_gids(Vector<gid_t> extra_gids) { m_extra_gids = move(extra_gids); }
     void delete_password();
 

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Array.h>
+#include <AK/String.h>
 #include <LibCards/Card.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Color.h>
@@ -23,7 +24,7 @@ public:
     NonnullRefPtr<Gfx::Bitmap> card_back_inverted();
     NonnullRefPtr<Gfx::Bitmap> card_front_highlighted(Suit, Rank);
 
-    void set_background_image_path(DeprecatedString path);
+    void set_background_image_path(StringView path);
     void set_background_color(Color);
 
 private:
@@ -40,7 +41,7 @@ private:
     RefPtr<Gfx::Bitmap> m_card_back;
     RefPtr<Gfx::Bitmap> m_card_back_inverted;
 
-    DeprecatedString m_background_image_path;
+    String m_background_image_path;
     Color m_background_color;
 };
 

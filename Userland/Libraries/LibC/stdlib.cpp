@@ -125,7 +125,7 @@ public:
         return DigitConsumeDecision::Consumed;
     }
 
-    T number() const { return m_num; };
+    T number() const { return m_num; }
 
 private:
     bool can_append_digit(int digit)

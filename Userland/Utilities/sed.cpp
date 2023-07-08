@@ -611,7 +611,7 @@ private:
         auto element = TRY(String::from_utf8(element_sv));
         TRY(container.try_append(move(element)));
         return {};
-    };
+    }
 };
 
 enum class CycleDecision {

@@ -110,7 +110,7 @@ public:
     void clear_path() { m_path.clear(); }
 
     void set_touch_target_list(TouchTargetList& touch_target_list) { m_touch_target_list = touch_target_list; }
-    TouchTargetList& touch_target_list() { return m_touch_target_list; };
+    TouchTargetList& touch_target_list() { return m_touch_target_list; }
     void clear_touch_target_list() { m_touch_target_list.clear(); }
 
     bool bubbles() const { return m_bubbles; }

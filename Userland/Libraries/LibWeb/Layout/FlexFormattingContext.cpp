@@ -279,7 +279,7 @@ void FlexFormattingContext::populate_specified_margins(FlexItem& item, CSS::Flex
         item.margins.cross_before_is_auto = item.box->computed_values().margin().left().is_auto();
         item.margins.cross_after_is_auto = item.box->computed_values().margin().right().is_auto();
     }
-};
+}
 
 // https://www.w3.org/TR/css-flexbox-1/#flex-items
 void FlexFormattingContext::generate_anonymous_flex_items()
@@ -561,6 +561,13 @@ CSSPixels FlexFormattingContext::calculate_main_size_from_cross_size_and_aspect_
     if (is_row_layout())
         return cross_size * aspect_ratio;
     return cross_size / aspect_ratio;
+}
+
+CSSPixels FlexFormattingContext::calculate_cross_size_from_main_size_and_aspect_ratio(CSSPixels main_size, double aspect_ratio) const
+{
+    if (is_row_layout())
+        return main_size / aspect_ratio;
+    return main_size * aspect_ratio;
 }
 
 // This function takes a size in the main axis and adjusts it according to the aspect ratio of the box
@@ -997,6 +1004,10 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
                 line.remaining_free_space = value;
         }
 
+        // AD-HOC: We allow the remaining free space to be infinite, but we can't let infinity
+        //         leak into the layout geometry, so we treat infinity as zero when used in arithmetic.
+        auto remaining_free_space_or_zero_if_infinite = isfinite(line.remaining_free_space.to_double()) ? line.remaining_free_space : 0;
+
         // c. If the remaining free space is non-zero, distribute it proportional to the flex factors:
         if (line.remaining_free_space != 0) {
             // If using the flex grow factor
@@ -1009,7 +1020,7 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
                         continue;
                     double ratio = item.flex_factor.value() / sum_of_flex_factor_of_unfrozen_items;
                     // Set the item’s target main size to its flex base size plus a fraction of the remaining free space proportional to the ratio.
-                    item.target_main_size = item.flex_base_size + (line.remaining_free_space * ratio);
+                    item.target_main_size = item.flex_base_size + (remaining_free_space_or_zero_if_infinite * ratio);
                 }
             }
             // If using the flex shrink factor
@@ -1031,7 +1042,7 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
 
                     // Set the item’s target main size to its flex base size minus a fraction of the absolute value of the remaining free space proportional to the ratio.
                     // (Note this may result in a negative inner main size; it will be corrected in the next step.)
-                    item.target_main_size = item.flex_base_size - (abs(line.remaining_free_space) * ratio);
+                    item.target_main_size = item.flex_base_size - (abs(remaining_free_space_or_zero_if_infinite) * ratio);
                 }
             }
         }
@@ -1149,6 +1160,11 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
 
     if (should_treat_cross_size_as_auto(item.box)) {
         // Item has automatic cross size, layout with "fit-content"
+
+        if (item.box->has_preferred_aspect_ratio() && item.main_size.has_value()) {
+            item.hypothetical_cross_size = calculate_cross_size_from_main_size_and_aspect_ratio(item.main_size.value(), item.box->preferred_aspect_ratio().value());
+            return;
+        }
 
         CSSPixels fit_content_cross_size = 0;
         if (is_row_layout()) {
@@ -1342,6 +1358,14 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
                     initial_offset = inner_main_size(flex_container()) - space_between_items / 2.0;
                 } else {
                     initial_offset = space_between_items / 2.0;
+                }
+                break;
+            case CSS::JustifyContent::SpaceEvenly:
+                space_between_items = flex_line.remaining_free_space / (number_of_items + 1);
+                if (is_direction_reverse()) {
+                    initial_offset = inner_main_size(flex_container()) - space_between_items;
+                } else {
+                    initial_offset = space_between_items;
                 }
                 break;
             }
@@ -1581,6 +1605,21 @@ void FlexFormattingContext::align_all_flex_lines()
             start_of_current_line = gap_size / 2;
             break;
         }
+        case CSS::AlignContent::SpaceEvenly: {
+            auto leftover_free_space = cross_size_of_flex_container - sum_of_flex_line_cross_sizes;
+            if (leftover_free_space < 0) {
+                // If the leftover free-space is negative this value is identical to center.
+                start_of_current_line = (cross_size_of_flex_container / 2) - (sum_of_flex_line_cross_sizes / 2);
+                break;
+            }
+
+            gap_size = leftover_free_space / (m_flex_lines.size() + 1);
+
+            // The spacing between the first/last lines and the flex container edges is the size of the spacing between flex lines.
+            start_of_current_line = gap_size;
+            break;
+        }
+
         case CSS::AlignContent::Stretch:
             start_of_current_line = 0;
             break;
@@ -2116,8 +2155,9 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
     CSSPixels cross_margin_after = is_row_layout() ? box_state.margin_bottom : box_state.margin_right;
     CSSPixels cross_border_before = is_row_layout() ? box_state.border_top : box_state.border_left;
     CSSPixels cross_border_after = is_row_layout() ? box_state.border_bottom : box_state.border_right;
-    CSSPixels cross_padding_before = is_row_layout() ? box_state.padding_top : box_state.padding_left;
     CSSPixels cross_padding_after = is_row_layout() ? box_state.padding_bottom : box_state.padding_right;
+    CSSPixels main_border_before = is_row_layout() ? box_state.border_left : box_state.border_top;
+    CSSPixels main_border_after = is_row_layout() ? box_state.border_right : box_state.border_bottom;
 
     switch (alignment_for_item(box)) {
     case CSS::AlignItems::Baseline:
@@ -2125,15 +2165,18 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
         //  Fallthrough
     case CSS::AlignItems::Start:
     case CSS::AlignItems::FlexStart:
+    case CSS::AlignItems::SelfStart:
     case CSS::AlignItems::Stretch:
-        cross_offset = -half_line_size + cross_margin_before + cross_border_before + cross_padding_before;
+    case CSS::AlignItems::Normal:
+        cross_offset = -half_line_size + cross_margin_before;
         break;
     case CSS::AlignItems::End:
+    case CSS::AlignItems::SelfEnd:
     case CSS::AlignItems::FlexEnd:
         cross_offset = half_line_size - inner_cross_size(box) - cross_margin_after - cross_border_after - cross_padding_after;
         break;
     case CSS::AlignItems::Center:
-        cross_offset = -(inner_cross_size(box) / 2.0);
+        cross_offset = -((inner_cross_size(box) + cross_border_before + cross_border_after) / 2.0);
         break;
     default:
         break;
@@ -2150,53 +2193,36 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
     CSSPixels main_offset = 0;
     switch (flex_container().computed_values().justify_content()) {
     case CSS::JustifyContent::Start:
-        if (is_direction_reverse()) {
-            main_offset = inner_main_size(flex_container());
-        } else {
-            main_offset = 0;
-        }
+    case CSS::JustifyContent::FlexStart:
+        main_offset = 0;
+        pack_from_end = is_direction_reverse();
         break;
     case CSS::JustifyContent::End:
-        if (is_direction_reverse()) {
-            main_offset = 0;
-        } else {
-            main_offset = inner_main_size(flex_container());
-        }
-        break;
-    case CSS::JustifyContent::FlexStart:
-        if (is_direction_reverse()) {
-            pack_from_end = false;
-            main_offset = inner_main_size(flex_container());
-        } else {
-            main_offset = 0;
-        }
-        break;
     case CSS::JustifyContent::FlexEnd:
-        if (is_direction_reverse()) {
-            main_offset = 0;
-        } else {
-            pack_from_end = false;
-            main_offset = inner_main_size(flex_container());
-        }
+        main_offset = -main_border_before - main_border_after;
+        pack_from_end = !is_direction_reverse();
         break;
     case CSS::JustifyContent::SpaceBetween:
+        pack_from_end = false;
         main_offset = 0;
         break;
     case CSS::JustifyContent::Center:
     case CSS::JustifyContent::SpaceAround:
-        main_offset = inner_main_size(flex_container()) / 2.0 - inner_main_size(box) / 2.0;
+    case CSS::JustifyContent::SpaceEvenly:
+        pack_from_end = false;
+        main_offset = (inner_main_size(flex_container()) - inner_main_size(box) - main_border_before - main_border_after) / 2.0;
         break;
     }
 
     // NOTE: Next, we add the flex container's padding since abspos boxes are placed relative to the padding edge
     //       of their abspos containing block.
     if (pack_from_end) {
-        main_offset += is_row_layout() ? m_flex_container_state.padding_left : m_flex_container_state.padding_top;
-    } else {
         main_offset += is_row_layout() ? m_flex_container_state.padding_right : m_flex_container_state.padding_bottom;
+    } else {
+        main_offset += is_row_layout() ? m_flex_container_state.padding_left : m_flex_container_state.padding_top;
     }
 
-    if (!pack_from_end)
+    if (pack_from_end)
         main_offset += inner_main_size(flex_container()) - inner_main_size(box);
 
     auto static_position_offset = is_row_layout() ? CSSPixelPoint { main_offset, cross_offset } : CSSPixelPoint { cross_offset, main_offset };

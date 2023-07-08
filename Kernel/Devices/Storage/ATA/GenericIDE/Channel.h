@@ -77,7 +77,7 @@ public:
         bool operator<(IOWindowGroup const&) const = delete;
         bool operator>(IOWindowGroup const&) const = delete;
 
-        IOWindow& io_window() const { return *m_io_window; };
+        IOWindow& io_window() const { return *m_io_window; }
         IOWindow& control_window() const { return *m_control_window; }
         IOWindow* bus_master_window() const { return m_bus_master_window.ptr(); }
 

@@ -38,7 +38,7 @@ public:
     void toggle_rotate_y() { m_rotate_y = !m_rotate_y; }
     void toggle_rotate_z() { m_rotate_z = !m_rotate_z; }
     void set_rotation_speed(float speed) { m_rotation_speed = speed; }
-    void set_stat_label(RefPtr<GUI::Label> l) { m_stats = l; };
+    void set_stat_label(RefPtr<GUI::Label> l) { m_stats = l; }
     void set_wrap_s_mode(GLint mode) { m_wrap_s_mode = mode; }
     void set_wrap_t_mode(GLint mode) { m_wrap_t_mode = mode; }
     void set_texture_scale(float scale) { m_texture_scale = scale; }
@@ -168,7 +168,7 @@ void GLContextWidget::resize_event(GUI::ResizeEvent& event)
 
     if (m_stats)
         m_stats->set_x(width() - m_stats->width() - 6);
-};
+}
 
 void GLContextWidget::mousemove_event(GUI::MouseEvent& event)
 {

@@ -229,7 +229,7 @@ public:
     virtual ~LzmaCompressor();
 
 private:
-    LzmaCompressor(MaybeOwned<Stream>, LzmaCompressorOptions, MaybeOwned<CircularBuffer>, FixedArray<Probability> literal_probabilities);
+    LzmaCompressor(MaybeOwned<Stream>, LzmaCompressorOptions, MaybeOwned<SearchableCircularBuffer>, FixedArray<Probability> literal_probabilities);
 
     ErrorOr<void> shift_range_encoder();
     ErrorOr<void> normalize_range_encoder();
@@ -255,7 +255,7 @@ private:
 
     // This doubles as an input buffer, which is appended at the very front of the buffer.
     // Therefore, the size of this should at least be the dictionary size + the largest possible repetition length.
-    MaybeOwned<CircularBuffer> m_dictionary;
+    MaybeOwned<SearchableCircularBuffer> m_dictionary;
 
     // Range encoder state.
     u32 m_range_encoder_range { 0xFFFFFFFF };

@@ -227,6 +227,18 @@ public:
         return TypedTransfer<T>::compare(data(), other.data(), other.size());
     }
 
+    [[nodiscard]] size_t constexpr matching_prefix_length(ReadonlySpan<T> other) const
+    {
+        auto maximum_length = min(size(), other.size());
+
+        for (size_t i = 0; i < maximum_length; i++) {
+            if (data()[i] != other.data()[i])
+                return i;
+        }
+
+        return maximum_length;
+    }
+
     [[nodiscard]] ALWAYS_INLINE constexpr T const& at(size_t index) const
     {
         VERIFY(index < this->m_size);

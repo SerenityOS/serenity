@@ -108,7 +108,7 @@ public:
 
     // These get + 1 byte for the sign.
     [[nodiscard]] size_t length() const { return m_unsigned_data.length() + 1; }
-    [[nodiscard]] size_t trimmed_length() const { return m_unsigned_data.trimmed_length() + 1; };
+    [[nodiscard]] size_t trimmed_length() const { return m_unsigned_data.trimmed_length() + 1; }
 
     [[nodiscard]] SignedBigInteger plus(SignedBigInteger const& other) const;
     [[nodiscard]] SignedBigInteger minus(SignedBigInteger const& other) const;

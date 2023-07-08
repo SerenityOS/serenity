@@ -152,7 +152,7 @@ static bool has_no_neighbors(ReadonlySpan<u32> const& row)
         return false;
 
     return has_no_neighbors(row.slice(1, row.size() - 1));
-};
+}
 
 bool Game::Board::is_stalled()
 {

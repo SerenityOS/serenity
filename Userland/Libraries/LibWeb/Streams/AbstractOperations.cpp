@@ -46,6 +46,21 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStreamDefaultReader>> acquire_reada
     return reader;
 }
 
+// https://streams.spec.whatwg.org/#acquire-readable-stream-byob-reader
+WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStreamBYOBReader>> acquire_readable_stream_byob_reader(ReadableStream& stream)
+{
+    auto& realm = stream.realm();
+
+    // 1. Let reader be a new ReadableStreamBYOBReader.
+    auto reader = TRY(realm.heap().allocate<ReadableStreamBYOBReader>(realm, realm));
+
+    // 2. Perform ? SetUpReadableStreamBYOBReader(reader, stream).
+    TRY(set_up_readable_stream_byob_reader(reader, stream));
+
+    // 3. Return reader.
+    return reader;
+}
+
 // https://streams.spec.whatwg.org/#is-readable-stream-locked
 bool is_readable_stream_locked(ReadableStream const& stream)
 {
@@ -477,6 +492,26 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_reader(ReadableStreamDe
     // 2. Perform ! ReadableStreamReaderGenericInitialize(reader, stream).
     // 3. Set reader.[[readRequests]] to a new empty list.
     readable_stream_reader_generic_initialize(ReadableStreamReader { reader }, stream);
+
+    return {};
+}
+
+// https://streams.spec.whatwg.org/#set-up-readable-stream-byob-reader
+WebIDL::ExceptionOr<void> set_up_readable_stream_byob_reader(ReadableStreamBYOBReader& reader, ReadableStream& stream)
+{
+    // 1. If ! IsReadableStreamLocked(stream) is true, throw a TypeError exception.
+    if (is_readable_stream_locked(stream))
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Cannot create stream reader for a locked stream"sv };
+
+    // 2. If stream.[[controller]] does not implement ReadableByteStreamController, throw a TypeError exception.
+    if (!stream.controller()->has<JS::NonnullGCPtr<ReadableByteStreamController>>())
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "BYOB reader cannot set up reader from non-byte stream"sv };
+
+    // 3. Perform ! ReadableStreamReaderGenericInitialize(reader, stream).
+    readable_stream_reader_generic_initialize(ReadableStreamReader { reader }, stream);
+
+    // 4. Set reader.[[readIntoRequests]] to a new empty list.
+    reader.read_into_requests().clear();
 
     return {};
 }

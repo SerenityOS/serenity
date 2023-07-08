@@ -23,7 +23,7 @@ public:
 
     virtual ~CSSSupportsRule() = default;
 
-    virtual Type type() const override { return Type::Supports; };
+    virtual Type type() const override { return Type::Supports; }
 
     DeprecatedString condition_text() const override;
     void set_condition_text(DeprecatedString) override;

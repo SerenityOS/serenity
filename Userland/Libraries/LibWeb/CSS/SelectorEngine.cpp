@@ -245,6 +245,9 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
     }
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Root:
         return is<HTML::HTMLHtmlElement>(element);
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::Host:
+        // FIXME: Implement :host selector.
+        return false;
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Scope:
         return scope ? &element == scope : is<HTML::HTMLHtmlElement>(element);
     case CSS::Selector::SimpleSelector::PseudoClass::Type::FirstOfType:

@@ -65,62 +65,62 @@ public:
     void set_time_zone(String time_zone) { m_time_zone = move(time_zone); }
 
     bool has_date_style() const { return m_date_style.has_value(); }
-    Style date_style() const { return *m_date_style; };
-    StringView date_style_string() const { return style_to_string(*m_date_style); };
-    void set_date_style(StringView style) { m_date_style = style_from_string(style); };
+    Style date_style() const { return *m_date_style; }
+    StringView date_style_string() const { return style_to_string(*m_date_style); }
+    void set_date_style(StringView style) { m_date_style = style_from_string(style); }
 
     bool has_time_style() const { return m_time_style.has_value(); }
-    Style time_style() const { return *m_time_style; };
-    StringView time_style_string() const { return style_to_string(*m_time_style); };
-    void set_time_style(StringView style) { m_time_style = style_from_string(style); };
+    Style time_style() const { return *m_time_style; }
+    StringView time_style_string() const { return style_to_string(*m_time_style); }
+    void set_time_style(StringView style) { m_time_style = style_from_string(style); }
 
-    String const& pattern() const { return Patterns::pattern; };
+    String const& pattern() const { return Patterns::pattern; }
     void set_pattern(String pattern) { Patterns::pattern = move(pattern); }
 
-    ReadonlySpan<::Locale::CalendarRangePattern> range_patterns() const { return m_range_patterns.span(); };
+    ReadonlySpan<::Locale::CalendarRangePattern> range_patterns() const { return m_range_patterns.span(); }
     void set_range_patterns(Vector<::Locale::CalendarRangePattern> range_patterns) { m_range_patterns = move(range_patterns); }
 
     bool has_era() const { return Patterns::era.has_value(); }
-    ::Locale::CalendarPatternStyle era() const { return *Patterns::era; };
+    ::Locale::CalendarPatternStyle era() const { return *Patterns::era; }
     StringView era_string() const { return ::Locale::calendar_pattern_style_to_string(*Patterns::era); }
 
     bool has_year() const { return Patterns::year.has_value(); }
-    ::Locale::CalendarPatternStyle year() const { return *Patterns::year; };
+    ::Locale::CalendarPatternStyle year() const { return *Patterns::year; }
     StringView year_string() const { return ::Locale::calendar_pattern_style_to_string(*Patterns::year); }
 
     bool has_month() const { return Patterns::month.has_value(); }
-    ::Locale::CalendarPatternStyle month() const { return *Patterns::month; };
+    ::Locale::CalendarPatternStyle month() const { return *Patterns::month; }
     StringView month_string() const { return ::Locale::calendar_pattern_style_to_string(*Patterns::month); }
 
     bool has_weekday() const { return Patterns::weekday.has_value(); }
-    ::Locale::CalendarPatternStyle weekday() const { return *Patterns::weekday; };
+    ::Locale::CalendarPatternStyle weekday() const { return *Patterns::weekday; }
     StringView weekday_string() const { return ::Locale::calendar_pattern_style_to_string(*Patterns::weekday); }
 
     bool has_day() const { return Patterns::day.has_value(); }
-    ::Locale::CalendarPatternStyle day() const { return *Patterns::day; };
+    ::Locale::CalendarPatternStyle day() const { return *Patterns::day; }
     StringView day_string() const { return ::Locale::calendar_pattern_style_to_string(*Patterns::day); }
 
     bool has_day_period() const { return Patterns::day_period.has_value(); }
-    ::Locale::CalendarPatternStyle day_period() const { return *Patterns::day_period; };
+    ::Locale::CalendarPatternStyle day_period() const { return *Patterns::day_period; }
     StringView day_period_string() const { return ::Locale::calendar_pattern_style_to_string(*Patterns::day_period); }
 
     bool has_hour() const { return Patterns::hour.has_value(); }
-    ::Locale::CalendarPatternStyle hour() const { return *Patterns::hour; };
+    ::Locale::CalendarPatternStyle hour() const { return *Patterns::hour; }
     StringView hour_string() const { return ::Locale::calendar_pattern_style_to_string(*Patterns::hour); }
 
     bool has_minute() const { return Patterns::minute.has_value(); }
-    ::Locale::CalendarPatternStyle minute() const { return *Patterns::minute; };
+    ::Locale::CalendarPatternStyle minute() const { return *Patterns::minute; }
     StringView minute_string() const { return ::Locale::calendar_pattern_style_to_string(*Patterns::minute); }
 
     bool has_second() const { return Patterns::second.has_value(); }
-    ::Locale::CalendarPatternStyle second() const { return *Patterns::second; };
+    ::Locale::CalendarPatternStyle second() const { return *Patterns::second; }
     StringView second_string() const { return ::Locale::calendar_pattern_style_to_string(*Patterns::second); }
 
     bool has_fractional_second_digits() const { return Patterns::fractional_second_digits.has_value(); }
-    u8 fractional_second_digits() const { return *Patterns::fractional_second_digits; };
+    u8 fractional_second_digits() const { return *Patterns::fractional_second_digits; }
 
     bool has_time_zone_name() const { return Patterns::time_zone_name.has_value(); }
-    ::Locale::CalendarPatternStyle time_zone_name() const { return *Patterns::time_zone_name; };
+    ::Locale::CalendarPatternStyle time_zone_name() const { return *Patterns::time_zone_name; }
     StringView time_zone_name_string() const { return ::Locale::calendar_pattern_style_to_string(*Patterns::time_zone_name); }
 
     NativeFunction* bound_format() const { return m_bound_format; }

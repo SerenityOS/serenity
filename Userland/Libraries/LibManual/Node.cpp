@@ -53,7 +53,8 @@ ErrorOr<NonnullRefPtr<PageNode const>> Node::try_create_from_query(Vector<String
             auto section_name = section_directory.substring_view(section_name_start_index, section_name_end_index.value() - section_name_start_index);
             auto section = TRY(SectionNode::try_create_from_number(section_name));
             auto page_name_end_index = section_directory.length() - section_name_end_index.value() - MARKDOWN_FILE_EXTENSION.length() - 1;
-            auto page_name = section_directory.substring_view(section_name_end_index.value(), page_name_end_index);
+            // +1 to trim the leading '/' from the start.
+            auto page_name = section_directory.substring_view(section_name_end_index.value() + 1, page_name_end_index - 1);
             return try_make_ref_counted<PageNode>(section, TRY(String::from_utf8(page_name)));
         }
 

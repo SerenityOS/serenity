@@ -23,9 +23,9 @@ public:
 
     virtual ~WeakRef() override = default;
 
-    auto const& value() const { return m_value; };
+    auto const& value() const { return m_value; }
 
-    void update_execution_generation() { m_last_execution_generation = vm().execution_generation(); };
+    void update_execution_generation() { m_last_execution_generation = vm().execution_generation(); }
 
     virtual void remove_dead_cells(Badge<Heap>) override;
 

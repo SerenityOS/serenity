@@ -27,7 +27,7 @@ protected:
     Color convert_color(Color original) override
     {
         return original.with_alpha(m_amount * 255);
-    };
+    }
 };
 
 }

@@ -109,7 +109,7 @@ public:
     void redraw(MenuItem const&);
 
     MenuItem* hovered_item() const;
-    int hovered_item_index() const { return m_hovered_item_index; };
+    int hovered_item_index() const { return m_hovered_item_index; }
 
     void set_hovered_index(int index, bool make_input = false);
 

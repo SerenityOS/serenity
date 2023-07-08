@@ -54,11 +54,11 @@ public:
     // 25.1.2.7 IsBigIntElementType ( type ), https://tc39.es/ecma262/#sec-isbigintelementtype
     virtual bool is_bigint_element_type() const = 0;
     // 25.1.2.10 GetValueFromBuffer ( arrayBuffer, byteIndex, type, isTypedArray, order [ , isLittleEndian ] ), https://tc39.es/ecma262/#sec-getvaluefrombuffer
-    virtual Value get_value_from_buffer(size_t byte_index, ArrayBuffer::Order, bool is_little_endian = true) const = 0;
+    virtual ThrowCompletionOr<Value> get_value_from_buffer(size_t byte_index, ArrayBuffer::Order, bool is_little_endian = true) const = 0;
     // 25.1.2.12 SetValueInBuffer ( arrayBuffer, byteIndex, type, value, isTypedArray, order [ , isLittleEndian ] ), https://tc39.es/ecma262/#sec-setvalueinbuffer
-    virtual void set_value_in_buffer(size_t byte_index, Value, ArrayBuffer::Order, bool is_little_endian = true) = 0;
+    virtual ThrowCompletionOr<void> set_value_in_buffer(size_t byte_index, Value, ArrayBuffer::Order, bool is_little_endian = true) = 0;
     // 25.1.2.13 GetModifySetValueInBuffer ( arrayBuffer, byteIndex, type, value, op [ , isLittleEndian ] ), https://tc39.es/ecma262/#sec-getmodifysetvalueinbuffer
-    virtual Value get_modify_set_value_in_buffer(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian = true) = 0;
+    virtual ThrowCompletionOr<Value> get_modify_set_value_in_buffer(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian = true) = 0;
 
 protected:
     TypedArrayBase(Object& prototype, IntrinsicConstructor intrinsic_constructor)
@@ -100,7 +100,7 @@ inline bool is_valid_integer_index(TypedArrayBase const& typed_array, CanonicalI
 
 // 10.4.5.10 IntegerIndexedElementGet ( O, index ), https://tc39.es/ecma262/#sec-integerindexedelementget
 template<typename T>
-inline Value integer_indexed_element_get(TypedArrayBase const& typed_array, CanonicalIndex property_index)
+inline ThrowCompletionOr<Value> integer_indexed_element_get(TypedArrayBase const& typed_array, CanonicalIndex property_index)
 {
     // 1. If IsValidIntegerIndex(O, index) is false, return undefined.
     if (!is_valid_integer_index(typed_array, property_index))
@@ -165,7 +165,7 @@ inline ThrowCompletionOr<void> integer_indexed_element_set(TypedArrayBase& typed
 
     // d. Let elementType be TypedArrayElementType(O).
     // e. Perform SetValueInBuffer(O.[[ViewedArrayBuffer]], indexedPosition, elementType, numValue, true, Unordered).
-    typed_array.viewed_array_buffer()->template set_value<T>(indexed_position.value(), num_value, true, ArrayBuffer::Order::Unordered);
+    MUST_OR_THROW_OOM(typed_array.viewed_array_buffer()->template set_value<T>(indexed_position.value(), num_value, true, ArrayBuffer::Order::Unordered));
 
     // 4. Return unused.
     return {};
@@ -195,7 +195,7 @@ public:
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
                 // i. Let value be IntegerIndexedElementGet(O, numericIndex).
-                auto value = integer_indexed_element_get<T>(*this, numeric_index);
+                auto value = MUST_OR_THROW_OOM(integer_indexed_element_get<T>(*this, numeric_index));
 
                 // ii. If value is undefined, return undefined.
                 if (value.is_undefined())
@@ -423,7 +423,7 @@ public:
         return { reinterpret_cast<UnderlyingBufferDataType*>(m_viewed_array_buffer->buffer().data() + m_byte_offset), m_array_length };
     }
 
-    virtual size_t element_size() const override { return sizeof(UnderlyingBufferDataType); };
+    virtual size_t element_size() const override { return sizeof(UnderlyingBufferDataType); }
 
     bool is_unclamped_integer_element_type() const override
     {
@@ -437,9 +437,9 @@ public:
         return is_bigint;
     }
 
-    Value get_value_from_buffer(size_t byte_index, ArrayBuffer::Order order, bool is_little_endian = true) const override { return viewed_array_buffer()->template get_value<T>(byte_index, true, order, is_little_endian); }
-    void set_value_in_buffer(size_t byte_index, Value value, ArrayBuffer::Order order, bool is_little_endian = true) override { viewed_array_buffer()->template set_value<T>(byte_index, value, true, order, is_little_endian); }
-    Value get_modify_set_value_in_buffer(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian = true) override { return viewed_array_buffer()->template get_modify_set_value<T>(byte_index, value, move(operation), is_little_endian); }
+    ThrowCompletionOr<Value> get_value_from_buffer(size_t byte_index, ArrayBuffer::Order order, bool is_little_endian = true) const override { return viewed_array_buffer()->template get_value<T>(byte_index, true, order, is_little_endian); }
+    ThrowCompletionOr<void> set_value_in_buffer(size_t byte_index, Value value, ArrayBuffer::Order order, bool is_little_endian = true) override { return viewed_array_buffer()->template set_value<T>(byte_index, value, true, order, is_little_endian); }
+    ThrowCompletionOr<Value> get_modify_set_value_in_buffer(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian = true) override { return viewed_array_buffer()->template get_modify_set_value<T>(byte_index, value, move(operation), is_little_endian); }
 
 protected:
     TypedArray(Object& prototype, IntrinsicConstructor intrinsic_constructor, u32 array_length, ArrayBuffer& array_buffer)

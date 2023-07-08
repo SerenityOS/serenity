@@ -25,7 +25,7 @@ class NVMeNameSpace : public StorageDevice {
 public:
     static ErrorOr<NonnullLockRefPtr<NVMeNameSpace>> try_create(NVMeController const&, Vector<NonnullLockRefPtr<NVMeQueue>> queues, u16 nsid, size_t storage_size, size_t lba_size);
 
-    CommandSet command_set() const override { return CommandSet::NVMe; };
+    CommandSet command_set() const override { return CommandSet::NVMe; }
     void start_request(AsyncBlockDeviceRequest& request) override;
 
 private:

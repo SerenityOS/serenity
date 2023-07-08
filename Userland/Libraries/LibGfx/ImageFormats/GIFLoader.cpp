@@ -548,20 +548,6 @@ IntSize GIFImageDecoderPlugin::size()
     return { m_context->logical_screen.width, m_context->logical_screen.height };
 }
 
-void GIFImageDecoderPlugin::set_volatile()
-{
-    if (m_context->frame_buffer) {
-        m_context->frame_buffer->set_volatile();
-    }
-}
-
-bool GIFImageDecoderPlugin::set_nonvolatile(bool& was_purged)
-{
-    if (!m_context->frame_buffer)
-        return false;
-    return m_context->frame_buffer->set_nonvolatile(was_purged);
-}
-
 ErrorOr<void> GIFImageDecoderPlugin::initialize()
 {
     FixedMemoryStream stream { { m_context->data, m_context->data_size } };

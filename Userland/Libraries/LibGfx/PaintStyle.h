@@ -36,7 +36,7 @@ public:
 
 private:
     // Simple paint styles can simply override sample_color() if they can easily generate a color from a coordinate.
-    virtual Color sample_color(IntPoint) const { return Color(); };
+    virtual Color sample_color(IntPoint) const { return Color(); }
 };
 
 class SolidColorPaintStyle final : public PaintStyle {

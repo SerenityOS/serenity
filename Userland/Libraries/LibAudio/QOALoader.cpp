@@ -33,7 +33,7 @@ bool QOALoaderPlugin::sniff(SeekableStream& stream)
 ErrorOr<NonnullOwnPtr<LoaderPlugin>, LoaderError> QOALoaderPlugin::create(NonnullOwnPtr<SeekableStream> stream)
 {
     auto loader = make<QOALoaderPlugin>(move(stream));
-    LOADER_TRY(loader->initialize());
+    TRY(loader->initialize());
     return loader;
 }
 
@@ -46,46 +46,46 @@ MaybeLoaderError QOALoaderPlugin::initialize()
 
 MaybeLoaderError QOALoaderPlugin::parse_header()
 {
-    u32 header_magic = LOADER_TRY(m_stream->read_value<BigEndian<u32>>());
+    u32 header_magic = TRY(m_stream->read_value<BigEndian<u32>>());
     if (header_magic != QOA::magic)
         return LoaderError { LoaderError::Category::Format, 0, "QOA header: Magic number must be 'qoaf'" };
 
-    m_total_samples = LOADER_TRY(m_stream->read_value<BigEndian<u32>>());
+    m_total_samples = TRY(m_stream->read_value<BigEndian<u32>>());
 
     return {};
 }
 
 MaybeLoaderError QOALoaderPlugin::load_one_frame(Span<Sample>& target, IsFirstFrame is_first_frame)
 {
-    QOA::FrameHeader header = LOADER_TRY(m_stream->read_value<QOA::FrameHeader>());
+    QOA::FrameHeader header = TRY(m_stream->read_value<QOA::FrameHeader>());
 
     if (header.num_channels > 8)
-        dbgln("QOALoader: Warning: QOA frame at {} has more than 8 channels ({}), this is not supported by the reference implementation.", LOADER_TRY(m_stream->tell()) - sizeof(QOA::FrameHeader), header.num_channels);
+        dbgln("QOALoader: Warning: QOA frame at {} has more than 8 channels ({}), this is not supported by the reference implementation.", TRY(m_stream->tell()) - sizeof(QOA::FrameHeader), header.num_channels);
     if (header.num_channels == 0)
-        return LoaderError { LoaderError::Category::Format, LOADER_TRY(m_stream->tell()), "QOA frame: Number of channels must be greater than 0" };
+        return LoaderError { LoaderError::Category::Format, TRY(m_stream->tell()), "QOA frame: Number of channels must be greater than 0" };
     if (header.sample_count > QOA::max_frame_samples)
-        return LoaderError { LoaderError::Category::Format, LOADER_TRY(m_stream->tell()), "QOA frame: Too many samples in frame" };
+        return LoaderError { LoaderError::Category::Format, TRY(m_stream->tell()), "QOA frame: Too many samples in frame" };
 
     // We weren't given a large enough buffer; signal that we didn't write anything and return.
     if (header.sample_count > target.size()) {
         target = target.trim(0);
-        LOADER_TRY(m_stream->seek(-sizeof(QOA::frame_header_size), AK::SeekMode::FromCurrentPosition));
+        TRY(m_stream->seek(-sizeof(QOA::frame_header_size), AK::SeekMode::FromCurrentPosition));
         return {};
     }
 
     target = target.trim(header.sample_count);
 
-    auto lms_states = LOADER_TRY(FixedArray<QOA::LMSState>::create(header.num_channels));
+    auto lms_states = TRY(FixedArray<QOA::LMSState>::create(header.num_channels));
     for (size_t channel = 0; channel < header.num_channels; ++channel) {
-        auto history_packed = LOADER_TRY(m_stream->read_value<BigEndian<u64>>());
-        auto weights_packed = LOADER_TRY(m_stream->read_value<BigEndian<u64>>());
+        auto history_packed = TRY(m_stream->read_value<BigEndian<u64>>());
+        auto weights_packed = TRY(m_stream->read_value<BigEndian<u64>>());
         lms_states[channel] = { history_packed, weights_packed };
     }
 
     // We pre-allocate very large arrays here, but that's the last allocation of the QOA loader!
     // Everything else is just shuffling data around.
     // (We will also be using all of the arrays in every frame but the last one.)
-    auto channels = LOADER_TRY((FixedArray<Array<i16, QOA::max_frame_samples>>::create(header.num_channels)));
+    auto channels = TRY((FixedArray<Array<i16, QOA::max_frame_samples>>::create(header.num_channels)));
 
     // There's usually (and at maximum) 256 slices per channel, but less at the very end.
     // If the final slice would be partial, we still need to decode it; integer division would tell us that this final slice doesn't exist.
@@ -105,7 +105,7 @@ MaybeLoaderError QOALoaderPlugin::load_one_frame(Span<Sample>& target, IsFirstFr
         m_sample_rate = header.sample_rate;
     } else {
         if (m_sample_rate != header.sample_rate)
-            return LoaderError { LoaderError::Category::Unimplemented, LOADER_TRY(m_stream->tell()), "QOA: Differing sample rate in non-initial frame" };
+            return LoaderError { LoaderError::Category::Unimplemented, TRY(m_stream->tell()), "QOA: Differing sample rate in non-initial frame" };
         if (m_num_channels != header.num_channels)
             m_has_uniform_channel_count = false;
     }
@@ -148,17 +148,17 @@ ErrorOr<Vector<FixedArray<Sample>>, LoaderError> QOALoaderPlugin::load_chunks(si
     size_t current_loaded_samples = 0;
 
     while (current_loaded_samples < samples_to_read) {
-        auto samples = LOADER_TRY(FixedArray<Sample>::create(QOA::max_frame_samples));
+        auto samples = TRY(FixedArray<Sample>::create(QOA::max_frame_samples));
         auto slice_to_load_into = samples.span();
         TRY(this->load_one_frame(slice_to_load_into, is_first_frame));
         is_first_frame = IsFirstFrame::No;
         VERIFY(slice_to_load_into.size() <= QOA::max_frame_samples);
         current_loaded_samples += slice_to_load_into.size();
         if (slice_to_load_into.size() != samples.size()) {
-            auto smaller_samples = LOADER_TRY(FixedArray<Sample>::create(slice_to_load_into));
+            auto smaller_samples = TRY(FixedArray<Sample>::create(slice_to_load_into));
             samples.swap(smaller_samples);
         }
-        LOADER_TRY(frames.try_append(move(samples)));
+        TRY(frames.try_append(move(samples)));
 
         if (slice_to_load_into.size() != samples.size())
             break;
@@ -170,14 +170,14 @@ ErrorOr<Vector<FixedArray<Sample>>, LoaderError> QOALoaderPlugin::load_chunks(si
 
 MaybeLoaderError QOALoaderPlugin::reset()
 {
-    LOADER_TRY(m_stream->seek(QOA::header_size, AK::SeekMode::SetPosition));
+    TRY(m_stream->seek(QOA::header_size, AK::SeekMode::SetPosition));
     m_loaded_samples = 0;
     // Read the first frame, then seek back to the beginning. This is necessary since the first frame contains the sample rate and channel count.
-    auto frame_samples = LOADER_TRY(FixedArray<Sample>::create(QOA::max_frame_samples));
+    auto frame_samples = TRY(FixedArray<Sample>::create(QOA::max_frame_samples));
     auto span = frame_samples.span();
-    LOADER_TRY(load_one_frame(span, IsFirstFrame::Yes));
+    TRY(load_one_frame(span, IsFirstFrame::Yes));
 
-    LOADER_TRY(m_stream->seek(QOA::header_size, AK::SeekMode::SetPosition));
+    TRY(m_stream->seek(QOA::header_size, AK::SeekMode::SetPosition));
     m_loaded_samples = 0;
     return {};
 }
@@ -189,14 +189,14 @@ MaybeLoaderError QOALoaderPlugin::seek(int sample_index)
     // A QOA file consists of 8 bytes header followed by a number of usually fixed-size frames.
     // This fixed bitrate allows us to seek in constant time.
     if (!m_has_uniform_channel_count)
-        return LoaderError { LoaderError::Category::Unimplemented, LOADER_TRY(m_stream->tell()), "QOA with non-uniform channel count is currently not seekable"sv };
+        return LoaderError { LoaderError::Category::Unimplemented, TRY(m_stream->tell()), "QOA with non-uniform channel count is currently not seekable"sv };
     /// FIXME: Change the Loader API to use size_t.
     VERIFY(sample_index >= 0);
     // We seek to the frame "before"; i.e. the frame that contains that sample.
     auto const frame_of_sample = static_cast<size_t>(AK::floor<double>(static_cast<double>(sample_index) / static_cast<double>(QOA::max_frame_samples)));
     auto const frame_size = QOA::frame_header_size + m_num_channels * (QOA::lms_state_size + sizeof(QOA::PackedSlice) * QOA::max_slices_per_frame);
     auto const byte_index = QOA::header_size + frame_of_sample * frame_size;
-    LOADER_TRY(m_stream->seek(byte_index, AK::SeekMode::SetPosition));
+    TRY(m_stream->seek(byte_index, AK::SeekMode::SetPosition));
     m_loaded_samples = frame_of_sample * QOA::max_frame_samples;
     return {};
 }
@@ -205,7 +205,7 @@ MaybeLoaderError QOALoaderPlugin::read_one_slice(QOA::LMSState& lms_state, Span<
 {
     VERIFY(samples.size() == QOA::slice_samples);
 
-    auto packed_slice = LOADER_TRY(m_stream->read_value<BigEndian<u64>>());
+    auto packed_slice = TRY(m_stream->read_value<BigEndian<u64>>());
     auto unpacked_slice = unpack_slice(packed_slice);
 
     for (size_t i = 0; i < QOA::slice_samples; ++i) {

@@ -17,22 +17,22 @@ namespace Kernel::Aarch64 {
 // https://developer.arm.com/documentation/ddi0601/2022-09/AArch64-Registers/ID-AA64ISAR0-EL1--AArch64-Instruction-Set-Attribute-Register-0?lang=en
 // ID_AA64ISAR0_EL1, AArch64 Instruction Set Attribute Register 0
 struct alignas(u64) ID_AA64ISAR0_EL1 {
-    int : 4;
-    int AES : 4;
-    int SHA1 : 4;
-    int SHA2 : 4;
-    int CRC32 : 4;
-    int Atomic : 4;
-    int TME : 4;
-    int RDM : 4;
-    int SHA3 : 4;
-    int SM3 : 4;
-    int SM4 : 4;
-    int DP : 4;
-    int FHM : 4;
-    int TS : 4;
-    int TLB : 4;
-    int RNDR : 4;
+    u64 : 4;
+    u64 AES : 4;
+    u64 SHA1 : 4;
+    u64 SHA2 : 4;
+    u64 CRC32 : 4;
+    u64 Atomic : 4;
+    u64 TME : 4;
+    u64 RDM : 4;
+    u64 SHA3 : 4;
+    u64 SM3 : 4;
+    u64 SM4 : 4;
+    u64 DP : 4;
+    u64 FHM : 4;
+    u64 TS : 4;
+    u64 TLB : 4;
+    u64 RNDR : 4;
 
     static inline ID_AA64ISAR0_EL1 read()
     {
@@ -49,22 +49,22 @@ static_assert(sizeof(ID_AA64ISAR0_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64ISAR1-EL1--AArch64-Instruction-Set-Attribute-Register-1
 // ID_AA64ISAR1_EL1, AArch64 Instruction Set Attribute Register 1
 struct alignas(u64) ID_AA64ISAR1_EL1 {
-    int DPB : 4;
-    int APA : 4;
-    int API : 4;
-    int JSCVT : 4;
-    int FCMA : 4;
-    int LRCPC : 4;
-    int GPA : 4;
-    int GPI : 4;
-    int FRINTTS : 4;
-    int SB : 4;
-    int SPECRES : 4;
-    int BF16 : 4;
-    int DGH : 4;
-    int I8MM : 4;
-    int XS : 4;
-    int LS64 : 4;
+    u64 DPB : 4;
+    u64 APA : 4;
+    u64 API : 4;
+    u64 JSCVT : 4;
+    u64 FCMA : 4;
+    u64 LRCPC : 4;
+    u64 GPA : 4;
+    u64 GPI : 4;
+    u64 FRINTTS : 4;
+    u64 SB : 4;
+    u64 SPECRES : 4;
+    u64 BF16 : 4;
+    u64 DGH : 4;
+    u64 I8MM : 4;
+    u64 XS : 4;
+    u64 LS64 : 4;
 
     static inline ID_AA64ISAR1_EL1 read()
     {
@@ -81,21 +81,21 @@ static_assert(sizeof(ID_AA64ISAR1_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64ISAR2-EL1--AArch64-Instruction-Set-Attribute-Register-2
 // ID_AA64ISAR2_EL1, AArch64 Instruction Set Attribute Register 2
 struct alignas(u64) ID_AA64ISAR2_EL1 {
-    int WFxT : 4;
-    int RPRES : 4;
-    int GPA3 : 4;
-    int APA3 : 4;
-    int MOPS : 4;
-    int BC : 4;
-    int PAC_frac : 4;
-    int CLRBHB : 4;
-    int SYSREG_128 : 4;
-    int SYSINSTR_128 : 4;
-    int PRFMSLC : 4;
-    int : 4;
-    int RPRFM : 4;
-    int CSSC : 4;
-    int : 8;
+    u64 WFxT : 4;
+    u64 RPRES : 4;
+    u64 GPA3 : 4;
+    u64 APA3 : 4;
+    u64 MOPS : 4;
+    u64 BC : 4;
+    u64 PAC_frac : 4;
+    u64 CLRBHB : 4;
+    u64 SYSREG_128 : 4;
+    u64 SYSINSTR_128 : 4;
+    u64 PRFMSLC : 4;
+    u64 : 4;
+    u64 RPRFM : 4;
+    u64 CSSC : 4;
+    u64 : 8;
 
     static inline ID_AA64ISAR2_EL1 read()
     {
@@ -112,22 +112,22 @@ static_assert(sizeof(ID_AA64ISAR2_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64PFR0-EL1--AArch64-Processor-Feature-Register-0
 // ID_AA64PFR0_EL1, AArch64 Processor Feature Register 0
 struct alignas(u64) ID_AA64PFR0_EL1 {
-    int EL0 : 4;
-    int EL1 : 4;
-    int EL2 : 4;
-    int EL3 : 4;
-    int FP : 4;
-    int AdvSIMD : 4;
-    int GIC : 4;
-    int RAS : 4;
-    int SVE : 4;
-    int SEL2 : 4;
-    int MPAM : 4;
-    int AMU : 4;
-    int DIT : 4;
-    int RME : 4;
-    int CSV2 : 4;
-    int CSV3 : 4;
+    u64 EL0 : 4;
+    u64 EL1 : 4;
+    u64 EL2 : 4;
+    u64 EL3 : 4;
+    u64 FP : 4;
+    u64 AdvSIMD : 4;
+    u64 GIC : 4;
+    u64 RAS : 4;
+    u64 SVE : 4;
+    u64 SEL2 : 4;
+    u64 MPAM : 4;
+    u64 AMU : 4;
+    u64 DIT : 4;
+    u64 RME : 4;
+    u64 CSV2 : 4;
+    u64 CSV3 : 4;
 
     static inline ID_AA64PFR0_EL1 read()
     {
@@ -144,22 +144,22 @@ static_assert(sizeof(ID_AA64PFR0_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64PFR1-EL1--AArch64-Processor-Feature-Register-1
 // ID_AA64PFR1_EL1, AArch64 Processor Feature Register 1
 struct alignas(u64) ID_AA64PFR1_EL1 {
-    int BT : 4;
-    int SSBS : 4;
-    int MTE : 4;
-    int RAS_frac : 4;
-    int MPAM_frac : 4;
-    int : 4;
-    int SME : 4;
-    int RNDR_trap : 4;
-    int CSV2_frac : 4;
-    int NMI : 4;
-    int MTE_frac : 4;
-    int GCS : 4;
-    int THE : 4;
-    int MTEX : 4;
-    int DF2 : 4;
-    int PFAR : 4;
+    u64 BT : 4;
+    u64 SSBS : 4;
+    u64 MTE : 4;
+    u64 RAS_frac : 4;
+    u64 MPAM_frac : 4;
+    u64 : 4;
+    u64 SME : 4;
+    u64 RNDR_trap : 4;
+    u64 CSV2_frac : 4;
+    u64 NMI : 4;
+    u64 MTE_frac : 4;
+    u64 GCS : 4;
+    u64 THE : 4;
+    u64 MTEX : 4;
+    u64 DF2 : 4;
+    u64 PFAR : 4;
 
     static inline ID_AA64PFR1_EL1 read()
     {
@@ -176,11 +176,11 @@ static_assert(sizeof(ID_AA64PFR1_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64PFR2-EL1--AArch64-Processor-Feature-Register-2
 // ID_AA64PFR2_EL1, AArch64 Processor Feature Register 2
 struct alignas(u64) ID_AA64PFR2_EL1 {
-    int MTEPERM : 4;
-    int MTESTOREONLY : 4;
-    int MTEFAR : 4;
-    int : 20;
-    int : 32;
+    u64 MTEPERM : 4;
+    u64 MTESTOREONLY : 4;
+    u64 MTEFAR : 4;
+    u64 : 20;
+    u64 : 32;
 
     static inline ID_AA64PFR2_EL1 read()
     {
@@ -197,15 +197,15 @@ static_assert(sizeof(ID_AA64PFR2_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0595/2021-12/AArch64-Registers/MPIDR-EL1--Multiprocessor-Affinity-Register?lang=en
 // MPIDR_EL1, Multiprocessor Affinity Register
 struct alignas(u64) MPIDR_EL1 {
-    int Aff0 : 8;
-    int Aff1 : 8;
-    int Aff2 : 8;
-    int MT : 1;
-    int : 5;
-    int U : 1;
-    int : 1;
-    int Aff3 : 8;
-    int : 24;
+    u64 Aff0 : 8;
+    u64 Aff1 : 8;
+    u64 Aff2 : 8;
+    u64 MT : 1;
+    u64 : 5;
+    u64 U : 1;
+    u64 : 1;
+    u64 Aff3 : 8;
+    u64 : 24;
 
     static inline MPIDR_EL1 read()
     {
@@ -222,21 +222,21 @@ static_assert(sizeof(MPIDR_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64MMFR0-EL1--AArch64-Memory-Model-Feature-Register-0
 // ID_AA64MMFR0_EL1, AArch64 Memory Model Feature Register 0
 struct alignas(u64) ID_AA64MMFR0_EL1 {
-    int PARange : 4;
-    int ASIDBits : 4;
-    int BigEnd : 4;
-    int SNSMem : 4;
-    int BigEndEL0 : 4;
-    int TGran16 : 4;
-    int TGran64 : 4;
-    int TGran4 : 4;
-    int TGran16_2 : 4;
-    int TGran64_2 : 4;
-    int TGran4_2 : 4;
-    int ExS : 4;
-    int : 8;
-    int FGT : 4;
-    int ECV : 4;
+    u64 PARange : 4;
+    u64 ASIDBits : 4;
+    u64 BigEnd : 4;
+    u64 SNSMem : 4;
+    u64 BigEndEL0 : 4;
+    u64 TGran16 : 4;
+    u64 TGran64 : 4;
+    u64 TGran4 : 4;
+    u64 TGran16_2 : 4;
+    u64 TGran64_2 : 4;
+    u64 TGran4_2 : 4;
+    u64 ExS : 4;
+    u64 : 8;
+    u64 FGT : 4;
+    u64 ECV : 4;
 
     static inline ID_AA64MMFR0_EL1 read()
     {
@@ -253,22 +253,22 @@ static_assert(sizeof(ID_AA64MMFR0_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64MMFR1-EL1--AArch64-Memory-Model-Feature-Register-1
 // ID_AA64MMFR1_EL1, AArch64 Memory Model Feature Register 1
 struct alignas(u64) ID_AA64MMFR1_EL1 {
-    int HAFDBS : 4;
-    int VMIDBits : 4;
-    int VH : 4;
-    int HPDS : 4;
-    int LO : 4;
-    int PAN : 4;
-    int SpecSEI : 4;
-    int XNX : 4;
-    int TWED : 4;
-    int ETS : 4;
-    int HCX : 4;
-    int AFP : 4;
-    int nTLBPA : 4;
-    int TIDCP1 : 4;
-    int CMOW : 4;
-    int ECBHB : 4;
+    u64 HAFDBS : 4;
+    u64 VMIDBits : 4;
+    u64 VH : 4;
+    u64 HPDS : 4;
+    u64 LO : 4;
+    u64 PAN : 4;
+    u64 SpecSEI : 4;
+    u64 XNX : 4;
+    u64 TWED : 4;
+    u64 ETS : 4;
+    u64 HCX : 4;
+    u64 AFP : 4;
+    u64 nTLBPA : 4;
+    u64 TIDCP1 : 4;
+    u64 CMOW : 4;
+    u64 ECBHB : 4;
 
     static inline ID_AA64MMFR1_EL1 read()
     {
@@ -285,22 +285,22 @@ static_assert(sizeof(ID_AA64MMFR1_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64MMFR2-EL1--AArch64-Memory-Model-Feature-Register-2
 // ID_AA64MMFR2_EL1, AArch64 Memory Model Feature Register 2
 struct alignas(u64) ID_AA64MMFR2_EL1 {
-    int CnP : 4;
-    int UAO : 4;
-    int LSM : 4;
-    int IESB : 4;
-    int VARange : 4;
-    int CCIDX : 4;
-    int NV : 4;
-    int ST : 4;
-    int AT : 4;
-    int IDS : 4;
-    int FWB : 4;
-    int : 4;
-    int TTL : 4;
-    int BBM : 4;
-    int EVT : 4;
-    int E0PD : 4;
+    u64 CnP : 4;
+    u64 UAO : 4;
+    u64 LSM : 4;
+    u64 IESB : 4;
+    u64 VARange : 4;
+    u64 CCIDX : 4;
+    u64 NV : 4;
+    u64 ST : 4;
+    u64 AT : 4;
+    u64 IDS : 4;
+    u64 FWB : 4;
+    u64 : 4;
+    u64 TTL : 4;
+    u64 BBM : 4;
+    u64 EVT : 4;
+    u64 E0PD : 4;
 
     static inline ID_AA64MMFR2_EL1 read()
     {
@@ -317,22 +317,22 @@ static_assert(sizeof(ID_AA64MMFR2_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64MMFR3-EL1--AArch64-Memory-Model-Feature-Register-3
 // ID_AA64MMFR3_EL1, AArch64 Memory Model Feature Register 3
 struct alignas(u64) ID_AA64MMFR3_EL1 {
-    int TCRX : 4;
-    int SCTLRX : 4;
-    int S1PIE : 4;
-    int S2PIE : 4;
-    int S1POE : 4;
-    int S2POE : 4;
-    int AIE : 4;
-    int MEC : 4;
-    int D128 : 4;
-    int D128_2 : 4;
-    int SNERR : 4;
-    int ANERR : 4;
-    int : 4;
-    int SDERR : 4;
-    int ADERR : 4;
-    int Spec_FPACC : 4;
+    u64 TCRX : 4;
+    u64 SCTLRX : 4;
+    u64 S1PIE : 4;
+    u64 S2PIE : 4;
+    u64 S1POE : 4;
+    u64 S2POE : 4;
+    u64 AIE : 4;
+    u64 MEC : 4;
+    u64 D128 : 4;
+    u64 D128_2 : 4;
+    u64 SNERR : 4;
+    u64 ANERR : 4;
+    u64 : 4;
+    u64 SDERR : 4;
+    u64 ADERR : 4;
+    u64 Spec_FPACC : 4;
 
     static inline ID_AA64MMFR3_EL1 read()
     {
@@ -349,10 +349,10 @@ static_assert(sizeof(ID_AA64MMFR3_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64MMFR4-EL1--AArch64-Memory-Model-Feature-Register-4
 // ID_AA64MMFR4_EL1, AArch64 Memory Model Feature Register 4
 struct alignas(u64) ID_AA64MMFR4_EL1 {
-    int : 4;
-    int EIESB : 4;
-    int : 24;
-    int : 32;
+    u64 : 4;
+    u64 EIESB : 4;
+    u64 : 24;
+    u64 : 32;
 
     static inline ID_AA64MMFR4_EL1 read()
     {
@@ -369,22 +369,22 @@ static_assert(sizeof(ID_AA64MMFR4_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64SMFR0-EL1--SME-Feature-ID-register-0
 // ID_AA64SMFR0_EL1, AArch64 SME Feature ID register 0
 struct alignas(u64) ID_AA64SMFR0_EL1 {
-    int : 32;
-    int F32F32 : 1;
-    int BI32I32 : 1;
-    int B16F32 : 1;
-    int F16F32 : 1;
-    int I8I32 : 4;
-    int : 2;
-    int F16F16 : 1;
-    int B16B16 : 1;
-    int I16I32 : 4;
-    int F64F64 : 1;
-    int : 3;
-    int I16I64 : 4;
-    int SMEver : 4;
-    int : 3;
-    int FA64 : 1;
+    u64 : 32;
+    u64 F32F32 : 1;
+    u64 BI32I32 : 1;
+    u64 B16F32 : 1;
+    u64 F16F32 : 1;
+    u64 I8I32 : 4;
+    u64 : 2;
+    u64 F16F16 : 1;
+    u64 B16B16 : 1;
+    u64 I16I32 : 4;
+    u64 F64F64 : 1;
+    u64 : 3;
+    u64 I16I64 : 4;
+    u64 SMEver : 4;
+    u64 : 3;
+    u64 FA64 : 1;
 
     static inline ID_AA64SMFR0_EL1 read()
     {
@@ -401,21 +401,21 @@ static_assert(sizeof(ID_AA64SMFR0_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64ZFR0-EL1--SVE-Feature-ID-register-0
 // ID_AA64ZFR0_EL1, AArch64 SVE Feature ID register 0
 struct alignas(u64) ID_AA64ZFR0_EL1 {
-    int SVEver : 4;
-    int AES : 4;
-    int : 8;
-    int BitPerm : 4;
-    int BF16 : 4;
-    int B16B16 : 4;
-    int : 4;
-    int SHA3 : 4;
-    int : 4;
-    int SM4 : 4;
-    int I8MM : 4;
-    int : 4;
-    int F32MM : 4;
-    int F64MM : 4;
-    int : 4;
+    u64 SVEver : 4;
+    u64 AES : 4;
+    u64 : 8;
+    u64 BitPerm : 4;
+    u64 BF16 : 4;
+    u64 B16B16 : 4;
+    u64 : 4;
+    u64 SHA3 : 4;
+    u64 : 4;
+    u64 SM4 : 4;
+    u64 I8MM : 4;
+    u64 : 4;
+    u64 F32MM : 4;
+    u64 F64MM : 4;
+    u64 : 4;
 
     static inline ID_AA64ZFR0_EL1 read()
     {
@@ -432,22 +432,22 @@ static_assert(sizeof(ID_AA64ZFR0_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64DFR0-EL1--AArch64-Debug-Feature-Register-0
 // ID_AA64DFR0_EL1, AArch64 Debug Feature Register 0
 struct alignas(u64) ID_AA64DFR0_EL1 {
-    int DebugVer : 4;
-    int TraceVer : 4;
-    int PMUVer : 4;
-    int BRPs : 4;
-    int PMSS : 4;
-    int WRPs : 4;
-    int SEBEP : 4;
-    int CTX_CMPs : 4;
-    int PMSVer : 4;
-    int DoubleLock : 4;
-    int TraceFilt : 4;
-    int TraceBuffer : 4;
-    int MTPMU : 4;
-    int BRBE : 4;
-    int ExtTrcBuff : 4;
-    int HPMN0 : 4;
+    u64 DebugVer : 4;
+    u64 TraceVer : 4;
+    u64 PMUVer : 4;
+    u64 BRPs : 4;
+    u64 PMSS : 4;
+    u64 WRPs : 4;
+    u64 SEBEP : 4;
+    u64 CTX_CMPs : 4;
+    u64 PMSVer : 4;
+    u64 DoubleLock : 4;
+    u64 TraceFilt : 4;
+    u64 TraceBuffer : 4;
+    u64 MTPMU : 4;
+    u64 BRBE : 4;
+    u64 ExtTrcBuff : 4;
+    u64 HPMN0 : 4;
 
     static inline ID_AA64DFR0_EL1 read()
     {
@@ -464,17 +464,17 @@ static_assert(sizeof(ID_AA64DFR0_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/ID-AA64DFR1-EL1--AArch64-Debug-Feature-Register-1
 // ID_AA64DFR1_EL1, AArch64 Debug Feature Register 1
 struct alignas(u64) ID_AA64DFR1_EL1 {
-    int SYSPMUID : 8;
-    int BRPs : 8;
-    int WRPs : 8;
-    int CTX_CMPs : 8;
-    int SPMU : 4;
-    int PMICNTR : 4;
-    int ABLE : 4;
-    int ITE : 4;
-    int EBEP : 4;
-    int : 4;
-    int ABL_CMPs : 8;
+    u64 SYSPMUID : 8;
+    u64 BRPs : 8;
+    u64 WRPs : 8;
+    u64 CTX_CMPs : 8;
+    u64 SPMU : 4;
+    u64 PMICNTR : 4;
+    u64 ABLE : 4;
+    u64 ITE : 4;
+    u64 EBEP : 4;
+    u64 : 4;
+    u64 ABL_CMPs : 8;
 
     static inline ID_AA64DFR1_EL1 read()
     {
@@ -491,8 +491,8 @@ static_assert(sizeof(ID_AA64DFR1_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0595/2020-12/AArch64-Registers/CNTFRQ-EL0--Counter-timer-Frequency-register
 // CNTFRQ_EL0, Counter-timer Frequency register
 struct alignas(u64) CNTFRQ_EL0 {
-    int : 32;
-    int ClockFrequency : 32;
+    u64 : 32;
+    u64 ClockFrequency : 32;
 
     static inline CNTFRQ_EL0 read()
     {
@@ -536,64 +536,64 @@ struct alignas(u64) TCR_EL1 {
     //
     // (https://stackoverflow.com/a/34269498)
 
-    enum class TG1GranuleSize : int {
+    enum class TG1GranuleSize : u8 {
         Size_16KB = 0b01,
         Size_4KB = 0b10,
         Size_64KB = 0b11,
     };
 
-    enum class TG0GranuleSize : int {
+    enum class TG0GranuleSize : u8 {
         Size_4KB = 0b00,
         Size_64KB = 0b01,
         Size_16KB = 0b10,
     };
 
-    int T0SZ : 6;
-    int RES0_0 : 1;
-    int EPD0 : 1;
+    u64 T0SZ : 6;
+    u64 RES0_0 : 1;
+    u64 EPD0 : 1;
     InnerCacheability IRGN0 : 2;
     OuterCacheability ORGN0 : 2;
     Shareability SH0 : 2;
     TG0GranuleSize TG0 : 2;
 
-    int T1SZ : 6;
-    int A1 : 1;
-    int EPD1 : 1;
+    u64 T1SZ : 6;
+    u64 A1 : 1;
+    u64 EPD1 : 1;
     InnerCacheability IRGN1 : 2;
     OuterCacheability ORGN1 : 2;
     Shareability SH1 : 2;
     TG1GranuleSize TG1 : 2;
 
-    int IPS : 3;
-    int RES0_1 : 1;
-    int AS : 1;
-    int TBI0 : 1;
-    int TBI1 : 1;
-    int HA : 1;
-    int HD : 1;
-    int HPD0 : 1;
-    int HPD1 : 1;
-    int HWU059 : 1;
-    int HWU060 : 1;
-    int HWU061 : 1;
-    int HWU062 : 1;
+    u64 IPS : 3;
+    u64 RES0_1 : 1;
+    u64 AS : 1;
+    u64 TBI0 : 1;
+    u64 TBI1 : 1;
+    u64 HA : 1;
+    u64 HD : 1;
+    u64 HPD0 : 1;
+    u64 HPD1 : 1;
+    u64 HWU059 : 1;
+    u64 HWU060 : 1;
+    u64 HWU061 : 1;
+    u64 HWU062 : 1;
 
-    int HWU159 : 1;
-    int HWU160 : 1;
-    int HWU161 : 1;
-    int HWU162 : 1;
+    u64 HWU159 : 1;
+    u64 HWU160 : 1;
+    u64 HWU161 : 1;
+    u64 HWU162 : 1;
 
-    int TBID0 : 1;
-    int TBID1 : 1;
-    int NFD0 : 1;
-    int NFD1 : 1;
+    u64 TBID0 : 1;
+    u64 TBID1 : 1;
+    u64 NFD0 : 1;
+    u64 NFD1 : 1;
 
-    int E0PD0 : 1;
-    int E0PD1 : 1;
-    int TCMA0 : 1;
-    int TCMA1 : 1;
-    int DS : 1;
-    int RES0_2 : 4;
+    u64 E0PD0 : 1;
+    u64 E0PD1 : 1;
+    u64 TCMA0 : 1;
+    u64 TCMA1 : 1;
+    u64 DS : 1;
+    u64 RES0_2 : 4;
 
     static inline void write(TCR_EL1 tcr_el1)
     {
@@ -620,55 +620,55 @@ static_assert(sizeof(TCR_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0595/2021-03/AArch64-Registers/SCTLR-EL1--System-Control-Register--EL1-
 // System Control Register
 struct alignas(u64) SCTLR_EL1 {
-    int M : 1;
-    int A : 1;
-    int C : 1;
-    int SA : 1;
-    int SA0 : 1;
-    int CP15BEN : 1;
-    int nAA : 1;
-    int ITD : 1;
-    int SED : 1;
-    int UMA : 1;
-    int EnRCTX : 1;
-    int EOS : 1;
-    int I : 1;
-    int EnDB : 1;
-    int DZE : 1;
-    int UCT : 1;
-    int nTWI : 1;
-    int _reserved17 : 1 = 0;
-    int nTWE : 1;
-    int WXN : 1;
-    int TSCXT : 1;
-    int IESB : 1;
-    int EIS : 1;
-    int SPAN : 1;
-    int E0E : 1;
-    int EE : 1;
-    int UCI : 1;
-    int EnDA : 1;
-    int nTLSMD : 1;
-    int LSMAOE : 1;
-    int EnIB : 1;
-    int EnIA : 1;
-    int _reserved32 : 3 = 0;
-    int BT0 : 1;
-    int BT1 : 1;
-    int ITFSB : 1;
-    int TCF0 : 2;
-    int TCF : 2;
-    int ATA0 : 1;
-    int ATA : 1;
-    int DSSBS : 1;
-    int TWEDEn : 1;
-    int TWEDEL : 4;
-    int _reserved50 : 4 = 0;
-    int EnASR : 1;
-    int EnAS0 : 1;
-    int EnALS : 1;
-    int EPAN : 1;
-    int _reserved58 : 6 = 0;
+    u64 M : 1;
+    u64 A : 1;
+    u64 C : 1;
+    u64 SA : 1;
+    u64 SA0 : 1;
+    u64 CP15BEN : 1;
+    u64 nAA : 1;
+    u64 ITD : 1;
+    u64 SED : 1;
+    u64 UMA : 1;
+    u64 EnRCTX : 1;
+    u64 EOS : 1;
+    u64 I : 1;
+    u64 EnDB : 1;
+    u64 DZE : 1;
+    u64 UCT : 1;
+    u64 nTWI : 1;
+    u64 _reserved17 : 1 = 0;
+    u64 nTWE : 1;
+    u64 WXN : 1;
+    u64 TSCXT : 1;
+    u64 IESB : 1;
+    u64 EIS : 1;
+    u64 SPAN : 1;
+    u64 E0E : 1;
+    u64 EE : 1;
+    u64 UCI : 1;
+    u64 EnDA : 1;
+    u64 nTLSMD : 1;
+    u64 LSMAOE : 1;
+    u64 EnIB : 1;
+    u64 EnIA : 1;
+    u64 _reserved32 : 3 = 0;
+    u64 BT0 : 1;
+    u64 BT1 : 1;
+    u64 ITFSB : 1;
+    u64 TCF0 : 2;
+    u64 TCF : 2;
+    u64 ATA0 : 1;
+    u64 ATA : 1;
+    u64 DSSBS : 1;
+    u64 TWEDEn : 1;
+    u64 TWEDEL : 4;
+    u64 _reserved50 : 4 = 0;
+    u64 EnASR : 1;
+    u64 EnAS0 : 1;
+    u64 EnALS : 1;
+    u64 EPAN : 1;
+    u64 _reserved58 : 6 = 0;
 
     static inline void write(SCTLR_EL1 sctlr_el1)
     {
@@ -712,7 +712,7 @@ struct alignas(u64) MIDR_EL1 {
     u8 Architecture : 4;
     u8 Variant : 4;
     u8 Implementer : 8;
-    int : 32;
+    u64 : 32;
 
     static inline MIDR_EL1 read()
     {
@@ -746,50 +746,50 @@ static_assert(sizeof(AIDR_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/HCR-EL2--Hypervisor-Configuration-Register
 // Hypervisor Configuration Register
 struct alignas(u64) HCR_EL2 {
-    int VM : 1;
-    int SWIO : 1;
-    int PTW : 1;
-    int FMO : 1;
-    int IMO : 1;
-    int AMO : 1;
-    int VF : 1;
-    int VI : 1;
-    int VSE : 1;
-    int FB : 1;
-    int BSU : 2;
-    int DC : 1;
-    int TWI : 1;
-    int TWE : 1;
-    int TID0 : 1;
-    int TID1 : 1;
-    int TID2 : 1;
-    int TID3 : 1;
-    int TSC : 1;
-    int TIPDCP : 1;
-    int TACR : 1;
-    int TSW : 1;
-    int TPCF : 1;
-    int TPU : 1;
-    int TTLB : 1;
-    int TVM : 1;
-    int TGE : 1;
-    int TDZ : 1;
-    int HCD : 1;
-    int TRVM : 1;
-    int RW : 1;
-    int CD : 1;
-    int ID : 1;
-    int E2H : 1;
-    int TLOR : 1;
-    int TERR : 1;
-    int MIOCNCE : 1;
-    int _reserved39 : 1 = 0;
-    int APK : 1 = 0;
-    int API : 1 = 0;
-    int NV : 1 = 0;
-    int NV1 : 1 = 0;
-    int AT : 1 = 0;
-    int _reserved45 : 18 = 0;
+    u64 VM : 1;
+    u64 SWIO : 1;
+    u64 PTW : 1;
+    u64 FMO : 1;
+    u64 IMO : 1;
+    u64 AMO : 1;
+    u64 VF : 1;
+    u64 VI : 1;
+    u64 VSE : 1;
+    u64 FB : 1;
+    u64 BSU : 2;
+    u64 DC : 1;
+    u64 TWI : 1;
+    u64 TWE : 1;
+    u64 TID0 : 1;
+    u64 TID1 : 1;
+    u64 TID2 : 1;
+    u64 TID3 : 1;
+    u64 TSC : 1;
+    u64 TIPDCP : 1;
+    u64 TACR : 1;
+    u64 TSW : 1;
+    u64 TPCF : 1;
+    u64 TPU : 1;
+    u64 TTLB : 1;
+    u64 TVM : 1;
+    u64 TGE : 1;
+    u64 TDZ : 1;
+    u64 HCD : 1;
+    u64 TRVM : 1;
+    u64 RW : 1;
+    u64 CD : 1;
+    u64 ID : 1;
+    u64 E2H : 1;
+    u64 TLOR : 1;
+    u64 TERR : 1;
+    u64 MIOCNCE : 1;
+    u64 _reserved39 : 1 = 0;
+    u64 APK : 1 = 0;
+    u64 API : 1 = 0;
+    u64 NV : 1 = 0;
+    u64 NV1 : 1 = 0;
+    u64 AT : 1 = 0;
+    u64 _reserved45 : 18 = 0;
 
     static inline void write(HCR_EL2 hcr_el2)
     {
@@ -811,41 +811,41 @@ static_assert(sizeof(HCR_EL2) == 8);
 // https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/SCR-EL3--Secure-Configuration-Register
 // Secure Configuration Register
 struct alignas(u64) SCR_EL3 {
-    int NS : 1;
-    int IRQ : 1;
-    int FIQ : 1;
-    int EA : 1;
-    int _reserved4 : 1 = 1;
-    int _reserved5 : 1 = 1;
-    int _reserved6 : 1 = 0;
-    int SMD : 1;
-    int HCE : 1;
-    int SIF : 1;
-    int RW : 1;
-    int ST : 1;
-    int TWI : 1;
-    int TWE : 1;
-    int TLOR : 1;
-    int TERR : 1;
-    int APK : 1;
-    int API : 1;
-    int EEL2 : 1;
-    int EASE : 1;
-    int NMEA : 1;
-    int FIEN : 1;
-    int _reserved22 : 3 = 0;
-    int EnSCXT : 1;
-    int ATA : 1;
-    int FGTEn : 1;
-    int ECVEn : 1;
-    int TWEDEn : 1;
-    int TWEDEL : 4;
-    int _reserved34 : 1 = 0;
-    int AMVOFFEN : 1;
-    int EnAS0 : 1;
-    int ADEn : 1;
-    int HXEn : 1;
-    int _reserved39 : 14 = 0;
+    u64 NS : 1;
+    u64 IRQ : 1;
+    u64 FIQ : 1;
+    u64 EA : 1;
+    u64 _reserved4 : 1 = 1;
+    u64 _reserved5 : 1 = 1;
+    u64 _reserved6 : 1 = 0;
+    u64 SMD : 1;
+    u64 HCE : 1;
+    u64 SIF : 1;
+    u64 RW : 1;
+    u64 ST : 1;
+    u64 TWI : 1;
+    u64 TWE : 1;
+    u64 TLOR : 1;
+    u64 TERR : 1;
+    u64 APK : 1;
+    u64 API : 1;
+    u64 EEL2 : 1;
+    u64 EASE : 1;
+    u64 NMEA : 1;
+    u64 FIEN : 1;
+    u64 _reserved22 : 3 = 0;
+    u64 EnSCXT : 1;
+    u64 ATA : 1;
+    u64 FGTEn : 1;
+    u64 ECVEn : 1;
+    u64 TWEDEn : 1;
+    u64 TWEDEL : 4;
+    u64 _reserved34 : 1 = 0;
+    u64 AMVOFFEN : 1;
+    u64 EnAS0 : 1;
+    u64 ADEn : 1;
+    u64 HXEn : 1;
+    u64 _reserved39 : 14 = 0;
 
     static inline void write(SCR_EL3 scr_el3)
     {
@@ -873,27 +873,27 @@ struct alignas(u64) SPSR_EL1 {
     };
 
     Mode M : 4;
-    int M_4 : 1 = 0;
-    int _reserved5 : 1 = 0;
-    int F : 1;
-    int I : 1;
-    int A : 1;
-    int D : 1;
-    int BTYPE : 2;
-    int SSBS : 1;
-    int _reserved13 : 7 = 0;
-    int IL : 1;
-    int SS : 1;
-    int PAN : 1;
-    int UA0 : 1;
-    int DIT : 1;
-    int TCO : 1;
-    int _reserved26 : 2 = 0;
-    int V : 1;
-    int C : 1;
-    int Z : 1;
-    int N : 1;
-    int _reserved32 : 32 = 0;
+    u64 M_4 : 1 = 0;
+    u64 _reserved5 : 1 = 0;
+    u64 F : 1;
+    u64 I : 1;
+    u64 A : 1;
+    u64 D : 1;
+    u64 BTYPE : 2;
+    u64 SSBS : 1;
+    u64 _reserved13 : 7 = 0;
+    u64 IL : 1;
+    u64 SS : 1;
+    u64 PAN : 1;
+    u64 UA0 : 1;
+    u64 DIT : 1;
+    u64 TCO : 1;
+    u64 _reserved26 : 2 = 0;
+    u64 V : 1;
+    u64 C : 1;
+    u64 Z : 1;
+    u64 N : 1;
+    u64 _reserved32 : 32 = 0;
 
     static inline void write(SPSR_EL1 spsr_el1)
     {
@@ -922,27 +922,27 @@ struct alignas(u64) SPSR_EL2 {
     };
 
     Mode M : 4;
-    int M_4 : 1 = 0;
-    int _reserved5 : 1 = 0;
-    int F : 1;
-    int I : 1;
-    int A : 1;
-    int D : 1;
-    int BTYPE : 2;
-    int SSBS : 1;
-    int _reserved13 : 7 = 0;
-    int IL : 1;
-    int SS : 1;
-    int PAN : 1;
-    int UA0 : 1;
-    int DIT : 1;
-    int TCO : 1;
-    int _reserved26 : 2 = 0;
-    int V : 1;
-    int C : 1;
-    int Z : 1;
-    int N : 1;
-    int _reserved32 : 32 = 0;
+    u64 M_4 : 1 = 0;
+    u64 _reserved5 : 1 = 0;
+    u64 F : 1;
+    u64 I : 1;
+    u64 A : 1;
+    u64 D : 1;
+    u64 BTYPE : 2;
+    u64 SSBS : 1;
+    u64 _reserved13 : 7 = 0;
+    u64 IL : 1;
+    u64 SS : 1;
+    u64 PAN : 1;
+    u64 UA0 : 1;
+    u64 DIT : 1;
+    u64 TCO : 1;
+    u64 _reserved26 : 2 = 0;
+    u64 V : 1;
+    u64 C : 1;
+    u64 Z : 1;
+    u64 N : 1;
+    u64 _reserved32 : 32 = 0;
 
     static inline void write(SPSR_EL2 spsr_el2)
     {
@@ -975,23 +975,23 @@ struct alignas(u64) SPSR_EL3 {
     };
 
     Mode M : 4;
-    int M_4 : 1 = 0;
-    int _reserved5 : 1 = 0;
-    int F : 1;
-    int I : 1;
-    int A : 1;
-    int D : 1;
-    int _reserved10 : 10 = 0;
-    int IL : 1;
-    int SS : 1;
-    int PAN : 1;
-    int UA0 : 1;
-    int _reserved24 : 4 = 0;
-    int V : 1;
-    int C : 1;
-    int Z : 1;
-    int N : 1;
-    int _reserved32 : 32 = 0;
+    u64 M_4 : 1 = 0;
+    u64 _reserved5 : 1 = 0;
+    u64 F : 1;
+    u64 I : 1;
+    u64 A : 1;
+    u64 D : 1;
+    u64 _reserved10 : 10 = 0;
+    u64 IL : 1;
+    u64 SS : 1;
+    u64 PAN : 1;
+    u64 UA0 : 1;
+    u64 _reserved24 : 4 = 0;
+    u64 V : 1;
+    u64 C : 1;
+    u64 Z : 1;
+    u64 N : 1;
+    u64 _reserved32 : 32 = 0;
 
     static inline void write(SPSR_EL3 spsr_el3)
     {

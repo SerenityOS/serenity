@@ -299,6 +299,11 @@ do_download_file() {
     local filename="$2"
     local accept_existing="${3:-true}"
 
+    if $accept_existing && [ -f "$filename" ]; then
+        echo "$filename already exists"
+        return
+    fi
+
     echo "Downloading URL: ${url}"
 
     # FIXME: Serenity's curl port does not support https, even with openssl installed.
@@ -306,15 +311,10 @@ do_download_file() {
         url=$(echo "$url" | sed "s/^https:\/\//http:\/\//")
     fi
 
-    # download files
-    if $accept_existing && [ -f "$filename" ]; then
-        echo "$filename already exists"
+    if which curl; then
+        run_nocd curl ${curlopts:-} "$url" -L -o "$filename"
     else
-        if which curl; then
-            run_nocd curl ${curlopts:-} "$url" -L -o "$filename"
-        else
-            run_nocd pro "$url" > "$filename"
-        fi
+        run_nocd pro "$url" > "$filename"
     fi
 }
 
@@ -776,7 +776,7 @@ do_dev() {
         do_installdepends
     fi
     if [ -d "$workdir" ] && [ ! -d "$workdir/.git" ]; then
-        if prompt_yes_no "- Would you like to clean the working direcory (i.e. ./package.sh clean)?"; then
+        if prompt_yes_no "- Would you like to clean the working directory (i.e. ./package.sh clean)?"; then
             do_clean
         fi
     fi

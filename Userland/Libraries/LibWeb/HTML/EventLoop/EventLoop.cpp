@@ -160,6 +160,10 @@ void EventLoop::process()
     // FIXME:     4. Unnecessary rendering: Remove from docs all Document objects which meet both of the following conditions:
     //               - The user agent believes that updating the rendering of the Document's browsing context would have no visible effect, and
     //               - The Document's map of animation frame callbacks is empty.
+    //            https://www.w3.org/TR/intersection-observer/#pending-initial-observation
+    //            In the HTML Event Loops Processing Model, under the "Update the rendering" step, the "Unnecessary rendering" step should be
+    //            modified to add an additional requirement for skipping the rendering update:
+    //              - The document does not have pending initial IntersectionObserver targets.
 
     // FIXME:     5. Remove from docs all Document objects for which the user agent believes that it's preferable to skip updating the rendering for other reasons.
 
@@ -192,7 +196,10 @@ void EventLoop::process()
         run_animation_frame_callbacks(document, now);
     });
 
-    // FIXME:     14. For each fully active Document in docs, run the update intersection observations steps for that Document, passing in now as the timestamp. [INTERSECTIONOBSERVER]
+    // 14. For each fully active Document in docs, run the update intersection observations steps for that Document, passing in now as the timestamp. [INTERSECTIONOBSERVER]
+    for_each_fully_active_document_in_docs([&](DOM::Document& document) {
+        document.run_the_update_intersection_observations_steps(now);
+    });
 
     // FIXME:     15. Invoke the mark paint timing algorithm for each Document object in docs.
 

@@ -28,6 +28,7 @@ public:
         ProgressValue,
         ProgressBar,
         Placeholder,
+        Selection,
 
         // Keep this last.
         PseudoElementCount,
@@ -97,6 +98,7 @@ public:
                 NthLastChild,
                 Empty,
                 Root,
+                Host,
                 FirstOfType,
                 LastOfType,
                 OnlyOfType,
@@ -231,6 +233,8 @@ constexpr StringView pseudo_element_name(Selector::PseudoElement pseudo_element)
         return "-webkit-progress-value"sv;
     case Selector::PseudoElement::Placeholder:
         return "placeholder"sv;
+    case Selector::PseudoElement::Selection:
+        return "selection"sv;
     case Selector::PseudoElement::PseudoElementCount:
         break;
     }
@@ -262,6 +266,8 @@ constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Ty
         return "empty"sv;
     case Selector::SimpleSelector::PseudoClass::Type::Root:
         return "root"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Host:
+        return "host"sv;
     case Selector::SimpleSelector::PseudoClass::Type::FirstOfType:
         return "first-of-type"sv;
     case Selector::SimpleSelector::PseudoClass::Type::LastOfType:

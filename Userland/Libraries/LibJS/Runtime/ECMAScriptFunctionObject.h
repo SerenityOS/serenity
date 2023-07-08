@@ -33,8 +33,8 @@ public:
         Global,
     };
 
-    static NonnullGCPtr<ECMAScriptFunctionObject> create(Realm&, DeprecatedFlyString name, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name = {});
-    static NonnullGCPtr<ECMAScriptFunctionObject> create(Realm&, DeprecatedFlyString name, Object& prototype, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name = {});
+    static NonnullGCPtr<ECMAScriptFunctionObject> create(Realm&, DeprecatedFlyString name, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Vector<DeprecatedFlyString> local_variables_names, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name = {});
+    static NonnullGCPtr<ECMAScriptFunctionObject> create(Realm&, DeprecatedFlyString name, Object& prototype, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Vector<DeprecatedFlyString> local_variables_names, Environment* parent_environment, PrivateEnvironment* private_environment, FunctionKind, bool is_strict, bool might_need_arguments_object = true, bool contains_direct_call_to_eval = true, bool is_arrow_function = false, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name = {});
 
     virtual ThrowCompletionOr<void> initialize(Realm&) override;
     virtual ~ECMAScriptFunctionObject() override = default;
@@ -45,19 +45,19 @@ public:
     void make_method(Object& home_object);
 
     Statement const& ecmascript_code() const { return m_ecmascript_code; }
-    Vector<FunctionParameter> const& formal_parameters() const { return m_formal_parameters; };
+    Vector<FunctionParameter> const& formal_parameters() const { return m_formal_parameters; }
 
-    virtual DeprecatedFlyString const& name() const override { return m_name; };
+    virtual DeprecatedFlyString const& name() const override { return m_name; }
     void set_name(DeprecatedFlyString const& name);
 
-    void set_is_class_constructor() { m_is_class_constructor = true; };
+    void set_is_class_constructor() { m_is_class_constructor = true; }
 
     auto& bytecode_executable() const { return m_bytecode_executable; }
 
     Environment* environment() { return m_environment; }
     virtual Realm* realm() const override { return m_realm; }
 
-    ConstructorKind constructor_kind() const { return m_constructor_kind; };
+    ConstructorKind constructor_kind() const { return m_constructor_kind; }
     void set_constructor_kind(ConstructorKind constructor_kind) { m_constructor_kind = constructor_kind; }
 
     ThisMode this_mode() const { return m_this_mode; }
@@ -72,13 +72,15 @@ public:
     void add_field(ClassFieldDefinition field) { m_fields.append(move(field)); }
 
     Vector<PrivateElement> const& private_methods() const { return m_private_methods; }
-    void add_private_method(PrivateElement method) { m_private_methods.append(move(method)); };
+    void add_private_method(PrivateElement method) { m_private_methods.append(move(method)); }
 
     // This is for IsSimpleParameterList (static semantics)
     bool has_simple_parameter_list() const { return m_has_simple_parameter_list; }
 
     // Equivalent to absence of [[Construct]]
     virtual bool has_constructor() const override { return m_kind == FunctionKind::Normal && !m_is_arrow_function; }
+
+    virtual Vector<DeprecatedFlyString> const& local_variables_names() const override { return m_local_variables_names; }
 
     FunctionKind kind() const { return m_kind; }
 
@@ -94,7 +96,7 @@ protected:
     virtual Completion ordinary_call_evaluate_body();
 
 private:
-    ECMAScriptFunctionObject(DeprecatedFlyString name, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Environment* parent_environment, PrivateEnvironment* private_environment, Object& prototype, FunctionKind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name);
+    ECMAScriptFunctionObject(DeprecatedFlyString name, DeprecatedString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Vector<DeprecatedFlyString> local_variables_names, Environment* parent_environment, PrivateEnvironment* private_environment, Object& prototype, FunctionKind, bool is_strict, bool might_need_arguments_object, bool contains_direct_call_to_eval, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name);
 
     virtual bool is_ecmascript_function_object() const override { return true; }
     virtual void visit_edges(Visitor&) override;
@@ -110,6 +112,7 @@ private:
     OwnPtr<Bytecode::Executable> m_bytecode_executable;
     Vector<OwnPtr<Bytecode::Executable>> m_default_parameter_bytecode_executables;
     i32 m_function_length { 0 };
+    Vector<DeprecatedFlyString> m_local_variables_names;
 
     // Internal Slots of ECMAScript Function Objects, https://tc39.es/ecma262/#table-internal-slots-of-ecmascript-function-objects
     GCPtr<Environment> m_environment;                                        // [[Environment]]

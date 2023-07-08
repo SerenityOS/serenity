@@ -27,7 +27,7 @@ public:
     Vector<NonnullRefPtr<FileEventNode>>& children() { return m_children; }
     Vector<NonnullRefPtr<FileEventNode>> const& children() const { return m_children; }
 
-    FileEventNode* parent() { return m_parent; };
+    FileEventNode* parent() { return m_parent; }
 
     FileEventNode& create_recursively(DeprecatedString);
 

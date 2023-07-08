@@ -220,8 +220,7 @@ struct Empty {
 };
 
 template<typename T>
-concept NotLvalueReference = !
-IsLvalueReference<T>;
+concept NotLvalueReference = !IsLvalueReference<T>;
 
 template<NotLvalueReference... Ts>
 struct Variant

@@ -78,7 +78,7 @@ public:
     bool checked_binding() const { return checked(); }
     void set_checked_binding(bool);
 
-    bool indeterminate() const { return m_indeterminate; };
+    bool indeterminate() const { return m_indeterminate; }
     void set_indeterminate(bool);
 
     void did_edit_text_node(Badge<BrowsingContext>);

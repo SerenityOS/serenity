@@ -19,11 +19,13 @@ Co-Authored-By: Stephan Unverwerth <s.unverwerth@gmx.de>
 Co-Authored-By: Tim Schumacher <timschumi@gmx.de>
 Co-Authored-By: circl <circl.lastname@gmail.com>
 Co-Authored-By: kleines Filmröllchen <filmroellchen@serenityos.org>
+Co-Authored-By: Linus Groh <mail@linusgroh.de>
 ---
  CMakeLists.txt                                |  25 +-
  build-scripts/config.sub                      |   3 +
  cmake/sdlchecks.cmake                         |  20 +
  include/SDL_config.h.cmake                    |   2 +
+ include/SDL_syswm.h                           |   3 +-
  src/SDL_error.c                               |   7 +-
  src/audio/SDL_audio.c                         |   3 +
  src/audio/SDL_sysaudio.h                      |   1 +
@@ -38,9 +40,9 @@ Co-Authored-By: kleines Filmröllchen <filmroellchen@serenityos.org>
  src/video/serenity/SDL_serenitymessagebox.h   |  38 ++
  src/video/serenity/SDL_serenitymouse.cpp      | 142 ++++
  src/video/serenity/SDL_serenitymouse.h        |  39 ++
- src/video/serenity/SDL_serenityvideo.cpp      | 607 ++++++++++++++++++
+ src/video/serenity/SDL_serenityvideo.cpp      | 617 ++++++++++++++++++
  src/video/serenity/SDL_serenityvideo.h        | 101 +++
- 20 files changed, 1308 insertions(+), 25 deletions(-)
+ 21 files changed, 1320 insertions(+), 26 deletions(-)
  create mode 100644 src/audio/serenity/SDL_serenityaudio.cpp
  create mode 100644 src/audio/serenity/SDL_serenityaudio.h
  create mode 100644 src/video/serenity/SDL_serenityevents.cpp
@@ -167,6 +169,20 @@ index 2d21b37ddce1e517185e574d1f3b510a672d24e7..370ffcf8d4674a8031b469cec063d481
  #cmakedefine SDL_VIDEO_DRIVER_WINDOWS @SDL_VIDEO_DRIVER_WINDOWS@
  #cmakedefine SDL_VIDEO_DRIVER_WINRT @SDL_VIDEO_DRIVER_WINRT@
  #cmakedefine SDL_VIDEO_DRIVER_WAYLAND @SDL_VIDEO_DRIVER_WAYLAND@
+diff --git a/include/SDL_syswm.h b/include/SDL_syswm.h
+index 45f8e7540d4fdc99a4d2c96356131b887d230c0b..296f2c03d7186378618bc342dbae598e70909235 100644
+--- a/include/SDL_syswm.h
++++ b/include/SDL_syswm.h
+@@ -148,7 +148,8 @@ typedef enum
+     SDL_SYSWM_OS2,
+     SDL_SYSWM_HAIKU,
+     SDL_SYSWM_KMSDRM,
+-    SDL_SYSWM_RISCOS
++    SDL_SYSWM_RISCOS,
++    SDL_SYSWM_SERENITY
+ } SDL_SYSWM_TYPE;
+ 
+ /**
 diff --git a/src/SDL_error.c b/src/SDL_error.c
 index 1ca460a6903359df2bd8aafa354b67df94d53751..b08d742e55f338a52e139cde0c50bd7524082aaf 100644
 --- a/src/SDL_error.c
@@ -213,7 +229,7 @@ index 6afaae195c6cedb6f9d7b00ca840907e280c0575..6c7009afd966ab384848a63b51c35ec2
  
 diff --git a/src/audio/serenity/SDL_serenityaudio.cpp b/src/audio/serenity/SDL_serenityaudio.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..e1cd5348b67c23c49b25f99f4f36e020658aa049
+index 0000000000000000000000000000000000000000..29fa1fcdb1bf018bae6129819648afccdf87c342
 --- /dev/null
 +++ b/src/audio/serenity/SDL_serenityaudio.cpp
 @@ -0,0 +1,166 @@
@@ -872,10 +888,10 @@ index 0000000000000000000000000000000000000000..039f0361b3d1b248e218ea69495f58e5
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenityvideo.cpp b/src/video/serenity/SDL_serenityvideo.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..f26040845dd05f425ba464af385e133c6c3eab93
+index 0000000000000000000000000000000000000000..411deb26028567d753b8335e606d59d05e004caa
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenityvideo.cpp
-@@ -0,0 +1,607 @@
+@@ -0,0 +1,617 @@
 +/*
 +  Simple DirectMedia Layer
 +  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
@@ -907,6 +923,7 @@ index 0000000000000000000000000000000000000000..f26040845dd05f425ba464af385e133c
 +#    include "../SDL_pixels_c.h"
 +#    include "../SDL_sysvideo.h"
 +#    include "SDL_mouse.h"
++#    include "SDL_syswm.h"
 +#    include "SDL_video.h"
 +}
 +
@@ -1059,6 +1076,7 @@ index 0000000000000000000000000000000000000000..f26040845dd05f425ba464af385e133c
 +    SDL_bool fullscreen);
 +extern void Serenity_SetWindowIcon(_THIS, SDL_Window* window, SDL_Surface* icon);
 +extern void Serenity_DestroyWindow(_THIS, SDL_Window* window);
++extern SDL_bool Serenity_GetWindowWMInfo(_THIS, SDL_Window *window, struct SDL_SysWMinfo *info);
 +extern int Serenity_CreateWindowFramebuffer(_THIS, SDL_Window* window,
 +    Uint32* format, void** pixels,
 +    int* pitch);
@@ -1102,6 +1120,7 @@ index 0000000000000000000000000000000000000000..f26040845dd05f425ba464af385e133c
 +    device->SetWindowFullscreen = Serenity_SetWindowFullscreen;
 +    device->SetWindowIcon = Serenity_SetWindowIcon;
 +    device->DestroyWindow = Serenity_DestroyWindow;
++    device->GetWindowWMInfo = Serenity_GetWindowWMInfo;
 +
 +    device->GL_CreateContext = Serenity_GL_CreateContext;
 +    device->GL_DeleteContext = Serenity_GL_DeleteContext;
@@ -1367,6 +1386,12 @@ index 0000000000000000000000000000000000000000..f26040845dd05f425ba464af385e133c
 +    auto platform_window = SerenityPlatformWindow::from_sdl_window(window);
 +    delete platform_window;
 +    window->driverdata = nullptr;
++}
++
++SDL_bool Serenity_GetWindowWMInfo(_THIS, SDL_Window *window, SDL_SysWMinfo *info)
++{
++    info->subsystem = SDL_SYSWM_SERENITY;
++    return SDL_TRUE;
 +}
 +
 +int Serenity_CreateWindowFramebuffer(_THIS, SDL_Window* window, Uint32* format,

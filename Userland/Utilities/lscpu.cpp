@@ -18,7 +18,7 @@ static void print_cache_info(StringView description, JsonObject const& cache_obj
     outln("\t{}:", description);
     outln("\t\tSize: {}", human_readable_size(cache_object.get_u32("size"sv).value()));
     outln("\t\tLine size: {}", human_readable_size(cache_object.get_u32("line_size"sv).value()));
-};
+}
 
 static void print_cpu_info(JsonObject const& value)
 {

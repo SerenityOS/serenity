@@ -32,3 +32,7 @@ $ mktemp -u
 # Create a temporary directory with a custom template
 $ mktemp -d serenity.XXXXX
 ```
+
+## See also
+* [`mkdir`(1)](help://man/1/mkdir) to create a regular directory
+* [`touch`(1)](help://man/1/touch) to create a regular file

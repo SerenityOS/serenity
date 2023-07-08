@@ -17,8 +17,8 @@ public:
     template<typename PRF>
     static ErrorOr<ByteBuffer> derive_key(ReadonlyBytes password, ReadonlyBytes salt, u32 iterations, u32 key_length_bytes)
     requires requires(PRF t) {
-                 t.digest_size();
-             }
+        t.digest_size();
+    }
     {
         PRF prf(password);
 

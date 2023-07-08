@@ -71,7 +71,7 @@ protected:
     {
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Routing);
         auto& blocker = static_cast<ARPTableBlocker&>(b);
-        auto maybe_mac_address = arp_table().with([&](auto const& table) -> auto{
+        auto maybe_mac_address = arp_table().with([&](auto const& table) -> auto {
             return table.get(blocker.ip_address());
         });
         if (!maybe_mac_address.has_value())
@@ -95,7 +95,7 @@ bool ARPTableBlocker::setup_blocker()
 
 void ARPTableBlocker::will_unblock_immediately_without_blocking(UnblockImmediatelyReason)
 {
-    auto addr = arp_table().with([&](auto const& table) -> auto{
+    auto addr = arp_table().with([&](auto const& table) -> auto {
         return table.get(ip_address());
     });
 
@@ -297,11 +297,11 @@ RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, R
     if (adapter == NetworkingManagement::the().loopback_adapter())
         return { adapter, adapter->mac_address() };
 
-    if ((target_addr & IPv4Address { 240, 0, 0, 0 }.to_u32()) == IPv4Address { 224, 0, 0, 0 }.to_u32())
+    if ((target_addr & (IPv4Address { 240, 0, 0, 0 }.to_u32())) == IPv4Address { 224, 0, 0, 0 }.to_u32())
         return { adapter, multicast_ethernet_address(target) };
 
     {
-        auto addr = arp_table().with([&](auto const& table) -> auto{
+        auto addr = arp_table().with([&](auto const& table) -> auto {
             return table.get(next_hop_ip);
         });
         if (addr.has_value()) {

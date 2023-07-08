@@ -52,13 +52,10 @@ static int memfd_create(char const* name, unsigned int flags)
     }                                                                \
     return success_value;
 
-// clang-format off
 template<typename T>
-concept SupportsReentrantGetpwent = requires(T passwd, T* ptr)
-{
+concept SupportsReentrantGetpwent = requires(T passwd, T* ptr) {
     getpwent_r(&passwd, nullptr, 0, &ptr);
 };
-// clang-format on
 
 // Note: This has to be in the global namespace for the extern declaration to trick the compiler
 // into finding a declaration of getpwent_r when it doesn't actually exist.
@@ -86,13 +83,10 @@ static ErrorOr<Optional<struct passwd>> getpwent_impl(Span<char> buffer)
     return Optional<struct passwd> {};
 }
 
-// clang-format off
 template<typename T>
-concept SupportsReentrantGetgrent = requires(T group, T* ptr)
-{
+concept SupportsReentrantGetgrent = requires(T group, T* ptr) {
     getgrent_r(&group, nullptr, 0, &ptr);
 };
-// clang-format on
 
 // Note: This has to be in the global namespace for the extern declaration to trick the compiler
 // into finding a declaration of getgrent_r when it doesn't actually exist.

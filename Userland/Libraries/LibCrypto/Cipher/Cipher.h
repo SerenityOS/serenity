@@ -81,7 +81,7 @@ private:
 
 struct CipherKey {
     virtual ReadonlyBytes bytes() const = 0;
-    static bool is_valid_key_size(size_t) { return false; };
+    static bool is_valid_key_size(size_t) { return false; }
 
     virtual ~CipherKey() = default;
 

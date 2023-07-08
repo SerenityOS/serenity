@@ -42,3 +42,4 @@ $ profile -t syscall -- echo "Hello friends!"
 ## See also
 
 * [`Profiler`(1)](help://man/1/Applications/Profiler) GUI for viewing profiling data produced by `profile`.
+* [`strace`(1)](help://man/1/strace)

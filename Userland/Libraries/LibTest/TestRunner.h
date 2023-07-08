@@ -39,7 +39,7 @@ public:
         s_the = this;
     }
 
-    virtual ~TestRunner() { s_the = nullptr; };
+    virtual ~TestRunner() { s_the = nullptr; }
 
     virtual void run(DeprecatedString test_glob);
 

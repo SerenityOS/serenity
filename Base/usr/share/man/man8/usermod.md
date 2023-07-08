@@ -33,4 +33,6 @@ This program must be run as root.
 
 * `username`: Username of the account to modify
 
-<!-- Auto-generated through ArgsParser -->
+## See also
+* [`userdel`(8)](help://man/8/userdel)
+* [`useradd`(8)](help://man/8/useradd)

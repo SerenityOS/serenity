@@ -44,7 +44,7 @@ public:
 
     virtual ~XMLHttpRequest() override;
 
-    State ready_state() const { return m_state; };
+    State ready_state() const { return m_state; }
     Fetch::Infrastructure::Status status() const;
     WebIDL::ExceptionOr<String> status_text() const;
     WebIDL::ExceptionOr<String> response_text() const;

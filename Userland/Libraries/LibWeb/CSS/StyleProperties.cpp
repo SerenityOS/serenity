@@ -265,13 +265,13 @@ static float resolve_opacity_value(CSS::StyleValue const& value)
         unclamped_opacity = value.as_number().number();
     } else if (value.is_calculated()) {
         auto& calculated = value.as_calculated();
-        if (calculated.resolved_type() == CalculatedStyleValue::ResolvedType::Percentage) {
+        if (calculated.resolves_to_percentage()) {
             auto maybe_percentage = value.as_calculated().resolve_percentage();
             if (maybe_percentage.has_value())
                 unclamped_opacity = maybe_percentage->as_fraction();
             else
                 dbgln("Unable to resolve calc() as opacity (percentage): {}", value.to_string());
-        } else {
+        } else if (calculated.resolves_to_number()) {
             auto maybe_number = const_cast<CalculatedStyleValue&>(value.as_calculated()).resolve_number();
             if (maybe_number.has_value())
                 unclamped_opacity = maybe_number.value();

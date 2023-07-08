@@ -47,7 +47,7 @@ public:
     {
         m_removed = true;
         list.remove(*this);
-    };
+    }
 
 private:
     friend ListType;

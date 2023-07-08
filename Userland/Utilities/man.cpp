@@ -80,12 +80,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto page = TRY(Manual::Node::try_create_from_query(query_parameters));
     auto page_name = TRY(page->name());
-    auto const* section = static_cast<Manual::SectionNode const*>(page->parent());
+    auto section_number = TRY(String::number(page->section_number()));
 
     if (pager.is_empty())
         pager = TRY(String::formatted("less -P 'Manual Page {}({}) line %l?e (END):.'",
             TRY(page_name.replace("'"sv, "'\\''"sv, ReplaceMode::FirstOnly)),
-            TRY(section->section_name().replace("'"sv, "'\\''"sv, ReplaceMode::FirstOnly))));
+            section_number));
     pid_t pager_pid = TRY(pipe_to_pager(pager));
 
     auto file = TRY(Core::File::open(TRY(page->path()), Core::File::OpenMode::Read));
@@ -97,8 +97,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto const title = TRY("SerenityOS manual"_string);
 
-    int spaces = max(view_width / 2 - page_name.code_points().length() - section->section_name().code_points().length() - title.code_points().length() / 2 - 4, 0);
-    outln("{}({}){}{}", page_name, section->section_name(), String::repeated(' ', spaces), title);
+    int spaces = max(view_width / 2 - page_name.code_points().length() - section_number.code_points().length() - title.code_points().length() / 2 - 4, 0);
+    outln("{}({}){}{}", page_name, section_number, String::repeated(' ', spaces), title);
 
     auto document = Markdown::Document::parse(buffer);
     VERIFY(document);

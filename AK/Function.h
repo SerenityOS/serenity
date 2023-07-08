@@ -40,14 +40,15 @@ namespace Detail {
 
 template<typename T, typename Out, typename... Args>
 inline constexpr bool IsCallableWithArguments = requires(T t) {
-                                                    {
-                                                        t(declval<Args>()...)
-                                                        } -> ConvertibleTo<Out>;
-                                                } || requires(T t) {
-                                                         {
-                                                             t(declval<Args>()...)
-                                                             } -> SameAs<Out>;
-                                                     };
+    {
+        t(declval<Args>()...)
+    } -> ConvertibleTo<Out>;
+} || requires(T t) {
+    {
+        t(declval<Args>()...)
+    } -> SameAs<Out>;
+};
+
 }
 
 using Detail::IsCallableWithArguments;

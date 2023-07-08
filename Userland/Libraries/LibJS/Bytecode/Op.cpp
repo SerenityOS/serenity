@@ -48,7 +48,7 @@ DeprecatedString Instruction::to_deprecated_string(Bytecode::Executable const& e
 
 namespace JS::Bytecode::Op {
 
-static ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value value, PropertyKey name, PropertyKind kind)
+static ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value this_value, Value value, PropertyKey name, PropertyKind kind)
 {
     auto object = TRY(base.to_object(vm));
     if (kind == PropertyKind::Getter || kind == PropertyKind::Setter) {
@@ -71,7 +71,7 @@ static ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value val
         break;
     }
     case PropertyKind::KeyValue: {
-        bool succeeded = TRY(object->internal_set(name, value, base));
+        bool succeeded = TRY(object->internal_set(name, value, this_value));
         if (!succeeded && vm.in_strict_mode())
             return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, TRY_OR_THROW_OOM(vm, base.to_string_without_side_effects()));
         break;
@@ -356,7 +356,7 @@ ThrowCompletionOr<void> CopyObjectExcludingProperties::execute_impl(Bytecode::In
     auto& vm = interpreter.vm();
     auto& realm = *vm.current_realm();
 
-    auto from_object = TRY(interpreter.reg(m_from_object).to_object(vm));
+    auto from_object = interpreter.reg(m_from_object);
 
     auto to_object = Object::create(realm, realm.intrinsics().object_prototype());
 
@@ -365,15 +365,7 @@ ThrowCompletionOr<void> CopyObjectExcludingProperties::execute_impl(Bytecode::In
         excluded_names.set(TRY(interpreter.reg(m_excluded_names[i]).to_property_key(vm)));
     }
 
-    auto own_keys = TRY(from_object->internal_own_property_keys());
-
-    for (auto& key : own_keys) {
-        auto property_key = TRY(key.to_property_key(vm));
-        if (!excluded_names.contains(property_key)) {
-            auto property_value = TRY(from_object->get(property_key));
-            to_object->define_direct_property(property_key, property_value, JS::default_attributes);
-        }
-    }
+    TRY(to_object->copy_data_properties(vm, from_object, excluded_names));
 
     interpreter.accumulator() = to_object;
     return {};
@@ -419,6 +411,17 @@ ThrowCompletionOr<void> GetVariable::execute_impl(Bytecode::Interpreter& interpr
     };
     auto reference = TRY(get_reference());
     interpreter.accumulator() = TRY(reference.get_value(vm));
+    return {};
+}
+
+ThrowCompletionOr<void> GetLocal::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    if (vm.running_execution_context().local_variables[m_index].is_empty()) {
+        auto const& variable_name = vm.running_execution_context().function->local_variables_names()[m_index];
+        return interpreter.vm().throw_completion<ReferenceError>(ErrorType::BindingNotInitialized, variable_name);
+    }
+    interpreter.accumulator() = vm.running_execution_context().local_variables[m_index];
     return {};
 }
 
@@ -506,12 +509,17 @@ ThrowCompletionOr<void> SetVariable::execute_impl(Bytecode::Interpreter& interpr
     return {};
 }
 
-ThrowCompletionOr<void> GetById::execute_impl(Bytecode::Interpreter& interpreter) const
+ThrowCompletionOr<void> SetLocal::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.vm().running_execution_context().local_variables[m_index] = interpreter.accumulator();
+    return {};
+}
+
+static ThrowCompletionOr<void> get_by_id(Bytecode::Interpreter& interpreter, IdentifierTableIndex property, Value base_value, Value this_value)
 {
     auto& vm = interpreter.vm();
 
-    auto const& name = interpreter.current_executable().get_identifier(m_property);
-    auto base_value = interpreter.accumulator();
+    auto const& name = interpreter.current_executable().get_identifier(property);
 
     // OPTIMIZATION: For various primitives we can avoid actually creating a new object for them.
     GCPtr<Object> base_obj;
@@ -530,8 +538,21 @@ ThrowCompletionOr<void> GetById::execute_impl(Bytecode::Interpreter& interpreter
         base_obj = TRY(base_value.to_object(vm));
     }
 
-    interpreter.accumulator() = TRY(base_obj->internal_get(name, base_value));
+    interpreter.accumulator() = TRY(base_obj->internal_get(name, this_value));
     return {};
+}
+
+ThrowCompletionOr<void> GetById::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto base_value = interpreter.accumulator();
+    return get_by_id(interpreter, m_property, base_value, base_value);
+}
+
+ThrowCompletionOr<void> GetByIdWithThis::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto base_value = interpreter.accumulator();
+    auto this_value = interpreter.reg(m_this_value);
+    return get_by_id(interpreter, m_property, base_value, this_value);
 }
 
 ThrowCompletionOr<void> GetPrivateById::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -544,6 +565,20 @@ ThrowCompletionOr<void> GetPrivateById::execute_impl(Bytecode::Interpreter& inte
     return {};
 }
 
+ThrowCompletionOr<void> HasPrivateId::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+
+    if (!interpreter.accumulator().is_object())
+        return vm.throw_completion<TypeError>(ErrorType::InOperatorWithObject);
+
+    auto private_environment = vm.running_execution_context().private_environment;
+    VERIFY(private_environment);
+    auto private_name = private_environment->resolve_private_identifier(interpreter.current_executable().get_identifier(m_property));
+    interpreter.accumulator() = Value(interpreter.accumulator().as_object().private_element_find(private_name) != nullptr);
+    return {};
+}
+
 ThrowCompletionOr<void> PutById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
@@ -551,7 +586,19 @@ ThrowCompletionOr<void> PutById::execute_impl(Bytecode::Interpreter& interpreter
     auto value = interpreter.accumulator();
     auto base = interpreter.reg(m_base);
     PropertyKey name = interpreter.current_executable().get_identifier(m_property);
-    TRY(put_by_property_key(vm, base, value, name, m_kind));
+    TRY(put_by_property_key(vm, base, base, value, name, m_kind));
+    interpreter.accumulator() = value;
+    return {};
+}
+
+ThrowCompletionOr<void> PutByIdWithThis::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    // NOTE: Get the value from the accumulator before side effects have a chance to overwrite it.
+    auto value = interpreter.accumulator();
+    auto base = interpreter.reg(m_base);
+    PropertyKey name = interpreter.current_executable().get_identifier(m_property);
+    TRY(put_by_property_key(vm, base, interpreter.reg(m_this_value), value, name, m_kind));
     interpreter.accumulator() = value;
     return {};
 }
@@ -572,13 +619,24 @@ ThrowCompletionOr<void> PutPrivateById::execute_impl(Bytecode::Interpreter& inte
 ThrowCompletionOr<void> DeleteById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto object = TRY(interpreter.accumulator().to_object(vm));
+    auto base_value = interpreter.accumulator();
     auto const& identifier = interpreter.current_executable().get_identifier(m_property);
     bool strict = vm.in_strict_mode();
-    auto reference = Reference { object, identifier, {}, strict };
+    auto reference = Reference { base_value, identifier, {}, strict };
     interpreter.accumulator() = Value(TRY(reference.delete_(vm)));
     return {};
-};
+}
+
+ThrowCompletionOr<void> DeleteByIdWithThis::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto base_value = interpreter.accumulator();
+    auto const& identifier = interpreter.current_executable().get_identifier(m_property);
+    bool strict = vm.in_strict_mode();
+    auto reference = Reference { base_value, identifier, interpreter.reg(m_this_value), strict };
+    interpreter.accumulator() = Value(TRY(reference.delete_(vm)));
+    return {};
+}
 
 ThrowCompletionOr<void> Jump::execute_impl(Bytecode::Interpreter& interpreter) const
 {
@@ -605,10 +663,7 @@ ThrowCompletionOr<void> ResolveSuperBase::execute_impl(Bytecode::Interpreter& in
     VERIFY(env.has_super_binding());
 
     // 3. Let baseValue be ? env.GetSuperBase().
-    auto base_value = TRY(env.get_super_base());
-
-    // 4. Let bv be ? RequireObjectCoercible(baseValue).
-    interpreter.accumulator() = TRY(require_object_coercible(vm, base_value));
+    interpreter.accumulator() = TRY(env.get_super_base());
 
     return {};
 }
@@ -821,7 +876,7 @@ ThrowCompletionOr<void> NewFunction::execute_impl(Bytecode::Interpreter& interpr
             name = interpreter.current_executable().get_identifier(m_lhs_name.value());
         interpreter.accumulator() = m_function_node.instantiate_ordinary_function_expression(vm, name);
     } else {
-        interpreter.accumulator() = ECMAScriptFunctionObject::create(interpreter.realm(), m_function_node.name(), m_function_node.source_text(), m_function_node.body(), m_function_node.parameters(), m_function_node.function_length(), vm.lexical_environment(), vm.running_execution_context().private_environment, m_function_node.kind(), m_function_node.is_strict_mode(), m_function_node.might_need_arguments_object(), m_function_node.contains_direct_call_to_eval(), m_function_node.is_arrow_function());
+        interpreter.accumulator() = ECMAScriptFunctionObject::create(interpreter.realm(), m_function_node.name(), m_function_node.source_text(), m_function_node.body(), m_function_node.parameters(), m_function_node.function_length(), m_function_node.local_variables_names(), vm.lexical_environment(), vm.running_execution_context().private_environment, m_function_node.kind(), m_function_node.is_strict_mode(), m_function_node.might_need_arguments_object(), m_function_node.contains_direct_call_to_eval(), m_function_node.is_arrow_function());
     }
 
     if (m_home_object.has_value()) {
@@ -1011,6 +1066,21 @@ ThrowCompletionOr<void> GetByValue::execute_impl(Bytecode::Interpreter& interpre
     return {};
 }
 
+ThrowCompletionOr<void> GetByValueWithThis::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+
+    // NOTE: Get the property key from the accumulator before side effects have a chance to overwrite it.
+    auto property_key_value = interpreter.accumulator();
+
+    auto object = TRY(interpreter.reg(m_base).to_object(vm));
+
+    auto property_key = TRY(property_key_value.to_property_key(vm));
+
+    interpreter.accumulator() = TRY(object->internal_get(property_key, interpreter.reg(m_this_value)));
+    return {};
+}
+
 ThrowCompletionOr<void> PutByValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
@@ -1021,7 +1091,22 @@ ThrowCompletionOr<void> PutByValue::execute_impl(Bytecode::Interpreter& interpre
     auto base = interpreter.reg(m_base);
 
     auto property_key = TRY(interpreter.reg(m_property).to_property_key(vm));
-    TRY(put_by_property_key(vm, base, value, property_key, m_kind));
+    TRY(put_by_property_key(vm, base, base, value, property_key, m_kind));
+    interpreter.accumulator() = value;
+    return {};
+}
+
+ThrowCompletionOr<void> PutByValueWithThis::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+
+    // NOTE: Get the value from the accumulator before side effects have a chance to overwrite it.
+    auto value = interpreter.accumulator();
+
+    auto base = interpreter.reg(m_base);
+
+    auto property_key = TRY(interpreter.reg(m_property).to_property_key(vm));
+    TRY(put_by_property_key(vm, base, interpreter.reg(m_this_value), value, property_key, m_kind));
     interpreter.accumulator() = value;
     return {};
 }
@@ -1033,10 +1118,25 @@ ThrowCompletionOr<void> DeleteByValue::execute_impl(Bytecode::Interpreter& inter
     // NOTE: Get the property key from the accumulator before side effects have a chance to overwrite it.
     auto property_key_value = interpreter.accumulator();
 
-    auto object = TRY(interpreter.reg(m_base).to_object(vm));
+    auto base_value = interpreter.reg(m_base);
     auto property_key = TRY(property_key_value.to_property_key(vm));
     bool strict = vm.in_strict_mode();
-    auto reference = Reference { object, property_key, {}, strict };
+    auto reference = Reference { base_value, property_key, {}, strict };
+    interpreter.accumulator() = Value(TRY(reference.delete_(vm)));
+    return {};
+}
+
+ThrowCompletionOr<void> DeleteByValueWithThis::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+
+    // NOTE: Get the property key from the accumulator before side effects have a chance to overwrite it.
+    auto property_key_value = interpreter.accumulator();
+
+    auto base_value = interpreter.reg(m_base);
+    auto property_key = TRY(property_key_value.to_property_key(vm));
+    bool strict = vm.in_strict_mode();
+    auto reference = Reference { base_value, property_key, interpreter.reg(m_this_value), strict };
     interpreter.accumulator() = Value(TRY(reference.delete_(vm)));
     return {};
 }
@@ -1074,25 +1174,40 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
     //    9- Property attributes of the target object must be obtained by calling its [[GetOwnProperty]] internal method
 
     // Invariant 3 effectively allows the implementation to ignore newly added keys, and we do so (similar to other implementations).
-    // Invariants 1 and 6 through 9 are implemented in `enumerable_own_property_names`, which implements the EnumerableOwnPropertyNames AO.
     auto& vm = interpreter.vm();
     auto object = TRY(interpreter.accumulator().to_object(vm));
     // Note: While the spec doesn't explicitly require these to be ordered, it says that the values should be retrieved via OwnPropertyKeys,
     //       so we just keep the order consistent anyway.
     OrderedHashTable<PropertyKey> properties;
+    OrderedHashTable<PropertyKey> non_enumerable_properties;
     HashTable<NonnullGCPtr<Object>> seen_objects;
     // Collect all keys immediately (invariant no. 5)
     for (auto object_to_check = GCPtr { object.ptr() }; object_to_check && !seen_objects.contains(*object_to_check); object_to_check = TRY(object_to_check->internal_get_prototype_of())) {
         seen_objects.set(*object_to_check);
-        for (auto& key : TRY(object_to_check->enumerable_own_property_names(Object::PropertyKind::Key))) {
-            properties.set(TRY(PropertyKey::from_value(vm, key)));
+        for (auto& key : TRY(object_to_check->internal_own_property_keys())) {
+            if (key.is_symbol())
+                continue;
+            auto property_key = TRY(PropertyKey::from_value(vm, key));
+
+            // If there is a non-enumerable property higher up the prototype chain with the same key,
+            // we mustn't include this property even if it's enumerable (invariant no. 5 and 6)
+            if (non_enumerable_properties.contains(property_key))
+                continue;
+            if (properties.contains(property_key))
+                continue;
+
+            auto descriptor = TRY(object_to_check->internal_get_own_property(property_key));
+            if (!*descriptor->enumerable)
+                non_enumerable_properties.set(move(property_key));
+            else
+                properties.set(move(property_key));
         }
     }
     IteratorRecord iterator {
         .iterator = object,
         .next_method = NativeFunction::create(
             interpreter.realm(),
-            [seen_items = HashTable<PropertyKey>(), items = move(properties)](VM& vm) mutable -> ThrowCompletionOr<Value> {
+            [items = move(properties)](VM& vm) mutable -> ThrowCompletionOr<Value> {
                 auto& realm = *vm.current_realm();
                 auto iterated_object_value = vm.this_value();
                 if (!iterated_object_value.is_object())
@@ -1107,11 +1222,6 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
                     }
 
                     auto key = items.take_first();
-
-                    // If the key was already seen, skip over it (invariant no. 4)
-                    auto result = seen_items.set(key);
-                    if (result != AK::HashSetResult::InsertedNewEntry)
-                        continue;
 
                     // If the property is deleted, don't include it (invariant no. 2)
                     if (!TRY(iterated_object.has_property(key)))
@@ -1226,6 +1336,14 @@ ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& inte
     return {};
 }
 
+ThrowCompletionOr<void> TypeofLocal::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto const& value = vm.running_execution_context().local_variables[m_index];
+    interpreter.accumulator() = MUST_OR_THROW_OOM(PrimitiveString::create(vm, value.typeof()));
+    return {};
+}
+
 ThrowCompletionOr<void> ToNumeric::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.accumulator() = TRY(interpreter.accumulator().to_numeric(interpreter.vm()));
@@ -1321,6 +1439,11 @@ DeprecatedString GetVariable::to_deprecated_string_impl(Bytecode::Executable con
     return DeprecatedString::formatted("GetVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
 }
 
+DeprecatedString GetLocal::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return DeprecatedString::formatted("GetLocal {}", m_index);
+}
+
 DeprecatedString DeleteVariable::to_deprecated_string_impl(Bytecode::Executable const& executable) const
 {
     return DeprecatedString::formatted("DeleteVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
@@ -1351,6 +1474,11 @@ DeprecatedString SetVariable::to_deprecated_string_impl(Bytecode::Executable con
     return DeprecatedString::formatted("SetVariable env:{} init:{} {} ({})", mode_string, initialization_mode_name, m_identifier, executable.identifier_table->get(m_identifier));
 }
 
+DeprecatedString SetLocal::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return DeprecatedString::formatted("SetLocal {}", m_index);
+}
+
 DeprecatedString PutById::to_deprecated_string_impl(Bytecode::Executable const& executable) const
 {
     auto kind = m_kind == PropertyKind::Getter
@@ -1360,6 +1488,17 @@ DeprecatedString PutById::to_deprecated_string_impl(Bytecode::Executable const& 
         : "property";
 
     return DeprecatedString::formatted("PutById kind:{} base:{}, property:{} ({})", kind, m_base, m_property, executable.identifier_table->get(m_property));
+}
+
+DeprecatedString PutByIdWithThis::to_deprecated_string_impl(Bytecode::Executable const& executable) const
+{
+    auto kind = m_kind == PropertyKind::Getter
+        ? "getter"
+        : m_kind == PropertyKind::Setter
+        ? "setter"
+        : "property";
+
+    return DeprecatedString::formatted("PutByIdWithThis kind:{} base:{}, property:{} ({}) this_value:{}", kind, m_base, m_property, executable.identifier_table->get(m_property), m_this_value);
 }
 
 DeprecatedString PutPrivateById::to_deprecated_string_impl(Bytecode::Executable const& executable) const
@@ -1378,14 +1517,29 @@ DeprecatedString GetById::to_deprecated_string_impl(Bytecode::Executable const& 
     return DeprecatedString::formatted("GetById {} ({})", m_property, executable.identifier_table->get(m_property));
 }
 
+DeprecatedString GetByIdWithThis::to_deprecated_string_impl(Bytecode::Executable const& executable) const
+{
+    return DeprecatedString::formatted("GetByIdWithThis {} ({}) this_value:{}", m_property, executable.identifier_table->get(m_property), m_this_value);
+}
+
 DeprecatedString GetPrivateById::to_deprecated_string_impl(Bytecode::Executable const& executable) const
 {
     return DeprecatedString::formatted("GetPrivateById {} ({})", m_property, executable.identifier_table->get(m_property));
 }
 
+DeprecatedString HasPrivateId::to_deprecated_string_impl(Bytecode::Executable const& executable) const
+{
+    return DeprecatedString::formatted("HasPrivateId {} ({})", m_property, executable.identifier_table->get(m_property));
+}
+
 DeprecatedString DeleteById::to_deprecated_string_impl(Bytecode::Executable const& executable) const
 {
     return DeprecatedString::formatted("DeleteById {} ({})", m_property, executable.identifier_table->get(m_property));
+}
+
+DeprecatedString DeleteByIdWithThis::to_deprecated_string_impl(Bytecode::Executable const& executable) const
+{
+    return DeprecatedString::formatted("DeleteByIdWithThis {} ({}) this_value:{}", m_property, executable.identifier_table->get(m_property), m_this_value);
 }
 
 DeprecatedString Jump::to_deprecated_string_impl(Bytecode::Executable const&) const
@@ -1557,6 +1711,11 @@ DeprecatedString GetByValue::to_deprecated_string_impl(Bytecode::Executable cons
     return DeprecatedString::formatted("GetByValue base:{}", m_base);
 }
 
+DeprecatedString GetByValueWithThis::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return DeprecatedString::formatted("GetByValueWithThis base:{} this_value:{}", m_base, m_this_value);
+}
+
 DeprecatedString PutByValue::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
     auto kind = m_kind == PropertyKind::Getter
@@ -1568,9 +1727,25 @@ DeprecatedString PutByValue::to_deprecated_string_impl(Bytecode::Executable cons
     return DeprecatedString::formatted("PutByValue kind:{} base:{}, property:{}", kind, m_base, m_property);
 }
 
+DeprecatedString PutByValueWithThis::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    auto kind = m_kind == PropertyKind::Getter
+        ? "getter"
+        : m_kind == PropertyKind::Setter
+        ? "setter"
+        : "property";
+
+    return DeprecatedString::formatted("PutByValueWithThis kind:{} base:{}, property:{} this_value:{}", kind, m_base, m_property, m_this_value);
+}
+
 DeprecatedString DeleteByValue::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
     return DeprecatedString::formatted("DeleteByValue base:{}", m_base);
+}
+
+DeprecatedString DeleteByValueWithThis::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return DeprecatedString::formatted("DeleteByValueWithThis base:{} this_value:{}", m_base, m_this_value);
 }
 
 DeprecatedString GetIterator::to_deprecated_string_impl(Executable const&) const
@@ -1631,6 +1806,11 @@ DeprecatedString GetNewTarget::to_deprecated_string_impl(Bytecode::Executable co
 DeprecatedString TypeofVariable::to_deprecated_string_impl(Bytecode::Executable const& executable) const
 {
     return DeprecatedString::formatted("TypeofVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
+}
+
+DeprecatedString TypeofLocal::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return DeprecatedString::formatted("TypeofLocal {}", m_index);
 }
 
 DeprecatedString ToNumeric::to_deprecated_string_impl(Bytecode::Executable const&) const

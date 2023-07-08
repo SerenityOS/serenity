@@ -40,7 +40,7 @@ endpoint WebContentClient
     did_request_dismiss_dialog() =|
     did_get_source(URL url, DeprecatedString source) =|
     did_get_dom_tree(DeprecatedString dom_tree) =|
-    did_get_dom_node_properties(i32 node_id, DeprecatedString computed_style, DeprecatedString resolved_style, DeprecatedString custom_properties, DeprecatedString node_box_sizing_json) =|
+    did_get_dom_node_properties(i32 node_id, DeprecatedString computed_style, DeprecatedString resolved_style, DeprecatedString custom_properties, DeprecatedString node_box_sizing_json, DeprecatedString aria_properties_state) =|
     did_get_accessibility_tree(DeprecatedString accessibility_tree) =|
     did_change_favicon(Gfx::ShareableBitmap favicon) =|
     did_request_all_cookies(URL url) => (Vector<Web::Cookie::Cookie> cookies)

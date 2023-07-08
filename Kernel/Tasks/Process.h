@@ -484,13 +484,13 @@ public:
     RefPtr<Custody> executable();
     RefPtr<Custody const> executable() const;
 
-    UnixDateTime creation_time() const { return m_creation_time; };
+    UnixDateTime creation_time() const { return m_creation_time; }
 
     static constexpr size_t max_arguments_size = Thread::default_userspace_stack_size / 8;
     static constexpr size_t max_environment_size = Thread::default_userspace_stack_size / 8;
     static constexpr size_t max_auxiliary_size = Thread::default_userspace_stack_size / 8;
-    Vector<NonnullOwnPtr<KString>> const& arguments() const { return m_arguments; };
-    Vector<NonnullOwnPtr<KString>> const& environment() const { return m_environment; };
+    Vector<NonnullOwnPtr<KString>> const& arguments() const { return m_arguments; }
+    Vector<NonnullOwnPtr<KString>> const& environment() const { return m_environment; }
 
     ErrorOr<void> exec(NonnullOwnPtr<KString> path, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, int recursion_depth = 0);
 

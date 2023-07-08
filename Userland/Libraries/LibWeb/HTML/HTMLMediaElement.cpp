@@ -28,6 +28,7 @@
 #include <LibWeb/HTML/MediaError.h>
 #include <LibWeb/HTML/PotentialCORSRequest.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
+#include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
 #include <LibWeb/HTML/TimeRanges.h>
 #include <LibWeb/HTML/TrackEvent.h>
 #include <LibWeb/HTML/VideoTrack.h>
@@ -368,12 +369,8 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::pause()
 
 WebIDL::ExceptionOr<void> HTMLMediaElement::toggle_playback()
 {
-    // FIXME: This runs from outside the context of any user script, so we do not have a running execution
-    //        context. This pushes one to allow the promise creation hook to run.
-    auto& environment_settings = document().relevant_settings_object();
-    environment_settings.prepare_to_run_script();
-
-    ScopeGuard guard { [&] { environment_settings.clean_up_after_running_script(); } };
+    // AD-HOC: An execution context is required for Promise creation hooks.
+    TemporaryExecutionContext execution_context { document().relevant_settings_object() };
 
     if (potentially_playing())
         TRY(pause());
@@ -1826,17 +1823,13 @@ void HTMLMediaElement::resolve_pending_play_promises(ReadonlySpan<JS::NonnullGCP
 {
     auto& realm = this->realm();
 
-    // FIXME: This AO runs from the media element task queue, at which point we do not have a running execution
-    //        context. This pushes one to allow the promise resolving hook to run.
-    auto& environment_settings = document().relevant_settings_object();
-    environment_settings.prepare_to_run_script();
+    // AD-HOC: An execution context is required for Promise resolving hooks.
+    TemporaryExecutionContext execution_context { document().relevant_settings_object() };
 
     // To resolve pending play promises for a media element with a list of promises promises, the user agent
     // must resolve each promise in promises with undefined.
     for (auto const& promise : promises)
         WebIDL::resolve_promise(realm, promise, JS::js_undefined());
-
-    environment_settings.clean_up_after_running_script();
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#reject-pending-play-promises
@@ -1844,17 +1837,13 @@ void HTMLMediaElement::reject_pending_play_promises(ReadonlySpan<JS::NonnullGCPt
 {
     auto& realm = this->realm();
 
-    // FIXME: This AO runs from the media element task queue, at which point we do not have a running execution
-    //        context. This pushes one to allow the promise rejection hook to run.
-    auto& environment_settings = document().relevant_settings_object();
-    environment_settings.prepare_to_run_script();
+    // AD-HOC: An execution context is required for Promise rejection hooks.
+    TemporaryExecutionContext execution_context { document().relevant_settings_object() };
 
     // To reject pending play promises for a media element with a list of promise promises and an exception name
     // error, the user agent must reject each promise in promises with error.
     for (auto const& promise : promises)
         WebIDL::reject_promise(realm, promise, error);
-
-    environment_settings.clean_up_after_running_script();
 }
 
 WebIDL::ExceptionOr<void> HTMLMediaElement::handle_keydown(Badge<Web::EventHandler>, KeyCode key)

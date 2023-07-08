@@ -124,6 +124,10 @@ if (ENABLE_UNDEFINED_SANITIZER)
     set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=undefined")
 endif()
 
+if (ENABLE_COMPILETIME_FORMAT_CHECK)
+    add_compile_definitions(ENABLE_COMPILETIME_FORMAT_CHECK)
+endif()
+
 if (ENABLE_LAGOM_MOLD)
     add_link_options(-fuse-ld=mold)
 endif()
@@ -400,6 +404,7 @@ if (BUILD_LAGOM)
         JS
         Line
         Locale
+        Manual
         Markdown
         PDF
         Regex
@@ -548,7 +553,7 @@ if (BUILD_LAGOM)
         target_link_libraries(lzcat LibCompress LibCore LibMain)
 
         add_executable(markdown-check ../../Userland/Utilities/markdown-check.cpp)
-        target_link_libraries(markdown-check LibFileSystem LibMarkdown LibMain)
+        target_link_libraries(markdown-check LibFileSystem LibMarkdown LibMain LibManual)
 
         if (NOT EMSCRIPTEN)
             add_executable(ntpquery ../../Userland/Utilities/ntpquery.cpp)

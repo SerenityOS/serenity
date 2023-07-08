@@ -96,5 +96,6 @@ unveil(nullptr, nullptr);
 
 ## See also
 
+* [`unveil`(1)](help://man/1/unveil)
 * [`pledge`(2)](help://man/2/pledge)
 * [`Mitigations`(7)](help://man/7/Mitigations)

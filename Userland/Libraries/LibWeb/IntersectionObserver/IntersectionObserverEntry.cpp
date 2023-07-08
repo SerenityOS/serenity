@@ -1,0 +1,57 @@
+/*
+ * Copyright (c) 2023, Luke Wilde <lukew@serenityos.org>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/DOM/Element.h>
+#include <LibWeb/IntersectionObserver/IntersectionObserverEntry.h>
+
+namespace Web::IntersectionObserver {
+
+WebIDL::ExceptionOr<JS::NonnullGCPtr<IntersectionObserverEntry>> IntersectionObserverEntry::construct_impl(JS::Realm& realm, Web::IntersectionObserver::IntersectionObserverEntryInit const& options)
+{
+    auto& vm = realm.vm();
+
+    JS::GCPtr<Geometry::DOMRectReadOnly> root_bounds;
+    if (options.root_bounds.has_value())
+        root_bounds = TRY(Geometry::DOMRectReadOnly::from_rect(vm, options.root_bounds.value()));
+
+    auto bounding_client_rect = TRY(Geometry::DOMRectReadOnly::from_rect(vm, options.bounding_client_rect));
+    auto intersection_rect = TRY(Geometry::DOMRectReadOnly::from_rect(vm, options.intersection_rect));
+    return MUST_OR_THROW_OOM(realm.heap().allocate<IntersectionObserverEntry>(realm, realm, options.time, root_bounds, bounding_client_rect, intersection_rect, options.is_intersecting, options.intersection_ratio, *options.target));
+}
+
+IntersectionObserverEntry::IntersectionObserverEntry(JS::Realm& realm, HighResolutionTime::DOMHighResTimeStamp time, JS::GCPtr<Geometry::DOMRectReadOnly> root_bounds, JS::NonnullGCPtr<Geometry::DOMRectReadOnly> bounding_client_rect, JS::NonnullGCPtr<Geometry::DOMRectReadOnly> intersection_rect, bool is_intersecting, double intersection_ratio, JS::NonnullGCPtr<DOM::Element> target)
+    : Bindings::PlatformObject(realm)
+    , m_time(time)
+    , m_root_bounds(root_bounds)
+    , m_bounding_client_rect(bounding_client_rect)
+    , m_intersection_rect(intersection_rect)
+    , m_is_intersecting(is_intersecting)
+    , m_intersection_ratio(intersection_ratio)
+    , m_target(target)
+{
+}
+
+IntersectionObserverEntry::~IntersectionObserverEntry() = default;
+
+JS::ThrowCompletionOr<void> IntersectionObserverEntry::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::IntersectionObserverEntryPrototype>(realm, "IntersectionObserverEntry"));
+
+    return {};
+}
+
+void IntersectionObserverEntry::visit_edges(JS::Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_root_bounds);
+    visitor.visit(m_bounding_client_rect);
+    visitor.visit(m_intersection_rect);
+    visitor.visit(m_target);
+}
+
+}

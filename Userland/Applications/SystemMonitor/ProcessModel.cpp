@@ -226,7 +226,7 @@ GUI::Variant ProcessModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
         case Column::Name:
             return thread.current_state.name;
         case Column::Command:
-            return thread.current_state.command;
+            return thread.current_state.command.visit([](String const& cmdline) { return cmdline; }, [](auto const&) { return ""_short_string; });
         case Column::Syscalls:
             return thread.current_state.syscall_count;
         case Column::InodeFaults:
@@ -296,7 +296,7 @@ GUI::Variant ProcessModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
                 return DeprecatedString::formatted("{} (*)", thread.current_state.name);
             return thread.current_state.name;
         case Column::Command:
-            return thread.current_state.command;
+            return thread.current_state.command.visit([](String const& cmdline) { return cmdline; }, [](auto const&) { return ""_short_string; });
         case Column::Syscalls:
             return thread.current_state.syscall_count;
         case Column::InodeFaults:
@@ -422,28 +422,34 @@ Vector<GUI::ModelIndex> ProcessModel::matches(StringView searching, unsigned fla
     return found_indices;
 }
 
-static ErrorOr<DeprecatedString> try_read_command_line(pid_t pid)
+ErrorOr<String> ProcessModel::read_command_line(pid_t pid)
 {
-    auto file = TRY(Core::File::open(DeprecatedString::formatted("/proc/{}/cmdline", pid), Core::File::OpenMode::Read));
+    auto file = TRY(Core::File::open(TRY(String::formatted("/proc/{}/cmdline", pid)), Core::File::OpenMode::Read));
     auto data = TRY(file->read_until_eof());
     auto json = TRY(JsonValue::from_string(StringView { data.bytes() }));
     auto array = json.as_array().values();
-    return DeprecatedString::join(" "sv, array);
+    return String::join(" "sv, array);
 }
 
-static DeprecatedString read_command_line(pid_t pid)
+ErrorOr<void> ProcessModel::ensure_process_statistics_file()
 {
-    auto string_or_error = try_read_command_line(pid);
-    if (string_or_error.is_error()) {
-        return "";
-    }
-    return string_or_error.release_value();
+    if (!m_process_statistics_file || !m_process_statistics_file->is_open())
+        m_process_statistics_file = TRY(Core::File::open("/sys/kernel/processes"sv, Core::File::OpenMode::Read));
+
+    return {};
 }
 
 void ProcessModel::update()
 {
+    auto result = ensure_process_statistics_file();
+    if (result.is_error()) {
+        dbgln("Process model couldn't be updated: {}", result.release_error());
+        return;
+    }
+
+    auto all_processes = Core::ProcessStatisticsReader::get_all(*m_process_statistics_file, true);
+
     auto previous_tid_count = m_threads.size();
-    auto all_processes = Core::ProcessStatisticsReader::get_all(true);
 
     HashTable<int> live_tids;
     u64 total_time_scheduled_diff = 0;
@@ -474,6 +480,8 @@ void ProcessModel::update()
                 auto thread_data = m_threads.ensure(tid, [&] { return make_ref_counted<Thread>(process_state); });
                 thread_data->previous_state = move(thread_data->current_state);
                 thread_data->current_state = move(state);
+                thread_data->read_command_line_if_necessary();
+
                 if (auto maybe_thread_index = process_state.threads.find_first_index(thread_data); maybe_thread_index.has_value()) {
                     process_state.threads[maybe_thread_index.value()] = thread_data;
                 } else {
@@ -496,7 +504,6 @@ void ProcessModel::update()
                     state.kernel = process.kernel;
                     state.executable = process.executable;
                     state.name = thread.name;
-                    state.command = read_command_line(process.pid);
                     state.uid = process.uid;
                     state.state = thread.state;
                     state.user = process.username;
@@ -539,7 +546,6 @@ void ProcessModel::update()
                 state.kernel = process.kernel;
                 state.executable = process.executable;
                 state.name = process.name;
-                state.command = read_command_line(process.pid);
                 state.uid = process.uid;
                 state.state = "Zombie";
                 state.user = process.username;

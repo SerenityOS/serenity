@@ -31,8 +31,7 @@ enum class InterruptsState;
 
 // FIXME This needs to go behind some sort of platform abstraction
 //       it is used between Thread and Processor.
-struct [[gnu::aligned(16)]] FPUState
-{
+struct [[gnu::aligned(16)]] FPUState {
     u8 buffer[512];
 };
 

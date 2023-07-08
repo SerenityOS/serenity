@@ -820,7 +820,7 @@ bool StyleComputer::expand_variables(DOM::Element& element, Optional<CSS::Select
 {
     // Arbitrary large value chosen to avoid the billion-laughs attack.
     // https://www.w3.org/TR/css-variables-1/#long-variables
-    const size_t MAX_VALUE_COUNT = 16384;
+    size_t const MAX_VALUE_COUNT = 16384;
     if (source.remaining_token_count() + dest.size() > MAX_VALUE_COUNT) {
         dbgln("Stopped expanding CSS variables: maximum length reached.");
         return false;
@@ -952,23 +952,20 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
                 return false;
             }
 
+            // FIXME: Handle all math functions.
             if (value.function().name().equals_ignoring_ascii_case("calc"sv)) {
                 auto const& calc_function = value.function();
                 if (auto calc_value = Parser::Parser::parse_calculated_value({}, Parser::ParsingContext { document() }, calc_function.values()).release_value_but_fixme_should_propagate_errors()) {
-                    switch (calc_value->resolved_type()) {
-                    case CalculatedStyleValue::ResolvedType::Integer: {
-                        auto resolved_value = calc_value->resolve_integer();
+                    if (calc_value->resolves_to_number()) {
+                        auto resolved_value = calc_value->resolve_number();
                         dest.empend(Parser::Token::create_number(resolved_value.value()));
                         continue;
-                    }
-                    case CalculatedStyleValue::ResolvedType::Percentage: {
+                    } else if (calc_value->resolves_to_percentage()) {
                         auto resolved_value = calc_value->resolve_percentage();
                         dest.empend(Parser::Token::create_percentage(resolved_value.value().value()));
                         continue;
-                    }
-                    default:
+                    } else {
                         dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Unimplemented calc() expansion: {}", calc_value->to_string());
-                        break;
                     }
                 }
             }
@@ -1603,7 +1600,7 @@ static NonnullRefPtr<StyleValue const> get_inherit_value(JS::Realm& initial_valu
     if (!parent_element || !parent_element->computed_css_values())
         return property_initial_value(initial_value_context_realm, property_id).release_value_but_fixme_should_propagate_errors();
     return parent_element->computed_css_values()->property(property_id);
-};
+}
 
 void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM::Element const* element, CSS::PropertyID property_id, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {

@@ -41,9 +41,9 @@ void CRC32::update(ReadonlyBytes span)
         ++data;
         --size;
     }
-};
+}
 
-    // FIXME: On Intel, use _mm_crc32_u8 / _mm_crc32_u64 if available (SSE 4.2).
+// FIXME: On Intel, use _mm_crc32_u8 / _mm_crc32_u64 if available (SSE 4.2).
 
 #else
 
@@ -116,24 +116,21 @@ void CRC32::update(ReadonlyBytes data)
         auto low = *segment ^ m_state;
         auto high = *(++segment);
 
-        // clang-format will put this all on one line, which is really hard to read.
-        // clang-format off
         m_state = table[0][(high >> 24) & 0xff]
-                ^ table[1][(high >> 16) & 0xff]
-                ^ table[2][(high >> 8) & 0xff]
-                ^ table[3][high & 0xff]
-                ^ table[4][(low >> 24) & 0xff]
-                ^ table[5][(low >> 16) & 0xff]
-                ^ table[6][(low >> 8) & 0xff]
-                ^ table[7][low & 0xff];
-        // clang-format on
+            ^ table[1][(high >> 16) & 0xff]
+            ^ table[2][(high >> 8) & 0xff]
+            ^ table[3][high & 0xff]
+            ^ table[4][(low >> 24) & 0xff]
+            ^ table[5][(low >> 16) & 0xff]
+            ^ table[6][(low >> 8) & 0xff]
+            ^ table[7][low & 0xff];
 
         aligned_data = aligned_data.slice(8);
     }
 
     for (auto byte : aligned_data)
         m_state = single_byte_crc(m_state, byte);
-};
+}
 
 #    else
 
@@ -164,7 +161,7 @@ void CRC32::update(ReadonlyBytes data)
     for (size_t i = 0; i < data.size(); i++) {
         m_state = table[(m_state ^ data.at(i)) & 0xFF] ^ (m_state >> 8);
     }
-};
+}
 
 #    endif
 #endif

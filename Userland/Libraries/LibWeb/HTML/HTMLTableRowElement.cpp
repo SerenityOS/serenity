@@ -5,12 +5,17 @@
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/CSS/StyleProperties.h>
+#include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
+#include <LibWeb/CSS/StyleValues/ImageStyleValue.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/HTML/HTMLTableCellElement.h>
 #include <LibWeb/HTML/HTMLTableElement.h>
 #include <LibWeb/HTML/HTMLTableRowElement.h>
 #include <LibWeb/HTML/HTMLTableSectionElement.h>
+#include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Namespace.h>
 
 namespace Web::HTML {
@@ -28,6 +33,24 @@ JS::ThrowCompletionOr<void> HTMLTableRowElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTableRowElementPrototype>(realm, "HTMLTableRowElement"));
 
     return {};
+}
+
+void HTMLTableRowElement::apply_presentational_hints(CSS::StyleProperties& style) const
+{
+    Base::apply_presentational_hints(style);
+    for_each_attribute([&](auto& name, auto& value) {
+        if (name == HTML::AttributeNames::bgcolor) {
+            // https://html.spec.whatwg.org/multipage/rendering.html#tables-2:rules-for-parsing-a-legacy-colour-value
+            auto color = parse_legacy_color_value(value);
+            if (color.has_value())
+                style.set_property(CSS::PropertyID::BackgroundColor, CSS::ColorStyleValue::create(color.value()).release_value_but_fixme_should_propagate_errors());
+            return;
+        } else if (name == HTML::AttributeNames::background) {
+            if (auto parsed_value = document().parse_url(value); parsed_value.is_valid())
+                style.set_property(CSS::PropertyID::BackgroundImage, CSS::ImageStyleValue::create(parsed_value).release_value_but_fixme_should_propagate_errors());
+            return;
+        }
+    });
 }
 
 void HTMLTableRowElement::visit_edges(Cell::Visitor& visitor)

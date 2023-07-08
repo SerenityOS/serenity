@@ -28,3 +28,8 @@ Archive: archive.zip
   adding: file1.txt
   adding: file2.png
 ```
+
+## See also
+* [`unzip`(1)](help://man/1/unzip)
+* [`gzip`(1)](help://man/1/gzip)
+* [`tar`(1)](help://man/1/tar)

@@ -44,8 +44,7 @@ public:
     virtual ~QOIImageDecoderPlugin() override = default;
 
     virtual IntSize size() override;
-    virtual void set_volatile() override;
-    [[nodiscard]] virtual bool set_nonvolatile(bool& was_purged) override;
+
     virtual ErrorOr<void> initialize() override;
     virtual bool is_animated() override { return false; }
     virtual size_t loop_count() override { return 0; }

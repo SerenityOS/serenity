@@ -119,10 +119,10 @@ public:
         return cast_to<T>(TRY(resolve(value)));
     }
 
-    /// Whether this Document is reasdy to resolve references, which is usually
+    /// Whether this Document is ready to resolve references, which is usually
     /// true, except just before the XRef table is parsed (and while the linearization
     /// dict is being read).
-    bool can_resolve_refefences() { return m_parser->can_resolve_references(); }
+    bool can_resolve_references() { return m_parser->can_resolve_references(); }
 
 private:
     explicit Document(NonnullRefPtr<DocumentParser> const& parser);

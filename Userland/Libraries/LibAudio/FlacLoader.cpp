@@ -22,6 +22,7 @@
 #include <LibAudio/FlacTypes.h>
 #include <LibAudio/GenericTypes.h>
 #include <LibAudio/LoaderError.h>
+#include <LibAudio/MultiChannel.h>
 #include <LibAudio/Resampler.h>
 #include <LibAudio/VorbisComment.h>
 #include <LibCore/File.h>
@@ -62,15 +63,15 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
     BigEndianInputBitStream bit_input { MaybeOwned<Stream>(*m_stream) };
 
     // A mixture of VERIFY and the non-crashing TRY().
-#define FLAC_VERIFY(check, category, msg)                                                                                       \
-    do {                                                                                                                        \
-        if (!(check)) {                                                                                                         \
-            return LoaderError { category, LOADER_TRY(m_stream->tell()), DeprecatedString::formatted("FLAC header: {}", msg) }; \
-        }                                                                                                                       \
+#define FLAC_VERIFY(check, category, msg)                                                                                \
+    do {                                                                                                                 \
+        if (!(check)) {                                                                                                  \
+            return LoaderError { category, TRY(m_stream->tell()), DeprecatedString::formatted("FLAC header: {}", msg) }; \
+        }                                                                                                                \
     } while (0)
 
     // Magic number
-    u32 flac = LOADER_TRY(bit_input.read_bits<u32>(32));
+    u32 flac = TRY(bit_input.read_bits<u32>(32));
     m_data_start_location += 4;
     FLAC_VERIFY(flac == 0x664C6143, LoaderError::Category::Format, "Magic number must be 'flaC'"); // "flaC"
 
@@ -81,17 +82,17 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
     BigEndianInputBitStream streaminfo_data { MaybeOwned<Stream>(streaminfo_data_memory) };
 
     // 11.10 METADATA_BLOCK_STREAMINFO
-    m_min_block_size = LOADER_TRY(streaminfo_data.read_bits<u16>(16));
+    m_min_block_size = TRY(streaminfo_data.read_bits<u16>(16));
     FLAC_VERIFY(m_min_block_size >= 16, LoaderError::Category::Format, "Minimum block size must be 16");
-    m_max_block_size = LOADER_TRY(streaminfo_data.read_bits<u16>(16));
+    m_max_block_size = TRY(streaminfo_data.read_bits<u16>(16));
     FLAC_VERIFY(m_max_block_size >= 16, LoaderError::Category::Format, "Maximum block size");
-    m_min_frame_size = LOADER_TRY(streaminfo_data.read_bits<u32>(24));
-    m_max_frame_size = LOADER_TRY(streaminfo_data.read_bits<u32>(24));
-    m_sample_rate = LOADER_TRY(streaminfo_data.read_bits<u32>(20));
+    m_min_frame_size = TRY(streaminfo_data.read_bits<u32>(24));
+    m_max_frame_size = TRY(streaminfo_data.read_bits<u32>(24));
+    m_sample_rate = TRY(streaminfo_data.read_bits<u32>(20));
     FLAC_VERIFY(m_sample_rate <= 655350, LoaderError::Category::Format, "Sample rate");
-    m_num_channels = LOADER_TRY(streaminfo_data.read_bits<u8>(3)) + 1; // 0 = one channel
+    m_num_channels = TRY(streaminfo_data.read_bits<u8>(3)) + 1; // 0 = one channel
 
-    m_bits_per_sample = LOADER_TRY(streaminfo_data.read_bits<u8>(5)) + 1;
+    m_bits_per_sample = TRY(streaminfo_data.read_bits<u8>(5)) + 1;
     if (m_bits_per_sample <= 8) {
         // FIXME: Signed/Unsigned issues?
         m_sample_format = PcmSampleFormat::Uint8;
@@ -105,7 +106,7 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
         FLAC_VERIFY(false, LoaderError::Category::Format, "Sample bit depth too large");
     }
 
-    m_total_samples = LOADER_TRY(streaminfo_data.read_bits<u64>(36));
+    m_total_samples = TRY(streaminfo_data.read_bits<u64>(36));
     if (m_total_samples == 0) {
         // "A value of zero here means the number of total samples is unknown."
         dbgln("FLAC Warning: File has unknown amount of samples, the loader will not stop before EOF");
@@ -113,7 +114,7 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
     }
 
     VERIFY(streaminfo_data.is_aligned_to_byte_boundary());
-    LOADER_TRY(streaminfo_data.read_until_filled({ m_md5_checksum, sizeof(m_md5_checksum) }));
+    TRY(streaminfo_data.read_until_filled({ m_md5_checksum, sizeof(m_md5_checksum) }));
 
     // Parse other blocks
     [[maybe_unused]] u16 meta_blocks_parsed = 1;
@@ -146,6 +147,7 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
     }
 
     dbgln_if(AFLACLOADER_DEBUG, "Parsed FLAC header: blocksize {}-{}{}, framesize {}-{}, {}Hz, {}bit, {} channels, {} samples total ({:.2f}s), MD5 {}, data start at {:x} bytes, {} headers total (skipped {})", m_min_block_size, m_max_block_size, is_fixed_blocksize_stream() ? " (constant)" : "", m_min_frame_size, m_max_frame_size, m_sample_rate, pcm_bits_per_sample(m_sample_format), m_num_channels, m_total_samples, static_cast<float>(m_total_samples) / static_cast<float>(m_sample_rate), m_md5_checksum, m_data_start_location, total_meta_blocks, total_meta_blocks - meta_blocks_parsed);
+    TRY(m_seektable.insert_seek_point({ 0, 0 }));
 
     return {};
 }
@@ -158,39 +160,39 @@ MaybeLoaderError FlacLoaderPlugin::load_picture(FlacRawMetadataBlock& block)
 
     PictureData picture;
 
-    picture.type = static_cast<ID3PictureType>(LOADER_TRY(picture_block_bytes.read_bits(32)));
+    picture.type = static_cast<ID3PictureType>(TRY(picture_block_bytes.read_bits(32)));
 
-    auto const mime_string_length = LOADER_TRY(picture_block_bytes.read_bits(32));
+    auto const mime_string_length = TRY(picture_block_bytes.read_bits(32));
     auto offset_before_seeking = memory_stream.offset();
     if (offset_before_seeking + mime_string_length >= block.data.size())
-        return LoaderError { LoaderError::Category::Format, LOADER_TRY(m_stream->tell()), "Picture MIME type exceeds available data" };
+        return LoaderError { LoaderError::Category::Format, TRY(m_stream->tell()), "Picture MIME type exceeds available data" };
 
     // "The MIME type string, in printable ASCII characters 0x20-0x7E."
-    picture.mime_string = LOADER_TRY(String::from_stream(memory_stream, mime_string_length));
+    picture.mime_string = TRY(String::from_stream(memory_stream, mime_string_length));
     for (auto code_point : picture.mime_string.code_points()) {
         if (code_point < 0x20 || code_point > 0x7E)
-            return LoaderError { LoaderError::Category::Format, LOADER_TRY(m_stream->tell()), "Picture MIME type is not ASCII in range 0x20 - 0x7E" };
+            return LoaderError { LoaderError::Category::Format, TRY(m_stream->tell()), "Picture MIME type is not ASCII in range 0x20 - 0x7E" };
     }
 
-    auto const description_string_length = LOADER_TRY(picture_block_bytes.read_bits(32));
+    auto const description_string_length = TRY(picture_block_bytes.read_bits(32));
     offset_before_seeking = memory_stream.offset();
     if (offset_before_seeking + description_string_length >= block.data.size())
-        return LoaderError { LoaderError::Category::Format, LOADER_TRY(m_stream->tell()), "Picture description exceeds available data" };
+        return LoaderError { LoaderError::Category::Format, TRY(m_stream->tell()), "Picture description exceeds available data" };
 
-    picture.description_string = LOADER_TRY(String::from_stream(memory_stream, description_string_length));
+    picture.description_string = TRY(String::from_stream(memory_stream, description_string_length));
 
-    picture.width = LOADER_TRY(picture_block_bytes.read_bits(32));
-    picture.height = LOADER_TRY(picture_block_bytes.read_bits(32));
+    picture.width = TRY(picture_block_bytes.read_bits(32));
+    picture.height = TRY(picture_block_bytes.read_bits(32));
 
-    picture.color_depth = LOADER_TRY(picture_block_bytes.read_bits(32));
-    picture.colors = LOADER_TRY(picture_block_bytes.read_bits(32));
+    picture.color_depth = TRY(picture_block_bytes.read_bits(32));
+    picture.colors = TRY(picture_block_bytes.read_bits(32));
 
-    auto const picture_size = LOADER_TRY(picture_block_bytes.read_bits(32));
+    auto const picture_size = TRY(picture_block_bytes.read_bits(32));
     offset_before_seeking = memory_stream.offset();
     if (offset_before_seeking + picture_size > block.data.size())
         return LoaderError { LoaderError::Category::Format, static_cast<size_t>(TRY(m_stream->tell())), "Picture size exceeds available data" };
 
-    LOADER_TRY(memory_stream.seek(picture_size, SeekMode::FromCurrentPosition));
+    TRY(memory_stream.seek(picture_size, SeekMode::FromCurrentPosition));
     picture.data = Vector<u8> { block.data.bytes().slice(offset_before_seeking, picture_size) };
 
     m_pictures.append(move(picture));
@@ -216,10 +218,10 @@ MaybeLoaderError FlacLoaderPlugin::load_seektable(FlacRawMetadataBlock& block)
     BigEndianInputBitStream seektable_bytes { MaybeOwned<Stream>(memory_stream) };
     for (size_t i = 0; i < block.length / 18; ++i) {
         // 11.14. SEEKPOINT
-        u64 sample_index = LOADER_TRY(seektable_bytes.read_bits<u64>(64));
-        u64 byte_offset = LOADER_TRY(seektable_bytes.read_bits<u64>(64));
+        u64 sample_index = TRY(seektable_bytes.read_bits<u64>(64));
+        u64 byte_offset = TRY(seektable_bytes.read_bits<u64>(64));
         // The sample count of a seek point is not relevant to us.
-        [[maybe_unused]] u16 sample_count = LOADER_TRY(seektable_bytes.read_bits<u16>(16));
+        [[maybe_unused]] u16 sample_count = TRY(seektable_bytes.read_bits<u16>(16));
         // Placeholder, to be ignored.
         if (sample_index == 0xFFFFFFFFFFFFFFFF)
             continue;
@@ -238,13 +240,13 @@ MaybeLoaderError FlacLoaderPlugin::load_seektable(FlacRawMetadataBlock& block)
 ErrorOr<FlacRawMetadataBlock, LoaderError> FlacLoaderPlugin::next_meta_block(BigEndianInputBitStream& bit_input)
 {
     // 11.7 METADATA_BLOCK_HEADER
-    bool is_last_block = LOADER_TRY(bit_input.read_bit());
+    bool is_last_block = TRY(bit_input.read_bit());
     // The block type enum constants agree with the specification
-    FlacMetadataBlockType type = (FlacMetadataBlockType)LOADER_TRY(bit_input.read_bits<u8>(7));
+    FlacMetadataBlockType type = (FlacMetadataBlockType)TRY(bit_input.read_bits<u8>(7));
     m_data_start_location += 1;
     FLAC_VERIFY(type != FlacMetadataBlockType::INVALID, LoaderError::Category::Format, "Invalid metadata block");
 
-    u32 block_length = LOADER_TRY(bit_input.read_bits<u32>(24));
+    u32 block_length = TRY(bit_input.read_bits<u32>(24));
     m_data_start_location += 3;
     // Blocks can be zero-sized, which would trip up the raw data reader below.
     if (block_length == 0)
@@ -252,13 +254,13 @@ ErrorOr<FlacRawMetadataBlock, LoaderError> FlacLoaderPlugin::next_meta_block(Big
             .is_last_block = is_last_block,
             .type = type,
             .length = 0,
-            .data = LOADER_TRY(ByteBuffer::create_uninitialized(0))
+            .data = TRY(ByteBuffer::create_uninitialized(0))
         };
     auto block_data_result = ByteBuffer::create_uninitialized(block_length);
     FLAC_VERIFY(!block_data_result.is_error(), LoaderError::Category::IO, "Out of memory");
     auto block_data = block_data_result.release_value();
 
-    LOADER_TRY(bit_input.read_until_filled(block_data));
+    TRY(bit_input.read_until_filled(block_data));
 
     m_data_start_location += block_length;
     return FlacRawMetadataBlock {
@@ -284,11 +286,10 @@ MaybeLoaderError FlacLoaderPlugin::seek(int int_sample_index)
         return {};
 
     auto maybe_target_seekpoint = m_seektable.seek_point_before(sample_index);
-    auto const seek_tolerance = (seek_tolerance_ms * m_sample_rate) / 1000;
     // No seektable or no fitting entry: Perform normal forward read
     if (!maybe_target_seekpoint.has_value()) {
         if (sample_index < m_loaded_samples) {
-            LOADER_TRY(m_stream->seek(m_data_start_location, SeekMode::SetPosition));
+            TRY(m_stream->seek(m_data_start_location, SeekMode::SetPosition));
             m_loaded_samples = 0;
         }
         if (sample_index - m_loaded_samples == 0)
@@ -299,22 +300,25 @@ MaybeLoaderError FlacLoaderPlugin::seek(int int_sample_index)
 
         // When a small seek happens, we may already be closer to the target than the seekpoint.
         if (sample_index - target_seekpoint.sample_index > sample_index - m_loaded_samples) {
-            dbgln_if(AFLACLOADER_DEBUG, "Close enough to target ({} samples): not seeking", sample_index - m_loaded_samples);
-            return {};
+            dbgln_if(AFLACLOADER_DEBUG, "Close enough to target ({} samples): ignoring seek point", sample_index - m_loaded_samples);
+        } else {
+            dbgln_if(AFLACLOADER_DEBUG, "Seeking to seektable: sample index {}, byte offset {}", target_seekpoint.sample_index, target_seekpoint.byte_offset);
+            auto position = target_seekpoint.byte_offset + m_data_start_location;
+            if (m_stream->seek(static_cast<i64>(position), SeekMode::SetPosition).is_error())
+                return LoaderError { LoaderError::Category::IO, m_loaded_samples, DeprecatedString::formatted("Invalid seek position {}", position) };
+            m_loaded_samples = target_seekpoint.sample_index;
         }
-
-        dbgln_if(AFLACLOADER_DEBUG, "Seeking to seektable: sample index {}, byte offset {}", target_seekpoint.sample_index, target_seekpoint.byte_offset);
-        auto position = target_seekpoint.byte_offset + m_data_start_location;
-        if (m_stream->seek(static_cast<i64>(position), SeekMode::SetPosition).is_error())
-            return LoaderError { LoaderError::Category::IO, m_loaded_samples, DeprecatedString::formatted("Invalid seek position {}", position) };
-        m_loaded_samples = target_seekpoint.sample_index;
     }
 
-    // Skip frames until we're within the seek tolerance.
-    while (sample_index - m_loaded_samples > seek_tolerance) {
+    // Skip frames until we're just before the target sample.
+    VERIFY(m_loaded_samples <= sample_index);
+    size_t frame_start_location;
+    while (m_loaded_samples <= sample_index) {
+        frame_start_location = TRY(m_stream->tell());
         (void)TRY(next_frame());
         m_loaded_samples += m_current_frame->sample_count;
     }
+    TRY(m_stream->seek(frame_start_location, SeekMode::SetPosition));
 
     return {};
 }
@@ -324,7 +328,8 @@ bool FlacLoaderPlugin::should_insert_seekpoint_at(u64 sample_index) const
     auto const max_seekpoint_distance = (maximum_seekpoint_distance_ms * m_sample_rate) / 1000;
     auto const seek_tolerance = (seek_tolerance_ms * m_sample_rate) / 1000;
     auto const current_seekpoint_distance = m_seektable.seek_point_sample_distance_around(sample_index).value_or(NumericLimits<u64>::max());
-    auto const distance_to_previous_seekpoint = sample_index - m_seektable.seek_point_before(sample_index).value_or({ 0, 0 }).sample_index;
+    auto const previous_seekpoint = m_seektable.seek_point_before(sample_index);
+    auto const distance_to_previous_seekpoint = previous_seekpoint.has_value() ? sample_index - previous_seekpoint->sample_index : NumericLimits<u64>::max();
 
     // We insert a seekpoint only under two conditions:
     // - The seek points around us are spaced too far for what the loader recommends.
@@ -338,11 +343,15 @@ ErrorOr<Vector<FixedArray<Sample>>, LoaderError> FlacLoaderPlugin::load_chunks(s
 {
     ssize_t remaining_samples = static_cast<ssize_t>(m_total_samples - m_loaded_samples);
     // The first condition is relevant for unknown-size streams (total samples = 0 in the header)
-    if (m_stream->is_eof() || remaining_samples <= 0)
+    if (m_stream->is_eof() || (m_total_samples < NumericLimits<u64>::max() && remaining_samples <= 0))
         return Vector<FixedArray<Sample>> {};
 
     size_t samples_to_read = min(samples_to_read_from_input, remaining_samples);
     Vector<FixedArray<Sample>> frames;
+    // In this case we can know exactly how many frames we're going to read.
+    if (is_fixed_blocksize_stream() && m_current_frame.has_value())
+        TRY(frames.try_ensure_capacity(samples_to_read / m_current_frame->sample_count + 1));
+
     size_t sample_index = 0;
 
     while (!m_stream->is_eof() && sample_index < samples_to_read) {
@@ -381,50 +390,50 @@ LoaderSamples FlacLoaderPlugin::next_frame()
     // TODO: Check the CRC-16 checksum by keeping track of read data.
 
     // 11.22. FRAME_HEADER
-    u16 sync_code = LOADER_TRY(bit_stream.read_bits<u16>(14));
+    u16 sync_code = TRY(bit_stream.read_bits<u16>(14));
     FLAC_VERIFY(sync_code == 0b11111111111110, LoaderError::Category::Format, "Sync code");
-    bool reserved_bit = LOADER_TRY(bit_stream.read_bit());
+    bool reserved_bit = TRY(bit_stream.read_bit());
     FLAC_VERIFY(reserved_bit == 0, LoaderError::Category::Format, "Reserved frame header bit");
     // 11.22.2. BLOCKING STRATEGY
-    [[maybe_unused]] bool blocking_strategy = LOADER_TRY(bit_stream.read_bit());
+    [[maybe_unused]] bool blocking_strategy = TRY(bit_stream.read_bit());
 
-    u32 sample_count = TRY(convert_sample_count_code(LOADER_TRY(bit_stream.read_bits<u8>(4))));
+    u32 sample_count = TRY(convert_sample_count_code(TRY(bit_stream.read_bits<u8>(4))));
 
-    u32 frame_sample_rate = TRY(convert_sample_rate_code(LOADER_TRY(bit_stream.read_bits<u8>(4))));
+    u32 frame_sample_rate = TRY(convert_sample_rate_code(TRY(bit_stream.read_bits<u8>(4))));
 
-    u8 channel_type_num = LOADER_TRY(bit_stream.read_bits<u8>(4));
+    u8 channel_type_num = TRY(bit_stream.read_bits<u8>(4));
     FLAC_VERIFY(channel_type_num < 0b1011, LoaderError::Category::Format, "Channel assignment");
     FlacFrameChannelType channel_type = (FlacFrameChannelType)channel_type_num;
 
-    u8 bit_depth = TRY(convert_bit_depth_code(LOADER_TRY(bit_stream.read_bits<u8>(3))));
+    u8 bit_depth = TRY(convert_bit_depth_code(TRY(bit_stream.read_bits<u8>(3))));
 
-    reserved_bit = LOADER_TRY(bit_stream.read_bit());
+    reserved_bit = TRY(bit_stream.read_bit());
     FLAC_VERIFY(reserved_bit == 0, LoaderError::Category::Format, "Reserved frame header end bit");
 
     // 11.22.8. CODED NUMBER
-    m_current_sample_or_frame = LOADER_TRY(read_utf8_char(bit_stream));
+    m_current_sample_or_frame = TRY(read_utf8_char(bit_stream));
 
     // Conditional header variables
     // 11.22.9. BLOCK SIZE INT
     if (sample_count == FLAC_BLOCKSIZE_AT_END_OF_HEADER_8) {
-        sample_count = LOADER_TRY(bit_stream.read_bits<u32>(8)) + 1;
+        sample_count = TRY(bit_stream.read_bits<u32>(8)) + 1;
     } else if (sample_count == FLAC_BLOCKSIZE_AT_END_OF_HEADER_16) {
-        sample_count = LOADER_TRY(bit_stream.read_bits<u32>(16)) + 1;
+        sample_count = TRY(bit_stream.read_bits<u32>(16)) + 1;
     }
 
     // 11.22.10. SAMPLE RATE INT
     if (frame_sample_rate == FLAC_SAMPLERATE_AT_END_OF_HEADER_8) {
-        frame_sample_rate = LOADER_TRY(bit_stream.read_bits<u32>(8)) * 1000;
+        frame_sample_rate = TRY(bit_stream.read_bits<u32>(8)) * 1000;
     } else if (frame_sample_rate == FLAC_SAMPLERATE_AT_END_OF_HEADER_16) {
-        frame_sample_rate = LOADER_TRY(bit_stream.read_bits<u32>(16));
+        frame_sample_rate = TRY(bit_stream.read_bits<u32>(16));
     } else if (frame_sample_rate == FLAC_SAMPLERATE_AT_END_OF_HEADER_16X10) {
-        frame_sample_rate = LOADER_TRY(bit_stream.read_bits<u32>(16)) * 10;
+        frame_sample_rate = TRY(bit_stream.read_bits<u32>(16)) * 10;
     }
 
     // It does not matter whether we extract the checksum from the digest here, or extract the digest 0x00 after processing the checksum.
     auto const calculated_checksum = checksum_stream->digest();
     // 11.22.11. FRAME CRC
-    u8 specified_checksum = LOADER_TRY(bit_stream.read_bits<u8>(8));
+    u8 specified_checksum = TRY(bit_stream.read_bits<u8>(8));
     VERIFY(bit_stream.is_aligned_to_byte_boundary());
     if (specified_checksum != calculated_checksum)
         dbgln("FLAC frame {}: Calculated header checksum {:02x} is different from specified checksum {:02x}", m_current_sample_or_frame, calculated_checksum, specified_checksum);
@@ -440,14 +449,17 @@ LoaderSamples FlacLoaderPlugin::next_frame()
     };
 
     u8 subframe_count = frame_channel_type_to_channel_count(channel_type);
-    Vector<Vector<i64>> current_subframes;
-    current_subframes.ensure_capacity(subframe_count);
+    TRY(m_subframe_buffers.try_resize_and_keep_capacity(subframe_count));
+
+    float sample_rescale = 1 / static_cast<float>(1 << (m_current_frame->bit_depth - 1));
+    dbgln_if(AFLACLOADER_DEBUG, "Samples will be rescaled from {} bits: factor {:.8f}", m_current_frame->bit_depth, sample_rescale);
 
     for (u8 i = 0; i < subframe_count; ++i) {
         FlacSubframeHeader new_subframe = TRY(next_subframe_header(bit_stream, i));
-        Vector<i64> subframe_samples = TRY(parse_subframe(new_subframe, bit_stream));
+        auto& subframe_samples = m_subframe_buffers[i];
+        subframe_samples.clear_with_capacity();
+        TRY(parse_subframe(subframe_samples, new_subframe, bit_stream));
         VERIFY(subframe_samples.size() == m_current_frame->sample_count);
-        current_subframes.unchecked_append(move(subframe_samples));
     }
 
     // 11.2. Overview ("The audio data is composed of...")
@@ -455,57 +467,60 @@ LoaderSamples FlacLoaderPlugin::next_frame()
 
     // 11.23. FRAME_FOOTER
     // TODO: check checksum, see above
-    [[maybe_unused]] u16 footer_checksum = LOADER_TRY(bit_stream.read_bits<u16>(16));
+    [[maybe_unused]] u16 footer_checksum = TRY(bit_stream.read_bits<u16>(16));
     dbgln_if(AFLACLOADER_DEBUG, "Subframe footer checksum: {}", footer_checksum);
 
-    float sample_rescale = 1 / static_cast<float>(1 << (m_current_frame->bit_depth - 1));
-    dbgln_if(AFLACLOADER_DEBUG, "Sample rescaled from {} bits: factor {:.8f}", m_current_frame->bit_depth, sample_rescale);
-
-    FixedArray<Sample> samples = TRY(FixedArray<Sample>::create(m_current_frame->sample_count));
+    FixedArray<Sample> samples;
 
     switch (channel_type) {
     case FlacFrameChannelType::Mono:
-        for (size_t i = 0; i < m_current_frame->sample_count; ++i)
-            samples[i] = Sample { static_cast<float>(current_subframes[0][i]) * sample_rescale };
-        break;
     case FlacFrameChannelType::Stereo:
-    // TODO mix together surround channels on each side?
     case FlacFrameChannelType::StereoCenter:
     case FlacFrameChannelType::Surround4p0:
     case FlacFrameChannelType::Surround5p0:
     case FlacFrameChannelType::Surround5p1:
     case FlacFrameChannelType::Surround6p1:
-    case FlacFrameChannelType::Surround7p1:
-        for (size_t i = 0; i < m_current_frame->sample_count; ++i)
-            samples[i] = { static_cast<float>(current_subframes[0][i]) * sample_rescale, static_cast<float>(current_subframes[1][i]) * sample_rescale };
+    case FlacFrameChannelType::Surround7p1: {
+        auto new_samples = TRY(downmix_surround_to_stereo<Vector<i64>>(m_subframe_buffers, sample_rescale));
+        samples.swap(new_samples);
         break;
-    case FlacFrameChannelType::LeftSideStereo:
+    }
+    case FlacFrameChannelType::LeftSideStereo: {
+        auto new_samples = TRY(FixedArray<Sample>::create(m_current_frame->sample_count));
+        samples.swap(new_samples);
         // channels are left (0) and side (1)
         for (size_t i = 0; i < m_current_frame->sample_count; ++i) {
             // right = left - side
-            samples[i] = { static_cast<float>(current_subframes[0][i]) * sample_rescale,
-                static_cast<float>(current_subframes[0][i] - current_subframes[1][i]) * sample_rescale };
+            samples[i] = { static_cast<float>(m_subframe_buffers[0][i]) * sample_rescale,
+                static_cast<float>(m_subframe_buffers[0][i] - m_subframe_buffers[1][i]) * sample_rescale };
         }
         break;
-    case FlacFrameChannelType::RightSideStereo:
+    }
+    case FlacFrameChannelType::RightSideStereo: {
+        auto new_samples = TRY(FixedArray<Sample>::create(m_current_frame->sample_count));
+        samples.swap(new_samples);
         // channels are side (0) and right (1)
         for (size_t i = 0; i < m_current_frame->sample_count; ++i) {
             // left = right + side
-            samples[i] = { static_cast<float>(current_subframes[1][i] + current_subframes[0][i]) * sample_rescale,
-                static_cast<float>(current_subframes[1][i]) * sample_rescale };
+            samples[i] = { static_cast<float>(m_subframe_buffers[1][i] + m_subframe_buffers[0][i]) * sample_rescale,
+                static_cast<float>(m_subframe_buffers[1][i]) * sample_rescale };
         }
         break;
-    case FlacFrameChannelType::MidSideStereo:
+    }
+    case FlacFrameChannelType::MidSideStereo: {
+        auto new_samples = TRY(FixedArray<Sample>::create(m_current_frame->sample_count));
+        samples.swap(new_samples);
         // channels are mid (0) and side (1)
-        for (size_t i = 0; i < current_subframes[0].size(); ++i) {
-            i64 mid = current_subframes[0][i];
-            i64 side = current_subframes[1][i];
+        for (size_t i = 0; i < m_subframe_buffers[0].size(); ++i) {
+            i64 mid = m_subframe_buffers[0][i];
+            i64 side = m_subframe_buffers[1][i];
             mid *= 2;
             // prevent integer division errors
-            samples[i] = { (static_cast<float>(mid + side) * .5f) * sample_rescale,
-                (static_cast<float>(mid - side) * .5f) * sample_rescale };
+            samples[i] = { static_cast<float>(mid + side) * .5f * sample_rescale,
+                static_cast<float>(mid - side) * .5f * sample_rescale };
         }
         break;
+    }
     }
 
     return samples;
@@ -628,11 +643,11 @@ ErrorOr<FlacSubframeHeader, LoaderError> FlacLoaderPlugin::next_subframe_header(
     }
 
     // zero-bit padding
-    if (LOADER_TRY(bit_stream.read_bit()) != 0)
+    if (TRY(bit_stream.read_bit()) != 0)
         return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Zero bit padding" };
 
     // 11.25.1. SUBFRAME TYPE
-    u8 subframe_code = LOADER_TRY(bit_stream.read_bits<u8>(6));
+    u8 subframe_code = TRY(bit_stream.read_bits<u8>(6));
     if ((subframe_code >= 0b000010 && subframe_code <= 0b000111) || (subframe_code > 0b001100 && subframe_code < 0b100000))
         return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Subframe type" };
 
@@ -651,12 +666,12 @@ ErrorOr<FlacSubframeHeader, LoaderError> FlacLoaderPlugin::next_subframe_header(
     }
 
     // 11.25.2. WASTED BITS PER SAMPLE FLAG
-    bool has_wasted_bits = LOADER_TRY(bit_stream.read_bit());
+    bool has_wasted_bits = TRY(bit_stream.read_bit());
     u8 k = 0;
     if (has_wasted_bits) {
         bool current_k_bit = 0;
         do {
-            current_k_bit = LOADER_TRY(bit_stream.read_bit());
+            current_k_bit = TRY(bit_stream.read_bit());
             ++k;
         } while (current_k_bit != 1);
     }
@@ -669,17 +684,16 @@ ErrorOr<FlacSubframeHeader, LoaderError> FlacLoaderPlugin::next_subframe_header(
     };
 }
 
-ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::parse_subframe(FlacSubframeHeader& subframe_header, BigEndianInputBitStream& bit_input)
+ErrorOr<void, LoaderError> FlacLoaderPlugin::parse_subframe(Vector<i64>& samples, FlacSubframeHeader& subframe_header, BigEndianInputBitStream& bit_input)
 {
-    Vector<i64> samples;
+    TRY(samples.try_ensure_capacity(m_current_frame->sample_count));
 
     switch (subframe_header.type) {
     case FlacSubframeType::Constant: {
         // 11.26. SUBFRAME_CONSTANT
-        u64 constant_value = LOADER_TRY(bit_input.read_bits<u64>(subframe_header.bits_per_sample - subframe_header.wasted_bits_per_sample));
+        u64 constant_value = TRY(bit_input.read_bits<u64>(subframe_header.bits_per_sample - subframe_header.wasted_bits_per_sample));
         dbgln_if(AFLACLOADER_DEBUG, "Constant subframe: {}", constant_value);
 
-        samples.ensure_capacity(m_current_frame->sample_count);
         VERIFY(subframe_header.bits_per_sample - subframe_header.wasted_bits_per_sample != 0);
         i64 constant = sign_extend(static_cast<u64>(constant_value), subframe_header.bits_per_sample - subframe_header.wasted_bits_per_sample);
         for (u64 i = 0; i < m_current_frame->sample_count; ++i) {
@@ -699,7 +713,7 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::parse_subframe(FlacSubframeH
     }
     case FlacSubframeType::LPC: {
         dbgln_if(AFLACLOADER_DEBUG, "Custom LPC subframe order {}", subframe_header.order);
-        samples = TRY(decode_custom_lpc(subframe_header, bit_input));
+        TRY(decode_custom_lpc(samples, subframe_header, bit_input));
         break;
     }
     default:
@@ -711,11 +725,13 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::parse_subframe(FlacSubframeH
     }
 
     // Resamplers VERIFY that the sample rate is non-zero.
-    if (m_current_frame->sample_rate == 0 || m_sample_rate == 0)
-        return samples;
+    if (m_current_frame->sample_rate == 0 || m_sample_rate == 0
+        || m_current_frame->sample_rate == m_sample_rate)
+        return {};
 
     ResampleHelper<i64> resampler(m_current_frame->sample_rate, m_sample_rate);
-    return resampler.resample(samples);
+    samples = resampler.resample(samples);
+    return {};
 }
 
 // 11.29. SUBFRAME_VERBATIM
@@ -728,7 +744,7 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_verbatim(FlacSubframe
     VERIFY(subframe.bits_per_sample - subframe.wasted_bits_per_sample != 0);
     for (size_t i = 0; i < m_current_frame->sample_count; ++i) {
         decoded.unchecked_append(sign_extend(
-            LOADER_TRY(bit_input.read_bits<u64>(subframe.bits_per_sample - subframe.wasted_bits_per_sample)),
+            TRY(bit_input.read_bits<u64>(subframe.bits_per_sample - subframe.wasted_bits_per_sample)),
             subframe.bits_per_sample - subframe.wasted_bits_per_sample));
     }
 
@@ -737,37 +753,36 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_verbatim(FlacSubframe
 
 // 11.28. SUBFRAME_LPC
 // Decode a subframe encoded with a custom linear predictor coding, i.e. the subframe provides the polynomial order and coefficients
-ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_custom_lpc(FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
+ErrorOr<void, LoaderError> FlacLoaderPlugin::decode_custom_lpc(Vector<i64>& decoded, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
 {
     // LPC must provide at least as many samples as its order.
     if (subframe.order > m_current_frame->sample_count)
         return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Too small frame for LPC order" };
 
-    Vector<i64> decoded;
     decoded.ensure_capacity(m_current_frame->sample_count);
 
     VERIFY(subframe.bits_per_sample - subframe.wasted_bits_per_sample != 0);
     // warm-up samples
     for (auto i = 0; i < subframe.order; ++i) {
         decoded.unchecked_append(sign_extend(
-            LOADER_TRY(bit_input.read_bits<u64>(subframe.bits_per_sample - subframe.wasted_bits_per_sample)),
+            TRY(bit_input.read_bits<u64>(subframe.bits_per_sample - subframe.wasted_bits_per_sample)),
             subframe.bits_per_sample - subframe.wasted_bits_per_sample));
     }
 
     // precision of the coefficients
-    u8 lpc_precision = LOADER_TRY(bit_input.read_bits<u8>(4));
+    u8 lpc_precision = TRY(bit_input.read_bits<u8>(4));
     if (lpc_precision == 0b1111)
         return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Invalid linear predictor coefficient precision" };
     lpc_precision += 1;
 
     // shift needed on the data (signed!)
-    i8 lpc_shift = static_cast<i8>(sign_extend(LOADER_TRY(bit_input.read_bits<u8>(5)), 5));
+    i8 lpc_shift = static_cast<i8>(sign_extend(TRY(bit_input.read_bits<u8>(5)), 5));
 
-    Vector<i64> coefficients;
+    Vector<i64, 32> coefficients;
     coefficients.ensure_capacity(subframe.order);
     // read coefficients
     for (auto i = 0; i < subframe.order; ++i) {
-        u64 raw_coefficient = LOADER_TRY(bit_input.read_bits<u64>(lpc_precision));
+        u64 raw_coefficient = TRY(bit_input.read_bits<u64>(lpc_precision));
         i64 coefficient = sign_extend(raw_coefficient, lpc_precision);
         coefficients.unchecked_append(coefficient);
     }
@@ -791,7 +806,7 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_custom_lpc(FlacSubfra
         decoded[i] += sample >> lpc_shift;
     }
 
-    return decoded;
+    return {};
 }
 
 // 11.27. SUBFRAME_FIXED
@@ -809,7 +824,7 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(FlacSubfram
     // warm-up samples
     for (auto i = 0; i < subframe.order; ++i) {
         decoded.unchecked_append(sign_extend(
-            LOADER_TRY(bit_input.read_bits<u64>(subframe.bits_per_sample - subframe.wasted_bits_per_sample)),
+            TRY(bit_input.read_bits<u64>(subframe.bits_per_sample - subframe.wasted_bits_per_sample)),
             subframe.bits_per_sample - subframe.wasted_bits_per_sample));
     }
 
@@ -871,8 +886,8 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(FlacSubfram
 MaybeLoaderError FlacLoaderPlugin::decode_residual(Vector<i64>& decoded, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
 {
     // 11.30.1. RESIDUAL_CODING_METHOD
-    auto residual_mode = static_cast<FlacResidualMode>(LOADER_TRY(bit_input.read_bits<u8>(2)));
-    u8 partition_order = LOADER_TRY(bit_input.read_bits<u8>(4));
+    auto residual_mode = static_cast<FlacResidualMode>(TRY(bit_input.read_bits<u8>(2)));
+    u8 partition_order = TRY(bit_input.read_bits<u8>(4));
     size_t partitions = 1 << partition_order;
 
     if (partitions > m_current_frame->sample_count)
@@ -882,6 +897,7 @@ MaybeLoaderError FlacLoaderPlugin::decode_residual(Vector<i64>& decoded, FlacSub
         // 11.30.2. RESIDUAL_CODING_METHOD_PARTITIONED_EXP_GOLOMB
         // decode a single Rice partition with four bits for the order k
         for (size_t i = 0; i < partitions; ++i) {
+            // FIXME: Write into the decode buffer directly.
             auto rice_partition = TRY(decode_rice_partition(4, partitions, i, subframe, bit_input));
             decoded.extend(move(rice_partition));
         }
@@ -889,6 +905,7 @@ MaybeLoaderError FlacLoaderPlugin::decode_residual(Vector<i64>& decoded, FlacSub
         // 11.30.3. RESIDUAL_CODING_METHOD_PARTITIONED_EXP_GOLOMB2
         // five bits equivalent
         for (size_t i = 0; i < partitions; ++i) {
+            // FIXME: Write into the decode buffer directly.
             auto rice_partition = TRY(decode_rice_partition(5, partitions, i, subframe, bit_input));
             decoded.extend(move(rice_partition));
         }
@@ -903,7 +920,7 @@ MaybeLoaderError FlacLoaderPlugin::decode_residual(Vector<i64>& decoded, FlacSub
 ALWAYS_INLINE ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_rice_partition(u8 partition_type, u32 partitions, u32 partition_index, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
 {
     // 11.30.2.2. EXP GOLOMB PARTITION ENCODING PARAMETER and 11.30.3.2. EXP-GOLOMB2 PARTITION ENCODING PARAMETER
-    u8 k = LOADER_TRY(bit_input.read_bits<u8>(partition_type));
+    u8 k = TRY(bit_input.read_bits<u8>(partition_type));
 
     u32 residual_sample_count;
     if (partitions == 0)
@@ -921,13 +938,13 @@ ALWAYS_INLINE ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_rice_pa
 
     // escape code for unencoded binary partition
     if (k == (1 << partition_type) - 1) {
-        u8 unencoded_bps = LOADER_TRY(bit_input.read_bits<u8>(5));
+        u8 unencoded_bps = TRY(bit_input.read_bits<u8>(5));
         for (size_t r = 0; r < residual_sample_count; ++r) {
-            rice_partition[r] = LOADER_TRY(bit_input.read_bits<u8>(unencoded_bps));
+            rice_partition[r] = sign_extend(TRY(bit_input.read_bits<u32>(unencoded_bps)), unencoded_bps);
         }
     } else {
         for (size_t r = 0; r < residual_sample_count; ++r) {
-            rice_partition[r] = LOADER_TRY(decode_unsigned_exp_golomb(k, bit_input));
+            rice_partition[r] = TRY(decode_unsigned_exp_golomb(k, bit_input));
         }
     }
 

@@ -74,7 +74,7 @@ public:
     virtual PcmSampleFormat pcm_format() = 0;
 
     Metadata const& metadata() const { return m_metadata; }
-    Vector<PictureData> const& pictures() const { return m_pictures; };
+    Vector<PictureData> const& pictures() const { return m_pictures; }
 
 protected:
     NonnullOwnPtr<SeekableStream> m_stream;
@@ -91,10 +91,15 @@ public:
     // Will only read less samples if we're at the end of the stream.
     LoaderSamples get_more_samples(size_t samples_to_read_from_input = 128 * KiB);
 
-    MaybeLoaderError reset() const { return m_plugin->reset(); }
+    MaybeLoaderError reset() const
+    {
+        m_plugin_at_end_of_stream = false;
+        return m_plugin->reset();
+    }
     MaybeLoaderError seek(int const position) const
     {
         m_buffer.clear_with_capacity();
+        m_plugin_at_end_of_stream = false;
         return m_plugin->seek(position);
     }
 
@@ -106,7 +111,7 @@ public:
     u16 bits_per_sample() const { return pcm_bits_per_sample(m_plugin->pcm_format()); }
     PcmSampleFormat pcm_format() const { return m_plugin->pcm_format(); }
     Metadata const& metadata() const { return m_plugin->metadata(); }
-    Vector<PictureData> const& pictures() const { return m_plugin->pictures(); };
+    Vector<PictureData> const& pictures() const { return m_plugin->pictures(); }
 
 private:
     static ErrorOr<NonnullOwnPtr<LoaderPlugin>, LoaderError> create_plugin(NonnullOwnPtr<SeekableStream> stream);
@@ -114,6 +119,8 @@ private:
     explicit Loader(NonnullOwnPtr<LoaderPlugin>);
 
     mutable NonnullOwnPtr<LoaderPlugin> m_plugin;
+    // The plugin can signal an end of stream by returning no (or only empty) chunks.
+    mutable bool m_plugin_at_end_of_stream { false };
     mutable Vector<Sample, loader_buffer_size> m_buffer;
 };
 

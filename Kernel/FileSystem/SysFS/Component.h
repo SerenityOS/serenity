@@ -31,7 +31,7 @@ public:
     virtual StringView name() const = 0;
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const { return Error::from_errno(ENOTIMPL); }
     virtual ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
-    virtual RefPtr<SysFSComponent> lookup(StringView) { VERIFY_NOT_REACHED(); };
+    virtual RefPtr<SysFSComponent> lookup(StringView) { VERIFY_NOT_REACHED(); }
     virtual mode_t permissions() const;
     virtual ErrorOr<void> truncate(u64) { return EPERM; }
     virtual size_t size() const { return 0; }
@@ -40,7 +40,7 @@ public:
 
     virtual ErrorOr<NonnullRefPtr<SysFSInode>> to_inode(SysFS const&) const;
 
-    InodeIndex component_index() const { return m_component_index; };
+    InodeIndex component_index() const { return m_component_index; }
 
     virtual ~SysFSComponent() = default;
 

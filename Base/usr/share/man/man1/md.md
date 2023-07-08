@@ -26,3 +26,6 @@ Here's how you can render this man page into HTML:
 ```sh
 $ md --html /usr/share/man/man1/md.md
 ```
+
+## See Also
+* [`man`(1)](help://man/1/man) to more easily read manpages

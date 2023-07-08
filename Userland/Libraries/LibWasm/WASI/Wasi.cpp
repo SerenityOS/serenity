@@ -930,11 +930,9 @@ struct InvocationOf<impl> {
 
         return HostFunction(
             [&self, function_name](Configuration& configuration, Vector<Value>& arguments) -> Wasm::Result {
-                Tuple args = [&]<typename... Ts, auto... Is>(IndexSequence<Is...>)
-                {
+                Tuple args = [&]<typename... Ts, auto... Is>(IndexSequence<Is...>) {
                     return Tuple { ABI::deserialize(ABI::to_compatible_value<Ts>(arguments[Is]))... };
-                }
-                .template operator()<Args...>(MakeIndexSequence<sizeof...(Args)>());
+                }.template operator()<Args...>(MakeIndexSequence<sizeof...(Args)>());
 
                 auto result = args.apply_as_args([&](auto&&... impl_args) { return (self.*impl)(configuration, impl_args...); });
                 dbgln_if(WASI_DEBUG, "WASI: {}({}) = {}", function_name, arguments, result);
@@ -948,8 +946,7 @@ struct InvocationOf<impl> {
                 if constexpr (!IsVoid<R>) {
                     // Return values are passed as pointers, after the arguments
                     if constexpr (requires { &R::serialize_into; }) {
-                        constexpr auto ResultCount = []<auto N>(void(R::*)(Array<Bytes, N>) const) { return N; }
-                        (&R::serialize_into);
+                        constexpr auto ResultCount = []<auto N>(void (R::*)(Array<Bytes, N>) const) { return N; }(&R::serialize_into);
                         ABI::serialize(*value.result(), address_spans<ResultCount>(arguments.span().slice(sizeof...(Args)), configuration));
                     } else {
                         ABI::serialize(*value.result(), address_spans<1>(arguments.span().slice(sizeof...(Args)), configuration));
