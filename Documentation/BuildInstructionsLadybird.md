@@ -29,7 +29,7 @@ sudo dnf install cmake libglvnd-devel ninja-build qt6-qtbase-devel qt6-qttools-d
 
 On openSUSE:
 ```
-sudo zypper install cmake libglvnd-devel ninja qt6-base-devel qt6-tools-devel qt6-wayland-devel ccache
+sudo zypper install cmake libglvnd-devel ninja qt6-base-devel qt6-multimedia-devel qt6-tools-devel qt6-wayland-devel ccache
 ```
 
 On Nix/NixOS:
