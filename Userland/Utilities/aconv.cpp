@@ -132,7 +132,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             writer.emplace(TRY(Audio::WavWriter::create_from_file(
                 output,
                 static_cast<int>(target_samplerate),
-                2, // input_loader->num_channels(),
+                input_loader->num_channels(),
                 parsed_output_sample_format)));
         } else if (output_format == "flac"sv) {
             auto parsed_output_sample_format = input_loader->pcm_format();

@@ -52,7 +52,7 @@ ErrorOr<void> WavWriter::write_samples(ReadonlySpan<Sample> samples)
             if (m_num_channels == 2)
                 TRY(m_file->write_value(right));
         }
-        m_data_sz += samples.size() * 2 * sizeof(u8);
+        m_data_sz += samples.size() * m_num_channels * sizeof(u8);
         break;
     }
     case PcmSampleFormat::Int16: {
@@ -64,7 +64,7 @@ ErrorOr<void> WavWriter::write_samples(ReadonlySpan<Sample> samples)
             if (m_num_channels == 2)
                 TRY(m_file->write_value(right));
         }
-        m_data_sz += samples.size() * 2 * sizeof(u16);
+        m_data_sz += samples.size() * m_num_channels * sizeof(u16);
         break;
     }
     default:
