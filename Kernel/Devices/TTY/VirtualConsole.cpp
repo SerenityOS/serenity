@@ -15,11 +15,11 @@
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/GPU/Management.h>
 #include <Kernel/Devices/HID/Management.h>
+#include <Kernel/Devices/TTY/ConsoleManagement.h>
+#include <Kernel/Devices/TTY/VirtualConsole.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Library/StdLib.h>
 #include <Kernel/Sections.h>
-#include <Kernel/TTY/ConsoleManagement.h>
-#include <Kernel/TTY/VirtualConsole.h>
 #include <LibVT/Color.h>
 
 namespace Kernel {

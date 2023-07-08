@@ -7,13 +7,13 @@
 #include <AK/JsonArraySerializer.h>
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
+#include <Kernel/Devices/TTY/TTY.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/ProcFS/Inode.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Library/KBufferBuilder.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/TTY/TTY.h>
 #include <Kernel/Tasks/Process.h>
 
 namespace Kernel {

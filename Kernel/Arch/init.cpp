@@ -31,6 +31,9 @@
 #include <Kernel/Devices/PCISerialDevice.h>
 #include <Kernel/Devices/SerialDevice.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>
+#include <Kernel/Devices/TTY/ConsoleManagement.h>
+#include <Kernel/Devices/TTY/PTYMultiplexer.h>
+#include <Kernel/Devices/TTY/VirtualConsole.h>
 #include <Kernel/FileSystem/SysFS/Registry.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Firmware/Directory.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
@@ -45,9 +48,6 @@
 #include <Kernel/Prekernel/Prekernel.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Security/Random.h>
-#include <Kernel/TTY/ConsoleManagement.h>
-#include <Kernel/TTY/PTYMultiplexer.h>
-#include <Kernel/TTY/VirtualConsole.h>
 #include <Kernel/Tasks/FinalizerTask.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>

@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Devices/GPU/VirtIO/Console.h>
-#include <Kernel/TTY/ConsoleManagement.h>
+#include <Kernel/Devices/TTY/ConsoleManagement.h>
 #include <Kernel/Tasks/WorkQueue.h>
 
 namespace Kernel::Graphics::VirtIOGPU {

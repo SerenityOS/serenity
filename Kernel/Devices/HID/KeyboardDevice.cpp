@@ -12,9 +12,9 @@
 #include <Kernel/API/KeyCode.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/HID/KeyboardDevice.h>
+#include <Kernel/Devices/TTY/ConsoleManagement.h>
+#include <Kernel/Devices/TTY/VirtualConsole.h>
 #include <Kernel/Sections.h>
-#include <Kernel/TTY/ConsoleManagement.h>
-#include <Kernel/TTY/VirtualConsole.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/WorkQueue.h>
 

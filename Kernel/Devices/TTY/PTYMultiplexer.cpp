@@ -7,10 +7,10 @@
 #include <AK/Singleton.h>
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Devices/TTY/MasterPTY.h>
+#include <Kernel/Devices/TTY/PTYMultiplexer.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Sections.h>
-#include <Kernel/TTY/MasterPTY.h>
-#include <Kernel/TTY/PTYMultiplexer.h>
 
 namespace Kernel {
 

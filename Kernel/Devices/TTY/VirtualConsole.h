@@ -13,7 +13,7 @@
 #include <Kernel/Devices/GPU/Console/Console.h>
 #include <Kernel/Devices/Generic/ConsoleDevice.h>
 #include <Kernel/Devices/HID/Management.h>
-#include <Kernel/TTY/TTY.h>
+#include <Kernel/Devices/TTY/TTY.h>
 #include <LibVT/Attribute.h>
 #include <LibVT/Color.h>
 #include <LibVT/Position.h>

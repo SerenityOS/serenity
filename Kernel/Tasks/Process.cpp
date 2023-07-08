@@ -22,6 +22,7 @@
 #include <Kernel/API/POSIX/sys/limits.h>
 #include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Devices/Generic/NullDevice.h>
+#include <Kernel/Devices/TTY/TTY.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
@@ -32,7 +33,6 @@
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/Sections.h>
-#include <Kernel/TTY/TTY.h>
 #include <Kernel/Tasks/PerformanceEventBuffer.h>
 #include <Kernel/Tasks/PerformanceManager.h>
 #include <Kernel/Tasks/Process.h>

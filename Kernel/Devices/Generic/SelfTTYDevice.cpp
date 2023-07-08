@@ -6,8 +6,8 @@
 
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/Generic/SelfTTYDevice.h>
+#include <Kernel/Devices/TTY/TTY.h>
 #include <Kernel/Sections.h>
-#include <Kernel/TTY/TTY.h>
 
 namespace Kernel {
 
