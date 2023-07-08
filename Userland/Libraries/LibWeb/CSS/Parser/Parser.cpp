@@ -8932,28 +8932,9 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentVal
         }
 
         if (value.is(Token::Type::Ident)) {
-            if (value.token().ident().equals_ignoring_ascii_case("e"sv)) {
-                TRY(values.try_append({ TRY(ConstantCalculationNode::create(CalculationNode::ConstantType::E)) }));
-                continue;
-            }
-
-            if (value.token().ident().equals_ignoring_ascii_case("pi"sv)) {
-                TRY(values.try_append({ TRY(ConstantCalculationNode::create(CalculationNode::ConstantType::PI)) }));
-                continue;
-            }
-
-            if (value.token().ident().equals_ignoring_ascii_case("infinity"sv)) {
-                TRY(values.try_append({ TRY(ConstantCalculationNode::create(CalculationNode::ConstantType::Infinity)) }));
-                continue;
-            }
-
-            if (value.token().ident().equals_ignoring_ascii_case("-infinity"sv)) {
-                TRY(values.try_append({ TRY(ConstantCalculationNode::create(CalculationNode::ConstantType::MinusInfinity)) }));
-                continue;
-            }
-
-            if (value.token().ident().equals_ignoring_ascii_case("NaN"sv)) {
-                TRY(values.try_append({ TRY(ConstantCalculationNode::create(CalculationNode::ConstantType::NaN)) }));
+            auto maybe_constant = CalculationNode::constant_type_from_string(value.token().ident());
+            if (maybe_constant.has_value()) {
+                TRY(values.try_append({ TRY(ConstantCalculationNode::create(maybe_constant.value())) }));
                 continue;
             }
         }

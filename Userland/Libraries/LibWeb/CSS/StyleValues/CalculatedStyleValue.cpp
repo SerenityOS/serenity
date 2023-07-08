@@ -87,6 +87,26 @@ static CalculatedStyleValue::CalculationResult to_resolved_type(CalculatedStyleV
     VERIFY_NOT_REACHED();
 }
 
+Optional<CalculationNode::ConstantType> CalculationNode::constant_type_from_string(StringView string)
+{
+    if (string.equals_ignoring_ascii_case("e"sv))
+        return CalculationNode::ConstantType::E;
+
+    if (string.equals_ignoring_ascii_case("pi"sv))
+        return CalculationNode::ConstantType::Pi;
+
+    if (string.equals_ignoring_ascii_case("infinity"sv))
+        return CalculationNode::ConstantType::Infinity;
+
+    if (string.equals_ignoring_ascii_case("-infinity"sv))
+        return CalculationNode::ConstantType::MinusInfinity;
+
+    if (string.equals_ignoring_ascii_case("NaN"sv))
+        return CalculationNode::ConstantType::NaN;
+
+    return {};
+}
+
 CalculationNode::CalculationNode(Type type)
     : m_type(type)
 {
@@ -974,7 +994,7 @@ ErrorOr<String> ConstantCalculationNode::to_string() const
     switch (m_constant) {
     case CalculationNode::ConstantType::E:
         return "e"_short_string;
-    case CalculationNode::ConstantType::PI:
+    case CalculationNode::ConstantType::Pi:
         return "pi"_short_string;
     case CalculationNode::ConstantType::Infinity:
         return "infinity"_string;
@@ -1005,7 +1025,7 @@ CalculatedStyleValue::CalculationResult ConstantCalculationNode::resolve([[maybe
     switch (m_constant) {
     case CalculationNode::ConstantType::E:
         return { Number(Number::Type::Number, M_E) };
-    case CalculationNode::ConstantType::PI:
+    case CalculationNode::ConstantType::Pi:
         return { Number(Number::Type::Number, M_PI) };
     // FIXME: We need to keep track of Infinity and NaN across all nodes, since they require special handling.
     case CalculationNode::ConstantType::Infinity:
