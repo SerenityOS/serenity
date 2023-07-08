@@ -109,7 +109,7 @@ JS::ThrowCompletionOr<bool> SheetGlobalObject::internal_has_property(JS::Propert
     return Object::internal_has_property(name);
 }
 
-JS::ThrowCompletionOr<JS::Value> SheetGlobalObject::internal_get(const JS::PropertyKey& property_name, JS::Value receiver) const
+JS::ThrowCompletionOr<JS::Value> SheetGlobalObject::internal_get(const JS::PropertyKey& property_name, JS::Value receiver, JS::CacheablePropertyMetadata*) const
 {
     if (property_name.is_string()) {
         if (property_name.as_string() == "value") {

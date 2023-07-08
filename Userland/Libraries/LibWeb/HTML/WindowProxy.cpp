@@ -144,7 +144,7 @@ JS::ThrowCompletionOr<bool> WindowProxy::internal_define_own_property(JS::Proper
 }
 
 // 7.4.7 [[Get]] ( P, Receiver ), https://html.spec.whatwg.org/multipage/window-object.html#windowproxy-get
-JS::ThrowCompletionOr<JS::Value> WindowProxy::internal_get(JS::PropertyKey const& property_key, JS::Value receiver) const
+JS::ThrowCompletionOr<JS::Value> WindowProxy::internal_get(JS::PropertyKey const& property_key, JS::Value receiver, JS::CacheablePropertyMetadata* cacheable_metadata) const
 {
     auto& vm = this->vm();
 
@@ -156,7 +156,7 @@ JS::ThrowCompletionOr<JS::Value> WindowProxy::internal_get(JS::PropertyKey const
     // 3. If IsPlatformObjectSameOrigin(W) is true, then return ? OrdinaryGet(this, P, Receiver).
     // NOTE: this is passed rather than W as OrdinaryGet and CrossOriginGet will invoke the [[GetOwnProperty]] internal method.
     if (is_platform_object_same_origin(*m_window))
-        return JS::Object::internal_get(property_key, receiver);
+        return JS::Object::internal_get(property_key, receiver, cacheable_metadata);
 
     // 4. Return ? CrossOriginGet(this, P, Receiver).
     // NOTE: this is passed rather than W as OrdinaryGet and CrossOriginGet will invoke the [[GetOwnProperty]] internal method.

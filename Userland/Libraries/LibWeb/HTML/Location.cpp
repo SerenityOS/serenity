@@ -442,13 +442,13 @@ JS::ThrowCompletionOr<bool> Location::internal_define_own_property(JS::PropertyK
 }
 
 // 7.10.5.7 [[Get]] ( P, Receiver ), https://html.spec.whatwg.org/multipage/history.html#location-get
-JS::ThrowCompletionOr<JS::Value> Location::internal_get(JS::PropertyKey const& property_key, JS::Value receiver) const
+JS::ThrowCompletionOr<JS::Value> Location::internal_get(JS::PropertyKey const& property_key, JS::Value receiver, JS::CacheablePropertyMetadata* cacheable_metadata) const
 {
     auto& vm = this->vm();
 
     // 1. If IsPlatformObjectSameOrigin(this) is true, then return ? OrdinaryGet(this, P, Receiver).
     if (HTML::is_platform_object_same_origin(*this))
-        return JS::Object::internal_get(property_key, receiver);
+        return JS::Object::internal_get(property_key, receiver, cacheable_metadata);
 
     // 2. Return ? CrossOriginGet(this, P, Receiver).
     return HTML::cross_origin_get(vm, static_cast<JS::Object const&>(*this), property_key, receiver);
