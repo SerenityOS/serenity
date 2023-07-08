@@ -616,7 +616,11 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     auto private_environment = callee_context.private_environment;
     for (auto& declaration : functions_to_initialize) {
         auto function = ECMAScriptFunctionObject::create(realm, declaration.name(), declaration.source_text(), declaration.body(), declaration.parameters(), declaration.function_length(), declaration.local_variables_names(), lex_environment, private_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object(), declaration.contains_direct_call_to_eval());
-        MUST(var_environment->set_mutable_binding(vm, declaration.name(), function, false));
+        if ((vm.bytecode_interpreter_if_exists() || kind() == FunctionKind::Generator) && declaration.name_identifier()->is_local()) {
+            callee_context.local_variables[declaration.name_identifier()->local_variable_index()] = function;
+        } else {
+            MUST(var_environment->set_mutable_binding(vm, declaration.name(), function, false));
+        }
     }
 
     if (is<DeclarativeEnvironment>(*lex_environment))
