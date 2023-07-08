@@ -564,9 +564,10 @@ private:
 
 class GetById final : public Instruction {
 public:
-    explicit GetById(IdentifierTableIndex property)
+    GetById(IdentifierTableIndex property, u32 cache_index)
         : Instruction(Type::GetById)
         , m_property(property)
+        , m_cache_index(cache_index)
     {
     }
 
@@ -577,14 +578,16 @@ public:
 
 private:
     IdentifierTableIndex m_property;
+    u32 m_cache_index { 0 };
 };
 
 class GetByIdWithThis final : public Instruction {
 public:
-    GetByIdWithThis(IdentifierTableIndex property, Register this_value)
+    GetByIdWithThis(IdentifierTableIndex property, Register this_value, u32 cache_index)
         : Instruction(Type::GetByIdWithThis)
         , m_property(property)
         , m_this_value(this_value)
+        , m_cache_index(cache_index)
     {
     }
 
@@ -600,6 +603,7 @@ public:
 private:
     IdentifierTableIndex m_property;
     Register m_this_value;
+    u32 m_cache_index { 0 };
 };
 
 class GetPrivateById final : public Instruction {

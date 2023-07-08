@@ -1120,7 +1120,7 @@ static Bytecode::CodeGenerationErrorOr<void> generate_object_binding_pattern_byt
             }
 
             generator.emit<Bytecode::Op::Load>(value_reg);
-            generator.emit<Bytecode::Op::GetById>(generator.intern_identifier(identifier));
+            generator.emit_get_by_id(generator.intern_identifier(identifier));
         } else {
             auto expression = name.get<NonnullRefPtr<Expression const>>();
             TRY(expression->generate_bytecode(generator));
@@ -1474,7 +1474,7 @@ static Bytecode::CodeGenerationErrorOr<void> get_base_and_value_from_member_expr
         } else {
             // 3. Let propertyKey be StringValue of IdentifierName.
             auto identifier_table_ref = generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string());
-            generator.emit<Bytecode::Op::GetByIdWithThis>(identifier_table_ref, this_reg);
+            generator.emit_get_by_id_with_this(identifier_table_ref, this_reg);
         }
     } else {
         TRY(member_expression.object().generate_bytecode(generator));
@@ -1485,7 +1485,7 @@ static Bytecode::CodeGenerationErrorOr<void> get_base_and_value_from_member_expr
         } else if (is<PrivateIdentifier>(member_expression.property())) {
             generator.emit<Bytecode::Op::GetPrivateById>(generator.intern_identifier(verify_cast<PrivateIdentifier>(member_expression.property()).string()));
         } else {
-            generator.emit<Bytecode::Op::GetById>(generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string()));
+            generator.emit_get_by_id(generator.intern_identifier(verify_cast<Identifier>(member_expression.property()).string()));
         }
     }
 
@@ -1587,11 +1587,11 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
         // The accumulator is set to an object, for example: { "type": 1 (normal), value: 1337 }
         generator.emit<Bytecode::Op::Store>(received_completion_register);
 
-        generator.emit<Bytecode::Op::GetById>(type_identifier);
+        generator.emit_get_by_id(type_identifier);
         generator.emit<Bytecode::Op::Store>(received_completion_type_register);
 
         generator.emit<Bytecode::Op::Load>(received_completion_register);
-        generator.emit<Bytecode::Op::GetById>(value_identifier);
+        generator.emit_get_by_id(value_identifier);
         generator.emit<Bytecode::Op::Store>(received_completion_value_register);
     };
 
@@ -1613,14 +1613,14 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
         // 5. Let iterator be iteratorRecord.[[Iterator]].
         auto iterator_register = generator.allocate_register();
         auto iterator_identifier = generator.intern_identifier("iterator");
-        generator.emit<Bytecode::Op::GetById>(iterator_identifier);
+        generator.emit_get_by_id(iterator_identifier);
         generator.emit<Bytecode::Op::Store>(iterator_register);
 
         // Cache iteratorRecord.[[NextMethod]] for use in step 7.a.i.
         auto next_method_register = generator.allocate_register();
         auto next_method_identifier = generator.intern_identifier("next");
         generator.emit<Bytecode::Op::Load>(iterator_record_register);
-        generator.emit<Bytecode::Op::GetById>(next_method_identifier);
+        generator.emit_get_by_id(next_method_identifier);
         generator.emit<Bytecode::Op::Store>(next_method_register);
 
         // 6. Let received be NormalCompletion(undefined).
@@ -2424,11 +2424,11 @@ static void generate_await(Bytecode::Generator& generator)
     // The accumulator is set to an object, for example: { "type": 1 (normal), value: 1337 }
     generator.emit<Bytecode::Op::Store>(received_completion_register);
 
-    generator.emit<Bytecode::Op::GetById>(type_identifier);
+    generator.emit_get_by_id(type_identifier);
     generator.emit<Bytecode::Op::Store>(received_completion_type_register);
 
     generator.emit<Bytecode::Op::Load>(received_completion_register);
-    generator.emit<Bytecode::Op::GetById>(value_identifier);
+    generator.emit_get_by_id(value_identifier);
     generator.emit<Bytecode::Op::Store>(received_completion_value_register);
 
     auto& normal_completion_continuation_block = generator.make_block();
@@ -2923,7 +2923,7 @@ static Bytecode::CodeGenerationErrorOr<void> generate_optional_chain(Bytecode::G
             },
             [&](OptionalChain::MemberReference const& ref) -> Bytecode::CodeGenerationErrorOr<void> {
                 generator.emit<Bytecode::Op::Store>(current_base_register);
-                generator.emit<Bytecode::Op::GetById>(generator.intern_identifier(ref.identifier->string()));
+                generator.emit_get_by_id(generator.intern_identifier(ref.identifier->string()));
                 generator.emit<Bytecode::Op::Store>(current_value_register);
                 return {};
             },

@@ -515,15 +515,19 @@ ThrowCompletionOr<void> SetLocal::execute_impl(Bytecode::Interpreter& interprete
     return {};
 }
 
-static ThrowCompletionOr<void> get_by_id(Bytecode::Interpreter& interpreter, IdentifierTableIndex property, Value base_value, Value this_value)
+static ThrowCompletionOr<void> get_by_id(Bytecode::Interpreter& interpreter, IdentifierTableIndex property, Value base_value, Value this_value, u32 cache_index)
 {
     auto& vm = interpreter.vm();
-
     auto const& name = interpreter.current_executable().get_identifier(property);
+    auto& cache = interpreter.current_executable().property_lookup_caches[cache_index];
 
     // OPTIMIZATION: For various primitives we can avoid actually creating a new object for them.
     GCPtr<Object> base_obj;
-    if (base_value.is_string()) {
+    if (base_value.is_object()) {
+        // This would be covered by the `else` branch below,
+        // but let's avoid all the extra checks if it's already an object.
+        base_obj = base_value.as_object();
+    } else if (base_value.is_string()) {
         auto string_value = TRY(base_value.as_string().get(vm, name));
         if (string_value.has_value()) {
             interpreter.accumulator() = *string_value;
@@ -538,21 +542,37 @@ static ThrowCompletionOr<void> get_by_id(Bytecode::Interpreter& interpreter, Ide
         base_obj = TRY(base_value.to_object(vm));
     }
 
-    interpreter.accumulator() = TRY(base_obj->internal_get(name, this_value));
+    // OPTIMIZATION: If the shape of the object hasn't changed, we can use the cached property offset.
+    if (&base_obj->shape() == cache.shape) {
+        interpreter.accumulator() = base_obj->get_direct(cache.property_offset.value());
+        return {};
+    }
+
+    CacheablePropertyMetadata cacheable_metadata;
+    interpreter.accumulator() = TRY(base_obj->internal_get(name, this_value, &cacheable_metadata));
+
+    if (cacheable_metadata.type == CacheablePropertyMetadata::Type::OwnProperty) {
+        cache.shape = &base_obj->shape();
+        cache.property_offset = cacheable_metadata.property_offset.value();
+    } else {
+        cache.shape = nullptr;
+        cache.property_offset = {};
+    }
+
     return {};
 }
 
 ThrowCompletionOr<void> GetById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto base_value = interpreter.accumulator();
-    return get_by_id(interpreter, m_property, base_value, base_value);
+    return get_by_id(interpreter, m_property, base_value, base_value, m_cache_index);
 }
 
 ThrowCompletionOr<void> GetByIdWithThis::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto base_value = interpreter.accumulator();
     auto this_value = interpreter.reg(m_this_value);
-    return get_by_id(interpreter, m_property, base_value, this_value);
+    return get_by_id(interpreter, m_property, base_value, this_value, m_cache_index);
 }
 
 ThrowCompletionOr<void> GetPrivateById::execute_impl(Bytecode::Interpreter& interpreter) const
