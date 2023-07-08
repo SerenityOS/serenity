@@ -79,6 +79,8 @@ public:
     bool matches_time() const { return matches_dimension(BaseType::Time); }
     bool matches_time_percentage() const { return matches_dimension_percentage(BaseType::Time); }
 
+    bool matches_dimension() const;
+
     Optional<i32> const& exponent(BaseType type) const { return m_type_exponents[to_underlying(type)]; }
     void set_exponent(BaseType type, i32 exponent) { m_type_exponents[to_underlying(type)] = exponent; }
 

@@ -413,6 +413,32 @@ bool CSSNumericType::matches_number_percentage() const
     return true;
 }
 
+bool CSSNumericType::matches_dimension() const
+{
+    // This isn't a spec algorithm.
+    // A type should match `<dimension>` if there are no non-zero entries,
+    // or it has a single non-zero entry (other than percent) which is equal to 1.
+
+    auto number_of_one_exponents = 0;
+
+    for (auto i = 0; i < to_underlying(BaseType::__Count); ++i) {
+        auto base_type = static_cast<BaseType>(i);
+        auto type_exponent = exponent(base_type);
+        if (!type_exponent.has_value())
+            continue;
+
+        if (type_exponent == 1) {
+            if (base_type == BaseType::Percent)
+                return false;
+            number_of_one_exponents++;
+        } else if (type_exponent != 0) {
+            return false;
+        }
+    }
+
+    return number_of_one_exponents == 0 || number_of_one_exponents == 1;
+}
+
 ErrorOr<String> CSSNumericType::dump() const
 {
     StringBuilder builder;
