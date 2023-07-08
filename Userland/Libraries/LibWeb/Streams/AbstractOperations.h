@@ -90,6 +90,8 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_handle_queue_drain(Rea
 void readable_byte_stream_controller_invalidate_byob_request(ReadableByteStreamController&);
 bool readable_byte_stream_controller_should_call_pull(ReadableByteStreamController const&);
 
+void initialize_writable_stream(WritableStream&);
+
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WritableStreamDefaultWriter>> acquire_writable_stream_default_writer(WritableStream&);
 bool is_writable_stream_locked(WritableStream const&);
 WebIDL::ExceptionOr<void> set_up_writable_stream_default_writer(WritableStreamDefaultWriter&, WritableStream&);
