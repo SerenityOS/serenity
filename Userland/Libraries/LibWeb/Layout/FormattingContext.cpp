@@ -1020,8 +1020,8 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     if (before_or_after_inside_layout == BeforeOrAfterInsideLayout::Before)
         return;
 
-    box_state.inset_top = top.to_px(box, width_of_containing_block);
-    box_state.inset_bottom = bottom.to_px(box, width_of_containing_block);
+    box_state.inset_top = top.to_px(box, height_of_containing_block);
+    box_state.inset_bottom = bottom.to_px(box, height_of_containing_block);
     box_state.margin_top = margin_top.to_px(box, width_of_containing_block);
     box_state.margin_bottom = margin_bottom.to_px(box, width_of_containing_block);
     box_state.padding_top = box.computed_values().padding().top().to_px(box, width_of_containing_block);
