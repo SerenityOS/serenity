@@ -283,18 +283,6 @@ public:
             return;
         }
 
-        for (size_t i = 0; i < m_functions_to_hoist.size(); i++) {
-            auto const& function_declaration = m_functions_to_hoist[i];
-            if (m_lexical_names.contains(function_declaration->name()) || m_forbidden_var_names.contains(function_declaration->name()))
-                continue;
-            if (is_top_level()) {
-                m_node->add_hoisted_function(move(m_functions_to_hoist[i]));
-            } else {
-                if (!m_parent_scope->m_lexical_names.contains(function_declaration->name()) && !m_parent_scope->m_function_names.contains(function_declaration->name()))
-                    m_parent_scope->m_functions_to_hoist.append(move(m_functions_to_hoist[i]));
-            }
-        }
-
         for (auto& it : m_identifier_groups) {
             auto const& identifier_group_name = it.key;
             auto& identifier_group = it.value;
@@ -316,19 +304,20 @@ public:
                     scope_has_declaration = true;
             }));
 
-            bool function_declaration = false;
             MUST(m_node->for_each_var_function_declaration_in_reverse_order([&](auto const& declaration) {
                 if (declaration.name() == identifier_group_name)
-                    function_declaration = true;
+                    scope_has_declaration = true;
             }));
             MUST(m_node->for_each_lexical_function_declaration_in_reverse_order([&](auto const& declaration) {
                 if (declaration.name() == identifier_group_name)
-                    function_declaration = true;
+                    scope_has_declaration = true;
             }));
-            MUST(m_node->for_each_function_hoistable_with_annexB_extension([&](auto const& declaration) {
-                if (declaration.name() == identifier_group_name)
-                    function_declaration = true;
-            }));
+
+            bool hoistable_function_declaration = false;
+            for (auto const& function_declaration : m_functions_to_hoist) {
+                if (function_declaration->name() == identifier_group_name)
+                    hoistable_function_declaration = true;
+            }
 
             if ((m_type == ScopeType::ClassDeclaration || m_type == ScopeType::Catch) && m_bound_names.contains(identifier_group_name)) {
                 // NOTE: Currently class names and catch section parameters are not considered to become local variables
@@ -346,7 +335,7 @@ public:
             }
 
             if (scope_has_declaration) {
-                if (function_declaration)
+                if (hoistable_function_declaration)
                     continue;
 
                 if (!identifier_group.captured_by_nested_function) {
@@ -374,6 +363,18 @@ public:
                         m_parent_scope->m_identifier_groups.set(identifier_group_name, identifier_group);
                     }
                 }
+            }
+        }
+
+        for (size_t i = 0; i < m_functions_to_hoist.size(); i++) {
+            auto const& function_declaration = m_functions_to_hoist[i];
+            if (m_lexical_names.contains(function_declaration->name()) || m_forbidden_var_names.contains(function_declaration->name()))
+                continue;
+            if (is_top_level()) {
+                m_node->add_hoisted_function(move(m_functions_to_hoist[i]));
+            } else {
+                if (!m_parent_scope->m_lexical_names.contains(function_declaration->name()) && !m_parent_scope->m_function_names.contains(function_declaration->name()))
+                    m_parent_scope->m_functions_to_hoist.append(move(m_functions_to_hoist[i]));
             }
         }
 
@@ -2799,15 +2800,15 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u16 parse_options, O
         }
 
         if (parse_options & FunctionNodeParseOptions::HasDefaultExportName) {
-            name = create_ast_node<Identifier const>(
+            name = create_identifier_and_register_in_current_scope(
                 { m_source_code, rule_start.position(), position() },
                 ExportStatement::local_name_for_default);
         } else if (FunctionNodeType::must_have_name() || match_identifier()) {
-            name = create_ast_node<Identifier const>(
+            name = create_identifier_and_register_in_current_scope(
                 { m_source_code, rule_start.position(), position() },
                 consume_identifier().DeprecatedFlyString_value());
         } else if (is_function_expression && (match(TokenType::Yield) || match(TokenType::Await))) {
-            name = create_ast_node<Identifier const>(
+            name = create_identifier_and_register_in_current_scope(
                 { m_source_code, rule_start.position(), position() },
                 consume().DeprecatedFlyString_value());
         }

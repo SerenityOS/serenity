@@ -707,6 +707,7 @@ struct FunctionParameter {
 class FunctionNode {
 public:
     StringView name() const { return m_name ? m_name->string().view() : ""sv; }
+    RefPtr<Identifier const> name_identifier() const { return m_name; }
     DeprecatedString const& source_text() const { return m_source_text; }
     Statement const& body() const { return *m_body; }
     Vector<FunctionParameter> const& parameters() const { return m_parameters; }

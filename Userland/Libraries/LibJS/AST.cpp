@@ -4769,8 +4769,12 @@ void ScopeNode::block_declaration_instantiation(VM& vm, Environment* environment
         if (is<FunctionDeclaration>(declaration)) {
             auto& function_declaration = static_cast<FunctionDeclaration const&>(declaration);
             auto function = ECMAScriptFunctionObject::create(realm, function_declaration.name(), function_declaration.source_text(), function_declaration.body(), function_declaration.parameters(), function_declaration.function_length(), function_declaration.local_variables_names(), environment, private_environment, function_declaration.kind(), function_declaration.is_strict_mode(), function_declaration.might_need_arguments_object(), function_declaration.contains_direct_call_to_eval());
-            VERIFY(is<DeclarativeEnvironment>(*environment));
-            static_cast<DeclarativeEnvironment&>(*environment).initialize_or_set_mutable_binding({}, vm, function_declaration.name(), function);
+            if (vm.bytecode_interpreter_if_exists() && function_declaration.name_identifier()->is_local()) {
+                vm.running_execution_context().local_variables[function_declaration.name_identifier()->local_variable_index()] = function;
+            } else {
+                VERIFY(is<DeclarativeEnvironment>(*environment));
+                static_cast<DeclarativeEnvironment&>(*environment).initialize_or_set_mutable_binding({}, vm, function_declaration.name(), function);
+            }
         }
     }));
 }
