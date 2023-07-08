@@ -329,7 +329,11 @@ private:
 
 ErrorOr<NonnullRefPtr<TinyVGDecodedImageData>> TinyVGDecodedImageData::decode(Stream& stream)
 {
-    auto header = TRY(decode_tinyvg_header(stream));
+    return decode(stream, TRY(decode_tinyvg_header(stream)));
+}
+
+ErrorOr<NonnullRefPtr<TinyVGDecodedImageData>> TinyVGDecodedImageData::decode(Stream& stream, TinyVGHeader const& header)
+{
     if (header.version != 1)
         return Error::from_string_literal("Invalid TinyVG: Unsupported version");
 
@@ -468,8 +472,60 @@ void TinyVGDecodedImageData::draw_transformed(Painter& painter, AffineTransform 
     }
 }
 
+struct TinyVGLoadingContext {
+    FixedMemoryStream stream;
+    TinyVGHeader header {};
+    RefPtr<TinyVGDecodedImageData> decoded_image {};
+    RefPtr<Bitmap> bitmap {};
+    enum class State {
+        NotDecoded = 0,
+        HeaderDecoded,
+        ImageDecoded,
+        Error,
+    };
+    State state { State::NotDecoded };
+};
+
+static ErrorOr<void> decode_header_and_update_context(TinyVGLoadingContext& context)
+{
+    VERIFY(context.state == TinyVGLoadingContext::State::NotDecoded);
+    auto header_or_error = decode_tinyvg_header(context.stream);
+    if (header_or_error.is_error()) {
+        context.state = TinyVGLoadingContext::State::Error;
+        return header_or_error.release_error();
+    }
+    context.state = TinyVGLoadingContext::State::HeaderDecoded;
+    context.header = header_or_error.release_value();
+    return {};
+}
+
+static ErrorOr<void> decode_image_data_and_update_context(TinyVGLoadingContext& context)
+{
+    VERIFY(context.state == TinyVGLoadingContext::State::HeaderDecoded);
+    auto image_data_or_error = TinyVGDecodedImageData::decode(context.stream, context.header);
+    if (image_data_or_error.is_error()) {
+        context.state = TinyVGLoadingContext::State::Error;
+        return image_data_or_error.release_error();
+    }
+    context.state = TinyVGLoadingContext::State::ImageDecoded;
+    context.decoded_image = image_data_or_error.release_value();
+    return {};
+}
+
+static ErrorOr<void> ensure_fully_decoded(TinyVGLoadingContext& context)
+{
+    if (context.state == TinyVGLoadingContext::State::Error)
+        return Error::from_string_literal("TinyVGImageDecoderPlugin: Decoding failed!");
+    if (context.state == TinyVGLoadingContext::State::NotDecoded)
+        TRY(decode_header_and_update_context(context));
+    if (context.state == TinyVGLoadingContext::State::HeaderDecoded)
+        TRY(decode_image_data_and_update_context(context));
+    VERIFY(context.state == TinyVGLoadingContext::State::ImageDecoded);
+    return {};
+}
+
 TinyVGImageDecoderPlugin::TinyVGImageDecoderPlugin(ReadonlyBytes bytes)
-    : m_context { bytes }
+    : m_context { make<TinyVGLoadingContext>(FixedMemoryStream { bytes }) }
 {
 }
 
@@ -486,29 +542,33 @@ bool TinyVGImageDecoderPlugin::sniff(ReadonlyBytes bytes)
 
 IntSize TinyVGImageDecoderPlugin::size()
 {
-    if (m_context.decoded_image)
-        return m_context.decoded_image->size();
-    return {};
+    if (m_context->state == TinyVGLoadingContext::State::NotDecoded)
+        (void)decode_header_and_update_context(*m_context);
+
+    if (m_context->state == TinyVGLoadingContext::State::Error)
+        return {};
+
+    return { m_context->header.width, m_context->header.height };
 }
 
 ErrorOr<void> TinyVGImageDecoderPlugin::initialize()
 {
-    FixedMemoryStream stream { { m_context.data.data(), m_context.data.size() } };
-    m_context.decoded_image = TRY(TinyVGDecodedImageData::decode(stream));
-    return {};
+    return decode_header_and_update_context(*m_context);
 }
 
 ErrorOr<ImageFrameDescriptor> TinyVGImageDecoderPlugin::frame(size_t, Optional<IntSize> ideal_size)
 {
-    auto target_size = ideal_size.value_or(m_context.decoded_image->size());
-    if (!m_context.bitmap || m_context.bitmap->size() != target_size)
-        m_context.bitmap = TRY(m_context.decoded_image->bitmap(target_size));
-    return ImageFrameDescriptor { m_context.bitmap };
+    TRY(ensure_fully_decoded(*m_context));
+    auto target_size = ideal_size.value_or(m_context->decoded_image->size());
+    if (!m_context->bitmap || m_context->bitmap->size() != target_size)
+        m_context->bitmap = TRY(m_context->decoded_image->bitmap(target_size));
+    return ImageFrameDescriptor { m_context->bitmap };
 }
 
 ErrorOr<VectorImageFrameDescriptor> TinyVGImageDecoderPlugin::vector_frame(size_t)
 {
-    return VectorImageFrameDescriptor { m_context.decoded_image, 0 };
+    TRY(ensure_fully_decoded(*m_context));
+    return VectorImageFrameDescriptor { m_context->decoded_image, 0 };
 }
 
 }
