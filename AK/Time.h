@@ -487,9 +487,7 @@ public:
     [[nodiscard]] i64 truncated_seconds() const { return m_offset.to_truncated_seconds(); }
     [[nodiscard]] i64 nanoseconds_within_second() const { return to_timespec().tv_nsec; }
 
-    // clang-format off
     constexpr bool operator==(MonotonicTime const& other) const { return this->m_offset == other.m_offset; }
-    // clang-format on
     constexpr int operator<=>(MonotonicTime const& other) const { return this->m_offset <=> other.m_offset; }
 
     constexpr MonotonicTime operator+(Duration const& other) const { return MonotonicTime { m_offset + other }; }
