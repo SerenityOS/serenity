@@ -80,13 +80,273 @@ static ErrorOr<String> get_event_key(KeyCode platform_key, u32 code_point)
     return event_key;
 }
 
+// 3. Keyboard Event code Value Tables, https://www.w3.org/TR/uievents-code/#code-value-tables
+static ErrorOr<String> get_event_code(KeyCode platform_key, unsigned modifiers)
+{
+    // 3.4. Numpad Section, https://www.w3.org/TR/uievents-code/#key-numpad-section
+    if ((modifiers & Mod_Keypad) != 0) {
+        switch (platform_key) {
+        case KeyCode::Key_0:
+            return "Numpad0"_string;
+        case KeyCode::Key_1:
+            return "Numpad1"_string;
+        case KeyCode::Key_2:
+            return "Numpad2"_string;
+        case KeyCode::Key_3:
+            return "Numpad3"_string;
+        case KeyCode::Key_4:
+            return "Numpad4"_string;
+        case KeyCode::Key_5:
+            return "Numpad5"_string;
+        case KeyCode::Key_6:
+            return "Numpad6"_string;
+        case KeyCode::Key_7:
+            return "Numpad7"_string;
+        case KeyCode::Key_8:
+            return "Numpad8"_string;
+        case KeyCode::Key_9:
+            return "Numpad9"_string;
+        case KeyCode::Key_Plus:
+            return "NumpadAdd"_string;
+        case KeyCode::Key_Period:
+        case KeyCode::Key_Delete:
+            return "NumpadDecimal"_string;
+        case KeyCode::Key_Slash:
+            return "NumpadDivide"_string;
+        case KeyCode::Key_Return:
+            return "NumpadEnter"_string;
+        case KeyCode::Key_Asterisk:
+            return "NumpadAsterisk"_string;
+        case KeyCode::Key_Minus:
+            return "NumpadSubtract"_string;
+        default:
+            break;
+        }
+    }
+
+    switch (platform_key) {
+    // 3.1.1. Writing System Keys, https://www.w3.org/TR/uievents-code/#key-alphanumeric-writing-system
+    case KeyCode::Key_Backtick:
+    case KeyCode::Key_Tilde:
+        return "Backquote"_string;
+    case KeyCode::Key_Backslash:
+    case KeyCode::Key_Pipe:
+        return "Backslash"_string;
+    case KeyCode::Key_LeftBrace:
+    case KeyCode::Key_LeftBracket:
+        return "BracketLeft"_string;
+    case KeyCode::Key_RightBrace:
+    case KeyCode::Key_RightBracket:
+        return "BracketRight"_string;
+    case KeyCode::Key_Comma:
+    case KeyCode::Key_LessThan:
+        return "Comma"_string;
+    case KeyCode::Key_0:
+    case KeyCode::Key_RightParen:
+        return "Digit0"_string;
+    case KeyCode::Key_1:
+    case KeyCode::Key_ExclamationPoint:
+        return "Digit1"_string;
+    case KeyCode::Key_2:
+    case KeyCode::Key_AtSign:
+        return "Digit2"_string;
+    case KeyCode::Key_3:
+    case KeyCode::Key_Hashtag:
+        return "Digit3"_string;
+    case KeyCode::Key_4:
+    case KeyCode::Key_Dollar:
+        return "Digit4"_string;
+    case KeyCode::Key_5:
+    case KeyCode::Key_Percent:
+        return "Digit5"_string;
+    case KeyCode::Key_6:
+    case KeyCode::Key_Circumflex:
+        return "Digit6"_string;
+    case KeyCode::Key_7:
+    case KeyCode::Key_Ampersand:
+        return "Digit7"_string;
+    case KeyCode::Key_8:
+    case KeyCode::Key_Asterisk:
+        return "Digit8"_string;
+    case KeyCode::Key_9:
+    case KeyCode::Key_LeftParen:
+        return "Digit9"_string;
+    case KeyCode::Key_Equal:
+    case KeyCode::Key_Plus:
+        return "Equal"_string;
+    // FIXME: IntlBackslash
+    // FIXME: IntlRo
+    // FIXME: IntlYen
+    case KeyCode::Key_A:
+        return "KeyA"_string;
+    case KeyCode::Key_B:
+        return "KeyB"_string;
+    case KeyCode::Key_C:
+        return "KeyC"_string;
+    case KeyCode::Key_D:
+        return "KeyD"_string;
+    case KeyCode::Key_E:
+        return "KeyE"_string;
+    case KeyCode::Key_F:
+        return "KeyF"_string;
+    case KeyCode::Key_G:
+        return "KeyG"_string;
+    case KeyCode::Key_H:
+        return "KeyH"_string;
+    case KeyCode::Key_I:
+        return "KeyI"_string;
+    case KeyCode::Key_J:
+        return "KeyJ"_string;
+    case KeyCode::Key_K:
+        return "KeyK"_string;
+    case KeyCode::Key_L:
+        return "KeyL"_string;
+    case KeyCode::Key_M:
+        return "KeyM"_string;
+    case KeyCode::Key_N:
+        return "KeyN"_string;
+    case KeyCode::Key_O:
+        return "KeyO"_string;
+    case KeyCode::Key_P:
+        return "KeyP"_string;
+    case KeyCode::Key_Q:
+        return "KeyQ"_string;
+    case KeyCode::Key_R:
+        return "KeyR"_string;
+    case KeyCode::Key_S:
+        return "KeyS"_string;
+    case KeyCode::Key_T:
+        return "KeyT"_string;
+    case KeyCode::Key_U:
+        return "KeyU"_string;
+    case KeyCode::Key_V:
+        return "KeyV"_string;
+    case KeyCode::Key_W:
+        return "KeyW"_string;
+    case KeyCode::Key_X:
+        return "KeyX"_string;
+    case KeyCode::Key_Y:
+        return "KeyY"_string;
+    case KeyCode::Key_Z:
+        return "KeyZ"_string;
+    case KeyCode::Key_Minus:
+    case KeyCode::Key_Underscore:
+        return "Minus"_string;
+    case KeyCode::Key_Period:
+    case KeyCode::Key_GreaterThan:
+        return "Period"_string;
+    case KeyCode::Key_Apostrophe:
+    case KeyCode::Key_DoubleQuote:
+        return "Quote"_string;
+    case KeyCode::Key_Semicolon:
+    case KeyCode::Key_Colon:
+        return "Semicolon"_string;
+    case KeyCode::Key_Slash:
+    case KeyCode::Key_QuestionMark:
+        return "Slash"_string;
+
+    // 3.1.2. Functional Keys, https://www.w3.org/TR/uievents-code/#key-alphanumeric-functional
+    case KeyCode::Key_Alt:
+        return "Alt"_string; // FIXME: Detect left vs. right key.
+    case KeyCode::Key_Backspace:
+        return "Backspace"_string;
+    case KeyCode::Key_CapsLock:
+        return "CapsLock"_string;
+    case KeyCode::Key_Menu:
+        return "ContextMenu"_string;
+    case KeyCode::Key_Control:
+        return "Control"_string; // FIXME: Detect left vs. right key.
+    case KeyCode::Key_Return:
+        return "Enter"_string;
+    case KeyCode::Key_Super:
+        return "Meta"_string; // FIXME: Detect left vs. right key.
+    case KeyCode::Key_LeftShift:
+        return "ShiftLeft"_string;
+    case KeyCode::Key_RightShift:
+        return "ShiftRight"_string;
+    case KeyCode::Key_Space:
+        return "Space"_string;
+    case KeyCode::Key_Tab:
+        return "Tab"_string;
+
+    // 3.2. Control Pad Section, https://www.w3.org/TR/uievents-code/#key-controlpad-section
+    case KeyCode::Key_Delete:
+        return "Delete"_string;
+    case KeyCode::Key_End:
+        return "End"_string;
+    // FIXME: Help
+    case KeyCode::Key_Home:
+        return "Home"_string;
+    case KeyCode::Key_Insert:
+        return "Insert"_string;
+    case KeyCode::Key_PageDown:
+        return "PageDown"_string;
+    case KeyCode::Key_PageUp:
+        return "PageUp"_string;
+
+    // 3.3. Arrow Pad Section, https://www.w3.org/TR/uievents-code/#key-arrowpad-section
+    case KeyCode::Key_Down:
+        return "ArrowDown"_string;
+    case KeyCode::Key_Left:
+        return "ArrowLeft"_string;
+    case KeyCode::Key_Right:
+        return "ArrowRight"_string;
+    case KeyCode::Key_Up:
+        return "ArrowUp"_string;
+
+    // 3.4. Numpad Section, https://www.w3.org/TR/uievents-code/#key-numpad-section
+    case KeyCode::Key_NumLock:
+        return "NumLock"_string;
+
+    // 3.5. Function Section, https://www.w3.org/TR/uievents-code/#key-function-section
+    case KeyCode::Key_Escape:
+        return "Escape"_string;
+    case KeyCode::Key_F1:
+        return "F1"_string;
+    case KeyCode::Key_F2:
+        return "F2"_string;
+    case KeyCode::Key_F3:
+        return "F3"_string;
+    case KeyCode::Key_F4:
+        return "F4"_string;
+    case KeyCode::Key_F5:
+        return "F5"_string;
+    case KeyCode::Key_F6:
+        return "F6"_string;
+    case KeyCode::Key_F7:
+        return "F7"_string;
+    case KeyCode::Key_F8:
+        return "F8"_string;
+    case KeyCode::Key_F9:
+        return "F9"_string;
+    case KeyCode::Key_F10:
+        return "F10"_string;
+    case KeyCode::Key_F11:
+        return "F11"_string;
+    case KeyCode::Key_F12:
+        return "F12"_string;
+    case KeyCode::Key_PrintScreen:
+    case KeyCode::Key_SysRq:
+        return "PrintScreen"_string;
+    case KeyCode::Key_ScrollLock:
+        return "ScrollLock"_string;
+    // FIXME: Pause
+
+    // 3.7. Legacy, Non-Standard and Special Keys, https://www.w3.org/TR/uievents-code/#key-legacy
+    case KeyCode::Key_Invalid:
+        return "Unidentified"_string;
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
 WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyboardEvent>> KeyboardEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, KeyCode platform_key, unsigned modifiers, u32 code_point)
 {
     auto& vm = realm.vm();
 
     // FIXME: Figure out what these should actually contain.
     auto event_key = TRY_OR_THROW_OOM(vm, get_event_key(platform_key, code_point));
-    auto event_code = TRY_OR_THROW_OOM(vm, "FIXME"_string);
+    auto event_code = TRY_OR_THROW_OOM(vm, get_event_code(platform_key, modifiers));
 
     auto key_code = determine_key_code(platform_key, code_point);
     KeyboardEventInit event_init {};
