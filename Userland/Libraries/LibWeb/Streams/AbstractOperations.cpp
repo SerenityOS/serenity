@@ -1156,6 +1156,36 @@ bool readable_byte_stream_controller_should_call_pull(ReadableByteStreamControll
     return false;
 }
 
+// https://streams.spec.whatwg.org/#create-readable-stream
+WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> create_readable_stream(JS::Realm& realm, StartAlgorithm&& start_algorithm, PullAlgorithm&& pull_algorithm, CancelAlgorithm&& cancel_algorithm, Optional<double> high_water_mark, Optional<SizeAlgorithm>&& size_algorithm)
+{
+    // 1. If highWaterMark was not passed, set it to 1.
+    if (!high_water_mark.has_value())
+        high_water_mark = 1.0;
+
+    // 2. If sizeAlgorithm was not passed, set it to an algorithm that returns 1.
+    if (!size_algorithm.has_value())
+        size_algorithm = [](auto const&) { return JS::normal_completion(JS::Value(1)); };
+
+    // 3. Assert: ! IsNonNegativeNumber(highWaterMark) is true.
+    VERIFY(is_non_negative_number(JS::Value { *high_water_mark }));
+
+    // 4. Let stream be a new ReadableStream.
+    auto stream = MUST_OR_THROW_OOM(realm.heap().allocate<ReadableStream>(realm, realm));
+
+    // 5. Perform ! InitializeReadableStream(stream).
+    initialize_readable_stream(*stream);
+
+    // 6. Let controller be a new ReadableStreamDefaultController.
+    auto controller = MUST_OR_THROW_OOM(realm.heap().allocate<ReadableStreamDefaultController>(realm, realm));
+
+    // 7. Perform ? SetUpReadableStreamDefaultController(stream, controller, startAlgorithm, pullAlgorithm, cancelAlgorithm, highWaterMark, sizeAlgorithm).
+    TRY(set_up_readable_stream_default_controller(*stream, *controller, move(start_algorithm), move(pull_algorithm), move(cancel_algorithm), *high_water_mark, move(*size_algorithm)));
+
+    // 8. Return stream.
+    return stream;
+}
+
 // https://streams.spec.whatwg.org/#create-writable-stream
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WritableStream>> create_writable_stream(JS::Realm& realm, StartAlgorithm&& start_algorithm, WriteAlgorithm&& write_algorithm, CloseAlgorithm&& close_algorithm, AbortAlgorithm&& abort_algorithm, double high_water_mark, SizeAlgorithm&& size_algorithm)
 {
