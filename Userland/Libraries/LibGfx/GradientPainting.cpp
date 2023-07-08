@@ -86,7 +86,7 @@ public:
         if (m_use_premultiplied_alpha == UsePremultipliedAlpha::Yes)
             return a.mixed_with(b, amount);
         return a.interpolate(b, amount);
-    };
+    }
 
     Color get_color(i64 index) const
     {

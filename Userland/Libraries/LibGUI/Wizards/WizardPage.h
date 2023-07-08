@@ -18,7 +18,7 @@ class WizardPage : public AbstractWizardPage {
 
     static ErrorOr<NonnullRefPtr<WizardPage>> create(StringView title, StringView subtitle);
 
-    Widget& body_widget() { return *m_body_widget; };
+    Widget& body_widget() { return *m_body_widget; }
 
     void set_page_title(String);
     void set_page_subtitle(String);

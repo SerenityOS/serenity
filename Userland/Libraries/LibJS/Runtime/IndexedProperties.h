@@ -101,7 +101,7 @@ public:
     IndexedPropertyIterator& operator*();
     bool operator!=(IndexedPropertyIterator const&) const;
 
-    u32 index() const { return m_index; };
+    u32 index() const { return m_index; }
 
 private:
     void skip_empty_indices();
@@ -129,8 +129,8 @@ public:
 
     void append(Value value, PropertyAttributes attributes = default_attributes) { put(array_like_size(), value, attributes); }
 
-    IndexedPropertyIterator begin(bool skip_empty = true) const { return IndexedPropertyIterator(*this, 0, skip_empty); };
-    IndexedPropertyIterator end() const { return IndexedPropertyIterator(*this, array_like_size(), false); };
+    IndexedPropertyIterator begin(bool skip_empty = true) const { return IndexedPropertyIterator(*this, 0, skip_empty); }
+    IndexedPropertyIterator end() const { return IndexedPropertyIterator(*this, array_like_size(), false); }
 
     bool is_empty() const { return array_like_size() == 0; }
     size_t array_like_size() const { return m_storage ? m_storage->array_like_size() : 0; }

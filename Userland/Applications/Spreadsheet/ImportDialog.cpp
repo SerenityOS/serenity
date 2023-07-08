@@ -146,7 +146,7 @@ auto CSVImportDialogPage::make_reader() -> Optional<Reader::XSV>
         behaviors = behaviors | Reader::ParserBehavior::TrimTrailingFieldSpaces;
 
     return Reader::XSV(m_csv, move(traits), behaviors);
-};
+}
 
 void CSVImportDialogPage::update_preview()
 

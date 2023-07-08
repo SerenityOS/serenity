@@ -41,7 +41,7 @@ private:
 
     static constexpr u32 first_data_cluster = 2;
 
-    FAT32BootRecord const* boot_record() const { return reinterpret_cast<FAT32BootRecord const*>(m_boot_record->data()); };
+    FAT32BootRecord const* boot_record() const { return reinterpret_cast<FAT32BootRecord const*>(m_boot_record->data()); }
 
     BlockBasedFileSystem::BlockIndex first_block_of_cluster(u32 cluster) const;
 

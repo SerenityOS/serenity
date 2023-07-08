@@ -84,7 +84,7 @@ public:
         auto new_child = ProfileNode::create(m_process, object_name, move(symbol), address, offset, timestamp, pid);
         add_child(new_child);
         return new_child;
-    };
+    }
 
     ProfileNode* parent() { return m_parent; }
     ProfileNode const* parent() const { return m_parent; }

@@ -24,8 +24,8 @@ class PNGChunk {
 
 public:
     explicit PNGChunk(String);
-    auto const& data() const { return m_data; };
-    String const& type() const { return m_type; };
+    auto const& data() const { return m_data; }
+    String const& type() const { return m_type; }
     ErrorOr<void> reserve(size_t bytes) { return m_data.try_ensure_capacity(bytes); }
 
     template<typename T>

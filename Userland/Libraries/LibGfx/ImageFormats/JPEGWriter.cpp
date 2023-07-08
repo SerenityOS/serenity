@@ -262,7 +262,7 @@ private:
     ErrorOr<void> write_symbol(OutputHuffmanTable::Symbol symbol)
     {
         return m_bit_stream.write_bits(symbol.word, symbol.code_length);
-    };
+    }
 
     ErrorOr<void> encode_dc(OutputHuffmanTable const& dc_table, i16 const component[], u8 component_id)
     {
@@ -327,7 +327,7 @@ private:
     {
         VERIFY(coefficient >= -2047 && coefficient <= 2047);
         return floor(log2(abs(coefficient))) + 1;
-    };
+    }
 
     QuantizationTable m_luminance_quantization_table {};
     QuantizationTable m_chrominance_quantization_table {};

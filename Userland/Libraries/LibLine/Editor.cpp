@@ -1335,7 +1335,7 @@ ErrorOr<void> Editor::cleanup()
     m_extra_forward_lines = 0;
     TRY(reposition_cursor(*stderr_stream));
     return {};
-};
+}
 
 ErrorOr<void> Editor::refresh_display()
 {

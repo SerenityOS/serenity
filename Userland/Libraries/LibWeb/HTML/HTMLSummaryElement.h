@@ -18,7 +18,7 @@ public:
     virtual ~HTMLSummaryElement() override;
 
     // https://www.w3.org/TR/html-aria/#el-details
-    virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::button; };
+    virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::button; }
 
     bool is_summary_for_its_parent_details();
 

@@ -142,7 +142,7 @@ private:
     template<typename T>
     int unicode_view_width(T const& view) const;
 
-    void update_x_height() { m_x_height = m_baseline - m_mean_line; };
+    void update_x_height() { m_x_height = m_baseline - m_mean_line; }
 
     virtual bool has_color_bitmaps() const override { return false; }
 

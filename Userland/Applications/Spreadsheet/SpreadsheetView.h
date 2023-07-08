@@ -107,7 +107,7 @@ public:
 
     void move_cursor(GUI::AbstractView::CursorMovement);
 
-    NonnullRefPtr<SheetModel> model() { return m_sheet_model; };
+    NonnullRefPtr<SheetModel> model() { return m_sheet_model; }
 
 private:
     virtual void hide_event(GUI::HideEvent&) override;

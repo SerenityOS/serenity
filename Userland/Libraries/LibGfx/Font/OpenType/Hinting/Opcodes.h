@@ -166,9 +166,9 @@ struct Instruction {
     bool d() const;
     bool e() const;
 
-    u8 flag_bits() const { return m_flag_bits; };
+    u8 flag_bits() const { return m_flag_bits; }
     Opcode opcode() const { return m_opcode; }
-    ReadonlyBytes values() const { return m_values; };
+    ReadonlyBytes values() const { return m_values; }
 
     Instruction(Opcode opcode, ReadonlyBytes values = {});
 

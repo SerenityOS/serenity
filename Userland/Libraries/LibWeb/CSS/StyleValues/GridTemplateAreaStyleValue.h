@@ -21,7 +21,7 @@ public:
     Vector<Vector<String>> const& grid_template_area() const { return m_grid_template_area; }
     virtual ErrorOr<String> to_string() const override;
 
-    bool properties_equal(GridTemplateAreaStyleValue const& other) const { return m_grid_template_area == other.m_grid_template_area; };
+    bool properties_equal(GridTemplateAreaStyleValue const& other) const { return m_grid_template_area == other.m_grid_template_area; }
 
 private:
     explicit GridTemplateAreaStyleValue(Vector<Vector<String>> grid_template_area)

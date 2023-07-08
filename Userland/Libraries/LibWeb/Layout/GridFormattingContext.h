@@ -58,7 +58,7 @@ public:
     {
         m_max_column_index = max(0, columns_count - 1);
         m_max_row_index = max(0, rows_count - 1);
-    };
+    }
     OccupationGrid() {};
 
     void set_occupied(int column_start, int column_end, int row_start, int row_end);
@@ -74,9 +74,9 @@ public:
     }
 
     int min_column_index() const { return m_min_column_index; }
-    int max_column_index() const { return m_max_column_index; };
-    int min_row_index() const { return m_min_row_index; };
-    int max_row_index() const { return m_max_row_index; };
+    int max_column_index() const { return m_max_column_index; }
+    int min_row_index() const { return m_min_row_index; }
+    int max_row_index() const { return m_max_row_index; }
 
     bool is_occupied(int column_index, int row_index) const;
 

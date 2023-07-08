@@ -74,7 +74,7 @@ public:
                 roots.set(value);
             }
         }
-    };
+    }
 };
 
 }

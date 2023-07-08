@@ -33,18 +33,18 @@ public:
 
     Vector<JS::Handle<Navigable>> child_navigables() const;
 
-    String const& id() const { return m_id; };
-    JS::GCPtr<Navigable> parent() const { return m_parent; };
+    String const& id() const { return m_id; }
+    JS::GCPtr<Navigable> parent() const { return m_parent; }
 
-    bool is_closing() const { return m_closing; };
-    void set_closing(bool value) { m_closing = value; };
+    bool is_closing() const { return m_closing; }
+    void set_closing(bool value) { m_closing = value; }
 
-    bool is_delaying_load_events() const { return m_delaying_load_events; };
-    void set_delaying_load_events(bool value) { m_delaying_load_events = value; };
+    bool is_delaying_load_events() const { return m_delaying_load_events; }
+    void set_delaying_load_events(bool value) { m_delaying_load_events = value; }
 
-    JS::GCPtr<SessionHistoryEntry> active_session_history_entry() const { return m_active_session_history_entry; };
-    JS::GCPtr<SessionHistoryEntry> current_session_history_entry() const { return m_current_session_history_entry; };
-    void set_current_session_history_entry(JS::GCPtr<SessionHistoryEntry> entry) { m_current_session_history_entry = entry; };
+    JS::GCPtr<SessionHistoryEntry> active_session_history_entry() const { return m_active_session_history_entry; }
+    JS::GCPtr<SessionHistoryEntry> current_session_history_entry() const { return m_current_session_history_entry; }
+    void set_current_session_history_entry(JS::GCPtr<SessionHistoryEntry> entry) { m_current_session_history_entry = entry; }
 
     Vector<JS::NonnullGCPtr<SessionHistoryEntry>>& get_session_history_entries() const;
 

@@ -27,7 +27,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool properties_equal(ContentStyleValue const& other) const { return m_properties == other.m_properties; };
+    bool properties_equal(ContentStyleValue const& other) const { return m_properties == other.m_properties; }
 
 private:
     ContentStyleValue(ValueComparingNonnullRefPtr<StyleValueList> content, ValueComparingRefPtr<StyleValueList> alt_text)

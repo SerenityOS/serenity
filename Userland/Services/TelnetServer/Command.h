@@ -58,5 +58,5 @@ struct Command {
         }
 
         return builder.to_deprecated_string();
-    };
+    }
 };

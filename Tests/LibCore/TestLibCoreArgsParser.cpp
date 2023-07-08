@@ -314,7 +314,7 @@ TEST_CASE(combination_of_bool_options_with_positional_vector_string)
         parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::No);
     });
     EXPECT_EQ(parser_result.result, false);
-};
+}
 
 TEST_CASE(stop_on_first_non_option)
 {

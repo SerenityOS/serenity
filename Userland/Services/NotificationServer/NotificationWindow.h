@@ -16,7 +16,7 @@ class NotificationWindow final : public GUI::Window {
 
 public:
     virtual ~NotificationWindow() override = default;
-    void set_original_rect(Gfx::IntRect original_rect) { m_original_rect = original_rect; };
+    void set_original_rect(Gfx::IntRect original_rect) { m_original_rect = original_rect; }
 
     void set_text(DeprecatedString const&);
     void set_title(DeprecatedString const&);

@@ -19,7 +19,7 @@ public:
     virtual StringView class_name() const override { return "InvertFilter"sv; }
 
 protected:
-    Color convert_color(Color original) override { return original.inverted(); };
+    Color convert_color(Color original) override { return original.inverted(); }
 };
 
 }

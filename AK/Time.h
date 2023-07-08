@@ -221,9 +221,9 @@ public:
     [[nodiscard]] static Duration from_timespec(const struct timespec&);
     [[nodiscard]] static Duration from_timeval(const struct timeval&);
     // We don't pull in <stdint.h> for the pretty min/max definitions because this file is also included in the Kernel
-    [[nodiscard]] constexpr static Duration min() { return Duration(-__INT64_MAX__ - 1LL, 0); };
-    [[nodiscard]] constexpr static Duration zero() { return Duration(0, 0); };
-    [[nodiscard]] constexpr static Duration max() { return Duration(__INT64_MAX__, 999'999'999); };
+    [[nodiscard]] constexpr static Duration min() { return Duration(-__INT64_MAX__ - 1LL, 0); }
+    [[nodiscard]] constexpr static Duration zero() { return Duration(0, 0); }
+    [[nodiscard]] constexpr static Duration max() { return Duration(__INT64_MAX__, 999'999'999); }
 
     // Truncates towards zero (2.8s to 2s, -2.8s to -2s).
     [[nodiscard]] i64 to_truncated_seconds() const;
@@ -433,15 +433,15 @@ public:
     [[nodiscard]] i64 truncated_seconds_since_epoch() const { return m_offset.to_truncated_seconds(); }
 
     // Offsetting a UNIX time by a duration yields another UNIX time.
-    constexpr UnixDateTime operator+(Duration const& other) const { return UnixDateTime { m_offset + other }; };
+    constexpr UnixDateTime operator+(Duration const& other) const { return UnixDateTime { m_offset + other }; }
     constexpr UnixDateTime& operator+=(Duration const& other)
     {
         this->m_offset = this->m_offset + other;
         return *this;
-    };
-    constexpr UnixDateTime operator-(Duration const& other) const { return UnixDateTime { m_offset - other }; };
+    }
+    constexpr UnixDateTime operator-(Duration const& other) const { return UnixDateTime { m_offset - other }; }
     // Subtracting two UNIX times yields their time difference.
-    constexpr Duration operator-(UnixDateTime const& other) const { return m_offset - other.m_offset; };
+    constexpr Duration operator-(UnixDateTime const& other) const { return m_offset - other.m_offset; }
 
 #ifndef KERNEL
     [[nodiscard]] static UnixDateTime now();

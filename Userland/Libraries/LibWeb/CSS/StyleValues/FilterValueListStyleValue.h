@@ -83,7 +83,7 @@ public:
 
     virtual ~FilterValueListStyleValue() override = default;
 
-    bool properties_equal(FilterValueListStyleValue const& other) const { return m_filter_value_list == other.m_filter_value_list; };
+    bool properties_equal(FilterValueListStyleValue const& other) const { return m_filter_value_list == other.m_filter_value_list; }
 
 private:
     FilterValueListStyleValue(Vector<FilterFunction> filter_value_list)

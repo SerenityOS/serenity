@@ -34,7 +34,7 @@ public:
         CipherBlock::overwrite(data, length);
     }
 
-    constexpr static size_t block_size() { return BlockSizeInBits / 8; };
+    constexpr static size_t block_size() { return BlockSizeInBits / 8; }
 
     virtual ReadonlyBytes bytes() const override { return ReadonlyBytes { m_data, sizeof(m_data) }; }
     virtual Bytes bytes() override { return Bytes { m_data, sizeof(m_data) }; }
@@ -59,10 +59,10 @@ private:
 };
 
 struct AESCipherKey : public CipherKey {
-    virtual ReadonlyBytes bytes() const override { return ReadonlyBytes { m_rd_keys, sizeof(m_rd_keys) }; };
+    virtual ReadonlyBytes bytes() const override { return ReadonlyBytes { m_rd_keys, sizeof(m_rd_keys) }; }
     virtual void expand_encrypt_key(ReadonlyBytes user_key, size_t bits) override;
     virtual void expand_decrypt_key(ReadonlyBytes user_key, size_t bits) override;
-    static bool is_valid_key_size(size_t bits) { return bits == 128 || bits == 192 || bits == 256; };
+    static bool is_valid_key_size(size_t bits) { return bits == 128 || bits == 192 || bits == 256; }
 
 #ifndef KERNEL
     DeprecatedString to_deprecated_string() const;
@@ -114,8 +114,8 @@ public:
     {
     }
 
-    virtual AESCipherKey const& key() const override { return m_key; };
-    virtual AESCipherKey& key() override { return m_key; };
+    virtual AESCipherKey const& key() const override { return m_key; }
+    virtual AESCipherKey& key() override { return m_key; }
 
     virtual void encrypt_block(BlockType const& in, BlockType& out) override;
     virtual void decrypt_block(BlockType const& in, BlockType& out) override;

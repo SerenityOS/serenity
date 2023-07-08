@@ -279,7 +279,7 @@ void FlexFormattingContext::populate_specified_margins(FlexItem& item, CSS::Flex
         item.margins.cross_before_is_auto = item.box->computed_values().margin().left().is_auto();
         item.margins.cross_after_is_auto = item.box->computed_values().margin().right().is_auto();
     }
-};
+}
 
 // https://www.w3.org/TR/css-flexbox-1/#flex-items
 void FlexFormattingContext::generate_anonymous_flex_items()

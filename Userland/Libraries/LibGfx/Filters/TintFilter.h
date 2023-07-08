@@ -29,7 +29,7 @@ protected:
         return Color::from_rgb(dest.value())
             .mixed_with(m_color, m_amount)
             .with_alpha(dest.alpha());
-    };
+    }
 
 private:
     Gfx::Color m_color;

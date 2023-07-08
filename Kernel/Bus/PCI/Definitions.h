@@ -374,7 +374,7 @@ public:
     u32 get_msix_table_offset() const { return m_msix_info.table_offset; }
 
     bool is_msi_capable() const { return m_msi_info.count > 0; }
-    bool is_msi_64bit_address_format() { return m_msi_info.message_address_64_bit_format; };
+    bool is_msi_64bit_address_format() { return m_msi_info.message_address_64_bit_format; }
 
     Spinlock<LockRank::None>& operation_lock() { return m_operation_lock; }
     Spinlock<LockRank::None>& operation_lock() const { return m_operation_lock; }

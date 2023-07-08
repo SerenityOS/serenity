@@ -200,8 +200,8 @@ public:
 
     Gfx::IntRect rect() const { return { 0, 0, width(), height() }; }
     Gfx::IntSize size() const { return m_relative_rect.size(); }
-    Gfx::IntRect content_rect() const { return this->content_margins().applied_to(rect()); };
-    Gfx::IntSize content_size() const { return this->content_rect().size(); };
+    Gfx::IntRect content_rect() const { return this->content_margins().applied_to(rect()); }
+    Gfx::IntSize content_size() const { return this->content_rect().size(); }
 
     // Invalidate the widget (or an area thereof), causing a repaint to happen soon.
     void update();

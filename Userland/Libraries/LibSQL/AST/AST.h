@@ -154,7 +154,7 @@ public:
     {
     }
 
-    bool return_all_columns() const { return m_columns.is_empty(); };
+    bool return_all_columns() const { return m_columns.is_empty(); }
     Vector<ColumnClause> const& columns() const { return m_columns; }
 
 private:
@@ -975,7 +975,7 @@ public:
     DeprecatedString const& alias() const { return m_alias; }
     Vector<DeprecatedString> const& column_names() const { return m_column_names; }
 
-    bool default_values() const { return !has_expressions() && !has_selection(); };
+    bool default_values() const { return !has_expressions() && !has_selection(); }
 
     bool has_expressions() const { return !m_chained_expressions.is_empty(); }
     Vector<NonnullRefPtr<ChainedExpression>> const& chained_expressions() const { return m_chained_expressions; }

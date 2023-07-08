@@ -42,6 +42,6 @@ DirectoryEntry DirectoryEntry::from_dirent(dirent const& de)
         .type = directory_entry_type_from_posix(de.d_type),
         .name = de.d_name,
     };
-};
+}
 
 }

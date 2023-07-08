@@ -53,7 +53,7 @@ public:
     void show_inspector_window(InspectorTarget = InspectorTarget::Document);
     void show_console_window();
 
-    Ladybird::ConsoleWidget* console() { return m_console_widget; };
+    Ladybird::ConsoleWidget* console() { return m_console_widget; }
 
 public slots:
     void focus_location_editor();

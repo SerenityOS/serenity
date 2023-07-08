@@ -286,7 +286,7 @@ private:
             m_loop.quit(0);
             return;
         }
-    };
+    }
 
     static DeprecatedString prompt_for_level(int level)
     {

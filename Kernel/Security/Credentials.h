@@ -26,7 +26,7 @@ public:
     UserID suid() const { return m_suid; }
     GroupID sgid() const { return m_sgid; }
     ReadonlySpan<GroupID> extra_gids() const { return m_extra_gids.span(); }
-    SessionID sid() const { return m_sid; };
+    SessionID sid() const { return m_sid; }
     ProcessGroupID pgid() const { return m_pgid; }
 
     bool in_group(GroupID) const;

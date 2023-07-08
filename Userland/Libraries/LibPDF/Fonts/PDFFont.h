@@ -29,7 +29,7 @@ public:
     virtual PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint, DeprecatedString const&, Color const&, float font_size, float character_spacing, float horizontal_scaling) = 0;
 
     virtual Type type() const = 0;
-    DeprecatedFlyString base_font_name() const { return m_base_font_name; };
+    DeprecatedFlyString base_font_name() const { return m_base_font_name; }
 
 protected:
     virtual PDFErrorOr<void> initialize(Document* document, NonnullRefPtr<DictObject> const& dict, float font_size);

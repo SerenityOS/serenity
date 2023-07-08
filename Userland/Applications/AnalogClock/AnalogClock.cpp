@@ -96,7 +96,7 @@ void AnalogClock::draw_hand(GUI::Painter& painter, double angle, double length, 
         painter.draw_line(left_wing_point, indicator_point, palette().threed_highlight());
         painter.draw_line(left_wing_point, tail_point, palette().threed_highlight());
     }
-};
+}
 
 void AnalogClock::draw_seconds_hand(GUI::Painter& painter, double angle)
 {

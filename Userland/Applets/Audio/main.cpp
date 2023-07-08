@@ -119,7 +119,7 @@ private:
         };
 
         return {};
-    };
+    }
 
 public:
     virtual ~AudioWidget() override = default;

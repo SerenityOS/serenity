@@ -1538,7 +1538,7 @@ NAKED void thread_context_first_enter(void)
         "    cld \n"
         "    call context_first_init \n"
         "    jmp common_trap_exit \n");
-};
+}
 
 NAKED void do_assume_context(Thread*, u32)
 {

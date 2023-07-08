@@ -24,6 +24,6 @@ auto debounce(int timeout, TFunction function)
         }
         timer->start();
     };
-};
+}
 
 }

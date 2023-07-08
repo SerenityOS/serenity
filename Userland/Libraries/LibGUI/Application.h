@@ -44,7 +44,7 @@ public:
     void show_tooltip(DeprecatedString, Widget const* tooltip_source_widget);
     void show_tooltip_immediately(DeprecatedString, Widget const* tooltip_source_widget);
     void hide_tooltip();
-    Widget const* tooltip_source_widget() { return m_tooltip_source_widget; };
+    Widget const* tooltip_source_widget() { return m_tooltip_source_widget; }
 
     bool quit_when_last_window_deleted() const { return m_quit_when_last_window_deleted; }
     void set_quit_when_last_window_deleted(bool b) { m_quit_when_last_window_deleted = b; }

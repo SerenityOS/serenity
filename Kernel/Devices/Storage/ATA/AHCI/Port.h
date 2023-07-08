@@ -42,7 +42,7 @@ public:
     u32 port_index() const { return m_port_index; }
     u32 representative_port_index() const { return port_index() + 1; }
     bool is_operable() const;
-    bool is_atapi_attached() const { return m_port_registers.sig == (u32)ATA::DeviceSignature::ATAPI; };
+    bool is_atapi_attached() const { return m_port_registers.sig == (u32)ATA::DeviceSignature::ATAPI; }
 
     LockRefPtr<StorageDevice> connected_device() const { return m_connected_device; }
 
@@ -96,7 +96,7 @@ private:
 
     Optional<u8> try_to_find_unused_command_header();
 
-    ALWAYS_INLINE bool is_interface_disabled() const { return (m_port_registers.ssts & 0xf) == 4; };
+    ALWAYS_INLINE bool is_interface_disabled() const { return (m_port_registers.ssts & 0xf) == 4; }
 
     ALWAYS_INLINE void wait_until_condition_met_or_timeout(size_t delay_in_microseconds, size_t retries, Function<bool(void)> condition_being_met) const;
 

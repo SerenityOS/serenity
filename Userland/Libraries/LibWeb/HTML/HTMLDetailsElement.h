@@ -18,7 +18,7 @@ public:
     virtual ~HTMLDetailsElement() override;
 
     // https://www.w3.org/TR/html-aria/#el-details
-    virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::group; };
+    virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::group; }
 
     // ^Element
     WebIDL::ExceptionOr<void> set_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;

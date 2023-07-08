@@ -199,7 +199,7 @@ static ErrorOr<RequiredLoadRange> get_required_load_range(OpenFileDescription& p
 
     VERIFY(range.end > range.start);
     return range;
-};
+}
 
 static ErrorOr<FlatPtr> get_load_offset(const ElfW(Ehdr) & main_program_header, OpenFileDescription& main_program_description, OpenFileDescription* interpreter_description)
 {

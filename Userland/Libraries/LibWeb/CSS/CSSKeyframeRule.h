@@ -27,7 +27,7 @@ public:
 
     virtual ~CSSKeyframeRule() = default;
 
-    virtual Type type() const override { return Type::Keyframe; };
+    virtual Type type() const override { return Type::Keyframe; }
 
     CSS::Percentage key() const { return m_key; }
     JS::NonnullGCPtr<CSSStyleDeclaration> style() const { return m_declarations; }

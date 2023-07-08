@@ -36,7 +36,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool properties_equal(FontStyleValue const& other) const { return m_properties == other.m_properties; };
+    bool properties_equal(FontStyleValue const& other) const { return m_properties == other.m_properties; }
 
 private:
     FontStyleValue(ValueComparingNonnullRefPtr<StyleValue> font_stretch, ValueComparingNonnullRefPtr<StyleValue> font_style, ValueComparingNonnullRefPtr<StyleValue> font_weight, ValueComparingNonnullRefPtr<StyleValue> font_size, ValueComparingNonnullRefPtr<StyleValue> line_height, ValueComparingNonnullRefPtr<StyleValue> font_families)

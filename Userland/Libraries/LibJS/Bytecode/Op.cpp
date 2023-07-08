@@ -625,7 +625,7 @@ ThrowCompletionOr<void> DeleteById::execute_impl(Bytecode::Interpreter& interpre
     auto reference = Reference { base_value, identifier, {}, strict };
     interpreter.accumulator() = Value(TRY(reference.delete_(vm)));
     return {};
-};
+}
 
 ThrowCompletionOr<void> DeleteByIdWithThis::execute_impl(Bytecode::Interpreter& interpreter) const
 {
@@ -636,7 +636,7 @@ ThrowCompletionOr<void> DeleteByIdWithThis::execute_impl(Bytecode::Interpreter& 
     auto reference = Reference { base_value, identifier, interpreter.reg(m_this_value), strict };
     interpreter.accumulator() = Value(TRY(reference.delete_(vm)));
     return {};
-};
+}
 
 ThrowCompletionOr<void> Jump::execute_impl(Bytecode::Interpreter& interpreter) const
 {
@@ -1139,7 +1139,7 @@ ThrowCompletionOr<void> DeleteByValueWithThis::execute_impl(Bytecode::Interprete
     auto reference = Reference { base_value, property_key, interpreter.reg(m_this_value), strict };
     interpreter.accumulator() = Value(TRY(reference.delete_(vm)));
     return {};
-};
+}
 
 ThrowCompletionOr<void> GetIterator::execute_impl(Bytecode::Interpreter& interpreter) const
 {

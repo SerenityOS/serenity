@@ -40,10 +40,10 @@ public:
     ByteBuffer const& body() const { return m_body; }
     void set_body(ByteBuffer body) { m_body = move(body); }
 
-    void start_timer() { m_load_timer.start(); };
+    void start_timer() { m_load_timer.start(); }
     Duration load_time() const { return m_load_timer.elapsed_time(); }
 
-    Optional<Page&>& page() { return m_page; };
+    Optional<Page&>& page() { return m_page; }
     void set_page(Page& page) { m_page = page; }
 
     unsigned hash() const

@@ -300,7 +300,7 @@ public:
     JS::NonnullGCPtr<Document> appropriate_template_contents_owner_document();
 
     DeprecatedString ready_state() const;
-    HTML::DocumentReadyState readiness() const { return m_readiness; };
+    HTML::DocumentReadyState readiness() const { return m_readiness; }
     void update_readiness(HTML::DocumentReadyState);
 
     HTML::Window& window() const { return const_cast<HTML::Window&>(*m_window); }
@@ -483,7 +483,7 @@ public:
 
     void make_active();
 
-    void set_salvageable(bool value) { m_salvageable = value; };
+    void set_salvageable(bool value) { m_salvageable = value; }
 
     HTML::ListOfAvailableImages& list_of_available_images();
     HTML::ListOfAvailableImages const& list_of_available_images() const;

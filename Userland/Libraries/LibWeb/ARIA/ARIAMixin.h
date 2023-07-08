@@ -167,7 +167,7 @@ public:
     virtual WebIDL::ExceptionOr<void> set_aria_value_text(DeprecatedString const&) = 0;
 
     // https://www.w3.org/TR/html-aria/#docconformance
-    virtual Optional<Role> default_role() const { return {}; };
+    virtual Optional<Role> default_role() const { return {}; }
 
     Optional<Role> role_or_default() const;
 

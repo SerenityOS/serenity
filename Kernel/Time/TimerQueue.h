@@ -63,7 +63,7 @@ private:
     void clear_cancelled() { return m_cancelled.store(false, AK::memory_order_release); }
     bool set_cancelled() { return m_cancelled.exchange(true, AK::memory_order_acq_rel); }
 
-    bool is_in_use() { return m_in_use.load(AK::memory_order_acquire); };
+    bool is_in_use() { return m_in_use.load(AK::memory_order_acquire); }
     void set_in_use() { m_in_use.store(true, AK::memory_order_release); }
     void clear_in_use() { return m_in_use.store(false, AK::memory_order_release); }
 

@@ -20,7 +20,7 @@ void safe_write(CircularBuffer& buffer, u8 i)
     Bytes b { &i, 1 };
     auto written_bytes = buffer.write(b);
     EXPECT_EQ(written_bytes, 1ul);
-};
+}
 
 void safe_read(CircularBuffer& buffer, u8 supposed_result)
 {
@@ -29,12 +29,12 @@ void safe_read(CircularBuffer& buffer, u8 supposed_result)
     b = buffer.read(b);
     EXPECT_EQ(b.size(), 1ul);
     EXPECT_EQ(*b.data(), supposed_result);
-};
+}
 
 void safe_discard(CircularBuffer& buffer, size_t size)
 {
     TRY_OR_FAIL(buffer.discard(size));
-};
+}
 
 }
 
