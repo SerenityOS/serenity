@@ -1156,6 +1156,29 @@ bool readable_byte_stream_controller_should_call_pull(ReadableByteStreamControll
     return false;
 }
 
+// https://streams.spec.whatwg.org/#initialize-writable-stream
+void initialize_writable_stream(WritableStream& stream)
+{
+    // 1. Set stream.[[state]] to "writable".
+    stream.set_state(WritableStream::State::Writable);
+
+    // 2. Set stream.[[storedError]], stream.[[writer]], stream.[[controller]], stream.[[inFlightWriteRequest]],
+    //    stream.[[closeRequest]], stream.[[inFlightCloseRequest]], and stream.[[pendingAbortRequest]] to undefined.
+    stream.set_stored_error(JS::js_undefined());
+    stream.set_writer({});
+    stream.set_controller({});
+    stream.set_in_flight_write_request({});
+    stream.set_close_request({});
+    stream.set_in_flight_close_request({});
+    stream.set_pending_abort_request({});
+
+    // 3. Set stream.[[writeRequests]] to a new empty list.
+    stream.write_requests().clear();
+
+    // 4. Set stream.[[backpressure]] to false.
+    stream.set_backpressure(false);
+}
+
 // https://streams.spec.whatwg.org/#acquire-writable-stream-default-writer
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WritableStreamDefaultWriter>> acquire_writable_stream_default_writer(WritableStream& stream)
 {
