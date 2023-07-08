@@ -120,6 +120,14 @@ If you want to test whether your code changes compile without running the VM you
 `Meta/serenity.sh build`. The `serenity.sh` script also provides a number of other commands. Run the script without
 arguments for a list.
 
+## Run
+
+After building and running SerenityOS successfully for the first time, the same command that was used to build SerenityOS can also be used to attempt to run without having to rebuild.
+
+```console
+Meta/serenity.sh run
+```
+
 ## Ports
 
 To add a package from the ports collection to Serenity, for example curl, change into the `Ports/curl` directory and
