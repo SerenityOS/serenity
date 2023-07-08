@@ -298,7 +298,10 @@ CodeGenerationErrorOr<void> Generator::emit_delete_reference(JS::ASTNode const& 
 {
     if (is<Identifier>(node)) {
         auto& identifier = static_cast<Identifier const&>(node);
-        emit<Bytecode::Op::DeleteVariable>(intern_identifier(identifier.string()));
+        if (identifier.is_local())
+            emit<Bytecode::Op::LoadImmediate>(Value(false));
+        else
+            emit<Bytecode::Op::DeleteVariable>(intern_identifier(identifier.string()));
         return {};
     }
 
