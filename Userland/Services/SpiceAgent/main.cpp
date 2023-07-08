@@ -31,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Desktop::Launcher::add_allowed_url(URL::create_with_file_scheme(Core::StandardPaths::downloads_directory())));
     TRY(Desktop::Launcher::seal_allowlist());
 
-    TRY(Core::System::pledge("unix rpath wpath stdio sendfd recvfd"));
+    TRY(Core::System::pledge("unix rpath wpath cpath stdio sendfd recvfd"));
     TRY(Core::System::unveil(SPICE_DEVICE, "rw"sv));
     TRY(Core::System::unveil(Core::StandardPaths::downloads_directory(), "rwc"sv));
     TRY(Core::System::unveil(nullptr, nullptr));
