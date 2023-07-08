@@ -1,7 +1,9 @@
 ---
 Language: Cpp
 AlignEscapedNewlines: Left
-AlignTrailingComments: true
+AlignTrailingComments:
+    Kind: Always
+    OverEmptyLines: 0
 BasedOnStyle: WebKit
 BraceWrapping:
     AfterFunction: true
@@ -10,7 +12,10 @@ BreakBeforeInheritanceComma: true
 BreakConstructorInitializers: BeforeComma
 IndentPPDirectives: AfterHash
 IndentRequiresClause: false
+InsertNewlineAtEOF: true
+LineEnding: LF
 NamespaceIndentation: None
 QualifierAlignment: Right
 RequiresClausePosition: WithFollowing
+RequiresExpressionIndentation: OuterScope
 SpaceAfterTemplateKeyword: false
