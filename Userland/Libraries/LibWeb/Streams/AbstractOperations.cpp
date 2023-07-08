@@ -1156,6 +1156,28 @@ bool readable_byte_stream_controller_should_call_pull(ReadableByteStreamControll
     return false;
 }
 
+// https://streams.spec.whatwg.org/#create-writable-stream
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WritableStream>> create_writable_stream(JS::Realm& realm, StartAlgorithm&& start_algorithm, WriteAlgorithm&& write_algorithm, CloseAlgorithm&& close_algorithm, AbortAlgorithm&& abort_algorithm, double high_water_mark, SizeAlgorithm&& size_algorithm)
+{
+    // 1. Assert: ! IsNonNegativeNumber(highWaterMark) is true.
+    VERIFY(is_non_negative_number(JS::Value { high_water_mark }));
+
+    // 2. Let stream be a new WritableStream.
+    auto stream = MUST_OR_THROW_OOM(realm.heap().allocate<WritableStream>(realm, realm));
+
+    // 3. Perform ! InitializeWritableStream(stream).
+    initialize_writable_stream(*stream);
+
+    // 4. Let controller be a new WritableStreamDefaultController.
+    auto controller = MUST_OR_THROW_OOM(realm.heap().allocate<WritableStreamDefaultController>(realm, realm));
+
+    // 5. Perform ? SetUpWritableStreamDefaultController(stream, controller, startAlgorithm, writeAlgorithm, closeAlgorithm, abortAlgorithm, highWaterMark, sizeAlgorithm).
+    TRY(set_up_writable_stream_default_controller(*stream, *controller, move(start_algorithm), move(write_algorithm), move(close_algorithm), move(abort_algorithm), high_water_mark, move(size_algorithm)));
+
+    // 6. Return stream.
+    return stream;
+}
+
 // https://streams.spec.whatwg.org/#initialize-writable-stream
 void initialize_writable_stream(WritableStream& stream)
 {
