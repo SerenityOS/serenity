@@ -43,7 +43,7 @@ private:
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
     virtual StringView class_name() const override { return "MasterPTY"sv; }
 
-    LockRefPtr<SlavePTY> m_slave;
+    SpinlockProtected<RefPtr<SlavePTY>, LockRank::None> m_slave;
     unsigned m_index;
     bool m_closed { false };
     NonnullOwnPtr<DoubleBuffer> m_buffer;
