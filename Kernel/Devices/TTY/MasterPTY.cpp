@@ -16,12 +16,12 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullLockRefPtr<MasterPTY>> MasterPTY::try_create(unsigned int index)
+ErrorOr<NonnullRefPtr<MasterPTY>> MasterPTY::try_create(unsigned int index)
 {
     auto buffer = TRY(DoubleBuffer::try_create("MasterPTY: Buffer"sv));
-    auto master_pty = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) MasterPTY(index, move(buffer))));
+    auto master_pty = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MasterPTY(index, move(buffer))));
     auto credentials = Process::current().credentials();
-    auto slave_pty = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) SlavePTY(*master_pty, credentials->uid(), credentials->gid(), index)));
+    auto slave_pty = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) SlavePTY(*master_pty, credentials->uid(), credentials->gid(), index)));
     master_pty->m_slave.with([&slave_pty](auto& slave) {
         slave = *slave_pty;
     });
