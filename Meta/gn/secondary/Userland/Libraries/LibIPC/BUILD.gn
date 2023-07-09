@@ -9,7 +9,6 @@ shared_library("LibIPC") {
     "ConnectionToServer.h",
     "Decoder.cpp",
     "Decoder.h",
-    "Dictionary.h",
     "Encoder.cpp",
     "Encoder.h",
     "File.h",
