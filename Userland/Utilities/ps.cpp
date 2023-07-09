@@ -163,15 +163,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& processes = all_processes.processes;
 
     // Filter
-    if (!pid_list.is_empty()) {
-        processes.remove_all_matching([&](auto& process) { return !pid_list.contains_slow(process.pid); });
-    } else if (!uid_list.is_empty()) {
-        processes.remove_all_matching([&](auto& process) { return !uid_list.contains_slow(process.uid); });
-    } else if (every_terminal_process_flag) {
-        processes.remove_all_matching([&](auto& process) { return process.tty.is_empty(); });
-    } else if (!every_process_flag) {
-        // Default is to show processes from the current TTY
-        processes.remove_all_matching([&](Core::ProcessStatistics& process) { return process.tty.view() != this_pseudo_tty_name.bytes_as_string_view(); });
+    if (!every_process_flag) {
+        Vector<Core::ProcessStatistics> filtered_processes;
+
+        for (auto const& process : processes) {
+            // Default is to show processes from the current TTY
+            if ((!provided_filtering_option && process.tty == this_pseudo_tty_name.bytes_as_string_view())
+                || (!pid_list.is_empty() && pid_list.contains_slow(process.pid))
+                || (!uid_list.is_empty() && uid_list.contains_slow(process.uid))
+                || (every_terminal_process_flag && !process.tty.is_empty())) {
+                filtered_processes.append(process);
+            }
+        }
+
+        processes = move(filtered_processes);
     }
 
     // Sort
