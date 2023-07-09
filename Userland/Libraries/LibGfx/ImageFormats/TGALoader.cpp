@@ -205,11 +205,6 @@ ErrorOr<void> TGAImageDecoderPlugin::decode_tga_header()
     return {};
 }
 
-ErrorOr<void> TGAImageDecoderPlugin::initialize()
-{
-    return decode_tga_header();
-}
-
 ErrorOr<bool> TGAImageDecoderPlugin::validate_before_create(ReadonlyBytes data)
 {
     if (data.size() < sizeof(TGAHeader))
@@ -225,7 +220,9 @@ ErrorOr<bool> TGAImageDecoderPlugin::validate_before_create(ReadonlyBytes data)
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> TGAImageDecoderPlugin::create(ReadonlyBytes data)
 {
-    return adopt_nonnull_own_or_enomem(new (nothrow) TGAImageDecoderPlugin(data.data(), data.size()));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) TGAImageDecoderPlugin(data.data(), data.size())));
+    TRY(plugin->decode_tga_header());
+    return plugin;
 }
 
 bool TGAImageDecoderPlugin::is_animated()
