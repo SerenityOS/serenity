@@ -13,7 +13,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/OpenType/Tables.h>
-#include <LibGfx/Font/PathRasterizer.h>
+#include <LibGfx/Painter.h>
 #include <math.h>
 
 namespace OpenType {
@@ -97,11 +97,11 @@ public:
             u32 m_offset { 0 };
         };
 
-        void rasterize_impl(Gfx::PathRasterizer&, Gfx::AffineTransform const&) const;
+        void rasterize_impl(Gfx::Painter&, Gfx::AffineTransform const&) const;
         RefPtr<Gfx::Bitmap> rasterize_simple(i16 ascender, i16 descender, float x_scale, float y_scale, Gfx::GlyphSubpixelOffset) const;
 
         template<typename GlyphCb>
-        void rasterize_composite_loop(Gfx::PathRasterizer& rasterizer, Gfx::AffineTransform const& transform, GlyphCb glyph_callback) const
+        void rasterize_composite_loop(Gfx::Painter& painter, Gfx::AffineTransform const& transform, GlyphCb glyph_callback) const
         {
             ComponentIterator component_iterator(m_slice);
 
@@ -118,9 +118,9 @@ public:
                     continue;
 
                 if (glyph->m_type == Type::Simple) {
-                    glyph->rasterize_impl(rasterizer, affine_here);
+                    glyph->rasterize_impl(painter, affine_here);
                 } else {
-                    glyph->rasterize_composite_loop(rasterizer, transform, glyph_callback);
+                    glyph->rasterize_composite_loop(painter, transform, glyph_callback);
                 }
             }
         }
@@ -130,15 +130,16 @@ public:
         {
             u32 width = (u32)(ceilf((m_xmax - m_xmin) * x_scale)) + 1;
             u32 height = (u32)(ceilf((font_ascender - font_descender) * y_scale)) + 1;
-            Gfx::PathRasterizer rasterizer(Gfx::IntSize(width, height));
+            auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { width, height }).release_value_but_fixme_should_propagate_errors();
             auto affine = Gfx::AffineTransform()
                               .translate(subpixel_offset.to_float_point())
                               .scale(x_scale, -y_scale)
                               .translate(-m_xmin, -font_ascender);
 
-            rasterize_composite_loop(rasterizer, affine, glyph_callback);
+            Gfx::Painter painter { bitmap };
+            rasterize_composite_loop(painter, affine, glyph_callback);
 
-            return rasterizer.accumulate();
+            return bitmap;
         }
 
         Type m_type { Type::Composite };
