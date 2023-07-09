@@ -59,7 +59,7 @@ jobs:
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
           sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-16 main'
           sudo apt-get update
-          sudo apt-get install -y clang-format-16 ccache e2fsprogs gcc-12 g++-12 libstdc++-12-dev libmpfr-dev libmpc-dev ninja-build optipng qemu-utils qemu-system-i386 unzip
+          sudo apt-get install -y clang-format-16 ccache e2fsprogs gcc-12 g++-12 libstdc++-12-dev libmpfr-dev libmpc-dev ninja-build optipng qemu-utils qemu-system-i386 unzip generate-ninja
           if ${{ matrix.arch == 'aarch64' }}; then
             # FIXME: Remove this when we no longer build our own Qemu binary.
             sudo apt-get install libgtk-3-dev libpixman-1-dev libsdl2-dev libslirp-dev
@@ -72,7 +72,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install flake8 requests
       - name: Check versions
-        run: set +e; g++ --version; g++-12 --version; clang-format --version; clang-format-16 --version; prettier --version; python --version; python3 --version; ninja --version; flake8 --version; ccache --version; qemu-system-i386 --version
+        run: set +e; g++ --version; g++-12 --version; clang-format --version; clang-format-16 --version; prettier --version; python --version; python3 --version; ninja --version; flake8 --version; ccache --version; qemu-system-i386 --version; gn --version
 
       # === PREPARE FOR BUILDING ===
 

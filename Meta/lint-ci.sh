@@ -29,6 +29,7 @@ for cmd in \
         Meta/check-style.py \
         Meta/lint-executable-resources.sh \
         Meta/lint-gml-format.sh \
+        Meta/lint-gn.sh \
         Meta/lint-keymaps.py \
         Meta/lint-prettier.sh \
         Meta/lint-python.sh \
