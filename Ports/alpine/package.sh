@@ -20,18 +20,6 @@ launcher_command='/usr/local/bin/alpine'
 launcher_run_in_terminal='true'
 icon_file='web/cgi/favicon.ico'
 
-pre_configure() {
-    # Rebuild after patching configure.ac to support serenity host.
-
-    # `automake` may exit with a warning about how there is a mismatch
-    # between the versions of autoconf and automake that were previously
-    # used to generate aclocal and specifed in configure.ac.
-    # We just need `automake` to generate `./compile` (so that we can run
-    # autoreconf to regenerate everything).
-    run automake --add-missing || true
-    run autoreconf
-}
-
 configure() {
     run ./"$configscript" \
         "${configopts[@]}" \
