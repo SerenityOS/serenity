@@ -20,12 +20,6 @@ bool RegularEditingEngine::on_key(KeyEvent const& event)
     if (EditingEngine::on_key(event))
         return true;
 
-    if (event.key() == KeyCode::Key_Escape) {
-        if (m_editor->on_escape_pressed)
-            m_editor->on_escape_pressed();
-        return true;
-    }
-
     if (event.alt() && event.shift() && event.key() == KeyCode::Key_S) {
         sort_selected_lines();
         return true;
