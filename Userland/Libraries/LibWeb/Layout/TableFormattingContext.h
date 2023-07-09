@@ -143,8 +143,16 @@ private:
 
     private:
         void collect_conflicting_col_elements();
+        void collect_conflicting_row_group_elements();
+
+        struct RowGroupInfo {
+            Node const* row_group;
+            size_t start_index;
+            size_t row_count;
+        };
 
         Vector<Node const*> m_col_elements_by_index;
+        Vector<Optional<RowGroupInfo>> m_row_group_elements_by_index;
         TableFormattingContext const* m_context;
     };
 
