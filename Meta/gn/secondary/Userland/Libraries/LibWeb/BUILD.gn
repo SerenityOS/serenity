@@ -67,7 +67,7 @@ compiled_action("generate_aria_roles") {
   inputs = [ "ARIA/AriaRoles.json" ]
   outputs = [
     "$target_gen_dir/ARIA/AriaRoles.h",
-    "$target_gen_dir/ARIA/AriaRoles.cpp"
+    "$target_gen_dir/ARIA/AriaRoles.cpp",
   ]
   args = [
     "-h",
@@ -75,7 +75,7 @@ compiled_action("generate_aria_roles") {
     "-c",
     rebase_path(outputs[1], root_build_dir),
     "-j",
-    rebase_path(inputs[0], root_build_dir)
+    rebase_path(inputs[0], root_build_dir),
   ]
 }
 
