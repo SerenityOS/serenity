@@ -948,9 +948,7 @@ bool VimEditingEngine::on_key_in_normal_mode(KeyEvent const& event)
         // Handle first any key codes that are to be applied regardless of modifiers.
         switch (event.key()) {
         case (KeyCode::Key_Escape):
-            if (m_editor->on_escape_pressed)
-                m_editor->on_escape_pressed();
-            return true;
+            return false;
         default:
             break;
         }
@@ -1136,9 +1134,7 @@ bool VimEditingEngine::on_key_in_visual_mode(KeyEvent const& event)
     switch (event.key()) {
     case (KeyCode::Key_Escape):
         switch_to_normal_mode();
-        if (m_editor->on_escape_pressed)
-            m_editor->on_escape_pressed();
-        return true;
+        return false;
     default:
         break;
     }
@@ -1268,9 +1264,7 @@ bool VimEditingEngine::on_key_in_visual_line_mode(KeyEvent const& event)
     switch (event.key()) {
     case (KeyCode::Key_Escape):
         switch_to_normal_mode();
-        if (m_editor->on_escape_pressed)
-            m_editor->on_escape_pressed();
-        return true;
+        return false;
     default:
         break;
     }
