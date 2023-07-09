@@ -1,17 +1,14 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2023, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Platform.h>
-#include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/PowerStateSwitch.h>
-#include <Kernel/Firmware/ACPI/Parser.h>
-#include <Kernel/Firmware/PowerState.h>
-#include <Kernel/Sections.h>
-#include <Kernel/TTY/ConsoleManagement.h>
+#include <Kernel/Tasks/PowerStateSwitchTask.h>
 #include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
@@ -55,13 +52,14 @@ ErrorOr<size_t> SysFSPowerStateSwitchNode::write_bytes(off_t offset, size_t coun
     TRY(data.read(buf, 1));
     switch (buf[0]) {
     case '1':
-        Firmware::reboot();
-        VERIFY_NOT_REACHED();
+        PowerStateSwitchTask::reboot();
+        return 1;
     case '2':
-        Firmware::poweroff();
-        VERIFY_NOT_REACHED();
+        PowerStateSwitchTask::shutdown();
+        return 1;
     default:
         return Error::from_errno(EINVAL);
     }
 }
+
 }
