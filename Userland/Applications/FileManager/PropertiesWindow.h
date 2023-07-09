@@ -90,6 +90,7 @@ private:
     RefPtr<GUI::ImageWidget> m_icon;
     RefPtr<GUI::Label> m_size_label;
     RefPtr<DirectoryStatisticsCalculator> m_directory_statistics_calculator;
+    RefPtr<GUI::Action> m_on_escape;
     DeprecatedString m_name;
     DeprecatedString m_parent_path;
     DeprecatedString m_path;
