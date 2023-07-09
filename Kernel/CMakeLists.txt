@@ -350,6 +350,7 @@ set(KERNEL_SOURCES
     Tasks/FinalizerTask.cpp
     Tasks/FutexQueue.cpp
     Tasks/PerformanceEventBuffer.cpp
+    Tasks/PowerStateSwitchTask.cpp
     Tasks/Process.cpp
     Tasks/ProcessGroup.cpp
     Tasks/ProcessList.cpp
