@@ -2,6 +2,14 @@ import("//Ladybird/compile_qt_resource_file.gni")
 import("//Ladybird/link_qt.gni")
 import("//Ladybird/moc_qt_objects.gni")
 
+group("ladybird") {
+  if (current_os == "mac") {
+    deps = [ ":ladybird.app" ]
+  } else {
+    deps = [ ":ladybird_executable" ]
+  }
+}
+
 moc_qt_objects("generate_moc") {
   sources = [
     "BrowserWindow.h",
@@ -37,7 +45,7 @@ config("ladybird_config") {
   defines = [ "AK_DONT_REPLACE_STD" ]
 }
 
-executable("ladybird") {
+executable("ladybird_executable") {
   configs += [
     ":ladybird_config",
     ":ladybird_qt_components",
@@ -86,6 +94,7 @@ executable("ladybird") {
   if (current_os == "android") {
     sources += [ "AndroidPlatform.cpp" ]
   }
+  output_name = "ladybird"
 }
 
 link_qt("headless_browser_qt") {
@@ -120,4 +129,136 @@ executable("headless-browser") {
     "HelperProcess.cpp",
     "Utilities.cpp",
   ]
+}
+
+if (current_os == "mac") {
+  bundle_data("ladybird_bundle_info_plist") {
+    sources = [ "Info.plist" ]
+    outputs = [ "{{bundle_contents_dir}}/Info.plist" ]
+  }
+
+  bundle_data("ladybird_bundle_executables") {
+    public_deps = [
+      ":headless-browser",
+      ":ladybird_executable",
+      "SQLServer",
+      "WebContent",
+      "WebDriver",
+    ]
+    sources = [
+      "$root_out_dir/bin/SQLServer",
+      "$root_out_dir/bin/WebContent",
+      "$root_out_dir/bin/WebDriver",
+      "$root_out_dir/bin/headless-browser",
+      "$root_out_dir/bin/ladybird",
+    ]
+    outputs = [ "{{bundle_executable_dir}}/{{source_file_part}}" ]
+  }
+
+  bundle_data("ladybird_bundle_libs") {
+    public_deps = [
+      "//Userland/Libraries/LibAudio",
+      "//Userland/Libraries/LibCompress",
+      "//Userland/Libraries/LibCore",
+      "//Userland/Libraries/LibCrypto",
+      "//Userland/Libraries/LibDiff",
+      "//Userland/Libraries/LibFileSystem",
+      "//Userland/Libraries/LibGL",
+      "//Userland/Libraries/LibGLSL",
+      "//Userland/Libraries/LibGPU",
+      "//Userland/Libraries/LibGUI",
+      "//Userland/Libraries/LibGemini",
+      "//Userland/Libraries/LibGfx",
+      "//Userland/Libraries/LibHTTP",
+      "//Userland/Libraries/LibIDL",
+      "//Userland/Libraries/LibIPC",
+      "//Userland/Libraries/LibJS",
+      "//Userland/Libraries/LibLine",
+      "//Userland/Libraries/LibMarkdown",
+      "//Userland/Libraries/LibRegex",
+      "//Userland/Libraries/LibSQL",
+      "//Userland/Libraries/LibSoftGPU",
+      "//Userland/Libraries/LibSyntax",
+      "//Userland/Libraries/LibTLS",
+      "//Userland/Libraries/LibTextCodec",
+      "//Userland/Libraries/LibThreading",
+      "//Userland/Libraries/LibVideo",
+      "//Userland/Libraries/LibWasm",
+      "//Userland/Libraries/LibWeb",
+      "//Userland/Libraries/LibWebSocket",
+      "//Userland/Libraries/LibWebView",
+      "//Userland/Libraries/LibXML",
+    ]
+    sources = [
+      "$root_out_dir/lib/liblagom-audio.dylib",
+      "$root_out_dir/lib/liblagom-compress.dylib",
+      "$root_out_dir/lib/liblagom-core.dylib",
+      "$root_out_dir/lib/liblagom-crypto.dylib",
+      "$root_out_dir/lib/liblagom-diff.dylib",
+      "$root_out_dir/lib/liblagom-filesystem.dylib",
+      "$root_out_dir/lib/liblagom-gemini.dylib",
+      "$root_out_dir/lib/liblagom-gfx.dylib",
+      "$root_out_dir/lib/liblagom-gl.dylib",
+      "$root_out_dir/lib/liblagom-glsl.dylib",
+      "$root_out_dir/lib/liblagom-gpu.dylib",
+      "$root_out_dir/lib/liblagom-gui.dylib",
+      "$root_out_dir/lib/liblagom-http.dylib",
+      "$root_out_dir/lib/liblagom-idl.dylib",
+      "$root_out_dir/lib/liblagom-ipc.dylib",
+      "$root_out_dir/lib/liblagom-js.dylib",
+      "$root_out_dir/lib/liblagom-line.dylib",
+      "$root_out_dir/lib/liblagom-markdown.dylib",
+      "$root_out_dir/lib/liblagom-regex.dylib",
+      "$root_out_dir/lib/liblagom-softgpu.dylib",
+      "$root_out_dir/lib/liblagom-sql.dylib",
+      "$root_out_dir/lib/liblagom-syntax.dylib",
+      "$root_out_dir/lib/liblagom-textcodec.dylib",
+      "$root_out_dir/lib/liblagom-threading.dylib",
+      "$root_out_dir/lib/liblagom-tls.dylib",
+      "$root_out_dir/lib/liblagom-video.dylib",
+      "$root_out_dir/lib/liblagom-wasm.dylib",
+      "$root_out_dir/lib/liblagom-web.dylib",
+      "$root_out_dir/lib/liblagom-websocket.dylib",
+      "$root_out_dir/lib/liblagom-webview.dylib",
+      "$root_out_dir/lib/liblagom-xml.dylib",
+    ]
+    outputs = [ "{{bundle_contents_dir}}/lib/{{source_file_part}}" ]
+  }
+
+  bundle_data("ladybird_resources") {
+    sources = [
+      "//Base/res/color-palettes",
+      "//Base/res/cursor-themes",
+      "//Base/res/fonts",
+      "//Base/res/html",
+      "//Base/res/icons",
+      "//Base/res/themes",
+    ]
+    outputs = [ "{{bundle_resources_dir}}/res/" + "{{source_file_part}}" ]
+  }
+
+  bundle_data("ladybird_config_resources") {
+    sources = [
+      "//Base/home/anon/.config/BrowserAutoplayAllowlist.txt",
+      "//Base/home/anon/.config/BrowserContentFilters.txt",
+    ]
+    outputs = [ "{{bundle_resources_dir}}/res/ladybird/{{source_file_part}}" ]
+  }
+
+  create_bundle("ladybird.app") {
+    product_type = "com.apple.product-type.application"
+
+    bundle_root_dir = "$root_build_dir/$target_name"
+    bundle_contents_dir = "$bundle_root_dir/Contents"
+    bundle_resources_dir = "$bundle_contents_dir/Resources"
+    bundle_executable_dir = "$bundle_contents_dir/MacOS"
+
+    deps = [
+      ":ladybird_bundle_executables",
+      ":ladybird_bundle_info_plist",
+      ":ladybird_bundle_libs",
+      ":ladybird_config_resources",
+      ":ladybird_resources",
+    ]
+  }
 }
