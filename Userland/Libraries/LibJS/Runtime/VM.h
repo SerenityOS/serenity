@@ -342,14 +342,4 @@ private:
     OwnPtr<Bytecode::Interpreter> m_bytecode_interpreter;
 };
 
-ALWAYS_INLINE Heap& Cell::heap() const
-{
-    return HeapBlock::from_cell(this)->heap();
-}
-
-ALWAYS_INLINE VM& Cell::vm() const
-{
-    return heap().vm();
-}
-
 }

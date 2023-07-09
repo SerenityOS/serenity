@@ -12,6 +12,7 @@
 #include <AK/Types.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibJS/Heap/Internals.h>
 
 #ifdef HAS_ADDRESS_SANITIZER
 #    include <sanitizer/asan_interface.h>
@@ -19,12 +20,12 @@
 
 namespace JS {
 
-class HeapBlock {
+class HeapBlock : public HeapBlockBase {
     AK_MAKE_NONCOPYABLE(HeapBlock);
     AK_MAKE_NONMOVABLE(HeapBlock);
 
 public:
-    static constexpr size_t block_size = 16 * KiB;
+    using HeapBlockBase::block_size;
     static NonnullOwnPtr<HeapBlock> create_with_cell_size(Heap&, size_t);
 
     size_t cell_size() const { return m_cell_size; }
@@ -66,11 +67,9 @@ public:
         });
     }
 
-    Heap& heap() { return m_heap; }
-
     static HeapBlock* from_cell(Cell const* cell)
     {
-        return reinterpret_cast<HeapBlock*>((FlatPtr)cell & ~(block_size - 1));
+        return static_cast<HeapBlock*>(HeapBlockBase::from_cell(cell));
     }
 
     Cell* cell_from_possible_pointer(FlatPtr pointer)
@@ -107,7 +106,6 @@ private:
         return reinterpret_cast<Cell*>(&m_storage[index * cell_size()]);
     }
 
-    Heap& m_heap;
     size_t m_cell_size { 0 };
     size_t m_next_lazy_freelist_index { 0 };
     GCPtr<FreelistEntry> m_freelist;
