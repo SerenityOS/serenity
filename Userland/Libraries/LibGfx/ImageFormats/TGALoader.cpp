@@ -156,7 +156,7 @@ private:
 };
 
 struct TGALoadingContext {
-    TGAHeader header;
+    TGAHeader header {};
     OwnPtr<TGAReader> reader = { nullptr };
     RefPtr<Gfx::Bitmap> bitmap;
 };
@@ -180,7 +180,6 @@ bool TGAImageDecoderPlugin::decode_tga_header()
     if (reader->data().size() < sizeof(TGAHeader))
         return false;
 
-    m_context->header = TGAHeader();
     m_context->header.id_length = reader->read_u8();
     m_context->header.color_map_type = reader->read_u8();
     m_context->header.data_type_code = static_cast<TGADataType>(reader->read_u8());
