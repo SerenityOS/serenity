@@ -16,7 +16,7 @@ source_set("CSS") {
     "CSSKeyframeRule.cpp",
     "CSSKeyframesRule.cpp",
     "CSSMediaRule.cpp",
-    "CSSNumerictype.cpp",
+    "CSSNumericType.cpp",
     "CSSRule.cpp",
     "CSSRuleList.cpp",
     "CSSStyleDeclaration.cpp",
