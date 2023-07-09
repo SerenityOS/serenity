@@ -31,7 +31,7 @@ public:
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
-    bool decode_tga_header();
+    ErrorOr<void> decode_tga_header();
     OwnPtr<TGALoadingContext> m_context;
 };
 
