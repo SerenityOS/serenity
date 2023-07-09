@@ -29,7 +29,7 @@ struct Array {
     using ValueType = T;
 
     // This is a static function because constructors mess up Array's POD-ness.
-    static Array from_span(Span<T> span)
+    static Array from_span(ReadonlySpan<T> span)
     {
         Array array;
         VERIFY(span.size() == Size);
