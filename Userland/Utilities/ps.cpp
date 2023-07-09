@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -80,7 +81,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool every_process_flag = false;
     bool every_terminal_process_flag = false;
     bool full_format_flag = false;
-    bool provided_pid_list = false;
+    bool provided_filtering_option = false;
     bool provided_quick_pid_list = false;
     Vector<pid_t> pid_list;
     Vector<uid_t> uid_list;
@@ -91,7 +92,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(every_process_flag, "Show every process (Equivalent to -A)", nullptr, 'e');
     args_parser.add_option(full_format_flag, "Full format", nullptr, 'f');
     args_parser.add_option(make_list_option(pid_list, "Show processes with a matching PID. (Comma- or space-separated list)", nullptr, 'p', "pid-list", [&](StringView pid_string) {
-        provided_pid_list = true;
+        provided_filtering_option = true;
         auto pid = pid_string.to_int();
         if (!pid.has_value())
             warnln("Could not parse '{}' as a PID.", pid_string);
@@ -105,6 +106,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return pid;
     }));
     args_parser.add_option(make_list_option(uid_list, "Show processes with a matching user ID or login name. (Comma- or space-separated list.)", nullptr, 'u', "user-list", [&](StringView user_string) -> Optional<uid_t> {
+        provided_filtering_option = true;
         if (auto uid = user_string.to_uint<uid_t>(); uid.has_value()) {
             return uid.value();
         }
@@ -118,8 +120,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }));
     args_parser.parse(arguments);
 
-    if (provided_pid_list && provided_quick_pid_list) {
-        warnln("`-p` and `-q` cannot be specified together.");
+    if (provided_filtering_option && provided_quick_pid_list) {
+        warnln("The -q option cannot be combined with other filtering options.");
         return 1;
     }
 
