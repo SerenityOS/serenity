@@ -39,7 +39,7 @@ static int gc_perf_string_id;
 static __thread HashMap<FlatPtr*, size_t>* s_custom_ranges_for_conservative_scan = nullptr;
 
 Heap::Heap(VM& vm)
-    : m_vm(vm)
+    : HeapBase(vm)
 {
 #ifdef AK_OS_SERENITY
     auto gc_signpost_string = "Garbage collection"sv;

@@ -13,6 +13,7 @@
 #include <AK/StringView.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/GCPtr.h>
+#include <LibJS/Heap/Internals.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -105,8 +106,8 @@ public:
 
     bool overrides_must_survive_garbage_collection(Badge<Heap>) const { return m_overrides_must_survive_garbage_collection; }
 
-    Heap& heap() const;
-    VM& vm() const;
+    ALWAYS_INLINE Heap& heap() const { return HeapBlockBase::from_cell(this)->heap(); }
+    ALWAYS_INLINE VM& vm() const { return bit_cast<HeapBase*>(&heap())->vm(); }
 
 protected:
     Cell() = default;

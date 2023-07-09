@@ -32,7 +32,7 @@ NonnullOwnPtr<HeapBlock> HeapBlock::create_with_cell_size(Heap& heap, size_t cel
 }
 
 HeapBlock::HeapBlock(Heap& heap, size_t cell_size)
-    : m_heap(heap)
+    : HeapBlockBase(heap)
     , m_cell_size(cell_size)
 {
     VERIFY(cell_size >= sizeof(FreelistEntry));

@@ -19,12 +19,13 @@
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Heap/CellAllocator.h>
 #include <LibJS/Heap/Handle.h>
+#include <LibJS/Heap/Internals.h>
 #include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/Runtime/WeakContainer.h>
 
 namespace JS {
 
-class Heap {
+class Heap : public HeapBase {
     AK_MAKE_NONCOPYABLE(Heap);
     AK_MAKE_NONMOVABLE(Heap);
 
@@ -56,8 +57,6 @@ public:
     };
 
     void collect_garbage(CollectionType = CollectionType::CollectGarbage, bool print_report = false);
-
-    VM& vm() { return m_vm; }
 
     bool should_collect_on_every_allocation() const { return m_should_collect_on_every_allocation; }
     void set_should_collect_on_every_allocation(bool b) { m_should_collect_on_every_allocation = b; }
@@ -105,8 +104,6 @@ private:
     size_t m_allocations_since_last_gc { 0 };
 
     bool m_should_collect_on_every_allocation { false };
-
-    VM& m_vm;
 
     Vector<NonnullOwnPtr<CellAllocator>> m_allocators;
 
