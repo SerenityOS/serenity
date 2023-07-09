@@ -97,6 +97,7 @@ void TableFormattingContext::calculate_row_column_grid(Box const& box)
 
     size_t x_width = 0, y_height = 0;
     size_t x_current = 0, y_current = 0;
+    size_t max_cell_x = 0, max_cell_y = 0;
 
     // Implements https://html.spec.whatwg.org/multipage/tables.html#algorithm-for-processing-rows
     auto process_row = [&](auto& row) {
@@ -131,6 +132,8 @@ void TableFormattingContext::calculate_row_column_grid(Box const& box)
                     for (size_t x = x_current; x < x_current + colspan; x++)
                         grid.set(GridPosition { x, y }, true);
                 m_cells.append(Cell { *box, x_current, y_current, colspan, rowspan });
+                max_cell_x = max(x_current, max_cell_x);
+                max_cell_y = max(y_current, max_cell_y);
 
                 x_current += colspan;
             }
@@ -158,6 +161,14 @@ void TableFormattingContext::calculate_row_column_grid(Box const& box)
         // Clip spans to the end of the table.
         cell.row_span = min(cell.row_span, m_rows.size() - cell.row_index);
         cell.column_span = min(cell.column_span, m_columns.size() - cell.column_index);
+    }
+
+    m_cells_by_coordinate.resize(max_cell_y + 1);
+    for (auto& position_to_cell_row : m_cells_by_coordinate) {
+        position_to_cell_row.resize(max_cell_x + 1);
+    }
+    for (auto const& cell : m_cells) {
+        m_cells_by_coordinate[cell.row_index][cell.column_index] = cell;
     }
 }
 
@@ -1040,8 +1051,32 @@ Vector<TableFormattingContext::ConflictingEdge> TableFormattingContext::BorderCo
     Cell const& cell, TableFormattingContext::ConflictingSide edge) const
 {
     // FIXME: Conflicting elements can be cells, rows, row groups, columns, column groups, and the table itself,
-    //        but we only consider 'col' elements in a 'colgroup' and the table itself for now.
+    //        but we only consider cells, 'col' elements in a 'colgroup' and the table itself for now.
     Vector<ConflictingEdge> result = {};
+    if (cell.column_index >= cell.column_span && edge == ConflictingSide::Left) {
+        auto maybe_cell_to_left = m_context->m_cells_by_coordinate[cell.row_index][cell.column_index - cell.column_span];
+        if (maybe_cell_to_left.has_value()) {
+            result.append({ maybe_cell_to_left->box, ConflictingSide::Right });
+        }
+    }
+    if (cell.column_index + cell.column_span < m_context->m_cells_by_coordinate[cell.row_index].size() && edge == ConflictingSide::Right) {
+        auto maybe_cell_to_right = m_context->m_cells_by_coordinate[cell.row_index][cell.column_index + cell.column_span];
+        if (maybe_cell_to_right.has_value()) {
+            result.append({ maybe_cell_to_right->box, ConflictingSide::Left });
+        }
+    }
+    if (cell.row_index >= cell.row_span && edge == ConflictingSide::Top) {
+        auto maybe_cell_above = m_context->m_cells_by_coordinate[cell.row_index - cell.row_span][cell.column_index];
+        if (maybe_cell_above.has_value()) {
+            result.append({ maybe_cell_above->box, ConflictingSide::Bottom });
+        }
+    }
+    if (cell.row_index + cell.row_span < m_context->m_cells_by_coordinate.size() && edge == ConflictingSide::Bottom) {
+        auto maybe_cell_below = m_context->m_cells_by_coordinate[cell.row_index + cell.row_span][cell.column_index];
+        if (maybe_cell_below.has_value()) {
+            result.append({ maybe_cell_below->box, ConflictingSide::Top });
+        }
+    }
     if (m_col_elements_by_index[cell.column_index] && edge == ConflictingSide::Left) {
         result.append({ m_col_elements_by_index[cell.column_index], ConflictingSide::Left });
     }
