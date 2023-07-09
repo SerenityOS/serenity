@@ -58,12 +58,28 @@ ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> FATInode::compute_block_list()
     while (cluster < no_more_clusters) {
         dbgln_if(FAT_DEBUG, "FATFS: Appending cluster {} to inode {}'s cluster chain", cluster, index());
 
-        BlockBasedFileSystem::BlockIndex first_block = fs().first_block_of_cluster(cluster);
-        for (u8 i = 0; i < fs().boot_record()->sectors_per_cluster; i++)
-            block_list.append(BlockBasedFileSystem::BlockIndex { first_block.value() + i });
+        auto first_block_and_length = fs().first_block_of_cluster(cluster);
+        for (u8 i = 0; i < first_block_and_length.number_of_sectors; i++)
+            block_list.append(BlockBasedFileSystem::BlockIndex { first_block_and_length.start_block.value() + i });
+
+        // Clusters 0 and 1 are reserved in the FAT, and their entries in the FAT will
+        // not point to another valid cluster in the chain (Cluster 0 typically holds
+        // the "FAT ID" field with some flags, Cluster 1 should be the end of chain
+        // marker).
+        // Internally, we use `cluster == 0` to represent the root directory Inode,
+        // which is a signal to read the root directory region blocks on FAT12/16
+        // file systems. (`fs().first_block_of_cluster` will return the appropriate
+        // block/sectors to read given cluster == 0).
+        // Therefore, we read one set of sectors for these invalud cluster numbers,
+        // and then terminate the loop becuase the FAT entry at `cluster` for these
+        // values does not represent the next step in the chain (because there is
+        // nothing else to read).
+        if (cluster <= 1) {
+            break;
+        }
 
         u32 fat_offset = cluster * sizeof(u32);
-        u32 fat_sector_index = fs().boot_record()->reserved_sector_count + (fat_offset / fs().m_device_block_size);
+        u32 fat_sector_index = fs().m_parameter_block->common_bpb()->reserved_sector_count + (fat_offset / fs().m_device_block_size);
         u32 entry_offset = fat_offset % fs().m_device_block_size;
 
         TRY(fs().raw_read(fat_sector_index, fat_sector_buffer));
@@ -126,6 +142,15 @@ ErrorOr<RefPtr<FATInode>> FATInode::traverse(Function<ErrorOr<bool>(RefPtr<FATIn
         } else if (entry->attributes == FATAttributes::LongFileName) {
             dbgln_if(FAT_DEBUG, "FATFS: Found LFN entry");
             TRY(lfn_entries.try_append(*reinterpret_cast<FATLongFileNameEntry*>(entry)));
+        } else if ((entry->first_cluster_high << 16 | entry->first_cluster_low) <= 1 && entry->file_size > 0) {
+            // Because clusters 0 and 1 are reserved, only empty files (size == 0 files)
+            // should specify these clusters.
+            // This driver uses a cluster number == 0 to represent the root directory inode
+            // on FAT12/16 file systems (a signal to look in the root directory region),
+            // so we ensure that no entries read off the file system have a cluster number
+            // that would also point to this region.
+            dbgln_if(FAT_DEBUG, "FATFS: Invalid cluster for entry");
+            return EINVAL;
         } else {
             dbgln_if(FAT_DEBUG, "FATFS: Found 8.3 entry");
             lfn_entries.reverse();
