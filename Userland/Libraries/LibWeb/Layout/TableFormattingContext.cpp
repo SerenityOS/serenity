@@ -1051,7 +1051,7 @@ Vector<TableFormattingContext::ConflictingEdge> TableFormattingContext::BorderCo
     Cell const& cell, TableFormattingContext::ConflictingSide edge) const
 {
     // FIXME: Conflicting elements can be cells, rows, row groups, columns, column groups, and the table itself,
-    //        but we only consider cells, 'col' elements in a 'colgroup' and the table itself for now.
+    //        but we only consider cells, rows, 'col' elements in a 'colgroup' and the table itself for now.
     Vector<ConflictingEdge> result = {};
     if (cell.column_index >= cell.column_span && edge == ConflictingSide::Left) {
         auto maybe_cell_to_left = m_context->m_cells_by_coordinate[cell.row_index][cell.column_index - cell.column_span];
@@ -1076,6 +1076,18 @@ Vector<TableFormattingContext::ConflictingEdge> TableFormattingContext::BorderCo
         if (maybe_cell_below.has_value()) {
             result.append({ maybe_cell_below->box, ConflictingSide::Top });
         }
+    }
+    if (edge == ConflictingSide::Top) {
+        result.append({ m_context->m_rows[cell.row_index].box, ConflictingSide::Top });
+    }
+    if (edge == ConflictingSide::Bottom) {
+        result.append({ m_context->m_rows[cell.row_index].box, ConflictingSide::Bottom });
+    }
+    if (cell.row_index >= cell.row_span && edge == ConflictingSide::Top) {
+        result.append({ m_context->m_rows[cell.row_index - cell.row_span].box, ConflictingSide::Bottom });
+    }
+    if (cell.row_index + cell.row_span < m_context->m_rows.size() && edge == ConflictingSide::Bottom) {
+        result.append({ m_context->m_rows[cell.row_index + cell.row_span].box, ConflictingSide::Top });
     }
     if (m_col_elements_by_index[cell.column_index] && edge == ConflictingSide::Left) {
         result.append({ m_col_elements_by_index[cell.column_index], ConflictingSide::Left });
@@ -1102,9 +1114,11 @@ Vector<TableFormattingContext::ConflictingEdge> TableFormattingContext::BorderCo
         result.append({ &m_context->table_box(), ConflictingSide::Bottom });
     }
     if (cell.column_index == 0 && edge == ConflictingSide::Left) {
+        result.append({ m_context->m_rows[cell.row_index].box, ConflictingSide::Left });
         result.append({ &m_context->table_box(), ConflictingSide::Left });
     }
     if (cell.column_index == m_context->m_columns.size() - 1 && edge == ConflictingSide::Right) {
+        result.append({ m_context->m_rows[cell.row_index].box, ConflictingSide::Right });
         result.append({ &m_context->table_box(), ConflictingSide::Right });
     }
     return result;
