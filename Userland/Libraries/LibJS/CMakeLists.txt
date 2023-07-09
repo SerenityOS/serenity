@@ -23,6 +23,7 @@ set(SOURCES
     Contrib/Test262/IsHTMLDDA.cpp
     CyclicModule.cpp
     Heap/BlockAllocator.cpp
+    Heap/Cell.cpp
     Heap/CellAllocator.cpp
     Heap/Handle.cpp
     Heap/Heap.cpp

@@ -6,6 +6,7 @@
 
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/StylePainter.h>
+#include <LibJS/Heap/Heap.h>
 #include <LibWeb/Layout/ListItemMarkerBox.h>
 #include <LibWeb/Painting/MarkerPaintable.h>
 

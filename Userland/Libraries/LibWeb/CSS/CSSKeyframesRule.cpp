@@ -10,6 +10,11 @@
 
 namespace Web::CSS {
 
+WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSKeyframesRule>> CSSKeyframesRule::create(JS::Realm& realm, AK::FlyString name, Vector<JS::NonnullGCPtr<CSSKeyframeRule>> keyframes)
+{
+    return MUST_OR_THROW_OOM(realm.heap().allocate<CSSKeyframesRule>(realm, realm, move(name), move(keyframes)));
+}
+
 void CSSKeyframesRule::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
