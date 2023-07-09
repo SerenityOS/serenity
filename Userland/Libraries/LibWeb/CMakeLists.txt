@@ -53,6 +53,7 @@ set(SOURCES
     CSS/Parser/Declaration.cpp
     CSS/Parser/DeclarationOrAtRule.cpp
     CSS/Parser/Function.cpp
+    CSS/Parser/Helpers.cpp
     CSS/Parser/Parser.cpp
     CSS/Parser/ParsingContext.cpp
     CSS/Parser/Rule.cpp

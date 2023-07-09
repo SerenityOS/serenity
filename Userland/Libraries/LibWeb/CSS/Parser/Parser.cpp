@@ -8746,6 +8746,59 @@ private:
     ComponentValue m_component_value;
 };
 
+// https://html.spec.whatwg.org/multipage/images.html#parse-a-srcset-attribute
+Length Parser::Parser::parse_as_sizes_attribute()
+{
+    Optional<Length> size;
+
+    // When asked to parse a sizes attribute from an element,
+    // parse a comma-separated list of component values from the value of the element's sizes attribute
+    // (or the empty string, if the attribute is absent), and let unparsed sizes list be the result.
+    auto unparsed_sizes_list = parse_a_comma_separated_list_of_component_values(m_token_stream);
+
+    // For each unparsed size in unparsed sizes list:
+    for (auto& unparsed_size : unparsed_sizes_list) {
+        // 1. Remove all consecutive <whitespace-token>s from the end of unparsed size.
+        //    If unparsed size is now empty, that is a parse error; continue.
+        while (!unparsed_size.is_empty() && unparsed_size.last().is_token() && unparsed_size.last().token().is(Token::Type::Whitespace))
+            unparsed_size.take_last();
+        if (unparsed_size.is_empty())
+            continue;
+
+        // 2. If the last component value in unparsed size is a valid non-negative <source-size-value>,
+        //    let size be its value and remove the component value from unparsed size.
+        //    FIXME: Any CSS function other than the math functions is invalid.
+        //    Otherwise, there is a parse error; continue.
+        auto length = parse_length(unparsed_size.last());
+        if (length.has_value() && length.value().raw_value() >= 0) {
+            size = length.value();
+            unparsed_size.take_last();
+        } else {
+            continue;
+        }
+
+        // 3. Remove all consecutive <whitespace-token>s from the end of unparsed size.
+        //    If unparsed size is now empty, return size and exit this algorithm.
+        //    If this was not the last item in unparsed sizes list, that is a parse error.
+        while (!unparsed_size.is_empty() && unparsed_size.last().is_token() && unparsed_size.last().token().is(Token::Type::Whitespace))
+            unparsed_size.take_last();
+        if (unparsed_size.is_empty())
+            return size.value();
+
+        // 4. Parse the remaining component values in unparsed size as a <media-condition>.
+        //    If it does not parse correctly, or it does parse correctly but the <media-condition> evaluates to false, continue.
+        TokenStream<ComponentValue> token_stream { unparsed_size };
+        auto media_condition = parse_media_condition(token_stream, MediaCondition::AllowOr::Yes);
+        if (media_condition && media_condition->evaluate(*m_context.window()) == MatchResult::True) {
+            return size.value();
+        } else {
+            continue;
+        }
+    }
+
+    return Length(100, Length::Type::Vw);
+}
+
 // https://www.w3.org/TR/css-values-4/#parse-a-calculation
 ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentValue> const& original_values)
 {
@@ -9126,128 +9179,4 @@ TimePercentage Parser::Dimension::time_percentage() const
         return percentage();
     VERIFY_NOT_REACHED();
 }
-}
-
-namespace Web {
-
-CSS::CSSStyleSheet* parse_css_stylesheet(CSS::Parser::ParsingContext const& context, StringView css, Optional<AK::URL> location)
-{
-    if (css.is_empty()) {
-        auto rule_list = CSS::CSSRuleList::create_empty(context.realm()).release_value_but_fixme_should_propagate_errors();
-        auto media_list = CSS::MediaList::create(context.realm(), {}).release_value_but_fixme_should_propagate_errors();
-        return CSS::CSSStyleSheet::create(context.realm(), rule_list, media_list, location).release_value_but_fixme_should_propagate_errors();
-    }
-    auto parser = CSS::Parser::Parser::create(context, css).release_value_but_fixme_should_propagate_errors();
-    return parser.parse_as_css_stylesheet(location);
-}
-
-CSS::ElementInlineCSSStyleDeclaration* parse_css_style_attribute(CSS::Parser::ParsingContext const& context, StringView css, DOM::Element& element)
-{
-    if (css.is_empty())
-        return CSS::ElementInlineCSSStyleDeclaration::create(element, {}, {}).release_value_but_fixme_should_propagate_errors();
-    auto parser = CSS::Parser::Parser::create(context, css).release_value_but_fixme_should_propagate_errors();
-    return parser.parse_as_style_attribute(element);
-}
-
-ErrorOr<RefPtr<CSS::StyleValue>> parse_css_value(CSS::Parser::ParsingContext const& context, StringView string, CSS::PropertyID property_id)
-{
-    if (string.is_empty())
-        return nullptr;
-    auto parser = TRY(CSS::Parser::Parser::create(context, string));
-    return parser.parse_as_css_value(property_id);
-}
-
-CSS::CSSRule* parse_css_rule(CSS::Parser::ParsingContext const& context, StringView css_text)
-{
-    auto parser = CSS::Parser::Parser::create(context, css_text).release_value_but_fixme_should_propagate_errors();
-    return parser.parse_as_css_rule();
-}
-
-Optional<CSS::SelectorList> parse_selector(CSS::Parser::ParsingContext const& context, StringView selector_text)
-{
-    auto parser = CSS::Parser::Parser::create(context, selector_text).release_value_but_fixme_should_propagate_errors();
-    return parser.parse_as_selector();
-}
-
-RefPtr<CSS::MediaQuery> parse_media_query(CSS::Parser::ParsingContext const& context, StringView string)
-{
-    auto parser = CSS::Parser::Parser::create(context, string).release_value_but_fixme_should_propagate_errors();
-    return parser.parse_as_media_query();
-}
-
-Vector<NonnullRefPtr<CSS::MediaQuery>> parse_media_query_list(CSS::Parser::ParsingContext const& context, StringView string)
-{
-    auto parser = CSS::Parser::Parser::create(context, string).release_value_but_fixme_should_propagate_errors();
-    return parser.parse_as_media_query_list();
-}
-
-RefPtr<CSS::Supports> parse_css_supports(CSS::Parser::ParsingContext const& context, StringView string)
-{
-    if (string.is_empty())
-        return {};
-    auto parser = CSS::Parser::Parser::create(context, string).release_value_but_fixme_should_propagate_errors();
-    return parser.parse_as_supports();
-}
-
-Optional<CSS::StyleProperty> parse_css_supports_condition(CSS::Parser::ParsingContext const& context, StringView string)
-{
-    if (string.is_empty())
-        return {};
-    auto parser = CSS::Parser::Parser::create(context, string).release_value_but_fixme_should_propagate_errors();
-    return parser.parse_as_supports_condition();
-}
-
-// https://html.spec.whatwg.org/multipage/images.html#parse-a-srcset-attribute
-CSS::Length CSS::Parser::Parser::parse_as_sizes_attribute()
-{
-    Optional<CSS::Length> size;
-
-    // When asked to parse a sizes attribute from an element,
-    // parse a comma-separated list of component values from the value of the element's sizes attribute
-    // (or the empty string, if the attribute is absent), and let unparsed sizes list be the result.
-    auto unparsed_sizes_list = parse_a_comma_separated_list_of_component_values(m_token_stream);
-
-    // For each unparsed size in unparsed sizes list:
-    for (auto& unparsed_size : unparsed_sizes_list) {
-        // 1. Remove all consecutive <whitespace-token>s from the end of unparsed size.
-        //    If unparsed size is now empty, that is a parse error; continue.
-        while (!unparsed_size.is_empty() && unparsed_size.last().is_token() && unparsed_size.last().token().is(Token::Type::Whitespace))
-            unparsed_size.take_last();
-        if (unparsed_size.is_empty())
-            continue;
-
-        // 2. If the last component value in unparsed size is a valid non-negative <source-size-value>,
-        //    let size be its value and remove the component value from unparsed size.
-        //    FIXME: Any CSS function other than the math functions is invalid.
-        //    Otherwise, there is a parse error; continue.
-        auto length = parse_length(unparsed_size.last());
-        if (length.has_value() && length.value().raw_value() >= 0) {
-            size = length.value();
-            unparsed_size.take_last();
-        } else {
-            continue;
-        }
-
-        // 3. Remove all consecutive <whitespace-token>s from the end of unparsed size.
-        //    If unparsed size is now empty, return size and exit this algorithm.
-        //    If this was not the last item in unparsed sizes list, that is a parse error.
-        while (!unparsed_size.is_empty() && unparsed_size.last().is_token() && unparsed_size.last().token().is(Token::Type::Whitespace))
-            unparsed_size.take_last();
-        if (unparsed_size.is_empty())
-            return size.value();
-
-        // 4. Parse the remaining component values in unparsed size as a <media-condition>.
-        //    If it does not parse correctly, or it does parse correctly but the <media-condition> evaluates to false, continue.
-        TokenStream<ComponentValue> token_stream { unparsed_size };
-        auto media_condition = parse_media_condition(token_stream, MediaCondition::AllowOr::Yes);
-        if (media_condition && media_condition->evaluate(*m_context.window()) == CSS::MatchResult::True) {
-            return size.value();
-        } else {
-            continue;
-        }
-    }
-
-    return CSS::Length(100, CSS::Length::Type::Vw);
-}
-
 }
