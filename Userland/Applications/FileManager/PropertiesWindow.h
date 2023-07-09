@@ -56,26 +56,26 @@ private:
         Queue<DeprecatedString> m_work_queue;
     };
 
-    static DeprecatedString const get_description(mode_t const mode)
+    static StringView const get_description(mode_t const mode)
     {
         if (S_ISREG(mode))
-            return "File";
+            return "File"sv;
         if (S_ISDIR(mode))
-            return "Directory";
+            return "Directory"sv;
         if (S_ISLNK(mode))
-            return "Symbolic link";
+            return "Symbolic link"sv;
         if (S_ISCHR(mode))
-            return "Character device";
+            return "Character device"sv;
         if (S_ISBLK(mode))
-            return "Block device";
+            return "Block device"sv;
         if (S_ISFIFO(mode))
-            return "FIFO (named pipe)";
+            return "FIFO (named pipe)"sv;
         if (S_ISSOCK(mode))
-            return "Socket";
+            return "Socket"sv;
         if (mode & S_IXUSR)
-            return "Executable";
+            return "Executable"sv;
 
-        return "Unknown";
+        return "Unknown"sv;
     }
 
     static ErrorOr<NonnullRefPtr<GUI::Button>> make_button(String, GUI::Widget& parent);
