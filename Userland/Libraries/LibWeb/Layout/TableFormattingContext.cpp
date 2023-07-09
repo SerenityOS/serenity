@@ -8,6 +8,7 @@
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/HTMLTableCellElement.h>
 #include <LibWeb/HTML/HTMLTableColElement.h>
+#include <LibWeb/HTML/HTMLTableRowElement.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
@@ -1025,6 +1026,7 @@ TableFormattingContext::BorderConflictFinder::BorderConflictFinder(TableFormatti
     : m_context(context)
 {
     collect_conflicting_col_elements();
+    collect_conflicting_row_group_elements();
 }
 
 void TableFormattingContext::BorderConflictFinder::collect_conflicting_col_elements()
@@ -1047,11 +1049,29 @@ void TableFormattingContext::BorderConflictFinder::collect_conflicting_col_eleme
     }
 }
 
+void TableFormattingContext::BorderConflictFinder::collect_conflicting_row_group_elements()
+{
+    m_row_group_elements_by_index.resize(m_context->m_rows.size());
+    size_t current_row_index = 0;
+    for_each_child_box_matching(m_context->table_box(), is_table_row_group, [&](auto& row_group_box) {
+        auto start_row_index = current_row_index;
+        size_t row_count = 0;
+        for_each_child_box_matching(row_group_box, is_table_row, [&](auto&) {
+            ++row_count;
+        });
+        for_each_child_box_matching(row_group_box, is_table_row, [&](auto&) {
+            m_row_group_elements_by_index[current_row_index] = RowGroupInfo {
+                .row_group = &row_group_box, .start_index = start_row_index, .row_count = row_count
+            };
+            ++current_row_index;
+            return IterationDecision::Continue;
+        });
+    });
+}
+
 Vector<TableFormattingContext::ConflictingEdge> TableFormattingContext::BorderConflictFinder::conflicting_edges(
     Cell const& cell, TableFormattingContext::ConflictingSide edge) const
 {
-    // FIXME: Conflicting elements can be cells, rows, row groups, columns, column groups, and the table itself,
-    //        but we only consider cells, rows, 'col' elements in a 'colgroup' and the table itself for now.
     Vector<ConflictingEdge> result = {};
     if (cell.column_index >= cell.column_span && edge == ConflictingSide::Left) {
         auto maybe_cell_to_left = m_context->m_cells_by_coordinate[cell.row_index][cell.column_index - cell.column_span];
@@ -1089,6 +1109,25 @@ Vector<TableFormattingContext::ConflictingEdge> TableFormattingContext::BorderCo
     if (cell.row_index + cell.row_span < m_context->m_rows.size() && edge == ConflictingSide::Bottom) {
         result.append({ m_context->m_rows[cell.row_index + cell.row_span].box, ConflictingSide::Top });
     }
+    auto const& maybe_row_group = m_row_group_elements_by_index[cell.row_index];
+    if (maybe_row_group.has_value() && cell.row_index == maybe_row_group->start_index && edge == ConflictingSide::Top) {
+        result.append({ maybe_row_group->row_group, ConflictingSide::Top });
+    }
+    if (cell.row_index >= cell.row_span) {
+        auto const& maybe_row_group_above = m_row_group_elements_by_index[cell.row_index - cell.row_span];
+        if (maybe_row_group_above.has_value() && cell.row_index == maybe_row_group_above->start_index + maybe_row_group_above->row_count && edge == ConflictingSide::Top) {
+            result.append({ maybe_row_group_above->row_group, ConflictingSide::Bottom });
+        }
+    }
+    if (maybe_row_group.has_value() && cell.row_index == maybe_row_group->start_index + maybe_row_group->row_count - 1 && edge == ConflictingSide::Bottom) {
+        result.append({ maybe_row_group->row_group, ConflictingSide::Bottom });
+    }
+    if (cell.row_index + cell.row_span < m_row_group_elements_by_index.size()) {
+        auto const& maybe_row_group_below = m_row_group_elements_by_index[cell.row_index + cell.row_span];
+        if (maybe_row_group_below.has_value() && cell.row_index + cell.row_span == maybe_row_group_below->start_index && edge == ConflictingSide::Bottom) {
+            result.append({ maybe_row_group_below->row_group, ConflictingSide::Top });
+        }
+    }
     if (m_col_elements_by_index[cell.column_index] && edge == ConflictingSide::Left) {
         result.append({ m_col_elements_by_index[cell.column_index], ConflictingSide::Left });
     }
@@ -1115,10 +1154,16 @@ Vector<TableFormattingContext::ConflictingEdge> TableFormattingContext::BorderCo
     }
     if (cell.column_index == 0 && edge == ConflictingSide::Left) {
         result.append({ m_context->m_rows[cell.row_index].box, ConflictingSide::Left });
+        if (m_row_group_elements_by_index[cell.row_index].has_value()) {
+            result.append({ m_row_group_elements_by_index[cell.row_index]->row_group, ConflictingSide::Left });
+        }
         result.append({ &m_context->table_box(), ConflictingSide::Left });
     }
     if (cell.column_index == m_context->m_columns.size() - 1 && edge == ConflictingSide::Right) {
         result.append({ m_context->m_rows[cell.row_index].box, ConflictingSide::Right });
+        if (m_row_group_elements_by_index[cell.row_index].has_value()) {
+            result.append({ m_row_group_elements_by_index[cell.row_index]->row_group, ConflictingSide::Right });
+        }
         result.append({ &m_context->table_box(), ConflictingSide::Right });
     }
     return result;
