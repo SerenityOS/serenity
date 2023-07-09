@@ -46,6 +46,7 @@ namespace Kernel {
 static void create_signal_trampoline();
 
 extern ProcessID g_init_pid;
+extern bool g_in_system_shutdown;
 
 RecursiveSpinlock<LockRank::None> g_profiling_lock {};
 static Atomic<pid_t> next_pid;
@@ -749,7 +750,8 @@ ErrorOr<void> Process::dump_perfcore()
 
 void Process::finalize()
 {
-    VERIFY(Thread::current() == g_finalizer);
+    if (!g_in_system_shutdown)
+        VERIFY(Thread::current() == g_finalizer);
 
     dbgln_if(PROCESS_DEBUG, "Finalizing process {}", *this);
 
@@ -759,8 +761,12 @@ void Process::finalize()
         });
     }
 
-    if (g_init_pid != 0 && pid() == g_init_pid)
-        PANIC("Init process quit unexpectedly. Exit code: {}", termination_status());
+    if (g_init_pid != 0 && pid() == g_init_pid) {
+        if (g_in_system_shutdown)
+            dbgln("Init process quitting for shutdown.");
+        else
+            PANIC("Init process quit unexpectedly. Exit code: {}", termination_status());
+    }
 
     if (is_dumpable()) {
         if (m_should_generate_coredump) {

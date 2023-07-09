@@ -14,6 +14,7 @@
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Security/Random.h>
 #include <Kernel/Tasks/PerformanceManager.h>
+#include <Kernel/Tasks/PowerStateSwitchTask.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
 
@@ -323,7 +324,9 @@ void AddressSpace::dump_regions()
 
 void AddressSpace::remove_all_regions(Badge<Process>)
 {
-    VERIFY(Thread::current() == g_finalizer);
+    if (!g_in_system_shutdown)
+        VERIFY(Thread::current() == g_finalizer);
+
     {
         SpinlockLocker pd_locker(m_page_directory->get_lock());
         for (auto& region : m_region_tree.regions())

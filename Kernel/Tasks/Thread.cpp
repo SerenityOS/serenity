@@ -23,6 +23,7 @@
 #include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/PerformanceEventBuffer.h>
+#include <Kernel/Tasks/PowerStateSwitchTask.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/Thread.h>
@@ -537,7 +538,8 @@ StringView Thread::state_string() const
 
 void Thread::finalize()
 {
-    VERIFY(Thread::current() == g_finalizer);
+    if (!g_in_system_shutdown)
+        VERIFY(Thread::current() == g_finalizer);
     VERIFY(Thread::current() != this);
 
 #if LOCK_DEBUG
