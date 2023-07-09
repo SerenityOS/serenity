@@ -149,6 +149,7 @@ private:
     };
 
     Vector<Cell> m_cells;
+    Vector<Vector<Optional<Cell const&>>> m_cells_by_coordinate;
     Vector<Column> m_columns;
     Vector<Row> m_rows;
 };
