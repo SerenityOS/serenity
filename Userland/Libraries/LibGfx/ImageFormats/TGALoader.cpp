@@ -174,11 +174,11 @@ IntSize TGAImageDecoderPlugin::size()
     return IntSize { m_context->header.width, m_context->header.height };
 }
 
-bool TGAImageDecoderPlugin::decode_tga_header()
+ErrorOr<void> TGAImageDecoderPlugin::decode_tga_header()
 {
     auto& reader = m_context->reader;
     if (reader->data().size() < sizeof(TGAHeader))
-        return false;
+        return Error::from_string_literal("Not enough data to be a TGA image");
 
     m_context->header.id_length = reader->read_u8();
     m_context->header.color_map_type = reader->read_u8();
@@ -197,19 +197,17 @@ bool TGAImageDecoderPlugin::decode_tga_header()
 
     // FIXME: Check for multiplication overflow!
     if (m_context->header.data_type_code == TGADataType::UncompressedRGB && bytes_remaining < static_cast<size_t>(m_context->header.width * m_context->header.height * (m_context->header.bits_per_pixel / 8)))
-        return false;
+        return Error::from_string_literal("Not enough data to read an image with the expected size");
 
     if (m_context->header.bits_per_pixel < 8 || m_context->header.bits_per_pixel > 32)
-        return false;
+        return Error::from_string_literal("Invalid bit depth");
 
-    return true;
+    return {};
 }
 
 ErrorOr<void> TGAImageDecoderPlugin::initialize()
 {
-    if (decode_tga_header())
-        return {};
-    return Error::from_string_literal("Bad TGA header");
+    return decode_tga_header();
 }
 
 ErrorOr<bool> TGAImageDecoderPlugin::validate_before_create(ReadonlyBytes data)
