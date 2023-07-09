@@ -12,7 +12,6 @@
 #include <AK/Debug.h>
 #include <AK/GenericLexer.h>
 #include <AK/SourceLocation.h>
-#include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/CSS/CSSFontFaceRule.h>
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSKeyframeRule.h>
@@ -84,7 +83,6 @@
 #include <LibWeb/CSS/StyleValues/URLStyleValue.h>
 #include <LibWeb/CSS/StyleValues/UnresolvedStyleValue.h>
 #include <LibWeb/CSS/StyleValues/UnsetStyleValue.h>
-#include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Infra/Strings.h>
 
@@ -94,43 +92,6 @@ static void log_parse_error(SourceLocation const& location = SourceLocation::cur
 }
 
 namespace Web::CSS::Parser {
-
-ParsingContext::ParsingContext(JS::Realm& realm)
-    : m_realm(realm)
-{
-}
-
-ParsingContext::ParsingContext(DOM::Document const& document, AK::URL url)
-    : m_realm(const_cast<JS::Realm&>(document.realm()))
-    , m_document(&document)
-    , m_url(move(url))
-{
-}
-
-ParsingContext::ParsingContext(DOM::Document const& document)
-    : m_realm(const_cast<JS::Realm&>(document.realm()))
-    , m_document(&document)
-    , m_url(document.url())
-{
-}
-
-ParsingContext::ParsingContext(DOM::ParentNode& parent_node)
-    : m_realm(parent_node.realm())
-    , m_document(&parent_node.document())
-    , m_url(parent_node.document().url())
-{
-}
-
-bool ParsingContext::in_quirks_mode() const
-{
-    return m_document ? m_document->in_quirks_mode() : false;
-}
-
-// https://www.w3.org/TR/css-values-4/#relative-urls
-AK::URL ParsingContext::complete_url(StringView relative_url) const
-{
-    return m_url.complete_url(relative_url);
-}
 
 ErrorOr<Parser> Parser::create(ParsingContext const& context, StringView input, StringView encoding)
 {
@@ -9279,7 +9240,7 @@ CSS::Length CSS::Parser::Parser::parse_as_sizes_attribute()
         //    If it does not parse correctly, or it does parse correctly but the <media-condition> evaluates to false, continue.
         TokenStream<ComponentValue> token_stream { unparsed_size };
         auto media_condition = parse_media_condition(token_stream, MediaCondition::AllowOr::Yes);
-        if (media_condition && media_condition->evaluate(m_context.document()->window()) == CSS::MatchResult::True) {
+        if (media_condition && media_condition->evaluate(*m_context.window()) == CSS::MatchResult::True) {
             return size.value();
         } else {
             continue;

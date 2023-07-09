@@ -20,7 +20,7 @@
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
-#include <LibGfx/Painter.h>
+#include <LibGfx/Color.h>
 #include <LibWeb/CSS/Enums.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/ValueID.h>

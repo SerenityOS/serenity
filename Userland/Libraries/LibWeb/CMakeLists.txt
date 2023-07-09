@@ -54,6 +54,7 @@ set(SOURCES
     CSS/Parser/DeclarationOrAtRule.cpp
     CSS/Parser/Function.cpp
     CSS/Parser/Parser.cpp
+    CSS/Parser/ParsingContext.cpp
     CSS/Parser/Rule.cpp
     CSS/Parser/Token.cpp
     CSS/Parser/Tokenizer.cpp

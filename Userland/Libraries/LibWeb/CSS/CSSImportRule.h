@@ -12,6 +12,7 @@
 #include <LibWeb/CSS/CSSRule.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/DOM/DocumentLoadEventDelayer.h>
+#include <LibWeb/Loader/Resource.h>
 
 namespace Web::CSS {
 

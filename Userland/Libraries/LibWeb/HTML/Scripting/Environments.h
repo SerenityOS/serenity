@@ -8,10 +8,7 @@
 #pragma once
 
 #include <AK/URL.h>
-#include <LibJS/Runtime/ExecutionContext.h>
-#include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/Object.h>
-#include <LibJS/Runtime/Realm.h>
+#include <LibJS/Forward.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Scripting/ModuleMap.h>

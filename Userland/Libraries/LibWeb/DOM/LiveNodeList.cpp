@@ -5,6 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/Error.h>
 #include <LibWeb/DOM/LiveNodeList.h>
 #include <LibWeb/DOM/Node.h>
 

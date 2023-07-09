@@ -44,6 +44,7 @@ public:
 
     bool in_quirks_mode() const;
     DOM::Document const* document() const { return m_document; }
+    HTML::Window const* window() const;
     AK::URL complete_url(StringView) const;
 
     PropertyID current_property_id() const { return m_current_property_id; }

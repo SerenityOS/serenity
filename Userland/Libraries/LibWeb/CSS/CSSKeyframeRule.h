@@ -20,10 +20,7 @@ class CSSKeyframeRule final : public CSSRule {
     WEB_PLATFORM_OBJECT(CSSKeyframeRule, CSSRule);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSKeyframeRule>> create(JS::Realm& realm, CSS::Percentage key, CSSStyleDeclaration& declarations)
-    {
-        return MUST_OR_THROW_OOM(realm.heap().allocate<CSSKeyframeRule>(realm, realm, key, declarations));
-    }
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSKeyframeRule>> create(JS::Realm& realm, CSS::Percentage key, CSSStyleDeclaration& declarations);
 
     virtual ~CSSKeyframeRule() = default;
 

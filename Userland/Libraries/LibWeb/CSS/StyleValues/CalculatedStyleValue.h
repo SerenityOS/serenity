@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <AK/Function.h>
 #include <LibWeb/CSS/Angle.h>
 #include <LibWeb/CSS/CSSNumericType.h>
 #include <LibWeb/CSS/Frequency.h>
