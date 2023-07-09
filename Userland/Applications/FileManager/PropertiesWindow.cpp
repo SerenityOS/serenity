@@ -98,7 +98,7 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
     m_old_mode = st.st_mode;
 
     auto* type = general_tab->find_descendant_of_type_named<GUI::Label>("type");
-    type->set_text(TRY(String::from_deprecated_string(get_description(m_mode))));
+    type->set_text(TRY(String::from_utf8(get_description(m_mode))));
 
     if (S_ISLNK(m_mode)) {
         auto link_destination_or_error = FileSystem::read_link(m_path);
