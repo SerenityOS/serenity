@@ -1077,6 +1077,8 @@ void TextEditor::keydown_event(KeyEvent& event)
     if (event.key() == KeyCode::Key_Escape) {
         if (on_escape_pressed)
             on_escape_pressed();
+        else
+            event.ignore();
         return;
     }
 
