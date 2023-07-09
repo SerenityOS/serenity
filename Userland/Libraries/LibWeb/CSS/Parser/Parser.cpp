@@ -8746,7 +8746,7 @@ private:
     ComponentValue m_component_value;
 };
 
-// https://html.spec.whatwg.org/multipage/images.html#parse-a-srcset-attribute
+// https://html.spec.whatwg.org/multipage/images.html#parsing-a-sizes-attribute
 Length Parser::Parser::parse_as_sizes_attribute()
 {
     Optional<Length> size;
