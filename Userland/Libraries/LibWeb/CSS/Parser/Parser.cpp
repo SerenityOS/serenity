@@ -4783,7 +4783,9 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_position_x_or_y_valu
         return EdgeStyleValue::create(relative_edge, *offset);
     }
 
-    return nullptr;
+    // If no offset is provided create this element but with an offset of default value of zero
+    transaction.commit();
+    return EdgeStyleValue::create(relative_edge, Length::make_px(0));
 }
 
 ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_repeat_value(TokenStream<ComponentValue>& tokens)
