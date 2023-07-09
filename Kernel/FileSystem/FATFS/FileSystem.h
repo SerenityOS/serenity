@@ -17,6 +17,44 @@
 
 namespace Kernel {
 
+class DOSBIOSParameterBlock final {
+private:
+    KBuffer const* const m_boot_record;
+    const struct DOS4BIOSParameterBlock* m_dos4_block;
+    const struct DOS7BIOSParameterBlock* m_dos7_block;
+    const struct DOS3BIOSParameterBlock* m_common_block;
+
+public:
+    DOSBIOSParameterBlock(KBuffer const* const boot_record)
+        : m_boot_record(boot_record)
+        , m_dos4_block(reinterpret_cast<const struct DOS4BIOSParameterBlock*>(boot_record->bytes().offset_pointer(0x024)))
+        , m_dos7_block(reinterpret_cast<const struct DOS7BIOSParameterBlock*>(boot_record->bytes().offset_pointer(0x024)))
+        , m_common_block(reinterpret_cast<const struct DOS3BIOSParameterBlock*>(boot_record->bytes().data()))
+    {
+    }
+
+    DOSBIOSParameterBlockVersion bpb_version() const;
+
+    DOS3BIOSParameterBlock const* common_bpb() const;
+
+    DOS4BIOSParameterBlock const* dos4_bpb() const;
+
+    DOS7BIOSParameterBlock const* dos7_bpb() const;
+
+    u16 sectors_per_fat() const;
+
+    u32 sector_count() const;
+
+    u8 signature() const;
+};
+
+// Represents a block of contiguous sectors to read. This typically represents a
+// cluster, but is also used to define areas of the root directory region.
+struct FatBlockSpan {
+    BlockBasedFileSystem::BlockIndex start_block;
+    size_t number_of_sectors;
+};
+
 class FATFS final : public BlockBasedFileSystem {
     friend FATInode;
 
@@ -42,13 +80,13 @@ private:
 
     static constexpr u32 first_data_cluster = 2;
 
-    FAT32BootRecord const* boot_record() const { return reinterpret_cast<FAT32BootRecord const*>(m_boot_record->data()); }
+    FatBlockSpan first_block_of_cluster(u32 cluster) const;
 
-    BlockBasedFileSystem::BlockIndex first_block_of_cluster(u32 cluster) const;
-
-    OwnPtr<KBuffer> m_boot_record {};
+    OwnPtr<KBuffer> m_boot_record;
+    OwnPtr<DOSBIOSParameterBlock> m_parameter_block;
     RefPtr<FATInode> m_root_inode;
     u32 m_first_data_sector { 0 };
+    FATVersion m_fat_version;
 };
 
 }
