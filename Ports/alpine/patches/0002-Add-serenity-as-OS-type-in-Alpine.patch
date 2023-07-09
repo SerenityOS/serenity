@@ -4,7 +4,7 @@ Date: Mon, 28 Nov 2022 19:55:04 -0800
 Subject: [PATCH] Add serenity as OS type in Alpine.
 
 ---
- configure.ac                      |  6 +++
+ configure                         |  6 +++
  imap/Makefile                     |  2 +-
  imap/src/osdep/unix/Makefile      |  9 +++++
  imap/src/osdep/unix/os_serenity.c | 59 +++++++++++++++++++++++++++++
@@ -13,11 +13,11 @@ Subject: [PATCH] Add serenity as OS type in Alpine.
  create mode 100644 imap/src/osdep/unix/os_serenity.c
  create mode 100644 imap/src/osdep/unix/os_serenity.h
 
-diff --git a/configure.ac b/configure.ac
-index 4fa94f16078daf6187131177b4153845fc0f2bce..1d899fa29ffb698a396a5756e707a51f20367679 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -1289,6 +1289,12 @@ case "$host" in
+diff --git a/configure b/configure
+index 2c417775d04165f3272767b3eb1025cbbe0a2fe3..5b9085b6e69d9faf838cbb9b7c54693f25d8bb9c 100755
+--- a/configure
++++ b/configure
+@@ -19007,6 +19007,12 @@ $as_echo "#define __EXTENSIONS__ 1" >>confdefs.h
      alpine_mode_readonly="(0600)"
      alpine_c_client_target="neb"
      ;;
