@@ -68,7 +68,7 @@ template("unix_toolchain") {
     tool("solink") {
       outfile = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
       if (current_os == "ios" || current_os == "mac") {
-        command = "$ld -shared {{ldflags}} -o $outfile {{inputs}} {{libs}} {{frameworks}}"
+        command = "$ld -shared {{ldflags}} -o $outfile {{inputs}} {{libs}} {{frameworks}} -Wl,-install_name,@rpath/{{target_output_name}}{{output_extension}}"
         default_output_extension = ".dylib"
       } else {
         command = "$ld -shared {{ldflags}} -Wl,-soname,{{target_output_name}}{{output_extension}} -Wl,-rpath,\\\$ORIGIN -o $outfile {{inputs}} {{libs}}"
@@ -86,7 +86,7 @@ template("unix_toolchain") {
     tool("solink_module") {
       outfile = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
       if (current_os == "ios" || current_os == "mac") {
-        command = "$ld -shared {{ldflags}} -Wl,-flat_namespace -Wl,-undefined,suppress -o $outfile {{inputs}} {{libs}} {{frameworks}}"
+        command = "$ld -shared {{ldflags}} -Wl,-flat_namespace -Wl,-undefined,suppress -o $outfile {{inputs}} {{libs}} {{frameworks}} -Wl,-install_name,@rpath/{{target_output_name}}{{output_extension}}"
         default_output_extension = ".dylib"
       } else {
         command = "$ld -shared {{ldflags}} -Wl,-soname,{{target_output_name}}{{output_extension}} -Wl,-rpath,\\\$ORIGIN -o $outfile {{inputs}} {{libs}}"
@@ -103,8 +103,7 @@ template("unix_toolchain") {
     tool("link") {
       outfile = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
       if (current_os == "ios" || current_os == "mac") {
-        command =
-            "$ld {{ldflags}} -o $outfile {{inputs}} {{libs}} {{frameworks}}"
+        command = "$ld {{ldflags}} -o $outfile {{inputs}} {{libs}} {{frameworks}} -Wl,-rpath,@executable_path/../lib"
       } else {
         command = "$ld {{ldflags}} -o $outfile -Wl,--start-group {{inputs}} -Wl,--end-group -Wl,-rpath,\\\$ORIGIN/../lib {{libs}}"
       }
