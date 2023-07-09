@@ -4757,7 +4757,13 @@ void ScopeNode::block_declaration_instantiation(VM& vm, Environment* environment
         auto is_constant_declaration = declaration.is_constant_declaration();
         // NOTE: Due to the use of MUST with `create_immutable_binding` and `create_mutable_binding` below,
         //       an exception should not result from `for_each_bound_name`.
-        MUST(declaration.for_each_bound_name([&](auto const& name) {
+        MUST(declaration.for_each_bound_identifier([&](auto const& identifier) {
+            if (vm.bytecode_interpreter_if_exists() && identifier.is_local()) {
+                // NOTE: No need to create bindings for local variables as their values are not stored in an environment.
+                return;
+            }
+
+            auto const& name = identifier.string();
             if (is_constant_declaration) {
                 MUST(environment->create_immutable_binding(vm, name, true));
             } else {
