@@ -13,6 +13,7 @@
     A(Alternate)                  \
     A(ASCII85Decode)              \
     A(ASCIIHexDecode)             \
+    A(Author)                     \
     A(BG)                         \
     A(BG2)                        \
     A(BM)                         \
@@ -31,6 +32,8 @@
     A(Columns)                    \
     A(Contents)                   \
     A(Count)                      \
+    A(CreationDate)               \
+    A(Creator)                    \
     A(CropBox)                    \
     A(Crypt)                      \
     A(D)                          \
@@ -79,8 +82,10 @@
     A(Image)                      \
     A(ImageMask)                  \
     A(Index)                      \
+    A(Info)                       \
     A(JBIG2Decode)                \
     A(JPXDecode)                  \
+    A(Keywords)                   \
     A(Kids)                       \
     A(L)                          \
     A(LC)                         \
@@ -99,6 +104,7 @@
     A(Matrix)                     \
     A(MediaBox)                   \
     A(MissingWidth)               \
+    A(ModDate)                    \
     A(N)                          \
     A(Names)                      \
     A(Next)                       \
@@ -113,6 +119,7 @@
     A(Pattern)                    \
     A(Predictor)                  \
     A(Prev)                       \
+    A(Producer)                   \
     A(R)                          \
     A(RI)                         \
     A(Registry)                   \
@@ -123,6 +130,7 @@
     A(SA)                         \
     A(SM)                         \
     A(SMask)                      \
+    A(Subject)                    \
     A(Subtype)                    \
     A(Supplement)                 \
     A(T)                          \
