@@ -149,3 +149,19 @@ TEST_CASE(strip_path_partially)
 
     EXPECT_FILE_EQ(MUST(String::formatted("{}/to/basename", s_test_dir)), "Hello, friends!\n");
 }
+
+TEST_CASE(add_file_from_scratch)
+{
+    PatchSetup setup;
+
+    auto patch = R"(
+--- /dev/null
++++ a/file_to_add
+@@ -0,0 +1 @@
++Hello, friends!
+)"sv;
+
+    run_patch({}, patch, "patching file file_to_add\n"sv);
+
+    EXPECT_FILE_EQ(MUST(String::formatted("{}/file_to_add", s_test_dir)), "Hello, friends!\n");
+}
