@@ -187,9 +187,4 @@ void Mixer::request_setting_sync()
     }
 }
 
-ClientAudioStream::ClientAudioStream(ConnectionFromClient& client)
-    : m_client(client)
-{
-}
-
 }

@@ -10,6 +10,7 @@ compile_ipc(AudioManagerClient.ipc AudioManagerClientEndpoint.h)
 compile_ipc(AudioManagerServer.ipc AudioManagerServerEndpoint.h)
 
 set(SOURCES
+    ClientAudioStream.cpp
     ConnectionFromClient.cpp
     ConnectionFromManagerClient.cpp
     Mixer.cpp
