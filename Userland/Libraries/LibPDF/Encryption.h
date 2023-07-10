@@ -41,8 +41,8 @@ protected:
     void decrypt(NonnullRefPtr<Object>, Reference reference) const override;
 
 private:
-    template<bool is_revision_2>
-    ByteBuffer compute_user_password_value(ByteBuffer password_string);
+    ByteBuffer compute_user_password_value_v2(ByteBuffer password_string);
+    ByteBuffer compute_user_password_value_v3_and_newer(ByteBuffer password_string);
 
     ByteBuffer compute_encryption_key(ByteBuffer password_string);
 

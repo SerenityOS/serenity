@@ -95,8 +95,7 @@ StandardSecurityHandler::StandardSecurityHandler(Document* document, size_t revi
 {
 }
 
-template<>
-ByteBuffer StandardSecurityHandler::compute_user_password_value<true>(ByteBuffer password_string)
+ByteBuffer StandardSecurityHandler::compute_user_password_value_v2(ByteBuffer password_string)
 {
     // Algorithm 4: Computing the encryption dictionary's U (user password)
     //              value (Security handlers of revision 2)
@@ -116,8 +115,7 @@ ByteBuffer StandardSecurityHandler::compute_user_password_value<true>(ByteBuffer
     return output;
 }
 
-template<>
-ByteBuffer StandardSecurityHandler::compute_user_password_value<false>(ByteBuffer password_string)
+ByteBuffer StandardSecurityHandler::compute_user_password_value_v3_and_newer(ByteBuffer password_string)
 {
     // Algorithm 5: Computing the encryption dictionary's U (user password)
     //              value (Security handlers of revision 3 or greater)
@@ -177,9 +175,9 @@ bool StandardSecurityHandler::try_provide_user_password(StringView password_stri
     //    supplied password string.
     ByteBuffer password_buffer = MUST(ByteBuffer::copy(password_string.bytes()));
     if (m_revision == 2) {
-        password_buffer = compute_user_password_value<true>(password_buffer);
+        password_buffer = compute_user_password_value_v2(password_buffer);
     } else {
-        password_buffer = compute_user_password_value<false>(password_buffer);
+        password_buffer = compute_user_password_value_v3_and_newer(password_buffer);
     }
 
     // b) If the result of step (a) is equal to the value of the encryption
