@@ -68,33 +68,33 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <(anonymous)> at (38,758) content-size 724x0 children: inline
         TextNode <#text>
       Box <div.row.reverse.outer.start> at (53,773) content-size 300x60 flex-container(row-reverse) [FFC] children: not-inline
-        BlockContainer <div> at (218,788) content-size 150x50 positioned [BFC] children: inline
+        BlockContainer <div> at (68,788) content-size 150x50 positioned [BFC] children: inline
           line 0 width: 41.234375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 5, rect: [218,788 41.234375x17.46875]
+            frag 0 from TextNode start: 0, length: 5, rect: [68,788 41.234375x17.46875]
               "start"
           TextNode <#text>
       BlockContainer <(anonymous)> at (38,848) content-size 724x0 children: inline
         TextNode <#text>
       Box <div.row.reverse.outer.flex-start> at (53,863) content-size 300x60 flex-container(row-reverse) [FFC] children: not-inline
-        BlockContainer <div> at (218,878) content-size 150x50 positioned [BFC] children: inline
+        BlockContainer <div> at (188,878) content-size 150x50 positioned [BFC] children: inline
           line 0 width: 76.8125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 10, rect: [218,878 76.8125x17.46875]
+            frag 0 from TextNode start: 0, length: 10, rect: [188,878 76.8125x17.46875]
               "flex-start"
           TextNode <#text>
       BlockContainer <(anonymous)> at (38,938) content-size 724x0 children: inline
         TextNode <#text>
       Box <div.row.reverse.outer.end> at (53,953) content-size 300x60 flex-container(row-reverse) [FFC] children: not-inline
-        BlockContainer <div> at (38,968) content-size 150x50 positioned [BFC] children: inline
+        BlockContainer <div> at (188,968) content-size 150x50 positioned [BFC] children: inline
           line 0 width: 26.1875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 3, rect: [38,968 26.1875x17.46875]
+            frag 0 from TextNode start: 0, length: 3, rect: [188,968 26.1875x17.46875]
               "end"
           TextNode <#text>
       BlockContainer <(anonymous)> at (38,1028) content-size 724x0 children: inline
         TextNode <#text>
       Box <div.row.reverse.outer.flex-end> at (53,1043) content-size 300x60 flex-container(row-reverse) [FFC] children: not-inline
-        BlockContainer <div> at (38,1058) content-size 150x50 positioned [BFC] children: inline
+        BlockContainer <div> at (68,1058) content-size 150x50 positioned [BFC] children: inline
           line 0 width: 61.765625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 8, rect: [38,1058 61.765625x17.46875]
+            frag 0 from TextNode start: 0, length: 8, rect: [68,1058 61.765625x17.46875]
               "flex-end"
           TextNode <#text>
       BlockContainer <(anonymous)> at (38,1118) content-size 724x0 children: inline
@@ -116,9 +116,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <(anonymous)> at (38,1298) content-size 724x0 children: inline
         TextNode <#text>
       Box <div.row.reverse.outer.space-between> at (53,1313) content-size 300x60 flex-container(row-reverse) [FFC] children: not-inline
-        BlockContainer <div> at (68,1328) content-size 150x50 positioned [BFC] children: inline
+        BlockContainer <div> at (188,1328) content-size 150x50 positioned [BFC] children: inline
           line 0 width: 115.515625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 13, rect: [68,1328 115.515625x17.46875]
+            frag 0 from TextNode start: 0, length: 13, rect: [188,1328 115.515625x17.46875]
               "space-between"
           TextNode <#text>
       BlockContainer <(anonymous)> at (38,1388) content-size 724x0 children: inline
@@ -196,33 +196,33 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <(anonymous)> at (38,2198) content-size 724x0 children: inline
         TextNode <#text>
       Box <div.column.reverse.outer.start> at (53,2213) content-size 300x60 flex-container(column-reverse) [FFC] children: not-inline
-        BlockContainer <div> at (68,2238) content-size 150x50 positioned [BFC] children: inline
+        BlockContainer <div> at (68,2228) content-size 150x50 positioned [BFC] children: inline
           line 0 width: 41.234375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 5, rect: [68,2238 41.234375x17.46875]
+            frag 0 from TextNode start: 0, length: 5, rect: [68,2228 41.234375x17.46875]
               "start"
           TextNode <#text>
       BlockContainer <(anonymous)> at (38,2288) content-size 724x0 children: inline
         TextNode <#text>
       Box <div.column.reverse.outer.flex-start> at (53,2303) content-size 300x60 flex-container(column-reverse) [FFC] children: not-inline
-        BlockContainer <div> at (68,2328) content-size 150x50 positioned [BFC] children: inline
+        BlockContainer <div> at (68,2298) content-size 150x50 positioned [BFC] children: inline
           line 0 width: 76.8125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 10, rect: [68,2328 76.8125x17.46875]
+            frag 0 from TextNode start: 0, length: 10, rect: [68,2298 76.8125x17.46875]
               "flex-start"
           TextNode <#text>
       BlockContainer <(anonymous)> at (38,2378) content-size 724x0 children: inline
         TextNode <#text>
       Box <div.column.reverse.outer.end> at (53,2393) content-size 300x60 flex-container(column-reverse) [FFC] children: not-inline
-        BlockContainer <div> at (68,2378) content-size 150x50 positioned [BFC] children: inline
+        BlockContainer <div> at (68,2388) content-size 150x50 positioned [BFC] children: inline
           line 0 width: 26.1875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 3, rect: [68,2378 26.1875x17.46875]
+            frag 0 from TextNode start: 0, length: 3, rect: [68,2388 26.1875x17.46875]
               "end"
           TextNode <#text>
       BlockContainer <(anonymous)> at (38,2468) content-size 724x0 children: inline
         TextNode <#text>
       Box <div.column.reverse.outer.flex-end> at (53,2483) content-size 300x60 flex-container(column-reverse) [FFC] children: not-inline
-        BlockContainer <div> at (68,2468) content-size 150x50 positioned [BFC] children: inline
+        BlockContainer <div> at (68,2498) content-size 150x50 positioned [BFC] children: inline
           line 0 width: 61.765625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 8, rect: [68,2468 61.765625x17.46875]
+            frag 0 from TextNode start: 0, length: 8, rect: [68,2498 61.765625x17.46875]
               "flex-end"
           TextNode <#text>
       BlockContainer <(anonymous)> at (38,2558) content-size 724x0 children: inline
@@ -244,9 +244,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <(anonymous)> at (38,2738) content-size 724x0 children: inline
         TextNode <#text>
       Box <div.column.reverse.outer.space-between> at (53,2753) content-size 300x60 flex-container(column-reverse) [FFC] children: not-inline
-        BlockContainer <div> at (68,2768) content-size 150x50 positioned [BFC] children: inline
+        BlockContainer <div> at (68,2748) content-size 150x50 positioned [BFC] children: inline
           line 0 width: 115.515625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 13, rect: [68,2768 115.515625x17.46875]
+            frag 0 from TextNode start: 0, length: 13, rect: [68,2748 115.515625x17.46875]
               "space-between"
           TextNode <#text>
       BlockContainer <(anonymous)> at (38,2828) content-size 724x0 children: inline

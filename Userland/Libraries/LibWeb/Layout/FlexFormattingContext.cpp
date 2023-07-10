@@ -2193,18 +2193,17 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
     CSSPixels main_offset = 0;
     switch (flex_container().computed_values().justify_content()) {
     case CSS::JustifyContent::Start:
+        pack_from_end = false;
+        break;
     case CSS::JustifyContent::FlexStart:
-        main_offset = 0;
+    case CSS::JustifyContent::SpaceBetween:
         pack_from_end = is_direction_reverse();
         break;
     case CSS::JustifyContent::End:
-    case CSS::JustifyContent::FlexEnd:
-        main_offset = -main_border_before - main_border_after;
-        pack_from_end = !is_direction_reverse();
+        pack_from_end = true;
         break;
-    case CSS::JustifyContent::SpaceBetween:
-        pack_from_end = false;
-        main_offset = 0;
+    case CSS::JustifyContent::FlexEnd:
+        pack_from_end = !is_direction_reverse();
         break;
     case CSS::JustifyContent::Center:
     case CSS::JustifyContent::SpaceAround:
@@ -2223,7 +2222,7 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
     }
 
     if (pack_from_end)
-        main_offset += inner_main_size(flex_container()) - inner_main_size(box);
+        main_offset += inner_main_size(flex_container()) - inner_main_size(box) - main_border_before - main_border_after;
 
     auto static_position_offset = is_row_layout() ? CSSPixelPoint { main_offset, cross_offset } : CSSPixelPoint { cross_offset, main_offset };
 
