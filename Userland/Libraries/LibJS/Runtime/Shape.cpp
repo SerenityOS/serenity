@@ -197,6 +197,8 @@ void Shape::add_property_to_unique_shape(StringOrSymbol const& property_key, Pro
 
     VERIFY(m_property_count < NumericLimits<u32>::max());
     ++m_property_count;
+
+    ++m_unique_shape_serial_number;
 }
 
 void Shape::reconfigure_property_in_unique_shape(StringOrSymbol const& property_key, PropertyAttributes attributes)
@@ -207,6 +209,8 @@ void Shape::reconfigure_property_in_unique_shape(StringOrSymbol const& property_
     VERIFY(it != m_property_table->end());
     it->value.attributes = attributes;
     m_property_table->set(property_key, it->value);
+
+    ++m_unique_shape_serial_number;
 }
 
 void Shape::remove_property_from_unique_shape(StringOrSymbol const& property_key, size_t offset)
@@ -220,6 +224,8 @@ void Shape::remove_property_from_unique_shape(StringOrSymbol const& property_key
         if (it.value.offset > offset)
             --it.value.offset;
     }
+
+    ++m_unique_shape_serial_number;
 }
 
 void Shape::add_property_without_transition(StringOrSymbol const& property_key, PropertyAttributes attributes)

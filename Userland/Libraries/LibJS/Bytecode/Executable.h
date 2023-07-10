@@ -18,6 +18,7 @@ namespace JS::Bytecode {
 struct PropertyLookupCache {
     WeakPtr<Shape> shape;
     Optional<u32> property_offset;
+    u64 unique_shape_serial_number { 0 };
 };
 
 struct Executable {
