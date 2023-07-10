@@ -140,9 +140,7 @@ PDFErrorOr<DocumentParser::LinearizationResult> DocumentParser::initialize_linea
     if (indirect_value_or_error.is_error())
         return LinearizationResult::NotLinearized;
 
-    auto indirect_value = indirect_value_or_error.value();
-
-    auto dict_value = TRY(m_document->resolve(indirect_value));
+    auto dict_value = indirect_value_or_error.value()->value();
     if (!dict_value.has<NonnullRefPtr<Object>>())
         return error("Expected linearization object to be a dictionary");
 
