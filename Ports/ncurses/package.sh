@@ -12,7 +12,9 @@ configopts=(
     "--without-ada"
     "--enable-widec"
 )
-files="https://invisible-mirror.net/archives/ncurses/ncurses-${version}.tar.gz ncurses-${version}.tar.gz 97fc51ac2b085d4cde31ef4d2c3122c21abc217e9090a43a30fc5ec21684e059"
+files=(
+    "https://invisible-mirror.net/archives/ncurses/ncurses-${version}.tar.gz ncurses-${version}.tar.gz 97fc51ac2b085d4cde31ef4d2c3122c21abc217e9090a43a30fc5ec21684e059"
+)
 
 check_tic_version() {
     local tic_path="$1"

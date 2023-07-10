@@ -8,7 +8,9 @@ use_fresh_config_guess='true'
 config_guess_paths=("make/autoconf/build-aux/autoconf-config.guess")
 use_fresh_config_sub='true'
 config_sub_paths=("make/autoconf/build-aux/autoconf-config.sub")
-files="https://github.com/openjdk/jdk17u-dev/archive/refs/tags/jdk-${version}-ga.tar.gz jdk-${version}-ga.tar.gz 4bd3d2534d7b584c01711e64b9e5b7e79052a1759d3fded8d64107ebc9d37dc2"
+files=(
+    "https://github.com/openjdk/jdk17u-dev/archive/refs/tags/jdk-${version}-ga.tar.gz jdk-${version}-ga.tar.gz 4bd3d2534d7b584c01711e64b9e5b7e79052a1759d3fded8d64107ebc9d37dc2"
+)
 depends=("fontconfig" "libffi")
 
 configure() {

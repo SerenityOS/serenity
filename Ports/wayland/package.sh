@@ -14,7 +14,9 @@ depends=(
     'expat'
     'libxml2'
 )
-files="https://gitlab.freedesktop.org/wayland/wayland/-/releases/${version}/downloads/wayland-${version}.tar.xz wayland-${version}.tar.xz 6dc64d7fc16837a693a51cfdb2e568db538bfdc9f457d4656285bb9594ef11ac"
+files=(
+    "https://gitlab.freedesktop.org/wayland/wayland/-/releases/${version}/downloads/wayland-${version}.tar.xz wayland-${version}.tar.xz 6dc64d7fc16837a693a51cfdb2e568db538bfdc9f457d4656285bb9594ef11ac"
+)
 
 configure() {
     # TODO: Figure out why GCC doesn't autodetect that libgcc_s is needed.

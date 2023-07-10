@@ -134,7 +134,9 @@ script simply defines some well-known variables and looks like this:
 port="foo"
 version="1.2.3"
 useconfigure="true"
-files="https://example.com/foo-${version}.tar.gz foo-${version}.tar.gz"
+files=(
+    "https://example.com/foo-${version}.tar.gz foo-${version}.tar.gz 9acd50f9a2af37e471f761c3fe7b8dea5617e51dac802fe6c177b74abf0abb5a"
+)
 depends=("bar" "baz")
 ```
 
@@ -183,8 +185,8 @@ depends=("ncurses" "gettext")
 
 #### `files`
 
-A list of external files required by the port, one per line. The format of each
-line is as follows:
+An array of external files required by the port, one per line. The format of each
+entry is as follows:
 
 ```text
 URL NAME HASH
@@ -197,7 +199,9 @@ that will be used for verification.
 For example:
 
 ```bash
-files="https://example.com/foo-${version}.tar.xz foo-${version}.tar.xz 9acd50f9a2af37e471f761c3fe7b8dea5617e51dac802fe6c177b74abf0abb5a"
+files=(
+    "https://example.com/foo-${version}.tar.xz foo-${version}.tar.xz 9acd50f9a2af37e471f761c3fe7b8dea5617e51dac802fe6c177b74abf0abb5a"
+)
 ```
 
 If a file is a compressed tar archive, a gzip compressed file or a zip

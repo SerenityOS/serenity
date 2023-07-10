@@ -3,7 +3,9 @@ port=ffmpeg
 version=5.0
 useconfigure=true
 depends=("libiconv" "libtiff" "xz" "bzip2" "SDL2" "x264" "x265")
-files="https://ffmpeg.org/releases/ffmpeg-${version}.tar.gz ffmpeg-${version}.tar.gz 7bf52bc242b5db8df67c62cb826df134d917dedcf6abf1289e15e4057bcc1750"
+files=(
+    "https://ffmpeg.org/releases/ffmpeg-${version}.tar.gz ffmpeg-${version}.tar.gz 7bf52bc242b5db8df67c62cb826df134d917dedcf6abf1289e15e4057bcc1750"
+)
 installopts=("INSTALL_TOP=${SERENITY_INSTALL_ROOT}/usr/local")
 configopts=("SRC_PATH=.")
 

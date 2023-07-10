@@ -8,7 +8,9 @@ configopts=(
 )
 use_fresh_config_sub='true'
 use_fresh_config_guess='true'
-files="https://alpineapp.email/alpine/release/src/alpine-2.26.tar.xz alpine-${version}.tar.xz c0779c2be6c47d30554854a3e14ef5e36539502b331068851329275898a9baba"
+files=(
+    "https://alpineapp.email/alpine/release/src/alpine-2.26.tar.xz alpine-${version}.tar.xz c0779c2be6c47d30554854a3e14ef5e36539502b331068851329275898a9baba"
+)
 depends=(
     'openssl'
     'ncurses'

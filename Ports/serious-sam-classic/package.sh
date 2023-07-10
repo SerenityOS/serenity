@@ -2,7 +2,9 @@
 port='serious-sam-classic'
 useconfigure='false'
 version='1.10.4'
-files="https://github.com/tx00100xt/SeriousSamClassic/archive/refs/tags/v${version}.tar.gz ${port}.tar.gz c42e1434e03f713ffc60aa627f0a24c64287598bc5ee7cdbd2cbe91aa363ef51"
+files=(
+    "https://github.com/tx00100xt/SeriousSamClassic/archive/refs/tags/v${version}.tar.gz ${port}.tar.gz c42e1434e03f713ffc60aa627f0a24c64287598bc5ee7cdbd2cbe91aa363ef51"
+)
 depends=(
     'libvorbis'
     'SDL2'

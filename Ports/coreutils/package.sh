@@ -4,7 +4,9 @@ version=9.1
 useconfigure="true"
 use_fresh_config_sub="true"
 config_sub_paths=("build-aux/config.sub")
-files="https://ftpmirror.gnu.org/gnu/coreutils/coreutils-${version}.tar.gz coreutils-${version}.tar.gz 6055df9268603e8239a5c9c1d64cb25b9a992530df66e33b8d78a660edb37b35"
+files=(
+    "https://ftpmirror.gnu.org/gnu/coreutils/coreutils-${version}.tar.gz coreutils-${version}.tar.gz 6055df9268603e8239a5c9c1d64cb25b9a992530df66e33b8d78a660edb37b35"
+)
 
 # Exclude some non-working utilities:
 #  - arch, coreutils, and hostname are already excluded in the default configuration

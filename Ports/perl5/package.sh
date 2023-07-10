@@ -2,8 +2,10 @@
 port='perl5'
 version='5.38.0'
 useconfigure='true'
-files="https://www.cpan.org/src/5.0/perl-${version}.tar.xz perl5-${version}.tar.xz eca551caec3bc549a4e590c0015003790bdd1a604ffe19cc78ee631d51f7072e
-https://github.com/arsv/perl-cross/releases/download/1.5/perl-cross-1.5.tar.gz perl-cross.1.5.tar.gz d744a390939e2ebb9a12f6725b4d9c19255a141d90031eff90ea183fdfcbf211"
+files=(
+    "https://www.cpan.org/src/5.0/perl-${version}.tar.xz perl5-${version}.tar.xz eca551caec3bc549a4e590c0015003790bdd1a604ffe19cc78ee631d51f7072e"
+    "https://github.com/arsv/perl-cross/releases/download/1.5/perl-cross-1.5.tar.gz perl-cross.1.5.tar.gz d744a390939e2ebb9a12f6725b4d9c19255a141d90031eff90ea183fdfcbf211"
+)
 configopts=(
     '-Dosname=serenity'
     "--target=${SERENITY_ARCH}-pc-serenity"

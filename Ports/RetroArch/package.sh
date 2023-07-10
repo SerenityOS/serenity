@@ -3,7 +3,9 @@ port=RetroArch
 useconfigure="true"
 version="1.12.0"
 archive_hash="c912e32a0300f16ade827d48a4a948d5dab40b764cd1169f61108c6f5803649a"
-files="https://github.com/libretro/${port}/archive/refs/tags/v${version}.tar.gz ${port}-${version}.tar.gz $archive_hash"
+files=(
+    "https://github.com/libretro/${port}/archive/refs/tags/v${version}.tar.gz ${port}-${version}.tar.gz $archive_hash"
+)
 depends=("freetype" "SDL2" "zlib")
 
 configopts=(

@@ -7,5 +7,7 @@ configopts=(
     "--disable-static"
     "--enable-shared"
 )
-files="https://github.com/libsdl-org/SDL_net/releases/download/release-${version}/SDL2_net-${version}.tar.gz SDL2_net-${version}.tar.gz 4e4a891988316271974ff4e9585ed1ef729a123d22c08bd473129179dc857feb"
+files=(
+    "https://github.com/libsdl-org/SDL_net/releases/download/release-${version}/SDL2_net-${version}.tar.gz SDL2_net-${version}.tar.gz 4e4a891988316271974ff4e9585ed1ef729a123d22c08bd473129179dc857feb"
+)
 depends=("SDL2")

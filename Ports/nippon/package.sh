@@ -1,7 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=nippon
 version="1.0"
-files="https://downloads.scummvm.org/frs/extras/Nippon%20Safes/nippon-1.0.zip ${port}-${version}.zip  53e7e2c60065e4aed193169bbcdcfd1113fa68d3efe1c8240ba073c0e20d613f"
+files=(
+    "https://downloads.scummvm.org/frs/extras/Nippon%20Safes/nippon-1.0.zip ${port}-${version}.zip  53e7e2c60065e4aed193169bbcdcfd1113fa68d3efe1c8240ba073c0e20d613f"
+)
 depends=("scummvm")
 
 resource_path="/usr/local/share/games/${port}-${version}"

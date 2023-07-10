@@ -3,7 +3,9 @@ port='cowsay'
 version='3.04'
 depends=('perl5')
 useconfigure='false'
-files="https://github.com/tnalpgge/rank-amateur-cowsay/archive/refs/tags/cowsay-${version}.tar.gz cowsay-${version}.tar.gz d8b871332cfc1f0b6c16832ecca413ca0ac14d58626491a6733829e3d655878b"
+files=(
+    "https://github.com/tnalpgge/rank-amateur-cowsay/archive/refs/tags/cowsay-${version}.tar.gz cowsay-${version}.tar.gz d8b871332cfc1f0b6c16832ecca413ca0ac14d58626491a6733829e3d655878b"
+)
 workdir="rank-amateur-cowsay-cowsay-${version}/"
 
 prefix='/usr/local'

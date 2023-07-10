@@ -3,7 +3,9 @@ port=SuperTuxKart
 useconfigure='true'
 version='1.4'
 archive_hash='9890392419baf4715313f14d5ad60746f276eed36eb580636caf44e2532c0f03'
-files="https://github.com/supertuxkart/stk-code/releases/download/${version}/supertuxkart-${version}-src.tar.xz ${port}-${version}-src.tar.xz $archive_hash"
+files=(
+    "https://github.com/supertuxkart/stk-code/releases/download/${version}/supertuxkart-${version}-src.tar.xz ${port}-${version}-src.tar.xz $archive_hash"
+)
 workdir="${port}-${version}-src"
 launcher_name='SuperTuxKart'
 launcher_category='Games'

@@ -13,7 +13,9 @@ depends=(
     'pcre2'
     'SDL2'
 )
-files="https://github.com/lite-xl/lite-xl/archive/${commit_hash}.tar.gz lite-xl-97ba91af8.tar.gz 25a0dd0a6ef856fd312eecd54983d401224eb8d7a5d5aa4a37c9131ac77bd9ca"
+files=(
+    "https://github.com/lite-xl/lite-xl/archive/${commit_hash}.tar.gz lite-xl-97ba91af8.tar.gz 25a0dd0a6ef856fd312eecd54983d401224eb8d7a5d5aa4a37c9131ac77bd9ca"
+)
 workdir="lite-xl-${commit_hash}"
 launcher_name='Lite-XL'
 icon_file='resources/icons/icon.ico'
