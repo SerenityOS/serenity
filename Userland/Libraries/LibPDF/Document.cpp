@@ -34,6 +34,46 @@ DeprecatedString OutlineItem::to_deprecated_string(int indent) const
     return builder.to_deprecated_string();
 }
 
+PDFErrorOr<Optional<DeprecatedString>> InfoDict::title() const
+{
+    return get(CommonNames::Title);
+}
+
+PDFErrorOr<Optional<DeprecatedString>> InfoDict::author() const
+{
+    return get(CommonNames::Author);
+}
+
+PDFErrorOr<Optional<DeprecatedString>> InfoDict::subject() const
+{
+    return get(CommonNames::Subject);
+}
+
+PDFErrorOr<Optional<DeprecatedString>> InfoDict::keywords() const
+{
+    return get(CommonNames::Keywords);
+}
+
+PDFErrorOr<Optional<DeprecatedString>> InfoDict::creator() const
+{
+    return get(CommonNames::Creator);
+}
+
+PDFErrorOr<Optional<DeprecatedString>> InfoDict::producer() const
+{
+    return get(CommonNames::Producer);
+}
+
+PDFErrorOr<Optional<DeprecatedString>> InfoDict::creation_date() const
+{
+    return get(CommonNames::CreationDate);
+}
+
+PDFErrorOr<Optional<DeprecatedString>> InfoDict::modification_date() const
+{
+    return get(CommonNames::ModDate);
+}
+
 PDFErrorOr<NonnullRefPtr<Document>> Document::create(ReadonlyBytes bytes)
 {
     auto parser = adopt_ref(*new DocumentParser({}, bytes));
@@ -187,6 +227,14 @@ PDFErrorOr<Value> Document::resolve(Value const& value)
         return static_ptr_cast<IndirectValue>(obj)->value();
 
     return value;
+}
+
+PDFErrorOr<Optional<InfoDict>> Document::info_dict()
+{
+    if (!trailer()->contains(CommonNames::Info))
+        return OptionalNone {};
+
+    return InfoDict(this, TRY(trailer()->get_dict(this, CommonNames::Info)));
 }
 
 PDFErrorOr<void> Document::build_page_tree()

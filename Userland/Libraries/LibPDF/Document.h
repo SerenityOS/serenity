@@ -76,6 +76,41 @@ struct OutlineDict final : public RefCounted<OutlineDict> {
     OutlineDict() = default;
 };
 
+class InfoDict {
+public:
+    InfoDict(Document* document, NonnullRefPtr<DictObject> dict)
+        : m_document(document)
+        , m_info_dict(move(dict))
+    {
+    }
+
+    PDFErrorOr<Optional<DeprecatedString>> title() const;
+    PDFErrorOr<Optional<DeprecatedString>> author() const;
+    PDFErrorOr<Optional<DeprecatedString>> subject() const;
+    PDFErrorOr<Optional<DeprecatedString>> keywords() const;
+
+    // Name of the program that created the original, non-PDF file.
+    PDFErrorOr<Optional<DeprecatedString>> creator() const;
+
+    // Name of the program that converted the file to PDF.
+    PDFErrorOr<Optional<DeprecatedString>> producer() const;
+
+    // FIXME: Provide some helper for parsing the date strings returned by these two methods.
+    PDFErrorOr<Optional<DeprecatedString>> creation_date() const;
+    PDFErrorOr<Optional<DeprecatedString>> modification_date() const;
+
+private:
+    PDFErrorOr<Optional<DeprecatedString>> get(DeprecatedFlyString const& name) const
+    {
+        if (!m_info_dict->contains(name))
+            return OptionalNone {};
+        return TRY(m_info_dict->get_string(m_document, name))->string();
+    }
+
+    WeakPtr<Document> m_document;
+    NonnullRefPtr<DictObject> m_info_dict;
+};
+
 class Document final
     : public RefCounted<Document>
     , public Weakable<Document> {
@@ -123,6 +158,8 @@ public:
     /// true, except just before the XRef table is parsed (and while the linearization
     /// dict is being read).
     bool can_resolve_references() { return m_parser->can_resolve_references(); }
+
+    PDFErrorOr<Optional<InfoDict>> info_dict();
 
 private:
     explicit Document(NonnullRefPtr<DocumentParser> const& parser);
