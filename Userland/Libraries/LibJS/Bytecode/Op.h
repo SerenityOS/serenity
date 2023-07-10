@@ -644,6 +644,7 @@ enum class PropertyKind {
     Getter,
     Setter,
     KeyValue,
+    DirectKeyValue, // Used for Object expressions. Always sets an own property, never calls a setter.
     Spread,
     ProtoSetter,
 };

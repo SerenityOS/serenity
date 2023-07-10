@@ -76,6 +76,9 @@ static ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value thi
             return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, TRY_OR_THROW_OOM(vm, base.to_string_without_side_effects()));
         break;
     }
+    case PropertyKind::DirectKeyValue:
+        object->define_direct_property(name, value, Attribute::Enumerable | Attribute::Writable | Attribute::Configurable);
+        break;
     case PropertyKind::Spread:
         TRY(object->copy_data_properties(vm, value, {}));
         break;

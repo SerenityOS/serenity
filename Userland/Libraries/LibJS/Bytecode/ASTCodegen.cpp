@@ -936,7 +936,7 @@ Bytecode::CodeGenerationErrorOr<void> ObjectExpression::generate_bytecode(Byteco
         Bytecode::Op::PropertyKind property_kind;
         switch (property->type()) {
         case ObjectProperty::Type::KeyValue:
-            property_kind = Bytecode::Op::PropertyKind::KeyValue;
+            property_kind = Bytecode::Op::PropertyKind::DirectKeyValue;
             break;
         case ObjectProperty::Type::Getter:
             property_kind = Bytecode::Op::PropertyKind::Getter;
