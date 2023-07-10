@@ -81,7 +81,7 @@ void ConnectionFromClient::request_file_handler(i32 request_id, i32 window_serve
             dbgln("FileSystemAccessServer: Couldn't open {}, error {}", path, file.error());
             async_handle_prompt_end(request_id, file.error().code(), Optional<IPC::File> {}, path);
         } else {
-            async_handle_prompt_end(request_id, 0, IPC::File(*file.release_value(), IPC::File::CloseAfterSending), path);
+            async_handle_prompt_end(request_id, 0, IPC::File(*file.release_value()), path);
         }
     } else {
         async_handle_prompt_end(request_id, EPERM, Optional<IPC::File> {}, path);
@@ -138,7 +138,7 @@ void ConnectionFromClient::prompt_helper(i32 request_id, Optional<DeprecatedStri
 
             m_approved_files.set(user_picked_file.value(), new_permissions);
 
-            async_handle_prompt_end(request_id, 0, IPC::File(*file.release_value(), IPC::File::CloseAfterSending), user_picked_file);
+            async_handle_prompt_end(request_id, 0, IPC::File(*file.release_value()), user_picked_file);
         }
     } else {
         async_handle_prompt_end(request_id, ECANCELED, Optional<IPC::File> {}, Optional<DeprecatedString> {});
