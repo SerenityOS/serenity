@@ -2,13 +2,9 @@
 port=less
 version=590
 useconfigure="true"
-files="https://ftpmirror.gnu.org/gnu/less/less-${version}.tar.gz less-${version}.tar.gz
-https://ftpmirror.gnu.org/gnu/less/less-${version}.tar.gz.sig less-${version}.tar.gz.sig
-https://ftpmirror.gnu.org/gnu/gnu-keyring.gpg gnu-keyring.gpg"
-
+files="https://ftpmirror.gnu.org/gnu/less/less-${version}.tar.gz less-${version}.tar.gz 6aadf54be8bf57d0e2999a3c5d67b1de63808bb90deb8f77b028eafae3a08e10"
 depends=("ncurses")
-auth_type="sig"
-auth_opts=("--keyring" "./gnu-keyring.gpg" "less-${version}.tar.gz.sig")
+auth_type='sha256'
 
 post_configure() {
     run_replace_in_file "s/#define HAVE_WCTYPE 1/\/* #undef HAVE_WCTYPE *\//" defines.h

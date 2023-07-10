@@ -1,11 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=ed
 version=1.18
-files="https://ftpmirror.gnu.org/gnu/ed/ed-${version}.tar.lz ed-${version}.tar.lz
-https://ftpmirror.gnu.org/gnu/ed/ed-${version}.tar.lz.sig ed-${version}.tar.lz.sig
-https://ftpmirror.gnu.org/gnu/gnu-keyring.gpg gnu-keyring.gpg"
-auth_type="sig"
-auth_opts=("--keyring" "./gnu-keyring.gpg" "ed-${version}.tar.lz.sig")
+files="https://ftpmirror.gnu.org/gnu/ed/ed-${version}.tar.lz ed-${version}.tar.lz aca8efad9800c587724a20b97aa8fc47e6b5a47df81606feaba831b074462b4f"
+auth_type='sha256'
 useconfigure=true
 depends=("pcre2")
 
