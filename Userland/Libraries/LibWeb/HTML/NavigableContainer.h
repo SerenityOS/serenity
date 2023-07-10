@@ -48,6 +48,8 @@ protected:
 
     void create_new_nested_browsing_context();
 
+    WebIDL::ExceptionOr<void> create_new_child_navigable();
+
     JS::GCPtr<BrowsingContext> m_nested_browsing_context;
 
     // https://html.spec.whatwg.org/multipage/document-sequences.html#content-navigable
