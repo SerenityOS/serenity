@@ -2,7 +2,6 @@
 port='VVVVVV'
 version='2.3.6'
 useconfigure='true'
-auth_type='sha256'
 files="https://github.com/TerryCavanagh/VVVVVV/archive/refs/tags/${version}.tar.gz VVVVVV-${version}.tar.gz a3366aab9e8462d330044ab1ec63927e9f5c3801c0ed96b24f08c553dcb911e9"
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"

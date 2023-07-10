@@ -4,7 +4,6 @@ version='6.4.0'
 workdir="qt5compat-everywhere-src-${version}"
 useconfigure='true'
 files="https://download.qt.io/official_releases/qt/$(cut -d. -f1,2 <<< ${version})/${version}/submodules/qt5compat-everywhere-src-${version}.tar.xz qt6-qt5compat-${version}.tar.xz 73475d0837f78246d509199f211a35c71fc36cccf64b3de258ebc6387194a4c0"
-auth_type='sha256'
 depends=(
     'qt6-qtbase'
     'libiconv'

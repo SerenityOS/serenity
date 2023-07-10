@@ -2,7 +2,6 @@
 port='cavestory'
 version='2.6.5-1'
 files=('https://github.com/gloof11/nxengine-evo/archive/0f45555c64bae21116bac30cd46002e70b1b6495.zip nxengine-evo-0f45555c64bae21116bac30cd46002e70b1b6495.zip c93cb2c1e16f49cd87bcc886cf6adf289355fabe7b5a30d506ec066cc1d86d1d')
-auth_type='sha256'
 depends=(
     'libjpeg'
     'libpng'

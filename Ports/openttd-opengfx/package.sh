@@ -3,7 +3,6 @@ port=openttd-opengfx
 version=7.1
 workdir=.
 files="https://cdn.openttd.org/opengfx-releases/${version}/opengfx-${version}-all.zip opengfx-${version}-all.zip 928fcf34efd0719a3560cbab6821d71ce686b6315e8825360fba87a7a94d7846"
-auth_type=sha256
 
 build() {
     # The ZIP file we downloaded contains a tarball.

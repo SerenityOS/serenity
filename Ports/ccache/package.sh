@@ -3,7 +3,6 @@ port='ccache'
 version='4.6.3'
 useconfigure='true'
 files="https://github.com/ccache/ccache/releases/download/v${version}/ccache-${version}.tar.gz ccache-$version.tar.gz f46ba3706ad80c30d4d5874dee2bf9227a7fcd0ccaac31b51919a3053d84bd05"
-auth_type='sha256'
 depends=('zstd')
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"

@@ -145,36 +145,6 @@ all the magic happens.
 
 The following variables have special functionality:
 
-#### `auth_import_key`
-
-PGP key to import (from `keyserver.ubuntu.com`) when [`auth_type`](#auth_type)
-is `sig`.
-
-#### `auth_opts`
-
-Options passed to `gpg --verify` when [`auth_type`](#auth_type) is `sig`.
-
-Usually used like this:
-
-```bash
-auth_opts="foo-${version}.tar.xz.asc foo-${version}.tar.xz"
-```
-
-#### `auth_type`
-
-The type of file validation to use, can be one of:
-
-- `sha256`: Use SHA256 hashes defined in [`files`](#files)
-- `sig`: Use PGP signatures (see [`auth_opts`](#auth_opts))
-
-Most ports use `sig` as `.asc` files are widely available.
-
-This _has_ to be specified in order for `lint-ports` to pass.
-
-If no signature or hash is provided by the author of the files, just create the
-hash yourself by calling `sha256sum` on the downloaded file and specifying the
-hash along with the [`files`](#files).
-
 #### `configopts`
 
 Options passed to the port's [`configscript`](#configscript) in the default
@@ -221,27 +191,17 @@ URL NAME HASH
 ```
 
 Where `URL` is the URL from where the file will be downloaded (using `curl`),
-`NAME` is the output name of the downloaded file, and `HASH` is an optional
-MD5, SHA1, or SHA256 hash that will be used for verification when
-[`auth_type`](#auth_type) is set to either of those hash functions.
+`NAME` is the output name of the downloaded file, and `HASH` is an SHA256 hash
+that will be used for verification.
 
 For example:
 
-_With PGP signatures_
-```bash
-files="https://example.com/foo-${version}.tar.xz foo-${version}.tar.xz
-https://example.com/foo-${version}.tar.xz.asc foo-${version}.tar.xz.asc"
-```
-_With a SHA256 hash_
 ```bash
 files="https://example.com/foo-${version}.tar.xz foo-${version}.tar.xz 9acd50f9a2af37e471f761c3fe7b8dea5617e51dac802fe6c177b74abf0abb5a"
 ```
 
 If a file is a compressed tar archive, a gzip compressed file or a zip
 compressed file, it will be extracted.
-
-If a file is an `.asc` file (PGP signature) it will be imported into `gpg`'s
-keyring and can later be used for verification using [`auth_opts`](#auth_opts).
 
 #### `icon_file`
 
