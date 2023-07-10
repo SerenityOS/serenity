@@ -54,56 +54,45 @@ void MimeData::set_text(DeprecatedString const& text)
     set_data("text/plain", text.to_byte_buffer());
 }
 
+static AK::Array<StringView, 8> s_plaintext_suffixes = {
+    ".c"sv,
+    ".cpp"sv,
+    ".gml"sv,
+    ".h"sv,
+    ".hpp"sv,
+    ".ini"sv,
+    ".ipc"sv,
+    ".txt"sv
+};
+
+static AK::Array<StringView, 3> s_plaintext_basenames = {
+    ".history"sv,
+    ".shellrc"sv
+    "CMakeLists.txt"sv,
+};
+
+// FIXME: Share this, TextEditor and HackStudio language detection somehow.
+static bool should_contain_plain_text_based_on_filename(StringView path)
+{
+    for (auto suffix : s_plaintext_suffixes) {
+        if (path.ends_with(suffix))
+            return true;
+    }
+    return s_plaintext_basenames.contains_slow(LexicalPath::basename(path));
+}
+
 StringView guess_mime_type_based_on_filename(StringView path)
 {
-    if (path.ends_with(".pbm"sv, CaseSensitivity::CaseInsensitive))
-        return "image/x‑portable‑bitmap"sv;
-    if (path.ends_with(".pgm"sv, CaseSensitivity::CaseInsensitive))
-        return "image/x‑portable‑graymap"sv;
-    if (path.ends_with(".png"sv, CaseSensitivity::CaseInsensitive))
-        return "image/png"sv;
-    if (path.ends_with(".ppm"sv, CaseSensitivity::CaseInsensitive))
-        return "image/x‑portable‑pixmap"sv;
-    if (path.ends_with(".gif"sv, CaseSensitivity::CaseInsensitive))
-        return "image/gif"sv;
-    if (path.ends_with(".bmp"sv, CaseSensitivity::CaseInsensitive))
-        return "image/bmp"sv;
-    if (path.ends_with(".jpg"sv, CaseSensitivity::CaseInsensitive) || path.ends_with(".jpeg"sv, CaseSensitivity::CaseInsensitive))
-        return "image/jpeg"sv;
-    if (path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive))
-        return "image/x-qoi"sv;
-    if (path.ends_with(".svg"sv, CaseSensitivity::CaseInsensitive))
-        return "image/svg+xml"sv;
-    if (path.ends_with(".tga"sv, CaseSensitivity::CaseInsensitive))
-        return "image/x-targa"sv;
-    if (path.ends_with(".webp"sv, CaseSensitivity::CaseInsensitive))
-        return "image/webp"sv;
-    if (path.ends_with(".tvg"sv, CaseSensitivity::CaseInsensitive))
-        return "image/tinyvg"sv;
-    if (path.ends_with(".md"sv, CaseSensitivity::CaseInsensitive))
-        return "text/markdown"sv;
-    if (path.ends_with(".html"sv, CaseSensitivity::CaseInsensitive) || path.ends_with(".htm"sv, CaseSensitivity::CaseInsensitive))
-        return "text/html"sv;
-    if (path.ends_with(".css"sv, CaseSensitivity::CaseInsensitive))
-        return "text/css"sv;
-    if (path.ends_with(".icc"sv, CaseSensitivity::CaseInsensitive) || path.ends_with(".icm"sv, CaseSensitivity::CaseInsensitive))
-        return "application/vnd.iccprofile"sv;
     if (path.ends_with(".js"sv, CaseSensitivity::CaseInsensitive))
         return "application/javascript"sv;
     if (path.ends_with(".json"sv, CaseSensitivity::CaseInsensitive))
         return "application/json"sv;
-    if (path.ends_with(".zip"sv, CaseSensitivity::CaseInsensitive))
-        return "application/zip"sv;
-    if (path.ends_with(".md"sv, CaseSensitivity::CaseInsensitive))
-        return "text/markdown"sv;
-    if (path.ends_with("/"sv, CaseSensitivity::CaseInsensitive))
-        return "text/html"sv;
-    if (path.ends_with(".csv"sv, CaseSensitivity::CaseInsensitive))
-        return "text/csv"sv;
+    if (path.ends_with(".icc"sv, CaseSensitivity::CaseInsensitive) || path.ends_with(".icm"sv, CaseSensitivity::CaseInsensitive))
+        return "application/vnd.iccprofile"sv;
     if (path.ends_with(".sheets"sv, CaseSensitivity::CaseInsensitive))
         return "application/x-sheets+json"sv;
-    if (path.ends_with(".webm"sv, CaseSensitivity::CaseInsensitive))
-        return "video/webm"sv;
+    if (path.ends_with(".zip"sv, CaseSensitivity::CaseInsensitive))
+        return "application/zip"sv;
     if (path.ends_with(".flac"sv, CaseSensitivity::CaseInsensitive))
         return "audio/flac"sv;
     if (path.ends_with(".mid"sv, CaseSensitivity::CaseInsensitive) || path.ends_with(".midi"sv, CaseSensitivity::CaseInsensitive))
@@ -114,20 +103,45 @@ StringView guess_mime_type_based_on_filename(StringView path)
         return "audio/qoa"sv;
     if (path.ends_with(".wav"sv, CaseSensitivity::CaseInsensitive))
         return "audio/wav"sv;
-    // FIXME: Share this, TextEditor and HackStudio language detection somehow.
-    auto basename = LexicalPath::basename(path);
-    if (path.ends_with(".cpp"sv, CaseSensitivity::CaseInsensitive)
-        || path.ends_with(".c"sv, CaseSensitivity::CaseInsensitive)
-        || path.ends_with(".hpp"sv, CaseSensitivity::CaseInsensitive)
-        || path.ends_with(".h"sv, CaseSensitivity::CaseInsensitive)
-        || path.ends_with(".gml"sv, CaseSensitivity::CaseInsensitive)
-        || path.ends_with(".ini"sv, CaseSensitivity::CaseInsensitive)
-        || path.ends_with(".ipc"sv, CaseSensitivity::CaseInsensitive)
-        || path.ends_with(".txt"sv, CaseSensitivity::CaseInsensitive)
-        || basename == "CMakeLists.txt"
-        || basename == ".history"
-        || basename == ".shellrc")
+    if (path.ends_with(".bmp"sv, CaseSensitivity::CaseInsensitive))
+        return "image/bmp"sv;
+    if (path.ends_with(".gif"sv, CaseSensitivity::CaseInsensitive))
+        return "image/gif"sv;
+    if (path.ends_with(".jpg"sv, CaseSensitivity::CaseInsensitive) || path.ends_with(".jpeg"sv, CaseSensitivity::CaseInsensitive))
+        return "image/jpeg"sv;
+    if (path.ends_with(".png"sv, CaseSensitivity::CaseInsensitive))
+        return "image/png"sv;
+    if (path.ends_with(".svg"sv, CaseSensitivity::CaseInsensitive))
+        return "image/svg+xml"sv;
+    if (path.ends_with(".tvg"sv, CaseSensitivity::CaseInsensitive))
+        return "image/tinyvg"sv;
+    if (path.ends_with(".webp"sv, CaseSensitivity::CaseInsensitive))
+        return "image/webp"sv;
+    if (path.ends_with(".pbm"sv, CaseSensitivity::CaseInsensitive))
+        return "image/x‑portable‑bitmap"sv;
+    if (path.ends_with(".pgm"sv, CaseSensitivity::CaseInsensitive))
+        return "image/x‑portable‑graymap"sv;
+    if (path.ends_with(".ppm"sv, CaseSensitivity::CaseInsensitive))
+        return "image/x‑portable‑pixmap"sv;
+    if (path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive))
+        return "image/x-qoi"sv;
+    if (path.ends_with(".tga"sv, CaseSensitivity::CaseInsensitive))
+        return "image/x-targa"sv;
+    if (path.ends_with(".css"sv, CaseSensitivity::CaseInsensitive))
+        return "text/css"sv;
+    if (path.ends_with(".csv"sv, CaseSensitivity::CaseInsensitive))
+        return "text/csv"sv;
+    if (path.ends_with(".html"sv, CaseSensitivity::CaseInsensitive) || path.ends_with(".htm"sv, CaseSensitivity::CaseInsensitive))
+        return "text/html"sv;
+    if (path.ends_with("/"sv, CaseSensitivity::CaseInsensitive)) // FIXME: This seems dubious
+        return "text/html"sv;
+    if (path.ends_with(".md"sv, CaseSensitivity::CaseInsensitive))
+        return "text/markdown"sv;
+    if (should_contain_plain_text_based_on_filename(path))
         return "text/plain"sv;
+    if (path.ends_with(".webm"sv, CaseSensitivity::CaseInsensitive))
+        return "video/webm"sv;
+
     return "application/octet-stream"sv;
 }
 
