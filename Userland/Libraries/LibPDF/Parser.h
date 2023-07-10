@@ -57,6 +57,11 @@ public:
     PDFErrorOr<NonnullRefPtr<StreamObject>> parse_stream(NonnullRefPtr<DictObject> dict);
     PDFErrorOr<Vector<Operator>> parse_operators();
 
+    void set_filters_enabled(bool enabled)
+    {
+        m_enable_filters = enabled;
+    }
+
 protected:
     void push_reference(Reference const& ref) { m_current_reference_stack.append(ref); }
     void pop_reference() { m_current_reference_stack.take_last(); }
@@ -73,6 +78,7 @@ protected:
     WeakPtr<Document> m_document;
     Vector<Reference> m_current_reference_stack;
     bool m_enable_encryption { true };
+    bool m_enable_filters { false };
 };
 
 };

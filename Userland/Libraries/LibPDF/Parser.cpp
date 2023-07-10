@@ -474,7 +474,7 @@ PDFErrorOr<NonnullRefPtr<StreamObject>> Parser::parse_stream(NonnullRefPtr<DictO
     if (m_document->security_handler() && m_enable_encryption)
         m_document->security_handler()->decrypt(stream_object, m_current_reference_stack.last());
 
-    if (dict->contains(CommonNames::Filter)) {
+    if (dict->contains(CommonNames::Filter) && m_enable_filters) {
         Vector<DeprecatedFlyString> filters;
 
         // We may either get a single filter or an array of cascading filters

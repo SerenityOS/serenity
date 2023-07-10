@@ -124,7 +124,19 @@ PDFErrorOr<DocumentParser::LinearizationResult> DocumentParser::initialize_linea
         return LinearizationResult::NotLinearized;
 
     // At this point, we still don't know for sure if we are dealing with a valid object.
+
+    // The linearization dict is read before decryption state is initialized.
+    // A linearization dict only contains numbers, so the decryption dictionary is not been needed (only strings and streams get decrypted, and only streams get unfiltered).
+    // But we don't know if the first object is a linearization dictionary until after parsing it, so the object might be a stream.
+    // If that stream is encrypted and filtered, we'd try to unfilter it while it's still encrypted, handing encrypted data to the unfiltering algorithms.
+    // This makes them assert, since they can't make sense of the encrypted data.
+    // So read the first object without unfiltering.
+    // If it is a linearization dict, there's no stream data and this has no effect.
+    // If it is a stream, this isn't a linearized file and the object will be read on demand (and unfiltered) later, when the object is lazily read via an xref entry.
+    set_filters_enabled(false);
     auto indirect_value_or_error = parse_indirect_value();
+    set_filters_enabled(true);
+
     if (indirect_value_or_error.is_error())
         return LinearizationResult::NotLinearized;
 
