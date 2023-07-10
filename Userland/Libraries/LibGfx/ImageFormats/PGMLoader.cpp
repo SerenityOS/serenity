@@ -36,7 +36,7 @@ ErrorOr<void> read_image_data(PGMLoadingContext& context)
         }
     }
 
-    context.state = PGMLoadingContext::State::Bitmap;
+    context.state = PGMLoadingContext::State::BitmapDecoded;
     return {};
 }
 }

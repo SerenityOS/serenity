@@ -30,12 +30,8 @@ struct PortableImageMapLoadingContext {
     enum class State {
         NotDecoded = 0,
         Error,
-        MagicNumber,
-        Width,
-        Height,
-        Maxval,
-        Bitmap,
-        Decoded
+        HeaderDecoded,
+        BitmapDecoded,
     };
 
     Type type { Type::Unknown };
@@ -89,7 +85,7 @@ IntSize PortableImageDecoderPlugin<TContext>::size()
     if (m_context->state == TContext::State::Error)
         return {};
 
-    if (m_context->state < TContext::State::Decoded) {
+    if (m_context->state < TContext::State::BitmapDecoded) {
         if (decode(*m_context).is_error()) {
             m_context->state = TContext::State::Error;
             // FIXME: We should propagate errors
@@ -156,7 +152,7 @@ ErrorOr<ImageFrameDescriptor> PortableImageDecoderPlugin<TContext>::frame(size_t
     if (m_context->state == TContext::State::Error)
         return Error::from_string_literal("PortableImageDecoderPlugin: Decoding failed");
 
-    if (m_context->state < TContext::State::Decoded) {
+    if (m_context->state < TContext::State::BitmapDecoded) {
         if (decode(*m_context).is_error()) {
             m_context->state = TContext::State::Error;
             return Error::from_string_literal("PortableImageDecoderPlugin: Decoding failed");

@@ -49,7 +49,7 @@ ErrorOr<void> read_image_data(PBMLoadingContext& context)
         }
     }
 
-    context.state = PBMLoadingContext::State::Bitmap;
+    context.state = PBMLoadingContext::State::BitmapDecoded;
     return {};
 }
 }
