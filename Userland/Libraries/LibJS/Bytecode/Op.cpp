@@ -546,7 +546,10 @@ static ThrowCompletionOr<void> get_by_id(Bytecode::Interpreter& interpreter, Ide
     }
 
     // OPTIMIZATION: If the shape of the object hasn't changed, we can use the cached property offset.
-    if (&base_obj->shape() == cache.shape) {
+    // NOTE: Unique shapes don't change identity, so we compare their serial numbers instead.
+    auto& shape = base_obj->shape();
+    if (&shape == cache.shape
+        && (!shape.is_unique() || shape.unique_shape_serial_number() == cache.unique_shape_serial_number)) {
         interpreter.accumulator() = base_obj->get_direct(cache.property_offset.value());
         return {};
     }
@@ -555,11 +558,9 @@ static ThrowCompletionOr<void> get_by_id(Bytecode::Interpreter& interpreter, Ide
     interpreter.accumulator() = TRY(base_obj->internal_get(name, this_value, &cacheable_metadata));
 
     if (cacheable_metadata.type == CacheablePropertyMetadata::Type::OwnProperty) {
-        cache.shape = &base_obj->shape();
+        cache.shape = shape;
         cache.property_offset = cacheable_metadata.property_offset.value();
-    } else {
-        cache.shape = nullptr;
-        cache.property_offset = {};
+        cache.unique_shape_serial_number = shape.unique_shape_serial_number();
     }
 
     return {};
