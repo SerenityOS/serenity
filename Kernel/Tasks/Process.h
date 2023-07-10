@@ -494,7 +494,7 @@ public:
 
     ErrorOr<void> exec(NonnullOwnPtr<KString> path, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, int recursion_depth = 0);
 
-    ErrorOr<LoadResult> load(Memory::AddressSpace& new_space, NonnullRefPtr<OpenFileDescription> main_program_description, RefPtr<OpenFileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header);
+    ErrorOr<LoadResult> load(Memory::AddressSpace& new_space, NonnullRefPtr<OpenFileDescription> main_program_description, RefPtr<OpenFileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header, Optional<size_t> minimum_stack_size = {});
 
     void terminate_due_to_signal(u8 signal);
     ErrorOr<void> send_signal(u8 signal, Process* sender);
@@ -624,12 +624,12 @@ private:
     bool create_perf_events_buffer_if_needed();
     void delete_perf_events_buffer();
 
-    ErrorOr<void> do_exec(NonnullRefPtr<OpenFileDescription> main_program_description, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, RefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, const ElfW(Ehdr) & main_program_header);
+    ErrorOr<void> do_exec(NonnullRefPtr<OpenFileDescription> main_program_description, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, RefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, const ElfW(Ehdr) & main_program_header, Optional<size_t> minimum_stack_size = {});
     ErrorOr<FlatPtr> do_write(OpenFileDescription&, UserOrKernelBuffer const&, size_t, Optional<off_t> = {});
 
     ErrorOr<FlatPtr> do_statvfs(FileSystem const& path, Custody const*, statvfs* buf);
 
-    ErrorOr<RefPtr<OpenFileDescription>> find_elf_interpreter_for_executable(StringView path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size);
+    ErrorOr<RefPtr<OpenFileDescription>> find_elf_interpreter_for_executable(StringView path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size, Optional<size_t>& minimum_stack_size);
 
     ErrorOr<void> do_kill(Process&, int signal);
     ErrorOr<void> do_killpg(ProcessGroupID pgrp, int signal);

@@ -286,6 +286,9 @@ static ErrorOr<LoadResult> load_elf_object(Memory::AddressSpace& new_space, Open
     FlatPtr load_base_address = 0;
     size_t stack_size = Thread::default_userspace_stack_size;
 
+    if (minimum_stack_size.has_value() && minimum_stack_size.value() > stack_size)
+        stack_size = minimum_stack_size.value();
+
     auto elf_name = TRY(object_description.pseudo_path());
     VERIFY(!Processor::in_critical());
 
@@ -380,13 +383,6 @@ static ErrorOr<LoadResult> load_elf_object(Memory::AddressSpace& new_space, Open
         if (program_header.type() == PT_LOAD)
             return load_section(program_header);
 
-        if (program_header.type() == PT_GNU_STACK) {
-            auto new_stack_size = program_header.size_in_memory();
-
-            if (new_stack_size > stack_size)
-                stack_size = new_stack_size;
-        }
-
         // NOTE: We ignore other program header types.
         return {};
     };
@@ -405,9 +401,6 @@ static ErrorOr<LoadResult> load_elf_object(Memory::AddressSpace& new_space, Open
         return ENOEXEC;
     }
 
-    if (minimum_stack_size.has_value() && minimum_stack_size.value() > stack_size)
-        stack_size = minimum_stack_size.value();
-
     auto* stack_region = TRY(new_space.allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, stack_size, PAGE_SIZE, "Stack (Main thread)"sv, PROT_READ | PROT_WRITE, AllocationStrategy::Reserve));
     stack_region->set_stack(true);
 
@@ -424,42 +417,19 @@ static ErrorOr<LoadResult> load_elf_object(Memory::AddressSpace& new_space, Open
 
 ErrorOr<LoadResult>
 Process::load(Memory::AddressSpace& new_space, NonnullRefPtr<OpenFileDescription> main_program_description,
-    RefPtr<OpenFileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header)
+    RefPtr<OpenFileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header, Optional<size_t> minimum_stack_size)
 {
     auto load_offset = TRY(get_load_offset(main_program_header, main_program_description, interpreter_description));
 
     if (interpreter_description.is_null()) {
-        auto load_result = TRY(load_elf_object(new_space, main_program_description, load_offset, ShouldAllocateTls::Yes, ShouldAllowSyscalls::No));
+        auto load_result = TRY(load_elf_object(new_space, main_program_description, load_offset, ShouldAllocateTls::Yes, ShouldAllowSyscalls::No, minimum_stack_size));
         m_master_tls_region = load_result.tls_region;
         m_master_tls_size = load_result.tls_size;
         m_master_tls_alignment = load_result.tls_alignment;
         return load_result;
     }
 
-    Optional<size_t> requested_main_program_stack_size;
-    {
-        auto main_program_size = main_program_description->inode()->size();
-        auto main_program_rounded_size = TRY(Memory::page_round_up(main_program_size));
-
-        auto main_program_vmobject = TRY(Memory::SharedInodeVMObject::try_create_with_inode(*main_program_description->inode()));
-        auto main_program_region = TRY(MM.allocate_kernel_region_with_vmobject(*main_program_vmobject, main_program_rounded_size, "Loaded Main Program ELF"sv, Memory::Region::Access::Read));
-
-        auto main_program_image = ELF::Image(main_program_region->vaddr().as_ptr(), main_program_size);
-        if (!main_program_image.is_valid())
-            return EINVAL;
-
-        main_program_image.for_each_program_header([&requested_main_program_stack_size](ELF::Image::ProgramHeader const& program_header) {
-            if (program_header.type() != PT_GNU_STACK)
-                return;
-
-            if (program_header.size_in_memory() == 0)
-                return;
-
-            requested_main_program_stack_size = program_header.size_in_memory();
-        });
-    }
-
-    auto interpreter_load_result = TRY(load_elf_object(new_space, *interpreter_description, load_offset, ShouldAllocateTls::No, ShouldAllowSyscalls::Yes, requested_main_program_stack_size));
+    auto interpreter_load_result = TRY(load_elf_object(new_space, *interpreter_description, load_offset, ShouldAllocateTls::No, ShouldAllowSyscalls::Yes, minimum_stack_size));
 
     // TLS allocation will be done in userspace by the loader
     VERIFY(!interpreter_load_result.tls_region);
@@ -489,7 +459,7 @@ void Process::clear_signal_handlers_for_exec()
 }
 
 ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_description, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment,
-    RefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, const ElfW(Ehdr) & main_program_header)
+    RefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, const ElfW(Ehdr) & main_program_header, Optional<size_t> minimum_stack_size)
 {
     VERIFY(is_user_process());
     VERIFY(!Processor::in_critical());
@@ -537,7 +507,7 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
         Memory::MemoryManager::enter_process_address_space(*this);
     });
 
-    auto load_result = TRY(load(new_space, main_program_description, interpreter_description, main_program_header));
+    auto load_result = TRY(load(new_space, main_program_description, interpreter_description, main_program_header, minimum_stack_size));
 
     // NOTE: We don't need the interpreter executable description after this point.
     //       We destroy it here to prevent it from getting destroyed when we return from this function.
@@ -826,15 +796,18 @@ static ErrorOr<Vector<NonnullOwnPtr<KString>>> find_shebang_interpreter_for_exec
     return ENOEXEC;
 }
 
-ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executable(StringView path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size)
+ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executable(StringView path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size, Optional<size_t>& minimum_stack_size)
 {
     // Not using ErrorOr here because we'll want to do the same thing in userspace in the RTLD
     StringBuilder interpreter_path_builder;
-    if (!TRY(ELF::validate_program_headers(main_executable_header, file_size, { &main_executable_header, main_executable_header_size }, &interpreter_path_builder))) {
+    Optional<size_t> main_executable_requested_stack_size {};
+    if (!TRY(ELF::validate_program_headers(main_executable_header, file_size, { &main_executable_header, main_executable_header_size }, &interpreter_path_builder, &main_executable_requested_stack_size))) {
         dbgln("exec({}): File has invalid ELF Program headers", path);
         return ENOEXEC;
     }
     auto interpreter_path = interpreter_path_builder.string_view();
+    if (main_executable_requested_stack_size.has_value() && (!minimum_stack_size.has_value() || *minimum_stack_size < *main_executable_requested_stack_size))
+        minimum_stack_size = main_executable_requested_stack_size;
 
     if (!interpreter_path.is_empty()) {
         dbgln_if(EXEC_DEBUG, "exec({}): Using program interpreter {}", path, interpreter_path);
@@ -863,11 +836,14 @@ ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executabl
 
         // Not using ErrorOr here because we'll want to do the same thing in userspace in the RTLD
         StringBuilder interpreter_interpreter_path_builder;
-        if (!TRY(ELF::validate_program_headers(*elf_header, interp_metadata.size, { first_page, nread }, &interpreter_interpreter_path_builder))) {
+        Optional<size_t> interpreter_requested_stack_size {};
+        if (!TRY(ELF::validate_program_headers(*elf_header, interp_metadata.size, { first_page, nread }, &interpreter_interpreter_path_builder, &interpreter_requested_stack_size))) {
             dbgln("exec({}): Interpreter ({}) has invalid ELF Program headers", path, interpreter_path);
             return ENOEXEC;
         }
         auto interpreter_interpreter_path = interpreter_interpreter_path_builder.string_view();
+        if (interpreter_requested_stack_size.has_value() && (!minimum_stack_size.has_value() || *minimum_stack_size < *interpreter_requested_stack_size))
+            minimum_stack_size = interpreter_requested_stack_size;
 
         if (!interpreter_interpreter_path.is_empty()) {
             dbgln("exec({}): Interpreter ({}) has its own interpreter ({})! No thank you!", path, interpreter_path, interpreter_interpreter_path);
@@ -945,8 +921,9 @@ ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, Vector<NonnullOwnPtr<KS
         return ENOEXEC;
     }
 
-    auto interpreter_description = TRY(find_elf_interpreter_for_executable(path->view(), *main_program_header, nread, metadata.size));
-    return do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, previous_interrupts_state, *main_program_header);
+    Optional<size_t> minimum_stack_size {};
+    auto interpreter_description = TRY(find_elf_interpreter_for_executable(path->view(), *main_program_header, nread, metadata.size, minimum_stack_size));
+    return do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, previous_interrupts_state, *main_program_header, minimum_stack_size);
 }
 
 ErrorOr<FlatPtr> Process::sys$execve(Userspace<Syscall::SC_execve_params const*> user_params)
