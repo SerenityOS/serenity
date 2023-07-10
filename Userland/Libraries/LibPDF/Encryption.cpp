@@ -323,8 +323,8 @@ void StandardSecurityHandler::encrypt(NonnullRefPtr<Object> object, Reference re
         auto stream = object->cast<StreamObject>();
         bytes = stream->bytes();
 
-        assign = [&stream](ByteBuffer const& buffer) {
-            stream->buffer() = buffer;
+        assign = [&object](ByteBuffer const& buffer) {
+            object->cast<StreamObject>()->buffer() = buffer;
         };
 
         if (stream->dict()->contains(CommonNames::Filter)) {
@@ -335,8 +335,8 @@ void StandardSecurityHandler::encrypt(NonnullRefPtr<Object> object, Reference re
     } else if (object->is<StringObject>()) {
         auto string = object->cast<StringObject>();
         bytes = string->string().bytes();
-        assign = [&string](ByteBuffer const& buffer) {
-            string->set_string(DeprecatedString(buffer.bytes()));
+        assign = [&object](ByteBuffer const& buffer) {
+            object->cast<StringObject>()->set_string(DeprecatedString(buffer.bytes()));
         };
     } else {
         VERIFY_NOT_REACHED();
