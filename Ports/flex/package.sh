@@ -7,4 +7,3 @@ use_fresh_config_sub=true
 config_sub_paths=("build-aux/config.sub")
 configopts=("--disable-bootstrap")
 depends=("m4" "pcre2")
-auth_type='sha256'

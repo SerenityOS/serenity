@@ -3,7 +3,6 @@ port='curl'
 version='8.0.1'
 useconfigure='true'
 files="https://curl.se/download/curl-${version}.tar.bz2 curl-${version}.tar.bz2 9b6b1e96b748d04b968786b6bdf407aa5c75ab53a3d37c1c8c81cdb736555ccf"
-auth_type='sha256'
 depends=(
   'ca-certificates'
   'openssl'

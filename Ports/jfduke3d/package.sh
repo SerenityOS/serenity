@@ -5,7 +5,6 @@ workdir="jfduke3d-${version}"
 launcher_name='Duke Nukem 3D'
 launcher_category='Games'
 launcher_command='duke3d'
-auth_type='sha256'
 depends=(
     'SDL2'
 )

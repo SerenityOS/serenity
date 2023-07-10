@@ -6,7 +6,6 @@ files="https://geoff.greer.fm/ag/releases/the_silver_searcher-${version}.tar.gz 
 workdir="the_silver_searcher-${version}"
 configopts=("--target=${SERENITY_ARCH}-pc-serenity" "--disable-utf8")
 depends=("pcre" "xz")
-auth_type="sha256"
 use_fresh_config_sub=true
 
 export CFLAGS="-fcommon -D_GNU_SOURCE -lpthread"

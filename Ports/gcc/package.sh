@@ -7,7 +7,6 @@ files="https://ftpmirror.gnu.org/gnu/gcc/gcc-${version}/gcc-${version}.tar.xz gc
 makeopts=("all-gcc" "all-target-libgcc" "all-target-libstdc++-v3" "-j$(nproc)")
 installopts=("DESTDIR=${SERENITY_INSTALL_ROOT}" "install-gcc" "install-target-libgcc" "install-target-libstdc++-v3")
 depends=("binutils" "gmp" "mpfr" "mpc" "isl")
-auth_type="sha256"
 
 
 build() {

@@ -3,7 +3,6 @@ port=openttd-opensfx
 version=1.0.3
 workdir=.
 files="https://cdn.openttd.org/opensfx-releases/${version}/opensfx-${version}-all.zip opensfx-${version}-all.zip e0a218b7dd9438e701503b0f84c25a97c1c11b7c2f025323fb19d6db16ef3759"
-auth_type=sha256
 
 build() {
     # The ZIP file we downloaded contains a tarball.

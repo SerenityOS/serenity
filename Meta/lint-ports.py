@@ -90,7 +90,7 @@ def read_port_dirs():
     return ports, all_good
 
 
-PORT_PROPERTIES = ('port', 'version', 'files', 'auth_type')
+PORT_PROPERTIES = ('port', 'version', 'files')
 
 
 def resolve_script_values(value: str, props: dict) -> str:
@@ -193,13 +193,7 @@ def check_package_files(ports):
             print(f"Ports/{port} should use '{port}' for 'port' but is using '{props['port']}' instead")
             all_good = False
 
-        if not props['auth_type'] in ('sha256', 'sig', ''):
-            print(f"Ports/{port} uses invalid signature algorithm '{props['auth_type']}' for 'auth_type'")
-            all_good = False
-
         for prop in PORT_PROPERTIES:
-            if prop == 'auth_type' and re.match('^https://github.com/SerenityPorts/', props["files"]):
-                continue
             if props[prop] == '':
                 print(f"Ports/{port} is missing required property '{prop}'")
                 all_good = False

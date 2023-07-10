@@ -7,7 +7,6 @@ files="https://ftpmirror.gnu.org/gnu/gdb/gdb-${version}.tar.xz gdb-${version}.ta
 makeopts+=("all")
 installopts=("DESTDIR=${SERENITY_INSTALL_ROOT}")
 depends=("gmp" "binutils")
-auth_type="sha256"
 
 # We only have a stub of getrusage(..)
 export ac_cv_func_getrusage=no

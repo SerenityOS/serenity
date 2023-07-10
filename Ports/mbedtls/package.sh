@@ -5,7 +5,6 @@ files="https://github.com/Mbed-TLS/mbedtls/archive/refs/tags/v${version}.tar.gz 
 makeopts=(
     "SHARED=1"
 )
-auth_type='sha256'
 
 install() {
     run make DESTDIR="${SERENITY_INSTALL_ROOT}/usr/local" "${installopts[@]}" install

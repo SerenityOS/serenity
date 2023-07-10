@@ -6,7 +6,6 @@ configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
 use_fresh_config_sub=true
 config_sub_paths=("autotools/config.sub")
 files="https://downloads.sourceforge.net/project/mikmod/libmikmod/${version}/libmikmod-${version}.tar.gz libmikmod-${version}.tar.gz ad9d64dfc8f83684876419ea7cd4ff4a41d8bcd8c23ef37ecb3a200a16b46d19"
-auth_type=sha256
 
 configure() {
     run cmake "${configopts[@]}" .

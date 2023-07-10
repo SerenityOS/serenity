@@ -93,9 +93,6 @@ use_fresh_config_sub=false
 use_fresh_config_guess=false
 depends=()
 patchlevel=1
-auth_type=
-auth_import_key=
-auth_opts=()
 launcher_name=
 launcher_category=
 launcher_command=
@@ -321,13 +318,6 @@ do_download_file() {
 fetch() {
     pre_fetch
 
-    if [ "$auth_type" = "sig" ] && [ ! -z "${auth_import_key}" ]; then
-        # import gpg key if not existing locally
-        # The default keyserver keys.openpgp.org prints "new key but contains no user ID - skipped"
-        # and fails. Use a different key server.
-        gpg --list-keys $auth_import_key || gpg --keyserver hkps://keyserver.ubuntu.com --recv-key $auth_import_key
-    fi
-
     tried_download_again=0
 
     while true; do
@@ -348,49 +338,22 @@ fetch() {
             read url filename auth_sum<<< $(echo "$f")
 
             # check sha256sum if given
-            if [ "$auth_type" = "sha256" ]; then
-                echo "Expecting ${auth_type}sum: $auth_sum"
-                calc_sum="$(sha256sum "${PORT_META_DIR}/${filename}" | cut -f1 -d' ')"
-                echo "${auth_type}sum($filename) = '$calc_sum'"
-                if [ "$calc_sum" != "$auth_sum" ]; then
-                    # remove downloaded file to re-download on next run
-                    rm -f "${PORT_META_DIR}/${filename}"
-                    echo "${auth_type}sums mismatching, removed erroneous download."
-                    if [ $tried_download_again -eq 1 ]; then
-                        echo "Please run script again."
-                        exit 1
-                    fi
-                    echo "Trying to download the files again."
-                    tried_download_again=1
-                    verification_failed=1
+            echo "Expecting sha256sum: $auth_sum"
+            calc_sum="$(sha256sum "${PORT_META_DIR}/${filename}" | cut -f1 -d' ')"
+            echo "sha256sum($filename) = '$calc_sum'"
+            if [ "$calc_sum" != "$auth_sum" ]; then
+                # remove downloaded file to re-download on next run
+                rm -f "${PORT_META_DIR}/${filename}"
+                echo "sha256sums mismatching, removed erroneous download."
+                if [ $tried_download_again -eq 1 ]; then
+                    echo "Please run script again."
+                    exit 1
                 fi
+                echo "Trying to download the files again."
+                tried_download_again=1
+                verification_failed=1
             fi
         done
-
-        # check signature
-        if [ "$auth_type" = "sig" ]; then
-            if $NO_GPG; then
-                echo "WARNING: gpg signature check was disabled by --no-gpg-verification"
-            else
-                if $(cd "${PORT_META_DIR}" && gpg --verify "${auth_opts[@]}"); then
-                    echo "- Signature check OK."
-                else
-                    echo "- Signature check NOT OK"
-                    for f in $files; do
-                        rm -f $f
-                    done
-                    rm -rf "$workdir"
-                    echo "  Signature mismatching, removed erronous download."
-                    if [ $tried_download_again -eq 1 ]; then
-                        echo "Please run script again."
-                        exit 1
-                    fi
-                    echo "Trying to download the files again."
-                    tried_download_again=1
-                    verification_failed=1
-                fi
-            fi
-        fi
 
         if [ $verification_failed -ne 1 ]; then
             break
