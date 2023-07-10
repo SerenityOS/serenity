@@ -82,17 +82,6 @@ PortableImageDecoderPlugin<TContext>::PortableImageDecoderPlugin(NonnullOwnPtr<S
 template<typename TContext>
 IntSize PortableImageDecoderPlugin<TContext>::size()
 {
-    if (m_context->state == TContext::State::Error)
-        return {};
-
-    if (m_context->state < TContext::State::BitmapDecoded) {
-        if (decode(*m_context).is_error()) {
-            m_context->state = TContext::State::Error;
-            // FIXME: We should propagate errors
-            return {};
-        }
-    }
-
     return { m_context->width, m_context->height };
 }
 
@@ -100,7 +89,9 @@ template<typename TContext>
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> PortableImageDecoderPlugin<TContext>::create(ReadonlyBytes data)
 {
     auto stream = TRY(try_make<FixedMemoryStream>(data));
-    return adopt_nonnull_own_or_enomem(new (nothrow) PortableImageDecoderPlugin<TContext>(move(stream)));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) PortableImageDecoderPlugin<TContext>(move(stream))));
+    TRY(read_header(*plugin->m_context));
+    return plugin;
 }
 
 template<typename TContext>

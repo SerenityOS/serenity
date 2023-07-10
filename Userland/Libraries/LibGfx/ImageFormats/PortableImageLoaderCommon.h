@@ -195,9 +195,8 @@ static ErrorOr<void> read_header(Context& context)
 template<typename TContext>
 static ErrorOr<void> decode(TContext& context)
 {
-    VERIFY(context.state == TContext::State::NotDecoded);
+    VERIFY(context.state == TContext::State::HeaderDecoded);
 
-    TRY(read_header(context));
     TRY(read_image_data(context));
 
     context.state = TContext::State::BitmapDecoded;
