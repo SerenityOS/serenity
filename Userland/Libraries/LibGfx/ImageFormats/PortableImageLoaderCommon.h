@@ -175,12 +175,9 @@ static ErrorOr<void> create_bitmap(TContext& context)
     return {};
 }
 
-template<typename TContext>
-static ErrorOr<void> decode(TContext& context)
+template<typename Context>
+static ErrorOr<void> read_header(Context& context)
 {
-    if (context.state >= TContext::State::Decoded)
-        return {};
-
     TRY(read_magic_number(context));
 
     TRY(read_whitespace(context));
@@ -201,6 +198,16 @@ static ErrorOr<void> decode(TContext& context)
         TRY(read_whitespace(context));
     }
 
+    return {};
+}
+
+template<typename TContext>
+static ErrorOr<void> decode(TContext& context)
+{
+    if (context.state >= TContext::State::Decoded)
+        return {};
+
+    TRY(read_header(context));
     TRY(read_image_data(context));
 
     context.state = TContext::State::Decoded;
