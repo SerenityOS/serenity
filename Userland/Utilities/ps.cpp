@@ -16,20 +16,56 @@
 #include <sys/sysmacros.h>
 #include <unistd.h>
 
-static ErrorOr<String> determine_tty_pseudo_name()
+static ErrorOr<Optional<String>> tty_stat_to_pseudo_name(struct stat tty_stat)
 {
-    auto tty_stat = TRY(Core::System::fstat(STDIN_FILENO));
     int tty_device_major = major(tty_stat.st_rdev);
     int tty_device_minor = minor(tty_stat.st_rdev);
 
-    if (tty_device_major == 201) {
+    if (tty_device_major == 201)
         return String::formatted("pts:{}", tty_device_minor);
+
+    if (tty_device_major == 4)
+        return String::formatted("tty:{}", tty_device_minor);
+
+    return OptionalNone {};
+}
+
+static ErrorOr<String> determine_tty_pseudo_name()
+{
+    auto tty_stat = TRY(Core::System::fstat(STDIN_FILENO));
+    auto maybe_tty_pseudo_name = TRY(tty_stat_to_pseudo_name(tty_stat));
+    return maybe_tty_pseudo_name.value_or("n/a"_short_string);
+}
+
+static ErrorOr<String> parse_tty_pseudo_name(StringView tty_name)
+{
+    auto tty_name_parts = tty_name.split_view(":"sv, AK::SplitBehavior::KeepEmpty);
+    String tty_full_name;
+    StringView tty_full_name_view;
+    if (tty_name_parts.size() == 1) {
+        tty_full_name_view = tty_name;
+    } else {
+        if (tty_name_parts.size() != 2)
+            return Error::from_errno(ENOTTY);
+
+        auto tty_device_type = tty_name_parts[0];
+        auto tty_number = tty_name_parts[1];
+        if (tty_device_type == "tty"sv)
+            tty_full_name = TRY(String::formatted("/dev/tty{}", tty_number));
+        else if (tty_device_type == "pts"sv)
+            tty_full_name = TRY(String::formatted("/dev/pts/{}", tty_number));
+        else
+            return Error::from_errno(ENOTTY);
+
+        tty_full_name_view = tty_full_name.bytes_as_string_view();
     }
 
-    if (tty_device_major == 4) {
-        return String::formatted("tty:{}", tty_device_minor);
-    }
-    return "n/a"_short_string;
+    auto tty_stat = TRY(Core::System::stat(tty_full_name_view));
+    auto maybe_tty_pseudo_name = TRY(tty_stat_to_pseudo_name(tty_stat));
+    if (!maybe_tty_pseudo_name.has_value())
+        return Error::from_errno(ENOTTY);
+
+    return maybe_tty_pseudo_name.release_value();
 }
 
 template<typename Value, typename ParseValue>
@@ -64,6 +100,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil("/etc/group", "r"));
+    TRY(Core::System::unveil("/dev/", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     enum class Alignment {
@@ -84,6 +121,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool provided_filtering_option = false;
     bool provided_quick_pid_list = false;
     Vector<pid_t> pid_list;
+    Vector<DeprecatedString> tty_list;
     Vector<uid_t> uid_list;
 
     Core::ArgsParser args_parser;
@@ -104,6 +142,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!pid.has_value())
             warnln("Could not parse '{}' as a PID.", pid_string);
         return pid;
+    }));
+    args_parser.add_option(make_list_option(tty_list, "Show processes associated with the given terminal. (Comma- or space-separated list.) The short TTY name or the full device path may be used.", "tty", 't', "tty-list", [&](StringView tty_string) -> Optional<DeprecatedString> {
+        provided_filtering_option = true;
+        auto tty_pseudo_name_or_error = parse_tty_pseudo_name(tty_string);
+        if (tty_pseudo_name_or_error.is_error()) {
+            warnln("Could not parse '{}' as a TTY", tty_string);
+            return {};
+        }
+        return tty_pseudo_name_or_error.release_value().to_deprecated_string();
     }));
     args_parser.add_option(make_list_option(uid_list, "Show processes with a matching user ID or login name. (Comma- or space-separated list.)", nullptr, 'u', "user-list", [&](StringView user_string) -> Optional<uid_t> {
         provided_filtering_option = true;
@@ -171,6 +218,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if ((!provided_filtering_option && process.tty == this_pseudo_tty_name.bytes_as_string_view())
                 || (!pid_list.is_empty() && pid_list.contains_slow(process.pid))
                 || (!uid_list.is_empty() && uid_list.contains_slow(process.uid))
+                || (!tty_list.is_empty() && tty_list.contains_slow(process.tty))
                 || (every_terminal_process_flag && !process.tty.is_empty())) {
                 filtered_processes.append(process);
             }
