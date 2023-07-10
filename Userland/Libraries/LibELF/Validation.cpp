@@ -187,7 +187,7 @@ bool validate_elf_header(ElfW(Ehdr) const& elf_header, size_t file_size, bool ve
     return true;
 }
 
-ErrorOr<bool> validate_program_headers(ElfW(Ehdr) const& elf_header, size_t file_size, ReadonlyBytes buffer, StringBuilder* interpreter_path_builder, bool verbose)
+ErrorOr<bool> validate_program_headers(ElfW(Ehdr) const& elf_header, size_t file_size, ReadonlyBytes buffer, StringBuilder* interpreter_path_builder, Optional<size_t>* requested_stack_size, bool verbose)
 {
     Checked<size_t> total_size_of_program_headers = elf_header.e_phnum;
     total_size_of_program_headers *= elf_header.e_phentsize;
@@ -306,6 +306,9 @@ ErrorOr<bool> validate_program_headers(ElfW(Ehdr) const& elf_header, size_t file
                         dbgln("PT_GNU_STACK size is not page-aligned.");
                     return false;
                 }
+
+                if (requested_stack_size)
+                    *requested_stack_size = program_header.p_memsz;
             }
 
             break;
