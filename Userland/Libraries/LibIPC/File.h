@@ -40,9 +40,8 @@ public:
     {
     }
 
-    template<typename... Args>
-    File(Core::File& file, Args... args)
-        : File(file.leak_fd(Badge<File> {}), args...)
+    explicit File(Core::File& file)
+        : File(file.leak_fd(Badge<File> {}), CloseAfterSending)
     {
     }
 
