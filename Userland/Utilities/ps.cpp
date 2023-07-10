@@ -121,6 +121,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool provided_filtering_option = false;
     bool provided_quick_pid_list = false;
     Vector<pid_t> pid_list;
+    Vector<pid_t> parent_pid_list;
     Vector<DeprecatedString> tty_list;
     Vector<uid_t> uid_list;
 
@@ -130,6 +131,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(every_process_flag, "Show every process (Equivalent to -A)", nullptr, 'e');
     args_parser.add_option(full_format_flag, "Full format", nullptr, 'f');
     args_parser.add_option(make_list_option(pid_list, "Show processes with a matching PID. (Comma- or space-separated list)", nullptr, 'p', "pid-list", [&](StringView pid_string) {
+        provided_filtering_option = true;
+        auto pid = pid_string.to_int();
+        if (!pid.has_value())
+            warnln("Could not parse '{}' as a PID.", pid_string);
+        return pid;
+    }));
+    args_parser.add_option(make_list_option(parent_pid_list, "Show processes with a matching PPID. (Comma- or space-separated list.)", "ppid", {}, "pid-list", [&](StringView pid_string) {
         provided_filtering_option = true;
         auto pid = pid_string.to_int();
         if (!pid.has_value())
@@ -217,6 +225,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             // Default is to show processes from the current TTY
             if ((!provided_filtering_option && process.tty == this_pseudo_tty_name.bytes_as_string_view())
                 || (!pid_list.is_empty() && pid_list.contains_slow(process.pid))
+                || (!parent_pid_list.is_empty() && parent_pid_list.contains_slow(process.ppid))
                 || (!uid_list.is_empty() && uid_list.contains_slow(process.uid))
                 || (!tty_list.is_empty() && tty_list.contains_slow(process.tty))
                 || (every_terminal_process_flag && !process.tty.is_empty())) {
