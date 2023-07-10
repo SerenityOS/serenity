@@ -277,8 +277,6 @@ void AllocatingMemoryStream::cleanup_unused_chunks()
         auto buffer = m_chunks.take_first();
         m_read_offset -= CHUNK_SIZE;
         m_write_offset -= CHUNK_SIZE;
-
-        m_chunks.append(move(buffer));
     }
 }
 
