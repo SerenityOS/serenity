@@ -7,7 +7,31 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
+#include <LibPDF/CommonNames.h>
 #include <LibPDF/Document.h>
+
+static PDF::PDFErrorOr<void> print_document_info_dict(PDF::Document& document)
+{
+    if (auto info_dict = TRY(document.info_dict()); info_dict.has_value()) {
+        if (auto title = TRY(info_dict->title()); title.has_value())
+            outln("Title: {}", title);
+        if (auto author = TRY(info_dict->author()); author.has_value())
+            outln("Author: {}", author);
+        if (auto subject = TRY(info_dict->subject()); subject.has_value())
+            outln("Subject: {}", subject);
+        if (auto keywords = TRY(info_dict->keywords()); keywords.has_value())
+            outln("Keywords: {}", keywords);
+        if (auto creator = TRY(info_dict->creator()); creator.has_value())
+            outln("Creator: {}", creator);
+        if (auto producer = TRY(info_dict->producer()); producer.has_value())
+            outln("Producer: {}", producer);
+        if (auto creation_date = TRY(info_dict->creation_date()); creation_date.has_value())
+            outln("Creation date: {}", creation_date);
+        if (auto modification_date = TRY(info_dict->modification_date()); modification_date.has_value())
+            outln("Modification date: {}", modification_date);
+    }
+    return {};
+}
 
 static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
 {
@@ -31,6 +55,7 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
     TRY(document->initialize());
 
     outln("{} pages", document->get_page_count());
+    TRY(print_document_info_dict(*document));
 
     return 0;
 }
