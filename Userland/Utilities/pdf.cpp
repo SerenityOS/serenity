@@ -45,6 +45,9 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
 
+    StringView password;
+    args_parser.add_option(password, "Password for decrypting PDF, if needed", "password", {}, "PASS");
+
     StringView in_path;
     args_parser.add_positional_argument(in_path, "Path to input image file", "FILE");
 
@@ -55,9 +58,14 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
     auto document = TRY(PDF::Document::create(file->bytes()));
 
     if (auto handler = document->security_handler(); handler && !handler->has_user_password()) {
-        // FIXME: Add a flag for passing in a password and suggest it in this diag.
-        warnln("PDF requires password");
-        return 1;
+        if (password.is_empty()) {
+            warnln("PDF requires password, pass in using --password");
+            return 1;
+        }
+        if (!document->security_handler()->try_provide_user_password(password)) {
+            warnln("invalid password '{}'", password);
+            return 1;
+        }
     }
 
     TRY(document->initialize());
