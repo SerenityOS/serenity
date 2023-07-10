@@ -317,20 +317,14 @@ func_defined fetch || fetch() {
     tried_download_again=0
 
     while true; do
-        OLDIFS=$IFS
-        IFS=$'\n'
-        for f in $files; do
-            IFS=$OLDIFS
+        for f in "${files[@]}"; do
             read url filename auth_sum<<< $(echo "$f")
             do_download_file "$url" "${PORT_META_DIR}/${filename}"
         done
 
         verification_failed=0
 
-        OLDIFS=$IFS
-        IFS=$'\n'
-        for f in $files; do
-            IFS=$OLDIFS
+        for f in "${files[@]}"; do
             read url filename auth_sum<<< $(echo "$f")
 
             # check sha256sum if given
@@ -357,10 +351,7 @@ func_defined fetch || fetch() {
     done
 
     # extract
-    OLDIFS=$IFS
-    IFS=$'\n'
-    for f in $files; do
-        IFS=$OLDIFS
+    for f in "${files[@]}"; do
         read url filename auth_sum<<< $(echo "$f")
 
         if [ ! -f "$workdir"/.${filename}_extracted ]; then
@@ -435,10 +426,7 @@ clean() {
     rm -rf "${PORT_BUILD_DIR}/"*
 }
 clean_dist() {
-    OLDIFS=$IFS
-    IFS=$'\n'
-    for f in $files; do
-        IFS=$OLDIFS
+    for f in "${files[@]}"; do
         read url filename hash <<< $(echo "$f")
         rm -f "${PORT_META_DIR}/${filename}"
     done

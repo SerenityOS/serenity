@@ -1,7 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='pacman'
 version='b6241a373cc09f021c2ab29714eca5f9e33463f8'
-files="https://codeload.github.com/ebuc99/pacman/zip/${version} pacman.zip d688f75d33c7bf4f217bfcaf0d5ee507fd73bb233d77303927d15b54988f0231"
+files=(
+    "https://codeload.github.com/ebuc99/pacman/zip/${version} pacman.zip d688f75d33c7bf4f217bfcaf0d5ee507fd73bb233d77303927d15b54988f0231"
+)
 useconfigure='true'
 depends=(
     'SDL2'

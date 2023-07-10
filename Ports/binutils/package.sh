@@ -12,7 +12,9 @@ configopts=(
     "--disable-nls"
     "--enable-libiberty"
 )
-files="https://ftpmirror.gnu.org/gnu/binutils/binutils-${version}.tar.xz binutils-${version}.tar.xz 0f8a4c272d7f17f369ded10a4aca28b8e304828e95526da482b0ccc4dfc9d8e1"
+files=(
+    "https://ftpmirror.gnu.org/gnu/binutils/binutils-${version}.tar.xz binutils-${version}.tar.xz 0f8a4c272d7f17f369ded10a4aca28b8e304828e95526da482b0ccc4dfc9d8e1"
+)
 depends=("zlib")
 
 export ac_cv_func_getrusage=no

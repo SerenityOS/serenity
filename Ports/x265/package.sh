@@ -2,7 +2,9 @@
 port=x265
 version=3.5
 workdir="${port}_${version}"
-files=("https://bitbucket.org/multicoreware/x265_git/downloads/x265_${version}.tar.gz x265_${version}.tar.gz e70a3335cacacbba0b3a20ec6fecd6783932288ebc8163ad74bcc9606477cae8")
+files=(
+    "https://bitbucket.org/multicoreware/x265_git/downloads/x265_${version}.tar.gz x265_${version}.tar.gz e70a3335cacacbba0b3a20ec6fecd6783932288ebc8163ad74bcc9606477cae8"
+)
 useconfigure=true
 
 configopts=(

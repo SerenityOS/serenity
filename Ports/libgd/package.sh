@@ -5,5 +5,7 @@ useconfigure=true
 use_fresh_config_sub=true
 configopts=("--without-x")
 config_sub_paths=("config/config.sub")
-files="https://github.com/libgd/libgd/releases/download/gd-${version}/libgd-${version}.tar.gz libgd-${version}.tar.gz dd3f1f0bb016edcc0b2d082e8229c822ad1d02223511997c80461481759b1ed2"
+files=(
+    "https://github.com/libgd/libgd/releases/download/gd-${version}/libgd-${version}.tar.gz libgd-${version}.tar.gz dd3f1f0bb016edcc0b2d082e8229c822ad1d02223511997c80461481759b1ed2"
+)
 depends=("libpng")

@@ -10,7 +10,9 @@ configopts=("--with-libgpg-error-prefix=${SERENITY_INSTALL_ROOT}/usr/local"
   "--with-ntbtls-prefix=${SERENITY_INSTALL_ROOT}/usr/local"
   "--with-npth-prefix=${SERENITY_INSTALL_ROOT}/usr/local"
   "--disable-dirmngr")
-files="https://gnupg.org/ftp/gcrypt/gnupg/gnupg-${version}.tar.bz2 gnupg-${version}.tar.bz2 84c1ef39e8621cfb70f31463a5d1d8edeab44332bc1e0e1af9b78b6f9ed05bb4"
+files=(
+    "https://gnupg.org/ftp/gcrypt/gnupg/gnupg-${version}.tar.bz2 gnupg-${version}.tar.bz2 84c1ef39e8621cfb70f31463a5d1d8edeab44332bc1e0e1af9b78b6f9ed05bb4"
+)
 depends=("libiconv" "libgpg-error" "libgcrypt" "libksba" "libassuan" "npth" "ntbtls")
 
 pre_configure() {

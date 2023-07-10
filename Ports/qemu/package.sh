@@ -23,7 +23,9 @@ depends=(
   'pixman'
   'SDL2'
 )
-files="${QEMU_ARCHIVE_URL} ${QEMU_ARCHIVE} ${QEMU_ARCHIVE_SHA256SUM}"
+files=(
+    "${QEMU_ARCHIVE_URL} ${QEMU_ARCHIVE} ${QEMU_ARCHIVE_SHA256SUM}"
+)
 
 pre_patch() {
     # Disable tests (those need way more stuff than QEMU itself) by clearing the respective meson file.

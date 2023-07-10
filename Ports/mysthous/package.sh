@@ -1,7 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=mysthous
 version="1.0"
-files="https://downloads.scummvm.org/frs/extras/Mystery%20House/MYSTHOUS.zip ${port}-${version}.zip ada412228a149394489b28c6c7f9ebab0722b52e04732fd0aa22949673cfa3a0"
+files=(
+    "https://downloads.scummvm.org/frs/extras/Mystery%20House/MYSTHOUS.zip ${port}-${version}.zip ada412228a149394489b28c6c7f9ebab0722b52e04732fd0aa22949673cfa3a0"
+)
 depends=("scummvm")
 
 resource_path="/usr/local/share/games/${port}-${version}"

@@ -2,7 +2,9 @@
 port='gemrb'
 version='0.9.1'
 useconfigure='true'
-files="https://github.com/gemrb/gemrb/archive/refs/tags/v${version}.tar.gz gemrb-${version}.tar.gz 6e5dbcf7398d5566751f434b0d4647196bfbe9a813e3b65ad6a4ee2f1bbfb9ba"
+files=(
+    "https://github.com/gemrb/gemrb/archive/refs/tags/v${version}.tar.gz gemrb-${version}.tar.gz 6e5dbcf7398d5566751f434b0d4647196bfbe9a813e3b65ad6a4ee2f1bbfb9ba"
+)
 depends=(
 	'freetype'
 	'libiconv'

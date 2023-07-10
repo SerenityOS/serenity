@@ -1,7 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='cavestory'
 version='2.6.5-1'
-files=('https://github.com/gloof11/nxengine-evo/archive/b427ed7bcd403a4dbb07703fe0eb015c3350bbfc.zip nxengine-evo-b427ed7bcd403a4dbb07703fe0eb015c3350bbfc.zip 83e66960e27ec928d1217439754f0dd733765ecaf760c02832e5b35f4858ea8a')
+files=(
+    'https://github.com/gloof11/nxengine-evo/archive/b427ed7bcd403a4dbb07703fe0eb015c3350bbfc.zip nxengine-evo-b427ed7bcd403a4dbb07703fe0eb015c3350bbfc.zip 83e66960e27ec928d1217439754f0dd733765ecaf760c02832e5b35f4858ea8a'
+)
 depends=(
     'libjpeg'
     'libpng'

@@ -5,7 +5,9 @@ _hlsdk_commit='63e3769c46ba7f502b53abdfdd55597e4130c0dd'
 useconfigure='true'
 depends=("xash3d-fwgs")
 workdir="hlsdk-portable-${_hlsdk_commit}"
-files="https://github.com/FWGS/hlsdk-portable/archive/${_hlsdk_commit}.tar.gz hlsdk-portable-${_hlsdk_commit}.tar.gz b010c94ed400e44508f43706aeea68b82615c6ad22d2b1b892e8d6201d97503d"
+files=(
+    "https://github.com/FWGS/hlsdk-portable/archive/${_hlsdk_commit}.tar.gz hlsdk-portable-${_hlsdk_commit}.tar.gz b010c94ed400e44508f43706aeea68b82615c6ad22d2b1b892e8d6201d97503d"
+)
 launcher_name='Half-Life'
 launcher_category='Games'
 launcher_command='sh /home/anon/Games/halflife/hl.sh'

@@ -3,7 +3,9 @@ port='brogue'
 depends=("SDL2" "SDL2_image")
 version='1.11.1'
 workdir="BrogueCE-${version}"
-files="https://github.com/tmewett/BrogueCE/archive/refs/tags/v${version}.tar.gz brogue-${version}.tar.gz dc562cf774f88b12b6aeebdac5a00e62e8598b3f84da2130a54a67a60c5debf2"
+files=(
+    "https://github.com/tmewett/BrogueCE/archive/refs/tags/v${version}.tar.gz brogue-${version}.tar.gz dc562cf774f88b12b6aeebdac5a00e62e8598b3f84da2130a54a67a60c5debf2"
+)
 makeopts+=("bin/brogue")
 
 install() {
