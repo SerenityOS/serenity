@@ -53,4 +53,12 @@ StringView guess_mime_type_based_on_filename(StringView);
 Optional<StringView> guess_mime_type_based_on_sniffed_bytes(ReadonlyBytes);
 Optional<StringView> guess_mime_type_based_on_sniffed_bytes(Core::File&);
 
+struct MimeType {
+    StringView name {};
+    Vector<StringView> common_extensions {};
+    StringView description {};
+    Optional<Vector<u8>> magic_bytes {};
+    u64 offset { 0 };
+};
+
 }
