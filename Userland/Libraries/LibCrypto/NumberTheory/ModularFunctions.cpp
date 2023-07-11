@@ -8,8 +8,7 @@
 #include <LibCrypto/BigInt/Algorithms/UnsignedBigIntegerAlgorithms.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
 
-namespace Crypto {
-namespace NumberTheory {
+namespace Crypto::NumberTheory {
 
 UnsignedBigInteger ModularInverse(UnsignedBigInteger const& a_, UnsignedBigInteger const& b)
 {
@@ -231,5 +230,4 @@ UnsignedBigInteger random_big_prime(size_t bits)
     }
 }
 
-}
 }

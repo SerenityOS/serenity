@@ -12,8 +12,7 @@
 #    include <AK/DeprecatedString.h>
 #endif
 
-namespace Crypto {
-namespace PK {
+namespace Crypto::PK {
 
 // FIXME: Fixing name up for grabs
 template<typename PrivKeyT, typename PubKeyT>
@@ -49,5 +48,4 @@ protected:
     PrivateKeyType m_private_key;
 };
 
-}
 }

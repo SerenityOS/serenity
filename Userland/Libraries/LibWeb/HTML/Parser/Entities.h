@@ -9,8 +9,7 @@
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 
-namespace Web {
-namespace HTML {
+namespace Web::HTML {
 
 struct EntityMatch {
     Vector<u32, 2> code_points;
@@ -19,5 +18,4 @@ struct EntityMatch {
 
 Optional<EntityMatch> code_points_from_entity(StringView);
 
-}
 }
