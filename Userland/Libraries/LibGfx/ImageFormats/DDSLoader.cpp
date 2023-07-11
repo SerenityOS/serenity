@@ -399,7 +399,7 @@ static ErrorOr<void> decode_dxt(Stream& stream, DDSLoadingContext& context, u64 
 }
 static ErrorOr<void> decode_bitmap(Stream& stream, DDSLoadingContext& context, u64 width, u64 height)
 {
-    Vector<u32> dxt_formats = { DXGI_FORMAT_BC1_UNORM, DXGI_FORMAT_BC2_UNORM, DXGI_FORMAT_BC3_UNORM };
+    static constexpr Array dxt_formats = { DXGI_FORMAT_BC1_UNORM, DXGI_FORMAT_BC2_UNORM, DXGI_FORMAT_BC3_UNORM };
     if (dxt_formats.contains_slow(context.format)) {
         for (u64 y = 0; y < height; y += 4) {
             TRY(decode_dxt(stream, context, width, y));
@@ -458,7 +458,7 @@ static ErrorOr<void> decode_header(DDSLoadingContext& context)
 
     context.format = get_format(context.header.pixel_format);
 
-    Vector<u32> supported_formats = { DXGI_FORMAT_BC1_UNORM, DXGI_FORMAT_BC2_UNORM, DXGI_FORMAT_BC3_UNORM };
+    static constexpr Array supported_formats = { DXGI_FORMAT_BC1_UNORM, DXGI_FORMAT_BC2_UNORM, DXGI_FORMAT_BC3_UNORM };
     if (!supported_formats.contains_slow(context.format)) {
         dbgln_if(DDS_DEBUG, "Format of type {} is not supported at the moment", to_underlying(context.format));
         context.state = DDSLoadingContext::State::Error;
