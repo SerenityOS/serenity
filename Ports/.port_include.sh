@@ -364,10 +364,6 @@ fetch() {
 
         if [ ! -f "$workdir"/.${filename}_extracted ]; then
             case "$filename" in
-                *.tar.gz|*.tgz)
-                    run_nocd tar -xzf "${PORT_META_DIR}/${filename}"
-                    run touch .${filename}_extracted
-                    ;;
                 *.tar.gz|*.tar.bz|*.tar.bz2|*.tar.xz|*.tar.lz|*.tar.zst|.tbz*|*.txz|*.tgz)
                     run_nocd tar -xf "${PORT_META_DIR}/${filename}"
                     run touch .${filename}_extracted
