@@ -265,10 +265,10 @@ namespace JS {
     P(globalThis)                            \
     P(granularity)                           \
     P(group)                                 \
+    P(groupBy)                               \
     P(groupCollapsed)                        \
     P(groupEnd)                              \
     P(groups)                                \
-    P(groupToMap)                            \
     P(has)                                   \
     P(hasIndices)                            \
     P(hasOwn)                                \

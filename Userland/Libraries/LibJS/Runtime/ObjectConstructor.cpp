@@ -39,6 +39,7 @@ ThrowCompletionOr<void> ObjectConstructor::initialize(Realm& realm)
     define_native_function(realm, vm.names.getOwnPropertyNames, get_own_property_names, 1, attr);
     define_native_function(realm, vm.names.getOwnPropertySymbols, get_own_property_symbols, 1, attr);
     define_native_function(realm, vm.names.getPrototypeOf, get_prototype_of, 1, attr);
+    define_native_function(realm, vm.names.groupBy, group_by, 2, attr);
     define_native_function(realm, vm.names.setPrototypeOf, set_prototype_of, 2, attr);
     define_native_function(realm, vm.names.isExtensible, is_extensible, 1, attr);
     define_native_function(realm, vm.names.isFrozen, is_frozen, 1, attr);
@@ -370,6 +371,33 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_prototype_of)
 
     // 2. Return ? obj.[[GetPrototypeOf]]().
     return TRY(object->internal_get_prototype_of());
+}
+
+// 2.1 Object.groupBy ( items, callbackfn ), https://tc39.es/proposal-array-grouping/#sec-object.groupby
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::group_by)
+{
+    auto& realm = *vm.current_realm();
+
+    auto items = vm.argument(0);
+    auto callback_function = vm.argument(1);
+
+    // 1. Let groups be ? GroupBy(items, callbackfn, property).
+    auto groups = TRY((JS::group_by<OrderedHashMap<PropertyKey, MarkedVector<Value>>, PropertyKey>(vm, items, callback_function)));
+
+    // 2. Let obj be OrdinaryObjectCreate(null).
+    auto object = Object::create(realm, nullptr);
+
+    // 3. For each Record { [[Key]], [[Elements]] } g of groups, do
+    for (auto& group : groups) {
+        // a. Let elements be CreateArrayFromList(g.[[Elements]]).
+        auto elements = Array::create_from(realm, group.value);
+
+        // b. Perform ! CreateDataPropertyOrThrow(obj, g.[[Key]], elements).
+        MUST(object->create_data_property_or_throw(group.key, elements));
+    }
+
+    // 4. Return obj.
+    return object;
 }
 
 // 20.1.2.13 Object.hasOwn ( O, P ), https://tc39.es/ecma262/#sec-object.hasown

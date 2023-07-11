@@ -1,26 +1,26 @@
-test("length is 1", () => {
-    expect(Array.prototype.groupToMap).toHaveLength(1);
+test("length is 2", () => {
+    expect(Map.groupBy).toHaveLength(2);
 });
 
 describe("errors", () => {
     test("callback must be a function", () => {
         expect(() => {
-            [].groupToMap(undefined);
+            Map.groupBy([], undefined);
         }).toThrowWithMessage(TypeError, "undefined is not a function");
     });
 
-    test("null or undefined this value", () => {
+    test("null or undefined items value", () => {
         expect(() => {
-            Array.prototype.groupToMap.call();
-        }).toThrowWithMessage(TypeError, "ToObject on null or undefined");
+            Map.groupBy();
+        }).toThrowWithMessage(TypeError, "undefined cannot be converted to an object");
 
         expect(() => {
-            Array.prototype.groupToMap.call(undefined);
-        }).toThrowWithMessage(TypeError, "ToObject on null or undefined");
+            Map.groupBy(undefined);
+        }).toThrowWithMessage(TypeError, "undefined cannot be converted to an object");
 
         expect(() => {
-            Array.prototype.groupToMap.call(null);
-        }).toThrowWithMessage(TypeError, "ToObject on null or undefined");
+            Map.groupBy(null);
+        }).toThrowWithMessage(TypeError, "null cannot be converted to an object");
     });
 });
 
@@ -31,7 +31,7 @@ describe("normal behavior", () => {
         const trueObject = { true: true };
         const falseObject = { false: false };
 
-        const firstResult = array.groupToMap(value => {
+        const firstResult = Map.groupBy(array, value => {
             visited.push(value);
             return value % 2 === 0 ? trueObject : falseObject;
         });
@@ -42,7 +42,7 @@ describe("normal behavior", () => {
         expect(firstResult.get(trueObject)).toEqual([2, 4, 6]);
         expect(firstResult.get(falseObject)).toEqual([1, 3, 5]);
 
-        const secondResult = array.groupToMap((_, index) => {
+        const secondResult = Map.groupBy(array, (_, index) => {
             return index < array.length / 2 ? trueObject : falseObject;
         });
 
@@ -50,33 +50,11 @@ describe("normal behavior", () => {
         expect(secondResult.size).toBe(2);
         expect(secondResult.get(trueObject)).toEqual([1, 2, 3]);
         expect(secondResult.get(falseObject)).toEqual([4, 5, 6]);
-
-        const thisArg = [7, 8, 9, 10, 11, 12];
-        const thirdResult = array.groupToMap(function (_, __, arrayVisited) {
-            expect(arrayVisited).toBe(array);
-            expect(this).toBe(thisArg);
-        }, thisArg);
-
-        expect(thirdResult).toBeInstanceOf(Map);
-        expect(thirdResult.size).toBe(1);
-        expect(thirdResult.get(undefined)).not.toBe(array);
-        expect(thirdResult.get(undefined)).not.toBe(thisArg);
-        expect(thirdResult.get(undefined)).toEqual(array);
-    });
-
-    test("is unscopable", () => {
-        expect(Array.prototype[Symbol.unscopables].groupToMap).toBeTrue();
-        const array = [];
-        with (array) {
-            expect(() => {
-                groupToMap;
-            }).toThrowWithMessage(ReferenceError, "'groupToMap' is not defined");
-        }
     });
 
     test("never calls callback with empty array", () => {
         var callbackCalled = 0;
-        const result = [].groupToMap(() => {
+        const result = Map.groupBy([], () => {
             callbackCalled++;
         });
         expect(result).toBeInstanceOf(Map);
@@ -86,7 +64,7 @@ describe("normal behavior", () => {
 
     test("calls callback once for every item", () => {
         var callbackCalled = 0;
-        const result = [1, 2, 3].groupToMap(() => {
+        const result = Map.groupBy([1, 2, 3], () => {
             callbackCalled++;
         });
         expect(result).toBeInstanceOf(Map);
@@ -96,8 +74,9 @@ describe("normal behavior", () => {
     });
 
     test("still returns a Map even if the global Map constructor was changed", () => {
+        const mapGroupBy = Map.groupBy;
         globalThis.Map = null;
-        const result = [1, 2].groupToMap(value => {
+        const result = mapGroupBy([1, 2], value => {
             return value % 2 === 0;
         });
         expect(result.size).toBe(2);

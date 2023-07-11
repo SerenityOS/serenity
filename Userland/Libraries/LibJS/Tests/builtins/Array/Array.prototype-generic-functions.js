@@ -306,43 +306,6 @@ describe("ability to work with generic non-array objects", () => {
         ]);
     });
 
-    test("group", () => {
-        const visited = [];
-        const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
-        const result = Array.prototype.group.call(o, (value, _, object) => {
-            expect(object).toBe(o);
-            visited.push(value);
-            return value !== undefined ? value.startsWith("b") : false;
-        });
-        expect(visited).toEqual(["foo", "bar", undefined, "baz", undefined]);
-        expect(result.false).toEqual(["foo", undefined, undefined]);
-        expect(result.true).toEqual(["bar", "baz"]);
-    });
-
-    test("groupToMap", () => {
-        const visited = [];
-        const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
-        const falseObject = { false: false };
-        const trueObject = { true: true };
-        const result = Array.prototype.groupToMap.call(o, (value, _, object) => {
-            expect(object).toBe(o);
-            visited.push(value);
-            return value !== undefined
-                ? value.startsWith("b")
-                    ? trueObject
-                    : falseObject
-                : falseObject;
-        });
-        expect(visited).toEqual(["foo", "bar", undefined, "baz", undefined]);
-        expect(result).toBeInstanceOf(Map);
-
-        const falseResult = result.get(falseObject);
-        expect(falseResult).toEqual(["foo", undefined, undefined]);
-
-        const trueResult = result.get(trueObject);
-        expect(trueResult).toEqual(["bar", "baz"]);
-    });
-
     test("toReversed", () => {
         const result = Array.prototype.toReversed.call(o);
         expect(result).toEqual([undefined, "baz", undefined, "bar", "foo"]);
