@@ -11,8 +11,7 @@
 #include <AK/Span.h>
 #include <AK/Types.h>
 
-namespace Crypto {
-namespace Cipher {
+namespace Crypto::Cipher {
 
 enum class Intent {
     Encryption,
@@ -122,5 +121,4 @@ protected:
 private:
     PaddingMode m_padding_mode;
 };
-}
 }

@@ -13,8 +13,8 @@
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
 #include <LibCrypto/PK/PK.h>
 
-namespace Crypto {
-namespace PK {
+namespace Crypto::PK {
+
 template<typename Integer = UnsignedBigInteger>
 class RSAPublicKey {
 public:
@@ -224,5 +224,4 @@ public:
         return m_public_key.length();
     }
 };
-}
 }

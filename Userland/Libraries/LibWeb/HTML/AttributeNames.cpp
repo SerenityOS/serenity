@@ -6,8 +6,7 @@
 
 #include <LibWeb/HTML/AttributeNames.h>
 
-namespace Web {
-namespace HTML {
+namespace Web::HTML {
 namespace AttributeNames {
 
 #define __ENUMERATE_HTML_ATTRIBUTE(name) DeprecatedFlyString name;
@@ -72,5 +71,4 @@ bool is_boolean_attribute(DeprecatedFlyString const& attribute)
         AttributeNames::selected);
 }
 
-}
 }

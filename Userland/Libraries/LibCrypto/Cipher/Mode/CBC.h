@@ -14,8 +14,7 @@
 #    include <AK/DeprecatedString.h>
 #endif
 
-namespace Crypto {
-namespace Cipher {
+namespace Crypto::Cipher {
 
 template<typename T>
 class CBC : public Mode<T> {
@@ -124,7 +123,5 @@ public:
 private:
     typename T::BlockType m_cipher_block {};
 };
-
-}
 
 }

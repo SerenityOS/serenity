@@ -13,8 +13,7 @@
 #include <AK/Vector.h>
 #include <LibCrypto/PK/Code/Code.h>
 
-namespace Crypto {
-namespace PK {
+namespace Crypto::PK {
 
 template<typename HashFunction, size_t SaltSize>
 class EMSA_PSS : public Code<HashFunction> {
@@ -167,5 +166,4 @@ private:
     Bytes m_buffer;
 };
 
-}
 }

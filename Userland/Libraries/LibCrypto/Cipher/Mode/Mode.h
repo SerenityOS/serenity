@@ -10,8 +10,7 @@
 #include <AK/Span.h>
 #include <LibCrypto/Cipher/Cipher.h>
 
-namespace Crypto {
-namespace Cipher {
+namespace Crypto::Cipher {
 
 template<typename T>
 class Mode {
@@ -98,6 +97,4 @@ protected:
 private:
     T m_cipher;
 };
-}
-
 }

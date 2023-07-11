@@ -9,8 +9,7 @@
 #include <AK/DeprecatedFlyString.h>
 #include <AK/Error.h>
 
-namespace Web {
-namespace HTML {
+namespace Web::HTML {
 namespace AttributeNames {
 
 #define ENUMERATE_HTML_ATTRIBUTES                          \
@@ -249,5 +248,4 @@ ErrorOr<void> initialize_strings();
 
 bool is_boolean_attribute(DeprecatedFlyString const& attribute);
 
-}
 }

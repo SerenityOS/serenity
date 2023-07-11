@@ -17,8 +17,7 @@
 #    include <AK/DeprecatedString.h>
 #endif
 
-namespace Crypto {
-namespace Cipher {
+namespace Crypto::Cipher {
 
 struct AESCipherBlock : public CipherBlock {
 public:
@@ -131,5 +130,4 @@ protected:
     AESCipherKey m_key;
 };
 
-}
 }

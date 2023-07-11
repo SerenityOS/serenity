@@ -12,8 +12,7 @@
 #include <LibCrypto/ASN1/PEM.h>
 #include <LibCrypto/PK/RSA.h>
 
-namespace Crypto {
-namespace PK {
+namespace Crypto::PK {
 
 static constexpr Array<int, 7> pkcs8_rsa_key_oid { 1, 2, 840, 113549, 1, 1, 1 };
 
@@ -416,6 +415,5 @@ void RSA_PKCS1_EME::sign(ReadonlyBytes, Bytes&)
 void RSA_PKCS1_EME::verify(ReadonlyBytes, Bytes&)
 {
     dbgln("FIXME: RSA_PKCS_EME::verify");
-}
 }
 }

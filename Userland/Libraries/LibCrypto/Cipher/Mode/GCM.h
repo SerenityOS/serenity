@@ -18,8 +18,7 @@
 #    include <AK/DeprecatedString.h>
 #endif
 
-namespace Crypto {
-namespace Cipher {
+namespace Crypto::Cipher {
 
 using IncrementFunction = IncrementInplace;
 
@@ -146,7 +145,5 @@ private:
     Bytes m_auth_key { m_auth_key_storage, block_size };
     Optional<Authentication::GHash> m_ghash;
 };
-
-}
 
 }

@@ -14,8 +14,7 @@
 #    include <AK/DeprecatedString.h>
 #endif
 
-namespace Crypto {
-namespace Cipher {
+namespace Crypto::Cipher {
 
 /*
  * Heads up: CTR is a *family* of modes, because the "counter" function is
@@ -193,5 +192,4 @@ protected:
     }
 };
 
-}
 }

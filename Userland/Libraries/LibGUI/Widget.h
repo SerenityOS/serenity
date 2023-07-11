@@ -27,18 +27,14 @@
 #include <LibGfx/Rect.h>
 #include <LibGfx/StandardCursor.h>
 
-namespace Core {
-namespace Registration {
+namespace Core::Registration {
 extern Core::ObjectClassRegistration registration_Widget;
-}
 }
 
 #define REGISTER_WIDGET(namespace_, class_name)                                                                                                                                                     \
-    namespace Core {                                                                                                                                                                                \
-    namespace Registration {                                                                                                                                                                        \
+    namespace Core::Registration {                                                                                                                                                                  \
     Core::ObjectClassRegistration registration_##class_name(                                                                                                                                        \
         #namespace_ "::" #class_name##sv, []() -> ErrorOr<NonnullRefPtr<Core::Object>> { return static_ptr_cast<Core::Object>(TRY(namespace_::class_name::try_create())); }, &registration_Widget); \
-    }                                                                                                                                                                                               \
     }
 
 namespace GUI {

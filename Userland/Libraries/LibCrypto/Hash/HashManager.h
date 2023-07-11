@@ -14,8 +14,7 @@
 #include <LibCrypto/Hash/SHA1.h>
 #include <LibCrypto/Hash/SHA2.h>
 
-namespace Crypto {
-namespace Hash {
+namespace Crypto::Hash {
 
 enum class HashKind {
     Unknown,
@@ -218,5 +217,4 @@ private:
     ByteBuffer m_pre_init_buffer;
 };
 
-}
 }
