@@ -72,7 +72,7 @@ protected:
     Reader m_reader;
     WeakPtr<Document> m_document;
     Vector<Reference> m_current_reference_stack;
-    bool m_disable_encryption { false };
+    bool m_enable_encryption { true };
 };
 
 };
