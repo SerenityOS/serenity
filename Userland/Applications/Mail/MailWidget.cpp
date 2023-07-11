@@ -290,6 +290,9 @@ void MailWidget::selected_mailbox()
                     .headers = { { "Date", "Subject", "From" } },
                 },
             },
+            IMAP::FetchCommand::DataItem {
+                .type = IMAP::FetchCommand::DataItemType::Flags,
+            },
         },
     };
 
@@ -308,6 +311,8 @@ void MailWidget::selected_mailbox()
     for (auto& fetch_data : fetch_response.data().fetch_data()) {
         auto& response_data = fetch_data.get<IMAP::FetchResponseData>();
         auto& body_data = response_data.body_data();
+
+        auto seen = !response_data.flags().find_if([](StringView value) { return value.equals_ignoring_ascii_case("\\Seen"sv); }).is_end();
 
         auto data_item_has_header = [](IMAP::FetchCommand::DataItem const& data_item, DeprecatedString const& search_header) {
             if (!data_item.section.has_value())
@@ -415,7 +420,7 @@ void MailWidget::selected_mailbox()
         if (from.is_empty())
             from = "(Unknown sender)";
 
-        InboxEntry inbox_entry { from, subject, date };
+        InboxEntry inbox_entry { from, subject, date, seen };
         m_statusbar->set_text(String::formatted("[{}]: Loading entry {}", mailbox.name, ++i).release_value_but_fixme_should_propagate_errors());
 
         active_inbox_entries.append(inbox_entry);

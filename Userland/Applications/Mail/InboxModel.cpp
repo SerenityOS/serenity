@@ -6,6 +6,7 @@
  */
 
 #include "InboxModel.h"
+#include <LibGfx/Font/FontDatabase.h>
 
 InboxModel::InboxModel(Vector<InboxEntry> entries)
     : m_entries(move(entries))
@@ -45,6 +46,10 @@ GUI::Variant InboxModel::data(GUI::ModelIndex const& index, GUI::ModelRole role)
     if (role == GUI::ModelRole::TextAlignment) {
         if (index.column() == Column::Date)
             return Gfx::TextAlignment::CenterRight;
+    }
+    if (role == GUI::ModelRole::Font) {
+        if (!value.seen)
+            return Gfx::FontDatabase::default_font().bold_variant();
     }
     return {};
 }

@@ -14,6 +14,7 @@ struct InboxEntry {
     DeprecatedString from;
     DeprecatedString subject;
     DeprecatedString date;
+    bool seen;
 };
 
 class InboxModel final : public GUI::Model {
