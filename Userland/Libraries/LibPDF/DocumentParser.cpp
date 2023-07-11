@@ -568,7 +568,9 @@ PDFErrorOr<Value> DocumentParser::parse_compressed_object_with_index(u32 index)
     if (m_reader.matches_eol())
         m_reader.consume_eol();
 
+    push_reference({ static_cast<u32>(first_number.get<int>()), static_cast<u32>(second_number.get<int>()) });
     auto dict = TRY(parse_dict());
+
     auto type = TRY(dict->get_name(m_document, CommonNames::Type))->name();
     if (type != "ObjStm")
         return error("Invalid object stream type");
@@ -577,7 +579,12 @@ PDFErrorOr<Value> DocumentParser::parse_compressed_object_with_index(u32 index)
     auto first_object_offset = dict->get_value("First").get_u32();
 
     auto stream = TRY(parse_stream(dict));
+    pop_reference();
+
     Parser stream_parser(m_document, stream->bytes());
+
+    // The data was already decrypted when reading the outer compressed ObjStm.
+    stream_parser.set_encryption_enabled(false);
 
     for (u32 i = 0; i < object_count; ++i) {
         auto object_number = TRY(stream_parser.parse_number());
@@ -589,7 +596,11 @@ PDFErrorOr<Value> DocumentParser::parse_compressed_object_with_index(u32 index)
         }
     }
 
-    return TRY(stream_parser.parse_value());
+    stream_parser.push_reference({ index, 0 });
+    auto value = TRY(stream_parser.parse_value());
+    stream_parser.pop_reference();
+
+    return value;
 }
 
 PDFErrorOr<DocumentParser::PageOffsetHintTable> DocumentParser::parse_page_offset_hint_table(ReadonlyBytes hint_stream_bytes)

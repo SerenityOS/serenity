@@ -62,10 +62,15 @@ public:
         m_enable_filters = enabled;
     }
 
-protected:
+    void set_encryption_enabled(bool enabled)
+    {
+        m_enable_encryption = enabled;
+    }
+
     void push_reference(Reference const& ref) { m_current_reference_stack.append(ref); }
     void pop_reference() { m_current_reference_stack.take_last(); }
 
+protected:
     Error error(
         DeprecatedString const& message
 #ifdef PDF_DEBUG
