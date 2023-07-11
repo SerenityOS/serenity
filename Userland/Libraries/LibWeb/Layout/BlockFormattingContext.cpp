@@ -57,6 +57,10 @@ static bool margins_collapse_through(Box const& box, LayoutState& state)
     // FIXME: For the purpose of margin collapsing (CSS 2 §8.3.1 Collapsing margins), if the block axis is the
     //        ratio-dependent axis, it is not considered to have a computed block-size of auto.
     //        https://www.w3.org/TR/css-sizing-4/#aspect-ratio-margin-collapse
+
+    if (box.computed_values().clear() != CSS::Clear::None)
+        return false;
+
     return state.get(box).border_box_height() == 0;
 }
 
