@@ -87,6 +87,14 @@ ErrorOr<String> Parser::parse_file_line(Optional<size_t> const& strip_count)
     return stripped_path.to_string();
 }
 
+ErrorOr<Patch> Parser::parse_patch(Optional<size_t> const& strip_count)
+{
+    Patch patch;
+    patch.header = TRY(parse_header(strip_count));
+    patch.hunks = TRY(parse_hunks());
+    return patch;
+}
+
 ErrorOr<Header> Parser::parse_header(Optional<size_t> const& strip_count)
 {
     Header header;
@@ -111,20 +119,20 @@ ErrorOr<Header> Parser::parse_header(Optional<size_t> const& strip_count)
         consume_line();
     }
 
-    return Error::from_string_literal("Unable to find any patch");
+    return header;
 }
 
 ErrorOr<Vector<Hunk>> Parser::parse_hunks()
 {
     Vector<Hunk> hunks;
 
-    while (!is_eof()) {
+    while (next_is("@@ ")) {
         // Try an locate a hunk location in this hunk. It may be prefixed with information.
         auto maybe_location = consume_unified_location();
         consume_line();
 
         if (!maybe_location.has_value())
-            continue;
+            break;
 
         Hunk hunk { *maybe_location, {} };
 
@@ -178,6 +186,8 @@ ErrorOr<Vector<Hunk>> Parser::parse_hunks()
 ErrorOr<Vector<Hunk>> parse_hunks(StringView diff)
 {
     Parser lexer(diff);
+    while (!lexer.next_is("@@ ") && !lexer.is_eof())
+        lexer.consume_line();
     return lexer.parse_hunks();
 }
 }

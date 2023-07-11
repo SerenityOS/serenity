@@ -165,3 +165,25 @@ TEST_CASE(add_file_from_scratch)
 
     EXPECT_FILE_EQ(MUST(String::formatted("{}/file_to_add", s_test_dir)), "Hello, friends!\n");
 }
+
+TEST_CASE(two_patches_in_single_patch_file)
+{
+    PatchSetup setup;
+
+    auto patch = R"(
+--- /dev/null
++++ a/first_file_to_add
+@@ -0,0 +1 @@
++Hello, friends!
+--- /dev/null
++++ a/second_file_to_add
+@@ -0,0 +1 @@
++Hello, friends!
+)"sv;
+
+    run_patch({}, patch, "patching file first_file_to_add\n"
+                         "patching file second_file_to_add\n"sv);
+
+    EXPECT_FILE_EQ(MUST(String::formatted("{}/first_file_to_add", s_test_dir)), "Hello, friends!\n");
+    EXPECT_FILE_EQ(MUST(String::formatted("{}/second_file_to_add", s_test_dir)), "Hello, friends!\n");
+}
