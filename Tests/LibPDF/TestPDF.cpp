@@ -13,7 +13,7 @@
 
 TEST_CASE(linearized_pdf)
 {
-    auto file = Core::MappedFile::map("linearized.pdf"sv).release_value();
+    auto file = MUST(Core::MappedFile::map("linearized.pdf"sv));
     auto document = MUST(PDF::Document::create(file->bytes()));
     MUST(document->initialize());
     EXPECT_EQ(document->get_page_count(), 1U);
@@ -21,7 +21,7 @@ TEST_CASE(linearized_pdf)
 
 TEST_CASE(non_linearized_pdf)
 {
-    auto file = Core::MappedFile::map("non-linearized.pdf"sv).release_value();
+    auto file = MUST(Core::MappedFile::map("non-linearized.pdf"sv));
     auto document = MUST(PDF::Document::create(file->bytes()));
     MUST(document->initialize());
     EXPECT_EQ(document->get_page_count(), 1U);
@@ -29,7 +29,7 @@ TEST_CASE(non_linearized_pdf)
 
 TEST_CASE(complex_pdf)
 {
-    auto file = Core::MappedFile::map("complex.pdf"sv).release_value();
+    auto file = MUST(Core::MappedFile::map("complex.pdf"sv));
     auto document = MUST(PDF::Document::create(file->bytes()));
     MUST(document->initialize());
     EXPECT_EQ(document->get_page_count(), 3U);
