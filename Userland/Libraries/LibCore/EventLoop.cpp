@@ -78,7 +78,7 @@ int EventLoop::exec()
 void EventLoop::spin_until(Function<bool()> goal_condition)
 {
     EventLoopPusher pusher(*this);
-    while (!goal_condition())
+    while (!m_impl->was_exit_requested() && !goal_condition())
         pump();
 }
 
