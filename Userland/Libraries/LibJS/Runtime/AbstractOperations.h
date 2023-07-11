@@ -268,7 +268,7 @@ ThrowCompletionOr<GroupsType> group_by(VM& vm, Value items, Value callback_funct
 
             // ii. IfAbruptCloseIterator(key, iteratorRecord).
             if (property_key.is_error())
-                return Completion { *TRY(iterator_close(vm, iterator_record, key.release_error())) };
+                return Completion { *TRY(iterator_close(vm, iterator_record, property_key.release_error())) };
 
             add_value_to_keyed_group(vm, groups, property_key.release_value(), value);
         }
