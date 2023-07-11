@@ -33,6 +33,14 @@ static PDF::PDFErrorOr<void> print_document_info_dict(PDF::Document& document)
     return {};
 }
 
+static PDF::PDFErrorOr<void> print_document_info(PDF::Document& document)
+{
+    outln("PDF Version: {}.{}", document.version().major, document.version().minor);
+    outln("Number of pages: {}", document.get_page_count());
+    TRY(print_document_info_dict(document));
+    return {};
+}
+
 static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
@@ -54,8 +62,7 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
 
     TRY(document->initialize());
 
-    outln("{} pages", document->get_page_count());
-    TRY(print_document_info_dict(*document));
+    TRY(print_document_info(*document));
 
     return 0;
 }
