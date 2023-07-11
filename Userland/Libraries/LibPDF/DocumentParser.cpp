@@ -21,22 +21,25 @@ DocumentParser::DocumentParser(Document* document, ReadonlyBytes bytes)
 {
 }
 
-PDFErrorOr<void> DocumentParser::initialize()
+PDFErrorOr<Version> DocumentParser::initialize()
 {
     m_reader.set_reading_forwards();
     if (m_reader.remaining() == 0)
         return error("Empty PDF document");
 
-    auto maybe_error = parse_header();
-    if (maybe_error.is_error()) {
-        warnln("{}", maybe_error.error().message());
+    auto maybe_version = parse_header();
+    if (maybe_version.is_error()) {
+        warnln("{}", maybe_version.error().message());
         warnln("No valid PDF header detected, continuing anyway.");
+        maybe_version = Version { 1, 6 }; // ¯\_(ツ)_/¯
     }
 
     auto const linearization_result = TRY(initialize_linearization_dict());
 
-    if (linearization_result == LinearizationResult::NotLinearized)
-        return initialize_non_linearized_xref_table();
+    if (linearization_result == LinearizationResult::NotLinearized) {
+        TRY(initialize_non_linearized_xref_table());
+        return maybe_version.value();
+    }
 
     bool is_linearized = m_linearization_dictionary.has_value();
     if (is_linearized) {
@@ -53,9 +56,11 @@ PDFErrorOr<void> DocumentParser::initialize()
     }
 
     if (is_linearized)
-        return initialize_linearized_xref_table();
+        TRY(initialize_linearized_xref_table());
+    else
+        TRY(initialize_non_linearized_xref_table());
 
-    return initialize_non_linearized_xref_table();
+    return maybe_version.value();
 }
 
 PDFErrorOr<Value> DocumentParser::parse_object_with_index(u32 index)
@@ -73,9 +78,8 @@ PDFErrorOr<Value> DocumentParser::parse_object_with_index(u32 index)
     return indirect_value->value();
 }
 
-PDFErrorOr<void> DocumentParser::parse_header()
+PDFErrorOr<Version> DocumentParser::parse_header()
 {
-    // FIXME: Do something with the version?
     m_reader.move_to(0);
     if (m_reader.remaining() < 8 || !m_reader.matches("%PDF-"))
         return error("Not a PDF document");
@@ -106,7 +110,7 @@ PDFErrorOr<void> DocumentParser::parse_header()
         }
     }
 
-    return {};
+    return Version { major_ver - '0', minor_ver - '0' };
 }
 
 PDFErrorOr<DocumentParser::LinearizationResult> DocumentParser::initialize_linearization_dict()

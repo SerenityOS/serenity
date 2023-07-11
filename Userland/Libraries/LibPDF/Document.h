@@ -122,6 +122,8 @@ public:
     // need to handle the case where the user password is the empty string.
     PDFErrorOr<void> initialize();
 
+    Version version() const { return m_version; }
+
     ALWAYS_INLINE RefPtr<SecurityHandler> const& security_handler() const { return m_security_handler; }
 
     ALWAYS_INLINE RefPtr<OutlineDict> const& outline() const { return m_outline; }
@@ -188,6 +190,7 @@ private:
     PDFErrorOr<NonnullRefPtr<Object>> find_in_key_value_array(NonnullRefPtr<ArrayObject> key_value_array, DeprecatedFlyString name);
 
     NonnullRefPtr<DocumentParser> m_parser;
+    Version m_version;
     RefPtr<DictObject> m_catalog;
     RefPtr<DictObject> m_trailer;
     Vector<u32> m_page_object_indices;

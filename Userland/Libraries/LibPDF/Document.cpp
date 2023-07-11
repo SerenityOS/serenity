@@ -79,8 +79,7 @@ PDFErrorOr<NonnullRefPtr<Document>> Document::create(ReadonlyBytes bytes)
     auto parser = adopt_ref(*new DocumentParser({}, bytes));
     auto document = adopt_ref(*new Document(parser));
 
-    TRY(parser->initialize());
-
+    document->m_version = TRY(parser->initialize());
     document->m_trailer = parser->trailer();
     document->m_catalog = TRY(parser->trailer()->get_dict(document, CommonNames::Root));
 
