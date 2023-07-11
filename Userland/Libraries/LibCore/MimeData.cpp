@@ -118,11 +118,11 @@ StringView guess_mime_type_based_on_filename(StringView path)
     if (path.ends_with(".webp"sv, CaseSensitivity::CaseInsensitive))
         return "image/webp"sv;
     if (path.ends_with(".pbm"sv, CaseSensitivity::CaseInsensitive))
-        return "image/x‑portable‑bitmap"sv;
+        return "image/x-portable-bitmap"sv;
     if (path.ends_with(".pgm"sv, CaseSensitivity::CaseInsensitive))
-        return "image/x‑portable‑graymap"sv;
+        return "image/x-portable-graymap"sv;
     if (path.ends_with(".ppm"sv, CaseSensitivity::CaseInsensitive))
-        return "image/x‑portable‑pixmap"sv;
+        return "image/x-portable-pixmap"sv;
     if (path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive))
         return "image/x-qoi"sv;
     if (path.ends_with(".tga"sv, CaseSensitivity::CaseInsensitive))
