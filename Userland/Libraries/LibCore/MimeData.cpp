@@ -166,6 +166,16 @@ Optional<StringView> guess_mime_type_based_on_sniffed_bytes(ReadonlyBytes bytes)
     return {};
 }
 
+Optional<StringView> get_description_from_mime_type(StringView mime_name)
+{
+    for (auto const& mime_type : s_registered_mime_type) {
+        if (mime_name == mime_type.name)
+            return mime_type.description;
+    }
+
+    return OptionalNone {};
+}
+
 Optional<StringView> guess_mime_type_based_on_sniffed_bytes(Core::File& file)
 {
     // Read accounts for longest possible offset + signature we currently match against (extra/iso-9660)
