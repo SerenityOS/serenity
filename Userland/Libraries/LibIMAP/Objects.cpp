@@ -74,10 +74,12 @@ DeprecatedString FetchCommand::DataItem::serialize() const
     case DataItemType::UID:
         return "UID";
     case DataItemType::PeekBody:
-        TODO();
     case DataItemType::BodySection: {
         StringBuilder sb;
-        sb.appendff("BODY[{}]", section.value().serialize());
+        if (type == DataItemType::BodySection)
+            sb.appendff("BODY[{}]", section.value().serialize());
+        else
+            sb.appendff("BODY.PEEK[{}]", section.value().serialize());
         if (partial_fetch) {
             sb.appendff("<{}.{}>", start, octets);
         }
