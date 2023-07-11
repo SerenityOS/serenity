@@ -56,4 +56,8 @@ TEST_CASE(encrypted_with_aes)
     EXPECT(document->security_handler()->try_provide_user_password("sup"sv));
     MUST(document->initialize());
     EXPECT_EQ(document->get_page_count(), 1U);
+
+    auto info_dict = MUST(document->info_dict()).value();
+    EXPECT_EQ(MUST(info_dict.title()).value(), "sup");
+    EXPECT_EQ(MUST(info_dict.creator()).value(), "TextEdit");
 }
