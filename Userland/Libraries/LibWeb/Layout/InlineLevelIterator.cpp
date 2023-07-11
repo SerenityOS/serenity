@@ -266,7 +266,7 @@ void InlineLevelIterator::enter_text_node(Layout::TextNode const& text_node)
         .do_respect_linebreaks = do_respect_linebreaks,
         .is_first_chunk = true,
         .is_last_chunk = false,
-        .chunk_iterator = TextNode::ChunkIterator { text_node.text_for_rendering(), do_wrap_lines, do_respect_linebreaks, text_node.is_generated() && text_node.text_for_rendering().is_empty() },
+        .chunk_iterator = TextNode::ChunkIterator { text_node.text_for_rendering(), do_wrap_lines, do_respect_linebreaks },
     };
     m_text_node_context->next_chunk = m_text_node_context->chunk_iterator.next();
 }
