@@ -48,3 +48,12 @@ TEST_CASE(truncated_pdf_header_issue_10717)
     auto document = PDF::Document::create(string.bytes());
     EXPECT(document.is_error());
 }
+
+TEST_CASE(encrypted_with_aes)
+{
+    auto file = MUST(Core::MappedFile::map("password-is-sup.pdf"sv));
+    auto document = MUST(PDF::Document::create(file->bytes()));
+    EXPECT(document->security_handler()->try_provide_user_password("sup"sv));
+    MUST(document->initialize());
+    EXPECT_EQ(document->get_page_count(), 1U);
+}
