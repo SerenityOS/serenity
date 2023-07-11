@@ -314,45 +314,32 @@ do_download_file() {
 func_defined fetch || fetch() {
     pre_fetch
 
-    tried_download_again=0
-
-    while true; do
-        for f in "${files[@]}"; do
-            read url filename auth_sum<<< $(echo "$f")
-            do_download_file "$url" "${PORT_META_DIR}/${filename}"
-        done
-
-        verification_failed=0
-
-        for f in "${files[@]}"; do
-            read url filename auth_sum<<< $(echo "$f")
-
-            # check sha256sum if given
-            echo "Expecting sha256sum: $auth_sum"
-            calc_sum="$(sha256sum "${PORT_META_DIR}/${filename}" | cut -f1 -d' ')"
-            echo "sha256sum($filename) = '$calc_sum'"
-            if [ "$calc_sum" != "$auth_sum" ]; then
-                # remove downloaded file to re-download on next run
-                rm -f "${PORT_META_DIR}/${filename}"
-                echo "sha256sums mismatching, removed erroneous download."
-                if [ $tried_download_again -eq 1 ]; then
-                    echo "Please run script again."
-                    exit 1
-                fi
-                echo "Trying to download the files again."
-                tried_download_again=1
-                verification_failed=1
-            fi
-        done
-
-        if [ $verification_failed -ne 1 ]; then
-            break
-        fi
-    done
-
-    # extract
     for f in "${files[@]}"; do
-        read url filename auth_sum<<< $(echo "$f")
+        read url filename auth_sum <<< $(echo "${f}")
+
+        tried_download_again=0
+
+        while true; do
+            do_download_file "$url" "${PORT_META_DIR}/${filename}"
+
+            calc_sum="$(sha256sum "${PORT_META_DIR}/${filename}" | cut -f1 -d' ')"
+
+            if [ "$calc_sum" = "$auth_sum" ]; then
+                break
+            fi
+
+            echo "SHA256 checksum of downloaded file '${filename}' does not match!"
+            echo "Expected: ${auth_sum}"
+            echo "Actual:   ${calc_sum}"
+            rm -f "${PORT_META_DIR}/${filename}"
+            echo "Removed erroneous download."
+            if [ "${tried_download_again}" -eq 1 ]; then
+                echo "Please run script again."
+                exit 1
+            fi
+            echo "Trying to download the file again."
+            tried_download_again=1
+        done
 
         if [ ! -f "$workdir"/.${filename}_extracted ]; then
             case "$filename" in
