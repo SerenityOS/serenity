@@ -13,6 +13,12 @@ InboxModel::InboxModel(Vector<InboxEntry> entries)
 {
 }
 
+void InboxModel::set_seen(int row, bool seen)
+{
+    m_entries[row].seen = seen;
+    did_update(DontInvalidateIndices);
+}
+
 int InboxModel::row_count(GUI::ModelIndex const&) const
 {
     return m_entries.size();
