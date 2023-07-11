@@ -24,6 +24,8 @@
     A(C)                          \
     A(CA)                         \
     A(CCITTFaxDecode)             \
+    A(CF)                         \
+    A(CFM)                        \
     A(CalRGB)                     \
     A(CIDSystemInfo)              \
     A(CIDToGIDMap)                \
@@ -130,6 +132,8 @@
     A(SA)                         \
     A(SM)                         \
     A(SMask)                      \
+    A(StmF)                       \
+    A(StrF)                       \
     A(Subject)                    \
     A(Subtype)                    \
     A(Supplement)                 \

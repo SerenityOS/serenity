@@ -5,6 +5,9 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/Debug.h>
+#include <AK/Random.h>
+#include <LibCrypto/Cipher/AES.h>
 #include <LibCrypto/Hash/MD5.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Document.h>
@@ -57,6 +60,58 @@ PDFErrorOr<NonnullRefPtr<SecurityHandler>> SecurityHandler::create(Document* doc
     TODO();
 }
 
+struct CryptFilter {
+    CryptFilterMethod method { CryptFilterMethod::None };
+    int length_in_bits { 0 };
+};
+
+static PDFErrorOr<CryptFilter> parse_v4_crypt(Document* document, NonnullRefPtr<DictObject> encryption_dict, DeprecatedString filter)
+{
+    // See 3.5 Encryption, Table 3.18 "Entries common to all encryption dictionaries" for StmF and StrF,
+    // and 3.5.4 Crypt Filters in the 1.7 spec, in particular Table 3.22 "Entries common to all crypt filter dictionaries".
+
+    if (filter == "Identity")
+        return CryptFilter {};
+
+    // "Every crypt filter used in the document must have an entry in this dictionary"
+    if (!encryption_dict->contains(CommonNames::CF))
+        return Error(Error::Type::Parse, "Missing CF key in encryption dict for v4");
+
+    auto crypt_filter_dicts = TRY(encryption_dict->get_dict(document, CommonNames::CF));
+    if (!crypt_filter_dicts->contains(filter))
+        return Error(Error::Type::Parse, "Missing key in CF dict for v4");
+
+    auto crypt_filter_dict = TRY(crypt_filter_dicts->get_dict(document, filter));
+
+    // "Default value: None"
+    if (!crypt_filter_dict->contains(CommonNames::CFM))
+        return CryptFilter {};
+    auto crypt_filter_method = TRY(crypt_filter_dict->get_name(document, CommonNames::CFM))->name();
+    if (crypt_filter_method == "None")
+        return CryptFilter {};
+
+    // Table 3.22 in the 1.7 spec says this is optional but doesn't give a default value.
+    // But the 2.0 spec (ISO 32000 2020) says it's required.
+    // The 2.0 spec also says "The standard security handler expresses the Length entry in bytes" (!).
+    if (!crypt_filter_dict->contains(CommonNames::Length))
+        return Error(Error::Type::Parse, "crypt filter /Length missing");
+    auto length_in_bits = crypt_filter_dict->get_value(CommonNames::Length).get<int>() * 8;
+
+    // NOTE: /CFM's /AuthEvent should be ignored for /StmF, /StrF.
+
+    if (crypt_filter_method == "V2")
+        return CryptFilter { CryptFilterMethod::V2, length_in_bits };
+
+    if (crypt_filter_method == "AESV2") {
+        // "the AES algorithm in Cipher Block Chaining (CBC) mode with a 16-byte block size"
+        if (length_in_bits != 128)
+            return Error(Error::Type::Parse, "Unexpected bit size for AESV2");
+        return CryptFilter { CryptFilterMethod::AESV2, length_in_bits };
+    }
+
+    return Error(Error::Type::Parse, "Unknown crypt filter method");
+}
+
 PDFErrorOr<NonnullRefPtr<StandardSecurityHandler>> StandardSecurityHandler::create(Document* document, NonnullRefPtr<DictObject> encryption_dict)
 {
     auto revision = encryption_dict->get_value(CommonNames::R).get<int>();
@@ -66,25 +121,46 @@ PDFErrorOr<NonnullRefPtr<StandardSecurityHandler>> StandardSecurityHandler::crea
 
     // V, number: [...] 1 "Algorithm 1 Encryption of data using the RC4 or AES algorithms" in 7.6.2,
     // "General Encryption Algorithm," with an encryption key length of 40 bits, see below [...]
-    // Lenght, integer: (Optional; PDF 1.4; only if V is 2 or 3) The length of the encryption key, in bits.
+    // Length, integer: (Optional; PDF 1.4; only if V is 2 or 3) The length of the encryption key, in bits.
     // The value shall be a multiple of 8, in the range 40 to 128. Default value: 40.
-    int length_in_bits;
     auto v = encryption_dict->get_value(CommonNames::V).get<int>();
-    if (encryption_dict->contains(CommonNames::Length))
+
+    auto method = CryptFilterMethod::V2;
+    size_t length_in_bits = 40;
+
+    if (v == 4) {
+        // "Default value: Identity"
+        DeprecatedString stream_filter = "Identity";
+        if (encryption_dict->contains(CommonNames::StmF))
+            stream_filter = TRY(encryption_dict->get_name(document, CommonNames::StmF))->name();
+
+        DeprecatedString string_filter = "Identity";
+        if (encryption_dict->contains(CommonNames::StrF))
+            string_filter = TRY(encryption_dict->get_name(document, CommonNames::StrF))->name();
+
+        if (stream_filter != string_filter)
+            return Error(Error::Type::Parse, "Can't handle StmF and StrF being different");
+
+        auto crypt_filter = TRY(parse_v4_crypt(document, encryption_dict, stream_filter));
+        method = crypt_filter.method;
+        length_in_bits = crypt_filter.length_in_bits;
+    } else if (encryption_dict->contains(CommonNames::Length))
         length_in_bits = encryption_dict->get_value(CommonNames::Length).get<int>();
-    else if (v == 1)
-        length_in_bits = 40;
-    else
+    else if (v != 1)
         return Error(Error::Type::Parse, "Can't determine length of encryption key");
+
     auto length = length_in_bits / 8;
+
+    dbgln_if(PDF_DEBUG, "encryption v{}, method {}, length {}", v, (int)method, length);
 
     bool encrypt_metadata = true;
     if (encryption_dict->contains(CommonNames::EncryptMetadata))
         encryption_dict->get_value(CommonNames::EncryptMetadata).get<bool>();
-    return adopt_ref(*new StandardSecurityHandler(document, revision, o, u, p, encrypt_metadata, length));
+
+    return adopt_ref(*new StandardSecurityHandler(document, revision, o, u, p, encrypt_metadata, length, method));
 }
 
-StandardSecurityHandler::StandardSecurityHandler(Document* document, size_t revision, DeprecatedString const& o_entry, DeprecatedString const& u_entry, u32 flags, bool encrypt_metadata, size_t length)
+StandardSecurityHandler::StandardSecurityHandler(Document* document, size_t revision, DeprecatedString const& o_entry, DeprecatedString const& u_entry, u32 flags, bool encrypt_metadata, size_t length, CryptFilterMethod method)
     : m_document(document)
     , m_revision(revision)
     , m_o_entry(o_entry)
@@ -92,6 +168,7 @@ StandardSecurityHandler::StandardSecurityHandler(Document* document, size_t revi
     , m_flags(flags)
     , m_encrypt_metadata(encrypt_metadata)
     , m_length(length)
+    , m_method(method)
 {
 }
 
@@ -292,14 +369,15 @@ ByteBuffer StandardSecurityHandler::compute_encryption_key(ByteBuffer password_s
     return encryption_key;
 }
 
-void StandardSecurityHandler::encrypt(NonnullRefPtr<Object> object, Reference reference) const
+void StandardSecurityHandler::crypt(NonnullRefPtr<Object> object, Reference reference, Crypto::Cipher::Intent direction) const
 {
     // 7.6.2 General Encryption Algorithm
     // Algorithm 1: Encryption of data using the RC3 or AES algorithms
 
-    // FIXME: Support AES
-
     VERIFY(m_encryption_key.has_value());
+
+    if (m_method == CryptFilterMethod::None)
+        return;
 
     // a) Obtain the object number and generation number from the object identifier of
     //    the string or stream to be encrypted. If the string is a direct object, use
@@ -309,20 +387,20 @@ void StandardSecurityHandler::encrypt(NonnullRefPtr<Object> object, Reference re
     //       object number.
 
     // b) For all strings and streams with crypt filter specifier; treating the object
-    //    number as binary integers, extends the origin n-byte encryption key to n + 5
+    //    number as binary integers, extend the original n-byte encryption key to n + 5
     //    bytes by appending the low-order 3 bytes of the object number and the low-order
     //    2 bytes of the generation number in that order, low-order byte first. ...
 
     auto encryption_key = m_encryption_key.value();
     ReadonlyBytes bytes;
-    Function<void(ByteBuffer const&)> assign;
+    Function<void(ReadonlyBytes)> assign;
 
     if (object->is<StreamObject>()) {
         auto stream = object->cast<StreamObject>();
         bytes = stream->bytes();
 
-        assign = [&object](ByteBuffer const& buffer) {
-            object->cast<StreamObject>()->buffer() = buffer;
+        assign = [&object](ReadonlyBytes bytes) {
+            object->cast<StreamObject>()->buffer() = MUST(ByteBuffer::copy(bytes));
         };
 
         if (stream->dict()->contains(CommonNames::Filter)) {
@@ -333,8 +411,8 @@ void StandardSecurityHandler::encrypt(NonnullRefPtr<Object> object, Reference re
     } else if (object->is<StringObject>()) {
         auto string = object->cast<StringObject>();
         bytes = string->string().bytes();
-        assign = [&object](ByteBuffer const& buffer) {
-            object->cast<StringObject>()->set_string(DeprecatedString(buffer.bytes()));
+        assign = [&object](ReadonlyBytes bytes) {
+            object->cast<StringObject>()->set_string(DeprecatedString(bytes));
         };
     } else {
         VERIFY_NOT_REACHED();
@@ -349,6 +427,13 @@ void StandardSecurityHandler::encrypt(NonnullRefPtr<Object> object, Reference re
     encryption_key.append(generation & 0xff);
     encryption_key.append((generation >> 8) & 0xff);
 
+    if (m_method == CryptFilterMethod::AESV2) {
+        encryption_key.append('s');
+        encryption_key.append('A');
+        encryption_key.append('l');
+        encryption_key.append('T');
+    }
+
     // c) Initialize the MD5 hash function and pass the result of step (b) as input to this
     //    function.
     Crypto::Hash::MD5 md5;
@@ -362,16 +447,57 @@ void StandardSecurityHandler::encrypt(NonnullRefPtr<Object> object, Reference re
     if (key.size() > min(encryption_key.size(), 16))
         key.resize(encryption_key.size());
 
+    if (m_method == CryptFilterMethod::AESV2) {
+        auto cipher = Crypto::Cipher::AESCipher::CBCMode(key, m_length * 8, direction, Crypto::Cipher::PaddingMode::CMS);
+
+        // "The block size parameter is 16 bytes, and the initialization vector is a 16-byte random number
+        //  that is stored as the first 16 bytes of the encrypted stream or string."
+        static_assert(Crypto::Cipher::AESCipher::block_size() == 16);
+        if (direction == Crypto::Cipher::Intent::Encryption) {
+            auto encrypted = MUST(cipher.create_aligned_buffer(bytes.size()));
+            auto encrypted_span = encrypted.bytes();
+
+            auto iv = MUST(ByteBuffer::create_uninitialized(Crypto::Cipher::AESCipher::block_size()));
+            fill_with_random(iv);
+
+            cipher.encrypt(bytes, encrypted_span, iv);
+
+            ByteBuffer output;
+            output.append(iv);
+            output.append(encrypted_span);
+            assign(output);
+        } else {
+            VERIFY(direction == Crypto::Cipher::Intent::Decryption);
+
+            auto iv = bytes.trim(16);
+            bytes = bytes.slice(16);
+
+            auto decrypted = MUST(cipher.create_aligned_buffer(bytes.size()));
+            auto decrypted_span = decrypted.bytes();
+            cipher.decrypt(bytes, decrypted_span, iv);
+
+            assign(decrypted_span);
+        }
+
+        return;
+    }
+
+    // RC4 is symmetric, so decryption is the same as encryption.
+    VERIFY(m_method == CryptFilterMethod::V2);
     RC4 rc4(key);
     auto output = rc4.encrypt(bytes);
 
     assign(output);
 }
 
+void StandardSecurityHandler::encrypt(NonnullRefPtr<Object> object, Reference reference) const
+{
+    crypt(object, reference, Crypto::Cipher::Intent::Encryption);
+}
+
 void StandardSecurityHandler::decrypt(NonnullRefPtr<Object> object, Reference reference) const
 {
-    // AES and RC4 are both symmetric, so decryption is the same as encryption
-    encrypt(object, reference);
+    crypt(object, reference, Crypto::Cipher::Intent::Decryption);
 }
 
 static constexpr auto identity_permutation = iota_array<size_t, 256>(0);
