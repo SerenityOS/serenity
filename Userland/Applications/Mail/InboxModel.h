@@ -33,6 +33,8 @@ public:
 
     virtual ~InboxModel() override = default;
 
+    void set_seen(int row, bool);
+
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return Column::__Count; }
     virtual ErrorOr<String> column_name(int) const override;

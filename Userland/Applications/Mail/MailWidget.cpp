@@ -243,7 +243,8 @@ bool MailWidget::is_supported_alternative(Alternative const& alternative) const
 
 void MailWidget::selected_mailbox()
 {
-    m_individual_mailbox_view->set_model(InboxModel::create({}));
+    m_individual_mailbox_model = InboxModel::create({});
+    m_individual_mailbox_view->set_model(m_individual_mailbox_model);
 
     auto const& index = m_mailbox_list->selection().first();
 
@@ -427,7 +428,8 @@ void MailWidget::selected_mailbox()
     }
 
     m_statusbar->set_text(String::formatted("[{}]: Loaded {} entries", mailbox.name, i).release_value_but_fixme_should_propagate_errors());
-    m_individual_mailbox_view->set_model(InboxModel::create(move(active_inbox_entries)));
+    m_individual_mailbox_model = InboxModel::create(move(active_inbox_entries));
+    m_individual_mailbox_view->set_model(m_individual_mailbox_model);
 }
 
 void MailWidget::selected_email_to_load()
@@ -509,6 +511,9 @@ void MailWidget::selected_email_to_load()
                 },
                 .partial_fetch = false,
             },
+            IMAP::FetchCommand::DataItem {
+                .type = IMAP::FetchCommand::DataItemType::Flags,
+            },
         },
     };
 
@@ -531,6 +536,9 @@ void MailWidget::selected_email_to_load()
     }
 
     auto& fetch_response_data = fetch_data.last().get<IMAP::FetchResponseData>();
+
+    auto seen = !fetch_response_data.flags().find_if([](StringView value) { return value.equals_ignoring_ascii_case("\\Seen"sv); }).is_end();
+    m_individual_mailbox_model->set_seen(index.row(), seen);
 
     if (!fetch_response_data.contains_response_type(IMAP::FetchResponseType::Body)) {
         GUI::MessageBox::show_error(window(), "The server sent no body."sv);
