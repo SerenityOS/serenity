@@ -310,57 +310,64 @@ do_download_file() {
     fi
 }
 
+fetch_simple() {
+    url="${1}"
+    filename="${2}"
+    checksum="${3}"
+
+    tried_download_again=0
+
+    while true; do
+        do_download_file "${url}" "${PORT_META_DIR}/${filename}"
+
+        actual_checksum="$(sha256sum "${PORT_META_DIR}/${filename}" | cut -f1 -d' ')"
+
+        if [ "${actual_checksum}" = "${checksum}" ]; then
+            break
+        fi
+
+        echo "SHA256 checksum of downloaded file '${filename}' does not match!"
+        echo "Expected: ${checksum}"
+        echo "Actual:   ${actual_checksum}"
+        rm -f "${PORT_META_DIR}/${filename}"
+        echo "Removed erroneous download."
+        if [ "${tried_download_again}" -eq 1 ]; then
+            echo "Please run script again."
+            exit 1
+        fi
+        echo "Trying to download the file again."
+        tried_download_again=1
+    done
+
+    if [ ! -f "$workdir"/.${filename}_extracted ]; then
+        case "$filename" in
+            *.tar.gz|*.tar.bz|*.tar.bz2|*.tar.xz|*.tar.lz|*.tar.zst|.tbz*|*.txz|*.tgz)
+                run_nocd tar -xf "${PORT_META_DIR}/${filename}"
+                run touch ".${filename}_extracted"
+                ;;
+            *.gz)
+                run_nocd gunzip "${PORT_META_DIR}/${filename}"
+                run touch ".${filename}_extracted"
+                ;;
+            *.zip)
+                run_nocd bsdtar xf "${PORT_META_DIR}/${filename}" || run_nocd unzip -qo "${PORT_META_DIR}/${filename}"
+                run touch ".${filename}_extracted"
+                ;;
+            *)
+                echo "Note: no case for file $filename."
+                cp "${PORT_META_DIR}/${filename}" ./
+                ;;
+        esac
+    fi
+}
+
 # FIXME: Don't allow overriding fetch, support multiple protocols instead. See #20004
 func_defined fetch || fetch() {
     pre_fetch
 
     for f in "${files[@]}"; do
         read url filename auth_sum <<< $(echo "${f}")
-
-        tried_download_again=0
-
-        while true; do
-            do_download_file "$url" "${PORT_META_DIR}/${filename}"
-
-            calc_sum="$(sha256sum "${PORT_META_DIR}/${filename}" | cut -f1 -d' ')"
-
-            if [ "$calc_sum" = "$auth_sum" ]; then
-                break
-            fi
-
-            echo "SHA256 checksum of downloaded file '${filename}' does not match!"
-            echo "Expected: ${auth_sum}"
-            echo "Actual:   ${calc_sum}"
-            rm -f "${PORT_META_DIR}/${filename}"
-            echo "Removed erroneous download."
-            if [ "${tried_download_again}" -eq 1 ]; then
-                echo "Please run script again."
-                exit 1
-            fi
-            echo "Trying to download the file again."
-            tried_download_again=1
-        done
-
-        if [ ! -f "$workdir"/.${filename}_extracted ]; then
-            case "$filename" in
-                *.tar.gz|*.tar.bz|*.tar.bz2|*.tar.xz|*.tar.lz|*.tar.zst|.tbz*|*.txz|*.tgz)
-                    run_nocd tar -xf "${PORT_META_DIR}/${filename}"
-                    run touch .${filename}_extracted
-                    ;;
-                *.gz)
-                    run_nocd gunzip "${PORT_META_DIR}/${filename}"
-                    run touch .${filename}_extracted
-                    ;;
-                *.zip)
-                    run_nocd bsdtar xf "${PORT_META_DIR}/${filename}" || run_nocd unzip -qo "${PORT_META_DIR}/${filename}"
-                    run touch .${filename}_extracted
-                    ;;
-                *)
-                    echo "Note: no case for file $filename."
-                    cp "${PORT_META_DIR}/${filename}" ./
-                    ;;
-            esac
-        fi
+        fetch_simple "${url}" "${filename}" "${auth_sum}"
     done
 
     post_fetch
