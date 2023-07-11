@@ -204,19 +204,19 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
         };
 
         Filter none_filter { .type = PNG::FilterType::None };
-        TRY(none_filter.buffer.try_ensure_capacity(sizeof(Pixel) * bitmap.height()));
+        TRY(none_filter.buffer.try_ensure_capacity(sizeof(Pixel) * bitmap.width()));
 
         Filter sub_filter { .type = PNG::FilterType::Sub };
-        TRY(sub_filter.buffer.try_ensure_capacity(sizeof(Pixel) * bitmap.height()));
+        TRY(sub_filter.buffer.try_ensure_capacity(sizeof(Pixel) * bitmap.width()));
 
         Filter up_filter { .type = PNG::FilterType::Up };
-        TRY(up_filter.buffer.try_ensure_capacity(sizeof(Pixel) * bitmap.height()));
+        TRY(up_filter.buffer.try_ensure_capacity(sizeof(Pixel) * bitmap.width()));
 
         Filter average_filter { .type = PNG::FilterType::Average };
-        TRY(average_filter.buffer.try_ensure_capacity(sizeof(ARGB32) * bitmap.height()));
+        TRY(average_filter.buffer.try_ensure_capacity(sizeof(ARGB32) * bitmap.width()));
 
         Filter paeth_filter { .type = PNG::FilterType::Paeth };
-        TRY(paeth_filter.buffer.try_ensure_capacity(sizeof(ARGB32) * bitmap.height()));
+        TRY(paeth_filter.buffer.try_ensure_capacity(sizeof(ARGB32) * bitmap.width()));
 
         auto pixel_x_minus_1 = Pixel::gfx_to_png(dummy_scanline[0]);
         auto pixel_xy_minus_1 = Pixel::gfx_to_png(dummy_scanline[0]);
