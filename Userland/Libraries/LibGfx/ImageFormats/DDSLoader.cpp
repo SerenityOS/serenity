@@ -40,6 +40,7 @@ struct DDSLoadingContext {
 
     DDSHeader header;
     DDSHeaderDXT10 header10;
+    DXGIFormat format;
     RefPtr<Gfx::Bitmap> bitmap;
 
     void dump_debug();
@@ -372,22 +373,22 @@ static ErrorOr<void> decode_color_block(Stream& stream, DDSLoadingContext& conte
     return {};
 }
 
-static ErrorOr<void> decode_dxt(Stream& stream, DDSLoadingContext& context, DXGIFormat format, u64 width, u64 y)
+static ErrorOr<void> decode_dxt(Stream& stream, DDSLoadingContext& context, u64 width, u64 y)
 {
-    if (format == DXGI_FORMAT_BC1_UNORM) {
+    if (context.format == DXGI_FORMAT_BC1_UNORM) {
         for (size_t x = 0; x < width; x += 4) {
             TRY(decode_color_block(stream, context, true, x, y));
         }
     }
 
-    if (format == DXGI_FORMAT_BC2_UNORM) {
+    if (context.format == DXGI_FORMAT_BC2_UNORM) {
         for (size_t x = 0; x < width; x += 4) {
             TRY(decode_dx3_alpha_block(stream, context, x, y));
             TRY(decode_color_block(stream, context, false, x, y));
         }
     }
 
-    if (format == DXGI_FORMAT_BC3_UNORM) {
+    if (context.format == DXGI_FORMAT_BC3_UNORM) {
         for (size_t x = 0; x < width; x += 4) {
             TRY(decode_dx5_alpha_block(stream, context, x, y));
             TRY(decode_color_block(stream, context, false, x, y));
@@ -396,12 +397,12 @@ static ErrorOr<void> decode_dxt(Stream& stream, DDSLoadingContext& context, DXGI
 
     return {};
 }
-static ErrorOr<void> decode_bitmap(Stream& stream, DDSLoadingContext& context, DXGIFormat format, u64 width, u64 height)
+static ErrorOr<void> decode_bitmap(Stream& stream, DDSLoadingContext& context, u64 width, u64 height)
 {
     Vector<u32> dxt_formats = { DXGI_FORMAT_BC1_UNORM, DXGI_FORMAT_BC2_UNORM, DXGI_FORMAT_BC3_UNORM };
-    if (dxt_formats.contains_slow(format)) {
+    if (dxt_formats.contains_slow(context.format)) {
         for (u64 y = 0; y < height; y += 4) {
-            TRY(decode_dxt(stream, context, format, width, y));
+            TRY(decode_dxt(stream, context, width, y));
         }
     }
 
@@ -455,11 +456,11 @@ static ErrorOr<void> decode_dds(DDSLoadingContext& context)
         context.dump_debug();
     }
 
-    DXGIFormat format = get_format(context.header.pixel_format);
+    context.format = get_format(context.header.pixel_format);
 
     Vector<u32> supported_formats = { DXGI_FORMAT_BC1_UNORM, DXGI_FORMAT_BC2_UNORM, DXGI_FORMAT_BC3_UNORM };
-    if (!supported_formats.contains_slow(format)) {
-        dbgln_if(DDS_DEBUG, "Format of type {} is not supported at the moment", static_cast<u32>(format));
+    if (!supported_formats.contains_slow(context.format)) {
+        dbgln_if(DDS_DEBUG, "Format of type {} is not supported at the moment", to_underlying(context.format));
         context.state = DDSLoadingContext::State::Error;
         return Error::from_string_literal("Format type is not supported at the moment");
     }
@@ -471,7 +472,7 @@ static ErrorOr<void> decode_dds(DDSLoadingContext& context)
 
         context.bitmap = TRY(Bitmap::create(BitmapFormat::BGRA8888, { width, height }));
 
-        TRY(decode_bitmap(context.stream, context, format, width, height));
+        TRY(decode_bitmap(context.stream, context, width, height));
     }
 
     context.state = DDSLoadingContext::State::BitmapDecoded;
