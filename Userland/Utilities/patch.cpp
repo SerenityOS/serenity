@@ -65,25 +65,28 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto patch_content = TRY(input->read_until_eof());
 
-    // FIXME: Support multiple patches in the patch file.
     Diff::Parser parser(patch_content);
-    Diff::Patch patch;
-    patch.header = TRY(parser.parse_header(strip_count));
-    patch.hunks = TRY(parser.parse_hunks());
 
-    // FIXME: Support adding/removing a file, and asking for file to patch as fallback otherwise.
-    StringView to_patch;
-    if (FileSystem::is_regular_file(patch.header.old_file_path)) {
-        to_patch = patch.header.old_file_path;
-    } else if (is_adding_file(patch) || FileSystem::is_regular_file(patch.header.new_file_path)) {
-        to_patch = patch.header.new_file_path;
-    } else {
-        warnln("Unable to determine file to patch");
-        return 1;
+    while (!parser.is_eof()) {
+        Diff::Patch patch = TRY(parser.parse_patch(strip_count));
+
+        if (patch.header.format == Diff::Format::Unknown)
+            break;
+
+        // FIXME: Support adding/removing a file, and asking for file to patch as fallback otherwise.
+        StringView to_patch;
+        if (FileSystem::is_regular_file(patch.header.old_file_path)) {
+            to_patch = patch.header.old_file_path;
+        } else if (is_adding_file(patch) || FileSystem::is_regular_file(patch.header.new_file_path)) {
+            to_patch = patch.header.new_file_path;
+        } else {
+            warnln("Unable to determine file to patch");
+            return 1;
+        }
+
+        outln("patching file {}", to_patch);
+        TRY(do_patch(to_patch, patch));
     }
-
-    outln("patching file {}", to_patch);
-    TRY(do_patch(to_patch, patch));
 
     return 0;
 }

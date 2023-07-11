@@ -80,11 +80,13 @@ class Parser : public GenericLexer {
 public:
     using GenericLexer::GenericLexer;
 
+    ErrorOr<Patch> parse_patch(Optional<size_t> const& strip_count = {});
+
     ErrorOr<Vector<Hunk>> parse_hunks();
 
+private:
     ErrorOr<Header> parse_header(Optional<size_t> const& strip_count);
 
-private:
     ErrorOr<String> parse_file_line(Optional<size_t> const& strip_count);
     Optional<HunkLocation> consume_unified_location();
     bool consume_line_number(size_t& number);
