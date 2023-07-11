@@ -234,9 +234,11 @@ bool HTMLImageElement::complete() const
         return true;
 
     // - The img element's current request's state is completely available and its pending request is null.
+    if (m_current_request->state() == ImageRequest::State::CompletelyAvailable && !m_pending_request)
+        return true;
+
     // - The img element's current request's state is broken and its pending request is null.
-    // FIXME: This is ad-hoc and should be updated once we are loading images via the Fetch mechanism.
-    if (auto bitmap = current_image_bitmap())
+    if (m_current_request->state() == ImageRequest::State::Broken && !m_pending_request)
         return true;
 
     return false;
