@@ -19,7 +19,7 @@ void MailSettingsWidget::reset_default_values()
 {
     m_server_inputbox->set_text(""sv);
     m_port_combobox->set_text("993"sv);
-    m_tls_checkbox->set_checked(false);
+    m_tls_checkbox->set_checked(true);
     m_email_inputbox->set_text(""sv);
 }
 
@@ -66,7 +66,7 @@ ErrorOr<void> MailSettingsWidget::setup()
     };
 
     m_tls_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("tls_input");
-    m_tls_checkbox->set_checked(Config::read_bool("Mail"sv, "Connection"sv, "TLS"sv, false));
+    m_tls_checkbox->set_checked(Config::read_bool("Mail"sv, "Connection"sv, "TLS"sv, true));
     m_tls_checkbox->on_checked = [&](auto) {
         set_modified(true);
     };
