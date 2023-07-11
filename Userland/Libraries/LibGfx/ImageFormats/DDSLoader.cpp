@@ -410,7 +410,7 @@ static ErrorOr<void> decode_bitmap(Stream& stream, DDSLoadingContext& context, u
     return {};
 }
 
-static ErrorOr<void> decode_dds(DDSLoadingContext& context)
+static ErrorOr<void> decode_header(DDSLoadingContext& context)
 {
     // All valid DDS files are at least 128 bytes long.
     if (TRY(context.stream.size()) < 128) {
@@ -464,6 +464,13 @@ static ErrorOr<void> decode_dds(DDSLoadingContext& context)
         context.state = DDSLoadingContext::State::Error;
         return Error::from_string_literal("Format type is not supported at the moment");
     }
+
+    return {};
+}
+
+static ErrorOr<void> decode_dds(DDSLoadingContext& context)
+{
+    TRY(decode_header(context));
 
     // We support parsing mipmaps, but we only care about the largest one :^) (At least for now)
     if (size_t mipmap_level = 0; mipmap_level < max(context.header.mip_map_count, 1u)) {
