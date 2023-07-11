@@ -54,7 +54,9 @@ void MimeData::set_text(DeprecatedString const& text)
     set_data("text/plain", text.to_byte_buffer());
 }
 
-static AK::Array<StringView, 8> s_plaintext_suffixes = {
+// FIXME: Share this, TextEditor and HackStudio language detection somehow.
+static Array constexpr s_plaintext_suffixes = {
+    // Extensions
     ".c"sv,
     ".cpp"sv,
     ".gml"sv,
@@ -62,156 +64,105 @@ static AK::Array<StringView, 8> s_plaintext_suffixes = {
     ".hpp"sv,
     ".ini"sv,
     ".ipc"sv,
-    ".txt"sv
-};
+    ".txt"sv,
 
-static AK::Array<StringView, 3> s_plaintext_basenames = {
+    // Base names
     ".history"sv,
     ".shellrc"sv
     "CMakeLists.txt"sv,
 };
 
-// FIXME: Share this, TextEditor and HackStudio language detection somehow.
-static bool should_contain_plain_text_based_on_filename(StringView path)
-{
-    for (auto suffix : s_plaintext_suffixes) {
-        if (path.ends_with(suffix))
-            return true;
-    }
-    return s_plaintext_basenames.contains_slow(LexicalPath::basename(path));
-}
+static Array const s_registered_mime_type = {
+    MimeType { .name = "application/gzip"sv, .common_extensions = { ".gz"sv, ".gzip"sv }, .description = "GZIP compressed data"sv, .magic_bytes = Vector<u8> { 0x1F, 0x8B } },
+    MimeType { .name = "application/javascript"sv, .common_extensions = { ".js"sv }, .description = "JavaScript source"sv },
+    MimeType { .name = "application/json"sv, .common_extensions = { ".json"sv }, .description = "JSON data"sv },
+    MimeType { .name = "application/pdf"sv, .common_extensions = { ".pdf"sv }, .description = "PDF document"sv, .magic_bytes = Vector<u8> { 0x25, 'P', 'D', 'F', 0x2D } },
+    MimeType { .name = "application/rtf"sv, .common_extensions = { ".rtf"sv }, .description = "Rich text file"sv, .magic_bytes = Vector<u8> { 0x7B, 0x5C, 0x72, 0x74, 0x66, 0x31 } },
+    MimeType { .name = "application/tar"sv, .common_extensions = { ".tar"sv }, .description = "Tape archive"sv, .magic_bytes = Vector<u8> { 0x75, 0x73, 0x74, 0x61, 0x72 }, .offset = 0x101 },
+    MimeType { .name = "application/vnd.iccprofile"sv, .common_extensions = { ".icc"sv }, .description = "ICC color profile"sv, .magic_bytes = Vector<u8> { 'a', 'c', 's', 'p' }, .offset = 36 },
+    MimeType { .name = "application/vnd.sqlite3"sv, .common_extensions = { ".sqlite"sv }, .description = "SQLite database"sv, .magic_bytes = Vector<u8> { 'S', 'Q', 'L', 'i', 't', 'e', ' ', 'f', 'o', 'r', 'm', 'a', 't', ' ', '3', 0x00 } },
+    MimeType { .name = "application/wasm"sv, .common_extensions = { ".wasm"sv }, .description = "WebAssembly bytecode"sv, .magic_bytes = Vector<u8> { 0x00, 'a', 's', 'm' } },
+    MimeType { .name = "application/x-7z-compressed"sv, .common_extensions = { "7z"sv }, .description = "7-Zip archive"sv, .magic_bytes = Vector<u8> { 0x37, 0x7A, 0xBC, 0xAF, 0x27, 0x1C } },
+    MimeType { .name = "application/x-blender"sv, .common_extensions = { ".blend"sv, ".blended"sv }, .description = "Blender project file"sv, .magic_bytes = Vector<u8> { 'B', 'L', 'E', 'N', 'D', 'E', 'R' } },
+    MimeType { .name = "application/x-bzip2"sv, .common_extensions = { ".bz2"sv }, .description = "BZIP2 compressed data"sv, .magic_bytes = Vector<u8> { 'B', 'Z', 'h' } },
+    MimeType { .name = "application/x-sheets+json"sv, .common_extensions = { ".sheets"sv }, .description = "Serenity Spreadsheet document"sv },
+    MimeType { .name = "application/zip"sv, .common_extensions = { ".zip"sv }, .description = "ZIP archive"sv, .magic_bytes = Vector<u8> { 0x50, 0x4B } },
+
+    MimeType { .name = "audio/flac"sv, .common_extensions = { ".flac"sv }, .description = "FLAC audio"sv, .magic_bytes = Vector<u8> { 'f', 'L', 'a', 'C' } },
+    MimeType { .name = "audio/midi"sv, .common_extensions = { ".mid"sv }, .description = "MIDI notes"sv, .magic_bytes = Vector<u8> { 0x4D, 0x54, 0x68, 0x64 } },
+    MimeType { .name = "audio/mpeg"sv, .common_extensions = { ".mp3"sv }, .description = "MP3 audio"sv, .magic_bytes = Vector<u8> { 0xFF, 0xFB } },
+    MimeType { .name = "audio/qoa"sv, .common_extensions = { ".qoa"sv }, .description = "Quite OK Audio"sv, .magic_bytes = Vector<u8> { 'q', 'o', 'a', 'f' } },
+    MimeType { .name = "audio/wav"sv, .common_extensions = { ".wav"sv }, .description = "WAVE audio"sv, .magic_bytes = Vector<u8> { 'W', 'A', 'V', 'E' }, .offset = 8 },
+
+    MimeType { .name = "extra/elf"sv, .common_extensions = { ".elf"sv }, .description = "ELF"sv, .magic_bytes = Vector<u8> { 0x7F, 'E', 'L', 'F' } },
+    MimeType { .name = "extra/ext"sv, .description = "EXT filesystem"sv, .magic_bytes = Vector<u8> { 0x53, 0xEF }, .offset = 0x438 },
+    MimeType { .name = "extra/iso-9660"sv, .common_extensions = { ".iso"sv }, .description = "ISO 9660 CD/DVD image"sv, .magic_bytes = Vector<u8> { 0x43, 0x44, 0x30, 0x30, 0x31 }, .offset = 0x8001 },
+    MimeType { .name = "extra/iso-9660"sv, .common_extensions = { ".iso"sv }, .description = "ISO 9660 CD/DVD image"sv, .magic_bytes = Vector<u8> { 0x43, 0x44, 0x30, 0x30, 0x31 }, .offset = 0x8801 },
+    MimeType { .name = "extra/iso-9660"sv, .common_extensions = { ".iso"sv }, .description = "ISO 9660 CD/DVD image"sv, .magic_bytes = Vector<u8> { 0x43, 0x44, 0x30, 0x30, 0x31 }, .offset = 0x9001 },
+    MimeType { .name = "extra/isz"sv, .common_extensions = { ".isz"sv }, .description = "Compressed ISO image"sv, .magic_bytes = Vector<u8> { 'I', 's', 'Z', '!' } },
+    MimeType { .name = "extra/lua-bytecode"sv, .description = "Lua bytecode"sv, .magic_bytes = Vector<u8> { 0x1B, 'L', 'u', 'a' } },
+    MimeType { .name = "extra/nes-rom"sv, .common_extensions = { ".nes"sv }, .description = "Nintendo Entertainment System ROM"sv, .magic_bytes = Vector<u8> { 'N', 'E', 'S', 0x1A } },
+    MimeType { .name = "extra/qcow"sv, .common_extensions = { ".qcow"sv, ".qcow2"sv, ".qcow3"sv }, .description = "QCOW file"sv, .magic_bytes = Vector<u8> { 'Q', 'F', 'I' } },
+    MimeType { .name = "extra/raw-zlib"sv, .description = "Raw zlib stream"sv, .magic_bytes = Vector<u8> { 0x78, 0x01 } },
+    MimeType { .name = "extra/raw-zlib"sv, .description = "Raw zlib stream"sv, .magic_bytes = Vector<u8> { 0x78, 0x5E } },
+    MimeType { .name = "extra/raw-zlib"sv, .description = "Raw zlib stream"sv, .magic_bytes = Vector<u8> { 0x78, 0x9C } },
+    MimeType { .name = "extra/raw-zlib"sv, .description = "Raw zlib stream"sv, .magic_bytes = Vector<u8> { 0x78, 0xDA } },
+    MimeType { .name = "extra/raw-zlib"sv, .description = "Raw zlib stream"sv, .magic_bytes = Vector<u8> { 0x78, 0x20 } },
+    MimeType { .name = "extra/raw-zlib"sv, .description = "Raw zlib stream"sv, .magic_bytes = Vector<u8> { 0x78, 0x7D } },
+    MimeType { .name = "extra/raw-zlib"sv, .description = "Raw zlib stream"sv, .magic_bytes = Vector<u8> { 0x78, 0xBB } },
+    MimeType { .name = "extra/raw-zlib"sv, .description = "Raw zlib stream"sv, .magic_bytes = Vector<u8> { 0x78, 0xF9 } },
+    MimeType { .name = "extra/win-31x-compressed"sv, .description = "Windows 3.1X compressed file"sv, .magic_bytes = Vector<u8> { 'K', 'W', 'A', 'J' } },
+    MimeType { .name = "extra/win-95-compressed"sv, .description = "Windows 95 compressed file"sv, .magic_bytes = Vector<u8> { 'S', 'Z', 'D', 'D' } },
+
+    MimeType { .name = "image/bmp"sv, .common_extensions = { ".bmp"sv }, .description = "BMP image data"sv, .magic_bytes = Vector<u8> { 'B', 'M' } },
+    MimeType { .name = "image/gif"sv, .common_extensions = { ".gif"sv }, .description = "GIF image data"sv, .magic_bytes = Vector<u8> { 'G', 'I', 'F', '8', '7', 'a' } },
+    MimeType { .name = "image/gif"sv, .common_extensions = { ".gif"sv }, .description = "GIF image data"sv, .magic_bytes = Vector<u8> { 'G', 'I', 'F', '8', '9', 'a' } },
+    MimeType { .name = "image/jpeg"sv, .common_extensions = { ".jpg"sv, ".jpeg"sv }, .description = "JPEG image data"sv, .magic_bytes = Vector<u8> { 0xFF, 0xD8, 0xFF } },
+    MimeType { .name = "image/png"sv, .common_extensions = { ".png"sv }, .description = "PNG image data"sv, .magic_bytes = Vector<u8> { 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A } },
+    MimeType { .name = "image/svg+xml"sv, .common_extensions = { ".svg"sv }, .description = "Scalable Vector Graphics image"sv },
+    MimeType { .name = "image/tiff"sv, .common_extensions = { ".tiff"sv }, .description = "TIFF image data"sv, .magic_bytes = Vector<u8> { 'I', 'I', '*', 0x00 } },
+    MimeType { .name = "image/tiff"sv, .common_extensions = { ".tiff"sv }, .description = "TIFF image data"sv, .magic_bytes = Vector<u8> { 'M', 'M', 0x00, '*' } },
+    MimeType { .name = "image/tinyvg"sv, .common_extensions = { ".tvg"sv }, .description = "TinyVG vector graphics"sv, .magic_bytes = Vector<u8> { 0x72, 0x56 } },
+    MimeType { .name = "image/webp"sv, .common_extensions = { ".webp"sv }, .description = "WebP image data"sv, .magic_bytes = Vector<u8> { 'W', 'E', 'B', 'P' }, .offset = 8 },
+    MimeType { .name = "image/x-portable-bitmap"sv, .common_extensions = { ".pbm"sv }, .description = "PBM image data"sv, .magic_bytes = Vector<u8> { 0x50, 0x31, 0x0A } },
+    MimeType { .name = "image/x-portable-graymap"sv, .common_extensions = { ".pgm"sv }, .description = "PGM image data"sv, .magic_bytes = Vector<u8> { 0x50, 0x32, 0x0A } },
+    MimeType { .name = "image/x-portable-pixmap"sv, .common_extensions = { ".ppm"sv }, .description = "PPM image data"sv, .magic_bytes = Vector<u8> { 0x50, 0x33, 0x0A } },
+    MimeType { .name = "image/x-qoi"sv, .common_extensions = { ".qoi"sv }, .description = "QOI image data"sv, .magic_bytes = Vector<u8> { 'q', 'o', 'i', 'f' } },
+    MimeType { .name = "image/x-targa"sv, .common_extensions = { ".tga"sv }, .description = "Targa image data"sv },
+
+    MimeType { .name = "text/css"sv, .common_extensions = { ".css"sv }, .description = "Cascading Style Sheet"sv },
+    MimeType { .name = "text/csv"sv, .common_extensions = { ".csv"sv }, .description = "CSV text"sv },
+    MimeType { .name = "text/html"sv, .common_extensions = { ".html"sv, ".htm"sv, "/"sv }, .description = "HTML document"sv }, // FIXME: The "/" seems dubious
+    MimeType { .name = "text/markdown"sv, .common_extensions = { ".md"sv }, .description = "Markdown document"sv },
+    MimeType { .name = "text/plain"sv, .common_extensions = Vector(s_plaintext_suffixes.span()), .description = "plain text"sv },
+    MimeType { .name = "text/x-shellscript"sv, .common_extensions = { ".sh"sv }, .description = "POSIX shell script text executable"sv, .magic_bytes = Vector<u8> { '#', '!', '/', 'b', 'i', 'n', '/', 's', 'h', '\n' } },
+
+    MimeType { .name = "video/matroska"sv, .common_extensions = { ".mkv"sv }, .description = "Matroska container"sv, .magic_bytes = Vector<u8> { 0x1A, 0x45, 0xDF, 0xA3 } },
+    MimeType { .name = "video/webm"sv, .common_extensions = { ".webm"sv }, .description = "WebM video"sv },
+};
 
 StringView guess_mime_type_based_on_filename(StringView path)
 {
-    if (path.ends_with(".js"sv, CaseSensitivity::CaseInsensitive))
-        return "application/javascript"sv;
-    if (path.ends_with(".json"sv, CaseSensitivity::CaseInsensitive))
-        return "application/json"sv;
-    if (path.ends_with(".icc"sv, CaseSensitivity::CaseInsensitive) || path.ends_with(".icm"sv, CaseSensitivity::CaseInsensitive))
-        return "application/vnd.iccprofile"sv;
-    if (path.ends_with(".sheets"sv, CaseSensitivity::CaseInsensitive))
-        return "application/x-sheets+json"sv;
-    if (path.ends_with(".zip"sv, CaseSensitivity::CaseInsensitive))
-        return "application/zip"sv;
-    if (path.ends_with(".flac"sv, CaseSensitivity::CaseInsensitive))
-        return "audio/flac"sv;
-    if (path.ends_with(".mid"sv, CaseSensitivity::CaseInsensitive) || path.ends_with(".midi"sv, CaseSensitivity::CaseInsensitive))
-        return "audio/midi"sv;
-    if (path.ends_with(".mp3"sv, CaseSensitivity::CaseInsensitive))
-        return "audio/mpeg"sv;
-    if (path.ends_with(".qoa"sv, CaseSensitivity::CaseInsensitive))
-        return "audio/qoa"sv;
-    if (path.ends_with(".wav"sv, CaseSensitivity::CaseInsensitive))
-        return "audio/wav"sv;
-    if (path.ends_with(".bmp"sv, CaseSensitivity::CaseInsensitive))
-        return "image/bmp"sv;
-    if (path.ends_with(".gif"sv, CaseSensitivity::CaseInsensitive))
-        return "image/gif"sv;
-    if (path.ends_with(".jpg"sv, CaseSensitivity::CaseInsensitive) || path.ends_with(".jpeg"sv, CaseSensitivity::CaseInsensitive))
-        return "image/jpeg"sv;
-    if (path.ends_with(".png"sv, CaseSensitivity::CaseInsensitive))
-        return "image/png"sv;
-    if (path.ends_with(".svg"sv, CaseSensitivity::CaseInsensitive))
-        return "image/svg+xml"sv;
-    if (path.ends_with(".tvg"sv, CaseSensitivity::CaseInsensitive))
-        return "image/tinyvg"sv;
-    if (path.ends_with(".webp"sv, CaseSensitivity::CaseInsensitive))
-        return "image/webp"sv;
-    if (path.ends_with(".pbm"sv, CaseSensitivity::CaseInsensitive))
-        return "image/x-portable-bitmap"sv;
-    if (path.ends_with(".pgm"sv, CaseSensitivity::CaseInsensitive))
-        return "image/x-portable-graymap"sv;
-    if (path.ends_with(".ppm"sv, CaseSensitivity::CaseInsensitive))
-        return "image/x-portable-pixmap"sv;
-    if (path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive))
-        return "image/x-qoi"sv;
-    if (path.ends_with(".tga"sv, CaseSensitivity::CaseInsensitive))
-        return "image/x-targa"sv;
-    if (path.ends_with(".css"sv, CaseSensitivity::CaseInsensitive))
-        return "text/css"sv;
-    if (path.ends_with(".csv"sv, CaseSensitivity::CaseInsensitive))
-        return "text/csv"sv;
-    if (path.ends_with(".html"sv, CaseSensitivity::CaseInsensitive) || path.ends_with(".htm"sv, CaseSensitivity::CaseInsensitive))
-        return "text/html"sv;
-    if (path.ends_with("/"sv, CaseSensitivity::CaseInsensitive)) // FIXME: This seems dubious
-        return "text/html"sv;
-    if (path.ends_with(".md"sv, CaseSensitivity::CaseInsensitive))
-        return "text/markdown"sv;
-    if (should_contain_plain_text_based_on_filename(path))
-        return "text/plain"sv;
-    if (path.ends_with(".webm"sv, CaseSensitivity::CaseInsensitive))
-        return "video/webm"sv;
+    for (auto const& mime_type : s_registered_mime_type) {
+        for (auto const possible_extension : mime_type.common_extensions) {
+            if (path.ends_with(possible_extension))
+                return mime_type.name;
+        }
+    }
 
     return "application/octet-stream"sv;
 }
 
-#define ENUMERATE_HEADER_CONTENTS                                                                                                                  \
-    __ENUMERATE_MIME_TYPE_HEADER("application/gzip"sv, gzip, 0, 2, 0x1F, 0x8B)                                                                     \
-    __ENUMERATE_MIME_TYPE_HEADER("application/pdf"sv, pdf, 0, 5, 0x25, 'P', 'D', 'F', 0x2D)                                                        \
-    __ENUMERATE_MIME_TYPE_HEADER("application/rtf"sv, rtf, 0, 6, 0x7B, 0x5C, 0x72, 0x74, 0x66, 0x31)                                               \
-    __ENUMERATE_MIME_TYPE_HEADER("application/tar"sv, tar, 0x101, 5, 0x75, 0x73, 0x74, 0x61, 0x72)                                                 \
-    __ENUMERATE_MIME_TYPE_HEADER("application/vnd.iccprofile"sv, icc, 36, 4, 'a', 'c', 's', 'p')                                                   \
-    __ENUMERATE_MIME_TYPE_HEADER("application/wasm"sv, wasm, 0, 4, 0x00, 'a', 's', 'm')                                                            \
-    __ENUMERATE_MIME_TYPE_HEADER("application/x-7z-compressed"sv, sevenzip, 0, 6, 0x37, 0x7A, 0xBC, 0xAF, 0x27, 0x1C)                              \
-    __ENUMERATE_MIME_TYPE_HEADER("application/x-bzip2"sv, bzip2, 0, 3, 'B', 'Z', 'h')                                                              \
-    __ENUMERATE_MIME_TYPE_HEADER("application/zip"sv, zip, 0, 2, 0x50, 0x4B)                                                                       \
-    __ENUMERATE_MIME_TYPE_HEADER("audio/flac"sv, flac, 0, 4, 'f', 'L', 'a', 'C')                                                                   \
-    __ENUMERATE_MIME_TYPE_HEADER("audio/midi"sv, midi, 0, 4, 0x4D, 0x54, 0x68, 0x64)                                                               \
-    __ENUMERATE_MIME_TYPE_HEADER("audio/mpeg"sv, mp3, 0, 2, 0xFF, 0xFB)                                                                            \
-    __ENUMERATE_MIME_TYPE_HEADER("audio/qoa"sv, qoa, 0, 4, 'q', 'o', 'a', 'f')                                                                     \
-    __ENUMERATE_MIME_TYPE_HEADER("audio/wav"sv, wav, 8, 4, 'W', 'A', 'V', 'E')                                                                     \
-    __ENUMERATE_MIME_TYPE_HEADER("extra/blender"sv, blend, 0, 7, 'B', 'L', 'E', 'N', 'D', 'E', 'R')                                                \
-    __ENUMERATE_MIME_TYPE_HEADER("extra/elf"sv, elf, 0, 4, 0x7F, 'E', 'L', 'F')                                                                    \
-    __ENUMERATE_MIME_TYPE_HEADER("extra/ext"sv, ext, 0x438, 2, 0x53, 0xEF)                                                                         \
-    __ENUMERATE_MIME_TYPE_HEADER("extra/iso-9660"sv, iso9660_0, 0x8001, 5, 0x43, 0x44, 0x30, 0x30, 0x31)                                           \
-    __ENUMERATE_MIME_TYPE_HEADER("extra/iso-9660"sv, iso9660_1, 0x8801, 5, 0x43, 0x44, 0x30, 0x30, 0x31)                                           \
-    __ENUMERATE_MIME_TYPE_HEADER("extra/iso-9660"sv, iso9660_2, 0x9001, 5, 0x43, 0x44, 0x30, 0x30, 0x31)                                           \
-    __ENUMERATE_MIME_TYPE_HEADER("extra/isz"sv, compressed_iso, 0, 4, 'I', 's', 'Z', '!')                                                          \
-    __ENUMERATE_MIME_TYPE_HEADER("extra/lua-bytecode"sv, lua_bytecode, 0, 4, 0x1B, 'L', 'u', 'a')                                                  \
-    __ENUMERATE_MIME_TYPE_HEADER("extra/matroska"sv, mkv, 0, 4, 0x1A, 0x45, 0xDF, 0xA3)                                                            \
-    __ENUMERATE_MIME_TYPE_HEADER("extra/nes-rom"sv, nesrom, 0, 4, 'N', 'E', 'S', 0x1A)                                                             \
-    __ENUMERATE_MIME_TYPE_HEADER("extra/qcow"sv, qcow, 0, 3, 'Q', 'F', 'I')                                                                        \
-    __ENUMERATE_MIME_TYPE_HEADER("extra/raw-zlib"sv, zlib_0, 0, 2, 0x78, 0x01)                                                                     \
-    __ENUMERATE_MIME_TYPE_HEADER("extra/raw-zlib"sv, zlib_1, 0, 2, 0x78, 0x5E)                                                                     \
-    __ENUMERATE_MIME_TYPE_HEADER("extra/raw-zlib"sv, zlib_2, 0, 2, 0x78, 0x9C)                                                                     \
-    __ENUMERATE_MIME_TYPE_HEADER("extra/raw-zlib"sv, zlib_3, 0, 2, 0x78, 0xDA)                                                                     \
-    __ENUMERATE_MIME_TYPE_HEADER("extra/raw-zlib"sv, zlib_4, 0, 2, 0x78, 0x20)                                                                     \
-    __ENUMERATE_MIME_TYPE_HEADER("extra/raw-zlib"sv, zlib_5, 0, 2, 0x78, 0x7D)                                                                     \
-    __ENUMERATE_MIME_TYPE_HEADER("extra/raw-zlib"sv, zlib_6, 0, 2, 0x78, 0xBB)                                                                     \
-    __ENUMERATE_MIME_TYPE_HEADER("extra/raw-zlib"sv, zlib_7, 0, 2, 0x78, 0xF9)                                                                     \
-    __ENUMERATE_MIME_TYPE_HEADER("extra/sqlite"sv, sqlite, 0, 16, 'S', 'Q', 'L', 'i', 't', 'e', ' ', 'f', 'o', 'r', 'm', 'a', 't', ' ', '3', 0x00) \
-    __ENUMERATE_MIME_TYPE_HEADER("extra/win-31x-compressed"sv, win_31x_archive, 0, 4, 'K', 'W', 'A', 'J')                                          \
-    __ENUMERATE_MIME_TYPE_HEADER("extra/win-95-compressed"sv, win_95_archive, 0, 4, 'S', 'Z', 'D', 'D')                                            \
-    __ENUMERATE_MIME_TYPE_HEADER("image/bmp"sv, bmp, 0, 2, 'B', 'M')                                                                               \
-    __ENUMERATE_MIME_TYPE_HEADER("image/gif"sv, gif_87, 0, 6, 'G', 'I', 'F', '8', '7', 'a')                                                        \
-    __ENUMERATE_MIME_TYPE_HEADER("image/gif"sv, gif_89, 0, 6, 'G', 'I', 'F', '8', '9', 'a')                                                        \
-    __ENUMERATE_MIME_TYPE_HEADER("image/jpeg"sv, jpeg, 0, 4, 0xFF, 0xD8, 0xFF, 0xDB)                                                               \
-    __ENUMERATE_MIME_TYPE_HEADER("image/jpeg"sv, jpeg_huh, 0, 4, 0xFF, 0xD8, 0xFF, 0xEE)                                                           \
-    __ENUMERATE_MIME_TYPE_HEADER("image/jpeg"sv, jpeg_jfif, 0, 12, 0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 'J', 'F', 'I', 'F', 0x00, 0x01)             \
-    __ENUMERATE_MIME_TYPE_HEADER("image/png"sv, png, 0, 8, 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A)                                            \
-    __ENUMERATE_MIME_TYPE_HEADER("image/tiff"sv, tiff, 0, 4, 'I', 'I', '*', 0x00)                                                                  \
-    __ENUMERATE_MIME_TYPE_HEADER("image/tiff"sv, tiff_bigendian, 0, 4, 'M', 'M', 0x00, '*')                                                        \
-    __ENUMERATE_MIME_TYPE_HEADER("image/tinyvg"sv, tinyvg, 0, 2, 0x72, 0x56)                                                                       \
-    __ENUMERATE_MIME_TYPE_HEADER("image/webp"sv, webp, 8, 4, 'W', 'E', 'B', 'P')                                                                   \
-    __ENUMERATE_MIME_TYPE_HEADER("image/x-portable-bitmap"sv, pbm, 0, 3, 0x50, 0x31, 0x0A)                                                         \
-    __ENUMERATE_MIME_TYPE_HEADER("image/x-portable-graymap"sv, pgm, 0, 3, 0x50, 0x32, 0x0A)                                                        \
-    __ENUMERATE_MIME_TYPE_HEADER("image/x-portable-pixmap"sv, ppm, 0, 3, 0x50, 0x33, 0x0A)                                                         \
-    __ENUMERATE_MIME_TYPE_HEADER("image/x-qoi"sv, qoi, 0, 4, 'q', 'o', 'i', 'f')                                                                   \
-    __ENUMERATE_MIME_TYPE_HEADER("text/x-shellscript"sv, shell, 0, 10, '#', '!', '/', 'b', 'i', 'n', '/', 's', 'h', '\n')
-
-#define __ENUMERATE_MIME_TYPE_HEADER(mime_type, var_name, pattern_offset, pattern_size, ...) \
-    static const u8 var_name##_arr[pattern_size] = { __VA_ARGS__ };                          \
-    static constexpr ReadonlyBytes var_name = ReadonlyBytes { var_name##_arr, pattern_size };
-ENUMERATE_HEADER_CONTENTS
-#undef __ENUMERATE_MIME_TYPE_HEADER
-
 Optional<StringView> guess_mime_type_based_on_sniffed_bytes(ReadonlyBytes bytes)
 {
-#define __ENUMERATE_MIME_TYPE_HEADER(mime_type, var_name, pattern_offset, pattern_size, ...)                       \
-    if (static_cast<ssize_t>(bytes.size()) >= pattern_offset && bytes.slice(pattern_offset).starts_with(var_name)) \
-        return mime_type;
-    ENUMERATE_HEADER_CONTENTS;
-#undef __ENUMERATE_MIME_TYPE_HEADER
+    for (auto const& mime_type : s_registered_mime_type) {
+        if (mime_type.magic_bytes.has_value()
+            && bytes.size() >= mime_type.offset
+            && bytes.slice(mime_type.offset).starts_with(*mime_type.magic_bytes)) {
+            return mime_type.name;
+        }
+    }
+
     return {};
 }
 
