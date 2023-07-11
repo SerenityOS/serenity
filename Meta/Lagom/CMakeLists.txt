@@ -561,7 +561,7 @@ if (BUILD_LAGOM)
         endif()
 
         add_executable(pdf ../../Userland/Utilities/pdf.cpp)
-        target_link_libraries(pdf LibCore LibPDF LibMain)
+        target_link_libraries(pdf LibCore LibGfx LibPDF LibMain)
 
         add_executable(sql ../../Userland/Utilities/sql.cpp)
         target_link_libraries(sql LibCore LibFileSystem LibIPC LibLine LibMain LibSQL)
