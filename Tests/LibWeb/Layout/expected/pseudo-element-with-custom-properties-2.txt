@@ -9,12 +9,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         BreakNode <br>
         TextNode <#text>
       BlockContainer <div.a> at (8,29.828125) content-size 784x100 children: inline
-        line 0 width: 200, height: 100, bottom: 100, baseline: 16.890625
+        line 0 width: 200, height: 100, bottom: 100, baseline: 100
           frag 0 from BlockContainer start: 0, length: 0, rect: [8,29.828125 200x100]
         BlockContainer <(anonymous)> at (8,29.828125) content-size 200x100 inline-block [BFC] children: inline
-          line 0 width: 0, height: 21.828125, bottom: 21.828125, baseline: 16.890625
-            frag 0 from TextNode start: 0, length: 0, rect: [8,29.828125 0x21.828125]
-              ""
           TextNode <#text>
       BlockContainer <(anonymous)> at (8,129.828125) content-size 784x65.484375 children: inline
         line 0 width: 0, height: 21.828125, bottom: 21.828125, baseline: 16.890625
@@ -29,12 +26,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         BreakNode <br>
         TextNode <#text>
       BlockContainer <div.b> at (8,195.3125) content-size 784x100 children: inline
-        line 0 width: 200, height: 100, bottom: 100, baseline: 16.890625
+        line 0 width: 200, height: 100, bottom: 100, baseline: 100
           frag 0 from BlockContainer start: 0, length: 0, rect: [8,195.3125 200x100]
         BlockContainer <(anonymous)> at (8,195.3125) content-size 200x100 inline-block [BFC] children: inline
-          line 0 width: 0, height: 21.828125, bottom: 21.828125, baseline: 16.890625
-            frag 0 from TextNode start: 0, length: 0, rect: [8,195.3125 0x21.828125]
-              ""
           TextNode <#text>
       BlockContainer <(anonymous)> at (8,295.3125) content-size 784x65.484375 children: inline
         line 0 width: 0, height: 21.828125, bottom: 21.828125, baseline: 16.890625
@@ -49,12 +43,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         BreakNode <br>
         TextNode <#text>
       BlockContainer <div.c> at (8,360.796875) content-size 784x100 children: inline
-        line 0 width: 200, height: 100, bottom: 100, baseline: 16.890625
+        line 0 width: 200, height: 100, bottom: 100, baseline: 100
           frag 0 from BlockContainer start: 0, length: 0, rect: [8,360.796875 200x100]
         BlockContainer <(anonymous)> at (8,360.796875) content-size 200x100 inline-block [BFC] children: inline
-          line 0 width: 0, height: 21.828125, bottom: 21.828125, baseline: 16.890625
-            frag 0 from TextNode start: 0, length: 0, rect: [8,360.796875 0x21.828125]
-              ""
           TextNode <#text>
       BlockContainer <(anonymous)> at (8,460.796875) content-size 784x0 children: inline
         TextNode <#text>
