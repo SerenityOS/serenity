@@ -124,10 +124,9 @@ void TextNode::compute_text_for_rendering()
     m_text_for_rendering = builder.to_deprecated_string();
 }
 
-TextNode::ChunkIterator::ChunkIterator(StringView text, bool wrap_lines, bool respect_linebreaks, bool is_generated_empty_string)
+TextNode::ChunkIterator::ChunkIterator(StringView text, bool wrap_lines, bool respect_linebreaks)
     : m_wrap_lines(wrap_lines)
     , m_respect_linebreaks(respect_linebreaks)
-    , m_should_emit_one_empty_chunk(is_generated_empty_string)
     , m_utf8_view(text)
     , m_iterator(m_utf8_view.begin())
 {
@@ -135,17 +134,6 @@ TextNode::ChunkIterator::ChunkIterator(StringView text, bool wrap_lines, bool re
 
 Optional<TextNode::Chunk> TextNode::ChunkIterator::next()
 {
-    if (m_should_emit_one_empty_chunk) {
-        m_should_emit_one_empty_chunk = false;
-        return Chunk {
-            .view = {},
-            .start = 0,
-            .length = 0,
-            .has_breaking_newline = false,
-            .is_all_whitespace = false,
-        };
-    }
-
     if (m_iterator == m_utf8_view.end())
         return {};
 
