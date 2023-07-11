@@ -53,14 +53,13 @@ struct BorderEdgePaintingInfo {
     EdgeDirection direction;
 };
 
-static BorderEdgePaintingInfo make_right_cell_edge(PaintContext& context, CSSPixelRect const& right_cell_rect, DevicePixelRect const& cell_rect, BordersData const& borders_data)
+static BorderEdgePaintingInfo make_right_cell_edge(PaintContext& context, CSSPixelRect const& right_cell_rect, CSSPixelRect const& cell_rect, BordersData const& borders_data)
 {
-    auto device_right_cell_rect = context.rounded_device_rect(right_cell_rect);
     DevicePixelRect right_border_rect = {
-        device_right_cell_rect.x() - context.enclosing_device_pixels(borders_data.right.width / 2),
-        cell_rect.y() - context.enclosing_device_pixels(borders_data.top.width / 2),
-        context.enclosing_device_pixels(borders_data.right.width),
-        max(cell_rect.height(), device_right_cell_rect.height()) + context.enclosing_device_pixels(borders_data.top.width / 2) + context.enclosing_device_pixels(borders_data.bottom.width / 2),
+        context.rounded_device_pixels(right_cell_rect.x() - round(borders_data.right.width / 2)),
+        context.rounded_device_pixels(cell_rect.y() - round(borders_data.top.width / 2)),
+        context.rounded_device_pixels(borders_data.right.width),
+        context.rounded_device_pixels(max(cell_rect.height(), right_cell_rect.height()) + round(borders_data.top.width / 2) + round(borders_data.bottom.width / 2)),
     };
     return BorderEdgePaintingInfo {
         .rect = right_border_rect,
@@ -69,14 +68,13 @@ static BorderEdgePaintingInfo make_right_cell_edge(PaintContext& context, CSSPix
     };
 }
 
-static BorderEdgePaintingInfo make_down_cell_edge(PaintContext& context, CSSPixelRect const& down_cell_rect, DevicePixelRect const& cell_rect, BordersData const& borders_data)
+static BorderEdgePaintingInfo make_down_cell_edge(PaintContext& context, CSSPixelRect const& down_cell_rect, CSSPixelRect const& cell_rect, BordersData const& borders_data)
 {
-    auto device_down_cell_rect = context.rounded_device_rect(down_cell_rect);
     DevicePixelRect down_border_rect = {
-        cell_rect.x() - context.enclosing_device_pixels(borders_data.left.width / 2),
-        device_down_cell_rect.y() - context.enclosing_device_pixels(borders_data.bottom.width / 2),
-        max(cell_rect.width(), device_down_cell_rect.width()) + context.enclosing_device_pixels(borders_data.left.width / 2) + context.enclosing_device_pixels(borders_data.right.width / 2),
-        context.enclosing_device_pixels(borders_data.bottom.width),
+        context.rounded_device_pixels(cell_rect.x() - round(borders_data.left.width / 2)),
+        context.rounded_device_pixels(down_cell_rect.y() - round(borders_data.bottom.width / 2)),
+        context.rounded_device_pixels(max(cell_rect.width(), down_cell_rect.width()) + round(borders_data.left.width / 2) + round(borders_data.right.width / 2)),
+        context.rounded_device_pixels(borders_data.bottom.width),
     };
     return BorderEdgePaintingInfo {
         .rect = down_border_rect,
@@ -85,13 +83,13 @@ static BorderEdgePaintingInfo make_down_cell_edge(PaintContext& context, CSSPixe
     };
 }
 
-static BorderEdgePaintingInfo make_first_row_top_cell_edge(PaintContext& context, DevicePixelRect const& cell_rect, BordersData const& borders_data)
+static BorderEdgePaintingInfo make_first_row_top_cell_edge(PaintContext& context, CSSPixelRect const& cell_rect, BordersData const& borders_data)
 {
     DevicePixelRect top_border_rect = {
-        cell_rect.x() - context.enclosing_device_pixels(borders_data.left.width / 2),
-        cell_rect.y() - context.enclosing_device_pixels(borders_data.top.width / 2),
-        cell_rect.width(),
-        context.enclosing_device_pixels(borders_data.top.width),
+        context.rounded_device_pixels(cell_rect.x() - round(borders_data.left.width / 2)),
+        context.rounded_device_pixels(cell_rect.y() - round(borders_data.top.width / 2)),
+        context.rounded_device_pixels(cell_rect.width()),
+        context.rounded_device_pixels(borders_data.top.width),
     };
     return BorderEdgePaintingInfo {
         .rect = top_border_rect,
@@ -100,13 +98,13 @@ static BorderEdgePaintingInfo make_first_row_top_cell_edge(PaintContext& context
     };
 }
 
-static BorderEdgePaintingInfo make_last_row_bottom_cell_edge(PaintContext& context, DevicePixelRect const& cell_rect, BordersData const& borders_data)
+static BorderEdgePaintingInfo make_last_row_bottom_cell_edge(PaintContext& context, CSSPixelRect const& cell_rect, BordersData const& borders_data)
 {
     DevicePixelRect bottom_border_rect = {
-        cell_rect.x() - context.enclosing_device_pixels(borders_data.left.width / 2),
-        cell_rect.y() + cell_rect.height() - context.enclosing_device_pixels(borders_data.bottom.width / 2),
-        cell_rect.width() + context.enclosing_device_pixels(borders_data.left.width / 2) + context.enclosing_device_pixels(borders_data.right.width / 2),
-        context.enclosing_device_pixels(borders_data.bottom.width),
+        context.rounded_device_pixels(cell_rect.x() - round(borders_data.left.width / 2)),
+        context.rounded_device_pixels(cell_rect.y() + cell_rect.height() - round(borders_data.bottom.width / 2)),
+        context.rounded_device_pixels(cell_rect.width() + round(borders_data.left.width / 2) + round(borders_data.right.width / 2)),
+        context.rounded_device_pixels(borders_data.bottom.width),
     };
     return BorderEdgePaintingInfo {
         .rect = bottom_border_rect,
@@ -115,13 +113,13 @@ static BorderEdgePaintingInfo make_last_row_bottom_cell_edge(PaintContext& conte
     };
 }
 
-static BorderEdgePaintingInfo make_first_column_left_cell_edge(PaintContext& context, DevicePixelRect const& cell_rect, BordersData const& borders_data)
+static BorderEdgePaintingInfo make_first_column_left_cell_edge(PaintContext& context, CSSPixelRect const& cell_rect, BordersData const& borders_data)
 {
     DevicePixelRect left_border_rect = {
-        cell_rect.x() - context.enclosing_device_pixels(borders_data.left.width / 2),
-        cell_rect.y() - context.enclosing_device_pixels(borders_data.top.width / 2),
-        context.enclosing_device_pixels(borders_data.left.width),
-        cell_rect.height(),
+        context.rounded_device_pixels(cell_rect.x() - round(borders_data.left.width / 2)),
+        context.rounded_device_pixels(cell_rect.y() - round(borders_data.top.width / 2)),
+        context.rounded_device_pixels(borders_data.left.width),
+        context.rounded_device_pixels(cell_rect.height() + round(borders_data.top.width / 2)),
     };
     return BorderEdgePaintingInfo {
         .rect = left_border_rect,
@@ -130,13 +128,13 @@ static BorderEdgePaintingInfo make_first_column_left_cell_edge(PaintContext& con
     };
 }
 
-static BorderEdgePaintingInfo make_last_column_right_cell_edge(PaintContext& context, DevicePixelRect const& cell_rect, BordersData const& borders_data)
+static BorderEdgePaintingInfo make_last_column_right_cell_edge(PaintContext& context, CSSPixelRect const& cell_rect, BordersData const& borders_data)
 {
     DevicePixelRect right_border_rect = {
-        cell_rect.x() + cell_rect.width() - context.enclosing_device_pixels(borders_data.right.width / 2),
-        cell_rect.y() - context.enclosing_device_pixels(borders_data.top.width / 2),
-        context.enclosing_device_pixels(borders_data.right.width),
-        cell_rect.height() + context.enclosing_device_pixels(borders_data.top.width / 2) + context.enclosing_device_pixels(borders_data.bottom.width / 2),
+        context.rounded_device_pixels(cell_rect.x() + cell_rect.width() - round(borders_data.right.width / 2)),
+        context.rounded_device_pixels(cell_rect.y() - round(borders_data.top.width / 2)),
+        context.rounded_device_pixels(borders_data.right.width),
+        context.rounded_device_pixels(cell_rect.height() + round(borders_data.top.width / 2) + round(borders_data.bottom.width / 2)),
     };
     return BorderEdgePaintingInfo {
         .rect = right_border_rect,
@@ -202,7 +200,7 @@ void paint_table_collapsed_borders(PaintContext& context, Layout::Node const& bo
             .bottom = cell_box->box_model().border.bottom == 0 ? CSS::BorderData() : cell_box->computed_values().border_bottom(),
             .left = cell_box->box_model().border.left == 0 ? CSS::BorderData() : cell_box->computed_values().border_left(),
         };
-        auto cell_rect = context.rounded_device_rect(cell_box->absolute_border_box_rect());
+        auto cell_rect = cell_box->absolute_border_box_rect();
         auto maybe_right_cell = cell_coordinates_to_box.get(CellCoordinates {
             .row_index = cell_box->table_cell_coordinates()->row_index,
             .column_index = cell_box->table_cell_coordinates()->column_index + cell_box->table_cell_coordinates()->column_span });
