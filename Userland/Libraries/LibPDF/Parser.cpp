@@ -17,7 +17,7 @@ namespace PDF {
 PDFErrorOr<Vector<Operator>> Parser::parse_operators(Document* document, ReadonlyBytes bytes)
 {
     Parser parser(document, bytes);
-    parser.m_disable_encryption = true;
+    parser.m_enable_encryption = false;
     return parser.parse_operators();
 }
 
@@ -260,7 +260,7 @@ NonnullRefPtr<StringObject> Parser::parse_string()
 
     auto string_object = make_object<StringObject>(string, is_binary_string);
 
-    if (m_document->security_handler() && !m_disable_encryption)
+    if (m_document->security_handler() && m_enable_encryption)
         m_document->security_handler()->decrypt(string_object, m_current_reference_stack.last());
 
     auto unencrypted_string = string_object->string();
@@ -471,7 +471,7 @@ PDFErrorOr<NonnullRefPtr<StreamObject>> Parser::parse_stream(NonnullRefPtr<DictO
 
     auto stream_object = make_object<StreamObject>(dict, MUST(ByteBuffer::copy(bytes)));
 
-    if (m_document->security_handler() && !m_disable_encryption)
+    if (m_document->security_handler() && m_enable_encryption)
         m_document->security_handler()->decrypt(stream_object, m_current_reference_stack.last());
 
     if (dict->contains(CommonNames::Filter)) {
