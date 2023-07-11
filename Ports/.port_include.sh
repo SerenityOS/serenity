@@ -303,11 +303,6 @@ do_download_file() {
 
     echo "Downloading URL: ${url}"
 
-    # FIXME: Serenity's curl port does not support https, even with openssl installed.
-    if which curl >/dev/null 2>&1 && ! curl https://example.com -so /dev/null; then
-        url=$(echo "$url" | sed "s/^https:\/\//http:\/\//")
-    fi
-
     if which curl; then
         run_nocd curl ${curlopts:-} "$url" -L -o "$filename"
     else
