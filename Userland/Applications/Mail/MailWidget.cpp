@@ -271,7 +271,7 @@ void MailWidget::selected_mailbox()
         .sequence_set = { { 1, (int)response.data().exists() } },
         .data_items = {
             IMAP::FetchCommand::DataItem {
-                .type = IMAP::FetchCommand::DataItemType::BodySection,
+                .type = IMAP::FetchCommand::DataItemType::PeekBody,
                 .section = IMAP::FetchCommand::DataItem::Section {
                     .type = IMAP::FetchCommand::DataItem::SectionType::HeaderFields,
                     .headers = { { "Subject", "From" } },
