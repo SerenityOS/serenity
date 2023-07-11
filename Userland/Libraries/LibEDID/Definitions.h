@@ -154,9 +154,7 @@ struct [[gnu::packed]] ExtensionBlock {
     };
     u8 checksum;
 };
+static_assert(AssertSize<ExtensionBlock, 128>());
 
 }
-
-static_assert(sizeof(Definitions::ExtensionBlock) == 128);
-
 }
