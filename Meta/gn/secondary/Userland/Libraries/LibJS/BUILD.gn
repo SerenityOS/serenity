@@ -41,6 +41,7 @@ shared_library("LibJS") {
     "Contrib/Test262/\$262Object.cpp",
     "CyclicModule.cpp",
     "Heap/BlockAllocator.cpp",
+    "Heap/Cell.cpp",
     "Heap/CellAllocator.cpp",
     "Heap/Handle.cpp",
     "Heap/Heap.cpp",
