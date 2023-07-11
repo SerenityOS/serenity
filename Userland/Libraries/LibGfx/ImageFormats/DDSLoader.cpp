@@ -31,6 +31,7 @@ struct DDSLoadingContext {
     enum State {
         NotDecoded = 0,
         Error,
+        HeaderDecoded,
         BitmapDecoded,
     };
 
@@ -465,12 +466,14 @@ static ErrorOr<void> decode_header(DDSLoadingContext& context)
         return Error::from_string_literal("Format type is not supported at the moment");
     }
 
+    context.state = DDSLoadingContext::HeaderDecoded;
+
     return {};
 }
 
 static ErrorOr<void> decode_dds(DDSLoadingContext& context)
 {
-    TRY(decode_header(context));
+    VERIFY(context.state == DDSLoadingContext::HeaderDecoded);
 
     // We support parsing mipmaps, but we only care about the largest one :^) (At least for now)
     if (size_t mipmap_level = 0; mipmap_level < max(context.header.mip_map_count, 1u)) {
@@ -631,18 +634,7 @@ DDSImageDecoderPlugin::~DDSImageDecoderPlugin() = default;
 
 IntSize DDSImageDecoderPlugin::size()
 {
-    if (m_context->state == DDSLoadingContext::State::Error)
-        return {};
-
-    if (m_context->state == DDSLoadingContext::State::BitmapDecoded)
-        return { m_context->header.width, m_context->header.height };
-
-    return {};
-}
-
-ErrorOr<void> DDSImageDecoderPlugin::initialize()
-{
-    return {};
+    return { m_context->header.width, m_context->header.height };
 }
 
 bool DDSImageDecoderPlugin::sniff(ReadonlyBytes data)
@@ -658,7 +650,9 @@ bool DDSImageDecoderPlugin::sniff(ReadonlyBytes data)
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> DDSImageDecoderPlugin::create(ReadonlyBytes data)
 {
     FixedMemoryStream stream { data };
-    return adopt_nonnull_own_or_enomem(new (nothrow) DDSImageDecoderPlugin(move(stream)));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) DDSImageDecoderPlugin(move(stream))));
+    TRY(decode_header(*plugin->m_context));
+    return plugin;
 }
 
 bool DDSImageDecoderPlugin::is_animated()
