@@ -270,14 +270,14 @@ ErrorOr<Bytes> AllocatingMemoryStream::next_write_range()
 
 void AllocatingMemoryStream::cleanup_unused_chunks()
 {
-    // FIXME: Move these all at once.
-    while (m_read_offset >= CHUNK_SIZE) {
-        VERIFY(m_write_offset >= m_read_offset);
+    VERIFY(m_write_offset >= m_read_offset);
 
-        auto buffer = m_chunks.take_first();
-        m_read_offset -= CHUNK_SIZE;
-        m_write_offset -= CHUNK_SIZE;
-    }
+    auto const chunks_to_remove = m_read_offset / CHUNK_SIZE;
+
+    m_chunks.remove(0, chunks_to_remove);
+
+    m_read_offset -= CHUNK_SIZE * chunks_to_remove;
+    m_write_offset -= CHUNK_SIZE * chunks_to_remove;
 }
 
 }
