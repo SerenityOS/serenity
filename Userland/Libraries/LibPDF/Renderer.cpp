@@ -181,7 +181,12 @@ RENDERER_HANDLER(set_dash_pattern)
 }
 
 RENDERER_TODO(set_color_rendering_intent)
-RENDERER_TODO(set_flatness_tolerance)
+
+RENDERER_HANDLER(set_flatness_tolerance)
+{
+    state().flatness_tolerance = args[0].to_float();
+    return {};
+}
 
 RENDERER_HANDLER(set_graphics_state_from_dict)
 {
