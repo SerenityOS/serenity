@@ -22,6 +22,9 @@ ErrorOr<DeprecatedString> resolve_xml_resource(XML::SystemID const&, Optional<XM
         return Error::from_string_literal("Refusing to load disallowed external entity");
 
     auto public_literal = public_id->public_literal;
+    if (public_literal.is_one_of("-//W3C//DTD SVG 1.1//EN")) {
+        return "";
+    }
     if (!public_literal.is_one_of(
             "-//W3C//DTD XHTML 1.0 Transitional//EN",
             "-//W3C//DTD XHTML 1.1//EN",
