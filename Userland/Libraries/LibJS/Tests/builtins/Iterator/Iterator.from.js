@@ -60,6 +60,22 @@ describe("normal behavior", () => {
         expect(result.done).toBeTrue();
     });
 
+    test("does not coerce strings to objects", () => {
+        const stringIterator = String.prototype[Symbol.iterator];
+        let observedType = null;
+
+        Object.defineProperty(String.prototype, Symbol.iterator, {
+            get() {
+                "use strict";
+                observedType = typeof this;
+                return stringIterator;
+            },
+        });
+
+        Iterator.from("ab");
+        expect(observedType).toBe("string");
+    });
+
     test("create Iterator from generator", () => {
         function* generator() {
             yield 1;

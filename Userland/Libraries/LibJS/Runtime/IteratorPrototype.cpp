@@ -359,8 +359,8 @@ private:
         if (mapped.is_error())
             return iterator.close_result(mapped.release_error());
 
-        // vi. Let innerIterator be Completion(GetIteratorFlattenable(mapped)).
-        auto inner_iterator = get_iterator_flattenable(vm, mapped.release_value());
+        // vi. Let innerIterator be Completion(GetIteratorFlattenable(mapped, reject-strings)).
+        auto inner_iterator = get_iterator_flattenable(vm, mapped.release_value(), StringHandling::RejectStrings);
 
         // vii. IfAbruptCloseIterator(innerIterator, iterated).
         if (inner_iterator.is_error())
