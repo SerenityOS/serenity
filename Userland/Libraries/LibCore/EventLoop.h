@@ -92,6 +92,7 @@ public:
     };
     static void notify_forked(ForkEvent);
 
+    static bool is_running();
     static EventLoop& current();
 
     EventLoopImplementation& impl() { return *m_impl; }

@@ -17,12 +17,17 @@
 namespace Core {
 
 namespace {
-Vector<EventLoop&>& event_loop_stack()
+OwnPtr<Vector<EventLoop&>>& event_loop_stack_uninitialized()
 {
     thread_local OwnPtr<Vector<EventLoop&>> s_event_loop_stack = nullptr;
-    if (s_event_loop_stack == nullptr)
-        s_event_loop_stack = make<Vector<EventLoop&>>();
-    return *s_event_loop_stack;
+    return s_event_loop_stack;
+}
+Vector<EventLoop&>& event_loop_stack()
+{
+    auto& the_stack = event_loop_stack_uninitialized();
+    if (the_stack == nullptr)
+        the_stack = make<Vector<EventLoop&>>();
+    return *the_stack;
 }
 }
 
@@ -39,6 +44,12 @@ EventLoop::~EventLoop()
     if (!event_loop_stack().is_empty() && &event_loop_stack().last() == this) {
         event_loop_stack().take_last();
     }
+}
+
+bool EventLoop::is_running()
+{
+    auto& stack = event_loop_stack_uninitialized();
+    return stack != nullptr && !stack->is_empty();
 }
 
 EventLoop& EventLoop::current()
