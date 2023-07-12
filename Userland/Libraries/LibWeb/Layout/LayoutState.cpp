@@ -103,6 +103,8 @@ void LayoutState::commit()
 
     HashTable<Layout::TextNode*> text_nodes;
 
+    Vector<Painting::PaintableWithLines&> paintables_with_lines;
+
     for (auto& it : used_values_per_layout_node) {
         auto& used_values = *it.value;
         auto& node = const_cast<NodeWithStyleAndBoxModelMetrics&>(used_values.node());
@@ -130,14 +132,23 @@ void LayoutState::commit()
             }
 
             if (is<Layout::BlockContainer>(box)) {
-                for (auto& line_box : used_values.line_boxes) {
-                    for (auto& fragment : line_box.fragments()) {
-                        if (fragment.layout_node().is_text_node())
-                            text_nodes.set(static_cast<Layout::TextNode*>(const_cast<Layout::Node*>(&fragment.layout_node())));
-                    }
-                }
-                static_cast<Painting::PaintableWithLines&>(paintable_box).set_line_boxes(move(used_values.line_boxes));
+                auto& paintable_with_lines = static_cast<Painting::PaintableWithLines&>(paintable_box);
+                paintable_with_lines.set_line_boxes(move(used_values.line_boxes));
+                paintables_with_lines.append(paintable_with_lines);
             }
+        }
+    }
+
+    // Measure absolute rect of each line box. Also collect all text nodes.
+    for (auto& paintable_with_lines : paintables_with_lines) {
+        for (auto& line_box : paintable_with_lines.line_boxes()) {
+            CSSPixelRect line_box_absolute_rect;
+            for (auto const& fragment : line_box.fragments()) {
+                line_box_absolute_rect = line_box_absolute_rect.united(fragment.absolute_rect());
+                if (fragment.layout_node().is_text_node())
+                    text_nodes.set(static_cast<Layout::TextNode*>(const_cast<Layout::Node*>(&fragment.layout_node())));
+            }
+            const_cast<LineBox&>(line_box).set_absolute_rect(line_box_absolute_rect);
         }
     }
 
