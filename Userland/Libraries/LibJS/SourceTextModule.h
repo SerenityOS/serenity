@@ -26,7 +26,7 @@ public:
     virtual ThrowCompletionOr<ResolvedBinding> resolve_export(VM& vm, DeprecatedFlyString const& export_name, Vector<ResolvedBinding> resolve_set = {}) override;
 
     Object* import_meta() { return m_import_meta; }
-    void set_import_meta(Badge<MetaProperty>, Object* import_meta) { m_import_meta = import_meta; }
+    void set_import_meta(Badge<VM>, Object* import_meta) { m_import_meta = import_meta; }
 
 protected:
     virtual ThrowCompletionOr<void> initialize_environment(VM& vm) override;

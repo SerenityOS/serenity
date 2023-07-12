@@ -682,6 +682,52 @@ Value VM::get_new_target()
     return verify_cast<FunctionEnvironment>(*env).new_target();
 }
 
+// 13.3.12.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-meta-properties-runtime-semantics-evaluation
+// ImportMeta branch only
+Object* VM::get_import_meta()
+{
+    // 1. Let module be GetActiveScriptOrModule().
+    auto script_or_module = get_active_script_or_module();
+
+    // 2. Assert: module is a Source Text Module Record.
+    auto& module = verify_cast<SourceTextModule>(*script_or_module.get<NonnullGCPtr<Module>>());
+
+    // 3. Let importMeta be module.[[ImportMeta]].
+    auto* import_meta = module.import_meta();
+
+    // 4. If importMeta is empty, then
+    if (import_meta == nullptr) {
+        // a. Set importMeta to OrdinaryObjectCreate(null).
+        import_meta = Object::create(*current_realm(), nullptr);
+
+        // b. Let importMetaValues be HostGetImportMetaProperties(module).
+        auto import_meta_values = host_get_import_meta_properties(module);
+
+        // c. For each Record { [[Key]], [[Value]] } p of importMetaValues, do
+        for (auto& entry : import_meta_values) {
+            // i. Perform ! CreateDataPropertyOrThrow(importMeta, p.[[Key]], p.[[Value]]).
+            MUST(import_meta->create_data_property_or_throw(entry.key, entry.value));
+        }
+
+        // d. Perform HostFinalizeImportMeta(importMeta, module).
+        host_finalize_import_meta(import_meta, module);
+
+        // e. Set module.[[ImportMeta]] to importMeta.
+        module.set_import_meta({}, import_meta);
+
+        // f. Return importMeta.
+        return import_meta;
+    }
+    // 5. Else,
+    else {
+        // a. Assert: Type(importMeta) is Object.
+        // Note: This is always true by the type.
+
+        // b. Return importMeta.
+        return import_meta;
+    }
+}
+
 // 9.4.5 GetGlobalObject ( ), https://tc39.es/ecma262/#sec-getglobalobject
 Object& VM::get_global_object()
 {
