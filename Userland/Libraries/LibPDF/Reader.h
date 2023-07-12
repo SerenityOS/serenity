@@ -63,7 +63,7 @@ public:
     template<typename T = char>
     PDFErrorOr<T> try_read()
     {
-        if (sizeof(T) + m_offset >= m_bytes.size()) {
+        if (sizeof(T) + m_offset > m_bytes.size()) {
             auto message = DeprecatedString::formatted("Cannot read {} bytes at offset {} of ReadonlyBytes of size {}", sizeof(T), m_offset, m_bytes.size());
             return Error { Error::Type::Parse, message };
         }
