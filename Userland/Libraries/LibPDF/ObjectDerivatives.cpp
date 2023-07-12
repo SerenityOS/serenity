@@ -85,7 +85,7 @@ DeprecatedString ArrayObject::to_deprecated_string(int indent) const
 
     for (auto& element : elements()) {
         if (!first)
-            builder.append(",\n"sv);
+            builder.append("\n"sv);
         first = false;
         append_indent(builder, indent + 1);
         builder.appendff("{}", element.to_deprecated_string(indent));
@@ -100,12 +100,13 @@ DeprecatedString ArrayObject::to_deprecated_string(int indent) const
 DeprecatedString DictObject::to_deprecated_string(int indent) const
 {
     StringBuilder builder;
+    append_indent(builder, indent);
     builder.append("<<\n"sv);
     bool first = true;
 
     for (auto& [key, value] : map()) {
         if (!first)
-            builder.append(",\n"sv);
+            builder.append("\n"sv);
         first = false;
         append_indent(builder, indent + 1);
         builder.appendff("/{} ", key);
@@ -121,25 +122,42 @@ DeprecatedString DictObject::to_deprecated_string(int indent) const
 DeprecatedString StreamObject::to_deprecated_string(int indent) const
 {
     StringBuilder builder;
+    builder.appendff("{}\n", dict()->to_deprecated_string(indent));
     builder.append("stream\n"sv);
-    append_indent(builder, indent);
-    builder.appendff("{}\n", dict()->to_deprecated_string(indent + 1));
-    append_indent(builder, indent + 1);
 
-    auto string = encode_hex(bytes());
-    while (true) {
-        if (string.length() > 60) {
-            builder.appendff("{}\n", string.substring(0, 60));
-            append_indent(builder, indent);
-            string = string.substring(60);
-            continue;
-        }
-
-        builder.appendff("{}\n", string);
-        break;
+    size_t ascii_count = 0;
+    for (auto c : bytes()) {
+        if (c < 128)
+            ++ascii_count;
     }
 
-    append_indent(builder, indent);
+    size_t percentage_ascii = 100;
+    if (bytes().size())
+        percentage_ascii = ascii_count * 100 / bytes().size();
+    bool is_mostly_text = percentage_ascii > 95;
+
+    if (is_mostly_text) {
+        for (auto c : bytes()) {
+            if (c < 128)
+                builder.append(c);
+            else
+                builder.appendff("\\{:03o}", c);
+        }
+    } else {
+        auto string = encode_hex(bytes());
+        while (true) {
+            if (string.length() > 60) {
+                builder.appendff("{}\n", string.substring(0, 60));
+                append_indent(builder, indent);
+                string = string.substring(60);
+                continue;
+            }
+
+            builder.appendff("{}\n", string);
+            break;
+        }
+    }
+
     builder.append("endstream"sv);
     return builder.to_deprecated_string();
 }
