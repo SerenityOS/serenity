@@ -130,8 +130,31 @@ public:
 
     bool is_out_of_view(PaintContext&) const;
 
-    void set_override_borders_data(BordersData const& override_borders_data) { m_override_borders_data = override_borders_data; }
-    Optional<BordersData> const& override_borders_data() const { return m_override_borders_data; }
+    enum class ConflictingElementKind {
+        Cell,
+        Row,
+        RowGroup,
+        Column,
+        ColumnGroup,
+        Table,
+    };
+
+    struct BorderDataWithElementKind {
+        CSS::BorderData border_data;
+        ConflictingElementKind element_kind;
+    };
+
+    struct BordersDataWithElementKind {
+        BorderDataWithElementKind top;
+        BorderDataWithElementKind right;
+        BorderDataWithElementKind bottom;
+        BorderDataWithElementKind left;
+    };
+
+    void set_override_borders_data(BordersDataWithElementKind const& override_borders_data) { m_override_borders_data = override_borders_data; }
+    Optional<BordersDataWithElementKind> const& override_borders_data() const { return m_override_borders_data; }
+
+    static BordersData remove_element_kind_from_borders_data(PaintableBox::BordersDataWithElementKind borders_data);
 
     struct TableCellCoordinates {
         size_t row_index;
@@ -182,7 +205,7 @@ private:
     mutable bool m_clipping_overflow { false };
     Optional<BorderRadiusCornerClipper> mutable m_overflow_corner_radius_clipper;
 
-    Optional<BordersData> m_override_borders_data;
+    Optional<BordersDataWithElementKind> m_override_borders_data;
     Optional<TableCellCoordinates> m_table_cell_coordinates;
 };
 

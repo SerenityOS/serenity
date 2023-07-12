@@ -49,97 +49,147 @@ enum class EdgeDirection {
 
 struct BorderEdgePaintingInfo {
     DevicePixelRect rect;
-    CSS::BorderData border_data;
+    PaintableBox::BorderDataWithElementKind border_data_with_element_kind;
     EdgeDirection direction;
+    Optional<size_t> row;
+    Optional<size_t> column;
 };
 
-static BorderEdgePaintingInfo make_right_cell_edge(PaintContext& context, CSSPixelRect const& right_cell_rect, CSSPixelRect const& cell_rect, BordersData const& borders_data)
+static Optional<size_t> row_index_for_element_kind(size_t index, Painting::PaintableBox::ConflictingElementKind element_kind)
+{
+    switch (element_kind) {
+    case Painting::PaintableBox::ConflictingElementKind::Cell:
+    case Painting::PaintableBox::ConflictingElementKind::Row:
+    case Painting::PaintableBox::ConflictingElementKind::RowGroup: {
+        return index;
+    }
+    default:
+        return {};
+    }
+}
+
+static Optional<size_t> column_index_for_element_kind(size_t index, Painting::PaintableBox::ConflictingElementKind element_kind)
+{
+    switch (element_kind) {
+    case Painting::PaintableBox::ConflictingElementKind::Cell:
+    case Painting::PaintableBox::ConflictingElementKind::Column:
+    case Painting::PaintableBox::ConflictingElementKind::ColumnGroup: {
+        return index;
+    }
+    default:
+        return {};
+    }
+}
+
+static BorderEdgePaintingInfo make_right_cell_edge(
+    PaintContext& context,
+    CSSPixelRect const& right_cell_rect,
+    CSSPixelRect const& cell_rect,
+    PaintableBox::BordersDataWithElementKind const& borders_data,
+    CellCoordinates const& coordinates)
 {
     DevicePixelRect right_border_rect = {
-        context.rounded_device_pixels(right_cell_rect.x() - round(borders_data.right.width / 2)),
-        context.rounded_device_pixels(cell_rect.y() - round(borders_data.top.width / 2)),
-        context.rounded_device_pixels(borders_data.right.width),
-        context.rounded_device_pixels(max(cell_rect.height(), right_cell_rect.height()) + round(borders_data.top.width / 2) + round(borders_data.bottom.width / 2)),
+        context.rounded_device_pixels(right_cell_rect.x() - round(borders_data.right.border_data.width / 2)),
+        context.rounded_device_pixels(cell_rect.y() - round(borders_data.top.border_data.width / 2)),
+        context.rounded_device_pixels(borders_data.right.border_data.width),
+        context.rounded_device_pixels(max(cell_rect.height(), right_cell_rect.height()) + round(borders_data.top.border_data.width / 2) + round(borders_data.bottom.border_data.width / 2)),
     };
     return BorderEdgePaintingInfo {
         .rect = right_border_rect,
-        .border_data = borders_data.right,
+        .border_data_with_element_kind = borders_data.right,
         .direction = EdgeDirection::Vertical,
+        .row = row_index_for_element_kind(coordinates.row_index, borders_data.right.element_kind),
+        .column = column_index_for_element_kind(coordinates.column_index, borders_data.right.element_kind),
     };
 }
 
-static BorderEdgePaintingInfo make_down_cell_edge(PaintContext& context, CSSPixelRect const& down_cell_rect, CSSPixelRect const& cell_rect, BordersData const& borders_data)
+static BorderEdgePaintingInfo make_down_cell_edge(
+    PaintContext& context,
+    CSSPixelRect const& down_cell_rect,
+    CSSPixelRect const& cell_rect,
+    PaintableBox::BordersDataWithElementKind const& borders_data,
+    CellCoordinates const& coordinates)
 {
     DevicePixelRect down_border_rect = {
-        context.rounded_device_pixels(cell_rect.x() - round(borders_data.left.width / 2)),
-        context.rounded_device_pixels(down_cell_rect.y() - round(borders_data.bottom.width / 2)),
-        context.rounded_device_pixels(max(cell_rect.width(), down_cell_rect.width()) + round(borders_data.left.width / 2) + round(borders_data.right.width / 2)),
-        context.rounded_device_pixels(borders_data.bottom.width),
+        context.rounded_device_pixels(cell_rect.x() - round(borders_data.left.border_data.width / 2)),
+        context.rounded_device_pixels(down_cell_rect.y() - round(borders_data.bottom.border_data.width / 2)),
+        context.rounded_device_pixels(max(cell_rect.width(), down_cell_rect.width()) + round(borders_data.left.border_data.width / 2) + round(borders_data.right.border_data.width / 2)),
+        context.rounded_device_pixels(borders_data.bottom.border_data.width),
     };
     return BorderEdgePaintingInfo {
         .rect = down_border_rect,
-        .border_data = borders_data.bottom,
+        .border_data_with_element_kind = borders_data.bottom,
         .direction = EdgeDirection::Horizontal,
+        .row = row_index_for_element_kind(coordinates.row_index, borders_data.bottom.element_kind),
+        .column = column_index_for_element_kind(coordinates.column_index, borders_data.bottom.element_kind),
     };
 }
 
-static BorderEdgePaintingInfo make_first_row_top_cell_edge(PaintContext& context, CSSPixelRect const& cell_rect, BordersData const& borders_data)
+static BorderEdgePaintingInfo make_first_row_top_cell_edge(PaintContext& context, CSSPixelRect const& cell_rect, PaintableBox::BordersDataWithElementKind const& borders_data, CellCoordinates const& coordinates)
 {
     DevicePixelRect top_border_rect = {
-        context.rounded_device_pixels(cell_rect.x() - round(borders_data.left.width / 2)),
-        context.rounded_device_pixels(cell_rect.y() - round(borders_data.top.width / 2)),
+        context.rounded_device_pixels(cell_rect.x() - round(borders_data.left.border_data.width / 2)),
+        context.rounded_device_pixels(cell_rect.y() - round(borders_data.top.border_data.width / 2)),
         context.rounded_device_pixels(cell_rect.width()),
-        context.rounded_device_pixels(borders_data.top.width),
+        context.rounded_device_pixels(borders_data.top.border_data.width),
     };
     return BorderEdgePaintingInfo {
         .rect = top_border_rect,
-        .border_data = borders_data.top,
+        .border_data_with_element_kind = borders_data.top,
         .direction = EdgeDirection::Horizontal,
+        .row = row_index_for_element_kind(coordinates.row_index, borders_data.top.element_kind),
+        .column = column_index_for_element_kind(coordinates.column_index, borders_data.top.element_kind),
     };
 }
 
-static BorderEdgePaintingInfo make_last_row_bottom_cell_edge(PaintContext& context, CSSPixelRect const& cell_rect, BordersData const& borders_data)
+static BorderEdgePaintingInfo make_last_row_bottom_cell_edge(PaintContext& context, CSSPixelRect const& cell_rect, PaintableBox::BordersDataWithElementKind const& borders_data, CellCoordinates const& coordinates)
 {
     DevicePixelRect bottom_border_rect = {
-        context.rounded_device_pixels(cell_rect.x() - round(borders_data.left.width / 2)),
-        context.rounded_device_pixels(cell_rect.y() + cell_rect.height() - round(borders_data.bottom.width / 2)),
-        context.rounded_device_pixels(cell_rect.width() + round(borders_data.left.width / 2) + round(borders_data.right.width / 2)),
-        context.rounded_device_pixels(borders_data.bottom.width),
+        context.rounded_device_pixels(cell_rect.x() - round(borders_data.left.border_data.width / 2)),
+        context.rounded_device_pixels(cell_rect.y() + cell_rect.height() - round(borders_data.bottom.border_data.width / 2)),
+        context.rounded_device_pixels(cell_rect.width() + round(borders_data.left.border_data.width / 2) + round(borders_data.right.border_data.width / 2)),
+        context.rounded_device_pixels(borders_data.bottom.border_data.width),
     };
     return BorderEdgePaintingInfo {
         .rect = bottom_border_rect,
-        .border_data = borders_data.bottom,
+        .border_data_with_element_kind = borders_data.bottom,
         .direction = EdgeDirection::Horizontal,
+        .row = row_index_for_element_kind(coordinates.row_index, borders_data.bottom.element_kind),
+        .column = column_index_for_element_kind(coordinates.column_index, borders_data.bottom.element_kind),
     };
 }
 
-static BorderEdgePaintingInfo make_first_column_left_cell_edge(PaintContext& context, CSSPixelRect const& cell_rect, BordersData const& borders_data)
+static BorderEdgePaintingInfo make_first_column_left_cell_edge(PaintContext& context, CSSPixelRect const& cell_rect, PaintableBox::BordersDataWithElementKind const& borders_data, CellCoordinates const& coordinates)
 {
     DevicePixelRect left_border_rect = {
-        context.rounded_device_pixels(cell_rect.x() - round(borders_data.left.width / 2)),
-        context.rounded_device_pixels(cell_rect.y() - round(borders_data.top.width / 2)),
-        context.rounded_device_pixels(borders_data.left.width),
-        context.rounded_device_pixels(cell_rect.height() + round(borders_data.top.width / 2)),
+        context.rounded_device_pixels(cell_rect.x() - round(borders_data.left.border_data.width / 2)),
+        context.rounded_device_pixels(cell_rect.y() - round(borders_data.top.border_data.width / 2)),
+        context.rounded_device_pixels(borders_data.left.border_data.width),
+        context.rounded_device_pixels(cell_rect.height() + round(borders_data.top.border_data.width / 2)),
     };
     return BorderEdgePaintingInfo {
         .rect = left_border_rect,
-        .border_data = borders_data.left,
+        .border_data_with_element_kind = borders_data.left,
         .direction = EdgeDirection::Vertical,
+        .row = row_index_for_element_kind(coordinates.row_index, borders_data.left.element_kind),
+        .column = column_index_for_element_kind(coordinates.column_index, borders_data.left.element_kind),
     };
 }
 
-static BorderEdgePaintingInfo make_last_column_right_cell_edge(PaintContext& context, CSSPixelRect const& cell_rect, BordersData const& borders_data)
+static BorderEdgePaintingInfo make_last_column_right_cell_edge(PaintContext& context, CSSPixelRect const& cell_rect, PaintableBox::BordersDataWithElementKind const& borders_data, CellCoordinates const& coordinates)
 {
     DevicePixelRect right_border_rect = {
-        context.rounded_device_pixels(cell_rect.x() + cell_rect.width() - round(borders_data.right.width / 2)),
-        context.rounded_device_pixels(cell_rect.y() - round(borders_data.top.width / 2)),
-        context.rounded_device_pixels(borders_data.right.width),
-        context.rounded_device_pixels(cell_rect.height() + round(borders_data.top.width / 2) + round(borders_data.bottom.width / 2)),
+        context.rounded_device_pixels(cell_rect.x() + cell_rect.width() - round(borders_data.right.border_data.width / 2)),
+        context.rounded_device_pixels(cell_rect.y() - round(borders_data.top.border_data.width / 2)),
+        context.rounded_device_pixels(borders_data.right.border_data.width),
+        context.rounded_device_pixels(cell_rect.height() + round(borders_data.top.border_data.width / 2) + round(borders_data.bottom.border_data.width / 2)),
     };
     return BorderEdgePaintingInfo {
         .rect = right_border_rect,
-        .border_data = borders_data.right,
+        .border_data_with_element_kind = borders_data.right,
         .direction = EdgeDirection::Vertical,
+        .row = row_index_for_element_kind(coordinates.row_index, borders_data.right.element_kind),
+        .column = column_index_for_element_kind(coordinates.column_index, borders_data.right.element_kind),
     };
 }
 
@@ -147,17 +197,38 @@ static void paint_collected_edges(PaintContext& context, Vector<BorderEdgePainti
 {
     // This sorting step isn't part of the specification, but it matches the behavior of other browsers at border intersections, which aren't
     // part of border conflict resolution in the specification but it's still desirable to handle them in a way which is consistent with it.
+    // See https://www.w3.org/TR/CSS22/tables.html#border-conflict-resolution for reference.
     quick_sort(border_edge_painting_info_list, [](auto const& a, auto const& b) {
-        return Layout::TableFormattingContext::border_is_less_specific(a.border_data, b.border_data);
+        auto const& a_border_data = a.border_data_with_element_kind.border_data;
+        auto const& b_border_data = b.border_data_with_element_kind.border_data;
+        if (a_border_data.line_style == b_border_data.line_style && a_border_data.width == b_border_data.width) {
+            if (b.border_data_with_element_kind.element_kind < a.border_data_with_element_kind.element_kind) {
+                return true;
+            } else if (b.border_data_with_element_kind.element_kind > a.border_data_with_element_kind.element_kind) {
+                return false;
+            }
+            // Here the element kind is the same, thus the coordinates are either both set or not set.
+            VERIFY(a.column.has_value() == b.column.has_value());
+            VERIFY(a.row.has_value() == b.row.has_value());
+            if (a.column.has_value()) {
+                if (b.column.value() < a.column.value()) {
+                    return true;
+                } else if (b.column.value() > a.column.value()) {
+                    return false;
+                }
+            }
+            return a.row.has_value() ? b.row.value() < a.row.value() : false;
+        }
+        return Layout::TableFormattingContext::border_is_less_specific(a_border_data, b_border_data);
     });
 
     for (auto const& border_edge_painting_info : border_edge_painting_info_list) {
-        auto const& border_data = border_edge_painting_info.border_data;
-        CSSPixels width = border_data.width;
+        auto const& border_data_with_element_kind = border_edge_painting_info.border_data_with_element_kind;
+        CSSPixels width = border_data_with_element_kind.border_data.width;
         if (width <= 0)
             continue;
-        auto color = border_data.color;
-        auto border_style = border_data.line_style;
+        auto color = border_data_with_element_kind.border_data.color;
+        auto border_style = border_data_with_element_kind.border_data.line_style;
         auto p1 = border_edge_painting_info.rect.top_left();
         auto p2 = border_edge_painting_info.direction == EdgeDirection::Horizontal
             ? border_edge_painting_info.rect.top_right()
@@ -194,31 +265,39 @@ void paint_table_collapsed_borders(PaintContext& context, Layout::Node const& bo
         column_count = max(column_count, cell_box->table_cell_coordinates()->column_index + cell_box->table_cell_coordinates()->column_span);
     }
     for (auto const cell_box : cell_boxes) {
-        auto borders_data = cell_box->override_borders_data().has_value() ? cell_box->override_borders_data().value() : BordersData {
-            .top = cell_box->box_model().border.top == 0 ? CSS::BorderData() : cell_box->computed_values().border_top(),
-            .right = cell_box->box_model().border.right == 0 ? CSS::BorderData() : cell_box->computed_values().border_right(),
-            .bottom = cell_box->box_model().border.bottom == 0 ? CSS::BorderData() : cell_box->computed_values().border_bottom(),
-            .left = cell_box->box_model().border.left == 0 ? CSS::BorderData() : cell_box->computed_values().border_left(),
+        auto borders_data = cell_box->override_borders_data().has_value() ? cell_box->override_borders_data().value() : PaintableBox::BordersDataWithElementKind {
+            .top = { .border_data = cell_box->box_model().border.top == 0 ? CSS::BorderData() : cell_box->computed_values().border_top(), .element_kind = PaintableBox::ConflictingElementKind::Cell },
+            .right = { .border_data = cell_box->box_model().border.right == 0 ? CSS::BorderData() : cell_box->computed_values().border_right(), .element_kind = PaintableBox::ConflictingElementKind::Cell },
+            .bottom = { .border_data = cell_box->box_model().border.bottom == 0 ? CSS::BorderData() : cell_box->computed_values().border_bottom(), .element_kind = PaintableBox::ConflictingElementKind::Cell },
+            .left = { .border_data = cell_box->box_model().border.left == 0 ? CSS::BorderData() : cell_box->computed_values().border_left(), .element_kind = PaintableBox::ConflictingElementKind::Cell },
         };
         auto cell_rect = cell_box->absolute_border_box_rect();
-        auto maybe_right_cell = cell_coordinates_to_box.get(CellCoordinates {
+        CellCoordinates right_cell_coordinates {
             .row_index = cell_box->table_cell_coordinates()->row_index,
-            .column_index = cell_box->table_cell_coordinates()->column_index + cell_box->table_cell_coordinates()->column_span });
-        auto maybe_down_cell = cell_coordinates_to_box.get(CellCoordinates {
+            .column_index = cell_box->table_cell_coordinates()->column_index + cell_box->table_cell_coordinates()->column_span
+        };
+        auto maybe_right_cell = cell_coordinates_to_box.get(right_cell_coordinates);
+        CellCoordinates down_cell_coordinates {
             .row_index = cell_box->table_cell_coordinates()->row_index + cell_box->table_cell_coordinates()->row_span,
-            .column_index = cell_box->table_cell_coordinates()->column_index });
+            .column_index = cell_box->table_cell_coordinates()->column_index
+        };
+        auto maybe_down_cell = cell_coordinates_to_box.get(down_cell_coordinates);
         if (maybe_right_cell.has_value())
-            border_edge_painting_info_list.append(make_right_cell_edge(context, maybe_right_cell.value()->absolute_border_box_rect(), cell_rect, borders_data));
+            border_edge_painting_info_list.append(make_right_cell_edge(context, maybe_right_cell.value()->absolute_border_box_rect(), cell_rect, borders_data, right_cell_coordinates));
         if (maybe_down_cell.has_value())
-            border_edge_painting_info_list.append(make_down_cell_edge(context, maybe_down_cell.value()->absolute_border_box_rect(), cell_rect, borders_data));
+            border_edge_painting_info_list.append(make_down_cell_edge(context, maybe_down_cell.value()->absolute_border_box_rect(), cell_rect, borders_data, down_cell_coordinates));
         if (cell_box->table_cell_coordinates()->row_index == 0)
-            border_edge_painting_info_list.append(make_first_row_top_cell_edge(context, cell_rect, borders_data));
+            border_edge_painting_info_list.append(make_first_row_top_cell_edge(context, cell_rect, borders_data,
+                { .row_index = 0, .column_index = cell_box->table_cell_coordinates()->column_index }));
         if (cell_box->table_cell_coordinates()->row_index + cell_box->table_cell_coordinates()->row_span == row_count)
-            border_edge_painting_info_list.append(make_last_row_bottom_cell_edge(context, cell_rect, borders_data));
+            border_edge_painting_info_list.append(make_last_row_bottom_cell_edge(context, cell_rect, borders_data,
+                { .row_index = row_count - 1, .column_index = cell_box->table_cell_coordinates()->column_index }));
         if (cell_box->table_cell_coordinates()->column_index == 0)
-            border_edge_painting_info_list.append(make_first_column_left_cell_edge(context, cell_rect, borders_data));
+            border_edge_painting_info_list.append(make_first_column_left_cell_edge(context, cell_rect, borders_data,
+                { .row_index = cell_box->table_cell_coordinates()->row_index, .column_index = 0 }));
         if (cell_box->table_cell_coordinates()->column_index + cell_box->table_cell_coordinates()->column_span == column_count)
-            border_edge_painting_info_list.append(make_last_column_right_cell_edge(context, cell_rect, borders_data));
+            border_edge_painting_info_list.append(make_last_column_right_cell_edge(context, cell_rect, borders_data,
+                { .row_index = cell_box->table_cell_coordinates()->row_index, .column_index = column_count - 1 }));
     }
 
     paint_collected_edges(context, border_edge_painting_info_list);
@@ -232,7 +311,7 @@ void paint_table_collapsed_borders(PaintContext& context, Layout::Node const& bo
         if (!top_left && !top_right && !bottom_left && !bottom_right) {
             continue;
         } else {
-            auto borders_data = cell_box->override_borders_data().has_value() ? cell_box->override_borders_data().value() : BordersData {
+            auto borders_data = cell_box->override_borders_data().has_value() ? PaintableBox::remove_element_kind_from_borders_data(cell_box->override_borders_data().value()) : BordersData {
                 .top = cell_box->box_model().border.top == 0 ? CSS::BorderData() : cell_box->computed_values().border_top(),
                 .right = cell_box->box_model().border.right == 0 ? CSS::BorderData() : cell_box->computed_values().border_right(),
                 .bottom = cell_box->box_model().border.bottom == 0 ? CSS::BorderData() : cell_box->computed_values().border_bottom(),

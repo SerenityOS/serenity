@@ -224,9 +224,19 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
     }
 }
 
+BordersData PaintableBox::remove_element_kind_from_borders_data(PaintableBox::BordersDataWithElementKind borders_data)
+{
+    return {
+        .top = borders_data.top.border_data,
+        .right = borders_data.right.border_data,
+        .bottom = borders_data.bottom.border_data,
+        .left = borders_data.left.border_data,
+    };
+}
+
 void PaintableBox::paint_border(PaintContext& context) const
 {
-    auto borders_data = m_override_borders_data.has_value() ? m_override_borders_data.value() : BordersData {
+    auto borders_data = m_override_borders_data.has_value() ? remove_element_kind_from_borders_data(m_override_borders_data.value()) : BordersData {
         .top = box_model().border.top == 0 ? CSS::BorderData() : computed_values().border_top(),
         .right = box_model().border.right == 0 ? CSS::BorderData() : computed_values().border_right(),
         .bottom = box_model().border.bottom == 0 ? CSS::BorderData() : computed_values().border_bottom(),
