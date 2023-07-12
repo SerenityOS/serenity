@@ -1774,8 +1774,8 @@ void Document::completely_finish_loading()
 
     auto observers_to_notify = m_document_observers.values();
     for (auto& document_observer : observers_to_notify) {
-        if (document_observer->document_fully_loaded)
-            document_observer->document_fully_loaded();
+        if (document_observer->document_completely_loaded)
+            document_observer->document_completely_loaded();
     }
 }
 
