@@ -77,6 +77,8 @@ ThrowCompletionOr<void> DeclarativeEnvironment::create_mutable_binding(VM&, Depr
         .initialized = false,
     });
 
+    ++m_environment_serial_number;
+
     // 3. Return unused.
     return {};
 }
@@ -96,6 +98,8 @@ ThrowCompletionOr<void> DeclarativeEnvironment::create_immutable_binding(VM&, De
         .can_be_deleted = false,
         .initialized = false,
     });
+
+    ++m_environment_serial_number;
 
     // 3. Return unused.
     return {};
@@ -216,6 +220,8 @@ ThrowCompletionOr<bool> DeclarativeEnvironment::delete_binding(VM&, DeprecatedFl
     // 3. Remove the binding for N from envRec.
     // NOTE: We keep the entries in m_bindings to avoid disturbing indices.
     binding_and_index->binding() = {};
+
+    ++m_environment_serial_number;
 
     // 4. Return true.
     return true;
