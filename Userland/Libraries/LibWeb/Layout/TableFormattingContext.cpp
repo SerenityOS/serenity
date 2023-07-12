@@ -655,13 +655,13 @@ void TableFormattingContext::compute_table_height(LayoutMode layout_mode)
         //   rowgroups/rows/cells' specified heights were resolved according to the table height, instead of
         //   being ignored as 0px).
 
-        // Assign reference size to base size. Later reference size might change to largee value during
-        // second pass of rows layout.
+        // Assign reference size to base size. Later, the reference size might change to a larger value during
+        // the second pass of rows layout.
         row.reference_height = row.base_height;
     }
 
     // Second pass of rows height calculation:
-    // At this point percentage row height can be resolved because final table height is calculated.
+    // At this point, percentage row height can be resolved because the final table height is calculated.
     for (auto& row : m_rows) {
         auto row_computed_height = row.box->computed_values().height();
         if (row_computed_height.is_percentage()) {
@@ -673,7 +673,7 @@ void TableFormattingContext::compute_table_height(LayoutMode layout_mode)
     }
 
     // Second pass cells layout:
-    // At this point percantage cell height can be resolved because final table heigh is calculated.
+    // At this point, percentage cell height can be resolved because the final table height is calculated.
     for (auto& cell : m_cells) {
         auto& row = m_rows[cell.row_index];
         auto& cell_state = m_state.get_mutable(cell.box);
