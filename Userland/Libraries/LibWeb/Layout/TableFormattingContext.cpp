@@ -532,10 +532,16 @@ void TableFormattingContext::distribute_width_to_columns()
         expand_columns_to_fill_available_width(column_type);
     };
 
+    // 1. The min-content sizing-guess is the set of column width assignments where each column is assigned its min-content width.
     for (auto& column : m_columns) {
         column.used_width = column.min_size;
     }
 
+    // 2. The min-content-percentage sizing-guess is the set of column width assignments where:
+    //    - each percent-column is assigned the larger of:
+    //      - its intrinsic percentage width times the assignable width and
+    //      - its min-content width.
+    //    - all other columns are assigned their min-content width.
     for (auto& column : m_columns) {
         if (column.type == SizeType::Percent) {
             column.used_width = max(column.min_size, column.percentage_width / 100 * available_width);
@@ -547,6 +553,12 @@ void TableFormattingContext::distribute_width_to_columns()
         return;
     }
 
+    // 3. The min-content-specified sizing-guess is the set of column width assignments where:
+    //    - each percent-column is assigned the larger of:
+    //      - its intrinsic percentage width times the assignable width and
+    //      - its min-content width
+    //    - any other column that is constrained is assigned its max-content width
+    //    - all other columns are assigned their min-content width.
     for (auto& column : m_columns) {
         if (column.type == SizeType::Pixel) {
             column.used_width = column.max_size;
@@ -558,20 +570,25 @@ void TableFormattingContext::distribute_width_to_columns()
         return;
     }
 
-    if (columns_total_used_width() < available_width) {
-        expand_columns_to_fill_available_width(SizeType::Auto);
+    // 4. The max-content sizing-guess is the set of column width assignments where:
+    //    - each percent-column is assigned the larger of:
+    //      - its intrinsic percentage width times the assignable width and
+    //      - its min-content width
+    //    - all other columns are assigned their max-content width.
+    for (auto& column : m_columns) {
+        if (column.type != SizeType::Percent) {
+            column.used_width = column.max_size;
+        }
     }
 
-    if (columns_total_used_width() < available_width) {
-        expand_columns_to_fill_available_width(SizeType::Pixel);
-    }
+    // If the assignable table width is less than or equal to the max-content sizing-guess, the used widths of the columns must be the
+    // linear combination (with weights adding to 1) of the two consecutive sizing-guesses whose width sums bound the available width.
 
-    if (columns_total_used_width() < available_width) {
-        expand_columns_to_fill_available_width(SizeType::Percent);
-    }
+    // Otherwise, the used widths of the columns are the result of starting from the max-content sizing-guess and distributing
+    // the excess width to the columns of the table according to the rules for distributing excess width to columns (for used width).
 
     // Implements steps 1 and 2 of https://www.w3.org/TR/css-tables-3/#distributing-width-to-columns
-    // FIXME: Implement steps 3-5 as well, which distribute excess width to constrained columns.
+    // FIXME: Implement steps 3-6 as well, which distribute excess width to constrained columns.
     if (columns_total_used_width() < available_width) {
         // NOTE: if all columns got their max width and there is still width to distribute left
         // it should be assigned to columns proportionally to their max width
