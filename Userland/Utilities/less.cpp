@@ -9,9 +9,7 @@
 #include <LibCore/System.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
-#include <csignal>
 #include <stdio.h>
-#include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -181,8 +179,8 @@ public:
     {
         // First, we get the current size of the window.
         struct winsize window;
-        if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &window) == -1) {
-            perror("ioctl(2)");
+        if (auto maybe_error = Core::System::ioctl(STDOUT_FILENO, TIOCGWINSZ, &window); maybe_error.is_error()) {
+            warnln("ioctl(2): {}", strerror(maybe_error.error().code()));
             return;
         }
 
@@ -522,9 +520,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     // On SIGWINCH set this flag so that the main-loop knows when the terminal
     // has been resized.
-    signal(SIGWINCH, [](auto) {
+    struct sigaction resize_action;
+    resize_action.sa_handler = [](auto) {
         g_resized = true;
-    });
+    };
+    TRY(Core::System::sigaction(SIGWINCH, &resize_action, nullptr));
 
     TRY(Core::System::pledge("stdio tty sigaction"));
 
@@ -535,7 +535,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         prompt = "--More--";
     }
 
-    if (!isatty(STDOUT_FILENO)) {
+    if (!TRY(Core::System::isatty(STDOUT_FILENO))) {
         cat_file(file);
         return 0;
     }
