@@ -49,13 +49,11 @@ int EventLoopImplementationQt::exec()
 size_t EventLoopImplementationQt::pump(PumpMode mode)
 {
     auto result = Core::ThreadEventQueue::current().process();
-    if (mode == PumpMode::WaitForEvents) {
-        if (is_main_loop())
-            QCoreApplication::processEvents(QEventLoop::WaitForMoreEvents);
-        else
-            m_event_loop.processEvents(QEventLoop::WaitForMoreEvents);
-    } else {
-    }
+    auto qt_mode = mode == PumpMode::WaitForEvents ? QEventLoop::WaitForMoreEvents : QEventLoop::AllEvents;
+    if (is_main_loop())
+        QCoreApplication::processEvents(qt_mode);
+    else
+        m_event_loop.processEvents(qt_mode);
     result += Core::ThreadEventQueue::current().process();
     return result;
 }
