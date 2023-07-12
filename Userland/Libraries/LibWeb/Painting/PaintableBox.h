@@ -31,7 +31,8 @@ public:
 
     struct OverflowData {
         CSSPixelRect scrollable_overflow_rect;
-        CSSPixelPoint scroll_offset;
+        bool has_scrollable_overflow { false };
+        CSSPixelPoint scroll_offset {};
     };
 
     CSSPixelRect absolute_rect() const;
@@ -95,9 +96,9 @@ public:
     CSSPixels absolute_y() const { return absolute_rect().y(); }
     CSSPixelPoint absolute_position() const { return absolute_rect().location(); }
 
-    bool has_overflow() const { return m_overflow_data.has_value(); }
+    [[nodiscard]] bool has_scrollable_overflow() const { return m_overflow_data->has_scrollable_overflow; }
 
-    Optional<CSSPixelRect> scrollable_overflow_rect() const
+    [[nodiscard]] Optional<CSSPixelRect> scrollable_overflow_rect() const
     {
         if (!m_overflow_data.has_value())
             return {};
@@ -106,7 +107,7 @@ public:
 
     Optional<CSSPixelRect> calculate_overflow_clipped_rect() const;
 
-    void set_overflow_data(Optional<OverflowData> data) { m_overflow_data = move(data); }
+    void set_overflow_data(OverflowData data) { m_overflow_data = move(data); }
     void set_containing_line_box_fragment(Optional<Layout::LineBoxFragmentCoordinate>);
 
     StackingContext* stacking_context() { return m_stacking_context; }
