@@ -9,6 +9,7 @@
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/LayoutState.h>
 #include <LibWeb/Layout/TextNode.h>
+#include <LibWeb/Layout/Viewport.h>
 
 namespace Web::Layout {
 
@@ -64,36 +65,70 @@ LayoutState::UsedValues const& LayoutState::get(NodeWithStyleAndBoxModelMetrics 
     return *new_used_values_ptr;
 }
 
-static void measure_scrollable_overflow(LayoutState const& state, Box const& box, CSSPixels& bottom_edge, CSSPixels& right_edge)
+// https://www.w3.org/TR/css-overflow-3/#scrollable-overflow
+static CSSPixelRect measure_scrollable_overflow(Box const& box)
 {
-    auto const* maybe_box_state = state.used_values_per_layout_node.get(&box).value_or(nullptr);
-    if (!maybe_box_state)
-        return;
-    auto const& box_state = *maybe_box_state;
-    auto scroll_container_border_box = CSSPixelRect {
-        box_state.offset.translated(-box_state.border_box_left(), -box_state.border_box_top()),
-        { box_state.border_box_width(), box_state.border_box_height() }
-    };
+    if (!box.paintable_box())
+        return {};
 
-    bottom_edge = max(bottom_edge, scroll_container_border_box.bottom());
-    right_edge = max(right_edge, scroll_container_border_box.right());
+    auto& paintable_box = const_cast<Painting::PaintableBox&>(*box.paintable_box());
 
-    if (box.children_are_inline()) {
-        if (!box_state.line_boxes.is_empty()) {
-            bottom_edge = max(bottom_edge, scroll_container_border_box.y() + box_state.line_boxes.last().bottom());
-            for (auto& line_box : box_state.line_boxes) {
-                if (line_box.fragments().is_empty())
-                    continue;
-                right_edge = max(right_edge, scroll_container_border_box.x() + line_box.fragments().last().width());
-            }
+    if (paintable_box.scrollable_overflow_rect().has_value())
+        return paintable_box.scrollable_overflow_rect().value();
+
+    // The scrollable overflow area is the union of:
+
+    // - The scroll container’s own padding box.
+    auto scrollable_overflow_rect = paintable_box.absolute_padding_box_rect();
+
+    // - All line boxes directly contained by the scroll container.
+    if (box.is_block_container() && box.children_are_inline()) {
+        auto const& line_boxes = verify_cast<Painting::PaintableWithLines>(*box.paintable_box()).line_boxes();
+        for (auto const& line_box : line_boxes) {
+            scrollable_overflow_rect = scrollable_overflow_rect.united(line_box.absolute_rect());
         }
-    } else {
-        // FIXME: Only check boxes for whom `box` is the containing block.
-        box.for_each_child_of_type<Box>([&](Box const& child) {
-            measure_scrollable_overflow(state, child, bottom_edge, right_edge);
+    }
+
+    // - The border boxes of all boxes for which it is the containing block
+    //   and whose border boxes are positioned not wholly in the negative scrollable overflow region,
+    //   FIXME: accounting for transforms by projecting each box onto the plane of the element that establishes its 3D rendering context. [CSS3-TRANSFORMS]
+    if (!box.children_are_inline()) {
+        box.for_each_child_of_type<Box>([&box, &scrollable_overflow_rect](Box const& child) {
+            if (!child.paintable_box())
+                return IterationDecision::Continue;
+
+            auto child_border_box = child.paintable_box()->absolute_border_box_rect();
+            // NOTE: Here we check that the child is not wholly in the negative scrollable overflow region.
+            if (child_border_box.bottom() > 0 && child_border_box.right() > 0)
+                scrollable_overflow_rect = scrollable_overflow_rect.united(child_border_box);
+
+            // - The scrollable overflow areas of all of the above boxes
+            //   (including zero-area boxes and accounting for transforms as described above),
+            //   provided they themselves have overflow: visible (i.e. do not themselves trap the overflow)
+            //   and that scrollable overflow is not already clipped (e.g. by the clip property or the contain property).
+            if (is<Viewport>(box) || child.computed_values().overflow_x() == CSS::Overflow::Visible || child.computed_values().overflow_y() == CSS::Overflow::Visible) {
+                auto child_scrollable_overflow = measure_scrollable_overflow(child);
+                if (is<Viewport>(box) || child.computed_values().overflow_x() == CSS::Overflow::Visible)
+                    scrollable_overflow_rect.unite_horizontally(child_scrollable_overflow);
+                if (is<Viewport>(box) || child.computed_values().overflow_y() == CSS::Overflow::Visible)
+                    scrollable_overflow_rect.unite_vertically(child_scrollable_overflow);
+            }
+
             return IterationDecision::Continue;
         });
     }
+
+    // FIXME: - The margin areas of grid item and flex item boxes for which the box establishes a containing block.
+
+    // FIXME: - Additional padding added to the end-side of the scrollable overflow rectangle as necessary
+    //          to enable a scroll position that satisfies the requirements of place-content: end alignment.
+
+    paintable_box.set_overflow_data(Painting::PaintableBox::OverflowData {
+        .scrollable_overflow_rect = scrollable_overflow_rect,
+        .has_scrollable_overflow = !paintable_box.absolute_padding_box_rect().contains(scrollable_overflow_rect),
+    });
+
+    return scrollable_overflow_rect;
 }
 
 void LayoutState::commit()
@@ -158,20 +193,7 @@ void LayoutState::commit()
         if (!used_values.node().is_box())
             continue;
         auto const& box = static_cast<Layout::Box const&>(used_values.node());
-        if (!box.is_scroll_container())
-            continue;
-        CSSPixels bottom_edge = 0;
-        CSSPixels right_edge = 0;
-        measure_scrollable_overflow(*this, box, bottom_edge, right_edge);
-
-        auto padding_box = box.paintable_box()->absolute_padding_box_rect();
-
-        if (bottom_edge > padding_box.height() || right_edge > padding_box.width()) {
-            Painting::PaintableBox::OverflowData overflow_data;
-            overflow_data.scrollable_overflow_rect = padding_box;
-            overflow_data.scrollable_overflow_rect.set_size(right_edge, bottom_edge);
-            const_cast<Painting::PaintableBox&>(*box.paintable_box()).set_overflow_data(overflow_data);
-        }
+        measure_scrollable_overflow(box);
     }
 
     for (auto* text_node : text_nodes)
