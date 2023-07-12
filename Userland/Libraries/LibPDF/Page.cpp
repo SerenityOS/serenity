@@ -12,25 +12,20 @@ namespace PDF {
 
 PDFErrorOr<ByteBuffer> Page::page_contents(Document& document) const
 {
+    // Table 3.27 Entries in a page object on Contents:
+    // "If this entry is absent, the page is empty. [...]"
     if (contents.is_null())
         return ByteBuffer {};
 
-    // Use our own vector, as the /Content can be an array with multiple
-    // streams which gets concatenated.
-    // FIXME: Text operators are supposed to only have effects on the current
-    // stream object. Do the text operators treat this concatenated stream
-    // as one stream or multiple?
+    // "The value may be either a single stream or an array of streams. If the value
+    //  is an array, the effect is as if all the streams in the array were concatenated,
+    //  in order, to form a single stream."
+    if (contents->is<StreamObject>())
+        return TRY(ByteBuffer::copy(contents->cast<StreamObject>()->bytes()));
+
     ByteBuffer byte_buffer;
-    if (contents->is<ArrayObject>()) {
-        auto array = contents->cast<ArrayObject>();
-        for (auto& ref : *array) {
-            auto bytes = TRY(document.resolve_to<StreamObject>(ref))->bytes();
-            byte_buffer.append(bytes.data(), bytes.size());
-        }
-    } else {
-        auto bytes = contents->cast<StreamObject>()->bytes();
-        byte_buffer.append(bytes.data(), bytes.size());
-    }
+    for (auto& ref : *contents->cast<ArrayObject>())
+        TRY(byte_buffer.try_append(TRY(document.resolve_to<StreamObject>(ref))->bytes()));
     return byte_buffer;
 }
 
