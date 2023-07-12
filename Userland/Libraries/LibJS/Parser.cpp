@@ -299,25 +299,10 @@ public:
             }
 
             bool scope_has_declaration = false;
-            MUST(m_node->for_each_var_declared_name([&](auto const& name) {
-                if (m_function_parameters.has_value() && m_forbidden_lexical_names.contains(name))
-                    return;
-                if (name == identifier_group_name)
-                    scope_has_declaration = true;
-            }));
-            MUST(m_node->for_each_lexically_declared_name([&](auto const& name) {
-                if (name == identifier_group_name)
-                    scope_has_declaration = true;
-            }));
-
-            MUST(m_node->for_each_var_function_declaration_in_reverse_order([&](auto const& declaration) {
-                if (declaration.name() == identifier_group_name)
-                    scope_has_declaration = true;
-            }));
-            MUST(m_node->for_each_lexical_function_declaration_in_reverse_order([&](auto const& declaration) {
-                if (declaration.name() == identifier_group_name)
-                    scope_has_declaration = true;
-            }));
+            if (is_top_level() && m_var_names.contains(identifier_group_name))
+                scope_has_declaration = true;
+            else if (m_lexical_names.contains(identifier_group_name) || m_function_names.contains(identifier_group_name))
+                scope_has_declaration = true;
 
             bool hoistable_function_declaration = false;
             for (auto const& function_declaration : m_functions_to_hoist) {
