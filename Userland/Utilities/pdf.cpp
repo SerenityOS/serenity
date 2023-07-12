@@ -85,6 +85,9 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
     StringView in_path;
     args_parser.add_positional_argument(in_path, "Path to input image file", "FILE");
 
+    bool dump_contents = false;
+    args_parser.add_option(dump_contents, "Dump page contents", "dump-contents", {});
+
     u32 page_number = 1;
     args_parser.add_option(page_number, "Page number (1-based)", "page", {}, "PAGE");
 
@@ -114,6 +117,20 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
         warnln("--page {} out of bounds, must be between 1 and {}", page_number, document->get_page_count());
         return 1;
     }
+    int page_index = page_number - 1;
+
+    if (dump_contents) {
+        auto page = TRY(document->get_page(page_index));
+        auto contents = TRY(page.page_contents(*document));
+        for (u8 c : contents.bytes()) {
+            if (c < 128)
+                out("{:c}", c);
+            else
+                out("\\{:03o}", c);
+        }
+
+        return 0;
+    }
 
     if (!render_path.is_empty()) {
 #if !defined(AK_OS_SERENITY)
@@ -122,7 +139,7 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
         Gfx::FontDatabase::set_default_fonts_lookup_path(DeprecatedString::formatted("{}/Base/res/fonts", source_root));
 #endif
 
-        TRY(save_rendered_page(document, page_number - 1, render_path));
+        TRY(save_rendered_page(document, page_index, render_path));
         return 0;
     }
 
