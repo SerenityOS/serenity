@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Sahan Fernando <sahan.h.fernando@gmail.com>
+ * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,9 +16,7 @@
 #include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
 #include <errno.h>
-#include <spawn.h>
 #include <stdio.h>
-#include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -70,30 +69,35 @@ static int run_command(Vector<DeprecatedString> const& command)
     for (auto& arg : command)
         argv.unchecked_append(arg.characters());
     argv.unchecked_append(nullptr);
-
-    if ((errno = posix_spawnp(const_cast<pid_t*>(&child_pid), argv[0], nullptr, nullptr, const_cast<char**>(argv.data()), environ))) {
+    auto child_pid_or_error = Core::System::posix_spawnp(command[0], nullptr, nullptr, const_cast<char**>(argv.data()), environ);
+    if (child_pid_or_error.is_error()) {
         exit_code = 1;
-        perror("posix_spawn");
-        return errno;
+        warnln("posix_spawn: {}", strerror(child_pid_or_error.error().code()));
+        return child_pid_or_error.error().code();
     }
+
+    child_pid = child_pid_or_error.release_value();
 
     // Wait for the child to terminate, then return its exit code.
-    int status;
-    pid_t exited_pid;
+    Core::System::WaitPidResult waitpid_result;
+    int error_code = 0;
     do {
-        exited_pid = waitpid(child_pid, &status, 0);
-    } while (exited_pid < 0 && errno == EINTR);
-    VERIFY(exited_pid == child_pid);
+        auto result_or_error = Core::System::waitpid(child_pid, 0);
+        if (result_or_error.is_error())
+            error_code = result_or_error.error().code();
+        else
+            waitpid_result = result_or_error.release_value();
+    } while (waitpid_result.pid < 0 && error_code == EINTR);
+    VERIFY(waitpid_result.pid == child_pid);
     child_pid = -1;
-    if (exited_pid < 0) {
-        perror("waitpid");
+    if (error_code > 0) {
+        warnln("waitpid: {}", strerror(error_code));
         return 1;
     }
-    if (WIFEXITED(status)) {
-        return WEXITSTATUS(status);
-    } else {
-        return 1;
+    if (WIFEXITED(waitpid_result.status)) {
+        return WEXITSTATUS(waitpid_result.status);
     }
+    return 1;
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
