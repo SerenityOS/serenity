@@ -684,6 +684,9 @@ public:
     }
     void set_local_variable_index(size_t index) { m_local_variable_index = index; }
 
+    bool is_global() const { return m_is_global; }
+    void set_is_global() { m_is_global = true; }
+
     virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual ThrowCompletionOr<Reference> to_reference(Interpreter&) const override;
@@ -696,6 +699,7 @@ private:
     mutable EnvironmentCoordinate m_cached_environment_coordinate;
 
     Optional<size_t> m_local_variable_index;
+    bool m_is_global { false };
 };
 
 struct FunctionParameter {
