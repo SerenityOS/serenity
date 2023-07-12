@@ -28,6 +28,8 @@ struct Page {
     Rectangle crop_box;
     float user_unit;
     int rotate;
+
+    PDFErrorOr<ByteBuffer> page_contents(Document&) const;
 };
 
 }
