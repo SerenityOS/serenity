@@ -39,11 +39,15 @@ ThrowCompletionOr<IteratorRecord> get_iterator_direct(VM& vm, Object& object)
     return iterator_record;
 }
 
-ThrowCompletionOr<IteratorRecord> get_iterator_flattenable(VM& vm, Value object)
+// 2.1.2 GetIteratorFlattenable ( obj, stringHandling ), https://tc39.es/proposal-iterator-helpers/#sec-getiteratorflattenable
+ThrowCompletionOr<IteratorRecord> get_iterator_flattenable(VM& vm, Value object, StringHandling string_handling)
 {
-    // 1. If obj is not an Object, throw a TypeError exception.
-    if (!object.is_object())
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, "obj"sv);
+    // 1. If obj is not an Object, then
+    if (!object.is_object()) {
+        // a. If stringHandling is reject-strings or obj is not a String, throw a TypeError exception.
+        if (string_handling == StringHandling::RejectStrings || !object.is_string())
+            return vm.throw_completion<TypeError>(ErrorType::NotAnObject, "obj"sv);
+    }
 
     // 2. Let method be ? GetMethod(obj, @@iterator).
     auto method = TRY(object.get_method(vm, vm.well_known_symbol_iterator()));

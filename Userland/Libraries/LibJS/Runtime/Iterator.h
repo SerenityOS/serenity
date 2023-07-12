@@ -35,7 +35,12 @@ private:
     IteratorRecord m_iterated; // [[Iterated]]
 };
 
+enum class StringHandling {
+    IterateStrings,
+    RejectStrings,
+};
+
 ThrowCompletionOr<IteratorRecord> get_iterator_direct(VM&, Object&);
-ThrowCompletionOr<IteratorRecord> get_iterator_flattenable(VM&, Value);
+ThrowCompletionOr<IteratorRecord> get_iterator_flattenable(VM&, Value, StringHandling);
 
 }
