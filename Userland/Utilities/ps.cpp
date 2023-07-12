@@ -16,6 +16,113 @@
 #include <sys/sysmacros.h>
 #include <unistd.h>
 
+#define ENUMERATE_COLUMN_DESCRIPTIONS                         \
+    COLUMN(UserId, "uid", "UID", Alignment::Left)             \
+    COLUMN(ProcessId, "pid", "PID", Alignment::Right)         \
+    COLUMN(ParentProcessId, "ppid", "PPID", Alignment::Right) \
+    COLUMN(ProcessGroupId, "pgid", "PGID", Alignment::Right)  \
+    COLUMN(SessionId, "sid", "SID", Alignment::Right)         \
+    COLUMN(State, "state", "STATE", Alignment::Left)          \
+    COLUMN(TTY, "tty", "TTY", Alignment::Left)                \
+    COLUMN(Command, "cmd", "CMD", Alignment::Left)
+
+enum class ColumnId {
+#define COLUMN(column_id, lookup_name, default_title, alignment) column_id,
+    ENUMERATE_COLUMN_DESCRIPTIONS
+#undef COLUMN
+        __Count
+};
+
+enum class Alignment {
+    Left,
+    Right,
+};
+
+struct ColumnDescription {
+    StringView lookup_name;
+    StringView default_title;
+    Alignment alignment;
+};
+
+struct Column {
+    ColumnId id;
+    String title;
+    Alignment alignment;
+    int width { 0 };
+    String buffer {};
+};
+
+static Optional<ColumnId> column_name_to_id(StringView column_name)
+{
+#define COLUMN(column_id, lookup_name, default_title, alignment) \
+    if (column_name == lookup_name)                              \
+        return ColumnId::column_id;
+    ENUMERATE_COLUMN_DESCRIPTIONS
+#undef COLUMN
+
+    return {};
+}
+
+static ErrorOr<Column> column_from_id(ColumnId column_id, Optional<String> const& custom_title = {})
+{
+    constexpr Array<ColumnDescription, static_cast<size_t>(ColumnId::__Count)> available_columns { {
+#define COLUMN(column_id, lookup_name, default_title, alignment) { lookup_name##sv, default_title##sv, alignment },
+        ENUMERATE_COLUMN_DESCRIPTIONS
+#undef COLUMN
+    } };
+
+    auto const& column_description = available_columns[static_cast<size_t>(column_id)];
+    auto title = custom_title.has_value()
+        ? custom_title.value()
+        : TRY(String::from_utf8(column_description.default_title));
+
+    return Column { column_id, title, column_description.alignment };
+}
+
+static ErrorOr<String> column_to_string(ColumnId column_id, Core::ProcessStatistics process)
+{
+    switch (column_id) {
+    case ColumnId::UserId:
+        return String::from_deprecated_string(process.username);
+    case ColumnId::ProcessId:
+        return String::number(process.pid);
+    case ColumnId::ParentProcessId:
+        return String::number(process.ppid);
+    case ColumnId::ProcessGroupId:
+        return String::number(process.pgid);
+    case ColumnId::SessionId:
+        return String::number(process.sid);
+    case ColumnId::TTY:
+        return process.tty == "" ? "n/a"_short_string : String::from_deprecated_string(process.tty);
+    case ColumnId::State:
+        return process.threads.is_empty()
+            ? "Zombie"_short_string
+            : String::from_deprecated_string(process.threads.first().state);
+    case ColumnId::Command:
+        return String::from_deprecated_string(process.name);
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+static ErrorOr<Column> parse_column_format_specifier(StringView column_format_specifier)
+{
+    auto column_specification_parts = column_format_specifier.split_view('=', SplitBehavior::KeepEmpty);
+    if (column_specification_parts.size() > 2)
+        return Error::from_string_literal("Invalid column specifier format");
+
+    auto column_name = column_specification_parts[0];
+    auto maybe_column_id = column_name_to_id(column_name);
+    if (!maybe_column_id.has_value())
+        return Error::from_string_literal("Unknown column");
+
+    Optional<String> column_title;
+    if (column_specification_parts.size() == 2)
+        column_title = TRY(String::from_utf8(column_specification_parts[1]));
+
+    return column_from_id(maybe_column_id.value(), column_title);
+}
+
 static ErrorOr<Optional<String>> tty_stat_to_pseudo_name(struct stat tty_stat)
 {
     int tty_device_major = major(tty_stat.st_rdev);
@@ -103,23 +210,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/dev/", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    enum class Alignment {
-        Left,
-        Right,
-    };
-
-    struct Column {
-        String title;
-        Alignment alignment { Alignment::Left };
-        int width { 0 };
-        String buffer;
-    };
-
     bool every_process_flag = false;
     bool every_terminal_process_flag = false;
     bool full_format_flag = false;
     bool provided_filtering_option = false;
     bool provided_quick_pid_list = false;
+    Vector<Column> columns;
     Vector<pid_t> pid_list;
     Vector<pid_t> parent_pid_list;
     Vector<DeprecatedString> tty_list;
@@ -130,6 +226,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(every_process_flag, "Show every process", nullptr, 'A');
     args_parser.add_option(every_process_flag, "Show every process (Equivalent to -A)", nullptr, 'e');
     args_parser.add_option(full_format_flag, "Full format", nullptr, 'f');
+    args_parser.add_option(make_list_option(columns, "Specify a user-defined format.", nullptr, 'o', "column-format", [&](StringView column_format_specifier) -> Optional<Column> {
+        auto column_or_error = parse_column_format_specifier(column_format_specifier);
+        if (column_or_error.is_error()) {
+            warnln("Could not parse '{}' as a column format specifier", column_format_specifier);
+            return {};
+        }
+        return column_or_error.release_value();
+    }));
     args_parser.add_option(make_list_option(pid_list, "Show processes with a matching PID. (Comma- or space-separated list)", nullptr, 'p', "pid-list", [&](StringView pid_string) {
         provided_filtering_option = true;
         auto pid = pid_string.to_int();
@@ -180,37 +284,29 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    Vector<Column> columns;
+    if (columns.is_empty()) {
+        auto add_default_column = [&](ColumnId column_id) -> ErrorOr<void> {
+            auto column = TRY(column_from_id(column_id));
+            columns.unchecked_append(move(column));
+            return {};
+        };
 
-    Optional<size_t> uid_column;
-    Optional<size_t> pid_column;
-    Optional<size_t> ppid_column;
-    Optional<size_t> pgid_column;
-    Optional<size_t> sid_column;
-    Optional<size_t> state_column;
-    Optional<size_t> tty_column;
-    Optional<size_t> cmd_column;
-
-    auto add_column = [&](auto title, auto alignment) {
-        columns.unchecked_append({ title, alignment, 0, {} });
-        return columns.size() - 1;
-    };
-
-    if (full_format_flag) {
-        TRY(columns.try_ensure_capacity(8));
-        uid_column = add_column("UID"_short_string, Alignment::Left);
-        pid_column = add_column("PID"_short_string, Alignment::Right);
-        ppid_column = add_column("PPID"_short_string, Alignment::Right);
-        pgid_column = add_column("PGID"_short_string, Alignment::Right);
-        sid_column = add_column("SID"_short_string, Alignment::Right);
-        state_column = add_column("STATE"_short_string, Alignment::Left);
-        tty_column = add_column("TTY"_short_string, Alignment::Left);
-        cmd_column = add_column("CMD"_short_string, Alignment::Left);
-    } else {
-        TRY(columns.try_ensure_capacity(3));
-        pid_column = add_column("PID"_short_string, Alignment::Right);
-        tty_column = add_column("TTY"_short_string, Alignment::Left);
-        cmd_column = add_column("CMD"_short_string, Alignment::Left);
+        if (full_format_flag) {
+            TRY(columns.try_ensure_capacity(8));
+            TRY(add_default_column(ColumnId::UserId));
+            TRY(add_default_column(ColumnId::ProcessId));
+            TRY(add_default_column(ColumnId::ParentProcessId));
+            TRY(add_default_column(ColumnId::ProcessGroupId));
+            TRY(add_default_column(ColumnId::SessionId));
+            TRY(add_default_column(ColumnId::State));
+            TRY(add_default_column(ColumnId::TTY));
+            TRY(add_default_column(ColumnId::Command));
+        } else {
+            TRY(columns.try_ensure_capacity(3));
+            TRY(add_default_column(ColumnId::ProcessId));
+            TRY(add_default_column(ColumnId::TTY));
+            TRY(add_default_column(ColumnId::Command));
+        }
     }
 
     auto all_processes = TRY(Core::ProcessStatisticsReader::get_all());
@@ -252,32 +348,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Vector<String> header;
     TRY(header.try_ensure_capacity(columns.size()));
-    for (auto& column : columns)
+    auto header_is_empty = true;
+    for (auto& column : columns) {
+        if (!column.title.is_empty())
+            header_is_empty = false;
         header.unchecked_append(column.title);
-    rows.unchecked_append(move(header));
+    }
+
+    if (!header_is_empty)
+        rows.unchecked_append(move(header));
 
     for (auto const& process : processes) {
         Vector<String> row;
-        TRY(row.try_resize(columns.size()));
-
-        if (uid_column.has_value())
-            row[*uid_column] = TRY(String::from_deprecated_string(process.username));
-        if (pid_column.has_value())
-            row[*pid_column] = TRY(String::number(process.pid));
-        if (ppid_column.has_value())
-            row[*ppid_column] = TRY(String::number(process.ppid));
-        if (pgid_column.has_value())
-            row[*pgid_column] = TRY(String::number(process.pgid));
-        if (sid_column.has_value())
-            row[*sid_column] = TRY(String::number(process.sid));
-        if (tty_column.has_value())
-            row[*tty_column] = process.tty == "" ? "n/a"_short_string : TRY(String::from_deprecated_string(process.tty));
-        if (state_column.has_value())
-            row[*state_column] = process.threads.is_empty()
-                ? "Zombie"_short_string
-                : TRY(String::from_deprecated_string(process.threads.first().state));
-        if (cmd_column.has_value())
-            row[*cmd_column] = TRY(String::from_deprecated_string(process.name));
+        TRY(row.try_ensure_capacity(columns.size()));
+        for (auto const& column : columns)
+            row.unchecked_append(TRY(column_to_string(column.id, process)));
 
         rows.unchecked_append(move(row));
     }
