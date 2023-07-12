@@ -104,6 +104,13 @@ CSSPixelRect PaintableBox::compute_absolute_paint_rect() const
 {
     // FIXME: This likely incomplete:
     auto rect = absolute_border_box_rect();
+    if (has_scrollable_overflow()) {
+        auto scrollable_overflow_rect = this->scrollable_overflow_rect().value();
+        if (computed_values().overflow_x() == CSS::Overflow::Visible)
+            rect.unite_horizontally(scrollable_overflow_rect);
+        if (computed_values().overflow_y() == CSS::Overflow::Visible)
+            rect.unite_vertically(scrollable_overflow_rect);
+    }
     auto resolved_box_shadow_data = resolve_box_shadow_data();
     for (auto const& shadow : resolved_box_shadow_data) {
         if (shadow.placement == ShadowPlacement::Inner)
