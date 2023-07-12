@@ -3492,7 +3492,6 @@ Completion MetaProperty::execute(Interpreter& interpreter) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
     auto& vm = interpreter.vm();
-    auto& realm = *vm.current_realm();
 
     // NewTarget : new . target
     if (m_type == MetaProperty::Type::NewTarget) {
@@ -3502,49 +3501,7 @@ Completion MetaProperty::execute(Interpreter& interpreter) const
 
     // ImportMeta : import . meta
     if (m_type == MetaProperty::Type::ImportMeta) {
-        // 1. Let module be GetActiveScriptOrModule().
-        auto script_or_module = interpreter.vm().get_active_script_or_module();
-
-        // 2. Assert: module is a Source Text Module Record.
-        VERIFY(script_or_module.has<NonnullGCPtr<Module>>());
-        VERIFY(script_or_module.get<NonnullGCPtr<Module>>());
-        VERIFY(is<SourceTextModule>(*script_or_module.get<NonnullGCPtr<Module>>()));
-        auto& module = static_cast<SourceTextModule&>(*script_or_module.get<NonnullGCPtr<Module>>());
-
-        // 3. Let importMeta be module.[[ImportMeta]].
-        auto* import_meta = module.import_meta();
-
-        // 4. If importMeta is empty, then
-        if (import_meta == nullptr) {
-            // a. Set importMeta to OrdinaryObjectCreate(null).
-            import_meta = Object::create(realm, nullptr);
-
-            // b. Let importMetaValues be HostGetImportMetaProperties(module).
-            auto import_meta_values = interpreter.vm().host_get_import_meta_properties(module);
-
-            // c. For each Record { [[Key]], [[Value]] } p of importMetaValues, do
-            for (auto& entry : import_meta_values) {
-                // i. Perform ! CreateDataPropertyOrThrow(importMeta, p.[[Key]], p.[[Value]]).
-                MUST(import_meta->create_data_property_or_throw(entry.key, entry.value));
-            }
-
-            // d. Perform HostFinalizeImportMeta(importMeta, module).
-            interpreter.vm().host_finalize_import_meta(import_meta, module);
-
-            // e. Set module.[[ImportMeta]] to importMeta.
-            module.set_import_meta({}, import_meta);
-
-            // f. Return importMeta.
-            return Value { import_meta };
-        }
-        // 5. Else,
-        else {
-            // a. Assert: Type(importMeta) is Object.
-            // Note: This is always true by the type.
-
-            // b. Return importMeta.
-            return Value { import_meta };
-        }
+        return Value(vm.get_import_meta());
     }
 
     VERIFY_NOT_REACHED();

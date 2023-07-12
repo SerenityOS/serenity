@@ -42,6 +42,7 @@
     O(GetIterator)                   \
     O(GetMethod)                     \
     O(GetNewTarget)                  \
+    O(GetImportMeta)                 \
     O(GetObjectPropertyIterator)     \
     O(GetPrivateById)                \
     O(GetVariable)                   \

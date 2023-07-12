@@ -219,6 +219,8 @@ public:
 
     Value get_new_target();
 
+    Object* get_import_meta();
+
     Object& get_global_object();
 
     CommonPropertyNames names;

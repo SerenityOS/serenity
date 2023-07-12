@@ -2884,10 +2884,8 @@ Bytecode::CodeGenerationErrorOr<void> MetaProperty::generate_bytecode(Bytecode::
 
     // ImportMeta : import . meta
     if (m_type == MetaProperty::Type::ImportMeta) {
-        return Bytecode::CodeGenerationError {
-            this,
-            "Unimplemented meta property: import.meta"sv,
-        };
+        generator.emit<Bytecode::Op::GetImportMeta>();
+        return {};
     }
 
     VERIFY_NOT_REACHED();

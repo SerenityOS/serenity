@@ -26,6 +26,7 @@
 #include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibJS/SourceTextModule.h>
 
 namespace JS::Bytecode {
 
@@ -759,6 +760,12 @@ ThrowCompletionOr<void> ResolveSuperBase::execute_impl(Bytecode::Interpreter& in
 ThrowCompletionOr<void> GetNewTarget::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.accumulator() = interpreter.vm().get_new_target();
+    return {};
+}
+
+ThrowCompletionOr<void> GetImportMeta::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.accumulator() = interpreter.vm().get_import_meta();
     return {};
 }
 
@@ -1894,6 +1901,11 @@ DeprecatedString ResolveSuperBase::to_deprecated_string_impl(Bytecode::Executabl
 DeprecatedString GetNewTarget::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
     return "GetNewTarget"sv;
+}
+
+DeprecatedString GetImportMeta::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return "GetImportMeta"sv;
 }
 
 DeprecatedString TypeofVariable::to_deprecated_string_impl(Bytecode::Executable const& executable) const
