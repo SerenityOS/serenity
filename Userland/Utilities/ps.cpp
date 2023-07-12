@@ -218,9 +218,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& processes = all_processes.processes;
 
     // Filter
-    if (!every_process_flag) {
-        Vector<Core::ProcessStatistics> filtered_processes;
+    Vector<Core::ProcessStatistics> filtered_processes;
+    if (provided_quick_pid_list) {
+        for (auto pid : pid_list) {
+            auto maybe_process = processes.first_matching([=](auto const& process) { return process.pid == pid; });
+            if (maybe_process.has_value())
+                filtered_processes.append(maybe_process.release_value());
+        }
 
+        processes = move(filtered_processes);
+    } else if (!every_process_flag) {
         for (auto const& process : processes) {
             // Default is to show processes from the current TTY
             if ((!provided_filtering_option && process.tty == this_pseudo_tty_name.bytes_as_string_view())
@@ -237,14 +244,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     // Sort
-    if (provided_quick_pid_list) {
-        auto processes_sort_predicate = [&pid_list](auto& a, auto& b) {
-            return pid_list.find_first_index(a.pid).value() < pid_list.find_first_index(b.pid).value();
-        };
-        quick_sort(processes, processes_sort_predicate);
-    } else {
+    if (!provided_quick_pid_list)
         quick_sort(processes, [](auto& a, auto& b) { return a.pid < b.pid; });
-    }
 
     Vector<Vector<String>> rows;
     TRY(rows.try_ensure_capacity(1 + processes.size()));
