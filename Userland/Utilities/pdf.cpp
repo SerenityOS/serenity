@@ -120,15 +120,7 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
     int page_index = page_number - 1;
 
     if (dump_contents) {
-        auto page = TRY(document->get_page(page_index));
-        auto contents = TRY(page.page_contents(*document));
-        for (u8 c : contents.bytes()) {
-            if (c < 128)
-                out("{:c}", c);
-            else
-                out("\\{:03o}", c);
-        }
-
+        TRY(document->dump_page(page_index));
         return 0;
     }
 
