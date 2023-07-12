@@ -60,6 +60,8 @@ public:
 
     void shrink_to_fit();
 
+    [[nodiscard]] u64 environment_serial_number() const { return m_environment_serial_number; }
+
 private:
     ThrowCompletionOr<Value> get_binding_value_direct(VM&, Binding&, bool strict);
     ThrowCompletionOr<void> set_mutable_binding_direct(VM&, Binding&, Value, bool strict);
@@ -121,6 +123,8 @@ private:
 
     Vector<Binding> m_bindings;
     Vector<DisposableResource> m_disposable_resource_stack;
+
+    u64 m_environment_serial_number { 0 };
 };
 
 template<>
