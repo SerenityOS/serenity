@@ -20,6 +20,8 @@ static struct termios g_save;
 // Flag set by a SIGWINCH signal handler to notify the main loop that the window has been resized.
 static Atomic<bool> g_resized { false };
 
+static Atomic<bool> g_restore_buffer_on_close { false };
+
 static ErrorOr<void> setup_tty(bool switch_buffer)
 {
     // Save previous tty settings.
@@ -34,20 +36,20 @@ static ErrorOr<void> setup_tty(bool switch_buffer)
     if (switch_buffer) {
         // Save cursor and switch to alternate buffer.
         out("\e[s\e[?1047h");
+        g_restore_buffer_on_close = true;
     }
 
     return {};
 }
 
-static ErrorOr<void> teardown_tty(bool switch_buffer)
+static void teardown_tty()
 {
-    TRY(Core::System::tcsetattr(STDOUT_FILENO, TCSAFLUSH, g_save));
+    auto maybe_error = Core::System::tcsetattr(STDOUT_FILENO, TCSAFLUSH, g_save);
+    if (maybe_error.is_error())
+        warnln("Failed to reset original terminal state: {}", strerror(maybe_error.error().code()));
 
-    if (switch_buffer) {
+    if (g_restore_buffer_on_close.exchange(false))
         out("\e[?1047l\e[u");
-    }
-
-    return {};
 }
 
 static Vector<StringView> wrap_line(DeprecatedString const& string, size_t width)
@@ -524,7 +526,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         g_resized = true;
     });
 
-    TRY(Core::System::pledge("stdio tty"));
+    TRY(Core::System::pledge("stdio tty sigaction"));
 
     if (emulate_more) {
         // Configure options that match more's behavior
@@ -539,6 +541,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     TRY(setup_tty(!dont_switch_buffer));
+
+    ScopeGuard teardown_guard([] {
+        teardown_tty();
+    });
+
+    auto teardown_sigaction_handler = [](auto) {
+        teardown_tty();
+        exit(1);
+    };
+    struct sigaction teardown_action;
+    teardown_action.sa_handler = teardown_sigaction_handler;
+    TRY(Core::System::sigaction(SIGTERM, &teardown_action, nullptr));
 
     Pager pager(filename, file, stdout, prompt);
     pager.init();
@@ -607,7 +621,5 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     pager.clear_status();
-
-    TRY(teardown_tty(!dont_switch_buffer));
     return 0;
 }
