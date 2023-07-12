@@ -56,3 +56,29 @@ TEST_CASE(rect_closest_to)
     closest = screen_rect.closest_to(p);
     EXPECT_EQ(screen_rect.side(closest), Gfx::IntRect::Side::Top);
 }
+
+TEST_CASE(rect_unite_horizontally)
+{
+    Gfx::IntRect rect { 10, 10, 100, 100 };
+    Gfx::IntRect huge_rect { 0, 0, 1000, 1000 };
+
+    rect.unite_horizontally(huge_rect);
+
+    EXPECT_EQ(rect.left(), 0);
+    EXPECT_EQ(rect.right(), 1000);
+    EXPECT_EQ(rect.top(), 10);
+    EXPECT_EQ(rect.bottom(), 110);
+}
+
+TEST_CASE(rect_unite_vertically)
+{
+    Gfx::IntRect rect { 10, 10, 100, 100 };
+    Gfx::IntRect huge_rect { 0, 0, 1000, 1000 };
+
+    rect.unite_vertically(huge_rect);
+
+    EXPECT_EQ(rect.top(), 0);
+    EXPECT_EQ(rect.bottom(), 1000);
+    EXPECT_EQ(rect.left(), 10);
+    EXPECT_EQ(rect.right(), 110);
+}

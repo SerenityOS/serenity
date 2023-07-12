@@ -870,6 +870,22 @@ public:
         return { { point.x() - size.width() / 2, point.y() - size.height() / 2 }, size };
     }
 
+    void unite_horizontally(Rect<T> const& other)
+    {
+        auto new_left = min(left(), other.left());
+        auto new_right = max(right(), other.right());
+        set_left(new_left);
+        set_right(new_right);
+    }
+
+    void unite_vertically(Rect<T> const& other)
+    {
+        auto new_top = min(top(), other.top());
+        auto new_bottom = max(bottom(), other.bottom());
+        set_top(new_top);
+        set_bottom(new_bottom);
+    }
+
     [[nodiscard]] Rect<T> united(Rect<T> const& other) const
     {
         if (is_empty())
