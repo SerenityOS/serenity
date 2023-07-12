@@ -14,20 +14,19 @@ class Register {
 public:
     constexpr static u32 accumulator_index = 0;
 
-    static Register accumulator()
+    static constexpr Register accumulator()
     {
-        static Register accumulator(accumulator_index);
-        return accumulator;
+        return Register(accumulator_index);
     }
 
-    explicit Register(u32 index)
+    constexpr explicit Register(u32 index)
         : m_index(index)
     {
     }
 
-    bool operator==(Register reg) const { return m_index == reg.index(); }
+    constexpr bool operator==(Register reg) const { return m_index == reg.index(); }
 
-    u32 index() const { return m_index; }
+    constexpr u32 index() const { return m_index; }
 
 private:
     u32 m_index;
