@@ -554,6 +554,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     teardown_action.sa_handler = teardown_sigaction_handler;
     TRY(Core::System::sigaction(SIGTERM, &teardown_action, nullptr));
 
+    struct sigaction ignore_action;
+    ignore_action.sa_handler = { SIG_IGN };
+    TRY(Core::System::sigaction(SIGINT, &ignore_action, nullptr));
+
     Pager pager(filename, file, stdout, prompt);
     pager.init();
 
