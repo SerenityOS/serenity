@@ -85,28 +85,7 @@ Renderer::Renderer(RefPtr<Document> document, Page const& page, RefPtr<Gfx::Bitm
 
 PDFErrorsOr<void> Renderer::render()
 {
-    if (m_page.contents.is_null())
-        return {};
-
-    // Use our own vector, as the /Content can be an array with multiple
-    // streams which gets concatenated
-    // FIXME: Text operators are supposed to only have effects on the current
-    // stream object. Do the text operators treat this concatenated stream
-    // as one stream or multiple?
-    ByteBuffer byte_buffer;
-
-    if (m_page.contents->is<ArrayObject>()) {
-        auto contents = m_page.contents->cast<ArrayObject>();
-        for (auto& ref : *contents) {
-            auto bytes = TRY(m_document->resolve_to<StreamObject>(ref))->bytes();
-            byte_buffer.append(bytes.data(), bytes.size());
-        }
-    } else {
-        auto bytes = m_page.contents->cast<StreamObject>()->bytes();
-        byte_buffer.append(bytes.data(), bytes.size());
-    }
-
-    auto operators = TRY(Parser::parse_operators(m_document, byte_buffer));
+    auto operators = TRY(Parser::parse_operators(m_document, TRY(m_page.page_contents(*m_document))));
 
     Errors errors;
     for (auto& op : operators) {
