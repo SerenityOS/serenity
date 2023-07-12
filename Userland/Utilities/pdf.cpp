@@ -85,11 +85,11 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
     StringView in_path;
     args_parser.add_positional_argument(in_path, "Path to input image file", "FILE");
 
-    StringView render_path;
-    args_parser.add_option(render_path, "Path to render a PDF page to", "render", {}, "PNG FILE");
-
     u32 page_number = 1;
     args_parser.add_option(page_number, "Page number (1-based)", "page", {}, "PAGE");
+
+    StringView render_path;
+    args_parser.add_option(render_path, "Path to render a PDF page to", "render", {}, "PNG FILE");
 
     args_parser.parse(arguments);
 
