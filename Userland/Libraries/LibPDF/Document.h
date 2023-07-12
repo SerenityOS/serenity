@@ -118,6 +118,7 @@ public:
 
     [[nodiscard]] u32 get_page_count() const;
 
+    PDFErrorOr<void> dump_page(u32 index);
     [[nodiscard]] PDFErrorOr<Page> get_page(u32 index);
 
     ALWAYS_INLINE Value get_value(u32 index) const
