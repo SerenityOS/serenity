@@ -21,9 +21,14 @@ struct PropertyLookupCache {
     u64 unique_shape_serial_number { 0 };
 };
 
+struct GlobalVariableCache : public PropertyLookupCache {
+    u64 environment_serial_number { 0 };
+};
+
 struct Executable {
     DeprecatedFlyString name;
     Vector<PropertyLookupCache> property_lookup_caches;
+    Vector<GlobalVariableCache> global_variable_caches;
     Vector<NonnullOwnPtr<BasicBlock>> basic_blocks;
     NonnullOwnPtr<StringTable> string_table;
     NonnullOwnPtr<IdentifierTable> identifier_table;

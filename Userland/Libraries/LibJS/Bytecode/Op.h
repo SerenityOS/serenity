@@ -524,6 +524,25 @@ private:
     Optional<EnvironmentCoordinate> mutable m_cached_environment_coordinate;
 };
 
+class GetGlobal final : public Instruction {
+public:
+    explicit GetGlobal(IdentifierTableIndex identifier, u32 cache_index)
+        : Instruction(Type::GetGlobal)
+        , m_identifier(identifier)
+        , m_cache_index(cache_index)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register) { }
+
+private:
+    IdentifierTableIndex m_identifier;
+    u32 m_cache_index { 0 };
+};
+
 class GetLocal final : public Instruction {
 public:
     explicit GetLocal(size_t index)

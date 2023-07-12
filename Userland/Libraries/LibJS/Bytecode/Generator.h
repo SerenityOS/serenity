@@ -202,6 +202,8 @@ public:
     void emit_get_by_id(IdentifierTableIndex);
     void emit_get_by_id_with_this(IdentifierTableIndex, Register);
 
+    [[nodiscard]] size_t next_global_variable_cache() { return m_next_global_variable_cache++; }
+
 private:
     Generator();
     ~Generator() = default;
@@ -222,6 +224,7 @@ private:
     u32 m_next_register { 2 };
     u32 m_next_block { 1 };
     u32 m_next_property_lookup_cache { 0 };
+    u32 m_next_global_variable_cache { 0 };
     FunctionKind m_enclosing_function_kind { FunctionKind::Normal };
     Vector<LabelableScope> m_continuable_scopes;
     Vector<LabelableScope> m_breakable_scopes;
