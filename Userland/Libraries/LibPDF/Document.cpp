@@ -136,6 +136,67 @@ u32 Document::get_page_count() const
     return m_page_object_indices.size();
 }
 
+static ErrorOr<void> collect_referenced_indices(Value const& value, Vector<int>& referenced_indices)
+{
+    TRY(value.visit(
+        [&](Empty const&) -> ErrorOr<void> { return {}; },
+        [&](nullptr_t const&) -> ErrorOr<void> { return {}; },
+        [&](bool const&) -> ErrorOr<void> { return {}; },
+        [&](int const&) -> ErrorOr<void> { return {}; },
+        [&](float const&) -> ErrorOr<void> { return {}; },
+        [&](Reference const& ref) -> ErrorOr<void> {
+            TRY(referenced_indices.try_append(ref.as_ref_index()));
+            return {};
+        },
+        [&](NonnullRefPtr<Object> const& object) -> ErrorOr<void> {
+            if (object->is<ArrayObject>()) {
+                for (auto& element : object->cast<ArrayObject>()->elements())
+                    TRY(collect_referenced_indices(element, referenced_indices));
+            } else if (object->is<DictObject>()) {
+                for (auto& [key, value] : object->cast<DictObject>()->map()) {
+                    if (key != CommonNames::Parent)
+                        TRY(collect_referenced_indices(value, referenced_indices));
+                }
+            } else if (object->is<StreamObject>()) {
+                for (auto& [key, value] : object->cast<StreamObject>()->dict()->map()) {
+                    if (key != CommonNames::Parent)
+                        TRY(collect_referenced_indices(value, referenced_indices));
+                }
+            }
+            return {};
+        }));
+    return {};
+}
+
+static PDFErrorOr<void> dump_tree(Document& document, size_t index, HashTable<int>& seen)
+{
+    if (seen.contains(index))
+        return {};
+    seen.set(index);
+
+    auto const& value = TRY(document.get_or_load_value(index));
+    outln("obj {} 0", index);
+    outln("{}", value.to_deprecated_string(0));
+    outln("endobj");
+
+    Vector<int> referenced_indices;
+    TRY(collect_referenced_indices(value, referenced_indices));
+    for (auto index : referenced_indices)
+        TRY(dump_tree(document, index, seen));
+
+    return {};
+}
+
+PDFErrorOr<void> Document::dump_page(u32 index)
+{
+    VERIFY(index < m_page_object_indices.size());
+    auto page_object_index = m_page_object_indices[index];
+
+    HashTable<int> seen;
+    TRY(dump_tree(*this, page_object_index, seen));
+    return {};
+}
+
 PDFErrorOr<Page> Document::get_page(u32 index)
 {
     VERIFY(index < m_page_object_indices.size());
