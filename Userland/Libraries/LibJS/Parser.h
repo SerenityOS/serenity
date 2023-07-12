@@ -316,8 +316,10 @@ private:
         bool allow_super_property_lookup { false };
         bool allow_super_constructor_call { false };
         bool in_function_context { false };
+        bool initiated_by_eval { false };
         bool in_eval_function_context { false }; // This controls if we allow new.target or not. Note that eval("return") is not allowed, so we have to have a separate state variable for eval.
         bool in_formal_parameter_context { false };
+        bool in_catch_parameter_context { false };
         bool in_generator_function_context { false };
         bool await_expression_is_valid { false };
         bool in_arrow_function_context { false };

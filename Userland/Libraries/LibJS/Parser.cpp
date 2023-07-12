@@ -75,9 +75,13 @@ private:
     }
 
 public:
-    static ScopePusher function_scope(Parser& parser)
+    static ScopePusher function_scope(Parser& parser, RefPtr<Identifier const> function_name = nullptr)
     {
-        return ScopePusher(parser, nullptr, ScopeLevel::FunctionTopLevel, ScopeType::Function);
+        ScopePusher scope_pusher(parser, nullptr, ScopeLevel::FunctionTopLevel, ScopeType::Function);
+        if (function_name) {
+            scope_pusher.m_bound_names.set(function_name->string());
+        }
+        return scope_pusher;
     }
 
     static ScopePusher program_scope(Parser& parser, Program& program)
@@ -237,7 +241,7 @@ public:
     void set_contains_direct_call_to_eval()
     {
         m_contains_direct_call_to_eval = true;
-        m_can_use_local_variables = false;
+        m_screwed_by_eval_in_scope_chain = true;
     }
     void set_contains_access_to_arguments_object() { m_contains_access_to_arguments_object = true; }
     void set_scope_node(ScopeNode* node) { m_node = node; }
@@ -270,12 +274,8 @@ public:
             m_parent_scope->m_contains_await_expression |= m_contains_await_expression;
         }
 
-        if (m_parent_scope) {
-            if (m_contains_direct_call_to_eval) {
-                m_parent_scope->m_can_use_local_variables = false;
-            } else {
-                m_can_use_local_variables = m_parent_scope->m_can_use_local_variables && m_can_use_local_variables;
-            }
+        if (m_parent_scope && m_contains_direct_call_to_eval) {
+            m_parent_scope->m_screwed_by_eval_in_scope_chain = true;
         }
 
         if (!m_node) {
@@ -286,6 +286,12 @@ public:
         for (auto& it : m_identifier_groups) {
             auto const& identifier_group_name = it.key;
             auto& identifier_group = it.value;
+
+            if (m_parser.m_state.in_catch_parameter_context) {
+                // NOTE: The parser currently cannot determine if an identifier captured by a function belongs to the environment created by a catch parameter.
+                //       As a result, any identifiers used inside the catch parameter are not considered as candidates for optimization in local or global variable access.
+                continue;
+            }
 
             if (identifier_group_name == "arguments"sv) {
                 // NOTE: arguments is a special variable that should not be treated as a candidate to become local
@@ -320,9 +326,14 @@ public:
             }
 
             if ((m_type == ScopeType::ClassDeclaration || m_type == ScopeType::Catch) && m_bound_names.contains(identifier_group_name)) {
-                // NOTE: Currently class names and catch section parameters are not considered to become local variables
-                //       but this might be fixed in the future
+                // NOTE: Currently, the parser cannot recognize that assigning a named function expression creates a scope with a binding for the function name.
+                //       As a result, function names are not considered as candidates for optimization in global variable access.
                 continue;
+            }
+
+            if (m_type == ScopeType::Function && m_bound_names.contains(identifier_group_name)) {
+                // NOTE: Currently parser can't determine that named function expression assigment creates scope with binding for funciton name so function names are not considered as candidates to be optmized in global variables access
+                identifier_group.might_be_variable_in_lexical_scope_in_named_function_assignment = true;
             }
 
             if (m_type == ScopeType::ClassDeclaration || m_type == ScopeType::Catch) {
@@ -330,17 +341,42 @@ public:
                 scope_has_declaration = false;
             }
 
-            if (m_type == ScopeType::Function && !m_contains_access_to_arguments_object && m_function_parameters_candidates_for_local_variables.contains(identifier_group_name)) {
-                scope_has_declaration = true;
+            if (m_type == ScopeType::Function) {
+                if (!m_contains_access_to_arguments_object && m_function_parameters_candidates_for_local_variables.contains(identifier_group_name)) {
+                    scope_has_declaration = true;
+                } else if (m_forbidden_lexical_names.contains(identifier_group_name)) {
+                    // NOTE: If an identifier is used as a function parameter that cannot be optimized locally or globally, it is simply ignored.
+                    continue;
+                }
             }
 
-            if (scope_has_declaration) {
+            if (m_type == ScopeType::Function && hoistable_function_declaration) {
+                // NOTE: Hoistable function declarations are currently not optimized into global or local variables, but future improvements may change that.
+                continue;
+            }
+
+            if (m_type == ScopeType::Program) {
+                auto can_use_global_for_identifier = true;
+                if (identifier_group.used_inside_with_statement)
+                    can_use_global_for_identifier = false;
+                else if (identifier_group.might_be_variable_in_lexical_scope_in_named_function_assignment)
+                    can_use_global_for_identifier = false;
+                else if (m_screwed_by_eval_in_scope_chain)
+                    can_use_global_for_identifier = false;
+                else if (m_parser.m_state.initiated_by_eval)
+                    can_use_global_for_identifier = false;
+
+                if (can_use_global_for_identifier) {
+                    for (auto& identifier : identifier_group.identifiers)
+                        identifier->set_is_global();
+                }
+            } else if (scope_has_declaration) {
                 if (hoistable_function_declaration)
                     continue;
 
-                if (!identifier_group.captured_by_nested_function) {
+                if (!identifier_group.captured_by_nested_function && !identifier_group.used_inside_with_statement) {
                     auto function_scope = last_function_scope();
-                    if (!function_scope || !m_can_use_local_variables) {
+                    if (!function_scope || m_screwed_by_eval_in_scope_chain) {
                         continue;
                     }
 
@@ -349,16 +385,23 @@ public:
                         identifier->set_local_variable_index(local_variable_index);
                 }
             } else {
-                if (m_function_parameters.has_value() || m_type == ScopeType::ClassField || m_type == ScopeType::ClassStaticInit || m_type == ScopeType::With) {
+                if (m_function_parameters.has_value() || m_type == ScopeType::ClassField || m_type == ScopeType::ClassStaticInit) {
                     // NOTE: Class fields and class static initialization sections implicitly create functions
                     identifier_group.captured_by_nested_function = true;
                 }
+
+                if (m_type == ScopeType::With)
+                    identifier_group.used_inside_with_statement = true;
 
                 if (m_parent_scope) {
                     if (auto maybe_parent_scope_identifier_group = m_parent_scope->m_identifier_groups.get(identifier_group_name); maybe_parent_scope_identifier_group.has_value()) {
                         maybe_parent_scope_identifier_group.value().identifiers.extend(identifier_group.identifiers);
                         if (identifier_group.captured_by_nested_function)
                             maybe_parent_scope_identifier_group.value().captured_by_nested_function = true;
+                        if (identifier_group.used_inside_with_statement)
+                            maybe_parent_scope_identifier_group.value().used_inside_with_statement = true;
+                        if (identifier_group.might_be_variable_in_lexical_scope_in_named_function_assignment)
+                            maybe_parent_scope_identifier_group.value().might_be_variable_in_lexical_scope_in_named_function_assignment = true;
                     } else {
                         m_parent_scope->m_identifier_groups.set(identifier_group_name, identifier_group);
                     }
@@ -436,6 +479,8 @@ private:
 
     struct IdentifierGroup {
         bool captured_by_nested_function { false };
+        bool used_inside_with_statement { false };
+        bool might_be_variable_in_lexical_scope_in_named_function_assignment { false };
         Vector<NonnullRefPtr<Identifier>> identifiers;
     };
     HashMap<DeprecatedFlyString, IdentifierGroup> m_identifier_groups;
@@ -445,7 +490,7 @@ private:
     bool m_contains_access_to_arguments_object { false };
     bool m_contains_direct_call_to_eval { false };
     bool m_contains_await_expression { false };
-    bool m_can_use_local_variables { true };
+    bool m_screwed_by_eval_in_scope_chain { false };
 };
 
 class OperatorPrecedenceTable {
@@ -576,6 +621,7 @@ Parser::Parser(Lexer lexer, Program::Type program_type, Optional<EvalInitialStat
     , m_program_type(program_type)
 {
     if (initial_state_for_eval.has_value()) {
+        m_state.initiated_by_eval = true;
         m_state.in_eval_function_context = initial_state_for_eval->in_eval_function_context;
         m_state.allow_super_property_lookup = initial_state_for_eval->allow_super_property_lookup;
         m_state.allow_super_constructor_call = initial_state_for_eval->allow_super_constructor_call;
@@ -2831,7 +2877,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u16 parse_options, O
     Vector<FunctionParameter> parameters;
     bool contains_direct_call_to_eval = false;
     auto body = [&] {
-        ScopePusher function_scope = ScopePusher::function_scope(*this);
+        ScopePusher function_scope = ScopePusher::function_scope(*this, name);
 
         consume(TokenType::ParenOpen);
         parameters = parse_formal_parameters(function_length, parse_options);
@@ -3634,6 +3680,7 @@ NonnullRefPtr<CatchClause const> Parser::parse_catch_clause()
     RefPtr<BindingPattern const> pattern_parameter;
     auto should_expect_parameter = false;
     if (match(TokenType::ParenOpen)) {
+        TemporaryChange catch_parameter_context_change { m_state.in_catch_parameter_context, true };
         should_expect_parameter = true;
         consume();
         if (match_identifier_name()
