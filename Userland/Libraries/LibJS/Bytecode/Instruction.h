@@ -45,6 +45,7 @@
     O(GetObjectPropertyIterator)     \
     O(GetPrivateById)                \
     O(GetVariable)                   \
+    O(GetGlobal)                     \
     O(GetLocal)                      \
     O(GreaterThan)                   \
     O(GreaterThanEquals)             \

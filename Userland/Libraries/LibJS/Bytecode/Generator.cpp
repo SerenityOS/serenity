@@ -57,9 +57,13 @@ CodeGenerationErrorOr<NonnullOwnPtr<Executable>> Generator::generate(ASTNode con
     Vector<PropertyLookupCache> property_lookup_caches;
     property_lookup_caches.resize(generator.m_next_property_lookup_cache);
 
+    Vector<GlobalVariableCache> global_variable_caches;
+    global_variable_caches.resize(generator.m_next_global_variable_cache);
+
     return adopt_own(*new Executable {
         .name = {},
         .property_lookup_caches = move(property_lookup_caches),
+        .global_variable_caches = move(global_variable_caches),
         .basic_blocks = move(generator.m_root_basic_blocks),
         .string_table = move(generator.m_string_table),
         .identifier_table = move(generator.m_identifier_table),
