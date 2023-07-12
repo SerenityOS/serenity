@@ -12,7 +12,7 @@
 
 namespace PDF {
 
-class Error {
+class [[nodiscard]] Error {
 public:
     enum class Type {
         Parse,
