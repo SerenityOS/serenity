@@ -265,7 +265,7 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
     //    but this time using the value of 'min-width' as the computed value for 'width'.
     if (!computed_values.min_width().is_auto()) {
         auto min_width = calculate_inner_width(box, remaining_available_space.width, computed_values.min_width());
-        auto used_width_px = used_width.is_auto() ? remaining_available_space.width.to_px() : used_width.to_px(box);
+        auto used_width_px = used_width.is_auto() ? calculate_min_content_width(box) : used_width.to_px(box);
         if (used_width_px < min_width.to_px(box)) {
             used_width = try_compute_width(min_width);
         }
