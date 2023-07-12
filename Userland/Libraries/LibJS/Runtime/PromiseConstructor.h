@@ -31,8 +31,8 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(race);
     JS_DECLARE_NATIVE_FUNCTION(reject);
     JS_DECLARE_NATIVE_FUNCTION(resolve);
-
     JS_DECLARE_NATIVE_FUNCTION(symbol_species_getter);
+    JS_DECLARE_NATIVE_FUNCTION(with_resolvers);
 };
 
 }
