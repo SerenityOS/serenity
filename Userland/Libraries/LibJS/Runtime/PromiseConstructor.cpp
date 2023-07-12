@@ -259,6 +259,7 @@ ThrowCompletionOr<void> PromiseConstructor::initialize(Realm& realm)
     define_native_function(realm, vm.names.race, race, 1, attr);
     define_native_function(realm, vm.names.reject, reject, 1, attr);
     define_native_function(realm, vm.names.resolve, resolve, 1, attr);
+    define_native_function(realm, vm.names.withResolvers, with_resolvers, 0, attr);
 
     define_native_accessor(realm, vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 
@@ -485,6 +486,33 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::symbol_species_getter)
 {
     // 1. Return the this value.
     return vm.this_value();
+}
+
+// 1.1.1.1 Promise.withResolvers ( ), https://tc39.es/proposal-promise-with-resolvers/#sec-promise.withResolvers
+JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::with_resolvers)
+{
+    auto& realm = *vm.current_realm();
+
+    // 1. Let C be the this value.
+    auto constructor = vm.this_value();
+
+    // 2. Let promiseCapability be ? NewPromiseCapability(C).
+    auto promise_capability = TRY(new_promise_capability(vm, constructor));
+
+    // 3. Let obj be OrdinaryObjectCreate(%Object.prototype%).
+    auto object = Object::create(realm, realm.intrinsics().object_prototype());
+
+    // 4. Perform ! CreateDataPropertyOrThrow(obj, "promise", promiseCapability.[[Promise]]).
+    MUST(object->create_data_property_or_throw(vm.names.promise, promise_capability->promise()));
+
+    // 5. Perform ! CreateDataPropertyOrThrow(obj, "resolve", promiseCapability.[[Resolve]]).
+    MUST(object->create_data_property_or_throw(vm.names.resolve, promise_capability->resolve()));
+
+    // 6. Perform ! CreateDataPropertyOrThrow(obj, "reject", promiseCapability.[[Reject]]).
+    MUST(object->create_data_property_or_throw(vm.names.reject, promise_capability->reject()));
+
+    // 7. Return obj.
+    return object;
 }
 
 }
