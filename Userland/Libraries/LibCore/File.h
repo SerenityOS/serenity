@@ -67,6 +67,7 @@ public:
     virtual bool is_open() const override;
     virtual void close() override;
     virtual ErrorOr<size_t> seek(i64 offset, SeekMode) override;
+    virtual ErrorOr<size_t> tell() const override;
     virtual ErrorOr<void> truncate(size_t length) override;
 
     // Sets the blocking mode of the file. If blocking mode is disabled, reads
@@ -109,6 +110,8 @@ private:
     int m_fd { -1 };
     bool m_last_read_was_eof { false };
     ShouldCloseFileDescriptor m_should_close_file_descriptor { ShouldCloseFileDescriptor::Yes };
+
+    size_t m_file_offset { 0 };
 };
 
 AK_ENUM_BITWISE_OPERATORS(File::OpenMode)

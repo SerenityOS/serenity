@@ -44,6 +44,7 @@ public:
 
     bool in_quirks_mode() const;
     DOM::Document const* document() const { return m_document; }
+    HTML::Window const* window() const;
     AK::URL complete_url(StringView) const;
 
     PropertyID current_property_id() const { return m_current_property_id; }
@@ -351,6 +352,7 @@ private:
     ErrorOr<RefPtr<StyleValue>> parse_single_shadow_value(TokenStream<ComponentValue>&, AllowInsetKeyword);
     ErrorOr<RefPtr<StyleValue>> parse_text_decoration_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_text_decoration_line_value(TokenStream<ComponentValue>&);
+    ErrorOr<RefPtr<StyleValue>> parse_easing_value(TokenStream<ComponentValue>&);
     ErrorOr<RefPtr<StyleValue>> parse_transform_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_transform_origin_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_grid_track_size_list(Vector<ComponentValue> const&, bool allow_separate_line_name_blocks = false);

@@ -91,4 +91,18 @@ BlockBasedFileSystem::BlockIndex FATFS::first_block_of_cluster(u32 cluster) cons
     return ((cluster - first_data_cluster) * boot_record()->sectors_per_cluster) + m_first_data_sector;
 }
 
+u8 FATFS::internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const
+{
+    FATAttributes attrib = static_cast<FATAttributes>(entry.file_type);
+    if (has_flag(attrib, FATAttributes::Directory)) {
+        return DT_DIR;
+    } else if (has_flag(attrib, FATAttributes::VolumeID)) {
+        return DT_UNKNOWN;
+    } else {
+        // ReadOnly, Hidden, System, Archive, LongFileName.
+        return DT_REG;
+    }
+    return DT_UNKNOWN;
+}
+
 }

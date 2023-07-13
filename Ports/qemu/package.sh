@@ -23,7 +23,6 @@ depends=(
   'pixman'
   'SDL2'
 )
-auth_type='sha256'
 files="${QEMU_ARCHIVE_URL} ${QEMU_ARCHIVE} ${QEMU_ARCHIVE_SHA256SUM}"
 
 pre_patch() {

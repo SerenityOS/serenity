@@ -250,6 +250,7 @@ set(KERNEL_SOURCES
     Net/Intel/E1000ENetworkAdapter.cpp
     Net/Intel/E1000NetworkAdapter.cpp
     Net/Realtek/RTL8168NetworkAdapter.cpp
+    Net/VirtIO/VirtIONetworkAdapter.cpp
     Net/IPv4Socket.cpp
     Net/LocalSocket.cpp
     Net/LoopbackAdapter.cpp

@@ -19,12 +19,12 @@
 
 namespace AK {
 
-class Error {
+class [[nodiscard]] Error {
 public:
     ALWAYS_INLINE Error(Error&&) = default;
     ALWAYS_INLINE Error& operator=(Error&&) = default;
 
-    [[nodiscard]] static Error from_errno(int code)
+    static Error from_errno(int code)
     {
         VERIFY(code != 0);
         return Error(code);
@@ -34,14 +34,14 @@ public:
     // the error message and return the errno code.
     // For calling this method from userspace programs, we will simply return from
     // the Error::from_string_view method!
-    [[nodiscard]] static Error from_string_view_or_print_error_and_return_errno(StringView string_literal, int code);
+    static Error from_string_view_or_print_error_and_return_errno(StringView string_literal, int code);
 
 #ifndef KERNEL
-    [[nodiscard]] static Error from_syscall(StringView syscall_name, int rc)
+    static Error from_syscall(StringView syscall_name, int rc)
     {
         return Error(syscall_name, rc);
     }
-    [[nodiscard]] static Error from_string_view(StringView string_literal) { return Error(string_literal); }
+    static Error from_string_view(StringView string_literal) { return Error(string_literal); }
 
     template<OneOf<DeprecatedString, DeprecatedFlyString, String, FlyString> T>
     static Error from_string_view(T)
@@ -54,7 +54,7 @@ public:
 
 #endif
 
-    [[nodiscard]] static Error copy(Error const& error)
+    static Error copy(Error const& error)
     {
         return Error(error);
     }
@@ -67,7 +67,7 @@ public:
     // If you need to return a static string based on a dynamic condition (like
     // picking an error from an array), then prefer `from_string_view` instead.
     template<size_t N>
-    [[nodiscard]] ALWAYS_INLINE static Error from_string_literal(char const (&string_literal)[N])
+    ALWAYS_INLINE static Error from_string_literal(char const (&string_literal)[N])
     {
         return from_string_view(StringView { string_literal, N - 1 });
     }

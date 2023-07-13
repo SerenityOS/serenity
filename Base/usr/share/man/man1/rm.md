@@ -30,3 +30,6 @@ $ rm README.md
 # Remove Tests directory
 $ rm -r Tests
 ```
+
+## See also
+* [`rmdir`(1)](help://man/1/rmdir) to just delete empty directories

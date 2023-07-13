@@ -112,7 +112,7 @@ static consteval Array<u16, 259> generate_length_to_symbol()
         array[len] = packed_length_symbols[base_length].symbol;
     }
     return array;
-};
+}
 static constexpr auto length_to_symbol = generate_length_to_symbol();
 
 static consteval Array<u16, 256> generate_distance_to_base_lo()
@@ -125,7 +125,7 @@ static consteval Array<u16, 256> generate_distance_to_base_lo()
         array[dist - 1] = packed_distances[base_distance].symbol;
     }
     return array;
-};
+}
 static constexpr auto distance_to_base_lo = generate_distance_to_base_lo();
 static consteval Array<u16, 256> generate_distance_to_base_hi()
 {
@@ -137,7 +137,7 @@ static consteval Array<u16, 256> generate_distance_to_base_hi()
         array[(dist - 1) >> 7] = packed_distances[base_distance].symbol;
     }
     return array;
-};
+}
 static constexpr auto distance_to_base_hi = generate_distance_to_base_hi();
 
 static consteval Array<u8, 288> generate_fixed_literal_bit_lengths()
@@ -147,7 +147,7 @@ static consteval Array<u8, 288> generate_fixed_literal_bit_lengths()
         array.span().slice(fixed_literal_bits[i].base_value, fixed_literal_bits[i + 1].base_value - fixed_literal_bits[i].base_value).fill(fixed_literal_bits[i].bits);
     }
     return array;
-};
+}
 static constexpr auto fixed_literal_bit_lengths = generate_fixed_literal_bit_lengths();
 
 static consteval Array<u8, 32> generate_fixed_distance_bit_lengths()
@@ -155,7 +155,7 @@ static consteval Array<u8, 32> generate_fixed_distance_bit_lengths()
     Array<u8, 32> array;
     array.fill(5);
     return array;
-};
+}
 static constexpr auto fixed_distance_bit_lengths = generate_fixed_distance_bit_lengths();
 
 static consteval u8 reverse8(u8 value)

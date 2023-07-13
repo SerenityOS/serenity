@@ -3,7 +3,7 @@ list(APPEND SPECIAL_TARGETS test install)
 list(APPEND REQUIRED_TARGETS
     arp base64 basename cat chmod chown clear comm cp cut date dd df diff dirname dmesg du echo env expr false
     file find grep groups head host hostname id ifconfig kill killall ln logout ls mkdir mount mv network-settings nproc
-    pgrep pidof ping pkill pmap ps readlink realpath reboot rm rmdir sed route seq shutdown sleep sort stat stty su tail test
+    patch pgrep pidof ping pkill pmap ps readlink realpath reboot rm rmdir sed route seq shutdown sleep sort stat stty su tail test
     touch tr true umount uname uniq uptime w wc which whoami xargs yes
 )
 list(APPEND RECOMMENDED_TARGETS
@@ -90,7 +90,7 @@ target_link_libraries(diff PRIVATE LibDiff)
 target_link_libraries(disasm PRIVATE LibX86)
 target_link_libraries(expr PRIVATE LibRegex)
 target_link_libraries(fdtdump PRIVATE LibDeviceTree)
-target_link_libraries(file PRIVATE LibGfx LibIPC LibCompress LibAudio)
+target_link_libraries(file PRIVATE LibGfx LibIPC LibArchive LibCompress LibAudio)
 target_link_libraries(functrace PRIVATE LibDebug LibX86)
 target_link_libraries(gml-format PRIVATE LibGUI)
 target_link_libraries(grep PRIVATE LibFileSystem LibRegex)
@@ -113,7 +113,7 @@ target_link_libraries(lspci PRIVATE LibPCIDB)
 target_link_libraries(lsusb PRIVATE LibUSBDB)
 target_link_libraries(lzcat PRIVATE LibCompress)
 target_link_libraries(man PRIVATE LibMarkdown LibManual)
-target_link_libraries(markdown-check PRIVATE LibFileSystem LibMarkdown)
+target_link_libraries(markdown-check PRIVATE LibFileSystem LibMarkdown LibManual)
 target_link_libraries(matroska PRIVATE LibVideo)
 target_link_libraries(md PRIVATE LibMarkdown)
 target_link_libraries(mktemp PRIVATE LibFileSystem)
@@ -123,7 +123,8 @@ target_link_libraries(notify PRIVATE LibGfx LibGUI)
 target_link_libraries(open PRIVATE LibDesktop LibFileSystem)
 target_link_libraries(passwd PRIVATE LibCrypt)
 target_link_libraries(paste PRIVATE LibGUI)
-target_link_libraries(pdf PRIVATE LibPDF)
+target_link_libraries(patch PRIVATE LibDiff LibFileSystem)
+target_link_libraries(pdf PRIVATE LibGfx LibPDF)
 target_link_libraries(pgrep PRIVATE LibRegex)
 target_link_libraries(pixelflut PRIVATE LibImageDecoderClient LibIPC LibGfx)
 target_link_libraries(pkill PRIVATE LibRegex)
@@ -155,7 +156,7 @@ target_link_libraries(watch PRIVATE LibFileSystem)
 target_link_libraries(wsctl PRIVATE LibGUI LibIPC)
 target_link_libraries(xml PRIVATE LibFileSystem LibXML)
 target_link_libraries(xzcat PRIVATE LibCompress)
-target_link_libraries(zip PRIVATE LibArchive LibCompress LibCrypto LibFileSystem)
+target_link_libraries(zip PRIVATE LibArchive LibFileSystem)
 
 # FIXME: Link this file into headless-browser without compiling it again.
 target_sources(headless-browser PRIVATE "${SerenityOS_SOURCE_DIR}/Userland/Services/WebContent/WebDriverConnection.cpp")

@@ -121,6 +121,24 @@ bool is_char_device(int fd)
     return S_ISCHR(st.st_mode);
 }
 
+bool is_regular_file(StringView path)
+{
+    auto st_or_error = Core::System::stat(path);
+    if (st_or_error.is_error())
+        return false;
+    auto st = st_or_error.release_value();
+    return S_ISREG(st.st_mode);
+}
+
+bool is_regular_file(int fd)
+{
+    auto st_or_error = Core::System::fstat(fd);
+    if (st_or_error.is_error())
+        return false;
+    auto st = st_or_error.release_value();
+    return S_ISREG(st.st_mode);
+}
+
 bool is_directory(StringView path)
 {
     auto st_or_error = Core::System::stat(path);
@@ -296,6 +314,24 @@ ErrorOr<void> copy_file_or_directory(StringView destination_path, StringView sou
         return TRY(Core::System::link(source_path, final_destination_path));
 
     return copy_file(final_destination_path, source_path, source_stat, *source, preserve_mode);
+}
+
+ErrorOr<void> move_file(StringView destination_path, StringView source_path, PreserveMode preserve_mode)
+{
+    auto maybe_error = Core::System::rename(source_path, destination_path);
+    if (!maybe_error.is_error())
+        return {};
+
+    if (!maybe_error.error().is_errno() || maybe_error.error().code() != EXDEV)
+        return maybe_error;
+
+    auto source = TRY(Core::File::open(source_path, Core::File::OpenMode::Read));
+
+    auto source_stat = TRY(Core::System::fstat(source->fd()));
+
+    TRY(copy_file(destination_path, source_path, source_stat, *source, preserve_mode));
+
+    return Core::System::unlink(source_path);
 }
 
 ErrorOr<void> remove(StringView path, RecursionMode mode)

@@ -40,6 +40,8 @@ public:
     Optional<bool> writable {};
     Optional<bool> enumerable {};
     Optional<bool> configurable {};
+
+    Optional<u32> property_offset {};
 };
 
 }

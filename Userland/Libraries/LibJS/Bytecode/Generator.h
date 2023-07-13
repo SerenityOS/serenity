@@ -18,6 +18,7 @@
 #include <LibJS/Bytecode/StringTable.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/FunctionKind.h>
+#include <LibRegex/Regex.h>
 
 namespace JS::Bytecode {
 
@@ -83,6 +84,15 @@ public:
     CodeGenerationErrorOr<void> emit_store_to_reference(JS::ASTNode const&);
     CodeGenerationErrorOr<void> emit_delete_reference(JS::ASTNode const&);
 
+    struct ReferenceRegisters {
+        Register base;                                // [[Base]]
+        Optional<Bytecode::Register> referenced_name; // [[ReferencedName]]
+        Register this_value;                          // [[ThisValue]]
+    };
+    CodeGenerationErrorOr<ReferenceRegisters> emit_super_reference(MemberExpression const&);
+
+    void emit_set_variable(JS::Identifier const& identifier, Bytecode::Op::SetVariable::InitializationMode initialization_mode = Bytecode::Op::SetVariable::InitializationMode::Set, Bytecode::Op::EnvironmentMode mode = Bytecode::Op::EnvironmentMode::Lexical);
+
     void push_home_object(Register);
     void pop_home_object();
     void emit_new_function(JS::FunctionExpression const&, Optional<IdentifierTableIndex> lhs_name);
@@ -120,6 +130,11 @@ public:
     StringTableIndex intern_string(DeprecatedString string)
     {
         return m_string_table->insert(move(string));
+    }
+
+    RegexTableIndex intern_regex(ParsedRegex regex)
+    {
+        return m_regex_table->insert(move(regex));
     }
 
     IdentifierTableIndex intern_identifier(DeprecatedFlyString string)
@@ -190,6 +205,11 @@ public:
         m_boundaries.take_last();
     }
 
+    void emit_get_by_id(IdentifierTableIndex);
+    void emit_get_by_id_with_this(IdentifierTableIndex, Register);
+
+    [[nodiscard]] size_t next_global_variable_cache() { return m_next_global_variable_cache++; }
+
 private:
     Generator();
     ~Generator() = default;
@@ -206,9 +226,12 @@ private:
     Vector<NonnullOwnPtr<BasicBlock>> m_root_basic_blocks;
     NonnullOwnPtr<StringTable> m_string_table;
     NonnullOwnPtr<IdentifierTable> m_identifier_table;
+    NonnullOwnPtr<RegexTable> m_regex_table;
 
     u32 m_next_register { 2 };
     u32 m_next_block { 1 };
+    u32 m_next_property_lookup_cache { 0 };
+    u32 m_next_global_variable_cache { 0 };
     FunctionKind m_enclosing_function_kind { FunctionKind::Normal };
     Vector<LabelableScope> m_continuable_scopes;
     Vector<LabelableScope> m_breakable_scopes;

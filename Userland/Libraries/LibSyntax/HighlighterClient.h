@@ -19,7 +19,7 @@ public:
 
     virtual Vector<GUI::TextDocumentSpan> const& spans() const = 0;
     virtual void set_span_at_index(size_t index, GUI::TextDocumentSpan span) = 0;
-    virtual void clear_spans() { do_set_spans({}); };
+    virtual void clear_spans() { do_set_spans({}); }
 
     virtual Vector<GUI::TextDocumentFoldingRegion>& folding_regions() = 0;
     virtual Vector<GUI::TextDocumentFoldingRegion> const& folding_regions() const = 0;

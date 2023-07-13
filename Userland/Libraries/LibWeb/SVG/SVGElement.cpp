@@ -8,6 +8,7 @@
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/HTML/DOMStringMap.h>
 #include <LibWeb/SVG/SVGElement.h>
 #include <LibWeb/SVG/SVGUseElement.h>
@@ -60,7 +61,18 @@ void SVGElement::children_changed()
 
 void SVGElement::update_use_elements_that_reference_this()
 {
-    if (is<SVGUseElement>(this)) {
+    if (is<SVGUseElement>(this)
+        // If this element is in a shadow root, it already represents a clone and is not itself referenced.
+        || is<DOM::ShadowRoot>(this->root())
+        // If this does not have an id it cannot be referenced, no point in searching the entire DOM tree.
+        || !this->has_attribute(HTML::AttributeNames::id)
+        // An unconnected node cannot have valid references.
+        // This also prevents searches for elements that are in the process of being constructed - as clones.
+        || !this->is_connected()
+        // Each use element already listens for the completely_loaded event and then clones its referece,
+        // we do not have to also clone it in the process of initial DOM building.
+        || !document().is_completely_loaded()) {
+
         return;
     }
 
@@ -79,7 +91,7 @@ void SVGElement::removed_from(Node* parent)
 
 void SVGElement::remove_from_use_element_that_reference_this()
 {
-    if (is<SVGUseElement>(this)) {
+    if (is<SVGUseElement>(this) || !this->has_attribute(HTML::AttributeNames::id)) {
         return;
     }
 

@@ -21,14 +21,11 @@ class CSSKeyframesRule final : public CSSRule {
     WEB_PLATFORM_OBJECT(CSSKeyframesRule, CSSRule);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSKeyframesRule>> create(JS::Realm& realm, FlyString name, Vector<JS::NonnullGCPtr<CSSKeyframeRule>> keyframes)
-    {
-        return MUST_OR_THROW_OOM(realm.heap().allocate<CSSKeyframesRule>(realm, realm, move(name), move(keyframes)));
-    }
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSKeyframesRule>> create(JS::Realm& realm, FlyString name, Vector<JS::NonnullGCPtr<CSSKeyframeRule>> keyframes);
 
     virtual ~CSSKeyframesRule() = default;
 
-    virtual Type type() const override { return Type::Keyframes; };
+    virtual Type type() const override { return Type::Keyframes; }
 
     Vector<JS::NonnullGCPtr<CSSKeyframeRule>> const& keyframes() const { return m_keyframes; }
     FlyString const& name() const { return m_name; }

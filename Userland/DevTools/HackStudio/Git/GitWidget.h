@@ -23,7 +23,7 @@ public:
 
     void refresh();
     void set_view_diff_callback(ViewDiffCallback callback);
-    bool initialized() const { return !m_git_repo.is_null(); };
+    bool initialized() const { return !m_git_repo.is_null(); }
     void change_repo(DeprecatedString const& repo_root);
 
 private:

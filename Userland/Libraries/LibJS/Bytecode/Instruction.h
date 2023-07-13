@@ -27,22 +27,29 @@
     O(CreateVariable)                \
     O(Decrement)                     \
     O(DeleteById)                    \
+    O(DeleteByIdWithThis)            \
     O(DeleteByValue)                 \
+    O(DeleteByValueWithThis)         \
     O(DeleteVariable)                \
     O(Div)                           \
     O(EnterUnwindContext)            \
     O(EnterObjectEnvironment)        \
     O(Exp)                           \
     O(GetById)                       \
+    O(GetByIdWithThis)               \
     O(GetByValue)                    \
+    O(GetByValueWithThis)            \
     O(GetIterator)                   \
     O(GetMethod)                     \
     O(GetNewTarget)                  \
     O(GetObjectPropertyIterator)     \
     O(GetPrivateById)                \
     O(GetVariable)                   \
+    O(GetGlobal)                     \
+    O(GetLocal)                      \
     O(GreaterThan)                   \
     O(GreaterThanEquals)             \
+    O(HasPrivateId)                  \
     O(ImportCall)                    \
     O(In)                            \
     O(Increment)                     \
@@ -78,7 +85,9 @@
     O(Not)                           \
     O(PushDeclarativeEnvironment)    \
     O(PutById)                       \
+    O(PutByIdWithThis)               \
     O(PutByValue)                    \
+    O(PutByValueWithThis)            \
     O(PutPrivateById)                \
     O(ResolveThisBinding)            \
     O(ResolveSuperBase)              \
@@ -86,6 +95,7 @@
     O(RightShift)                    \
     O(ScheduleJump)                  \
     O(SetVariable)                   \
+    O(SetLocal)                      \
     O(Store)                         \
     O(StrictlyEquals)                \
     O(StrictlyInequals)              \
@@ -97,6 +107,7 @@
     O(ToNumeric)                     \
     O(Typeof)                        \
     O(TypeofVariable)                \
+    O(TypeofLocal)                   \
     O(UnaryMinus)                    \
     O(UnaryPlus)                     \
     O(UnsignedRightShift)            \

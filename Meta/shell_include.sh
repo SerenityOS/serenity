@@ -6,16 +6,26 @@
 # NOTE: If using another privilege escalation binary make sure it is configured or has the appropiate flag
 #       to keep the current environment variables in the launched process (in sudo's case this is achieved
 #       through the -E flag described in sudo(8).
-SUDO="sudo -E"
-
-if [ "$(uname -s)" = "SerenityOS" ]; then
-    SUDO="pls -E"
-fi
-
 die() {
     echo "die: $*"
     exit 1
 }
+
+if [ "$(uname -s)" = "SerenityOS" ]; then
+    SUDO="pls -E"
+elif command -v sudo >/dev/null; then
+    SUDO="sudo -E"
+elif command -v doas >/dev/null; then
+    if [ "$SUDO_UID" = '' ]; then
+        SUDO_UID=$(id -u)
+        SUDO_GID=$(id -g)
+        export SUDO_UID SUDO_GID
+    fi
+    # To make doas work, you have to make sure you use the "keepenv" flag in doas.conf
+    SUDO="doas"
+else
+    die "You need sudo, doas or pls to build Serenity..."
+fi
 
 exit_if_running_as_root() {
     if [ "$(id -u)" -eq 0 ]; then
@@ -71,4 +81,21 @@ get_number_of_processing_units() {
   fi
 
   ($number_of_processing_units)
+}
+
+# We depend on GNU coreutils du for the --apparent-size extension.
+# GNU coreutils is a build dependency.
+if command -v gdu > /dev/null 2>&1 && gdu --version | grep -q "GNU coreutils"; then
+    GNUDU="gdu"
+else
+    GNUDU="du"
+fi
+
+disk_usage() {
+    # shellcheck disable=SC2003,SC2307
+    expr "$(${GNUDU} -sbm "$1" | cut -f1)"
+}
+
+inode_usage() {
+    find "$1" | wc -l
 }

@@ -73,9 +73,6 @@ static ErrorOr<void> read_comment(TContext& context)
 template<typename TContext>
 static ErrorOr<void> read_magic_number(TContext& context)
 {
-    if (context.state >= TContext::State::MagicNumber)
-        return {};
-
     if (TRY(context.stream->size()) < 2) {
         dbgln_if(PORTABLE_IMAGE_LOADER_DEBUG, "There is no enough data for {}", TContext::FormatDetails::image_type);
         return Error::from_string_literal("There is no enough data to read magic number.");
@@ -86,13 +83,11 @@ static ErrorOr<void> read_magic_number(TContext& context)
 
     if (magic_number[0] == 'P' && magic_number[1] == TContext::FormatDetails::ascii_magic_number) {
         context.type = TContext::Type::ASCII;
-        context.state = TContext::State::MagicNumber;
         return {};
     }
 
     if (magic_number[0] == 'P' && magic_number[1] == TContext::FormatDetails::binary_magic_number) {
         context.type = TContext::Type::RAWBITS;
-        context.state = TContext::State::MagicNumber;
         return {};
     }
 
@@ -136,7 +131,6 @@ template<typename TContext>
 static ErrorOr<void> read_width(TContext& context)
 {
     context.width = TRY(read_number(*context.stream));
-    context.state = TContext::State::Width;
     return {};
 }
 
@@ -144,7 +138,6 @@ template<typename TContext>
 static ErrorOr<void> read_height(TContext& context)
 {
     context.height = TRY(read_number(*context.stream));
-    context.state = TContext::State::Height;
     return {};
 }
 
@@ -153,18 +146,14 @@ static ErrorOr<void> read_max_val(TContext& context)
 {
     context.format_details.max_val = TRY(read_number(*context.stream));
 
-    if (context.format_details.max_val == 0) {
-        context.state = TContext::State::Error;
+    if (context.format_details.max_val == 0)
         return Error::from_string_literal("The image has a maximum value of 0");
-    }
 
     if (context.format_details.max_val > 255) {
         dbgln_if(PORTABLE_IMAGE_LOADER_DEBUG, "We can't parse 2 byte color for {}", TContext::FormatDetails::image_type);
-        context.state = TContext::State::Error;
         return Error::from_string_literal("Can't parse 2 byte color");
     }
 
-    context.state = TContext::State::Maxval;
     return {};
 }
 
@@ -175,12 +164,9 @@ static ErrorOr<void> create_bitmap(TContext& context)
     return {};
 }
 
-template<typename TContext>
-static ErrorOr<void> decode(TContext& context)
+template<typename Context>
+static ErrorOr<void> read_header(Context& context)
 {
-    if (context.state >= TContext::State::Decoded)
-        return {};
-
     TRY(read_magic_number(context));
 
     TRY(read_whitespace(context));
@@ -201,9 +187,19 @@ static ErrorOr<void> decode(TContext& context)
         TRY(read_whitespace(context));
     }
 
+    context.state = Context::State::HeaderDecoded;
+
+    return {};
+}
+
+template<typename TContext>
+static ErrorOr<void> decode(TContext& context)
+{
+    VERIFY(context.state == TContext::State::HeaderDecoded);
+
     TRY(read_image_data(context));
 
-    context.state = TContext::State::Decoded;
+    context.state = TContext::State::BitmapDecoded;
     return {};
 }
 

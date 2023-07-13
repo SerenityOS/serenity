@@ -8,15 +8,6 @@ utmp_gid=5
 window_uid=13
 window_gid=13
 
-CP="cp"
-
-# cp on macOS and BSD systems do not support the --preserve= option.
-# gcp comes with coreutils, which is already a dependency.
-OS="$(uname -s)"
-if [ "$OS" = "Darwin" ] || echo "$OS" | grep -qe 'BSD$'; then
-	CP="gcp"
-fi
-
 die() {
     echo "die: $*"
     exit 1
@@ -45,13 +36,13 @@ SERENITY_ARCH="${SERENITY_ARCH:-x86_64}"
 
 if [ "$SERENITY_TOOLCHAIN" = "Clang" ]; then
     TOOLCHAIN_DIR="$SERENITY_SOURCE_DIR"/Toolchain/Local/clang/
-    $CP --preserve=timestamps "$TOOLCHAIN_DIR"/lib/"$SERENITY_ARCH"-pc-serenity/* mnt/usr/lib
+    rsync -aH --update -t "$TOOLCHAIN_DIR"/lib/"$SERENITY_ARCH"-pc-serenity/* mnt/usr/lib
     mkdir -p mnt/usr/include/"$SERENITY_ARCH"-pc-serenity
-    $CP --preserve=timestamps -r "$TOOLCHAIN_DIR"/include/c++ mnt/usr/include
-    $CP --preserve=timestamps -r "$TOOLCHAIN_DIR"/include/"$SERENITY_ARCH"-pc-serenity/c++ mnt/usr/include/"$SERENITY_ARCH"-pc-serenity
+    rsync -aH --update -t -r "$TOOLCHAIN_DIR"/include/c++ mnt/usr/include
+    rsync -aH --update -t -r "$TOOLCHAIN_DIR"/include/"$SERENITY_ARCH"-pc-serenity/c++ mnt/usr/include/"$SERENITY_ARCH"-pc-serenity
 else
-    $CP --preserve=timestamps -r "$SERENITY_SOURCE_DIR"/Toolchain/Local/"$SERENITY_ARCH"/"$SERENITY_ARCH"-pc-serenity/lib/* mnt/usr/lib
-    $CP --preserve=timestamps -r "$SERENITY_SOURCE_DIR"/Toolchain/Local/"$SERENITY_ARCH"/"$SERENITY_ARCH"-pc-serenity/include/c++ mnt/usr/include
+    rsync -aH --update -t -r "$SERENITY_SOURCE_DIR"/Toolchain/Local/"$SERENITY_ARCH"/"$SERENITY_ARCH"-pc-serenity/lib/* mnt/usr/lib
+    rsync -aH --update -t -r "$SERENITY_SOURCE_DIR"/Toolchain/Local/"$SERENITY_ARCH"/"$SERENITY_ARCH"-pc-serenity/include/c++ mnt/usr/include
 fi
 
 # If umask was 027 or similar when the repo was cloned,

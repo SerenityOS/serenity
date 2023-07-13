@@ -26,6 +26,7 @@ public:
     virtual bool is_open() const { return false; }
     virtual ErrorOr<String> path() const = 0;
     virtual PageNode const* document() const = 0;
+    virtual unsigned section_number() const = 0;
 
     // Backend for the command-line argument format that Help and man accept. Handles:
     // [/path/to/documentation.md] (no second argument)
@@ -37,6 +38,24 @@ public:
     // Finds a page via the help://man/<number>/<subsections...>/page URLs.
     // This will automatically start discovering pages by inspecting the filesystem.
     static ErrorOr<NonnullRefPtr<Node const>> try_find_from_help_url(URL const&);
+
+    bool operator==(Node const& other) const
+    {
+        if (auto this_path = this->path(), other_path = other.path();
+            !this_path.is_error() && !other_path.is_error()) {
+            return this_path.release_value() == other_path.release_value();
+        }
+        return false;
+    }
+};
+
+}
+
+namespace AK {
+
+template<typename T>
+requires(IsBaseOf<Manual::Node, T>) struct Traits<T> : public GenericTraits<T> {
+    static unsigned hash(T p) { return Traits::hash(p.path()); }
 };
 
 }

@@ -39,3 +39,6 @@ DHCP=true
 [ep1s1]
 Enabled=false
 ```
+
+## See Also
+* [`ifconfig`(1)](help://man/1/ifconfig)

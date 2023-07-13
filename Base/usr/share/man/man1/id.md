@@ -37,3 +37,5 @@ $ id -G
 ## See also
 
 * [`whoami`(1)](help://man/1/whoami)
+* [`groups`(1)](help://man/1/groups)
+* [`usermod`(8)](help://man/8/usermod)

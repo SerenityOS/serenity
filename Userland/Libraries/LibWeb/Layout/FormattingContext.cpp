@@ -578,13 +578,13 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
 
     auto computed_left = computed_values.inset().left();
     auto computed_right = computed_values.inset().right();
+    auto left = computed_values.inset().left().to_px(box, width_of_containing_block);
+    auto right = computed_values.inset().right().to_px(box, width_of_containing_block);
 
     auto try_compute_width = [&](auto const& a_width) {
         margin_left = computed_values.margin().left().resolved(box, width_of_containing_block_as_length);
         margin_right = computed_values.margin().right().resolved(box, width_of_containing_block_as_length);
 
-        auto left = computed_values.inset().left().to_px(box, width_of_containing_block);
-        auto right = computed_values.inset().right().to_px(box, width_of_containing_block);
         auto width = a_width;
 
         auto solve_for_left = [&] {
@@ -610,7 +610,8 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
             // is 'ltr' set 'left' to the static position and apply rule number three below;
             // otherwise, set 'right' to the static position and apply rule number one below.
             // FIXME: This is very hackish.
-            left = 0;
+            auto static_position = calculate_static_position(box);
+            left = static_position.x();
             goto Rule3;
         }
 
@@ -666,8 +667,8 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
         //    Then solve for 'left' (if 'direction is 'rtl') or 'right' (if 'direction' is 'ltr').
         else if (computed_left.is_auto() && computed_right.is_auto() && !width.is_auto()) {
             // FIXME: Check direction
-            // FIXME: Use the static-position containing block
-            left = 0;
+            auto static_position = calculate_static_position(box);
+            left = static_position.x();
             right = solve_for_right();
         }
 
@@ -722,11 +723,10 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
 
     auto& box_state = m_state.get_mutable(box);
     box_state.set_content_width(used_width.to_px(box));
-
+    box_state.inset_left = left;
+    box_state.inset_right = right;
     box_state.margin_left = margin_left.to_px(box);
     box_state.margin_right = margin_right.to_px(box);
-    box_state.border_left = border_left;
-    box_state.border_right = border_right;
     box_state.padding_left = padding_left;
     box_state.padding_right = padding_right;
 }
@@ -734,12 +734,84 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
 void FormattingContext::compute_width_for_absolutely_positioned_replaced_element(Box const& box, AvailableSpace const& available_space)
 {
     // 10.3.8 Absolutely positioned, replaced elements
-    // The used value of 'width' is determined as for inline replaced elements.
+    // In this case, section 10.3.7 applies up through and including the constraint equation,
+    // but the rest of section 10.3.7 is replaced by the following rules:
+
+    // 1. The used value of 'width' is determined as for inline replaced elements.
     if (is<ReplacedBox>(box)) {
         // FIXME: This const_cast is gross.
         static_cast<ReplacedBox&>(const_cast<Box&>(box)).prepare_for_replaced_layout();
     }
-    m_state.get_mutable(box).set_content_width(compute_width_for_replaced_element(box, available_space));
+
+    auto width = compute_width_for_replaced_element(box, available_space);
+    auto width_of_containing_block = available_space.width.to_px();
+    auto available = width_of_containing_block - width;
+    auto const& computed_values = box.computed_values();
+    auto left = computed_values.inset().left();
+    auto margin_left = computed_values.margin().left();
+    auto right = computed_values.inset().right();
+    auto margin_right = computed_values.margin().right();
+    auto static_position = calculate_static_position(box);
+
+    auto to_px = [&](const CSS::LengthPercentage& l) {
+        return l.to_px(box, width_of_containing_block);
+    };
+
+    // If 'margin-left' or 'margin-right' is specified as 'auto' its used value is determined by the rules below.
+    // 2. If both 'left' and 'right' have the value 'auto', then if the 'direction' property of the
+    // element establishing the static-position containing block is 'ltr', set 'left' to the static
+    // position; else if 'direction' is 'rtl', set 'right' to the static position.
+    if (left.is_auto() && right.is_auto()) {
+        left = CSS::Length::make_px(static_position.x());
+    }
+
+    // 3. If 'left' or 'right' are 'auto', replace any 'auto' on 'margin-left' or 'margin-right' with '0'.
+    if (left.is_auto() || right.is_auto()) {
+        if (margin_left.is_auto())
+            margin_left = CSS::Length::make_px(0);
+        if (margin_right.is_auto())
+            margin_right = CSS::Length::make_px(0);
+    }
+
+    // 4. If at this point both 'margin-left' and 'margin-right' are still 'auto', solve the equation
+    // under the extra constraint that the two margins must get equal values, unless this would make
+    // them negative, in which case when the direction of the containing block is 'ltr' ('rtl'),
+    // set 'margin-left' ('margin-right') to zero and solve for 'margin-right' ('margin-left').
+    if (margin_left.is_auto() && margin_right.is_auto()) {
+        auto remainder = available - to_px(left) - to_px(right);
+        if (remainder < 0) {
+            margin_left = CSS::Length::make_px(0);
+            margin_right = CSS::Length::make_px(0);
+        } else {
+            margin_left = CSS::Length::make_px(remainder / 2);
+            margin_right = CSS::Length::make_px(remainder / 2);
+        }
+    }
+
+    // 5. If at this point there is an 'auto' left, solve the equation for that value.
+    if (left.is_auto()) {
+        left = CSS::Length::make_px(available - to_px(right) - to_px(margin_left) - to_px(margin_right));
+    } else if (right.is_auto()) {
+        right = CSS::Length::make_px(available - to_px(left) - to_px(margin_left) - to_px(margin_right));
+    } else if (margin_left.is_auto()) {
+        margin_left = CSS::Length::make_px(available - to_px(left) - to_px(right) - to_px(margin_right));
+    } else if (margin_right.is_auto()) {
+        margin_right = CSS::Length::make_px(available - to_px(left) - to_px(margin_left) - to_px(right));
+    }
+
+    // 6. If at this point the values are over-constrained, ignore the value for either 'left'
+    // (in case the 'direction' property of the containing block is 'rtl') or 'right'
+    // (in case 'direction' is 'ltr') and solve for that value.
+    if (0 != available - to_px(left) - to_px(right) - to_px(margin_left) - to_px(margin_right)) {
+        right = CSS::Length::make_px(available - to_px(left) - to_px(margin_left) - to_px(margin_right));
+    }
+
+    auto& box_state = m_state.get_mutable(box);
+    box_state.inset_left = to_px(left);
+    box_state.inset_right = to_px(right);
+    box_state.margin_left = to_px(margin_left);
+    box_state.margin_right = to_px(margin_right);
+    box_state.set_content_width(width);
 }
 
 // https://drafts.csswg.org/css-position-3/#abs-non-replaced-height
@@ -942,15 +1014,18 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     //       the final used values for vertical margin/border/padding.
 
     auto& box_state = m_state.get_mutable(box);
+    box_state.set_content_height(used_height);
+
+    // do not set calculated insets or margins on the first pass, there will be a second pass
+    if (before_or_after_inside_layout == BeforeOrAfterInsideLayout::Before)
+        return;
+
+    box_state.inset_top = top.to_px(box, height_of_containing_block);
+    box_state.inset_bottom = bottom.to_px(box, height_of_containing_block);
     box_state.margin_top = margin_top.to_px(box, width_of_containing_block);
     box_state.margin_bottom = margin_bottom.to_px(box, width_of_containing_block);
-    box_state.border_top = box.computed_values().border_top().width;
-    box_state.border_bottom = box.computed_values().border_bottom().width;
     box_state.padding_top = box.computed_values().padding().top().to_px(box, width_of_containing_block);
     box_state.padding_bottom = box.computed_values().padding().bottom().to_px(box, width_of_containing_block);
-
-    // And here is where we assign the box's content height.
-    box_state.set_content_height(used_height);
 }
 
 // NOTE: This is different from content_box_rect_in_ancestor_coordinate_space() as this does *not* follow the containing block chain up, but rather the parent() chain.
@@ -1005,9 +1080,9 @@ CSSPixelPoint FormattingContext::calculate_static_position(Box const& box) const
             // Easy case: no previous sibling, we're at the top of the containing block.
         }
     } else {
-        x = m_state.get(box).margin_box_left();
+        x = m_state.get(box).margin_left;
         // We're among block siblings, Y can be calculated easily.
-        y = m_state.get(box).margin_box_top();
+        y = m_state.get(box).margin_top;
     }
     auto offset_to_static_parent = content_box_rect_in_static_position_ancestor_coordinate_space(box, *box.containing_block());
     return offset_to_static_parent.location().translated(x, y);
@@ -1023,6 +1098,13 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
     auto height_of_containing_block_as_length = CSS::Length::make_px(height_of_containing_block);
 
+    // The border computed values are not changed by the compute_height & width calculations below.
+    // The spec only adjusts and computes sizes, insets and margins.
+    box_state.border_left = box.computed_values().border_left().width;
+    box_state.border_right = box.computed_values().border_right().width;
+    box_state.border_top = box.computed_values().border_top().width;
+    box_state.border_bottom = box.computed_values().border_bottom().width;
+
     compute_width_for_absolutely_positioned_element(box, available_space);
 
     // NOTE: We compute height before *and* after doing inside layout.
@@ -1034,70 +1116,86 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
 
     compute_height_for_absolutely_positioned_element(box, available_space, BeforeOrAfterInsideLayout::After);
 
-    box_state.margin_top = box.computed_values().margin().top().to_px(box, width_of_containing_block);
-    box_state.margin_bottom = box.computed_values().margin().bottom().to_px(box, width_of_containing_block);
-
-    box_state.border_left = box.computed_values().border_left().width;
-    box_state.border_right = box.computed_values().border_right().width;
-    box_state.border_top = box.computed_values().border_top().width;
-    box_state.border_bottom = box.computed_values().border_bottom().width;
-
-    auto const& computed_left = box.computed_values().inset().left();
-    auto const& computed_right = box.computed_values().inset().right();
-    auto const& computed_top = box.computed_values().inset().top();
-    auto const& computed_bottom = box.computed_values().inset().bottom();
-
-    box_state.inset_left = computed_left.to_px(box, width_of_containing_block);
-    box_state.inset_top = computed_top.to_px(box, height_of_containing_block);
-    box_state.inset_right = computed_right.to_px(box, width_of_containing_block);
-    box_state.inset_bottom = computed_bottom.to_px(box, height_of_containing_block);
-
-    auto static_position = calculate_static_position(box);
-
     CSSPixelPoint used_offset;
-
-    if (!computed_left.is_auto()) {
-        CSSPixels x_offset = box_state.inset_left
-            + box_state.border_box_left();
-        used_offset.set_x(x_offset + box_state.margin_left);
-    } else if (!computed_right.is_auto()) {
-        CSSPixels x_offset = CSSPixels(0)
-            - box_state.inset_right
-            - box_state.border_box_right();
-        used_offset.set_x(width_of_containing_block + x_offset - box_state.content_width() - box_state.margin_right);
-    } else {
-        // NOTE: static position is content box position so border_box and margin should not be added
-        used_offset.set_x(static_position.x());
-    }
-
-    if (!computed_top.is_auto()) {
-        CSSPixels y_offset = box_state.inset_top
-            + box_state.border_box_top();
-        used_offset.set_y(y_offset + box_state.margin_top);
-    } else if (!computed_bottom.is_auto()) {
-        CSSPixels y_offset = CSSPixels(0)
-            - box_state.inset_bottom
-            - box_state.border_box_bottom();
-        used_offset.set_y(height_of_containing_block + y_offset - box_state.content_height() - box_state.margin_bottom);
-    } else {
-        // NOTE: static position is content box position so border_box and margin should not be added
-        used_offset.set_y(static_position.y());
-    }
-
+    used_offset.set_x(box_state.inset_left + box_state.margin_box_left());
+    used_offset.set_y(box_state.inset_top + box_state.margin_box_top());
     // NOTE: Absolutely positioned boxes are relative to the *padding edge* of the containing block.
     used_offset.translate_by(-containing_block_state.padding_left, -containing_block_state.padding_top);
-
     box_state.set_content_offset(used_offset);
 
     if (independent_formatting_context)
         independent_formatting_context->parent_context_did_dimension_child_root_box();
 }
 
-void FormattingContext::compute_height_for_absolutely_positioned_replaced_element(Box const& box, AvailableSpace const& available_space, BeforeOrAfterInsideLayout)
+void FormattingContext::compute_height_for_absolutely_positioned_replaced_element(Box const& box, AvailableSpace const& available_space, BeforeOrAfterInsideLayout before_or_after_inside_layout)
 {
     // 10.6.5 Absolutely positioned, replaced elements
+    // This situation is similar to 10.6.4, except that the element has an intrinsic height.
+
     // The used value of 'height' is determined as for inline replaced elements.
-    m_state.get_mutable(box).set_content_height(compute_height_for_replaced_element(box, available_space));
+    auto height = compute_height_for_replaced_element(box, available_space);
+
+    auto height_of_containing_block = available_space.height.to_px();
+    auto available = height_of_containing_block - height;
+    auto const& computed_values = box.computed_values();
+    auto top = computed_values.inset().top();
+    auto margin_top = computed_values.margin().top();
+    auto bottom = computed_values.inset().bottom();
+    auto margin_bottom = computed_values.margin().bottom();
+    auto static_position = calculate_static_position(box);
+
+    auto to_px = [&](const CSS::LengthPercentage& l) {
+        return l.to_px(box, height_of_containing_block);
+    };
+
+    // If 'margin-top' or 'margin-bottom' is specified as 'auto' its used value is determined by the rules below.
+    // 2. If both 'top' and 'bottom' have the value 'auto', replace 'top' with the element's static position.
+    if (top.is_auto() && bottom.is_auto()) {
+        top = CSS::Length::make_px(static_position.x());
+    }
+
+    // 3. If 'bottom' is 'auto', replace any 'auto' on 'margin-top' or 'margin-bottom' with '0'.
+    if (bottom.is_auto()) {
+        if (margin_top.is_auto())
+            margin_top = CSS::Length::make_px(0);
+        if (margin_bottom.is_auto())
+            margin_bottom = CSS::Length::make_px(0);
+    }
+
+    // 4. If at this point both 'margin-top' and 'margin-bottom' are still 'auto',
+    // solve the equation under the extra constraint that the two margins must get equal values.
+    if (margin_top.is_auto() && margin_bottom.is_auto()) {
+        auto remainder = available - to_px(top) - to_px(bottom);
+        margin_top = CSS::Length::make_px(remainder / 2);
+        margin_bottom = CSS::Length::make_px(remainder / 2);
+    }
+
+    // 5. If at this point there is an 'auto' left, solve the equation for that value.
+    if (top.is_auto()) {
+        top = CSS::Length::make_px(available - to_px(bottom) - to_px(margin_top) - to_px(margin_bottom));
+    } else if (bottom.is_auto()) {
+        bottom = CSS::Length::make_px(available - to_px(top) - to_px(margin_top) - to_px(margin_bottom));
+    } else if (margin_top.is_auto()) {
+        margin_top = CSS::Length::make_px(available - to_px(top) - to_px(bottom) - to_px(margin_bottom));
+    } else if (margin_bottom.is_auto()) {
+        margin_bottom = CSS::Length::make_px(available - to_px(top) - to_px(margin_top) - to_px(bottom));
+    }
+
+    // 6. If at this point the values are over-constrained, ignore the value for 'bottom' and solve for that value.
+    if (0 != available - to_px(top) - to_px(bottom) - to_px(margin_top) - to_px(margin_bottom)) {
+        bottom = CSS::Length::make_px(available - to_px(top) - to_px(margin_top) - to_px(margin_bottom));
+    }
+
+    auto& box_state = m_state.get_mutable(box);
+    box_state.set_content_height(height);
+
+    // do not set calculated insets or margins on the first pass, there will be a second pass
+    if (before_or_after_inside_layout == BeforeOrAfterInsideLayout::Before)
+        return;
+    box_state.inset_top = to_px(top);
+    box_state.inset_bottom = to_px(bottom);
+    box_state.margin_top = to_px(margin_top);
+    box_state.margin_bottom = to_px(margin_bottom);
 }
 
 // https://www.w3.org/TR/css-position-3/#relpos-insets

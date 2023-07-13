@@ -1,0 +1,43 @@
+shared_library("LibTest") {
+  output_name = "test"
+  include_dirs = [ "//Userland/Libraries" ]
+  sources = [
+    "CrashTest.cpp",
+    "CrashTest.h",
+    "Macros.h",
+    "Results.h",
+    "TestCase.h",
+    "TestRunner.h",
+    "TestRunnerUtil.h",
+    "TestSuite.cpp",
+    "TestSuite.h",
+  ]
+
+  deps = [ "//AK" ]
+  if (current_os != "serenity") {
+    deps += [ "//Userland/Libraries/LibCore" ]
+  }
+
+  output_name = "test"
+
+  testonly = true
+}
+
+source_set("test_main") {
+  include_dirs = [ "//Userland/Libraries" ]
+  sources = [ "TestMain.cpp" ]
+  deps = [ "//AK" ]
+  public_deps = [ ":LibTest" ]
+  testonly = true
+}
+
+source_set("test_js_main") {
+  include_dirs = [ "//Userland/Libraries" ]
+  sources = [
+    "JavaScriptTestRunner.h",
+    "JavaScriptTestRunnerMain.cpp",
+  ]
+  deps = [ "//AK" ]
+  public_deps = [ ":LibTest" ]
+  testonly = true
+}

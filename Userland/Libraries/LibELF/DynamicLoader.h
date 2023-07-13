@@ -72,7 +72,7 @@ public:
     // Stage 4 of loading: initializers
     void load_stage_4();
 
-    void set_tls_offset(size_t offset) { m_tls_offset = offset; };
+    void set_tls_offset(size_t offset) { m_tls_offset = offset; }
     size_t tls_size_of_current_object() const { return m_tls_size_of_current_object; }
     size_t tls_alignment_of_current_object() const { return m_tls_alignment_of_current_object; }
     size_t tls_offset() const { return m_tls_offset; }

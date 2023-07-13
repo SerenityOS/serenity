@@ -27,3 +27,6 @@ Compare two files and report the location of any differences. By default, execut
 * 0 - Files are identical.
 * 1 - Files are different.
 * 2 - An error occurred.
+
+## See also
+* [`comm`(1)](help://man/1/comm)

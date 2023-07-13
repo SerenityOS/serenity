@@ -78,7 +78,7 @@ public:
         return static_cast<double>(value());
     }
 
-    ParameterT value() const { return m_value; };
+    ParameterT value() const { return m_value; }
     void set_value(ParameterT value)
     {
         set_value_sneaky(value, DSP::Detail::ProcessorParameterSetValueTag {});

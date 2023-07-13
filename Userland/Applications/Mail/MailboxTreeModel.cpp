@@ -21,17 +21,17 @@ GUI::ModelIndex MailboxTreeModel::index(int row, int column, GUI::ModelIndex con
     if (!parent.is_valid()) {
         if (m_account_holder.accounts().is_empty())
             return {};
-        return create_index(row, column, &m_account_holder.accounts().at(row));
+        return create_index(row, column, m_account_holder.accounts().at(row));
     }
     auto& base_node = *static_cast<BaseNode*>(parent.internal_data());
 
     if (is<MailboxNode>(base_node)) {
         auto& remote_mailbox = verify_cast<MailboxNode>(base_node);
-        return create_index(row, column, &remote_mailbox.children().at(row));
+        return create_index(row, column, remote_mailbox.children().at(row));
     }
 
     auto& remote_parent = verify_cast<AccountNode>(base_node);
-    return create_index(row, column, &remote_parent.mailboxes().at(row));
+    return create_index(row, column, remote_parent.mailboxes().at(row));
 }
 
 GUI::ModelIndex MailboxTreeModel::parent_index(GUI::ModelIndex const& index) const

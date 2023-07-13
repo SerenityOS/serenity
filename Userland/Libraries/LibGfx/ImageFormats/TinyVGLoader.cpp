@@ -504,19 +504,6 @@ IntSize TinyVGImageDecoderPlugin::size()
     return {};
 }
 
-void TinyVGImageDecoderPlugin::set_volatile()
-{
-    if (m_context.bitmap)
-        m_context.bitmap->set_volatile();
-}
-
-bool TinyVGImageDecoderPlugin::set_nonvolatile(bool& was_purged)
-{
-    if (!m_context.bitmap)
-        return false;
-    return m_context.bitmap->set_nonvolatile(was_purged);
-}
-
 ErrorOr<void> TinyVGImageDecoderPlugin::initialize()
 {
     FixedMemoryStream stream { { m_context.data.data(), m_context.data.size() } };

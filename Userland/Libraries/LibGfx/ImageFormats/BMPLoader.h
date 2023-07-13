@@ -28,8 +28,7 @@ public:
     virtual ~BMPImageDecoderPlugin() override;
 
     virtual IntSize size() override;
-    virtual void set_volatile() override;
-    [[nodiscard]] virtual bool set_nonvolatile(bool& was_purged) override;
+
     virtual ErrorOr<void> initialize() override;
     bool sniff_dib();
     virtual bool is_animated() override;

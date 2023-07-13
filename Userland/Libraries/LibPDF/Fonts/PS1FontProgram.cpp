@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/Font/PathRasterizer.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Encoding.h>
 #include <LibPDF/Fonts/PS1FontProgram.h>

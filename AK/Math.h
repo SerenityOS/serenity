@@ -8,6 +8,7 @@
 
 #include <AK/BuiltinWrappers.h>
 #include <AK/Concepts.h>
+#include <AK/FloatingPoint.h>
 #include <AK/NumericLimits.h>
 #include <AK/StdLibExtraDetails.h>
 #include <AK/Types.h>
@@ -21,6 +22,8 @@ namespace AK {
 template<FloatingPoint T>
 constexpr T NaN = __builtin_nan("");
 template<FloatingPoint T>
+constexpr T Infinity = __builtin_huge_vall();
+template<FloatingPoint T>
 constexpr T Pi = 3.141592653589793238462643383279502884L;
 template<FloatingPoint T>
 constexpr T E = 2.718281828459045235360287471352662498L;
@@ -28,6 +31,11 @@ template<FloatingPoint T>
 constexpr T Sqrt2 = 1.414213562373095048801688724209698079L;
 template<FloatingPoint T>
 constexpr T Sqrt1_2 = 0.707106781186547524400844362104849039L;
+
+template<FloatingPoint T>
+constexpr T L2_10 = 3.321928094887362347870319429489390175864L;
+template<FloatingPoint T>
+constexpr T L2_E = 1.442695040888963407359924681001892137L;
 
 namespace Details {
 template<size_t>
@@ -424,6 +432,88 @@ using Trigonometry::tan;
 namespace Exponentials {
 
 template<FloatingPoint T>
+constexpr T log2(T x)
+{
+    CONSTEXPR_STATE(log2, x);
+
+#if ARCH(X86_64)
+    if constexpr (IsSame<T, long double>) {
+        T ret;
+        asm(
+            "fld1\n"
+            "fxch %%st(1)\n"
+            "fyl2x\n"
+            : "=t"(ret)
+            : "0"(x));
+        return ret;
+    }
+#endif
+    // References:
+    // Gist comparing some implementations
+    // * https://gist.github.com/Hendiadyoin1/f58346d66637deb9156ef360aa158bf9
+
+    if (x == 0)
+        return -Infinity<T>;
+    if (x <= 0 || __builtin_isnan(x))
+        return NaN<T>;
+
+    FloatExtractor<T> ext { .d = x };
+    T exponent = ext.exponent - FloatExtractor<T>::exponent_bias;
+
+    // When the mantissa shows 0b00 (implicitly 1.0) we are on a power of 2
+    if (ext.mantissa == 0)
+        return exponent;
+
+    // FIXME: Handle denormalized numbers separately
+
+    FloatExtractor<T> mantissa_ext {
+        .mantissa = ext.mantissa,
+        .exponent = FloatExtractor<T>::exponent_bias,
+        .sign = ext.sign
+    };
+
+    // (1 <= mantissa < 2)
+    T m = mantissa_ext.d;
+
+    // This is a reconstruction of one of Sun's algorithms
+    // They use a transformation to lower the problem space,
+    // while keeping the precision, and a 14th degree polynomial,
+    // which is mirrored at sqrt(2)
+    // TODO: Sun has some more algorithms for this and other math functions,
+    //       leveraging LUTs, investigate those, if they are better in performance and/or precision.
+    //       These seem to be related to crLibM's implementations, for which papers and references
+    //       are available.
+    // FIXME: Dynamically adjust the amount of precision between floats and doubles
+    //        AKA floats might need less accuracy here, in comparison to doubles
+
+    bool inverted = false;
+    // m > sqrt(2)
+    if (m > Sqrt2<T>) {
+        inverted = true;
+        m = 2 / m;
+    }
+    T s = (m - 1) / (m + 1);
+    // ln((1 + s) / (1 - s)) == ln(m)
+    T s2 = s * s;
+    // clang-format off
+    T high_approx = s2 * (static_cast<T>(0.6666666666666735130)
+                  + s2 * (static_cast<T>(0.3999999999940941908)
+                  + s2 * (static_cast<T>(0.2857142874366239149)
+                  + s2 * (static_cast<T>(0.2222219843214978396)
+                  + s2 * (static_cast<T>(0.1818357216161805012)
+                  + s2 * (static_cast<T>(0.1531383769920937332)
+                  + s2 *  static_cast<T>(0.1479819860511658591)))))));
+    // clang-format on
+
+    // ln(m) == 2 * s + s * high_approx
+    // log2(m) == log2(e) * ln(m)
+    T log2_mantissa = L2_E<T> * (2 * s + s * high_approx);
+    if (inverted)
+        log2_mantissa = 1 - log2_mantissa;
+    return exponent + log2_mantissa;
+}
+
+template<FloatingPoint T>
 constexpr T log(T x)
 {
     CONSTEXPR_STATE(log, x);
@@ -437,35 +527,11 @@ constexpr T log(T x)
         : "=t"(ret)
         : "0"(x));
     return ret;
+#elif defined(AK_OS_SERENITY)
+    // FIXME: Adjust the polynomial and formula in log2 to fit this
+    return log2<T>(x) / L2_E<T>;
 #else
-#    if defined(AK_OS_SERENITY)
-    // TODO: Add implementation for this function.
-    TODO();
-#    endif
     return __builtin_log(x);
-#endif
-}
-
-template<FloatingPoint T>
-constexpr T log2(T x)
-{
-    CONSTEXPR_STATE(log2, x);
-
-#if ARCH(X86_64)
-    T ret;
-    asm(
-        "fld1\n"
-        "fxch %%st(1)\n"
-        "fyl2x\n"
-        : "=t"(ret)
-        : "0"(x));
-    return ret;
-#else
-#    if defined(AK_OS_SERENITY)
-    // TODO: Add implementation for this function.
-    TODO();
-#    endif
-    return __builtin_log2(x);
 #endif
 }
 
@@ -483,11 +549,10 @@ constexpr T log10(T x)
         : "=t"(ret)
         : "0"(x));
     return ret;
+#elif defined(AK_OS_SERENITY)
+    // FIXME: Adjust the polynomial and formula in log2 to fit this
+    return log2<T>(x) / L2_10<T>;
 #else
-#    if defined(AK_OS_SERENITY)
-    // TODO: Add implementation for this function.
-    TODO();
-#    endif
     return __builtin_log10(x);
 #endif
 }

@@ -17,4 +17,6 @@ $ gunzip [--keep] [--stdout] <FILE...>
 
 * `FILE`: File to decompress
 
-<!-- Auto-generated through ArgsParser -->
+## See also
+* [`gzip`(1)](help://man/1/gzip)
+* [`tar`(1)](help://man/1/tar)

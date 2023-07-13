@@ -7,7 +7,7 @@
         "ghcr.io/devcontainers/features/github-cli:1": {},
         "ghcr.io/devcontainers-contrib/features/pre-commit:1": {},
         "./features/serenity": {
-            "llvm_version": 15,
+            "llvm_version": 16,
             "enable_ladybird": true,
             "enable_serenity": true
         },

@@ -33,17 +33,17 @@ public:
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
 
-    Chess::Board& board() { return m_board; };
-    Chess::Board const& board() const { return m_board; };
+    Chess::Board& board() { return m_board; }
+    Chess::Board const& board() const { return m_board; }
 
-    Chess::Board& board_playback() { return m_board_playback; };
-    Chess::Board const& board_playback() const { return m_board_playback; };
+    Chess::Board& board_playback() { return m_board_playback; }
+    Chess::Board const& board_playback() const { return m_board_playback; }
 
-    Chess::Color side() const { return m_side; };
-    void set_side(Chess::Color side) { m_side = side; };
+    Chess::Color side() const { return m_side; }
+    void set_side(Chess::Color side) { m_side = side; }
 
     void set_piece_set(StringView set);
-    DeprecatedString const& piece_set() const { return m_piece_set; };
+    DeprecatedString const& piece_set() const { return m_piece_set; }
 
     Optional<Chess::Square> mouse_to_square(GUI::MouseEvent& event) const;
 

@@ -13,6 +13,7 @@
 #include <LibJS/Bytecode/IdentifierTable.h>
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Label.h>
+#include <LibJS/Bytecode/RegexTable.h>
 #include <LibJS/Bytecode/Register.h>
 #include <LibJS/Bytecode/StringTable.h>
 #include <LibJS/Heap/Cell.h>
@@ -196,10 +197,11 @@ public:
 
 class NewRegExp final : public Instruction {
 public:
-    NewRegExp(StringTableIndex source_index, StringTableIndex flags_index)
+    NewRegExp(StringTableIndex source_index, StringTableIndex flags_index, RegexTableIndex regex_index)
         : Instruction(Type::NewRegExp)
         , m_source_index(source_index)
         , m_flags_index(flags_index)
+        , m_regex_index(regex_index)
     {
     }
 
@@ -211,6 +213,7 @@ public:
 private:
     StringTableIndex m_source_index;
     StringTableIndex m_flags_index;
+    RegexTableIndex m_regex_index;
 };
 
 #define JS_ENUMERATE_NEW_BUILTIN_ERROR_OPS(O) \
@@ -484,6 +487,25 @@ private:
     InitializationMode m_initialization_mode { InitializationMode::Set };
 };
 
+class SetLocal final : public Instruction {
+public:
+    explicit SetLocal(size_t index)
+        : Instruction(Type::SetLocal)
+        , m_index(index)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register) { }
+
+    size_t index() const { return m_index; }
+
+private:
+    size_t m_index;
+};
+
 class GetVariable final : public Instruction {
 public:
     explicit GetVariable(IdentifierTableIndex identifier)
@@ -503,6 +525,44 @@ private:
     IdentifierTableIndex m_identifier;
 
     Optional<EnvironmentCoordinate> mutable m_cached_environment_coordinate;
+};
+
+class GetGlobal final : public Instruction {
+public:
+    explicit GetGlobal(IdentifierTableIndex identifier, u32 cache_index)
+        : Instruction(Type::GetGlobal)
+        , m_identifier(identifier)
+        , m_cache_index(cache_index)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register) { }
+
+private:
+    IdentifierTableIndex m_identifier;
+    u32 m_cache_index { 0 };
+};
+
+class GetLocal final : public Instruction {
+public:
+    explicit GetLocal(size_t index)
+        : Instruction(Type::GetLocal)
+        , m_index(index)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register) { }
+
+    size_t index() const { return m_index; }
+
+private:
+    size_t m_index;
 };
 
 class DeleteVariable final : public Instruction {
@@ -526,9 +586,10 @@ private:
 
 class GetById final : public Instruction {
 public:
-    explicit GetById(IdentifierTableIndex property)
+    GetById(IdentifierTableIndex property, u32 cache_index)
         : Instruction(Type::GetById)
         , m_property(property)
+        , m_cache_index(cache_index)
     {
     }
 
@@ -539,6 +600,32 @@ public:
 
 private:
     IdentifierTableIndex m_property;
+    u32 m_cache_index { 0 };
+};
+
+class GetByIdWithThis final : public Instruction {
+public:
+    GetByIdWithThis(IdentifierTableIndex property, Register this_value, u32 cache_index)
+        : Instruction(Type::GetByIdWithThis)
+        , m_property(property)
+        , m_this_value(this_value)
+        , m_cache_index(cache_index)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register from, Register to)
+    {
+        if (m_this_value == from)
+            m_this_value = to;
+    }
+
+private:
+    IdentifierTableIndex m_property;
+    Register m_this_value;
+    u32 m_cache_index { 0 };
 };
 
 class GetPrivateById final : public Instruction {
@@ -558,10 +645,28 @@ private:
     IdentifierTableIndex m_property;
 };
 
+class HasPrivateId final : public Instruction {
+public:
+    explicit HasPrivateId(IdentifierTableIndex property)
+        : Instruction(Type::HasPrivateId)
+        , m_property(property)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register) { }
+
+private:
+    IdentifierTableIndex m_property;
+};
+
 enum class PropertyKind {
     Getter,
     Setter,
     KeyValue,
+    DirectKeyValue, // Used for Object expressions. Always sets an own property, never calls a setter.
     Spread,
     ProtoSetter,
 };
@@ -587,6 +692,35 @@ public:
 
 private:
     Register m_base;
+    IdentifierTableIndex m_property;
+    PropertyKind m_kind;
+};
+
+class PutByIdWithThis final : public Instruction {
+public:
+    PutByIdWithThis(Register base, Register this_value, IdentifierTableIndex property, PropertyKind kind = PropertyKind::KeyValue)
+        : Instruction(Type::PutByIdWithThis)
+        , m_base(base)
+        , m_this_value(this_value)
+        , m_property(property)
+        , m_kind(kind)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register from, Register to)
+    {
+        if (m_base == from)
+            m_base = to;
+        if (m_this_value == from)
+            m_this_value = to;
+    }
+
+private:
+    Register m_base;
+    Register m_this_value;
     IdentifierTableIndex m_property;
     PropertyKind m_kind;
 };
@@ -633,6 +767,25 @@ private:
     IdentifierTableIndex m_property;
 };
 
+class DeleteByIdWithThis final : public Instruction {
+public:
+    DeleteByIdWithThis(Register this_value, IdentifierTableIndex property)
+        : Instruction(Type::DeleteByIdWithThis)
+        , m_this_value(this_value)
+        , m_property(property)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register) { }
+
+private:
+    Register m_this_value;
+    IdentifierTableIndex m_property;
+};
+
 class GetByValue final : public Instruction {
 public:
     explicit GetByValue(Register base)
@@ -654,6 +807,31 @@ private:
     Register m_base;
 };
 
+class GetByValueWithThis final : public Instruction {
+public:
+    GetByValueWithThis(Register base, Register this_value)
+        : Instruction(Type::GetByValueWithThis)
+        , m_base(base)
+        , m_this_value(this_value)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register from, Register to)
+    {
+        if (m_base == from)
+            m_base = to;
+        if (m_this_value == from)
+            m_this_value = to;
+    }
+
+private:
+    Register m_base;
+    Register m_this_value;
+};
+
 class PutByValue final : public Instruction {
 public:
     PutByValue(Register base, Register property, PropertyKind kind = PropertyKind::KeyValue)
@@ -671,11 +849,44 @@ public:
     {
         if (m_base == from)
             m_base = to;
+        if (m_property == from)
+            m_property = to;
     }
 
 private:
     Register m_base;
     Register m_property;
+    PropertyKind m_kind;
+};
+
+class PutByValueWithThis final : public Instruction {
+public:
+    PutByValueWithThis(Register base, Register property, Register this_value, PropertyKind kind = PropertyKind::KeyValue)
+        : Instruction(Type::PutByValueWithThis)
+        , m_base(base)
+        , m_property(property)
+        , m_this_value(this_value)
+        , m_kind(kind)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register from, Register to)
+    {
+        if (m_base == from)
+            m_base = to;
+        if (m_property == from)
+            m_property = to;
+        if (m_this_value == from)
+            m_this_value = to;
+    }
+
+private:
+    Register m_base;
+    Register m_property;
+    Register m_this_value;
     PropertyKind m_kind;
 };
 
@@ -698,6 +909,29 @@ public:
 
 private:
     Register m_base;
+};
+
+class DeleteByValueWithThis final : public Instruction {
+public:
+    DeleteByValueWithThis(Register base, Register this_value)
+        : Instruction(Type::DeleteByValueWithThis)
+        , m_base(base)
+        , m_this_value(this_value)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register from, Register to)
+    {
+        if (m_base == from)
+            m_base = to;
+    }
+
+private:
+    Register m_base;
+    Register m_this_value;
 };
 
 class Jump : public Instruction {
@@ -1319,6 +1553,23 @@ public:
 
 private:
     IdentifierTableIndex m_identifier;
+};
+
+class TypeofLocal final : public Instruction {
+public:
+    explicit TypeofLocal(size_t index)
+        : Instruction(Type::TypeofLocal)
+        , m_index(index)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register) { }
+
+private:
+    size_t m_index;
 };
 
 }

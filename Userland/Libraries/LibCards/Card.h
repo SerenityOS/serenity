@@ -91,7 +91,7 @@ public:
     Gfx::IntRect const& rect() const { return m_rect; }
     Gfx::IntPoint position() const { return m_rect.location(); }
     Gfx::IntPoint old_position() const { return m_old_position; }
-    Rank rank() const { return m_rank; };
+    Rank rank() const { return m_rank; }
     Suit suit() const { return m_suit; }
 
     bool is_old_position_valid() const { return m_old_position_valid; }

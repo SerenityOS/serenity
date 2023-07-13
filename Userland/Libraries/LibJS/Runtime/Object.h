@@ -39,6 +39,18 @@ struct PrivateElement {
     Handle<Value> value;
 };
 
+// Non-standard: This is information optionally returned by object property access functions.
+//               It can be used to implement inline caches for property lookup.
+struct CacheablePropertyMetadata {
+    enum class Type {
+        NotCacheable,
+        OwnProperty,
+    };
+    Type type { Type::NotCacheable };
+    Optional<u32> property_offset;
+    u64 unique_shape_serial_number { 0 };
+};
+
 class Object : public Cell {
     JS_CELL(Object, Cell);
 
@@ -118,7 +130,7 @@ public:
     virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyKey const&) const;
     virtual ThrowCompletionOr<bool> internal_define_own_property(PropertyKey const&, PropertyDescriptor const&);
     virtual ThrowCompletionOr<bool> internal_has_property(PropertyKey const&) const;
-    virtual ThrowCompletionOr<Value> internal_get(PropertyKey const&, Value receiver) const;
+    virtual ThrowCompletionOr<Value> internal_get(PropertyKey const&, Value receiver, CacheablePropertyMetadata* = nullptr) const;
     virtual ThrowCompletionOr<bool> internal_set(PropertyKey const&, Value value, Value receiver);
     virtual ThrowCompletionOr<bool> internal_delete(PropertyKey const&);
     virtual ThrowCompletionOr<MarkedVector<Value>> internal_own_property_keys() const;
@@ -148,7 +160,7 @@ public:
 
     Value get_without_side_effects(PropertyKey const&) const;
 
-    void define_direct_property(PropertyKey const& property_key, Value value, PropertyAttributes attributes) { storage_set(property_key, { value, attributes }); };
+    void define_direct_property(PropertyKey const& property_key, Value value, PropertyAttributes attributes) { storage_set(property_key, { value, attributes }); }
     void define_direct_accessor(PropertyKey const&, FunctionObject* getter, FunctionObject* setter, PropertyAttributes attributes);
 
     using IntrinsicAccessor = Value (*)(Realm&);

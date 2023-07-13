@@ -3,7 +3,6 @@ port='cmake'
 version='3.26.1'
 useconfigure='true'
 files="https://github.com/Kitware/CMake/releases/download/v${version}/cmake-${version}.tar.gz cmake-${version}.tar.gz f29964290ad3ced782a1e58ca9fda394a82406a647e24d6afd4e6c32e42c412f"
-auth_type='sha256'
 depends=(
     'bash'
     'make'

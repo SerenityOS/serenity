@@ -69,11 +69,11 @@ private:
     // Helper of next_frame that fetches a sub frame's header
     ErrorOr<FlacSubframeHeader, LoaderError> next_subframe_header(BigEndianInputBitStream& bit_input, u8 channel_index);
     // Helper of next_frame that decompresses a subframe
-    ErrorOr<Vector<i64>, LoaderError> parse_subframe(FlacSubframeHeader& subframe_header, BigEndianInputBitStream& bit_input);
+    ErrorOr<void, LoaderError> parse_subframe(Vector<i64>& samples, FlacSubframeHeader& subframe_header, BigEndianInputBitStream& bit_input);
     // Subframe-internal data decoders (heavy lifting)
     ErrorOr<Vector<i64>, LoaderError> decode_fixed_lpc(FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
     ErrorOr<Vector<i64>, LoaderError> decode_verbatim(FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
-    ErrorOr<Vector<i64>, LoaderError> decode_custom_lpc(FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
+    ErrorOr<void, LoaderError> decode_custom_lpc(Vector<i64>& decoded, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
     MaybeLoaderError decode_residual(Vector<i64>& decoded, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
     // decode a single rice partition that has its own rice parameter
     ALWAYS_INLINE ErrorOr<Vector<i64>, LoaderError> decode_rice_partition(u8 partition_type, u32 partitions, u32 partition_index, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
@@ -110,6 +110,10 @@ private:
     Optional<FlacFrameHeader> m_current_frame;
     u64 m_current_sample_or_frame { 0 };
     SeekTable m_seektable;
+
+    // Keep around a few temporary buffers whose allocated space can be reused.
+    // This is an empirical optimization since allocations and deallocations take a lot of time in the decoder.
+    mutable Vector<Vector<i64>, 2> m_subframe_buffers;
 };
 
 }

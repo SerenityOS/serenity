@@ -89,7 +89,7 @@ void InlineFormattingContext::run(Box const&, LayoutMode layout_mode, AvailableS
 
 void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode layout_mode)
 {
-    auto width_of_containing_block = m_available_space->width.to_px();
+    auto width_of_containing_block = m_available_space->width.to_px_or_zero();
     auto& box_state = m_state.get_mutable(box);
     auto const& computed_values = box.computed_values();
 

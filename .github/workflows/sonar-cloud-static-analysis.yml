@@ -58,9 +58,9 @@ jobs:
         # Packages below aren't.
         run: |
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-15 main'
+          sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-16 main'
           sudo apt-get update
-          sudo apt-get install -y clang-format-15 gcc-12 g++-12 libstdc++-12-dev libmpfr-dev libmpc-dev ninja-build unzip
+          sudo apt-get install -y clang-format-16 gcc-12 g++-12 libstdc++-12-dev libmpfr-dev libmpc-dev ninja-build unzip
 
       - name: Check versions
         run: set +e; g++ --version; g++-12 --version; ninja --version;

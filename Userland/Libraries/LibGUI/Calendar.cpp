@@ -39,6 +39,7 @@ Calendar::Calendar(Core::DateTime date_time, Mode mode)
     m_weekend_length = weekend_length;
 
     set_fill_with_background_color(true);
+    set_scrollbars_enabled(false);
 
     for (int i = 0; i < 7; i++) {
         Day day;
@@ -80,6 +81,38 @@ void Calendar::toggle_mode()
     update_tiles(this->view_year(), this->view_month());
     this->resize(this->height(), this->width());
     invalidate_layout();
+}
+
+void Calendar::show_previous_date()
+{
+    unsigned view_month = m_view_month;
+    unsigned view_year = m_view_year;
+    if (m_mode == GUI::Calendar::Month) {
+        --view_month;
+        if (view_month == 0) {
+            view_month = 12;
+            --view_year;
+        }
+    } else {
+        --view_year;
+    }
+    update_tiles(view_year, view_month);
+}
+
+void Calendar::show_next_date()
+{
+    unsigned view_month = m_view_month;
+    unsigned view_year = m_view_year;
+    if (m_mode == GUI::Calendar::Month) {
+        ++view_month;
+        if (view_month == 13) {
+            view_month = 1;
+            ++view_year;
+        }
+    } else {
+        ++view_year;
+    }
+    update_tiles(view_year, view_month);
 }
 
 void Calendar::resize_event(GUI::ResizeEvent& event)
@@ -743,6 +776,17 @@ void Calendar::mousedown_event(GUI::MouseEvent& event)
             }
         }
     }
+}
+
+void Calendar::mousewheel_event(GUI::MouseEvent& event)
+{
+    if (event.wheel_delta_y() > 0)
+        show_next_date();
+    else
+        show_previous_date();
+
+    if (on_scroll)
+        on_scroll();
 }
 
 void Calendar::doubleclick_event(GUI::MouseEvent& event)

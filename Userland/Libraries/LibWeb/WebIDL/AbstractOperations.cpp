@@ -74,7 +74,7 @@ ErrorOr<ByteBuffer> get_buffer_source_copy(JS::Object const& buffer_source)
 
     // 9. For i in the range offset to offset + length − 1, inclusive, set bytes[i − offset] to ! GetValueFromBuffer(esArrayBuffer, i, Uint8, true, Unordered).
     for (u64 i = offset; i < offset + length; ++i) {
-        auto value = es_array_buffer->get_value<u8>(i, true, JS::ArrayBuffer::Unordered);
+        auto value = es_array_buffer->get_value<u8>(i, true, JS::ArrayBuffer::Unordered).release_allocated_value_but_fixme_should_propagate_errors();
         bytes[i - offset] = static_cast<u8>(value.as_double());
     }
 

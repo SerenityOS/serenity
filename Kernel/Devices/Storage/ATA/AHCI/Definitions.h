@@ -177,7 +177,7 @@ public:
         return indices;
     }
 
-    u32 bit_mask() const { return m_bit_mask; };
+    u32 bit_mask() const { return m_bit_mask; }
 
     // Disable default implementations that would use surprising integer promotion.
     bool operator==(MaskedBitField const&) const = delete;

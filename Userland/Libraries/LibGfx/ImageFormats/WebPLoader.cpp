@@ -722,19 +722,6 @@ IntSize WebPImageDecoderPlugin::size()
     return m_context->size.value();
 }
 
-void WebPImageDecoderPlugin::set_volatile()
-{
-    if (m_context->bitmap)
-        m_context->bitmap->set_volatile();
-}
-
-bool WebPImageDecoderPlugin::set_nonvolatile(bool& was_purged)
-{
-    if (!m_context->bitmap)
-        return false;
-    return m_context->bitmap->set_nonvolatile(was_purged);
-}
-
 ErrorOr<void> WebPImageDecoderPlugin::initialize()
 {
     auto header_okay_or_error = decode_webp_header(*m_context);

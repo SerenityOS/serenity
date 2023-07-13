@@ -22,6 +22,7 @@
 #include <LibWebView/ViewImplementation.h>
 #include <QAbstractScrollArea>
 #include <QPointer>
+#include <QUrl>
 
 class QTextEdit;
 class QLineEdit;

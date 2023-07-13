@@ -61,7 +61,7 @@ private:
         , m_on_complete(move(on_complete))
     {
         if (m_on_complete) {
-            m_promise->on_resolved = [](NonnullRefPtr<Core::Object>& object) -> ErrorOr<void> {
+            m_promise->on_resolution = [](NonnullRefPtr<Core::Object>& object) -> ErrorOr<void> {
                 auto self = static_ptr_cast<BackgroundAction<Result>>(object);
                 VERIFY(self->m_result.has_value());
                 if (auto maybe_error = self->m_on_complete(self->m_result.value()); maybe_error.is_error())
@@ -78,7 +78,7 @@ private:
         enqueue_work([this, origin_event_loop = &Core::EventLoop::current()] {
             auto result = m_action(*this);
             // The event loop cancels the promise when it exits.
-            m_canceled |= m_promise->is_canceled();
+            m_canceled |= m_promise->is_rejected();
             auto callback_scheduled = false;
             // All of our work was successful and we weren't cancelled; resolve the event loop's promise.
             if (!m_canceled && !result.is_error()) {
@@ -99,7 +99,7 @@ private:
                 if (result.is_error())
                     error = result.release_error();
 
-                m_promise->cancel(Error::from_errno(ECANCELED));
+                m_promise->reject(Error::from_errno(ECANCELED));
                 if (!m_canceled && m_on_error) {
                     callback_scheduled = true;
                     origin_event_loop->deferred_invoke([this, error = move(error)]() mutable {

@@ -25,7 +25,7 @@ public:
     Vector<NonnullRefPtr<Selector>> const& selectors() const { return m_selectors; }
     CSSStyleDeclaration const& declaration() const { return m_declaration; }
 
-    virtual Type type() const override { return Type::Style; };
+    virtual Type type() const override { return Type::Style; }
 
     DeprecatedString selector_text() const;
     void set_selector_text(StringView);

@@ -1,14 +1,14 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x0 children: inline
-      BlockContainer <div#container> at (8,8) content-size 500x400 positioned [BFC] children: inline
+      BlockContainer <div#container> at (28,28) content-size 500x400 positioned [BFC] children: inline
         TextNode <#text>
-        BlockContainer <div#red> at (38,38) content-size 100x100 positioned [BFC] children: not-inline
+        BlockContainer <div#red> at (58,58) content-size 100x100 positioned [BFC] children: not-inline
         TextNode <#text>
-        BlockContainer <div#green> at (338,78) content-size 100x100 positioned [BFC] children: not-inline
+        BlockContainer <div#green> at (358,98) content-size 100x100 positioned [BFC] children: not-inline
         TextNode <#text>
-        BlockContainer <div#blue> at (28,288) content-size 100x100 positioned [BFC] children: not-inline
+        BlockContainer <div#blue> at (48,308) content-size 100x100 positioned [BFC] children: not-inline
         TextNode <#text>
-        BlockContainer <div#yellow> at (388,288) content-size 100x100 positioned [BFC] children: not-inline
+        BlockContainer <div#yellow> at (408,308) content-size 100x100 positioned [BFC] children: not-inline
         TextNode <#text>
       TextNode <#text>

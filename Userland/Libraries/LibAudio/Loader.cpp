@@ -68,6 +68,9 @@ ErrorOr<NonnullOwnPtr<LoaderPlugin>, LoaderError> Loader::create_plugin(NonnullO
 
 LoaderSamples Loader::get_more_samples(size_t samples_to_read_from_input)
 {
+    if (m_plugin_at_end_of_stream)
+        return FixedArray<Sample> {};
+
     size_t remaining_samples = total_samples() - loaded_samples();
     size_t samples_to_read = min(remaining_samples, samples_to_read_from_input);
     auto samples = TRY(FixedArray<Sample>::create(samples_to_read));
@@ -88,8 +91,10 @@ LoaderSamples Loader::get_more_samples(size_t samples_to_read_from_input)
     while (sample_index < samples_to_read) {
         auto chunk_data = TRY(m_plugin->load_chunks(samples_to_read - sample_index));
         chunk_data.remove_all_matching([](auto& chunk) { return chunk.is_empty(); });
-        if (chunk_data.is_empty())
+        if (chunk_data.is_empty()) {
+            m_plugin_at_end_of_stream = true;
             break;
+        }
         for (auto& chunk : chunk_data) {
             if (sample_index < samples_to_read) {
                 auto count = min(samples_to_read - sample_index, chunk.size());

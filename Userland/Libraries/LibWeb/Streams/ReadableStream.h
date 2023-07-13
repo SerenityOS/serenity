@@ -9,6 +9,7 @@
 #include <AK/Forward.h>
 #include <LibJS/Forward.h>
 #include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/Bindings/ReadableStreamPrototype.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Streams/QueuingStrategy.h>
 
@@ -19,6 +20,11 @@ using ReadableStreamReader = Variant<JS::NonnullGCPtr<ReadableStreamDefaultReade
 
 // https://streams.spec.whatwg.org/#typedefdef-readablestreamcontroller
 using ReadableStreamController = Variant<JS::NonnullGCPtr<ReadableStreamDefaultController>, JS::NonnullGCPtr<ReadableByteStreamController>>;
+
+// https://streams.spec.whatwg.org/#dictdef-readablestreamgetreaderoptions
+struct ReadableStreamGetReaderOptions {
+    Optional<Bindings::ReadableStreamReaderMode> mode;
+};
 
 // https://streams.spec.whatwg.org/#readablestream
 class ReadableStream final : public Bindings::PlatformObject {
@@ -37,7 +43,7 @@ public:
 
     bool locked() const;
     WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> cancel(JS::Value reason);
-    WebIDL::ExceptionOr<ReadableStreamReader> get_reader();
+    WebIDL::ExceptionOr<ReadableStreamReader> get_reader(ReadableStreamGetReaderOptions const& = {});
 
     Optional<ReadableStreamController>& controller() { return m_controller; }
     void set_controller(Optional<ReadableStreamController> value) { m_controller = move(value); }

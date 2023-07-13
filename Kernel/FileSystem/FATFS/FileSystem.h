@@ -26,6 +26,7 @@ public:
     virtual ~FATFS() override = default;
     virtual StringView class_name() const override { return "FATFS"sv; }
     virtual Inode& root_inode() override;
+    virtual u8 internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const override;
 
 private:
     virtual ErrorOr<void> initialize_while_locked() override;
@@ -41,7 +42,7 @@ private:
 
     static constexpr u32 first_data_cluster = 2;
 
-    FAT32BootRecord const* boot_record() const { return reinterpret_cast<FAT32BootRecord const*>(m_boot_record->data()); };
+    FAT32BootRecord const* boot_record() const { return reinterpret_cast<FAT32BootRecord const*>(m_boot_record->data()); }
 
     BlockBasedFileSystem::BlockIndex first_block_of_cluster(u32 cluster) const;
 

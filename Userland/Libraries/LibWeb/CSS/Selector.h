@@ -98,6 +98,7 @@ public:
                 NthLastChild,
                 Empty,
                 Root,
+                Host,
                 FirstOfType,
                 LastOfType,
                 OnlyOfType,
@@ -265,6 +266,8 @@ constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Ty
         return "empty"sv;
     case Selector::SimpleSelector::PseudoClass::Type::Root:
         return "root"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Host:
+        return "host"sv;
     case Selector::SimpleSelector::PseudoClass::Type::FirstOfType:
         return "first-of-type"sv;
     case Selector::SimpleSelector::PseudoClass::Type::LastOfType:

@@ -27,6 +27,11 @@ ErrorOr<String> PageNode::path() const
     return TRY(String::formatted("{}/{}.md", TRY(m_section->path()), m_page));
 }
 
+unsigned PageNode::section_number() const
+{
+    return m_section->section_number();
+}
+
 ErrorOr<NonnullRefPtr<PageNode>> PageNode::help_index_page()
 {
     static NonnullRefPtr<PageNode> const help_index_page = TRY(try_make_ref_counted<PageNode>(sections[7 - 1], TRY("Help-index"_string)));

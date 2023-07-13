@@ -25,6 +25,8 @@ private:
 
     virtual bool has_constructor() const override { return true; }
 
+    JS_DECLARE_NATIVE_FUNCTION(group_by);
+
     JS_DECLARE_NATIVE_FUNCTION(symbol_species_getter);
 };
 

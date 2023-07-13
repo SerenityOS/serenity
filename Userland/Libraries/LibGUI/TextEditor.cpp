@@ -1364,7 +1364,7 @@ void TextEditor::add_code_point(u32 code_point)
             m_autocomplete_timer->start();
     }
     insert_at_cursor_or_replace_selection(sb.to_deprecated_string());
-};
+}
 
 void TextEditor::reset_cursor_blink()
 {

@@ -83,7 +83,7 @@ public:
     ALWAYS_INLINE Value const& at(size_t index) const { return m_elements[index]; }
 
     PDFErrorOr<NonnullRefPtr<Object>> get_object_at(Document* document, size_t index) const;
-    NonnullRefPtr<Object> get_object_at(size_t index) const { return at(index).get<NonnullRefPtr<Object>>(); };
+    NonnullRefPtr<Object> get_object_at(size_t index) const { return at(index).get<NonnullRefPtr<Object>>(); }
 
 #define DEFINE_INDEXER(class_name, snake_name)                                                  \
     PDFErrorOr<NonnullRefPtr<class_name>> get_##snake_name##_at(Document*, size_t index) const; \
@@ -162,8 +162,8 @@ public:
     virtual ~StreamObject() override = default;
 
     [[nodiscard]] ALWAYS_INLINE NonnullRefPtr<DictObject> dict() const { return m_dict; }
-    [[nodiscard]] ReadonlyBytes bytes() const { return m_buffer.bytes(); };
-    [[nodiscard]] ByteBuffer& buffer() { return m_buffer; };
+    [[nodiscard]] ReadonlyBytes bytes() const { return m_buffer.bytes(); }
+    [[nodiscard]] ByteBuffer& buffer() { return m_buffer; }
 
     char const* type_name() const override { return "stream"; }
     DeprecatedString to_deprecated_string(int indent) const override;

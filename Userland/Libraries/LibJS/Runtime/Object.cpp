@@ -764,7 +764,7 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> Object::internal_get_own_propert
     PropertyDescriptor descriptor;
 
     // 3. Let X be O's own property whose key is P.
-    auto [value, attributes] = *maybe_storage_entry;
+    auto [value, attributes, property_offset] = *maybe_storage_entry;
 
     // 4. If X is a data property, then
     if (!value.is_accessor()) {
@@ -790,6 +790,9 @@ ThrowCompletionOr<Optional<PropertyDescriptor>> Object::internal_get_own_propert
 
     // 7. Set D.[[Configurable]] to the value of X's [[Configurable]] attribute.
     descriptor.configurable = attributes.is_configurable();
+
+    // Non-standard: Add the property offset to the descriptor. This is used to populate CacheablePropertyMetadata.
+    descriptor.property_offset = property_offset;
 
     // 8. Return D.
     return descriptor;
@@ -836,7 +839,7 @@ ThrowCompletionOr<bool> Object::internal_has_property(PropertyKey const& propert
 }
 
 // 10.1.8 [[Get]] ( P, Receiver ), https://tc39.es/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots-get-p-receiver
-ThrowCompletionOr<Value> Object::internal_get(PropertyKey const& property_key, Value receiver) const
+ThrowCompletionOr<Value> Object::internal_get(PropertyKey const& property_key, Value receiver, CacheablePropertyMetadata* cacheable_metadata) const
 {
     VERIFY(!receiver.is_empty());
     VERIFY(property_key.is_valid());
@@ -860,8 +863,16 @@ ThrowCompletionOr<Value> Object::internal_get(PropertyKey const& property_key, V
     }
 
     // 3. If IsDataDescriptor(desc) is true, return desc.[[Value]].
-    if (descriptor->is_data_descriptor())
+    if (descriptor->is_data_descriptor()) {
+        // Non-standard: If the caller has requested cacheable metadata and the property is an own property, fill it in.
+        if (cacheable_metadata && descriptor->property_offset.has_value()) {
+            *cacheable_metadata = CacheablePropertyMetadata {
+                .type = CacheablePropertyMetadata::Type::OwnProperty,
+                .property_offset = descriptor->property_offset.value(),
+            };
+        }
         return *descriptor->value;
+    }
 
     // 4. Assert: IsAccessorDescriptor(desc) is true.
     VERIFY(descriptor->is_accessor_descriptor());
@@ -1075,6 +1086,7 @@ Optional<ValueAndAttributes> Object::storage_get(PropertyKey const& property_key
 
     Value value;
     PropertyAttributes attributes;
+    Optional<u32> property_offset;
 
     if (property_key.is_number()) {
         auto value_and_attributes = m_indexed_properties.get(property_key.as_number());
@@ -1094,9 +1106,10 @@ Optional<ValueAndAttributes> Object::storage_get(PropertyKey const& property_key
 
         value = m_storage[metadata->offset];
         attributes = metadata->attributes;
+        property_offset = metadata->offset;
     }
 
-    return ValueAndAttributes { .value = value, .attributes = attributes };
+    return ValueAndAttributes { .value = value, .attributes = attributes, .property_offset = property_offset };
 }
 
 bool Object::storage_has(PropertyKey const& property_key) const
@@ -1111,7 +1124,7 @@ void Object::storage_set(PropertyKey const& property_key, ValueAndAttributes con
 {
     VERIFY(property_key.is_valid());
 
-    auto [value, attributes] = value_and_attributes;
+    auto [value, attributes, _] = value_and_attributes;
 
     if (property_key.is_number()) {
         auto index = property_key.as_number();

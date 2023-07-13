@@ -186,13 +186,13 @@ TEST_CASE(test_copy_ctor_and_dtor_called)
             : m_was_move_constructed(other.m_was_move_constructed)
         {
             EXPECT(false);
-        };
+        }
 
         MoveChecker(MoveChecker&& other)
             : m_was_move_constructed(other.m_was_move_constructed)
         {
             m_was_move_constructed = true;
-        };
+        }
 
         bool& m_was_move_constructed;
     };

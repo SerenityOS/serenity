@@ -37,8 +37,8 @@ public:
 
     JS::Promise* run(PreventErrorReporting = PreventErrorReporting::No);
 
-    JS::SourceTextModule const* record() const { return m_record.ptr(); };
-    JS::SourceTextModule* record() { return m_record.ptr(); };
+    JS::SourceTextModule const* record() const { return m_record.ptr(); }
+    JS::SourceTextModule* record() { return m_record.ptr(); }
 
 protected:
     JavaScriptModuleScript(AK::URL base_url, DeprecatedString filename, EnvironmentSettingsObject& environment_settings_object);

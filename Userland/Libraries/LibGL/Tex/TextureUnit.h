@@ -44,13 +44,13 @@ public:
     void set_rgb_source(size_t index, GLenum source) { m_rgb_source[index] = source; }
     GLenum rgb_source(size_t index) const { return m_rgb_source[index]; }
 
-    bool texture_1d_enabled() const { return m_texture_1d_enabled; };
+    bool texture_1d_enabled() const { return m_texture_1d_enabled; }
     void set_texture_1d_enabled(bool texture_1d_enabled) { m_texture_1d_enabled = texture_1d_enabled; }
-    bool texture_2d_enabled() const { return m_texture_2d_enabled; };
+    bool texture_2d_enabled() const { return m_texture_2d_enabled; }
     void set_texture_2d_enabled(bool texture_2d_enabled) { m_texture_2d_enabled = texture_2d_enabled; }
-    bool texture_3d_enabled() const { return m_texture_3d_enabled; };
+    bool texture_3d_enabled() const { return m_texture_3d_enabled; }
     void set_texture_3d_enabled(bool texture_3d_enabled) { m_texture_3d_enabled = texture_3d_enabled; }
-    bool texture_cube_map_enabled() const { return m_texture_cube_map_enabled; };
+    bool texture_cube_map_enabled() const { return m_texture_cube_map_enabled; }
     void set_texture_cube_map_enabled(bool texture_cube_map_enabled) { m_texture_cube_map_enabled = texture_cube_map_enabled; }
 
     FloatMatrix4x4& texture_matrix() { return m_texture_matrix_stack.last(); }

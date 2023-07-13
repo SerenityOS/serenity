@@ -416,7 +416,7 @@ private:
 
     StringView name() override { return "Playing"sv; }
 
-    bool is_playing() const override { return true; };
+    bool is_playing() const override { return true; }
     PlaybackState get_state() const override { return PlaybackState::Playing; }
     ErrorOr<void> pause() override
     {
@@ -540,7 +540,7 @@ private:
     {
         return replace_handler_and_delete_this<PlayingStateHandler>();
     }
-    bool is_playing() const override { return false; };
+    bool is_playing() const override { return false; }
     PlaybackState get_state() const override { return PlaybackState::Paused; }
 };
 
@@ -710,7 +710,7 @@ private:
         manager().m_decode_wait_condition.broadcast();
         return replace_handler_and_delete_this<SeekingStateHandler>(true, Duration::zero(), SeekMode::Fast);
     }
-    bool is_playing() const override { return false; };
+    bool is_playing() const override { return false; }
     PlaybackState get_state() const override { return PlaybackState::Stopped; }
 };
 

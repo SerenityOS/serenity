@@ -21,22 +21,25 @@ DocumentParser::DocumentParser(Document* document, ReadonlyBytes bytes)
 {
 }
 
-PDFErrorOr<void> DocumentParser::initialize()
+PDFErrorOr<Version> DocumentParser::initialize()
 {
     m_reader.set_reading_forwards();
     if (m_reader.remaining() == 0)
         return error("Empty PDF document");
 
-    auto maybe_error = parse_header();
-    if (maybe_error.is_error()) {
-        warnln("{}", maybe_error.error().message());
+    auto maybe_version = parse_header();
+    if (maybe_version.is_error()) {
+        warnln("{}", maybe_version.error().message());
         warnln("No valid PDF header detected, continuing anyway.");
+        maybe_version = Version { 1, 6 }; // ¯\_(ツ)_/¯
     }
 
     auto const linearization_result = TRY(initialize_linearization_dict());
 
-    if (linearization_result == LinearizationResult::NotLinearized)
-        return initialize_non_linearized_xref_table();
+    if (linearization_result == LinearizationResult::NotLinearized) {
+        TRY(initialize_non_linearized_xref_table());
+        return maybe_version.value();
+    }
 
     bool is_linearized = m_linearization_dictionary.has_value();
     if (is_linearized) {
@@ -53,9 +56,11 @@ PDFErrorOr<void> DocumentParser::initialize()
     }
 
     if (is_linearized)
-        return initialize_linearized_xref_table();
+        TRY(initialize_linearized_xref_table());
+    else
+        TRY(initialize_non_linearized_xref_table());
 
-    return initialize_non_linearized_xref_table();
+    return maybe_version.value();
 }
 
 PDFErrorOr<Value> DocumentParser::parse_object_with_index(u32 index)
@@ -73,9 +78,8 @@ PDFErrorOr<Value> DocumentParser::parse_object_with_index(u32 index)
     return indirect_value->value();
 }
 
-PDFErrorOr<void> DocumentParser::parse_header()
+PDFErrorOr<Version> DocumentParser::parse_header()
 {
-    // FIXME: Do something with the version?
     m_reader.move_to(0);
     if (m_reader.remaining() < 8 || !m_reader.matches("%PDF-"))
         return error("Not a PDF document");
@@ -106,7 +110,7 @@ PDFErrorOr<void> DocumentParser::parse_header()
         }
     }
 
-    return {};
+    return Version { major_ver - '0', minor_ver - '0' };
 }
 
 PDFErrorOr<DocumentParser::LinearizationResult> DocumentParser::initialize_linearization_dict()
@@ -120,13 +124,23 @@ PDFErrorOr<DocumentParser::LinearizationResult> DocumentParser::initialize_linea
         return LinearizationResult::NotLinearized;
 
     // At this point, we still don't know for sure if we are dealing with a valid object.
+
+    // The linearization dict is read before decryption state is initialized.
+    // A linearization dict only contains numbers, so the decryption dictionary is not been needed (only strings and streams get decrypted, and only streams get unfiltered).
+    // But we don't know if the first object is a linearization dictionary until after parsing it, so the object might be a stream.
+    // If that stream is encrypted and filtered, we'd try to unfilter it while it's still encrypted, handing encrypted data to the unfiltering algorithms.
+    // This makes them assert, since they can't make sense of the encrypted data.
+    // So read the first object without unfiltering.
+    // If it is a linearization dict, there's no stream data and this has no effect.
+    // If it is a stream, this isn't a linearized file and the object will be read on demand (and unfiltered) later, when the object is lazily read via an xref entry.
+    set_filters_enabled(false);
     auto indirect_value_or_error = parse_indirect_value();
+    set_filters_enabled(true);
+
     if (indirect_value_or_error.is_error())
         return LinearizationResult::NotLinearized;
 
-    auto indirect_value = indirect_value_or_error.value();
-
-    auto dict_value = TRY(m_document->resolve(indirect_value));
+    auto dict_value = indirect_value_or_error.value()->value();
     if (!dict_value.has<NonnullRefPtr<Object>>())
         return error("Expected linearization object to be a dictionary");
 
@@ -554,7 +568,9 @@ PDFErrorOr<Value> DocumentParser::parse_compressed_object_with_index(u32 index)
     if (m_reader.matches_eol())
         m_reader.consume_eol();
 
+    push_reference({ static_cast<u32>(first_number.get<int>()), static_cast<u32>(second_number.get<int>()) });
     auto dict = TRY(parse_dict());
+
     auto type = TRY(dict->get_name(m_document, CommonNames::Type))->name();
     if (type != "ObjStm")
         return error("Invalid object stream type");
@@ -563,7 +579,12 @@ PDFErrorOr<Value> DocumentParser::parse_compressed_object_with_index(u32 index)
     auto first_object_offset = dict->get_value("First").get_u32();
 
     auto stream = TRY(parse_stream(dict));
+    pop_reference();
+
     Parser stream_parser(m_document, stream->bytes());
+
+    // The data was already decrypted when reading the outer compressed ObjStm.
+    stream_parser.set_encryption_enabled(false);
 
     for (u32 i = 0; i < object_count; ++i) {
         auto object_number = TRY(stream_parser.parse_number());
@@ -575,7 +596,11 @@ PDFErrorOr<Value> DocumentParser::parse_compressed_object_with_index(u32 index)
         }
     }
 
-    return TRY(stream_parser.parse_value());
+    stream_parser.push_reference({ index, 0 });
+    auto value = TRY(stream_parser.parse_value());
+    stream_parser.pop_reference();
+
+    return value;
 }
 
 PDFErrorOr<DocumentParser::PageOffsetHintTable> DocumentParser::parse_page_offset_hint_table(ReadonlyBytes hint_stream_bytes)

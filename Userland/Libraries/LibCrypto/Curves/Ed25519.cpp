@@ -21,7 +21,7 @@ ErrorOr<ByteBuffer> Ed25519::generate_private_key()
     auto buffer = TRY(ByteBuffer::create_uninitialized(key_size()));
     fill_with_random(buffer);
     return buffer;
-};
+}
 
 // https://datatracker.ietf.org/doc/html/rfc8032#section-5.1.5
 ErrorOr<ByteBuffer> Ed25519::generate_public_key(ReadonlyBytes private_key)

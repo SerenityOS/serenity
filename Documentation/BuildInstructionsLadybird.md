@@ -2,12 +2,12 @@
 
 ## Build Prerequisites
 
-Qt6 development packages and a C++20 capable compiler are required. gcc-12 or clang-15 are required at a minimum for c++20 support.
+Qt6 development packages and a C++20 capable compiler are required. g++-12 or clang-15 are required at a minimum for c++20 support.
 
 On Debian/Ubuntu required packages include, but are not limited to:
 
 ```
-sudo apt install build-essential cmake libgl1-mesa-dev ninja-build qt6-base-dev qt6-tools-dev-tools qt6-multimedia-dev
+sudo apt install build-essential cmake libgl1-mesa-dev ninja-build qt6-base-dev qt6-tools-dev-tools qt6-multimedia-dev ccache
 ```
 
 For Ubuntu 20.04 and above, ensure that the Qt6 Wayland packages are available:
@@ -19,17 +19,17 @@ sudo apt install qt6-wayland
 On Arch Linux/Manjaro:
 
 ```
-sudo pacman -S --needed base-devel cmake libgl ninja qt6-base qt6-tools qt6-wayland qt6-multimedia
+sudo pacman -S --needed base-devel cmake libgl ninja qt6-base qt6-tools qt6-wayland qt6-multimedia ccache
 ```
 
 On Fedora or derivatives:
 ```
-sudo dnf install cmake libglvnd-devel ninja-build qt6-qtbase-devel qt6-qttools-devel qt6-qtwayland-devel qt6-qtmultimedia-devel
+sudo dnf install cmake libglvnd-devel ninja-build qt6-qtbase-devel qt6-qttools-devel qt6-qtwayland-devel qt6-qtmultimedia-devel ccache
 ```
 
 On openSUSE:
 ```
-sudo zypper install cmake libglvnd-devel ninja qt6-base-devel qt6-tools-devel qt6-wayland-devel
+sudo zypper install cmake libglvnd-devel ninja qt6-base-devel qt6-multimedia-devel qt6-tools-devel qt6-wayland-devel ccache
 ```
 
 On Nix/NixOS:
@@ -43,7 +43,7 @@ Note that Xcode 13.x does not have sufficient C++20 support to build ladybird. X
 
 ```
 xcode-select --install
-brew install cmake qt ninja
+brew install cmake qt ninja ccache
 ```
 
 On OpenIndiana:
@@ -123,6 +123,14 @@ To run without ninja rule:
 export SERENITY_SOURCE_DIR=$(realpath ../)
 ./Build/ladybird/ladybird # or, in macOS: open ./Build/ladybird/ladybird.app
 ```
+
+### Debugging with CLion
+
+Ladybird should be built with debug symbols first. In `Meta/CMake/lagom_compile_options.cmake` remove the optimizations by changing `-O2` to `-O0`. For macOS also change the debug option from `-g1` to `-g` so that lldb is happy with the emitted symbols. In linux `-g1` can be changed to `-ggdb3` for maximum debug info.
+
+After running Ladybird as suggested above with `./Meta/serenity.sh run lagom ladybird`, you can now in CLion use Run -> Attach to Process to connect. If debugging layouting and rendering issues, filter the listing that opens for `WebContent` and attach to that.
+
+Now breakpoints, stepping and variable inspection will work.
 
 ### Debugging with Xcode on macOS
 

@@ -24,7 +24,7 @@ static void finalizer_task(void*)
         else
             g_finalizer_wait_queue->wait_forever(finalizer_task_name);
     }
-};
+}
 
 UNMAP_AFTER_INIT void FinalizerTask::spawn()
 {

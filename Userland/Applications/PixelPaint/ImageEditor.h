@@ -125,7 +125,7 @@ public:
     void set_unmodified();
     void update_modified();
     Function<void(DeprecatedString)> on_appended_status_info_change;
-    DeprecatedString appended_status_info() { return m_appended_status_info; };
+    DeprecatedString appended_status_info() { return m_appended_status_info; }
     void set_appended_status_info(DeprecatedString);
     DeprecatedString generate_unique_layer_name(DeprecatedString const& original_layer_name);
 

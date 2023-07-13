@@ -1,0 +1,15 @@
+source_set("UIEvents") {
+  configs += [ "//Userland/Libraries/LibWeb:configs" ]
+  deps = [ "//Userland/Libraries/LibWeb:all_generated" ]
+  include_dirs = [
+    "//Userland/",  # For LibGUI needing WindowServer types
+  ]
+  sources = [
+    "EventNames.cpp",
+    "FocusEvent.cpp",
+    "KeyboardEvent.cpp",
+    "MouseEvent.cpp",
+    "UIEvent.cpp",
+    "WheelEvent.cpp",
+  ]
+}

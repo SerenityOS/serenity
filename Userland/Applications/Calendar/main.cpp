@@ -49,33 +49,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto calendar = main_widget->find_descendant_of_type_named<GUI::Calendar>("calendar");
 
     auto prev_date_action = GUI::Action::create({}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"sv)), [&](const GUI::Action&) {
-        unsigned view_month = calendar->view_month();
-        unsigned view_year = calendar->view_year();
-        if (calendar->mode() == GUI::Calendar::Month) {
-            view_month--;
-            if (calendar->view_month() == 1) {
-                view_month = 12;
-                view_year--;
-            }
-        } else {
-            view_year--;
-        }
-        calendar->update_tiles(view_year, view_month);
+        calendar->show_previous_date();
     });
 
     auto next_date_action = GUI::Action::create({}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)), [&](const GUI::Action&) {
-        unsigned view_month = calendar->view_month();
-        unsigned view_year = calendar->view_year();
-        if (calendar->mode() == GUI::Calendar::Month) {
-            view_month++;
-            if (calendar->view_month() == 12) {
-                view_month = 1;
-                view_year++;
-            }
-        } else {
-            view_year++;
-        }
-        calendar->update_tiles(view_year, view_month);
+        calendar->show_next_date();
     });
 
     auto add_event_action = GUI::Action::create("&Add Event", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/add-event.png"sv)), [&](const GUI::Action&) {

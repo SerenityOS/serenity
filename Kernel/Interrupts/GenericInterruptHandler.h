@@ -48,8 +48,8 @@ public:
 
     virtual bool eoi() = 0;
     void increment_call_count();
-    void set_reserved() { m_reserved = true; };
-    bool reserved() const { return m_reserved; };
+    void set_reserved() { m_reserved = true; }
+    bool reserved() const { return m_reserved; }
 
 protected:
     void change_interrupt_number(u8 number);

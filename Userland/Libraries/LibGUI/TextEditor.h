@@ -76,7 +76,7 @@ public:
     void set_automatic_indentation_enabled(bool enabled) { m_automatic_indentation_enabled = enabled; }
 
     virtual int soft_tab_width() const final { return m_soft_tab_width; }
-    void set_soft_tab_width(int width) { m_soft_tab_width = width; };
+    void set_soft_tab_width(int width) { m_soft_tab_width = width; }
 
     WrappingMode wrapping_mode() const { return m_wrapping_mode; }
     bool is_wrapping_enabled() const { return m_wrapping_mode != WrappingMode::NoWrap; }
@@ -221,7 +221,7 @@ public:
 
     bool is_in_drag_select() const { return m_in_drag_select; }
 
-    TextRange& selection() { return m_selection; };
+    TextRange& selection() { return m_selection; }
     void did_update_selection();
     void did_change(AllowCallback = AllowCallback::Yes);
     void update_cursor();
@@ -308,8 +308,8 @@ private:
     // ^Syntax::HighlighterClient
     virtual Vector<TextDocumentSpan> const& spans() const final { return document().spans(); }
     virtual void set_span_at_index(size_t index, TextDocumentSpan span) final { document().set_span_at_index(index, move(span)); }
-    virtual Vector<GUI::TextDocumentFoldingRegion>& folding_regions() final { return document().folding_regions(); };
-    virtual Vector<GUI::TextDocumentFoldingRegion> const& folding_regions() const final { return document().folding_regions(); };
+    virtual Vector<GUI::TextDocumentFoldingRegion>& folding_regions() final { return document().folding_regions(); }
+    virtual Vector<GUI::TextDocumentFoldingRegion> const& folding_regions() const final { return document().folding_regions(); }
     virtual void highlighter_did_request_update() final { update(); }
     virtual DeprecatedString highlighter_did_request_text() const final { return text(); }
     virtual GUI::TextDocument& highlighter_did_request_document() final { return document(); }

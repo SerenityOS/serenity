@@ -8,7 +8,6 @@
 
 #include <AK/DeprecatedFlyString.h>
 #include <AK/Diagnostics.h>
-#include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 

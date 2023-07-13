@@ -46,7 +46,7 @@ private:
     {
         if (event.button() == GUI::MouseButton::Primary)
             m_anchor_point = event.position();
-    };
+    }
 
     virtual void mousemove_event(GUI::MouseEvent& event) override
     {
@@ -54,13 +54,13 @@ private:
             m_region = Gfx::IntRect::from_two_points(*m_anchor_point, event.position());
             update();
         }
-    };
+    }
 
     virtual void mouseup_event(GUI::MouseEvent& event) override
     {
         if (event.button() == GUI::MouseButton::Primary)
             m_window->close();
-    };
+    }
 
     virtual void paint_event(GUI::PaintEvent&) override
     {

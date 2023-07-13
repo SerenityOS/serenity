@@ -8,8 +8,7 @@
 #include <LibCrypto/Cipher/AES.h>
 #include <LibCrypto/Cipher/AESTables.h>
 
-namespace Crypto {
-namespace Cipher {
+namespace Crypto::Cipher {
 
 template<typename T>
 constexpr u32 get_key(T pt)
@@ -404,5 +403,4 @@ void AESCipherBlock::overwrite(ReadonlyBytes bytes)
     }
 }
 
-}
 }

@@ -27,7 +27,7 @@ public:
     virtual ~E1000NetworkAdapter() override;
 
     virtual void send_raw(ReadonlyBytes) override;
-    virtual bool link_up() override { return m_link_up; };
+    virtual bool link_up() override { return m_link_up; }
     virtual i32 link_speed() override;
     virtual bool link_full_duplex() override;
 

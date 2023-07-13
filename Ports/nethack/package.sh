@@ -3,7 +3,6 @@ port='nethack'
 version='3.6.7'
 workdir="NetHack-${version}"
 files="https://www.nethack.org/download/${version}/nethack-${version//.}-src.tgz nethack-${version//.}-src.tgz 98cf67df6debf9668a61745aa84c09bcab362e5d33f5b944ec5155d44d2aacb2"
-auth_type='sha256'
 depends=(
     'ncurses'
     'bash'

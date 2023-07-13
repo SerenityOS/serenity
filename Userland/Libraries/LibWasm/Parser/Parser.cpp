@@ -1047,9 +1047,20 @@ ParseResult<ElementSection::SegmentType3> ElementSection::SegmentType3::parse(St
 
 ParseResult<ElementSection::SegmentType4> ElementSection::SegmentType4::parse(Stream& stream)
 {
-    dbgln("Type 4");
-    (void)stream;
-    return ParseError::NotImplemented;
+    auto expression = Expression::parse(stream);
+    if (expression.is_error())
+        return expression.error();
+    auto initializers = parse_vector<Expression>(stream);
+    if (initializers.is_error())
+        return initializers.error();
+
+    return SegmentType4 {
+        .mode = Active {
+            .index = 0,
+            .expression = expression.release_value(),
+        },
+        .initializer = initializers.release_value(),
+    };
 }
 
 ParseResult<ElementSection::SegmentType5> ElementSection::SegmentType5::parse(Stream& stream)
@@ -1117,7 +1128,7 @@ ParseResult<ElementSection::Element> ElementSection::Element::parse(Stream& stre
         if (auto result = SegmentType4::parse(stream); result.is_error()) {
             return result.error();
         } else {
-            return ParseError::NotImplemented;
+            return Element { ValueType(ValueType::FunctionReference), move(result.value().initializer), move(result.value().mode) };
         }
     case 0x05:
         if (auto result = SegmentType5::parse(stream); result.is_error()) {

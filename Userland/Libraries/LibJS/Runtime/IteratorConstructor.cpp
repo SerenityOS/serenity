@@ -66,27 +66,23 @@ JS_DEFINE_NATIVE_FUNCTION(IteratorConstructor::from)
 
     auto object = vm.argument(0);
 
-    // 1. If O is a String, set O to ! ToObject(O).
-    if (object.is_string())
-        object = MUST_OR_THROW_OOM(object.to_object(vm));
+    // 1. Let iteratorRecord be ? GetIteratorFlattenable(O, iterate-strings).
+    auto iterator_record = TRY(get_iterator_flattenable(vm, object, StringHandling::IterateStrings));
 
-    // 2. Let iteratorRecord be ? GetIteratorFlattenable(O).
-    auto iterator_record = TRY(get_iterator_flattenable(vm, object));
-
-    // 3. Let hasInstance be ? OrdinaryHasInstance(%Iterator%, iteratorRecord.[[Iterator]]).
+    // 2. Let hasInstance be ? OrdinaryHasInstance(%Iterator%, iteratorRecord.[[Iterator]]).
     auto has_instance = TRY(ordinary_has_instance(vm, iterator_record.iterator, realm.intrinsics().iterator_constructor()));
 
-    // 4. If hasInstance is true, then
+    // 3. If hasInstance is true, then
     if (has_instance.is_boolean() && has_instance.as_bool()) {
         // a. Return iteratorRecord.[[Iterator]].
         return iterator_record.iterator;
     }
 
-    // 5. Let wrapper be OrdinaryObjectCreate(%WrapForValidIteratorPrototype%, « [[Iterated]] »).
-    // 6. Set wrapper.[[Iterated]] to iteratorRecord.
+    // 4. Let wrapper be OrdinaryObjectCreate(%WrapForValidIteratorPrototype%, « [[Iterated]] »).
+    // 5. Set wrapper.[[Iterated]] to iteratorRecord.
     auto wrapper = MUST_OR_THROW_OOM(Iterator::create(realm, realm.intrinsics().wrap_for_valid_iterator_prototype(), move(iterator_record)));
 
-    // 7. Return wrapper.
+    // 6. Return wrapper.
     return wrapper;
 }
 

@@ -30,7 +30,7 @@ public:
     static bool is_initialized();
     bool initialize();
 
-    unsigned allocate_minor_device_number() { return m_current_minor_number++; };
+    unsigned allocate_minor_device_number() { return m_current_minor_number++; }
     GraphicsManagement();
 
     void attach_new_display_connector(Badge<DisplayConnector>, DisplayConnector&);

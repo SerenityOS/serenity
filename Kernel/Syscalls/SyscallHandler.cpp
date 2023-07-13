@@ -20,8 +20,8 @@ namespace Kernel {
 
 namespace Syscall {
 
-using Handler = auto(Process::*)(FlatPtr, FlatPtr, FlatPtr, FlatPtr) -> ErrorOr<FlatPtr>;
-using HandlerWithRegisterState = auto(Process::*)(RegisterState&) -> ErrorOr<FlatPtr>;
+using Handler = auto (Process::*)(FlatPtr, FlatPtr, FlatPtr, FlatPtr) -> ErrorOr<FlatPtr>;
+using HandlerWithRegisterState = auto (Process::*)(RegisterState&) -> ErrorOr<FlatPtr>;
 
 struct HandlerMetadata {
     Handler handler;

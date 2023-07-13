@@ -265,10 +265,10 @@ namespace JS {
     P(globalThis)                            \
     P(granularity)                           \
     P(group)                                 \
+    P(groupBy)                               \
     P(groupCollapsed)                        \
     P(groupEnd)                              \
     P(groups)                                \
-    P(groupToMap)                            \
     P(has)                                   \
     P(hasIndices)                            \
     P(hasOwn)                                \
@@ -405,6 +405,7 @@ namespace JS {
     P(pop)                                   \
     P(pow)                                   \
     P(preventExtensions)                     \
+    P(promise)                               \
     P(propertyIsEnumerable)                  \
     P(prototype)                             \
     P(proxy)                                 \
@@ -582,6 +583,7 @@ namespace JS {
     P(withCalendar)                          \
     P(withPlainDate)                         \
     P(withPlainTime)                         \
+    P(withResolvers)                         \
     P(withTimeZone)                          \
     P(writable)                              \
     P(year)                                  \

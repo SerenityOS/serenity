@@ -10,45 +10,127 @@
 
 namespace Diff {
 
-ErrorOr<Vector<Hunk>> parse_hunks(StringView diff)
+Optional<HunkLocation> Parser::consume_unified_location()
 {
-    Vector<StringView> diff_lines = diff.split_view('\n');
-    if (diff_lines.is_empty())
-        return Vector<Hunk> {};
+    auto consume_range = [this](Range& range) {
+        if (!consume_line_number(range.start_line))
+            return false;
 
-    Vector<Hunk> hunks;
+        if (consume_specific(',')) {
+            if (!consume_line_number(range.number_of_lines))
+                return false;
+        } else {
+            range.number_of_lines = 1;
+        }
+        return true;
+    };
 
-    size_t line_index = 0;
-    HunkLocation current_location {};
+    if (!consume_specific("@@ -"))
+        return {};
 
-    // Skip to first hunk
-    while (diff_lines[line_index][0] != '@') {
-        ++line_index;
-    }
+    HunkLocation location;
 
-    while (line_index < diff_lines.size()) {
-        if (diff_lines[line_index][0] == '@') {
-            current_location = parse_hunk_location(diff_lines[line_index]);
-            ++line_index;
+    if (!consume_range(location.old_range))
+        return {};
+
+    if (!consume_specific(" +"))
+        return {};
+
+    if (!consume_range(location.new_range))
+        return {};
+
+    if (!consume_specific(" @@"))
+        return {};
+
+    return location;
+}
+
+bool Parser::consume_line_number(size_t& number)
+{
+    auto line = consume_while(is_ascii_digit);
+
+    auto maybe_number = line.to_uint<size_t>();
+    if (!maybe_number.has_value())
+        return false;
+
+    number = maybe_number.value();
+    return true;
+}
+
+ErrorOr<Header> Parser::parse_header()
+{
+    Header header;
+
+    while (!is_eof()) {
+
+        if (consume_specific("+++ ")) {
+            header.new_file_path = TRY(String::from_utf8(consume_line()));
             continue;
         }
 
-        Hunk hunk {};
-        hunk.location = current_location;
+        if (consume_specific("--- ")) {
+            header.old_file_path = TRY(String::from_utf8(consume_line()));
+            continue;
+        }
 
-        while (line_index < diff_lines.size()) {
-            auto const& line = diff_lines[line_index];
+        if (next_is("@@ ")) {
+            header.format = Format::Unified;
+            return header;
+        }
 
-            char const operation = line[0];
-            if (operation != ' ' && operation != '+' && operation != '-')
-                break;
+        consume_line();
+    }
+
+    return Error::from_string_literal("Unable to find any patch");
+}
+
+ErrorOr<Vector<Hunk>> Parser::parse_hunks()
+{
+    Vector<Hunk> hunks;
+
+    while (!is_eof()) {
+        // Try an locate a hunk location in this hunk. It may be prefixed with information.
+        auto maybe_location = consume_unified_location();
+        consume_line();
+
+        if (!maybe_location.has_value())
+            continue;
+
+        Hunk hunk { *maybe_location, {} };
+
+        auto old_lines_expected = hunk.location.old_range.number_of_lines;
+        auto new_lines_expected = hunk.location.new_range.number_of_lines;
+
+        // We've found a location. Now parse out all of the expected content lines.
+        while (old_lines_expected != 0 || new_lines_expected != 0) {
+            StringView line = consume_line();
+
+            if (line.is_empty())
+                return Error::from_string_literal("Malformed empty content line in patch");
+
+            if (line[0] != ' ' && line[0] != '+' && line[0] != '-')
+                return Error::from_string_literal("Invaid operation in patch");
+
+            auto const operation = Line::operation_from_symbol(line[0]);
+
+            if (operation != Line::Operation::Removal) {
+                if (new_lines_expected == 0)
+                    return Error::from_string_literal("Found more removal and context lines in patch than expected");
+
+                --new_lines_expected;
+            }
+
+            if (operation != Line::Operation::Addition) {
+                if (old_lines_expected == 0)
+                    return Error::from_string_literal("Found more addition and context lines in patch than expected");
+
+                --old_lines_expected;
+            }
 
             auto const content = line.substring_view(1, line.length() - 1);
-
-            TRY(hunk.lines.try_append(Line { Line::operation_from_symbol(operation), TRY(String::from_utf8(content)) }));
-
-            ++line_index;
+            TRY(hunk.lines.try_append(Line { operation, TRY(String::from_utf8(content)) }));
         }
+
         TRY(hunks.try_append(hunk));
     }
 
@@ -63,48 +145,9 @@ ErrorOr<Vector<Hunk>> parse_hunks(StringView diff)
     return hunks;
 }
 
-HunkLocation parse_hunk_location(StringView location_line)
+ErrorOr<Vector<Hunk>> parse_hunks(StringView diff)
 {
-    size_t char_index = 0;
-    auto parse_start_and_length_pair = [](StringView raw) {
-        auto maybe_index_of_separator = raw.find(',');
-
-        size_t start = 0;
-        size_t length = 0;
-        if (maybe_index_of_separator.has_value()) {
-            auto index_of_separator = maybe_index_of_separator.value();
-            start = raw.substring_view(0, index_of_separator).to_uint().value();
-            length = raw.substring_view(index_of_separator + 1, raw.length() - index_of_separator - 1).to_uint().value();
-        } else {
-            length = 1;
-            start = raw.to_uint().value();
-        }
-
-        return Range { start, length };
-    };
-    while (char_index < location_line.length() && location_line[char_index++] != '-') {
-    }
-    VERIFY(char_index < location_line.length());
-
-    size_t original_location_start_index = char_index;
-
-    while (char_index < location_line.length() && location_line[char_index++] != ' ') {
-    }
-    VERIFY(char_index < location_line.length() && location_line[char_index] == '+');
-    size_t original_location_end_index = char_index - 2;
-
-    size_t target_location_start_index = char_index + 1;
-
-    char_index += 1;
-    while (char_index < location_line.length() && location_line[char_index++] != ' ') {
-    }
-    VERIFY(char_index < location_line.length());
-
-    size_t target_location_end_index = char_index - 2;
-
-    auto old_range = parse_start_and_length_pair(location_line.substring_view(original_location_start_index, original_location_end_index - original_location_start_index + 1));
-    auto new_range = parse_start_and_length_pair(location_line.substring_view(target_location_start_index, target_location_end_index - target_location_start_index + 1));
-    return { old_range, new_range };
+    Parser lexer(diff);
+    return lexer.parse_hunks();
 }
-
-};
+}

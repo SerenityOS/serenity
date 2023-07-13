@@ -138,8 +138,8 @@ public:
     bool is_object() const { return m_value.tag == OBJECT_TAG; }
     bool is_boolean() const { return m_value.tag == BOOLEAN_TAG; }
     bool is_symbol() const { return m_value.tag == SYMBOL_TAG; }
-    bool is_accessor() const { return m_value.tag == ACCESSOR_TAG; };
-    bool is_bigint() const { return m_value.tag == BIGINT_TAG; };
+    bool is_accessor() const { return m_value.tag == ACCESSOR_TAG; }
+    bool is_bigint() const { return m_value.tag == BIGINT_TAG; }
     bool is_nullish() const { return (m_value.tag & IS_NULLISH_EXTRACT_PATTERN) == IS_NULLISH_PATTERN; }
     bool is_cell() const { return (m_value.tag & IS_CELL_PATTERN) == IS_CELL_PATTERN; }
     ThrowCompletionOr<bool> is_array(VM&) const;

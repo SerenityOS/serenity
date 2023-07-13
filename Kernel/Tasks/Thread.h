@@ -1066,7 +1066,7 @@ public:
 
     ErrorOr<NonnullOwnPtr<KString>> backtrace();
 
-    Blocker const* blocker() const { return m_blocker; };
+    Blocker const* blocker() const { return m_blocker; }
     Kernel::Mutex const* blocking_mutex() const { return m_blocking_mutex; }
 
 #if LOCK_DEBUG

@@ -4,7 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/Font/PathRasterizer.h>
+#include <LibGfx/AntiAliasingPainter.h>
+#include <LibGfx/Painter.h>
 #include <LibPDF/Fonts/Type1FontProgram.h>
 
 namespace PDF {
@@ -54,15 +55,19 @@ enum ExtendedCommand {
 
 RefPtr<Gfx::Bitmap> Type1FontProgram::rasterize_glyph(DeprecatedFlyString const& char_name, float width, Gfx::GlyphSubpixelOffset subpixel_offset)
 {
+    constexpr auto base_color = Color::White;
     auto path = build_char(char_name, width, subpixel_offset);
     auto bounding_box = path.bounding_box().size();
 
     u32 w = (u32)ceilf(bounding_box.width()) + 2;
     u32 h = (u32)ceilf(bounding_box.height()) + 2;
 
-    Gfx::PathRasterizer rasterizer(Gfx::IntSize(w, h));
-    rasterizer.draw_path(path);
-    return rasterizer.accumulate();
+    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { w, h }).release_value_but_fixme_should_propagate_errors();
+    Gfx::Painter painter { bitmap };
+    Gfx::AntiAliasingPainter aa_painter { painter };
+
+    aa_painter.fill_path(path, base_color);
+    return bitmap;
 }
 
 Gfx::Path Type1FontProgram::build_char(DeprecatedFlyString const& char_name, float width, Gfx::GlyphSubpixelOffset subpixel_offset)

@@ -1,0 +1,29 @@
+# TODO: AudioClient IPC files for serenity
+
+shared_library("LibAudio") {
+  include_dirs = [ "//Userland/Libraries" ]
+  sources = [
+    "FlacLoader.cpp",
+    "GenericTypes.cpp",
+    "Loader.cpp",
+    "MP3Loader.cpp",
+    "Metadata.cpp",
+    "QOALoader.cpp",
+    "QOATypes.cpp",
+    "RIFFTypes.cpp",
+    "SampleFormats.cpp",
+    "UserSampleQueue.cpp",
+    "VorbisComment.cpp",
+    "WavLoader.cpp",
+    "WavWriter.cpp",
+  ]
+  deps = [
+    "//AK",
+    "//Userland/Libraries/LibCore",
+    "//Userland/Libraries/LibCrypto",
+    "//Userland/Libraries/LibIPC",
+    "//Userland/Libraries/LibThreading",
+    "//Userland/Libraries/LibUnicode",
+  ]
+  output_name = "audio"
+}

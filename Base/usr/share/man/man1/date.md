@@ -37,3 +37,6 @@ $ date +%Y-%m-%d
 # Set date to 1610017485 (UNIX time)
 $ date -s 1610017485
 ```
+
+## See Also
+* [`ntpquery`(1)](help://man/1/ntpquery)

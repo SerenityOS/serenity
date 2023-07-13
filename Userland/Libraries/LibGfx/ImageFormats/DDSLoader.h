@@ -241,8 +241,7 @@ public:
     virtual ~DDSImageDecoderPlugin() override;
 
     virtual IntSize size() override;
-    virtual void set_volatile() override;
-    [[nodiscard]] virtual bool set_nonvolatile(bool& was_purged) override;
+
     virtual ErrorOr<void> initialize() override;
     virtual bool is_animated() override;
     virtual size_t loop_count() override;

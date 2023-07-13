@@ -230,10 +230,10 @@ static ThrowCompletionOr<Value> atomic_compare_exchange_impl(VM& vm, TypedArrayB
     constexpr bool is_little_endian = __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__;
 
     // 11. Let expectedBytes be NumericToRawBytes(elementType, expected, isLittleEndian).
-    auto expected_bytes = numeric_to_raw_bytes<T>(vm, expected, is_little_endian);
+    auto expected_bytes = MUST_OR_THROW_OOM(numeric_to_raw_bytes<T>(vm, expected, is_little_endian));
 
     // 12. Let replacementBytes be NumericToRawBytes(elementType, replacement, isLittleEndian).
-    auto replacement_bytes = numeric_to_raw_bytes<T>(vm, replacement, is_little_endian);
+    auto replacement_bytes = MUST_OR_THROW_OOM(numeric_to_raw_bytes<T>(vm, replacement, is_little_endian));
 
     // FIXME: Implement SharedArrayBuffer case.
     // 13. If IsSharedArrayBuffer(buffer) is true, then
@@ -371,7 +371,7 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::store)
 
     // 7. Let elementType be TypedArrayElementType(typedArray).
     // 8. Perform SetValueInBuffer(buffer, indexedPosition, elementType, v, true, SeqCst).
-    typed_array->set_value_in_buffer(indexed_position, value_to_set, ArrayBuffer::Order::SeqCst, true);
+    MUST_OR_THROW_OOM(typed_array->set_value_in_buffer(indexed_position, value_to_set, ArrayBuffer::Order::SeqCst, true));
 
     // 9. Return v.
     return value_to_set;

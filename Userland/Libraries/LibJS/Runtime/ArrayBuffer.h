@@ -72,11 +72,11 @@ public:
         Unordered
     };
     template<typename type>
-    Value get_value(size_t byte_index, bool is_typed_array, Order, bool is_little_endian = true);
+    ThrowCompletionOr<Value> get_value(size_t byte_index, bool is_typed_array, Order, bool is_little_endian = true);
     template<typename type>
-    void set_value(size_t byte_index, Value value, bool is_typed_array, Order, bool is_little_endian = true);
+    ThrowCompletionOr<void> set_value(size_t byte_index, Value value, bool is_typed_array, Order, bool is_little_endian = true);
     template<typename T>
-    Value get_modify_set_value(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian = true);
+    ThrowCompletionOr<Value> get_modify_set_value(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian = true);
 
 private:
     ArrayBuffer(ByteBuffer buffer, Object& prototype);
@@ -110,30 +110,59 @@ ThrowCompletionOr<NonnullGCPtr<ArrayBuffer>> allocate_shared_array_buffer(VM&, F
 template<typename T>
 static Value raw_bytes_to_numeric(VM& vm, ByteBuffer raw_value, bool is_little_endian)
 {
+    // 1. Let elementSize be the Element Size value specified in Table 70 for Element Type type.
+    //    NOTE: Used in step 6, but not needed with our implementation of that step.
+
+    // 2. If isLittleEndian is false, reverse the order of the elements of rawBytes.
     if (!is_little_endian) {
         VERIFY(raw_value.size() % 2 == 0);
         for (size_t i = 0; i < raw_value.size() / 2; ++i)
             swap(raw_value[i], raw_value[raw_value.size() - 1 - i]);
     }
+
+    // 3. If type is Float32, then
     using UnderlyingBufferDataType = Conditional<IsSame<ClampedU8, T>, u8, T>;
     if constexpr (IsSame<UnderlyingBufferDataType, float>) {
+        // a. Let value be the byte elements of rawBytes concatenated and interpreted as a little-endian bit string encoding of an IEEE 754-2019 binary32 value.
         float value;
         raw_value.span().copy_to({ &value, sizeof(float) });
+
+        // b. If value is an IEEE 754-2019 binary32 NaN value, return the NaN Number value.
         if (isnan(value))
             return js_nan();
+
+        // c. Return the Number value that corresponds to value.
         return Value(value);
     }
+
+    // 4. If type is Float64, then
     if constexpr (IsSame<UnderlyingBufferDataType, double>) {
+        // a. Let value be the byte elements of rawBytes concatenated and interpreted as a little-endian bit string encoding of an IEEE 754-2019 binary64 value.
         double value;
         raw_value.span().copy_to({ &value, sizeof(double) });
+
+        // b. If value is an IEEE 754-2019 binary64 NaN value, return the NaN Number value.
         if (isnan(value))
             return js_nan();
+
+        // c. Return the Number value that corresponds to value.
         return Value(value);
     }
+
+    // NOTE: Not in spec, sanity check for steps below.
     if constexpr (!IsIntegral<UnderlyingBufferDataType>)
         VERIFY_NOT_REACHED();
+
+    // 5. If IsUnsignedElementType(type) is true, then
+    //     a. Let intValue be the byte elements of rawBytes concatenated and interpreted as a bit string encoding of an unsigned little-endian binary number.
+    // 6. Else,
+    //     a. Let intValue be the byte elements of rawBytes concatenated and interpreted as a bit string encoding of a binary little-endian two's complement number of bit length elementSize × 8.
+    //
+    // NOTE: The signed/unsigned logic above is implemented in step 7 by the IsSigned<> check, and in step 8 by JS::Value constructor overloads.
     UnderlyingBufferDataType int_value = 0;
     raw_value.span().copy_to({ &int_value, sizeof(UnderlyingBufferDataType) });
+
+    // 7. If IsBigIntElementType(type) is true, return the BigInt value that corresponds to intValue.
     if constexpr (sizeof(UnderlyingBufferDataType) == 8) {
         if constexpr (IsSigned<UnderlyingBufferDataType>) {
             static_assert(IsSame<UnderlyingBufferDataType, i64>);
@@ -142,33 +171,66 @@ static Value raw_bytes_to_numeric(VM& vm, ByteBuffer raw_value, bool is_little_e
             static_assert(IsOneOf<UnderlyingBufferDataType, u64, double>);
             return BigInt::create(vm, Crypto::SignedBigInteger { Crypto::UnsignedBigInteger { int_value } });
         }
-    } else {
+    }
+    // 8. Otherwise, return the Number value that corresponds to intValue.
+    else {
         return Value(int_value);
     }
 }
 
-// Implementation for 25.1.2.10 GetValueFromBuffer, used in TypedArray<T>::get_value_from_buffer().
+// Implementation for 25.1.2.10 GetValueFromBuffer, used in TypedArray<T>::get_value_from_buffer(), https://tc39.es/ecma262/#sec-getvaluefrombuffer
 template<typename T>
-Value ArrayBuffer::get_value(size_t byte_index, [[maybe_unused]] bool is_typed_array, Order, bool is_little_endian)
+ThrowCompletionOr<Value> ArrayBuffer::get_value(size_t byte_index, [[maybe_unused]] bool is_typed_array, Order, bool is_little_endian)
 {
     auto& vm = this->vm();
+    // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
+    VERIFY(!is_detached());
 
+    // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.
+    VERIFY(buffer().bytes().slice(byte_index).size() >= sizeof(T));
+
+    // 3. Let block be arrayBuffer.[[ArrayBufferData]].
+    auto& block = buffer();
+
+    // 4. Let elementSize be the Element Size value specified in Table 70 for Element Type type.
     auto element_size = sizeof(T);
 
-    // FIXME: Check for shared buffer
+    ByteBuffer raw_value;
 
-    // FIXME: Propagate errors.
-    auto raw_value = MUST(buffer_impl().slice(byte_index, element_size));
+    // FIXME: 5. If IsSharedArrayBuffer(arrayBuffer) is true, then
+    if (false) {
+        // FIXME: a. Let execution be the [[CandidateExecution]] field of the surrounding agent's Agent Record.
+        // FIXME: b. Let eventsRecord be the Agent Events Record of execution.[[EventsRecords]] whose [[AgentSignifier]] is AgentSignifier().
+        // FIXME: c. If isTypedArray is true and IsNoTearConfiguration(type, order) is true, let noTear be true; otherwise let noTear be false.
+        // FIXME: d. Let rawValue be a List of length elementSize whose elements are nondeterministically chosen byte values.
+        // FIXME: e. NOTE: In implementations, rawValue is the result of a non-atomic or atomic read instruction on the underlying hardware. The nondeterminism is a semantic prescription of the memory model to describe observable behaviour of hardware with weak consistency.
+        // FIXME: f. Let readEvent be ReadSharedMemory { [[Order]]: order, [[NoTear]]: noTear, [[Block]]: block, [[ByteIndex]]: byteIndex, [[ElementSize]]: elementSize }.
+        // FIXME: g. Append readEvent to eventsRecord.[[EventList]].
+        // FIXME: h. Append Chosen Value Record { [[Event]]: readEvent, [[ChosenValue]]: rawValue } to execution.[[ChosenValues]].
+    }
+    // 6. Else,
+    else {
+        // a. Let rawValue be a List whose elements are bytes from block at indices in the interval from byteIndex (inclusive) to byteIndex + elementSize (exclusive).
+        raw_value = TRY_OR_THROW_OOM(vm, block.slice(byte_index, element_size));
+    }
+
+    // 7. Assert: The number of elements in rawValue is elementSize.
+    VERIFY(raw_value.size() == element_size);
+
+    // 8. If isLittleEndian is not present, set isLittleEndian to the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
+    //    NOTE: Done by default parameter at declaration of this function.
+
+    // 9. Return RawBytesToNumeric(type, rawValue, isLittleEndian).
     return raw_bytes_to_numeric<T>(vm, move(raw_value), is_little_endian);
 }
 
 // 25.1.2.11 NumericToRawBytes ( type, value, isLittleEndian ), https://tc39.es/ecma262/#sec-numerictorawbytes
 template<typename T>
-static ByteBuffer numeric_to_raw_bytes(VM& vm, Value value, bool is_little_endian)
+static ThrowCompletionOr<ByteBuffer> numeric_to_raw_bytes(VM& vm, Value value, bool is_little_endian)
 {
     VERIFY(value.is_number() || value.is_bigint());
     using UnderlyingBufferDataType = Conditional<IsSame<ClampedU8, T>, u8, T>;
-    ByteBuffer raw_bytes = ByteBuffer::create_uninitialized(sizeof(UnderlyingBufferDataType)).release_value_but_fixme_should_propagate_errors(); // FIXME: Handle possible OOM situation.
+    ByteBuffer raw_bytes = TRY_OR_THROW_OOM(vm, ByteBuffer::create_uninitialized(sizeof(UnderlyingBufferDataType)));
     auto flip_if_needed = [&]() {
         if (is_little_endian)
             return;
@@ -229,7 +291,7 @@ static ByteBuffer numeric_to_raw_bytes(VM& vm, Value value, bool is_little_endia
 
 // 25.1.2.12 SetValueInBuffer ( arrayBuffer, byteIndex, type, value, isTypedArray, order [ , isLittleEndian ] ), https://tc39.es/ecma262/#sec-setvalueinbuffer
 template<typename T>
-void ArrayBuffer::set_value(size_t byte_index, Value value, [[maybe_unused]] bool is_typed_array, Order, bool is_little_endian)
+ThrowCompletionOr<void> ArrayBuffer::set_value(size_t byte_index, Value value, [[maybe_unused]] bool is_typed_array, Order, bool is_little_endian)
 {
     auto& vm = this->vm();
 
@@ -254,7 +316,7 @@ void ArrayBuffer::set_value(size_t byte_index, Value value, [[maybe_unused]] boo
     //    NOTE: Done by default parameter at declaration of this function.
 
     // 7. Let rawBytes be NumericToRawBytes(type, value, isLittleEndian).
-    auto raw_bytes = numeric_to_raw_bytes<T>(vm, value, is_little_endian);
+    auto raw_bytes = MUST_OR_THROW_OOM(numeric_to_raw_bytes<T>(vm, value, is_little_endian));
 
     // FIXME 8. If IsSharedArrayBuffer(arrayBuffer) is true, then
     if (false) {
@@ -270,20 +332,20 @@ void ArrayBuffer::set_value(size_t byte_index, Value value, [[maybe_unused]] boo
     }
 
     // 10. Return unused.
+    return {};
 }
 
 // 25.1.2.13 GetModifySetValueInBuffer ( arrayBuffer, byteIndex, type, value, op [ , isLittleEndian ] ), https://tc39.es/ecma262/#sec-getmodifysetvalueinbuffer
 template<typename T>
-Value ArrayBuffer::get_modify_set_value(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian)
+ThrowCompletionOr<Value> ArrayBuffer::get_modify_set_value(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian)
 {
     auto& vm = this->vm();
 
-    auto raw_bytes = numeric_to_raw_bytes<T>(vm, value, is_little_endian);
+    auto raw_bytes = MUST_OR_THROW_OOM(numeric_to_raw_bytes<T>(vm, value, is_little_endian));
 
     // FIXME: Check for shared buffer
 
-    // FIXME: Propagate errors.
-    auto raw_bytes_read = MUST(buffer_impl().slice(byte_index, sizeof(T)));
+    auto raw_bytes_read = TRY_OR_THROW_OOM(vm, buffer_impl().slice(byte_index, sizeof(T)));
     auto raw_bytes_modified = operation(raw_bytes_read, raw_bytes);
     raw_bytes_modified.span().copy_to(buffer_impl().span().slice(byte_index));
 

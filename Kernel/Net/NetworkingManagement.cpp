@@ -15,6 +15,7 @@
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Net/Realtek/RTL8168NetworkAdapter.h>
+#include <Kernel/Net/VirtIO/VirtIONetworkAdapter.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
@@ -100,6 +101,7 @@ static constexpr PCINetworkDriverInitializer s_initializers[] = {
     { RTL8168NetworkAdapter::probe, RTL8168NetworkAdapter::create },
     { E1000NetworkAdapter::probe, E1000NetworkAdapter::create },
     { E1000ENetworkAdapter::probe, E1000ENetworkAdapter::create },
+    { VirtIONetworkAdapter::probe, VirtIONetworkAdapter::create },
 };
 
 UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> NetworkingManagement::determine_network_device(PCI::DeviceIdentifier const& device_identifier) const

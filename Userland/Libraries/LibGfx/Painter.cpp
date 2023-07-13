@@ -58,7 +58,7 @@ ALWAYS_INLINE static Color color_for_format(BitmapFormat format, ARGB32 value)
     default:
         VERIFY_NOT_REACHED();
     }
-};
+}
 
 template<BitmapFormat format = BitmapFormat::Invalid>
 ALWAYS_INLINE Color get_pixel(Gfx::Bitmap const& bitmap, int x, int y)

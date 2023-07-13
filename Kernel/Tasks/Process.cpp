@@ -1066,7 +1066,7 @@ ErrorOr<void> Process::try_set_coredump_property(StringView key, StringView valu
     auto key_kstring = TRY(KString::try_create(key));
     auto value_kstring = TRY(KString::try_create(value));
     return set_coredump_property(move(key_kstring), move(value_kstring));
-};
+}
 
 static constexpr StringView to_string(Pledge promise)
 {

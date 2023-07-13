@@ -498,7 +498,7 @@ public:
             if (result.is_error())
                 return result.error();
             return Import { module.release_value(), name.release_value(), result.release_value() };
-        };
+        }
 
         DeprecatedString m_module;
         DeprecatedString m_name;
@@ -563,7 +563,7 @@ public:
     {
     }
 
-    auto& tables() const { return m_tables; };
+    auto& tables() const { return m_tables; }
 
     static ParseResult<TableSection> parse(Stream& stream);
 
@@ -737,7 +737,6 @@ public:
     };
 
     struct SegmentType0 {
-        // FIXME: Implement me!
         static ParseResult<SegmentType0> parse(Stream& stream);
 
         Vector<FunctionIndex> function_indices;
@@ -757,8 +756,10 @@ public:
         static ParseResult<SegmentType3> parse(Stream& stream);
     };
     struct SegmentType4 {
-        // FIXME: Implement me!
         static ParseResult<SegmentType4> parse(Stream& stream);
+
+        Active mode;
+        Vector<Expression> initializer;
     };
     struct SegmentType5 {
         // FIXME: Implement me!

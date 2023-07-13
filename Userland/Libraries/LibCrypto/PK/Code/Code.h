@@ -9,8 +9,7 @@
 #include <LibCrypto/Hash/HashFunction.h>
 #include <LibCrypto/Verification.h>
 
-namespace Crypto {
-namespace PK {
+namespace Crypto::PK {
 
 template<typename HashFunction>
 class Code {
@@ -33,5 +32,4 @@ protected:
     HashFunction m_hasher;
 };
 
-}
 }

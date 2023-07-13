@@ -53,7 +53,7 @@ public:
     virtual ErrorOr<void> close() override;
 
     virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(OpenFileDescription const&) const override;
-    virtual StringView class_name() const override { return "InodeWatcher"sv; };
+    virtual StringView class_name() const override { return "InodeWatcher"sv; }
     virtual bool is_inode_watcher() const override { return true; }
 
     void notify_inode_event(Badge<Inode>, InodeIdentifier, InodeWatcherEvent::Type, StringView name = {});

@@ -11,13 +11,14 @@
 #include <AK/DeprecatedString.h>
 #include <LibConfig/Listener.h>
 #include <LibCore/DateTime.h>
+#include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Widget.h>
 
 namespace GUI {
 
 class Calendar final
-    : public GUI::Frame
+    : public GUI::AbstractScrollableWidget
     , public Config::Listener {
     C_OBJECT(Calendar)
 
@@ -64,6 +65,9 @@ public:
     void set_show_days_of_the_week(bool b) { m_show_days = b; }
     bool is_showing_days_of_the_week() const { return m_show_days; }
 
+    void show_previous_date();
+    void show_next_date();
+
     Gfx::IntSize unadjusted_tile_size() const { return m_unadjusted_tile_size; }
     void set_unadjusted_tile_size(int width, int height)
     {
@@ -74,6 +78,7 @@ public:
     virtual void config_string_did_change(StringView, StringView, StringView, StringView) override;
     virtual void config_i32_did_change(StringView, StringView, StringView, i32 value) override;
 
+    Function<void()> on_scroll;
     Function<void()> on_tile_click;
     Function<void()> on_tile_doubleclick;
     Function<void()> on_month_click;
@@ -89,6 +94,7 @@ private:
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mousedown_event(MouseEvent&) override;
     virtual void mouseup_event(MouseEvent&) override;
+    virtual void mousewheel_event(MouseEvent&) override;
     virtual void doubleclick_event(MouseEvent&) override;
     virtual void leave_event(Core::Event&) override;
 

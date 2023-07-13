@@ -33,7 +33,7 @@ JS::ThrowCompletionOr<void> SVGUseElement::initialize(JS::Realm& realm)
     set_shadow_root(shadow_root);
 
     m_document_observer = TRY(realm.heap().allocate<DOM::DocumentObserver>(realm, realm, document()));
-    m_document_observer->document_fully_loaded = [this]() {
+    m_document_observer->document_completely_loaded = [this]() {
         clone_element_tree_as_our_shadow_tree(referenced_element());
     };
 

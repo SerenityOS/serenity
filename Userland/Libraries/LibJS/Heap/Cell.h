@@ -13,8 +13,7 @@
 #include <AK/StringView.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/GCPtr.h>
-#include <LibJS/Runtime/Completion.h>
-#include <LibJS/Runtime/Value.h>
+#include <LibJS/Heap/Internals.h>
 
 namespace JS {
 
@@ -32,7 +31,7 @@ class Cell {
     AK_MAKE_NONMOVABLE(Cell);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) { return {}; }
+    virtual ThrowCompletionOr<void> initialize(Realm&);
     virtual ~Cell() = default;
 
     bool is_marked() const { return m_mark; }
@@ -74,11 +73,7 @@ public:
             visit_impl(const_cast<RemoveConst<T>&>(*cell.ptr()));
         }
 
-        void visit(Value value)
-        {
-            if (value.is_cell())
-                visit_impl(value.as_cell());
-        }
+        void visit(Value value);
 
         // Allow explicitly ignoring a GC-allocated member in a visit_edges implementation instead
         // of just not using it.
@@ -105,8 +100,8 @@ public:
 
     bool overrides_must_survive_garbage_collection(Badge<Heap>) const { return m_overrides_must_survive_garbage_collection; }
 
-    Heap& heap() const;
-    VM& vm() const;
+    ALWAYS_INLINE Heap& heap() const { return HeapBlockBase::from_cell(this)->heap(); }
+    ALWAYS_INLINE VM& vm() const { return bit_cast<HeapBase*>(&heap())->vm(); }
 
 protected:
     Cell() = default;

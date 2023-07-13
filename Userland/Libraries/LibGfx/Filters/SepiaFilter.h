@@ -25,7 +25,7 @@ public:
     }
 
 protected:
-    Color convert_color(Color original) override { return original.sepia(m_amount); };
+    Color convert_color(Color original) override { return original.sepia(m_amount); }
 };
 
 }

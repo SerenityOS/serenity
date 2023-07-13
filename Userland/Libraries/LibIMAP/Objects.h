@@ -735,7 +735,7 @@ public:
 
     ResponseData& data() { return m_data; }
 
-    DeprecatedString response_text() { return m_response_text; };
+    DeprecatedString response_text() { return m_response_text; }
 
     SolidResponse()
         : SolidResponse(ResponseStatus::Bad, -1)

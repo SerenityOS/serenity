@@ -1167,7 +1167,7 @@ void HackStudioWidget::run()
 void HackStudioWidget::hide_action_tabs()
 {
     m_action_tab_widget->set_preferred_height(24);
-};
+}
 
 Project& HackStudioWidget::project()
 {

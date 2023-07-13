@@ -25,8 +25,7 @@ static void to_u8s(u8* b, u32 const* w)
 
 }
 
-namespace Crypto {
-namespace Authentication {
+namespace Crypto::Authentication {
 
 GHash::TagType GHash::process(ReadonlyBytes aad, ReadonlyBytes cipher)
 {
@@ -117,5 +116,4 @@ void galois_multiply(u32 (&z)[4], const u32 (&_x)[4], const u32 (&_y)[4])
     }
 }
 
-}
 }

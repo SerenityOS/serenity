@@ -92,6 +92,25 @@ TEST_CASE(file_seeking_around)
     EXPECT_EQ(buffer_contents, expected_seek_contents3);
 }
 
+BENCHMARK_CASE(file_tell)
+{
+    auto file = TRY_OR_FAIL(Core::File::open("/usr/Tests/LibCore/10kb.txt"sv, Core::File::OpenMode::Read));
+    auto expected_file_offset = 0u;
+    auto ten_byte_buffer = TRY_OR_FAIL(ByteBuffer::create_uninitialized(1));
+    for (auto i = 0u; i < 4000; ++i) {
+        TRY_OR_FAIL(file->read_until_filled(ten_byte_buffer));
+        expected_file_offset += 1u;
+        EXPECT_EQ(expected_file_offset, TRY_OR_FAIL(file->tell()));
+    }
+
+    for (auto i = 0u; i < 4000; ++i) {
+        auto seek_file_offset = TRY_OR_FAIL(file->seek(-1, SeekMode::FromCurrentPosition));
+        expected_file_offset -= 1;
+        EXPECT_EQ(seek_file_offset, TRY_OR_FAIL(file->tell()));
+        EXPECT_EQ(expected_file_offset, TRY_OR_FAIL(file->tell()));
+    }
+}
+
 TEST_CASE(file_adopt_fd)
 {
     int rc = ::open("/usr/Tests/LibCore/long_lines.txt", O_RDONLY);

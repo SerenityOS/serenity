@@ -30,7 +30,7 @@ private:
     StringView consume_while(Function<bool(u8)> should_consume);
     StringView consume_until_end_of_line();
 
-    bool at_end() { return position >= m_buffer.size(); };
+    bool at_end() { return position >= m_buffer.size(); }
 
     unsigned parse_number();
     Optional<unsigned> try_parse_number();

@@ -11,8 +11,7 @@
 #include <AK/Span.h>
 #include <AK/Types.h>
 
-namespace Crypto {
-namespace Cipher {
+namespace Crypto::Cipher {
 
 enum class Intent {
     Encryption,
@@ -81,7 +80,7 @@ private:
 
 struct CipherKey {
     virtual ReadonlyBytes bytes() const = 0;
-    static bool is_valid_key_size(size_t) { return false; };
+    static bool is_valid_key_size(size_t) { return false; }
 
     virtual ~CipherKey() = default;
 
@@ -122,5 +121,4 @@ protected:
 private:
     PaddingMode m_padding_mode;
 };
-}
 }

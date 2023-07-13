@@ -9,9 +9,7 @@
 #include <LibCore/System.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
-#include <csignal>
 #include <stdio.h>
-#include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -19,6 +17,8 @@ static struct termios g_save;
 
 // Flag set by a SIGWINCH signal handler to notify the main loop that the window has been resized.
 static Atomic<bool> g_resized { false };
+
+static Atomic<bool> g_restore_buffer_on_close { false };
 
 static ErrorOr<void> setup_tty(bool switch_buffer)
 {
@@ -34,20 +34,20 @@ static ErrorOr<void> setup_tty(bool switch_buffer)
     if (switch_buffer) {
         // Save cursor and switch to alternate buffer.
         out("\e[s\e[?1047h");
+        g_restore_buffer_on_close = true;
     }
 
     return {};
 }
 
-static ErrorOr<void> teardown_tty(bool switch_buffer)
+static void teardown_tty()
 {
-    TRY(Core::System::tcsetattr(STDOUT_FILENO, TCSAFLUSH, g_save));
+    auto maybe_error = Core::System::tcsetattr(STDOUT_FILENO, TCSAFLUSH, g_save);
+    if (maybe_error.is_error())
+        warnln("Failed to reset original terminal state: {}", strerror(maybe_error.error().code()));
 
-    if (switch_buffer) {
+    if (g_restore_buffer_on_close.exchange(false))
         out("\e[?1047l\e[u");
-    }
-
-    return {};
 }
 
 static Vector<StringView> wrap_line(DeprecatedString const& string, size_t width)
@@ -179,8 +179,8 @@ public:
     {
         // First, we get the current size of the window.
         struct winsize window;
-        if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &window) == -1) {
-            perror("ioctl(2)");
+        if (auto maybe_error = Core::System::ioctl(STDOUT_FILENO, TIOCGWINSZ, &window); maybe_error.is_error()) {
+            warnln("ioctl(2): {}", strerror(maybe_error.error().code()));
             return;
         }
 
@@ -520,11 +520,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     // On SIGWINCH set this flag so that the main-loop knows when the terminal
     // has been resized.
-    signal(SIGWINCH, [](auto) {
+    struct sigaction resize_action;
+    resize_action.sa_handler = [](auto) {
         g_resized = true;
-    });
+    };
+    TRY(Core::System::sigaction(SIGWINCH, &resize_action, nullptr));
 
-    TRY(Core::System::pledge("stdio tty"));
+    TRY(Core::System::pledge("stdio tty sigaction"));
 
     if (emulate_more) {
         // Configure options that match more's behavior
@@ -533,12 +535,28 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         prompt = "--More--";
     }
 
-    if (!isatty(STDOUT_FILENO)) {
+    if (!TRY(Core::System::isatty(STDOUT_FILENO))) {
         cat_file(file);
         return 0;
     }
 
     TRY(setup_tty(!dont_switch_buffer));
+
+    ScopeGuard teardown_guard([] {
+        teardown_tty();
+    });
+
+    auto teardown_sigaction_handler = [](auto) {
+        teardown_tty();
+        exit(1);
+    };
+    struct sigaction teardown_action;
+    teardown_action.sa_handler = teardown_sigaction_handler;
+    TRY(Core::System::sigaction(SIGTERM, &teardown_action, nullptr));
+
+    struct sigaction ignore_action;
+    ignore_action.sa_handler = { SIG_IGN };
+    TRY(Core::System::sigaction(SIGINT, &ignore_action, nullptr));
 
     Pager pager(filename, file, stdout, prompt);
     pager.init();
@@ -607,7 +625,5 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     pager.clear_status();
-
-    TRY(teardown_tty(!dont_switch_buffer));
     return 0;
 }

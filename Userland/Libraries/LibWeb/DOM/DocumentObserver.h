@@ -18,7 +18,7 @@ class DocumentObserver final : public Bindings::PlatformObject {
 
 public:
     JS::SafeFunction<void()> document_became_inactive;
-    JS::SafeFunction<void()> document_fully_loaded;
+    JS::SafeFunction<void()> document_completely_loaded;
 
 private:
     explicit DocumentObserver(JS::Realm&, DOM::Document&);

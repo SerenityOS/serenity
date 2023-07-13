@@ -448,7 +448,7 @@ inline constexpr bool IsFundamental = IsArithmetic<T> || IsVoid<T> || IsNullPoin
 template<typename T, T... Ts>
 struct IntegerSequence {
     using Type = T;
-    static constexpr unsigned size() noexcept { return sizeof...(Ts); };
+    static constexpr unsigned size() noexcept { return sizeof...(Ts); }
 };
 
 template<unsigned... Indices>

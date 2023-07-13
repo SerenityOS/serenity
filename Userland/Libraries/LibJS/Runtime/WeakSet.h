@@ -23,8 +23,8 @@ public:
 
     virtual ~WeakSet() override = default;
 
-    HashTable<GCPtr<Cell>> const& values() const { return m_values; };
-    HashTable<GCPtr<Cell>>& values() { return m_values; };
+    HashTable<GCPtr<Cell>> const& values() const { return m_values; }
+    HashTable<GCPtr<Cell>>& values() { return m_values; }
 
     virtual void remove_dead_cells(Badge<Heap>) override;
 

@@ -50,7 +50,7 @@ public:
     ThrowCompletionOr<Value> run(Script&, JS::GCPtr<Environment> lexical_environment_override = nullptr);
     ThrowCompletionOr<Value> run(SourceTextModule&);
 
-    ThrowCompletionOr<Value> run(Realm& realm, Bytecode::Executable const& executable, Bytecode::BasicBlock const* entry_point = nullptr)
+    ThrowCompletionOr<Value> run(Realm& realm, Bytecode::Executable& executable, Bytecode::BasicBlock const* entry_point = nullptr)
     {
         auto value_and_frame = run_and_return_frame(realm, executable, entry_point);
         return move(value_and_frame.value);
@@ -60,7 +60,7 @@ public:
         ThrowCompletionOr<Value> value;
         OwnPtr<RegisterWindow> frame;
     };
-    ValueAndFrame run_and_return_frame(Realm&, Bytecode::Executable const&, Bytecode::BasicBlock const* entry_point, RegisterWindow* = nullptr);
+    ValueAndFrame run_and_return_frame(Realm&, Bytecode::Executable&, Bytecode::BasicBlock const* entry_point, RegisterWindow* = nullptr);
 
     ALWAYS_INLINE Value& accumulator() { return reg(Register::accumulator()); }
     Value& reg(Register const& r) { return registers()[r.index()]; }
@@ -88,7 +88,8 @@ public:
     void leave_unwind_context();
     ThrowCompletionOr<void> continue_pending_unwind(Label const& resume_label);
 
-    Executable const& current_executable() { return *m_current_executable; }
+    Executable& current_executable() { return *m_current_executable; }
+    Executable const& current_executable() const { return *m_current_executable; }
     BasicBlock const& current_block() const { return *m_current_block; }
     size_t pc() const;
     DeprecatedString debug_position() const;
@@ -124,7 +125,7 @@ private:
     Optional<Value> m_return_value;
     Optional<Value> m_saved_return_value;
     Optional<Value> m_saved_exception;
-    Executable const* m_current_executable { nullptr };
+    Executable* m_current_executable { nullptr };
     OwnPtr<JS::Interpreter> m_ast_interpreter;
     BasicBlock const* m_current_block { nullptr };
     InstructionStreamIterator* m_pc { nullptr };

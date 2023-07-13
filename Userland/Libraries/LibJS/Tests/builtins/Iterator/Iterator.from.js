@@ -2,7 +2,7 @@ describe("errors", () => {
     test("called with non-Object", () => {
         expect(() => {
             Iterator.from(Symbol.hasInstance);
-        }).toThrowWithMessage(TypeError, "obj is not an object");
+        }).toThrowWithMessage(TypeError, "Symbol(Symbol.hasInstance) is not an object");
     });
 
     test("@@iterator is not callable", () => {
@@ -35,7 +35,7 @@ describe("errors", () => {
 
         expect(() => {
             Iterator.from(iterable);
-        }).toThrowWithMessage(TypeError, "iterator is not an object");
+        }).toThrowWithMessage(TypeError, "Symbol(Symbol.hasInstance) is not an object");
     });
 });
 
@@ -58,6 +58,22 @@ describe("normal behavior", () => {
         result = iterator.next();
         expect(result.value).toBeUndefined();
         expect(result.done).toBeTrue();
+    });
+
+    test("does not coerce strings to objects", () => {
+        const stringIterator = String.prototype[Symbol.iterator];
+        let observedType = null;
+
+        Object.defineProperty(String.prototype, Symbol.iterator, {
+            get() {
+                "use strict";
+                observedType = typeof this;
+                return stringIterator;
+            },
+        });
+
+        Iterator.from("ab");
+        expect(observedType).toBe("string");
     });
 
     test("create Iterator from generator", () => {

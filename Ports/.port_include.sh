@@ -93,9 +93,6 @@ use_fresh_config_sub=false
 use_fresh_config_guess=false
 depends=()
 patchlevel=1
-auth_type=
-auth_import_key=
-auth_opts=()
 launcher_name=
 launcher_category=
 launcher_command=
@@ -299,34 +296,22 @@ do_download_file() {
     local filename="$2"
     local accept_existing="${3:-true}"
 
-    echo "Downloading URL: ${url}"
-
-    # FIXME: Serenity's curl port does not support https, even with openssl installed.
-    if which curl >/dev/null 2>&1 && ! curl https://example.com -so /dev/null; then
-        url=$(echo "$url" | sed "s/^https:\/\//http:\/\//")
-    fi
-
-    # download files
     if $accept_existing && [ -f "$filename" ]; then
         echo "$filename already exists"
+        return
+    fi
+
+    echo "Downloading URL: ${url}"
+
+    if which curl; then
+        run_nocd curl ${curlopts:-} "$url" -L -o "$filename"
     else
-        if which curl; then
-            run_nocd curl ${curlopts:-} "$url" -L -o "$filename"
-        else
-            run_nocd pro "$url" > "$filename"
-        fi
+        run_nocd pro "$url" > "$filename"
     fi
 }
 
 fetch() {
     pre_fetch
-
-    if [ "$auth_type" = "sig" ] && [ ! -z "${auth_import_key}" ]; then
-        # import gpg key if not existing locally
-        # The default keyserver keys.openpgp.org prints "new key but contains no user ID - skipped"
-        # and fails. Use a different key server.
-        gpg --list-keys $auth_import_key || gpg --keyserver hkps://keyserver.ubuntu.com --recv-key $auth_import_key
-    fi
 
     tried_download_again=0
 
@@ -348,49 +333,22 @@ fetch() {
             read url filename auth_sum<<< $(echo "$f")
 
             # check sha256sum if given
-            if [ "$auth_type" = "sha256" ]; then
-                echo "Expecting ${auth_type}sum: $auth_sum"
-                calc_sum="$(sha256sum "${PORT_META_DIR}/${filename}" | cut -f1 -d' ')"
-                echo "${auth_type}sum($filename) = '$calc_sum'"
-                if [ "$calc_sum" != "$auth_sum" ]; then
-                    # remove downloaded file to re-download on next run
-                    rm -f "${PORT_META_DIR}/${filename}"
-                    echo "${auth_type}sums mismatching, removed erroneous download."
-                    if [ $tried_download_again -eq 1 ]; then
-                        echo "Please run script again."
-                        exit 1
-                    fi
-                    echo "Trying to download the files again."
-                    tried_download_again=1
-                    verification_failed=1
+            echo "Expecting sha256sum: $auth_sum"
+            calc_sum="$(sha256sum "${PORT_META_DIR}/${filename}" | cut -f1 -d' ')"
+            echo "sha256sum($filename) = '$calc_sum'"
+            if [ "$calc_sum" != "$auth_sum" ]; then
+                # remove downloaded file to re-download on next run
+                rm -f "${PORT_META_DIR}/${filename}"
+                echo "sha256sums mismatching, removed erroneous download."
+                if [ $tried_download_again -eq 1 ]; then
+                    echo "Please run script again."
+                    exit 1
                 fi
+                echo "Trying to download the files again."
+                tried_download_again=1
+                verification_failed=1
             fi
         done
-
-        # check signature
-        if [ "$auth_type" = "sig" ]; then
-            if $NO_GPG; then
-                echo "WARNING: gpg signature check was disabled by --no-gpg-verification"
-            else
-                if $(cd "${PORT_META_DIR}" && gpg --verify "${auth_opts[@]}"); then
-                    echo "- Signature check OK."
-                else
-                    echo "- Signature check NOT OK"
-                    for f in $files; do
-                        rm -f $f
-                    done
-                    rm -rf "$workdir"
-                    echo "  Signature mismatching, removed erronous download."
-                    if [ $tried_download_again -eq 1 ]; then
-                        echo "Please run script again."
-                        exit 1
-                    fi
-                    echo "Trying to download the files again."
-                    tried_download_again=1
-                    verification_failed=1
-                fi
-            fi
-        fi
 
         if [ $verification_failed -ne 1 ]; then
             break
@@ -406,10 +364,6 @@ fetch() {
 
         if [ ! -f "$workdir"/.${filename}_extracted ]; then
             case "$filename" in
-                *.tar.gz|*.tgz)
-                    run_nocd tar -xzf "${PORT_META_DIR}/${filename}"
-                    run touch .${filename}_extracted
-                    ;;
                 *.tar.gz|*.tar.bz|*.tar.bz2|*.tar.xz|*.tar.lz|*.tar.zst|.tbz*|*.txz|*.tgz)
                     run_nocd tar -xf "${PORT_META_DIR}/${filename}"
                     run touch .${filename}_extracted
@@ -421,9 +375,6 @@ fetch() {
                 *.zip)
                     run_nocd bsdtar xf "${PORT_META_DIR}/${filename}" || run_nocd unzip -qo "${PORT_META_DIR}/${filename}"
                     run touch .${filename}_extracted
-                    ;;
-                *.asc)
-                    run_nocd gpg --import "${PORT_META_DIR}/${filename}" || true
                     ;;
                 *)
                     echo "Note: no case for file $filename."
@@ -776,7 +727,7 @@ do_dev() {
         do_installdepends
     fi
     if [ -d "$workdir" ] && [ ! -d "$workdir/.git" ]; then
-        if prompt_yes_no "- Would you like to clean the working direcory (i.e. ./package.sh clean)?"; then
+        if prompt_yes_no "- Would you like to clean the working directory (i.e. ./package.sh clean)?"; then
             do_clean
         fi
     fi

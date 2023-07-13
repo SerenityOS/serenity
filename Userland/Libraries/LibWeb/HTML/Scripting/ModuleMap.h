@@ -20,13 +20,13 @@ public:
     {
     }
 
-    AK::URL const& url() const { return m_url; };
+    AK::URL const& url() const { return m_url; }
     DeprecatedString const& type() const { return m_type; }
 
     bool operator==(ModuleLocationTuple const& other) const
     {
         return other.url() == m_url && other.type() == m_type;
-    };
+    }
 
 private:
     AK::URL m_url;

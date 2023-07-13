@@ -148,7 +148,7 @@ static ThrowCompletionOr<Value> set_view_value(VM& vm, Value request_index, Valu
         return vm.throw_completion<RangeError>(ErrorType::DataViewOutOfRangeByteOffset, get_index, view_size);
 
     // 14. Perform SetValueInBuffer(buffer, bufferIndex, type, numberValue, false, Unordered, isLittleEndian).
-    buffer->set_value<T>(buffer_index.value(), number_value, false, ArrayBuffer::Order::Unordered, little_endian);
+    MUST_OR_THROW_OOM(buffer->set_value<T>(buffer_index.value(), number_value, false, ArrayBuffer::Order::Unordered, little_endian));
 
     // 15. Return undefined.
     return js_undefined();

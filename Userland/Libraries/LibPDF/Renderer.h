@@ -76,6 +76,7 @@ struct GraphicsState {
     RefPtr<ColorSpace> paint_color_space { DeviceGrayColorSpace::the() };
     Gfx::Color stroke_color { Gfx::Color::NamedColor::Black };
     Gfx::Color paint_color { Gfx::Color::NamedColor::Black };
+    float flatness_tolerance { 0.0f };
     float line_width { 1.0f };
     LineCapStyle line_cap_style { LineCapStyle::ButtCap };
     LineJoinStyle line_join_style { LineJoinStyle::Miter };
@@ -261,6 +262,7 @@ struct Formatter<PDF::GraphicsState> : Formatter<StringView> {
         builder.appendff("  ctm={}\n", state.ctm);
         builder.appendff("  stroke_color={}\n", state.stroke_color);
         builder.appendff("  paint_color={}\n", state.paint_color);
+        builder.appendff("  flatness_tolerance={}\n", state.flatness_tolerance);
         builder.appendff("  line_width={}\n", state.line_width);
         builder.appendff("  line_cap_style={}\n", state.line_cap_style);
         builder.appendff("  line_join_style={}\n", state.line_join_style);

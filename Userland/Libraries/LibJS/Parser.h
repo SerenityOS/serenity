@@ -211,6 +211,8 @@ public:
     // Needs to mess with m_state, and we're not going to expose a non-const getter for that :^)
     friend ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic_function(VM&, FunctionObject&, FunctionObject*, FunctionKind, MarkedVector<Value> const&);
 
+    static Parser parse_function_body_from_string(DeprecatedString const& body_string, u16 parse_options, Vector<FunctionParameter> const& parameters, FunctionKind kind, bool& contains_direct_call_to_eval);
+
 private:
     friend class ScopePusher;
 
@@ -314,8 +316,10 @@ private:
         bool allow_super_property_lookup { false };
         bool allow_super_constructor_call { false };
         bool in_function_context { false };
+        bool initiated_by_eval { false };
         bool in_eval_function_context { false }; // This controls if we allow new.target or not. Note that eval("return") is not allowed, so we have to have a separate state variable for eval.
         bool in_formal_parameter_context { false };
+        bool in_catch_parameter_context { false };
         bool in_generator_function_context { false };
         bool await_expression_is_valid { false };
         bool in_arrow_function_context { false };
@@ -341,6 +345,8 @@ private:
             return a.column == b.column && a.line == b.line;
         }
     };
+
+    NonnullRefPtr<Identifier const> create_identifier_and_register_in_current_scope(SourceRange range, DeprecatedFlyString string);
 
     NonnullRefPtr<SourceCode const> m_source_code;
     Vector<Position> m_rule_starts;

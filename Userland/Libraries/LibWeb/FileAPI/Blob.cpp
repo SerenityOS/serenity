@@ -14,6 +14,7 @@
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/FileAPI/Blob.h>
+#include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Streams/AbstractOperations.h>
 #include <LibWeb/Streams/ReadableStreamDefaultReader.h>
@@ -282,14 +283,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Streams::ReadableStream>> Blob::get_stream(
 
             // 2. Queue a global task on the file reading task source given blob’s relevant global object to perform the following steps:
             HTML::queue_global_task(HTML::Task::Source::FileReading, realm.global_object(), [stream, bytes = move(bytes)]() {
-                // NOTE: Not part of the spec, but we need to have an execution context on the stack to call native functions.
-                auto& environment_settings_object = Bindings::host_defined_environment_settings_object(stream->realm());
-                environment_settings_object.prepare_to_run_script();
-
-                ScopeGuard guard = [&]() {
-                    // See above NOTE.
-                    environment_settings_object.clean_up_after_running_script();
-                };
+                HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(stream->realm()) };
 
                 // 1. If bytes is failure, then error stream with a failure reason and abort these steps.
                 // 2. Let chunk be a new Uint8Array wrapping an ArrayBuffer containing bytes. If creating the ArrayBuffer throws an exception, then error stream with that exception and abort these steps.

@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/Error.h>
 #include <LibWeb/DOM/StaticNodeList.h>
 
 namespace Web::DOM {

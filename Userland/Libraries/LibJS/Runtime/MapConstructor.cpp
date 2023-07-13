@@ -1,12 +1,13 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/Map.h>
 #include <LibJS/Runtime/MapConstructor.h>
@@ -25,6 +26,9 @@ ThrowCompletionOr<void> MapConstructor::initialize(Realm& realm)
 
     // 24.1.2.1 Map.prototype, https://tc39.es/ecma262/#sec-map.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().map_prototype(), 0);
+
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(realm, vm.names.groupBy, group_by, 2, attr);
 
     define_native_accessor(realm, vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 
@@ -65,6 +69,47 @@ ThrowCompletionOr<NonnullGCPtr<Object>> MapConstructor::construct(FunctionObject
         return {};
     }));
 
+    return map;
+}
+
+// 3.1 Map.groupBy ( items, callbackfn ), https://tc39.es/proposal-array-grouping/#sec-map.groupby
+JS_DEFINE_NATIVE_FUNCTION(MapConstructor::group_by)
+{
+    auto& realm = *vm.current_realm();
+
+    auto items = vm.argument(0);
+    auto callback_function = vm.argument(1);
+
+    struct KeyedGroupTraits : public Traits<Handle<Value>> {
+        static unsigned hash(Handle<Value> const& value_handle)
+        {
+            return ValueTraits::hash(value_handle.value());
+        }
+
+        static bool equals(Handle<Value> const& a, Handle<Value> const& b)
+        {
+            // AddValueToKeyedGroup uses SameValue on the keys on Step 1.a.
+            return same_value(a.value(), b.value());
+        }
+    };
+
+    // 1. Let groups be ? GroupBy(items, callbackfn, zero).
+    auto groups = TRY((JS::group_by<OrderedHashMap<Handle<Value>, MarkedVector<Value>, KeyedGroupTraits>, void>(vm, items, callback_function)));
+
+    // 2. Let map be ! Construct(%Map%).
+    auto map = Map::create(realm);
+
+    // 3. For each Record { [[Key]], [[Elements]] } g of groups, do
+    for (auto& group : groups) {
+        // a. Let elements be CreateArrayFromList(g.[[Elements]]).
+        auto elements = Array::create_from(realm, group.value);
+
+        // b. Let entry be the Record { [[Key]]: g.[[Key]], [[Value]]: elements }.
+        // c. Append entry to map.[[MapData]].
+        map->map_set(group.key.value(), elements);
+    }
+
+    // 4. Return map.
     return map;
 }
 

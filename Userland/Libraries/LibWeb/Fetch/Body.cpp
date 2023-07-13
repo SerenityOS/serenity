@@ -16,6 +16,7 @@
 #include <LibWeb/Fetch/Body.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
 #include <LibWeb/FileAPI/Blob.h>
+#include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
 #include <LibWeb/Infra/JSON.h>
 #include <LibWeb/MimeSniff/MimeType.h>
 #include <LibWeb/Streams/ReadableStream.h>
@@ -165,15 +166,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> consume_body(JS::Realm& realm
     // 3. Let errorSteps given error be to reject promise with error.
     // NOTE: `promise` and `realm` is protected by JS::SafeFunction.
     auto error_steps = [promise, &realm](JS::GCPtr<WebIDL::DOMException> error) {
-        // NOTE: Not part of the spec, but we need to have an execution context on the stack to call native functions.
-        //       (In this case, Promise's reject function)
-        auto& environment_settings_object = Bindings::host_defined_environment_settings_object(realm);
-        environment_settings_object.prepare_to_run_script();
-
+        // AD-HOC: An execution context is required for Promise's reject function.
+        HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(realm) };
         WebIDL::reject_promise(realm, promise, error);
-
-        // See above NOTE.
-        environment_settings_object.clean_up_after_running_script();
     };
 
     // 4. Let successSteps given a byte sequence data be to resolve promise with the result of running convertBytesToJSValue
@@ -183,15 +178,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> consume_body(JS::Realm& realm
     auto success_steps = [promise, &realm, &object, type](ByteBuffer const& data) {
         auto& vm = realm.vm();
 
-        // NOTE: Not part of the spec, but we need to have an execution context on the stack to call native functions.
-        //       (In this case, Promise's reject function and JSON.parse)
-        auto& environment_settings_object = Bindings::host_defined_environment_settings_object(realm);
-        environment_settings_object.prepare_to_run_script();
-
-        ScopeGuard guard = [&]() {
-            // See above NOTE.
-            environment_settings_object.clean_up_after_running_script();
-        };
+        // AD-HOC: An execution context is required for Promise's reject function and JSON.parse.
+        HTML::TemporaryExecutionContext execution_context { Bindings::host_defined_environment_settings_object(realm) };
 
         auto value_or_error = Bindings::throw_dom_exception_if_needed(vm, [&]() -> WebIDL::ExceptionOr<JS::Value> {
             return package_data(realm, data, type, TRY_OR_THROW_OOM(vm, object.mime_type_impl()));

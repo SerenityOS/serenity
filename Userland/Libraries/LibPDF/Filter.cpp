@@ -83,7 +83,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_ascii_hex(ReadonlyBytes bytes)
         TRY(output.try_append(high_nibble << 4));
 
     return output;
-};
+}
 
 PDFErrorOr<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes bytes)
 {
@@ -138,7 +138,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes bytes)
     }
 
     return TRY(ByteBuffer::copy(buff.span()));
-};
+}
 
 PDFErrorOr<ByteBuffer> Filter::decode_png_prediction(Bytes bytes, int bytes_per_row)
 {
@@ -208,7 +208,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_png_prediction(Bytes bytes, int bytes_per_
 PDFErrorOr<ByteBuffer> Filter::decode_lzw(ReadonlyBytes)
 {
     return Error::rendering_unsupported_error("LZW Filter is not supported");
-};
+}
 
 PDFErrorOr<ByteBuffer> Filter::decode_flate(ReadonlyBytes bytes, int predictor, int columns, int colors, int bits_per_component)
 {
@@ -228,7 +228,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_flate(ReadonlyBytes bytes, int predictor, 
         return AK::Error::from_string_literal("Flate input data is not divisible into columns");
 
     return decode_png_prediction(buff, bytes_per_row);
-};
+}
 
 PDFErrorOr<ByteBuffer> Filter::decode_run_length(ReadonlyBytes bytes)
 {
@@ -256,17 +256,17 @@ PDFErrorOr<ByteBuffer> Filter::decode_run_length(ReadonlyBytes bytes)
         }
     }
     return buffer;
-};
+}
 
 PDFErrorOr<ByteBuffer> Filter::decode_ccitt(ReadonlyBytes)
 {
     return Error::rendering_unsupported_error("CCITTFaxDecode Filter is unsupported");
-};
+}
 
 PDFErrorOr<ByteBuffer> Filter::decode_jbig2(ReadonlyBytes)
 {
     return Error::rendering_unsupported_error("JBIG2 Filter is unsupported");
-};
+}
 
 PDFErrorOr<ByteBuffer> Filter::decode_dct(ReadonlyBytes bytes)
 {
@@ -277,16 +277,16 @@ PDFErrorOr<ByteBuffer> Filter::decode_dct(ReadonlyBytes bytes)
         return TRY(frame.image->serialize_to_byte_buffer());
     }
     return AK::Error::from_string_literal("Not a JPEG image!");
-};
+}
 
 PDFErrorOr<ByteBuffer> Filter::decode_jpx(ReadonlyBytes)
 {
     return Error::rendering_unsupported_error("JPX Filter is not supported");
-};
+}
 
 PDFErrorOr<ByteBuffer> Filter::decode_crypt(ReadonlyBytes)
 {
     return Error::rendering_unsupported_error("Crypt Filter is not supported");
-};
+}
 
 }

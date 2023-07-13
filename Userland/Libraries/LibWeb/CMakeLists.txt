@@ -1,9 +1,12 @@
 include(libweb_generators)
 
 set(SOURCES
+    ARIA/AriaData.cpp
     ARIA/ARIAMixin.cpp
     ARIA/ARIAMixin.idl
     ARIA/Roles.cpp
+    ARIA/RoleType.cpp
+    ARIA/StateAndProperties.cpp
     Bindings/AudioConstructor.cpp
     Bindings/HostDefined.cpp
     Bindings/ImageConstructor.cpp
@@ -26,6 +29,7 @@ set(SOURCES
     CSS/CSSKeyframesRule.cpp
     CSS/CSSFontFaceRule.cpp
     CSS/CSSMediaRule.cpp
+    CSS/CSSNumericType.cpp
     CSS/CSSRule.cpp
     CSS/CSSRuleList.cpp
     CSS/CSSStyleDeclaration.cpp
@@ -49,7 +53,9 @@ set(SOURCES
     CSS/Parser/Declaration.cpp
     CSS/Parser/DeclarationOrAtRule.cpp
     CSS/Parser/Function.cpp
+    CSS/Parser/Helpers.cpp
     CSS/Parser/Parser.cpp
+    CSS/Parser/ParsingContext.cpp
     CSS/Parser/Rule.cpp
     CSS/Parser/Token.cpp
     CSS/Parser/Tokenizer.cpp
@@ -83,6 +89,7 @@ set(SOURCES
     CSS/StyleValues/ConicGradientStyleValue.cpp
     CSS/StyleValues/ContentStyleValue.cpp
     CSS/StyleValues/DisplayStyleValue.cpp
+    CSS/StyleValues/EasingStyleValue.cpp
     CSS/StyleValues/EdgeStyleValue.cpp
     CSS/StyleValues/FilterValueListStyleValue.cpp
     CSS/StyleValues/FlexFlowStyleValue.cpp
@@ -359,6 +366,7 @@ set(SOURCES
     HTML/Scripting/ModuleMap.cpp
     HTML/Scripting/ModuleScript.cpp
     HTML/Scripting/Script.cpp
+    HTML/Scripting/TemporaryExecutionContext.cpp
     HTML/Scripting/WindowEnvironmentSettingsObject.cpp
     HTML/SessionHistoryEntry.cpp
     HTML/SharedImageRequest.cpp
@@ -391,6 +399,7 @@ set(SOURCES
     Infra/JSON.cpp
     Infra/Strings.cpp
     IntersectionObserver/IntersectionObserver.cpp
+    IntersectionObserver/IntersectionObserverEntry.cpp
     Layout/AudioBox.cpp
     Layout/AvailableSpace.cpp
     Layout/BlockContainer.cpp
@@ -474,6 +483,7 @@ set(SOURCES
     Painting/SVGTextPaintable.cpp
     Painting/ShadowPainting.cpp
     Painting/StackingContext.cpp
+    Painting/TableBordersPainting.cpp
     Painting/TextPaintable.cpp
     Painting/VideoPaintable.cpp
     PerformanceTimeline/EntryTypes.cpp
@@ -589,10 +599,21 @@ set(SOURCES
     XML/XMLDocumentBuilder.cpp
 )
 
+invoke_generator(
+        "AriaRoles.cpp"
+        Lagom::GenerateAriaRoles
+        "${CMAKE_CURRENT_SOURCE_DIR}/ARIA/AriaRoles.json"
+        "ARIA/AriaRoles.h"
+        "ARIA/AriaRoles.cpp"
+        arguments -j "${CMAKE_CURRENT_SOURCE_DIR}/ARIA/AriaRoles.json"
+)
+
 generate_css_implementation()
 
 set(GENERATED_SOURCES
+    ARIA/AriaRoles.cpp
     CSS/DefaultStyleSheetSource.cpp
+    CSS/EasingFunctions.cpp
     CSS/Enums.cpp
     CSS/MediaFeatureID.cpp
     CSS/PropertyID.cpp

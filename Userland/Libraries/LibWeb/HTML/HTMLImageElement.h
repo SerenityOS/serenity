@@ -72,6 +72,7 @@ public:
         Eager,
     };
     [[nodiscard]] LazyLoading lazy_loading() const;
+    [[nodiscard]] bool will_lazy_load() const;
 
     // https://html.spec.whatwg.org/multipage/images.html#upgrade-the-pending-request-to-the-current-request
     void upgrade_pending_request_to_current_request();
@@ -82,6 +83,8 @@ public:
     virtual Optional<float> intrinsic_aspect_ratio() const override;
     virtual RefPtr<Gfx::Bitmap const> current_image_bitmap(Gfx::IntSize = {}) const override;
     virtual void set_visible_in_viewport(bool) override;
+
+    JS::SafeFunction<void()> take_lazy_load_resumption_steps(Badge<DOM::Document>);
 
 private:
     HTMLImageElement(DOM::Document&, DOM::QualifiedName);
@@ -116,6 +119,10 @@ private:
     RefPtr<ImageRequest> m_pending_request;
 
     SourceSet m_source_set;
+
+    // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#lazy-load-resumption-steps
+    // Each img and iframe element has associated lazy load resumption steps, initially null.
+    JS::SafeFunction<void()> m_lazy_load_resumption_steps;
 };
 
 }

@@ -69,7 +69,7 @@ describe("errors", () => {
         expect(() => {
             const iterator = generator().flatMap(() => Symbol.hasInstance);
             iterator.next();
-        }).toThrowWithMessage(TypeError, "obj is not an object");
+        }).toThrowWithMessage(TypeError, "Symbol(Symbol.hasInstance) is not an object");
     });
 });
 

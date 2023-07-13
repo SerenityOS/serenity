@@ -39,7 +39,7 @@ BigFraction::BigFraction(StringView sv)
     auto fraction_length = UnsignedBigInteger(static_cast<u64>(fraction_part_view.length()));
 
     *this = BigFraction(move(integer_part)) + BigFraction(move(fractional_part), NumberTheory::Power("10"_bigint, move(fraction_length)));
-};
+}
 
 BigFraction BigFraction::operator+(BigFraction const& rhs) const
 {

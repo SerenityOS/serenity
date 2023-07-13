@@ -12,7 +12,6 @@
 #include <AK/Debug.h>
 #include <AK/GenericLexer.h>
 #include <AK/SourceLocation.h>
-#include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/CSS/CSSFontFaceRule.h>
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSKeyframeRule.h>
@@ -46,6 +45,7 @@
 #include <LibWeb/CSS/StyleValues/ContentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/CustomIdentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
+#include <LibWeb/CSS/StyleValues/EasingStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FlexFlowStyleValue.h>
@@ -84,7 +84,6 @@
 #include <LibWeb/CSS/StyleValues/URLStyleValue.h>
 #include <LibWeb/CSS/StyleValues/UnresolvedStyleValue.h>
 #include <LibWeb/CSS/StyleValues/UnsetStyleValue.h>
-#include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Infra/Strings.h>
 
@@ -94,43 +93,6 @@ static void log_parse_error(SourceLocation const& location = SourceLocation::cur
 }
 
 namespace Web::CSS::Parser {
-
-ParsingContext::ParsingContext(JS::Realm& realm)
-    : m_realm(realm)
-{
-}
-
-ParsingContext::ParsingContext(DOM::Document const& document, AK::URL url)
-    : m_realm(const_cast<JS::Realm&>(document.realm()))
-    , m_document(&document)
-    , m_url(move(url))
-{
-}
-
-ParsingContext::ParsingContext(DOM::Document const& document)
-    : m_realm(const_cast<JS::Realm&>(document.realm()))
-    , m_document(&document)
-    , m_url(document.url())
-{
-}
-
-ParsingContext::ParsingContext(DOM::ParentNode& parent_node)
-    : m_realm(parent_node.realm())
-    , m_document(&parent_node.document())
-    , m_url(parent_node.document().url())
-{
-}
-
-bool ParsingContext::in_quirks_mode() const
-{
-    return m_document ? m_document->in_quirks_mode() : false;
-}
-
-// https://www.w3.org/TR/css-values-4/#relative-urls
-AK::URL ParsingContext::complete_url(StringView relative_url) const
-{
-    return m_url.complete_url(relative_url);
-}
 
 ErrorOr<Parser> Parser::create(ParsingContext const& context, StringView input, StringView encoding)
 {
@@ -534,6 +496,8 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::OnlyOfType);
         if (pseudo_name.equals_ignoring_ascii_case("root"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Root);
+        if (pseudo_name.equals_ignoring_ascii_case("host"sv))
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Host);
         if (pseudo_name.equals_ignoring_ascii_case("visited"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Visited);
         if (pseudo_name.equals_ignoring_ascii_case("scope"sv))
@@ -2338,6 +2302,8 @@ Optional<AK::URL> Parser::parse_url_function(ComponentValue const& component_val
             case AllowedDataUrlType::Font:
                 if (data_url.data_mime_type().starts_with("font"sv, CaseSensitivity::CaseInsensitive))
                     return data_url;
+                if (data_url.data_mime_type().starts_with("application/font"sv, CaseSensitivity::CaseInsensitive))
+                    return data_url;
                 break;
             default:
                 break;
@@ -2501,7 +2467,7 @@ static StringView consume_if_starts_with(StringView str, StringView start, auto 
         return str.substring_view(start.length());
     }
     return str;
-};
+}
 
 ErrorOr<RefPtr<StyleValue>> Parser::parse_linear_gradient_function(ComponentValue const& component_value)
 {
@@ -3405,32 +3371,12 @@ ErrorOr<RefPtr<CalculatedStyleValue>> Parser::parse_calculated_value(Vector<Comp
         }
     }
 
-    auto calc_type = calculation_tree->resolved_type();
+    auto calc_type = calculation_tree->determine_type(m_context.current_property_id());
     if (!calc_type.has_value()) {
         dbgln_if(CSS_PARSER_DEBUG, "calc() resolved as invalid!!!");
         return nullptr;
     }
-
-    [[maybe_unused]] auto to_string = [](CalculatedStyleValue::ResolvedType type) {
-        switch (type) {
-        case CalculatedStyleValue::ResolvedType::Angle:
-            return "Angle"sv;
-        case CalculatedStyleValue::ResolvedType::Frequency:
-            return "Frequency"sv;
-        case CalculatedStyleValue::ResolvedType::Integer:
-            return "Integer"sv;
-        case CalculatedStyleValue::ResolvedType::Length:
-            return "Length"sv;
-        case CalculatedStyleValue::ResolvedType::Number:
-            return "Number"sv;
-        case CalculatedStyleValue::ResolvedType::Percentage:
-            return "Percentage"sv;
-        case CalculatedStyleValue::ResolvedType::Time:
-            return "Time"sv;
-        }
-        VERIFY_NOT_REACHED();
-    };
-    dbgln_if(CSS_PARSER_DEBUG, "Deduced calc() resolved type as: {}", to_string(calc_type.value()));
+    dbgln_if(CSS_PARSER_DEBUG, "Deduced calc() resolved type as: {}", calc_type->dump());
 
     return CalculatedStyleValue::create(calculation_tree.release_nonnull(), calc_type.release_value());
 }
@@ -4125,7 +4071,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_dynamic_value(ComponentValue const& co
         if (!function_node)
             return nullptr;
 
-        auto function_type = function_node->resolved_type();
+        auto function_type = function_node->determine_type(m_context.current_property_id());
         if (!function_type.has_value())
             return nullptr;
 
@@ -5365,7 +5311,7 @@ static Optional<PositionEdge> identifier_to_edge(ValueID identifier)
     default:
         return {};
     }
-};
+}
 
 static Optional<LengthPercentage> style_value_to_length_percentage(auto value)
 {
@@ -5376,7 +5322,7 @@ static Optional<LengthPercentage> style_value_to_length_percentage(auto value)
     if (value->is_calculated())
         return LengthPercentage { value->as_calculated() };
     return {};
-};
+}
 
 ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_position_value(TokenStream<ComponentValue>& tokens)
 {
@@ -6262,8 +6208,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_filter_value_list_value(Vector<Compone
         } else if (filter_token == FilterToken::DropShadow) {
             if (!tokens.has_next_token())
                 return {};
-            auto next_token = [&]() -> auto&
-            {
+            auto next_token = [&]() -> auto& {
                 auto& token = tokens.next_token();
                 tokens.skip_whitespace();
                 return token;
@@ -7095,6 +7040,108 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_text_decoration_line_value(TokenStream
     return StyleValueList::create(move(style_values), StyleValueList::Separator::Space);
 }
 
+ErrorOr<RefPtr<StyleValue>> Parser::parse_easing_value(TokenStream<ComponentValue>& tokens)
+{
+    auto transaction = tokens.begin_transaction();
+
+    tokens.skip_whitespace();
+
+    auto const& part = tokens.next_token();
+
+    StringView name;
+    Optional<Vector<ComponentValue> const&> arguments;
+    if (part.is(Token::Type::Ident)) {
+        name = part.token().ident();
+    } else if (part.is_function()) {
+        name = part.function().name();
+        arguments = part.function().values();
+    } else {
+        return nullptr;
+    }
+
+    auto maybe_function = easing_function_from_string(name);
+    if (!maybe_function.has_value())
+        return nullptr;
+
+    auto function = maybe_function.release_value();
+    auto function_metadata = easing_function_metadata(function);
+
+    if (function_metadata.parameters.is_empty() && arguments.has_value()) {
+        dbgln_if(CSS_PARSER_DEBUG, "Too many arguments to {}. max: 0", name);
+        return nullptr;
+    }
+
+    StyleValueVector values;
+    size_t argument_index = 0;
+    if (arguments.has_value()) {
+        auto argument_tokens = TokenStream { *arguments };
+        auto arguments_values = parse_a_comma_separated_list_of_component_values(argument_tokens);
+        if (arguments_values.size() > function_metadata.parameters.size()) {
+            dbgln_if(CSS_PARSER_DEBUG, "Too many arguments to {}. max: {}", name, function_metadata.parameters.size());
+            return nullptr;
+        }
+        for (auto& argument_values : arguments_values) {
+            if (argument_values.size() != 1) {
+                dbgln_if(CSS_PARSER_DEBUG, "Too many values in argument to {}. max: 1", name);
+                return nullptr;
+            }
+
+            auto& value = argument_values[0];
+            switch (function_metadata.parameters[argument_index].type) {
+            case EasingFunctionParameterType::Number: {
+                if (value.is(Token::Type::Number))
+                    values.append(TRY(NumberStyleValue::create(value.token().number().value())));
+                else
+                    return nullptr;
+                break;
+            }
+            case EasingFunctionParameterType::NumberZeroToOne: {
+                if (value.is(Token::Type::Number) && value.token().number_value() >= 0 && value.token().number_value() <= 1)
+                    values.append(TRY(NumberStyleValue::create(value.token().number().value())));
+                else
+                    return nullptr;
+                break;
+            }
+            case EasingFunctionParameterType::Integer: {
+                if (value.is(Token::Type::Number) && value.token().number().is_integer())
+                    values.append(TRY(IntegerStyleValue::create(value.token().number().integer_value())));
+                else
+                    return nullptr;
+                break;
+            }
+            case EasingFunctionParameterType::StepPosition: {
+                if (!value.is(Token::Type::Ident))
+                    return nullptr;
+                auto ident = TRY(parse_identifier_value(value));
+                if (!ident)
+                    return nullptr;
+                switch (ident->to_identifier()) {
+                case ValueID::JumpStart:
+                case ValueID::JumpEnd:
+                case ValueID::JumpNone:
+                case ValueID::Start:
+                case ValueID::End:
+                    TRY(values.try_append(*ident));
+                    break;
+                default:
+                    return nullptr;
+                }
+            }
+            }
+
+            ++argument_index;
+        }
+    }
+
+    if (argument_index < function_metadata.parameters.size() && !function_metadata.parameters[argument_index].is_optional) {
+        dbgln_if(CSS_PARSER_DEBUG, "Required parameter at position {} is missing", argument_index);
+        return nullptr;
+    }
+
+    transaction.commit();
+    return EasingStyleValue::create(function, move(values));
+}
+
 ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_value(Vector<ComponentValue> const& component_values)
 {
     StyleValueVector transformations;
@@ -7923,7 +7970,7 @@ bool block_contains_var_or_attr(Block const& block)
             return true;
     }
     return false;
-};
+}
 
 Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(PropertyID property_id, TokenStream<ComponentValue>& tokens)
 {
@@ -7944,6 +7991,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
     m_context.set_current_property_id(property_id);
     Vector<ComponentValue> component_values;
     bool contains_var_or_attr = false;
+    bool const property_accepts_custom_ident = property_accepts_type(property_id, ValueType::CustomIdent);
 
     while (tokens.has_next_token()) {
         auto const& token = tokens.next_token();
@@ -7957,7 +8005,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             if (token.is(Token::Type::Whitespace))
                 continue;
 
-            if (token.is(Token::Type::Ident) && has_ignored_vendor_prefix(token.token().ident()))
+            if (!property_accepts_custom_ident && token.is(Token::Type::Ident) && has_ignored_vendor_prefix(token.token().ident()))
                 return ParseError::IncludesIgnoredVendorPrefix;
         }
 
@@ -8264,6 +8312,13 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
         }
         return {};
     };
+    auto any_property_accepts_type_percentage = [](ReadonlySpan<PropertyID> property_ids, ValueType value_type) -> Optional<PropertyID> {
+        for (auto const& property : property_ids) {
+            if (property_accepts_type(property, value_type) && property_accepts_type(property, ValueType::Percentage))
+                return property;
+        }
+        return {};
+    };
     auto any_property_accepts_identifier = [](ReadonlySpan<PropertyID> property_ids, ValueID identifier) -> Optional<PropertyID> {
         for (auto const& property : property_ids) {
             if (property_accepts_identifier(property, identifier))
@@ -8273,6 +8328,11 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
     };
 
     auto& peek_token = tokens.peek_token();
+
+    if (auto property = any_property_accepts_type(property_ids, ValueType::EasingFunction); property.has_value()) {
+        if (auto maybe_easing_function = TRY(parse_easing_value(tokens)))
+            return PropertyAndValue { *property, maybe_easing_function };
+    }
 
     if (peek_token.is(Token::Type::Ident)) {
         // NOTE: We do not try to parse "CSS-wide keywords" here. https://www.w3.org/TR/css-values-4/#common-keywords
@@ -8414,34 +8474,41 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
         if (auto maybe_dynamic = TRY(parse_dynamic_value(peek_token)); maybe_dynamic && maybe_dynamic->is_calculated()) {
             (void)tokens.next_token();
             auto& calculated = maybe_dynamic->as_calculated();
-            switch (calculated.resolved_type()) {
-            case CalculatedStyleValue::ResolvedType::Angle:
+            if (calculated.resolves_to_angle_percentage()) {
+                if (auto property = any_property_accepts_type_percentage(property_ids, ValueType::Angle); property.has_value())
+                    return PropertyAndValue { *property, calculated };
+            } else if (calculated.resolves_to_angle()) {
                 if (auto property = any_property_accepts_type(property_ids, ValueType::Angle); property.has_value())
                     return PropertyAndValue { *property, calculated };
-                break;
-            case CalculatedStyleValue::ResolvedType::Frequency:
+            } else if (calculated.resolves_to_frequency_percentage()) {
+                if (auto property = any_property_accepts_type_percentage(property_ids, ValueType::Frequency); property.has_value())
+                    return PropertyAndValue { *property, calculated };
+            } else if (calculated.resolves_to_frequency()) {
                 if (auto property = any_property_accepts_type(property_ids, ValueType::Frequency); property.has_value())
                     return PropertyAndValue { *property, calculated };
-                break;
-            case CalculatedStyleValue::ResolvedType::Integer:
-            case CalculatedStyleValue::ResolvedType::Number:
+            } else if (calculated.resolves_to_number_percentage()) {
+                if (auto property = any_property_accepts_type_percentage(property_ids, ValueType::Number); property.has_value())
+                    return PropertyAndValue { *property, calculated };
+            } else if (calculated.resolves_to_number()) {
                 if (property_accepts_numeric) {
                     auto property_or_resolved = property_accepting_integer.value_or_lazy_evaluated([property_accepting_number]() { return property_accepting_number.value(); });
                     return PropertyAndValue { property_or_resolved, calculated };
                 }
-                break;
-            case CalculatedStyleValue::ResolvedType::Length:
+            } else if (calculated.resolves_to_length_percentage()) {
+                if (auto property = any_property_accepts_type_percentage(property_ids, ValueType::Length); property.has_value())
+                    return PropertyAndValue { *property, calculated };
+            } else if (calculated.resolves_to_length()) {
                 if (auto property = any_property_accepts_type(property_ids, ValueType::Length); property.has_value())
                     return PropertyAndValue { *property, calculated };
-                break;
-            case CalculatedStyleValue::ResolvedType::Percentage:
-                if (auto property = any_property_accepts_type(property_ids, ValueType::Percentage); property.has_value())
+            } else if (calculated.resolves_to_time_percentage()) {
+                if (auto property = any_property_accepts_type_percentage(property_ids, ValueType::Time); property.has_value())
                     return PropertyAndValue { *property, calculated };
-                break;
-            case CalculatedStyleValue::ResolvedType::Time:
+            } else if (calculated.resolves_to_time()) {
                 if (auto property = any_property_accepts_type(property_ids, ValueType::Time); property.has_value())
                     return PropertyAndValue { *property, calculated };
-                break;
+            } else if (calculated.resolves_to_percentage()) {
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Percentage); property.has_value())
+                    return PropertyAndValue { *property, calculated };
             }
         }
     }
@@ -8768,6 +8835,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override { VERIFY_NOT_REACHED(); }
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override { VERIFY_NOT_REACHED(); }
+    virtual Optional<CSSNumericType> determine_type(Web::CSS::PropertyID) const override { VERIFY_NOT_REACHED(); }
     virtual bool contains_percentage() const override { VERIFY_NOT_REACHED(); }
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override { VERIFY_NOT_REACHED(); }
 
@@ -8785,6 +8853,59 @@ private:
 
     ComponentValue m_component_value;
 };
+
+// https://html.spec.whatwg.org/multipage/images.html#parsing-a-sizes-attribute
+Length Parser::Parser::parse_as_sizes_attribute()
+{
+    Optional<Length> size;
+
+    // When asked to parse a sizes attribute from an element,
+    // parse a comma-separated list of component values from the value of the element's sizes attribute
+    // (or the empty string, if the attribute is absent), and let unparsed sizes list be the result.
+    auto unparsed_sizes_list = parse_a_comma_separated_list_of_component_values(m_token_stream);
+
+    // For each unparsed size in unparsed sizes list:
+    for (auto& unparsed_size : unparsed_sizes_list) {
+        // 1. Remove all consecutive <whitespace-token>s from the end of unparsed size.
+        //    If unparsed size is now empty, that is a parse error; continue.
+        while (!unparsed_size.is_empty() && unparsed_size.last().is_token() && unparsed_size.last().token().is(Token::Type::Whitespace))
+            unparsed_size.take_last();
+        if (unparsed_size.is_empty())
+            continue;
+
+        // 2. If the last component value in unparsed size is a valid non-negative <source-size-value>,
+        //    let size be its value and remove the component value from unparsed size.
+        //    FIXME: Any CSS function other than the math functions is invalid.
+        //    Otherwise, there is a parse error; continue.
+        auto length = parse_length(unparsed_size.last());
+        if (length.has_value() && length.value().raw_value() >= 0) {
+            size = length.value();
+            unparsed_size.take_last();
+        } else {
+            continue;
+        }
+
+        // 3. Remove all consecutive <whitespace-token>s from the end of unparsed size.
+        //    If unparsed size is now empty, return size and exit this algorithm.
+        //    If this was not the last item in unparsed sizes list, that is a parse error.
+        while (!unparsed_size.is_empty() && unparsed_size.last().is_token() && unparsed_size.last().token().is(Token::Type::Whitespace))
+            unparsed_size.take_last();
+        if (unparsed_size.is_empty())
+            return size.value();
+
+        // 4. Parse the remaining component values in unparsed size as a <media-condition>.
+        //    If it does not parse correctly, or it does parse correctly but the <media-condition> evaluates to false, continue.
+        TokenStream<ComponentValue> token_stream { unparsed_size };
+        auto media_condition = parse_media_condition(token_stream, MediaCondition::AllowOr::Yes);
+        if (media_condition && media_condition->evaluate(*m_context.window()) == MatchResult::True) {
+            return size.value();
+        } else {
+            continue;
+        }
+    }
+
+    return Length(100, Length::Type::Vw);
+}
 
 // https://www.w3.org/TR/css-values-4/#parse-a-calculation
 ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentValue> const& original_values)
@@ -9166,128 +9287,4 @@ TimePercentage Parser::Dimension::time_percentage() const
         return percentage();
     VERIFY_NOT_REACHED();
 }
-}
-
-namespace Web {
-
-CSS::CSSStyleSheet* parse_css_stylesheet(CSS::Parser::ParsingContext const& context, StringView css, Optional<AK::URL> location)
-{
-    if (css.is_empty()) {
-        auto rule_list = CSS::CSSRuleList::create_empty(context.realm()).release_value_but_fixme_should_propagate_errors();
-        auto media_list = CSS::MediaList::create(context.realm(), {}).release_value_but_fixme_should_propagate_errors();
-        return CSS::CSSStyleSheet::create(context.realm(), rule_list, media_list, location).release_value_but_fixme_should_propagate_errors();
-    }
-    auto parser = CSS::Parser::Parser::create(context, css).release_value_but_fixme_should_propagate_errors();
-    return parser.parse_as_css_stylesheet(location);
-}
-
-CSS::ElementInlineCSSStyleDeclaration* parse_css_style_attribute(CSS::Parser::ParsingContext const& context, StringView css, DOM::Element& element)
-{
-    if (css.is_empty())
-        return CSS::ElementInlineCSSStyleDeclaration::create(element, {}, {}).release_value_but_fixme_should_propagate_errors();
-    auto parser = CSS::Parser::Parser::create(context, css).release_value_but_fixme_should_propagate_errors();
-    return parser.parse_as_style_attribute(element);
-}
-
-ErrorOr<RefPtr<CSS::StyleValue>> parse_css_value(CSS::Parser::ParsingContext const& context, StringView string, CSS::PropertyID property_id)
-{
-    if (string.is_empty())
-        return nullptr;
-    auto parser = TRY(CSS::Parser::Parser::create(context, string));
-    return parser.parse_as_css_value(property_id);
-}
-
-CSS::CSSRule* parse_css_rule(CSS::Parser::ParsingContext const& context, StringView css_text)
-{
-    auto parser = CSS::Parser::Parser::create(context, css_text).release_value_but_fixme_should_propagate_errors();
-    return parser.parse_as_css_rule();
-}
-
-Optional<CSS::SelectorList> parse_selector(CSS::Parser::ParsingContext const& context, StringView selector_text)
-{
-    auto parser = CSS::Parser::Parser::create(context, selector_text).release_value_but_fixme_should_propagate_errors();
-    return parser.parse_as_selector();
-}
-
-RefPtr<CSS::MediaQuery> parse_media_query(CSS::Parser::ParsingContext const& context, StringView string)
-{
-    auto parser = CSS::Parser::Parser::create(context, string).release_value_but_fixme_should_propagate_errors();
-    return parser.parse_as_media_query();
-}
-
-Vector<NonnullRefPtr<CSS::MediaQuery>> parse_media_query_list(CSS::Parser::ParsingContext const& context, StringView string)
-{
-    auto parser = CSS::Parser::Parser::create(context, string).release_value_but_fixme_should_propagate_errors();
-    return parser.parse_as_media_query_list();
-}
-
-RefPtr<CSS::Supports> parse_css_supports(CSS::Parser::ParsingContext const& context, StringView string)
-{
-    if (string.is_empty())
-        return {};
-    auto parser = CSS::Parser::Parser::create(context, string).release_value_but_fixme_should_propagate_errors();
-    return parser.parse_as_supports();
-}
-
-Optional<CSS::StyleProperty> parse_css_supports_condition(CSS::Parser::ParsingContext const& context, StringView string)
-{
-    if (string.is_empty())
-        return {};
-    auto parser = CSS::Parser::Parser::create(context, string).release_value_but_fixme_should_propagate_errors();
-    return parser.parse_as_supports_condition();
-}
-
-// https://html.spec.whatwg.org/multipage/images.html#parse-a-srcset-attribute
-CSS::Length CSS::Parser::Parser::parse_as_sizes_attribute()
-{
-    Optional<CSS::Length> size;
-
-    // When asked to parse a sizes attribute from an element,
-    // parse a comma-separated list of component values from the value of the element's sizes attribute
-    // (or the empty string, if the attribute is absent), and let unparsed sizes list be the result.
-    auto unparsed_sizes_list = parse_a_comma_separated_list_of_component_values(m_token_stream);
-
-    // For each unparsed size in unparsed sizes list:
-    for (auto& unparsed_size : unparsed_sizes_list) {
-        // 1. Remove all consecutive <whitespace-token>s from the end of unparsed size.
-        //    If unparsed size is now empty, that is a parse error; continue.
-        while (!unparsed_size.is_empty() && unparsed_size.last().is_token() && unparsed_size.last().token().is(Token::Type::Whitespace))
-            unparsed_size.take_last();
-        if (unparsed_size.is_empty())
-            continue;
-
-        // 2. If the last component value in unparsed size is a valid non-negative <source-size-value>,
-        //    let size be its value and remove the component value from unparsed size.
-        //    FIXME: Any CSS function other than the math functions is invalid.
-        //    Otherwise, there is a parse error; continue.
-        auto length = parse_length(unparsed_size.last());
-        if (length.has_value() && length.value().raw_value() >= 0) {
-            size = length.value();
-            unparsed_size.take_last();
-        } else {
-            continue;
-        }
-
-        // 3. Remove all consecutive <whitespace-token>s from the end of unparsed size.
-        //    If unparsed size is now empty, return size and exit this algorithm.
-        //    If this was not the last item in unparsed sizes list, that is a parse error.
-        while (!unparsed_size.is_empty() && unparsed_size.last().is_token() && unparsed_size.last().token().is(Token::Type::Whitespace))
-            unparsed_size.take_last();
-        if (unparsed_size.is_empty())
-            return size.value();
-
-        // 4. Parse the remaining component values in unparsed size as a <media-condition>.
-        //    If it does not parse correctly, or it does parse correctly but the <media-condition> evaluates to false, continue.
-        TokenStream<ComponentValue> token_stream { unparsed_size };
-        auto media_condition = parse_media_condition(token_stream, MediaCondition::AllowOr::Yes);
-        if (media_condition && media_condition->evaluate(m_context.document()->window()) == CSS::MatchResult::True) {
-            return size.value();
-        } else {
-            continue;
-        }
-    }
-
-    return CSS::Length(100, CSS::Length::Type::Vw);
-}
-
 }

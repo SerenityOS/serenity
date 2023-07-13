@@ -1,8 +1,8 @@
 # Patches for alpine on SerenityOS
 
-## `0001-Compiler-helpers-for-build-system-not-host.patch`
+## `0001-Update-pith-Makefile.in-to-compile-helpers-for-build.patch`
 
-Compiler helpers for build system, not host.
+Update pith/Makefile.in to compile helpers for build system, not target
 
 
 ## `0002-Add-serenity-as-OS-type-in-Alpine.patch`

@@ -27,18 +27,14 @@
 #include <LibGfx/Rect.h>
 #include <LibGfx/StandardCursor.h>
 
-namespace Core {
-namespace Registration {
+namespace Core::Registration {
 extern Core::ObjectClassRegistration registration_Widget;
-}
 }
 
 #define REGISTER_WIDGET(namespace_, class_name)                                                                                                                                                     \
-    namespace Core {                                                                                                                                                                                \
-    namespace Registration {                                                                                                                                                                        \
+    namespace Core::Registration {                                                                                                                                                                  \
     Core::ObjectClassRegistration registration_##class_name(                                                                                                                                        \
         #namespace_ "::" #class_name##sv, []() -> ErrorOr<NonnullRefPtr<Core::Object>> { return static_ptr_cast<Core::Object>(TRY(namespace_::class_name::try_create())); }, &registration_Widget); \
-    }                                                                                                                                                                                               \
     }
 
 namespace GUI {
@@ -200,8 +196,8 @@ public:
 
     Gfx::IntRect rect() const { return { 0, 0, width(), height() }; }
     Gfx::IntSize size() const { return m_relative_rect.size(); }
-    Gfx::IntRect content_rect() const { return this->content_margins().applied_to(rect()); };
-    Gfx::IntSize content_size() const { return this->content_rect().size(); };
+    Gfx::IntRect content_rect() const { return this->content_margins().applied_to(rect()); }
+    Gfx::IntSize content_size() const { return this->content_rect().size(); }
 
     // Invalidate the widget (or an area thereof), causing a repaint to happen soon.
     void update();

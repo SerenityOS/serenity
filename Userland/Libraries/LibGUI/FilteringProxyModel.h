@@ -31,7 +31,7 @@ public:
     virtual ~FilteringProxyModel() override
     {
         m_model->unregister_client(*this);
-    };
+    }
 
     virtual int row_count(ModelIndex const& = ModelIndex()) const override;
     virtual int column_count(ModelIndex const& = ModelIndex()) const override;

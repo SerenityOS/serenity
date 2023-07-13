@@ -7,8 +7,7 @@
 #include <AK/StringView.h>
 #include <LibWeb/HTML/Parser/Entities.h>
 
-namespace Web {
-namespace HTML {
+namespace Web::HTML {
 
 Optional<EntityMatch> code_points_from_entity(StringView entity)
 {
@@ -2277,5 +2276,4 @@ Optional<EntityMatch> code_points_from_entity(StringView entity)
     return match;
 }
 
-}
 }

@@ -9,7 +9,6 @@ configopts=(
 use_fresh_config_sub='true'
 use_fresh_config_guess='true'
 files="https://alpineapp.email/alpine/release/src/alpine-2.26.tar.xz alpine-${version}.tar.xz c0779c2be6c47d30554854a3e14ef5e36539502b331068851329275898a9baba"
-auth_type='sha256'
 depends=(
     'openssl'
     'ncurses'
@@ -20,18 +19,6 @@ launcher_category='Internet'
 launcher_command='/usr/local/bin/alpine'
 launcher_run_in_terminal='true'
 icon_file='web/cgi/favicon.ico'
-
-pre_configure() {
-    # Rebuild after patching configure.ac to support serenity host.
-
-    # `automake` may exit with a warning about how there is a mismatch
-    # between the versions of autoconf and automake that were previously
-    # used to generate aclocal and specifed in configure.ac.
-    # We just need `automake` to generate `./compile` (so that we can run
-    # autoreconf to regenerate everything).
-    run automake --add-missing || true
-    run autoreconf
-}
 
 configure() {
     run ./"$configscript" \

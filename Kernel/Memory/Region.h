@@ -207,8 +207,8 @@ public:
     [[nodiscard]] bool mmapped_from_readable() const { return m_mmapped_from_readable; }
     [[nodiscard]] bool mmapped_from_writable() const { return m_mmapped_from_writable; }
 
-    void start_handling_page_fault(Badge<MemoryManager>) { m_in_progress_page_faults++; };
-    void finish_handling_page_fault(Badge<MemoryManager>) { m_in_progress_page_faults--; };
+    void start_handling_page_fault(Badge<MemoryManager>) { m_in_progress_page_faults++; }
+    void finish_handling_page_fault(Badge<MemoryManager>) { m_in_progress_page_faults--; }
 
 private:
     Region();

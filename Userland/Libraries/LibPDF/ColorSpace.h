@@ -34,8 +34,8 @@ public:
     {
     }
 
-    DeprecatedFlyString name() const { return m_name; };
-    bool never_needs_parameters() const { return m_never_needs_parameters; };
+    DeprecatedFlyString name() const { return m_name; }
+    bool never_needs_parameters() const { return m_never_needs_parameters; }
     static PDFErrorOr<ColorSpaceFamily> get(DeprecatedFlyString const&);
 
 #define ENUMERATE(name, ever_needs_parameters) static ColorSpaceFamily name;

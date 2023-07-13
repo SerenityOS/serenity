@@ -32,6 +32,8 @@ public:
         return verify_cast<TableWrapper>(*table_box().containing_block());
     }
 
+    static bool border_is_less_specific(const CSS::BorderData& a, const CSS::BorderData& b);
+
 private:
     CSSPixels run_caption_layout(LayoutMode, CSS::CaptionSide);
     CSSPixels compute_capmin();
@@ -120,26 +122,42 @@ private:
 
     CSSPixels compute_row_content_height(Cell const& cell) const;
 
-    enum class ConflictingEdge {
+    enum class ConflictingSide {
         Top,
-        Right,
         Bottom,
         Left,
+        Right,
     };
+
+    struct ConflictingEdge {
+        Node const* element;
+        ConflictingSide side;
+    };
+
+    static const CSS::BorderData& border_data_conflicting_edge(ConflictingEdge const& conflicting_edge);
 
     class BorderConflictFinder {
     public:
         BorderConflictFinder(TableFormattingContext const* context);
-        Vector<Node const*> conflicting_elements(Cell const&, ConflictingEdge) const;
+        Vector<ConflictingEdge> conflicting_edges(Cell const&, ConflictingSide) const;
 
     private:
         void collect_conflicting_col_elements();
+        void collect_conflicting_row_group_elements();
+
+        struct RowGroupInfo {
+            Node const* row_group;
+            size_t start_index;
+            size_t row_count;
+        };
 
         Vector<Node const*> m_col_elements_by_index;
+        Vector<Optional<RowGroupInfo>> m_row_group_elements_by_index;
         TableFormattingContext const* m_context;
     };
 
     Vector<Cell> m_cells;
+    Vector<Vector<Optional<Cell const&>>> m_cells_by_coordinate;
     Vector<Column> m_columns;
     Vector<Row> m_rows;
 };

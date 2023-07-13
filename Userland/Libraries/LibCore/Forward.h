@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Forward.h>
+
 namespace Core {
 
 class AnonymousBuffer;
@@ -32,7 +34,7 @@ class Object;
 class ObjectClassRegistration;
 class ProcessStatisticsReader;
 class Socket;
-template<typename Result>
+template<typename Result, typename TError = AK::Error>
 class Promise;
 class SocketAddress;
 class TCPServer;

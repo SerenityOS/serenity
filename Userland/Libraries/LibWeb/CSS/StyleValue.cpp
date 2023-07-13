@@ -7,6 +7,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Font/FontStyleMapping.h>
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/CSS/StyleValues/AbstractImageStyleValue.h>
@@ -24,6 +25,7 @@
 #include <LibWeb/CSS/StyleValues/ContentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/CustomIdentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
+#include <LibWeb/CSS/StyleValues/EasingStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FlexFlowStyleValue.h>
@@ -110,6 +112,12 @@ BorderRadiusStyleValue const& StyleValue::as_border_radius() const
 {
     VERIFY(is_border_radius());
     return static_cast<BorderRadiusStyleValue const&>(*this);
+}
+
+EasingStyleValue const& StyleValue::as_easing() const
+{
+    VERIFY(is_easing());
+    return static_cast<EasingStyleValue const&>(*this);
 }
 
 BorderRadiusShorthandStyleValue const& StyleValue::as_border_radius_shorthand() const

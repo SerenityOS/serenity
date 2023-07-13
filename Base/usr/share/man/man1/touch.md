@@ -51,6 +51,6 @@ $ touch -r anotherfile thatfile
 ```
 
 ## See also
-
+* [`mktemp`(1)](help://man/1/mktemp) to create a temporary file
 * [`futimens`(2)](help://man/3/futimens)
 * [`utimensat`(2)](help://man/3/utimensat)

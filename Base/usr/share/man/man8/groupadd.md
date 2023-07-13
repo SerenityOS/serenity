@@ -30,3 +30,7 @@ This program must be run as root.
 # groupadd maintainers
 ```
 
+## See Also
+* [`useradd`(8)](help://man/8/useradd)
+* [`groupdel`(8)](help://man/8/groupdel)
+* [`groups`(1)](help://man/1/groups)

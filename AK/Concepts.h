@@ -57,13 +57,9 @@ concept AnyString = IsConstructible<StringView, RemoveCVReference<T> const&>;
 template<typename T, typename U>
 concept HashCompatible = IsHashCompatible<Detail::Decay<T>, Detail::Decay<U>>;
 
-// FIXME: remove once Clang formats these properly.
-// clang-format off
-
 // Any indexable, sized, contiguous data structure.
 template<typename ArrayT, typename ContainedT, typename SizeT = size_t>
-concept ArrayLike = requires(ArrayT array, SizeT index)
-{
+concept ArrayLike = requires(ArrayT array, SizeT index) {
     {
         array[index]
     }
@@ -87,8 +83,7 @@ concept ArrayLike = requires(ArrayT array, SizeT index)
 
 // Any indexable data structure.
 template<typename ArrayT, typename ContainedT, typename SizeT = size_t>
-concept Indexable = requires(ArrayT array, SizeT index)
-{
+concept Indexable = requires(ArrayT array, SizeT index) {
     {
         array[index]
     }
@@ -96,8 +91,7 @@ concept Indexable = requires(ArrayT array, SizeT index)
 };
 
 template<typename Func, typename... Args>
-concept VoidFunction = requires(Func func, Args... args)
-{
+concept VoidFunction = requires(Func func, Args... args) {
     {
         func(args...)
     }
@@ -105,8 +99,7 @@ concept VoidFunction = requires(Func func, Args... args)
 };
 
 template<typename Func, typename... Args>
-concept IteratorFunction = requires(Func func, Args... args)
-{
+concept IteratorFunction = requires(Func func, Args... args) {
     {
         func(args...)
     }
@@ -114,17 +107,19 @@ concept IteratorFunction = requires(Func func, Args... args)
 };
 
 template<typename T, typename EndT>
-concept IteratorPairWith = requires(T it, EndT end)
-{
+concept IteratorPairWith = requires(T it, EndT end) {
     *it;
-    { it != end } -> SameAs<bool>;
+    {
+        it != end
+    } -> SameAs<bool>;
     ++it;
 };
 
 template<typename T>
-concept IterableContainer = requires
-{
-    { declval<T>().begin() } -> IteratorPairWith<decltype(declval<T>().end())>;
+concept IterableContainer = requires {
+    {
+        declval<T>().begin()
+    } -> IteratorPairWith<decltype(declval<T>().end())>;
 };
 
 template<typename Func, typename... Args>
@@ -134,7 +129,33 @@ concept FallibleFunction = requires(Func&& func, Args&&... args) {
     func(forward<Args>(args)...).release_value();
 };
 
-// clang-format on
+}
+namespace AK::Detail {
+
+template<typename T, typename Out, typename... Args>
+inline constexpr bool IsCallableWithArguments = requires(T t) {
+    {
+        t(declval<Args>()...)
+    } -> Concepts::ConvertibleTo<Out>;
+} || requires(T t) {
+    {
+        t(declval<Args>()...)
+    } -> Concepts::SameAs<Out>;
+};
+
+}
+
+namespace AK {
+
+using Detail::IsCallableWithArguments;
+
+}
+
+namespace AK::Concepts {
+
+template<typename Func, typename R, typename... Args>
+concept CallableAs = Detail::IsCallableWithArguments<Func, R, Args...>;
+
 }
 
 #if !USING_AK_GLOBALLY
@@ -142,6 +163,7 @@ namespace AK {
 #endif
 using AK::Concepts::Arithmetic;
 using AK::Concepts::ArrayLike;
+using AK::Concepts::CallableAs;
 using AK::Concepts::ConvertibleTo;
 using AK::Concepts::DerivedFrom;
 using AK::Concepts::Enum;

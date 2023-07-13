@@ -20,7 +20,10 @@ ErrorOr<void> generate_bounds_checking_function(JsonObject& properties, SourceGe
 
 static bool type_name_is_enum(StringView type_name)
 {
-    return !AK::first_is_one_of(type_name, "angle"sv, "color"sv, "custom-ident"sv, "frequency"sv, "image"sv, "integer"sv, "length"sv, "number"sv, "paint"sv, "percentage"sv, "ratio"sv, "rect"sv, "resolution"sv, "string"sv, "time"sv, "url"sv);
+    return !AK::first_is_one_of(type_name,
+        "angle"sv, "color"sv, "custom-ident"sv, "easing-function"sv, "frequency"sv, "image"sv,
+        "integer"sv, "length"sv, "number"sv, "paint"sv, "percentage"sv, "ratio"sv, "rect"sv,
+        "resolution"sv, "string"sv, "time"sv, "url"sv);
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -158,6 +161,7 @@ enum class ValueType {
     Angle,
     Color,
     CustomIdent,
+    EasingFunction,
     FilterValueList,
     Frequency,
     Image,
@@ -176,6 +180,7 @@ enum class ValueType {
 };
 bool property_accepts_type(PropertyID, ValueType);
 bool property_accepts_identifier(PropertyID, ValueID);
+Optional<ValueType> property_resolves_percentages_relative_to(PropertyID);
 
 // These perform range-checking, but are also safe to call with properties that don't accept that type. (They'll just return false.)
 bool property_accepts_angle(PropertyID, Angle const&);
@@ -613,6 +618,8 @@ bool property_accepts_type(PropertyID property_id, ValueType value_type)
                     TRY(property_generator.try_appendln("        case ValueType::Color:"));
                 } else if (type_name == "custom-ident") {
                     TRY(property_generator.try_appendln("        case ValueType::CustomIdent:"));
+                } else if (type_name == "easing-function") {
+                    TRY(property_generator.try_appendln("        case ValueType::EasingFunction:"));
                 } else if (type_name == "frequency") {
                     TRY(property_generator.try_appendln("        case ValueType::Frequency:"));
                 } else if (type_name == "image") {
@@ -715,6 +722,31 @@ bool property_accepts_identifier(PropertyID property_id, ValueID identifier)
     TRY(generator.try_append(R"~~~(
     default:
         return false;
+    }
+}
+
+Optional<ValueType> property_resolves_percentages_relative_to(PropertyID property_id)
+{
+    switch (property_id) {
+)~~~"));
+
+    TRY(properties.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
+        VERIFY(value.is_object());
+        if (auto resolved_type = value.as_object().get_deprecated_string("percentages-resolve-to"sv); resolved_type.has_value()) {
+            auto property_generator = TRY(generator.fork());
+            TRY(property_generator.set("name:titlecase", TRY(title_casify(name))));
+            TRY(property_generator.set("resolved_type:titlecase", TRY(title_casify(resolved_type.value()))));
+            TRY(property_generator.try_append(R"~~~(
+    case PropertyID::@name:titlecase@:
+        return ValueType::@resolved_type:titlecase@;
+)~~~"));
+        }
+        return {};
+    }));
+
+    TRY(generator.try_append(R"~~~(
+    default:
+        return {};
     }
 }
 

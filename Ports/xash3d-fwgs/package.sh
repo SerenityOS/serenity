@@ -18,7 +18,6 @@ https://github.com/FWGS/mainui_cpp/archive/${_mainui_commit}.tar.gz mainui_cpp-$
 https://github.com/FWGS/MiniUTL/archive/${_miniutl_commit}.tar.gz MiniUTL-${_miniutl_commit}.tar.gz 7b7b26377854b3fc741c8d652d8b3c9c540512644943ca6efb63df941b2861e3
 https://github.com/xiph/opus/archive/${_opus_commit}.tar.gz opus-${_opus_commit}.tar.gz 56156f1f7a19fcd356041604ce9fdd7d70a67a0e91153f25970dcc8710ea057e
 https://github.com/FWGS/xash-extras/archive/${_extras_commit}.tar.gz xash-extras-${_extras_commit}.tar.gz 020b4c35f97fabbd70a7444a98451f0f5be4dcbf149e42e5e49598a5651805ab"
-auth_type='sha256'
 
 export PKG_CONFIG_PATH="${SERENITY_INSTALL_ROOT}/usr/local/lib/pkgconfig"
 

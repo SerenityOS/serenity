@@ -17,9 +17,9 @@ class ElementSizePreviewWidget final : public GUI::AbstractScrollableWidget {
     C_OBJECT(ElementSizePreviewWidget)
 
 public:
-    void set_box_model(Web::Layout::BoxModelMetrics box_model) { m_node_box_sizing = box_model; };
-    void set_node_content_height(float height) { m_node_content_height = height; };
-    void set_node_content_width(float width) { m_node_content_width = width; };
+    void set_box_model(Web::Layout::BoxModelMetrics box_model) { m_node_box_sizing = box_model; }
+    void set_node_content_height(float height) { m_node_content_height = height; }
+    void set_node_content_width(float width) { m_node_content_width = width; }
 
 private:
     virtual void paint_event(GUI::PaintEvent&) override;

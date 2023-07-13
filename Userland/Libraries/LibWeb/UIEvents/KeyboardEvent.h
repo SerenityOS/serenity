@@ -24,6 +24,13 @@ struct KeyboardEventInit : public EventModifierInit {
     u32 char_code { 0 };
 };
 
+enum class DOMKeyLocation {
+    Standard = 0,
+    Left = 1,
+    Right = 2,
+    Numpad = 3,
+};
+
 // https://www.w3.org/TR/uievents/#interface-keyboardevent
 class KeyboardEvent final : public UIEvent {
     WEB_PLATFORM_OBJECT(KeyboardEvent, UIEvent);

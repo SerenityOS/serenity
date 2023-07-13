@@ -18,4 +18,6 @@ $ gzip [--keep] [--stdout] [--decompress] <FILES...>
 
 * `FILES`: Files
 
-<!-- Auto-generated through ArgsParser -->
+## See also
+* [`gunzip`(1)](help://man/1/gunzip)
+* [`tar`(1)](help://man/1/tar)

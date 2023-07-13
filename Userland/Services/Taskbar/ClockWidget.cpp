@@ -53,22 +53,8 @@ ClockWidget::ClockWidget()
     m_prev_date->set_fixed_size(24, 24);
     m_prev_date->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"sv).release_value_but_fixme_should_propagate_errors());
     m_prev_date->on_click = [&](auto) {
-        unsigned view_month = m_calendar->view_month();
-        unsigned view_year = m_calendar->view_year();
-        if (m_calendar->mode() == GUI::Calendar::Month) {
-            view_month--;
-            if (m_calendar->view_month() == 1) {
-                view_month = 12;
-                view_year--;
-            }
-        } else {
-            view_year--;
-        }
-        m_calendar->update_tiles(view_year, view_month);
-        if (m_calendar->mode() == GUI::Calendar::Year)
-            m_selected_calendar_button->set_text(m_calendar->formatted_date(GUI::Calendar::YearOnly).release_value_but_fixme_should_propagate_errors());
-        else
-            m_selected_calendar_button->set_text(m_calendar->formatted_date().release_value_but_fixme_should_propagate_errors());
+        m_calendar->show_previous_date();
+        update_selected_calendar_button();
     };
 
     m_selected_calendar_button = navigation_container.add<GUI::Button>();
@@ -76,10 +62,7 @@ ClockWidget::ClockWidget()
     m_selected_calendar_button->set_fixed_height(24);
     m_selected_calendar_button->on_click = [&](auto) {
         m_calendar->toggle_mode();
-        if (m_calendar->mode() == GUI::Calendar::Year)
-            m_selected_calendar_button->set_text(m_calendar->formatted_date(GUI::Calendar::YearOnly).release_value_but_fixme_should_propagate_errors());
-        else
-            m_selected_calendar_button->set_text(m_calendar->formatted_date().release_value_but_fixme_should_propagate_errors());
+        update_selected_calendar_button();
     };
 
     m_next_date = navigation_container.add<GUI::Button>();
@@ -87,22 +70,8 @@ ClockWidget::ClockWidget()
     m_next_date->set_fixed_size(24, 24);
     m_next_date->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv).release_value_but_fixme_should_propagate_errors());
     m_next_date->on_click = [&](auto) {
-        unsigned view_month = m_calendar->view_month();
-        unsigned view_year = m_calendar->view_year();
-        if (m_calendar->mode() == GUI::Calendar::Month) {
-            view_month++;
-            if (m_calendar->view_month() == 12) {
-                view_month = 1;
-                view_year++;
-            }
-        } else {
-            view_year++;
-        }
-        m_calendar->update_tiles(view_year, view_month);
-        if (m_calendar->mode() == GUI::Calendar::Year)
-            m_selected_calendar_button->set_text(m_calendar->formatted_date(GUI::Calendar::YearOnly).release_value_but_fixme_should_propagate_errors());
-        else
-            m_selected_calendar_button->set_text(m_calendar->formatted_date().release_value_but_fixme_should_propagate_errors());
+        m_calendar->show_next_date();
+        update_selected_calendar_button();
     };
 
     auto& separator1 = root_container->add<GUI::HorizontalSeparator>();
@@ -113,6 +82,10 @@ ClockWidget::ClockWidget()
 
     m_calendar = calendar_container.add<GUI::Calendar>();
     m_selected_calendar_button->set_text(m_calendar->formatted_date().release_value_but_fixme_should_propagate_errors());
+
+    m_calendar->on_scroll = [&] {
+        update_selected_calendar_button();
+    };
 
     m_calendar->on_tile_click = [&] {
         m_selected_calendar_button->set_text(m_calendar->formatted_date().release_value_but_fixme_should_propagate_errors());
@@ -232,6 +205,14 @@ void ClockWidget::jump_to_current_date()
     m_calendar->set_selected_date(Core::DateTime::now());
     m_calendar->update_tiles(Core::DateTime::now().year(), Core::DateTime::now().month());
     m_selected_calendar_button->set_text(m_calendar->formatted_date().release_value_but_fixme_should_propagate_errors());
+}
+
+void ClockWidget::update_selected_calendar_button()
+{
+    if (m_calendar->mode() == GUI::Calendar::Year)
+        m_selected_calendar_button->set_text(m_calendar->formatted_date(GUI::Calendar::YearOnly).release_value_but_fixme_should_propagate_errors());
+    else
+        m_selected_calendar_button->set_text(m_calendar->formatted_date().release_value_but_fixme_should_propagate_errors());
 }
 
 }

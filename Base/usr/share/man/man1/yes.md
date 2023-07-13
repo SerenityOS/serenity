@@ -39,3 +39,6 @@ t
 t
 t^C
 ```
+
+## See also
+* [`cat`(1)](help://man/1/cat)

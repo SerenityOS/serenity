@@ -1104,8 +1104,11 @@ static ErrorOr<void> process_gAMA(ReadonlyBytes data, PNGLoadingContext& context
 static ErrorOr<void> process_sRGB(ReadonlyBytes data, PNGLoadingContext& context)
 {
     // https://www.w3.org/TR/png/#srgb-standard-colour-space
-    if (data.size() != 1)
-        return Error::from_string_literal("sRGB chunk has an abnormal size");
+    if (data.size() != 1) {
+        // Invalid per spec, but (rarely) happens in the wild. Log and ignore.
+        warnln("warning: PNG sRGB chunk has an abnormal size; ignoring");
+        return {};
+    }
 
     u8 rendering_intent = data[0];
     if (rendering_intent > 3)
@@ -1307,19 +1310,6 @@ IntSize PNGImageDecoderPlugin::size()
     }
 
     return { m_context->width, m_context->height };
-}
-
-void PNGImageDecoderPlugin::set_volatile()
-{
-    if (m_context->bitmap)
-        m_context->bitmap->set_volatile();
-}
-
-bool PNGImageDecoderPlugin::set_nonvolatile(bool& was_purged)
-{
-    if (!m_context->bitmap)
-        return false;
-    return m_context->bitmap->set_nonvolatile(was_purged);
 }
 
 ErrorOr<void> PNGImageDecoderPlugin::initialize()

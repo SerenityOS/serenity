@@ -21,9 +21,7 @@ public:
     TGAImageDecoderPlugin(u8 const*, size_t);
 
     virtual IntSize size() override;
-    virtual void set_volatile() override;
-    [[nodiscard]] virtual bool set_nonvolatile(bool& was_purged) override;
-    virtual ErrorOr<void> initialize() override;
+
     virtual bool is_animated() override;
     virtual size_t loop_count() override;
     virtual size_t frame_count() override;
@@ -32,7 +30,7 @@ public:
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
-    bool decode_tga_header();
+    ErrorOr<void> decode_tga_header();
     OwnPtr<TGALoadingContext> m_context;
 };
 

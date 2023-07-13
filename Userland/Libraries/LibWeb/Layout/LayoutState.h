@@ -98,18 +98,18 @@ struct LayoutState {
 
         Vector<LineBox> line_boxes;
 
-        CSSPixels margin_box_left() const { return margin_left + border_left + padding_left; }
-        CSSPixels margin_box_right() const { return margin_right + border_right + padding_right; }
-        CSSPixels margin_box_top() const { return margin_top + border_top + padding_top; }
-        CSSPixels margin_box_bottom() const { return margin_bottom + border_bottom + padding_bottom; }
+        CSSPixels margin_box_left() const { return margin_left + border_left_collapsed() + padding_left; }
+        CSSPixels margin_box_right() const { return margin_right + border_right_collapsed() + padding_right; }
+        CSSPixels margin_box_top() const { return margin_top + border_top_collapsed() + padding_top; }
+        CSSPixels margin_box_bottom() const { return margin_bottom + border_bottom_collapsed() + padding_bottom; }
 
         CSSPixels margin_box_width() const { return margin_box_left() + content_width() + margin_box_right(); }
         CSSPixels margin_box_height() const { return margin_box_top() + content_height() + margin_box_bottom(); }
 
-        CSSPixels border_box_left() const { return border_left + padding_left; }
-        CSSPixels border_box_right() const { return border_right + padding_right; }
-        CSSPixels border_box_top() const { return border_top + padding_top; }
-        CSSPixels border_box_bottom() const { return border_bottom + padding_bottom; }
+        CSSPixels border_box_left() const { return border_left_collapsed() + padding_left; }
+        CSSPixels border_box_right() const { return border_right_collapsed() + padding_right; }
+        CSSPixels border_box_top() const { return border_top_collapsed() + padding_top; }
+        CSSPixels border_box_bottom() const { return border_bottom_collapsed() + padding_bottom; }
 
         CSSPixels border_box_width() const { return border_box_left() + content_width() + border_box_right(); }
         CSSPixels border_box_height() const { return border_box_top() + content_height() + border_box_bottom(); }
@@ -119,12 +119,22 @@ struct LayoutState {
         void add_floating_descendant(Box const& box) { m_floating_descendants.set(&box); }
         auto const& floating_descendants() const { return m_floating_descendants; }
 
-        void set_override_borders_data(Painting::BordersData const& override_borders_data) { m_override_borders_data = override_borders_data; };
+        void set_override_borders_data(Painting::BordersData const& override_borders_data) { m_override_borders_data = override_borders_data; }
         auto const& override_borders_data() const { return m_override_borders_data; }
+
+        void set_table_cell_coordinates(Painting::PaintableBox::TableCellCoordinates const& table_cell_coordinates) { m_table_cell_coordinates = table_cell_coordinates; }
+        auto const& table_cell_coordinates() const { return m_table_cell_coordinates; }
 
     private:
         AvailableSize available_width_inside() const;
         AvailableSize available_height_inside() const;
+
+        bool use_collapsing_borders_model() const { return m_override_borders_data.has_value(); }
+        // Implement the collapsing border model https://www.w3.org/TR/CSS22/tables.html#collapsing-borders.
+        CSSPixels border_left_collapsed() const { return use_collapsing_borders_model() ? round(border_left / 2) : border_left; }
+        CSSPixels border_right_collapsed() const { return use_collapsing_borders_model() ? round(border_right / 2) : border_right; }
+        CSSPixels border_top_collapsed() const { return use_collapsing_borders_model() ? round(border_top / 2) : border_top; }
+        CSSPixels border_bottom_collapsed() const { return use_collapsing_borders_model() ? round(border_bottom / 2) : border_bottom; }
 
         JS::GCPtr<Layout::NodeWithStyleAndBoxModelMetrics> m_node { nullptr };
 
@@ -137,6 +147,7 @@ struct LayoutState {
         HashTable<JS::GCPtr<Box const>> m_floating_descendants;
 
         Optional<Painting::BordersData> m_override_borders_data;
+        Optional<Painting::PaintableBox::TableCellCoordinates> m_table_cell_coordinates;
     };
 
     void commit();

@@ -11,24 +11,25 @@
 
 namespace Kernel {
 
+#if ARCH(X86_64)
+#    define UNAME_MACHINE "x86_64"
+#elif ARCH(AARCH64)
+#    define UNAME_MACHINE "AArch64"
+#else
+#    error Unknown architecture
+#endif
+
 ErrorOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
 
-    utsname buf
-    {
+    utsname buf {
         "SerenityOS",
-            {}, // Hostname, filled in below.
-            {}, // "Release" (1.0-dev), filled in below.
-            {}, // "Revision" (git commit hash), filled in below.
-#if ARCH(X86_64)
-            "x86_64",
-#elif ARCH(AARCH64)
-            "AArch64",
-#else
-#    error Unknown architecture
-#endif
+        {}, // Hostname, filled in below.
+        {}, // "Release" (1.0-dev), filled in below.
+        {}, // "Revision" (git commit hash), filled in below.
+        UNAME_MACHINE
     };
 
     auto version_string = TRY(KString::formatted("{}.{}-dev", SERENITY_MAJOR_REVISION, SERENITY_MINOR_REVISION));

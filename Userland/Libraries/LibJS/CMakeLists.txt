@@ -15,6 +15,7 @@ set(SOURCES
     Bytecode/Pass/MergeBlocks.cpp
     Bytecode/Pass/PlaceBlocks.cpp
     Bytecode/Pass/UnifySameBlocks.cpp
+    Bytecode/RegexTable.cpp
     Bytecode/StringTable.cpp
     Console.cpp
     Contrib/Test262/$262Object.cpp
@@ -23,6 +24,7 @@ set(SOURCES
     Contrib/Test262/IsHTMLDDA.cpp
     CyclicModule.cpp
     Heap/BlockAllocator.cpp
+    Heap/Cell.cpp
     Heap/CellAllocator.cpp
     Heap/Handle.cpp
     Heap/Heap.cpp

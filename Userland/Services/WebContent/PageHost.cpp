@@ -168,7 +168,7 @@ void PageHost::page_did_layout()
 {
     auto* layout_root = this->layout_root();
     VERIFY(layout_root);
-    if (layout_root->paintable_box()->has_overflow())
+    if (layout_root->paintable_box()->has_scrollable_overflow())
         m_content_size = page().enclosing_device_rect(layout_root->paintable_box()->scrollable_overflow_rect().value()).size();
     else
         m_content_size = page().enclosing_device_rect(layout_root->paintable_box()->absolute_rect()).size();

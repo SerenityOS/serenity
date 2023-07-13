@@ -47,7 +47,6 @@ PDFErrorOr<void> SimpleFont::initialize(Document* document, NonnullRefPtr<DictOb
 
 PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_string(Gfx::Painter& painter, Gfx::FloatPoint glyph_position, DeprecatedString const& string, Color const& paint_color, float font_size, float character_spacing, float horizontal_scaling)
 {
-    auto so = make_object<StringObject>(string, true);
     for (auto char_code : string.bytes()) {
         // Use the width specified in the font's dictionary if available,
         // and use the default width for the given font otherwise.

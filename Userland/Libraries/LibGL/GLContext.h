@@ -106,7 +106,7 @@ public:
     GLContext(RefPtr<GPU::Driver> driver, NonnullOwnPtr<GPU::Device>, Gfx::Bitmap&);
     ~GLContext();
 
-    NonnullRefPtr<Gfx::Bitmap> frontbuffer() const { return m_frontbuffer; };
+    NonnullRefPtr<Gfx::Bitmap> frontbuffer() const { return m_frontbuffer; }
     void present();
 
     void gl_begin(GLenum mode);

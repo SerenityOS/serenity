@@ -15,8 +15,7 @@
 #    include <AK/DeprecatedString.h>
 #endif
 
-namespace Crypto {
-namespace Authentication {
+namespace Crypto::Authentication {
 
 void galois_multiply(u32 (&z)[4], const u32 (&x)[4], const u32 (&y)[4]);
 
@@ -60,7 +59,5 @@ public:
 private:
     u32 m_key[4];
 };
-
-}
 
 }

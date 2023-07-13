@@ -2,7 +2,6 @@
 port='nano'
 version='7.2'
 files="https://www.nano-editor.org/dist/v7/nano-${version}.tar.xz nano-${version}.tar.xz 86f3442768bd2873cec693f83cdf80b4b444ad3cc14760b74361474fc87a4526"
-auth_type='sha256'
 useconfigure='true'
 use_fresh_config_sub='true'
 configopts=("--target=${SERENITY_ARCH}-pc-serenity" "--disable-browser" "--disable-utf8")

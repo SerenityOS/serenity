@@ -193,7 +193,7 @@ ThrowCompletionOr<Value> Interpreter::run(SourceTextModule& module)
     return js_undefined();
 }
 
-Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Executable const& executable, BasicBlock const* entry_point, RegisterWindow* in_frame)
+Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Executable& executable, BasicBlock const* entry_point, RegisterWindow* in_frame)
 {
     dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter will run unit {:p}", &executable);
 

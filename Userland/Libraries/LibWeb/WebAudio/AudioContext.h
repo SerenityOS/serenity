@@ -31,8 +31,8 @@ public:
 
     virtual ~AudioContext() override;
 
-    double base_latency() const { return m_base_latency; };
-    double output_latency() const { return m_output_latency; };
+    double base_latency() const { return m_base_latency; }
+    double output_latency() const { return m_output_latency; }
     AudioTimestamp get_output_timestamp();
     WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> resume();
     WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> suspend();

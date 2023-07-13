@@ -290,7 +290,7 @@ private:
     {
         for (auto& index : m_capture_groups_in_scope.last())
             stack.insert_bytecode_clear_capture_group(index);
-    };
+    }
 
     // ECMA-262's flavour of regex is a bit weird in that it allows backrefs to reference "future" captures, and such backrefs
     // always match the empty string. So we have to know how many capturing parenthesis there are, but we don't want to always

@@ -30,12 +30,8 @@ struct PortableImageMapLoadingContext {
     enum class State {
         NotDecoded = 0,
         Error,
-        MagicNumber,
-        Width,
-        Height,
-        Maxval,
-        Bitmap,
-        Decoded
+        HeaderDecoded,
+        BitmapDecoded,
     };
 
     Type type { Type::Unknown };
@@ -64,10 +60,6 @@ public:
 
     virtual IntSize size() override;
 
-    virtual void set_volatile() override;
-    [[nodiscard]] virtual bool set_nonvolatile(bool& was_purged) override;
-
-    virtual ErrorOr<void> initialize() override { return {}; }
     virtual bool is_animated() override;
     virtual size_t loop_count() override;
     virtual size_t frame_count() override;
@@ -90,41 +82,16 @@ PortableImageDecoderPlugin<TContext>::PortableImageDecoderPlugin(NonnullOwnPtr<S
 template<typename TContext>
 IntSize PortableImageDecoderPlugin<TContext>::size()
 {
-    if (m_context->state == TContext::State::Error)
-        return {};
-
-    if (m_context->state < TContext::State::Decoded) {
-        if (decode(*m_context).is_error()) {
-            m_context->state = TContext::State::Error;
-            // FIXME: We should propagate errors
-            return {};
-        }
-    }
-
     return { m_context->width, m_context->height };
-}
-
-template<typename TContext>
-void PortableImageDecoderPlugin<TContext>::set_volatile()
-{
-    if (m_context->bitmap)
-        m_context->bitmap->set_volatile();
-}
-
-template<typename TContext>
-bool PortableImageDecoderPlugin<TContext>::set_nonvolatile(bool& was_purged)
-{
-    if (!m_context->bitmap)
-        return false;
-
-    return m_context->bitmap->set_nonvolatile(was_purged);
 }
 
 template<typename TContext>
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> PortableImageDecoderPlugin<TContext>::create(ReadonlyBytes data)
 {
     auto stream = TRY(try_make<FixedMemoryStream>(data));
-    return adopt_nonnull_own_or_enomem(new (nothrow) PortableImageDecoderPlugin<TContext>(move(stream)));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) PortableImageDecoderPlugin<TContext>(move(stream))));
+    TRY(read_header(*plugin->m_context));
+    return plugin;
 }
 
 template<typename TContext>
@@ -176,7 +143,7 @@ ErrorOr<ImageFrameDescriptor> PortableImageDecoderPlugin<TContext>::frame(size_t
     if (m_context->state == TContext::State::Error)
         return Error::from_string_literal("PortableImageDecoderPlugin: Decoding failed");
 
-    if (m_context->state < TContext::State::Decoded) {
+    if (m_context->state < TContext::State::BitmapDecoded) {
         if (decode(*m_context).is_error()) {
             m_context->state = TContext::State::Error;
             return Error::from_string_literal("PortableImageDecoderPlugin: Decoding failed");

@@ -314,7 +314,7 @@ Value FunctionExpression::instantiate_ordinary_function_expression(VM& vm, Depre
         given_name = "";
     auto has_own_name = !name().is_empty();
 
-    auto const& used_name = has_own_name ? name() : given_name;
+    auto const used_name = has_own_name ? name() : given_name.view();
     auto environment = NonnullGCPtr { *vm.running_execution_context().lexical_environment };
     if (has_own_name) {
         VERIFY(environment);
@@ -324,7 +324,7 @@ Value FunctionExpression::instantiate_ordinary_function_expression(VM& vm, Depre
 
     auto private_environment = vm.running_execution_context().private_environment;
 
-    auto closure = ECMAScriptFunctionObject::create(realm, used_name, source_text(), body(), parameters(), function_length(), environment, private_environment, kind(), is_strict_mode(), might_need_arguments_object(), contains_direct_call_to_eval(), is_arrow_function());
+    auto closure = ECMAScriptFunctionObject::create(realm, used_name, source_text(), body(), parameters(), function_length(), local_variables_names(), environment, private_environment, kind(), is_strict_mode(), might_need_arguments_object(), contains_direct_call_to_eval(), is_arrow_function());
 
     // FIXME: 6. Perform SetFunctionName(closure, name).
     // FIXME: 7. Perform MakeConstructor(closure).
@@ -1496,19 +1496,12 @@ ThrowCompletionOr<Reference> Expression::to_reference(Interpreter&) const
 ThrowCompletionOr<Reference> Identifier::to_reference(Interpreter& interpreter) const
 {
     if (m_cached_environment_coordinate.is_valid()) {
-        Environment* environment = nullptr;
-        bool coordinate_screwed_by_delete_in_global_environment = false;
-        if (m_cached_environment_coordinate.index == EnvironmentCoordinate::global_marker) {
-            environment = &interpreter.vm().current_realm()->global_environment();
-            coordinate_screwed_by_delete_in_global_environment = !TRY(environment->has_binding(string()));
-        } else {
-            environment = interpreter.vm().running_execution_context().lexical_environment;
-            for (size_t i = 0; i < m_cached_environment_coordinate.hops; ++i)
-                environment = environment->outer_environment();
-            VERIFY(environment);
-            VERIFY(environment->is_declarative_environment());
-        }
-        if (!coordinate_screwed_by_delete_in_global_environment && !environment->is_permanently_screwed_by_eval()) {
+        auto environment = interpreter.vm().running_execution_context().lexical_environment;
+        for (size_t i = 0; i < m_cached_environment_coordinate.hops; ++i)
+            environment = environment->outer_environment();
+        VERIFY(environment);
+        VERIFY(environment->is_declarative_environment());
+        if (!environment->is_permanently_screwed_by_eval()) {
             return Reference { *environment, string(), interpreter.vm().in_strict_mode(), m_cached_environment_coordinate };
         }
         m_cached_environment_coordinate = {};
@@ -1791,7 +1784,7 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation
 
         // FIXME: A potential optimization is not creating the functions here since these are never directly accessible.
         auto function_code = create_ast_node<ClassFieldInitializerStatement>(m_initializer->source_range(), copy_initializer.release_nonnull(), name);
-        initializer = make_handle(*ECMAScriptFunctionObject::create(realm, DeprecatedString::empty(), DeprecatedString::empty(), *function_code, {}, 0, vm.lexical_environment(), vm.running_execution_context().private_environment, FunctionKind::Normal, true, false, m_contains_direct_call_to_eval, false, property_key_or_private_name));
+        initializer = make_handle(*ECMAScriptFunctionObject::create(realm, DeprecatedString::empty(), DeprecatedString::empty(), *function_code, {}, 0, {}, vm.lexical_environment(), vm.running_execution_context().private_environment, FunctionKind::Normal, true, false, m_contains_direct_call_to_eval, false, property_key_or_private_name));
         initializer->make_method(target);
     }
 
@@ -1835,7 +1828,7 @@ ThrowCompletionOr<ClassElement::ClassValue> StaticInitializer::class_element_eva
     // 4. Let formalParameters be an instance of the production FormalParameters : [empty] .
     // 5. Let bodyFunction be OrdinaryFunctionCreate(%Function.prototype%, sourceText, formalParameters, ClassStaticBlockBody, non-lexical-this, lex, privateEnv).
     // Note: The function bodyFunction is never directly accessible to ECMAScript code.
-    auto body_function = ECMAScriptFunctionObject::create(realm, DeprecatedString::empty(), DeprecatedString::empty(), *m_function_body, {}, 0, lexical_environment, private_environment, FunctionKind::Normal, true, false, m_contains_direct_call_to_eval, false);
+    auto body_function = ECMAScriptFunctionObject::create(realm, DeprecatedString::empty(), DeprecatedString::empty(), *m_function_body, {}, 0, m_function_body->local_variables_names(), lexical_environment, private_environment, FunctionKind::Normal, true, false, m_contains_direct_call_to_eval, false);
 
     // 6. Perform MakeMethod(bodyFunction, homeObject).
     body_function->make_method(home_object);
@@ -1852,7 +1845,7 @@ Completion ClassExpression::execute(Interpreter& interpreter) const
 
     // 1. Let className be StringValue of BindingIdentifier.
     // 2. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments className and className.
-    auto* value = TRY(class_definition_evaluation(interpreter.vm(), m_name, m_name.is_null() ? "" : m_name));
+    auto* value = TRY(class_definition_evaluation(interpreter.vm(), name(), name()));
 
     // 3. Set value.[[SourceText]] to the source text matched by ClassExpression.
     value->set_source_text(m_source_text);
@@ -1971,6 +1964,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::create_class_const
         constructor.body(),
         constructor.parameters(),
         constructor.function_length(),
+        constructor.local_variables_names(),
         vm.lexical_environment(),
         vm.running_execution_context().private_environment,
         constructor.kind(),
@@ -2308,10 +2302,18 @@ ThrowCompletionOr<void> ClassDeclaration::for_each_bound_name(ThrowCompletionOrV
     return callback(m_class_expression->name());
 }
 
+ThrowCompletionOr<void> ClassDeclaration::for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const
+{
+    if (!m_class_expression->m_name)
+        return {};
+
+    return callback(*m_class_expression->m_name);
+}
+
 void ClassExpression::dump(int indent) const
 {
     print_indent(indent);
-    outln("ClassExpression: \"{}\"", m_name);
+    outln("ClassExpression: \"{}\"", name());
 
     print_indent(indent);
     outln("(Constructor)");
@@ -2447,6 +2449,23 @@ ThrowCompletionOr<void> BindingPattern::for_each_bound_name(ThrowCompletionOrVoi
     return {};
 }
 
+ThrowCompletionOr<void> BindingPattern::for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const
+{
+    for (auto const& entry : entries) {
+        auto const& alias = entry.alias;
+        if (alias.has<NonnullRefPtr<Identifier const>>()) {
+            TRY(callback(alias.get<NonnullRefPtr<Identifier const>>()));
+        } else if (alias.has<NonnullRefPtr<BindingPattern const>>()) {
+            TRY(alias.get<NonnullRefPtr<BindingPattern const>>()->for_each_bound_identifier(forward<decltype(callback)>(callback)));
+        } else {
+            auto const& name = entry.name;
+            if (name.has<NonnullRefPtr<Identifier const>>())
+                TRY(callback(name.get<NonnullRefPtr<Identifier const>>()));
+        }
+    }
+    return {};
+}
+
 void BindingPattern::dump(int indent) const
 {
     print_indent(indent);
@@ -2511,11 +2530,14 @@ void FunctionNode::dump(int indent, DeprecatedString const& class_name) const
 
         for (auto& parameter : m_parameters) {
             parameter.binding.visit(
-                [&](DeprecatedFlyString const& name) {
-                    print_indent(indent + 2);
-                    if (parameter.is_rest)
+                [&](Identifier const& identifier) {
+                    if (parameter.is_rest) {
+                        print_indent(indent + 2);
                         out("...");
-                    outln("{}", name);
+                        identifier.dump(0);
+                    } else {
+                        identifier.dump(indent + 2);
+                    }
                 },
                 [&](BindingPattern const& pattern) {
                     pattern.dump(indent + 2);
@@ -2539,6 +2561,13 @@ ThrowCompletionOr<void> FunctionDeclaration::for_each_bound_name(ThrowCompletion
     if (name().is_empty())
         return {};
     return callback(name());
+}
+
+ThrowCompletionOr<void> FunctionDeclaration::for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const
+{
+    if (!m_name)
+        return {};
+    return callback(*m_name);
 }
 
 void FunctionExpression::dump(int indent) const
@@ -2679,7 +2708,13 @@ Completion Identifier::execute(Interpreter& interpreter) const
 void Identifier::dump(int indent) const
 {
     print_indent(indent);
-    outln("Identifier \"{}\"", m_string);
+    if (is_local()) {
+        outln("Identifier \"{}\" is_local=(true) index=({})", m_string, m_local_variable_index);
+    } else if (is_global()) {
+        outln("Identifier \"{}\" is_global=(true)", m_string);
+    } else {
+        outln("Identifier \"{}\"", m_string);
+    }
 }
 
 Completion PrivateIdentifier::execute(Interpreter&) const
@@ -3095,6 +3130,23 @@ ThrowCompletionOr<void> VariableDeclaration::for_each_bound_name(ThrowCompletion
     return {};
 }
 
+ThrowCompletionOr<void> VariableDeclaration::for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const
+{
+    for (auto const& entry : declarations()) {
+        TRY(entry->target().visit(
+            [&](NonnullRefPtr<Identifier const> const& id) {
+                return callback(id);
+            },
+            [&](NonnullRefPtr<BindingPattern const> const& binding) {
+                return binding->for_each_bound_identifier([&](auto const& id) {
+                    return callback(id);
+                });
+            }));
+    }
+
+    return {};
+}
+
 void VariableDeclaration::dump(int indent) const
 {
     char const* declaration_kind_string = nullptr;
@@ -3147,6 +3199,16 @@ ThrowCompletionOr<void> UsingDeclaration::for_each_bound_name(ThrowCompletionOrV
     for (auto const& entry : m_declarations) {
         VERIFY(entry->target().has<NonnullRefPtr<Identifier const>>());
         TRY(callback(entry->target().get<NonnullRefPtr<Identifier const>>()->string()));
+    }
+
+    return {};
+}
+
+ThrowCompletionOr<void> UsingDeclaration::for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const
+{
+    for (auto const& entry : m_declarations) {
+        VERIFY(entry->target().has<NonnullRefPtr<Identifier const>>());
+        TRY(callback(entry->target().get<NonnullRefPtr<Identifier const>>()));
     }
 
     return {};
@@ -4415,6 +4477,16 @@ ThrowCompletionOr<void> ScopeNode::for_each_lexically_declared_name(ThrowComplet
     return {};
 }
 
+ThrowCompletionOr<void> ScopeNode::for_each_lexically_declared_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const
+{
+    for (auto const& declaration : m_lexical_declarations) {
+        TRY(declaration->for_each_bound_identifier([&](auto const& identifier) {
+            return callback(identifier);
+        }));
+    }
+    return {};
+}
+
 ThrowCompletionOr<void> ScopeNode::for_each_var_declared_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const
 {
     for (auto& declaration : m_var_declarations) {
@@ -4425,10 +4497,30 @@ ThrowCompletionOr<void> ScopeNode::for_each_var_declared_name(ThrowCompletionOrV
     return {};
 }
 
+ThrowCompletionOr<void> ScopeNode::for_each_var_declared_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const
+{
+    for (auto& declaration : m_var_declarations) {
+        TRY(declaration->for_each_bound_identifier([&](auto const& id) {
+            return callback(id);
+        }));
+    }
+    return {};
+}
+
 ThrowCompletionOr<void> ScopeNode::for_each_var_function_declaration_in_reverse_order(ThrowCompletionOrVoidCallback<FunctionDeclaration const&>&& callback) const
 {
     for (ssize_t i = m_var_declarations.size() - 1; i >= 0; i--) {
         auto& declaration = m_var_declarations[i];
+        if (is<FunctionDeclaration>(declaration))
+            TRY(callback(static_cast<FunctionDeclaration const&>(*declaration)));
+    }
+    return {};
+}
+
+ThrowCompletionOr<void> ScopeNode::for_each_lexical_function_declaration_in_reverse_order(ThrowCompletionOrVoidCallback<FunctionDeclaration const&>&& callback) const
+{
+    for (ssize_t i = m_lexical_declarations.size() - 1; i >= 0; i--) {
+        auto& declaration = m_lexical_declarations[i];
         if (is<FunctionDeclaration>(declaration))
             TRY(callback(static_cast<FunctionDeclaration const&>(*declaration)));
     }
@@ -4660,7 +4752,13 @@ void ScopeNode::block_declaration_instantiation(VM& vm, Environment* environment
         auto is_constant_declaration = declaration.is_constant_declaration();
         // NOTE: Due to the use of MUST with `create_immutable_binding` and `create_mutable_binding` below,
         //       an exception should not result from `for_each_bound_name`.
-        MUST(declaration.for_each_bound_name([&](auto const& name) {
+        MUST(declaration.for_each_bound_identifier([&](auto const& identifier) {
+            if (vm.bytecode_interpreter_if_exists() && identifier.is_local()) {
+                // NOTE: No need to create bindings for local variables as their values are not stored in an environment.
+                return;
+            }
+
+            auto const& name = identifier.string();
             if (is_constant_declaration) {
                 MUST(environment->create_immutable_binding(vm, name, true));
             } else {
@@ -4671,9 +4769,13 @@ void ScopeNode::block_declaration_instantiation(VM& vm, Environment* environment
 
         if (is<FunctionDeclaration>(declaration)) {
             auto& function_declaration = static_cast<FunctionDeclaration const&>(declaration);
-            auto function = ECMAScriptFunctionObject::create(realm, function_declaration.name(), function_declaration.source_text(), function_declaration.body(), function_declaration.parameters(), function_declaration.function_length(), environment, private_environment, function_declaration.kind(), function_declaration.is_strict_mode(), function_declaration.might_need_arguments_object(), function_declaration.contains_direct_call_to_eval());
-            VERIFY(is<DeclarativeEnvironment>(*environment));
-            static_cast<DeclarativeEnvironment&>(*environment).initialize_or_set_mutable_binding({}, vm, function_declaration.name(), function);
+            auto function = ECMAScriptFunctionObject::create(realm, function_declaration.name(), function_declaration.source_text(), function_declaration.body(), function_declaration.parameters(), function_declaration.function_length(), function_declaration.local_variables_names(), environment, private_environment, function_declaration.kind(), function_declaration.is_strict_mode(), function_declaration.might_need_arguments_object(), function_declaration.contains_direct_call_to_eval());
+            if (vm.bytecode_interpreter_if_exists() && function_declaration.name_identifier()->is_local()) {
+                vm.running_execution_context().local_variables[function_declaration.name_identifier()->local_variable_index()] = function;
+            } else {
+                VERIFY(is<DeclarativeEnvironment>(*environment));
+                static_cast<DeclarativeEnvironment&>(*environment).initialize_or_set_mutable_binding({}, vm, function_declaration.name(), function);
+            }
         }
     }));
 }
@@ -4686,7 +4788,9 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(VM& vm, Global
     // 1. Let lexNames be the LexicallyDeclaredNames of script.
     // 2. Let varNames be the VarDeclaredNames of script.
     // 3. For each element name of lexNames, do
-    TRY(for_each_lexically_declared_name([&](DeprecatedFlyString const& name) -> ThrowCompletionOr<void> {
+    TRY(for_each_lexically_declared_identifier([&](Identifier const& identifier) -> ThrowCompletionOr<void> {
+        auto const& name = identifier.string();
+
         // a. If env.HasVarDeclaration(name) is true, throw a SyntaxError exception.
         if (global_environment.has_var_declaration(name))
             return vm.throw_completion<SyntaxError>(ErrorType::TopLevelVariableAlreadyDeclared, name);
@@ -4791,7 +4895,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(VM& vm, Global
         // b. For each FunctionDeclaration f that is directly contained in the StatementList of a Block, CaseClause, or DefaultClause Contained within script, do
         TRY(for_each_function_hoistable_with_annexB_extension([&](FunctionDeclaration& function_declaration) -> ThrowCompletionOr<void> {
             // i. Let F be StringValue of the BindingIdentifier of f.
-            auto& function_name = function_declaration.name();
+            auto function_name = function_declaration.name();
 
             // ii. If replacing the FunctionDeclaration f with a VariableStatement that has F as a BindingIdentifier would not produce any Early Errors for script, then
             // Note: This step is already performed during parsing and for_each_function_hoistable_with_annexB_extension so this always passes here.
@@ -4865,7 +4969,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(VM& vm, Global
     for (auto& declaration : functions_to_initialize.in_reverse()) {
         // a. Let fn be the sole element of the BoundNames of f.
         // b. Let fo be InstantiateFunctionObject of f with arguments env and privateEnv.
-        auto function = ECMAScriptFunctionObject::create(realm, declaration.name(), declaration.source_text(), declaration.body(), declaration.parameters(), declaration.function_length(), &global_environment, private_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object(), declaration.contains_direct_call_to_eval());
+        auto function = ECMAScriptFunctionObject::create(realm, declaration.name(), declaration.source_text(), declaration.body(), declaration.parameters(), declaration.function_length(), declaration.local_variables_names(), &global_environment, private_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object(), declaration.contains_direct_call_to_eval());
 
         // c. Perform ? env.CreateGlobalFunctionBinding(fn, fo, false).
         TRY(global_environment.create_global_function_binding(declaration.name(), function, false));

@@ -4,7 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Font/OpenType/Glyf.h>
+#include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
 #include <LibGfx/Point.h>
 
@@ -258,7 +260,7 @@ ReadonlyBytes Glyf::Glyph::program() const
     return m_slice.slice(instructions_start + 2, num_instructions);
 }
 
-void Glyf::Glyph::rasterize_impl(Gfx::PathRasterizer& rasterizer, Gfx::AffineTransform const& transform) const
+void Glyf::Glyph::rasterize_impl(Gfx::Painter& painter, Gfx::AffineTransform const& transform) const
 {
     // Get offset for flags, x, and y.
     u16 num_points = be_u16(m_slice.offset_pointer((m_num_contours - 1) * 2)) + 1;
@@ -332,20 +334,23 @@ void Glyf::Glyph::rasterize_impl(Gfx::PathRasterizer& rasterizer, Gfx::AffineTra
         }
     }
 
-    rasterizer.draw_path(path);
+    constexpr auto base_color = Color::White;
+    Gfx::AntiAliasingPainter aa_painter { painter };
+    aa_painter.fill_path(path, base_color);
 }
 
 RefPtr<Gfx::Bitmap> Glyf::Glyph::rasterize_simple(i16 font_ascender, i16 font_descender, float x_scale, float y_scale, Gfx::GlyphSubpixelOffset subpixel_offset) const
 {
     u32 width = (u32)(ceilf((m_xmax - m_xmin) * x_scale)) + 2;
     u32 height = (u32)(ceilf((font_ascender - font_descender) * y_scale)) + 2;
-    Gfx::PathRasterizer rasterizer(Gfx::IntSize(width, height));
+    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { width, height }).release_value_but_fixme_should_propagate_errors();
     auto affine = Gfx::AffineTransform()
                       .translate(subpixel_offset.to_float_point())
                       .scale(x_scale, -y_scale)
                       .translate(-m_xmin, -font_ascender);
-    rasterize_impl(rasterizer, affine);
-    return rasterizer.accumulate();
+    Gfx::Painter painter { bitmap };
+    rasterize_impl(painter, affine);
+    return bitmap;
 }
 
 Optional<Glyf::Glyph> Glyf::glyph(u32 offset) const

@@ -12,8 +12,7 @@
 #include <LibCrypto/Hash/SHA2.h>
 #include <LibCrypto/PK/Code/Code.h>
 
-namespace Crypto {
-namespace PK {
+namespace Crypto::PK {
 
 template<typename HashFunction>
 class EMSA_PKCS1_V1_5 : public Code<HashFunction> {
@@ -134,5 +133,4 @@ inline ReadonlyBytes EMSA_PKCS1_V1_5<Crypto::Hash::Manager>::hash_function_diges
     }
 }
 
-}
 }

@@ -467,6 +467,9 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                 case CSS::Selector::SimpleSelector::PseudoClass::Type::Root:
                     pseudo_class_description = "Root";
                     break;
+                case CSS::Selector::SimpleSelector::PseudoClass::Type::Host:
+                    pseudo_class_description = "Host";
+                    break;
                 case CSS::Selector::SimpleSelector::PseudoClass::Type::FirstOfType:
                     pseudo_class_description = "FirstOfType";
                     break;
@@ -822,8 +825,8 @@ void dump_tree(StringBuilder& builder, Painting::Paintable const& paintable, boo
         auto const& paintable_box = static_cast<Painting::PaintableBox const&>(paintable);
         builder.appendff(" {}", paintable_box.absolute_border_box_rect());
 
-        if (paintable_box.has_overflow()) {
-            builder.appendff(" overflow: {}", paintable_box.scrollable_overflow_rect().value());
+        if (paintable_box.has_scrollable_overflow()) {
+            builder.appendff(" overflow: {}", paintable_box.scrollable_overflow_rect());
         }
     }
     builder.append("\n"sv);

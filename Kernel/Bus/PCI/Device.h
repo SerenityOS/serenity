@@ -35,7 +35,7 @@ struct [[gnu::packed]] MSIxTableEntry {
 
 class Device {
 public:
-    DeviceIdentifier const& device_identifier() const { return *m_pci_identifier; };
+    DeviceIdentifier const& device_identifier() const { return *m_pci_identifier; }
 
     virtual ~Device() = default;
 

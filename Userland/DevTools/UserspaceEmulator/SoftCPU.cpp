@@ -3184,8 +3184,8 @@ void SoftCPU::CVTSD2SS_xmm1_xmm2m64(X86::Instruction const&) { TODO_INSN(); }
 void SoftCPU::CVTDQ2PS_xmm1_xmm2m128(X86::Instruction const&) { TODO_INSN(); }
 void SoftCPU::CVTPS2DQ_xmm1_xmm2m128(X86::Instruction const&) { TODO_INSN(); }
 void SoftCPU::CVTTPS2DQ_xmm1_xmm2m128(X86::Instruction const&) { TODO_INSN(); }
-void SoftCPU::SUBPD_xmm1_xmm2m128(X86::Instruction const&) { TODO_INSN(); };
-void SoftCPU::SUBSD_xmm1_xmm2m32(X86::Instruction const&) { TODO_INSN(); };
+void SoftCPU::SUBPD_xmm1_xmm2m128(X86::Instruction const&) { TODO_INSN(); }
+void SoftCPU::SUBSD_xmm1_xmm2m32(X86::Instruction const&) { TODO_INSN(); }
 void SoftCPU::MINPD_xmm1_xmm2m128(X86::Instruction const&) { TODO_INSN(); }
 void SoftCPU::MINSD_xmm1_xmm2m32(X86::Instruction const&) { TODO_INSN(); }
 void SoftCPU::DIVPD_xmm1_xmm2m128(X86::Instruction const&) { TODO_INSN(); }

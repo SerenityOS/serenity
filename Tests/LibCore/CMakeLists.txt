@@ -1,10 +1,11 @@
 set(TEST_SOURCES
     TestLibCoreArgsParser.cpp
-    TestLibCoreFileWatcher.cpp
     TestLibCoreDeferredInvoke.cpp
-    TestLibCoreStream.cpp
     TestLibCoreFilePermissionsMask.cpp
+    TestLibCoreFileWatcher.cpp
+    TestLibCorePromise.cpp
     TestLibCoreSharedSingleProducerCircularQueue.cpp
+    TestLibCoreStream.cpp
 )
 
 foreach(source IN LISTS TEST_SOURCES)

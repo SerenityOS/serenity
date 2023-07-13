@@ -8,9 +8,9 @@
 
 #include <AK/Assertions.h>
 #include <AK/Atomic.h>
-#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/ScopeGuard.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <bits/pthread_cancel.h>
 #include <errno.h>
@@ -31,7 +31,9 @@ static constexpr u32 POST_WAKES = 1 << 31;
 
 static constexpr auto sem_path_prefix = "/tmp/semaphore/"sv;
 static constexpr auto SEM_NAME_MAX = PATH_MAX - sem_path_prefix.length();
-static ErrorOr<DeprecatedString> sem_name_to_path(char const* name)
+
+// The returned string will always contain a null terminator, since it is used in C APIs.
+static ErrorOr<String> sem_name_to_path(char const* name)
 {
     if (name[0] != '/')
         return EINVAL;
@@ -48,7 +50,9 @@ static ErrorOr<DeprecatedString> sem_name_to_path(char const* name)
     StringBuilder builder;
     TRY(builder.try_append(sem_path_prefix));
     TRY(builder.try_append(name_view));
-    return builder.to_deprecated_string();
+
+    TRY(builder.try_append_code_point(0));
+    return builder.to_string();
 }
 
 struct NamedSemaphore {
@@ -58,7 +62,7 @@ struct NamedSemaphore {
     sem_t* sem { nullptr };
 };
 
-static HashMap<DeprecatedString, NamedSemaphore> s_named_semaphores;
+static HashMap<String, NamedSemaphore> s_named_semaphores;
 static pthread_mutex_t s_sem_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_once_t s_sem_once = PTHREAD_ONCE_INIT;
 
@@ -95,7 +99,8 @@ sem_t* sem_open(char const* name, int flags, ...)
     pthread_mutex_lock(&s_sem_mutex);
     ScopeGuard unlock_guard = [] { pthread_mutex_unlock(&s_sem_mutex); };
 
-    int fd = open(path.characters(), O_RDWR | O_CLOEXEC | flags, mode);
+    // sem_name_to_path guarantees a null terminator.
+    int fd = open(path.bytes_as_string_view().characters_without_null_termination(), O_RDWR | O_CLOEXEC | flags, mode);
     if (fd == -1)
         return SEM_FAILED;
 
@@ -200,7 +205,7 @@ int sem_unlink(char const* name)
     }
     auto path = path_or_error.release_value();
 
-    return unlink(path.characters());
+    return unlink(path.bytes_as_string_view().characters_without_null_termination());
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sem_init.html

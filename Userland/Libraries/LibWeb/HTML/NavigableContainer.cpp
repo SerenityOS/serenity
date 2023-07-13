@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
@@ -12,10 +13,13 @@
 #include <LibWeb/HTML/BrowsingContextGroup.h>
 #include <LibWeb/HTML/DocumentState.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
+#include <LibWeb/HTML/Navigable.h>
 #include <LibWeb/HTML/NavigableContainer.h>
 #include <LibWeb/HTML/NavigationParams.h>
 #include <LibWeb/HTML/Origin.h>
+#include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
+#include <LibWeb/HighResolutionTime/TimeOrigin.h>
 #include <LibWeb/Page/Page.h>
 
 namespace Web::HTML {
@@ -50,6 +54,80 @@ JS::GCPtr<NavigableContainer> NavigableContainer::navigable_container_with_conte
             return navigable_container;
     }
     return nullptr;
+}
+
+// https://html.spec.whatwg.org/multipage/document-sequences.html#create-a-new-child-navigable
+WebIDL::ExceptionOr<void> NavigableContainer::create_new_child_navigable()
+{
+    // 1. Let parentNavigable be element's node navigable.
+    auto parent_navigable = navigable();
+
+    // 2. Let group be element's node document's browsing context's top-level browsing context's group.
+    VERIFY(document().browsing_context());
+    auto group = document().browsing_context()->top_level_browsing_context().group();
+    VERIFY(group);
+
+    // 3. Let browsingContext and document be the result of creating a new browsing context and document given element's node document, element, and group.
+    auto* page = document().page();
+    VERIFY(page);
+    auto [browsing_context, document] = TRY(BrowsingContext::create_a_new_browsing_context_and_document(*page, this->document(), *this, *group));
+
+    // 4. Let targetName be null.
+    Optional<String> target_name;
+
+    // 5. If element has a name content attribute, then set targetName to the value of that attribute.
+    if (auto value = attribute(HTML::AttributeNames::name); !value.is_null())
+        target_name = String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors();
+
+    // 6. Let documentState be a new document state, with
+    //    document: document
+    //    navigable target name: targetName
+    JS::NonnullGCPtr<DocumentState> document_state = *heap().allocate_without_realm<HTML::DocumentState>();
+    document_state->set_document(document);
+    if (target_name.has_value())
+        document_state->set_navigable_target_name(*target_name);
+
+    // 7. Let navigable be a new navigable.
+    JS::NonnullGCPtr<Navigable> navigable = *heap().allocate_without_realm<Navigable>();
+
+    // 8. Initialize the navigable navigable given documentState and parentNavigable.
+    TRY_OR_THROW_OOM(vm(), navigable->initialize_navigable(document_state, parent_navigable));
+
+    // 9. Set element's content navigable to navigable.
+    m_content_navigable = navigable;
+
+    // 10. Let historyEntry be navigable's active session history entry.
+    auto history_entry = navigable->active_session_history_entry();
+
+    // 11. Let traversable be parentNavigable's traversable navigable.
+    auto traversable = parent_navigable->traversable_navigable();
+
+    // FIXME: 12. Append the following session history traversal steps to traversable:
+
+    // 1. Let parentDocState be parentNavigable's active session history entry's document state.
+
+    auto parent_doc_state = parent_navigable->active_session_history_entry()->document_state;
+
+    // 2. Let targetStepSHE be the first session history entry in traversable's session history entries whose document state equals parentDocState.
+    auto target_step_she = *(traversable->session_history_entries().find_if([parent_doc_state](auto& entry) {
+        return entry->document_state == parent_doc_state;
+    }));
+
+    // 3. Set historyEntry's step to targetStepSHE's step.
+    history_entry->step = target_step_she->step;
+
+    // 4. Let nestedHistory be a new nested history whose id is navigable's id and entries list is « historyEntry ».
+    DocumentState::NestedHistory nested_history {
+        .id = navigable->id(),
+        .entries { *history_entry },
+    };
+
+    // 5. Append nestedHistory to parentDocState's nested histories.
+    parent_doc_state->nested_histories().append(move(nested_history));
+
+    // FIXME: 6. Update for navigable creation/destruction given traversable
+
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#creating-a-new-nested-browsing-context

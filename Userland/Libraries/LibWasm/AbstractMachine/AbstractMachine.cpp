@@ -162,6 +162,13 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
             auxiliary_instance.globals().append(*ptr);
     }
 
+    for (auto& func : module.functions()) {
+        auto address = m_store.allocate(main_module_instance, func);
+        VERIFY(address.has_value());
+        auxiliary_instance.functions().append(*address);
+        main_module_instance.functions().append(*address);
+    }
+
     BytecodeInterpreter interpreter(m_stack_info);
 
     module.for_each_section_of_type<GlobalSection>([&](auto& global_section) {
@@ -398,12 +405,6 @@ Optional<InstantiationError> AbstractMachine::allocate_all_initial_phase(Module 
     }
 
     // FIXME: What if this fails?
-
-    for (auto& func : module.functions()) {
-        auto address = m_store.allocate(module_instance, func);
-        VERIFY(address.has_value());
-        module_instance.functions().append(*address);
-    }
 
     module.for_each_section_of_type<TableSection>([&](TableSection const& section) {
         for (auto& table : section.tables()) {

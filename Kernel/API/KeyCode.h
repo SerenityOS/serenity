@@ -134,7 +134,8 @@ enum KeyModifier {
     Mod_Shift = (1 << 2),
     Mod_Super = (1 << 3),
     Mod_AltGr = (1 << 4),
-    Mod_Mask = Mod_Alt | Mod_Ctrl | Mod_Shift | Mod_Super | Mod_AltGr,
+    Mod_Keypad = (1 << 5),
+    Mod_Mask = Mod_Alt | Mod_Ctrl | Mod_Shift | Mod_Super | Mod_AltGr | Mod_Keypad,
 
     Is_Press = 0x80,
 };
@@ -151,6 +152,7 @@ struct KeyEvent {
     bool shift() const { return flags & Mod_Shift; }
     bool super() const { return flags & Mod_Super; }
     bool altgr() const { return flags & Mod_AltGr; }
+    bool keypad() const { return flags & Mod_Keypad; }
     unsigned modifiers() const { return flags & Mod_Mask; }
     bool is_press() const { return flags & Is_Press; }
 };

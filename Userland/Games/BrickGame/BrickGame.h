@@ -38,7 +38,7 @@ private:
     void paint_sidebar_text(GUI::Painter&, int row, StringView);
     void paint_paused_text(GUI::Painter&);
     void paint_cell(GUI::Painter&, Gfx::IntRect, BoardSpace);
-    void paint_game(GUI::Painter&, Gfx::IntRect const&);
+    ErrorOr<void> paint_game(GUI::Painter&, Gfx::IntRect const&);
     void game_over();
 
     enum class GameState {

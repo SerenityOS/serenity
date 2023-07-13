@@ -220,6 +220,7 @@ ErrorOr<String> Selector::SimpleSelector::serialize() const
         case Selector::SimpleSelector::PseudoClass::Type::OnlyChild:
         case Selector::SimpleSelector::PseudoClass::Type::Empty:
         case Selector::SimpleSelector::PseudoClass::Type::Root:
+        case Selector::SimpleSelector::PseudoClass::Type::Host:
         case Selector::SimpleSelector::PseudoClass::Type::FirstOfType:
         case Selector::SimpleSelector::PseudoClass::Type::LastOfType:
         case Selector::SimpleSelector::PseudoClass::Type::OnlyOfType:

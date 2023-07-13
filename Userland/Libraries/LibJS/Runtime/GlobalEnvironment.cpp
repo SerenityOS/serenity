@@ -39,11 +39,8 @@ ThrowCompletionOr<Value> GlobalEnvironment::get_this_binding(VM&) const
 }
 
 // 9.1.1.4.1 HasBinding ( N ), https://tc39.es/ecma262/#sec-global-environment-records-hasbinding-n
-ThrowCompletionOr<bool> GlobalEnvironment::has_binding(DeprecatedFlyString const& name, Optional<size_t>* out_index) const
+ThrowCompletionOr<bool> GlobalEnvironment::has_binding(DeprecatedFlyString const& name, Optional<size_t>*) const
 {
-    if (out_index)
-        *out_index = EnvironmentCoordinate::global_marker;
-
     // 1. Let DclRec be envRec.[[DeclarativeRecord]].
     // 2. If ! DclRec.HasBinding(N) is true, return true.
     if (MUST(m_declarative_record->has_binding(name)))

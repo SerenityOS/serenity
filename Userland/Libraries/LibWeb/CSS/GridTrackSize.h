@@ -37,7 +37,7 @@ public:
     bool is_max_content() const { return m_type == Type::MaxContent; }
     bool is_min_content() const { return m_type == Type::MinContent; }
 
-    LengthPercentage length_percentage() const { return m_length_percentage; };
+    LengthPercentage length_percentage() const { return m_length_percentage; }
     double flex_factor() const { return m_flex_factor; }
 
     // https://www.w3.org/TR/css-grid-2/#layout-algorithm

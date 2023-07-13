@@ -107,7 +107,7 @@ public:
     ErrorOr<void> apply_flock(Process const&, OpenFileDescription const&, Userspace<flock const*>, ShouldBlock);
     ErrorOr<void> get_flock(OpenFileDescription const&, Userspace<flock*>) const;
     void remove_flocks_for_description(OpenFileDescription const&);
-    Thread::FlockBlockerSet& flock_blocker_set() { return m_flock_blocker_set; };
+    Thread::FlockBlockerSet& flock_blocker_set() { return m_flock_blocker_set; }
 
 protected:
     Inode(FileSystem&, InodeIndex);

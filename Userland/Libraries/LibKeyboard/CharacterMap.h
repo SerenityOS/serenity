@@ -21,7 +21,7 @@ public:
     int set_system_map();
     static ErrorOr<CharacterMap> fetch_system_map();
 
-    CharacterMapData const& character_map_data() const { return m_character_map_data; };
+    CharacterMapData const& character_map_data() const { return m_character_map_data; }
     DeprecatedString const& character_map_name() const;
 
 private:

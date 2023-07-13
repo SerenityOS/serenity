@@ -294,7 +294,7 @@ public:
 
     long double fpu_get(u8 index) { return m_fpu.fpu_get(index); }
     long double fpu_pop() { return m_fpu.fpu_pop(); }
-    MMX mmx_get(u8 index) const { return m_fpu.mmx_get(index); };
+    MMX mmx_get(u8 index) const { return m_fpu.mmx_get(index); }
 
     void set_eax(ValueWithShadow<u32> value) { gpr32(X86::RegisterEAX) = value; }
     void set_ebx(ValueWithShadow<u32> value) { gpr32(X86::RegisterEBX) = value; }

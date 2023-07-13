@@ -5,9 +5,16 @@
  */
 
 #include "CSSKeyframeRule.h"
+#include <LibWeb/Bindings/CSSKeyframeRulePrototype.h>
+#include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/CSS/CSSRuleList.h>
 
 namespace Web::CSS {
+
+WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSKeyframeRule>> CSSKeyframeRule::create(JS::Realm& realm, CSS::Percentage key, Web::CSS::CSSStyleDeclaration& declarations)
+{
+    return MUST_OR_THROW_OOM(realm.heap().allocate<CSSKeyframeRule>(realm, realm, key, declarations));
+}
 
 void CSSKeyframeRule::visit_edges(Visitor& visitor)
 {
@@ -15,8 +22,10 @@ void CSSKeyframeRule::visit_edges(Visitor& visitor)
     visitor.visit(m_declarations);
 }
 
-JS::ThrowCompletionOr<void> CSSKeyframeRule::initialize(JS::Realm&)
+JS::ThrowCompletionOr<void> CSSKeyframeRule::initialize(JS::Realm& realm)
 {
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSKeyframeRulePrototype>(realm, "CSSKeyframeRule"));
     return {};
 }
 

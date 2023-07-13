@@ -11,7 +11,6 @@
 #include <LibWeb/CSS/CSSRuleList.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/StyleSheet.h>
-#include <LibWeb/Loader/Resource.h>
 
 namespace Web::CSS {
 

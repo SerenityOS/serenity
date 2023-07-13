@@ -8,8 +8,7 @@
 
 #include <AK/Types.h>
 
-namespace EDID {
-namespace Definitions {
+namespace EDID::Definitions {
 
 struct [[gnu::packed]] StandardTimings {
     u8 horizontal_8_pixels;
@@ -154,9 +153,6 @@ struct [[gnu::packed]] ExtensionBlock {
     };
     u8 checksum;
 };
-
-}
-
-static_assert(sizeof(Definitions::ExtensionBlock) == 128);
+static_assert(AssertSize<ExtensionBlock, 128>());
 
 }

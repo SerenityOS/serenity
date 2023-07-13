@@ -24,7 +24,7 @@ public:
     ~ATAPortInterruptDisabler()
     {
         (void)m_port->enable_interrupts();
-    };
+    }
 
 private:
     LockRefPtr<ATAPort> m_port;
@@ -40,7 +40,7 @@ public:
     ~ATAPortInterruptCleaner()
     {
         (void)m_port->force_clear_interrupts();
-    };
+    }
 
 private:
     LockRefPtr<ATAPort> m_port;

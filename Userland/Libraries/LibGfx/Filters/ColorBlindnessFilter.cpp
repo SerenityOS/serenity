@@ -79,6 +79,6 @@ Color ColorBlindnessFilter::convert_color(Color original)
         (u8)(original.red() * m_red_in_green_band + original.green() * m_green_in_green_band + original.blue() * m_blue_in_green_band),
         (u8)(original.red() * m_red_in_blue_band + original.green() * m_green_in_blue_band + original.blue() * m_blue_in_blue_band),
         original.alpha());
-};
+}
 
 }

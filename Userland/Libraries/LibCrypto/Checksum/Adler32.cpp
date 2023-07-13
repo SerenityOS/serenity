@@ -16,7 +16,7 @@ void Adler32::update(ReadonlyBytes data)
         m_state_a = (m_state_a + data.at(i)) % 65521;
         m_state_b = (m_state_b + m_state_a) % 65521;
     }
-};
+}
 
 u32 Adler32::digest()
 {

@@ -9,8 +9,7 @@
 #include <AK/Types.h>
 #include <LibLine/Style.h>
 
-namespace Line {
-namespace VT {
+namespace Line::VT {
 
 ErrorOr<void> save_cursor(Stream&);
 ErrorOr<void> restore_cursor(Stream&);
@@ -20,5 +19,4 @@ ErrorOr<void> move_relative(int x, int y, Stream&);
 ErrorOr<void> move_absolute(u32 x, u32 y, Stream&);
 ErrorOr<void> apply_style(Style const&, Stream&, bool is_starting = true);
 
-}
 }

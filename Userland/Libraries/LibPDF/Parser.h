@@ -57,10 +57,20 @@ public:
     PDFErrorOr<NonnullRefPtr<StreamObject>> parse_stream(NonnullRefPtr<DictObject> dict);
     PDFErrorOr<Vector<Operator>> parse_operators();
 
-protected:
+    void set_filters_enabled(bool enabled)
+    {
+        m_enable_filters = enabled;
+    }
+
+    void set_encryption_enabled(bool enabled)
+    {
+        m_enable_encryption = enabled;
+    }
+
     void push_reference(Reference const& ref) { m_current_reference_stack.append(ref); }
     void pop_reference() { m_current_reference_stack.take_last(); }
 
+protected:
     Error error(
         DeprecatedString const& message
 #ifdef PDF_DEBUG
@@ -72,7 +82,8 @@ protected:
     Reader m_reader;
     WeakPtr<Document> m_document;
     Vector<Reference> m_current_reference_stack;
-    bool m_disable_encryption { false };
+    bool m_enable_encryption { true };
+    bool m_enable_filters { false };
 };
 
 };

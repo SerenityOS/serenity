@@ -55,7 +55,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 if (!endpoint_name.is_null()) {
                     // Note: If there are three or more endpoints defined in a file, these errors will look a bit wonky.
                     // However, that's fine, because it shouldn't happen in the first place.
-                    warnln("Error: Multiple endpoints in file '{}': Found {} and {}", filename, line_endpoint_name);
+                    warnln("Error: Multiple endpoints in file '{}': Found {} and {}", filename, endpoint_name, line_endpoint_name);
                     had_errors = true;
                     continue; // next line
                 }

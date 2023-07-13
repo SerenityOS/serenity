@@ -26,7 +26,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override { return m_frequency.to_string(); }
 
-    bool properties_equal(FrequencyStyleValue const& other) const { return m_frequency == other.m_frequency; };
+    bool properties_equal(FrequencyStyleValue const& other) const { return m_frequency == other.m_frequency; }
 
 private:
     explicit FrequencyStyleValue(Frequency frequency)
