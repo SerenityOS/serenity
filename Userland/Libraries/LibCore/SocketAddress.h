@@ -84,6 +84,9 @@ public:
         return address;
     }
 
+    bool operator==(SocketAddress const& other) const = default;
+    bool operator!=(SocketAddress const& other) const = default;
+
 private:
     Type m_type { Type::Invalid };
     IPv4Address m_ipv4_address;
@@ -98,5 +101,13 @@ struct AK::Formatter<Core::SocketAddress> : Formatter<DeprecatedString> {
     ErrorOr<void> format(FormatBuilder& builder, Core::SocketAddress const& value)
     {
         return Formatter<DeprecatedString>::format(builder, value.to_deprecated_string());
+    }
+};
+
+template<>
+struct AK::Traits<Core::SocketAddress> : public GenericTraits<Core::SocketAddress> {
+    static unsigned hash(Core::SocketAddress const& socket_address)
+    {
+        return pair_int_hash(Traits<IPv4Address>::hash(socket_address.ipv4_address()), Traits<u16>::hash(socket_address.port()));
     }
 };
