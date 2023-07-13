@@ -96,7 +96,7 @@ bool MasterPTY::can_write_from_slave() const
 {
     if (m_closed)
         return true;
-    return m_buffer->space_for_writing();
+    return m_buffer->space_for_writing() >= 2;
 }
 
 ErrorOr<void> MasterPTY::close()
