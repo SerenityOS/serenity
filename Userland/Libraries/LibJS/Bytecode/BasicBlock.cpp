@@ -7,7 +7,6 @@
 #include <AK/DeprecatedString.h>
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Op.h>
-#include <sys/mman.h>
 
 namespace JS::Bytecode {
 
@@ -23,8 +22,7 @@ BasicBlock::BasicBlock(DeprecatedString name, size_t size)
     // The main issue we're working around here is that we don't want pointers into the bytecode stream to become invalidated
     // during code generation due to dynamic buffer resizing. Otherwise we could just use a Vector.
     m_buffer_capacity = size;
-    m_buffer = (u8*)mmap(nullptr, m_buffer_capacity, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-    VERIFY(m_buffer != MAP_FAILED);
+    m_buffer = new u8[m_buffer_capacity];
 }
 
 BasicBlock::~BasicBlock()
@@ -36,7 +34,7 @@ BasicBlock::~BasicBlock()
         Instruction::destroy(const_cast<Instruction&>(to_destroy));
     }
 
-    munmap(m_buffer, m_buffer_capacity);
+    delete[] m_buffer;
 }
 
 void BasicBlock::seal()
