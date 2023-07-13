@@ -31,6 +31,9 @@ void SVGTextPaintable::paint(PaintContext& context, PaintPhase phase) const
     if (!is_visible())
         return;
 
+    if (!layout_node().computed_values().fill().has_value())
+        return;
+
     SVGGraphicsPaintable::paint(context, phase);
 
     if (phase != PaintPhase::Foreground)
