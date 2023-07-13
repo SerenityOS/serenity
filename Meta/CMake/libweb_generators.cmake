@@ -19,6 +19,15 @@ function (generate_css_implementation)
     )
 
     invoke_generator(
+        "MathFunctions.cpp"
+        Lagom::GenerateCSSMathFunctions
+        "${LIBWEB_INPUT_FOLDER}/CSS/MathFunctions.json"
+        "CSS/MathFunctions.h"
+        "CSS/MathFunctions.cpp"
+        arguments -j "${LIBWEB_INPUT_FOLDER}/CSS/MathFunctions.json"
+    )
+
+    invoke_generator(
         "MediaFeatureID.cpp"
         Lagom::GenerateCSSMediaFeatureID
         "${LIBWEB_INPUT_FOLDER}/CSS/MediaFeatures.json"
