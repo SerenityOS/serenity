@@ -200,12 +200,12 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
         auto min_content_width = calculate_min_content_width(cell.box);
         auto max_content_width = calculate_max_content_width(cell.box);
 
-        CSSPixels min_height = min_content_height;
-        CSSPixels min_width = min_content_width;
+        CSSPixels outer_min_height = min_content_height;
+        CSSPixels outer_min_width = min_content_width;
         if (!computed_values.min_height().is_auto())
-            min_height = max(min_height, computed_values.min_height().to_px(cell.box, containing_block.content_height()));
+            outer_min_height = max(outer_min_height, computed_values.min_height().to_px(cell.box, containing_block.content_height()));
         if (!computed_values.min_width().is_auto())
-            min_width = max(min_width, computed_values.min_width().to_px(cell.box, containing_block.content_width()));
+            outer_min_width = max(outer_min_width, computed_values.min_width().to_px(cell.box, containing_block.content_width()));
 
         CSSPixels max_height = computed_values.height().is_auto() ? max_content_height : height;
         CSSPixels max_width = computed_values.width().is_length() ? width : max_content_width;
@@ -230,12 +230,12 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
         }
 
         auto cell_intrinsic_height_offsets = padding_top + padding_bottom + border_top + border_bottom;
-        cell.min_height = min_height + cell_intrinsic_height_offsets;
-        cell.max_height = max(max(height, min_height), max_height) + cell_intrinsic_height_offsets;
+        cell.outer_min_height = outer_min_height + cell_intrinsic_height_offsets;
+        cell.outer_max_height = max(max(height, outer_min_height), max_height) + cell_intrinsic_height_offsets;
 
         auto cell_intrinsic_width_offsets = padding_left + padding_right + border_left + border_right;
-        cell.min_width = min_width + cell_intrinsic_width_offsets;
-        cell.max_width = max(max(width, min_width), max_width) + cell_intrinsic_width_offsets;
+        cell.outer_min_width = outer_min_width + cell_intrinsic_width_offsets;
+        cell.outer_max_width = max(max(width, outer_min_width), max_width) + cell_intrinsic_width_offsets;
     }
 }
 
@@ -255,8 +255,8 @@ void TableFormattingContext::initialize_table_measures<TableFormattingContext::R
             // This is done by running the same algorithm as the column measurement, with the span=1 value being initialized (for min-content) with
             // the largest of the resulting height of the previous row layout, the height specified on the corresponding table-row (if any), and
             // the largest height specified on cells that span this row only (the algorithm starts by considering cells of span 2 on top of that assignment).
-            m_rows[cell.row_index].min_size = max(m_rows[cell.row_index].min_size, max(cell.min_height, specified_height));
-            m_rows[cell.row_index].max_size = max(m_rows[cell.row_index].max_size, cell.max_height);
+            m_rows[cell.row_index].min_size = max(m_rows[cell.row_index].min_size, max(cell.outer_min_height, specified_height));
+            m_rows[cell.row_index].max_size = max(m_rows[cell.row_index].max_size, cell.outer_max_height);
         }
     }
 }
@@ -266,8 +266,8 @@ void TableFormattingContext::initialize_table_measures<TableFormattingContext::C
 {
     for (auto& cell : m_cells) {
         if (cell.column_span == 1) {
-            m_columns[cell.column_index].min_size = max(m_columns[cell.column_index].min_size, cell.min_width);
-            m_columns[cell.column_index].max_size = max(m_columns[cell.column_index].max_size, cell.max_width);
+            m_columns[cell.column_index].min_size = max(m_columns[cell.column_index].min_size, cell.outer_min_width);
+            m_columns[cell.column_index].max_size = max(m_columns[cell.column_index].max_size, cell.outer_max_width);
         }
     }
 }
@@ -413,7 +413,7 @@ void TableFormattingContext::compute_table_width()
         for (auto& cell : m_cells) {
             auto const& cell_width = cell.box->computed_values().width();
             if (cell_width.is_percentage()) {
-                adjusted_used_width = 100 / cell_width.percentage().value() * cell.min_width;
+                adjusted_used_width = 100 / cell_width.percentage().value() * cell.outer_min_width;
                 used_width = min(max(used_width, adjusted_used_width), width_of_table_containing_block);
             }
         }
@@ -1258,25 +1258,25 @@ size_t TableFormattingContext::cell_index<TableFormattingContext::Column>(TableF
 template<>
 CSSPixels TableFormattingContext::cell_min_size<TableFormattingContext::Row>(TableFormattingContext::Cell const& cell)
 {
-    return cell.min_height;
+    return cell.outer_min_height;
 }
 
 template<>
 CSSPixels TableFormattingContext::cell_min_size<TableFormattingContext::Column>(TableFormattingContext::Cell const& cell)
 {
-    return cell.min_width;
+    return cell.outer_min_width;
 }
 
 template<>
 CSSPixels TableFormattingContext::cell_max_size<TableFormattingContext::Row>(TableFormattingContext::Cell const& cell)
 {
-    return cell.max_height;
+    return cell.outer_max_height;
 }
 
 template<>
 CSSPixels TableFormattingContext::cell_max_size<TableFormattingContext::Column>(TableFormattingContext::Cell const& cell)
 {
-    return cell.max_width;
+    return cell.outer_max_width;
 }
 
 template<>
