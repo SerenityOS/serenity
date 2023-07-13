@@ -175,6 +175,7 @@ void TableFormattingContext::calculate_row_column_grid(Box const& box)
 
 void TableFormattingContext::compute_cell_measures(AvailableSpace const& available_space)
 {
+    // Implements https://www.w3.org/TR/css-tables-3/#computing-cell-measures.
     auto const& containing_block = m_state.get(*table_wrapper().containing_block());
     auto table_width_is_auto = table_box().computed_values().width().is_auto();
 
@@ -193,49 +194,58 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
         CSSPixels border_left = use_collapsing_borders_model ? round(cell_state.border_left / 2) : computed_values.border_left().width;
         CSSPixels border_right = use_collapsing_borders_model ? round(cell_state.border_right / 2) : computed_values.border_right().width;
 
-        auto height = computed_values.height().to_px(cell.box, containing_block.content_height());
-        auto width = (computed_values.width().is_length() || !table_width_is_auto) ? computed_values.width().to_px(cell.box, containing_block.content_width()) : 0;
         auto min_content_height = calculate_min_content_height(cell.box, available_space.width);
         auto max_content_height = calculate_max_content_height(cell.box, available_space.width);
         auto min_content_width = calculate_min_content_width(cell.box);
         auto max_content_width = calculate_max_content_width(cell.box);
 
-        CSSPixels outer_min_height = min_content_height;
-        CSSPixels outer_min_width = min_content_width;
-        if (!computed_values.min_height().is_auto())
-            outer_min_height = max(outer_min_height, computed_values.min_height().to_px(cell.box, containing_block.content_height()));
-        if (!computed_values.min_width().is_auto())
-            outer_min_width = max(outer_min_width, computed_values.min_width().to_px(cell.box, containing_block.content_width()));
+        // The outer min-content height of a table-cell is max(min-height, min-content height) adjusted by the cell intrinsic offsets.
+        auto min_height = computed_values.min_height().to_px(cell.box, containing_block.content_height());
+        auto outer_min_height = max(min_height, min_content_height);
+        auto cell_intrinsic_height_offsets = padding_top + padding_bottom + border_top + border_bottom;
+        cell.outer_min_height = outer_min_height + cell_intrinsic_height_offsets;
+        // The outer min-content width of a table-cell is max(min-width, min-content width) adjusted by the cell intrinsic offsets.
+        auto min_width = computed_values.min_width().is_auto() ? 0 : computed_values.min_width().to_px(cell.box, containing_block.content_width());
+        auto outer_min_width = max(min_width, min_content_width);
+        auto cell_intrinsic_width_offsets = padding_left + padding_right + border_left + border_right;
+        cell.outer_min_width = outer_min_width + cell_intrinsic_width_offsets;
+        // FIXME: Compute outer min-content width / height of a table-column or table-column-group / table-row or table-row-group.
 
-        CSSPixels max_height = computed_values.height().is_auto() ? max_content_height : height;
-        CSSPixels max_width = computed_values.width().is_length() ? width : max_content_width;
+        // The outer max-content height of a table-cell in a non-constrained row is
+        // max(min-height, height, min-content height, min(max-height, max-content height)) adjusted by the cell intrinsic offsets.
+        auto height = computed_values.height().to_px(cell.box, containing_block.content_height());
+        auto max_height = computed_values.height().is_auto() ? max_content_height : height;
         if (!should_treat_max_height_as_none(cell.box, available_space.height))
             max_height = min(max_height, computed_values.max_height().to_px(cell.box, containing_block.content_height()));
-        if (!should_treat_max_width_as_none(cell.box, available_space.width))
-            max_width = min(max_width, computed_values.max_width().to_px(cell.box, containing_block.content_width()));
-
         if (computed_values.height().is_percentage()) {
             m_rows[cell.row_index].type = SizeType::Percent;
             m_rows[cell.row_index].percentage_height = max(m_rows[cell.row_index].percentage_height, computed_values.height().percentage().value());
         } else {
             m_rows[cell.row_index].type = SizeType::Pixel;
         }
+        // FIXME: The outer max-content height of a table-cell in a constrained row is
+        // max(min-height, height, min-content height, min(max-height, height)) adjusted by the cell intrinsic offsets.
+        cell.outer_max_height = max(max(height, outer_min_height), max_height) + cell_intrinsic_height_offsets;
+        // FIXME: The outer max-content height of a table-row or table-row-group is max(min-height, min(max-height, height)).
+
+        // The outer max-content width of a table-cell in a non-constrained column is
+        // max(min-width, width, min-content width, min(max-width, max-content width)) adjusted by the cell intrinsic offsets.
+        bool column_is_constrained = computed_values.width().is_length();
+        auto width = (computed_values.width().is_length() || !table_width_is_auto) ? computed_values.width().to_px(cell.box, containing_block.content_width()) : 0;
+        auto max_width = computed_values.width().is_length() ? width : max_content_width;
+        if (!should_treat_max_width_as_none(cell.box, available_space.width))
+            max_width = min(max_width, computed_values.max_width().to_px(cell.box, containing_block.content_width()));
         if (computed_values.width().is_percentage()) {
             m_columns[cell.column_index].type = SizeType::Percent;
             m_columns[cell.column_index].percentage_width = max(m_columns[cell.column_index].percentage_width, computed_values.width().percentage().value());
         } else {
             m_columns[cell.column_index].type = SizeType::Pixel;
-            if (computed_values.width().is_length())
-                m_columns[cell.column_index].is_constrained = true;
+            m_columns[cell.column_index].is_constrained = column_is_constrained;
         }
-
-        auto cell_intrinsic_height_offsets = padding_top + padding_bottom + border_top + border_bottom;
-        cell.outer_min_height = outer_min_height + cell_intrinsic_height_offsets;
-        cell.outer_max_height = max(max(height, outer_min_height), max_height) + cell_intrinsic_height_offsets;
-
-        auto cell_intrinsic_width_offsets = padding_left + padding_right + border_left + border_right;
-        cell.outer_min_width = outer_min_width + cell_intrinsic_width_offsets;
+        // FIXME: The outer max-content width of a table-cell in a constrained column is
+        // max(min-width, width, min-content width, min(max-width, width)) adjusted by the cell intrinsic offsets.
         cell.outer_max_width = max(max(width, outer_min_width), max_width) + cell_intrinsic_width_offsets;
+        // FIXME: The outer max-content width of a table-column or table-column-group is max(min-width, min(max-width, width)).
     }
 }
 
