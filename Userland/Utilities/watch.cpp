@@ -26,6 +26,33 @@ static bool flag_beep_on_fail = false;
 static int volatile exit_code = 0;
 static volatile pid_t child_pid = -1;
 
+static struct termios g_save;
+
+static ErrorOr<void> setup_tty()
+{
+    // Save previous tty settings.
+    g_save = TRY(Core::System::tcgetattr(STDOUT_FILENO));
+
+    struct termios raw = g_save;
+    raw.c_lflag &= ~(ECHO | ICANON);
+
+    // Disable echo and line buffering
+    TRY(Core::System::tcsetattr(STDOUT_FILENO, TCSAFLUSH, raw));
+
+    // Save cursor and switch to alternate buffer.
+    out("\e[s\e[?1047h");
+    return {};
+}
+
+static void teardown_tty()
+{
+    auto maybe_error = Core::System::tcsetattr(STDOUT_FILENO, TCSAFLUSH, g_save);
+    if (maybe_error.is_error())
+        warnln("Failed to reset original terminal state: {}", strerror(maybe_error.error().code()));
+
+    out("\e[?1047l\e[u");
+}
+
 static DeprecatedString build_header_string(Vector<DeprecatedString> const& command, Duration const& interval)
 {
     StringBuilder builder;
@@ -59,6 +86,10 @@ static void handle_signal(int signal)
             exit_code = 1;
         }
     }
+    auto is_a_tty_or_error = Core::System::isatty(STDOUT_FILENO);
+    if (!is_a_tty_or_error.is_error() && is_a_tty_or_error.value())
+        teardown_tty();
+
     exit(exit_code);
 }
 
@@ -102,8 +133,7 @@ static int run_command(Vector<DeprecatedString> const& command)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::signal(SIGINT, handle_signal));
-    TRY(Core::System::pledge("stdio proc exec rpath"));
+    TRY(Core::System::pledge("stdio proc exec rpath tty sigaction"));
 
     Vector<DeprecatedString> files_to_watch;
     Vector<DeprecatedString> command;
@@ -127,6 +157,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(move(file_arg));
     args_parser.add_positional_argument(command, "Command to run", "command");
     args_parser.parse(arguments);
+
+    if (TRY(Core::System::isatty(STDOUT_FILENO)))
+        TRY(setup_tty());
+
+    struct sigaction quit_action;
+    quit_action.sa_handler = handle_signal;
+    TRY(Core::System::sigaction(SIGTERM, &quit_action, nullptr));
+    TRY(Core::System::sigaction(SIGINT, &quit_action, nullptr));
 
     DeprecatedString header;
 
@@ -175,7 +213,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
         }
     } else {
-        TRY(Core::System::pledge("stdio proc exec"));
+        TRY(Core::System::pledge("stdio proc exec tty"));
 
         Duration interval;
         if (opt_interval <= 0) {
