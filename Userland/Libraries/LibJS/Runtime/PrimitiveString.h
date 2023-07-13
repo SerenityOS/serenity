@@ -59,7 +59,11 @@ private:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
-    ThrowCompletionOr<void> resolve_rope_if_needed() const;
+    enum class EncodingPreference {
+        UTF8,
+        UTF16,
+    };
+    ThrowCompletionOr<void> resolve_rope_if_needed(EncodingPreference) const;
 
     mutable bool m_is_rope { false };
 
