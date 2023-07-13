@@ -409,6 +409,7 @@ ErrorOr<void, ParseError> Parser::parse_standalone_document_decl()
     TRY(expect("standalone"sv));
     auto accept = accept_rule();
 
+    TRY(parse_eq());
     TRY(expect(is_any_of("'\""sv), "one of ' or \""sv));
     m_lexer.retreat();
 
