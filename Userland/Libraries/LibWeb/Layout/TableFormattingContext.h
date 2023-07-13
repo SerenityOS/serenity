@@ -94,10 +94,10 @@ private:
         size_t column_span;
         size_t row_span;
         CSSPixels baseline { 0 };
-        CSSPixels min_width { 0 };
-        CSSPixels max_width { 0 };
-        CSSPixels min_height { 0 };
-        CSSPixels max_height { 0 };
+        CSSPixels outer_min_width { 0 };
+        CSSPixels outer_max_width { 0 };
+        CSSPixels outer_min_height { 0 };
+        CSSPixels outer_max_height { 0 };
     };
 
     // Accessors to enable direction-agnostic table measurement.
