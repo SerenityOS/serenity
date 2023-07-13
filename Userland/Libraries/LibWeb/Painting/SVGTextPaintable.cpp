@@ -34,6 +34,11 @@ void SVGTextPaintable::paint(PaintContext& context, PaintPhase phase) const
     if (!layout_node().computed_values().fill().has_value())
         return;
 
+    if (layout_node().computed_values().fill()->is_url()) {
+        dbgln("FIXME: Using url() as fill is not supported for svg text");
+        return;
+    }
+
     SVGGraphicsPaintable::paint(context, phase);
 
     if (phase != PaintPhase::Foreground)
