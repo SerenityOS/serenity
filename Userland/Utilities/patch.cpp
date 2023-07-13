@@ -29,8 +29,14 @@ static ErrorOr<void> do_patch(StringView path_of_file_to_patch, Diff::Patch cons
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    StringView directory;
+
     Core::ArgsParser args_parser;
+    args_parser.add_option(directory, "Change the working directory to <directory> before applying the patch file", "directory", 'd', "directory");
     args_parser.parse(arguments);
+
+    if (!directory.is_null())
+        TRY(Core::System::chdir(directory));
 
     auto input = TRY(Core::File::standard_input());
 
