@@ -259,6 +259,8 @@ public:
         return m_tag_table.get(signature).map([](auto it) -> TagData const& { return *it; });
     }
 
+    Optional<String> tag_string_data(TagSignature signature) const;
+
     size_t tag_count() const { return m_tag_table.size(); }
 
     // Only versions 2 and 4 are in use.
