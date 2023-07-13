@@ -18,6 +18,7 @@
 #include <LibJS/Bytecode/StringTable.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/FunctionKind.h>
+#include <LibRegex/Regex.h>
 
 namespace JS::Bytecode {
 
@@ -131,6 +132,11 @@ public:
         return m_string_table->insert(move(string));
     }
 
+    RegexTableIndex intern_regex(ParsedRegex regex)
+    {
+        return m_regex_table->insert(move(regex));
+    }
+
     IdentifierTableIndex intern_identifier(DeprecatedFlyString string)
     {
         return m_identifier_table->insert(move(string));
@@ -220,6 +226,7 @@ private:
     Vector<NonnullOwnPtr<BasicBlock>> m_root_basic_blocks;
     NonnullOwnPtr<StringTable> m_string_table;
     NonnullOwnPtr<IdentifierTable> m_identifier_table;
+    NonnullOwnPtr<RegexTable> m_regex_table;
 
     u32 m_next_register { 2 };
     u32 m_next_block { 1 };

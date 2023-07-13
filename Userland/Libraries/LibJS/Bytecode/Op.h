@@ -13,6 +13,7 @@
 #include <LibJS/Bytecode/IdentifierTable.h>
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Label.h>
+#include <LibJS/Bytecode/RegexTable.h>
 #include <LibJS/Bytecode/Register.h>
 #include <LibJS/Bytecode/StringTable.h>
 #include <LibJS/Heap/Cell.h>
@@ -196,10 +197,11 @@ public:
 
 class NewRegExp final : public Instruction {
 public:
-    NewRegExp(StringTableIndex source_index, StringTableIndex flags_index)
+    NewRegExp(StringTableIndex source_index, StringTableIndex flags_index, RegexTableIndex regex_index)
         : Instruction(Type::NewRegExp)
         , m_source_index(source_index)
         , m_flags_index(flags_index)
+        , m_regex_index(regex_index)
     {
     }
 
@@ -211,6 +213,7 @@ public:
 private:
     StringTableIndex m_source_index;
     StringTableIndex m_flags_index;
+    RegexTableIndex m_regex_index;
 };
 
 #define JS_ENUMERATE_NEW_BUILTIN_ERROR_OPS(O) \

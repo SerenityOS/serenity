@@ -16,6 +16,7 @@ namespace JS::Bytecode {
 Generator::Generator()
     : m_string_table(make<StringTable>())
     , m_identifier_table(make<IdentifierTable>())
+    , m_regex_table(make<RegexTable>())
 {
 }
 
@@ -67,6 +68,7 @@ CodeGenerationErrorOr<NonnullOwnPtr<Executable>> Generator::generate(ASTNode con
         .basic_blocks = move(generator.m_root_basic_blocks),
         .string_table = move(generator.m_string_table),
         .identifier_table = move(generator.m_identifier_table),
+        .regex_table = move(generator.m_regex_table),
         .number_of_registers = generator.m_next_register,
         .is_strict_mode = is_strict_mode,
     });

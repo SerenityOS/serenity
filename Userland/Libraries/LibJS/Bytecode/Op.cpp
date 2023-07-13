@@ -328,14 +328,30 @@ ThrowCompletionOr<void> NewObject::execute_impl(Bytecode::Interpreter& interpret
     return {};
 }
 
+// 13.2.7.3 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-regular-expression-literals-runtime-semantics-evaluation
 ThrowCompletionOr<void> NewRegExp::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
 
-    auto source = interpreter.current_executable().get_string(m_source_index);
+    auto& realm = *vm.current_realm();
+
+    // 1. Let pattern be CodePointsToString(BodyText of RegularExpressionLiteral).
+    auto pattern = interpreter.current_executable().get_string(m_source_index);
+
+    // 2. Let flags be CodePointsToString(FlagText of RegularExpressionLiteral).
     auto flags = interpreter.current_executable().get_string(m_flags_index);
 
-    interpreter.accumulator() = TRY(regexp_create(vm, PrimitiveString::create(vm, source), PrimitiveString::create(vm, flags)));
+    // 3. Return ! RegExpCreate(pattern, flags).
+    auto& parsed_regex = interpreter.current_executable().regex_table->get(m_regex_index);
+    Regex<ECMA262> regex(parsed_regex.regex, parsed_regex.pattern, parsed_regex.flags);
+    // NOTE: We bypass RegExpCreate and subsequently RegExpAlloc as an optimization to use the already parsed values.
+    auto regexp_object = RegExpObject::create(realm, move(regex), move(pattern), move(flags));
+    // RegExpAlloc has these two steps from the 'Legacy RegExp features' proposal.
+    regexp_object->set_realm(*vm.current_realm());
+    // We don't need to check 'If SameValue(newTarget, thisRealm.[[Intrinsics]].[[%RegExp%]]) is true'
+    // here as we know RegExpCreate calls RegExpAlloc with %RegExp% for newTarget.
+    regexp_object->set_legacy_features_enabled(true);
+    interpreter.accumulator() = regexp_object;
     return {};
 }
 

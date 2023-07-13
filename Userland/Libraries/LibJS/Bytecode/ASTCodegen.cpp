@@ -289,7 +289,12 @@ Bytecode::CodeGenerationErrorOr<void> RegExpLiteral::generate_bytecode(Bytecode:
 {
     auto source_index = generator.intern_string(m_pattern);
     auto flags_index = generator.intern_string(m_flags);
-    generator.emit<Bytecode::Op::NewRegExp>(source_index, flags_index);
+    auto regex_index = generator.intern_regex(Bytecode::ParsedRegex {
+        .regex = m_parsed_regex,
+        .pattern = m_parsed_pattern,
+        .flags = m_parsed_flags,
+    });
+    generator.emit<Bytecode::Op::NewRegExp>(source_index, flags_index, regex_index);
     return {};
 }
 
