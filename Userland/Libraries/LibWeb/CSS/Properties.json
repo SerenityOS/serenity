@@ -1205,6 +1205,54 @@
     ],
     "percentages-resolve-to": "length"
   },
+  "inset-block": {
+    "logical-alias-for": [
+      "inset"
+    ],
+    "max-values": 2
+  },
+  "inset-block-end": {
+    "logical-alias-for": [
+      "top",
+      "right",
+      "bottom",
+      "left"
+    ],
+    "max-values": 1
+  },
+  "inset-block-start": {
+    "logical-alias-for": [
+      "top",
+      "right",
+      "bottom",
+      "left"
+    ],
+    "max-values": 1
+  },
+  "inset-inline": {
+    "logical-alias-for": [
+      "inset"
+    ],
+    "max-values": 2
+  },
+  "inset-inline-end": {
+    "logical-alias-for": [
+      "top",
+      "right",
+      "bottom",
+      "left"
+    ],
+    "max-values": 1
+  },
+  "inset-inline-start": {
+    "logical-alias-for": [
+      "top",
+      "right",
+      "bottom",
+      "left"
+    ],
+    "max-values": 1
+  },
   "justify-content": {
     "inherited": false,
     "initial": "flex-start",

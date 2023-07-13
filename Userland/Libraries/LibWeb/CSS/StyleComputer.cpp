@@ -304,6 +304,14 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return PropertyID::PaddingLeft;
         case PropertyID::PaddingInlineEnd:
             return PropertyID::PaddingRight;
+        case PropertyID::InsetBlockStart:
+            return PropertyID::Top;
+        case PropertyID::InsetBlockEnd:
+            return PropertyID::Bottom;
+        case PropertyID::InsetInlineStart:
+            return PropertyID::Left;
+        case PropertyID::InsetInlineEnd:
+            return PropertyID::Right;
         default:
             return {};
         }
@@ -324,6 +332,10 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return StartAndEndPropertyIDs { PropertyID::PaddingTop, PropertyID::PaddingBottom };
         case PropertyID::PaddingInline:
             return StartAndEndPropertyIDs { PropertyID::PaddingLeft, PropertyID::PaddingRight };
+        case PropertyID::InsetBlock:
+            return StartAndEndPropertyIDs { PropertyID::Top, PropertyID::Bottom };
+        case PropertyID::InsetInline:
+            return StartAndEndPropertyIDs { PropertyID::Left, PropertyID::Right };
         default:
             return {};
         }
