@@ -362,11 +362,6 @@ void GridFormattingContext::place_item_with_row_position(Box const& child_box)
 
     int column_start = 0;
     size_t column_span = child_box.computed_values().grid_column_start().is_span() ? child_box.computed_values().grid_column_start().raw_value() : 1;
-    // https://drafts.csswg.org/css-grid/#auto-placement-algo
-    // 8.5. Grid Item Placement Algorithm
-    // 3.3. If the largest column span among all the items without a definite column position is larger
-    // than the width of the implicit grid, add columns to the end of the implicit grid to accommodate
-    // that column span.
     bool found_available_column = false;
     for (size_t column_index = column_start; column_index < m_occupation_grid.column_count(); column_index++) {
         if (!m_occupation_grid.is_occupied(column_index, row_start)) {
@@ -531,11 +526,6 @@ void GridFormattingContext::place_item_with_no_declared_position(Box const& chil
         column_span = child_box.computed_values().grid_column_start().raw_value();
     else if (child_box.computed_values().grid_column_end().is_span())
         column_span = child_box.computed_values().grid_column_end().raw_value();
-    // https://drafts.csswg.org/css-grid/#auto-placement-algo
-    // 8.5. Grid Item Placement Algorithm
-    // 3.3. If the largest column span among all the items without a definite column position is larger
-    // than the width of the implicit grid, add columns to the end of the implicit grid to accommodate
-    // that column span.
     auto row_start = 0;
     size_t row_span = 1;
     if (child_box.computed_values().grid_row_start().is_span())
@@ -1370,6 +1360,20 @@ void GridFormattingContext::place_grid_items(AvailableSpace const& available_spa
     // NOTE: "Explicitly positioned items" and "items positioned in the previous step" done in step 1
     // and 2, respectively. Adding columns for "items not yet positioned but with a definite column"
     // will be done in step 4.
+
+    // 3.3. If the largest column span among all the items without a definite column position is larger
+    // than the width of the implicit grid, add columns to the end of the implicit grid to accommodate
+    // that column span.
+    for (auto const& child_box : m_boxes_to_place) {
+        int column_span = 1;
+        if (child_box->computed_values().grid_column_start().is_span())
+            column_span = child_box->computed_values().grid_column_start().raw_value();
+        else if (child_box->computed_values().grid_column_end().is_span())
+            column_span = child_box->computed_values().grid_column_end().raw_value();
+
+        if (column_span - 1 > m_occupation_grid.max_column_index())
+            m_occupation_grid.set_max_column_index(column_span - 1);
+    }
 
     // 4. Position the remaining grid items.
     // For each grid item that hasn't been positioned by the previous steps, in order-modified document
