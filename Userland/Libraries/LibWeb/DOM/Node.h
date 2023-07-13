@@ -84,6 +84,7 @@ public:
 
     virtual bool is_editable() const;
 
+    virtual bool is_dom_node() const final { return true; }
     virtual bool is_html_element() const { return false; }
     virtual bool is_html_html_element() const { return false; }
     virtual bool is_html_anchor_element() const { return false; }
@@ -704,3 +705,6 @@ private:
 };
 
 }
+
+template<>
+inline bool JS::Object::fast_is<Web::DOM::Node>() const { return is_dom_node(); }

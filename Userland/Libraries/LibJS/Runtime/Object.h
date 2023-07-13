@@ -169,6 +169,7 @@ public:
     void define_native_function(Realm&, PropertyKey const&, SafeFunction<ThrowCompletionOr<Value>(VM&)>, i32 length, PropertyAttributes attributes);
     void define_native_accessor(Realm&, PropertyKey const&, SafeFunction<ThrowCompletionOr<Value>(VM&)> getter, SafeFunction<ThrowCompletionOr<Value>(VM&)> setter, PropertyAttributes attributes);
 
+    virtual bool is_dom_node() const { return false; }
     virtual bool is_function() const { return false; }
     virtual bool is_typed_array() const { return false; }
     virtual bool is_string_object() const { return false; }
