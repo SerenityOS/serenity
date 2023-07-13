@@ -293,26 +293,6 @@ private:
     // NOTE: Implemented in generated code. (GenerateCSSMathFunctions.cpp)
     ErrorOr<OwnPtr<CalculationNode>> parse_math_function(PropertyID, Function const&);
     ErrorOr<OwnPtr<CalculationNode>> parse_a_calc_function_node(Function const&);
-    ErrorOr<OwnPtr<CalculationNode>> parse_min_function(Function const&);
-    ErrorOr<OwnPtr<CalculationNode>> parse_max_function(Function const&);
-    ErrorOr<OwnPtr<CalculationNode>> parse_clamp_function(Function const&);
-    ErrorOr<OwnPtr<CalculationNode>> parse_abs_function(Function const&);
-    ErrorOr<OwnPtr<CalculationNode>> parse_sign_function(Function const&);
-    ErrorOr<OwnPtr<CalculationNode>> parse_sin_function(Function const&);
-    ErrorOr<OwnPtr<CalculationNode>> parse_cos_function(Function const&);
-    ErrorOr<OwnPtr<CalculationNode>> parse_tan_function(Function const&);
-    ErrorOr<OwnPtr<CalculationNode>> parse_asin_function(Function const&);
-    ErrorOr<OwnPtr<CalculationNode>> parse_acos_function(Function const&);
-    ErrorOr<OwnPtr<CalculationNode>> parse_atan_function(Function const&);
-    ErrorOr<OwnPtr<CalculationNode>> parse_atan2_function(Function const&);
-    ErrorOr<OwnPtr<CalculationNode>> parse_pow_function(Function const&);
-    ErrorOr<OwnPtr<CalculationNode>> parse_sqrt_function(Function const&);
-    ErrorOr<OwnPtr<CalculationNode>> parse_hypot_function(Function const&);
-    ErrorOr<OwnPtr<CalculationNode>> parse_log_function(Function const&);
-    ErrorOr<OwnPtr<CalculationNode>> parse_exp_function(Function const&);
-    ErrorOr<OwnPtr<CalculationNode>> parse_round_function(Function const&);
-    ErrorOr<OwnPtr<CalculationNode>> parse_mod_function(Function const&);
-    ErrorOr<OwnPtr<CalculationNode>> parse_rem_function(Function const&);
     ErrorOr<RefPtr<StyleValue>> parse_dimension_value(ComponentValue const&);
     ErrorOr<RefPtr<StyleValue>> parse_integer_value(TokenStream<ComponentValue>&);
     ErrorOr<RefPtr<StyleValue>> parse_number_value(TokenStream<ComponentValue>&);
