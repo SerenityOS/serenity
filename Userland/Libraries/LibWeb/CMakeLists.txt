@@ -615,6 +615,7 @@ set(GENERATED_SOURCES
     CSS/DefaultStyleSheetSource.cpp
     CSS/EasingFunctions.cpp
     CSS/Enums.cpp
+    CSS/MathFunctions.cpp
     CSS/MediaFeatureID.cpp
     CSS/PropertyID.cpp
     CSS/QuirksModeStyleSheetSource.cpp

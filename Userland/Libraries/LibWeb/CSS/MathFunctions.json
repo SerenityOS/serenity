@@ -1,0 +1,232 @@
+{
+  "abs": {
+    "parameters": [
+      {
+        "name": "value",
+        "type": "<number>|<dimension>|<percentage>",
+        "required": true
+      }
+    ]
+  },
+  "acos": {
+    "parameters": [
+      {
+        "name": "value",
+        "type": "<number>",
+        "required": true
+      }
+    ]
+  },
+  "asin": {
+    "parameters": [
+      {
+        "name": "value",
+        "type": "<number>",
+        "required": true
+      }
+    ]
+  },
+  "atan": {
+    "parameters": [
+      {
+        "name": "value",
+        "type": "<number>",
+        "required": true
+      }
+    ]
+  },
+  "atan2": {
+    "parameters": [
+      {
+        "name": "y",
+        "type": "<number>|<dimension>|<percentage>",
+        "required": true
+      },
+      {
+        "name": "x",
+        "type": "<number>|<dimension>|<percentage>",
+        "required": true
+      }
+    ]
+  },
+  "clamp": {
+    "parameters": [
+      {
+        "name": "min",
+        "type": "<number>|<dimension>|<percentage>",
+        "required": true
+      },
+      {
+        "name": "central",
+        "type": "<number>|<dimension>|<percentage>",
+        "required": true
+      },
+      {
+        "name": "max",
+        "type": "<number>|<dimension>|<percentage>",
+        "required": true
+      }
+    ]
+  },
+  "cos": {
+    "parameters": [
+      {
+        "name": "value",
+        "type": "<number>|<angle>",
+        "required": true
+      }
+    ]
+  },
+  "exp": {
+    "parameters": [
+      {
+        "name": "value",
+        "type": "<number>",
+        "required": true
+      }
+    ]
+  },
+  "hypot": {
+    "is-variadic": true,
+    "parameters": [
+      {
+        "name": "value",
+        "type": "<number>|<dimension>|<percentage>",
+        "required": true
+      }
+    ]
+  },
+  "log": {
+    "parameters": [
+      {
+        "name": "value",
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "name": "base",
+        "type": "<number>",
+        "required": false,
+        "default": "e"
+      }
+    ]
+  },
+  "max": {
+    "is-variadic": true,
+    "parameters": [
+      {
+        "name": "value",
+        "type": "<number>|<dimension>|<percentage>",
+        "required": true
+      }
+    ]
+  },
+  "min": {
+    "is-variadic": true,
+    "parameters": [
+      {
+        "name": "value",
+        "type": "<number>|<dimension>|<percentage>",
+        "required": true
+      }
+    ]
+  },
+  "mod": {
+    "parameters": [
+      {
+        "name": "value",
+        "type": "<number>|<dimension>|<percentage>",
+        "required": true
+      },
+      {
+        "name": "divisor",
+        "type": "<number>|<dimension>|<percentage>",
+        "required": true
+      }
+    ]
+  },
+  "pow": {
+    "parameters": [
+      {
+        "name": "value",
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "name": "exponent",
+        "type": "<number>",
+        "required": true
+      }
+    ]
+  },
+  "rem": {
+    "parameters": [
+      {
+        "name": "value",
+        "type": "<number>|<dimension>|<percentage>",
+        "required": true
+      },
+      {
+        "name": "divisor",
+        "type": "<number>|<dimension>|<percentage>",
+        "required": true
+      }
+    ]
+  },
+  "round": {
+    "parameters": [
+      {
+        "name": "strategy",
+        "type": "<rounding-strategy>",
+        "required": false,
+        "default": "nearest"
+      },
+      {
+        "name": "value",
+        "type": "<number>|<dimension>|<percentage>",
+        "required": true
+      },
+      {
+        "name": "interval",
+        "type": "<number>|<dimension>|<percentage>",
+        "required": true
+      }
+    ]
+  },
+  "sign": {
+    "parameters": [
+      {
+        "name": "value",
+        "type": "<number>|<dimension>|<percentage>",
+        "required": true
+      }
+    ]
+  },
+  "sin": {
+    "parameters": [
+      {
+        "name": "value",
+        "type": "<number>|<angle>",
+        "required": true
+      }
+    ]
+  },
+  "sqrt": {
+    "parameters": [
+      {
+        "name": "value",
+        "type": "<number>",
+        "required": true
+      }
+    ]
+  },
+  "tan": {
+    "parameters": [
+      {
+        "name": "value",
+        "type": "<number>|<angle>",
+        "required": true
+      }
+    ]
+  }
+}
