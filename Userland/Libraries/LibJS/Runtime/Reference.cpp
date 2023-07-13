@@ -67,7 +67,7 @@ ThrowCompletionOr<void> Reference::put_value(VM& vm, Value value)
     VERIFY(m_base_environment);
 
     // c. Return ? base.SetMutableBinding(V.[[ReferencedName]], W, V.[[Strict]]) (see 9.1).
-    if (m_environment_coordinate.has_value() && m_environment_coordinate->index != EnvironmentCoordinate::global_marker)
+    if (m_environment_coordinate.has_value())
         return static_cast<DeclarativeEnvironment*>(m_base_environment)->set_mutable_binding_direct(vm, m_environment_coordinate->index, value, m_strict);
     else
         return m_base_environment->set_mutable_binding(vm, m_name.as_string(), value, m_strict);
@@ -137,7 +137,7 @@ ThrowCompletionOr<Value> Reference::get_value(VM& vm) const
     VERIFY(m_base_environment);
 
     // c. Return ? base.GetBindingValue(V.[[ReferencedName]], V.[[Strict]]) (see 9.1).
-    if (m_environment_coordinate.has_value() && m_environment_coordinate->index != EnvironmentCoordinate::global_marker)
+    if (m_environment_coordinate.has_value())
         return static_cast<DeclarativeEnvironment*>(m_base_environment)->get_binding_value_direct(vm, m_environment_coordinate->index, m_strict);
     return m_base_environment->get_binding_value(vm, m_name.as_string(), m_strict);
 }

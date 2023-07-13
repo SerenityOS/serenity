@@ -17,7 +17,6 @@ struct EnvironmentCoordinate {
 
     bool is_valid() const { return hops != invalid_marker && index != invalid_marker; }
 
-    static constexpr u32 global_marker = 0xffffffff;
     static constexpr u32 invalid_marker = 0xfffffffe;
 };
 
