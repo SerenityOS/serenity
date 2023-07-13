@@ -15,6 +15,7 @@ source_set("StyleValues") {
     "ConicGradientStyleValue.cpp",
     "ContentStyleValue.cpp",
     "DisplayStyleValue.cpp",
+    "EasingStyleValue.cpp",
     "EdgeStyleValue.cpp",
     "FilterValueListStyleValue.cpp",
     "FlexFlowStyleValue.cpp",
