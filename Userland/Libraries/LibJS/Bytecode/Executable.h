@@ -11,6 +11,7 @@
 #include <AK/WeakPtr.h>
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/IdentifierTable.h>
+#include <LibJS/Bytecode/RegexTable.h>
 #include <LibJS/Bytecode/StringTable.h>
 
 namespace JS::Bytecode {
@@ -32,6 +33,7 @@ struct Executable {
     Vector<NonnullOwnPtr<BasicBlock>> basic_blocks;
     NonnullOwnPtr<StringTable> string_table;
     NonnullOwnPtr<IdentifierTable> identifier_table;
+    NonnullOwnPtr<RegexTable> regex_table;
     size_t number_of_registers { 0 };
     bool is_strict_mode { false };
 
