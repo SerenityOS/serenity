@@ -829,7 +829,13 @@ Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_labelled_evaluation
         if (m_init->is_variable_declaration()) {
             auto& variable_declaration = verify_cast<VariableDeclaration>(*m_init);
 
-            if (variable_declaration.is_lexical_declaration()) {
+            auto has_non_local_variables = false;
+            MUST(variable_declaration.for_each_bound_identifier([&](auto const& identifier) {
+                if (!identifier.is_local())
+                    has_non_local_variables = true;
+            }));
+
+            if (variable_declaration.is_lexical_declaration() && has_non_local_variables) {
                 has_lexical_environment = true;
 
                 // FIXME: Is Block correct?
@@ -837,8 +843,10 @@ Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_labelled_evaluation
 
                 bool is_const = variable_declaration.is_constant_declaration();
                 // NOTE: Nothing in the callback throws an exception.
-                MUST(variable_declaration.for_each_bound_name([&](auto const& name) {
-                    auto index = generator.intern_identifier(name);
+                MUST(variable_declaration.for_each_bound_identifier([&](auto const& identifier) {
+                    if (identifier.is_local())
+                        return;
+                    auto index = generator.intern_identifier(identifier.string());
                     generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Lexical, is_const);
                 }));
             }
@@ -2528,22 +2536,32 @@ static Bytecode::CodeGenerationErrorOr<ForInOfHeadEvaluationResult> for_in_of_he
                 generator.emit_set_variable(*identifier);
             }
         } else {
-            // 1. Let oldEnv be the running execution context's LexicalEnvironment.
-            // NOTE: 'uninitializedBoundNames' refers to the lexical bindings (i.e. Const/Let) present in the second and last form.
-            // 2. If uninitializedBoundNames is not an empty List, then
-            entered_lexical_scope = true;
-            // a. Assert: uninitializedBoundNames has no duplicate entries.
-            // b. Let newEnv be NewDeclarativeEnvironment(oldEnv).
-            generator.begin_variable_scope();
-            // c. For each String name of uninitializedBoundNames, do
-            // NOTE: Nothing in the callback throws an exception.
-            MUST(variable_declaration.for_each_bound_name([&](auto const& name) {
-                // i. Perform ! newEnv.CreateMutableBinding(name, false).
-                auto identifier = generator.intern_identifier(name);
-                generator.emit<Bytecode::Op::CreateVariable>(identifier, Bytecode::Op::EnvironmentMode::Lexical, false);
+            auto has_non_local_variables = false;
+            MUST(variable_declaration.for_each_bound_identifier([&](auto const& identifier) {
+                if (!identifier.is_local())
+                    has_non_local_variables = true;
             }));
-            // d. Set the running execution context's LexicalEnvironment to newEnv.
-            // NOTE: Done by CreateLexicalEnvironment.
+
+            if (has_non_local_variables) {
+                // 1. Let oldEnv be the running execution context's LexicalEnvironment.
+                // NOTE: 'uninitializedBoundNames' refers to the lexical bindings (i.e. Const/Let) present in the second and last form.
+                // 2. If uninitializedBoundNames is not an empty List, then
+                entered_lexical_scope = true;
+                // a. Assert: uninitializedBoundNames has no duplicate entries.
+                // b. Let newEnv be NewDeclarativeEnvironment(oldEnv).
+                generator.begin_variable_scope();
+                // c. For each String name of uninitializedBoundNames, do
+                // NOTE: Nothing in the callback throws an exception.
+                MUST(variable_declaration.for_each_bound_identifier([&](auto const& identifier) {
+                    if (identifier.is_local())
+                        return;
+                    // i. Perform ! newEnv.CreateMutableBinding(name, false).
+                    auto interned_identifier = generator.intern_identifier(identifier.string());
+                    generator.emit<Bytecode::Op::CreateVariable>(interned_identifier, Bytecode::Op::EnvironmentMode::Lexical, false);
+                }));
+                // d. Set the running execution context's LexicalEnvironment to newEnv.
+                // NOTE: Done by CreateLexicalEnvironment.
+            }
         }
     } else {
         // Runtime Semantics: ForInOfLoopEvaluation, for any of:
@@ -2691,17 +2709,19 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
         auto& variable_declaration = static_cast<VariableDeclaration const&>(*lhs.get<NonnullRefPtr<ASTNode const>>());
         // 2. For each element name of the BoundNames of ForBinding, do
         // NOTE: Nothing in the callback throws an exception.
-        MUST(variable_declaration.for_each_bound_name([&](auto const& name) {
-            auto identifier = generator.intern_identifier(name);
+        MUST(variable_declaration.for_each_bound_identifier([&](auto const& identifier) {
+            if (identifier.is_local())
+                return;
+            auto interned_identifier = generator.intern_identifier(identifier.string());
             // a. If IsConstantDeclaration of LetOrConst is true, then
             if (variable_declaration.is_constant_declaration()) {
                 // i. Perform ! environment.CreateImmutableBinding(name, true).
-                generator.emit<Bytecode::Op::CreateVariable>(identifier, Bytecode::Op::EnvironmentMode::Lexical, true);
+                generator.emit<Bytecode::Op::CreateVariable>(interned_identifier, Bytecode::Op::EnvironmentMode::Lexical, true);
             }
             // b. Else,
             else {
                 // i. Perform ! environment.CreateMutableBinding(name, false).
-                generator.emit<Bytecode::Op::CreateVariable>(identifier, Bytecode::Op::EnvironmentMode::Lexical, false);
+                generator.emit<Bytecode::Op::CreateVariable>(interned_identifier, Bytecode::Op::EnvironmentMode::Lexical, false);
             }
         }));
         // 3. Return unused.
