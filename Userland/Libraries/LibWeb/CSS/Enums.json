@@ -269,6 +269,12 @@
         "round",
         "space"
     ],
+    "rounding-strategy": [
+        "down",
+        "nearest",
+        "to-zero",
+        "up"
+    ],
     "text-align": [
         "center",
         "justify",

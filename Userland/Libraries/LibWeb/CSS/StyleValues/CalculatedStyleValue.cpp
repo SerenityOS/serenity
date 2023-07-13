@@ -1791,14 +1791,14 @@ ErrorOr<void> ExpCalculationNode::dump(StringBuilder& builder, int indent) const
     return {};
 }
 
-ErrorOr<NonnullOwnPtr<RoundCalculationNode>> RoundCalculationNode::create(RoundingMode mode, NonnullOwnPtr<CalculationNode> x, NonnullOwnPtr<CalculationNode> y)
+ErrorOr<NonnullOwnPtr<RoundCalculationNode>> RoundCalculationNode::create(RoundingStrategy strategy, NonnullOwnPtr<CalculationNode> x, NonnullOwnPtr<CalculationNode> y)
 {
-    return adopt_nonnull_own_or_enomem(new (nothrow) RoundCalculationNode(mode, move(x), move(y)));
+    return adopt_nonnull_own_or_enomem(new (nothrow) RoundCalculationNode(strategy, move(x), move(y)));
 }
 
-RoundCalculationNode::RoundCalculationNode(RoundingMode mode, NonnullOwnPtr<CalculationNode> x, NonnullOwnPtr<CalculationNode> y)
+RoundCalculationNode::RoundCalculationNode(RoundingStrategy mode, NonnullOwnPtr<CalculationNode> x, NonnullOwnPtr<CalculationNode> y)
     : CalculationNode(Type::Round)
-    , m_mode(mode)
+    , m_strategy(mode)
     , m_x(move(x))
     , m_y(move(y))
 {
@@ -1810,20 +1810,7 @@ ErrorOr<String> RoundCalculationNode::to_string() const
 {
     StringBuilder builder;
     builder.append("round("sv);
-    switch (m_mode) {
-    case RoundingMode::Nearest:
-        builder.append("nearest"sv);
-        break;
-    case RoundingMode::Up:
-        builder.append("up"sv);
-        break;
-    case RoundingMode::Down:
-        builder.append("down"sv);
-        break;
-    case RoundingMode::TowardZero:
-        builder.append("toward-zero"sv);
-        break;
-    }
+    builder.append(CSS::to_string(m_strategy));
     builder.append(", "sv);
     builder.append(TRY(m_x->to_string()));
     builder.append(", "sv);
@@ -1868,22 +1855,22 @@ CalculatedStyleValue::CalculationResult RoundCalculationNode::resolve(Optional<L
     auto upper_b = ceil(node_a_value / node_b_value) * node_b_value;
     auto lower_b = floor(node_a_value / node_b_value) * node_b_value;
 
-    if (m_mode == RoundingMode::Nearest) {
+    if (m_strategy == RoundingStrategy::Nearest) {
         auto upper_diff = fabs(upper_b - node_a_value);
         auto lower_diff = fabs(node_a_value - lower_b);
         auto rounded_value = upper_diff < lower_diff ? upper_b : lower_b;
         return to_resolved_type(resolved_type, rounded_value);
     }
 
-    if (m_mode == RoundingMode::Up) {
+    if (m_strategy == RoundingStrategy::Up) {
         return to_resolved_type(resolved_type, upper_b);
     }
 
-    if (m_mode == RoundingMode::Down) {
+    if (m_strategy == RoundingStrategy::Down) {
         return to_resolved_type(resolved_type, lower_b);
     }
 
-    if (m_mode == RoundingMode::TowardZero) {
+    if (m_strategy == RoundingStrategy::ToZero) {
         auto upper_diff = fabs(upper_b);
         auto lower_diff = fabs(lower_b);
         auto rounded_value = upper_diff < lower_diff ? upper_b : lower_b;

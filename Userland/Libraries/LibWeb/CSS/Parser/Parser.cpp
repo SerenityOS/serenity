@@ -3923,25 +3923,23 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_round_function(Function const& fu
 
     OwnPtr<CalculationNode> node_a = nullptr;
     OwnPtr<CalculationNode> node_b = nullptr;
-    auto mode = CalculationNode::RoundingMode::Nearest;
+    auto strategy = RoundingStrategy::Nearest;
     if (parameters.size() == 3) {
-        auto rounding_mode_component = parameters[0][0];
-        if (!rounding_mode_component.is(Token::Type::Ident)) {
-            dbgln_if(CSS_PARSER_DEBUG, "round() mode must be a string"sv);
+        auto rounding_strategy_component = parameters[0][0];
+        if (!rounding_strategy_component.is(Token::Type::Ident)) {
+            dbgln_if(CSS_PARSER_DEBUG, "round() strategy must be an ident"sv);
             return nullptr;
         }
 
-        auto mode_string = rounding_mode_component.token().ident();
-        if (mode_string.equals_ignoring_ascii_case("nearest"sv)) {
-            mode = CalculationNode::RoundingMode::Nearest;
-        } else if (mode_string.equals_ignoring_ascii_case("up"sv)) {
-            mode = CalculationNode::RoundingMode::Up;
-        } else if (mode_string.equals_ignoring_ascii_case("down"sv)) {
-            mode = CalculationNode::RoundingMode::Down;
-        } else if (mode_string.equals_ignoring_ascii_case("to-zero"sv)) {
-            mode = CalculationNode::RoundingMode::TowardZero;
+        auto maybe_value_id = value_id_from_string(rounding_strategy_component.token().ident());
+        if (!maybe_value_id.has_value()) {
+            dbgln_if(CSS_PARSER_DEBUG, "round() strategy must be one of 'nearest', 'up', 'down', or 'to-zero'"sv);
+            return nullptr;
+        }
+        if (auto maybe_strategy = value_id_to_rounding_strategy(maybe_value_id.value()); maybe_strategy.has_value()) {
+            strategy = maybe_strategy.value();
         } else {
-            dbgln_if(CSS_PARSER_DEBUG, "round() mode must be one of 'nearest', 'up', 'down', or 'to-zero'"sv);
+            dbgln_if(CSS_PARSER_DEBUG, "round() strategy must be one of 'nearest', 'up', 'down', or 'to-zero'"sv);
             return nullptr;
         }
 
@@ -3976,7 +3974,7 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_round_function(Function const& fu
         return nullptr;
     }
 
-    return TRY(RoundCalculationNode::create(mode, node_a.release_nonnull(), node_b.release_nonnull()));
+    return TRY(RoundCalculationNode::create(strategy, node_a.release_nonnull(), node_b.release_nonnull()));
 }
 
 ErrorOr<OwnPtr<CalculationNode>> Parser::parse_mod_function(Function const& function)
