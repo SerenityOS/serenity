@@ -130,14 +130,6 @@ public:
         MinusInfinity,
     };
 
-    // https://drafts.csswg.org/css-values-4/#round-func
-    enum class RoundingMode {
-        Nearest,
-        Up,
-        Down,
-        TowardZero
-    };
-
     enum class Type {
         Numeric,
         // NOTE: Currently, any value with a `var()` or `attr()` function in it is always an
@@ -699,7 +691,7 @@ private:
 
 class RoundCalculationNode final : public CalculationNode {
 public:
-    static ErrorOr<NonnullOwnPtr<RoundCalculationNode>> create(CalculationNode::RoundingMode, NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
+    static ErrorOr<NonnullOwnPtr<RoundCalculationNode>> create(RoundingStrategy, NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
     ~RoundCalculationNode();
 
     virtual ErrorOr<String> to_string() const override;
@@ -712,8 +704,8 @@ public:
     virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
 
 private:
-    RoundCalculationNode(RoundingMode, NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
-    CalculationNode::RoundingMode m_mode;
+    RoundCalculationNode(RoundingStrategy, NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
+    RoundingStrategy m_strategy;
     NonnullOwnPtr<CalculationNode> m_x;
     NonnullOwnPtr<CalculationNode> m_y;
 };
