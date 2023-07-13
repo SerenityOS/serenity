@@ -73,6 +73,8 @@ public:
         return abs(m_min_row_index) + m_max_row_index + 1;
     }
 
+    void set_max_column_index(size_t max_column_index) { m_max_column_index = max_column_index; }
+
     int min_column_index() const { return m_min_column_index; }
     int max_column_index() const { return m_max_column_index; }
     int min_row_index() const { return m_min_row_index; }
