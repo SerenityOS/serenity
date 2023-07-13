@@ -92,7 +92,7 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
     args_parser.add_option(page_number, "Page number (1-based)", "page", {}, "PAGE");
 
     StringView render_path;
-    args_parser.add_option(render_path, "Path to render a PDF page to", "render", {}, "PNG FILE");
+    args_parser.add_option(render_path, "Path to render PDF page to", "render", {}, "FILE.png");
 
     args_parser.parse(arguments);
 
