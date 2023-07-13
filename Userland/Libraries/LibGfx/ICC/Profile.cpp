@@ -1709,4 +1709,40 @@ XYZ const& Profile::red_matrix_column() const { return xyz_data(redMatrixColumnT
 XYZ const& Profile::green_matrix_column() const { return xyz_data(greenMatrixColumnTag); }
 XYZ const& Profile::blue_matrix_column() const { return xyz_data(blueMatrixColumnTag); }
 
+Optional<String> Profile::tag_string_data(TagSignature signature) const
+{
+    auto maybe_tag_data = tag_data(signature);
+    if (!maybe_tag_data.has_value())
+        return {};
+    auto& tag_data = maybe_tag_data.release_value();
+    if (tag_data.type() == Gfx::ICC::MultiLocalizedUnicodeTagData::Type) {
+        auto& multi_localized_unicode = static_cast<Gfx::ICC::MultiLocalizedUnicodeTagData const&>(tag_data);
+        // Try to find 'en-US', otherwise any 'en' language, otherwise the first record.
+        Optional<String> en_string;
+        constexpr u16 language_en = ('e' << 8) + 'n';
+        constexpr u16 country_us = ('U' << 8) + 'S';
+        for (auto const& record : multi_localized_unicode.records()) {
+            if (record.iso_639_1_language_code == language_en) {
+                if (record.iso_3166_1_country_code == country_us)
+                    return record.text;
+                en_string = record.text;
+            }
+        }
+        if (en_string.has_value())
+            return en_string.value();
+        if (!multi_localized_unicode.records().is_empty())
+            return multi_localized_unicode.records().first().text;
+        return {};
+    }
+    if (tag_data.type() == Gfx::ICC::TextDescriptionTagData::Type) {
+        auto& text_description = static_cast<Gfx::ICC::TextDescriptionTagData const&>(tag_data);
+        return text_description.ascii_description();
+    }
+    if (tag_data.type() == Gfx::ICC::TextTagData::Type) {
+        auto& text = static_cast<Gfx::ICC::TextTagData const&>(tag_data);
+        return text.text();
+    }
+    return {};
+}
+
 }
