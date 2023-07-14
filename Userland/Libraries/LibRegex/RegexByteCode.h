@@ -559,7 +559,6 @@ public:
 
     ALWAYS_INLINE ByteCodeValueType argument(size_t offset) const
     {
-        VERIFY(state().instruction_position + offset <= m_bytecode->size());
         return m_bytecode->at(state().instruction_position + 1 + offset);
     }
 
