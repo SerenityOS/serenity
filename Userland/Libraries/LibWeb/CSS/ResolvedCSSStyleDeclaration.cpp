@@ -691,6 +691,8 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().image_rendering()));
     case PropertyID::JustifyContent:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().justify_content()));
+    case PropertyID::JustifySelf:
+        return TRY(IdentifierStyleValue::create(to_value_id(layout_node.computed_values().justify_self())));
     case PropertyID::Left:
         return style_value_for_length_percentage(layout_node.computed_values().inset().left());
     case PropertyID::LineHeight:

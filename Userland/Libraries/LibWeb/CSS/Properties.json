@@ -1260,6 +1260,13 @@
       "justify-content"
     ]
   },
+  "justify-self": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-types": [
+      "justify-self"
+    ]
+  },
   "left": {
     "inherited": false,
     "initial": "auto",
