@@ -647,7 +647,7 @@ struct MatchInput {
     mutable Vector<size_t> saved_positions;
     mutable Vector<size_t> saved_code_unit_positions;
     mutable Vector<size_t> saved_forks_since_last_save;
-    mutable HashMap<u64, u64> checkpoints;
+    mutable Vector<u64, 64> checkpoints;
     mutable Optional<size_t> fork_to_replace;
 };
 
