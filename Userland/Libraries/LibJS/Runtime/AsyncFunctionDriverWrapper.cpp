@@ -114,7 +114,7 @@ void AsyncFunctionDriverWrapper::continue_async_execution(VM& vm, Value value, b
                 continue;
             }
             if (m_current_promise->state() == Promise::State::Rejected) {
-                generator_result = m_generator_object->resume_abrupt(vm, m_current_promise->result(), {});
+                generator_result = m_generator_object->resume_abrupt(vm, throw_completion(m_current_promise->result()), {});
                 continue;
             }
             // Due to the nature of promise capabilities we might get called on either one path,
