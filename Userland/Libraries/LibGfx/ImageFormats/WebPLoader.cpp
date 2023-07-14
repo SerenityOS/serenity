@@ -772,7 +772,7 @@ ErrorOr<ImageFrameDescriptor> WebPImageDecoderPlugin::frame(size_t index, Option
     if (m_context->state == WebPLoadingContext::State::Error)
         return Error::from_string_literal("WebPImageDecoderPlugin: Decoding failed");
 
-    // In a a lambda so that only one check to set State::Error is needed, instead of one per TRY.
+    // In a lambda so that only one check to set State::Error is needed, instead of one per TRY.
     auto decode_frame = [this](size_t index) -> ErrorOr<ImageFrameDescriptor> {
         if (m_context->state < WebPLoadingContext::State::ChunksDecoded)
             TRY(decode_webp_chunks(*m_context));
