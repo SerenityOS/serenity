@@ -173,7 +173,7 @@ IntSize QOIImageDecoderPlugin::size()
     if (m_context->state < QOILoadingContext::State::HeaderDecoded) {
         // FIXME: This is a weird API (inherited from ImageDecoderPlugin), should probably propagate errors by returning ErrorOr<IntSize>.
         //        For the time being, ignore the result and rely on the context's state.
-        (void)decode_header_and_update_context(*m_context->stream);
+        (void)decode_header_and_update_context();
     }
 
     if (m_context->state == QOILoadingContext::State::Error)
@@ -184,7 +184,7 @@ IntSize QOIImageDecoderPlugin::size()
 
 ErrorOr<void> QOIImageDecoderPlugin::initialize()
 {
-    return decode_header_and_update_context(*m_context->stream);
+    return decode_header_and_update_context();
 }
 
 bool QOIImageDecoderPlugin::sniff(ReadonlyBytes data)
@@ -208,10 +208,10 @@ ErrorOr<ImageFrameDescriptor> QOIImageDecoderPlugin::frame(size_t index, Optiona
     VERIFY(m_context->state != QOILoadingContext::State::Error);
 
     if (m_context->state == QOILoadingContext::State::NotDecoded) {
-        TRY(decode_header_and_update_context(*m_context->stream));
-        TRY(decode_image_and_update_context(*m_context->stream));
+        TRY(decode_header_and_update_context());
+        TRY(decode_image_and_update_context());
     } else if (m_context->state == QOILoadingContext::State::HeaderDecoded) {
-        TRY(decode_image_and_update_context(*m_context->stream));
+        TRY(decode_image_and_update_context());
     }
 
     VERIFY(m_context->state == QOILoadingContext::State::ImageDecoded);
@@ -219,10 +219,10 @@ ErrorOr<ImageFrameDescriptor> QOIImageDecoderPlugin::frame(size_t index, Optiona
     return ImageFrameDescriptor { m_context->bitmap, 0 };
 }
 
-ErrorOr<void> QOIImageDecoderPlugin::decode_header_and_update_context(Stream& stream)
+ErrorOr<void> QOIImageDecoderPlugin::decode_header_and_update_context()
 {
     VERIFY(m_context->state < QOILoadingContext::State::HeaderDecoded);
-    auto error_or_header = decode_qoi_header(stream);
+    auto error_or_header = decode_qoi_header(*m_context->stream);
     if (error_or_header.is_error()) {
         m_context->state = QOILoadingContext::State::Error;
         return error_or_header.release_error();
@@ -232,10 +232,10 @@ ErrorOr<void> QOIImageDecoderPlugin::decode_header_and_update_context(Stream& st
     return {};
 }
 
-ErrorOr<void> QOIImageDecoderPlugin::decode_image_and_update_context(Stream& stream)
+ErrorOr<void> QOIImageDecoderPlugin::decode_image_and_update_context()
 {
     VERIFY(m_context->state < QOILoadingContext::State::ImageDecoded);
-    auto error_or_bitmap = decode_qoi_image(stream, m_context->header.width, m_context->header.height);
+    auto error_or_bitmap = decode_qoi_image(*m_context->stream, m_context->header.width, m_context->header.height);
     if (error_or_bitmap.is_error()) {
         m_context->state = QOILoadingContext::State::Error;
         return error_or_bitmap.release_error();
