@@ -66,6 +66,7 @@ public:
     static CSS::FlexBasis flex_basis() { return CSS::Size::make_auto(); }
     static CSS::ImageRendering image_rendering() { return CSS::ImageRendering::Auto; }
     static CSS::JustifyContent justify_content() { return CSS::JustifyContent::FlexStart; }
+    static CSS::JustifyItems justify_items() { return CSS::JustifyItems::Legacy; }
     static CSS::JustifySelf justify_self() { return CSS::JustifySelf::Auto; }
     static CSS::AlignContent align_content() { return CSS::AlignContent::Stretch; }
     static CSS::AlignItems align_items() { return CSS::AlignItems::Stretch; }
@@ -255,6 +256,7 @@ public:
     CSS::ImageRendering image_rendering() const { return m_inherited.image_rendering; }
     CSS::JustifyContent justify_content() const { return m_noninherited.justify_content; }
     CSS::JustifySelf justify_self() const { return m_noninherited.justify_self; }
+    CSS::JustifyItems justify_items() const { return m_noninherited.justify_items; }
     CSS::BackdropFilter const& backdrop_filter() const { return m_noninherited.backdrop_filter; }
     Vector<ShadowData> const& box_shadow() const { return m_noninherited.box_shadow; }
     CSS::BoxSizing box_sizing() const { return m_noninherited.box_sizing; }
@@ -403,6 +405,7 @@ protected:
         CSS::AlignSelf align_self { InitialValues::align_self() };
         CSS::Appearance appearance { InitialValues::appearance() };
         CSS::JustifyContent justify_content { InitialValues::justify_content() };
+        CSS::JustifyItems justify_items { InitialValues::justify_items() };
         CSS::JustifySelf justify_self { InitialValues::justify_self() };
         CSS::Overflow overflow_x { InitialValues::overflow() };
         CSS::Overflow overflow_y { InitialValues::overflow() };
@@ -505,6 +508,7 @@ public:
     void set_appearance(CSS::Appearance value) { m_noninherited.appearance = value; }
     void set_opacity(float value) { m_noninherited.opacity = value; }
     void set_justify_content(CSS::JustifyContent value) { m_noninherited.justify_content = value; }
+    void set_justify_items(CSS::JustifyItems value) { m_noninherited.justify_items = value; }
     void set_justify_self(CSS::JustifySelf value) { m_noninherited.justify_self = value; }
     void set_box_shadow(Vector<ShadowData>&& value) { m_noninherited.box_shadow = move(value); }
     void set_transformations(Vector<CSS::Transformation> value) { m_noninherited.transformations = move(value); }

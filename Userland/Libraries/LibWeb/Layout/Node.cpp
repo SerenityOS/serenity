@@ -491,6 +491,10 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     if (justify_content.has_value())
         computed_values.set_justify_content(justify_content.value());
 
+    auto justify_items = computed_style.justify_items();
+    if (justify_items.has_value())
+        computed_values.set_justify_items(justify_items.value());
+
     auto justify_self = computed_style.justify_self();
     if (justify_self.has_value())
         computed_values.set_justify_self(justify_self.value());
