@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +7,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Painting/Paintable.h>
+#include <LibWeb/Painting/PaintableBox.h>
 
 namespace Web::Painting {
 
@@ -84,6 +85,13 @@ Paintable const* Paintable::previous_sibling() const
     for (; layout_node && !layout_node->paintable(); layout_node = layout_node->previous_sibling())
         ;
     return layout_node ? layout_node->paintable() : nullptr;
+}
+
+StackingContext const* Paintable::stacking_context_rooted_here() const
+{
+    if (!layout_node().is_box())
+        return nullptr;
+    return static_cast<PaintableBox const&>(*this).stacking_context();
 }
 
 }

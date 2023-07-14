@@ -134,6 +134,8 @@ public:
     template<typename T>
     bool fast_is() const = delete;
 
+    StackingContext const* stacking_context_rooted_here() const;
+
 protected:
     explicit Paintable(Layout::Node const& layout_node)
         : m_layout_node(layout_node)
