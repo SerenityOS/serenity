@@ -320,21 +320,36 @@ URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Option
             }
             // 2. Otherwise, if c is U+003A (:), then:
             else if (code_point == ':') {
-                // FIXME: 1. If state override is given, then:
-                if (false) {
-                    // FIXME: 1. If url’s scheme is a special scheme and buffer is not a special scheme, then return.
-                    // FIXME: 2. If url’s scheme is a special scheme and buffer is not a special scheme, then return.
-                    // FIXME: 3. If url includes credentials or has a non-null port, and buffer is "file", then return.
-                    // FIXME: 4. If url’s scheme is "file" and its host is an empty host, then return.
+                // 1. If state override is given, then:
+                if (state_override.has_value()) {
+                    // 1. If url’s scheme is a special scheme and buffer is not a special scheme, then return.
+                    if (URL::is_special_scheme(url->scheme()) && !URL::is_special_scheme(buffer.string_view()))
+                        return *url;
+
+                    // 2. If url’s scheme is not a special scheme and buffer is a special scheme, then return.
+                    if (!URL::is_special_scheme(url->scheme()) && URL::is_special_scheme(buffer.string_view()))
+                        return *url;
+
+                    // 3. If url includes credentials or has a non-null port, and buffer is "file", then return.
+                    if ((url->includes_credentials() || url->port().has_value()) && buffer.string_view() == "file"sv)
+                        return *url;
+
+                    // 4. If url’s scheme is "file" and its host is an empty host, then return.
+                    if (url->scheme() == "file"sv && url->host().is_empty())
+                        return *url;
                 }
 
                 // 2. Set url’s scheme to buffer.
                 url->m_scheme = buffer.to_deprecated_string();
 
-                // FIXME: 3. If state override is given, then:
-                if (false) {
-                    // FIXME: 1. If url’s port is url’s scheme’s default port, then set url’s port to null.
-                    // FIXME: 2. Return.
+                // 3. If state override is given, then:
+                if (state_override.has_value()) {
+                    // 1. If url’s port is url’s scheme’s default port, then set url’s port to null.
+                    if (url->port() == URL::default_port_for_scheme(url->scheme()))
+                        url->m_port = {};
+
+                    // 2. Return.
+                    return *url;
                 }
 
                 // 4. Set buffer to the empty string.
@@ -634,7 +649,9 @@ URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Option
                     return {};
                 }
 
-                // FIXME: 2. If state override is given and state override is hostname state, then return.
+                // 2. If state override is given and state override is hostname state, then return.
+                if (state_override.has_value() && *state_override == State::Hostname)
+                    return *url;
 
                 // 3. Let host be the result of host parsing buffer with url is not special.
                 auto host = parse_host(buffer.string_view(), !url->is_special());
@@ -662,7 +679,9 @@ URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Option
                     return {};
                 }
 
-                // FIXME: 2. Otherwise, if state override is given, buffer is the empty string, and either url includes credentials or url’s port is non-null, return.
+                // 2. Otherwise, if state override is given, buffer is the empty string, and either url includes credentials or url’s port is non-null, return.
+                if (state_override.has_value() && buffer.is_empty() && (url->includes_credentials() || url->port().has_value()))
+                    return *url;
 
                 // 3. Let host be the result of host parsing buffer with url is not special.
                 auto host = parse_host(buffer.string_view(), !url->is_special());
@@ -676,7 +695,10 @@ URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Option
                 buffer.clear();
                 state = State::Port;
 
-                // FIXME: 6. If state override is given, then return.
+                // 6. If state override is given, then return.
+                if (state_override.has_value())
+                    return *url;
+
                 continue;
 
             }
@@ -732,7 +754,9 @@ URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Option
                     buffer.clear();
                 }
 
-                // FIXME: 2. If state override is given, then return.
+                // 2. If state override is given, then return.
+                if (state_override.has_value())
+                    return *url;
 
                 // 3. Set state to path start state and decrease pointer by 1.
                 state = State::PathStart;
@@ -855,7 +879,9 @@ URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Option
                     // 1. Set url’s host to the empty string.
                     url->m_host = "";
 
-                    // FIXME: 2. If state override is given, then return.
+                    // 2. If state override is given, then return.
+                    if (state_override.has_value())
+                        return *url;
 
                     // 3. Set state to path start state.
                     state = State::PathStart;
@@ -877,7 +903,9 @@ URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Option
                     // 4. Set url’s host to host.
                     url->m_host = host.release_value();
 
-                    // FIXME: 5. If state override is given, then return.
+                    // 5. If state override is given, then return.
+                    if (state_override.has_value())
+                        return *url;
 
                     // 6. Set buffer to the empty string and state to path start state.
                     buffer.clear();
