@@ -207,19 +207,30 @@ public:
             auto color_index = TRY(m_stream.read_value<VarUInt>());
             return m_color_table[color_index];
         };
+        auto read_gradient = [&]() -> ErrorOr<NonnullRefPtr<SVGGradientPaintStyle>> {
+            auto point_0 = TRY(read_point());
+            auto point_1 = TRY(read_point());
+            auto color_0 = TRY(read_color());
+            auto color_1 = TRY(read_color());
+            // Map TinyVG gradients to SVG gradients (since we already have those).
+            // This is not entirely consistent with the spec, which uses gamma sRGB for gradients
+            // (but this matches the TVG -> SVG renderings).
+            auto svg_gradient = TRY([&]() -> ErrorOr<NonnullRefPtr<SVGGradientPaintStyle>> {
+                if (type == StyleType::LinearGradient)
+                    return TRY(SVGLinearGradientPaintStyle::create(point_0, point_1));
+                auto radius = point_1.distance_from(point_0);
+                return TRY(SVGRadialGradientPaintStyle::create(point_0, 0, point_0, radius));
+            }());
+            TRY(svg_gradient->add_color_stop(0, color_0));
+            TRY(svg_gradient->add_color_stop(1, color_1));
+            return svg_gradient;
+        };
         switch (type) {
-        case StyleType::FlatColored: {
+        case StyleType::FlatColored:
             return TRY(read_color());
-        }
         case StyleType::LinearGradient:
-        case StyleType::RadialGradinet: {
-            // TODO: Make PaintStyle (for these ultra basic gradients)
-            [[maybe_unused]] auto point_0 = TRY(read_point());
-            [[maybe_unused]] auto point_1 = TRY(read_point());
-            [[maybe_unused]] auto color_0 = TRY(read_color());
-            [[maybe_unused]] auto color_1 = TRY(read_color());
-            return Color(Color::Black);
-        }
+        case StyleType::RadialGradinet:
+            return TRY(read_gradient());
         }
         return Error::from_string_literal("Invalid TinyVG: Bad style data");
     }
