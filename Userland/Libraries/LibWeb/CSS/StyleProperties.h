@@ -83,6 +83,7 @@ public:
     Optional<CSS::Visibility> visibility() const;
     Optional<CSS::ImageRendering> image_rendering() const;
     Optional<CSS::JustifyContent> justify_content() const;
+    Optional<CSS::JustifyItems> justify_items() const;
     Optional<CSS::JustifySelf> justify_self() const;
     Optional<CSS::Overflow> overflow_x() const;
     Optional<CSS::Overflow> overflow_y() const;

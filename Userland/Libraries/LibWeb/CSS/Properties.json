@@ -1260,6 +1260,13 @@
       "justify-content"
     ]
   },
+  "justify-items": {
+    "inherited": false,
+    "initial": "legacy",
+    "valid-types": [
+      "justify-items"
+    ]
+  },
   "justify-self": {
     "inherited": false,
     "initial": "auto",

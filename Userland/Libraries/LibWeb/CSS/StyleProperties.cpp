@@ -405,6 +405,12 @@ Optional<CSS::JustifyContent> StyleProperties::justify_content() const
     return value_id_to_justify_content(value->to_identifier());
 }
 
+Optional<CSS::JustifyItems> StyleProperties::justify_items() const
+{
+    auto value = property(CSS::PropertyID::JustifyItems);
+    return value_id_to_justify_items(value->to_identifier());
+}
+
 Optional<CSS::JustifySelf> StyleProperties::justify_self() const
 {
     auto value = property(CSS::PropertyID::JustifySelf);

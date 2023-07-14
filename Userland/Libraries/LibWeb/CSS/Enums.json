@@ -176,6 +176,21 @@
         "space-around",
         "space-evenly"
     ],
+    "justify-items": [
+        "baseline",
+        "center",
+        "end",
+        "flex-end",
+        "flex-start",
+        "legacy",
+        "normal",
+        "safe",
+        "self-end",
+        "self-start",
+        "start",
+        "stretch",
+        "unsafe"
+    ],
     "justify-self": [
         "auto",
         "baseline",
