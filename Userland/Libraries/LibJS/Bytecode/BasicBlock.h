@@ -19,6 +19,8 @@ struct UnwindInfo {
     BasicBlock const* finalizer;
 
     JS::GCPtr<Environment> lexical_environment;
+
+    bool handler_called { false };
 };
 
 class BasicBlock {

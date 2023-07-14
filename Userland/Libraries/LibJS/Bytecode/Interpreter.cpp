@@ -242,10 +242,10 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
                 auto& unwind_context = unwind_contexts().last();
                 if (unwind_context.executable != m_current_executable)
                     break;
-                if (unwind_context.handler) {
+                if (unwind_context.handler && !unwind_context.handler_called) {
                     vm().running_execution_context().lexical_environment = unwind_context.lexical_environment;
                     m_current_block = unwind_context.handler;
-                    unwind_context.handler = nullptr;
+                    unwind_context.handler_called = true;
 
                     accumulator() = exception_value;
                     m_saved_exception = {};
@@ -254,6 +254,11 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
                 }
                 if (unwind_context.finalizer) {
                     m_current_block = unwind_context.finalizer;
+                    // If an exception was thrown inside the corresponding `catch` block, we need to rethrow it
+                    // from the `finally` block. But if the exception is from the `try` block, and has already been
+                    // handled by `catch`, we swallow it.
+                    if (!unwind_context.handler_called)
+                        m_saved_exception = {};
                     will_jump = true;
                     break;
                 }
