@@ -17,6 +17,7 @@
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/AsyncFunctionDriverWrapper.h>
+#include <LibJS/Runtime/AsyncGenerator.h>
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/ExecutionContext.h>
@@ -855,9 +856,6 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
 
-    if (m_kind == FunctionKind::AsyncGenerator)
-        return vm.throw_completion<InternalError>(ErrorType::NotImplemented, "Async Generator function execution");
-
     auto* bytecode_interpreter = vm.bytecode_interpreter_if_exists();
 
     // The bytecode interpreter can execute generator functions while the AST interpreter cannot.
@@ -867,7 +865,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
     // However, this does cause an awkward situation with features not supported in bytecode, where features that work outside of generators with AST
     // suddenly stop working inside of generators.
     // This is a stop gap until bytecode mode becomes the default.
-    if (m_kind == FunctionKind::Generator && !bytecode_interpreter) {
+    if ((m_kind == FunctionKind::Generator || m_kind == FunctionKind::AsyncGenerator) && !bytecode_interpreter) {
         bytecode_interpreter = &vm.bytecode_interpreter();
     }
 
@@ -920,6 +918,11 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         if (m_kind == FunctionKind::Normal)
             return { Completion::Type::Return, result.value_or(js_undefined()), {} };
 
+        if (m_kind == FunctionKind::AsyncGenerator) {
+            auto async_generator_object = TRY(AsyncGenerator::create(realm, result, this, vm.running_execution_context().copy(), move(*result_and_frame.frame)));
+            return { Completion::Type::Return, async_generator_object, {} };
+        }
+
         auto generator_object = TRY(GeneratorObject::create(realm, result, this, vm.running_execution_context().copy(), move(*result_and_frame.frame)));
 
         // NOTE: Async functions are entirely transformed to generator functions, and wrapped in a custom driver that returns a promise
@@ -932,6 +935,8 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
     } else {
         if (m_kind == FunctionKind::Generator)
             return vm.throw_completion<InternalError>(ErrorType::NotImplemented, "Generator function execution in AST interpreter");
+        if (m_kind == FunctionKind::AsyncGenerator)
+            return vm.throw_completion<InternalError>(ErrorType::NotImplemented, "Async generator function execution in AST interpreter");
         OwnPtr<Interpreter> local_interpreter;
         Interpreter* ast_interpreter = vm.interpreter_if_exists();
 

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2023, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,7 @@
 #pragma once
 
 #include <AK/Variant.h>
+#include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Runtime/ExecutionContext.h>
 #include <LibJS/Runtime/Object.h>
 
@@ -25,21 +27,40 @@ public:
         Completed,
     };
 
+    static ThrowCompletionOr<NonnullGCPtr<AsyncGenerator>> create(Realm&, Value, ECMAScriptFunctionObject*, ExecutionContext, Bytecode::RegisterWindow);
+
     virtual ~AsyncGenerator() override = default;
 
+    void async_generator_enqueue(Completion, NonnullGCPtr<PromiseCapability>);
+    ThrowCompletionOr<void> resume(VM&, Completion completion);
+    ThrowCompletionOr<void> await_return();
+    void complete_step(Completion, bool done, Realm* realm = nullptr);
+    void drain_queue();
+
+    State async_generator_state() const { return m_async_generator_state; }
+    void set_async_generator_state(Badge<AsyncGeneratorPrototype>, State value);
+
+    Optional<String> const& generator_brand() const { return m_generator_brand; }
+
 private:
-    explicit AsyncGenerator(Object& prototype);
+    AsyncGenerator(Realm&, Object& prototype, ExecutionContext);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
+    void execute(VM&, Completion completion);
+    ThrowCompletionOr<void> await(Value);
+
     // At the time of constructing an AsyncGenerator, we still need to point to an
     // execution context on the stack, but later need to 'adopt' it.
-    using ExecutionContextVariant = Variant<ExecutionContext, ExecutionContext*, Empty>;
+    State m_async_generator_state { State::SuspendedStart }; // [[AsyncGeneratorState]]
+    ExecutionContext m_async_generator_context;              // [[AsyncGeneratorContext]]
+    Vector<AsyncGeneratorRequest> m_async_generator_queue;   // [[AsyncGeneratorQueue]]
+    Optional<String> m_generator_brand;                      // [[GeneratorBrand]]
 
-    Optional<State> m_async_generator_state;               // [[AsyncGeneratorState]]
-    ExecutionContextVariant m_async_generator_context;     // [[AsyncGeneratorContext]]
-    Vector<AsyncGeneratorRequest> m_async_generator_queue; // [[AsyncGeneratorQueue]]
-    Optional<DeprecatedString> m_generator_brand;          // [[GeneratorBrand]]
+    GCPtr<ECMAScriptFunctionObject> m_generating_function;
+    Value m_previous_value;
+    Optional<Bytecode::RegisterWindow> m_frame;
+    GCPtr<Promise> m_current_promise;
 };
 
 }

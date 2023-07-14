@@ -1587,6 +1587,78 @@ Bytecode::CodeGenerationErrorOr<void> ReturnStatement::generate_bytecode(Bytecod
     return {};
 }
 
+static void get_received_completion_type_and_value(Bytecode::Generator& generator, Bytecode::Register received_completion_register, Bytecode::Register received_completion_type_register, Bytecode::Register received_completion_value_register, Bytecode::IdentifierTableIndex type_identifier, Bytecode::IdentifierTableIndex value_identifier)
+{
+    // The accumulator is set to an object, for example: { "type": 1 (normal), value: 1337 }
+    generator.emit<Bytecode::Op::Store>(received_completion_register);
+
+    generator.emit_get_by_id(type_identifier);
+    generator.emit<Bytecode::Op::Store>(received_completion_type_register);
+
+    generator.emit<Bytecode::Op::Load>(received_completion_register);
+    generator.emit_get_by_id(value_identifier);
+    generator.emit<Bytecode::Op::Store>(received_completion_value_register);
+}
+
+static void generate_await(Bytecode::Generator& generator, Bytecode::Register received_completion_register, Bytecode::Register received_completion_type_register, Bytecode::Register received_completion_value_register, Bytecode::IdentifierTableIndex type_identifier, Bytecode::IdentifierTableIndex value_identifier);
+
+enum class AwaitBeforeYield {
+    No,
+    Yes,
+};
+
+static void generate_yield(Bytecode::Generator& generator, Bytecode::Label continuation_label, Bytecode::Register received_completion_register, Bytecode::Register received_completion_type_register, Bytecode::Register received_completion_value_register, Bytecode::IdentifierTableIndex type_identifier, Bytecode::IdentifierTableIndex value_identifier, AwaitBeforeYield await_before_yield)
+{
+    if (!generator.is_in_async_generator_function()) {
+        generator.emit<Bytecode::Op::Yield>(Bytecode::Label { continuation_label });
+        return;
+    }
+
+    if (await_before_yield == AwaitBeforeYield::Yes)
+        generate_await(generator, received_completion_register, received_completion_type_register, received_completion_value_register, type_identifier, value_identifier);
+
+    auto& unwrap_yield_resumption_block = generator.make_block();
+    generator.emit<Bytecode::Op::Yield>(Bytecode::Label { unwrap_yield_resumption_block });
+    generator.switch_to_basic_block(unwrap_yield_resumption_block);
+    get_received_completion_type_and_value(generator, received_completion_register, received_completion_type_register, received_completion_value_register, type_identifier, value_identifier);
+
+    // 27.6.3.7 AsyncGeneratorUnwrapYieldResumption ( resumptionValue ), https://tc39.es/ecma262/#sec-asyncgeneratorunwrapyieldresumption
+    // 1. If resumptionValue.[[Type]] is not return, return ? resumptionValue.
+    auto& load_completion_and_jump_to_continuation_label_block = generator.make_block();
+    auto& resumption_value_type_is_return_block = generator.make_block();
+    generator.emit<Bytecode::Op::LoadImmediate>(Value(to_underlying(Completion::Type::Return)));
+    generator.emit<Bytecode::Op::StrictlyInequals>(received_completion_type_register);
+    generator.emit<Bytecode::Op::JumpConditional>(
+        Bytecode::Label { load_completion_and_jump_to_continuation_label_block },
+        Bytecode::Label { resumption_value_type_is_return_block });
+
+    generator.switch_to_basic_block(resumption_value_type_is_return_block);
+
+    // 2. Let awaited be Completion(Await(resumptionValue.[[Value]])).
+    generator.emit<Bytecode::Op::Load>(received_completion_value_register);
+    generate_await(generator, received_completion_register, received_completion_type_register, received_completion_value_register, type_identifier, value_identifier);
+
+    // 3. If awaited.[[Type]] is throw, return ? awaited.
+    auto& awaited_type_is_normal_block = generator.make_block();
+    generator.emit<Bytecode::Op::LoadImmediate>(Value(to_underlying(Completion::Type::Throw)));
+    generator.emit<Bytecode::Op::StrictlyEquals>(received_completion_type_register);
+    generator.emit<Bytecode::Op::JumpConditional>(
+        Bytecode::Label { load_completion_and_jump_to_continuation_label_block },
+        Bytecode::Label { awaited_type_is_normal_block });
+
+    // 4. Assert: awaited.[[Type]] is normal.
+    generator.switch_to_basic_block(awaited_type_is_normal_block);
+
+    // 5. Return Completion Record { [[Type]]: return, [[Value]]: awaited.[[Value]], [[Target]]: empty }.
+    generator.emit<Bytecode::Op::LoadImmediate>(Value(to_underlying(Completion::Type::Return)));
+    generator.emit<Bytecode::Op::PutById>(received_completion_register, type_identifier);
+    generator.emit<Bytecode::Op::Jump>(Bytecode::Label { load_completion_and_jump_to_continuation_label_block });
+
+    generator.switch_to_basic_block(load_completion_and_jump_to_continuation_label_block);
+    generator.emit<Bytecode::Op::Load>(received_completion_register);
+    generator.emit<Bytecode::Op::Jump>(continuation_label);
+}
+
 Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     VERIFY(generator.is_in_generator_function());
@@ -1598,21 +1670,10 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
     auto type_identifier = generator.intern_identifier("type");
     auto value_identifier = generator.intern_identifier("value");
 
-    auto get_received_completion_type_and_value = [&]() {
-        // The accumulator is set to an object, for example: { "type": 1 (normal), value: 1337 }
-        generator.emit<Bytecode::Op::Store>(received_completion_register);
-
-        generator.emit_get_by_id(type_identifier);
-        generator.emit<Bytecode::Op::Store>(received_completion_type_register);
-
-        generator.emit<Bytecode::Op::Load>(received_completion_register);
-        generator.emit_get_by_id(value_identifier);
-        generator.emit<Bytecode::Op::Store>(received_completion_value_register);
-    };
-
     if (m_is_yield_from) {
         // 15.5.5 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluation
-        // FIXME: 1. Let generatorKind be GetGeneratorKind().
+        // 1. Let generatorKind be GetGeneratorKind().
+        // NOTE: is_in_async_generator_function differentiates the generator kind.
 
         // 2. Let exprRef be ? Evaluation of AssignmentExpression.
         // 3. Let value be ? GetValue(exprRef).
@@ -1620,9 +1681,9 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
         TRY(m_argument->generate_bytecode(generator));
 
         // 4. Let iteratorRecord be ? GetIterator(value, generatorKind).
-        // FIXME: Consider generatorKind.
         auto iterator_record_register = generator.allocate_register();
-        generator.emit<Bytecode::Op::GetIterator>();
+        auto iterator_hint = generator.is_in_async_generator_function() ? IteratorHint::Async : IteratorHint::Sync;
+        generator.emit<Bytecode::Op::GetIterator>(iterator_hint);
         generator.emit<Bytecode::Op::Store>(iterator_record_register);
 
         // 5. Let iterator be iteratorRecord.[[Iterator]].
@@ -1670,7 +1731,9 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
         generator.emit_with_extra_register_slots<Bytecode::Op::NewArray>(2, AK::Array { received_completion_value_register, received_completion_value_register });
         generator.emit<Bytecode::Op::CallWithArgumentArray>(Bytecode::Op::CallType::Call, next_method_register, iterator_register);
 
-        // FIXME: ii. If generatorKind is async, set innerResult to ? Await(innerResult).
+        // ii. If generatorKind is async, set innerResult to ? Await(innerResult).
+        if (generator.is_in_async_generator_function())
+            generate_await(generator, received_completion_register, received_completion_type_register, received_completion_value_register, type_identifier, value_identifier);
 
         // iii. If innerResult is not an Object, throw a TypeError exception.
         generator.emit<Bytecode::Op::ThrowIfNotObject>();
@@ -1697,15 +1760,15 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
 
         generator.switch_to_basic_block(type_is_normal_not_done_block);
 
-        // FIXME: vi. If generatorKind is async, set received to Completion(AsyncGeneratorYield(? IteratorValue(innerResult))).
+        // vi. If generatorKind is async, set received to Completion(AsyncGeneratorYield(? IteratorValue(innerResult))).
         // vii. Else, set received to Completion(GeneratorYield(innerResult)).
-        // FIXME: Else,
         generator.emit<Bytecode::Op::Load>(inner_result_register);
 
         // FIXME: Yield currently only accepts a Value, not an object conforming to the IteratorResult interface, so we have to do an observable lookup of `value` here.
+        //        This only matters for non-async generators.
         generator.emit<Bytecode::Op::IteratorResultValue>();
 
-        generator.emit<Bytecode::Op::Yield>(Bytecode::Label { continuation_block });
+        generate_yield(generator, Bytecode::Label { continuation_block }, received_completion_register, received_completion_type_register, received_completion_value_register, type_identifier, value_identifier, AwaitBeforeYield::No);
 
         // b. Else if received.[[Type]] is throw, then
         generator.switch_to_basic_block(is_type_throw_block);
@@ -1742,7 +1805,9 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
         generator.emit_with_extra_register_slots<Bytecode::Op::NewArray>(2, AK::Array { received_completion_value_register, received_completion_value_register });
         generator.emit<Bytecode::Op::CallWithArgumentArray>(Bytecode::Op::CallType::Call, throw_method_register, iterator_register);
 
-        // FIXME: 2. If generatorKind is async, set innerResult to ? Await(innerResult).
+        // 2. If generatorKind is async, set innerResult to ? Await(innerResult).
+        if (generator.is_in_async_generator_function())
+            generate_await(generator, received_completion_register, received_completion_type_register, received_completion_value_register, type_identifier, value_identifier);
 
         // 3. NOTE: Exceptions from the inner iterator throw method are propagated. Normal completions from an inner throw method are processed similarly to an inner next.
         // 4. If innerResult is not an Object, throw a TypeError exception.
@@ -1768,26 +1833,31 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
 
         generator.switch_to_basic_block(type_is_throw_not_done_block);
 
-        // FIXME: 7. If generatorKind is async, set received to Completion(AsyncGeneratorYield(? IteratorValue(innerResult))).
+        // 7. If generatorKind is async, set received to Completion(AsyncGeneratorYield(? IteratorValue(innerResult))).
         // 8. Else, set received to Completion(GeneratorYield(innerResult)).
-        // FIXME: Else,
         generator.emit<Bytecode::Op::Load>(inner_result_register);
 
         // FIXME: Yield currently only accepts a Value, not an object conforming to the IteratorResult interface, so we have to do an observable lookup of `value` here.
+        //        This only matters for non-async generators.
         generator.emit<Bytecode::Op::IteratorResultValue>();
 
-        generator.emit<Bytecode::Op::Yield>(Bytecode::Label { continuation_block });
+        generate_yield(generator, Bytecode::Label { continuation_block }, received_completion_register, received_completion_type_register, received_completion_value_register, type_identifier, value_identifier, AwaitBeforeYield::No);
 
         generator.switch_to_basic_block(throw_method_is_undefined_block);
 
         // 1. NOTE: If iterator does not have a throw method, this throw is going to terminate the yield* loop. But first we need to give iterator a chance to clean up.
 
         // 2. Let closeCompletion be Completion Record { [[Type]]: normal, [[Value]]: empty, [[Target]]: empty }.
-        // FIXME: 3. If generatorKind is async, perform ? AsyncIteratorClose(iteratorRecord, closeCompletion).
-        // 4. Else, perform ? IteratorClose(iteratorRecord, closeCompletion).
-        // FIXME: Else,
+        // 3. If generatorKind is async, perform ? AsyncIteratorClose(iteratorRecord, closeCompletion).
         generator.emit<Bytecode::Op::Load>(iterator_record_register);
-        generator.emit<Bytecode::Op::IteratorClose>(Completion::Type::Normal, Optional<Value> {});
+        if (generator.is_in_async_generator_function()) {
+            // FIXME: This performs `await` outside of the generator!
+            generator.emit<Bytecode::Op::AsyncIteratorClose>(Completion::Type::Normal, Optional<Value> {});
+        }
+        // 4. Else, perform ? IteratorClose(iteratorRecord, closeCompletion).
+        else {
+            generator.emit<Bytecode::Op::IteratorClose>(Completion::Type::Normal, Optional<Value> {});
+        }
 
         // 5. NOTE: The next step throws a TypeError to indicate that there was a yield* protocol violation: iterator does not have a throw method.
         // 6. Throw a TypeError exception.
@@ -1817,10 +1887,13 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
 
         generator.switch_to_basic_block(return_is_undefined_block);
 
-        // FIXME: 1. If generatorKind is async, set received.[[Value]] to ? Await(received.[[Value]]).
+        // 1. If generatorKind is async, set received.[[Value]] to ? Await(received.[[Value]]).
+        generator.emit<Bytecode::Op::Load>(received_completion_value_register);
+        if (generator.is_in_async_generator_function())
+            generate_await(generator, received_completion_register, received_completion_type_register, received_completion_value_register, type_identifier, value_identifier);
+
         // 2. Return ? received.
         // NOTE: This will always be a return completion.
-        generator.emit<Bytecode::Op::Load>(received_completion_value_register);
         generator.perform_needed_unwinds<Bytecode::Op::Yield>();
         generator.emit<Bytecode::Op::Yield>(nullptr);
 
@@ -1830,7 +1903,9 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
         generator.emit_with_extra_register_slots<Bytecode::Op::NewArray>(2, AK::Array { received_completion_value_register, received_completion_value_register });
         generator.emit<Bytecode::Op::CallWithArgumentArray>(Bytecode::Op::CallType::Call, return_method_register, iterator_register);
 
-        // FIXME: v. If generatorKind is async, set innerReturnResult to ? Await(innerReturnResult).
+        // v. If generatorKind is async, set innerReturnResult to ? Await(innerReturnResult).
+        if (generator.is_in_async_generator_function())
+            generate_await(generator, received_completion_register, received_completion_type_register, received_completion_value_register, type_identifier, value_identifier);
 
         // vi. If innerReturnResult is not an Object, throw a TypeError exception.
         generator.emit<Bytecode::Op::ThrowIfNotObject>();
@@ -1860,18 +1935,18 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
 
         generator.switch_to_basic_block(type_is_return_not_done_block);
 
-        // FIXME: ix. If generatorKind is async, set received to Completion(AsyncGeneratorYield(? IteratorValue(innerReturnResult))).
+        // ix. If generatorKind is async, set received to Completion(AsyncGeneratorYield(? IteratorValue(innerReturnResult))).
         // x. Else, set received to Completion(GeneratorYield(innerReturnResult)).
-        // FIXME: Else,
         generator.emit<Bytecode::Op::Load>(inner_return_result_register);
 
         // FIXME: Yield currently only accepts a Value, not an object conforming to the IteratorResult interface, so we have to do an observable lookup of `value` here.
+        //        This only matters for non-async generators.
         generator.emit<Bytecode::Op::IteratorResultValue>();
 
-        generator.emit<Bytecode::Op::Yield>(Bytecode::Label { continuation_block });
+        generate_yield(generator, Bytecode::Label { continuation_block }, received_completion_register, received_completion_type_register, received_completion_value_register, type_identifier, value_identifier, AwaitBeforeYield::No);
 
         generator.switch_to_basic_block(continuation_block);
-        get_received_completion_type_and_value();
+        get_received_completion_type_and_value(generator, received_completion_register, received_completion_type_register, received_completion_value_register, type_identifier, value_identifier);
         generator.emit<Bytecode::Op::Jump>(Bytecode::Label { loop_block });
 
         generator.switch_to_basic_block(loop_end_block);
@@ -1884,9 +1959,9 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
         generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
 
     auto& continuation_block = generator.make_block();
-    generator.emit<Bytecode::Op::Yield>(Bytecode::Label { continuation_block });
+    generate_yield(generator, Bytecode::Label { continuation_block }, received_completion_register, received_completion_type_register, received_completion_value_register, type_identifier, value_identifier, AwaitBeforeYield::Yes);
     generator.switch_to_basic_block(continuation_block);
-    get_received_completion_type_and_value();
+    get_received_completion_type_and_value(generator, received_completion_register, received_completion_type_register, received_completion_value_register, type_identifier, value_identifier);
 
     auto& normal_completion_continuation_block = generator.make_block();
     auto& throw_completion_continuation_block = generator.make_block();
@@ -2419,32 +2494,15 @@ Bytecode::CodeGenerationErrorOr<void> ThisExpression::generate_bytecode(Bytecode
     return {};
 }
 
-static void generate_await(Bytecode::Generator& generator)
+static void generate_await(Bytecode::Generator& generator, Bytecode::Register received_completion_register, Bytecode::Register received_completion_type_register, Bytecode::Register received_completion_value_register, Bytecode::IdentifierTableIndex type_identifier, Bytecode::IdentifierTableIndex value_identifier)
 {
     VERIFY(generator.is_in_async_function());
 
-    // Transform `await expr` to `yield expr`, see AsyncFunctionDriverWrapper
-    // For that we just need to copy most of the code from YieldExpression
-    auto received_completion_register = generator.allocate_register();
-    auto received_completion_type_register = generator.allocate_register();
-    auto received_completion_value_register = generator.allocate_register();
-
-    auto type_identifier = generator.intern_identifier("type");
-    auto value_identifier = generator.intern_identifier("value");
-
     auto& continuation_block = generator.make_block();
-    generator.emit<Bytecode::Op::Yield>(Bytecode::Label { continuation_block });
+    generator.emit<Bytecode::Op::Await>(Bytecode::Label { continuation_block });
     generator.switch_to_basic_block(continuation_block);
 
-    // The accumulator is set to an object, for example: { "type": 1 (normal), value: 1337 }
-    generator.emit<Bytecode::Op::Store>(received_completion_register);
-
-    generator.emit_get_by_id(type_identifier);
-    generator.emit<Bytecode::Op::Store>(received_completion_type_register);
-
-    generator.emit<Bytecode::Op::Load>(received_completion_register);
-    generator.emit_get_by_id(value_identifier);
-    generator.emit<Bytecode::Op::Store>(received_completion_value_register);
+    get_received_completion_type_and_value(generator, received_completion_register, received_completion_type_register, received_completion_value_register, type_identifier, value_identifier);
 
     auto& normal_completion_continuation_block = generator.make_block();
     auto& throw_value_block = generator.make_block();
@@ -2455,7 +2513,7 @@ static void generate_await(Bytecode::Generator& generator)
         Bytecode::Label { normal_completion_continuation_block },
         Bytecode::Label { throw_value_block });
 
-    // Simplification: The only abrupt completion we receive from AsyncFunctionDriverWrapper is Type::Throw
+    // Simplification: The only abrupt completion we receive from AsyncFunctionDriverWrapper or AsyncGenerator is Type::Throw
     //                 So we do not need to account for the Type::Return path
     generator.switch_to_basic_block(throw_value_block);
     generator.emit<Bytecode::Op::Load>(received_completion_value_register);
@@ -2469,7 +2527,15 @@ static void generate_await(Bytecode::Generator& generator)
 Bytecode::CodeGenerationErrorOr<void> AwaitExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     TRY(m_argument->generate_bytecode(generator));
-    generate_await(generator);
+
+    auto received_completion_register = generator.allocate_register();
+    auto received_completion_type_register = generator.allocate_register();
+    auto received_completion_value_register = generator.allocate_register();
+
+    auto type_identifier = generator.intern_identifier("type");
+    auto value_identifier = generator.intern_identifier("value");
+
+    generate_await(generator, received_completion_register, received_completion_type_register, received_completion_value_register, type_identifier, value_identifier);
     return {};
 }
 
@@ -2651,8 +2717,16 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
     generator.emit<Bytecode::Op::IteratorNext>();
 
     // b. If iteratorKind is async, set nextResult to ? Await(nextResult).
-    if (iterator_kind == IteratorHint::Async)
-        generate_await(generator);
+    if (iterator_kind == IteratorHint::Async) {
+        auto received_completion_register = generator.allocate_register();
+        auto received_completion_type_register = generator.allocate_register();
+        auto received_completion_value_register = generator.allocate_register();
+
+        auto type_identifier = generator.intern_identifier("type");
+        auto value_identifier = generator.intern_identifier("value");
+
+        generate_await(generator, received_completion_register, received_completion_type_register, received_completion_value_register, type_identifier, value_identifier);
+    }
 
     // c. If Type(nextResult) is not Object, throw a TypeError exception.
     generator.emit<Bytecode::Op::ThrowIfNotObject>();
