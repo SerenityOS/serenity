@@ -1426,17 +1426,39 @@ void GridFormattingContext::resolve_grid_item_widths()
 
         auto try_compute_width = [&](CSSPixels a_width) {
             CSSPixels width = a_width;
-            auto underflow_px = containing_block_width - width - box_state.border_left - box_state.border_right - box_state.padding_left - box_state.padding_right - box_state.margin_left - box_state.margin_right;
+
+            // Auto margins absorb positive free space prior to alignment via the box alignment properties.
+            auto free_space_left_for_margins = containing_block_width - width - box_state.border_left - box_state.border_right - box_state.padding_left - box_state.padding_right - box_state.margin_left - box_state.margin_right;
             if (computed_values.margin().left().is_auto() && computed_values.margin().right().is_auto()) {
-                auto half_of_the_underflow = underflow_px / 2;
-                box_state.margin_left = half_of_the_underflow;
-                box_state.margin_right = half_of_the_underflow;
+                box_state.margin_left = free_space_left_for_margins / 2;
+                box_state.margin_right = free_space_left_for_margins / 2;
             } else if (computed_values.margin().left().is_auto()) {
-                box_state.margin_left = underflow_px;
+                box_state.margin_left = free_space_left_for_margins;
             } else if (computed_values.margin().right().is_auto()) {
-                box_state.margin_right = underflow_px;
+                box_state.margin_right = free_space_left_for_margins;
             } else if (computed_values.width().is_auto()) {
-                width += underflow_px;
+                width += free_space_left_for_margins;
+            }
+
+            auto free_space_left_for_alignment = containing_block_width - a_width - box_state.border_left - box_state.border_right - box_state.padding_left - box_state.padding_right - box_state.margin_left - box_state.margin_right;
+            switch (computed_values.justify_self()) {
+            case CSS::JustifySelf::Normal:
+            case CSS::JustifySelf::Stretch:
+                return width;
+            case CSS::JustifySelf::Center:
+                box_state.margin_left += free_space_left_for_alignment / 2;
+                box_state.margin_right += free_space_left_for_alignment / 2;
+                return a_width;
+            case CSS::JustifySelf::Start:
+            case CSS::JustifySelf::FlexStart:
+                box_state.margin_right += free_space_left_for_alignment;
+                return a_width;
+            case CSS::JustifySelf::End:
+            case CSS::JustifySelf::FlexEnd:
+                box_state.margin_left += free_space_left_for_alignment;
+                return a_width;
+            default:
+                break;
             }
 
             return width;
