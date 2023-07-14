@@ -590,3 +590,20 @@ TEST_CASE(test_tvg)
 
     expect_single_frame_of_size(*plugin_decoder, { 1024, 1024 });
 }
+
+TEST_CASE(test_everything_tvg)
+{
+    Array file_names {
+        TEST_INPUT("tvg/everything.tvg"sv),
+        TEST_INPUT("tvg/everything-32.tvg"sv)
+    };
+
+    for (auto file_name : file_names) {
+        auto file = MUST(Core::MappedFile::map(file_name));
+        EXPECT(Gfx::TinyVGImageDecoderPlugin::sniff(file->bytes()));
+        auto plugin_decoder = MUST(Gfx::TinyVGImageDecoderPlugin::create(file->bytes()));
+        MUST(plugin_decoder->initialize());
+
+        expect_single_frame_of_size(*plugin_decoder, { 400, 768 });
+    }
+}
