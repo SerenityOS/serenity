@@ -182,15 +182,13 @@ void EliminateLoads::perform(PassPipelineExecutable& executable)
 {
     started();
 
-    // FIXME: If we walk the CFG instead of the block list, we might be able to
-    //        save some work between blocks
-    for (auto it = executable.executable.basic_blocks.begin(); it != executable.executable.basic_blocks.end(); ++it) {
-        auto const& old_block = *it;
+    auto cfg = executable.cfg.release_value();
+    for (auto& entry : cfg) {
+        auto const& old_block = entry.key;
+
         auto new_block = eliminate_loads(*old_block, executable.executable.number_of_registers);
 
-        // We will replace the old block, with a new one, so we need to replace all references,
-        // to the old one with the new one
-        for (auto& block : executable.executable.basic_blocks) {
+        for (auto& block : entry.value) {
             InstructionStreamIterator it { block->instruction_stream() };
             while (!it.at_end()) {
                 auto& instruction = *it;
@@ -199,7 +197,7 @@ void EliminateLoads::perform(PassPipelineExecutable& executable)
             }
         }
 
-        executable.executable.basic_blocks[it.index()] = move(new_block);
+        entry.key = new_block;
     }
 
     finished();
