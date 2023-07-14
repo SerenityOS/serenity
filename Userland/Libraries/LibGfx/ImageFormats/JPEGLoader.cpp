@@ -1857,22 +1857,18 @@ static ErrorOr<void> parse_header(JPEGStream& stream, JPEGLoadingContext& contex
 
 static ErrorOr<void> decode_header(JPEGLoadingContext& context)
 {
-    if (context.state < JPEGLoadingContext::State::HeaderDecoded) {
-        if (auto result = parse_header(context.stream, context); result.is_error()) {
-            context.state = JPEGLoadingContext::State::Error;
-            return result.release_error();
-        }
+    VERIFY(context.state < JPEGLoadingContext::State::HeaderDecoded);
+    TRY(parse_header(context.stream, context));
 
-        if constexpr (JPEG_DEBUG) {
-            dbgln("Image width: {}", context.frame.width);
-            dbgln("Image height: {}", context.frame.height);
-            dbgln("Macroblocks in a row: {}", context.mblock_meta.hpadded_count);
-            dbgln("Macroblocks in a column: {}", context.mblock_meta.vpadded_count);
-            dbgln("Macroblock meta padded total: {}", context.mblock_meta.padded_total);
-        }
-
-        context.state = JPEGLoadingContext::State::HeaderDecoded;
+    if constexpr (JPEG_DEBUG) {
+        dbgln("Image width: {}", context.frame.width);
+        dbgln("Image height: {}", context.frame.height);
+        dbgln("Macroblocks in a row: {}", context.mblock_meta.hpadded_count);
+        dbgln("Macroblocks in a column: {}", context.mblock_meta.vpadded_count);
+        dbgln("Macroblock meta padded total: {}", context.mblock_meta.padded_total);
     }
+
+    context.state = JPEGLoadingContext::State::HeaderDecoded;
     return {};
 }
 
@@ -1905,7 +1901,6 @@ static ErrorOr<Vector<Macroblock>> construct_macroblocks(JPEGLoadingContext& con
 
 static ErrorOr<void> decode_jpeg(JPEGLoadingContext& context)
 {
-    TRY(decode_header(context));
     auto macroblocks = TRY(construct_macroblocks(context));
     TRY(dequantize(context, macroblocks));
     inverse_dct(context, macroblocks);
@@ -1923,12 +1918,7 @@ JPEGImageDecoderPlugin::~JPEGImageDecoderPlugin() = default;
 
 IntSize JPEGImageDecoderPlugin::size()
 {
-    if (m_context->state == JPEGLoadingContext::State::Error)
-        return {};
-    if (m_context->state >= JPEGLoadingContext::State::FrameDecoded)
-        return { m_context->frame.width, m_context->frame.height };
-
-    return {};
+    return { m_context->frame.width, m_context->frame.height };
 }
 
 bool JPEGImageDecoderPlugin::sniff(ReadonlyBytes data)
@@ -1942,7 +1932,9 @@ bool JPEGImageDecoderPlugin::sniff(ReadonlyBytes data)
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JPEGImageDecoderPlugin::create(ReadonlyBytes data)
 {
     auto stream = TRY(try_make<FixedMemoryStream>(data));
-    return adopt_nonnull_own_or_enomem(new (nothrow) JPEGImageDecoderPlugin(move(stream)));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JPEGImageDecoderPlugin(move(stream))));
+    TRY(decode_header(*plugin->m_context));
+    return plugin;
 }
 
 bool JPEGImageDecoderPlugin::is_animated()
@@ -1986,8 +1978,6 @@ ErrorOr<ImageFrameDescriptor> JPEGImageDecoderPlugin::frame(size_t index, Option
 
 ErrorOr<Optional<ReadonlyBytes>> JPEGImageDecoderPlugin::icc_data()
 {
-    TRY(decode_header(*m_context));
-
     if (m_context->icc_data.has_value())
         return *m_context->icc_data;
     return OptionalNone {};
