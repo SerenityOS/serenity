@@ -380,7 +380,7 @@ ErrorOr<NonnullRefPtr<TinyVGDecodedImageData>> TinyVGDecodedImageData::decode(St
             auto header = TRY(reader.read_fill_command_header(style_type));
             for (u32 i = 0; i < header.count; i++) {
                 TRY(draw_commands.try_append(DrawCommand {
-                    rectangle_to_path(TRY(reader.read_rectangle())), move(header.style) }));
+                    rectangle_to_path(TRY(reader.read_rectangle())), header.style }));
             }
             break;
         }
@@ -430,9 +430,9 @@ ErrorOr<NonnullRefPtr<TinyVGDecodedImageData>> TinyVGDecodedImageData::decode(St
         }
         case Command::OutlineFillRectangles: {
             auto header = TRY(reader.read_outline_fill_command_header(style_type));
-            for (u32 i = 0; i < header.count - 1; i++) {
+            for (u32 i = 0; i < header.count; i++) {
                 TRY(draw_commands.try_append(DrawCommand {
-                    rectangle_to_path(TRY(reader.read_rectangle())), move(header.fill_style), move(header.line_style), header.line_width }));
+                    rectangle_to_path(TRY(reader.read_rectangle())), header.fill_style, header.line_style, header.line_width }));
             }
             break;
         }
