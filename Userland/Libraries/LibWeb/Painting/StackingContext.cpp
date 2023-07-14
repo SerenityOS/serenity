@@ -444,7 +444,7 @@ Gfx::FloatPoint StackingContext::compute_transform_origin() const
 template<typename U, typename Callback>
 static TraversalDecision for_each_in_inclusive_subtree_of_type_within_same_stacking_context_in_reverse(Paintable const& paintable, Callback callback)
 {
-    if (is<PaintableBox>(paintable) && static_cast<PaintableBox const&>(paintable).stacking_context()) {
+    if (paintable.stacking_context_rooted_here()) {
         // Note: Include the stacking context (so we can hit test it), but don't recurse into it.
         if (auto decision = callback(static_cast<U const&>(paintable)); decision != TraversalDecision::Continue)
             return decision;
