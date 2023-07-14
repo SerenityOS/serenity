@@ -83,6 +83,28 @@ public:
         return TraversalDecision::Continue;
     }
 
+    template<typename Callback>
+    TraversalDecision for_each_in_inclusive_subtree(Callback callback) const
+    {
+        if (auto decision = callback(*this); decision != TraversalDecision::Continue)
+            return decision;
+        for (auto* child = first_child(); child; child = child->next_sibling()) {
+            if (child->for_each_in_inclusive_subtree(callback) == TraversalDecision::Break)
+                return TraversalDecision::Break;
+        }
+        return TraversalDecision::Continue;
+    }
+
+    template<typename Callback>
+    TraversalDecision for_each_in_subtree(Callback callback) const
+    {
+        for (auto* child = first_child(); child; child = child->next_sibling()) {
+            if (child->for_each_in_inclusive_subtree(callback) == TraversalDecision::Break)
+                return TraversalDecision::Break;
+        }
+        return TraversalDecision::Continue;
+    }
+
     virtual void paint(PaintContext&, PaintPhase) const { }
 
     virtual void before_children_paint(PaintContext&, PaintPhase) const { }

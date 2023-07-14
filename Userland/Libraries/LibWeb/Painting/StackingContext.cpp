@@ -182,38 +182,40 @@ void StackingContext::paint_internal(PaintContext& context) const
     // Draw positioned descendants with z-index `0` or `auto` in tree order. (step 8)
     // NOTE: Non-positioned descendants that establish stacking contexts with z-index `0` or `auto` are also painted here.
     // FIXME: There's more to this step that we have yet to understand and implement.
-    m_box->paintable_box()->for_each_in_subtree_of_type<PaintableBox>([&](PaintableBox const& paintable_box) {
-        auto const& z_index = paintable_box.computed_values().z_index();
-        if (auto* child = paintable_box.stacking_context()) {
+    m_box->paintable_box()->for_each_in_subtree([&](Paintable const& paintable) {
+        auto const& layout_node = paintable.layout_node();
+        auto const& z_index = paintable.computed_values().z_index();
+
+        if (auto const* child = paintable.stacking_context_rooted_here()) {
             if (!z_index.has_value() || z_index.value() == 0)
                 paint_child(child);
             return TraversalDecision::SkipChildrenAndContinue;
         }
         if (z_index.has_value() && z_index.value() != 0)
             return TraversalDecision::Continue;
-        if (!paintable_box.layout_box().is_positioned())
+        if (!layout_node.is_positioned())
             return TraversalDecision::Continue;
         // At this point, `paintable_box` is a positioned descendant with z-index: auto
         // but no stacking context of its own.
         // FIXME: This is basically duplicating logic found elsewhere in this same function. Find a way to make this more elegant.
-        auto parent = paintable_box.layout_node().parent();
+        auto parent = layout_node.parent();
         auto* parent_paintable = parent ? parent->paintable() : nullptr;
         if (parent_paintable)
             parent_paintable->before_children_paint(context, PaintPhase::Foreground);
-        auto containing_block = paintable_box.layout_node().containing_block();
+        auto containing_block = layout_node.containing_block();
         auto* containing_block_paintable = containing_block ? containing_block->paintable() : nullptr;
         if (containing_block_paintable)
             containing_block_paintable->apply_clip_overflow_rect(context, PaintPhase::Foreground);
-        paint_node(paintable_box.layout_box(), context, PaintPhase::Background);
-        paint_node(paintable_box.layout_box(), context, PaintPhase::Border);
-        paint_descendants(context, paintable_box.layout_box(), StackingContextPaintPhase::BackgroundAndBorders);
-        paint_descendants(context, paintable_box.layout_box(), StackingContextPaintPhase::Floats);
-        paint_descendants(context, paintable_box.layout_box(), StackingContextPaintPhase::BackgroundAndBordersForInlineLevelAndReplaced);
-        paint_node(paintable_box.layout_box(), context, PaintPhase::Foreground);
-        paint_descendants(context, paintable_box.layout_box(), StackingContextPaintPhase::Foreground);
-        paint_node(paintable_box.layout_box(), context, PaintPhase::FocusOutline);
-        paint_node(paintable_box.layout_box(), context, PaintPhase::Overlay);
-        paint_descendants(context, paintable_box.layout_box(), StackingContextPaintPhase::FocusAndOverlay);
+        paint_node(layout_node, context, PaintPhase::Background);
+        paint_node(layout_node, context, PaintPhase::Border);
+        paint_descendants(context, layout_node, StackingContextPaintPhase::BackgroundAndBorders);
+        paint_descendants(context, layout_node, StackingContextPaintPhase::Floats);
+        paint_descendants(context, layout_node, StackingContextPaintPhase::BackgroundAndBordersForInlineLevelAndReplaced);
+        paint_node(layout_node, context, PaintPhase::Foreground);
+        paint_descendants(context, layout_node, StackingContextPaintPhase::Foreground);
+        paint_node(layout_node, context, PaintPhase::FocusOutline);
+        paint_node(layout_node, context, PaintPhase::Overlay);
+        paint_descendants(context, layout_node, StackingContextPaintPhase::FocusAndOverlay);
         if (parent_paintable)
             parent_paintable->after_children_paint(context, PaintPhase::Foreground);
         if (containing_block_paintable)
