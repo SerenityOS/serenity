@@ -132,8 +132,8 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncGeneratorPrototype::return_)
         // a. Set generator.[[AsyncGeneratorState]] to awaiting-return.
         generator->set_async_generator_state({}, AsyncGenerator::State::AwaitingReturn);
 
-        // b. Perform ! AsyncGeneratorAwaitReturn(generator).
-        MUST(generator->await_return());
+        // b. Perform AsyncGeneratorAwaitReturn(generator).
+        generator->await_return();
     }
     // 9. Else if state is suspendedYield, then
     else if (state == AsyncGenerator::State::SuspendedYield) {

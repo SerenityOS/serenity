@@ -143,4 +143,25 @@ describe("errors", () => {
         expect(rejection).toBeInstanceOf(TypeError);
         expect(rejection.message).toBe("Not an object of type AsyncGenerator");
     });
+
+    // https://github.com/tc39/ecma262/pull/2683
+    test("doesn't crash on broken promises", () => {
+        const promise = Promise.resolve(1337);
+        Object.defineProperty(promise, "constructor", {
+            get: function () {
+                throw new Error("yaksplode");
+            },
+        });
+
+        async function* generator() {}
+        const generatorObject = generator();
+
+        let rejection = null;
+        generatorObject.return(promise).catch(error => {
+            rejection = error;
+        });
+        runQueuedPromiseJobs();
+        expect(rejection).toBeInstanceOf(Error);
+        expect(rejection.message).toBe("yaksplode");
+    });
 });
