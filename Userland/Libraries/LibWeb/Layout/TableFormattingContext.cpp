@@ -192,19 +192,13 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
         }
 
         if (computed_values.width().is_percentage()) {
-            m_columns[cell.column_index].type = SizeType::Percent;
+            m_columns[cell.column_index].has_percentage_width = true;
             m_columns[cell.column_index].percentage_width = max(m_columns[cell.column_index].percentage_width, computed_values.width().percentage().value());
-        } else {
-            // FIXME: Columns with no specified width should remain SizeType::Auto.
-            m_columns[cell.column_index].type = SizeType::Pixel;
         }
 
         if (computed_values.height().is_percentage()) {
-            m_rows[cell.row_index].type = SizeType::Percent;
+            m_rows[cell.row_index].has_percentage_height = true;
             m_rows[cell.row_index].percentage_height = max(m_rows[cell.row_index].percentage_height, computed_values.height().percentage().value());
-        } else {
-            // FIXME: Rows with no specified width should remain SizeType::Auto.
-            m_rows[cell.row_index].type = SizeType::Pixel;
         }
     }
 
@@ -282,10 +276,7 @@ void TableFormattingContext::initialize_table_measures<TableFormattingContext::R
     for (auto& cell : m_cells) {
         auto const& computed_values = cell.box->computed_values();
         if (cell.row_span == 1) {
-            // FIXME: Implement intrinsic percentage width of a column based on cells of span up to 1.
-            auto specified_height = m_rows[cell.row_index].type == SizeType::Pixel
-                ? computed_values.height().to_px(cell.box, containing_block.content_height())
-                : 0;
+            auto specified_height = computed_values.height().to_px(cell.box, containing_block.content_height());
             // https://www.w3.org/TR/css-tables-3/#row-layout makes specified cell height part of the initialization formula for row table measures:
             // This is done by running the same algorithm as the column measurement, with the span=1 value being initialized (for min-content) with
             // the largest of the resulting height of the previous row layout, the height specified on the corresponding table-row (if any), and
@@ -531,7 +522,7 @@ void TableFormattingContext::distribute_width_to_columns()
     //    - all other columns are assigned their min-content width.
     for (size_t i = 0; i < m_columns.size(); ++i) {
         auto& column = m_columns[i];
-        if (column.type == SizeType::Percent) {
+        if (column.has_percentage_width) {
             candidate_widths[i] = max(column.min_size, column.percentage_width / 100 * available_width);
         }
     }
@@ -574,7 +565,7 @@ void TableFormattingContext::distribute_width_to_columns()
     //    - all other columns are assigned their max-content width.
     for (size_t i = 0; i < m_columns.size(); ++i) {
         auto& column = m_columns[i];
-        if (column.type != SizeType::Percent) {
+        if (!column.has_percentage_width) {
             candidate_widths[i] = column.max_size;
         }
     }

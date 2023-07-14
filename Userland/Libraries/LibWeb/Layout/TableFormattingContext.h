@@ -58,18 +58,12 @@ private:
 
     Optional<AvailableSpace> m_available_space;
 
-    enum class SizeType {
-        Percent,
-        Pixel,
-        Auto
-    };
-
     struct Column {
-        SizeType type { SizeType::Auto };
         CSSPixels left_offset { 0 };
         CSSPixels min_size { 0 };
         CSSPixels max_size { 0 };
         CSSPixels used_width { 0 };
+        bool has_percentage_width { false };
         double percentage_width { 0 };
         // Store whether the column is constrained: https://www.w3.org/TR/css-tables-3/#constrainedness
         bool is_constrained { false };
@@ -81,9 +75,9 @@ private:
         CSSPixels reference_height { 0 };
         CSSPixels final_height { 0 };
         CSSPixels baseline { 0 };
-        SizeType type { SizeType::Auto };
         CSSPixels min_size { 0 };
         CSSPixels max_size { 0 };
+        bool has_percentage_height { false };
         double percentage_height { 0 };
         // Store whether the row is constrained: https://www.w3.org/TR/css-tables-3/#constrainedness
         bool is_constrained { false };
