@@ -129,7 +129,14 @@ Window& Menu::ensure_menu_window(Gfx::IntPoint position)
     auto calculate_window_rect = [&]() -> Gfx::IntRect {
         int window_height_available = screen.height() - frame_thickness() * 2;
         int max_window_height = (window_height_available / item_height()) * item_height() + frame_thickness() * 2;
-        int content_height = m_items.is_empty() ? 0 : m_items.last()->rect().bottom() + frame_thickness();
+        int content_height = 0;
+        // find the last visible item to determine the required menu height
+        for (size_t i = m_items.size(); i > 0; i--) {
+            if (m_items[i - 1]->is_visible()) {
+                content_height = m_items[i - 1]->rect().bottom() + frame_thickness();
+                break;
+            }
+        }
         int window_height = min(max_window_height, content_height);
         if (window_height < content_height) {
             m_scrollable = true;
