@@ -10,6 +10,7 @@
 #include <AK/Stack.h>
 #include <LibRegex/Regex.h>
 #include <LibRegex/RegexBytecodeStreamOptimizer.h>
+#include <LibUnicode/CharacterTypes.h>
 #if REGEX_DEBUG
 #    include <AK/ScopeGuard.h>
 #    include <AK/ScopeLogger.h>
@@ -124,6 +125,37 @@ static bool has_overlap(Vector<CompareTypeAndValuePair> const& lhs, Vector<Compa
     HashTable<CharClass> lhs_char_classes;
     HashTable<CharClass> lhs_negated_char_classes;
 
+    auto has_any_unicode_property = false;
+    HashTable<Unicode::GeneralCategory> lhs_unicode_general_categories;
+    HashTable<Unicode::Property> lhs_unicode_properties;
+    HashTable<Unicode::Script> lhs_unicode_scripts;
+    HashTable<Unicode::Script> lhs_unicode_script_extensions;
+    HashTable<Unicode::GeneralCategory> lhs_negated_unicode_general_categories;
+    HashTable<Unicode::Property> lhs_negated_unicode_properties;
+    HashTable<Unicode::Script> lhs_negated_unicode_scripts;
+    HashTable<Unicode::Script> lhs_negated_unicode_script_extensions;
+
+    auto any_unicode_property_matches = [&](u32 code_point) {
+        if (any_of(lhs_negated_unicode_general_categories, [code_point](auto category) { return Unicode::code_point_has_general_category(code_point, category); }))
+            return false;
+        if (any_of(lhs_negated_unicode_properties, [code_point](auto property) { return Unicode::code_point_has_property(code_point, property); }))
+            return false;
+        if (any_of(lhs_negated_unicode_scripts, [code_point](auto script) { return Unicode::code_point_has_script(code_point, script); }))
+            return false;
+        if (any_of(lhs_negated_unicode_script_extensions, [code_point](auto script) { return Unicode::code_point_has_script_extension(code_point, script); }))
+            return false;
+
+        if (any_of(lhs_unicode_general_categories, [code_point](auto category) { return Unicode::code_point_has_general_category(code_point, category); }))
+            return true;
+        if (any_of(lhs_unicode_properties, [code_point](auto property) { return Unicode::code_point_has_property(code_point, property); }))
+            return true;
+        if (any_of(lhs_unicode_scripts, [code_point](auto script) { return Unicode::code_point_has_script(code_point, script); }))
+            return true;
+        if (any_of(lhs_unicode_script_extensions, [code_point](auto script) { return Unicode::code_point_has_script_extension(code_point, script); }))
+            return true;
+        return false;
+    };
+
     auto range_contains = [&]<typename T>(T& value) -> bool {
         u32 start;
         u32 end;
@@ -134,6 +166,12 @@ static bool has_overlap(Vector<CompareTypeAndValuePair> const& lhs, Vector<Compa
         } else {
             start = value;
             end = value;
+        }
+
+        if (has_any_unicode_property) {
+            // We have some properties, and a range is present
+            // Instead of checking every single code point in the range, assume it's a match.
+            return start != end || any_unicode_property_matches(start);
         }
 
         auto* max = lhs_ranges.find_smallest_not_below(start);
@@ -203,9 +241,33 @@ static bool has_overlap(Vector<CompareTypeAndValuePair> const& lhs, Vector<Compa
             // We've handled this before coming here.
             break;
         case CharacterCompareType::Property:
+            has_any_unicode_property = true;
+            if (!current_lhs_inversion_state())
+                lhs_unicode_properties.set(static_cast<Unicode::Property>(pair.value));
+            else
+                lhs_negated_unicode_properties.set(static_cast<Unicode::Property>(pair.value));
+            break;
         case CharacterCompareType::GeneralCategory:
+            has_any_unicode_property = true;
+            if (!current_lhs_inversion_state())
+                lhs_unicode_general_categories.set(static_cast<Unicode::GeneralCategory>(pair.value));
+            else
+                lhs_negated_unicode_general_categories.set(static_cast<Unicode::GeneralCategory>(pair.value));
+            break;
         case CharacterCompareType::Script:
+            has_any_unicode_property = true;
+            if (!current_lhs_inversion_state())
+                lhs_unicode_scripts.set(static_cast<Unicode::Script>(pair.value));
+            else
+                lhs_negated_unicode_scripts.set(static_cast<Unicode::Script>(pair.value));
+            break;
         case CharacterCompareType::ScriptExtension:
+            has_any_unicode_property = true;
+            if (!current_lhs_inversion_state())
+                lhs_unicode_script_extensions.set(static_cast<Unicode::Script>(pair.value));
+            else
+                lhs_negated_unicode_script_extensions.set(static_cast<Unicode::Script>(pair.value));
+            break;
         case CharacterCompareType::And:
         case CharacterCompareType::Or:
         case CharacterCompareType::EndAndOr:
@@ -275,9 +337,49 @@ static bool has_overlap(Vector<CompareTypeAndValuePair> const& lhs, Vector<Compa
             // We've handled this before coming here.
             break;
         case CharacterCompareType::Property:
+            // The only reasonable scenario where we can check these properties without spending too much time is if:
+            //  - the ranges are empty
+            //  - the char classes are empty
+            //  - the unicode properties are empty or contain only this property
+            if (!lhs_ranges.is_empty() || !lhs_negated_ranges.is_empty() || !lhs_char_classes.is_empty() || !lhs_negated_char_classes.is_empty())
+                return true;
+            if (has_any_unicode_property && !lhs_unicode_properties.is_empty() && !lhs_negated_unicode_properties.is_empty()) {
+                if (current_lhs_inversion_state() ^ lhs_unicode_properties.contains(static_cast<Unicode::Property>(pair.value)))
+                    return true;
+                if (false == (current_lhs_inversion_state() ^ lhs_negated_unicode_properties.contains(static_cast<Unicode::Property>(pair.value))))
+                    return true;
+            }
+            break;
         case CharacterCompareType::GeneralCategory:
+            if (!lhs_ranges.is_empty() || !lhs_negated_ranges.is_empty() || !lhs_char_classes.is_empty() || !lhs_negated_char_classes.is_empty())
+                return true;
+            if (has_any_unicode_property && !lhs_unicode_general_categories.is_empty() && !lhs_negated_unicode_general_categories.is_empty()) {
+                if (current_lhs_inversion_state() ^ lhs_unicode_general_categories.contains(static_cast<Unicode::GeneralCategory>(pair.value)))
+                    return true;
+                if (false == (current_lhs_inversion_state() ^ lhs_negated_unicode_general_categories.contains(static_cast<Unicode::GeneralCategory>(pair.value))))
+                    return true;
+            }
+            break;
         case CharacterCompareType::Script:
+            if (!lhs_ranges.is_empty() || !lhs_negated_ranges.is_empty() || !lhs_char_classes.is_empty() || !lhs_negated_char_classes.is_empty())
+                return true;
+            if (has_any_unicode_property && !lhs_unicode_scripts.is_empty() && !lhs_negated_unicode_scripts.is_empty()) {
+                if (current_lhs_inversion_state() ^ lhs_unicode_scripts.contains(static_cast<Unicode::Script>(pair.value)))
+                    return true;
+                if (false == (current_lhs_inversion_state() ^ lhs_negated_unicode_scripts.contains(static_cast<Unicode::Script>(pair.value))))
+                    return true;
+            }
+            break;
         case CharacterCompareType::ScriptExtension:
+            if (!lhs_ranges.is_empty() || !lhs_negated_ranges.is_empty() || !lhs_char_classes.is_empty() || !lhs_negated_char_classes.is_empty())
+                return true;
+            if (has_any_unicode_property && !lhs_unicode_script_extensions.is_empty() && !lhs_negated_unicode_script_extensions.is_empty()) {
+                if (current_lhs_inversion_state() ^ lhs_unicode_script_extensions.contains(static_cast<Unicode::Script>(pair.value)))
+                    return true;
+                if (false == (current_lhs_inversion_state() ^ lhs_negated_unicode_script_extensions.contains(static_cast<Unicode::Script>(pair.value))))
+                    return true;
+            }
+            break;
         case CharacterCompareType::And:
         case CharacterCompareType::Or:
         case CharacterCompareType::EndAndOr:
