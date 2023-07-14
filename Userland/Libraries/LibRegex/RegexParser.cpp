@@ -179,6 +179,8 @@ ALWAYS_INLINE void Parser::reset()
 
 Parser::Result Parser::parse(Optional<AllOptions> regex_options)
 {
+    ByteCode::reset_checkpoint_serial_id();
+
     reset();
     if (regex_options.has_value())
         m_parser_state.regex_options = regex_options.value();
