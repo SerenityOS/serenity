@@ -107,3 +107,45 @@ TEST_CASE(basic_addition_patch_from_empty_file)
 
     EXPECT_FILE_EQ(MUST(String::formatted("{}/a", s_test_dir)), "1\n2\n3\n");
 }
+
+TEST_CASE(strip_path_to_basename)
+{
+    PatchSetup setup;
+
+    auto patch = R"(
+--- /dev/null
++++ a/bunch/of/../folders/stripped/to/basename
+@@ -0,0 +1 @@
++Hello, friends!
+)"sv;
+
+    auto file = ""sv;
+    auto input = MUST(Core::File::open(MUST(String::formatted("{}/basename", s_test_dir)), Core::File::OpenMode::Write));
+    MUST(input->write_until_depleted(file.bytes()));
+
+    run_patch({}, patch, "patching file basename\n"sv);
+
+    EXPECT_FILE_EQ(MUST(String::formatted("{}/basename", s_test_dir)), "Hello, friends!\n");
+}
+
+TEST_CASE(strip_path_partially)
+{
+    PatchSetup setup;
+
+    auto patch = R"(
+--- /dev/null
++++ a/bunch/of/../folders/stripped/to/basename
+@@ -0,0 +1 @@
++Hello, friends!
+)"sv;
+
+    MUST(Core::System::mkdir(MUST(String::formatted("{}/to", s_test_dir)), 0755));
+
+    auto file = ""sv;
+    auto input = MUST(Core::File::open(MUST(String::formatted("{}/to/basename", s_test_dir)), Core::File::OpenMode::Write));
+    MUST(input->write_until_depleted(file.bytes()));
+
+    run_patch({ "-p6" }, patch, "patching file to/basename\n"sv);
+
+    EXPECT_FILE_EQ(MUST(String::formatted("{}/to/basename", s_test_dir)), "Hello, friends!\n");
+}
