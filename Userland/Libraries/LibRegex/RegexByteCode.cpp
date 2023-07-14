@@ -559,7 +559,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
             auto range_data = m_bytecode->template spans<4>().slice(offset, count);
             offset += count;
 
-            auto ch = input.view.substring_view(state.string_position, 1)[0];
+            auto ch = input.view[state.string_position_in_code_units];
 
             auto const* matching_range = binary_search(range_data, ch, nullptr, [insensitive = input.regex_options & AllFlags::Insensitive](auto needle, CharRange range) {
                 auto upper_case_needle = needle;
