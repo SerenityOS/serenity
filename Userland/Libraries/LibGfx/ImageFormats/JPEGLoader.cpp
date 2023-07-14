@@ -1931,11 +1931,6 @@ IntSize JPEGImageDecoderPlugin::size()
     return {};
 }
 
-ErrorOr<void> JPEGImageDecoderPlugin::initialize()
-{
-    return {};
-}
-
 bool JPEGImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
     return data.size() > 3
