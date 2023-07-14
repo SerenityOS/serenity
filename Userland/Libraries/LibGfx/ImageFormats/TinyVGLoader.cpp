@@ -247,6 +247,12 @@ public:
             for (u32 i = 0; i < command_count; i++) {
                 u8 command_tag = TRY(m_stream.read_value<u8>());
                 auto path_command = static_cast<PathCommand>(command_tag & 0x7);
+                bool has_line_width = (command_tag >> 4) & 0b1;
+                if (has_line_width) {
+                    // FIXME: TinyVG allows changing the line width within a path.
+                    // This is not supported in LibGfx, so we currently ignore this.
+                    (void)TRY(read_unit());
+                }
                 switch (path_command) {
                 case PathCommand::Line:
                     path.line_to(TRY(read_point()));
