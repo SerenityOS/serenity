@@ -19,6 +19,7 @@ enum class CryptFilterMethod {
     None,
     V2, // RC4
     AESV2,
+    AESV3,
 };
 
 class SecurityHandler : public RefCounted<SecurityHandler> {
@@ -53,10 +54,15 @@ protected:
 private:
     void crypt(NonnullRefPtr<Object>, Reference reference, Crypto::Cipher::Intent) const;
 
-    ByteBuffer compute_user_password_value_v2(ByteBuffer password_string);
-    ByteBuffer compute_user_password_value_v3_and_newer(ByteBuffer password_string);
+    ByteBuffer compute_user_password_value_r2(ByteBuffer password_string);
+    ByteBuffer compute_user_password_value_r3_to_r5(ByteBuffer password_string);
 
-    ByteBuffer compute_encryption_key(ByteBuffer password_string);
+    bool authenticate_user_password_r2_to_r5(StringView password_string);
+    bool authenticate_user_password_r6_and_later(StringView password_string);
+
+    ByteBuffer compute_encryption_key_r2_to_r5(ByteBuffer password_string);
+    ByteBuffer compute_encryption_key_r6_and_later(ByteBuffer password_string);
+    ByteBuffer computing_a_hash_r6_and_later(ByteBuffer password_string);
 
     Document* m_document;
     size_t m_revision;
