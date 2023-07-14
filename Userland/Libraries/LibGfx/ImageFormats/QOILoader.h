@@ -54,8 +54,8 @@ public:
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
-    ErrorOr<void> decode_header_and_update_context(Stream&);
-    ErrorOr<void> decode_image_and_update_context(Stream&);
+    ErrorOr<void> decode_header_and_update_context();
+    ErrorOr<void> decode_image_and_update_context();
 
     QOIImageDecoderPlugin(NonnullOwnPtr<Stream>);
 
