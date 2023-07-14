@@ -479,7 +479,10 @@ void TableFormattingContext::distribute_width_to_columns()
     // This is the width that we will be able to allocate to the columns.
     CSSPixels available_width = m_state.get(table_box()).content_width() - total_horizontal_border_spacing;
 
-    auto columns_total_used_width = [&]() {
+    Vector<CSSPixels> candidate_widths;
+    candidate_widths.resize(m_columns.size());
+
+    auto compute_columns_total_used_width = [&]() {
         CSSPixels total_used_width = 0;
         for (auto& column : m_columns) {
             total_used_width += column.used_width;
@@ -487,54 +490,38 @@ void TableFormattingContext::distribute_width_to_columns()
         return total_used_width;
     };
 
-    auto column_preferred_width = [&](Column& column) {
-        switch (column.type) {
-        case SizeType::Percent: {
-            return max(column.min_size, column.percentage_width / 100 * available_width);
+    auto compute_columns_total_candidate_width = [&]() {
+        CSSPixels total_candidate_width = 0;
+        for (auto width : candidate_widths) {
+            total_candidate_width += width;
         }
-        case SizeType::Pixel:
-        case SizeType::Auto: {
-            return column.max_size;
-        }
-        default: {
-            VERIFY_NOT_REACHED();
-        }
+        return total_candidate_width;
+    };
+
+    auto commit_candidate_widths = [&]() {
+        for (size_t i = 0; i < m_columns.size(); ++i) {
+            auto& column = m_columns[i];
+            column.used_width = candidate_widths[i];
         }
     };
 
-    auto expand_columns_to_fill_available_width = [&](SizeType column_type) {
-        CSSPixels remaining_available_width = available_width;
-        CSSPixels total_preferred_width_increment = 0;
-        for (auto& column : m_columns) {
-            remaining_available_width -= column.used_width;
-            if (column.type == column_type) {
-                total_preferred_width_increment += column_preferred_width(column) - column.min_size;
-            }
-        }
-
-        if (total_preferred_width_increment == 0)
+    auto compute_linear_combination = [&](CSSPixels columns_total_candidate_width) {
+        auto columns_total_used_width = compute_columns_total_used_width();
+        if (columns_total_candidate_width == columns_total_used_width) {
             return;
-
-        for (auto& column : m_columns) {
-            if (column.type == column_type) {
-                CSSPixels preferred_width_increment = column_preferred_width(column) - column.min_size;
-                column.used_width += preferred_width_increment * remaining_available_width / total_preferred_width_increment;
-            }
         }
-    };
-
-    auto shrink_columns_to_fit_available_width = [&](SizeType column_type) {
-        for (auto& column : m_columns) {
-            if (column.type == column_type)
-                column.used_width = column.min_size;
+        auto candidate_weight = ((available_width - columns_total_used_width) / (columns_total_candidate_width - columns_total_used_width)).to_double();
+        for (size_t i = 0; i < m_columns.size(); ++i) {
+            auto& column = m_columns[i];
+            column.used_width = candidate_weight * candidate_widths[i] + (1 - candidate_weight) * column.used_width;
         }
-
-        expand_columns_to_fill_available_width(column_type);
     };
 
     // 1. The min-content sizing-guess is the set of column width assignments where each column is assigned its min-content width.
-    for (auto& column : m_columns) {
+    for (size_t i = 0; i < m_columns.size(); ++i) {
+        auto& column = m_columns[i];
         column.used_width = column.min_size;
+        candidate_widths[i] = column.min_size;
     }
 
     // 2. The min-content-percentage sizing-guess is the set of column width assignments where:
@@ -542,15 +529,21 @@ void TableFormattingContext::distribute_width_to_columns()
     //      - its intrinsic percentage width times the assignable width and
     //      - its min-content width.
     //    - all other columns are assigned their min-content width.
-    for (auto& column : m_columns) {
+    for (size_t i = 0; i < m_columns.size(); ++i) {
+        auto& column = m_columns[i];
         if (column.type == SizeType::Percent) {
-            column.used_width = max(column.min_size, column.percentage_width / 100 * available_width);
+            candidate_widths[i] = max(column.min_size, column.percentage_width / 100 * available_width);
         }
     }
 
-    if (columns_total_used_width() > available_width) {
-        shrink_columns_to_fit_available_width(SizeType::Percent);
+    auto columns_total_candidate_width = compute_columns_total_candidate_width();
+    // If the assignable table width is less than or equal to the max-content sizing-guess, the used widths of the columns must be the
+    // linear combination (with weights adding to 1) of the two consecutive sizing-guesses whose width sums bound the available width.
+    if (available_width < columns_total_candidate_width) {
+        compute_linear_combination(columns_total_candidate_width);
         return;
+    } else {
+        commit_candidate_widths();
     }
 
     // 3. The min-content-specified sizing-guess is the set of column width assignments where:
@@ -559,15 +552,19 @@ void TableFormattingContext::distribute_width_to_columns()
     //      - its min-content width
     //    - any other column that is constrained is assigned its max-content width
     //    - all other columns are assigned their min-content width.
-    for (auto& column : m_columns) {
-        if (column.type == SizeType::Pixel) {
-            column.used_width = column.max_size;
+    for (size_t i = 0; i < m_columns.size(); ++i) {
+        auto& column = m_columns[i];
+        if (column.is_constrained) {
+            candidate_widths[i] = column.max_size;
         }
     }
 
-    if (columns_total_used_width() > available_width) {
-        shrink_columns_to_fit_available_width(SizeType::Pixel);
+    columns_total_candidate_width = compute_columns_total_candidate_width();
+    if (available_width < columns_total_candidate_width) {
+        compute_linear_combination(columns_total_candidate_width);
         return;
+    } else {
+        commit_candidate_widths();
     }
 
     // 4. The max-content sizing-guess is the set of column width assignments where:
@@ -575,21 +572,28 @@ void TableFormattingContext::distribute_width_to_columns()
     //      - its intrinsic percentage width times the assignable width and
     //      - its min-content width
     //    - all other columns are assigned their max-content width.
-    for (auto& column : m_columns) {
+    for (size_t i = 0; i < m_columns.size(); ++i) {
+        auto& column = m_columns[i];
         if (column.type != SizeType::Percent) {
-            column.used_width = column.max_size;
+            candidate_widths[i] = column.max_size;
         }
     }
 
-    // If the assignable table width is less than or equal to the max-content sizing-guess, the used widths of the columns must be the
-    // linear combination (with weights adding to 1) of the two consecutive sizing-guesses whose width sums bound the available width.
+    columns_total_candidate_width = compute_columns_total_candidate_width();
+    if (available_width < columns_total_candidate_width) {
+        compute_linear_combination(columns_total_candidate_width);
+        return;
+    } else {
+        commit_candidate_widths();
+    }
 
     // Otherwise, the used widths of the columns are the result of starting from the max-content sizing-guess and distributing
     // the excess width to the columns of the table according to the rules for distributing excess width to columns (for used width).
 
     // Implements steps 1 and 2 of https://www.w3.org/TR/css-tables-3/#distributing-width-to-columns
     // FIXME: Implement steps 3-6 as well, which distribute excess width to constrained columns.
-    if (columns_total_used_width() < available_width) {
+    auto columns_total_used_width = compute_columns_total_used_width();
+    if (columns_total_used_width < available_width) {
         // NOTE: if all columns got their max width and there is still width to distribute left
         // it should be assigned to columns proportionally to their max width
         CSSPixels grid_max = 0.0f;
@@ -602,7 +606,7 @@ void TableFormattingContext::distribute_width_to_columns()
             ++unconstrained_column_count;
         }
 
-        auto width_to_distribute = available_width - columns_total_used_width();
+        auto width_to_distribute = available_width - columns_total_used_width;
         if (grid_max == 0) {
             // If total max width of columns is zero then divide distributable width equally among them
             auto column_width = width_to_distribute / unconstrained_column_count;
