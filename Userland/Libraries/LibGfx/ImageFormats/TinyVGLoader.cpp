@@ -507,13 +507,8 @@ struct TinyVGLoadingContext {
 static ErrorOr<void> decode_header_and_update_context(TinyVGLoadingContext& context)
 {
     VERIFY(context.state == TinyVGLoadingContext::State::NotDecoded);
-    auto header_or_error = decode_tinyvg_header(context.stream);
-    if (header_or_error.is_error()) {
-        context.state = TinyVGLoadingContext::State::Error;
-        return header_or_error.release_error();
-    }
+    context.header = TRY(decode_tinyvg_header(context.stream));
     context.state = TinyVGLoadingContext::State::HeaderDecoded;
-    context.header = header_or_error.release_value();
     return {};
 }
 
@@ -534,8 +529,6 @@ static ErrorOr<void> ensure_fully_decoded(TinyVGLoadingContext& context)
 {
     if (context.state == TinyVGLoadingContext::State::Error)
         return Error::from_string_literal("TinyVGImageDecoderPlugin: Decoding failed!");
-    if (context.state == TinyVGLoadingContext::State::NotDecoded)
-        TRY(decode_header_and_update_context(context));
     if (context.state == TinyVGLoadingContext::State::HeaderDecoded)
         TRY(decode_image_data_and_update_context(context));
     VERIFY(context.state == TinyVGLoadingContext::State::ImageDecoded);
@@ -549,7 +542,9 @@ TinyVGImageDecoderPlugin::TinyVGImageDecoderPlugin(ReadonlyBytes bytes)
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> TinyVGImageDecoderPlugin::create(ReadonlyBytes bytes)
 {
-    return adopt_nonnull_own_or_enomem(new (nothrow) TinyVGImageDecoderPlugin(bytes));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) TinyVGImageDecoderPlugin(bytes)));
+    TRY(decode_header_and_update_context(*plugin->m_context));
+    return plugin;
 }
 
 bool TinyVGImageDecoderPlugin::sniff(ReadonlyBytes bytes)
@@ -560,18 +555,7 @@ bool TinyVGImageDecoderPlugin::sniff(ReadonlyBytes bytes)
 
 IntSize TinyVGImageDecoderPlugin::size()
 {
-    if (m_context->state == TinyVGLoadingContext::State::NotDecoded)
-        (void)decode_header_and_update_context(*m_context);
-
-    if (m_context->state == TinyVGLoadingContext::State::Error)
-        return {};
-
     return { m_context->header.width, m_context->header.height };
-}
-
-ErrorOr<void> TinyVGImageDecoderPlugin::initialize()
-{
-    return decode_header_and_update_context(*m_context);
 }
 
 ErrorOr<ImageFrameDescriptor> TinyVGImageDecoderPlugin::frame(size_t, Optional<IntSize> ideal_size)
