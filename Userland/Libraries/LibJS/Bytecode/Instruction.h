@@ -13,6 +13,8 @@
 #define ENUMERATE_BYTECODE_OPS(O)    \
     O(Add)                           \
     O(Append)                        \
+    O(AsyncIteratorClose)            \
+    O(Await)                         \
     O(BitwiseAnd)                    \
     O(BitwiseNot)                    \
     O(BitwiseOr)                     \
