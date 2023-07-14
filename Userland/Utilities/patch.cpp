@@ -30,9 +30,11 @@ static ErrorOr<void> do_patch(StringView path_of_file_to_patch, Diff::Patch cons
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     StringView directory;
+    Optional<size_t> strip_count;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(directory, "Change the working directory to <directory> before applying the patch file", "directory", 'd', "directory");
+    args_parser.add_option(strip_count, "Strip given number of leading path components from file names (defaults as basename)", "strip", 'p', "count");
     args_parser.parse(arguments);
 
     if (!directory.is_null())
@@ -45,7 +47,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // FIXME: Support multiple patches in the patch file.
     Diff::Parser parser(patch_content);
     Diff::Patch patch;
-    patch.header = TRY(parser.parse_header());
+    patch.header = TRY(parser.parse_header(strip_count));
     patch.hunks = TRY(parser.parse_hunks());
 
     // FIXME: Support adding/removing a file, and asking for file to patch as fallback otherwise.
