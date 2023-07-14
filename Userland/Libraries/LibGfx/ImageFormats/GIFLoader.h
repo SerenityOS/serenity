@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/MemoryStream.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
 
@@ -30,7 +31,7 @@ public:
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
-    GIFImageDecoderPlugin(u8 const*, size_t);
+    GIFImageDecoderPlugin(FixedMemoryStream);
 
     OwnPtr<GIFLoadingContext> m_context;
 };
