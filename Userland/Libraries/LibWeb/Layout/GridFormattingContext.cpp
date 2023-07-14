@@ -1414,6 +1414,40 @@ void GridFormattingContext::determine_grid_container_height()
     m_automatic_content_height = total_y;
 }
 
+CSS::JustifyItems GridFormattingContext::justification_for_item(Box const& box) const
+{
+    switch (box.computed_values().justify_self()) {
+    case CSS::JustifySelf::Auto:
+        return grid_container().computed_values().justify_items();
+    case CSS::JustifySelf::End:
+        return CSS::JustifyItems::End;
+    case CSS::JustifySelf::Normal:
+        return CSS::JustifyItems::Normal;
+    case CSS::JustifySelf::SelfStart:
+        return CSS::JustifyItems::SelfStart;
+    case CSS::JustifySelf::SelfEnd:
+        return CSS::JustifyItems::SelfEnd;
+    case CSS::JustifySelf::FlexStart:
+        return CSS::JustifyItems::FlexStart;
+    case CSS::JustifySelf::FlexEnd:
+        return CSS::JustifyItems::FlexEnd;
+    case CSS::JustifySelf::Center:
+        return CSS::JustifyItems::Center;
+    case CSS::JustifySelf::Baseline:
+        return CSS::JustifyItems::Baseline;
+    case CSS::JustifySelf::Start:
+        return CSS::JustifyItems::Start;
+    case CSS::JustifySelf::Stretch:
+        return CSS::JustifyItems::Stretch;
+    case CSS::JustifySelf::Safe:
+        return CSS::JustifyItems::Safe;
+    case CSS::JustifySelf::Unsafe:
+        return CSS::JustifyItems::Unsafe;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 void GridFormattingContext::resolve_grid_item_widths()
 {
     for (auto& item : m_grid_items) {
@@ -1441,20 +1475,20 @@ void GridFormattingContext::resolve_grid_item_widths()
             }
 
             auto free_space_left_for_alignment = containing_block_width - a_width - box_state.border_left - box_state.border_right - box_state.padding_left - box_state.padding_right - box_state.margin_left - box_state.margin_right;
-            switch (computed_values.justify_self()) {
-            case CSS::JustifySelf::Normal:
-            case CSS::JustifySelf::Stretch:
+            switch (justification_for_item(item.box)) {
+            case CSS::JustifyItems::Normal:
+            case CSS::JustifyItems::Stretch:
                 return width;
-            case CSS::JustifySelf::Center:
+            case CSS::JustifyItems::Center:
                 box_state.margin_left += free_space_left_for_alignment / 2;
                 box_state.margin_right += free_space_left_for_alignment / 2;
                 return a_width;
-            case CSS::JustifySelf::Start:
-            case CSS::JustifySelf::FlexStart:
+            case CSS::JustifyItems::Start:
+            case CSS::JustifyItems::FlexStart:
                 box_state.margin_right += free_space_left_for_alignment;
                 return a_width;
-            case CSS::JustifySelf::End:
-            case CSS::JustifySelf::FlexEnd:
+            case CSS::JustifyItems::End:
+            case CSS::JustifyItems::FlexEnd:
                 box_state.margin_left += free_space_left_for_alignment;
                 return a_width;
             default:

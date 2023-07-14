@@ -103,6 +103,8 @@ public:
     Box const& grid_container() const { return context_box(); }
 
 private:
+    CSS::JustifyItems justification_for_item(Box const& box) const;
+
     void resolve_items_box_metrics(GridDimension const dimension);
 
     CSSPixels m_automatic_content_height { 0 };
