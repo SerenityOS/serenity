@@ -381,7 +381,7 @@ static ErrorOr<void> decode_frame(GIFLoadingContext& context, size_t frame_index
     return {};
 }
 
-static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
+static ErrorOr<void> load_header_and_logical_screen(GIFLoadingContext& context)
 {
     if (TRY(context.stream.size()) < 32)
         return Error::from_string_literal("Size too short for GIF frame descriptors");
@@ -411,6 +411,13 @@ static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
         u8 b = TRY(context.stream.read_value<u8>());
         context.logical_screen.color_map[i] = { r, g, b };
     }
+
+    return {};
+}
+
+static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
+{
+    TRY(load_header_and_logical_screen(context));
 
     NonnullOwnPtr<GIFImageDescriptor> current_image = make<GIFImageDescriptor>();
     for (;;) {
