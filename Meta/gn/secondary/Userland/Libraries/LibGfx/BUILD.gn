@@ -68,6 +68,7 @@ shared_library("LibGfx") {
     "TextDirection.cpp",
     "TextLayout.cpp",
     "Triangle.cpp",
+    "VectorGraphic.cpp",
     "WindowTheme.cpp",
   ]
   deps = [
