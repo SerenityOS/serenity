@@ -1377,6 +1377,27 @@ private:
     Optional<Label> m_continuation_label;
 };
 
+class Await final : public Instruction {
+public:
+    constexpr static bool IsTerminator = true;
+
+    explicit Await(Label continuation_label)
+        : Instruction(Type::Await)
+        , m_continuation_label(continuation_label)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&);
+    void replace_references_impl(Register, Register) { }
+
+    auto& continuation() const { return m_continuation_label; }
+
+private:
+    Label m_continuation_label;
+};
+
 class PushDeclarativeEnvironment final : public Instruction {
 public:
     explicit PushDeclarativeEnvironment(HashMap<u32, Variable> variables)
@@ -1445,6 +1466,25 @@ class IteratorClose final : public Instruction {
 public:
     IteratorClose(Completion::Type completion_type, Optional<Value> completion_value)
         : Instruction(Type::IteratorClose)
+        , m_completion_type(completion_type)
+        , m_completion_value(completion_value)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+    void replace_references_impl(Register, Register) { }
+
+private:
+    Completion::Type m_completion_type { Completion::Type::Normal };
+    Optional<Value> m_completion_value;
+};
+
+class AsyncIteratorClose final : public Instruction {
+public:
+    AsyncIteratorClose(Completion::Type completion_type, Optional<Value> completion_value)
+        : Instruction(Type::AsyncIteratorClose)
         , m_completion_type(completion_type)
         , m_completion_value(completion_value)
     {

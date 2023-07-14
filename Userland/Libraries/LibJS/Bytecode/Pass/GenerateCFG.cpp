@@ -92,6 +92,12 @@ static void generate_cfg_for_block(BasicBlock const& current_block, PassPipeline
             }
             return;
         }
+        case Await: {
+            auto const& continuation = static_cast<Op::Await const&>(instruction).continuation();
+            executable.exported_blocks->set(&continuation.block());
+            enter_label(continuation, current_block);
+            return;
+        }
         case EnterUnwindContext: {
             auto entry_point = static_cast<Op::EnterUnwindContext const&>(instruction).entry_point();
             auto handler_target = static_cast<Op::EnterUnwindContext const&>(instruction).handler_target();

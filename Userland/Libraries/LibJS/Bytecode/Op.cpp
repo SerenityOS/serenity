@@ -1130,12 +1130,15 @@ ThrowCompletionOr<void> Yield::execute_impl(Bytecode::Interpreter& interpreter) 
     auto yielded_value = interpreter.accumulator().value_or(js_undefined());
     auto object = Object::create(interpreter.realm(), nullptr);
     object->define_direct_property("result", yielded_value, JS::default_attributes);
+
     if (m_continuation_label.has_value())
         // FIXME: If we get a pointer, which is not accurately representable as a double
         //        will cause this to explode
         object->define_direct_property("continuation", Value(static_cast<double>(reinterpret_cast<u64>(&m_continuation_label->block()))), JS::default_attributes);
     else
         object->define_direct_property("continuation", Value(0), JS::default_attributes);
+
+    object->define_direct_property("isAwait", Value(false), JS::default_attributes);
     interpreter.do_return(object);
     return {};
 }
@@ -1143,6 +1146,25 @@ ThrowCompletionOr<void> Yield::execute_impl(Bytecode::Interpreter& interpreter) 
 void Yield::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
 {
     if (m_continuation_label.has_value() && &m_continuation_label->block() == &from)
+        m_continuation_label = Label { to };
+}
+
+ThrowCompletionOr<void> Await::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto yielded_value = interpreter.accumulator().value_or(js_undefined());
+    auto object = Object::create(interpreter.realm(), nullptr);
+    object->define_direct_property("result", yielded_value, JS::default_attributes);
+    // FIXME: If we get a pointer, which is not accurately representable as a double
+    //        will cause this to explode
+    object->define_direct_property("continuation", Value(static_cast<double>(reinterpret_cast<u64>(&m_continuation_label.block()))), JS::default_attributes);
+    object->define_direct_property("isAwait", Value(true), JS::default_attributes);
+    interpreter.do_return(object);
+    return {};
+}
+
+void Await::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
+{
+    if (&m_continuation_label.block() == &from)
         m_continuation_label = Label { to };
 }
 
@@ -1350,6 +1372,17 @@ ThrowCompletionOr<void> IteratorClose::execute_impl(Bytecode::Interpreter& inter
 
     // FIXME: Return the value of the resulting completion. (Note that m_completion_value can be empty!)
     TRY(iterator_close(vm, iterator, Completion { m_completion_type, m_completion_value, {} }));
+    return {};
+}
+
+ThrowCompletionOr<void> AsyncIteratorClose::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto iterator_object = TRY(interpreter.accumulator().to_object(vm));
+    auto iterator = object_to_iterator(vm, iterator_object);
+
+    // FIXME: Return the value of the resulting completion. (Note that m_completion_value can be empty!)
+    TRY(async_iterator_close(vm, iterator, Completion { m_completion_type, m_completion_value, {} }));
     return {};
 }
 
@@ -1806,6 +1839,11 @@ DeprecatedString Yield::to_deprecated_string_impl(Bytecode::Executable const&) c
     return DeprecatedString::formatted("Yield return");
 }
 
+DeprecatedString Await::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    return DeprecatedString::formatted("Await continuation:@{}", m_continuation_label.block().name());
+}
+
 DeprecatedString GetByValue::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
     return DeprecatedString::formatted("GetByValue base:{}", m_base);
@@ -1871,6 +1909,15 @@ DeprecatedString IteratorClose::to_deprecated_string_impl(Bytecode::Executable c
 
     auto completion_value_string = m_completion_value->to_string_without_side_effects().release_value_but_fixme_should_propagate_errors();
     return DeprecatedString::formatted("IteratorClose completion_type={} completion_value={}", to_underlying(m_completion_type), completion_value_string);
+}
+
+DeprecatedString AsyncIteratorClose::to_deprecated_string_impl(Bytecode::Executable const&) const
+{
+    if (!m_completion_value.has_value())
+        return DeprecatedString::formatted("AsyncIteratorClose completion_type={} completion_value=<empty>", to_underlying(m_completion_type));
+
+    auto completion_value_string = m_completion_value->to_string_without_side_effects().release_value_but_fixme_should_propagate_errors();
+    return DeprecatedString::formatted("AsyncIteratorClose completion_type={} completion_value={}", to_underlying(m_completion_type), completion_value_string);
 }
 
 DeprecatedString IteratorNext::to_deprecated_string_impl(Executable const&) const
