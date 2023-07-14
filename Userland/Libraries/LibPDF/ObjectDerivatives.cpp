@@ -145,17 +145,13 @@ DeprecatedString StreamObject::to_deprecated_string(int indent) const
         }
     } else {
         auto string = encode_hex(bytes());
-        while (true) {
-            if (string.length() > 60) {
-                builder.appendff("{}\n", string.substring(0, 60));
-                append_indent(builder, indent);
-                string = string.substring(60);
-                continue;
-            }
-
-            builder.appendff("{}\n", string);
-            break;
+        while (string.length() > 60) {
+            builder.appendff("{}\n", string.substring(0, 60));
+            append_indent(builder, indent);
+            string = string.substring(60);
         }
+
+        builder.appendff("{}\n", string);
     }
 
     builder.append("endstream"sv);
