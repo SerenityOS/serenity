@@ -436,6 +436,7 @@ ErrorOr<NonnullRefPtr<TinyVGDecodedImageData>> TinyVGDecodedImageData::decode(St
             polygon.move_to(TRY(reader.read_point()));
             for (u32 i = 0; i < header.count - 1; i++)
                 polygon.line_to(TRY(reader.read_point()));
+            polygon.close();
             TRY(draw_commands.try_append(DrawCommand { move(polygon), move(header.fill_style), move(header.line_style), header.line_width }));
             break;
         }
