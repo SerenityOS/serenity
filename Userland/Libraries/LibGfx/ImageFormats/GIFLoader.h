@@ -22,7 +22,6 @@ public:
 
     virtual IntSize size() override;
 
-    virtual ErrorOr<void> initialize() override;
     virtual bool is_animated() override;
     virtual size_t loop_count() override;
     virtual size_t frame_count() override;

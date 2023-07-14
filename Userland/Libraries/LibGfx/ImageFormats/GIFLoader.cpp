@@ -548,13 +548,6 @@ IntSize GIFImageDecoderPlugin::size()
     return { m_context->logical_screen.width, m_context->logical_screen.height };
 }
 
-ErrorOr<void> GIFImageDecoderPlugin::initialize()
-{
-    FixedMemoryStream stream { { m_context->data, m_context->data_size } };
-    TRY(decode_gif_header(stream));
-    return {};
-}
-
 bool GIFImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
     FixedMemoryStream stream { data };
