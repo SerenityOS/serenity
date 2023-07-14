@@ -891,7 +891,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
 
         auto declaration_result = function_declaration_instantiation(nullptr);
 
-        if (m_kind == FunctionKind::Normal || m_kind == FunctionKind::Generator) {
+        if (m_kind == FunctionKind::Normal || m_kind == FunctionKind::Generator || m_kind == FunctionKind::AsyncGenerator) {
             if (declaration_result.is_error())
                 return declaration_result.release_error();
         }
@@ -899,7 +899,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         if (!m_bytecode_executable)
             m_bytecode_executable = TRY(Bytecode::compile(vm, *m_ecmascript_code, m_kind, m_name));
 
-        if (m_kind == FunctionKind::Async || m_kind == FunctionKind::AsyncGenerator) {
+        if (m_kind == FunctionKind::Async) {
             if (declaration_result.is_throw_completion()) {
                 auto promise_capability = MUST(new_promise_capability(vm, realm.intrinsics().promise_constructor()));
                 MUST(call(vm, *promise_capability->reject(), js_undefined(), *declaration_result.throw_completion().value()));
