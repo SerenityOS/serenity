@@ -1,16 +1,14 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Liav A <liavalb@gmail.com>
-Date: Fri, 27 May 2022 10:18:35 +0300
+Date: Fri, 14 Jul 2023 16:05:27 +0300
 Subject: [PATCH] Stop compiler warnings on dangling pointer
 
-Use static variable to prevent using a dangling pointer from a previous
-stack trace.
 ---
- source/components/utilities/utdebug.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ source/components/utilities/utdebug.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/source/components/utilities/utdebug.c b/source/components/utilities/utdebug.c
-index f789e68..fd18f5c 100644
+index 82e8a62050beec30d3b067a8516bb23f3808182a..f4b40bb5b10e8e3d9bf3d60b7332ba70aa40a2c6 100644
 --- a/source/components/utilities/utdebug.c
 +++ b/source/components/utilities/utdebug.c
 @@ -182,7 +182,7 @@ void
@@ -21,8 +19,8 @@ index f789e68..fd18f5c 100644
 +    static ACPI_SIZE               CurrentSp;
  
  
-     AcpiGbl_EntryStackPointer = &CurrentSp;
-@@ -205,7 +205,7 @@ void
+ #pragma GCC diagnostic push
+@@ -210,7 +210,7 @@ void
  AcpiUtTrackStackPtr (
      void)
  {

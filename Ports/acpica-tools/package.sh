@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=acpica-tools
-version=20220331
-workdir="acpica-unix-${version}"
-files="https://acpica.org/sites/acpica/files/acpica-unix-${version}.tar.gz acpica-unix-${version}.tar.gz acaff68b14f1e0804ebbfc4b97268a4ccbefcfa053b02ed9924f2b14d8a98e21"
+version='R06_28_23'
+workdir="acpica-${version}"
+files="https://github.com/acpica/acpica/archive/refs/tags/${version}.tar.gz acpica-${version}.tar.gz 2248799b7ca08a7711ac87d31924354ed49047507607d033bd327ba861ec4d31"
 
 
 build() {

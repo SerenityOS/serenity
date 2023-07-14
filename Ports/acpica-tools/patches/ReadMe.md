@@ -4,18 +4,15 @@
 
 Stop compiler warnings on dangling pointer
 
-Use static variable to prevent using a dangling pointer from a previous
-stack trace.
 
-## `0002-Disable-sprintf-debug-message-with-formatting-issues.patch`
+## `0002-Add-serenity-definitions-for-LibC-includes.patch`
 
-Disable sprintf debug message with formatting issues
+Add serenity definitions for LibC includes
 
+We use the netbsd "acnetbsd.h" file here as a template.
 
-## `0003-Fix-printf-bad-specifier-formatting.patch`
+## `0003-Disable-warnings-for-Werror-bad-function-cast.patch`
 
-Fix printf bad specifier formatting
+Disable warnings for Werror=bad-function-cast
 
-Fix sprintf specifier being written in a bad format leading to iASL to
-crash.
 
