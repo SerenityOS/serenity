@@ -170,21 +170,7 @@ QOIImageDecoderPlugin::QOIImageDecoderPlugin(NonnullOwnPtr<Stream> stream)
 
 IntSize QOIImageDecoderPlugin::size()
 {
-    if (m_context->state < QOILoadingContext::State::HeaderDecoded) {
-        // FIXME: This is a weird API (inherited from ImageDecoderPlugin), should probably propagate errors by returning ErrorOr<IntSize>.
-        //        For the time being, ignore the result and rely on the context's state.
-        (void)decode_header_and_update_context();
-    }
-
-    if (m_context->state == QOILoadingContext::State::Error)
-        return {};
-
     return { m_context->header.width, m_context->header.height };
-}
-
-ErrorOr<void> QOIImageDecoderPlugin::initialize()
-{
-    return decode_header_and_update_context();
 }
 
 bool QOIImageDecoderPlugin::sniff(ReadonlyBytes data)
@@ -196,7 +182,9 @@ bool QOIImageDecoderPlugin::sniff(ReadonlyBytes data)
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> QOIImageDecoderPlugin::create(ReadonlyBytes data)
 {
     auto stream = TRY(try_make<FixedMemoryStream>(data));
-    return adopt_nonnull_own_or_enomem(new (nothrow) QOIImageDecoderPlugin(move(stream)));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) QOIImageDecoderPlugin(move(stream))));
+    TRY(plugin->decode_header_and_update_context());
+    return plugin;
 }
 
 ErrorOr<ImageFrameDescriptor> QOIImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
@@ -207,12 +195,8 @@ ErrorOr<ImageFrameDescriptor> QOIImageDecoderPlugin::frame(size_t index, Optiona
     // No one should try to decode the frame again after an error was already returned.
     VERIFY(m_context->state != QOILoadingContext::State::Error);
 
-    if (m_context->state == QOILoadingContext::State::NotDecoded) {
-        TRY(decode_header_and_update_context());
+    if (m_context->state == QOILoadingContext::State::HeaderDecoded)
         TRY(decode_image_and_update_context());
-    } else if (m_context->state == QOILoadingContext::State::HeaderDecoded) {
-        TRY(decode_image_and_update_context());
-    }
 
     VERIFY(m_context->state == QOILoadingContext::State::ImageDecoded);
     VERIFY(m_context->bitmap);
@@ -222,13 +206,8 @@ ErrorOr<ImageFrameDescriptor> QOIImageDecoderPlugin::frame(size_t index, Optiona
 ErrorOr<void> QOIImageDecoderPlugin::decode_header_and_update_context()
 {
     VERIFY(m_context->state < QOILoadingContext::State::HeaderDecoded);
-    auto error_or_header = decode_qoi_header(*m_context->stream);
-    if (error_or_header.is_error()) {
-        m_context->state = QOILoadingContext::State::Error;
-        return error_or_header.release_error();
-    }
+    m_context->header = TRY(decode_qoi_header(*m_context->stream));
     m_context->state = QOILoadingContext::State::HeaderDecoded;
-    m_context->header = error_or_header.release_value();
     return {};
 }
 
