@@ -160,6 +160,7 @@ static bool restore_string_position(MatchInput const& input, MatchState& state)
 
 OwnPtr<OpCode> ByteCode::s_opcodes[(size_t)OpCodeId::Last + 1];
 bool ByteCode::s_opcodes_initialized { false };
+size_t ByteCode::s_next_checkpoint_serial_id { 0 };
 
 void ByteCode::ensure_opcodes_initialized()
 {
@@ -1063,15 +1064,14 @@ ALWAYS_INLINE ExecutionResult OpCode_ResetRepeat::execute(MatchInput const&, Mat
 
 ALWAYS_INLINE ExecutionResult OpCode_Checkpoint::execute(MatchInput const& input, MatchState& state) const
 {
-    input.checkpoints.set(state.instruction_position, state.string_position);
+    input.checkpoints.set(id(), state.string_position);
     return ExecutionResult::Continue;
 }
 
 ALWAYS_INLINE ExecutionResult OpCode_JumpNonEmpty::execute(MatchInput const& input, MatchState& state) const
 {
     u64 current_position = state.string_position;
-    auto checkpoint_ip = state.instruction_position + size() + checkpoint();
-    auto checkpoint_position = input.checkpoints.find(checkpoint_ip);
+    auto checkpoint_position = input.checkpoints.find(checkpoint());
 
     if (checkpoint_position != input.checkpoints.end() && checkpoint_position->value != current_position) {
         auto form = this->form();
