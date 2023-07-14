@@ -529,9 +529,6 @@ static ErrorOr<void> read_webp_first_chunk(WebPLoadingContext& context)
     if (context.state >= WebPLoadingContext::State::FirstChunkRead)
         return {};
 
-    if (context.state < WebPLoadingContext::HeaderDecoded)
-        TRY(decode_webp_header(context));
-
     context.chunks_cursor = context.data.slice(sizeof(WebPFileHeader));
     auto first_chunk = TRY(decode_webp_advance_chunk(context.chunks_cursor));
 
@@ -579,8 +576,7 @@ static ErrorOr<void> decode_webp_chunks(WebPLoadingContext& context)
     if (context.state >= WebPLoadingContext::State::ChunksDecoded)
         return {};
 
-    if (context.state < WebPLoadingContext::FirstChunkDecoded)
-        TRY(decode_webp_first_chunk(context));
+    VERIFY(context.state >= WebPLoadingContext::FirstChunkDecoded);
 
     if (context.first_chunk->type == FourCC("VP8X"))
         return decode_webp_extended(context, context.chunks_cursor);
@@ -711,22 +707,7 @@ bool WebPImageDecoderPlugin::set_error(ErrorOr<void> const& error_or)
 
 IntSize WebPImageDecoderPlugin::size()
 {
-    if (m_context->state == WebPLoadingContext::State::Error)
-        return {};
-
-    if (m_context->state < WebPLoadingContext::State::FirstChunkDecoded) {
-        if (set_error(decode_webp_first_chunk(*m_context)))
-            return {};
-    }
-
     return m_context->size.value();
-}
-
-ErrorOr<void> WebPImageDecoderPlugin::initialize()
-{
-    auto header_okay_or_error = decode_webp_header(*m_context);
-    set_error(header_okay_or_error);
-    return header_okay_or_error;
 }
 
 bool WebPImageDecoderPlugin::sniff(ReadonlyBytes data)
@@ -741,19 +722,14 @@ bool WebPImageDecoderPlugin::sniff(ReadonlyBytes data)
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> WebPImageDecoderPlugin::create(ReadonlyBytes data)
 {
     auto context = TRY(try_make<WebPLoadingContext>());
-    return adopt_nonnull_own_or_enomem(new (nothrow) WebPImageDecoderPlugin(data, move(context)));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) WebPImageDecoderPlugin(data, move(context))));
+    TRY(decode_webp_header(*plugin->m_context));
+    TRY(decode_webp_first_chunk(*plugin->m_context));
+    return plugin;
 }
 
 bool WebPImageDecoderPlugin::is_animated()
 {
-    if (m_context->state == WebPLoadingContext::State::Error)
-        return false;
-
-    if (m_context->state < WebPLoadingContext::State::FirstChunkDecoded) {
-        if (set_error(decode_webp_first_chunk(*m_context)))
-            return false;
-    }
-
     return m_context->first_chunk->type == FourCC("VP8X") && m_context->vp8x_header.has_animation;
 }
 
