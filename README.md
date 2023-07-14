@@ -24,7 +24,7 @@ You can watch videos of the system being developed on YouTube:
 
 ## Screenshot
 
-![Screenshot as of b36968c.png](https://raw.githubusercontent.com/SerenityOS/serenity/master/Meta/Screenshots/screenshot-b36968c.png)
+![Screenshot as of c03b788.png](https://raw.githubusercontent.com/SerenityOS/serenity/master/Meta/Screenshots/screenshot-c03b788.png)
 
 ## Features
 
