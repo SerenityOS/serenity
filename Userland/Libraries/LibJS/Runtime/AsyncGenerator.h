@@ -33,7 +33,7 @@ public:
 
     void async_generator_enqueue(Completion, NonnullGCPtr<PromiseCapability>);
     ThrowCompletionOr<void> resume(VM&, Completion completion);
-    ThrowCompletionOr<void> await_return();
+    void await_return();
     void complete_step(Completion, bool done, Realm* realm = nullptr);
     void drain_queue();
 

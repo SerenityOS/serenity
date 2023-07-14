@@ -342,7 +342,8 @@ ThrowCompletionOr<void> AsyncGenerator::resume(VM& vm, Completion completion)
 }
 
 // 27.6.3.9 AsyncGeneratorAwaitReturn ( generator ), https://tc39.es/ecma262/#sec-asyncgeneratorawaitreturn
-ThrowCompletionOr<void> AsyncGenerator::await_return()
+// With unmerged broken promise fixup from https://github.com/tc39/ecma262/pull/2683
+void AsyncGenerator::await_return()
 {
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
@@ -362,10 +363,31 @@ ThrowCompletionOr<void> AsyncGenerator::await_return()
     // 5. Assert: completion.[[Type]] is return.
     VERIFY(completion.type() == Completion::Type::Return);
 
-    // 6. Let promise be ? PromiseResolve(%Promise%, completion.[[Value]]).
-    auto* promise = TRY(promise_resolve(vm, realm.intrinsics().promise_constructor(), completion.value().value()));
+    // 6. Let promiseCompletion be Completion(PromiseResolve(%Promise%, _completion_.[[Value]])).
+    auto promise_completion = promise_resolve(vm, realm.intrinsics().promise_constructor(), completion.value().value());
 
-    // 7. Let fulfilledClosure be a new Abstract Closure with parameters (value) that captures generator and performs
+    // 7. If promiseCompletion is an abrupt completion, then
+    if (promise_completion.is_throw_completion()) {
+        // a. Set generator.[[AsyncGeneratorState]] to completed.
+        m_async_generator_state = State::Completed;
+
+        // b. Perform AsyncGeneratorCompleteStep(generator, promiseCompletion, true).
+        complete_step(promise_completion.release_error(), true);
+
+        // c. Perform AsyncGeneratorDrainQueue(generator).
+        drain_queue();
+
+        // d. Return unused.
+        return;
+    }
+
+    // 8. Assert: promiseCompletion.[[Type]] is normal.
+    VERIFY(!promise_completion.is_throw_completion());
+
+    // 9. Let promise be promiseCompletion.[[Value]].
+    auto* promise = promise_completion.release_value();
+
+    // 10. Let fulfilledClosure be a new Abstract Closure with parameters (value) that captures generator and performs
     //    the following steps when called:
     auto fulfilled_closure = [this](VM& vm) -> ThrowCompletionOr<Value> {
         // a. Set generator.[[AsyncGeneratorState]] to completed.
@@ -384,10 +406,10 @@ ThrowCompletionOr<void> AsyncGenerator::await_return()
         return js_undefined();
     };
 
-    // 8. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 1, "", « »).
+    // 11. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 1, "", « »).
     auto on_fulfilled = NativeFunction::create(realm, move(fulfilled_closure), 1, "");
 
-    // 9. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures generator and performs
+    // 12. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures generator and performs
     //    the following steps when called:
     auto rejected_closure = [this](VM& vm) -> ThrowCompletionOr<Value> {
         // a. Set generator.[[AsyncGeneratorState]] to completed.
@@ -406,17 +428,17 @@ ThrowCompletionOr<void> AsyncGenerator::await_return()
         return js_undefined();
     };
 
-    // 10. Let onRejected be CreateBuiltinFunction(rejectedClosure, 1, "", « »).
+    // 13. Let onRejected be CreateBuiltinFunction(rejectedClosure, 1, "", « »).
     auto on_rejected = NativeFunction::create(realm, move(rejected_closure), 1, "");
 
-    // 11. Perform PerformPromiseThen(promise, onFulfilled, onRejected).
+    // 14. Perform PerformPromiseThen(promise, onFulfilled, onRejected).
     // NOTE: await_return should only be called when the generator is in SuspendedStart or Completed state,
     //       so an await shouldn't be running currently, so it should be safe to overwrite m_current_promise.
     m_current_promise = verify_cast<Promise>(promise);
     m_current_promise->perform_then(on_fulfilled, on_rejected, {});
 
-    // 12. Return unused.
-    return {};
+    // 15. Return unused.
+    return;
 }
 
 // 27.6.3.5 AsyncGeneratorCompleteStep ( generator, completion, done [ , realm ] ), https://tc39.es/ecma262/#sec-asyncgeneratorcompletestep
@@ -507,8 +529,8 @@ void AsyncGenerator::drain_queue()
             // i. Set generator.[[AsyncGeneratorState]] to awaiting-return.
             m_async_generator_state = State::AwaitingReturn;
 
-            // ii. Perform ! AsyncGeneratorAwaitReturn(generator).
-            MUST(await_return());
+            // ii. Perform AsyncGeneratorAwaitReturn(generator).
+            await_return();
 
             // iii. Set done to true.
             done = true;
