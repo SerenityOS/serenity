@@ -6,6 +6,12 @@
 
 #pragma once
 
+// Includes essentially mandated by POSIX:
+// https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/netdb.h.html
+#include <inttypes.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+
 #include <sys/cdefs.h>
 #include <sys/types.h>
 

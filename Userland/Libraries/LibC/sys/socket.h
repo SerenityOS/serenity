@@ -6,6 +6,10 @@
 
 #pragma once
 
+// Includes essentially mandated by POSIX:
+// https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/sys_socket.h.html
+#include <sys/uio.h>
+
 #include <Kernel/API/POSIX/sys/socket.h>
 #include <sys/cdefs.h>
 #include <sys/un.h>

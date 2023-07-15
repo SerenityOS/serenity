@@ -7,6 +7,10 @@
 
 #pragma once
 
+// Includes essentially mandated by POSIX:
+// https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/string.h.html
+#include <stddef.h>
+
 #include <sys/cdefs.h>
 #include <sys/types.h>
 

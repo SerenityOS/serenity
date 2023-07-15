@@ -6,6 +6,11 @@
 
 #pragma once
 
+// Includes essentially mandated by POSIX:
+// https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/semaphore.h.html
+#include <fcntl.h>
+#include <time.h>
+
 #include <limits.h>
 #include <pthread.h>
 #include <sys/cdefs.h>

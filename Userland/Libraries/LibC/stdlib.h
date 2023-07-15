@@ -6,8 +6,14 @@
 
 #pragma once
 
-#include <bits/wchar.h>
+// Includes essentially mandated by POSIX:
+// https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/stdlib.h.html
+#include <limits.h>
+#include <math.h>
 #include <stddef.h>
+#include <sys/wait.h>
+
+#include <bits/wchar.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
 

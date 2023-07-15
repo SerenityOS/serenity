@@ -7,6 +7,11 @@
 
 #pragma once
 
+// Includes essentially mandated by POSIX:
+// https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/fcntl.h.html
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include <Kernel/API/POSIX/fcntl.h>
 #include <Kernel/API/POSIX/sys/stat.h>
 #include <sys/cdefs.h>

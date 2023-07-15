@@ -6,12 +6,15 @@
 
 #pragma once
 
-#include <bits/pthread_integration.h>
+// Includes essentially mandated by POSIX:
+// https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/pthread.h.html
 #include <sched.h>
+#include <time.h>
+
+#include <bits/pthread_integration.h>
 #include <stdint.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
-#include <time.h>
 
 __BEGIN_DECLS
 

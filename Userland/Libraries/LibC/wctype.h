@@ -6,10 +6,19 @@
 
 #pragma once
 
-#include <assert.h>
+// Includes essentially mandated by POSIX:
+// https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/wctype.h.html
 #include <ctype.h>
-#include <sys/cdefs.h>
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 #include <wchar.h>
+
+#include <assert.h>
+#include <sys/cdefs.h>
 
 __BEGIN_DECLS
 
