@@ -5,7 +5,7 @@
  */
 
 #include <AK/Format.h>
-#include <LibJS/Contrib/Test262/$262Object.h>
+#include <LibJS/Contrib/Test262/262Object.h>
 #include <LibJS/Contrib/Test262/AgentObject.h>
 #include <LibJS/Contrib/Test262/GlobalObject.h>
 #include <LibJS/Heap/Cell.h>
