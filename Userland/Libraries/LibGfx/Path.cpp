@@ -21,8 +21,9 @@ void Path::elliptical_arc_to(FloatPoint point, FloatSize radii, float x_axis_rot
     double rx = radii.width();
     double ry = radii.height();
 
-    double x_axis_rotation_c = AK::cos(static_cast<double>(x_axis_rotation));
-    double x_axis_rotation_s = AK::sin(static_cast<double>(x_axis_rotation));
+    double x_axis_rotation_s;
+    double x_axis_rotation_c;
+    AK::sincos(static_cast<double>(x_axis_rotation), x_axis_rotation_s, x_axis_rotation_c);
 
     // Find the last point
     FloatPoint last_point { 0, 0 };
@@ -99,9 +100,9 @@ void Path::elliptical_arc_to(FloatPoint point, FloatSize radii, float x_axis_rot
     auto theta_delta = theta_2 - theta_1;
 
     if (!sweep && theta_delta > 0.0) {
-        theta_delta -= 2 * M_PI;
+        theta_delta -= 2 * AK::Pi<double>;
     } else if (sweep && theta_delta < 0) {
-        theta_delta += 2 * M_PI;
+        theta_delta += 2 * AK::Pi<double>;
     }
 
     elliptical_arc_to(
