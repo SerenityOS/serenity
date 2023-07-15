@@ -4474,16 +4474,6 @@ ThrowCompletionOr<void> ScopeNode::for_each_var_function_declaration_in_reverse_
     return {};
 }
 
-ThrowCompletionOr<void> ScopeNode::for_each_lexical_function_declaration_in_reverse_order(ThrowCompletionOrVoidCallback<FunctionDeclaration const&>&& callback) const
-{
-    for (ssize_t i = m_lexical_declarations.size() - 1; i >= 0; i--) {
-        auto& declaration = m_lexical_declarations[i];
-        if (is<FunctionDeclaration>(declaration))
-            TRY(callback(static_cast<FunctionDeclaration const&>(*declaration)));
-    }
-    return {};
-}
-
 ThrowCompletionOr<void> ScopeNode::for_each_var_scoped_variable_declaration(ThrowCompletionOrVoidCallback<VariableDeclaration const&>&& callback) const
 {
     for (auto& declaration : m_var_declarations) {
