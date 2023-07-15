@@ -11,7 +11,7 @@ Co-Authored-By: Daniel Bertalan <dani@danielbertalan.dev>
 Co-Authored-By: Itamar <itamar8910@gmail.com>
 Co-Authored-By: Nico Weber <thakis@chromium.org>
 Co-Authored-By: Philip Herron <herron.philip@googlemail.com>
-Co-Authored-By: Shannon Booth <shannon.ml.booth@gmail.com>
+Co-Authored-By: Shannon Booth <shannon@serenityos.org>
 ---
  libgcc/config/t-slibgcc | 1 -
  1 file changed, 1 deletion(-)

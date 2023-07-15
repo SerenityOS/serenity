@@ -17,7 +17,7 @@ Co-Authored-By: Tim Schumacher <timschumi@gmx.de>
 Co-Authored-By: Andrew Kaster <andrewdkaster@gmail.com>
 Co-Authored-By: Brian Gianforcaro <bgianf@serenityos.org>
 Co-Authored-By: Philip Herron <herron.philip@googlemail.com>
-Co-Authored-By: Shannon Booth <shannon.ml.booth@gmail.com>
+Co-Authored-By: Shannon Booth <shannon@serenityos.org>
 ---
  gcc/config.gcc             | 19 ++++++++++++++
  gcc/config/i386/serenity.h |  7 ++++++

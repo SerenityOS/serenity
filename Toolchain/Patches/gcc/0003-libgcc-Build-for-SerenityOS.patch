@@ -12,7 +12,7 @@ Co-Authored-By: Nico Weber <thakis@chromium.org>
 Co-Authored-By: Andrew Kaster <andrewdkaster@gmail.com>
 Co-Authored-By: Daniel Bertalan <dani@danielbertalan.dev>
 Co-Authored-By: Philip Herron <herron.philip@googlemail.com>
-Co-Authored-By: Shannon Booth <shannon.ml.booth@gmail.com>
+Co-Authored-By: Shannon Booth <shannon@serenityos.org>
 ---
  gcc/configure               |  3 +++
  libgcc/config.host          | 16 ++++++++++++++++
