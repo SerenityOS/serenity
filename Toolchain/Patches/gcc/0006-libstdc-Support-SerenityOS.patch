@@ -18,7 +18,7 @@ Co-Authored-By: James Mintram <me@jamesrm.com>
 Co-Authored-By: Martin Bříza <m@rtinbriza.cz>
 Co-Authored-By: Nico Weber <thakis@chromium.org>
 Co-Authored-By: Philip Herron <herron.philip@googlemail.com>
-Co-Authored-By: Shannon Booth <shannon.ml.booth@gmail.com>
+Co-Authored-By: Shannon Booth <shannon@serenityos.org>
 ---
  libstdc++-v3/acinclude.m4   |  4 ++--
  libstdc++-v3/configure      | 11 ++++++++---
