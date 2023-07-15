@@ -165,7 +165,7 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
     auto independent_formatting_context = layout_inside(box, layout_mode, box_state.available_inner_space_or_constraints_from(*m_available_space));
 
     auto const& height_value = box.computed_values().height();
-    if (height_value.is_auto()) {
+    if (should_treat_height_as_auto(box, *m_available_space)) {
         // FIXME: (10.6.6) If 'height' is 'auto', the height depends on the element's descendants per 10.6.7.
         parent().compute_height(box, AvailableSpace(AvailableSize::make_indefinite(), AvailableSize::make_indefinite()));
     } else {
