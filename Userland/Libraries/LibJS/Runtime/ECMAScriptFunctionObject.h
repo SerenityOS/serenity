@@ -16,6 +16,7 @@
 namespace JS {
 
 void async_block_start(VM&, NonnullRefPtr<Statement const> const& parse_node, PromiseCapability const&, ExecutionContext&);
+void async_function_start(VM&, PromiseCapability const&, NonnullRefPtr<Statement const> const& async_function_body);
 
 // 10.2 ECMAScript Function Objects, https://tc39.es/ecma262/#sec-ecmascript-function-objects
 class ECMAScriptFunctionObject final : public FunctionObject {
@@ -103,8 +104,6 @@ private:
 
     ThrowCompletionOr<void> prepare_for_ordinary_call(ExecutionContext& callee_context, Object* new_target);
     void ordinary_call_bind_this(ExecutionContext&, Value this_argument);
-
-    void async_function_start(PromiseCapability const&);
 
     ThrowCompletionOr<void> function_declaration_instantiation(Interpreter*);
 

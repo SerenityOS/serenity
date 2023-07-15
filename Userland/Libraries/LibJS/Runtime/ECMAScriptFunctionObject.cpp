@@ -754,10 +754,8 @@ void ECMAScriptFunctionObject::ordinary_call_bind_this(ExecutionContext& callee_
 }
 
 // 27.7.5.1 AsyncFunctionStart ( promiseCapability, asyncFunctionBody ), https://tc39.es/ecma262/#sec-async-functions-abstract-operations-async-function-start
-void ECMAScriptFunctionObject::async_function_start(PromiseCapability const& promise_capability)
+void async_function_start(VM& vm, PromiseCapability const& promise_capability, NonnullRefPtr<Statement const> const& async_function_body)
 {
-    auto& vm = this->vm();
-
     // 1. Let runningContext be the running execution context.
     auto& running_context = vm.running_execution_context();
 
@@ -767,7 +765,7 @@ void ECMAScriptFunctionObject::async_function_start(PromiseCapability const& pro
     // 3. NOTE: Copying the execution state is required for AsyncBlockStart to resume its execution. It is ill-defined to resume a currently executing context.
 
     // 4. Perform AsyncBlockStart(promiseCapability, asyncFunctionBody, asyncContext).
-    async_block_start(vm, m_ecmascript_code, promise_capability, async_context);
+    async_block_start(vm, async_function_body, promise_capability, async_context);
 
     // 5. Return unused.
 }
@@ -978,7 +976,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
             // 4. Else,
             else {
                 // a. Perform AsyncFunctionStart(promiseCapability, FunctionBody).
-                async_function_start(promise_capability);
+                async_function_start(vm, promise_capability, m_ecmascript_code);
             }
 
             // 5. Return Completion Record { [[Type]]: return, [[Value]]: promiseCapability.[[Promise]], [[Target]]: empty }.
