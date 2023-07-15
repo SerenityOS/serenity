@@ -238,14 +238,10 @@ void StackingContext::paint_internal(PaintContext& context) const
 Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformation const& transformation) const
 {
     auto count = transformation.values.size();
-    auto value = [this, transformation](size_t index, Optional<CSS::Length const&> reference_length = {}) -> float {
+    auto value = [this, transformation](size_t index, CSS::Length const& reference_length = CSS::Length::make_px(0)) -> float {
         return transformation.values[index].visit(
             [this, reference_length](CSS::LengthPercentage const& value) -> double {
-                if (reference_length.has_value()) {
-                    return value.resolved(m_box, reference_length.value()).to_px(m_box).to_float();
-                }
-
-                return value.length().to_px(m_box).to_float();
+                return value.resolved(m_box, reference_length).to_px(m_box).to_float();
             },
             [this](CSS::AngleOrCalculated const& value) {
                 return value.resolved(m_box).to_degrees() * M_DEG2RAD;
