@@ -268,7 +268,6 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
         auto min_width = computed_values.min_width().to_px(cell.box, containing_block.content_width());
         auto cell_intrinsic_width_offsets = padding_left + padding_right + border_left + border_right;
         cell.outer_min_width = max(min_width, min_content_width) + cell_intrinsic_width_offsets;
-        // FIXME: Compute outer min-content width / height of a table-column or table-column-group / table-row or table-row-group.
 
         // FIXME: Compute height, max_height correctly.
         auto height = computed_values.height().to_px(cell.box, containing_block.content_height());
@@ -285,7 +284,6 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
             // max(min-height, height, min-content height, min(max-height, max-content height)) adjusted by the cell intrinsic offsets.
             cell.outer_max_height = max(min_height, max(height, max(min_content_height, min(max_height, max_content_height)))) + cell_intrinsic_height_offsets;
         }
-        // FIXME: The outer max-content height of a table-row or table-row-group is max(min-height, min(max-height, height)).
 
         // FIXME: Compute width, max_width correctly.
         auto width = (computed_values.width().is_length() || !table_width_is_auto) ? computed_values.width().to_px(cell.box, containing_block.content_width()) : 0;
@@ -302,7 +300,39 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
             // max(min-width, width, min-content width, min(max-width, max-content width)) adjusted by the cell intrinsic offsets.
             cell.outer_max_width = max(min_width, max(width, max(min_content_width, min(max_width, max_content_width)))) + cell_intrinsic_width_offsets;
         }
-        // FIXME: The outer max-content width of a table-column or table-column-group is max(min-width, min(max-width, width)).
+    }
+}
+
+void TableFormattingContext::compute_outer_content_sizes()
+{
+    auto const& containing_block = m_state.get(*table_wrapper().containing_block());
+
+    size_t column_index = 0;
+    for_each_child_box_matching(table_box(), is_table_column_group, [&](auto& column_group_box) {
+        for_each_child_box_matching(column_group_box, is_table_column, [&](auto& column_box) {
+            auto const& computed_values = column_box.computed_values();
+            auto min_width = computed_values.min_width().to_px(column_box, containing_block.content_width());
+            auto max_width = computed_values.max_width().is_length() ? computed_values.max_width().to_px(column_box, containing_block.content_width()) : INFINITY;
+            auto width = computed_values.width().to_px(column_box, containing_block.content_width());
+            // The outer min-content width of a table-column or table-column-group is max(min-width, width).
+            m_columns[column_index].min_size = max(min_width, width);
+            // The outer max-content width of a table-column or table-column-group is max(min-width, min(max-width, width)).
+            m_columns[column_index].max_size = max(min_width, min(max_width, width));
+            auto const& col_node = static_cast<HTML::HTMLTableColElement const&>(*column_box.dom_node());
+            unsigned span = col_node.attribute(HTML::AttributeNames::span).to_uint().value_or(1);
+            column_index += span;
+        });
+    });
+
+    for (auto& row : m_rows) {
+        auto const& computed_values = row.box->computed_values();
+        auto min_height = computed_values.min_height().to_px(row.box, containing_block.content_height());
+        auto max_height = computed_values.max_height().is_length() ? computed_values.max_height().to_px(row.box, containing_block.content_height()) : INFINITY;
+        auto height = computed_values.height().to_px(row.box, containing_block.content_height());
+        // The outer min-content height of a table-row or table-row-group is max(min-height, height).
+        row.min_size = max(min_height, height);
+        // The outer max-content height of a table-row or table-row-group is max(min-height, min(max-height, height)).
+        row.max_size = max(min_height, min(max_height, height));
     }
 }
 
@@ -1267,6 +1297,7 @@ void TableFormattingContext::run(Box const& box, LayoutMode layout_mode, Availab
 
     // Compute the minimum width of each column.
     compute_cell_measures(available_space);
+    compute_outer_content_sizes();
     compute_table_measures<Column>();
 
     // https://www.w3.org/TR/css-tables-3/#row-layout
