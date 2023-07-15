@@ -442,7 +442,7 @@ Vector<CSS::Transformation> StyleProperties::transformations() const
             if (transformation_value->is_calculated()) {
                 auto& calculated = transformation_value->as_calculated();
                 if (calculated.resolves_to_length()) {
-                    dbgln("FIXME: Unable to resolve length with no layout node! {}", calculated.to_string());
+                    values.append(CSS::LengthPercentage { calculated });
                 } else if (calculated.resolves_to_percentage()) {
                     values.append({ calculated.resolve_percentage().value() });
                 } else if (calculated.resolves_to_number()) {
