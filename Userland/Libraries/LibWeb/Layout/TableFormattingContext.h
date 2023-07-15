@@ -40,6 +40,7 @@ private:
     void calculate_row_column_grid(Box const&);
     void compute_constrainedness();
     void compute_cell_measures(AvailableSpace const& available_space);
+    void compute_outer_content_sizes();
     template<class RowOrColumn>
     void initialize_table_measures();
     template<class RowOrColumn>
