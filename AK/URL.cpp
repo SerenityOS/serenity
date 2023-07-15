@@ -15,9 +15,9 @@
 
 namespace AK {
 
-// FIXME: It could make sense to force users of URL to use URLParser::parse() explicitly instead of using a constructor.
+// FIXME: It could make sense to force users of URL to use URLParser::basic_parse() explicitly instead of using a constructor.
 URL::URL(StringView string)
-    : URL(URLParser::parse(string))
+    : URL(URLParser::basic_parse(string))
 {
     if constexpr (URL_PARSER_DEBUG) {
         if (m_valid)
@@ -32,7 +32,7 @@ URL URL::complete_url(StringView relative_url) const
     if (!is_valid())
         return {};
 
-    return URLParser::parse(relative_url, *this);
+    return URLParser::basic_parse(relative_url, *this);
 }
 
 DeprecatedString URL::username(ApplyPercentDecoding apply_percent_decoding) const

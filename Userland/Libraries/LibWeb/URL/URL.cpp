@@ -31,7 +31,7 @@ static Optional<AK::URL> parse_api_url(String const& url, Optional<String> const
     // 2. If base is non-null:
     if (base.has_value()) {
         // 1. Set parsedBase to the result of running the basic URL parser on base.
-        auto parsed_base_url = URLParser::parse(*base);
+        auto parsed_base_url = URLParser::basic_parse(*base);
 
         // 2. If parsedBase is failure, then return failure.
         if (!parsed_base_url.is_valid())
@@ -41,7 +41,7 @@ static Optional<AK::URL> parse_api_url(String const& url, Optional<String> const
     }
 
     // 3. Return the result of running the basic URL parser on url with parsedBase.
-    auto parsed = URLParser::parse(url, parsed_base);
+    auto parsed = URLParser::basic_parse(url, parsed_base);
     return parsed.is_valid() ? parsed : Optional<AK::URL> {};
 }
 
@@ -180,7 +180,7 @@ WebIDL::ExceptionOr<void> URL::set_protocol(String const& protocol)
 
     // The protocol setter steps are to basic URL parse the given value, followed by U+003A (:), with this’s URL as
     // url and scheme start state as state override.
-    auto result_url = URLParser::parse(TRY_OR_THROW_OOM(vm, String::formatted("{}:", protocol)), {}, m_url, URLParser::State::SchemeStart);
+    auto result_url = URLParser::basic_parse(TRY_OR_THROW_OOM(vm, String::formatted("{}:", protocol)), {}, m_url, URLParser::State::SchemeStart);
     if (result_url.is_valid())
         m_url = move(result_url);
     return {};
@@ -254,7 +254,7 @@ void URL::set_host(String const& host)
         return;
 
     // 2. Basic URL parse the given value with this’s URL as url and host state as state override.
-    auto result_url = URLParser::parse(host, {}, m_url, URLParser::State::Host);
+    auto result_url = URLParser::basic_parse(host, {}, m_url, URLParser::State::Host);
     if (result_url.is_valid())
         m_url = move(result_url);
 }
@@ -280,7 +280,7 @@ void URL::set_hostname(String const& hostname)
         return;
 
     // 2. Basic URL parse the given value with this’s URL as url and hostname state as state override.
-    auto result_url = URLParser::parse(hostname, {}, m_url, URLParser::State::Hostname);
+    auto result_url = URLParser::basic_parse(hostname, {}, m_url, URLParser::State::Hostname);
     if (result_url.is_valid())
         m_url = move(result_url);
 }
@@ -311,7 +311,7 @@ void URL::set_port(String const& port)
     }
     // 3. Otherwise, basic URL parse the given value with this’s URL as url and port state as state override.
     else {
-        auto result_url = URLParser::parse(port, {}, m_url, URLParser::State::Port);
+        auto result_url = URLParser::basic_parse(port, {}, m_url, URLParser::State::Port);
         if (result_url.is_valid())
             m_url = move(result_url);
     }
@@ -339,7 +339,7 @@ void URL::set_pathname(String const& pathname)
     url.set_paths({});
 
     // 3. Basic URL parse the given value with this’s URL as url and path start state as state override.
-    auto result_url = URLParser::parse(pathname, {}, move(url), URLParser::State::PathStart);
+    auto result_url = URLParser::basic_parse(pathname, {}, move(url), URLParser::State::PathStart);
     if (result_url.is_valid())
         m_url = move(result_url);
 }
@@ -388,7 +388,7 @@ WebIDL::ExceptionOr<void> URL::set_search(String const& search)
     url_copy.set_query(DeprecatedString::empty());
 
     // 5. Basic URL parse input with url as url and query state as state override.
-    auto result_url = URLParser::parse(input, {}, move(url_copy), URLParser::State::Query);
+    auto result_url = URLParser::basic_parse(input, {}, move(url_copy), URLParser::State::Query);
     if (result_url.is_valid()) {
         m_url = move(result_url);
 
@@ -442,7 +442,7 @@ void URL::set_hash(String const& hash)
     url.set_fragment(DeprecatedString::empty());
 
     // 4. Basic URL parse input with this’s URL as url and fragment state as state override.
-    auto result_url = URLParser::parse(input, {}, move(url), URLParser::State::Fragment);
+    auto result_url = URLParser::basic_parse(input, {}, move(url), URLParser::State::Fragment);
     if (result_url.is_valid())
         m_url = move(result_url);
 }
