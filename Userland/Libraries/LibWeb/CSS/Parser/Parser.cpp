@@ -2278,6 +2278,8 @@ Vector<Vector<ComponentValue>> Parser::parse_a_comma_separated_list_of_component
     return list_of_component_value_lists;
 }
 
+template Vector<Vector<ComponentValue>> Parser::parse_a_comma_separated_list_of_component_values(TokenStream<ComponentValue>&);
+
 ElementInlineCSSStyleDeclaration* Parser::parse_as_style_attribute(DOM::Element& element)
 {
     auto declarations_and_at_rules = parse_a_list_of_declarations(m_token_stream);
