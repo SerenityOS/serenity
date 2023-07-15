@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-masterword.png) MasterWord
+![Icon](file:///res/icons/16x16/app-masterword.png) MasterWord
 
 [Open](file:///bin/MasterWord)
 

@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-mouse.png) Mouse Settings - Mouse settings application
+![Icon](file:///res/icons/16x16/app-mouse.png) Mouse Settings - Mouse settings application
 
 [Open](file:///bin/MouseSettings)
 

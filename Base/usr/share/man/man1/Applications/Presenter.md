@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-presenter.png) Presenter - Present slides to an audience
+![Icon](file:///res/icons/16x16/app-presenter.png) Presenter - Present slides to an audience
 
 [Open](file:///bin/Presenter)
 

@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-analog-clock.png) Analog Clock - Serenity analog clock
+![Icon](file:///res/icons/16x16/app-analog-clock.png) Analog Clock - Serenity analog clock
 
 [Open](file:///bin/AnalogClock)
 

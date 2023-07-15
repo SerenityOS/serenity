@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/hex.png) Hex Editor - Binary file editor
+![Icon](file:///res/icons/16x16/hex.png) Hex Editor - Binary file editor
 
 [Open](file:///bin/HexEditor)
 

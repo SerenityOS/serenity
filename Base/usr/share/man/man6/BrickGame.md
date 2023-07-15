@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-brickgame.png) BrickGame
+![Icon](file:///res/icons/16x16/app-brickgame.png) BrickGame
 
 [Open](file:///bin/BrickGame)
 

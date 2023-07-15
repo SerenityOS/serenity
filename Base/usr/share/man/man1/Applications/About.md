@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/ladyball.png) About - About SerenityOS
+![Icon](file:///res/icons/16x16/ladyball.png) About - About SerenityOS
 
 [Open](file:///bin/About)
 

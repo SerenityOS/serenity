@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-character-map.png) Character Map - Unicode character viewer
+![Icon](file:///res/icons/16x16/app-character-map.png) Character Map - Unicode character viewer
 
 [Open](file:///bin/CharacterMap)
 

@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-calculator.png) Calculator - Serenity calculator
+![Icon](file:///res/icons/16x16/app-calculator.png) Calculator - Serenity calculator
 
 [Open](file:///bin/Calculator)
 

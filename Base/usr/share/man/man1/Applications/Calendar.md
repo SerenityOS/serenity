@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-calendar.png) Calendar - Serenity calendar
+![Icon](file:///res/icons/16x16/app-calendar.png) Calendar - Serenity calendar
 
 [Open](file:///bin/Calendar)
 

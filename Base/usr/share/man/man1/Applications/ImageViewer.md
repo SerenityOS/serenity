@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/filetype-image.png) Image Viewer - SerenityOS image viewer
+![Icon](file:///res/icons/16x16/filetype-image.png) Image Viewer - SerenityOS image viewer
 
 [Open](file:///bin/ImageViewer)
 

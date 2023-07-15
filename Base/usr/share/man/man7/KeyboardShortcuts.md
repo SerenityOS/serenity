@@ -1,4 +1,4 @@
-![Keyboard Icon](/res/icons/32x32/app-keyboard-settings.png)
+![Keyboard Icon](file:///res/icons/32x32/app-keyboard-settings.png)
 
 ## Name
 Keyboard Shortcuts
