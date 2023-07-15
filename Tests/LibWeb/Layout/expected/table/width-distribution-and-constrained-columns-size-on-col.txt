@@ -1,0 +1,32 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x27.46875 children: not-inline
+      TableWrapper <(anonymous)> at (8,8) content-size 420x27.46875 [BFC] children: not-inline
+        Box <table> at (9,9) content-size 418x25.46875 table-box [TFC] children: not-inline
+          BlockContainer <(anonymous)> (not painted) children: inline
+            TextNode <#text>
+          BlockContainer <colgroup> (not painted) table-column-group children: not-inline
+            BlockContainer <col> (not painted) children: not-inline
+            BlockContainer <col> (not painted) children: not-inline
+          BlockContainer <(anonymous)> (not painted) children: inline
+            TextNode <#text>
+          Box <tbody> at (9,9) content-size 412x21.46875 table-row-group children: not-inline
+            Box <tr> at (11,11) content-size 412x21.46875 table-row children: not-inline
+              BlockContainer <(anonymous)> (not painted) children: inline
+                TextNode <#text>
+              BlockContainer <td> at (13,13) content-size 14.265625x17.46875 table-cell [BFC] children: inline
+                line 0 width: 14.265625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+                  frag 0 from TextNode start: 0, length: 1, rect: [13,13 14.265625x17.46875]
+                    "A"
+                TextNode <#text>
+              BlockContainer <(anonymous)> (not painted) children: inline
+                TextNode <#text>
+              BlockContainer <td> at (33.265625,13) content-size 389.734375x17.46875 table-cell [BFC] children: inline
+                line 0 width: 9.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+                  frag 0 from TextNode start: 0, length: 1, rect: [33.265625,13 9.34375x17.46875]
+                    "B"
+                TextNode <#text>
+              BlockContainer <(anonymous)> (not painted) children: inline
+                TextNode <#text>
+            BlockContainer <(anonymous)> (not painted) children: inline
+              TextNode <#text>

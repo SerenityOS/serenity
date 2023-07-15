@@ -54,6 +54,16 @@ static inline bool is_table_row(Box const& box)
     return box.display().is_table_row();
 }
 
+static inline bool is_table_column_group(Box const& box)
+{
+    return box.display().is_table_column_group();
+}
+
+static inline bool is_table_column(Box const& box)
+{
+    return box.display().is_table_column();
+}
+
 template<typename Matcher, typename Callback>
 static void for_each_child_box_matching(Box const& parent, Matcher matcher, Callback callback)
 {
@@ -173,16 +183,31 @@ void TableFormattingContext::calculate_row_column_grid(Box const& box)
     }
 }
 
-void TableFormattingContext::compute_cell_measures(AvailableSpace const& available_space)
+void TableFormattingContext::compute_constrainedness()
 {
-    // Implements https://www.w3.org/TR/css-tables-3/#computing-cell-measures.
-    auto const& containing_block = m_state.get(*table_wrapper().containing_block());
-    auto table_width_is_auto = table_box().computed_values().width().is_auto();
+    // Definition of constrainedness: https://www.w3.org/TR/css-tables-3/#constrainedness
+    size_t column_index = 0;
+    for_each_child_box_matching(table_box(), is_table_column_group, [&](auto& column_group_box) {
+        for_each_child_box_matching(column_group_box, is_table_column, [&](auto& column_box) {
+            auto const& computed_values = column_box.computed_values();
+            if (!computed_values.width().is_auto() && !computed_values.width().is_percentage()) {
+                m_columns[column_index].is_constrained = true;
+            }
+            auto const& col_node = static_cast<HTML::HTMLTableColElement const&>(*column_box.dom_node());
+            unsigned span = col_node.attribute(HTML::AttributeNames::span).to_uint().value_or(1);
+            column_index += span;
+        });
+    });
+
+    for (auto& row : m_rows) {
+        auto const& computed_values = row.box->computed_values();
+        if (!computed_values.height().is_auto() && !computed_values.height().is_percentage()) {
+            row.is_constrained = true;
+        }
+    }
 
     for (auto& cell : m_cells) {
         auto const& computed_values = cell.box->computed_values();
-        // Definition of constrainedness: https://www.w3.org/TR/css-tables-3/#constrainedness
-        // FIXME: Consider table-column-group and table-column too.
         if (!computed_values.width().is_auto() && !computed_values.width().is_percentage()) {
             m_columns[cell.column_index].is_constrained = true;
         }
@@ -190,6 +215,19 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
         if (!computed_values.height().is_auto() && !computed_values.height().is_percentage()) {
             m_rows[cell.row_index].is_constrained = true;
         }
+    }
+}
+
+void TableFormattingContext::compute_cell_measures(AvailableSpace const& available_space)
+{
+    // Implements https://www.w3.org/TR/css-tables-3/#computing-cell-measures.
+    auto const& containing_block = m_state.get(*table_wrapper().containing_block());
+    auto table_width_is_auto = table_box().computed_values().width().is_auto();
+
+    compute_constrainedness();
+
+    for (auto& cell : m_cells) {
+        auto const& computed_values = cell.box->computed_values();
 
         if (computed_values.width().is_percentage()) {
             m_columns[cell.column_index].has_percentage_width = true;

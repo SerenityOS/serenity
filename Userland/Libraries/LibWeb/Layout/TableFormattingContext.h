@@ -38,6 +38,7 @@ private:
     CSSPixels run_caption_layout(LayoutMode, CSS::CaptionSide);
     CSSPixels compute_capmin();
     void calculate_row_column_grid(Box const&);
+    void compute_constrainedness();
     void compute_cell_measures(AvailableSpace const& available_space);
     template<class RowOrColumn>
     void initialize_table_measures();
