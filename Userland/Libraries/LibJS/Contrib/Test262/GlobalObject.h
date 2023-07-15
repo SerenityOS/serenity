@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibJS/Contrib/Test262/$262Object.h>
+#include <LibJS/Contrib/Test262/262Object.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS::Test262 {

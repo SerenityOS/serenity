@@ -5,9 +5,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+// NOTE: This file is not named $262Object.cpp because dollar signs in file names cause issues with some build tools.
+
 #include <AK/TypeCasts.h>
 #include <LibJS/Bytecode/Interpreter.h>
-#include <LibJS/Contrib/Test262/$262Object.h>
+#include <LibJS/Contrib/Test262/262Object.h>
 #include <LibJS/Contrib/Test262/AgentObject.h>
 #include <LibJS/Contrib/Test262/GlobalObject.h>
 #include <LibJS/Contrib/Test262/IsHTMLDDA.h>

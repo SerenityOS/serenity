@@ -18,7 +18,7 @@ set(SOURCES
     Bytecode/RegexTable.cpp
     Bytecode/StringTable.cpp
     Console.cpp
-    Contrib/Test262/$262Object.cpp
+    Contrib/Test262/262Object.cpp
     Contrib/Test262/AgentObject.cpp
     Contrib/Test262/GlobalObject.cpp
     Contrib/Test262/IsHTMLDDA.cpp

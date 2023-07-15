@@ -39,10 +39,7 @@ paths = []
 for containing_path in PATHS_TO_SEARCH:
     for root, dirs, files in os.walk(userland_path / containing_path):
         for file in files:
-            # FIXME: The dollar sign in $262Object.cpp gets corrupted in compile_commands.json somehow, and
-            #        ends up as "\\$$262Object.cpp". This results in a clang error, so we just ignore the
-            #        file here
-            if file.endswith('.cpp') and not file.endswith('262Object.cpp'):
+            if file.endswith('.cpp'):
                 paths.append(Path(root) / file)
 
 
