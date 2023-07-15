@@ -364,7 +364,7 @@ static auto parse(StringView contents)
             .preserve_comments = true,
             .resolve_external_resource = [&](XML::SystemID const& system_id, Optional<XML::PublicID> const&) -> ErrorOr<DeprecatedString> {
                 auto base = URL::create_with_file_scheme(s_path.to_deprecated_string());
-                auto url = URLParser::parse(system_id.system_literal, base);
+                auto url = URLParser::basic_parse(system_id.system_literal, base);
                 if (!url.is_valid())
                     return Error::from_string_literal("Invalid URL");
 

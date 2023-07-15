@@ -78,7 +78,7 @@ void HTMLHyperlinkElementUtils::set_protocol(DeprecatedString protocol)
         return;
 
     // 3. Basic URL parse the given value, followed by ":", with this element's url as url and scheme start state as state override.
-    auto result_url = URLParser::parse(DeprecatedString::formatted("{}:", protocol), {}, m_url, URLParser::State::SchemeStart);
+    auto result_url = URLParser::basic_parse(DeprecatedString::formatted("{}:", protocol), {}, m_url, URLParser::State::SchemeStart);
     if (result_url.is_valid())
         m_url = move(result_url);
 
@@ -192,7 +192,7 @@ void HTMLHyperlinkElementUtils::set_host(DeprecatedString host)
         return;
 
     // 4. Basic URL parse the given value, with url as url and host state as state override.
-    auto result_url = URLParser::parse(host, {}, url, URLParser::State::Host);
+    auto result_url = URLParser::basic_parse(host, {}, url, URLParser::State::Host);
     if (result_url.is_valid())
         m_url = move(result_url);
 
@@ -225,7 +225,7 @@ void HTMLHyperlinkElementUtils::set_hostname(DeprecatedString hostname)
         return;
 
     // 4. Basic URL parse the given value, with url as url and hostname state as state override.
-    auto result_url = URLParser::parse(hostname, {}, m_url, URLParser::State::Hostname);
+    auto result_url = URLParser::basic_parse(hostname, {}, m_url, URLParser::State::Hostname);
     if (result_url.is_valid())
         m_url = move(result_url);
 
@@ -267,7 +267,7 @@ void HTMLHyperlinkElementUtils::set_port(DeprecatedString port)
         m_url->set_port({});
     } else {
         // 5. Otherwise, basic URL parse the given value, with url as url and port state as state override.
-        auto result_url = URLParser::parse(port, {}, m_url, URLParser::State::Port);
+        auto result_url = URLParser::basic_parse(port, {}, m_url, URLParser::State::Port);
         if (result_url.is_valid())
             m_url = move(result_url);
     }
@@ -311,7 +311,7 @@ void HTMLHyperlinkElementUtils::set_pathname(DeprecatedString pathname)
     url->set_paths({});
 
     // 5. Basic URL parse the given value, with url as url and path start state as state override.
-    auto result_url = URLParser::parse(pathname, {}, move(url), URLParser::State::PathStart);
+    auto result_url = URLParser::basic_parse(pathname, {}, move(url), URLParser::State::PathStart);
     if (result_url.is_valid())
         m_url = move(result_url);
 
@@ -358,7 +358,7 @@ void HTMLHyperlinkElementUtils::set_search(DeprecatedString search)
         url_copy->set_query(DeprecatedString::empty());
 
         //    3. Basic URL parse input, with null, this element's node document's document's character encoding, url as url, and query state as state override.
-        auto result_url = URLParser::parse(input, {}, move(url_copy), URLParser::State::Query);
+        auto result_url = URLParser::basic_parse(input, {}, move(url_copy), URLParser::State::Query);
         if (result_url.is_valid())
             m_url = move(result_url);
     }
@@ -406,7 +406,7 @@ void HTMLHyperlinkElementUtils::set_hash(DeprecatedString hash)
         url_copy->set_fragment(DeprecatedString::empty());
 
         //    3. Basic URL parse input, with url as url and fragment state as state override.
-        auto result_url = URLParser::parse(input, {}, move(url_copy), URLParser::State::Fragment);
+        auto result_url = URLParser::basic_parse(input, {}, move(url_copy), URLParser::State::Fragment);
         if (result_url.is_valid())
             m_url = move(result_url);
     }

@@ -27,7 +27,7 @@ static bool is_url_code_point(u32 code_point)
 
 static void report_validation_error(SourceLocation const& location = SourceLocation::current())
 {
-    dbgln_if(URL_PARSER_DEBUG, "URLParser::parse: Validation error! {}", location);
+    dbgln_if(URL_PARSER_DEBUG, "URLParser::basic_parse: Validation error! {}", location);
 }
 
 static Optional<DeprecatedString> parse_opaque_host(StringView input)
@@ -194,7 +194,7 @@ Optional<URL> URLParser::parse_data_url(StringView raw_input)
 //       future for validation of URLs, which would then lead to infinite recursion.
 //       The same goes for base_url, because e.g. the port() getter does not always return m_port, and we are interested in the underlying member
 //       variables' values here, not what the URL class presents to its users.
-URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Optional<URL> url, Optional<State> state_override)
+URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, Optional<URL> url, Optional<State> state_override)
 {
     dbgln_if(URL_PARSER_DEBUG, "URLParser::parse: Parsing '{}'", raw_input);
     if (raw_input.is_empty())
@@ -287,11 +287,11 @@ URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Option
 
         if constexpr (URL_PARSER_DEBUG) {
             if (code_point == end_of_file)
-                dbgln("URLParser::parse: {} state with EOF.", state_name(state));
+                dbgln("URLParser::basic_parse: {} state with EOF.", state_name(state));
             else if (is_ascii_printable(code_point))
-                dbgln("URLParser::parse: {} state with code point U+{:04X} ({:c}).", state_name(state), code_point, code_point);
+                dbgln("URLParser::basic_parse: {} state with code point U+{:04X} ({:c}).", state_name(state), code_point, code_point);
             else
-                dbgln("URLParser::parse: {} state with code point U+{:04X}.", state_name(state), code_point);
+                dbgln("URLParser::basic_parse: {} state with code point U+{:04X}.", state_name(state), code_point);
         }
 
         switch (state) {
