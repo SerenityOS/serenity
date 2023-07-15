@@ -6,6 +6,10 @@
 
 #pragma once
 
+// Includes essentially mandated by POSIX:
+// https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/time.h.html
+#include <signal.h>
+
 #include <Kernel/API/POSIX/time.h>
 #include <sys/cdefs.h>
 

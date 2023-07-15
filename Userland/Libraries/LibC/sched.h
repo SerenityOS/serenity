@@ -6,6 +6,10 @@
 
 #pragma once
 
+// Includes essentially mandated by POSIX:
+// https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/sched.h.html
+#include <time.h>
+
 #include <Kernel/API/POSIX/sched.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>

@@ -6,9 +6,12 @@
 
 #pragma once
 
+// Includes essentially mandated by POSIX:
+// https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/sys_resource.h.html
+#include <sys/time.h>
+
 #include <stdint.h>
 #include <sys/cdefs.h>
-#include <sys/time.h>
 
 __BEGIN_DECLS
 

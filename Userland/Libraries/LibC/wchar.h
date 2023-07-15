@@ -6,10 +6,18 @@
 
 #pragma once
 
-#include <bits/FILE.h>
-#include <bits/wchar_size.h>
+// Includes essentially mandated by POSIX:
+// https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/wchar.h.html
+#include <ctype.h>
 #include <stdarg.h>
 #include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
+#include <bits/FILE.h>
+#include <bits/wchar_size.h>
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS

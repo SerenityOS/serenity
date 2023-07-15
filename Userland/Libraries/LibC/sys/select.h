@@ -6,8 +6,12 @@
 
 #pragma once
 
-#include <fd_set.h>
+// Includes essentially mandated by POSIX:
+// https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/sys_select.h.html
 #include <signal.h>
+#include <time.h>
+
+#include <fd_set.h>
 #include <string.h>
 #include <sys/cdefs.h>
 #include <sys/time.h>

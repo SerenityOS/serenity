@@ -6,7 +6,10 @@
 
 #pragma once
 
+// Includes essentially mandated by POSIX:
+// https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/langinfo.h.html
 #include <nl_types.h>
+
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS

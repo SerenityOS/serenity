@@ -13,8 +13,11 @@
 
 #pragma once
 
+// Includes essentially mandated by POSIX:
+// https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/spawn.h.html
 #include <sched.h>
 #include <signal.h>
+
 #include <sys/cdefs.h>
 #include <sys/types.h>
 

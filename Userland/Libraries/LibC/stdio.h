@@ -8,6 +8,10 @@
 
 #define _STDIO_H // Make GMP believe we exist.
 
+// Includes essentially mandated by POSIX:
+// https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/stdio.h.html
+#include <stddef.h>
+
 #include <Kernel/API/POSIX/stdio.h>
 #include <bits/FILE.h>
 #include <limits.h>

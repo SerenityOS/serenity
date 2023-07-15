@@ -6,8 +6,11 @@
 
 #pragma once
 
+// Includes essentially mandated by POSIX:
+// https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/arpa_inet.h.html
 #include <inttypes.h>
 #include <netinet/in.h>
+
 #include <sys/cdefs.h>
 #include <sys/socket.h>
 

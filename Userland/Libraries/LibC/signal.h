@@ -6,6 +6,10 @@
 
 #pragma once
 
+// Includes essentially mandated by POSIX:
+// https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/signal.h.html
+#include <time.h>
+
 #include <Kernel/API/POSIX/signal.h>
 #include <Kernel/API/POSIX/ucontext.h>
 #include <bits/sighow.h>
