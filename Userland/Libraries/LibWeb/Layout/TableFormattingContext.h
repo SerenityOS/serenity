@@ -47,6 +47,7 @@ private:
     void compute_table_measures();
     void compute_table_width();
     void distribute_width_to_columns();
+    void distribute_excess_width_to_columns(CSSPixels available_width);
     void compute_table_height(LayoutMode layout_mode);
     void distribute_height_to_rows();
     void position_row_boxes();
@@ -54,6 +55,17 @@ private:
     void border_conflict_resolution();
     CSSPixels border_spacing_horizontal() const;
     CSSPixels border_spacing_vertical() const;
+
+    CSSPixels compute_columns_total_used_width() const;
+    void commit_candidate_column_widths(Vector<CSSPixels> const& candidate_widths);
+    void assign_columns_width_linear_combination(Vector<CSSPixels> const& candidate_widths, CSSPixels available_width);
+
+    template<class ColumnFilter>
+    bool distribute_excess_width_proportionally_to_max_width(CSSPixels excess_width, ColumnFilter column_filter);
+    template<class ColumnFilter>
+    bool distribute_excess_width_equally(CSSPixels excess_width, ColumnFilter column_filter);
+    template<class ColumnFilter>
+    bool distribute_excess_width_by_intrinsic_percentage(CSSPixels excess_width, ColumnFilter column_filter);
 
     CSSPixels m_table_height { 0 };
     CSSPixels m_automatic_content_height { 0 };
@@ -69,6 +81,8 @@ private:
         double percentage_width { 0 };
         // Store whether the column is constrained: https://www.w3.org/TR/css-tables-3/#constrainedness
         bool is_constrained { false };
+        // Store whether the column has originating cells, defined in https://www.w3.org/TR/css-tables-3/#terminology.
+        bool has_originating_cells { false };
     };
 
     struct Row {
