@@ -1,8 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='cmake'
-version='3.26.1'
+# NOTE: keep this version aligned with Toolchain/BuildCMake.sh
+version='3.26.4'
 useconfigure='true'
-files="https://github.com/Kitware/CMake/releases/download/v${version}/cmake-${version}.tar.gz cmake-${version}.tar.gz f29964290ad3ced782a1e58ca9fda394a82406a647e24d6afd4e6c32e42c412f"
+files="https://github.com/Kitware/CMake/releases/download/v${version}/cmake-${version}.tar.gz cmake-${version}.tar.gz 313b6880c291bd4fe31c0aa51d6e62659282a521e695f30d5cc0d25abbd5c208"
 depends=(
     'bash'
     'make'
