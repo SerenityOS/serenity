@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/URLParser.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
@@ -15,6 +14,7 @@
 #include <LibWeb/Fetch/Response.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/Infra/JSON.h>
+#include <LibWeb/URL/URL.h>
 
 namespace Web::Fetch {
 
@@ -174,7 +174,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::redirect(JS::VM& vm, S
 
     // 1. Let parsedURL be the result of parsing url with current settings object’s API base URL.
     auto api_base_url = HTML::current_settings_object().api_base_url();
-    auto parsed_url = URLParser::parse(url, api_base_url);
+    auto parsed_url = URL::parse(url, api_base_url);
 
     // 2. If parsedURL is failure, then throw a TypeError.
     if (!parsed_url.is_valid())

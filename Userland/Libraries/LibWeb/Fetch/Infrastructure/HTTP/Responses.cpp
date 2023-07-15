@@ -6,7 +6,6 @@
 
 #include <AK/Debug.h>
 #include <AK/TypeCasts.h>
-#include <AK/URLParser.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/VM.h>
@@ -14,6 +13,7 @@
 #include <LibWeb/Fetch/Infrastructure/FetchParams.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
+#include <LibWeb/URL/URL.h>
 
 namespace Web::Fetch::Infrastructure {
 
@@ -113,7 +113,7 @@ ErrorOr<Optional<AK::URL>> Response::location_url(Optional<String> const& reques
         return Optional<AK::URL> {};
 
     // 3. If location is a header value, then set location to the result of parsing location with response’s URL.
-    auto location = AK::URLParser::parse(location_values.first(), url());
+    auto location = URL::parse(location_values.first(), url());
     if (!location.is_valid())
         return Error::from_string_view("Invalid 'Location' header URL"sv);
 

@@ -490,4 +490,27 @@ bool host_is_domain(StringView host)
         && !IPv6Address::from_string(host).has_value();
 }
 
+// https://url.spec.whatwg.org/#concept-url-parser
+AK::URL parse(StringView input, Optional<AK::URL> const& base_url)
+{
+    // FIXME: We should probably have an extended version of AK::URL for LibWeb instead of standalone functions like this.
+
+    // 1. Let url be the result of running the basic URL parser on input with base and encoding.
+    auto url = URLParser::basic_parse(input, base_url);
+
+    // 2. If url is failure, return failure.
+    if (url.is_valid())
+        return {};
+
+    // 3. If url’s scheme is not "blob",
+    if (url.scheme() != "blob")
+        return url;
+
+    // FIXME: 4. Set url’s blob URL entry to the result of resolving the blob URL url,
+    // FIXME: 5. if that did not return failure, and null otherwise.
+
+    // 6. Return url
+    return url;
+}
+
 }

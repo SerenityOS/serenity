@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/URLParser.h>
 #include <LibJS/Runtime/ModuleRequest.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/DOM/Document.h>
@@ -25,6 +24,7 @@
 #include <LibWeb/Loader/LoadRequest.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/MimeSniff/MimeType.h>
+#include <LibWeb/URL/URL.h>
 
 namespace Web::HTML {
 
@@ -170,7 +170,7 @@ WebIDL::ExceptionOr<Optional<AK::URL>> resolve_imports_match(DeprecatedString co
             VERIFY(resolution_result->serialize().ends_with("/"sv));
 
             // 5. Let url be the result of URL parsing afterPrefix with resolutionResult.
-            auto url = URLParser::parse(after_prefix, *resolution_result);
+            auto url = URL::parse(after_prefix, *resolution_result);
 
             // 6. If url is failure, then throw a TypeError indicating that resolution of normalizedSpecifier was blocked since the afterPrefix portion
             //    could not be URL-parsed relative to the resolutionResult mapped to by the specifierKey prefix.
@@ -200,7 +200,7 @@ Optional<AK::URL> resolve_url_like_module_specifier(DeprecatedString const& spec
     // 1. If specifier starts with "/", "./", or "../", then:
     if (specifier.starts_with("/"sv) || specifier.starts_with("./"sv) || specifier.starts_with("../"sv)) {
         // 1. Let url be the result of URL parsing specifier with baseURL.
-        auto url = URLParser::parse(specifier, base_url);
+        auto url = URL::parse(specifier, base_url);
 
         // 2. If url is failure, then return null.
         if (!url.is_valid())
@@ -211,7 +211,7 @@ Optional<AK::URL> resolve_url_like_module_specifier(DeprecatedString const& spec
     }
 
     // 2. Let url be the result of URL parsing specifier (with no base URL).
-    auto url = URLParser::parse(specifier);
+    auto url = URL::parse(specifier);
 
     // 3. If url is failure, then return null.
     if (!url.is_valid())
