@@ -180,6 +180,7 @@ void TableFormattingContext::calculate_row_column_grid(Box const& box)
     }
     for (auto const& cell : m_cells) {
         m_cells_by_coordinate[cell.row_index][cell.column_index] = cell;
+        m_columns[cell.column_index].has_originating_cells = true;
     }
 }
 
@@ -525,6 +526,111 @@ void TableFormattingContext::compute_table_width()
     table_box_state.set_content_width(used_width);
 }
 
+CSSPixels TableFormattingContext::compute_columns_total_used_width() const
+{
+    CSSPixels total_used_width = 0;
+    for (auto& column : m_columns) {
+        total_used_width += column.used_width;
+    }
+    return total_used_width;
+}
+
+static CSSPixels compute_columns_total_candidate_width(Vector<CSSPixels> const& candidate_widths)
+{
+    CSSPixels total_candidate_width = 0;
+    for (auto width : candidate_widths) {
+        total_candidate_width += width;
+    }
+    return total_candidate_width;
+}
+
+void TableFormattingContext::commit_candidate_column_widths(Vector<CSSPixels> const& candidate_widths)
+{
+    VERIFY(candidate_widths.size() == m_columns.size());
+    for (size_t i = 0; i < m_columns.size(); ++i) {
+        m_columns[i].used_width = candidate_widths[i];
+    }
+}
+
+void TableFormattingContext::assign_columns_width_linear_combination(Vector<CSSPixels> const& candidate_widths, CSSPixels available_width)
+{
+    auto columns_total_candidate_width = compute_columns_total_candidate_width(candidate_widths);
+    auto columns_total_used_width = compute_columns_total_used_width();
+    if (columns_total_candidate_width == columns_total_used_width) {
+        return;
+    }
+    auto candidate_weight = ((available_width - columns_total_used_width) / (columns_total_candidate_width - columns_total_used_width)).to_double();
+    for (size_t i = 0; i < m_columns.size(); ++i) {
+        auto& column = m_columns[i];
+        column.used_width = candidate_weight * candidate_widths[i] + (1 - candidate_weight) * column.used_width;
+    }
+}
+
+template<class ColumnFilter>
+bool TableFormattingContext::distribute_excess_width_proportionally_to_max_width(CSSPixels excess_width, ColumnFilter column_filter)
+{
+    bool found_matching_columns = false;
+    CSSPixels total_max_width = 0;
+    for (auto const& column : m_columns) {
+        if (column_filter(column)) {
+            total_max_width += column.max_size;
+            found_matching_columns = true;
+        }
+    }
+    if (!found_matching_columns) {
+        return false;
+    }
+    VERIFY(total_max_width > 0);
+    for (auto& column : m_columns) {
+        if (column_filter(column)) {
+            column.used_width += excess_width * column.max_size / total_max_width;
+        }
+    }
+    return true;
+}
+
+template<class ColumnFilter>
+bool TableFormattingContext::distribute_excess_width_equally(CSSPixels excess_width, ColumnFilter column_filter)
+{
+    size_t matching_column_count = 0;
+    for (auto const& column : m_columns) {
+        if (column_filter(column)) {
+            ++matching_column_count;
+        }
+    }
+    if (matching_column_count == 0) {
+        return false;
+    }
+    for (auto& column : m_columns) {
+        if (column_filter(column)) {
+            column.used_width += excess_width / matching_column_count;
+        }
+    }
+    return matching_column_count;
+}
+
+template<class ColumnFilter>
+bool TableFormattingContext::distribute_excess_width_by_intrinsic_percentage(CSSPixels excess_width, ColumnFilter column_filter)
+{
+    bool found_matching_columns = false;
+    double total_percentage_width = 0;
+    for (auto const& column : m_columns) {
+        if (column_filter(column)) {
+            found_matching_columns = true;
+            total_percentage_width += column.percentage_width;
+        }
+    }
+    if (!found_matching_columns) {
+        return false;
+    }
+    for (auto& column : m_columns) {
+        if (column_filter(column)) {
+            column.used_width += excess_width * column.percentage_width / total_percentage_width;
+        }
+    }
+    return true;
+}
+
 void TableFormattingContext::distribute_width_to_columns()
 {
     // Implements https://www.w3.org/TR/css-tables-3/#width-distribution-algorithm
@@ -536,45 +642,10 @@ void TableFormattingContext::distribute_width_to_columns()
 
     // The assignable table width is the used width of the table minus the total horizontal border spacing (if any).
     // This is the width that we will be able to allocate to the columns.
-    CSSPixels available_width = m_state.get(table_box()).content_width() - total_horizontal_border_spacing;
+    const CSSPixels available_width = m_state.get(table_box()).content_width() - total_horizontal_border_spacing;
 
     Vector<CSSPixels> candidate_widths;
     candidate_widths.resize(m_columns.size());
-
-    auto compute_columns_total_used_width = [&]() {
-        CSSPixels total_used_width = 0;
-        for (auto& column : m_columns) {
-            total_used_width += column.used_width;
-        }
-        return total_used_width;
-    };
-
-    auto compute_columns_total_candidate_width = [&]() {
-        CSSPixels total_candidate_width = 0;
-        for (auto width : candidate_widths) {
-            total_candidate_width += width;
-        }
-        return total_candidate_width;
-    };
-
-    auto commit_candidate_widths = [&]() {
-        for (size_t i = 0; i < m_columns.size(); ++i) {
-            auto& column = m_columns[i];
-            column.used_width = candidate_widths[i];
-        }
-    };
-
-    auto compute_linear_combination = [&](CSSPixels columns_total_candidate_width) {
-        auto columns_total_used_width = compute_columns_total_used_width();
-        if (columns_total_candidate_width == columns_total_used_width) {
-            return;
-        }
-        auto candidate_weight = ((available_width - columns_total_used_width) / (columns_total_candidate_width - columns_total_used_width)).to_double();
-        for (size_t i = 0; i < m_columns.size(); ++i) {
-            auto& column = m_columns[i];
-            column.used_width = candidate_weight * candidate_widths[i] + (1 - candidate_weight) * column.used_width;
-        }
-    };
 
     // 1. The min-content sizing-guess is the set of column width assignments where each column is assigned its min-content width.
     for (size_t i = 0; i < m_columns.size(); ++i) {
@@ -595,14 +666,13 @@ void TableFormattingContext::distribute_width_to_columns()
         }
     }
 
-    auto columns_total_candidate_width = compute_columns_total_candidate_width();
     // If the assignable table width is less than or equal to the max-content sizing-guess, the used widths of the columns must be the
     // linear combination (with weights adding to 1) of the two consecutive sizing-guesses whose width sums bound the available width.
-    if (available_width < columns_total_candidate_width) {
-        compute_linear_combination(columns_total_candidate_width);
+    if (available_width < compute_columns_total_candidate_width(candidate_widths)) {
+        assign_columns_width_linear_combination(candidate_widths, available_width);
         return;
     } else {
-        commit_candidate_widths();
+        commit_candidate_column_widths(candidate_widths);
     }
 
     // 3. The min-content-specified sizing-guess is the set of column width assignments where:
@@ -618,12 +688,11 @@ void TableFormattingContext::distribute_width_to_columns()
         }
     }
 
-    columns_total_candidate_width = compute_columns_total_candidate_width();
-    if (available_width < columns_total_candidate_width) {
-        compute_linear_combination(columns_total_candidate_width);
+    if (available_width < compute_columns_total_candidate_width(candidate_widths)) {
+        assign_columns_width_linear_combination(candidate_widths, available_width);
         return;
     } else {
-        commit_candidate_widths();
+        commit_candidate_column_widths(candidate_widths);
     }
 
     // 4. The max-content sizing-guess is the set of column width assignments where:
@@ -638,51 +707,91 @@ void TableFormattingContext::distribute_width_to_columns()
         }
     }
 
-    columns_total_candidate_width = compute_columns_total_candidate_width();
-    if (available_width < columns_total_candidate_width) {
-        compute_linear_combination(columns_total_candidate_width);
+    if (available_width < compute_columns_total_candidate_width(candidate_widths)) {
+        assign_columns_width_linear_combination(candidate_widths, available_width);
         return;
     } else {
-        commit_candidate_widths();
+        commit_candidate_column_widths(candidate_widths);
     }
 
     // Otherwise, the used widths of the columns are the result of starting from the max-content sizing-guess and distributing
     // the excess width to the columns of the table according to the rules for distributing excess width to columns (for used width).
+    distribute_excess_width_to_columns(available_width);
+}
 
-    // Implements steps 1 and 2 of https://www.w3.org/TR/css-tables-3/#distributing-width-to-columns
-    // FIXME: Implement steps 3-6 as well, which distribute excess width to constrained columns.
+void TableFormattingContext::distribute_excess_width_to_columns(CSSPixels available_width)
+{
+    // Implements https://www.w3.org/TR/css-tables-3/#distributing-width-to-columns
     auto columns_total_used_width = compute_columns_total_used_width();
-    if (columns_total_used_width < available_width) {
-        // NOTE: if all columns got their max width and there is still width to distribute left
-        // it should be assigned to columns proportionally to their max width
-        CSSPixels grid_max = 0.0f;
-        size_t unconstrained_column_count = 0;
-        for (auto& column : m_columns) {
-            if (column.is_constrained) {
-                continue;
-            }
-            grid_max += column.max_size;
-            ++unconstrained_column_count;
-        }
-
-        auto width_to_distribute = available_width - columns_total_used_width;
-        if (grid_max == 0) {
-            // If total max width of columns is zero then divide distributable width equally among them
-            auto column_width = width_to_distribute / unconstrained_column_count;
-            for (auto& column : m_columns) {
-                if (column.is_constrained)
-                    continue;
-                column.used_width = column_width;
-            }
-        } else {
-            // Distribute width to columns proportionally to their max width
-            for (auto& column : m_columns) {
-                if (column.is_constrained)
-                    continue;
-                column.used_width += width_to_distribute * column.max_size / grid_max;
-            }
-        }
+    if (columns_total_used_width >= available_width) {
+        return;
     }
+    auto excess_width = available_width - columns_total_used_width;
+    if (excess_width == 0) {
+        return;
+    }
+
+    // 1. If there are non-constrained columns that have originating cells with intrinsic percentage width of 0% and with nonzero
+    //    max-content width (aka the columns allowed to grow by this rule), the distributed widths of the columns allowed to grow
+    //    by this rule are increased in proportion to max-content width so the total increase adds to the excess width.
+    if (distribute_excess_width_proportionally_to_max_width(
+            excess_width,
+            [](auto const& column) {
+                return !column.is_constrained && column.has_originating_cells && column.percentage_width == 0 && column.max_size > 0;
+            })) {
+        excess_width = available_width - compute_columns_total_used_width();
+    }
+    if (excess_width == 0) {
+        return;
+    }
+    // 2. Otherwise, if there are non-constrained columns that have originating cells with intrinsic percentage width of 0% (aka the columns
+    //    allowed to grow by this rule, which thanks to the previous rule must have zero max-content width), the distributed widths of the
+    //    columns allowed to grow by this rule are increased by equal amounts so the total increase adds to the excess width.
+    if (distribute_excess_width_equally(excess_width,
+            [](auto const& column) {
+                return !column.is_constrained && column.has_originating_cells && column.percentage_width == 0;
+            })) {
+        excess_width = available_width - compute_columns_total_used_width();
+    }
+    if (excess_width == 0) {
+        return;
+    }
+    // 3. Otherwise, if there are constrained columns with intrinsic percentage width of 0% and with nonzero max-content width
+    //    (aka the columns allowed to grow by this rule, which, due to other rules, must have originating cells), the distributed widths of the
+    //    columns allowed to grow by this rule are increased in proportion to max-content width so the total increase adds to the excess width.
+    if (distribute_excess_width_proportionally_to_max_width(
+            excess_width,
+            [](auto const& column) {
+                return column.is_constrained && column.percentage_width == 0 && column.max_size > 0;
+            })) {
+        excess_width = available_width - compute_columns_total_used_width();
+    }
+    if (excess_width == 0) {
+        return;
+    }
+    // 4. Otherwise, if there are columns with intrinsic percentage width greater than 0% (aka the columns allowed to grow by this rule,
+    //    which, due to other rules, must have originating cells), the distributed widths of the columns allowed to grow by this rule are
+    //    increased in proportion to intrinsic percentage width so the total increase adds to the excess width.
+    if (distribute_excess_width_by_intrinsic_percentage(excess_width, [](auto const& column) {
+            return column.percentage_width > 0;
+        })) {
+        excess_width = available_width - compute_columns_total_used_width();
+    }
+    if (excess_width == 0) {
+        return;
+    }
+    // 5. Otherwise, if there is any such column, the distributed widths of all columns that have originating cells are increased by equal amounts
+    //    so the total increase adds to the excess width.
+    if (distribute_excess_width_equally(
+            excess_width,
+            [](auto const& column) { return column.has_originating_cells; })) {
+        excess_width = available_width - compute_columns_total_used_width();
+    }
+    if (excess_width == 0) {
+        return;
+    }
+    // 6. Otherwise, the distributed widths of all columns are increased by equal amounts so the total increase adds to the excess width.
+    distribute_excess_width_equally(excess_width, [](auto const&) { return true; });
 }
 
 void TableFormattingContext::compute_table_height(LayoutMode layout_mode)
