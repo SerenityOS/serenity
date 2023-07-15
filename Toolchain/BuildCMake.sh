@@ -35,9 +35,9 @@ check_sha() {
     test "${EXPECTED_HASH}" = "${SEEN_HASH}"
 }
 
-# Note: Update this alongside Meta/CMake/cmake-version.cmake
-CMAKE_VERSION=3.26.0
-CMAKE_ARCHIVE_SHA256=4256613188857e95700621f7cdaaeb954f3546a9249e942bc2f9b3c26e381365
+# Note: Update this alongside the cmake port, and Meta/CMake/cmake-version.cmake if the build requires this version of cmake.
+CMAKE_VERSION=3.26.4
+CMAKE_ARCHIVE_SHA256=313b6880c291bd4fe31c0aa51d6e62659282a521e695f30d5cc0d25abbd5c208
 CMAKE_ARCHIVE=cmake-${CMAKE_VERSION}.tar.gz
 CMAKE_ARCHIVE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/${CMAKE_ARCHIVE}
 
