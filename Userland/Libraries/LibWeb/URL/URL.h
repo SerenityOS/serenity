@@ -77,4 +77,7 @@ private:
 HTML::Origin url_origin(AK::URL const&);
 bool host_is_domain(StringView host);
 
+// https://url.spec.whatwg.org/#concept-url-parser
+AK::URL parse(StringView input, Optional<AK::URL> const& base_url = {});
+
 }
