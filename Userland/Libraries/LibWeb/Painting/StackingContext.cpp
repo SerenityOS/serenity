@@ -482,6 +482,11 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     };
     auto transformed_position = affine_transform_matrix().inverse().value_or({}).map(offset_position).to_type<CSSPixels>() + transform_origin;
 
+    if (paintable_box().layout_box().is_fixed_position()) {
+        auto scroll_offset = paintable_box().document().browsing_context()->viewport_scroll_offset();
+        transformed_position.translate_by(-scroll_offset);
+    }
+
     // FIXME: Support more overflow variations.
     if (paintable_box().computed_values().overflow_x() == CSS::Overflow::Hidden && paintable_box().computed_values().overflow_y() == CSS::Overflow::Hidden) {
         if (!paintable_box().absolute_border_box_rect().contains(transformed_position.x(), transformed_position.y()))
