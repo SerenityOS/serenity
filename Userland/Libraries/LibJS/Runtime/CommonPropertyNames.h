@@ -208,6 +208,7 @@ namespace JS {
     P(fractionalSecondDigits)                \
     P(freeze)                                \
     P(from)                                  \
+    P(fromAsync)                             \
     P(fromCharCode)                          \
     P(fromCodePoint)                         \
     P(fromEntries)                           \

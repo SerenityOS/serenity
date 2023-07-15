@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,9 +10,14 @@
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayConstructor.h>
+#include <LibJS/Runtime/AsyncFromSyncIteratorPrototype.h>
+#include <LibJS/Runtime/Completion.h>
+#include <LibJS/Runtime/ECMAScriptFunctionObject.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
+#include <LibJS/Runtime/PromiseCapability.h>
+#include <LibJS/Runtime/PromiseConstructor.h>
 #include <LibJS/Runtime/Shape.h>
 
 namespace JS {
@@ -31,6 +37,7 @@ ThrowCompletionOr<void> ArrayConstructor::initialize(Realm& realm)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.from, from, 1, attr);
+    define_native_function(realm, vm.names.fromAsync, from_async, 1, attr);
     define_native_function(realm, vm.names.isArray, is_array, 1, attr);
     define_native_function(realm, vm.names.of, of, 0, attr);
 
@@ -284,6 +291,243 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
 
     // 14. Return A.
     return array;
+}
+
+// 2.1.1.1 Array.fromAsync ( asyncItems [ , mapfn [ , thisArg ] ] ), https://tc39.es/proposal-array-from-async/#sec-array.fromAsync
+JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from_async)
+{
+    auto& realm = *vm.current_realm();
+
+    auto async_items = vm.argument(0);
+    auto mapfn = vm.argument(1);
+    auto this_arg = vm.argument(2);
+
+    // 1. Let C be the this value.
+    auto constructor = vm.this_value();
+
+    // 2. Let promiseCapability be ! NewPromiseCapability(%Promise%).
+    auto promise_capability = MUST(new_promise_capability(vm, realm.intrinsics().promise_constructor()));
+
+    // 3. Let fromAsyncClosure be a new Abstract Closure with no parameters that captures C, mapfn, and thisArg and performs the following steps when called:
+    SafeFunction<Completion()> from_async_closure = [constructor, mapfn, this_arg, &vm, &realm, async_items]() mutable -> Completion {
+        bool mapping;
+
+        // a. If mapfn is undefined, let mapping be false.
+        if (mapfn.is_undefined()) {
+            mapping = false;
+        }
+        // b. Else,
+        else {
+            // i. If IsCallable(mapfn) is false, throw a TypeError exception.
+            if (!mapfn.is_function())
+                return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, mapfn.to_string_without_side_effects()));
+
+            // ii. Let mapping be true.
+            mapping = true;
+        }
+
+        // c. Let usingAsyncIterator be ? GetMethod(asyncItems, @@asyncIterator).
+        auto using_async_iterator = TRY(async_items.get_method(vm, vm.well_known_symbol_async_iterator()));
+
+        GCPtr<FunctionObject> using_sync_iterator;
+
+        // d. If usingAsyncIterator is undefined, then
+        if (!using_async_iterator) {
+            // i. Let usingSyncIterator be ? GetMethod(asyncItems, @@iterator).
+            using_sync_iterator = TRY(async_items.get_method(vm, vm.well_known_symbol_iterator()));
+        }
+
+        GCPtr<Object> array;
+
+        // e. If IsConstructor(C) is true, then
+        if (constructor.is_constructor()) {
+            // i. Let A be ? Construct(C).
+            array = TRY(JS::construct(vm, constructor.as_function()));
+        }
+        // f. Else,
+        else {
+            // i. Let A be ! ArrayCreate(0).
+            array = MUST(Array::create(realm, 0));
+        }
+
+        // g. Let iteratorRecord be undefined.
+        Optional<IteratorRecord> iterator_record;
+
+        // h. If usingAsyncIterator is not undefined, then
+        if (using_async_iterator) {
+            // i. Set iteratorRecord to ? GetIterator(asyncItems, async, usingAsyncIterator).
+            iterator_record = TRY(get_iterator(vm, async_items, IteratorHint::Async, using_async_iterator));
+        }
+        // i. Else if usingSyncIterator is not undefined, then
+        else if (using_sync_iterator) {
+            // i. Set iteratorRecord to ? CreateAsyncFromSyncIterator(GetIterator(asyncItems, sync, usingSyncIterator)).
+            iterator_record = create_async_from_sync_iterator(vm, TRY(get_iterator(vm, async_items, IteratorHint::Sync, using_sync_iterator)));
+        }
+
+        // j. If iteratorRecord is not undefined, then
+        if (iterator_record.has_value()) {
+            // i. Let k be 0.
+            // ii. Repeat,
+            for (size_t k = 0;; ++k) {
+                // 1. If k ≥ 2^53 - 1, then
+                if (k >= MAX_ARRAY_LIKE_INDEX) {
+                    // a. Let error be ThrowCompletion(a newly created TypeError object).
+                    auto error = vm.throw_completion<TypeError>(ErrorType::ArrayMaxSize);
+
+                    // b. Return ? AsyncIteratorClose(iteratorRecord, error).
+                    return *TRY(async_iterator_close(vm, iterator_record.value(), move(error)));
+                }
+
+                // 2. Let Pk be ! ToString(𝔽(k)).
+                auto property_key = PropertyKey { k };
+
+                // FIXME: Spec bug: https://github.com/tc39/proposal-array-from-async/issues/33.
+                //        Implementing the following would cause an infinite loop.
+                //
+                // 3. Let next be ? Await(IteratorStep(iteratorRecord)).
+                // 4. If next is false, then
+                //     a. Perform ? Set(A, "length", 𝔽(k), true).
+                //     b. Return Completion Record { [[Type]]: return, [[Value]]: A, [[Target]]: empty }.
+                // 5. Let nextValue be ? IteratorValue(next).
+                //
+                // Below implements the suggested fix: https://github.com/tc39/proposal-array-from-async/issues/33#issuecomment-1279296963
+                //
+                // There also seems to be a second issue here where we are not respecting array mutation. After resolving the first entry, the
+                // iterator should also take into account any other changes which are made to async_items (which does not seem to be happening).
+
+                // Let nextResult be ? Call(iteratorRecord.[[NextMethod]], iteratorRecord.[[Iterator]]).
+                auto next_result = TRY(JS::call(vm, iterator_record->next_method, iterator_record->iterator));
+
+                // Set nextResult to ? Await(nextResult).
+                next_result = TRY(await(vm, next_result));
+
+                // If nextResult is not an Object, throw a TypeError exception.
+                if (!next_result.is_object())
+                    return vm.throw_completion<TypeError>(ErrorType::IterableNextBadReturn);
+
+                // Let done be ? IteratorComplete(nextResult).
+                auto done = TRY(JS::iterator_complete(vm, next_result.as_object()));
+
+                // If done is true,
+                if (done) {
+                    // Perform ? Set(A, "length", 𝔽(k), true).
+                    TRY(array->set(vm.names.length, Value(k), Object::ShouldThrowExceptions::Yes));
+
+                    // Return Completion Record { [[Type]]: return, [[Value]]: A, [[Target]]: empty }.
+                    return Completion { Completion::Type::Return, array, {} };
+                }
+
+                // Let nextValue be ? IteratorValue(nextResult).
+                auto next_value = TRY(iterator_value(vm, next_result.as_object()));
+
+                // (spec deviation ends here)
+
+                Value mapped_value;
+
+                // 6. If mapping is true, then
+                if (mapping) {
+                    // a. Let mappedValue be Call(mapfn, thisArg, « nextValue, 𝔽(k) »).
+                    auto mapped_value_or_error = JS::call(vm, mapfn, this_arg, next_value, Value(k));
+
+                    // b. IfAbruptCloseAsyncIterator(mappedValue, iteratorRecord).
+                    if (mapped_value_or_error.is_error()) {
+                        TRY(async_iterator_close(vm, iterator_record.value(), mapped_value_or_error));
+                        return mapped_value_or_error;
+                    }
+
+                    // c. Set mappedValue to Await(mappedValue).
+                    mapped_value_or_error = await(vm, mapped_value_or_error.value());
+
+                    // d. IfAbruptCloseAsyncIterator(mappedValue, iteratorRecord).
+                    if (mapped_value_or_error.is_error()) {
+                        TRY(async_iterator_close(vm, iterator_record.value(), mapped_value_or_error));
+                        return mapped_value_or_error;
+                    }
+
+                    mapped_value = mapped_value_or_error.value();
+                }
+                // 7. Else, let mappedValue be nextValue.
+                else {
+                    mapped_value = next_value;
+                }
+
+                // 8. Let defineStatus be CreateDataPropertyOrThrow(A, Pk, mappedValue).
+                auto define_status = array->create_data_property_or_throw(property_key, mapped_value);
+
+                // 9. If defineStatus is an abrupt completion, return ? AsyncIteratorClose(iteratorRecord, defineStatus).
+                if (define_status.is_error())
+                    return *TRY(iterator_close(vm, iterator_record.value(), define_status.release_error()));
+
+                // 10. Set k to k + 1.
+            }
+        }
+        // k. Else,
+        else {
+            // i. NOTE: asyncItems is neither an AsyncIterable nor an Iterable so assume it is an array-like object.
+
+            // ii. Let arrayLike be ! ToObject(asyncItems).
+            auto array_like = MUST(async_items.to_object(vm));
+
+            // iii. Let len be ? LengthOfArrayLike(arrayLike).
+            auto length = TRY(length_of_array_like(vm, array_like));
+
+            // iv. If IsConstructor(C) is true, then
+            if (constructor.is_constructor()) {
+                // 1. Let A be ? Construct(C, « 𝔽(len) »).
+                array = TRY(JS::construct(vm, constructor.as_function(), Value(length)));
+            }
+            // v. Else,
+            else {
+                // 1. Let A be ? ArrayCreate(len).
+                array = TRY(Array::create(realm, length));
+            }
+
+            // vi. Let k be 0.
+            // vii. Repeat, while k < len,
+            for (size_t k = 0; k < length; ++k) {
+                // 1. Let Pk be ! ToString(𝔽(k)).
+                auto property_key = PropertyKey { k };
+
+                // 2. Let kValue be ? Get(arrayLike, Pk).
+                auto k_value = TRY(array_like->get(property_key));
+
+                // 3. Set kValue to ? Await(kValue).
+                k_value = TRY(await(vm, k_value));
+
+                Value mapped_value;
+
+                // 4. If mapping is true, then
+                if (mapping) {
+                    // a. Let mappedValue be ? Call(mapfn, thisArg, « kValue, 𝔽(k) »).
+                    mapped_value = TRY(JS::call(vm, mapfn, this_arg, k_value, Value(k)));
+
+                    // b. Set mappedValue to ? Await(mappedValue).
+                    mapped_value = TRY(await(vm, mapped_value));
+                }
+                // 5. Else, let mappedValue be kValue.
+                else {
+                    mapped_value = k_value;
+                }
+
+                // 6. Perform ? CreateDataPropertyOrThrow(A, Pk, mappedValue).
+                TRY(array->create_data_property_or_throw(property_key, mapped_value));
+
+                // 7. Set k to k + 1.
+            }
+
+            // viii. Perform ? Set(A, "length", 𝔽(len), true).
+            TRY(array->set(vm.names.length, Value(length), Object::ShouldThrowExceptions::Yes));
+
+            // ix. Return Completion Record { [[Type]]: return, [[Value]]: A, [[Target]]: empty }.
+            return Completion { Completion::Type::Return, array, {} };
+        }
+    };
+
+    // 4. Perform AsyncFunctionStart(promiseCapability, fromAsyncClosure).
+    async_function_start(vm, promise_capability, from_async_closure);
+
+    // 5. Return promiseCapability.[[Promise]].
+    return promise_capability->promise();
 }
 
 // 23.1.2.2 Array.isArray ( arg ), https://tc39.es/ecma262/#sec-array.isarray
