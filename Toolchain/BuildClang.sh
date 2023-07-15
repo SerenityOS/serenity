@@ -249,6 +249,7 @@ popd
 SRC_ROOT=$($REALPATH "$DIR"/..)
 FILES=$(find \
     "$SRC_ROOT"/Kernel/API \
+    "$SRC_ROOT"/Kernel/Arch \
     "$SRC_ROOT"/Userland/Libraries/LibC \
     "$SRC_ROOT"/Userland/Libraries/LibELF/ELFABI.h \
     "$SRC_ROOT"/Userland/Libraries/LibRegex/RegexDefs.h \
@@ -259,8 +260,8 @@ for arch in $ARCHS; do
         mkdir -p Root/usr/include/
         for header in $FILES; do
             target=$(echo "$header" | "$SED" \
-                -e "s|$SRC_ROOT/Userland/Libraries/LibC||" \
                 -e "s|$SRC_ROOT/Kernel/|Kernel/|" \
+                -e "s|$SRC_ROOT/Userland/Libraries/LibC||" \
                 -e "s|$SRC_ROOT/Userland/Libraries/LibELF/|LibELF/|" \
                 -e "s|$SRC_ROOT/Userland/Libraries/LibRegex/|LibRegex/|")
             buildstep "system_headers" "$INSTALL" -D "$header" "Root/usr/include/$target"

@@ -266,7 +266,6 @@ pushd "$DIR/Build/$ARCH"
         mkdir -p Root/usr/include/
         SRC_ROOT=$($REALPATH "$DIR"/..)
         FILES=$(find \
-            "$SRC_ROOT"/AK \
             "$SRC_ROOT"/Kernel/API \
             "$SRC_ROOT"/Kernel/Arch \
             "$SRC_ROOT"/Userland/Libraries/LibC \
@@ -275,7 +274,6 @@ pushd "$DIR/Build/$ARCH"
             -name '*.h' -print)
         for header in $FILES; do
             target=$(echo "$header" | sed \
-                -e "s|$SRC_ROOT/AK/|AK/|" \
                 -e "s|$SRC_ROOT/Userland/Libraries/LibC||" \
                 -e "s|$SRC_ROOT/Kernel/|Kernel/|" \
                 -e "s|$SRC_ROOT/Userland/Libraries/LibELF/|LibELF/|" \
