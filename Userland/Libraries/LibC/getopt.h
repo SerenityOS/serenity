@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <bits/getopt.h>
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
@@ -21,11 +22,6 @@ struct option {
     int val;
 };
 
-extern int opterr;
-extern int optopt;
-extern int optind;
-extern int optreset;
-extern char* optarg;
 int getopt_long(int argc, char* const* argv, char const* short_options, const struct option* long_options, int* out_long_option_index);
 
 __END_DECLS
