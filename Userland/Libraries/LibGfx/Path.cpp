@@ -14,6 +14,54 @@
 
 namespace Gfx {
 
+void Path::approximate_elliptical_arc_with_cubic_beziers(FloatPoint center, FloatSize radii, float x_axis_rotation, float theta, float theta_delta)
+{
+    float sin_x_rotation;
+    float cos_x_rotation;
+    AK::sincos(x_axis_rotation, sin_x_rotation, cos_x_rotation);
+    auto arc_point_and_derivative = [&](float t, FloatPoint& point, FloatPoint& derivative) {
+        float sin_angle;
+        float cos_angle;
+        AK::sincos(t, sin_angle, cos_angle);
+        point = FloatPoint {
+            center.x()
+                + radii.width() * cos_x_rotation * cos_angle
+                - radii.height() * sin_x_rotation * sin_angle,
+            center.y()
+                + radii.width() * sin_x_rotation * cos_angle
+                + radii.height() * cos_x_rotation * sin_angle,
+        };
+        derivative = FloatPoint {
+            -radii.width() * cos_x_rotation * sin_angle
+                - radii.height() * sin_x_rotation * cos_angle,
+            -radii.width() * sin_x_rotation * sin_angle
+                + radii.height() * cos_x_rotation * cos_angle,
+        };
+    };
+    auto approximate_arc_between = [&](float start_angle, float end_angle) {
+        auto t = AK::tan((end_angle - start_angle) / 2);
+        auto alpha = AK::sin(end_angle - start_angle) * ((AK::sqrt(4 + 3 * t * t) - 1) / 3);
+        FloatPoint p1, d1;
+        FloatPoint p2, d2;
+        arc_point_and_derivative(start_angle, p1, d1);
+        arc_point_and_derivative(end_angle, p2, d2);
+        auto q1 = p1 + d1.scaled(alpha, alpha);
+        auto q2 = p2 - d2.scaled(alpha, alpha);
+        cubic_bezier_curve_to(q1, q2, p2);
+    };
+    // FIXME: Come up with a more mathematically sound step size (using some error calculation).
+    auto step = theta_delta;
+    int step_count = 1;
+    while (fabs(step) > AK::Pi<float> / 4) {
+        step /= 2;
+        step_count *= 2;
+    }
+    float prev = theta;
+    float t = prev + step;
+    for (int i = 0; i < step_count; i++, prev = t, t += step)
+        approximate_arc_between(prev, t);
+}
+
 void Path::elliptical_arc_to(FloatPoint point, FloatSize radii, float x_axis_rotation, bool large_arc, bool sweep)
 {
     auto next_point = point;
@@ -105,15 +153,12 @@ void Path::elliptical_arc_to(FloatPoint point, FloatSize radii, float x_axis_rot
         theta_delta += 2 * AK::Pi<double>;
     }
 
-    elliptical_arc_to(
-        next_point,
+    approximate_elliptical_arc_with_cubic_beziers(
         { cx, cy },
         { rx, ry },
         x_axis_rotation,
         theta_1,
-        theta_delta,
-        large_arc,
-        sweep);
+        theta_delta);
 }
 
 void Path::close()
@@ -170,7 +215,6 @@ void Path::close_all_subpaths()
         case Segment::Type::LineTo:
         case Segment::Type::QuadraticBezierCurveTo:
         case Segment::Type::CubicBezierCurveTo:
-        case Segment::Type::EllipticalArcTo:
             if (is_first_point_in_subpath) {
                 start_of_subpath = cursor;
                 is_first_point_in_subpath = false;
@@ -205,9 +249,6 @@ DeprecatedString Path::to_deprecated_string() const
         case Segment::Type::CubicBezierCurveTo:
             builder.append("CubicBezierCurveTo"sv);
             break;
-        case Segment::Type::EllipticalArcTo:
-            builder.append("EllipticalArcTo"sv);
-            break;
         case Segment::Type::Invalid:
             builder.append("Invalid"sv);
             break;
@@ -225,16 +266,6 @@ DeprecatedString Path::to_deprecated_string() const
             builder.append(", "sv);
             builder.append(static_cast<CubicBezierCurveSegment const&>(*segment).through_1().to_deprecated_string());
             break;
-        case Segment::Type::EllipticalArcTo: {
-            auto& arc = static_cast<EllipticalArcSegment const&>(*segment);
-            builder.appendff(", {}, {}, {}, {}, {}",
-                arc.radii().to_deprecated_string().characters(),
-                arc.center().to_deprecated_string().characters(),
-                arc.x_axis_rotation(),
-                arc.theta_1(),
-                arc.theta_delta());
-            break;
-        }
         default:
             break;
         }
@@ -304,14 +335,6 @@ void Path::segmentize_path()
             cursor = segment->point();
             break;
         }
-        case Segment::Type::EllipticalArcTo: {
-            auto& arc = static_cast<EllipticalArcSegment const&>(*segment);
-            Painter::for_each_line_segment_on_elliptical_arc(cursor, arc.point(), arc.center(), arc.radii(), arc.x_axis_rotation(), arc.theta_1(), arc.theta_delta(), [&](FloatPoint p0, FloatPoint p1) {
-                add_line(p0, p1);
-            });
-            cursor = segment->point();
-            break;
-        }
         case Segment::Type::Invalid:
             VERIFY_NOT_REACHED();
         }
@@ -344,20 +367,6 @@ Path Path::copy_transformed(Gfx::AffineTransform const& transform) const
         case Segment::Type::CubicBezierCurveTo: {
             auto const& cubic_segment = static_cast<CubicBezierCurveSegment const&>(*segment);
             result.cubic_bezier_curve_to(transform.map(cubic_segment.through_0()), transform.map(cubic_segment.through_1()), transform.map(segment->point()));
-            break;
-        }
-        case Segment::Type::EllipticalArcTo: {
-            auto const& arc_segment = static_cast<EllipticalArcSegment const&>(*segment);
-            auto det_negative = transform.determinant() < 0;
-            result.elliptical_arc_to(
-                transform.map(segment->point()),
-                transform.map(arc_segment.center()),
-                transform.map(arc_segment.radii()),
-                arc_segment.x_axis_rotation() + transform.rotation(),
-                det_negative ? AK::Pi<float> * 2 - arc_segment.theta_1() : arc_segment.theta_1(),
-                det_negative ? -arc_segment.theta_delta() : arc_segment.theta_delta(),
-                arc_segment.large_arc(),
-                det_negative ? !arc_segment.sweep() : arc_segment.sweep());
             break;
         }
         case Segment::Type::Invalid:

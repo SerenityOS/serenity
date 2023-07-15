@@ -2451,11 +2451,6 @@ void Painter::stroke_path(Path const& path, Color color, int thickness)
             cursor = segment->point();
             break;
         }
-        case Segment::Type::EllipticalArcTo:
-            auto& arc = static_cast<EllipticalArcSegment const&>(*segment);
-            draw_elliptical_arc(cursor.to_type<int>(), segment->point().to_type<int>(), arc.center().to_type<int>(), arc.radii(), arc.x_axis_rotation(), arc.theta_1(), arc.theta_delta(), color, thickness);
-            cursor = segment->point();
-            break;
         }
     }
 }
