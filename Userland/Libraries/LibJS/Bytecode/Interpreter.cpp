@@ -278,7 +278,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
                 //       but we generate a Yield Operation in the case of returns in
                 //       generators as well, so we need to check if it will actually
                 //       continue or is a `return` in disguise
-                will_yield = instruction.type() == Instruction::Type::Yield && static_cast<Op::Yield const&>(instruction).continuation().has_value();
+                will_yield = (instruction.type() == Instruction::Type::Yield && static_cast<Op::Yield const&>(instruction).continuation().has_value()) || instruction.type() == Instruction::Type::Await;
                 break;
             }
             ++pc;
