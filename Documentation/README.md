@@ -13,6 +13,7 @@ A list of useful pages across the web can be found on [the link list](Links.md).
 * [Running Tests](RunningTests.md)
 * [Setting Up Self-Hosted Runners](SelfHostedRunners.md)
 * [Profiling the Build](BuildProfilingInstructions.md)
+* [Spice Intergration](SpiceIntergration.md)
 
 ### OS-specific
 Make sure to read the basic [Build Instructions](BuildInstructions.md) first.
@@ -29,13 +30,17 @@ Make sure to read the basic [Build Instructions](BuildInstructions.md) first.
 ## Configuring Editors
 * [CLion](CLionConfiguration.md)
 * [Emacs](EmacsConfiguration.md)
+* [Helix](HelixConfiguration.md)
+* [NVim](NvimConfiguration.md)
 * [Qt Creator](QtCreatorConfiguration.md)
+* [Vim](VimConfiguration.md)
 * [VS Code](VSCodeConfiguration.md)
 
 ## Development
 * [How to Contribute](../CONTRIBUTING.md)
 * [Coding Style](CodingStyle.md)
 * [Common Patterns](Patterns.md)
+* [Guidelines for Text in UI](HumanInterfaceGuidelines/Text.md)
 * [EventLoop](EventLoop.md)
 * [High DPI Support](HighDPI.md)
 * [Smart Pointers](SmartPointers.md)
@@ -52,6 +57,7 @@ Make sure to read the basic [Build Instructions](BuildInstructions.md) first.
 * [Inter-Process Communication protocol (.ipc)](../Base/usr/share/man/man4/ipc.md)
 
 ## Browser/LibWeb
+* [Ladybird Browser Build Instructions](BuildInstructionsLadybird.md)
 * [General Architecture](Browser/ProcessArchitecture.md)
 * [LibWeb: From Loading to Painting](Browser/LibWebFromLoadingToPainting.md)
 * [How to Add an IDL File](Browser/AddNewIDLFile.md)
@@ -60,6 +66,10 @@ Make sure to read the basic [Build Instructions](BuildInstructions.md) first.
 ## Kernel
 * [AHCI Locking](Kernel/AHCILocking.md)
 * [ProcFS Indexing](Kernel/ProcFSIndexing.md)
+* [RAMFS](Kernel/RAMFS.md)
+* [IOWindow](Kernel/IOWindow.md)
+* [Graphics Subsystem](Kernel/GraphicsSubsystem.md)
+* [Kernel Development Patterns & Guidelines](Kernel/DevelopmentGuidelines.md)
 
 ## Applications
 Documentation for SerenityOS applications and utilities can be found in [the man pages](https://man.serenityos.org/).
