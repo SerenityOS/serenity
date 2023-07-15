@@ -314,7 +314,6 @@ public:
     ThrowCompletionOr<void> for_each_var_declared_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const;
 
     ThrowCompletionOr<void> for_each_var_function_declaration_in_reverse_order(ThrowCompletionOrVoidCallback<FunctionDeclaration const&>&& callback) const;
-    ThrowCompletionOr<void> for_each_lexical_function_declaration_in_reverse_order(ThrowCompletionOrVoidCallback<FunctionDeclaration const&>&& callback) const;
     ThrowCompletionOr<void> for_each_var_scoped_variable_declaration(ThrowCompletionOrVoidCallback<VariableDeclaration const&>&& callback) const;
 
     void block_declaration_instantiation(VM&, Environment*) const;
