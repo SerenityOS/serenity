@@ -34,12 +34,9 @@ ThrowCompletionOr<void> IteratorHelperPrototype::initialize(Realm& realm)
 JS_DEFINE_NATIVE_FUNCTION(IteratorHelperPrototype::next)
 {
     auto iterator = TRY(typed_this_object(vm));
-    if (iterator->done())
-        return create_iterator_result_object(vm, js_undefined(), true);
 
     // 1. Return ? GeneratorResume(this value, undefined, "Iterator Helper").
-    auto result = TRY(iterator->closure()(*iterator));
-    return create_iterator_result_object(vm, result, iterator->done());
+    return iterator->resume(vm, js_undefined(), "Iterator Helper"sv);
 }
 
 // 3.1.2.1.2 %IteratorHelperPrototype%.return ( ), https://tc39.es/proposal-iterator-helpers/#sec-%iteratorhelperprototype%.return

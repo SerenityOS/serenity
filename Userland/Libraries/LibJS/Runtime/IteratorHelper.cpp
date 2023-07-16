@@ -13,11 +13,11 @@ namespace JS {
 
 ThrowCompletionOr<NonnullGCPtr<IteratorHelper>> IteratorHelper::create(Realm& realm, IteratorRecord underlying_iterator, Closure closure)
 {
-    return TRY(realm.heap().allocate<IteratorHelper>(realm, realm.intrinsics().iterator_helper_prototype(), move(underlying_iterator), move(closure)));
+    return TRY(realm.heap().allocate<IteratorHelper>(realm, realm, realm.intrinsics().iterator_helper_prototype(), move(underlying_iterator), move(closure)));
 }
 
-IteratorHelper::IteratorHelper(Object& prototype, IteratorRecord underlying_iterator, Closure closure)
-    : Object(ConstructWithPrototypeTag::Tag, prototype)
+IteratorHelper::IteratorHelper(Realm& realm, Object& prototype, IteratorRecord underlying_iterator, Closure closure)
+    : GeneratorObject(realm, prototype, realm.vm().running_execution_context().copy(), "Iterator Helper"sv)
     , m_underlying_iterator(move(underlying_iterator))
     , m_closure(move(closure))
 {
@@ -31,15 +31,27 @@ void IteratorHelper::visit_edges(Visitor& visitor)
 
 Value IteratorHelper::result(Value value)
 {
-    if (value.is_undefined())
-        m_done = true;
+    set_generator_state(value.is_undefined() ? GeneratorState::Completed : GeneratorState::SuspendedYield);
     return value;
 }
 
-ThrowCompletionOr<Value> IteratorHelper::close_result(Completion completion)
+ThrowCompletionOr<Value> IteratorHelper::close_result(VM& vm, Completion completion)
 {
-    m_done = true;
-    return *TRY(iterator_close(vm(), underlying_iterator(), move(completion)));
+    set_generator_state(GeneratorState::Completed);
+    return *TRY(iterator_close(vm, underlying_iterator(), move(completion)));
+}
+
+ThrowCompletionOr<Value> IteratorHelper::execute(VM& vm, JS::Completion const&)
+{
+    ScopeGuard guard { [&] { vm.pop_execution_context(); } };
+    auto result_value = m_closure(vm, *this);
+
+    if (result_value.is_throw_completion()) {
+        set_generator_state(GeneratorState::Completed);
+        return result_value;
+    }
+
+    return create_iterator_result_object(vm, result(result_value.release_value()), generator_state() == GeneratorState::Completed);
 }
 
 }
