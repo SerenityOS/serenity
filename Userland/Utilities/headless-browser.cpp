@@ -209,6 +209,7 @@ static ErrorOr<String> run_one_test(HeadlessWebContentView& view, StringView inp
     } else if (mode == TestMode::Text) {
         view.on_load_finish = [&](auto const&) {
             result = view.dump_text().release_value_but_fixme_should_propagate_errors();
+            view.debug_request("collect-garbage");
             loop.quit(0);
         };
     }
