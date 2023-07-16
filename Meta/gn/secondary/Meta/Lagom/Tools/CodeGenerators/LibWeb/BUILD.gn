@@ -28,6 +28,14 @@ lagom_tool("GenerateCSSEnums") {
   ]
 }
 
+lagom_tool("GenerateCSSMathFunctions") {
+  sources = [ "GenerateCSSMathFunctions.cpp" ]
+  deps = [
+    ":headers",
+    "//Userland/Libraries/LibMain",
+  ]
+}
+
 lagom_tool("GenerateCSSMediaFeatureID") {
   sources = [ "GenerateCSSMediaFeatureID.cpp" ]
   deps = [
