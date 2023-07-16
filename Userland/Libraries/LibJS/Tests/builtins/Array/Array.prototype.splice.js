@@ -46,6 +46,11 @@ test("basic functionality", () => {
     removed = array.splice(-123, 123);
     expect(array).toEqual([]);
     expect(removed).toEqual(["foo", "bar", "baz"]);
+
+    array = ["foo", "bar"];
+    removed = array.splice(1, 1, "baz");
+    expect(array).toEqual(["foo", "baz"]);
+    expect(removed).toEqual(["bar"]);
 });
 
 test("Invalid lengths", () => {
