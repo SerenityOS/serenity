@@ -15,8 +15,11 @@
 
 namespace JS {
 
-void async_block_start(VM&, NonnullRefPtr<Statement const> const& parse_node, PromiseCapability const&, ExecutionContext&);
-void async_function_start(VM&, PromiseCapability const&, NonnullRefPtr<Statement const> const& async_function_body);
+template<typename T>
+void async_block_start(VM&, T const& async_body, PromiseCapability const&, ExecutionContext&);
+
+template<typename T>
+void async_function_start(VM&, PromiseCapability const&, T const& async_function_body);
 
 // 10.2 ECMAScript Function Objects, https://tc39.es/ecma262/#sec-ecmascript-function-objects
 class ECMAScriptFunctionObject final : public FunctionObject {
