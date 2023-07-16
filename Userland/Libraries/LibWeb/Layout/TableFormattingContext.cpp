@@ -387,11 +387,15 @@ void TableFormattingContext::compute_table_measures()
             auto cell_span_value = cell_span<RowOrColumn>(cell);
             if (cell_span_value == current_span) {
                 // Define the baseline max-content size as the sum of the max-content sizes based on cells of span up to N-1 of all columns that the cell spans.
-                CSSPixels baseline_max_content_size = 0;
                 auto cell_start_rc_index = cell_index<RowOrColumn>(cell);
                 auto cell_end_rc_index = cell_start_rc_index + cell_span_value;
+                CSSPixels baseline_max_content_size = 0;
                 for (auto rc_index = cell_start_rc_index; rc_index < cell_end_rc_index; rc_index++) {
                     baseline_max_content_size += rows_or_columns[rc_index].max_size;
+                }
+                CSSPixels baseline_min_content_size = 0;
+                for (auto rc_index = cell_start_rc_index; rc_index < cell_end_rc_index; rc_index++) {
+                    baseline_min_content_size += rows_or_columns[rc_index].min_size;
                 }
 
                 // Define the baseline border spacing as the sum of the horizontal border-spacing for any columns spanned by the cell, other than the one in which the cell originates.
@@ -403,7 +407,22 @@ void TableFormattingContext::compute_table_measures()
                     // The contribution of the cell is the sum of:
                     // the min-content size of the column based on cells of span up to N-1
                     auto cell_min_contribution = rows_or_columns[rc_index].min_size;
-                    // and the product of:
+                    // the product of:
+                    // - the ratio of:
+                    //   - the max-content size of the row / column based on cells of span up to N-1 of the row / column minus the
+                    //     min-content size of the row / column based on cells of span up to N-1 of the row / column, to
+                    //   - the baseline max-content size minus the baseline min-content size
+                    //   or zero if this ratio is undefined, and
+                    // - the outer min-content size of the cell minus the baseline min-content size and the baseline border spacing, clamped
+                    //   to be at least 0 and at most the difference between the baseline max-content size and the baseline min-content size
+                    auto normalized_max_min_diff = baseline_max_content_size != baseline_min_content_size
+                        ? (rows_or_columns[rc_index].max_size - rows_or_columns[rc_index].min_size) / (baseline_max_content_size - baseline_min_content_size)
+                        : 0;
+                    auto clamped_diff_to_baseline_min = min(
+                        max(cell_min_size<RowOrColumn>(cell) - baseline_min_content_size - baseline_border_spacing, 0),
+                        baseline_max_content_size - baseline_min_content_size);
+                    cell_min_contribution += normalized_max_min_diff * clamped_diff_to_baseline_min;
+                    // the product of:
                     // - the ratio of the max-content size based on cells of span up to N-1 of the column to the baseline max-content size
                     // - the outer min-content size of the cell minus the baseline max-content size and baseline border spacing, or 0 if this is negative
                     cell_min_contribution += (rows_or_columns[rc_index].max_size / baseline_max_content_size)
