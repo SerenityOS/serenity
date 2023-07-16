@@ -416,6 +416,8 @@ Path Path::stroke_to_fill(float thickness) const
     // Note: This convolves a polygon with the path using the algorithm described
     // in https://keithp.com/~keithp/talks/cairo2003.pdf (3.1 Stroking Splines via Convolution)
 
+    VERIFY(thickness > 0);
+
     auto& lines = split_lines();
     if (lines.is_empty())
         return Path {};
