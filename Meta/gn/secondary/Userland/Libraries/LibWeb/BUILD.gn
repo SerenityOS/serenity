@@ -113,6 +113,23 @@ compiled_action("generate_css_enums") {
   ]
 }
 
+compiled_action("generate_css_math_functions") {
+  tool = "//Meta/Lagom/Tools/CodeGenerators/LibWeb:GenerateCSSMathFunctions"
+  inputs = [ "CSS/MathFunctions.json" ]
+  outputs = [
+    "$target_gen_dir/CSS/MathFunctions.h",
+    "$target_gen_dir/CSS/MathFunctions.cpp",
+  ]
+  args = [
+    "-h",
+    rebase_path(outputs[0], root_build_dir),
+    "-c",
+    rebase_path(outputs[1], root_build_dir),
+    "-j",
+    rebase_path(inputs[0], root_build_dir),
+  ]
+}
+
 compiled_action("generate_css_media_feature_id") {
   tool = "//Meta/Lagom/Tools/CodeGenerators/LibWeb:GenerateCSSMediaFeatureID"
   inputs = [ "CSS/MediaFeatures.json" ]
@@ -201,6 +218,7 @@ source_set("all_generated") {
     ":generate_aria_roles",
     ":generate_css_easing_functions",
     ":generate_css_enums",
+    ":generate_css_math_functions",
     ":generate_css_media_feature_id",
     ":generate_css_property_id",
     ":generate_css_transform_functions",
