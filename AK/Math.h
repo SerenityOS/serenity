@@ -64,8 +64,6 @@ constexpr size_t product_odd() { return value * product_odd<value - 2>(); }
     }
 
 #define AARCH64_INSTRUCTION(instruction, arg) \
-    if constexpr (IsSame<T, long double>)     \
-        TODO();                               \
     if constexpr (IsSame<T, double>) {        \
         double res;                           \
         asm(#instruction " %d0, %d1"          \
@@ -80,6 +78,13 @@ constexpr size_t product_odd() { return value * product_odd<value - 2>(); }
             : "w"(arg));                      \
         return res;                           \
     }
+
+// aarch64 float instructions don't do quad-precision.
+#define AARCH64_INSTRUCTIONL(function, instruction, arg) \
+    if constexpr (IsSame<T, long double>) {              \
+        return __builtin_##function##l(arg);             \
+    }                                                    \
+    AARCH64_INSTRUCTION(instruction, arg)
 
 namespace Division {
 template<FloatingPoint T>
@@ -159,7 +164,7 @@ constexpr T sqrt(T x)
         : "0"(x));
     return res;
 #elif ARCH(AARCH64)
-    AARCH64_INSTRUCTION(fsqrt, x);
+    AARCH64_INSTRUCTIONL(sqrt, fsqrt, x);
 #else
     return __builtin_sqrt(x);
 #endif
@@ -169,6 +174,9 @@ template<FloatingPoint T>
 constexpr T rsqrt(T x)
 {
 #if ARCH(AARCH64)
+    if constexpr (IsSame<T, long double>) {
+        return (T)1. / sqrtl(x);
+    }
     AARCH64_INSTRUCTION(frsqrte, x);
 #elif ARCH(X86_64)
     if constexpr (IsSame<T, float>) {
@@ -233,7 +241,7 @@ constexpr T fabs(T x)
         : "+t"(x));
     return x;
 #elif ARCH(AARCH64)
-    AARCH64_INSTRUCTION(fabs, x);
+    AARCH64_INSTRUCTIONL(fabs, fabs, x);
 #else
     return __builtin_fabs(x);
 #endif
@@ -870,7 +878,7 @@ constexpr T ceil(T num)
             : static_cast<i64>(num) + ((num > 0) ? 1 : 0);
     }
 #if ARCH(AARCH64)
-    AARCH64_INSTRUCTION(frintp, num);
+    AARCH64_INSTRUCTIONL(ceil, frintp, num);
 #else
     return __builtin_ceil(num);
 #endif
@@ -887,7 +895,7 @@ constexpr T floor(T num)
             : static_cast<i64>(num) - ((num > 0) ? 0 : 1);
     }
 #if ARCH(AARCH64)
-    AARCH64_INSTRUCTION(frintm, num);
+    AARCH64_INSTRUCTIONL(floor, frintm, num);
 #else
     return __builtin_floor(num);
 #endif
