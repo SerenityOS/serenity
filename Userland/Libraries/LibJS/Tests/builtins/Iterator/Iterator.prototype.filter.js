@@ -40,6 +40,28 @@ describe("errors", () => {
         }).toThrow(TestError);
     });
 
+    test("iterator's return method throws", () => {
+        function TestError() {}
+
+        class TestIterator extends Iterator {
+            next() {
+                return {
+                    done: false,
+                    value: 1,
+                };
+            }
+
+            return() {
+                throw new TestError();
+            }
+        }
+
+        expect(() => {
+            const iterator = new TestIterator().filter(() => true);
+            iterator.return();
+        }).toThrow(TestError);
+    });
+
     test("predicate function throws", () => {
         function TestError() {}
 
@@ -152,5 +174,32 @@ describe("normal behavior", () => {
 
         expect(firstFilterCount).toBe(4);
         expect(secondFilterCount).toBe(2);
+    });
+
+    test("return is forwarded to the underlying iterator's return method", () => {
+        let returnCount = 0;
+
+        class TestIterator extends Iterator {
+            next() {
+                return {
+                    done: false,
+                    value: 1,
+                };
+            }
+
+            return() {
+                ++returnCount;
+                return {};
+            }
+        }
+
+        const iterator = new TestIterator().filter(() => true);
+        expect(returnCount).toBe(0);
+
+        iterator.return();
+        expect(returnCount).toBe(1);
+
+        iterator.return();
+        expect(returnCount).toBe(1);
     });
 });

@@ -49,6 +49,28 @@ describe("errors", () => {
             iterator.next();
         }).toThrow(TestError);
     });
+
+    test("iterator's return method throws", () => {
+        function TestError() {}
+
+        class TestIterator extends Iterator {
+            next() {
+                return {
+                    done: false,
+                    value: 1,
+                };
+            }
+
+            return() {
+                throw new TestError();
+            }
+        }
+
+        expect(() => {
+            const iterator = new TestIterator().take(1);
+            iterator.return();
+        }).toThrow(TestError);
+    });
 });
 
 describe("normal behavior", () => {
@@ -119,5 +141,32 @@ describe("normal behavior", () => {
         value = iterator.next();
         expect(value.value).toBeUndefined();
         expect(value.done).toBeTrue();
+    });
+
+    test("return is forwarded to the underlying iterator's return method", () => {
+        let returnCount = 0;
+
+        class TestIterator extends Iterator {
+            next() {
+                return {
+                    done: false,
+                    value: 1,
+                };
+            }
+
+            return() {
+                ++returnCount;
+                return {};
+            }
+        }
+
+        const iterator = new TestIterator().take(1);
+        expect(returnCount).toBe(0);
+
+        iterator.return();
+        expect(returnCount).toBe(1);
+
+        iterator.return();
+        expect(returnCount).toBe(1);
     });
 });

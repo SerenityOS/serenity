@@ -44,16 +44,28 @@ JS_DEFINE_NATIVE_FUNCTION(IteratorHelperPrototype::return_)
 {
     // 1. Let O be this value.
     // 2. Perform ? RequireInternalSlot(O, [[UnderlyingIterator]]).
+    auto iterator = TRY(typed_this_object(vm));
+
     // 3. Assert: O has a [[GeneratorState]] slot.
     // 4. If O.[[GeneratorState]] is suspendedStart, then
-    //     a. Set O.[[GeneratorState]] to completed.
-    //     b. NOTE: Once a generator enters the completed state it never leaves it and its associated execution context is never resumed. Any execution state associated with O can be discarded at this point.
-    //     c. Perform ? IteratorClose(O.[[UnderlyingIterator]], NormalCompletion(unused)).
-    //     d. Return CreateIterResultObject(undefined, true).
-    // 5. Let C be Completion { [[Type]]: return, [[Value]]: undefined, [[Target]]: empty }.
-    // 6. Return ? GeneratorResumeAbrupt(O, C, "Iterator Helper").
+    if (iterator->generator_state() == GeneratorObject::GeneratorState::SuspendedStart) {
+        // a. Set O.[[GeneratorState]] to completed.
+        iterator->set_generator_state(GeneratorObject::GeneratorState::Completed);
 
-    return vm.throw_completion<InternalError>(ErrorType::NotImplemented, "IteratorHelper.prototype.return"sv);
+        // b. NOTE: Once a generator enters the completed state it never leaves it and its associated execution context is never resumed. Any execution state associated with O can be discarded at this point.
+
+        // c. Perform ? IteratorClose(O.[[UnderlyingIterator]], NormalCompletion(unused)).
+        TRY(iterator_close(vm, iterator->underlying_iterator(), normal_completion({})));
+
+        // d. Return CreateIterResultObject(undefined, true).
+        return create_iterator_result_object(vm, js_undefined(), true);
+    }
+
+    // 5. Let C be Completion { [[Type]]: return, [[Value]]: undefined, [[Target]]: empty }.
+    Completion completion { Completion::Type::Return, js_undefined(), {} };
+
+    // 6. Return ? GeneratorResumeAbrupt(O, C, "Iterator Helper").
+    return TRY(iterator->resume_abrupt(vm, move(completion), "Iterator Helper"sv));
 }
 
 }
