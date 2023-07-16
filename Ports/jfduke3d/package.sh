@@ -6,6 +6,7 @@ install_dir='/usr/local/share/games/jfduke3d'
 launcher_name='Duke Nukem 3D'
 launcher_category='Games'
 launcher_command="${install_dir}/duke3d"
+icon_file='rsrc/game_icon.ico'
 depends=(
     'SDL2'
 )
