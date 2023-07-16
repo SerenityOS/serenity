@@ -11,15 +11,16 @@
 
 namespace JS {
 
-ThrowCompletionOr<NonnullGCPtr<IteratorHelper>> IteratorHelper::create(Realm& realm, IteratorRecord underlying_iterator, Closure closure)
+ThrowCompletionOr<NonnullGCPtr<IteratorHelper>> IteratorHelper::create(Realm& realm, IteratorRecord underlying_iterator, Closure closure, Optional<AbruptClosure> abrupt_closure)
 {
-    return TRY(realm.heap().allocate<IteratorHelper>(realm, realm, realm.intrinsics().iterator_helper_prototype(), move(underlying_iterator), move(closure)));
+    return TRY(realm.heap().allocate<IteratorHelper>(realm, realm, realm.intrinsics().iterator_helper_prototype(), move(underlying_iterator), move(closure), move(abrupt_closure)));
 }
 
-IteratorHelper::IteratorHelper(Realm& realm, Object& prototype, IteratorRecord underlying_iterator, Closure closure)
+IteratorHelper::IteratorHelper(Realm& realm, Object& prototype, IteratorRecord underlying_iterator, Closure closure, Optional<AbruptClosure> abrupt_closure)
     : GeneratorObject(realm, prototype, realm.vm().running_execution_context().copy(), "Iterator Helper"sv)
     , m_underlying_iterator(move(underlying_iterator))
     , m_closure(move(closure))
+    , m_abrupt_closure(move(abrupt_closure))
 {
 }
 
@@ -41,9 +42,16 @@ ThrowCompletionOr<Value> IteratorHelper::close_result(VM& vm, Completion complet
     return *TRY(iterator_close(vm, underlying_iterator(), move(completion)));
 }
 
-ThrowCompletionOr<Value> IteratorHelper::execute(VM& vm, JS::Completion const&)
+ThrowCompletionOr<Value> IteratorHelper::execute(VM& vm, JS::Completion const& completion)
 {
     ScopeGuard guard { [&] { vm.pop_execution_context(); } };
+
+    if (completion.is_abrupt()) {
+        if (m_abrupt_closure.has_value())
+            return (*m_abrupt_closure)(vm, *this, completion);
+        return close_result(vm, completion);
+    }
+
     auto result_value = m_closure(vm, *this);
 
     if (result_value.is_throw_completion()) {

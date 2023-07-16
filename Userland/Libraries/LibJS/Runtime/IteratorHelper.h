@@ -19,8 +19,9 @@ class IteratorHelper final : public GeneratorObject {
 
 public:
     using Closure = JS::SafeFunction<ThrowCompletionOr<Value>(VM&, IteratorHelper&)>;
+    using AbruptClosure = JS::SafeFunction<ThrowCompletionOr<Value>(VM&, IteratorHelper&, Completion const&)>;
 
-    static ThrowCompletionOr<NonnullGCPtr<IteratorHelper>> create(Realm&, IteratorRecord, Closure);
+    static ThrowCompletionOr<NonnullGCPtr<IteratorHelper>> create(Realm&, IteratorRecord, Closure, Optional<AbruptClosure> = {});
 
     IteratorRecord const& underlying_iterator() const { return m_underlying_iterator; }
 
@@ -31,13 +32,14 @@ public:
     ThrowCompletionOr<Value> close_result(VM&, Completion);
 
 private:
-    IteratorHelper(Realm&, Object& prototype, IteratorRecord, Closure);
+    IteratorHelper(Realm&, Object& prototype, IteratorRecord, Closure, Optional<AbruptClosure>);
 
     virtual void visit_edges(Visitor&) override;
     virtual ThrowCompletionOr<Value> execute(VM&, JS::Completion const& completion) override;
 
     IteratorRecord m_underlying_iterator; // [[UnderlyingIterator]]
     Closure m_closure;
+    Optional<AbruptClosure> m_abrupt_closure;
 
     size_t m_counter { 0 };
     bool m_done { false };
