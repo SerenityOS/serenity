@@ -17,7 +17,6 @@ class GeneratorObject final : public Object {
 
 public:
     static ThrowCompletionOr<NonnullGCPtr<GeneratorObject>> create(Realm&, Value, ECMAScriptFunctionObject*, ExecutionContext, Bytecode::RegisterWindow);
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
     virtual ~GeneratorObject() override = default;
     void visit_edges(Cell::Visitor&) override;
 

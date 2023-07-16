@@ -41,11 +41,6 @@ GeneratorObject::GeneratorObject(Realm&, Object& prototype, ExecutionContext con
 {
 }
 
-ThrowCompletionOr<void> GeneratorObject::initialize(Realm&)
-{
-    return {};
-}
-
 void GeneratorObject::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
