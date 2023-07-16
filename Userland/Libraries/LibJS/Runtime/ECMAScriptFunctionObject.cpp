@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@serenityos.org>
  * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -773,9 +774,12 @@ void async_function_start(VM& vm, PromiseCapability const& promise_capability, T
 
 // 27.7.5.2 AsyncBlockStart ( promiseCapability, asyncBody, asyncContext ), https://tc39.es/ecma262/#sec-asyncblockstart
 // 12.7.1.1 AsyncBlockStart ( promiseCapability, asyncBody, asyncContext ), https://tc39.es/proposal-explicit-resource-management/#sec-asyncblockstart
+// 1.2.1.1 AsyncBlockStart ( promiseCapability, asyncBody, asyncContext ), https://tc39.es/proposal-array-from-async/#sec-asyncblockstart
 template<typename T>
 void async_block_start(VM& vm, T const& async_body, PromiseCapability const& promise_capability, ExecutionContext& async_context)
 {
+    // NOTE: This function is a combination between two proposals, so does not exactly match spec steps of either.
+
     auto& realm = *vm.current_realm();
 
     // 1. Assert: promiseCapability is a PromiseCapability Record.
@@ -785,42 +789,60 @@ void async_block_start(VM& vm, T const& async_body, PromiseCapability const& pro
 
     // 3. Set the code evaluation state of asyncContext such that when evaluation is resumed for that execution context the following steps will be performed:
     auto execution_steps = NativeFunction::create(realm, "", [&realm, &async_body, &promise_capability, &async_context](auto& vm) -> ThrowCompletionOr<Value> {
-        // a. Let result be the result of evaluating asyncBody.
         Completion result;
-        if (auto* bytecode_interpreter = vm.bytecode_interpreter_if_exists()) {
-            // FIXME: Cache this executable somewhere.
-            auto maybe_executable = Bytecode::compile(vm, async_body, FunctionKind::Async, "AsyncBlockStart"sv);
-            if (maybe_executable.is_error())
-                result = maybe_executable.release_error();
-            else
-                result = bytecode_interpreter->run_and_return_frame(realm, *maybe_executable.value(), nullptr).value;
-        } else {
-            result = async_body->execute(vm.interpreter());
+
+        // a. If asyncBody is a Parse Node, then
+        if constexpr (!IsCallableWithArguments<T, Completion>) {
+            // a. Let result be the result of evaluating asyncBody.
+            if (auto* bytecode_interpreter = vm.bytecode_interpreter_if_exists()) {
+                // FIXME: Cache this executable somewhere.
+                auto maybe_executable = Bytecode::compile(vm, async_body, FunctionKind::Async, "AsyncBlockStart"sv);
+                if (maybe_executable.is_error())
+                    result = maybe_executable.release_error();
+                else
+                    result = bytecode_interpreter->run_and_return_frame(realm, *maybe_executable.value(), nullptr).value;
+            } else {
+                result = async_body->execute(vm.interpreter());
+            }
+        }
+        // b. Else,
+        else {
+            (void)realm;
+
+            // i. Assert: asyncBody is an Abstract Closure with no parameters.
+            static_assert(IsCallableWithArguments<T, Completion>);
+
+            // ii. Let result be asyncBody().
+            result = async_body();
         }
 
-        // b. Assert: If we return here, the async function either threw an exception or performed an implicit or explicit return; all awaiting is done.
+        // c. Assert: If we return here, the async function either threw an exception or performed an implicit or explicit return; all awaiting is done.
 
-        // c. Remove asyncContext from the execution context stack and restore the execution context that is at the top of the execution context stack as the running execution context.
+        // d. Remove asyncContext from the execution context stack and restore the execution context that is at the top of the execution context stack as the running execution context.
         vm.pop_execution_context();
 
-        // d. Let env be asyncContext's LexicalEnvironment.
-        auto env = async_context.lexical_environment;
-        VERIFY(is<DeclarativeEnvironment>(*env));
+        // NOTE: This does not work for Array.fromAsync, likely due to conflicts between that proposal and Explicit Resource Management proposal.
+        if constexpr (!IsCallableWithArguments<T, Completion>) {
+            // e. Let env be asyncContext's LexicalEnvironment.
+            auto env = async_context.lexical_environment;
 
-        // e. Set result to DisposeResources(env, result).
-        result = dispose_resources(vm, static_cast<DeclarativeEnvironment*>(env.ptr()), result);
+            // f. Set result to DisposeResources(env, result).
+            result = dispose_resources(vm, verify_cast<DeclarativeEnvironment>(env.ptr()), result);
+        } else {
+            (void)async_context;
+        }
 
-        // f. If result.[[Type]] is normal, then
+        // g. If result.[[Type]] is normal, then
         if (result.type() == Completion::Type::Normal) {
             // i. Perform ! Call(promiseCapability.[[Resolve]], undefined, « undefined »).
             MUST(call(vm, *promise_capability.resolve(), js_undefined(), js_undefined()));
         }
-        // g. Else if result.[[Type]] is return, then
+        // h. Else if result.[[Type]] is return, then
         else if (result.type() == Completion::Type::Return) {
             // i. Perform ! Call(promiseCapability.[[Resolve]], undefined, « result.[[Value]] »).
             MUST(call(vm, *promise_capability.resolve(), js_undefined(), *result.value()));
         }
-        // h. Else,
+        // i. Else,
         else {
             // i. Assert: result.[[Type]] is throw.
             VERIFY(result.type() == Completion::Type::Throw);
@@ -828,7 +850,7 @@ void async_block_start(VM& vm, T const& async_body, PromiseCapability const& pro
             // ii. Perform ! Call(promiseCapability.[[Reject]], undefined, « result.[[Value]] »).
             MUST(call(vm, *promise_capability.reject(), js_undefined(), *result.value()));
         }
-        // i. Return unused.
+        // j. Return unused.
         // NOTE: We don't support returning an empty/optional/unused value here.
         return js_undefined();
     });
@@ -852,6 +874,9 @@ void async_block_start(VM& vm, T const& async_body, PromiseCapability const& pro
 
 template void async_block_start(VM&, NonnullGCPtr<Statement const> const& async_body, PromiseCapability const&, ExecutionContext&);
 template void async_function_start(VM&, PromiseCapability const&, NonnullGCPtr<Statement const> const& async_function_body);
+
+template void async_block_start(VM&, SafeFunction<Completion()> const& async_body, PromiseCapability const&, ExecutionContext&);
+template void async_function_start(VM&, PromiseCapability const&, SafeFunction<Completion()> const& async_function_body);
 
 // 10.2.1.4 OrdinaryCallEvaluateBody ( F, argumentsList ), https://tc39.es/ecma262/#sec-ordinarycallevaluatebody
 // 15.8.4 Runtime Semantics: EvaluateAsyncFunctionBody, https://tc39.es/ecma262/#sec-runtime-semantics-evaluatefunctionbody
