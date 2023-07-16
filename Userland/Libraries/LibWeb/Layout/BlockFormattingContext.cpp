@@ -420,6 +420,7 @@ CSSPixels BlockFormattingContext::compute_table_box_width_inside_table_wrapper(B
     else if (available_space.width.is_min_content())
         throwaway_state.get_mutable(box).set_min_content_width();
     else {
+        // ...here
         VERIFY(available_space.width.is_max_content());
         throwaway_state.get_mutable(box).set_max_content_width();
     }
@@ -1137,8 +1138,12 @@ CSSPixels BlockFormattingContext::greatest_child_width(Box const& box) const
         }
     } else {
         box.for_each_child_of_type<Box>([&](Box const& child) {
-            if (!child.is_absolutely_positioned())
-                max_width = max(max_width, m_state.get(child).margin_box_width());
+            if (!child.is_absolutely_positioned()) {
+                auto margin_box_width = m_state.get(child).margin_box_width();
+                // This crashes...
+                if (isfinite(margin_box_width.to_double()))
+                    max_width = max(max_width, margin_box_width);
+            }
         });
     }
     return max_width;
