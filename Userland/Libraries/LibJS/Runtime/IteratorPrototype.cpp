@@ -321,6 +321,24 @@ public:
         return next_outer_iterator(vm, iterated, iterator, mapper);
     }
 
+    // NOTE: This implements step 5.b.ix.4.d of Iterator.prototype.flatMap.
+    ThrowCompletionOr<Value> on_abrupt_completion(VM& vm, IteratorHelper& iterator, Completion const& completion)
+    {
+        VERIFY(m_inner_iterator.has_value());
+
+        // d. If completion is an abrupt completion, then
+
+        // i. Let backupCompletion be Completion(IteratorClose(innerIterator, completion)).
+        auto backup_completion = iterator_close(vm, *m_inner_iterator, completion);
+
+        // ii. IfAbruptCloseIterator(backupCompletion, iterated).
+        if (backup_completion.is_error())
+            return iterator.close_result(vm, backup_completion.release_error());
+
+        // iii. Return ? IteratorClose(completion, iterated).
+        return iterator.close_result(vm, completion);
+    }
+
 private:
     FlatMapIterator() = default;
 
@@ -397,10 +415,7 @@ private:
                 return iterator.close_result(vm, inner_value.release_error());
 
             // c. Let completion be Completion(Yield(innerValue)).
-            // d. If completion is an abrupt completion, then
-            //     i. Let backupCompletion be Completion(IteratorClose(innerIterator, completion)).
-            //     ii. IfAbruptCloseIterator(backupCompletion, iterated).
-            //     iii. Return ? IteratorClose(completion, iterated).
+            // NOTE: Step d is implemented via on_abrupt_completion.
             return inner_value.release_value();
         }
     }
@@ -434,9 +449,13 @@ JS_DEFINE_NATIVE_FUNCTION(IteratorPrototype::flat_map)
         return flat_map_iterator->next(vm, iterated, iterator, *mapper);
     };
 
+    IteratorHelper::AbruptClosure abrupt_closure = [flat_map_iterator](auto& vm, auto& iterator, auto const& completion) -> ThrowCompletionOr<Value> {
+        return flat_map_iterator->on_abrupt_completion(vm, iterator, completion);
+    };
+
     // 6. Let result be CreateIteratorFromClosure(closure, "Iterator Helper", %IteratorHelperPrototype%, « [[UnderlyingIterator]] »).
     // 7. Set result.[[UnderlyingIterator]] to iterated.
-    auto result = TRY(IteratorHelper::create(realm, move(iterated), move(closure)));
+    auto result = TRY(IteratorHelper::create(realm, move(iterated), move(closure), move(abrupt_closure)));
 
     // 8. Return result.
     return result;
