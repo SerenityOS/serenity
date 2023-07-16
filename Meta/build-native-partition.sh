@@ -16,7 +16,7 @@ cleanup() {
 
 if [ "$(id -u)" != 0 ]; then
     set +e
-    ${SUDO} "${SHELL}" -c -- "\"$0\" $* || exit 42"
+    ${SUDO} -- "${SHELL}" -c "\"$0\" $* || exit 42"
     case $? in
         1)
             die "this script needs to run as root"
