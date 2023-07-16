@@ -20,8 +20,8 @@ public:
     virtual ~GeneratorObject() override = default;
     void visit_edges(Cell::Visitor&) override;
 
-    ThrowCompletionOr<Value> resume(VM&, Value value, Optional<DeprecatedString> generator_brand);
-    ThrowCompletionOr<Value> resume_abrupt(VM&, JS::Completion abrupt_completion, Optional<DeprecatedString> generator_brand);
+    ThrowCompletionOr<Value> resume(VM&, Value value, Optional<StringView> const& generator_brand);
+    ThrowCompletionOr<Value> resume_abrupt(VM&, JS::Completion abrupt_completion, Optional<StringView> const& generator_brand);
 
 private:
     GeneratorObject(Realm&, Object& prototype, ExecutionContext);
@@ -33,7 +33,7 @@ private:
         Completed,
     };
 
-    ThrowCompletionOr<GeneratorState> validate(VM&, Optional<DeprecatedString> const& generator_brand);
+    ThrowCompletionOr<GeneratorState> validate(VM&, Optional<StringView> const& generator_brand);
     ThrowCompletionOr<Value> execute(VM&, JS::Completion const& completion);
 
     ExecutionContext m_execution_context;
@@ -41,7 +41,7 @@ private:
     Value m_previous_value;
     Optional<Bytecode::RegisterWindow> m_frame;
     GeneratorState m_generator_state { GeneratorState::SuspendedStart };
-    Optional<DeprecatedString> m_generator_brand;
+    Optional<StringView> m_generator_brand;
 };
 
 }
