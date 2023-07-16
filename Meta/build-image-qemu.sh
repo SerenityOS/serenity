@@ -12,7 +12,7 @@ if [ "$(id -u)" != 0 ]; then
         USE_FUSE2FS=1
     else
         set +e
-        ${SUDO} "${SHELL}" -c -- "\"$0\" $* || exit 42"
+        ${SUDO} -- "${SHELL}" -c "\"$0\" $* || exit 42"
         case $? in
             1)
                 die "this script needs to run as root"
@@ -70,7 +70,7 @@ nearest_power_of_2() {
     echo $p
 }
 if [ "$SERENITY_ARCH" = "aarch64" ] || { [ -n "$SERENITY_USE_SDCARD" ] && [ "$SERENITY_USE_SDCARD" -eq 1 ]; }; then
-    # SD cards must have a size that is a power of 2. The Aarch64 port loads from an SD card. 
+    # SD cards must have a size that is a power of 2. The Aarch64 port loads from an SD card.
     DISK_SIZE_BYTES=$(nearest_power_of_2 "$DISK_SIZE_BYTES")
 fi
 
