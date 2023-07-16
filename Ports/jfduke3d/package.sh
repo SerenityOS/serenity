@@ -2,9 +2,10 @@
 port='jfduke3d'
 version='41cd46bc00633e7457d07d88c8add9f99a7d9d41'
 workdir="jfduke3d-${version}"
+install_dir='/usr/local/share/games/jfduke3d'
 launcher_name='Duke Nukem 3D'
 launcher_category='Games'
-launcher_command='duke3d'
+launcher_command="${install_dir}/duke3d"
 depends=(
     'SDL2'
 )
@@ -37,7 +38,7 @@ pre_patch() {
 }
 
 install() {
-    run mkdir -p "${SERENITY_INSTALL_ROOT}/usr/local/bin"
-    run cp build "${SERENITY_INSTALL_ROOT}/usr/local/bin"
-    run cp duke3d "${SERENITY_INSTALL_ROOT}/usr/local/bin"
+    run mkdir -p "${SERENITY_INSTALL_ROOT}${install_dir}"
+    run cp build "${SERENITY_INSTALL_ROOT}${install_dir}"
+    run cp duke3d "${SERENITY_INSTALL_ROOT}${install_dir}"
 }
