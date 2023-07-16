@@ -12,7 +12,7 @@
 
 namespace JS {
 
-class GeneratorObject final : public Object {
+class GeneratorObject : public Object {
     JS_OBJECT(GeneratorObject, Object);
 
 public:
@@ -23,19 +23,22 @@ public:
     ThrowCompletionOr<Value> resume(VM&, Value value, Optional<StringView> const& generator_brand);
     ThrowCompletionOr<Value> resume_abrupt(VM&, JS::Completion abrupt_completion, Optional<StringView> const& generator_brand);
 
-private:
-    GeneratorObject(Realm&, Object& prototype, ExecutionContext);
-
     enum class GeneratorState {
         SuspendedStart,
         SuspendedYield,
         Executing,
         Completed,
     };
+    GeneratorState generator_state() const { return m_generator_state; }
+    void set_generator_state(GeneratorState generator_state) { m_generator_state = generator_state; }
+
+protected:
+    GeneratorObject(Realm&, Object& prototype, ExecutionContext, Optional<StringView> generator_brand = {});
 
     ThrowCompletionOr<GeneratorState> validate(VM&, Optional<StringView> const& generator_brand);
-    ThrowCompletionOr<Value> execute(VM&, JS::Completion const& completion);
+    virtual ThrowCompletionOr<Value> execute(VM&, JS::Completion const& completion);
 
+private:
     ExecutionContext m_execution_context;
     GCPtr<ECMAScriptFunctionObject> m_generating_function;
     Value m_previous_value;

@@ -421,15 +421,15 @@ ErrorOr<void> print_shadow_realm(JS::PrintContext& print_context, JS::ShadowReal
     return {};
 }
 
-ErrorOr<void> print_generator(JS::PrintContext& print_context, JS::GeneratorObject const&, HashTable<JS::Object*>&)
+ErrorOr<void> print_generator(JS::PrintContext& print_context, JS::GeneratorObject const& generator, HashTable<JS::Object*>&)
 {
-    TRY(print_type(print_context, "Generator"sv));
+    TRY(print_type(print_context, generator.class_name()));
     return {};
 }
 
-ErrorOr<void> print_async_generator(JS::PrintContext& print_context, JS::AsyncGenerator const&, HashTable<JS::Object*>&)
+ErrorOr<void> print_async_generator(JS::PrintContext& print_context, JS::AsyncGenerator const& generator, HashTable<JS::Object*>&)
 {
-    TRY(print_type(print_context, "AsyncGenerator"sv));
+    TRY(print_type(print_context, generator.class_name()));
     return {};
 }
 
