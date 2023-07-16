@@ -682,7 +682,9 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
         layout_list_item_marker(static_cast<ListItemBox const&>(box));
     }
 
-    bottom_of_lowest_margin_box = max(bottom_of_lowest_margin_box, box_state.offset.y() + box_state.content_height() + box_state.margin_box_bottom());
+    auto calculated_bottom_of_lowest_margin_box = box_state.offset.y() + box_state.content_height() + box_state.margin_box_bottom();
+    if (isfinite(calculated_bottom_of_lowest_margin_box.to_double()))
+        bottom_of_lowest_margin_box = max(bottom_of_lowest_margin_box, calculated_bottom_of_lowest_margin_box);
 
     if (independent_formatting_context)
         independent_formatting_context->parent_context_did_dimension_child_root_box();
