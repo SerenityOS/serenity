@@ -37,7 +37,7 @@ JS_DEFINE_NATIVE_FUNCTION(GeneratorPrototype::next)
     return generator_object->resume(vm, vm.argument(0), {});
 }
 
-// 27.5.1.3 Generator.prototype.next ( value ), https://tc39.es/ecma262/#sec-generator.prototype.return
+// 27.5.1.3 Generator.prototype.return ( value ), https://tc39.es/ecma262/#sec-generator.prototype.return
 JS_DEFINE_NATIVE_FUNCTION(GeneratorPrototype::return_)
 {
     // 1. Let g be the this value.
@@ -50,7 +50,7 @@ JS_DEFINE_NATIVE_FUNCTION(GeneratorPrototype::return_)
     return generator_object->resume_abrupt(vm, completion, {});
 }
 
-// 27.5.1.4 Generator.prototype.next ( value ), https://tc39.es/ecma262/#sec-generator.prototype.throw
+// 27.5.1.4 Generator.prototype.throw ( exception ), https://tc39.es/ecma262/#sec-generator.prototype.throw
 JS_DEFINE_NATIVE_FUNCTION(GeneratorPrototype::throw_)
 {
     // 1. Let g be the this value.
