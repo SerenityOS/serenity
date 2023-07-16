@@ -1,95 +1,126 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: Oleg Kosenkov <okosenkov@gmail.com>
-Date: Mon, 31 May 2021 14:01:49 -0400
+From: Fabian Dellwing <fabian.dellwing@gmail.com>
+Date: Sun, 16 Jul 2023 07:09:55 +0200
 Subject: [PATCH] Build with CMake
 
 ---
- CMakeLists.txt     |  4 +++
- src/CMakeLists.txt | 67 ++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 71 insertions(+)
+ CMakeLists.txt | 110 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 110 insertions(+)
  create mode 100644 CMakeLists.txt
- create mode 100644 src/CMakeLists.txt
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
 new file mode 100644
-index 0000000..dfb9649
+index 0000000000000000000000000000000000000000..f52fb4d501707d290bf2e41bdca1867992fbb19d
 --- /dev/null
 +++ b/CMakeLists.txt
-@@ -0,0 +1,4 @@
-+cmake_minimum_required(VERSION 3.16)
-+project(opentyrian LANGUAGES C)
-+install(FILES CREDITS NEWS README DESTINATION share/doc/opentyrian)
-+add_subdirectory(src)
-diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-new file mode 100644
-index 0000000..19d68c0
---- /dev/null
-+++ b/src/CMakeLists.txt
-@@ -0,0 +1,67 @@
+@@ -0,0 +1,110 @@
++cmake_minimum_required(VERSION 3.8)
++
++# set version number
++set (OPENTYRIAN_VERSION 2.1)
++
++# set the project name
++project(OpenTyrian VERSION ${OPENTYRIAN_VERSION})
++
++install(FILES NEWS README DESTINATION share/doc/opentyrian)
++
++set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
++
++# Options enabled by default
++option ( enable-network "compile support for network" on )
++
++# Include required scripts
++include(GNUInstallDirs)
++
++# Search for dependencies
 +find_package(SDL2 REQUIRED)
-+add_executable(tyrian
-+        animlib.c
-+        arg_parse.c
-+        backgrnd.c
-+        config.c
-+        config_file.c
-+        destruct.c
-+        editship.c
-+        episodes.c
-+        file.c
-+        font.c
-+        fonthand.c
-+        game_menu.c
-+        helptext.c
-+        joystick.c
-+        jukebox.c
-+        keyboard.c
-+        lds_play.c
-+        loudness.c
-+        lvllib.c
-+        lvlmast.c
-+        mainint.c
-+        menus.c
-+        mouse.c
-+        mtrand.c
-+        musmast.c
-+        network.c
-+        nortsong.c
-+        nortvars.c
-+        opentyr.c
-+        opl.c
-+        palette.c
-+        params.c
-+        pcxload.c
-+        pcxmast.c
-+        picload.c
-+        player.c
-+        scroller.c
-+        setup.c
-+        shots.c
-+        sizebuf.c
-+        sndmast.c
-+        sprite.c
-+        starlib.c
-+        std_support.c
-+        tyrian2.c
-+        varz.c
-+        vga256d.c
-+        vga_palette.c
-+        video.c
-+        video_scale.c
-+        video_scale_hqNx.c
-+        xmas.c)
-+target_include_directories(tyrian PRIVATE . ${SDL2_INCLUDE_DIRS})
-+if("${SDL2_LIBRARIES}" STREQUAL "")
-+    message(WARNING "SDL2_LIBRARIES wasn't set, manually setting to SDL2::SDL2")
-+    set(SDL2_LIBRARIES "SDL2::SDL2")
++
++if (enable-network)
++    find_package(SDL2_net REQUIRED)
++    add_definitions(-DWITH_NETWORK)
 +endif()
 +
-+target_compile_options(tyrian PRIVATE -std=iso9899:1999 )
-+target_compile_definitions(tyrian PRIVATE
-+        -DNDEBUG
-+        -DTYRIAN_DIR=\"/usr/local/share/games/opentyrian\")
-+target_link_libraries(tyrian m ${SDL2_LIBRARIES})
-+install(TARGETS tyrian
-+        RUNTIME DESTINATION bin)
++# add the executable
++add_executable(opentyrian WIN32
++    src/animlib.c
++    src/arg_parse.c
++    src/backgrnd.c
++    src/config.c
++    src/config_file.c
++    src/destruct.c
++    src/editship.c
++    src/episodes.c
++    src/file.c
++    src/font.c
++    src/fonthand.c
++    src/game_menu.c
++    src/helptext.c
++    src/joystick.c
++    src/jukebox.c
++    src/keyboard.c
++    src/lds_play.c
++    src/loudness.c
++    src/lvllib.c
++    src/lvlmast.c
++    src/mainint.c
++    src/menus.c
++    src/mouse.c
++    src/mtrand.c
++    src/musmast.c
++    src/network.c
++    src/nortsong.c
++    src/nortvars.c
++    src/opentyr.c
++    src/opl.c
++    src/palette.c
++    src/params.c
++    src/pcxload.c
++    src/pcxmast.c
++    src/picload.c
++    src/player.c
++    src/shots.c
++    src/sizebuf.c
++    src/sndmast.c
++    src/sprite.c
++    src/starlib.c
++    src/tyrian2.c
++    src/varz.c
++    src/vga256d.c
++    src/vga_palette.c
++    src/video.c
++    src/video_scale.c
++    src/video_scale_hqNx.c
++    src/xmas.c
++)
++
++# Setup version
++target_compile_definitions(opentyrian PUBLIC
++    OPENTYRIAN_VERSION=\"${OPENTYRIAN_VERSION}\"
++    -DTYRIAN_DIR=\"/usr/local/share/games/opentyrian\"
++)
++
++# Compile options
++target_include_directories(opentyrian
++    PRIVATE
++    ${CMAKE_SOURCE_DIR}/src
++)
++
++target_link_libraries(opentyrian
++    SDL2::SDL2
++    SDL2::SDL2main
++    $<$<AND:$<BOOL:${enable-network}>,$<BOOL:${SDL2_net_FOUND}>>:
++        SDL2_net::SDL2_net
++    >
++)
++
++find_library(MATH_LIBRARY m)
++
++if (MATH_LIBRARY)
++    message(STATUS "Add math library ${MATH_LIBRARY}")
++    target_link_libraries(opentyrian
++        ${MATH_LIBRARY}
++    )
++endif()
++
++install(TARGETS opentyrian
++    RUNTIME DESTINATION bin)
