@@ -1445,87 +1445,163 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::sort)
 // 23.1.3.31 Array.prototype.splice ( start, deleteCount, ...items ), https://tc39.es/ecma262/#sec-array.prototype.splice
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
 {
+    // 1. Let O be ? ToObject(this value).
     auto this_object = TRY(vm.this_value().to_object(vm));
 
+    // 2. Let len be ? LengthOfArrayLike(O).
     auto initial_length = TRY(length_of_array_like(vm, this_object));
 
+    // 3. Let relativeStart be ? ToIntegerOrInfinity(start).
     auto relative_start = TRY(vm.argument(0).to_integer_or_infinity(vm));
-
-    if (Value(relative_start).is_negative_infinity())
-        relative_start = 0;
 
     u64 actual_start;
 
-    if (relative_start < 0)
+    // 4. If relativeStart = -∞, let actualStart be 0.
+    if (Value(relative_start).is_negative_infinity())
+        actual_start = 0;
+    // 5. Else if relativeStart < 0, let actualStart be max(len + relativeStart, 0).
+    else if (relative_start < 0)
         actual_start = max((ssize_t)initial_length + relative_start, (ssize_t)0);
+    // 6. Else, let actualStart be min(relativeStart, len).
     else
         actual_start = min(relative_start, initial_length);
 
-    u64 insert_count = 0;
-    double actual_delete_count = 0;
+    // 7. Let itemCount be the number of elements in items.
+    u64 item_count = vm.argument_count() >= 2 ? vm.argument_count() - 2 : 0;
 
-    if (vm.argument_count() == 1) {
+    u64 actual_delete_count;
+
+    // 8. If start is not present, then
+    if (vm.argument_count() == 0) {
+        // a. Let actualDeleteCount be 0.
+        actual_delete_count = 0;
+    }
+    // 9. Else if deleteCount is not present, then
+    else if (vm.argument_count() == 1) {
+        // a. Let actualDeleteCount be len - actualStart.
         actual_delete_count = initial_length - actual_start;
-    } else if (vm.argument_count() >= 2) {
-        insert_count = vm.argument_count() - 2;
+    }
+    // 10. Else,
+    else {
+        // a. Let dc be ? ToIntegerOrInfinity(deleteCount).
         auto delete_count = TRY(vm.argument(1).to_integer_or_infinity(vm));
-        auto temp = max(delete_count, 0);
-        actual_delete_count = min(temp, initial_length - actual_start);
+
+        // b. Let actualDeleteCount be the result of clamping dc between 0 and len - actualStart.
+        actual_delete_count = clamp(delete_count, 0, initial_length - actual_start);
     }
 
-    double new_length = initial_length + insert_count - actual_delete_count;
-
-    if (new_length > MAX_ARRAY_LIKE_INDEX)
+    // 11. If len + itemCount - actualDeleteCount > 2^53 - 1, throw a TypeError exception.
+    if (initial_length + item_count - actual_delete_count > MAX_ARRAY_LIKE_INDEX)
         return vm.throw_completion<TypeError>(ErrorType::ArrayMaxSize);
 
+    // 12. Let A be ? ArraySpeciesCreate(O, actualDeleteCount).
     auto* removed_elements = TRY(array_species_create(vm, this_object, actual_delete_count));
 
-    for (u64 i = 0; i < actual_delete_count; ++i) {
-        auto from = actual_start + i;
+    // 13. Let k be 0.
+    // 14. Repeat, while k < actualDeleteCount,
+    for (u64 k = 0; k < actual_delete_count; ++k) {
+        // a. Let from be ! ToString(𝔽(actualStart + k)).
+        auto from = PropertyKey { actual_start + k };
 
+        // b. If ? HasProperty(O, from) is true, then
         if (TRY(this_object->has_property(from))) {
+            // i. Let fromValue be ? Get(O, from).
             auto from_value = TRY(this_object->get(from));
 
-            TRY(removed_elements->create_data_property_or_throw(i, from_value));
+            // ii. Perform ? CreateDataPropertyOrThrow(A, ! ToString(𝔽(k)), fromValue).
+            TRY(removed_elements->create_data_property_or_throw(k, from_value));
         }
+
+        // c. Set k to k + 1.
     }
 
+    // 15. Perform ? Set(A, "length", 𝔽(actualDeleteCount), true).
     TRY(removed_elements->set(vm.names.length, Value(actual_delete_count), Object::ShouldThrowExceptions::Yes));
 
-    if (insert_count < actual_delete_count) {
-        for (u64 i = actual_start; i < initial_length - actual_delete_count; ++i) {
-            auto to = i + insert_count;
-            u64 from = i + actual_delete_count;
+    // 16. If itemCount < actualDeleteCount, then
+    if (item_count < actual_delete_count) {
+        // a. Set k to actualStart.
+        // b. Repeat, while k < (len - actualDeleteCount),
+        for (u64 k = actual_start; k < initial_length - actual_delete_count; ++k) {
+            // i. Let from be ! ToString(𝔽(k + actualDeleteCount)).
+            auto from = PropertyKey { k + actual_delete_count };
 
+            // ii. Let to be ! ToString(𝔽(k + itemCount)).
+            auto to = PropertyKey { k + item_count };
+
+            // iii. If ? HasProperty(O, from) is true, then
             if (TRY(this_object->has_property(from))) {
+                // 1. Let fromValue be ? Get(O, from).
                 auto from_value = TRY(this_object->get(from));
+
+                // 2. Perform ? Set(O, to, fromValue, true).
                 TRY(this_object->set(to, from_value, Object::ShouldThrowExceptions::Yes));
-            } else {
+            }
+            // iv. Else,
+            else {
+                // 1. Perform ? DeletePropertyOrThrow(O, to).
                 TRY(this_object->delete_property_or_throw(to));
             }
+
+            // v. Set k to k + 1.
         }
 
-        for (u64 i = initial_length; i > new_length; --i)
-            TRY(this_object->delete_property_or_throw(i - 1));
-    } else if (insert_count > actual_delete_count) {
-        for (u64 i = initial_length - actual_delete_count; i > actual_start; --i) {
-            u64 from_index = i + actual_delete_count - 1;
-            auto to = i + insert_count - 1;
+        // c. Set k to len.
+        // d. Repeat, while k > (len - actualDeleteCount + itemCount),
+        for (u64 k = initial_length; k > initial_length - actual_delete_count + item_count; --k) {
+            // i. Perform ? DeletePropertyOrThrow(O, ! ToString(𝔽(k - 1))).
+            TRY(this_object->delete_property_or_throw(k - 1));
 
-            if (TRY(this_object->has_property(from_index))) {
-                auto from_value = TRY(this_object->get(from_index));
+            // ii. Set k to k - 1.
+        }
+    }
+    // 17. Else if itemCount > actualDeleteCount, then
+    else if (item_count > actual_delete_count) {
+        // a. Set k to (len - actualDeleteCount).
+        // b. Repeat, while k > actualStart,
+        for (u64 k = initial_length - actual_delete_count; k > actual_start; --k) {
+            // i. Let from be ! ToString(𝔽(k + actualDeleteCount - 1)).
+            auto from = PropertyKey { k + actual_delete_count - 1 };
+
+            // ii. Let to be ! ToString(𝔽(k + itemCount - 1)).
+            auto to = PropertyKey { k + item_count - 1 };
+
+            // iii. If ? HasProperty(O, from) is true, then
+            if (TRY(this_object->has_property(from))) {
+                // 1. Let fromValue be ? Get(O, from).
+                auto from_value = TRY(this_object->get(from));
+
+                // 2. Perform ? Set(O, to, fromValue, true).
                 TRY(this_object->set(to, from_value, Object::ShouldThrowExceptions::Yes));
-            } else {
+            }
+            // iv. Else,
+            else {
+                // 1. Perform ? DeletePropertyOrThrow(O, to).
                 TRY(this_object->delete_property_or_throw(to));
             }
+
+            // v. Set k to k - 1.
         }
     }
 
-    for (u64 i = 0; i < insert_count; ++i)
-        TRY(this_object->set(actual_start + i, vm.argument(i + 2), Object::ShouldThrowExceptions::Yes));
+    // 18. Set k to actualStart.
+    auto k = actual_start;
 
-    TRY(this_object->set(vm.names.length, Value(new_length), Object::ShouldThrowExceptions::Yes));
+    // 19. For each element E of items, do
+    for (size_t element_index = 2; element_index < vm.argument_count(); ++element_index) {
+        auto element = vm.argument(element_index);
 
+        // a. Perform ? Set(O, ! ToString(𝔽(k)), E, true).
+        TRY(this_object->set(k, element, Object::ShouldThrowExceptions::Yes));
+
+        // b. Set k to k + 1.
+        ++k;
+    }
+
+    // 20. Perform ? Set(O, "length", 𝔽(len - actualDeleteCount + itemCount), true).
+    TRY(this_object->set(vm.names.length, Value(initial_length - actual_delete_count + item_count), Object::ShouldThrowExceptions::Yes));
+
+    // 21. Return A.
     return removed_elements;
 }
 
