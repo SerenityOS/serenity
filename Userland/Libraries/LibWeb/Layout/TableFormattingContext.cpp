@@ -223,7 +223,6 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
 {
     // Implements https://www.w3.org/TR/css-tables-3/#computing-cell-measures.
     auto const& containing_block = m_state.get(*table_wrapper().containing_block());
-    auto table_width_is_auto = table_box().computed_values().width().is_auto();
 
     compute_constrainedness();
 
@@ -270,11 +269,11 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
         auto cell_intrinsic_width_offsets = padding_left + padding_right + border_left + border_right;
         cell.outer_min_width = max(min_width, min_content_width) + cell_intrinsic_width_offsets;
 
-        // FIXME: Compute height, max_height correctly.
-        auto height = computed_values.height().to_px(cell.box, containing_block.content_height());
-        auto max_height = computed_values.height().is_auto() ? max_content_height : height;
-        if (!should_treat_max_height_as_none(cell.box, available_space.height))
-            max_height = min(max_height, computed_values.max_height().to_px(cell.box, containing_block.content_height()));
+        // The tables specification isn't explicit on how to use the height and max-height CSS properties in the outer max-content formulas.
+        // However, during this early phase we don't have enough information to resolve percentage sizes yet and the formulas for outer sizes
+        // in the specification give enough clues to pick defaults in a way that makes sense.
+        auto height = computed_values.height().is_length() ? computed_values.height().to_px(cell.box, containing_block.content_height()) : 0;
+        auto max_height = computed_values.max_height().is_length() ? computed_values.max_height().to_px(cell.box, containing_block.content_height()) : INFINITY;
         if (m_rows[cell.row_index].is_constrained) {
             // The outer max-content height of a table-cell in a constrained row is
             // max(min-height, height, min-content height, min(max-height, height)) adjusted by the cell intrinsic offsets.
@@ -286,11 +285,9 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
             cell.outer_max_height = max(min_height, max(height, max(min_content_height, min(max_height, max_content_height)))) + cell_intrinsic_height_offsets;
         }
 
-        // FIXME: Compute width, max_width correctly.
-        auto width = (computed_values.width().is_length() || !table_width_is_auto) ? computed_values.width().to_px(cell.box, containing_block.content_width()) : 0;
-        auto max_width = computed_values.width().is_length() ? width : max_content_width;
-        if (!should_treat_max_width_as_none(cell.box, available_space.width))
-            max_width = min(max_width, computed_values.max_width().to_px(cell.box, containing_block.content_width()));
+        // See the explanation for height and max_height above.
+        auto width = computed_values.width().is_length() ? computed_values.width().to_px(cell.box, containing_block.content_width()) : 0;
+        auto max_width = computed_values.max_width().is_length() ? computed_values.max_width().to_px(cell.box, containing_block.content_width()) : INFINITY;
         if (m_columns[cell.column_index].is_constrained) {
             // The outer max-content width of a table-cell in a constrained column is
             // max(min-width, width, min-content width, min(max-width, width)) adjusted by the cell intrinsic offsets.
