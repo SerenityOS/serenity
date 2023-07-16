@@ -43,3 +43,14 @@ install() {
     run cp build "${SERENITY_INSTALL_ROOT}${install_dir}"
     run cp duke3d "${SERENITY_INSTALL_ROOT}${install_dir}"
 }
+
+post_install() {
+  echo
+  echo 'Duke Nukem 3D is installed!'
+  echo
+  echo 'Make sure your game files are present in the installation directory:'
+  echo '    Inside SerenityOS: ~/.jfduke3d'
+  echo "    Outside SerenityOS: ${SERENITY_INSTALL_ROOT}/Base/home/anon/.jfduke3d"
+  echo
+  echo 'For more information you can visit the JFDuke3D Documentation: https://www.jonof.id.au/jfduke3d/readme.html'
+}
