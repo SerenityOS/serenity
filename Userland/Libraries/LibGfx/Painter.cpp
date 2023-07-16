@@ -2418,41 +2418,9 @@ PainterStateSaver::~PainterStateSaver()
 
 void Painter::stroke_path(Path const& path, Color color, int thickness)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
-
     if (thickness <= 0)
         return;
-
-    FloatPoint cursor;
-
-    for (auto& segment : path.segments()) {
-        switch (segment->type()) {
-        case Segment::Type::Invalid:
-            VERIFY_NOT_REACHED();
-            break;
-        case Segment::Type::MoveTo:
-            cursor = segment->point();
-            break;
-        case Segment::Type::LineTo:
-            draw_line(cursor.to_type<int>(), segment->point().to_type<int>(), color, thickness);
-            cursor = segment->point();
-            break;
-        case Segment::Type::QuadraticBezierCurveTo: {
-            auto through = static_cast<QuadraticBezierCurveSegment const&>(*segment).through();
-            draw_quadratic_bezier_curve(through.to_type<int>(), cursor.to_type<int>(), segment->point().to_type<int>(), color, thickness);
-            cursor = segment->point();
-            break;
-        }
-        case Segment::Type::CubicBezierCurveTo: {
-            auto& curve = static_cast<CubicBezierCurveSegment const&>(*segment);
-            auto through_0 = curve.through_0();
-            auto through_1 = curve.through_1();
-            draw_cubic_bezier_curve(through_0.to_type<int>(), through_1.to_type<int>(), cursor.to_type<int>(), segment->point().to_type<int>(), color, thickness);
-            cursor = segment->point();
-            break;
-        }
-        }
-    }
+    fill_path(path.stroke_to_fill(thickness), color);
 }
 
 void Painter::blit_disabled(IntPoint location, Gfx::Bitmap const& bitmap, IntRect const& rect, Palette const& palette)
