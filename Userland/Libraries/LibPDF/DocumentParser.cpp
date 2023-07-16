@@ -390,7 +390,7 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_stream()
     if (field_sizes->at(1).get_u32() == 0)
         return error("Malformed xref dictionary");
 
-    auto highest_object_number = dict->get_value("Size").get<int>() - 1;
+    auto number_of_object_entries = dict->get_value("Size").get<int>();
 
     Vector<Tuple<int, int>> subsections;
     if (dict->contains(CommonNames::Index)) {
@@ -399,9 +399,9 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_stream()
             return error("Malformed xref dictionary");
 
         for (size_t i = 0; i < index_array->size(); i += 2)
-            subsections.append({ index_array->at(i).get<int>(), index_array->at(i + 1).get<int>() - 1 });
+            subsections.append({ index_array->at(i).get<int>(), index_array->at(i + 1).get<int>() });
     } else {
-        subsections.append({ 0, highest_object_number });
+        subsections.append({ 0, number_of_object_entries });
     }
     auto stream = TRY(parse_stream(dict));
     auto table = adopt_ref(*new XRefTable());
@@ -416,35 +416,33 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_stream()
     };
 
     size_t byte_index = 0;
-    size_t subsection_index = 0;
 
-    Vector<XRefEntry> entries;
+    for (auto const& subsection : subsections) {
+        auto start = subsection.get<0>();
+        auto count = subsection.get<1>();
+        Vector<XRefEntry> entries;
 
-    for (int entry_index = 0; subsection_index < subsections.size(); ++entry_index) {
-        Array<long, 3> fields;
-        for (size_t field_index = 0; field_index < 3; ++field_index) {
-            auto field_size = field_sizes->at(field_index).get_u32();
+        for (int i = 0; i < count; i++) {
+            Array<long, 3> fields;
+            for (size_t field_index = 0; field_index < 3; ++field_index) {
+                auto field_size = field_sizes->at(field_index).get_u32();
 
-            if (byte_index + field_size > stream->bytes().size())
-                return error("The xref stream data cut off early");
+                if (byte_index + field_size > stream->bytes().size())
+                    return error("The xref stream data cut off early");
 
-            auto field = stream->bytes().slice(byte_index, field_size);
-            fields[field_index] = field_to_long(field);
-            byte_index += field_size;
+                auto field = stream->bytes().slice(byte_index, field_size);
+                fields[field_index] = field_to_long(field);
+                byte_index += field_size;
+            }
+
+            u8 type = fields[0];
+            if (field_sizes->at(0).get_u32() == 0)
+                type = 1;
+
+            entries.append({ fields[1], static_cast<u16>(fields[2]), type != 0, type == 2 });
         }
 
-        u8 type = fields[0];
-        if (!field_sizes->at(0).get_u32())
-            type = 1;
-
-        entries.append({ fields[1], static_cast<u16>(fields[2]), type != 0, type == 2 });
-
-        auto subsection = subsections[subsection_index];
-        if (entry_index >= subsection.get<1>()) {
-            table->add_section({ subsection.get<0>(), subsection.get<1>(), entries });
-            entries.clear();
-            subsection_index++;
-        }
+        table->add_section({ start, count, move(entries) });
     }
 
     table->set_trailer(dict);
