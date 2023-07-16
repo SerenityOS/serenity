@@ -737,7 +737,7 @@ ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, GCPtr<PromiseCa
         VERIFY(capability != nullptr);
 
         // b. Perform AsyncBlockStart(capability, module.[[ECMAScriptCode]], moduleContext).
-        async_block_start(vm, m_ecmascript_code, *capability, module_context);
+        async_block_start<NonnullRefPtr<Statement const>>(vm, m_ecmascript_code, *capability, module_context);
     }
 
     // 11. Return unused.

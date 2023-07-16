@@ -754,7 +754,8 @@ void ECMAScriptFunctionObject::ordinary_call_bind_this(ExecutionContext& callee_
 }
 
 // 27.7.5.1 AsyncFunctionStart ( promiseCapability, asyncFunctionBody ), https://tc39.es/ecma262/#sec-async-functions-abstract-operations-async-function-start
-void async_function_start(VM& vm, PromiseCapability const& promise_capability, NonnullRefPtr<Statement const> const& async_function_body)
+template<typename T>
+void async_function_start(VM& vm, PromiseCapability const& promise_capability, T const& async_function_body)
 {
     // 1. Let runningContext be the running execution context.
     auto& running_context = vm.running_execution_context();
@@ -771,7 +772,8 @@ void async_function_start(VM& vm, PromiseCapability const& promise_capability, N
 }
 
 // 27.7.5.2 AsyncBlockStart ( promiseCapability, asyncBody, asyncContext ), https://tc39.es/ecma262/#sec-asyncblockstart
-void async_block_start(VM& vm, NonnullRefPtr<Statement const> const& async_body, PromiseCapability const& promise_capability, ExecutionContext& async_context)
+template<typename T>
+void async_block_start(VM& vm, T const& async_body, PromiseCapability const& promise_capability, ExecutionContext& async_context)
 {
     auto& realm = *vm.current_realm();
 
@@ -846,6 +848,9 @@ void async_block_start(VM& vm, NonnullRefPtr<Statement const> const& async_body,
 
     // 8. Return unused.
 }
+
+template void async_block_start(VM&, NonnullGCPtr<Statement const> const& async_body, PromiseCapability const&, ExecutionContext&);
+template void async_function_start(VM&, PromiseCapability const&, NonnullGCPtr<Statement const> const& async_function_body);
 
 // 10.2.1.4 OrdinaryCallEvaluateBody ( F, argumentsList ), https://tc39.es/ecma262/#sec-ordinarycallevaluatebody
 // 15.8.4 Runtime Semantics: EvaluateAsyncFunctionBody, https://tc39.es/ecma262/#sec-runtime-semantics-evaluatefunctionbody
