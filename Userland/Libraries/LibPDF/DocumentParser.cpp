@@ -43,16 +43,10 @@ PDFErrorOr<Version> DocumentParser::initialize()
 
     bool is_linearized = m_linearization_dictionary.has_value();
     if (is_linearized) {
-        // The file may have been linearized at one point, but could have been updated afterwards,
-        // which means it is no longer a linearized PDF file.
+        // If the length given in the linearization dictionary is not equal to the length
+        // of the document, then this file has most likely been incrementally updated, and
+        // should no longer be treated as linearized.
         is_linearized = m_linearization_dictionary.value().length_of_file == m_reader.bytes().size();
-
-        if (!is_linearized) {
-            // FIXME: The file shouldn't be treated as linearized, yet the xref tables are still
-            // split. This might take some tweaking to ensure correct behavior, which can be
-            // implemented later.
-            TODO();
-        }
     }
 
     if (is_linearized)
