@@ -19,6 +19,7 @@
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/ProcessingInstruction.h>
+#include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/CustomElements/CustomElementDefinition.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
@@ -3746,6 +3747,11 @@ Vector<JS::Handle<DOM::Node>> HTMLParser::parse_html_fragment(DOM::Element& cont
     Vector<JS::Handle<DOM::Node>> children;
     while (JS::GCPtr<DOM::Node> child = root->first_child()) {
         MUST(root->remove_child(*child));
+        if (child->is_element()) {
+            auto* element = static_cast<DOM::Element*>(child.ptr());
+            if (element->is_shadow_host())
+                context_element.document().adopt_node(*element->shadow_root_internal());
+        }
         context_element.document().adopt_node(*child);
         children.append(JS::make_handle(*child));
     }

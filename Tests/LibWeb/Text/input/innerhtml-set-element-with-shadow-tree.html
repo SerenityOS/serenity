@@ -1,0 +1,8 @@
+<script src="include.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // This test ensures that the shadow tree (of <input />) can be garbage collected without crashing.
+        // The test is successful if it produces no output.
+        document.body.innerHTML = "<input />";
+    });
+</script>
