@@ -387,6 +387,8 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_stream()
     auto field_sizes = TRY(dict->get_array(m_document, "W"));
     if (field_sizes->size() != 3)
         return error("Malformed xref dictionary");
+    if (field_sizes->at(1).get_u32() == 0)
+        return error("Malformed xref dictionary");
 
     auto highest_object_number = dict->get_value("Size").get<int>() - 1;
 
