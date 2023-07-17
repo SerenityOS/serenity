@@ -326,6 +326,7 @@ private:
     ErrorOr<RefPtr<StyleValue>> parse_list_style_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_overflow_value(Vector<ComponentValue> const&);
     ErrorOr<RefPtr<StyleValue>> parse_place_content_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<StyleValue>> parse_place_items_value(Vector<ComponentValue> const&);
     enum class AllowInsetKeyword {
         No,
         Yes,
