@@ -614,14 +614,15 @@ static ErrorOr<void> decode_png_ihdr(PNGLoadingContext& context)
     size_t data_remaining = context.data_size - (context.data_current_ptr - context.data);
 
     Streamer streamer(context.data_current_ptr, data_remaining);
-    while (!streamer.at_end() && !context.has_seen_iend) {
-        TRY(process_chunk(streamer, context));
 
-        context.data_current_ptr = streamer.current_data_ptr();
+    // https://www.w3.org/TR/png/#11IHDR
+    // The IHDR chunk shall be the first chunk in the PNG datastream.
+    TRY(process_chunk(streamer, context));
 
-        if (context.state == PNGLoadingContext::State::IHDRDecoded)
-            return {};
-    }
+    context.data_current_ptr = streamer.current_data_ptr();
+
+    VERIFY(context.state == PNGLoadingContext::State::IHDRDecoded);
+    return {};
 }
 
 static bool decode_png_image_data_chunk(PNGLoadingContext& context)
