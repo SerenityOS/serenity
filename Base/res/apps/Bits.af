@@ -1,0 +1,7 @@
+[App]
+Name=Bits
+Executable=/bin/Bits
+Category=Internet
+
+[Launcher]
+FileTypes=torrent

@@ -152,6 +152,15 @@ void Engine::cancel_checking(InfoHash info_hash)
     });
 }
 
+void Engine::register_views_update_callback(int interval_ms, Function<void(NonnullOwnPtr<HashMap<InfoHash, TorrentView>>)> views_updated)
+{
+    m_event_loop->deferred_invoke([&, interval_ms, views_updated = move(views_updated)]() mutable {
+        add<Core::Timer>(interval_ms, [&, views_updated = move(views_updated)] {
+            views_updated(torrents_views());
+        }).start();
+    });
+}
+
 Engine::Engine(Configuration config, NonnullRefPtr<ConnectionManager> connection_manager)
     : m_config(move(config))
     , m_connection_manager(move(connection_manager))
@@ -303,6 +312,41 @@ Engine::Engine(Configuration config, NonnullRefPtr<ConnectionManager> connection
             m_connection_stats = move(stats);
         });
     };
+}
+
+NonnullOwnPtr<HashMap<InfoHash, TorrentView>> Engine::torrents_views()
+{
+    auto views = make<HashMap<InfoHash, TorrentView>>();
+    for (auto const& [info_hash, torrent] : m_torrents) {
+        Vector<PeerView> pviews;
+        pviews.ensure_capacity(torrent->peer_sessions.size());
+
+        torrent->download_speed = 0;
+        torrent->upload_speed = 0;
+        for (auto const& session : torrent->peer_sessions) {
+            auto const& stats = m_connection_stats->get(session->connection_id).value_or({});
+            pviews.append(PeerView(
+                session->id,
+                session->peer->address.ipv4_address().to_deprecated_string(),
+                session->peer->address.port(),
+                session->bitfield.progress(),
+                stats.download_speed,
+                stats.upload_speed,
+                stats.bytes_downloaded,
+                stats.bytes_uploaded,
+                session->we_are_choking_peer,
+                session->peer_is_choking_us,
+                session->we_are_interested_in_peer,
+                session->peer_is_interested_in_us,
+                true));
+            torrent->download_speed += stats.download_speed;
+            torrent->upload_speed += stats.upload_speed;
+        }
+
+        views->set(info_hash, TorrentView(info_hash, torrent->display_name, torrent->total_length, torrent->state, torrent->local_bitfield.progress(), m_checker_stats.get(info_hash).value_or(0), torrent->download_speed, torrent->upload_speed, torrent->data_path, pviews, torrent->local_bitfield));
+    }
+
+    return views;
 }
 
 void Engine::check_torrent(NonnullRefPtr<Torrent> torrent, Function<void()> on_success)

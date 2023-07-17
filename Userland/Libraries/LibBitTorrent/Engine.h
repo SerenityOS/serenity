@@ -16,6 +16,7 @@
 #include "Peer.h"
 #include "PeerSession.h"
 #include "Torrent.h"
+#include "TorrentView.h"
 #include <AK/HashMap.h>
 #include <LibCore/Object.h>
 
@@ -30,6 +31,7 @@ public:
     void start_torrent(InfoHash info_hash);
     void stop_torrent(InfoHash);
     void cancel_checking(InfoHash);
+    void register_views_update_callback(int interval_ms, Function<void(NonnullOwnPtr<HashMap<InfoHash, TorrentView>>)> callback);
 
 private:
     Engine(Configuration config, NonnullRefPtr<ConnectionManager> connection_manager);
@@ -53,6 +55,7 @@ private:
     NonnullOwnPtr<HashMap<ConnectionId, ConnectionStats>> m_connection_stats { make<HashMap<ConnectionId, ConnectionStats>>() };
     CheckerStats m_checker_stats;
 
+    NonnullOwnPtr<HashMap<InfoHash, TorrentView>> torrents_views();
     void check_torrent(NonnullRefPtr<Torrent> err_or_checked_bitfield, Function<void()> on_success);
 
     u64 available_slots_for_torrent(NonnullRefPtr<Torrent> torrent) const;
