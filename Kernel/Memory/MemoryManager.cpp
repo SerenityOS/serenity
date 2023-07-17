@@ -904,7 +904,7 @@ ErrorOr<CommittedPhysicalPageSet> MemoryManager::commit_physical_pages(size_t pa
             });
             process.name().with([&](auto& process_name) {
                 dbgln("{}({}) resident:{}, shared:{}, virtual:{}",
-                    process_name->view(),
+                    process_name.representable_view(),
                     process.pid(),
                     amount_resident / PAGE_SIZE,
                     amount_shared / PAGE_SIZE,

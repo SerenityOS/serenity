@@ -298,7 +298,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
     }
 #endif
 
-    MUST(Process::create_kernel_process(KString::must_create("init_stage2"sv), init_stage2, nullptr, THREAD_AFFINITY_DEFAULT, Process::RegisterProcess::No));
+    MUST(Process::create_kernel_process("init_stage2"sv, init_stage2, nullptr, THREAD_AFFINITY_DEFAULT, Process::RegisterProcess::No));
 
     Scheduler::start();
     VERIFY_NOT_REACHED();

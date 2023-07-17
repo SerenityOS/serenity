@@ -42,10 +42,7 @@ static HashTable<NonnullRefPtr<TCPSocket>>* delayed_ack_sockets;
 
 void NetworkTask::spawn()
 {
-    auto name = KString::try_create("Network Task"sv);
-    if (name.is_error())
-        TODO();
-    auto [_, first_thread] = MUST(Process::create_kernel_process(name.release_value(), NetworkTask_main, nullptr));
+    auto [_, first_thread] = MUST(Process::create_kernel_process("Network Task"sv, NetworkTask_main, nullptr));
     network_task = first_thread;
 }
 

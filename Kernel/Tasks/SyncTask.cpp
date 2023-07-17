@@ -14,7 +14,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT void SyncTask::spawn()
 {
-    MUST(Process::create_kernel_process(KString::must_create("VFS Sync Task"sv), [] {
+    MUST(Process::create_kernel_process("VFS Sync Task"sv, [] {
         dbgln("VFS SyncTask is running");
         while (!Process::current().is_dying()) {
             VirtualFileSystem::sync();

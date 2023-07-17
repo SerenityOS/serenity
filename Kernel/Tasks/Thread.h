@@ -9,6 +9,7 @@
 #include <AK/Concepts.h>
 #include <AK/EnumBits.h>
 #include <AK/Error.h>
+#include <AK/FixedStringBuffer.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
@@ -94,11 +95,13 @@ public:
     Process& process() { return m_process; }
     Process const& process() const { return m_process; }
 
-    SpinlockProtected<NonnullOwnPtr<KString>, LockRank::None> const& name() const
+    using Name = FixedStringBuffer<64>;
+    SpinlockProtected<Name, LockRank::None> const& name() const
     {
         return m_name;
     }
-    void set_name(NonnullOwnPtr<KString> name);
+
+    void set_name(StringView);
 
     void finalize();
 
@@ -1083,7 +1086,7 @@ public:
 #endif
 
 private:
-    Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Memory::Region>, NonnullRefPtr<Timer>, NonnullOwnPtr<KString>);
+    Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Memory::Region>, NonnullRefPtr<Timer>);
 
     BlockResult block_impl(BlockTimeout const&, Blocker&);
 
@@ -1221,7 +1224,7 @@ private:
 
     FPUState m_fpu_state {};
     State m_state { Thread::State::Invalid };
-    SpinlockProtected<NonnullOwnPtr<KString>, LockRank::None> m_name;
+    SpinlockProtected<Name, LockRank::None> m_name;
     u32 m_priority { THREAD_PRIORITY_NORMAL };
 
     State m_stop_state { Thread::State::Invalid };

@@ -22,7 +22,7 @@ ErrorOr<void> Process::do_kill(Process& process, int signal)
         return EPERM;
     if (process.is_kernel_process()) {
         process.name().with([&](auto& process_name) {
-            dbgln("Attempted to send signal {} to kernel process {} ({})", signal, process_name->view(), process.pid());
+            dbgln("Attempted to send signal {} to kernel process {} ({})", signal, process_name.representable_view(), process.pid());
         });
         return EPERM;
     }

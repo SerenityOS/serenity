@@ -219,8 +219,7 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create_user_process(StringView 
     }
 
     auto path_string = TRY(KString::try_create(path));
-    auto name = TRY(KString::try_create(parts.last()));
-    auto [process, first_thread] = TRY(Process::create(move(name), uid, gid, ProcessID(0), false, VirtualFileSystem::the().root_custody(), nullptr, tty));
+    auto [process, first_thread] = TRY(Process::create(parts.last(), uid, gid, ProcessID(0), false, VirtualFileSystem::the().root_custody(), nullptr, tty));
 
     TRY(process->m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
         TRY(fds.try_resize(Process::OpenFileDescriptions::max_open()));
@@ -255,9 +254,9 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create_user_process(StringView 
     return ProcessAndFirstThread { move(process), move(first_thread) };
 }
 
-ErrorOr<Process::ProcessAndFirstThread> Process::create_kernel_process(NonnullOwnPtr<KString> name, void (*entry)(void*), void* entry_data, u32 affinity, RegisterProcess do_register)
+ErrorOr<Process::ProcessAndFirstThread> Process::create_kernel_process(StringView name, void (*entry)(void*), void* entry_data, u32 affinity, RegisterProcess do_register)
 {
-    auto process_and_first_thread = TRY(Process::create(move(name), UserID(0), GroupID(0), ProcessID(0), true));
+    auto process_and_first_thread = TRY(Process::create(name, UserID(0), GroupID(0), ProcessID(0), true));
     auto& process = *process_and_first_thread.process;
     auto& thread = *process_and_first_thread.first_thread;
 
@@ -286,13 +285,22 @@ void Process::unprotect_data()
     });
 }
 
-ErrorOr<Process::ProcessAndFirstThread> Process::create(NonnullOwnPtr<KString> name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, Process* fork_parent)
+ErrorOr<Process::ProcessAndFirstThread> Process::create_with_forked_name(UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, Process* fork_parent)
+{
+    Process::Name name {};
+    Process::current().name().with([&name](auto& process_name) {
+        name.store_characters(process_name.representable_view());
+    });
+    return TRY(Process::create(name.representable_view(), uid, gid, ppid, is_kernel_process, current_directory, executable, tty, fork_parent));
+}
+
+ErrorOr<Process::ProcessAndFirstThread> Process::create(StringView name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, Process* fork_parent)
 {
     auto unveil_tree = UnveilNode { TRY(KString::try_create("/"sv)), UnveilMetadata(TRY(KString::try_create("/"sv))) };
     auto exec_unveil_tree = UnveilNode { TRY(KString::try_create("/"sv)), UnveilMetadata(TRY(KString::try_create("/"sv))) };
     auto credentials = TRY(Credentials::create(uid, gid, uid, gid, uid, gid, {}, fork_parent ? fork_parent->sid() : 0, fork_parent ? fork_parent->pgid() : 0));
 
-    auto process = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Process(move(name), move(credentials), ppid, is_kernel_process, move(current_directory), move(executable), tty, move(unveil_tree), move(exec_unveil_tree), kgettimeofday())));
+    auto process = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Process(name, move(credentials), ppid, is_kernel_process, move(current_directory), move(executable), tty, move(unveil_tree), move(exec_unveil_tree), kgettimeofday())));
 
     OwnPtr<Memory::AddressSpace> new_address_space;
     if (fork_parent) {
@@ -309,9 +317,8 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create(NonnullOwnPtr<KString> n
     return ProcessAndFirstThread { move(process), move(first_thread) };
 }
 
-Process::Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials> credentials, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree, UnixDateTime creation_time)
-    : m_name(move(name))
-    , m_is_kernel_process(is_kernel_process)
+Process::Process(StringView name, NonnullRefPtr<Credentials> credentials, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree, UnixDateTime creation_time)
+    : m_is_kernel_process(is_kernel_process)
     , m_executable(move(executable))
     , m_current_directory(move(current_directory))
     , m_creation_time(creation_time)
@@ -319,6 +326,7 @@ Process::Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials> credent
     , m_exec_unveil_data(move(exec_unveil_tree))
     , m_wait_blocker_set(*this)
 {
+    set_name(name);
     // Ensure that we protect the process data when exiting the constructor.
     with_mutable_protected_data([&](auto& protected_data) {
         protected_data.pid = allocate_pid();
@@ -329,7 +337,7 @@ Process::Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials> credent
 
     if constexpr (PROCESS_DEBUG) {
         this->name().with([&](auto& process_name) {
-            dbgln("Created new process {}({})", process_name->view(), this->pid().value());
+            dbgln("Created new process {}({})", process_name.representable_view(), this->pid().value());
         });
     }
 }
@@ -701,7 +709,7 @@ ErrorOr<void> Process::dump_core()
         return {};
     }
     auto coredump_path = TRY(name().with([&](auto& process_name) {
-        return KString::formatted("{}/{}_{}_{}", coredump_directory_path->view(), process_name->view(), pid().value(), kgettimeofday().seconds_since_epoch());
+        return KString::formatted("{}/{}_{}_{}", coredump_directory_path->view(), process_name.representable_view(), pid().value(), kgettimeofday().seconds_since_epoch());
     }));
     auto coredump = TRY(Coredump::try_create(*this, coredump_path->view()));
     return coredump->write();
@@ -715,7 +723,7 @@ ErrorOr<void> Process::dump_perfcore()
 
     // Try to generate a filename which isn't already used.
     auto base_filename = TRY(name().with([&](auto& process_name) {
-        return KString::formatted("{}_{}", process_name->view(), pid().value());
+        return KString::formatted("{}_{}", process_name.representable_view(), pid().value());
     }));
     auto perfcore_filename = TRY(KString::formatted("{}.profile", base_filename));
     RefPtr<OpenFileDescription> description;
@@ -757,7 +765,7 @@ void Process::finalize()
 
     if (veil_state() == VeilState::Dropped) {
         name().with([&](auto& process_name) {
-            dbgln("\x1b[01;31mProcess '{}' exited with the veil left open\x1b[0m", process_name->view());
+            dbgln("\x1b[01;31mProcess '{}' exited with the veil left open\x1b[0m", process_name.representable_view());
         });
     }
 
@@ -888,7 +896,7 @@ void Process::die()
                 if constexpr (PROCESS_DEBUG) {
                     process.name().with([&](auto& process_name) {
                         name().with([&](auto& name) {
-                            dbgln("Process {} ({}) is attached by {} ({}) which will exit", process_name->view(), process.pid(), name->view(), pid());
+                            dbgln("Process {} ({}) is attached by {} ({}) which will exit", process_name.representable_view(), process.pid(), name.representable_view(), pid());
                         });
                     });
                 }
@@ -896,7 +904,7 @@ void Process::die()
                 auto err = process.send_signal(SIGSTOP, this);
                 if (err.is_error()) {
                     process.name().with([&](auto& process_name) {
-                        dbgln("Failed to send the SIGSTOP signal to {} ({})", process_name->view(), process.pid());
+                        dbgln("Failed to send the SIGSTOP signal to {} ({})", process_name.representable_view(), process.pid());
                     });
                 }
             }
@@ -943,14 +951,14 @@ ErrorOr<void> Process::send_signal(u8 signal, Process* sender)
     return ESRCH;
 }
 
-ErrorOr<NonnullRefPtr<Thread>> Process::create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, NonnullOwnPtr<KString> name, u32 affinity, bool joinable)
+ErrorOr<NonnullRefPtr<Thread>> Process::create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, StringView name, u32 affinity, bool joinable)
 {
     VERIFY((priority >= THREAD_PRIORITY_MIN) && (priority <= THREAD_PRIORITY_MAX));
 
     // FIXME: Do something with guard pages?
 
     auto thread = TRY(Thread::create(*this));
-    thread->set_name(move(name));
+    thread->set_name(name);
     thread->set_affinity(affinity);
     thread->set_priority(priority);
     if (!joinable)
@@ -1138,15 +1146,15 @@ ErrorOr<NonnullRefPtr<Custody>> Process::custody_for_dirfd(int dirfd)
     return *description->custody();
 }
 
-SpinlockProtected<NonnullOwnPtr<KString>, LockRank::None> const& Process::name() const
+SpinlockProtected<Process::Name, LockRank::None> const& Process::name() const
 {
     return m_name;
 }
 
-void Process::set_name(NonnullOwnPtr<KString> name)
+void Process::set_name(StringView name)
 {
-    m_name.with([&](auto& this_name) {
-        this_name = move(name);
+    m_name.with([name](auto& process_name) {
+        process_name.store_characters(name);
     });
 }
 

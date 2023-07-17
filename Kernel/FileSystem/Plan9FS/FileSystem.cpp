@@ -350,10 +350,7 @@ void Plan9FS::ensure_thread()
 {
     SpinlockLocker lock(m_thread_lock);
     if (!m_thread_running.exchange(true, AK::MemoryOrder::memory_order_acq_rel)) {
-        auto process_name = KString::try_create("Plan9FS"sv);
-        if (process_name.is_error())
-            TODO();
-        auto [_, thread] = Process::create_kernel_process(process_name.release_value(), [&]() {
+        auto [_, thread] = Process::create_kernel_process("Plan9FS"sv, [&]() {
             thread_main();
             m_thread_running.store(false, AK::MemoryOrder::memory_order_release);
             Process::current().sys$exit(0);

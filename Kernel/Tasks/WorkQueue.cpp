@@ -24,10 +24,7 @@ UNMAP_AFTER_INIT void WorkQueue::initialize()
 
 UNMAP_AFTER_INIT WorkQueue::WorkQueue(StringView name)
 {
-    auto name_kstring = KString::try_create(name);
-    if (name_kstring.is_error())
-        TODO();
-    auto [_, thread] = Process::create_kernel_process(name_kstring.release_value(), [this] {
+    auto [_, thread] = Process::create_kernel_process(name, [this] {
         while (!Process::current().is_dying()) {
             WorkItem* item;
             bool have_more;
