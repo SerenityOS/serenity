@@ -68,6 +68,7 @@ the error.
 * `EPERM`: The veil is locked, or an attempt to add more permissions for an
   already unveiled path was rejected.
 * `EINVAL`: `path` is not an absolute path, or `permissions` are malformed.
+* `E2BIG`: `permissions` string is longer than 5 characters.
 
 All of the usual path resolution errors may also occur.
 

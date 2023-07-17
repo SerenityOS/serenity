@@ -9,6 +9,7 @@
 #include <Kernel/API/Ioctl.h>
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/API/POSIX/unistd.h>
+#include <Kernel/API/Syscall.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/MountFile.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
@@ -16,6 +17,7 @@
 #include <Kernel/Library/StdLib.h>
 #include <Kernel/Memory/PrivateInodeVMObject.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 
@@ -51,8 +53,10 @@ ErrorOr<void> MountFile::ioctl(OpenFileDescription&, unsigned request, Userspace
             auto mount_specific_data = TRY(copy_typed_from_user(user_mount_specific_data));
             if ((mount_specific_data.value_type == MountSpecificFlag::ValueType::SignedInteger || mount_specific_data.value_type == MountSpecificFlag::ValueType::UnsignedInteger) && mount_specific_data.value_length != 8)
                 return EDOM;
-            if (mount_specific_data.key_string_length > MOUNT_SPECIFIC_FLAG_KEY_STRING_MAX_LENGTH)
-                return ENAMETOOLONG;
+
+            Syscall::StringArgument user_key_string { reinterpret_cast<const char*>(mount_specific_data.key_string_addr), static_cast<size_t>(mount_specific_data.key_string_length) };
+            auto key_string = TRY(Process::get_syscall_name_string_fixed_buffer<MOUNT_SPECIFIC_FLAG_KEY_STRING_MAX_LENGTH>(user_key_string));
+
             if (mount_specific_data.value_type != MountSpecificFlag::ValueType::Boolean && mount_specific_data.value_length == 0)
                 return EINVAL;
             if (mount_specific_data.value_type != MountSpecificFlag::ValueType::Boolean && mount_specific_data.value_addr == nullptr)
@@ -71,7 +75,6 @@ ErrorOr<void> MountFile::ioctl(OpenFileDescription&, unsigned request, Userspace
             // NOTE: We enforce that the passed argument will be either i64 or u64, so it will always be
             // exactly 8 bytes. We do that to simplify handling of integers as well as to ensure ABI correctness
             // in all possible cases.
-            auto key_string = TRY(try_copy_kstring_from_user(reinterpret_cast<FlatPtr>(mount_specific_data.key_string_addr), static_cast<size_t>(mount_specific_data.key_string_length)));
             switch (mount_specific_data.value_type) {
             // NOTE: This is actually considered as simply boolean flag.
             case MountSpecificFlag::ValueType::Boolean: {
@@ -81,27 +84,27 @@ ErrorOr<void> MountFile::ioctl(OpenFileDescription&, unsigned request, Userspace
                 if (value_integer != 0 && value_integer != 1)
                     return EDOM;
                 bool value = (value_integer == 1) ? true : false;
-                TRY(m_file_system_initializer.handle_mount_boolean_flag(our_mount_specific_data->bytes(), key_string->view(), value));
+                TRY(m_file_system_initializer.handle_mount_boolean_flag(our_mount_specific_data->bytes(), key_string.representable_view(), value));
                 return {};
             }
             case MountSpecificFlag::ValueType::UnsignedInteger: {
                 VERIFY(m_file_system_initializer.handle_mount_unsigned_integer_flag);
                 Userspace<u64*> user_value_addr(reinterpret_cast<FlatPtr>(mount_specific_data.value_addr));
                 auto value_integer = TRY(copy_typed_from_user(user_value_addr));
-                TRY(m_file_system_initializer.handle_mount_unsigned_integer_flag(our_mount_specific_data->bytes(), key_string->view(), value_integer));
+                TRY(m_file_system_initializer.handle_mount_unsigned_integer_flag(our_mount_specific_data->bytes(), key_string.representable_view(), value_integer));
                 return {};
             }
             case MountSpecificFlag::ValueType::SignedInteger: {
                 VERIFY(m_file_system_initializer.handle_mount_signed_integer_flag);
                 Userspace<i64*> user_value_addr(reinterpret_cast<FlatPtr>(mount_specific_data.value_addr));
                 auto value_integer = TRY(copy_typed_from_user(user_value_addr));
-                TRY(m_file_system_initializer.handle_mount_signed_integer_flag(our_mount_specific_data->bytes(), key_string->view(), value_integer));
+                TRY(m_file_system_initializer.handle_mount_signed_integer_flag(our_mount_specific_data->bytes(), key_string.representable_view(), value_integer));
                 return {};
             }
             case MountSpecificFlag::ValueType::ASCIIString: {
                 VERIFY(m_file_system_initializer.handle_mount_ascii_string_flag);
                 auto value_string = TRY(try_copy_kstring_from_user(reinterpret_cast<FlatPtr>(mount_specific_data.value_addr), static_cast<size_t>(mount_specific_data.value_length)));
-                TRY(m_file_system_initializer.handle_mount_ascii_string_flag(our_mount_specific_data->bytes(), key_string->view(), value_string->view()));
+                TRY(m_file_system_initializer.handle_mount_ascii_string_flag(our_mount_specific_data->bytes(), key_string.representable_view(), value_string->view()));
                 return {};
             }
             default:

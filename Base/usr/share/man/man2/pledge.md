@@ -65,6 +65,7 @@ Promises marked with an asterisk (\*) are SerenityOS specific extensions not sup
 * `EFAULT`: `promises` and/or `execpromises` are not null and not in readable memory.
 * `EINVAL`: One or more invalid promises were specified.
 * `EPERM`: An attempt to increase capabilities was rejected.
+* `E2BIG`: `promises` string or `execpromises `string are longer than all known promises strings together.
 
 ## History
 

@@ -15,9 +15,15 @@ ErrorOr<FlatPtr> Process::sys$gethostname(Userspace<char*> buffer, size_t size)
     if (size > NumericLimits<ssize_t>::max())
         return EINVAL;
     return hostname().with_shared([&](auto const& name) -> ErrorOr<FlatPtr> {
-        if (size < (name->length() + 1))
+        // NOTE: To be able to copy a null-terminated string, we need at most
+        // 65 characters to store and copy and not 64 here, to store the whole
+        // hostname string + null terminator.
+        FixedStringBuffer<UTSNAME_ENTRY_LEN> current_hostname {};
+        current_hostname.store_characters(name.representable_view());
+        auto name_view = current_hostname.representable_view();
+        if (size < (name_view.length() + 1))
             return ENAMETOOLONG;
-        TRY(copy_to_user(buffer, name->characters(), name->length() + 1));
+        TRY(copy_to_user(buffer, name_view.characters_without_null_termination(), name_view.length() + 1));
         return 0;
     });
 }
@@ -30,11 +36,9 @@ ErrorOr<FlatPtr> Process::sys$sethostname(Userspace<char const*> buffer, size_t 
     auto credentials = this->credentials();
     if (!credentials->is_superuser())
         return EPERM;
-    if (length > 64)
-        return ENAMETOOLONG;
-    auto new_name = TRY(try_copy_kstring_from_user(buffer, length));
+    auto new_hostname = TRY(get_syscall_name_string_fixed_buffer<UTSNAME_ENTRY_LEN - 1>(buffer, length));
     hostname().with_exclusive([&](auto& name) {
-        name = move(new_name);
+        name.store_characters(new_hostname.representable_view());
     });
     return 0;
 }
