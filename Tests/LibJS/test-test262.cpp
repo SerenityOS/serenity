@@ -126,7 +126,8 @@ static ErrorOr<HashMap<size_t, TestResult>> run_test_files(Span<DeprecatedString
         }
         auto& runner_process = runner_process_or_error.value();
 
-        if (!runner_process->write_lines(files.slice(test_index))) {
+        if (auto maybe_error = runner_process->write_lines(files.slice(test_index)); maybe_error.is_error()) {
+            warnln("Runner process failed writing writing file input: {}", maybe_error.error());
             fail_all_after();
             return results;
         }
