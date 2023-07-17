@@ -156,7 +156,6 @@ struct PNGLoadingContext {
     enum State {
         NotDecoded = 0,
         Error,
-        HeaderDecoded,
         IHDRDecoded,
         ImageDataChunkDecoded,
         ChunksDecoded,
@@ -589,9 +588,6 @@ NEVER_INLINE FLATTEN static ErrorOr<void> unfilter(PNGLoadingContext& context)
 
 static bool decode_png_header(PNGLoadingContext& context)
 {
-    if (context.state >= PNGLoadingContext::HeaderDecoded)
-        return true;
-
     if (!context.data || context.data_size < sizeof(PNG::header)) {
         dbgln_if(PNG_DEBUG, "Missing PNG header");
         context.state = PNGLoadingContext::State::Error;
@@ -605,7 +601,6 @@ static bool decode_png_header(PNGLoadingContext& context)
     }
 
     context.data_current_ptr = context.data + sizeof(PNG::header);
-    context.state = PNGLoadingContext::HeaderDecoded;
     return true;
 }
 
