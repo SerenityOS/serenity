@@ -230,13 +230,13 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
         auto const& computed_values = cell.box->computed_values();
 
         if (computed_values.width().is_percentage()) {
-            m_columns[cell.column_index].has_percentage_width = true;
-            m_columns[cell.column_index].percentage_width = max(m_columns[cell.column_index].percentage_width, computed_values.width().percentage().value());
+            m_columns[cell.column_index].has_intrinsic_percentage = true;
+            m_columns[cell.column_index].intrinsic_percentage = max(m_columns[cell.column_index].intrinsic_percentage, computed_values.width().percentage().value());
         }
 
         if (computed_values.height().is_percentage()) {
-            m_rows[cell.row_index].has_percentage_height = true;
-            m_rows[cell.row_index].percentage_height = max(m_rows[cell.row_index].percentage_height, computed_values.height().percentage().value());
+            m_rows[cell.row_index].has_intrinsic_percentage = true;
+            m_rows[cell.row_index].intrinsic_percentage = max(m_rows[cell.row_index].intrinsic_percentage, computed_values.height().percentage().value());
         }
     }
 
@@ -633,7 +633,7 @@ bool TableFormattingContext::distribute_excess_width_by_intrinsic_percentage(CSS
     for (auto const& column : m_columns) {
         if (column_filter(column)) {
             found_matching_columns = true;
-            total_percentage_width += column.percentage_width;
+            total_percentage_width += column.intrinsic_percentage;
         }
     }
     if (!found_matching_columns) {
@@ -641,7 +641,7 @@ bool TableFormattingContext::distribute_excess_width_by_intrinsic_percentage(CSS
     }
     for (auto& column : m_columns) {
         if (column_filter(column)) {
-            column.used_width += excess_width * column.percentage_width / total_percentage_width;
+            column.used_width += excess_width * column.intrinsic_percentage / total_percentage_width;
         }
     }
     return true;
@@ -677,8 +677,8 @@ void TableFormattingContext::distribute_width_to_columns()
     //    - all other columns are assigned their min-content width.
     for (size_t i = 0; i < m_columns.size(); ++i) {
         auto& column = m_columns[i];
-        if (column.has_percentage_width) {
-            candidate_widths[i] = max(column.min_size, column.percentage_width / 100 * available_width);
+        if (column.has_intrinsic_percentage) {
+            candidate_widths[i] = max(column.min_size, column.intrinsic_percentage / 100 * available_width);
         }
     }
 
@@ -718,7 +718,7 @@ void TableFormattingContext::distribute_width_to_columns()
     //    - all other columns are assigned their max-content width.
     for (size_t i = 0; i < m_columns.size(); ++i) {
         auto& column = m_columns[i];
-        if (!column.has_percentage_width) {
+        if (!column.has_intrinsic_percentage) {
             candidate_widths[i] = column.max_size;
         }
     }
@@ -753,7 +753,7 @@ void TableFormattingContext::distribute_excess_width_to_columns(CSSPixels availa
     if (distribute_excess_width_proportionally_to_max_width(
             excess_width,
             [](auto const& column) {
-                return !column.is_constrained && column.has_originating_cells && column.percentage_width == 0 && column.max_size > 0;
+                return !column.is_constrained && column.has_originating_cells && column.intrinsic_percentage == 0 && column.max_size > 0;
             })) {
         excess_width = available_width - compute_columns_total_used_width();
     }
@@ -765,7 +765,7 @@ void TableFormattingContext::distribute_excess_width_to_columns(CSSPixels availa
     //    columns allowed to grow by this rule are increased by equal amounts so the total increase adds to the excess width.
     if (distribute_excess_width_equally(excess_width,
             [](auto const& column) {
-                return !column.is_constrained && column.has_originating_cells && column.percentage_width == 0;
+                return !column.is_constrained && column.has_originating_cells && column.intrinsic_percentage == 0;
             })) {
         excess_width = available_width - compute_columns_total_used_width();
     }
@@ -778,7 +778,7 @@ void TableFormattingContext::distribute_excess_width_to_columns(CSSPixels availa
     if (distribute_excess_width_proportionally_to_max_width(
             excess_width,
             [](auto const& column) {
-                return column.is_constrained && column.percentage_width == 0 && column.max_size > 0;
+                return column.is_constrained && column.intrinsic_percentage == 0 && column.max_size > 0;
             })) {
         excess_width = available_width - compute_columns_total_used_width();
     }
@@ -789,7 +789,7 @@ void TableFormattingContext::distribute_excess_width_to_columns(CSSPixels availa
     //    which, due to other rules, must have originating cells), the distributed widths of the columns allowed to grow by this rule are
     //    increased in proportion to intrinsic percentage width so the total increase adds to the excess width.
     if (distribute_excess_width_by_intrinsic_percentage(excess_width, [](auto const& column) {
-            return column.percentage_width > 0;
+            return column.intrinsic_percentage > 0;
         })) {
         excess_width = available_width - compute_columns_total_used_width();
     }

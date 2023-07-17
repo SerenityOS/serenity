@@ -77,8 +77,8 @@ private:
         CSSPixels min_size { 0 };
         CSSPixels max_size { 0 };
         CSSPixels used_width { 0 };
-        bool has_percentage_width { false };
-        double percentage_width { 0 };
+        bool has_intrinsic_percentage { false };
+        double intrinsic_percentage { 0 };
         // Store whether the column is constrained: https://www.w3.org/TR/css-tables-3/#constrainedness
         bool is_constrained { false };
         // Store whether the column has originating cells, defined in https://www.w3.org/TR/css-tables-3/#terminology.
@@ -93,8 +93,8 @@ private:
         CSSPixels baseline { 0 };
         CSSPixels min_size { 0 };
         CSSPixels max_size { 0 };
-        bool has_percentage_height { false };
-        double percentage_height { 0 };
+        bool has_intrinsic_percentage { false };
+        double intrinsic_percentage { 0 };
         // Store whether the row is constrained: https://www.w3.org/TR/css-tables-3/#constrainedness
         bool is_constrained { false };
     };
