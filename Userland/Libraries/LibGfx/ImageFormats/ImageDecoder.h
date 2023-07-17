@@ -37,8 +37,6 @@ public:
 
     virtual IntSize size() = 0;
 
-    virtual ErrorOr<void> initialize() { return {}; }
-
     virtual bool is_animated() = 0;
 
     virtual size_t loop_count() = 0;

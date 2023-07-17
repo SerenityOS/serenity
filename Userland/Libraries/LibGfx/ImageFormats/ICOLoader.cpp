@@ -149,7 +149,6 @@ ErrorOr<void> ICOImageDecoderPlugin::load_ico_bitmap(ICOLoadingContext& context,
     ICOImageDescriptor& desc = context.images[real_index];
     if (PNGImageDecoderPlugin::sniff({ context.data + desc.offset, desc.size })) {
         auto png_decoder = TRY(PNGImageDecoderPlugin::create({ context.data + desc.offset, desc.size }));
-        TRY(png_decoder->initialize());
         auto decoded_png_frame = TRY(png_decoder->frame(0));
         if (!decoded_png_frame.image) {
             dbgln_if(ICO_DEBUG, "load_ico_bitmap: failed to load PNG encoded image index: {}", real_index);

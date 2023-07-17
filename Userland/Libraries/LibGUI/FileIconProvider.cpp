@@ -212,9 +212,9 @@ Icon FileIconProvider::icon_for_executable(DeprecatedString const& path)
         } else {
             // FIXME: Use the ImageDecoder service.
             if (Gfx::PNGImageDecoderPlugin::sniff({ section->raw_data(), section->size() })) {
-                auto png_decoder = Gfx::PNGImageDecoderPlugin::create({ section->raw_data(), section->size() }).release_value_but_fixme_should_propagate_errors();
-                if (!png_decoder->initialize().is_error()) {
-                    auto frame_or_error = png_decoder->frame(0);
+                auto png_decoder = Gfx::PNGImageDecoderPlugin::create({ section->raw_data(), section->size() });
+                if (!png_decoder.is_error()) {
+                    auto frame_or_error = png_decoder.value()->frame(0);
                     if (!frame_or_error.is_error()) {
                         bitmap = frame_or_error.value().image;
                     }
