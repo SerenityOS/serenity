@@ -138,8 +138,7 @@ static ErrorOr<void> load_ico_directory(ICOLoadingContext& context)
 
 ErrorOr<void> ICOImageDecoderPlugin::load_ico_bitmap(ICOLoadingContext& context, Optional<size_t> index)
 {
-    if (context.state < ICOLoadingContext::State::DirectoryDecoded)
-        TRY(load_ico_directory(context));
+    VERIFY(context.state >= ICOLoadingContext::State::DirectoryDecoded);
 
     size_t real_index = context.largest_index;
     if (index.has_value())
@@ -186,7 +185,9 @@ bool ICOImageDecoderPlugin::sniff(ReadonlyBytes data)
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> ICOImageDecoderPlugin::create(ReadonlyBytes data)
 {
-    return adopt_nonnull_own_or_enomem(new (nothrow) ICOImageDecoderPlugin(data.data(), data.size()));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) ICOImageDecoderPlugin(data.data(), data.size())));
+    TRY(load_ico_directory(*plugin->m_context));
+    return plugin;
 }
 
 ICOImageDecoderPlugin::ICOImageDecoderPlugin(u8 const* data, size_t size)
@@ -200,26 +201,7 @@ ICOImageDecoderPlugin::~ICOImageDecoderPlugin() = default;
 
 IntSize ICOImageDecoderPlugin::size()
 {
-    if (m_context->state == ICOLoadingContext::State::Error) {
-        return {};
-    }
-
-    if (m_context->state < ICOLoadingContext::State::DirectoryDecoded) {
-        if (load_ico_directory(*m_context).is_error()) {
-            m_context->state = ICOLoadingContext::State::Error;
-            return {};
-        }
-        m_context->state = ICOLoadingContext::State::DirectoryDecoded;
-    }
-
     return { m_context->images[m_context->largest_index].width, m_context->images[m_context->largest_index].height };
-}
-
-ErrorOr<void> ICOImageDecoderPlugin::initialize()
-{
-    FixedMemoryStream stream { { m_context->data, m_context->data_size } };
-    TRY(decode_ico_header(stream));
-    return {};
 }
 
 bool ICOImageDecoderPlugin::is_animated()
