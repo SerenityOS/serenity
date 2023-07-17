@@ -1566,6 +1566,38 @@ CSSPixels FormattingContext::containing_block_height_for(Box const& box) const
     VERIFY_NOT_REACHED();
 }
 
+AvailableSize FormattingContext::containing_block_width_as_available_size(Box const& box) const
+{
+    auto const& containing_block_state = m_state.get(*box.containing_block());
+    auto const& box_state = m_state.get(box);
+
+    switch (box_state.width_constraint) {
+    case SizeConstraint::MinContent:
+        return AvailableSize::make_min_content();
+    case SizeConstraint::MaxContent:
+        return AvailableSize::make_max_content();
+    case SizeConstraint::None:
+        return AvailableSize::make_definite(containing_block_state.content_width());
+    }
+    VERIFY_NOT_REACHED();
+}
+
+AvailableSize FormattingContext::containing_block_height_as_available_size(Box const& box) const
+{
+    auto const& containing_block_state = m_state.get(*box.containing_block());
+    auto const& box_state = m_state.get(box);
+
+    switch (box_state.height_constraint) {
+    case SizeConstraint::MinContent:
+        return AvailableSize::make_min_content();
+    case SizeConstraint::MaxContent:
+        return AvailableSize::make_max_content();
+    case SizeConstraint::None:
+        return AvailableSize::make_definite(containing_block_state.content_height());
+    }
+    VERIFY_NOT_REACHED();
+}
+
 // https://drafts.csswg.org/css-sizing-3/#stretch-fit-size
 CSSPixels FormattingContext::calculate_stretch_fit_width(Box const& box, AvailableSize const& available_width) const
 {
