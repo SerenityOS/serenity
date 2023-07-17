@@ -17,4 +17,10 @@ struct FileInTorrent {
     i64 const size;
 };
 
+struct LocalFile {
+    DeprecatedString const path_in_torrent;
+    DeprecatedString const path;
+    i64 const size;
+};
+
 }

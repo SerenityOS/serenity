@@ -15,6 +15,7 @@
 #include "Peer.h"
 #include "PeerSession.h"
 #include "Torrent.h"
+#include "TorrentDataFileMap.h"
 #include <AK/HashMap.h>
 #include <LibCore/Object.h>
 
@@ -42,6 +43,7 @@ private:
 
     HashMap<InfoHash, NonnullRefPtr<Announcer>> m_announcers;
     HashMap<InfoHash, NonnullRefPtr<Torrent>> m_torrents;
+    HashMap<InfoHash, NonnullOwnPtr<TorrentDataFileMap>> m_torrent_data_file_maps;
 
     HashMap<ConnectionId, NonnullRefPtr<Peer>> m_connecting_peers;
     HashMap<ConnectionId, NonnullRefPtr<PeerSession>> m_all_sessions;

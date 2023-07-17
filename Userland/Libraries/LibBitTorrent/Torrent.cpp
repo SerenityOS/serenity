@@ -25,8 +25,9 @@ DeprecatedString state_to_string(TorrentState state)
     }
 }
 
-Torrent::Torrent(DeprecatedString display_name,DeprecatedString data_path, InfoHash info_hash, PeerId local_peer_id, u64 total_length, u64 nominal_piece_length)
+Torrent::Torrent(DeprecatedString display_name, Vector<LocalFile> local_files, DeprecatedString data_path, InfoHash info_hash, PeerId local_peer_id, u64 total_length, u64 nominal_piece_length)
     : display_name(display_name)
+    , local_files(local_files)
     , data_path(move(data_path))
     , info_hash(info_hash)
     , local_peer_id(local_peer_id)

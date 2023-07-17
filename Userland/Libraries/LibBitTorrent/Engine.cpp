@@ -24,10 +24,16 @@ void Engine::add_torrent(NonnullOwnPtr<MetaInfo> meta_info, DeprecatedString dat
         }
 
         auto root_data_path = DeprecatedString::formatted("{}{}", data_path, optional_root_dir);
+        auto local_files = Vector<LocalFile>();
+        for (auto file_in_torrent : meta_info->files()) {
+            auto local_path = DeprecatedString::formatted("{}/{}", root_data_path, file_in_torrent.path);
+            local_files.append(LocalFile(file_in_torrent.path, local_path, file_in_torrent.size));
+        }
 
         auto info_hash = InfoHash({ meta_info->info_hash() });
         NonnullRefPtr<Torrent> const& torrent = make_ref_counted<Torrent>(
             meta_info->root_dir_name().value_or(meta_info->files()[0].path),
+            move(local_files),
             root_data_path,
             info_hash,
             PeerId::random(),
@@ -48,7 +54,41 @@ void Engine::start_torrent(InfoHash info_hash)
     m_event_loop->deferred_invoke([this, info_hash]() {
         NonnullRefPtr<Torrent> torrent = *m_torrents.get(info_hash).value();
 
+        // FIXME better handling of (non)-existing files at torrent startup
+        for (auto local_file : torrent->local_files) {
+            auto err = create_file_with_subdirs(local_file.path);
+            if (err.is_error()) {
+                dbgln("error creating file: {}", err.error());
+                torrent->state = TorrentState::ERROR;
+                return;
+            }
+            auto err_or_file = Core::File::open(local_file.path, Core::File::OpenMode::ReadWrite);
+            if (err_or_file.is_error()) {
+                dbgln("error opening file: {}", err_or_file.error());
+                torrent->state = TorrentState::ERROR;
+                return;
+            }
+            auto file = err_or_file.release_value();
+
+            // FIXME: Fallocating or truncating is very slow on ext2, we should give better feedback to the user.
+            auto maybe_err = Core::System::posix_fallocate(file->fd(), 0, local_file.size);
+            if (maybe_err.is_error()) {
+                dbgln("error posix_fallocating file: {}", maybe_err.error());
+                torrent->state = TorrentState::ERROR;
+                return;
+            }
+            file->close();
+        }
+
         auto do_start_torrent = [this, torrent] {
+            auto err_or_data_file_map = TorrentDataFileMap::try_create(torrent->nominal_piece_length, torrent->local_files);
+            if (err_or_data_file_map.is_error()) {
+                dbgln("error creating TorrentDataFileMap: {}", err_or_data_file_map.error());
+                torrent->state = TorrentState::ERROR;
+                return;
+            }
+            m_torrent_data_file_maps.set(torrent->info_hash, err_or_data_file_map.release_value());
+
             if (torrent->local_bitfield.progress() < 100) {
                 for (u64 i = 0; i < torrent->piece_count; i++) {
                     if (!torrent->local_bitfield.get(i))
@@ -96,6 +136,7 @@ void Engine::stop_torrent(InfoHash info_hash)
         for (auto& session : m_torrents.get(info_hash).value()->peer_sessions) {
             m_connection_manager->close_connection(session->connection_id, "Stopping torrent");
         }
+        m_torrent_data_file_maps.remove(info_hash);
     });
 }
 
@@ -277,9 +318,11 @@ void Engine::connect_more_peers(NonnullRefPtr<Torrent> torrent)
     }
 }
 
-ErrorOr<void> Engine::piece_downloaded(u64 index, ReadonlyBytes, NonnullRefPtr<PeerSession> peer)
+ErrorOr<void> Engine::piece_downloaded(u64 index, ReadonlyBytes data, NonnullRefPtr<PeerSession> peer)
 {
     auto torrent = peer->peer->torrent;
+    auto const& data_file_map = m_torrent_data_file_maps.get(torrent->info_hash).value();
+    TRY(data_file_map->write_piece(index, data));
 
     torrent->local_bitfield.set(index, true);
     auto& havers = torrent->missing_pieces.get(index).value()->havers;
@@ -562,8 +605,14 @@ ErrorOr<void> Engine::handle_piece(NonnullOwnPtr<PieceMessage> piece_message, No
     return {};
 }
 
-ErrorOr<void> Engine::handle_request(NonnullOwnPtr<RequestMessage>, NonnullRefPtr<PeerSession>)
+ErrorOr<void> Engine::handle_request(NonnullOwnPtr<RequestMessage> request, NonnullRefPtr<PeerSession> peer)
 {
+    // TODO: validate request parameters, disconnect peer if they're invalid.
+    auto torrent = peer->peer->torrent;
+    auto piece = TRY(ByteBuffer::create_uninitialized(torrent->piece_length(request->piece_index)));
+    TRY(m_torrent_data_file_maps.get(torrent->info_hash).value()->read_piece(request->piece_index, piece));
+
+    m_connection_manager->send_message(peer->connection_id, make<PieceMessage>(request->piece_index, request->piece_offset, TRY(piece.slice(request->piece_offset, request->block_length))));
     return {};
 }
 

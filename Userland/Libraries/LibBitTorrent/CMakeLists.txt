@@ -4,6 +4,7 @@ set(SOURCES
     Bencode/BEncoder.cpp
     BitField.cpp
     Engine.cpp
+    Files.cpp
     Message.cpp
     MetaInfo.cpp
     Net/Connection.cpp
@@ -12,6 +13,7 @@ set(SOURCES
     PeerSession.cpp
     PieceHeap.cpp
     Torrent.cpp
+    TorrentDataFileMap.cpp
 )
 
 serenity_lib(LibBitTorrent bittorrent)
