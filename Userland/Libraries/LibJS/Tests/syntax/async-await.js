@@ -200,3 +200,15 @@ describe("await cannot be used in class static init blocks", () => {
         expect("class A{ static { async function* await() {} } }").not.toEval();
     });
 });
+
+test("async returning a thenable", () => {
+    let isCalled = false;
+    const f = async () => ({
+        then() {
+            isCalled = true;
+        },
+    });
+    f();
+    runQueuedPromiseJobs();
+    expect(isCalled).toBe(true);
+});
