@@ -129,6 +129,12 @@ public:
 
 private:
     virtual void perform(PassPipelineExecutable&) override;
+    virtual void generate_cfg(PassPipelineExecutable& executable)
+    {
+        PassManager pass_manager;
+        pass_manager.add<GenerateCFG>();
+        pass_manager.perform(executable);
+    }
 };
 
 }

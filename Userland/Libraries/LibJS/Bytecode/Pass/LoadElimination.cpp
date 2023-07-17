@@ -11,7 +11,7 @@
 
 namespace JS::Bytecode::Passes {
 
-static NonnullOwnPtr<BasicBlock> eliminate_loads(BasicBlock const& block, size_t number_of_registers)
+static NonnullOwnPtr<BasicBlock> eliminate_loads(BasicBlock const& block, size_t number_of_registers, HashMap<u32, Register>& register_rerouting_table)
 {
     auto array_ranges = Bitmap::create(number_of_registers, false).release_value_but_fixme_should_propagate_errors();
 
@@ -29,8 +29,7 @@ static NonnullOwnPtr<BasicBlock> eliminate_loads(BasicBlock const& block, size_t
 
     auto new_block = BasicBlock::create(block.name(), block.size());
     HashMap<size_t, Register> identifier_table {};
-    HashMap<u32, Register> register_rerouting_table {};
-
+    
     for (auto it = InstructionStreamIterator(block.instruction_stream()); !it.at_end();) {
         using enum Instruction::Type;
 
@@ -181,16 +180,18 @@ static NonnullOwnPtr<BasicBlock> eliminate_loads(BasicBlock const& block, size_t
 void EliminateLoads::perform(PassPipelineExecutable& executable)
 {
     started();
+    generate_cfg(executable);
 
-    // FIXME: If we walk the CFG instead of the block list, we might be able to
-    //        save some work between blocks
-    for (auto it = executable.executable.basic_blocks.begin(); it != executable.executable.basic_blocks.end(); ++it) {
-        auto const& old_block = *it;
-        auto new_block = eliminate_loads(*old_block, executable.executable.number_of_registers);
+    static HashMap<u32, Register> register_rerouting_table {};
+    auto cfg = executable.cfg.release_value();
+
+    for (auto& entry : cfg) {
+        auto const& old_block = entry.key;
+        auto new_block = eliminate_loads(*old_block, executable.executable.number_of_registers, register_rerouting_table);
 
         // We will replace the old block, with a new one, so we need to replace all references,
         // to the old one with the new one
-        for (auto& block : executable.executable.basic_blocks) {
+        for (auto& block : entry.value) {
             InstructionStreamIterator it { block->instruction_stream() };
             while (!it.at_end()) {
                 auto& instruction = *it;
@@ -199,7 +200,7 @@ void EliminateLoads::perform(PassPipelineExecutable& executable)
             }
         }
 
-        executable.executable.basic_blocks[it.index()] = move(new_block);
+        entry.key = move(new_block);
     }
 
     finished();
