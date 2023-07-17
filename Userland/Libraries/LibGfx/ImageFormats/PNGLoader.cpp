@@ -630,10 +630,8 @@ static bool decode_png_ihdr(PNGLoadingContext& context)
 
         context.data_current_ptr = streamer.current_data_ptr();
 
-        if (context.width && context.height) {
-            context.state = PNGLoadingContext::State::IHDRDecoded;
+        if (context.state == PNGLoadingContext::State::IHDRDecoded)
             return true;
-        }
     }
 
     return false;
@@ -1018,6 +1016,9 @@ static ErrorOr<void> process_IHDR(ReadonlyBytes data, PNGLoadingContext& context
     default:
         return Error::from_string_literal("Unsupported color type");
     }
+
+    context.state = PNGLoadingContext::IHDRDecoded;
+
     return {};
 }
 
