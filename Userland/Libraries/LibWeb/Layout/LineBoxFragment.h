@@ -17,13 +17,7 @@ class LineBoxFragment {
     friend class LineBox;
 
 public:
-    enum class Type {
-        Normal,
-        Leading,
-        Trailing,
-    };
-
-    LineBoxFragment(Node const& layout_node, int start, int length, CSSPixelPoint offset, CSSPixelSize size, CSSPixels border_box_top, CSSPixels border_box_bottom, Type type)
+    LineBoxFragment(Node const& layout_node, int start, int length, CSSPixelPoint offset, CSSPixelSize size, CSSPixels border_box_top, CSSPixels border_box_bottom)
         : m_layout_node(layout_node)
         , m_start(start)
         , m_length(length)
@@ -31,7 +25,6 @@ public:
         , m_size(size)
         , m_border_box_top(border_box_top)
         , m_border_box_bottom(border_box_bottom)
-        , m_type(type)
     {
     }
 
@@ -39,7 +32,6 @@ public:
     int start() const { return m_start; }
     int length() const { return m_length; }
     CSSPixelRect const absolute_rect() const;
-    Type type() const { return m_type; }
 
     CSSPixelPoint offset() const
     {
@@ -88,7 +80,6 @@ private:
     CSSPixels m_border_box_top { 0 };
     CSSPixels m_border_box_bottom { 0 };
     CSSPixels m_baseline { 0 };
-    Type m_type { Type::Normal };
 };
 
 }
