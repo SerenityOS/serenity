@@ -43,7 +43,10 @@ static int memfd_create(char const* name, unsigned int flags)
 #endif
 
 #if defined(AK_OS_MACOS)
+#    include <crt_externs.h>
 #    include <sys/mman.h>
+#else
+extern char** environ;
 #endif
 
 #define HANDLE_SYSCALL_RETURN_VALUE(syscall_name, rc, success_value) \
@@ -1712,6 +1715,15 @@ ErrorOr<String> resolve_executable_from_environment(StringView filename, int fla
     }
 
     return Error::from_errno(ENOENT);
+}
+
+char** environment()
+{
+#if defined(AK_OS_MACOS)
+    return *_NSGetEnviron();
+#else
+    return environ;
+#endif
 }
 
 }
