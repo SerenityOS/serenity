@@ -225,26 +225,6 @@ ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> TGAImageDecoderPlugin::create(Readonl
     return plugin;
 }
 
-bool TGAImageDecoderPlugin::is_animated()
-{
-    return false;
-}
-
-size_t TGAImageDecoderPlugin::loop_count()
-{
-    return 0;
-}
-
-size_t TGAImageDecoderPlugin::frame_count()
-{
-    return 1;
-}
-
-size_t TGAImageDecoderPlugin::first_animated_frame_index()
-{
-    return 0;
-}
-
 ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
 {
     auto bits_per_pixel = m_context->header.bits_per_pixel;
