@@ -228,20 +228,6 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
 
     for (auto& cell : m_cells) {
         auto const& computed_values = cell.box->computed_values();
-
-        if (computed_values.width().is_percentage()) {
-            m_columns[cell.column_index].has_intrinsic_percentage = true;
-            m_columns[cell.column_index].intrinsic_percentage = max(m_columns[cell.column_index].intrinsic_percentage, computed_values.width().percentage().value());
-        }
-
-        if (computed_values.height().is_percentage()) {
-            m_rows[cell.row_index].has_intrinsic_percentage = true;
-            m_rows[cell.row_index].intrinsic_percentage = max(m_rows[cell.row_index].intrinsic_percentage, computed_values.height().percentage().value());
-        }
-    }
-
-    for (auto& cell : m_cells) {
-        auto const& computed_values = cell.box->computed_values();
         CSSPixels padding_top = computed_values.padding().top().to_px(cell.box, containing_block.content_height());
         CSSPixels padding_bottom = computed_values.padding().bottom().to_px(cell.box, containing_block.content_height());
         CSSPixels padding_left = computed_values.padding().left().to_px(cell.box, containing_block.content_width());
@@ -365,6 +351,86 @@ void TableFormattingContext::initialize_table_measures<TableFormattingContext::C
 }
 
 template<class RowOrColumn>
+void TableFormattingContext::compute_intrinsic_percentage(size_t max_cell_span)
+{
+    auto& rows_or_columns = table_rows_or_columns<RowOrColumn>();
+
+    // https://www.w3.org/TR/css-tables-3/#intrinsic-percentage-width-of-a-column-based-on-cells-of-span-up-to-1
+    initialize_intrinsic_percentages_from_rows_or_columns<RowOrColumn>();
+    initialize_intrinsic_percentages_from_cells<RowOrColumn>();
+
+    // Stores intermediate values for intrinsic percentage based on cells of span up to N for the iterative algorithm, to store them back at the end of the step.
+    Vector<double> intrinsic_percentage_contribution_by_index;
+    intrinsic_percentage_contribution_by_index.resize(rows_or_columns.size());
+    for (size_t rc_index = 0; rc_index < rows_or_columns.size(); ++rc_index) {
+        intrinsic_percentage_contribution_by_index[rc_index] = rows_or_columns[rc_index].intrinsic_percentage;
+    }
+
+    for (size_t current_span = 2; current_span <= max_cell_span; current_span++) {
+        // https://www.w3.org/TR/css-tables-3/#intrinsic-percentage-width-of-a-column-based-on-cells-of-span-up-to-n-n--1
+        for (auto& cell : m_cells) {
+            auto cell_span_value = cell_span<RowOrColumn>(cell);
+            if (cell_span_value != current_span) {
+                continue;
+            }
+            auto cell_start_rc_index = cell_index<RowOrColumn>(cell);
+            auto cell_end_rc_index = cell_start_rc_index + cell_span_value;
+            // 1. Start with the percentage contribution of the cell.
+            CSSPixels cell_contribution = cell_percentage_contribution<RowOrColumn>(cell);
+            // 2. Subtract the intrinsic percentage width of the column based on cells of span up to N-1 of all columns
+            //    that the cell spans. If this gives a negative result, change it to 0%.
+            for (auto rc_index = cell_start_rc_index; rc_index < cell_end_rc_index; rc_index++) {
+                cell_contribution -= rows_or_columns[rc_index].intrinsic_percentage;
+                cell_contribution = max(cell_contribution, 0);
+            }
+            // Compute the sum of the non-spanning max-content sizes of all rows / columns spanned by the cell that have an intrinsic percentage
+            // size of the row / column based on cells of span up to N-1 equal to 0%, to be used in step 3 of the cell contribution algorithm.
+            CSSPixels width_sum_of_columns_with_zero_intrinsic_percentage = 0;
+            size_t number_of_columns_with_zero_intrinsic_percentage = 0;
+            for (auto rc_index = cell_start_rc_index; rc_index < cell_end_rc_index; rc_index++) {
+                if (rows_or_columns[rc_index].intrinsic_percentage == 0) {
+                    width_sum_of_columns_with_zero_intrinsic_percentage += rows_or_columns[rc_index].max_size;
+                    ++number_of_columns_with_zero_intrinsic_percentage;
+                }
+            }
+            for (size_t rc_index = cell_start_rc_index; rc_index < cell_end_rc_index; rc_index++) {
+                // If the intrinsic percentage width of a column based on cells of span up to N-1 is greater than 0%, then the intrinsic percentage width of
+                // the column based on cells of span up to N is the same as the intrinsic percentage width of the column based on cells of span up to N-1.
+                if (rows_or_columns[rc_index].intrinsic_percentage > 0) {
+                    continue;
+                }
+                // Otherwise, it is the largest of the contributions of the cells in the column whose colSpan is N,
+                // where the contribution of a cell is the result of taking the following steps:
+                // 1. Start with the percentage contribution of the cell.
+                // 2. Subtract the intrinsic percentage width of the column based on cells of span up to N-1 of all columns
+                //    that the cell spans. If this gives a negative result, change it to 0%.
+                // 3. Multiply by the ratio of the column’s non-spanning max-content width to the sum of the non-spanning max-content widths of all
+                //    columns spanned by the cell that have an intrinsic percentage width of the column based on cells of span up to N-1 equal to 0%.
+                CSSPixels ajusted_cell_contribution;
+                if (width_sum_of_columns_with_zero_intrinsic_percentage != 0) {
+                    ajusted_cell_contribution = cell_contribution * rows_or_columns[rc_index].max_size / width_sum_of_columns_with_zero_intrinsic_percentage;
+                } else {
+                    // However, if this ratio is undefined because the denominator is zero, instead use the 1 divided by the number of columns
+                    // spanned by the cell that have an intrinsic percentage width of the column based on cells of span up to N-1 equal to zero.
+                    ajusted_cell_contribution = cell_contribution * 1 / number_of_columns_with_zero_intrinsic_percentage;
+                }
+                intrinsic_percentage_contribution_by_index[rc_index] = max(ajusted_cell_contribution.to_double(), intrinsic_percentage_contribution_by_index[rc_index]);
+            }
+        }
+        for (size_t rc_index = 0; rc_index < rows_or_columns.size(); ++rc_index) {
+            rows_or_columns[rc_index].intrinsic_percentage = intrinsic_percentage_contribution_by_index[rc_index];
+        }
+    }
+
+    // Clamp total intrinsic percentage to 100%: https://www.w3.org/TR/css-tables-3/#intrinsic-percentage-width-of-a-column
+    double total_intrinsic_percentage = 0;
+    for (auto& rows_or_column : rows_or_columns) {
+        rows_or_column.intrinsic_percentage = max(min(100 - total_intrinsic_percentage, rows_or_column.intrinsic_percentage), 0);
+        total_intrinsic_percentage += rows_or_column.intrinsic_percentage;
+    }
+}
+
+template<class RowOrColumn>
 void TableFormattingContext::compute_table_measures()
 {
     initialize_table_measures<RowOrColumn>();
@@ -375,6 +441,10 @@ void TableFormattingContext::compute_table_measures()
     for (auto& cell : m_cells) {
         max_cell_span = max(max_cell_span, cell_span<RowOrColumn>(cell));
     }
+
+    // Since the intrinsic percentage specification uses non-spanning max-content size for the iterative algorithm,
+    // run it before we compute the spanning max-content size with its own iterative algorithm for span up to N.
+    compute_intrinsic_percentage<RowOrColumn>(max_cell_span);
 
     for (size_t current_span = 2; current_span <= max_cell_span; current_span++) {
         // https://www.w3.org/TR/css-tables-3/#min-content-width-of-a-column-based-on-cells-of-span-up-to-n-n--1
@@ -1518,6 +1588,95 @@ template<>
 CSSPixels TableFormattingContext::cell_max_size<TableFormattingContext::Column>(TableFormattingContext::Cell const& cell)
 {
     return cell.outer_max_width;
+}
+
+template<>
+double TableFormattingContext::cell_percentage_contribution<TableFormattingContext::Row>(TableFormattingContext::Cell const& cell)
+{
+    // Definition of percentage contribution: https://www.w3.org/TR/css-tables-3/#percentage-contribution
+    auto const& computed_values = cell.box->computed_values();
+    auto max_height_percentage = computed_values.max_height().is_percentage() ? computed_values.max_height().percentage().value() : static_cast<double>(INFINITY);
+    auto height_percentage = computed_values.height().is_percentage() ? computed_values.height().percentage().value() : 0;
+    return min(height_percentage, max_height_percentage);
+}
+
+template<>
+double TableFormattingContext::cell_percentage_contribution<TableFormattingContext::Column>(TableFormattingContext::Cell const& cell)
+{
+    // Definition of percentage contribution: https://www.w3.org/TR/css-tables-3/#percentage-contribution
+    auto const& computed_values = cell.box->computed_values();
+    auto max_width_percentage = computed_values.max_width().is_percentage() ? computed_values.max_width().percentage().value() : static_cast<double>(INFINITY);
+    auto width_percentage = computed_values.width().is_percentage() ? computed_values.width().percentage().value() : 0;
+    return min(width_percentage, max_width_percentage);
+}
+
+template<>
+bool TableFormattingContext::cell_has_intrinsic_percentage<TableFormattingContext::Row>(TableFormattingContext::Cell const& cell)
+{
+    return cell.box->computed_values().height().is_percentage();
+}
+
+template<>
+bool TableFormattingContext::cell_has_intrinsic_percentage<TableFormattingContext::Column>(TableFormattingContext::Cell const& cell)
+{
+    return cell.box->computed_values().width().is_percentage();
+}
+
+template<>
+void TableFormattingContext::initialize_intrinsic_percentages_from_rows_or_columns<TableFormattingContext::Row>()
+{
+    for (auto& row : m_rows) {
+        auto const& computed_values = row.box->computed_values();
+        // Definition of percentage contribution: https://www.w3.org/TR/css-tables-3/#percentage-contribution
+        auto max_height_percentage = computed_values.max_height().is_percentage() ? computed_values.max_height().percentage().value() : static_cast<double>(INFINITY);
+        auto height_percentage = computed_values.height().is_percentage() ? computed_values.height().percentage().value() : 0;
+        row.has_intrinsic_percentage = computed_values.max_height().is_percentage() || computed_values.height().is_percentage();
+        row.intrinsic_percentage = min(height_percentage, max_height_percentage);
+    }
+}
+
+template<>
+void TableFormattingContext::initialize_intrinsic_percentages_from_rows_or_columns<TableFormattingContext::Column>()
+{
+    size_t column_index = 0;
+    for_each_child_box_matching(table_box(), is_table_column_group, [&](auto& column_group_box) {
+        for_each_child_box_matching(column_group_box, is_table_column, [&](auto& column_box) {
+            auto const& computed_values = column_box.computed_values();
+            // Definition of percentage contribution: https://www.w3.org/TR/css-tables-3/#percentage-contribution
+            auto max_width_percentage = computed_values.max_width().is_percentage() ? computed_values.max_width().percentage().value() : static_cast<double>(INFINITY);
+            auto width_percentage = computed_values.width().is_percentage() ? computed_values.width().percentage().value() : 0;
+            m_columns[column_index].has_intrinsic_percentage = computed_values.max_width().is_percentage() || computed_values.width().is_percentage();
+            m_columns[column_index].intrinsic_percentage = min(width_percentage, max_width_percentage);
+            auto const& col_node = static_cast<HTML::HTMLTableColElement const&>(*column_box.dom_node());
+            unsigned span = col_node.attribute(HTML::AttributeNames::span).to_uint().value_or(1);
+            column_index += span;
+        });
+    });
+}
+
+template<class RowOrColumn>
+void TableFormattingContext::initialize_intrinsic_percentages_from_cells()
+{
+    auto& rows_or_columns = table_rows_or_columns<RowOrColumn>();
+
+    for (auto& cell : m_cells) {
+        auto cell_span_value = cell_span<RowOrColumn>(cell);
+        auto cell_start_rc_index = cell_index<RowOrColumn>(cell);
+        auto cell_end_rc_index = cell_start_rc_index + cell_span_value;
+        if (cell_has_intrinsic_percentage<RowOrColumn>(cell)) {
+            for (auto rc_index = cell_start_rc_index; rc_index < cell_end_rc_index; rc_index++) {
+                rows_or_columns[rc_index].has_intrinsic_percentage = true;
+            }
+            if (cell_span_value != 1) {
+                continue;
+            }
+        } else {
+            continue;
+        }
+        size_t rc_index = cell_index<RowOrColumn>(cell);
+        rows_or_columns[rc_index].has_intrinsic_percentage = true;
+        rows_or_columns[rc_index].intrinsic_percentage = max(cell_percentage_contribution<RowOrColumn>(cell), rows_or_columns[rc_index].intrinsic_percentage);
+    }
 }
 
 template<>

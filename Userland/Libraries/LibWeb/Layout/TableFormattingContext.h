@@ -45,6 +45,8 @@ private:
     void initialize_table_measures();
     template<class RowOrColumn>
     void compute_table_measures();
+    template<class RowOrColumn>
+    void compute_intrinsic_percentage(size_t max_cell_span);
     void compute_table_width();
     void distribute_width_to_columns();
     void distribute_excess_width_to_columns(CSSPixels available_width);
@@ -125,6 +127,18 @@ private:
 
     template<class RowOrColumn>
     static CSSPixels cell_max_size(Cell const& cell);
+
+    template<class RowOrColumn>
+    static double cell_percentage_contribution(Cell const& cell);
+
+    template<class RowOrColumn>
+    static bool cell_has_intrinsic_percentage(Cell const& cell);
+
+    template<class RowOrColumn>
+    void initialize_intrinsic_percentages_from_rows_or_columns();
+
+    template<class RowOrColumn>
+    void initialize_intrinsic_percentages_from_cells();
 
     template<class RowOrColumn>
     CSSPixels border_spacing();
