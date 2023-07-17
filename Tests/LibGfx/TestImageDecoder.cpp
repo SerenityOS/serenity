@@ -77,14 +77,7 @@ TEST_CASE(test_not_ico)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("buggie.png"sv)));
     EXPECT(!Gfx::ICOImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = MUST(Gfx::ICOImageDecoderPlugin::create(file->bytes()));
-    EXPECT(plugin_decoder->initialize().is_error());
-
-    EXPECT(plugin_decoder->frame_count());
-    EXPECT(!plugin_decoder->is_animated());
-    EXPECT(!plugin_decoder->loop_count());
-
-    EXPECT(plugin_decoder->frame(0).is_error());
+    EXPECT(Gfx::ICOImageDecoderPlugin::create(file->bytes()).is_error());
 }
 
 TEST_CASE(test_bmp_embedded_in_ico)
