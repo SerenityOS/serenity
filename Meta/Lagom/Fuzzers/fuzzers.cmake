@@ -50,6 +50,7 @@ set(FUZZER_TARGETS
     Tar
     TGALoader
     TTF
+    TinyVGLoader
     URL
     UTF16BEDecoder
     VP9Decoder
@@ -118,6 +119,7 @@ set(FUZZER_DEPENDENCIES_SQLParser LibSQL)
 set(FUZZER_DEPENDENCIES_Tar LibArchive)
 set(FUZZER_DEPENDENCIES_TGALoader LibGfx)
 set(FUZZER_DEPENDENCIES_TTF LibGfx)
+set(FUZZER_DEPENDENCIES_TinyVGLoader LibGfx)
 set(FUZZER_DEPENDENCIES_UTF16BEDecoder LibTextCodec)
 set(FUZZER_DEPENDENCIES_VP9Decoder LibVideo)
 set(FUZZER_DEPENDENCIES_WasmParser LibWasm)

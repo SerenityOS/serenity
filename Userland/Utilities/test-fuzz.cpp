@@ -64,6 +64,7 @@
     T(Tar)                   \
     T(TGALoader)             \
     T(TTF)                   \
+    T(TinyVGLoader)          \
     T(URL)                   \
     T(UTF16BEDecoder)        \
     T(VP9Decoder)            \
