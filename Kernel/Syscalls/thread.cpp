@@ -48,9 +48,9 @@ ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<Sys
     // We know this thread is not the main_thread,
     // So give it a unique name until the user calls $set_thread_name on it
     auto new_thread_name = TRY(name().with([&](auto& process_name) {
-        return KString::formatted("{} [{}]", process_name->view(), thread->tid().value());
+        return KString::formatted("{} [{}]", process_name.representable_view(), thread->tid().value());
     }));
-    thread->set_name(move(new_thread_name));
+    thread->set_name(new_thread_name->view());
 
     if (!is_thread_joinable)
         thread->detach();
@@ -194,17 +194,14 @@ ErrorOr<FlatPtr> Process::sys$set_thread_name(pid_t tid, Userspace<char const*> 
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
 
-    auto name = TRY(try_copy_kstring_from_user(user_name, user_name_length));
-
-    const size_t max_thread_name_size = 64;
-    if (name->length() > max_thread_name_size)
-        return ENAMETOOLONG;
+    Thread::Name thread_name {};
+    TRY(try_copy_name_from_user_into_fixed_string_buffer<64>(user_name, thread_name, user_name_length));
 
     auto thread = Thread::from_tid(tid);
     if (!thread || thread->pid() != pid())
         return ESRCH;
 
-    thread->set_name(move(name));
+    thread->set_name(thread_name.representable_view());
     return 0;
 }
 
@@ -220,16 +217,12 @@ ErrorOr<FlatPtr> Process::sys$get_thread_name(pid_t tid, Userspace<char*> buffer
         return ESRCH;
 
     TRY(thread->name().with([&](auto& thread_name) -> ErrorOr<void> {
-        if (thread_name->view().is_null()) {
-            char null_terminator = '\0';
-            TRY(copy_to_user(buffer, &null_terminator, sizeof(null_terminator)));
-            return {};
-        }
-
-        if (thread_name->length() + 1 > buffer_size)
+        VERIFY(!thread_name.representable_view().is_null());
+        auto thread_name_view = thread_name.representable_view();
+        if (thread_name_view.length() + 1 > buffer_size)
             return ENAMETOOLONG;
 
-        return copy_to_user(buffer, thread_name->characters(), thread_name->length() + 1);
+        return copy_to_user(buffer, thread_name_view.characters_without_null_termination(), thread_name_view.length() + 1);
     }));
 
     return 0;

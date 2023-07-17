@@ -340,7 +340,7 @@ ErrorOr<void> PerformanceEventBuffer::add_process(Process const& process, Proces
         executable = TRY(process.executable()->try_serialize_absolute_path());
     } else {
         executable = TRY(process.name().with([&](auto& process_name) {
-            return KString::formatted("<{}>", process_name->view());
+            return KString::formatted("<{}>", process_name.representable_view());
         }));
     }
 

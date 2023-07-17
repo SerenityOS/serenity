@@ -30,7 +30,7 @@ static void finalizer_task(void*)
 
 UNMAP_AFTER_INIT void FinalizerTask::spawn()
 {
-    auto [_, finalizer_thread] = MUST(Process::create_kernel_process(KString::must_create(finalizer_task_name), finalizer_task, nullptr));
+    auto [_, finalizer_thread] = MUST(Process::create_kernel_process(finalizer_task_name, finalizer_task, nullptr));
     g_finalizer = move(finalizer_thread);
 }
 

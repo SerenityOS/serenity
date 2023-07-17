@@ -372,10 +372,10 @@ UNMAP_AFTER_INIT void Scheduler::initialize()
     g_finalizer_wait_queue = new WaitQueue;
 
     g_finalizer_has_work.store(false, AK::MemoryOrder::memory_order_release);
-    auto [colonel_process, idle_thread] = MUST(Process::create_kernel_process(KString::must_create("colonel"sv), idle_loop, nullptr, 1, Process::RegisterProcess::No));
+    auto [colonel_process, idle_thread] = MUST(Process::create_kernel_process("colonel"sv, idle_loop, nullptr, 1, Process::RegisterProcess::No));
     s_colonel_process = &colonel_process.leak_ref();
     idle_thread->set_priority(THREAD_PRIORITY_MIN);
-    idle_thread->set_name(KString::must_create("Idle Task #0"sv));
+    idle_thread->set_name("Idle Task #0"sv);
 
     set_idle_thread(idle_thread);
 }
@@ -394,7 +394,7 @@ UNMAP_AFTER_INIT Thread* Scheduler::create_ap_idle_thread(u32 cpu)
     VERIFY(Processor::is_bootstrap_processor());
 
     VERIFY(s_colonel_process);
-    Thread* idle_thread = MUST(s_colonel_process->create_kernel_thread(idle_loop, nullptr, THREAD_PRIORITY_MIN, MUST(KString::formatted("idle thread #{}", cpu)), 1 << cpu, false));
+    Thread* idle_thread = MUST(s_colonel_process->create_kernel_thread(idle_loop, nullptr, THREAD_PRIORITY_MIN, MUST(KString::formatted("idle thread #{}", cpu))->view(), 1 << cpu, false));
     VERIFY(idle_thread);
     return idle_thread;
 }

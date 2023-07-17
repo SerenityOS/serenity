@@ -480,9 +480,6 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
 
     auto last_part = path->view().find_last_split_view('/');
 
-    auto new_process_name = TRY(KString::try_create(last_part));
-    auto new_main_thread_name = TRY(new_process_name->try_clone());
-
     auto allocated_space = TRY(Memory::AddressSpace::try_create(*this, nullptr));
     OwnPtr<Memory::AddressSpace> old_space;
     auto old_master_tls_region = m_master_tls_region;
@@ -659,8 +656,9 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     //       and we don't want to deal with faults after this point.
     auto new_userspace_sp = TRY(make_userspace_context_for_main_thread(new_main_thread->regs(), *load_result.stack_region.unsafe_ptr(), m_arguments, m_environment, move(auxv)));
 
-    set_name(move(new_process_name));
-    new_main_thread->set_name(move(new_main_thread_name));
+    // NOTE: The Process and its first thread share the same name.
+    set_name(last_part);
+    new_main_thread->set_name(last_part);
 
     if (wait_for_tracer_at_next_execve()) {
         // Make sure we release the ptrace lock here or the tracer will block forever.

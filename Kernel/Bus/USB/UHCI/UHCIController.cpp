@@ -585,7 +585,7 @@ size_t UHCIController::poll_transfer_queue(QueueHead& transfer_queue)
 
 ErrorOr<void> UHCIController::spawn_port_process()
 {
-    TRY(Process::create_kernel_process(TRY(KString::try_create("UHCI Hot Plug Task"sv)), [&] {
+    TRY(Process::create_kernel_process("UHCI Hot Plug Task"sv, [&] {
         while (!Process::current().is_dying()) {
             if (m_root_hub)
                 m_root_hub->check_for_port_updates();
@@ -600,7 +600,7 @@ ErrorOr<void> UHCIController::spawn_port_process()
 
 ErrorOr<void> UHCIController::spawn_async_poll_process()
 {
-    TRY(Process::create_kernel_process(TRY(KString::try_create("UHCI Async Poll Task"sv)), [&] {
+    TRY(Process::create_kernel_process("UHCI Async Poll Task"sv, [&] {
         u16 poll_interval_ms = 1024;
         while (!Process::current().is_dying()) {
             {

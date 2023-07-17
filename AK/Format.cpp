@@ -920,7 +920,7 @@ void vdbg(StringView fmtstr, TypeErasedFormatParams& params, bool newline)
         if (Kernel::Thread::current()) {
             auto& thread = *Kernel::Thread::current();
             thread.process().name().with([&](auto& process_name) {
-                builder.appendff("{}.{:03} \033[34;1m[#{} {}({}:{})]\033[0m: ", time.truncated_seconds(), time.nanoseconds_within_second() / 1000000, Kernel::Processor::current_id(), process_name->view(), thread.pid().value(), thread.tid().value());
+                builder.appendff("{}.{:03} \033[34;1m[#{} {}({}:{})]\033[0m: ", time.truncated_seconds(), time.nanoseconds_within_second() / 1000000, Kernel::Processor::current_id(), process_name.representable_view(), thread.pid().value(), thread.tid().value());
             });
         } else {
             builder.appendff("{}.{:03} \033[34;1m[#{} Kernel]\033[0m: ", time.truncated_seconds(), time.nanoseconds_within_second() / 1000000, Kernel::Processor::current_id());
@@ -974,7 +974,7 @@ void vdmesgln(StringView fmtstr, TypeErasedFormatParams& params)
         if (Kernel::Processor::is_initialized() && Kernel::Thread::current()) {
             auto& thread = *Kernel::Thread::current();
             thread.process().name().with([&](auto& process_name) {
-                builder.appendff("{}.{:03} \033[34;1m[{}({}:{})]\033[0m: ", time.truncated_seconds(), time.nanoseconds_within_second() / 1000000, process_name->view(), thread.pid().value(), thread.tid().value());
+                builder.appendff("{}.{:03} \033[34;1m[{}({}:{})]\033[0m: ", time.truncated_seconds(), time.nanoseconds_within_second() / 1000000, process_name.representable_view(), thread.pid().value(), thread.tid().value());
             });
         } else {
             builder.appendff("{}.{:03} \033[34;1m[Kernel]\033[0m: ", time.truncated_seconds(), time.nanoseconds_within_second() / 1000000);
@@ -1001,7 +1001,7 @@ void v_critical_dmesgln(StringView fmtstr, TypeErasedFormatParams& params)
     if (Kernel::Processor::is_initialized() && Kernel::Thread::current()) {
         auto& thread = *Kernel::Thread::current();
         thread.process().name().with([&](auto& process_name) {
-            builder.appendff("[{}({}:{})]: ", process_name->view(), thread.pid().value(), thread.tid().value());
+            builder.appendff("[{}({}:{})]: ", process_name.representable_view(), thread.pid().value(), thread.tid().value());
         });
     } else {
         builder.appendff("[Kernel]: ");

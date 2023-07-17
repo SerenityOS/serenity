@@ -55,14 +55,13 @@ ErrorOr<FlatPtr> Process::sys$prctl(int option, FlatPtr arg1, FlatPtr arg2)
             int user_buffer_size = static_cast<int>(arg2);
             if (user_buffer_size < 0)
                 return EINVAL;
-            if (user_buffer_size > 256)
-                return ENAMETOOLONG;
             size_t buffer_size = static_cast<size_t>(user_buffer_size);
-            auto name = TRY(try_copy_kstring_from_user(buffer, buffer_size));
+            Process::Name process_name {};
+            TRY(try_copy_name_from_user_into_fixed_string_buffer<32>(buffer, process_name, buffer_size));
             // NOTE: Reject empty and whitespace-only names, as they only confuse users.
-            if (name->view().is_whitespace())
+            if (process_name.representable_view().is_whitespace())
                 return EINVAL;
-            set_name(move(name));
+            set_name(process_name.representable_view());
             return 0;
         }
         case PR_GET_PROCESS_NAME: {
@@ -73,9 +72,10 @@ ErrorOr<FlatPtr> Process::sys$prctl(int option, FlatPtr arg1, FlatPtr arg2)
                 return EINVAL;
             size_t buffer_size = static_cast<size_t>(arg2);
             TRY(m_name.with([&buffer, buffer_size](auto& name) -> ErrorOr<void> {
-                if (name->length() + 1 > buffer_size)
+                auto view = name.representable_view();
+                if (view.length() + 1 > buffer_size)
                     return ENAMETOOLONG;
-                return copy_to_user(buffer, name->characters(), name->length() + 1);
+                return copy_to_user(buffer, view.characters_without_null_termination(), view.length() + 1);
             }));
             return 0;
         }

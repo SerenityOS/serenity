@@ -26,8 +26,6 @@
 
 namespace Kernel {
 
-static constexpr StringView power_state_switch_task_name_view = "Power State Switch Task"sv;
-
 Thread* g_power_state_switch_task;
 bool g_in_system_shutdown { false };
 
@@ -53,12 +51,9 @@ void PowerStateSwitchTask::power_state_switch_task(void* raw_entry_data)
 
 void PowerStateSwitchTask::spawn(PowerStateCommand command)
 {
-    // FIXME: If we switch power states during memory pressure, don't let the system crash just because of our task name.
-    NonnullOwnPtr<KString> power_state_switch_task_name = MUST(KString::try_create(power_state_switch_task_name_view));
-
     VERIFY(g_power_state_switch_task == nullptr);
     auto [_, power_state_switch_task_thread] = MUST(Process::create_kernel_process(
-        move(power_state_switch_task_name), power_state_switch_task, bit_cast<void*>(command)));
+        "Power State Switch Task"sv, power_state_switch_task, bit_cast<void*>(command)));
     g_power_state_switch_task = move(power_state_switch_task_thread);
 }
 
@@ -189,7 +184,7 @@ ErrorOr<void> PowerStateSwitchTask::kill_processes(ProcessKind kind, ProcessID f
                     if (process.pid() != Process::current().pid() && !process.is_dead() && process.pid() != finalizer_pid && process.is_kernel_process() == kill_kernel_processes) {
                         dbgln("Process {:2} kernel={} dead={} dying={} ({})",
                             process.pid(), process.is_kernel_process(), process.is_dead(), process.is_dying(),
-                            process.name().with([](auto& name) { return name->view(); }));
+                            process.name().with([](auto& name) { return name.representable_view(); }));
                     }
                 });
             }

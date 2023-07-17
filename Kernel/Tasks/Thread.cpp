@@ -47,16 +47,18 @@ ErrorOr<NonnullRefPtr<Thread>> Thread::create(NonnullRefPtr<Process> process)
 
     auto block_timer = TRY(try_make_ref_counted<Timer>());
 
-    auto name = TRY(process->name().with([](auto& name) { return name->try_clone(); }));
-    return adopt_nonnull_ref_or_enomem(new (nothrow) Thread(move(process), move(kernel_stack_region), move(block_timer), move(name)));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Thread(move(process), move(kernel_stack_region), move(block_timer)));
 }
 
-Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> kernel_stack_region, NonnullRefPtr<Timer> block_timer, NonnullOwnPtr<KString> name)
+Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> kernel_stack_region, NonnullRefPtr<Timer> block_timer)
     : m_process(move(process))
     , m_kernel_stack_region(move(kernel_stack_region))
-    , m_name(move(name))
     , m_block_timer(move(block_timer))
 {
+    m_process->name().with([this](auto& process_name) {
+        set_name(process_name.representable_view());
+    });
+
     bool is_first_thread = m_process->add_thread(*this);
     if (is_first_thread) {
         // First thread gets TID == PID
@@ -74,7 +76,7 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> ker
 
     if constexpr (THREAD_DEBUG) {
         m_process->name().with([&](auto& process_name) {
-            dbgln("Created new thread {}({}:{})", process_name->view(), m_process->pid().value(), m_tid.value());
+            dbgln("Created new thread {}({}:{})", process_name.representable_view(), m_process->pid().value(), m_tid.value());
         });
     }
 
@@ -1465,10 +1467,10 @@ void Thread::track_lock_release(LockRank rank)
     m_lock_rank_mask ^= rank;
 }
 
-void Thread::set_name(NonnullOwnPtr<KString> name)
+void Thread::set_name(StringView name)
 {
-    m_name.with([&](auto& this_name) {
-        this_name = move(name);
+    m_name.with([name](auto& thread_name) {
+        thread_name.store_characters(name);
     });
 }
 
@@ -1476,9 +1478,9 @@ void Thread::set_name(NonnullOwnPtr<KString> name)
 
 ErrorOr<void> AK::Formatter<Kernel::Thread>::format(FormatBuilder& builder, Kernel::Thread const& value)
 {
-    return value.process().name().with([&](auto& process_name) {
+    return value.process().name().with([&](auto& thread_name) {
         return AK::Formatter<FormatString>::format(
             builder,
-            "{}({}:{})"sv, process_name->view(), value.pid().value(), value.tid().value());
+            "{}({}:{})"sv, thread_name.representable_view(), value.pid().value(), value.tid().value());
     });
 }

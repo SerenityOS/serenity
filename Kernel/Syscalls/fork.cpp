@@ -20,9 +20,8 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::proc));
 
-    auto child_name = TRY(name().with([](auto& name) { return name->try_clone(); }));
     auto credentials = this->credentials();
-    auto child_and_first_thread = TRY(Process::create(move(child_name), credentials->uid(), credentials->gid(), pid(), m_is_kernel_process, current_directory(), executable(), tty(), this));
+    auto child_and_first_thread = TRY(Process::create_with_forked_name(credentials->uid(), credentials->gid(), pid(), m_is_kernel_process, current_directory(), executable(), tty(), this));
     auto& child = child_and_first_thread.process;
     auto& child_first_thread = child_and_first_thread.first_thread;
 
