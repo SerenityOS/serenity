@@ -35,10 +35,19 @@ class ImageDecoderPlugin {
 public:
     virtual ~ImageDecoderPlugin() = default;
 
+    // Each plugin should implement these static functions and register them in ImageDecoder.cpp
+    // Implement sniff() if the file includes a magic number
+    // static bool sniff(ReadonlyBytes);
+    // Implement validate_before_create() otherwise
+    // static ErrorOr<bool> validate_before_create(ReadonlyBytes);
+
+    // This function should be used to both create the context and parse the image header.
+    // static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
+
+    // This should always be available as gathered in create()
     virtual IntSize size() = 0;
 
     virtual bool is_animated() = 0;
-
     virtual size_t loop_count() = 0;
     virtual size_t frame_count() = 0;
     virtual size_t first_animated_frame_index() = 0;
