@@ -272,7 +272,6 @@ PDFErrorOr<ByteBuffer> Filter::decode_dct(ReadonlyBytes bytes)
 {
     if (Gfx::JPEGImageDecoderPlugin::sniff({ bytes.data(), bytes.size() })) {
         auto decoder = Gfx::JPEGImageDecoderPlugin::create({ bytes.data(), bytes.size() }).release_value_but_fixme_should_propagate_errors();
-        TRY(decoder->initialize());
         auto frame = TRY(decoder->frame(0));
         return TRY(frame.image->serialize_to_byte_buffer());
     }
