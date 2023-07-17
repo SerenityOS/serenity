@@ -144,7 +144,7 @@ def get_script_props(dir: str, script_name: str, props: dict, depth: int = 0, ma
                 continue
 
             if (value.startswith(('"', "'"))):
-                if (value.endswith(value[0])):
+                if (value.endswith(value[0]) and len(value) > 1):
                     value = value[1:-1]
                 else:
                     buffer += "\n"
