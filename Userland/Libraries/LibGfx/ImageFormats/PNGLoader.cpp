@@ -157,7 +157,7 @@ struct PNGLoadingContext {
         NotDecoded = 0,
         Error,
         HeaderDecoded,
-        SizeDecoded,
+        IHDRDecoded,
         ImageDataChunkDecoded,
         ChunksDecoded,
         BitmapDecoded,
@@ -609,9 +609,9 @@ static bool decode_png_header(PNGLoadingContext& context)
     return true;
 }
 
-static bool decode_png_size(PNGLoadingContext& context)
+static bool decode_png_ihdr(PNGLoadingContext& context)
 {
-    if (context.state >= PNGLoadingContext::SizeDecoded)
+    if (context.state >= PNGLoadingContext::IHDRDecoded)
         return true;
 
     if (context.state < PNGLoadingContext::HeaderDecoded) {
@@ -631,7 +631,7 @@ static bool decode_png_size(PNGLoadingContext& context)
         context.data_current_ptr = streamer.current_data_ptr();
 
         if (context.width && context.height) {
-            context.state = PNGLoadingContext::State::SizeDecoded;
+            context.state = PNGLoadingContext::State::IHDRDecoded;
             return true;
         }
     }
@@ -644,8 +644,8 @@ static bool decode_png_image_data_chunk(PNGLoadingContext& context)
     if (context.state >= PNGLoadingContext::ImageDataChunkDecoded)
         return true;
 
-    if (context.state < PNGLoadingContext::SizeDecoded) {
-        if (!decode_png_size(context))
+    if (context.state < PNGLoadingContext::IHDRDecoded) {
+        if (!decode_png_ihdr(context))
             return false;
     }
 
@@ -1303,8 +1303,8 @@ IntSize PNGImageDecoderPlugin::size()
     if (m_context->state == PNGLoadingContext::State::Error)
         return {};
 
-    if (m_context->state < PNGLoadingContext::State::SizeDecoded) {
-        bool success = decode_png_size(*m_context);
+    if (m_context->state < PNGLoadingContext::State::IHDRDecoded) {
+        bool success = decode_png_ihdr(*m_context);
         if (!success)
             return {};
     }
