@@ -1212,6 +1212,10 @@ static ErrorOr<void> process_chunk(Streamer& streamer, PNGLoadingContext& contex
 
     if (chunk_type == "IHDR"sv)
         return process_IHDR(chunk_data, context);
+
+    if (context.state < PNGLoadingContext::IHDRDecoded)
+        return Error::from_string_literal("IHDR is not the first chunk of the file");
+
     if (chunk_type == "IDAT"sv)
         return process_IDAT(chunk_data, context);
     if (chunk_type == "PLTE"sv)
