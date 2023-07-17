@@ -518,14 +518,14 @@ void StandardSecurityHandler::crypt(NonnullRefPtr<Object> object, Reference refe
 
     auto encryption_key = m_encryption_key.value();
     ReadonlyBytes bytes;
-    Function<void(ReadonlyBytes)> assign;
+    Function<void(ByteBuffer)> assign;
 
     if (object->is<StreamObject>()) {
         auto stream = object->cast<StreamObject>();
         bytes = stream->bytes();
 
-        assign = [&object](ReadonlyBytes bytes) {
-            object->cast<StreamObject>()->buffer() = MUST(ByteBuffer::copy(bytes));
+        assign = [&object](ByteBuffer buffer) {
+            object->cast<StreamObject>()->buffer() = move(buffer);
         };
 
         if (stream->dict()->contains(CommonNames::Filter)) {
@@ -536,8 +536,8 @@ void StandardSecurityHandler::crypt(NonnullRefPtr<Object> object, Reference refe
     } else if (object->is<StringObject>()) {
         auto string = object->cast<StringObject>();
         bytes = string->string().bytes();
-        assign = [&object](ReadonlyBytes bytes) {
-            object->cast<StringObject>()->set_string(DeprecatedString(bytes));
+        assign = [&object](ByteBuffer buffer) {
+            object->cast<StringObject>()->set_string(DeprecatedString(buffer.bytes()));
         };
     } else {
         VERIFY_NOT_REACHED();
@@ -579,18 +579,14 @@ void StandardSecurityHandler::crypt(NonnullRefPtr<Object> object, Reference refe
         //  that is stored as the first 16 bytes of the encrypted stream or string."
         static_assert(Crypto::Cipher::AESCipher::block_size() == 16);
         if (direction == Crypto::Cipher::Intent::Encryption) {
-            auto encrypted = MUST(cipher.create_aligned_buffer(bytes.size()));
-            auto encrypted_span = encrypted.bytes();
+            auto output = MUST(cipher.create_aligned_buffer(16 + bytes.size()));
+            auto iv_span = output.bytes().trim(16);
+            auto encrypted_span = output.bytes().slice(16);
 
-            auto iv = MUST(ByteBuffer::create_uninitialized(Crypto::Cipher::AESCipher::block_size()));
-            fill_with_random(iv);
+            fill_with_random(iv_span);
+            cipher.encrypt(bytes, encrypted_span, iv_span);
 
-            cipher.encrypt(bytes, encrypted_span, iv);
-
-            ByteBuffer output;
-            output.append(iv);
-            output.append(encrypted_span);
-            assign(output);
+            assign(move(output));
         } else {
             VERIFY(direction == Crypto::Cipher::Intent::Decryption);
 
@@ -600,8 +596,9 @@ void StandardSecurityHandler::crypt(NonnullRefPtr<Object> object, Reference refe
             auto decrypted = MUST(cipher.create_aligned_buffer(bytes.size()));
             auto decrypted_span = decrypted.bytes();
             cipher.decrypt(bytes, decrypted_span, iv);
+            decrypted.resize(decrypted_span.size());
 
-            assign(decrypted_span);
+            assign(move(decrypted));
         }
 
         return;
@@ -612,7 +609,7 @@ void StandardSecurityHandler::crypt(NonnullRefPtr<Object> object, Reference refe
     RC4 rc4(key);
     auto output = rc4.encrypt(bytes);
 
-    assign(output);
+    assign(move(output));
 }
 
 void StandardSecurityHandler::encrypt(NonnullRefPtr<Object> object, Reference reference) const
