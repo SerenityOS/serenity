@@ -655,26 +655,6 @@ ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> DDSImageDecoderPlugin::create(Readonl
     return plugin;
 }
 
-bool DDSImageDecoderPlugin::is_animated()
-{
-    return false;
-}
-
-size_t DDSImageDecoderPlugin::loop_count()
-{
-    return 0;
-}
-
-size_t DDSImageDecoderPlugin::frame_count()
-{
-    return 1;
-}
-
-size_t DDSImageDecoderPlugin::first_animated_frame_index()
-{
-    return 0;
-}
-
 ErrorOr<ImageFrameDescriptor> DDSImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
 {
     if (index > 0)

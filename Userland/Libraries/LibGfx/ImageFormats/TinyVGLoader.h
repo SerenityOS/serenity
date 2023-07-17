@@ -81,10 +81,6 @@ public:
     static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
 
     virtual IntSize size() override;
-    virtual bool is_animated() override { return false; }
-    virtual size_t loop_count() override { return 0; }
-    virtual size_t frame_count() override { return 1; }
-    virtual size_t first_animated_frame_index() override { return 0; }
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) override;
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override { return OptionalNone {}; }
 

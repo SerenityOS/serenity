@@ -1500,26 +1500,6 @@ bool BMPImageDecoderPlugin::sniff_dib()
     return !decode_bmp_dib(*m_context).is_error();
 }
 
-bool BMPImageDecoderPlugin::is_animated()
-{
-    return false;
-}
-
-size_t BMPImageDecoderPlugin::loop_count()
-{
-    return 0;
-}
-
-size_t BMPImageDecoderPlugin::frame_count()
-{
-    return 1;
-}
-
-size_t BMPImageDecoderPlugin::first_animated_frame_index()
-{
-    return 0;
-}
-
 ErrorOr<ImageFrameDescriptor> BMPImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
 {
     if (index > 0)

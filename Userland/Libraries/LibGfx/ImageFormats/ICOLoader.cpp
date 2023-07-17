@@ -203,26 +203,6 @@ IntSize ICOImageDecoderPlugin::size()
     return { m_context->images[m_context->largest_index].width, m_context->images[m_context->largest_index].height };
 }
 
-bool ICOImageDecoderPlugin::is_animated()
-{
-    return false;
-}
-
-size_t ICOImageDecoderPlugin::loop_count()
-{
-    return 0;
-}
-
-size_t ICOImageDecoderPlugin::frame_count()
-{
-    return 1;
-}
-
-size_t ICOImageDecoderPlugin::first_animated_frame_index()
-{
-    return 0;
-}
-
 ErrorOr<ImageFrameDescriptor> ICOImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
 {
     if (index > 0)
