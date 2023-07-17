@@ -29,7 +29,6 @@ public:
 
     virtual IntSize size() override;
 
-    virtual ErrorOr<void> initialize() override;
     bool sniff_dib();
     virtual bool is_animated() override;
     virtual size_t loop_count() override;
@@ -40,6 +39,7 @@ public:
 
 private:
     BMPImageDecoderPlugin(u8 const*, size_t, IncludedInICO included_in_ico = IncludedInICO::No);
+    static ErrorOr<NonnullOwnPtr<BMPImageDecoderPlugin>> create_impl(ReadonlyBytes, IncludedInICO);
 
     OwnPtr<BMPLoadingContext> m_context;
 };
