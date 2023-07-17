@@ -191,7 +191,6 @@ enum class DIBType {
 struct BMPLoadingContext {
     enum class State {
         NotDecoded = 0,
-        HeaderDecoded,
         DIBDecoded,
         ColorTableDecoded,
         PixelDataDecoded,
@@ -494,12 +493,6 @@ static bool set_dib_bitmasks(BMPLoadingContext& context, InputStreamer& streamer
 
 static ErrorOr<void> decode_bmp_header(BMPLoadingContext& context)
 {
-    if (context.state == BMPLoadingContext::State::Error)
-        return Error::from_string_literal("Error before starting decode_bmp_header");
-
-    if (context.state >= BMPLoadingContext::State::HeaderDecoded)
-        return {};
-
     if (!context.file_bytes || context.file_size < bmp_header_size) {
         dbgln_if(BMP_DEBUG, "Missing BMP header");
         context.state = BMPLoadingContext::State::Error;
@@ -536,7 +529,6 @@ static ErrorOr<void> decode_bmp_header(BMPLoadingContext& context)
         return Error::from_string_literal("BMP data offset is beyond file end");
     }
 
-    context.state = BMPLoadingContext::State::HeaderDecoded;
     return {};
 }
 
@@ -823,7 +815,7 @@ static ErrorOr<void> decode_bmp_dib(BMPLoadingContext& context)
     if (context.state >= BMPLoadingContext::State::DIBDecoded)
         return {};
 
-    if (!context.is_included_in_ico && context.state < BMPLoadingContext::State::HeaderDecoded)
+    if (!context.is_included_in_ico)
         TRY(decode_bmp_header(context));
 
     u8 header_size = context.is_included_in_ico ? 0 : bmp_header_size;
@@ -935,9 +927,6 @@ static ErrorOr<void> decode_bmp_color_table(BMPLoadingContext& context)
 {
     if (context.state == BMPLoadingContext::State::Error)
         return Error::from_string_literal("Error before starting decode_bmp_color_table");
-
-    if (context.state < BMPLoadingContext::State::DIBDecoded)
-        TRY(decode_bmp_dib(context));
 
     if (context.state >= BMPLoadingContext::State::ColorTableDecoded)
         return {};
@@ -1478,18 +1467,7 @@ BMPImageDecoderPlugin::~BMPImageDecoderPlugin() = default;
 
 IntSize BMPImageDecoderPlugin::size()
 {
-    if (m_context->state == BMPLoadingContext::State::Error)
-        return {};
-
-    if (m_context->state < BMPLoadingContext::State::DIBDecoded && decode_bmp_dib(*m_context).is_error())
-        return {};
-
     return { m_context->dib.core.width, abs(m_context->dib.core.height) };
-}
-
-ErrorOr<void> BMPImageDecoderPlugin::initialize()
-{
-    return decode_bmp_header(*m_context);
 }
 
 bool BMPImageDecoderPlugin::sniff(ReadonlyBytes data)
@@ -1500,14 +1478,21 @@ bool BMPImageDecoderPlugin::sniff(ReadonlyBytes data)
     return !decode_bmp_header(context).is_error();
 }
 
+ErrorOr<NonnullOwnPtr<BMPImageDecoderPlugin>> BMPImageDecoderPlugin::create_impl(ReadonlyBytes data, IncludedInICO included_in_ico)
+{
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) BMPImageDecoderPlugin(data.data(), data.size(), included_in_ico)));
+    TRY(decode_bmp_dib(*plugin->m_context));
+    return plugin;
+}
+
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> BMPImageDecoderPlugin::create(ReadonlyBytes data)
 {
-    return adopt_nonnull_own_or_enomem(new (nothrow) BMPImageDecoderPlugin(data.data(), data.size()));
+    return create_impl(data, IncludedInICO::No);
 }
 
 ErrorOr<NonnullOwnPtr<BMPImageDecoderPlugin>> BMPImageDecoderPlugin::create_as_included_in_ico(Badge<ICOImageDecoderPlugin>, ReadonlyBytes data)
 {
-    return adopt_nonnull_own_or_enomem(new (nothrow) BMPImageDecoderPlugin(data.data(), data.size(), IncludedInICO::Yes));
+    return create_impl(data, IncludedInICO::Yes);
 }
 
 bool BMPImageDecoderPlugin::sniff_dib()
@@ -1552,8 +1537,6 @@ ErrorOr<ImageFrameDescriptor> BMPImageDecoderPlugin::frame(size_t index, Optiona
 
 ErrorOr<Optional<ReadonlyBytes>> BMPImageDecoderPlugin::icc_data()
 {
-    TRY(decode_bmp_dib(*m_context));
-
     if (m_context->dib_type != DIBType::V5)
         return OptionalNone {};
 
