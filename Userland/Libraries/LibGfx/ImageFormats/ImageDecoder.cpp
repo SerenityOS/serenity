@@ -48,9 +48,11 @@ static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin(Readonl
         auto sniff_result = plugin.sniff(bytes);
         if (!sniff_result)
             continue;
-        auto plugin_decoder = plugin.create(bytes).release_value_but_fixme_should_propagate_errors();
-        if (!plugin_decoder->initialize().is_error())
-            return plugin_decoder;
+        auto plugin_decoder = plugin.create(bytes);
+        if (!plugin_decoder.is_error()) {
+            if (!plugin_decoder.value()->initialize().is_error())
+                return plugin_decoder.release_value();
+        }
     }
     return {};
 }
