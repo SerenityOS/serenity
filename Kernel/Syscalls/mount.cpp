@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/FixedStringBuffer.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/MountFile.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
@@ -20,14 +21,15 @@ ErrorOr<FlatPtr> Process::sys$fsopen(Userspace<Syscall::SC_fsopen_params const*>
     if (!credentials->is_superuser())
         return Error::from_errno(EPERM);
     auto params = TRY(copy_typed_from_user(user_params));
-    auto fs_type_string = TRY(try_copy_kstring_from_user(params.fs_type));
+    // NOTE: 16 characters should be enough for any fstype today and in the future.
+    auto fs_type_string = TRY(get_syscall_name_string_fixed_buffer<16>(params.fs_type));
 
     // NOTE: If some userspace program uses MS_REMOUNT, return EINVAL to indicate that we never want this
     // flag to appear in the mount table...
     if (params.flags & MS_REMOUNT || params.flags & MS_BIND)
         return Error::from_errno(EINVAL);
 
-    auto const* fs_type_initializer = TRY(VirtualFileSystem::find_filesystem_type_initializer(fs_type_string->view()));
+    auto const* fs_type_initializer = TRY(VirtualFileSystem::find_filesystem_type_initializer(fs_type_string.representable_view()));
     VERIFY(fs_type_initializer);
     auto mount_file = TRY(MountFile::create(*fs_type_initializer, params.flags));
     auto description = TRY(OpenFileDescription::try_create(move(mount_file)));

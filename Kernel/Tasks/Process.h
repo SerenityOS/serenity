@@ -41,7 +41,7 @@
 
 namespace Kernel {
 
-MutexProtected<OwnPtr<KString>>& hostname();
+MutexProtected<FixedStringBuffer<UTSNAME_ENTRY_LEN - 1>>& hostname();
 UnixDateTime kgettimeofday();
 
 #define ENUMERATE_PLEDGE_PROMISES         \
@@ -73,6 +73,15 @@ UnixDateTime kgettimeofday();
     __ENUMERATE_PLEDGE_PROMISE(jail)      \
     __ENUMERATE_PLEDGE_PROMISE(mount)     \
     __ENUMERATE_PLEDGE_PROMISE(no_error)
+
+#define __ENUMERATE_PLEDGE_PROMISE(x) sizeof(#x) + 1 +
+// NOTE: We truncate the last space from the string as it's not needed (with 0 - 1).
+constexpr static unsigned all_promises_strings_length_with_spaces = ENUMERATE_PLEDGE_PROMISES 0 - 1;
+#undef __ENUMERATE_PLEDGE_PROMISE
+
+// NOTE: This is a sanity check because length of more than 1024 characters
+// is not reasonable.
+static_assert(all_promises_strings_length_with_spaces <= 1024);
 
 enum class Pledge : u32 {
 #define __ENUMERATE_PLEDGE_PROMISE(x) x,
@@ -604,6 +613,36 @@ public:
 
     ErrorOr<void> validate_mmap_prot(int prot, bool map_stack, bool map_anonymous, Memory::Region const* region = nullptr) const;
     ErrorOr<void> validate_inode_mmap_prot(int prot, bool description_readable, bool description_writable, bool map_shared) const;
+
+    template<size_t Size>
+    static ErrorOr<FixedStringBuffer<Size>> get_syscall_string_fixed_buffer(Syscall::StringArgument const& argument)
+    {
+        // NOTE: If the string is too much big for the FixedStringBuffer,
+        // we return E2BIG error here.
+        FixedStringBuffer<Size> buffer;
+        TRY(try_copy_string_from_user_into_fixed_string_buffer<Size>(reinterpret_cast<FlatPtr>(argument.characters), buffer, argument.length));
+        return buffer;
+    }
+
+    template<size_t Size>
+    static ErrorOr<FixedStringBuffer<Size>> get_syscall_name_string_fixed_buffer(Userspace<char const*> user_buffer, size_t user_length = Size)
+    {
+        // NOTE: If the string is too much big for the FixedStringBuffer,
+        // we return E2BIG error here.
+        FixedStringBuffer<Size> buffer;
+        TRY(try_copy_string_from_user_into_fixed_string_buffer<Size>(user_buffer, buffer, user_length));
+        return buffer;
+    }
+
+    template<size_t Size>
+    static ErrorOr<FixedStringBuffer<Size>> get_syscall_name_string_fixed_buffer(Syscall::StringArgument const& argument)
+    {
+        // NOTE: If the string is too much big for the FixedStringBuffer,
+        // we return ENAMETOOLONG error here.
+        FixedStringBuffer<Size> buffer;
+        TRY(try_copy_name_from_user_into_fixed_string_buffer<Size>(reinterpret_cast<FlatPtr>(argument.characters), buffer, argument.length));
+        return buffer;
+    }
 
 private:
     friend class MemoryManager;

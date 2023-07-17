@@ -38,9 +38,10 @@ ErrorOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
     AK::TypedTransfer<u8>::copy(reinterpret_cast<u8*>(buf.version), SERENITY_VERSION.bytes().data(), min(SERENITY_VERSION.length(), UTSNAME_ENTRY_LEN - 1));
 
     hostname().with_shared([&](auto const& name) {
-        auto length = min(name->length(), UTSNAME_ENTRY_LEN - 1);
-        AK::TypedTransfer<char>::copy(reinterpret_cast<char*>(buf.nodename), name->characters(), length);
-        buf.nodename[length] = '\0';
+        auto name_length = name.representable_view().length();
+        VERIFY(name_length <= (UTSNAME_ENTRY_LEN - 1));
+        AK::TypedTransfer<char>::copy(reinterpret_cast<char*>(buf.nodename), name.representable_view().characters_without_null_termination(), name_length);
+        buf.nodename[name_length] = '\0';
     });
 
     TRY(copy_to_user(user_buf, &buf));

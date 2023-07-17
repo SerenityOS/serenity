@@ -101,19 +101,16 @@ ErrorOr<FlatPtr> Process::sys$unveil(Userspace<Syscall::SC_unveil_params const*>
     if (!params.path.characters || !params.permissions.characters)
         return EINVAL;
 
-    if (params.permissions.length > 5)
-        return EINVAL;
-
     auto path = TRY(get_syscall_path_argument(params.path));
 
     if (path->is_empty() || !path->view().starts_with('/'))
         return EINVAL;
 
-    auto permissions = TRY(try_copy_kstring_from_user(params.permissions));
+    auto permissions = TRY(get_syscall_string_fixed_buffer<5>(params.permissions));
 
     // Let's work out permissions first...
     unsigned new_permissions = 0;
-    for (char const permission : permissions->view()) {
+    for (char const permission : permissions.representable_view()) {
         switch (permission) {
         case 'r':
             new_permissions |= UnveilAccess::Read;

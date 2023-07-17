@@ -53,9 +53,9 @@ static Atomic<pid_t> next_pid;
 static Singleton<SpinlockProtected<Process::AllProcessesList, LockRank::None>> s_all_instances;
 READONLY_AFTER_INIT Memory::Region* g_signal_trampoline_region;
 
-static Singleton<MutexProtected<OwnPtr<KString>>> s_hostname;
+static Singleton<MutexProtected<FixedStringBuffer<UTSNAME_ENTRY_LEN - 1>>> s_hostname;
 
-MutexProtected<OwnPtr<KString>>& hostname()
+MutexProtected<FixedStringBuffer<UTSNAME_ENTRY_LEN - 1>>& hostname()
 {
     return *s_hostname;
 }
@@ -161,7 +161,7 @@ UNMAP_AFTER_INIT void Process::initialize()
 
     // Note: This is called before scheduling is initialized, and before APs are booted.
     //       So we can "safely" bypass the lock here.
-    reinterpret_cast<OwnPtr<KString>&>(hostname()) = KString::must_create("courage"sv);
+    reinterpret_cast<FixedStringBuffer<UTSNAME_ENTRY_LEN - 1>&>(hostname()).store_characters("courage"sv);
 
     create_signal_trampoline();
 }

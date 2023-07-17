@@ -12,6 +12,10 @@ TEST_CASE(test_argument_validation)
 {
     auto res = unveil("/etc", "aaaaaaaaaaaa");
     EXPECT_EQ(res, -1);
+    EXPECT_EQ(errno, E2BIG);
+
+    res = unveil("/etc", "aaaaa");
+    EXPECT_EQ(res, -1);
     EXPECT_EQ(errno, EINVAL);
 
     res = unveil(nullptr, "r");

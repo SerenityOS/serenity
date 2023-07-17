@@ -96,8 +96,8 @@ ErrorOr<void> Socket::setsockopt(int level, int option, Userspace<void const*> u
         if (user_value_size != IFNAMSIZ)
             return EINVAL;
         auto user_string = static_ptr_cast<char const*>(user_value);
-        auto ifname = TRY(try_copy_kstring_from_user(user_string, user_value_size));
-        auto device = NetworkingManagement::the().lookup_by_name(ifname->view());
+        auto ifname = TRY(Process::get_syscall_name_string_fixed_buffer<IFNAMSIZ>(user_string, user_value_size));
+        auto device = NetworkingManagement::the().lookup_by_name(ifname.representable_view());
         if (!device)
             return ENODEV;
         m_bound_interface.with([&device](auto& bound_device) {
