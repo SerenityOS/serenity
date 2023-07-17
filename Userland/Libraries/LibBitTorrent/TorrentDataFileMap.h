@@ -75,14 +75,16 @@ private:
 
 class TorrentDataFileMap {
 public:
-    static ErrorOr<NonnullOwnPtr<TorrentDataFileMap>> try_create(i64 piece_length, Vector<LocalFile> files);
+    static ErrorOr<NonnullOwnPtr<TorrentDataFileMap>> try_create(ByteBuffer piece_hashes, i64 piece_length, Vector<LocalFile> files);
 
     ErrorOr<void> read_piece(u32 index, Bytes buffer);
     ErrorOr<bool> write_piece(u32 index, ReadonlyBytes data);
+    ErrorOr<bool> check_piece(i64 index, bool is_last_piece);
     ErrorOr<bool> validate_hash(i64 index, ReadonlyBytes data);
 
 private:
-    TorrentDataFileMap(i64 piece_length, NonnullOwnPtr<MultiFileMapperStream> mapper);
+    TorrentDataFileMap(ByteBuffer piece_hashes, i64 piece_length, NonnullOwnPtr<MultiFileMapperStream> mapper);
+    ByteBuffer m_piece_hashes;
     u64 m_piece_length;
     NonnullOwnPtr<MultiFileMapperStream> m_files_mapper;
 };

@@ -10,6 +10,9 @@ namespace BitTorrent {
 
 enum class TorrentState {
     ERROR,
+    CHECKING,
+    CHECKING_CANCELLED,
+    CHECKING_FAILED,
     STOPPED,
     STARTED,
     SEEDING

@@ -3,6 +3,7 @@ set(SOURCES
     Bencode/BDecoder.cpp
     Bencode/BEncoder.cpp
     BitField.cpp
+    Checker.cpp
     Engine.cpp
     Files.cpp
     Message.cpp

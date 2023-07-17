@@ -34,6 +34,7 @@ void Engine::add_torrent(NonnullOwnPtr<MetaInfo> meta_info, DeprecatedString dat
         NonnullRefPtr<Torrent> const& torrent = make_ref_counted<Torrent>(
             meta_info->root_dir_name().value_or(meta_info->files()[0].path),
             move(local_files),
+            meta_info->piece_hashes(),
             root_data_path,
             info_hash,
             PeerId::random(),
@@ -81,7 +82,7 @@ void Engine::start_torrent(InfoHash info_hash)
         }
 
         auto do_start_torrent = [this, torrent] {
-            auto err_or_data_file_map = TorrentDataFileMap::try_create(torrent->nominal_piece_length, torrent->local_files);
+            auto err_or_data_file_map = TorrentDataFileMap::try_create(torrent->piece_hashes, torrent->nominal_piece_length, torrent->local_files);
             if (err_or_data_file_map.is_error()) {
                 dbgln("error creating TorrentDataFileMap: {}", err_or_data_file_map.error());
                 torrent->state = TorrentState::ERROR;
@@ -120,7 +121,11 @@ void Engine::start_torrent(InfoHash info_hash)
             connect_more_peers(torrent);
         };
 
-        do_start_torrent();
+        if (torrent->bitfield_is_up_to_date) {
+            do_start_torrent();
+        } else {
+            check_torrent(torrent, move(do_start_torrent));
+        }
     });
 }
 
@@ -140,6 +145,13 @@ void Engine::stop_torrent(InfoHash info_hash)
     });
 }
 
+void Engine::cancel_checking(InfoHash info_hash)
+{
+    m_event_loop->deferred_invoke([&, info_hash] {
+        m_checker.cancel(info_hash);
+    });
+}
+
 Engine::Engine(Configuration config, NonnullRefPtr<ConnectionManager> connection_manager)
     : m_config(move(config))
     , m_connection_manager(move(connection_manager))
@@ -151,6 +163,12 @@ Engine::Engine(Configuration config, NonnullRefPtr<ConnectionManager> connection
         "Engine"sv);
 
     m_thread->start();
+
+    m_checker.on_stats_update = [&](CheckerStats stats) {
+        m_event_loop->deferred_invoke([&, stats = move(stats)] {
+            m_checker_stats = stats;
+        });
+    };
 
     m_connection_manager->on_connection_established = [&](ConnectionId connection_id) {
         m_event_loop->deferred_invoke([&, connection_id] {
@@ -287,6 +305,39 @@ Engine::Engine(Configuration config, NonnullRefPtr<ConnectionManager> connection
     };
 }
 
+void Engine::check_torrent(NonnullRefPtr<Torrent> torrent, Function<void()> on_success)
+{
+    VERIFY(!m_torrent_data_file_maps.contains(torrent->info_hash));
+
+    torrent->state = TorrentState::CHECKING;
+    auto err_or_data_file_map = TorrentDataFileMap::try_create(torrent->piece_hashes, torrent->nominal_piece_length, torrent->local_files);
+    if (err_or_data_file_map.is_error()) {
+        dbgln("Error creating data file map: {}", err_or_data_file_map.error());
+        torrent->state = TorrentState::CHECKING_FAILED;
+        return;
+    }
+
+    m_checker.check(torrent->info_hash, err_or_data_file_map.release_value(), torrent->piece_count, [&, torrent, on_success = move(on_success)](ErrorOr<BitField> err_or_checked_bitfield) mutable {
+        m_event_loop->deferred_invoke([&, torrent, err_or_checked_bitfield = move(err_or_checked_bitfield), on_success = move(on_success)]() mutable {
+            if (err_or_checked_bitfield.is_error()) {
+                auto& err = err_or_checked_bitfield.error();
+                if (err.code() == ECANCELED) {
+                    dbgln("Torrent check cancelled");
+                    torrent->state = TorrentState::CHECKING_CANCELLED;
+                } else {
+                    dbgln("Error checking torrent: {}", err);
+                    torrent->state = TorrentState::CHECKING_FAILED;
+                }
+            } else {
+                torrent->local_bitfield = err_or_checked_bitfield.release_value();
+                torrent->bitfield_is_up_to_date = true;
+                dbgln("Torrent check succeeded, we have {}/{} pieces: {:.1}%", torrent->local_bitfield.ones(), torrent->piece_count, torrent->local_bitfield.progress());
+                on_success();
+            }
+        });
+    });
+}
+
 u64 Engine::available_slots_for_torrent(NonnullRefPtr<BitTorrent::Torrent> torrent) const
 {
     u64 total_connections_for_torrent = torrent->peer_sessions.size();
@@ -322,44 +373,48 @@ ErrorOr<void> Engine::piece_downloaded(u64 index, ReadonlyBytes data, NonnullRef
 {
     auto torrent = peer->peer->torrent;
     auto const& data_file_map = m_torrent_data_file_maps.get(torrent->info_hash).value();
-    TRY(data_file_map->write_piece(index, data));
+    if (TRY(data_file_map->validate_hash(index, data))) {
+        TRY(data_file_map->write_piece(index, data));
 
-    torrent->local_bitfield.set(index, true);
-    auto& havers = torrent->missing_pieces.get(index).value()->havers;
-    dbgln("Havers of that piece {} we just downloaded: {}", index, havers.size());
-    for (auto& haver : havers) {
-        VERIFY(haver->interesting_pieces.remove(index));
-        dbgln("Removed piece {} from interesting pieces of {}", index, haver);
-        if (haver->interesting_pieces.is_empty()) {
-            dbgln("Peer {} has no more interesting pieces, sending a NotInterested message", haver);
-            m_connection_manager->send_message(haver->connection_id, make<NotInterestedMessage>());
-            haver->we_are_interested_in_peer = false;
+        torrent->local_bitfield.set(index, true);
+        auto& havers = torrent->missing_pieces.get(index).value()->havers;
+        dbgln("Havers of that piece {} we just downloaded: {}", index, havers.size());
+        for (auto& haver : havers) {
+            VERIFY(haver->interesting_pieces.remove(index));
+            dbgln("Removed piece {} from interesting pieces of {}", index, haver);
+            if (haver->interesting_pieces.is_empty()) {
+                dbgln("Peer {} has no more interesting pieces, sending a NotInterested message", haver);
+                m_connection_manager->send_message(haver->connection_id, make<NotInterestedMessage>());
+                haver->we_are_interested_in_peer = false;
+            }
         }
-    }
-    torrent->missing_pieces.remove(index);
+        torrent->missing_pieces.remove(index);
 
-    dbgln("We completed piece {}", index);
-
-    for (auto const& session : torrent->peer_sessions) {
-        m_connection_manager->send_message(session->connection_id, make<HaveMessage>(index));
-    }
-
-    if (torrent->local_bitfield.progress() == 100) {
-        dbgln("Torrent download completed: {}", torrent->info_hash);
-        VERIFY(torrent->piece_heap.is_empty());
-        VERIFY(torrent->missing_pieces.is_empty());
-
-        torrent->state = TorrentState::SEEDING;
-        m_announcers.get(torrent->info_hash).value()->completed();
+        dbgln("We completed piece {}", index);
 
         for (auto const& session : torrent->peer_sessions) {
-            if (session->bitfield.progress() == 100)
-                m_connection_manager->close_connection(session->connection_id, "Torrent fully downloaded.");
+            m_connection_manager->send_message(session->connection_id, make<HaveMessage>(index));
         }
 
-        return {};
-    }
+        if (torrent->local_bitfield.progress() == 100) {
+            dbgln("Torrent download completed: {}", torrent->info_hash);
+            VERIFY(torrent->piece_heap.is_empty());
+            VERIFY(torrent->missing_pieces.is_empty());
 
+            torrent->state = TorrentState::SEEDING;
+            m_announcers.get(torrent->info_hash).value()->completed();
+
+            for (auto const& session : torrent->peer_sessions) {
+                if (session->bitfield.progress() == 100)
+                    m_connection_manager->close_connection(session->connection_id, "Torrent fully downloaded.");
+            }
+
+            return {};
+        }
+    } else {
+        insert_piece_in_heap(torrent, index);
+        dbgln("Piece {} failed hash check", index);
+    }
     TRY(piece_or_peer_availability_updated(torrent));
     return {};
 }

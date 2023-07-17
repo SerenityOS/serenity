@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Announcer.h"
+#include "Checker.h"
 #include "Configuration.h"
 #include "FixedSizeByteString.h"
 #include "Message.h"
@@ -15,7 +16,6 @@
 #include "Peer.h"
 #include "PeerSession.h"
 #include "Torrent.h"
-#include "TorrentDataFileMap.h"
 #include <AK/HashMap.h>
 #include <LibCore/Object.h>
 
@@ -29,6 +29,7 @@ public:
     void add_torrent(NonnullOwnPtr<MetaInfo>, DeprecatedString);
     void start_torrent(InfoHash info_hash);
     void stop_torrent(InfoHash);
+    void cancel_checking(InfoHash);
 
 private:
     Engine(Configuration config, NonnullRefPtr<ConnectionManager> connection_manager);
@@ -39,6 +40,7 @@ private:
     OwnPtr<Core::EventLoop> m_event_loop;
     RefPtr<Threading::Thread> m_thread;
 
+    Checker m_checker;
     NonnullRefPtr<ConnectionManager> m_connection_manager;
 
     HashMap<InfoHash, NonnullRefPtr<Announcer>> m_announcers;
@@ -49,6 +51,9 @@ private:
     HashMap<ConnectionId, NonnullRefPtr<PeerSession>> m_all_sessions;
 
     NonnullOwnPtr<HashMap<ConnectionId, ConnectionStats>> m_connection_stats { make<HashMap<ConnectionId, ConnectionStats>>() };
+    CheckerStats m_checker_stats;
+
+    void check_torrent(NonnullRefPtr<Torrent> err_or_checked_bitfield, Function<void()> on_success);
 
     u64 available_slots_for_torrent(NonnullRefPtr<Torrent> torrent) const;
     void connect_more_peers(NonnullRefPtr<Torrent>);

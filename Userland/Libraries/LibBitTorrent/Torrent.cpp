@@ -18,6 +18,12 @@ DeprecatedString state_to_string(TorrentState state)
         return "Stopped";
     case TorrentState::STARTED:
         return "Started";
+    case TorrentState::CHECKING:
+        return "Checking";
+    case TorrentState::CHECKING_CANCELLED:
+        return "Checking Cancelled";
+    case TorrentState::CHECKING_FAILED:
+        return "Checking Failed";
     case TorrentState::SEEDING:
         return "Seeding";
     default:
@@ -25,9 +31,10 @@ DeprecatedString state_to_string(TorrentState state)
     }
 }
 
-Torrent::Torrent(DeprecatedString display_name, Vector<LocalFile> local_files, DeprecatedString data_path, InfoHash info_hash, PeerId local_peer_id, u64 total_length, u64 nominal_piece_length)
+Torrent::Torrent(DeprecatedString display_name, Vector<LocalFile> local_files, ByteBuffer piece_hashes, DeprecatedString data_path, InfoHash info_hash, PeerId local_peer_id, u64 total_length, u64 nominal_piece_length)
     : display_name(display_name)
     , local_files(local_files)
+    , piece_hashes(piece_hashes)
     , data_path(move(data_path))
     , info_hash(info_hash)
     , local_peer_id(local_peer_id)

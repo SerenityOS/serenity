@@ -148,14 +148,15 @@ void MultiFileMapperStream::close()
     }
 }
 
-ErrorOr<NonnullOwnPtr<TorrentDataFileMap>> TorrentDataFileMap::try_create(i64 piece_length, Vector<LocalFile> local_files)
+ErrorOr<NonnullOwnPtr<TorrentDataFileMap>> TorrentDataFileMap::try_create(ByteBuffer piece_hashes, i64 piece_length, Vector<LocalFile> local_files)
 {
     auto mapper = TRY(MultiFileMapperStream::try_create(move(local_files)));
-    return adopt_nonnull_own_or_enomem(new (nothrow) TorrentDataFileMap(piece_length, move(mapper)));
+    return adopt_nonnull_own_or_enomem(new (nothrow) TorrentDataFileMap(piece_hashes, piece_length, move(mapper)));
 }
 
-TorrentDataFileMap::TorrentDataFileMap(i64 piece_length, NonnullOwnPtr<MultiFileMapperStream> mapper)
-    : m_piece_length(piece_length)
+TorrentDataFileMap::TorrentDataFileMap(ByteBuffer piece_hashes, i64 piece_length, NonnullOwnPtr<MultiFileMapperStream> mapper)
+    : m_piece_hashes(piece_hashes)
+    , m_piece_length(piece_length)
     , m_files_mapper(move(mapper))
 {
 }
@@ -174,6 +175,24 @@ ErrorOr<bool> TorrentDataFileMap::write_piece(u32 index, ReadonlyBytes data)
     TRY(m_files_mapper->seek(index * m_piece_length, SeekMode::SetPosition));
     TRY(m_files_mapper->write_until_depleted(data));
     return true;
+}
+
+ErrorOr<bool> TorrentDataFileMap::check_piece(i64 index, bool is_last_piece)
+{
+    auto piece_length = is_last_piece ? m_files_mapper->total_size() % m_piece_length : m_piece_length;
+    TRY(m_files_mapper->seek(index * m_piece_length, SeekMode::SetPosition));
+    auto piece_data = TRY(ByteBuffer::create_zeroed(piece_length));
+    TRY(m_files_mapper->read_until_filled(piece_data.bytes()));
+
+    return validate_hash(index, piece_data);
+}
+
+ErrorOr<bool> TorrentDataFileMap::validate_hash(i64 index, AK::ReadonlyBytes data)
+{
+    auto piece_hash = TRY(m_piece_hashes.slice(index * 20, 20));
+    auto sha1 = Crypto::Hash::Manager(Crypto::Hash::HashKind::SHA1);
+    sha1.update(data);
+    return sha1.digest().bytes() == piece_hash.bytes();
 }
 
 }

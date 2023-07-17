@@ -73,6 +73,8 @@ ErrorOr<NonnullOwnPtr<MetaInfo>> MetaInfo::create(Stream& stream)
         }
     }
 
+    meta_info->m_piece_hashes = info_dict.get<ByteBuffer>("pieces");
+
     return meta_info;
 }
 

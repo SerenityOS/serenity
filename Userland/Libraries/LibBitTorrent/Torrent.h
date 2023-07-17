@@ -26,10 +26,11 @@ struct Peer;
 DeprecatedString state_to_string(TorrentState state);
 
 struct Torrent : public RefCounted<Torrent> {
-    Torrent(DeprecatedString display_name, Vector<LocalFile> local_files, DeprecatedString data_path, InfoHash info_hash, PeerId local_peer_id, u64 total_length, u64 nominal_piece_length);
+    Torrent(DeprecatedString display_name, Vector<LocalFile> local_files, ByteBuffer piece_hashes, DeprecatedString data_path, InfoHash info_hash, PeerId local_peer_id, u64 total_length, u64 nominal_piece_length);
 
     DeprecatedString const display_name;
     Vector<LocalFile> const local_files;
+    ByteBuffer const piece_hashes;
     DeprecatedString const data_path;
     InfoHash const info_hash;
     PeerId const local_peer_id;
@@ -38,6 +39,7 @@ struct Torrent : public RefCounted<Torrent> {
     u64 const nominal_piece_length; // Is "nominal" the right term?
     u64 const total_length;
     BitField local_bitfield;
+    bool bitfield_is_up_to_date = false;
 
     Vector<Vector<URL>> announce_urls;
     TorrentState state = TorrentState::STOPPED;
