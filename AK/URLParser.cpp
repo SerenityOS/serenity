@@ -50,17 +50,319 @@ static Optional<DeprecatedString> parse_ipv4_address(StringView input)
     return input;
 }
 
+// https://url.spec.whatwg.org/#concept-ipv6-serializer
+static ErrorOr<String> serialize_ipv6_address(Array<u16, 8> const& address)
+{
+    // 1. Let output be the empty string.
+    StringBuilder output;
+
+    // 2. Let compress be an index to the first IPv6 piece in the first longest sequences of address’s IPv6 pieces that are 0.
+    // 3. If there is no sequence of address’s IPv6 pieces that are 0 that is longer than 1, then set compress to null.
+    Optional<size_t> compress;
+    size_t longest_sequence_length = 0;
+    size_t current_sequence_length = 0;
+    size_t current_sequence_start = 0;
+    for (size_t i = 0; i < 8; ++i) {
+        if (address[i] == 0) {
+            if (current_sequence_length == 0)
+                current_sequence_start = i;
+            ++current_sequence_length;
+        } else {
+            if (current_sequence_length > longest_sequence_length) {
+                longest_sequence_length = current_sequence_length;
+                compress = current_sequence_start;
+            }
+            current_sequence_length = 0;
+        }
+    }
+    // 4. Let ignore0 be false.
+    auto ignore0 = false;
+
+    // 5. For each pieceIndex in the range 0 to 7, inclusive:
+    for (size_t piece_index = 0; piece_index <= 7; ++piece_index) {
+        // 1. If ignore0 is true and address[pieceIndex] is 0, then continue.
+        if (ignore0 && address[piece_index] == 0)
+            continue;
+
+        // 2. Otherwise, if ignore0 is true, set ignore0 to false.
+        if (ignore0)
+            ignore0 = false;
+
+        // 3. If compress is pieceIndex, then:
+        if (compress == piece_index) {
+            // 1. Let separator be "::" if pieceIndex is 0, and U+003A (:) otherwise.
+            auto separator = piece_index == 0 ? "::"sv : ":"sv;
+
+            // 2. Append separator to output.
+            output.append(separator);
+
+            // 3. Set ignore0 to true and continue.
+            ignore0 = true;
+            continue;
+        }
+
+        // 4. Append address[pieceIndex], represented as the shortest possible lowercase hexadecimal number, to output.
+        output.appendff("{:x}", address[piece_index]);
+
+        // 5. If pieceIndex is not 7, then append U+003A (:) to output.
+        if (piece_index != 7)
+            output.append(':');
+    }
+
+    // 6. Return output.
+    return output.to_string();
+}
+
+// https://url.spec.whatwg.org/#concept-ipv6-parser
+static Optional<Array<u16, 8>> parse_ipv6_address(StringView input)
+{
+    // 1. Let address be a new IPv6 address whose IPv6 pieces are all 0.
+    Array<u16, 8> address {};
+
+    // 2. Let pieceIndex be 0.
+    size_t piece_index = 0;
+
+    // 3. Let compress be null.
+    Optional<size_t> compress;
+
+    Vector<u32> code_points;
+    code_points.ensure_capacity(input.length());
+    for (auto code_point : Utf8View { input }) {
+        code_points.append(code_point);
+    }
+
+    // 4. Let pointer be a pointer for input.
+    size_t pointer = 0;
+    auto c = [&]() -> u32 {
+        if (pointer >= code_points.size())
+            return end_of_file;
+        return code_points[pointer];
+    };
+
+    auto remaining = [&]() -> ReadonlySpan<u32> {
+        if ((pointer + 1) >= code_points.size())
+            return {};
+        return code_points.span().slice(pointer + 1);
+    };
+
+    // 5. If c is U+003A (:), then:
+    if (c() == ':') {
+        // 1. If remaining does not start with U+003A (:), IPv6-invalid-compression validation error, return failure.
+        if (remaining().is_empty() || remaining()[0] != ':') {
+            report_validation_error();
+            return {};
+        }
+
+        // 2. Increase pointer by 2.
+        pointer += 2;
+
+        // 3. Increase pieceIndex by 1 and then set compress to pieceIndex.
+        ++piece_index;
+        compress = piece_index;
+    }
+
+    // 6. While c is not the EOF code point:
+    while (c() != end_of_file) {
+        // 1. If pieceIndex is 8, IPv6-too-many-pieces validation error, return failure.
+        if (piece_index == 8) {
+            report_validation_error();
+            return {};
+        }
+
+        // 2. If c is U+003A (:), then:
+        if (c() == ':') {
+            // 1. If compress is non-null, IPv6-multiple-compression validation error, return failure.
+            if (compress.has_value()) {
+                report_validation_error();
+                return {};
+            }
+
+            // 2. Increase pointer and pieceIndex by 1, set compress to pieceIndex, and then continue.
+            ++pointer;
+            ++piece_index;
+            compress = piece_index;
+            continue;
+        }
+
+        // 3. Let value and length be 0.
+        u32 value = 0;
+        size_t length = 0;
+
+        // 4. While length is less than 4 and c is an ASCII hex digit,
+        //    set value to value × 0x10 + c interpreted as hexadecimal number,
+        //    and increase pointer and length by 1.
+        while (length < 4 && is_ascii_hex_digit(c())) {
+            value = value * 0x10 + parse_ascii_hex_digit(c());
+            ++pointer;
+            ++length;
+        }
+
+        // 5. If c is U+002E (.), then:
+        if (c() == '.') {
+            // 1. If length is 0, IPv4-in-IPv6-invalid-code-point validation error, return failure.
+            if (length == 0) {
+                report_validation_error();
+                return {};
+            }
+
+            // 2. Decrease pointer by length.
+            pointer -= length;
+
+            // 3. If pieceIndex is greater than 6, IPv4-in-IPv6-too-many-pieces validation error, return failure.
+            if (piece_index > 6) {
+                report_validation_error();
+                return {};
+            }
+
+            // 4. Let numbersSeen be 0.
+            size_t numbers_seen = 0;
+
+            // 5. While c is not the EOF code point:
+            while (c() != end_of_file) {
+                // 1. Let ipv4Piece be null.
+                Optional<u32> ipv4_piece;
+
+                // 2. If numbersSeen is greater than 0, then:
+                if (numbers_seen > 0) {
+                    // 1. If c is a U+002E (.) and numbersSeen is less than 4, then increase pointer by 1.
+                    if (c() == '.' && numbers_seen < 4) {
+                        ++pointer;
+                    }
+                    // 2. Otherwise, IPv4-in-IPv6-invalid-code-point validation error, return failure.
+                    else {
+                        report_validation_error();
+                        return {};
+                    }
+                }
+
+                // 3. If c is not an ASCII digit, IPv4-in-IPv6-invalid-code-point validation error, return failure.
+                if (!is_ascii_digit(c())) {
+                    report_validation_error();
+                    return {};
+                }
+
+                // 4. While c is an ASCII digit:
+                while (is_ascii_digit(c())) {
+                    // 1. Let number be c interpreted as decimal number.
+                    u32 number = parse_ascii_digit(c());
+
+                    // 2. If ipv4Piece is null, then set ipv4Piece to number.
+                    if (!ipv4_piece.has_value()) {
+                        ipv4_piece = number;
+                    }
+                    // Otherwise, if ipv4Piece is 0, IPv4-in-IPv6-invalid-code-point validation error, return failure.
+                    else if (ipv4_piece.value() == 0) {
+                        report_validation_error();
+                        return {};
+                    }
+                    // Otherwise, set ipv4Piece to ipv4Piece × 10 + number.
+                    else {
+                        ipv4_piece = ipv4_piece.value() * 10 + number;
+                    }
+
+                    // 3. If ipv4Piece is greater than 255, IPv4-in-IPv6-out-of-range-part validation error, return failure.
+                    if (ipv4_piece.value() > 255) {
+                        report_validation_error();
+                        return {};
+                    }
+
+                    // 4. Increase pointer by 1.
+                    ++pointer;
+                }
+                // 5. Set address[pieceIndex] to address[pieceIndex] × 0x100 + ipv4Piece.
+                address[piece_index] = address[piece_index] * 0x100 + ipv4_piece.value();
+
+                // 6. Increase numbersSeen by 1.
+                ++numbers_seen;
+
+                // 7. If numbersSeen is 2 or 4, then increase pieceIndex by 1.
+                if (numbers_seen == 2 || numbers_seen == 4)
+                    ++piece_index;
+            }
+
+            // 6. If numbersSeen is not 4, IPv4-in-IPv6-too-few-parts validation error, return failure.
+            if (numbers_seen != 4) {
+                report_validation_error();
+                return {};
+            }
+
+            // 7. Break.
+            break;
+        }
+        // 6. Otherwise, if c is U+003A (:):
+        else if (c() == ':') {
+            // 1. Increase pointer by 1.
+            ++pointer;
+
+            // 2. If c is the EOF code point, IPv6-invalid-code-point validation error, return failure.
+            if (c() == end_of_file) {
+                report_validation_error();
+                return {};
+            }
+        }
+
+        // 7. Otherwise, if c is not the EOF code point, IPv6-invalid-code-point validation error, return failure.
+        else if (c() != end_of_file) {
+            report_validation_error();
+            return {};
+        }
+
+        // 8. Set address[pieceIndex] to value.
+        address[piece_index] = value;
+
+        // 9. Increase pieceIndex by 1.
+        ++piece_index;
+    }
+
+    // 7. If compress is non-null, then:
+    if (compress.has_value()) {
+        // 1. Let swaps be pieceIndex − compress.
+        size_t swaps = piece_index - compress.value();
+
+        // 2. Set pieceIndex to 7.
+        piece_index = 7;
+
+        // 3. While pieceIndex is not 0 and swaps is greater than 0,
+        //    swap address[pieceIndex] with address[compress + swaps − 1],
+        //    and then decrease both pieceIndex and swaps by 1.
+        while (piece_index != 0 && swaps > 0) {
+            swap(address[piece_index], address[compress.value() + swaps - 1]);
+            --piece_index;
+            --swaps;
+        }
+    }
+
+    // 8. Otherwise, if compress is null and pieceIndex is not 8, IPv6-too-few-pieces validation error, return failure.
+    else if (!compress.has_value() && piece_index != 8) {
+        report_validation_error();
+        return {};
+    }
+
+    // 9. Return address.
+    return address;
+}
+
 // https://url.spec.whatwg.org/#concept-host-parser
 // NOTE: This is a very bare-bones implementation.
 static Optional<DeprecatedString> parse_host(StringView input, bool is_not_special = false)
 {
+    // 1. If input starts with U+005B ([), then:
     if (input.starts_with('[')) {
+        // 1. If input does not end with U+005D (]), IPv6-unclosed validation error, return failure.
         if (!input.ends_with(']')) {
             report_validation_error();
             return {};
         }
-        // FIXME: Return the result of IPv6 parsing input with its leading U+005B ([) and trailing U+005D (]) removed.
-        TODO();
+
+        // 2. Return the result of IPv6 parsing input with its leading U+005B ([) and trailing U+005D (]) removed.
+        auto address = parse_ipv6_address(input.substring_view(1, input.length() - 2));
+        if (!address.has_value())
+            return {};
+
+        auto result = serialize_ipv6_address(*address);
+        if (result.is_error())
+            return {};
+        return result.release_value().to_deprecated_string();
     }
 
     if (is_not_special)

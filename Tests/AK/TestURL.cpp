@@ -428,3 +428,33 @@ TEST_CASE(google_street_view)
     URL url(streetview_url);
     EXPECT_EQ(url.serialize(), streetview_url);
 }
+
+TEST_CASE(ipv6_address)
+{
+    {
+        constexpr auto ipv6_url = "http://[::1]/index.html"sv;
+        URL url(ipv6_url);
+        EXPECT(url.is_valid());
+        EXPECT_EQ(url, ipv6_url);
+    }
+
+    {
+        constexpr auto ipv6_url = "http://[0:f:0:0:f:f:0:0]/index.html"sv;
+        URL url(ipv6_url);
+        EXPECT(url.is_valid());
+        EXPECT_EQ(url, ipv6_url);
+    }
+
+    {
+        constexpr auto ipv6_url = "https://[2001:0db8:85a3:0000:0000:8a2e:0370:7334]/index.html"sv;
+        URL url(ipv6_url);
+        EXPECT(url.is_valid());
+        EXPECT_EQ(url, ipv6_url);
+    }
+
+    {
+        constexpr auto bad_ipv6_url = "https://[oops]/index.html"sv;
+        URL url(bad_ipv6_url);
+        EXPECT_EQ(url.is_valid(), false);
+    }
+}
