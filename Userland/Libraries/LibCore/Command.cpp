@@ -74,17 +74,17 @@ ErrorOr<void> Command::write_lines(Span<DeprecatedString> lines)
     struct sigaction old_action_handler;
     TRY(Core::System::sigaction(SIGPIPE, &action_handler, &old_action_handler));
 
-    for (DeprecatedString const& line : lines) {
-        if (m_stdin->write_until_depleted(DeprecatedString::formatted("{}\n", line).bytes()).is_error())
-            break;
-    }
+    auto close_stdin = ScopeGuard([this, &old_action_handler] {
+        // Ensure that the input stream ends here, whether we were able to write all lines or not
+        m_stdin->close();
 
-    // Ensure that the input stream ends here, whether we were able to write all lines or not
-    m_stdin->close();
+        // It's not really a problem if this signal failed
+        if (sigaction(SIGPIPE, &old_action_handler, nullptr) < 0)
+            perror("sigaction");
+    });
 
-    // It's not really a problem if this signal failed
-    if (sigaction(SIGPIPE, &old_action_handler, nullptr) < 0)
-        perror("sigaction");
+    for (DeprecatedString const& line : lines)
+        TRY(m_stdin->write_until_depleted(DeprecatedString::formatted("{}\n", line).bytes()));
 
     return {};
 }
