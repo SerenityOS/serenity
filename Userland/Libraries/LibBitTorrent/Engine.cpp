@@ -34,6 +34,11 @@ void Engine::add_torrent(NonnullOwnPtr<MetaInfo> meta_info, DeprecatedString dat
             meta_info->total_length(),
             meta_info->piece_length());
 
+        if (meta_info->announce_list().size() > 0) {
+            torrent->announce_urls = meta_info->announce_list();
+        } else {
+            torrent->announce_urls = { { meta_info->announce() } };
+        }
         m_torrents.set(info_hash, move(torrent));
     });
 }
@@ -50,6 +55,24 @@ void Engine::start_torrent(InfoHash info_hash)
                 torrent->state = TorrentState::SEEDING;
             }
 
+            // The HTTP request we make to the tracker requires these stats.
+            auto get_stats_for_announce = [torrent]() -> AnnounceStats {
+                return { 0, 0, torrent->local_bitfield.zeroes() * torrent->nominal_piece_length };
+            };
+
+            auto on_announce_success = [this, torrent](Vector<Core::SocketAddress> peers) {
+                if (torrent->state == TorrentState::STARTED) {
+                    for (auto const& peer_address : peers) {
+                        if (!torrent->peers.contains(peer_address))
+                            torrent->peers.set(peer_address, make_ref_counted<Peer>(peer_address, torrent));
+                    }
+                    connect_more_peers(torrent);
+                }
+            };
+            auto info_hash = torrent->info_hash;
+            m_announcers.set(info_hash, MUST(Announcer::create(info_hash, torrent->announce_urls, torrent->local_peer_id, m_config.listen_port, torrent->tracker_session_key, move(get_stats_for_announce), move(on_announce_success))));
+
+            // Calling this now because we might already have peers, and we don't want to wait for the announce reponse, it could have failed for many reasons.
             connect_more_peers(torrent);
         };
 
@@ -60,6 +83,8 @@ void Engine::start_torrent(InfoHash info_hash)
 void Engine::stop_torrent(InfoHash info_hash)
 {
     m_event_loop->deferred_invoke([&, info_hash] {
+        m_announcers.take(info_hash).value()->stopped();
+
         auto torrent = m_torrents.get(info_hash).value();
         torrent->state = TorrentState::STOPPED;
         for (auto& session : m_torrents.get(info_hash).value()->peer_sessions) {
@@ -256,6 +281,7 @@ ErrorOr<void> Engine::piece_downloaded(u64 index, ReadonlyBytes, NonnullRefPtr<P
         dbgln("Torrent download completed: {}", torrent->info_hash);
 
         torrent->state = TorrentState::SEEDING;
+        m_announcers.get(torrent->info_hash).value()->completed();
 
         for (auto const& session : torrent->peer_sessions) {
             if (session->bitfield.progress() == 100)

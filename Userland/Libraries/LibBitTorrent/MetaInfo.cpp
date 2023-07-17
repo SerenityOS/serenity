@@ -29,6 +29,26 @@ ErrorOr<NonnullOwnPtr<MetaInfo>> MetaInfo::create(Stream& stream)
 
     auto meta_info = TRY(adopt_nonnull_own_or_enomem(new (nothrow) MetaInfo(InfoHash(sha1_manager.digest().bytes()))));
 
+    // TODO: support tracker-less torrent (DHT), some torrent files have no announce url.
+
+    // http://bittorrent.org/beps/bep_0012.html
+    if (root.contains("announce-list")) {
+        for (auto& tier_list : root.get<List>("announce-list")) {
+            auto tier = Vector<URL>();
+            for (auto& url : tier_list.get<List>()) {
+                tier.append(URL(TRY(DeprecatedString::from_utf8(url.get<ByteBuffer>().bytes()))));
+                if (!tier.last().is_valid())
+                    return Error::from_string_view(TRY(String::formatted("'{}' is not a valid URL", tier.last())).bytes_as_string_view());
+            }
+            meta_info->m_announce_list.append(move(tier));
+        }
+    } else {
+        meta_info->m_announce = URL(TRY(root.get_string("announce")));
+        if (!meta_info->m_announce.is_valid()) {
+            return Error::from_string_view(TRY(String::formatted("'{}' is not a valid URL", meta_info->m_announce)).bytes_as_string_view());
+        }
+    }
+
     meta_info->m_piece_length = info_dict.get<i64>("piece length");
     if (info_dict.contains("length")) {
         // single file mode

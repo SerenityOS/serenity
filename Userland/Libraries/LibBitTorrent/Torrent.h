@@ -31,11 +31,13 @@ struct Torrent : public RefCounted<Torrent> {
     DeprecatedString const data_path;
     InfoHash const info_hash;
     PeerId const local_peer_id;
+    u64 const tracker_session_key; // https://www.bittorrent.org/beps/bep_0007.html
     u64 const piece_count;
     u64 const nominal_piece_length; // Is "nominal" the right term?
     u64 const total_length;
     BitField local_bitfield;
 
+    Vector<Vector<URL>> announce_urls;
     TorrentState state = TorrentState::STOPPED;
 
     // Active torrent members

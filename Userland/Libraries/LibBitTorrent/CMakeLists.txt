@@ -1,4 +1,5 @@
 set(SOURCES
+    Announcer.cpp
     Bencode/BDecoder.cpp
     Bencode/BEncoder.cpp
     BitField.cpp

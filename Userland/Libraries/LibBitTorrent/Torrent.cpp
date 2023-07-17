@@ -30,6 +30,7 @@ Torrent::Torrent(DeprecatedString display_name,DeprecatedString data_path, InfoH
     , data_path(move(data_path))
     , info_hash(info_hash)
     , local_peer_id(local_peer_id)
+    , tracker_session_key(get_random<u64>())
     , piece_count(ceil_div(total_length, nominal_piece_length))
     , nominal_piece_length(nominal_piece_length)
     , total_length(total_length)

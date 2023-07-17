@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Announcer.h"
 #include "Configuration.h"
 #include "FixedSizeByteString.h"
 #include "Message.h"
@@ -39,6 +40,7 @@ private:
 
     NonnullRefPtr<ConnectionManager> m_connection_manager;
 
+    HashMap<InfoHash, NonnullRefPtr<Announcer>> m_announcers;
     HashMap<InfoHash, NonnullRefPtr<Torrent>> m_torrents;
 
     HashMap<ConnectionId, NonnullRefPtr<Peer>> m_connecting_peers;
