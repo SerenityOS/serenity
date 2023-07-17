@@ -70,6 +70,7 @@
 #include <LibWeb/CSS/StyleValues/OverflowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PlaceContentStyleValue.h>
+#include <LibWeb/CSS/StyleValues/PlaceItemsStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RadialGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RatioStyleValue.h>
@@ -6222,6 +6223,25 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_place_content_value(Vector<ComponentVa
     return PlaceContentStyleValue::create(maybe_align_content_value.release_nonnull(), maybe_justify_content_value.release_nonnull());
 }
 
+ErrorOr<RefPtr<StyleValue>> Parser::parse_place_items_value(Vector<ComponentValue> const& component_values)
+{
+    auto tokens = TokenStream { component_values };
+    auto maybe_align_items_value = TRY(parse_css_value_for_property(PropertyID::AlignItems, tokens));
+    if (!maybe_align_items_value)
+        return nullptr;
+
+    if (component_values.size() == 1) {
+        if (!property_accepts_identifier(PropertyID::JustifyItems, maybe_align_items_value->to_identifier()))
+            return nullptr;
+        return PlaceItemsStyleValue::create(*maybe_align_items_value, *maybe_align_items_value);
+    }
+
+    auto maybe_justify_items_value = TRY(parse_css_value_for_property(PropertyID::JustifyItems, tokens));
+    if (!maybe_justify_items_value)
+        return nullptr;
+    return PlaceItemsStyleValue::create(*maybe_align_items_value, *maybe_justify_items_value);
+}
+
 ErrorOr<RefPtr<StyleValue>> Parser::parse_text_decoration_value(Vector<ComponentValue> const& component_values)
 {
     RefPtr<StyleValue> decoration_line;
@@ -7454,6 +7474,10 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         return ParseError::SyntaxError;
     case PropertyID::PlaceContent:
         if (auto parsed_value = FIXME_TRY(parse_place_content_value(component_values)))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
+    case PropertyID::PlaceItems:
+        if (auto parsed_value = FIXME_TRY(parse_place_items_value(component_values)))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::TextDecoration:

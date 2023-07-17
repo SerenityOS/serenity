@@ -54,6 +54,7 @@
 #include <LibWeb/CSS/StyleValues/OverflowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PlaceContentStyleValue.h>
+#include <LibWeb/CSS/StyleValues/PlaceItemsStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RectStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
@@ -429,6 +430,19 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
         style.set_property(CSS::PropertyID::AlignContent, value);
         style.set_property(CSS::PropertyID::JustifyContent, value);
+        return;
+    }
+
+    if (property_id == CSS::PropertyID::PlaceItems) {
+        if (value.is_place_items()) {
+            auto const& place_items = value.as_place_items();
+            style.set_property(CSS::PropertyID::AlignItems, place_items.align_items());
+            style.set_property(CSS::PropertyID::JustifyItems, place_items.justify_items());
+            return;
+        }
+
+        style.set_property(CSS::PropertyID::AlignItems, value);
+        style.set_property(CSS::PropertyID::JustifyItems, value);
         return;
     }
 
