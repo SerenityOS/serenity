@@ -1,6 +1,6 @@
 # Patches for zig on SerenityOS
 
-## `0001-Add-support-for-building-LLVM-on-SerenityOS.patch`
+## `0001-Support-Add-support-for-building-LLVM-on-SerenityOS.patch`
 
 Add support for building LLVM on SerenityOS
 
@@ -9,12 +9,12 @@ Adds SerenityOS `#ifdef`s for platform-specific code.
 We stub out wait4, as SerenityOS doesn't support querying a child
 process's resource usage information.
 
-## `0002-Add-triple-for-SerenityOS.patch`
+## `0002-Triple-Add-triple-for-SerenityOS.patch`
 
 Add triple for SerenityOS
 
 
-## `0003-Add-support-for-SerenityOS.patch`
+## `0003-Driver-Add-support-for-SerenityOS.patch`
 
 Add support for SerenityOS
 
@@ -23,7 +23,7 @@ This makes the compiler look for libraries and headers in the right
 places, and enables some security mitigations like stack-smashing
 protection and position-independent code by default.
 
-## `0004-Default-to-ftls-model-initial-exec-on-SerenityOS.patch`
+## `0004-Driver-Default-to-ftls-model-initial-exec-on-Serenit.patch`
 
 Default to -ftls-model=initial-exec on SerenityOS
 
@@ -32,7 +32,7 @@ the default local-exec when building code for Serenity.
 
 This patch should be removed when we implement proper TLS support.
 
-## `0005-Add-support-for-SerenityOS.patch`
+## `0005-libc-Add-support-for-SerenityOS.patch`
 
 Add support for SerenityOS
 
@@ -51,7 +51,7 @@ This commit is an adaptation of the LLVM patch by Daniel Bertalan to fit
 the layout of the zig-bootstrap project.
 
 
-## `0006-Allow-undefined-symbols-on-SerenityOS.patch`
+## `0006-cmake-Allow-undefined-symbols-on-SerenityOS.patch`
 
 Allow undefined symbols on SerenityOS
 
@@ -59,7 +59,7 @@ Allow undefined symbols in LLVM libraries, which is needed because only
 stubs are available for SerenityOS libraries when libc++ and libunwind
 are built.
 
-## `0007-Support-building-shared-libLLVM-and-libClang-for-Ser.patch`
+## `0007-cmake-Support-building-shared-libLLVM-and-libClang-f.patch`
 
 Support building shared libLLVM and libClang for SerenityOS
 
@@ -75,21 +75,17 @@ it, and the ELF sections that store version data would just waste space.
 Add SerenityOS to config.guess
 
 
-## `0009-Prevent-the-use-of-POSIX-shm-on-SerenityOS.patch`
+## `0009-llvm-Prevent-the-use-of-POSIX-shm-on-SerenityOS.patch`
 
 Prevent the use of POSIX shm on SerenityOS
 
 POSIX shm is not supported by SerenityOS yet, so this causes a
 compilation error.
 
-## `0010-llvm-Implement-bigint-to-LLVM-int-for-32-bit-compile.patch`
+## `0010-cmake-Increase-the-default-stack-size-when-running-o.patch`
 
-llvm: Implement bigint-to-LLVM int for 32-bit compiler builds
+cmake: Increase the default stack size when running on SerenityOS
 
-The conversion to DoubleLimb is necessary due to LLVM only accepting
-64-bit limbs for big integers. Since we need some space to store it, we
-also have to allocate. This is an unfortunate penalty that 32-bit
-compiler builds have to take.
 
 ## `0011-Add-SerenityOS-target.patch`
 
@@ -105,5 +101,27 @@ Implement SerenityOS support in std
 ## `0013-build-Adjust-build-process-for-SerenityOS.patch`
 
 build: Adjust build process for SerenityOS
+
+
+## `0014-zlib-Fix-implicit-write-method-declaration-error.patch`
+
+zlib: Fix implicit write() method declaration error
+
+
+## `0015-build-Remove-unsupported-zig-linker-flag-z-seperate-.patch`
+
+build: Remove unsupported zig linker flag -z seperate-code
+
+
+## `0016-docgen-Filter-ZIG_LIBC-from-the-environment.patch`
+
+docgen: Filter ZIG_LIBC from the environment
+
+This environment variable can leak into the doctest builds and cause
+them to look for the host libraries in the target libc locations.
+
+## `0017-build-Set-Zig-version-to-0.11.0-dev.4003-c6aa29b6f.patch`
+
+build: Set Zig version to 0.11.0-dev.4003+c6aa29b6f
 
 

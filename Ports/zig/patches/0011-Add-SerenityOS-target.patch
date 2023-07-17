@@ -1,6 +1,6 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: sin-ack <sin-ack@users.noreply.github.com>
-Date: Sun, 11 Dec 2022 17:18:09 +0000
+Date: Sun, 16 Jul 2023 17:34:51 +0300
 Subject: [PATCH] Add SerenityOS target
 
 Named "serenity" within the code to match what LLVM says.
@@ -12,12 +12,11 @@ Named "serenity" within the code to match what LLVM says.
  zig/src/libc_installation.zig     | 6 +++++-
  zig/src/link/Elf.zig              | 9 +++++++++
  zig/src/target.zig                | 5 ++++-
- zig/src/type.zig                  | 1 +
  zig/src/zig_llvm.h                | 3 ++-
- 9 files changed, 32 insertions(+), 3 deletions(-)
+ 8 files changed, 31 insertions(+), 3 deletions(-)
 
 diff --git a/zig/lib/std/target.zig b/zig/lib/std/target.zig
-index 49a7bd1c7dd1334067ed3b867f5ada7b99538355..af7b14be8e01509280d59b0196ff3a3040a48bf6 100644
+index 2a96e84001ebf67ce29a9059f62045776530549a..b137e48c02d7d7ecc0f5eae61f6225504bf0ba3d 100644
 --- a/zig/lib/std/target.zig
 +++ b/zig/lib/std/target.zig
 @@ -60,6 +60,7 @@ pub const Target = struct {
@@ -44,7 +43,7 @@ index 49a7bd1c7dd1334067ed3b867f5ada7b99538355..af7b14be8e01509280d59b0196ff3a30
                  => true,
  
                  .linux,
-@@ -563,6 +566,7 @@ pub const Target = struct {
+@@ -568,6 +571,7 @@ pub const Target = struct {
                  .watchos,
                  .driverkit,
                  .shadermodel,
@@ -52,7 +51,7 @@ index 49a7bd1c7dd1334067ed3b867f5ada7b99538355..af7b14be8e01509280d59b0196ff3a30
                  => return .none,
              }
          }
-@@ -1740,6 +1744,8 @@ pub const Target = struct {
+@@ -1690,6 +1694,8 @@ pub const Target = struct {
              // TODO revisit when multi-arch for Haiku is available
              .haiku => return copy(&result, "/system/runtime_loader"),
  
@@ -62,7 +61,7 @@ index 49a7bd1c7dd1334067ed3b867f5ada7b99538355..af7b14be8e01509280d59b0196ff3a30
              // implement the standard dynamic linker path code for it.
              .ananas,
 diff --git a/zig/lib/std/zig/CrossTarget.zig b/zig/lib/std/zig/CrossTarget.zig
-index aad0cb42f252d04b858133ba6ec598aa043f1c1c..a401ba49ee7afde0279c537a890cd33d3fe4815e 100644
+index d42b02d931dc3afa7cc33b1576ec77d123fc5bd5..479c1bffc8df034ee2d876118c1aa2579758ac44 100644
 --- a/zig/lib/std/zig/CrossTarget.zig
 +++ b/zig/lib/std/zig/CrossTarget.zig
 @@ -137,6 +137,7 @@ fn updateOsVersionRange(self: *CrossTarget, os: Target.Os) void {
@@ -73,7 +72,7 @@ index aad0cb42f252d04b858133ba6ec598aa043f1c1c..a401ba49ee7afde0279c537a890cd33d
          .other,
          => {
              self.os_version_min = .{ .none = {} };
-@@ -693,6 +694,7 @@ fn parseOs(result: *CrossTarget, diags: *ParseOptions.Diagnostics, text: []const
+@@ -734,6 +735,7 @@ fn parseOs(result: *CrossTarget, diags: *ParseOptions.Diagnostics, text: []const
          .plan9,
          .driverkit,
          .shadermodel,
@@ -82,10 +81,10 @@ index aad0cb42f252d04b858133ba6ec598aa043f1c1c..a401ba49ee7afde0279c537a890cd33d
          => return error.InvalidOperatingSystemVersion,
  
 diff --git a/zig/src/codegen/llvm.zig b/zig/src/codegen/llvm.zig
-index e3ae805402e063341519ebeb7ee62c8717e45697..ba4f2c0840f15b7776f4d8768d3a525551069484 100644
+index ec456e53a7b29be235ec329882e593545273c732..32baa8fbb39a699e57450ed36d5897991c32524b 100644
 --- a/zig/src/codegen/llvm.zig
 +++ b/zig/src/codegen/llvm.zig
-@@ -143,6 +143,7 @@ pub fn targetTriple(allocator: Allocator, target: std.Target) ![:0]u8 {
+@@ -144,6 +144,7 @@ pub fn targetTriple(allocator: Allocator, target: std.Target) ![:0]u8 {
          .watchos => "watchos",
          .driverkit => "driverkit",
          .shadermodel => "shadermodel",
@@ -93,7 +92,7 @@ index e3ae805402e063341519ebeb7ee62c8717e45697..ba4f2c0840f15b7776f4d8768d3a5255
          .opencl,
          .glsl450,
          .vulkan,
-@@ -246,6 +247,7 @@ pub fn targetOs(os_tag: std.Target.Os.Tag) llvm.OSType {
+@@ -250,6 +251,7 @@ pub fn targetOs(os_tag: std.Target.Os.Tag) llvm.OSType {
          .emscripten => .Emscripten,
          .driverkit => .DriverKit,
          .shadermodel => .ShaderModel,
@@ -102,10 +101,10 @@ index e3ae805402e063341519ebeb7ee62c8717e45697..ba4f2c0840f15b7776f4d8768d3a5255
  }
  
 diff --git a/zig/src/codegen/llvm/bindings.zig b/zig/src/codegen/llvm/bindings.zig
-index 90d0f51c7b36f7f3df19594933034f483a24c757..f11d1a6743493e18d5b4c2c6f19356d249f88cba 100644
+index b093588e80c1dcbcd3d515ffa09b9ffefcd55828..385b17bd16a2f957f6e79bd7c068820415bcae6f 100644
 --- a/zig/src/codegen/llvm/bindings.zig
 +++ b/zig/src/codegen/llvm/bindings.zig
-@@ -1287,6 +1287,7 @@ pub const OSType = enum(c_int) {
+@@ -1298,6 +1298,7 @@ pub const OSType = enum(c_int) {
      WASI,
      Emscripten,
      ShaderModel,
@@ -114,7 +113,7 @@ index 90d0f51c7b36f7f3df19594933034f483a24c757..f11d1a6743493e18d5b4c2c6f19356d2
  
  pub const ArchType = enum(c_int) {
 diff --git a/zig/src/libc_installation.zig b/zig/src/libc_installation.zig
-index 0a50f970123fbf2298cdf3666a1e7d6a59130e20..af50f4ebfaa783328513d9d9086cdfa9aee83b76 100644
+index 355c3bad8dcd53a03e4df133f0a470b91d390a22..c048b865270640877e0bd042c21faa7e8317991f 100644
 --- a/zig/src/libc_installation.zig
 +++ b/zig/src/libc_installation.zig
 @@ -8,6 +8,7 @@ const build_options = @import("build_options");
@@ -145,10 +144,10 @@ index 0a50f970123fbf2298cdf3666a1e7d6a59130e20..af50f4ebfaa783328513d9d9086cdfa9
          else
              "sys/errno.h";
 diff --git a/zig/src/link/Elf.zig b/zig/src/link/Elf.zig
-index ebb1cbdfb8efc867d34e0315256e6efa4c90a035..46c61a10fefd8aa2efe43c023e261e97197dc4b3 100644
+index 0258b0a6a70ad07bf6bad54ccf24954d67bb98d9..fc2d11a10eb8aa31a739a0da15b592cd0f0b90ac 100644
 --- a/zig/src/link/Elf.zig
 +++ b/zig/src/link/Elf.zig
-@@ -3152,6 +3152,15 @@ const CsuObjects = struct {
+@@ -3382,6 +3382,15 @@ const CsuObjects = struct {
                      .static_pie  => result.set( "rcrt0.o", null, "crtbegin.o",  "crtend.o",  null ),
                      // zig fmt: on
                  },
@@ -165,10 +164,10 @@ index ebb1cbdfb8efc867d34e0315256e6efa4c90a035..46c61a10fefd8aa2efe43c023e261e97
                      // zig fmt: off
                      .dynamic_lib => result.set( null,          "crti.o", "crtbeginS.o", "crtendS.o", "crtn.o" ),
 diff --git a/zig/src/target.zig b/zig/src/target.zig
-index 836791a1d1d7c69655d056b39ed58f2399ed12f4..02c9a23d9ac0dfa870defba94c8b302a5dab7927 100644
+index f07dcc43d21e516ef5e5f392d231207a4e6389eb..95efc730d9c2ba61a19200bf11ad1456a37650dc 100644
 --- a/zig/src/target.zig
 +++ b/zig/src/target.zig
-@@ -187,7 +187,7 @@ pub fn libcNeedsLibUnwind(target: std.Target) bool {
+@@ -190,7 +190,7 @@ pub fn libcNeedsLibUnwind(target: std.Target) bool {
  }
  
  pub fn requiresPIE(target: std.Target) bool {
@@ -177,7 +176,7 @@ index 836791a1d1d7c69655d056b39ed58f2399ed12f4..02c9a23d9ac0dfa870defba94c8b302a
  }
  
  /// This function returns whether non-pic code is completely invalid on the given target.
-@@ -472,6 +472,9 @@ pub fn libcFullLinkFlags(target: std.Target) []const []const u8 {
+@@ -476,6 +476,9 @@ pub fn libcFullLinkFlags(target: std.Target) []const []const u8 {
              "-lpthread",
              "-lc",
          },
@@ -187,23 +186,11 @@ index 836791a1d1d7c69655d056b39ed58f2399ed12f4..02c9a23d9ac0dfa870defba94c8b302a
          else => switch (target.abi) {
              .android => &[_][]const u8{
                  "-lm",
-diff --git a/zig/src/type.zig b/zig/src/type.zig
-index 1aefa8f7a1c77ddf58b1cb7271b57db6618704fb..13f8dc1879ed37e0452c78c698b72fcb3b955ec2 100644
---- a/zig/src/type.zig
-+++ b/zig/src/type.zig
-@@ -6772,6 +6772,7 @@ pub const CType = enum {
-             .ananas,
-             .fuchsia,
-             .minix,
-+	    .serenity,
-             => switch (target.cpu.arch) {
-                 .msp430 => switch (self) {
-                     .short, .ushort, .int, .uint => return 16,
 diff --git a/zig/src/zig_llvm.h b/zig/src/zig_llvm.h
-index 7f9bd0a1619d30239a1ab92c3b9675d8c1bdb987..dc1561421fa0afedf892ddbdf698b57aeb83af72 100644
+index 74dcd105649ab9633f67a8caaf26e2d3ba5b5aef..6dc140d69c16935654a9d58658184def3464be35 100644
 --- a/zig/src/zig_llvm.h
 +++ b/zig/src/zig_llvm.h
-@@ -468,7 +468,8 @@ enum ZigLLVM_OSType {
+@@ -475,7 +475,8 @@ enum ZigLLVM_OSType {
      ZigLLVM_WASI,       // Experimental WebAssembly OS
      ZigLLVM_Emscripten,
      ZigLLVM_ShaderModel, // DirectX ShaderModel

@@ -12,6 +12,7 @@ const SerenityIncludes = @cImport({
     @cInclude("stdio.h");
     @cInclude("sys/file.h");
     @cInclude("sys/mman.h");
+    @cInclude("sys/socket.h");
     @cInclude("sys/stat.h");
     @cInclude("sys/types.h");
     @cInclude("sys/uio.h");

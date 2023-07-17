@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: sin-ack <sin-ack@protonmail.com>
 Date: Tue, 27 Sep 2022 00:08:46 +0000
-Subject: [PATCH] Add support for SerenityOS
+Subject: [PATCH] [libc++] Add support for SerenityOS
 
 This commit teaches libc++ about what features are available in our
 LibC, namely:
@@ -28,10 +28,10 @@ Co-Authored-By: Daniel Bertalan <dani@danielbertalan.dev>
  create mode 100644 zig/lib/libcxx/include/__support/serenity/xlocale.h
 
 diff --git a/zig/lib/libcxx/include/__config b/zig/lib/libcxx/include/__config
-index d9a47343dad1faf52826abbcd6da7578cec9932a..74a8970eddfaec23f421c3edbe974f77ad055e27 100644
+index 7967c70035414e65a10aa82e564cf1ce48a12032..dad99cd4cc2520e22e9ef8e60ce3e9267c733cbc 100644
 --- a/zig/lib/libcxx/include/__config
 +++ b/zig/lib/libcxx/include/__config
-@@ -910,7 +910,8 @@ _LIBCPP_BEGIN_NAMESPACE_STD _LIBCPP_END_NAMESPACE_STD
+@@ -930,7 +930,8 @@ _LIBCPP_BEGIN_NAMESPACE_STD _LIBCPP_END_NAMESPACE_STD
          defined(__sun__) ||                                                                                            \
          defined(__MVS__) ||                                                                                            \
          defined(_AIX) ||                                                                                               \
@@ -41,7 +41,7 @@ index d9a47343dad1faf52826abbcd6da7578cec9932a..74a8970eddfaec23f421c3edbe974f77
  // clang-format on
  #      define _LIBCPP_HAS_THREAD_API_PTHREAD
  #    elif defined(__Fuchsia__)
-@@ -988,7 +989,7 @@ _LIBCPP_BEGIN_NAMESPACE_STD _LIBCPP_END_NAMESPACE_STD
+@@ -1008,7 +1009,7 @@ _LIBCPP_BEGIN_NAMESPACE_STD _LIBCPP_END_NAMESPACE_STD
  #  endif
  
  #  if defined(__BIONIC__) || defined(__NuttX__) || defined(__Fuchsia__) || defined(__wasi__) ||                        \
@@ -51,10 +51,10 @@ index d9a47343dad1faf52826abbcd6da7578cec9932a..74a8970eddfaec23f421c3edbe974f77
  #  endif
  
 diff --git a/zig/lib/libcxx/include/__locale b/zig/lib/libcxx/include/__locale
-index 40f9a3ff57c22635254be654227333b2a10eca6a..1c499c078b44a49abead17ce566801b4c34733f3 100644
+index e0ffa0ca00ffe2b13c363440da0f7cd26c6d65db..33e994abe361af548ccbc5e17c251741546f5503 100644
 --- a/zig/lib/libcxx/include/__locale
 +++ b/zig/lib/libcxx/include/__locale
-@@ -42,6 +42,8 @@
+@@ -44,6 +44,8 @@
  # include <__support/musl/xlocale.h>
  #elif defined(_LIBCPP_HAS_MUSL_LIBC)
  # include <__support/musl/xlocale.h>
@@ -94,10 +94,10 @@ index 0000000000000000000000000000000000000000..0f939d2f6989e2ad617145308d079776
 +
 +#endif
 diff --git a/zig/lib/libcxx/include/locale b/zig/lib/libcxx/include/locale
-index b01c66d0430f66ee74118e73296780bb864e920b..da29b7d00c709788facb049f417b6d5ccb5b70e1 100644
+index 874866f69822366f24a99458a040d07651c7ae4a..55632f101f06528c3a9eb01e062f69b06d887369 100644
 --- a/zig/lib/libcxx/include/locale
 +++ b/zig/lib/libcxx/include/locale
-@@ -217,7 +217,7 @@ template <class charT> class messages_byname;
+@@ -216,7 +216,7 @@ template <class charT> class messages_byname;
  
  #if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
  // Most unix variants have catopen.  These are the specific ones that don't.
