@@ -50,6 +50,10 @@ void Engine::start_torrent(InfoHash info_hash)
 
         auto do_start_torrent = [this, torrent] {
             if (torrent->local_bitfield.progress() < 100) {
+                for (u64 i = 0; i < torrent->piece_count; i++) {
+                    if (!torrent->local_bitfield.get(i))
+                        torrent->missing_pieces.set(i, make_ref_counted<PieceStatus>(i));
+                }
                 torrent->state = TorrentState::STARTED;
             } else {
                 torrent->state = TorrentState::SEEDING;
@@ -87,6 +91,8 @@ void Engine::stop_torrent(InfoHash info_hash)
 
         auto torrent = m_torrents.get(info_hash).value();
         torrent->state = TorrentState::STOPPED;
+        torrent->piece_heap.clear();
+        torrent->missing_pieces.clear();
         for (auto& session : m_torrents.get(info_hash).value()->peer_sessions) {
             m_connection_manager->close_connection(session->connection_id, "Stopping torrent");
         }
@@ -140,8 +146,13 @@ Engine::Engine(Configuration config, NonnullRefPtr<ConnectionManager> connection
                 auto torrent = peer->torrent;
 
                 if (torrent->state == TorrentState::STARTED) {
+                    for (auto const& piece_index : session->interesting_pieces) {
+                        torrent->missing_pieces.get(piece_index).value()->havers.remove(session);
+                    }
+
                     auto& piece = session->incoming_piece;
                     if (piece.index.has_value()) {
+                        insert_piece_in_heap(torrent, piece.index.value());
                         piece.index = {};
                     }
                 }
@@ -271,6 +282,19 @@ ErrorOr<void> Engine::piece_downloaded(u64 index, ReadonlyBytes, NonnullRefPtr<P
     auto torrent = peer->peer->torrent;
 
     torrent->local_bitfield.set(index, true);
+    auto& havers = torrent->missing_pieces.get(index).value()->havers;
+    dbgln("Havers of that piece {} we just downloaded: {}", index, havers.size());
+    for (auto& haver : havers) {
+        VERIFY(haver->interesting_pieces.remove(index));
+        dbgln("Removed piece {} from interesting pieces of {}", index, haver);
+        if (haver->interesting_pieces.is_empty()) {
+            dbgln("Peer {} has no more interesting pieces, sending a NotInterested message", haver);
+            m_connection_manager->send_message(haver->connection_id, make<NotInterestedMessage>());
+            haver->we_are_interested_in_peer = false;
+        }
+    }
+    torrent->missing_pieces.remove(index);
+
     dbgln("We completed piece {}", index);
 
     for (auto const& session : torrent->peer_sessions) {
@@ -279,6 +303,8 @@ ErrorOr<void> Engine::piece_downloaded(u64 index, ReadonlyBytes, NonnullRefPtr<P
 
     if (torrent->local_bitfield.progress() == 100) {
         dbgln("Torrent download completed: {}", torrent->info_hash);
+        VERIFY(torrent->piece_heap.is_empty());
+        VERIFY(torrent->missing_pieces.is_empty());
 
         torrent->state = TorrentState::SEEDING;
         m_announcers.get(torrent->info_hash).value()->completed();
@@ -304,28 +330,68 @@ ErrorOr<void> Engine::piece_or_peer_availability_updated(NonnullRefPtr<Torrent> 
     dbgln("We have {} inactive peers out of {} connected peers.", available_slots, torrent->peer_sessions.size());
     for (size_t i = 0; i < available_slots; i++) {
         dbgln("Trying to start a piece download on a {}th peer", i);
+        if (torrent->piece_heap.is_empty())
+            return {};
 
         // TODO find out the rarest available piece, because the rarest piece might not be available right now.
-        u64 next_piece_index = 0;
-        for (u64 j = 0; j < torrent->piece_count; j++) {
-            if (!torrent->local_bitfield.get(j)) {
-                next_piece_index = j;
+        auto next_piece_index = torrent->piece_heap.peek_min()->index_in_torrent;
+        dbgln("Picked next piece for download {}", next_piece_index);
+        // TODO improve how we select the peer. Choking algo, bandwidth, etc
+        bool found_peer = false;
+        for (auto& haver : torrent->missing_pieces.get(next_piece_index).value()->havers) {
+            if (!haver->peer_is_choking_us && !haver->active) {
+                dbgln("Requesting piece {} from peer {}", next_piece_index, haver);
+                haver->active = true;
+                u32 block_length = min(BLOCK_LENGTH, torrent->piece_length(next_piece_index));
+                m_connection_manager->send_message(haver->connection_id, make<RequestMessage>(next_piece_index, 0, block_length));
+
+                found_peer = true;
                 break;
             }
         }
-
-        dbgln("Picked next piece for download {}", next_piece_index);
-        for (auto p : torrent->peer_sessions) {
-            if (!p->active && !p->peer_is_choking_us && p->bitfield.get(next_piece_index)) {
-                dbgln("Requesting piece {} from peer {}", next_piece_index, p);
-                p->active = true;
-                u32 block_length = min(BLOCK_LENGTH, torrent->piece_length(next_piece_index));
-                m_connection_manager->send_message(p->connection_id, make<RequestMessage>(next_piece_index, 0, block_length));
-                return {};
-            }
+        if (found_peer) {
+            dbgln("Found peer for piece {}, popping the piece from the heap", next_piece_index);
+            auto piece_status = torrent->piece_heap.pop_min();
+            piece_status->currently_downloading = true;
+            VERIFY(piece_status->index_in_torrent == next_piece_index);
+        } else {
+            dbgln("No more available peer to download piece {}", next_piece_index);
+            break;
         }
     }
     return {};
+}
+
+ErrorOr<void> Engine::peer_has_piece(u64 piece_index, NonnullRefPtr<PeerSession> peer)
+{
+    auto& torrent = peer->peer->torrent;
+    auto piece_status = torrent->missing_pieces.get(piece_index).value();
+    piece_status->havers.set(peer);
+
+    // A piece being downloaded won't be in the heap
+    if (!piece_status->currently_downloading) {
+        if (piece_status->index_in_heap.has_value()) {
+            // The piece is missing and other peers have it.
+            torrent->piece_heap.update(*piece_status);
+        } else {
+            // The piece is missing and this is the first peer we learn of that has it.
+            torrent->piece_heap.insert(*piece_status);
+        }
+    } else {
+        VERIFY(!piece_status->index_in_heap.has_value());
+    }
+
+    peer->interesting_pieces.set(piece_index);
+
+    return {};
+}
+
+void Engine::insert_piece_in_heap(NonnullRefPtr<Torrent> torrent, u64 piece_index)
+{
+    dbgln("Reinserting piece {} in the heap for torrent {}", piece_index, torrent->info_hash);
+    auto piece_status = torrent->missing_pieces.get(piece_index).value();
+    piece_status->currently_downloading = false;
+    torrent->piece_heap.insert(*piece_status);
 }
 
 ErrorOr<void> Engine::parse_input_message(ConnectionId connection_id, ReadonlyBytes message_bytes)
@@ -387,10 +453,10 @@ ErrorOr<void> Engine::handle_bitfield(NonnullOwnPtr<BitFieldMessage> bitfield, N
 
     bool interesting = false;
     auto torrent = peer->peer->torrent;
-    for (u64 piece_index = 0; piece_index < torrent->local_bitfield.size(); piece_index++) {
-        if (peer->bitfield.get(piece_index)) {
+    for (auto& missing_piece : torrent->missing_pieces.keys()) {
+        if (peer->bitfield.get(missing_piece)) {
             interesting = true;
-            break;
+            TRY(peer_has_piece(missing_piece, peer));
         }
     }
 
@@ -429,7 +495,8 @@ ErrorOr<void> Engine::handle_have(NonnullOwnPtr<HaveMessage> have_message, Nonnu
     dbgln("Peer has piece {}, setting in peer bitfield, bitfield size: {}", piece_index, peer->bitfield.size());
     peer->bitfield.set(piece_index, true);
 
-    if (!peer->peer->torrent->local_bitfield.get(piece_index)) {
+    if (peer->peer->torrent->missing_pieces.contains(piece_index)) {
+        TRY(peer_has_piece(piece_index, peer));
         if (!peer->we_are_interested_in_peer) {
             m_connection_manager->send_message(peer->connection_id, make<UnchokeMessage>());
             peer->we_are_choking_peer = false;
@@ -485,6 +552,7 @@ ErrorOr<void> Engine::handle_piece(NonnullOwnPtr<PieceMessage> piece_message, No
             dbgln("Weren't done downloading the blocks for this piece {}, but peer is choking us, so we're giving up on it", index);
             piece.index = {};
             peer->active = false;
+            insert_piece_in_heap(torrent, index);
             TRY(piece_or_peer_availability_updated(torrent));
         } else {
             auto next_block_length = min((size_t)BLOCK_LENGTH, (size_t)piece.length - piece.offset);

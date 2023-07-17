@@ -10,6 +10,7 @@ set(SOURCES
     Net/ConnectionManager.cpp
     Peer.cpp
     PeerSession.cpp
+    PieceHeap.cpp
     Torrent.cpp
 )
 

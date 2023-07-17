@@ -52,6 +52,8 @@ private:
     void connect_more_peers(NonnullRefPtr<Torrent>);
     ErrorOr<void> piece_downloaded(u64 index, ReadonlyBytes data, NonnullRefPtr<PeerSession> peer);
     ErrorOr<void> piece_or_peer_availability_updated(NonnullRefPtr<Torrent> torrent);
+    ErrorOr<void> peer_has_piece(u64 piece_index, NonnullRefPtr<PeerSession> peer);
+    void insert_piece_in_heap(NonnullRefPtr<Torrent> torrent, u64 piece_index);
 
     ErrorOr<void> parse_input_message(ConnectionId connection_id, ReadonlyBytes message_bytes);
     ErrorOr<void> handle_bitfield(NonnullOwnPtr<BitFieldMessage>, NonnullRefPtr<PeerSession>);

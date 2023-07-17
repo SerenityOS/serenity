@@ -34,6 +34,7 @@ struct PeerSession : public RefCounted<PeerSession> {
     bool we_are_interested_in_peer { false };
 
     BitField bitfield;
+    HashTable<u64> interesting_pieces;
 
     // TODO: move this to PieceStatus?
     struct {

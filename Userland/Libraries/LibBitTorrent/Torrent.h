@@ -9,6 +9,7 @@
 #include "BitField.h"
 #include "Files.h"
 #include "FixedSizeByteString.h"
+#include "PieceHeap.h"
 #include "TorrentState.h"
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
@@ -41,6 +42,8 @@ struct Torrent : public RefCounted<Torrent> {
     TorrentState state = TorrentState::STOPPED;
 
     // Active torrent members
+    PieceHeap piece_heap;
+    HashMap<u64, RefPtr<PieceStatus>> missing_pieces;
     HashMap<Core::SocketAddress, NonnullRefPtr<Peer>> peers;
     HashTable<NonnullRefPtr<PeerSession>> peer_sessions;
     u64 download_speed { 0 };
