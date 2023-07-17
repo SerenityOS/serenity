@@ -3,6 +3,7 @@ set(FUZZER_TARGETS
     BMPLoader
     Brotli
     CyrillicDecoder
+    DDSLoader
     DeflateCompression
     DeflateDecompression
     ELF
@@ -72,6 +73,7 @@ set(FUZZER_DEPENDENCIES_BMPLoader LibGfx)
 set(FUZZER_DEPENDENCIES_Brotli LibCompress)
 set(FUZZER_DEPENDENCIES_CSSParser LibWeb)
 set(FUZZER_DEPENDENCIES_CyrillicDecoder LibTextCodec)
+set(FUZZER_DEPENDENCIES_DDSLoader LibGfx)
 set(FUZZER_DEPENDENCIES_DeflateCompression LibCompress)
 set(FUZZER_DEPENDENCIES_DeflateDecompression LibCompress)
 set(FUZZER_DEPENDENCIES_ELF LibELF)

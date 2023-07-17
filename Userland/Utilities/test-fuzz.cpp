@@ -17,6 +17,7 @@
     T(Brotli)                \
     T(CSSParser)             \
     T(CyrillicDecoder)       \
+    T(DDSLoader)             \
     T(DeflateCompression)    \
     T(DeflateDecompression)  \
     T(ELF)                   \
