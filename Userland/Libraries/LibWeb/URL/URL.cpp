@@ -499,7 +499,7 @@ AK::URL parse(StringView input, Optional<AK::URL> const& base_url)
     auto url = URLParser::basic_parse(input, base_url);
 
     // 2. If url is failure, return failure.
-    if (url.is_valid())
+    if (!url.is_valid())
         return {};
 
     // 3. If url’s scheme is not "blob",
