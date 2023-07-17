@@ -609,43 +609,27 @@ static bool decode_png_header(PNGLoadingContext& context)
     return true;
 }
 
-static bool decode_png_ihdr(PNGLoadingContext& context)
+static ErrorOr<void> decode_png_ihdr(PNGLoadingContext& context)
 {
-    if (context.state >= PNGLoadingContext::IHDRDecoded)
-        return true;
-
-    if (context.state < PNGLoadingContext::HeaderDecoded) {
-        if (!decode_png_header(context))
-            return false;
-    }
-
     size_t data_remaining = context.data_size - (context.data_current_ptr - context.data);
 
     Streamer streamer(context.data_current_ptr, data_remaining);
     while (!streamer.at_end() && !context.has_seen_iend) {
-        if (auto result = process_chunk(streamer, context); result.is_error()) {
-            context.state = PNGLoadingContext::State::Error;
-            return false;
-        }
+        TRY(process_chunk(streamer, context));
 
         context.data_current_ptr = streamer.current_data_ptr();
 
         if (context.state == PNGLoadingContext::State::IHDRDecoded)
-            return true;
+            return {};
     }
-
-    return false;
 }
 
 static bool decode_png_image_data_chunk(PNGLoadingContext& context)
 {
+    VERIFY(context.state >= PNGLoadingContext::IHDRDecoded);
+
     if (context.state >= PNGLoadingContext::ImageDataChunkDecoded)
         return true;
-
-    if (context.state < PNGLoadingContext::IHDRDecoded) {
-        if (!decode_png_ihdr(context))
-            return false;
-    }
 
     size_t data_remaining = context.data_size - (context.data_current_ptr - context.data);
 
@@ -700,13 +684,10 @@ static bool decode_png_animation_data_chunks(PNGLoadingContext& context, u32 req
 
 static bool decode_png_chunks(PNGLoadingContext& context)
 {
+    VERIFY(context.state >= PNGLoadingContext::IHDRDecoded);
+
     if (context.state >= PNGLoadingContext::State::ChunksDecoded)
         return true;
-
-    if (context.state < PNGLoadingContext::HeaderDecoded) {
-        if (!decode_png_header(context))
-            return false;
-    }
 
     size_t data_remaining = context.data_size - (context.data_current_ptr - context.data);
 
@@ -871,9 +852,6 @@ static ErrorOr<void> decode_png_bitmap(PNGLoadingContext& context)
 
     if (context.state >= PNGLoadingContext::State::BitmapDecoded)
         return {};
-
-    if (context.width == -1 || context.height == -1)
-        return Error::from_string_literal("PNGImageDecoderPlugin: Didn't see an IHDR chunk.");
 
     if (context.color_type == PNG::ColorType::IndexedColor && context.palette_data.is_empty())
         return Error::from_string_literal("PNGImageDecoderPlugin: Didn't see a PLTE chunk for a palletized image, or it was empty.");
@@ -1301,23 +1279,7 @@ bool PNGImageDecoderPlugin::ensure_animation_frame_was_decoded(u32 animation_fra
 
 IntSize PNGImageDecoderPlugin::size()
 {
-    if (m_context->state == PNGLoadingContext::State::Error)
-        return {};
-
-    if (m_context->state < PNGLoadingContext::State::IHDRDecoded) {
-        bool success = decode_png_ihdr(*m_context);
-        if (!success)
-            return {};
-    }
-
     return { m_context->width, m_context->height };
-}
-
-ErrorOr<void> PNGImageDecoderPlugin::initialize()
-{
-    if (decode_png_header(*m_context))
-        return {};
-    return Error::from_string_literal("bad image header");
 }
 
 bool PNGImageDecoderPlugin::sniff(ReadonlyBytes data)
@@ -1330,7 +1292,11 @@ bool PNGImageDecoderPlugin::sniff(ReadonlyBytes data)
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> PNGImageDecoderPlugin::create(ReadonlyBytes data)
 {
-    return adopt_nonnull_own_or_enomem(new (nothrow) PNGImageDecoderPlugin(data.data(), data.size()));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) PNGImageDecoderPlugin(data.data(), data.size())));
+    if (!decode_png_header(*plugin->m_context))
+        return Error::from_string_literal("Invalid header for a PNG file");
+    TRY(decode_png_ihdr(*plugin->m_context));
+    return plugin;
 }
 
 bool PNGImageDecoderPlugin::is_animated()
