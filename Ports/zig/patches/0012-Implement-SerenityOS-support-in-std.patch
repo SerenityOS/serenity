@@ -6,23 +6,24 @@ Subject: [PATCH] Implement SerenityOS support in std
 ---
  zig/lib/std/Thread.zig               |   2 +-
  zig/lib/std/c.zig                    |   1 +
- zig/lib/std/c/serenity.zig           | 396 +++++++++++++++++++++++++++
+ zig/lib/std/c/serenity.zig           | 621 +++++++++++++++++++++++++++
  zig/lib/std/c/serenity/constants.zig |   6 +
  zig/lib/std/debug.zig                |   3 +-
- zig/lib/std/fs.zig                   |  72 ++++-
+ zig/lib/std/fs.zig                   |  72 +++-
  zig/lib/std/fs/get_app_data_dir.zig  |   2 +-
  zig/lib/std/os.zig                   |   3 +-
- 8 files changed, 479 insertions(+), 6 deletions(-)
+ zig/lib/std/target.zig               |   1 +
+ 9 files changed, 705 insertions(+), 6 deletions(-)
  create mode 100644 zig/lib/std/c/serenity.zig
  create mode 100644 zig/lib/std/c/serenity/constants.zig
 
 diff --git a/zig/lib/std/Thread.zig b/zig/lib/std/Thread.zig
-index e2e17a29259e1e2cf323ad90451f6fe7906e12a9..125e63bfd138a5a08653f4c815846c42e8eca3c5 100644
+index 99e2feb4cf432d7fb323b62412e810a7b932d9a9..4dcc644b36cf99a7c18084c5ccdaeffa7723e7bd 100644
 --- a/zig/lib/std/Thread.zig
 +++ b/zig/lib/std/Thread.zig
-@@ -617,7 +617,7 @@ const PosixThreadImpl = struct {
+@@ -636,7 +636,7 @@ const PosixThreadImpl = struct {
                  };
-                 return @intCast(usize, count);
+                 return @as(usize, @intCast(count));
              },
 -            .solaris => {
 +            .solaris, .serenity => {
@@ -30,7 +31,7 @@ index e2e17a29259e1e2cf323ad90451f6fe7906e12a9..125e63bfd138a5a08653f4c815846c42
                  // /dev/kstat via ioctls, and traverse a linked list for each
                  // cpu.
 diff --git a/zig/lib/std/c.zig b/zig/lib/std/c.zig
-index 5f03f1c61902a191de87b49f0dcbdfec4a872d34..92c4bfcccb6bf45fcd8df748d346c8ec0dc84208 100644
+index 149f3ab7e19919ad8d2b57988aa1db61213ea60d..d7720089a346f4c2ea8ef8f9aac15459b3fc2235 100644
 --- a/zig/lib/std/c.zig
 +++ b/zig/lib/std/c.zig
 @@ -54,6 +54,7 @@ pub usingnamespace switch (builtin.os.tag) {
@@ -43,10 +44,10 @@ index 5f03f1c61902a191de87b49f0dcbdfec4a872d34..92c4bfcccb6bf45fcd8df748d346c8ec
  
 diff --git a/zig/lib/std/c/serenity.zig b/zig/lib/std/c/serenity.zig
 new file mode 100644
-index 0000000000000000000000000000000000000000..747023f1b1b5613b24751312058a5460c79bd3ba
+index 0000000000000000000000000000000000000000..1c8dc37af9d528338d2c5543b5f3a47894264c0e
 --- /dev/null
 +++ b/zig/lib/std/c/serenity.zig
-@@ -0,0 +1,396 @@
+@@ -0,0 +1,621 @@
 +pub const std = @import("std");
 +pub const SerenityConstants = @import("serenity/constants.zig");
 +
@@ -55,6 +56,46 @@ index 0000000000000000000000000000000000000000..747023f1b1b5613b24751312058a5460
 +pub const ino_t = u64;
 +pub const off_t = i64;
 +pub const nlink_t = u64;
++
++// see Kernel/API/POSIX/sys/socket.h
++pub const sa_family_t = u16;
++
++// see Kernel/API/POSIX/sys/types.h
++pub const socklen_t = u32;
++
++// see Userland/Libraries/LibC/netdb.h
++pub const addrinfo = struct {
++    flags: u16,
++    family: sa_family_t,
++    socktype: u16,
++    protocol: u16,
++    addrlen: socklen_t,
++    addr: ?*sockaddr,
++    canonname: ?[*:0]const u8,
++    next: ?*addrinfo,
++};
++
++// see Kernel/API/POSIX/sys/socket.h
++pub const AF = struct {
++    pub const MASK = 0xff;
++    pub const UNSPEC = 0;
++    pub const LOCAL = 1;
++    pub const UNIX = LOCAL;
++    pub const INET = 2;
++    pub const INET6 = 3;
++    pub const MAX = 4;
++};
++
++// see Userland/Libraries/LibC/netdb.h
++pub const AI = struct {
++    pub const PASSIVE = 1;
++    pub const CANONNAME = 2;
++    pub const NUMERICHOST = 4;
++    pub const NUMERICSERV = 8;
++    pub const V4MAPPED = 16;
++    pub const ALL = 32;
++    pub const ADDRCONFIG = 64;
++};
 +
 +pub const E = enum(i32) {
 +    SUCCESS = SerenityConstants.ESUCCESS,
@@ -141,6 +182,23 @@ index 0000000000000000000000000000000000000000..747023f1b1b5613b24751312058a5460
 +    STALE = SerenityConstants.ESTALE,
 +};
 +
++// see Userland/Libraries/LibC/netdb.h
++pub const EAI = enum(c_int) {
++    ADDRFAMILY = 1,
++    AGAIN = 2,
++    BADFLAGS = 3,
++    FAIL = 4,
++    FAMILY = 5,
++    MEMORY = 6,
++    NODATA = 7,
++    NONAME = 8,
++    SERVICE = 9,
++    SOCKTYPE = 10,
++    SYSTEM = 11,
++    OVERFLOW = 12,
++    _,
++};
++
 +pub const PATH_MAX = SerenityConstants.PATH_MAX;
 +
 +pub const time_t = i64;
@@ -222,6 +280,21 @@ index 0000000000000000000000000000000000000000..747023f1b1b5613b24751312058a5460
 +
 +pub const IOV_MAX = SerenityConstants.IOV_MAX;
 +
++// see Kernel/API/POSIX/sys/socket.h
++pub const IPPROTO = struct {
++    pub const IP = 0;
++    pub const ICMP = 1;
++    pub const IGMP = 2;
++    pub const IPIP = 4;
++    pub const TCP = 6;
++    pub const UDP = 17;
++    pub const IPV6 = 41;
++    pub const ESP = 50;
++    pub const AH = 51;
++    pub const ICMPV6 = 58;
++    pub const RAW = 255;
++};
++
 +pub const pthread_mutex_t = extern struct {
 +    lock: u32 = 0,
 +    owner: ?std.c.pthread_t = null,
@@ -234,6 +307,8 @@ index 0000000000000000000000000000000000000000..747023f1b1b5613b24751312058a5460
 +    value: u32 = 0,
 +    clockid: c_int = CLOCK.MONOTONIC_COARSE, // clockid_t
 +};
++
++pub const PTHREAD_STACK_MIN = SerenityConstants.PTHREAD_STACK_MIN;
 +
 +pub const uid_t = u32;
 +pub const gid_t = u32;
@@ -335,6 +410,145 @@ index 0000000000000000000000000000000000000000..747023f1b1b5613b24751312058a5460
 +    pub const END = SerenityConstants.SEEK_END;
 +};
 +
++pub const SIG = struct {
++    pub const ABRT = SerenityConstants.SIGABRT;
++    pub const ALRM = SerenityConstants.SIGALRM;
++    pub const BUS = SerenityConstants.SIGBUS;
++    pub const CANCEL = SerenityConstants.SIGCANCEL;
++    pub const CHLD = SerenityConstants.SIGCHLD;
++    pub const CONT = SerenityConstants.SIGCONT;
++    pub const FPE = SerenityConstants.SIGFPE;
++    pub const HUP = SerenityConstants.SIGHUP;
++    pub const ILL = SerenityConstants.SIGILL;
++    pub const INFO = SerenityConstants.SIGINFO;
++    pub const INT = SerenityConstants.SIGINT;
++    pub const INVAL = SerenityConstants.SIGINVAL;
++    pub const IO = SerenityConstants.SIGIO;
++    pub const KILL = SerenityConstants.SIGKILL;
++    pub const PIPE = SerenityConstants.SIGPIPE;
++    pub const PROF = SerenityConstants.SIGPROF;
++    pub const QUIT = SerenityConstants.SIGQUIT;
++    pub const SEGV = SerenityConstants.SIGSEGV;
++    pub const STKFLT = SerenityConstants.SIGSTKFLT;
++    pub const STOP = SerenityConstants.SIGSTOP;
++    pub const SYS = SerenityConstants.SIGSYS;
++    pub const TERM = SerenityConstants.SIGTERM;
++    pub const TRAP = SerenityConstants.SIGTRAP;
++    pub const TSTP = SerenityConstants.SIGTSTP;
++    pub const TTIN = SerenityConstants.SIGTTIN;
++    pub const TTOU = SerenityConstants.SIGTTOU;
++    pub const URG = SerenityConstants.SIGURG;
++    pub const USR1 = SerenityConstants.SIGUSR1;
++    pub const USR2 = SerenityConstants.SIGUSR2;
++    pub const VTALRM = SerenityConstants.SIGVTALRM;
++    pub const WINCH = SerenityConstants.SIGWINCH;
++    pub const XCPU = SerenityConstants.SIGXCPU;
++    pub const XFSZ = SerenityConstants.SIGXFSZ;
++};
++
++pub const sigval = extern union {
++    int: i32,
++    ptr: *anyopaque,
++};
++
++pub const siginfo_t = extern struct {
++    signo: c_int,
++    code: c_int,
++    errno: c_int,
++    pid: pid_t,
++    uid: uid_t,
++    addr: ?*const anyopaque,
++    status: c_int,
++    band: c_int,
++    value: sigval,
++};
++
++pub const sigset_t = u32;
++pub const empty_sigset: sigset_t = 0;
++
++pub const Sigaction = extern struct {
++    pub const handler_fn = *const fn (c_int) align(1) callconv(.C) void;
++    pub const sigaction_fn = *const fn (c_int, *const siginfo_t, ?*const anyopaque) callconv(.C) void;
++
++    handler: extern union {
++        handler: ?handler_fn,
++        sigaction: ?sigaction_fn,
++    },
++    mask: sigset_t,
++    flags: c_int,
++};
++
++pub const SO = struct {
++    pub const ACCEPTCONN = SerenityConstants.SO_ACCEPTCONN;
++    pub const BINDTODEVICE = SerenityConstants.SO_BINDTODEVICE;
++    pub const BROADCAST = SerenityConstants.SO_BROADCAST;
++    pub const DEBUG = SerenityConstants.SO_DEBUG;
++    pub const DONTROUTE = SerenityConstants.SO_DONTROUTE;
++    pub const ERROR = SerenityConstants.SO_ERROR;
++    pub const KEEPALIVE = SerenityConstants.SO_KEEPALIVE;
++    pub const LINGER = SerenityConstants.SO_LINGER;
++    pub const OOBINLINE = SerenityConstants.SO_OOBINLINE;
++    pub const PEERCRED = SerenityConstants.SO_PEERCRED;
++    pub const RCVBUF = SerenityConstants.SO_RCVBUF;
++    pub const RCVLOWAT = SerenityConstants.SO_RCVLOWAT;
++    pub const RCVTIMEO = SerenityConstants.SO_RCVTIMEO;
++    pub const REUSEADDR = SerenityConstants.SO_REUSEADDR;
++    pub const SNDBUF = SerenityConstants.SO_SNDBUF;
++    pub const SNDLOWAT = SerenityConstants.SO_SNDLOWAT;
++    pub const SNDTIMEO = SerenityConstants.SO_SNDTIMEO;
++    pub const TIMESTAMP = SerenityConstants.SO_TIMESTAMP;
++    pub const TYPE = SerenityConstants.SO_TYPE;
++};
++
++pub const SOL = struct {
++    pub const SOCKET = SerenityConstants.SOL_SOCKET;
++};
++
++// see Kernel/API/POSIX/netinet/in.h
++pub const in_port_t = u16;
++
++pub const in_addr = extern struct {
++    addr: u32,
++};
++
++pub const in6_addr = extern union {
++    addr: [16]u8,
++    addr32: [4]u32,
++};
++
++// see Kernel/API/POSIX/sys/socket.h
++pub const sockaddr = extern struct {
++    /// address family
++    family: sa_family_t,
++    /// actually longer; address value
++    data: [14]u8,
++
++    // see Kernel/API/POSIX/netinet/in.h
++    pub const in = extern struct {
++        family: sa_family_t = AF.INET,
++        port: in_port_t,
++        addr: in_addr,
++        zero: [8]u8 = [8]u8{ 0, 0, 0, 0, 0, 0, 0, 0 },
++    };
++
++    pub const in6 = extern struct {
++        family: sa_family_t = AF.INET6,
++        port: in_port_t,
++        flowinfo: u32,
++        addr: in6_addr,
++        scope_id: u32,
++    };
++
++    // see Kernel/API/POSIX/sys/un.h
++    /// Definitions for UNIX IPC domain.
++    pub const un = extern struct {
++        family: sa_family_t = AF.LOCAL,
++
++        /// path name
++        path: [106]u8,
++    };
++};
++
 +pub const POLL = struct {
 +    pub const IN = SerenityConstants.POLLIN;
 +    pub const RDNORM = SerenityConstants.POLLRDNORM;
@@ -346,6 +560,18 @@ index 0000000000000000000000000000000000000000..747023f1b1b5613b24751312058a5460
 +    pub const NVAL = SerenityConstants.POLLNVAL;
 +    pub const WRBAND = SerenityConstants.POLLWRBAND;
 +    pub const RDHUP = SerenityConstants.POLLRDHUP;
++};
++
++//see Kernel/API/POSIX/sys/socket.h
++pub const SOCK = struct {
++    pub const TYPE_MASK = 0xff;
++    pub const STREAM = 1;
++    pub const DGRAM = 2;
++    pub const RAW = 3;
++    pub const RDM = 4;
++    pub const SEQPACKET = 5;
++    pub const NONBLOCK = 2048;
++    pub const CLOEXEC = 524288;
 +};
 +
 +pub const pollfd = struct {
@@ -365,7 +591,7 @@ index 0000000000000000000000000000000000000000..747023f1b1b5613b24751312058a5460
 +    pub const NOWAIT = SerenityConstants.WNOWAIT;
 +
 +    pub fn EXITSTATUS(s: u32) u8 {
-+        return @intCast(u8, (s & 0xff00) >> 8);
++        return @intCast((s & 0xff00) >> 8);
 +    }
 +
 +    pub fn STOPSIG(s: u32) u32 {
@@ -385,7 +611,7 @@ index 0000000000000000000000000000000000000000..747023f1b1b5613b24751312058a5460
 +    }
 +
 +    pub fn IFSIGNALED(s: u32) bool {
-+        return (@intCast(u8, (s & 0x7f) + 1) >> 1) > 0;
++        return (@as(u8, @intCast((s & 0x7f) + 1)) >> 1) > 0;
 +    }
 +
 +    pub fn IFCONTINUED(s: u32) bool {
@@ -421,7 +647,7 @@ index 0000000000000000000000000000000000000000..747023f1b1b5613b24751312058a5460
 +    pub const RANDOMIZED = SerenityConstants.MAP_RANDOMIZED;
 +    pub const PURGEABLE = SerenityConstants.MAP_PURGEABLE;
 +    pub const FIXED_NOREPLACE = SerenityConstants.MAP_FIXED_NOREPLACE;
-+    pub const FAILED = @intToPtr(*anyopaque, @bitCast(usize, @as(isize, -1)));
++    pub const FAILED: *anyopaque = @ptrFromInt(@as(usize, @bitCast(@as(isize, -1))));
 +};
 +
 +pub const MSF = struct {
@@ -456,18 +682,18 @@ index 0000000000000000000000000000000000000000..94d7b1c091f7affb5c968738a8719cbb
 +    );
 +}
 diff --git a/zig/lib/std/debug.zig b/zig/lib/std/debug.zig
-index 90ceff3df157f3d94feddceae12de59fc2e3581d..5c25a8c9cebcb0cce01b229808ea67c57c968d5e 100644
+index 44f6ce136759b773e2426656aa9907b5fc51d9fc..9b5f6f993ef870689d31a8ee99bb358b4d25278d 100644
 --- a/zig/lib/std/debug.zig
 +++ b/zig/lib/std/debug.zig
-@@ -812,6 +812,7 @@ pub fn openSelfDebugInfo(allocator: mem.Allocator) anyerror!DebugInfo {
+@@ -771,6 +771,7 @@ pub fn openSelfDebugInfo(allocator: mem.Allocator) OpenSelfDebugInfoError!DebugI
+             .dragonfly,
+             .openbsd,
              .macos,
-             .windows,
-             .solaris,
 +            .serenity,
-             => return DebugInfo.init(allocator),
-             else => return error.UnsupportedDebugInfo,
-         }
-@@ -1761,7 +1762,7 @@ pub const ModuleDebugInfo = switch (native_os) {
+             .solaris,
+             .windows,
+             => return try DebugInfo.init(allocator),
+@@ -1748,7 +1749,7 @@ pub const ModuleDebugInfo = switch (native_os) {
              };
          }
      },
@@ -477,19 +703,19 @@ index 90ceff3df157f3d94feddceae12de59fc2e3581d..5c25a8c9cebcb0cce01b229808ea67c5
          dwarf: DW.DwarfInfo,
          mapped_memory: []align(mem.page_size) const u8,
 diff --git a/zig/lib/std/fs.zig b/zig/lib/std/fs.zig
-index e253aaff9e9505182db90c8fa08aa931dca8a0ba..cebf86fc05164ff311731deb4c75730d4dc84d27 100644
+index cb6ce2032ec7e2f2bc720f354558bb5335ae7d24..3894bc6dfc4bb383f7055dd4a264e9f9e2132d76 100644
 --- a/zig/lib/std/fs.zig
 +++ b/zig/lib/std/fs.zig
-@@ -34,7 +34,7 @@ pub const Watch = @import("fs/watch.zig").Watch;
+@@ -39,7 +39,7 @@ pub const Watch = @import("fs/watch.zig").Watch;
  /// fit into a UTF-8 encoded array of this length.
  /// The byte count includes room for a null sentinel byte.
  pub const MAX_PATH_BYTES = switch (builtin.os.tag) {
--    .linux, .macos, .ios, .freebsd, .netbsd, .dragonfly, .openbsd, .haiku, .solaris => os.PATH_MAX,
-+    .linux, .macos, .ios, .freebsd, .netbsd, .dragonfly, .openbsd, .haiku, .solaris, .serenity => os.PATH_MAX,
+-    .linux, .macos, .ios, .freebsd, .openbsd, .netbsd, .dragonfly, .haiku, .solaris => os.PATH_MAX,
++    .linux, .macos, .ios, .freebsd, .openbsd, .netbsd, .dragonfly, .haiku, .solaris, .serenity => os.PATH_MAX,
      // Each UTF-16LE character may be expanded to 3 UTF-8 bytes.
      // If it would require 4 UTF-8 bytes, then there would be a surrogate
      // pair in the UTF-16LE, and we (over)account 3 bytes for it that way.
-@@ -521,6 +521,69 @@ pub const IterableDir = struct {
+@@ -528,6 +528,69 @@ pub const IterableDir = struct {
                  self.first_iter = true;
              }
          },
@@ -525,7 +751,7 @@ index e253aaff9e9505182db90c8fa08aa931dca8a0ba..cebf86fc05164ff311731deb4c75730d
 +                        return null;
 +                    }
 +
-+                    const name = mem.sliceTo(@ptrCast([*:0]u8, &entry.?.d_name), 0);
++                    const name = mem.sliceTo(@as([*:0]u8, @ptrCast(&entry.?.d_name)), 0);
 +                    if (mem.eql(u8, name, ".") or mem.eql(u8, name, ".."))
 +                        continue :start_over;
 +
@@ -539,15 +765,15 @@ index e253aaff9e9505182db90c8fa08aa931dca8a0ba..cebf86fc05164ff311731deb4c75730d
 +                        error.FileNotFound => unreachable, // lost the race
 +                        else => |e| return e,
 +                    };
-+                    const entry_kind = switch (stat_info.mode & os.S.IFMT) {
-+                        os.S.IFIFO => Entry.Kind.NamedPipe,
-+                        os.S.IFCHR => Entry.Kind.CharacterDevice,
-+                        os.S.IFDIR => Entry.Kind.Directory,
-+                        os.S.IFBLK => Entry.Kind.BlockDevice,
-+                        os.S.IFREG => Entry.Kind.File,
-+                        os.S.IFLNK => Entry.Kind.SymLink,
-+                        os.S.IFSOCK => Entry.Kind.UnixDomainSocket,
-+                        else => Entry.Kind.Unknown,
++                    const entry_kind: Entry.Kind = switch (stat_info.mode & os.S.IFMT) {
++                        os.S.IFIFO => .named_pipe,
++                        os.S.IFCHR => .character_device,
++                        os.S.IFDIR => .directory,
++                        os.S.IFBLK => .block_device,
++                        os.S.IFREG => .file,
++                        os.S.IFLNK => .sym_link,
++                        os.S.IFSOCK => .unix_domain_socket,
++                        else => .unknown,
 +                    };
 +                    return Entry{
 +                        .name = name,
@@ -559,7 +785,7 @@ index e253aaff9e9505182db90c8fa08aa931dca8a0ba..cebf86fc05164ff311731deb4c75730d
          .haiku => struct {
              dir: Dir,
              buf: [1024]u8, // TODO align(@alignOf(os.dirent64)),
-@@ -906,6 +969,11 @@ pub const IterableDir = struct {
+@@ -913,6 +976,11 @@ pub const IterableDir = struct {
                  .buf = undefined,
                  .first_iter = first_iter_start_value,
              },
@@ -571,8 +797,8 @@ index e253aaff9e9505182db90c8fa08aa931dca8a0ba..cebf86fc05164ff311731deb4c75730d
              .windows => return Iterator{
                  .dir = self.dir,
                  .index = 0,
-@@ -2941,7 +3009,7 @@ pub fn selfExePath(out_buffer: []u8) SelfExePathError![]u8 {
-         return out_buffer[0..real_path.len];
+@@ -2993,7 +3061,7 @@ pub fn selfExePath(out_buffer: []u8) SelfExePathError![]u8 {
+         return result;
      }
      switch (builtin.os.tag) {
 -        .linux => return os.readlinkZ("/proc/self/exe", out_buffer),
@@ -581,7 +807,7 @@ index e253aaff9e9505182db90c8fa08aa931dca8a0ba..cebf86fc05164ff311731deb4c75730d
          .freebsd, .dragonfly => {
              var mib = [4]c_int{ os.CTL.KERN, os.KERN.PROC, os.KERN.PROC_PATHNAME, -1 };
 diff --git a/zig/lib/std/fs/get_app_data_dir.zig b/zig/lib/std/fs/get_app_data_dir.zig
-index 4f7ba9af623841cc8be7b6c48d55037f689fec8d..5a5b4de8aefe6962979a9a65f937cc35c78d7631 100644
+index 2f599c32130e2be12f44fa015df91816614d5f5b..896dde5ab8e0e573dc137d9a86be8298abef8a1a 100644
 --- a/zig/lib/std/fs/get_app_data_dir.zig
 +++ b/zig/lib/std/fs/get_app_data_dir.zig
 @@ -44,7 +44,7 @@ pub fn getAppDataDir(allocator: mem.Allocator, appname: []const u8) GetAppDataDi
@@ -594,23 +820,35 @@ index 4f7ba9af623841cc8be7b6c48d55037f689fec8d..5a5b4de8aefe6962979a9a65f937cc35
                  return fs.path.join(allocator, &[_][]const u8{ xdg, appname });
              }
 diff --git a/zig/lib/std/os.zig b/zig/lib/std/os.zig
-index f13ee03a967df2899aed1b935dd12975f5d07332..b1c174b774b40553c455d768c11ec6c752796a06 100644
+index cb988ca9a8e67f1c3c383a0b2a74bda7b0e14152..0c740baadaeb045c0c01dc7be92f3472b01afa17 100644
 --- a/zig/lib/std/os.zig
 +++ b/zig/lib/std/os.zig
-@@ -36,6 +36,7 @@ pub const haiku = std.c;
+@@ -35,6 +35,7 @@ pub const freebsd = std.c;
+ pub const haiku = std.c;
  pub const netbsd = std.c;
  pub const openbsd = std.c;
- pub const solaris = std.c;
 +pub const serenity = std.c;
+ pub const solaris = std.c;
  pub const linux = @import("os/linux.zig");
  pub const plan9 = @import("os/plan9.zig");
- pub const uefi = @import("os/uefi.zig");
-@@ -5112,7 +5113,7 @@ pub fn getFdPath(fd: fd_t, out_buffer: *[MAX_PATH_BYTES]u8) RealPathError![]u8 {
+@@ -5205,7 +5206,7 @@ pub fn getFdPath(fd: fd_t, out_buffer: *[MAX_PATH_BYTES]u8) RealPathError![]u8 {
              const len = mem.indexOfScalar(u8, out_buffer[0..], @as(u8, 0)) orelse MAX_PATH_BYTES;
              return out_buffer[0..len];
          },
 -        .linux => {
 +        .linux, .serenity => {
-             var procfs_buf: ["/proc/self/fd/-2147483648".len:0]u8 = undefined;
-             const proc_path = std.fmt.bufPrint(procfs_buf[0..], "/proc/self/fd/{d}\x00", .{fd}) catch unreachable;
+             var procfs_buf: ["/proc/self/fd/-2147483648\x00".len]u8 = undefined;
+             const proc_path = std.fmt.bufPrintZ(procfs_buf[0..], "/proc/self/fd/{d}", .{fd}) catch unreachable;
  
+diff --git a/zig/lib/std/target.zig b/zig/lib/std/target.zig
+index b137e48c02d7d7ecc0f5eae61f6225504bf0ba3d..956edd944f587759ae04f69d477447f96441367c 100644
+--- a/zig/lib/std/target.zig
++++ b/zig/lib/std/target.zig
+@@ -2079,6 +2079,7 @@ pub const Target = struct {
+             .ananas,
+             .fuchsia,
+             .minix,
++            .serenity,
+             => switch (target.cpu.arch) {
+                 .msp430 => switch (c_type) {
+                     .char => return 8,
