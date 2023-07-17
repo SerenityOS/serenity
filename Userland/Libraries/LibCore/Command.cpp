@@ -63,7 +63,7 @@ ErrorOr<void> Command::write(StringView input)
     return {};
 }
 
-bool Command::write_lines(Span<DeprecatedString> lines)
+ErrorOr<void> Command::write_lines(Span<DeprecatedString> lines)
 {
     // It's possible the process dies before we can write everything to the
     // stdin. So make sure that we don't crash but just stop writing.
@@ -72,10 +72,7 @@ bool Command::write_lines(Span<DeprecatedString> lines)
     action_handler.sa_handler = SIG_IGN;
 
     struct sigaction old_action_handler;
-    if (sigaction(SIGPIPE, &action_handler, &old_action_handler) < 0) {
-        perror("sigaction");
-        return false;
-    }
+    TRY(Core::System::sigaction(SIGPIPE, &action_handler, &old_action_handler));
 
     for (DeprecatedString const& line : lines) {
         if (m_stdin->write_until_depleted(DeprecatedString::formatted("{}\n", line).bytes()).is_error())
@@ -89,7 +86,7 @@ bool Command::write_lines(Span<DeprecatedString> lines)
     if (sigaction(SIGPIPE, &old_action_handler, nullptr) < 0)
         perror("sigaction");
 
-    return true;
+    return {};
 }
 
 ErrorOr<Command::ProcessOutputs> Command::read_all()

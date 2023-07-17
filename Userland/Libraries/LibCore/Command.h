@@ -41,7 +41,7 @@ public:
 
     ErrorOr<void> write(StringView input);
 
-    bool write_lines(Span<DeprecatedString> lines);
+    ErrorOr<void> write_lines(Span<DeprecatedString> lines);
 
     ErrorOr<ProcessOutputs> read_all();
 
