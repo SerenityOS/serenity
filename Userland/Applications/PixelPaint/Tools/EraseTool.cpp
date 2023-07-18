@@ -69,7 +69,7 @@ ErrorOr<GUI::Widget*> EraseTool::get_properties_widget()
         size_label->set_fixed_size(80, 20);
 
         auto size_slider = TRY(size_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_string));
-        size_slider->set_range(1, 100);
+        size_slider->set_range(1, 250);
         size_slider->set_value(size());
 
         size_slider->on_change = [this, size_slider](int value) {
@@ -144,20 +144,28 @@ NonnullRefPtr<Gfx::Bitmap> EraseTool::build_cursor()
         return BrushTool::build_cursor();
 
     m_scale_last_created_cursor = m_editor ? m_editor->scale() : 1;
-    int scaled_size = size() * m_scale_last_created_cursor;
+    int cursor_size = AK::clamp(preferred_cursor_size(), 1, max_allowed_cursor_size());
 
-    NonnullRefPtr<Gfx::Bitmap> new_cursor = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, Gfx::IntSize(scaled_size, scaled_size)).release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> new_cursor = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, Gfx::IntSize(cursor_size, cursor_size)).release_value_but_fixme_should_propagate_errors();
 
-    Gfx::IntRect rect { 0, 0, scaled_size, scaled_size };
     Gfx::Painter painter { new_cursor };
 
-    painter.draw_rect(rect, Color::LightGray);
-    painter.draw_line({ scaled_size / 2 - 5, scaled_size / 2 }, { scaled_size / 2 + 5, scaled_size / 2 }, Color::LightGray, 3);
-    painter.draw_line({ scaled_size / 2, scaled_size / 2 - 5 }, { scaled_size / 2, scaled_size / 2 + 5 }, Color::LightGray, 3);
-    painter.draw_line({ scaled_size / 2 - 5, scaled_size / 2 }, { scaled_size / 2 + 5, scaled_size / 2 }, Color::MidGray, 1);
-    painter.draw_line({ scaled_size / 2, scaled_size / 2 - 5 }, { scaled_size / 2, scaled_size / 2 + 5 }, Color::MidGray, 1);
+    if (preferred_cursor_size() > max_allowed_cursor_size()) {
+        painter.draw_rect({ 0, 0, cursor_size, cursor_size }, Color::Red);
+        painter.draw_rect({ 3, 3, cursor_size - 6, cursor_size - 6 }, Color::LightGray);
+    } else {
+        painter.draw_rect({ 0, 0, cursor_size, cursor_size }, Color::LightGray);
+    }
+    painter.draw_line({ cursor_size / 2 - 5, cursor_size / 2 }, { cursor_size / 2 + 5, cursor_size / 2 }, Color::LightGray, 3);
+    painter.draw_line({ cursor_size / 2, cursor_size / 2 - 5 }, { cursor_size / 2, cursor_size / 2 + 5 }, Color::LightGray, 3);
+    painter.draw_line({ cursor_size / 2 - 5, cursor_size / 2 }, { cursor_size / 2 + 5, cursor_size / 2 }, Color::MidGray, 1);
+    painter.draw_line({ cursor_size / 2, cursor_size / 2 - 5 }, { cursor_size / 2, cursor_size / 2 + 5 }, Color::MidGray, 1);
 
     return new_cursor;
 }
 
+float EraseTool::preferred_cursor_size()
+{
+    return size() * (m_editor ? m_editor->scale() : 1);
+}
 }

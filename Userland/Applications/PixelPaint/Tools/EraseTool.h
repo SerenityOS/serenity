@@ -26,6 +26,7 @@ protected:
     virtual Color color_for(GUI::MouseEvent const& event) override;
     virtual void draw_point(Gfx::Bitmap& bitmap, Gfx::Color color, Gfx::IntPoint point) override;
     virtual NonnullRefPtr<Gfx::Bitmap> build_cursor() override;
+    virtual float preferred_cursor_size() override;
 
 private:
     virtual StringView tool_name() const override { return "Erase Tool"sv; }

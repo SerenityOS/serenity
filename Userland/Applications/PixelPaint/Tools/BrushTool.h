@@ -2,7 +2,7 @@
  * Copyright (c) 2020, Ben Jilks <benjyjilks@gmail.com>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
- * Copyright (c) 2022, Torsten Engelmann <engelTorsten@gmx.de>
+ * Copyright (c) 2022-2023, Torsten Engelmann <engelTorsten@gmx.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -50,6 +50,8 @@ protected:
     virtual void draw_line(Gfx::Bitmap& bitmap, Gfx::Color color, Gfx::IntPoint start, Gfx::IntPoint end);
     virtual NonnullRefPtr<Gfx::Bitmap> build_cursor();
     void refresh_editor_cursor();
+    virtual float preferred_cursor_size();
+    virtual float max_allowed_cursor_size();
     float m_scale_last_created_cursor = 0;
 
 private:
