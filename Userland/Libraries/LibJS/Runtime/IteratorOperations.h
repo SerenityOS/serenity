@@ -31,7 +31,7 @@ ThrowCompletionOr<Value> iterator_value(VM&, Object& iterator_result);
 Completion iterator_close(VM&, IteratorRecord const&, Completion);
 Completion async_iterator_close(VM&, IteratorRecord const&, Completion);
 NonnullGCPtr<Object> create_iterator_result_object(VM&, Value, bool done);
-ThrowCompletionOr<MarkedVector<Value>> iterable_to_list(VM&, Value iterable, GCPtr<FunctionObject> method = {});
+ThrowCompletionOr<MarkedVector<Value>> iterator_to_list(VM&, IteratorRecord const&);
 
 using IteratorValueCallback = Function<Optional<Completion>(Value)>;
 Completion get_iterator_values(VM&, Value iterable, IteratorValueCallback callback);

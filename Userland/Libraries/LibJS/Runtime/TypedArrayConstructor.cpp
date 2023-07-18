@@ -86,7 +86,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
     // 6. If usingIterator is not undefined, then
     if (using_iterator) {
         // a. Let values be ? IteratorToList(? GetIteratorFromMethod(source, usingIterator)).
-        auto values = TRY(iterable_to_list(vm, source, using_iterator));
+        auto values = TRY(iterator_to_list(vm, TRY(get_iterator_from_method(vm, source, *using_iterator))));
 
         // b. Let len be the number of elements in values.
         auto length = values.size();

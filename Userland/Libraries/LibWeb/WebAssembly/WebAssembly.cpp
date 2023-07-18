@@ -203,7 +203,7 @@ JS::ThrowCompletionOr<size_t> instantiate_module(JS::VM& vm, Wasm::Module const&
                             if (method == JS::js_undefined())
                                 return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotIterable, TRY_OR_THROW_OOM(vm, result.to_string_without_side_effects()));
 
-                            auto values = TRY(JS::iterable_to_list(vm, result, method));
+                            auto values = TRY(JS::iterator_to_list(vm, TRY(JS::get_iterator_from_method(vm, result, *method))));
 
                             if (values.size() != type.results().size())
                                 return vm.throw_completion<JS::TypeError>(DeprecatedString::formatted("Invalid number of return values for multi-value wasm return of {} objects", type.results().size()));
