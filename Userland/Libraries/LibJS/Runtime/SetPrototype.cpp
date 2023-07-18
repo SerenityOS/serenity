@@ -251,27 +251,6 @@ static ThrowCompletionOr<SetRecord> get_set_record(VM& vm, Value value)
     return SetRecord { .set = object, .size = integer_size, .has = has.as_function(), .keys = keys.as_function() };
 }
 
-// 10 GetKeysIterator ( setRec ), https://tc39.es/proposal-set-methods/#sec-getkeysiterator
-static ThrowCompletionOr<IteratorRecord> get_keys_iterator(VM& vm, SetRecord const& set_record)
-{
-    // 1. Let keysIter be ? Call(setRec.[[Keys]], setRec.[[Set]]).
-    auto keys_iterator = TRY(call(vm, *set_record.keys, set_record.set));
-
-    // 2. If keysIter is not an Object, throw a TypeError exception.
-    if (!keys_iterator.is_object())
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, keys_iterator.to_string_without_side_effects()));
-
-    // 3. Let nextMethod be ? Get(keysIter, "next").
-    auto next_method = TRY(keys_iterator.as_object().get(vm.names.next));
-
-    // 4. If IsCallable(nextMethod) is false, throw a TypeError exception.
-    if (!next_method.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, next_method.to_string_without_side_effects()));
-
-    // 5. Return a new Iterator Record { [[Iterator]]: keysIter, [[NextMethod]]: nextMethod, [[Done]]: false }.
-    return IteratorRecord { .iterator = &keys_iterator.as_object(), .next_method = next_method, .done = false };
-}
-
 // 1 Set.prototype.union ( other ), https://tc39.es/proposal-set-methods/#sec-set.prototype.union
 JS_DEFINE_NATIVE_FUNCTION(SetPrototype::union_)
 {
@@ -282,8 +261,8 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::union_)
     // 3. Let otherRec be ? GetSetRecord(other).
     auto other_record = TRY(get_set_record(vm, vm.argument(0)));
 
-    // 4. Let keysIter be ? GetKeysIterator(otherRec).
-    auto keys_iterator = TRY(get_keys_iterator(vm, other_record));
+    // 4. Let keysIter be ? GetIteratorFromMethod(otherRec.[[Set]], otherRec.[[Keys]]).
+    auto keys_iterator = TRY(get_iterator_from_method(vm, other_record.set, other_record.keys));
 
     // 5. Let resultSetData be a copy of O.[[SetData]].
     auto result = set->copy();
@@ -353,8 +332,8 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::intersection)
     }
     // 7. Else,
     else {
-        // a. Let keysIter be ? GetKeysIterator(otherRec).
-        auto keys_iterator = TRY(get_keys_iterator(vm, other_record));
+        // a. Let keysIter be ? GetIteratorFromMethod(otherRec.[[Set]], otherRec.[[Keys]]).
+        auto keys_iterator = TRY(get_iterator_from_method(vm, other_record.set, other_record.keys));
 
         // b. Let next be true.
         auto next = true;
@@ -431,8 +410,8 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::difference)
     }
     // 7. Else,
     else {
-        // a. Let keysIter be ? GetKeysIterator(otherRec).
-        auto keys_iterator = TRY(get_keys_iterator(vm, other_record));
+        // a. Let keysIter be ? GetIteratorFromMethod(otherRec.[[Set]], otherRec.[[Keys]]).
+        auto keys_iterator = TRY(get_iterator_from_method(vm, other_record.set, other_record.keys));
 
         // b. Let next be true.
         auto next = true;
@@ -478,8 +457,8 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::symmetric_difference)
     // 3. Let otherRec be ? GetSetRecord(other).
     auto other_record = TRY(get_set_record(vm, vm.argument(0)));
 
-    // 4. Let keysIter be ? GetKeysIterator(otherRec).
-    auto keys_iterator = TRY(get_keys_iterator(vm, other_record));
+    // 4. Let keysIter be ? GetIteratorFromMethod(otherRec.[[Set]], otherRec.[[Keys]]).
+    auto keys_iterator = TRY(get_iterator_from_method(vm, other_record.set, other_record.keys));
 
     // 5. Let resultSetData be a copy of O.[[SetData]].
     auto result = set->copy();
@@ -571,8 +550,8 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::is_superset_of)
     if (this_size < other_record.size)
         return false;
 
-    // 6. Let keysIter be ? GetKeysIterator(otherRec).
-    auto keys_iterator = TRY(get_keys_iterator(vm, other_record));
+    // 6. Let keysIter be ? GetIteratorFromMethod(otherRec.[[Set]], otherRec.[[Keys]]).
+    auto keys_iterator = TRY(get_iterator_from_method(vm, other_record.set, other_record.keys));
 
     // 7. Let next be true.
     auto next = true;
@@ -625,8 +604,8 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::is_disjoint_from)
     }
     // 6. Else,
     else {
-        // a. Let keysIter be ? GetKeysIterator(otherRec).
-        auto keys_iterator = TRY(get_keys_iterator(vm, other_record));
+        // a. Let keysIter be ? GetIteratorFromMethod(otherRec.[[Set]], otherRec.[[Keys]]).
+        auto keys_iterator = TRY(get_iterator_from_method(vm, other_record.set, other_record.keys));
 
         // b. Let next be true.
         auto next = true;
