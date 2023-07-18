@@ -337,8 +337,8 @@ ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern 
     }
     // BindingPattern : ArrayBindingPattern
     else {
-        // 1. Let iteratorRecord be ? GetIterator(value).
-        auto iterator_record = TRY(get_iterator(vm, value));
+        // 1. Let iteratorRecord be ? GetIterator(value, sync).
+        auto iterator_record = TRY(get_iterator(vm, value, IteratorHint::Sync));
 
         // 2. Let result be Completion(IteratorBindingInitialization of ArrayBindingPattern with arguments iteratorRecord and environment).
         auto result = iterator_binding_initialization(*target, iterator_record, environment);

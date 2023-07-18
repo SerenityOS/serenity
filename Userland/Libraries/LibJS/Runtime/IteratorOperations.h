@@ -23,7 +23,7 @@ enum class IteratorHint {
 };
 
 ThrowCompletionOr<IteratorRecord> get_iterator_from_method(VM&, Value, NonnullGCPtr<FunctionObject>);
-ThrowCompletionOr<IteratorRecord> get_iterator(VM&, Value, IteratorHint = IteratorHint::Sync);
+ThrowCompletionOr<IteratorRecord> get_iterator(VM&, Value, IteratorHint);
 ThrowCompletionOr<NonnullGCPtr<Object>> iterator_next(VM&, IteratorRecord const&, Optional<Value> = {});
 ThrowCompletionOr<GCPtr<Object>> iterator_step(VM&, IteratorRecord const&);
 ThrowCompletionOr<bool> iterator_complete(VM&, Object& iterator_result);

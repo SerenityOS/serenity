@@ -226,7 +226,8 @@ ThrowCompletionOr<GroupsType> group_by(VM& vm, Value items, Value callback_funct
     GroupsType groups;
 
     // 4. Let iteratorRecord be ? GetIterator(items).
-    auto iterator_record = TRY(get_iterator(vm, items));
+    // FIXME: The Array Grouping proposal is out of date - the `kind` parameter is now required.
+    auto iterator_record = TRY(get_iterator(vm, items, IteratorHint::Sync));
 
     // 5. Let k be 0.
     u64 k = 0;

@@ -1295,7 +1295,7 @@ Completion ForAwaitOfStatement::loop_evaluation(Interpreter& interpreter, Vector
     auto rhs_result = for_of_head_state.rhs_value;
 
     // NOTE: Perform step 7 from ForIn/OfHeadEvaluation. And since this is always async we only have to do step 7.d.
-    // d. Return ? GetIterator(exprValue, iteratorHint).
+    // d. Return ? GetIterator(exprValue, iteratorKind).
     auto iterator = TRY(get_iterator(vm, rhs_result, IteratorHint::Async));
 
     // 14.7.5.7 ForIn/OfBodyEvaluation ( lhs, stmt, iteratorRecord, iterationKind, lhsKind, labelSet [ , iteratorKind ] ), https://tc39.es/ecma262/#sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset
