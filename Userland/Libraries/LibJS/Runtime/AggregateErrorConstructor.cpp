@@ -64,8 +64,8 @@ ThrowCompletionOr<NonnullGCPtr<Object>> AggregateErrorConstructor::construct(Fun
     // 4. Perform ? InstallErrorCause(O, options).
     TRY(aggregate_error->install_error_cause(options));
 
-    // 5. Let errorsList be ? IterableToList(errors).
-    auto errors_list = TRY(iterable_to_list(vm, errors));
+    // 5. Let errorsList be ? IteratorToList(? GetIterator(errors, sync)).
+    auto errors_list = TRY(iterator_to_list(vm, TRY(get_iterator(vm, errors, IteratorHint::Sync))));
 
     // 6. Perform ! DefinePropertyOrThrow(O, "errors", PropertyDescriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: CreateArrayFromList(errorsList) }).
     MUST(aggregate_error->define_property_or_throw(vm.names.errors, { .value = Array::create_from(realm, errors_list), .writable = true, .enumerable = false, .configurable = true }));

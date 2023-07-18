@@ -208,29 +208,16 @@ NonnullGCPtr<Object> create_iterator_result_object(VM& vm, Value value, bool don
     return object;
 }
 
-// 7.4.13 IterableToList ( items [ , method ] ), https://tc39.es/ecma262/#sec-iterabletolist
-ThrowCompletionOr<MarkedVector<Value>> iterable_to_list(VM& vm, Value items, GCPtr<FunctionObject> method)
+// 7.4.13 IteratorToList ( iteratorRecord ), https://tc39.es/ecma262/#sec-iteratortolist
+ThrowCompletionOr<MarkedVector<Value>> iterator_to_list(VM& vm, IteratorRecord const& iterator_record)
 {
-    IteratorRecord iterator_record;
-
-    // 1. If method is present, then
-    if (method) {
-        // a. Let iteratorRecord be ? GetIteratorFromMethod(items, method).
-        iterator_record = TRY(get_iterator_from_method(vm, items, *method));
-    }
-    // 2. Else,
-    else {
-        // b. Let iteratorRecord be ? GetIterator(items, sync).
-        iterator_record = TRY(get_iterator(vm, items, IteratorHint::Sync));
-    }
-
-    // 3. Let values be a new empty List.
+    // 1. Let values be a new empty List.
     MarkedVector<Value> values(vm.heap());
 
-    // 4. Let next be true.
+    // 2. Let next be true.
     GCPtr<Object> next;
 
-    // 5. Repeat, while next is not false,
+    // 3. Repeat, while next is not false,
     do {
         // a. Set next to ? IteratorStep(iteratorRecord).
         next = TRY(iterator_step(vm, iterator_record));
@@ -245,7 +232,7 @@ ThrowCompletionOr<MarkedVector<Value>> iterable_to_list(VM& vm, Value items, GCP
         }
     } while (next);
 
-    // 6. Return values.
+    // 4. Return values.
     return values;
 }
 
