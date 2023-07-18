@@ -70,7 +70,7 @@ DeprecatedString PlaylistModel::format_filesize(u64 size_in_bytes)
 
 DeprecatedString PlaylistModel::format_duration(u32 duration_in_seconds)
 {
-    return DeprecatedString::formatted("{:02}:{:02}:{:02}", duration_in_seconds / 3600, duration_in_seconds / 60, duration_in_seconds % 60);
+    return DeprecatedString::formatted("{:02}:{:02}:{:02}", duration_in_seconds / 3600, (duration_in_seconds / 60) % 60, duration_in_seconds % 60);
 }
 
 ErrorOr<String> PlaylistModel::column_name(int column) const
