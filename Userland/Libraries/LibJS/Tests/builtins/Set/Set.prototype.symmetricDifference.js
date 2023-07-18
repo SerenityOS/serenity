@@ -1,3 +1,11 @@
+describe("errors", () => {
+    test("called with negative size", () => {
+        expect(() => {
+            new Set().symmetricDifference({ size: -1 });
+        }).toThrowWithMessage(RangeError, "size must not be negative");
+    });
+});
+
 test("basic functionality", () => {
     expect(Set.prototype.symmetricDifference).toHaveLength(1);
 

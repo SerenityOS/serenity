@@ -229,21 +229,25 @@ static ThrowCompletionOr<SetRecord> get_set_record(VM& vm, Value value)
     // 6. Let intSize be ! ToIntegerOrInfinity(numSize).
     auto integer_size = MUST(number_size.to_integer_or_infinity(vm));
 
-    // 7. Let has be ? Get(obj, "has").
+    // 7. If intSize < 0, throw a RangeError exception.
+    if (integer_size < 0)
+        return vm.throw_completion<RangeError>(ErrorType::NumberIsNegative, "size"sv);
+
+    // 8. Let has be ? Get(obj, "has").
     auto has = TRY(object.get(vm.names.has));
 
-    // 8. If IsCallable(has) is false, throw a TypeError exception.
+    // 9. If IsCallable(has) is false, throw a TypeError exception.
     if (!has.is_function())
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, has.to_string_without_side_effects()));
 
-    // 9. Let keys be ? Get(obj, "keys").
+    // 10. Let keys be ? Get(obj, "keys").
     auto keys = TRY(object.get(vm.names.keys));
 
-    // 10. If IsCallable(keys) is false, throw a TypeError exception.
+    // 11. If IsCallable(keys) is false, throw a TypeError exception.
     if (!keys.is_function())
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, keys.to_string_without_side_effects()));
 
-    // 11. Return a new Set Record { [[Set]]: obj, [[Size]]: intSize, [[Has]]: has, [[Keys]]: keys }.
+    // 12. Return a new Set Record { [[Set]]: obj, [[Size]]: intSize, [[Has]]: has, [[Keys]]: keys }.
     return SetRecord { .set = object, .size = integer_size, .has = has.as_function(), .keys = keys.as_function() };
 }
 

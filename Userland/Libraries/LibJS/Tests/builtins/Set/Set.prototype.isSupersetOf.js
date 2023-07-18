@@ -1,3 +1,11 @@
+describe("errors", () => {
+    test("called with negative size", () => {
+        expect(() => {
+            new Set().isSupersetOf({ size: -1 });
+        }).toThrowWithMessage(RangeError, "size must not be negative");
+    });
+});
+
 test("basic functionality", () => {
     expect(Set.prototype.isSupersetOf).toHaveLength(1);
 
