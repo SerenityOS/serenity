@@ -24,7 +24,7 @@ public:
 
     T const& cipher() const { return m_cipher; }
 
-    ErrorOr<ByteBuffer> create_aligned_buffer(size_t input_size) const
+    static ErrorOr<ByteBuffer> create_aligned_buffer(size_t input_size)
     {
         size_t remainder = (input_size + T::block_size()) % T::block_size();
         if (remainder == 0)
