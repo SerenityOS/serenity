@@ -77,10 +77,12 @@ private:
     virtual void flush_writes() override;
 
     BlockIndex first_block_index() const;
+    BlockIndex first_block_of_block_group_descriptors() const;
     ErrorOr<InodeIndex> allocate_inode(GroupIndex preferred_group = 0);
     ErrorOr<Vector<BlockIndex>> allocate_blocks(GroupIndex preferred_group_index, size_t count);
     GroupIndex group_index_from_inode(InodeIndex) const;
     GroupIndex group_index_from_block_index(BlockIndex) const;
+    BlockIndex first_block_of_group(GroupIndex) const;
 
     ErrorOr<bool> get_inode_allocation_state(InodeIndex) const;
     ErrorOr<void> set_inode_allocation_state(InodeIndex, bool);

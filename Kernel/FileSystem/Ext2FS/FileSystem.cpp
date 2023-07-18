@@ -95,7 +95,7 @@ ErrorOr<void> Ext2FS::initialize_while_locked()
     }
 
     auto blocks_to_read = ceil_div(m_block_group_count * sizeof(ext2_group_desc), block_size());
-    BlockIndex first_block_of_bgdt = block_size() == 1024 ? 2 : 1;
+    BlockIndex first_block_of_bgdt = first_block_of_block_group_descriptors();
     m_cached_group_descriptor_table = TRY(KBuffer::try_create_with_size("Ext2FS: Block group descriptors"sv, block_size() * blocks_to_read, Memory::Region::Access::ReadWrite));
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(m_cached_group_descriptor_table->data());
     TRY(read_blocks(first_block_of_bgdt, blocks_to_read, buffer));
@@ -271,7 +271,7 @@ auto Ext2FS::allocate_blocks(GroupIndex preferred_group_index, size_t count) -> 
         int blocks_in_group = min(blocks_per_group(), super_block().s_blocks_count);
         auto block_bitmap = cached_bitmap->bitmap(blocks_in_group);
 
-        BlockIndex first_block_in_group = (group_index.value() - 1) * blocks_per_group() + first_block_index().value();
+        BlockIndex first_block_in_group = first_block_of_group(group_index);
         size_t free_region_size = 0;
         auto first_unset_bit_index = block_bitmap.find_longest_range_of_unset_bits(count - blocks.size(), free_region_size);
         VERIFY(first_unset_bit_index.has_value());
@@ -352,7 +352,17 @@ Ext2FS::GroupIndex Ext2FS::group_index_from_block_index(BlockIndex block_index) 
 {
     if (!block_index)
         return 0;
-    return (block_index.value() - 1) / blocks_per_group() + 1;
+    return (block_index.value() - first_block_index().value()) / blocks_per_group() + 1;
+}
+
+Ext2FS::BlockIndex Ext2FS::first_block_of_group(GroupIndex group_index) const
+{
+    return (group_index.value() - 1) * blocks_per_group() + first_block_index().value();
+}
+
+Ext2FS::BlockIndex Ext2FS::first_block_of_block_group_descriptors() const
+{
+    return block_size() == 1024 ? 2 : 1;
 }
 
 auto Ext2FS::group_index_from_inode(InodeIndex inode) const -> GroupIndex
@@ -612,7 +622,7 @@ void Ext2FS::flush_block_group_descriptor_table()
 {
     MutexLocker locker(m_lock);
     auto blocks_to_write = ceil_div(m_block_group_count * sizeof(ext2_group_desc), block_size());
-    auto first_block_of_bgdt = block_size() == 1024 ? 2 : 1;
+    auto first_block_of_bgdt = first_block_of_block_group_descriptors();
     auto buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)block_group_descriptors());
     if (auto result = write_blocks(first_block_of_bgdt, blocks_to_write, buffer); result.is_error())
         dbgln("Ext2FS[{}]::flush_block_group_descriptor_table(): Failed to write blocks: {}", fsid(), result.error());
