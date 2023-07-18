@@ -9,10 +9,10 @@ Co-Authored-By: Rodrigo Tobar <rtobarc@gmail.com>
  1 file changed, 24 insertions(+)
 
 diff --git a/Configurations/10-main.conf b/Configurations/10-main.conf
-index 8ca8235..3dea01f 100644
+index 8010087b46dcea332f586d440b442fa1bcf3e34d..ee25d4c1be22f7eade443a5d48c3df60f4c7a6f1 100644
 --- a/Configurations/10-main.conf
 +++ b/Configurations/10-main.conf
-@@ -627,6 +627,30 @@ my %targets = (
+@@ -672,6 +672,30 @@ my %targets = (
          shared_extension => ".so",
      },
  

@@ -1,10 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=openssl
-branch='1.1.1'
-version="${branch}s"
+version='3.0.9'
 useconfigure=true
 configscript=Configure
-files="https://www.openssl.org/source/openssl-${version}.tar.gz openssl-${version}.tar.gz c5ac01e760ee6ff0dab61d6b2bbd30146724d063eb322180c6f18a6f74e4b6aa"
+files="https://www.openssl.org/source/openssl-${version}.tar.gz openssl-${version}.tar.gz eb1ab04781474360f77c318ab89d8c5a03abc38e63d65a603cabbf1b00a1dc90"
 
 depends=("zlib")
 configopts=("--prefix=/usr/local" "-DOPENSSL_SYS_SERENITY=1" "-DOPENSSL_USE_IPV6=0" "zlib" "threads" "no-tests" "no-asm" "serenity-generic")

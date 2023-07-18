@@ -1,19 +1,20 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: Luke Wilde <lukew@serenityos.org>
-Date: Wed, 16 Mar 2022 12:52:30 +0000
+From: Kenneth Myhra <kennethmyhra@gmail.com>
+Date: Tue, 18 Jul 2023 18:58:14 +0200
 Subject: [PATCH] Add build configuration info for serenity
 
+Co-Authored-By: Luke Wilde <lukew@serenityos.org>
 Co-Authored-By: Rodrigo Tobar <rtobarc@gmail.com>
 ---
  Configurations/shared-info.pl | 7 +++++++
  1 file changed, 7 insertions(+)
 
 diff --git a/Configurations/shared-info.pl b/Configurations/shared-info.pl
-index 47eddd6..ab04a19 100644
+index edd16f405594a7e0d25d479e7e04272679bf8061..04852a65793c2ad4f53615d9c6c054ea0760e80a 100644
 --- a/Configurations/shared-info.pl
 +++ b/Configurations/shared-info.pl
-@@ -34,6 +34,13 @@ my %shared_info;
-             shared_defflag    => '-Wl,--version-script=',
+@@ -39,6 +39,13 @@ my %shared_info;
+                 : '-Wl,-z,defs',
          };
      },
 +    'serenity-shared' => {
@@ -24,5 +25,5 @@ index 47eddd6..ab04a19 100644
 +        shared_defflag        => "-Wl,-Map=",
 +    },
      'bsd-gcc-shared' => sub { return $shared_info{'linux-shared'}; },
-     'bsd-shared' => sub {
-         return $shared_info{'gnu-shared'} if detect_gnu_ld();
+     'darwin-shared' => {
+         module_ldflags        => '-bundle',
