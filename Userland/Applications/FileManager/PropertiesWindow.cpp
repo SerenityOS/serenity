@@ -12,6 +12,7 @@
 #include <Applications/FileManager/DirectoryView.h>
 #include <Applications/FileManager/PropertiesWindowAudioTabGML.h>
 #include <Applications/FileManager/PropertiesWindowGeneralTabGML.h>
+#include <Applications/FileManager/PropertiesWindowImageTabGML.h>
 #include <LibAudio/Loader.h>
 #include <LibCore/Directory.h>
 #include <LibCore/System.h>
@@ -26,6 +27,8 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/TabWidget.h>
+#include <LibGfx/ICC/Profile.h>
+#include <LibGfx/ICC/Tags.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -215,6 +218,9 @@ ErrorOr<void> PropertiesWindow::create_file_type_specific_tabs(GUI::TabWidget& t
     if (mime_type.starts_with("audio/"sv))
         return create_audio_tab(tab_widget, move(mapped_file));
 
+    if (mime_type.starts_with("image/"sv))
+        return create_image_tab(tab_widget, move(mapped_file), mime_type);
+
     return {};
 }
 
@@ -252,6 +258,64 @@ ErrorOr<void> PropertiesWindow::create_audio_tab(GUI::TabWidget& tab_widget, Non
         ->set_text(TRY(loader->metadata().track_number.map([](auto number) { return String::number(number); })).value_or({}));
     tab->find_descendant_of_type_named<GUI::Label>("audio_genre")->set_text(loader->metadata().genre.value_or({}));
     tab->find_descendant_of_type_named<GUI::Label>("audio_comment")->set_text(loader->metadata().comment.value_or({}));
+
+    return {};
+}
+
+ErrorOr<void> PropertiesWindow::create_image_tab(GUI::TabWidget& tab_widget, NonnullRefPtr<Core::MappedFile> mapped_file, StringView mime_type)
+{
+    auto image_decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(mapped_file->bytes(), mime_type);
+    if (!image_decoder)
+        return {};
+
+    auto tab = TRY(tab_widget.try_add_tab<GUI::Widget>("Image"_short_string));
+    TRY(tab->load_from_gml(properties_window_image_tab_gml));
+
+    tab->find_descendant_of_type_named<GUI::Label>("image_type")->set_text(TRY(String::from_utf8(mime_type)));
+    tab->find_descendant_of_type_named<GUI::Label>("image_size")->set_text(TRY(String::formatted("{} x {}", image_decoder->width(), image_decoder->height())));
+
+    String animation_text;
+    if (image_decoder->is_animated()) {
+        auto loops = image_decoder->loop_count();
+        auto frames = image_decoder->frame_count();
+        StringBuilder builder;
+        if (loops == 0) {
+            TRY(builder.try_append("Loop indefinitely"sv));
+        } else if (loops == 1) {
+            TRY(builder.try_append("Once"sv));
+        } else {
+            TRY(builder.try_appendff("Loop {} times"sv, loops));
+        }
+        TRY(builder.try_appendff(" ({} frames)"sv, frames));
+
+        animation_text = TRY(builder.to_string());
+    } else {
+        animation_text = "None"_short_string;
+    }
+    tab->find_descendant_of_type_named<GUI::Label>("image_animation")->set_text(move(animation_text));
+
+    auto hide_icc_group = [&tab](String profile_text) {
+        tab->find_descendant_of_type_named<GUI::Label>("image_has_icc_profile")->set_text(profile_text);
+        tab->find_descendant_of_type_named<GUI::Widget>("image_icc_group")->set_visible(false);
+    };
+
+    if (auto embedded_icc_bytes = TRY(image_decoder->icc_data()); embedded_icc_bytes.has_value()) {
+        auto icc_profile_or_error = Gfx::ICC::Profile::try_load_from_externally_owned_memory(embedded_icc_bytes.value());
+        if (icc_profile_or_error.is_error()) {
+            hide_icc_group(TRY("Present but invalid"_string));
+        } else {
+            auto icc_profile = icc_profile_or_error.release_value();
+
+            tab->find_descendant_of_type_named<GUI::Label>("image_has_icc_profile")->set_text(TRY("See below"_string));
+            tab->find_descendant_of_type_named<GUI::Label>("image_icc_profile")->set_text(icc_profile->tag_string_data(Gfx::ICC::profileDescriptionTag).value_or({}));
+            tab->find_descendant_of_type_named<GUI::Label>("image_icc_copyright")->set_text(icc_profile->tag_string_data(Gfx::ICC::copyrightTag).value_or({}));
+            tab->find_descendant_of_type_named<GUI::Label>("image_icc_color_space")->set_text(TRY(String::from_utf8(data_color_space_name(icc_profile->data_color_space()))));
+            tab->find_descendant_of_type_named<GUI::Label>("image_icc_device_class")->set_text(TRY(String::from_utf8((device_class_name(icc_profile->device_class())))));
+        }
+
+    } else {
+        hide_icc_group("None"_short_string);
+    }
 
     return {};
 }
