@@ -258,7 +258,7 @@ public:
     Function<ThrowCompletionOr<void>(ScriptOrModule, ModuleRequest, PromiseCapability const&)> host_import_module_dynamically;
     Function<void(ScriptOrModule, ModuleRequest const&, PromiseCapability const&, Promise*)> host_finish_dynamic_import;
 
-    Function<HashMap<PropertyKey, Value>(SourceTextModule const&)> host_get_import_meta_properties;
+    Function<HashMap<PropertyKey, Value>(SourceTextModule&)> host_get_import_meta_properties;
     Function<void(Object*, SourceTextModule const&)> host_finalize_import_meta;
 
     Function<Vector<DeprecatedString>()> host_get_supported_import_assertions;
