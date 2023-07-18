@@ -641,8 +641,24 @@ void Ext2FS::flush_block_group_descriptor_table()
     auto blocks_to_write = ceil_div(m_block_group_count * sizeof(ext2_group_desc), block_size());
     auto first_block_of_bgdt = first_block_of_block_group_descriptors();
     auto buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)block_group_descriptors());
-    if (auto result = write_blocks(first_block_of_bgdt, blocks_to_write, buffer); result.is_error())
-        dbgln("Ext2FS[{}]::flush_block_group_descriptor_table(): Failed to write blocks: {}", fsid(), result.error());
+    auto write_bgdt_to_block = [&](BlockIndex index) {
+        if (auto result = write_blocks(index, blocks_to_write, buffer); result.is_error())
+            dbgln("Ext2FS[{}]::flush_block_group_descriptor_table(): Failed to write blocks: {}", fsid(), result.error());
+    };
+
+    write_bgdt_to_block(first_block_of_bgdt);
+
+    auto is_sparse = has_flag(get_features_readonly(), FeaturesReadOnly::SparseSuperblock);
+
+    for (auto group = 1u; group < m_block_group_count; ++group) {
+        // First block is occupied by the super block
+        BlockIndex second_block_in_group = first_block_of_group(group).value() + 1;
+        // BGDT copies with sparse layout are in group number 2 and powers of 3, 5, and 7.
+        if (!is_sparse || group == 2 || AK::is_power_of<3>(group - 1) || AK::is_power_of<5>(group - 1) || AK::is_power_of<7>(group - 1)) {
+            dbgln_if(EXT2_DEBUG, "Writing block group descriptor table backup to block group {} (block {})", group, second_block_in_group);
+            write_bgdt_to_block(second_block_in_group);
+        }
+    }
 }
 
 void Ext2FS::flush_writes()
