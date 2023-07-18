@@ -276,7 +276,7 @@ bool StandardSecurityHandler::authenticate_user_password_r2_to_r5(StringView pas
     return u_bytes == password_buffer.bytes();
 }
 
-bool StandardSecurityHandler::authenticate_user_password_r6_and_later(StringView)
+bool StandardSecurityHandler::authenticate_user_password_r6_and_later(StringView password)
 {
     // ISO 32000 (PDF 2.0), 7.6.4.4.10 Algorithm 11: Authenticating the user password (Security handlers of
     // revision 6)
@@ -286,7 +286,12 @@ bool StandardSecurityHandler::authenticate_user_password_r6_and_later(StringView
     //    concatenated with the 8 bytes of User Validation Salt (see 7.6.4.4.7, "Algorithm 8: Computing the
     //    encryption dictionary's U (user password) and UE (user encryption) values (Security handlers of
     //    revision 6)"). If the 32- byte result matches the first 32 bytes of the U string, this is the user password.
-    TODO();
+    ByteBuffer input;
+    input.append(password.bytes());
+    input.append(m_u_entry.bytes().slice(32, 8)); // See comment in compute_encryption_key_r6_and_later() re "Validation Salt".
+    auto hash = computing_a_hash_r6_and_later(input, password, HashKind::User);
+
+    return hash == m_u_entry.bytes().trim(32);
 }
 
 bool StandardSecurityHandler::try_provide_user_password(StringView password_string)
