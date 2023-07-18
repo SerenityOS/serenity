@@ -12,6 +12,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ValueSlider.h>
 #include <LibGfx/AntiAliasingPainter.h>
@@ -26,6 +27,9 @@ void BrushTool::set_size(int size)
         return;
     m_size = size;
     refresh_editor_cursor();
+    auto may_have_failed = ensure_brush_reference_bitmap(m_ensured_color);
+    if (may_have_failed.is_error())
+        GUI::MessageBox::show_error(nullptr, MUST(String::formatted("Failed to create the brush. error: {}", may_have_failed.release_error())));
 }
 
 void BrushTool::on_mousedown(Layer* layer, MouseEvent& event)
@@ -87,18 +91,28 @@ Color BrushTool::color_for(GUI::MouseEvent const& event)
 
 void BrushTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color color, Gfx::IntPoint point)
 {
-    constexpr auto flow_scale = 10;
+    if (ensure_brush_reference_bitmap(color).is_error())
+        return;
+
+    if (m_editor->active_layer()->mask_type() != Layer::MaskType::EditingMask || m_editor->active_layer()->edit_mode() == Layer::EditMode::Mask) {
+        Gfx::Painter painter = Gfx::Painter(bitmap);
+        painter.blit(point.translated(-size()), *m_brush_reference, m_brush_reference->rect());
+        return;
+    }
+
+    // if we have to deal with an EditingMask we need to set the pixel individually
+    int ref_x, ref_y;
     for (int y = point.y() - size(); y < point.y() + size(); y++) {
         for (int x = point.x() - size(); x < point.x() + size(); x++) {
-            auto distance = point.distance_from({ x, y });
+            ref_x = x + size() - point.x();
+            ref_y = y + size() - point.y();
             if (x < 0 || x >= bitmap.width() || y < 0 || y >= bitmap.height())
                 continue;
-            if (distance >= size())
+
+            auto pixel_color = m_brush_reference->get_pixel<Gfx::StorageFormat::BGRA8888>(ref_x, ref_y);
+            if (!pixel_color.alpha())
                 continue;
 
-            auto falloff = get_falloff(distance) * flow_scale;
-            auto pixel_color = color;
-            pixel_color.set_alpha(AK::min(falloff * 255, 255));
             set_pixel_with_possible_mask(x, y, bitmap.get_pixel(x, y).blend(pixel_color), bitmap);
         }
     }
@@ -213,6 +227,36 @@ void BrushTool::refresh_editor_cursor()
     m_cursor = build_cursor();
     if (m_editor)
         m_editor->update_tool_cursor();
+}
+
+ErrorOr<void> BrushTool::ensure_brush_reference_bitmap(Gfx::Color color)
+{
+    Gfx::IntSize brush_size = Gfx::IntSize(size() * 2, size() * 2);
+
+    if (m_brush_reference.is_null() || m_brush_reference->size() != brush_size)
+        m_brush_reference = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, brush_size));
+    else if (m_ensured_color != color || m_ensured_hardness != hardness())
+        m_brush_reference->fill(Color::Transparent);
+    else
+        return {};
+
+    m_ensured_color = color;
+    m_ensured_hardness = hardness();
+    constexpr auto flow_scale = 10;
+    Gfx::IntPoint center_point = { size(), size() };
+    for (int y = 0; y < m_brush_reference->height(); y++) {
+        for (int x = 0; x < m_brush_reference->width(); x++) {
+            auto distance = center_point.distance_from({ x, y });
+            if (distance >= size())
+                continue;
+
+            auto falloff = get_falloff(distance) * flow_scale;
+            auto pixel_color = color;
+            pixel_color.set_alpha(AK::min(falloff * 255, 255));
+            m_brush_reference->set_pixel(x, y, pixel_color);
+        }
+    }
+    return {};
 }
 
 float BrushTool::preferred_cursor_size()

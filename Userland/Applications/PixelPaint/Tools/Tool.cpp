@@ -91,7 +91,10 @@ void Tool::set_pixel_with_possible_mask<Gfx::StorageFormat::BGRA8888>(int x, int
 
     switch (m_editor->active_layer()->edit_mode()) {
     case Layer::EditMode::Content:
-        bitmap.set_pixel<Gfx::StorageFormat::BGRA8888>(x, y, m_editor->active_layer()->modify_pixel_with_editing_mask(x, y, color, bitmap.get_pixel(x, y)));
+        if (m_editor->active_layer()->mask_type() == Layer::MaskType::EditingMask)
+            bitmap.set_pixel<Gfx::StorageFormat::BGRA8888>(x, y, m_editor->active_layer()->modify_pixel_with_editing_mask(x, y, color, bitmap.get_pixel(x, y)));
+        else
+            bitmap.set_pixel(x, y, color);
         break;
     case Layer::EditMode::Mask:
         bitmap.set_pixel<Gfx::StorageFormat::BGRA8888>(x, y, color);
@@ -106,7 +109,10 @@ void Tool::set_pixel_with_possible_mask(int x, int y, Gfx::Color color, Gfx::Bit
 
     switch (m_editor->active_layer()->edit_mode()) {
     case Layer::EditMode::Content:
-        bitmap.set_pixel(x, y, m_editor->active_layer()->modify_pixel_with_editing_mask(x, y, color, bitmap.get_pixel(x, y)));
+        if (m_editor->active_layer()->mask_type() == Layer::MaskType::EditingMask)
+            bitmap.set_pixel(x, y, m_editor->active_layer()->modify_pixel_with_editing_mask(x, y, color, bitmap.get_pixel(x, y)));
+        else
+            bitmap.set_pixel(x, y, color);
         break;
     case Layer::EditMode::Mask:
         bitmap.set_pixel(x, y, color);
