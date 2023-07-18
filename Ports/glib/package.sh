@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='glib'
-version='2.76.1'
-files="https://download.gnome.org/sources/glib/2.76/glib-${version}.tar.xz glib-${version}.tar.xz 43dc0f6a126958f5b454136c4398eab420249c16171a769784486e25f2fda19f"
+version='2.77.0'
+files="https://download.gnome.org/sources/glib/2.77/glib-${version}.tar.xz glib-${version}.tar.xz 1897fd8ad4ebb523c32fabe7508c3b0b039c089661ae1e7917df0956a320ac4d"
 useconfigure='true'
 configopts=("--cross-file" "${SERENITY_BUILD_DIR}/meson-cross-file.txt")
 depends=("libiconv" "libffi" "zlib" "gettext" "pcre")
