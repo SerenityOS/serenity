@@ -159,9 +159,13 @@ void ConsoleWidget::print_html(StringView line)
         document.body.appendChild(p);
 )~~~"sv);
 
-    // FIXME: Make it scroll to the bottom, using `window.scrollTo()` in the JS above.
-    //        We used to call `m_output_view->scroll_to_bottom();` here, but that does not work because
-    //        it runs synchronously, meaning it happens before the HTML is output via IPC above.
+    // FIXME: It should be sufficient to scrollTo a y value of document.documentElement.offsetHeight,
+    // but due to an unknown bug offsetHeight seems to not be properly updated after spamming
+    // a lot of document changes.
+    //
+    // The setTimeout makes the scrollTo async and allows the DOM to be updated.
+    builder.append("setTimeout(function() { window.scrollTo(0, 1_000_000_000); }, 0);"sv);
+
     m_output_view->run_javascript(builder.string_view());
 }
 
