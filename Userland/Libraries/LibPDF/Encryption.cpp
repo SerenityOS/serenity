@@ -7,7 +7,9 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <AK/Random.h>
+#include <AK/UFixedBigIntDivision.h>
 #include <LibCrypto/Cipher/AES.h>
+#include <LibCrypto/Hash/HashManager.h>
 #include <LibCrypto/Hash/MD5.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Document.h>
@@ -443,43 +445,94 @@ ByteBuffer StandardSecurityHandler::compute_encryption_key_r6_and_later(ByteBuff
     TODO();
 }
 
-ByteBuffer StandardSecurityHandler::computing_a_hash_r6_and_later(ByteBuffer)
+ByteBuffer StandardSecurityHandler::computing_a_hash_r6_and_later(ByteBuffer original_input, StringView input_password, HashKind kind)
 {
     // ISO 32000 (PDF 2.0), 7.6.4.3.4 Algorithm 2.B: Computing a hash (revision 6 or later)
 
     // Take the SHA-256 hash of the original input to the algorithm and name the resulting 32 bytes, K.
+    static_assert(Crypto::Hash::SHA256::DigestType::Size == 32);
+    Crypto::Hash::SHA256 sha;
+    sha.update(original_input);
+    auto K = MUST(ByteBuffer::copy(sha.digest().bytes()));
+
     // Perform the following steps (a)-(d) 64 times:
+    int round_number;
+    for (round_number = 0;; ++round_number) {
+        // a) Make a new string, K1, consisting of 64 repetitions of the sequence: Input password, K, the 48-byte user
+        //    key. The 48 byte user key is only used when checking the owner password or creating the owner key. If
+        //    checking the user password or creating the user key, K1 is the concatenation of the input password and K.
+        ByteBuffer K1_part;
+        K1_part.append(input_password.bytes());
+        K1_part.append(K.bytes());
+        if (kind == HashKind::Owner)
+            K1_part.append(m_u_entry.bytes());
 
-    // a) Make a new string, K1, consisting of 64 repetitions of the sequence: Input password, K, the 48-byte user
-    //    key. The 48 byte user key is only used when checking the owner password or creating the owner key. If
-    //    checking the user password or creating the user key, K1 is the concatenation of the input password and K.
+        ByteBuffer K1;
+        for (int i = 0; i < 64; ++i)
+            K1.append(K1_part);
 
-    // b) Encrypt K1 with the AES-128 (CBC, no padding) algorithm, using the first 16 bytes of K as the key and
-    //    the second 16 bytes of K as the initialization vector. The result of this encryption is E.
+        // b) Encrypt K1 with the AES-128 (CBC, no padding) algorithm, using the first 16 bytes of K as the key and
+        //    the second 16 bytes of K as the initialization vector. The result of this encryption is E.
+        ReadonlyBytes key = K.bytes().trim(16);
+        ReadonlyBytes initialization_vector = K.bytes().slice(16);
 
-    // c) Taking the first 16 bytes of E as an unsigned big-endian integer, compute the remainder, modulo 3. If the
-    //    result is 0, the next hash used is SHA-256, if the result is 1, the next hash used is SHA-384, if the result is
-    //    2, the next hash used is SHA-512.
+        // (PaddingMode doesn't matter here since input is block-aligned.)
+        auto cipher = Crypto::Cipher::AESCipher::CBCMode(key, 128, Crypto::Cipher::Intent::Encryption, Crypto::Cipher::PaddingMode::Null);
+        auto E = MUST(cipher.create_aligned_buffer(K1.size()));
+        Bytes E_span = E.bytes();
+        cipher.encrypt(K1, E_span, initialization_vector);
 
-    // d) Using the hash algorithm determined in step c, take the hash of E. The result is a new value of K, which
-    //    will be 32, 48, or 64 bytes in length.
+        // c) Taking the first 16 bytes of E as an unsigned big-endian integer, compute the remainder, modulo 3. If the
+        //    result is 0, the next hash used is SHA-256, if the result is 1, the next hash used is SHA-384, if the result is
+        //    2, the next hash used is SHA-512.
+        u128 remainder(0);
+        for (int i = 0; i < 16; ++i)
+            remainder = (remainder << 8) | E[i];
+        remainder %= u128(3);
 
-    // Repeat the process (a-d) with this new value of K. Following 64 rounds (round number 0 to round
-    // number 63), do the following, starting with round number 64:
+        Crypto::Hash::HashKind hash_kind;
+        switch (u8 { remainder }) {
+        case 0:
+            hash_kind = Crypto::Hash::HashKind::SHA256;
+            break;
+        case 1:
+            hash_kind = Crypto::Hash::HashKind::SHA384;
+            break;
+        case 2:
+            hash_kind = Crypto::Hash::HashKind::SHA512;
+            break;
+        }
 
-    // NOTE 2 The reason for multiple rounds is to defeat the possibility of running all paths in parallel. With 64
-    //        rounds (minimum) there are 3^64 paths through the algorithm.
+        // d) Using the hash algorithm determined in step c, take the hash of E. The result is a new value of K, which
+        //    will be 32, 48, or 64 bytes in length.
+        Crypto::Hash::Manager hash(hash_kind);
+        hash.update(E);
+        K = MUST(ByteBuffer::copy(hash.digest().bytes()));
 
-    // e) Look at the very last byte of E. If the value of that byte (taken as an unsigned integer) is greater than the
-    //    round number - 32, repeat steps (a-d) again.
+        // Repeat the process (a-d) with this new value of K. Following 64 rounds (round number 0 to round
+        // number 63), do the following, starting with round number 64:
 
-    // f) Repeat from steps (a-e) until the value of the last byte is <= (round number) - 32.
+        if (round_number < 64)
+            continue;
 
-    // NOTE 3 Tests indicate that the total number of rounds will most likely be between 65 and 80.
+        // NOTE 2 The reason for multiple rounds is to defeat the possibility of running all paths in parallel. With 64
+        //        rounds (minimum) there are 3^64 paths through the algorithm.
+
+        // e) Look at the very last byte of E. If the value of that byte (taken as an unsigned integer) is greater than the
+        //    round number - 32, repeat steps (a-d) again.
+
+        // f) Repeat from steps (a-e) until the value of the last byte is <= (round number) - 32.
+
+        // NOTE 3 Tests indicate that the total number of rounds will most likely be between 65 and 80.
+
+        if (E.bytes().last() <= round_number - 32)
+            break;
+    }
 
     // The first 32 bytes of the final K are the output of the algorithm.
-
-    TODO();
+    VERIFY(K.size() >= 32);
+    K.resize(32);
+    return K;
 }
 
 void StandardSecurityHandler::crypt(NonnullRefPtr<Object> object, Reference reference, Crypto::Cipher::Intent direction) const

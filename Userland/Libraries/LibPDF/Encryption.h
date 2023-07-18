@@ -62,7 +62,12 @@ private:
 
     ByteBuffer compute_encryption_key_r2_to_r5(ByteBuffer password_string);
     ByteBuffer compute_encryption_key_r6_and_later(ByteBuffer password_string);
-    ByteBuffer computing_a_hash_r6_and_later(ByteBuffer password_string);
+
+    enum class HashKind {
+        Owner,
+        User,
+    };
+    ByteBuffer computing_a_hash_r6_and_later(ByteBuffer input, StringView input_password, HashKind);
 
     Document* m_document;
     size_t m_revision;
