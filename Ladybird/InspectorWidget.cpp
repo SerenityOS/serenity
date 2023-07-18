@@ -34,8 +34,8 @@ InspectorWidget::InspectorWidget()
         tab_widget->addTab(container, name);
     };
 
-    auto top_tap_widget = new QTabWidget;
-    splitter->addWidget(top_tap_widget);
+    auto* top_tab_widget = new QTabWidget;
+    splitter->addWidget(top_tab_widget);
 
     m_dom_tree_view = new QTreeView;
     m_dom_tree_view->setHeaderHidden(true);
@@ -48,12 +48,12 @@ InspectorWidget::InspectorWidget()
                 set_selection(index);
             }
         });
-    add_tab(top_tap_widget, m_dom_tree_view, "DOM");
+    add_tab(top_tab_widget, m_dom_tree_view, "DOM");
 
     auto accessibility_tree_view = new QTreeView;
     accessibility_tree_view->setHeaderHidden(true);
     accessibility_tree_view->setModel(&m_accessibility_model);
-    add_tab(top_tap_widget, accessibility_tree_view, "Accessibility");
+    add_tab(top_tab_widget, accessibility_tree_view, "Accessibility");
 
     auto add_table_tab = [&](auto* tab_widget, auto& model, auto name) {
         auto table_view = new QTableView;
