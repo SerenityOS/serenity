@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/IntegralMath.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Ext2FS/FileSystem.h>
 #include <Kernel/FileSystem/Ext2FS/Inode.h>
@@ -30,7 +31,23 @@ ErrorOr<void> Ext2FS::flush_super_block()
     MutexLocker locker(m_lock);
     VERIFY((sizeof(ext2_super_block) % logical_block_size()) == 0);
     auto super_block_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&m_super_block);
-    return raw_write_blocks(2, (sizeof(ext2_super_block) / logical_block_size()), super_block_buffer);
+    auto const superblock_physical_block_count = (sizeof(ext2_super_block) / logical_block_size());
+
+    // First superblock is always at offset 1024 (physical block index 2).
+    TRY(raw_write_blocks(2, superblock_physical_block_count, super_block_buffer));
+
+    auto is_sparse = has_flag(get_features_readonly(), FeaturesReadOnly::SparseSuperblock);
+
+    for (auto group = 1u; group < m_block_group_count; ++group) {
+        auto first_block_in_group = first_block_of_group(group);
+        // Superblock copies with sparse layout are in group number 2 and powers of 3, 5, and 7.
+        if (!is_sparse || group == 2 || AK::is_power_of<3>(group - 1) || AK::is_power_of<5>(group - 1) || AK::is_power_of<7>(group - 1)) {
+            dbgln_if(EXT2_DEBUG, "Writing superblock backup to block group {} (block {})", group, first_block_in_group);
+            TRY(write_blocks(first_block_in_group, 1, super_block_buffer));
+        }
+    }
+
+    return {};
 }
 
 ext2_group_desc const& Ext2FS::group_descriptor(GroupIndex group_index) const

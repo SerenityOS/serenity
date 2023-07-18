@@ -22,10 +22,13 @@ class Ext2FS final : public BlockBasedFileSystem {
     friend class Ext2FSInode;
 
 public:
+    // s_feature_ro_compat
     enum class FeaturesReadOnly : u32 {
         None = 0,
-        FileSize64bits = 1 << 1,
+        SparseSuperblock = EXT2_FEATURE_RO_COMPAT_SPARSE_SUPER,
+        FileSize64bits = EXT2_FEATURE_RO_COMPAT_LARGE_FILE,
     };
+    AK_ENUM_BITWISE_FRIEND_OPERATORS(FeaturesReadOnly);
 
     static ErrorOr<NonnullRefPtr<FileSystem>> try_create(OpenFileDescription&, ReadonlyBytes);
 
