@@ -49,14 +49,14 @@ ThrowCompletionOr<IteratorRecord> get_iterator(VM& vm, Value object, IteratorHin
             // i. Let syncMethod be ? GetMethod(obj, @@iterator).
             auto sync_method = TRY(object.get_method(vm, vm.well_known_symbol_iterator()));
 
-            // NOTE: Additional type check to produce a better error message than Call().
+            // ii. If syncMethod is undefined, throw a TypeError exception.
             if (!sync_method)
                 return vm.throw_completion<TypeError>(ErrorType::NotIterable, TRY_OR_THROW_OOM(vm, object.to_string_without_side_effects()));
 
-            // ii. Let syncIteratorRecord be ? GetIteratorFromMethod(obj, syncMethod).
+            // iii. Let syncIteratorRecord be ? GetIteratorFromMethod(obj, syncMethod).
             auto sync_iterator_record = TRY(get_iterator_from_method(vm, object, *sync_method));
 
-            // iii. Return CreateAsyncFromSyncIterator(syncIteratorRecord).
+            // iv. Return CreateAsyncFromSyncIterator(syncIteratorRecord).
             return create_async_from_sync_iterator(vm, sync_iterator_record);
         }
     }
@@ -66,11 +66,11 @@ ThrowCompletionOr<IteratorRecord> get_iterator(VM& vm, Value object, IteratorHin
         method = TRY(object.get_method(vm, vm.well_known_symbol_iterator()));
     }
 
-    // NOTE: Additional type check to produce a better error message than Call().
+    // 3. If method is undefined, throw a TypeError exception.
     if (!method)
         return vm.throw_completion<TypeError>(ErrorType::NotIterable, TRY_OR_THROW_OOM(vm, object.to_string_without_side_effects()));
 
-    // 3. Return ? GetIteratorFromMethod(obj, method).
+    // 4. Return ? GetIteratorFromMethod(obj, method).
     return TRY(get_iterator_from_method(vm, object, *method));
 }
 
