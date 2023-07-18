@@ -67,7 +67,8 @@ static JS::ThrowCompletionOr<Vector<String>> convert_value_to_sequence_of_string
     // https://webidl.spec.whatwg.org/#create-sequence-from-iterable
     // To create an IDL value of type sequence<T> given an iterable iterable and an iterator getter method, perform the following steps:
     // 1. Let iter be ? GetIterator(iterable, sync, method).
-    auto iterator = TRY(JS::get_iterator(vm, value, JS::IteratorHint::Sync, method));
+    // FIXME: The WebIDL spec is out of date - it should be using GetIteratorFromMethod.
+    auto iterator = TRY(JS::get_iterator_from_method(vm, value, *method));
 
     // 2. Initialize i to be 0.
     Vector<String> sequence_of_strings;

@@ -22,7 +22,8 @@ enum class IteratorHint {
     Async,
 };
 
-ThrowCompletionOr<IteratorRecord> get_iterator(VM&, Value, IteratorHint = IteratorHint::Sync, Optional<Value> method = {});
+ThrowCompletionOr<IteratorRecord> get_iterator_from_method(VM&, Value, NonnullGCPtr<FunctionObject>);
+ThrowCompletionOr<IteratorRecord> get_iterator(VM&, Value, IteratorHint = IteratorHint::Sync);
 ThrowCompletionOr<NonnullGCPtr<Object>> iterator_next(VM&, IteratorRecord const&, Optional<Value> = {});
 ThrowCompletionOr<GCPtr<Object>> iterator_step(VM&, IteratorRecord const&);
 ThrowCompletionOr<bool> iterator_complete(VM&, Object& iterator_result);
@@ -30,9 +31,9 @@ ThrowCompletionOr<Value> iterator_value(VM&, Object& iterator_result);
 Completion iterator_close(VM&, IteratorRecord const&, Completion);
 Completion async_iterator_close(VM&, IteratorRecord const&, Completion);
 NonnullGCPtr<Object> create_iterator_result_object(VM&, Value, bool done);
-ThrowCompletionOr<MarkedVector<Value>> iterable_to_list(VM&, Value iterable, Optional<Value> method = {});
+ThrowCompletionOr<MarkedVector<Value>> iterable_to_list(VM&, Value iterable, GCPtr<FunctionObject> method = {});
 
 using IteratorValueCallback = Function<Optional<Completion>(Value)>;
-Completion get_iterator_values(VM&, Value iterable, IteratorValueCallback callback, Optional<Value> method = {});
+Completion get_iterator_values(VM&, Value iterable, IteratorValueCallback callback);
 
 }

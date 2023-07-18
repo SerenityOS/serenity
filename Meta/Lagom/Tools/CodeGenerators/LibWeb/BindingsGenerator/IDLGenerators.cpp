@@ -1533,8 +1533,9 @@ void IDL::ParameterizedType::generate_sequence_from_iterable(SourceGenerator& ge
     //      4. Initialize Si to the result of converting nextItem to an IDL value of type T.
     //      5. Set i to i + 1.
 
+    // FIXME: The WebIDL spec is out of date - it should be using GetIteratorFromMethod.
     sequence_generator.append(R"~~~(
-    auto iterator@recursion_depth@ = TRY(JS::get_iterator(vm, @iterable_cpp_name@, JS::IteratorHint::Sync, @iterator_method_cpp_name@));
+    auto iterator@recursion_depth@ = TRY(JS::get_iterator_from_method(vm, @iterable_cpp_name@, *@iterator_method_cpp_name@));
 )~~~");
 
     if (sequence_cpp_type.sequence_storage_type == SequenceStorageType::Vector) {

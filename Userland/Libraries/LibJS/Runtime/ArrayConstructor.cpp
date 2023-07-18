@@ -179,8 +179,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
             array = MUST(Array::create(realm, 0));
         }
 
-        // c. Let iteratorRecord be ? GetIterator(items, sync, usingIterator).
-        auto iterator = TRY(get_iterator(vm, items, IteratorHint::Sync, using_iterator));
+        // c. Let iteratorRecord be ? GetIteratorFromMethod(items, usingIterator).
+        auto iterator = TRY(get_iterator_from_method(vm, items, *using_iterator));
 
         // d. Let k be 0.
         // e. Repeat,
@@ -356,12 +356,14 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from_async)
         // h. If usingAsyncIterator is not undefined, then
         if (using_async_iterator) {
             // i. Set iteratorRecord to ? GetIterator(asyncItems, async, usingAsyncIterator).
-            iterator_record = TRY(get_iterator(vm, async_items, IteratorHint::Async, using_async_iterator));
+            // FIXME: The Array.from proposal is out of date - it should be using GetIteratorFromMethod.
+            iterator_record = TRY(get_iterator_from_method(vm, async_items, *using_async_iterator));
         }
         // i. Else if usingSyncIterator is not undefined, then
         else if (using_sync_iterator) {
             // i. Set iteratorRecord to ? CreateAsyncFromSyncIterator(GetIterator(asyncItems, sync, usingSyncIterator)).
-            iterator_record = create_async_from_sync_iterator(vm, TRY(get_iterator(vm, async_items, IteratorHint::Sync, using_sync_iterator)));
+            // FIXME: The Array.from proposal is out of date - it should be using GetIteratorFromMethod.
+            iterator_record = create_async_from_sync_iterator(vm, TRY(get_iterator_from_method(vm, async_items, *using_sync_iterator)));
         }
 
         // j. If iteratorRecord is not undefined, then
