@@ -41,6 +41,8 @@ public:
         double multiplicand = hardness() == 100 ? 1.0 : 1.0 / (100 - hardness());
         return (1.0 - double { distance / size() }) * multiplicand;
     }
+    virtual void refresh_editor_cursor() override;
+    virtual void set_current_position(Gfx::IntPoint cursor_position) override;
 
 protected:
     virtual StringView tool_name() const override { return "Brush Tool"sv; }
@@ -49,7 +51,6 @@ protected:
     virtual void draw_point(Gfx::Bitmap& bitmap, Gfx::Color color, Gfx::IntPoint point);
     virtual void draw_line(Gfx::Bitmap& bitmap, Gfx::Color color, Gfx::IntPoint start, Gfx::IntPoint end);
     virtual NonnullRefPtr<Gfx::Bitmap> build_cursor();
-    void refresh_editor_cursor();
     float m_scale_last_created_cursor = 0;
 
 private:
@@ -60,6 +61,9 @@ private:
     bool m_has_clicked { false };
     Gfx::IntPoint m_last_position;
     NonnullRefPtr<Gfx::Bitmap const> m_cursor = build_cursor();
+    Gfx::IntSize m_editor_previous_size = Gfx::IntSize(0, 0);
+    int m_size_previous { 20 };
+    float max_scaled_size = 0;
 };
 
 }

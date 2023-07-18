@@ -146,16 +146,44 @@ NonnullRefPtr<Gfx::Bitmap> EraseTool::build_cursor()
     m_scale_last_created_cursor = m_editor ? m_editor->scale() : 1;
     int scaled_size = size() * m_scale_last_created_cursor;
 
+    // If we have an ImageEditor the scaled_size should not excede the longest size of the ImageEditor (width or height)
+    if (m_editor) {
+        int max_dimension = max(m_editor->width(), m_editor->height());
+        if (scaled_size > max_dimension * 2) {
+            // scaled_size needs to change in order to draw the cursor in the correct location.
+            scaled_size = max_dimension * 2;
+        }
+    }
+    scaled_size = max(scaled_size, 1);
     NonnullRefPtr<Gfx::Bitmap> new_cursor = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, Gfx::IntSize(scaled_size, scaled_size)).release_value_but_fixme_should_propagate_errors();
 
     Gfx::IntRect rect { 0, 0, scaled_size, scaled_size };
     Gfx::Painter painter { new_cursor };
 
-    painter.draw_rect(rect, Color::LightGray);
-    painter.draw_line({ scaled_size / 2 - 5, scaled_size / 2 }, { scaled_size / 2 + 5, scaled_size / 2 }, Color::LightGray, 3);
-    painter.draw_line({ scaled_size / 2, scaled_size / 2 - 5 }, { scaled_size / 2, scaled_size / 2 + 5 }, Color::LightGray, 3);
-    painter.draw_line({ scaled_size / 2 - 5, scaled_size / 2 }, { scaled_size / 2 + 5, scaled_size / 2 }, Color::MidGray, 1);
-    painter.draw_line({ scaled_size / 2, scaled_size / 2 - 5 }, { scaled_size / 2, scaled_size / 2 + 5 }, Color::MidGray, 1);
+    // If no ImageEditor is present, we cannot bind the rect within the editor. Then we will just draw the rect as normal.
+
+    auto half_scaled_size = scaled_size / 2;
+    if (!m_editor) {
+        painter.draw_rect(rect, Color::LightGray);
+    } else {
+        if (m_current_tool_position.x() >= (half_scaled_size) && (m_current_tool_position.x() + half_scaled_size) <= m_editor->width() && m_current_tool_position.y() >= (half_scaled_size) && (m_current_tool_position.y() + half_scaled_size) <= m_editor->height()) {
+            painter.draw_rect(rect, Color::LightGray);
+        } else {
+            // FIXME: If you move the cursor rapidly the rectangle doesn't get updated properly and can shoot past the ImageEditor bounds
+            int left_overlap = (m_current_tool_position.x() < (half_scaled_size)) ? ((half_scaled_size)-m_current_tool_position.x()) : 0;
+            int right_overlap = ((m_current_tool_position.x() + half_scaled_size) > m_editor->width()) ? ((m_current_tool_position.x() + half_scaled_size) - m_editor->width()) : 0;
+
+            int top_overlap = (m_current_tool_position.y() < (half_scaled_size)) ? ((half_scaled_size)-m_current_tool_position.y()) : 0;
+            int bottom_overlap = ((m_current_tool_position.y() + half_scaled_size) > m_editor->height()) ? ((m_current_tool_position.y() + half_scaled_size) - m_editor->height()) : 0;
+
+            Gfx::IntRect new_rect { left_overlap, top_overlap, scaled_size - (left_overlap + right_overlap), scaled_size - (top_overlap + bottom_overlap) };
+            painter.draw_rect(new_rect, Color::LightGray);
+        }
+    }
+    painter.draw_line({ half_scaled_size - 5, half_scaled_size }, { half_scaled_size + 5, half_scaled_size }, Color::LightGray, 3);
+    painter.draw_line({ half_scaled_size, half_scaled_size - 5 }, { half_scaled_size, half_scaled_size + 5 }, Color::LightGray, 3);
+    painter.draw_line({ half_scaled_size - 5, half_scaled_size }, { half_scaled_size + 5, half_scaled_size }, Color::MidGray, 1);
+    painter.draw_line({ half_scaled_size, half_scaled_size - 5 }, { half_scaled_size, half_scaled_size + 5 }, Color::MidGray, 1);
 
     return new_cursor;
 }

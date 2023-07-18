@@ -187,9 +187,33 @@ ErrorOr<GUI::Widget*> BrushTool::get_properties_widget()
 
 NonnullRefPtr<Gfx::Bitmap> BrushTool::build_cursor()
 {
-    m_scale_last_created_cursor = m_editor ? m_editor->scale() : 1;
-    auto scaled_size = size() * m_scale_last_created_cursor;
+    auto new_scale = m_editor ? m_editor->scale() : 1;
+    auto scaled_size = size() * new_scale;
     auto containing_box_size = 2 * scaled_size;
+    bool draw_ellipse = true;
+
+    // If we have an ImageEditor scaled_size should not excede diagonal length of the ImageEditor
+    if (m_editor) {
+        // FIXME: The ImageEditor diagonal size could be saved on the ImageEditor and exposed to optimize.
+        //        It would be nice if that was recalculated when the ImageEditor was resized
+        if (m_scale_last_created_cursor != new_scale) {
+            if (m_editor_previous_size != m_editor->size()) {
+                m_editor_previous_size = m_editor->size();
+                max_scaled_size = sqrt(pow(m_editor->width(), 2) + pow(m_editor->height(), 2));
+            }
+        }
+
+        if (scaled_size > max_scaled_size) {
+            scaled_size = max_scaled_size;
+            containing_box_size = scaled_size * 2;
+            // Due to performance issues when the cursor is too large we choose to draw it here.
+            draw_ellipse = false;
+        }
+    }
+
+    scaled_size = max(scaled_size, 1);
+    containing_box_size = max(containing_box_size, 1);
+
     NonnullRefPtr<Gfx::Bitmap> new_cursor = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, Gfx::IntSize(containing_box_size, containing_box_size)).release_value_but_fixme_should_propagate_errors();
 
     Gfx::Painter painter { new_cursor };
@@ -199,16 +223,32 @@ NonnullRefPtr<Gfx::Bitmap> BrushTool::build_cursor()
     painter.draw_line({ scaled_size, scaled_size - 5 }, { scaled_size, scaled_size + 5 }, Color::LightGray, 3);
     painter.draw_line({ scaled_size - 5, scaled_size }, { scaled_size + 5, scaled_size }, Color::MidGray, 1);
     painter.draw_line({ scaled_size, scaled_size - 5 }, { scaled_size, scaled_size + 5 }, Color::MidGray, 1);
-    aa_painter.draw_ellipse(Gfx::IntRect(0, 0, containing_box_size, containing_box_size), Color::LightGray, 1);
+
+    // If no ImageEditor is present, we cannot bind the ellipse within the editor. Then we will just draw the ellipse.
+    if (!m_editor) {
+        aa_painter.draw_ellipse(Gfx::IntRect(0, 0, containing_box_size, containing_box_size), Color::LightGray, 1);
+    } else if (draw_ellipse) {
+        Color color = m_editor->color_for(GUI::MouseButton::Primary);
+        aa_painter.fill_ellipse(Gfx::IntRect(0, 0, containing_box_size, containing_box_size), color.with_alpha(100));
+    }
+
+    m_scale_last_created_cursor = new_scale;
 
     return new_cursor;
 }
 
 void BrushTool::refresh_editor_cursor()
 {
+    // FIXME: reverting the change to only build_cursor on m_editor scale size or tool size causes slow behavior when zoomed to max with the BrushTool
     m_cursor = build_cursor();
+    m_size_previous = size();
     if (m_editor)
         m_editor->update_tool_cursor();
+}
+
+void BrushTool::set_current_position(Gfx::IntPoint cursor_position)
+{
+    m_current_tool_position = cursor_position;
 }
 
 }
