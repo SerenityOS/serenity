@@ -34,15 +34,13 @@ ThrowCompletionOr<IteratorRecord> get_iterator_from_method(VM& vm, Value object,
     return iterator_record;
 }
 
-// 7.4.3 GetIterator ( obj [ , hint ] ), https://tc39.es/ecma262/#sec-getiterator
-ThrowCompletionOr<IteratorRecord> get_iterator(VM& vm, Value object, IteratorHint hint)
+// 7.4.3 GetIterator ( obj, kind ), https://tc39.es/ecma262/#sec-getiterator
+ThrowCompletionOr<IteratorRecord> get_iterator(VM& vm, Value object, IteratorHint kind)
 {
     JS::GCPtr<FunctionObject> method;
 
-    // 1. If hint is not present, set hint to sync.
-
-    // 2. If hint is async, then
-    if (hint == IteratorHint::Async) {
+    // 1. If kind is async, then
+    if (kind == IteratorHint::Async) {
         // a. Let method be ? GetMethod(obj, @@asyncIterator).
         method = TRY(object.get_method(vm, vm.well_known_symbol_async_iterator()));
 
@@ -62,7 +60,7 @@ ThrowCompletionOr<IteratorRecord> get_iterator(VM& vm, Value object, IteratorHin
             return create_async_from_sync_iterator(vm, sync_iterator_record);
         }
     }
-    // 3. Else,
+    // 2. Else,
     else {
         // a. Let method be ? GetMethod(obj, @@iterator).
         method = TRY(object.get_method(vm, vm.well_known_symbol_iterator()));
@@ -72,7 +70,7 @@ ThrowCompletionOr<IteratorRecord> get_iterator(VM& vm, Value object, IteratorHin
     if (!method)
         return vm.throw_completion<TypeError>(ErrorType::NotIterable, TRY_OR_THROW_OOM(vm, object.to_string_without_side_effects()));
 
-    // 4. Return ? GetIteratorFromMethod(obj, method).
+    // 3. Return ? GetIteratorFromMethod(obj, method).
     return TRY(get_iterator_from_method(vm, object, *method));
 }
 

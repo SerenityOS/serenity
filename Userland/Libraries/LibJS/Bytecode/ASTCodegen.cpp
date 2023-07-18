@@ -2669,12 +2669,12 @@ static Bytecode::CodeGenerationErrorOr<ForInOfHeadEvaluationResult> for_in_of_he
     // 7. Else,
     else {
         // a. Assert: iterationKind is iterate or async-iterate.
-        // b. If iterationKind is async-iterate, let iteratorHint be async.
-        // c. Else, let iteratorHint be sync.
-        auto iterator_hint = iteration_kind == IterationKind::AsyncIterate ? IteratorHint::Async : IteratorHint::Sync;
+        // b. If iterationKind is async-iterate, let iteratorKind be async.
+        // c. Else, let iteratorKind be sync.
+        auto iterator_kind = iteration_kind == IterationKind::AsyncIterate ? IteratorHint::Async : IteratorHint::Sync;
 
-        // d. Return ? GetIterator(exprValue, iteratorHint).
-        generator.emit<Bytecode::Op::GetIterator>(iterator_hint);
+        // d. Return ? GetIterator(exprValue, iteratorKind).
+        generator.emit<Bytecode::Op::GetIterator>(iterator_kind);
     }
 
     return result;
