@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020, Ben Jilks <benjyjilks@gmail.com>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
- * Copyright (c) 2022, Torsten Engelmann <engelTorsten@gmx.de>
+ * Copyright (c) 2022-2023, Torsten Engelmann <engelTorsten@gmx.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -149,10 +149,10 @@ ErrorOr<GUI::Widget*> BrushTool::get_properties_widget()
 
         auto size_label = TRY(size_container->try_add<GUI::Label>("Size:"_string));
         size_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        size_label->set_fixed_size(80, 20);
+        size_label->set_fixed_size(60, 20);
 
         auto size_slider = TRY(size_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_string));
-        size_slider->set_range(1, 100);
+        size_slider->set_range(1, 250);
         size_slider->set_value(m_size);
         size_slider->set_override_cursor(cursor());
 
@@ -169,7 +169,7 @@ ErrorOr<GUI::Widget*> BrushTool::get_properties_widget()
 
         auto hardness_label = TRY(hardness_container->try_add<GUI::Label>("Hardness:"_string));
         hardness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        hardness_label->set_fixed_size(80, 20);
+        hardness_label->set_fixed_size(60, 20);
 
         auto hardness_slider = TRY(hardness_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "%"_string));
         hardness_slider->set_range(1, 100);
@@ -188,19 +188,23 @@ ErrorOr<GUI::Widget*> BrushTool::get_properties_widget()
 NonnullRefPtr<Gfx::Bitmap> BrushTool::build_cursor()
 {
     m_scale_last_created_cursor = m_editor ? m_editor->scale() : 1;
-    auto scaled_size = size() * m_scale_last_created_cursor;
-    auto containing_box_size = 2 * scaled_size;
+    auto containing_box_size = AK::clamp(preferred_cursor_size(), 1.0f, max_allowed_cursor_size());
+    auto centered = containing_box_size / 2;
     NonnullRefPtr<Gfx::Bitmap> new_cursor = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, Gfx::IntSize(containing_box_size, containing_box_size)).release_value_but_fixme_should_propagate_errors();
 
     Gfx::Painter painter { new_cursor };
     Gfx::AntiAliasingPainter aa_painter { painter };
 
-    painter.draw_line({ scaled_size - 5, scaled_size }, { scaled_size + 5, scaled_size }, Color::LightGray, 3);
-    painter.draw_line({ scaled_size, scaled_size - 5 }, { scaled_size, scaled_size + 5 }, Color::LightGray, 3);
-    painter.draw_line({ scaled_size - 5, scaled_size }, { scaled_size + 5, scaled_size }, Color::MidGray, 1);
-    painter.draw_line({ scaled_size, scaled_size - 5 }, { scaled_size, scaled_size + 5 }, Color::MidGray, 1);
-    aa_painter.draw_ellipse(Gfx::IntRect(0, 0, containing_box_size, containing_box_size), Color::LightGray, 1);
-
+    painter.draw_line({ centered - 5, centered }, { centered + 5, centered }, Color::LightGray, 3);
+    painter.draw_line({ centered, centered - 5 }, { centered, centered + 5 }, Color::LightGray, 3);
+    painter.draw_line({ centered - 5, centered }, { centered + 5, centered }, Color::MidGray, 1);
+    painter.draw_line({ centered, centered - 5 }, { centered, centered + 5 }, Color::MidGray, 1);
+    if (max_allowed_cursor_size() != containing_box_size) {
+        aa_painter.draw_ellipse(Gfx::IntRect(0, 0, containing_box_size, containing_box_size), Color::LightGray, 1);
+    } else {
+        aa_painter.draw_ellipse(Gfx::IntRect(0, 0, containing_box_size, containing_box_size), Color::Red, 1);
+        aa_painter.draw_ellipse(Gfx::IntRect(3, 3, containing_box_size - 6, containing_box_size - 6), Color::LightGray, 1);
+    }
     return new_cursor;
 }
 
@@ -211,4 +215,13 @@ void BrushTool::refresh_editor_cursor()
         m_editor->update_tool_cursor();
 }
 
+float BrushTool::preferred_cursor_size()
+{
+    return 2 * size() * (m_editor ? m_editor->scale() : 1);
+}
+
+float BrushTool::max_allowed_cursor_size()
+{
+    return m_editor ? Gfx::IntPoint(0, 0).distance_from({ m_editor->width(), m_editor->height() }) * 1.1f : 500;
+}
 }
