@@ -701,9 +701,9 @@ float Font::glyphs_horizontal_kerning(u32 left_glyph_id, u32 right_glyph_id, flo
     }
 
     if (m_kern.has_value()) {
-        auto kerning = m_kern->get_glyph_kerning(left_glyph_id, right_glyph_id) * x_scale;
+        auto kerning = m_kern->get_glyph_kerning(left_glyph_id, right_glyph_id);
         m_kerning_cache.set(cache_key, kerning);
-        return kerning;
+        return kerning * x_scale;
     }
 
     m_kerning_cache.set(cache_key, 0);
