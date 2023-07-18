@@ -190,7 +190,6 @@ NonnullRefPtr<Gfx::Bitmap> BrushTool::build_cursor()
     auto new_scale = m_editor ? m_editor->scale() : 1;
     auto scaled_size = size() * new_scale;
     auto containing_box_size = 2 * scaled_size;
-    bool draw_ellipse = true;
 
     // If we have an ImageEditor scaled_size should not excede diagonal length of the ImageEditor
     if (m_editor) {
@@ -206,8 +205,6 @@ NonnullRefPtr<Gfx::Bitmap> BrushTool::build_cursor()
         if (scaled_size > max_scaled_size) {
             scaled_size = max_scaled_size;
             containing_box_size = scaled_size * 2;
-            // Due to performance issues when the cursor is too large we choose to draw it here.
-            draw_ellipse = false;
         }
     }
 
@@ -227,7 +224,7 @@ NonnullRefPtr<Gfx::Bitmap> BrushTool::build_cursor()
     // If no ImageEditor is present, we cannot bind the ellipse within the editor. Then we will just draw the ellipse.
     if (!m_editor) {
         aa_painter.draw_ellipse(Gfx::IntRect(0, 0, containing_box_size, containing_box_size), Color::LightGray, 1);
-    } else if (draw_ellipse) {
+    } else if (m_current_tool_position.x() + scaled_size <= m_editor->width() && m_current_tool_position.y() + scaled_size <= m_editor->height() && m_current_tool_position.x() - scaled_size > 0 && m_current_tool_position.y() - scaled_size > 0) {
         Color color = m_editor->color_for(GUI::MouseButton::Primary);
         aa_painter.fill_ellipse(Gfx::IntRect(0, 0, containing_box_size, containing_box_size), color.with_alpha(100));
     }
