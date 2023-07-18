@@ -26,7 +26,7 @@ sudo apt-get install -y python-is-python3
 git clone --depth 10000 https://github.com/web-platform-tests/wpt.git
 
 # Switch to the commit that was used to generate tests expectations. Requires periodic updates.
-(cd wpt; git checkout 4c27189ed2db4ddad8e727d4ea9ae8329c3e1672)
+(cd wpt; git checkout 4434e91bd0801dfefff044b5b9a9744e30d255d3)
 
 # Apply WPT patch with Ladybird runner
 (cd wpt; git apply ../ladybird_runner.patch)
