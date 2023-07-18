@@ -169,15 +169,23 @@ NonnullRefPtr<Gfx::Bitmap> EraseTool::build_cursor()
         if (m_current_tool_position.x() >= (half_scaled_size) && (m_current_tool_position.x() + half_scaled_size) <= m_editor->width() && m_current_tool_position.y() >= (half_scaled_size) && (m_current_tool_position.y() + half_scaled_size) <= m_editor->height()) {
             painter.draw_rect(rect, Color::LightGray);
         } else {
-            // FIXME: If you move the cursor rapidly the rectangle doesn't get updated properly and can shoot past the ImageEditor bounds
             int left_overlap = (m_current_tool_position.x() < (half_scaled_size)) ? ((half_scaled_size)-m_current_tool_position.x()) : 0;
             int right_overlap = ((m_current_tool_position.x() + half_scaled_size) > m_editor->width()) ? ((m_current_tool_position.x() + half_scaled_size) - m_editor->width()) : 0;
-
             int top_overlap = (m_current_tool_position.y() < (half_scaled_size)) ? ((half_scaled_size)-m_current_tool_position.y()) : 0;
             int bottom_overlap = ((m_current_tool_position.y() + half_scaled_size) > m_editor->height()) ? ((m_current_tool_position.y() + half_scaled_size) - m_editor->height()) : 0;
 
-            Gfx::IntRect new_rect { left_overlap, top_overlap, scaled_size - (left_overlap + right_overlap), scaled_size - (top_overlap + bottom_overlap) };
-            painter.draw_rect(new_rect, Color::LightGray);
+            if (left_overlap == 0) {
+                painter.draw_line(Gfx::IntPoint(0, top_overlap), Gfx::IntPoint(0, scaled_size - bottom_overlap), Color::LightGray);
+            }
+            if (right_overlap == 0) {
+                painter.draw_line(Gfx::IntPoint(scaled_size - 1, top_overlap), Gfx::IntPoint(scaled_size - 1, scaled_size - bottom_overlap), Color::LightGray);
+            }
+            if (top_overlap == 0) {
+                painter.draw_line(Gfx::IntPoint(left_overlap, 0), Gfx::IntPoint(scaled_size - right_overlap, 0), Color::LightGray);
+            }
+            if (bottom_overlap == 0) {
+                painter.draw_line(Gfx::IntPoint(left_overlap, scaled_size - 1), Gfx::IntPoint(scaled_size - right_overlap, scaled_size - 1), Color::LightGray);
+            }
         }
     }
     painter.draw_line({ half_scaled_size - 5, half_scaled_size }, { half_scaled_size + 5, half_scaled_size }, Color::LightGray, 3);
