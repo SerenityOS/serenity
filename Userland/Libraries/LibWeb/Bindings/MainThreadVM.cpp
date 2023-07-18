@@ -15,6 +15,8 @@
 #include <LibJS/Runtime/ModuleRequest.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/VM.h>
+#include <LibJS/SourceTextModule.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Bindings/WindowExposedInterfaces.h>
@@ -30,6 +32,7 @@
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Scripting/Fetching.h>
+#include <LibWeb/HTML/Scripting/Script.h>
 #include <LibWeb/HTML/TagNames.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowProxy.h>
@@ -344,7 +347,47 @@ ErrorOr<void> initialize_main_thread_vm()
         return { JS::make_handle(&callable), move(host_defined) };
     };
 
-    // FIXME: Implement 8.1.5.5.1 HostGetImportMetaProperties(moduleRecord), https://html.spec.whatwg.org/multipage/webappapis.html#hostgetimportmetaproperties
+    // 8.1.5.5.1 HostGetImportMetaProperties(moduleRecord), https://html.spec.whatwg.org/multipage/webappapis.html#hostgetimportmetaproperties
+    s_main_thread_vm->host_get_import_meta_properties = [](JS::SourceTextModule& module_record) {
+        auto& realm = module_record.realm();
+        auto& vm = realm.vm();
+
+        // 1. Let moduleScript be moduleRecord.[[HostDefined]].
+        auto& module_script = *verify_cast<HTML::Script>(module_record.host_defined());
+
+        // 2. Assert: moduleScript's base URL is not null, as moduleScript is a JavaScript module script.
+        VERIFY(module_script.base_url().is_valid());
+
+        // 3. Let urlString be moduleScript's base URL, serialized.
+        auto url_string = module_script.base_url().serialize();
+
+        // 4. Let steps be the following steps, given the argument specifier:
+        auto steps = [module_script = JS::NonnullGCPtr { module_script }](JS::VM& vm) -> JS::ThrowCompletionOr<JS::Value> {
+            auto specifier = vm.argument(0);
+
+            // 1. Set specifier to ? ToString(specifier).
+            auto specifier_string = TRY(specifier.to_string(vm));
+
+            // 2. Let url be the result of resolving a module specifier given moduleScript and specifier.
+            auto url = TRY(Bindings::throw_dom_exception_if_needed(vm, [&] {
+                return HTML::resolve_module_specifier(*module_script, specifier_string.to_deprecated_string());
+            }));
+
+            // 3. Return the serialization of url.
+            return JS::PrimitiveString::create(vm, url.serialize());
+        };
+
+        // 4. Let resolveFunction be ! CreateBuiltinFunction(steps, 1, "resolve", « »).
+        auto resolve_function = JS::NativeFunction::create(realm, move(steps), 1, vm.names.resolve);
+
+        // 5. Return « Record { [[Key]]: "url", [[Value]]: urlString }, Record { [[Key]]: "resolve", [[Value]]: resolveFunction } ».
+        HashMap<JS::PropertyKey, JS::Value> meta;
+        meta.set("url", JS::PrimitiveString::create(vm, move(url_string)));
+        meta.set("resolve", resolve_function);
+
+        return meta;
+    };
+
     // FIXME: Implement 8.1.5.5.2 HostImportModuleDynamically(referencingScriptOrModule, moduleRequest, promiseCapability), https://html.spec.whatwg.org/multipage/webappapis.html#hostimportmoduledynamically(referencingscriptormodule,-modulerequest,-promisecapability)
     // FIXME: Implement 8.1.5.5.3 HostResolveImportedModule(referencingScriptOrModule, moduleRequest), https://html.spec.whatwg.org/multipage/webappapis.html#hostresolveimportedmodule(referencingscriptormodule,-modulerequest)
 
