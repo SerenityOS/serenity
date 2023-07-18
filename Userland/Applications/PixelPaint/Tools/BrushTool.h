@@ -62,6 +62,10 @@ private:
     bool m_has_clicked { false };
     Gfx::IntPoint m_last_position;
     NonnullRefPtr<Gfx::Bitmap const> m_cursor = build_cursor();
+    RefPtr<Gfx::Bitmap> m_brush_reference = nullptr;
+    Gfx::Color m_ensured_color {};
+    int m_ensured_hardness = 0;
+    ErrorOr<void> ensure_brush_reference_bitmap(Gfx::Color);
 };
 
 }
