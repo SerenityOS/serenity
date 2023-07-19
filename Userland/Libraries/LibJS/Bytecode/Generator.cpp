@@ -417,16 +417,14 @@ void Generator::generate_scoped_jump(JumpType type)
     VERIFY_NOT_REACHED();
 }
 
-void Generator::generate_break()
-{
-    generate_scoped_jump(JumpType::Break);
-}
-
-void Generator::generate_break(DeprecatedFlyString const& break_label)
+void Generator::generate_labelled_jump(JumpType type, DeprecatedFlyString const& label)
 {
     size_t current_boundary = m_boundaries.size();
     bool last_was_finally = false;
-    for (auto const& breakable_scope : m_breakable_scopes.in_reverse()) {
+
+    auto const& jumpable_scopes = type == JumpType::Continue ? m_continuable_scopes : m_breakable_scopes;
+
+    for (auto const& jumpable_scope : jumpable_scopes.in_reverse()) {
         for (; current_boundary > 0; --current_boundary) {
             auto boundary = m_boundaries[current_boundary - 1];
             if (boundary == BlockBoundaryType::Unwind) {
@@ -436,25 +434,36 @@ void Generator::generate_break(DeprecatedFlyString const& break_label)
             } else if (boundary == BlockBoundaryType::LeaveLexicalEnvironment) {
                 emit<Bytecode::Op::LeaveLexicalEnvironment>();
             } else if (boundary == BlockBoundaryType::ReturnToFinally) {
-                auto& block = make_block(DeprecatedString::formatted("{}.break", current_block().name()));
+                auto jump_type_name = type == JumpType::Break ? "break"sv : "continue"sv;
+                auto& block = make_block(DeprecatedString::formatted("{}.{}", current_block().name(), jump_type_name));
                 emit<Op::ScheduleJump>(Label { block });
                 switch_to_basic_block(block);
                 last_was_finally = true;
-            } else if (boundary == BlockBoundaryType::Break) {
-                // Make sure we don't process this boundary twice if the current breakable scope doesn't contain the target label.
+            } else if ((type == JumpType::Continue && boundary == BlockBoundaryType::Continue) || (type == JumpType::Break && boundary == BlockBoundaryType::Break)) {
+                // Make sure we don't process this boundary twice if the current jumpable scope doesn't contain the target label.
                 --current_boundary;
                 break;
             }
         }
 
-        if (breakable_scope.language_label_set.contains_slow(break_label)) {
-            emit<Op::Jump>().set_targets(breakable_scope.bytecode_target, {});
+        if (jumpable_scope.language_label_set.contains_slow(label)) {
+            emit<Op::Jump>().set_targets(jumpable_scope.bytecode_target, {});
             return;
         }
     }
 
-    // We must have a breakable scope available that contains the label, as this should be enforced by the parser.
+    // We must have a jumpable scope available that contains the label, as this should be enforced by the parser.
     VERIFY_NOT_REACHED();
+}
+
+void Generator::generate_break()
+{
+    generate_scoped_jump(JumpType::Break);
+}
+
+void Generator::generate_break(DeprecatedFlyString const& break_label)
+{
+    generate_labelled_jump(JumpType::Break, break_label);
 }
 
 void Generator::generate_continue()
@@ -464,37 +473,7 @@ void Generator::generate_continue()
 
 void Generator::generate_continue(DeprecatedFlyString const& continue_label)
 {
-    size_t current_boundary = m_boundaries.size();
-    bool last_was_finally = false;
-    for (auto const& continuable_scope : m_continuable_scopes.in_reverse()) {
-        for (; current_boundary > 0; --current_boundary) {
-            auto boundary = m_boundaries[current_boundary - 1];
-            if (boundary == BlockBoundaryType::Unwind) {
-                if (!last_was_finally)
-                    emit<Bytecode::Op::LeaveUnwindContext>();
-                last_was_finally = false;
-            } else if (boundary == BlockBoundaryType::LeaveLexicalEnvironment) {
-                emit<Bytecode::Op::LeaveLexicalEnvironment>();
-            } else if (boundary == BlockBoundaryType::ReturnToFinally) {
-                auto& block = make_block(DeprecatedString::formatted("{}.continue", current_block().name()));
-                emit<Op::ScheduleJump>(Label { block });
-                switch_to_basic_block(block);
-                last_was_finally = true;
-            } else if (boundary == BlockBoundaryType::Continue) {
-                // Make sure we don't process this boundary twice if the current continuable scope doesn't contain the target label.
-                --current_boundary;
-                break;
-            }
-        }
-
-        if (continuable_scope.language_label_set.contains_slow(continue_label)) {
-            emit<Op::Jump>().set_targets(continuable_scope.bytecode_target, {});
-            return;
-        }
-    }
-
-    // We must have a continuable scope available that contains the label, as this should be enforced by the parser.
-    VERIFY_NOT_REACHED();
+    generate_labelled_jump(JumpType::Continue, continue_label);
 }
 
 void Generator::push_home_object(Register register_)
