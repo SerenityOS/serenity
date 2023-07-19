@@ -54,6 +54,15 @@ public:
 
     void resolve_vertical_box_model_metrics(Box const&);
 
+    enum class DidIntroduceClearance {
+        Yes,
+        No,
+    };
+
+    [[nodiscard]] DidIntroduceClearance clear_floating_boxes(Node const& child_box);
+
+    void reset_margin_state() { m_margin_state.reset(); }
+
 private:
     CSSPixels compute_auto_height_for_block_level_element(Box const&, AvailableSpace const&);
 
@@ -74,13 +83,6 @@ private:
     void layout_list_item_marker(ListItemBox const&);
 
     void measure_scrollable_overflow(Box const&, CSSPixels& bottom_edge, CSSPixels& right_edge) const;
-
-    enum class DidIntroduceClearance {
-        Yes,
-        No,
-    };
-
-    [[nodiscard]] DidIntroduceClearance clear_floating_boxes(Box const& child_box);
 
     enum class FloatSide {
         Left,

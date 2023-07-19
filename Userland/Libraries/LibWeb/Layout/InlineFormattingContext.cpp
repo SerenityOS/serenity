@@ -246,9 +246,15 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
             continue;
 
         switch (item.type) {
-        case InlineLevelIterator::Item::Type::ForcedBreak:
+        case InlineLevelIterator::Item::Type::ForcedBreak: {
             line_builder.break_line(LineBuilder::ForcedBreak::Yes);
+            if (item.node) {
+                auto introduce_clearance = parent().clear_floating_boxes(*item.node);
+                if (introduce_clearance == BlockFormattingContext::DidIntroduceClearance::Yes)
+                    parent().reset_margin_state();
+            }
             break;
+        }
         case InlineLevelIterator::Item::Type::Element: {
             auto& box = verify_cast<Layout::Box>(*item.node);
             compute_inset(box);
