@@ -160,6 +160,7 @@ void Window::show()
         m_frameless,
         m_forced_shadow,
         m_alpha_hit_threshold,
+        m_alpha_blur_radius,
         m_base_size,
         m_size_increment,
         m_minimum_size_when_windowless,
@@ -870,6 +871,18 @@ void Window::set_automatic_cursor_tracking_widget(Widget* widget)
     if (widget == m_automatic_cursor_tracking_widget)
         return;
     m_automatic_cursor_tracking_widget = widget;
+}
+
+void Window::set_alpha_blur_radius(u8 value)
+{
+    if (m_alpha_blur_radius == value)
+        return;
+    m_alpha_blur_radius = value;
+    if (!is_visible())
+        return;
+
+    ConnectionToWindowServer::the().async_set_window_alpha_blur_radius(m_window_id, value);
+    update();
 }
 
 void Window::set_has_alpha_channel(bool value)

@@ -73,8 +73,12 @@ public:
     void set_closeable(bool closeable) { m_closeable = closeable; }
 
     void set_double_buffering_enabled(bool);
+
     void set_has_alpha_channel(bool);
     bool has_alpha_channel() const { return m_has_alpha_channel; }
+
+    void set_alpha_blur_radius(u8); // A radius of 0 disables blur compositing entirely.
+    u8 alpha_blur_radius() const { return m_alpha_blur_radius; }
 
     void set_alpha_hit_threshold(float);
     float alpha_hit_threshold() const { return m_alpha_hit_threshold; }
@@ -289,6 +293,7 @@ private:
 
     RefPtr<Gfx::Bitmap const> m_icon;
     int m_window_id { 0 };
+    u8 m_alpha_blur_radius { 0 };
     float m_alpha_hit_threshold { 0.0f };
     RefPtr<Widget> m_main_widget;
     WeakPtr<Widget> m_default_return_key_widget;
