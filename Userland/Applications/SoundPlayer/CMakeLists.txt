@@ -14,7 +14,7 @@ set(SOURCES
     Playlist.cpp
     PlaylistWidget.cpp
     SampleWidget.cpp
-    SoundPlayerWidgetAdvancedView.cpp
+    SoundPlayerWidget.cpp
     main.cpp
 )
 

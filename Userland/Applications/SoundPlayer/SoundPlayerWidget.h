@@ -18,9 +18,9 @@
 #include <LibGUI/Widget.h>
 #include <LibImageDecoderClient/Client.h>
 
-class SoundPlayerWidgetAdvancedView final : public GUI::Widget
+class SoundPlayerWidget final : public GUI::Widget
     , public Player {
-    C_OBJECT(SoundPlayerWidgetAdvancedView)
+    C_OBJECT(SoundPlayerWidget)
 
 public:
     void set_nonlinear_volume_slider(bool nonlinear);
@@ -55,7 +55,7 @@ protected:
     void keydown_event(GUI::KeyEvent&) override;
 
 private:
-    SoundPlayerWidgetAdvancedView(GUI::Window&, Audio::ConnectionToServer&, ImageDecoderClient::Client&);
+    SoundPlayerWidget(GUI::Window&, Audio::ConnectionToServer&, ImageDecoderClient::Client&);
 
     void sync_previous_next_actions();
 

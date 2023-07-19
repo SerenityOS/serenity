@@ -9,7 +9,7 @@
 #include "BarsVisualizationWidget.h"
 #include "Player.h"
 #include "SampleWidget.h"
-#include "SoundPlayerWidgetAdvancedView.h"
+#include "SoundPlayerWidget.h"
 #include <LibAudio/ConnectionToServer.h>
 #include <LibAudio/FlacLoader.h>
 #include <LibConfig/Client.h>
@@ -52,7 +52,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     // start in advanced view by default
-    Player* player = TRY(window->set_main_widget<SoundPlayerWidgetAdvancedView>(window, audio_client, decoder_client));
+    Player* player = TRY(window->set_main_widget<SoundPlayerWidget>(window, audio_client, decoder_client));
 
     if (!file_path.is_empty()) {
         player->play_file_path(file_path);
@@ -95,14 +95,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     playback_menu->add_action(loop_playlist);
 
     auto linear_volume_slider = GUI::Action::create_checkable("&Nonlinear Volume Slider", [&](auto& action) {
-        static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_nonlinear_volume_slider(action.is_checked());
+        static_cast<SoundPlayerWidget*>(player)->set_nonlinear_volume_slider(action.is_checked());
     });
     TRY(playback_menu->try_add_separator());
     TRY(playback_menu->try_add_action(linear_volume_slider));
     TRY(playback_menu->try_add_separator());
 
     auto playlist_toggle = GUI::Action::create_checkable("&Show Playlist", [&](auto& action) {
-        static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_playlist_visible(action.is_checked());
+        static_cast<SoundPlayerWidget*>(player)->set_playlist_visible(action.is_checked());
     });
     if (player->loop_mode() == Player::LoopMode::Playlist) {
         playlist_toggle->set_checked(true);
@@ -129,21 +129,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     auto bars = GUI::Action::create_checkable("&Bars", [&](auto&) {
-        static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_visualization<BarsVisualizationWidget>();
+        static_cast<SoundPlayerWidget*>(player)->set_visualization<BarsVisualizationWidget>();
         set_selected_visualization_in_config("bars"sv);
     });
     TRY(visualization_menu->try_add_action(bars));
     visualization_actions.add_action(bars);
 
     auto samples = GUI::Action::create_checkable("&Samples", [&](auto&) {
-        static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_visualization<SampleWidget>();
+        static_cast<SoundPlayerWidget*>(player)->set_visualization<SampleWidget>();
         set_selected_visualization_in_config("samples"sv);
     });
     TRY(visualization_menu->try_add_action(samples));
     visualization_actions.add_action(samples);
 
     auto album_cover_visualization = GUI::Action::create_checkable("&Album Cover", [&](auto&) {
-        auto* view = static_cast<SoundPlayerWidgetAdvancedView*>(player);
+        auto* view = static_cast<SoundPlayerWidget*>(player);
         view->set_visualization<AlbumCoverVisualizationWidget>([&view]() {
             return view->get_image_from_music_file();
         });
