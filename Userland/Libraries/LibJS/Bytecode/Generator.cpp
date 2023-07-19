@@ -377,17 +377,25 @@ void Generator::emit_set_variable(JS::Identifier const& identifier, Bytecode::Op
     }
 }
 
-void Generator::generate_break()
+void Generator::generate_scoped_jump(JumpType type)
 {
     bool last_was_finally = false;
-    // FIXME: Reduce code duplication
     for (size_t i = m_boundaries.size(); i > 0; --i) {
         auto boundary = m_boundaries[i - 1];
         using enum BlockBoundaryType;
         switch (boundary) {
         case Break:
-            emit<Op::Jump>().set_targets(nearest_breakable_scope(), {});
-            return;
+            if (type == JumpType::Break) {
+                emit<Op::Jump>().set_targets(nearest_breakable_scope(), {});
+                return;
+            }
+            break;
+        case Continue:
+            if (type == JumpType::Continue) {
+                emit<Op::Jump>().set_targets(nearest_continuable_scope(), {});
+                return;
+            }
+            break;
         case Unwind:
             if (!last_was_finally)
                 emit<Bytecode::Op::LeaveUnwindContext>();
@@ -396,10 +404,9 @@ void Generator::generate_break()
         case LeaveLexicalEnvironment:
             emit<Bytecode::Op::LeaveLexicalEnvironment>();
             break;
-        case Continue:
-            break;
         case ReturnToFinally: {
-            auto& block = make_block(DeprecatedString::formatted("{}.break", current_block().name()));
+            auto jump_type_name = type == JumpType::Break ? "break"sv : "continue"sv;
+            auto& block = make_block(DeprecatedString::formatted("{}.{}", current_block().name(), jump_type_name));
             emit<Op::ScheduleJump>(Label { block });
             switch_to_basic_block(block);
             last_was_finally = true;
@@ -408,6 +415,11 @@ void Generator::generate_break()
         }
     }
     VERIFY_NOT_REACHED();
+}
+
+void Generator::generate_break()
+{
+    generate_scoped_jump(JumpType::Break);
 }
 
 void Generator::generate_break(DeprecatedFlyString const& break_label)
@@ -447,35 +459,7 @@ void Generator::generate_break(DeprecatedFlyString const& break_label)
 
 void Generator::generate_continue()
 {
-    bool last_was_finally = false;
-    // FIXME: Reduce code duplication
-    for (size_t i = m_boundaries.size(); i > 0; --i) {
-        auto boundary = m_boundaries[i - 1];
-        using enum BlockBoundaryType;
-        switch (boundary) {
-        case Continue:
-            emit<Op::Jump>().set_targets(nearest_continuable_scope(), {});
-            return;
-        case Unwind:
-            if (!last_was_finally)
-                emit<Bytecode::Op::LeaveUnwindContext>();
-            last_was_finally = false;
-            break;
-        case LeaveLexicalEnvironment:
-            emit<Bytecode::Op::LeaveLexicalEnvironment>();
-            break;
-        case Break:
-            break;
-        case ReturnToFinally: {
-            auto& block = make_block(DeprecatedString::formatted("{}.continue", current_block().name()));
-            emit<Op::ScheduleJump>(Label { block });
-            switch_to_basic_block(block);
-            last_was_finally = true;
-            break;
-        };
-        }
-    }
-    VERIFY_NOT_REACHED();
+    generate_scoped_jump(JumpType::Continue);
 }
 
 void Generator::generate_continue(DeprecatedFlyString const& continue_label)

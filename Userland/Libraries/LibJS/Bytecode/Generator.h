@@ -212,6 +212,12 @@ public:
     [[nodiscard]] size_t next_global_variable_cache() { return m_next_global_variable_cache++; }
 
 private:
+    enum class JumpType {
+        Continue,
+        Break,
+    };
+    void generate_scoped_jump(JumpType);
+
     Generator();
     ~Generator() = default;
 
