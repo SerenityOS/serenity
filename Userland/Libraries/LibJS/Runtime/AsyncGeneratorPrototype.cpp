@@ -6,7 +6,7 @@
  */
 
 #include <LibJS/Runtime/AsyncGeneratorPrototype.h>
-#include <LibJS/Runtime/IteratorOperations.h>
+#include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/PromiseCapability.h>
 #include <LibJS/Runtime/PromiseConstructor.h>
 

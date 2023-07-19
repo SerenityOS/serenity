@@ -5,7 +5,7 @@
  */
 
 #include <LibJS/Runtime/Array.h>
-#include <LibJS/Runtime/IteratorOperations.h>
+#include <LibJS/Runtime/Iterator.h>
 #include <LibWeb/Bindings/HeadersIteratorPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Fetch/HeadersIterator.h>

@@ -147,7 +147,6 @@ set(SOURCES
     Runtime/IteratorConstructor.cpp
     Runtime/IteratorHelper.cpp
     Runtime/IteratorHelperPrototype.cpp
-    Runtime/IteratorOperations.cpp
     Runtime/IteratorPrototype.cpp
     Runtime/JSONObject.cpp
     Runtime/JobCallback.cpp

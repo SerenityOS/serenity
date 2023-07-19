@@ -5,7 +5,7 @@
  */
 
 #include <LibJS/Runtime/AbstractOperations.h>
-#include <LibJS/Runtime/IteratorOperations.h>
+#include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/WrapForValidIteratorPrototype.h>
 
 namespace JS {

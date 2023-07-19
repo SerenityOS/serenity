@@ -8,7 +8,7 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ErrorConstructor.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/IteratorOperations.h>
+#include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/SuppressedError.h>
 #include <LibJS/Runtime/SuppressedErrorConstructor.h>
 

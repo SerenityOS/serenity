@@ -9,8 +9,8 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/IteratorHelper.h>
-#include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/IteratorPrototype.h>
 
 namespace JS {

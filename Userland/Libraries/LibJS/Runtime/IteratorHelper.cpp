@@ -5,8 +5,8 @@
  */
 
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/IteratorHelper.h>
-#include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/Realm.h>
 
 namespace JS {
