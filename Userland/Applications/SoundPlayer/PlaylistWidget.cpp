@@ -29,23 +29,23 @@ PlaylistWidget::PlaylistWidget()
     };
 }
 
-GUI::Variant PlaylistModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
+GUI::Variant PlaylistModel::data(GUI::ModelIndex const& index, GUI::ModelRole role) const
 {
     if (role == GUI::ModelRole::TextAlignment)
         return "CenterLeft";
     if (role == GUI::ModelRole::Display) {
         switch (index.column()) {
-        case 0:
+        case Column::Title:
             return m_playlist_items[index.row()].extended_info->track_display_title.value_or(LexicalPath::title(m_playlist_items[index.row()].path));
-        case 1:
+        case Column::Duration:
             return human_readable_digital_time(m_playlist_items[index.row()].extended_info->track_length_in_seconds.value_or(0));
-        case 2:
+        case Column::Group:
             return m_playlist_items[index.row()].extended_info->group_name.value_or("");
-        case 3:
+        case Column::Album:
             return m_playlist_items[index.row()].extended_info->album_title.value_or("");
-        case 4:
+        case Column::Artist:
             return m_playlist_items[index.row()].extended_info->album_artist.value_or("");
-        case 5:
+        case Column::Filesize:
             return human_readable_size(m_playlist_items[index.row()].extended_info->file_size_in_bytes.value_or(0));
         }
     }
@@ -60,17 +60,17 @@ GUI::Variant PlaylistModel::data(const GUI::ModelIndex& index, GUI::ModelRole ro
 ErrorOr<String> PlaylistModel::column_name(int column) const
 {
     switch (column) {
-    case 0:
+    case Column::Title:
         return "Title"_short_string;
-    case 1:
+    case Column::Duration:
         return TRY("Duration"_string);
-    case 2:
+    case Column::Group:
         return "Group"_short_string;
-    case 3:
+    case Column::Album:
         return "Album"_short_string;
-    case 4:
+    case Column::Artist:
         return "Artist"_short_string;
-    case 5:
+    case Column::Filesize:
         return TRY("Filesize"_string);
     }
     VERIFY_NOT_REACHED();
