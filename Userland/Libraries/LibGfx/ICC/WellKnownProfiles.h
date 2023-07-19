@@ -12,6 +12,7 @@
 namespace Gfx::ICC {
 
 class Profile;
+class TagData;
 
 ErrorOr<NonnullRefPtr<Profile>> sRGB();
 
