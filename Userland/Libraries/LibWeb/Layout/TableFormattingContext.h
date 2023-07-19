@@ -177,6 +177,12 @@ private:
         void collect_conflicting_col_elements();
         void collect_conflicting_row_group_elements();
 
+        void collect_cell_conflicting_edges(Vector<ConflictingEdge>&, Cell const&, ConflictingSide) const;
+        void collect_row_conflicting_edges(Vector<ConflictingEdge>&, Cell const&, ConflictingSide) const;
+        void collect_row_group_conflicting_edges(Vector<ConflictingEdge>&, Cell const&, ConflictingSide) const;
+        void collect_column_group_conflicting_edges(Vector<ConflictingEdge>&, Cell const&, ConflictingSide) const;
+        void collect_table_box_conflicting_edges(Vector<ConflictingEdge>&, Cell const&, ConflictingSide) const;
+
         struct RowGroupInfo {
             Node const* row_group;
             size_t start_index;
