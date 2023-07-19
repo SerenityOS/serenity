@@ -77,7 +77,6 @@ private:
     void on_navigatable_link_click(const GUI::TextDocumentSpan&);
     void on_identifier_click(const GUI::TextDocumentSpan&);
 
-    Gfx::IntRect gutter_icon_rect(size_t line_number) const;
     static Gfx::Bitmap const& breakpoint_icon_bitmap();
     static Gfx::Bitmap const& current_position_icon_bitmap();
     static ErrorOr<void> initialize_tooltip_window();

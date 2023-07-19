@@ -146,11 +146,6 @@ EditorWrapper const& Editor::wrapper() const
     return static_cast<EditorWrapper const&>(*parent());
 }
 
-Gfx::IntRect Editor::gutter_icon_rect(size_t line_number) const
-{
-    return gutter_content_rect(line_number).translated(frame_thickness(), 0);
-}
-
 void Editor::paint_event(GUI::PaintEvent& event)
 {
     GUI::TextEditor::paint_event(event);
@@ -445,7 +440,6 @@ void Editor::clear_execution_position()
     size_t previous_position = execution_position().value();
     code_document().clear_execution_position();
     remove_gutter_indicator(m_execution_indicator_id, previous_position);
-    update(gutter_icon_rect(previous_position));
 }
 
 Gfx::Bitmap const& Editor::breakpoint_icon_bitmap()
