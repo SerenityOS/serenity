@@ -29,8 +29,6 @@ public:
     DeprecatedString const& file_path() const { return m_file_path; }
     Optional<Syntax::Language> const& language() const { return m_language; }
 
-    virtual bool is_code_document() const override final { return true; }
-
     enum class DiffType {
         None,
         AddedLine,

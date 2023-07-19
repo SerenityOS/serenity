@@ -456,9 +456,7 @@ Gfx::Bitmap const& Editor::current_position_icon_bitmap()
 
 CodeDocument const& Editor::code_document() const
 {
-    auto const& doc = document();
-    VERIFY(doc.is_code_document());
-    return static_cast<CodeDocument const&>(doc);
+    return verify_cast<CodeDocument const>(document());
 }
 
 CodeDocument& Editor::code_document()
@@ -471,7 +469,7 @@ void Editor::set_document(GUI::TextDocument& doc)
     if (has_document() && &document() == &doc)
         return;
 
-    VERIFY(doc.is_code_document());
+    VERIFY(is<CodeDocument>(doc));
     GUI::TextEditor::set_document(doc);
 
     set_override_cursor(Gfx::StandardCursor::IBeam);
