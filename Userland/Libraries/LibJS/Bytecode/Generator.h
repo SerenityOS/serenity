@@ -217,6 +217,7 @@ private:
         Break,
     };
     void generate_scoped_jump(JumpType);
+    void generate_labelled_jump(JumpType, DeprecatedFlyString const& label);
 
     Generator();
     ~Generator() = default;
