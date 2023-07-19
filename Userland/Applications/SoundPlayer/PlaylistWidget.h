@@ -19,11 +19,21 @@ enum class PlaylistModelCustomRole {
 
 class PlaylistModel : public GUI::Model {
 public:
+    enum Column {
+        Title,
+        Duration,
+        Group,
+        Album,
+        Artist,
+        Filesize,
+        __Count
+    };
+
     ~PlaylistModel() override = default;
 
-    int row_count(const GUI::ModelIndex&) const override { return m_playlist_items.size(); }
-    int column_count(const GUI::ModelIndex&) const override { return 6; }
-    GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
+    int row_count(GUI::ModelIndex const&) const override { return m_playlist_items.size(); }
+    int column_count(GUI::ModelIndex const&) const override { return 6; }
+    GUI::Variant data(GUI::ModelIndex const&, GUI::ModelRole) const override;
     ErrorOr<String> column_name(int column) const override;
     Vector<M3UEntry>& items() { return m_playlist_items; }
 
