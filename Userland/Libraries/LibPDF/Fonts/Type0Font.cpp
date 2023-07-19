@@ -87,6 +87,10 @@ float Type0Font::get_char_width(u16 char_code) const
     return static_cast<float>(width) / 1000.0f;
 }
 
+void Type0Font::set_font_size(float)
+{
+}
+
 PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter&, Gfx::FloatPoint, DeprecatedString const&, Color const&, float, float, float)
 {
     return Error::rendering_unsupported_error("Type0 font not implemented yet");

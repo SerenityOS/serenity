@@ -54,6 +54,12 @@ float Type1Font::get_glyph_width(u8 char_code) const
     return m_font->glyph_width(char_code);
 }
 
+void Type1Font::set_font_size(float font_size)
+{
+    if (m_font)
+        m_font = m_font->with_size((font_size * POINTS_PER_INCH) / DEFAULT_DPI);
+}
+
 void Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Color color)
 {
     if (!m_font_program) {
