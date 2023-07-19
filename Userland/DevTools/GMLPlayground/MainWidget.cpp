@@ -136,7 +136,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 {
     auto file_menu = TRY(window.try_add_menu("&File"_short_string));
 
-    auto save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
+    m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
         LexicalPath initial_path(m_file_path.is_empty() ? "Untitled.gml" : m_file_path);
         auto response = FileSystemAccessClient::Client::the().save_file(&window, initial_path.title(), initial_path.extension());
         if (response.is_error())
@@ -155,7 +155,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
         if (m_file_path.is_empty()) {
-            save_as_action->activate();
+            m_save_as_action->activate();
             return;
         }
         auto response = FileSystemAccessClient::Client::the().request_file(&window, m_file_path, Core::File::OpenMode::Truncate | Core::File::OpenMode::Write);
@@ -189,7 +189,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     TRY(file_menu->try_add_action(open_action));
     TRY(file_menu->try_add_action(*m_save_action));
-    TRY(file_menu->try_add_action(save_as_action));
+    TRY(file_menu->try_add_action(*m_save_as_action));
     TRY(file_menu->try_add_separator());
 
     TRY(file_menu->add_recent_files_list([&](auto& action) {
@@ -281,7 +281,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     (void)TRY(m_toolbar->try_add_action(open_action));
     (void)TRY(m_toolbar->try_add_action(*m_save_action));
-    (void)TRY(m_toolbar->try_add_action(save_as_action));
+    (void)TRY(m_toolbar->try_add_action(*m_save_as_action));
     TRY(m_toolbar->try_add_separator());
     (void)TRY(m_toolbar->try_add_action(m_editor->cut_action()));
     (void)TRY(m_toolbar->try_add_action(m_editor->copy_action()));

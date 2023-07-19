@@ -35,6 +35,7 @@ private:
     virtual void drop_event(GUI::DropEvent&) override;
 
     RefPtr<GUI::Action> m_save_action;
+    RefPtr<GUI::Action> m_save_as_action;
     RefPtr<GUI::TextEditor> m_editor;
     RefPtr<GUI::Toolbar> m_toolbar;
     RefPtr<GUI::Splitter> m_splitter;
