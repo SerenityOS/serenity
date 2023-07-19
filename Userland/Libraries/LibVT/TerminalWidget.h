@@ -44,6 +44,9 @@ public:
     void set_opacity(u8);
     float opacity() { return m_opacity; }
 
+    void set_alpha_blur_radius(u8);
+    u8 alpha_blur_radius() const { return m_alpha_blur_radius; }
+
     void set_show_scrollbar(bool);
 
     enum class BellMode {
@@ -204,6 +207,7 @@ private:
     RefPtr<Core::Notifier> m_notifier;
 
     u8 m_opacity { 255 };
+    u8 m_alpha_blur_radius { 0 };
     bool m_cursor_blink_state { true };
     bool m_automatic_size_policy { false };
 

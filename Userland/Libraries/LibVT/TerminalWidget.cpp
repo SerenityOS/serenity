@@ -555,6 +555,16 @@ void TerminalWidget::set_opacity(u8 new_opacity)
     update();
 }
 
+void TerminalWidget::set_alpha_blur_radius(u8 new_alpha_blur_radius)
+{
+    if (m_alpha_blur_radius == new_alpha_blur_radius)
+        return;
+
+    window()->set_alpha_blur_radius(new_alpha_blur_radius);
+    m_alpha_blur_radius = new_alpha_blur_radius;
+    update();
+}
+
 void TerminalWidget::set_show_scrollbar(bool show_scrollbar)
 {
     m_scrollbar->set_visible(show_scrollbar);

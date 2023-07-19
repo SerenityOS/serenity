@@ -22,6 +22,7 @@
 #include <LibGUI/OpacitySlider.h>
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/SpinBox.h>
+#include <LibGUI/ValueSlider.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/FontDatabase.h>
@@ -105,6 +106,16 @@ ErrorOr<void> TerminalSettingsViewWidget::setup()
     slider.on_change = [this](int value) {
         m_opacity = value;
         Config::write_i32("Terminal"sv, "Window"sv, "Opacity"sv, static_cast<i32>(m_opacity));
+        set_modified(true);
+    };
+
+    auto& blur_slider = *find_descendant_of_type_named<GUI::HorizontalOpacitySlider>("background_blur_slider");
+    m_blur_radius = Config::read_i32("Terminal"sv, "Window"sv, "AlphaBlurRadius"sv);
+    m_original_blur_radius = m_blur_radius;
+    blur_slider.set_value(m_blur_radius);
+    blur_slider.on_change = [this](int value) {
+        m_blur_radius = value;
+        Config::write_i32("Terminal"sv, "Window"sv, "AlphaBlurRadius"sv, static_cast<i32>(m_blur_radius));
         set_modified(true);
     };
 
@@ -267,6 +278,7 @@ void TerminalSettingsMainWidget::cancel_settings()
 void TerminalSettingsViewWidget::apply_settings()
 {
     m_original_opacity = m_opacity;
+    m_original_blur_radius = m_blur_radius;
     m_original_font = m_font;
     m_original_cursor_shape = m_cursor_shape;
     m_original_cursor_is_blinking_set = m_cursor_is_blinking_set;
@@ -278,6 +290,7 @@ void TerminalSettingsViewWidget::apply_settings()
 void TerminalSettingsViewWidget::write_back_settings() const
 {
     Config::write_i32("Terminal"sv, "Window"sv, "Opacity"sv, static_cast<i32>(m_original_opacity));
+    Config::write_i32("Terminal"sv, "Window"sv, "AlphaBlurRadius"sv, static_cast<i32>(m_original_blur_radius));
     Config::write_string("Terminal"sv, "Text"sv, "Font"sv, m_original_font->qualified_name());
     Config::write_string("Terminal"sv, "Cursor"sv, "Shape"sv, VT::TerminalWidget::stringify_cursor_shape(m_original_cursor_shape));
     Config::write_bool("Terminal"sv, "Cursor"sv, "Blinking"sv, m_original_cursor_is_blinking_set);

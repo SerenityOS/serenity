@@ -94,6 +94,8 @@ public:
             m_parent_terminal.set_max_history_size(value);
         } else if (group == "Window" && key == "Opacity") {
             m_parent_terminal.set_opacity(value);
+        } else if (group == "Window" && key == "AlphaBlurRadius") {
+            m_parent_terminal.set_alpha_blur_radius(value);
         }
     }
 
@@ -320,6 +322,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto new_opacity = Config::read_i32("Terminal"sv, "Window"sv, "Opacity"sv, 255);
     terminal->set_opacity(new_opacity);
     window->set_has_alpha_channel(new_opacity < 255);
+
+    auto new_alpha_blur_opacity = Config::read_i32("Terminal"sv, "Window"sv, "AlphaBlurRadius"sv, 0);
+    window->set_alpha_blur_radius(new_alpha_blur_opacity);
 
     auto new_scrollback_size = Config::read_i32("Terminal"sv, "Terminal"sv, "MaxHistorySize"sv, terminal->max_history_size());
     terminal->set_max_history_size(new_scrollback_size);

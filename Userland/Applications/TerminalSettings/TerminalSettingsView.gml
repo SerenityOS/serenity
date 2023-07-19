@@ -41,18 +41,43 @@
     }
 
     @GUI::GroupBox {
-        title: "Background opacity"
+        title: "Background properties"
         preferred_height: "fit"
         layout: @GUI::VerticalBoxLayout {
             margins: [8]
             spacing: 8
         }
 
-        @GUI::HorizontalOpacitySlider {
-            name: "background_opacity_slider"
-            min: 0
-            max: 255
-            orientation: "Horizontal"
+        @GUI::GroupBox {
+            title: "Opacity"
+            preferred_height: "fit"
+            layout: @GUI::VerticalBoxLayout {
+                margins: [8]
+                spacing: 8
+            }
+
+            @GUI::HorizontalOpacitySlider {
+                name: "background_opacity_slider"
+                min: 0
+                max: 255
+                orientation: "Horizontal"
+            }
+        }
+
+        @GUI::GroupBox {
+            title: "Blur"
+            preferred_height: "fit"
+            layout: @GUI::VerticalBoxLayout {
+                margins: [8]
+                spacing: 8
+            }
+
+            @GUI::HorizontalOpacitySlider {
+                name: "background_blur_slider"
+                min: 0
+                max: 8
+                orientation: "Horizontal"
+            }
         }
     }
 
