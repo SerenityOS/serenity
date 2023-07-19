@@ -13,6 +13,7 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/MarkupGenerator.h>
 #include <QFontDatabase>
+#include <QKeyEvent>
 #include <QLineEdit>
 #include <QPalette>
 #include <QPushButton>
@@ -45,23 +46,9 @@ ConsoleWidget::ConsoleWidget()
 
     layout()->addWidget(bottom_container);
 
-    m_input = new QLineEdit(bottom_container);
+    m_input = new ConsoleInputEdit(bottom_container, *this);
     m_input->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
     bottom_container->layout()->addWidget(m_input);
-
-    QObject::connect(m_input, &QLineEdit::returnPressed, [this] {
-        auto js_source = ak_deprecated_string_from_qstring(m_input->text());
-
-        if (js_source.is_whitespace())
-            return;
-
-        m_input->clear();
-
-        print_source_line(js_source);
-
-        if (on_js_input)
-            on_js_input(js_source);
-    });
 
     setFocusProxy(m_input);
 
@@ -182,6 +169,50 @@ void ConsoleWidget::reset()
     m_highest_notified_message_index = -1;
     m_highest_received_message_index = -1;
     m_waiting_for_messages = false;
+}
+
+void ConsoleInputEdit::keyPressEvent(QKeyEvent* event)
+{
+    switch (event->key()) {
+    case Qt::Key_Down: {
+        auto last_index = m_history.size() - 1;
+        if (m_history_index < last_index) {
+            m_history_index++;
+            setText(qstring_from_ak_deprecated_string(m_history.at(m_history_index)));
+        } else if (m_history_index == last_index) {
+            m_history_index++;
+            clear();
+        }
+        break;
+    }
+    case Qt::Key_Up:
+        if (m_history_index > 0) {
+            m_history_index--;
+            setText(qstring_from_ak_deprecated_string(m_history.at(m_history_index)));
+        }
+        break;
+    case Qt::Key_Return: {
+        auto js_source = ak_deprecated_string_from_qstring(text());
+        if (js_source.is_whitespace())
+            return;
+
+        if (m_history.is_empty() || m_history.last() != js_source) {
+            m_history.append(js_source);
+            m_history_index = m_history.size();
+        }
+
+        clear();
+
+        m_console_widget.print_source_line(js_source);
+
+        if (m_console_widget.on_js_input)
+            m_console_widget.on_js_input(js_source);
+
+        break;
+    }
+    default:
+        QLineEdit::keyPressEvent(event);
+    }
 }
 
 }
