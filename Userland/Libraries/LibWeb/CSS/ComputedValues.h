@@ -83,6 +83,7 @@ public:
     static CSS::FillRule fill_rule() { return CSS::FillRule::Nonzero; }
     static float stroke_opacity() { return 1.0f; }
     static float stop_opacity() { return 1.0f; }
+    static CSS::TextAnchor text_anchor() { return CSS::TextAnchor::Start; }
     static CSS::Length border_radius() { return Length::make_px(0); }
     static Variant<CSS::VerticalAlign, CSS::LengthPercentage> vertical_align() { return CSS::VerticalAlign::Baseline; }
     static CSS::LengthBox inset() { return { CSS::Length::make_auto(), CSS::Length::make_auto(), CSS::Length::make_auto(), CSS::Length::make_auto() }; }
@@ -312,6 +313,7 @@ public:
     LengthPercentage const& stroke_width() const { return m_inherited.stroke_width; }
     Color stop_color() const { return m_noninherited.stop_color; }
     float stop_opacity() const { return m_noninherited.stop_opacity; }
+    CSS::TextAnchor text_anchor() const { return m_inherited.text_anchor; }
 
     Vector<CSS::Transformation> const& transformations() const { return m_noninherited.transformations; }
     CSS::TransformOrigin const& transform_origin() const { return m_noninherited.transform_origin; }
@@ -357,6 +359,7 @@ protected:
         float fill_opacity { InitialValues::fill_opacity() };
         float stroke_opacity { InitialValues::stroke_opacity() };
         LengthPercentage stroke_width { Length::make_px(1) };
+        CSS::TextAnchor text_anchor { InitialValues::text_anchor() };
 
         Vector<ShadowData> text_shadow;
     } m_inherited;
@@ -538,6 +541,7 @@ public:
     void set_stroke_width(LengthPercentage value) { m_inherited.stroke_width = value; }
     void set_stop_color(Color value) { m_noninherited.stop_color = value; }
     void set_stop_opacity(float value) { m_noninherited.stop_opacity = value; }
+    void set_text_anchor(CSS::TextAnchor value) { m_inherited.text_anchor = value; }
 };
 
 }

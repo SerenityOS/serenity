@@ -68,6 +68,31 @@ void SVGTextPaintable::paint(PaintContext& context, PaintPhase phase) const
 
     Utf8View text_content { child_text_content };
     auto text_offset = context.floored_device_point(dom_node.get_offset().transformed(*transform).to_type<CSSPixels>());
+
+    // FIXME: Once SVGFormattingContext does text layout this logic should move there.
+    // https://svgwg.org/svg2-draft/text.html#TextAnchoringProperties
+    switch (text_element.text_anchor().value_or(SVG::TextAnchor::Start)) {
+    case SVG::TextAnchor::Start:
+        // The rendered characters are aligned such that the start of the resulting rendered text is at the initial
+        // current text position.
+        break;
+    case SVG::TextAnchor::Middle: {
+        // The rendered characters are shifted such that the geometric middle of the resulting rendered text
+        // (determined from the initial and final current text position before applying the text-anchor property)
+        // is at the initial current text position.
+        text_offset.translate_by(-scaled_font.width(text_content) / 2, 0);
+        break;
+    }
+    case SVG::TextAnchor::End: {
+        // The rendered characters are shifted such that the end of the resulting rendered text (final current text
+        // position before applying the text-anchor property) is at the initial current text position.
+        text_offset.translate_by(-scaled_font.width(text_content), 0);
+        break;
+    }
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
     painter.draw_text_run(text_offset.to_type<int>(), text_content, scaled_font, layout_node().computed_values().fill()->as_color());
 }
 

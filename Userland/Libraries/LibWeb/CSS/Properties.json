@@ -1862,6 +1862,13 @@
     ],
     "percentages-resolve-to": "length"
   },
+  "text-anchor": {
+    "inherited": true,
+    "initial": "start",
+    "valid-types": [
+      "text-anchor"
+    ]
+  },
   "text-align": {
     "inherited": true,
     "initial": "left",
