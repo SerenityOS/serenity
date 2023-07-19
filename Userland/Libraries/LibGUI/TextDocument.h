@@ -150,8 +150,6 @@ public:
     TextPosition insert_at(TextPosition const&, StringView, Client const* = nullptr);
     void remove(TextRange const&);
 
-    virtual bool is_code_document() const { return false; }
-
     bool is_empty() const;
     bool is_modified() const { return m_undo_stack.is_current_modified(); }
     void set_unmodified();
