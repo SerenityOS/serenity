@@ -13,6 +13,7 @@
 #include "SampleWidget.h"
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
+#include <AK/NumberFormat.h>
 #include <AK/SIMD.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/Action.h>
@@ -243,7 +244,7 @@ void SoundPlayerWidgetAdvancedView::shuffle_mode_changed(Player::ShuffleMode)
 
 void SoundPlayerWidgetAdvancedView::time_elapsed(int seconds)
 {
-    m_timestamp_label->set_text(String::formatted("Elapsed: {:02}:{:02}:{:02}", seconds / 3600, seconds / 60, seconds % 60).release_value_but_fixme_should_propagate_errors());
+    m_timestamp_label->set_text(String::formatted("Elapsed: {}", human_readable_digital_time(seconds)).release_value_but_fixme_should_propagate_errors());
 }
 
 void SoundPlayerWidgetAdvancedView::file_name_changed(StringView name)

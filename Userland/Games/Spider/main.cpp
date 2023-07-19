@@ -7,6 +7,7 @@
  */
 
 #include "Game.h"
+#include <AK/NumberFormat.h>
 #include <Games/Spider/SpiderGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
@@ -28,15 +29,6 @@ enum class StatisticDisplay : u8 {
     BestTime,
     __Count
 };
-
-static DeprecatedString format_seconds(uint64_t seconds_elapsed)
-{
-    uint64_t hours = seconds_elapsed / 3600;
-    uint64_t minutes = (seconds_elapsed / 60) % 60;
-    uint64_t seconds = seconds_elapsed % 60;
-
-    return DeprecatedString::formatted("{:02}:{:02}:{:02}", hours, minutes, seconds);
-}
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -130,7 +122,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             statusbar.set_text(1, String::formatted("High Score: {}", high_score()).release_value_but_fixme_should_propagate_errors());
             break;
         case StatisticDisplay::BestTime:
-            statusbar.set_text(1, String::formatted("Best Time: {}", format_seconds(best_time())).release_value_but_fixme_should_propagate_errors());
+            statusbar.set_text(1, String::formatted("Best Time: {}", human_readable_digital_time(best_time())).release_value_but_fixme_should_propagate_errors());
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -158,7 +150,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto timer = TRY(Core::Timer::create_repeating(1000, [&]() {
         ++seconds_elapsed;
 
-        statusbar.set_text(2, String::formatted("Time: {}", format_seconds(seconds_elapsed)).release_value_but_fixme_should_propagate_errors());
+        statusbar.set_text(2, String::formatted("Time: {}", human_readable_digital_time(seconds_elapsed)).release_value_but_fixme_should_propagate_errors());
     }));
 
     game.on_game_start = [&]() {
