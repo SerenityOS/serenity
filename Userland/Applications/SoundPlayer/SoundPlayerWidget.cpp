@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "SoundPlayerWidgetAdvancedView.h"
+#include "SoundPlayerWidget.h"
 #include "AlbumCoverVisualizationWidget.h"
 #include "BarsVisualizationWidget.h"
 #include "M3UParser.h"
@@ -28,7 +28,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 
-SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window, Audio::ConnectionToServer& connection, ImageDecoderClient::Client& image_decoder_client)
+SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, Audio::ConnectionToServer& connection, ImageDecoderClient::Client& image_decoder_client)
     : Player(connection)
     , m_window(window)
     , m_image_decoder_client(image_decoder_client)
@@ -140,19 +140,19 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
     done_initializing();
 }
 
-void SoundPlayerWidgetAdvancedView::set_nonlinear_volume_slider(bool nonlinear)
+void SoundPlayerWidget::set_nonlinear_volume_slider(bool nonlinear)
 {
     m_nonlinear_volume_slider = nonlinear;
 }
 
-void SoundPlayerWidgetAdvancedView::drag_enter_event(GUI::DragEvent& event)
+void SoundPlayerWidget::drag_enter_event(GUI::DragEvent& event)
 {
     auto const& mime_types = event.mime_types();
     if (mime_types.contains_slow("text/uri-list"))
         event.accept();
 }
 
-void SoundPlayerWidgetAdvancedView::drop_event(GUI::DropEvent& event)
+void SoundPlayerWidget::drop_event(GUI::DropEvent& event)
 {
     event.accept();
 
@@ -166,7 +166,7 @@ void SoundPlayerWidgetAdvancedView::drop_event(GUI::DropEvent& event)
     }
 }
 
-void SoundPlayerWidgetAdvancedView::keydown_event(GUI::KeyEvent& event)
+void SoundPlayerWidget::keydown_event(GUI::KeyEvent& event)
 {
     if (event.key() == Key_Up)
         m_volume_slider->increase_slider_by_page_steps(1);
@@ -177,7 +177,7 @@ void SoundPlayerWidgetAdvancedView::keydown_event(GUI::KeyEvent& event)
     GUI::Widget::keydown_event(event);
 }
 
-void SoundPlayerWidgetAdvancedView::set_playlist_visible(bool visible)
+void SoundPlayerWidget::set_playlist_visible(bool visible)
 {
     if (!visible) {
         m_playlist_widget->remove_from_parent();
@@ -187,7 +187,7 @@ void SoundPlayerWidgetAdvancedView::set_playlist_visible(bool visible)
     }
 }
 
-RefPtr<Gfx::Bitmap> SoundPlayerWidgetAdvancedView::get_image_from_music_file()
+RefPtr<Gfx::Bitmap> SoundPlayerWidget::get_image_from_music_file()
 {
     auto const& pictures = this->pictures();
     if (pictures.is_empty())
@@ -203,7 +203,7 @@ RefPtr<Gfx::Bitmap> SoundPlayerWidgetAdvancedView::get_image_from_music_file()
     return decoded_image.frames[0].bitmap;
 }
 
-void SoundPlayerWidgetAdvancedView::play_state_changed(Player::PlayState state)
+void SoundPlayerWidget::play_state_changed(Player::PlayState state)
 {
     sync_previous_next_actions();
 
@@ -220,34 +220,34 @@ void SoundPlayerWidgetAdvancedView::play_state_changed(Player::PlayState state)
     }
 }
 
-void SoundPlayerWidgetAdvancedView::loop_mode_changed(Player::LoopMode)
+void SoundPlayerWidget::loop_mode_changed(Player::LoopMode)
 {
 }
 
-void SoundPlayerWidgetAdvancedView::mute_changed(bool muted)
+void SoundPlayerWidget::mute_changed(bool muted)
 {
     m_mute_action->set_text(muted ? "Unmute"sv : "Mute"sv);
     m_mute_action->set_icon(muted ? m_muted_icon : m_volume_icon);
     m_volume_slider->set_enabled(!muted);
 }
 
-void SoundPlayerWidgetAdvancedView::sync_previous_next_actions()
+void SoundPlayerWidget::sync_previous_next_actions()
 {
     m_back_action->set_enabled(playlist().size() > 1 && !playlist().shuffling());
     m_next_action->set_enabled(playlist().size() > 1);
 }
 
-void SoundPlayerWidgetAdvancedView::shuffle_mode_changed(Player::ShuffleMode)
+void SoundPlayerWidget::shuffle_mode_changed(Player::ShuffleMode)
 {
     sync_previous_next_actions();
 }
 
-void SoundPlayerWidgetAdvancedView::time_elapsed(int seconds)
+void SoundPlayerWidget::time_elapsed(int seconds)
 {
     m_timestamp_label->set_text(String::formatted("Elapsed: {}", human_readable_digital_time(seconds)).release_value_but_fixme_should_propagate_errors());
 }
 
-void SoundPlayerWidgetAdvancedView::file_name_changed(StringView name)
+void SoundPlayerWidget::file_name_changed(StringView name)
 {
     m_visualization->start_new_file(name);
     DeprecatedString title = name;
@@ -263,13 +263,13 @@ void SoundPlayerWidgetAdvancedView::file_name_changed(StringView name)
     m_window.set_title(DeprecatedString::formatted("{} — Sound Player", title));
 }
 
-void SoundPlayerWidgetAdvancedView::total_samples_changed(int total_samples)
+void SoundPlayerWidget::total_samples_changed(int total_samples)
 {
     m_playback_progress_slider->set_max(total_samples);
     m_playback_progress_slider->set_page_step(total_samples / 10);
 }
 
-void SoundPlayerWidgetAdvancedView::sound_buffer_played(FixedArray<Audio::Sample> const& buffer, int sample_rate, int samples_played)
+void SoundPlayerWidget::sound_buffer_played(FixedArray<Audio::Sample> const& buffer, int sample_rate, int samples_played)
 {
     m_visualization->set_buffer(buffer);
     m_visualization->set_samplerate(sample_rate);
@@ -278,12 +278,12 @@ void SoundPlayerWidgetAdvancedView::sound_buffer_played(FixedArray<Audio::Sample
         m_playback_progress_slider->set_value(samples_played, GUI::AllowCallback::No);
 }
 
-void SoundPlayerWidgetAdvancedView::volume_changed(double volume)
+void SoundPlayerWidget::volume_changed(double volume)
 {
     m_volume_label->set_text(String::formatted("{}%", static_cast<int>(volume * 100)).release_value_but_fixme_should_propagate_errors());
 }
 
-void SoundPlayerWidgetAdvancedView::playlist_loaded(StringView path, bool loaded)
+void SoundPlayerWidget::playlist_loaded(StringView path, bool loaded)
 {
     if (!loaded) {
         GUI::MessageBox::show(&m_window, DeprecatedString::formatted("Could not load playlist at \"{}\".", path), "Error opening playlist"sv, GUI::MessageBox::Type::Error);
@@ -293,7 +293,7 @@ void SoundPlayerWidgetAdvancedView::playlist_loaded(StringView path, bool loaded
     play_file_path(playlist().next());
 }
 
-void SoundPlayerWidgetAdvancedView::audio_load_error(StringView path, StringView error_string)
+void SoundPlayerWidget::audio_load_error(StringView path, StringView error_string)
 {
     GUI::MessageBox::show(&m_window, DeprecatedString::formatted("Failed to load audio file: {} ({})", path, error_string.is_null() ? "Unknown error"sv : error_string),
         "Filetype error"sv, GUI::MessageBox::Type::Error);
