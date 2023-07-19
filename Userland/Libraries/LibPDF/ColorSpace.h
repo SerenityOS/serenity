@@ -9,6 +9,7 @@
 #include <AK/DeprecatedFlyString.h>
 #include <AK/Forward.h>
 #include <LibGfx/Color.h>
+#include <LibGfx/ICC/Profile.h>
 #include <LibPDF/Value.h>
 
 #define ENUMERATE_COLOR_SPACE_FAMILIES(V) \
@@ -137,7 +138,10 @@ public:
     ColorSpaceFamily const& family() const override { return ColorSpaceFamily::ICCBased; }
 
 private:
-    ICCBasedColorSpace() = delete;
+    ICCBasedColorSpace(NonnullRefPtr<Gfx::ICC::Profile>);
+
+    static RefPtr<Gfx::ICC::Profile> s_srgb_profile;
+    NonnullRefPtr<Gfx::ICC::Profile> m_profile;
 };
 
 }
