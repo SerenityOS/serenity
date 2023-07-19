@@ -13,6 +13,7 @@
 #include <QBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QMenu>
 #include <QToolBar>
 #include <QToolButton>
 #include <QWidget>
@@ -113,5 +114,6 @@ private:
     bool m_is_history_navigation { false };
 
     Ladybird::ConsoleWidget* m_console_widget { nullptr };
+    OwnPtr<QMenu> m_console_context_menu;
     Ladybird::InspectorWidget* m_inspector_widget { nullptr };
 };

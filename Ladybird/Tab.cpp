@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "Tab.h"
 #include "BrowserWindow.h"
 #include "ConsoleWidget.h"
 #include "InspectorWidget.h"
@@ -667,6 +666,17 @@ void Tab::show_console_window()
         m_console_widget = new Ladybird::ConsoleWidget;
         m_console_widget->setWindowTitle("JS Console");
         m_console_widget->resize(640, 480);
+
+        // Make the copy action available in the window via the bound copy key shortcut.
+        // Simply adding it to the context menu is not enough.
+        m_console_widget->addAction(&m_window->copy_selection_action());
+
+        m_console_context_menu = make<QMenu>("Context menu", m_console_widget);
+        m_console_context_menu->addAction(&m_window->copy_selection_action());
+        m_console_widget->view().on_context_menu_request = [this](Gfx::IntPoint) {
+            auto screen_position = QCursor::pos();
+            m_console_context_menu->exec(screen_position);
+        };
         m_console_widget->on_js_input = [this](auto js_source) {
             view().js_console_input(js_source);
         };
