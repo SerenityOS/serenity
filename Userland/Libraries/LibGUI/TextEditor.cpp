@@ -2167,10 +2167,8 @@ void TextEditor::recompute_visual_lines(size_t line_index, Vector<TextDocumentFo
         }
     }
 
-    if (is_wrapping_enabled())
-        visual_data->visual_rect = { m_horizontal_content_padding, 0, available_width, static_cast<int>(visual_data->visual_lines.size()) * line_height() };
-    else
-        visual_data->visual_rect = { m_horizontal_content_padding, 0, text_width_for_font(line.view(), font()), line_height() };
+    auto line_width = is_wrapping_enabled() ? available_width : text_width_for_font(line.view(), font());
+    visual_data->visual_rect = { m_horizontal_content_padding, 0, line_width, static_cast<int>(visual_data->visual_lines.size()) * line_height() };
 }
 
 template<typename Callback>
