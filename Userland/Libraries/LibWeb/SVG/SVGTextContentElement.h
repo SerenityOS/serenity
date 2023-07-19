@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibWeb/SVG/AttributeParser.h>
 #include <LibWeb/SVG/SVGGraphicsElement.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
@@ -23,6 +24,8 @@ public:
     WebIDL::ExceptionOr<int> get_number_of_chars() const;
 
     Gfx::FloatPoint get_offset() const;
+
+    Optional<TextAnchor> text_anchor() const;
 
 protected:
     SVGTextContentElement(DOM::Document&, DOM::QualifiedName);

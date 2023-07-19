@@ -8,6 +8,7 @@
 #include <AK/Utf16View.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Utf16String.h>
+#include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Layout/SVGTextBox.h>
 #include <LibWeb/SVG/AttributeNames.h>
@@ -28,6 +29,22 @@ JS::ThrowCompletionOr<void> SVGTextContentElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGTextContentElementPrototype>(realm, "SVGTextContentElement"));
 
     return {};
+}
+
+Optional<TextAnchor> SVGTextContentElement::text_anchor() const
+{
+    if (!layout_node())
+        return {};
+    switch (layout_node()->computed_values().text_anchor()) {
+    case CSS::TextAnchor::Start:
+        return TextAnchor::Start;
+    case CSS::TextAnchor::Middle:
+        return TextAnchor::Middle;
+    case CSS::TextAnchor::End:
+        return TextAnchor::End;
+    default:
+        VERIFY_NOT_REACHED();
+    }
 }
 
 void SVGTextContentElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)

@@ -125,6 +125,12 @@ enum class FillRule {
     Evenodd
 };
 
+enum class TextAnchor {
+    Start,
+    Middle,
+    End
+};
+
 class AttributeParser final {
 public:
     ~AttributeParser() = default;

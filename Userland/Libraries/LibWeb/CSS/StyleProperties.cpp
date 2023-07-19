@@ -589,6 +589,12 @@ bool StyleProperties::operator==(StyleProperties const& other) const
     return true;
 }
 
+Optional<CSS::TextAnchor> StyleProperties::text_anchor() const
+{
+    auto value = property(CSS::PropertyID::TextAnchor);
+    return value_id_to_text_anchor(value->to_identifier());
+}
+
 Optional<CSS::TextAlign> StyleProperties::text_align() const
 {
     auto value = property(CSS::PropertyID::TextAlign);

@@ -275,6 +275,11 @@
         "to-zero",
         "up"
     ],
+    "text-anchor": [
+        "start",
+        "middle",
+        "end"
+    ],
     "text-align": [
         "center",
         "justify",
