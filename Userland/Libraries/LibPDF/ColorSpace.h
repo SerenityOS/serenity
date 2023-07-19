@@ -55,7 +55,7 @@ public:
 
     virtual ~ColorSpace() = default;
 
-    virtual Color color(Vector<Value> const& arguments) const = 0;
+    virtual PDFErrorOr<Color> color(Vector<Value> const& arguments) const = 0;
     virtual int number_of_components() const = 0;
     virtual Vector<float> default_decode() const = 0;
     virtual ColorSpaceFamily const& family() const = 0;
@@ -67,7 +67,7 @@ public:
 
     ~DeviceGrayColorSpace() override = default;
 
-    Color color(Vector<Value> const& arguments) const override;
+    PDFErrorOr<Color> color(Vector<Value> const& arguments) const override;
     int number_of_components() const override { return 1; }
     Vector<float> default_decode() const override;
     ColorSpaceFamily const& family() const override { return ColorSpaceFamily::DeviceGray; }
@@ -82,7 +82,7 @@ public:
 
     ~DeviceRGBColorSpace() override = default;
 
-    Color color(Vector<Value> const& arguments) const override;
+    PDFErrorOr<Color> color(Vector<Value> const& arguments) const override;
     int number_of_components() const override { return 3; }
     Vector<float> default_decode() const override;
     ColorSpaceFamily const& family() const override { return ColorSpaceFamily::DeviceRGB; }
@@ -97,7 +97,7 @@ public:
 
     ~DeviceCMYKColorSpace() override = default;
 
-    Color color(Vector<Value> const& arguments) const override;
+    PDFErrorOr<Color> color(Vector<Value> const& arguments) const override;
     int number_of_components() const override { return 4; }
     Vector<float> default_decode() const override;
     ColorSpaceFamily const& family() const override { return ColorSpaceFamily::DeviceCMYK; }
@@ -112,7 +112,7 @@ public:
 
     ~CalRGBColorSpace() override = default;
 
-    Color color(Vector<Value> const& arguments) const override;
+    PDFErrorOr<Color> color(Vector<Value> const& arguments) const override;
     int number_of_components() const override { return 3; }
     Vector<float> default_decode() const override;
     ColorSpaceFamily const& family() const override { return ColorSpaceFamily::CalRGB; }
@@ -132,7 +132,7 @@ public:
 
     ~ICCBasedColorSpace() override = default;
 
-    Color color(Vector<Value> const& arguments) const override;
+    PDFErrorOr<Color> color(Vector<Value> const& arguments) const override;
     int number_of_components() const override { VERIFY_NOT_REACHED(); }
     Vector<float> default_decode() const override;
     ColorSpaceFamily const& family() const override { return ColorSpaceFamily::ICCBased; }

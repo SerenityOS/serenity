@@ -523,7 +523,7 @@ RENDERER_HANDLER(set_painting_space)
 
 RENDERER_HANDLER(set_stroking_color)
 {
-    state().stroke_color = state().stroke_color_space->color(args);
+    state().stroke_color = TRY(state().stroke_color_space->color(args));
     return {};
 }
 
@@ -534,13 +534,13 @@ RENDERER_HANDLER(set_stroking_color_extended)
     if (last_arg.has<NonnullRefPtr<Object>>() && last_arg.get<NonnullRefPtr<Object>>()->is<NameObject>())
         TODO();
 
-    state().stroke_color = state().stroke_color_space->color(args);
+    state().stroke_color = TRY(state().stroke_color_space->color(args));
     return {};
 }
 
 RENDERER_HANDLER(set_painting_color)
 {
-    state().paint_color = state().paint_color_space->color(args);
+    state().paint_color = TRY(state().paint_color_space->color(args));
     return {};
 }
 
@@ -551,49 +551,49 @@ RENDERER_HANDLER(set_painting_color_extended)
     if (last_arg.has<NonnullRefPtr<Object>>() && last_arg.get<NonnullRefPtr<Object>>()->is<NameObject>())
         TODO();
 
-    state().paint_color = state().paint_color_space->color(args);
+    state().paint_color = TRY(state().paint_color_space->color(args));
     return {};
 }
 
 RENDERER_HANDLER(set_stroking_color_and_space_to_gray)
 {
     state().stroke_color_space = DeviceGrayColorSpace::the();
-    state().stroke_color = state().stroke_color_space->color(args);
+    state().stroke_color = TRY(state().stroke_color_space->color(args));
     return {};
 }
 
 RENDERER_HANDLER(set_painting_color_and_space_to_gray)
 {
     state().paint_color_space = DeviceGrayColorSpace::the();
-    state().paint_color = state().paint_color_space->color(args);
+    state().paint_color = TRY(state().paint_color_space->color(args));
     return {};
 }
 
 RENDERER_HANDLER(set_stroking_color_and_space_to_rgb)
 {
     state().stroke_color_space = DeviceRGBColorSpace::the();
-    state().stroke_color = state().stroke_color_space->color(args);
+    state().stroke_color = TRY(state().stroke_color_space->color(args));
     return {};
 }
 
 RENDERER_HANDLER(set_painting_color_and_space_to_rgb)
 {
     state().paint_color_space = DeviceRGBColorSpace::the();
-    state().paint_color = state().paint_color_space->color(args);
+    state().paint_color = TRY(state().paint_color_space->color(args));
     return {};
 }
 
 RENDERER_HANDLER(set_stroking_color_and_space_to_cmyk)
 {
     state().stroke_color_space = DeviceCMYKColorSpace::the();
-    state().stroke_color = state().stroke_color_space->color(args);
+    state().stroke_color = TRY(state().stroke_color_space->color(args));
     return {};
 }
 
 RENDERER_HANDLER(set_painting_color_and_space_to_cmyk)
 {
     state().paint_color_space = DeviceCMYKColorSpace::the();
-    state().paint_color = state().paint_color_space->color(args);
+    state().paint_color = TRY(state().paint_color_space->color(args));
     return {};
 }
 
@@ -795,7 +795,7 @@ PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::load_image(NonnullRefPtr<Stream
             sample = sample.slice(bytes_per_component);
             component_values[i] = Value { component_value_decoders[i].interpolate(component[0]) };
         }
-        auto color = color_space->color(component_values);
+        auto color = TRY(color_space->color(component_values));
         bitmap->set_pixel(x, y, color);
         ++x;
         if (x == width) {
