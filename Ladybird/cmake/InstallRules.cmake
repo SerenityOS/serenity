@@ -6,7 +6,13 @@ set(package ladybird)
 
 set(ladybird_applications ladybird SQLServer WebContent WebDriver headless-browser)
 
-install(TARGETS ${ladybird_applications}
+set(app_install_targets ${ladybird_applications})
+if (ANDROID)
+    # androiddeployqt will get confused with duplicate resources if we install every app
+    set(app_install_targets ladybird)
+endif()
+
+install(TARGETS ${app_install_targets}
   EXPORT ladybirdTargets
   RUNTIME
     COMPONENT ladybird_Runtime

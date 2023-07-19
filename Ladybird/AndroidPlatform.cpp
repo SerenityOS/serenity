@@ -10,9 +10,10 @@
 #include <AK/ScopeGuard.h>
 #include <LibArchive/Tar.h>
 #include <LibArchive/TarStream.h>
+#include <LibCompress/Gzip.h>
 #include <LibCore/Directory.h>
-#include <LibCore/FileStream.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
 
 #include <QCoreApplication>
@@ -31,7 +32,7 @@ extern DeprecatedString s_serenity_resource_root;
 
 void android_platform_init();
 static void extract_ladybird_resources();
-static ErrorOr<void> extract_tar_archive(DeprecatedString archive_file, DeprecatedString output_directory);
+static ErrorOr<void> extract_tar_archive(String archive_file, DeprecatedString output_directory);
 
 void android_platform_init()
 {
@@ -53,31 +54,25 @@ void extract_ladybird_resources()
     if (file_or_error.is_error()) {
         qDebug() << "Unable to open test file file as expected, extracting asssets...";
 
-        MUST(extract_tar_archive(DeprecatedString::formatted("{}/ladybird-assets.tar", s_serenity_resource_root), s_serenity_resource_root));
+        MUST(extract_tar_archive(MUST(String::formatted("{}/ladybird-assets.tar", s_serenity_resource_root)), s_serenity_resource_root));
     } else {
         qDebug() << "Opened app-browser.png test file, good to go!";
         qDebug() << "Hopefully no developer changed the asset files and expected them to be re-extracted!";
     }
 }
 
-ErrorOr<void> extract_tar_archive(DeprecatedString archive_file, DeprecatedString output_directory)
+ErrorOr<void> extract_tar_archive(String archive_file, DeprecatedString output_directory)
 {
     constexpr size_t buffer_size = 4096;
 
-    auto file = TRY(Core::DeprecatedFile::open(archive_file, Core::OpenMode::ReadOnly));
+    auto file = TRY(Core::InputBufferedFile::create(TRY(Core::File::open(archive_file, Core::File::OpenMode::Read))));
 
     DeprecatedString old_pwd = TRY(Core::System::getcwd());
 
     TRY(Core::System::chdir(output_directory));
     ScopeGuard go_back = [&old_pwd] { MUST(Core::System::chdir(old_pwd)); };
 
-    Core::InputFileStream file_stream(file);
-
-    Archive::TarInputStream tar_stream(file_stream);
-    if (!tar_stream.valid()) {
-        qDebug() << "the provided file is not a well-formatted ustar file";
-        return Error::from_errno(EINVAL);
-    }
+    auto tar_stream = TRY(Archive::TarInputStream::construct(make<Compress::GzipCompressor>(move(file))));
 
     HashMap<DeprecatedString, DeprecatedString> global_overrides;
     HashMap<DeprecatedString, DeprecatedString> local_overrides;
@@ -96,14 +91,14 @@ ErrorOr<void> extract_tar_archive(DeprecatedString archive_file, DeprecatedStrin
         return {};
     };
 
-    for (; !tar_stream.finished(); tar_stream.advance()) {
-        Archive::TarFileHeader const& header = tar_stream.header();
+    while (!tar_stream->finished()) {
+        Archive::TarFileHeader const& header = tar_stream->header();
 
         // Handle meta-entries earlier to avoid consuming the file content stream.
         if (header.content_is_like_extended_header()) {
             switch (header.type_flag()) {
             case Archive::TarFileType::GlobalExtendedHeader: {
-                TRY(tar_stream.for_each_extended_header([&](StringView key, StringView value) {
+                TRY(tar_stream->for_each_extended_header([&](StringView key, StringView value) {
                     if (value.length() == 0)
                         global_overrides.remove(key);
                     else
@@ -112,7 +107,7 @@ ErrorOr<void> extract_tar_archive(DeprecatedString archive_file, DeprecatedStrin
                 break;
             }
             case Archive::TarFileType::ExtendedHeader: {
-                TRY(tar_stream.for_each_extended_header([&](StringView key, StringView value) {
+                TRY(tar_stream->for_each_extended_header([&](StringView key, StringView value) {
                     local_overrides.set(key, value);
                 }));
                 break;
@@ -122,10 +117,11 @@ ErrorOr<void> extract_tar_archive(DeprecatedString archive_file, DeprecatedStrin
                 VERIFY_NOT_REACHED();
             }
 
+            TRY(tar_stream->advance());
             continue;
         }
 
-        Archive::TarFileStream file_stream = tar_stream.file_contents();
+        Archive::TarFileStream file_stream = tar_stream->file_contents();
 
         // Handle other header types that don't just have an effect on extraction.
         switch (header.type_flag()) {
@@ -133,12 +129,14 @@ ErrorOr<void> extract_tar_archive(DeprecatedString archive_file, DeprecatedStrin
             StringBuilder long_name;
 
             Array<u8, buffer_size> buffer;
-            size_t bytes_read;
 
-            while ((bytes_read = file_stream.read(buffer)) > 0)
-                long_name.append(reinterpret_cast<char*>(buffer.data()), bytes_read);
+            while (!file_stream.is_eof()) {
+                auto slice = TRY(file_stream.read_some(buffer));
+                long_name.append(reinterpret_cast<char*>(slice.data()), slice.size());
+            }
 
             local_overrides.set("path", long_name.to_deprecated_string());
+            TRY(tar_stream->advance());
             continue;
         }
         default:
@@ -151,20 +149,22 @@ ErrorOr<void> extract_tar_archive(DeprecatedString archive_file, DeprecatedStrin
             path = path.prepend(header.prefix());
         DeprecatedString filename = get_override("path"sv).value_or(path.string());
 
-        DeprecatedString absolute_path = Core::DeprecatedFile::absolute_path(filename);
+        DeprecatedString absolute_path = TRY(FileSystem::absolute_path(filename)).to_deprecated_string();
         auto parent_path = LexicalPath(absolute_path).parent();
+        auto header_mode = TRY(header.mode());
 
         switch (header.type_flag()) {
         case Archive::TarFileType::NormalFile:
         case Archive::TarFileType::AlternateNormalFile: {
             MUST(Core::Directory::create(parent_path, Core::Directory::CreateDirectories::Yes));
 
-            int fd = TRY(Core::System::open(absolute_path, O_CREAT | O_WRONLY, header.mode()));
+            int fd = TRY(Core::System::open(absolute_path, O_CREAT | O_WRONLY, header_mode));
 
             Array<u8, buffer_size> buffer;
-            size_t bytes_read;
-            while ((bytes_read = file_stream.read(buffer)) > 0)
-                TRY(Core::System::write(fd, buffer.span().slice(0, bytes_read)));
+            while (!file_stream.is_eof()) {
+                auto slice = TRY(file_stream.read_some(buffer));
+                TRY(Core::System::write(fd, slice));
+            }
 
             TRY(Core::System::close(fd));
             break;
@@ -178,9 +178,9 @@ ErrorOr<void> extract_tar_archive(DeprecatedString archive_file, DeprecatedStrin
         case Archive::TarFileType::Directory: {
             MUST(Core::Directory::create(parent_path, Core::Directory::CreateDirectories::Yes));
 
-            auto result_or_error = Core::System::mkdir(absolute_path, header.mode());
+            auto result_or_error = Core::System::mkdir(absolute_path, header_mode);
             if (result_or_error.is_error() && result_or_error.error().code() != EEXIST)
-                return result_or_error.error();
+                return result_or_error.release_error();
             break;
         }
         default:
@@ -191,8 +191,8 @@ ErrorOr<void> extract_tar_archive(DeprecatedString archive_file, DeprecatedStrin
 
         // Non-global headers should be cleared after every file.
         local_overrides.clear();
-    }
-    file_stream.close();
 
+        TRY(tar_stream->advance());
+    }
     return {};
 }

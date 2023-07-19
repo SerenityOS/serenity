@@ -97,9 +97,7 @@ set(SOURCES
     main.cpp
 )
 
-qt_add_executable(ladybird ${SOURCES}
-    MANUAL_FINALIZATION
-)
+qt_add_executable(ladybird ${SOURCES})
 target_link_libraries(ladybird PRIVATE Qt::Core Qt::Gui Qt::Network Qt::Widgets LibCore LibFileSystem LibGfx LibGUI LibIPC LibJS LibMain LibWeb LibWebView LibSQL)
 
 target_include_directories(ladybird PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
@@ -128,6 +126,7 @@ set_target_properties(ladybird PROPERTIES
 
 if (ANDROID)
     include(cmake/AndroidExtras.cmake)
+    link_android_libs(headless-browser)
 endif()
 
 add_custom_target(run${LADYBIRD_CUSTOM_TARGET_SUFFIX}
@@ -140,8 +139,6 @@ add_custom_target(debug${LADYBIRD_CUSTOM_TARGET_SUFFIX}
     COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SERENITY_SOURCE_DIR}" gdb -ex "set follow-fork-mode child" "$<TARGET_FILE:ladybird>"
     USES_TERMINAL
 )
-
-qt_finalize_executable(ladybird)
 
 add_subdirectory(SQLServer)
 add_subdirectory(WebContent)

@@ -13,8 +13,12 @@ set_property(TARGET ladybird APPEND PROPERTY
 #
 # Android-specific sources and libs
 #
-target_sources(ladybird PRIVATE AndroidPlatform.cpp)
-target_link_libraries(ladybird PRIVATE LibCompress LibArchive)
+add_library(android_init STATIC AndroidPlatform.cpp)
+target_link_libraries(android_init PUBLIC Qt::Core Qt::Gui Qt::Network LibCompress LibArchive LibFileSystem)
+
+macro(link_android_libs target)
+    target_link_libraries(${target} PRIVATE android_init)
+endmacro()
 
 #
 # NDK and Qt don't ship OpenSSL for Android
@@ -27,7 +31,13 @@ FetchContent_Declare(android_openssl
     GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable(android_openssl)
-set_property(TARGET ladybird APPEND PROPERTY QT_ANDROID_EXTRA_LIBS ${ANDROID_EXTRA_LIBS})
+link_android_libs(ladybird)
+target_link_libraries(ladybird PRIVATE Qt::Network)
+set_property(TARGET ladybird APPEND PROPERTY QT_ANDROID_EXTRA_LIBS ${ANDROID_EXTRA_LIBS}
+  "${CMAKE_CURRENT_BINARY_DIR}/WebContent/libWebContent_${ANDROID_ABI}.so"
+  "${CMAKE_CURRENT_BINARY_DIR}/SQLServer/libSQLServer_${ANDROID_ABI}.so"
+  "${CMAKE_CURRENT_BINARY_DIR}/WebDriver/libWebDriver_${ANDROID_ABI}.so"
+)
 
 #
 # Copy resources into tarball for inclusion in /assets of APK
@@ -60,6 +70,6 @@ add_custom_target(copy-content-filters
         "asset-bundle/res/ladybird/BrowserContentFilters.txt"
 )
 add_dependencies(archive-assets copy-autoplay-allowlist copy-content-filters)
-add_custom_target(copy-assets COMMAND ${CMAKE_COMMAND} -E copy_if_different ladybird-assets.tar.gz "${CMAKE_SOURCE_DIR}/android/assets")
+add_custom_target(copy-assets COMMAND ${CMAKE_COMMAND} -E copy_if_different ladybird-assets.tar.gz "${CMAKE_SOURCE_DIR}/android/assets/")
 add_dependencies(copy-assets archive-assets)
 add_dependencies(ladybird copy-assets)
