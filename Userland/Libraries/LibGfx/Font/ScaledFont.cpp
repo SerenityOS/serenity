@@ -22,7 +22,7 @@ ScaledFont::ScaledFont(NonnullRefPtr<VectorFont> font, float point_width, float 
 
     auto metrics = m_font->metrics(m_x_scale, m_y_scale);
 
-    m_pixel_size = m_point_height * 1.33333333f;
+    m_pixel_size = m_point_height * (DEFAULT_DPI / POINTS_PER_INCH);
     m_pixel_size_rounded_up = static_cast<int>(ceilf(m_pixel_size));
 
     m_pixel_metrics = Gfx::FontPixelMetrics {
