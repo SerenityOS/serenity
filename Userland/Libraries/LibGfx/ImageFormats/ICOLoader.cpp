@@ -136,13 +136,11 @@ static ErrorOr<void> load_ico_directory(ICOLoadingContext& context)
     return {};
 }
 
-ErrorOr<void> ICOImageDecoderPlugin::load_ico_bitmap(ICOLoadingContext& context, Optional<size_t> index)
+ErrorOr<void> ICOImageDecoderPlugin::load_ico_bitmap(ICOLoadingContext& context)
 {
     VERIFY(context.state >= ICOLoadingContext::State::DirectoryDecoded);
 
-    size_t real_index = context.largest_index;
-    if (index.has_value())
-        real_index = index.value();
+    size_t const real_index = context.largest_index;
     if (real_index >= context.images.size())
         return Error::from_string_literal("Index out of bounds");
 
@@ -213,7 +211,7 @@ ErrorOr<ImageFrameDescriptor> ICOImageDecoderPlugin::frame(size_t index, Optiona
 
     if (m_context->state < ICOLoadingContext::State::BitmapDecoded) {
         // NOTE: This forces the chunk decoding to happen.
-        auto maybe_error = load_ico_bitmap(*m_context, {});
+        auto maybe_error = load_ico_bitmap(*m_context);
         if (maybe_error.is_error()) {
             m_context->state = ICOLoadingContext::State::Error;
             return Error::from_string_literal("ICOImageDecoderPlugin: Decoding failed");
