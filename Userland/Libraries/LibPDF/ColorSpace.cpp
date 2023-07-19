@@ -69,7 +69,7 @@ NonnullRefPtr<DeviceGrayColorSpace> DeviceGrayColorSpace::the()
     return instance;
 }
 
-Color DeviceGrayColorSpace::color(Vector<Value> const& arguments) const
+PDFErrorOr<Color> DeviceGrayColorSpace::color(Vector<Value> const& arguments) const
 {
     VERIFY(arguments.size() == 1);
     auto gray = static_cast<u8>(arguments[0].to_float() * 255.0f);
@@ -87,7 +87,7 @@ NonnullRefPtr<DeviceRGBColorSpace> DeviceRGBColorSpace::the()
     return instance;
 }
 
-Color DeviceRGBColorSpace::color(Vector<Value> const& arguments) const
+PDFErrorOr<Color> DeviceRGBColorSpace::color(Vector<Value> const& arguments) const
 {
     VERIFY(arguments.size() == 3);
     auto r = static_cast<u8>(arguments[0].to_float() * 255.0f);
@@ -107,7 +107,7 @@ NonnullRefPtr<DeviceCMYKColorSpace> DeviceCMYKColorSpace::the()
     return instance;
 }
 
-Color DeviceCMYKColorSpace::color(Vector<Value> const& arguments) const
+PDFErrorOr<Color> DeviceCMYKColorSpace::color(Vector<Value> const& arguments) const
 {
     VERIFY(arguments.size() == 4);
     auto c = arguments[0].to_float();
@@ -265,7 +265,7 @@ constexpr Array<float, 3> convert_to_srgb(Array<float, 3> xyz)
     return matrix_multiply(conversion_matrix, xyz);
 }
 
-Color CalRGBColorSpace::color(Vector<Value> const& arguments) const
+PDFErrorOr<Color> CalRGBColorSpace::color(Vector<Value> const& arguments) const
 {
     VERIFY(arguments.size() == 3);
     auto a = clamp(arguments[0].to_float(), 0.0f, 1.0f);
@@ -329,10 +329,10 @@ ICCBasedColorSpace::ICCBasedColorSpace(NonnullRefPtr<Gfx::ICC::Profile> profile)
 {
 }
 
-Color ICCBasedColorSpace::color(Vector<Value> const& arguments) const
+PDFErrorOr<Color> ICCBasedColorSpace::color(Vector<Value> const& arguments) const
 {
     if (!s_srgb_profile)
-        s_srgb_profile = MUST(Gfx::ICC::sRGB());
+        s_srgb_profile = TRY(Gfx::ICC::sRGB());
 
     Vector<u8> bytes;
     for (auto const& arg : arguments) {
@@ -340,9 +340,9 @@ Color ICCBasedColorSpace::color(Vector<Value> const& arguments) const
         bytes.append(static_cast<u8>(arg.to_float() * 255.0f));
     }
 
-    auto pcs = MUST(m_profile->to_pcs(bytes));
+    auto pcs = TRY(m_profile->to_pcs(bytes));
     Array<u8, 3> output;
-    MUST(s_srgb_profile->from_pcs(pcs, output.span()));
+    TRY(s_srgb_profile->from_pcs(pcs, output.span()));
 
     return Color(output[0], output[1], output[2]);
 }
