@@ -29,6 +29,8 @@ private:
     PropertiesWindow(DeprecatedString const& path, Window* parent = nullptr);
     ErrorOr<void> create_widgets(bool disable_rename);
     ErrorOr<void> create_general_tab(GUI::TabWidget&, bool disable_rename);
+    ErrorOr<void> create_file_type_specific_tabs(GUI::TabWidget&);
+    ErrorOr<void> create_audio_tab(GUI::TabWidget&, NonnullRefPtr<Core::MappedFile>);
 
     struct PermissionMasks {
         mode_t read;

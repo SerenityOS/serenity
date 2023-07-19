@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022-2023, the SerenityOS developers.
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,7 +10,9 @@
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
 #include <Applications/FileManager/DirectoryView.h>
+#include <Applications/FileManager/PropertiesWindowAudioTabGML.h>
 #include <Applications/FileManager/PropertiesWindowGeneralTabGML.h>
+#include <LibAudio/Loader.h>
 #include <LibCore/Directory.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -58,6 +61,7 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
 
     auto tab_widget = TRY(main_widget->try_add<GUI::TabWidget>());
     TRY(create_general_tab(tab_widget, disable_rename));
+    TRY(create_file_type_specific_tabs(tab_widget));
 
     auto button_widget = TRY(main_widget->try_add<GUI::Widget>());
     TRY(button_widget->try_set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 5));
@@ -192,6 +196,62 @@ ErrorOr<void> PropertiesWindow::create_general_tab(GUI::TabWidget& tab_widget, b
     auto* others_write = general_tab->find_descendant_of_type_named<GUI::CheckBox>("others_write");
     auto* others_execute = general_tab->find_descendant_of_type_named<GUI::CheckBox>("others_execute");
     TRY(setup_permission_checkboxes(*others_read, *others_write, *others_execute, { S_IROTH, S_IWOTH, S_IXOTH }, m_mode));
+
+    return {};
+}
+
+ErrorOr<void> PropertiesWindow::create_file_type_specific_tabs(GUI::TabWidget& tab_widget)
+{
+    auto mapped_file_or_error = Core::MappedFile::map(m_path);
+    if (mapped_file_or_error.is_error()) {
+        warnln("{}: {}", m_path, mapped_file_or_error.release_error());
+        return {};
+    }
+    auto mapped_file = mapped_file_or_error.release_value();
+
+    auto file_name_guess = Core::guess_mime_type_based_on_filename(m_path);
+    auto mime_type = Core::guess_mime_type_based_on_sniffed_bytes(mapped_file->bytes()).value_or(file_name_guess);
+
+    if (mime_type.starts_with("audio/"sv))
+        return create_audio_tab(tab_widget, move(mapped_file));
+
+    return {};
+}
+
+ErrorOr<void> PropertiesWindow::create_audio_tab(GUI::TabWidget& tab_widget, NonnullRefPtr<Core::MappedFile> mapped_file)
+{
+    auto loader_or_error = Audio::Loader::create(mapped_file->bytes());
+    if (loader_or_error.is_error()) {
+        warnln("Failed to open '{}': {}", m_path, loader_or_error.release_error());
+        return {};
+    }
+    auto loader = loader_or_error.release_value();
+
+    auto tab = TRY(tab_widget.try_add_tab<GUI::Widget>("Audio"_short_string));
+    TRY(tab->load_from_gml(properties_window_audio_tab_gml));
+
+    tab->find_descendant_of_type_named<GUI::Label>("audio_type")->set_text(TRY(String::from_deprecated_string(loader->format_name())));
+    auto duration_seconds = loader->total_samples() / loader->sample_rate();
+    tab->find_descendant_of_type_named<GUI::Label>("audio_duration")->set_text(TRY(String::from_deprecated_string(human_readable_digital_time(duration_seconds))));
+    tab->find_descendant_of_type_named<GUI::Label>("audio_sample_rate")->set_text(TRY(String::formatted("{} Hz", loader->sample_rate())));
+    tab->find_descendant_of_type_named<GUI::Label>("audio_format")->set_text(TRY(String::formatted("{}-bit", loader->bits_per_sample())));
+
+    auto channel_count = loader->num_channels();
+    String channels_string;
+    if (channel_count == 1 || channel_count == 2) {
+        channels_string = TRY(String::formatted("{} ({})", channel_count, channel_count == 1 ? "Mono"sv : "Stereo"sv));
+    } else {
+        channels_string = TRY(String::number(channel_count));
+    }
+    tab->find_descendant_of_type_named<GUI::Label>("audio_channels")->set_text(channels_string);
+
+    tab->find_descendant_of_type_named<GUI::Label>("audio_title")->set_text(loader->metadata().title.value_or({}));
+    tab->find_descendant_of_type_named<GUI::Label>("audio_artists")->set_text(TRY(loader->metadata().all_artists()).value_or({}));
+    tab->find_descendant_of_type_named<GUI::Label>("audio_album")->set_text(loader->metadata().album.value_or({}));
+    tab->find_descendant_of_type_named<GUI::Label>("audio_track_number")
+        ->set_text(TRY(loader->metadata().track_number.map([](auto number) { return String::number(number); })).value_or({}));
+    tab->find_descendant_of_type_named<GUI::Label>("audio_genre")->set_text(loader->metadata().genre.value_or({}));
+    tab->find_descendant_of_type_named<GUI::Label>("audio_comment")->set_text(loader->metadata().comment.value_or({}));
 
     return {};
 }
