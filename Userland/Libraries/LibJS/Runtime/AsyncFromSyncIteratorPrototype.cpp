@@ -7,7 +7,7 @@
 
 #include <LibJS/Runtime/AsyncFromSyncIteratorPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/IteratorOperations.h>
+#include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/Promise.h>
 #include <LibJS/Runtime/PromiseCapability.h>
 #include <LibJS/Runtime/PromiseConstructor.h>

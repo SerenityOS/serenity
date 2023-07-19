@@ -14,7 +14,7 @@
 #include <LibJS/Runtime/CanonicalIndex.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/IteratorOperations.h>
+#include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/PrivateEnvironment.h>
 #include <LibJS/Runtime/Value.h>
 

@@ -8,7 +8,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/SegmentIteratorPrototype.h>
 #include <LibJS/Runtime/Intl/Segments.h>
-#include <LibJS/Runtime/IteratorOperations.h>
+#include <LibJS/Runtime/Iterator.h>
 
 namespace JS::Intl {
 

@@ -19,7 +19,7 @@
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/EnvironmentCoordinate.h>
-#include <LibJS/Runtime/IteratorOperations.h>
+#include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibJS/Runtime/ValueTraits.h>
 

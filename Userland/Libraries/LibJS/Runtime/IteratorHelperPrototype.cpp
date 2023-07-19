@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/IteratorHelperPrototype.h>
-#include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/Realm.h>
 
 namespace JS {

@@ -13,7 +13,7 @@
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Date.h>
-#include <LibJS/Runtime/IteratorOperations.h>
+#include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/PropertyKey.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
