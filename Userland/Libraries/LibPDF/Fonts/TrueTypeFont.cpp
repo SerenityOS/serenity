@@ -40,6 +40,11 @@ float TrueTypeFont::get_glyph_width(u8 char_code) const
     return m_font->glyph_width(char_code);
 }
 
+void TrueTypeFont::set_font_size(float font_size)
+{
+    m_font = m_font->with_size((font_size * POINTS_PER_INCH) / DEFAULT_DPI);
+}
+
 void TrueTypeFont::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float, u8 char_code, Color color)
 {
     // Account for the reversed font baseline

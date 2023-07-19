@@ -458,6 +458,13 @@ RENDERER_HANDLER(text_set_matrix_and_line_matrix)
     m_text_line_matrix = new_transform;
     m_text_matrix = new_transform;
     m_text_rendering_matrix_is_dirty = true;
+
+    // Settings the text/line matrix retroactively affects fonts
+    if (text_state().font) {
+        auto new_text_rendering_matrix = calculate_text_rendering_matrix();
+        text_state().font->set_font_size(text_state().font_size * new_text_rendering_matrix.x_scale());
+    }
+
     return {};
 }
 
