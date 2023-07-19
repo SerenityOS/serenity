@@ -31,7 +31,8 @@ class StringData;
 
 // FIXME: Remove this when OpenBSD Clang fully supports consteval.
 //        And once oss-fuzz updates to clang >15.
-#if defined(AK_OS_OPENBSD) || defined(OSS_FUZZ)
+//        And once Android ships an NDK with clang >14
+#if defined(AK_OS_OPENBSD) || defined(OSS_FUZZ) || defined(AK_OS_ANDROID)
 #    define AK_SHORT_STRING_CONSTEVAL constexpr
 #else
 #    define AK_SHORT_STRING_CONSTEVAL consteval
