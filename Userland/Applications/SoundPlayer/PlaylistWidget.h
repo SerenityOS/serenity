@@ -31,7 +31,6 @@ private:
     Vector<M3UEntry> m_playlist_items;
 
     static DeprecatedString format_filesize(u64 size_in_bytes);
-    static DeprecatedString format_duration(u32 duration_in_seconds);
 };
 
 class PlaylistTableView : public GUI::TableView {

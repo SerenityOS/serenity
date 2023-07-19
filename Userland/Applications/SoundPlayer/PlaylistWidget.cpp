@@ -7,6 +7,7 @@
 #include "PlaylistWidget.h"
 #include "Player.h"
 #include <AK/LexicalPath.h>
+#include <AK/NumberFormat.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/HeaderView.h>
 #include <LibGUI/Model.h>
@@ -37,7 +38,7 @@ GUI::Variant PlaylistModel::data(const GUI::ModelIndex& index, GUI::ModelRole ro
         case 0:
             return m_playlist_items[index.row()].extended_info->track_display_title.value_or(LexicalPath::title(m_playlist_items[index.row()].path));
         case 1:
-            return format_duration(m_playlist_items[index.row()].extended_info->track_length_in_seconds.value_or(0));
+            return human_readable_digital_time(m_playlist_items[index.row()].extended_info->track_length_in_seconds.value_or(0));
         case 2:
             return m_playlist_items[index.row()].extended_info->group_name.value_or("");
         case 3:
@@ -66,11 +67,6 @@ DeprecatedString PlaylistModel::format_filesize(u64 size_in_bytes)
         return DeprecatedString::formatted("{:.2f} KiB", (double)size_in_bytes / KiB);
     else
         return DeprecatedString::formatted("{} B", size_in_bytes);
-}
-
-DeprecatedString PlaylistModel::format_duration(u32 duration_in_seconds)
-{
-    return DeprecatedString::formatted("{:02}:{:02}:{:02}", duration_in_seconds / 3600, (duration_in_seconds / 60) % 60, duration_in_seconds % 60);
 }
 
 ErrorOr<String> PlaylistModel::column_name(int column) const

@@ -7,6 +7,7 @@
  */
 
 #include "Game.h"
+#include <AK/NumberFormat.h>
 #include <AK/URL.h>
 #include <Games/Solitaire/SolitaireGML.h>
 #include <LibConfig/Client.h>
@@ -92,7 +93,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& statusbar = *widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     statusbar.set_text(0, TRY("Score: 0"_string));
     statusbar.set_text(1, TRY(String::formatted("High Score: {}", high_score())));
-    statusbar.set_text(2, TRY("Time: 00:00:00"_string));
+    statusbar.set_text(2, TRY("Time: 00:00"_string));
 
     app->on_action_enter = [&](GUI::Action& action) {
         statusbar.set_override_text(action.status_tip());
@@ -110,18 +111,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto timer = TRY(Core::Timer::create_repeating(1000, [&]() {
         ++seconds_elapsed;
-
-        uint64_t hours = seconds_elapsed / 3600;
-        uint64_t minutes = (seconds_elapsed / 60) % 60;
-        uint64_t seconds = seconds_elapsed % 60;
-
-        statusbar.set_text(2, String::formatted("Time: {:02}:{:02}:{:02}", hours, minutes, seconds).release_value_but_fixme_should_propagate_errors());
+        statusbar.set_text(2, String::formatted("Time: {}", human_readable_digital_time(seconds_elapsed)).release_value_but_fixme_should_propagate_errors());
     }));
 
     game.on_game_start = [&]() {
         seconds_elapsed = 0;
         timer->start();
-        statusbar.set_text(2, "Time: 00:00:00"_string.release_value_but_fixme_should_propagate_errors());
+        statusbar.set_text(2, "Time: 00:00"_string.release_value_but_fixme_should_propagate_errors());
     };
     game.on_game_end = [&](Solitaire::GameOverReason reason, uint32_t score) {
         if (timer->is_active())
