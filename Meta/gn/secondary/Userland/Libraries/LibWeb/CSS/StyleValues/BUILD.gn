@@ -36,6 +36,7 @@ source_set("StyleValues") {
     "NumberStyleValue.cpp",
     "OverflowStyleValue.cpp",
     "PlaceContentStyleValue.cpp",
+    "PlaceItemsStyleValue.cpp",
     "PositionStyleValue.cpp",
     "RadialGradientStyleValue.cpp",
     "RectStyleValue.cpp",
