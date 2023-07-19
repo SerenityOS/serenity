@@ -116,7 +116,6 @@ private:
     GUI::TextPosition m_previous_text_position { 0, 0 };
     bool m_hovering_editor { false };
     bool m_hovering_clickable { false };
-    bool m_autocomplete_in_focus { false };
     RefPtr<GUI::Action> m_move_execution_to_line_action;
     RefPtr<Core::Timer> m_tokens_info_timer; // Used for querying language server for syntax highlighting info
     OwnPtr<LanguageClient> m_language_client;
