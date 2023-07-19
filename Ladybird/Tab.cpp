@@ -78,7 +78,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     m_hover_label->setFrameShape(QFrame::Shape::Box);
     m_hover_label->setAutoFillBackground(true);
 
-    auto* focus_location_editor_action = new QAction("Edit Location");
+    auto* focus_location_editor_action = new QAction("Edit Location", this);
     focus_location_editor_action->setShortcut(QKeySequence("Ctrl+L"));
     addAction(focus_location_editor_action);
 
