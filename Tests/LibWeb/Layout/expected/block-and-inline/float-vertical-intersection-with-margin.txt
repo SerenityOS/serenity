@@ -1,0 +1,26 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x34.9375 children: inline
+      line 0 width: 6.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+        frag 0 from TextNode start: 0, length: 1, rect: [108,8 6.34375x17.46875]
+          "1"
+      line 1 width: 8.8125, height: 17.46875, bottom: 34.9375, baseline: 13.53125
+        frag 0 from TextNode start: 0, length: 1, rect: [108,25.46875 8.8125x17.46875]
+          "2"
+      BlockContainer <span.a> at (8,8) content-size 100x17.46875 floating [BFC] children: inline
+        line 0 width: 14.265625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+          frag 0 from TextNode start: 0, length: 1, rect: [8,8 14.265625x17.46875]
+            "A"
+        TextNode <#text>
+      InlineNode <span>
+        TextNode <#text>
+      TextNode <#text>
+      BreakNode <br>
+      TextNode <#text>
+      BlockContainer <span.a> at (8,25.46875) content-size 100x17.46875 floating [BFC] children: inline
+        line 0 width: 9.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+          frag 0 from TextNode start: 0, length: 1, rect: [8,25.46875 9.34375x17.46875]
+            "B"
+        TextNode <#text>
+      InlineNode <span>
+        TextNode <#text>

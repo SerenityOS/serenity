@@ -752,7 +752,7 @@ CSSPixels BlockFormattingContext::BlockMarginState::current_collapsed_margin() c
     return collapsed_margin;
 }
 
-BlockFormattingContext::DidIntroduceClearance BlockFormattingContext::clear_floating_boxes(Box const& child_box)
+BlockFormattingContext::DidIntroduceClearance BlockFormattingContext::clear_floating_boxes(Node const& child_box)
 {
     auto const& computed_values = child_box.computed_values();
     auto result = DidIntroduceClearance::No;
