@@ -337,20 +337,30 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
 
+    // 1. Let calleeContext be the running execution context.
     auto& callee_context = vm.running_execution_context();
 
-    // Needed to extract declarations and functions
+    // 2. Let code be func.[[ECMAScriptCode]].
     ScopeNode const* scope_body = nullptr;
     if (is<ScopeNode>(*m_ecmascript_code))
         scope_body = static_cast<ScopeNode const*>(m_ecmascript_code.ptr());
 
+    // 3. Let strict be func.[[Strict]].
+    bool const strict = is_strict_mode();
+
     bool has_parameter_expressions = false;
 
-    // FIXME: Maybe compute has duplicates at parse time? (We need to anyway since it's an error in some cases)
+    // 4. Let formals be func.[[FormalParameters]].
+    auto const& formals = m_formal_parameters;
 
+    // FIXME: Maybe compute has duplicates at parse time? (We need to anyway since it's an error in some cases)
+    // 5. Let parameterNames be the BoundNames of formals.
+    // 6. If parameterNames has any duplicate entries, let hasDuplicates be true. Otherwise, let hasDuplicates be false.
     bool has_duplicates = false;
     HashTable<DeprecatedFlyString> parameter_names;
-    for (auto& parameter : m_formal_parameters) {
+
+    // NOTE: This loop performs step 5, 6, and 8.
+    for (auto const& parameter : formals) {
         if (parameter.default_value)
             has_parameter_expressions = true;
 
@@ -371,17 +381,52 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
             });
     }
 
-    auto arguments_object_needed = m_might_need_arguments_object;
+    // 7. Let simpleParameterList be IsSimpleParameterList of formals.
+    bool const simple_parameter_list = has_simple_parameter_list();
 
-    if (this_mode() == ThisMode::Lexical)
-        arguments_object_needed = false;
+    // 8. Let hasParameterExpressions be ContainsExpression of formals.
+    // NOTE: Already set above.
 
-    if (parameter_names.contains(vm.names.arguments.as_string()))
-        arguments_object_needed = false;
+    // 9. Let varNames be the VarDeclaredNames of code.
+    // 10. Let varDeclarations be the VarScopedDeclarations of code.
+    // 11. Let lexicalNames be the LexicallyDeclaredNames of code.
+    // NOTE: Not needed as we use iteration helpers for this instead.
 
+    // 12. Let functionNames be a new empty List.
     HashTable<DeprecatedFlyString> function_names;
+
+    // 13. Let functionsToInitialize be a new empty List.
     Vector<FunctionDeclaration const&> functions_to_initialize;
 
+    // 14. For each element d of varDeclarations, in reverse List order, do
+    // a. If d is neither a VariableDeclaration nor a ForBinding nor a BindingIdentifier, then
+    //     i. Assert: d is either a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration.
+    //     ii. Let fn be the sole element of the BoundNames of d.
+    //     iii. If functionNames does not contain fn, then
+    //         1. Insert fn as the first element of functionNames.
+    //         2. NOTE: If there are multiple function declarations for the same name, the last declaration is used.
+    //         3. Insert d as the first element of functionsToInitialize.
+    // NOTE: This block is done in step 18 below.
+
+    // 15. Let argumentsObjectNeeded be true.
+    auto arguments_object_needed = m_might_need_arguments_object;
+
+    // 16. If func.[[ThisMode]] is lexical, then
+    if (this_mode() == ThisMode::Lexical) {
+        // a. NOTE: Arrow functions never have an arguments object.
+        // b. Set argumentsObjectNeeded to false.
+        arguments_object_needed = false;
+    }
+    // 17. Else if parameterNames contains "arguments", then
+    else if (parameter_names.contains(vm.names.arguments.as_string())) {
+        // a. Set argumentsObjectNeeded to false.
+        arguments_object_needed = false;
+    }
+
+    // 18. Else if hasParameterExpressions is false, then
+    //     a. If functionNames contains "arguments" or lexicalNames contains "arguments", then
+    //         i. Set argumentsObjectNeeded to false.
+    // NOTE: The block below is a combination of step 14 and step 18.
     if (scope_body) {
         // NOTE: Nothing in the callback throws an exception.
         MUST(scope_body->for_each_var_function_declaration_in_reverse_order([&](FunctionDeclaration const& function) {
@@ -407,42 +452,98 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 
     GCPtr<Environment> environment;
 
-    if (is_strict_mode() || !has_parameter_expressions) {
+    // 19. If strict is true or hasParameterExpressions is false, then
+    if (strict || !has_parameter_expressions) {
+        // a. NOTE: Only a single Environment Record is needed for the parameters, since calls to eval in strict mode code cannot create new bindings which are visible outside of the eval.
+        // b. Let env be the LexicalEnvironment of calleeContext.
         environment = callee_context.lexical_environment;
-    } else {
-        environment = new_declarative_environment(*callee_context.lexical_environment);
+    }
+    // 20. Else,
+    else {
+        // a. NOTE: A separate Environment Record is needed to ensure that bindings created by direct eval calls in the formal parameter list are outside the environment where parameters are declared.
+
+        // b. Let calleeEnv be the LexicalEnvironment of calleeContext.
+        auto callee_env = callee_context.lexical_environment;
+
+        // c. Let env be NewDeclarativeEnvironment(calleeEnv).
+        environment = new_declarative_environment(*callee_env);
+
+        // d. Assert: The VariableEnvironment of calleeContext is calleeEnv.
         VERIFY(callee_context.variable_environment == callee_context.lexical_environment);
+
+        // e. Set the LexicalEnvironment of calleeContext to env.
         callee_context.lexical_environment = environment;
     }
 
+    // 21. For each String paramName of parameterNames, do
     for (auto const& parameter_name : parameter_names) {
-        if (MUST(environment->has_binding(parameter_name)))
-            continue;
+        // a. Let alreadyDeclared be ! env.HasBinding(paramName).
+        auto already_declared = MUST(environment->has_binding(parameter_name));
 
-        MUST(environment->create_mutable_binding(vm, parameter_name, false));
-        if (has_duplicates)
-            MUST(environment->initialize_binding(vm, parameter_name, js_undefined(), Environment::InitializeBindingHint::Normal));
+        // b. NOTE: Early errors ensure that duplicate parameter names can only occur in non-strict functions that do not have parameter default values or rest parameters.
+
+        // c. If alreadyDeclared is false, then
+        if (!already_declared) {
+            // i. Perform ! env.CreateMutableBinding(paramName, false).
+            MUST(environment->create_mutable_binding(vm, parameter_name, false));
+
+            // ii. If hasDuplicates is true, then
+            if (has_duplicates) {
+                // 1. Perform ! env.InitializeBinding(paramName, undefined).
+                MUST(environment->initialize_binding(vm, parameter_name, js_undefined(), Environment::InitializeBindingHint::Normal));
+            }
+        }
     }
 
+    // 22. If argumentsObjectNeeded is true, then
     if (arguments_object_needed) {
         Object* arguments_object;
-        if (is_strict_mode() || !has_simple_parameter_list())
+
+        // a. If strict is true or simpleParameterList is false, then
+        if (strict || !simple_parameter_list) {
+            // i. Let ao be CreateUnmappedArgumentsObject(argumentsList).
             arguments_object = create_unmapped_arguments_object(vm, vm.running_execution_context().arguments);
-        else
+        }
+        // b. Else,
+        else {
+            // i. NOTE: A mapped argument object is only provided for non-strict functions that don't have a rest parameter, any parameter default value initializers, or any destructured parameters.
+
+            // ii. Let ao be CreateMappedArgumentsObject(func, formals, argumentsList, env).
             arguments_object = create_mapped_arguments_object(vm, *this, formal_parameters(), vm.running_execution_context().arguments, *environment);
+        }
 
-        if (is_strict_mode())
+        // c. If strict is true, then
+        if (strict) {
+            // i. Perform ! env.CreateImmutableBinding("arguments", false).
             MUST(environment->create_immutable_binding(vm, vm.names.arguments.as_string(), false));
-        else
-            MUST(environment->create_mutable_binding(vm, vm.names.arguments.as_string(), false));
 
+            // ii. NOTE: In strict mode code early errors prevent attempting to assign to this binding, so its mutability is not observable.
+        }
+        // b. Else,
+        else {
+            // i. Perform ! env.CreateMutableBinding("arguments", false).
+            MUST(environment->create_mutable_binding(vm, vm.names.arguments.as_string(), false));
+        }
+
+        // c. Perform ! env.InitializeBinding("arguments", ao).
         MUST(environment->initialize_binding(vm, vm.names.arguments.as_string(), arguments_object, Environment::InitializeBindingHint::Normal));
+
+        // f. Let parameterBindings be the list-concatenation of parameterNames and « "arguments" ».
         parameter_names.set(vm.names.arguments.as_string());
     }
+    // 23. Else,
+    else {
+        // a. Let parameterBindings be parameterNames.
+    }
 
-    // We now treat parameterBindings as parameterNames.
+    // NOTE: We now treat parameterBindings as parameterNames.
 
-    // The spec makes an iterator here to do IteratorBindingInitialization but we just do it manually
+    // 24. Let iteratorRecord be CreateListIteratorRecord(argumentsList).
+    // 25. If hasDuplicates is true, then
+    //     a. Perform ? IteratorBindingInitialization of formals with arguments iteratorRecord and undefined.
+    // 26. Else,
+    //     a. Perform ? IteratorBindingInitialization of formals with arguments iteratorRecord and env.
+    // NOTE: The spec makes an iterator here to do IteratorBindingInitialization but we just do it manually
     auto& execution_context_arguments = vm.running_execution_context().arguments;
 
     size_t default_parameter_index = 0;
@@ -507,12 +608,25 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     if (scope_body)
         instantiated_var_names.ensure_capacity(scope_body->var_declaration_count());
 
+    // 27. If hasParameterExpressions is false, then
     if (!has_parameter_expressions) {
+        // a. NOTE: Only a single Environment Record is needed for the parameters and top-level vars.
+
+        // b. Let instantiatedVarNames be a copy of the List parameterBindings.
+        // NOTE: Done in implementation of step 27.c.i.1 below
+
         if (scope_body) {
             // NOTE: Due to the use of MUST with `create_mutable_binding` and `initialize_binding` below,
             //       an exception should not result from `for_each_var_declared_name`.
+
+            // c. For each element n of varNames, do
             MUST(scope_body->for_each_var_declared_identifier([&](auto const& id) {
+                // i. If instantiatedVarNames does not contain n, then
                 if (!parameter_names.contains(id.string()) && instantiated_var_names.set(id.string()) == AK::HashSetResult::InsertedNewEntry) {
+                    // 1. Append n to instantiatedVarNames.
+
+                    // 2. Perform ! env.CreateMutableBinding(n, false).
+                    // 3. Perform ! env.InitializeBinding(n, undefined).
                     if (vm.bytecode_interpreter_if_exists() && id.is_local()) {
                         callee_context.local_variables[id.local_variable_index()] = js_undefined();
                     } else {
@@ -522,37 +636,66 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 }
             }));
         }
+
+        // d.Let varEnv be env
         var_environment = environment;
-    } else {
+    }
+    // 28. Else,
+    else {
+        // a. NOTE: A separate Environment Record is needed to ensure that closures created by expressions in the formal parameter list do not have visibility of declarations in the function body.
+
+        // b. Let varEnv be NewDeclarativeEnvironment(env).
         var_environment = new_declarative_environment(*environment);
+
+        // c. Set the VariableEnvironment of calleeContext to varEnv.
         callee_context.variable_environment = var_environment;
+
+        // d. Let instantiatedVarNames be a new empty List.
+        // NOTE: Already done above.
 
         if (scope_body) {
             // NOTE: Due to the use of MUST with `create_mutable_binding`, `get_binding_value` and `initialize_binding` below,
             //       an exception should not result from `for_each_var_declared_name`.
+
+            // e. For each element n of varNames, do
             MUST(scope_body->for_each_var_declared_identifier([&](auto const& id) {
-                if (instantiated_var_names.set(id.string()) != AK::HashSetResult::InsertedNewEntry)
-                    return;
-                MUST(var_environment->create_mutable_binding(vm, id.string(), false));
+                // i. If instantiatedVarNames does not contain n, then
+                if (instantiated_var_names.set(id.string()) == AK::HashSetResult::InsertedNewEntry) {
+                    // 1. Append n to instantiatedVarNames.
 
-                Value initial_value;
-                if (!parameter_names.contains(id.string()) || function_names.contains(id.string()))
-                    initial_value = js_undefined();
-                else
-                    initial_value = MUST(environment->get_binding_value(vm, id.string(), false));
+                    // 2. Perform ! varEnv.CreateMutableBinding(n, false).
+                    MUST(var_environment->create_mutable_binding(vm, id.string(), false));
 
-                if (vm.bytecode_interpreter_if_exists() && id.is_local()) {
-                    // NOTE: Local variables are supported only in bytecode interpreter
-                    callee_context.local_variables[id.local_variable_index()] = initial_value;
-                } else {
-                    MUST(var_environment->initialize_binding(vm, id.string(), initial_value, Environment::InitializeBindingHint::Normal));
+                    Value initial_value;
+
+                    // 3. If parameterBindings does not contain n, or if functionNames contains n, then
+                    if (!parameter_names.contains(id.string()) || function_names.contains(id.string())) {
+                        // a. Let initialValue be undefined.
+                        initial_value = js_undefined();
+                    }
+                    // 4. Else,
+                    else {
+                        // a. Let initialValue be ! env.GetBindingValue(n, false).
+                        initial_value = MUST(environment->get_binding_value(vm, id.string(), false));
+                    }
+
+                    // 5. Perform ! varEnv.InitializeBinding(n, initialValue).
+                    if (vm.bytecode_interpreter_if_exists() && id.is_local()) {
+                        // NOTE: Local variables are supported only in bytecode interpreter
+                        callee_context.local_variables[id.local_variable_index()] = initial_value;
+                    } else {
+                        MUST(var_environment->initialize_binding(vm, id.string(), initial_value, Environment::InitializeBindingHint::Normal));
+                    }
+
+                    // 6. NOTE: A var with the same name as a formal parameter initially has the same value as the corresponding initialized parameter.
                 }
             }));
         }
     }
 
+    // 29. NOTE: Annex B.3.2.1 adds additional steps at this point.
     // B.3.2.1 Changes to FunctionDeclarationInstantiation, https://tc39.es/ecma262/#sec-web-compat-functiondeclarationinstantiation
-    if (!m_strict && scope_body) {
+    if (!strict && scope_body) {
         // NOTE: Due to the use of MUST with `create_mutable_binding` and `initialize_binding` below,
         //       an exception should not result from `for_each_function_hoistable_with_annexB_extension`.
         MUST(scope_body->for_each_function_hoistable_with_annexB_extension([&](FunctionDeclaration& function_declaration) {
@@ -573,7 +716,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     GCPtr<Environment> lex_environment;
 
     // 30. If strict is false, then
-    if (!is_strict_mode()) {
+    if (!strict) {
         // Optimization: We avoid creating empty top-level declarative environments in non-strict mode, if both of these conditions are true:
         //               1. there is no direct call to eval() within this function
         //               2. there are no lexical declarations that would go into the environment
@@ -588,8 +731,10 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
             //          all declarations into a new Environment Record.
             lex_environment = new_declarative_environment(*var_environment);
         }
-    } else {
-        // 31. Else, let lexEnv be varEnv.
+    }
+    // 31. Else,
+    else {
+        // a. let lexEnv be varEnv.
         lex_environment = var_environment;
     }
 
@@ -599,25 +744,45 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     if (!scope_body)
         return {};
 
+    // 33. Let lexDeclarations be the LexicallyScopedDeclarations of code.
+    // 34. For each element d of lexDeclarations, do
     // NOTE: Due to the use of MUST in the callback, an exception should not result from `for_each_lexically_scoped_declaration`.
     MUST(scope_body->for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
         // NOTE: Due to the use of MUST with `create_immutable_binding` and `create_mutable_binding` below,
         //       an exception should not result from `for_each_bound_name`.
+
+        // a. NOTE: A lexically declared name cannot be the same as a function/generator declaration, formal parameter, or a var name. Lexically declared names are only instantiated here but not initialized.
+
+        // b. For each element dn of the BoundNames of d, do
         MUST(declaration.for_each_bound_identifier([&](auto const& id) {
             if (vm.bytecode_interpreter_if_exists() && id.is_local()) {
                 // NOTE: Local variables are supported only in bytecode interpreter
                 return;
             }
-            if (declaration.is_constant_declaration())
+
+            // i. If IsConstantDeclaration of d is true, then
+            if (declaration.is_constant_declaration()) {
+                // 1. Perform ! lexEnv.CreateImmutableBinding(dn, true).
                 MUST(lex_environment->create_immutable_binding(vm, id.string(), true));
-            else
+            }
+            // ii. Else,
+            else {
+                // 1. Perform ! lexEnv.CreateMutableBinding(dn, false).
                 MUST(lex_environment->create_mutable_binding(vm, id.string(), false));
+            }
         }));
     }));
 
+    // 35. Let privateEnv be the PrivateEnvironment of calleeContext.
     auto private_environment = callee_context.private_environment;
+
+    // 36. For each Parse Node f of functionsToInitialize, do
     for (auto& declaration : functions_to_initialize) {
+        // a. Let fn be the sole element of the BoundNames of f.
+        // b. Let fo be InstantiateFunctionObject of f with arguments lexEnv and privateEnv.
         auto function = ECMAScriptFunctionObject::create(realm, declaration.name(), declaration.source_text(), declaration.body(), declaration.parameters(), declaration.function_length(), declaration.local_variables_names(), lex_environment, private_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object(), declaration.contains_direct_call_to_eval());
+
+        // c. Perform ! varEnv.SetMutableBinding(fn, fo, false).
         if ((vm.bytecode_interpreter_if_exists() || kind() == FunctionKind::Generator || kind() == FunctionKind::AsyncGenerator) && declaration.name_identifier()->is_local()) {
             callee_context.local_variables[declaration.name_identifier()->local_variable_index()] = function;
         } else {
@@ -630,6 +795,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     if (is<DeclarativeEnvironment>(*var_environment))
         static_cast<DeclarativeEnvironment*>(var_environment.ptr())->shrink_to_fit();
 
+    // 37. Return unused.
     return {};
 }
 
