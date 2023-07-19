@@ -25,7 +25,7 @@ public:
 
 private:
     ICOImageDecoderPlugin(u8 const*, size_t);
-    static ErrorOr<void> load_ico_bitmap(ICOLoadingContext& context, Optional<size_t> index);
+    static ErrorOr<void> load_ico_bitmap(ICOLoadingContext& context);
 
     OwnPtr<ICOLoadingContext> m_context;
 };
