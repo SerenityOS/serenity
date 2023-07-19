@@ -46,7 +46,7 @@ GUI::Variant PlaylistModel::data(const GUI::ModelIndex& index, GUI::ModelRole ro
         case 4:
             return m_playlist_items[index.row()].extended_info->album_artist.value_or("");
         case 5:
-            return format_filesize(m_playlist_items[index.row()].extended_info->file_size_in_bytes.value_or(0));
+            return human_readable_size(m_playlist_items[index.row()].extended_info->file_size_in_bytes.value_or(0));
         }
     }
     if (role == GUI::ModelRole::Sort)
@@ -55,18 +55,6 @@ GUI::Variant PlaylistModel::data(const GUI::ModelIndex& index, GUI::ModelRole ro
         return m_playlist_items[index.row()].path;
 
     return {};
-}
-
-DeprecatedString PlaylistModel::format_filesize(u64 size_in_bytes)
-{
-    if (size_in_bytes > GiB)
-        return DeprecatedString::formatted("{:.2f} GiB", (double)size_in_bytes / GiB);
-    else if (size_in_bytes > MiB)
-        return DeprecatedString::formatted("{:.2f} MiB", (double)size_in_bytes / MiB);
-    else if (size_in_bytes > KiB)
-        return DeprecatedString::formatted("{:.2f} KiB", (double)size_in_bytes / KiB);
-    else
-        return DeprecatedString::formatted("{} B", size_in_bytes);
 }
 
 ErrorOr<String> PlaylistModel::column_name(int column) const
