@@ -30,7 +30,7 @@ EditorWrapper::EditorWrapper()
     m_editor->set_ruler_visible(true);
     m_editor->set_automatic_indentation_enabled(true);
 
-    m_editor->on_focus = [this] {
+    m_editor->on_focusin = [this] {
         set_current_editor_wrapper(this);
     };
 
