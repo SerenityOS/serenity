@@ -182,7 +182,7 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
         }
     });
 
-    auto* inspector_action = new QAction("Open &Inspector");
+    auto* inspector_action = new QAction("Open &Inspector", this);
     inspector_action->setIcon(QIcon(QString("%1/res/icons/browser/dom-tree.png").arg(s_serenity_resource_root.characters())));
     inspector_action->setShortcut(QKeySequence("Ctrl+Shift+I"));
     inspect_menu->addAction(inspector_action);
@@ -292,7 +292,7 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     auto* user_agent_group = new QActionGroup(this);
 
     auto add_user_agent = [this, &user_agent_group, &spoof_user_agent_menu](auto& name, auto& user_agent) {
-        auto* action = new QAction(name);
+        auto* action = new QAction(name, this);
         action->setCheckable(true);
         user_agent_group->addAction(action);
         spoof_user_agent_menu->addAction(action);
@@ -312,7 +312,7 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     add_user_agent("Firefox Android Mobile", "Mozilla/5.0 (Android 11; Mobile; rv:68.0) Gecko/68.0 Firefox/86.0");
     add_user_agent("Safari iOS Mobile", "Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1");
 
-    auto* custom_user_agent_action = new QAction("Custom...");
+    auto* custom_user_agent_action = new QAction("Custom...", this);
     custom_user_agent_action->setCheckable(true);
     user_agent_group->addAction(custom_user_agent_action);
     spoof_user_agent_menu->addAction(custom_user_agent_action);
