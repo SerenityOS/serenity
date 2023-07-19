@@ -35,3 +35,4 @@ Userland/Libraries/LibWasm/Tests/Spec
 
 Tests/LibWeb/WPT/wpt
 Tests/LibWeb/WPT/metadata
+Tests/LibWeb/WPT/MANIFEST.json
