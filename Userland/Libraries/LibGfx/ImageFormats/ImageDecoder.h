@@ -53,8 +53,12 @@ public:
     virtual size_t frame_count() { return 1; }
     virtual size_t first_animated_frame_index() { return 0; }
 
+    // Override this function if the format can embed an ICC profile.
+    // As some formats store the profile at the end of the file, it can't
+    // be read during `create`, hence being fallible.
+    virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() { return OptionalNone {}; }
+
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) = 0;
-    virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() = 0;
 
     virtual bool is_vector() { return false; }
     virtual ErrorOr<VectorImageFrameDescriptor> vector_frame(size_t) { VERIFY_NOT_REACHED(); }

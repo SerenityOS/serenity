@@ -224,9 +224,4 @@ ErrorOr<void> QOIImageDecoderPlugin::decode_image_and_update_context()
     return {};
 }
 
-ErrorOr<Optional<ReadonlyBytes>> QOIImageDecoderPlugin::icc_data()
-{
-    return OptionalNone {};
-}
-
 }

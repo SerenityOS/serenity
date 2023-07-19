@@ -82,7 +82,6 @@ public:
 
     virtual IntSize size() override;
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) override;
-    virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override { return OptionalNone {}; }
 
     virtual bool is_vector() override { return true; }
     virtual ErrorOr<VectorImageFrameDescriptor> vector_frame(size_t index) override;
