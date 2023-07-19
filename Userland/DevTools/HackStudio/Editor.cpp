@@ -146,18 +146,6 @@ EditorWrapper const& Editor::wrapper() const
     return static_cast<EditorWrapper const&>(*parent());
 }
 
-void Editor::focusin_event(GUI::FocusEvent& event)
-{
-    if (on_focus)
-        on_focus();
-    GUI::TextEditor::focusin_event(event);
-}
-
-void Editor::focusout_event(GUI::FocusEvent& event)
-{
-    GUI::TextEditor::focusout_event(event);
-}
-
 Gfx::IntRect Editor::gutter_icon_rect(size_t line_number) const
 {
     return gutter_content_rect(line_number).translated(frame_thickness(), 0);
