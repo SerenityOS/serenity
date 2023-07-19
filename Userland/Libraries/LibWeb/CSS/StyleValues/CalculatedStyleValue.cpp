@@ -1263,7 +1263,7 @@ Optional<CalculatedStyleValue::ResolvedType> AsinCalculationNode::resolved_type(
 // https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
 Optional<CSSNumericType> AsinCalculationNode::determine_type(PropertyID) const
 {
-    // NOTE: Spec is currently wrong: https://github.com/w3c/csswg-drafts/issues/9034
+    // «[ "angle" → 1 ]».
     return CSSNumericType { CSSNumericType::BaseType::Angle, 1 };
 }
 
@@ -1324,7 +1324,7 @@ Optional<CalculatedStyleValue::ResolvedType> AcosCalculationNode::resolved_type(
 // https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
 Optional<CSSNumericType> AcosCalculationNode::determine_type(PropertyID) const
 {
-    // NOTE: Spec is currently wrong: https://github.com/w3c/csswg-drafts/issues/9034
+    // «[ "angle" → 1 ]».
     return CSSNumericType { CSSNumericType::BaseType::Angle, 1 };
 }
 
@@ -1385,7 +1385,7 @@ Optional<CalculatedStyleValue::ResolvedType> AtanCalculationNode::resolved_type(
 // https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
 Optional<CSSNumericType> AtanCalculationNode::determine_type(PropertyID) const
 {
-    // NOTE: Spec is currently wrong: https://github.com/w3c/csswg-drafts/issues/9034
+    // «[ "angle" → 1 ]».
     return CSSNumericType { CSSNumericType::BaseType::Angle, 1 };
 }
 
@@ -1449,7 +1449,7 @@ Optional<CalculatedStyleValue::ResolvedType> Atan2CalculationNode::resolved_type
 // https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
 Optional<CSSNumericType> Atan2CalculationNode::determine_type(PropertyID) const
 {
-    // NOTE: Spec is currently wrong: https://github.com/w3c/csswg-drafts/issues/9034
+    // «[ "angle" → 1 ]».
     return CSSNumericType { CSSNumericType::BaseType::Angle, 1 };
 }
 
