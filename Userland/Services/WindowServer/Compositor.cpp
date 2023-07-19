@@ -20,6 +20,7 @@
 #include <AK/TemporaryChange.h>
 #include <LibCore/Timer.h>
 #include <LibGfx/AntiAliasingPainter.h>
+#include <LibGfx/Filters/StackBlurFilter.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
@@ -437,6 +438,18 @@ void Compositor::compose()
                 break;
             }
 
+            auto blur_region = [&](Gfx::Painter& painter, const Gfx::IntRect& rect, u8 radius) {
+                Gfx::IntRect actual_region {};
+                auto maybe_background = painter.get_region_bitmap(rect, Gfx::BitmapFormat::BGRA8888, actual_region);
+                VERIFY(!maybe_background.is_error());
+                if (actual_region.is_empty() && maybe_background.is_error())
+                    return;
+                auto background_bitmap = maybe_background.release_value();
+                Gfx::StackBlurFilter filter { background_bitmap };
+                filter.process_rgba(radius, Color::Transparent);
+                painter.blit(rect.location(), background_bitmap, background_bitmap->rect());
+            };
+
             Gfx::IntRect dirty_rect_in_backing_coordinates = update_window_rect.intersected(backing_rect)
                                                                  .translated(-backing_rect.location());
 
@@ -448,6 +461,8 @@ void Compositor::compose()
                         return src.to_grayscale().darkened(0.75f);
                     });
                 } else {
+                    if (!window.is_opaque() && (window.alpha_blur_radius() != 0u))
+                        blur_region(painter, update_window_rect.intersected(backing_rect), window.alpha_blur_radius());
                     painter.blit(dst, *backing_store, dirty_rect_in_backing_coordinates);
                 }
             }

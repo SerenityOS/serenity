@@ -1079,6 +1079,15 @@ void Window::set_modified(bool modified)
     frame().invalidate_titlebar();
 }
 
+void Window::set_alpha_blur_radius(u8 value)
+{
+    if (m_alpha_blur_radius == value)
+        return;
+    m_alpha_blur_radius = value;
+    Compositor::the().invalidate_occlusions();
+    invalidate(false);
+}
+
 DeprecatedString Window::computed_title() const
 {
     DeprecatedString title = m_title.replace("[*]"sv, is_modified() ? " (*)"sv : ""sv, ReplaceMode::FirstOnly);

@@ -157,6 +157,10 @@ public:
     {
         m_hit_testing_enabled = value;
     }
+
+    u8 alpha_blur_radius() const { return m_alpha_blur_radius; }
+    void set_alpha_blur_radius(u8);
+
     float alpha_hit_threshold() const { return m_alpha_hit_threshold; }
     void set_alpha_hit_threshold(float threshold)
     {
@@ -437,6 +441,7 @@ private:
     i32 m_last_backing_store_serial { -1 };
     int m_window_id { -1 };
     i32 m_client_id { -1 };
+    u8 m_alpha_blur_radius { 0 };
     float m_alpha_hit_threshold { 0.0f };
     Gfx::IntSize m_size_increment;
     Gfx::IntSize m_base_size;

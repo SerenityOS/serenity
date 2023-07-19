@@ -604,7 +604,7 @@ Window* ConnectionFromClient::window_from_id(i32 window_id)
 void ConnectionFromClient::create_window(i32 window_id, Gfx::IntRect const& rect,
     bool auto_position, bool has_alpha_channel, bool minimizable, bool closeable, bool resizable,
     bool fullscreen, bool frameless, bool forced_shadow,
-    float alpha_hit_threshold, Gfx::IntSize base_size, Gfx::IntSize size_increment,
+    float alpha_hit_threshold, u8 alpha_blur_radius, Gfx::IntSize base_size, Gfx::IntSize size_increment,
     Gfx::IntSize minimum_size, Optional<Gfx::IntSize> const& resize_aspect_ratio, i32 type, i32 mode,
     DeprecatedString const& title, i32 parent_window_id, Gfx::IntRect const& launch_origin_rect)
 {
@@ -666,6 +666,7 @@ void ConnectionFromClient::create_window(i32 window_id, Gfx::IntRect const& rect
         window->recalculate_rect();
     }
     window->set_alpha_hit_threshold(alpha_hit_threshold);
+    window->set_alpha_blur_radius(alpha_blur_radius);
     window->set_size_increment(size_increment);
     window->set_base_size(base_size);
     if (resize_aspect_ratio.has_value() && !resize_aspect_ratio.value().is_empty())
@@ -829,6 +830,16 @@ void ConnectionFromClient::set_window_has_alpha_channel(i32 window_id, bool has_
         return;
     }
     it->value->set_has_alpha_channel(has_alpha_channel);
+}
+
+void ConnectionFromClient::set_window_alpha_blur_radius(i32 window_id, u8 radius)
+{
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end()) {
+        did_misbehave("SetWindowAlphaBlurRadius: Bad window ID");
+        return;
+    }
+    it->value->set_alpha_blur_radius(radius);
 }
 
 void ConnectionFromClient::set_window_alpha_hit_threshold(i32 window_id, float threshold)
