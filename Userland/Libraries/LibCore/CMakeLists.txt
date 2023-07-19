@@ -41,8 +41,10 @@ if (NOT ANDROID AND NOT WIN32 AND NOT EMSCRIPTEN)
         FilePermissionsMask.cpp
         GetPassword.cpp
         Group.cpp
-        LocalServer.cpp
     )
+endif()
+if (NOT WIN32 AND NOT EMSCRIPTEN)
+    list(APPEND SOURCES LocalServer.cpp)
 endif()
 
 # FIXME: Implement Core::FileWatcher for macOS, *BSD, and Windows.
