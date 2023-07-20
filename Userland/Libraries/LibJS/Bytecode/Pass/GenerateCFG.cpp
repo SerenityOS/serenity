@@ -23,7 +23,7 @@ static BasicBlock const* next_handler_or_finalizer()
     return unwind_frames.last()->handler ?: unwind_frames.last()->finalizer;
 }
 
-static void generate_cfg_for_block(BasicBlock const& current_block, PassPipelineExecutable executable)
+static void generate_cfg_for_block(BasicBlock const& current_block, PassPipelineExecutable& executable)
 {
     seen_blocks.set(&current_block);
 
