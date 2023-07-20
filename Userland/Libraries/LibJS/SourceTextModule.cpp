@@ -438,8 +438,9 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
     // 21. For each element d of varDeclarations, do
     // a. For each element dn of the BoundNames of d, do
     // NOTE: Due to the use of MUST with `create_mutable_binding` and `initialize_binding` below,
-    //       an exception should not result from `for_each_var_declared_name`.
-    MUST(m_ecmascript_code->for_each_var_declared_name([&](auto const& name) {
+    //       an exception should not result from `for_each_var_declared_identifier`.
+    MUST(m_ecmascript_code->for_each_var_declared_identifier([&](auto const& identifier) {
+        auto const& name = identifier.string();
         // i. If dn is not an element of declaredVarNames, then
         if (!declared_var_names.contains_slow(name)) {
             // 1. Perform ! env.CreateMutableBinding(dn, false).
