@@ -206,6 +206,8 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Configuration/CoredumpDirectory.cpp
     FileSystem/SysFS/Subsystems/Kernel/Configuration/Directory.cpp
     FileSystem/SysFS/Subsystems/Kernel/Configuration/DumpKmallocStack.cpp
+    FileSystem/SysFS/Subsystems/Kernel/Configuration/FixedStringBufferVariable.cpp
+    FileSystem/SysFS/Subsystems/Kernel/Configuration/Hostname.cpp
     FileSystem/SysFS/Subsystems/Kernel/Configuration/StringVariable.cpp
     FileSystem/SysFS/Subsystems/Kernel/Configuration/UBSANDeadly.cpp
     FileSystem/VirtualFileSystem.cpp

@@ -11,6 +11,7 @@
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Configuration/CoredumpDirectory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Configuration/Directory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Configuration/DumpKmallocStack.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Configuration/Hostname.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Configuration/UBSANDeadly.h>
 
 namespace Kernel {
@@ -23,6 +24,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<SysFSKernelConfigurationDirectory> SysFSKernelCon
         list.append(SysFSDumpKmallocStacks::must_create(*global_variables_directory));
         list.append(SysFSUBSANDeadly::must_create(*global_variables_directory));
         list.append(SysFSCoredumpDirectory::must_create(*global_variables_directory));
+        list.append(SysFSHostnameString::must_create(*global_variables_directory));
         return {};
     }));
     return global_variables_directory;
