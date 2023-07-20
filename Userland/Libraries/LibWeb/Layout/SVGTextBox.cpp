@@ -25,6 +25,7 @@ CSSPixelPoint SVGTextBox::viewbox_origin() const
 
 Optional<Gfx::AffineTransform> SVGTextBox::layout_transform() const
 {
+    // FIXME: Since text layout boxes are currently 0x0 it is not possible handle viewBox scaling here.
     auto& geometry_element = dom_node();
     auto transform = geometry_element.get_transform();
     auto* svg_box = geometry_element.first_ancestor_of_type<SVG::SVGSVGElement>();
