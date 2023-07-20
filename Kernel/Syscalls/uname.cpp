@@ -19,6 +19,8 @@ namespace Kernel {
 #    error Unknown architecture
 #endif
 
+KString* g_version_string { nullptr };
+
 ErrorOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
@@ -32,8 +34,8 @@ ErrorOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
         UNAME_MACHINE
     };
 
-    auto version_string = TRY(KString::formatted("{}.{}-dev", SERENITY_MAJOR_REVISION, SERENITY_MINOR_REVISION));
-    AK::TypedTransfer<u8>::copy(reinterpret_cast<u8*>(buf.release), version_string->bytes().data(), min(version_string->length(), UTSNAME_ENTRY_LEN - 1));
+    VERIFY(g_version_string);
+    AK::TypedTransfer<u8>::copy(reinterpret_cast<u8*>(buf.release), g_version_string->bytes().data(), min(g_version_string->length(), UTSNAME_ENTRY_LEN - 1));
 
     AK::TypedTransfer<u8>::copy(reinterpret_cast<u8*>(buf.version), SERENITY_VERSION.bytes().data(), min(SERENITY_VERSION.length(), UTSNAME_ENTRY_LEN - 1));
 
