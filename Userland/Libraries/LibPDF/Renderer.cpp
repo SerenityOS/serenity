@@ -695,6 +695,8 @@ Gfx::Rect<T> Renderer::map(Gfx::Rect<T> rect) const
 
 PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject> dict)
 {
+    // ISO 32000 (PDF 2.0), 8.4.5 Graphics state parameter dictionaries
+
     if (dict->contains(CommonNames::LW))
         TRY(handle_set_line_width({ dict->get_value(CommonNames::LW) }));
 
@@ -712,8 +714,32 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
         TRY(handle_set_dash_pattern(array->elements()));
     }
 
+    // FIXME: RI
+    // FIXME: OP
+    // FIXME: op
+    // FIXME: OPM
+    // FIXME: Font
+    // FIXME: BG
+    // FIXME: BG2
+    // FIXME: UCR
+    // FIXME: UCR2
+    // FIXME: TR
+    // FIXME: TR2
+    // FIXME: HT
+
     if (dict->contains(CommonNames::FL))
         TRY(handle_set_flatness_tolerance({ dict->get_value(CommonNames::FL) }));
+
+    // FIXME: SM
+    // FIXME: SA
+    // FIXME: BM
+    // FIXME: SMask
+    // FIXME: CA
+    // FIXME: ca
+    // FIXME: AIS
+    // FIXME: TK
+    // FIXME: UseBlackPtComp
+    // FIXME: HTO
 
     return {};
 }
