@@ -123,6 +123,7 @@ public:
 
     Gfx::Font const& font() const;
     Gfx::Font const& scaled_font(PaintContext&) const;
+    Gfx::Font const& scaled_font(float scale_factor) const;
 
     CSS::ImmutableComputedValues const& computed_values() const;
     CSSPixels line_height() const;
@@ -253,7 +254,12 @@ inline Gfx::Font const& Node::font() const
 
 inline Gfx::Font const& Node::scaled_font(PaintContext& context) const
 {
-    return *FontCache::the().scaled_font(font(), context.device_pixels_per_css_pixel());
+    return scaled_font(context.device_pixels_per_css_pixel());
+}
+
+inline Gfx::Font const& Node::scaled_font(float scale_factor) const
+{
+    return *FontCache::the().scaled_font(font(), scale_factor);
 }
 
 inline const CSS::ImmutableComputedValues& Node::computed_values() const
