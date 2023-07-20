@@ -675,22 +675,6 @@ void StandardSecurityHandler::crypt(NonnullRefPtr<Object> object, Reference refe
         TODO();
     }
 
-    // 7.6.2 General Encryption Algorithm
-    // Algorithm 1: Encryption of data using the RC3 or AES algorithms
-
-    // a) Obtain the object number and generation number from the object identifier of
-    //    the string or stream to be encrypted. If the string is a direct object, use
-    //    the identifier of the indirect object containing it.
-    //
-    // Note: This is always passed in at parse time because objects don't know their own
-    //       object number.
-
-    // b) For all strings and streams with crypt filter specifier; treating the object
-    //    number as binary integers, extend the original n-byte encryption key to n + 5
-    //    bytes by appending the low-order 3 bytes of the object number and the low-order
-    //    2 bytes of the generation number in that order, low-order byte first. ...
-
-    auto encryption_key = m_encryption_key.value();
     ReadonlyBytes bytes;
     Function<void(ByteBuffer)> assign;
 
@@ -717,6 +701,22 @@ void StandardSecurityHandler::crypt(NonnullRefPtr<Object> object, Reference refe
         VERIFY_NOT_REACHED();
     }
 
+    // 7.6.2 General Encryption Algorithm
+    // Algorithm 1: Encryption of data using the RC3 or AES algorithms
+
+    // a) Obtain the object number and generation number from the object identifier of
+    //    the string or stream to be encrypted. If the string is a direct object, use
+    //    the identifier of the indirect object containing it.
+    //
+    // Note: This is always passed in at parse time because objects don't know their own
+    //       object number.
+
+    // b) For all strings and streams with crypt filter specifier; treating the object
+    //    number as binary integers, extend the original n-byte encryption key to n + 5
+    //    bytes by appending the low-order 3 bytes of the object number and the low-order
+    //    2 bytes of the generation number in that order, low-order byte first. ...
+
+    auto encryption_key = m_encryption_key.value();
     auto index = reference.as_ref_index();
     auto generation = reference.as_ref_generation_index();
 
