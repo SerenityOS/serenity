@@ -40,6 +40,7 @@
 #include <Kernel/Tasks/Thread.h>
 #include <Kernel/Tasks/ThreadTracer.h>
 #include <Kernel/Time/TimerQueue.h>
+#include <Kernel/Version.h>
 
 namespace Kernel {
 
@@ -47,6 +48,7 @@ static void create_signal_trampoline();
 
 extern ProcessID g_init_pid;
 extern bool g_in_system_shutdown;
+extern KString* g_version_string;
 
 RecursiveSpinlock<LockRank::None> g_profiling_lock {};
 static Atomic<pid_t> next_pid;
@@ -162,6 +164,9 @@ UNMAP_AFTER_INIT void Process::initialize()
     // Note: This is called before scheduling is initialized, and before APs are booted.
     //       So we can "safely" bypass the lock here.
     reinterpret_cast<FixedStringBuffer<UTSNAME_ENTRY_LEN - 1>&>(hostname()).store_characters("courage"sv);
+    // NOTE: Just allocate the kernel version string here so we never have to worry
+    // about OOM conditions in the uname syscall.
+    g_version_string = MUST(KString::formatted("{}.{}-dev", SERENITY_MAJOR_REVISION, SERENITY_MINOR_REVISION)).leak_ptr();
 
     create_signal_trampoline();
 }
