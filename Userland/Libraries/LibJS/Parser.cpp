@@ -762,8 +762,8 @@ void Parser::parse_module(Program& program)
             auto const& exported_name = entry.local_or_import_name;
             bool found = false;
             // NOTE: Nothing in the callback throws an exception.
-            MUST(program.for_each_lexically_declared_name([&](auto const& name) {
-                if (name == exported_name)
+            MUST(program.for_each_lexically_declared_identifier([&](auto const& identifier) {
+                if (identifier.string() == exported_name)
                     found = true;
             }));
             if (found)
@@ -3706,9 +3706,9 @@ NonnullRefPtr<CatchClause const> Parser::parse_catch_clause()
     auto body = parse_block_statement();
 
     // NOTE: Nothing in the callback throws an exception.
-    MUST(body->for_each_lexically_declared_name([&](auto const& name) {
-        if (bound_names.contains(name))
-            syntax_error(DeprecatedString::formatted("Identifier '{}' already declared as catch parameter", name));
+    MUST(body->for_each_lexically_declared_identifier([&](auto const& identifier) {
+        if (bound_names.contains(identifier.string()))
+            syntax_error(DeprecatedString::formatted("Identifier '{}' already declared as catch parameter", identifier.string()));
     }));
 
     if (pattern_parameter) {

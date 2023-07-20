@@ -307,7 +307,6 @@ public:
     [[nodiscard]] size_t lexical_declaration_count() const { return m_lexical_declarations.size(); }
 
     ThrowCompletionOr<void> for_each_lexically_scoped_declaration(ThrowCompletionOrVoidCallback<Declaration const&>&& callback) const;
-    ThrowCompletionOr<void> for_each_lexically_declared_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const;
     ThrowCompletionOr<void> for_each_lexically_declared_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const;
 
     ThrowCompletionOr<void> for_each_var_declared_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const;

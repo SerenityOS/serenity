@@ -441,8 +441,8 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 
         if (!has_parameter_expressions && arguments_object_needed) {
             // NOTE: Nothing in the callback throws an exception.
-            MUST(scope_body->for_each_lexically_declared_name([&](auto const& name) {
-                if (name == arguments_name)
+            MUST(scope_body->for_each_lexically_declared_identifier([&](auto const& identifier) {
+                if (identifier.string() == arguments_name)
                     arguments_object_needed = false;
             }));
         }
