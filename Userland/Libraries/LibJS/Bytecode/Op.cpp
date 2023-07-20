@@ -582,32 +582,38 @@ ThrowCompletionOr<void> SetLocal::execute_impl(Bytecode::Interpreter& interprete
     return {};
 }
 
+static ThrowCompletionOr<NonnullGCPtr<Object>> base_object_for_get(Bytecode::Interpreter& interpreter, Value base_value)
+{
+    auto& vm = interpreter.vm();
+    if (base_value.is_object())
+        return base_value.as_object();
+
+    // OPTIMIZATION: For various primitives we can avoid actually creating a new object for them.
+    if (base_value.is_string())
+        return vm.current_realm()->intrinsics().string_prototype();
+    if (base_value.is_number())
+        return vm.current_realm()->intrinsics().number_prototype();
+    if (base_value.is_boolean())
+        return vm.current_realm()->intrinsics().boolean_prototype();
+
+    return base_value.to_object(vm);
+}
+
 static ThrowCompletionOr<void> get_by_id(Bytecode::Interpreter& interpreter, IdentifierTableIndex property, Value base_value, Value this_value, u32 cache_index)
 {
     auto& vm = interpreter.vm();
     auto const& name = interpreter.current_executable().get_identifier(property);
     auto& cache = interpreter.current_executable().property_lookup_caches[cache_index];
 
-    // OPTIMIZATION: For various primitives we can avoid actually creating a new object for them.
-    GCPtr<Object> base_obj;
-    if (base_value.is_object()) {
-        // This would be covered by the `else` branch below,
-        // but let's avoid all the extra checks if it's already an object.
-        base_obj = base_value.as_object();
-    } else if (base_value.is_string()) {
+    if (base_value.is_string()) {
         auto string_value = TRY(base_value.as_string().get(vm, name));
         if (string_value.has_value()) {
             interpreter.accumulator() = *string_value;
             return {};
         }
-        base_obj = vm.current_realm()->intrinsics().string_prototype();
-    } else if (base_value.is_number()) {
-        base_obj = vm.current_realm()->intrinsics().number_prototype();
-    } else if (base_value.is_boolean()) {
-        base_obj = vm.current_realm()->intrinsics().boolean_prototype();
-    } else {
-        base_obj = TRY(base_value.to_object(vm));
     }
+
+    auto base_obj = TRY(base_object_for_get(interpreter, base_value));
 
     // OPTIMIZATION: If the shape of the object hasn't changed, we can use the cached property offset.
     // NOTE: Unique shapes don't change identity, so we compare their serial numbers instead.
