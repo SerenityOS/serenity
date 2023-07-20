@@ -180,7 +180,6 @@ private:
     uid_t virt$geteuid();
     gid_t virt$getgid();
     int virt$getgroups(ssize_t count, FlatPtr);
-    int virt$gethostname(FlatPtr, ssize_t);
     int virt$getpeername(FlatPtr);
     int virt$getpgid(pid_t);
     int virt$getpgrp();

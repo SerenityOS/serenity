@@ -292,7 +292,6 @@ set(KERNEL_SOURCES
     Syscalls/get_stack_bounds.cpp
     Syscalls/getrandom.cpp
     Syscalls/getuid.cpp
-    Syscalls/hostname.cpp
     Syscalls/ioctl.cpp
     Syscalls/jail.cpp
     Syscalls/keymap.cpp

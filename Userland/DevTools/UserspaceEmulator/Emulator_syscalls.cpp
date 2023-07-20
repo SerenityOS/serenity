@@ -118,8 +118,6 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$getgid();
     case SC_getgroups:
         return virt$getgroups(arg1, arg2);
-    case SC_gethostname:
-        return virt$gethostname(arg1, arg2);
     case SC_getpeername:
         return virt$getpeername(arg1);
     case SC_getpgid:
@@ -1303,21 +1301,6 @@ int Emulator::virt$realpath(FlatPtr params_addr)
     if (rc < 0)
         return rc;
     mmu().copy_to_vm((FlatPtr)params.buffer.data, host_buffer.data(), host_buffer.size());
-    return rc;
-}
-
-int Emulator::virt$gethostname(FlatPtr buffer, ssize_t buffer_size)
-{
-    if (buffer_size < 0)
-        return -EINVAL;
-    auto buffer_result = ByteBuffer::create_zeroed(buffer_size);
-    if (buffer_result.is_error())
-        return -ENOMEM;
-    auto& host_buffer = buffer_result.value();
-    int rc = syscall(SC_gethostname, host_buffer.data(), host_buffer.size());
-    if (rc < 0)
-        return rc;
-    mmu().copy_to_vm(buffer, host_buffer.data(), host_buffer.size());
     return rc;
 }
 
