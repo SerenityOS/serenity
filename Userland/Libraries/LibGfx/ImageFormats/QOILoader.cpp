@@ -162,7 +162,8 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_qoi_image(Stream& stream, u32 width
     return { move(bitmap) };
 }
 
-QOIImageDecoderPlugin::QOIImageDecoderPlugin(NonnullOwnPtr<Stream> stream)
+QOIImageDecoderPlugin::QOIImageDecoderPlugin(NonnullOwnPtr<Stream> stream, RequestType request)
+    : ImageDecoderPlugin(request)
 {
     m_context = make<QOILoadingContext>();
     m_context->stream = move(stream);
@@ -179,16 +180,18 @@ bool QOIImageDecoderPlugin::sniff(ReadonlyBytes data)
     return !decode_qoi_header(stream).is_error();
 }
 
-ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> QOIImageDecoderPlugin::create(ReadonlyBytes data)
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> QOIImageDecoderPlugin::create(ReadonlyBytes data, RequestType request)
 {
     auto stream = TRY(try_make<FixedMemoryStream>(data));
-    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) QOIImageDecoderPlugin(move(stream))));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) QOIImageDecoderPlugin(move(stream), request)));
     TRY(plugin->decode_header_and_update_context());
     return plugin;
 }
 
 ErrorOr<ImageFrameDescriptor> QOIImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
 {
+    VERIFY((m_request & RequestType::Image) == RequestType::Image);
+
     if (index > 0)
         return Error::from_string_literal("Invalid frame index");
 

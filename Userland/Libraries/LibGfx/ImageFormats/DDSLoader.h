@@ -237,7 +237,7 @@ struct DDSLoadingContext;
 class DDSImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
     static bool sniff(ReadonlyBytes);
-    static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
+    static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes, RequestType);
 
     virtual ~DDSImageDecoderPlugin() override;
 
@@ -246,7 +246,7 @@ public:
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) override;
 
 private:
-    DDSImageDecoderPlugin(FixedMemoryStream);
+    DDSImageDecoderPlugin(FixedMemoryStream, RequestType);
 
     OwnPtr<DDSLoadingContext> m_context;
 };

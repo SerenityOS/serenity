@@ -1015,7 +1015,7 @@ RefPtr<Gfx::Bitmap> Font::color_bitmap(u32 glyph_id) const
     return embedded_bitmap_data_for_glyph(glyph_id).visit(
         [&](EmbeddedBitmapWithFormat17 const& data) -> RefPtr<Gfx::Bitmap> {
             auto data_slice = ReadonlyBytes { data.format17.data, static_cast<u32>(data.format17.data_len) };
-            auto decoder = Gfx::PNGImageDecoderPlugin::create(data_slice).release_value_but_fixme_should_propagate_errors();
+            auto decoder = Gfx::PNGImageDecoderPlugin::create(data_slice, Gfx::ImageDecoder::RequestType::Image).release_value_but_fixme_should_propagate_errors();
             auto frame = decoder->frame(0);
             if (frame.is_error()) {
                 dbgln("PNG decode failed");

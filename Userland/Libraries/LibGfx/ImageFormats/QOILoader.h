@@ -39,7 +39,7 @@ struct QOILoadingContext {
 class QOIImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
     static bool sniff(ReadonlyBytes);
-    static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
+    static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes, RequestType);
 
     virtual ~QOIImageDecoderPlugin() override = default;
 
@@ -51,7 +51,7 @@ private:
     ErrorOr<void> decode_header_and_update_context();
     ErrorOr<void> decode_image_and_update_context();
 
-    QOIImageDecoderPlugin(NonnullOwnPtr<Stream>);
+    QOIImageDecoderPlugin(NonnullOwnPtr<Stream>, RequestType);
 
     OwnPtr<QOILoadingContext> m_context;
 };

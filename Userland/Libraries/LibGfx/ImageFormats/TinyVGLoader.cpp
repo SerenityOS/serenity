@@ -535,14 +535,15 @@ static ErrorOr<void> ensure_fully_decoded(TinyVGLoadingContext& context)
     return {};
 }
 
-TinyVGImageDecoderPlugin::TinyVGImageDecoderPlugin(ReadonlyBytes bytes)
-    : m_context { make<TinyVGLoadingContext>(FixedMemoryStream { bytes }) }
+TinyVGImageDecoderPlugin::TinyVGImageDecoderPlugin(ReadonlyBytes bytes, RequestType request)
+    : ImageDecoderPlugin(request)
+    , m_context { make<TinyVGLoadingContext>(FixedMemoryStream { bytes }) }
 {
 }
 
-ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> TinyVGImageDecoderPlugin::create(ReadonlyBytes bytes)
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> TinyVGImageDecoderPlugin::create(ReadonlyBytes bytes, RequestType request)
 {
-    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) TinyVGImageDecoderPlugin(bytes)));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) TinyVGImageDecoderPlugin(bytes, request)));
     TRY(decode_header_and_update_context(*plugin->m_context));
     return plugin;
 }
@@ -560,6 +561,8 @@ IntSize TinyVGImageDecoderPlugin::size()
 
 ErrorOr<ImageFrameDescriptor> TinyVGImageDecoderPlugin::frame(size_t, Optional<IntSize> ideal_size)
 {
+    VERIFY((m_request & RequestType::Image) == RequestType::Image);
+
     TRY(ensure_fully_decoded(*m_context));
     auto target_size = ideal_size.value_or(m_context->decoded_image->size());
     if (!m_context->bitmap || m_context->bitmap->size() != target_size)

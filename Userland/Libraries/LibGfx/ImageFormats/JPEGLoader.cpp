@@ -431,6 +431,8 @@ struct JPEGLoadingContext {
 
     State state { State::NotDecoded };
 
+    ImageDecoder::RequestType request;
+
     Array<Optional<Array<u16, 64>>, 4> quantization_tables {};
 
     StartOfFrame frame;
@@ -1029,6 +1031,12 @@ static ErrorOr<void> read_huffman_table(JPEGStream& stream, JPEGLoadingContext& 
 
 static ErrorOr<void> read_icc_profile(JPEGStream& stream, JPEGLoadingContext& context, int bytes_to_read)
 {
+    if ((context.request & ImageDecoder::RequestType::ICCProfile) != ImageDecoder::RequestType::ICCProfile) {
+        dbgln_if(JPEG_DEBUG, "Skipping ICC profile");
+        TRY(stream.discard(bytes_to_read));
+        return {};
+    }
+
     // https://www.color.org/technotes/ICC-Technote-ProfileEmbedding.pdf, page 5, "JFIF".
     if (bytes_to_read <= 2) {
         dbgln_if(JPEG_DEBUG, "icc marker too small");
@@ -1909,9 +1917,11 @@ static ErrorOr<void> decode_jpeg(JPEGLoadingContext& context)
     return {};
 }
 
-JPEGImageDecoderPlugin::JPEGImageDecoderPlugin(NonnullOwnPtr<FixedMemoryStream> stream)
+JPEGImageDecoderPlugin::JPEGImageDecoderPlugin(NonnullOwnPtr<FixedMemoryStream> stream, RequestType request)
+    : ImageDecoderPlugin(request)
 {
     m_context = JPEGLoadingContext::create(move(stream)).release_value_but_fixme_should_propagate_errors();
+    m_context->request = request;
 }
 
 JPEGImageDecoderPlugin::~JPEGImageDecoderPlugin() = default;
@@ -1929,16 +1939,18 @@ bool JPEGImageDecoderPlugin::sniff(ReadonlyBytes data)
         && data.data()[2] == 0xFF;
 }
 
-ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JPEGImageDecoderPlugin::create(ReadonlyBytes data)
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JPEGImageDecoderPlugin::create(ReadonlyBytes data, RequestType request)
 {
     auto stream = TRY(try_make<FixedMemoryStream>(data));
-    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JPEGImageDecoderPlugin(move(stream))));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JPEGImageDecoderPlugin(move(stream), request)));
     TRY(decode_header(*plugin->m_context));
     return plugin;
 }
 
 ErrorOr<ImageFrameDescriptor> JPEGImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
 {
+    VERIFY((m_request & RequestType::Image) == RequestType::Image);
+
     if (index > 0)
         return Error::from_string_literal("JPEGImageDecoderPlugin: Invalid frame index");
 
@@ -1958,6 +1970,8 @@ ErrorOr<ImageFrameDescriptor> JPEGImageDecoderPlugin::frame(size_t index, Option
 
 ErrorOr<Optional<ReadonlyBytes>> JPEGImageDecoderPlugin::icc_data()
 {
+    VERIFY((m_request & RequestType::ICCProfile) == RequestType::ICCProfile);
+
     if (m_context->icc_data.has_value())
         return *m_context->icc_data;
     return OptionalNone {};

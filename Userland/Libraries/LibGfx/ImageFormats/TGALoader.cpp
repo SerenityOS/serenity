@@ -161,7 +161,8 @@ struct TGALoadingContext {
     RefPtr<Gfx::Bitmap> bitmap;
 };
 
-TGAImageDecoderPlugin::TGAImageDecoderPlugin(u8 const* file_data, size_t file_size)
+TGAImageDecoderPlugin::TGAImageDecoderPlugin(u8 const* file_data, size_t file_size, RequestType request)
+    : ImageDecoderPlugin(request)
 {
     m_context = make<TGALoadingContext>();
     m_context->reader = make<TGAReader>(ReadonlyBytes { file_data, file_size });
@@ -216,15 +217,17 @@ ErrorOr<bool> TGAImageDecoderPlugin::validate_before_create(ReadonlyBytes data)
     return true;
 }
 
-ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> TGAImageDecoderPlugin::create(ReadonlyBytes data)
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> TGAImageDecoderPlugin::create(ReadonlyBytes data, RequestType request)
 {
-    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) TGAImageDecoderPlugin(data.data(), data.size())));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) TGAImageDecoderPlugin(data.data(), data.size(), request)));
     TRY(plugin->decode_tga_header());
     return plugin;
 }
 
 ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
 {
+    VERIFY((m_request & RequestType::Image) == RequestType::Image);
+
     auto bits_per_pixel = m_context->header.bits_per_pixel;
     auto color_map = m_context->header.color_map_type;
     auto data_type = m_context->header.data_type_code;

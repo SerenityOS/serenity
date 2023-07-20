@@ -146,7 +146,7 @@ ErrorOr<void> ICOImageDecoderPlugin::load_ico_bitmap(ICOLoadingContext& context)
 
     ICOImageDescriptor& desc = context.images[real_index];
     if (PNGImageDecoderPlugin::sniff({ context.data + desc.offset, desc.size })) {
-        auto png_decoder = TRY(PNGImageDecoderPlugin::create({ context.data + desc.offset, desc.size }));
+        auto png_decoder = TRY(PNGImageDecoderPlugin::create({ context.data + desc.offset, desc.size }, RequestType::Image));
         auto decoded_png_frame = TRY(png_decoder->frame(0));
         if (!decoded_png_frame.image) {
             dbgln_if(ICO_DEBUG, "load_ico_bitmap: failed to load PNG encoded image index: {}", real_index);
@@ -180,14 +180,15 @@ bool ICOImageDecoderPlugin::sniff(ReadonlyBytes data)
     return !decode_ico_header(stream).is_error();
 }
 
-ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> ICOImageDecoderPlugin::create(ReadonlyBytes data)
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> ICOImageDecoderPlugin::create(ReadonlyBytes data, RequestType request)
 {
-    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) ICOImageDecoderPlugin(data.data(), data.size())));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) ICOImageDecoderPlugin(data.data(), data.size(), request)));
     TRY(load_ico_directory(*plugin->m_context));
     return plugin;
 }
 
-ICOImageDecoderPlugin::ICOImageDecoderPlugin(u8 const* data, size_t size)
+ICOImageDecoderPlugin::ICOImageDecoderPlugin(u8 const* data, size_t size, RequestType request)
+    : ImageDecoderPlugin(request)
 {
     m_context = make<ICOLoadingContext>();
     m_context->data = data;
@@ -203,6 +204,8 @@ IntSize ICOImageDecoderPlugin::size()
 
 ErrorOr<ImageFrameDescriptor> ICOImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
 {
+    VERIFY((m_request & RequestType::Image) == RequestType::Image);
+
     if (index > 0)
         return Error::from_string_literal("ICOImageDecoderPlugin: Invalid frame index");
 

@@ -33,6 +33,12 @@ struct VectorImageFrameDescriptor {
 
 class ImageDecoderPlugin {
 public:
+    enum class RequestType {
+        Image = 1,
+        ICCProfile = 2,
+        Everything = 3,
+    };
+
     virtual ~ImageDecoderPlugin() = default;
 
     // Each plugin should implement these static functions and register them in ImageDecoder.cpp
@@ -42,7 +48,7 @@ public:
     // static ErrorOr<bool> validate_before_create(ReadonlyBytes);
 
     // This function should be used to both create the context and parse the image header.
-    // static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
+    // static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes, RequestType);
 
     // This should always be available as gathered in create()
     virtual IntSize size() = 0;
@@ -56,7 +62,11 @@ public:
     // Override this function if the format can embed an ICC profile.
     // As some formats store the profile at the end of the file, it can't
     // be read during `create`, hence being fallible.
-    virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() { return OptionalNone {}; }
+    virtual ErrorOr<Optional<ReadonlyBytes>> icc_data()
+    {
+        VERIFY((to_underlying(m_request) & to_underlying(RequestType::ICCProfile)) == to_underlying(RequestType::ICCProfile));
+        return OptionalNone {};
+    }
 
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) = 0;
 
@@ -64,12 +74,21 @@ public:
     virtual ErrorOr<VectorImageFrameDescriptor> vector_frame(size_t) { VERIFY_NOT_REACHED(); }
 
 protected:
-    ImageDecoderPlugin() = default;
+    ImageDecoderPlugin(RequestType request)
+        : m_request(request) {};
+    RequestType m_request;
 };
+
+inline ImageDecoderPlugin::RequestType operator&(ImageDecoderPlugin::RequestType const& r1, ImageDecoderPlugin::RequestType const& r2)
+{
+    return static_cast<ImageDecoderPlugin::RequestType>(to_underlying(r1) & to_underlying(r2));
+}
 
 class ImageDecoder : public RefCounted<ImageDecoder> {
 public:
-    static RefPtr<ImageDecoder> try_create_for_raw_bytes(ReadonlyBytes, Optional<DeprecatedString> mime_type = {});
+    using RequestType = ImageDecoderPlugin::RequestType;
+
+    static RefPtr<ImageDecoder> try_create_for_raw_bytes(ReadonlyBytes, Optional<DeprecatedString> mime_type = {}, RequestType = RequestType::Image);
     ~ImageDecoder() = default;
 
     IntSize size() const { return m_plugin->size(); }

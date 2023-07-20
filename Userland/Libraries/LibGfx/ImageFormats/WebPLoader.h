@@ -15,7 +15,7 @@ struct WebPLoadingContext;
 class WebPImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
     static bool sniff(ReadonlyBytes);
-    static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
+    static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes, RequestType);
 
     virtual ~WebPImageDecoderPlugin() override;
 

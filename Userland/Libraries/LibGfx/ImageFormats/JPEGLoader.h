@@ -19,7 +19,7 @@ struct JPEGLoadingContext;
 class JPEGImageDecoderPlugin : public ImageDecoderPlugin {
 public:
     static bool sniff(ReadonlyBytes);
-    static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
+    static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes, RequestType);
 
     virtual ~JPEGImageDecoderPlugin() override;
     virtual IntSize size() override;
@@ -28,7 +28,7 @@ public:
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
-    JPEGImageDecoderPlugin(NonnullOwnPtr<FixedMemoryStream>);
+    JPEGImageDecoderPlugin(NonnullOwnPtr<FixedMemoryStream>, RequestType);
 
     OwnPtr<JPEGLoadingContext> m_context;
 };

@@ -78,7 +78,7 @@ struct TinyVGLoadingContext;
 class TinyVGImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
     static bool sniff(ReadonlyBytes);
-    static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
+    static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes, RequestType);
 
     virtual IntSize size() override;
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) override;
@@ -89,7 +89,7 @@ public:
     virtual ~TinyVGImageDecoderPlugin() override = default;
 
 private:
-    TinyVGImageDecoderPlugin(ReadonlyBytes);
+    TinyVGImageDecoderPlugin(ReadonlyBytes, RequestType);
 
     NonnullOwnPtr<TinyVGLoadingContext> m_context;
 };

@@ -532,7 +532,8 @@ static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
     return {};
 }
 
-GIFImageDecoderPlugin::GIFImageDecoderPlugin(FixedMemoryStream stream)
+GIFImageDecoderPlugin::GIFImageDecoderPlugin(FixedMemoryStream stream, RequestType request)
+    : ImageDecoderPlugin(request)
 {
     m_context = make<GIFLoadingContext>(move(stream));
 }
@@ -550,10 +551,10 @@ bool GIFImageDecoderPlugin::sniff(ReadonlyBytes data)
     return !decode_gif_header(stream).is_error();
 }
 
-ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> GIFImageDecoderPlugin::create(ReadonlyBytes data)
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> GIFImageDecoderPlugin::create(ReadonlyBytes data, RequestType request)
 {
     FixedMemoryStream stream { data };
-    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) GIFImageDecoderPlugin(move(stream))));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) GIFImageDecoderPlugin(move(stream), request)));
     TRY(load_header_and_logical_screen(*plugin->m_context));
     return plugin;
 }
@@ -592,6 +593,8 @@ size_t GIFImageDecoderPlugin::loop_count()
 
 size_t GIFImageDecoderPlugin::frame_count()
 {
+    VERIFY((m_request & RequestType::Image) == RequestType::Image);
+
     if (m_context->error_state != GIFLoadingContext::ErrorState::NoError) {
         return 1;
     }

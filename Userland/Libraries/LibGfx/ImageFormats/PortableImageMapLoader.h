@@ -54,7 +54,7 @@ template<typename TContext>
 class PortableImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
     static bool sniff(ReadonlyBytes);
-    static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
+    static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes, RequestType);
 
     virtual ~PortableImageDecoderPlugin() override = default;
 
@@ -63,13 +63,14 @@ public:
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) override;
 
 private:
-    PortableImageDecoderPlugin(NonnullOwnPtr<SeekableStream> stream);
+    PortableImageDecoderPlugin(NonnullOwnPtr<SeekableStream> stream, RequestType);
 
     OwnPtr<TContext> m_context;
 };
 
 template<typename TContext>
-PortableImageDecoderPlugin<TContext>::PortableImageDecoderPlugin(NonnullOwnPtr<SeekableStream> stream)
+PortableImageDecoderPlugin<TContext>::PortableImageDecoderPlugin(NonnullOwnPtr<SeekableStream> stream, RequestType request)
+    : ImageDecoderPlugin(request)
 {
     m_context = make<TContext>(move(stream));
 }
@@ -81,10 +82,10 @@ IntSize PortableImageDecoderPlugin<TContext>::size()
 }
 
 template<typename TContext>
-ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> PortableImageDecoderPlugin<TContext>::create(ReadonlyBytes data)
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> PortableImageDecoderPlugin<TContext>::create(ReadonlyBytes data, RequestType request)
 {
     auto stream = TRY(try_make<FixedMemoryStream>(data));
-    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) PortableImageDecoderPlugin<TContext>(move(stream))));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) PortableImageDecoderPlugin<TContext>(move(stream), request)));
     TRY(read_header(*plugin->m_context));
     return plugin;
 }
@@ -108,6 +109,8 @@ bool PortableImageDecoderPlugin<TContext>::sniff(ReadonlyBytes data)
 template<typename TContext>
 ErrorOr<ImageFrameDescriptor> PortableImageDecoderPlugin<TContext>::frame(size_t index, Optional<IntSize>)
 {
+    VERIFY((m_request & RequestType::Image) == RequestType::Image);
+
     if (index > 0)
         return Error::from_string_literal("PortableImageDecoderPlugin: Invalid frame index");
 

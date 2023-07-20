@@ -15,7 +15,7 @@ struct PNGLoadingContext;
 class PNGImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
     static bool sniff(ReadonlyBytes);
-    static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
+    static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes, RequestType);
 
     virtual ~PNGImageDecoderPlugin() override;
 
@@ -29,7 +29,7 @@ public:
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
-    PNGImageDecoderPlugin(u8 const*, size_t);
+    PNGImageDecoderPlugin(u8 const*, size_t, RequestType);
     bool ensure_image_data_chunk_was_decoded();
     bool ensure_animation_frame_was_decoded(u32);
 

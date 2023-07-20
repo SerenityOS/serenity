@@ -15,7 +15,7 @@ struct ICOLoadingContext;
 class ICOImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
     static bool sniff(ReadonlyBytes);
-    static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
+    static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes, RequestType);
 
     virtual ~ICOImageDecoderPlugin() override;
 
@@ -24,7 +24,7 @@ public:
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) override;
 
 private:
-    ICOImageDecoderPlugin(u8 const*, size_t);
+    ICOImageDecoderPlugin(u8 const*, size_t, RequestType);
     static ErrorOr<void> load_ico_bitmap(ICOLoadingContext& context);
 
     OwnPtr<ICOLoadingContext> m_context;

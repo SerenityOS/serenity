@@ -15,10 +15,10 @@ struct TGALoadingContext;
 class TGAImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
     static ErrorOr<bool> validate_before_create(ReadonlyBytes);
-    static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
+    static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes, RequestType);
 
     virtual ~TGAImageDecoderPlugin() override;
-    TGAImageDecoderPlugin(u8 const*, size_t);
+    TGAImageDecoderPlugin(u8 const*, size_t, RequestType);
 
     virtual IntSize size() override;
 

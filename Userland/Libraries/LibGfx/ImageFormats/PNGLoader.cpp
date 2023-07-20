@@ -162,6 +162,9 @@ struct PNGLoadingContext {
         BitmapDecoded,
     };
     State state { State::NotDecoded };
+
+    ImageDecoder::RequestType request;
+
     u8 const* data { nullptr };
     u8 const* data_current_ptr { nullptr };
     size_t data_size { 0 };
@@ -1044,6 +1047,9 @@ static ErrorOr<void> process_cICP(ReadonlyBytes data, PNGLoadingContext& context
 
 static ErrorOr<void> process_iCCP(ReadonlyBytes data, PNGLoadingContext& context)
 {
+    if ((context.request & ImageDecoder::RequestType::ICCProfile) != ImageDecoder::RequestType::ICCProfile)
+        return {};
+
     // https://www.w3.org/TR/png/#11iCCP
     size_t profile_name_length_max = min(80u, data.size());
     size_t profile_name_length = strnlen((char const*)data.data(), profile_name_length_max);
@@ -1238,9 +1244,11 @@ static ErrorOr<void> process_chunk(Streamer& streamer, PNGLoadingContext& contex
     return {};
 }
 
-PNGImageDecoderPlugin::PNGImageDecoderPlugin(u8 const* data, size_t size)
+PNGImageDecoderPlugin::PNGImageDecoderPlugin(u8 const* data, size_t size, RequestType request)
+    : ImageDecoderPlugin(request)
 {
     m_context = make<PNGLoadingContext>();
+    m_context->request = request;
     m_context->data = m_context->data_current_ptr = data;
     m_context->data_size = size;
 }
@@ -1290,9 +1298,9 @@ bool PNGImageDecoderPlugin::sniff(ReadonlyBytes data)
     return decode_png_header(context);
 }
 
-ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> PNGImageDecoderPlugin::create(ReadonlyBytes data)
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> PNGImageDecoderPlugin::create(ReadonlyBytes data, RequestType request)
 {
-    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) PNGImageDecoderPlugin(data.data(), data.size())));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) PNGImageDecoderPlugin(data.data(), data.size(), request)));
     if (!decode_png_header(*plugin->m_context))
         return Error::from_string_literal("Invalid header for a PNG file");
     TRY(decode_png_ihdr(*plugin->m_context));
@@ -1368,6 +1376,8 @@ static ErrorOr<RefPtr<Bitmap>> render_animation_frame(AnimationFrame const& prev
 
 ErrorOr<ImageFrameDescriptor> PNGImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
 {
+    VERIFY((m_request & RequestType::Image) == RequestType::Image);
+
     if (m_context->state == PNGLoadingContext::State::Error)
         return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
 
@@ -1438,6 +1448,8 @@ ErrorOr<ImageFrameDescriptor> PNGImageDecoderPlugin::frame(size_t index, Optiona
 
 ErrorOr<Optional<ReadonlyBytes>> PNGImageDecoderPlugin::icc_data()
 {
+    VERIFY((m_request & RequestType::ICCProfile) == RequestType::ICCProfile);
+
     if (!decode_png_chunks(*m_context))
         return Error::from_string_literal("PNGImageDecoderPlugin: Decoding chunks failed");
 

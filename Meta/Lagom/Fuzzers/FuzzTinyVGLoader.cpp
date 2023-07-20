@@ -8,7 +8,7 @@
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
-    auto decoder_or_error = Gfx::TinyVGImageDecoderPlugin::create({ data, size });
+    auto decoder_or_error = Gfx::TinyVGImageDecoderPlugin::create({ data, size }, Gfx::ImageDecoderPlugin::RequestType::Everything);
     if (decoder_or_error.is_error())
         return 0;
     auto decoder = decoder_or_error.release_value();

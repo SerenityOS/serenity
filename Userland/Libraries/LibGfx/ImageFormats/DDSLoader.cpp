@@ -625,7 +625,8 @@ void DDSLoadingContext::dump_debug()
     dbgln("{}", builder.to_deprecated_string());
 }
 
-DDSImageDecoderPlugin::DDSImageDecoderPlugin(FixedMemoryStream stream)
+DDSImageDecoderPlugin::DDSImageDecoderPlugin(FixedMemoryStream stream, RequestType request)
+    : ImageDecoderPlugin(request)
 {
     m_context = make<DDSLoadingContext>(move(stream));
 }
@@ -647,16 +648,18 @@ bool DDSImageDecoderPlugin::sniff(ReadonlyBytes data)
         && data.data()[3] == 0x20;
 }
 
-ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> DDSImageDecoderPlugin::create(ReadonlyBytes data)
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> DDSImageDecoderPlugin::create(ReadonlyBytes data, RequestType request)
 {
     FixedMemoryStream stream { data };
-    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) DDSImageDecoderPlugin(move(stream))));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) DDSImageDecoderPlugin(move(stream), request)));
     TRY(decode_header(*plugin->m_context));
     return plugin;
 }
 
 ErrorOr<ImageFrameDescriptor> DDSImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
 {
+    VERIFY((m_request & RequestType::Image) == RequestType::Image);
+
     if (index > 0)
         return Error::from_string_literal("DDSImageDecoderPlugin: Invalid frame index");
 

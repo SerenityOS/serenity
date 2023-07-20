@@ -1455,7 +1455,8 @@ static ErrorOr<void> decode_bmp_pixel_data(BMPLoadingContext& context)
     return {};
 }
 
-BMPImageDecoderPlugin::BMPImageDecoderPlugin(u8 const* data, size_t data_size, IncludedInICO is_included_in_ico)
+BMPImageDecoderPlugin::BMPImageDecoderPlugin(u8 const* data, size_t data_size, RequestType request, IncludedInICO is_included_in_ico)
+    : ImageDecoderPlugin(request)
 {
     m_context = make<BMPLoadingContext>();
     m_context->file_bytes = data;
@@ -1478,21 +1479,21 @@ bool BMPImageDecoderPlugin::sniff(ReadonlyBytes data)
     return !decode_bmp_header(context).is_error();
 }
 
-ErrorOr<NonnullOwnPtr<BMPImageDecoderPlugin>> BMPImageDecoderPlugin::create_impl(ReadonlyBytes data, IncludedInICO included_in_ico)
+ErrorOr<NonnullOwnPtr<BMPImageDecoderPlugin>> BMPImageDecoderPlugin::create_impl(ReadonlyBytes data, RequestType request, IncludedInICO included_in_ico)
 {
-    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) BMPImageDecoderPlugin(data.data(), data.size(), included_in_ico)));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) BMPImageDecoderPlugin(data.data(), data.size(), request, included_in_ico)));
     TRY(decode_bmp_dib(*plugin->m_context));
     return plugin;
 }
 
-ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> BMPImageDecoderPlugin::create(ReadonlyBytes data)
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> BMPImageDecoderPlugin::create(ReadonlyBytes data, RequestType request)
 {
-    return create_impl(data, IncludedInICO::No);
+    return create_impl(data, request, IncludedInICO::No);
 }
 
 ErrorOr<NonnullOwnPtr<BMPImageDecoderPlugin>> BMPImageDecoderPlugin::create_as_included_in_ico(Badge<ICOImageDecoderPlugin>, ReadonlyBytes data)
 {
-    return create_impl(data, IncludedInICO::Yes);
+    return create_impl(data, RequestType::Image, IncludedInICO::Yes);
 }
 
 bool BMPImageDecoderPlugin::sniff_dib()
@@ -1502,6 +1503,8 @@ bool BMPImageDecoderPlugin::sniff_dib()
 
 ErrorOr<ImageFrameDescriptor> BMPImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
 {
+    VERIFY((m_request & RequestType::Image) == RequestType::Image);
+
     if (index > 0)
         return Error::from_string_literal("BMPImageDecoderPlugin: Invalid frame index");
 
@@ -1517,6 +1520,8 @@ ErrorOr<ImageFrameDescriptor> BMPImageDecoderPlugin::frame(size_t index, Optiona
 
 ErrorOr<Optional<ReadonlyBytes>> BMPImageDecoderPlugin::icc_data()
 {
+    VERIFY((m_request & RequestType::ICCProfile) == RequestType::ICCProfile);
+
     if (m_context->dib_type != DIBType::V5)
         return OptionalNone {};
 

@@ -22,11 +22,11 @@
 
 namespace Gfx {
 
-static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin(ReadonlyBytes bytes)
+static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin(ReadonlyBytes bytes, ImageDecoder::RequestType request)
 {
     struct ImagePluginInitializer {
         bool (*sniff)(ReadonlyBytes) = nullptr;
-        ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> (*create)(ReadonlyBytes) = nullptr;
+        ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> (*create)(ReadonlyBytes, ImageDecoder::RequestType) = nullptr;
     };
 
     static constexpr ImagePluginInitializer s_initializers[] = {
@@ -48,18 +48,18 @@ static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin(Readonl
         auto sniff_result = plugin.sniff(bytes);
         if (!sniff_result)
             continue;
-        auto plugin_decoder = plugin.create(bytes);
+        auto plugin_decoder = plugin.create(bytes, request);
         if (!plugin_decoder.is_error())
             return plugin_decoder.release_value();
     }
     return {};
 }
 
-static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin_with_known_mime_type(StringView mime_type, ReadonlyBytes bytes)
+static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin_with_known_mime_type(StringView mime_type, ReadonlyBytes bytes, ImageDecoder::RequestType request)
 {
     struct ImagePluginWithMIMETypeInitializer {
         ErrorOr<bool> (*validate_before_create)(ReadonlyBytes) = nullptr;
-        ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> (*create)(ReadonlyBytes) = nullptr;
+        ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> (*create)(ReadonlyBytes, ImageDecoder::RequestType) = nullptr;
         StringView mime_type;
     };
 
@@ -73,20 +73,20 @@ static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin_with_kn
         auto validation_result = plugin.validate_before_create(bytes).release_value_but_fixme_should_propagate_errors();
         if (!validation_result)
             continue;
-        auto plugin_decoder = plugin.create(bytes);
+        auto plugin_decoder = plugin.create(bytes, request);
         if (!plugin_decoder.is_error())
             return plugin_decoder.release_value();
     }
     return {};
 }
 
-RefPtr<ImageDecoder> ImageDecoder::try_create_for_raw_bytes(ReadonlyBytes bytes, Optional<DeprecatedString> mime_type)
+RefPtr<ImageDecoder> ImageDecoder::try_create_for_raw_bytes(ReadonlyBytes bytes, Optional<DeprecatedString> mime_type, RequestType request)
 {
-    if (OwnPtr<ImageDecoderPlugin> plugin = probe_and_sniff_for_appropriate_plugin(bytes); plugin)
+    if (OwnPtr<ImageDecoderPlugin> plugin = probe_and_sniff_for_appropriate_plugin(bytes, request); plugin)
         return adopt_ref_if_nonnull(new (nothrow) ImageDecoder(plugin.release_nonnull()));
 
     if (mime_type.has_value()) {
-        if (OwnPtr<ImageDecoderPlugin> plugin = probe_and_sniff_for_appropriate_plugin_with_known_mime_type(mime_type.value(), bytes); plugin)
+        if (OwnPtr<ImageDecoderPlugin> plugin = probe_and_sniff_for_appropriate_plugin_with_known_mime_type(mime_type.value(), bytes, request); plugin)
             return adopt_ref_if_nonnull(new (nothrow) ImageDecoder(plugin.release_nonnull()));
     }
 

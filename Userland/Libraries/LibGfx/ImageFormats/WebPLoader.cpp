@@ -115,6 +115,8 @@ struct WebPLoadingContext {
         BitmapDecoded,
     };
     State state { State::NotDecoded };
+    ImageDecoder::RequestType request;
+
     ReadonlyBytes data;
 
     ReadonlyBytes chunks_cursor;
@@ -472,7 +474,7 @@ static ErrorOr<void> decode_webp_extended(WebPLoadingContext& context, ReadonlyB
     while (!chunks.is_empty()) {
         auto chunk = TRY(decode_webp_advance_chunk(chunks));
 
-        if (chunk.type == FourCC("ICCP"))
+        if (chunk.type == FourCC("ICCP") && ((context.request & ImageDecoder::RequestType::ICCProfile) == ImageDecoder::RequestType::ICCProfile))
             store(context.iccp_chunk, chunk);
         else if (chunk.type == FourCC("ALPH"))
             store(alpha, chunk);
@@ -688,7 +690,8 @@ static ErrorOr<ImageFrameDescriptor> decode_webp_animation_frame(WebPLoadingCont
 }
 
 WebPImageDecoderPlugin::WebPImageDecoderPlugin(ReadonlyBytes data, OwnPtr<WebPLoadingContext> context)
-    : m_context(move(context))
+    : ImageDecoderPlugin(context->request)
+    , m_context(move(context))
 {
     m_context->data = data;
 }
@@ -719,9 +722,10 @@ bool WebPImageDecoderPlugin::sniff(ReadonlyBytes data)
     return !decode_webp_header(context).is_error();
 }
 
-ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> WebPImageDecoderPlugin::create(ReadonlyBytes data)
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> WebPImageDecoderPlugin::create(ReadonlyBytes data, RequestType request)
 {
     auto context = TRY(try_make<WebPLoadingContext>());
+    context->request = request;
     auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) WebPImageDecoderPlugin(data, move(context))));
     TRY(decode_webp_header(*plugin->m_context));
     TRY(decode_webp_first_chunk(*plugin->m_context));
@@ -766,6 +770,8 @@ size_t WebPImageDecoderPlugin::first_animated_frame_index()
 
 ErrorOr<ImageFrameDescriptor> WebPImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
 {
+    VERIFY((m_request & RequestType::Image) == RequestType::Image);
+
     if (index >= frame_count())
         return Error::from_string_literal("WebPImageDecoderPlugin: Invalid frame index");
 
@@ -810,6 +816,8 @@ ErrorOr<ImageFrameDescriptor> WebPImageDecoderPlugin::frame(size_t index, Option
 
 ErrorOr<Optional<ReadonlyBytes>> WebPImageDecoderPlugin::icc_data()
 {
+    VERIFY((m_request & RequestType::ICCProfile) == RequestType::ICCProfile);
+
     if (auto result = decode_webp_chunks(*m_context); result.is_error()) {
         m_context->state = WebPLoadingContext::State::Error;
         return result.release_error();
