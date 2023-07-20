@@ -14,7 +14,7 @@
 
 namespace JS {
 
-ThrowCompletionOr<NonnullGCPtr<GeneratorObject>> GeneratorObject::create(Realm& realm, Value initial_value, ECMAScriptFunctionObject* generating_function, ExecutionContext execution_context, Bytecode::RegisterWindow frame)
+ThrowCompletionOr<NonnullGCPtr<GeneratorObject>> GeneratorObject::create(Realm& realm, Value initial_value, ECMAScriptFunctionObject* generating_function, ExecutionContext execution_context, Bytecode::CallFrame frame)
 {
     auto& vm = realm.vm();
     // This is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
@@ -111,7 +111,7 @@ ThrowCompletionOr<Value> GeneratorObject::execute(VM& vm, Completion const& comp
 
     VERIFY(!m_generating_function->bytecode_executable()->basic_blocks.find_if([next_block](auto& block) { return block == next_block; }).is_end());
 
-    Bytecode::RegisterWindow* frame = nullptr;
+    Bytecode::CallFrame* frame = nullptr;
     if (m_frame.has_value())
         frame = &m_frame.value();
 

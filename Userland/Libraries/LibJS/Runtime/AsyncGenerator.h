@@ -27,7 +27,7 @@ public:
         Completed,
     };
 
-    static ThrowCompletionOr<NonnullGCPtr<AsyncGenerator>> create(Realm&, Value, ECMAScriptFunctionObject*, ExecutionContext, Bytecode::RegisterWindow);
+    static ThrowCompletionOr<NonnullGCPtr<AsyncGenerator>> create(Realm&, Value, ECMAScriptFunctionObject*, ExecutionContext, Bytecode::CallFrame);
 
     virtual ~AsyncGenerator() override = default;
 
@@ -59,7 +59,7 @@ private:
 
     GCPtr<ECMAScriptFunctionObject> m_generating_function;
     Value m_previous_value;
-    Optional<Bytecode::RegisterWindow> m_frame;
+    Optional<Bytecode::CallFrame> m_frame;
     GCPtr<Promise> m_current_promise;
 };
 
