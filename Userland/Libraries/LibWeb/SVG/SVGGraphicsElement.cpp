@@ -142,6 +142,12 @@ void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style)
         } else if (name.equals_ignoring_ascii_case(SVG::AttributeNames::opacity)) {
             if (auto stroke_opacity_value = parse_css_value(parsing_context, value, CSS::PropertyID::Opacity).release_value_but_fixme_should_propagate_errors())
                 style.set_property(CSS::PropertyID::Opacity, stroke_opacity_value.release_nonnull());
+        } else if (name.equals_ignoring_ascii_case("text-anchor"sv)) {
+            if (auto text_anchor_value = parse_css_value(parsing_context, value, CSS::PropertyID::TextAnchor).release_value_but_fixme_should_propagate_errors())
+                style.set_property(CSS::PropertyID::TextAnchor, text_anchor_value.release_nonnull());
+        } else if (name.equals_ignoring_ascii_case("font-size"sv)) {
+            if (auto font_size_value = parse_css_value(parsing_context, value, CSS::PropertyID::FontSize).release_value_but_fixme_should_propagate_errors())
+                style.set_property(CSS::PropertyID::FontSize, font_size_value.release_nonnull());
         }
     });
 }
