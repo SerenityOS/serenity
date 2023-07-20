@@ -633,6 +633,36 @@ void StandardSecurityHandler::crypt(NonnullRefPtr<Object> object, Reference refe
     if (m_method == CryptFilterMethod::None)
         return;
 
+    auto aes = [&](ReadonlyBytes bytes, ByteBuffer const& key) {
+        auto cipher = Crypto::Cipher::AESCipher::CBCMode(key, m_length * 8, direction, Crypto::Cipher::PaddingMode::CMS);
+
+        // "The block size parameter is 16 bytes, and the initialization vector is a 16-byte random number
+        //  that is stored as the first 16 bytes of the encrypted stream or string."
+        static_assert(Crypto::Cipher::AESCipher::block_size() == 16);
+        if (direction == Crypto::Cipher::Intent::Encryption) {
+            auto output = cipher.create_aligned_buffer(16 + bytes.size()).release_value_but_fixme_should_propagate_errors();
+            auto iv_span = output.bytes().trim(16);
+            auto encrypted_span = output.bytes().slice(16);
+
+            fill_with_random(iv_span);
+            cipher.encrypt(bytes, encrypted_span, iv_span);
+
+            return output;
+        } else {
+            VERIFY(direction == Crypto::Cipher::Intent::Decryption);
+
+            auto iv = bytes.trim(16);
+            bytes = bytes.slice(16);
+
+            auto decrypted = cipher.create_aligned_buffer(bytes.size()).release_value_but_fixme_should_propagate_errors();
+            auto decrypted_span = decrypted.bytes();
+            cipher.decrypt(bytes, decrypted_span, iv);
+            decrypted.resize(decrypted_span.size());
+
+            return decrypted;
+        }
+    };
+
     if (m_method == CryptFilterMethod::AESV3) {
         // ISO 32000 (PDF 2.0), 7.6.3.3 Algorithm 1.A: Encryption of data using the AES algorithms
 
@@ -717,34 +747,7 @@ void StandardSecurityHandler::crypt(NonnullRefPtr<Object> object, Reference refe
         key.resize(encryption_key.size());
 
     if (m_method == CryptFilterMethod::AESV2) {
-        auto cipher = Crypto::Cipher::AESCipher::CBCMode(key, m_length * 8, direction, Crypto::Cipher::PaddingMode::CMS);
-
-        // "The block size parameter is 16 bytes, and the initialization vector is a 16-byte random number
-        //  that is stored as the first 16 bytes of the encrypted stream or string."
-        static_assert(Crypto::Cipher::AESCipher::block_size() == 16);
-        if (direction == Crypto::Cipher::Intent::Encryption) {
-            auto output = cipher.create_aligned_buffer(16 + bytes.size()).release_value_but_fixme_should_propagate_errors();
-            auto iv_span = output.bytes().trim(16);
-            auto encrypted_span = output.bytes().slice(16);
-
-            fill_with_random(iv_span);
-            cipher.encrypt(bytes, encrypted_span, iv_span);
-
-            assign(move(output));
-        } else {
-            VERIFY(direction == Crypto::Cipher::Intent::Decryption);
-
-            auto iv = bytes.trim(16);
-            bytes = bytes.slice(16);
-
-            auto decrypted = cipher.create_aligned_buffer(bytes.size()).release_value_but_fixme_should_propagate_errors();
-            auto decrypted_span = decrypted.bytes();
-            cipher.decrypt(bytes, decrypted_span, iv);
-            decrypted.resize(decrypted_span.size());
-
-            assign(move(decrypted));
-        }
-
+        assign(aes(bytes, key));
         return;
     }
 
