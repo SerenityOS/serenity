@@ -18,6 +18,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     TRY(Core::System::pledge("stdio accept inet rpath"));
     TRY(Core::System::unveil("/sys/kernel/net/adapters", "r"));
+    TRY(Core::System::unveil("/sys/kernel/conf/hostname", "r"));
     TRY(Core::System::unveil("/etc/hosts", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
     return event_loop.exec();

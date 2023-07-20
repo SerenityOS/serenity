@@ -32,6 +32,7 @@
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
 #include <sys/types.h>
+#include <sys/utsname.h>
 #include <syscall.h>
 #include <termios.h>
 #include <time.h>
@@ -621,14 +622,46 @@ int usleep(useconds_t usec)
 
 int gethostname(char* buffer, size_t size)
 {
-    int rc = syscall(SC_gethostname, buffer, size);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
+    int fd = open("/sys/kernel/conf/hostname", O_RDONLY);
+    if (fd < 0)
+        return fd;
+    char temp_buf[UTSNAME_ENTRY_LEN];
+    memset(temp_buf, 0, UTSNAME_ENTRY_LEN);
+    int rc = read(fd, temp_buf, UTSNAME_ENTRY_LEN);
+    int saved_errno = errno;
+    if (rc != -1) {
+        if (static_cast<size_t>(rc) > size) {
+            // NOTE: POSIX doesn't specify how to handle truncation due
+            // to insufficient buffer storage being specified.
+            // According to the linux manual page, in glibc "the function then
+            // checks if the length of the nodename [from uname(2)] was greater
+            // than or equal to len, and if it is, then the function returns -1
+            // with errno set to ENAMETOOLONG;"
+            // To ensure we handle insufficient length properly, let's just return -1
+            // and set errno to ENAMETOOLONG.
+            rc = -1;
+            saved_errno = ENAMETOOLONG;
+        } else {
+            memcpy(buffer, temp_buf, rc);
+        }
+    }
+    if (int close_rc = close(fd); close_rc < 0)
+        return close_rc;
+    errno = saved_errno;
+    return (rc == -1) ? -1 : 0;
 }
 
 int sethostname(char const* hostname, ssize_t size)
 {
-    int rc = syscall(SC_sethostname, hostname, size);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
+    int fd = open("/sys/kernel/conf/hostname", O_RDWR);
+    if (fd < 0)
+        return fd;
+    int rc = write(fd, hostname, size);
+    int saved_errno = errno;
+    if (int close_rc = close(fd); close_rc < 0)
+        return close_rc;
+    errno = saved_errno;
+    return (rc == -1) ? -1 : 0;
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/readlinkat.html
