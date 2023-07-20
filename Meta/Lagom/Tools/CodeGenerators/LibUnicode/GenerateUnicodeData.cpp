@@ -156,10 +156,6 @@ struct UnicodeData {
     Vector<Alias> script_aliases;
     PropList script_extensions;
 
-    PropList block_list {
-        { "No_Block"sv, {} },
-    };
-    Vector<Alias> block_aliases;
     Vector<BlockName> block_display_names;
 
     // FIXME: We are not yet doing anything with this data. It will be needed for String.prototype.normalize.
@@ -814,7 +810,6 @@ namespace Unicode {
     generate_enum("GeneralCategory"sv, {}, unicode_data.general_categories.keys(), unicode_data.general_category_aliases);
     generate_enum("Property"sv, {}, unicode_data.prop_list.keys(), unicode_data.prop_aliases);
     generate_enum("Script"sv, {}, unicode_data.script_list.keys(), unicode_data.script_aliases);
-    generate_enum("Block"sv, {}, unicode_data.block_list.keys(), unicode_data.block_aliases);
     generate_enum("GraphemeBreakProperty"sv, {}, unicode_data.grapheme_break_props.keys());
     generate_enum("WordBreakProperty"sv, {}, unicode_data.word_break_props.keys());
     generate_enum("SentenceBreakProperty"sv, {}, unicode_data.sentence_break_props.keys());
@@ -1149,7 +1144,6 @@ static constexpr Array<ReadonlySpan<CodePointRange>, @size@> @name@ { {)~~~");
     append_prop_list("s_properties"sv, "s_property_{}"sv, unicode_data.prop_list);
     append_prop_list("s_scripts"sv, "s_script_{}"sv, unicode_data.script_list);
     append_prop_list("s_script_extensions"sv, "s_script_extension_{}"sv, unicode_data.script_extensions);
-    append_prop_list("s_blocks"sv, "s_block_{}"sv, unicode_data.block_list);
     append_prop_list("s_grapheme_break_properties"sv, "s_grapheme_break_property_{}"sv, unicode_data.grapheme_break_props);
     append_prop_list("s_word_break_properties"sv, "s_word_break_property_{}"sv, unicode_data.word_break_props);
     append_prop_list("s_sentence_break_properties"sv, "s_sentence_break_property_{}"sv, unicode_data.sentence_break_props);
@@ -1342,9 +1336,6 @@ bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
     append_prop_search("Script"sv, "script"sv, "s_scripts"sv);
     append_prop_search("Script"sv, "script_extension"sv, "s_script_extensions"sv);
     TRY(append_from_string("Script"sv, "script"sv, unicode_data.script_list, unicode_data.script_aliases));
-
-    append_prop_search("Block"sv, "block"sv, "s_blocks"sv);
-    TRY(append_from_string("Block"sv, "block"sv, unicode_data.block_list, unicode_data.block_aliases));
 
     append_prop_search("GraphemeBreakProperty"sv, "grapheme_break_property"sv, "s_grapheme_break_properties"sv);
     append_prop_search("WordBreakProperty"sv, "word_break_property"sv, "s_word_break_properties"sv);
@@ -1564,7 +1555,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(parse_prop_list(*scripts_file, unicode_data.script_list));
     TRY(parse_prop_list(*script_extensions_file, unicode_data.script_extensions, true));
     TRY(parse_block_display_names(*blocks_file, unicode_data));
-    TRY(parse_prop_list(*blocks_file, unicode_data.block_list, false, true));
     TRY(parse_name_aliases(*name_alias_file, unicode_data));
     TRY(parse_prop_list(*grapheme_break_file, unicode_data.grapheme_break_props));
     TRY(parse_prop_list(*word_break_file, unicode_data.word_break_props));
@@ -1574,7 +1564,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(parse_unicode_data(*unicode_data_file, unicode_data));
     TRY(parse_value_alias_list(*prop_value_alias_file, "gc"sv, unicode_data.general_categories.keys(), unicode_data.general_category_aliases));
     TRY(parse_value_alias_list(*prop_value_alias_file, "sc"sv, unicode_data.script_list.keys(), unicode_data.script_aliases, false));
-    TRY(parse_value_alias_list(*prop_value_alias_file, "blk"sv, unicode_data.block_list.keys(), unicode_data.block_aliases, false, true));
     TRY(normalize_script_extensions(unicode_data.script_extensions, unicode_data.script_list, unicode_data.script_aliases));
 
     TRY(generate_unicode_data_header(*generated_header_file, unicode_data));
