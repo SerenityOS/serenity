@@ -33,13 +33,14 @@ public:
     {
         if (event.modifiers() & KeyModifier::Mod_Ctrl) {
             auto dialog = GUI::ColorPicker::construct(m_color, window());
-            if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
-                m_color = dialog->color();
+            dialog->on_color_changed = [this](Gfx::Color color) {
+                m_color = color;
                 auto pal = palette();
                 pal.set_color(ColorRole::Background, m_color);
                 set_palette(pal);
                 update();
-            }
+            };
+            dialog->exec();
         }
 
         if (event.button() == GUI::MouseButton::Primary)
@@ -72,8 +73,10 @@ public:
             return;
 
         auto dialog = GUI::ColorPicker::construct(m_color, window());
-        if (dialog->exec() == GUI::Dialog::ExecResult::OK)
-            on_color_change(dialog->color());
+        dialog->on_color_changed = [this](Gfx::Color color) {
+            on_color_change(color);
+        };
+        dialog->exec();
     }
 
     void set_background_color(Color color)
