@@ -495,21 +495,70 @@ void SpreadsheetWidget::change_cell_static_color_format(Spreadsheet::FormatType 
 {
     VERIFY(current_worksheet_if_available());
 
-    auto dialog = GUI::ColorPicker::construct(Color::White, window(), "Select Color");
-    if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
+    auto preview_color_in_selected_cells = [this, format_type](Gfx::Color color) {
+        for (auto& position : current_worksheet_if_available()->selected_cells()) {
+            auto* cell = current_worksheet_if_available()->at(position);
+            auto previous_type_metadata = cell->type_metadata();
+            if (format_type == Spreadsheet::FormatType::Background)
+                cell->type_metadata().static_format.background_color = color;
+            else
+                cell->type_metadata().static_format.foreground_color = color;
+            update();
+        }
+    };
+    auto apply_color_to_selected_cells = [this, format_type](Gfx::Color color) {
         Vector<CellChange> cell_changes;
         for (auto& position : current_worksheet_if_available()->selected_cells()) {
             auto* cell = current_worksheet_if_available()->at(position);
             auto previous_type_metadata = cell->type_metadata();
             if (format_type == Spreadsheet::FormatType::Background)
-                cell->type_metadata().static_format.background_color = dialog->color();
+                cell->type_metadata().static_format.background_color = color;
             else
-                cell->type_metadata().static_format.foreground_color = dialog->color();
+                cell->type_metadata().static_format.foreground_color = color;
             cell_changes.append(CellChange(*cell, previous_type_metadata));
         }
         undo_stack().push(make<CellsUndoMetadataCommand>(move(cell_changes)));
         window()->set_modified(true);
-    }
+    };
+    auto get_selection_color = [this, format_type](void) {
+        // FIXME: Not sure what to do if a selection of multiple cells has more than one color.
+        //        For now we just grab the first one we see and pass that to GUI::ColorPicker
+        for (auto& position : current_worksheet_if_available()->selected_cells()) {
+            auto* cell = current_worksheet_if_available()->at(position);
+            auto previous_type_metadata = cell->type_metadata();
+            if (format_type == Spreadsheet::FormatType::Background)
+                return cell->type_metadata().static_format.background_color.value_or(Color::White);
+            else
+                return cell->type_metadata().static_format.foreground_color.value_or(Color::White);
+        }
+        return Color(Color::White);
+    };
+
+    // FIXME: Hack, we want to restore the cell metadata to the actual state before computing the change
+    auto get_current_selection_metadata = [this](void) {
+        Vector<CellTypeMetadata> cell_metadata;
+        for (auto& position : current_worksheet_if_available()->selected_cells()) {
+            auto* cell = current_worksheet_if_available()->at(position);
+            cell_metadata.append(cell->type_metadata());
+        }
+        return cell_metadata;
+    };
+    auto restore_current_selection_metadata = [this](Vector<CellTypeMetadata> metadata) {
+        for (auto& position : current_worksheet_if_available()->selected_cells()) {
+            auto* cell = current_worksheet_if_available()->at(position);
+            cell->type_metadata() = metadata.take_first();
+        }
+    };
+
+    auto dialog = GUI::ColorPicker::construct(get_selection_color(), window(), "Select Color");
+    dialog->on_color_changed = [&preview_color_in_selected_cells](Gfx::Color color) {
+        preview_color_in_selected_cells(color);
+    };
+    Vector<CellTypeMetadata> preserved_state = get_current_selection_metadata();
+    auto result = dialog->exec();
+    restore_current_selection_metadata(preserved_state);
+    if (result == GUI::Dialog::ExecResult::OK)
+        apply_color_to_selected_cells(dialog->color());
 }
 
 void SpreadsheetWidget::save(String const& filename, Core::File& file)
