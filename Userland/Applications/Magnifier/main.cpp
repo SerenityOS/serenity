@@ -123,10 +123,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto choose_grid_color_action = GUI::Action::create(
         "Choose Grid &Color", [&](auto& action [[maybe_unused]]) {
             auto dialog = GUI::ColorPicker::construct(magnifier->grid_color(), window, "Magnifier: choose grid color");
+            dialog->on_color_changed = [&magnifier](Gfx::Color color) {
+                magnifier->set_grid_color(color);
+            };
             dialog->set_color_has_alpha_channel(true);
             if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
                 Config::write_string("Magnifier"sv, "Grid"sv, "Color"sv, dialog->color().to_deprecated_string());
-                magnifier->set_grid_color(dialog->color());
             }
         });
     {
