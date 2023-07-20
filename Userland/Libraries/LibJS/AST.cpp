@@ -4367,16 +4367,6 @@ ThrowCompletionOr<void> ScopeNode::for_each_lexically_scoped_declaration(ThrowCo
     return {};
 }
 
-ThrowCompletionOr<void> ScopeNode::for_each_lexically_declared_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const
-{
-    for (auto const& declaration : m_lexical_declarations) {
-        TRY(declaration->for_each_bound_identifier([&](auto const& identifier) {
-            return callback(identifier.string());
-        }));
-    }
-    return {};
-}
-
 ThrowCompletionOr<void> ScopeNode::for_each_lexically_declared_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const
 {
     for (auto const& declaration : m_lexical_declarations) {
