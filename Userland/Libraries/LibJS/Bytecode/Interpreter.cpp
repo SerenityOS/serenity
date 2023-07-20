@@ -58,8 +58,8 @@ void Interpreter::visit_edges(Cell::Visitor& visitor)
         visitor.visit(*m_saved_return_value);
     if (m_saved_exception.has_value())
         visitor.visit(*m_saved_exception);
-    for (auto& window : m_register_windows) {
-        window.visit([&](auto& value) { value->visit_edges(visitor); });
+    for (auto& frame : m_call_frames) {
+        frame.visit([&](auto& value) { value->visit_edges(visitor); });
     }
 }
 
@@ -193,7 +193,7 @@ ThrowCompletionOr<Value> Interpreter::run(SourceTextModule& module)
     return js_undefined();
 }
 
-Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Executable& executable, BasicBlock const* entry_point, RegisterWindow* in_frame)
+Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Executable& executable, BasicBlock const* entry_point, CallFrame* in_frame)
 {
     dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter will run unit {:p}", &executable);
 
@@ -219,9 +219,9 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
     TemporaryChange restore_current_block { m_current_block, entry_point ?: executable.basic_blocks.first() };
 
     if (in_frame)
-        push_register_window(in_frame, executable.number_of_registers);
+        push_call_frame(in_frame, executable.number_of_registers);
     else
-        push_register_window(make<RegisterWindow>(), executable.number_of_registers);
+        push_call_frame(make<CallFrame>(), executable.number_of_registers);
 
     for (;;) {
         Bytecode::InstructionStreamIterator pc(m_current_block->instruction_stream());
@@ -321,7 +321,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
         }
     }
 
-    auto frame = pop_register_window();
+    auto frame = pop_call_frame();
 
     Value return_value = js_undefined();
     if (m_return_value.has_value()) {
@@ -331,8 +331,8 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
     }
 
     // NOTE: The return value from a called function is put into $0 in the caller context.
-    if (!m_register_windows.is_empty())
-        window().registers[0] = return_value;
+    if (!m_call_frames.is_empty())
+        call_frame().registers[0] = return_value;
 
     // At this point we may have already run any queued promise jobs via on_call_stack_emptied,
     // in which case this is a no-op.
@@ -349,13 +349,13 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
         Value thrown_value = m_saved_exception.value();
         m_saved_exception = {};
         m_saved_return_value = {};
-        if (auto* register_window = frame.get_pointer<NonnullOwnPtr<RegisterWindow>>())
-            return { throw_completion(thrown_value), move(*register_window) };
+        if (auto* call_frame = frame.get_pointer<NonnullOwnPtr<CallFrame>>())
+            return { throw_completion(thrown_value), move(*call_frame) };
         return { throw_completion(thrown_value), nullptr };
     }
 
-    if (auto* register_window = frame.get_pointer<NonnullOwnPtr<RegisterWindow>>())
-        return { return_value, move(*register_window) };
+    if (auto* call_frame = frame.get_pointer<NonnullOwnPtr<CallFrame>>())
+        return { return_value, move(*call_frame) };
     return { return_value, nullptr };
 }
 
@@ -462,18 +462,18 @@ Realm& Interpreter::realm()
     return *m_vm.current_realm();
 }
 
-void Interpreter::push_register_window(Variant<NonnullOwnPtr<RegisterWindow>, RegisterWindow*> window, size_t register_count)
+void Interpreter::push_call_frame(Variant<NonnullOwnPtr<CallFrame>, CallFrame*> frame, size_t register_count)
 {
-    m_register_windows.append(move(window));
-    this->window().registers.resize(register_count);
-    m_current_register_window = this->window().registers;
+    m_call_frames.append(move(frame));
+    this->call_frame().registers.resize(register_count);
+    m_current_call_frame = this->call_frame().registers;
 }
 
-Variant<NonnullOwnPtr<RegisterWindow>, RegisterWindow*> Interpreter::pop_register_window()
+Variant<NonnullOwnPtr<CallFrame>, CallFrame*> Interpreter::pop_call_frame()
 {
-    auto window = m_register_windows.take_last();
-    m_current_register_window = m_register_windows.is_empty() ? Span<Value> {} : this->window().registers;
-    return window;
+    auto frame = m_call_frames.take_last();
+    m_current_call_frame = m_call_frames.is_empty() ? Span<Value> {} : this->call_frame().registers;
+    return frame;
 }
 
 }

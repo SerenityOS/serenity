@@ -19,7 +19,7 @@ namespace JS::Bytecode {
 class InstructionStreamIterator;
 class PassManager;
 
-struct RegisterWindow {
+struct CallFrame {
     void visit_edges(Cell::Visitor& visitor)
     {
         for (auto const& value : registers)
@@ -58,15 +58,15 @@ public:
 
     struct ValueAndFrame {
         ThrowCompletionOr<Value> value;
-        OwnPtr<RegisterWindow> frame;
+        OwnPtr<CallFrame> frame;
     };
-    ValueAndFrame run_and_return_frame(Realm&, Bytecode::Executable&, Bytecode::BasicBlock const* entry_point, RegisterWindow* = nullptr);
+    ValueAndFrame run_and_return_frame(Realm&, Bytecode::Executable&, Bytecode::BasicBlock const* entry_point, CallFrame* = nullptr);
 
     ALWAYS_INLINE Value& accumulator() { return reg(Register::accumulator()); }
     Value& reg(Register const& r) { return registers()[r.index()]; }
 
-    auto& saved_lexical_environment_stack() { return window().saved_lexical_environments; }
-    auto& unwind_contexts() { return window().unwind_contexts; }
+    auto& saved_lexical_environment_stack() { return call_frame().saved_lexical_environments; }
+    auto& unwind_contexts() { return call_frame().unwind_contexts; }
 
     void jump(Label const& label)
     {
@@ -101,25 +101,25 @@ public:
     void visit_edges(Cell::Visitor&);
 
 private:
-    RegisterWindow& window()
+    CallFrame& call_frame()
     {
-        return m_register_windows.last().visit([](auto& x) -> RegisterWindow& { return *x; });
+        return m_call_frames.last().visit([](auto& x) -> CallFrame& { return *x; });
     }
 
-    RegisterWindow const& window() const
+    CallFrame const& call_frame() const
     {
-        return const_cast<Interpreter*>(this)->window();
+        return const_cast<Interpreter*>(this)->call_frame();
     }
 
-    Span<Value> registers() { return m_current_register_window; }
-    ReadonlySpan<Value> registers() const { return m_current_register_window; }
+    Span<Value> registers() { return m_current_call_frame; }
+    ReadonlySpan<Value> registers() const { return m_current_call_frame; }
 
-    void push_register_window(Variant<NonnullOwnPtr<RegisterWindow>, RegisterWindow*>, size_t register_count);
-    [[nodiscard]] Variant<NonnullOwnPtr<RegisterWindow>, RegisterWindow*> pop_register_window();
+    void push_call_frame(Variant<NonnullOwnPtr<CallFrame>, CallFrame*>, size_t register_count);
+    [[nodiscard]] Variant<NonnullOwnPtr<CallFrame>, CallFrame*> pop_call_frame();
 
     VM& m_vm;
-    Vector<Variant<NonnullOwnPtr<RegisterWindow>, RegisterWindow*>> m_register_windows;
-    Span<Value> m_current_register_window;
+    Vector<Variant<NonnullOwnPtr<CallFrame>, CallFrame*>> m_call_frames;
+    Span<Value> m_current_call_frame;
     Optional<BasicBlock const*> m_pending_jump;
     BasicBlock const* m_scheduled_jump { nullptr };
     Optional<Value> m_return_value;
