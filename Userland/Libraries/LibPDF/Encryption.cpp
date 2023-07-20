@@ -663,18 +663,6 @@ void StandardSecurityHandler::crypt(NonnullRefPtr<Object> object, Reference refe
         }
     };
 
-    if (m_method == CryptFilterMethod::AESV3) {
-        // ISO 32000 (PDF 2.0), 7.6.3.3 Algorithm 1.A: Encryption of data using the AES algorithms
-
-        // a) Use the 32-byte file encryption key for the AES-256 symmetric key algorithm, along with the string or
-        //    stream data to be encrypted.
-        //
-        //    Use the AES algorithm in Cipher Block Chaining (CBC) mode, which requires an initialization
-        //    vector. The block size parameter is set to 16 bytes, and the initialization vector is a 16-byte random
-        //    number that is stored as the first 16 bytes of the encrypted stream or string.
-        TODO();
-    }
-
     ReadonlyBytes bytes;
     Function<void(ByteBuffer)> assign;
 
@@ -699,6 +687,19 @@ void StandardSecurityHandler::crypt(NonnullRefPtr<Object> object, Reference refe
         };
     } else {
         VERIFY_NOT_REACHED();
+    }
+
+    if (m_method == CryptFilterMethod::AESV3) {
+        // ISO 32000 (PDF 2.0), 7.6.3.3 Algorithm 1.A: Encryption of data using the AES algorithms
+
+        // a) Use the 32-byte file encryption key for the AES-256 symmetric key algorithm, along with the string or
+        //    stream data to be encrypted.
+        //
+        //    Use the AES algorithm in Cipher Block Chaining (CBC) mode, which requires an initialization
+        //    vector. The block size parameter is set to 16 bytes, and the initialization vector is a 16-byte random
+        //    number that is stored as the first 16 bytes of the encrypted stream or string.
+        assign(aes(bytes, m_encryption_key.value()));
+        return;
     }
 
     // 7.6.2 General Encryption Algorithm
