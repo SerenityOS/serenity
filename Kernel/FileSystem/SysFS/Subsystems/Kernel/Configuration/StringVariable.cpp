@@ -16,8 +16,10 @@ ErrorOr<void> SysFSSystemStringVariable::try_generate(KBufferBuilder& builder)
     return builder.appendff("{}\n", string_value->view());
 }
 
-ErrorOr<size_t> SysFSSystemStringVariable::write_bytes(off_t, size_t count, UserOrKernelBuffer const& buffer, OpenFileDescription*)
+ErrorOr<size_t> SysFSSystemStringVariable::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& buffer, OpenFileDescription*)
 {
+    if (offset != 0)
+        return EINVAL;
     MutexLocker locker(m_refresh_lock);
     // Note: We do all of this code before taking the spinlock because then we disable
     // interrupts so page faults will not work.
