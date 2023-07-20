@@ -14,7 +14,7 @@
 .long multiboot_checksum
 
 
-/* for MULTIBOOT_MEMORY_INFO */
+/* for MULTIBOOT_AOUT_KLUDGE, just a dummy */
 .long 0x00000000    /* header_addr */
 .long 0x00000000    /* load_addr */
 .long 0x00000000    /* load_end_addr */
