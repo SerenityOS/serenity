@@ -111,6 +111,7 @@
     A(Names)                      \
     A(Next)                       \
     A(O)                          \
+    A(OE)                         \
     A(OP)                         \
     A(OPM)                        \
     A(Ordering)                   \
@@ -119,6 +120,7 @@
     A(Pages)                      \
     A(Parent)                     \
     A(Pattern)                    \
+    A(Perms)                      \
     A(Predictor)                  \
     A(Prev)                       \
     A(Producer)                   \
@@ -146,6 +148,7 @@
     A(Type)                       \
     A(Type1C)                     \
     A(U)                          \
+    A(UE)                         \
     A(UCR)                        \
     A(UseBlackPTComp)             \
     A(UserUnit)                   \

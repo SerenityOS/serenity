@@ -166,7 +166,12 @@ PDFErrorOr<NonnullRefPtr<StandardSecurityHandler>> StandardSecurityHandler::crea
     if (encryption_dict->contains(CommonNames::EncryptMetadata))
         encryption_dict->get_value(CommonNames::EncryptMetadata).get<bool>();
 
+    DeprecatedString oe, ue, perms;
     if (v >= 5) {
+        oe = TRY(encryption_dict->get_string(document, CommonNames::OE))->string();
+        ue = TRY(encryption_dict->get_string(document, CommonNames::UE))->string();
+        perms = TRY(encryption_dict->get_string(document, CommonNames::Perms))->string();
+
         // O and U are 48 bytes for V == 5, but some files pad them with nul bytes to 127 bytes. So trim them, if necessary.
         if (o.length() > 48)
             o = o.substring(0, 48);
@@ -175,18 +180,27 @@ PDFErrorOr<NonnullRefPtr<StandardSecurityHandler>> StandardSecurityHandler::crea
 
         if (o.length() != 48)
             return Error(Error::Type::Parse, "Invalid O size");
+        if (oe.length() != 32)
+            return Error(Error::Type::Parse, "Invalid OE size");
         if (u.length() != 48)
             return Error(Error::Type::Parse, "Invalid U size");
+        if (ue.length() != 32)
+            return Error(Error::Type::Parse, "Invalid UE size");
+        if (perms.length() != 16)
+            return Error(Error::Type::Parse, "Invalid Perms size");
     }
 
-    return adopt_ref(*new StandardSecurityHandler(document, revision, o, u, p, encrypt_metadata, length, method));
+    return adopt_ref(*new StandardSecurityHandler(document, revision, o, oe, u, ue, perms, p, encrypt_metadata, length, method));
 }
 
-StandardSecurityHandler::StandardSecurityHandler(Document* document, size_t revision, DeprecatedString const& o_entry, DeprecatedString const& u_entry, u32 flags, bool encrypt_metadata, size_t length, CryptFilterMethod method)
+StandardSecurityHandler::StandardSecurityHandler(Document* document, size_t revision, DeprecatedString const& o_entry, DeprecatedString const& oe_entry, DeprecatedString const& u_entry, DeprecatedString const& ue_entry, DeprecatedString const& perms_entry, u32 flags, bool encrypt_metadata, size_t length, CryptFilterMethod method)
     : m_document(document)
     , m_revision(revision)
     , m_o_entry(o_entry)
+    , m_oe_entry(oe_entry)
     , m_u_entry(u_entry)
+    , m_ue_entry(ue_entry)
+    , m_perms_entry(perms_entry)
     , m_flags(flags)
     , m_encrypt_metadata(encrypt_metadata)
     , m_length(length)

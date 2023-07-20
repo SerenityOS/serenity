@@ -39,7 +39,7 @@ class StandardSecurityHandler : public SecurityHandler {
 public:
     static PDFErrorOr<NonnullRefPtr<StandardSecurityHandler>> create(Document*, NonnullRefPtr<DictObject> encryption_dict);
 
-    StandardSecurityHandler(Document*, size_t revision, DeprecatedString const& o_entry, DeprecatedString const& u_entry, u32 flags, bool encrypt_metadata, size_t length, CryptFilterMethod method);
+    StandardSecurityHandler(Document*, size_t revision, DeprecatedString const& o_entry, DeprecatedString const& oe_entry, DeprecatedString const& u_entry, DeprecatedString const& ue_entry, DeprecatedString const& perms, u32 flags, bool encrypt_metadata, size_t length, CryptFilterMethod method);
 
     ~StandardSecurityHandler() override = default;
 
@@ -74,7 +74,10 @@ private:
     size_t m_revision;
     Optional<ByteBuffer> m_encryption_key;
     DeprecatedString m_o_entry;
+    DeprecatedString m_oe_entry;
     DeprecatedString m_u_entry;
+    DeprecatedString m_ue_entry;
+    DeprecatedString m_perms_entry;
     u32 m_flags;
     bool m_encrypt_metadata;
     size_t m_length;
