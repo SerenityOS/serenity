@@ -342,10 +342,13 @@ bool StandardSecurityHandler::authenticate_owner_password_r6_and_later(StringVie
 bool StandardSecurityHandler::try_provide_user_password(StringView password_string)
 {
     bool has_user_password;
-    if (m_revision >= 6)
-        has_user_password = authenticate_user_password_r6_and_later(password_string);
-    else
+    if (m_revision >= 6) {
+        // This checks both owner and user password.
+        auto password = ByteBuffer::copy(password_string.bytes()).release_value_but_fixme_should_propagate_errors();
+        has_user_password = compute_encryption_key_r6_and_later(move(password));
+    } else {
         has_user_password = authenticate_user_password_r2_to_r5(password_string);
+    }
 
     if (!has_user_password)
         m_encryption_key = {};
