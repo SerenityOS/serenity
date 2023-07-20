@@ -34,6 +34,7 @@ public:
     Function<bool(u32)> on_score_update;
 
     void set_skin_color(Color);
+    Gfx::Color get_skin_color() const { return m_snake_color; }
     void set_skin_name(DeprecatedString);
     void set_skin(NonnullOwnPtr<SnakeSkin> skin);
 
