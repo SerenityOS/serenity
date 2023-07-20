@@ -117,6 +117,9 @@ Gfx::AffineTransform SVGGraphicsElement::get_transform() const
 
 void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {
+    // FIXME: Hack to ensure unitless SVG properties (such as font-size) are parsed.
+    FIXME::TemporarilyEnableQuirksMode enable_quirks(document());
+
     CSS::Parser::ParsingContext parsing_context { document() };
     for_each_attribute([&](auto& name, auto& value) {
         if (name.equals_ignoring_ascii_case("fill"sv)) {
