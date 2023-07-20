@@ -417,6 +417,10 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
     m_global_data.with([&](auto& global_data) {
         // We assume that the physical page range is contiguous and doesn't contain huge gaps!
         PhysicalAddress highest_physical_address;
+#if ARCH(X86_64)
+        // On x86 LAPIC is at 0xfee00000 or a similar address. Round up to 0x100000000LL to cover variations.
+        highest_physical_address = PhysicalAddress { 0x100000000LL };
+#endif
         for (auto& range : global_data.used_memory_ranges) {
             if (range.end.get() > highest_physical_address.get())
                 highest_physical_address = range.end;
@@ -426,6 +430,15 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
             if (range_end.get() > highest_physical_address.get())
                 highest_physical_address = range_end;
         }
+
+#if ARCH(X86_64)
+        // Map multiboot framebuffer
+        if ((multiboot_flags & MULTIBOOT_INFO_FRAMEBUFFER_INFO) && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
+            PhysicalAddress multiboot_framebuffer_addr_end = multiboot_framebuffer_addr.offset(multiboot_framebuffer_height * multiboot_framebuffer_pitch);
+            if (multiboot_framebuffer_addr_end > highest_physical_address)
+                highest_physical_address = multiboot_framebuffer_addr_end;
+        }
+#endif
 
         // Calculate how many total physical pages the array will have
         m_physical_page_entries_count = PhysicalAddress::physical_page_index(highest_physical_address.get()) + 1;
