@@ -34,6 +34,11 @@ void Text::EmphasisNode::render_for_terminal(StringBuilder& builder) const
     }
 }
 
+void Text::EmphasisNode::render_for_raw_print(StringBuilder& builder) const
+{
+    child->render_for_raw_print(builder);
+}
+
 size_t Text::EmphasisNode::terminal_length() const
 {
     return child->terminal_length();
@@ -62,6 +67,11 @@ void Text::CodeNode::render_for_terminal(StringBuilder& builder) const
     builder.append("\e[22m"sv);
 }
 
+void Text::CodeNode::render_for_raw_print(StringBuilder& builder) const
+{
+    code->render_for_raw_print(builder);
+}
+
 size_t Text::CodeNode::terminal_length() const
 {
     return code->terminal_length();
@@ -85,6 +95,10 @@ void Text::BreakNode::render_for_terminal(StringBuilder&) const
 {
 }
 
+void Text::BreakNode::render_for_raw_print(StringBuilder&) const
+{
+}
+
 size_t Text::BreakNode::terminal_length() const
 {
     return 0;
@@ -102,6 +116,11 @@ RecursionDecision Text::BreakNode::walk(Visitor& visitor) const
 void Text::TextNode::render_to_html(StringBuilder& builder) const
 {
     builder.append(escape_html_entities(text));
+}
+
+void Text::TextNode::render_for_raw_print(StringBuilder& builder) const
+{
+    builder.append(text);
 }
 
 void Text::TextNode::render_for_terminal(StringBuilder& builder) const
@@ -158,6 +177,11 @@ void Text::LinkNode::render_to_html(StringBuilder& builder) const
     }
 }
 
+void Text::LinkNode::render_for_raw_print(StringBuilder& builder) const
+{
+    text->render_for_raw_print(builder);
+}
+
 void Text::LinkNode::render_for_terminal(StringBuilder& builder) const
 {
     bool is_linked = href.contains("://"sv);
@@ -195,6 +219,13 @@ void Text::MultiNode::render_to_html(StringBuilder& builder) const
 {
     for (auto& child : children) {
         child->render_to_html(builder);
+    }
+}
+
+void Text::MultiNode::render_for_raw_print(StringBuilder& builder) const
+{
+    for (auto& child : children) {
+        child->render_for_raw_print(builder);
     }
 }
 
@@ -236,6 +267,11 @@ void Text::StrikeThroughNode::render_to_html(StringBuilder& builder) const
     builder.append("</del>"sv);
 }
 
+void Text::StrikeThroughNode::render_for_raw_print(StringBuilder& builder) const
+{
+    striked_text->render_for_raw_print(builder);
+}
+
 void Text::StrikeThroughNode::render_for_terminal(StringBuilder& builder) const
 {
     builder.append("\e[9m"sv);
@@ -266,6 +302,13 @@ DeprecatedString Text::render_to_html() const
 {
     StringBuilder builder;
     m_node->render_to_html(builder);
+    return builder.to_deprecated_string().trim(" \n\t"sv);
+}
+
+DeprecatedString Text::render_for_raw_print() const
+{
+    StringBuilder builder;
+    m_node->render_for_raw_print(builder);
     return builder.to_deprecated_string().trim(" \n\t"sv);
 }
 

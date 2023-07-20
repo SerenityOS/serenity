@@ -23,6 +23,7 @@ public:
     public:
         virtual void render_to_html(StringBuilder& builder) const = 0;
         virtual void render_for_terminal(StringBuilder& builder) const = 0;
+        virtual void render_for_raw_print(StringBuilder& builder) const = 0;
         virtual size_t terminal_length() const = 0;
         virtual RecursionDecision walk(Visitor&) const = 0;
 
@@ -42,6 +43,7 @@ public:
 
         virtual void render_to_html(StringBuilder& builder) const override;
         virtual void render_for_terminal(StringBuilder& builder) const override;
+        virtual void render_for_raw_print(StringBuilder& builder) const override;
         virtual size_t terminal_length() const override;
         virtual RecursionDecision walk(Visitor&) const override;
     };
@@ -57,6 +59,7 @@ public:
 
         virtual void render_to_html(StringBuilder& builder) const override;
         virtual void render_for_terminal(StringBuilder& builder) const override;
+        virtual void render_for_raw_print(StringBuilder& builder) const override;
         virtual size_t terminal_length() const override;
         virtual RecursionDecision walk(Visitor&) const override;
     };
@@ -65,6 +68,7 @@ public:
     public:
         virtual void render_to_html(StringBuilder& builder) const override;
         virtual void render_for_terminal(StringBuilder& builder) const override;
+        virtual void render_for_raw_print(StringBuilder& builder) const override;
         virtual size_t terminal_length() const override;
         virtual RecursionDecision walk(Visitor&) const override;
     };
@@ -88,6 +92,7 @@ public:
 
         virtual void render_to_html(StringBuilder& builder) const override;
         virtual void render_for_terminal(StringBuilder& builder) const override;
+        virtual void render_for_raw_print(StringBuilder& builder) const override;
         virtual size_t terminal_length() const override;
         virtual RecursionDecision walk(Visitor&) const override;
     };
@@ -115,6 +120,7 @@ public:
         }
         virtual void render_to_html(StringBuilder& builder) const override;
         virtual void render_for_terminal(StringBuilder& builder) const override;
+        virtual void render_for_raw_print(StringBuilder& builder) const override;
         virtual size_t terminal_length() const override;
         virtual RecursionDecision walk(Visitor&) const override;
     };
@@ -125,6 +131,7 @@ public:
 
         virtual void render_to_html(StringBuilder& builder) const override;
         virtual void render_for_terminal(StringBuilder& builder) const override;
+        virtual void render_for_raw_print(StringBuilder& builder) const override;
         virtual size_t terminal_length() const override;
         virtual RecursionDecision walk(Visitor&) const override;
     };
@@ -140,6 +147,7 @@ public:
 
         virtual void render_to_html(StringBuilder& builder) const override;
         virtual void render_for_terminal(StringBuilder& builder) const override;
+        virtual void render_for_raw_print(StringBuilder& builder) const override;
         virtual size_t terminal_length() const override;
         virtual RecursionDecision walk(Visitor&) const override;
     };
@@ -148,6 +156,7 @@ public:
 
     DeprecatedString render_to_html() const;
     DeprecatedString render_for_terminal() const;
+    DeprecatedString render_for_raw_print() const;
     RecursionDecision walk(Visitor&) const;
 
     static Text parse(StringView);
