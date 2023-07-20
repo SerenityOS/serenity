@@ -74,6 +74,22 @@ extern "C" [[noreturn]] void init();
 
 u64 generate_secure_seed();
 
+static void memmove_virt(void* dest_virt, FlatPtr dest_phys, void* src, size_t n)
+{
+    if (dest_phys < (FlatPtr)src) {
+        u8* pd = (u8*)dest_virt;
+        u8 const* ps = (u8 const*)src;
+        for (; n--;)
+            *pd++ = *ps++;
+        return;
+    }
+
+    u8* pd = (u8*)dest_virt;
+    u8 const* ps = (u8 const*)src;
+    for (pd += n, ps += n; n--;)
+        *--pd = *--ps;
+}
+
 extern "C" [[noreturn]] void init()
 {
     if (multiboot_info_ptr->mods_count < 1)
@@ -154,11 +170,15 @@ extern "C" [[noreturn]] void init()
 
     reload_cr3();
 
-    for (ssize_t i = kernel_elf_header.e_phnum - 1; i >= 0; i--) {
-        auto& kernel_program_header = kernel_program_headers[i];
+    int backwards = kernel_physical_base >= (FlatPtr)kernel_image;
+
+    for (ssize_t i = 0; i < kernel_elf_header.e_phnum; i++) {
+        auto& kernel_program_header = kernel_program_headers[backwards ? kernel_elf_header.e_phnum - 1 - i : i];
         if (kernel_program_header.p_type != PT_LOAD)
             continue;
-        __builtin_memmove((u8*)kernel_load_base + kernel_program_header.p_vaddr, kernel_image + kernel_program_header.p_offset, kernel_program_header.p_filesz);
+        memmove_virt((u8*)kernel_load_base + kernel_program_header.p_vaddr,
+            kernel_physical_base + kernel_program_header.p_vaddr,
+            kernel_image + kernel_program_header.p_offset, kernel_program_header.p_filesz);
     }
 
     for (ssize_t i = kernel_elf_header.e_phnum - 1; i >= 0; i--) {
