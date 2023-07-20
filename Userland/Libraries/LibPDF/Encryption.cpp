@@ -166,6 +166,19 @@ PDFErrorOr<NonnullRefPtr<StandardSecurityHandler>> StandardSecurityHandler::crea
     if (encryption_dict->contains(CommonNames::EncryptMetadata))
         encryption_dict->get_value(CommonNames::EncryptMetadata).get<bool>();
 
+    if (v >= 5) {
+        // O and U are 48 bytes for V == 5, but some files pad them with nul bytes to 127 bytes. So trim them, if necessary.
+        if (o.length() > 48)
+            o = o.substring(0, 48);
+        if (u.length() > 48)
+            u = u.substring(0, 48);
+
+        if (o.length() != 48)
+            return Error(Error::Type::Parse, "Invalid O size");
+        if (u.length() != 48)
+            return Error(Error::Type::Parse, "Invalid U size");
+    }
+
     return adopt_ref(*new StandardSecurityHandler(document, revision, o, u, p, encrypt_metadata, length, method));
 }
 
@@ -292,6 +305,24 @@ bool StandardSecurityHandler::authenticate_user_password_r6_and_later(StringView
     auto hash = computing_a_hash_r6_and_later(input, password, HashKind::User);
 
     return hash == m_u_entry.bytes().trim(32);
+}
+
+bool StandardSecurityHandler::authenticate_owner_password_r6_and_later(StringView password)
+{
+    // ISO 32000 (PDF 2.0), 7.6.4.4.11 Algorithm 12: Authenticating the owner password (Security handlers of
+    // revision 6)
+
+    // a) Test the password against the owner key by computing the 32-byte hash using algorithm 2.B with an
+    //    input string consisting of the UTF-8 password concatenated with the 8 bytes of Owner Validation Salt
+    //    and the 48 byte U string.  If the 32- byte result matches the first 32 bytes of the O string, this is the owner
+    //    password.
+    ByteBuffer input;
+    input.append(password.bytes());
+    input.append(m_o_entry.bytes().slice(32, 8)); // See comment in compute_encryption_key_r6_and_later() re "Validation Salt".
+    input.append(m_u_entry.bytes());
+    auto hash = computing_a_hash_r6_and_later(input, password, HashKind::Owner);
+
+    return hash == m_o_entry.bytes().trim(32);
 }
 
 bool StandardSecurityHandler::try_provide_user_password(StringView password_string)

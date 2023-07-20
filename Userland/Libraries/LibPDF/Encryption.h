@@ -59,6 +59,7 @@ private:
 
     bool authenticate_user_password_r2_to_r5(StringView password_string);
     bool authenticate_user_password_r6_and_later(StringView password_string);
+    bool authenticate_owner_password_r6_and_later(StringView password_string);
 
     ByteBuffer compute_encryption_key_r2_to_r5(ByteBuffer password_string);
     ByteBuffer compute_encryption_key_r6_and_later(ByteBuffer password_string);
