@@ -7,6 +7,7 @@
 #include "GeneratorUtil.h"
 #include <AK/AllOf.h>
 #include <AK/Array.h>
+#include <AK/BinarySearch.h>
 #include <AK/CharacterTypes.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Error.h>
@@ -96,6 +97,18 @@ struct BlockName {
     size_t name { 0 };
 };
 
+struct CodePointTables {
+    static constexpr auto MSB_COUNT = 16u;
+    static_assert(MSB_COUNT < 24u);
+
+    static constexpr auto LSB_COUNT = 24u - MSB_COUNT;
+    static constexpr auto LSB_MASK = NumericLimits<u32>::max() >> (NumericLimits<u32>::digits() - LSB_COUNT);
+
+    Vector<size_t> stage1;
+    Vector<size_t> stage2;
+    Vector<Vector<bool>> unique_properties;
+};
+
 struct UnicodeData {
     UniqueStringStorage unique_strings;
 
@@ -156,6 +169,14 @@ struct UnicodeData {
     PropList grapheme_break_props;
     PropList word_break_props;
     PropList sentence_break_props;
+
+    CodePointTables general_category_tables;
+    CodePointTables property_tables;
+    CodePointTables script_tables;
+    CodePointTables script_extension_tables;
+    CodePointTables grapheme_break_tables;
+    CodePointTables word_break_tables;
+    CodePointTables sentence_break_tables;
 };
 
 static DeprecatedString sanitize_entry(DeprecatedString const& entry)
@@ -1071,67 +1092,79 @@ static constexpr Array<@mapping_type@, @size@> s_@name@_mappings { {
             return data.decomposition_mapping;
         });
 
-    auto append_code_point_range_list = [&](DeprecatedString name, Vector<Unicode::CodePointRange> const& ranges) {
-        generator.set("name", name);
-        generator.set("size", DeprecatedString::number(ranges.size()));
-        generator.append(R"~~~(
-static constexpr Array<CodePointRange, @size@> @name@ { {
+    auto append_code_point_tables = [&](StringView collection_snake, CodePointTables const& tables) -> ErrorOr<void> {
+        auto append_stage = [&](auto const& stage, auto name, auto type) -> ErrorOr<void> {
+            TRY(generator.set("name", TRY(String::formatted("{}_{}", collection_snake, name))));
+            TRY(generator.set("size", TRY(String::number(stage.size()))));
+            generator.set("type", type);
+
+            generator.append(R"~~~(
+static constexpr Array<@type@, @size@> @name@ { {
     )~~~");
 
-        constexpr size_t max_ranges_per_row = 20;
-        size_t ranges_in_current_row = 0;
+            static constexpr size_t max_values_per_row = 300;
+            size_t values_in_current_row = 0;
 
-        for (auto const& range : ranges) {
-            if (ranges_in_current_row++ > 0)
-                generator.append(" ");
+            for (auto value : stage) {
+                if (values_in_current_row++ > 0)
+                    generator.append(", ");
 
-            generator.set("first", DeprecatedString::formatted("{:#x}", range.first));
-            generator.set("last", DeprecatedString::formatted("{:#x}", range.last));
-            generator.append("{ @first@, @last@ },");
+                TRY(generator.set("value", TRY(String::number(value))));
+                generator.append("@value@");
 
-            if (ranges_in_current_row == max_ranges_per_row) {
-                ranges_in_current_row = 0;
-                generator.append("\n    ");
+                if (values_in_current_row == max_values_per_row) {
+                    values_in_current_row = 0;
+                    generator.append(",\n    ");
+                }
             }
-        }
 
-        generator.append(R"~~~(
-} };
-)~~~");
-    };
-
-    auto append_prop_list = [&](StringView collection_name, StringView property_format, PropList const& property_list) {
-        for (auto const& property : property_list) {
-            auto name = DeprecatedString::formatted(property_format, property.key);
-            append_code_point_range_list(move(name), property.value);
-        }
-
-        auto property_names = property_list.keys();
-        quick_sort(property_names);
-
-        generator.set("name", collection_name);
-        generator.set("size", DeprecatedString::number(property_names.size()));
-        generator.append(R"~~~(
-static constexpr Array<ReadonlySpan<CodePointRange>, @size@> @name@ { {)~~~");
-
-        for (auto const& property_name : property_names) {
-            generator.set("name", DeprecatedString::formatted(property_format, property_name));
             generator.append(R"~~~(
-    @name@.span(),)~~~");
-        }
-
-        generator.append(R"~~~(
 } };
 )~~~");
+
+            return {};
+        };
+
+        auto append_unique_properties = [&](auto const& unique_properties) -> ErrorOr<void> {
+            TRY(generator.set("name", TRY(String::formatted("{}_unique_properties", collection_snake))));
+            TRY(generator.set("outer_size", TRY(String::number(unique_properties.size()))));
+            TRY(generator.set("inner_size", TRY(String::number(unique_properties[0].size()))));
+
+            generator.append(R"~~~(
+static constexpr Array<Array<bool, @inner_size@>, @outer_size@> @name@ { {)~~~");
+
+            for (auto const& property_set : unique_properties) {
+                generator.append(R"~~~(
+    { )~~~");
+
+                for (auto value : property_set) {
+                    TRY(generator.set("value", TRY(String::formatted("{}", value))));
+                    generator.append("@value@, ");
+                }
+
+                generator.append(" },");
+            }
+
+            generator.append(R"~~~(
+} };
+)~~~");
+
+            return {};
+        };
+
+        TRY(append_stage(tables.stage1, "stage1"sv, "u16"sv));
+        TRY(append_stage(tables.stage2, "stage2"sv, "u16"sv));
+        TRY(append_unique_properties(tables.unique_properties));
+        return {};
     };
 
-    append_prop_list("s_general_categories"sv, "s_general_category_{}"sv, unicode_data.general_categories);
-    append_prop_list("s_properties"sv, "s_property_{}"sv, unicode_data.prop_list);
-    append_prop_list("s_scripts"sv, "s_script_{}"sv, unicode_data.script_list);
-    append_prop_list("s_script_extensions"sv, "s_script_extension_{}"sv, unicode_data.script_extensions);
-    append_prop_list("s_grapheme_break_properties"sv, "s_grapheme_break_property_{}"sv, unicode_data.grapheme_break_props);
-    append_prop_list("s_word_break_properties"sv, "s_word_break_property_{}"sv, unicode_data.word_break_props);
-    append_prop_list("s_sentence_break_properties"sv, "s_sentence_break_property_{}"sv, unicode_data.sentence_break_props);
+    TRY(append_code_point_tables("s_general_categories"sv, unicode_data.general_category_tables));
+    TRY(append_code_point_tables("s_properties"sv, unicode_data.property_tables));
+    TRY(append_code_point_tables("s_scripts"sv, unicode_data.script_tables));
+    TRY(append_code_point_tables("s_script_extensions"sv, unicode_data.script_extension_tables));
+    TRY(append_code_point_tables("s_grapheme_break_properties"sv, unicode_data.grapheme_break_tables));
+    TRY(append_code_point_tables("s_word_break_properties"sv, unicode_data.word_break_tables));
+    TRY(append_code_point_tables("s_sentence_break_properties"sv, unicode_data.sentence_break_tables));
 
     auto append_code_point_display_names = [&](StringView type, StringView name, auto const& display_names) {
         constexpr size_t max_values_per_row = 30;
@@ -1271,20 +1304,27 @@ Optional<CodePointDecomposition const> code_point_decomposition_by_index(size_t 
 }
 )~~~");
 
-    auto append_prop_search = [&](StringView enum_title, StringView enum_snake, StringView collection_name) {
+    auto append_prop_search = [&](StringView enum_title, StringView enum_snake, StringView collection_name) -> ErrorOr<void> {
         generator.set("enum_title", enum_title);
         generator.set("enum_snake", enum_snake);
         generator.set("collection_name", collection_name);
+
+        TRY(generator.set("LSB_COUNT", TRY(String::number(CodePointTables::LSB_COUNT))));
+        TRY(generator.set("LSB_MASK", TRY(String::formatted("{:#x}", CodePointTables::LSB_MASK))));
+
         generator.append(R"~~~(
 bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
 {
-    auto index = static_cast<@enum_title@UnderlyingType>(@enum_snake@);
-    auto const& ranges = @collection_name@.at(index);
+    auto stage1_index = code_point >> @LSB_COUNT@;
+    auto stage2_index = @collection_name@_stage1[stage1_index] + (code_point & @LSB_MASK@);
+    auto unique_properties_index = @collection_name@_stage2[stage2_index];
 
-    auto const* range = binary_search(ranges, code_point, nullptr, CodePointRangeComparator {});
-    return range != nullptr;
+    auto const& property_set = @collection_name@_unique_properties[unique_properties_index];
+    return property_set[to_underlying(@enum_snake@)];
 }
 )~~~");
+
+        return {};
     };
 
     auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& prop_list, Vector<Alias> const& aliases) -> ErrorOr<void> {
@@ -1312,19 +1352,19 @@ bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
 
     TRY(append_from_string("Locale"sv, "locale"sv, unicode_data.locales, {}));
 
-    append_prop_search("GeneralCategory"sv, "general_category"sv, "s_general_categories"sv);
+    TRY(append_prop_search("GeneralCategory"sv, "general_category"sv, "s_general_categories"sv));
     TRY(append_from_string("GeneralCategory"sv, "general_category"sv, unicode_data.general_categories, unicode_data.general_category_aliases));
 
-    append_prop_search("Property"sv, "property"sv, "s_properties"sv);
+    TRY(append_prop_search("Property"sv, "property"sv, "s_properties"sv));
     TRY(append_from_string("Property"sv, "property"sv, unicode_data.prop_list, unicode_data.prop_aliases));
 
-    append_prop_search("Script"sv, "script"sv, "s_scripts"sv);
-    append_prop_search("Script"sv, "script_extension"sv, "s_script_extensions"sv);
+    TRY(append_prop_search("Script"sv, "script"sv, "s_scripts"sv));
+    TRY(append_prop_search("Script"sv, "script_extension"sv, "s_script_extensions"sv));
     TRY(append_from_string("Script"sv, "script"sv, unicode_data.script_list, unicode_data.script_aliases));
 
-    append_prop_search("GraphemeBreakProperty"sv, "grapheme_break_property"sv, "s_grapheme_break_properties"sv);
-    append_prop_search("WordBreakProperty"sv, "word_break_property"sv, "s_word_break_properties"sv);
-    append_prop_search("SentenceBreakProperty"sv, "sentence_break_property"sv, "s_sentence_break_properties"sv);
+    TRY(append_prop_search("GraphemeBreakProperty"sv, "grapheme_break_property"sv, "s_grapheme_break_properties"sv));
+    TRY(append_prop_search("WordBreakProperty"sv, "word_break_property"sv, "s_word_break_properties"sv));
+    TRY(append_prop_search("SentenceBreakProperty"sv, "sentence_break_property"sv, "s_sentence_break_properties"sv));
 
     generator.append(R"~~~(
 }
@@ -1460,6 +1500,128 @@ static ErrorOr<void> normalize_script_extensions(PropList& script_extensions, Pr
     return {};
 }
 
+// The goal here is to produce a set of tables that represent a category of code point properties for every code point.
+// The most naive method would be to generate a single table per category, each with one entry per code point. Each of
+// those tables would have a size of 0x10ffff though, which is a non-starter. Instead, we create a set of 2-stage lookup
+// tables per category.
+//
+// To do so, it's important to note that Unicode tends to organize code points with similar properties together. This
+// leads to long series of code points with identical properties. Therefore, if we divide the 0x10ffff code points into
+// fixed-size blocks, many of those blocks will also be identical.
+//
+// So we iterate over every code point, classifying each one for the category of interest. We represent a classification
+// as a list of booleans. We store the classification in the CodePointTables::unique_properties list for this category.
+// As the name implies, this list is de-duplicated; we store the index into this list in a separate list, which we call
+// a "block".
+//
+// As we iterate, we "pause" every BLOCK_SIZE code points to examine the block. If the block is unique so far, we extend
+// CodePointTables::stage2 with the entries of that block (so CodePointTables::stage2 is also a list of indices into
+// CodePointTables::unique_properties). We then append the index of the start of that block in CodePointTables::stage2
+// to CodePointTables::stage1.
+//
+// The value of BLOCK_SIZE is determined by CodePointTables::MSB_COUNT and CodePointTables::LSB_COUNT. We need 24 bits
+// to describe all code points; the blocks we create are based on splitting these bits into 2 segments. We currently use
+// a 16:8 bit split. So when perform a runtime lookup of a code point in the 2-stage tables, we:
+//
+//     1. Use most-significant 16 bits of the code point as the index into CodePointTables::stage1. That value is the
+//        index into CodePointTables::stage2 of the start of the block that contains properties for this code point.
+//
+//     2. Add the least-significant 8 bits of the code point to that value, to use as the index into
+//        CodePointTables::stage2. As described above, that value is the index into CodePointTables::unique_properties,
+//        which contains the classification for this code point.
+//
+// Using the code point GeneralCategory as an example, we end up with a CodePointTables::stage1 with a size of ~4000,
+// a CodePointTables::stage2 with a size of ~40,000, and a CodePointTables::unique_properties with a size of ~30. So
+// this process reduces over 1 million entries (0x10ffff) to ~44,030.
+//
+// For much more in-depth reading, see: https://icu.unicode.org/design/struct/utrie
+static ErrorOr<void> create_code_point_tables(UnicodeData& unicode_data)
+{
+    static constexpr auto MAX_CODE_POINT = 0x10ffffu;
+
+    struct TableMetadata {
+        static ErrorOr<TableMetadata> create(PropList const& property_list)
+        {
+            TableMetadata data;
+            TRY(data.property_values.try_ensure_capacity(property_list.size()));
+            TRY(data.property_set.try_ensure_capacity(property_list.size()));
+
+            auto property_names = property_list.keys();
+            quick_sort(property_names);
+
+            for (auto const& property_name : property_names) {
+                auto const& code_point_rages = property_list.get(property_name).value();
+                data.property_values.unchecked_append(code_point_rages);
+            }
+
+            return data;
+        }
+
+        Vector<typename PropList::ValueType const&> property_values;
+        Vector<bool> property_set;
+
+        Vector<size_t> current_block;
+        HashMap<decltype(current_block), size_t> unique_blocks;
+    };
+
+    auto update_tables = [](auto code_point, auto& tables, auto& metadata) -> ErrorOr<void> {
+        static constexpr auto BLOCK_SIZE = CodePointTables::LSB_MASK + 1;
+
+        for (auto const& property_values : metadata.property_values) {
+            auto has_property = binary_search(property_values, code_point, nullptr, Unicode::CodePointRangeComparator {}) != nullptr;
+            metadata.property_set.unchecked_append(has_property);
+        }
+
+        size_t unique_properties_index = 0;
+        if (auto block_index = tables.unique_properties.find_first_index(metadata.property_set); block_index.has_value()) {
+            unique_properties_index = *block_index;
+        } else {
+            unique_properties_index = tables.unique_properties.size();
+            TRY(tables.unique_properties.try_append(metadata.property_set));
+        }
+
+        TRY(metadata.current_block.try_append(unique_properties_index));
+        metadata.property_set.clear_with_capacity();
+
+        if (metadata.current_block.size() == BLOCK_SIZE || code_point == MAX_CODE_POINT) {
+            size_t stage2_index = 0;
+            if (auto block_index = metadata.unique_blocks.get(metadata.current_block); block_index.has_value()) {
+                stage2_index = *block_index;
+            } else {
+                stage2_index = tables.stage2.size();
+                TRY(tables.stage2.try_extend(metadata.current_block));
+
+                TRY(metadata.unique_blocks.try_set(metadata.current_block, stage2_index));
+            }
+
+            TRY(tables.stage1.try_append(stage2_index));
+            metadata.current_block.clear_with_capacity();
+        }
+
+        return {};
+    };
+
+    auto general_category_metadata = TRY(TableMetadata::create(unicode_data.general_categories));
+    auto property_metadata = TRY(TableMetadata::create(unicode_data.prop_list));
+    auto script_metadata = TRY(TableMetadata::create(unicode_data.script_list));
+    auto script_extension_metadata = TRY(TableMetadata::create(unicode_data.script_extensions));
+    auto grapheme_break_metadata = TRY(TableMetadata::create(unicode_data.grapheme_break_props));
+    auto word_break_metadata = TRY(TableMetadata::create(unicode_data.word_break_props));
+    auto sentence_break_metadata = TRY(TableMetadata::create(unicode_data.sentence_break_props));
+
+    for (u32 code_point = 0; code_point <= MAX_CODE_POINT; ++code_point) {
+        TRY(update_tables(code_point, unicode_data.general_category_tables, general_category_metadata));
+        TRY(update_tables(code_point, unicode_data.property_tables, property_metadata));
+        TRY(update_tables(code_point, unicode_data.script_tables, script_metadata));
+        TRY(update_tables(code_point, unicode_data.script_extension_tables, script_extension_metadata));
+        TRY(update_tables(code_point, unicode_data.grapheme_break_tables, grapheme_break_metadata));
+        TRY(update_tables(code_point, unicode_data.word_break_tables, word_break_metadata));
+        TRY(update_tables(code_point, unicode_data.sentence_break_tables, sentence_break_metadata));
+    }
+
+    return {};
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     StringView generated_header_path;
@@ -1550,6 +1712,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(parse_value_alias_list(*prop_value_alias_file, "gc"sv, unicode_data.general_categories.keys(), unicode_data.general_category_aliases));
     TRY(parse_value_alias_list(*prop_value_alias_file, "sc"sv, unicode_data.script_list.keys(), unicode_data.script_aliases, false));
     TRY(normalize_script_extensions(unicode_data.script_extensions, unicode_data.script_list, unicode_data.script_aliases));
+
+    TRY(create_code_point_tables(unicode_data));
 
     TRY(generate_unicode_data_header(*generated_header_file, unicode_data));
     TRY(generate_unicode_data_implementation(*generated_implementation_file, unicode_data));
