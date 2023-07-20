@@ -783,8 +783,9 @@ Completion ForStatement::loop_evaluation(Interpreter& interpreter, Vector<Deprec
             loop_env = new_declarative_environment(*old_environment);
             auto is_const = declaration->is_constant_declaration();
             // NOTE: Due to the use of MUST with `create_immutable_binding` and `create_mutable_binding` below,
-            //       an exception should not result from `for_each_bound_name`.
-            MUST(declaration->for_each_bound_name([&](auto const& name) {
+            //       an exception should not result from `for_each_bound_identifier`.
+            MUST(declaration->for_each_bound_identifier([&](auto const& identifier) {
+                auto const& name = identifier.string();
                 if (is_const) {
                     MUST(loop_env->create_immutable_binding(vm, name, true));
                 } else {
@@ -985,8 +986,9 @@ struct ForInOfHeadState {
             // 14.7.5.4 Runtime Semantics: ForDeclarationBindingInstantiation, https://tc39.es/ecma262/#sec-runtime-semantics-fordeclarationbindinginstantiation
             // 1. For each element name of the BoundNames of ForBinding, do
             // NOTE: Due to the use of MUST with `create_immutable_binding` and `create_mutable_binding` below,
-            //       an exception should not result from `for_each_bound_name`.
-            MUST(for_declaration.for_each_bound_name([&](auto const& name) {
+            //       an exception should not result from `for_each_bound_identifier`.
+            MUST(for_declaration.for_each_bound_identifier([&](auto const& identifier) {
+                auto const& name = identifier.string();
                 if (first_name.is_empty())
                     first_name = name;
 
@@ -1081,9 +1083,9 @@ static ThrowCompletionOr<ForInOfHeadState> for_in_of_head_execute(Interpreter& i
             } else {
                 state.lhs_kind = ForInOfHeadState::LexicalBinding;
                 new_environment = new_declarative_environment(*interpreter.lexical_environment());
-                // NOTE: Due to the use of MUST with `create_mutable_binding` below, an exception should not result from `for_each_bound_name`.
-                MUST(variable_declaration.for_each_bound_name([&](auto const& name) {
-                    MUST(new_environment->create_mutable_binding(vm, name, false));
+                // NOTE: Due to the use of MUST with `create_mutable_binding` below, an exception should not result from `for_each_bound_identifier.
+                MUST(variable_declaration.for_each_bound_identifier([&](auto const& identifier) {
+                    MUST(new_environment->create_mutable_binding(vm, identifier.string(), false));
                 }));
             }
         } else {
@@ -1091,9 +1093,9 @@ static ThrowCompletionOr<ForInOfHeadState> for_in_of_head_execute(Interpreter& i
             auto& declaration = static_cast<UsingDeclaration const&>(*(*ast_ptr));
             state.lhs_kind = ForInOfHeadState::LexicalBinding;
             new_environment = new_declarative_environment(*interpreter.lexical_environment());
-            // NOTE: Due to the use of MUST with `create_mutable_binding` below, an exception should not result from `for_each_bound_name`.
-            MUST(declaration.for_each_bound_name([&](auto const& name) {
-                MUST(new_environment->create_mutable_binding(vm, name, false));
+            // NOTE: Due to the use of MUST with `create_mutable_binding` below, an exception should not result from `for_each_bound_identifier.
+            MUST(declaration.for_each_bound_identifier([&](auto const& identifier) {
+                MUST(new_environment->create_mutable_binding(vm, identifier.string(), false));
             }));
         }
 
@@ -3121,8 +3123,8 @@ ThrowCompletionOr<void> VariableDeclaration::for_each_bound_name(ThrowCompletion
                 return callback(id->string());
             },
             [&](NonnullRefPtr<BindingPattern const> const& binding) {
-                return binding->for_each_bound_name([&](auto const& name) {
-                    return callback(name);
+                return binding->for_each_bound_identifier([&](auto const& identifier) {
+                    return callback(identifier.string());
                 });
             }));
     }
@@ -3933,9 +3935,9 @@ Completion TryStatement::execute(Interpreter& interpreter) const
             [&](NonnullRefPtr<BindingPattern const> const& pattern) {
                 // 3. For each element argName of the BoundNames of CatchParameter, do
                 // NOTE: Due to the use of MUST with `create_mutable_binding` below, an exception should not result from `for_each_bound_name`.
-                MUST(pattern->for_each_bound_name([&](auto& name) {
+                MUST(pattern->for_each_bound_identifier([&](auto& identifier) {
                     // a. Perform ! catchEnv.CreateMutableBinding(argName, false).
-                    MUST(catch_environment->create_mutable_binding(vm, name, false));
+                    MUST(catch_environment->create_mutable_binding(vm, identifier.string(), false));
                 }));
             });
 
@@ -4427,8 +4429,8 @@ ThrowCompletionOr<void> ScopeNode::for_each_lexically_scoped_declaration(ThrowCo
 ThrowCompletionOr<void> ScopeNode::for_each_lexically_declared_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const
 {
     for (auto const& declaration : m_lexical_declarations) {
-        TRY(declaration->for_each_bound_name([&](auto const& name) {
-            return callback(name);
+        TRY(declaration->for_each_bound_identifier([&](auto const& identifier) {
+            return callback(identifier.string());
         }));
     }
     return {};
@@ -4447,8 +4449,8 @@ ThrowCompletionOr<void> ScopeNode::for_each_lexically_declared_identifier(ThrowC
 ThrowCompletionOr<void> ScopeNode::for_each_var_declared_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const
 {
     for (auto& declaration : m_var_declarations) {
-        TRY(declaration->for_each_bound_name([&](auto const& name) {
-            return callback(name);
+        TRY(declaration->for_each_bound_identifier([&](auto const& identifier) {
+            return callback(identifier.string());
         }));
     }
     return {};
@@ -4813,7 +4815,8 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(VM& vm, Global
         // Note: This is done in for_each_var_scoped_variable_declaration.
 
         // i. For each String vn of the BoundNames of d, do
-        return declaration.for_each_bound_name([&](auto const& name) -> ThrowCompletionOr<void> {
+        return declaration.for_each_bound_identifier([&](auto const& identifier) -> ThrowCompletionOr<void> {
+            auto const& name = identifier.string();
             // 1. If vn is not an element of declaredFunctionNames, then
             if (declared_function_names.contains(name))
                 return {};
@@ -4893,7 +4896,8 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(VM& vm, Global
     TRY(for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
         // a. NOTE: Lexically declared names are only instantiated here but not initialized.
         // b. For each element dn of the BoundNames of d, do
-        return declaration.for_each_bound_name([&](auto const& name) -> ThrowCompletionOr<void> {
+        return declaration.for_each_bound_identifier([&](auto const& identifier) -> ThrowCompletionOr<void> {
+            auto const& name = identifier.string();
             // i. If IsConstantDeclaration of d is true, then
             if (declaration.is_constant_declaration()) {
                 // 1. Perform ? env.CreateImmutableBinding(dn, true).

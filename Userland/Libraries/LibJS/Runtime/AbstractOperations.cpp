@@ -936,7 +936,9 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& pr
         // Note: This is handled by for_each_var_scoped_variable_declaration.
 
         // i. For each String vn of the BoundNames of d, do
-        return declaration.for_each_bound_name([&](auto const& name) -> ThrowCompletionOr<void> {
+        return declaration.for_each_bound_identifier([&](auto const& identifier) -> ThrowCompletionOr<void> {
+            auto const& name = identifier.string();
+
             // 1. If vn is not an element of declaredFunctionNames, then
             if (!declared_function_names.contains(name)) {
                 // a. If varEnv is a global Environment Record, then
@@ -965,7 +967,9 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& pr
         // a. NOTE: Lexically declared names are only instantiated here but not initialized.
 
         // b. For each element dn of the BoundNames of d, do
-        return declaration.for_each_bound_name([&](auto const& name) -> ThrowCompletionOr<void> {
+        return declaration.for_each_bound_identifier([&](auto const& identifier) -> ThrowCompletionOr<void> {
+            auto const& name = identifier.string();
+
             // i. If IsConstantDeclaration of d is true, then
             if (declaration.is_constant_declaration()) {
                 // 1. Perform ? lexEnv.CreateImmutableBinding(dn, true).

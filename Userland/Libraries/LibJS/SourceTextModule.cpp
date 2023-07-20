@@ -464,8 +464,9 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
     MUST(m_ecmascript_code->for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
         // a. For each element dn of the BoundNames of d, do
         // NOTE: Due to the use of MUST with `create_immutable_binding`, `create_mutable_binding` and `initialize_binding` below,
-        //       an exception should not result from `for_each_bound_name`.
-        MUST(declaration.for_each_bound_name([&](DeprecatedFlyString const& name) {
+        //       an exception should not result from `for_each_bound_identifier`.
+        MUST(declaration.for_each_bound_identifier([&](auto const& identifier) {
+            auto const& name = identifier.string();
             // i. If IsConstantDeclaration of d is true, then
             if (declaration.is_constant_declaration()) {
                 // 1. Perform ! env.CreateImmutableBinding(dn, true).

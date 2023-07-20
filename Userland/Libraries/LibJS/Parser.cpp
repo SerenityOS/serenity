@@ -110,9 +110,9 @@ public:
         ScopePusher scope_pusher(parser, nullptr, ScopeLevel::NotTopLevel, ScopeType::Catch);
         if (pattern) {
             // NOTE: Nothing in the callback throws an exception.
-            MUST(pattern->for_each_bound_name([&](auto const& name) {
-                scope_pusher.m_forbidden_var_names.set(name);
-                scope_pusher.m_bound_names.set(name);
+            MUST(pattern->for_each_bound_identifier([&](auto const& identifier) {
+                scope_pusher.m_forbidden_var_names.set(identifier.string());
+                scope_pusher.m_bound_names.set(identifier.string());
             }));
         } else if (!parameter.is_empty()) {
             scope_pusher.m_var_names.set(parameter);
@@ -149,7 +149,8 @@ public:
     {
         if (declaration->is_lexical_declaration()) {
             // NOTE: Nothing in the callback throws an exception.
-            MUST(declaration->for_each_bound_name([&](auto const& name) {
+            MUST(declaration->for_each_bound_identifier([&](auto const& identifier) {
+                auto const& name = identifier.string();
                 if (m_var_names.contains(name) || m_forbidden_lexical_names.contains(name) || m_function_names.contains(name))
                     throw_identifier_declared(name, declaration);
 
@@ -160,7 +161,8 @@ public:
             m_node->add_lexical_declaration(move(declaration));
         } else if (!declaration->is_function_declaration()) {
             // NOTE: Nothing in the callback throws an exception.
-            MUST(declaration->for_each_bound_name([&](auto const& name) {
+            MUST(declaration->for_each_bound_identifier([&](auto const& identifier) {
+                auto const& name = identifier.string();
                 ScopePusher* pusher = this;
                 while (true) {
                     if (pusher->m_lexical_names.contains(name)
@@ -185,8 +187,8 @@ public:
             if (m_scope_level != ScopeLevel::NotTopLevel && m_scope_level != ScopeLevel::ModuleTopLevel) {
                 // Only non-top levels and Module don't var declare the top functions
                 // NOTE: Nothing in the callback throws an exception.
-                MUST(declaration->for_each_bound_name([&](auto const& name) {
-                    m_var_names.set(name);
+                MUST(declaration->for_each_bound_identifier([&](auto const& identifier) {
+                    m_var_names.set(identifier.string());
                 }));
                 m_node->add_var_scoped_declaration(move(declaration));
             } else {
@@ -257,8 +259,8 @@ public:
                 },
                 [&](NonnullRefPtr<BindingPattern const> const& binding_pattern) {
                     // NOTE: Nothing in the callback throws an exception.
-                    MUST(binding_pattern->for_each_bound_name([&](auto const& name) {
-                        m_forbidden_lexical_names.set(name);
+                    MUST(binding_pattern->for_each_bound_identifier([&](auto const& identifier) {
+                        m_forbidden_lexical_names.set(identifier.string());
                     }));
                 });
         }
@@ -2754,7 +2756,9 @@ NonnullRefPtr<FunctionBody const> Parser::parse_function_body(Vector<FunctionPar
                 },
                 [&](NonnullRefPtr<BindingPattern const> const& binding) {
                     // NOTE: Nothing in the callback throws an exception.
-                    MUST(binding->for_each_bound_name([&](auto& bound_name) {
+                    MUST(binding->for_each_bound_identifier([&](auto& bound_identifier) {
+                        auto const& bound_name = bound_identifier.string();
+
                         if (function_kind == FunctionKind::Generator && bound_name == "yield"sv)
                             syntax_error("Parameter name 'yield' not allowed in this context");
 
@@ -2929,8 +2933,8 @@ Vector<FunctionParameter> Parser::parse_formal_parameters(int& function_length, 
                 [&](NonnullRefPtr<BindingPattern const> const& bindings) {
                     bool found_duplicate = false;
                     // NOTE: Nothing in the callback throws an exception.
-                    MUST(bindings->for_each_bound_name([&](auto& bound_name) {
-                        if (bound_name == parameter_name)
+                    MUST(bindings->for_each_bound_identifier([&](auto& bound_identifier) {
+                        if (bound_identifier.string() == parameter_name)
                             found_duplicate = true;
                     }));
                     return found_duplicate;
@@ -3183,7 +3187,8 @@ RefPtr<BindingPattern const> Parser::parse_binding_pattern(Parser::AllowDuplicat
 
     Vector<StringView> bound_names;
     // NOTE: Nothing in the callback throws an exception.
-    MUST(pattern->for_each_bound_name([&](auto& name) {
+    MUST(pattern->for_each_bound_identifier([&](auto& identifier) {
+        auto const& name = identifier.string();
         if (allow_duplicates == AllowDuplicates::No) {
             if (bound_names.contains_slow(name))
                 syntax_error("Duplicate parameter names in bindings");
@@ -3244,8 +3249,8 @@ NonnullRefPtr<VariableDeclaration const> Parser::parse_variable_declaration(IsFo
         if (auto pattern = parse_binding_pattern(declaration_kind != DeclarationKind::Var ? AllowDuplicates::No : AllowDuplicates::Yes, AllowMemberExpressions::No)) {
             if ((declaration_kind == DeclarationKind::Let || declaration_kind == DeclarationKind::Const)) {
                 // NOTE: Nothing in the callback throws an exception.
-                MUST(pattern->for_each_bound_name([this](auto& name) {
-                    if (name == "let"sv)
+                MUST(pattern->for_each_bound_identifier([this](auto& identifier) {
+                    if (identifier.string() == "let"sv)
                         syntax_error("Lexical binding may not be called 'let'");
                 }));
             }
@@ -3685,10 +3690,10 @@ NonnullRefPtr<CatchClause const> Parser::parse_catch_clause()
 
     if (pattern_parameter) {
         // NOTE: Nothing in the callback throws an exception.
-        MUST(pattern_parameter->for_each_bound_name(
-            [&](auto& name) {
-                check_identifier_name_for_assignment_validity(name);
-                bound_names.set(name);
+        MUST(pattern_parameter->for_each_bound_identifier(
+            [&](auto& identifier) {
+                check_identifier_name_for_assignment_validity(identifier.string());
+                bound_names.set(identifier.string());
             }));
     }
 
@@ -4888,7 +4893,8 @@ NonnullRefPtr<ExportStatement const> Parser::parse_export_statement(Program& pro
                         },
                         [&](NonnullRefPtr<BindingPattern const> const& binding) {
                             // NOTE: Nothing in the callback throws an exception.
-                            MUST(binding->for_each_bound_name([&](auto& name) {
+                            MUST(binding->for_each_bound_identifier([&](auto& identifier) {
+                                auto const& name = identifier.string();
                                 entries_with_location.append({ ExportEntry::named_export(name, name), decl_position });
                             }));
                         });
@@ -4906,9 +4912,11 @@ NonnullRefPtr<ExportStatement const> Parser::parse_export_statement(Program& pro
                     },
                     [&](NonnullRefPtr<BindingPattern const> const& binding) {
                         // NOTE: Nothing in the callback throws an exception.
-                        MUST(binding->for_each_bound_name([&](auto& name) {
-                            entries_with_location.append({ ExportEntry::named_export(name, name), variable_position });
-                        }));
+                        MUST(binding->for_each_bound_identifier(
+                            [&](auto& identifier) {
+                                auto const& name = identifier.string();
+                                entries_with_location.append({ ExportEntry::named_export(name, name), variable_position });
+                            }));
                     });
             }
             expression = variable_declaration;
