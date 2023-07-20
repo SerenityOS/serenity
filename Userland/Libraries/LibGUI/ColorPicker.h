@@ -26,6 +26,7 @@ public:
     bool color_has_alpha_channel() const { return m_color_has_alpha_channel; }
     void set_color_has_alpha_channel(bool);
     Color color() const { return m_color; }
+    Function<void(Color)> on_color_changed;
 
 private:
     explicit ColorPicker(Color, Window* parent_window = nullptr, DeprecatedString title = "Color Picker");
@@ -36,6 +37,7 @@ private:
     void update_color_widgets();
     void create_color_button(Widget& container, unsigned rgb);
 
+    Color m_original_color;
     Color m_color;
     bool m_color_has_alpha_channel { true };
 
