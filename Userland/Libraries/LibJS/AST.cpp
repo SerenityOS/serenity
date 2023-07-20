@@ -4377,16 +4377,6 @@ ThrowCompletionOr<void> ScopeNode::for_each_lexically_declared_identifier(ThrowC
     return {};
 }
 
-ThrowCompletionOr<void> ScopeNode::for_each_var_declared_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const
-{
-    for (auto& declaration : m_var_declarations) {
-        TRY(declaration->for_each_bound_identifier([&](auto const& identifier) {
-            return callback(identifier.string());
-        }));
-    }
-    return {};
-}
-
 ThrowCompletionOr<void> ScopeNode::for_each_var_declared_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const
 {
     for (auto& declaration : m_var_declarations) {
@@ -4690,10 +4680,10 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(VM& vm, Global
     }));
 
     // 4. For each element name of varNames, do
-    TRY(for_each_var_declared_name([&](auto const& name) -> ThrowCompletionOr<void> {
+    TRY(for_each_var_declared_identifier([&](auto const& identifier) -> ThrowCompletionOr<void> {
         // a. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
-        if (global_environment.has_lexical_declaration(name))
-            return vm.throw_completion<SyntaxError>(ErrorType::TopLevelVariableAlreadyDeclared, name);
+        if (global_environment.has_lexical_declaration(identifier.string()))
+            return vm.throw_completion<SyntaxError>(ErrorType::TopLevelVariableAlreadyDeclared, identifier.string());
 
         return {};
     }));

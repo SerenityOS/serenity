@@ -743,10 +743,10 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& pr
         // a. If varEnv is a global Environment Record, then
         if (global_var_environment) {
             // i. For each element name of varNames, do
-            TRY(program.for_each_var_declared_name([&](auto const& name) -> ThrowCompletionOr<void> {
+            TRY(program.for_each_var_declared_identifier([&](auto const& identifier) -> ThrowCompletionOr<void> {
                 // 1. If varEnv.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
-                if (global_var_environment->has_lexical_declaration(name))
-                    return vm.throw_completion<SyntaxError>(ErrorType::TopLevelVariableAlreadyDeclared, name);
+                if (global_var_environment->has_lexical_declaration(identifier.string()))
+                    return vm.throw_completion<SyntaxError>(ErrorType::TopLevelVariableAlreadyDeclared, identifier.string());
 
                 // 2. NOTE: eval will not create a global var declaration that would be shadowed by a global lexical declaration.
                 return {};
@@ -763,7 +763,8 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& pr
             if (!is<ObjectEnvironment>(*this_environment)) {
                 // 1. NOTE: The environment of with statements cannot contain any lexical declaration so it doesn't need to be checked for var/let hoisting conflicts.
                 // 2. For each element name of varNames, do
-                TRY(program.for_each_var_declared_name([&](auto const& name) -> ThrowCompletionOr<void> {
+                TRY(program.for_each_var_declared_identifier([&](auto const& identifier) -> ThrowCompletionOr<void> {
+                    auto const& name = identifier.string();
                     // a. If ! thisEnv.HasBinding(name) is true, then
                     if (MUST(this_environment->has_binding(name))) {
                         // i. Throw a SyntaxError exception.

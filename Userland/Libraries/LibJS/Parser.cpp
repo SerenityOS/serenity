@@ -769,8 +769,8 @@ void Parser::parse_module(Program& program)
             if (found)
                 continue;
             // NOTE: Nothing in the callback throws an exception.
-            MUST(program.for_each_var_declared_name([&](auto const& name) {
-                if (name == exported_name)
+            MUST(program.for_each_var_declared_identifier([&](auto const& identifier) {
+                if (identifier.string() == exported_name)
                     found = true;
             }));
             for (auto& import : program.imports()) {

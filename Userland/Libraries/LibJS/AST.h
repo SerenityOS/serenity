@@ -309,7 +309,6 @@ public:
     ThrowCompletionOr<void> for_each_lexically_scoped_declaration(ThrowCompletionOrVoidCallback<Declaration const&>&& callback) const;
     ThrowCompletionOr<void> for_each_lexically_declared_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const;
 
-    ThrowCompletionOr<void> for_each_var_declared_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const;
     ThrowCompletionOr<void> for_each_var_declared_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const;
 
     ThrowCompletionOr<void> for_each_var_function_declaration_in_reverse_order(ThrowCompletionOrVoidCallback<FunctionDeclaration const&>&& callback) const;
