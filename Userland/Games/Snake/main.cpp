@@ -108,11 +108,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto was_paused = game.is_paused();
         if (!was_paused)
             game.pause();
-        auto dialog = GUI::ColorPicker::construct(Gfx::Color::White, window);
-        if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
+        auto dialog = GUI::ColorPicker::construct(game.get_skin_color(), window);
+        dialog->on_color_changed = [&game](Gfx::Color color) {
+            game.set_skin_color(color);
+        };
+        if (dialog->exec() == GUI::Dialog::ExecResult::OK)
             Config::write_u32("Snake"sv, "Snake"sv, "BaseColor"sv, dialog->color().value());
-            game.set_skin_color(dialog->color());
-        }
         if (!was_paused)
             game.start();
     });
