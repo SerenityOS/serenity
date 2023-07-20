@@ -185,6 +185,7 @@ private:
 
 ColorPicker::ColorPicker(Color color, Window* parent_window, DeprecatedString title)
     : Dialog(parent_window)
+    , m_original_color(color)
     , m_color(color)
 {
     set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/color-chooser.png"sv).release_value_but_fixme_should_propagate_errors());
@@ -230,6 +231,8 @@ void ColorPicker::build_ui()
     auto& ok_button = button_container.add<DialogButton>();
     ok_button.set_text("OK"_short_string);
     ok_button.on_click = [this](auto) {
+        if (on_color_changed)
+            on_color_changed(m_color);
         done(ExecResult::OK);
     };
     ok_button.set_default(true);
@@ -237,6 +240,8 @@ void ColorPicker::build_ui()
     auto& cancel_button = button_container.add<DialogButton>();
     cancel_button.set_text("Cancel"_short_string);
     cancel_button.on_click = [this](auto) {
+        if (on_color_changed)
+            on_color_changed(m_original_color);
         done(ExecResult::Cancel);
     };
 }
@@ -439,6 +444,8 @@ void ColorPicker::update_color_widgets()
     m_alpha_spinbox->set_enabled(m_color_has_alpha_channel);
     m_alpha->set_value(m_color.alpha());
     m_alpha->set_visible(m_color_has_alpha_channel);
+    if (on_color_changed)
+        on_color_changed(m_color);
 }
 
 void ColorPicker::create_color_button(Widget& container, unsigned rgb)

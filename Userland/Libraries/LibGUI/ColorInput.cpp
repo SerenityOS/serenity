@@ -71,9 +71,11 @@ void ColorInput::mouseup_event(MouseEvent& event)
         m_may_be_color_rect_click = false;
         if (is_color_rect_click) {
             auto dialog = GUI::ColorPicker::construct(m_color, window(), m_color_picker_title);
+            dialog->on_color_changed = [this](Gfx::Color color) {
+                set_color(color);
+            };
             dialog->set_color_has_alpha_channel(m_color_has_alpha_channel);
-            if (dialog->exec() == GUI::Dialog::ExecResult::OK)
-                set_color(dialog->color());
+            dialog->exec();
             event.accept();
             return;
         }
