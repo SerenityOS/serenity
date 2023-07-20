@@ -449,10 +449,12 @@ ByteBuffer StandardSecurityHandler::compute_encryption_key_r2_to_r5(ByteBuffer p
     return encryption_key;
 }
 
-ByteBuffer StandardSecurityHandler::compute_encryption_key_r6_and_later(ByteBuffer password_string)
+bool StandardSecurityHandler::compute_encryption_key_r6_and_later(ByteBuffer password_string)
 {
     // This function should never be called after we have a valid encryption key.
     VERIFY(!m_encryption_key.has_value());
+
+    auto const zero_iv = ByteBuffer::create_zeroed(16).release_value_but_fixme_should_propagate_errors();
 
     // ISO 32000 (PDF 2.0), 7.6.4.3.3 Algorithm 2.A: Retrieving the file encryption key from an encrypted
     // document in order to decrypt it (revision 6 or later)
@@ -475,24 +477,60 @@ ByteBuffer StandardSecurityHandler::compute_encryption_key_r6_and_later(ByteBuff
     //    consisting of the UTF-8 password concatenated with the 8 bytes of owner Validation Salt, concatenated
     //    with the 48-byte U string. If the 32-byte result matches the first 32 bytes of the O string, this is the owner
     //    password.
+    // [Implementor's note: This is the same as Algorithm 12 in the spec.]
+    if (authenticate_owner_password_r6_and_later(password_string)) {
+        // d) Compute an intermediate owner key by computing a hash using algorithm 2.B with an input string
+        //    consisting of the UTF-8 owner password concatenated with the 8 bytes of owner Key Salt, concatenated
+        //    with the 48-byte U string. The 32-byte result is the key used to decrypt the 32-byte OE string using AES-
+        //    256 in CBC mode with no padding and an initialization vector of zero. The 32-byte result is the file
+        //    encryption key.
+        ByteBuffer input;
+        input.append(password_string);
+        input.append(m_o_entry.bytes().slice(40, 8));
+        input.append(m_u_entry.bytes());
+        auto key = computing_a_hash_r6_and_later(input, password_string, HashKind::Owner);
 
-    // d) Compute an intermediate owner key by computing a hash using algorithm 2.B with an input string
-    //    consisting of the UTF-8 owner password concatenated with the 8 bytes of owner Key Salt, concatenated
-    //    with the 48-byte U string. The 32-byte result is the key used to decrypt the 32-byte OE string using AES-
-    //    256 in CBC mode with no padding and an initialization vector of zero. The 32-byte result is the file
-    //    encryption key.
+        // [Implementor's note: PaddingMode doesn't matter here since input is block-aligned.]
+        auto cipher = Crypto::Cipher::AESCipher::CBCMode(key, 256, Crypto::Cipher::Intent::Decryption, Crypto::Cipher::PaddingMode::Null);
+        auto decrypted = cipher.create_aligned_buffer(m_oe_entry.length()).release_value_but_fixme_should_propagate_errors();
+        Bytes decrypted_span = decrypted.bytes();
+        cipher.decrypt(m_oe_entry.bytes(), decrypted_span, zero_iv);
+        m_encryption_key = ByteBuffer::copy(decrypted_span).release_value_but_fixme_should_propagate_errors();
+    }
+    // [Implementor's note: The spec seems to miss a step like c) but for the user password here.]
+    else if (authenticate_user_password_r6_and_later(password_string)) {
+        // e) Compute an intermediate user key by computing a hash using algorithm 2.B with an input string
+        //    consisting of the UTF-8 user password concatenated with the 8 bytes of user Key Salt. The 32-byte result
+        //    is the key used to decrypt the 32-byte UE string using AES-256 in CBC mode with no padding and an
+        //    initialization vector of zero. The 32-byte result is the file encryption key.
+        ByteBuffer input;
+        input.append(password_string);
+        input.append(m_u_entry.bytes().slice(40, 8));
+        auto key = computing_a_hash_r6_and_later(input, password_string, HashKind::User);
 
-    // e) Compute an intermediate user key by computing a hash using algorithm 2.B with an input string
-    //    consisting of the UTF-8 user password concatenated with the 8 bytes of user Key Salt. The 32-byte result
-    //    is the key used to decrypt the 32-byte UE string using AES-256 in CBC mode with no padding and an
-    //    initialization vector of zero. The 32-byte result is the file encryption key.
+        // [Implementor's note: PaddingMode doesn't matter here since input is block-aligned.]
+        auto cipher = Crypto::Cipher::AESCipher::CBCMode(key, 256, Crypto::Cipher::Intent::Decryption, Crypto::Cipher::PaddingMode::Null);
+        auto decrypted = cipher.create_aligned_buffer(m_ue_entry.length()).release_value_but_fixme_should_propagate_errors();
+        Bytes decrypted_span = decrypted.bytes();
+        cipher.decrypt(m_ue_entry.bytes(), decrypted_span, zero_iv);
+        m_encryption_key = ByteBuffer::copy(decrypted_span).release_value_but_fixme_should_propagate_errors();
+    }
+    // [Implementor's note: No explicit step for this in the spec, but if we get here the password was neither owner nor user password.]
+    else {
+        return false;
+    }
 
-    // f) Decrypt the 16-bye Perms string using AES-256 in ECB mode with an initialization vector of zero and
+    // f) Decrypt the 16-byte Perms string using AES-256 in ECB mode with an initialization vector of zero and
     //    the file encryption key as the key. Verify that bytes 9-11 of the result are the characters "a", "d", "b". Bytes
     //    0-3 of the decrypted Perms entry, treated as a little-endian integer, are the user permissions. They shall
     //    match the value in the P key.
+    // [Implementor's note: For 16-byte long messages, CBC with an IV of zero is the same as ECB. ECB with an IV doesn't make a lot of sense (?) Maybe the spec means CBC.]
+    auto cipher = Crypto::Cipher::AESCipher::CBCMode(m_encryption_key.value(), 256, Crypto::Cipher::Intent::Decryption, Crypto::Cipher::PaddingMode::Null);
+    auto decrypted = cipher.create_aligned_buffer(m_perms_entry.length()).release_value_but_fixme_should_propagate_errors();
+    Bytes decrypted_span = decrypted.bytes();
+    cipher.decrypt(m_perms_entry.bytes(), decrypted_span, zero_iv);
 
-    TODO();
+    return decrypted_span[9] == 'a' && decrypted_span[10] == 'd' && decrypted_span[11] == 'b' && *bit_cast<LittleEndian<u32>*>(decrypted_span.data()) == m_flags;
 }
 
 ByteBuffer StandardSecurityHandler::computing_a_hash_r6_and_later(ByteBuffer original_input, StringView input_password, HashKind kind)
