@@ -217,8 +217,8 @@ ByteBuffer StandardSecurityHandler::compute_user_password_value_r3_to_r5(ByteBuf
 
     // e) Pass the first element of the file's file identifier array to the MD5
     //    hash function.
-    auto id_array = MUST(m_document->trailer()->get_array(m_document, CommonNames::ID));
-    auto first_element_string = MUST(id_array->get_string_at(m_document, 0))->string();
+    auto id_array = m_document->trailer()->get_array(m_document, CommonNames::ID).release_value_but_fixme_should_propagate_errors();
+    auto first_element_string = id_array->get_string_at(m_document, 0).release_value_but_fixme_should_propagate_errors()->string();
     md5.update(first_element_string);
 
     // d) Encrypt the 16-byte result of the hash, using an RC4 encryption function
@@ -234,7 +234,7 @@ ByteBuffer StandardSecurityHandler::compute_user_password_value_r3_to_r5(ByteBuf
     //    by taking each byte of the original encryption key obtained in step (a) and
     //    performing an XOR operation between the that byte and the single-byte value of
     //    the iteration counter (from 1 to 19).
-    auto new_encryption_key = MUST(ByteBuffer::create_uninitialized(encryption_key.size()));
+    auto new_encryption_key = ByteBuffer::create_uninitialized(encryption_key.size()).release_value_but_fixme_should_propagate_errors();
     for (size_t i = 1; i <= 19; i++) {
         for (size_t j = 0; j < encryption_key.size(); j++)
             new_encryption_key[j] = encryption_key[j] ^ i;
@@ -259,7 +259,7 @@ bool StandardSecurityHandler::authenticate_user_password_r2_to_r5(StringView pas
 
     // a) Perform all but the last step of [Algorithm 4] or [Algorithm 5] using the
     //    supplied password string.
-    ByteBuffer password_buffer = MUST(ByteBuffer::copy(password_string.bytes()));
+    ByteBuffer password_buffer = ByteBuffer::copy(password_string.bytes()).release_value_but_fixme_should_propagate_errors();
     if (m_revision == 2) {
         password_buffer = compute_user_password_value_r2(password_buffer);
     } else {
@@ -335,8 +335,8 @@ ByteBuffer StandardSecurityHandler::compute_encryption_key_r2_to_r5(ByteBuffer p
     md5.update(reinterpret_cast<u8 const*>(&m_flags), sizeof(m_flags));
 
     // e) Pass the first element of the file's file identifier array to the MD5 hash function.
-    auto id_array = MUST(m_document->trailer()->get_array(m_document, CommonNames::ID));
-    auto first_element_string = MUST(id_array->get_string_at(m_document, 0))->string();
+    auto id_array = m_document->trailer()->get_array(m_document, CommonNames::ID).release_value_but_fixme_should_propagate_errors();
+    auto first_element_string = id_array->get_string_at(m_document, 0).release_value_but_fixme_should_propagate_errors()->string();
     md5.update(first_element_string);
 
     // f) (Security handlers of revision 4 or greater) if the document metadata is not being
@@ -453,7 +453,7 @@ ByteBuffer StandardSecurityHandler::computing_a_hash_r6_and_later(ByteBuffer ori
     static_assert(Crypto::Hash::SHA256::DigestType::Size == 32);
     Crypto::Hash::SHA256 sha;
     sha.update(original_input);
-    auto K = MUST(ByteBuffer::copy(sha.digest().bytes()));
+    auto K = ByteBuffer::copy(sha.digest().bytes()).release_value_but_fixme_should_propagate_errors();
 
     // Perform the following steps (a)-(d) 64 times:
     int round_number;
@@ -478,7 +478,7 @@ ByteBuffer StandardSecurityHandler::computing_a_hash_r6_and_later(ByteBuffer ori
 
         // (PaddingMode doesn't matter here since input is block-aligned.)
         auto cipher = Crypto::Cipher::AESCipher::CBCMode(key, 128, Crypto::Cipher::Intent::Encryption, Crypto::Cipher::PaddingMode::Null);
-        auto E = MUST(cipher.create_aligned_buffer(K1.size()));
+        auto E = cipher.create_aligned_buffer(K1.size()).release_value_but_fixme_should_propagate_errors();
         Bytes E_span = E.bytes();
         cipher.encrypt(K1, E_span, initialization_vector);
 
@@ -507,7 +507,7 @@ ByteBuffer StandardSecurityHandler::computing_a_hash_r6_and_later(ByteBuffer ori
         //    will be 32, 48, or 64 bytes in length.
         Crypto::Hash::Manager hash(hash_kind);
         hash.update(E);
-        K = MUST(ByteBuffer::copy(hash.digest().bytes()));
+        K = ByteBuffer::copy(hash.digest().bytes()).release_value_but_fixme_should_propagate_errors();
 
         // Repeat the process (a-d) with this new value of K. Following 64 rounds (round number 0 to round
         // number 63), do the following, starting with round number 64:
@@ -582,7 +582,7 @@ void StandardSecurityHandler::crypt(NonnullRefPtr<Object> object, Reference refe
         };
 
         if (stream->dict()->contains(CommonNames::Filter)) {
-            auto filter = MUST(stream->dict()->get_name(m_document, CommonNames::Filter))->name();
+            auto filter = stream->dict()->get_name(m_document, CommonNames::Filter).release_value_but_fixme_should_propagate_errors()->name();
             if (filter == "Crypt")
                 TODO();
         }
@@ -620,7 +620,7 @@ void StandardSecurityHandler::crypt(NonnullRefPtr<Object> object, Reference refe
     // d) Use the first (n + 5) bytes, up to a maximum of 16, of the output from the MD5
     //    hash as the key for the RC4 or AES symmetric key algorithms, along with the string
     //    or stream data to be encrypted.
-    auto key = MUST(ByteBuffer::copy(md5.peek().bytes()));
+    auto key = ByteBuffer::copy(md5.peek().bytes()).release_value_but_fixme_should_propagate_errors();
 
     if (key.size() > min(encryption_key.size(), 16))
         key.resize(encryption_key.size());
@@ -632,7 +632,7 @@ void StandardSecurityHandler::crypt(NonnullRefPtr<Object> object, Reference refe
         //  that is stored as the first 16 bytes of the encrypted stream or string."
         static_assert(Crypto::Cipher::AESCipher::block_size() == 16);
         if (direction == Crypto::Cipher::Intent::Encryption) {
-            auto output = MUST(cipher.create_aligned_buffer(16 + bytes.size()));
+            auto output = cipher.create_aligned_buffer(16 + bytes.size()).release_value_but_fixme_should_propagate_errors();
             auto iv_span = output.bytes().trim(16);
             auto encrypted_span = output.bytes().slice(16);
 
@@ -646,7 +646,7 @@ void StandardSecurityHandler::crypt(NonnullRefPtr<Object> object, Reference refe
             auto iv = bytes.trim(16);
             bytes = bytes.slice(16);
 
-            auto decrypted = MUST(cipher.create_aligned_buffer(bytes.size()));
+            auto decrypted = cipher.create_aligned_buffer(bytes.size()).release_value_but_fixme_should_propagate_errors();
             auto decrypted_span = decrypted.bytes();
             cipher.decrypt(bytes, decrypted_span, iv);
             decrypted.resize(decrypted_span.size());
@@ -702,7 +702,7 @@ void RC4::generate_bytes(ByteBuffer& bytes)
 
 ByteBuffer RC4::encrypt(ReadonlyBytes bytes)
 {
-    auto output = MUST(ByteBuffer::create_uninitialized(bytes.size()));
+    auto output = ByteBuffer::create_uninitialized(bytes.size()).release_value_but_fixme_should_propagate_errors();
     generate_bytes(output);
     for (size_t i = 0; i < bytes.size(); i++)
         output[i] ^= bytes[i];
