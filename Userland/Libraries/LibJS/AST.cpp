@@ -2296,14 +2296,6 @@ void ClassDeclaration::dump(int indent) const
     m_class_expression->dump(indent + 1);
 }
 
-ThrowCompletionOr<void> ClassDeclaration::for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const
-{
-    if (m_class_expression->name().is_empty())
-        return {};
-
-    return callback(m_class_expression->name());
-}
-
 ThrowCompletionOr<void> ClassDeclaration::for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const
 {
     if (!m_class_expression->m_name)
@@ -2434,23 +2426,6 @@ bool BindingPattern::contains_expression() const
     return false;
 }
 
-ThrowCompletionOr<void> BindingPattern::for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const
-{
-    for (auto const& entry : entries) {
-        auto const& alias = entry.alias;
-        if (alias.has<NonnullRefPtr<Identifier const>>()) {
-            TRY(callback(alias.get<NonnullRefPtr<Identifier const>>()->string()));
-        } else if (alias.has<NonnullRefPtr<BindingPattern const>>()) {
-            TRY(alias.get<NonnullRefPtr<BindingPattern const>>()->for_each_bound_name(forward<decltype(callback)>(callback)));
-        } else {
-            auto const& name = entry.name;
-            if (name.has<NonnullRefPtr<Identifier const>>())
-                TRY(callback(name.get<NonnullRefPtr<Identifier const>>()->string()));
-        }
-    }
-    return {};
-}
-
 ThrowCompletionOr<void> BindingPattern::for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const
 {
     for (auto const& entry : entries) {
@@ -2556,13 +2531,6 @@ void FunctionNode::dump(int indent, DeprecatedString const& class_name) const
 void FunctionDeclaration::dump(int indent) const
 {
     FunctionNode::dump(indent, class_name());
-}
-
-ThrowCompletionOr<void> FunctionDeclaration::for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const
-{
-    if (name().is_empty())
-        return {};
-    return callback(name());
 }
 
 ThrowCompletionOr<void> FunctionDeclaration::for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const
@@ -3115,23 +3083,6 @@ Completion VariableDeclarator::execute(Interpreter& interpreter) const
     VERIFY_NOT_REACHED();
 }
 
-ThrowCompletionOr<void> VariableDeclaration::for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const
-{
-    for (auto const& entry : declarations()) {
-        TRY(entry->target().visit(
-            [&](NonnullRefPtr<Identifier const> const& id) {
-                return callback(id->string());
-            },
-            [&](NonnullRefPtr<BindingPattern const> const& binding) {
-                return binding->for_each_bound_identifier([&](auto const& identifier) {
-                    return callback(identifier.string());
-                });
-            }));
-    }
-
-    return {};
-}
-
 ThrowCompletionOr<void> VariableDeclaration::for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const
 {
     for (auto const& entry : declarations()) {
@@ -3194,16 +3145,6 @@ Completion UsingDeclaration::execute(Interpreter& interpreter) const
 
     // 3. Return empty.
     return normal_completion({});
-}
-
-ThrowCompletionOr<void> UsingDeclaration::for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const
-{
-    for (auto const& entry : m_declarations) {
-        VERIFY(entry->target().has<NonnullRefPtr<Identifier const>>());
-        TRY(callback(entry->target().get<NonnullRefPtr<Identifier const>>()->string()));
-    }
-
-    return {};
 }
 
 ThrowCompletionOr<void> UsingDeclaration::for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&& callback) const
