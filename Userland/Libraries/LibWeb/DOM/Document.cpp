@@ -11,6 +11,7 @@
 #include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
+#include <LibCore/Timer.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/FunctionObject.h>
@@ -84,7 +85,6 @@
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/PermissionsPolicy/AutoplayAllowlist.h>
-#include <LibWeb/Platform/Timer.h>
 #include <LibWeb/SVG/SVGElement.h>
 #include <LibWeb/SVG/SVGTitleElement.h>
 #include <LibWeb/SVG/TagNames.h>
@@ -319,13 +319,13 @@ Document::Document(JS::Realm& realm, const AK::URL& url)
 {
     HTML::main_thread_event_loop().register_document({}, *this);
 
-    m_style_update_timer = Platform::Timer::create_single_shot(0, [this] {
+    m_style_update_timer = Core::Timer::create_single_shot(0, [this] {
         update_style();
-    });
+    }).release_value_but_fixme_should_propagate_errors();
 
-    m_layout_update_timer = Platform::Timer::create_single_shot(0, [this] {
+    m_layout_update_timer = Core::Timer::create_single_shot(0, [this] {
         update_layout();
-    });
+    }).release_value_but_fixme_should_propagate_errors();
 }
 
 Document::~Document()
