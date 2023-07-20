@@ -567,7 +567,7 @@ ByteBuffer StandardSecurityHandler::computing_a_hash_r6_and_later(ByteBuffer ori
         ReadonlyBytes key = K.bytes().trim(16);
         ReadonlyBytes initialization_vector = K.bytes().slice(16);
 
-        // (PaddingMode doesn't matter here since input is block-aligned.)
+        // [Implementor's note: PaddingMode doesn't matter here since input is block-aligned.]
         auto cipher = Crypto::Cipher::AESCipher::CBCMode(key, 128, Crypto::Cipher::Intent::Encryption, Crypto::Cipher::PaddingMode::Null);
         auto E = cipher.create_aligned_buffer(K1.size()).release_value_but_fixme_should_propagate_errors();
         Bytes E_span = E.bytes();
@@ -603,7 +603,8 @@ ByteBuffer StandardSecurityHandler::computing_a_hash_r6_and_later(ByteBuffer ori
         // Repeat the process (a-d) with this new value of K. Following 64 rounds (round number 0 to round
         // number 63), do the following, starting with round number 64:
 
-        if (round_number < 64)
+        // [Implementor's note: Conceptually, steps e)-f) are at the top of the loop for rounds >= 64, so this has to continue for < 63, not for < 64.]
+        if (round_number < 63)
             continue;
 
         // NOTE 2 The reason for multiple rounds is to defeat the possibility of running all paths in parallel. With 64
