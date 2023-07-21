@@ -1,0 +1,5 @@
+[Exposed=Nobody] interface Internals {
+
+    undefined gc();
+
+};

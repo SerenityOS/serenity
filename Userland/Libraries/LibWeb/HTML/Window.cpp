@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
@@ -51,6 +51,7 @@
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
 #include <LibWeb/Infra/Base64.h>
 #include <LibWeb/Infra/CharacterTypes.h>
+#include <LibWeb/Internals/Internals.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/RequestIdleCallback/IdleDeadline.h>
@@ -805,6 +806,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::CallbackType>> Window::byte_length_
     return JS::NonnullGCPtr { *m_byte_length_queuing_strategy_size_function };
 }
 
+static bool s_internals_object_exposed = false;
+
+void Window::set_internals_object_exposed(bool exposed)
+{
+    s_internals_object_exposed = exposed;
+}
+
 WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
 {
     auto& realm = this->realm();
@@ -814,6 +822,9 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
 
     MUST_OR_THROW_OOM(Bindings::WindowGlobalMixin::initialize(realm, *this));
     MUST_OR_THROW_OOM(WindowOrWorkerGlobalScopeMixin::initialize(realm));
+
+    if (s_internals_object_exposed)
+        define_direct_property("internals", MUST_OR_THROW_OOM(heap().allocate<Internals::Internals>(realm, realm)), JS::default_attributes);
 
     return {};
 }

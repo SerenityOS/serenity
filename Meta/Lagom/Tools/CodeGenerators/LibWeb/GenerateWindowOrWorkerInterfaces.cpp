@@ -178,7 +178,7 @@ void Intrinsics::create_web_namespace<@namespace_class@>(JS::Realm& realm)
 )~~~");
     };
 
-    auto add_interface = [&](SourceGenerator& gen, StringView name, StringView prototype_class, StringView constructor_class, Optional<LegacyConstructor> const& legacy_constructor) {
+    auto add_interface = [](SourceGenerator& gen, StringView name, StringView prototype_class, StringView constructor_class, Optional<LegacyConstructor> const& legacy_constructor) {
         gen.set("interface_name", name);
         gen.set("prototype_class", prototype_class);
         gen.set("constructor_class", constructor_class);
@@ -434,6 +434,8 @@ static ErrorOr<ExposedTo> parse_exposure_set(IDL::Interface& interface)
     auto exposed = maybe_exposed.value().trim_whitespace();
     if (exposed == "*"sv)
         return ExposedTo::All;
+    if (exposed == "Nobody"sv)
+        return ExposedTo::Nobody;
     if (exposed == "Window"sv)
         return ExposedTo::Window;
     if (exposed == "Worker"sv)
@@ -477,10 +479,8 @@ ErrorOr<void> add_to_interface_sets(IDL::Interface& interface, Vector<IDL::Inter
 {
     // TODO: Add service worker exposed and audio worklet exposed
     auto whom = TRY(parse_exposure_set(interface));
-    VERIFY(whom != ExposedTo::Nobody);
 
-    if ((whom & ExposedTo::Window) || (whom & ExposedTo::DedicatedWorker) || (whom & ExposedTo::SharedWorker))
-        intrinsics.append(interface);
+    intrinsics.append(interface);
 
     if (whom & ExposedTo::Window)
         window_exposed.append(interface);

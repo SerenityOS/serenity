@@ -23,6 +23,7 @@ static constexpr Array libweb_interface_namespaces = {
     "Geometry"sv,
     "HTML"sv,
     "HighResolutionTime"sv,
+    "Internals"sv,
     "IntersectionObserver"sv,
     "NavigationTiming"sv,
     "RequestIdleCallback"sv,
