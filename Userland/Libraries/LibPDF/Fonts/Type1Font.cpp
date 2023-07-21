@@ -79,7 +79,7 @@ void Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float w
     point = point.translated(translation);
 
     auto glyph_position = Gfx::GlyphRasterPosition::get_nearest_fit_for(point);
-    Gfx::GlyphIndexWithSubpixelOffset index { char_code, glyph_position.subpixel_offset };
+    Type1GlyphCacheKey index { char_code, glyph_position.subpixel_offset, width };
 
     RefPtr<Gfx::Bitmap> bitmap;
     auto maybe_bitmap = m_glyph_cache.get(index);

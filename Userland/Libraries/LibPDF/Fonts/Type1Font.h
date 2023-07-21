@@ -12,6 +12,14 @@
 
 namespace PDF {
 
+struct Type1GlyphCacheKey {
+    u32 glyph_id;
+    Gfx::GlyphSubpixelOffset subpixel_offset;
+    float width;
+
+    bool operator==(Type1GlyphCacheKey const&) const = default;
+};
+
 class Type1Font : public SimpleFont {
 public:
     float get_glyph_width(u8 char_code) const override;
@@ -25,7 +33,19 @@ protected:
 private:
     RefPtr<Type1FontProgram> m_font_program;
     RefPtr<Gfx::Font> m_font;
-    HashMap<Gfx::GlyphIndexWithSubpixelOffset, RefPtr<Gfx::Bitmap>> m_glyph_cache;
+    HashMap<Type1GlyphCacheKey, RefPtr<Gfx::Bitmap>> m_glyph_cache;
+};
+
+}
+
+namespace AK {
+
+template<>
+struct Traits<PDF::Type1GlyphCacheKey> : public GenericTraits<PDF::Type1GlyphCacheKey> {
+    static unsigned hash(PDF::Type1GlyphCacheKey const& index)
+    {
+        return pair_int_hash(pair_int_hash(index.glyph_id, (index.subpixel_offset.x << 8) | index.subpixel_offset.y), int_hash(bit_cast<u32>(index.width)));
+    }
 };
 
 }
