@@ -36,6 +36,33 @@ but because of the async operation, we can't send the `errno` code back to userl
 to ensure that internal functions still use the `ErrorOr<>` return type, and in main calling function, we use
 other meaningful infrastructure utilities in the Kernel to indicate that the operation failed.
 
+## KStrings vs FixedStringBuffers
+
+As you might understand, we put a respectable amount of effort into making the kernel code OOM-safe.
+One approach to achieve this is to allow error propagation where possible.
+The other approach is to eliminate heap allocations altogether where possible.
+
+To do so, the FixedStringBuffer class was introduced into the AK library, and is used
+extensively in kernel syscall handlers' code.
+The idea is very simple - if we know the maximum length of an inspected string during
+a syscall and it's relatively short (so it doesn't exceed the stack size), something like
+1024 bytes is the total max length (but in theory we could just make the stack size bigger),
+it could be copied from userspace to that stack storage instead of doing an heap allocation
+to create a KString. This is especially useful when inspecting a string only during the
+syscall handler scope, because doing an heap allocation is wasteful on memory resources
+and puts a strain on the kernel memory manager for no good reason.
+
+The FixedStringBuffer puts some safety guards - like zeroing the memory when storing new
+StringView, as well as truncating it if its length exceeds the allocated stack storage size.
+
+It should be noted that there are helpers to handle a FixedStringBuffer storage:
+* `Process::get_syscall_name_string_argument_into_static_char_buffer(...)`
+* `Process::get_syscall_string_argument_into_static_char_buffer(...)`
+* `try_copy_name_from_user_into_static_char_buffer(...)`
+* `try_copy_string_from_user_into_static_char_buffer(...)`
+
+These helpers will ensure that if the given string is exceeding the allocated stack storage size, then an error will be released instead of just truncating the string and continue execution.
+
 ## We don't break userspace - the SerenityOS version
 
 We don't break userspace. However, in contrast to the Linux vision on this statement,
