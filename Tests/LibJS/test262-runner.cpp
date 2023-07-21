@@ -16,7 +16,6 @@
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Interpreter.h>
-#include <LibJS/Bytecode/PassManager.h>
 #include <LibJS/Contrib/Test262/GlobalObject.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
@@ -564,13 +563,11 @@ int main(int argc, char** argv)
     bool enable_debug_printing = false;
     bool disable_core_dumping = false;
     bool use_bytecode = false;
-    bool enable_bytecode_optimizations = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("LibJS test262 runner for streaming tests");
     args_parser.add_option(s_harness_file_directory, "Directory containing the harness files", "harness-location", 'l', "harness-files");
     args_parser.add_option(use_bytecode, "Use the bytecode interpreter", "use-bytecode", 'b');
-    args_parser.add_option(enable_bytecode_optimizations, "Enable the bytecode optimization passes", "enable-bytecode-optimizations", 'e');
     args_parser.add_option(s_parse_only, "Only parse the files", "parse-only", 'p');
     args_parser.add_option(timeout, "Seconds before test should timeout", "timeout", 't', "seconds");
     args_parser.add_option(enable_debug_printing, "Enable debug printing", "debug", 'd');
@@ -578,7 +575,6 @@ int main(int argc, char** argv)
     args_parser.parse(arguments);
 
     JS::Bytecode::Interpreter::set_enabled(use_bytecode);
-    JS::Bytecode::Interpreter::set_optimizations_enabled(enable_bytecode_optimizations);
 
 #if !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN)
     if (disable_core_dumping && prctl(PR_SET_DUMPABLE, 0, 0) < 0) {
