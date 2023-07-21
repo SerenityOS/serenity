@@ -3,9 +3,7 @@ test("length is 0", () => {
 });
 
 function registerInDifferentScope(registry) {
-    const target = {};
-    registry.register(target, {});
-    return target;
+    registry.register({}, {});
 }
 
 test("basic functionality", () => {
@@ -20,8 +18,7 @@ test("basic functionality", () => {
 
     expect(count).toBe(0);
 
-    const target = registerInDifferentScope(registry);
-    markAsGarbage("target");
+    registerInDifferentScope(registry);
     gc();
 
     registry.cleanupSome(increment);
