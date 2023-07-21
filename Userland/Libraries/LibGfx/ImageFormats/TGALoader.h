@@ -18,7 +18,6 @@ public:
     static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
 
     virtual ~TGAImageDecoderPlugin() override;
-    TGAImageDecoderPlugin(u8 const*, size_t);
 
     virtual IntSize size() override;
 
@@ -26,8 +25,10 @@ public:
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
+    TGAImageDecoderPlugin(NonnullOwnPtr<TGALoadingContext>);
+
     ErrorOr<void> decode_tga_header();
-    OwnPtr<TGALoadingContext> m_context;
+    NonnullOwnPtr<TGALoadingContext> m_context;
 };
 
 }
