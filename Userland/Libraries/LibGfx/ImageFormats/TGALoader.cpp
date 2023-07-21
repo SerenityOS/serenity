@@ -71,41 +71,44 @@ public:
     {
     }
 
-    ALWAYS_INLINE u8 read_u8()
+    ALWAYS_INLINE ErrorOr<u8> read_u8()
     {
+        if (m_index >= m_data.size())
+            return Error::from_string_literal("Tried to read out of bounds data from TGA image");
         u8 value = m_data[m_index];
         m_index++;
         return value;
     }
 
-    ALWAYS_INLINE i8 read_i8()
+    ALWAYS_INLINE ErrorOr<i8> read_i8()
     {
-        return static_cast<i8>(read_u8());
+        auto value = TRY(read_u8());
+        return static_cast<i8>(value);
     }
 
-    ALWAYS_INLINE u16 read_u16()
+    ALWAYS_INLINE ErrorOr<u16> read_u16()
     {
-        return read_u8() | read_u8() << 8;
+        return TRY(read_u8()) | TRY(read_u8()) << 8;
     }
 
-    ALWAYS_INLINE i16 read_i16()
+    ALWAYS_INLINE ErrorOr<i16> read_i16()
     {
-        return read_i8() | read_i8() << 8;
+        return TRY(read_i8()) | TRY(read_i8()) << 8;
     }
 
-    ALWAYS_INLINE u32 read_u32()
+    ALWAYS_INLINE ErrorOr<u32> read_u32()
     {
-        return read_u16() | read_u16() << 16;
+        return TRY(read_u16()) | TRY(read_u16()) << 16;
     }
 
-    ALWAYS_INLINE i32 read_i32()
+    ALWAYS_INLINE ErrorOr<i32> read_i32()
     {
-        return read_i16() | read_i16() << 16;
+        return TRY(read_i16()) | TRY(read_i16()) << 16;
     }
 
-    ALWAYS_INLINE TGAPixelPacket read_packet_type()
+    ALWAYS_INLINE ErrorOr<TGAPixelPacket> read_packet_type()
     {
-        auto pixel_packet_type = read_u8();
+        auto pixel_packet_type = TRY(read_u8());
         auto pixel_packet = TGAPixelPacket();
         pixel_packet.raw = !(pixel_packet_type & 0x80);
         pixel_packet.pixels_count = (pixel_packet_type & 0x7f);
@@ -116,23 +119,23 @@ public:
         return pixel_packet;
     }
 
-    ALWAYS_INLINE TGAPixel read_pixel(u8 bits_per_pixel)
+    ALWAYS_INLINE ErrorOr<TGAPixel> read_pixel(u8 bits_per_pixel)
     {
         auto pixel = TGAPixel();
 
         switch (bits_per_pixel) {
         case 24:
-            pixel.components.blue = read_u8();
-            pixel.components.green = read_u8();
-            pixel.components.red = read_u8();
+            pixel.components.blue = TRY(read_u8());
+            pixel.components.green = TRY(read_u8());
+            pixel.components.red = TRY(read_u8());
             pixel.components.alpha = 0xFF;
             return pixel;
 
         case 32:
-            pixel.components.blue = read_u8();
-            pixel.components.green = read_u8();
-            pixel.components.red = read_u8();
-            pixel.components.alpha = read_u8();
+            pixel.components.blue = TRY(read_u8());
+            pixel.components.green = TRY(read_u8());
+            pixel.components.red = TRY(read_u8());
+            pixel.components.alpha = TRY(read_u8());
             return pixel;
 
         default:
@@ -180,18 +183,18 @@ ErrorOr<void> TGAImageDecoderPlugin::decode_tga_header()
     if (reader->data().size() < sizeof(TGAHeader))
         return Error::from_string_literal("Not enough data to be a TGA image");
 
-    m_context->header.id_length = reader->read_u8();
-    m_context->header.color_map_type = reader->read_u8();
-    m_context->header.data_type_code = static_cast<TGADataType>(reader->read_u8());
-    m_context->header.color_map_origin = reader->read_i16();
-    m_context->header.color_map_length = reader->read_i16();
-    m_context->header.color_map_depth = reader->read_u8();
-    m_context->header.x_origin = reader->read_i16();
-    m_context->header.y_origin = reader->read_i16();
-    m_context->header.width = reader->read_u16();
-    m_context->header.height = reader->read_u16();
-    m_context->header.bits_per_pixel = reader->read_u8();
-    m_context->header.image_descriptor = reader->read_u8();
+    m_context->header.id_length = TRY(reader->read_u8());
+    m_context->header.color_map_type = TRY(reader->read_u8());
+    m_context->header.data_type_code = static_cast<TGADataType>(TRY(reader->read_u8()));
+    m_context->header.color_map_origin = TRY(reader->read_i16());
+    m_context->header.color_map_length = TRY(reader->read_i16());
+    m_context->header.color_map_depth = TRY(reader->read_u8());
+    m_context->header.x_origin = TRY(reader->read_i16());
+    m_context->header.y_origin = TRY(reader->read_i16());
+    m_context->header.width = TRY(reader->read_u16());
+    m_context->header.height = TRY(reader->read_u16());
+    m_context->header.bits_per_pixel = TRY(reader->read_u8());
+    m_context->header.image_descriptor = TRY(reader->read_u8());
 
     auto bytes_remaining = reader->data().size() - reader->index();
 
@@ -282,7 +285,7 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index, Optiona
     case TGADataType::UncompressedRGB: {
         for (int row = 0; row < height; ++row) {
             for (int col = 0; col < width; ++col) {
-                auto pixel = m_context->reader->read_pixel(bits_per_pixel);
+                auto pixel = TRY(m_context->reader->read_pixel(bits_per_pixel));
                 auto actual_row = row;
                 if (y_origin < height)
                     actual_row = height - 1 - row;
@@ -298,9 +301,9 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index, Optiona
         size_t pixel_index = 0;
         size_t pixel_count = height * width;
         while (pixel_index < pixel_count) {
-            auto packet_type = m_context->reader->read_packet_type();
+            auto packet_type = TRY(m_context->reader->read_packet_type());
             VERIFY(packet_type.pixels_count > 0);
-            TGAPixel pixel = m_context->reader->read_pixel(bits_per_pixel);
+            TGAPixel pixel = TRY(m_context->reader->read_pixel(bits_per_pixel));
             auto max_pixel_index = min(pixel_index + packet_type.pixels_count, pixel_count);
             for (size_t current_pixel_index = pixel_index; current_pixel_index < max_pixel_index; ++current_pixel_index) {
                 int row = current_pixel_index / width;
@@ -313,7 +316,7 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index, Optiona
                     actual_col = width - 1 - col;
                 bitmap->scanline(actual_row)[actual_col] = pixel.data;
                 if (packet_type.raw && (current_pixel_index + 1) < max_pixel_index)
-                    pixel = m_context->reader->read_pixel(bits_per_pixel);
+                    pixel = TRY(m_context->reader->read_pixel(bits_per_pixel));
             }
             pixel_index += packet_type.pixels_count;
         }
