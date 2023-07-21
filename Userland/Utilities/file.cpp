@@ -197,10 +197,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Vector<StringView> paths;
     bool flag_mime_only = false;
+    bool flag_brief_mode = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Determine type of files");
     args_parser.add_option(flag_mime_only, "Only print mime type", "mime-type", 'I');
+    args_parser.add_option(flag_brief_mode, "Do not prepend file names to output lines", "brief", 'b');
     args_parser.add_positional_argument(paths, "Files to identify", "files", Core::ArgsParser::Required::Yes);
     args_parser.parse(arguments);
 
@@ -217,18 +219,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         struct stat file_stat = TRY(Core::System::lstat(path));
 
+        if (!flag_brief_mode)
+            out("{}: ", path);
+
         auto file_size_in_bytes = file_stat.st_size;
         if (S_ISDIR(file_stat.st_mode)) {
-            outln("{}: directory", path);
+            outln("directory");
         } else if (!file_size_in_bytes) {
-            outln("{}: empty", path);
+            outln("empty");
         } else {
             auto file_name_guess = Core::guess_mime_type_based_on_filename(path);
             auto mime_type = Core::guess_mime_type_based_on_sniffed_bytes(*file).value_or(file_name_guess);
             auto human_readable_description = TRY(get_description_from_mime_type(mime_type, path));
             if (!human_readable_description.has_value())
                 human_readable_description = TRY(String::from_utf8(mime_type));
-            outln("{}: {}", path, flag_mime_only ? mime_type : *human_readable_description);
+            outln("{}", flag_mime_only ? mime_type : *human_readable_description);
         }
     }
 
