@@ -276,11 +276,6 @@ void Heap::mark_live_cells(HashTable<Cell*> const& roots)
         bytecode_interpreter->visit_edges(visitor);
 
     visitor.mark_all_live_cells();
-
-    for (auto& inverse_root : m_uprooted_cells)
-        inverse_root->set_marked(false);
-
-    m_uprooted_cells.clear();
 }
 
 bool Heap::cell_must_survive_garbage_collection(Cell const& cell)
@@ -425,11 +420,6 @@ void Heap::undefer_gc(Badge<DeferGC>)
             collect_garbage();
         m_should_gc_when_deferral_ends = false;
     }
-}
-
-void Heap::uproot_cell(Cell* cell)
-{
-    m_uprooted_cells.append(cell);
 }
 
 void register_safe_function_closure(void* base, size_t size)
