@@ -190,6 +190,8 @@ public:
     HighResolutionTime::DOMHighResTimeStamp get_last_activation_timestamp() const { return m_last_activation_timestamp; }
     void set_last_activation_timestamp(HighResolutionTime::DOMHighResTimeStamp timestamp) { m_last_activation_timestamp = timestamp; }
 
+    static void set_internals_object_exposed(bool);
+
 private:
     explicit Window(JS::Realm&);
 

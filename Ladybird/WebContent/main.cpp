@@ -23,6 +23,7 @@
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibMain/Main.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -88,6 +89,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Web::ResourceLoader::initialize(Ladybird::RequestManagerQt::create());
         Web::WebSockets::WebSocketClientManager::initialize(Ladybird::WebSocketClientManagerQt::create());
     }
+
+    Web::HTML::Window::set_internals_object_exposed(is_layout_test_mode);
 
     JS::Bytecode::Interpreter::set_enabled(use_javascript_bytecode);
 

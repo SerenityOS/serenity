@@ -454,6 +454,10 @@ namespace Web::HighResolutionTime {
 class Performance;
 }
 
+namespace Web::Internals {
+class Internals;
+}
+
 namespace Web::IntersectionObserver {
 class IntersectionObserver;
 class IntersectionObserverEntry;
