@@ -574,18 +574,21 @@ void ProcessModel::update()
             tids_to_remove.append(it.key);
             continue;
         }
+        if (it.value->current_state.state == "Zombie") {
+        continue;
+        }
         auto& thread = *it.value;
         u64 time_scheduled_diff = (thread.current_state.time_user + thread.current_state.time_kernel)
             - (thread.previous_state.time_user + thread.previous_state.time_kernel);
         u64 time_scheduled_diff_kernel = thread.current_state.time_kernel - thread.previous_state.time_kernel;
         thread.current_state.cpu_percent = total_time_scheduled_diff > 0 ? (float)((time_scheduled_diff * 1000) / total_time_scheduled_diff) / 10.0f : 0;
         thread.current_state.cpu_percent_kernel = total_time_scheduled_diff > 0 ? (float)((time_scheduled_diff_kernel * 1000) / total_time_scheduled_diff) / 10.0f : 0;
-        if (it.value->current_state.pid != 0) {
-            auto& cpu_info = m_cpus[thread.current_state.cpu];
-            cpu_info->total_cpu_percent += thread.current_state.cpu_percent;
-            cpu_info->total_cpu_percent_kernel += thread.current_state.cpu_percent_kernel;
+            if (it.value->current_state.pid != 0) {
+                auto& cpu_info = m_cpus[thread.current_state.cpu];
+                cpu_info->total_cpu_percent += thread.current_state.cpu_percent;
+                cpu_info->total_cpu_percent_kernel += thread.current_state.cpu_percent_kernel;
+            }
         }
-    }
 
     // FIXME: Also remove dead threads from processes
     for (auto tid : tids_to_remove) {
