@@ -1515,17 +1515,37 @@ void GridFormattingContext::resolve_grid_item_heights()
     for (auto& item : m_grid_items) {
         CSSPixels containing_block_height = containing_block_size_for_item(item, GridDimension::Row);
 
-        auto border_top = item.box->computed_values().border_top().width;
-        auto border_bottom = item.box->computed_values().border_bottom().width;
-
         auto& box_state = m_state.get_mutable(item.box);
-        box_state.border_top = border_top;
-        box_state.border_bottom = border_bottom;
 
-        auto const& computed_height = item.box->computed_values().height();
-        auto used_height = computed_height.is_auto()
-            ? (containing_block_height - box_state.margin_box_top() - box_state.margin_box_bottom())
-            : computed_height.to_px(grid_container(), containing_block_height);
+        auto const& computed_values = item.box->computed_values();
+        auto const& computed_height = computed_values.height();
+
+        auto try_compute_height = [&](CSSPixels a_height) {
+            CSSPixels height = a_height;
+            auto underflow_px = containing_block_height - height - box_state.border_top - box_state.border_bottom - box_state.padding_top - box_state.padding_bottom - box_state.margin_top - box_state.margin_bottom;
+            if (computed_values.margin().top().is_auto() && computed_values.margin().bottom().is_auto()) {
+                auto half_of_the_underflow = underflow_px / 2;
+                box_state.margin_top = half_of_the_underflow;
+                box_state.margin_bottom = half_of_the_underflow;
+            } else if (computed_values.margin().top().is_auto()) {
+                box_state.margin_top = underflow_px;
+            } else if (computed_values.margin().bottom().is_auto()) {
+                box_state.margin_bottom = underflow_px;
+            } else if (computed_values.height().is_auto()) {
+                height += underflow_px;
+            }
+
+            return height;
+        };
+
+        CSSPixels used_height;
+        if (computed_height.is_auto()) {
+            used_height = try_compute_height(calculate_fit_content_height(item.box, get_available_space_for_item(item)));
+        } else if (computed_height.is_fit_content()) {
+            used_height = try_compute_height(calculate_fit_content_height(item.box, get_available_space_for_item(item)));
+        } else {
+            used_height = try_compute_height(computed_height.to_px(grid_container(), containing_block_height));
+        }
         box_state.set_content_height(used_height);
     }
 }
