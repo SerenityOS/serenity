@@ -1,0 +1,13 @@
+<script src="../include.js"></script>
+<script>
+    test(() => {
+        println(structuredClone(undefined));
+        println(structuredClone(null));
+        println(structuredClone(true));
+        println(structuredClone(false));
+        println(structuredClone(123));
+        println(structuredClone(123.456));
+        println(structuredClone(BigInt("0x1fffffffffffff")))
+        println(structuredClone("This is a string"));
+    });
+</script>
