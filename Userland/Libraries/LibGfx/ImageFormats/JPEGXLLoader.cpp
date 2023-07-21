@@ -421,16 +421,13 @@ struct BlendingInfo {
     u8 source {};
 };
 
-static ErrorOr<BlendingInfo> read_blending_info(LittleEndianInputBitStream& stream, ImageMetadata const& metadata, bool have_crop)
+static ErrorOr<BlendingInfo> read_blending_info(LittleEndianInputBitStream& stream, ImageMetadata const& metadata, bool full_frame)
 {
     BlendingInfo blending_info;
 
     blending_info.mode = static_cast<BlendingInfo::BlendMode>(U32(0, 1, 2, 3 + TRY(stream.read_bits(2))));
 
     bool const extra = metadata.num_extra_channels > 0;
-    // FIXME: also consider "cropped" image of the dimension of the frame
-    VERIFY(!have_crop);
-    bool const full_frame = !have_crop;
 
     if (extra) {
         TODO();
@@ -537,7 +534,10 @@ struct FrameHeader {
 
     BlendingInfo blending_info {};
 
+    u32 duration {};
+
     bool is_last { true };
+    u8 save_as_reference {};
     bool save_before_ct {};
 
     String name {};
@@ -598,8 +598,12 @@ static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream
         bool const normal_frame = frame_header.frame_type == FrameHeader::FrameType::kRegularFrame
             || frame_header.frame_type == FrameHeader::FrameType::kSkipProgressive;
 
+        // FIXME: also consider "cropped" image of the dimension of the frame
+        VERIFY(!frame_header.have_crop);
+        bool const full_frame = !frame_header.have_crop;
+
         if (normal_frame) {
-            frame_header.blending_info = TRY(read_blending_info(stream, metadata, frame_header.have_crop));
+            frame_header.blending_info = TRY(read_blending_info(stream, metadata, full_frame));
 
             for (u16 i {}; i < metadata.num_extra_channels; ++i)
                 TODO();
@@ -613,14 +617,17 @@ static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream
         // FIXME: Ensure that is_last has the correct default value
         VERIFY(normal_frame);
 
+        auto const resets_canvas = full_frame && frame_header.blending_info.mode == BlendingInfo::BlendMode::kReplace;
+        auto const can_reference = !frame_header.is_last && (frame_header.duration == 0 || frame_header.save_as_reference != 0) && frame_header.frame_type != FrameHeader::FrameType::kLFFrame;
+
         if (frame_header.frame_type != FrameHeader::FrameType::kLFFrame) {
             if (!frame_header.is_last)
                 TODO();
-            frame_header.save_before_ct = TRY(stream.read_bit());
         }
 
-        // FIXME: Ensure that save_before_ct has the correct default value
-        VERIFY(frame_header.frame_type != FrameHeader::FrameType::kLFFrame);
+        frame_header.save_before_ct = !normal_frame;
+        if (frame_header.frame_type == FrameHeader::FrameType::kReferenceOnly || (resets_canvas && can_reference))
+            frame_header.save_before_ct = TRY(stream.read_bit());
 
         auto const name_length = U32(0, TRY(stream.read_bits(4)), 16 + TRY(stream.read_bits(5)), 48 + TRY(stream.read_bits(10)));
         auto string_buffer = TRY(FixedArray<u8>::create(name_length));
