@@ -446,11 +446,10 @@ ErrorOr<void> BrotliDecompressionStream::read_block_configuration(Block& block)
     block.type_previous = 1;
     block.number_of_types = blocks_of_type;
 
-    block.type_code.clear();
-    block.length_code.clear();
-
     if (blocks_of_type == 1) {
         block.length = 16 * MiB;
+        block.type_code = {};
+        block.length_code = {};
     } else {
         block.type_code = TRY(CanonicalCode::read_prefix_code(m_input_stream, 2 + blocks_of_type));
         block.length_code = TRY(CanonicalCode::read_prefix_code(m_input_stream, 26));

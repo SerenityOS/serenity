@@ -27,11 +27,6 @@ public:
     static ErrorOr<CanonicalCode> read_complex_prefix_code(LittleEndianInputBitStream&, size_t alphabet_size, size_t hskip);
 
     ErrorOr<size_t> read_symbol(LittleEndianInputBitStream&) const;
-    void clear()
-    {
-        m_symbol_codes.clear();
-        m_symbol_values.clear();
-    }
 
 private:
     static ErrorOr<size_t> read_complex_prefix_code_length(LittleEndianInputBitStream&);
