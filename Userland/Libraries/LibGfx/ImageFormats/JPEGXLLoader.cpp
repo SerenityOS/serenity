@@ -363,11 +363,22 @@ static ErrorOr<ExtraChannelInfo> read_extra_channel_info(LittleEndianInputBitStr
 }
 
 struct ToneMapping {
+    float intensity_target { 255 };
+    float min_nits { 0 };
+    bool relative_to_max_display { false };
+    float linear_below { 0 };
 };
 
-static ErrorOr<ToneMapping> read_tone_mapping(LittleEndianInputBitStream&)
+static ErrorOr<ToneMapping> read_tone_mapping(LittleEndianInputBitStream& stream)
 {
-    TODO();
+    ToneMapping tone_mapping;
+    bool const all_default = TRY(stream.read_bit());
+
+    if (!all_default) {
+        TODO();
+    }
+
+    return tone_mapping;
 }
 
 struct OpsinInverseMatrix {
