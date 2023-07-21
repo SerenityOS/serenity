@@ -2230,19 +2230,8 @@ NonnullRefPtr<Expression const> Parser::parse_expression(int min_precedence, Ass
 
     if (is<CallExpression>(*expression) && m_state.current_scope_pusher) {
         auto& callee = static_ptr_cast<CallExpression const>(expression)->callee();
-        if (is<Identifier>(callee)) {
-            auto& identifier_instance = static_cast<Identifier const&>(callee);
-            if (identifier_instance.string() == "eval"sv) {
-                bool has_not_been_declared_as_variable = true;
-                for (auto scope = m_state.current_scope_pusher; scope; scope = scope->parent_scope()) {
-                    if (scope->has_declaration(identifier_instance.string())) {
-                        has_not_been_declared_as_variable = false;
-                        break;
-                    }
-                }
-                if (has_not_been_declared_as_variable)
-                    m_state.current_scope_pusher->set_contains_direct_call_to_eval();
-            }
+        if (is<Identifier>(callee) && static_cast<Identifier const&>(callee).string() == "eval"sv) {
+            m_state.current_scope_pusher->set_contains_direct_call_to_eval();
         }
     }
 
