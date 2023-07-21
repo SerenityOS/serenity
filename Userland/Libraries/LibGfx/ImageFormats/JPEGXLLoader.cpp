@@ -810,10 +810,277 @@ static ErrorOr<LfChannelDequantization> read_lf_channel_dequantization(LittleEnd
 ///
 
 /// C - Entropy decoding
+class ANSHistogram {
+public:
+    static ErrorOr<ANSHistogram> read_histogram(LittleEndianInputBitStream& stream, u8 log_alphabet_size)
+    {
+        ANSHistogram histogram;
+
+        auto const alphabet_size = TRY(histogram.read_ans_distribution(stream, log_alphabet_size));
+
+        // C.2.6 - Alias mapping
+
+        histogram.m_log_bucket_size = 12 - log_alphabet_size;
+        histogram.m_bucket_size = 1 << histogram.m_log_bucket_size;
+        auto const table_size = 1 << log_alphabet_size;
+
+        Optional<u64> index_of_unique_symbol {};
+        for (u64 i {}; i < histogram.m_distribution.size(); ++i) {
+            if (histogram.m_distribution[i] == 1 << 12)
+                index_of_unique_symbol = i;
+        }
+
+        TRY(histogram.m_symbols.try_resize(table_size));
+        TRY(histogram.m_offsets.try_resize(table_size));
+        TRY(histogram.m_cutoffs.try_resize(table_size));
+
+        if (index_of_unique_symbol.has_value()) {
+            auto const s = *index_of_unique_symbol;
+            for (i32 i = 0; i < table_size; i++) {
+                histogram.m_symbols[i] = s;
+                histogram.m_offsets[i] = histogram.m_bucket_size * i;
+                histogram.m_cutoffs[i] = 0;
+            }
+            return histogram;
+        }
+
+        Vector<u16> overfull;
+        Vector<u16> underfull;
+
+        for (u16 i {}; i < alphabet_size; i++) {
+            histogram.m_cutoffs[i] = histogram.m_distribution[i];
+            histogram.m_symbols[i] = i;
+            if (histogram.m_cutoffs[i] > histogram.m_bucket_size)
+                TRY(overfull.try_append(i));
+            else if (histogram.m_cutoffs[i] < histogram.m_bucket_size)
+                TRY(underfull.try_append(i));
+        }
+
+        for (u16 i = alphabet_size; i < table_size; i++) {
+            histogram.m_cutoffs[i] = 0;
+            TRY(underfull.try_append(i));
+        }
+
+        while (overfull.size() > 0) {
+            VERIFY(underfull.size() > 0);
+            auto const o = overfull.take_last();
+            auto const u = underfull.take_last();
+
+            auto const by = histogram.m_bucket_size - histogram.m_cutoffs[u];
+            histogram.m_cutoffs[o] -= by;
+            histogram.m_symbols[u] = o;
+            histogram.m_offsets[u] = histogram.m_cutoffs[o];
+            if (histogram.m_cutoffs[o] < histogram.m_bucket_size)
+                TRY(underfull.try_append(o));
+            else if (histogram.m_cutoffs[o] > histogram.m_bucket_size)
+                TRY(overfull.try_append(o));
+        }
+
+        for (u16 i {}; i < table_size; i++) {
+            if (histogram.m_cutoffs[i] == histogram.m_bucket_size) {
+                histogram.m_symbols[i] = i;
+                histogram.m_offsets[i] = 0;
+                histogram.m_cutoffs[i] = 0;
+            } else {
+                histogram.m_offsets[i] -= histogram.m_cutoffs[i];
+            }
+        }
+
+        return histogram;
+    }
+
+    ErrorOr<u16> read_symbol(LittleEndianInputBitStream& stream, Optional<u32>& state) const
+    {
+        if (!state.has_value())
+            state = TRY(stream.read_bits(32));
+
+        auto const index = *state & 0xFFF;
+        auto const symbol_and_offset = alias_mapping(index);
+        state = m_distribution[symbol_and_offset.symbol] * (*state >> 12) + symbol_and_offset.offset;
+        if (*state < (1 << 16))
+            state = (*state << 16) | TRY(stream.read_bits(16));
+        return symbol_and_offset.symbol;
+    }
+
+private:
+    static ErrorOr<u8> U8(LittleEndianInputBitStream& stream)
+    {
+        if (TRY(stream.read_bit()) == 0)
+            return 0;
+        auto const n = TRY(stream.read_bits(3));
+        return TRY(stream.read_bits(n)) + (1 << n);
+    }
+
+    struct SymbolAndOffset {
+        u16 symbol {};
+        u16 offset {};
+    };
+
+    SymbolAndOffset alias_mapping(u32 x) const
+    {
+        // C.2.6 - Alias mapping
+        auto const i = x >> m_log_bucket_size;
+        auto const pos = x & (m_bucket_size - 1);
+        u16 const symbol = pos >= m_cutoffs[i] ? m_symbols[i] : i;
+        u16 const offset = pos >= m_cutoffs[i] ? m_offsets[i] + pos : pos;
+
+        return { symbol, offset };
+    }
+
+    static ErrorOr<u16> read_with_prefix(LittleEndianInputBitStream& stream)
+    {
+        auto const prefix = TRY(stream.read_bits(3));
+
+        switch (prefix) {
+        case 0:
+            return 10;
+        case 1:
+            for (auto const possibility : { 4, 0, 11, 13 }) {
+                if (TRY(stream.read_bit()))
+                    return possibility;
+            }
+            return 12;
+        case 2:
+            return 7;
+        case 3:
+            return TRY(stream.read_bit()) ? 1 : 3;
+        case 4:
+            return 6;
+        case 5:
+            return 8;
+        case 6:
+            return 9;
+        case 7:
+            return TRY(stream.read_bit()) ? 2 : 5;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    ErrorOr<u16> read_ans_distribution(LittleEndianInputBitStream& stream, u8 log_alphabet_size)
+    {
+        // C.2.5  ANS distribution decoding
+        auto const table_size = 1 << log_alphabet_size;
+
+        m_distribution = TRY(FixedArray<i32>::create(table_size));
+
+        if (TRY(stream.read_bit())) {
+            u16 alphabet_size {};
+            if (TRY(stream.read_bit())) {
+                auto const v1 = TRY(U8(stream));
+                auto const v2 = TRY(U8(stream));
+                VERIFY(v1 != v2);
+                m_distribution[v1] = TRY(stream.read_bits(12));
+                m_distribution[v2] = (1 << 12) - m_distribution[v1];
+                alphabet_size = 1 + max(v1, v2);
+            } else {
+                auto const x = TRY(U8(stream));
+                m_distribution[x] = 1 << 12;
+                alphabet_size = 1 + x;
+            }
+            return alphabet_size;
+        }
+
+        if (TRY(stream.read_bit())) {
+            auto const alphabet_size = TRY(U8(stream)) + 1;
+            for (u16 i = 0; i < alphabet_size; i++)
+                m_distribution[i] = (1 << 12) / alphabet_size;
+            for (u16 i = 0; i < ((1 << 12) % alphabet_size); i++)
+                m_distribution[i]++;
+            return alphabet_size;
+        }
+
+        u8 len = 0;
+        while (len < 3) {
+            if (TRY(stream.read_bit()))
+                len++;
+            else
+                break;
+        }
+
+        u8 const shift = TRY(stream.read_bits(len)) + (1 << len) - 1;
+        VERIFY(shift <= 13);
+
+        auto const alphabet_size = TRY(U8(stream)) + 3;
+
+        i32 omit_log = -1;
+        i32 omit_pos = -1;
+
+        auto same = TRY(FixedArray<i32>::create(alphabet_size));
+        auto logcounts = TRY(FixedArray<i32>::create(alphabet_size));
+
+        u8 rle {};
+        for (u16 i = 0; i < alphabet_size; i++) {
+            logcounts[i] = TRY(read_with_prefix(stream));
+
+            if (logcounts[i] == 13) {
+                rle = TRY(U8(stream));
+                same[i] = rle + 5;
+                i += rle + 3;
+                continue;
+            }
+            if (logcounts[i] > omit_log) {
+                omit_log = logcounts[i];
+                omit_pos = i;
+            }
+        }
+
+        VERIFY(m_distribution[omit_pos] >= 0);
+        VERIFY(omit_pos + 1 >= alphabet_size || logcounts[omit_pos + 1] != 13);
+
+        i32 prev = 0;
+        i32 numsame = 0;
+        i64 total_count {};
+        for (u16 i = 0; i < alphabet_size; i++) {
+            if (same[i] != 0) {
+                numsame = same[i] - 1;
+                prev = i > 0 ? m_distribution[i - 1] : 0;
+            }
+            if (numsame > 0) {
+                m_distribution[i] = prev;
+                numsame--;
+            } else {
+                auto const code = logcounts[i];
+                if (i == omit_pos || code == 0)
+                    continue;
+
+                if (code == 1) {
+                    m_distribution[i] = 1;
+                } else {
+                    auto const bitcount = min(max(0, shift - ((12 - code + 1) >> 1)), code - 1);
+                    m_distribution[i] = (1 << (code - 1)) + (TRY(stream.read_bits(bitcount)) << (code - 1 - bitcount));
+                }
+            }
+            total_count += m_distribution[i];
+        }
+        m_distribution[omit_pos] = (1 << 12) - total_count;
+        VERIFY(m_distribution[omit_pos] >= 0);
+
+        return alphabet_size;
+    }
+
+    Vector<u16> m_symbols;
+    Vector<u16> m_offsets;
+    Vector<u16> m_cutoffs;
+
+    FixedArray<i32> m_distribution;
+
+    u16 m_log_bucket_size {};
+    u16 m_bucket_size {};
+};
+
 class EntropyDecoder {
-    using BrotliCanonicalCode = Compress::Brotli::CanonicalCode;
+    AK_MAKE_NONCOPYABLE(EntropyDecoder);
+    AK_MAKE_DEFAULT_MOVABLE(EntropyDecoder);
 
 public:
+    EntropyDecoder() = default;
+    ~EntropyDecoder()
+    {
+        if (m_state.has_value() && *m_state != 0x130000)
+            dbgln("JPEGXLLoader: ANS decoder left in invalid state");
+    }
+
     static ErrorOr<EntropyDecoder> create(LittleEndianInputBitStream& stream, u8 initial_num_distrib)
     {
         EntropyDecoder entropy_decoder;
@@ -863,7 +1130,12 @@ public:
                     distributions[i] = BrotliCanonicalCode { { 1 }, { 0 } };
             }
         } else {
-            TODO();
+            entropy_decoder.m_distributions = Vector<ANSHistogram> {};
+            auto& distributions = entropy_decoder.m_distributions.get<Vector<ANSHistogram>>();
+            TRY(distributions.try_ensure_capacity(entropy_decoder.m_configs.size()));
+
+            for (u32 i = 0; i < entropy_decoder.m_configs.size(); ++i)
+                distributions.empend(TRY(ANSHistogram::read_histogram(stream, entropy_decoder.m_log_alphabet_size)));
         }
 
         return entropy_decoder;
@@ -882,6 +1154,10 @@ public:
             [&](Vector<BrotliCanonicalCode> const& distributions) -> ErrorOr<void> {
                 token = TRY(distributions[m_clusters[context]].read_symbol(stream));
                 return {};
+            },
+            [&](Vector<ANSHistogram> const& distributions) -> ErrorOr<void> {
+                token = TRY(distributions[m_clusters[context]].read_symbol(stream, m_state));
+                return {};
             }));
 
         auto r = TRY(read_uint(stream, m_configs[m_clusters[context]], token));
@@ -889,6 +1165,8 @@ public:
     }
 
 private:
+    using BrotliCanonicalCode = Compress::Brotli::CanonicalCode;
+
     struct HybridUint {
         u32 split_exponent {};
         u32 split {};
@@ -972,7 +1250,8 @@ private:
 
     u8 m_log_alphabet_size { 15 };
 
-    Variant<Vector<BrotliCanonicalCode>> m_distributions { Vector<BrotliCanonicalCode> {} }; // D in the spec
+    Variant<Vector<BrotliCanonicalCode>, Vector<ANSHistogram>> m_distributions { Vector<BrotliCanonicalCode> {} }; // D in the spec
+    Optional<u32> m_state {};
 };
 ///
 
