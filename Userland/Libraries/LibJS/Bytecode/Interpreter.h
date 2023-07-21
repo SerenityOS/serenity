@@ -17,7 +17,6 @@
 namespace JS::Bytecode {
 
 class InstructionStreamIterator;
-class PassManager;
 
 struct CallFrame {
     void visit_edges(Cell::Visitor& visitor)
@@ -39,7 +38,6 @@ class Interpreter {
 public:
     [[nodiscard]] static bool enabled();
     static void set_enabled(bool);
-    static void set_optimizations_enabled(bool);
 
     explicit Interpreter(VM&);
     ~Interpreter();
@@ -93,8 +91,6 @@ public:
     BasicBlock const& current_block() const { return *m_current_block; }
     size_t pc() const;
     DeprecatedString debug_position() const;
-
-    static Bytecode::PassManager& optimization_pipeline();
 
     VM::InterpreterExecutionScope ast_interpreter_scope(Realm&);
 

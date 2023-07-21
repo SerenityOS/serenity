@@ -12,7 +12,6 @@
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Bytecode/Op.h>
-#include <LibJS/Bytecode/PassManager.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -30,13 +29,6 @@ bool Interpreter::enabled()
 void Interpreter::set_enabled(bool enabled)
 {
     s_bytecode_interpreter_enabled = enabled;
-}
-
-static bool s_optimizations_enabled = false;
-
-void Interpreter::set_optimizations_enabled(bool enabled)
-{
-    s_optimizations_enabled = enabled;
 }
 
 bool g_dump_bytecode = false;
@@ -123,11 +115,6 @@ ThrowCompletionOr<Value> Interpreter::run(Script& script_record, JS::GCPtr<Envir
                 result = JS::throw_completion(JS::InternalError::create(realm(), error_string.release_value()));
         } else {
             auto executable = executable_result.release_value();
-
-            if (s_optimizations_enabled) {
-                auto& passes = optimization_pipeline();
-                passes.perform(*executable);
-            }
 
             if (g_dump_bytecode)
                 executable->dump();
@@ -403,26 +390,6 @@ VM::InterpreterExecutionScope Interpreter::ast_interpreter_scope(Realm& realm)
     return { *m_ast_interpreter };
 }
 
-Bytecode::PassManager& Interpreter::optimization_pipeline()
-{
-    static auto s_optimization_pipeline = [] {
-        auto pm = make<Bytecode::PassManager>();
-        pm->add<Passes::GenerateCFG>();
-        pm->add<Passes::UnifySameBlocks>();
-        pm->add<Passes::GenerateCFG>();
-        pm->add<Passes::MergeBlocks>();
-        pm->add<Passes::GenerateCFG>();
-        pm->add<Passes::UnifySameBlocks>();
-        pm->add<Passes::GenerateCFG>();
-        pm->add<Passes::MergeBlocks>();
-        pm->add<Passes::GenerateCFG>();
-        pm->add<Passes::PlaceBlocks>();
-        pm->add<Passes::EliminateLoads>();
-        return pm;
-    }();
-    return *s_optimization_pipeline;
-}
-
 size_t Interpreter::pc() const
 {
     return m_pc ? m_pc->offset() : 0;
@@ -441,15 +408,6 @@ ThrowCompletionOr<NonnullOwnPtr<Bytecode::Executable>> compile(VM& vm, ASTNode c
 
     auto bytecode_executable = executable_result.release_value();
     bytecode_executable->name = name;
-
-    if (s_optimizations_enabled) {
-        auto& passes = Bytecode::Interpreter::optimization_pipeline();
-        passes.perform(*bytecode_executable);
-        if constexpr (JS_BYTECODE_DEBUG) {
-            dbgln("Optimisation passes took {}us", passes.elapsed());
-            dbgln("Compiled Bytecode::Block for function '{}':", name);
-        }
-    }
 
     if (Bytecode::g_dump_bytecode)
         bytecode_executable->dump();

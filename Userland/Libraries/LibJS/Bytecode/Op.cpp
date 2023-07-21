@@ -257,14 +257,6 @@ ThrowCompletionOr<void> ImportCall::execute_impl(Bytecode::Interpreter& interpre
     return {};
 }
 
-void ImportCall::replace_references_impl(Register from, Register to)
-{
-    if (m_specifier == from)
-        m_specifier = to;
-    if (m_options == from)
-        m_options = to;
-}
-
 // FIXME: Since the accumulator is a Value, we store an object there and have to convert back and forth between that an Iterator records. Not great.
 // Make sure to put this into the accumulator before the iterator object disappears from the stack to prevent the members from being GC'd.
 static Object* iterator_to_object(VM& vm, IteratorRecord iterator)
@@ -774,14 +766,6 @@ ThrowCompletionOr<void> GetImportMeta::execute_impl(Bytecode::Interpreter& inter
     return {};
 }
 
-void Jump::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
-{
-    if (m_true_target.has_value() && &m_true_target->block() == &from)
-        m_true_target = Label { to };
-    if (m_false_target.has_value() && &m_false_target->block() == &from)
-        m_false_target = Label { to };
-}
-
 ThrowCompletionOr<void> JumpConditional::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     VERIFY(m_true_target.has_value());
@@ -1045,54 +1029,6 @@ ThrowCompletionOr<void> EnterUnwindContext::execute_impl(Bytecode::Interpreter& 
     return {};
 }
 
-void NewFunction::replace_references_impl(Register from, Register to)
-{
-    if (m_home_object == from)
-        m_home_object = to;
-}
-
-void EnterUnwindContext::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
-{
-    if (&m_entry_point.block() == &from)
-        m_entry_point = Label { to };
-    if (m_handler_target.has_value() && &m_handler_target->block() == &from)
-        m_handler_target = Label { to };
-    if (m_finalizer_target.has_value() && &m_finalizer_target->block() == &from)
-        m_finalizer_target = Label { to };
-}
-
-void CopyObjectExcludingProperties::replace_references_impl(Register from, Register to)
-{
-    if (m_from_object == from)
-        m_from_object = to;
-
-    for (size_t i = 0; i < m_excluded_names_count; ++i) {
-        if (m_excluded_names[i] == from)
-            m_excluded_names[i] = to;
-    }
-}
-
-void Call::replace_references_impl(Register from, Register to)
-{
-    if (m_callee == from)
-        m_callee = to;
-
-    if (m_this_value == from)
-        m_this_value = to;
-
-    if (m_first_argument == from)
-        m_first_argument = to;
-}
-
-void CallWithArgumentArray::replace_references_impl(Register from, Register to)
-{
-    if (m_callee == from)
-        m_callee = to;
-
-    if (m_this_value == from)
-        m_this_value = to;
-}
-
 ThrowCompletionOr<void> ScheduleJump::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.schedule_jump(m_target);
@@ -1114,12 +1050,6 @@ ThrowCompletionOr<void> LeaveUnwindContext::execute_impl(Bytecode::Interpreter& 
 ThrowCompletionOr<void> ContinuePendingUnwind::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     return interpreter.continue_pending_unwind(m_resume_target);
-}
-
-void ContinuePendingUnwind::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
-{
-    if (&m_resume_target.block() == &from)
-        m_resume_target = Label { to };
 }
 
 ThrowCompletionOr<void> PushDeclarativeEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -1148,12 +1078,6 @@ ThrowCompletionOr<void> Yield::execute_impl(Bytecode::Interpreter& interpreter) 
     return {};
 }
 
-void Yield::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
-{
-    if (m_continuation_label.has_value() && &m_continuation_label->block() == &from)
-        m_continuation_label = Label { to };
-}
-
 ThrowCompletionOr<void> Await::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto yielded_value = interpreter.accumulator().value_or(js_undefined());
@@ -1165,12 +1089,6 @@ ThrowCompletionOr<void> Await::execute_impl(Bytecode::Interpreter& interpreter) 
     object->define_direct_property("isAwait", Value(true), JS::default_attributes);
     interpreter.do_return(object);
     return {};
-}
-
-void Await::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
-{
-    if (&m_continuation_label.block() == &from)
-        m_continuation_label = Label { to };
 }
 
 ThrowCompletionOr<void> GetByValue::execute_impl(Bytecode::Interpreter& interpreter) const

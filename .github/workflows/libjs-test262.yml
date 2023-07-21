@@ -107,7 +107,6 @@ jobs:
         run: |
           cp -f ../libjs-website/test262/data/per-file-master.json .
           cp -f ../libjs-website/test262/data/per-file-bytecode-master.json .
-          cp -f ../libjs-website/test262/data/per-file-bytecode-optimized-master.json .
           cp -f ../libjs-website/wasm/data/per-file-master.json wasm-per-file-master.json
 
       - name: Run test262 and test262-parser-tests
@@ -119,8 +118,7 @@ jobs:
             --test262-parser-tests ../test262-parser-tests \
             --results-json ../libjs-website/test262/data/results.json \
             --per-file-output ../libjs-website/test262/data/per-file-master.json \
-            --per-file-bytecode-output ../libjs-website/test262/data/per-file-bytecode-master.json \
-            --per-file-bytecode-optimized-output ../libjs-website/test262/data/per-file-bytecode-optimized-master.json
+            --per-file-bytecode-output ../libjs-website/test262/data/per-file-bytecode-master.json
 
       - name: Run test-wasm
         working-directory: libjs-test262/Build
@@ -168,11 +166,6 @@ jobs:
         continue-on-error: true
         working-directory: libjs-test262
         run: ./per_file_result_diff.py -o per-file-bytecode-master.json -n ../libjs-website/test262/data/per-file-bytecode-master.json
-
-      - name: Compare optimized bytecode
-        continue-on-error: true
-        working-directory: libjs-test262
-        run: ./per_file_result_diff.py -o per-file-bytecode-optimized-master.json -n ../libjs-website/test262/data/per-file-bytecode-optimized-master.json
 
       - name: Compare non-bytecode to bytecode
         continue-on-error: true
