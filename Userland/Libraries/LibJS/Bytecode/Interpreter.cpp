@@ -46,8 +46,6 @@ void Interpreter::visit_edges(Cell::Visitor& visitor)
 {
     if (m_return_value.has_value())
         visitor.visit(*m_return_value);
-    if (m_saved_return_value.has_value())
-        visitor.visit(*m_saved_return_value);
     if (m_saved_exception.has_value())
         visitor.visit(*m_saved_exception);
     for (auto& frame : m_call_frames) {
@@ -277,8 +275,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
         if (!unwind_contexts().is_empty() && !will_yield) {
             auto& unwind_context = unwind_contexts().last();
             if (unwind_context.executable == m_current_executable && unwind_context.finalizer) {
-                m_saved_return_value = m_return_value;
-                m_return_value = {};
+                reg(Register::saved_return_value()) = m_return_value.release_value();
                 m_current_block = unwind_context.finalizer;
                 // the unwind_context will be pop'ed when entering the finally block
                 continue;
@@ -308,13 +305,15 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
         }
     }
 
+    auto saved_return_value = reg(Register::saved_return_value());
+
     auto frame = pop_call_frame();
 
     Value return_value = js_undefined();
     if (m_return_value.has_value()) {
         return_value = m_return_value.release_value();
-    } else if (m_saved_return_value.has_value() && !m_saved_exception.has_value()) {
-        return_value = m_saved_return_value.release_value();
+    } else if (!saved_return_value.is_empty()) {
+        return_value = saved_return_value;
     }
 
     // NOTE: The return value from a called function is put into $0 in the caller context.
@@ -335,7 +334,6 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
     if (m_saved_exception.has_value()) {
         Value thrown_value = m_saved_exception.value();
         m_saved_exception = {};
-        m_saved_return_value = {};
         if (auto* call_frame = frame.get_pointer<NonnullOwnPtr<CallFrame>>())
             return { throw_completion(thrown_value), move(*call_frame) };
         return { throw_completion(thrown_value), nullptr };
@@ -366,8 +364,8 @@ ThrowCompletionOr<void> Interpreter::continue_pending_unwind(Label const& resume
         return throw_completion(m_saved_exception.release_value());
     }
 
-    if (m_saved_return_value.has_value()) {
-        do_return(m_saved_return_value.release_value());
+    if (!saved_return_value().is_empty()) {
+        do_return(saved_return_value());
         return {};
     }
 

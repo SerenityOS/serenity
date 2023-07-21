@@ -19,6 +19,13 @@ public:
         return Register(accumulator_index);
     }
 
+    constexpr static u32 saved_return_value_index = 1;
+
+    static constexpr Register saved_return_value()
+    {
+        return Register(saved_return_value_index);
+    }
+
     constexpr explicit Register(u32 index)
         : m_index(index)
     {

@@ -61,6 +61,7 @@ public:
     ValueAndFrame run_and_return_frame(Realm&, Bytecode::Executable&, Bytecode::BasicBlock const* entry_point, CallFrame* = nullptr);
 
     ALWAYS_INLINE Value& accumulator() { return reg(Register::accumulator()); }
+    ALWAYS_INLINE Value& saved_return_value() { return reg(Register::saved_return_value()); }
     Value& reg(Register const& r) { return registers()[r.index()]; }
 
     auto& saved_lexical_environment_stack() { return call_frame().saved_lexical_environments; }
@@ -119,7 +120,6 @@ private:
     Optional<BasicBlock const*> m_pending_jump;
     BasicBlock const* m_scheduled_jump { nullptr };
     Optional<Value> m_return_value;
-    Optional<Value> m_saved_return_value;
     Optional<Value> m_saved_exception;
     Executable* m_current_executable { nullptr };
     OwnPtr<JS::Interpreter> m_ast_interpreter;
