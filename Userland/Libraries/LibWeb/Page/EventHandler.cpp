@@ -130,20 +130,6 @@ EventHandler::EventHandler(Badge<HTML::BrowsingContext>, HTML::BrowsingContext& 
 
 EventHandler::~EventHandler() = default;
 
-Layout::Viewport const* EventHandler::layout_root() const
-{
-    if (!m_browsing_context->active_document())
-        return nullptr;
-    return m_browsing_context->active_document()->layout_node();
-}
-
-Layout::Viewport* EventHandler::layout_root()
-{
-    if (!m_browsing_context->active_document())
-        return nullptr;
-    return m_browsing_context->active_document()->layout_node();
-}
-
 Painting::PaintableBox* EventHandler::paint_root()
 {
     if (!m_browsing_context->active_document())
