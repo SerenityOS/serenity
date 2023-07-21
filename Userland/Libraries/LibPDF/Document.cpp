@@ -175,7 +175,7 @@ static PDFErrorOr<void> dump_tree(Document& document, size_t index, HashTable<in
     seen.set(index);
 
     auto const& value = TRY(document.get_or_load_value(index));
-    outln("obj {} 0", index);
+    outln("{} 0 obj", index);
     outln("{}", value.to_deprecated_string(0));
     outln("endobj");
 
