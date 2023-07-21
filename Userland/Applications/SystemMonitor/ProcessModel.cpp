@@ -574,6 +574,9 @@ void ProcessModel::update()
             tids_to_remove.append(it.key);
             continue;
         }
+        if (it.value->current_state.state == "Zombie") {
+            continue;
+        }
         auto& thread = *it.value;
         u64 time_scheduled_diff = (thread.current_state.time_user + thread.current_state.time_kernel)
             - (thread.previous_state.time_user + thread.previous_state.time_kernel);
