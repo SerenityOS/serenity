@@ -1639,7 +1639,7 @@ public:
         auto result = [this]() -> ErrorOr<void> {
             // A.1 - Codestream structure
 
-            TRY(decode_image_header());
+            // The header is already decoded in JPEGXLImageDecoderPlugin::create()
 
             if (m_metadata.colour_encoding.want_icc)
                 TODO();
