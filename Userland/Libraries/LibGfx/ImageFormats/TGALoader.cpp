@@ -93,7 +93,8 @@ public:
 
     ALWAYS_INLINE ErrorOr<i16> read_i16()
     {
-        return TRY(read_i8()) | TRY(read_i8()) << 8;
+        auto value = TRY(read_u16());
+        return static_cast<i16>(value);
     }
 
     ALWAYS_INLINE ErrorOr<u32> read_u32()
@@ -103,7 +104,8 @@ public:
 
     ALWAYS_INLINE ErrorOr<i32> read_i32()
     {
-        return TRY(read_i16()) | TRY(read_i16()) << 16;
+        auto value = TRY(read_u32());
+        return static_cast<i32>(value);
     }
 
     ALWAYS_INLINE ErrorOr<TGAPixelPacket> read_packet_type()
