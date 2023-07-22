@@ -526,7 +526,7 @@ PDFErrorOr<Vector<Operator>> Parser::parse_operators()
     Vector<Value> operator_args;
 
     constexpr static auto is_operator_char = [](char ch) {
-        return isalpha(ch) || ch == '*' || ch == '\'';
+        return isalpha(ch) || ch == '*' || ch == '\'' || ch == '"';
     };
 
     m_reader.consume_whitespace();
