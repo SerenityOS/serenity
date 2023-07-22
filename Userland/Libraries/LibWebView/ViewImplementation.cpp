@@ -14,7 +14,8 @@
 
 namespace WebView {
 
-ViewImplementation::ViewImplementation()
+ViewImplementation::ViewImplementation(UseJavaScriptBytecode use_javascript_bytecode)
+    : m_use_javascript_bytecode(use_javascript_bytecode)
 {
     m_backing_store_shrink_timer = Core::Timer::create_single_shot(3000, [this] {
         resize_backing_stores_if_needed(WindowResizeInProgress::No);

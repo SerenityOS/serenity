@@ -49,7 +49,7 @@ class HeadlessWebContentView final : public WebView::ViewImplementation {
 public:
     static ErrorOr<NonnullOwnPtr<HeadlessWebContentView>> create(Core::AnonymousBuffer theme, Gfx::IntSize const& window_size, StringView web_driver_ipc_path, WebView::IsLayoutTestMode is_layout_test_mode = WebView::IsLayoutTestMode::No, WebView::UseJavaScriptBytecode use_javascript_bytecode = WebView::UseJavaScriptBytecode::No)
     {
-        auto view = TRY(adopt_nonnull_own_or_enomem(new (nothrow) HeadlessWebContentView()));
+        auto view = TRY(adopt_nonnull_own_or_enomem(new (nothrow) HeadlessWebContentView(use_javascript_bytecode)));
 
 #if defined(AK_OS_SERENITY)
         view->m_client_state.client = TRY(WebView::WebContentClient::try_create(*view));
@@ -94,7 +94,10 @@ public:
     }
 
 private:
-    HeadlessWebContentView() = default;
+    HeadlessWebContentView(WebView::UseJavaScriptBytecode use_javascript_bytecode)
+        : WebView::ViewImplementation(use_javascript_bytecode)
+    {
+    }
 
     void notify_server_did_layout(Badge<WebView::WebContentClient>, Gfx::IntSize) override { }
     void notify_server_did_paint(Badge<WebView::WebContentClient>, i32, Gfx::IntSize) override { }
@@ -125,7 +128,7 @@ private:
 
     void notify_server_did_finish_handling_input_event(bool) override { }
     void update_zoom() override { }
-    void create_client(WebView::EnableCallgrindProfiling, WebView::UseJavaScriptBytecode) override { }
+    void create_client(WebView::EnableCallgrindProfiling) override { }
 
     virtual Gfx::IntRect viewport_rect() const override { return m_viewport_rect; }
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const override { return widget_position; }

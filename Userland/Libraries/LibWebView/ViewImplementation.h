@@ -74,6 +74,8 @@ public:
     void clear_inspected_dom_node();
     i32 get_hovered_node_id();
 
+    UseJavaScriptBytecode use_javascript_bytecode() const { return m_use_javascript_bytecode; }
+
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument = {});
 
     void run_javascript(StringView);
@@ -158,7 +160,7 @@ protected:
     static constexpr auto ZOOM_MAX_LEVEL = 5.0f;
     static constexpr auto ZOOM_STEP = 0.1f;
 
-    ViewImplementation();
+    explicit ViewImplementation(UseJavaScriptBytecode);
 
     WebContentClient& client();
     WebContentClient const& client() const;
@@ -173,7 +175,7 @@ protected:
     void request_repaint();
     void handle_resize();
 
-    virtual void create_client(EnableCallgrindProfiling = EnableCallgrindProfiling::No, UseJavaScriptBytecode = UseJavaScriptBytecode::No) { }
+    virtual void create_client(EnableCallgrindProfiling = EnableCallgrindProfiling::No) { }
 
 #if !defined(AK_OS_SERENITY)
     ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(ReadonlySpan<String> candidate_web_content_paths, EnableCallgrindProfiling = EnableCallgrindProfiling::No, IsLayoutTestMode = IsLayoutTestMode::No, UseJavaScriptBytecode = UseJavaScriptBytecode::No);
@@ -210,6 +212,8 @@ protected:
 
     size_t m_crash_count = 0;
     RefPtr<Core::Timer> m_repeated_crash_timer;
+
+    UseJavaScriptBytecode m_use_javascript_bytecode {};
 };
 
 }
