@@ -754,7 +754,7 @@ PDFErrorOr<void> Renderer::show_text(DeprecatedString const& string)
     auto font_size = text_rendering_matrix.x_scale() * text_state().font_size;
 
     auto start_position = text_rendering_matrix.map(Gfx::FloatPoint { 0.0f, 0.0f });
-    auto end_position = TRY(text_state().font->draw_string(m_painter, start_position, string, state().paint_color, font_size, text_state().character_spacing, text_state().word_spacing, text_state().horizontal_scaling));
+    auto end_position = TRY(text_state().font->draw_string(m_painter, start_position, string, state().paint_color, font_size, text_state().character_spacing * text_rendering_matrix.x_scale(), text_state().word_spacing * text_rendering_matrix.x_scale(), text_state().horizontal_scaling));
 
     // Update text matrix
     auto delta_x = end_position.x() - start_position.x();
