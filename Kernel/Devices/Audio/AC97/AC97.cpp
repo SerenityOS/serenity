@@ -35,6 +35,21 @@ UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<AudioController>> AC97::create(PCI::Devic
 UNMAP_AFTER_INIT ErrorOr<bool> AC97::probe(PCI::DeviceIdentifier const& device_identifier)
 {
     VERIFY(device_identifier.class_code() == PCI::ClassID::Multimedia);
+
+    // TODO: Check pci ids.
+
+    if (PCI::get_BAR_space_size(device_identifier, PCI::HeaderType0BaseRegister::BAR0) <= NativeAudioMixerRegister::MaxUsedMixerOffset)
+        return Error::from_errno(EIO);
+
+    // BAR registers are 32-bit. So if BAR0 is 64-bit then
+    // it occupies BAR0 and BAR1 and hence BAR1 isn't present on its own.
+    u64 pci_bar0_value = PCI::get_BAR(device_identifier, PCI::HeaderType0BaseRegister::BAR0);
+    if (PCI::get_BAR_space_type(pci_bar0_value) == PCI::BARSpaceType::Memory64BitSpace)
+        return Error::from_errno(EIO);
+
+    if (PCI::get_BAR_space_size(device_identifier, PCI::HeaderType0BaseRegister::BAR1) <= NativeAudioBusRegister::MaxUsedBusOffset)
+        return Error::from_errno(EIO);
+
     return device_identifier.subclass_code() == PCI::Multimedia::SubclassID::Audio;
 }
 

@@ -48,6 +48,7 @@ private:
         PCMFrontDACRate = 0x2c,
         VendorID1 = 0x7c,
         VendorID2 = 0x7e,
+        MaxUsedMixerOffset = 0x7f,
     };
 
     enum ExtendedAudioMask : u16 {
@@ -79,6 +80,7 @@ private:
 
     enum NativeAudioBusRegister : u8 {
         GlobalControl = 0x2c,
+        MaxUsedBusOffset = 0x2f
     };
 
     enum AudioStatusRegisterFlag : u16 {
