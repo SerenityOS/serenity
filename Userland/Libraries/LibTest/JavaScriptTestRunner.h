@@ -3,6 +3,7 @@
  * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Ali Mohammad Pur <mpfard@serenityos.org>
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -425,6 +426,11 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
                 auto details = test_value.as_object().get_deprecated_string("details"sv);
                 VERIFY(result.has_value());
                 test.details = details.value();
+            } else if (result_string == "xfail") {
+                test.result = Test::Result::ExpectedFail;
+                m_counts.tests_expected_failed++;
+                if (suite.most_severe_test_result != Test::Result::Fail)
+                    suite.most_severe_test_result = Test::Result::ExpectedFail;
             } else {
                 test.result = Test::Result::Skip;
                 if (suite.most_severe_test_result == Test::Result::Pass)
@@ -443,6 +449,8 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
         } else {
             if (suite.most_severe_test_result == Test::Result::Skip && file_result.most_severe_test_result == Test::Result::Pass)
                 file_result.most_severe_test_result = Test::Result::Skip;
+            else if (suite.most_severe_test_result == Test::Result::ExpectedFail && (file_result.most_severe_test_result == Test::Result::Pass || file_result.most_severe_test_result == Test::Result::Skip))
+                file_result.most_severe_test_result = Test::Result::ExpectedFail;
             m_counts.suites_passed++;
         }
 
@@ -605,6 +613,9 @@ inline void TestRunner::print_file_result(JSFileResult const& file_result) const
                     print_modifiers({ CLEAR, FG_RED });
                     outln("{} (failed):", test.name);
                     outln("                 {}", test.details);
+                } else if (test.result == Test::Result::ExpectedFail) {
+                    print_modifiers({ CLEAR, FG_ORANGE });
+                    outln("{} (expected fail)", test.name);
                 } else {
                     print_modifiers({ CLEAR, FG_ORANGE });
                     outln("{} (skipped)", test.name);

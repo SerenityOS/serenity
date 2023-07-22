@@ -120,8 +120,11 @@ void TestRunner::do_run_single_test(DeprecatedString const& test_path, size_t cu
     case Test::Result::Pass:
         ++m_counts.tests_passed;
         break;
+    case Test::Result::ExpectedFail:
+        ++m_counts.tests_passed;
+        break;
     case Test::Result::Skip:
-        ++m_counts.tests_skipped;
+        ++m_counts.tests_expected_failed;
         break;
     case Test::Result::Fail:
         ++m_counts.tests_failed;
@@ -196,7 +199,8 @@ void TestRunner::do_run_single_test(DeprecatedString const& test_path, size_t cu
             outln("{} ({})", test_result.file_path.basename(), test_result.result == Test::Result::Fail ? "failed" : "crashed");
         } else {
             print_modifiers({ Test::CLEAR, Test::FG_ORANGE });
-            outln("{} (skipped)", test_result.file_path.basename());
+            auto const status = test_result.result == Test::Result::Skip ? "skipped"sv : "expected fail"sv;
+            outln("{} ({})", test_result.file_path.basename(), status);
         }
         print_modifiers({ Test::CLEAR });
     }

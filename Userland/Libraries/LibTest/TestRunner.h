@@ -3,6 +3,7 @@
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Ali Mohammad Pur <mpfard@serenityos.org>
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -184,12 +185,17 @@ inline void TestRunner::print_test_results() const
         out("{} skipped, ", m_counts.tests_skipped);
         print_modifiers({ CLEAR });
     }
+    if (m_counts.tests_expected_failed) {
+        print_modifiers({ FG_ORANGE });
+        out("{} expected failed, ", m_counts.tests_expected_failed);
+        print_modifiers({ CLEAR });
+    }
     if (m_counts.tests_passed) {
         print_modifiers({ FG_GREEN });
         out("{} passed, ", m_counts.tests_passed);
         print_modifiers({ CLEAR });
     }
-    outln("{} total", m_counts.tests_failed + m_counts.tests_skipped + m_counts.tests_passed);
+    outln("{} total", m_counts.tests_failed + m_counts.tests_skipped + m_counts.tests_passed + m_counts.tests_expected_failed);
 
     outln("Files:       {} total", m_counts.files_total);
 
@@ -227,6 +233,9 @@ inline void TestRunner::print_test_results_as_json() const
                 case Result::Skip:
                     result_name = "SKIPPED"sv;
                     break;
+                case Result::ExpectedFail:
+                    result_name = "XFAIL"sv;
+                    break;
                 case Result::Crashed:
                     result_name = "PROCESS_ERROR"sv;
                     break;
@@ -254,7 +263,8 @@ inline void TestRunner::print_test_results_as_json() const
         tests.set("failed", m_counts.tests_failed);
         tests.set("passed", m_counts.tests_passed);
         tests.set("skipped", m_counts.tests_skipped);
-        tests.set("total", m_counts.tests_failed + m_counts.tests_passed + m_counts.tests_skipped);
+        tests.set("xfail", m_counts.tests_expected_failed);
+        tests.set("total", m_counts.tests_failed + m_counts.tests_passed + m_counts.tests_skipped + m_counts.tests_expected_failed);
 
         JsonObject results;
         results.set("suites", suites);
