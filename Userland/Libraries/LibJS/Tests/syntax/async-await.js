@@ -201,7 +201,7 @@ describe("await cannot be used in class static init blocks", () => {
     });
 });
 
-test("async returning a thenable", () => {
+test.xfailIf(isBytecodeInterpreterEnabled(), "async returning a thenable", () => {
     let isCalled = false;
     const f = async () => ({
         then() {

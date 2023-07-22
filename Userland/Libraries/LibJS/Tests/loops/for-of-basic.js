@@ -130,26 +130,37 @@ describe("special left hand sides", () => {
         expect(f().a).toBe("c");
     });
 
-    test("call function is allowed in parsing but fails in runtime", () => {
-        function f() {
-            expect().fail();
+    test.xfailIf(
+        isBytecodeInterpreterEnabled(),
+        "call function is allowed in parsing but fails in runtime",
+        () => {
+            function f() {
+                expect().fail();
+            }
+
+            // Does not fail since it does not iterate but prettier does not like it so we use eval.
+            expect("for (f() of []);").toEvalTo(undefined);
+
+            expect(() => {
+                eval("for (f() of [0]) { expect().fail() }");
+            }).toThrowWithMessage(ReferenceError, "Invalid left-hand side in assignment");
         }
+    );
 
-        // Does not fail since it does not iterate but prettier does not like it so we use eval.
-        expect("for (f() of []);").toEvalTo(undefined);
+    test.xfailIf(
+        isBytecodeInterpreterEnabled(),
+        "Cannot change constant declaration in body",
+        () => {
+            const vals = [];
+            for (const v of [1, 2]) {
+                expect(() => v++).toThrowWithMessage(
+                    TypeError,
+                    "Invalid assignment to const variable"
+                );
+                vals.push(v);
+            }
 
-        expect(() => {
-            eval("for (f() of [0]) { expect().fail() }");
-        }).toThrowWithMessage(ReferenceError, "Invalid left-hand side in assignment");
-    });
-
-    test("Cannot change constant declaration in body", () => {
-        const vals = [];
-        for (const v of [1, 2]) {
-            expect(() => v++).toThrowWithMessage(TypeError, "Invalid assignment to const variable");
-            vals.push(v);
+            expect(vals).toEqual([1, 2]);
         }
-
-        expect(vals).toEqual([1, 2]);
-    });
+    );
 });

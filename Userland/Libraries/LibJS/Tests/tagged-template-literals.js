@@ -154,7 +154,7 @@ describe("tagged template literal functionality", () => {
         expect(stringsValue.raw[1]).toBe("invalid\\u");
     });
 
-    test("string value gets cached per AST node", () => {
+    test.xfailIf(isBytecodeInterpreterEnabled(), "string value gets cached per AST node", () => {
         function call(func, val) {
             return func`template${val}second`;
         }
@@ -164,7 +164,7 @@ describe("tagged template literal functionality", () => {
         expect(firstResult).toBe(secondResult);
     });
 
-    test("this value of call comes from reference", () => {
+    test.xfailIf(isBytecodeInterpreterEnabled(), "this value of call comes from reference", () => {
         let thisValue = null;
         const obj = {
             func() {

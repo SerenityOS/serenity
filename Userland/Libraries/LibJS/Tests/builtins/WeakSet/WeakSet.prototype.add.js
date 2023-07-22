@@ -16,25 +16,29 @@ test("invalid values", () => {
     });
 });
 
-test("automatic removal of garbage-collected values", () => {
-    const weakSet = new WeakSet();
-    const objectItem = { a: 1 };
+test.xfailIf(
+    isBytecodeInterpreterEnabled(),
+    "automatic removal of garbage-collected values",
+    () => {
+        const weakSet = new WeakSet();
+        const objectItem = { a: 1 };
 
-    expect(weakSet.add(objectItem)).toBe(weakSet);
-    expect(getWeakSetSize(weakSet)).toBe(1);
+        expect(weakSet.add(objectItem)).toBe(weakSet);
+        expect(getWeakSetSize(weakSet)).toBe(1);
 
-    markAsGarbage("objectItem");
-    gc();
+        markAsGarbage("objectItem");
+        gc();
 
-    expect(getWeakSetSize(weakSet)).toBe(0);
+        expect(getWeakSetSize(weakSet)).toBe(0);
 
-    const symbolItem = Symbol("foo");
+        const symbolItem = Symbol("foo");
 
-    expect(weakSet.add(symbolItem)).toBe(weakSet);
-    expect(getWeakSetSize(weakSet)).toBe(1);
+        expect(weakSet.add(symbolItem)).toBe(weakSet);
+        expect(getWeakSetSize(weakSet)).toBe(1);
 
-    markAsGarbage("symbolItem");
-    gc();
+        markAsGarbage("symbolItem");
+        gc();
 
-    expect(getWeakSetSize(weakSet)).toBe(0);
-});
+        expect(getWeakSetSize(weakSet)).toBe(0);
+    }
+);

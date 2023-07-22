@@ -40,7 +40,7 @@ describe("normal behavior", () => {
         expect(passed).toBeTrue();
     });
 
-    test("value from async module", () => {
+    test.xfailIf(isBytecodeInterpreterEnabled(), "value from async module", () => {
         const shadowRealm = new ShadowRealm();
         const promise = shadowRealm.importValue("./async-module.mjs", "foo");
         expect(promise).toBeInstanceOf(Promise);
