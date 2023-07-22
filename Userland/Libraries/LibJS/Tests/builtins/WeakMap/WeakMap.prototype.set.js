@@ -1,9 +1,3 @@
-function registerInDifferentScope(registry) {
-    const target = {};
-    registry.register(target, {});
-    eval("");
-}
-
 test("basic functionality", () => {
     expect(WeakMap.prototype.set).toHaveLength(2);
 
@@ -27,26 +21,25 @@ test("invalid values", () => {
     });
 });
 
-function setObjectKey(weakMap) {
-    expect(weakMap.set({ e: 3 }, 1)).toBe(weakMap);
-}
-
-function setSymbolKey(weakMap) {
-    expect(weakMap.set(Symbol("foo"), "bar")).toBe(weakMap);
-}
-
 test("automatic removal of garbage-collected values", () => {
     const weakMap = new WeakMap();
+    const objectKey = { e: 3 };
 
-    setObjectKey(weakMap);
+    expect(weakMap.set(objectKey, 1)).toBe(weakMap);
     expect(getWeakMapSize(weakMap)).toBe(1);
 
+    markAsGarbage("objectKey");
     gc();
+
     expect(getWeakMapSize(weakMap)).toBe(0);
 
-    setSymbolKey(weakMap);
+    const symbolKey = Symbol("foo");
+
+    expect(weakMap.set(symbolKey, "bar")).toBe(weakMap);
     expect(getWeakMapSize(weakMap)).toBe(1);
 
+    markAsGarbage("symbolKey");
     gc();
+
     expect(getWeakMapSize(weakMap)).toBe(0);
 });

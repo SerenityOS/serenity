@@ -76,6 +76,8 @@ public:
 
     BlockAllocator& block_allocator() { return m_block_allocator; }
 
+    void uproot_cell(Cell* cell);
+
 private:
     static bool cell_must_survive_garbage_collection(Cell const&);
 
@@ -109,6 +111,8 @@ private:
     HandleImpl::List m_handles;
     MarkedVectorBase::List m_marked_vectors;
     WeakContainer::List m_weak_containers;
+
+    Vector<GCPtr<Cell>> m_uprooted_cells;
 
     BlockAllocator m_block_allocator;
 

@@ -16,26 +16,25 @@ test("invalid values", () => {
     });
 });
 
-function addObjectItem(weakSet) {
-    weakSet.add({ a: 1 });
-}
-
-function addSymbolItem(weakSet) {
-    weakSet.add(Symbol("foo"));
-}
-
 test("automatic removal of garbage-collected values", () => {
     const weakSet = new WeakSet();
+    const objectItem = { a: 1 };
 
-    addObjectItem(weakSet);
+    expect(weakSet.add(objectItem)).toBe(weakSet);
     expect(getWeakSetSize(weakSet)).toBe(1);
 
+    markAsGarbage("objectItem");
     gc();
+
     expect(getWeakSetSize(weakSet)).toBe(0);
 
-    addSymbolItem(weakSet);
+    const symbolItem = Symbol("foo");
+
+    expect(weakSet.add(symbolItem)).toBe(weakSet);
     expect(getWeakSetSize(weakSet)).toBe(1);
 
+    markAsGarbage("symbolItem");
     gc();
+
     expect(getWeakSetSize(weakSet)).toBe(0);
 });
