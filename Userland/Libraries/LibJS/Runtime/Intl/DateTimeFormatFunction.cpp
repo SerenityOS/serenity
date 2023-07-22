@@ -13,7 +13,7 @@
 
 namespace JS::Intl {
 
-// 11.5.5 DateTime Format Functions, https://tc39.es/ecma402/#sec-datetime-format-functions
+// 11.5.4 DateTime Format Functions, https://tc39.es/ecma402/#sec-datetime-format-functions
 NonnullGCPtr<DateTimeFormatFunction> DateTimeFormatFunction::create(Realm& realm, DateTimeFormat& date_time_format)
 {
     return realm.heap().allocate<DateTimeFormatFunction>(realm, date_time_format, realm.intrinsics().function_prototype()).release_allocated_value_but_fixme_should_propagate_errors();

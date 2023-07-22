@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Intl/DateTimeFormat.h>
 #include <LibJS/Runtime/NativeFunction.h>
 
 namespace JS::Intl {
@@ -27,6 +26,18 @@ private:
     virtual bool has_constructor() const override { return true; }
 
     JS_DECLARE_NATIVE_FUNCTION(supported_locales_of);
+};
+
+enum class OptionRequired {
+    Any,
+    Date,
+    Time,
+};
+
+enum class OptionDefaults {
+    All,
+    Date,
+    Time,
 };
 
 ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM&, FunctionObject& new_target, Value locales_value, Value options_value, OptionRequired, OptionDefaults);

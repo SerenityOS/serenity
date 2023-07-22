@@ -147,18 +147,6 @@ private:
     String m_data_locale;
 };
 
-enum class OptionRequired {
-    Any,
-    Date,
-    Time,
-};
-
-enum class OptionDefaults {
-    All,
-    Date,
-    Time,
-};
-
 // Table 8: Record returned by ToLocalTime, https://tc39.es/ecma402/#table-datetimeformat-tolocaltime-record
 // Note: [[InDST]] is not included here - it is handled by LibUnicode / LibTimeZone.
 struct LocalTime {
@@ -180,7 +168,6 @@ struct LocalTime {
     u16 millisecond { 0 }; // [[Millisecond]]
 };
 
-ThrowCompletionOr<Object*> to_date_time_options(VM&, Value options_value, OptionRequired, OptionDefaults);
 ThrowCompletionOr<Optional<::Locale::CalendarPattern>> date_time_style_format(VM&, StringView data_locale, DateTimeFormat& date_time_format);
 Optional<::Locale::CalendarPattern> basic_format_matcher(::Locale::CalendarPattern const& options, Vector<::Locale::CalendarPattern> formats);
 Optional<::Locale::CalendarPattern> best_fit_format_matcher(::Locale::CalendarPattern const& options, Vector<::Locale::CalendarPattern> formats);
