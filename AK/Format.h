@@ -557,9 +557,6 @@ struct Formatter<nullptr_t> : Formatter<FlatPtr> {
 
 ErrorOr<void> vformat(StringBuilder&, StringView fmtstr, TypeErasedFormatParams&);
 
-void vdbg(StringView fmtstr, TypeErasedFormatParams&, bool newline = false);
-void dbgln();
-
 #ifndef KERNEL
 void vout(FILE*, StringView fmtstr, TypeErasedFormatParams&, bool newline = false);
 
@@ -596,30 +593,13 @@ inline void outln() { outln(stdout); }
 template<typename... Parameters>
 void warn(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
 {
-#    ifdef AK_OS_SERENITY
-    VariadicFormatParams<AllowDebugOnlyFormatters::Yes, Parameters...> variadic_format_params { parameters... };
-    vdbg(fmtstr.view(), variadic_format_params, false);
-#    endif
     out(stderr, move(fmtstr), parameters...);
 }
 
 template<typename... Parameters>
-void warnln(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
-{
-#    ifdef AK_OS_SERENITY
-    VariadicFormatParams<AllowDebugOnlyFormatters::Yes, Parameters...> variadic_format_params { parameters... };
-    vdbg(fmtstr.view(), variadic_format_params, true);
-#    endif
-    outln(stderr, move(fmtstr), parameters...);
-}
+void warnln(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters) { outln(stderr, move(fmtstr), parameters...); }
 
-inline void warnln()
-{
-#    ifdef AK_OS_SERENITY
-    dbgln();
-#    endif
-    outln(stderr);
-}
+inline void warnln() { outln(stderr); }
 
 #    define warnln_if(flag, fmt, ...)       \
         do {                                \
@@ -628,6 +608,8 @@ inline void warnln()
         } while (0)
 
 #endif
+
+void vdbg(StringView fmtstr, TypeErasedFormatParams&, bool newline = false);
 
 template<typename... Parameters>
 void dbg(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
