@@ -99,7 +99,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         size = stat.st_size + size;
         break;
     case OP_Shrink:
-        size = stat.st_size - size;
+        size = max(stat.st_size - size, 0);
         break;
     }
 
