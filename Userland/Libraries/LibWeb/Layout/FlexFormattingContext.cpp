@@ -987,7 +987,7 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
 
         // AD-HOC: We allow the remaining free space to be infinite, but we can't let infinity
         //         leak into the layout geometry, so we treat infinity as zero when used in arithmetic.
-        auto remaining_free_space_or_zero_if_infinite = isfinite(line.remaining_free_space.to_double()) ? line.remaining_free_space : 0;
+        auto remaining_free_space_or_zero_if_infinite = !line.remaining_free_space.might_be_saturated() ? line.remaining_free_space : 0;
 
         // c. If the remaining free space is non-zero, distribute it proportional to the flex factors:
         if (line.remaining_free_space != 0) {
@@ -1096,7 +1096,7 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
 
     // AD-HOC: Due to the way we calculate the remaining free space, it can be infinite when sizing
     //         under a max-content constraint. In that case, we can simply set it to zero here.
-    if (!isfinite(line.remaining_free_space.to_double()))
+    if (line.remaining_free_space.might_be_saturated())
         line.remaining_free_space = 0;
 
     // 6. Set each item’s used main size to its target main size.

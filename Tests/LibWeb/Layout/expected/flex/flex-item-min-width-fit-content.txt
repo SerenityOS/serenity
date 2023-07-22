@@ -9,14 +9,14 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <div.buttons> at (394.625,11) content-size 114.375x50 flex-item [BFC] children: inline
         line 0 width: 114.375, height: 19.46875, bottom: 19.46875, baseline: 14.53125
           frag 0 from BlockContainer start: 0, length: 0, rect: [395.625,12 57.046875x17.46875]
-          frag 1 from BlockContainer start: 0, length: 0, rect: [454.625,12 53.328125x17.46875]
+          frag 1 from BlockContainer start: 0, length: 0, rect: [454.671875,12 53.328125x17.46875]
         BlockContainer <div.button> at (395.625,12) content-size 57.046875x17.46875 inline-block [BFC] children: inline
           line 0 width: 57.046875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
             frag 0 from TextNode start: 0, length: 6, rect: [395.625,12 57.046875x17.46875]
               "Accept"
           TextNode <#text>
-        BlockContainer <div.button> at (454.625,12) content-size 53.328125x17.46875 inline-block [BFC] children: inline
+        BlockContainer <div.button> at (454.671875,12) content-size 53.328125x17.46875 inline-block [BFC] children: inline
           line 0 width: 53.328125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 6, rect: [454.625,12 53.328125x17.46875]
+            frag 0 from TextNode start: 0, length: 6, rect: [454.671875,12 53.328125x17.46875]
               "Reject"
           TextNode <#text>

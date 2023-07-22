@@ -1,41 +1,41 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
-    BlockContainer <body> at (8,8) content-size 784x257.46875 children: inline
-      line 0 width: 772, height: 130.46875, bottom: 130.46875, baseline: 127
+    BlockContainer <body> at (8,8) content-size 784x257.9375 children: inline
+      line 0 width: 772, height: 130.9375, bottom: 130.9375, baseline: 127
         frag 0 from SVGSVGBox start: 0, length: 0, rect: [9,84 100x50]
-        frag 1 from TextNode start: 0, length: 1, rect: [110,121 8x17.46875]
+        frag 1 from TextNode start: 0, length: 1, rect: [110,121.46875 8x17.46875]
           " "
         frag 2 from SVGSVGBox start: 0, length: 0, rect: [119,84 100x50]
-        frag 3 from TextNode start: 0, length: 1, rect: [220,121 8x17.46875]
+        frag 3 from TextNode start: 0, length: 1, rect: [220,121.46875 8x17.46875]
           " "
         frag 4 from SVGSVGBox start: 0, length: 0, rect: [229,84 100x50]
-        frag 5 from TextNode start: 0, length: 1, rect: [330,121 8x17.46875]
+        frag 5 from TextNode start: 0, length: 1, rect: [330,121.46875 8x17.46875]
           " "
         frag 6 from SVGSVGBox start: 0, length: 0, rect: [339,84 100x50]
-        frag 7 from TextNode start: 0, length: 1, rect: [440,121 8x17.46875]
+        frag 7 from TextNode start: 0, length: 1, rect: [440,121.46875 8x17.46875]
           " "
         frag 8 from SVGSVGBox start: 0, length: 0, rect: [449,84 100x50]
-        frag 9 from TextNode start: 0, length: 1, rect: [550,121 8x17.46875]
+        frag 9 from TextNode start: 0, length: 1, rect: [550,121.46875 8x17.46875]
           " "
         frag 10 from SVGSVGBox start: 0, length: 0, rect: [559,84 100x50]
-        frag 11 from TextNode start: 0, length: 1, rect: [660,121 8x17.46875]
+        frag 11 from TextNode start: 0, length: 1, rect: [660,121.46875 8x17.46875]
           " "
         frag 12 from SVGSVGBox start: 0, length: 0, rect: [669,9 50x125]
-        frag 13 from TextNode start: 0, length: 1, rect: [720,121 8x17.46875]
+        frag 13 from TextNode start: 0, length: 1, rect: [720,121.46875 8x17.46875]
           " "
         frag 14 from SVGSVGBox start: 0, length: 0, rect: [729,9 50x125]
-      line 1 width: 402, height: 130.46875, bottom: 257.46875, baseline: 127
+      line 1 width: 402, height: 130.9375, bottom: 257.9375, baseline: 127
         frag 0 from SVGSVGBox start: 0, length: 0, rect: [9,136 50x125]
-        frag 1 from TextNode start: 0, length: 1, rect: [60,248 8x17.46875]
+        frag 1 from TextNode start: 0, length: 1, rect: [60,248.46875 8x17.46875]
           " "
         frag 2 from SVGSVGBox start: 0, length: 0, rect: [69,136 50x125]
-        frag 3 from TextNode start: 0, length: 1, rect: [120,248 8x17.46875]
+        frag 3 from TextNode start: 0, length: 1, rect: [120,248.46875 8x17.46875]
           " "
         frag 4 from SVGSVGBox start: 0, length: 0, rect: [129,136 50x125]
-        frag 5 from TextNode start: 0, length: 1, rect: [180,248 8x17.46875]
+        frag 5 from TextNode start: 0, length: 1, rect: [180,248.46875 8x17.46875]
           " "
         frag 6 from SVGSVGBox start: 0, length: 0, rect: [189,136 50x125]
-        frag 7 from TextNode start: 0, length: 1, rect: [240,248 8x17.46875]
+        frag 7 from TextNode start: 0, length: 1, rect: [240,248.46875 8x17.46875]
           " "
         frag 8 from SVGSVGBox start: 0, length: 0, rect: [249,201 160x60]
       SVGSVGBox <svg> at (9,84) content-size 100x50 [SVG] children: inline
@@ -100,6 +100,6 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       TextNode <#text>
       SVGSVGBox <svg> at (249,201) content-size 160x60 [SVG] children: inline
         TextNode <#text>
-        SVGGeometryBox <circle> at (299,200.999998) content-size 60x60.000003 children: not-inline
+        SVGGeometryBox <circle> at (299,201) content-size 60x60 children: not-inline
         TextNode <#text>
       TextNode <#text>

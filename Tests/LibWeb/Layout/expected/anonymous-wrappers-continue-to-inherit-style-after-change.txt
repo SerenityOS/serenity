@@ -1,13 +1,13 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
-  BlockContainer <html> at (0,0) content-size 800x89.846250 [BFC] children: not-inline
-    BlockContainer <body> at (8,21.440000) content-size 784x73.846250 children: not-inline
-      BlockContainer <h1> at (8,21.440000) content-size 784x34.9375 children: inline
+  BlockContainer <html> at (0,0) content-size 800x89.84375 [BFC] children: not-inline
+    BlockContainer <body> at (8,21.4375) content-size 784x73.84375 children: not-inline
+      BlockContainer <h1> at (8,21.4375) content-size 784x34.9375 children: inline
         line 0 width: 105.53125, height: 34.9375, bottom: 34.9375, baseline: 27.0625
-          frag 0 from TextNode start: 0, length: 6, rect: [8,21.440000 105.53125x34.9375]
+          frag 0 from TextNode start: 0, length: 6, rect: [8,21.4375 105.53125x34.9375]
             "header"
         TextNode <#text>
-      BlockContainer <(anonymous)> at (8,77.817501) content-size 784x17.46875 children: inline
+      BlockContainer <(anonymous)> at (8,77.8125) content-size 784x17.46875 children: inline
         line 0 width: 212.125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-          frag 0 from TextNode start: 0, length: 24, rect: [8,77.817501 212.125x17.46875]
+          frag 0 from TextNode start: 0, length: 24, rect: [8,77.8125 212.125x17.46875]
             "anonymously wrapped text"
         TextNode <#text>

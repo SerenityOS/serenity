@@ -103,14 +103,14 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       Box <div.grid-container> at (8,275.34375) content-size 784x90.9375 [GFC] children: not-inline
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.grid-item> at (444.2,285.34375) content-size 337.8x17.46875 [BFC] children: inline
+        BlockContainer <div.grid-item> at (444.1875,285.34375) content-size 337.796875x17.46875 [BFC] children: inline
           line 0 width: 6.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 1, rect: [444.2,285.34375 6.34375x17.46875]
+            frag 0 from TextNode start: 0, length: 1, rect: [444.1875,285.34375 6.34375x17.46875]
               "1"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.grid-item> at (18,338.8125) content-size 337.8x17.46875 [BFC] children: inline
+        BlockContainer <div.grid-item> at (18,338.8125) content-size 337.796875x17.46875 [BFC] children: inline
           line 0 width: 8.8125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
             frag 0 from TextNode start: 0, length: 1, rect: [18,338.8125 8.8125x17.46875]
               "2"

@@ -1,14 +1,14 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
-    BlockContainer <body> at (8,8) content-size 784x23.999999 children: not-inline
-      Box <div.grid-container> at (8,8) content-size 784x23.999999 [GFC] children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x24 children: not-inline
+      Box <div.grid-container> at (8,8) content-size 784x24 [GFC] children: not-inline
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.wrapper> at (8,8) content-size 64x23.999999 [BFC] children: inline
-          line 0 width: 64, height: 23.999999, bottom: 23.999999, baseline: 23.999999
-            frag 0 from ImageBox start: 0, length: 0, rect: [8,8 64x23.999999]
+        BlockContainer <div.wrapper> at (8,8) content-size 64.015625x24 [BFC] children: inline
+          line 0 width: 64.015625, height: 24, bottom: 24, baseline: 24
+            frag 0 from ImageBox start: 0, length: 0, rect: [8,8 64.015625x24]
           TextNode <#text>
-          ImageBox <img> at (8,8) content-size 64x23.999999 children: not-inline
+          ImageBox <img> at (8,8) content-size 64.015625x24 children: not-inline
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>

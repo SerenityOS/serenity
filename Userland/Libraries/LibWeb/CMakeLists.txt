@@ -490,6 +490,7 @@ set(SOURCES
     PerformanceTimeline/EntryTypes.cpp
     PerformanceTimeline/PerformanceEntry.cpp
     PermissionsPolicy/AutoplayAllowlist.cpp
+    PixelUnits.cpp
     Platform/AudioCodecPlugin.cpp
     Platform/EventLoopPlugin.cpp
     Platform/EventLoopPluginSerenity.cpp

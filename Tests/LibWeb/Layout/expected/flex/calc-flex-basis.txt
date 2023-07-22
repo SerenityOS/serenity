@@ -3,22 +3,22 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
     BlockContainer <body> at (10,10) content-size 780x62 children: not-inline
       Box <div.flex-container> at (11,11) content-size 778x60 flex-container(row) [FFC] children: not-inline
         BlockContainer <div.flex-item> at (12,12) content-size 386x28 flex-item [BFC] children: inline
-          line 0 width: 58.398437, height: 21.835937, bottom: 21.835937, baseline: 16.914062
-            frag 0 from TextNode start: 0, length: 6, rect: [12,12 58.398437x21.835937]
+          line 0 width: 58.390625, height: 21.828125, bottom: 21.828125, baseline: 16.890625
+            frag 0 from TextNode start: 0, length: 6, rect: [12,12 58.390625x21.828125]
               "Item 1"
           TextNode <#text>
         BlockContainer <div.flex-item> at (401,12) content-size 386x28 flex-item [BFC] children: inline
-          line 0 width: 61.484375, height: 21.835937, bottom: 21.835937, baseline: 16.914062
-            frag 0 from TextNode start: 0, length: 6, rect: [401,12 61.484375x21.835937]
+          line 0 width: 61.484375, height: 21.828125, bottom: 21.828125, baseline: 16.890625
+            frag 0 from TextNode start: 0, length: 6, rect: [401,12 61.484375x21.828125]
               "Item 2"
           TextNode <#text>
         BlockContainer <div.flex-item> at (12,42) content-size 386x28 flex-item [BFC] children: inline
-          line 0 width: 61.835937, height: 21.835937, bottom: 21.835937, baseline: 16.914062
-            frag 0 from TextNode start: 0, length: 6, rect: [12,42 61.835937x21.835937]
+          line 0 width: 61.828125, height: 21.828125, bottom: 21.828125, baseline: 16.890625
+            frag 0 from TextNode start: 0, length: 6, rect: [12,42 61.828125x21.828125]
               "Item 3"
           TextNode <#text>
         BlockContainer <div.flex-item> at (401,42) content-size 386x28 flex-item [BFC] children: inline
-          line 0 width: 60.15625, height: 21.835937, bottom: 21.835937, baseline: 16.914062
-            frag 0 from TextNode start: 0, length: 6, rect: [401,42 60.15625x21.835937]
+          line 0 width: 60.15625, height: 21.828125, bottom: 21.828125, baseline: 16.890625
+            frag 0 from TextNode start: 0, length: 6, rect: [401,42 60.15625x21.828125]
               "Item 4"
           TextNode <#text>

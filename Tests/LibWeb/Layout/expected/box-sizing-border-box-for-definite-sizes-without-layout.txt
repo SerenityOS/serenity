@@ -1,11 +1,11 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
-  BlockContainer <html> at (0,0) content-size 800x66 [BFC] children: not-inline
-    BlockContainer <body> at (8,8) content-size 784x50 children: inline
-      line 0 width: 89.726562, height: 50, bottom: 50, baseline: 16.914062
-        frag 0 from Box start: 0, length: 0, rect: [28,38 49.726562x0]
-      Box <div.button> at (28,38) content-size 49.726562x0 flex-container(row) [FFC] children: not-inline
-        BlockContainer <(anonymous)> at (28,27.082031) content-size 49.726562x21.835937 flex-item [BFC] children: inline
-          line 0 width: 49.726562, height: 21.835937, bottom: 21.835937, baseline: 16.914062
-            frag 0 from TextNode start: 0, length: 5, rect: [28,27.082031 49.726562x21.835937]
+  BlockContainer <html> at (0,0) content-size 800x66.90625 [BFC] children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x50.90625 children: inline
+      line 0 width: 89.71875, height: 50.90625, bottom: 50.90625, baseline: 16.890625
+        frag 0 from Box start: 0, length: 0, rect: [28,38.90625 49.71875x0]
+      Box <div.button> at (28,38.90625) content-size 49.71875x0 flex-container(row) [FFC] children: not-inline
+        BlockContainer <(anonymous)> at (28,28) content-size 49.71875x21.828125 flex-item [BFC] children: inline
+          line 0 width: 49.71875, height: 21.828125, bottom: 21.828125, baseline: 16.890625
+            frag 0 from TextNode start: 0, length: 5, rect: [28,28 49.71875x21.828125]
               "Hello"
           TextNode <#text>

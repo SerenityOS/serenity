@@ -1,60 +1,60 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (1,1) content-size 798x600 [BFC] children: not-inline
-    BlockContainer <body> at (252,10) content-size 538x399.257812 children: inline
-      line 0 width: 228.339843, height: 21.835937, bottom: 21.835937, baseline: 16.914062
-        frag 0 from TextNode start: 1, length: 21, rect: [554,10 228.339843x21.835937]
+    BlockContainer <body> at (252,10) content-size 538x398.90625 children: inline
+      line 0 width: 228.3125, height: 21.828125, bottom: 21.828125, baseline: 16.890625
+        frag 0 from TextNode start: 1, length: 21, rect: [554,10 228.3125x21.828125]
           "Lorem ipsum dolor sit"
-      line 1 width: 183.769531, height: 22.671875, bottom: 44.507812, baseline: 16.914062
-        frag 0 from TextNode start: 23, length: 17, rect: [554,31 183.769531x21.835937]
+      line 1 width: 183.75, height: 21.828125, bottom: 43.65625, baseline: 16.890625
+        frag 0 from TextNode start: 23, length: 17, rect: [554,31.828125 183.75x21.828125]
           "amet, consectetur"
-      line 2 width: 140.546875, height: 22.507812, bottom: 66.179687, baseline: 16.914062
-        frag 0 from TextNode start: 41, length: 16, rect: [554,53 140.546875x21.835937]
+      line 2 width: 140.53125, height: 21.828125, bottom: 65.484375, baseline: 16.890625
+        frag 0 from TextNode start: 41, length: 16, rect: [554,53.65625 140.53125x21.828125]
           "adipiscing elit."
-      line 3 width: 145, height: 22.34375, bottom: 87.851562, baseline: 16.914062
-        frag 0 from TextNode start: 58, length: 13, rect: [554,75 145x21.835937]
+      line 3 width: 144.984375, height: 21.828125, bottom: 87.3125, baseline: 16.890625
+        frag 0 from TextNode start: 58, length: 13, rect: [554,75.484375 144.984375x21.828125]
           "Suspendisse a"
-      line 4 width: 196.699218, height: 22.179687, bottom: 109.523437, baseline: 16.914062
-        frag 0 from TextNode start: 72, length: 19, rect: [554,97 196.699218x21.835937]
+      line 4 width: 196.6875, height: 21.828125, bottom: 109.140625, baseline: 16.890625
+        frag 0 from TextNode start: 72, length: 19, rect: [554,97.3125 196.6875x21.828125]
           "placerat mauris, ut"
-      line 5 width: 234.6875, height: 22.015625, bottom: 131.195312, baseline: 16.914062
-        frag 0 from TextNode start: 92, length: 22, rect: [554,119 234.6875x21.835937]
+      line 5 width: 234.65625, height: 21.828125, bottom: 130.96875, baseline: 16.890625
+        frag 0 from TextNode start: 92, length: 22, rect: [554,119.140625 234.65625x21.828125]
           "elementum mi. Morbi ut"
-      line 6 width: 201.523437, height: 21.851562, bottom: 152.867187, baseline: 16.914062
-        frag 0 from TextNode start: 115, length: 20, rect: [554,141 201.523437x21.835937]
+      line 6 width: 201.5, height: 21.828125, bottom: 152.796875, baseline: 16.890625
+        frag 0 from TextNode start: 115, length: 20, rect: [554,140.96875 201.5x21.828125]
           "vehicula ipsum, eget"
-      line 7 width: 232.539062, height: 22.6875, bottom: 175.539062, baseline: 16.914062
-        frag 0 from TextNode start: 136, length: 23, rect: [554,162 232.539062x21.835937]
+      line 7 width: 232.53125, height: 21.828125, bottom: 174.625, baseline: 16.890625
+        frag 0 from TextNode start: 136, length: 23, rect: [554,162.796875 232.53125x21.828125]
           "placerat augue. Integer"
-      line 8 width: 202.96875, height: 22.523437, bottom: 197.210937, baseline: 16.914062
-        frag 0 from TextNode start: 160, length: 20, rect: [554,184 202.96875x21.835937]
+      line 8 width: 202.953125, height: 21.828125, bottom: 196.453125, baseline: 16.890625
+        frag 0 from TextNode start: 160, length: 20, rect: [554,184.625 202.953125x21.828125]
           "rutrum nisi eget dui"
       line 9 width: 0, height: 0, bottom: 0, baseline: 0
-      line 10 width: 208.828125, height: 22.359375, bottom: 224.882812, baseline: 16.914062
-        frag 0 from TextNode start: 181, length: 19, rect: [252,212 208.828125x21.835937]
+      line 10 width: 208.8125, height: 21.828125, bottom: 224.28125, baseline: 16.890625
+        frag 0 from TextNode start: 181, length: 19, rect: [252,212.453125 208.8125x21.828125]
           "dictum, eu accumsan"
-      line 11 width: 180.195312, height: 22.195312, bottom: 246.554687, baseline: 16.914062
-        frag 0 from TextNode start: 201, length: 18, rect: [252,234 180.195312x21.835937]
+      line 11 width: 180.171875, height: 21.828125, bottom: 246.109375, baseline: 16.890625
+        frag 0 from TextNode start: 201, length: 18, rect: [252,234.28125 180.171875x21.828125]
           "enim tristique. Ut"
-      line 12 width: 195.273437, height: 22.03125, bottom: 268.226562, baseline: 16.914062
-        frag 0 from TextNode start: 220, length: 19, rect: [252,256 195.273437x21.835937]
+      line 12 width: 195.25, height: 21.828125, bottom: 267.9375, baseline: 16.890625
+        frag 0 from TextNode start: 220, length: 19, rect: [252,256.109375 195.25x21.828125]
           "lobortis lorem eget"
-      line 13 width: 222.910156, height: 21.867187, bottom: 289.898437, baseline: 16.914062
-        frag 0 from TextNode start: 240, length: 22, rect: [252,278 222.910156x21.835937]
+      line 13 width: 222.875, height: 21.828125, bottom: 289.765625, baseline: 16.890625
+        frag 0 from TextNode start: 240, length: 22, rect: [252,277.9375 222.875x21.828125]
           "est vulputate egestas."
-      line 14 width: 223.125, height: 22.703125, bottom: 312.570312, baseline: 16.914062
-        frag 0 from TextNode start: 263, length: 23, rect: [252,299 223.125x21.835937]
+      line 14 width: 223.109375, height: 21.828125, bottom: 311.59375, baseline: 16.890625
+        frag 0 from TextNode start: 263, length: 23, rect: [252,299.765625 223.109375x21.828125]
           "Integer laoreet lacinia"
-      line 15 width: 222.617187, height: 22.539062, bottom: 334.242187, baseline: 16.914062
-        frag 0 from TextNode start: 287, length: 22, rect: [252,321 222.617187x21.835937]
+      line 15 width: 222.59375, height: 21.828125, bottom: 333.421875, baseline: 16.890625
+        frag 0 from TextNode start: 287, length: 22, rect: [252,321.59375 222.59375x21.828125]
           "ante sodales lobortis."
-      line 16 width: 178.300781, height: 22.375, bottom: 355.914062, baseline: 16.914062
-        frag 0 from TextNode start: 310, length: 17, rect: [252,343 178.300781x21.835937]
+      line 16 width: 178.28125, height: 21.828125, bottom: 355.25, baseline: 16.890625
+        frag 0 from TextNode start: 310, length: 17, rect: [252,343.421875 178.28125x21.828125]
           "Donec a tincidunt"
-      line 17 width: 231.074218, height: 22.210937, bottom: 377.585937, baseline: 16.914062
-        frag 0 from TextNode start: 328, length: 22, rect: [252,365 231.074218x21.835937]
+      line 17 width: 231.0625, height: 21.828125, bottom: 377.078125, baseline: 16.890625
+        frag 0 from TextNode start: 328, length: 22, rect: [252,365.25 231.0625x21.828125]
           "ante. Phasellus a arcu"
-      line 18 width: 70.546875, height: 22.046875, bottom: 399.257812, baseline: 16.914062
-        frag 0 from TextNode start: 351, length: 7, rect: [252,387 70.546875x21.835937]
+      line 18 width: 70.546875, height: 21.828125, bottom: 398.90625, baseline: 16.890625
+        frag 0 from TextNode start: 351, length: 7, rect: [252,387.078125 70.546875x21.828125]
           "tortor."
       BlockContainer <div.left> at (253,11) content-size 300x200 floating [BFC] children: not-inline
       TextNode <#text>
