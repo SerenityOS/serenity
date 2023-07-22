@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Brian Gianforcaro <bgianf@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,6 +18,7 @@ enum class Result {
     Pass,
     Fail,
     Skip,
+    ExpectedFail,
     Crashed,
 };
 
@@ -42,6 +44,7 @@ struct Counts {
     unsigned tests_failed { 0 };
     unsigned tests_passed { 0 };
     unsigned tests_skipped { 0 };
+    unsigned tests_expected_failed { 0 };
     unsigned suites_failed { 0 };
     unsigned suites_passed { 0 };
     unsigned files_total { 0 };
