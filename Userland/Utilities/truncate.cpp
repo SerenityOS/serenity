@@ -46,20 +46,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     off_t size = 0;
 
     if (!resize.is_empty()) {
-        DeprecatedString str = resize;
-
-        switch (str[0]) {
+        switch (resize[0]) {
         case '+':
             op = OP_Grow;
-            str = str.substring(1, str.length() - 1);
+            resize = resize.substring_view(1);
             break;
         case '-':
             op = OP_Shrink;
-            str = str.substring(1, str.length() - 1);
+            resize = resize.substring_view(1);
             break;
         }
 
-        auto size_opt = str.to_int<off_t>();
+        auto size_opt = resize.to_int<off_t>();
         if (!size_opt.has_value()) {
             args_parser.print_usage(stderr, arguments.strings[0]);
             return 1;
