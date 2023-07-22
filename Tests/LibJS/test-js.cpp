@@ -12,6 +12,11 @@ TEST_ROOT("Userland/Libraries/LibJS/Tests");
 
 TESTJS_PROGRAM_FLAG(test262_parser_tests, "Run test262 parser tests", "test262-parser-tests", 0);
 
+TESTJS_GLOBAL_FUNCTION(is_bytecode_interpreter_enabled, isBytecodeInterpreterEnabled, 0)
+{
+    return JS::Value(JS::Bytecode::Interpreter::enabled());
+}
+
 TESTJS_GLOBAL_FUNCTION(is_strict_mode, isStrictMode, 0)
 {
     return JS::Value(vm.in_strict_mode());
