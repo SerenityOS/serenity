@@ -630,6 +630,41 @@ class ExpectationError extends Error {
         };
     };
 
+    test.xfail = (message, callback) => {
+        if (!__TestResults__[suiteMessage]) __TestResults__[suiteMessage] = {};
+
+        const suite = __TestResults__[suiteMessage];
+        if (Object.prototype.hasOwnProperty.call(suite, message)) {
+            suite[message] = {
+                result: "fail",
+                details: "Another test with the same message did already run",
+                duration: 0,
+            };
+            return;
+        }
+
+        const now = () => Temporal.Now.instant().epochNanoseconds;
+        const start = now();
+        const time_us = () => Number(BigInt.asIntN(53, (now() - start) / 1000n));
+        try {
+            callback();
+            suite[message] = {
+                result: "fail",
+                details: "Expected test to fail, but it passed",
+                duration: time_us(),
+            };
+        } catch (e) {
+            suite[message] = {
+                result: "xfail",
+                duration: time_us(),
+            };
+        }
+    };
+
+    test.xfailIf = (condition, message, callback) => {
+        condition ? test.xfail(message, callback) : test(message, callback);
+    };
+
     withinSameSecond = callback => {
         let callbackDuration;
         for (let tries = 0; tries < 5; tries++) {
