@@ -1,9 +1,9 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
-  BlockContainer <html> at (1,1) content-size 798x62.50625 [BFC] children: not-inline
-    BlockContainer <body> at (2,2) content-size 796x60.50625 children: inline
-      line 0 width: 34, height: 28.50625, bottom: 28.50625, baseline: 28.50625
+  BlockContainer <html> at (1,1) content-size 798x62.515625 [BFC] children: not-inline
+    BlockContainer <body> at (2,2) content-size 796x60.515625 children: inline
+      line 0 width: 34, height: 28.515625, bottom: 28.515625, baseline: 28.515625
         frag 0 from BlockContainer start: 0, length: 0, rect: [4,3 30x30]
-      line 1 width: 32, height: 28.50625, bottom: 60.50625, baseline: 28.50625
+      line 1 width: 32, height: 28.515625, bottom: 60.515625, baseline: 28.515625
         frag 0 from BlockContainer start: 0, length: 0, rect: [3,35 30x30]
       BlockContainer <div.clump> at (4,3) content-size 30x30 inline-block [BFC] children: not-inline
       BreakNode <br>

@@ -1,20 +1,20 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
-  BlockContainer <html> at (0,0) content-size 800x570.851562 [BFC] children: not-inline
-    BlockContainer <body> at (8,70) content-size 784x492.851562 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x570.84375 [BFC] children: not-inline
+    BlockContainer <body> at (8,70) content-size 784x492.84375 children: not-inline
       BlockContainer <p.min-inline-test> at (8,70) content-size 784x200 children: inline
-        line 0 width: 85.859375, height: 76.425781, bottom: 76.425781, baseline: 59.199218
-          frag 0 from TextNode start: 0, length: 2, rect: [8,70 85.859375x76.425781]
+        line 0 width: 85.859375, height: 76.421875, bottom: 76.421875, baseline: 59.1875
+          frag 0 from TextNode start: 0, length: 2, rect: [8,70 85.859375x76.421875]
             "KK"
         TextNode <#text>
-      BlockContainer <(anonymous)> at (8,340) content-size 784x76.425781 children: inline
-        line 0 width: 0, height: 76.425781, bottom: 76.425781, baseline: 59.199218
+      BlockContainer <(anonymous)> at (8,340) content-size 784x76.421875 children: inline
+        line 0 width: 0, height: 76.421875, bottom: 76.421875, baseline: 59.1875
         TextNode <#text>
         BreakNode <br>
         TextNode <#text>
-      BlockContainer <p.max-inline-test> at (8,486.425781) content-size 100x76.425781 children: inline
-        line 0 width: 85.859375, height: 76.425781, bottom: 76.425781, baseline: 59.199218
-          frag 0 from TextNode start: 0, length: 2, rect: [8,486.425781 85.859375x76.425781]
+      BlockContainer <p.max-inline-test> at (8,486.421875) content-size 100x76.421875 children: inline
+        line 0 width: 85.859375, height: 76.421875, bottom: 76.421875, baseline: 59.1875
+          frag 0 from TextNode start: 0, length: 2, rect: [8,486.421875 85.859375x76.421875]
             "KK"
         TextNode <#text>
-      BlockContainer <(anonymous)> at (8,632.851562) content-size 784x0 children: inline
+      BlockContainer <(anonymous)> at (8,632.84375) content-size 784x0 children: inline
         TextNode <#text>

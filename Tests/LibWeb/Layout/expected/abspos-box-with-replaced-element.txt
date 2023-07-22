@@ -1,7 +1,7 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (1,1) content-size 798x0 [BFC] children: not-inline
     BlockContainer <body> at (10,10) content-size 500x100 positioned [BFC] children: not-inline
-      BlockContainer <div.image-container> at (261,11) content-size 248x28.4836 positioned [BFC] children: inline
-        line 0 width: 250, height: 28.4836, bottom: 28.4836, baseline: 28.4836
-          frag 0 from ImageBox start: 0, length: 0, rect: [262,12 248x26.4836]
-        ImageBox <img> at (262,12) content-size 248x26.4836 children: not-inline
+      BlockContainer <div.image-container> at (261,11) content-size 248x25.25 positioned [BFC] children: inline
+        line 0 width: 250, height: 25.25, bottom: 25.25, baseline: 25.25
+          frag 0 from ImageBox start: 0, length: 0, rect: [262,12 248x23.25]
+        ImageBox <img> at (262,12) content-size 248x23.25 children: not-inline

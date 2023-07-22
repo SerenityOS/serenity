@@ -3,7 +3,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
     BlockContainer <body> at (8,8) content-size 784x17.46875 children: not-inline
       Box <div.ipc-page-grid> at (8,8) content-size 784x17.46875 flex-container(row) [FFC] children: not-inline
         Box <div.ipc-sub-grid> at (8,8) content-size 36.84375x17.46875 flex-item [GFC] children: not-inline
-          BlockContainer <div> at (8,8) content-size 36.844x17.46875 [BFC] children: inline
+          BlockContainer <div> at (8,8) content-size 36.84375x17.46875 [BFC] children: inline
             line 0 width: 36.84375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
               frag 0 from TextNode start: 0, length: 5, rect: [8,8 36.84375x17.46875]
                 "hello"

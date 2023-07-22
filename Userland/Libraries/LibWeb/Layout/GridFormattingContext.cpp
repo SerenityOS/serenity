@@ -803,7 +803,7 @@ void GridFormattingContext::distribute_extra_space_across_spanned_tracks_base_si
     // 2. Distribute space up to limits:
     // FIXME: If a fixed-point type were used to represent CSS pixels, it would be possible to compare with 0
     //        instead of epsilon.
-    while (extra_space > NumericLimits<double>().epsilon()) {
+    while (extra_space > CSSPixels::epsilon()) {
         auto all_frozen = all_of(affected_tracks, [](auto const& track) { return track.base_size_frozen; });
         if (all_frozen)
             break;
@@ -893,7 +893,7 @@ void GridFormattingContext::distribute_extra_space_across_spanned_tracks_growth_
     // 2. Distribute space up to limits:
     // FIXME: If a fixed-point type were used to represent CSS pixels, it would be possible to compare with 0
     //        instead of epsilon.
-    while (extra_space > NumericLimits<double>().epsilon()) {
+    while (extra_space > CSSPixels::epsilon()) {
         auto all_frozen = all_of(affected_tracks, [](auto const& track) { return track.growth_limit_frozen; });
         if (all_frozen)
             break;

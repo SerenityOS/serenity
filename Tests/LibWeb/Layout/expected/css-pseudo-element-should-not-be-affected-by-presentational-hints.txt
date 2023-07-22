@@ -5,9 +5,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         Box <table> at (11,11) content-size 108x104 table-box [TFC] children: not-inline
           Box <tbody> at (11,11) content-size 104x100 table-row-group children: not-inline
             Box <tr> at (13,13) content-size 104x100 table-row children: not-inline
-              BlockContainer <td> at (15,51.082031) content-size 100x23.835937 table-cell [BFC] children: not-inline
-                BlockContainer <(anonymous)> at (16,52.082031) content-size 98x21.835937 children: inline
-                  line 0 width: 0, height: 21.835937, bottom: 21.835937, baseline: 16.914062
-                    frag 0 from TextNode start: 0, length: 0, rect: [16,52.082031 0x21.835937]
+              BlockContainer <td> at (15,51.078125) content-size 100x23.828125 table-cell [BFC] children: not-inline
+                BlockContainer <(anonymous)> at (16,52.078125) content-size 98x21.828125 children: inline
+                  line 0 width: 0, height: 21.828125, bottom: 21.828125, baseline: 16.890625
+                    frag 0 from TextNode start: 0, length: 0, rect: [16,52.078125 0x21.828125]
                       ""
                   TextNode <#text>

@@ -1,13 +1,13 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
-    BlockContainer <body> at (8,8) content-size 784x35.40625 children: not-inline
-      Box <div.ipc-page-grid> at (8,8) content-size 784x35.40625 flex-container(row) [FFC] children: not-inline
-        Box <div.ipc-sub-grid> at (8,8) content-size 401.28125x35.40625 flex-item [GFC] children: not-inline
-          BlockContainer <(anonymous)> at (8,8) content-size 401.281x35.40625 [BFC] children: inline
+    BlockContainer <body> at (8,8) content-size 784x34.9375 children: not-inline
+      Box <div.ipc-page-grid> at (8,8) content-size 784x34.9375 flex-container(row) [FFC] children: not-inline
+        Box <div.ipc-sub-grid> at (8,8) content-size 401.28125x34.9375 flex-item [GFC] children: not-inline
+          BlockContainer <(anonymous)> at (8,8) content-size 401.265625x34.9375 [BFC] children: inline
             line 0 width: 356.96875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
               frag 0 from TextNode start: 0, length: 40, rect: [8,8 356.96875x17.46875]
                 "The 10 Most Anticipated Summer Movies of"
-            line 1 width: 36.3125, height: 17.9375, bottom: 35.40625, baseline: 13.53125
-              frag 0 from TextNode start: 41, length: 4, rect: [8,25 36.3125x17.46875]
+            line 1 width: 36.3125, height: 17.46875, bottom: 34.9375, baseline: 13.53125
+              frag 0 from TextNode start: 41, length: 4, rect: [8,25.46875 36.3125x17.46875]
                 "2023"
             TextNode <#text>
