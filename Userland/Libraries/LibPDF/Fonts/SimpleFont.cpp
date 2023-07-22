@@ -45,7 +45,7 @@ PDFErrorOr<void> SimpleFont::initialize(Document* document, NonnullRefPtr<DictOb
     return {};
 }
 
-PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_string(Gfx::Painter& painter, Gfx::FloatPoint glyph_position, DeprecatedString const& string, Color const& paint_color, float font_size, float character_spacing, float horizontal_scaling)
+PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_string(Gfx::Painter& painter, Gfx::FloatPoint glyph_position, DeprecatedString const& string, Color const& paint_color, float font_size, float character_spacing, float word_spacing, float horizontal_scaling)
 {
     for (auto char_code : string.bytes()) {
         // Use the width specified in the font's dictionary if available,
@@ -57,8 +57,17 @@ PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_string(Gfx::Painter& painter, Gfx::
             glyph_width = get_glyph_width(char_code);
 
         draw_glyph(painter, glyph_position, glyph_width, char_code, paint_color);
+
         auto tx = glyph_width;
         tx += character_spacing;
+
+        // ISO 32000 (PDF 2.0), 9.3.3 Wordspacing
+        // "Word spacing shall be applied to every occurrence of the single-byte character code 32
+        // in a string when using a simple font (including Type 3) or a composite font that defines
+        // code 32 as a single-byte code."
+        if (char_code == ' ')
+            tx += word_spacing;
+
         tx *= horizontal_scaling;
         glyph_position += { tx, 0.0f };
     }

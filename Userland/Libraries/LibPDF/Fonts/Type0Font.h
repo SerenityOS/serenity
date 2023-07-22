@@ -20,7 +20,7 @@ struct CIDSystemInfo {
 class Type0Font : public PDFFont {
 public:
     void set_font_size(float font_size) override;
-    PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint pos, DeprecatedString const&, Color const&, float, float, float) override;
+    PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint pos, DeprecatedString const&, Color const&, float, float, float, float) override;
     Type type() const override { return PDFFont::Type::Type0; }
 
 protected:

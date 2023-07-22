@@ -13,7 +13,7 @@ namespace PDF {
 
 class SimpleFont : public PDFFont {
 public:
-    PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint, DeprecatedString const&, Color const&, float font_size, float character_spacing, float horizontal_scaling) override;
+    PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint, DeprecatedString const&, Color const&, float font_size, float character_spacing, float word_spacing, float horizontal_scaling) override;
 
 protected:
     PDFErrorOr<void> initialize(Document* document, NonnullRefPtr<DictObject> const& dict, float font_size) override;
