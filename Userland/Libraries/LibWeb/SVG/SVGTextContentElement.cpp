@@ -47,36 +47,11 @@ Optional<TextAnchor> SVGTextContentElement::text_anchor() const
     }
 }
 
-void SVGTextContentElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
-{
-    SVGGraphicsElement::attribute_changed(name, value);
-
-    if (name == SVG::AttributeNames::x) {
-        m_x = AttributeParser::parse_coordinate(value).value_or(m_x);
-    } else if (name == SVG::AttributeNames::y) {
-        m_y = AttributeParser::parse_coordinate(value).value_or(m_y);
-    } else if (name == SVG::AttributeNames::dx) {
-        m_dx = AttributeParser::parse_coordinate(value).value_or(m_dx);
-    } else if (name == SVG::AttributeNames::dy) {
-        m_dy = AttributeParser::parse_coordinate(value).value_or(m_dy);
-    }
-}
-
-JS::GCPtr<Layout::Node> SVGTextContentElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
-{
-    return heap().allocate_without_realm<Layout::SVGTextBox>(document(), *this, move(style));
-}
-
 // https://svgwg.org/svg2-draft/text.html#__svg__SVGTextContentElement__getNumberOfChars
 WebIDL::ExceptionOr<int> SVGTextContentElement::get_number_of_chars() const
 {
     auto chars = TRY_OR_THROW_OOM(vm(), utf8_to_utf16(child_text_content()));
     return static_cast<int>(chars.size());
-}
-
-Gfx::FloatPoint SVGTextContentElement::get_offset() const
-{
-    return { m_x + m_dx, m_y + m_dy };
 }
 
 }

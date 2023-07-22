@@ -99,7 +99,7 @@
 #include <LibWeb/SVG/SVGStopElement.h>
 #include <LibWeb/SVG/SVGStyleElement.h>
 #include <LibWeb/SVG/SVGSymbolElement.h>
-#include <LibWeb/SVG/SVGTextContentElement.h>
+#include <LibWeb/SVG/SVGTextElement.h>
 #include <LibWeb/SVG/SVGTitleElement.h>
 #include <LibWeb/SVG/SVGUseElement.h>
 #include <LibWeb/SVG/TagNames.h>
@@ -462,7 +462,7 @@ static WebIDL::ExceptionOr<JS::GCPtr<SVG::SVGElement>> create_svg_element(JS::Re
     if (local_name == SVG::TagNames::symbol)
         return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGSymbolElement>(realm, document, move(qualified_name)));
     if (local_name == SVG::TagNames::text)
-        return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGTextContentElement>(realm, document, move(qualified_name)));
+        return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGTextElement>(realm, document, move(qualified_name)));
     if (local_name == SVG::TagNames::title)
         return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGTitleElement>(realm, document, move(qualified_name)));
     if (local_name == SVG::TagNames::use)
