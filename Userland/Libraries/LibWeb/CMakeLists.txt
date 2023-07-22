@@ -550,6 +550,8 @@ set(SOURCES
     SVG/SVGStyleElement.cpp
     SVG/SVGSymbolElement.cpp
     SVG/SVGTextContentElement.cpp
+    SVG/SVGTextElement.cpp
+    SVG/SVGTextPositioningElement.cpp
     SVG/SVGTitleElement.cpp
     SVG/SVGUseElement.cpp
     SVG/TagNames.cpp

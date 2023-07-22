@@ -17,13 +17,7 @@ class SVGTextContentElement : public SVGGraphicsElement {
     WEB_PLATFORM_OBJECT(SVGTextContentElement, SVGGraphicsElement);
 
 public:
-    virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
-
-    virtual void attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value) override;
-
     WebIDL::ExceptionOr<int> get_number_of_chars() const;
-
-    Gfx::FloatPoint get_offset() const;
 
     Optional<TextAnchor> text_anchor() const;
 
@@ -31,12 +25,6 @@ protected:
     SVGTextContentElement(DOM::Document&, DOM::QualifiedName);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
-
-private:
-    float m_x { 0 };
-    float m_y { 0 };
-    float m_dx { 0 };
-    float m_dy { 0 };
 };
 
 }
