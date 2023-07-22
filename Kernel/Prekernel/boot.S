@@ -24,7 +24,7 @@ boot_pdpt:
 .skip 4096
 .global boot_pd0
 boot_pd0:
-.skip 4096
+.skip (4096 * 4)
 .global boot_pd0_pts
 boot_pd0_pts:
 .skip 4096 * (MAX_KERNEL_SIZE >> 21)
@@ -65,10 +65,10 @@ pml4t:
 
 pdpt
 
-    0: boot_pd0 (0-1GB)
-    1: n/a      (1-2GB)
-    2: n/a      (2-3GB)
-    3: n/a      (3-4GB)
+    0: boot_pd0             (0-1GB)
+    1: boot_pd0 + 4096      (1-2GB)
+    2: boot_pd0 + 4096 * 2  (2-3GB)
+    3: boot_pd0 + 4096 * 3  (3-4GB)
 
 boot_pd0 : 512 PDEs
 
@@ -421,13 +421,16 @@ long_mode_supported:
     xorl %eax, %eax
     rep stosl
 
-    /* set up pdpt[0] and pdpt[3] */
+    /* set up pdpt[0]..pdpt[3] */
     movl $boot_pdpt, %edi
     movl $(boot_pd0 + 3), 0(%edi)
+    movl $(boot_pd0 + 4096 + 3), 8(%edi)
+    movl $(boot_pd0 + 4096 * 2 + 3), 16(%edi)
+    movl $(boot_pd0 + 4096 * 3 + 3), 24(%edi)
 
     /* clear pd0 */
     movl $boot_pd0, %edi
-    movl $1024, %ecx
+    movl $4096, %ecx
     xorl %eax, %eax
     rep stosl
 
@@ -461,6 +464,19 @@ long_mode_supported:
     orl $0x3, 0(%edi)
     addl $8, %edi
     addl $4096, %eax
+    loop 1b
+
+    /* Map the rest with 2MiB pages */
+    /* add boot_pd0_pts to boot_pd0 */
+    movl $(2048 - (MAX_KERNEL_SIZE >> 21)), %ecx
+    movl $(boot_pd0 + (MAX_KERNEL_SIZE >> 21) * 8), %edi
+    /* R/W + Present + 2 MiB */
+    movl $(MAX_KERNEL_SIZE | 0x83), %eax
+
+1:
+    movl %eax, 0(%edi)
+    addl $8, %edi
+    addl $(1 << 21), %eax
     loop 1b
 
     /* point CR3 to PML4T */
