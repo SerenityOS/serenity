@@ -1009,6 +1009,7 @@ int snprintf(char* buffer, size_t size, char const* fmt, ...)
 void perror(char const* s)
 {
     int saved_errno = errno;
+    dbgln("perror(): {}: {}", s, strerror(saved_errno));
     warnln("{}: {}", s, strerror(saved_errno));
 }
 
