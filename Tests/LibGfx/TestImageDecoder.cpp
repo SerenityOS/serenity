@@ -565,10 +565,12 @@ TEST_CASE(test_everything_tvg)
 
 TEST_CASE(test_jxl_modular_simple_tree_upsample2_10bits)
 {
-
-    auto file = MUST(Core::MappedFile::map(TEST_INPUT("jxl/modular_simple_tree_upsample2_10bits.jxl"sv)));
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("jxl/modular_simple_tree_upsample2_10bits_rct.jxl"sv)));
     EXPECT(Gfx::JPEGXLImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::JPEGXLImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame_of_size(*plugin_decoder, { 128, 128 });
+
+    auto frame = MUST(plugin_decoder->frame(0));
+    EXPECT_EQ(frame.image->get_pixel(42, 57), Gfx::Color::from_string("#4c0072"sv));
 }
