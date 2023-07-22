@@ -1668,7 +1668,6 @@ public:
         Error,
         HeaderDecoded,
         FrameDecoded,
-        BitmapDecoded
     };
 
     State state() const
@@ -1756,7 +1755,7 @@ ErrorOr<ImageFrameDescriptor> JPEGXLImageDecoderPlugin::frame(size_t index, Opti
     if (m_context->state() == JPEGXLLoadingContext::State::Error)
         return Error::from_string_literal("JPEGXLImageDecoderPlugin: Decoding failed");
 
-    if (m_context->state() < JPEGXLLoadingContext::State::BitmapDecoded)
+    if (m_context->state() < JPEGXLLoadingContext::State::FrameDecoded)
         TRY(m_context->decode());
 
     return ImageFrameDescriptor { m_context->bitmap(), 0 };
