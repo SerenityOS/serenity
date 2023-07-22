@@ -48,15 +48,15 @@ describe("errors", () => {
 
         expect(() => {
             new Intl.PluralRules("en", { minimumFractionDigits: "hello!" });
-        }).toThrowWithMessage(RangeError, "Value NaN is NaN or is not between 0 and 20");
+        }).toThrowWithMessage(RangeError, "Value NaN is NaN or is not between 0 and 100");
 
         expect(() => {
             new Intl.PluralRules("en", { minimumFractionDigits: -1 });
-        }).toThrowWithMessage(RangeError, "Value -1 is NaN or is not between 0 and 20");
+        }).toThrowWithMessage(RangeError, "Value -1 is NaN or is not between 0 and 100");
 
         expect(() => {
-            new Intl.PluralRules("en", { minimumFractionDigits: 21 });
-        }).toThrowWithMessage(RangeError, "Value 21 is NaN or is not between 0 and 20");
+            new Intl.PluralRules("en", { minimumFractionDigits: 101 });
+        }).toThrowWithMessage(RangeError, "Value 101 is NaN or is not between 0 and 100");
     });
 
     test("maximumFractionDigits option is invalid ", () => {
@@ -66,15 +66,15 @@ describe("errors", () => {
 
         expect(() => {
             new Intl.PluralRules("en", { maximumFractionDigits: "hello!" });
-        }).toThrowWithMessage(RangeError, "Value NaN is NaN or is not between 0 and 20");
+        }).toThrowWithMessage(RangeError, "Value NaN is NaN or is not between 0 and 100");
 
         expect(() => {
             new Intl.PluralRules("en", { maximumFractionDigits: -1 });
-        }).toThrowWithMessage(RangeError, "Value -1 is NaN or is not between 0 and 20");
+        }).toThrowWithMessage(RangeError, "Value -1 is NaN or is not between 0 and 100");
 
         expect(() => {
-            new Intl.PluralRules("en", { maximumFractionDigits: 21 });
-        }).toThrowWithMessage(RangeError, "Value 21 is NaN or is not between 0 and 20");
+            new Intl.PluralRules("en", { maximumFractionDigits: 101 });
+        }).toThrowWithMessage(RangeError, "Value 101 is NaN or is not between 0 and 100");
 
         expect(() => {
             new Intl.PluralRules("en", { minimumFractionDigits: 10, maximumFractionDigits: 5 });
@@ -208,7 +208,7 @@ describe("normal behavior", () => {
     });
 
     test("all valid minimumFractionDigits options", () => {
-        for (let i = 0; i <= 20; ++i) {
+        for (let i = 0; i <= 100; ++i) {
             expect(() => {
                 new Intl.PluralRules("en", { minimumFractionDigits: i });
             }).not.toThrow();
@@ -216,7 +216,7 @@ describe("normal behavior", () => {
     });
 
     test("all valid maximumFractionDigits options", () => {
-        for (let i = 0; i <= 20; ++i) {
+        for (let i = 0; i <= 100; ++i) {
             expect(() => {
                 new Intl.PluralRules("en", { maximumFractionDigits: i });
             }).not.toThrow();
