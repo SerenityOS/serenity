@@ -47,7 +47,29 @@ UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<PS2KeyboardDevice>> PS2KeyboardDevice::tr
 
 UNMAP_AFTER_INIT ErrorOr<void> PS2KeyboardDevice::initialize()
 {
-    return attached_controller().reset_device(attached_port_index());
+    ErrorOr<void> err = attached_controller().reset_device(attached_port_index());
+
+    if (err.is_error()) {
+        TRY(attached_controller().send_command(attached_port_index(), SerialIOController::DeviceCommand::GetDeviceID));
+        ErrorOr<u8> res = attached_controller().read_from_device(attached_port_index());
+        if (res.is_error()) {
+            return err;
+        }
+        switch (res.value()) {
+            // Regular and NCD Sun keyboards.
+        case 0xab:
+        case 0xac:
+            // Trust keyboard, raw and translated
+        case 0x2b:
+        case 0x5d:
+            // NMB SGI keyboard, raw and translated
+        case 0x60:
+        case 0x47:
+            return {};
+        }
+    }
+
+    return err;
 }
 
 // FIXME: UNMAP_AFTER_INIT might not be correct, because in practice PS/2 devices
