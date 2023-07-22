@@ -91,7 +91,7 @@ void Type0Font::set_font_size(float)
 {
 }
 
-PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter&, Gfx::FloatPoint, DeprecatedString const&, Color const&, float, float, float)
+PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter&, Gfx::FloatPoint, DeprecatedString const&, Color const&, float, float, float, float)
 {
     return Error::rendering_unsupported_error("Type0 font not implemented yet");
 }
