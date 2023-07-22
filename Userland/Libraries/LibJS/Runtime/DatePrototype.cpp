@@ -984,17 +984,12 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_json)
     return TRY(this_value.invoke(vm, vm.names.toISOString));
 }
 
-static ThrowCompletionOr<Intl::DateTimeFormat*> construct_date_time_format(VM& vm, Value locales, Value options)
-{
-    auto& realm = *vm.current_realm();
-    auto date_time_format = TRY(construct(vm, realm.intrinsics().intl_date_time_format_constructor(), locales, options));
-    return static_cast<Intl::DateTimeFormat*>(date_time_format.ptr());
-}
-
 // 21.4.4.38 Date.prototype.toLocaleDateString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-date.prototype.tolocaledatestring
 // 19.4.2 Date.prototype.toLocaleDateString ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sup-date.prototype.tolocaledatestring
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_date_string)
 {
+    auto& realm = *vm.current_realm();
+
     auto locales = vm.argument(0);
     auto options = vm.argument(1);
 
@@ -1005,14 +1000,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_date_string)
     if (isnan(time))
         return MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Invalid Date"sv));
 
-    // 3. Let options be ? ToDateTimeOptions(options, "date", "date").
-    options = Value(TRY(Intl::to_date_time_options(vm, options, Intl::OptionRequired::Date, Intl::OptionDefaults::Date)));
+    // 3. Let dateFormat be ? CreateDateTimeFormat(%DateTimeFormat%, locales, options, "date", "date").
+    auto date_format = TRY(Intl::create_date_time_format(vm, realm.intrinsics().intl_date_time_format_constructor(), locales, options, Intl::OptionRequired::Date, Intl::OptionDefaults::Date));
 
-    // 4. Let dateFormat be ? Construct(%DateTimeFormat%, « locales, options »).
-    auto* date_format = TRY(construct_date_time_format(vm, locales, options));
-
-    // 5. Return ? FormatDateTime(dateFormat, x).
-    auto formatted = TRY(Intl::format_date_time(vm, *date_format, time));
+    // 4. Return ? FormatDateTime(dateFormat, x).
+    auto formatted = TRY(Intl::format_date_time(vm, date_format, time));
     return PrimitiveString::create(vm, move(formatted));
 }
 
@@ -1020,6 +1012,8 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_date_string)
 // 19.4.1 Date.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sup-date.prototype.tolocalestring
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_string)
 {
+    auto& realm = *vm.current_realm();
+
     auto locales = vm.argument(0);
     auto options = vm.argument(1);
 
@@ -1030,14 +1024,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_string)
     if (isnan(time))
         return MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Invalid Date"sv));
 
-    // 3. Let options be ? ToDateTimeOptions(options, "any", "all").
-    options = Value(TRY(Intl::to_date_time_options(vm, options, Intl::OptionRequired::Any, Intl::OptionDefaults::All)));
+    // 3. Let dateFormat be ? CreateDateTimeFormat(%DateTimeFormat%, locales, options, "any", "all").
+    auto date_format = TRY(Intl::create_date_time_format(vm, realm.intrinsics().intl_date_time_format_constructor(), locales, options, Intl::OptionRequired::Any, Intl::OptionDefaults::All));
 
-    // 4. Let dateFormat be ? Construct(%DateTimeFormat%, « locales, options »).
-    auto* date_format = TRY(construct_date_time_format(vm, locales, options));
-
-    // 5. Return ? FormatDateTime(dateFormat, x).
-    auto formatted = TRY(Intl::format_date_time(vm, *date_format, time));
+    // 4. Return ? FormatDateTime(dateFormat, x).
+    auto formatted = TRY(Intl::format_date_time(vm, date_format, time));
     return PrimitiveString::create(vm, move(formatted));
 }
 
@@ -1045,6 +1036,8 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_string)
 // 19.4.3 Date.prototype.toLocaleTimeString ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sup-date.prototype.tolocaletimestring
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_time_string)
 {
+    auto& realm = *vm.current_realm();
+
     auto locales = vm.argument(0);
     auto options = vm.argument(1);
 
@@ -1055,14 +1048,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_time_string)
     if (isnan(time))
         return MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Invalid Date"sv));
 
-    // 3. Let options be ? ToDateTimeOptions(options, "time", "time").
-    options = Value(TRY(Intl::to_date_time_options(vm, options, Intl::OptionRequired::Time, Intl::OptionDefaults::Time)));
+    // 3. Let timeFormat be ? CreateDateTimeFormat(%DateTimeFormat%, locales, options, "time", "time").
+    auto time_format = TRY(Intl::create_date_time_format(vm, realm.intrinsics().intl_date_time_format_constructor(), locales, options, Intl::OptionRequired::Time, Intl::OptionDefaults::Time));
 
-    // 4. Let timeFormat be ? Construct(%DateTimeFormat%, « locales, options »).
-    auto* time_format = TRY(construct_date_time_format(vm, locales, options));
-
-    // 5. Return ? FormatDateTime(dateFormat, x).
-    auto formatted = TRY(Intl::format_date_time(vm, *time_format, time));
+    // 4. Return ? FormatDateTime(timeFormat, x).
+    auto formatted = TRY(Intl::format_date_time(vm, time_format, time));
     return PrimitiveString::create(vm, move(formatted));
 }
 
