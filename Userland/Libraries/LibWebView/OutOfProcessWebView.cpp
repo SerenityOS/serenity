@@ -25,7 +25,8 @@ REGISTER_WIDGET(WebView, OutOfProcessWebView)
 
 namespace WebView {
 
-OutOfProcessWebView::OutOfProcessWebView()
+OutOfProcessWebView::OutOfProcessWebView(UseJavaScriptBytecode use_javascript_bytecode)
+    : ViewImplementation(use_javascript_bytecode)
 {
     set_should_hide_unnecessary_scrollbars(true);
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
@@ -35,7 +36,7 @@ OutOfProcessWebView::OutOfProcessWebView()
 
 OutOfProcessWebView::~OutOfProcessWebView() = default;
 
-void OutOfProcessWebView::create_client(EnableCallgrindProfiling, UseJavaScriptBytecode)
+void OutOfProcessWebView::create_client(EnableCallgrindProfiling)
 {
     m_client_state = {};
 
