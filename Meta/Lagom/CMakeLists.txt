@@ -665,6 +665,12 @@ if (BUILD_LAGOM)
         )
         set_tests_properties(JS PROPERTIES ENVIRONMENT SERENITY_SOURCE_DIR=${SERENITY_PROJECT_ROOT})
 
+        add_test(
+            NAME JS-Bytecode
+            COMMAND test-js -b --show-progress=false
+        )
+        set_tests_properties(JS-Bytecode PROPERTIES ENVIRONMENT SERENITY_SOURCE_DIR=${SERENITY_PROJECT_ROOT})
+
         # Extra tests from Tests/LibJS
         lagom_test(../../Tests/LibJS/test-invalid-unicode-js.cpp LIBS LibJS)
         lagom_test(../../Tests/LibJS/test-value-js.cpp LIBS LibJS)
