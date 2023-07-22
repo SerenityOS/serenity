@@ -1456,6 +1456,10 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     ImageMetadata const& metadata,
     Optional<EntropyDecoder>& entropy_decoder)
 {
+    // F.1 - General
+    // Each Frame is byte-aligned by invoking ZeroPadToByte() (B.2.7)
+    stream.align_to_byte_boundary();
+
     Frame frame;
 
     frame.frame_header = TRY(read_frame_header(stream, metadata));
