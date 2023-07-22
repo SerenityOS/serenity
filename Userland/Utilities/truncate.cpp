@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -53,12 +54,34 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             break;
         }
 
+        auto suffix = resize[resize.length() - 1];
+        i64 multiplier = 1;
+        if (!AK::is_ascii_digit(suffix)) {
+            switch (to_ascii_lowercase(suffix)) {
+            case 'k':
+                multiplier = KiB;
+                resize = resize.substring_view(0, resize.length() - 1);
+                break;
+            case 'm':
+                multiplier = MiB;
+                resize = resize.substring_view(0, resize.length() - 1);
+                break;
+            case 'g':
+                multiplier = GiB;
+                resize = resize.substring_view(0, resize.length() - 1);
+                break;
+            default:
+                args_parser.print_usage(stderr, arguments.strings[0]);
+                return 1;
+            }
+        }
+
         auto size_opt = resize.to_int<off_t>();
-        if (!size_opt.has_value()) {
+        if (!size_opt.has_value() || Checked<off_t>::multiplication_would_overflow(size_opt.value(), multiplier)) {
             args_parser.print_usage(stderr, arguments.strings[0]);
             return 1;
         }
-        size = size_opt.value();
+        size = size_opt.value() * multiplier;
     }
 
     if (!reference.is_empty()) {
