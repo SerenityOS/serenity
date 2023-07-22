@@ -324,11 +324,11 @@ ThrowCompletionOr<void> set_number_format_digit_options(VM& vm, NumberFormatBase
     if (need_fraction_digits) {
         // a. If hasFd is true, then
         if (has_fraction_digits) {
-            // i. Set mnfd to ? DefaultNumberOption(mnfd, 0, 20, undefined).
-            auto min_digits = TRY(default_number_option(vm, min_fraction_digits, 0, 20, {}));
+            // i. Set mnfd to ? DefaultNumberOption(mnfd, 0, 100, undefined).
+            auto min_digits = TRY(default_number_option(vm, min_fraction_digits, 0, 100, {}));
 
-            // ii. Set mxfd to ? DefaultNumberOption(mxfd, 0, 20, undefined).
-            auto max_digits = TRY(default_number_option(vm, max_fraction_digits, 0, 20, {}));
+            // ii. Set mxfd to ? DefaultNumberOption(mxfd, 0, 100, undefined).
+            auto max_digits = TRY(default_number_option(vm, max_fraction_digits, 0, 100, {}));
 
             // iii. If mnfd is undefined, set mnfd to min(mnfdDefault, mxfd).
             if (!min_digits.has_value())
