@@ -1447,8 +1447,7 @@ static void apply_transformation(Image& image, TransformInfo const& transformati
 static ErrorOr<void> read_pass_group(LittleEndianInputBitStream& stream,
     Image& image,
     FrameHeader const& frame_header,
-    u32 group_dim,
-    Vector<TransformInfo> const& transform_infos)
+    u32 group_dim)
 {
     if (frame_header.encoding == FrameHeader::Encoding::kVarDCT) {
         (void)stream;
@@ -1468,9 +1467,6 @@ static ErrorOr<void> read_pass_group(LittleEndianInputBitStream& stream,
         if (!is_meta_channel)
             TODO();
     }
-
-    for (auto const& transformation : transform_infos.in_reverse())
-        apply_transformation(image, transformation);
 
     return {};
 }
@@ -1538,9 +1534,15 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     }
 
     auto const num_pass_group = frame.num_groups * frame.frame_header.passes.num_passes;
-    auto const& transform_info = frame.lf_global.gmodular.modular_header.transform;
+    auto const& transform_infos = frame.lf_global.gmodular.modular_header.transform;
     for (u64 i {}; i < num_pass_group; ++i)
-        TRY(read_pass_group(stream, image, frame.frame_header, group_dim, transform_info));
+        TRY(read_pass_group(stream, image, frame.frame_header, group_dim));
+
+    // G.4.2 - Modular group data
+    // When all modular groups are decoded, the inverse transforms are applied to
+    // the at that point fully decoded GlobalModular image, as specified in H.6.
+    for (auto const& transformation : transform_infos.in_reverse())
+        apply_transformation(image, transformation);
 
     return frame;
 }
