@@ -198,7 +198,7 @@ test("deleting a symbol returned by @@toPrimitive", () => {
 });
 
 // FIXME: This currently does not work with the AST interpreter, but works with Bytecode.
-test.skip("delete always evaluates the lhs", () => {
+test.xfailIf(!isBytecodeInterpreterEnabled(), "delete always evaluates the lhs", () => {
     const obj = { prop: 1 };
     let called = false;
     function a() {
