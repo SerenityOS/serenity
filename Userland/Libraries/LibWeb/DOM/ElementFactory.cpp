@@ -99,6 +99,7 @@
 #include <LibWeb/SVG/SVGStopElement.h>
 #include <LibWeb/SVG/SVGStyleElement.h>
 #include <LibWeb/SVG/SVGSymbolElement.h>
+#include <LibWeb/SVG/SVGTSpanElement.h>
 #include <LibWeb/SVG/SVGTextElement.h>
 #include <LibWeb/SVG/SVGTitleElement.h>
 #include <LibWeb/SVG/SVGUseElement.h>
@@ -465,6 +466,8 @@ static WebIDL::ExceptionOr<JS::GCPtr<SVG::SVGElement>> create_svg_element(JS::Re
         return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGTextElement>(realm, document, move(qualified_name)));
     if (local_name == SVG::TagNames::title)
         return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGTitleElement>(realm, document, move(qualified_name)));
+    if (local_name == SVG::TagNames::tspan)
+        return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGTSpanElement>(realm, document, move(qualified_name)));
     if (local_name == SVG::TagNames::use)
         return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGUseElement>(realm, document, move(qualified_name)));
 
