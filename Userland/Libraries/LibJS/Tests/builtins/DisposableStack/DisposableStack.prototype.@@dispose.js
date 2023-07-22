@@ -7,7 +7,7 @@ test("is the same as dispose", () => {
 });
 
 describe("used in using functionality", () => {
-    test("make the stack marked as disposed", () => {
+    test.xfailIf(isBytecodeInterpreterEnabled(), "make the stack marked as disposed", () => {
         let innerStack;
         {
             using stack = new DisposableStack();

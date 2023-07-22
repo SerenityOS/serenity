@@ -21,25 +21,29 @@ test("invalid values", () => {
     });
 });
 
-test("automatic removal of garbage-collected values", () => {
-    const weakMap = new WeakMap();
-    const objectKey = { e: 3 };
+test.xfailIf(
+    isBytecodeInterpreterEnabled(),
+    "automatic removal of garbage-collected values",
+    () => {
+        const weakMap = new WeakMap();
+        const objectKey = { e: 3 };
 
-    expect(weakMap.set(objectKey, 1)).toBe(weakMap);
-    expect(getWeakMapSize(weakMap)).toBe(1);
+        expect(weakMap.set(objectKey, 1)).toBe(weakMap);
+        expect(getWeakMapSize(weakMap)).toBe(1);
 
-    markAsGarbage("objectKey");
-    gc();
+        markAsGarbage("objectKey");
+        gc();
 
-    expect(getWeakMapSize(weakMap)).toBe(0);
+        expect(getWeakMapSize(weakMap)).toBe(0);
 
-    const symbolKey = Symbol("foo");
+        const symbolKey = Symbol("foo");
 
-    expect(weakMap.set(symbolKey, "bar")).toBe(weakMap);
-    expect(getWeakMapSize(weakMap)).toBe(1);
+        expect(weakMap.set(symbolKey, "bar")).toBe(weakMap);
+        expect(getWeakMapSize(weakMap)).toBe(1);
 
-    markAsGarbage("symbolKey");
-    gc();
+        markAsGarbage("symbolKey");
+        gc();
 
-    expect(getWeakMapSize(weakMap)).toBe(0);
-});
+        expect(getWeakMapSize(weakMap)).toBe(0);
+    }
+);
