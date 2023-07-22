@@ -15,7 +15,6 @@
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <sched.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 struct WorkItem {
@@ -300,23 +299,24 @@ ErrorOr<int> execute_work_items(Vector<WorkItem> const& items)
         case WorkItem::Type::MoveFile: {
             DeprecatedString destination = item.destination;
             while (true) {
-                if (rename(item.source.characters(), destination.characters()) == 0) {
+                auto maybe_error = Core::System::rename(item.source, destination);
+                if (!maybe_error.is_error()) {
                     item_done += item.size;
                     executed_work_bytes += item.size;
                     print_progress();
                     break;
                 }
-                auto original_errno = errno;
+                auto error_code = maybe_error.release_error().code();
 
-                if (original_errno == EEXIST) {
+                if (error_code == EEXIST) {
                     destination = deduplicate_destination_file_name(destination);
                     continue;
                 }
 
-                if (original_errno != EXDEV) {
+                if (error_code != EXDEV) {
                     // FIXME: Return the formatted string directly. There is no way to do this right now without the temporary going out of scope and being destroyed.
-                    report_warning(DeprecatedString::formatted("Failed to move {}: {}", item.source, strerror(original_errno)));
-                    return Error::from_errno(original_errno);
+                    report_warning(DeprecatedString::formatted("Failed to move {}: {}", item.source, strerror(error_code)));
+                    return Error::from_errno(error_code);
                 }
 
                 // EXDEV means we have to copy the file data and then remove the original
