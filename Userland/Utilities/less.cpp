@@ -66,13 +66,17 @@ static Vector<StringView> wrap_line(DeprecatedString const& string, size_t width
     return spans;
 }
 
+static constexpr StringView start_bold = "\e[1m"sv;
+static constexpr StringView end_bold = "\e[22m "sv;
+
 class Pager {
 public:
-    Pager(StringView filename, FILE* file, FILE* tty, StringView prompt)
+    Pager(StringView filename, FILE* file, FILE* tty, StringView prompt, bool show_line_numbers)
         : m_file(file)
         , m_tty(tty)
         , m_filename(filename)
         , m_prompt(prompt)
+        , m_show_line_numbers(show_line_numbers)
     {
     }
 
@@ -187,6 +191,13 @@ public:
         auto original_height = m_height;
 
         m_width = window.ws_col;
+        if (m_show_line_numbers) {
+            auto digits_count_for_max_line_number = count_digits_in_number(m_lines.size() + 1);
+            auto line_number_printed_length = start_bold.length() + digits_count_for_max_line_number + end_bold.length();
+            if (line_number_printed_length <= m_width)
+                m_width -= line_number_printed_length;
+        }
+
         m_height = window.ws_row;
 
         // If the window is now larger than it was before, read more lines of
@@ -216,8 +227,14 @@ public:
         }
     }
 
+    size_t count_digits_in_number(size_t line_numbers)
+    {
+        return line_numbers > 0 ? static_cast<size_t>(log10(line_numbers)) + 1 : 1;
+    }
+
     size_t write_range(size_t line, size_t subline, size_t length)
     {
+        auto digits_count_for_max_line_number = count_digits_in_number(m_lines.size() + 1);
         size_t lines = 0;
         for (size_t i = line; i < m_lines.size(); ++i) {
             for (auto string : sublines(i)) {
@@ -227,6 +244,12 @@ public:
                 }
                 if (lines >= length)
                     return lines;
+
+                if (m_show_line_numbers) {
+                    out(m_tty, start_bold);
+                    out(m_tty, "{:{}}", i + 1, digits_count_for_max_line_number);
+                    out(m_tty, end_bold);
+                }
 
                 outln(m_tty, "{}", string);
                 ++lines;
@@ -453,6 +476,8 @@ private:
 
     DeprecatedString m_filename;
     DeprecatedString m_prompt;
+
+    bool m_show_line_numbers { false };
 };
 
 /// Return the next key sequence, or nothing if a signal is received while waiting
@@ -498,6 +523,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool dont_switch_buffer = false;
     bool quit_at_eof = false;
     bool emulate_more = false;
+    bool show_line_numbers = false;
 
     if (LexicalPath::basename(arguments.strings[0]) == "more"sv)
         emulate_more = true;
@@ -506,6 +532,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(filename, "The paged file", "file", Core::ArgsParser::Required::No);
     args_parser.add_option(prompt, "Prompt line", "prompt", 'P', "Prompt");
     args_parser.add_option(dont_switch_buffer, "Don't use xterm alternate buffer", "no-init", 'X');
+    args_parser.add_option(show_line_numbers, "Show line numbers", "line-numbers", 'N');
     args_parser.add_option(quit_at_eof, "Exit when the end of the file is reached", "quit-at-eof", 'e');
     args_parser.add_option(emulate_more, "Pretend that we are more(1)", "emulate-more", 'm');
     args_parser.parse(arguments);
@@ -558,7 +585,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     ignore_action.sa_handler = { SIG_IGN };
     TRY(Core::System::sigaction(SIGINT, &ignore_action, nullptr));
 
-    Pager pager(filename, file, stdout, prompt);
+    Pager pager(filename, file, stdout, prompt, show_line_numbers);
     pager.init();
 
     StringBuilder modifier_buffer = StringBuilder(10);
