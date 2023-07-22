@@ -12,6 +12,7 @@
 #include <LibGfx/ImageFormats/ICOLoader.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
+#include <LibGfx/ImageFormats/JPEGXLLoader.h>
 #include <LibGfx/ImageFormats/PBMLoader.h>
 #include <LibGfx/ImageFormats/PGMLoader.h>
 #include <LibGfx/ImageFormats/PNGLoader.h>
@@ -560,4 +561,14 @@ TEST_CASE(test_everything_tvg)
 
         expect_single_frame_of_size(*plugin_decoder, { 400, 768 });
     }
+}
+
+TEST_CASE(test_jxl_modular_simple_tree_upsample2_10bits)
+{
+
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("jxl/modular_simple_tree_upsample2_10bits.jxl"sv)));
+    EXPECT(Gfx::JPEGXLImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Gfx::JPEGXLImageDecoderPlugin::create(file->bytes()));
+
+    expect_single_frame_of_size(*plugin_decoder, { 128, 128 });
 }
