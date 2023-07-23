@@ -50,12 +50,12 @@ public:
         return m_result_or_rejection.has_value() && !m_result_or_rejection->is_error();
     }
 
-    ErrorOr<Result, ErrorType>& await()
+    ErrorOr<Result, ErrorType> await()
     {
         while (!m_result_or_rejection.has_value())
             Core::EventLoop::current().pump();
 
-        return *m_result_or_rejection;
+        return m_result_or_rejection.release_value();
     }
 
     // Converts a Promise<A> to a Promise<B> using a function func: A -> B
