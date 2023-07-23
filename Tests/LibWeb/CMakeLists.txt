@@ -2,6 +2,7 @@ set(TEST_SOURCES
     TestCSSIDSpeed.cpp
     TestCSSPixels.cpp
     TestHTMLTokenizer.cpp
+    TestNumbers.cpp
 )
 
 foreach(source IN LISTS TEST_SOURCES)

@@ -358,6 +358,7 @@ set(SOURCES
     HTML/NavigationTransition.cpp
     HTML/Navigator.cpp
     HTML/NavigatorID.cpp
+    HTML/Numbers.cpp
     HTML/PageTransitionEvent.cpp
     HTML/Parser/Entities.cpp
     HTML/Parser/HTMLEncodingDetection.cpp
