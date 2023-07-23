@@ -15,20 +15,13 @@
 #include <LibPDF/Document.h>
 #include <LibPDF/Renderer.h>
 
-RefPtr<Core::MappedFile> s_file;
-
-static PDF::PDFErrorOr<NonnullRefPtr<PDF::Document>> load()
+@interface LagomPDFView ()
 {
-    auto source_root = DeprecatedString("/Users/thakis/src/serenity");
-    Gfx::FontDatabase::set_default_fonts_lookup_path(DeprecatedString::formatted("{}/Base/res/fonts", source_root));
-
-    NSLog(@"before file");
-    s_file = TRY(Core::MappedFile::map("/Users/thakis/src/hack/sample.pdf"sv));
-    NSLog(@"got file");
-    auto document = TRY(PDF::Document::create(s_file->bytes()));
-    TRY(document->initialize());
-    return document;
+    RefPtr<Core::MappedFile> _file;
+    RefPtr<PDF::Document> _doc;
+    NSBitmapImageRep* _rep;
 }
+@end
 
 static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render(PDF::Document& document)
 {
@@ -48,32 +41,52 @@ static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render(PDF::Document& documen
     return bitmap;
 }
 
+static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
+{
+    auto& bitmap = bitmap_p.leak_ref();
+    auto space = CGColorSpaceCreateDeviceRGB();
+    CGBitmapInfo info = kCGBitmapByteOrder32Little | kCGImageAlphaFirst;
+    auto data = CGDataProviderCreateWithData(
+        &bitmap, bitmap.begin(), bitmap.size_in_bytes(),
+        [](void* p, void const*, size_t) { (void)adopt_ref(*reinterpret_cast<Gfx::Bitmap*>(p)); });
+    auto cgbmp = CGImageCreate(bitmap.width(), bitmap.height(), 8,
+        32, bitmap.pitch(), space,
+        info, data, nullptr, false, kCGRenderingIntentDefault);
+    auto* bmp = [[NSBitmapImageRep alloc] initWithCGImage:cgbmp];
+    CGColorSpaceRelease(space);
+    CGImageRelease(cgbmp);
+    return bmp;
+}
+
 @implementation LagomPDFView
+
+- (PDF::PDFErrorOr<NonnullRefPtr<PDF::Document>>)load
+{
+    auto source_root = DeprecatedString("/Users/thakis/src/serenity");
+    Gfx::FontDatabase::set_default_fonts_lookup_path(DeprecatedString::formatted("{}/Base/res/fonts", source_root));
+
+    NSLog(@"before file");
+    _file = TRY(Core::MappedFile::map("/Users/thakis/src/hack/sample.pdf"sv));
+    NSLog(@"got file");
+    auto document = TRY(PDF::Document::create(_file->bytes()));
+    TRY(document->initialize());
+    return document;
+}
 
 - (void)drawRect:(NSRect)rect
 {
-    static auto doc_or = load();
-    if (!doc_or.is_error()) {
-        auto doc = doc_or.value();
-        auto bitmap_or = render(*doc);
-        if (!bitmap_or.is_error()) {
-            auto& bitmap_o = bitmap_or.value();
-            auto& bitmap = bitmap_o.leak_ref();
-            auto space = CGColorSpaceCreateDeviceRGB();
-            CGBitmapInfo info = kCGBitmapByteOrder32Little | kCGImageAlphaFirst;
-            auto data = CGDataProviderCreateWithData(
-                &bitmap, bitmap.begin(), bitmap.size_in_bytes(),
-                [](void* p, void const*, size_t) { /* XXX adoptRef again */ });
-            auto cgbmp = CGImageCreate(bitmap.width(), bitmap.height(), 8,
-                32, bitmap.width() * 4, space,
-                info, data, nullptr, false, kCGRenderingIntentDefault);
-            auto* nsbmp = [[NSBitmapImageRep alloc] initWithCGImage:cgbmp];
-            [nsbmp drawAtPoint:NSMakePoint(0, 0)];
-            CGImageRelease(cgbmp);
+    static bool did_load = false;
+    if (!did_load) {
+        did_load = true;
+        if (auto doc_or = [self load]; !doc_or.is_error()) {
+            _doc = doc_or.value();
+            if (auto bitmap_or = render(*_doc); !bitmap_or.is_error())
+                _rep = ns_from_gfx(bitmap_or.value());
+        } else {
+            NSLog(@"failed to load: %@", @(doc_or.error().message().characters()));
         }
-    } else {
-        NSLog(@"failed to load: %@", @(doc_or.error().message().characters()));
     }
+    [_rep drawAtPoint:NSMakePoint(0, 0)];
 }
 
 @end
