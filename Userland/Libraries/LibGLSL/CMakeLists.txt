@@ -1,6 +1,11 @@
 set(SOURCES
+    AST.cpp
     Compiler.cpp
+    Lexer.cpp
     Linker.cpp
+    Parser.cpp
+    Preprocessor.cpp
+    Token.cpp
 )
 
 serenity_lib(LibGLSL glsl)
