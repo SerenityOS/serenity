@@ -23,12 +23,15 @@
 }
 @end
 
-static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render(PDF::Document& document)
+static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render(PDF::Document& document, NSSize size)
 {
     NSLog(@"num pages %@", @(document.get_page_count()));
     int page_index = 0;
     auto page = TRY(document.get_page(page_index));
-    auto page_size = Gfx::IntSize { 800, round_to<int>(800 * page.media_box.height() / page.media_box.width()) };
+
+    Gfx::IntSize page_size;
+    page_size.set_width(size.width);
+    page_size.set_height(size.height);
 
     auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, page_size));
 
@@ -80,16 +83,17 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 {
     static bool did_load = false;
     if (!did_load) {
+        NSSize pixel_size = [self convertSizeToBacking:self.bounds.size];
         did_load = true;
         if (auto doc_or = [self load]; !doc_or.is_error()) {
             _doc = doc_or.value();
-            if (auto bitmap_or = render(*_doc); !bitmap_or.is_error())
+            if (auto bitmap_or = render(*_doc, pixel_size); !bitmap_or.is_error())
                 _rep = ns_from_gfx(bitmap_or.value());
         } else {
             NSLog(@"failed to load: %@", @(doc_or.error().message().characters()));
         }
     }
-    [_rep drawAtPoint:NSMakePoint(0, 0)];
+    [_rep drawInRect:self.bounds];
 }
 
 @end
