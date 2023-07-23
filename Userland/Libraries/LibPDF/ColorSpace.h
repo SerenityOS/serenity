@@ -144,4 +144,19 @@ private:
     NonnullRefPtr<Gfx::ICC::Profile> m_profile;
 };
 
+class SeparationColorSpace final : public ColorSpace {
+public:
+    static PDFErrorOr<NonnullRefPtr<SeparationColorSpace>> create(Document*, Vector<Value>&& parameters);
+
+    ~SeparationColorSpace() override = default;
+
+    PDFErrorOr<Color> color(Vector<Value> const& arguments) const override;
+    int number_of_components() const override { TODO(); }
+    Vector<float> default_decode() const override;
+    ColorSpaceFamily const& family() const override { return ColorSpaceFamily::Separation; }
+
+private:
+    SeparationColorSpace() = default;
+};
+
 }

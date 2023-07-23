@@ -134,6 +134,7 @@
     A(SA)                         \
     A(SM)                         \
     A(SMask)                      \
+    A(Separation)                 \
     A(StmF)                       \
     A(StrF)                       \
     A(Subject)                    \
