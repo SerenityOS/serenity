@@ -7,8 +7,6 @@
 
 #import "LagomPDFView.h"
 
-// #define USING_AK_GLOBALLY 0
-
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibGfx/Bitmap.h>
@@ -70,9 +68,7 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
     auto source_root = DeprecatedString("/Users/thakis/src/serenity");
     Gfx::FontDatabase::set_default_fonts_lookup_path(DeprecatedString::formatted("{}/Base/res/fonts", source_root));
 
-    NSLog(@"before file");
-    _file = TRY(Core::MappedFile::map("/Users/thakis/src/hack/sample.pdf"sv));
-    NSLog(@"got file");
+    _file = TRY(Core::MappedFile::map("/Users/thakis/Downloads/pdf_reference_1-7.pdf"sv));
     auto document = TRY(PDF::Document::create(_file->bytes()));
     TRY(document->initialize());
     return document;
