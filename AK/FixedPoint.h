@@ -202,19 +202,24 @@ public:
     }
     constexpr This operator*(This const& other) const
     {
-        // FIXME: Potential Overflow, although result could be represented accurately
-        Underlying value = m_value * other.raw();
-        This ret {};
-        ret.raw() = value >> precision;
-        // fract(value) >= .5?
+        // FIXME: Figure out a way to use more narrow types and avoid __int128
+        using MulRes = Conditional<sizeof(Underlying) < sizeof(i64), i64, __int128>;
+
+        MulRes value = raw();
+        value *= other.raw();
+
+        This ret = create_raw(value >> precision);
+        // Rounding:
+        // If last bit cut off is 1:
         if (value & (1u << (precision - 1))) {
-            // fract(value) > .5?
+            // If the bit after is 1 as well
             if (value & (radix_mask >> 2u)) {
-                // yes: round up;
-                ret.raw() += (value > 0 ? 1 : -1);
+                // We round away from 0
+                ret.raw() += 1;
             } else {
-                //  no: round to even (aka unset last sigificant bit);
-                ret.raw() += m_value & 1;
+                // Otherwise we round to the next even value
+                // Which means we add the least significant bit of the raw return value
+                ret.raw() += ret.raw() & 1;
             }
         }
         return ret;
@@ -268,19 +273,7 @@ public:
     }
     This& operator*=(This const& other)
     {
-        Underlying value = m_value * other.raw();
-        m_value = value >> precision;
-        // fract(value) >= .5?
-        if (value & (1u << (precision - 1))) {
-            // fract(value) > .5?
-            if (value & (radix_mask >> 2u)) {
-                // yes: round up;
-                m_value += (value > 0 ? 1 : -1);
-            } else {
-                //  no: round to even (aka unset last sigificant bit);
-                m_value += m_value & 1;
-            }
-        }
+        *this = *this * other;
         return *this;
     }
     This& operator/=(This const& other)
