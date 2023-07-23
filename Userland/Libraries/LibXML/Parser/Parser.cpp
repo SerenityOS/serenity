@@ -862,7 +862,7 @@ ErrorOr<void, ParseError> Parser::parse_content()
             if (auto char_reference = reference.get_pointer<DeprecatedString>())
                 append_text(*char_reference);
             else
-                TRY(resolve_reference(reference.get<EntityReference>(), ReferencePlacement::Content));
+                append_text(TRY(resolve_reference(reference.get<EntityReference>(), ReferencePlacement::Content)));
             goto try_char_data;
         }
         if (auto result = parse_cdata_section(); !result.is_error()) {
