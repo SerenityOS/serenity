@@ -555,8 +555,10 @@ RENDERER_HANDLER(set_painting_color_extended)
 {
     // FIXME: Handle Pattern color spaces
     auto last_arg = args.last();
-    if (last_arg.has<NonnullRefPtr<Object>>() && last_arg.get<NonnullRefPtr<Object>>()->is<NameObject>())
-        TODO();
+    if (last_arg.has<NonnullRefPtr<Object>>() && last_arg.get<NonnullRefPtr<Object>>()->is<NameObject>()) {
+        dbgln("pattern space {}", last_arg.get<NonnullRefPtr<Object>>()->cast<NameObject>()->name());
+        return Error::rendering_unsupported_error("Pattern color spaces not yet implemented");
+    }
 
     state().paint_color = TRY(state().paint_color_space->color(args));
     return {};
@@ -903,6 +905,10 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space_from_resources(V
         }
     }
     auto color_space_resource_dict = TRY(resources->get_dict(m_document, CommonNames::ColorSpace));
+    if (!color_space_resource_dict->contains(color_space_name)) {
+        dbgln("missing key {}", color_space_name);
+        return Error::rendering_unsupported_error("Missing entry for color space name");
+    }
     auto color_space_array = TRY(color_space_resource_dict->get_array(m_document, color_space_name));
     return ColorSpace::create(m_document, color_space_array);
 }
