@@ -95,9 +95,25 @@ void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& styl
     apply_border_style(CSS::PropertyID::BorderBottomStyle, CSS::PropertyID::BorderBottomWidth, CSS::PropertyID::BorderBottomColor);
 }
 
+// This implements step 8 in the spec here:
+// https://html.spec.whatwg.org/multipage/tables.html#algorithm-for-processing-rows
 unsigned int HTMLTableCellElement::col_span() const
 {
-    return Web::HTML::parse_non_negative_integer(attribute(HTML::AttributeNames::colspan)).value_or(1);
+    auto optional_value = Web::HTML::parse_non_negative_integer(attribute(HTML::AttributeNames::colspan));
+
+    // If parsing that value failed, or returned zero, or if the attribute is absent, then let colspan be 1, instead.
+    if (!optional_value.has_value() || optional_value.value() == 0) {
+        return 1;
+    }
+
+    auto value = optional_value.value();
+
+    // If colspan is greater than 1000, let it be 1000 instead.
+    if (value > 1000) {
+        return 1000;
+    }
+
+    return value;
 }
 
 WebIDL::ExceptionOr<void> HTMLTableCellElement::set_col_span(unsigned int value)
@@ -105,9 +121,19 @@ WebIDL::ExceptionOr<void> HTMLTableCellElement::set_col_span(unsigned int value)
     return set_attribute(HTML::AttributeNames::colspan, DeprecatedString::number(value));
 }
 
+// This implements step 9 in the spec here:
+// https://html.spec.whatwg.org/multipage/tables.html#algorithm-for-processing-rows
 unsigned int HTMLTableCellElement::row_span() const
 {
-    return Web::HTML::parse_non_negative_integer(attribute(HTML::AttributeNames::rowspan)).value_or(1);
+    // If parsing that value failed or if the attribute is absent, then let rowspan be 1, instead.
+    auto value = Web::HTML::parse_non_negative_integer(attribute(HTML::AttributeNames::rowspan)).value_or(1);
+
+    // If rowspan is greater than 65534, let it be 65534 instead.
+    if (value > 65534) {
+        return 65534;
+    }
+
+    return value;
 }
 
 WebIDL::ExceptionOr<void> HTMLTableCellElement::set_row_span(unsigned int value)
