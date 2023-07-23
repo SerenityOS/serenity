@@ -1,5 +1,6 @@
 set(TEST_SOURCES
     TestCSSIDSpeed.cpp
+    TestCSSPixels.cpp
     TestHTMLTokenizer.cpp
 )
 
