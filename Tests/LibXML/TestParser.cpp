@@ -29,3 +29,15 @@ TEST_CASE(character_reference_integer_overflow)
         return Test::Crash::Failure::DidNotCrash;
     });
 }
+
+TEST_CASE(predefined_character_reference)
+{
+    XML::Parser parser("<a>Well hello &amp;, &lt;, &gt;, &apos;, and &quot;!</a>"sv);
+    auto document = MUST(parser.parse());
+
+    auto const& node = document.root().content.get<XML::Node::Element>();
+    EXPECT_EQ(node.name, "a");
+
+    auto const& content = node.children[0]->content.get<XML::Node::Text>();
+    EXPECT_EQ(content.builder.string_view(), "Well hello &, <, >, ', and \"!");
+}
