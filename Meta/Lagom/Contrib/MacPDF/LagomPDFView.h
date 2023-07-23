@@ -7,7 +7,10 @@
 
 #pragma once
 
+// Several AK types conflict with MacOS types.
+#define FixedPoint FixedPointMacOS
 #import <Cocoa/Cocoa.h>
+#undef FixedPoint
 
 @interface LagomPDFView : NSView
 {
