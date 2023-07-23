@@ -226,8 +226,14 @@ public:
     }
     constexpr This operator/(This const& other) const
     {
-        // FIXME: Better rounding?
-        return create_raw((m_value / other.m_value) << (precision));
+        // FIXME: Figure out a way to use more narrow types and avoid __int128
+        using DivRes = Conditional<sizeof(Underlying) < sizeof(i64), i64, __int128>;
+
+        DivRes value = raw();
+        value <<= precision;
+        value /= other.raw();
+
+        return create_raw(value);
     }
 
     template<Integral I>
@@ -278,9 +284,7 @@ public:
     }
     This& operator/=(This const& other)
     {
-        // FIXME: See above
-        m_value /= other.raw();
-        m_value <<= precision;
+        *this = *this / other;
         return *this;
     }
 
