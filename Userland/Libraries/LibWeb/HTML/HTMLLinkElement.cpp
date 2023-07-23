@@ -107,7 +107,8 @@ void HTMLLinkElement::attribute_changed(DeprecatedFlyString const& name, Depreca
         }
     }
 
-    if (m_relationship & Relationship::Stylesheet) {
+    // FIXME: Handle alternate stylesheets properly
+    if (m_relationship & Relationship::Stylesheet && !(m_relationship & Relationship::Alternate)) {
         if (name == HTML::AttributeNames::disabled && m_loaded_style_sheet)
             document().style_sheets().remove_sheet(*m_loaded_style_sheet);
 
