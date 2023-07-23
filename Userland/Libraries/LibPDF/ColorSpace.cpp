@@ -40,7 +40,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(DeprecatedFlyString con
     if (name == CommonNames::DeviceCMYK)
         return DeviceCMYKColorSpace::the();
     if (name == CommonNames::Pattern)
-        TODO();
+        return Error::rendering_unsupported_error("Pattern color spaces not yet implemented");
     VERIFY_NOT_REACHED();
 }
 
@@ -60,7 +60,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, Non
         return TRY(ICCBasedColorSpace::create(document, move(parameters)));
 
     dbgln("Unknown color space: {}", color_space_name);
-    TODO();
+    return Error::rendering_unsupported_error("unknown color space");
 }
 
 NonnullRefPtr<DeviceGrayColorSpace> DeviceGrayColorSpace::the()
