@@ -137,6 +137,7 @@ ErrorOr<NonnullRefPtr<TCPSocket>> TCPSocket::try_create_client(IPv4Address const
         client->set_local_port(new_local_port);
         client->set_peer_address(new_peer_address);
         client->set_peer_port(new_peer_port);
+        client->set_bound(true);
         client->set_direction(Direction::Incoming);
         client->set_originator(*this);
 
@@ -414,19 +415,46 @@ NetworkOrdered<u16> TCPSocket::compute_tcp_checksum(IPv4Address const& source, I
 
 ErrorOr<void> TCPSocket::protocol_bind()
 {
-    return m_adapter.with([this](auto& adapter) -> ErrorOr<void> {
+    dbgln_if(TCP_SOCKET_DEBUG, "TCPSocket::protocol_bind(), local_port() is {}", local_port());
+    // Check that we do have the address we're trying to bind to.
+    TRY(m_adapter.with([this](auto& adapter) -> ErrorOr<void> {
         if (has_specific_local_address() && !adapter) {
             adapter = NetworkingManagement::the().from_ipv4_address(local_address());
             if (!adapter)
                 return set_so_error(EADDRNOTAVAIL);
         }
         return {};
-    });
-}
+    }));
 
-ErrorOr<void> TCPSocket::protocol_listen(bool did_allocate_port)
-{
-    if (!did_allocate_port) {
+    if (local_port() == 0) {
+        // Allocate an unused ephemeral port.
+        constexpr u16 first_ephemeral_port = 32768;
+        constexpr u16 last_ephemeral_port = 60999;
+        constexpr u16 ephemeral_port_range_size = last_ephemeral_port - first_ephemeral_port;
+        u16 first_scan_port = first_ephemeral_port + get_good_random<u16>() % ephemeral_port_range_size;
+
+        return sockets_by_tuple().with_exclusive([&](auto& table) -> ErrorOr<void> {
+            u16 port = first_scan_port;
+            while (true) {
+                IPv4SocketTuple proposed_tuple(local_address(), port, peer_address(), peer_port());
+
+                auto it = table.find(proposed_tuple);
+                if (it == table.end()) {
+                    set_local_port(port);
+                    table.set(proposed_tuple, this);
+                    dbgln_if(TCP_SOCKET_DEBUG, "...allocated port {}, tuple {}", port, proposed_tuple.to_string());
+                    return {};
+                }
+                ++port;
+                if (port > last_ephemeral_port)
+                    port = first_ephemeral_port;
+                if (port == first_scan_port)
+                    break;
+            }
+            return set_so_error(EADDRINUSE);
+        });
+    } else {
+        // Verify that the user-supplied port is not already used by someone else.
         bool ok = sockets_by_tuple().with_exclusive([&](auto& table) -> bool {
             if (table.contains(tuple()))
                 return false;
@@ -435,8 +463,12 @@ ErrorOr<void> TCPSocket::protocol_listen(bool did_allocate_port)
         });
         if (!ok)
             return set_so_error(EADDRINUSE);
+        return {};
     }
+}
 
+ErrorOr<void> TCPSocket::protocol_listen()
+{
     set_direction(Direction::Passive);
     set_state(State::Listen);
     set_setup_state(SetupState::Completed);
@@ -453,8 +485,7 @@ ErrorOr<void> TCPSocket::protocol_connect(OpenFileDescription& description)
     if (!has_specific_local_address())
         set_local_address(routing_decision.adapter->ipv4_address());
 
-    if (auto result = allocate_local_port_if_needed(); result.error_or_port.is_error())
-        return result.error_or_port.release_error();
+    TRY(ensure_bound());
 
     m_sequence_number = get_good_random<u32>();
     m_ack_number = 0;
@@ -485,33 +516,6 @@ ErrorOr<void> TCPSocket::protocol_connect(OpenFileDescription& description)
     }
 
     return set_so_error(EINPROGRESS);
-}
-
-ErrorOr<u16> TCPSocket::protocol_allocate_local_port()
-{
-    constexpr u16 first_ephemeral_port = 32768;
-    constexpr u16 last_ephemeral_port = 60999;
-    constexpr u16 ephemeral_port_range_size = last_ephemeral_port - first_ephemeral_port;
-    u16 first_scan_port = first_ephemeral_port + get_good_random<u16>() % ephemeral_port_range_size;
-
-    return sockets_by_tuple().with_exclusive([&](auto& table) -> ErrorOr<u16> {
-        for (u16 port = first_scan_port;;) {
-            IPv4SocketTuple proposed_tuple(local_address(), port, peer_address(), peer_port());
-
-            auto it = table.find(proposed_tuple);
-            if (it == table.end()) {
-                set_local_port(port);
-                table.set(proposed_tuple, this);
-                return port;
-            }
-            ++port;
-            if (port > last_ephemeral_port)
-                port = first_ephemeral_port;
-            if (port == first_scan_port)
-                break;
-        }
-        return set_so_error(EADDRINUSE);
-    });
 }
 
 bool TCPSocket::protocol_is_disconnected() const
