@@ -14,6 +14,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLTableCellElement.h>
 #include <LibWeb/HTML/HTMLTableElement.h>
+#include <LibWeb/HTML/Numbers.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 
 namespace Web::HTML {
@@ -96,7 +97,7 @@ void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& styl
 
 unsigned int HTMLTableCellElement::col_span() const
 {
-    return attribute(HTML::AttributeNames::colspan).to_uint().value_or(1);
+    return Web::HTML::parse_non_negative_integer(attribute(HTML::AttributeNames::colspan)).value_or(1);
 }
 
 WebIDL::ExceptionOr<void> HTMLTableCellElement::set_col_span(unsigned int value)
@@ -106,7 +107,7 @@ WebIDL::ExceptionOr<void> HTMLTableCellElement::set_col_span(unsigned int value)
 
 unsigned int HTMLTableCellElement::row_span() const
 {
-    return attribute(HTML::AttributeNames::rowspan).to_uint().value_or(1);
+    return Web::HTML::parse_non_negative_integer(attribute(HTML::AttributeNames::rowspan)).value_or(1);
 }
 
 WebIDL::ExceptionOr<void> HTMLTableCellElement::set_row_span(unsigned int value)
