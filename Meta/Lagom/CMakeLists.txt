@@ -629,6 +629,7 @@ if (BUILD_LAGOM)
             LibTimeZone
             LibUnicode
             LibVideo
+            LibXML
         )
         if (ENABLE_LAGOM_LIBWEB)
             list(APPEND TEST_DIRECTORIES LibWeb)
