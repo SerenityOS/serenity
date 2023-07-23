@@ -43,33 +43,33 @@ __BEGIN_DECLS
 // functions are here to provide external linkage to their macro implementations.
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/creal.html
-inline float(crealf)(float complex z)
+static inline float(crealf)(float complex z)
 {
     return crealf(z);
 }
 
-inline double(creal)(double complex z)
+static inline double(creal)(double complex z)
 {
     return creal(z);
 }
 
-inline long double(creall)(long double complex z)
+static inline long double(creall)(long double complex z)
 {
     return creall(z);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/cimag.html
-inline double(cimag)(double complex z)
+static inline double(cimag)(double complex z)
 {
     return cimag(z);
 }
 
-inline float(cimagf)(float complex z)
+static inline float(cimagf)(float complex z)
 {
     return cimagf(z);
 }
 
-inline long double(cimagl)(long double complex z)
+static inline long double(cimagl)(long double complex z)
 {
     return cimagl(z);
 }
