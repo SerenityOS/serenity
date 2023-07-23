@@ -21,11 +21,6 @@ class NetworkAdapter;
 class TCPPacket;
 class TCPSocket;
 
-struct PortAllocationResult {
-    ErrorOr<u16> error_or_port;
-    bool did_allocate;
-};
-
 class IPv4Socket : public Socket {
 public:
     static ErrorOr<NonnullRefPtr<Socket>> create(int type, int protocol);
@@ -76,14 +71,14 @@ protected:
     IPv4Socket(int type, int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer, OwnPtr<KBuffer> optional_scratch_buffer);
     virtual StringView class_name() const override { return "IPv4Socket"sv; }
 
-    PortAllocationResult allocate_local_port_if_needed();
+    void set_bound(bool bound) { m_bound = bound; }
+    ErrorOr<void> ensure_bound();
 
     virtual ErrorOr<void> protocol_bind() { return {}; }
-    virtual ErrorOr<void> protocol_listen([[maybe_unused]] bool did_allocate_port) { return {}; }
+    virtual ErrorOr<void> protocol_listen() { return {}; }
     virtual ErrorOr<size_t> protocol_receive(ReadonlyBytes /* raw_ipv4_packet */, UserOrKernelBuffer&, size_t, int) { return ENOTIMPL; }
     virtual ErrorOr<size_t> protocol_send(UserOrKernelBuffer const&, size_t) { return ENOTIMPL; }
     virtual ErrorOr<void> protocol_connect(OpenFileDescription&) { return {}; }
-    virtual ErrorOr<u16> protocol_allocate_local_port() { return ENOPROTOOPT; }
     virtual ErrorOr<size_t> protocol_size(ReadonlyBytes /* raw_ipv4_packet */) { return ENOTIMPL; }
     virtual bool protocol_is_disconnected() const { return false; }
 
@@ -108,6 +103,7 @@ private:
 
     Vector<IPv4Address> m_multicast_memberships;
     bool m_multicast_loop { true };
+    bool m_bound { false };
 
     struct ReceivedPacket {
         IPv4Address peer_address;
