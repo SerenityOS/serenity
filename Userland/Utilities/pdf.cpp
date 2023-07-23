@@ -75,6 +75,65 @@ static PDF::PDFErrorOr<void> save_rendered_page(PDF::Document& document, int pag
     return {};
 }
 
+// Takes a sorted non-empty vector of ints like `1 1 3 4 5 5 5` and returns a RLE-y summary string like " 1 (2x) 3 4 5 (3x)" (with a leading space).
+static ErrorOr<String> summary_string(Vector<int> const& pages)
+{
+    StringBuilder builder;
+    int last_page = 0;
+    int page_count = 0;
+    for (int page : pages) {
+        if (page == last_page) {
+            ++page_count;
+            continue;
+        }
+
+        if (last_page != 0) {
+            builder.appendff(" {}", last_page);
+            if (page_count > 1)
+                builder.appendff(" ({}x)", page_count);
+        }
+        last_page = page;
+        page_count = 1;
+    }
+    builder.appendff(" {}", last_page);
+    if (page_count > 1)
+        builder.appendff(" ({}x)", page_count);
+    return builder.to_string();
+}
+
+static PDF::PDFErrorOr<void> print_debugging_stats(PDF::Document& document)
+{
+    HashMap<DeprecatedString, Vector<int>> diags_to_pages;
+    for (u32 page_number = 1; page_number <= document.get_page_count(); ++page_number) {
+        out("page number {} / {}", page_number, document.get_page_count());
+        fflush(stdout);
+        auto page = TRY(document.get_page(page_number - 1));
+        auto page_size = Gfx::IntSize { 200, round_to<int>(200 * page.media_box.height() / page.media_box.width()) };
+        auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, page_size));
+        auto errors = PDF::Renderer::render(document, page, bitmap, PDF::RenderingPreferences {});
+        if (errors.is_error()) {
+            for (auto const& error : errors.error().errors())
+                diags_to_pages.ensure(error.message()).append(page_number);
+        }
+        out("\r");
+    }
+    outln();
+
+    if (diags_to_pages.is_empty()) {
+        outln("no issues found");
+        return {};
+    }
+
+    auto keys = diags_to_pages.keys();
+    quick_sort(keys, [&](auto& k1, auto& k2) { return diags_to_pages.get(k1)->size() < diags_to_pages.get(k2)->size(); });
+    for (auto const& key : keys.in_reverse()) {
+        auto const& value = diags_to_pages.get(key).value();
+        outln("{} times: {}", value.size(), key);
+        outln("    on pages:{}", TRY(summary_string(value)));
+    }
+    return {};
+}
+
 static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
@@ -84,6 +143,9 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
 
     StringView in_path;
     args_parser.add_positional_argument(in_path, "Path to input image file", "FILE");
+
+    bool debugging_stats = false;
+    args_parser.add_option(debugging_stats, "Print stats for debugging", "debugging-stats", {});
 
     bool dump_contents = false;
     args_parser.add_option(dump_contents, "Dump page contents", "dump-contents", {});
@@ -113,6 +175,19 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
 
     TRY(document->initialize());
 
+#if !defined(AK_OS_SERENITY)
+    if (debugging_stats || !render_path.is_empty()) {
+        // Get from Build/lagom/bin/pdf to Base/res/fonts.
+        auto source_root = LexicalPath(arguments.argv[0]).parent().parent().parent().parent().string();
+        Gfx::FontDatabase::set_default_fonts_lookup_path(DeprecatedString::formatted("{}/Base/res/fonts", source_root));
+    }
+#endif
+
+    if (debugging_stats) {
+        TRY(print_debugging_stats(*document));
+        return 0;
+    }
+
     if (page_number < 1 || page_number > document->get_page_count()) {
         warnln("--page {} out of bounds, must be between 1 and {}", page_number, document->get_page_count());
         return 1;
@@ -125,12 +200,6 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
     }
 
     if (!render_path.is_empty()) {
-#if !defined(AK_OS_SERENITY)
-        // Get from Build/lagom/bin/pdf to Base/res/fonts.
-        auto source_root = LexicalPath(arguments.argv[0]).parent().parent().parent().parent().string();
-        Gfx::FontDatabase::set_default_fonts_lookup_path(DeprecatedString::formatted("{}/Base/res/fonts", source_root));
-#endif
-
         TRY(save_rendered_page(document, page_index, render_path));
         return 0;
     }
