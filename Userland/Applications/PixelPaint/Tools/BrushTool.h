@@ -55,9 +55,27 @@ protected:
     float m_scale_last_created_cursor = 0;
 
 private:
+    enum class BrushMode {
+        Normal,
+        Soft,
+        Dodge,
+        Burn,
+        __Count,
+    };
+
+    enum class PriorityMode {
+        Highlights,
+        Midtones,
+        Shadows,
+        __Count,
+    };
+
+    BrushMode m_mode = BrushMode::Normal;
+    PriorityMode m_priority = PriorityMode::Highlights;
     RefPtr<GUI::Widget> m_properties_widget;
     int m_size { 20 };
     int m_hardness { 80 };
+    float m_exposure = 0.2f;
     bool m_was_drawing { false };
     bool m_has_clicked { false };
     Gfx::IntPoint m_last_position;
@@ -65,7 +83,11 @@ private:
     RefPtr<Gfx::Bitmap> m_brush_reference = nullptr;
     Gfx::Color m_ensured_color {};
     int m_ensured_hardness = 0;
+    int m_precomputed_color_values[256];
+    Gfx::IntRect m_last_draw_rect;
+    bool m_is_drawing_line { false };
     ErrorOr<void> ensure_brush_reference_bitmap(Gfx::Color);
+    void update_precomputed_color_values();
 };
 
 }
