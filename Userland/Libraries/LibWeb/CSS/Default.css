@@ -525,6 +525,15 @@ td, th {
 
 th {
     font-weight: bold;
+    /*
+    The text-align property for table headings is non-standard, but all
+    existing user-agents seem to render them centered by default.
+
+    See:
+    - https://trac.webkit.org/browser/trunk/Source/WebCore/css/html.css?rev=295625#L272
+    - https://searchfox.org/mozilla-central/rev/0b55b868c17835942d40ca3fedfca8057481207b/layout/style/res/html.css#473
+    */
+    text-align: center;
 }
 
 caption {
