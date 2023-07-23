@@ -1158,7 +1158,7 @@ public:
             entropy_decoder.m_log_alphabet_size = 5 + TRY(stream.read_bits(2));
 
         for (auto& config : entropy_decoder.m_configs)
-            config = TRY(entropy_decoder.read_config(stream));
+            config = TRY(read_config(stream, entropy_decoder.m_log_alphabet_size));
 
         if (use_prefix_code) {
             entropy_decoder.m_distributions = Vector<BrotliCanonicalCode> {};
@@ -1257,6 +1257,25 @@ private:
         return result;
     }
 
+    static ErrorOr<HybridUint> read_config(LittleEndianInputBitStream& stream, u8 log_alphabet_size)
+    {
+        // C.2.3 - Hybrid integer configuration
+        HybridUint config {};
+        config.split_exponent = TRY(stream.read_bits(ceil(log2(log_alphabet_size + 1))));
+        if (config.split_exponent != log_alphabet_size) {
+            auto nbits = ceil(log2(config.split_exponent + 1));
+            config.msb_in_token = TRY(stream.read_bits(nbits));
+            nbits = ceil(log2(config.split_exponent - config.msb_in_token + 1));
+            config.lsb_in_token = TRY(stream.read_bits(nbits));
+        } else {
+            config.msb_in_token = 0;
+            config.lsb_in_token = 0;
+        }
+
+        config.split = 1 << config.split_exponent;
+        return config;
+    }
+
     ErrorOr<void> read_pre_clustered_distributions(LittleEndianInputBitStream& stream, u8 num_distrib)
     {
         // C.2.2  Distribution clustering
@@ -1299,25 +1318,6 @@ private:
         }
         TRY(m_configs.try_resize(num_clusters));
         return {};
-    }
-
-    ErrorOr<HybridUint> read_config(LittleEndianInputBitStream& stream) const
-    {
-        // C.2.3 - Hybrid integer configuration
-        HybridUint config {};
-        config.split_exponent = TRY(stream.read_bits(ceil(log2(m_log_alphabet_size + 1))));
-        if (config.split_exponent != m_log_alphabet_size) {
-            auto nbits = ceil(log2(config.split_exponent + 1));
-            config.msb_in_token = TRY(stream.read_bits(nbits));
-            nbits = ceil(log2(config.split_exponent - config.msb_in_token + 1));
-            config.lsb_in_token = TRY(stream.read_bits(nbits));
-        } else {
-            config.msb_in_token = 0;
-            config.lsb_in_token = 0;
-        }
-
-        config.split = 1 << config.split_exponent;
-        return config;
     }
 
     bool m_lz77_enabled {};
