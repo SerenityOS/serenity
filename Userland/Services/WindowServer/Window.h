@@ -234,6 +234,12 @@ public:
     Gfx::Bitmap const* backing_store() const { return m_backing_store.ptr(); }
     Gfx::Bitmap* backing_store() { return m_backing_store.ptr(); }
 
+    // FIXME: This probably needs double buffering too
+    void update_blur_background_cache(RefPtr<Gfx::Bitmap> background_bitmap)
+    {
+        m_blur_background_cache = move(background_bitmap);
+    }
+
     void set_backing_store(RefPtr<Gfx::Bitmap> backing_store, i32 serial)
     {
         m_last_backing_store = move(m_backing_store);
@@ -436,6 +442,7 @@ private:
     bool m_occluded { false };
     RefPtr<Gfx::Bitmap> m_backing_store;
     RefPtr<Gfx::Bitmap> m_last_backing_store;
+    RefPtr<Gfx::Bitmap> m_blur_background_cache;
     Gfx::IntSize m_backing_store_visible_size {};
     i32 m_backing_store_serial { -1 };
     i32 m_last_backing_store_serial { -1 };

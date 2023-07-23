@@ -440,14 +440,15 @@ void Compositor::compose()
 
             auto blur_region = [&](Gfx::Painter& painter, const Gfx::IntRect& rect, u8 radius) {
                 Gfx::IntRect actual_region {};
-                auto maybe_background = painter.get_region_bitmap(rect, Gfx::BitmapFormat::BGRA8888, actual_region);
+                int i = radius % 2 == 0 ? radius : radius + 1;
+                auto maybe_background = painter.get_region_bitmap(rect.inflated(i, i, i, i), Gfx::BitmapFormat::BGRx8888, actual_region);
                 VERIFY(!maybe_background.is_error());
                 if (actual_region.is_empty() && maybe_background.is_error())
                     return;
                 auto background_bitmap = maybe_background.release_value();
                 Gfx::StackBlurFilter filter { background_bitmap };
                 filter.process_rgba(radius, Color::Transparent);
-                painter.blit(rect.location(), background_bitmap, background_bitmap->rect());
+                painter.blit(rect.location(), background_bitmap, background_bitmap->rect().shrunken(i, i, i, i));
             };
 
             Gfx::IntRect dirty_rect_in_backing_coordinates = update_window_rect.intersected(backing_rect)
@@ -534,7 +535,12 @@ void Compositor::compose()
                     prepare_transparency_rect(*screen, screen_render_rect);
                     auto& temp_painter = *screen->compositor_screen_data().m_temp_painter;
                     Gfx::PainterStateSaver saver(temp_painter);
-                    temp_painter.add_clip_rect(screen_render_rect);
+                    int abr = window.alpha_blur_radius();
+                    abr += abr % 2 == 0 ? 0 : 1;
+                    if (!window.is_opaque() && (abr != 0u))
+                        temp_painter.add_clip_rect(screen_render_rect.inflated(abr, abr, abr, abr));
+                    else
+                        temp_painter.add_clip_rect(screen_render_rect);
                     compose_window_rect(*screen, temp_painter, screen_render_rect);
                 }
                 return IterationDecision::Continue;
