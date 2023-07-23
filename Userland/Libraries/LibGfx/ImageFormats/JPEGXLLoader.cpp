@@ -1201,8 +1201,12 @@ private:
     ErrorOr<void> read_pre_clustered_distributions(LittleEndianInputBitStream& stream, u8 num_distrib)
     {
         // C.2.2  Distribution clustering
-        if (num_distrib == 1)
-            TODO();
+        if (num_distrib == 1) {
+            // If num_dist == 1, then num_clusters = 1 and clusters[0] = 0, and the remainder of this subclause is skipped.
+            m_clusters = { 0 };
+            TRY(m_configs.try_resize(1));
+            return {};
+        };
 
         TRY(m_clusters.try_resize(num_distrib));
 
