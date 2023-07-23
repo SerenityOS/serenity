@@ -41,42 +41,42 @@ TEST_CASE(rounding)
     EXPECT_EQ(Type(0.5).round(), Type(0));
     EXPECT_EQ(Type(0.5).floor(), Type(0));
     EXPECT_EQ(Type(0.5).ceil(), Type(1));
-    EXPECT_EQ(Type(0.75).trunk(), Type(0));
+    EXPECT_EQ(Type(0.75).trunc(), Type(0));
 
     EXPECT_EQ(Type(1.5).round(), Type(2));
     EXPECT_EQ(Type(1.5).floor(), Type(1));
     EXPECT_EQ(Type(1.5).ceil(), Type(2));
-    EXPECT_EQ(Type(1.25).trunk(), Type(1));
+    EXPECT_EQ(Type(1.25).trunc(), Type(1));
 
     EXPECT_EQ(Type(-0.5).round(), Type(0));
     EXPECT_EQ(Type(-0.5).floor(), Type(-1));
     EXPECT_EQ(Type(-0.5).ceil(), Type(0));
-    EXPECT_EQ(Type(-0.75).trunk(), Type(0));
+    EXPECT_EQ(Type(-0.75).trunc(), Type(0));
 
     EXPECT_EQ(Type(-1.5).round(), Type(-2));
     EXPECT_EQ(Type(-1.5).floor(), Type(-2));
     EXPECT_EQ(Type(-1.5).ceil(), Type(-1));
-    EXPECT_EQ(Type(-1.25).trunk(), Type(-1));
+    EXPECT_EQ(Type(-1.25).trunc(), Type(-1));
 
     EXPECT_EQ(Type(0.5).lround(), 0);
     EXPECT_EQ(Type(0.5).lfloor(), 0);
     EXPECT_EQ(Type(0.5).lceil(), 1);
-    EXPECT_EQ(Type(0.5).ltrunk(), 0);
+    EXPECT_EQ(Type(0.5).ltrunc(), 0);
 
     EXPECT_EQ(Type(1.5).lround(), 2);
     EXPECT_EQ(Type(1.5).lfloor(), 1);
     EXPECT_EQ(Type(1.5).lceil(), 2);
-    EXPECT_EQ(Type(1.5).ltrunk(), 1);
+    EXPECT_EQ(Type(1.5).ltrunc(), 1);
 
     EXPECT_EQ(Type(-0.5).lround(), 0);
     EXPECT_EQ(Type(-0.5).lfloor(), -1);
     EXPECT_EQ(Type(-0.5).lceil(), 0);
-    EXPECT_EQ(Type(-0.5).ltrunk(), 0);
+    EXPECT_EQ(Type(-0.5).ltrunc(), 0);
 
     EXPECT_EQ(Type(-1.5).lround(), -2);
     EXPECT_EQ(Type(-1.5).lfloor(), -2);
     EXPECT_EQ(Type(-1.5).lceil(), -1);
-    EXPECT_EQ(Type(-1.5).ltrunk(), -1);
+    EXPECT_EQ(Type(-1.5).ltrunc(), -1);
 
     // Check that sRGB TRC curve parameters match the s15fixed16 values stored in Gimp's built-in profile.
     // (This only requires that the FixedPoint<> constructor rounds before truncating to the fixed-point value,

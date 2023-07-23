@@ -66,19 +66,7 @@ public:
     template<Integral I>
     explicit constexpr operator I() const
     {
-        I value = m_value >> precision;
-        // fract(m_value) >= .5?
-        if (m_value & (1u << (precision - 1))) {
-            // fract(m_value) > .5?
-            if (m_value & (radix_mask >> 2u)) {
-                // yes: round "up";
-                value += (m_value > 0 ? 1 : -1);
-            } else {
-                //  no: round to even;
-                value += value & 1;
-            }
-        }
-        return value;
+        return trunc().raw() >> precision;
     }
 
     static constexpr This create_raw(Underlying value)
@@ -111,9 +99,23 @@ public:
         return *this;
     }
 
+    // Note/FIXME: This uses round to nearest break-tie to even
+    //        Not break-tie away from 0 as the C99's round does
     constexpr This round() const
     {
-        return This { static_cast<Underlying>(*this) };
+        Underlying value = m_value >> precision;
+        // fract(m_value) >= .5?
+        if (m_value & (1u << (precision - 1))) {
+            // fract(m_value) > .5?
+            if (m_value & (radix_mask >> 2u)) {
+                // yes: round "up";
+                value += (m_value > 0 ? 1 : -1);
+            } else {
+                //  no: round to even;
+                value += value & 1;
+            }
+        }
+        return value;
     }
     constexpr This floor() const
     {
@@ -124,7 +126,7 @@ public:
         return create_raw((m_value & ~radix_mask)
             + (m_value & radix_mask ? 1 << precision : 0));
     }
-    constexpr This trunk() const
+    constexpr This trunc() const
     {
         return create_raw((m_value & ~radix_mask)
             + ((m_value & radix_mask)
@@ -132,14 +134,14 @@ public:
                     : 0));
     }
 
-    constexpr Underlying lround() const { return static_cast<Underlying>(*this); }
+    constexpr Underlying lround() const { return round().raw() >> precision; }
     constexpr Underlying lfloor() const { return m_value >> precision; }
     constexpr Underlying lceil() const
     {
         return (m_value >> precision)
             + (m_value & radix_mask ? 1 : 0);
     }
-    constexpr Underlying ltrunk() const
+    constexpr Underlying ltrunc() const
     {
         return (m_value >> precision)
             + ((m_value & radix_mask)
@@ -437,7 +439,7 @@ struct Formatter<FixedPoint<precision, Underlying>> : StandardFormatter {
         if constexpr (IsSigned<Underlying>)
             is_negative = value < 0;
 
-        i64 integer = value.ltrunk();
+        i64 integer = value.ltrunc();
         constexpr u64 one = static_cast<Underlying>(1) << precision;
         u64 fraction_raw = value.raw() & (one - 1);
         return builder.put_fixed_point(is_negative, integer, fraction_raw, one, base, upper_case, m_zero_pad, m_use_separator, m_align, m_width.value(), m_precision.value(), m_fill, m_sign_mode, real_number_display_mode);
