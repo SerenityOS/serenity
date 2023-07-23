@@ -458,3 +458,40 @@ TEST_CASE(ipv6_address)
         EXPECT_EQ(url.is_valid(), false);
     }
 }
+
+TEST_CASE(ipv4_address)
+{
+    {
+        constexpr auto ipv4_url = "http://127.0.0.1/index.html"sv;
+        URL url(ipv4_url);
+        EXPECT(url.is_valid());
+        EXPECT_EQ(url.host(), "127.0.0.1"sv);
+    }
+
+    {
+        constexpr auto ipv4_url = "http://0x.0x.0"sv;
+        URL url(ipv4_url);
+        EXPECT(url.is_valid());
+        EXPECT_EQ(url.host(), "0.0.0.0"sv);
+    }
+
+    {
+        constexpr auto bad_ipv4_url = "https://127..0.0.1"sv;
+        URL url(bad_ipv4_url);
+        EXPECT(!url.is_valid());
+    }
+
+    {
+        constexpr auto ipv4_url = "http://256"sv;
+        URL url(ipv4_url);
+        EXPECT(url.is_valid());
+        EXPECT_EQ(url.host(), "0.0.1.0"sv);
+    }
+
+    {
+        constexpr auto ipv4_url = "http://888888888"sv;
+        URL url(ipv4_url);
+        EXPECT(url.is_valid());
+        EXPECT_EQ(url.host(), "52.251.94.56"sv);
+    }
+}

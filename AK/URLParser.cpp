@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
+ * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,7 @@
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
+#include <AK/IntegralMath.h>
 #include <AK/Optional.h>
 #include <AK/SourceLocation.h>
 #include <AK/StringBuilder.h>
@@ -44,10 +46,184 @@ static Optional<DeprecatedString> parse_opaque_host(StringView input)
     return URL::percent_encode(input, URL::PercentEncodeSet::C0Control);
 }
 
-static Optional<DeprecatedString> parse_ipv4_address(StringView input)
+struct ParsedIPv4Number {
+    u32 number { 0 };
+    bool validation_error { false };
+};
+
+// https://url.spec.whatwg.org/#ipv4-number-parser
+static Optional<ParsedIPv4Number> parse_ipv4_number(StringView input)
 {
-    // FIXME: Implement the correct IPv4 parser as specified by https://url.spec.whatwg.org/#concept-ipv4-parser.
-    return input;
+    // 1. If input is the empty string, then return failure.
+    if (input.is_empty())
+        return {};
+
+    // 2. Let validationError be false.
+    bool validation_error = false;
+
+    // 3. Let R be 10.
+    u8 radix = 10;
+
+    // 4. If input contains at least two code points and the first two code points are either "0X" or "0x", then:
+    if (input.length() >= 2 && (input.starts_with("0X"sv) || input.starts_with("0x"sv))) {
+        // 1. Set validationError to true.
+        validation_error = true;
+
+        // 2. Remove the first two code points from input.
+        input = input.substring_view(2);
+
+        // 3. Set R to 16.
+        radix = 16;
+    }
+    // 5. Otherwise, if input contains at least two code points and the first code point is U+0030 (0), then:
+    else if (input.length() >= 2 && input[0] == '0') {
+        // 1. Set validationError to true.
+        validation_error = true;
+
+        // 2. Remove the first code point from input.
+        input = input.substring_view(1);
+
+        // 3. Set R to 8.
+        radix = 8;
+    }
+
+    // 6. If input is the empty string, then return (0, true).
+    if (input.is_empty())
+        return ParsedIPv4Number { 0, true };
+
+    // 7. If input contains a code point that is not a radix-R digit, then return failure.
+    if (radix == 8) {
+        if (!all_of(input, [](auto character) { return is_ascii_octal_digit(character); }))
+            return {};
+    } else if (radix == 10) {
+        if (!all_of(input, [](auto character) { return is_ascii_digit(character); }))
+            return {};
+    } else if (radix == 16) {
+        if (!all_of(input, [](auto character) { return is_ascii_hex_digit(character); }))
+            return {};
+    } else {
+        VERIFY_NOT_REACHED();
+    }
+
+    // 8. Let output be the mathematical integer value that is represented by input in radix-R notation, using ASCII hex digits for digits with values 0 through 15.
+    u32 output;
+    if (radix == 8)
+        output = StringUtils::convert_to_uint_from_octal(input).release_value();
+    else if (radix == 10)
+        output = input.to_uint().release_value();
+    else if (radix == 16)
+        output = StringUtils::convert_to_uint_from_hex(input).release_value();
+    else
+        VERIFY_NOT_REACHED();
+
+    // 9. Return (output, validationError).
+    return ParsedIPv4Number { output, validation_error };
+}
+
+// https://url.spec.whatwg.org/#concept-ipv4-parser
+static Optional<u32> parse_ipv4_address(StringView input)
+{
+    // 1. Let parts be the result of strictly splitting input on U+002E (.).
+    auto parts = input.split_view("."sv, SplitBehavior::KeepEmpty);
+
+    // 2. If the last item in parts is the empty string, then:
+    if (parts.last().is_empty()) {
+        // 1. IPv4-empty-part validation error.
+        report_validation_error();
+
+        // 2. If parts’s size is greater than 1, then remove the last item from parts.
+        if (parts.size() > 1)
+            parts.take_last();
+    }
+
+    // 3. If parts’s size is greater than 4, IPv4-too-many-parts validation error, return failure.
+    if (parts.size() > 4) {
+        report_validation_error();
+        return {};
+    }
+
+    // 4. Let numbers be an empty list.
+    Vector<u32, 4> numbers;
+
+    // 5. For each part of parts:
+    for (auto const& part : parts) {
+        // 1. Let result be the result of parsing part.
+        auto const result = parse_ipv4_number(part);
+
+        // 2. If result is failure, IPv4-non-numeric-part validation error, return failure.
+        if (!result.has_value()) {
+            report_validation_error();
+            return {};
+        }
+
+        // 3. If result[1] is true, IPv4-non-decimal-part validation error.
+        if (result->validation_error)
+            report_validation_error();
+
+        // 4. Append result[0] to numbers.
+        numbers.append(result->number);
+    }
+
+    // 6. If any item in numbers is greater than 255, IPv4-out-of-range-part validation error.
+    // 7. If any but the last item in numbers is greater than 255, then return failure.
+    for (size_t i = 0; i < numbers.size(); ++i) {
+        if (numbers[i] > 255) {
+            report_validation_error();
+            if (i != numbers.size() - 1)
+                return {};
+        }
+    }
+
+    // 8. If the last item in numbers is greater than or equal to 256^(5 − numbers’s size), then return failure.
+    if (numbers.last() >= pow<size_t>(256, 5 - numbers.size()))
+        return {};
+
+    // 9. Let ipv4 be the last item in numbers.
+    auto ipv4 = numbers.last();
+
+    // 10. Remove the last item from numbers.
+    numbers.take_last();
+
+    // 11. Let counter be 0.
+    u8 counter = 0;
+
+    // 12. For each n of numbers:
+    for (u32 n : numbers) {
+        // 1. Increment ipv4 by n × 256^(3 − counter).
+        ipv4 += n * pow<size_t>(256, 3 - counter);
+
+        // 2. Increment counter by 1.
+        ++counter;
+    }
+
+    // 13. Return ipv4.
+    return ipv4;
+}
+
+// https://url.spec.whatwg.org/#concept-ipv4-serializer
+static ErrorOr<String> serialize_ipv4_address(u32 address)
+{
+    // 1. Let output be the empty string.
+    // NOTE: Array to avoid prepend.
+    Array<u8, 4> output;
+
+    // 2. Let n be the value of address.
+    u32 n = address;
+
+    // 3. For each i in the range 1 to 4, inclusive:
+    for (size_t i = 0; i <= 3; ++i) {
+        // 1. Prepend n % 256, serialized, to output.
+        output[3 - i] = n % 256;
+
+        // 2. If i is not 4, then prepend U+002E (.) to output.
+        // NOTE: done at end
+
+        // 3. Set n to floor(n / 256).
+        n /= 256;
+    }
+
+    // 4. Return output.
+    return String::formatted("{}.{}.{}.{}", output[0], output[1], output[2], output[3]);
 }
 
 // https://url.spec.whatwg.org/#concept-ipv6-serializer
@@ -365,15 +541,21 @@ static Optional<DeprecatedString> parse_host(StringView input, bool is_not_speci
         return result.release_value().to_deprecated_string();
     }
 
+    // 2. If isNotSpecial is true, then return the result of opaque-host parsing input.
     if (is_not_special)
         return parse_opaque_host(input);
+
+    // 3. Assert: input is not the empty string.
     VERIFY(!input.is_empty());
 
-    // FIXME: Let domain be the result of running UTF-8 decode without BOM on the percent-decoding of input.
+    // FIXME: 4. Let domain be the result of running UTF-8 decode without BOM on the percent-decoding of input.
     auto domain = URL::percent_decode(input);
-    // FIXME: Let asciiDomain be the result of running domain to ASCII on domain.
+
+    // FIXME: 5. Let asciiDomain be the result of running domain to ASCII on domain.
+    // FIXME: 6. If asciiDomain is failure, then return failure.
     auto& ascii_domain = domain;
 
+    // 7. If asciiDomain contains a forbidden domain code point, domain-invalid-code-point validation error, return failure.
     auto forbidden_host_characters = "\0\t\n\r #%/:<>?@[\\]^|"sv;
     for (auto character : forbidden_host_characters) {
         if (ascii_domain.view().contains(character)) {
@@ -382,8 +564,21 @@ static Optional<DeprecatedString> parse_host(StringView input, bool is_not_speci
         }
     }
 
-    auto ipv4_host = parse_ipv4_address(ascii_domain);
-    return ipv4_host;
+    // 8. If asciiDomain ends in a number, then return the result of IPv4 parsing asciiDomain.
+    if (is_ascii_digit(ascii_domain[ascii_domain.length() - 1])) {
+        auto ipv4_host = parse_ipv4_address(ascii_domain);
+        if (!ipv4_host.has_value())
+            return {};
+
+        auto result = serialize_ipv4_address(*ipv4_host);
+        if (result.is_error())
+            return {};
+
+        return result.release_value().to_deprecated_string();
+    }
+
+    // 9. Return asciiDomain.
+    return ascii_domain;
 }
 
 // https://url.spec.whatwg.org/#start-with-a-windows-drive-letter
