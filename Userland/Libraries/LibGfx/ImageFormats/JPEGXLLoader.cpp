@@ -1214,16 +1214,29 @@ private:
 
         u16 num_clusters = 0;
 
-        if (is_simple) {
-            u8 const nbits = TRY(stream.read_bits(2));
+        auto const read_clusters = [&](auto&& reader) -> ErrorOr<void> {
             for (u8 i {}; i < num_distrib; ++i) {
-                m_clusters[i] = TRY(stream.read_bits(nbits));
+                m_clusters[i] = TRY(reader());
                 if (m_clusters[i] >= num_clusters)
                     num_clusters = m_clusters[i] + 1;
             }
+            return {};
+        };
 
+        if (is_simple) {
+            u8 const nbits = TRY(stream.read_bits(2));
+            TRY(read_clusters([nbits, &stream]() { return stream.read_bits(nbits); }));
         } else {
-            TODO();
+            auto const use_mtf = TRY(stream.read_bit());
+            if (num_distrib == 2)
+                TODO();
+
+            auto decoder = TRY(EntropyDecoder::create(stream, 1));
+
+            TRY(read_clusters([&]() { return decoder.decode_hybrid_uint(stream, 0); }));
+
+            if (use_mtf)
+                TODO();
         }
         TRY(m_configs.try_resize(num_clusters));
         return {};
