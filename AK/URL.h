@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
+ * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,6 +20,8 @@
 
 namespace AK {
 
+// https://url.spec.whatwg.org/#url-representation
+// A URL is a struct that represents a universal identifier. To disambiguate from a valid URL string it can also be referred to as a URL record.
 class URL {
     friend class URLParser;
 
@@ -150,15 +153,30 @@ private:
 
     bool m_valid { false };
 
+    // A URL’s scheme is an ASCII string that identifies the type of URL and can be used to dispatch a URL for further processing after parsing. It is initially the empty string.
     DeprecatedString m_scheme;
+
+    // A URL’s username is an ASCII string identifying a username. It is initially the empty string.
     DeprecatedString m_username;
+
+    // A URL’s password is an ASCII string identifying a password. It is initially the empty string.
     DeprecatedString m_password;
+
+    // A URL’s host is null or a host. It is initially null.
     DeprecatedString m_host;
-    // NOTE: If the port is the default port for the scheme, m_port should be empty.
+
+    // A URL’s port is either null or a 16-bit unsigned integer that identifies a networking port. It is initially null.
     Optional<u16> m_port;
+
+    // A URL’s path is either a URL path segment or a list of zero or more URL path segments, usually identifying a location. It is initially « ».
+    // A URL path segment is an ASCII string. It commonly refers to a directory or a file, but has no predefined meaning.
     DeprecatedString m_path;
     Vector<DeprecatedString> m_paths;
+
+    // A URL’s query is either null or an ASCII string. It is initially null.
     DeprecatedString m_query;
+
+    // A URL’s fragment is either null or an ASCII string that can be used for further processing on the resource the URL’s other components identify. It is initially null.
     DeprecatedString m_fragment;
 
     bool m_cannot_be_a_base_url { false };
