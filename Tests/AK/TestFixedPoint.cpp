@@ -26,6 +26,11 @@ TEST_CASE(arithmetic)
     EXPECT_EQ(
         Type((int)1) * Type(0.5),
         Type(0.5));
+    EXPECT_EQ(Type(0.125) * Type(3.75),
+        Type(0.125 * 3.75));
+    EXPECT_EQ(Type(0.125) * Type(-3.75),
+        Type(0.125 * -3.75));
+
     EXPECT_EQ(
         Type((int)1) / Type(0.5),
         Type(2));
