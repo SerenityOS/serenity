@@ -44,16 +44,19 @@ static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render(PDF::Document& documen
 static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 {
     auto& bitmap = bitmap_p.leak_ref();
-    auto space = CGColorSpaceCreateDeviceRGB();
-    CGBitmapInfo info = kCGBitmapByteOrder32Little | kCGImageAlphaFirst;
+    CGBitmapInfo info = kCGBitmapByteOrder32Little | (CGBitmapInfo)kCGImageAlphaFirst;
     auto data = CGDataProviderCreateWithData(
         &bitmap, bitmap.begin(), bitmap.size_in_bytes(),
-        [](void* p, void const*, size_t) { (void)adopt_ref(*reinterpret_cast<Gfx::Bitmap*>(p)); });
+        [](void* p, void const*, size_t) {
+            (void)adopt_ref(*reinterpret_cast<Gfx::Bitmap*>(p));
+        });
+    auto space = CGColorSpaceCreateDeviceRGB();
     auto cgbmp = CGImageCreate(bitmap.width(), bitmap.height(), 8,
         32, bitmap.pitch(), space,
         info, data, nullptr, false, kCGRenderingIntentDefault);
-    auto* bmp = [[NSBitmapImageRep alloc] initWithCGImage:cgbmp];
     CGColorSpaceRelease(space);
+    CGDataProviderRelease(data);
+    auto* bmp = [[NSBitmapImageRep alloc] initWithCGImage:cgbmp];
     CGImageRelease(cgbmp);
     return bmp;
 }
