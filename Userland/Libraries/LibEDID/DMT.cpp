@@ -116,7 +116,7 @@ FixedPoint<16, u32> DMT::MonitorTiming::vertical_frequency_hz() const
 
 u32 DMT::MonitorTiming::refresh_rate_hz() const
 {
-    return vertical_frequency_hz().ltrunk();
+    return vertical_frequency_hz().ltrunc();
 }
 
 #ifndef KERNEL
