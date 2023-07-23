@@ -20,13 +20,12 @@
     RefPtr<Core::MappedFile> _file;
     RefPtr<PDF::Document> _doc;
     NSBitmapImageRep* _rep;
+    int _page_index;
 }
 @end
 
-static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render(PDF::Document& document, NSSize size)
+static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render(PDF::Document& document, int page_index, NSSize size)
 {
-    NSLog(@"num pages %@", @(document.get_page_count()));
-    int page_index = 0;
     auto page = TRY(document.get_page(page_index));
 
     Gfx::IntSize page_size;
@@ -79,16 +78,24 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
     return document;
 }
 
+- (void)pageChanged
+{
+    if (!_doc || _doc->get_page_count() == 0)
+        return;
+    NSSize pixel_size = [self convertSizeToBacking:self.bounds.size];
+    if (auto bitmap_or = render(*_doc, _page_index, pixel_size); !bitmap_or.is_error())
+        _rep = ns_from_gfx(bitmap_or.value());
+}
+
 - (void)drawRect:(NSRect)rect
 {
     static bool did_load = false;
     if (!did_load) {
-        NSSize pixel_size = [self convertSizeToBacking:self.bounds.size];
+        _page_index = 0;
         did_load = true;
         if (auto doc_or = [self load]; !doc_or.is_error()) {
             _doc = doc_or.value();
-            if (auto bitmap_or = render(*_doc, pixel_size); !bitmap_or.is_error())
-                _rep = ns_from_gfx(bitmap_or.value());
+            [self pageChanged];
         } else {
             NSLog(@"failed to load: %@", @(doc_or.error().message().characters()));
         }
@@ -96,4 +103,31 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
     [_rep drawInRect:self.bounds];
 }
 
+- (BOOL)acceptsFirstResponder
+{
+    return YES;
+}
+
+- (void)keyDown:(NSEvent*)event
+{
+    [self interpretKeyEvents:@[ event ]];
+}
+
+- (IBAction)moveLeft:(id)sender
+{
+    if (_page_index > 0) {
+        _page_index--;
+        [self pageChanged];
+        [self setNeedsDisplay:YES];
+    }
+}
+
+- (IBAction)moveRight:(id)sender
+{
+    if (_page_index < _doc->get_page_count() - 1) {
+        _page_index++;
+        [self pageChanged];
+        [self setNeedsDisplay:YES];
+    }
+}
 @end
