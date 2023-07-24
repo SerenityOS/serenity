@@ -489,7 +489,6 @@ Vector<Certificate> TLSv12::parse_pem_certificate(ReadonlyBytes certificate_pem_
     return { move(certificate) };
 }
 
-Singleton<DefaultRootCACertificates> DefaultRootCACertificates::s_the;
 DefaultRootCACertificates::DefaultRootCACertificates()
 {
     auto load_result = load_certificates();
@@ -499,6 +498,12 @@ DefaultRootCACertificates::DefaultRootCACertificates()
     }
 
     m_ca_certificates = load_result.release_value();
+}
+
+DefaultRootCACertificates& DefaultRootCACertificates::the()
+{
+    static DefaultRootCACertificates s_the;
+    return s_the;
 }
 
 ErrorOr<Vector<Certificate>> DefaultRootCACertificates::load_certificates()
