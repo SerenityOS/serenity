@@ -766,17 +766,19 @@ PDFErrorOr<void> Renderer::show_text(DeprecatedString const& string)
 PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::load_image(NonnullRefPtr<StreamObject> image)
 {
     auto image_dict = image->dict();
-    auto filter_object = TRY(image_dict->get_object(m_document, CommonNames::Filter));
     auto width = image_dict->get_value(CommonNames::Width).get<int>();
     auto height = image_dict->get_value(CommonNames::Height).get<int>();
 
-    auto is_filter = [&](DeprecatedFlyString const& name) {
+    auto is_filter = [&](DeprecatedFlyString const& name) -> PDFErrorOr<bool> {
+        if (!image_dict->contains(CommonNames::Filter))
+            return false;
+        auto filter_object = TRY(image_dict->get_object(m_document, CommonNames::Filter));
         if (filter_object->is<NameObject>())
             return filter_object->cast<NameObject>()->name() == name;
         auto filters = filter_object->cast<ArrayObject>();
         return MUST(filters->get_name_at(m_document, 0))->name() == name;
     };
-    if (is_filter(CommonNames::JPXDecode)) {
+    if (TRY(is_filter(CommonNames::JPXDecode))) {
         return Error(Error::Type::RenderingUnsupported, "JPXDecode filter");
     }
     if (image_dict->contains(CommonNames::ImageMask)) {
@@ -807,7 +809,7 @@ PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::load_image(NonnullRefPtr<Stream
         component_value_decoders.empend(0.0f, 255.0f, dmin, dmax);
     }
 
-    if (is_filter(CommonNames::DCTDecode)) {
+    if (TRY(is_filter(CommonNames::DCTDecode))) {
         // TODO: stream objects could store Variant<bytes/Bitmap> to avoid seialisation/deserialisation here
         return TRY(Gfx::Bitmap::create_from_serialized_bytes(image->bytes()));
     }
