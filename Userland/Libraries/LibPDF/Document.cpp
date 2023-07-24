@@ -297,6 +297,23 @@ PDFErrorOr<Optional<InfoDict>> Document::info_dict()
     return InfoDict(this, TRY(trailer()->get_dict(this, CommonNames::Info)));
 }
 
+PDFErrorOr<Vector<DeprecatedFlyString>> Document::read_filters(NonnullRefPtr<DictObject> dict)
+{
+    Vector<DeprecatedFlyString> filters;
+
+    // We may either get a single filter or an array of cascading filters
+    auto filter_object = TRY(dict->get_object(this, CommonNames::Filter));
+    if (filter_object->is<ArrayObject>()) {
+        auto filter_array = filter_object->cast<ArrayObject>();
+        for (size_t i = 0; i < filter_array->size(); ++i)
+            filters.append(TRY(filter_array->get_name_at(this, i))->name());
+    } else {
+        filters.append(filter_object->cast<NameObject>()->name());
+    }
+
+    return filters;
+}
+
 PDFErrorOr<void> Document::build_page_tree()
 {
     auto page_tree = TRY(m_catalog->get_dict(this, CommonNames::Pages));
