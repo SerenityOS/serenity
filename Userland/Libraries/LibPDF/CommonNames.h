@@ -27,6 +27,8 @@
     A(CF)                         \
     A(CFM)                        \
     A(CalRGB)                     \
+    A(CIDFontType0)               \
+    A(CIDFontType2)               \
     A(CIDSystemInfo)              \
     A(CIDToGIDMap)                \
     A(Colors)                     \
