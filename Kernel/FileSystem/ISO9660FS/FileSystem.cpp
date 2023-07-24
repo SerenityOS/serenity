@@ -24,7 +24,7 @@ ErrorOr<NonnullRefPtr<FileSystem>> ISO9660FS::try_create(OpenFileDescription& de
 ISO9660FS::ISO9660FS(OpenFileDescription& description)
     : BlockBasedFileSystem(description)
 {
-    set_block_size(logical_sector_size);
+    set_logical_block_size(logical_sector_size);
     m_device_block_size = logical_sector_size;
 }
 

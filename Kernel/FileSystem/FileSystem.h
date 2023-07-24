@@ -53,7 +53,7 @@ public:
 
     virtual void flush_writes() { }
 
-    u64 block_size() const { return m_block_size; }
+    u64 logical_block_size() const { return m_logical_block_size; }
     size_t fragment_size() const { return m_fragment_size; }
 
     virtual bool is_file_backed() const { return false; }
@@ -66,7 +66,7 @@ public:
 protected:
     FileSystem();
 
-    void set_block_size(u64 size) { m_block_size = size; }
+    void set_logical_block_size(u64 size) { m_logical_block_size = size; }
     void set_fragment_size(size_t size) { m_fragment_size = size; }
 
     virtual ErrorOr<void> prepare_to_clear_last_mount([[maybe_unused]] Inode& mount_guest_inode) { return {}; }
@@ -75,7 +75,7 @@ protected:
 
 private:
     FileSystemID m_fsid;
-    u64 m_block_size { 0 };
+    u64 m_logical_block_size { 0 };
     size_t m_fragment_size { 0 };
     bool m_readonly { false };
 

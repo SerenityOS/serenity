@@ -97,13 +97,13 @@ ErrorOr<void> Ext2FS::initialize_while_locked()
         dmesgln("Ext2FS: Descriptor size: {}", EXT2_DESC_SIZE(&super_block));
     }
 
-    set_block_size(EXT2_BLOCK_SIZE(&super_block));
+    set_logical_block_size(EXT2_BLOCK_SIZE(&super_block));
     set_fragment_size(EXT2_FRAG_SIZE(&super_block));
 
     // Note: This depends on the block size being available.
     TRY(BlockBasedFileSystem::initialize_while_locked());
 
-    VERIFY(block_size() <= (int)max_block_size);
+    VERIFY(logical_block_size() <= (int)max_block_size);
 
     m_block_group_count = ceil_div(super_block.s_blocks_count, super_block.s_blocks_per_group);
 
@@ -112,9 +112,9 @@ ErrorOr<void> Ext2FS::initialize_while_locked()
         return EINVAL;
     }
 
-    auto blocks_to_read = ceil_div(m_block_group_count * sizeof(ext2_group_desc), block_size());
+    auto blocks_to_read = ceil_div(m_block_group_count * sizeof(ext2_group_desc), logical_block_size());
     BlockIndex first_block_of_bgdt = first_block_of_block_group_descriptors();
-    m_cached_group_descriptor_table = TRY(KBuffer::try_create_with_size("Ext2FS: Block group descriptors"sv, block_size() * blocks_to_read, Memory::Region::Access::ReadWrite));
+    m_cached_group_descriptor_table = TRY(KBuffer::try_create_with_size("Ext2FS: Block group descriptors"sv, logical_block_size() * blocks_to_read, Memory::Region::Access::ReadWrite));
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(m_cached_group_descriptor_table->data());
     TRY(read_blocks(first_block_of_bgdt, blocks_to_read, buffer));
 
@@ -154,7 +154,7 @@ bool Ext2FS::find_block_containing_inode(InodeIndex inode, BlockIndex& block_ind
 
     u64 full_offset = ((inode.value() - 1) % inodes_per_group()) * inode_size();
     block_index = bgd.bg_inode_table + (full_offset >> EXT2_BLOCK_SIZE_BITS(&super_block));
-    offset = full_offset & (block_size() - 1);
+    offset = full_offset & (logical_block_size() - 1);
 
     return true;
 }
@@ -380,7 +380,7 @@ Ext2FS::BlockIndex Ext2FS::first_block_of_group(GroupIndex group_index) const
 
 Ext2FS::BlockIndex Ext2FS::first_block_of_block_group_descriptors() const
 {
-    return block_size() == 1024 ? 2 : 1;
+    return logical_block_size() == 1024 ? 2 : 1;
 }
 
 auto Ext2FS::group_index_from_inode(InodeIndex inode) const -> GroupIndex
@@ -442,7 +442,7 @@ ErrorOr<void> Ext2FS::set_inode_allocation_state(InodeIndex inode_index, bool ne
 
 Ext2FS::BlockIndex Ext2FS::first_block_index() const
 {
-    return block_size() == 1024 ? 1 : 0;
+    return logical_block_size() == 1024 ? 1 : 0;
 }
 
 ErrorOr<Ext2FS::CachedBitmap*> Ext2FS::get_bitmap_block(BlockIndex bitmap_block_index)
@@ -452,9 +452,9 @@ ErrorOr<Ext2FS::CachedBitmap*> Ext2FS::get_bitmap_block(BlockIndex bitmap_block_
             return cached_bitmap.ptr();
     }
 
-    auto block = TRY(KBuffer::try_create_with_size("Ext2FS: Cached bitmap block"sv, block_size(), Memory::Region::Access::ReadWrite));
+    auto block = TRY(KBuffer::try_create_with_size("Ext2FS: Cached bitmap block"sv, logical_block_size(), Memory::Region::Access::ReadWrite));
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(block->data());
-    TRY(read_block(bitmap_block_index, &buffer, block_size()));
+    TRY(read_block(bitmap_block_index, &buffer, logical_block_size()));
     auto new_bitmap = TRY(adopt_nonnull_own_or_enomem(new (nothrow) CachedBitmap(bitmap_block_index, move(block))));
     TRY(m_cached_bitmaps.try_append(move(new_bitmap)));
     return m_cached_bitmaps.last().ptr();
@@ -639,7 +639,7 @@ ErrorOr<void> Ext2FS::free_inode(Ext2FSInode& inode)
 void Ext2FS::flush_block_group_descriptor_table()
 {
     MutexLocker locker(m_lock);
-    auto blocks_to_write = ceil_div(m_block_group_count * sizeof(ext2_group_desc), block_size());
+    auto blocks_to_write = ceil_div(m_block_group_count * sizeof(ext2_group_desc), logical_block_size());
     auto first_block_of_bgdt = first_block_of_block_group_descriptors();
     auto buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)block_group_descriptors());
     auto write_bgdt_to_block = [&](BlockIndex index) {
@@ -682,7 +682,7 @@ void Ext2FS::flush_writes()
         for (auto& cached_bitmap : m_cached_bitmaps) {
             if (cached_bitmap->dirty) {
                 auto buffer = UserOrKernelBuffer::for_kernel_buffer(cached_bitmap->buffer->data());
-                if (auto result = write_block(cached_bitmap->bitmap_block_index, buffer, block_size()); result.is_error()) {
+                if (auto result = write_block(cached_bitmap->bitmap_block_index, buffer, logical_block_size()); result.is_error()) {
                     dbgln("Ext2FS[{}]::flush_writes(): Failed to write blocks: {}", fsid(), result.error());
                 }
                 cached_bitmap->dirty = false;
