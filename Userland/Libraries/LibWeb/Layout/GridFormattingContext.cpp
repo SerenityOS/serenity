@@ -785,6 +785,9 @@ void GridFormattingContext::distribute_extra_space_across_spanned_tracks_base_si
             affected_tracks.append(track);
     }
 
+    if (affected_tracks.size() == 0)
+        return;
+
     for (auto& track : affected_tracks)
         track.item_incurred_increase = 0;
 
@@ -869,6 +872,9 @@ void GridFormattingContext::distribute_extra_space_across_spanned_tracks_growth_
 
     for (auto& track : affected_tracks)
         track.item_incurred_increase = 0;
+
+    if (affected_tracks.size() == 0)
+        return;
 
     // 1. Find the space to distribute:
     CSSPixels spanned_tracks_sizes_sum = 0;
