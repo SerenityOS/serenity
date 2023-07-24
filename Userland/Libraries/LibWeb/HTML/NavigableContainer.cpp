@@ -102,30 +102,31 @@ WebIDL::ExceptionOr<void> NavigableContainer::create_new_child_navigable()
     // 11. Let traversable be parentNavigable's traversable navigable.
     auto traversable = parent_navigable->traversable_navigable();
 
-    // FIXME: 12. Append the following session history traversal steps to traversable:
+    // 12. Append the following session history traversal steps to traversable:
+    traversable->append_session_history_traversal_steps([traversable, navigable, parent_navigable, history_entry] {
+        // 1. Let parentDocState be parentNavigable's active session history entry's document state.
 
-    // 1. Let parentDocState be parentNavigable's active session history entry's document state.
+        auto parent_doc_state = parent_navigable->active_session_history_entry()->document_state;
 
-    auto parent_doc_state = parent_navigable->active_session_history_entry()->document_state;
+        // 2. Let targetStepSHE be the first session history entry in traversable's session history entries whose document state equals parentDocState.
+        auto target_step_she = *(traversable->session_history_entries().find_if([parent_doc_state](auto& entry) {
+            return entry->document_state == parent_doc_state;
+        }));
 
-    // 2. Let targetStepSHE be the first session history entry in traversable's session history entries whose document state equals parentDocState.
-    auto target_step_she = *(traversable->session_history_entries().find_if([parent_doc_state](auto& entry) {
-        return entry->document_state == parent_doc_state;
-    }));
+        // 3. Set historyEntry's step to targetStepSHE's step.
+        history_entry->step = target_step_she->step;
 
-    // 3. Set historyEntry's step to targetStepSHE's step.
-    history_entry->step = target_step_she->step;
+        // 4. Let nestedHistory be a new nested history whose id is navigable's id and entries list is « historyEntry ».
+        DocumentState::NestedHistory nested_history {
+            .id = navigable->id(),
+            .entries { *history_entry },
+        };
 
-    // 4. Let nestedHistory be a new nested history whose id is navigable's id and entries list is « historyEntry ».
-    DocumentState::NestedHistory nested_history {
-        .id = navigable->id(),
-        .entries { *history_entry },
-    };
+        // 5. Append nestedHistory to parentDocState's nested histories.
+        parent_doc_state->nested_histories().append(move(nested_history));
 
-    // 5. Append nestedHistory to parentDocState's nested histories.
-    parent_doc_state->nested_histories().append(move(nested_history));
-
-    // FIXME: 6. Update for navigable creation/destruction given traversable
+        // FIXME: 6. Update for navigable creation/destruction given traversable
+    });
 
     return {};
 }
@@ -342,10 +343,11 @@ void NavigableContainer::destroy_the_child_navigable()
     // 7. Let traversable be container's node navigable's traversable navigable.
     auto traversable = this->navigable()->traversable_navigable();
 
-    // FIXME: 8. Append the following session history traversal steps to traversable:
-
-    // 1. Apply pending history changes to traversable.
-    traversable->apply_pending_history_changes();
+    // 8. Append the following session history traversal steps to traversable:
+    traversable->append_session_history_traversal_steps([traversable] {
+        // 1. Apply pending history changes to traversable.
+        traversable->apply_pending_history_changes();
+    });
 }
 
 }

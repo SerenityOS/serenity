@@ -939,61 +939,64 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
         //     for historyEntry, given navigable, "navigate", sourceSnapshotParams,
         //     targetSnapshotParams, navigationId, navigationParams, cspNavigationType, with allowPOST
         //     set to true and completionSteps set to the following step:
-        populate_session_history_entry_document(history_entry, navigation_params, navigation_id, source_snapshot_params, [this, history_entry, history_handling] {
-            // https://html.spec.whatwg.org/multipage/browsing-the-web.html#finalize-a-cross-document-navigation
+        populate_session_history_entry_document(history_entry, navigation_params, navigation_id, source_snapshot_params, [this, history_entry, history_handling, navigation_id] {
+            traversable_navigable()->append_session_history_traversal_steps([this, history_entry, history_handling, navigation_id] {
+                // https://html.spec.whatwg.org/multipage/browsing-the-web.html#finalize-a-cross-document-navigation
 
-            // 1. FIXME: Assert: this is running on navigable's traversable navigable's session history traversal queue.
+                // 1. FIXME: Assert: this is running on navigable's traversable navigable's session history traversal queue.
 
-            // 2. Set navigable's is delaying load events to false.
-            set_delaying_load_events(false);
+                // 2. Set navigable's is delaying load events to false.
+                set_delaying_load_events(false);
 
-            // 3. If historyEntry's document is null, then return.
-            if (!history_entry->document_state->document())
-                return;
+                // 3. If historyEntry's document is null, then return.
+                if (!history_entry->document_state->document())
+                    return;
 
-            // 4. FIXME: If all of the following are true:
-            //    - navigable's parent is null;
-            //    - historyEntry's document's browsing context is not an auxiliary browsing context whose opener browsing context is non-null; and
-            //    - historyEntry's document's origin is not navigable's active document's origin
-            //    then set historyEntry's document state's navigable target name to the empty string.
+                // 4. FIXME: If all of the following are true:
+                //    - navigable's parent is null;
+                //    - historyEntry's document's browsing context is not an auxiliary browsing context whose opener browsing context is non-null; and
+                //    - historyEntry's document's origin is not navigable's active document's origin
+                //    then set historyEntry's document state's navigable target name to the empty string.
 
-            // 5. Let entryToReplace be navigable's active session history entry if historyHandling is "replace", otherwise null.
-            auto entry_to_replace = history_handling == HistoryHandlingBehavior::Replace ? active_session_history_entry() : nullptr;
+                // 5. Let entryToReplace be navigable's active session history entry if historyHandling is "replace", otherwise null.
+                auto entry_to_replace = history_handling == HistoryHandlingBehavior::Replace ? active_session_history_entry() : nullptr;
 
-            // 6. Let traversable be navigable's traversable navigable.
-            auto traversable = traversable_navigable();
+                // 6. Let traversable be navigable's traversable navigable.
+                auto traversable = traversable_navigable();
 
-            // 7. Let targetStep be null.
-            int target_step;
+                // 7. Let targetStep be null.
+                int target_step;
 
-            // 8. Let targetEntries be the result of getting session history entries for navigable.
-            auto& target_entries = get_session_history_entries();
+                // 8. Let targetEntries be the result of getting session history entries for navigable.
+                auto& target_entries = get_session_history_entries();
 
-            // 9. If entryToReplace is null, then:
-            if (entry_to_replace == nullptr) {
-                // FIXME: 1. Clear the forward session history of traversable.
+                // 9. If entryToReplace is null, then:
+                if (entry_to_replace == nullptr) {
+                    // FIXME: 1. Clear the forward session history of traversable.
+                    traversable->clear_the_forward_session_history();
 
-                // 2. Set targetStep to traversable's current session history step + 1.
-                target_step = traversable->current_session_history_step() + 1;
+                    // 2. Set targetStep to traversable's current session history step + 1.
+                    target_step = traversable->current_session_history_step() + 1;
 
-                // 3. Set historyEntry's step to targetStep.
-                history_entry->step = target_step;
+                    // 3. Set historyEntry's step to targetStep.
+                    history_entry->step = target_step;
 
-                // 4. Append historyEntry to targetEntries.
-                target_entries.append(move(history_entry));
-            } else {
-                // 1. Replace entryToReplace with historyEntry in targetEntries.
-                *(target_entries.find(*entry_to_replace)) = history_entry;
+                    // 4. Append historyEntry to targetEntries.
+                    target_entries.append(move(history_entry));
+                } else {
+                    // 1. Replace entryToReplace with historyEntry in targetEntries.
+                    *(target_entries.find(*entry_to_replace)) = history_entry;
 
-                // 2. Set historyEntry's step to entryToReplace's step.
-                history_entry->step = entry_to_replace->step;
+                    // 2. Set historyEntry's step to entryToReplace's step.
+                    history_entry->step = entry_to_replace->step;
 
-                // 3. Set targetStep to traversable's current session history step.
-                target_step = traversable->current_session_history_step();
-            }
+                    // 3. Set targetStep to traversable's current session history step.
+                    target_step = traversable->current_session_history_step();
+                }
 
-            // 10. Apply the history step targetStep to traversable.
-            traversable->apply_the_history_step(target_step);
+                // 10. Apply the history step targetStep to traversable.
+                traversable->apply_the_history_step(target_step);
+            });
         }).release_value_but_fixme_should_propagate_errors();
     });
 
@@ -1022,10 +1025,11 @@ void Navigable::reload()
     // 2. Let traversable be navigable's traversable navigable.
     auto traversable = traversable_navigable();
 
-    // FIXME: 3. Append the following session history traversal steps to traversable:
-
-    // 1. Apply pending history changes to traversable with true.
-    traversable->apply_pending_history_changes();
+    // 3. Append the following session history traversal steps to traversable:
+    traversable->append_session_history_traversal_steps([traversable] {
+        // 1. Apply pending history changes to traversable with true.
+        traversable->apply_pending_history_changes();
+    });
 }
 
 }
