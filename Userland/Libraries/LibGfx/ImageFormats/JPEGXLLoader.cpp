@@ -1128,6 +1128,27 @@ private:
     u16 m_bucket_size {};
 };
 
+struct LZ77 {
+    bool lz77_enabled {};
+
+    u32 min_symbol {};
+    u32 min_length {};
+};
+
+static ErrorOr<LZ77> read_lz77(LittleEndianInputBitStream& stream)
+{
+    LZ77 lz77;
+
+    lz77.lz77_enabled = TRY(stream.read_bit());
+
+    if (lz77.lz77_enabled) {
+        lz77.min_symbol = U32(224, 512, 4096, 8 + TRY(stream.read_bits(15)));
+        lz77.min_length = U32(3, 4, 5 + TRY(stream.read_bits(2)), 9 + TRY(stream.read_bits(8)));
+    }
+
+    return lz77;
+}
+
 class EntropyDecoder {
     AK_MAKE_NONCOPYABLE(EntropyDecoder);
     AK_MAKE_DEFAULT_MOVABLE(EntropyDecoder);
@@ -1144,10 +1165,13 @@ public:
     {
         EntropyDecoder entropy_decoder;
         // C.2 - Distribution decoding
-        entropy_decoder.m_lz77_enabled = TRY(stream.read_bit());
+        entropy_decoder.m_lz77 = TRY(read_lz77(stream));
 
-        if (entropy_decoder.m_lz77_enabled) {
-            TODO();
+        if (entropy_decoder.m_lz77.lz77_enabled) {
+            entropy_decoder.m_lz_dist_ctx = initial_num_distrib++;
+            entropy_decoder.m_lz_len_conf = TRY(read_config(stream, 8));
+
+            entropy_decoder.m_lz77_window = TRY(FixedArray<u32>::create(1 << 20));
         }
 
         TRY(entropy_decoder.read_pre_clustered_distributions(stream, initial_num_distrib));
@@ -1204,13 +1228,60 @@ public:
     {
         // C.3.3 - Hybrid integer decoding
 
-        if (m_lz77_enabled)
-            TODO();
+        static constexpr Array<Array<i8, 2>, 120> kSpecialDistances = {
+            Array<i8, 2> { 0, 1 }, { 1, 0 }, { 1, 1 }, { -1, 1 }, { 0, 2 }, { 2, 0 }, { 1, 2 }, { -1, 2 }, { 2, 1 }, { -2, 1 }, { 2, 2 },
+            { -2, 2 }, { 0, 3 }, { 3, 0 }, { 1, 3 }, { -1, 3 }, { 3, 1 }, { -3, 1 }, { 2, 3 }, { -2, 3 }, { 3, 2 },
+            { -3, 2 }, { 0, 4 }, { 4, 0 }, { 1, 4 }, { -1, 4 }, { 4, 1 }, { -4, 1 }, { 3, 3 }, { -3, 3 }, { 2, 4 },
+            { -2, 4 }, { 4, 2 }, { -4, 2 }, { 0, 5 }, { 3, 4 }, { -3, 4 }, { 4, 3 }, { -4, 3 }, { 5, 0 }, { 1, 5 },
+            { -1, 5 }, { 5, 1 }, { -5, 1 }, { 2, 5 }, { -2, 5 }, { 5, 2 }, { -5, 2 }, { 4, 4 }, { -4, 4 }, { 3, 5 },
+            { -3, 5 }, { 5, 3 }, { -5, 3 }, { 0, 6 }, { 6, 0 }, { 1, 6 }, { -1, 6 }, { 6, 1 }, { -6, 1 }, { 2, 6 },
+            { -2, 6 }, { 6, 2 }, { -6, 2 }, { 4, 5 }, { -4, 5 }, { 5, 4 }, { -5, 4 }, { 3, 6 }, { -3, 6 }, { 6, 3 },
+            { -6, 3 }, { 0, 7 }, { 7, 0 }, { 1, 7 }, { -1, 7 }, { 5, 5 }, { -5, 5 }, { 7, 1 }, { -7, 1 }, { 4, 6 },
+            { -4, 6 }, { 6, 4 }, { -6, 4 }, { 2, 7 }, { -2, 7 }, { 7, 2 }, { -7, 2 }, { 3, 7 }, { -3, 7 }, { 7, 3 },
+            { -7, 3 }, { 5, 6 }, { -5, 6 }, { 6, 5 }, { -6, 5 }, { 8, 0 }, { 4, 7 }, { -4, 7 }, { 7, 4 }, { -7, 4 },
+            { 8, 1 }, { 8, 2 }, { 6, 6 }, { -6, 6 }, { 8, 3 }, { 5, 7 }, { -5, 7 }, { 7, 5 }, { -7, 5 }, { 8, 4 }, { 6, 7 },
+            { -6, 7 }, { 7, 6 }, { -7, 6 }, { 8, 5 }, { 7, 7 }, { -7, 7 }, { 8, 6 }, { 8, 7 }
+        };
 
-        // Read symbol from entropy coded stream using D[clusters[ctx]]
-        auto const token = TRY(read_symbol(stream, context));
-        auto r = TRY(read_uint(stream, m_configs[m_clusters[context]], token));
+        u32 r {};
+        if (m_lz77_num_to_copy > 0) {
+            r = m_lz77_window[(m_lz77_copy_pos++) & 0xFFFFF];
+            m_lz77_num_to_copy--;
+        } else {
+            // Read symbol from entropy coded stream using D[clusters[ctx]]
+            auto token = TRY(read_symbol(stream, context));
+
+            if (m_lz77.lz77_enabled && token >= m_lz77.min_symbol) {
+                m_lz77_num_to_copy = TRY(read_uint(stream, m_lz_len_conf, token - m_lz77.min_symbol)) + m_lz77.min_length;
+                // Read symbol using D[clusters[lz_dist_ctx]]
+                token = TRY(read_symbol(stream, m_lz_dist_ctx));
+                auto distance = TRY(read_uint(stream, m_configs[m_clusters[m_lz_dist_ctx]], token));
+                if (m_dist_multiplier == 0) {
+                    distance++;
+                } else if (distance < 120) {
+                    auto const offset = kSpecialDistances[distance][0];
+                    distance = offset + m_dist_multiplier * kSpecialDistances[distance][1];
+                    if (distance < 1)
+                        distance = 1;
+                } else {
+                    distance -= 119;
+                }
+                distance = min(distance, min(m_lz77_num_decoded, 1 << 20));
+                m_lz77_copy_pos = m_lz77_num_decoded - distance;
+                return decode_hybrid_uint(stream, m_clusters[context]);
+            }
+            r = TRY(read_uint(stream, m_configs[m_clusters[context]], token));
+        }
+
+        if (m_lz77.lz77_enabled)
+            m_lz77_window[(m_lz77_num_decoded++) & 0xFFFFF] = r;
+
         return r;
+    }
+
+    void set_dist_multiplier(u32 dist_multiplier)
+    {
+        m_dist_multiplier = dist_multiplier;
     }
 
 private:
@@ -1325,7 +1396,15 @@ private:
         return {};
     }
 
-    bool m_lz77_enabled {};
+    LZ77 m_lz77 {};
+    u32 m_lz_dist_ctx {};
+    HybridUint m_lz_len_conf {};
+    FixedArray<u32> m_lz77_window {};
+    u32 m_lz77_num_to_copy {};
+    u32 m_lz77_copy_pos {};
+    u32 m_lz77_num_decoded {};
+    u32 m_dist_multiplier {};
+
     Vector<u32> m_clusters;
     Vector<HybridUint> m_configs;
 
@@ -1940,6 +2019,7 @@ static Neighborhood retrieve_neighborhood(Channel const& channel, u32 x, u32 y)
 
 static ErrorOr<ModularHeader> read_modular_header(LittleEndianInputBitStream& stream,
     Image& image,
+    ImageMetadata const& metadata,
     Optional<EntropyDecoder>& decoder,
     MATree const& global_tree,
     u16 num_channels)
@@ -1957,6 +2037,19 @@ static ErrorOr<ModularHeader> read_modular_header(LittleEndianInputBitStream& st
     Optional<MATree> local_tree;
     if (!modular_header.use_global_tree)
         TODO();
+
+    // where dist_multiplier is set to the largest channel width amongst all channels
+    // that are to be decoded, excluding the meta-channels.
+    auto const dist_multiplier = [&]() {
+        u32 dist_multiplier {};
+        // FIXME: This should start at nb_meta_channels not 0
+        for (u16 i = 0; i < metadata.number_of_channels(); ++i) {
+            if (image.channels()[i].width() > dist_multiplier)
+                dist_multiplier = image.channels()[i].width();
+        }
+        return dist_multiplier;
+    }();
+    decoder->set_dist_multiplier(dist_multiplier);
 
     // The decoder then starts an entropy-coded stream (C.1) and decodes the data for each channel
     // (in ascending order of index) as specified in H.3, skipping any channels having width or height
@@ -2029,7 +2122,7 @@ static ErrorOr<GlobalModular> read_global_modular(LittleEndianInputBitStream& st
     //        However, the decoder only decodes the first nb_meta_channels channels and any further channels
     //        that have a width and height that are both at most group_dim. At that point, it stops decoding.
     //        No inverse transforms are applied yet.
-    global_modular.modular_header = TRY(read_modular_header(stream, image, entropy_decoder, global_modular.ma_tree, num_channels));
+    global_modular.modular_header = TRY(read_modular_header(stream, image, metadata, entropy_decoder, global_modular.ma_tree, num_channels));
 
     return global_modular;
 }
