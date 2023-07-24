@@ -63,7 +63,7 @@ ErrorOr<void> FATFS::initialize_while_locked()
     }
 
     m_device_block_size = boot_record()->bytes_per_sector;
-    set_block_size(m_device_block_size);
+    set_logical_block_size(m_device_block_size);
 
     u32 root_directory_sectors = ((boot_record()->root_directory_entry_count * sizeof(FATEntry)) + (m_device_block_size - 1)) / m_device_block_size;
     m_first_data_sector = boot_record()->reserved_sector_count + (boot_record()->fat_count * boot_record()->sectors_per_fat) + root_directory_sectors;
