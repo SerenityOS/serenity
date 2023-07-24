@@ -298,6 +298,7 @@ RENDERER_HANDLER(path_close_and_stroke)
 RENDERER_HANDLER(path_fill_nonzero)
 {
     begin_path_paint();
+    m_current_path.close_all_subpaths();
     m_anti_aliasing_painter.fill_path(m_current_path, state().paint_color, Gfx::Painter::WindingRule::Nonzero);
     end_path_paint();
     return {};
@@ -311,6 +312,7 @@ RENDERER_HANDLER(path_fill_nonzero_deprecated)
 RENDERER_HANDLER(path_fill_evenodd)
 {
     begin_path_paint();
+    m_current_path.close_all_subpaths();
     m_anti_aliasing_painter.fill_path(m_current_path, state().paint_color, Gfx::Painter::WindingRule::EvenOdd);
     end_path_paint();
     return {};
