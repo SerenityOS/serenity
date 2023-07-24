@@ -906,6 +906,17 @@ constexpr T round(T x)
     return ceil(x - .5);
 }
 
+template<typename T>
+constexpr int clamp_to_int(T value)
+{
+    if (value >= NumericLimits<int>::max()) {
+        return NumericLimits<int>::max();
+    } else if (value <= NumericLimits<int>::min()) {
+        return NumericLimits<int>::min();
+    }
+    return value;
+}
+
 #undef CONSTEXPR_STATE
 #undef AARCH64_INSTRUCTION
 }
