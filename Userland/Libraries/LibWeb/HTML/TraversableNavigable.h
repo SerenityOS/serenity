@@ -8,6 +8,7 @@
 
 #include <AK/Vector.h>
 #include <LibWeb/HTML/Navigable.h>
+#include <LibWeb/HTML/SessionHistoryTraversalQueue.h>
 #include <LibWeb/HTML/VisibilityState.h>
 
 namespace Web::HTML {
@@ -47,6 +48,11 @@ public:
 
     void destroy_top_level_traversable();
 
+    void append_session_history_traversal_steps(JS::SafeFunction<void()> steps)
+    {
+        m_session_history_traversal_queue.append(move(steps));
+    }
+
 private:
     TraversableNavigable();
 
@@ -65,6 +71,8 @@ private:
 
     // https://html.spec.whatwg.org/multipage/document-sequences.html#system-visibility-state
     VisibilityState m_system_visibility_state { VisibilityState::Visible };
+
+    SessionHistoryTraversalQueue m_session_history_traversal_queue;
 };
 
 }
