@@ -78,8 +78,8 @@ bool ISO9660DirectoryIterator::skip()
         // need to snap to the next logical block, because directory records
         // cannot span multiple logical blocks.
         u32 remaining_bytes = m_current_directory.entry->length - m_current_directory.offset;
-        if (remaining_bytes > m_fs.logical_block_size()) {
-            m_current_directory.offset += remaining_bytes % m_fs.logical_block_size();
+        if (remaining_bytes > m_fs.device_block_size()) {
+            m_current_directory.offset += remaining_bytes % m_fs.device_block_size();
             get_header();
 
             dbgln_if(ISO9660_VERY_DEBUG, "skip(): Snapped to next logical block (succeeded)");

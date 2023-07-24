@@ -148,7 +148,7 @@ ErrorOr<void> BlockBasedFileSystem::initialize_while_locked()
 
 ErrorOr<void> BlockBasedFileSystem::write_block(BlockIndex index, UserOrKernelBuffer const& data, size_t count, u64 offset, bool allow_cache)
 {
-    VERIFY(m_logical_block_size);
+    VERIFY(m_device_block_size);
     VERIFY(offset + count <= block_size());
     dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::write_block {}, size={}", index, count);
 
@@ -183,17 +183,17 @@ ErrorOr<void> BlockBasedFileSystem::write_block(BlockIndex index, UserOrKernelBu
 
 ErrorOr<void> BlockBasedFileSystem::raw_read(BlockIndex index, UserOrKernelBuffer& buffer)
 {
-    auto base_offset = index.value() * m_logical_block_size;
-    auto nread = TRY(file_description().read(buffer, base_offset, m_logical_block_size));
-    VERIFY(nread == m_logical_block_size);
+    auto base_offset = index.value() * m_device_block_size;
+    auto nread = TRY(file_description().read(buffer, base_offset, m_device_block_size));
+    VERIFY(nread == m_device_block_size);
     return {};
 }
 
 ErrorOr<void> BlockBasedFileSystem::raw_write(BlockIndex index, UserOrKernelBuffer const& buffer)
 {
-    auto base_offset = index.value() * m_logical_block_size;
-    auto nwritten = TRY(file_description().write(base_offset, buffer, m_logical_block_size));
-    VERIFY(nwritten == m_logical_block_size);
+    auto base_offset = index.value() * m_device_block_size;
+    auto nwritten = TRY(file_description().write(base_offset, buffer, m_device_block_size));
+    VERIFY(nwritten == m_device_block_size);
     return {};
 }
 
@@ -202,7 +202,7 @@ ErrorOr<void> BlockBasedFileSystem::raw_read_blocks(BlockIndex index, size_t cou
     auto current = buffer;
     for (auto block = index.value(); block < (index.value() + count); block++) {
         TRY(raw_read(BlockIndex { block }, current));
-        current = current.offset(logical_block_size());
+        current = current.offset(device_block_size());
     }
     return {};
 }
@@ -212,14 +212,14 @@ ErrorOr<void> BlockBasedFileSystem::raw_write_blocks(BlockIndex index, size_t co
     auto current = buffer;
     for (auto block = index.value(); block < (index.value() + count); block++) {
         TRY(raw_write(block, current));
-        current = current.offset(logical_block_size());
+        current = current.offset(device_block_size());
     }
     return {};
 }
 
 ErrorOr<void> BlockBasedFileSystem::write_blocks(BlockIndex index, unsigned count, UserOrKernelBuffer const& data, bool allow_cache)
 {
-    VERIFY(m_logical_block_size);
+    VERIFY(m_device_block_size);
     dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::write_blocks {}, count={}", index, count);
     for (unsigned i = 0; i < count; ++i) {
         TRY(write_block(BlockIndex { index.value() + i }, data.offset(i * block_size()), block_size(), 0, allow_cache));
@@ -229,7 +229,7 @@ ErrorOr<void> BlockBasedFileSystem::write_blocks(BlockIndex index, unsigned coun
 
 ErrorOr<void> BlockBasedFileSystem::read_block(BlockIndex index, UserOrKernelBuffer* buffer, size_t count, u64 offset, bool allow_cache) const
 {
-    VERIFY(m_logical_block_size);
+    VERIFY(m_device_block_size);
     VERIFY(offset + count <= block_size());
     dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::read_block {}", index);
 
@@ -258,7 +258,7 @@ ErrorOr<void> BlockBasedFileSystem::read_block(BlockIndex index, UserOrKernelBuf
 
 ErrorOr<void> BlockBasedFileSystem::read_blocks(BlockIndex index, unsigned count, UserOrKernelBuffer& buffer, bool allow_cache) const
 {
-    VERIFY(m_logical_block_size);
+    VERIFY(m_device_block_size);
     if (!count)
         return EINVAL;
     if (count == 1)

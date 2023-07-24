@@ -52,7 +52,7 @@ ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> FATInode::compute_block_list()
 
     Vector<BlockBasedFileSystem::BlockIndex> block_list;
 
-    auto fat_sector = TRY(KBuffer::try_create_with_size("FATFS: FAT read buffer"sv, fs().m_logical_block_size));
+    auto fat_sector = TRY(KBuffer::try_create_with_size("FATFS: FAT read buffer"sv, fs().m_device_block_size));
     auto fat_sector_buffer = UserOrKernelBuffer::for_kernel_buffer(fat_sector->data());
 
     while (cluster < no_more_clusters) {
@@ -63,8 +63,8 @@ ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> FATInode::compute_block_list()
             block_list.append(BlockBasedFileSystem::BlockIndex { first_block.value() + i });
 
         u32 fat_offset = cluster * sizeof(u32);
-        u32 fat_sector_index = fs().boot_record()->reserved_sector_count + (fat_offset / fs().m_logical_block_size);
-        u32 entry_offset = fat_offset % fs().m_logical_block_size;
+        u32 fat_sector_index = fs().boot_record()->reserved_sector_count + (fat_offset / fs().m_device_block_size);
+        u32 entry_offset = fat_offset % fs().m_device_block_size;
 
         TRY(fs().raw_read(fat_sector_index, fat_sector_buffer));
 
@@ -87,13 +87,13 @@ ErrorOr<NonnullOwnPtr<KBuffer>> FATInode::read_block_list()
     auto builder = TRY(KBufferBuilder::try_create());
 
     u8 buffer[512];
-    VERIFY(fs().m_logical_block_size <= sizeof(buffer));
+    VERIFY(fs().m_device_block_size <= sizeof(buffer));
     auto buf = UserOrKernelBuffer::for_kernel_buffer(buffer);
 
     for (BlockBasedFileSystem::BlockIndex block : m_block_list) {
         dbgln_if(FAT_DEBUG, "FATFS: reading block: {}", block);
         TRY(fs().raw_read(block, buf));
-        TRY(builder.append((char const*)buffer, fs().m_logical_block_size));
+        TRY(builder.append((char const*)buffer, fs().m_device_block_size));
     }
 
     auto blocks = builder.build();
@@ -207,9 +207,9 @@ ErrorOr<size_t> FATInode::read_bytes_locked(off_t offset, size_t size, UserOrKer
 
     // FIXME: Read only the needed blocks instead of the whole file
     auto blocks = TRY(const_cast<FATInode&>(*this).read_block_list());
-    TRY(buffer.write(blocks->data() + offset, min(size, m_block_list.size() * fs().m_logical_block_size - offset)));
+    TRY(buffer.write(blocks->data() + offset, min(size, m_block_list.size() * fs().m_device_block_size - offset)));
 
-    return min(size, m_block_list.size() * fs().m_logical_block_size - offset);
+    return min(size, m_block_list.size() * fs().m_device_block_size - offset);
 }
 
 InodeMetadata FATInode::metadata() const

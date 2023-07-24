@@ -20,17 +20,17 @@ ErrorOr<size_t> ISO9660Inode::read_bytes_locked(off_t offset, size_t size, UserO
     if (static_cast<u64>(offset) >= data_length)
         return 0;
 
-    auto block = TRY(KBuffer::try_create_with_size("ISO9660FS: Inode read buffer"sv, fs().m_logical_block_size));
+    auto block = TRY(KBuffer::try_create_with_size("ISO9660FS: Inode read buffer"sv, fs().device_block_size()));
     auto block_buffer = UserOrKernelBuffer::for_kernel_buffer(block->data());
 
     size_t total_bytes = min(size, data_length - offset);
     size_t nread = 0;
-    size_t blocks_already_read = offset / fs().m_logical_block_size;
-    size_t initial_offset = offset % fs().m_logical_block_size;
+    size_t blocks_already_read = offset / fs().device_block_size();
+    size_t initial_offset = offset % fs().device_block_size();
 
     auto current_block_index = BlockBasedFileSystem::BlockIndex { extent_location + blocks_already_read };
     while (nread != total_bytes) {
-        size_t bytes_to_read = min(total_bytes - nread, fs().logical_block_size() - initial_offset);
+        size_t bytes_to_read = min(total_bytes - nread, fs().device_block_size() - initial_offset);
         auto buffer_offset = buffer.offset(nread);
         dbgln_if(ISO9660_VERY_DEBUG, "ISO9660Inode::read_bytes: Reading {} bytes into buffer offset {}/{}, logical block index: {}", bytes_to_read, nread, total_bytes, current_block_index.value());
 
