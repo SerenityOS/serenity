@@ -618,7 +618,7 @@ void Ext2FS::flush_block_group_descriptor_table()
         dbgln("Ext2FS[{}]::flush_block_group_descriptor_table(): Failed to write blocks: {}", fsid(), result.error());
 }
 
-void Ext2FS::flush_writes()
+ErrorOr<void> Ext2FS::flush_writes()
 {
     {
         MutexLocker locker(m_lock);
@@ -626,8 +626,7 @@ void Ext2FS::flush_writes()
             auto result = flush_super_block();
             if (result.is_error()) {
                 dbgln("Ext2FS[{}]::flush_writes(): Failed to write superblock: {}", fsid(), result.error());
-                // FIXME: We should handle this error.
-                VERIFY_NOT_REACHED();
+                return EIO;
             }
             m_super_block_dirty = false;
         }
@@ -664,7 +663,13 @@ void Ext2FS::flush_writes()
         });
     }
 
-    BlockBasedFileSystem::flush_writes();
+    auto result = BlockBasedFileSystem::flush_writes();
+    if (result.is_error()) {
+        dbgln("Ext2FS[{}]::flush_writes(): Failed to flush writes: {}", BlockBasedFileSystem::fsid(), result.error());
+        return EIO;
+    }
+
+    return {};
 }
 
 ErrorOr<NonnullRefPtr<Ext2FSInode>> Ext2FS::build_root_inode() const

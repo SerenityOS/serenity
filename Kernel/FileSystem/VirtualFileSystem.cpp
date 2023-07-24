@@ -248,7 +248,7 @@ void VirtualFileSystem::sync_filesystems()
     });
 
     for (auto& fs : file_systems)
-        fs->flush_writes();
+        MUST(fs->flush_writes());
 }
 
 void VirtualFileSystem::lock_all_filesystems()

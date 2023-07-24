@@ -305,9 +305,10 @@ void BlockBasedFileSystem::flush_writes_impl()
     });
 }
 
-void BlockBasedFileSystem::flush_writes()
+ErrorOr<void> BlockBasedFileSystem::flush_writes()
 {
     flush_writes_impl();
+    return {};
 }
 
 }
