@@ -30,12 +30,12 @@ ErrorOr<void> Ext2FS::flush_super_block()
 {
     MutexLocker locker(m_lock);
     auto super_block_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&m_super_block);
-    auto const superblock_physical_block_count = (sizeof(ext2_super_block) / logical_block_size());
+    auto const superblock_physical_block_count = (sizeof(ext2_super_block) / device_block_size());
 
     // FIXME: We currently have no ability of writing within a device block, but the ability to do so would allow us to use device block sizes larger than 1024.
-    VERIFY((sizeof(ext2_super_block) % logical_block_size()) == 0);
+    VERIFY((sizeof(ext2_super_block) % device_block_size()) == 0);
     // First superblock is always at offset 1024 (physical block index 2).
-    TRY(raw_write_blocks(1024 / logical_block_size(), superblock_physical_block_count, super_block_buffer));
+    TRY(raw_write_blocks(1024 / device_block_size(), superblock_physical_block_count, super_block_buffer));
 
     auto is_sparse = has_flag(get_features_readonly(), FeaturesReadOnly::SparseSuperblock);
 
@@ -70,9 +70,9 @@ ErrorOr<void> Ext2FS::initialize_while_locked()
     VERIFY(m_lock.is_locked());
     VERIFY(!is_initialized_while_locked());
 
-    VERIFY((sizeof(ext2_super_block) % logical_block_size()) == 0);
+    VERIFY((sizeof(ext2_super_block) % device_block_size()) == 0);
     auto super_block_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&m_super_block);
-    TRY(raw_read_blocks(1024 / logical_block_size(), (sizeof(ext2_super_block) / logical_block_size()), super_block_buffer));
+    TRY(raw_read_blocks(1024 / device_block_size(), (sizeof(ext2_super_block) / device_block_size()), super_block_buffer));
 
     auto const& super_block = this->super_block();
     if constexpr (EXT2_DEBUG) {
