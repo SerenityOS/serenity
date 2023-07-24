@@ -11,7 +11,12 @@
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/BigInt.h>
+#include <LibJS/Runtime/BigIntObject.h>
+#include <LibJS/Runtime/BooleanObject.h>
+#include <LibJS/Runtime/Date.h>
+#include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/HTML/StructuredSerialize.h>
@@ -52,6 +57,14 @@ enum ValueTag {
     // Following two u32s representing the length of the string, then the following u32s, equal to size, is the string representation.
     StringPrimitive,
 
+    BooleanObject,
+
+    NumberObject,
+
+    StringObject,
+
+    DateObject,
+
     // TODO: Define many more types
 
     // This tag or higher are understood to be errors
@@ -89,6 +102,27 @@ public:
         } else if (value.is_string()) {
             m_serialized.append(ValueTag::StringPrimitive);
             TRY(serialize_string(m_serialized, value.as_string()));
+        } else if (value.is_object()) {
+            auto& value_object = value.as_object();
+            if (is<JS::BooleanObject>(value_object)) {
+                m_serialized.append(ValueTag::BooleanObject);
+                auto& boolean_object = static_cast<JS::BooleanObject&>(value_object);
+                m_serialized.append(bit_cast<u32>(static_cast<u32>(boolean_object.boolean())));
+            } else if (is<JS::NumberObject>(value_object)) {
+                m_serialized.append(ValueTag::NumberObject);
+                auto& number_object = static_cast<JS::NumberObject&>(value_object);
+                double const number = number_object.number();
+                m_serialized.append(bit_cast<u32*>(&number), 2);
+            } else if (is<JS::StringObject>(value_object)) {
+                m_serialized.append(ValueTag::StringObject);
+                auto& string_object = static_cast<JS::StringObject&>(value_object);
+                TRY(serialize_string(m_serialized, string_object.primitive_string()));
+            } else if (is<JS::Date>(value_object)) {
+                m_serialized.append(ValueTag::DateObject);
+                auto& date_object = static_cast<JS::Date&>(value_object);
+                double const date_value = date_object.date_value();
+                m_serialized.append(bit_cast<u32*>(&date_value), 2);
+            }
         } else {
             // TODO: Define many more types
             m_error = "Unsupported type"sv;
@@ -177,6 +211,36 @@ public:
             case ValueTag::StringPrimitive: {
                 auto string = TRY(deserialize_string_primitive(m_vm, m_vector, position));
                 m_memory.append(JS::Value { string });
+                break;
+            }
+            case BooleanObject: {
+                auto* realm = m_vm.current_realm();
+                bool const value = static_cast<bool>(m_vector[position++]);
+                m_memory.append(JS::BooleanObject::create(*realm, value));
+                break;
+            }
+            case ValueTag::NumberObject: {
+                auto* realm = m_vm.current_realm();
+                u32 bits[2];
+                bits[0] = m_vector[position++];
+                bits[1] = m_vector[position++];
+                double const value = *bit_cast<double*>(&bits);
+                m_memory.append(JS::NumberObject::create(*realm, value));
+                break;
+            }
+            case ValueTag::StringObject: {
+                auto* realm = m_vm.current_realm();
+                auto string = TRY(deserialize_string_primitive(m_vm, m_vector, position));
+                m_memory.append(TRY(JS::StringObject::create(*realm, string, realm->intrinsics().string_prototype())));
+                break;
+            }
+            case ValueTag::DateObject: {
+                auto* realm = m_vm.current_realm();
+                u32 bits[2];
+                bits[0] = m_vector[position++];
+                bits[1] = m_vector[position++];
+                double const value = *bit_cast<double*>(&bits);
+                m_memory.append(JS::Date::create(*realm, value));
                 break;
             }
             default:
