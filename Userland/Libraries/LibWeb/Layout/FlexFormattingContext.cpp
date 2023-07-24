@@ -1301,7 +1301,7 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
         CSSPixels initial_offset = 0;
         auto number_of_items = flex_line.items.size();
 
-        if (auto_margins == 0) {
+        if (auto_margins == 0 && number_of_items > 0) {
             switch (flex_container().computed_values().justify_content()) {
             case CSS::JustifyContent::Start:
             case CSS::JustifyContent::FlexStart:
