@@ -39,8 +39,6 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(DeprecatedFlyString con
         return DeviceRGBColorSpace::the();
     if (name == CommonNames::DeviceCMYK)
         return DeviceCMYKColorSpace::the();
-    if (name == CommonNames::Pattern)
-        return Error::rendering_unsupported_error("Pattern color spaces not yet implemented");
     VERIFY_NOT_REACHED();
 }
 
@@ -58,6 +56,12 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, Non
 
     if (color_space_name == CommonNames::ICCBased)
         return TRY(ICCBasedColorSpace::create(document, move(parameters)));
+
+    if (color_space_name == CommonNames::Indexed)
+        return Error::rendering_unsupported_error("Indexed color spaces not yet implemented");
+
+    if (color_space_name == CommonNames::Pattern)
+        return Error::rendering_unsupported_error("Pattern color spaces not yet implemented");
 
     if (color_space_name == CommonNames::Separation)
         return TRY(SeparationColorSpace::create(document, move(parameters)));

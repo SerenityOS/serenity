@@ -84,6 +84,7 @@
     A(Image)                      \
     A(ImageMask)                  \
     A(Index)                      \
+    A(Indexed)                    \
     A(Info)                       \
     A(JBIG2Decode)                \
     A(JPXDecode)                  \
