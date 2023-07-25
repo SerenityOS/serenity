@@ -96,10 +96,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd unix fattr cpath rpath wpath proc exec"));
 
     Vector<DeprecatedString> specified_urls;
+    bool use_ast_interpreter = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(specified_urls, "URLs to open", "url", Core::ArgsParser::Required::No);
     args_parser.add_option(Browser::g_webdriver_content_ipc_path, "Path to WebDriver IPC for WebContent", "webdriver-content-path", 0, "path");
+    args_parser.add_option(use_ast_interpreter, "Enable JavaScript AST interpreter (deprecated)", "ast", 0);
 
     args_parser.parse(arguments);
 
@@ -173,7 +175,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         first_url = TRY(url_from_argument_string(specified_urls.first()));
 
     auto cookie_jar = TRY(Browser::CookieJar::create(*database));
-    auto window = Browser::BrowserWindow::construct(cookie_jar, first_url);
+    auto window = Browser::BrowserWindow::construct(cookie_jar, first_url, use_ast_interpreter ? WebView::UseJavaScriptBytecode::No : WebView::UseJavaScriptBytecode::Yes);
 
     auto content_filters_watcher = TRY(Core::FileWatcher::create());
     content_filters_watcher->on_change = [&](Core::FileWatcherEvent const&) {

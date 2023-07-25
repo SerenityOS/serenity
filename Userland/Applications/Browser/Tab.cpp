@@ -114,7 +114,7 @@ void Tab::update_status(Optional<String> text_override, i32 count_waiting)
     }
 }
 
-Tab::Tab(BrowserWindow& window)
+Tab::Tab(BrowserWindow& window, WebView::UseJavaScriptBytecode use_javascript_bytecode)
 {
     load_from_gml(tab_gml).release_value_but_fixme_should_propagate_errors();
 
@@ -123,7 +123,7 @@ Tab::Tab(BrowserWindow& window)
 
     auto& webview_container = *find_descendant_of_type_named<GUI::Widget>("webview_container");
 
-    m_web_content_view = webview_container.add<WebView::OutOfProcessWebView>();
+    m_web_content_view = webview_container.add<WebView::OutOfProcessWebView>(use_javascript_bytecode);
 
     auto preferred_color_scheme = Web::CSS::preferred_color_scheme_from_string(Config::read_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, Browser::default_color_scheme));
     m_web_content_view->set_preferred_color_scheme(preferred_color_scheme);

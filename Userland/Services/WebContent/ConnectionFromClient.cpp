@@ -14,6 +14,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/SystemTheme.h>
+#include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Console.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/ConsoleObject.h>
@@ -62,6 +63,11 @@ Web::Page& ConnectionFromClient::page()
 Web::Page const& ConnectionFromClient::page() const
 {
     return m_page_host->page();
+}
+
+void ConnectionFromClient::set_use_javascript_bytecode(bool use_bytecode)
+{
+    JS::Bytecode::Interpreter::set_enabled(use_bytecode);
 }
 
 Messages::WebContentServer::GetWindowHandleResponse ConnectionFromClient::get_window_handle()
