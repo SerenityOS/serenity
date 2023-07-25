@@ -368,10 +368,17 @@ void MailWidget::selected_mailbox()
 
         auto& from_iterator_value = from_iterator->get<1>().value();
         auto from_index = from_iterator_value.find("From:"sv);
-        VERIFY(from_index.has_value());
-        auto potential_from = from_iterator_value.substring(from_index.value());
-        auto from_parts = potential_from.split_limit(':', 2);
-        auto from = parse_and_unfold(from_parts.last());
+        if (!from_index.has_value())
+            from_index = from_iterator_value.find("from:"sv);
+        DeprecatedString from;
+        if (from_index.has_value()) {
+            auto potential_from = from_iterator_value.substring(from_index.value());
+            auto from_parts = potential_from.split_limit(':', 2);
+            from = parse_and_unfold(from_parts.last());
+        }
+
+        if (from.is_empty())
+            from = "(Unknown sender)";
 
         InboxEntry inbox_entry { from, subject };
 
