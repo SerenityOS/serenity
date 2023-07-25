@@ -119,7 +119,7 @@ private:
         CSSPixels base_size { 0 };
         bool base_size_frozen { false };
 
-        CSSPixels growth_limit { 0 };
+        Optional<CSSPixels> growth_limit { 0 };
         bool growth_limit_frozen { false };
         bool infinitely_growable { false };
 

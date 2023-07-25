@@ -10,8 +10,6 @@
 
 namespace Web::Layout {
 
-static int const infinity = -1;
-
 GridFormattingContext::GridTrack GridFormattingContext::GridTrack::create_from_definition(CSS::ExplicitGridTrack const& definition)
 {
     // NOTE: repeat() is expected to be expanded beforehand.
@@ -720,16 +718,16 @@ void GridFormattingContext::initialize_track_sizes(AvailableSpace const& availab
         if (track.max_track_sizing_function.is_fixed(available_size)) {
             track.growth_limit = track.max_track_sizing_function.css_size().to_px(grid_container(), available_size.to_px());
         } else if (track.max_track_sizing_function.is_flexible_length()) {
-            track.growth_limit = infinity;
+            track.growth_limit = {};
         } else if (track.max_track_sizing_function.is_intrinsic(available_size)) {
-            track.growth_limit = infinity;
+            track.growth_limit = {};
         } else {
             VERIFY_NOT_REACHED();
         }
 
         // In all cases, if the growth limit is less than the base size, increase the growth limit to match
         // the base size.
-        if (track.growth_limit != infinity && track.growth_limit < track.base_size)
+        if (track.growth_limit.has_value() && track.growth_limit.value() < track.base_size)
             track.growth_limit = track.base_size;
     }
 }
@@ -768,9 +766,8 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(AvailableSpace const& 
     // 5. If any track still has an infinite growth limit (because, for example, it had no items placed in
     // it or it is a flexible track), set its growth limit to its base size.
     for (auto& track : tracks_and_gaps) {
-        if (track.growth_limit == infinity) {
+        if (!track.growth_limit.has_value())
             track.growth_limit = track.base_size;
-        }
     }
 }
 
@@ -816,10 +813,10 @@ void GridFormattingContext::distribute_extra_space_across_spanned_tracks_base_si
             if (track.base_size_frozen)
                 continue;
 
-            if (track.growth_limit != infinity && increase_per_track >= track.growth_limit) {
+            if (track.growth_limit.has_value() && increase_per_track >= track.growth_limit.value()) {
                 track.base_size_frozen = true;
-                track.item_incurred_increase = track.growth_limit;
-                extra_space -= track.growth_limit;
+                track.item_incurred_increase = track.growth_limit.value();
+                extra_space -= track.growth_limit.value();
             } else {
                 track.item_incurred_increase += increase_per_track;
                 extra_space -= increase_per_track;
@@ -879,8 +876,8 @@ void GridFormattingContext::distribute_extra_space_across_spanned_tracks_growth_
     // 1. Find the space to distribute:
     CSSPixels spanned_tracks_sizes_sum = 0;
     for (auto& track : spanned_tracks) {
-        if (track.growth_limit != infinity) {
-            spanned_tracks_sizes_sum += track.growth_limit;
+        if (track.growth_limit.has_value()) {
+            spanned_tracks_sizes_sum += track.growth_limit.value();
         } else {
             spanned_tracks_sizes_sum += track.base_size;
         }
@@ -908,14 +905,13 @@ void GridFormattingContext::distribute_extra_space_across_spanned_tracks_growth_
 
             // For growth limits, the limit is infinity if it is marked as infinitely growable, and equal to the
             // growth limit otherwise.
-            auto limit = track.infinitely_growable ? infinity : track.growth_limit;
-            if (limit != infinity && increase_per_track >= limit) {
-                track.growth_limit_frozen = true;
-                track.item_incurred_increase = limit;
-                extra_space -= limit;
-            } else {
+            if (track.infinitely_growable || !track.growth_limit.has_value()) {
                 track.item_incurred_increase += increase_per_track;
                 extra_space -= increase_per_track;
+            } else if (track.growth_limit.has_value() && increase_per_track >= track.growth_limit.value()) {
+                track.growth_limit_frozen = true;
+                track.item_incurred_increase = track.growth_limit.value();
+                extra_space -= track.growth_limit.value();
             }
         }
     }
@@ -996,7 +992,7 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
         // 4. If at this point any track’s growth limit is now less than its base size, increase its growth limit to
         //    match its base size.
         for (auto& track : tracks) {
-            if (track.growth_limit != infinity && track.growth_limit < track.base_size)
+            if (track.growth_limit.has_value() && track.growth_limit.value() < track.base_size)
                 track.growth_limit = track.base_size;
         }
 
@@ -1005,14 +1001,14 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
             return track.max_track_sizing_function.is_intrinsic(available_size);
         });
         for (auto& track : spanned_tracks) {
-            if (track.growth_limit == infinity) {
+            if (!track.growth_limit.has_value()) {
                 // If the affected size is an infinite growth limit, set it to the track’s base size plus the planned increase.
                 track.growth_limit = track.base_size + track.planned_increase;
                 // Mark any tracks whose growth limit changed from infinite to finite in this step as infinitely growable
                 // for the next step.
                 track.infinitely_growable = true;
             } else {
-                track.growth_limit += track.planned_increase;
+                track.growth_limit.value() += track.planned_increase;
             }
             track.planned_increase = 0;
         }
@@ -1025,11 +1021,11 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
             return track.max_track_sizing_function.is_max_content() || track.max_track_sizing_function.is_auto(available_size);
         });
         for (auto& track : spanned_tracks) {
-            if (track.growth_limit == infinity) {
+            if (!track.growth_limit.has_value()) {
                 // If the affected size is an infinite growth limit, set it to the track’s base size plus the planned increase.
                 track.growth_limit = track.base_size + track.planned_increase;
             } else {
-                track.growth_limit += track.planned_increase;
+                track.growth_limit.value() += track.planned_increase;
             }
             track.planned_increase = 0;
         }
@@ -1066,7 +1062,7 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
         // 4. If at this point any track’s growth limit is now less than its base size, increase its growth limit to
         //    match its base size.
         for (auto& track : tracks) {
-            if (track.growth_limit != infinity && track.growth_limit < track.base_size)
+            if (track.growth_limit.has_value() && track.growth_limit.value() < track.base_size)
                 track.growth_limit = track.base_size;
         }
     }
@@ -1101,8 +1097,8 @@ void GridFormattingContext::maximize_tracks(AvailableSpace const& available_spac
         for (auto& track : tracks) {
             if (track.base_size_frozen)
                 continue;
-            VERIFY(track.growth_limit != infinity);
-            track.base_size = min(track.growth_limit, track.base_size + free_space_to_distribute_per_track);
+            VERIFY(track.growth_limit.has_value());
+            track.base_size = min(track.growth_limit.value(), track.base_size + free_space_to_distribute_per_track);
         }
         if (get_free_space_px() == free_space_px)
             break;
