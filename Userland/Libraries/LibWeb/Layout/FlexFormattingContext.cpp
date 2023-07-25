@@ -1303,6 +1303,8 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
         if (auto_margins == 0 && number_of_items > 0) {
             switch (flex_container().computed_values().justify_content()) {
             case CSS::JustifyContent::Start:
+                initial_offset = 0;
+                break;
             case CSS::JustifyContent::FlexStart:
                 if (is_direction_reverse()) {
                     initial_offset = inner_main_size(flex_container());
@@ -1311,6 +1313,8 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
                 }
                 break;
             case CSS::JustifyContent::End:
+                initial_offset = inner_main_size(flex_container());
+                break;
             case CSS::JustifyContent::FlexEnd:
                 if (is_direction_reverse()) {
                     initial_offset = 0;
@@ -1364,13 +1368,18 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
         auto flex_region_render_cursor = FlexRegionRenderCursor::Left;
 
         switch (flex_container().computed_values().justify_content()) {
-        case CSS::JustifyContent::Start:
         case CSS::JustifyContent::FlexStart:
+        case CSS::JustifyContent::Center:
+        case CSS::JustifyContent::SpaceAround:
+        case CSS::JustifyContent::SpaceBetween:
+        case CSS::JustifyContent::SpaceEvenly:
             if (is_direction_reverse()) {
                 flex_region_render_cursor = FlexRegionRenderCursor::Right;
             }
             break;
         case CSS::JustifyContent::End:
+            flex_region_render_cursor = FlexRegionRenderCursor::Right;
+            break;
         case CSS::JustifyContent::FlexEnd:
             if (!is_direction_reverse()) {
                 flex_region_render_cursor = FlexRegionRenderCursor::Right;
@@ -1392,7 +1401,7 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
                 + item.padding.main_after
                 + space_between_items;
 
-            if (is_direction_reverse()) {
+            if (is_direction_reverse() && flex_region_render_cursor == FlexRegionRenderCursor::Right) {
                 item.main_offset = cursor_offset - item.main_size.value() - item.margins.main_after - item.borders.main_after - item.padding.main_after;
                 cursor_offset -= amount_of_main_size_used;
             } else if (flex_region_render_cursor == FlexRegionRenderCursor::Right) {
@@ -1404,7 +1413,7 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
             }
         };
 
-        if (is_direction_reverse() || flex_region_render_cursor == FlexRegionRenderCursor::Right) {
+        if (flex_region_render_cursor == FlexRegionRenderCursor::Right) {
             for (ssize_t i = flex_line.items.size() - 1; i >= 0; --i) {
                 auto& item = flex_line.items[i];
                 place_item(item);
