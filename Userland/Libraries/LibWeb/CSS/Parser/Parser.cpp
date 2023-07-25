@@ -6372,6 +6372,9 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_easing_value(TokenStream<ComponentValu
             return nullptr;
         }
         for (auto& argument_values : arguments_values) {
+            // Prune any whitespace before and after the actual argument values.
+            argument_values.remove_all_matching([](auto& value) { return value.is(Token::Type::Whitespace); });
+
             if (argument_values.size() != 1) {
                 dbgln_if(CSS_PARSER_DEBUG, "Too many values in argument to {}. max: 1", name);
                 return nullptr;
