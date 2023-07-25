@@ -72,7 +72,7 @@ class MarkdownLinkage final : Markdown::Visitor {
 public:
     ~MarkdownLinkage() = default;
 
-    static MarkdownLinkage analyze(Markdown::Document const&);
+    static MarkdownLinkage analyze(Markdown::Document const&, bool verbose);
 
     bool has_anchor(DeprecatedString const& anchor) const { return m_anchors.contains(anchor); }
     HashTable<DeprecatedString> const& anchors() const { return m_anchors; }
@@ -80,7 +80,8 @@ public:
     Vector<FileLink> const& file_links() const { return m_file_links; }
 
 private:
-    MarkdownLinkage()
+    MarkdownLinkage(bool verbose)
+        : m_verbose(verbose)
     {
         auto const* source_directory = getenv("SERENITY_SOURCE_DIR");
         if (source_directory != nullptr) {
@@ -96,13 +97,14 @@ private:
     HashTable<DeprecatedString> m_anchors;
     Vector<FileLink> m_file_links;
     bool m_has_invalid_link { false };
+    bool m_verbose { false };
 
     DeprecatedString m_serenity_source_directory;
 };
 
-MarkdownLinkage MarkdownLinkage::analyze(Markdown::Document const& document)
+MarkdownLinkage MarkdownLinkage::analyze(Markdown::Document const& document, bool verbose)
 {
-    MarkdownLinkage linkage;
+    MarkdownLinkage linkage(verbose);
 
     document.walk(linkage);
 
@@ -184,7 +186,8 @@ RecursionDecision MarkdownLinkage::visit(Markdown::Text::LinkNode const& link_no
     auto url = URL::create_with_url_or_path(href);
     if (url.is_valid()) {
         if (url.scheme() == "https" || url.scheme() == "http") {
-            outln("Not checking external link {}", href);
+            if (m_verbose)
+                outln("Not checking external link {}", href);
             return RecursionDecision::Recurse;
         }
         if (url.scheme() == "help") {
@@ -224,7 +227,7 @@ RecursionDecision MarkdownLinkage::visit(Markdown::Text::LinkNode const& link_no
                     warnln("Binary link named '{}' is not allowed, binary links must be called 'Open'. Linked binary: {}", link_text, href);
                     m_has_invalid_link = true;
                 }
-            } else {
+            } else if (m_verbose) {
                 outln("Not checking local link {}", href);
             }
             return RecursionDecision::Recurse;
@@ -287,13 +290,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
     Vector<StringView> file_paths;
     bool output_link_graph { false };
+    bool verbose_output { false };
     StringView base_path = "/"sv;
     args_parser.add_positional_argument(file_paths, "Path to markdown files to read and parse", "paths", Core::ArgsParser::Required::Yes);
     args_parser.add_option(base_path, "System base path (default: \"/\")", "base", 'b', "path");
     args_parser.add_option(output_link_graph, "Output a page link graph into \"manpage-links.gv\". The recommended tool to process this graph is `fdp`.", "link-graph", 'g');
+    args_parser.add_option(verbose_output, "Print extra information about skipped links", "verbose", 'v');
     args_parser.parse(arguments);
 
-    outln("Reading and parsing Markdown files ...");
+    if (verbose_output)
+        outln("Reading and parsing Markdown files ...");
     HashMap<String, MarkdownLinkage> files;
     for (auto path : file_paths) {
         auto file_or_error = Core::File::open(path, Core::File::OpenMode::Read);
@@ -319,10 +325,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             // Since this should never happen anyway, fail early.
             return 1;
         }
-        files.set(TRY(FileSystem::real_path(path)), MarkdownLinkage::analyze(*document));
+        files.set(TRY(FileSystem::real_path(path)), MarkdownLinkage::analyze(*document, verbose_output));
     }
 
-    outln("Checking links ...");
+    if (verbose_output)
+        outln("Checking links ...");
     bool any_problems = false;
     for (auto const& file_item : files) {
         if (file_item.value.has_invalid_link()) {
@@ -425,8 +432,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (any_problems) {
         outln("Done. Some errors were encountered, please check above log.");
         return 1;
-    } else {
+    } else if (verbose_output) {
         outln("Done. No problems detected.");
-        return 0;
     }
+    return 0;
 }
