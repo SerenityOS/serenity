@@ -123,6 +123,7 @@ bool MailWidget::connect_and_login()
             return false;
     }
 
+    m_statusbar->set_text(String::formatted("Connecting to {}:{}...", server, port).release_value_but_fixme_should_propagate_errors());
     auto maybe_imap_client = tls ? IMAP::Client::connect_tls(server, port) : IMAP::Client::connect_plaintext(server, port);
     if (maybe_imap_client.is_error()) {
         GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to connect to '{}:{}' over {}: {}", server, port, tls ? "TLS" : "Plaintext", maybe_imap_client.error()));
@@ -135,13 +136,16 @@ bool MailWidget::connect_and_login()
     MUST(connection_promise->await());
 
     auto response = MUST(m_imap_client->login(username, password)->await()).release_value();
+    m_statusbar->set_text(String::formatted("Connected. Logging in as {}...", username).release_value_but_fixme_should_propagate_errors());
 
     if (response.status() != IMAP::ResponseStatus::OK) {
         dbgln("Failed to login. The server says: '{}'", response.response_text());
         GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to login. The server says: '{}'", response.response_text()));
+        m_statusbar->set_text("Failed to log in"_string);
         return false;
     }
 
+    m_statusbar->set_text("Logged in. Loading mailboxes..."_string);
     response = MUST(m_imap_client->list(""sv, "*"sv)->await()).release_value();
 
     if (response.status() != IMAP::ResponseStatus::OK) {
@@ -151,6 +155,8 @@ bool MailWidget::connect_and_login()
     }
 
     auto& list_items = response.data().list_items();
+
+    m_statusbar->set_text(String::formatted("Loaded {} mailboxes", list_items.size()).release_value_but_fixme_should_propagate_errors());
 
     m_account_holder = AccountHolder::create();
     m_account_holder->add_account_with_name_and_mailboxes(username, move(list_items));
@@ -267,9 +273,11 @@ void MailWidget::selected_mailbox()
 
     if (response.data().exists() == 0) {
         // No mail in this mailbox, return.
+        m_statusbar->set_text(String::formatted("[{}]: 0 messages", mailbox.name).release_value_but_fixme_should_propagate_errors());
         return;
     }
 
+    m_statusbar->set_text(String::formatted("[{}]: Fetching {} messages...", mailbox.name, response.data().exists()).release_value_but_fixme_should_propagate_errors());
     auto fetch_command = IMAP::FetchCommand {
         // Mail will always be numbered from 1 up to the number of mail items that exist, which is specified in the select response with "EXISTS".
         .sequence_set = { { 1, (int)response.data().exists() } },
@@ -288,12 +296,14 @@ void MailWidget::selected_mailbox()
 
     if (response.status() != IMAP::ResponseStatus::OK) {
         dbgln("Failed to retrieve subject/from for e-mails. The server says: '{}'", response.response_text());
+        m_statusbar->set_text(String::formatted("[{}]: Failed to fetch messages :^(", mailbox.name).release_value_but_fixme_should_propagate_errors());
         GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to retrieve e-mails. The server says: '{}'", response.response_text()));
         return;
     }
 
     Vector<InboxEntry> active_inbox_entries;
 
+    int i = 0;
     for (auto& fetch_data : fetch_response.data().fetch_data()) {
         auto& response_data = fetch_data.get<IMAP::FetchResponseData>();
         auto& body_data = response_data.body_data();
@@ -381,10 +391,12 @@ void MailWidget::selected_mailbox()
             from = "(Unknown sender)";
 
         InboxEntry inbox_entry { from, subject };
+        m_statusbar->set_text(String::formatted("[{}]: Loading entry {}", mailbox.name, ++i).release_value_but_fixme_should_propagate_errors());
 
         active_inbox_entries.append(inbox_entry);
     }
 
+    m_statusbar->set_text(String::formatted("[{}]: Loaded {} entries", mailbox.name, i).release_value_but_fixme_should_propagate_errors());
     m_individual_mailbox_view->set_model(InboxModel::create(move(active_inbox_entries)));
 }
 
@@ -397,6 +409,8 @@ void MailWidget::selected_email_to_load()
 
     // IMAP is 1-based.
     int id_of_email_to_load = index.row() + 1;
+
+    m_statusbar->set_text("Fetching message..."_string);
 
     auto fetch_command = IMAP::FetchCommand {
         .sequence_set = { { id_of_email_to_load, id_of_email_to_load } },
@@ -476,6 +490,8 @@ void MailWidget::selected_email_to_load()
         return;
     }
 
+    m_statusbar->set_text("Parsing message..."_string);
+
     auto& fetch_data = fetch_response.data().fetch_data();
 
     if (fetch_data.is_empty()) {
@@ -518,7 +534,10 @@ void MailWidget::selected_email_to_load()
         return;
     }
 
+    m_statusbar->set_text("Message loaded."_string);
+
     // FIXME: I'm not sure what the URL should be. Just use the default URL "about:blank".
     // FIXME: It would be nice if we could pass over the charset.
+    // FIXME: Add ability to cancel the load when we switch to another email. Feels very sluggish on heavy emails otherwise
     m_web_view->load_html(decoded_data, "about:blank"sv);
 }
