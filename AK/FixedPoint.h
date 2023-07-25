@@ -99,17 +99,21 @@ public:
         return *this;
     }
 
-    // Note/FIXME: This uses round to nearest break-tie to even
-    //        Not break-tie away from 0 as the C99's round does
-    constexpr This round() const
+    constexpr This rint() const
     {
+        // Note: Round fair, break tie to even
         Underlying value = m_value >> precision;
+
+        // Note: For negative numbers the ordering are reversed,
+        //       and they were already decremented by the shift, so we need to
+        //       add 1 when we see a fract values behind the `.5`s place set,
+        //       because that means they are smaller than .5
         // fract(m_value) >= .5?
         if (m_value & (1u << (precision - 1))) {
             // fract(m_value) > .5?
             if (m_value & (radix_mask >> 2u)) {
                 // yes: round "up";
-                value += (m_value > 0 ? 1 : -1);
+                value += 1;
             } else {
                 //  no: round to even;
                 value += value & 1;
@@ -134,7 +138,7 @@ public:
                     : 0));
     }
 
-    constexpr Underlying lround() const { return round().raw() >> precision; }
+    constexpr Underlying lrint() const { return rint().raw() >> precision; }
     constexpr Underlying lfloor() const { return m_value >> precision; }
     constexpr Underlying lceil() const
     {

@@ -131,7 +131,7 @@ TEST_CASE(edid1)
             EXPECT(block_id == expected_timings.block_id);
             EXPECT(detailed_timing.horizontal_addressable_pixels() == expected_timings.width);
             EXPECT(detailed_timing.vertical_addressable_lines() == expected_timings.height);
-            EXPECT(detailed_timing.refresh_rate().lround() == expected_timings.refresh_rate);
+            EXPECT(detailed_timing.refresh_rate().lrint() == expected_timings.refresh_rate);
             detailed_timings_found++;
             return IterationDecision::Continue;
         }));
@@ -313,7 +313,7 @@ TEST_CASE(edid2)
             EXPECT(block_id == expected_timings.block_id);
             EXPECT(detailed_timing.horizontal_addressable_pixels() == expected_timings.width);
             EXPECT(detailed_timing.vertical_addressable_lines() == expected_timings.height);
-            EXPECT(detailed_timing.refresh_rate().lround() == expected_timings.refresh_rate);
+            EXPECT(detailed_timing.refresh_rate().lrint() == expected_timings.refresh_rate);
             detailed_timings_found++;
             return IterationDecision::Continue;
         }));
@@ -430,7 +430,7 @@ TEST_CASE(edid_extension_maps)
             EXPECT(block_id == expected_timings.block_id);
             EXPECT(detailed_timing.horizontal_addressable_pixels() == expected_timings.width);
             EXPECT(detailed_timing.vertical_addressable_lines() == expected_timings.height);
-            EXPECT(detailed_timing.refresh_rate().lround() == expected_timings.refresh_rate);
+            EXPECT(detailed_timing.refresh_rate().lrint() == expected_timings.refresh_rate);
             detailed_timings_found++;
             return IterationDecision::Continue;
         }));
@@ -479,7 +479,7 @@ TEST_CASE(edid_1_0)
             EXPECT(block_id == expected_timings.block_id);
             EXPECT(detailed_timing.horizontal_addressable_pixels() == expected_timings.width);
             EXPECT(detailed_timing.vertical_addressable_lines() == expected_timings.height);
-            EXPECT(detailed_timing.refresh_rate().lround() == expected_timings.refresh_rate);
+            EXPECT(detailed_timing.refresh_rate().lrint() == expected_timings.refresh_rate);
             detailed_timings_found++;
             return IterationDecision::Continue;
         }));
