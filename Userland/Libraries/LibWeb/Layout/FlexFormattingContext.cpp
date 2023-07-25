@@ -1367,26 +1367,28 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
         };
         auto flex_region_render_cursor = FlexRegionRenderCursor::Left;
 
-        switch (flex_container().computed_values().justify_content()) {
-        case CSS::JustifyContent::FlexStart:
-        case CSS::JustifyContent::Center:
-        case CSS::JustifyContent::SpaceAround:
-        case CSS::JustifyContent::SpaceBetween:
-        case CSS::JustifyContent::SpaceEvenly:
-            if (is_direction_reverse()) {
+        if (auto_margins == 0) {
+            switch (flex_container().computed_values().justify_content()) {
+            case CSS::JustifyContent::FlexStart:
+            case CSS::JustifyContent::Center:
+            case CSS::JustifyContent::SpaceAround:
+            case CSS::JustifyContent::SpaceBetween:
+            case CSS::JustifyContent::SpaceEvenly:
+                if (is_direction_reverse()) {
+                    flex_region_render_cursor = FlexRegionRenderCursor::Right;
+                }
+                break;
+            case CSS::JustifyContent::End:
                 flex_region_render_cursor = FlexRegionRenderCursor::Right;
+                break;
+            case CSS::JustifyContent::FlexEnd:
+                if (!is_direction_reverse()) {
+                    flex_region_render_cursor = FlexRegionRenderCursor::Right;
+                }
+                break;
+            default:
+                break;
             }
-            break;
-        case CSS::JustifyContent::End:
-            flex_region_render_cursor = FlexRegionRenderCursor::Right;
-            break;
-        case CSS::JustifyContent::FlexEnd:
-            if (!is_direction_reverse()) {
-                flex_region_render_cursor = FlexRegionRenderCursor::Right;
-            }
-            break;
-        default:
-            break;
         }
 
         CSSPixels cursor_offset = initial_offset;
