@@ -93,7 +93,7 @@ int main(int argc, char** argv)
 #endif
     bool print_json = false;
     bool per_file = false;
-    bool use_bytecode = false;
+    bool use_ast_interpreter = false;
     StringView specified_test_root;
     DeprecatedString common_path;
     DeprecatedString test_glob;
@@ -119,7 +119,7 @@ int main(int argc, char** argv)
     args_parser.add_option(print_json, "Show results as JSON", "json", 'j');
     args_parser.add_option(per_file, "Show detailed per-file results as JSON (implies -j)", "per-file", 0);
     args_parser.add_option(g_collect_on_every_allocation, "Collect garbage after every allocation", "collect-often", 'g');
-    args_parser.add_option(use_bytecode, "Use the bytecode interpreter", "run-bytecode", 'b');
+    args_parser.add_option(use_ast_interpreter, "Enable JavaScript AST interpreter (deprecated)", "ast", 0);
     args_parser.add_option(JS::Bytecode::g_dump_bytecode, "Dump the bytecode", "dump-bytecode", 'd');
     args_parser.add_option(test_glob, "Only run tests matching the given glob", "filter", 'f', "glob");
     for (auto& entry : g_extra_args)
@@ -137,12 +137,12 @@ int main(int argc, char** argv)
         AK::set_debug_enabled(false);
     }
 
-    if (JS::Bytecode::g_dump_bytecode && !use_bytecode) {
-        warnln("--dump-bytecode can only be used when --run-bytecode is specified.");
+    if (JS::Bytecode::g_dump_bytecode && use_ast_interpreter) {
+        warnln("--dump-bytecode can not be used when --ast is specified.");
         return 1;
     }
 
-    JS::Bytecode::Interpreter::set_enabled(use_bytecode);
+    JS::Bytecode::Interpreter::set_enabled(!use_ast_interpreter);
 
     DeprecatedString test_root;
 
