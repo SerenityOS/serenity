@@ -1686,6 +1686,24 @@ CSSPixelRect FormattingContext::absolute_content_rect(Box const& box) const
     return rect;
 }
 
+Box const* FormattingContext::box_child_to_derive_baseline_from(Box const& box) const
+{
+    // To find the baseline of a box, we first look for the last in-flow child with at least one line box.
+    auto const* last_box_child = box.last_child_of_type<Box>();
+    for (Node const* child = last_box_child; child; child = child->previous_sibling()) {
+        if (!child->is_box())
+            continue;
+        auto& child_box = static_cast<Box const&>(*child);
+        if (child_box.is_out_of_flow(*this))
+            continue;
+        if (m_state.get(child_box).line_boxes.is_empty())
+            continue;
+        return &child_box;
+    }
+    // If none of the children has a line box, the baseline is formed by the last in-flow child.
+    return last_box_child;
+}
+
 CSSPixels FormattingContext::box_baseline(Box const& box) const
 {
     auto const& box_state = m_state.get(box);
@@ -1714,7 +1732,7 @@ CSSPixels FormattingContext::box_baseline(Box const& box) const
     if (!box_state.line_boxes.is_empty())
         return box_state.margin_box_top() + box_state.offset.y() + box_state.line_boxes.last().baseline();
     if (box.has_children() && !box.children_are_inline()) {
-        auto const* child_box = box.last_child_of_type<Box>();
+        auto const* child_box = box_child_to_derive_baseline_from(box);
         VERIFY(child_box);
         return box_baseline(*child_box);
     }
