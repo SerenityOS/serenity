@@ -949,7 +949,11 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
 
     // Sum the outer sizes of all items on the line, and subtract this from the flex container’s inner main size.
     // For frozen items, use their outer target main size; for other items, use their outer flex base size.
-    auto calculate_remaining_free_space = [&]() -> CSSPixels {
+    auto calculate_remaining_free_space = [&]() -> Optional<CSSPixels> {
+        // AD-HOC: If the container is sized under max-content constraints, then remaining_free_space won't have
+        //         a value to avoid leaking an infinite value into layout calculations.
+        if (available_main_size.might_be_saturated())
+            return {};
         CSSPixels sum = 0;
         for (auto const& item : line.items) {
             if (item.frozen)
@@ -978,16 +982,16 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
         line.remaining_free_space = calculate_remaining_free_space();
 
         // If the sum of the unfrozen flex items’ flex factors is less than one, multiply the initial free space by this sum.
-        if (auto sum_of_flex_factor_of_unfrozen_items = line.sum_of_flex_factor_of_unfrozen_items(); sum_of_flex_factor_of_unfrozen_items < 1) {
-            auto value = initial_free_space * sum_of_flex_factor_of_unfrozen_items;
+        if (auto sum_of_flex_factor_of_unfrozen_items = line.sum_of_flex_factor_of_unfrozen_items(); sum_of_flex_factor_of_unfrozen_items < 1 && initial_free_space.has_value()) {
+            auto value = initial_free_space.value() * sum_of_flex_factor_of_unfrozen_items;
             // If the magnitude of this value is less than the magnitude of the remaining free space, use this as the remaining free space.
-            if (abs(value) < abs(line.remaining_free_space))
+            if (abs(value) < abs(line.remaining_free_space.value()))
                 line.remaining_free_space = value;
         }
 
         // AD-HOC: We allow the remaining free space to be infinite, but we can't let infinity
         //         leak into the layout geometry, so we treat infinity as zero when used in arithmetic.
-        auto remaining_free_space_or_zero_if_infinite = !line.remaining_free_space.might_be_saturated() ? line.remaining_free_space : 0;
+        auto remaining_free_space_or_zero_if_infinite = line.remaining_free_space.has_value() ? line.remaining_free_space.value() : 0;
 
         // c. If the remaining free space is non-zero, distribute it proportional to the flex factors:
         if (line.remaining_free_space != 0) {
@@ -1093,11 +1097,6 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
 
     // NOTE: Calculate the remaining free space once again here, since it's needed later when aligning items.
     line.remaining_free_space = calculate_remaining_free_space();
-
-    // AD-HOC: Due to the way we calculate the remaining free space, it can be infinite when sizing
-    //         under a max-content constraint. In that case, we can simply set it to zero here.
-    if (line.remaining_free_space.might_be_saturated())
-        line.remaining_free_space = 0;
 
     // 6. Set each item’s used main size to its target main size.
     for (auto& item : line.items) {
@@ -1278,8 +1277,8 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
         // CSS-FLEXBOX-2: Account for gap between flex items.
         used_main_space += main_gap() * (flex_line.items.size() - 1);
 
-        if (flex_line.remaining_free_space > 0) {
-            CSSPixels size_per_auto_margin = flex_line.remaining_free_space / static_cast<double>(auto_margins);
+        if (flex_line.remaining_free_space.has_value() && flex_line.remaining_free_space.value() > 0 && auto_margins > 0) {
+            CSSPixels size_per_auto_margin = flex_line.remaining_free_space.value() / auto_margins;
             for (auto& item : flex_line.items) {
                 if (item.margins.main_before_is_auto)
                     set_main_axis_first_margin(item, size_per_auto_margin);
@@ -1331,11 +1330,12 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
                 } else {
                     initial_offset = 0;
                 }
-                if (number_of_items > 1)
-                    space_between_items = flex_line.remaining_free_space / (number_of_items - 1);
+                if (flex_line.remaining_free_space.has_value() && number_of_items > 1)
+                    space_between_items = flex_line.remaining_free_space.value() / (number_of_items - 1);
                 break;
             case CSS::JustifyContent::SpaceAround:
-                space_between_items = flex_line.remaining_free_space / number_of_items;
+                if (flex_line.remaining_free_space.has_value())
+                    space_between_items = flex_line.remaining_free_space.value() / number_of_items;
                 if (is_direction_reverse()) {
                     initial_offset = inner_main_size(flex_container()) - space_between_items / 2.0;
                 } else {
@@ -1343,7 +1343,8 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
                 }
                 break;
             case CSS::JustifyContent::SpaceEvenly:
-                space_between_items = flex_line.remaining_free_space / (number_of_items + 1);
+                if (flex_line.remaining_free_space.has_value())
+                    space_between_items = flex_line.remaining_free_space.value() / (number_of_items + 1);
                 if (is_direction_reverse()) {
                     initial_offset = inner_main_size(flex_container()) - space_between_items;
                 } else {
