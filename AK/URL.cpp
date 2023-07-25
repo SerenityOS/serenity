@@ -299,49 +299,68 @@ DeprecatedString URL::serialize(ExcludeFragment exclude_fragment) const
 {
     if (m_scheme == "data")
         return serialize_data_url();
-    StringBuilder builder;
-    builder.append(m_scheme);
-    builder.append(':');
 
+    // 1. Let output be url’s scheme and U+003A (:) concatenated.
+    StringBuilder output;
+    output.append(m_scheme);
+    output.append(':');
+
+    // 2. If url’s host is non-null:
     if (!m_host.is_null()) {
-        builder.append("//"sv);
+        // 1. Append "//" to output.
+        output.append("//"sv);
 
+        // 2. If url includes credentials, then:
         if (includes_credentials()) {
-            builder.append(m_username);
+            // 1. Append url’s username to output.
+            output.append(m_username);
+
+            // 2. If url’s password is not the empty string, then append U+003A (:), followed by url’s password, to output.
             if (!m_password.is_empty()) {
-                builder.append(':');
-                builder.append(m_password);
+                output.append(':');
+                output.append(m_password);
             }
-            builder.append('@');
+
+            // 3. Append U+0040 (@) to output.
+            output.append('@');
         }
 
-        builder.append(m_host);
+        // 3. Append url’s host, serialized, to output.
+        output.append(m_host);
+
+        // 4. If url’s port is non-null, append U+003A (:) followed by url’s port, serialized, to output.
         if (m_port.has_value())
-            builder.appendff(":{}", *m_port);
+            output.appendff(":{}", *m_port);
     }
 
+    // 3. If url’s host is null, url does not have an opaque path, url’s path’s size is greater than 1, and url’s path[0] is the empty string, then append U+002F (/) followed by U+002E (.) to output.
+    // 4. Append the result of URL path serializing url to output.
+    // FIXME: Implement this closer to spec steps.
     if (cannot_be_a_base_url()) {
-        builder.append(m_paths[0]);
+        output.append(m_paths[0]);
     } else {
         if (m_host.is_null() && m_paths.size() > 1 && m_paths[0].is_empty())
-            builder.append("/."sv);
+            output.append("/."sv);
         for (auto& segment : m_paths) {
-            builder.append('/');
-            builder.append(segment);
+            output.append('/');
+            output.append(segment);
         }
     }
 
+    // 5. If url’s query is non-null, append U+003F (?), followed by url’s query, to output.
     if (!m_query.is_null()) {
-        builder.append('?');
-        builder.append(m_query);
+        output.append('?');
+        output.append(m_query);
     }
 
+    // 6. If exclude fragment is false and url’s fragment is non-null, then append U+0023 (#), followed by url’s fragment, to output.
     if (exclude_fragment == ExcludeFragment::No && !m_fragment.is_null()) {
-        builder.append('#');
-        builder.append(m_fragment);
+        output.append('#');
+        output.append(m_fragment);
     }
 
-    return builder.to_deprecated_string();
+    // 7. Return output.
+    return output.to_deprecated_string();
 }
 
 // https://url.spec.whatwg.org/#url-rendering
