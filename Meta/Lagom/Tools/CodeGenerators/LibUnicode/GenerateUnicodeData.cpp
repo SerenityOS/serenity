@@ -979,13 +979,6 @@ struct CodePointComparator {
     }
 };
 
-struct CodePointRangeComparator {
-    constexpr int operator()(u32 code_point, CodePointRange const& range)
-    {
-        return (code_point > range.last) - (code_point < range.first);
-    }
-};
-
 struct BlockNameData {
     CodePointRange code_point_range {};
     @string_index_type@ display_name { 0 };
