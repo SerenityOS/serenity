@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TypedTransfer.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Version.h>
 
@@ -33,14 +32,11 @@ ErrorOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
     };
 
     auto version_string = TRY(KString::formatted("{}.{}-dev", SERENITY_MAJOR_REVISION, SERENITY_MINOR_REVISION));
-    AK::TypedTransfer<u8>::copy(reinterpret_cast<u8*>(buf.release), version_string->bytes().data(), min(version_string->length(), UTSNAME_ENTRY_LEN - 1));
-
-    AK::TypedTransfer<u8>::copy(reinterpret_cast<u8*>(buf.version), SERENITY_VERSION.bytes().data(), min(SERENITY_VERSION.length(), UTSNAME_ENTRY_LEN - 1));
+    version_string->view().copy_characters_to_buffer(buf.release, UTSNAME_ENTRY_LEN);
+    SERENITY_VERSION.view().copy_characters_to_buffer(buf.version, UTSNAME_ENTRY_LEN);
 
     hostname().with_shared([&](auto const& name) {
-        auto length = min(name->length(), UTSNAME_ENTRY_LEN - 1);
-        AK::TypedTransfer<char>::copy(reinterpret_cast<char*>(buf.nodename), name->characters(), length);
-        buf.nodename[length] = '\0';
+        name->view().copy_characters_to_buffer(buf.nodename, UTSNAME_ENTRY_LEN);
     });
 
     TRY(copy_to_user(user_buf, &buf));
