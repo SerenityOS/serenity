@@ -1331,7 +1331,8 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
                 } else {
                     initial_offset = 0;
                 }
-                space_between_items = flex_line.remaining_free_space / (number_of_items - 1);
+                if (number_of_items > 1)
+                    space_between_items = flex_line.remaining_free_space / (number_of_items - 1);
                 break;
             case CSS::JustifyContent::SpaceAround:
                 space_between_items = flex_line.remaining_free_space / number_of_items;
