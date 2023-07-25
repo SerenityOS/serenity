@@ -120,7 +120,6 @@ public:
     static URL create_with_help_scheme(DeprecatedString const& path, DeprecatedString const& fragment = {}, DeprecatedString const& hostname = {});
     static URL create_with_data(DeprecatedString mime_type, DeprecatedString payload, bool is_base64 = false) { return URL(move(mime_type), move(payload), is_base64); }
 
-    static bool scheme_requires_port(StringView);
     static u16 default_port_for_scheme(StringView);
     static bool is_special_scheme(StringView);
 

@@ -190,11 +190,6 @@ bool URL::compute_validity() const
     return true;
 }
 
-bool URL::scheme_requires_port(StringView scheme)
-{
-    return (default_port_for_scheme(scheme) != 0);
-}
-
 u16 URL::default_port_for_scheme(StringView scheme)
 {
     if (scheme == "http")
