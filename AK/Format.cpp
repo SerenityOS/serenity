@@ -396,7 +396,7 @@ ErrorOr<void> FormatBuilder::put_fixed_point(
         u64 scale = pow<u64>(10, precision);
 
         auto fraction = (scale * fraction_value) / fraction_one; // TODO: overflows
-        if (is_negative)
+        if (is_negative && fraction != 0)
             fraction = scale - fraction;
 
         size_t leading_zeroes = 0;
