@@ -575,13 +575,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool use_test262_global = false;
     StringView evaluate_script;
     Vector<StringView> script_paths;
-    bool use_bytecode = false;
+    bool use_ast_interpreter = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This is a JavaScript interpreter.");
     args_parser.add_option(s_dump_ast, "Dump the AST", "dump-ast", 'A');
     args_parser.add_option(JS::Bytecode::g_dump_bytecode, "Dump the bytecode", "dump-bytecode", 'd');
-    args_parser.add_option(use_bytecode, "Run the bytecode", "run-bytecode", 'b');
+    args_parser.add_option(use_ast_interpreter, "Enable JavaScript AST interpreter (deprecated)", "ast", 0);
     args_parser.add_option(s_as_module, "Treat as module", "as-module", 'm');
     args_parser.add_option(s_print_last_result, "Print last result", "print-last-result", 'l');
     args_parser.add_option(s_strip_ansi, "Disable ANSI colors", "disable-ansi-colors", 'i');
@@ -594,7 +594,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(script_paths, "Path to script files", "scripts", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    JS::Bytecode::Interpreter::set_enabled(use_bytecode);
+    JS::Bytecode::Interpreter::set_enabled(!use_ast_interpreter);
 
     bool syntax_highlight = !disable_syntax_highlight;
 
