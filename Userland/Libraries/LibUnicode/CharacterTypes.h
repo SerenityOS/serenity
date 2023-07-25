@@ -22,6 +22,13 @@ struct CodePointRange {
     u32 last { 0 };
 };
 
+struct CodePointRangeComparator {
+    constexpr int operator()(u32 code_point, CodePointRange const& range)
+    {
+        return (code_point > range.last) - (code_point < range.first);
+    }
+};
+
 struct BlockName {
     CodePointRange code_point_range {};
     StringView display_name;
