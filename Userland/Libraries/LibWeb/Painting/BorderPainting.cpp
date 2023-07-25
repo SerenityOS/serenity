@@ -33,24 +33,24 @@ BorderRadiiData normalized_border_radii_data(Layout::Node const& node, CSSPixelR
     top_right_radius_px.vertical_radius = top_right_radius.vertical_radius.to_px(node, rect.height());
 
     // Scale overlapping curves according to https://www.w3.org/TR/css-backgrounds-3/#corner-overlap
-    CSSPixels f = 1.0f;
-    auto width_reciprocal = 1.0 / rect.width().to_double();
-    auto height_reciprocal = 1.0 / rect.height().to_double();
-    f = max(f, width_reciprocal * (top_left_radius_px.horizontal_radius + top_right_radius_px.horizontal_radius));
-    f = max(f, height_reciprocal * (top_right_radius_px.vertical_radius + bottom_right_radius_px.vertical_radius));
-    f = max(f, width_reciprocal * (bottom_left_radius_px.horizontal_radius + bottom_right_radius_px.horizontal_radius));
-    f = max(f, height_reciprocal * (top_left_radius_px.vertical_radius + bottom_left_radius_px.vertical_radius));
+    CSSPixels f = 1;
+    if (rect.width() > 0) {
+        f = max(f, (top_left_radius_px.horizontal_radius + top_right_radius_px.horizontal_radius) / rect.width());
+        f = max(f, (bottom_left_radius_px.horizontal_radius + bottom_right_radius_px.horizontal_radius) / rect.width());
+    }
+    if (rect.height() > 0) {
+        f = max(f, (top_right_radius_px.vertical_radius + bottom_right_radius_px.vertical_radius) / rect.height());
+        f = max(f, (top_left_radius_px.vertical_radius + bottom_left_radius_px.vertical_radius) / rect.height());
+    }
 
-    f = 1.0 / f.to_double();
-
-    top_left_radius_px.horizontal_radius *= f;
-    top_left_radius_px.vertical_radius *= f;
-    top_right_radius_px.horizontal_radius *= f;
-    top_right_radius_px.vertical_radius *= f;
-    bottom_right_radius_px.horizontal_radius *= f;
-    bottom_right_radius_px.vertical_radius *= f;
-    bottom_left_radius_px.horizontal_radius *= f;
-    bottom_left_radius_px.vertical_radius *= f;
+    top_left_radius_px.horizontal_radius /= f;
+    top_left_radius_px.vertical_radius /= f;
+    top_right_radius_px.horizontal_radius /= f;
+    top_right_radius_px.vertical_radius /= f;
+    bottom_right_radius_px.horizontal_radius /= f;
+    bottom_right_radius_px.vertical_radius /= f;
+    bottom_left_radius_px.horizontal_radius /= f;
+    bottom_left_radius_px.vertical_radius /= f;
 
     return BorderRadiiData { top_left_radius_px, top_right_radius_px, bottom_right_radius_px, bottom_left_radius_px };
 }
