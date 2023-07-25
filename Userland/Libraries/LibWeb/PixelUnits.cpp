@@ -112,7 +112,7 @@ CSSPixels CSSPixels::operator+(CSSPixels const& other) const
 CSSPixels CSSPixels::operator-(CSSPixels const& other) const
 {
     CSSPixels result;
-    result.set_raw_value(raw_value() - other.raw_value());
+    result.set_raw_value(saturated_addition(raw_value(), -other.raw_value()));
     return result;
 }
 

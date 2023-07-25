@@ -76,4 +76,15 @@ TEST_CASE(comparison2)
     EXPECT_EQ(CSSPixels(123) == CSSPixels(123), true);
 }
 
+TEST_CASE(saturated_addition)
+{
+    EXPECT_EQ(CSSPixels(INFINITY), CSSPixels(INFINITY) + 1);
+}
+
+TEST_CASE(saturated_subtraction)
+{
+    auto value = CSSPixels(INFINITY);
+    EXPECT_EQ(value - -1, CSSPixels(INFINITY));
+}
+
 }
