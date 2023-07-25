@@ -163,6 +163,10 @@ bool MailWidget::connect_and_login()
 
 void MailWidget::on_window_close()
 {
+    if (!m_imap_client) {
+        // User closed main window before a connection was established
+        return;
+    }
     auto response = move(MUST(m_imap_client->send_simple_command(IMAP::CommandType::Logout)->await()).release_value().get<IMAP::SolidResponse>());
     VERIFY(response.status() == IMAP::ResponseStatus::OK);
 
