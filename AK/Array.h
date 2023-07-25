@@ -33,7 +33,7 @@ struct Array {
     {
         Array array;
         VERIFY(span.size() == Size);
-        TypedTransfer<T>::copy(array.data(), span.data(), Size);
+        Detail::TypedTransfer<T>::copy(array.data(), span.data(), Size);
         return array;
     }
 

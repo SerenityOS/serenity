@@ -193,13 +193,13 @@ public:
     ALWAYS_INLINE constexpr size_t copy_to(Span<RemoveConst<T>> other) const
     {
         VERIFY(other.size() >= size());
-        return TypedTransfer<RemoveConst<T>>::copy(other.data(), data(), size());
+        return Detail::TypedTransfer<RemoveConst<T>>::copy(other.data(), data(), size());
     }
 
     ALWAYS_INLINE constexpr size_t copy_trimmed_to(Span<RemoveConst<T>> other) const
     {
         auto const count = min(size(), other.size());
-        return TypedTransfer<RemoveConst<T>>::copy(other.data(), data(), count);
+        return Detail::TypedTransfer<RemoveConst<T>>::copy(other.data(), data(), count);
     }
 
     ALWAYS_INLINE constexpr size_t fill(T const& value)
@@ -224,7 +224,7 @@ public:
         if (size() < other.size())
             return false;
 
-        return TypedTransfer<T>::compare(data(), other.data(), other.size());
+        return Detail::TypedTransfer<T>::compare(data(), other.data(), other.size());
     }
 
     [[nodiscard]] size_t constexpr matching_prefix_length(ReadonlySpan<T> other) const
@@ -286,7 +286,7 @@ public:
         if (size() != other.size())
             return false;
 
-        return TypedTransfer<T>::compare(data(), other.data(), size());
+        return Detail::TypedTransfer<T>::compare(data(), other.data(), size());
     }
 
     ALWAYS_INLINE constexpr operator ReadonlySpan<T>() const

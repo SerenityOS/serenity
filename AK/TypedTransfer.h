@@ -8,7 +8,7 @@
 
 #include <AK/Traits.h>
 
-namespace AK {
+namespace AK::Detail {
 
 template<typename T>
 class TypedTransfer {

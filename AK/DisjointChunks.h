@@ -207,7 +207,7 @@ ChunkType shatter_chunk(ChunkType& source_chunk, size_t start, size_t sliced_len
     if constexpr (IsTriviallyConstructible<T>) {
         new_chunk.resize(wanted_slice.size());
 
-        TypedTransfer<T>::move(new_chunk.data(), wanted_slice.data(), wanted_slice.size());
+        Detail::TypedTransfer<T>::move(new_chunk.data(), wanted_slice.data(), wanted_slice.size());
     } else {
         new_chunk.ensure_capacity(wanted_slice.size());
         for (auto& entry : wanted_slice)
@@ -224,7 +224,7 @@ FixedArray<T> shatter_chunk(FixedArray<T>& source_chunk, size_t start, size_t sl
 
     FixedArray<T> new_chunk = FixedArray<T>::must_create_but_fixme_should_propagate_errors(wanted_slice.size());
     if constexpr (IsTriviallyConstructible<T>) {
-        TypedTransfer<T>::move(new_chunk.data(), wanted_slice.data(), wanted_slice.size());
+        Detail::TypedTransfer<T>::move(new_chunk.data(), wanted_slice.data(), wanted_slice.size());
     } else {
         auto copied_chunk = FixedArray<T>::create(wanted_slice).release_value_but_fixme_should_propagate_errors();
         new_chunk.swap(copied_chunk);
