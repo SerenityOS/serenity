@@ -178,4 +178,8 @@ TEST_CASE(formatter)
     EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(-0.1)), "-0.100007"sv);
     EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(-0.02)), "-0.020005"sv);
     EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(-0.0000000005)), "0"sv);
+
+    EXPECT_EQ(DeprecatedString::formatted("{}", Type(-1)), "-1"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{}", Type(-2)), "-2"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{}", Type(-3)), "-3"sv);
 }
