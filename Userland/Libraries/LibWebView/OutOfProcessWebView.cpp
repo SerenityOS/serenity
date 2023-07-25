@@ -47,6 +47,8 @@ void OutOfProcessWebView::create_client(EnableCallgrindProfiling)
         });
     };
 
+    client().async_set_use_javascript_bytecode(use_javascript_bytecode() == UseJavaScriptBytecode::Yes);
+
     m_client_state.client_handle = Web::Crypto::generate_random_uuid().release_value_but_fixme_should_propagate_errors();
     client().async_set_window_handle(m_client_state.client_handle);
 

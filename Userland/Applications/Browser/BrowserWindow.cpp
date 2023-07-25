@@ -57,9 +57,10 @@ static DeprecatedString search_engines_file_path()
     return builder.to_deprecated_string();
 }
 
-BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
+BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url, WebView::UseJavaScriptBytecode use_javascript_bytecode)
     : m_cookie_jar(cookie_jar)
     , m_window_actions(*this)
+    , m_use_javascript_bytecode(use_javascript_bytecode)
 {
     auto app_icon = GUI::Icon::default_icon("app-browser"sv);
     m_bookmarks_bar = Browser::BookmarksBarWidget::construct(Browser::bookmarks_file_path(), true);
@@ -563,7 +564,7 @@ void BrowserWindow::set_window_title_for_tab(Tab const& tab)
 
 Tab& BrowserWindow::create_new_tab(URL url, Web::HTML::ActivateTab activate)
 {
-    auto& new_tab = m_tab_widget->add_tab<Browser::Tab>("New tab"_short_string, *this);
+    auto& new_tab = m_tab_widget->add_tab<Browser::Tab>("New tab"_short_string, *this, m_use_javascript_bytecode);
 
     m_tab_widget->set_bar_visible(!is_fullscreen() && m_tab_widget->children().size() > 1);
 

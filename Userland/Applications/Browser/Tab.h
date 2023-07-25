@@ -15,6 +15,7 @@
 #include <LibGfx/ShareableBitmap.h>
 #include <LibHTTP/Job.h>
 #include <LibWeb/Forward.h>
+#include <LibWebView/ViewImplementation.h>
 
 namespace WebView {
 class OutOfProcessWebView;
@@ -98,7 +99,7 @@ public:
     WebView::OutOfProcessWebView& view() { return *m_web_content_view; }
 
 private:
-    explicit Tab(BrowserWindow&);
+    Tab(BrowserWindow&, WebView::UseJavaScriptBytecode);
 
     virtual void show_event(GUI::ShowEvent&) override;
     virtual void hide_event(GUI::HideEvent&) override;

@@ -50,7 +50,7 @@ public:
     void broadcast_window_size(Gfx::IntSize);
 
 private:
-    explicit BrowserWindow(CookieJar&, URL);
+    BrowserWindow(CookieJar&, URL, WebView::UseJavaScriptBytecode);
 
     void build_menus();
     ErrorOr<void> load_search_engines(GUI::Menu& settings_menu);
@@ -86,6 +86,8 @@ private:
     RefPtr<GUI::Action> m_disable_user_agent_spoofing;
     RefPtr<GUI::Action> m_disable_search_engine_action;
     RefPtr<GUI::Action> m_change_homepage_action;
+
+    WebView::UseJavaScriptBytecode m_use_javascript_bytecode {};
 };
 
 }
