@@ -13,6 +13,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 
     if (auto maybe_document = PDF::Document::create(bytes); !maybe_document.is_error()) {
         auto document = maybe_document.release_value();
+        (void)document->initialize();
         auto pages = document->get_page_count();
         for (size_t i = 0; i < pages; ++i) {
             (void)document->get_page(i);
