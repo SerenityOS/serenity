@@ -30,6 +30,7 @@ private:
     ErrorOr<void> create_widgets(bool disable_rename);
     ErrorOr<void> create_general_tab(GUI::TabWidget&, bool disable_rename);
     ErrorOr<void> create_file_type_specific_tabs(GUI::TabWidget&);
+    ErrorOr<void> create_archive_tab(GUI::TabWidget&, NonnullRefPtr<Core::MappedFile>);
     ErrorOr<void> create_audio_tab(GUI::TabWidget&, NonnullRefPtr<Core::MappedFile>);
     ErrorOr<void> create_font_tab(GUI::TabWidget&, NonnullRefPtr<Core::MappedFile>, StringView mime_type);
     ErrorOr<void> create_image_tab(GUI::TabWidget&, NonnullRefPtr<Core::MappedFile>, StringView mime_type);

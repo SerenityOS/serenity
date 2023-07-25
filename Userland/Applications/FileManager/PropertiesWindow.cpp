@@ -7,13 +7,16 @@
  */
 
 #include "PropertiesWindow.h"
+#include <AK/GenericShorthands.h>
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
 #include <Applications/FileManager/DirectoryView.h>
+#include <Applications/FileManager/PropertiesWindowArchiveTabGML.h>
 #include <Applications/FileManager/PropertiesWindowAudioTabGML.h>
 #include <Applications/FileManager/PropertiesWindowFontTabGML.h>
 #include <Applications/FileManager/PropertiesWindowGeneralTabGML.h>
 #include <Applications/FileManager/PropertiesWindowImageTabGML.h>
+#include <LibArchive/Zip.h>
 #include <LibAudio/Loader.h>
 #include <LibCore/Directory.h>
 #include <LibCore/System.h>
@@ -222,6 +225,10 @@ ErrorOr<void> PropertiesWindow::create_file_type_specific_tabs(GUI::TabWidget& t
     auto file_name_guess = Core::guess_mime_type_based_on_filename(m_path);
     auto mime_type = Core::guess_mime_type_based_on_sniffed_bytes(mapped_file->bytes()).value_or(file_name_guess);
 
+    // FIXME: Support other archive types
+    if (mime_type == "application/zip"sv)
+        return create_archive_tab(tab_widget, move(mapped_file));
+
     if (mime_type.starts_with("audio/"sv))
         return create_audio_tab(tab_widget, move(mapped_file));
 
@@ -230,6 +237,28 @@ ErrorOr<void> PropertiesWindow::create_file_type_specific_tabs(GUI::TabWidget& t
 
     if (mime_type.starts_with("image/"sv))
         return create_image_tab(tab_widget, move(mapped_file), mime_type);
+
+    return {};
+}
+
+ErrorOr<void> PropertiesWindow::create_archive_tab(GUI::TabWidget& tab_widget, NonnullRefPtr<Core::MappedFile> mapped_file)
+{
+    auto maybe_zip = Archive::Zip::try_create(mapped_file->bytes());
+    if (!maybe_zip.has_value()) {
+        warnln("Failed to read zip file '{}' ", m_path);
+        return {};
+    }
+    auto zip = maybe_zip.release_value();
+
+    auto tab = TRY(tab_widget.try_add_tab<GUI::Widget>(TRY("Archive"_string)));
+    TRY(tab->load_from_gml(properties_window_archive_tab_gml));
+
+    auto statistics = TRY(zip.calculate_statistics());
+
+    tab->find_descendant_of_type_named<GUI::Label>("archive_format")->set_text("ZIP"_short_string);
+    tab->find_descendant_of_type_named<GUI::Label>("archive_file_count")->set_text(TRY(String::number(statistics.file_count())));
+    tab->find_descendant_of_type_named<GUI::Label>("archive_directory_count")->set_text(TRY(String::number(statistics.directory_count())));
+    tab->find_descendant_of_type_named<GUI::Label>("archive_uncompressed_size")->set_text(TRY(String::from_deprecated_string(AK::human_readable_size(statistics.total_uncompressed_bytes()))));
 
     return {};
 }
