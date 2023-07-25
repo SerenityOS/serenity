@@ -286,7 +286,7 @@ void MailWidget::selected_mailbox()
                 .type = IMAP::FetchCommand::DataItemType::PeekBody,
                 .section = IMAP::FetchCommand::DataItem::Section {
                     .type = IMAP::FetchCommand::DataItem::SectionType::HeaderFields,
-                    .headers = { { "Subject", "From" } },
+                    .headers = { { "Date", "Subject", "From" } },
                 },
             },
         },
@@ -320,6 +320,13 @@ void MailWidget::selected_mailbox()
             });
             return header_iterator != data_item.section->headers->end();
         };
+
+        auto date_iterator = body_data.find_if([&data_item_has_header](Tuple<IMAP::FetchCommand::DataItem, Optional<DeprecatedString>>& data) {
+            auto const data_item = data.get<0>();
+            return data_item_has_header(data_item, "Date");
+        });
+
+        VERIFY(date_iterator != body_data.end());
 
         auto subject_iterator = body_data.find_if([&data_item_has_header](Tuple<IMAP::FetchCommand::DataItem, Optional<DeprecatedString>>& data) {
             auto const data_item = data.get<0>();
@@ -364,6 +371,19 @@ void MailWidget::selected_mailbox()
             return builder.to_deprecated_string();
         };
 
+        auto& date_iterator_value = date_iterator->get<1>().value();
+        auto date_index = date_iterator_value.find("Date:"sv);
+        DeprecatedString date;
+        if (date_index.has_value()) {
+            auto potential_date = date_iterator_value.substring(date_index.value());
+            auto date_parts = potential_date.split_limit(':', 2);
+            date = parse_and_unfold(date_parts.last());
+        }
+
+        if (date.is_empty()) {
+            date = "(Unknown date)";
+        }
+
         auto& subject_iterator_value = subject_iterator->get<1>().value();
         auto subject_index = subject_iterator_value.find("Subject:"sv);
         DeprecatedString subject;
@@ -374,7 +394,7 @@ void MailWidget::selected_mailbox()
         }
 
         if (subject.is_empty())
-            subject = "(no subject)";
+            subject = "(No subject)";
 
         auto& from_iterator_value = from_iterator->get<1>().value();
         auto from_index = from_iterator_value.find("From:"sv);
@@ -390,7 +410,7 @@ void MailWidget::selected_mailbox()
         if (from.is_empty())
             from = "(Unknown sender)";
 
-        InboxEntry inbox_entry { from, subject };
+        InboxEntry inbox_entry { from, subject, date };
         m_statusbar->set_text(String::formatted("[{}]: Loading entry {}", mailbox.name, ++i).release_value_but_fixme_should_propagate_errors());
 
         active_inbox_entries.append(inbox_entry);

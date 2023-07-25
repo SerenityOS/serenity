@@ -13,6 +13,7 @@
 struct InboxEntry {
     DeprecatedString from;
     DeprecatedString subject;
+    DeprecatedString date;
 };
 
 class InboxModel final : public GUI::Model {
@@ -20,6 +21,7 @@ public:
     enum Column {
         From,
         Subject,
+        Date,
         __Count
     };
 
