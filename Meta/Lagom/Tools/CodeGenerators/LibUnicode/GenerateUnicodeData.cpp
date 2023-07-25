@@ -19,15 +19,7 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
-
-// Some code points are excluded from UnicodeData.txt, and instead are part of a "range" of code
-// points, as indicated by the "name" field. For example:
-//     3400;<CJK Ideograph Extension A, First>;Lo;0;L;;;;;N;;;;;
-//     4DBF;<CJK Ideograph Extension A, Last>;Lo;0;L;;;;;N;;;;;
-struct CodePointRange {
-    u32 first;
-    u32 last;
-};
+#include <LibUnicode/CharacterTypes.h>
 
 // https://www.unicode.org/reports/tr44/#SpecialCasing.txt
 struct SpecialCasing {
@@ -56,7 +48,7 @@ struct CodePointDecomposition {
 };
 
 // https://www.unicode.org/reports/tr44/#PropList.txt
-using PropList = HashMap<DeprecatedString, Vector<CodePointRange>>;
+using PropList = HashMap<DeprecatedString, Vector<Unicode::CodePointRange>>;
 
 // https://www.unicode.org/reports/tr44/#DerivedNormalizationProps.txt
 enum class QuickCheck {
@@ -66,7 +58,7 @@ enum class QuickCheck {
 };
 
 struct Normalization {
-    CodePointRange code_point_range;
+    Unicode::CodePointRange code_point_range;
     Vector<u32> value;
     QuickCheck quick_check { QuickCheck::Yes };
 };
@@ -74,7 +66,7 @@ struct Normalization {
 using NormalizationProps = HashMap<DeprecatedString, Vector<Normalization>>;
 
 struct CodePointName {
-    CodePointRange code_point_range;
+    Unicode::CodePointRange code_point_range;
     size_t name { 0 };
 };
 
@@ -100,7 +92,7 @@ struct CodePointData {
 };
 
 struct BlockName {
-    CodePointRange code_point_range;
+    Unicode::CodePointRange code_point_range;
     size_t name { 0 };
 };
 
@@ -195,9 +187,9 @@ static Vector<u32> parse_code_point_list(StringView list)
     return code_points;
 }
 
-static CodePointRange parse_code_point_range(StringView list)
+static Unicode::CodePointRange parse_code_point_range(StringView list)
 {
-    CodePointRange code_point_range {};
+    Unicode::CodePointRange code_point_range {};
 
     if (list.contains(".."sv)) {
         auto segments = list.split_view(".."sv);
@@ -532,13 +524,13 @@ static ErrorOr<void> parse_normalization_props(Core::InputBufferedFile& file, Un
     return {};
 }
 
-static void add_canonical_code_point_name(CodePointRange range, StringView name, UnicodeData& unicode_data)
+static void add_canonical_code_point_name(Unicode::CodePointRange range, StringView name, UnicodeData& unicode_data)
 {
     // https://www.unicode.org/versions/Unicode15.0.0/ch04.pdf#G142981
     // FIXME: Implement the NR1 rules for Hangul syllables.
 
     struct CodePointNameFormat {
-        CodePointRange code_point_range;
+        Unicode::CodePointRange code_point_range;
         StringView name;
     };
 
@@ -698,7 +690,7 @@ static ErrorOr<void> parse_unicode_data(Core::InputBufferedFile& file, UnicodeDa
         } else if (data.name.starts_with("<"sv) && data.name.ends_with(", Last>"sv)) {
             VERIFY(code_point_range_start.has_value());
 
-            CodePointRange code_point_range { *code_point_range_start, data.code_point };
+            Unicode::CodePointRange code_point_range { *code_point_range_start, data.code_point };
             assigned_code_points.append(code_point_range);
 
             data.name = data.name.substring(1, data.name.length() - 8);
@@ -1079,7 +1071,7 @@ static constexpr Array<@mapping_type@, @size@> s_@name@_mappings { {
             return data.decomposition_mapping;
         });
 
-    auto append_code_point_range_list = [&](DeprecatedString name, Vector<CodePointRange> const& ranges) {
+    auto append_code_point_range_list = [&](DeprecatedString name, Vector<Unicode::CodePointRange> const& ranges) {
         generator.set("name", name);
         generator.set("size", DeprecatedString::number(ranges.size()));
         generator.append(R"~~~(
@@ -1342,7 +1334,7 @@ bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
     return {};
 }
 
-static Vector<u32> flatten_code_point_ranges(Vector<CodePointRange> const& code_points)
+static Vector<u32> flatten_code_point_ranges(Vector<Unicode::CodePointRange> const& code_points)
 {
     Vector<u32> flattened;
 
@@ -1355,9 +1347,9 @@ static Vector<u32> flatten_code_point_ranges(Vector<CodePointRange> const& code_
     return flattened;
 }
 
-static Vector<CodePointRange> form_code_point_ranges(Vector<u32> code_points)
+static Vector<Unicode::CodePointRange> form_code_point_ranges(Vector<u32> code_points)
 {
-    Vector<CodePointRange> ranges;
+    Vector<Unicode::CodePointRange> ranges;
 
     u32 range_start = code_points[0];
     u32 range_end = range_start;
@@ -1378,7 +1370,7 @@ static Vector<CodePointRange> form_code_point_ranges(Vector<u32> code_points)
     return ranges;
 }
 
-static void sort_and_merge_code_point_ranges(Vector<CodePointRange>& code_points)
+static void sort_and_merge_code_point_ranges(Vector<Unicode::CodePointRange>& code_points)
 {
     quick_sort(code_points, [](auto const& range1, auto const& range2) {
         return range1.first < range2.first;
