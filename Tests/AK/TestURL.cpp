@@ -39,6 +39,16 @@ TEST_CASE(basic)
         EXPECT(url.fragment().is_null());
     }
     {
+        URL url("https://www.serenityos.org1/index.html"sv);
+        EXPECT_EQ(url.is_valid(), true);
+        EXPECT_EQ(url.scheme(), "https");
+        EXPECT_EQ(url.host(), "www.serenityos.org1");
+        EXPECT_EQ(url.port_or_default(), 443);
+        EXPECT_EQ(url.serialize_path(), "/index.html");
+        EXPECT(url.query().is_null());
+        EXPECT(url.fragment().is_null());
+    }
+    {
         URL url("https://localhost:1234/~anon/test/page.html"sv);
         EXPECT_EQ(url.is_valid(), true);
         EXPECT_EQ(url.scheme(), "https");

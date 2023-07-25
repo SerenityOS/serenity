@@ -518,6 +518,37 @@ static Optional<Array<u16, 8>> parse_ipv6_address(StringView input)
     return address;
 }
 
+// https://url.spec.whatwg.org/#ends-in-a-number-checker
+static bool ends_in_a_number_checker(StringView input)
+{
+    // 1. Let parts be the result of strictly splitting input on U+002E (.).
+    auto parts = input.split_view("."sv, SplitBehavior::KeepEmpty);
+
+    // 2. If the last item in parts is the empty string, then:
+    if (parts.last().is_empty()) {
+        // 1. If parts’s size is 1, then return false.
+        if (parts.size() == 1)
+            return false;
+
+        // 2. Remove the last item from parts.
+        parts.take_last();
+    }
+
+    // 3. Let last be the last item in parts.
+    auto last = parts.last();
+
+    // 4. If last is non-empty and contains only ASCII digits, then return true.
+    if (!last.is_empty() && all_of(last, is_ascii_digit))
+        return true;
+
+    // 5. If parsing last as an IPv4 number does not return failure, then return true.
+    if (parse_ipv4_number(last).has_value())
+        return true;
+
+    // 6. Return false.
+    return false;
+}
+
 // https://url.spec.whatwg.org/#concept-host-parser
 // NOTE: This is a very bare-bones implementation.
 static Optional<DeprecatedString> parse_host(StringView input, bool is_not_special = false)
@@ -565,7 +596,7 @@ static Optional<DeprecatedString> parse_host(StringView input, bool is_not_speci
     }
 
     // 8. If asciiDomain ends in a number, then return the result of IPv4 parsing asciiDomain.
-    if (is_ascii_digit(ascii_domain[ascii_domain.length() - 1])) {
+    if (ends_in_a_number_checker(ascii_domain)) {
         auto ipv4_host = parse_ipv4_address(ascii_domain);
         if (!ipv4_host.has_value())
             return {};
