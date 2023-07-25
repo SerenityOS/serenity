@@ -70,7 +70,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView webdriver_content_ipc_path;
     bool enable_callgrind_profiling = false;
     bool enable_sql_database = false;
-    bool use_javascript_bytecode = false;
+    bool use_ast_interpreter = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("The Ladybird web browser :^)");
@@ -78,7 +78,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(webdriver_content_ipc_path, "Path to WebDriver IPC for WebContent", "webdriver-content-path", 0, "path");
     args_parser.add_option(enable_callgrind_profiling, "Enable Callgrind profiling", "enable-callgrind-profiling", 'P');
     args_parser.add_option(enable_sql_database, "Enable SQL database", "enable-sql-database", 0);
-    args_parser.add_option(use_javascript_bytecode, "Enable JavaScript bytecode VM", "use-bytecode", 0);
+    args_parser.add_option(use_ast_interpreter, "Enable JavaScript AST interpreter (deprecated)", "ast", 0);
     args_parser.parse(arguments);
 
     auto get_formatted_url = [&](StringView const& raw_url) -> ErrorOr<URL> {
@@ -101,7 +101,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto cookie_jar = database ? TRY(Browser::CookieJar::create(*database)) : Browser::CookieJar::create();
 
     s_settings = adopt_own_if_nonnull(new Browser::Settings());
-    BrowserWindow window(cookie_jar, webdriver_content_ipc_path, enable_callgrind_profiling ? WebView::EnableCallgrindProfiling::Yes : WebView::EnableCallgrindProfiling::No, use_javascript_bytecode ? WebView::UseJavaScriptBytecode::Yes : WebView::UseJavaScriptBytecode::No);
+    BrowserWindow window(cookie_jar, webdriver_content_ipc_path, enable_callgrind_profiling ? WebView::EnableCallgrindProfiling::Yes : WebView::EnableCallgrindProfiling::No, use_ast_interpreter ? WebView::UseJavaScriptBytecode::No : WebView::UseJavaScriptBytecode::Yes);
     window.setWindowTitle("Ladybird");
     window.resize(800, 600);
     window.show();
