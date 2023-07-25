@@ -168,7 +168,7 @@ public:
         VERIFY(height() <= other.height());
         for (u32 row = 0; row < height(); row++) {
             auto other_index = other.index_at(row, 0);
-            AK::TypedTransfer<T>::copy(&m_storage[index_at(row, 0)], &other[other_index], width());
+            memcpy(&m_storage[index_at(row, 0)], &other[other_index], width() * sizeof(T));
         }
     }
 

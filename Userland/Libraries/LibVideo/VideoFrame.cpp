@@ -109,8 +109,8 @@ ALWAYS_INLINE DecoderErrorOr<void> convert_to_bitmap_subsampled(Convert convert,
             }
         }
 
-        AK::TypedTransfer<RemoveReference<decltype(*u_row_a)>>::move(u_row_a, u_row_b, width);
-        AK::TypedTransfer<RemoveReference<decltype(*u_row_a)>>::move(v_row_a, v_row_b, width);
+        memmove(u_row_a, u_row_b, width * sizeof(*u_row_a));
+        memmove(v_row_a, v_row_b, width * sizeof(*v_row_a));
     }
 
     if constexpr (subsampling_vertical != 0) {

@@ -6,7 +6,6 @@
  */
 
 #include <AK/IntegralMath.h>
-#include <AK/TypedTransfer.h>
 #include <LibGfx/Size.h>
 #include <LibVideo/Color/CodingIndependentCodePoints.h>
 
@@ -1406,7 +1405,7 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform_array_per
 
     // 1.1. A temporary array named copyT is set equal to T.
     Array<Intermediate, block_size> data_copy;
-    AK::TypedTransfer<Intermediate>::copy(data_copy.data(), data.data(), block_size);
+    memcpy(data_copy.data(), data.data(), block_size * sizeof(Intermediate));
 
     // 1.2. T[ i ] is set equal to copyT[ brev( n, i ) ] for i = 0..((1<<n) - 1).
     for (auto i = 0u; i < block_size; i++)
@@ -1526,7 +1525,7 @@ inline void Decoder::inverse_asymmetric_discrete_sine_transform_input_array_perm
 
     // A temporary array named copyT is set equal to T.
     Array<Intermediate, block_size> data_copy;
-    AK::TypedTransfer<Intermediate>::copy(data_copy.data(), data.data(), block_size);
+    memcpy(data_copy.data(), data.data(), block_size * sizeof(Intermediate));
 
     // The values at even locations T[ 2 * i ] are set equal to copyT[ n0 - 1 - 2 * i ] for i = 0..(n1-1).
     // The values at odd locations T[ 2 * i + 1 ] are set equal to copyT[ 2 * i ] for i = 0..(n1-1).
@@ -1543,7 +1542,7 @@ inline void Decoder::inverse_asymmetric_discrete_sine_transform_output_array_per
 
     // A temporary array named copyT is set equal to T.
     Array<Intermediate, maximum_transform_size> data_copy;
-    AK::TypedTransfer<Intermediate>::copy(data_copy.data(), data.data(), block_size);
+    memcpy(data_copy.data(), data.data(), block_size * sizeof(Intermediate));
 
     // The permutation depends on n as follows:
     if (log2_of_block_size == 4) {
@@ -1959,7 +1958,7 @@ DecoderErrorOr<void> Decoder::update_reference_frames(FrameContext const& frame_
                     auto source_y = min(destination_y >= MV_BORDER ? destination_y - MV_BORDER : 0, height - 1);
                     auto const* source = &original_buffer[source_y * stride];
                     auto* destination = &frame_store_buffer[destination_y * frame_store_width + MV_BORDER];
-                    AK::TypedTransfer<RemoveReference<decltype(*destination)>>::copy(destination, source, width);
+                    memcpy(destination, source, width * sizeof(*destination));
                 }
 
                 for (auto destination_y = 0u; destination_y < frame_store_height; destination_y++) {

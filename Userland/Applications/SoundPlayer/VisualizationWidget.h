@@ -8,7 +8,6 @@
 
 #include <AK/FixedArray.h>
 #include <AK/Forward.h>
-#include <AK/TypedTransfer.h>
 #include <LibAudio/Sample.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Painter.h>
@@ -62,7 +61,7 @@ public:
         if (buffer_position + m_render_buffer.size() >= m_sample_buffer.size())
             buffer_position = m_sample_buffer.size() - m_render_buffer.size();
 
-        AK::TypedTransfer<float>::copy(m_render_buffer.data(), m_sample_buffer.span().slice(buffer_position).data(), m_render_buffer.size());
+        memcpy(m_render_buffer.data(), m_sample_buffer.span().slice(buffer_position).data(), m_render_buffer.size() * sizeof(float));
 
         render(event, m_render_buffer);
     }

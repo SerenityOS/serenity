@@ -8,7 +8,6 @@
 #include "BarsVisualizationWidget.h"
 #include <AK/IntegralMath.h>
 #include <AK/Math.h>
-#include <AK/TypedTransfer.h>
 #include <LibDSP/FFT.h>
 #include <LibDSP/Window.h>
 #include <LibGUI/Event.h>
@@ -31,7 +30,7 @@ void BarsVisualizationWidget::render(GUI::PaintEvent& event, FixedArray<float> c
     for (size_t i = 0; i < fft_size / 2; i++)
         m_fft_samples[i + fft_size / 2] = samples[i] * m_fft_window[i + fft_size / 2];
 
-    AK::TypedTransfer<float>::copy(m_previous_samples.data(), samples.data(), samples.size());
+    samples.span().copy_to(m_previous_samples.span());
 
     DSP::fft(m_fft_samples.span(), false);
 

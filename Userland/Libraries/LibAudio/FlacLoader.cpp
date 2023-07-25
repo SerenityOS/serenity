@@ -16,7 +16,6 @@
 #include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Try.h>
-#include <AK/TypedTransfer.h>
 #include <AK/UFixedBigInt.h>
 #include <LibAudio/FlacLoader.h>
 #include <LibAudio/FlacTypes.h>

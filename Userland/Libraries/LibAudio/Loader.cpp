@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/TypedTransfer.h>
 #include <LibAudio/FlacLoader.h>
 #include <LibAudio/Loader.h>
 #include <LibAudio/MP3Loader.h>
@@ -80,7 +79,7 @@ LoaderSamples Loader::get_more_samples(size_t samples_to_read_from_input)
 
     if (m_buffer.size() > 0) {
         size_t to_transfer = min(m_buffer.size(), samples_to_read);
-        AK::TypedTransfer<Sample>::move(samples.data(), m_buffer.data(), to_transfer);
+        memmove(samples.data(), m_buffer.data(), to_transfer * sizeof(Sample));
         if (to_transfer < m_buffer.size())
             m_buffer.remove(0, to_transfer);
         else
@@ -99,7 +98,7 @@ LoaderSamples Loader::get_more_samples(size_t samples_to_read_from_input)
         for (auto& chunk : chunk_data) {
             if (sample_index < samples_to_read) {
                 auto count = min(samples_to_read - sample_index, chunk.size());
-                AK::TypedTransfer<Sample>::move(samples.span().offset(sample_index), chunk.data(), count);
+                memmove(samples.span().offset(sample_index), chunk.data(), count * sizeof(Sample));
                 // We didn't read all of the chunk; transfer the rest into the buffer.
                 if (count < chunk.size()) {
                     auto remaining_samples_count = chunk.size() - count;

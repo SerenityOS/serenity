@@ -6,7 +6,6 @@
 
 #include <AK/FixedArray.h>
 #include <AK/QuickSort.h>
-#include <AK/TypedTransfer.h>
 #include <AK/URL.h>
 #include <LibConfig/Client.h>
 #include <LibConfig/Listener.h>
