@@ -80,7 +80,12 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> WindowProxy::internal_ge
 
         // 4. If maxProperties is greater than 0 and index is less than maxProperties, then set value to the WindowProxy object of the indexth document-tree child browsing context of W's browsing context, sorted in the order that their browsing context container elements were most recently inserted into W's associated Document, the WindowProxy object of the most recently inserted browsing context container's nested browsing context being last.
         if (max_properties > 0 && index < max_properties) {
-            // FIXME: Implement this.
+            JS::MarkedVector<BrowsingContext*> browsing_contexts { vm.heap() };
+            m_window->browsing_context()->for_each_child([&](BrowsingContext& child) {
+                if (child.container() && child.container()->in_a_document_tree())
+                    browsing_contexts.append(&child);
+            });
+            value = JS::Value(browsing_contexts[index]->window_proxy());
         }
 
         // 5. If value is undefined, then:
