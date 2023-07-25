@@ -91,7 +91,7 @@ CSSPixels TableFormattingContext::run_caption_layout(LayoutMode layout_mode, CSS
         caption_context->resolve_vertical_box_model_metrics(child_box);
         auto const& caption_state = m_state.get(child_box);
         if (phase == CSS::CaptionSide::Top) {
-            m_state.get_mutable(table_box()).set_content_y(caption_state.margin_box_height());
+            m_state.get_mutable(table_box()).set_content_y(caption_state.content_height() + caption_state.margin_box_bottom());
         } else {
             m_state.get_mutable(child_box).set_content_y(
                 m_state.get(table_box()).margin_box_height() + caption_state.margin_box_top());
