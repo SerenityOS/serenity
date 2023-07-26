@@ -4,8 +4,8 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <div.wrapper> at (8,8) content-size 784x34.9375 children: not-inline
         TableWrapper <(anonymous)> at (108,8) content-size 584x34.9375 [BFC] children: not-inline
           Box <div.box> at (108,8) content-size 584x34.9375 table-box [TFC] children: not-inline
-            Box <(anonymous)> at (108,8) content-size 575.171875x34.9375 table-row children: not-inline
-              BlockContainer <div.cell> at (108,8) content-size 575.171875x34.9375 table-cell [BFC] children: inline
+            Box <(anonymous)> at (108,8) content-size 584x34.9375 table-row children: not-inline
+              BlockContainer <div.cell> at (108,8) content-size 584x34.9375 table-cell [BFC] children: inline
                 line 0 width: 569.859375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
                   frag 0 from TextNode start: 0, length: 58, rect: [108,8 569.859375x17.46875]
                     "DaTa DisplaYiNg CSS WeBpaGE ScReEn OF aR AddITioN COmmOnLY"

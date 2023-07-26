@@ -5,11 +5,11 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         Box <table.ambox> at (9,9) content-size 784x110.8125 table-box [TFC] children: not-inline
           BlockContainer <(anonymous)> (not painted) children: inline
             TextNode <#text>
-          Box <tbody> at (9,9) content-size 776.453125x106.8125 table-row-group children: not-inline
-            Box <tr> at (11,11) content-size 776.453125x106.8125 table-row children: not-inline
+          Box <tbody> at (9,9) content-size 778x106.8125 table-row-group children: not-inline
+            Box <tr> at (11,11) content-size 778x106.8125 table-row children: not-inline
               BlockContainer <td.mbox-image> at (12,39.40625) content-size 50x50 table-cell [BFC] children: not-inline
                 BlockContainer <div.mbox-image-div> at (12,39.40625) content-size 50x50 children: not-inline
-              BlockContainer <td.mbox-text> at (66,12) content-size 722.453125x104.8125 table-cell [BFC] children: inline
+              BlockContainer <td.mbox-text> at (66,12) content-size 724x104.8125 table-cell [BFC] children: inline
                 line 0 width: 689.640625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
                   frag 0 from TextNode start: 1, length: 84, rect: [66,12 689.640625x17.46875]
                     "In a scene set in a lawyer's office, the lawyer sits alone and bounces a rubber ball"
