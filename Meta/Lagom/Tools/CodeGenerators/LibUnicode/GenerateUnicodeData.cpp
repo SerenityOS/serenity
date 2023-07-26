@@ -7,7 +7,6 @@
 #include "GeneratorUtil.h"
 #include <AK/AllOf.h>
 #include <AK/Array.h>
-#include <AK/BinarySearch.h>
 #include <AK/CharacterTypes.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Error.h>
@@ -1540,7 +1539,7 @@ static ErrorOr<void> create_code_point_tables(UnicodeData& unicode_data)
     static constexpr auto MAX_CODE_POINT = 0x10ffffu;
 
     struct TableMetadata {
-        static ErrorOr<TableMetadata> create(PropList const& property_list)
+        static ErrorOr<TableMetadata> create(PropList& property_list)
         {
             TableMetadata data;
             TRY(data.property_values.try_ensure_capacity(property_list.size()));
@@ -1549,15 +1548,15 @@ static ErrorOr<void> create_code_point_tables(UnicodeData& unicode_data)
             auto property_names = property_list.keys();
             quick_sort(property_names);
 
-            for (auto const& property_name : property_names) {
-                auto const& code_point_rages = property_list.get(property_name).value();
-                data.property_values.unchecked_append(code_point_rages);
+            for (auto& property_name : property_names) {
+                auto& code_point_ranges = property_list.get(property_name).value();
+                data.property_values.unchecked_append(move(code_point_ranges));
             }
 
             return data;
         }
 
-        Vector<typename PropList::ValueType const&> property_values;
+        Vector<typename PropList::ValueType> property_values;
         Vector<bool> property_set;
 
         Vector<size_t> current_block;
@@ -1566,10 +1565,23 @@ static ErrorOr<void> create_code_point_tables(UnicodeData& unicode_data)
 
     auto update_tables = [](auto code_point, auto& tables, auto& metadata) -> ErrorOr<void> {
         static constexpr auto BLOCK_SIZE = CodePointTables::LSB_MASK + 1;
+        static Unicode::CodePointRangeComparator comparator {};
 
-        for (auto const& property_values : metadata.property_values) {
-            auto has_property = binary_search(property_values, code_point, nullptr, Unicode::CodePointRangeComparator {}) != nullptr;
+        for (auto& property_values : metadata.property_values) {
+            size_t ranges_to_remove = 0;
+            auto has_property = false;
+
+            for (auto const& range : property_values) {
+                if (auto comparison = comparator(code_point, range); comparison <= 0) {
+                    has_property = comparison == 0;
+                    break;
+                }
+
+                ++ranges_to_remove;
+            }
+
             metadata.property_set.unchecked_append(has_property);
+            property_values.remove(0, ranges_to_remove);
         }
 
         size_t unique_properties_index = 0;
