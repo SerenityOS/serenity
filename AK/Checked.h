@@ -339,6 +339,22 @@ public:
     }
 
     template<typename U, typename V>
+    static constexpr T saturating_add(U a, V b)
+    {
+        Checked checked { a };
+        checked.saturating_add(b);
+        return checked.value();
+    }
+
+    template<typename U, typename V>
+    static constexpr T saturating_sub(U a, V b)
+    {
+        Checked checked { a };
+        checked.saturating_sub(b);
+        return checked.value();
+    }
+
+    template<typename U, typename V>
     [[nodiscard]] static constexpr bool multiplication_would_overflow(U u, V v)
     {
 #if __has_builtin(__builtin_mul_overflow_p)
