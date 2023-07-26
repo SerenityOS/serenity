@@ -121,7 +121,7 @@ static Optional<ParsedIPv4Number> parse_ipv4_number(StringView input)
 }
 
 // https://url.spec.whatwg.org/#concept-ipv4-parser
-static Optional<u32> parse_ipv4_address(StringView input)
+static Optional<URL::IPv4Address> parse_ipv4_address(StringView input)
 {
     // 1. Let parts be the result of strictly splitting input on U+002E (.).
     auto parts = input.split_view("."sv, SplitBehavior::KeepEmpty);
@@ -201,7 +201,7 @@ static Optional<u32> parse_ipv4_address(StringView input)
 }
 
 // https://url.spec.whatwg.org/#concept-ipv4-serializer
-static ErrorOr<String> serialize_ipv4_address(u32 address)
+static ErrorOr<String> serialize_ipv4_address(URL::IPv4Address address)
 {
     // 1. Let output be the empty string.
     // NOTE: Array to avoid prepend.
@@ -227,7 +227,7 @@ static ErrorOr<String> serialize_ipv4_address(u32 address)
 }
 
 // https://url.spec.whatwg.org/#concept-ipv6-serializer
-static ErrorOr<String> serialize_ipv6_address(Array<u16, 8> const& address)
+static ErrorOr<String> serialize_ipv6_address(URL::IPv6Address const& address)
 {
     // 1. Let output be the empty string.
     StringBuilder output;
@@ -290,7 +290,7 @@ static ErrorOr<String> serialize_ipv6_address(Array<u16, 8> const& address)
 }
 
 // https://url.spec.whatwg.org/#concept-ipv6-parser
-static Optional<Array<u16, 8>> parse_ipv6_address(StringView input)
+static Optional<URL::IPv6Address> parse_ipv6_address(StringView input)
 {
     // 1. Let address be a new IPv6 address whose IPv6 pieces are all 0.
     Array<u16, 8> address {};
