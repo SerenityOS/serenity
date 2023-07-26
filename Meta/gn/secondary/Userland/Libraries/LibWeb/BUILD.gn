@@ -250,6 +250,7 @@ shared_library("LibWeb") {
     "Dump.cpp",
     "FontCache.cpp",
     "Namespace.cpp",
+    "PixelUnits.cpp",
   ]
   deps = [
            ":all_generated",
