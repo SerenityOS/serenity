@@ -152,6 +152,14 @@ void URL::set_fragment(DeprecatedString fragment, ApplyPercentEncoding apply_per
     m_fragment = move(fragment);
 }
 
+// https://url.spec.whatwg.org/#cannot-have-a-username-password-port
+bool URL::cannot_have_a_username_or_password_or_port() const
+{
+    // A URL cannot have a username/password/port if its host is null or the empty string, or its scheme is "file".
+    // FIXME: The spec does not mention anything to do with 'cannot be a base URL'.
+    return m_host.is_null() || m_host.is_empty() || m_cannot_be_a_base_url || m_scheme == "file"sv;
+}
+
 // FIXME: This is by no means complete.
 // NOTE: This relies on some assumptions about how the spec-defined URL parser works that may turn out to be wrong.
 bool URL::compute_validity() const
