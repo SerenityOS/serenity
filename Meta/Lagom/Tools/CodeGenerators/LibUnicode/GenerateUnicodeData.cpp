@@ -128,27 +128,17 @@ struct CodePointTables {
 struct UnicodeData {
     UniqueStringStorage unique_strings;
 
-    u32 code_points_with_non_zero_combining_class { 0 };
-
     u32 code_points_with_decomposition_mapping { 0 };
     Vector<u32> decomposition_mappings;
     Vector<DeprecatedString> compatibility_tags;
 
-    u32 simple_uppercase_mapping_size { 0 };
-    u32 simple_lowercase_mapping_size { 0 };
-    u32 simple_titlecase_mapping_size { 0 };
-
     Vector<SpecialCasing> special_casing;
-    u32 code_points_with_special_casing { 0 };
     u32 largest_special_casing_mapping_size { 0 };
-    u32 largest_special_casing_size { 0 };
     Vector<DeprecatedString> conditions;
     Vector<DeprecatedString> locales;
 
     Vector<CaseFolding> case_folding;
-    u32 code_points_with_case_folding { 0 };
     u32 largest_case_folding_mapping_size { 0 };
-    u32 largest_case_folding_size { 0 };
     Vector<StringView> statuses;
 
     Vector<CodePointData> code_point_data;
@@ -746,33 +736,17 @@ static ErrorOr<void> parse_unicode_data(Core::InputBufferedFile& file, UnicodeDa
             }
         }
 
-        bool has_special_casing { false };
         for (auto const& casing : unicode_data.special_casing) {
-            if (casing.code_point == data.code_point) {
+            if (casing.code_point == data.code_point)
                 data.casing.special_casing_indices.append(casing.index);
-                has_special_casing = true;
-            }
         }
 
-        bool has_case_folding { false };
         for (size_t i = 0; i < unicode_data.case_folding.size(); ++i) {
-            if (auto const& folding = unicode_data.case_folding[i]; folding.code_point == data.code_point) {
+            if (auto const& folding = unicode_data.case_folding[i]; folding.code_point == data.code_point)
                 data.casing.case_folding_indices.append(i);
-                has_case_folding = true;
-            }
         }
 
-        unicode_data.code_points_with_non_zero_combining_class += data.casing.canonical_combining_class != 0;
-        unicode_data.simple_uppercase_mapping_size += data.casing.simple_uppercase_mapping.has_value();
-        unicode_data.simple_lowercase_mapping_size += data.casing.simple_lowercase_mapping.has_value();
-        unicode_data.simple_titlecase_mapping_size += data.casing.simple_titlecase_mapping.has_value();
         unicode_data.code_points_with_decomposition_mapping += data.decomposition_mapping.has_value();
-
-        unicode_data.code_points_with_special_casing += has_special_casing;
-        unicode_data.largest_special_casing_size = max(unicode_data.largest_special_casing_size, data.casing.special_casing_indices.size());
-
-        unicode_data.code_points_with_case_folding += has_case_folding;
-        unicode_data.largest_case_folding_size = max(unicode_data.largest_case_folding_size, data.casing.case_folding_indices.size());
 
         previous_code_point = data.code_point;
         unicode_data.code_point_data.append(move(data));
@@ -901,9 +875,7 @@ static ErrorOr<void> generate_unicode_data_implementation(Core::InputBufferedFil
     SourceGenerator generator { builder };
 
     generator.set("string_index_type"sv, unicode_data.unique_strings.type_that_fits());
-    generator.set("largest_special_casing_size", DeprecatedString::number(unicode_data.largest_special_casing_size));
     generator.set("special_casing_size", DeprecatedString::number(unicode_data.special_casing.size()));
-    generator.set("largest_case_folding_size", DeprecatedString::number(unicode_data.largest_case_folding_size));
     generator.set("case_folding_size", DeprecatedString::number(unicode_data.case_folding.size()));
 
     TRY(generator.set("CODE_POINT_TABLES_LSB_COUNT", TRY(String::number(CODE_POINT_TABLES_LSB_COUNT))));
