@@ -652,17 +652,11 @@ struct TOC {
 
 static u64 num_toc_entries(FrameHeader const& frame_header, u64 num_groups, u64 num_lf_groups)
 {
+    // F.3.1 - General
     if (num_groups == 1 && frame_header.passes.num_passes == 1)
         return 1;
 
-    // Otherwise, there is one entry for each of the following sections,
-    // in the order they are listed: LfGlobal, one per LfGroup in raster
-    // order, one for HfGlobal followed by HfPass data for all the passes,
-    // and num_groups * frame_header.passes.num_passes for the PassGroup sections.
-
-    auto const hf_contribution = frame_header.encoding == FrameHeader::Encoding::kVarDCT ? (1 + frame_header.passes.num_passes) : 0;
-
-    return 1 + num_lf_groups + hf_contribution + num_groups * frame_header.passes.num_passes;
+    return 1 + num_lf_groups + 1 + num_groups * frame_header.passes.num_passes;
 }
 
 static ErrorOr<TOC> read_toc(LittleEndianInputBitStream& stream, FrameHeader const& frame_header, u64 num_groups, u64 num_lf_groups)
