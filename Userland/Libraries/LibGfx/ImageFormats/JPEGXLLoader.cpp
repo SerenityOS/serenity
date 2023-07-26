@@ -582,7 +582,7 @@ struct FrameHeader {
 
     Array<u8, 3> jpeg_upsampling {};
     u8 upsampling {};
-    Vector<u8> ec_upsampling {};
+    FixedArray<u8> ec_upsampling {};
 
     u8 group_size_shift { 1 };
     Passes passes {};
@@ -591,6 +591,7 @@ struct FrameHeader {
     bool have_crop { false };
 
     BlendingInfo blending_info {};
+    FixedArray<BlendingInfo> ec_blending_info {};
 
     u32 duration {};
 
@@ -631,8 +632,9 @@ static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream
 
             frame_header.upsampling = U32(1, 2, 4, 8);
 
+            frame_header.ec_upsampling = TRY(FixedArray<u8>::create(metadata.num_extra_channels));
             for (u16 i {}; i < metadata.num_extra_channels; ++i)
-                TODO();
+                frame_header.ec_upsampling[i] = U32(1, 2, 4, 8);
         }
 
         if (frame_header.encoding == FrameHeader::Encoding::kModular)
@@ -663,8 +665,9 @@ static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream
         if (normal_frame) {
             frame_header.blending_info = TRY(read_blending_info(stream, metadata, full_frame));
 
+            frame_header.ec_blending_info = TRY(FixedArray<BlendingInfo>::create(metadata.num_extra_channels));
             for (u16 i {}; i < metadata.num_extra_channels; ++i)
-                TODO();
+                frame_header.ec_blending_info[i] = TRY(read_blending_info(stream, metadata, full_frame));
 
             if (metadata.animation.has_value())
                 TODO();
