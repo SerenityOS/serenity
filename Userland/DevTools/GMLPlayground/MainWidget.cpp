@@ -221,7 +221,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     auto format_gml_action = GUI::Action::create("&Format GML", { Mod_Ctrl | Mod_Shift, Key_I }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reformat.png"sv)), [&](auto&) {
         auto formatted_gml_or_error = GUI::GML::format_gml(m_editor->text());
         if (!formatted_gml_or_error.is_error()) {
-            m_editor->replace_all_text_without_resetting_undo_stack(formatted_gml_or_error.release_value());
+            m_editor->replace_all_text_without_resetting_undo_stack(formatted_gml_or_error.release_value(), "Format GML"sv);
         } else {
             GUI::MessageBox::show(
                 &window,
