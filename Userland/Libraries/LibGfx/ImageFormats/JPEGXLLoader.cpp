@@ -1561,8 +1561,8 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     }
 
     if (frame.frame_header.upsampling > 1) {
-        frame.width = ceil(frame.width / frame.frame_header.upsampling);
-        frame.height = ceil(frame.height / frame.frame_header.upsampling);
+        frame.width = ceil(static_cast<double>(frame.width) / frame.frame_header.upsampling);
+        frame.height = ceil(static_cast<double>(frame.height) / frame.frame_header.upsampling);
     }
 
     if (frame.frame_header.lf_level > 0)
@@ -1571,8 +1571,10 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     // F.2 - FrameHeader
     auto const group_dim = 128 << frame.frame_header.group_size_shift;
 
-    frame.num_groups = ceil(frame.width / group_dim) * ceil(frame.height / group_dim);
-    frame.num_lf_groups = ceil(frame.width / (group_dim * 8)) * ceil(frame.height / (group_dim * 8));
+    auto const frame_width = static_cast<double>(frame.width);
+    auto const frame_height = static_cast<double>(frame.height);
+    frame.num_groups = ceil(frame_width / group_dim) * ceil(frame_height / group_dim);
+    frame.num_lf_groups = ceil(frame_width / (group_dim * 8)) * ceil(frame_height / (group_dim * 8));
 
     frame.toc = TRY(read_toc(stream, frame.frame_header, frame.num_groups, frame.num_lf_groups));
 
