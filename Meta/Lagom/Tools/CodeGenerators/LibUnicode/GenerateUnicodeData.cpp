@@ -885,8 +885,8 @@ struct CodePointDecomposition {
 
 Optional<Locale> locale_from_string(StringView locale);
 
-ReadonlySpan<SpecialCasing const*> special_case_mapping(u32 code_point);
-ReadonlySpan<CaseFolding const*> case_folding_mapping(u32 code_point);
+ReadonlySpan<SpecialCasing> special_case_mapping(u32 code_point);
+ReadonlySpan<CaseFolding> case_folding_mapping(u32 code_point);
 
 }
 )~~~");
@@ -982,20 +982,16 @@ static constexpr Array<CaseFolding, @case_folding_size@> s_case_folding { {)~~~"
     generator.append(R"~~~(
 } };
 
-struct CodePointMapping {
-    u32 code_point { 0 };
-    u32 mapping { 0 };
-};
+struct CasingTable {
+    u8 canonical_combining_class { 0 };
+    i32 simple_uppercase_mapping { -1 };
+    i32 simple_lowercase_mapping { -1 };
+    i32 simple_titlecase_mapping { -1 };
 
-struct SpecialCaseMapping {
-    u32 code_point { 0 };
-    Array<SpecialCasing const*, @largest_special_casing_size@> special_casing {};
+    u32 special_casing_start_index { 0 };
     u32 special_casing_size { 0 };
-};
 
-struct CaseFoldingMapping {
-    u32 code_point { 0 };
-    Array<CaseFolding const*, @largest_case_folding_size@> case_folding {};
+    u32 case_folding_start_index { 0 };
     u32 case_folding_size { 0 };
 };
 
@@ -1094,19 +1090,47 @@ static constexpr Array<@mapping_type@, @size@> s_@name@_mappings { {
 )~~~");
     };
 
-    append_code_point_mappings("combining_class"sv, "CodePointMapping"sv, unicode_data.code_points_with_non_zero_combining_class,
-        [](auto const& data) -> Optional<u32> {
-            if (data.casing.canonical_combining_class == 0)
-                return {};
-            return data.casing.canonical_combining_class;
-        });
-    append_code_point_mappings("uppercase"sv, "CodePointMapping"sv, unicode_data.simple_uppercase_mapping_size, [](auto const& data) { return data.casing.simple_uppercase_mapping; });
-    append_code_point_mappings("lowercase"sv, "CodePointMapping"sv, unicode_data.simple_lowercase_mapping_size, [](auto const& data) { return data.casing.simple_lowercase_mapping; });
-    append_code_point_mappings("titlecase"sv, "CodePointMapping"sv, unicode_data.simple_titlecase_mapping_size, [](auto const& data) { return data.casing.simple_titlecase_mapping; });
-    append_code_point_mappings("special_case"sv, "SpecialCaseMapping"sv, unicode_data.code_points_with_special_casing, [](auto const& data) { return data.casing.special_casing_indices; });
-    append_code_point_mappings("case_folding"sv, "CaseFoldingMapping"sv, unicode_data.code_points_with_case_folding, [](auto const& data) { return data.casing.case_folding_indices; });
     append_code_point_mappings("abbreviation"sv, "CodePointAbbreviation"sv, unicode_data.code_point_abbreviations.size(), [](auto const& data) { return data.abbreviation; });
     append_code_point_mappings("decomposition"sv, "CodePointDecompositionRaw"sv, unicode_data.code_points_with_decomposition_mapping, [](auto const& data) { return data.decomposition_mapping; });
+
+    auto append_casing_table = [&](auto collection_snake, auto const& unique_properties) -> ErrorOr<void> {
+        TRY(generator.set("name", TRY(String::formatted("{}_unique_properties", collection_snake))));
+        TRY(generator.set("size", TRY(String::number(unique_properties.size()))));
+
+        auto optional_code_point_to_string = [](auto const& code_point) -> ErrorOr<String> {
+            if (!code_point.has_value())
+                return "-1"_short_string;
+            return String::number(*code_point);
+        };
+        auto first_index_to_string = [](auto const& list) -> ErrorOr<String> {
+            if (list.is_empty())
+                return "0"_short_string;
+            return String::number(list.first());
+        };
+
+        generator.append(R"~~~(
+static constexpr Array<CasingTable, @size@> @name@ { {)~~~");
+
+        for (auto const& casing : unique_properties) {
+            TRY(generator.set("canonical_combining_class", TRY(String::number(casing.canonical_combining_class))));
+            TRY(generator.set("simple_uppercase_mapping", TRY(optional_code_point_to_string(casing.simple_uppercase_mapping))));
+            TRY(generator.set("simple_lowercase_mapping", TRY(optional_code_point_to_string(casing.simple_lowercase_mapping))));
+            TRY(generator.set("simple_titlecase_mapping", TRY(optional_code_point_to_string(casing.simple_titlecase_mapping))));
+            TRY(generator.set("special_casing_start_index", TRY(first_index_to_string(casing.special_casing_indices))));
+            TRY(generator.set("special_casing_size", TRY(String::number(casing.special_casing_indices.size()))));
+            TRY(generator.set("case_folding_start_index", TRY(first_index_to_string(casing.case_folding_indices))));
+            TRY(generator.set("case_folding_size", TRY(String::number(casing.case_folding_indices.size()))));
+
+            generator.append(R"~~~(
+    { @canonical_combining_class@, @simple_uppercase_mapping@, @simple_lowercase_mapping@, @simple_titlecase_mapping@, @special_casing_start_index@, @special_casing_size@, @case_folding_start_index@, @case_folding_size@ },)~~~");
+        }
+
+        generator.append(R"~~~(
+} };
+)~~~");
+
+        return {};
+    };
 
     auto append_property_table = [&](auto collection_snake, auto const& unique_properties) -> ErrorOr<void> {
         TRY(generator.set("name", TRY(String::formatted("{}_unique_properties", collection_snake))));
@@ -1174,6 +1198,7 @@ static constexpr Array<@type@, @size@> @name@ { {
         return {};
     };
 
+    TRY(append_code_point_tables("s_casings"sv, unicode_data.casing_tables, append_casing_table));
     TRY(append_code_point_tables("s_general_categories"sv, unicode_data.general_category_tables, append_property_table));
     TRY(append_code_point_tables("s_properties"sv, unicode_data.property_tables, append_property_table));
     TRY(append_code_point_tables("s_scripts"sv, unicode_data.script_tables, append_property_table));
@@ -1253,43 +1278,63 @@ Optional<DeprecatedString> code_point_display_name(u32 code_point)
 
     return {};
 }
+
+static CasingTable const& casing_table_for_code_point(u32 code_point)
+{
+    auto stage1_index = code_point >> @CODE_POINT_TABLES_LSB_COUNT@;
+    auto stage2_index = s_casings_stage1[stage1_index] + (code_point & @CODE_POINT_TABLES_LSB_MASK@);
+    auto unique_properties_index = s_casings_stage2[stage2_index];
+
+    return s_casings_unique_properties[unique_properties_index];
+}
 )~~~");
 
-    auto append_code_point_mapping_search = [&](StringView method, StringView mappings, StringView fallback) {
+    auto append_code_point_mapping_search = [&](StringView method, StringView mapping, Optional<StringView> const& fallback = {}) {
         generator.set("method", method);
-        generator.set("mappings", mappings);
-        generator.set("fallback", fallback);
+        generator.set("mapping", mapping);
         generator.append(R"~~~(
 u32 @method@(u32 code_point)
 {
-    auto const* mapping = binary_search(@mappings@, code_point, nullptr, CodePointComparator<CodePointMapping> {});
-    return mapping ? mapping->mapping : @fallback@;
+    auto const& casing_table = casing_table_for_code_point(code_point);
+    auto mapping = casing_table.@mapping@;
+)~~~");
+
+        if (fallback.has_value()) {
+            generator.set("fallback", *fallback);
+            generator.append(R"~~~(
+    return mapping == -1 ? @fallback@ : static_cast<u32>(mapping);)~~~");
+        } else {
+            generator.append(R"~~~(
+    return mapping;)~~~");
+        }
+
+        generator.append(R"~~~(
 }
 )~~~");
     };
 
-    append_code_point_mapping_search("canonical_combining_class"sv, "s_combining_class_mappings"sv, "0"sv);
-    append_code_point_mapping_search("to_unicode_uppercase"sv, "s_uppercase_mappings"sv, "code_point"sv);
-    append_code_point_mapping_search("to_unicode_lowercase"sv, "s_lowercase_mappings"sv, "code_point"sv);
-    append_code_point_mapping_search("to_unicode_titlecase"sv, "s_titlecase_mappings"sv, "code_point"sv);
+    append_code_point_mapping_search("canonical_combining_class"sv, "canonical_combining_class"sv);
+    append_code_point_mapping_search("to_unicode_uppercase"sv, "simple_uppercase_mapping"sv, "code_point"sv);
+    append_code_point_mapping_search("to_unicode_lowercase"sv, "simple_lowercase_mapping"sv, "code_point"sv);
+    append_code_point_mapping_search("to_unicode_titlecase"sv, "simple_titlecase_mapping"sv, "code_point"sv);
 
     generator.append(R"~~~(
-ReadonlySpan<SpecialCasing const*> special_case_mapping(u32 code_point)
+ReadonlySpan<SpecialCasing> special_case_mapping(u32 code_point)
 {
-    auto const* mapping = binary_search(s_special_case_mappings, code_point, nullptr, CodePointComparator<SpecialCaseMapping> {});
-    if (mapping == nullptr)
+    auto const& casing_table = casing_table_for_code_point(code_point);
+    if (casing_table.special_casing_size == 0)
         return {};
 
-    return mapping->special_casing.span().slice(0, mapping->special_casing_size);
+    return s_special_case.span().slice(casing_table.special_casing_start_index, casing_table.special_casing_size);
 }
 
-ReadonlySpan<CaseFolding const*> case_folding_mapping(u32 code_point)
+ReadonlySpan<CaseFolding> case_folding_mapping(u32 code_point)
 {
-    auto const* mapping = binary_search(s_case_folding_mappings, code_point, nullptr, CodePointComparator<CaseFoldingMapping> {});
-    if (mapping == nullptr)
+    auto const& casing_table = casing_table_for_code_point(code_point);
+    if (casing_table.case_folding_size == 0)
         return {};
 
-    return mapping->case_folding.span().slice(0, mapping->case_folding_size);
+    return s_case_folding.span().slice(casing_table.case_folding_start_index, casing_table.case_folding_size);
 }
 
 Optional<StringView> code_point_abbreviation(u32 code_point)
@@ -1513,6 +1558,22 @@ static ErrorOr<void> normalize_script_extensions(PropList& script_extensions, Pr
     return {};
 }
 
+struct CasingMetadata {
+    using ConstIterator = typename Vector<CodePointData>::ConstIterator;
+
+    CasingMetadata(Vector<CodePointData> const& code_point_data)
+        : iterator(code_point_data.begin())
+        , end(code_point_data.end())
+    {
+    }
+
+    ConstIterator iterator;
+    ConstIterator const end;
+
+    Vector<size_t> current_block;
+    HashMap<decltype(current_block), size_t> unique_blocks;
+};
+
 struct PropertyMetadata {
     static ErrorOr<PropertyMetadata> create(PropList& property_list)
     {
@@ -1608,6 +1669,25 @@ static ErrorOr<void> create_code_point_tables(UnicodeData& unicode_data)
         return {};
     };
 
+    auto update_casing_tables = [&](auto code_point, auto& tables, auto& metadata) -> ErrorOr<void> {
+        CasingTable casing {};
+
+        while (metadata.iterator != metadata.end) {
+            if (code_point < metadata.iterator->code_point)
+                break;
+
+            if (code_point == metadata.iterator->code_point) {
+                casing = move(metadata.iterator->casing);
+                break;
+            }
+
+            ++metadata.iterator;
+        }
+
+        TRY(update_tables(code_point, tables, metadata, casing));
+        return {};
+    };
+
     auto update_property_tables = [&](auto code_point, auto& tables, auto& metadata) -> ErrorOr<void> {
         static Unicode::CodePointRangeComparator comparator {};
 
@@ -1634,6 +1714,7 @@ static ErrorOr<void> create_code_point_tables(UnicodeData& unicode_data)
         return {};
     };
 
+    CasingMetadata casing_metadata { unicode_data.code_point_data };
     auto general_category_metadata = TRY(PropertyMetadata::create(unicode_data.general_categories));
     auto property_metadata = TRY(PropertyMetadata::create(unicode_data.prop_list));
     auto script_metadata = TRY(PropertyMetadata::create(unicode_data.script_list));
@@ -1643,6 +1724,7 @@ static ErrorOr<void> create_code_point_tables(UnicodeData& unicode_data)
     auto sentence_break_metadata = TRY(PropertyMetadata::create(unicode_data.sentence_break_props));
 
     for (u32 code_point = 0; code_point <= MAX_CODE_POINT; ++code_point) {
+        TRY(update_casing_tables(code_point, unicode_data.casing_tables, casing_metadata));
         TRY(update_property_tables(code_point, unicode_data.general_category_tables, general_category_metadata));
         TRY(update_property_tables(code_point, unicode_data.property_tables, property_metadata));
         TRY(update_property_tables(code_point, unicode_data.script_tables, script_metadata));
