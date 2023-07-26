@@ -69,7 +69,7 @@ function(generate_state_machine source header)
         set(output ${CMAKE_CURRENT_BINARY_DIR}/${header})
         add_custom_command(
             OUTPUT ${output}
-            COMMAND $<TARGET_FILE:Lagom::StateMachineGenerator> ${source} > ${output}.tmp
+            COMMAND $<TARGET_FILE:Lagom::StateMachineGenerator> ${source} -o ${output}.tmp
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different ${output}.tmp ${output}
             COMMAND "${CMAKE_COMMAND}" -E remove ${output}.tmp
             VERBATIM
