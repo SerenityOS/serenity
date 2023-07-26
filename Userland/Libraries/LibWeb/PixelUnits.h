@@ -283,8 +283,7 @@ template<>
 struct Traits<Web::CSSPixels> : public GenericTraits<Web::CSSPixels> {
     static unsigned hash(Web::CSSPixels const& key)
     {
-        VERIFY(isfinite(key.to_double()));
-        return Traits<double>::hash(key.to_double());
+        return Traits<int>::hash(key.raw_value());
     }
 
     static bool equals(Web::CSSPixels const& a, Web::CSSPixels const& b)
