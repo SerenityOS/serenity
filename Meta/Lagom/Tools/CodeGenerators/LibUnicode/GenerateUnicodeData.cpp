@@ -96,16 +96,19 @@ struct BlockName {
     size_t name { 0 };
 };
 
+using PropertyTable = Vector<bool>;
+
+static constexpr auto CODE_POINT_TABLES_MSB_COUNT = 16u;
+static_assert(CODE_POINT_TABLES_MSB_COUNT < 24u);
+
+static constexpr auto CODE_POINT_TABLES_LSB_COUNT = 24u - CODE_POINT_TABLES_MSB_COUNT;
+static constexpr auto CODE_POINT_TABLES_LSB_MASK = NumericLimits<u32>::max() >> (NumericLimits<u32>::digits() - CODE_POINT_TABLES_LSB_COUNT);
+
+template<typename PropertyType>
 struct CodePointTables {
-    static constexpr auto MSB_COUNT = 16u;
-    static_assert(MSB_COUNT < 24u);
-
-    static constexpr auto LSB_COUNT = 24u - MSB_COUNT;
-    static constexpr auto LSB_MASK = NumericLimits<u32>::max() >> (NumericLimits<u32>::digits() - LSB_COUNT);
-
     Vector<size_t> stage1;
     Vector<size_t> stage2;
-    Vector<Vector<bool>> unique_properties;
+    Vector<PropertyType> unique_properties;
 };
 
 struct UnicodeData {
@@ -169,13 +172,13 @@ struct UnicodeData {
     PropList word_break_props;
     PropList sentence_break_props;
 
-    CodePointTables general_category_tables;
-    CodePointTables property_tables;
-    CodePointTables script_tables;
-    CodePointTables script_extension_tables;
-    CodePointTables grapheme_break_tables;
-    CodePointTables word_break_tables;
-    CodePointTables sentence_break_tables;
+    CodePointTables<PropertyTable> general_category_tables;
+    CodePointTables<PropertyTable> property_tables;
+    CodePointTables<PropertyTable> script_tables;
+    CodePointTables<PropertyTable> script_extension_tables;
+    CodePointTables<PropertyTable> grapheme_break_tables;
+    CodePointTables<PropertyTable> word_break_tables;
+    CodePointTables<PropertyTable> sentence_break_tables;
 };
 
 static DeprecatedString sanitize_entry(DeprecatedString const& entry)
@@ -888,6 +891,9 @@ static ErrorOr<void> generate_unicode_data_implementation(Core::InputBufferedFil
     generator.set("largest_case_folding_size", DeprecatedString::number(unicode_data.largest_case_folding_size));
     generator.set("case_folding_size", DeprecatedString::number(unicode_data.case_folding.size()));
 
+    TRY(generator.set("CODE_POINT_TABLES_LSB_COUNT", TRY(String::number(CODE_POINT_TABLES_LSB_COUNT))));
+    TRY(generator.set("CODE_POINT_TABLES_LSB_MASK", TRY(String::formatted("{:#x}", CODE_POINT_TABLES_LSB_MASK))));
+
     generator.append(R"~~~(
 #include <AK/Array.h>
 #include <AK/BinarySearch.h>
@@ -1091,7 +1097,34 @@ static constexpr Array<@mapping_type@, @size@> s_@name@_mappings { {
             return data.decomposition_mapping;
         });
 
-    auto append_code_point_tables = [&](StringView collection_snake, CodePointTables const& tables) -> ErrorOr<void> {
+    auto append_property_table = [&](auto collection_snake, auto const& unique_properties) -> ErrorOr<void> {
+        TRY(generator.set("name", TRY(String::formatted("{}_unique_properties", collection_snake))));
+        TRY(generator.set("outer_size", TRY(String::number(unique_properties.size()))));
+        TRY(generator.set("inner_size", TRY(String::number(unique_properties[0].size()))));
+
+        generator.append(R"~~~(
+static constexpr Array<Array<bool, @inner_size@>, @outer_size@> @name@ { {)~~~");
+
+        for (auto const& property_set : unique_properties) {
+            generator.append(R"~~~(
+    { )~~~");
+
+            for (auto value : property_set) {
+                TRY(generator.set("value", TRY(String::formatted("{}", value))));
+                generator.append("@value@, ");
+            }
+
+            generator.append(" },");
+        }
+
+        generator.append(R"~~~(
+} };
+)~~~");
+
+        return {};
+    };
+
+    auto append_code_point_tables = [&](StringView collection_snake, auto const& tables, auto& append_unique_properties) -> ErrorOr<void> {
         auto append_stage = [&](auto const& stage, auto name, auto type) -> ErrorOr<void> {
             TRY(generator.set("name", TRY(String::formatted("{}_{}", collection_snake, name))));
             TRY(generator.set("size", TRY(String::number(stage.size()))));
@@ -1124,46 +1157,19 @@ static constexpr Array<@type@, @size@> @name@ { {
             return {};
         };
 
-        auto append_unique_properties = [&](auto const& unique_properties) -> ErrorOr<void> {
-            TRY(generator.set("name", TRY(String::formatted("{}_unique_properties", collection_snake))));
-            TRY(generator.set("outer_size", TRY(String::number(unique_properties.size()))));
-            TRY(generator.set("inner_size", TRY(String::number(unique_properties[0].size()))));
-
-            generator.append(R"~~~(
-static constexpr Array<Array<bool, @inner_size@>, @outer_size@> @name@ { {)~~~");
-
-            for (auto const& property_set : unique_properties) {
-                generator.append(R"~~~(
-    { )~~~");
-
-                for (auto value : property_set) {
-                    TRY(generator.set("value", TRY(String::formatted("{}", value))));
-                    generator.append("@value@, ");
-                }
-
-                generator.append(" },");
-            }
-
-            generator.append(R"~~~(
-} };
-)~~~");
-
-            return {};
-        };
-
         TRY(append_stage(tables.stage1, "stage1"sv, "u16"sv));
         TRY(append_stage(tables.stage2, "stage2"sv, "u16"sv));
-        TRY(append_unique_properties(tables.unique_properties));
+        TRY(append_unique_properties(collection_snake, tables.unique_properties));
         return {};
     };
 
-    TRY(append_code_point_tables("s_general_categories"sv, unicode_data.general_category_tables));
-    TRY(append_code_point_tables("s_properties"sv, unicode_data.property_tables));
-    TRY(append_code_point_tables("s_scripts"sv, unicode_data.script_tables));
-    TRY(append_code_point_tables("s_script_extensions"sv, unicode_data.script_extension_tables));
-    TRY(append_code_point_tables("s_grapheme_break_properties"sv, unicode_data.grapheme_break_tables));
-    TRY(append_code_point_tables("s_word_break_properties"sv, unicode_data.word_break_tables));
-    TRY(append_code_point_tables("s_sentence_break_properties"sv, unicode_data.sentence_break_tables));
+    TRY(append_code_point_tables("s_general_categories"sv, unicode_data.general_category_tables, append_property_table));
+    TRY(append_code_point_tables("s_properties"sv, unicode_data.property_tables, append_property_table));
+    TRY(append_code_point_tables("s_scripts"sv, unicode_data.script_tables, append_property_table));
+    TRY(append_code_point_tables("s_script_extensions"sv, unicode_data.script_extension_tables, append_property_table));
+    TRY(append_code_point_tables("s_grapheme_break_properties"sv, unicode_data.grapheme_break_tables, append_property_table));
+    TRY(append_code_point_tables("s_word_break_properties"sv, unicode_data.word_break_tables, append_property_table));
+    TRY(append_code_point_tables("s_sentence_break_properties"sv, unicode_data.sentence_break_tables, append_property_table));
 
     auto append_code_point_display_names = [&](StringView type, StringView name, auto const& display_names) {
         constexpr size_t max_values_per_row = 30;
@@ -1308,14 +1314,11 @@ Optional<CodePointDecomposition const> code_point_decomposition_by_index(size_t 
         generator.set("enum_snake", enum_snake);
         generator.set("collection_name", collection_name);
 
-        TRY(generator.set("LSB_COUNT", TRY(String::number(CodePointTables::LSB_COUNT))));
-        TRY(generator.set("LSB_MASK", TRY(String::formatted("{:#x}", CodePointTables::LSB_MASK))));
-
         generator.append(R"~~~(
 bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
 {
-    auto stage1_index = code_point >> @LSB_COUNT@;
-    auto stage2_index = @collection_name@_stage1[stage1_index] + (code_point & @LSB_MASK@);
+    auto stage1_index = code_point >> @CODE_POINT_TABLES_LSB_COUNT@;
+    auto stage2_index = @collection_name@_stage1[stage1_index] + (code_point & @CODE_POINT_TABLES_LSB_MASK@);
     auto unique_properties_index = @collection_name@_stage2[stage2_index];
 
     auto const& property_set = @collection_name@_unique_properties[unique_properties_index];
@@ -1499,6 +1502,31 @@ static ErrorOr<void> normalize_script_extensions(PropList& script_extensions, Pr
     return {};
 }
 
+struct PropertyMetadata {
+    static ErrorOr<PropertyMetadata> create(PropList& property_list)
+    {
+        PropertyMetadata data;
+        TRY(data.property_values.try_ensure_capacity(property_list.size()));
+        TRY(data.property_set.try_ensure_capacity(property_list.size()));
+
+        auto property_names = property_list.keys();
+        quick_sort(property_names);
+
+        for (auto& property_name : property_names) {
+            auto& code_point_ranges = property_list.get(property_name).value();
+            data.property_values.unchecked_append(move(code_point_ranges));
+        }
+
+        return data;
+    }
+
+    Vector<typename PropList::ValueType> property_values;
+    PropertyTable property_set;
+
+    Vector<size_t> current_block;
+    HashMap<decltype(current_block), size_t> unique_blocks;
+};
+
 // The goal here is to produce a set of tables that represent a category of code point properties for every code point.
 // The most naive method would be to generate a single table per category, each with one entry per code point. Each of
 // those tables would have a size of 0x10ffff though, which is a non-starter. Instead, we create a set of 2-stage lookup
@@ -1538,62 +1566,18 @@ static ErrorOr<void> create_code_point_tables(UnicodeData& unicode_data)
 {
     static constexpr auto MAX_CODE_POINT = 0x10ffffu;
 
-    struct TableMetadata {
-        static ErrorOr<TableMetadata> create(PropList& property_list)
-        {
-            TableMetadata data;
-            TRY(data.property_values.try_ensure_capacity(property_list.size()));
-            TRY(data.property_set.try_ensure_capacity(property_list.size()));
-
-            auto property_names = property_list.keys();
-            quick_sort(property_names);
-
-            for (auto& property_name : property_names) {
-                auto& code_point_ranges = property_list.get(property_name).value();
-                data.property_values.unchecked_append(move(code_point_ranges));
-            }
-
-            return data;
-        }
-
-        Vector<typename PropList::ValueType> property_values;
-        Vector<bool> property_set;
-
-        Vector<size_t> current_block;
-        HashMap<decltype(current_block), size_t> unique_blocks;
-    };
-
-    auto update_tables = [](auto code_point, auto& tables, auto& metadata) -> ErrorOr<void> {
-        static constexpr auto BLOCK_SIZE = CodePointTables::LSB_MASK + 1;
-        static Unicode::CodePointRangeComparator comparator {};
-
-        for (auto& property_values : metadata.property_values) {
-            size_t ranges_to_remove = 0;
-            auto has_property = false;
-
-            for (auto const& range : property_values) {
-                if (auto comparison = comparator(code_point, range); comparison <= 0) {
-                    has_property = comparison == 0;
-                    break;
-                }
-
-                ++ranges_to_remove;
-            }
-
-            metadata.property_set.unchecked_append(has_property);
-            property_values.remove(0, ranges_to_remove);
-        }
+    auto update_tables = [&](auto code_point, auto& tables, auto& metadata, auto const& values) -> ErrorOr<void> {
+        static constexpr auto BLOCK_SIZE = CODE_POINT_TABLES_LSB_MASK + 1;
 
         size_t unique_properties_index = 0;
-        if (auto block_index = tables.unique_properties.find_first_index(metadata.property_set); block_index.has_value()) {
+        if (auto block_index = tables.unique_properties.find_first_index(values); block_index.has_value()) {
             unique_properties_index = *block_index;
         } else {
             unique_properties_index = tables.unique_properties.size();
-            TRY(tables.unique_properties.try_append(metadata.property_set));
+            TRY(tables.unique_properties.try_append(values));
         }
 
         TRY(metadata.current_block.try_append(unique_properties_index));
-        metadata.property_set.clear_with_capacity();
 
         if (metadata.current_block.size() == BLOCK_SIZE || code_point == MAX_CODE_POINT) {
             size_t stage2_index = 0;
@@ -1613,22 +1597,48 @@ static ErrorOr<void> create_code_point_tables(UnicodeData& unicode_data)
         return {};
     };
 
-    auto general_category_metadata = TRY(TableMetadata::create(unicode_data.general_categories));
-    auto property_metadata = TRY(TableMetadata::create(unicode_data.prop_list));
-    auto script_metadata = TRY(TableMetadata::create(unicode_data.script_list));
-    auto script_extension_metadata = TRY(TableMetadata::create(unicode_data.script_extensions));
-    auto grapheme_break_metadata = TRY(TableMetadata::create(unicode_data.grapheme_break_props));
-    auto word_break_metadata = TRY(TableMetadata::create(unicode_data.word_break_props));
-    auto sentence_break_metadata = TRY(TableMetadata::create(unicode_data.sentence_break_props));
+    auto update_property_tables = [&](auto code_point, auto& tables, auto& metadata) -> ErrorOr<void> {
+        static Unicode::CodePointRangeComparator comparator {};
+
+        for (auto& property_values : metadata.property_values) {
+            size_t ranges_to_remove = 0;
+            auto has_property = false;
+
+            for (auto const& range : property_values) {
+                if (auto comparison = comparator(code_point, range); comparison <= 0) {
+                    has_property = comparison == 0;
+                    break;
+                }
+
+                ++ranges_to_remove;
+            }
+
+            metadata.property_set.unchecked_append(has_property);
+            property_values.remove(0, ranges_to_remove);
+        }
+
+        TRY(update_tables(code_point, tables, metadata, metadata.property_set));
+        metadata.property_set.clear_with_capacity();
+
+        return {};
+    };
+
+    auto general_category_metadata = TRY(PropertyMetadata::create(unicode_data.general_categories));
+    auto property_metadata = TRY(PropertyMetadata::create(unicode_data.prop_list));
+    auto script_metadata = TRY(PropertyMetadata::create(unicode_data.script_list));
+    auto script_extension_metadata = TRY(PropertyMetadata::create(unicode_data.script_extensions));
+    auto grapheme_break_metadata = TRY(PropertyMetadata::create(unicode_data.grapheme_break_props));
+    auto word_break_metadata = TRY(PropertyMetadata::create(unicode_data.word_break_props));
+    auto sentence_break_metadata = TRY(PropertyMetadata::create(unicode_data.sentence_break_props));
 
     for (u32 code_point = 0; code_point <= MAX_CODE_POINT; ++code_point) {
-        TRY(update_tables(code_point, unicode_data.general_category_tables, general_category_metadata));
-        TRY(update_tables(code_point, unicode_data.property_tables, property_metadata));
-        TRY(update_tables(code_point, unicode_data.script_tables, script_metadata));
-        TRY(update_tables(code_point, unicode_data.script_extension_tables, script_extension_metadata));
-        TRY(update_tables(code_point, unicode_data.grapheme_break_tables, grapheme_break_metadata));
-        TRY(update_tables(code_point, unicode_data.word_break_tables, word_break_metadata));
-        TRY(update_tables(code_point, unicode_data.sentence_break_tables, sentence_break_metadata));
+        TRY(update_property_tables(code_point, unicode_data.general_category_tables, general_category_metadata));
+        TRY(update_property_tables(code_point, unicode_data.property_tables, property_metadata));
+        TRY(update_property_tables(code_point, unicode_data.script_tables, script_metadata));
+        TRY(update_property_tables(code_point, unicode_data.script_extension_tables, script_extension_metadata));
+        TRY(update_property_tables(code_point, unicode_data.grapheme_break_tables, grapheme_break_metadata));
+        TRY(update_property_tables(code_point, unicode_data.word_break_tables, word_break_metadata));
+        TRY(update_property_tables(code_point, unicode_data.sentence_break_tables, sentence_break_metadata));
     }
 
     return {};
