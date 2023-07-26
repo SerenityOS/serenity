@@ -227,10 +227,9 @@ static ErrorOr<String> serialize_ipv4_address(URL::IPv4Address address)
 }
 
 // https://url.spec.whatwg.org/#concept-ipv6-serializer
-static ErrorOr<String> serialize_ipv6_address(URL::IPv6Address const& address)
+static void serialize_ipv6_address(URL::IPv6Address const& address, StringBuilder& output)
 {
     // 1. Let output be the empty string.
-    StringBuilder output;
 
     // 2. Let compress be an index to the first IPv6 piece in the first longest sequences of address’s IPv6 pieces that are 0.
     // 3. If there is no sequence of address’s IPv6 pieces that are 0 that is longer than 1, then set compress to null.
@@ -286,7 +285,6 @@ static ErrorOr<String> serialize_ipv6_address(URL::IPv6Address const& address)
     }
 
     // 6. Return output.
-    return output.to_string();
 }
 
 // https://url.spec.whatwg.org/#concept-ipv6-parser
@@ -566,10 +564,9 @@ static Optional<DeprecatedString> parse_host(StringView input, bool is_not_speci
         if (!address.has_value())
             return {};
 
-        auto result = serialize_ipv6_address(*address);
-        if (result.is_error())
-            return {};
-        return result.release_value().to_deprecated_string();
+        StringBuilder output;
+        serialize_ipv6_address(*address, output);
+        return output.to_deprecated_string();
     }
 
     // 2. If isNotSpecial is true, then return the result of opaque-host parsing input.
