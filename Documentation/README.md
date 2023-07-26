@@ -62,6 +62,7 @@ Make sure to read the basic [Build Instructions](BuildInstructions.md) first.
 * [LibWeb: From Loading to Painting](Browser/LibWebFromLoadingToPainting.md)
 * [How to Add an IDL File](Browser/AddNewIDLFile.md)
 * [LibWeb Code Style & Patterns](Browser/Patterns.md)
+* [LibJS Garbage Collection](Browser/LibJSGarbageCollection.md)
 
 ## Kernel
 * [AHCI Locking](Kernel/AHCILocking.md)
