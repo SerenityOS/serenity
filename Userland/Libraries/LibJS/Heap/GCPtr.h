@@ -60,13 +60,13 @@ public:
         return *this;
     }
 
-    T* operator->() const { return m_ptr; }
+    RETURNS_NONNULL T* operator->() const { return m_ptr; }
 
     T& operator*() const { return *m_ptr; }
 
-    T* ptr() const { return m_ptr; }
+    RETURNS_NONNULL T* ptr() const { return m_ptr; }
 
-    operator T*() const { return m_ptr; }
+    RETURNS_NONNULL operator T*() const { return m_ptr; }
 
     operator T&() const { return *m_ptr; }
 
