@@ -66,12 +66,12 @@ bool CSSPixels::operator==(CSSPixels const& other) const
 
 CSSPixels& CSSPixels::operator++()
 {
-    m_value += fixed_point_denominator;
+    m_value = Checked<int>::saturating_add(m_value, fixed_point_denominator);
     return *this;
 }
 CSSPixels& CSSPixels::operator--()
 {
-    m_value -= fixed_point_denominator;
+    m_value = Checked<int>::saturating_sub(m_value, fixed_point_denominator);
     return *this;
 }
 
@@ -91,25 +91,14 @@ CSSPixels CSSPixels::operator-() const
     return from_raw(-raw_value());
 }
 
-static inline int saturated_addition(int a, int b)
-{
-    i32 overflow = (b > 0 && a > NumericLimits<i32>::max() - b);
-    i32 underflow = (b < 0 && a < NumericLimits<i32>::min() - b);
-    return overflow ? NumericLimits<i32>::max() : (underflow ? NumericLimits<i32>::min() : a + b);
-}
-
 CSSPixels CSSPixels::operator+(CSSPixels const& other) const
 {
-    CSSPixels result;
-    result.set_raw_value(saturated_addition(raw_value(), other.raw_value()));
-    return result;
+    return from_raw(Checked<int>::saturating_add(raw_value(), other.raw_value()));
 }
 
 CSSPixels CSSPixels::operator-(CSSPixels const& other) const
 {
-    CSSPixels result;
-    result.set_raw_value(saturated_addition(raw_value(), -other.raw_value()));
-    return result;
+    return from_raw(Checked<int>::saturating_sub(raw_value(), other.raw_value()));
 }
 
 CSSPixels CSSPixels::operator*(CSSPixels const& other) const
