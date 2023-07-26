@@ -408,13 +408,13 @@ void TableFormattingContext::compute_intrinsic_percentage(size_t max_cell_span)
                 //    columns spanned by the cell that have an intrinsic percentage width of the column based on cells of span up to N-1 equal to 0%.
                 CSSPixels ajusted_cell_contribution;
                 if (width_sum_of_columns_with_zero_intrinsic_percentage != 0) {
-                    ajusted_cell_contribution = cell_contribution * rows_or_columns[rc_index].max_size / width_sum_of_columns_with_zero_intrinsic_percentage;
+                    ajusted_cell_contribution = cell_contribution * rows_or_columns[rc_index].max_size / static_cast<double>(width_sum_of_columns_with_zero_intrinsic_percentage);
                 } else {
                     // However, if this ratio is undefined because the denominator is zero, instead use the 1 divided by the number of columns
                     // spanned by the cell that have an intrinsic percentage width of the column based on cells of span up to N-1 equal to zero.
                     ajusted_cell_contribution = cell_contribution * 1 / number_of_columns_with_zero_intrinsic_percentage;
                 }
-                intrinsic_percentage_contribution_by_index[rc_index] = max(ajusted_cell_contribution.to_double(), intrinsic_percentage_contribution_by_index[rc_index]);
+                intrinsic_percentage_contribution_by_index[rc_index] = max(static_cast<double>(ajusted_cell_contribution), intrinsic_percentage_contribution_by_index[rc_index]);
             }
         }
         for (size_t rc_index = 0; rc_index < rows_or_columns.size(); ++rc_index) {
@@ -486,7 +486,7 @@ void TableFormattingContext::compute_table_measures()
                     // - the outer min-content size of the cell minus the baseline min-content size and the baseline border spacing, clamped
                     //   to be at least 0 and at most the difference between the baseline max-content size and the baseline min-content size
                     auto normalized_max_min_diff = baseline_max_content_size != baseline_min_content_size
-                        ? (rows_or_columns[rc_index].max_size - rows_or_columns[rc_index].min_size) / (baseline_max_content_size - baseline_min_content_size)
+                        ? (rows_or_columns[rc_index].max_size - rows_or_columns[rc_index].min_size) / static_cast<double>(baseline_max_content_size - baseline_min_content_size)
                         : 0;
                     auto clamped_diff_to_baseline_min = min(
                         max(cell_min_size<RowOrColumn>(cell) - baseline_min_content_size - baseline_border_spacing, 0),
@@ -495,7 +495,7 @@ void TableFormattingContext::compute_table_measures()
                     // the product of:
                     // - the ratio of the max-content size based on cells of span up to N-1 of the column to the baseline max-content size
                     // - the outer min-content size of the cell minus the baseline max-content size and baseline border spacing, or 0 if this is negative
-                    cell_min_contribution += (rows_or_columns[rc_index].max_size / baseline_max_content_size)
+                    cell_min_contribution += (rows_or_columns[rc_index].max_size / static_cast<double>(baseline_max_content_size))
                         * max(CSSPixels(0), cell_min_size<RowOrColumn>(cell) - baseline_max_content_size - baseline_border_spacing);
 
                     // The contribution of the cell is the sum of:
@@ -504,7 +504,7 @@ void TableFormattingContext::compute_table_measures()
                     // and the product of:
                     // - the ratio of the max-content size based on cells of span up to N-1 of the column to the baseline max-content size
                     // - the outer max-content size of the cell minus the baseline max-content size and the baseline border spacing, or 0 if this is negative
-                    cell_max_contribution += (rows_or_columns[rc_index].max_size / baseline_max_content_size)
+                    cell_max_contribution += (rows_or_columns[rc_index].max_size / static_cast<double>(baseline_max_content_size))
                         * max(CSSPixels(0), cell_max_size<RowOrColumn>(cell) - baseline_max_content_size - baseline_border_spacing);
                     cell_min_contributions_by_rc_index[rc_index].append(cell_min_contribution);
                     cell_max_contributions_by_rc_index[rc_index].append(cell_max_contribution);
@@ -645,7 +645,7 @@ void TableFormattingContext::assign_columns_width_linear_combination(Vector<CSSP
     if (columns_total_candidate_width == columns_total_used_width) {
         return;
     }
-    auto candidate_weight = ((available_width - columns_total_used_width) / (columns_total_candidate_width - columns_total_used_width)).to_double();
+    auto candidate_weight = (available_width - columns_total_used_width) / static_cast<double>(columns_total_candidate_width - columns_total_used_width);
     for (size_t i = 0; i < m_columns.size(); ++i) {
         auto& column = m_columns[i];
         column.used_width = candidate_weight * candidate_widths[i] + (1 - candidate_weight) * column.used_width;
@@ -669,7 +669,7 @@ bool TableFormattingContext::distribute_excess_width_proportionally_to_max_width
     VERIFY(total_max_width > 0);
     for (auto& column : m_columns) {
         if (column_filter(column)) {
-            column.used_width += excess_width * column.max_size / total_max_width;
+            column.used_width += excess_width * column.max_size / static_cast<double>(total_max_width);
         }
     }
     return true;
@@ -1048,7 +1048,7 @@ void TableFormattingContext::distribute_height_to_rows()
         // will be the weighted mean of the base and the reference size that yields the correct total height.
 
         for (auto& row : m_rows) {
-            auto weight = row.reference_height / sum_reference_height;
+            auto weight = row.reference_height / static_cast<double>(sum_reference_height);
             auto final_height = m_table_height * weight;
             row.final_height = final_height;
         }

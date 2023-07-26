@@ -5,22 +5,22 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         Box <table> at (9,9) content-size 79.4375x83.875 table-box [TFC] children: not-inline
           BlockContainer <(anonymous)> (not painted) children: inline
             TextNode <#text>
-          Box <tbody> at (9,9) content-size 75.4375x76.640625 table-row-group children: not-inline
-            Box <tr> at (11,11) content-size 75.4375x20.671875 table-row children: not-inline
-              BlockContainer <td> at (13,12.609375) content-size 71.4375x17.46875 table-cell [BFC] children: inline
+          Box <tbody> at (9,9) content-size 75.4375x77.859375 table-row-group children: not-inline
+            Box <tr> at (11,11) content-size 75.4375x21.453125 table-row children: not-inline
+              BlockContainer <td> at (13,13) content-size 71.4375x17.46875 table-cell [BFC] children: inline
                 line 0 width: 7.9375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-                  frag 0 from TextNode start: 0, length: 1, rect: [13,12.609375 7.9375x17.46875]
+                  frag 0 from TextNode start: 0, length: 1, rect: [13,13 7.9375x17.46875]
                     "*"
                 TextNode <#text>
             BlockContainer <(anonymous)> (not painted) children: inline
               TextNode <#text>
-            Box <tr> at (11,33.671875) content-size 75.4375x55.96875 table-row children: not-inline
-              BlockContainer <td> at (13,44.1875) content-size 71.4375x34.9375 table-cell [BFC] children: inline
+            Box <tr> at (11,34.453125) content-size 75.4375x56.40625 table-row children: not-inline
+              BlockContainer <td> at (13,45.1875) content-size 71.4375x34.9375 table-cell [BFC] children: inline
                 line 0 width: 71.4375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-                  frag 0 from TextNode start: 0, length: 9, rect: [13,44.1875 71.4375x17.46875]
+                  frag 0 from TextNode start: 0, length: 9, rect: [13,45.1875 71.4375x17.46875]
                     "*********"
                 line 1 width: 63.5625, height: 17.46875, bottom: 34.9375, baseline: 13.53125
-                  frag 0 from TextNode start: 10, length: 8, rect: [13,61.65625 63.5625x17.46875]
+                  frag 0 from TextNode start: 10, length: 8, rect: [13,62.65625 63.5625x17.46875]
                     "***** **"
                 TextNode <#text>
             BlockContainer <(anonymous)> (not painted) children: inline
