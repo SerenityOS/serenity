@@ -59,6 +59,13 @@ public:
     CSSPixels(float value);
     CSSPixels(double value);
 
+    static CSSPixels from_raw(int value)
+    {
+        CSSPixels res;
+        res.set_raw_value(value);
+        return res;
+    }
+
     float to_float() const;
     double to_double() const;
     int to_int() const;

@@ -83,16 +83,12 @@ int CSSPixels::operator<=>(CSSPixels const& other) const
 
 CSSPixels CSSPixels::operator+() const
 {
-    CSSPixels result;
-    result.set_raw_value(+raw_value());
-    return result;
+    return from_raw(+raw_value());
 }
 
 CSSPixels CSSPixels::operator-() const
 {
-    CSSPixels result;
-    result.set_raw_value(-raw_value());
-    return result;
+    return from_raw(-raw_value());
 }
 
 static inline int saturated_addition(int a, int b)
@@ -156,9 +152,7 @@ CSSPixels& CSSPixels::operator/=(CSSPixels const& other)
 
 CSSPixels CSSPixels::abs() const
 {
-    CSSPixels result;
-    result.set_raw_value(::abs(m_value));
-    return result;
+    return from_raw(::abs(m_value));
 }
 
 }
