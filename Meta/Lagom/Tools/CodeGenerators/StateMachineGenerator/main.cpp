@@ -216,10 +216,15 @@ void output_header(StateMachine const&, SourceGenerator&);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    Core::ArgsParser args_parser;
     StringView path;
-    args_parser.add_positional_argument(path, "Path to parser description", "input", Core::ArgsParser::Required::Yes);
-    args_parser.parse(arguments);
+    StringView output_file = "-"sv;
+
+    Core::ArgsParser parser;
+    parser.add_positional_argument(path, "Path to parser description", "input", Core::ArgsParser::Required::Yes);
+    parser.add_option(output_file, "Place to write file", "output", 'o', "output-file");
+    parser.parse(arguments);
+
+    auto output = TRY(Core::File::open_file_or_standard_stream(output_file, Core::File::OpenMode::Write));
 
     auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
     auto content = TRY(file->read_until_eof());
@@ -228,7 +233,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringBuilder builder;
     SourceGenerator generator { builder };
     output_header(*state_machine, generator);
-    outln("{}", generator.as_string_view());
+
+    TRY(output->write_until_depleted(generator.as_string_view().bytes()));
     return 0;
 }
 
