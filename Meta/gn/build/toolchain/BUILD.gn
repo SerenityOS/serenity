@@ -1,3 +1,6 @@
+import("//Meta/gn/build/serenity_target.gni")
+import("//Meta/gn/build/toolchain/compiler.gni")
+
 unix_copy_command = "ln -f {{source}} {{output}} 2>/dev/null || (rm -rf {{output}} && cp -af {{source}} {{output}})"
 
 template("unix_toolchain") {
@@ -9,6 +12,13 @@ template("unix_toolchain") {
 
     forward_variables_from(invoker.toolchain_args, "*")
     forward_variables_from(invoker, "*")
+
+    not_needed([
+                 "current_cpu",
+                 "cc",
+                 "is_clang",
+                 "use_lld",
+               ])
 
     tool("cc") {
       depfile = "{{output}}.d"
@@ -55,10 +65,12 @@ template("unix_toolchain") {
       description = "AR {{output}}"
       outputs = [ "{{output_dir}}/{{target_output_name}}.a" ]
       output_prefix = "lib"
-      if (current_os != "serenity") {
+      if (current_os == "serenity") {
+        default_output_dir = "{{target_out_dir}}"
+      } else {
         output_prefix = "liblagom-"
+        default_output_dir = "{{root_out_dir}}/lib"
       }
-      default_output_dir = "{{root_out_dir}}/lib"
     }
 
     # Make these apply to all tools below.
@@ -77,10 +89,12 @@ template("unix_toolchain") {
       description = "SOLINK $outfile"
       outputs = [ outfile ]
       output_prefix = "lib"
-      if (current_os != "serenity") {
+      if (current_os == "serenity") {
+        default_output_dir = "{{target_out_dir}}"
+      } else {
         output_prefix = "liblagom-"
+        default_output_dir = "{{root_out_dir}}/lib"
       }
-      default_output_dir = "{{root_out_dir}}/lib"
     }
 
     tool("solink_module") {
@@ -94,10 +108,12 @@ template("unix_toolchain") {
       }
       description = "SOLINK $outfile"
       outputs = [ outfile ]
-      if (current_os != "serenity") {
+      if (current_os == "serenity") {
+        default_output_dir = "{{target_out_dir}}"
+      } else {
         output_prefix = "lagom-"
+        default_output_dir = "{{root_out_dir}}/lib"
       }
-      default_output_dir = "{{root_out_dir}}/lib"
     }
 
     tool("link") {
@@ -110,9 +126,13 @@ template("unix_toolchain") {
       description = "LINK $outfile"
       outputs = [ outfile ]
 
-      # Setting this allows targets to override the default executable output by
-      # setting output_dir.
-      default_output_dir = "{{root_out_dir}}/bin"
+      if (current_os == "serenity") {
+        # Setting this allows targets to override the default executable output by
+        # setting output_dir.
+        default_output_dir = "{{target_out_dir}}"
+      } else {
+        default_output_dir = "{{root_out_dir}}/bin"
+      }
     }
 
     tool("copy") {
@@ -157,4 +177,15 @@ unix_toolchain("unix") {
     cxx = host_cxx
   }
 }
-# Note: For serenity, we can override cc and cxx etc in toolchain_args
+
+unix_toolchain("serenity") {
+  cc = serenity_cc
+  cxx = serenity_cxx
+  ld = serenity_ld
+  toolchain_args = {
+    current_os = "serenity"
+    current_cpu = serenity_arch
+    is_clang = serenity_toolchain == "Clang"
+    use_lld = is_clang
+  }
+}

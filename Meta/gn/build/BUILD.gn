@@ -142,6 +142,7 @@ config("compiler_defaults") {
   if (sysroot != "") {
     if (current_os != "mac" && current_os != "android") {
       cflags += [ "--sysroot=" + rebase_path(sysroot, root_build_dir) ]
+      ldflags += [ "--sysroot=" + rebase_path(sysroot, root_build_dir) ]
     }
   }
 

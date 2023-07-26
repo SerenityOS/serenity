@@ -1,4 +1,7 @@
 declare_args() {
   # Path of sysroot to use.
   sysroot = ""
+  if (current_os == "serenity") {
+    sysroot = "$root_build_dir/Root"
+  }
 }
