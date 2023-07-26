@@ -70,12 +70,30 @@ struct CodePointName {
     size_t name { 0 };
 };
 
+struct CasingTable {
+    bool operator==(CasingTable const& other) const
+    {
+        return canonical_combining_class == other.canonical_combining_class
+            && simple_lowercase_mapping == other.simple_lowercase_mapping
+            && simple_uppercase_mapping == other.simple_uppercase_mapping
+            && simple_titlecase_mapping == other.simple_titlecase_mapping
+            && special_casing_indices == other.special_casing_indices
+            && case_folding_indices == other.case_folding_indices;
+    }
+
+    u8 canonical_combining_class { 0 };
+    Optional<u32> simple_uppercase_mapping;
+    Optional<u32> simple_lowercase_mapping;
+    Optional<u32> simple_titlecase_mapping;
+    Vector<u32> special_casing_indices;
+    Vector<u32> case_folding_indices;
+};
+
 // https://www.unicode.org/reports/tr44/#UnicodeData.txt
 struct CodePointData {
     u32 code_point { 0 };
     DeprecatedString name;
     Optional<size_t> abbreviation;
-    u8 canonical_combining_class { 0 };
     DeprecatedString bidi_class;
     Optional<CodePointDecomposition> decomposition_mapping;
     Optional<i8> numeric_value_decimal;
@@ -84,11 +102,7 @@ struct CodePointData {
     bool bidi_mirrored { false };
     DeprecatedString unicode_1_name;
     DeprecatedString iso_comment;
-    Optional<u32> simple_uppercase_mapping;
-    Optional<u32> simple_lowercase_mapping;
-    Optional<u32> simple_titlecase_mapping;
-    Vector<u32> special_casing_indices;
-    Vector<u32> case_folding_indices;
+    CasingTable casing;
 };
 
 struct BlockName {
@@ -172,6 +186,7 @@ struct UnicodeData {
     PropList word_break_props;
     PropList sentence_break_props;
 
+    CodePointTables<CasingTable> casing_tables;
     CodePointTables<PropertyTable> general_category_tables;
     CodePointTables<PropertyTable> property_tables;
     CodePointTables<PropertyTable> script_tables;
@@ -683,7 +698,7 @@ static ErrorOr<void> parse_unicode_data(Core::InputBufferedFile& file, UnicodeDa
         CodePointData data {};
         data.code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[0]).value();
         data.name = segments[1];
-        data.canonical_combining_class = AK::StringUtils::convert_to_uint<u8>(segments[3]).value();
+        data.casing.canonical_combining_class = AK::StringUtils::convert_to_uint<u8>(segments[3]).value();
         data.bidi_class = segments[4];
         data.decomposition_mapping = parse_decomposition_mapping(segments[5], unicode_data);
         data.numeric_value_decimal = AK::StringUtils::convert_to_int<i8>(segments[6]);
@@ -692,9 +707,9 @@ static ErrorOr<void> parse_unicode_data(Core::InputBufferedFile& file, UnicodeDa
         data.bidi_mirrored = segments[9] == "Y"sv;
         data.unicode_1_name = segments[10];
         data.iso_comment = segments[11];
-        data.simple_uppercase_mapping = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[12]);
-        data.simple_lowercase_mapping = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[13]);
-        data.simple_titlecase_mapping = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[14]);
+        data.casing.simple_uppercase_mapping = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[12]);
+        data.casing.simple_lowercase_mapping = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[13]);
+        data.casing.simple_titlecase_mapping = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[14]);
 
         if (auto abbreviation = unicode_data.code_point_abbreviations.get(data.code_point); abbreviation.has_value())
             data.abbreviation = *abbreviation;
@@ -734,7 +749,7 @@ static ErrorOr<void> parse_unicode_data(Core::InputBufferedFile& file, UnicodeDa
         bool has_special_casing { false };
         for (auto const& casing : unicode_data.special_casing) {
             if (casing.code_point == data.code_point) {
-                data.special_casing_indices.append(casing.index);
+                data.casing.special_casing_indices.append(casing.index);
                 has_special_casing = true;
             }
         }
@@ -742,22 +757,22 @@ static ErrorOr<void> parse_unicode_data(Core::InputBufferedFile& file, UnicodeDa
         bool has_case_folding { false };
         for (size_t i = 0; i < unicode_data.case_folding.size(); ++i) {
             if (auto const& folding = unicode_data.case_folding[i]; folding.code_point == data.code_point) {
-                data.case_folding_indices.append(i);
+                data.casing.case_folding_indices.append(i);
                 has_case_folding = true;
             }
         }
 
-        unicode_data.code_points_with_non_zero_combining_class += data.canonical_combining_class != 0;
-        unicode_data.simple_uppercase_mapping_size += data.simple_uppercase_mapping.has_value();
-        unicode_data.simple_lowercase_mapping_size += data.simple_lowercase_mapping.has_value();
-        unicode_data.simple_titlecase_mapping_size += data.simple_titlecase_mapping.has_value();
+        unicode_data.code_points_with_non_zero_combining_class += data.casing.canonical_combining_class != 0;
+        unicode_data.simple_uppercase_mapping_size += data.casing.simple_uppercase_mapping.has_value();
+        unicode_data.simple_lowercase_mapping_size += data.casing.simple_lowercase_mapping.has_value();
+        unicode_data.simple_titlecase_mapping_size += data.casing.simple_titlecase_mapping.has_value();
         unicode_data.code_points_with_decomposition_mapping += data.decomposition_mapping.has_value();
 
         unicode_data.code_points_with_special_casing += has_special_casing;
-        unicode_data.largest_special_casing_size = max(unicode_data.largest_special_casing_size, data.special_casing_indices.size());
+        unicode_data.largest_special_casing_size = max(unicode_data.largest_special_casing_size, data.casing.special_casing_indices.size());
 
         unicode_data.code_points_with_case_folding += has_case_folding;
-        unicode_data.largest_case_folding_size = max(unicode_data.largest_case_folding_size, data.case_folding_indices.size());
+        unicode_data.largest_case_folding_size = max(unicode_data.largest_case_folding_size, data.casing.case_folding_indices.size());
 
         previous_code_point = data.code_point;
         unicode_data.code_point_data.append(move(data));
@@ -1081,21 +1096,17 @@ static constexpr Array<@mapping_type@, @size@> s_@name@_mappings { {
 
     append_code_point_mappings("combining_class"sv, "CodePointMapping"sv, unicode_data.code_points_with_non_zero_combining_class,
         [](auto const& data) -> Optional<u32> {
-            if (data.canonical_combining_class == 0)
+            if (data.casing.canonical_combining_class == 0)
                 return {};
-            return data.canonical_combining_class;
+            return data.casing.canonical_combining_class;
         });
-    append_code_point_mappings("uppercase"sv, "CodePointMapping"sv, unicode_data.simple_uppercase_mapping_size, [](auto const& data) { return data.simple_uppercase_mapping; });
-    append_code_point_mappings("lowercase"sv, "CodePointMapping"sv, unicode_data.simple_lowercase_mapping_size, [](auto const& data) { return data.simple_lowercase_mapping; });
-    append_code_point_mappings("titlecase"sv, "CodePointMapping"sv, unicode_data.simple_titlecase_mapping_size, [](auto const& data) { return data.simple_titlecase_mapping; });
-    append_code_point_mappings("special_case"sv, "SpecialCaseMapping"sv, unicode_data.code_points_with_special_casing, [](auto const& data) { return data.special_casing_indices; });
-    append_code_point_mappings("case_folding"sv, "CaseFoldingMapping"sv, unicode_data.code_points_with_case_folding, [](auto const& data) { return data.case_folding_indices; });
+    append_code_point_mappings("uppercase"sv, "CodePointMapping"sv, unicode_data.simple_uppercase_mapping_size, [](auto const& data) { return data.casing.simple_uppercase_mapping; });
+    append_code_point_mappings("lowercase"sv, "CodePointMapping"sv, unicode_data.simple_lowercase_mapping_size, [](auto const& data) { return data.casing.simple_lowercase_mapping; });
+    append_code_point_mappings("titlecase"sv, "CodePointMapping"sv, unicode_data.simple_titlecase_mapping_size, [](auto const& data) { return data.casing.simple_titlecase_mapping; });
+    append_code_point_mappings("special_case"sv, "SpecialCaseMapping"sv, unicode_data.code_points_with_special_casing, [](auto const& data) { return data.casing.special_casing_indices; });
+    append_code_point_mappings("case_folding"sv, "CaseFoldingMapping"sv, unicode_data.code_points_with_case_folding, [](auto const& data) { return data.casing.case_folding_indices; });
     append_code_point_mappings("abbreviation"sv, "CodePointAbbreviation"sv, unicode_data.code_point_abbreviations.size(), [](auto const& data) { return data.abbreviation; });
-
-    append_code_point_mappings("decomposition"sv, "CodePointDecompositionRaw"sv, unicode_data.code_points_with_decomposition_mapping,
-        [](auto const& data) {
-            return data.decomposition_mapping;
-        });
+    append_code_point_mappings("decomposition"sv, "CodePointDecompositionRaw"sv, unicode_data.code_points_with_decomposition_mapping, [](auto const& data) { return data.decomposition_mapping; });
 
     auto append_property_table = [&](auto collection_snake, auto const& unique_properties) -> ErrorOr<void> {
         TRY(generator.set("name", TRY(String::formatted("{}_unique_properties", collection_snake))));
