@@ -9,9 +9,6 @@
 
 namespace Web {
 
-static i32 const fractional_bits = 6;
-static constexpr i32 fixed_point_denominator = 1 << fractional_bits;
-
 CSSPixels::CSSPixels(int value)
 {
     m_value = value * fixed_point_denominator;
@@ -103,9 +100,26 @@ CSSPixels CSSPixels::operator-(CSSPixels const& other) const
 
 CSSPixels CSSPixels::operator*(CSSPixels const& other) const
 {
-    CSSPixels result;
-    result.set_raw_value((static_cast<i64>(raw_value()) * other.raw_value()) >> fractional_bits);
-    return result;
+    i64 value = raw_value();
+    value *= other.raw_value();
+
+    int int_value = AK::clamp_to_int(value >> fractional_bits);
+
+    // Rounding:
+    // If last bit cut off was 1:
+    if (value & (1u << (fractional_bits - 1))) {
+        // If the bit after was 1 as well
+        if (value & (radix_mask >> 2u)) {
+            // We need to round away from 0
+            int_value = Checked<int>::saturating_add(int_value, 1);
+        } else {
+            // Otherwise we round to the next even value
+            // Which means we add the least significant bit of the raw integer value
+            int_value = Checked<int>::saturating_add(int_value, int_value & 1);
+        }
+    }
+
+    return from_raw(int_value);
 }
 
 CSSPixels CSSPixels::operator/(CSSPixels const& other) const
