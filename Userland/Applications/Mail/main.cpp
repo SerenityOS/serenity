@@ -63,9 +63,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     window->show();
 
-    bool should_continue = mail_widget->connect_and_login();
-    if (!should_continue)
+    bool should_continue = TRY(mail_widget->connect_and_login());
+    if (!should_continue) {
         return 1;
+    }
 
     return app->exec();
 }
