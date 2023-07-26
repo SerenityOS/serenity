@@ -97,13 +97,13 @@ WebIDL::ExceptionOr<ReadableStreamReader> ReadableStream::get_reader(ReadableStr
 {
     // 1. If options["mode"] does not exist, return ? AcquireReadableStreamDefaultReader(this).
     if (!options.mode.has_value())
-        return TRY(acquire_readable_stream_default_reader(*this));
+        return ReadableStreamReader { TRY(acquire_readable_stream_default_reader(*this)) };
 
     // 2. Assert: options["mode"] is "byob".
     VERIFY(*options.mode == Bindings::ReadableStreamReaderMode::Byob);
 
     // 3. Return ? AcquireReadableStreamBYOBReader(this).
-    return TRY(acquire_readable_stream_byob_reader(*this));
+    return ReadableStreamReader { TRY(acquire_readable_stream_byob_reader(*this)) };
 }
 
 JS::ThrowCompletionOr<void> ReadableStream::initialize(JS::Realm& realm)

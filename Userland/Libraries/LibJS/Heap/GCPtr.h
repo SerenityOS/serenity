@@ -31,22 +31,11 @@ public:
     {
     }
 
-    NonnullGCPtr(NonnullGCPtr const& other)
-        : m_ptr(other.ptr())
-    {
-    }
-
     template<typename U>
     NonnullGCPtr(NonnullGCPtr<U> const& other)
     requires(IsConvertible<U*, T*>)
         : m_ptr(other.ptr())
     {
-    }
-
-    NonnullGCPtr& operator=(NonnullGCPtr const& other)
-    {
-        m_ptr = other.ptr();
-        return *this;
     }
 
     template<typename U>
@@ -88,7 +77,7 @@ private:
 template<typename T>
 class GCPtr {
 public:
-    GCPtr() = default;
+    constexpr GCPtr() = default;
 
     GCPtr(T& ptr)
         : m_ptr(&ptr)
@@ -97,11 +86,6 @@ public:
 
     GCPtr(T* ptr)
         : m_ptr(ptr)
-    {
-    }
-
-    GCPtr(GCPtr<T> const& other)
-        : m_ptr(other.ptr())
     {
     }
 
@@ -128,8 +112,6 @@ public:
         : m_ptr(nullptr)
     {
     }
-
-    GCPtr& operator=(GCPtr const&) = default;
 
     template<typename U>
     GCPtr& operator=(GCPtr<U> const& other)
