@@ -609,6 +609,26 @@ static Optional<DeprecatedString> parse_host(StringView input, bool is_not_speci
     return ascii_domain;
 }
 
+// https://url.spec.whatwg.org/#concept-host-serializer
+ErrorOr<String> URLParser::serialize_host(URL::Host const& host)
+{
+    // 1. If host is an IPv4 address, return the result of running the IPv4 serializer on host.
+    if (host.has<URL::IPv4Address>())
+        return serialize_ipv4_address(host.get<URL::IPv4Address>());
+
+    // 2. Otherwise, if host is an IPv6 address, return U+005B ([), followed by the result of running the IPv6 serializer on host, followed by U+005D (]).
+    if (host.has<URL::IPv6Address>()) {
+        StringBuilder output;
+        TRY(output.try_append('['));
+        serialize_ipv6_address(host.get<URL::IPv6Address>(), output);
+        TRY(output.try_append(']'));
+        return output.to_string();
+    }
+
+    // 3. Otherwise, host is a domain, opaque host, or empty host, return host.
+    return host.get<String>();
+}
+
 // https://url.spec.whatwg.org/#start-with-a-windows-drive-letter
 constexpr bool starts_with_windows_drive_letter(StringView input)
 {
