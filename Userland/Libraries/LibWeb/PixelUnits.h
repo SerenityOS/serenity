@@ -52,6 +52,11 @@ constexpr DevicePixels operator%(DevicePixels left, T right) { return left.value
 /// See https://www.w3.org/TR/css-values-3/#reference-pixel
 class CSSPixels {
 public:
+    static constexpr i32 fractional_bits = 6;
+    static constexpr i32 fixed_point_denominator = 1 << fractional_bits;
+
+    static constexpr i32 radix_mask = fixed_point_denominator - 1;
+
     CSSPixels() = default;
     CSSPixels(int value);
     CSSPixels(unsigned int value);

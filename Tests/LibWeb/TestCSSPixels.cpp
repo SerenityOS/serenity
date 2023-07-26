@@ -39,6 +39,17 @@ TEST_CASE(multiplication1)
     CSSPixels b(4);
     CSSPixels c = a * b;
     EXPECT_EQ(c, CSSPixels(12));
+
+    // Temporary overflow
+    a = CSSPixels::from_raw(0xFFFF'FFFF >> (CSSPixels::fractional_bits + 1));
+    b = 1;
+    EXPECT_EQ((a * b), a);
+
+    // Rounding
+    a = CSSPixels::from_raw(0b01'000001);
+    b = CSSPixels::from_raw(0b01'100000);
+    EXPECT_EQ(a * b, CSSPixels(a.to_double() * b.to_double()));
+    EXPECT_EQ(a * -b, CSSPixels(a.to_double() * -b.to_double()));
 }
 
 TEST_CASE(addition2)
