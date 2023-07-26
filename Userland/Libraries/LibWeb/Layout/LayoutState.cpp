@@ -334,7 +334,7 @@ void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, Us
 
 void LayoutState::UsedValues::set_content_width(CSSPixels width)
 {
-    VERIFY(isfinite(width.to_double()));
+    VERIFY(!width.might_be_saturated());
     if (width < 0) {
         // Negative widths are not allowed in CSS. We have a bug somewhere! Clamp to 0 to avoid doing too much damage.
         dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Layout calculated a negative width for {}: {}", m_node->debug_description(), width);
@@ -346,7 +346,7 @@ void LayoutState::UsedValues::set_content_width(CSSPixels width)
 
 void LayoutState::UsedValues::set_content_height(CSSPixels height)
 {
-    VERIFY(isfinite(height.to_double()));
+    VERIFY(!height.might_be_saturated());
     if (height < 0) {
         // Negative heights are not allowed in CSS. We have a bug somewhere! Clamp to 0 to avoid doing too much damage.
         dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Layout calculated a negative height for {}: {}", m_node->debug_description(), height);
