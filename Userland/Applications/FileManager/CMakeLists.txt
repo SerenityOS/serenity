@@ -12,6 +12,7 @@ compile_gml(PropertiesWindowAudioTab.gml PropertiesWindowAudioTabGML.h propertie
 compile_gml(PropertiesWindowFontTab.gml PropertiesWindowFontTabGML.h properties_window_font_tab_gml)
 compile_gml(PropertiesWindowGeneralTab.gml PropertiesWindowGeneralTabGML.h properties_window_general_tab_gml)
 compile_gml(PropertiesWindowImageTab.gml PropertiesWindowImageTabGML.h properties_window_image_tab_gml)
+compile_gml(PropertiesWindowPDFTab.gml PropertiesWindowPDFTabGML.h properties_window_pdf_tab_gml)
 
 set(SOURCES
     DesktopWidget.cpp
@@ -30,7 +31,8 @@ set(GENERATED_SOURCES
     PropertiesWindowFontTabGML.h
     PropertiesWindowGeneralTabGML.h
     PropertiesWindowImageTabGML.h
+    PropertiesWindowPDFTabGML.h
 )
 
 serenity_app(FileManager ICON app-file-manager)
-target_link_libraries(FileManager PRIVATE LibArchive LibAudio LibCore LibFileSystem LibGfx LibGUI LibDesktop LibConfig LibMain LibThreading)
+target_link_libraries(FileManager PRIVATE LibArchive LibAudio LibConfig LibCore LibDesktop LibFileSystem LibGfx LibGUI LibMain LibPDF LibThreading)
