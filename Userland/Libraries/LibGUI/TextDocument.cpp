@@ -42,10 +42,11 @@ TextDocument::TextDocument(Client* client)
     };
 }
 
-bool TextDocument::set_text(StringView text, AllowCallback allow_callback)
+bool TextDocument::set_text(StringView text, AllowCallback allow_callback, IsNewDocument is_new_document)
 {
     m_client_notifications_enabled = false;
-    m_undo_stack.clear();
+    if (is_new_document == IsNewDocument::Yes)
+        m_undo_stack.clear();
     m_spans.clear();
     m_folding_regions.clear();
     remove_all_lines();
@@ -99,7 +100,8 @@ bool TextDocument::set_text(StringView text, AllowCallback allow_callback)
     clear_text_guard.disarm();
 
     // FIXME: Should the modified state be cleared on some of the earlier returns as well?
-    set_unmodified();
+    if (is_new_document == IsNewDocument::Yes)
+        set_unmodified();
     return true;
 }
 
@@ -1057,31 +1059,24 @@ DeprecatedString InsertLineCommand::action_text() const
     return action_text_builder.to_deprecated_string();
 }
 
-ReplaceAllTextCommand::ReplaceAllTextCommand(GUI::TextDocument& document, DeprecatedString const& text, GUI::TextRange const& range, DeprecatedString const& action_text)
+ReplaceAllTextCommand::ReplaceAllTextCommand(GUI::TextDocument& document, DeprecatedString const& text, DeprecatedString const& action_text)
     : TextDocumentUndoCommand(document)
     , m_original_text(document.text())
     , m_new_text(text)
-    , m_range(range)
     , m_action_text(action_text)
 {
 }
 
 void ReplaceAllTextCommand::redo()
 {
-    m_document.remove(m_range);
-    m_document.set_all_cursors(m_range.start());
-    auto new_cursor = m_document.insert_at(m_range.start(), m_new_text, m_client);
-    m_range.set_end(new_cursor);
-    m_document.set_all_cursors(new_cursor);
+    m_document.set_all_cursors({ 0, 0 });
+    m_document.set_text(m_new_text, AllowCallback::Yes, TextDocument::IsNewDocument::No);
 }
 
 void ReplaceAllTextCommand::undo()
 {
-    m_document.remove(m_range);
-    m_document.set_all_cursors(m_range.start());
-    auto new_cursor = m_document.insert_at(m_range.start(), m_original_text, m_client);
-    m_range.set_end(new_cursor);
-    m_document.set_all_cursors(new_cursor);
+    m_document.set_all_cursors({ 0, 0 });
+    m_document.set_text(m_original_text, AllowCallback::Yes, TextDocument::IsNewDocument::No);
 }
 
 bool ReplaceAllTextCommand::merge_with(GUI::Command const&)
