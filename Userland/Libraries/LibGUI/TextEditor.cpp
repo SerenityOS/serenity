@@ -1798,9 +1798,9 @@ void TextEditor::insert_at_cursor_or_replace_selection(StringView text)
     }
 }
 
-void TextEditor::replace_all_text_without_resetting_undo_stack(StringView text)
+void TextEditor::replace_all_text_without_resetting_undo_stack(StringView text, StringView action_text)
 {
-    execute<ReplaceAllTextCommand>(text, "GML Playground Format Text");
+    execute<ReplaceAllTextCommand>(text, action_text);
     did_change();
     update();
 }
