@@ -124,6 +124,16 @@ TEST_CASE(to_unicode_casefold)
     EXPECT_EQ(result, "\u03B1\u0342\u03B9"sv);
 }
 
+BENCHMARK_CASE(casing)
+{
+    for (size_t i = 0; i < 50'000; ++i) {
+        __test_to_unicode_lowercase();
+        __test_to_unicode_uppercase();
+        __test_to_unicode_titlecase();
+        __test_to_unicode_casefold();
+    }
+}
+
 TEST_CASE(to_unicode_lowercase_unconditional_special_casing)
 {
     // LATIN SMALL LETTER SHARP S
