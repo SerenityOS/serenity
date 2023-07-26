@@ -468,7 +468,7 @@ struct BlendingInfo {
 
     BlendMode mode {};
     u8 alpha_channel {};
-    u8 clamp {};
+    bool clamp { false };
     u8 source {};
 };
 
@@ -481,7 +481,14 @@ static ErrorOr<BlendingInfo> read_blending_info(LittleEndianInputBitStream& stre
     bool const extra = metadata.num_extra_channels > 0;
 
     if (extra) {
-        TODO();
+        auto const blend_or_mul_add = blending_info.mode == BlendingInfo::BlendMode::kBlend
+            || blending_info.mode == BlendingInfo::BlendMode::kMulAdd;
+
+        if (blend_or_mul_add)
+            blending_info.alpha_channel = U32(0, 1, 2, 3 + TRY(stream.read_bits(3)));
+
+        if (blend_or_mul_add || blending_info.mode == BlendingInfo::BlendMode::kMul)
+            blending_info.clamp = TRY(stream.read_bit());
     }
 
     if (blending_info.mode != BlendingInfo::BlendMode::kReplace
