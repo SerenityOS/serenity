@@ -46,18 +46,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto client = TRY(tls ? IMAP::Client::connect_tls(host, port) : IMAP::Client::connect_plaintext(host, port));
     TRY(client->connection_promise()->await());
 
-    auto response = TRY(client->login(username, password.view())->await()).release_value();
+    auto response = TRY(TRY(client->login(username, password.view()))->await()).release_value();
     outln("[LOGIN] Login response: {}", response.response_text());
 
-    response = move(TRY(client->send_simple_command(IMAP::CommandType::Capability)->await()).value().get<IMAP::SolidResponse>());
+    response = move(TRY(TRY(client->send_simple_command(IMAP::CommandType::Capability))->await()).value().get<IMAP::SolidResponse>());
     outln("[CAPABILITY] First capability: {}", response.data().capabilities().first());
     bool idle_supported = !response.data().capabilities().find_if([](auto capability) { return capability.equals_ignoring_ascii_case("IDLE"sv); }).is_end();
 
-    response = TRY(client->list(""sv, "*"sv)->await()).release_value();
+    response = TRY(TRY(client->list(""sv, "*"sv))->await()).release_value();
     outln("[LIST] First mailbox: {}", response.data().list_items().first().name);
 
     auto mailbox = "Inbox"sv;
-    response = TRY(client->select(mailbox)->await()).release_value();
+    response = TRY(TRY(client->select(mailbox))->await()).release_value();
     outln("[SELECT] Select response: {}", response.response_text());
 
     auto message = Message {
@@ -70,7 +70,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         "This is a message just to say hello.\r\n"
         "So, \"Hello\"."
     };
-    auto promise = client->append("INBOX"sv, move(message));
+    auto promise = TRY(client->append("INBOX"sv, move(message)));
     response = TRY(promise->await()).release_value();
     outln("[APPEND] Response: {}", response.response_text());
 
@@ -79,13 +79,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         IMAP::SearchKey::From { "jdoe@machine.example" } });
     keys.append(IMAP::SearchKey {
         IMAP::SearchKey::Subject { "Saying Hello" } });
-    response = TRY(client->search({}, move(keys), false)->await()).release_value();
+    response = TRY(TRY(client->search({}, move(keys), false))->await()).release_value();
 
     Vector<unsigned> search_results = move(response.data().search_results());
     auto added_message = search_results.first();
     outln("[SEARCH] Number of results: {}", search_results.size());
 
-    response = TRY(client->status("INBOX"sv, { IMAP::StatusItemType::Recent, IMAP::StatusItemType::Messages })->await()).release_value();
+    response = TRY(TRY(client->status("INBOX"sv, { IMAP::StatusItemType::Recent, IMAP::StatusItemType::Messages }))->await()).release_value();
     outln("[STATUS] Recent items: {}", response.data().status_item().get(IMAP::StatusItemType::Recent));
 
     for (auto item : search_results) {
@@ -118,7 +118,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         };
         // clang-format on
 
-        auto fetch_response = TRY(client->fetch(fetch_command, false)->await()).release_value();
+        auto fetch_response = TRY(TRY(client->fetch(fetch_command, false))->await()).release_value();
         outln("[FETCH] Subject of search result: {}",
             fetch_response.data()
                 .fetch_data()
@@ -136,22 +136,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // FIXME: There is a discrepancy between IMAP::Sequence wanting signed ints
     //        and IMAP search results returning unsigned ones. Find which one is
     //        more correct and fix this.
-    response = TRY(client->store(IMAP::StoreMethod::Add, { static_cast<int>(added_message), static_cast<int>(added_message) }, false, { "\\Deleted" }, false)->await()).release_value();
+    response = TRY(TRY(client->store(IMAP::StoreMethod::Add, { static_cast<int>(added_message), static_cast<int>(added_message) }, false, { "\\Deleted" }, false))->await()).release_value();
     outln("[STORE] Store response: {}", response.response_text());
 
-    response = move(TRY(client->send_simple_command(IMAP::CommandType::Expunge)->await()).release_value().get<IMAP::SolidResponse>());
+    response = move(TRY(TRY(client->send_simple_command(IMAP::CommandType::Expunge))->await()).release_value().get<IMAP::SolidResponse>());
     outln("[EXPUNGE] Number of expunged entries: {}", response.data().expunged().size());
 
     if (idle_supported) {
-        VERIFY(TRY(client->idle()->await()).has_value());
+        VERIFY(TRY(TRY(client->idle())->await()).has_value());
         sleep(3);
-        response = TRY(client->finish_idle()->await()).release_value();
+        response = TRY(TRY(client->finish_idle())->await()).release_value();
         outln("[IDLE] Idle response: {}", response.response_text());
     } else {
         outln("[IDLE] Skipped. No IDLE support.");
     }
 
-    response = move(TRY(client->send_simple_command(IMAP::CommandType::Logout)->await()).release_value().get<IMAP::SolidResponse>());
+    response = move(TRY(TRY(client->send_simple_command(IMAP::CommandType::Logout))->await()).release_value().get<IMAP::SolidResponse>());
     outln("[LOGOUT] Bye: {}", response.data().bye_message().value());
 
     client->close();

@@ -19,7 +19,7 @@ class MailWidget final : public GUI::Widget {
 public:
     virtual ~MailWidget() override = default;
 
-    bool connect_and_login();
+    ErrorOr<bool> connect_and_login();
 
     void on_window_close();
 

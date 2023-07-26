@@ -96,7 +96,7 @@ MailWidget::MailWidget()
     };
 }
 
-bool MailWidget::connect_and_login()
+ErrorOr<bool> MailWidget::connect_and_login()
 {
     auto server = Config::read_string("Mail"sv, "Connection"sv, "Server"sv, {});
 
@@ -117,6 +117,7 @@ bool MailWidget::connect_and_login()
         return false;
     }
 
+    // FIXME: Plaintext password storage, yikes!
     auto password = Config::read_string("Mail"sv, "User"sv, "Password"sv, {});
     while (password.is_empty()) {
         if (GUI::PasswordInputDialog::show(window(), password, "Login"sv, server, username) != GUI::Dialog::ExecResult::OK)
@@ -131,12 +132,11 @@ bool MailWidget::connect_and_login()
     }
     m_imap_client = maybe_imap_client.release_value();
 
-    auto connection_promise = m_imap_client->connection_promise();
-    VERIFY(!connection_promise.is_null());
-    MUST(connection_promise->await());
+    TRY(m_imap_client->connection_promise()->await());
 
-    auto response = MUST(m_imap_client->login(username, password)->await()).release_value();
     m_statusbar->set_text(String::formatted("Connected. Logging in as {}...", username).release_value_but_fixme_should_propagate_errors());
+
+    auto response = TRY(TRY(m_imap_client->login(username, password))->await()).release_value();
 
     if (response.status() != IMAP::ResponseStatus::OK) {
         dbgln("Failed to login. The server says: '{}'", response.response_text());
@@ -146,7 +146,7 @@ bool MailWidget::connect_and_login()
     }
 
     m_statusbar->set_text("Logged in. Loading mailboxes..."_string);
-    response = MUST(m_imap_client->list(""sv, "*"sv)->await()).release_value();
+    response = TRY(TRY(m_imap_client->list(""sv, "*"sv))->await()).release_value();
 
     if (response.status() != IMAP::ResponseStatus::OK) {
         dbgln("Failed to retrieve mailboxes. The server says: '{}'", response.response_text());
@@ -173,7 +173,7 @@ void MailWidget::on_window_close()
         // User closed main window before a connection was established
         return;
     }
-    auto response = move(MUST(m_imap_client->send_simple_command(IMAP::CommandType::Logout)->await()).release_value().get<IMAP::SolidResponse>());
+    auto response = move(MUST(MUST(m_imap_client->send_simple_command(IMAP::CommandType::Logout))->await()).release_value().get<IMAP::SolidResponse>());
     VERIFY(response.status() == IMAP::ResponseStatus::OK);
 
     m_imap_client->close();
@@ -263,7 +263,7 @@ void MailWidget::selected_mailbox()
     if (mailbox.flags & (unsigned)IMAP::MailboxFlag::NoSelect)
         return;
 
-    auto response = MUST(m_imap_client->select(mailbox.name)->await()).release_value();
+    auto response = MUST(MUST(m_imap_client->select(mailbox.name))->await()).release_value();
 
     if (response.status() != IMAP::ResponseStatus::OK) {
         dbgln("Failed to select mailbox. The server says: '{}'", response.response_text());
@@ -292,7 +292,7 @@ void MailWidget::selected_mailbox()
         },
     };
 
-    auto fetch_response = MUST(m_imap_client->fetch(fetch_command, false)->await()).release_value();
+    auto fetch_response = MUST(MUST(m_imap_client->fetch(fetch_command, false))->await()).release_value();
 
     if (response.status() != IMAP::ResponseStatus::OK) {
         dbgln("Failed to retrieve subject/from for e-mails. The server says: '{}'", response.response_text());
@@ -441,7 +441,7 @@ void MailWidget::selected_email_to_load()
         },
     };
 
-    auto fetch_response = MUST(m_imap_client->fetch(fetch_command, false)->await()).release_value();
+    auto fetch_response = MUST(MUST(m_imap_client->fetch(fetch_command, false))->await()).release_value();
 
     if (fetch_response.status() != IMAP::ResponseStatus::OK) {
         dbgln("Failed to retrieve the body structure of the selected e-mail. The server says: '{}'", fetch_response.response_text());
@@ -502,7 +502,7 @@ void MailWidget::selected_email_to_load()
         },
     };
 
-    fetch_response = MUST(m_imap_client->fetch(fetch_command, false)->await()).release_value();
+    fetch_response = MUST(MUST(m_imap_client->fetch(fetch_command, false))->await()).release_value();
 
     if (fetch_response.status() != IMAP::ResponseStatus::OK) {
         dbgln("Failed to retrieve the body of the selected e-mail. The server says: '{}'", fetch_response.response_text());
