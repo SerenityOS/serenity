@@ -31,6 +31,11 @@ TEST_CASE(division1)
     CSSPixels b(5);
     CSSPixels c = a / b;
     EXPECT_EQ(c, CSSPixels(2));
+
+    a = CSSPixels::from_raw(0x3FFF'FFFF); // int_max / 2
+    b = 0.25;
+    EXPECT(!a.might_be_saturated());
+    EXPECT((a / b).might_be_saturated());
 }
 
 TEST_CASE(multiplication1)

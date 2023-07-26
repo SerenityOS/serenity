@@ -124,9 +124,12 @@ CSSPixels CSSPixels::operator*(CSSPixels const& other) const
 
 CSSPixels CSSPixels::operator/(CSSPixels const& other) const
 {
-    CSSPixels result;
-    result.set_raw_value(static_cast<long long>(fixed_point_denominator) * raw_value() / other.raw_value());
-    return result;
+    i64 mult = raw_value();
+    mult <<= fractional_bits;
+    mult /= other.raw_value();
+
+    int int_value = AK::clamp_to_int(mult);
+    return from_raw(int_value);
 }
 
 CSSPixels& CSSPixels::operator+=(CSSPixels const& other)
