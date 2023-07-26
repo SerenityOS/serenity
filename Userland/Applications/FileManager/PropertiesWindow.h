@@ -34,6 +34,7 @@ private:
     ErrorOr<void> create_audio_tab(GUI::TabWidget&, NonnullRefPtr<Core::MappedFile>);
     ErrorOr<void> create_font_tab(GUI::TabWidget&, NonnullRefPtr<Core::MappedFile>, StringView mime_type);
     ErrorOr<void> create_image_tab(GUI::TabWidget&, NonnullRefPtr<Core::MappedFile>, StringView mime_type);
+    ErrorOr<void> create_pdf_tab(GUI::TabWidget&, NonnullRefPtr<Core::MappedFile>);
 
     struct PermissionMasks {
         mode_t read;
