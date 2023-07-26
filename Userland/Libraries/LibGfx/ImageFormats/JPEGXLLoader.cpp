@@ -67,6 +67,15 @@ static ALWAYS_INLINE ErrorOr<u64> U64(LittleEndianInputBitStream& stream)
 
     return value;
 }
+
+// This is not specified
+static ErrorOr<String> read_string(LittleEndianInputBitStream& stream)
+{
+    auto const name_length = U32(0, TRY(stream.read_bits(4)), 16 + TRY(stream.read_bits(5)), 48 + TRY(stream.read_bits(10)));
+    auto string_buffer = TRY(FixedArray<u8>::create(name_length));
+    TRY(stream.read_until_filled(string_buffer.span()));
+    return String::from_utf8(StringView { string_buffer.span() });
+}
 ///
 
 /// D.2 - Image dimensions
@@ -629,11 +638,7 @@ static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream
         if (frame_header.frame_type == FrameHeader::FrameType::kReferenceOnly || (resets_canvas && can_reference))
             frame_header.save_before_ct = TRY(stream.read_bit());
 
-        auto const name_length = U32(0, TRY(stream.read_bits(4)), 16 + TRY(stream.read_bits(5)), 48 + TRY(stream.read_bits(10)));
-        auto string_buffer = TRY(FixedArray<u8>::create(name_length));
-        TRY(stream.read_until_filled(string_buffer.span()));
-
-        frame_header.name = TRY(String::from_utf8(StringView { string_buffer.span() }));
+        frame_header.name = TRY(read_string(stream));
 
         frame_header.restoration_filter = TRY(read_restoration_filter(stream));
 
