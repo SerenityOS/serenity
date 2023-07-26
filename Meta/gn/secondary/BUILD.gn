@@ -11,6 +11,10 @@ group("default") {
   testonly = true
 }
 
+group("serenity") {
+  deps = [ "//Kernel(//Meta/gn/build/toolchain:serenity)" ]
+}
+
 # A pool called "console" in the root BUILD.gn is magic and represents ninja's
 # built-in console pool. (Requires a GN with `gn --version` >= 552353.)
 pool("console") {
