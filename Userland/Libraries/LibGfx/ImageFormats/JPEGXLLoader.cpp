@@ -68,6 +68,12 @@ static ALWAYS_INLINE ErrorOr<u64> U64(LittleEndianInputBitStream& stream)
     return value;
 }
 
+template<Enum E>
+ErrorOr<E> read_enum(LittleEndianInputBitStream& stream)
+{
+    return static_cast<E>(U32(0, 1, 2 + TRY(stream.read_bits(4)), 18 + TRY(stream.read_bits(6))));
+}
+
 // This is not specified
 static ErrorOr<String> read_string(LittleEndianInputBitStream& stream)
 {
@@ -313,11 +319,47 @@ struct AnimationHeader {
 };
 
 struct ExtraChannelInfo {
+    enum class ExtraChannelType {
+        kAlpha = 0,
+        kDepth = 1,
+        kSpotColour = 2,
+        kSelectionMask = 3,
+        kBlack = 4,
+        kCFA = 5,
+        kThermal = 6,
+        kNonOptional = 15,
+        kOptional = 16,
+    };
+
+    bool d_alpha { true };
+    ExtraChannelType type { ExtraChannelType::kAlpha };
+    BitDepth bit_depth {};
+    u32 dim_shift {};
+    String name;
+    bool alpha_associated { false };
 };
 
-static ErrorOr<ExtraChannelInfo> read_extra_channel_info(LittleEndianInputBitStream&)
+static ErrorOr<ExtraChannelInfo> read_extra_channel_info(LittleEndianInputBitStream& stream)
 {
-    TODO();
+    ExtraChannelInfo extra_channel_info;
+
+    extra_channel_info.d_alpha = TRY(stream.read_bit());
+
+    if (!extra_channel_info.d_alpha) {
+        extra_channel_info.type = TRY(read_enum<ExtraChannelInfo::ExtraChannelType>(stream));
+        extra_channel_info.bit_depth = TRY(read_bit_depth(stream));
+        extra_channel_info.dim_shift = U32(0, 3, 4, 1 + TRY(stream.read_bits(3)));
+        extra_channel_info.name = TRY(read_string(stream));
+
+        if (extra_channel_info.type == ExtraChannelInfo::ExtraChannelType::kAlpha)
+            extra_channel_info.alpha_associated = TRY(stream.read_bit());
+    }
+
+    if (extra_channel_info.type != ExtraChannelInfo::ExtraChannelType::kAlpha) {
+        TODO();
+    }
+
+    return extra_channel_info;
 }
 
 struct ToneMapping {
