@@ -347,7 +347,7 @@ JS::GCPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Docume
     if (display.is_flex_inside() || display.is_grid_inside())
         return document.heap().allocate_without_realm<Layout::Box>(document, element, move(style));
 
-    if (display.is_flow_inside() || display.is_flow_root_inside())
+    if (display.is_flow_inside() || display.is_flow_root_inside() || display.is_contents())
         return document.heap().allocate_without_realm<Layout::BlockContainer>(document, element, move(style));
 
     dbgln("FIXME: CSS display '{}' not implemented yet.", display.to_string().release_value_but_fixme_should_propagate_errors());

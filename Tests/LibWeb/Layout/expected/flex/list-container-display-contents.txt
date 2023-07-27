@@ -1,0 +1,14 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x41.46875 [BFC] children: not-inline
+    BlockContainer <body> at (8,16) content-size 784x17.46875 children: not-inline
+      Box <ul.globalnav-list> at (48,16) content-size 744x17.46875 flex-container(row) [FFC] children: not-inline
+        BlockContainer <div#item-1> at (48,16) content-size 46.734375x17.46875 flex-item [BFC] children: inline
+          line 0 width: 46.734375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 5, rect: [48,16 46.734375x17.46875]
+              "Store"
+          TextNode <#text>
+        BlockContainer <div#item-2> at (762,16) content-size 30x17.46875 flex-item [BFC] children: inline
+          line 0 width: 30, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 3, rect: [762,16 30x17.46875]
+              "Mac"
+          TextNode <#text>
