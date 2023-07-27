@@ -5327,8 +5327,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_display_value(Vector<ComponentValue> c
 
             // display-box
             case ValueID::Contents:
-                // FIXME this should be Display::Short::Contents but contents is currently not implemented
-                return Display::from_short(Display::Short::Flow);
+                return Display::from_short(Display::Short::Contents);
             case ValueID::None:
                 return Display::from_short(Display::Short::None);
 

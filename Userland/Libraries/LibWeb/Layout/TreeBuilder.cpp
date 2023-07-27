@@ -129,6 +129,9 @@ static Layout::Node& insertion_parent_for_block_node(Layout::NodeWithStyle& layo
 
 void TreeBuilder::insert_node_into_inline_or_block_ancestor(Layout::Node& node, CSS::Display display, AppendOrPrepend mode)
 {
+    if (node.display().is_contents())
+        return;
+
     if (display.is_inline_outside()) {
         // Inlines can be inserted into the nearest ancestor.
         auto& insertion_point = insertion_parent_for_inline_node(m_ancestor_stack.last());
@@ -141,6 +144,8 @@ void TreeBuilder::insert_node_into_inline_or_block_ancestor(Layout::Node& node, 
         // Non-inlines can't be inserted into an inline parent, so find the nearest non-inline ancestor.
         auto& nearest_non_inline_ancestor = [&]() -> Layout::NodeWithStyle& {
             for (auto& ancestor : m_ancestor_stack.in_reverse()) {
+                if (ancestor->display().is_contents())
+                    continue;
                 if (!ancestor->display().is_inline_outside())
                     return ancestor;
                 if (!ancestor->display().is_flow_inside())
