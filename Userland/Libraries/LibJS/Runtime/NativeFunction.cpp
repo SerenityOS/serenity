@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/FunctionEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -141,8 +142,8 @@ ThrowCompletionOr<Value> NativeFunction::internal_call(Value this_argument, Mark
     // NOTE: This is a LibJS specific hack for NativeFunction to inherit the strictness of its caller.
     callee_context.is_strict_mode = vm.in_strict_mode();
 
-    if (auto* interpreter = vm.interpreter_if_exists())
-        callee_context.current_node = interpreter->current_node();
+    if (auto* interpreter = vm.interpreter_if_exists(); interpreter && interpreter->current_node())
+        callee_context.source_range = interpreter->current_node()->unrealized_source_range();
 
     // </8.> --------------------------------------------------------------------------
 
@@ -204,8 +205,8 @@ ThrowCompletionOr<NonnullGCPtr<Object>> NativeFunction::internal_construct(Marke
     // NOTE: This is a LibJS specific hack for NativeFunction to inherit the strictness of its caller.
     callee_context.is_strict_mode = vm.in_strict_mode();
 
-    if (auto* interpreter = vm.interpreter_if_exists())
-        callee_context.current_node = interpreter->current_node();
+    if (auto* interpreter = vm.interpreter_if_exists(); interpreter && interpreter->current_node())
+        callee_context.source_range = interpreter->current_node()->unrealized_source_range();
 
     // </8.> --------------------------------------------------------------------------
 

@@ -15,6 +15,7 @@
 #include <LibJS/Module.h>
 #include <LibJS/Runtime/PrivateEnvironment.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibJS/SourceRange.h>
 
 namespace JS {
 
@@ -42,7 +43,7 @@ public:
     // Non-standard: This points at something that owns this ExecutionContext, in case it needs to be protected from GC.
     GCPtr<Cell> context_owner;
 
-    ASTNode const* current_node { nullptr };
+    UnrealizedSourceRange source_range;
     DeprecatedFlyString function_name;
     Value this_value;
     MarkedVector<Value> arguments;
