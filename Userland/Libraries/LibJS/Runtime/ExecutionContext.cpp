@@ -33,7 +33,7 @@ ExecutionContext ExecutionContext::copy() const
     copy.lexical_environment = lexical_environment;
     copy.variable_environment = variable_environment;
     copy.private_environment = private_environment;
-    copy.current_node = current_node;
+    copy.source_range = source_range;
     copy.function_name = function_name;
     copy.this_value = this_value;
     copy.is_strict_mode = is_strict_mode;

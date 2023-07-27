@@ -23,7 +23,7 @@ SourceRange const& TracebackFrame::source_range() const
                 static auto dummy_source_code = SourceCode::create(String {}, String {});
                 return SourceRange { dummy_source_code, {}, {} };
             }
-            return unrealized->source_code->range_from_offsets(unrealized->start_offset, unrealized->end_offset);
+            return unrealized->realize();
         }();
         source_range_storage = move(source_range);
     }
@@ -85,19 +85,8 @@ void Error::populate_stack()
 
         TracebackFrame frame {
             .function_name = move(function_name),
-            .source_range_storage = TracebackFrame::UnrealizedSourceRange {},
+            .source_range_storage = context->source_range,
         };
-
-        // We might not have an AST node associated with the execution context, e.g. in promise
-        // reaction jobs (which aren't called anywhere from the source code).
-        // They're not going to generate any _unhandled_ exceptions though, so a meaningless
-        // source range is fine.
-        if (context->current_node) {
-            auto* unrealized = frame.source_range_storage.get_pointer<TracebackFrame::UnrealizedSourceRange>();
-            unrealized->source_code = context->current_node->source_code();
-            unrealized->start_offset = context->current_node->start_offset();
-            unrealized->end_offset = context->current_node->end_offset();
-        }
 
         m_traceback.append(move(frame));
     }

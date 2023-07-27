@@ -58,6 +58,10 @@ public:
     virtual void dump(int indent) const;
 
     [[nodiscard]] SourceRange source_range() const;
+    UnrealizedSourceRange unrealized_source_range() const
+    {
+        return { m_source_code, m_start_offset, m_end_offset };
+    }
     u32 start_offset() const { return m_start_offset; }
     u32 end_offset() const { return m_end_offset; }
 

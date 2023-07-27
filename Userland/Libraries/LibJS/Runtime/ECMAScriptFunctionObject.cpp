@@ -154,8 +154,8 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
 
     // Non-standard
     callee_context.arguments.extend(move(arguments_list));
-    if (auto* interpreter = vm.interpreter_if_exists())
-        callee_context.current_node = interpreter->current_node();
+    if (auto* interpreter = vm.interpreter_if_exists(); interpreter && interpreter->current_node())
+        callee_context.source_range = interpreter->current_node()->unrealized_source_range();
 
     // 2. Let calleeContext be PrepareForOrdinaryCall(F, undefined).
     // NOTE: We throw if the end of the native stack is reached, so unlike in the spec this _does_ need an exception check.
@@ -225,8 +225,8 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ECMAScriptFunctionObject::internal_const
 
     // Non-standard
     callee_context.arguments.extend(move(arguments_list));
-    if (auto* interpreter = vm.interpreter_if_exists())
-        callee_context.current_node = interpreter->current_node();
+    if (auto* interpreter = vm.interpreter_if_exists(); interpreter && interpreter->current_node())
+        callee_context.source_range = interpreter->current_node()->unrealized_source_range();
 
     // 4. Let calleeContext be PrepareForOrdinaryCall(F, newTarget).
     // NOTE: We throw if the end of the native stack is reached, so unlike in the spec this _does_ need an exception check.

@@ -47,7 +47,7 @@ public:
         : m_interpreter(interpreter)
         , m_chain_node { nullptr, node }
     {
-        m_interpreter.vm().running_execution_context().current_node = &node;
+        m_interpreter.vm().running_execution_context().source_range = node.unrealized_source_range();
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdangling-pointer"
         // The node pointer is popped from the interpreter in the destructor.

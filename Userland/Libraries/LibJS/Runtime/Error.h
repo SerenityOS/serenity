@@ -19,11 +19,6 @@ struct TracebackFrame {
     DeprecatedFlyString function_name;
     [[nodiscard]] SourceRange const& source_range() const;
 
-    struct UnrealizedSourceRange {
-        u32 start_offset { 0 };
-        u32 end_offset { 0 };
-        RefPtr<JS::SourceCode const> source_code;
-    };
     mutable Variant<SourceRange, UnrealizedSourceRange> source_range_storage;
 };
 

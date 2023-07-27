@@ -29,7 +29,6 @@ Workbook::Workbook(Vector<NonnullRefPtr<Sheet>>&& sheets, GUI::Window& parent_wi
     m_workbook_object = m_vm->heap().allocate<WorkbookObject>(m_interpreter->realm(), m_interpreter->realm(), *this).release_allocated_value_but_fixme_should_propagate_errors();
     m_interpreter->realm().global_object().define_direct_property("workbook", workbook_object(), JS::default_attributes);
 
-    m_main_execution_context.current_node = nullptr;
     m_main_execution_context.this_value = &m_interpreter->realm().global_object();
     m_main_execution_context.function_name = "(global execution context)"sv;
     m_main_execution_context.lexical_environment = &m_interpreter->realm().global_environment();
