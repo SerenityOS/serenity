@@ -248,8 +248,8 @@ void URLProvider::query(DeprecatedString const& query, Function<void(Vector<Nonn
 
     if (url.scheme().is_empty())
         url.set_scheme("http");
-    if (url.host().is_empty())
-        url.set_host(query);
+    if (url.host().has<Empty>() || url.host() == String {})
+        url.set_host(String::from_deprecated_string(query).release_value_but_fixme_should_propagate_errors());
     if (url.path_segment_count() == 0)
         url.set_paths({ "" });
 

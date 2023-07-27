@@ -7,6 +7,7 @@
 
 #include <AK/Base64.h>
 #include <AK/StringBuilder.h>
+#include <AK/URLParser.h>
 #include <LibHTTP/HttpRequest.h>
 #include <LibHTTP/Job.h>
 
@@ -57,7 +58,7 @@ ErrorOr<ByteBuffer> HttpRequest::to_raw_request() const
         TRY(builder.try_append(m_url.query()));
     }
     TRY(builder.try_append(" HTTP/1.1\r\nHost: "sv));
-    TRY(builder.try_append(m_url.host()));
+    TRY(builder.try_append(TRY(m_url.serialized_host())));
     if (m_url.port().has_value())
         TRY(builder.try_appendff(":{}", *m_url.port()));
     TRY(builder.try_append("\r\n"sv));

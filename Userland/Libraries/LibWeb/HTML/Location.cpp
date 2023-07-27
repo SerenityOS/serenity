@@ -153,15 +153,15 @@ WebIDL::ExceptionOr<String> Location::host() const
     auto url = this->url();
 
     // 3. If url's host is null, return the empty string.
-    if (url.host().is_null())
+    if (url.host().has<Empty>())
         return String {};
 
     // 4. If url's port is null, return url's host, serialized.
     if (!url.port().has_value())
-        return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(url.host()));
+        return TRY_OR_THROW_OOM(vm, url.serialized_host());
 
     // 5. Return url's host, serialized, followed by ":" and url's port, serialized.
-    return TRY_OR_THROW_OOM(vm, String::formatted("{}:{}", url.host(), *url.port()));
+    return TRY_OR_THROW_OOM(vm, String::formatted("{}:{}", TRY_OR_THROW_OOM(vm, url.serialized_host()), *url.port()));
 }
 
 WebIDL::ExceptionOr<void> Location::set_host(String const&)
@@ -183,11 +183,11 @@ WebIDL::ExceptionOr<String> Location::hostname() const
     auto url = this->url();
 
     // 2. If this's url's host is null, return the empty string.
-    if (url.host().is_null())
+    if (url.host().has<Empty>())
         return String {};
 
     // 3. Return this's url's host, serialized.
-    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(url.host()));
+    return TRY_OR_THROW_OOM(vm, url.serialized_host());
 }
 
 WebIDL::ExceptionOr<void> Location::set_hostname(String const&)

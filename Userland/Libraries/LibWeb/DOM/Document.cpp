@@ -2316,8 +2316,7 @@ DeprecatedString Document::domain() const
         return DeprecatedString::empty();
 
     // 3. Return effectiveDomain, serialized.
-    // FIXME: Implement host serialization.
-    return effective_domain.release_value();
+    return URLParser::serialize_host(effective_domain.release_value()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 }
 
 void Document::set_domain(DeprecatedString const& domain)

@@ -147,7 +147,7 @@ void ConnectionFromClient::ensure_connection(URL const& url, ::RequestServer::Ca
     }
 
     if (cache_level == CacheLevel::ResolveOnly) {
-        return Core::deferred_invoke([host = url.host()] {
+        return Core::deferred_invoke([host = url.serialized_host().release_value_but_fixme_should_propagate_errors().to_deprecated_string()] {
             dbgln("EnsureConnection: DNS-preload for {}", host);
             (void)gethostbyname(host.characters());
         });
@@ -156,7 +156,8 @@ void ConnectionFromClient::ensure_connection(URL const& url, ::RequestServer::Ca
     auto& job = Job::ensure(url);
     dbgln("EnsureConnection: Pre-connect to {}", url);
     auto do_preconnect = [&](auto& cache) {
-        auto it = cache.find({ url.host(), url.port_or_default() });
+        auto serialized_host = url.serialized_host().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+        auto it = cache.find({ serialized_host, url.port_or_default() });
         if (it == cache.end() || it->value->is_empty())
             ConnectionCache::get_or_create_connection(cache, url, job);
     };

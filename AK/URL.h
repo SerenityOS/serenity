@@ -79,7 +79,8 @@ public:
     DeprecatedString const& scheme() const { return m_scheme; }
     DeprecatedString username(ApplyPercentDecoding = ApplyPercentDecoding::Yes) const;
     DeprecatedString password(ApplyPercentDecoding = ApplyPercentDecoding::Yes) const;
-    DeprecatedString const& host() const { return m_host; }
+    Host const& host() const { return m_host; }
+    ErrorOr<String> serialized_host() const;
     DeprecatedString basename(ApplyPercentDecoding = ApplyPercentDecoding::Yes) const;
     DeprecatedString query(ApplyPercentDecoding = ApplyPercentDecoding::No) const;
     DeprecatedString fragment(ApplyPercentDecoding = ApplyPercentDecoding::Yes) const;
@@ -101,7 +102,7 @@ public:
     void set_scheme(DeprecatedString);
     void set_username(DeprecatedString, ApplyPercentEncoding = ApplyPercentEncoding::Yes);
     void set_password(DeprecatedString, ApplyPercentEncoding = ApplyPercentEncoding::Yes);
-    void set_host(DeprecatedString);
+    void set_host(Host);
     void set_port(Optional<u16>);
     void set_paths(Vector<DeprecatedString>, ApplyPercentEncoding = ApplyPercentEncoding::Yes);
     void set_query(DeprecatedString, ApplyPercentEncoding = ApplyPercentEncoding::Yes);
@@ -178,7 +179,7 @@ private:
     DeprecatedString m_password;
 
     // A URL’s host is null or a host. It is initially null.
-    DeprecatedString m_host;
+    Host m_host;
 
     // A URL’s port is either null or a 16-bit unsigned integer that identifies a networking port. It is initially null.
     Optional<u16> m_port;
