@@ -51,10 +51,12 @@ struct AK::Traits<Gfx::TGAHeader> : public GenericTraits<Gfx::TGAHeader> {
 namespace Gfx {
 
 struct TGALoadingContext {
-    TGALoadingContext(FixedMemoryStream stream)
-        : stream(move(stream))
+    TGALoadingContext(ReadonlyBytes bytes, FixedMemoryStream stream)
+        : bytes(bytes)
+        , stream(move(stream))
     {
     }
+    ReadonlyBytes bytes;
     FixedMemoryStream stream;
     TGAHeader header {};
     RefPtr<Gfx::Bitmap> bitmap;
@@ -85,7 +87,7 @@ static ErrorOr<void> ensure_header_validity(TGAHeader const& header, size_t whol
 ErrorOr<void> TGAImageDecoderPlugin::decode_tga_header()
 {
     m_context->header = TRY(m_context->stream.read_value<TGAHeader>());
-    TRY(ensure_header_validity(m_context->header, m_context->stream.readonly_bytes().size()));
+    TRY(ensure_header_validity(m_context->header, m_context->bytes.size()));
     return {};
 }
 
@@ -99,7 +101,7 @@ ErrorOr<bool> TGAImageDecoderPlugin::validate_before_create(ReadonlyBytes data)
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> TGAImageDecoderPlugin::create(ReadonlyBytes data)
 {
     FixedMemoryStream stream { data };
-    auto context = TRY(adopt_nonnull_own_or_enomem(new (nothrow) TGALoadingContext(move(stream))));
+    auto context = TRY(adopt_nonnull_own_or_enomem(new (nothrow) TGALoadingContext(data, move(stream))));
     auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) TGAImageDecoderPlugin(move(context))));
     TRY(plugin->decode_tga_header());
     return plugin;

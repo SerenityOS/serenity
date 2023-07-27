@@ -109,16 +109,6 @@ ErrorOr<void> FixedMemoryStream::write_until_depleted(ReadonlyBytes bytes)
     return {};
 }
 
-Bytes FixedMemoryStream::bytes()
-{
-    VERIFY(m_writing_enabled);
-    return m_bytes;
-}
-ReadonlyBytes FixedMemoryStream::readonly_bytes() const
-{
-    return m_bytes;
-}
-
 size_t FixedMemoryStream::offset() const
 {
     return m_offset;
