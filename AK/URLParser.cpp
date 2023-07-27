@@ -32,7 +32,7 @@ static void report_validation_error(SourceLocation const& location = SourceLocat
     dbgln_if(URL_PARSER_DEBUG, "URLParser::basic_parse: Validation error! {}", location);
 }
 
-static Optional<DeprecatedString> parse_opaque_host(StringView input)
+static Optional<URL::Host> parse_opaque_host(StringView input)
 {
     auto forbidden_host_characters_excluding_percent = "\0\t\n\r #/:<>?@[\\]^|"sv;
     for (auto character : forbidden_host_characters_excluding_percent) {
@@ -43,7 +43,7 @@ static Optional<DeprecatedString> parse_opaque_host(StringView input)
     }
     // FIXME: If input contains a code point that is not a URL code point and not U+0025 (%), validation error.
     // FIXME: If input contains a U+0025 (%) and the two code points following it are not ASCII hex digits, validation error.
-    return URL::percent_encode(input, URL::PercentEncodeSet::C0Control);
+    return String::from_deprecated_string(URL::percent_encode(input, URL::PercentEncodeSet::C0Control)).release_value_but_fixme_should_propagate_errors();
 }
 
 struct ParsedIPv4Number {
@@ -549,7 +549,7 @@ static bool ends_in_a_number_checker(StringView input)
 
 // https://url.spec.whatwg.org/#concept-host-parser
 // NOTE: This is a very bare-bones implementation.
-static Optional<DeprecatedString> parse_host(StringView input, bool is_not_special = false)
+static Optional<URL::Host> parse_host(StringView input, bool is_not_special = false)
 {
     // 1. If input starts with U+005B ([), then:
     if (input.starts_with('[')) {
@@ -563,10 +563,7 @@ static Optional<DeprecatedString> parse_host(StringView input, bool is_not_speci
         auto address = parse_ipv6_address(input.substring_view(1, input.length() - 2));
         if (!address.has_value())
             return {};
-
-        StringBuilder output;
-        serialize_ipv6_address(*address, output);
-        return output.to_deprecated_string();
+        return address.release_value();
     }
 
     // 2. If isNotSpecial is true, then return the result of opaque-host parsing input.
@@ -581,12 +578,16 @@ static Optional<DeprecatedString> parse_host(StringView input, bool is_not_speci
 
     // FIXME: 5. Let asciiDomain be the result of running domain to ASCII on domain.
     // FIXME: 6. If asciiDomain is failure, then return failure.
-    auto& ascii_domain = domain;
+    auto ascii_domain_or_error = String::from_deprecated_string(domain);
+    if (ascii_domain_or_error.is_error())
+        return {};
+
+    auto ascii_domain = ascii_domain_or_error.release_value();
 
     // 7. If asciiDomain contains a forbidden domain code point, domain-invalid-code-point validation error, return failure.
     auto forbidden_host_characters = "\0\t\n\r #%/:<>?@[\\]^|"sv;
     for (auto character : forbidden_host_characters) {
-        if (ascii_domain.view().contains(character)) {
+        if (ascii_domain.bytes_as_string_view().contains(character)) {
             report_validation_error();
             return {};
         }
@@ -598,11 +599,7 @@ static Optional<DeprecatedString> parse_host(StringView input, bool is_not_speci
         if (!ipv4_host.has_value())
             return {};
 
-        auto result = serialize_ipv4_address(*ipv4_host);
-        if (result.is_error())
-            return {};
-
-        return result.release_value().to_deprecated_string();
+        return ipv4_host.release_value();
     }
 
     // 9. Return asciiDomain.
@@ -880,7 +877,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                         return *url;
 
                     // 4. If url’s scheme is "file" and its host is an empty host, then return.
-                    if (url->scheme() == "file"sv && url->host().is_empty())
+                    if (url->scheme() == "file"sv && url->host() == String {})
                         return *url;
                 }
 
@@ -1319,7 +1316,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
             url->m_scheme = "file";
 
             // 2. Set url’s host to the empty string.
-            url->m_host = "";
+            url->m_host = String {};
 
             // 3. If c is U+002F (/) or U+005C (\), then:
             if (code_point == '/' || code_point == '\\') {
@@ -1422,7 +1419,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                 // 2. Otherwise, if buffer is the empty string, then:
                 else if (buffer.is_empty()) {
                     // 1. Set url’s host to the empty string.
-                    url->m_host = "";
+                    url->m_host = String {};
 
                     // 2. If state override is given, then return.
                     if (state_override.has_value())
@@ -1442,8 +1439,8 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                         return {};
 
                     // 3. If host is "localhost", then set host to the empty string.
-                    if (host.value() == "localhost")
-                        host = "";
+                    if (host.value().has<String>() && host.value().get<String>() == "localhost"sv)
+                        host = String {};
 
                     // 4. Set url’s host to host.
                     url->m_host = host.release_value();
@@ -1498,7 +1495,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                     continue;
             }
             // 5. Otherwise, if state override is given and url’s host is null, append the empty string to url’s path.
-            else if (state_override.has_value() && url->host().is_empty()) {
+            else if (state_override.has_value() && url->host().has<Empty>()) {
                 url->append_slash();
             }
             break;

@@ -217,7 +217,7 @@ static bool url_matches_about_blank(AK::URL const& url)
         && url.serialize_path() == "blank"sv
         && url.username().is_empty()
         && url.password().is_empty()
-        && url.host().is_null();
+        && url.host().has<Empty>();
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#shared-attribute-processing-steps-for-iframe-and-frame-elements

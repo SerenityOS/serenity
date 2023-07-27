@@ -208,7 +208,10 @@ Optional<DeprecatedString> CookieJar::canonicalize_domain(const URL& url)
         return {};
 
     // FIXME: Implement RFC 5890 to "Convert each label that is not a Non-Reserved LDH (NR-LDH) label to an A-label".
-    return url.host().to_lowercase();
+    if (url.host().has<Empty>())
+        return {};
+
+    return url.serialized_host().release_value_but_fixme_should_propagate_errors().to_deprecated_string().to_lowercase();
 }
 
 bool CookieJar::domain_matches(DeprecatedString const& string, DeprecatedString const& domain_string)

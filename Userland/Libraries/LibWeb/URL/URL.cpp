@@ -235,15 +235,15 @@ WebIDL::ExceptionOr<String> URL::host() const
     auto& url = m_url;
 
     // 2. If url’s host is null, then return the empty string.
-    if (url.host().is_null())
+    if (url.host().has<Empty>())
         return String {};
 
     // 3. If url’s port is null, return url’s host, serialized.
     if (!url.port().has_value())
-        return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(url.host()));
+        return TRY_OR_THROW_OOM(vm, url.serialized_host());
 
     // 4. Return url’s host, serialized, followed by U+003A (:) and url’s port, serialized.
-    return TRY_OR_THROW_OOM(vm, String::formatted("{}:{}", url.host(), *url.port()));
+    return TRY_OR_THROW_OOM(vm, String::formatted("{}:{}", TRY_OR_THROW_OOM(vm, url.serialized_host()), *url.port()));
 }
 
 // https://url.spec.whatwg.org/#dom-url-hostref-for-dom-url-host%E2%91%A0
@@ -265,11 +265,11 @@ WebIDL::ExceptionOr<String> URL::hostname() const
     auto& vm = realm().vm();
 
     // 1. If this’s URL’s host is null, then return the empty string.
-    if (m_url.host().is_null())
+    if (m_url.host().has<Empty>())
         return String {};
 
     // 2. Return this’s URL’s host, serialized.
-    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_url.host()));
+    return TRY_OR_THROW_OOM(vm, m_url.serialized_host());
 }
 
 // https://url.spec.whatwg.org/#ref-for-dom-url-hostname①
@@ -473,7 +473,7 @@ HTML::Origin url_origin(AK::URL const& url)
     if (url.scheme() == "file"sv) {
         // Unfortunate as it is, this is left as an exercise to the reader. When in doubt, return a new opaque origin.
         // Note: We must return an origin with the `file://' protocol for `file://' iframes to work from `file://' pages.
-        return HTML::Origin(url.scheme(), DeprecatedString(), 0);
+        return HTML::Origin(url.scheme(), String {}, 0);
     }
 
     // -> Otherwise

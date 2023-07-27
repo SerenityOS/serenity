@@ -37,14 +37,14 @@ struct Proxy {
     ErrorOr<NonnullOwnPtr<StorageType>> tunnel(URL const& url, Args&&... args)
     {
         if (data.type == Core::ProxyData::Direct) {
-            return TRY(SocketType::connect(url.host(), url.port_or_default(), forward<Args>(args)...));
+            return TRY(SocketType::connect(url.serialized_host().release_value_but_fixme_should_propagate_errors().to_deprecated_string(), url.port_or_default(), forward<Args>(args)...));
         }
         if (data.type == Core::ProxyData::SOCKS5) {
             if constexpr (requires { SocketType::connect(declval<DeprecatedString>(), *proxy_client_storage, forward<Args>(args)...); }) {
-                proxy_client_storage = TRY(Core::SOCKSProxyClient::connect(data.host_ipv4, data.port, Core::SOCKSProxyClient::Version::V5, url.host(), url.port_or_default()));
-                return TRY(SocketType::connect(url.host(), *proxy_client_storage, forward<Args>(args)...));
+                proxy_client_storage = TRY(Core::SOCKSProxyClient::connect(data.host_ipv4, data.port, Core::SOCKSProxyClient::Version::V5, url.serialized_host().release_value_but_fixme_should_propagate_errors().to_deprecated_string(), url.port_or_default()));
+                return TRY(SocketType::connect(url.serialized_host().release_value_but_fixme_should_propagate_errors().to_deprecated_string(), *proxy_client_storage, forward<Args>(args)...));
             } else if constexpr (IsSame<SocketType, Core::TCPSocket>) {
-                return TRY(Core::SOCKSProxyClient::connect(data.host_ipv4, data.port, Core::SOCKSProxyClient::Version::V5, url.host(), url.port_or_default()));
+                return TRY(Core::SOCKSProxyClient::connect(data.host_ipv4, data.port, Core::SOCKSProxyClient::Version::V5, url.serialized_host().release_value_but_fixme_should_propagate_errors().to_deprecated_string(), url.port_or_default()));
             } else {
                 return Error::from_string_literal("SOCKS5 not supported for this socket type");
             }
@@ -173,7 +173,7 @@ ErrorOr<void> recreate_socket_if_needed(T& connection, URL const& url)
 decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job, Core::ProxyData proxy_data = {})
 {
     using CacheEntryType = RemoveCVReference<decltype(*cache.begin()->value)>;
-    auto& sockets_for_url = *cache.ensure({ url.host(), url.port_or_default(), proxy_data }, [] { return make<CacheEntryType>(); });
+    auto& sockets_for_url = *cache.ensure({ url.serialized_host().release_value_but_fixme_should_propagate_errors().to_deprecated_string(), url.port_or_default(), proxy_data }, [] { return make<CacheEntryType>(); });
 
     Proxy proxy { proxy_data };
 

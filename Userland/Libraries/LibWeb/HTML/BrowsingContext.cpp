@@ -44,7 +44,7 @@ static bool url_matches_about_blank(AK::URL const& url)
         && url.serialize_path() == "blank"sv
         && url.username().is_empty()
         && url.password().is_empty()
-        && url.host().is_null();
+        && url.host().has<Empty>();
 }
 
 // FIXME: This is an outdated older version of "determining the origin" and should be removed.

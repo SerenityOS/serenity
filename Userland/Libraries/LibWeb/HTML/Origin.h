@@ -8,13 +8,15 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
+#include <AK/URL.h>
+#include <AK/URLParser.h>
 
 namespace Web::HTML {
 
 class Origin {
 public:
     Origin() = default;
-    Origin(DeprecatedString const& scheme, DeprecatedString const& host, u16 port)
+    Origin(DeprecatedString const& scheme, AK::URL::Host const& host, u16 port)
         : m_scheme(scheme)
         , m_host(host)
         , m_port(port)
@@ -22,10 +24,10 @@ public:
     }
 
     // https://html.spec.whatwg.org/multipage/origin.html#concept-origin-opaque
-    bool is_opaque() const { return m_scheme.is_null() && m_host.is_null() && m_port == 0; }
+    bool is_opaque() const { return m_scheme.is_null() && m_host.has<Empty>() && m_port == 0; }
 
     DeprecatedString const& scheme() const { return m_scheme; }
-    DeprecatedString const& host() const { return m_host; }
+    AK::URL::Host const& host() const { return m_host; }
     u16 port() const { return m_port; }
 
     // https://html.spec.whatwg.org/multipage/origin.html#same-origin
@@ -81,7 +83,7 @@ public:
         result.append("://"sv);
 
         // 4. Append origin's host, serialized, to result.
-        result.append(host());
+        result.append(URLParser::serialize_host(host()).release_value_but_fixme_should_propagate_errors().to_deprecated_string());
 
         // 5. If origin's port is non-null, append a U+003A COLON character (:), and origin's port, serialized, to result.
         if (port() != 0) {
@@ -93,11 +95,11 @@ public:
     }
 
     // https://html.spec.whatwg.org/multipage/origin.html#concept-origin-effective-domain
-    Optional<DeprecatedString> effective_domain() const
+    Optional<AK::URL::Host> effective_domain() const
     {
         // 1. If origin is an opaque origin, then return null.
         if (is_opaque())
-            return Optional<DeprecatedString> {};
+            return {};
 
         // FIXME: 2. If origin's domain is non-null, then return origin's domain.
 
@@ -109,7 +111,7 @@ public:
 
 private:
     DeprecatedString m_scheme;
-    DeprecatedString m_host;
+    AK::URL::Host m_host;
     u16 m_port { 0 };
 };
 
@@ -120,7 +122,10 @@ template<>
 struct Traits<Web::HTML::Origin> : public GenericTraits<Web::HTML::Origin> {
     static unsigned hash(Web::HTML::Origin const& origin)
     {
-        return pair_int_hash(origin.scheme().hash(), pair_int_hash(int_hash(origin.port()), origin.host().hash()));
+        auto hash_without_host = pair_int_hash(origin.scheme().hash(), origin.port());
+        if (origin.host().has<Empty>())
+            return hash_without_host;
+        return pair_int_hash(hash_without_host, URLParser::serialize_host(origin.host()).release_value_but_fixme_should_propagate_errors().hash());
     }
 };
 } // namespace AK

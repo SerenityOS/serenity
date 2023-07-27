@@ -112,10 +112,10 @@ void ConnectionFromClient::load_url(const URL& url)
 
 #if defined(AK_OS_SERENITY)
     DeprecatedString process_name;
-    if (url.host().is_empty())
+    if (url.host().has<Empty>() || url.host() == String {})
         process_name = "WebContent";
     else
-        process_name = DeprecatedString::formatted("WebContent: {}", url.host());
+        process_name = DeprecatedString::formatted("WebContent: {}", url.serialized_host().release_value_but_fixme_should_propagate_errors());
 
     pthread_setname_np(pthread_self(), process_name.characters());
 #endif
