@@ -214,10 +214,10 @@ ErrorOr<void> MonitorSettingsWidget::selected_screen_index_or_resolution_changed
         }
     }
 
-    auto dpi_label_value = String::formatted("{} dpi", screen_dpi.value());
-    if (screen_dpi.has_value() && !dpi_label_value.is_error()) {
+    if (screen_dpi.has_value()) {
+        auto dpi_label_value = TRY(String::formatted("{} dpi", screen_dpi.value()));
         m_dpi_label->set_tooltip(screen_dpi_tooltip.to_deprecated_string());
-        m_dpi_label->set_text(dpi_label_value.release_value());
+        m_dpi_label->set_text(move(dpi_label_value));
         m_dpi_label->set_visible(true);
     } else {
         m_dpi_label->set_visible(false);
