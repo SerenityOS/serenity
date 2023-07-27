@@ -1978,6 +1978,7 @@
   "transform": {
     "inherited": false,
     "initial": "none",
+    "affects-layout": false,
     "affects-stacking-context": true
   },
   "transform-origin": {
