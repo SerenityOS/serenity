@@ -77,12 +77,6 @@ ErrorOr<void> NetworkSettingsWidget::setup()
     JsonParser parser(data);
     JsonValue proc_net_adapters_json = TRY(parser.parse());
 
-    // FIXME: This should be done before creating a window.
-    if (proc_net_adapters_json.as_array().is_empty()) {
-        GUI::MessageBox::show_error(window(), "No network adapters found!"sv);
-        ::exit(1);
-    }
-
     size_t selected_adapter_index = 0;
     size_t index = 0;
     proc_net_adapters_json.as_array().for_each([&](auto& value) {
@@ -108,6 +102,12 @@ ErrorOr<void> NetworkSettingsWidget::setup()
         m_adapter_names.append(adapter_name);
         index++;
     });
+
+    // FIXME: This should be done before creating a window.
+    if (m_adapter_names.is_empty()) {
+        GUI::MessageBox::show_error(window(), "No network adapters found!"sv);
+        ::exit(1);
+    }
 
     m_adapters_combobox->set_model(TRY(GUI::ItemListModel<DeprecatedString>::try_create(m_adapter_names)));
     m_adapters_combobox->on_change = [this](DeprecatedString const& text, GUI::ModelIndex const&) {
