@@ -273,3 +273,32 @@ TEST_CASE(type_list_specialization)
     EXPECT((IsSame<typename MyList::template Type<1>, int>));
     EXPECT((IsSame<typename MyList::template Type<2>, String>));
 }
+
+TEST_CASE(variant_equality)
+{
+    using MyVariant = Variant<Empty, int, float>;
+
+    {
+        MyVariant variant1 = 1;
+        MyVariant variant2 = 1;
+        EXPECT_EQ(variant1, variant2);
+    }
+
+    {
+        MyVariant variant1 = 1;
+        MyVariant variant2 = 1.5f;
+        EXPECT_NE(variant1, variant2);
+    }
+
+    {
+        MyVariant variant1 = 1;
+        MyVariant variant2;
+        EXPECT_NE(variant1, variant2);
+    }
+
+    {
+        MyVariant variant1;
+        MyVariant variant2;
+        EXPECT_EQ(variant1, variant2);
+    }
+}
