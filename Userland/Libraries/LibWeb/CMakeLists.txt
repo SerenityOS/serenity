@@ -3,7 +3,6 @@ include(libweb_generators)
 set(SOURCES
     ARIA/AriaData.cpp
     ARIA/ARIAMixin.cpp
-    ARIA/ARIAMixin.idl
     ARIA/Roles.cpp
     ARIA/RoleType.cpp
     ARIA/StateAndProperties.cpp
@@ -129,16 +128,13 @@ set(SOURCES
     DOM/AbstractRange.cpp
     DOM/AccessibilityTreeNode.cpp
     DOM/Attr.cpp
-    DOM/Attr.idl
     DOM/CDATASection.cpp
     DOM/CharacterData.cpp
-    DOM/CharacterData.idl
     DOM/Comment.cpp
     DOM/CustomEvent.cpp
     DOM/DOMEventListener.cpp
     DOM/DOMImplementation.cpp
     DOM/DOMTokenList.cpp
-    DOM/DOMTokenList.idl
     DOM/Document.cpp
     DOM/DocumentFragment.cpp
     DOM/DocumentLoadEventDelayer.cpp
@@ -172,7 +168,6 @@ set(SOURCES
     DOM/StaticRange.cpp
     DOM/StyleElementUtils.cpp
     DOM/Text.cpp
-    DOM/Text.idl
     DOM/TreeWalker.cpp
     DOM/XMLDocument.cpp
     DOMParsing/InnerHTML.cpp
