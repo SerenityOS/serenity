@@ -12,19 +12,16 @@
 # Parameters:
 #   idl_list (required) [string]
 #     List of IDL files that are all the same type.
-#     Expected to be an absolute path.
 #
 #   type (required) string
 #       "global", "iterable", "namespace", or "standard"
 #
 # Example use:
 #
-#  standard_idl_files = get_path_info(
-#    [
-#      "//Library/Foo.idl",
-#      "//Bar.idl"
-#    ],
-#    "abspath")
+#  standard_idl_files = [
+#    "//Library/Foo.idl",
+#    "//Bar.idl"
+#  ]
 #
 #  generate_idl_bindings("standard_idl_bindings") {
 #    idl_list = standard_idl_files
