@@ -495,8 +495,10 @@ void TableFormattingContext::compute_table_measures()
                     // the product of:
                     // - the ratio of the max-content size based on cells of span up to N-1 of the column to the baseline max-content size
                     // - the outer min-content size of the cell minus the baseline max-content size and baseline border spacing, or 0 if this is negative
-                    cell_min_contribution += (rows_or_columns[rc_index].max_size / static_cast<double>(baseline_max_content_size))
-                        * max(CSSPixels(0), cell_min_size<RowOrColumn>(cell) - baseline_max_content_size - baseline_border_spacing);
+                    if (baseline_max_content_size != 0) {
+                        cell_min_contribution += (rows_or_columns[rc_index].max_size / static_cast<double>(baseline_max_content_size))
+                            * max(CSSPixels(0), cell_min_size<RowOrColumn>(cell) - baseline_max_content_size - baseline_border_spacing);
+                    }
 
                     // The contribution of the cell is the sum of:
                     // the max-content size of the column based on cells of span up to N-1
@@ -504,8 +506,10 @@ void TableFormattingContext::compute_table_measures()
                     // and the product of:
                     // - the ratio of the max-content size based on cells of span up to N-1 of the column to the baseline max-content size
                     // - the outer max-content size of the cell minus the baseline max-content size and the baseline border spacing, or 0 if this is negative
-                    cell_max_contribution += (rows_or_columns[rc_index].max_size / static_cast<double>(baseline_max_content_size))
-                        * max(CSSPixels(0), cell_max_size<RowOrColumn>(cell) - baseline_max_content_size - baseline_border_spacing);
+                    if (baseline_max_content_size != 0) {
+                        cell_max_contribution += (rows_or_columns[rc_index].max_size / static_cast<double>(baseline_max_content_size))
+                            * max(CSSPixels(0), cell_max_size<RowOrColumn>(cell) - baseline_max_content_size - baseline_border_spacing);
+                    }
                     cell_min_contributions_by_rc_index[rc_index].append(cell_min_contribution);
                     cell_max_contributions_by_rc_index[rc_index].append(cell_max_contribution);
                 }
