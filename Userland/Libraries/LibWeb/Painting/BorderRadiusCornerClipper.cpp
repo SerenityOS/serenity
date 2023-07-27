@@ -21,11 +21,19 @@ ErrorOr<BorderRadiusCornerClipper> BorderRadiusCornerClipper::create(PaintContex
 
     DevicePixelSize corners_bitmap_size {
         max(
-            top_left.horizontal_radius + top_right.horizontal_radius,
-            bottom_left.horizontal_radius + bottom_right.horizontal_radius),
+            max(
+                top_left.horizontal_radius + top_right.horizontal_radius,
+                top_left.horizontal_radius + bottom_right.horizontal_radius),
+            max(
+                bottom_left.horizontal_radius + top_right.horizontal_radius,
+                bottom_left.horizontal_radius + bottom_right.horizontal_radius)),
         max(
-            top_left.vertical_radius + bottom_left.vertical_radius,
-            top_right.vertical_radius + bottom_right.vertical_radius)
+            max(
+                top_left.vertical_radius + bottom_left.vertical_radius,
+                top_left.vertical_radius + bottom_right.vertical_radius),
+            max(
+                top_right.vertical_radius + bottom_left.vertical_radius,
+                top_right.vertical_radius + bottom_right.vertical_radius))
     };
 
     RefPtr<Gfx::Bitmap> corner_bitmap;
