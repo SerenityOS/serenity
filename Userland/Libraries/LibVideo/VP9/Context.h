@@ -46,6 +46,7 @@ public:
         Vector2D<FrameBlockContext>& contexts)
     {
         return FrameContext(
+            data,
             TRY(try_make<FixedMemoryStream>(data)),
             TRY(try_make<SyntaxElementCounter>()),
             contexts);
@@ -54,12 +55,12 @@ public:
     FrameContext(FrameContext const&) = delete;
     FrameContext(FrameContext&&) = default;
 
+    ReadonlyBytes stream_data;
     NonnullOwnPtr<FixedMemoryStream> stream;
     BigEndianInputBitStream bit_stream;
 
     DecoderErrorOr<BooleanDecoder> create_range_decoder(size_t size)
     {
-        ReadonlyBytes stream_data = stream->readonly_bytes();
         auto compressed_header_data = ReadonlyBytes(stream_data.data() + stream->offset(), size);
 
         // 9.2.1: The Boolean decoding process specified in section 9.2.2 is invoked to read a marker syntax element from the
@@ -178,10 +179,12 @@ public:
 private:
     friend struct TileContext;
 
-    FrameContext(NonnullOwnPtr<FixedMemoryStream> stream,
+    FrameContext(ReadonlyBytes data,
+        NonnullOwnPtr<FixedMemoryStream> stream,
         NonnullOwnPtr<SyntaxElementCounter> counter,
         Vector2D<FrameBlockContext>& contexts)
-        : stream(move(stream))
+        : stream_data(data)
+        , stream(move(stream))
         , bit_stream(MaybeOwned<Stream>(*this->stream))
         , counter(move(counter))
         , m_block_contexts(contexts)
