@@ -262,6 +262,40 @@ bool HTMLImageElement::uses_srcset_or_picture() const
     return has_attribute(HTML::AttributeNames::srcset) || (parent() && is<HTMLPictureElement>(*parent()));
 }
 
+// We batch handling of successfully fetched images to avoid interleaving 1 image, 1 layout, 1 image, 1 layout, etc.
+// The processing timer is 1ms instead of 0ms, since layout is driven by a 0ms timer, and if we use 0ms here,
+// the event loop will process them in insertion order. This is a bit of a hack, but it works.
+struct BatchingDispatcher {
+public:
+    BatchingDispatcher()
+        : m_timer(Core::Timer::create_single_shot(1, [this] { process(); }).release_value_but_fixme_should_propagate_errors())
+    {
+    }
+
+    void enqueue(JS::SafeFunction<void()> callback)
+    {
+        m_queue.append(move(callback));
+        m_timer->restart();
+    }
+
+private:
+    void process()
+    {
+        auto queue = move(m_queue);
+        for (auto& callback : queue)
+            callback();
+    }
+
+    NonnullRefPtr<Core::Timer> m_timer;
+    Vector<JS::SafeFunction<void()>> m_queue;
+};
+
+static BatchingDispatcher& batching_dispatcher()
+{
+    static BatchingDispatcher dispatcher;
+    return dispatcher;
+}
+
 // https://html.spec.whatwg.org/multipage/images.html#update-the-image-data
 ErrorOr<void> HTMLImageElement::update_the_image_data(bool restart_animations, bool maybe_omit_events)
 {
@@ -473,44 +507,46 @@ after_step_7:
 
         image_request->add_callbacks(
             [this, image_request, maybe_omit_events, url_string, previous_url]() {
-                VERIFY(image_request->shared_image_request());
-                auto image_data = image_request->shared_image_request()->image_data();
-                image_request->set_image_data(image_data);
+                batching_dispatcher().enqueue([this, image_request, maybe_omit_events, url_string, previous_url] {
+                    VERIFY(image_request->shared_image_request());
+                    auto image_data = image_request->shared_image_request()->image_data();
+                    image_request->set_image_data(image_data);
 
-                ListOfAvailableImages::Key key;
-                key.url = url_string;
-                key.mode = m_cors_setting;
-                key.origin = document().origin();
+                    ListOfAvailableImages::Key key;
+                    key.url = url_string;
+                    key.mode = m_cors_setting;
+                    key.origin = document().origin();
 
-                // 1. If image request is the pending request, abort the image request for the current request,
-                //    upgrade the pending request to the current request
-                //    and prepare image request for presentation given the img element.
-                if (image_request == m_pending_request) {
-                    abort_the_image_request(realm(), m_current_request);
-                    upgrade_pending_request_to_current_request();
-                    image_request->prepare_for_presentation(*this);
-                }
+                    // 1. If image request is the pending request, abort the image request for the current request,
+                    //    upgrade the pending request to the current request
+                    //    and prepare image request for presentation given the img element.
+                    if (image_request == m_pending_request) {
+                        abort_the_image_request(realm(), m_current_request);
+                        upgrade_pending_request_to_current_request();
+                        image_request->prepare_for_presentation(*this);
+                    }
 
-                // 2. Set image request to the completely available state.
-                image_request->set_state(ImageRequest::State::CompletelyAvailable);
+                    // 2. Set image request to the completely available state.
+                    image_request->set_state(ImageRequest::State::CompletelyAvailable);
 
-                // 3. Add the image to the list of available images using the key key, with the ignore higher-layer caching flag set.
-                document().list_of_available_images().add(key, *image_data, true).release_value_but_fixme_should_propagate_errors();
+                    // 3. Add the image to the list of available images using the key key, with the ignore higher-layer caching flag set.
+                    document().list_of_available_images().add(key, *image_data, true).release_value_but_fixme_should_propagate_errors();
 
-                // 4. If maybe omit events is not set or previousURL is not equal to urlString, then fire an event named load at the img element.
-                if (!maybe_omit_events || previous_url != url_string)
-                    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
+                    // 4. If maybe omit events is not set or previousURL is not equal to urlString, then fire an event named load at the img element.
+                    if (!maybe_omit_events || previous_url != url_string)
+                        dispatch_event(DOM::Event::create(realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
 
-                set_needs_style_update(true);
-                document().set_needs_layout();
+                    set_needs_style_update(true);
+                    document().set_needs_layout();
 
-                if (image_data->is_animated() && image_data->frame_count() > 1) {
-                    m_current_frame_index = 0;
-                    m_animation_timer->set_interval(image_data->frame_duration(0));
-                    m_animation_timer->start();
-                }
+                    if (image_data->is_animated() && image_data->frame_count() > 1) {
+                        m_current_frame_index = 0;
+                        m_animation_timer->set_interval(image_data->frame_duration(0));
+                        m_animation_timer->start();
+                    }
 
-                m_load_event_delayer.clear();
+                    m_load_event_delayer.clear();
+                });
             },
             [this, image_request, maybe_omit_events, url_string, previous_url, selected_source]() {
                 // The image data is not in a supported file format;
