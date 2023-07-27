@@ -1452,6 +1452,40 @@ CSS::JustifyItems GridFormattingContext::justification_for_item(Box const& box) 
     }
 }
 
+CSS::AlignItems GridFormattingContext::alignment_for_item(Box const& box) const
+{
+    switch (box.computed_values().align_self()) {
+    case CSS::AlignSelf::Auto:
+        return grid_container().computed_values().align_items();
+    case CSS::AlignSelf::End:
+        return CSS::AlignItems::End;
+    case CSS::AlignSelf::Normal:
+        return CSS::AlignItems::Normal;
+    case CSS::AlignSelf::SelfStart:
+        return CSS::AlignItems::SelfStart;
+    case CSS::AlignSelf::SelfEnd:
+        return CSS::AlignItems::SelfEnd;
+    case CSS::AlignSelf::FlexStart:
+        return CSS::AlignItems::FlexStart;
+    case CSS::AlignSelf::FlexEnd:
+        return CSS::AlignItems::FlexEnd;
+    case CSS::AlignSelf::Center:
+        return CSS::AlignItems::Center;
+    case CSS::AlignSelf::Baseline:
+        return CSS::AlignItems::Baseline;
+    case CSS::AlignSelf::Start:
+        return CSS::AlignItems::Start;
+    case CSS::AlignSelf::Stretch:
+        return CSS::AlignItems::Stretch;
+    case CSS::AlignSelf::Safe:
+        return CSS::AlignItems::Safe;
+    case CSS::AlignSelf::Unsafe:
+        return CSS::AlignItems::Unsafe;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 void GridFormattingContext::resolve_grid_item_widths()
 {
     for (auto& item : m_grid_items) {
@@ -1537,6 +1571,30 @@ void GridFormattingContext::resolve_grid_item_heights()
                 box_state.margin_bottom = underflow_px;
             } else if (computed_values.height().is_auto()) {
                 height += underflow_px;
+            }
+
+            switch (alignment_for_item(item.box)) {
+            case CSS::AlignItems::Baseline:
+                // FIXME: Not implemented
+            case CSS::AlignItems::Stretch:
+            case CSS::AlignItems::Normal:
+                break;
+            case CSS::AlignItems::Start:
+            case CSS::AlignItems::FlexStart:
+            case CSS::AlignItems::SelfStart:
+                box_state.margin_bottom += underflow_px;
+                return a_height;
+            case CSS::AlignItems::End:
+            case CSS::AlignItems::SelfEnd:
+            case CSS::AlignItems::FlexEnd:
+                box_state.margin_top += underflow_px;
+                return a_height;
+            case CSS::AlignItems::Center:
+                box_state.margin_top += underflow_px / 2;
+                box_state.margin_bottom += underflow_px / 2;
+                return a_height;
+            default:
+                break;
             }
 
             return height;

@@ -104,6 +104,7 @@ public:
 
 private:
     CSS::JustifyItems justification_for_item(Box const& box) const;
+    CSS::AlignItems alignment_for_item(Box const& box) const;
 
     void resolve_items_box_metrics(GridDimension const dimension);
 
