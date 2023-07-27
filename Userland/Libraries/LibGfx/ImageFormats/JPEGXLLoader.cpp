@@ -1094,12 +1094,24 @@ public:
         return m_vshift;
     }
 
+    bool decoded() const
+    {
+        return m_decoded;
+    }
+
+    void set_decoded(bool decoded)
+    {
+        m_decoded = decoded;
+    }
+
 private:
     u32 m_width {};
     u32 m_height {};
 
     u32 m_hshift {};
     u32 m_vshift {};
+
+    bool m_decoded { false };
 
     Vector<i32> m_pixels {};
 };
@@ -1313,6 +1325,8 @@ static ErrorOr<ModularHeader> read_modular_header(LittleEndianInputBitStream& st
                 image.channels()[i].set(x, y, total);
             }
         }
+
+        image.channels()[i].set_decoded(true);
     }
 
     return modular_header;
@@ -1386,6 +1400,39 @@ static ErrorOr<LfGlobal> read_lf_global(LittleEndianInputBitStream& stream,
     lf_global.gmodular = TRY(read_global_modular(stream, image, frame_header, metadata, entropy_decoder));
 
     return lf_global;
+}
+///
+
+/// G.2 - LfGroup
+static ErrorOr<void> read_lf_group(LittleEndianInputBitStream&,
+    Image& image,
+    FrameHeader const& frame_header)
+{
+    // LF coefficients
+    if (frame_header.encoding == FrameHeader::Encoding::kVarDCT) {
+        TODO();
+    }
+
+    // ModularLfGroup
+    for (auto const& channel : image.channels()) {
+        if (channel.decoded())
+            continue;
+
+        if (channel.hshift() < 3 || channel.vshift() < 3)
+            continue;
+
+        // This code actually only detect that we need to read a null image
+        // so a no-op. It should be fully rewritten when we add proper support
+        // for LfGroup.
+        TODO();
+    }
+
+    // HF metadata
+    if (frame_header.encoding == FrameHeader::Encoding::kVarDCT) {
+        TODO();
+    }
+
+    return {};
 }
 ///
 
@@ -1534,7 +1581,7 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     frame.lf_global = TRY(read_lf_global(stream, image, frame.frame_header, metadata, entropy_decoder));
 
     for (u32 i {}; i < frame.num_lf_groups; ++i)
-        TODO();
+        TRY(read_lf_group(stream, image, frame.frame_header));
 
     if (frame.frame_header.encoding == FrameHeader::Encoding::kVarDCT) {
         TODO();
