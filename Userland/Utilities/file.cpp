@@ -110,24 +110,14 @@ static ErrorOr<Optional<String>> zip_details(StringView description, StringView 
 {
     auto mapped_file = TRY(Core::MappedFile::map(path));
     auto zip_file = Archive::Zip::try_create(mapped_file->bytes());
-    u32 files = 0;
-    u32 directories = 0;
-    u64 total_bytes = 0;
-    TRY(zip_file->for_each_member([&](auto zip_member) -> ErrorOr<IterationDecision> {
-        if (zip_member.is_directory)
-            directories++;
-        else
-            files++;
-        total_bytes += zip_member.uncompressed_size;
-        return IterationDecision::Continue;
-    }));
+    auto statistics = TRY(zip_file->calculate_statistics());
     return TRY(String::formatted("{}, {} {}, {} {} totaling {} uncompressed",
         description,
-        directories,
-        directories == 1 ? "directory" : "directories",
-        files,
-        files == 1 ? "file" : "files",
-        AK::human_readable_size(total_bytes)));
+        statistics.directory_count(),
+        statistics.directory_count() == 1 ? "directory" : "directories",
+        statistics.file_count(),
+        statistics.file_count() == 1 ? "file" : "files",
+        AK::human_readable_size(statistics.total_uncompressed_bytes())));
 }
 
 static ErrorOr<Optional<String>> elf_details(StringView description, StringView path)

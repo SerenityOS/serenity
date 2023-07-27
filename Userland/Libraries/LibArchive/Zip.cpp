@@ -77,7 +77,7 @@ Optional<Zip> Zip::try_create(ReadonlyBytes buffer)
     };
 }
 
-ErrorOr<bool> Zip::for_each_member(Function<ErrorOr<IterationDecision>(ZipMember const&)> callback)
+ErrorOr<bool> Zip::for_each_member(Function<ErrorOr<IterationDecision>(ZipMember const&)> callback) const
 {
     size_t member_offset = m_members_start_offset;
     for (size_t i = 0; i < m_member_count; i++) {
@@ -102,6 +102,24 @@ ErrorOr<bool> Zip::for_each_member(Function<ErrorOr<IterationDecision>(ZipMember
         member_offset += central_directory_record.size();
     }
     return true;
+}
+
+ErrorOr<Statistics> Zip::calculate_statistics() const
+{
+    size_t file_count = 0;
+    size_t directory_count = 0;
+    size_t uncompressed_bytes = 0;
+
+    TRY(for_each_member([&](auto zip_member) -> ErrorOr<IterationDecision> {
+        if (zip_member.is_directory)
+            directory_count++;
+        else
+            file_count++;
+        uncompressed_bytes += zip_member.uncompressed_size;
+        return IterationDecision::Continue;
+    }));
+
+    return Statistics(file_count, directory_count, uncompressed_bytes);
 }
 
 ZipOutputStream::ZipOutputStream(NonnullOwnPtr<Stream> stream)
