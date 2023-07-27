@@ -172,13 +172,17 @@ static void paint_outer_box_shadow(PaintContext& context, CSSPixelRect const& co
 
     auto shadow_bitmap_rect = DevicePixelRect(
         0, 0,
-        max(
-            top_left_corner_size.width() + top_right_corner_size.width(),
-            bottom_left_corner_size.width() + bottom_right_corner_size.width())
+        max(max(
+                top_left_corner_size.width() + top_right_corner_size.width(),
+                bottom_left_corner_size.width() + bottom_right_corner_size.width()),
+            max(top_left_corner_size.width() + bottom_right_corner_size.width(),
+                bottom_left_corner_size.width() + top_right_corner_size.width()))
             + 1 + blurred_edge_thickness,
-        max(
-            top_left_corner_size.height() + bottom_left_corner_size.height(),
-            top_right_corner_size.height() + bottom_right_corner_size.height())
+        max(max(
+                top_left_corner_size.height() + bottom_left_corner_size.height(),
+                top_right_corner_size.height() + bottom_right_corner_size.height()),
+            max(top_left_corner_size.height() + bottom_right_corner_size.height(),
+                bottom_left_corner_size.height() + top_right_corner_size.height()))
             + 1 + blurred_edge_thickness);
 
     auto top_left_corner_rect = DevicePixelRect {
