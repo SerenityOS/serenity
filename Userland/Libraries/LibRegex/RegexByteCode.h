@@ -822,6 +822,28 @@ public:
     }
 };
 
+ALWAYS_INLINE OpCode& ByteCode::get_opcode(regex::MatchState& state) const
+{
+    OpCodeId opcode_id;
+    if (auto opcode_ptr = static_cast<DisjointChunks<ByteCodeValueType> const&>(*this).find(state.instruction_position))
+        opcode_id = (OpCodeId)*opcode_ptr;
+    else
+        opcode_id = OpCodeId::Exit;
+
+    auto& opcode = get_opcode_by_id(opcode_id);
+    opcode.set_state(state);
+    return opcode;
+}
+
+ALWAYS_INLINE OpCode& ByteCode::get_opcode_by_id(OpCodeId id) const
+{
+    VERIFY(id >= OpCodeId::First && id <= OpCodeId::Last);
+
+    auto& opcode = s_opcodes[(u32)id];
+    opcode->set_bytecode(*const_cast<ByteCode*>(this));
+    return *opcode;
+}
+
 template<typename T>
 bool is(OpCode const&);
 
