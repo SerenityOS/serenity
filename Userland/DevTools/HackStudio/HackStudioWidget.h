@@ -113,6 +113,7 @@ private:
     NonnullRefPtr<GUI::Action> create_remove_current_editor_tab_widget_action();
     ErrorOr<NonnullRefPtr<GUI::Action>> create_remove_current_editor_action();
     ErrorOr<NonnullRefPtr<GUI::Action>> create_open_action();
+    ErrorOr<NonnullRefPtr<GUI::Action>> create_toggle_open_file_in_single_click_action();
     NonnullRefPtr<GUI::Action> create_save_action();
     NonnullRefPtr<GUI::Action> create_save_as_action();
     NonnullRefPtr<GUI::Action> create_show_in_file_manager_action();
@@ -247,6 +248,7 @@ private:
     RefPtr<GUI::Action> m_locations_history_back_action;
     RefPtr<GUI::Action> m_locations_history_forward_action;
     RefPtr<GUI::Action> m_toggle_semantic_highlighting_action;
+    RefPtr<GUI::Action> m_toggle_view_file_in_single_click_action;
     RefPtr<GUI::Action> m_open_project_configuration_action;
 
     RefPtr<Gfx::Font const> read_editor_font_from_config();
