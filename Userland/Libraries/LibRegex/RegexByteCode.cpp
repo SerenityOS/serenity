@@ -416,6 +416,9 @@ ALWAYS_INLINE ExecutionResult OpCode_SaveRightNamedCaptureGroup::execute(MatchIn
 
 ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, MatchState& state) const
 {
+    auto argument_count = arguments_count();
+    auto has_single_argument = argument_count == 1;
+
     bool inverse { false };
     bool temporary_inverse { false };
     bool reset_temp_inverse { false };
@@ -443,7 +446,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
     state.string_position_before_match = state.string_position;
 
     size_t offset { state.instruction_position + 3 };
-    for (size_t i = 0; i < arguments_count(); ++i) {
+    for (size_t i = 0; i < argument_count; ++i) {
         if (state.string_position > string_position)
             break;
 
@@ -647,7 +650,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
             inverse_matched = true;
         }
 
-        if (new_disjunction_state.active) {
+        if (!has_single_argument && new_disjunction_state.active) {
             auto failed = (!had_zero_length_match && string_position == state.string_position) || state.string_position > input.view.length();
 
             if (!failed) {
@@ -665,11 +668,13 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
         }
     }
 
-    auto& new_disjunction_state = current_disjunction_state();
-    if (new_disjunction_state.active) {
-        if (!new_disjunction_state.fail) {
-            state.string_position = new_disjunction_state.last_accepted_position.value_or(new_disjunction_state.initial_position);
-            state.string_position_in_code_units = new_disjunction_state.last_accepted_code_unit_position.value_or(new_disjunction_state.initial_code_unit_position);
+    if (!has_single_argument) {
+        auto& new_disjunction_state = current_disjunction_state();
+        if (new_disjunction_state.active) {
+            if (!new_disjunction_state.fail) {
+                state.string_position = new_disjunction_state.last_accepted_position.value_or(new_disjunction_state.initial_position);
+                state.string_position_in_code_units = new_disjunction_state.last_accepted_code_unit_position.value_or(new_disjunction_state.initial_code_unit_position);
+            }
         }
     }
 
@@ -687,7 +692,8 @@ ALWAYS_INLINE void OpCode_Compare::compare_char(MatchInput const& input, MatchSt
     if (state.string_position == input.view.length())
         return;
 
-    auto input_view = input.view.substring_view(state.string_position, 1)[0];
+    // FIXME: Figure out how to do this if unicode() without performing a substring split first.
+    auto input_view = input.view.unicode() ? input.view.substring_view(state.string_position, 1)[0] : input.view.code_unit_at(state.string_position_in_code_units);
     bool equal;
     if (input.regex_options & AllFlags::Insensitive)
         equal = to_ascii_lowercase(input_view) == to_ascii_lowercase(ch1); // FIXME: Implement case-insensitive matching for non-ascii characters
@@ -715,6 +721,12 @@ ALWAYS_INLINE bool OpCode_Compare::compare_string(MatchInput const& input, Match
     if (str.length() == 0) {
         had_zero_length_match = true;
         return true;
+    }
+
+    if (str.length() == 1) {
+        auto inverse_matched = false;
+        compare_char(input, state, str[0], false, inverse_matched);
+        return !inverse_matched;
     }
 
     auto subject = input.view.substring_view(state.string_position, str.length());
