@@ -1700,8 +1700,8 @@ Box const* FormattingContext::box_child_to_derive_baseline_from(Box const& box) 
             continue;
         return &child_box;
     }
-    // If none of the children has a line box, the baseline is formed by the last in-flow child.
-    return last_box_child;
+    // None of the children has a line box.
+    return nullptr;
 }
 
 CSSPixels FormattingContext::box_baseline(Box const& box) const
@@ -1732,9 +1732,10 @@ CSSPixels FormattingContext::box_baseline(Box const& box) const
     if (!box_state.line_boxes.is_empty())
         return box_state.margin_box_top() + box_state.offset.y() + box_state.line_boxes.last().baseline();
     if (box.has_children() && !box.children_are_inline()) {
-        auto const* child_box = box_child_to_derive_baseline_from(box);
-        VERIFY(child_box);
-        return box_baseline(*child_box);
+        // If none of the children have a baseline set, the bottom margin edge of the box is used.
+        if (auto const* child_box = box_child_to_derive_baseline_from(box)) {
+            return box_baseline(*child_box);
+        }
     }
     return box_state.margin_box_height();
 }
