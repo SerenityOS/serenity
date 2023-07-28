@@ -130,7 +130,7 @@ void Parser::parse_untagged()
     auto number = try_parse_number();
     if (number.has_value()) {
         consume(" "sv);
-        auto data_type = parse_atom().to_deprecated_string();
+        auto data_type = parse_atom();
         if (data_type == "EXISTS"sv) {
             m_response.data().set_exists(number.value());
             consume("\r\n"sv);
