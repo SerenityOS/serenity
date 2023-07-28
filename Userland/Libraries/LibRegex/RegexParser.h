@@ -55,6 +55,10 @@ public:
         Token error_token;
         Vector<DeprecatedFlyString> capture_groups;
         AllOptions options;
+
+        struct {
+            Optional<DeprecatedString> pure_substring_search;
+        } optimization_data {};
     };
 
     explicit Parser(Lexer& lexer)

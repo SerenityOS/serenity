@@ -190,6 +190,11 @@ public:
 
     explicit RegexStringView(DeprecatedString&&) = delete;
 
+    bool is_string_view() const
+    {
+        return m_view.has<StringView>();
+    }
+
     StringView string_view() const
     {
         return m_view.get<StringView>();
