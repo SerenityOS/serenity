@@ -140,6 +140,8 @@ PaletteWidget::PaletteWidget()
     display_color_list(result.value());
 }
 
+PaletteWidget::~PaletteWidget() = default;
+
 void PaletteWidget::set_image_editor(ImageEditor* editor)
 {
     m_editor = editor;

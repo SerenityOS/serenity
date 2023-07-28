@@ -64,6 +64,8 @@ LayerPropertiesWidget::LayerPropertiesWidget()
     };
 }
 
+LayerPropertiesWidget::~LayerPropertiesWidget() = default;
+
 void LayerPropertiesWidget::set_layer(Layer* layer)
 {
     if (m_layer == layer)

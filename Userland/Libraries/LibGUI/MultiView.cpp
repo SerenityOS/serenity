@@ -50,6 +50,8 @@ MultiView::MultiView()
     set_view_mode(ViewMode::Icon);
 }
 
+MultiView::~MultiView() = default;
+
 void MultiView::set_view_mode(ViewMode mode)
 {
     if (m_view_mode == mode)

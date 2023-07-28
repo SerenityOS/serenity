@@ -18,7 +18,7 @@ namespace GUI {
 class MultiView final : public GUI::StackWidget {
     C_OBJECT(MultiView)
 public:
-    virtual ~MultiView() override = default;
+    virtual ~MultiView() override;
 
     Function<void()> on_selection_change;
     Function<void(ModelIndex const&)> on_activation;
