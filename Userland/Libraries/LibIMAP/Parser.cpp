@@ -18,7 +18,7 @@ ParseStatus Parser::parse(ByteBuffer&& buffer, bool expecting_tag)
         m_incomplete = false;
     } else {
         m_buffer = move(buffer);
-        position = 0;
+        m_position = 0;
         m_response = SolidResponse();
     }
 
@@ -50,16 +50,16 @@ ParseStatus Parser::parse(ByteBuffer&& buffer, bool expecting_tag)
 
 bool Parser::try_consume(StringView x)
 {
-    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, consume({})", position, x);
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, consume({})", m_position, x);
     size_t i = 0;
-    auto previous_position = position;
-    while (i < x.length() && !at_end() && to_ascii_lowercase(x[i]) == to_ascii_lowercase(m_buffer[position])) {
+    auto previous_position = m_position;
+    while (i < x.length() && !at_end() && to_ascii_lowercase(x[i]) == to_ascii_lowercase(m_buffer[m_position])) {
         i++;
-        position++;
+        m_position++;
     }
     if (i != x.length()) {
         // We didn't match the full string.
-        position = previous_position;
+        m_position = previous_position;
         dbgln_if(IMAP_PARSER_DEBUG, "ret false");
         return false;
     }
@@ -82,9 +82,9 @@ void Parser::parse_response_done()
 
     StringBuilder response_data;
 
-    while (!at_end() && m_buffer[position] != '\r') {
-        response_data.append((char)m_buffer[position]);
-        position += 1;
+    while (!at_end() && m_buffer[m_position] != '\r') {
+        response_data.append((char)m_buffer[m_position]);
+        m_position += 1;
     }
 
     consume("\r\n"sv);
@@ -94,7 +94,7 @@ void Parser::parse_response_done()
 void Parser::consume(StringView x)
 {
     if (!try_consume(x)) {
-        dbgln("\"{}\" not matched at {}, (buffer length {})", x, position, m_buffer.size());
+        dbgln("\"{}\" not matched at {}, (buffer length {})", x, m_position, m_buffer.size());
 
         m_parsing_failed = true;
     }
@@ -102,20 +102,20 @@ void Parser::consume(StringView x)
 
 Optional<unsigned> Parser::try_parse_number()
 {
-    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, try_parse_number()", position);
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, try_parse_number()", m_position);
     auto number_matched = 0;
-    while (!at_end() && 0 <= m_buffer[position] - '0' && m_buffer[position] - '0' <= 9) {
+    while (!at_end() && 0 <= m_buffer[m_position] - '0' && m_buffer[m_position] - '0' <= 9) {
         number_matched++;
-        position++;
+        m_position++;
     }
     if (number_matched == 0) {
-        dbgln_if(IMAP_PARSER_DEBUG, "p: {}, ret empty", position);
+        dbgln_if(IMAP_PARSER_DEBUG, "p: {}, ret empty", m_position);
         return {};
     }
 
-    auto number = StringView(m_buffer.data() + position - number_matched, number_matched);
+    auto number = StringView(m_buffer.data() + m_position - number_matched, number_matched);
 
-    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, ret \"{}\"", position, number.to_uint());
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, ret \"{}\"", m_position, number.to_uint());
     return number.to_uint();
 }
 
@@ -244,7 +244,7 @@ void Parser::parse_untagged()
 
             status_item.set(type, value);
 
-            if (!at_end() && m_buffer[position] != ')')
+            if (!at_end() && m_buffer[m_position] != ')')
                 consume(" "sv);
         }
         m_response.data().set_status(move(status_item));
@@ -259,10 +259,10 @@ void Parser::parse_untagged()
 
 StringView Parser::parse_quoted_string()
 {
-    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, parse_quoted_string()", position);
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, parse_quoted_string()", m_position);
     auto str = consume_while([](u8 x) { return x != '"'; });
     consume("\""sv);
-    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, ret \"{}\"", position, str);
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, ret \"{}\"", m_position, str);
     return str;
 }
 
@@ -277,7 +277,7 @@ StringView Parser::parse_string()
 
 Optional<StringView> Parser::parse_nstring()
 {
-    dbgln_if(IMAP_PARSER_DEBUG, "p: {} parse_nstring()", position);
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {} parse_nstring()", m_position);
     if (try_consume("NIL"sv))
         return {};
     else
@@ -331,7 +331,7 @@ FetchResponseData Parser::parse_fetch_response()
             break;
         }
         }
-        if (!at_end() && m_buffer[position] != ')')
+        if (!at_end() && m_buffer[m_position] != ')')
             consume(" "sv);
     }
     consume("\r\n"sv);
@@ -376,7 +376,7 @@ Envelope Parser::parse_envelope()
 }
 BodyStructure Parser::parse_body_structure()
 {
-    if (!at_end() && m_buffer[position] == '(') {
+    if (!at_end() && m_buffer[m_position] == '(') {
         auto data = MultiPartBodyStructureData();
         while (try_consume("("sv)) {
             auto child = parse_body_structure();
@@ -570,19 +570,19 @@ Tuple<DeprecatedString, HashMap<DeprecatedString, DeprecatedString>> Parser::par
 
 StringView Parser::parse_literal_string()
 {
-    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, parse_literal_string()", position);
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, parse_literal_string()", m_position);
     consume("{"sv);
     auto num_bytes = parse_number();
     consume("}\r\n"sv);
 
-    if (m_buffer.size() < position + num_bytes) {
+    if (m_buffer.size() < m_position + num_bytes) {
         m_parsing_failed = true;
         return ""sv;
     }
 
-    position += num_bytes;
-    auto s = StringView(m_buffer.data() + position - num_bytes, num_bytes);
-    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, ret \"{}\"", position, s);
+    m_position += num_bytes;
+    auto s = StringView(m_buffer.data() + m_position - num_bytes, num_bytes);
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, ret \"{}\"", m_position, s);
     return s;
 }
 
@@ -615,21 +615,21 @@ void Parser::parse_capability_response()
 
 StringView Parser::parse_atom()
 {
-    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, parse_atom()", position);
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, parse_atom()", m_position);
     auto is_non_atom_char = [](u8 x) {
         auto non_atom_chars = { '(', ')', '{', ' ', '%', '*', '"', '\\', ']' };
         return AK::find(non_atom_chars.begin(), non_atom_chars.end(), x) != non_atom_chars.end();
     };
 
-    auto start = position;
+    auto start = m_position;
     auto count = 0;
-    while (!at_end() && !is_ascii_control(m_buffer[position]) && !is_non_atom_char(m_buffer[position])) {
+    while (!at_end() && !is_ascii_control(m_buffer[m_position]) && !is_non_atom_char(m_buffer[m_position])) {
         count++;
-        position++;
+        m_position++;
     }
 
     StringView s = StringView(m_buffer.data() + start, count);
-    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, ret \"{}\"", position, s);
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, ret \"{}\"", m_position, s);
     return s;
 }
 
@@ -703,15 +703,15 @@ MailboxFlag Parser::parse_mailbox_flag(StringView s)
 
 StringView Parser::consume_while(Function<bool(u8)> should_consume)
 {
-    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, consume_while()", position);
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, consume_while()", m_position);
     int chars = 0;
-    while (!at_end() && should_consume(m_buffer[position])) {
-        position++;
+    while (!at_end() && should_consume(m_buffer[m_position])) {
+        m_position++;
         chars++;
     }
-    auto s = StringView(m_buffer.data() + position - chars, chars);
+    auto s = StringView(m_buffer.data() + m_position - chars, chars);
 
-    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, ret \"{}\"", position, s);
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, ret \"{}\"", m_position, s);
     return s;
 }
 
@@ -814,7 +814,7 @@ Optional<Vector<Address>> Parser::parse_address_list()
     consume("("sv);
     while (!try_consume(")"sv)) {
         addresses.append(parse_address());
-        if (!at_end() && m_buffer[position] != ')')
+        if (!at_end() && m_buffer[m_position] != ')')
             consume(" "sv);
     }
     return { addresses };
@@ -840,7 +840,7 @@ Address Parser::parse_address()
 }
 StringView Parser::parse_astring()
 {
-    if (!at_end() && (m_buffer[position] == '{' || m_buffer[position] == '"'))
+    if (!at_end() && (m_buffer[m_position] == '{' || m_buffer[m_position] == '"'))
         return parse_string();
     else
         return parse_atom();
@@ -873,7 +873,7 @@ BodyExtension Parser::parse_body_extension()
             try_consume(" "sv);
         }
         return BodyExtension { move(extensions) };
-    } else if (!at_end() && (m_buffer[position] == '"' || m_buffer[position] == '{')) {
+    } else if (!at_end() && (m_buffer[m_position] == '"' || m_buffer[m_position] == '{')) {
         return BodyExtension { { parse_string() } };
     } else {
         return BodyExtension { parse_number() };
