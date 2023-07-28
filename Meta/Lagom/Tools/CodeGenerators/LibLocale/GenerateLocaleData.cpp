@@ -833,11 +833,16 @@ static ErrorOr<void> parse_calendar_keywords(DeprecatedString locale_dates_path,
     KeywordList keywords {};
 
     TRY(Core::Directory::for_each_entry(locale_dates_path, Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto& directory) -> ErrorOr<IterationDecision> {
-        auto locale_calendars_path = LexicalPath::join(directory.path().string(), entry.name).string();
-
-        LexicalPath calendars_path(move(locale_calendars_path));
-        if (!calendars_path.basename().starts_with("ca-"sv))
+        if (!entry.name.starts_with("ca-"sv))
             return IterationDecision::Continue;
+
+        // The generic calendar is not a supported Unicode calendar key, so skip it:
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Locale/calendar#unicode_calendar_keys
+        if (entry.name == "ca-generic.json"sv)
+            return IterationDecision::Continue;
+
+        auto locale_calendars_path = LexicalPath::join(directory.path().string(), entry.name).string();
+        LexicalPath calendars_path(move(locale_calendars_path));
 
         auto calendars = TRY(read_json_file(calendars_path.string()));
         auto const& main_object = calendars.as_object().get_object("main"sv).value();
@@ -846,11 +851,6 @@ static ErrorOr<void> parse_calendar_keywords(DeprecatedString locale_dates_path,
         auto const& calendars_object = dates_object.get_object("calendars"sv).value();
 
         calendars_object.for_each_member([&](auto calendar_name, JsonValue const&) {
-            // The generic calendar is not a supported Unicode calendar key, so skip it:
-            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Locale/calendar#unicode_calendar_keys
-            if (calendar_name == "generic"sv)
-                return;
-
             if (auto calendar_alias = find_keyword_alias("ca"sv, calendar_name, cldr); calendar_alias.has_value())
                 calendar_name = calendar_alias.release_value();
 
