@@ -94,6 +94,14 @@ public:
     DisjointSpans& operator=(DisjointSpans&&) = default;
     DisjointSpans& operator=(DisjointSpans const&) = default;
 
+    Span<T> singular_span() const
+    {
+        VERIFY(m_spans.size() == 1);
+        return m_spans[0];
+    }
+
+    SpanContainer const& individual_spans() const { return m_spans; }
+
     bool operator==(DisjointSpans const& other) const
     {
         if (other.size() != size())
@@ -440,8 +448,22 @@ private:
     Vector<ChunkType, InlineCapacity> m_chunks;
 };
 
-}
+template<typename T>
+struct Traits<DisjointSpans<T>> : public GenericTraits<DisjointSpans<T>> {
+    static unsigned hash(DisjointSpans<T> const& span)
+    {
+        unsigned hash = 0;
+        for (auto const& value : span) {
+            auto value_hash = Traits<T>::hash(value);
+            hash = pair_int_hash(hash, value_hash);
+        }
+        return hash;
+    }
 
+    constexpr static bool is_trivial() { return false; }
+};
+
+}
 #if USING_AK_GLOBALLY
 using AK::DisjointChunks;
 using AK::DisjointSpans;

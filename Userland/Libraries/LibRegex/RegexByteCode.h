@@ -185,6 +185,23 @@ public:
         Base::first_chunk().prepend(forward<T>(value));
     }
 
+    void append(Span<ByteCodeValueType const> value)
+    {
+        if (is_empty())
+            Base::append({});
+        auto& last = Base::last_chunk();
+        last.ensure_capacity(value.size());
+        for (auto v : value)
+            last.unchecked_append(v);
+    }
+
+    void ensure_capacity(size_t capacity)
+    {
+        if (is_empty())
+            Base::append({});
+        Base::last_chunk().ensure_capacity(capacity);
+    }
+
     void last_chunk() const = delete;
     void first_chunk() const = delete;
 
@@ -210,20 +227,11 @@ public:
 
     void insert_bytecode_compare_string(StringView view)
     {
-        ByteCode bytecode;
-
-        bytecode.empend(static_cast<ByteCodeValueType>(OpCodeId::Compare));
-        bytecode.empend(static_cast<u64>(1)); // number of arguments
-
-        ByteCode arguments;
-
-        arguments.empend(static_cast<ByteCodeValueType>(CharacterCompareType::String));
-        arguments.insert_string(view);
-
-        bytecode.empend(arguments.size()); // size of arguments
-        bytecode.extend(move(arguments));
-
-        extend(move(bytecode));
+        empend(static_cast<ByteCodeValueType>(OpCodeId::Compare));
+        empend(static_cast<u64>(1)); // number of arguments
+        empend(2 + view.length());   // size of arguments
+        empend(static_cast<ByteCodeValueType>(CharacterCompareType::String));
+        insert_string(view);
     }
 
     void insert_bytecode_group_capture_left(size_t capture_groups_count)

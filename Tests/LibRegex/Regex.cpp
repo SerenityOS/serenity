@@ -1047,6 +1047,8 @@ TEST_CASE(optimizer_alternation)
     Array tests {
         // Pattern, Subject, Expected length
         Tuple { "a|"sv, "a"sv, 1u },
+        Tuple { "a|a|a|a|a|a|a|a|a|b"sv, "a"sv, 1u },
+        Tuple { "ab|ac|ad|bc"sv, "bc"sv, 2u },
     };
 
     for (auto& test : tests) {
