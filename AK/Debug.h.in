@@ -210,6 +210,10 @@
 #    cmakedefine01 IMAGE_LOADER_DEBUG
 #endif
 
+#ifndef IMAP_PARSER_DEBUG
+#    cmakedefine01 IMAP_PARSER_DEBUG
+#endif
+
 #ifndef ITEM_RECTS_DEBUG
 #    cmakedefine01 ITEM_RECTS_DEBUG
 #endif
