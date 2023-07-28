@@ -208,6 +208,8 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
     else
         push_call_frame(make<CallFrame>(), executable.number_of_registers);
 
+    TemporaryChange restore_this_value { m_this_value, {} };
+
     for (;;) {
         Bytecode::InstructionStreamIterator pc(m_current_block->instruction_stream());
         TemporaryChange temp_change { m_pc, &pc };
