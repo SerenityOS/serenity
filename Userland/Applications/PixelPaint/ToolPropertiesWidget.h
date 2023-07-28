@@ -20,7 +20,7 @@ class ToolPropertiesWidget final : public GUI::Widget {
     C_OBJECT(ToolPropertiesWidget);
 
 public:
-    virtual ~ToolPropertiesWidget() override = default;
+    virtual ~ToolPropertiesWidget() override;
 
     void set_active_tool(Tool*);
 

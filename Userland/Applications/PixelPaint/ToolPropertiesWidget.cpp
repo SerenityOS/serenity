@@ -26,6 +26,8 @@ ToolPropertiesWidget::ToolPropertiesWidget()
     m_error_label->set_enabled(false);
 }
 
+ToolPropertiesWidget::~ToolPropertiesWidget() = default;
+
 void ToolPropertiesWidget::set_active_tool(Tool* tool)
 {
     if (tool == m_active_tool)

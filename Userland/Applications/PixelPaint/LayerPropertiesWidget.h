@@ -17,7 +17,7 @@ class LayerPropertiesWidget final : public GUI::Widget {
     C_OBJECT(LayerPropertiesWidget);
 
 public:
-    virtual ~LayerPropertiesWidget() override = default;
+    virtual ~LayerPropertiesWidget() override;
 
     void set_layer(Layer*);
 

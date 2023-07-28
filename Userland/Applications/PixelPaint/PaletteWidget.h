@@ -22,7 +22,7 @@ class PaletteWidget final : public GUI::Frame {
     C_OBJECT(PaletteWidget);
 
 public:
-    virtual ~PaletteWidget() override = default;
+    virtual ~PaletteWidget() override;
 
     void set_primary_color(Color);
     void set_secondary_color(Color);
