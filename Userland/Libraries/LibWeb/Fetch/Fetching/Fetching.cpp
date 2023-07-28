@@ -256,7 +256,7 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
         // - request’s current URL’s scheme is "http"
         request->current_url().scheme() == "http"sv
         // - request’s current URL’s host is a domain
-        && URL::host_is_domain(request->current_url().serialized_host().release_value_but_fixme_should_propagate_errors())
+        && URL::host_is_domain(request->current_url().host())
         // FIXME: - Matching request’s current URL’s host per Known HSTS Host Domain Name Matching results in either a
         //          superdomain match with an asserted includeSubDomains directive or a congruent match (with or without an
         //          asserted includeSubDomains directive) [HSTS]; or DNS resolution for the request finds a matching HTTPS RR
