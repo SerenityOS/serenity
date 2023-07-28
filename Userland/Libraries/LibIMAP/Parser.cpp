@@ -5,12 +5,14 @@
  */
 
 #include <AK/CharacterTypes.h>
+#include <AK/Debug.h>
 #include <LibIMAP/Parser.h>
 
 namespace IMAP {
 
 ParseStatus Parser::parse(ByteBuffer&& buffer, bool expecting_tag)
 {
+    dbgln_if(IMAP_PARSER_DEBUG, "Parser received {} bytes:\n\"{}\"", buffer.size(), StringView(buffer.data(), buffer.size()));
     if (m_incomplete) {
         m_buffer += buffer;
         m_incomplete = false;
@@ -48,6 +50,7 @@ ParseStatus Parser::parse(ByteBuffer&& buffer, bool expecting_tag)
 
 bool Parser::try_consume(StringView x)
 {
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, consume({})", position, x);
     size_t i = 0;
     auto previous_position = position;
     while (i < x.length() && !at_end() && to_ascii_lowercase(x[i]) == to_ascii_lowercase(m_buffer[position])) {
@@ -57,9 +60,11 @@ bool Parser::try_consume(StringView x)
     if (i != x.length()) {
         // We didn't match the full string.
         position = previous_position;
+        dbgln_if(IMAP_PARSER_DEBUG, "ret false");
         return false;
     }
 
+    dbgln_if(IMAP_PARSER_DEBUG, "ret true");
     return true;
 }
 
@@ -89,7 +94,7 @@ void Parser::parse_response_done()
 void Parser::consume(StringView x)
 {
     if (!try_consume(x)) {
-        dbgln("{} not matched at {}, buffer: {}", x, position, StringView(m_buffer.data(), m_buffer.size()));
+        dbgln("\"{}\" not matched at {}, (buffer length {})", x, position, m_buffer.size());
 
         m_parsing_failed = true;
     }
@@ -97,16 +102,20 @@ void Parser::consume(StringView x)
 
 Optional<unsigned> Parser::try_parse_number()
 {
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, try_parse_number()", position);
     auto number_matched = 0;
     while (!at_end() && 0 <= m_buffer[position] - '0' && m_buffer[position] - '0' <= 9) {
         number_matched++;
         position++;
     }
-    if (number_matched == 0)
+    if (number_matched == 0) {
+        dbgln_if(IMAP_PARSER_DEBUG, "p: {}, ret empty", position);
         return {};
+    }
 
     auto number = StringView(m_buffer.data() + position - number_matched, number_matched);
 
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, ret \"{}\"", position, number.to_uint());
     return number.to_uint();
 }
 
@@ -250,8 +259,10 @@ void Parser::parse_untagged()
 
 StringView Parser::parse_quoted_string()
 {
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, parse_quoted_string()", position);
     auto str = consume_while([](u8 x) { return x != '"'; });
     consume("\""sv);
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, ret \"{}\"", position, str);
     return str;
 }
 
@@ -266,6 +277,7 @@ StringView Parser::parse_string()
 
 Optional<StringView> Parser::parse_nstring()
 {
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {} parse_nstring()", position);
     if (try_consume("NIL"sv))
         return {};
     else
@@ -558,6 +570,7 @@ Tuple<DeprecatedString, HashMap<DeprecatedString, DeprecatedString>> Parser::par
 
 StringView Parser::parse_literal_string()
 {
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, parse_literal_string()", position);
     consume("{"sv);
     auto num_bytes = parse_number();
     consume("}\r\n"sv);
@@ -568,7 +581,9 @@ StringView Parser::parse_literal_string()
     }
 
     position += num_bytes;
-    return StringView(m_buffer.data() + position - num_bytes, num_bytes);
+    auto s = StringView(m_buffer.data() + position - num_bytes, num_bytes);
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, ret \"{}\"", position, s);
+    return s;
 }
 
 ListItem Parser::parse_list_item()
@@ -600,6 +615,7 @@ void Parser::parse_capability_response()
 
 StringView Parser::parse_atom()
 {
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, parse_atom()", position);
     auto is_non_atom_char = [](u8 x) {
         auto non_atom_chars = { '(', ')', '{', ' ', '%', '*', '"', '\\', ']' };
         return AK::find(non_atom_chars.begin(), non_atom_chars.end(), x) != non_atom_chars.end();
@@ -612,7 +628,9 @@ StringView Parser::parse_atom()
         position++;
     }
 
-    return StringView(m_buffer.data() + start, count);
+    StringView s = StringView(m_buffer.data() + start, count);
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, ret \"{}\"", position, s);
+    return s;
 }
 
 ResponseStatus Parser::parse_status()
@@ -685,12 +703,16 @@ MailboxFlag Parser::parse_mailbox_flag(StringView s)
 
 StringView Parser::consume_while(Function<bool(u8)> should_consume)
 {
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, consume_while()", position);
     int chars = 0;
     while (!at_end() && should_consume(m_buffer[position])) {
         position++;
         chars++;
     }
-    return StringView(m_buffer.data() + position - chars, chars);
+    auto s = StringView(m_buffer.data() + position - chars, chars);
+
+    dbgln_if(IMAP_PARSER_DEBUG, "p: {}, ret \"{}\"", position, s);
+    return s;
 }
 
 StringView Parser::consume_until_end_of_line()
