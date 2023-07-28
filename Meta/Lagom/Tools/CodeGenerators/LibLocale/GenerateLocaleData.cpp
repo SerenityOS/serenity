@@ -413,6 +413,35 @@ static ErrorOr<void> preprocess_currencies(DeprecatedString numbers_path, CLDR& 
     return {};
 }
 
+static bool is_sanctioned_date_field(StringView field)
+{
+    // This is a copy of the units sanctioned for use within ECMA-402, with names adjusted for the names used by the CLDR.
+    // https://tc39.es/ecma402/#table-validcodeforDateField
+    return field.is_one_of("era"sv, "year"sv, "quarter"sv, "month"sv, "week"sv, "weekday"sv, "day"sv, "dayperiod"sv, "hour"sv, "minute"sv, "second"sv, "zone"sv);
+}
+
+static ErrorOr<void> preprocess_date_fields(DeprecatedString dates_path, CLDR& cldr)
+{
+    LexicalPath date_fields_path(move(dates_path));
+    date_fields_path = date_fields_path.append("dateFields.json"sv);
+
+    auto const& locale_date_fields = *TRY(read_json_file_with_cache(date_fields_path.string()));
+    auto const& main_object = locale_date_fields.as_object().get_object("main"sv).value();
+    auto const& locale_object = main_object.get_object(date_fields_path.parent().basename()).value();
+    auto const& dates_object = locale_object.get_object("dates"sv).value();
+    auto const& fields_object = dates_object.get_object("fields"sv).value();
+
+    fields_object.for_each_member([&](auto const& key, JsonValue const&) {
+        if (!is_sanctioned_date_field(key))
+            return;
+
+        if (!cldr.date_fields.contains_slow(key))
+            cldr.date_fields.append(key);
+    });
+
+    return {};
+}
+
 static ErrorOr<void> parse_unicode_extension_keywords(DeprecatedString bcp47_path, CLDR& cldr)
 {
     constexpr auto desired_keywords = Array { "ca"sv, "co"sv, "hc"sv, "kf"sv, "kn"sv, "nu"sv };
@@ -738,27 +767,11 @@ static ErrorOr<void> parse_locale_date_fields(DeprecatedString dates_path, CLDR&
     LexicalPath date_fields_path(move(dates_path));
     date_fields_path = date_fields_path.append("dateFields.json"sv);
 
-    auto locale_date_fields = TRY(read_json_file(date_fields_path.string()));
+    auto const& locale_date_fields = *TRY(read_json_file_with_cache(date_fields_path.string()));
     auto const& main_object = locale_date_fields.as_object().get_object("main"sv).value();
     auto const& locale_object = main_object.get_object(date_fields_path.parent().basename()).value();
     auto const& dates_object = locale_object.get_object("dates"sv).value();
     auto const& fields_object = dates_object.get_object("fields"sv).value();
-
-    auto is_sanctioned_field = [](StringView field) {
-        // This is a copy of the units sanctioned for use within ECMA-402, with names adjusted for the names used by the CLDR.
-        // https://tc39.es/ecma402/#table-validcodeforDateField
-        return field.is_one_of("era"sv, "year"sv, "quarter"sv, "month"sv, "week"sv, "weekday"sv, "day"sv, "dayperiod"sv, "hour"sv, "minute"sv, "second"sv, "zone"sv);
-    };
-
-    fields_object.for_each_member([&](auto const& key, JsonValue const&) {
-        if (!is_sanctioned_field(key))
-            return;
-
-        if (!cldr.date_fields.contains_slow(key))
-            cldr.date_fields.append(key);
-    });
-
-    quick_sort(cldr.date_fields);
 
     DateFieldList long_date_fields {};
     long_date_fields.resize(cldr.date_fields.size());
@@ -770,7 +783,7 @@ static ErrorOr<void> parse_locale_date_fields(DeprecatedString dates_path, CLDR&
     narrow_date_fields.resize(cldr.date_fields.size());
 
     fields_object.for_each_member([&](auto const& key, JsonValue const& value) {
-        if (!is_sanctioned_field(key))
+        if (!is_sanctioned_date_field(key))
             return;
 
         auto const& long_name = value.as_object().get_deprecated_string("displayName"sv).value();
@@ -1011,10 +1024,17 @@ static ErrorOr<void> parse_all_locales(DeprecatedString bcp47_path, DeprecatedSt
         return IterationDecision::Continue;
     }));
 
+    TRY(Core::Directory::for_each_entry(TRY(String::formatted("{}/main", dates_path)), Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto& directory) -> ErrorOr<IterationDecision> {
+        auto dates_path = LexicalPath::join(directory.path().string(), entry.name).string();
+        TRY(preprocess_date_fields(dates_path, cldr));
+        return IterationDecision::Continue;
+    }));
+
     quick_sort(cldr.languages);
     quick_sort(cldr.territories);
     quick_sort(cldr.scripts);
     quick_sort(cldr.currencies);
+    quick_sort(cldr.date_fields);
 
     TRY(Core::Directory::for_each_entry(TRY(String::formatted("{}/bcp47", bcp47_path)), Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto& directory) -> ErrorOr<IterationDecision> {
         auto bcp47_path = LexicalPath::join(directory.path().string(), entry.name).string();
