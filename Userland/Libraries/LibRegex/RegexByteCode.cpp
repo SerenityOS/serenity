@@ -181,28 +181,6 @@ void ByteCode::ensure_opcodes_initialized()
     s_opcodes_initialized = true;
 }
 
-ALWAYS_INLINE OpCode& ByteCode::get_opcode_by_id(OpCodeId id) const
-{
-    VERIFY(id >= OpCodeId::First && id <= OpCodeId::Last);
-
-    auto& opcode = s_opcodes[(u32)id];
-    opcode->set_bytecode(*const_cast<ByteCode*>(this));
-    return *opcode;
-}
-
-OpCode& ByteCode::get_opcode(MatchState& state) const
-{
-    OpCodeId opcode_id;
-    if (auto opcode_ptr = static_cast<DisjointChunks<ByteCodeValueType> const&>(*this).find(state.instruction_position))
-        opcode_id = (OpCodeId)*opcode_ptr;
-    else
-        opcode_id = OpCodeId::Exit;
-
-    auto& opcode = get_opcode_by_id(opcode_id);
-    opcode.set_state(state);
-    return opcode;
-}
-
 ALWAYS_INLINE ExecutionResult OpCode_Exit::execute(MatchInput const& input, MatchState& state) const
 {
     if (state.string_position > input.view.length() || state.instruction_position >= m_bytecode->size())
