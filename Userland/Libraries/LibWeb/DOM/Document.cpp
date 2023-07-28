@@ -9,6 +9,7 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
+#include <AK/GenericLexer.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
 #include <LibCore/Timer.h>
@@ -77,6 +78,7 @@
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
+#include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWeb/IntersectionObserver/IntersectionObserver.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
@@ -1756,6 +1758,10 @@ void Document::completely_finish_loading()
     // 2. Set document's completely loaded time to the current time.
     m_completely_loaded_time = AK::UnixDateTime::now();
 
+    // NOTE: See the end of shared_declarative_refresh_steps.
+    if (m_active_refresh_timer)
+        m_active_refresh_timer->start();
+
     // 3. Let container be document's browsing context's container.
     auto container = JS::make_handle(browsing_context()->container());
 
@@ -3047,6 +3053,164 @@ void Document::start_intersection_observing_a_lazy_loading_element(Element& elem
     // 3. Call doc's lazy load intersection observer's observe method with element as the argument.
     VERIFY(m_lazy_load_intersection_observer);
     m_lazy_load_intersection_observer->observe(element);
+}
+
+// https://html.spec.whatwg.org/multipage/semantics.html#shared-declarative-refresh-steps
+void Document::shared_declarative_refresh_steps(StringView input, JS::GCPtr<HTML::HTMLMetaElement const> meta_element)
+{
+    // 1. If document's will declaratively refresh is true, then return.
+    if (m_will_declaratively_refresh)
+        return;
+
+    // 2. Let position point at the first code point of input.
+    GenericLexer lexer(input);
+
+    // 3. Skip ASCII whitespace within input given position.
+    lexer.ignore_while(Infra::is_ascii_whitespace);
+
+    // 4. Let time be 0.
+    u32 time = 0;
+
+    // 5. Collect a sequence of code points that are ASCII digits from input given position, and let the result be timeString.
+    auto time_string = lexer.consume_while(is_ascii_digit);
+
+    // 6. If timeString is the empty string, then:
+    if (time_string.is_empty()) {
+        // 1. If the code point in input pointed to by position is not U+002E (.), then return.
+        if (lexer.peek() != '.')
+            return;
+    }
+
+    // 7. Otherwise, set time to the result of parsing timeString using the rules for parsing non-negative integers.
+    // FIXME: Not sure if this exactly matches the spec's "rules for parsing non-negative integers".
+    auto maybe_time = time_string.to_uint<u32>();
+
+    // FIXME: Since we only collected ASCII digits, this can only fail because of overflow. What do we do when that happens? For now, default to 0.
+    if (maybe_time.has_value() && maybe_time.value() < NumericLimits<int>::max() && !Checked<int>::multiplication_would_overflow(static_cast<int>(maybe_time.value()), 1000)) {
+        time = maybe_time.value();
+    }
+
+    // 8. Collect a sequence of code points that are ASCII digits and U+002E FULL STOP characters (.) from input given
+    //    position. Ignore any collected characters.
+    lexer.ignore_while([](auto c) {
+        return is_ascii_digit(c) || c == '.';
+    });
+
+    // 9. Let urlRecord be document's URL.
+    auto url_record = url();
+
+    // 10. If position is not past the end of input, then:
+    if (!lexer.is_eof()) {
+        // 1. If the code point in input pointed to by position is not U+003B (;), U+002C (,), or ASCII whitespace, then return.
+        if (lexer.peek() != ';' && lexer.peek() != ',' && !Infra::is_ascii_whitespace(lexer.peek()))
+            return;
+
+        // 2. Skip ASCII whitespace within input given position.
+        lexer.ignore_while(Infra::is_ascii_whitespace);
+
+        // 3. If the code point in input pointed to by position is U+003B (;) or U+002C (,), then advance position to the next code point.
+        if (lexer.peek() == ';' || lexer.peek() == ',')
+            lexer.ignore(1);
+
+        // 4. Skip ASCII whitespace within input given position.
+        lexer.ignore_while(Infra::is_ascii_whitespace);
+    }
+
+    // 11. If position is not past the end of input, then:
+    if (!lexer.is_eof()) {
+        // 1. Let urlString be the substring of input from the code point at position to the end of the string.
+        auto url_string = lexer.remaining();
+
+        // 2. If the code point in input pointed to by position is U+0055 (U) or U+0075 (u), then advance position to the next code point. Otherwise, jump to the step labeled skip quotes.
+        if (lexer.peek() == 'U' || lexer.peek() == 'u')
+            lexer.ignore(1);
+        else
+            goto skip_quotes;
+
+        // 3. If the code point in input pointed to by position is U+0052 (R) or U+0072 (r), then advance position to the next code point. Otherwise, jump to the step labeled parse.
+        if (lexer.peek() == 'R' || lexer.peek() == 'r')
+            lexer.ignore(1);
+        else
+            goto parse;
+
+        // 4. If the code point in input pointed to by position is U+004C (L) or U+006C (l), then advance position to the next code point. Otherwise, jump to the step labeled parse.
+        if (lexer.peek() == 'L' || lexer.peek() == 'l')
+            lexer.ignore(1);
+        else
+            goto parse;
+
+        // 5. Skip ASCII whitespace within input given position.
+        lexer.ignore_while(Infra::is_ascii_whitespace);
+
+        // 6. If the code point in input pointed to by position is U+003D (=), then advance position to the next code point. Otherwise, jump to the step labeled parse.
+        if (lexer.peek() == '=')
+            lexer.ignore(1);
+        else
+            goto parse;
+
+        // 7. Skip ASCII whitespace within input given position.
+        lexer.ignore_while(Infra::is_ascii_whitespace);
+
+    skip_quotes : {
+        // 8. Skip quotes: If the code point in input pointed to by position is U+0027 (') or U+0022 ("), then let
+        //    quote be that code point, and advance position to the next code point. Otherwise, let quote be the empty
+        //    string.
+        Optional<char> quote;
+        if (lexer.peek() == '\'' || lexer.peek() == '"')
+            quote = lexer.consume();
+
+        // 9. Set urlString to the substring of input from the code point at position to the end of the string.
+        // 10. If quote is not the empty string, and there is a code point in urlString equal to quote, then truncate
+        //     urlString at that code point, so that it and all subsequent code points are removed.
+        url_string = lexer.consume_while([&quote](auto c) {
+            return !quote.has_value() || c != quote.value();
+        });
+    }
+
+    parse:
+        // 11. Parse: Parse urlString relative to document. If that fails, return. Otherwise, set urlRecord to the
+        //     resulting URL record.
+        auto maybe_url_record = parse_url(url_string);
+        if (!maybe_url_record.is_valid())
+            return;
+
+        url_record = maybe_url_record;
+    }
+
+    // 12. Set document's will declaratively refresh to true.
+    m_will_declaratively_refresh = true;
+
+    // 13. Perform one or more of the following steps:
+    // - After the refresh has come due (as defined below), if the user has not canceled the redirect and, if meta is
+    //   given, document's active sandboxing flag set does not have the sandboxed automatic features browsing context
+    //   flag set, then navigate document's node navigable to urlRecord using document, with historyHandling set to
+    //   "replace".
+    m_active_refresh_timer = Core::Timer::create_single_shot(time * 1000, [this, has_meta_element = !!meta_element, url_record = move(url_record)]() {
+        if (has_meta_element && active_sandboxing_flag_set().flags & HTML::SandboxingFlagSet::SandboxedAutomaticFeatures)
+            return;
+
+        // FIXME: Use navigables when they're used for all navigation (otherwise, navigable() would be null in some cases)
+        VERIFY(browsing_context());
+        auto request = Fetch::Infrastructure::Request::create(vm());
+        request->set_url(url_record);
+        MUST(browsing_context()->navigate(request, *browsing_context(), false, HTML::HistoryHandlingBehavior::Replace));
+    }).release_value_but_fixme_should_propagate_errors();
+
+    // For the purposes of the previous paragraph, a refresh is said to have come due as soon as the later of the
+    // following two conditions occurs:
+
+    // - At least time seconds have elapsed since document's completely loaded time, adjusted to take into
+    //   account user or user agent preferences.
+    // m_active_refresh_timer is started in completely_finished_loading after setting the completely loaded time.
+
+    // - If meta is given, at least time seconds have elapsed since meta was inserted into the document document,
+    // adjusted to take into account user or user agent preferences.
+    // NOTE: This is only done if completely loaded time has a value because shared_declarative_refresh_steps is called
+    // by HTMLMetaElement::inserted and if the document hasn't finished loading when the meta element was inserted,
+    // then the document completely finishing loading will _always_ come after inserting the meta element.
+    if (meta_element && m_completely_loaded_time.has_value()) {
+        m_active_refresh_timer->start();
+    }
 }
 
 }
