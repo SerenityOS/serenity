@@ -96,6 +96,7 @@ public:
     using CalculatedOr<Length>::CalculatedOr;
 
     Length resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&) const override;
+    [[nodiscard]] Length resolved(Length::ResolutionContext const&) const;
 };
 
 class PercentageOrCalculated : public CalculatedOr<Percentage> {

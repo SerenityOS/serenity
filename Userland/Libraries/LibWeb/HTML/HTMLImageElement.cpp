@@ -710,7 +710,7 @@ static void update_the_source_set(DOM::Element& element)
 
             // 10. Let el's source set be the result of creating a source set given default source, srcset, and sizes.
             if (is<HTMLImageElement>(element))
-                static_cast<HTMLImageElement&>(element).set_source_set(SourceSet::create(element.document(), default_source, srcset, sizes));
+                static_cast<HTMLImageElement&>(element).set_source_set(SourceSet::create(element, default_source, srcset, sizes));
             else if (is<HTMLLinkElement>(element))
                 TODO();
             return;
@@ -750,7 +750,7 @@ static void update_the_source_set(DOM::Element& element)
         //           Otherwise, set el's dimension attribute source to el.
 
         // 10. Normalize the source densities of source set.
-        source_set.normalize_source_densities();
+        source_set.normalize_source_densities(element);
 
         // 11. Let el's source set be source set.
         if (is<HTMLImageElement>(element))
