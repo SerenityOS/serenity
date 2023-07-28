@@ -495,6 +495,8 @@ public:
 
     void start_intersection_observing_a_lazy_loading_element(Element& element);
 
+    void shared_declarative_refresh_steps(StringView input, JS::GCPtr<HTML::HTMLMetaElement const> meta_element = nullptr);
+
 protected:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -676,6 +678,12 @@ private:
     // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#lazy-load-intersection-observer
     // Each Document has a lazy load intersection observer, initially set to null but can be set to an IntersectionObserver instance.
     JS::GCPtr<IntersectionObserver::IntersectionObserver> m_lazy_load_intersection_observer;
+
+    // https://html.spec.whatwg.org/multipage/semantics.html#will-declaratively-refresh
+    // A Document object has an associated will declaratively refresh (a boolean). It is initially false.
+    bool m_will_declaratively_refresh { false };
+
+    RefPtr<Core::Timer> m_active_refresh_timer;
 };
 
 template<>
