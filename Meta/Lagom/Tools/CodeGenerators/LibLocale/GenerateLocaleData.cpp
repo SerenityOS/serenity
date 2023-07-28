@@ -240,6 +240,20 @@ struct CLDR {
         _temporary_result.release_value();                                                           \
     })
 
+// NOTE: We return a pointer only because ErrorOr cannot store references. You may safely assume the pointer is non-null.
+ErrorOr<JsonValue const*> read_json_file_with_cache(DeprecatedString const& path)
+{
+    static HashMap<DeprecatedString, JsonValue> parsed_json_cache;
+
+    if (auto parsed_json = parsed_json_cache.get(path); parsed_json.has_value())
+        return &parsed_json.value();
+
+    auto parsed_json = TRY(read_json_file(path));
+    TRY(parsed_json_cache.try_set(path, move(parsed_json)));
+
+    return &parsed_json_cache.get(path).value();
+}
+
 static ErrorOr<LanguageMapping> parse_language_mapping(CLDR& cldr, StringView key, StringView alias)
 {
     auto parsed_key = TRY(CanonicalLanguageID::parse(cldr.unique_strings, key));
@@ -305,7 +319,7 @@ static ErrorOr<void> parse_identity(DeprecatedString locale_path, CLDR& cldr, Lo
     LexicalPath locale_display_names_path(move(locale_path)); // Note: Every JSON file defines identity data, so we can use any of them.
     locale_display_names_path = locale_display_names_path.append("localeDisplayNames.json"sv);
 
-    auto locale_display_names = TRY(read_json_file(locale_display_names_path.string()));
+    auto const& locale_display_names = *TRY(read_json_file_with_cache(locale_display_names_path.string()));
     auto const& main_object = locale_display_names.as_object().get_object("main"sv).value();
     auto const& locale_object = main_object.get_object(locale_display_names_path.parent().basename()).value();
     auto const& identity_object = locale_object.get_object("identity"sv).value();
@@ -342,7 +356,7 @@ static ErrorOr<void> parse_locale_display_patterns(DeprecatedString locale_path,
     LexicalPath locale_display_names_path(move(locale_path));
     locale_display_names_path = locale_display_names_path.append("localeDisplayNames.json"sv);
 
-    auto locale_display_names = TRY(read_json_file(locale_display_names_path.string()));
+    auto const& locale_display_names = *TRY(read_json_file_with_cache(locale_display_names_path.string()));
     auto const& main_object = locale_display_names.as_object().get_object("main"sv).value();
     auto const& locale_object = main_object.get_object(locale_display_names_path.parent().basename()).value();
     auto const& locale_display_names_object = locale_object.get_object("localeDisplayNames"sv).value();
@@ -366,7 +380,7 @@ static ErrorOr<void> preprocess_languages(DeprecatedString locale_path, CLDR& cl
     if (!FileSystem::exists(languages_path.string()))
         return {};
 
-    auto locale_languages = TRY(read_json_file(languages_path.string()));
+    auto const& locale_languages = *TRY(read_json_file_with_cache(languages_path.string()));
     auto const& main_object = locale_languages.as_object().get_object("main"sv).value();
     auto const& locale_object = main_object.get_object(languages_path.parent().basename()).value();
     auto const& locale_display_names_object = locale_object.get_object("localeDisplayNames"sv).value();
@@ -385,7 +399,7 @@ static ErrorOr<void> preprocess_currencies(DeprecatedString numbers_path, CLDR& 
     LexicalPath currencies_path(move(numbers_path));
     currencies_path = currencies_path.append("currencies.json"sv);
 
-    auto locale_currencies = TRY(read_json_file(currencies_path.string()));
+    auto const& locale_currencies = *TRY(read_json_file_with_cache(currencies_path.string()));
     auto const& main_object = locale_currencies.as_object().get_object("main"sv).value();
     auto const& locale_object = main_object.get_object(currencies_path.parent().basename()).value();
     auto const& locale_numbers_object = locale_object.get_object("numbers"sv).value();
@@ -479,7 +493,7 @@ static ErrorOr<void> parse_locale_languages(DeprecatedString locale_path, CLDR& 
         return {};
     }
 
-    auto locale_languages = TRY(read_json_file(languages_path.string()));
+    auto const& locale_languages = *TRY(read_json_file_with_cache(languages_path.string()));
     auto const& main_object = locale_languages.as_object().get_object("main"sv).value();
     auto const& locale_object = main_object.get_object(languages_path.parent().basename()).value();
     auto const& locale_display_names_object = locale_object.get_object("localeDisplayNames"sv).value();
@@ -646,7 +660,7 @@ static ErrorOr<void> parse_locale_currencies(DeprecatedString numbers_path, CLDR
     LexicalPath currencies_path(move(numbers_path));
     currencies_path = currencies_path.append("currencies.json"sv);
 
-    auto locale_currencies = TRY(read_json_file(currencies_path.string()));
+    auto const& locale_currencies = *TRY(read_json_file_with_cache(currencies_path.string()));
     auto const& main_object = locale_currencies.as_object().get_object("main"sv).value();
     auto const& locale_object = main_object.get_object(currencies_path.parent().basename()).value();
     auto const& locale_numbers_object = locale_object.get_object("numbers"sv).value();
@@ -689,7 +703,7 @@ static ErrorOr<void> parse_locale_calendars(DeprecatedString locale_path, CLDR& 
     LexicalPath locale_display_names_path(move(locale_path));
     locale_display_names_path = locale_display_names_path.append("localeDisplayNames.json"sv);
 
-    auto locale_display_names = TRY(read_json_file(locale_display_names_path.string()));
+    auto const& locale_display_names = *TRY(read_json_file_with_cache(locale_display_names_path.string()));
     auto const& main_object = locale_display_names.as_object().get_object("main"sv).value();
     auto const& locale_object = main_object.get_object(locale_display_names_path.parent().basename()).value();
     auto const& locale_display_names_object = locale_object.get_object("localeDisplayNames"sv).value();
