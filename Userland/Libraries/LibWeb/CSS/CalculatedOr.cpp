@@ -23,6 +23,13 @@ Length LengthOrCalculated::resolve_calculated(NonnullRefPtr<CalculatedStyleValue
     return calculated->resolve_length(layout_node).value();
 }
 
+Length LengthOrCalculated::resolved(Length::ResolutionContext const& context) const
+{
+    if (is_calculated())
+        return calculated()->resolve_length(context).value();
+    return value();
+}
+
 Percentage PercentageOrCalculated::resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const& calculated, Layout::Node const&) const
 {
     return calculated->resolve_percentage().value();

@@ -3460,6 +3460,23 @@ Optional<Parser::Dimension> Parser::parse_dimension(ComponentValue const& compon
     return {};
 }
 
+Optional<LengthOrCalculated> Parser::parse_source_size_value(ComponentValue const& component_value)
+{
+    if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_ascii_case("auto"sv)) {
+        return LengthOrCalculated { Length::make_auto() };
+    }
+
+    if (auto dynamic_value = parse_dynamic_value(component_value); !dynamic_value.is_error() && dynamic_value.value()) {
+        return LengthOrCalculated { dynamic_value.value()->as_calculated().as_calculated() };
+    }
+
+    if (auto length = parse_length(component_value); length.has_value()) {
+        return LengthOrCalculated { length.release_value() };
+    }
+
+    return {};
+}
+
 Optional<Length> Parser::parse_length(ComponentValue const& component_value)
 {
     auto dimension = parse_dimension(component_value);
@@ -8152,43 +8169,47 @@ private:
 };
 
 // https://html.spec.whatwg.org/multipage/images.html#parsing-a-sizes-attribute
-Length Parser::Parser::parse_as_sizes_attribute()
+LengthOrCalculated Parser::Parser::parse_as_sizes_attribute()
 {
-    Optional<Length> size;
-
-    // When asked to parse a sizes attribute from an element,
-    // parse a comma-separated list of component values from the value of the element's sizes attribute
-    // (or the empty string, if the attribute is absent), and let unparsed sizes list be the result.
+    // 1. Let unparsed sizes list be the result of parsing a comma-separated list of component values
+    //    from the value of element's sizes attribute (or the empty string, if the attribute is absent).
     auto unparsed_sizes_list = parse_a_comma_separated_list_of_component_values(m_token_stream);
 
-    // For each unparsed size in unparsed sizes list:
+    // 2. Let size be null.
+    Optional<LengthOrCalculated> size;
+
+    // 3. For each unparsed size in unparsed sizes list:
     for (auto& unparsed_size : unparsed_sizes_list) {
         // 1. Remove all consecutive <whitespace-token>s from the end of unparsed size.
         //    If unparsed size is now empty, that is a parse error; continue.
         while (!unparsed_size.is_empty() && unparsed_size.last().is_token() && unparsed_size.last().token().is(Token::Type::Whitespace))
             unparsed_size.take_last();
-        if (unparsed_size.is_empty())
+        if (unparsed_size.is_empty()) {
+            log_parse_error();
             continue;
+        }
 
         // 2. If the last component value in unparsed size is a valid non-negative <source-size-value>,
         //    let size be its value and remove the component value from unparsed size.
         //    FIXME: Any CSS function other than the math functions is invalid.
         //    Otherwise, there is a parse error; continue.
-        auto length = parse_length(unparsed_size.last());
-        if (length.has_value() && length.value().raw_value() >= 0) {
-            size = length.value();
+        if (auto source_size_value = parse_source_size_value(unparsed_size.last()); source_size_value.has_value()) {
+            size = source_size_value.value();
             unparsed_size.take_last();
         } else {
+            log_parse_error();
             continue;
         }
 
         // 3. Remove all consecutive <whitespace-token>s from the end of unparsed size.
-        //    If unparsed size is now empty, return size and exit this algorithm.
-        //    If this was not the last item in unparsed sizes list, that is a parse error.
         while (!unparsed_size.is_empty() && unparsed_size.last().is_token() && unparsed_size.last().token().is(Token::Type::Whitespace))
             unparsed_size.take_last();
+
+        // If unparsed size is now empty, then return size.
         if (unparsed_size.is_empty())
             return size.value();
+
+        // FIXME: If this was not the keyword auto and it was not the last item in unparsed sizes list, that is a parse error.
 
         // 4. Parse the remaining component values in unparsed size as a <media-condition>.
         //    If it does not parse correctly, or it does parse correctly but the <media-condition> evaluates to false, continue.
@@ -8199,6 +8220,10 @@ Length Parser::Parser::parse_as_sizes_attribute()
         } else {
             continue;
         }
+
+        // 5. If size is not auto, then return size.
+        if (size.value().is_calculated() || !size.value().value().is_auto())
+            return size.value();
     }
 
     return Length(100, Length::Type::Vw);

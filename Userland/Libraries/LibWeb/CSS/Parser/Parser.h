@@ -91,7 +91,7 @@ public:
     static ErrorOr<RefPtr<StyleValue>> parse_css_value(Badge<StyleComputer>, ParsingContext const&, PropertyID, Vector<ComponentValue> const&);
     static ErrorOr<RefPtr<CalculatedStyleValue>> parse_calculated_value(Badge<StyleComputer>, ParsingContext const&, Vector<ComponentValue> const&);
 
-    CSS::Length parse_as_sizes_attribute();
+    [[nodiscard]] LengthOrCalculated parse_as_sizes_attribute();
 
 private:
     Parser(ParsingContext const&, Vector<Token>);
@@ -256,6 +256,7 @@ private:
     Optional<Color> parse_rgb_or_hsl_color(StringView function_name, Vector<ComponentValue> const&);
     Optional<Color> parse_color(ComponentValue const&);
     Optional<Length> parse_length(ComponentValue const&);
+    [[nodiscard]] Optional<LengthOrCalculated> parse_source_size_value(ComponentValue const&);
     Optional<Ratio> parse_ratio(TokenStream<ComponentValue>&);
     Optional<UnicodeRange> parse_unicode_range(TokenStream<ComponentValue>&);
     Optional<UnicodeRange> parse_unicode_range(StringView);
