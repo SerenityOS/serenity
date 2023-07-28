@@ -30,7 +30,7 @@ private:
     StringView consume_while(Function<bool(u8)> should_consume);
     StringView consume_until_end_of_line();
 
-    bool at_end() { return position >= m_buffer.size(); }
+    bool at_end() { return m_position >= m_buffer.size(); }
 
     unsigned parse_number();
     Optional<unsigned> try_parse_number();
@@ -66,7 +66,7 @@ private:
     // To retain state if parsing is not finished
     ByteBuffer m_buffer;
     SolidResponse m_response;
-    unsigned position { 0 };
+    unsigned m_position { 0 };
     bool m_incomplete { false };
     bool m_parsing_failed { false };
 };
