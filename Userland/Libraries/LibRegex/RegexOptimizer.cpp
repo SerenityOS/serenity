@@ -25,9 +25,13 @@ void Regex<Parser>::run_optimization_passes()
 {
     parser_result.bytecode.flatten();
 
+    auto blocks = split_basic_blocks(parser_result.bytecode);
+    if (attempt_rewrite_entire_match_as_substring_search(blocks))
+        return;
+
     // Rewrite fork loops as atomic groups
     // e.g. a*b -> (ATOMIC a*)b
-    attempt_rewrite_loops_as_atomic_groups(split_basic_blocks(parser_result.bytecode));
+    attempt_rewrite_loops_as_atomic_groups(blocks);
 
     parser_result.bytecode.flatten();
 }
@@ -518,6 +522,51 @@ static AtomicRewritePreconditionResult block_satisfies_atomic_rewrite_preconditi
     if (following_block_has_at_least_one_compare)
         return AtomicRewritePreconditionResult::SatisfiedWithProperHeader;
     return AtomicRewritePreconditionResult::SatisfiedWithEmptyHeader;
+}
+
+template<typename Parser>
+bool Regex<Parser>::attempt_rewrite_entire_match_as_substring_search(BasicBlockList const& basic_blocks)
+{
+    // If there's no jumps, we can probably rewrite this as a substring search (Compare { string = str }).
+    if (basic_blocks.size() > 1)
+        return false;
+
+    if (basic_blocks.is_empty()) {
+        parser_result.optimization_data.pure_substring_search = ""sv;
+        return true; // Empty regex, sure.
+    }
+
+    auto& bytecode = parser_result.bytecode;
+
+    auto is_unicode = parser_result.options.has_flag_set(AllFlags::Unicode);
+
+    // We have a single basic block, let's see if it's a series of character or string compares.
+    StringBuilder final_string;
+    MatchState state;
+    while (state.instruction_position < bytecode.size()) {
+        auto& opcode = bytecode.get_opcode(state);
+        switch (opcode.opcode_id()) {
+        case OpCodeId::Compare: {
+            auto& compare = static_cast<OpCode_Compare const&>(opcode);
+            for (auto& flat_compare : compare.flat_compares()) {
+                if (flat_compare.type != CharacterCompareType::Char)
+                    return false;
+
+                if (is_unicode || flat_compare.value <= 0x7f)
+                    final_string.append_code_point(flat_compare.value);
+                else
+                    final_string.append(bit_cast<char>(static_cast<u8>(flat_compare.value)));
+            }
+            break;
+        }
+        default:
+            return false;
+        }
+        state.instruction_position += opcode.size();
+    }
+
+    parser_result.optimization_data.pure_substring_search = final_string.to_deprecated_string();
+    return true;
 }
 
 template<typename Parser>

@@ -231,6 +231,7 @@ public:
 private:
     void run_optimization_passes();
     void attempt_rewrite_loops_as_atomic_groups(BasicBlockList const&);
+    bool attempt_rewrite_entire_match_as_substring_search(BasicBlockList const&);
 };
 
 // free standing functions for match, search and has_match

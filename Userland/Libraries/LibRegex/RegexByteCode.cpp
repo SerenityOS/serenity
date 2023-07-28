@@ -900,9 +900,8 @@ Vector<CompareTypeAndValuePair> OpCode_Compare::flat_compares() const
             result.append({ compare_type, ref });
         } else if (compare_type == CharacterCompareType::String) {
             auto& length = m_bytecode->at(offset++);
-            if (length > 0)
-                result.append({ compare_type, m_bytecode->at(offset) });
-            StringBuilder str_builder;
+            for (size_t k = 0; k < length; ++k)
+                result.append({ CharacterCompareType::Char, m_bytecode->at(offset + k) });
             offset += length;
         } else if (compare_type == CharacterCompareType::CharClass) {
             auto character_class = m_bytecode->at(offset++);
