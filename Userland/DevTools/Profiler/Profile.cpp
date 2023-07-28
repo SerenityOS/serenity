@@ -288,12 +288,12 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
 
         if (type_string == "sample"sv) {
             event.data = Event::SampleData {};
-        } else if (type_string == "malloc"sv) {
+        } else if (type_string == "kmalloc"sv) {
             event.data = Event::MallocData {
                 .ptr = perf_event.get_addr("ptr"sv).value_or(0),
                 .size = perf_event.get_integer<size_t>("size"sv).value_or(0),
             };
-        } else if (type_string == "free"sv) {
+        } else if (type_string == "kfree"sv) {
             event.data = Event::FreeData {
                 .ptr = perf_event.get_addr("ptr"sv).value_or(0),
             };
