@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2022, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2023-2024, Abhishek R. <raturiabhi1000@gmail.com>
  * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -866,6 +867,13 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_remove_current_edit
     });
 }
 
+ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_toggle_open_file_in_single_click_action()
+{
+    return GUI::Action::create_checkable("&Open File with Single Click", [this](auto&) {
+        m_project_tree_view->set_activates_on_selection(!m_project_tree_view->activates_on_selection());
+    });
+}
+
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_open_action()
 {
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"sv));
@@ -1498,6 +1506,8 @@ ErrorOr<void> HackStudioWidget::create_view_menu(GUI::Window& window)
     view_menu.add_action(show_dotfiles_action);
     m_toggle_semantic_highlighting_action = TRY(create_toggle_syntax_highlighting_mode_action());
     view_menu.add_action(*m_toggle_semantic_highlighting_action);
+    m_toggle_view_file_in_single_click_action = TRY(create_toggle_open_file_in_single_click_action());
+    view_menu.add_action(*m_toggle_view_file_in_single_click_action);
     view_menu.add_separator();
 
     m_wrapping_mode_actions.set_exclusive(true);
