@@ -14,6 +14,7 @@ if [ -z "${HOST_CC:=}" ]; then
     export HOST_PATH="${PATH:=}"
     export HOST_READELF="${READELF:=readelf}"
     export HOST_OBJCOPY="${OBJCOPY:=objcopy}"
+    export HOST_OBJDUMP="${OBJDUMP:=objdump}"
     export HOST_STRIP="${STRIP:=strip}"
     export HOST_CXXFILT="${CXXFILT:=c++filt}"
     export HOST_PKG_CONFIG_DIR="${PKG_CONFIG_DIR:=}"
@@ -33,6 +34,7 @@ if [ "$SERENITY_TOOLCHAIN" = "Clang" ]; then
     export RANLIB="llvm-ranlib"
     export READELF="llvm-readelf"
     export OBJCOPY="llvm-objcopy"
+    export OBJDUMP="llvm-objdump"
     export STRIP="llvm-strip"
     export CXXFILT="llvm-cxxfilt"
 else
@@ -45,6 +47,7 @@ else
     export RANLIB="${SERENITY_ARCH}-pc-serenity-ranlib"
     export READELF="${SERENITY_ARCH}-pc-serenity-readelf"
     export OBJCOPY="${SERENITY_ARCH}-pc-serenity-objcopy"
+    export OBJDUMP="${SERENITY_ARCH}-pc-serenity-objdump"
     export STRIP="${SERENITY_ARCH}-pc-serenity-strip"
     export CXXFILT="${SERENITY_ARCH}-pc-serenity-c++filt"
 fi
