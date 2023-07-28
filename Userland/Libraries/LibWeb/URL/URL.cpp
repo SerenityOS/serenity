@@ -482,12 +482,10 @@ HTML::Origin url_origin(AK::URL const& url)
 }
 
 // https://url.spec.whatwg.org/#concept-domain
-bool host_is_domain(StringView host)
+bool host_is_domain(AK::URL::Host const& host)
 {
     // A domain is a non-empty ASCII string that identifies a realm within a network.
-    return !host.is_empty()
-        && !IPv4Address::from_string(host).has_value()
-        && !IPv6Address::from_string(host).has_value();
+    return host.has<String>() && host.get<String>() != String {};
 }
 
 // https://url.spec.whatwg.org/#concept-url-parser
