@@ -97,15 +97,10 @@ function (generate_js_bindings target)
         cmake_parse_arguments(PARSE_ARGV 1 LIBWEB_BINDINGS "NAMESPACE;ITERABLE;GLOBAL" "" "")
         get_filename_component(basename "${class}" NAME)
 
-        # FIXME: Instead of requiring a manual declaration of namespace bindings, we should ask BindingsGenerator if it's a namespace
         if (LIBWEB_BINDINGS_NAMESPACE)
             set(BINDINGS_SOURCES
                 "Bindings/${basename}Namespace.h"
                 "Bindings/${basename}Namespace.cpp"
-            )
-            set(BINDINGS_TYPES
-                namespace-header
-                namespace-implementation
             )
         else()
             set(BINDINGS_SOURCES
@@ -114,77 +109,50 @@ function (generate_js_bindings target)
                 "Bindings/${basename}Prototype.h"
                 "Bindings/${basename}Prototype.cpp"
             )
-            set(BINDINGS_TYPES
-                constructor-header
-                constructor-implementation
-                prototype-header
-                prototype-implementation
-            )
         endif()
 
-        # FIXME: Instead of requiring a manual declaration of iterable bindings, we should ask BindingsGenerator if it's iterable
         if(LIBWEB_BINDINGS_ITERABLE)
             list(APPEND BINDINGS_SOURCES
                 "Bindings/${basename}IteratorPrototype.h"
                 "Bindings/${basename}IteratorPrototype.cpp"
             )
-            list(APPEND BINDINGS_TYPES
-                iterator-prototype-header
-                iterator-prototype-implementation
-            )
         endif()
 
-        # FIXME: Instead of requiring a manual declaration of global object bindings, we should ask BindingsGenerator if it's global
         if(LIBWEB_BINDINGS_GLOBAL)
             list(APPEND BINDINGS_SOURCES
                 "Bindings/${basename}GlobalMixin.h"
                 "Bindings/${basename}GlobalMixin.cpp"
             )
-            list(APPEND BINDINGS_TYPES
-                global-mixin-header
-                global-mixin-implementation
-            )
         endif()
 
+        list(TRANSFORM BINDINGS_SOURCES PREPEND "${CMAKE_CURRENT_BINARY_DIR}/")
         target_sources(${target} PRIVATE ${BINDINGS_SOURCES})
-        # FIXME: cmake_minimum_required(3.17) for ZIP_LISTS
-        list(LENGTH BINDINGS_SOURCES num_bindings)
-        math(EXPR bindings_end "${num_bindings} - 1")
-        foreach(iter RANGE "${bindings_end}")
-            list(GET BINDINGS_SOURCES ${iter} bindings_src)
-            list(GET BINDINGS_TYPES ${iter} bindings_type)
-            get_property(include_paths DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
-            list(TRANSFORM include_paths PREPEND -i)
 
-            # Ninja expects the target name in depfiles to be relative to CMAKE_BINARY_DIR, but ${bindings_src} is
-            # relative to CMAKE_CURRENT_BINARY_DIR. CMake >= 3.20 can do the rewriting transparently (CMP0116).
-            if(CMAKE_GENERATOR MATCHES "^Ninja" AND NOT POLICY CMP0116)
-                # FIXME: Drop this branch for cmake_minimum_required(3.20)
-                get_filename_component(full_path ${bindings_src} ABSOLUTE BASE_DIR ${CMAKE_CURRENT_BINARY_DIR})
-                file(RELATIVE_PATH depfile_target ${CMAKE_BINARY_DIR} ${full_path})
-            else()
-                set(depfile_target ${bindings_src})
-            endif()
+        get_property(include_paths DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+        list(TRANSFORM include_paths PREPEND -i)
 
-            add_custom_command(
-                OUTPUT "${bindings_src}"
-                COMMAND "$<TARGET_FILE:Lagom::BindingsGenerator>" "--${bindings_type}" -o "${bindings_src}.tmp" --depfile "${bindings_src}.d"
-                        --depfile-target "${depfile_target}" ${include_paths} "${LIBWEB_INPUT_FOLDER}/${class}.idl" "${LIBWEB_INPUT_FOLDER}"
-                COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${bindings_src}.tmp" "${bindings_src}"
-                COMMAND "${CMAKE_COMMAND}" -E remove "${bindings_src}.tmp"
-                VERBATIM
-                DEPENDS Lagom::BindingsGenerator
-                MAIN_DEPENDENCY ${class}.idl
-                DEPFILE ${CMAKE_CURRENT_BINARY_DIR}/${bindings_src}.d
-            )
-        endforeach()
+        # Ninja expects the target name in depfiles to be relative to CMAKE_BINARY_DIR, but ${bindings_src} is
+        # relative to CMAKE_CURRENT_BINARY_DIR. CMake >= 3.20 can do the rewriting transparently (CMP0116).
+        set(depfile_prefix_arg "")
+        if(CMAKE_GENERATOR MATCHES "^Ninja" AND NOT POLICY CMP0116)
+            file(RELATIVE_PATH depfile_target ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+            set(depfile_prefix_arg "--depfile-prefix ${depfile_target}" )
+        endif()
 
-        foreach(generated_file IN LISTS BINDINGS_SOURCES)
-            get_filename_component(generated_name ${generated_file} NAME)
-            add_custom_target(generate_${generated_name} DEPENDS ${generated_file})
-            add_dependencies(all_generated generate_${generated_name})
-            add_dependencies(${target} generate_${generated_name})
-        endforeach()
+        add_custom_command(
+            OUTPUT ${BINDINGS_SOURCES}
+            COMMAND "$<TARGET_FILE:Lagom::BindingsGenerator>" -o "Bindings" --depfile "Bindings/${basename}.d"
+                    ${depfile_prefix_arg} "${LIBWEB_INPUT_FOLDER}/${class}.idl" "${LIBWEB_INPUT_FOLDER}"
+            VERBATIM
+            COMMENT "Generating Bindings for ${class}"
+            DEPENDS Lagom::BindingsGenerator
+            MAIN_DEPENDENCY ${class}.idl
+            DEPFILE ${CMAKE_CURRENT_BINARY_DIR}/Bindings/${basename}.d
+        )
+
+        add_custom_target(generate_${basename} DEPENDS ${BINDINGS_SOURCES})
+        add_dependencies(all_generated generate_${basename})
+        add_dependencies(${target} generate_${basename})
 
         list(APPEND LIBWEB_ALL_IDL_FILES "${LIBWEB_INPUT_FOLDER}/${class}.idl")
         set(LIBWEB_ALL_IDL_FILES ${LIBWEB_ALL_IDL_FILES} PARENT_SCOPE)

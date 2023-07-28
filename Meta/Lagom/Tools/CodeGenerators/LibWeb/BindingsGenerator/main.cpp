@@ -3,6 +3,7 @@
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2023, Andrew Kaster <akaster@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -37,27 +38,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView import_base_path;
     StringView output_path = "-"sv;
     StringView depfile_path;
-    StringView depfile_target;
-    bool namespace_header_mode = false;
-    bool namespace_implementation_mode = false;
-    bool constructor_header_mode = false;
-    bool constructor_implementation_mode = false;
-    bool prototype_header_mode = false;
-    bool prototype_implementation_mode = false;
-    bool iterator_prototype_header_mode = false;
-    bool iterator_prototype_implementation_mode = false;
-    bool global_mixin_header_mode = false;
-    bool global_mixin_implementation_mode = false;
-    args_parser.add_option(namespace_header_mode, "Generate the namespace .h file", "namespace-header", 'N');
-    args_parser.add_option(namespace_implementation_mode, "Generate the namespace .cpp file", "namespace-implementation", 'A');
-    args_parser.add_option(constructor_header_mode, "Generate the constructor .h file", "constructor-header", 'C');
-    args_parser.add_option(constructor_implementation_mode, "Generate the constructor .cpp file", "constructor-implementation", 'O');
-    args_parser.add_option(prototype_header_mode, "Generate the prototype .h file", "prototype-header", 'P');
-    args_parser.add_option(prototype_implementation_mode, "Generate the prototype .cpp file", "prototype-implementation", 'R');
-    args_parser.add_option(iterator_prototype_header_mode, "Generate the iterator prototype .h file", "iterator-prototype-header", 0);
-    args_parser.add_option(iterator_prototype_implementation_mode, "Generate the iterator prototype .cpp file", "iterator-prototype-implementation", 0);
-    args_parser.add_option(global_mixin_header_mode, "Generate the global object mixin .h file", "global-mixin-header", 0);
-    args_parser.add_option(global_mixin_implementation_mode, "Generate the global object mixin .cpp file", "global-mixin-implementation", 0);
+    StringView depfile_prefix;
+
     args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Add a header search path passed to the compiler",
@@ -69,28 +51,28 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return true;
         },
     });
-    args_parser.add_option(output_path, "Path to output generated file into", "output-path", 'o', "output-path");
+    args_parser.add_option(output_path, "Path to output generated files into", "output-path", 'o', "output-path");
     args_parser.add_option(depfile_path, "Path to write dependency file to", "depfile", 'd', "depfile-path");
-    args_parser.add_option(depfile_target, "Name of target in the depfile (default: output path)", "depfile-target", 't', "target");
+    args_parser.add_option(depfile_prefix, "Prefix to prepend to relative paths in dependency file", "depfile-prefix", 'p', "depfile-prefix");
     args_parser.add_positional_argument(path, "IDL file", "idl-file");
     args_parser.add_positional_argument(import_base_path, "Import base path", "import-base-path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
+    auto idl_file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
 
     LexicalPath lexical_path(path);
     auto& namespace_ = lexical_path.parts_view().at(lexical_path.parts_view().size() - 2);
 
-    auto data = TRY(file->read_until_eof());
+    auto data = TRY(idl_file->read_until_eof());
 
     if (import_base_path.is_null())
         import_base_path = lexical_path.dirname();
 
-    auto output_file = TRY(Core::File::open_file_or_standard_stream(output_path, Core::File::OpenMode::Write));
-
     IDL::Parser parser(path, data, import_base_path);
     auto& interface = parser.parse();
 
+    // If the interface name is the same as its namespace, qualify the name in the generated code.
+    // e.g. Selection::Selection
     if (IDL::libweb_interface_namespaces.span().contains_slow(namespace_)) {
         StringBuilder builder;
         builder.append(namespace_);
@@ -143,43 +125,85 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     StringBuilder output_builder;
 
-    if (namespace_header_mode)
-        IDL::generate_namespace_header(interface, output_builder);
+    auto write_if_changed = [&](auto generator_function, StringView file_path) -> ErrorOr<void> {
+        (*generator_function)(interface, output_builder);
 
-    if (namespace_implementation_mode)
-        IDL::generate_namespace_implementation(interface, output_builder);
+        auto output_file = TRY(Core::File::open(file_path, Core::File::OpenMode::ReadWrite));
 
-    if (constructor_header_mode)
-        IDL::generate_constructor_header(interface, output_builder);
+        // Only write to disk if contents have changed
+        auto previous_contents = TRY(output_file->read_until_eof());
+        TRY(output_file->seek(0, SeekMode::SetPosition));
+        if (previous_contents != output_builder.string_view())
+            TRY(output_file->write_until_depleted(output_builder.string_view().bytes()));
+        // FIXME: Can we add clear_with_capacity to StringBuilder instead of throwing away the allocated buffer?
+        output_builder.clear();
+        return {};
+    };
 
-    if (constructor_implementation_mode)
-        IDL::generate_constructor_implementation(interface, output_builder);
+    String namespace_header;
+    String namespace_implementation;
+    String constructor_header;
+    String constructor_implementation;
+    String prototype_header;
+    String prototype_implementation;
+    String iterator_prototype_header;
+    String iterator_prototype_implementation;
+    String global_mixin_header;
+    String global_mixin_implementation;
 
-    if (prototype_header_mode)
-        IDL::generate_prototype_header(interface, output_builder);
+    auto path_prefix = LexicalPath::join(output_path, lexical_path.basename(LexicalPath::StripExtension::Yes));
 
-    if (prototype_implementation_mode)
-        IDL::generate_prototype_implementation(interface, output_builder);
+    if (interface.is_namespace) {
+        namespace_header = TRY(String::formatted("{}Namespace.h", path_prefix));
+        namespace_implementation = TRY(String::formatted("{}Namespace.cpp", path_prefix));
 
-    if (iterator_prototype_header_mode)
-        IDL::generate_iterator_prototype_header(interface, output_builder);
+        TRY(write_if_changed(&IDL::generate_namespace_header, namespace_header));
+        TRY(write_if_changed(&IDL::generate_namespace_implementation, namespace_implementation));
+    } else {
+        constructor_header = TRY(String::formatted("{}Constructor.h", path_prefix));
+        constructor_implementation = TRY(String::formatted("{}Constructor.cpp", path_prefix));
+        prototype_header = TRY(String::formatted("{}Prototype.h", path_prefix));
+        prototype_implementation = TRY(String::formatted("{}Prototype.cpp", path_prefix));
 
-    if (iterator_prototype_implementation_mode)
-        IDL::generate_iterator_prototype_implementation(interface, output_builder);
+        TRY(write_if_changed(&IDL::generate_constructor_header, constructor_header));
+        TRY(write_if_changed(&IDL::generate_constructor_implementation, constructor_implementation));
+        TRY(write_if_changed(&IDL::generate_prototype_header, prototype_header));
+        TRY(write_if_changed(&IDL::generate_prototype_implementation, prototype_implementation));
+    }
 
-    if (global_mixin_header_mode)
-        IDL::generate_global_mixin_header(interface, output_builder);
+    if (interface.pair_iterator_types.has_value()) {
+        iterator_prototype_header = TRY(String::formatted("{}IteratorPrototype.h", path_prefix));
+        iterator_prototype_implementation = TRY(String::formatted("{}IteratorPrototype.cpp", path_prefix));
 
-    if (global_mixin_implementation_mode)
-        IDL::generate_global_mixin_implementation(interface, output_builder);
+        TRY(write_if_changed(&IDL::generate_iterator_prototype_header, iterator_prototype_header));
+        TRY(write_if_changed(&IDL::generate_iterator_prototype_implementation, iterator_prototype_implementation));
+    }
 
-    TRY(output_file->write_until_depleted(output_builder.string_view().bytes()));
+    if (interface.extended_attributes.contains("Global")) {
+        global_mixin_header = TRY(String::formatted("{}GlobalMixin.h", path_prefix));
+        global_mixin_implementation = TRY(String::formatted("{}GlobalMixin.cpp", path_prefix));
 
-    if (!depfile_path.is_null()) {
+        TRY(write_if_changed(&IDL::generate_global_mixin_header, global_mixin_header));
+        TRY(write_if_changed(&IDL::generate_global_mixin_implementation, global_mixin_implementation));
+    }
+
+    if (!depfile_path.is_empty()) {
         auto depfile = TRY(Core::File::open_file_or_standard_stream(depfile_path, Core::File::OpenMode::Write));
 
         StringBuilder depfile_builder;
-        depfile_builder.append(depfile_target.is_null() ? output_path : depfile_target);
+        bool first_file = true;
+        for (StringView s : { constructor_header, constructor_implementation, prototype_header, prototype_implementation, namespace_header, namespace_implementation, iterator_prototype_header, iterator_prototype_implementation, global_mixin_header, global_mixin_implementation }) {
+            if (!s.is_empty()) {
+                if (!first_file) {
+                    depfile_builder.append(' ');
+                }
+                if (!depfile_prefix.is_empty())
+                    depfile_builder.append(LexicalPath::join(depfile_prefix, s).string());
+                else
+                    depfile_builder.append(s);
+                first_file = false;
+            }
+        }
         depfile_builder.append(':');
         for (auto const& path : parser.imported_files()) {
             depfile_builder.append(" \\\n "sv);
