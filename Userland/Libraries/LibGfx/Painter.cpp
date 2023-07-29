@@ -934,7 +934,7 @@ void Painter::blit_with_opacity(IntPoint position, Gfx::Bitmap const& source, In
     }
 }
 
-void Painter::blit_filtered(IntPoint position, Gfx::Bitmap const& source, IntRect const& src_rect, Function<Color(Color)> filter)
+void Painter::blit_filtered(IntPoint position, Gfx::Bitmap const& source, IntRect const& src_rect, Function<Color(Color)> const& filter)
 {
     VERIFY((source.scale() == 1 || source.scale() == scale()) && "blit_filtered only supports integer upsampling");
 
