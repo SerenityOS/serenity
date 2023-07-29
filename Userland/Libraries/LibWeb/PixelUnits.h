@@ -10,6 +10,7 @@
 
 #include <AK/Concepts.h>
 #include <AK/DistinctNumeric.h>
+#include <AK/Math.h>
 #include <AK/Traits.h>
 #include <LibGfx/Forward.h>
 #include <math.h>
@@ -60,14 +61,40 @@ public:
     static constexpr i32 max_integer_value = NumericLimits<int>::max() >> fractional_bits;
     static constexpr i32 min_integer_value = NumericLimits<int>::min() >> fractional_bits;
 
-    CSSPixels() = default;
-    CSSPixels(int value);
-    CSSPixels(unsigned int value);
-    CSSPixels(unsigned long value);
-    CSSPixels(float value);
-    CSSPixels(double value);
+    constexpr CSSPixels() = default;
+    template<Signed I>
+    constexpr CSSPixels(I value)
+    {
+        if (value > max_integer_value) [[unlikely]]
+            m_value = NumericLimits<int>::max();
+        else if (value < min_integer_value) [[unlikely]]
+            m_value = NumericLimits<int>::min();
+        else
+            m_value = static_cast<int>(value) << fractional_bits;
+    }
 
-    static CSSPixels from_raw(int value)
+    CSSPixels(float value)
+    {
+        if (!isnan(value))
+            m_value = AK::clamp_to_int(value * fixed_point_denominator);
+    }
+
+    CSSPixels(double value)
+    {
+        if (!isnan(value))
+            m_value = AK::clamp_to_int(value * fixed_point_denominator);
+    }
+
+    template<Unsigned U>
+    constexpr CSSPixels(U value)
+    {
+        if (value > max_integer_value) [[unlikely]]
+            m_value = NumericLimits<int>::max();
+        else
+            m_value = static_cast<int>(value) << fractional_bits;
+    }
+
+    static constexpr CSSPixels from_raw(int value)
     {
         CSSPixels res;
         res.set_raw_value(value);
@@ -78,63 +105,133 @@ public:
     double to_double() const;
     int to_int() const;
 
-    inline int raw_value() const { return m_value; }
-    inline void set_raw_value(int value) { m_value = value; }
+    constexpr int raw_value() const { return m_value; }
+    constexpr void set_raw_value(int value) { m_value = value; }
 
-    bool might_be_saturated() const;
+    constexpr bool might_be_saturated() const { return raw_value() == NumericLimits<i32>::max() || raw_value() == NumericLimits<i32>::min(); }
 
-    bool operator==(CSSPixels const& other) const;
+    constexpr bool operator==(CSSPixels const& other) const = default;
 
     explicit operator double() const { return to_double(); }
 
-    CSSPixels& operator++();
-    CSSPixels& operator--();
+    constexpr CSSPixels& operator++()
+    {
+        m_value = Checked<int>::saturating_add(m_value, fixed_point_denominator);
+        return *this;
+    }
+    constexpr CSSPixels& operator--()
+    {
+        m_value = Checked<int>::saturating_sub(m_value, fixed_point_denominator);
+        return *this;
+    }
 
-    int operator<=>(CSSPixels const& other) const;
+    constexpr int operator<=>(CSSPixels const& other) const
+    {
+        return raw_value() > other.raw_value()
+            ? 1
+            : raw_value() < other.raw_value()
+            ? -1
+            : 0;
+    }
 
-    CSSPixels operator+() const;
-    CSSPixels operator-() const;
+    constexpr CSSPixels operator+() const { return from_raw(+raw_value()); }
+    constexpr CSSPixels operator-() const { return from_raw(-raw_value()); }
 
-    CSSPixels operator+(CSSPixels const& other) const;
-    CSSPixels operator-(CSSPixels const& other) const;
-    CSSPixels operator*(CSSPixels const& other) const;
-    CSSPixels operator/(CSSPixels const& other) const;
+    constexpr CSSPixels operator+(CSSPixels const& other) const
+    {
+        return from_raw(Checked<int>::saturating_add(raw_value(), other.raw_value()));
+    }
 
-    CSSPixels& operator+=(CSSPixels const& other);
-    CSSPixels& operator-=(CSSPixels const& other);
-    CSSPixels& operator*=(CSSPixels const& other);
-    CSSPixels& operator/=(CSSPixels const& other);
+    constexpr CSSPixels operator-(CSSPixels const& other) const
+    {
+        return from_raw(Checked<int>::saturating_sub(raw_value(), other.raw_value()));
+    }
 
-    CSSPixels abs() const;
+    constexpr CSSPixels operator*(CSSPixels const& other) const
+    {
+        i64 value = raw_value();
+        value *= other.raw_value();
+
+        int int_value = AK::clamp_to_int(value >> fractional_bits);
+
+        // Rounding:
+        // If last bit cut off was 1:
+        if (value & (1u << (fractional_bits - 1))) {
+            // If the bit after was 1 as well
+            if (value & (radix_mask >> 2u)) {
+                // We need to round away from 0
+                int_value = Checked<int>::saturating_add(int_value, 1);
+            } else {
+                // Otherwise we round to the next even value
+                // Which means we add the least significant bit of the raw integer value
+                int_value = Checked<int>::saturating_add(int_value, int_value & 1);
+            }
+        }
+
+        return from_raw(int_value);
+    }
+
+    constexpr CSSPixels operator/(CSSPixels const& other) const
+    {
+        i64 mult = raw_value();
+        mult <<= fractional_bits;
+        mult /= other.raw_value();
+
+        int int_value = AK::clamp_to_int(mult);
+        return from_raw(int_value);
+    }
+
+    constexpr CSSPixels& operator+=(CSSPixels const& other)
+    {
+        *this = *this + other;
+        return *this;
+    }
+    constexpr CSSPixels& operator-=(CSSPixels const& other)
+    {
+        *this = *this - other;
+        return *this;
+    }
+    constexpr CSSPixels& operator*=(CSSPixels const& other)
+    {
+        *this = *this * other;
+        return *this;
+    }
+    constexpr CSSPixels& operator/=(CSSPixels const& other)
+    {
+        *this = *this / other;
+        return *this;
+    }
+
+    constexpr CSSPixels abs() const { return from_raw(::abs(m_value)); }
 
 private:
     i32 m_value { 0 };
 };
 
-inline bool operator==(CSSPixels left, int right) { return left == CSSPixels(right); }
+constexpr bool operator==(CSSPixels left, int right) { return left == CSSPixels(right); }
 inline bool operator==(CSSPixels left, float right) { return left.to_float() == right; }
 inline bool operator==(CSSPixels left, double right) { return left.to_double() == right; }
 
-inline bool operator>(CSSPixels left, int right) { return left > CSSPixels(right); }
+constexpr bool operator>(CSSPixels left, int right) { return left > CSSPixels(right); }
 inline bool operator>(CSSPixels left, float right) { return left.to_float() > right; }
 inline bool operator>(CSSPixels left, double right) { return left.to_double() > right; }
 
-inline bool operator<(CSSPixels left, int right) { return left < CSSPixels(right); }
+constexpr bool operator<(CSSPixels left, int right) { return left < CSSPixels(right); }
 inline bool operator<(CSSPixels left, float right) { return left.to_float() < right; }
 inline bool operator<(CSSPixels left, double right) { return left.to_double() < right; }
 
-inline CSSPixels operator*(CSSPixels left, int right) { return left * CSSPixels(right); }
-inline CSSPixels operator*(CSSPixels left, unsigned long right) { return left * CSSPixels(right); }
+constexpr CSSPixels operator*(CSSPixels left, int right) { return left * CSSPixels(right); }
+constexpr CSSPixels operator*(CSSPixels left, unsigned long right) { return left * CSSPixels(right); }
 inline float operator*(CSSPixels left, float right) { return left.to_float() * right; }
 inline double operator*(CSSPixels left, double right) { return left.to_double() * right; }
 
-inline CSSPixels operator*(int left, CSSPixels right) { return right * CSSPixels(left); }
-inline CSSPixels operator*(unsigned long left, CSSPixels right) { return right * CSSPixels(left); }
+constexpr CSSPixels operator*(int left, CSSPixels right) { return right * CSSPixels(left); }
+constexpr CSSPixels operator*(unsigned long left, CSSPixels right) { return right * CSSPixels(left); }
 inline float operator*(float left, CSSPixels right) { return right.to_float() * left; }
 inline double operator*(double left, CSSPixels right) { return right.to_double() * left; }
 
-inline CSSPixels operator/(CSSPixels left, int right) { return left / CSSPixels(right); }
-inline CSSPixels operator/(CSSPixels left, unsigned long right) { return left / CSSPixels(right); }
+constexpr CSSPixels operator/(CSSPixels left, int right) { return left / CSSPixels(right); }
+constexpr CSSPixels operator/(CSSPixels left, unsigned long right) { return left / CSSPixels(right); }
 inline float operator/(CSSPixels left, float right) { return left.to_float() / right; }
 inline double operator/(CSSPixels left, double right) { return left.to_double() / right; }
 
