@@ -254,20 +254,22 @@ inline Web::CSSPixels abs(Web::CSSPixels const& value)
 
 constexpr Web::CSSPixels floor(Web::CSSPixels const& value)
 {
-    // FIXME: Actually floor value
-    return value;
+    return Web::CSSPixels::from_raw(value.raw_value() & ~Web::CSSPixels::radix_mask);
 }
 
 constexpr Web::CSSPixels ceil(Web::CSSPixels const& value)
 {
-    // FIXME: Actually ceil value
-    return value;
+    auto floor_value = value.raw_value() & ~Web::CSSPixels::radix_mask;
+    auto ceil_value = floor_value + (value.raw_value() & Web::CSSPixels::radix_mask ? Web::CSSPixels::fixed_point_denominator : 0);
+    return Web::CSSPixels::from_raw(ceil_value);
 }
 
 constexpr Web::CSSPixels round(Web::CSSPixels const& value)
 {
-    // FIXME: Actually round value
-    return value;
+    // FIXME: Maybe do this with bit-fiddling instead
+    if (value > 0)
+        return floor(value + Web::CSSPixels::from_raw(Web::CSSPixels::fixed_point_denominator >> 1 /* 0.5 */));
+    return ceil(value - Web::CSSPixels::from_raw(Web::CSSPixels::fixed_point_denominator >> 1 /* 0.5 */));
 }
 
 constexpr Web::DevicePixels abs(Web::DevicePixels const& value)

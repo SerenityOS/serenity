@@ -5,14 +5,14 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         line 0 width: 340.484375, height: 65.5, bottom: 65.5, baseline: 50.734375
           frag 0 from TextNode start: 0, length: 11, rect: [102,3 340.484375x65.5]
             "This entire"
-        line 1 width: 341.25, height: 65.5, bottom: 131, baseline: 50.734375
-          frag 0 from TextNode start: 12, length: 11, rect: [102,68.5 341.25x65.5]
+        line 1 width: 341.25, height: 66, bottom: 131.5, baseline: 50.734375
+          frag 0 from TextNode start: 12, length: 11, rect: [102,68 341.25x65.5]
             "text should"
         line 2 width: 274.15625, height: 65.5, bottom: 196.5, baseline: 50.734375
           frag 0 from TextNode start: 24, length: 8, rect: [102,134 274.15625x65.5]
             "be on an"
-        line 3 width: 204.078125, height: 65.5, bottom: 262, baseline: 50.734375
-          frag 0 from TextNode start: 33, length: 6, rect: [102,199.5 204.078125x65.5]
+        line 3 width: 204.078125, height: 66, bottom: 262.5, baseline: 50.734375
+          frag 0 from TextNode start: 33, length: 6, rect: [102,199 204.078125x65.5]
             "orange"
         line 4 width: 351.5625, height: 65.5, bottom: 327.5, baseline: 50.734375
           frag 0 from TextNode start: 40, length: 11, rect: [102,265 351.5625x65.5]

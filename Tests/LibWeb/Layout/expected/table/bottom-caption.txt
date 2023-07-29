@@ -9,7 +9,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             TextNode <#text>
           BlockContainer <caption> at (8,74.40625) content-size 82.734375x17.46875 [BFC] children: inline
             line 0 width: 82.734375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-              frag 0 from TextNode start: 1, length: 9, rect: [16.21875,74.40625 82.734375x17.46875]
+              frag 0 from TextNode start: 1, length: 9, rect: [16,74.40625 82.734375x17.46875]
                 "A Caption"
             TextNode <#text>
           BlockContainer <(anonymous)> (not painted) children: inline
@@ -74,7 +74,7 @@ PaintableWithLines (Viewport<#document>) [0,0 800x600]
     PaintableWithLines (BlockContainer<BODY>) [8,8 784x83.875]
       PaintableWithLines (TableWrapper(anonymous)) [8,8 99.171875x83.875]
         PaintableBox (Box<TABLE>#full-table) [8,8 99.171875x66.40625] overflow: [8,8 99.171875x83.875]
-          PaintableWithLines (BlockContainer<CAPTION>) [8,74.40625 82.734375x17.46875] overflow: [8,74.40625 90.953125x17.46875]
+          PaintableWithLines (BlockContainer<CAPTION>) [8,74.40625 82.734375x17.46875] overflow: [8,74.40625 90.734375x17.46875]
             TextPaintable (TextNode<#text>)
           PaintableBox (Box<THEAD>) [8,8 95.171875x19.46875] overflow: [8,8 97.171875x21.46875]
             PaintableBox (Box<TR>) [10,10 95.171875x19.46875]

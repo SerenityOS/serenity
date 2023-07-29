@@ -1,43 +1,43 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
-    BlockContainer <body> at (8,8) content-size 784x112.8125 children: not-inline
-      TableWrapper <(anonymous)> at (8,8) content-size 784x112.8125 [BFC] children: not-inline
-        Box <table.ambox> at (9,9) content-size 784x110.8125 table-box [TFC] children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x113.15625 children: not-inline
+      TableWrapper <(anonymous)> at (8,8) content-size 784x113.15625 [BFC] children: not-inline
+        Box <table.ambox> at (9,9) content-size 784x111.15625 table-box [TFC] children: not-inline
           BlockContainer <(anonymous)> (not painted) children: inline
             TextNode <#text>
-          Box <tbody> at (9,9) content-size 778x106.8125 table-row-group children: not-inline
-            Box <tr> at (11,11) content-size 778x106.8125 table-row children: not-inline
-              BlockContainer <td.mbox-image> at (12,39.40625) content-size 50x50 table-cell [BFC] children: not-inline
-                BlockContainer <div.mbox-image-div> at (12,39.40625) content-size 50x50 children: not-inline
-              BlockContainer <td.mbox-text> at (66,12) content-size 724x104.8125 table-cell [BFC] children: inline
+          Box <tbody> at (9,9) content-size 778x107.15625 table-row-group children: not-inline
+            Box <tr> at (11,11) content-size 778x107.15625 table-row children: not-inline
+              BlockContainer <td.mbox-image> at (12,39.578125) content-size 50x50 table-cell [BFC] children: not-inline
+                BlockContainer <div.mbox-image-div> at (12,39.578125) content-size 50x50 children: not-inline
+              BlockContainer <td.mbox-text> at (66,12) content-size 724x105.15625 table-cell [BFC] children: inline
                 line 0 width: 689.640625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
                   frag 0 from TextNode start: 1, length: 84, rect: [66,12 689.640625x17.46875]
                     "In a scene set in a lawyer's office, the lawyer sits alone and bounces a rubber ball"
-                line 1 width: 695.5625, height: 17.46875, bottom: 34.9375, baseline: 13.53125
-                  frag 0 from TextNode start: 86, length: 84, rect: [66,29.46875 695.5625x17.46875]
+                line 1 width: 695.5625, height: 17.9375, bottom: 35.40625, baseline: 13.53125
+                  frag 0 from TextNode start: 86, length: 84, rect: [66,29 695.5625x17.46875]
                     "against the wall. They receive a call from their assistant who expresses frustration"
-                line 2 width: 703.125, height: 17.46875, bottom: 52.40625, baseline: 13.53125
-                  frag 0 from TextNode start: 171, length: 85, rect: [66,46.9375 703.125x17.46875]
+                line 2 width: 703.125, height: 18.40625, bottom: 53.34375, baseline: 13.53125
+                  frag 0 from TextNode start: 171, length: 85, rect: [66,46 703.125x17.46875]
                     "over a packed waiting room and the lawyer's lack of clients. The lawyer then looks at"
-                line 3 width: 695.90625, height: 17.46875, bottom: 69.875, baseline: 13.53125
-                  frag 0 from TextNode start: 257, length: 81, rect: [66,64.40625 695.90625x17.46875]
+                line 3 width: 695.90625, height: 17.875, bottom: 70.28125, baseline: 13.53125
+                  frag 0 from TextNode start: 257, length: 81, rect: [66,64 695.90625x17.46875]
                     "some papers from a large envelope, which turn out to be divorce papers from their"
-                line 4 width: 670.515625, height: 17.46875, bottom: 87.34375, baseline: 13.53125
-                  frag 0 from TextNode start: 339, length: 84, rect: [66,81.875 670.515625x17.46875]
+                line 4 width: 670.515625, height: 18.34375, bottom: 88.21875, baseline: 13.53125
+                  frag 0 from TextNode start: 339, length: 84, rect: [66,81 670.515625x17.46875]
                     "significant other. Finally, the lawyer instructs their assistant to send in the next"
-                line 5 width: 47.21875, height: 17.46875, bottom: 104.8125, baseline: 13.53125
-                  frag 0 from TextNode start: 424, length: 7, rect: [66,99.34375 47.21875x17.46875]
+                line 5 width: 47.21875, height: 17.8125, bottom: 105.15625, baseline: 13.53125
+                  frag 0 from TextNode start: 424, length: 7, rect: [66,99 47.21875x17.46875]
                     "client."
                 TextNode <#text>
 
 PaintableWithLines (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
-    PaintableWithLines (BlockContainer<BODY>) [8,8 784x112.8125] overflow: [8,8 786x112.8125]
-      PaintableWithLines (TableWrapper(anonymous)) [8,8 784x112.8125] overflow: [8,8 786x112.8125]
-        PaintableBox (Box<TABLE>.ambox) [8,8 786x112.8125]
-          PaintableBox (Box<TBODY>) [9,9 778x106.8125] overflow: [9,9 782x108.8125]
-            PaintableBox (Box<TR>) [11,11 778x106.8125] overflow: [11,11 780x106.8125]
-              PaintableWithLines (BlockContainer<TD>.mbox-image) [11,11 52x106.8125]
-                PaintableWithLines (BlockContainer<DIV>.mbox-image-div) [12,39.40625 50x50]
-              PaintableWithLines (BlockContainer<TD>.mbox-text) [65,11 726x106.8125]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x113.15625] overflow: [8,8 786x113.15625]
+      PaintableWithLines (TableWrapper(anonymous)) [8,8 784x113.15625] overflow: [8,8 786x113.15625]
+        PaintableBox (Box<TABLE>.ambox) [8,8 786x113.15625]
+          PaintableBox (Box<TBODY>) [9,9 778x107.15625] overflow: [9,9 782x109.15625]
+            PaintableBox (Box<TR>) [11,11 778x107.15625] overflow: [11,11 780x107.15625]
+              PaintableWithLines (BlockContainer<TD>.mbox-image) [11,11 52x107.15625]
+                PaintableWithLines (BlockContainer<DIV>.mbox-image-div) [12,39.578125 50x50]
+              PaintableWithLines (BlockContainer<TD>.mbox-text) [65,11 726x107.15625]
                 TextPaintable (TextNode<#text>)

@@ -1,46 +1,46 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
-  BlockContainer <html> at (1,1) content-size 798x128.8125 [BFC] children: not-inline
-    BlockContainer <body> at (10,10) content-size 780x110.8125 children: not-inline
-      BlockContainer <div.foo> at (11,11) content-size 93.765625x34.9375 children: inline
+  BlockContainer <html> at (1,1) content-size 798x130.21875 [BFC] children: not-inline
+    BlockContainer <body> at (10,10) content-size 780x112.21875 children: not-inline
+      BlockContainer <div.foo> at (11,11) content-size 93.765625x35.40625 children: inline
         line 0 width: 43.578125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
           frag 0 from TextNode start: 0, length: 6, rect: [11,11 43.578125x17.46875]
             "width:"
-        line 1 width: 93.765625, height: 17.46875, bottom: 34.9375, baseline: 13.53125
-          frag 0 from TextNode start: 7, length: 11, rect: [11,28.46875 93.765625x17.46875]
+        line 1 width: 93.765625, height: 17.9375, bottom: 35.40625, baseline: 13.53125
+          frag 0 from TextNode start: 7, length: 11, rect: [11,28 93.765625x17.46875]
             "min-content"
         TextNode <#text>
-      BlockContainer <(anonymous)> at (10,46.9375) content-size 780x0 children: inline
+      BlockContainer <(anonymous)> at (10,47.40625) content-size 780x0 children: inline
         TextNode <#text>
-      BlockContainer <div.bar> at (11,47.9375) content-size 93.765625x34.9375 children: inline
+      BlockContainer <div.bar> at (11,48.40625) content-size 93.765625x35.40625 children: inline
         line 0 width: 81.3125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-          frag 0 from TextNode start: 0, length: 10, rect: [11,47.9375 81.3125x17.46875]
+          frag 0 from TextNode start: 0, length: 10, rect: [11,48.40625 81.3125x17.46875]
             "max-width:"
-        line 1 width: 93.765625, height: 17.46875, bottom: 34.9375, baseline: 13.53125
+        line 1 width: 93.765625, height: 17.9375, bottom: 35.40625, baseline: 13.53125
           frag 0 from TextNode start: 11, length: 11, rect: [11,65.40625 93.765625x17.46875]
             "min-content"
         TextNode <#text>
-      BlockContainer <(anonymous)> at (10,83.875) content-size 780x0 children: inline
+      BlockContainer <(anonymous)> at (10,84.8125) content-size 780x0 children: inline
         TextNode <#text>
-      BlockContainer <div.baz> at (11,84.875) content-size 93.765625x34.9375 children: inline
+      BlockContainer <div.baz> at (11,85.8125) content-size 93.765625x35.40625 children: inline
         line 0 width: 76.4375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-          frag 0 from TextNode start: 0, length: 10, rect: [11,84.875 76.4375x17.46875]
+          frag 0 from TextNode start: 0, length: 10, rect: [11,85.8125 76.4375x17.46875]
             "min-width:"
-        line 1 width: 93.765625, height: 17.46875, bottom: 34.9375, baseline: 13.53125
-          frag 0 from TextNode start: 11, length: 11, rect: [11,102.34375 93.765625x17.46875]
+        line 1 width: 93.765625, height: 17.9375, bottom: 35.40625, baseline: 13.53125
+          frag 0 from TextNode start: 11, length: 11, rect: [11,102.8125 93.765625x17.46875]
             "min-content"
         TextNode <#text>
-      BlockContainer <(anonymous)> at (10,120.8125) content-size 780x0 children: inline
+      BlockContainer <(anonymous)> at (10,122.21875) content-size 780x0 children: inline
         TextNode <#text>
 
 PaintableWithLines (Viewport<#document>) [0,0 800x600]
-  PaintableWithLines (BlockContainer<HTML>) [0,0 800x130.8125]
-    PaintableWithLines (BlockContainer<BODY>) [9,9 782x112.8125]
-      PaintableWithLines (BlockContainer<DIV>.foo) [10,10 95.765625x36.9375]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x132.21875]
+    PaintableWithLines (BlockContainer<BODY>) [9,9 782x114.21875]
+      PaintableWithLines (BlockContainer<DIV>.foo) [10,10 95.765625x37.40625]
         TextPaintable (TextNode<#text>)
-      PaintableWithLines (BlockContainer(anonymous)) [10,46.9375 780x0]
-      PaintableWithLines (BlockContainer<DIV>.bar) [10,46.9375 95.765625x36.9375]
+      PaintableWithLines (BlockContainer(anonymous)) [10,47.40625 780x0]
+      PaintableWithLines (BlockContainer<DIV>.bar) [10,47.40625 95.765625x37.40625]
         TextPaintable (TextNode<#text>)
-      PaintableWithLines (BlockContainer(anonymous)) [10,83.875 780x0]
-      PaintableWithLines (BlockContainer<DIV>.baz) [10,83.875 95.765625x36.9375]
+      PaintableWithLines (BlockContainer(anonymous)) [10,84.8125 780x0]
+      PaintableWithLines (BlockContainer<DIV>.baz) [10,84.8125 95.765625x37.40625]
         TextPaintable (TextNode<#text>)
-      PaintableWithLines (BlockContainer(anonymous)) [10,120.8125 780x0]
+      PaintableWithLines (BlockContainer(anonymous)) [10,122.21875 780x0]

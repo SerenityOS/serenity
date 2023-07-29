@@ -1,200 +1,200 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (1,1) content-size 798x600 [BFC] children: not-inline
-    BlockContainer <body> at (252,10) content-size 538x399.1875 children: inline
+    BlockContainer <body> at (252,10) content-size 538x399.53125 children: inline
       line 0 width: 228.34375, height: 21.84375, bottom: 21.84375, baseline: 16.921875
         frag 0 from TextNode start: 1, length: 5, rect: [554,10 63.71875x21.84375]
           "Lorem"
-        frag 1 from TextNode start: 6, length: 1, rect: [617.71875,10 12.546875x21.84375]
+        frag 1 from TextNode start: 6, length: 1, rect: [618,10 12.546875x21.84375]
           " "
-        frag 2 from TextNode start: 7, length: 5, rect: [630.265625,10 56.625x21.84375]
+        frag 2 from TextNode start: 7, length: 5, rect: [630.546875,10 56.625x21.84375]
           "ipsum"
-        frag 3 from TextNode start: 12, length: 1, rect: [686.890625,10 12.546875x21.84375]
+        frag 3 from TextNode start: 12, length: 1, rect: [686.546875,10 12.546875x21.84375]
           " "
-        frag 4 from TextNode start: 13, length: 5, rect: [699.4375,10 52.046875x21.84375]
+        frag 4 from TextNode start: 13, length: 5, rect: [699.09375,10 52.046875x21.84375]
           "dolor"
-        frag 5 from TextNode start: 18, length: 1, rect: [751.484375,10 12.546875x21.84375]
+        frag 5 from TextNode start: 18, length: 1, rect: [751.09375,10 12.546875x21.84375]
           " "
-        frag 6 from TextNode start: 19, length: 3, rect: [764.03125,10 25.953125x21.84375]
+        frag 6 from TextNode start: 19, length: 3, rect: [763.640625,10 25.953125x21.84375]
           "sit"
-      line 1 width: 183.78125, height: 21.84375, bottom: 43.6875, baseline: 16.921875
-        frag 0 from TextNode start: 23, length: 5, rect: [554,31.84375 52.71875x21.84375]
+      line 1 width: 183.78125, height: 22.6875, bottom: 44.53125, baseline: 16.921875
+        frag 0 from TextNode start: 23, length: 5, rect: [554,31 52.71875x21.84375]
           "amet,"
-        frag 1 from TextNode start: 28, length: 1, rect: [606.71875,31.84375 62.21875x21.84375]
+        frag 1 from TextNode start: 28, length: 1, rect: [607,31 62.21875x21.84375]
           " "
-        frag 2 from TextNode start: 29, length: 11, rect: [668.9375,31.84375 121.0625x21.84375]
+        frag 2 from TextNode start: 29, length: 11, rect: [669.21875,31 121.0625x21.84375]
           "consectetur"
-      line 2 width: 140.5625, height: 21.84375, bottom: 65.53125, baseline: 16.921875
-        frag 0 from TextNode start: 41, length: 10, rect: [554,53.6875 94.65625x21.84375]
+      line 2 width: 140.5625, height: 22.53125, bottom: 66.21875, baseline: 16.921875
+        frag 0 from TextNode start: 41, length: 10, rect: [554,53 94.65625x21.84375]
           "adipiscing"
-        frag 1 from TextNode start: 51, length: 1, rect: [648.65625,53.6875 105.4375x21.84375]
+        frag 1 from TextNode start: 51, length: 1, rect: [649,53 105.4375x21.84375]
           " "
-        frag 2 from TextNode start: 52, length: 5, rect: [754.09375,53.6875 35.90625x21.84375]
+        frag 2 from TextNode start: 52, length: 5, rect: [754.4375,53 35.90625x21.84375]
           "elit."
-      line 3 width: 145, height: 21.84375, bottom: 87.375, baseline: 16.921875
-        frag 0 from TextNode start: 58, length: 11, rect: [554,75.53125 123.3125x21.84375]
+      line 3 width: 145, height: 22.375, bottom: 87.90625, baseline: 16.921875
+        frag 0 from TextNode start: 58, length: 11, rect: [554,75 123.3125x21.84375]
           "Suspendisse"
-        frag 1 from TextNode start: 69, length: 1, rect: [677.3125,75.53125 101x21.84375]
+        frag 1 from TextNode start: 69, length: 1, rect: [677,75 101x21.84375]
           " "
-        frag 2 from TextNode start: 70, length: 1, rect: [778.3125,75.53125 11.6875x21.84375]
+        frag 2 from TextNode start: 70, length: 1, rect: [778,75 11.6875x21.84375]
           "a"
-      line 4 width: 196.703125, height: 21.84375, bottom: 109.21875, baseline: 16.921875
-        frag 0 from TextNode start: 72, length: 8, rect: [554,97.375 82.046875x21.84375]
+      line 4 width: 196.703125, height: 22.21875, bottom: 109.59375, baseline: 16.921875
+        frag 0 from TextNode start: 72, length: 8, rect: [554,97 82.046875x21.84375]
           "placerat"
-        frag 1 from TextNode start: 80, length: 1, rect: [636.046875,97.375 29.640625x21.84375]
+        frag 1 from TextNode start: 80, length: 1, rect: [636,97 29.640625x21.84375]
           " "
-        frag 2 from TextNode start: 81, length: 7, rect: [665.6875,97.375 73.875x21.84375]
+        frag 2 from TextNode start: 81, length: 7, rect: [665.640625,97 73.875x21.84375]
           "mauris,"
-        frag 3 from TextNode start: 88, length: 1, rect: [739.5625,97.375 29.640625x21.84375]
+        frag 3 from TextNode start: 88, length: 1, rect: [739.640625,97 29.640625x21.84375]
           " "
-        frag 4 from TextNode start: 89, length: 2, rect: [769.203125,97.375 20.78125x21.84375]
+        frag 4 from TextNode start: 89, length: 2, rect: [769.28125,97 20.78125x21.84375]
           "ut"
-      line 5 width: 234.6875, height: 21.84375, bottom: 131.0625, baseline: 16.921875
-        frag 0 from TextNode start: 92, length: 9, rect: [554,119.21875 101.28125x21.84375]
+      line 5 width: 234.6875, height: 22.0625, bottom: 131.28125, baseline: 16.921875
+        frag 0 from TextNode start: 92, length: 9, rect: [554,119 101.28125x21.84375]
           "elementum"
-        frag 1 from TextNode start: 101, length: 1, rect: [655.28125,119.21875 10.4375x21.84375]
+        frag 1 from TextNode start: 101, length: 1, rect: [655,119 10.4375x21.84375]
           " "
-        frag 2 from TextNode start: 102, length: 3, rect: [665.71875,119.21875 26.390625x21.84375]
+        frag 2 from TextNode start: 102, length: 3, rect: [665.4375,119 26.390625x21.84375]
           "mi."
-        frag 3 from TextNode start: 105, length: 1, rect: [692.109375,119.21875 10.4375x21.84375]
+        frag 3 from TextNode start: 105, length: 1, rect: [692.4375,119 10.4375x21.84375]
           " "
-        frag 4 from TextNode start: 106, length: 5, rect: [702.546875,119.21875 56.234375x21.84375]
+        frag 4 from TextNode start: 106, length: 5, rect: [702.875,119 56.234375x21.84375]
           "Morbi"
-        frag 5 from TextNode start: 111, length: 1, rect: [758.78125,119.21875 10.4375x21.84375]
+        frag 5 from TextNode start: 111, length: 1, rect: [758.875,119 10.4375x21.84375]
           " "
-        frag 6 from TextNode start: 112, length: 2, rect: [769.21875,119.21875 20.78125x21.84375]
+        frag 6 from TextNode start: 112, length: 2, rect: [769.3125,119 20.78125x21.84375]
           "ut"
-      line 6 width: 201.53125, height: 21.84375, bottom: 152.90625, baseline: 16.921875
-        frag 0 from TextNode start: 115, length: 8, rect: [554,141.0625 78.765625x21.84375]
+      line 6 width: 201.53125, height: 21.90625, bottom: 152.96875, baseline: 16.921875
+        frag 0 from TextNode start: 115, length: 8, rect: [554,141 78.765625x21.84375]
           "vehicula"
-        frag 1 from TextNode start: 123, length: 1, rect: [632.765625,141.0625 27.234375x21.84375]
+        frag 1 from TextNode start: 123, length: 1, rect: [633,141 27.234375x21.84375]
           " "
-        frag 2 from TextNode start: 124, length: 6, rect: [660,141.0625 62.9375x21.84375]
+        frag 2 from TextNode start: 124, length: 6, rect: [660.234375,141 62.9375x21.84375]
           "ipsum,"
-        frag 3 from TextNode start: 130, length: 1, rect: [722.9375,141.0625 27.234375x21.84375]
+        frag 3 from TextNode start: 130, length: 1, rect: [723.234375,141 27.234375x21.84375]
           " "
-        frag 4 from TextNode start: 131, length: 4, rect: [750.171875,141.0625 39.828125x21.84375]
+        frag 4 from TextNode start: 131, length: 4, rect: [750.46875,141 39.828125x21.84375]
           "eget"
-      line 7 width: 232.53125, height: 21.84375, bottom: 174.75, baseline: 16.921875
-        frag 0 from TextNode start: 136, length: 8, rect: [554,162.90625 82.046875x21.84375]
+      line 7 width: 232.53125, height: 22.75, bottom: 175.65625, baseline: 16.921875
+        frag 0 from TextNode start: 136, length: 8, rect: [554,162 82.046875x21.84375]
           "placerat"
-        frag 1 from TextNode start: 144, length: 1, rect: [636.046875,162.90625 11.734375x21.84375]
+        frag 1 from TextNode start: 144, length: 1, rect: [636,162 11.734375x21.84375]
           " "
-        frag 2 from TextNode start: 145, length: 6, rect: [647.78125,162.90625 61.875x21.84375]
+        frag 2 from TextNode start: 145, length: 6, rect: [647.734375,162 61.875x21.84375]
           "augue."
-        frag 3 from TextNode start: 151, length: 1, rect: [709.65625,162.90625 11.734375x21.84375]
+        frag 3 from TextNode start: 151, length: 1, rect: [709.734375,162 11.734375x21.84375]
           " "
-        frag 4 from TextNode start: 152, length: 7, rect: [721.390625,162.90625 68.609375x21.84375]
+        frag 4 from TextNode start: 152, length: 7, rect: [721.46875,162 68.609375x21.84375]
           "Integer"
-      line 8 width: 202.96875, height: 21.84375, bottom: 196.59375, baseline: 16.921875
-        frag 0 from TextNode start: 160, length: 6, rect: [554,184.75 70.3125x21.84375]
+      line 8 width: 202.96875, height: 22.59375, bottom: 197.34375, baseline: 16.921875
+        frag 0 from TextNode start: 160, length: 6, rect: [554,184 70.3125x21.84375]
           "rutrum"
-        frag 1 from TextNode start: 166, length: 1, rect: [624.3125,184.75 21x21.84375]
+        frag 1 from TextNode start: 166, length: 1, rect: [624,184 21x21.84375]
           " "
-        frag 2 from TextNode start: 167, length: 4, rect: [645.3125,184.75 35.09375x21.84375]
+        frag 2 from TextNode start: 167, length: 4, rect: [645,184 35.09375x21.84375]
           "nisi"
-        frag 3 from TextNode start: 171, length: 1, rect: [680.40625,184.75 21x21.84375]
+        frag 3 from TextNode start: 171, length: 1, rect: [680,184 21x21.84375]
           " "
-        frag 4 from TextNode start: 172, length: 4, rect: [701.40625,184.75 39.828125x21.84375]
+        frag 4 from TextNode start: 172, length: 4, rect: [701,184 39.828125x21.84375]
           "eget"
-        frag 5 from TextNode start: 176, length: 1, rect: [741.234375,184.75 21x21.84375]
+        frag 5 from TextNode start: 176, length: 1, rect: [741,184 21x21.84375]
           " "
-        frag 6 from TextNode start: 177, length: 3, rect: [762.234375,184.75 27.734375x21.84375]
+        frag 6 from TextNode start: 177, length: 3, rect: [762,184 27.734375x21.84375]
           "dui"
       line 9 width: 0, height: 0, bottom: 0, baseline: 0
-      line 10 width: 208.828125, height: 21.84375, bottom: 224.4375, baseline: 16.921875
-        frag 0 from TextNode start: 181, length: 7, rect: [252,212.59375 68.984375x21.84375]
+      line 10 width: 208.828125, height: 22.4375, bottom: 225.03125, baseline: 16.921875
+        frag 0 from TextNode start: 181, length: 7, rect: [252,212 68.984375x21.84375]
           "dictum,"
-        frag 1 from TextNode start: 188, length: 1, rect: [320.984375,212.59375 23.578125x21.84375]
+        frag 1 from TextNode start: 188, length: 1, rect: [321,212 23.578125x21.84375]
           " "
-        frag 2 from TextNode start: 189, length: 2, rect: [344.5625,212.59375 23.109375x21.84375]
+        frag 2 from TextNode start: 189, length: 2, rect: [344.578125,212 23.109375x21.84375]
           "eu"
-        frag 3 from TextNode start: 191, length: 1, rect: [367.671875,212.59375 23.578125x21.84375]
+        frag 3 from TextNode start: 191, length: 1, rect: [367.578125,212 23.578125x21.84375]
           " "
-        frag 4 from TextNode start: 192, length: 8, rect: [391.25,212.59375 96.734375x21.84375]
+        frag 4 from TextNode start: 192, length: 8, rect: [391.15625,212 96.734375x21.84375]
           "accumsan"
-      line 11 width: 180.1875, height: 21.84375, bottom: 246.28125, baseline: 16.921875
-        frag 0 from TextNode start: 201, length: 4, rect: [252,234.4375 43.875x21.84375]
+      line 11 width: 180.1875, height: 22.28125, bottom: 246.71875, baseline: 16.921875
+        frag 0 from TextNode start: 201, length: 4, rect: [252,234 43.875x21.84375]
           "enim"
-        frag 1 from TextNode start: 205, length: 1, rect: [295.875,234.4375 37.90625x21.84375]
+        frag 1 from TextNode start: 205, length: 1, rect: [296,234 37.90625x21.84375]
           " "
-        frag 2 from TextNode start: 206, length: 10, rect: [333.78125,234.4375 93.625x21.84375]
+        frag 2 from TextNode start: 206, length: 10, rect: [333.90625,234 93.625x21.84375]
           "tristique."
-        frag 3 from TextNode start: 216, length: 1, rect: [427.40625,234.4375 37.90625x21.84375]
+        frag 3 from TextNode start: 216, length: 1, rect: [427.90625,234 37.90625x21.84375]
           " "
-        frag 4 from TextNode start: 217, length: 2, rect: [465.3125,234.4375 22.6875x21.84375]
+        frag 4 from TextNode start: 217, length: 2, rect: [465.8125,234 22.6875x21.84375]
           "Ut"
-      line 12 width: 195.28125, height: 21.84375, bottom: 268.125, baseline: 16.921875
-        frag 0 from TextNode start: 220, length: 8, rect: [252,256.28125 80.015625x21.84375]
+      line 12 width: 195.28125, height: 22.125, bottom: 268.40625, baseline: 16.921875
+        frag 0 from TextNode start: 220, length: 8, rect: [252,256 80.015625x21.84375]
           "lobortis"
-        frag 1 from TextNode start: 228, length: 1, rect: [332.015625,256.28125 30.359375x21.84375]
+        frag 1 from TextNode start: 228, length: 1, rect: [332,256 30.359375x21.84375]
           " "
-        frag 2 from TextNode start: 229, length: 5, rect: [362.375,256.28125 55.4375x21.84375]
+        frag 2 from TextNode start: 229, length: 5, rect: [362.359375,256 55.4375x21.84375]
           "lorem"
-        frag 3 from TextNode start: 234, length: 1, rect: [417.8125,256.28125 30.359375x21.84375]
+        frag 3 from TextNode start: 234, length: 1, rect: [417.359375,256 30.359375x21.84375]
           " "
-        frag 4 from TextNode start: 235, length: 4, rect: [448.171875,256.28125 39.828125x21.84375]
+        frag 4 from TextNode start: 235, length: 4, rect: [447.71875,256 39.828125x21.84375]
           "eget"
-      line 13 width: 222.921875, height: 21.84375, bottom: 289.96875, baseline: 16.921875
-        frag 0 from TextNode start: 240, length: 3, rect: [252,278.125 31.15625x21.84375]
+      line 13 width: 222.921875, height: 21.96875, bottom: 290.09375, baseline: 16.921875
+        frag 0 from TextNode start: 240, length: 3, rect: [252,278 31.15625x21.84375]
           "est"
-        frag 1 from TextNode start: 243, length: 1, rect: [283.15625,278.125 16.53125x21.84375]
+        frag 1 from TextNode start: 243, length: 1, rect: [283,278 16.53125x21.84375]
           " "
-        frag 2 from TextNode start: 244, length: 9, rect: [299.6875,278.125 91.46875x21.84375]
+        frag 2 from TextNode start: 244, length: 9, rect: [299.53125,278 91.46875x21.84375]
           "vulputate"
-        frag 3 from TextNode start: 253, length: 1, rect: [391.15625,278.125 16.53125x21.84375]
+        frag 3 from TextNode start: 253, length: 1, rect: [391.53125,278 16.53125x21.84375]
           " "
-        frag 4 from TextNode start: 254, length: 8, rect: [407.6875,278.125 80.296875x21.84375]
+        frag 4 from TextNode start: 254, length: 8, rect: [408.0625,278 80.296875x21.84375]
           "egestas."
-      line 14 width: 223.125, height: 21.84375, bottom: 311.8125, baseline: 16.921875
-        frag 0 from TextNode start: 263, length: 7, rect: [252,299.96875 68.609375x21.84375]
+      line 14 width: 223.125, height: 22.8125, bottom: 312.78125, baseline: 16.921875
+        frag 0 from TextNode start: 263, length: 7, rect: [252,299 68.609375x21.84375]
           "Integer"
-        frag 1 from TextNode start: 270, length: 1, rect: [320.609375,299.96875 16.4375x21.84375]
+        frag 1 from TextNode start: 270, length: 1, rect: [321,299 16.4375x21.84375]
           " "
-        frag 2 from TextNode start: 271, length: 7, rect: [337.046875,299.96875 71.328125x21.84375]
+        frag 2 from TextNode start: 271, length: 7, rect: [337.4375,299 71.328125x21.84375]
           "laoreet"
-        frag 3 from TextNode start: 278, length: 1, rect: [408.375,299.96875 16.4375x21.84375]
+        frag 3 from TextNode start: 278, length: 1, rect: [408.4375,299 16.4375x21.84375]
           " "
-        frag 4 from TextNode start: 279, length: 7, rect: [424.8125,299.96875 63.1875x21.84375]
+        frag 4 from TextNode start: 279, length: 7, rect: [424.875,299 63.1875x21.84375]
           "lacinia"
-      line 15 width: 222.609375, height: 21.84375, bottom: 333.65625, baseline: 16.921875
-        frag 0 from TextNode start: 287, length: 4, rect: [252,321.8125 43.15625x21.84375]
+      line 15 width: 222.609375, height: 22.65625, bottom: 334.46875, baseline: 16.921875
+        frag 0 from TextNode start: 287, length: 4, rect: [252,321 43.15625x21.84375]
           "ante"
-        frag 1 from TextNode start: 291, length: 1, rect: [295.15625,321.8125 16.6875x21.84375]
+        frag 1 from TextNode start: 291, length: 1, rect: [295,321 16.6875x21.84375]
           " "
-        frag 2 from TextNode start: 292, length: 7, rect: [311.84375,321.8125 74x21.84375]
+        frag 2 from TextNode start: 292, length: 7, rect: [311.6875,321 74x21.84375]
           "sodales"
-        frag 3 from TextNode start: 299, length: 1, rect: [385.84375,321.8125 16.6875x21.84375]
+        frag 3 from TextNode start: 299, length: 1, rect: [385.6875,321 16.6875x21.84375]
           " "
-        frag 4 from TextNode start: 300, length: 9, rect: [402.53125,321.8125 85.453125x21.84375]
+        frag 4 from TextNode start: 300, length: 9, rect: [402.375,321 85.453125x21.84375]
           "lobortis."
-      line 16 width: 178.3125, height: 21.84375, bottom: 355.5, baseline: 16.921875
-        frag 0 from TextNode start: 310, length: 5, rect: [252,343.65625 60.90625x21.84375]
+      line 16 width: 178.3125, height: 22.5, bottom: 356.15625, baseline: 16.921875
+        frag 0 from TextNode start: 310, length: 5, rect: [252,343 60.90625x21.84375]
           "Donec"
-        frag 1 from TextNode start: 315, length: 1, rect: [312.90625,343.65625 38.84375x21.84375]
+        frag 1 from TextNode start: 315, length: 1, rect: [313,343 38.84375x21.84375]
           " "
-        frag 2 from TextNode start: 316, length: 1, rect: [351.75,343.65625 11.6875x21.84375]
+        frag 2 from TextNode start: 316, length: 1, rect: [351.84375,343 11.6875x21.84375]
           "a"
-        frag 3 from TextNode start: 317, length: 1, rect: [363.4375,343.65625 38.84375x21.84375]
+        frag 3 from TextNode start: 317, length: 1, rect: [363.84375,343 38.84375x21.84375]
           " "
-        frag 4 from TextNode start: 318, length: 9, rect: [402.28125,343.65625 85.71875x21.84375]
+        frag 4 from TextNode start: 318, length: 9, rect: [402.6875,343 85.71875x21.84375]
           "tincidunt"
-      line 17 width: 231.078125, height: 21.84375, bottom: 377.34375, baseline: 16.921875
-        frag 0 from TextNode start: 328, length: 5, rect: [252,365.5 48.59375x21.84375]
+      line 17 width: 231.078125, height: 22.34375, bottom: 377.84375, baseline: 16.921875
+        frag 0 from TextNode start: 328, length: 5, rect: [252,365 48.59375x21.84375]
           "ante."
-        frag 1 from TextNode start: 333, length: 1, rect: [300.59375,365.5 11.640625x21.84375]
+        frag 1 from TextNode start: 333, length: 1, rect: [301,365 11.640625x21.84375]
           " "
-        frag 2 from TextNode start: 334, length: 9, rect: [312.234375,365.5 94.765625x21.84375]
+        frag 2 from TextNode start: 334, length: 9, rect: [312.640625,365 94.765625x21.84375]
           "Phasellus"
-        frag 3 from TextNode start: 343, length: 1, rect: [407,365.5 11.640625x21.84375]
+        frag 3 from TextNode start: 343, length: 1, rect: [406.640625,365 11.640625x21.84375]
           " "
-        frag 4 from TextNode start: 344, length: 1, rect: [418.640625,365.5 11.6875x21.84375]
+        frag 4 from TextNode start: 344, length: 1, rect: [418.28125,365 11.6875x21.84375]
           "a"
-        frag 5 from TextNode start: 345, length: 1, rect: [430.328125,365.5 11.640625x21.84375]
+        frag 5 from TextNode start: 345, length: 1, rect: [430.28125,365 11.640625x21.84375]
           " "
-        frag 6 from TextNode start: 346, length: 4, rect: [441.96875,365.5 46.03125x21.84375]
+        frag 6 from TextNode start: 346, length: 4, rect: [441.921875,365 46.03125x21.84375]
           "arcu"
-      line 18 width: 70.546875, height: 21.84375, bottom: 399.1875, baseline: 16.921875
-        frag 0 from TextNode start: 351, length: 7, rect: [252,387.34375 70.546875x21.84375]
+      line 18 width: 70.546875, height: 22.1875, bottom: 399.53125, baseline: 16.921875
+        frag 0 from TextNode start: 351, length: 7, rect: [252,387 70.546875x21.84375]
           "tortor."
       BlockContainer <div.left> at (253,11) content-size 300x200 floating [BFC] children: not-inline
       TextNode <#text>
@@ -203,7 +203,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
 
 PaintableWithLines (Viewport<#document>) [0,0 800x600] overflow: [0,0 800x602]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x602]
-    PaintableWithLines (BlockContainer<BODY>) [251,9 540x401.1875]
+    PaintableWithLines (BlockContainer<BODY>) [251,9 540x401.53125] overflow: [252,10 538.34375x399.53125]
       PaintableWithLines (BlockContainer<DIV>.left) [252,10 302x202]
       PaintableWithLines (BlockContainer<DIV>.right) [488,212 302x202]
       TextPaintable (TextNode<#text>)

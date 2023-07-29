@@ -5,7 +5,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
     BlockContainer <body> at (8,8) content-size 784x34.9375 children: not-inline
       BlockContainer <(anonymous)> at (8,8) content-size 784x17.46875 children: inline
         line 0 width: 27.640625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-          frag 0 from TextNode start: 1, length: 3, rect: [137.109375,8 27.640625x17.46875]
+          frag 0 from TextNode start: 1, length: 3, rect: [137,8 27.640625x17.46875]
             "bar"
         BlockContainer <div.big-float> at (8,8) content-size 100x100 floating [BFC] children: not-inline
         TextNode <#text>
@@ -17,7 +17,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         TextNode <#text>
       BlockContainer <div> at (8,25.46875) content-size 784x17.46875 children: inline
         line 0 width: 27.203125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-          frag 0 from TextNode start: 1, length: 3, rect: [129.515625,25.46875 27.203125x17.46875]
+          frag 0 from TextNode start: 1, length: 3, rect: [130,25.46875 27.203125x17.46875]
             "baz"
         TextNode <#text>
         BlockContainer <div.yyy> at (108,25.46875) content-size 21.515625x17.46875 floating [BFC] children: inline

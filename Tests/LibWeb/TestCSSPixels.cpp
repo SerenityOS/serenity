@@ -111,4 +111,40 @@ TEST_CASE(multiplication_uses_i64_for_raw_values)
     EXPECT_EQ(c, CSSPixels(776400));
 }
 
+TEST_CASE(rounding)
+{
+    EXPECT_EQ(ceil(CSSPixels(0)), CSSPixels(0));
+    EXPECT_EQ(ceil(CSSPixels(0.5)), CSSPixels(1));
+    EXPECT_EQ(ceil(CSSPixels(1.3)), CSSPixels(2));
+    EXPECT_EQ(ceil(CSSPixels(1.5)), CSSPixels(2));
+    EXPECT_EQ(ceil(CSSPixels(1.7)), CSSPixels(2));
+
+    EXPECT_EQ(ceil(CSSPixels(-0.5)), CSSPixels(0));
+    EXPECT_EQ(ceil(CSSPixels(-1.3)), CSSPixels(-1));
+    EXPECT_EQ(ceil(CSSPixels(-1.5)), CSSPixels(-1));
+    EXPECT_EQ(ceil(CSSPixels(-1.7)), CSSPixels(-1));
+
+    EXPECT_EQ(floor(CSSPixels(0)), CSSPixels(0));
+    EXPECT_EQ(floor(CSSPixels(0.5)), CSSPixels(0));
+    EXPECT_EQ(floor(CSSPixels(1.3)), CSSPixels(1));
+    EXPECT_EQ(floor(CSSPixels(1.5)), CSSPixels(1));
+    EXPECT_EQ(floor(CSSPixels(1.7)), CSSPixels(1));
+
+    EXPECT_EQ(floor(CSSPixels(-0.5)), CSSPixels(-1));
+    EXPECT_EQ(floor(CSSPixels(-1.3)), CSSPixels(-2));
+    EXPECT_EQ(floor(CSSPixels(-1.5)), CSSPixels(-2));
+    EXPECT_EQ(floor(CSSPixels(-1.7)), CSSPixels(-2));
+
+    EXPECT_EQ(round(CSSPixels(0)), CSSPixels(0));
+    EXPECT_EQ(round(CSSPixels(0.5)), CSSPixels(1));
+    EXPECT_EQ(round(CSSPixels(1.3)), CSSPixels(1));
+    EXPECT_EQ(round(CSSPixels(1.5)), CSSPixels(2));
+    EXPECT_EQ(round(CSSPixels(1.7)), CSSPixels(2));
+
+    EXPECT_EQ(round(CSSPixels(-0.5)), CSSPixels(-1));
+    EXPECT_EQ(round(CSSPixels(-1.3)), CSSPixels(-1));
+    EXPECT_EQ(round(CSSPixels(-1.5)), CSSPixels(-2));
+    EXPECT_EQ(round(CSSPixels(-1.7)), CSSPixels(-2));
+}
+
 }

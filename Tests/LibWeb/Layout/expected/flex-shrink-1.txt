@@ -8,14 +8,14 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           line 0 width: 18.9375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
             frag 0 from TextNode start: 0, length: 3, rect: [10,10 18.9375x17.46875]
               "1 I"
-          line 1 width: 49.359375, height: 17.46875, bottom: 34.9375, baseline: 13.53125
-            frag 0 from TextNode start: 4, length: 6, rect: [10,27.46875 49.359375x17.46875]
+          line 1 width: 49.359375, height: 17.9375, bottom: 35.40625, baseline: 13.53125
+            frag 0 from TextNode start: 4, length: 6, rect: [10,27 49.359375x17.46875]
               "shrink"
-          line 2 width: 24.875, height: 17.46875, bottom: 52.40625, baseline: 13.53125
-            frag 0 from TextNode start: 11, length: 3, rect: [10,44.9375 24.875x17.46875]
+          line 2 width: 24.875, height: 18.40625, bottom: 53.34375, baseline: 13.53125
+            frag 0 from TextNode start: 11, length: 3, rect: [10,44 24.875x17.46875]
               "the"
-          line 3 width: 38.765625, height: 17.46875, bottom: 69.875, baseline: 13.53125
-            frag 0 from TextNode start: 15, length: 4, rect: [10,62.40625 38.765625x17.46875]
+          line 3 width: 38.765625, height: 17.875, bottom: 70.28125, baseline: 13.53125
+            frag 0 from TextNode start: 15, length: 4, rect: [10,62 38.765625x17.46875]
               "most"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline

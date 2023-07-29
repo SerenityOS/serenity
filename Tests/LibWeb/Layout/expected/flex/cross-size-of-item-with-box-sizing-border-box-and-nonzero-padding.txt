@@ -1,34 +1,34 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
-  BlockContainer <html> at (1,1) content-size 798x244.28125 [BFC] children: not-inline
-    BlockContainer <body> at (10,10) content-size 780x226.28125 children: not-inline
-      Box <div.outer.flex.flex-wrap> at (11,11) content-size 778x224.28125 flex-container(row) [FFC] children: not-inline
-        BlockContainer <div.inner> at (12,62) content-size 776x122.28125 flex-item [BFC] children: inline
+  BlockContainer <html> at (1,1) content-size 798x245.09375 [BFC] children: not-inline
+    BlockContainer <body> at (10,10) content-size 780x227.09375 children: not-inline
+      Box <div.outer.flex.flex-wrap> at (11,11) content-size 778x225.09375 flex-container(row) [FFC] children: not-inline
+        BlockContainer <div.inner> at (12,62) content-size 776x123.09375 flex-item [BFC] children: inline
           line 0 width: 741.640625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
             frag 0 from TextNode start: 0, length: 90, rect: [12,62 741.640625x17.46875]
               "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus interdum libero et urna"
-          line 1 width: 765.03125, height: 17.46875, bottom: 34.9375, baseline: 13.53125
-            frag 0 from TextNode start: 91, length: 95, rect: [12,79.46875 765.03125x17.46875]
+          line 1 width: 765.03125, height: 17.9375, bottom: 35.40625, baseline: 13.53125
+            frag 0 from TextNode start: 91, length: 95, rect: [12,79 765.03125x17.46875]
               "sodales auctor. Nullam sodales bibendum turpis quis blandit. Ut fringilla erat et erat laoreet,"
-          line 2 width: 747.5625, height: 17.46875, bottom: 52.40625, baseline: 13.53125
-            frag 0 from TextNode start: 187, length: 90, rect: [12,96.9375 747.5625x17.46875]
+          line 2 width: 747.5625, height: 18.40625, bottom: 53.34375, baseline: 13.53125
+            frag 0 from TextNode start: 187, length: 90, rect: [12,96 747.5625x17.46875]
               "faucibus rhoncus orci hendrerit. Etiam at sagittis diam. Etiam nec neque non dolor iaculis"
-          line 3 width: 732.109375, height: 17.46875, bottom: 69.875, baseline: 13.53125
-            frag 0 from TextNode start: 278, length: 90, rect: [12,114.40625 732.109375x17.46875]
+          line 3 width: 732.109375, height: 17.875, bottom: 70.28125, baseline: 13.53125
+            frag 0 from TextNode start: 278, length: 90, rect: [12,114 732.109375x17.46875]
               "finibus euismod eget erat. Pellentesque vitae purus vitae nisi vehicula vestibulum quis ut"
-          line 4 width: 759.453125, height: 17.46875, bottom: 87.34375, baseline: 13.53125
-            frag 0 from TextNode start: 369, length: 95, rect: [12,131.875 759.453125x17.46875]
+          line 4 width: 759.453125, height: 18.34375, bottom: 88.21875, baseline: 13.53125
+            frag 0 from TextNode start: 369, length: 95, rect: [12,131 759.453125x17.46875]
               "diam. Integer convallis, justo ullamcorper sollicitudin varius, enim enim pellentesque erat, eu"
-          line 5 width: 767.1875, height: 17.46875, bottom: 104.8125, baseline: 13.53125
-            frag 0 from TextNode start: 465, length: 94, rect: [12,149.34375 767.1875x17.46875]
+          line 5 width: 767.1875, height: 17.8125, bottom: 105.15625, baseline: 13.53125
+            frag 0 from TextNode start: 465, length: 94, rect: [12,149 767.1875x17.46875]
               "pellentesque sem arcu eu purus. Phasellus id erat sed felis luctus mollis eget sit amet dolor."
-          line 6 width: 765.578125, height: 17.46875, bottom: 122.28125, baseline: 13.53125
-            frag 0 from TextNode start: 560, length: 95, rect: [12,166.8125 765.578125x17.46875]
+          line 6 width: 765.578125, height: 18.28125, bottom: 123.09375, baseline: 13.53125
+            frag 0 from TextNode start: 560, length: 95, rect: [12,166 765.578125x17.46875]
               "Pellentesque eget justo nulla. Duis consectetur imperdiet nisi, ac tincidunt urna blandit quis."
           TextNode <#text>
 
 PaintableWithLines (Viewport<#document>) [0,0 800x600]
-  PaintableWithLines (BlockContainer<HTML>) [0,0 800x246.28125]
-    PaintableWithLines (BlockContainer<BODY>) [9,9 782x228.28125]
-      PaintableBox (Box<DIV>.outer.flex.flex-wrap) [10,10 780x226.28125]
-        PaintableWithLines (BlockContainer<DIV>.inner) [11,11 778x224.28125]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x247.09375]
+    PaintableWithLines (BlockContainer<BODY>) [9,9 782x229.09375]
+      PaintableBox (Box<DIV>.outer.flex.flex-wrap) [10,10 780x227.09375]
+        PaintableWithLines (BlockContainer<DIV>.inner) [11,11 778x225.09375]
           TextPaintable (TextNode<#text>)

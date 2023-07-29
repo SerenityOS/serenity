@@ -1,22 +1,22 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (1,1) content-size 798x0 [BFC] children: not-inline
-    BlockContainer <body> at (10,10) content-size 102x56.40625 positioned [BFC] children: not-inline
-      BlockContainer <div#container> at (11,11) content-size 100x54.40625 children: not-inline
-        BlockContainer <div#child> at (72,12) content-size 50x52.40625 children: inline
+    BlockContainer <body> at (10,10) content-size 102x57.34375 positioned [BFC] children: not-inline
+      BlockContainer <div#container> at (11,11) content-size 100x55.34375 children: not-inline
+        BlockContainer <div#child> at (72,12) content-size 50x53.34375 children: inline
           line 0 width: 28.40625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
             frag 0 from TextNode start: 0, length: 4, rect: [72,12 28.40625x17.46875]
               "well"
-          line 1 width: 36.84375, height: 17.46875, bottom: 34.9375, baseline: 13.53125
-            frag 0 from TextNode start: 5, length: 5, rect: [72,29.46875 36.84375x17.46875]
+          line 1 width: 36.84375, height: 17.9375, bottom: 35.40625, baseline: 13.53125
+            frag 0 from TextNode start: 5, length: 5, rect: [72,29 36.84375x17.46875]
               "hello"
-          line 2 width: 55.359375, height: 17.46875, bottom: 52.40625, baseline: 13.53125
-            frag 0 from TextNode start: 11, length: 7, rect: [72,46.9375 55.359375x17.46875]
+          line 2 width: 55.359375, height: 18.40625, bottom: 53.34375, baseline: 13.53125
+            frag 0 from TextNode start: 11, length: 7, rect: [72,46 55.359375x17.46875]
               "friends"
           TextNode <#text>
 
 PaintableWithLines (Viewport<#document>) [0,0 800x600]
-  PaintableWithLines (BlockContainer<HTML>) [0,0 800x2] overflow: [9,9 174x58.40625]
-    PaintableWithLines (BlockContainer<BODY>) [9,9 104x58.40625] overflow: [10,10 173x56.40625]
-      PaintableWithLines (BlockContainer<DIV>#container) [10,10 102x56.40625] overflow: [11,11 172x54.40625]
-        PaintableWithLines (BlockContainer<DIV>#child) [11,11 172x54.40625]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x2] overflow: [9,9 174x59.34375]
+    PaintableWithLines (BlockContainer<BODY>) [9,9 104x59.34375] overflow: [10,10 173x57.34375]
+      PaintableWithLines (BlockContainer<DIV>#container) [10,10 102x57.34375] overflow: [11,11 172x55.34375]
+        PaintableWithLines (BlockContainer<DIV>#child) [11,11 172x55.34375]
           TextPaintable (TextNode<#text>)

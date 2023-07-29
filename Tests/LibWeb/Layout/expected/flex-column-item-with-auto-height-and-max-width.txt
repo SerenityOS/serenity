@@ -1,26 +1,26 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
-  BlockContainer <html> at (1,1) content-size 798x91.34375 [BFC] children: not-inline
-    Box <body> at (2,2) content-size 796x89.34375 flex-container(column) [FFC] children: not-inline
-      BlockContainer <main> at (3,3) content-size 400x87.34375 flex-item [BFC] children: inline
+  BlockContainer <html> at (1,1) content-size 798x92.21875 [BFC] children: not-inline
+    Box <body> at (2,2) content-size 796x90.21875 flex-container(column) [FFC] children: not-inline
+      BlockContainer <main> at (3,3) content-size 400x88.21875 flex-item [BFC] children: inline
         line 0 width: 346.984375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
           frag 0 from TextNode start: 0, length: 41, rect: [3,3 346.984375x17.46875]
             "For my day job I'm currently working as a"
-        line 1 width: 337.59375, height: 17.46875, bottom: 34.9375, baseline: 13.53125
-          frag 0 from TextNode start: 42, length: 39, rect: [3,20.46875 337.59375x17.46875]
+        line 1 width: 337.59375, height: 17.9375, bottom: 35.40625, baseline: 13.53125
+          frag 0 from TextNode start: 42, length: 39, rect: [3,20 337.59375x17.46875]
             "Software Engineer at For my day job I'm"
-        line 2 width: 368.203125, height: 17.46875, bottom: 52.40625, baseline: 13.53125
-          frag 0 from TextNode start: 82, length: 43, rect: [3,37.9375 368.203125x17.46875]
+        line 2 width: 368.203125, height: 18.40625, bottom: 53.34375, baseline: 13.53125
+          frag 0 from TextNode start: 82, length: 43, rect: [3,37 368.203125x17.46875]
             "currently working as a Software Engineer at"
-        line 3 width: 346.984375, height: 17.46875, bottom: 69.875, baseline: 13.53125
-          frag 0 from TextNode start: 126, length: 41, rect: [3,55.40625 346.984375x17.46875]
+        line 3 width: 346.984375, height: 17.875, bottom: 70.28125, baseline: 13.53125
+          frag 0 from TextNode start: 126, length: 41, rect: [3,55 346.984375x17.46875]
             "For my day job I'm currently working as a"
-        line 4 width: 175.40625, height: 17.46875, bottom: 87.34375, baseline: 13.53125
-          frag 0 from TextNode start: 168, length: 20, rect: [3,72.875 175.40625x17.46875]
+        line 4 width: 175.40625, height: 18.34375, bottom: 88.21875, baseline: 13.53125
+          frag 0 from TextNode start: 168, length: 20, rect: [3,72 175.40625x17.46875]
             "Software Engineer at"
         TextNode <#text>
 
 PaintableWithLines (Viewport<#document>) [0,0 800x600]
-  PaintableWithLines (BlockContainer<HTML>) [0,0 800x93.34375]
-    PaintableBox (Box<BODY>) [1,1 798x91.34375]
-      PaintableWithLines (BlockContainer<MAIN>) [2,2 402x89.34375]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x94.21875]
+    PaintableBox (Box<BODY>) [1,1 798x92.21875]
+      PaintableWithLines (BlockContainer<MAIN>) [2,2 402x90.21875]
         TextPaintable (TextNode<#text>)
