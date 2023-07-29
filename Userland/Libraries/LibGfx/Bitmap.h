@@ -24,6 +24,7 @@
     __ENUMERATE_IMAGE_FORMAT(gif, ".gif")   \
     __ENUMERATE_IMAGE_FORMAT(bmp, ".bmp")   \
     __ENUMERATE_IMAGE_FORMAT(ico, ".ico")   \
+    __ENUMERATE_IMAGE_FORMAT(iff, ".iff")   \
     __ENUMERATE_IMAGE_FORMAT(jpeg, ".jpg")  \
     __ENUMERATE_IMAGE_FORMAT(jpeg, ".jpeg") \
     __ENUMERATE_IMAGE_FORMAT(jxl, ".jxl")   \

@@ -9,6 +9,7 @@
 #include <LibGfx/ImageFormats/DDSLoader.h>
 #include <LibGfx/ImageFormats/GIFLoader.h>
 #include <LibGfx/ImageFormats/ICOLoader.h>
+#include <LibGfx/ImageFormats/ILBMLoader.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
 #include <LibGfx/ImageFormats/JPEGXLLoader.h>
@@ -38,6 +39,7 @@ static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin(Readonl
         { PGMImageDecoderPlugin::sniff, PGMImageDecoderPlugin::create },
         { PPMImageDecoderPlugin::sniff, PPMImageDecoderPlugin::create },
         { ICOImageDecoderPlugin::sniff, ICOImageDecoderPlugin::create },
+        { ILBMImageDecoderPlugin::sniff, ILBMImageDecoderPlugin::create },
         { JPEGImageDecoderPlugin::sniff, JPEGImageDecoderPlugin::create },
         { JPEGXLImageDecoderPlugin::sniff, JPEGXLImageDecoderPlugin::create },
         { DDSImageDecoderPlugin::sniff, DDSImageDecoderPlugin::create },
