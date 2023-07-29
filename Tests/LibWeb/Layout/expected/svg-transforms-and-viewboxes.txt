@@ -1,20 +1,20 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x700 [BFC] children: not-inline
     BlockContainer <body> at (50,50) content-size 700x600 children: inline
-      line 0 width: 616, height: 203.9375, bottom: 203.9375, baseline: 200
+      line 0 width: 616, height: 203.46875, bottom: 203.46875, baseline: 200
         frag 0 from SVGSVGBox start: 0, length: 0, rect: [50,150 200x100]
-        frag 1 from TextNode start: 0, length: 1, rect: [250,236.46875 8x17.46875]
+        frag 1 from TextNode start: 0, length: 1, rect: [250,236 8x17.46875]
           " "
         frag 2 from SVGSVGBox start: 0, length: 0, rect: [258,50 200x200]
-        frag 3 from TextNode start: 0, length: 1, rect: [458,236.46875 8x17.46875]
+        frag 3 from TextNode start: 0, length: 1, rect: [458,236 8x17.46875]
           " "
         frag 4 from SVGSVGBox start: 0, length: 0, rect: [466,50 200x200]
-      line 1 width: 616, height: 203.9375, bottom: 403.9375, baseline: 200
+      line 1 width: 616, height: 203.46875, bottom: 403.46875, baseline: 200
         frag 0 from SVGSVGBox start: 0, length: 0, rect: [50,250 200x200]
-        frag 1 from TextNode start: 0, length: 1, rect: [250,436.46875 8x17.46875]
+        frag 1 from TextNode start: 0, length: 1, rect: [250,436 8x17.46875]
           " "
         frag 2 from SVGSVGBox start: 0, length: 0, rect: [258,250 200x200]
-        frag 3 from TextNode start: 0, length: 1, rect: [458,436.46875 8x17.46875]
+        frag 3 from TextNode start: 0, length: 1, rect: [458,436 8x17.46875]
           " "
         frag 4 from SVGSVGBox start: 0, length: 0, rect: [466,250 200x200]
       line 2 width: 200, height: 200, bottom: 600, baseline: 200

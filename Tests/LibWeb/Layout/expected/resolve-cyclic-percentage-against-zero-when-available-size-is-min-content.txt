@@ -3,8 +3,8 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
     BlockContainer <body> at (10,10) content-size 780x1233.46875 children: not-inline
       BlockContainer <div.w.min> at (11,11) content-size 2x17.46875 children: inline
         line 0 width: 4, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-          frag 0 from ImageBox start: 0, length: 0, rect: [12,21.53125 2x2]
-        ImageBox <img> at (12,21.53125) content-size 2x2 children: not-inline
+          frag 0 from ImageBox start: 0, length: 0, rect: [12,21 2x2]
+        ImageBox <img> at (12,21) content-size 2x2 children: not-inline
       BlockContainer <(anonymous)> at (10,29.46875) content-size 780x0 children: inline
         TextNode <#text>
       BlockContainer <div.w.max> at (11,30.46875) content-size 402x404 children: inline
@@ -30,7 +30,7 @@ PaintableWithLines (Viewport<#document>) [0,0 800x600] overflow: [0,0 800x1253.4
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x1253.46875]
     PaintableWithLines (BlockContainer<BODY>) [9,9 782x1235.46875]
       PaintableWithLines (BlockContainer<DIV>.w.min) [10,10 4x19.46875] overflow: [11,11 3x17.46875]
-        ImagePaintable (ImageBox<IMG>) [11,20.53125 4x4]
+        ImagePaintable (ImageBox<IMG>) [11,20 4x4]
       PaintableWithLines (BlockContainer(anonymous)) [10,29.46875 780x0]
       PaintableWithLines (BlockContainer<DIV>.w.max) [10,29.46875 404x406] overflow: [11,30.46875 403x404]
         ImagePaintable (ImageBox<IMG>) [11,30.46875 404x404]

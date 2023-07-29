@@ -1,30 +1,30 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x1008 [BFC] children: not-inline
-    BlockContainer <body> at (8,8) content-size 784x107.34375 children: not-inline
-      BlockContainer <div.wrapper> at (8,8) content-size 784x107.34375 children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x108.21875 children: not-inline
+      BlockContainer <div.wrapper> at (8,8) content-size 784x108.21875 children: not-inline
         BlockContainer <div.float> at (592,8) content-size 200x1000 floating [BFC] children: not-inline
-        BlockContainer <div.bfc> at (18,18) content-size 564x87.34375 [BFC] children: inline
+        BlockContainer <div.bfc> at (18,18) content-size 564x88.21875 [BFC] children: inline
           line 0 width: 458.125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
             frag 0 from TextNode start: 0, length: 56, rect: [18,18 458.125x17.46875]
               "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-          line 1 width: 511.796875, height: 17.46875, bottom: 34.9375, baseline: 13.53125
-            frag 0 from TextNode start: 57, length: 60, rect: [18,35.46875 511.796875x17.46875]
+          line 1 width: 511.796875, height: 17.9375, bottom: 35.40625, baseline: 13.53125
+            frag 0 from TextNode start: 57, length: 60, rect: [18,35 511.796875x17.46875]
               "Pellentesque vitae neque nunc. Nam fermentum libero a lectus"
-          line 2 width: 537.078125, height: 17.46875, bottom: 52.40625, baseline: 13.53125
-            frag 0 from TextNode start: 118, length: 67, rect: [18,52.9375 537.078125x17.46875]
+          line 2 width: 537.078125, height: 18.40625, bottom: 53.34375, baseline: 13.53125
+            frag 0 from TextNode start: 118, length: 67, rect: [18,52 537.078125x17.46875]
               "vulputate eleifend. Nam sagittis tristique augue, id sodales mauris"
-          line 3 width: 537.34375, height: 17.46875, bottom: 69.875, baseline: 13.53125
-            frag 0 from TextNode start: 186, length: 65, rect: [18,70.40625 537.34375x17.46875]
+          line 3 width: 537.34375, height: 17.875, bottom: 70.28125, baseline: 13.53125
+            frag 0 from TextNode start: 186, length: 65, rect: [18,70 537.34375x17.46875]
               "suscipit at. Vivamus eget placerat ex. Suspendisse potenti. Morbi"
-          line 4 width: 455.375, height: 17.46875, bottom: 87.34375, baseline: 13.53125
-            frag 0 from TextNode start: 252, length: 57, rect: [18,87.875 455.375x17.46875]
+          line 4 width: 455.375, height: 18.34375, bottom: 88.21875, baseline: 13.53125
+            frag 0 from TextNode start: 252, length: 57, rect: [18,87 455.375x17.46875]
               "pulvinar ipsum eget nulla dapibus, ac varius mi eleifend."
           TextNode <#text>
 
 PaintableWithLines (Viewport<#document>) [0,0 800x600] overflow: [0,0 800x1008]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x1008]
-    PaintableWithLines (BlockContainer<BODY>) [8,8 784x107.34375] overflow: [8,8 784x1000]
-      PaintableWithLines (BlockContainer<DIV>.wrapper) [8,8 784x107.34375] overflow: [8,8 784x1000]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x108.21875] overflow: [8,8 784x1000]
+      PaintableWithLines (BlockContainer<DIV>.wrapper) [8,8 784x108.21875] overflow: [8,8 784x1000]
         PaintableWithLines (BlockContainer<DIV>.float) [592,8 200x1000]
-        PaintableWithLines (BlockContainer<DIV>.bfc) [8,8 584x107.34375]
+        PaintableWithLines (BlockContainer<DIV>.bfc) [8,8 584x108.21875]
           TextPaintable (TextNode<#text>)

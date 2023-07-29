@@ -1,28 +1,28 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
-  BlockContainer <html> at (1,1) content-size 798x456.71875 [BFC] children: not-inline
-    Box <body.hero> at (10,10) content-size 500x438.71875 flex-container(column) [FFC] children: not-inline
-      BlockContainer <div.upper> at (10,11) content-size 500x436.71875 flex-item [BFC] children: inline
+  BlockContainer <html> at (1,1) content-size 798x457.09375 [BFC] children: not-inline
+    Box <body.hero> at (10,10) content-size 500x439.09375 flex-container(column) [FFC] children: not-inline
+      BlockContainer <div.upper> at (10,11) content-size 500x437.09375 flex-item [BFC] children: inline
         line 0 width: 453.984375, height: 87.34375, bottom: 87.34375, baseline: 67.65625
           frag 0 from TextNode start: 0, length: 11, rect: [10,11 453.984375x87.34375]
             "This entire"
-        line 1 width: 455, height: 87.34375, bottom: 174.6875, baseline: 67.65625
-          frag 0 from TextNode start: 12, length: 11, rect: [10,98.34375 455x87.34375]
+        line 1 width: 455, height: 87.6875, bottom: 175.03125, baseline: 67.65625
+          frag 0 from TextNode start: 12, length: 11, rect: [10,98 455x87.34375]
             "text should"
-        line 2 width: 230.78125, height: 87.34375, bottom: 262.03125, baseline: 67.65625
-          frag 0 from TextNode start: 24, length: 5, rect: [10,185.6875 230.78125x87.34375]
+        line 2 width: 230.78125, height: 88.03125, bottom: 262.71875, baseline: 67.65625
+          frag 0 from TextNode start: 24, length: 5, rect: [10,185 230.78125x87.34375]
             "be on"
-        line 3 width: 272.109375, height: 87.34375, bottom: 349.375, baseline: 67.65625
-          frag 0 from TextNode start: 30, length: 6, rect: [10,273.03125 272.109375x87.34375]
+        line 3 width: 272.109375, height: 87.375, bottom: 349.40625, baseline: 67.65625
+          frag 0 from TextNode start: 30, length: 6, rect: [10,273 272.109375x87.34375]
             "orange"
-        line 4 width: 468.75, height: 87.34375, bottom: 436.71875, baseline: 67.65625
-          frag 0 from TextNode start: 37, length: 11, rect: [10,360.375 468.75x87.34375]
+        line 4 width: 468.75, height: 87.71875, bottom: 437.09375, baseline: 67.65625
+          frag 0 from TextNode start: 37, length: 11, rect: [10,360 468.75x87.34375]
             "background."
         TextNode <#text>
       BlockContainer <(anonymous)> (not painted) [BFC] children: inline
         TextNode <#text>
 
 PaintableWithLines (Viewport<#document>) [0,0 800x600]
-  PaintableWithLines (BlockContainer<HTML>) [0,0 800x458.71875]
-    PaintableBox (Box<BODY>.hero) [9,9 502x440.71875] overflow: [9,10 502x438.71875]
-      PaintableWithLines (BlockContainer<DIV>.upper) [9,10 502x438.71875]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x459.09375]
+    PaintableBox (Box<BODY>.hero) [9,9 502x441.09375] overflow: [9,10 502x439.09375]
+      PaintableWithLines (BlockContainer<DIV>.upper) [9,10 502x439.09375]
         TextPaintable (TextNode<#text>)

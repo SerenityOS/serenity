@@ -1,6 +1,6 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
-  BlockContainer <html> at (1,1) content-size 798x160.8125 [BFC] children: not-inline
-    BlockContainer <body> at (10,10) content-size 780x142.8125 children: not-inline
+  BlockContainer <html> at (1,1) content-size 798x161.21875 [BFC] children: not-inline
+    BlockContainer <body> at (10,10) content-size 780x143.21875 children: not-inline
       BlockContainer <div.px-indent> at (11,11) content-size 778x68.9375 children: not-inline
         BlockContainer <(anonymous)> at (11,11) content-size 778x17.46875 children: inline
           line 0 width: 142.390625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
@@ -12,28 +12,28 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             frag 0 from TextNode start: 0, length: 12, rect: [62,45.46875 90.921875x17.46875]
               "is inherited"
           TextNode <#text>
-      BlockContainer <div.pct-indent> at (11,81.9375) content-size 100x69.875 children: inline
+      BlockContainer <div.pct-indent> at (11,81.9375) content-size 100x70.28125 children: inline
         line 0 width: 80.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
           frag 0 from TextNode start: 0, length: 3, rect: [61,81.9375 30.34375x17.46875]
             "50%"
-        line 1 width: 88.15625, height: 17.46875, bottom: 34.9375, baseline: 13.53125
-          frag 0 from TextNode start: 4, length: 11, rect: [11,99.40625 88.15625x17.46875]
+        line 1 width: 88.15625, height: 17.9375, bottom: 35.40625, baseline: 13.53125
+          frag 0 from TextNode start: 4, length: 11, rect: [11,98.9375 88.15625x17.46875]
             "indent snip"
-        line 2 width: 78.703125, height: 17.46875, bottom: 52.40625, baseline: 13.53125
-          frag 0 from TextNode start: 16, length: 9, rect: [11,116.875 78.703125x17.46875]
+        line 2 width: 78.703125, height: 18.40625, bottom: 53.34375, baseline: 13.53125
+          frag 0 from TextNode start: 16, length: 9, rect: [11,115.9375 78.703125x17.46875]
             "snap snib"
-        line 3 width: 37.765625, height: 17.46875, bottom: 69.875, baseline: 13.53125
-          frag 0 from TextNode start: 26, length: 4, rect: [11,134.34375 37.765625x17.46875]
+        line 3 width: 37.765625, height: 17.875, bottom: 70.28125, baseline: 13.53125
+          frag 0 from TextNode start: 26, length: 4, rect: [11,133.9375 37.765625x17.46875]
             "snab"
         TextNode <#text>
 
 PaintableWithLines (Viewport<#document>) [0,0 800x600]
-  PaintableWithLines (BlockContainer<HTML>) [0,0 800x162.8125]
-    PaintableWithLines (BlockContainer<BODY>) [9,9 782x144.8125]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x163.21875]
+    PaintableWithLines (BlockContainer<BODY>) [9,9 782x145.21875]
       PaintableWithLines (BlockContainer<DIV>.px-indent) [10,10 780x70.9375]
         PaintableWithLines (BlockContainer(anonymous)) [11,11 778x17.46875]
           TextPaintable (TextNode<#text>)
         PaintableWithLines (BlockContainer<P>) [11,44.46875 778x19.46875]
           TextPaintable (TextNode<#text>)
-      PaintableWithLines (BlockContainer<DIV>.pct-indent) [10,80.9375 102x71.875]
+      PaintableWithLines (BlockContainer<DIV>.pct-indent) [10,80.9375 102x72.28125]
         TextPaintable (TextNode<#text>)
