@@ -398,6 +398,18 @@ struct ImageMetadata {
     Array<double, 15> up2_weight = s_d_up2;
     Array<double, 55> up4_weight = s_d_up4;
     Array<double, 210> up8_weight = s_d_up8;
+
+    u16 number_of_color_channels() const
+    {
+        if (!xyb_encoded && colour_encoding.colour_space == ColourEncoding::ColourSpace::kGrey)
+            return 1;
+        return 3;
+    }
+
+    u16 number_of_channels() const
+    {
+        return number_of_color_channels() + num_extra_channels;
+    }
 };
 
 static ErrorOr<ImageMetadata> read_metadata_header(LittleEndianInputBitStream& stream)
@@ -1169,14 +1181,18 @@ private:
 
 class Image {
 public:
-    static ErrorOr<Image> create(IntSize size)
+    static ErrorOr<Image> create(IntSize size, ImageMetadata const& metadata)
     {
         Image image {};
 
-        // FIXME: Don't assume three channels and a fixed size
-        TRY(image.m_channels.try_append(TRY(Channel::create(size.width(), size.height()))));
-        TRY(image.m_channels.try_append(TRY(Channel::create(size.width(), size.height()))));
-        TRY(image.m_channels.try_append(TRY(Channel::create(size.width(), size.height()))));
+        for (u16 i = 0; i < metadata.number_of_channels(); ++i) {
+            if (i < metadata.number_of_color_channels()) {
+                TRY(image.m_channels.try_append(TRY(Channel::create(size.width(), size.height()))));
+            } else {
+                auto const dim_shift = metadata.ec_info[i - metadata.number_of_color_channels()].dim_shift;
+                TRY(image.m_channels.try_append(TRY(Channel::create(size.width() >> dim_shift, size.height() >> dim_shift))));
+            }
+        }
 
         return image;
     }
@@ -1629,7 +1645,7 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
 
     frame.toc = TRY(read_toc(stream, frame.frame_header, frame.num_groups, frame.num_lf_groups));
 
-    image = TRY(Image::create({ frame.width, frame.height }));
+    image = TRY(Image::create({ frame.width, frame.height }, metadata));
 
     frame.lf_global = TRY(read_lf_global(stream, image, frame.frame_header, metadata, entropy_decoder));
 
