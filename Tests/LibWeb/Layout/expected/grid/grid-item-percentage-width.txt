@@ -7,7 +7,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             frag 0 from TextNode start: 0, length: 5, rect: [8,8 42.140625x17.46875]
               "First"
           TextNode <#text>
-        BlockContainer <div.second> at (400,8) content-size 78.390625x17.46875 [BFC] children: inline
+        BlockContainer <div.second> at (400,8) content-size 78.40625x17.46875 [BFC] children: inline
           line 0 width: 57.40625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
             frag 0 from TextNode start: 0, length: 6, rect: [400,8 57.40625x17.46875]
               "Second"
@@ -19,5 +19,5 @@ PaintableWithLines (Viewport<#document>) [0,0 800x600]
       PaintableBox (Box<DIV>.grid-container) [8,8 784x17.46875]
         PaintableWithLines (BlockContainer<DIV>.first) [8,8 313.59375x17.46875]
           TextPaintable (TextNode<#text>)
-        PaintableWithLines (BlockContainer<DIV>.second) [400,8 78.390625x17.46875]
+        PaintableWithLines (BlockContainer<DIV>.second) [400,8 78.40625x17.46875]
           TextPaintable (TextNode<#text>)

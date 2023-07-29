@@ -2,7 +2,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x68.40625 [BFC] children: not-inline
     Box <body.pink> at (8,8) content-size 784x52.40625 flex-container(row) [FFC] children: not-inline
       Box <div.orange> at (8,8) content-size 194.71875x52.40625 flex-container(row) flex-item [FFC] children: not-inline
-        BlockContainer <div.lime> at (8,8) content-size 87.34375x52.40625 flex-item [BFC] children: inline
+        BlockContainer <div.lime> at (8,8) content-size 87.359375x52.40625 flex-item [BFC] children: inline
           line 0 width: 74.75, height: 17.46875, bottom: 17.46875, baseline: 13.53125
             frag 0 from TextNode start: 0, length: 9, rect: [8,8 74.75x17.46875]
               "This is a"
@@ -18,5 +18,5 @@ PaintableWithLines (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x68.40625]
     PaintableBox (Box<BODY>.pink) [8,8 784x52.40625]
       PaintableBox (Box<DIV>.orange) [8,8 194.71875x52.40625]
-        PaintableWithLines (BlockContainer<DIV>.lime) [8,8 87.34375x52.40625]
+        PaintableWithLines (BlockContainer<DIV>.lime) [8,8 87.359375x52.40625]
           TextPaintable (TextNode<#text>)

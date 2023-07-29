@@ -3,9 +3,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
     BlockContainer <body> at (8,8) content-size 784x17.46875 children: not-inline
       BlockContainer <div> at (8,8) content-size 784x17.46875 children: not-inline
         Box <div.grid> at (8,8) content-size 784x17.46875 [GFC] children: not-inline
-          BlockContainer <div.item> at (243.1875,8) content-size 313.625x17.46875 [BFC] children: inline
+          BlockContainer <div.item> at (243.203125,8) content-size 313.59375x17.46875 [BFC] children: inline
             line 0 width: 121.0625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-              frag 0 from TextNode start: 0, length: 16, rect: [243.1875,8 121.0625x17.46875]
+              frag 0 from TextNode start: 0, length: 16, rect: [243.203125,8 121.0625x17.46875]
                 "A filthy t-shirt"
             TextNode <#text>
 

@@ -4,23 +4,23 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       Box <div.container> at (9,9) content-size 500x102 flex-container(row) [FFC] children: not-inline
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.box> at (10,10) content-size 164.65625x100 flex-item [BFC] children: inline
+        BlockContainer <div.box> at (10,10) content-size 164.671875x100 flex-item [BFC] children: inline
           line 0 width: 6.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
             frag 0 from TextNode start: 0, length: 1, rect: [10,10 6.34375x17.46875]
               "1"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.box> at (176.65625,10) content-size 164.65625x100 flex-item [BFC] children: inline
+        BlockContainer <div.box> at (176.671875,10) content-size 164.671875x100 flex-item [BFC] children: inline
           line 0 width: 8.8125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 1, rect: [176.65625,10 8.8125x17.46875]
+            frag 0 from TextNode start: 0, length: 1, rect: [176.671875,10 8.8125x17.46875]
               "2"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.box> at (343.3125,10) content-size 164.65625x100 flex-item [BFC] children: inline
+        BlockContainer <div.box> at (343.34375,10) content-size 164.671875x100 flex-item [BFC] children: inline
           line 0 width: 9.09375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 1, rect: [343.3125,10 9.09375x17.46875]
+            frag 0 from TextNode start: 0, length: 1, rect: [343.34375,10 9.09375x17.46875]
               "3"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
@@ -31,11 +31,11 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
 PaintableWithLines (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
     PaintableWithLines (BlockContainer<BODY>) [8,8 784x104]
-      PaintableBox (Box<DIV>.container) [8,8 502x104]
-        PaintableWithLines (BlockContainer<DIV>.box) [9,9 166.65625x102]
+      PaintableBox (Box<DIV>.container) [8,8 502x104] overflow: [9,9 500.015625x102]
+        PaintableWithLines (BlockContainer<DIV>.box) [9,9 166.671875x102]
           TextPaintable (TextNode<#text>)
-        PaintableWithLines (BlockContainer<DIV>.box) [175.65625,9 166.65625x102]
+        PaintableWithLines (BlockContainer<DIV>.box) [175.671875,9 166.671875x102]
           TextPaintable (TextNode<#text>)
-        PaintableWithLines (BlockContainer<DIV>.box) [342.3125,9 166.65625x102]
+        PaintableWithLines (BlockContainer<DIV>.box) [342.34375,9 166.671875x102]
           TextPaintable (TextNode<#text>)
       PaintableWithLines (BlockContainer(anonymous)) [8,112 784x0]
