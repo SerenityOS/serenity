@@ -410,6 +410,16 @@ struct ImageMetadata {
     {
         return number_of_color_channels() + num_extra_channels;
     }
+
+    Optional<u16> alpha_channel() const
+    {
+        for (u16 i = 0; i < ec_info.size(); ++i) {
+            if (ec_info[i].type == ExtraChannelInfo::ExtraChannelType::kAlpha)
+                return i + number_of_color_channels();
+        }
+
+        return OptionalNone {};
+    }
 };
 
 static ErrorOr<ImageMetadata> read_metadata_header(LittleEndianInputBitStream& stream)
@@ -1197,15 +1207,17 @@ public:
         return image;
     }
 
-    ErrorOr<NonnullRefPtr<Bitmap>> to_bitmap(u8 bits_per_sample) const
+    ErrorOr<NonnullRefPtr<Bitmap>> to_bitmap(ImageMetadata& metadata) const
     {
         // FIXME: which channel size should we use?
         auto const width = m_channels[0].width();
         auto const height = m_channels[0].height();
 
-        auto bitmap = TRY(Bitmap::create(BitmapFormat::BGRx8888, { width, height }));
+        auto bitmap = TRY(Bitmap::create(BitmapFormat::BGRA8888, { width, height }));
 
-        // FIXME: This assumes a raw image with RGB channels, other cases are possible
+        auto const alpha_channel = metadata.alpha_channel();
+
+        auto const bits_per_sample = metadata.bit_depth.bits_per_sample;
         VERIFY(bits_per_sample >= 8);
         for (u32 y {}; y < height; ++y) {
             for (u32 x {}; x < width; ++x) {
@@ -1218,11 +1230,20 @@ public:
                     return clamp(sample + .5, 0, (1 << maximum_supported_bit_depth) - 1);
                 };
 
-                Color const color {
-                    to_u8(m_channels[0].get(x, y)),
-                    to_u8(m_channels[1].get(x, y)),
-                    to_u8(m_channels[2].get(x, y)),
-                };
+                auto const color = [&]() -> Color {
+                    if (!alpha_channel.has_value()) {
+                        return { to_u8(m_channels[0].get(x, y)),
+                            to_u8(m_channels[1].get(x, y)),
+                            to_u8(m_channels[2].get(x, y)) };
+                    }
+
+                    return {
+                        to_u8(m_channels[0].get(x, y)),
+                        to_u8(m_channels[1].get(x, y)),
+                        to_u8(m_channels[2].get(x, y)),
+                        to_u8(m_channels[*alpha_channel].get(x, y)),
+                    };
+                }();
                 bitmap->set_pixel(x, y, color);
             }
         }
@@ -1767,6 +1788,19 @@ static ErrorOr<void> apply_image_features(Image& image, ImageMetadata const& met
 }
 ///
 
+/// L.4 - Extra channel rendering
+static ErrorOr<void> render_extra_channels(Image&, ImageMetadata const& metadata)
+{
+    for (u16 i = metadata.number_of_color_channels(); i < metadata.number_of_channels(); ++i) {
+        auto const ec_index = i - metadata.number_of_color_channels();
+        if (metadata.ec_info[ec_index].dim_shift != 0)
+            TODO();
+    }
+
+    return {};
+}
+///
+
 class JPEGXLLoadingContext {
 public:
     JPEGXLLoadingContext(NonnullOwnPtr<Stream> stream)
@@ -1805,7 +1839,9 @@ public:
         if (m_metadata.xyb_encoded || frame.frame_header.do_YCbCr)
             TODO();
 
-        m_bitmap = TRY(image.to_bitmap(m_metadata.bit_depth.bits_per_sample));
+        TRY(render_extra_channels(image, m_metadata));
+
+        m_bitmap = TRY(image.to_bitmap(m_metadata));
 
         return {};
     }
