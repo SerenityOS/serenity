@@ -10,6 +10,7 @@
 #include <AK/OwnPtr.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/DOM/DocumentLoadEventDelayer.h>
+#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/CORSSettingAttribute.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
@@ -21,7 +22,8 @@ namespace Web::HTML {
 class HTMLImageElement final
     : public HTMLElement
     , public FormAssociatedElement
-    , public Layout::ImageProvider {
+    , public Layout::ImageProvider
+    , public BrowsingContext::ViewportClient {
     WEB_PLATFORM_OBJECT(HTMLImageElement, HTMLElement);
     FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLImageElement)
 
@@ -48,6 +50,9 @@ public:
     bool complete() const;
 
     virtual Optional<ARIA::Role> default_role() const override;
+
+    // https://html.spec.whatwg.org/multipage/images.html#img-environment-changes
+    void react_to_changes_in_the_environment();
 
     // https://html.spec.whatwg.org/multipage/images.html#update-the-image-data
     ErrorOr<void> update_the_image_data(bool restart_the_animations = false, bool maybe_omit_events = false);
@@ -90,13 +95,17 @@ private:
     HTMLImageElement(DOM::Document&, DOM::QualifiedName);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void finalize() override;
 
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
+    virtual void browsing_context_did_set_viewport_rect(CSSPixelRect const&) override;
+
     void handle_successful_fetch(AK::URL const&, StringView mime_type, ImageRequest&, ByteBuffer, bool maybe_omit_events, AK::URL const& previous_url);
     void handle_failed_fetch();
+    void add_callbacks_to_image_request(NonnullRefPtr<ImageRequest>, bool maybe_omit_events, AK::URL const& url_string, AK::URL const& previous_url);
 
     void animate();
 
@@ -123,6 +132,8 @@ private:
     // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#lazy-load-resumption-steps
     // Each img and iframe element has associated lazy load resumption steps, initially null.
     JS::SafeFunction<void()> m_lazy_load_resumption_steps;
+
+    CSSPixelSize m_last_seen_viewport_size;
 };
 
 }
