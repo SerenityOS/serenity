@@ -459,11 +459,11 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
 
         auto compare_type = (CharacterCompareType)m_bytecode->at(offset++);
 
-        if (compare_type == CharacterCompareType::Inverse) {
+        switch (compare_type) {
+        case CharacterCompareType::Inverse:
             inverse = !inverse;
             continue;
-
-        } else if (compare_type == CharacterCompareType::TemporaryInverse) {
+        case CharacterCompareType::TemporaryInverse:
             // If "TemporaryInverse" is given, negate the current inversion state only for the next opcode.
             // it follows that this cannot be the last compare element.
             VERIFY(i != arguments_count() - 1);
@@ -471,8 +471,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
             temporary_inverse = true;
             reset_temp_inverse = false;
             continue;
-
-        } else if (compare_type == CharacterCompareType::Char) {
+        case CharacterCompareType::Char: {
             u32 ch = m_bytecode->at(offset++);
 
             // We want to compare a string that is longer or equal in length to the available string
@@ -480,8 +479,9 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
             compare_char(input, state, ch, current_inversion_state(), inverse_matched);
-
-        } else if (compare_type == CharacterCompareType::AnyChar) {
+            break;
+        }
+        case CharacterCompareType::AnyChar: {
             // We want to compare a string that is definitely longer than the available string
             if (input.view.length() <= state.string_position)
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
@@ -498,8 +498,9 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
                 else
                     advance_string_position(state, input.view, input_view);
             }
-
-        } else if (compare_type == CharacterCompareType::String) {
+            break;
+        }
+        case CharacterCompareType::String: {
             VERIFY(!current_inversion_state());
 
             auto const& length = m_bytecode->at(offset++);
@@ -521,9 +522,9 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
                 if (current_inversion_state())
                     inverse_matched = true;
             }
-
-        } else if (compare_type == CharacterCompareType::CharClass) {
-
+            break;
+        }
+        case CharacterCompareType::CharClass: {
             if (input.view.length() <= state.string_position_in_code_units)
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
@@ -531,8 +532,9 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
             auto ch = input.view[state.string_position_in_code_units];
 
             compare_character_class(input, state, character_class, ch, current_inversion_state(), inverse_matched);
-
-        } else if (compare_type == CharacterCompareType::LookupTable) {
+            break;
+        }
+        case CharacterCompareType::LookupTable: {
             if (input.view.length() <= state.string_position)
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
@@ -565,8 +567,9 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
                 else
                     advance_string_position(state, input.view, ch);
             }
-
-        } else if (compare_type == CharacterCompareType::CharRange) {
+            break;
+        }
+        case CharacterCompareType::CharRange: {
             if (input.view.length() <= state.string_position)
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
@@ -577,8 +580,9 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
             auto ch = input.view[state.string_position_in_code_units];
 
             compare_character_range(input, state, from, to, ch, current_inversion_state(), inverse_matched);
-
-        } else if (compare_type == CharacterCompareType::Reference) {
+            break;
+        }
+        case CharacterCompareType::Reference: {
             auto reference_number = (size_t)m_bytecode->at(offset++);
             auto& groups = state.capture_group_matches.at(input.match_index);
             if (groups.size() <= reference_number)
@@ -594,24 +598,29 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
                 if (current_inversion_state())
                     inverse_matched = true;
             }
-
-        } else if (compare_type == CharacterCompareType::Property) {
+            break;
+        }
+        case CharacterCompareType::Property: {
             auto property = static_cast<Unicode::Property>(m_bytecode->at(offset++));
             compare_property(input, state, property, current_inversion_state(), inverse_matched);
-
-        } else if (compare_type == CharacterCompareType::GeneralCategory) {
+            break;
+        }
+        case CharacterCompareType::GeneralCategory: {
             auto general_category = static_cast<Unicode::GeneralCategory>(m_bytecode->at(offset++));
             compare_general_category(input, state, general_category, current_inversion_state(), inverse_matched);
-
-        } else if (compare_type == CharacterCompareType::Script) {
+            break;
+        }
+        case CharacterCompareType::Script: {
             auto script = static_cast<Unicode::Script>(m_bytecode->at(offset++));
             compare_script(input, state, script, current_inversion_state(), inverse_matched);
-
-        } else if (compare_type == CharacterCompareType::ScriptExtension) {
+            break;
+        }
+        case CharacterCompareType::ScriptExtension: {
             auto script = static_cast<Unicode::Script>(m_bytecode->at(offset++));
             compare_script_extension(input, state, script, current_inversion_state(), inverse_matched);
-
-        } else if (compare_type == CharacterCompareType::And) {
+            break;
+        }
+        case CharacterCompareType::And:
             disjunction_states.append({
                 .active = true,
                 .is_conjunction = false,
@@ -620,8 +629,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
                 .initial_code_unit_position = state.string_position_in_code_units,
             });
             continue;
-
-        } else if (compare_type == CharacterCompareType::Or) {
+        case CharacterCompareType::Or:
             disjunction_states.append({
                 .active = true,
                 .is_conjunction = true,
@@ -630,15 +638,15 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
                 .initial_code_unit_position = state.string_position_in_code_units,
             });
             continue;
-
-        } else if (compare_type == CharacterCompareType::EndAndOr) {
+        case CharacterCompareType::EndAndOr: {
             auto disjunction_state = disjunction_states.take_last();
             if (!disjunction_state.fail) {
                 state.string_position = disjunction_state.last_accepted_position.value_or(disjunction_state.initial_position);
                 state.string_position_in_code_units = disjunction_state.last_accepted_code_unit_position.value_or(disjunction_state.initial_code_unit_position);
             }
-
-        } else {
+            break;
+        }
+        default:
             warnln("Undefined comparison: {}", (int)compare_type);
             VERIFY_NOT_REACHED();
             break;
