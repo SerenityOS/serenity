@@ -41,6 +41,7 @@ shared_library("LibGfx") {
     "ImageFormats/DDSLoader.cpp",
     "ImageFormats/GIFLoader.cpp",
     "ImageFormats/ICOLoader.cpp",
+    "ImageFormats/ILBMLoader.cpp",
     "ImageFormats/ImageDecoder.cpp",
     "ImageFormats/JPEGLoader.cpp",
     "ImageFormats/JPEGWriter.cpp",

@@ -132,6 +132,7 @@ static Array const s_registered_mime_type = {
     MimeType { .name = "image/vnd.ms-dds"sv, .common_extensions = { ".dds"sv }, .description = "DDS image data"sv, .magic_bytes = Vector<u8> { 'D', 'D', 'S', ' ' } },
     MimeType { .name = "image/webp"sv, .common_extensions = { ".webp"sv }, .description = "WebP image data"sv, .magic_bytes = Vector<u8> { 'W', 'E', 'B', 'P' }, .offset = 8 },
     MimeType { .name = "image/x-icon"sv, .common_extensions = { ".ico"sv }, .description = "ICO image data"sv },
+    MimeType { .name = "image/x-ilbm"sv, .common_extensions = { ".iff"sv }, .description = "Interleaved bitmap image data"sv, .magic_bytes = Vector<u8> { 0x46, 0x4F, 0x52, 0x4F } },
     MimeType { .name = "image/x-portable-bitmap"sv, .common_extensions = { ".pbm"sv }, .description = "PBM image data"sv, .magic_bytes = Vector<u8> { 0x50, 0x31, 0x0A } },
     MimeType { .name = "image/x-portable-graymap"sv, .common_extensions = { ".pgm"sv }, .description = "PGM image data"sv, .magic_bytes = Vector<u8> { 0x50, 0x32, 0x0A } },
     MimeType { .name = "image/x-portable-pixmap"sv, .common_extensions = { ".ppm"sv }, .description = "PPM image data"sv, .magic_bytes = Vector<u8> { 0x50, 0x33, 0x0A } },
