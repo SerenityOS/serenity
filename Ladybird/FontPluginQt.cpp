@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -11,8 +11,6 @@
 #include <LibCore/StandardPaths.h>
 #include <LibGfx/Font/Emoji.h>
 #include <LibGfx/Font/FontDatabase.h>
-#include <QFont>
-#include <QFontInfo>
 
 extern DeprecatedString s_serenity_resource_root;
 
@@ -59,44 +57,27 @@ Gfx::Font& FontPluginQt::default_fixed_width_font()
 void FontPluginQt::update_generic_fonts()
 {
     // How we choose which system font to use for each CSS font:
-    // 1. Ask Qt via the QFont::StyleHint mechanism for the user's preferred font.
-    // 2. Try loading that font through Gfx::FontDatabase
-    // 3. If we don't support that font for whatever reason (e.g missing TrueType features in LibGfx)...
-    //    1. Try a list of known-suitable fallback fonts with their names hard-coded below
-    //    2. If that didn't work, fall back to Gfx::FontDatabase::default_font() (or default_fixed_width_font())
+    // 1. Try a list of known-suitable fonts with their names hard-coded below.
+    // 2. If that didn't work, fall back to Gfx::FontDatabase::default_font() (or default_fixed_width_font())
 
-    // This is rather weird, but it's how things work right now, as we can only draw with fonts loaded by LibGfx.
+    // This is rather weird, but it's how things work right now.
+    // We should eventually have a way to query the system for the default font.
+    // Furthermore, we should allow overriding via some kind of configuration mechanism.
 
     m_generic_font_names.resize(static_cast<size_t>(Web::Platform::GenericFont::__Count));
 
-    auto update_mapping = [&](Web::Platform::GenericFont generic_font, QFont::StyleHint qfont_style_hint, ReadonlySpan<DeprecatedString> fallbacks) {
+    auto update_mapping = [&](Web::Platform::GenericFont generic_font, ReadonlySpan<DeprecatedString> fallbacks) {
         if (m_is_layout_test_mode) {
             m_generic_font_names[static_cast<size_t>(generic_font)] = "SerenitySans";
             return;
         }
 
-        QFont qt_font;
-        qt_font.setStyleHint(qfont_style_hint);
+        RefPtr<Gfx::Font const> gfx_font;
 
-        // NOTE: This is a workaround for setStyleHint being a no-op on X11 systems. See:
-        //       https://doc.qt.io/qt-6/qfont.html#setStyleHint
-        if (generic_font == Web::Platform::GenericFont::Monospace)
-            qt_font.setFamily("monospace");
-        else if (generic_font == Web::Platform::GenericFont::Fantasy)
-            qt_font.setFamily("fantasy");
-        else if (generic_font == Web::Platform::GenericFont::Cursive)
-            qt_font.setFamily("cursive");
-
-        QFontInfo qt_info(qt_font);
-        auto qt_font_family = qt_info.family();
-
-        auto gfx_font = Gfx::FontDatabase::the().get(qt_font_family.toUtf8().data(), 16, 400, Gfx::FontWidth::Normal, 0, Gfx::Font::AllowInexactSizeMatch::Yes);
-        if (!gfx_font) {
-            for (auto& fallback : fallbacks) {
-                gfx_font = Gfx::FontDatabase::the().get(fallback, 16, 400, Gfx::FontWidth::Normal, 0, Gfx::Font::AllowInexactSizeMatch::Yes);
-                if (gfx_font)
-                    break;
-            }
+        for (auto& fallback : fallbacks) {
+            gfx_font = Gfx::FontDatabase::the().get(fallback, 16, 400, Gfx::FontWidth::Normal, 0, Gfx::Font::AllowInexactSizeMatch::Yes);
+            if (gfx_font)
+                break;
         }
 
         if (!gfx_font) {
@@ -117,15 +98,15 @@ void FontPluginQt::update_generic_fonts()
     Vector<DeprecatedString> sans_serif_fallbacks { "Arial", "Helvetica", "Verdana", "Trebuchet MS", "Gill Sans", "Noto Sans", "Avantgarde", "Optima", "Arial Narrow", "Liberation Sans", "Katica" };
     Vector<DeprecatedString> serif_fallbacks { "Times", "Times New Roman", "Didot", "Georgia", "Palatino", "Bookman", "New Century Schoolbook", "American Typewriter", "Liberation Serif", "Roman" };
 
-    update_mapping(Web::Platform::GenericFont::Cursive, QFont::StyleHint::Cursive, cursive_fallbacks);
-    update_mapping(Web::Platform::GenericFont::Fantasy, QFont::StyleHint::Fantasy, fantasy_fallbacks);
-    update_mapping(Web::Platform::GenericFont::Monospace, QFont::StyleHint::Monospace, monospace_fallbacks);
-    update_mapping(Web::Platform::GenericFont::SansSerif, QFont::StyleHint::SansSerif, sans_serif_fallbacks);
-    update_mapping(Web::Platform::GenericFont::Serif, QFont::StyleHint::Serif, serif_fallbacks);
-    update_mapping(Web::Platform::GenericFont::UiMonospace, QFont::StyleHint::Monospace, monospace_fallbacks);
-    update_mapping(Web::Platform::GenericFont::UiRounded, QFont::StyleHint::SansSerif, sans_serif_fallbacks);
-    update_mapping(Web::Platform::GenericFont::UiSansSerif, QFont::StyleHint::SansSerif, sans_serif_fallbacks);
-    update_mapping(Web::Platform::GenericFont::UiSerif, QFont::StyleHint::Serif, serif_fallbacks);
+    update_mapping(Web::Platform::GenericFont::Cursive, cursive_fallbacks);
+    update_mapping(Web::Platform::GenericFont::Fantasy, fantasy_fallbacks);
+    update_mapping(Web::Platform::GenericFont::Monospace, monospace_fallbacks);
+    update_mapping(Web::Platform::GenericFont::SansSerif, sans_serif_fallbacks);
+    update_mapping(Web::Platform::GenericFont::Serif, serif_fallbacks);
+    update_mapping(Web::Platform::GenericFont::UiMonospace, monospace_fallbacks);
+    update_mapping(Web::Platform::GenericFont::UiRounded, sans_serif_fallbacks);
+    update_mapping(Web::Platform::GenericFont::UiSansSerif, sans_serif_fallbacks);
+    update_mapping(Web::Platform::GenericFont::UiSerif, serif_fallbacks);
 }
 
 DeprecatedString FontPluginQt::generic_font_name(Web::Platform::GenericFont generic_font)
