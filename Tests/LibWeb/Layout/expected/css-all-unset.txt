@@ -1,0 +1,12 @@
+Viewport <#document> at (0,0) content-size 800x600 children: inline
+  line 0 width: 238.125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+    frag 0 from TextNode start: 1, length: 18, rect: [0,0 134.984375x17.46875]
+      "* { all: unset; } "
+    frag 1 from TextNode start: 0, length: 13, rect: [134.984375,0 103.140625x17.46875]
+      "Hello friends"
+  InlineNode <html>
+    InlineNode <head>
+      InlineNode <style>
+        TextNode <#text>
+    InlineNode <body>
+      TextNode <#text>
