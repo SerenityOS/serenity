@@ -17,6 +17,7 @@
 #include <LibWeb/CSS/CSSKeyframeRule.h>
 #include <LibWeb/CSS/CSSKeyframesRule.h>
 #include <LibWeb/CSS/CSSMediaRule.h>
+#include <LibWeb/CSS/CSSNamespaceRule.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
@@ -3240,6 +3241,37 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
             }
 
             return CSSKeyframesRule::create(m_context.realm(), name, move(keyframes)).release_value_but_fixme_should_propagate_errors();
+        }
+        if (rule->at_rule_name().equals_ignoring_ascii_case("namespace"sv)) {
+            // https://drafts.csswg.org/css-namespaces/#syntax
+            auto token_stream = TokenStream { rule->prelude() };
+            token_stream.skip_whitespace();
+
+            auto token = token_stream.next_token();
+            Optional<StringView> prefix = {};
+            if (token.is(Token::Type::Ident)) {
+                prefix = token.token().ident();
+                token_stream.skip_whitespace();
+                token = token_stream.next_token();
+            }
+
+            DeprecatedString namespace_uri;
+            if (token.is(Token::Type::String)) {
+                namespace_uri = token.token().string();
+            } else if (auto url = parse_url_function(token, AllowedDataUrlType::None); url.has_value()) {
+                namespace_uri = url.value().to_deprecated_string();
+            } else {
+                dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @namespace rule invalid; discarding.");
+                return {};
+            }
+
+            token_stream.skip_whitespace();
+            if (token_stream.has_next_token()) {
+                dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @namespace rule invalid; discarding.");
+                return {};
+            }
+
+            return CSSNamespaceRule::create(m_context.realm(), prefix, namespace_uri).release_value_but_fixme_should_propagate_errors();
         }
 
         // FIXME: More at rules!
