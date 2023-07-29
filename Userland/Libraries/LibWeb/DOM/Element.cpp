@@ -15,6 +15,7 @@
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
 #include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/CSS/StyleComputer.h>
+#include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/DOM/Attr.h>
 #include <LibWeb/DOM/DOMTokenList.h>
 #include <LibWeb/DOM/Document.h>
@@ -420,8 +421,18 @@ static Element::RequiredInvalidationAfterStyleChange compute_required_invalidati
         } else if (CSS::property_affects_layout(property_id)) {
             invalidation.relayout = true;
         }
-        if (CSS::property_affects_stacking_context(property_id))
+        if (property_id == CSS::PropertyID::Opacity) {
+            // OPTIMIZATION: An element creates a stacking context when its opacity changes from 1 to less than 1
+            //               and stops to create one when opacity returns to 1. So stacking context tree rebuild is
+            //               not required for opacity changes within the range below 1.
+            auto old_value_opacity = old_value.has_value() ? old_value->style->as_number().number() : 1;
+            auto new_value_opacity = new_value.has_value() ? new_value->style->as_number().number() : 1;
+            if (old_value_opacity != new_value_opacity && (old_value_opacity == 1 || new_value_opacity == 1)) {
+                invalidation.rebuild_stacking_context_tree = true;
+            }
+        } else if (CSS::property_affects_stacking_context(property_id)) {
             invalidation.rebuild_stacking_context_tree = true;
+        }
         invalidation.repaint = true;
     }
     return invalidation;
