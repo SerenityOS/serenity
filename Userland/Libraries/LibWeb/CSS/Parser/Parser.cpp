@@ -76,6 +76,7 @@
 #include <LibWeb/CSS/StyleValues/RatioStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RectStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ResolutionStyleValue.h>
+#include <LibWeb/CSS/StyleValues/RevertStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StringStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
@@ -3352,7 +3353,9 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_builtin_value(ComponentValue const& co
             return InitialStyleValue::the();
         if (ident.equals_ignoring_ascii_case("unset"sv))
             return UnsetStyleValue::the();
-        // FIXME: Implement `revert` and `revert-layer` keywords, from Cascade4 and Cascade5 respectively
+        if (ident.equals_ignoring_ascii_case("revert"sv))
+            return RevertStyleValue::the();
+        // FIXME: Implement `revert-layer` from CSS-CASCADE-5.
     }
 
     return nullptr;

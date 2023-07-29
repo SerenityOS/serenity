@@ -287,8 +287,18 @@ static bool contains(Edge a, Edge b)
     return a == b || b == Edge::All;
 }
 
-static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, StyleValue const& value, DOM::Document& document, CSS::CSSStyleDeclaration const* declaration)
+static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, StyleValue const& value, DOM::Document& document, CSS::CSSStyleDeclaration const* declaration, StyleProperties::PropertyValues const& properties_for_revert)
 {
+    auto set_longhand_property = [&](CSS::PropertyID property_id, StyleValue const& value) {
+        if (value.is_revert()) {
+            auto& property_in_previous_cascade_origin = properties_for_revert[to_underlying(property_id)];
+            if (property_in_previous_cascade_origin.has_value())
+                style.set_property(property_id, property_in_previous_cascade_origin->style, property_in_previous_cascade_origin->declaration);
+        } else {
+            style.set_property(property_id, value, declaration);
+        }
+    };
+
     auto map_logical_property_to_real_property = [](PropertyID property_id) -> Optional<PropertyID> {
         // FIXME: Honor writing-mode, direction and text-orientation.
         switch (property_id) {
@@ -346,18 +356,18 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     };
 
     if (auto real_property_id = map_logical_property_to_real_property(property_id); real_property_id.has_value())
-        return set_property_expanding_shorthands(style, real_property_id.value(), value, document, declaration);
+        return set_property_expanding_shorthands(style, real_property_id.value(), value, document, declaration, properties_for_revert);
 
     if (auto real_property_ids = map_logical_property_to_real_properties(property_id); real_property_ids.has_value()) {
         if (value.is_value_list() && value.as_value_list().size() == 2) {
             auto const& start = value.as_value_list().values()[0];
             auto const& end = value.as_value_list().values()[1];
-            set_property_expanding_shorthands(style, real_property_ids->start, start, document, declaration);
-            set_property_expanding_shorthands(style, real_property_ids->end, end, document, declaration);
+            set_property_expanding_shorthands(style, real_property_ids->start, start, document, declaration, properties_for_revert);
+            set_property_expanding_shorthands(style, real_property_ids->end, end, document, declaration, properties_for_revert);
             return;
         }
-        set_property_expanding_shorthands(style, real_property_ids->start, value, document, declaration);
-        set_property_expanding_shorthands(style, real_property_ids->end, value, document, declaration);
+        set_property_expanding_shorthands(style, real_property_ids->start, value, document, declaration, properties_for_revert);
+        set_property_expanding_shorthands(style, real_property_ids->end, value, document, declaration, properties_for_revert);
         return;
     }
 
@@ -366,68 +376,68 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         auto& properties = composite_value.sub_properties();
         auto& values = composite_value.values();
         for (size_t i = 0; i < properties.size(); ++i)
-            set_property_expanding_shorthands(style, properties[i], values[i], document, declaration);
+            set_property_expanding_shorthands(style, properties[i], values[i], document, declaration, properties_for_revert);
     }
 
-    auto assign_edge_values = [&style, &declaration](PropertyID top_property, PropertyID right_property, PropertyID bottom_property, PropertyID left_property, auto const& values) {
+    auto assign_edge_values = [&](PropertyID top_property, PropertyID right_property, PropertyID bottom_property, PropertyID left_property, auto const& values) {
         if (values.size() == 4) {
-            style.set_property(top_property, values[0], declaration);
-            style.set_property(right_property, values[1], declaration);
-            style.set_property(bottom_property, values[2], declaration);
-            style.set_property(left_property, values[3], declaration);
+            set_longhand_property(top_property, values[0]);
+            set_longhand_property(right_property, values[1]);
+            set_longhand_property(bottom_property, values[2]);
+            set_longhand_property(left_property, values[3]);
         } else if (values.size() == 3) {
-            style.set_property(top_property, values[0], declaration);
-            style.set_property(right_property, values[1], declaration);
-            style.set_property(bottom_property, values[2], declaration);
-            style.set_property(left_property, values[1], declaration);
+            set_longhand_property(top_property, values[0]);
+            set_longhand_property(right_property, values[1]);
+            set_longhand_property(bottom_property, values[2]);
+            set_longhand_property(left_property, values[1]);
         } else if (values.size() == 2) {
-            style.set_property(top_property, values[0], declaration);
-            style.set_property(right_property, values[1], declaration);
-            style.set_property(bottom_property, values[0], declaration);
-            style.set_property(left_property, values[1], declaration);
+            set_longhand_property(top_property, values[0]);
+            set_longhand_property(right_property, values[1]);
+            set_longhand_property(bottom_property, values[0]);
+            set_longhand_property(left_property, values[1]);
         } else if (values.size() == 1) {
-            style.set_property(top_property, values[0], declaration);
-            style.set_property(right_property, values[0], declaration);
-            style.set_property(bottom_property, values[0], declaration);
-            style.set_property(left_property, values[0], declaration);
+            set_longhand_property(top_property, values[0]);
+            set_longhand_property(right_property, values[0]);
+            set_longhand_property(bottom_property, values[0]);
+            set_longhand_property(left_property, values[0]);
         }
     };
 
     if (property_id == CSS::PropertyID::TextDecoration) {
         if (value.is_text_decoration()) {
             auto const& text_decoration = value.as_text_decoration();
-            style.set_property(CSS::PropertyID::TextDecorationLine, text_decoration.line(), declaration);
-            style.set_property(CSS::PropertyID::TextDecorationThickness, text_decoration.thickness(), declaration);
-            style.set_property(CSS::PropertyID::TextDecorationStyle, text_decoration.style(), declaration);
-            style.set_property(CSS::PropertyID::TextDecorationColor, text_decoration.color(), declaration);
+            set_longhand_property(CSS::PropertyID::TextDecorationLine, text_decoration.line());
+            set_longhand_property(CSS::PropertyID::TextDecorationThickness, text_decoration.thickness());
+            set_longhand_property(CSS::PropertyID::TextDecorationStyle, text_decoration.style());
+            set_longhand_property(CSS::PropertyID::TextDecorationColor, text_decoration.color());
             return;
         }
 
-        style.set_property(CSS::PropertyID::TextDecorationLine, value, declaration);
-        style.set_property(CSS::PropertyID::TextDecorationThickness, value, declaration);
-        style.set_property(CSS::PropertyID::TextDecorationStyle, value, declaration);
-        style.set_property(CSS::PropertyID::TextDecorationColor, value, declaration);
+        set_longhand_property(CSS::PropertyID::TextDecorationLine, value);
+        set_longhand_property(CSS::PropertyID::TextDecorationThickness, value);
+        set_longhand_property(CSS::PropertyID::TextDecorationStyle, value);
+        set_longhand_property(CSS::PropertyID::TextDecorationColor, value);
         return;
     }
 
     if (property_id == CSS::PropertyID::Overflow) {
         if (value.is_overflow()) {
             auto const& overflow = value.as_overflow();
-            style.set_property(CSS::PropertyID::OverflowX, overflow.overflow_x(), declaration);
-            style.set_property(CSS::PropertyID::OverflowY, overflow.overflow_y(), declaration);
+            set_longhand_property(CSS::PropertyID::OverflowX, overflow.overflow_x());
+            set_longhand_property(CSS::PropertyID::OverflowY, overflow.overflow_y());
             return;
         }
 
-        style.set_property(CSS::PropertyID::OverflowX, value, declaration);
-        style.set_property(CSS::PropertyID::OverflowY, value, declaration);
+        set_longhand_property(CSS::PropertyID::OverflowX, value);
+        set_longhand_property(CSS::PropertyID::OverflowY, value);
         return;
     }
 
     if (property_id == CSS::PropertyID::PlaceContent) {
         if (value.is_place_content()) {
             auto const& place_content = value.as_place_content();
-            style.set_property(CSS::PropertyID::AlignContent, place_content.align_content());
-            style.set_property(CSS::PropertyID::JustifyContent, place_content.justify_content());
+            set_longhand_property(CSS::PropertyID::AlignContent, place_content.align_content());
+            set_longhand_property(CSS::PropertyID::JustifyContent, place_content.justify_content());
             return;
         }
 
@@ -439,21 +449,21 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     if (property_id == CSS::PropertyID::PlaceItems) {
         if (value.is_place_items()) {
             auto const& place_items = value.as_place_items();
-            style.set_property(CSS::PropertyID::AlignItems, place_items.align_items());
-            style.set_property(CSS::PropertyID::JustifyItems, place_items.justify_items());
+            set_longhand_property(CSS::PropertyID::AlignItems, place_items.align_items());
+            set_longhand_property(CSS::PropertyID::JustifyItems, place_items.justify_items());
             return;
         }
 
-        style.set_property(CSS::PropertyID::AlignItems, value);
-        style.set_property(CSS::PropertyID::JustifyItems, value);
+        set_longhand_property(CSS::PropertyID::AlignItems, value);
+        set_longhand_property(CSS::PropertyID::JustifyItems, value);
         return;
     }
 
     if (property_id == CSS::PropertyID::Border) {
-        set_property_expanding_shorthands(style, CSS::PropertyID::BorderTop, value, document, declaration);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BorderRight, value, document, declaration);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BorderBottom, value, document, declaration);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BorderLeft, value, document, declaration);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BorderTop, value, document, declaration, properties_for_revert);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BorderRight, value, document, declaration, properties_for_revert);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BorderBottom, value, document, declaration, properties_for_revert);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BorderLeft, value, document, declaration, properties_for_revert);
         // FIXME: Also reset border-image, in line with the spec: https://www.w3.org/TR/css-backgrounds-3/#border-shorthands
         return;
     }
@@ -461,17 +471,17 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     if (property_id == CSS::PropertyID::BorderRadius) {
         if (value.is_border_radius_shorthand()) {
             auto const& shorthand = value.as_border_radius_shorthand();
-            style.set_property(CSS::PropertyID::BorderTopLeftRadius, shorthand.top_left(), declaration);
-            style.set_property(CSS::PropertyID::BorderTopRightRadius, shorthand.top_right(), declaration);
-            style.set_property(CSS::PropertyID::BorderBottomRightRadius, shorthand.bottom_right(), declaration);
-            style.set_property(CSS::PropertyID::BorderBottomLeftRadius, shorthand.bottom_left(), declaration);
+            set_longhand_property(CSS::PropertyID::BorderTopLeftRadius, shorthand.top_left());
+            set_longhand_property(CSS::PropertyID::BorderTopRightRadius, shorthand.top_right());
+            set_longhand_property(CSS::PropertyID::BorderBottomRightRadius, shorthand.bottom_right());
+            set_longhand_property(CSS::PropertyID::BorderBottomLeftRadius, shorthand.bottom_left());
             return;
         }
 
-        style.set_property(CSS::PropertyID::BorderTopLeftRadius, value, declaration);
-        style.set_property(CSS::PropertyID::BorderTopRightRadius, value, declaration);
-        style.set_property(CSS::PropertyID::BorderBottomRightRadius, value, declaration);
-        style.set_property(CSS::PropertyID::BorderBottomLeftRadius, value, declaration);
+        set_longhand_property(CSS::PropertyID::BorderTopLeftRadius, value);
+        set_longhand_property(CSS::PropertyID::BorderTopRightRadius, value);
+        set_longhand_property(CSS::PropertyID::BorderBottomRightRadius, value);
+        set_longhand_property(CSS::PropertyID::BorderBottomLeftRadius, value);
         return;
     }
 
@@ -501,24 +511,24 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         if (value.is_border()) {
             auto const& border = value.as_border();
             if (contains(Edge::Top, edge)) {
-                style.set_property(PropertyID::BorderTopWidth, border.border_width(), declaration);
-                style.set_property(PropertyID::BorderTopStyle, border.border_style(), declaration);
-                style.set_property(PropertyID::BorderTopColor, border.border_color(), declaration);
+                set_longhand_property(PropertyID::BorderTopWidth, border.border_width());
+                set_longhand_property(PropertyID::BorderTopStyle, border.border_style());
+                set_longhand_property(PropertyID::BorderTopColor, border.border_color());
             }
             if (contains(Edge::Right, edge)) {
-                style.set_property(PropertyID::BorderRightWidth, border.border_width(), declaration);
-                style.set_property(PropertyID::BorderRightStyle, border.border_style(), declaration);
-                style.set_property(PropertyID::BorderRightColor, border.border_color(), declaration);
+                set_longhand_property(PropertyID::BorderRightWidth, border.border_width());
+                set_longhand_property(PropertyID::BorderRightStyle, border.border_style());
+                set_longhand_property(PropertyID::BorderRightColor, border.border_color());
             }
             if (contains(Edge::Bottom, edge)) {
-                style.set_property(PropertyID::BorderBottomWidth, border.border_width(), declaration);
-                style.set_property(PropertyID::BorderBottomStyle, border.border_style(), declaration);
-                style.set_property(PropertyID::BorderBottomColor, border.border_color(), declaration);
+                set_longhand_property(PropertyID::BorderBottomWidth, border.border_width());
+                set_longhand_property(PropertyID::BorderBottomStyle, border.border_style());
+                set_longhand_property(PropertyID::BorderBottomColor, border.border_color());
             }
             if (contains(Edge::Left, edge)) {
-                style.set_property(PropertyID::BorderLeftWidth, border.border_width(), declaration);
-                style.set_property(PropertyID::BorderLeftStyle, border.border_style(), declaration);
-                style.set_property(PropertyID::BorderLeftColor, border.border_color(), declaration);
+                set_longhand_property(PropertyID::BorderLeftWidth, border.border_width());
+                set_longhand_property(PropertyID::BorderLeftStyle, border.border_style());
+                set_longhand_property(PropertyID::BorderLeftColor, border.border_color());
             }
             return;
         }
@@ -532,10 +542,10 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return;
         }
 
-        style.set_property(CSS::PropertyID::BorderTopStyle, value, declaration);
-        style.set_property(CSS::PropertyID::BorderRightStyle, value, declaration);
-        style.set_property(CSS::PropertyID::BorderBottomStyle, value, declaration);
-        style.set_property(CSS::PropertyID::BorderLeftStyle, value, declaration);
+        set_longhand_property(CSS::PropertyID::BorderTopStyle, value);
+        set_longhand_property(CSS::PropertyID::BorderRightStyle, value);
+        set_longhand_property(CSS::PropertyID::BorderBottomStyle, value);
+        set_longhand_property(CSS::PropertyID::BorderLeftStyle, value);
         return;
     }
 
@@ -546,10 +556,10 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return;
         }
 
-        style.set_property(CSS::PropertyID::BorderTopWidth, value, declaration);
-        style.set_property(CSS::PropertyID::BorderRightWidth, value, declaration);
-        style.set_property(CSS::PropertyID::BorderBottomWidth, value, declaration);
-        style.set_property(CSS::PropertyID::BorderLeftWidth, value, declaration);
+        set_longhand_property(CSS::PropertyID::BorderTopWidth, value);
+        set_longhand_property(CSS::PropertyID::BorderRightWidth, value);
+        set_longhand_property(CSS::PropertyID::BorderBottomWidth, value);
+        set_longhand_property(CSS::PropertyID::BorderLeftWidth, value);
         return;
     }
 
@@ -560,43 +570,43 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return;
         }
 
-        style.set_property(CSS::PropertyID::BorderTopColor, value, declaration);
-        style.set_property(CSS::PropertyID::BorderRightColor, value, declaration);
-        style.set_property(CSS::PropertyID::BorderBottomColor, value, declaration);
-        style.set_property(CSS::PropertyID::BorderLeftColor, value, declaration);
+        set_longhand_property(CSS::PropertyID::BorderTopColor, value);
+        set_longhand_property(CSS::PropertyID::BorderRightColor, value);
+        set_longhand_property(CSS::PropertyID::BorderBottomColor, value);
+        set_longhand_property(CSS::PropertyID::BorderLeftColor, value);
         return;
     }
 
     if (property_id == CSS::PropertyID::Background) {
         if (value.is_background()) {
             auto const& background = value.as_background();
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundColor, background.color(), document, declaration);
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundImage, background.image(), document, declaration);
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundPosition, background.position(), document, declaration);
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundSize, background.size(), document, declaration);
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeat, background.repeat(), document, declaration);
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundAttachment, background.attachment(), document, declaration);
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundOrigin, background.origin(), document, declaration);
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundClip, background.clip(), document, declaration);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundColor, background.color(), document, declaration, properties_for_revert);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundImage, background.image(), document, declaration, properties_for_revert);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundPosition, background.position(), document, declaration, properties_for_revert);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundSize, background.size(), document, declaration, properties_for_revert);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeat, background.repeat(), document, declaration, properties_for_revert);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundAttachment, background.attachment(), document, declaration, properties_for_revert);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundOrigin, background.origin(), document, declaration, properties_for_revert);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundClip, background.clip(), document, declaration, properties_for_revert);
             return;
         }
 
-        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundColor, value, document, declaration);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundImage, value, document, declaration);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundPosition, value, document, declaration);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundSize, value, document, declaration);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeat, value, document, declaration);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundAttachment, value, document, declaration);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundOrigin, value, document, declaration);
-        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundClip, value, document, declaration);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundColor, value, document, declaration, properties_for_revert);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundImage, value, document, declaration, properties_for_revert);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundPosition, value, document, declaration, properties_for_revert);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundSize, value, document, declaration, properties_for_revert);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeat, value, document, declaration, properties_for_revert);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundAttachment, value, document, declaration, properties_for_revert);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundOrigin, value, document, declaration, properties_for_revert);
+        set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundClip, value, document, declaration, properties_for_revert);
         return;
     }
 
     if (property_id == CSS::PropertyID::BackgroundPosition) {
         if (value.is_position()) {
             auto const& position = value.as_position();
-            style.set_property(CSS::PropertyID::BackgroundPositionX, position.edge_x(), declaration);
-            style.set_property(CSS::PropertyID::BackgroundPositionY, position.edge_y(), declaration);
+            set_longhand_property(CSS::PropertyID::BackgroundPositionX, position.edge_x());
+            set_longhand_property(CSS::PropertyID::BackgroundPositionY, position.edge_y());
         } else if (value.is_value_list()) {
             // Expand background-position layer list into separate lists for x and y positions:
             auto const& values_list = value.as_value_list();
@@ -614,11 +624,11 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
                     y_positions.unchecked_append(layer);
                 }
             }
-            style.set_property(CSS::PropertyID::BackgroundPositionX, StyleValueList::create(move(x_positions), values_list.separator()).release_value_but_fixme_should_propagate_errors(), declaration);
-            style.set_property(CSS::PropertyID::BackgroundPositionY, StyleValueList::create(move(y_positions), values_list.separator()).release_value_but_fixme_should_propagate_errors(), declaration);
+            set_longhand_property(CSS::PropertyID::BackgroundPositionX, StyleValueList::create(move(x_positions), values_list.separator()).release_value_but_fixme_should_propagate_errors());
+            set_longhand_property(CSS::PropertyID::BackgroundPositionY, StyleValueList::create(move(y_positions), values_list.separator()).release_value_but_fixme_should_propagate_errors());
         } else {
-            style.set_property(CSS::PropertyID::BackgroundPositionX, value, declaration);
-            style.set_property(CSS::PropertyID::BackgroundPositionY, value, declaration);
+            set_longhand_property(CSS::PropertyID::BackgroundPositionX, value);
+            set_longhand_property(CSS::PropertyID::BackgroundPositionY, value);
         }
 
         return;
@@ -631,10 +641,10 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return;
         }
 
-        style.set_property(CSS::PropertyID::Top, value, declaration);
-        style.set_property(CSS::PropertyID::Right, value, declaration);
-        style.set_property(CSS::PropertyID::Bottom, value, declaration);
-        style.set_property(CSS::PropertyID::Left, value, declaration);
+        set_longhand_property(CSS::PropertyID::Top, value);
+        set_longhand_property(CSS::PropertyID::Right, value);
+        set_longhand_property(CSS::PropertyID::Bottom, value);
+        set_longhand_property(CSS::PropertyID::Left, value);
         return;
     }
 
@@ -645,10 +655,10 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return;
         }
 
-        style.set_property(CSS::PropertyID::MarginTop, value, declaration);
-        style.set_property(CSS::PropertyID::MarginRight, value, declaration);
-        style.set_property(CSS::PropertyID::MarginBottom, value, declaration);
-        style.set_property(CSS::PropertyID::MarginLeft, value, declaration);
+        set_longhand_property(CSS::PropertyID::MarginTop, value);
+        set_longhand_property(CSS::PropertyID::MarginRight, value);
+        set_longhand_property(CSS::PropertyID::MarginBottom, value);
+        set_longhand_property(CSS::PropertyID::MarginLeft, value);
         return;
     }
 
@@ -659,47 +669,47 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return;
         }
 
-        style.set_property(CSS::PropertyID::PaddingTop, value, declaration);
-        style.set_property(CSS::PropertyID::PaddingRight, value, declaration);
-        style.set_property(CSS::PropertyID::PaddingBottom, value, declaration);
-        style.set_property(CSS::PropertyID::PaddingLeft, value, declaration);
+        set_longhand_property(CSS::PropertyID::PaddingTop, value);
+        set_longhand_property(CSS::PropertyID::PaddingRight, value);
+        set_longhand_property(CSS::PropertyID::PaddingBottom, value);
+        set_longhand_property(CSS::PropertyID::PaddingLeft, value);
         return;
     }
 
     if (property_id == CSS::PropertyID::ListStyle) {
         if (value.is_list_style()) {
             auto const& list_style = value.as_list_style();
-            style.set_property(CSS::PropertyID::ListStylePosition, list_style.position(), declaration);
-            style.set_property(CSS::PropertyID::ListStyleImage, list_style.image(), declaration);
-            style.set_property(CSS::PropertyID::ListStyleType, list_style.style_type(), declaration);
+            set_longhand_property(CSS::PropertyID::ListStylePosition, list_style.position());
+            set_longhand_property(CSS::PropertyID::ListStyleImage, list_style.image());
+            set_longhand_property(CSS::PropertyID::ListStyleType, list_style.style_type());
             return;
         }
 
-        style.set_property(CSS::PropertyID::ListStylePosition, value, declaration);
-        style.set_property(CSS::PropertyID::ListStyleImage, value, declaration);
-        style.set_property(CSS::PropertyID::ListStyleType, value, declaration);
+        set_longhand_property(CSS::PropertyID::ListStylePosition, value);
+        set_longhand_property(CSS::PropertyID::ListStyleImage, value);
+        set_longhand_property(CSS::PropertyID::ListStyleType, value);
         return;
     }
 
     if (property_id == CSS::PropertyID::Font) {
         if (value.is_font()) {
             auto const& font_shorthand = value.as_font();
-            style.set_property(CSS::PropertyID::FontSize, font_shorthand.font_size(), declaration);
-            style.set_property(CSS::PropertyID::FontFamily, font_shorthand.font_families(), declaration);
-            style.set_property(CSS::PropertyID::FontStretch, font_shorthand.font_stretch(), declaration);
-            style.set_property(CSS::PropertyID::FontStyle, font_shorthand.font_style(), declaration);
-            style.set_property(CSS::PropertyID::FontWeight, font_shorthand.font_weight(), declaration);
-            style.set_property(CSS::PropertyID::LineHeight, font_shorthand.line_height(), declaration);
+            set_longhand_property(CSS::PropertyID::FontSize, font_shorthand.font_size());
+            set_longhand_property(CSS::PropertyID::FontFamily, font_shorthand.font_families());
+            set_longhand_property(CSS::PropertyID::FontStretch, font_shorthand.font_stretch());
+            set_longhand_property(CSS::PropertyID::FontStyle, font_shorthand.font_style());
+            set_longhand_property(CSS::PropertyID::FontWeight, font_shorthand.font_weight());
+            set_longhand_property(CSS::PropertyID::LineHeight, font_shorthand.line_height());
             // FIXME: Implement font-variant
             return;
         }
 
-        style.set_property(CSS::PropertyID::FontStretch, value, declaration);
-        style.set_property(CSS::PropertyID::FontSize, value, declaration);
-        style.set_property(CSS::PropertyID::FontFamily, value, declaration);
-        style.set_property(CSS::PropertyID::FontStyle, value, declaration);
-        style.set_property(CSS::PropertyID::FontWeight, value, declaration);
-        style.set_property(CSS::PropertyID::LineHeight, value, declaration);
+        set_longhand_property(CSS::PropertyID::FontStretch, value);
+        set_longhand_property(CSS::PropertyID::FontSize, value);
+        set_longhand_property(CSS::PropertyID::FontFamily, value);
+        set_longhand_property(CSS::PropertyID::FontStyle, value);
+        set_longhand_property(CSS::PropertyID::FontWeight, value);
+        set_longhand_property(CSS::PropertyID::LineHeight, value);
         // FIXME: Implement font-variant
         return;
     }
@@ -707,106 +717,106 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     if (property_id == CSS::PropertyID::Flex) {
         if (value.is_flex()) {
             auto const& flex = value.as_flex();
-            style.set_property(CSS::PropertyID::FlexGrow, flex.grow(), declaration);
-            style.set_property(CSS::PropertyID::FlexShrink, flex.shrink(), declaration);
-            style.set_property(CSS::PropertyID::FlexBasis, flex.basis(), declaration);
+            set_longhand_property(CSS::PropertyID::FlexGrow, flex.grow());
+            set_longhand_property(CSS::PropertyID::FlexShrink, flex.shrink());
+            set_longhand_property(CSS::PropertyID::FlexBasis, flex.basis());
             return;
         }
 
-        style.set_property(CSS::PropertyID::FlexGrow, value, declaration);
-        style.set_property(CSS::PropertyID::FlexShrink, value, declaration);
-        style.set_property(CSS::PropertyID::FlexBasis, value, declaration);
+        set_longhand_property(CSS::PropertyID::FlexGrow, value);
+        set_longhand_property(CSS::PropertyID::FlexShrink, value);
+        set_longhand_property(CSS::PropertyID::FlexBasis, value);
         return;
     }
 
     if (property_id == CSS::PropertyID::FlexFlow) {
         if (value.is_flex_flow()) {
             auto const& flex_flow = value.as_flex_flow();
-            style.set_property(CSS::PropertyID::FlexDirection, flex_flow.flex_direction(), declaration);
-            style.set_property(CSS::PropertyID::FlexWrap, flex_flow.flex_wrap(), declaration);
+            set_longhand_property(CSS::PropertyID::FlexDirection, flex_flow.flex_direction());
+            set_longhand_property(CSS::PropertyID::FlexWrap, flex_flow.flex_wrap());
             return;
         }
 
-        style.set_property(CSS::PropertyID::FlexDirection, value, declaration);
-        style.set_property(CSS::PropertyID::FlexWrap, value, declaration);
+        set_longhand_property(CSS::PropertyID::FlexDirection, value);
+        set_longhand_property(CSS::PropertyID::FlexWrap, value);
         return;
     }
 
     if (property_id == CSS::PropertyID::GridArea) {
         if (value.is_grid_area_shorthand()) {
             auto const& shorthand = value.as_grid_area_shorthand();
-            style.set_property(CSS::PropertyID::GridRowStart, shorthand.row_start(), declaration);
-            style.set_property(CSS::PropertyID::GridColumnStart, shorthand.column_start(), declaration);
-            style.set_property(CSS::PropertyID::GridRowEnd, shorthand.row_end(), declaration);
-            style.set_property(CSS::PropertyID::GridColumnEnd, shorthand.column_end(), declaration);
+            set_longhand_property(CSS::PropertyID::GridRowStart, shorthand.row_start());
+            set_longhand_property(CSS::PropertyID::GridColumnStart, shorthand.column_start());
+            set_longhand_property(CSS::PropertyID::GridRowEnd, shorthand.row_end());
+            set_longhand_property(CSS::PropertyID::GridColumnEnd, shorthand.column_end());
             return;
         }
-        style.set_property(CSS::PropertyID::GridRowStart, value, declaration);
-        style.set_property(CSS::PropertyID::GridColumnStart, value, declaration);
-        style.set_property(CSS::PropertyID::GridRowEnd, value, declaration);
-        style.set_property(CSS::PropertyID::GridColumnEnd, value, declaration);
+        set_longhand_property(CSS::PropertyID::GridRowStart, value);
+        set_longhand_property(CSS::PropertyID::GridColumnStart, value);
+        set_longhand_property(CSS::PropertyID::GridRowEnd, value);
+        set_longhand_property(CSS::PropertyID::GridColumnEnd, value);
         return;
     }
 
     if (property_id == CSS::PropertyID::GridColumn) {
         if (value.is_grid_track_placement_shorthand()) {
             auto const& shorthand = value.as_grid_track_placement_shorthand();
-            style.set_property(CSS::PropertyID::GridColumnStart, shorthand.start(), declaration);
-            style.set_property(CSS::PropertyID::GridColumnEnd, shorthand.end(), declaration);
+            set_longhand_property(CSS::PropertyID::GridColumnStart, shorthand.start());
+            set_longhand_property(CSS::PropertyID::GridColumnEnd, shorthand.end());
             return;
         }
 
-        style.set_property(CSS::PropertyID::GridColumnStart, value, declaration);
-        style.set_property(CSS::PropertyID::GridColumnEnd, value, declaration);
+        set_longhand_property(CSS::PropertyID::GridColumnStart, value);
+        set_longhand_property(CSS::PropertyID::GridColumnEnd, value);
         return;
     }
 
     if (property_id == CSS::PropertyID::GridRow) {
         if (value.is_grid_track_placement_shorthand()) {
             auto const& shorthand = value.as_grid_track_placement_shorthand();
-            style.set_property(CSS::PropertyID::GridRowStart, shorthand.start(), declaration);
-            style.set_property(CSS::PropertyID::GridRowEnd, shorthand.end(), declaration);
+            set_longhand_property(CSS::PropertyID::GridRowStart, shorthand.start());
+            set_longhand_property(CSS::PropertyID::GridRowEnd, shorthand.end());
             return;
         }
 
-        style.set_property(CSS::PropertyID::GridRowStart, value, declaration);
-        style.set_property(CSS::PropertyID::GridRowEnd, value, declaration);
+        set_longhand_property(CSS::PropertyID::GridRowStart, value);
+        set_longhand_property(CSS::PropertyID::GridRowEnd, value);
         return;
     }
 
     if (property_id == CSS::PropertyID::GridTemplate || property_id == CSS::PropertyID::Grid) {
         if (value.is_grid_track_size_list_shorthand()) {
             auto const& shorthand = value.as_grid_track_size_list_shorthand();
-            style.set_property(CSS::PropertyID::GridTemplateAreas, shorthand.areas(), declaration);
-            style.set_property(CSS::PropertyID::GridTemplateRows, shorthand.rows(), declaration);
-            style.set_property(CSS::PropertyID::GridTemplateColumns, shorthand.columns(), declaration);
+            set_longhand_property(CSS::PropertyID::GridTemplateAreas, shorthand.areas());
+            set_longhand_property(CSS::PropertyID::GridTemplateRows, shorthand.rows());
+            set_longhand_property(CSS::PropertyID::GridTemplateColumns, shorthand.columns());
             return;
         }
-        style.set_property(CSS::PropertyID::GridTemplateAreas, value, declaration);
-        style.set_property(CSS::PropertyID::GridTemplateRows, value, declaration);
-        style.set_property(CSS::PropertyID::GridTemplateColumns, value, declaration);
+        set_longhand_property(CSS::PropertyID::GridTemplateAreas, value);
+        set_longhand_property(CSS::PropertyID::GridTemplateRows, value);
+        set_longhand_property(CSS::PropertyID::GridTemplateColumns, value);
         return;
     }
 
     if (property_id == CSS::PropertyID::Gap || property_id == CSS::PropertyID::GridGap) {
         if (value.is_value_list()) {
             auto const& values_list = value.as_value_list();
-            style.set_property(CSS::PropertyID::RowGap, values_list.values()[0], declaration);
-            style.set_property(CSS::PropertyID::ColumnGap, values_list.values()[1], declaration);
+            set_longhand_property(CSS::PropertyID::RowGap, values_list.values()[0]);
+            set_longhand_property(CSS::PropertyID::ColumnGap, values_list.values()[1]);
             return;
         }
-        style.set_property(CSS::PropertyID::RowGap, value, declaration);
-        style.set_property(CSS::PropertyID::ColumnGap, value, declaration);
+        set_longhand_property(CSS::PropertyID::RowGap, value);
+        set_longhand_property(CSS::PropertyID::ColumnGap, value);
         return;
     }
 
     if (property_id == CSS::PropertyID::RowGap || property_id == CSS::PropertyID::GridRowGap) {
-        style.set_property(CSS::PropertyID::RowGap, value, declaration);
+        set_longhand_property(CSS::PropertyID::RowGap, value);
         return;
     }
 
     if (property_id == CSS::PropertyID::ColumnGap || property_id == CSS::PropertyID::GridColumnGap) {
-        style.set_property(CSS::PropertyID::ColumnGap, value, declaration);
+        set_longhand_property(CSS::PropertyID::ColumnGap, value);
         return;
     }
 
@@ -816,27 +826,32 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
         if (is_horizontal) {
             if (property_id == CSS::PropertyID::MaxInlineSize) {
-                style.set_property(CSS::PropertyID::MaxWidth, value, declaration);
+                set_longhand_property(CSS::PropertyID::MaxWidth, value);
             } else {
-                style.set_property(CSS::PropertyID::MinWidth, value, declaration);
+                set_longhand_property(CSS::PropertyID::MinWidth, value);
             }
         } else {
             if (property_id == CSS::PropertyID::MaxInlineSize) {
-                style.set_property(CSS::PropertyID::MaxHeight, value, declaration);
+                set_longhand_property(CSS::PropertyID::MaxHeight, value);
             } else {
-                style.set_property(CSS::PropertyID::MinHeight, value, declaration);
+                set_longhand_property(CSS::PropertyID::MinHeight, value);
             }
         }
         return;
     }
 
-    style.set_property(property_id, value, declaration);
+    set_longhand_property(property_id, value);
 }
 
-void StyleComputer::set_all_properties(DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element, StyleProperties& style, StyleValue const& value, DOM::Document& document, CSS::CSSStyleDeclaration const* declaration) const
+void StyleComputer::set_all_properties(DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element, StyleProperties& style, StyleValue const& value, DOM::Document& document, CSS::CSSStyleDeclaration const* declaration, StyleProperties::PropertyValues const& properties_for_revert) const
 {
     for (auto i = to_underlying(CSS::first_longhand_property_id); i <= to_underlying(CSS::last_longhand_property_id); ++i) {
         auto property_id = (CSS::PropertyID)i;
+
+        if (value.is_revert()) {
+            style.m_property_values[to_underlying(property_id)] = properties_for_revert[to_underlying(property_id)];
+            continue;
+        }
 
         if (value.is_unset()) {
             if (is_inherited_property(property_id))
@@ -852,9 +867,9 @@ void StyleComputer::set_all_properties(DOM::Element& element, Optional<CSS::Sele
                 property_value = resolved.release_nonnull();
         }
         if (!property_value->is_unresolved())
-            set_property_expanding_shorthands(style, property_id, property_value, document, declaration);
+            set_property_expanding_shorthands(style, property_id, property_value, document, declaration, properties_for_revert);
 
-        set_property_expanding_shorthands(style, property_id, value, document, declaration);
+        set_property_expanding_shorthands(style, property_id, value, document, declaration, properties_for_revert);
     }
 }
 
@@ -1078,13 +1093,15 @@ RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& e
 
 void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element, Vector<MatchingRule> const& matching_rules, CascadeOrigin cascade_origin, Important important) const
 {
+    auto properties_for_revert = style.properties();
+
     for (auto const& match : matching_rules) {
         for (auto const& property : verify_cast<PropertyOwningCSSStyleDeclaration>(match.rule->declaration()).properties()) {
             if (important != property.important)
                 continue;
 
             if (property.property_id == CSS::PropertyID::All) {
-                set_all_properties(element, pseudo_element, style, property.value, m_document, &match.rule->declaration());
+                set_all_properties(element, pseudo_element, style, property.value, m_document, &match.rule->declaration(), properties_for_revert);
                 continue;
             }
 
@@ -1094,7 +1111,7 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
                     property_value = resolved.release_nonnull();
             }
             if (!property_value->is_unresolved())
-                set_property_expanding_shorthands(style, property.property_id, property_value, m_document, &match.rule->declaration());
+                set_property_expanding_shorthands(style, property.property_id, property_value, m_document, &match.rule->declaration(), properties_for_revert);
         }
     }
 
@@ -1105,7 +1122,7 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
                     continue;
 
                 if (property.property_id == CSS::PropertyID::All) {
-                    set_all_properties(element, pseudo_element, style, property.value, m_document, inline_style);
+                    set_all_properties(element, pseudo_element, style, property.value, m_document, inline_style, properties_for_revert);
                     continue;
                 }
 
@@ -1115,7 +1132,7 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
                         property_value = resolved.release_nonnull();
                 }
                 if (!property_value->is_unresolved())
-                    set_property_expanding_shorthands(style, property.property_id, property_value, m_document, inline_style);
+                    set_property_expanding_shorthands(style, property.property_id, property_value, m_document, inline_style, properties_for_revert);
             }
         }
     }
