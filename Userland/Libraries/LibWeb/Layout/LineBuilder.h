@@ -49,6 +49,8 @@ public:
     void recalculate_available_space();
     CSSPixels y_for_float_to_be_inserted_here(Box const&);
 
+    auto& inline_formatting_context() { return m_context; }
+
 private:
     void begin_new_line(bool increment_y, bool is_first_break_in_sequence = true);
 

@@ -38,6 +38,9 @@ public:
     virtual void determine_width_of_child(Box const&, AvailableSpace const&) override;
     virtual void determine_height_of_child(Box const&, AvailableSpace const&) override;
 
+    CSSPixels vertical_float_clearance() const;
+    void set_vertical_float_clearance(CSSPixels);
+
 private:
     void generate_line_boxes(LayoutMode);
     void apply_justification_to_fragments(CSS::TextJustify, LineBox&, bool is_last_line);
@@ -48,6 +51,8 @@ private:
 
     CSSPixels m_automatic_content_width { 0 };
     CSSPixels m_automatic_content_height { 0 };
+
+    CSSPixels m_vertical_float_clearance { 0 };
 };
 
 }
