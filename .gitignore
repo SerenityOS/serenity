@@ -36,3 +36,6 @@ Userland/Libraries/LibWasm/Tests/Spec
 Tests/LibWeb/WPT/wpt
 Tests/LibWeb/WPT/metadata
 Tests/LibWeb/WPT/MANIFEST.json
+
+# Ensure that all files in /Base can be tracked, even if they match one of the above rules
+!/Base/**
