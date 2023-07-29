@@ -249,7 +249,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
         case InlineLevelIterator::Item::Type::ForcedBreak: {
             line_builder.break_line(LineBuilder::ForcedBreak::Yes);
             if (item.node) {
-                auto introduce_clearance = parent().clear_floating_boxes(*item.node);
+                auto introduce_clearance = parent().clear_floating_boxes(*item.node, *this);
                 if (introduce_clearance == BlockFormattingContext::DidIntroduceClearance::Yes)
                     parent().reset_margin_state();
             }
@@ -268,8 +268,12 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
             break;
 
         case InlineLevelIterator::Item::Type::FloatingElement:
-            if (is<Box>(*item.node))
+            if (is<Box>(*item.node)) {
+                auto introduce_clearance = parent().clear_floating_boxes(*item.node, *this);
+                if (introduce_clearance == BlockFormattingContext::DidIntroduceClearance::Yes)
+                    parent().reset_margin_state();
                 parent().layout_floating_box(static_cast<Layout::Box const&>(*item.node), containing_block(), layout_mode, *m_available_space, 0, &line_builder);
+            }
             break;
 
         case InlineLevelIterator::Item::Type::Text: {
@@ -367,6 +371,16 @@ void InlineFormattingContext::determine_width_of_child(Box const& box, Available
 void InlineFormattingContext::determine_height_of_child(Box const& box, AvailableSpace const& available_space)
 {
     return parent().determine_height_of_child(box, available_space);
+}
+
+CSSPixels InlineFormattingContext::vertical_float_clearance() const
+{
+    return m_vertical_float_clearance;
+}
+
+void InlineFormattingContext::set_vertical_float_clearance(CSSPixels vertical_float_clearance)
+{
+    m_vertical_float_clearance = vertical_float_clearance;
 }
 
 }

@@ -10,6 +10,7 @@
 #include <LibWeb/Forward.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/FormattingContext.h>
+#include <LibWeb/Layout/InlineFormattingContext.h>
 
 namespace Web::Layout {
 
@@ -59,7 +60,7 @@ public:
         No,
     };
 
-    [[nodiscard]] DidIntroduceClearance clear_floating_boxes(Node const& child_box);
+    [[nodiscard]] DidIntroduceClearance clear_floating_boxes(Node const& child_box, Optional<InlineFormattingContext&> inline_formatting_context);
 
     void reset_margin_state() { m_margin_state.reset(); }
 
