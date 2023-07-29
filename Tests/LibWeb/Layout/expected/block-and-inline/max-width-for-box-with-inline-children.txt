@@ -1,22 +1,22 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
-  BlockContainer <html> at (1,1) content-size 798x185.734375 [BFC] children: not-inline
-    BlockContainer <body> at (10,10) content-size 204x167.734375 children: not-inline
-      BlockContainer <div.outer> at (11,11) content-size 202x165.734375 children: not-inline
-        BlockContainer <div.inner> at (12,12) content-size 200x163.734375 children: inline
-          line 0 width: 88.765625, height: 54.578125, bottom: 54.578125, baseline: 42.265625
-            frag 0 from TextNode start: 0, length: 4, rect: [12,12 88.765625x54.578125]
+  BlockContainer <html> at (1,1) content-size 798x185.78125 [BFC] children: not-inline
+    BlockContainer <body> at (10,10) content-size 204x167.78125 children: not-inline
+      BlockContainer <div.outer> at (11,11) content-size 202x165.78125 children: not-inline
+        BlockContainer <div.inner> at (12,12) content-size 200x163.78125 children: inline
+          line 0 width: 88.765625, height: 54.59375, bottom: 54.59375, baseline: 42.28125
+            frag 0 from TextNode start: 0, length: 4, rect: [12,12 88.765625x54.59375]
               "well"
-          line 1 width: 115.125, height: 54.578125, bottom: 109.15625, baseline: 42.265625
-            frag 0 from TextNode start: 5, length: 5, rect: [12,66.578125 115.125x54.578125]
+          line 1 width: 115.140625, height: 54.59375, bottom: 109.1875, baseline: 42.28125
+            frag 0 from TextNode start: 5, length: 5, rect: [12,66.59375 115.140625x54.59375]
               "hello"
-          line 2 width: 172.984375, height: 54.578125, bottom: 163.734375, baseline: 42.265625
-            frag 0 from TextNode start: 11, length: 7, rect: [12,121.15625 172.984375x54.578125]
+          line 2 width: 173, height: 54.59375, bottom: 163.78125, baseline: 42.28125
+            frag 0 from TextNode start: 11, length: 7, rect: [12,121.1875 173x54.59375]
               "friends"
           TextNode <#text>
 
 PaintableWithLines (Viewport<#document>) [0,0 800x600]
-  PaintableWithLines (BlockContainer<HTML>) [0,0 800x187.734375]
-    PaintableWithLines (BlockContainer<BODY>) [9,9 206x169.734375]
-      PaintableWithLines (BlockContainer<DIV>.outer) [10,10 204x167.734375]
-        PaintableWithLines (BlockContainer<DIV>.inner) [11,11 202x165.734375]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x187.78125]
+    PaintableWithLines (BlockContainer<BODY>) [9,9 206x169.78125]
+      PaintableWithLines (BlockContainer<DIV>.outer) [10,10 204x167.78125]
+        PaintableWithLines (BlockContainer<DIV>.inner) [11,11 202x165.78125]
           TextPaintable (TextNode<#text>)

@@ -1,21 +1,18 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
-    BlockContainer <body> at (8,8) content-size 784x34.9375 children: not-inline
-      Box <div.ipc-page-grid> at (8,8) content-size 784x34.9375 flex-container(row) [FFC] children: not-inline
-        Box <div.ipc-sub-grid> at (8,8) content-size 401.28125x34.9375 flex-item [GFC] children: not-inline
-          BlockContainer <(anonymous)> at (8,8) content-size 401.265625x34.9375 [BFC] children: inline
-            line 0 width: 356.96875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-              frag 0 from TextNode start: 0, length: 40, rect: [8,8 356.96875x17.46875]
-                "The 10 Most Anticipated Summer Movies of"
-            line 1 width: 36.3125, height: 17.46875, bottom: 34.9375, baseline: 13.53125
-              frag 0 from TextNode start: 41, length: 4, rect: [8,25.46875 36.3125x17.46875]
-                "2023"
+    BlockContainer <body> at (8,8) content-size 784x17.46875 children: not-inline
+      Box <div.ipc-page-grid> at (8,8) content-size 784x17.46875 flex-container(row) [FFC] children: not-inline
+        Box <div.ipc-sub-grid> at (8,8) content-size 401.28125x17.46875 flex-item [GFC] children: not-inline
+          BlockContainer <(anonymous)> at (8,8) content-size 401.28125x17.46875 [BFC] children: inline
+            line 0 width: 401.28125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+              frag 0 from TextNode start: 0, length: 45, rect: [8,8 401.28125x17.46875]
+                "The 10 Most Anticipated Summer Movies of 2023"
             TextNode <#text>
 
 PaintableWithLines (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
-    PaintableWithLines (BlockContainer<BODY>) [8,8 784x34.9375]
-      PaintableBox (Box<DIV>.ipc-page-grid) [8,8 784x34.9375]
-        PaintableBox (Box<DIV>.ipc-sub-grid) [8,8 401.28125x34.9375]
-          PaintableWithLines (BlockContainer(anonymous)) [8,8 401.265625x34.9375]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x17.46875]
+      PaintableBox (Box<DIV>.ipc-page-grid) [8,8 784x17.46875]
+        PaintableBox (Box<DIV>.ipc-sub-grid) [8,8 401.28125x17.46875]
+          PaintableWithLines (BlockContainer(anonymous)) [8,8 401.28125x17.46875]
             TextPaintable (TextNode<#text>)

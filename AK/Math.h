@@ -1017,11 +1017,15 @@ constexpr T pow(T x, T y)
 template<typename T>
 constexpr int clamp_to_int(T value)
 {
-    if (value >= NumericLimits<int>::max()) {
+    if (value >= NumericLimits<int>::max())
         return NumericLimits<int>::max();
-    } else if (value <= NumericLimits<int>::min()) {
+
+    if (value <= NumericLimits<int>::min())
         return NumericLimits<int>::min();
-    }
+
+    if constexpr (IsFloatingPoint<T>)
+        return round_to<int>(value);
+
     return value;
 }
 

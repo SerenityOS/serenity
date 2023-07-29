@@ -1,18 +1,18 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
-  BlockContainer <html> at (0,0) content-size 800x66.90625 [BFC] children: not-inline
-    BlockContainer <body> at (8,8) content-size 784x50.90625 children: inline
-      line 0 width: 89.71875, height: 50.90625, bottom: 50.90625, baseline: 16.890625
-        frag 0 from Box start: 0, length: 0, rect: [28,38.90625 49.71875x0]
-      Box <div.button> at (28,38.90625) content-size 49.71875x0 flex-container(row) [FFC] children: not-inline
-        BlockContainer <(anonymous)> at (28,28) content-size 49.71875x21.828125 flex-item [BFC] children: inline
-          line 0 width: 49.71875, height: 21.828125, bottom: 21.828125, baseline: 16.890625
-            frag 0 from TextNode start: 0, length: 5, rect: [28,28 49.71875x21.828125]
+  BlockContainer <html> at (0,0) content-size 800x66.921875 [BFC] children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x50.921875 children: inline
+      line 0 width: 89.71875, height: 50.921875, bottom: 50.921875, baseline: 16.921875
+        frag 0 from Box start: 0, length: 0, rect: [28,38.921875 49.71875x0]
+      Box <div.button> at (28,38.921875) content-size 49.71875x0 flex-container(row) [FFC] children: not-inline
+        BlockContainer <(anonymous)> at (28,28) content-size 49.71875x21.84375 flex-item [BFC] children: inline
+          line 0 width: 49.71875, height: 21.84375, bottom: 21.84375, baseline: 16.921875
+            frag 0 from TextNode start: 0, length: 5, rect: [28,28 49.71875x21.84375]
               "Hello"
           TextNode <#text>
 
 PaintableWithLines (Viewport<#document>) [0,0 800x600]
-  PaintableWithLines (BlockContainer<HTML>) [0,0 800x66.90625]
-    PaintableWithLines (BlockContainer<BODY>) [8,8 784x50.90625]
-      PaintableBox (Box<DIV>.button) [8,18.90625 89.71875x40]
-        PaintableWithLines (BlockContainer(anonymous)) [28,28 49.71875x21.828125]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x66.921875]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x50.921875]
+      PaintableBox (Box<DIV>.button) [8,18.921875 89.71875x40]
+        PaintableWithLines (BlockContainer(anonymous)) [28,28 49.71875x21.84375]
           TextPaintable (TextNode<#text>)
