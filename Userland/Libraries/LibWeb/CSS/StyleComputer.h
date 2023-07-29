@@ -154,6 +154,8 @@ private:
     bool expand_variables(DOM::Element&, Optional<CSS::Selector::PseudoElement>, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Parser::TokenStream<Parser::ComponentValue>& source, Vector<Parser::ComponentValue>& dest) const;
     bool expand_unresolved_values(DOM::Element&, StringView property_name, Parser::TokenStream<Parser::ComponentValue>& source, Vector<Parser::ComponentValue>& dest) const;
 
+    void set_all_properties(DOM::Element&, Optional<CSS::Selector::PseudoElement>, StyleProperties&, StyleValue const&, DOM::Document&, CSS::CSSStyleDeclaration const*) const;
+
     template<typename Callback>
     void for_each_stylesheet(CascadeOrigin, Callback) const;
 

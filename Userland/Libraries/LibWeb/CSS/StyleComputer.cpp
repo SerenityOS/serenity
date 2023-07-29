@@ -83,6 +83,9 @@ struct Traits<Web::CSS::FontFaceKey> : public GenericTraits<Web::CSS::FontFaceKe
 
 namespace Web::CSS {
 
+static DOM::Element const* element_to_inherit_style_from(DOM::Element const*, Optional<CSS::Selector::PseudoElement>);
+static NonnullRefPtr<StyleValue const> get_inherit_value(JS::Realm& initial_value_context_realm, CSS::PropertyID, DOM::Element const*, Optional<CSS::Selector::PseudoElement>);
+
 StyleComputer::StyleComputer(DOM::Document& document)
     : m_document(document)
     , m_default_font_metrics(16, Gfx::FontDatabase::default_font().pixel_metrics(), 16)
@@ -830,6 +833,31 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     style.set_property(property_id, value, declaration);
 }
 
+void StyleComputer::set_all_properties(DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element, StyleProperties& style, StyleValue const& value, DOM::Document& document, CSS::CSSStyleDeclaration const* declaration) const
+{
+    for (auto i = to_underlying(CSS::first_longhand_property_id); i <= to_underlying(CSS::last_longhand_property_id); ++i) {
+        auto property_id = (CSS::PropertyID)i;
+
+        if (value.is_unset()) {
+            if (is_inherited_property(property_id))
+                style.m_property_values[to_underlying(property_id)] = { { get_inherit_value(document.realm(), property_id, &element, pseudo_element), nullptr } };
+            else
+                style.m_property_values[to_underlying(property_id)] = { { property_initial_value(document.realm(), property_id).release_value_but_fixme_should_propagate_errors(), nullptr } };
+            continue;
+        }
+
+        NonnullRefPtr<StyleValue> property_value = value;
+        if (property_value->is_unresolved()) {
+            if (auto resolved = resolve_unresolved_style_value(element, pseudo_element, property_id, property_value->as_unresolved()))
+                property_value = resolved.release_nonnull();
+        }
+        if (!property_value->is_unresolved())
+            set_property_expanding_shorthands(style, property_id, property_value, document, declaration);
+
+        set_property_expanding_shorthands(style, property_id, value, document, declaration);
+    }
+}
+
 static RefPtr<StyleValue const> get_custom_property(DOM::Element const& element, Optional<CSS::Selector::PseudoElement> pseudo_element, FlyString const& custom_property_name)
 {
     if (pseudo_element.has_value()) {
@@ -1054,6 +1082,12 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
         for (auto const& property : verify_cast<PropertyOwningCSSStyleDeclaration>(match.rule->declaration()).properties()) {
             if (important != property.important)
                 continue;
+
+            if (property.property_id == CSS::PropertyID::All) {
+                set_all_properties(element, pseudo_element, style, property.value, m_document, &match.rule->declaration());
+                continue;
+            }
+
             auto property_value = property.value;
             if (property.value->is_unresolved()) {
                 if (auto resolved = resolve_unresolved_style_value(element, pseudo_element, property.property_id, property.value->as_unresolved()))
@@ -1069,6 +1103,12 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
             for (auto const& property : inline_style->properties()) {
                 if (important != property.important)
                     continue;
+
+                if (property.property_id == CSS::PropertyID::All) {
+                    set_all_properties(element, pseudo_element, style, property.value, m_document, inline_style);
+                    continue;
+                }
+
                 auto property_value = property.value;
                 if (property.value->is_unresolved()) {
                     if (auto resolved = resolve_unresolved_style_value(element, pseudo_element, property.property_id, property.value->as_unresolved()))
@@ -1804,7 +1844,7 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
     return {};
 }
 
-static DOM::Element const* element_to_inherit_style_from(DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element)
+DOM::Element const* element_to_inherit_style_from(DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element)
 {
     // Pseudo-elements treat their originating element as their parent.
     DOM::Element const* parent_element = nullptr;
@@ -1816,7 +1856,7 @@ static DOM::Element const* element_to_inherit_style_from(DOM::Element const* ele
     return parent_element;
 }
 
-static NonnullRefPtr<StyleValue const> get_inherit_value(JS::Realm& initial_value_context_realm, CSS::PropertyID property_id, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element)
+NonnullRefPtr<StyleValue const> get_inherit_value(JS::Realm& initial_value_context_realm, CSS::PropertyID property_id, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element)
 {
     auto* parent_element = element_to_inherit_style_from(element, pseudo_element);
 
