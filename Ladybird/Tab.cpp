@@ -9,6 +9,7 @@
 #include "ConsoleWidget.h"
 #include "InspectorWidget.h"
 #include "Settings.h"
+#include "TVGIconEngine.h"
 #include "Utilities.h"
 #include <Browser/History.h>
 #include <LibGfx/ImageFormats/BMPWriter.h>
@@ -31,33 +32,20 @@
 extern DeprecatedString s_serenity_resource_root;
 extern Browser::Settings* s_settings;
 
-static QIcon render_tvg_icon_with_theme_colors(QString name, QPalette const& palette)
+static QIcon create_tvg_icon_with_theme_colors(QString name, QPalette const& palette)
 {
     auto path = QString(":/Icons/%1.tvg").arg(name);
-    Gfx::IntSize icon_size(16, 16);
-
-    QFile icon_resource(path);
-    VERIFY(icon_resource.open(QIODeviceBase::ReadOnly));
-    auto icon_data = icon_resource.readAll();
-    ReadonlyBytes icon_bytes { icon_data.data(), static_cast<size_t>(icon_data.size()) };
-    auto icon_raster = MUST(Gfx::Bitmap::load_from_bytes(icon_bytes, icon_size));
-
-    QIcon icon;
-    auto render = [&](QColor color) -> QPixmap {
-        auto image = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, icon_size));
-        Gfx::Painter painter { image };
-        auto icon_color = Color::from_argb(color.rgba64().toArgb32());
-        painter.blit_filtered({ 0, 0 }, *icon_raster, icon_raster->rect(), [&](auto color) {
-            return icon_color.with_alpha((icon_color.alpha() * color.alpha()) / 255);
-        });
-        QImage qimage { image->scanline_u8(0), image->width(), image->height(), QImage::Format::Format_ARGB32 };
-        return QPixmap::fromImage(qimage);
+    auto icon_engine = TVGIconEngine::from_file(path);
+    VERIFY(icon_engine);
+    auto icon_filter = [](QColor color) {
+        return [color = Color::from_argb(color.rgba64().toArgb32())](Gfx::Color icon_color) {
+            return color.with_alpha((icon_color.alpha() * color.alpha()) / 255);
+        };
     };
-
-    icon.addPixmap(render(palette.color(QPalette::ColorGroup::Normal, QPalette::ColorRole::ButtonText)), QIcon::Mode::Normal);
-    icon.addPixmap(render(palette.color(QPalette::ColorGroup::Disabled, QPalette::ColorRole::ButtonText)), QIcon::Mode::Disabled);
-
-    return icon;
+    icon_engine->add_filter(QIcon::Mode::Normal, icon_filter(palette.color(QPalette::ColorGroup::Normal, QPalette::ColorRole::ButtonText)));
+    icon_engine->add_filter(QIcon::Mode::Disabled, icon_filter(palette.color(QPalette::ColorGroup::Disabled, QPalette::ColorRole::ButtonText)));
+    icon_engine->set_scale(0.66f);
+    return QIcon(icon_engine);
 }
 
 Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling, WebView::UseJavaScriptBytecode use_javascript_bytecode)
@@ -85,7 +73,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     m_layout->addWidget(m_toolbar);
     m_layout->addWidget(m_view);
 
-    rerender_toolbar_icons();
+    recreate_toolbar_icons();
 
     m_toolbar->addAction(&m_window->go_back_action());
     m_toolbar->addAction(&m_window->go_forward_action());
@@ -614,18 +602,18 @@ void Tab::update_hover_label()
 bool Tab::event(QEvent* event)
 {
     if (event->type() == QEvent::PaletteChange) {
-        rerender_toolbar_icons();
+        recreate_toolbar_icons();
         return QWidget::event(event);
     }
 
     return QWidget::event(event);
 }
 
-void Tab::rerender_toolbar_icons()
+void Tab::recreate_toolbar_icons()
 {
-    m_window->go_back_action().setIcon(render_tvg_icon_with_theme_colors("back", palette()));
-    m_window->go_forward_action().setIcon(render_tvg_icon_with_theme_colors("forward", palette()));
-    m_window->reload_action().setIcon(render_tvg_icon_with_theme_colors("reload", palette()));
+    m_window->go_back_action().setIcon(create_tvg_icon_with_theme_colors("back", palette()));
+    m_window->go_forward_action().setIcon(create_tvg_icon_with_theme_colors("forward", palette()));
+    m_window->reload_action().setIcon(create_tvg_icon_with_theme_colors("reload", palette()));
 }
 
 void Tab::show_inspector_window(InspectorTarget inspector_target)
