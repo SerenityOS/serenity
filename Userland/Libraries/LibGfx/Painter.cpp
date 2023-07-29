@@ -934,7 +934,7 @@ void Painter::blit_with_opacity(IntPoint position, Gfx::Bitmap const& source, In
     }
 }
 
-void Painter::blit_filtered(IntPoint position, Gfx::Bitmap const& source, IntRect const& src_rect, Function<Color(Color)> const& filter)
+void Painter::blit_filtered(IntPoint position, Gfx::Bitmap const& source, IntRect const& src_rect, Function<Color(Color)> const& filter, bool apply_alpha)
 {
     VERIFY((source.scale() == 1 || source.scale() == scale()) && "blit_filtered only supports integer upsampling");
 
@@ -969,7 +969,7 @@ void Painter::blit_filtered(IntPoint position, Gfx::Bitmap const& source, IntRec
                 if (source_color.alpha() == 0)
                     continue;
                 auto filtered_color = filter(source_color);
-                if (filtered_color.alpha() == 0xff)
+                if (!apply_alpha || filtered_color.alpha() == 0xff)
                     dst[x] = filtered_color.value();
                 else
                     dst[x] = color_for_format(dst_format, dst[x]).blend(filtered_color).value();
@@ -985,7 +985,7 @@ void Painter::blit_filtered(IntPoint position, Gfx::Bitmap const& source, IntRec
                 if (source_color.alpha() == 0)
                     continue;
                 auto filtered_color = filter(source_color);
-                if (filtered_color.alpha() == 0xff)
+                if (!apply_alpha || filtered_color.alpha() == 0xff)
                     dst[x] = filtered_color.value();
                 else
                     dst[x] = color_for_format(dst_format, dst[x]).blend(filtered_color).value();
