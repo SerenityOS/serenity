@@ -24,6 +24,7 @@ namespace Web::CSS {
 
 struct MatchingRule {
     JS::GCPtr<CSSStyleRule const> rule;
+    JS::GCPtr<CSSStyleSheet const> sheet;
     size_t style_sheet_index { 0 };
     size_t rule_index { 0 };
     size_t selector_index { 0 };
@@ -172,6 +173,8 @@ private:
 
     void build_rule_cache();
     void build_rule_cache_if_needed() const;
+
+    Vector<MatchingRule> filter_namespace_rules(DOM::Element const&, Vector<MatchingRule> const&) const;
 
     JS::NonnullGCPtr<DOM::Document> m_document;
 

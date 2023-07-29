@@ -48,6 +48,8 @@ public:
 
     void set_style_sheet_list(Badge<StyleSheetList>, StyleSheetList*);
 
+    Optional<StringView> namespace_filter() const;
+
 private:
     CSSStyleSheet(JS::Realm&, CSSRuleList&, MediaList&, Optional<AK::URL> location);
 

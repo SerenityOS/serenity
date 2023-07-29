@@ -144,6 +144,7 @@ void CSSRuleList::for_each_effective_style_rule(Function<void(CSSStyleRule const
             break;
         case CSSRule::Type::Keyframe:
         case CSSRule::Type::Keyframes:
+        case CSSRule::Type::Namespace:
             break;
         }
     }
@@ -173,6 +174,8 @@ void CSSRuleList::for_each_effective_keyframes_at_rule(Function<void(CSSKeyframe
             break;
         case CSSRule::Type::Keyframes:
             callback(static_cast<CSSKeyframesRule const&>(*rule));
+            break;
+        case CSSRule::Type::Namespace:
             break;
         }
     }
@@ -212,6 +215,7 @@ bool CSSRuleList::evaluate_media_queries(HTML::Window const& window)
         }
         case CSSRule::Type::Keyframe:
         case CSSRule::Type::Keyframes:
+        case CSSRule::Type::Namespace:
             break;
         }
     }

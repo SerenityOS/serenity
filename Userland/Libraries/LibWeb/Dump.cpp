@@ -679,6 +679,9 @@ ErrorOr<void> dump_rule(StringBuilder& builder, CSS::CSSRule const& rule, int in
     case CSS::CSSRule::Type::Keyframe:
     case CSS::CSSRule::Type::Keyframes:
         break;
+    case CSS::CSSRule::Type::Namespace:
+        TRY(dump_namespace_rule(builder, verify_cast<CSS::CSSNamespaceRule const>(rule), indent_levels));
+        break;
     }
     return {};
 }
@@ -833,6 +836,16 @@ void dump_tree(StringBuilder& builder, Painting::Paintable const& paintable, boo
     for (auto const* child = paintable.first_child(); child; child = child->next_sibling()) {
         dump_tree(builder, *child, colorize, indent + 1);
     }
+}
+
+ErrorOr<void> dump_namespace_rule(StringBuilder& builder, CSS::CSSNamespaceRule const& namespace_, int indent_levels)
+{
+    indent(builder, indent_levels);
+    TRY(builder.try_appendff("  Namespace: {}\n", namespace_.namespace_uri()));
+    if (!namespace_.prefix().is_null() && !namespace_.prefix().is_empty())
+        TRY(builder.try_appendff("  Prefix: {}\n", namespace_.prefix()));
+
+    return {};
 }
 
 }

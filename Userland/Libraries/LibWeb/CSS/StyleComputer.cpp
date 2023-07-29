@@ -220,19 +220,40 @@ StyleComputer::RuleCache const& StyleComputer::rule_cache_for_cascade_origin(Cas
     }
 }
 
+Vector<MatchingRule> StyleComputer::filter_namespace_rules(DOM::Element const& element, Vector<MatchingRule> const& rules) const
+{
+    Vector<MatchingRule> filtered_rules;
+
+    for (auto const& rule : rules) {
+        auto namespace_uri = rule.sheet->namespace_filter();
+        if (namespace_uri.has_value()) {
+            if (namespace_uri.value() == element.namespace_uri())
+                filtered_rules.append(rule);
+        } else {
+            filtered_rules.append(rule);
+        }
+    }
+
+    // FIXME: Filter out non-default namespace using prefixes
+
+    return filtered_rules;
+}
+
 Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& element, CascadeOrigin cascade_origin, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {
     auto const& rule_cache = rule_cache_for_cascade_origin(cascade_origin);
 
     Vector<MatchingRule> rules_to_run;
     auto add_rules_to_run = [&](Vector<MatchingRule> const& rules) {
+        Vector<MatchingRule> namespace_filtered_rules = filter_namespace_rules(element, rules);
+
         if (pseudo_element.has_value()) {
-            for (auto& rule : rules) {
+            for (auto& rule : namespace_filtered_rules) {
                 if (rule.contains_pseudo_element)
                     rules_to_run.append(rule);
             }
         } else {
-            rules_to_run.extend(rules);
+            rules_to_run.extend(namespace_filtered_rules);
         }
     };
 
@@ -2556,10 +2577,11 @@ NonnullOwnPtr<StyleComputer::RuleCache> StyleComputer::make_rule_cache_for_casca
             for (CSS::Selector const& selector : rule.selectors()) {
                 MatchingRule matching_rule {
                     &rule,
+                    sheet,
                     style_sheet_index,
                     rule_index,
                     selector_index,
-                    selector.specificity(),
+                    selector.specificity()
                 };
 
                 for (auto const& simple_selector : selector.compound_selectors().last().simple_selectors) {

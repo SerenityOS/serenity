@@ -6,6 +6,7 @@
 
 #include <LibWeb/Bindings/CSSStyleSheetPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/CSS/CSSNamespaceRule.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/StyleComputer.h>
@@ -135,6 +136,19 @@ bool CSSStyleSheet::evaluate_media_queries(HTML::Window const& window)
 void CSSStyleSheet::set_style_sheet_list(Badge<StyleSheetList>, StyleSheetList* list)
 {
     m_style_sheet_list = list;
+}
+
+Optional<StringView> CSSStyleSheet::namespace_filter() const
+{
+    for (JS::NonnullGCPtr<CSSRule> rule : *m_rules) {
+        if (rule->type() == CSSRule::Type::Namespace) {
+            auto& namespace_rule = verify_cast<CSSNamespaceRule>(*rule);
+            if (!namespace_rule.namespace_uri().is_empty() && namespace_rule.prefix().is_empty())
+                return namespace_rule.namespace_uri().view();
+        }
+    }
+
+    return {};
 }
 
 }
