@@ -91,6 +91,7 @@ set(SOURCES
     Settings.cpp
     SettingsDialog.cpp
     Tab.cpp
+    TVGIconEngine.cpp
     Utilities.cpp
     WebContentView.cpp
     ladybird.qrc
