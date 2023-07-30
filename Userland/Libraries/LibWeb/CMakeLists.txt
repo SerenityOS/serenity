@@ -633,6 +633,7 @@ set(GENERATED_SOURCES
     CSS/QuirksModeStyleSheetSource.cpp
     CSS/TransformFunctions.cpp
     CSS/ValueID.cpp
+    MathML/MathMLStyleSheetSource.cpp
 )
 
 serenity_lib(LibWeb web)

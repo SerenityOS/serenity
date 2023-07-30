@@ -89,6 +89,19 @@ function (generate_css_implementation)
     add_custom_target(generate_QuirksModeStyleSheetSource.cpp DEPENDS CSS/QuirksModeStyleSheetSource.cpp)
     add_dependencies(all_generated generate_QuirksModeStyleSheetSource.cpp)
 
+    add_custom_command(
+            OUTPUT MathML/MathMLStyleSheetSource.cpp
+            COMMAND "${CMAKE_COMMAND}" -E make_directory CSS
+            COMMAND "${LIBWEB_INPUT_FOLDER}/Scripts/GenerateStyleSheetSource.sh" mathml_stylesheet_source "${LIBWEB_INPUT_FOLDER}/MathML/Default.css" > MathML/MathMLStyleSheetSource.cpp.tmp
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different MathML/MathMLStyleSheetSource.cpp.tmp MathML/MathMLStyleSheetSource.cpp
+            COMMAND "${CMAKE_COMMAND}" -E remove MathML/MathMLStyleSheetSource.cpp.tmp
+            VERBATIM
+            DEPENDS "${LIBWEB_INPUT_FOLDER}/Scripts/GenerateStyleSheetSource.sh"
+            MAIN_DEPENDENCY "${LIBWEB_INPUT_FOLDER}/MathML/Default.css"
+    )
+    add_custom_target(generate_MathMLStyleSheetSource.cpp DEPENDS MathML/MathMLStyleSheetSource.cpp)
+    add_dependencies(all_generated generate_MathMLStyleSheetSource.cpp)
+
     set(CSS_GENERATED_TO_INSTALL
         "CSS/EasingFunctions.h"
         "CSS/Enums.h"
