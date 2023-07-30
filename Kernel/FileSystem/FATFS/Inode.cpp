@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteReader.h>
+#include <AK/Endian.h>
 #include <AK/Time.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/FATFS/Inode.h>
@@ -18,7 +20,7 @@ ErrorOr<NonnullRefPtr<FATInode>> FATInode::create(FATFS& fs, FATEntry entry, Vec
 }
 
 FATInode::FATInode(FATFS& fs, FATEntry entry, NonnullOwnPtr<KString> filename)
-    : Inode(fs, first_cluster())
+    : Inode(fs, first_cluster(fs.m_fat_version))
     , m_entry(entry)
     , m_filename(move(filename))
 {
@@ -55,7 +57,7 @@ ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> FATInode::compute_block_list()
     auto fat_sector = TRY(KBuffer::try_create_with_size("FATFS: FAT read buffer"sv, fs().m_device_block_size));
     auto fat_sector_buffer = UserOrKernelBuffer::for_kernel_buffer(fat_sector->data());
 
-    while (cluster < no_more_clusters) {
+    while (cluster < end_of_chain_marker()) {
         dbgln_if(FAT_DEBUG, "FATFS: Appending cluster {} to inode {}'s cluster chain", cluster, index());
 
         auto first_block_and_length = fs().first_block_of_cluster(cluster);
@@ -78,17 +80,76 @@ ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> FATInode::compute_block_list()
             break;
         }
 
-        u32 fat_offset = cluster * sizeof(u32);
+        u32 fat_offset = cluster * cluster_size();
         u32 fat_sector_index = fs().m_parameter_block->common_bpb()->reserved_sector_count + (fat_offset / fs().m_device_block_size);
         u32 entry_offset = fat_offset % fs().m_device_block_size;
 
         TRY(fs().raw_read(fat_sector_index, fat_sector_buffer));
 
-        cluster = *reinterpret_cast<u32*>(&fat_sector->data()[entry_offset]);
-        cluster &= cluster_number_mask;
+        cluster = cluster_number(*fat_sector, entry_offset);
     }
 
     return block_list;
+}
+
+u32 FATInode::end_of_chain_marker() const
+{
+    // Returns the end of chain entry for the given file system.
+    // Any FAT entry of this value or greater signifies the end
+    // of the chain has been reached for a given entry.
+    switch (fs().m_fat_version) {
+    case FATVersion::FAT12:
+        return 0xff8;
+    case FATVersion::FAT16:
+        return 0xfff8;
+    case FATVersion::FAT32:
+        return 0x0FFFFFF8;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+size_t FATInode::cluster_size() const
+{
+    switch (fs().m_fat_version) {
+    case FATVersion::FAT12:
+        VERIFY(false);
+        break;
+    case FATVersion::FAT16:
+        return 2;
+    case FATVersion::FAT32:
+        return 4;
+    default:
+        VERIFY(false);
+    }
+}
+
+u32 FATInode::cluster_number(KBuffer const& fat_sector, u32 entry_offset) const
+{
+    u32 cluster = 0;
+    switch (fs().m_fat_version) {
+    case FATVersion::FAT12:
+        VERIFY(false);
+        break;
+    case FATVersion::FAT16: {
+        u16 cluster_u16_le = 0;
+        ByteReader::load<u16>(fat_sector.bytes().offset(entry_offset), cluster_u16_le);
+        cluster = LittleEndian { cluster_u16_le };
+        break;
+    }
+    case FATVersion::FAT32: {
+        u32 cluster_u32_le = 0;
+        ByteReader::load<u32>(fat_sector.bytes().offset(entry_offset), cluster_u32_le);
+        cluster = LittleEndian { cluster_u32_le };
+        // FAT32 entries use 28-bits to represent the cluster number. The top 4 bits
+        // may contain flags or other data and must be masked off.
+        cluster &= 0x0FFFFFFF;
+        break;
+    }
+    default:
+        VERIFY(false);
+    }
+    return cluster;
 }
 
 ErrorOr<NonnullOwnPtr<KBuffer>> FATInode::read_block_list()
@@ -220,7 +281,18 @@ StringView FATInode::byte_terminated_string(StringView string, u8 fill_byte)
 
 u32 FATInode::first_cluster() const
 {
-    return (((u32)m_entry.first_cluster_high) << 16) | m_entry.first_cluster_low;
+    return first_cluster(fs().m_fat_version);
+}
+
+u32 FATInode::first_cluster(FATVersion const version) const
+{
+    if (version == FATVersion::FAT32) {
+        return (static_cast<u32>(m_entry.first_cluster_high) << 16) | m_entry.first_cluster_low;
+    }
+    // The space occupied in a directory entry by `first_cluster_high` (0x14)
+    // is reserved in FAT12/16, and may be used to store file meta-data.
+    // As a result, do not include it.
+    return m_entry.first_cluster_low;
 }
 
 ErrorOr<size_t> FATInode::read_bytes_locked(off_t offset, size_t size, UserOrKernelBuffer& buffer, OpenFileDescription*) const
