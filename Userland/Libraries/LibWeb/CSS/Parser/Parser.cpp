@@ -4249,30 +4249,43 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_paint_value(TokenStream<ComponentValue
 {
     // `<paint> = none | <color> | <url> [none | <color>]? | context-fill | context-stroke`
 
-    if (auto color = TRY(parse_color_value(tokens.peek_token()))) {
-        (void)tokens.next_token();
-        return color;
-    }
+    auto parse_color_or_none = [&]() -> ErrorOr<Optional<RefPtr<StyleValue>>> {
+        if (auto color = TRY(parse_color_value(tokens.peek_token()))) {
+            (void)tokens.next_token();
+            return color;
+        }
 
-    if (auto url = TRY(parse_url_value(tokens.peek_token(), AllowedDataUrlType::Image))) {
-        // FIXME: Accept `[none | <color>]?`
-        (void)tokens.next_token();
-        return url;
-    }
-
-    // NOTE: <color> also accepts identifiers, so we do this identifier check last.
-    if (tokens.peek_token().is(Token::Type::Ident)) {
-        auto maybe_ident = value_id_from_string(tokens.peek_token().token().ident());
-        if (maybe_ident.has_value()) {
-            // FIXME: Accept `context-fill` and `context-stroke`
-            switch (*maybe_ident) {
-            case ValueID::None:
-                (void)tokens.next_token();
-                return IdentifierStyleValue::create(*maybe_ident);
-            default:
-                return nullptr;
+        // NOTE: <color> also accepts identifiers, so we do this identifier check last.
+        if (tokens.peek_token().is(Token::Type::Ident)) {
+            auto maybe_ident = value_id_from_string(tokens.peek_token().token().ident());
+            if (maybe_ident.has_value()) {
+                // FIXME: Accept `context-fill` and `context-stroke`
+                switch (*maybe_ident) {
+                case ValueID::None:
+                    (void)tokens.next_token();
+                    return IdentifierStyleValue::create(*maybe_ident);
+                default:
+                    return nullptr;
+                }
             }
         }
+
+        return OptionalNone {};
+    };
+
+    // FIMXE: Allow context-fill/context-stroke here
+    if (auto color_or_none = TRY(parse_color_or_none()); color_or_none.has_value())
+        return *color_or_none;
+
+    if (auto url = TRY(parse_url_value(tokens.peek_token()))) {
+        (void)tokens.next_token();
+        tokens.skip_whitespace();
+        if (auto color_or_none = TRY(parse_color_or_none()); color_or_none == nullptr) {
+            // Fail to parse if the fallback is invalid, but otherwise ignore it.
+            // FIXME: Use fallback color
+            return nullptr;
+        }
+        return url;
     }
 
     return nullptr;
