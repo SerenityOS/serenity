@@ -213,6 +213,13 @@ embed_as_string_view("generate_quirks_mode_stylesheet_source") {
   namespace = "Web::CSS"
 }
 
+embed_as_string_view("generate_mathml_stylesheet_source") {
+  input = "MathML/Default.css"
+  output = "$target_gen_dir/MathML/MathMLStyleSheetSource.cpp"
+  variable_name = "mathml_stylesheet_source"
+  namespace = "Web::MathML"
+}
+
 source_set("all_generated") {
   generated_deps = [
     ":generate_aria_roles",

@@ -195,6 +195,16 @@ static CSSStyleSheet& quirks_mode_stylesheet(DOM::Document const& document)
     return *sheet;
 }
 
+static CSSStyleSheet& mathml_stylesheet(DOM::Document const& document)
+{
+    static JS::Handle<CSSStyleSheet> sheet;
+    if (!sheet.cell()) {
+        extern StringView mathml_stylesheet_source;
+        sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(document), mathml_stylesheet_source));
+    }
+    return *sheet;
+}
+
 template<typename Callback>
 void StyleComputer::for_each_stylesheet(CascadeOrigin cascade_origin, Callback callback) const
 {
@@ -202,6 +212,7 @@ void StyleComputer::for_each_stylesheet(CascadeOrigin cascade_origin, Callback c
         callback(default_stylesheet(document()));
         if (document().in_quirks_mode())
             callback(quirks_mode_stylesheet(document()));
+        callback(mathml_stylesheet(document()));
     }
     if (cascade_origin == CascadeOrigin::Author) {
         for (auto const& sheet : document().style_sheets().sheets())
