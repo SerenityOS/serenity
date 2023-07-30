@@ -248,6 +248,8 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, unsigned button, unsig
                     run_activation_behavior = node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::click, offset, client_offset, page_offset, button).release_value_but_fixme_should_propagate_errors());
                 else if (button == GUI::MouseButton::Secondary && !(modifiers & Mod_Shift)) // Allow the user to bypass custom context menus by holding shift, like Firefox.
                     run_activation_behavior = node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::contextmenu, offset, client_offset, page_offset, button).release_value_but_fixme_should_propagate_errors());
+                else if (button == GUI::MouseButton::Middle)
+                    run_activation_behavior = true;
             }
 
             if (run_activation_behavior) {
