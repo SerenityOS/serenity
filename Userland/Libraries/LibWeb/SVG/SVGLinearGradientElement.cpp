@@ -51,8 +51,8 @@ NumberPercentage SVGLinearGradientElement::start_x() const
 {
     if (m_x1.has_value())
         return *m_x1;
-    if (auto href = linear_gradient_xlink_href())
-        return href->start_x();
+    if (auto gradient = linked_linear_gradient())
+        return gradient->start_x();
     // If the attribute is not specified, the effect is as if a value of '0%' were specified.
     return NumberPercentage::create_percentage(0);
 }
@@ -62,8 +62,8 @@ NumberPercentage SVGLinearGradientElement::start_y() const
 {
     if (m_y1.has_value())
         return *m_y1;
-    if (auto href = linear_gradient_xlink_href())
-        return href->start_x();
+    if (auto gradient = linked_linear_gradient())
+        return gradient->start_x();
     // If the attribute is not specified, the effect is as if a value of '0%' were specified.
     return NumberPercentage::create_percentage(0);
 }
@@ -73,8 +73,8 @@ NumberPercentage SVGLinearGradientElement::end_x() const
 {
     if (m_x2.has_value())
         return *m_x2;
-    if (auto href = linear_gradient_xlink_href())
-        return href->start_x();
+    if (auto gradient = linked_linear_gradient())
+        return gradient->start_x();
     // If the attribute is not specified, the effect is as if a value of '100%' were specified.
     return NumberPercentage::create_percentage(100);
 }
@@ -84,8 +84,8 @@ NumberPercentage SVGLinearGradientElement::end_y() const
 {
     if (m_y2.has_value())
         return *m_y2;
-    if (auto href = linear_gradient_xlink_href())
-        return href->start_x();
+    if (auto gradient = linked_linear_gradient())
+        return gradient->start_x();
     // If the attribute is not specified, the effect is as if a value of '0%' were specified.
     return NumberPercentage::create_percentage(0);
 }

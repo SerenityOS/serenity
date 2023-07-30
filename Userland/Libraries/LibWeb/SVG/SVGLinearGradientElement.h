@@ -33,10 +33,10 @@ protected:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
 private:
-    JS::GCPtr<SVGLinearGradientElement const> linear_gradient_xlink_href() const
+    JS::GCPtr<SVGLinearGradientElement const> linked_linear_gradient() const
     {
-        if (auto href = xlink_href(); href && is<SVGLinearGradientElement>(*href))
-            return &verify_cast<SVGLinearGradientElement>(*href);
+        if (auto gradient = linked_gradient(); gradient && is<SVGLinearGradientElement>(*gradient))
+            return &verify_cast<SVGLinearGradientElement>(*gradient);
         return {};
     }
 

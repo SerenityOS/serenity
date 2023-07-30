@@ -35,8 +35,8 @@ GradientUnits SVGGradientElement::gradient_units() const
 {
     if (m_gradient_units.has_value())
         return *m_gradient_units;
-    if (auto href = xlink_href())
-        return href->gradient_units();
+    if (auto gradient = linked_gradient())
+        return gradient->gradient_units();
     return GradientUnits::ObjectBoundingBox;
 }
 
@@ -44,8 +44,8 @@ Optional<Gfx::AffineTransform> SVGGradientElement::gradient_transform() const
 {
     if (m_gradient_transform.has_value())
         return m_gradient_transform;
-    if (auto href = xlink_href())
-        return href->gradient_transform();
+    if (auto gradient = linked_gradient())
+        return gradient->gradient_transform();
     return {};
 }
 
@@ -78,11 +78,13 @@ void SVGGradientElement::add_color_stops(Gfx::SVGGradientPaintStyle& paint_style
     });
 }
 
-JS::GCPtr<SVGGradientElement const> SVGGradientElement::xlink_href() const
+JS::GCPtr<SVGGradientElement const> SVGGradientElement::linked_gradient() const
 {
     // FIXME: This entire function is an ad-hoc hack!
     // It can only resolve #<ids> in the same document.
-    if (auto href = get_attribute("href"); !href.is_empty()) {
+
+    auto link = has_attribute("href") ? get_attribute("href") : get_attribute("xlink:href");
+    if (auto href = link; !href.is_empty()) {
         auto url = document().parse_url(href);
         auto id = url.fragment();
         if (id.is_empty())
