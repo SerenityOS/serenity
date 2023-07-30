@@ -30,8 +30,16 @@ public:
 private:
     FATInode(FATFS&, FATEntry, NonnullOwnPtr<KString> filename);
 
-    static constexpr u32 no_more_clusters = 0x0FFFFFF8;
-    static constexpr u32 cluster_number_mask = 0x0FFFFFFF;
+    // Number of bytes used to store a cluster within the table.
+    size_t cluster_size() const;
+
+    // Returns cluster number value that indicates the end of the chain
+    // has been reached. Any cluster value >= this value indicates this
+    // is the last cluster.
+    u32 end_of_chain_marker() const;
+
+    // Reads the cluster number located at the offset within the table.
+    u32 cluster_number(KBuffer const& fat_sector, u32 entry_offset) const;
 
     static constexpr u8 end_entry_byte = 0x00;
     static constexpr u8 unused_entry_byte = 0xE5;
@@ -49,6 +57,10 @@ private:
     ErrorOr<NonnullOwnPtr<KBuffer>> read_block_list();
     ErrorOr<RefPtr<FATInode>> traverse(Function<ErrorOr<bool>(RefPtr<FATInode>)> callback);
     u32 first_cluster() const;
+    // This overload of `first_cluster` does not rely on the base Inode
+    // already being created to determine the FAT version. It is used
+    // during FATInode creation (create()).
+    u32 first_cluster(FATVersion const version) const;
 
     // ^Inode
     virtual ErrorOr<size_t> write_bytes_locked(off_t, size_t, UserOrKernelBuffer const& data, OpenFileDescription*) override;
