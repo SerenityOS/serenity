@@ -106,7 +106,7 @@ void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const&
 
     auto color = border_color(edge, borders_data);
     auto border_style = border_data.line_style;
-    auto device_pixel_width = context.enclosing_device_pixels(width);
+    auto device_pixel_width = context.rounded_device_pixels(width);
 
     struct Points {
         DevicePixelPoint p1;
