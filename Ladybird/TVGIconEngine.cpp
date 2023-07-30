@@ -33,14 +33,7 @@ QPixmap TVGIconEngine::pixmap(QSize const& size, QIcon::Mode mode, QIcon::State 
         return pixmap;
     auto bitmap = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { size.width(), size.height() }));
     Gfx::Painter painter { *bitmap };
-    auto icon_rect = m_image_data->rect().to_type<float>();
-    auto scale = min(size.width() / icon_rect.width(), size.height() / icon_rect.height()) * m_scale;
-    auto centered = Gfx::FloatRect { {}, icon_rect.size().scaled_by(scale) }
-                        .centered_within(Gfx::FloatRect { {}, { size.width(), size.height() } });
-    auto transform = Gfx::AffineTransform {}
-                         .translate(centered.location())
-                         .multiply(Gfx::AffineTransform {}.scale(scale, scale));
-    m_image_data->draw_transformed(painter, transform);
+    m_image_data->draw_into(painter, bitmap->rect());
     for (auto const& filter : m_filters) {
         if (filter->mode() == mode) {
             painter.blit_filtered({}, *bitmap, bitmap->rect(), filter->function(), false);

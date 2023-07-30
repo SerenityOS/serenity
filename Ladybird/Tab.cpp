@@ -44,7 +44,6 @@ static QIcon create_tvg_icon_with_theme_colors(QString name, QPalette const& pal
     };
     icon_engine->add_filter(QIcon::Mode::Normal, icon_filter(palette.color(QPalette::ColorGroup::Normal, QPalette::ColorRole::ButtonText)));
     icon_engine->add_filter(QIcon::Mode::Disabled, icon_filter(palette.color(QPalette::ColorGroup::Disabled, QPalette::ColorRole::ButtonText)));
-    icon_engine->set_scale(0.66f);
     return QIcon(icon_engine);
 }
 
@@ -59,7 +58,6 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     m_view = new WebContentView(webdriver_content_ipc_path, enable_callgrind_profiling, use_javascript_bytecode);
     m_toolbar = new QToolBar(this);
     m_location_edit = new LocationEdit(this);
-    m_reset_zoom_button = new QToolButton(m_toolbar);
 
     m_hover_label = new QLabel(this);
     m_hover_label->hide();
@@ -79,6 +77,13 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     m_toolbar->addAction(&m_window->go_forward_action());
     m_toolbar->addAction(&m_window->reload_action());
     m_toolbar->addWidget(m_location_edit);
+    m_toolbar->setIconSize({ 16, 16 });
+    // This is a little awkward, but without this Qt shrinks the button to the size of the icon.
+    // Note: toolButtonStyle="0" -> ToolButtonIconOnly.
+    m_toolbar->setStyleSheet("QToolButton[toolButtonStyle=\"0\"]{width:24px;height:24px}");
+
+    m_reset_zoom_button = new QToolButton(m_toolbar);
+    m_reset_zoom_button->setToolButtonStyle(Qt::ToolButtonTextOnly);
     m_reset_zoom_button->setToolTip("Reset zoom level");
     m_reset_zoom_button_action = m_toolbar->addWidget(m_reset_zoom_button);
     m_reset_zoom_button_action->setVisible(false);
