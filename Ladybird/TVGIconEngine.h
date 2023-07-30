@@ -29,12 +29,6 @@ public:
 
     void add_filter(QIcon::Mode mode, Function<Color(Color)> filter);
 
-    void set_scale(float scale)
-    {
-        m_scale = scale;
-        invalidate_cache();
-    }
-
 private:
     static unsigned next_cache_id()
     {
@@ -64,7 +58,6 @@ private:
 
     QString pixmap_cache_key(QSize const& size, QIcon::Mode mode, QIcon::State state);
 
-    float m_scale { 1 };
     Vector<NonnullRefPtr<Filter>> m_filters;
     NonnullRefPtr<Gfx::TinyVGDecodedImageData> m_image_data;
     unsigned m_cache_id { next_cache_id() };
