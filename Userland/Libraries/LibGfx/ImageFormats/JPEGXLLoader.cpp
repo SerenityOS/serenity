@@ -203,6 +203,22 @@ struct ColourEncoding {
         u32 uy {};
     };
 
+    enum class TransferFunction {
+        k709 = 1,
+        kUnknown = 2,
+        kLinear = 8,
+        kSRGB = 13,
+        kPQ = 16,
+        kDCI = 17,
+        kHLG = 18,
+    };
+
+    struct CustomTransferFunction {
+        bool have_gamma { false };
+        u32 gamma {};
+        TransferFunction transfer_function { TransferFunction::kSRGB };
+    };
+
     bool want_icc = false;
     ColourSpace colour_space { ColourSpace::kRGB };
     WhitePoint white_point { WhitePoint::kD65 };
@@ -212,6 +228,8 @@ struct ColourEncoding {
     Customxy red {};
     Customxy green {};
     Customxy blue {};
+
+    CustomTransferFunction tf {};
 
     RenderingIntent rendering_intent { RenderingIntent::kRelative };
 };
@@ -234,13 +252,53 @@ struct ColourEncoding {
     return custom_xy;
 }
 
+static ErrorOr<ColourEncoding::CustomTransferFunction> read_custom_transfer_function(LittleEndianInputBitStream& stream)
+{
+    ColourEncoding::CustomTransferFunction custom_transfer_function;
+
+    custom_transfer_function.have_gamma = TRY(stream.read_bit());
+
+    if (custom_transfer_function.have_gamma)
+        custom_transfer_function.gamma = TRY(stream.read_bits(24));
+    else
+        custom_transfer_function.transfer_function = TRY(read_enum<ColourEncoding::TransferFunction>(stream));
+
+    return custom_transfer_function;
+}
+
 static ErrorOr<ColourEncoding> read_colour_encoding(LittleEndianInputBitStream& stream)
 {
     ColourEncoding colour_encoding;
     bool const all_default = TRY(stream.read_bit());
 
     if (!all_default) {
-        TODO();
+        colour_encoding.want_icc = TRY(stream.read_bit());
+        colour_encoding.colour_space = TRY(read_enum<ColourEncoding::ColourSpace>(stream));
+
+        auto const use_desc = !all_default && !colour_encoding.want_icc;
+        auto const not_xyb = colour_encoding.colour_space != ColourEncoding::ColourSpace::kXYB;
+
+        if (use_desc && not_xyb)
+            colour_encoding.white_point = TRY(read_enum<ColourEncoding::WhitePoint>(stream));
+
+        if (colour_encoding.white_point == ColourEncoding::WhitePoint::kCustom)
+            colour_encoding.white = TRY(read_custom_xy(stream));
+
+        auto const has_primaries = use_desc && not_xyb && colour_encoding.colour_space != ColourEncoding::ColourSpace::kGrey;
+
+        if (has_primaries)
+            colour_encoding.primaries = TRY(read_enum<ColourEncoding::Primaries>(stream));
+
+        if (colour_encoding.primaries == ColourEncoding::Primaries::kCustom) {
+            colour_encoding.red = TRY(read_custom_xy(stream));
+            colour_encoding.green = TRY(read_custom_xy(stream));
+            colour_encoding.blue = TRY(read_custom_xy(stream));
+        }
+
+        if (use_desc) {
+            colour_encoding.tf = TRY(read_custom_transfer_function(stream));
+            colour_encoding.rendering_intent = TRY(read_enum<ColourEncoding::RenderingIntent>(stream));
+        }
     }
 
     return colour_encoding;
