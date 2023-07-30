@@ -15,6 +15,7 @@
 #include <LibGfx/ShareableBitmap.h>
 #include <LibHTTP/Job.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/HTML/ActivateTab.h>
 #include <LibWebView/ViewImplementation.h>
 
 namespace WebView {
@@ -63,7 +64,7 @@ public:
     void window_size_changed(Gfx::IntSize);
 
     Function<void(DeprecatedString const&)> on_title_change;
-    Function<void(const URL&)> on_tab_open_request;
+    Function<void(const URL&, Web::HTML::ActivateTab)> on_tab_open_request;
     Function<void(Tab&)> on_activate_tab_request;
     Function<void(Tab&)> on_tab_close_request;
     Function<void(Tab&)> on_tab_close_other_request;

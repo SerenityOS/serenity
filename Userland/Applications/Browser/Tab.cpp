@@ -164,7 +164,7 @@ Tab::Tab(BrowserWindow& window, WebView::UseJavaScriptBytecode use_javascript_by
     auto& go_home_button = toolbar.add_action(window.go_home_action());
     go_home_button.set_allowed_mouse_buttons_for_pressing(GUI::MouseButton::Primary | GUI::MouseButton::Middle);
     go_home_button.on_middle_mouse_click = [&](auto) {
-        on_tab_open_request(Browser::url_from_user_input(g_home_url));
+        on_tab_open_request(Browser::url_from_user_input(g_home_url), Web::HTML::ActivateTab::Yes);
     };
 
     toolbar.add_action(window.reload_action());
@@ -275,7 +275,7 @@ Tab::Tab(BrowserWindow& window, WebView::UseJavaScriptBytecode use_javascript_by
 
     view().on_link_click = [this](auto& url, auto& target, unsigned modifiers) {
         if (target == "_blank" || modifiers == Mod_Ctrl) {
-            on_tab_open_request(url);
+            on_tab_open_request(url, Web::HTML::ActivateTab::Yes);
         } else {
             load(url);
         }
@@ -463,8 +463,11 @@ Tab::Tab(BrowserWindow& window, WebView::UseJavaScriptBytecode use_javascript_by
             m_audio_context_menu->popup(screen_position);
     };
 
-    view().on_link_middle_click = [this](auto& href, auto&, auto) {
-        view().on_link_click(href, "_blank", 0);
+    view().on_link_middle_click = [this](auto& url, auto&, auto modifiers) {
+        auto activate_tab = Browser::default_switch_to_new_tabs;
+        if (modifiers == Mod_Shift)
+            activate_tab = !activate_tab;
+        on_tab_open_request(url, activate_tab ? Web::HTML::ActivateTab::Yes : Web::HTML::ActivateTab::No);
     };
 
     view().on_title_change = [this](auto const& title) {
@@ -587,7 +590,7 @@ Tab::Tab(BrowserWindow& window, WebView::UseJavaScriptBytecode use_javascript_by
         on_tab_close_request(*this);
     }));
     m_tab_context_menu->add_action(GUI::Action::create("&Duplicate Tab", g_icon_bag.duplicate_tab, [this](auto&) {
-        on_tab_open_request(url());
+        on_tab_open_request(url(), Web::HTML::ActivateTab::Yes);
     }));
     m_tab_context_menu->add_action(GUI::Action::create("Close &Other Tabs", g_icon_bag.close_other_tabs, [this](auto&) {
         on_tab_close_other_request(*this);
@@ -735,7 +738,7 @@ void Tab::did_become_active()
 {
     BookmarksBarWidget::the().on_bookmark_click = [this](auto& url, auto open) {
         if (open == BookmarksBarWidget::Open::InNewTab)
-            on_tab_open_request(url);
+            on_tab_open_request(url, Web::HTML::ActivateTab::Yes);
         else if (open == BookmarksBarWidget::Open::InNewWindow)
             on_window_open_request(url);
         else

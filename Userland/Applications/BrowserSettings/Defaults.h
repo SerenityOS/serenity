@@ -18,5 +18,6 @@ static constexpr bool default_enable_content_filters = true;
 static constexpr bool default_show_bookmarks_bar = true;
 static constexpr bool default_close_download_widget_on_finish = false;
 static constexpr bool default_allow_autoplay_on_all_websites = false;
+static constexpr bool default_switch_to_new_tabs = false;
 
 }
