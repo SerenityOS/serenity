@@ -942,7 +942,19 @@ static ErrorOr<WPHeader> read_self_correcting_predictor(LittleEndianInputBitStre
     bool const default_wp = TRY(stream.read_bit());
 
     if (!default_wp) {
-        TODO();
+        self_correcting_predictor.wp_p1 = TRY(stream.read_bits(5));
+        self_correcting_predictor.wp_p2 = TRY(stream.read_bits(5));
+        self_correcting_predictor.wp_p3a = TRY(stream.read_bits(5));
+        self_correcting_predictor.wp_p3b = TRY(stream.read_bits(5));
+        self_correcting_predictor.wp_p3c = TRY(stream.read_bits(5));
+        self_correcting_predictor.wp_p3d = TRY(stream.read_bits(5));
+        self_correcting_predictor.wp_p3e = TRY(stream.read_bits(5));
+        self_correcting_predictor.wp_w = {
+            TRY(stream.read_bits<u8>(4)),
+            TRY(stream.read_bits<u8>(4)),
+            TRY(stream.read_bits<u8>(4)),
+            TRY(stream.read_bits<u8>(4)),
+        };
     }
 
     return self_correcting_predictor;
