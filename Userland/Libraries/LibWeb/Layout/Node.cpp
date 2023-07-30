@@ -289,6 +289,28 @@ NodeWithStyle::NodeWithStyle(DOM::Document& document, DOM::Node* node, CSS::Comp
     m_font = Platform::FontPlugin::the().default_font();
 }
 
+// https://www.w3.org/TR/css-values-4/#snap-a-length-as-a-border-width
+static CSSPixels snap_a_length_as_a_border_width(double device_pixels_per_css_pixel, CSSPixels length)
+{
+    // 1. Assert: len is non-negative.
+    VERIFY(length >= 0);
+
+    // 2. If len is an integer number of device pixels, do nothing.
+    auto device_pixels = length.to_double() * device_pixels_per_css_pixel;
+    if (device_pixels == trunc(device_pixels))
+        return length;
+
+    // 3. If len is greater than zero, but less than 1 device pixel, round len up to 1 device pixel.
+    if (device_pixels > 0 && device_pixels < 1)
+        return 1 / device_pixels_per_css_pixel;
+
+    // 4. If len is greater than 1 device pixel, round it down to the nearest integer number of device pixels.
+    if (device_pixels > 1)
+        return floor(device_pixels) / device_pixels_per_css_pixel;
+
+    return length;
+}
+
 void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
 {
     auto& computed_values = static_cast<CSS::MutableComputedValues&>(m_computed_values);
@@ -676,7 +698,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
                 VERIFY_NOT_REACHED();
             };
 
-            border.width = resolve_border_width();
+            border.width = snap_a_length_as_a_border_width(document().page()->client().device_pixels_per_css_pixel(), resolve_border_width());
         }
     };
 
