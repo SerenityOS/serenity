@@ -1,4 +1,4 @@
-![Help Icon](/res/icons/32x32/app-help.png)
+![Help Icon](../../../../res/icons/32x32/app-help.png)
 
 ## Welcome to the SerenityOS on-line help system!
 

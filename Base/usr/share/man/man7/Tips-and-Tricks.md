@@ -1,4 +1,4 @@
-![Welcome Icon](/res/icons/32x32/app-welcome.png)
+![Welcome Icon](../../../../res/icons/32x32/app-welcome.png)
 
 ## Name
 Tips and Tricks

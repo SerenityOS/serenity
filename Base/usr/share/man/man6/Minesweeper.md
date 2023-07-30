@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-minesweeper.png) Minesweeper
+![Icon](../../../../res/icons/16x16/app-minesweeper.png) Minesweeper
 
 [Open](file:///bin/Minesweeper)
 

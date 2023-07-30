@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-assistant.png) Assistant - Serenity Assistant
+![Icon](../../../../../res/icons/16x16/app-assistant.png) Assistant - Serenity Assistant
 
 [Open](file:///bin/Assistant)
 

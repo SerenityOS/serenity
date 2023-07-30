@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-catdog.png) CatDog - A helpful companion
+![Icon](../../../../../res/icons/16x16/app-catdog.png) CatDog - A helpful companion
 
 [Open](file:///bin/CatDog)
 

@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-flappybug.png) Flappy Bug
+![Icon](../../../../res/icons/16x16/app-flappybug.png) Flappy Bug
 
 [Open](file:///bin/FlappyBug)
 

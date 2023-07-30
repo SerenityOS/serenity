@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-flood.png) Flood
+![Icon](../../../../res/icons/16x16/app-flood.png) Flood
 
 [Open](file:///bin/Flood)
 

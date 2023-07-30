@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-magnifier.png) Magnifier - Magnifier application
+![Icon](../../../../../res/icons/16x16/app-magnifier.png) Magnifier - Magnifier application
 
 [Open](file:///bin/Magnifier)
 
