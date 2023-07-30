@@ -1564,7 +1564,7 @@ void TableFormattingContext::BorderConflictFinder::collect_table_box_conflicting
         result.append({ &m_context->table_box(), Painting::PaintableBox::ConflictingElementKind::Table, ConflictingSide::Top, {}, {} });
     }
     // Bottom edge from column group or table. Left and right edges of the column group are handled in collect_column_group_conflicting_edges.
-    if (cell.row_index == m_context->m_rows.size() - 1 && edge == ConflictingSide::Bottom) {
+    if (cell.row_index + cell.row_span == m_context->m_rows.size() && edge == ConflictingSide::Bottom) {
         if (m_col_elements_by_index[cell.column_index]) {
             result.append({ m_col_elements_by_index[cell.column_index], Painting::PaintableBox::ConflictingElementKind::ColumnGroup, ConflictingSide::Bottom, {}, cell.column_index });
         }
@@ -1579,7 +1579,7 @@ void TableFormattingContext::BorderConflictFinder::collect_table_box_conflicting
         result.append({ &m_context->table_box(), Painting::PaintableBox::ConflictingElementKind::Table, ConflictingSide::Left, {}, {} });
     }
     // Right edge from row group or table. Top and bottom edges of the row group are handled in collect_row_group_conflicting_edges.
-    if (cell.column_index == m_context->m_columns.size() - 1 && edge == ConflictingSide::Right) {
+    if (cell.column_index + cell.column_span == m_context->m_columns.size() && edge == ConflictingSide::Right) {
         result.append({ m_context->m_rows[cell.row_index].box, Painting::PaintableBox::ConflictingElementKind::Row, ConflictingSide::Right, cell.row_index, {} });
         if (m_row_group_elements_by_index[cell.row_index].has_value()) {
             result.append({ m_row_group_elements_by_index[cell.row_index]->row_group, Painting::PaintableBox::ConflictingElementKind::RowGroup, ConflictingSide::Right, cell.row_index, {} });
