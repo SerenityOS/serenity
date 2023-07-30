@@ -821,7 +821,9 @@ static ErrorOr<LfChannelDequantization> read_lf_channel_dequantization(LittleEnd
     auto const all_default = TRY(stream.read_bit());
 
     if (!all_default) {
-        TODO();
+        lf_channel_dequantization.m_x_lf_unscaled = TRY(F16(stream));
+        lf_channel_dequantization.m_y_lf_unscaled = TRY(F16(stream));
+        lf_channel_dequantization.m_b_lf_unscaled = TRY(F16(stream));
     }
 
     return lf_channel_dequantization;
