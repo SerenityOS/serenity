@@ -83,10 +83,10 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         return;
 
     struct {
-        int top { 0 };
-        int bottom { 0 };
-        int left { 0 };
-        int right { 0 };
+        DevicePixels top { 0 };
+        DevicePixels bottom { 0 };
+        DevicePixels left { 0 };
+        DevicePixels right { 0 };
     } clip_shrink;
 
     auto border_top = layout_node.computed_values().border_top();
@@ -96,10 +96,10 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
 
     if (border_top.color.alpha() == 255 && border_bottom.color.alpha() == 255
         && border_left.color.alpha() == 255 && border_right.color.alpha() == 255) {
-        clip_shrink.top = border_top.width;
-        clip_shrink.bottom = border_bottom.width;
-        clip_shrink.left = border_left.width;
-        clip_shrink.right = border_right.width;
+        clip_shrink.top = context.rounded_device_pixels(border_top.width);
+        clip_shrink.bottom = context.rounded_device_pixels(border_bottom.width);
+        clip_shrink.left = context.rounded_device_pixels(border_left.width);
+        clip_shrink.right = context.rounded_device_pixels(border_right.width);
     }
 
     // Note: Background layers are ordered front-to-back, so we paint them in reverse

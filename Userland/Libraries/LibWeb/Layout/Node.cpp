@@ -654,12 +654,12 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
         if (border.line_style == CSS::LineStyle::None || border.line_style == CSS::LineStyle::Hidden) {
             border.width = 0;
         } else {
-            auto resolve_border_width = [&]() -> double {
+            auto resolve_border_width = [&]() -> CSSPixels {
                 auto value = computed_style.property(width_property);
                 if (value->is_calculated())
-                    return value->as_calculated().resolve_length(*this)->to_px(*this).to_double();
+                    return value->as_calculated().resolve_length(*this)->to_px(*this);
                 if (value->is_length())
-                    return value->as_length().length().to_px(*this).to_double();
+                    return value->as_length().length().to_px(*this);
                 if (value->is_identifier()) {
                     // https://www.w3.org/TR/css-backgrounds-3/#valdef-line-width-thin
                     switch (value->to_identifier()) {

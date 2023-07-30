@@ -224,14 +224,14 @@ void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, Us
         CSSPixels border_and_padding;
 
         if (width) {
-            border_and_padding = CSSPixels(computed_values.border_left().width)
+            border_and_padding = computed_values.border_left().width
                 + computed_values.padding().left().to_px(*m_node, containing_block_used_values->content_width())
-                + CSSPixels(computed_values.border_right().width)
+                + computed_values.border_right().width
                 + computed_values.padding().right().to_px(*m_node, containing_block_used_values->content_width());
         } else {
-            border_and_padding = CSSPixels(computed_values.border_top().width)
+            border_and_padding = computed_values.border_top().width
                 + computed_values.padding().top().to_px(*m_node, containing_block_used_values->content_width())
-                + CSSPixels(computed_values.border_bottom().width)
+                + computed_values.border_bottom().width
                 + computed_values.padding().bottom().to_px(*m_node, containing_block_used_values->content_width());
         }
 

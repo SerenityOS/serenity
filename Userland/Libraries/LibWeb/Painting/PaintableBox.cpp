@@ -278,7 +278,7 @@ void PaintableBox::paint_background(PaintContext& context) const
 
     // HACK: If the Box has a border, use the bordered_rect to paint the background.
     //       This way if we have a border-radius there will be no gap between the filling and actual border.
-    if (computed_values().border_top().width || computed_values().border_right().width || computed_values().border_bottom().width || computed_values().border_left().width)
+    if (computed_values().border_top().width != 0 || computed_values().border_right().width != 0 || computed_values().border_bottom().width != 0 || computed_values().border_left().width != 0)
         background_rect = absolute_border_box_rect();
 
     Painting::paint_background(context, layout_box(), background_rect, background_color, computed_values().image_rendering(), background_layers, normalized_border_radii_data());
