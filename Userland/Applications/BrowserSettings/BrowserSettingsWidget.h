@@ -30,6 +30,7 @@ private:
     RefPtr<GUI::ComboBox> m_color_scheme_combobox;
     RefPtr<GUI::CheckBox> m_show_bookmarks_bar_checkbox;
     RefPtr<GUI::CheckBox> m_auto_close_download_windows_checkbox;
+    RefPtr<GUI::CheckBox> m_switch_to_new_tabs_checkbox;
 
     void set_search_engine_url(StringView);
     bool m_is_custom_search_engine { false };

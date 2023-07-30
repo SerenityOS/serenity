@@ -120,6 +120,10 @@ ErrorOr<void> BrowserSettingsWidget::setup()
     m_auto_close_download_windows_checkbox->set_checked(Config::read_bool("Browser"sv, "Preferences"sv, "CloseDownloadWidgetOnFinish"sv, Browser::default_close_download_widget_on_finish), GUI::AllowCallback::No);
     m_auto_close_download_windows_checkbox->on_checked = [&](auto) { set_modified(true); };
 
+    m_switch_to_new_tabs_checkbox = find_descendant_of_type_named<GUI::CheckBox>("switch_to_new_tabs_checkbox");
+    m_switch_to_new_tabs_checkbox->set_checked(Config::read_bool("Browser"sv, "Preferences"sv, "SwitchToNewTabs"sv, Browser::default_switch_to_new_tabs), GUI::AllowCallback::No);
+    m_switch_to_new_tabs_checkbox->on_checked = [&](auto) { set_modified(true); };
+
     return {};
 }
 
@@ -208,6 +212,7 @@ void BrowserSettingsWidget::apply_settings()
     }
 
     Config::write_bool("Browser"sv, "Preferences"sv, "CloseDownloadWidgetOnFinish"sv, m_auto_close_download_windows_checkbox->is_checked());
+    Config::write_bool("Browser"sv, "Preferences"sv, "SwitchToNewTabs"sv, m_switch_to_new_tabs_checkbox->is_checked());
 }
 
 void BrowserSettingsWidget::reset_default_values()
@@ -217,5 +222,6 @@ void BrowserSettingsWidget::reset_default_values()
     m_show_bookmarks_bar_checkbox->set_checked(Browser::default_show_bookmarks_bar);
     set_color_scheme(Browser::default_color_scheme);
     m_auto_close_download_windows_checkbox->set_checked(Browser::default_close_download_widget_on_finish);
+    m_switch_to_new_tabs_checkbox->set_checked(Browser::default_switch_to_new_tabs);
     set_search_engine_url(Browser::default_search_engine);
 }

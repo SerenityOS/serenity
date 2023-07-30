@@ -203,4 +203,30 @@
             }
         }
     }
+
+    @GUI::GroupBox {
+        title: "General"
+        fixed_height: 70
+        layout: @GUI::VerticalBoxLayout {
+            margins: [16, 8, 8]
+            spacing: 2
+        }
+
+        @GUI::Widget {
+            layout: @GUI::HorizontalBoxLayout {
+                spacing: 16
+            }
+
+            @GUI::ImageWidget {
+                fixed_width: 32
+                fixed_height: 32
+                bitmap: "/res/icons/32x32/app-settings.png"
+            }
+
+            @GUI::CheckBox {
+                name: "switch_to_new_tabs_checkbox"
+                text: "Automatically switch to new tabs"
+            }
+        }
+    }
 }

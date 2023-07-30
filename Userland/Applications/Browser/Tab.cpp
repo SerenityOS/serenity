@@ -464,7 +464,7 @@ Tab::Tab(BrowserWindow& window, WebView::UseJavaScriptBytecode use_javascript_by
     };
 
     view().on_link_middle_click = [this](auto& url, auto&, auto modifiers) {
-        auto activate_tab = Browser::default_switch_to_new_tabs;
+        auto activate_tab = Config::read_bool("Browser"sv, "Preferences"sv, "SwitchToNewTabs"sv, Browser::default_switch_to_new_tabs);
         if (modifiers == Mod_Shift)
             activate_tab = !activate_tab;
         on_tab_open_request(url, activate_tab ? Web::HTML::ActivateTab::Yes : Web::HTML::ActivateTab::No);
