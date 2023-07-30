@@ -7791,40 +7791,41 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
         if (auto maybe_dynamic = TRY(parse_dynamic_value(peek_token)); maybe_dynamic && maybe_dynamic->is_calculated()) {
             (void)tokens.next_token();
             auto& calculated = maybe_dynamic->as_calculated();
-            if (calculated.resolves_to_angle_percentage()) {
-                if (auto property = any_property_accepts_type_percentage(property_ids, ValueType::Angle); property.has_value())
+            // This is a bit sensitive to ordering: `<foo>` and `<percentage>` have to be checked before `<foo-percentage>`.
+            if (calculated.resolves_to_percentage()) {
+                if (auto property = any_property_accepts_type(property_ids, ValueType::Percentage); property.has_value())
                     return PropertyAndValue { *property, calculated };
             } else if (calculated.resolves_to_angle()) {
                 if (auto property = any_property_accepts_type(property_ids, ValueType::Angle); property.has_value())
                     return PropertyAndValue { *property, calculated };
-            } else if (calculated.resolves_to_frequency_percentage()) {
-                if (auto property = any_property_accepts_type_percentage(property_ids, ValueType::Frequency); property.has_value())
+            } else if (calculated.resolves_to_angle_percentage()) {
+                if (auto property = any_property_accepts_type_percentage(property_ids, ValueType::Angle); property.has_value())
                     return PropertyAndValue { *property, calculated };
             } else if (calculated.resolves_to_frequency()) {
                 if (auto property = any_property_accepts_type(property_ids, ValueType::Frequency); property.has_value())
                     return PropertyAndValue { *property, calculated };
-            } else if (calculated.resolves_to_number_percentage()) {
-                if (auto property = any_property_accepts_type_percentage(property_ids, ValueType::Number); property.has_value())
+            } else if (calculated.resolves_to_frequency_percentage()) {
+                if (auto property = any_property_accepts_type_percentage(property_ids, ValueType::Frequency); property.has_value())
                     return PropertyAndValue { *property, calculated };
             } else if (calculated.resolves_to_number()) {
                 if (property_accepts_numeric) {
                     auto property_or_resolved = property_accepting_integer.value_or_lazy_evaluated([property_accepting_number]() { return property_accepting_number.value(); });
                     return PropertyAndValue { property_or_resolved, calculated };
                 }
-            } else if (calculated.resolves_to_length_percentage()) {
-                if (auto property = any_property_accepts_type_percentage(property_ids, ValueType::Length); property.has_value())
+            } else if (calculated.resolves_to_number_percentage()) {
+                if (auto property = any_property_accepts_type_percentage(property_ids, ValueType::Number); property.has_value())
                     return PropertyAndValue { *property, calculated };
             } else if (calculated.resolves_to_length()) {
                 if (auto property = any_property_accepts_type(property_ids, ValueType::Length); property.has_value())
                     return PropertyAndValue { *property, calculated };
-            } else if (calculated.resolves_to_time_percentage()) {
-                if (auto property = any_property_accepts_type_percentage(property_ids, ValueType::Time); property.has_value())
+            } else if (calculated.resolves_to_length_percentage()) {
+                if (auto property = any_property_accepts_type_percentage(property_ids, ValueType::Length); property.has_value())
                     return PropertyAndValue { *property, calculated };
             } else if (calculated.resolves_to_time()) {
                 if (auto property = any_property_accepts_type(property_ids, ValueType::Time); property.has_value())
                     return PropertyAndValue { *property, calculated };
-            } else if (calculated.resolves_to_percentage()) {
-                if (auto property = any_property_accepts_type(property_ids, ValueType::Percentage); property.has_value())
+            } else if (calculated.resolves_to_time_percentage()) {
+                if (auto property = any_property_accepts_type_percentage(property_ids, ValueType::Time); property.has_value())
                     return PropertyAndValue { *property, calculated };
             }
         }
