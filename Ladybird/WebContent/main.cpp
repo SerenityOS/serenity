@@ -29,7 +29,7 @@
 #include <LibWeb/PermissionsPolicy/AutoplayAllowlist.h>
 #include <LibWeb/Platform/EventLoopPluginSerenity.h>
 #include <LibWeb/WebSockets/WebSocket.h>
-#include <QGuiApplication>
+#include <QCoreApplication>
 #include <QTimer>
 #include <WebContent/ConnectionFromClient.h>
 #include <WebContent/PageHost.h>
@@ -46,7 +46,7 @@ extern DeprecatedString s_serenity_resource_root;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    QGuiApplication app(arguments.argc, arguments.argv);
+    QCoreApplication app(arguments.argc, arguments.argv);
 
 #if defined(AK_OS_MACOS)
     prohibit_interaction();
