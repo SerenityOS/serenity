@@ -121,10 +121,10 @@ void TestRunner::do_run_single_test(DeprecatedString const& test_path, size_t cu
         ++m_counts.tests_passed;
         break;
     case Test::Result::ExpectedFail:
-        ++m_counts.tests_passed;
+        ++m_counts.tests_expected_failed;
         break;
     case Test::Result::Skip:
-        ++m_counts.tests_expected_failed;
+        ++m_counts.tests_skipped;
         break;
     case Test::Result::Fail:
         ++m_counts.tests_failed;
