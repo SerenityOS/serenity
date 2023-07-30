@@ -84,6 +84,7 @@ executable("ladybird_executable") {
     "ModelTranslator.cpp",
     "Settings.cpp",
     "SettingsDialog.cpp",
+    "TVGIconEngine.cpp",
     "Tab.cpp",
     "Utilities.cpp",
     "WebContentView.cpp",
