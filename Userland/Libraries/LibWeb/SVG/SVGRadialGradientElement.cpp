@@ -57,8 +57,8 @@ NumberPercentage SVGRadialGradientElement::start_circle_x() const
         return *m_fx;
     // If the element references an element that specifies a value for 'fx', then the value of 'fx' is
     // inherited from the referenced element.
-    if (auto href = radial_gradient_xlink_href())
-        return href->start_circle_x();
+    if (auto gradient = linked_radial_gradient())
+        return gradient->start_circle_x();
     // If attribute ‘fx’ is not specified, ‘fx’ will coincide with the presentational value of ‘cx’ for
     // the element whether the value for 'cx' was inherited or not.
     return end_circle_x();
@@ -71,8 +71,8 @@ NumberPercentage SVGRadialGradientElement::start_circle_y() const
         return *m_fy;
     // If the element references an element that specifies a value for 'fy', then the value of 'fy' is
     // inherited from the referenced element.
-    if (auto href = radial_gradient_xlink_href())
-        return href->start_circle_y();
+    if (auto gradient = linked_radial_gradient())
+        return gradient->start_circle_y();
     // If attribute ‘fy’ is not specified, ‘fy’ will coincide with the presentational value of ‘cy’ for
     // the element whether the value for 'cy' was inherited or not.
     return end_circle_y();
@@ -86,8 +86,8 @@ NumberPercentage SVGRadialGradientElement::start_circle_radius() const
         return *m_fr;
     // if the element references an element that specifies a value for 'fr', then the value of
     // 'fr' is inherited from the referenced element.
-    if (auto href = radial_gradient_xlink_href())
-        return href->start_circle_radius();
+    if (auto gradient = linked_radial_gradient())
+        return gradient->start_circle_radius();
     // If the attribute is not specified, the effect is as if a value of '0%' were specified.
     return NumberPercentage::create_percentage(0);
 }
@@ -97,8 +97,8 @@ NumberPercentage SVGRadialGradientElement::end_circle_x() const
 {
     if (m_cx.has_value())
         return *m_cx;
-    if (auto href = radial_gradient_xlink_href())
-        return href->end_circle_x();
+    if (auto gradient = linked_radial_gradient())
+        return gradient->end_circle_x();
     return NumberPercentage::create_percentage(50);
 }
 
@@ -107,8 +107,8 @@ NumberPercentage SVGRadialGradientElement::end_circle_y() const
 {
     if (m_cy.has_value())
         return *m_cy;
-    if (auto href = radial_gradient_xlink_href())
-        return href->end_circle_y();
+    if (auto gradient = linked_radial_gradient())
+        return gradient->end_circle_y();
     return NumberPercentage::create_percentage(50);
 }
 
@@ -118,8 +118,8 @@ NumberPercentage SVGRadialGradientElement::end_circle_radius() const
     // Note: A negative value is an error.
     if (m_r.has_value() && m_r->value() >= 0)
         return *m_r;
-    if (auto href = radial_gradient_xlink_href())
-        return href->end_circle_radius();
+    if (auto gradient = linked_radial_gradient())
+        return gradient->end_circle_radius();
     return NumberPercentage::create_percentage(50);
 }
 
