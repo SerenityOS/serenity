@@ -225,7 +225,7 @@ Vector<MatchingRule> StyleComputer::filter_namespace_rules(DOM::Element const& e
     Vector<MatchingRule> filtered_rules;
 
     for (auto const& rule : rules) {
-        auto namespace_uri = rule.sheet->namespace_filter();
+        auto namespace_uri = rule.sheet->default_namespace();
         if (namespace_uri.has_value()) {
             if (namespace_uri.value() == element.namespace_uri())
                 filtered_rules.append(rule);
