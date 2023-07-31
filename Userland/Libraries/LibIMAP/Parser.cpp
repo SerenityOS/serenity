@@ -561,6 +561,7 @@ Vector<DeprecatedString> Parser::parse_langs()
 }
 Tuple<DeprecatedString, HashMap<DeprecatedString, DeprecatedString>> Parser::parse_disposition()
 {
+    consume("("sv);
     auto disposition_type = parse_string();
     consume(" "sv);
     auto disposition_vals = parse_body_fields_params();
