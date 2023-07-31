@@ -757,6 +757,10 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
         return style_value_for_size(layout_node.computed_values().row_gap());
     case PropertyID::Stroke:
         return style_value_for_svg_paint(layout_node.computed_values().stroke());
+    case PropertyID::StrokeLinecap:
+        return TRY(IdentifierStyleValue::create(to_value_id(layout_node.computed_values().stroke_linecap())));
+    case PropertyID::StrokeLinejoin:
+        return TRY(IdentifierStyleValue::create(to_value_id(layout_node.computed_values().stroke_linejoin())));
     case PropertyID::StrokeOpacity:
         return NumberStyleValue::create(layout_node.computed_values().stroke_opacity());
     case PropertyID::StrokeWidth:

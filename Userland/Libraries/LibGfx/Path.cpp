@@ -411,138 +411,238 @@ private:
     ReadonlySpan<T> m_span;
 };
 
-Path Path::stroke_to_fill(float thickness) const
+Path Path::stroke_to_fill(float thickness, StrokeLinecap linecap, StrokeLinejoin linejoin) const
 {
-    // Note: This convolves a polygon with the path using the algorithm described
-    // in https://keithp.com/~keithp/talks/cairo2003.pdf (3.1 Stroking Splines via Convolution)
-
     VERIFY(thickness > 0);
 
-    auto& lines = split_lines();
-    if (lines.is_empty())
-        return Path {};
+    Path stroked_path;
+    Path outer_offset_path;
+    Path inner_offset_path;
 
-    // Paths can be disconnected, which a pain to deal with, so split it up.
-    Vector<Vector<FloatPoint>> segments;
-    segments.append({ lines.first().a() });
-    for (auto& line : lines) {
-        if (line.a() == segments.last().last()) {
-            segments.last().append(line.b());
+    auto parallel_line = [](FloatPoint const& prev, FloatPoint const& curr, float thickness, bool outer) {
+        auto sign = outer ? 1 : -1;
+        auto x1 = prev.x();
+        auto y1 = prev.y();
+        auto x2 = curr.x();
+        auto y2 = curr.y();
+        auto sum = (y2 - y1) * (y2 - y1) + (x2 - x1) * (x2 - x1);
+        auto y_sign = (x2 > x1) ? 1 : -1;
+        auto x_sign = (y2 > y1) ? 1 : -1;
+
+        auto m1 = x1 + sign * x_sign * (thickness / 2) * AK::sqrt((y2 - y1) * (y2 - y1) / sum);
+        auto n1 = y1 - sign * y_sign * (thickness / 2) * AK::sqrt((x2 - x1) * (x2 - x1) / sum);
+        auto m2 = x2 + sign * x_sign * (thickness / 2) * AK::sqrt((y2 - y1) * (y2 - y1) / sum);
+        auto n2 = y2 - sign * y_sign * (thickness / 2) * AK::sqrt((x2 - x1) * (x2 - x1) / sum);
+
+        return FloatLine { FloatPoint { m1, n1 }, FloatPoint { m2, n2 } };
+    };
+
+    auto compute_derivative = [](Segment const* segment, FloatPoint cursor, bool end = true) {
+        switch (segment->type()) {
+        case Segment::Type::MoveTo:
+        case Segment::Type::LineTo:
+            return cursor - segment->point();
+        case Segment::Type::QuadraticBezierCurveTo: {
+            auto& curve = static_cast<QuadraticBezierCurveSegment const&>(*segment);
+            if (end) {
+                return curve.through() * (-2.0f) + curve.point() * 2.0f;
+            }
+            return cursor * (-2.0f) + curve.through();
+        }
+        case Segment::Type::CubicBezierCurveTo: {
+            auto& curve = static_cast<CubicBezierCurveSegment const&>(*segment);
+            if (end) {
+                return curve.through_1() * (-3.0f) + curve.point() * 3.0f;
+            }
+            return cursor * (-3.0f) + curve.through_0() * 3.0f;
+        }
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    };
+
+    // This function is borrowed from Line::intersected method.
+    // But here we also compute the joined point outside current lines.
+    auto intersected_point = [&](FloatPoint const& outer_offset_point1, FloatPoint const& outer_offset_point2, Segment const* prev_segment, Segment const* curr_segment, FloatPoint const& prev_point) -> Optional<FloatPoint> {
+        auto cross_product = [](FloatPoint const& p1, FloatPoint const& p2) {
+            return p1.x() * p2.y() - p1.y() * p2.x();
+        };
+
+        // For cubic/quad approximated curves, the approximated line at end points always can not reflect the real tangent direction.
+        // So instead of using checking two aproximated line derivative, use the real derivative of the arc.
+        auto r = compute_derivative(prev_segment, prev_point, true);
+        auto s = compute_derivative(curr_segment, prev_segment->point(), false);
+
+        auto delta_a = outer_offset_point2 - outer_offset_point1;
+        auto denom = cross_product(r, s);
+
+        // FIXME: 0.01 is an experimental number. If denom is too small, then t will be too large.
+        if (AK::abs(denom) < 0.01f) {
+            return {};
+        }
+
+        auto t = cross_product(delta_a, s) / denom;
+        return FloatPoint { outer_offset_point1.x() + t * r.x(), outer_offset_point1.y() + t * r.y() };
+    };
+
+    auto join_lines = [&](FloatLine const& outer_line, FloatPoint const& joined_point, FloatPoint const& prev_point, Segment const* prev, Segment const* curr) {
+        switch (linejoin) {
+        case StrokeLinejoin::Arcs:
+        case StrokeLinejoin::MiterClip:
+            // FIXME: To implement arcs, miterclip
+            outer_offset_path.line_to(outer_line.a());
+            break;
+        case StrokeLinejoin::Bevel:
+            outer_offset_path.line_to(outer_line.a());
+            break;
+        case StrokeLinejoin::Miter: {
+            VERIFY(outer_offset_path.segments().size() >= 2);
+            auto intersected = intersected_point(outer_offset_path.segments().last()->point(), outer_line.a(), prev, curr, prev_point);
+            if (intersected.has_value()) {
+                outer_offset_path.line_to(intersected.value());
+            }
+
+            outer_offset_path.line_to(outer_line.a());
+            break;
+        }
+        case StrokeLinejoin::Round:
+            outer_offset_path.arc_to(
+                outer_line.a(),
+                outer_offset_path.segments().last()->point().distance_from(joined_point),
+                false,
+                true);
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    };
+
+    auto append_offset_path = [&](FloatPoint const& start_before, FloatPoint const& start, FloatPoint const& end, Segment const* prev, Segment const* curr, bool joinable = true) {
+        FloatLine outer_line = parallel_line(start, end, thickness, true);
+        FloatLine inner_line = parallel_line(start, end, thickness, false);
+
+        if (outer_offset_path.segments().size() == 0) {
+            outer_offset_path.move_to(outer_line.a());
+        } else if (joinable) {
+            join_lines(outer_line, start, start_before, prev, curr);
         } else {
-            segments.append({ line.a(), line.b() });
+            outer_offset_path.line_to(outer_line.a());
         }
-    }
+        outer_offset_path.line_to(outer_line.b());
 
-    // Note: This is the same as the tolerance from bezier curve splitting.
-    constexpr auto flatness = 0.015f;
-    auto pen_vertex_count = max(
-        static_cast<int>(ceilf(AK::Pi<float> / acosf(1 - (2 * flatness) / thickness))), 4);
-    if (pen_vertex_count % 2 == 1)
-        pen_vertex_count += 1;
-
-    Vector<FloatPoint, 128> pen_vertices;
-    pen_vertices.ensure_capacity(pen_vertex_count);
-
-    // Generate vertices for the pen (going counterclockwise). The pen does not necessarily need
-    // to be a circle (or an approximation of one), but other shapes are untested.
-    float theta = 0;
-    float theta_delta = (AK::Pi<float> * 2) / pen_vertex_count;
-    for (int i = 0; i < pen_vertex_count; i++) {
-        float sin_theta;
-        float cos_theta;
-        AK::sincos(theta, sin_theta, cos_theta);
-        pen_vertices.unchecked_append({ cos_theta * thickness / 2, sin_theta * thickness / 2 });
-        theta -= theta_delta;
-    }
-
-    auto wrapping_index = [](auto& vertices, auto index) {
-        return vertices[(index + vertices.size()) % vertices.size()];
-    };
-
-    auto angle_between = [](auto p1, auto p2) {
-        auto delta = p2 - p1;
-        return atan2f(delta.y(), delta.x());
-    };
-
-    struct ActiveRange {
-        float start;
-        float end;
-
-        bool in_range(float angle) const
+        if (inner_offset_path.segments().size() == 0) {
+            inner_offset_path.move_to(inner_line.a());
+        }
         {
-            // Note: Since active ranges go counterclockwise start > end unless we wrap around at 180 degrees
-            return ((angle <= start && angle >= end)
-                || (start < end && angle <= start)
-                || (start < end && angle >= end));
+            inner_offset_path.line_to(inner_line.a());
+        }
+        inner_offset_path.line_to(inner_line.b());
+    };
+
+    auto add_stroke_line_cap = [&](FloatPoint p0) {
+        switch (linecap) {
+        case StrokeLinecap::Butt: {
+            outer_offset_path.line_to(p0);
+            break;
+        }
+        case StrokeLinecap::Square: {
+            auto line = parallel_line(outer_offset_path.segments().last()->point(), p0, thickness, true);
+            outer_offset_path.line_to(line.a());
+            outer_offset_path.line_to(line.b());
+            outer_offset_path.line_to(p0);
+            break;
+        }
+        case StrokeLinecap::Round: {
+            outer_offset_path.arc_to(p0, thickness / 2, true, true);
+            break;
+        }
+        default:
+            VERIFY_NOT_REACHED();
         }
     };
 
-    Vector<ActiveRange, 128> active_ranges;
-    active_ranges.ensure_capacity(pen_vertices.size());
-    for (auto i = 0; i < pen_vertex_count; i++) {
-        active_ranges.unchecked_append({ angle_between(wrapping_index(pen_vertices, i - 1), pen_vertices[i]),
-            angle_between(pen_vertices[i], wrapping_index(pen_vertices, i + 1)) });
-    }
+    auto close_interval_stroke_path = [&](int head, int tail) {
+        if (outer_offset_path.segments().size() == 0 || inner_offset_path.segments().size() == 0)
+            return;
 
-    auto clockwise = [](float current_angle, float target_angle) {
-        if (target_angle < 0)
-            target_angle += AK::Pi<float> * 2;
-        if (current_angle < 0)
-            current_angle += AK::Pi<float> * 2;
-        if (target_angle < current_angle)
-            target_angle += AK::Pi<float> * 2;
-        return (target_angle - current_angle) <= AK::Pi<float>;
+        // Case 1: It is a full closed geometry. Then it would be two seperate closed offset path: outer one and inner one.
+        if (m_segments.at(head)->point() == m_segments.at(tail)->point()) {
+            join_lines(
+                FloatLine { outer_offset_path.segments().at(0)->point(), outer_offset_path.segments().at(1)->point() },
+                m_segments.at(head)->point(),
+                m_segments.at(tail - 1)->point(),
+                m_segments.at(tail),
+                m_segments.at(head + 1));
+            // According to the NonZero filling rule, should inverse inner offset path to cancel out the outer offset path.
+            // Then make the middle part to be empty.
+            Path inversed_inner_offset_path;
+            inversed_inner_offset_path.move_to(inner_offset_path.segments().last()->point());
+            for (int i = inner_offset_path.segments().size() - 2; i >= 0; --i) {
+                inversed_inner_offset_path.line_to(inner_offset_path.segments()[i]->point());
+            }
+            inversed_inner_offset_path.close();
+            stroked_path.append_path(inversed_inner_offset_path);
+        } else { // Case 2: Outer offset path linked with inner offset path.
+            add_stroke_line_cap(inner_offset_path.segments().last()->point());
+
+            for (int i = inner_offset_path.segments().size() - 2; i >= 0; --i) {
+                outer_offset_path.line_to(inner_offset_path.segments()[i]->point());
+            }
+
+            add_stroke_line_cap(outer_offset_path.segments().first()->point());
+        }
+
+        stroked_path.append_path(outer_offset_path);
+        outer_offset_path.clear();
+        inner_offset_path.clear();
     };
 
-    Path convolution;
-    for (auto& segment : segments) {
-        RoundTrip<FloatPoint> shape { segment };
-
-        bool first = true;
-        auto add_vertex = [&](auto v) {
-            if (first) {
-                convolution.move_to(v);
+    FloatPoint cursor;
+    FloatPoint pre_cursor;
+    int interval_head = 0;
+    for (size_t i = 0; i < m_segments.size(); ++i) {
+        auto segment = m_segments.at(i);
+        switch (segment->type()) {
+        case Segment::Type::MoveTo: {
+            if (outer_offset_path.segments().size() > 0 && inner_offset_path.segments().size() > 0) {
+                close_interval_stroke_path(interval_head, i - 1);
+                interval_head = i;
+            }
+            break;
+        }
+        case Segment::Type::LineTo: {
+            append_offset_path(pre_cursor, cursor, segment->point(), m_segments.at(i - 1), segment);
+            break;
+        }
+        case Segment::Type::QuadraticBezierCurveTo: {
+            auto control = static_cast<QuadraticBezierCurveSegment const&>(*segment).through();
+            bool first = true;
+            Painter::for_each_line_segment_on_bezier_curve(control, cursor, segment->point(), [&](FloatPoint p0, FloatPoint p1) {
+                append_offset_path(pre_cursor, p0, p1, m_segments.at(i - 1), segment, first);
                 first = false;
-            } else {
-                convolution.line_to(v);
-            }
-        };
-
-        auto shape_idx = 0u;
-
-        auto slope = [&] {
-            return angle_between(shape[shape_idx], shape[shape_idx + 1]);
-        };
-
-        auto start_slope = slope();
-        // Note: At least one range must be active.
-        auto active = *active_ranges.find_first_index_if([&](auto& range) {
-            return range.in_range(start_slope);
-        });
-
-        while (shape_idx < shape.size()) {
-            add_vertex(shape[shape_idx] + pen_vertices[active]);
-            auto slope_now = slope();
-            auto range = active_ranges[active];
-            if (range.in_range(slope_now)) {
-                shape_idx++;
-            } else {
-                if (clockwise(slope_now, range.end)) {
-                    if (active == static_cast<size_t>(pen_vertex_count - 1))
-                        active = 0;
-                    else
-                        active++;
-                } else {
-                    if (active == 0)
-                        active = pen_vertex_count - 1;
-                    else
-                        active--;
-                }
-            }
+            });
+            break;
         }
+        case Segment::Type::CubicBezierCurveTo: {
+            auto& curve = static_cast<CubicBezierCurveSegment const&>(*segment);
+            auto control_0 = curve.through_0();
+            auto control_1 = curve.through_1();
+            bool first = true;
+            Painter::for_each_line_segment_on_cubic_bezier_curve(control_0, control_1, cursor, segment->point(), [&](FloatPoint p0, FloatPoint p1) {
+                append_offset_path(pre_cursor, p0, p1, m_segments.at(i - 1), segment, first);
+                first = false;
+            });
+            break;
+        }
+        case Segment::Type::Invalid:
+            VERIFY_NOT_REACHED();
+        }
+        pre_cursor = cursor;
+        cursor = segment->point();
     }
 
-    return convolution;
+    close_interval_stroke_path(interval_head, m_segments.size() - 1);
+    return stroked_path;
 }
 
 }

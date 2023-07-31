@@ -298,6 +298,18 @@ float StyleProperties::fill_opacity() const
     return resolve_opacity_value(*value);
 }
 
+Optional<CSS::StrokeLinecap> StyleProperties::stroke_linecap() const
+{
+    auto value = property(CSS::PropertyID::StrokeLinecap);
+    return value_id_to_stroke_linecap(value->to_identifier());
+}
+
+Optional<CSS::StrokeLinejoin> StyleProperties::stroke_linejoin() const
+{
+    auto value = property(CSS::PropertyID::StrokeLinejoin);
+    return value_id_to_stroke_linejoin(value->to_identifier());
+}
+
 float StyleProperties::stroke_opacity() const
 {
     auto value = property(CSS::PropertyID::StrokeOpacity);

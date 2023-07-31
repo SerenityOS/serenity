@@ -1830,6 +1830,22 @@
       "paint"
     ]
   },
+  "stroke-linecap": {
+    "affects-layout": false,
+    "inherited": true,
+    "initial": "butt",
+    "valid-types": [
+      "stroke-linecap"
+    ]
+  },
+  "stroke-linejoin": {
+    "affects-layout": false,
+    "inherited": true,
+    "initial": "miter",
+    "valid-types": [
+      "stroke-linejoin"
+    ]
+  },
   "stroke-opacity": {
     "affects-layout": false,
     "inherited": true,

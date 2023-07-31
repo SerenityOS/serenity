@@ -282,6 +282,18 @@
     "to-zero",
     "up"
   ],
+  "stroke-linecap": [
+    "butt",
+    "round",
+    "square"
+  ],
+  "stroke-linejoin": [
+      "arcs",
+      "bevel",
+      "miter",
+      "miter-clip",
+      "round"
+  ],
   "text-anchor": [
     "start",
     "middle",

@@ -54,6 +54,38 @@ static Gfx::Painter::WindingRule to_gfx_winding_rule(SVG::FillRule fill_rule)
     }
 }
 
+static Gfx::Path::StrokeLinecap to_gfx_stroke_linecap(SVG::StrokeLinecap stroke_linecap)
+{
+    switch (stroke_linecap) {
+    case SVG::StrokeLinecap::Butt:
+        return Gfx::Path::StrokeLinecap::Butt;
+    case SVG::StrokeLinecap::Square:
+        return Gfx::Path::StrokeLinecap::Square;
+    case SVG::StrokeLinecap::Round:
+        return Gfx::Path::StrokeLinecap::Round;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+static Gfx::Path::StrokeLinejoin to_gfx_stroke_linejoin(SVG::StrokeLinejoin stroke_linejoin)
+{
+    switch (stroke_linejoin) {
+    case SVG::StrokeLinejoin::Arcs:
+        return Gfx::Path::StrokeLinejoin::Arcs;
+    case SVG::StrokeLinejoin::Bevel:
+        return Gfx::Path::StrokeLinejoin::Bevel;
+    case SVG::StrokeLinejoin::Miter:
+        return Gfx::Path::StrokeLinejoin::Miter;
+    case SVG::StrokeLinejoin::MiterClip:
+        return Gfx::Path::StrokeLinejoin::MiterClip;
+    case SVG::StrokeLinejoin::Round:
+        return Gfx::Path::StrokeLinejoin::Round;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
 {
     if (!is_visible())
@@ -127,6 +159,8 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
             winding_rule);
     }
 
+    auto stroke_linecap = to_gfx_stroke_linecap(geometry_element.stroke_linecap().value_or(SVG::StrokeLinecap::Butt));
+    auto stroke_linejoin = to_gfx_stroke_linejoin(geometry_element.stroke_linejoin().value_or(SVG::StrokeLinejoin::Miter));
     auto stroke_opacity = geometry_element.stroke_opacity().value_or(1);
 
     // Note: This is assuming .x_scale() == .y_scale() (which it does currently).
@@ -137,12 +171,16 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
             path,
             *paint_style,
             stroke_thickness,
-            stroke_opacity);
+            stroke_opacity,
+            stroke_linecap,
+            stroke_linejoin);
     } else if (auto stroke_color = geometry_element.stroke_color(); stroke_color.has_value()) {
         painter.stroke_path(
             path,
             stroke_color->with_opacity(stroke_opacity),
-            stroke_thickness);
+            stroke_thickness,
+            stroke_linecap,
+            stroke_linejoin);
     }
 }
 

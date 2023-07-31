@@ -17,6 +17,7 @@
 #include <LibGfx/Gradients.h>
 #include <LibGfx/GrayscaleBitmap.h>
 #include <LibGfx/PaintStyle.h>
+#include <LibGfx/Path.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
@@ -137,7 +138,7 @@ public:
     static void for_each_line_segment_on_elliptical_arc(FloatPoint p1, FloatPoint p2, FloatPoint center, FloatSize radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(FloatPoint, FloatPoint)>&);
     static void for_each_line_segment_on_elliptical_arc(FloatPoint p1, FloatPoint p2, FloatPoint center, FloatSize radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(FloatPoint, FloatPoint)>&&);
 
-    void stroke_path(Path const&, Color, int thickness);
+    void stroke_path(Path const&, Color, int thickness, Path::StrokeLinecap stroke_linecap = Path::StrokeLinecap::Butt, Path::StrokeLinejoin stroke_linejoin = Path::StrokeLinejoin::Miter);
 
     enum class WindingRule {
         Nonzero,

@@ -125,6 +125,20 @@ enum class FillRule {
     Evenodd
 };
 
+enum class StrokeLinecap {
+    Butt,
+    Square,
+    Round
+};
+
+enum class StrokeLinejoin {
+    Arcs,
+    Bevel,
+    Miter,
+    MiterClip,
+    Round
+};
+
 enum class TextAnchor {
     Start,
     Middle,

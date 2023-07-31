@@ -2193,35 +2193,20 @@ static bool can_approximate_bezier_curve(FloatPoint p1, FloatPoint p2, FloatPoin
 // static
 void Painter::for_each_line_segment_on_bezier_curve(FloatPoint control_point, FloatPoint p1, FloatPoint p2, Function<void(FloatPoint, FloatPoint)>& callback)
 {
-    struct SegmentDescriptor {
-        FloatPoint control_point;
-        FloatPoint p1;
-        FloatPoint p2;
-    };
-
-    static constexpr auto split_quadratic_bezier_curve = [](FloatPoint original_control, FloatPoint p1, FloatPoint p2, auto& segments) {
-        auto po1_midpoint = original_control + p1;
+    if (can_approximate_bezier_curve(p1, p2, control_point)) {
+        callback(p1, p2);
+    } else {
+        auto po1_midpoint = control_point + p1;
         po1_midpoint /= 2;
 
-        auto po2_midpoint = original_control + p2;
+        auto po2_midpoint = control_point + p2;
         po2_midpoint /= 2;
 
         auto new_segment = po1_midpoint + po2_midpoint;
         new_segment /= 2;
 
-        segments.enqueue({ po1_midpoint, p1, new_segment });
-        segments.enqueue({ po2_midpoint, new_segment, p2 });
-    };
-
-    Queue<SegmentDescriptor> segments;
-    segments.enqueue({ control_point, p1, p2 });
-    while (!segments.is_empty()) {
-        auto segment = segments.dequeue();
-
-        if (can_approximate_bezier_curve(segment.p1, segment.p2, segment.control_point))
-            callback(segment.p1, segment.p2);
-        else
-            split_quadratic_bezier_curve(segment.control_point, segment.p1, segment.p2, segments);
+        for_each_line_segment_on_bezier_curve(po1_midpoint, p1, new_segment, callback);
+        for_each_line_segment_on_bezier_curve(po2_midpoint, new_segment, p2, callback);
     }
 }
 
@@ -2270,21 +2255,13 @@ static bool can_approximate_cubic_bezier_curve(FloatPoint p1, FloatPoint p2, Flo
 // static
 void Painter::for_each_line_segment_on_cubic_bezier_curve(FloatPoint control_point_0, FloatPoint control_point_1, FloatPoint p1, FloatPoint p2, Function<void(FloatPoint, FloatPoint)>& callback)
 {
-    struct ControlPair {
-        FloatPoint control_point_0;
-        FloatPoint control_point_1;
-    };
-    struct SegmentDescriptor {
-        ControlPair control_points;
-        FloatPoint p1;
-        FloatPoint p2;
-    };
-
-    static constexpr auto split_cubic_bezier_curve = [](ControlPair const& original_controls, FloatPoint p1, FloatPoint p2, auto& segments) {
+    if (can_approximate_cubic_bezier_curve(p1, p2, control_point_0, control_point_1)) {
+        callback(p1, p2);
+    } else {
         Array level_1_midpoints {
-            (p1 + original_controls.control_point_0) / 2,
-            (original_controls.control_point_0 + original_controls.control_point_1) / 2,
-            (original_controls.control_point_1 + p2) / 2,
+            (p1 + control_point_0) / 2,
+            (control_point_0 + control_point_1) / 2,
+            (control_point_1 + p2) / 2,
         };
         Array level_2_midpoints {
             (level_1_midpoints[0] + level_1_midpoints[1]) / 2,
@@ -2292,19 +2269,8 @@ void Painter::for_each_line_segment_on_cubic_bezier_curve(FloatPoint control_poi
         };
         auto level_3_midpoint = (level_2_midpoints[0] + level_2_midpoints[1]) / 2;
 
-        segments.enqueue({ { level_1_midpoints[0], level_2_midpoints[0] }, p1, level_3_midpoint });
-        segments.enqueue({ { level_2_midpoints[1], level_1_midpoints[2] }, level_3_midpoint, p2 });
-    };
-
-    Queue<SegmentDescriptor> segments;
-    segments.enqueue({ { control_point_0, control_point_1 }, p1, p2 });
-    while (!segments.is_empty()) {
-        auto segment = segments.dequeue();
-
-        if (can_approximate_cubic_bezier_curve(segment.p1, segment.p2, segment.control_points.control_point_0, segment.control_points.control_point_1))
-            callback(segment.p1, segment.p2);
-        else
-            split_cubic_bezier_curve(segment.control_points, segment.p1, segment.p2, segments);
+        for_each_line_segment_on_cubic_bezier_curve(level_1_midpoints[0], level_2_midpoints[0], p1, level_3_midpoint, callback);
+        for_each_line_segment_on_cubic_bezier_curve(level_2_midpoints[1], level_1_midpoints[2], level_3_midpoint, p2, callback);
     }
 }
 
@@ -2416,11 +2382,11 @@ PainterStateSaver::~PainterStateSaver()
     m_painter.restore();
 }
 
-void Painter::stroke_path(Path const& path, Color color, int thickness)
+void Painter::stroke_path(Path const& path, Color color, int thickness, Path::StrokeLinecap stroke_linecap, Path::StrokeLinejoin stroke_linejoin)
 {
     if (thickness <= 0)
         return;
-    fill_path(path.stroke_to_fill(thickness), color);
+    fill_path(path.stroke_to_fill(thickness, stroke_linecap, stroke_linejoin), color);
 }
 
 void Painter::blit_disabled(IntPoint location, Gfx::Bitmap const& bitmap, IntRect const& rect, Palette const& palette)

@@ -11,7 +11,7 @@
     </style>
 </head>
 <body>
-<svg width="800" height="1200">
+<svg width="800" height="1600">
     <path d="M 10 10 h 100 l -50 80 z" fill="green" stroke="black" stroke-width="3"></path>
     <path d="M 60 10 h 100 l -50 80 z" fill="red" fill-opacity="50%" stroke="blue" stroke-opacity="50%"  stroke-width="3"></path>
     <path d="M 110 10 h 100 l -50 80 z" class="css"></path>
@@ -84,6 +84,48 @@
     <polygon fill="lime" stroke="blue" stroke-width="10"
              points="450,875  558,937.5  558,1062.5
                      450,1125 342,1062.6 342,937.5" />
+
+    
+    <!-- Based on https://svgwg.org/svg2-draft/painting.html#LineCaps -->
+    <line x1="50" y1="1200" x2="200" y2="1200" stroke="black" stroke-linecap="butt" stroke-width="30" />
+    <line x1="250" y1="1200" x2="400" y2="1200" stroke="black" stroke-linecap="round" stroke-width="30" />
+    <line x1="450" y1="1200" x2="600" y2="1200" stroke="black" stroke-linecap="square" stroke-width="30" />
+    <path d="M50,1200 h150 M250,1200 h150 M450,1200 h150" stroke="pink" stroke-width="1" />
+
+    <path
+        d="M50,1350 a40,40 0,0,0 40,-60 a60,60 0 0 1 40,70"
+        stroke="black"
+        stroke-width="20"
+        fill="none"
+        stroke-linejoin="miter" />
+
+    <path
+        d="M250,1350 a40,40 0,0,0 40,-60 a60,60 0 0 1 40,70"
+        stroke="black"
+        stroke-width="20"
+        fill="none"
+        stroke-linejoin="round" />
+
+    <path
+        d="M450,1350 a40,40 0,0,0 40,-60 a60,60 0 0 1 40,70"
+        stroke="black"
+        stroke-width="20"
+        fill="none"
+        stroke-linejoin="bevel" />
+
+    <g id="highlight">
+        <path
+          d="M50,1350 a40,40 0,0,0 40,-60 a60,60 0 0 1 40,70"
+          stroke="pink"
+          fill="none"
+          stroke-width="1" />
+        <circle cx="50" cy="1350" r="2" fill="pink" />
+        <circle cx="90" cy="1290" r="2" fill="pink" />
+        <circle cx="130" cy="1360" r="2" fill="pink" />
+    </g>
+    <use xlink:href="#highlight" x="200" />
+    <use xlink:href="#highlight" x="400" />
+
 </svg>
 </body>
 </html>
