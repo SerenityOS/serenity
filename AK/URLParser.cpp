@@ -232,7 +232,6 @@ static void serialize_ipv6_address(URL::IPv6Address const& address, StringBuilde
     // 1. Let output be the empty string.
 
     // 2. Let compress be an index to the first IPv6 piece in the first longest sequences of address’s IPv6 pieces that are 0.
-    // 3. If there is no sequence of address’s IPv6 pieces that are 0 that is longer than 1, then set compress to null.
     Optional<size_t> compress;
     size_t longest_sequence_length = 0;
     size_t current_sequence_length = 0;
@@ -250,6 +249,11 @@ static void serialize_ipv6_address(URL::IPv6Address const& address, StringBuilde
             current_sequence_length = 0;
         }
     }
+
+    // 3. If there is no sequence of address’s IPv6 pieces that are 0 that is longer than 1, then set compress to null.
+    if (longest_sequence_length <= 1)
+        compress = {};
+
     // 4. Let ignore0 be false.
     auto ignore0 = false;
 
