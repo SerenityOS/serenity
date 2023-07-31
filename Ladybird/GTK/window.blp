@@ -1,0 +1,73 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $LadybirdWindow : Adw.ApplicationWindow {
+  title: "Ladybird";
+
+  Adw.TabOverview tab_overview {
+    view: tab_view;
+    enable-new-tab: true;
+    create-tab => $open_new_tab(template) swapped;
+
+    child: Adw.ToolbarView {
+      top-bar-style: raised;
+
+      [top]
+      Adw.HeaderBar {
+        [start]
+        Box {
+          orientation: horizontal;
+          spacing: 6;
+
+          Button back_button {
+            icon-name: "go-previous-symbolic";
+          }
+          Button forward_button {
+            icon-name: "go-next-symbolic";
+          }
+          Button refresh_button {
+            icon-name: "view-refresh-symbolic";
+          }
+          Button new_tab_button {
+            icon-name: "tab-new-symbolic";
+            action-name: "win.new-tab";
+          }
+        }
+
+        [title]
+        Adw.Clamp {
+          hexpand: true;
+          maximum-size: 860;
+          tightening-threshold: 560;
+
+          Entry url_entry {
+            input-purpose: url;
+            placeholder-text: "Enter a URL to open...";
+          }
+        }
+
+        [end]
+        Box {
+          orientation: horizontal;
+          spacing: 6;
+
+          Button overview_button {
+            icon-name: "view-grid-symbolic";
+            action-name: "overview.open";
+          }
+          Button menu_button {
+            icon-name: "open-menu-symbolic";
+          }
+        }
+      }
+
+      [top]
+      Adw.TabBar {
+        view: tab_view;
+      }
+
+      content: Adw.TabView tab_view {
+      };
+    };
+  }
+}
