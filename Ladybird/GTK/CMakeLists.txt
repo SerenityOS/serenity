@@ -9,6 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(PkgConfig)
 pkg_check_modules(gtk4 REQUIRED IMPORTED_TARGET gtk4>=4.11.3)
 pkg_check_modules(libadwaita REQUIRED IMPORTED_TARGET libadwaita-1>=1.4)
+pkg_check_modules(gobject-introspection-1.0 REQUIRED IMPORTED_TARGET gobject-introspection-1.0>=1.77)
 
 find_program(GLIB_COMPILE_RESOURCES NAMES glib-compile-resources REQUIRED)
 
@@ -50,9 +51,10 @@ include_directories(
 )
 add_compile_definitions(AK_DONT_REPLACE_STD)
 
-foreach(prefix_dir IN LISTS CMAKE_PREFIX_PATH)
-    list(APPEND GI_TYPELIB_PATH "${prefix_dir}/lib64/girepository-1.0")
-endforeach()
+pkg_get_variable(GI_TYPELIB_PATH gobject-introspection-1.0 typelibdir)
+if (DEFINED ENV{GI_TYPELIB_PATH})
+    list(APPEND GI_TYPELIB_PATH $ENV{GI_TYPELIB_PATH})
+endif()
 list(JOIN GI_TYPELIB_PATH ":" GI_TYPELIB_PATH_ENV)
 
 set(RESOURCE_FILES)
