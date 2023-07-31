@@ -30,8 +30,7 @@ public:
 private:
     FATInode(FATFS&, FATEntry, NonnullOwnPtr<KString> filename);
 
-    // Number of bytes used to store a cluster within the table.
-    size_t cluster_size() const;
+    size_t fat_offset_for_cluster(u32 cluster) const;
 
     // Returns cluster number value that indicates the end of the chain
     // has been reached. Any cluster value >= this value indicates this
@@ -39,7 +38,7 @@ private:
     u32 end_of_chain_marker() const;
 
     // Reads the cluster number located at the offset within the table.
-    u32 cluster_number(KBuffer const& fat_sector, u32 entry_offset) const;
+    u32 cluster_number(KBuffer const& fat_sector, u32 entry_cluster_number, u32 entry_offset) const;
 
     static constexpr u8 end_entry_byte = 0x00;
     static constexpr u8 unused_entry_byte = 0xE5;
