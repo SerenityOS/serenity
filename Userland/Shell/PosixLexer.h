@@ -9,6 +9,7 @@
 #include <AK/GenericLexer.h>
 #include <AK/Queue.h>
 #include <AK/String.h>
+#include <AK/TemporaryChange.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <Shell/AST.h>
@@ -209,7 +210,7 @@ struct State {
         },
     };
     Vector<Expansion> expansions {};
-    Queue<HeredocEntry> heredoc_entries {};
+    Vector<HeredocEntry> heredoc_entries {};
     bool on_new_line { true };
 };
 
@@ -313,10 +314,6 @@ struct Token {
             return Token::Type::And;
         if (name == "|"sv)
             return Token::Type::Pipe;
-        if (name == "("sv)
-            return Token::Type::OpenParen;
-        if (name == ")"sv)
-            return Token::Type::CloseParen;
         if (name == ">"sv)
             return Token::Type::Great;
         if (name == "<"sv)
@@ -429,6 +426,17 @@ private:
     ErrorOr<ReductionResult> reduce_command_or_arithmetic_substitution_expansion();
     ErrorOr<ReductionResult> reduce_extended_parameter_expansion();
     ErrorOr<ReductionResult> reduce_heredoc_contents();
+
+    struct SkipTokens {
+        explicit SkipTokens(Lexer& lexer)
+            : m_state_change(lexer.m_state, lexer.m_state)
+        {
+        }
+
+        TemporaryChange<State> m_state_change;
+    };
+
+    SkipTokens switch_to_skip_mode() { return SkipTokens { *this }; }
 
     char consume();
     bool consume_specific(char);
