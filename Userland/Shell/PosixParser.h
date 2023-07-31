@@ -71,7 +71,7 @@ private:
     ErrorOr<RefPtr<AST::Node>> parse_list();
     ErrorOr<RefPtr<AST::Node>> parse_and_or();
     ErrorOr<RefPtr<AST::Node>> parse_pipeline();
-    ErrorOr<RefPtr<AST::Node>> parse_pipe_sequence();
+    ErrorOr<RefPtr<AST::Node>> parse_pipe_sequence(bool is_negated);
     ErrorOr<RefPtr<AST::Node>> parse_command();
     ErrorOr<RefPtr<AST::Node>> parse_compound_command();
     ErrorOr<RefPtr<AST::Node>> parse_subshell();

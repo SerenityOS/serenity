@@ -769,14 +769,37 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_and_or()
 
 ErrorOr<RefPtr<AST::Node>> Parser::parse_pipeline()
 {
-    return parse_pipe_sequence();
+    while (peek().type == Token::Type::Newline)
+        skip();
+
+    auto is_negated = false;
+    if (peek().type == Token::Type::Bang) {
+        is_negated = true;
+        skip();
+    }
+
+    return parse_pipe_sequence(is_negated);
 }
 
-ErrorOr<RefPtr<AST::Node>> Parser::parse_pipe_sequence()
+ErrorOr<RefPtr<AST::Node>> Parser::parse_pipe_sequence(bool is_negated)
 {
     auto node = TRY(parse_command());
     if (!node)
         return RefPtr<AST::Node> {};
+
+    if (is_negated) {
+        if (is<AST::CastToCommand>(node.ptr())) {
+            node = make_ref_counted<AST::CastToCommand>(
+                node->position(),
+                make_ref_counted<AST::ListConcatenate>(
+                    node->position(),
+                    Vector<NonnullRefPtr<AST::Node>> {
+                        make_ref_counted<AST::BarewordLiteral>(
+                            node->position(),
+                            "not"_short_string),
+                        *static_cast<AST::CastToCommand&>(*node).inner() }));
+        }
+    }
 
     for (;;) {
         if (peek().type != Token::Type::Pipe)
