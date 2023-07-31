@@ -20,6 +20,7 @@
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TreeView.h>
+#include <LibIMAP/MessageHeaderEncoding.h>
 #include <LibIMAP/QuotedPrintable.h>
 
 MailWidget::MailWidget()
@@ -395,6 +396,10 @@ void MailWidget::selected_mailbox()
 
         if (subject.is_empty())
             subject = "(No subject)";
+
+        if (subject.contains("=?"sv) && subject.contains("?="sv)) {
+            subject = MUST(IMAP::decode_rfc2047_encoded_words(subject));
+        }
 
         auto& from_iterator_value = from_iterator->get<1>().value();
         auto from_index = from_iterator_value.find("From:"sv);
