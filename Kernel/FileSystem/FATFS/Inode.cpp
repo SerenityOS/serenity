@@ -80,13 +80,14 @@ ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> FATInode::compute_block_list()
             break;
         }
 
-        u32 fat_offset = cluster * cluster_size();
+        u32 fat_offset = fat_offset_for_cluster(cluster);
         u32 fat_sector_index = fs().m_parameter_block->common_bpb()->reserved_sector_count + (fat_offset / fs().m_device_block_size);
         u32 entry_offset = fat_offset % fs().m_device_block_size;
 
         TRY(fs().raw_read(fat_sector_index, fat_sector_buffer));
 
-        cluster = cluster_number(*fat_sector, entry_offset);
+        // Look up the next cluster to read, or read End of Chain marker from table.
+        cluster = cluster_number(*fat_sector, cluster, entry_offset);
     }
 
     return block_list;
@@ -99,9 +100,9 @@ u32 FATInode::end_of_chain_marker() const
     // of the chain has been reached for a given entry.
     switch (fs().m_fat_version) {
     case FATVersion::FAT12:
-        return 0xff8;
+        return 0xFF8;
     case FATVersion::FAT16:
-        return 0xfff8;
+        return 0xFFF8;
     case FATVersion::FAT32:
         return 0x0FFFFFF8;
     default:
@@ -109,28 +110,49 @@ u32 FATInode::end_of_chain_marker() const
     }
 }
 
-size_t FATInode::cluster_size() const
+size_t FATInode::fat_offset_for_cluster(u32 cluster) const
 {
     switch (fs().m_fat_version) {
-    case FATVersion::FAT12:
-        VERIFY(false);
-        break;
+    case FATVersion::FAT12: {
+        // In FAT12, a cluster entry is stored in a byte, plus
+        // the low/high nybble of an adjacent byte.
+        //
+        // CLSTR:   0 1      2 3      4 5
+        // INDEX: [0 1 2], [3 4 5], [6 7 8]
+
+        // Every 2 clusters are represented using 3 bytes.
+        return (cluster * 3) / 2;
+    } break;
     case FATVersion::FAT16:
-        return 2;
+        return cluster * 2; // Each cluster is stored in 2 bytes.
     case FATVersion::FAT32:
-        return 4;
+        return cluster * 4; // Each cluster is stored in 4 bytes.
     default:
-        VERIFY(false);
+        VERIFY_NOT_REACHED();
     }
 }
 
-u32 FATInode::cluster_number(KBuffer const& fat_sector, u32 entry_offset) const
+u32 FATInode::cluster_number(KBuffer const& fat_sector, u32 entry_cluster_number, u32 entry_offset) const
 {
     u32 cluster = 0;
     switch (fs().m_fat_version) {
-    case FATVersion::FAT12:
-        VERIFY(false);
+    case FATVersion::FAT12: {
+        u16 fat12_bytes_le = 0;
+        // Two FAT12 entries get stored in a total of 3 bytes, as follows:
+        // AB CD EF are grouped as [D AB] and [E FC] (little-endian).
+        // For a given cluster, we interpret the associated 2 bytes as a little-endian
+        // 16-bit value ({CD AB} or {EF CD}), and then shift/mask the extra high or low nybble.
+        ByteReader::load<u16>(fat_sector.bytes().offset(entry_offset), fat12_bytes_le);
+        cluster = LittleEndian { fat12_bytes_le };
+        if (entry_cluster_number % 2 == 0) {
+            // CD AB -> D AB
+            cluster &= 0x0FFF;
+        } else {
+            // EF CD -> E FC.
+            cluster = cluster >> 4;
+        }
         break;
+    }
     case FATVersion::FAT16: {
         u16 cluster_u16_le = 0;
         ByteReader::load<u16>(fat_sector.bytes().offset(entry_offset), cluster_u16_le);
@@ -147,7 +169,7 @@ u32 FATInode::cluster_number(KBuffer const& fat_sector, u32 entry_offset) const
         break;
     }
     default:
-        VERIFY(false);
+        VERIFY_NOT_REACHED();
     }
     return cluster;
 }
@@ -291,7 +313,7 @@ u32 FATInode::first_cluster(FATVersion const version) const
     }
     // The space occupied in a directory entry by `first_cluster_high` (0x14)
     // is reserved in FAT12/16, and may be used to store file meta-data.
-    // As a result, do not include it.
+    // As a result, do not include it on FAT12/16 file systems.
     return m_entry.first_cluster_low;
 }
 
