@@ -1,0 +1,9 @@
+ftp://serenityos.org:21
+protocol => 'ftp:'
+username => ''
+password => ''
+host => 'serenityos.org'
+hostname => 'serenityos.org'
+port => ''
+pathname => '/'
+search => ''

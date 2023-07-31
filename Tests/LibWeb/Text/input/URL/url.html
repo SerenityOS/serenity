@@ -1,0 +1,23 @@
+<script src="../include.js"></script>
+<script>
+    test(() => {
+        function printURL(input) {
+            println(input);
+            const url = new URL(input);
+            println(`protocol => '${url.protocol}'`);
+            println(`username => '${url.username}'`);
+            println(`password => '${url.password}'`);
+            println(`host => '${url.host}'`);
+            println(`hostname => '${url.hostname}'`);
+            println(`port => '${url.port}'`);
+            println(`pathname => '${url.pathname}'`);
+            println(`search => '${url.search}'`);
+        }
+
+        for (url of [
+            'ftp://serenityos.org:21',
+        ]) {
+            printURL(url);
+        }
+    });
+</script>
