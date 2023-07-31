@@ -93,6 +93,8 @@ WebIDL::ExceptionOr<unsigned> CSSRuleList::insert_a_css_rule(Variant<StringView,
     m_rules.insert(index, *new_rule);
 
     // 8. Return index.
+    if (on_change)
+        on_change();
     return index;
 }
 
@@ -118,6 +120,8 @@ WebIDL::ExceptionOr<void> CSSRuleList::remove_a_css_rule(u32 index)
     old_rule.set_parent_rule(nullptr);
     old_rule.set_parent_style_sheet(nullptr);
 
+    if (on_change)
+        on_change();
     return {};
 }
 

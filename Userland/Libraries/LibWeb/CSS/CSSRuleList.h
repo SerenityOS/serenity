@@ -61,6 +61,8 @@ public:
     bool evaluate_media_queries(HTML::Window const&);
     void for_each_effective_keyframes_at_rule(Function<void(CSSKeyframesRule const&)> const& callback) const;
 
+    Function<void()> on_change;
+
 private:
     explicit CSSRuleList(JS::Realm&);
 
