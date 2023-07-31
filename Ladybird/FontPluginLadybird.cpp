@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "FontPluginQt.h"
+#include "FontPluginLadybird.h"
 #include <AK/DeprecatedString.h>
 #include <AK/String.h>
 #include <LibCore/StandardPaths.h>
@@ -16,7 +16,7 @@ extern DeprecatedString s_serenity_resource_root;
 
 namespace Ladybird {
 
-FontPluginQt::FontPluginQt(bool is_layout_test_mode)
+FontPluginLadybird::FontPluginLadybird(bool is_layout_test_mode)
     : m_is_layout_test_mode(is_layout_test_mode)
 {
     // Load the default SerenityOS fonts...
@@ -42,19 +42,19 @@ FontPluginQt::FontPluginQt(bool is_layout_test_mode)
     VERIFY(m_default_fixed_width_font);
 }
 
-FontPluginQt::~FontPluginQt() = default;
+FontPluginLadybird::~FontPluginLadybird() = default;
 
-Gfx::Font& FontPluginQt::default_font()
+Gfx::Font& FontPluginLadybird::default_font()
 {
     return *m_default_font;
 }
 
-Gfx::Font& FontPluginQt::default_fixed_width_font()
+Gfx::Font& FontPluginLadybird::default_fixed_width_font()
 {
     return *m_default_fixed_width_font;
 }
 
-void FontPluginQt::update_generic_fonts()
+void FontPluginLadybird::update_generic_fonts()
 {
     // How we choose which system font to use for each CSS font:
     // 1. Try a list of known-suitable fonts with their names hard-coded below.
@@ -90,7 +90,7 @@ void FontPluginQt::update_generic_fonts()
         m_generic_font_names[static_cast<size_t>(generic_font)] = gfx_font->family();
     };
 
-    // Fallback fonts to look for if Gfx::Font can't load the font suggested by Qt.
+    // Fallback fonts to look for if Gfx::Font can't load expected font
     // The lists are basically arbitrary, taken from https://www.w3.org/Style/Examples/007/fonts.en.html
     Vector<DeprecatedString> cursive_fallbacks { "Comic Sans MS", "Comic Sans", "Apple Chancery", "Bradley Hand", "Brush Script MT", "Snell Roundhand", "URW Chancery L" };
     Vector<DeprecatedString> fantasy_fallbacks { "Impact", "Luminari", "Chalkduster", "Jazz LET", "Blippo", "Stencil Std", "Marker Felt", "Trattatello" };
@@ -109,7 +109,7 @@ void FontPluginQt::update_generic_fonts()
     update_mapping(Web::Platform::GenericFont::UiSerif, serif_fallbacks);
 }
 
-DeprecatedString FontPluginQt::generic_font_name(Web::Platform::GenericFont generic_font)
+DeprecatedString FontPluginLadybird::generic_font_name(Web::Platform::GenericFont generic_font)
 {
     return m_generic_font_names[static_cast<size_t>(generic_font)];
 }
