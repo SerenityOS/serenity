@@ -32,7 +32,7 @@ private:
 
     bool at_end() { return m_position >= m_buffer.size(); }
 
-    unsigned parse_number();
+    ErrorOr<unsigned> parse_number();
     Optional<unsigned> try_parse_number();
 
     void parse_response_done();
