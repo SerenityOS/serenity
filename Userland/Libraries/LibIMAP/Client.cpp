@@ -53,6 +53,26 @@ ErrorOr<NonnullOwnPtr<Client>> Client::connect_plaintext(StringView host, u16 po
     return adopt_nonnull_own_or_enomem(new (nothrow) Client(host, port, move(socket)));
 }
 
+bool Client::verify_response_is_complete()
+{
+    // FIXME: This is still more of a heuristic than a proper approach.
+    //        I would imagine this breaks if we happen to get an email that
+    //        contains this pattern we're looking for.
+    dbgln("Waiting for a complete IMAP response, buffer size is now {}", m_buffer.size());
+    Vector<StringView> statuses = { "OK"sv, "BAD"sv, "NO"sv };
+    auto slice_size = m_buffer.size() >= 100 ? 100 : m_buffer.size(); // Arbitrary slice size, should contain what we're looking for.
+    auto slice_data = MUST(m_buffer.slice(m_buffer.size() - slice_size, slice_size));
+    StringView slice = StringView(slice_data);
+    for (auto status : statuses) {
+        DeprecatedString pattern = DeprecatedString::formatted("A{} {}", m_current_command, status);
+        if (slice.contains(pattern)) {
+            dbgln("IMAP server replied {}, sending to parser", pattern);
+            return true;
+        }
+    }
+    return false;
+}
+
 ErrorOr<void> Client::on_ready_to_receive()
 {
     if (!TRY(m_socket->can_read_without_blocking()))
@@ -70,8 +90,8 @@ ErrorOr<void> Client::on_ready_to_receive()
         return {};
     }
 
-    if (m_buffer[m_buffer.size() - 1] == '\n') {
-        // Don't try parsing until we have a complete line.
+    // Don't try parsing until we have a complete response.
+    if (verify_response_is_complete()) {
         auto response = m_parser.parse(move(m_buffer), m_expecting_response);
         TRY(handle_parsed_response(move(response)));
         m_buffer.clear();
