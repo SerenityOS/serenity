@@ -71,7 +71,7 @@ bool Parser::try_consume(StringView x)
 void Parser::parse_response_done()
 {
     consume("A"sv);
-    auto tag = parse_number();
+    auto tag = MUST(parse_number());
     consume(" "sv);
 
     ResponseStatus status = parse_status();
@@ -119,12 +119,12 @@ Optional<unsigned> Parser::try_parse_number()
     return number.to_uint();
 }
 
-unsigned Parser::parse_number()
+ErrorOr<unsigned> Parser::parse_number()
 {
     auto number = try_parse_number();
     if (!number.has_value()) {
         m_parsing_failed = true;
-        return -1;
+        return Error::from_string_view("Failed to parse expected number"sv);
     }
 
     return number.value();
@@ -177,15 +177,15 @@ void Parser::parse_untagged()
                 // No-op.
             } else if (actual_type == "UIDNEXT"sv) {
                 consume(" "sv);
-                auto n = parse_number();
+                auto n = MUST(parse_number());
                 m_response.data().set_uid_next(n);
             } else if (actual_type == "UIDVALIDITY"sv) {
                 consume(" "sv);
-                auto n = parse_number();
+                auto n = MUST(parse_number());
                 m_response.data().set_uid_validity(n);
             } else if (actual_type == "UNSEEN"sv) {
                 consume(" "sv);
-                auto n = parse_number();
+                auto n = MUST(parse_number());
                 m_response.data().set_unseen(n);
             } else if (actual_type == "PERMANENTFLAGS"sv) {
                 consume(" "sv);
@@ -193,7 +193,7 @@ void Parser::parse_untagged()
                 m_response.data().set_permanent_flags(move(flags));
             } else if (actual_type == "HIGHESTMODSEQ"sv) {
                 consume(" "sv);
-                parse_number();
+                MUST(parse_number());
                 // No-op for now.
             } else {
                 dbgln("Unknown: {}", actual_type);
@@ -207,7 +207,7 @@ void Parser::parse_untagged()
         Vector<unsigned> ids;
         while (!try_consume("\r\n"sv)) {
             consume(" "sv);
-            auto id = parse_number();
+            auto id = MUST(parse_number());
             ids.append(id);
         }
         m_response.data().set_search_results(move(ids));
@@ -224,7 +224,7 @@ void Parser::parse_untagged()
         while (!try_consume(")"sv)) {
             auto status_att = parse_atom();
             consume(" "sv);
-            auto value = parse_number();
+            auto value = MUST(parse_number());
 
             auto type = StatusItemType::Recent;
             if (status_att == "MESSAGES"sv) {
@@ -318,7 +318,7 @@ FetchResponseData Parser::parse_fetch_response()
         }
         case FetchCommand::DataItemType::UID: {
             consume(" "sv);
-            fetch_response.set_uid(parse_number());
+            fetch_response.set_uid(MUST(parse_number()));
             break;
         }
         case FetchCommand::DataItemType::PeekBody:
@@ -439,9 +439,9 @@ BodyStructure Parser::parse_one_part_body()
         consume(" "sv);
         auto encoding = parse_string();
         consume(" "sv);
-        auto num_octets = parse_number();
+        auto num_octets = MUST(parse_number());
         consume(" "sv);
-        auto num_lines = parse_number();
+        auto num_lines = MUST(parse_number());
 
         auto data = BodyStructureData {
             type,
@@ -501,7 +501,7 @@ BodyStructure Parser::parse_one_part_body()
         consume(" "sv);
         auto encoding = parse_string();
         consume(" "sv);
-        auto num_octets = parse_number();
+        auto num_octets = MUST(parse_number());
         consume(" "sv);
         auto envelope = parse_envelope();
 
@@ -528,7 +528,7 @@ BodyStructure Parser::parse_one_part_body()
         consume(" "sv);
         auto encoding = parse_string();
         consume(" "sv);
-        auto num_octets = parse_number();
+        auto num_octets = MUST(parse_number());
         consume(" "sv);
 
         BodyStructureData data {
@@ -572,7 +572,7 @@ StringView Parser::parse_literal_string()
 {
     dbgln_if(IMAP_PARSER_DEBUG, "p: {}, parse_literal_string()", m_position);
     consume("{"sv);
-    auto num_bytes = parse_number();
+    auto num_bytes = MUST(parse_number());
     consume("}\r\n"sv);
 
     if (m_buffer.size() < m_position + num_bytes) {
@@ -772,7 +772,7 @@ FetchCommand::DataItem Parser::parse_fetch_data_item()
             m_parsing_failed = true;
         }
         if (try_consume("<"sv)) {
-            auto start = parse_number();
+            auto start = MUST(parse_number());
             data_item.partial_fetch = true;
             data_item.start = (int)start;
             consume(">"sv);
@@ -876,7 +876,7 @@ BodyExtension Parser::parse_body_extension()
     } else if (!at_end() && (m_buffer[m_position] == '"' || m_buffer[m_position] == '{')) {
         return BodyExtension { { parse_string() } };
     } else {
-        return BodyExtension { parse_number() };
+        return BodyExtension { MUST(parse_number()) };
     }
 }
 }
