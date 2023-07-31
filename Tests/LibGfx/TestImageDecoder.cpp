@@ -574,3 +574,23 @@ TEST_CASE(test_jxl_modular_simple_tree_upsample2_10bits)
     auto frame = MUST(plugin_decoder->frame(0));
     EXPECT_EQ(frame.image->get_pixel(42, 57), Gfx::Color::from_string("#4c0072"sv));
 }
+
+TEST_CASE(test_jxl_modular_property_8)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("jxl/modular_property_8.jxl"sv)));
+    EXPECT(Gfx::JPEGXLImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Gfx::JPEGXLImageDecoderPlugin::create(file->bytes()));
+
+    expect_single_frame_of_size(*plugin_decoder, { 32, 32 });
+
+    auto frame = MUST(plugin_decoder->frame(0));
+    for (u8 i = 0; i < 32; ++i) {
+        for (u8 j = 0; j < 32; ++j) {
+            auto const color = frame.image->get_pixel(i, j);
+            if ((i + j) % 2 == 0)
+                EXPECT_EQ(color, Gfx::Color::Black);
+            else
+                EXPECT_EQ(color, Gfx::Color::Yellow);
+        }
+    }
+}
