@@ -60,6 +60,7 @@ void ButtonPaintable::paint(PaintContext& context, PaintPhase phase) const
 
         // Paint button text clipped to button rect
         auto& painter = context.painter();
+        painter.save();
         painter.add_clip_rect(button_rect.to_type<int>());
         painter.draw_text(
             text_rect.to_type<int>(),
@@ -67,7 +68,7 @@ void ButtonPaintable::paint(PaintContext& context, PaintPhase phase) const
             FontCache::the().scaled_font(layout_box().font(), context.device_pixels_per_css_pixel()),
             Gfx::TextAlignment::Center,
             computed_values().color());
-        painter.clear_clip_rect();
+        painter.restore();
     }
 }
 
