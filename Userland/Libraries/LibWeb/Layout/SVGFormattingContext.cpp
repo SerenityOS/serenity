@@ -159,7 +159,7 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
             auto path_transform = dom_node.get_transform();
 
             double viewbox_scale = 1;
-            auto maybe_view_box = svg_svg_element.view_box();
+            auto maybe_view_box = dom_node.view_box();
             if (maybe_view_box.has_value()) {
                 // FIXME: This should allow just one of width or height to be specified.
                 // E.g. We should be able to layout <svg width="100%"> where height is unspecified/auto.

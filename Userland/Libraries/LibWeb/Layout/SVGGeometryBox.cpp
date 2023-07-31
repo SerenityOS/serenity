@@ -33,7 +33,7 @@ Optional<Gfx::AffineTransform> SVGGeometryBox::layout_transform() const
     double scaling = 1;
     auto origin = viewbox_origin().to_type<double>().to_type<float>();
     Gfx::FloatPoint paint_offset = {};
-    if (svg_box && svg_box->view_box().has_value()) {
+    if (svg_box && geometry_element.view_box().has_value()) {
         // Note: SVGFormattingContext has already done the scaling based on the viewbox,
         // we now have to derive what it was from the original bounding box size.
         // FIXME: It would be nice if we could store the transform from layout somewhere, so we don't have to solve for it here.
