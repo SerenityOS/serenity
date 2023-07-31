@@ -204,22 +204,29 @@ bool URL::compute_validity() const
     return true;
 }
 
+// https://url.spec.whatwg.org/#default-port
 u16 URL::default_port_for_scheme(StringView scheme)
 {
+    // Spec defined mappings with port:
+    if (scheme == "ftp")
+        return 21;
     if (scheme == "http")
         return 80;
     if (scheme == "https")
         return 443;
+    if (scheme == "ws")
+        return 80;
+    if (scheme == "wss")
+        return 443;
+
+    // NOTE: not in spec, but we support these too
     if (scheme == "gemini")
         return 1965;
     if (scheme == "irc")
         return 6667;
     if (scheme == "ircs")
         return 6697;
-    if (scheme == "ws")
-        return 80;
-    if (scheme == "wss")
-        return 443;
+
     return 0;
 }
 
