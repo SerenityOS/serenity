@@ -1303,12 +1303,15 @@ static ErrorOr<Vector<i32>> get_properties(Vector<Channel> const& channels, u16 
     TRY(properties.try_append(W));
 
     // x > 0 ? W - /* (the value of property 9 at position (x - 1, y)) */ : W
-    i32 x_1 = x - 1;
-    i32 const W_x_1 = x_1 > 0 ? channels[i].get(x_1 - 1, y) : (x_1 >= 0 && y > 0 ? channels[i].get(x_1, y - 1) : 0);
-    i32 const N_x_1 = x_1 >= 0 && y > 0 ? channels[i].get(x_1, y - 1) : W_x_1;
-    i32 const NW_x_1 = x_1 > 0 && y > 0 ? channels[i].get(x_1 - 1, y - 1) : W_x_1;
-
-    TRY(properties.try_append(W_x_1 + N_x_1 - NW_x_1));
+    if (x > 0) {
+        auto const x_1 = x - 1;
+        i32 const W_x_1 = x_1 > 0 ? channels[i].get(x_1 - 1, y) : (y > 0 ? channels[i].get(x_1, y - 1) : 0);
+        i32 const N_x_1 = y > 0 ? channels[i].get(x_1, y - 1) : W_x_1;
+        i32 const NW_x_1 = x_1 > 0 && y > 0 ? channels[i].get(x_1 - 1, y - 1) : W_x_1;
+        TRY(properties.try_append(W - (W_x_1 + N_x_1 - NW_x_1)));
+    } else {
+        TRY(properties.try_append(W));
+    }
 
     TRY(properties.try_append(W + N - NW));
     TRY(properties.try_append(W - NW));
