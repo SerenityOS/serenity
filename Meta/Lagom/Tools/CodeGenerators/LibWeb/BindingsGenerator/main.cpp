@@ -191,18 +191,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto depfile = TRY(Core::File::open_file_or_standard_stream(depfile_path, Core::File::OpenMode::Write));
 
         StringBuilder depfile_builder;
-        bool first_file = true;
         for (StringView s : { constructor_header, constructor_implementation, prototype_header, prototype_implementation, namespace_header, namespace_implementation, iterator_prototype_header, iterator_prototype_implementation, global_mixin_header, global_mixin_implementation }) {
-            if (!s.is_empty()) {
-                if (!first_file) {
-                    depfile_builder.append(' ');
-                }
-                if (!depfile_prefix.is_empty())
-                    depfile_builder.append(LexicalPath::join(depfile_prefix, s).string());
-                else
-                    depfile_builder.append(s);
-                first_file = false;
-            }
+            if (s.is_empty())
+                continue;
+
+            if (!depfile_prefix.is_empty())
+                depfile_builder.append(LexicalPath::join(depfile_prefix, s).string());
+            else
+                depfile_builder.append(s);
+
+            break;
         }
         depfile_builder.append(':');
         for (auto const& path : parser.imported_files()) {
