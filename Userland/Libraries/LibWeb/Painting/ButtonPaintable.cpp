@@ -47,8 +47,10 @@ void ButtonPaintable::paint(PaintContext& context, PaintPhase phase) const
         auto text_rect = button_rect;
 
         // Apply CSS text-indent property to text rect
+        // FIXME: The second parameter to to_px() needs to be the block container’s own inline-axis inner size:
+        //        https://drafts.csswg.org/css-text-3/#propdef-text-indent
         auto text_indent = computed_values().text_indent().to_px(layout_box(), CSSPixels());
-        text_rect.translate_by(text_indent.to_int(), 0);
+        text_rect.translate_by(context.rounded_device_pixels(text_indent), 0);
 
         // Apply button pressed state offset
         if (being_pressed()) {
