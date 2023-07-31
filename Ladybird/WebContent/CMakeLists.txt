@@ -9,7 +9,7 @@ set(WEBCONTENT_SOURCES
     ../AudioCodecPluginLadybird.cpp
     ../AudioThread.cpp
     ../EventLoopImplementationQt.cpp
-    ../FontPluginQt.cpp
+    ../FontPluginLadybird.cpp
     ../ImageCodecPluginLadybird.cpp
     ../RequestManagerQt.cpp
     ../Utilities.cpp
