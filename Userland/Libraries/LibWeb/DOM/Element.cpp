@@ -425,8 +425,8 @@ static Element::RequiredInvalidationAfterStyleChange compute_required_invalidati
             // OPTIMIZATION: An element creates a stacking context when its opacity changes from 1 to less than 1
             //               and stops to create one when opacity returns to 1. So stacking context tree rebuild is
             //               not required for opacity changes within the range below 1.
-            auto old_value_opacity = old_value.has_value() ? old_value->style->as_number().number() : 1;
-            auto new_value_opacity = new_value.has_value() ? new_value->style->as_number().number() : 1;
+            auto old_value_opacity = old_style.opacity();
+            auto new_value_opacity = new_style.opacity();
             if (old_value_opacity != new_value_opacity && (old_value_opacity == 1 || new_value_opacity == 1)) {
                 invalidation.rebuild_stacking_context_tree = true;
             }
