@@ -175,6 +175,8 @@ void ConsoleInputEdit::keyPressEvent(QKeyEvent* event)
 {
     switch (event->key()) {
     case Qt::Key_Down: {
+        if (m_history.is_empty())
+            break;
         auto last_index = m_history.size() - 1;
         if (m_history_index < last_index) {
             m_history_index++;
