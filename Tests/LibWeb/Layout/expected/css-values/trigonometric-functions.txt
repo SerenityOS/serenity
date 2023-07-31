@@ -1,0 +1,12 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x996 [BFC] children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x980 children: not-inline
+      BlockContainer <div.sin> at (8,8) content-size 79.984375x100 positioned children: not-inline
+      BlockContainer <div.cos> at (8,108) content-size 99.984375x100 positioned children: not-inline
+      BlockContainer <div.tan> at (8,208) content-size 119.984375x100 positioned children: not-inline
+      BlockContainer <div.asin> at (8,308) content-size 100x140 positioned children: not-inline
+      BlockContainer <div.acos> at (8,448) content-size 100x160 positioned children: not-inline
+      BlockContainer <div.atan> at (8,608) content-size 100x180 positioned children: not-inline
+      BlockContainer <div.atan2> at (8,788) content-size 100x200 positioned children: not-inline
+      BlockContainer <(anonymous)> at (8,988) content-size 784x0 children: inline
+        TextNode <#text>
