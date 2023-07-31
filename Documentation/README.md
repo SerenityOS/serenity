@@ -13,7 +13,7 @@ A list of useful pages across the web can be found on [the link list](Links.md).
 * [Running Tests](RunningTests.md)
 * [Setting Up Self-Hosted Runners](SelfHostedRunners.md)
 * [Profiling the Build](BuildProfilingInstructions.md)
-* [Spice Intergration](SpiceIntergration.md)
+* [Spice Integration](SpiceIntegration.md)
 
 ### OS-specific
 Make sure to read the basic [Build Instructions](BuildInstructions.md) first.
