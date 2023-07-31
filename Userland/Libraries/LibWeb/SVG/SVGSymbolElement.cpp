@@ -10,6 +10,7 @@
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/OverflowStyleValue.h>
 #include <LibWeb/DOM/ShadowRoot.h>
+#include <LibWeb/SVG/AttributeNames.h>
 #include <LibWeb/SVG/SVGSymbolElement.h>
 #include <LibWeb/SVG/SVGUseElement.h>
 
@@ -44,8 +45,12 @@ void SVGSymbolElement::apply_presentational_hints(CSS::StyleProperties& style) c
         // and this declaration must have importance over any other CSS rule or presentation attribute.
         style.set_property(CSS::PropertyID::Display, CSS::DisplayStyleValue::create(CSS::Display::from_short(CSS::Display::Short::None)).release_value_but_fixme_should_propagate_errors());
     }
+}
 
-    // TODO: Parse viewBox and apply it in SVGGraphicsElement/SVGGraphicsPaintable
+void SVGSymbolElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
+{
+    if (name.equals_ignoring_ascii_case(SVG::AttributeNames::viewBox))
+        m_view_box = try_parse_view_box(value);
 }
 
 bool SVGSymbolElement::is_direct_child_of_use_shadow_tree() const

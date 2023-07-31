@@ -1,0 +1,20 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x150 children: not-inline
+      BlockContainer <(anonymous)> at (8,8) content-size 784x0 children: inline
+        TextNode <#text>
+        TextNode <#text>
+      BlockContainer <div> at (8,8) content-size 784x150 children: inline
+        line 0 width: 300, height: 150, bottom: 150, baseline: 150
+          frag 0 from SVGSVGBox start: 0, length: 0, rect: [8,8 300x150]
+        TextNode <#text>
+        SVGSVGBox <svg> at (8,8) content-size 300x150 [SVG] children: inline
+          TextNode <#text>
+          InlineNode <use>
+            InlineNode <symbol#braces>
+              TextNode <#text>
+              SVGGeometryBox <path> at (92.375,26.75) content-size 131.25x112.140625 children: inline
+                TextNode <#text>
+              TextNode <#text>
+          TextNode <#text>
+        TextNode <#text>

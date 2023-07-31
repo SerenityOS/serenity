@@ -15,6 +15,7 @@
 #include <LibWeb/SVG/SVGElement.h>
 #include <LibWeb/SVG/SVGGradientElement.h>
 #include <LibWeb/SVG/TagNames.h>
+#include <LibWeb/SVG/ViewBox.h>
 
 namespace Web::SVG {
 
@@ -44,6 +45,8 @@ public:
 
     Optional<Gfx::PaintStyle const&> fill_paint_style(SVGPaintContext const&) const;
     Optional<Gfx::PaintStyle const&> stroke_paint_style(SVGPaintContext const&) const;
+
+    Optional<ViewBox> view_box() const;
 
 protected:
     SVGGraphicsElement(DOM::Document&, DOM::QualifiedName);
