@@ -63,6 +63,7 @@ private:
     void setup_callbacks();
 
     ErrorOr<void> on_ready_to_receive();
+    bool verify_response_is_complete();
 
     ErrorOr<void> handle_parsed_response(ParseStatus&& parse_status);
     ErrorOr<void> send_next_command();
