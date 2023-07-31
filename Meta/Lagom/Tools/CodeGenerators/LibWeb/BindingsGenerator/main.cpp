@@ -133,7 +133,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         // Only write to disk if contents have changed
         auto previous_contents = TRY(output_file->read_until_eof());
         TRY(output_file->seek(0, SeekMode::SetPosition));
-        if (previous_contents != output_builder.string_view())
+        if (previous_contents != output_builder.string_view().bytes())
             TRY(output_file->write_until_depleted(output_builder.string_view().bytes()));
         // FIXME: Can we add clear_with_capacity to StringBuilder instead of throwing away the allocated buffer?
         output_builder.clear();
