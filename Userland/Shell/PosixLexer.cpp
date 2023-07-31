@@ -256,7 +256,7 @@ ErrorOr<Lexer::ReductionResult> Lexer::reduce_operator()
 
     if (expect_heredoc_entry && tokens.size() > 1) {
         auto [key, interpolation] = process_heredoc_key(tokens[1]);
-        m_state.heredoc_entries.enqueue(HeredocEntry {
+        m_state.heredoc_entries.append(HeredocEntry {
             .key = key,
             .allow_interpolation = interpolation,
             .dedent = tokens[0].type == Token::Type::DoubleLessDash,
@@ -544,7 +544,7 @@ ErrorOr<Lexer::ReductionResult> Lexer::reduce_start()
     }
 
     if (was_on_new_line && !m_state.heredoc_entries.is_empty()) {
-        auto const& entry = m_state.heredoc_entries.head();
+        auto const& entry = m_state.heredoc_entries.first();
 
         auto start_index = m_lexer.tell();
         Optional<size_t> end_index;
@@ -576,7 +576,7 @@ ErrorOr<Lexer::ReductionResult> Lexer::reduce_start()
         token.relevant_heredoc_key = entry.key;
         token.type = Token::Type::HeredocContents;
 
-        m_state.heredoc_entries.dequeue();
+        m_state.heredoc_entries.take_first();
 
         m_state.on_new_line = true;
 
@@ -705,6 +705,14 @@ ErrorOr<Lexer::ReductionResult> Lexer::reduce_start()
         };
     }
 
+    if (!m_state.escaping && is_any_of("})"sv)(m_lexer.peek())) {
+        // That's an eof for us.
+        return ReductionResult {
+            .tokens = {},
+            .next_reduction = Reduction::None,
+        };
+    }
+
     m_state.escaping = false;
     m_state.buffer.append(consume());
     return ReductionResult {
@@ -793,6 +801,42 @@ ErrorOr<Lexer::ReductionResult> Lexer::reduce_parameter_expansion()
 
 ErrorOr<Lexer::ReductionResult> Lexer::reduce_command_or_arithmetic_substitution_expansion()
 {
+    auto ch = m_lexer.peek();
+    if (ch == '(' && m_state.buffer.string_view().ends_with("$("sv)) {
+        m_state.buffer.append(consume());
+        m_state.expansions.last() = ArithmeticExpansion {
+            .expression = {},
+            .value = StringBuilder {},
+            .range = range(-2)
+        };
+        return ReductionResult {
+            .tokens = {},
+            .next_reduction = Reduction::ArithmeticExpansion,
+        };
+    }
+
+    auto saved_position = m_state.position;
+    {
+        auto skip_mode = switch_to_skip_mode();
+
+        auto next_reduction = Reduction::Start;
+        do {
+            auto result = TRY(reduce(next_reduction));
+            next_reduction = result.next_reduction;
+        } while (next_reduction != Reduction::None);
+        saved_position = m_state.position;
+    }
+
+    auto const skipped_text = m_lexer.input().substring_view(m_state.position.end_offset, saved_position.end_offset - m_state.position.end_offset);
+    m_state.position.end_offset = saved_position.end_offset;
+    m_state.position.end_line = saved_position.end_line;
+
+    m_state.buffer.append(skipped_text);
+    m_state.expansions.last().get<CommandExpansion>().command.append(skipped_text);
+    m_state.expansions.last().visit([&](auto& expansion) {
+        expansion.range.length = m_state.position.end_offset - expansion.range.start - m_state.position.start_offset;
+    });
+
     if (m_lexer.is_eof()) {
         return ReductionResult {
             .tokens = { Token::continuation("$("_short_string) },
@@ -800,12 +844,12 @@ ErrorOr<Lexer::ReductionResult> Lexer::reduce_command_or_arithmetic_substitution
         };
     }
 
-    auto ch = m_lexer.peek();
+    ch = m_lexer.peek();
     if (ch == '(' && m_state.buffer.string_view().ends_with("$("sv)) {
         m_state.buffer.append(consume());
         m_state.expansions.last() = ArithmeticExpansion {
             .expression = {},
-            .value = StringBuilder {},
+            .value = m_state.expansions.last().get<CommandExpansion>().command,
             .range = range(-2)
         };
         return ReductionResult {
