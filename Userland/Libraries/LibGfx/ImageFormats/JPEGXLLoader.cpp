@@ -9,6 +9,7 @@
 #include <AK/FixedArray.h>
 #include <AK/String.h>
 #include <LibCompress/Brotli.h>
+#include <LibGfx/ImageFormats/ExifOrientedBitmap.h>
 #include <LibGfx/ImageFormats/JPEGXLLoader.h>
 
 namespace Gfx {
@@ -1582,7 +1583,8 @@ public:
         auto const width = m_channels[0].width();
         auto const height = m_channels[0].height();
 
-        auto bitmap = TRY(Bitmap::create(BitmapFormat::BGRA8888, { width, height }));
+        auto const orientation = static_cast<ExifOrientedBitmap::Orientation>(metadata.orientation);
+        auto oriented_bitmap = TRY(ExifOrientedBitmap::create(BitmapFormat::BGRA8888, { width, height }, orientation));
 
         auto const alpha_channel = metadata.alpha_channel();
 
@@ -1613,11 +1615,11 @@ public:
                         to_u8(m_channels[*alpha_channel].get(x, y)),
                     };
                 }();
-                bitmap->set_pixel(x, y, color);
+                oriented_bitmap.set_pixel(x, y, color);
             }
         }
 
-        return bitmap;
+        return oriented_bitmap.bitmap();
     }
 
     Vector<Channel>& channels()
