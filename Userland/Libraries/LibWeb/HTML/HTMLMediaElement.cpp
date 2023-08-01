@@ -212,6 +212,14 @@ WebIDL::ExceptionOr<Bindings::CanPlayTypeResult> HTMLMediaElement::can_play_type
     return Bindings::CanPlayTypeResult::Empty;
 }
 
+void HTMLMediaElement::set_seeking(bool seeking)
+{
+    if (m_seeking == seeking)
+        return;
+    m_seeking = seeking;
+    set_needs_style_update(true);
+}
+
 // https://html.spec.whatwg.org/multipage/media.html#dom-media-load
 WebIDL::ExceptionOr<void> HTMLMediaElement::load()
 {
@@ -505,7 +513,8 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::load_element()
         }
 
         // 7. If seeking is true, set it to false.
-        m_seeking = false;
+        if (seeking())
+            set_seeking(false);
 
         // 8. Set the current playback position to 0.
         m_current_playback_position = 0;
@@ -1490,7 +1499,7 @@ void HTMLMediaElement::seek_element(double playback_position, MediaSeekMode seek
     }
 
     // 4. Set the seeking IDL attribute to true.
-    m_seeking = true;
+    set_seeking(true);
 
     // FIXME: 5. If the seek was in response to a DOM method call or setting of an IDL attribute, then continue the script. The
     //           remainder of these steps must be run in parallel. With the exception of the steps marked with ⌛, they could be
@@ -1534,7 +1543,7 @@ void HTMLMediaElement::seek_element(double playback_position, MediaSeekMode seek
     //            synchronous section are marked with ⌛.)
 
     // 14. ⌛ Set the seeking IDL attribute to false.
-    m_seeking = false;
+    set_seeking(false);
 
     // 15. ⌛ Run the time marches on steps.
     time_marches_on(TimeMarchesOnReason::Other);

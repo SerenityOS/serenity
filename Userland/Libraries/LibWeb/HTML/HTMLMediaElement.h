@@ -70,6 +70,7 @@ public:
     ReadyState ready_state() const { return m_ready_state; }
 
     bool seeking() const { return m_seeking; }
+    void set_seeking(bool);
 
     WebIDL::ExceptionOr<void> load();
 
