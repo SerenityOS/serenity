@@ -55,3 +55,13 @@ we have to manually tell libstdc++ about what our LibC supports.
 In most places, we take the Newlib code paths.
 
 
+## `0007-libstdc-Build-static-library-with-fPIC.patch`
+
+libstdc++: Build static library with -fPIC
+
+We want the libstdc++.a library to contain -fPIC code in order to link
+it statically into LibC/our shared objects. However, the build system
+forces no-pic/pie instead.
+
+This hack is from https://gcc.gnu.org/bugzilla/show_bug.cgi?id=58638
+

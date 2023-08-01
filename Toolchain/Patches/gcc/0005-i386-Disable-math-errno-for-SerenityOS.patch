@@ -11,7 +11,7 @@ has the effect of setting -fno-math-errno by default.
  1 file changed, 4 insertions(+)
 
 diff --git a/gcc/common/config/i386/i386-common.cc b/gcc/common/config/i386/i386-common.cc
-index d90c558311bb4fab0821faaf07c27d21c5a7ec64..defb2e650250441b22664065dceb80c6cb8bbb9b 100644
+index c72644cb7db37b18cb22cf1ff02a972a18509d01..cce666b274cd6129796efc81870428dc17a6f229 100644
 --- a/gcc/common/config/i386/i386-common.cc
 +++ b/gcc/common/config/i386/i386-common.cc
 @@ -1854,6 +1854,10 @@ ix86_option_init_struct (struct gcc_options *opts)

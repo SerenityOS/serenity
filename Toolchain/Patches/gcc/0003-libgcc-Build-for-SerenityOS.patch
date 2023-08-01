@@ -34,10 +34,10 @@ index c7b26d1927de62d7b3a49ea9ac0a998979659cf2..5fcfaa3cfff30d2e8d1cdf3f62bf2125
  
  if test x$gcc_cv_target_dl_iterate_phdr = xyes; then
 diff --git a/libgcc/config.host b/libgcc/config.host
-index b9975de902357576003cf391850fef2dc336aee1..d6cbaae46be819b6b17932d28327dd2658d3f2ad 100644
+index 9d7212028d063648206b521705601ad2b50620c5..9f3c857a1e0cade7171b371c4e823487a5e3b2f2 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
-@@ -1294,6 +1294,11 @@ riscv*-*-freebsd*)
+@@ -1312,6 +1312,11 @@ riscv*-*-freebsd*)
  	tmake_file="${tmake_file} riscv/t-softfp${host_address} t-softfp riscv/t-elf riscv/t-elf${host_address} t-slibgcc-libgcc"
  	extra_parts="$extra_parts crtbegin.o crtend.o crti.o crtn.o crtendS.o crtbeginT.o"
  	;;
@@ -49,7 +49,7 @@ index b9975de902357576003cf391850fef2dc336aee1..d6cbaae46be819b6b17932d28327dd26
  riscv*-*-*)
  	tmake_file="${tmake_file} riscv/t-softfp${host_address} t-softfp riscv/t-elf riscv/t-elf${host_address}"
  	extra_parts="$extra_parts crtbegin.o crtend.o crti.o crtn.o"
-@@ -1507,6 +1512,22 @@ nvptx-*)
+@@ -1525,6 +1530,22 @@ nvptx-*)
  	tmake_file="$tmake_file nvptx/t-nvptx"
  	extra_parts="crt0.o"
  	;;
@@ -73,7 +73,7 @@ index b9975de902357576003cf391850fef2dc336aee1..d6cbaae46be819b6b17932d28327dd26
  	echo "*** Configuration ${host} not supported" 1>&2
  	exit 1
 diff --git a/libgcc/unwind-dw2-fde-dip.c b/libgcc/unwind-dw2-fde-dip.c
-index 6223f5f18a23038c30654f191c63b9ae8baca26a..87813e9b249e7add5915ca310c86443a712caa05 100644
+index 28ea0e64e0e8d8c1faf52194a78cfc98398eceb8..2b139330c045ee01651bececc4d882f09f380cce 100644
 --- a/libgcc/unwind-dw2-fde-dip.c
 +++ b/libgcc/unwind-dw2-fde-dip.c
 @@ -57,6 +57,12 @@
