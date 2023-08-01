@@ -6,9 +6,3 @@ files="https://ftpmirror.gnu.org/gettext/gettext-${version}.tar.gz gettext-${ver
 depends=("libiconv")
 use_fresh_config_sub='true'
 config_sub_paths=("build-aux/config.sub" "libtextstyle/build-aux/config.sub")
-
-install() {
-    run make DESTDIR=${SERENITY_INSTALL_ROOT} "${installopts[@]}" install
-    ${CC} -shared -pthread -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libintl.so -Wl,-soname,libintl.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libintl.a -Wl,--no-whole-archive -liconv
-    rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/libintl.la
-}
