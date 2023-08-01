@@ -106,6 +106,7 @@ public:
     static CSS::BorderCollapse border_collapse() { return CSS::BorderCollapse::Separate; }
     static Vector<Vector<String>> grid_template_areas() { return {}; }
     static CSS::Time transition_delay() { return CSS::Time::make_seconds(0); }
+    static CSS::ObjectFit object_fit() { return CSS::ObjectFit::Fill; }
 };
 
 enum class BackgroundSize {

@@ -937,6 +937,12 @@ String StyleProperties::grid_area() const
     return value->as_string().to_string().release_value_but_fixme_should_propagate_errors();
 }
 
+Optional<CSS::ObjectFit> StyleProperties::object_fit() const
+{
+    auto value = property(CSS::PropertyID::ObjectFit);
+    return value_id_to_object_fit(value->to_identifier());
+}
+
 Color StyleProperties::stop_color() const
 {
     auto value = property(CSS::PropertyID::StopColor);
