@@ -110,6 +110,7 @@ public:
     Optional<CSS::BorderCollapse> border_collapse() const;
     Vector<Vector<String>> grid_template_areas() const;
     String grid_area() const;
+    Optional<CSS::ObjectFit> object_fit() const;
 
     Vector<CSS::Transformation> transformations() const;
     CSS::TransformOrigin transform_origin() const;

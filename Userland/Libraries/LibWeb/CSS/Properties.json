@@ -1559,6 +1559,13 @@
       "unitless-length"
     ]
   },
+  "object-fit": {
+    "inherited": false,
+    "initial": "fill",
+    "valid-types": [
+      "object-fit"
+    ]
+  },
   "opacity": {
     "affects-layout": false,
     "affects-stacking-context": true,

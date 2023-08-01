@@ -238,6 +238,13 @@
         "inside",
         "outside"
     ],
+    "object-fit": [
+      "fill",
+      "contain",
+      "cover",
+      "none",
+      "scale-down"
+    ],
     "overflow": [
         "auto",
         "clip",
