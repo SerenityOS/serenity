@@ -10,6 +10,7 @@
 #include <AK/IPv6Address.h>
 #include <AK/URLParser.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/FileAPI/BlobURLStore.h>
 #include <LibWeb/URL/URL.h>
 
 namespace Web::URL {
@@ -455,7 +456,24 @@ HTML::Origin url_origin(AK::URL const& url)
     // The origin of a URL url is the origin returned by running these steps, switching on url’s scheme:
     // -> "blob"
     if (url.scheme() == "blob"sv) {
-        // FIXME: Support 'blob://' URLs
+        auto url_string = url.to_string().release_value_but_fixme_should_propagate_errors();
+
+        // 1. If url’s blob URL entry is non-null, then return url’s blob URL entry’s environment’s origin.
+        if (auto blob_url_entry = FileAPI::blob_url_store().get(url_string); blob_url_entry.has_value())
+            return blob_url_entry->environment->origin();
+
+        // 2. Let pathURL be the result of parsing the result of URL path serializing url.
+        auto path_url = parse(url.serialize_path());
+
+        // 3. If pathURL is failure, then return a new opaque origin.
+        if (!path_url.is_valid())
+            return HTML::Origin {};
+
+        // 4. If pathURL’s scheme is "http", "https", or "file", then return pathURL’s origin.
+        if (path_url.scheme().is_one_of("http"sv, "https"sv, "file"sv))
+            return url_origin(path_url);
+
+        // 5. Return a new opaque origin.
         return HTML::Origin {};
     }
 
