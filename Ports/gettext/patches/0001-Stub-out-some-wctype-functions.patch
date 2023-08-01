@@ -8,10 +8,10 @@ Subject: [PATCH] Stub out some wctype functions
  1 file changed, 12 insertions(+)
 
 diff --git a/gettext-tools/gnulib-lib/fnmatch.c b/gettext-tools/gnulib-lib/fnmatch.c
-index 3937ce3..84aa6e6 100644
+index b33a127d9802be15eeafef4622e63aac709bef8e..87f1f7c218c1708f84f3e4394eaa219e1d7c5858 100644
 --- a/gettext-tools/gnulib-lib/fnmatch.c
 +++ b/gettext-tools/gnulib-lib/fnmatch.c
-@@ -106,6 +106,18 @@ extern int fnmatch (const char *pattern, const char *string, int flags);
+@@ -112,6 +112,18 @@ typedef ptrdiff_t idx_t;
  # define CHAR_CLASS_MAX_LENGTH 256
  #endif
  
