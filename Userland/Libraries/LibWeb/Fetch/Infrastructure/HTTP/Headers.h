@@ -61,6 +61,8 @@ public:
     [[nodiscard]] ErrorOr<ExtractLengthResult> extract_length() const;
 
     [[nodiscard]] ErrorOr<Optional<MimeSniff::MimeType>> extract_mime_type() const;
+
+    ErrorOr<Vector<ByteBuffer>> unique_names() const;
 };
 
 struct RangeHeaderValue {
