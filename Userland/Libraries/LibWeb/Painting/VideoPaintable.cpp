@@ -61,6 +61,8 @@ void VideoPaintable::paint(PaintContext& context, PaintPhase phase) const
     if (phase != PaintPhase::Foreground)
         return;
 
+    Gfx::PainterStateSaver saver { context.painter() };
+
     auto video_rect = context.rounded_device_rect(absolute_rect());
     context.painter().add_clip_rect(video_rect.to_type<int>());
 
