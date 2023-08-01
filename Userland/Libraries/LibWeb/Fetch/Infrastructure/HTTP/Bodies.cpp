@@ -69,6 +69,9 @@ WebIDL::ExceptionOr<void> Body::fully_read(JS::Realm& realm, Web::Fetch::Infrast
     // FIXME: Implement the streams spec - this is completely made up for now :^)
     if (auto const* byte_buffer = m_source.get_pointer<ByteBuffer>()) {
         TRY_OR_THROW_OOM(vm, success_steps(*byte_buffer));
+    } else if (auto const* blob_handle = m_source.get_pointer<JS::Handle<FileAPI::Blob>>()) {
+        auto byte_buffer = TRY_OR_THROW_OOM(vm, ByteBuffer::copy((*blob_handle)->bytes()));
+        TRY_OR_THROW_OOM(vm, success_steps(move(byte_buffer)));
     } else {
         // Empty, Blob, FormData
         error_steps(WebIDL::DOMException::create(realm, "DOMException", "Reading from Blob, FormData or null source is not yet implemented"sv));
