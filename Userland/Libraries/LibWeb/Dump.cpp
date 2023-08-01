@@ -557,6 +557,12 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                 case CSS::Selector::SimpleSelector::PseudoClass::Type::VolumeLocked:
                     pseudo_class_description = "VolumeLocked";
                     break;
+                case CSS::Selector::SimpleSelector::PseudoClass::Type::Buffering:
+                    pseudo_class_description = "Buffering";
+                    break;
+                case CSS::Selector::SimpleSelector::PseudoClass::Type::Stalled:
+                    pseudo_class_description = "Stalled";
+                    break;
                 }
 
                 builder.appendff(" pseudo_class={}", pseudo_class_description);

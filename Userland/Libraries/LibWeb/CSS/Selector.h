@@ -120,6 +120,8 @@ public:
                 Seeking,
                 Muted,
                 VolumeLocked,
+                Buffering,
+                Stalled,
             };
             Type type;
 
@@ -319,6 +321,10 @@ constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Ty
         return "muted"sv;
     case Selector::SimpleSelector::PseudoClass::Type::VolumeLocked:
         return "volume-locked"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Buffering:
+        return "buffering"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Stalled:
+        return "stalled"sv;
     }
     VERIFY_NOT_REACHED();
 }

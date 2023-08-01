@@ -465,6 +465,8 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
 
         if (pseudo_name.equals_ignoring_ascii_case("active"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Active);
+        if (pseudo_name.equals_ignoring_ascii_case("buffering"sv))
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Buffering);
         if (pseudo_name.equals_ignoring_ascii_case("checked"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Checked);
         if (pseudo_name.equals_ignoring_ascii_case("indeterminate"sv))
@@ -507,6 +509,8 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Root);
         if (pseudo_name.equals_ignoring_ascii_case("seeking"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Seeking);
+        if (pseudo_name.equals_ignoring_ascii_case("stalled"sv))
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Stalled);
         if (pseudo_name.equals_ignoring_ascii_case("host"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Host);
         if (pseudo_name.equals_ignoring_ascii_case("visited"sv))
