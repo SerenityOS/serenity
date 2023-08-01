@@ -53,6 +53,23 @@ JS::NonnullGCPtr<HeaderList> HeaderList::create(JS::VM& vm)
     return vm.heap().allocate_without_realm<HeaderList>();
 }
 
+// Non-standard
+ErrorOr<Vector<ByteBuffer>> HeaderList::unique_names() const
+{
+    Vector<ByteBuffer> header_names_set;
+    HashTable<ReadonlyBytes, CaseInsensitiveBytesTraits<u8 const>> header_names_seen;
+
+    for (auto const& header : *this) {
+        if (header_names_seen.contains(header.name))
+            continue;
+        auto bytes = TRY(ByteBuffer::copy(header.name));
+        TRY(header_names_seen.try_set(header.name));
+        TRY(header_names_set.try_append(move(bytes)));
+    }
+
+    return header_names_set;
+}
+
 // https://fetch.spec.whatwg.org/#header-list-contains
 bool HeaderList::contains(ReadonlyBytes name) const
 {

@@ -393,13 +393,23 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
             if (!response->is_network_error() && !is<Infrastructure::FilteredResponse>(*response)) {
                 // 1. If request’s response tainting is "cors", then:
                 if (request->response_tainting() == Infrastructure::Request::ResponseTainting::CORS) {
-                    // FIXME: 1. Let headerNames be the result of extracting header list values given
-                    //           `Access-Control-Expose-Headers` and response’s header list.
-                    // FIXME: 2. If request’s credentials mode is not "include" and headerNames contains `*`, then set
-                    //           response’s CORS-exposed header-name list to all unique header names in response’s header
-                    //           list.
-                    // FIXME: 3. Otherwise, if headerNames is not null or failure, then set response’s CORS-exposed
-                    //           header-name list to headerNames.
+                    // 1. Let headerNames be the result of extracting header list values given
+                    //    `Access-Control-Expose-Headers` and response’s header list.
+                    auto header_names_or_failure = TRY_OR_IGNORE(Infrastructure::extract_header_list_values("Access-Control-Expose-Headers"sv.bytes(), response->header_list()));
+                    auto header_names = header_names_or_failure.has<Vector<ByteBuffer>>() ? header_names_or_failure.get<Vector<ByteBuffer>>() : Vector<ByteBuffer> {};
+
+                    // 2. If request’s credentials mode is not "include" and headerNames contains `*`, then set
+                    //    response’s CORS-exposed header-name list to all unique header names in response’s header
+                    //    list.
+                    if (request->credentials_mode() != Infrastructure::Request::CredentialsMode::Include && header_names.contains_slow("*"sv.bytes())) {
+                        auto unique_header_names = TRY_OR_IGNORE(response->header_list()->unique_names());
+                        response->set_cors_exposed_header_name_list(move(unique_header_names));
+                    }
+                    // 3. Otherwise, if headerNames is not null or failure, then set response’s CORS-exposed
+                    //    header-name list to headerNames.
+                    else if (!header_names.is_empty()) {
+                        response->set_cors_exposed_header_name_list(move(header_names));
+                    }
                 }
 
                 // 2. Set response to the following filtered response with response as its internal response, depending
