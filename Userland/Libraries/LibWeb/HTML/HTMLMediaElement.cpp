@@ -414,6 +414,7 @@ void HTMLMediaElement::set_muted(bool muted)
 
     m_muted = muted;
     volume_or_muted_attribute_changed();
+    set_needs_style_update(true);
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#user-interface:dom-media-volume-3

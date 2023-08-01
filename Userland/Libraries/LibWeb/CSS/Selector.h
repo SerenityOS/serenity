@@ -118,6 +118,7 @@ public:
                 Playing,
                 Paused,
                 Seeking,
+                Muted,
             };
             Type type;
 
@@ -313,6 +314,8 @@ constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Ty
         return "paused"sv;
     case Selector::SimpleSelector::PseudoClass::Type::Seeking:
         return "seeking"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Muted:
+        return "muted"sv;
     }
     VERIFY_NOT_REACHED();
 }
