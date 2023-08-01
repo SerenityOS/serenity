@@ -51,7 +51,7 @@ static void ladybird_window_init(LadybirdWindow* self)
     gtk_widget_init_template(widget);
 
     // Let's try adding a tab -- what could possibly go wrong?
-    gtk_widget_activate_action(widget, "win.new_tab", NULL);
+    gtk_widget_activate_action(widget, "win.new-tab", NULL);
 }
 
 static void ladybird_window_class_init(LadybirdWindowClass* klass)
