@@ -68,6 +68,8 @@ public:
         HaveEnoughData,
     };
     ReadyState ready_state() const { return m_ready_state; }
+    bool blocked() const;
+    bool stalled() const;
 
     bool seeking() const { return m_seeking; }
     void set_seeking(bool);
@@ -172,7 +174,6 @@ private:
 
     void volume_or_muted_attribute_changed();
 
-    bool blocked() const;
     bool is_eligible_for_autoplay() const;
     bool has_ended_playback() const;
     WebIDL::ExceptionOr<void> reached_end_of_media_playback();

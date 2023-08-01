@@ -1273,7 +1273,10 @@ void HTMLMediaElement::forget_media_resource_specific_tracks()
 // https://html.spec.whatwg.org/multipage/media.html#ready-states:media-element-3
 void HTMLMediaElement::set_ready_state(ReadyState ready_state)
 {
-    ScopeGuard guard { [&] { m_ready_state = ready_state; } };
+    ScopeGuard guard { [&] {
+        m_ready_state = ready_state;
+        set_needs_style_update(true);
+    } };
 
     // When the ready state of a media element whose networkState is not NETWORK_EMPTY changes, the user agent must
     // follow the steps given below:
@@ -1621,6 +1624,12 @@ bool HTMLMediaElement::blocked() const
     // FIXME: Implement "paused for user interaction" (namely "the user agent has reached a point in the media resource
     //        where the user has to make a selection for the resource to continue").
     // FIXME: Implement "paused for in-band content".
+    return false;
+}
+
+bool HTMLMediaElement::stalled() const
+{
+    // FIXME: Implement stall timeout. https://html.spec.whatwg.org/multipage/media.html#stall-timeout
     return false;
 }
 
