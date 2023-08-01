@@ -401,6 +401,11 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
         auto const& media_element = static_cast<HTML::HTMLMediaElement const&>(element);
         return media_element.muted();
     }
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::VolumeLocked: {
+        // FIXME: Currently we don't allow the user to specify an override volume, so this is always false.
+        //        Once we do, implement this!
+        return false;
+    }
     }
 
     return false;

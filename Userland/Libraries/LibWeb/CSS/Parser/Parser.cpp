@@ -511,6 +511,8 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Host);
         if (pseudo_name.equals_ignoring_ascii_case("visited"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Visited);
+        if (pseudo_name.equals_ignoring_ascii_case("volume-locked"sv))
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::VolumeLocked);
         if (pseudo_name.equals_ignoring_ascii_case("scope"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Scope);
 
