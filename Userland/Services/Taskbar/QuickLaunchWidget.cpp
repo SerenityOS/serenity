@@ -191,7 +191,7 @@ ErrorOr<void> QuickLaunchWidget::add_or_adjust_button(DeprecatedString const& bu
     button->set_button_style(Gfx::ButtonStyle::Coolbar);
     auto icon = entry->icon();
     button->set_icon(icon.bitmap_for_size(16));
-    button->set_tooltip(entry->name());
+    button->set_tooltip_deprecated(entry->name());
     button->set_name(button_name);
     button->on_click = [entry = move(entry), this](auto) {
         auto result = entry->launch();

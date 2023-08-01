@@ -49,7 +49,7 @@ private:
         if (action.group() && action.group()->is_exclusive())
             set_exclusive(true);
         set_action(action);
-        set_tooltip(tooltip(action));
+        set_tooltip_deprecated(tooltip(action));
         set_focus_policy(FocusPolicy::NoFocus);
         if (action.icon())
             set_icon(action.icon());
@@ -63,7 +63,7 @@ private:
         auto const* action = this->action();
         VERIFY(action);
 
-        set_tooltip(tooltip(*action));
+        set_tooltip_deprecated(tooltip(*action));
         if (!action->icon())
             Button::set_text(move(text));
     }

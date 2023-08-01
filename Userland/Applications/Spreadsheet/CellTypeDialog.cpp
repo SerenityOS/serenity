@@ -153,7 +153,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, Vector<Position> const& po
 
             m_type = CellType::get_by_name(g_types.at(index.row()));
             if (auto* editor = right_side.find_descendant_of_type_named<GUI::TextEditor>("format_editor"))
-                editor->set_tooltip(m_type->metadata_hint(MetadataName::Format));
+                editor->set_tooltip_deprecated(m_type->metadata_hint(MetadataName::Format));
         };
 
         {

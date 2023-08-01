@@ -69,7 +69,7 @@ ErrorOr<void> MainWidget::initialize()
     // FIXME: Implement vertical flipping in GUI::Slider, not here.
     m_octave_knob = TRY(m_octave_container->try_add<GUI::VerticalSlider>());
     m_octave_knob->set_preferred_width(GUI::SpecialDimension::Fit);
-    m_octave_knob->set_tooltip("Z: octave down, X: octave up");
+    m_octave_knob->set_tooltip_deprecated("Z: octave down, X: octave up");
     m_octave_knob->set_range(octave_min - 1, octave_max - 1);
     m_octave_knob->set_value((octave_max - 1) - (m_track_manager.keyboard()->virtual_keyboard_octave() - 1));
     m_octave_knob->set_step(1);

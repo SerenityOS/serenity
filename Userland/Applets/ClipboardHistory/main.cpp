@@ -101,7 +101,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     applet_window->set_window_type(GUI::WindowType::Applet);
     applet_window->set_has_alpha_channel(true);
     auto icon_widget = TRY(applet_window->set_main_widget<GUI::ImageWidget>());
-    icon_widget->set_tooltip("Clipboard History");
+    icon_widget->set_tooltip_deprecated("Clipboard History");
     icon_widget->load_from_file("/res/icons/16x16/edit-copy.png"sv);
     icon_widget->on_click = [&main_window = *main_window] {
         main_window.show();

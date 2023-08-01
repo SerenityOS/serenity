@@ -308,7 +308,7 @@ void Action::set_tooltip(DeprecatedString tooltip)
         return;
     m_tooltip = move(tooltip);
     for_each_toolbar_button([&](auto& button) {
-        button.set_tooltip(*m_tooltip);
+        button.set_tooltip_deprecated(*m_tooltip);
     });
     for_each_menu_item([&](auto& menu_item) {
         menu_item.update_from_action({});

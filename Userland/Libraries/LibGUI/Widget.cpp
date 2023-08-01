@@ -57,7 +57,7 @@ Widget::Widget()
     REGISTER_BOOL_PROPERTY("visible", is_visible, set_visible);
     REGISTER_BOOL_PROPERTY("focused", is_focused, set_focus);
     REGISTER_BOOL_PROPERTY("enabled", is_enabled, set_enabled);
-    REGISTER_DEPRECATED_STRING_PROPERTY("tooltip", tooltip, set_tooltip);
+    REGISTER_DEPRECATED_STRING_PROPERTY("tooltip", tooltip_deprecated, set_tooltip_deprecated);
 
     REGISTER_UI_SIZE_PROPERTY("min_size", min_size, set_min_size);
     REGISTER_READONLY_UI_SIZE_PROPERTY("effective_min_size", effective_min_size);
@@ -1107,7 +1107,7 @@ Gfx::IntRect Widget::relative_non_grabbable_rect() const
     return rect;
 }
 
-void Widget::set_tooltip(DeprecatedString tooltip)
+void Widget::set_tooltip_deprecated(DeprecatedString tooltip)
 {
     m_tooltip = move(tooltip);
     if (Application::the()->tooltip_source_widget() == this)

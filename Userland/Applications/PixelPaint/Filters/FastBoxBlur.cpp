@@ -180,7 +180,7 @@ ErrorOr<RefPtr<GUI::Widget>> FastBoxBlur::get_settings_widget()
 
         m_gaussian_checkbox = TRY(gaussian_container->try_add<GUI::CheckBox>("Approximate Gaussian Blur"_string));
         m_gaussian_checkbox->set_checked(m_approximate_gauss);
-        m_gaussian_checkbox->set_tooltip("A real gaussian blur can be approximated by running the box blur multiple times with different weights.");
+        m_gaussian_checkbox->set_tooltip_deprecated("A real gaussian blur can be approximated by running the box blur multiple times with different weights.");
         m_gaussian_checkbox->on_checked = [this](bool checked) {
             m_approximate_gauss = checked;
             update_preview();

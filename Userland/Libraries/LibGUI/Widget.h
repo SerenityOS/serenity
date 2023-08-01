@@ -161,8 +161,8 @@ public:
     virtual bool is_visible_for_timer_purposes() const override;
 
     bool has_tooltip() const { return !m_tooltip.is_empty(); }
-    DeprecatedString tooltip() const { return m_tooltip; }
-    void set_tooltip(DeprecatedString);
+    DeprecatedString tooltip_deprecated() const { return m_tooltip; }
+    void set_tooltip_deprecated(DeprecatedString);
 
     bool is_auto_focusable() const { return m_auto_focusable; }
     void set_auto_focusable(bool auto_focusable) { m_auto_focusable = auto_focusable; }

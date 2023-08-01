@@ -89,7 +89,7 @@ ErrorOr<void> TaskbarWindow::populate_taskbar()
     m_clock_widget = TRY(main_widget->try_add<Taskbar::ClockWidget>());
 
     m_show_desktop_button = TRY(main_widget->try_add<GUI::Button>());
-    m_show_desktop_button->set_tooltip("Show Desktop");
+    m_show_desktop_button->set_tooltip_deprecated("Show Desktop");
     m_show_desktop_button->set_icon(TRY(GUI::Icon::try_create_default_icon("desktop"sv)).bitmap_for_size(16));
     m_show_desktop_button->set_button_style(Gfx::ButtonStyle::Coolbar);
     m_show_desktop_button->set_fixed_size(24, 24);
@@ -199,7 +199,7 @@ void TaskbarWindow::update_window_button(::Window& window, bool show_as_active)
     if (!button)
         return;
     button->set_text(String::from_deprecated_string(window.title()).release_value_but_fixme_should_propagate_errors());
-    button->set_tooltip(window.title());
+    button->set_tooltip_deprecated(window.title());
     button->set_checked(show_as_active);
     button->set_visible(is_window_on_current_workspace(window));
 }
