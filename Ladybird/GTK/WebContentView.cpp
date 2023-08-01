@@ -93,9 +93,7 @@ static void ladybird_web_content_view_dispose(GObject* object)
 
     g_clear_object(&self->hadjustment);
     g_clear_object(&self->vadjustment);
-    if (self->impl) {
-        self->impl.clear();
-    }
+    self->impl.clear();
 
     G_OBJECT_CLASS(ladybird_web_content_view_parent_class)->dispose(object);
 }
