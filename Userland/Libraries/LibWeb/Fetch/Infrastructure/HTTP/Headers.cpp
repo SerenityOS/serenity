@@ -776,6 +776,26 @@ ErrorOr<Optional<Vector<ByteBuffer>>> extract_header_values(Header const& header
 {
     // FIXME: 1. If parsing header’s value, per the ABNF for header’s name, fails, then return failure.
     // FIXME: 2. Return one or more values resulting from parsing header’s value, per the ABNF for header’s name.
+
+    // For now we only parse some headers that are of the ABNF list form "#something"
+    if (StringView { header.name }.is_one_of_ignoring_ascii_case(
+            "Access-Control-Request-Headers"sv,
+            "Access-Control-Expose-Headers"sv,
+            "Access-Control-Allow-Headers"sv,
+            "Access-Control-Allow-Methods"sv)
+        && !header.value.is_empty()) {
+        auto split_values = StringView { header.value }.split_view(',');
+        Vector<ByteBuffer> trimmed_values;
+
+        for (auto const& value : split_values) {
+            auto trimmed_value = value.trim(" \t"sv);
+            auto trimmed_value_as_byte_buffer = TRY(ByteBuffer::copy(trimmed_value.bytes()));
+            TRY(trimmed_values.try_append(move(trimmed_value_as_byte_buffer)));
+        }
+
+        return trimmed_values;
+    }
+
     // This always ignores the ABNF rules for now and returns the header value as a single list item.
     return Vector { TRY(ByteBuffer::copy(header.value)) };
 }

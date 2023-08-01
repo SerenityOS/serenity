@@ -1812,38 +1812,6 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> cors_preflight_fetch(JS::
             // NOTE: We treat "header_names_or_failure" being `Empty` as empty Vector here.
             auto header_names = header_names_or_failure.has<Vector<ByteBuffer>>() ? header_names_or_failure.get<Vector<ByteBuffer>>() : Vector<ByteBuffer> {};
 
-            // FIXME: Remove this once extract_header_list_values validates the header and returns multiple values.
-            if (!methods.is_empty()) {
-                VERIFY(methods.size() == 1);
-
-                auto split_methods = StringView { methods.first() }.split_view(',');
-                Vector<ByteBuffer> trimmed_methods;
-
-                for (auto const& method : split_methods) {
-                    auto trimmed_method = method.trim(" \t"sv);
-                    auto trimmed_method_as_byte_buffer = TRY_OR_IGNORE(ByteBuffer::copy(trimmed_method.bytes()));
-                    TRY_OR_IGNORE(trimmed_methods.try_append(move(trimmed_method_as_byte_buffer)));
-                }
-
-                methods = move(trimmed_methods);
-            }
-
-            // FIXME: Remove this once extract_header_list_values validates the header and returns multiple values.
-            if (!header_names.is_empty()) {
-                VERIFY(header_names.size() == 1);
-
-                auto split_header_names = StringView { header_names.first() }.split_view(',');
-                Vector<ByteBuffer> trimmed_header_names;
-
-                for (auto const& header_name : split_header_names) {
-                    auto trimmed_header_name = header_name.trim(" \t"sv);
-                    auto trimmed_header_name_as_byte_buffer = TRY_OR_IGNORE(ByteBuffer::copy(trimmed_header_name.bytes()));
-                    TRY_OR_IGNORE(trimmed_header_names.try_append(move(trimmed_header_name_as_byte_buffer)));
-                }
-
-                header_names = move(trimmed_header_names);
-            }
-
             // 4. If methods is null and request’s use-CORS-preflight flag is set, then set methods to a new list containing request’s method.
             // NOTE: This ensures that a CORS-preflight fetch that happened due to request’s use-CORS-preflight flag being set is cached.
             if (methods.is_empty() && request.use_cors_preflight())
