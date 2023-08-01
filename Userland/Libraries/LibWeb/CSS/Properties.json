@@ -140,7 +140,7 @@
     "valid-types": [
       "ratio"
     ],
-    "valid-identifiers":[
+    "valid-identifiers": [
       "auto"
     ]
   },
