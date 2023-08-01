@@ -22,10 +22,13 @@ class Ext2FS final : public BlockBasedFileSystem {
     friend class Ext2FSInode;
 
 public:
+    // s_feature_ro_compat
     enum class FeaturesReadOnly : u32 {
         None = 0,
-        FileSize64bits = 1 << 1,
+        SparseSuperblock = EXT2_FEATURE_RO_COMPAT_SPARSE_SUPER,
+        FileSize64bits = EXT2_FEATURE_RO_COMPAT_LARGE_FILE,
     };
+    AK_ENUM_BITWISE_FRIEND_OPERATORS(FeaturesReadOnly);
 
     static ErrorOr<NonnullRefPtr<FileSystem>> try_create(OpenFileDescription&, ReadonlyBytes);
 
@@ -77,10 +80,12 @@ private:
     virtual ErrorOr<void> flush_writes() override;
 
     BlockIndex first_block_index() const;
+    BlockIndex first_block_of_block_group_descriptors() const;
     ErrorOr<InodeIndex> allocate_inode(GroupIndex preferred_group = 0);
     ErrorOr<Vector<BlockIndex>> allocate_blocks(GroupIndex preferred_group_index, size_t count);
     GroupIndex group_index_from_inode(InodeIndex) const;
     GroupIndex group_index_from_block_index(BlockIndex) const;
+    BlockIndex first_block_of_group(GroupIndex) const;
 
     ErrorOr<bool> get_inode_allocation_state(InodeIndex) const;
     ErrorOr<void> set_inode_allocation_state(InodeIndex, bool);

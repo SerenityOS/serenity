@@ -12,7 +12,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             TextNode <#text>
           BlockContainer <caption> at (8,10) content-size 82.734375x17.46875 [BFC] children: inline
             line 0 width: 82.734375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-              frag 0 from TextNode start: 1, length: 9, rect: [16,10 82.734375x17.46875]
+              frag 0 from TextNode start: 1, length: 9, rect: [16.21875,10 82.734375x17.46875]
                 "A Caption"
             TextNode <#text>
           BlockContainer <(anonymous)> (not painted) children: inline

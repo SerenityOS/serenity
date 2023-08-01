@@ -35,10 +35,10 @@ protected:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
 private:
-    JS::GCPtr<SVGRadialGradientElement const> radial_gradient_xlink_href() const
+    JS::GCPtr<SVGRadialGradientElement const> linked_radial_gradient() const
     {
-        if (auto href = xlink_href(); href && is<SVGRadialGradientElement>(*href))
-            return &verify_cast<SVGRadialGradientElement>(*href);
+        if (auto gradient = linked_gradient(); gradient && is<SVGRadialGradientElement>(*gradient))
+            return &verify_cast<SVGRadialGradientElement>(*gradient);
         return {};
     }
 

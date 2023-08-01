@@ -7,6 +7,7 @@
 
 #include "Hunks.h"
 #include <AK/Debug.h>
+#include <AK/LexicalPath.h>
 
 namespace Diff {
 
@@ -57,19 +58,56 @@ bool Parser::consume_line_number(size_t& number)
     return true;
 }
 
-ErrorOr<Header> Parser::parse_header()
+ErrorOr<String> Parser::parse_file_line(Optional<size_t> const& strip_count)
+{
+    // FIXME: handle parsing timestamps as well.
+    auto path = consume_line();
+
+    // No strip count given. Default to basename of file.
+    if (!strip_count.has_value())
+        return String::from_deprecated_string(LexicalPath::basename(path));
+
+    // NOTE: We cannot use LexicalPath::parts as we want to strip the non-canonicalized path.
+    auto const& parts = path.split_view('/');
+
+    // More components to strip than the filename has. Just pretend it is missing.
+    if (strip_count.value() >= parts.size())
+        return String();
+
+    // Remove given number of leading components from the path.
+    size_t components = parts.size() - strip_count.value();
+
+    StringBuilder stripped_path;
+    for (size_t i = parts.size() - components; i < parts.size(); ++i) {
+        TRY(stripped_path.try_append(parts[i]));
+        if (i != parts.size() - 1)
+            TRY(stripped_path.try_append("/"sv));
+    }
+
+    return stripped_path.to_string();
+}
+
+ErrorOr<Patch> Parser::parse_patch(Optional<size_t> const& strip_count)
+{
+    Patch patch;
+    patch.header = TRY(parse_header(strip_count));
+    patch.hunks = TRY(parse_hunks());
+    return patch;
+}
+
+ErrorOr<Header> Parser::parse_header(Optional<size_t> const& strip_count)
 {
     Header header;
 
     while (!is_eof()) {
 
         if (consume_specific("+++ ")) {
-            header.new_file_path = TRY(String::from_utf8(consume_line()));
+            header.new_file_path = TRY(parse_file_line(strip_count));
             continue;
         }
 
         if (consume_specific("--- ")) {
-            header.old_file_path = TRY(String::from_utf8(consume_line()));
+            header.old_file_path = TRY(parse_file_line(strip_count));
             continue;
         }
 
@@ -81,20 +119,20 @@ ErrorOr<Header> Parser::parse_header()
         consume_line();
     }
 
-    return Error::from_string_literal("Unable to find any patch");
+    return header;
 }
 
 ErrorOr<Vector<Hunk>> Parser::parse_hunks()
 {
     Vector<Hunk> hunks;
 
-    while (!is_eof()) {
+    while (next_is("@@ ")) {
         // Try an locate a hunk location in this hunk. It may be prefixed with information.
         auto maybe_location = consume_unified_location();
         consume_line();
 
         if (!maybe_location.has_value())
-            continue;
+            break;
 
         Hunk hunk { *maybe_location, {} };
 
@@ -148,6 +186,8 @@ ErrorOr<Vector<Hunk>> Parser::parse_hunks()
 ErrorOr<Vector<Hunk>> parse_hunks(StringView diff)
 {
     Parser lexer(diff);
+    while (!lexer.next_is("@@ ") && !lexer.is_eof())
+        lexer.consume_line();
     return lexer.parse_hunks();
 }
 }

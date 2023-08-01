@@ -68,7 +68,7 @@ private:
     virtual void resizeEvent(QResizeEvent*) override;
     virtual bool event(QEvent*) override;
 
-    void rerender_toolbar_icons();
+    void recreate_toolbar_icons();
     void update_hover_label();
 
     void open_link(URL const&);

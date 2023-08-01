@@ -148,6 +148,7 @@ jobs:
           CTEST_OUTPUT_ON_FAILURE: 1
           ASAN_OPTIONS: 'strict_string_checks=1:check_initialization_order=1:strict_init_order=1:detect_stack_use_after_return=1'
           UBSAN_OPTIONS: 'print_stacktrace=1:print_summary=1:halt_on_error=1'
+          TESTS_ONLY: 1
 
     - ${{ if and(eq(parameters.fuzzer, 'NoFuzz'), eq(parameters.os, 'Linux') ) }}:
       - script: |

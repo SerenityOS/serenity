@@ -1,0 +1,6 @@
+true
+false
+123
+123.456
+This is a String object
+1692748800000

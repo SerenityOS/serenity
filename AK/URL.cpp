@@ -101,10 +101,16 @@ void URL::set_password(DeprecatedString password, ApplyPercentEncoding apply_per
     m_valid = compute_validity();
 }
 
-void URL::set_host(DeprecatedString host)
+void URL::set_host(Host host)
 {
     m_host = move(host);
     m_valid = compute_validity();
+}
+
+// https://url.spec.whatwg.org/#concept-host-serializer
+ErrorOr<String> URL::serialized_host() const
+{
+    return URLParser::serialize_host(m_host);
 }
 
 void URL::set_port(Optional<u16> port)
@@ -152,6 +158,14 @@ void URL::set_fragment(DeprecatedString fragment, ApplyPercentEncoding apply_per
     m_fragment = move(fragment);
 }
 
+// https://url.spec.whatwg.org/#cannot-have-a-username-password-port
+bool URL::cannot_have_a_username_or_password_or_port() const
+{
+    // A URL cannot have a username/password/port if its host is null or the empty string, or its scheme is "file".
+    // FIXME: The spec does not mention anything to do with 'cannot be a base URL'.
+    return m_host.has<Empty>() || m_host == String {} || m_cannot_be_a_base_url || m_scheme == "file"sv;
+}
+
 // FIXME: This is by no means complete.
 // NOTE: This relies on some assumptions about how the spec-defined URL parser works that may turn out to be wrong.
 bool URL::compute_validity() const
@@ -184,33 +198,35 @@ bool URL::compute_validity() const
     }
 
     // NOTE: A file URL's host should be the empty string for localhost, not null.
-    if (m_scheme == "file" && m_host.is_null())
+    if (m_scheme == "file" && m_host.has<Empty>())
         return false;
 
     return true;
 }
 
-bool URL::scheme_requires_port(StringView scheme)
-{
-    return (default_port_for_scheme(scheme) != 0);
-}
-
+// https://url.spec.whatwg.org/#default-port
 u16 URL::default_port_for_scheme(StringView scheme)
 {
+    // Spec defined mappings with port:
+    if (scheme == "ftp")
+        return 21;
     if (scheme == "http")
         return 80;
     if (scheme == "https")
         return 443;
+    if (scheme == "ws")
+        return 80;
+    if (scheme == "wss")
+        return 443;
+
+    // NOTE: not in spec, but we support these too
     if (scheme == "gemini")
         return 1965;
     if (scheme == "irc")
         return 6667;
     if (scheme == "ircs")
         return 6697;
-    if (scheme == "ws")
-        return 80;
-    if (scheme == "wss")
-        return 443;
+
     return 0;
 }
 
@@ -224,7 +240,7 @@ URL URL::create_with_file_scheme(DeprecatedString const& path, DeprecatedString 
     url.set_scheme("file");
     // NOTE: If the hostname is localhost (or null, which implies localhost), it should be set to the empty string.
     //       This is because a file URL always needs a non-null hostname.
-    url.set_host(hostname.is_null() || hostname == "localhost" ? DeprecatedString::empty() : hostname);
+    url.set_host(hostname.is_null() || hostname == "localhost" ? String {} : String::from_deprecated_string(hostname).release_value_but_fixme_should_propagate_errors());
     url.set_paths(lexical_path.parts());
     if (path.ends_with('/'))
         url.append_slash();
@@ -240,7 +256,8 @@ URL URL::create_with_help_scheme(DeprecatedString const& path, DeprecatedString 
     url.set_scheme("help");
     // NOTE: If the hostname is localhost (or null, which implies localhost), it should be set to the empty string.
     //       This is because a file URL always needs a non-null hostname.
-    url.set_host(hostname.is_null() || hostname == "localhost" ? DeprecatedString::empty() : hostname);
+    url.set_host(hostname.is_null() || hostname == "localhost" ? String {} : String::from_deprecated_string(hostname).release_value_but_fixme_should_propagate_errors());
+
     url.set_paths(lexical_path.parts());
     if (path.ends_with('/'))
         url.append_slash();
@@ -299,49 +316,68 @@ DeprecatedString URL::serialize(ExcludeFragment exclude_fragment) const
 {
     if (m_scheme == "data")
         return serialize_data_url();
-    StringBuilder builder;
-    builder.append(m_scheme);
-    builder.append(':');
 
-    if (!m_host.is_null()) {
-        builder.append("//"sv);
+    // 1. Let output be url’s scheme and U+003A (:) concatenated.
+    StringBuilder output;
+    output.append(m_scheme);
+    output.append(':');
 
+    // 2. If url’s host is non-null:
+    if (!m_host.has<Empty>()) {
+        // 1. Append "//" to output.
+        output.append("//"sv);
+
+        // 2. If url includes credentials, then:
         if (includes_credentials()) {
-            builder.append(m_username);
+            // 1. Append url’s username to output.
+            output.append(m_username);
+
+            // 2. If url’s password is not the empty string, then append U+003A (:), followed by url’s password, to output.
             if (!m_password.is_empty()) {
-                builder.append(':');
-                builder.append(m_password);
+                output.append(':');
+                output.append(m_password);
             }
-            builder.append('@');
+
+            // 3. Append U+0040 (@) to output.
+            output.append('@');
         }
 
-        builder.append(m_host);
+        // 3. Append url’s host, serialized, to output.
+        output.append(serialized_host().release_value_but_fixme_should_propagate_errors());
+
+        // 4. If url’s port is non-null, append U+003A (:) followed by url’s port, serialized, to output.
         if (m_port.has_value())
-            builder.appendff(":{}", *m_port);
+            output.appendff(":{}", *m_port);
     }
 
+    // 3. If url’s host is null, url does not have an opaque path, url’s path’s size is greater than 1, and url’s path[0] is the empty string, then append U+002F (/) followed by U+002E (.) to output.
+    // 4. Append the result of URL path serializing url to output.
+    // FIXME: Implement this closer to spec steps.
     if (cannot_be_a_base_url()) {
-        builder.append(m_paths[0]);
+        output.append(m_paths[0]);
     } else {
-        if (m_host.is_null() && m_paths.size() > 1 && m_paths[0].is_empty())
-            builder.append("/."sv);
+        if (m_host.has<Empty>() && m_paths.size() > 1 && m_paths[0].is_empty())
+            output.append("/."sv);
         for (auto& segment : m_paths) {
-            builder.append('/');
-            builder.append(segment);
+            output.append('/');
+            output.append(segment);
         }
     }
 
+    // 5. If url’s query is non-null, append U+003F (?), followed by url’s query, to output.
     if (!m_query.is_null()) {
-        builder.append('?');
-        builder.append(m_query);
+        output.append('?');
+        output.append(m_query);
     }
 
+    // 6. If exclude fragment is false and url’s fragment is non-null, then append U+0023 (#), followed by url’s fragment, to output.
     if (exclude_fragment == ExcludeFragment::No && !m_fragment.is_null()) {
-        builder.append('#');
-        builder.append(m_fragment);
+        output.append('#');
+        output.append(m_fragment);
     }
 
-    return builder.to_deprecated_string();
+    // 7. Return output.
+    return output.to_deprecated_string();
 }
 
 // https://url.spec.whatwg.org/#url-rendering
@@ -357,9 +393,9 @@ DeprecatedString URL::serialize_for_display() const
     builder.append(m_scheme);
     builder.append(':');
 
-    if (!m_host.is_null()) {
+    if (!m_host.has<Empty>()) {
         builder.append("//"sv);
-        builder.append(m_host);
+        builder.append(serialized_host().release_value_but_fixme_should_propagate_errors());
         if (m_port.has_value())
             builder.appendff(":{}", *m_port);
     }
@@ -367,7 +403,7 @@ DeprecatedString URL::serialize_for_display() const
     if (cannot_be_a_base_url()) {
         builder.append(m_paths[0]);
     } else {
-        if (m_host.is_null() && m_paths.size() > 1 && m_paths[0].is_empty())
+        if (m_host.has<Empty>() && m_paths.size() > 1 && m_paths[0].is_empty())
             builder.append("/."sv);
         for (auto& segment : m_paths) {
             builder.append('/');
@@ -415,7 +451,7 @@ DeprecatedString URL::serialize_origin() const
     StringBuilder builder;
     builder.append(m_scheme);
     builder.append("://"sv);
-    builder.append(m_host);
+    builder.append(serialized_host().release_value_but_fixme_should_propagate_errors());
     if (m_port.has_value())
         builder.appendff(":{}", *m_port);
     return builder.to_deprecated_string();

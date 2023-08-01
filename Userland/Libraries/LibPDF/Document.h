@@ -146,6 +146,8 @@ public:
 
     PDFErrorOr<Optional<InfoDict>> info_dict();
 
+    PDFErrorOr<Vector<DeprecatedFlyString>> read_filters(NonnullRefPtr<DictObject>);
+
 private:
     explicit Document(NonnullRefPtr<DocumentParser> const& parser);
 

@@ -3,7 +3,6 @@ include(libweb_generators)
 set(SOURCES
     ARIA/AriaData.cpp
     ARIA/ARIAMixin.cpp
-    ARIA/ARIAMixin.idl
     ARIA/Roles.cpp
     ARIA/RoleType.cpp
     ARIA/StateAndProperties.cpp
@@ -30,6 +29,7 @@ set(SOURCES
     CSS/CSSFontFaceRule.cpp
     CSS/CSSMediaRule.cpp
     CSS/CSSNumericType.cpp
+    CSS/CSSNamespaceRule.cpp
     CSS/CSSRule.cpp
     CSS/CSSRuleList.cpp
     CSS/CSSStyleDeclaration.cpp
@@ -129,16 +129,13 @@ set(SOURCES
     DOM/AbstractRange.cpp
     DOM/AccessibilityTreeNode.cpp
     DOM/Attr.cpp
-    DOM/Attr.idl
     DOM/CDATASection.cpp
     DOM/CharacterData.cpp
-    DOM/CharacterData.idl
     DOM/Comment.cpp
     DOM/CustomEvent.cpp
     DOM/DOMEventListener.cpp
     DOM/DOMImplementation.cpp
     DOM/DOMTokenList.cpp
-    DOM/DOMTokenList.idl
     DOM/Document.cpp
     DOM/DocumentFragment.cpp
     DOM/DocumentLoadEventDelayer.cpp
@@ -172,7 +169,6 @@ set(SOURCES
     DOM/StaticRange.cpp
     DOM/StyleElementUtils.cpp
     DOM/Text.cpp
-    DOM/Text.idl
     DOM/TreeWalker.cpp
     DOM/XMLDocument.cpp
     DOMParsing/InnerHTML.cpp
@@ -490,6 +486,7 @@ set(SOURCES
     PerformanceTimeline/EntryTypes.cpp
     PerformanceTimeline/PerformanceEntry.cpp
     PermissionsPolicy/AutoplayAllowlist.cpp
+    PixelUnits.cpp
     Platform/AudioCodecPlugin.cpp
     Platform/EventLoopPlugin.cpp
     Platform/EventLoopPluginSerenity.cpp

@@ -2,8 +2,8 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (1,1) content-size 798x37.46875 [BFC] children: not-inline
     BlockContainer <body> at (10,10) content-size 780x19.46875 children: not-inline
       Box <div.container> at (11,11) content-size 800x17.46875 flex-container(row) [FFC] children: not-inline
-        BlockContainer <(anonymous)> at (392.210937,11) content-size 37.578125x17.46875 flex-item [BFC] children: inline
+        BlockContainer <(anonymous)> at (392.203125,11) content-size 37.578125x17.46875 flex-item [BFC] children: inline
           line 0 width: 37.578125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 4, rect: [392.210937,11 37.578125x17.46875]
+            frag 0 from TextNode start: 0, length: 4, rect: [392.203125,11 37.578125x17.46875]
               "Text"
           TextNode <#text>

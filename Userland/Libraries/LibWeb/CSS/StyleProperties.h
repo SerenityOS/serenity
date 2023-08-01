@@ -35,6 +35,12 @@ public:
         }
     }
 
+    struct StyleAndSourceDeclaration {
+        NonnullRefPtr<StyleValue const> style;
+        CSS::CSSStyleDeclaration const* declaration = nullptr;
+    };
+    using PropertyValues = Array<Optional<StyleAndSourceDeclaration>, to_underlying(CSS::last_property_id) + 1>;
+
     auto& properties() { return m_property_values; }
     auto const& properties() const { return m_property_values; }
 
@@ -138,11 +144,7 @@ public:
 private:
     friend class StyleComputer;
 
-    struct StyleAndSourceDeclaration {
-        NonnullRefPtr<StyleValue const> style;
-        CSS::CSSStyleDeclaration const* declaration = nullptr;
-    };
-    Array<Optional<StyleAndSourceDeclaration>, to_underlying(CSS::last_property_id) + 1> m_property_values;
+    PropertyValues m_property_values;
     Optional<CSS::Overflow> overflow(CSS::PropertyID) const;
     Vector<CSS::ShadowData> shadow(CSS::PropertyID, Layout::Node const&) const;
 

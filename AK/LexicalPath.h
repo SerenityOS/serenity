@@ -19,13 +19,18 @@ namespace AK {
 
 class LexicalPath {
 public:
+    enum StripExtension {
+        No,
+        Yes
+    };
+
     explicit LexicalPath(DeprecatedString);
 
     bool is_absolute() const { return !m_string.is_empty() && m_string[0] == '/'; }
     DeprecatedString const& string() const { return m_string; }
 
     StringView dirname() const { return m_dirname; }
-    StringView basename() const { return m_basename; }
+    StringView basename(StripExtension s = StripExtension::No) const { return s == StripExtension::No ? m_basename : m_basename.substring_view(0, m_basename.length() - m_extension.length() - 1); }
     StringView title() const { return m_title; }
     StringView extension() const { return m_extension; }
 
@@ -59,10 +64,10 @@ public:
         return lexical_path.dirname();
     }
 
-    [[nodiscard]] static DeprecatedString basename(DeprecatedString path)
+    [[nodiscard]] static DeprecatedString basename(DeprecatedString path, StripExtension s = StripExtension::No)
     {
         auto lexical_path = LexicalPath(move(path));
-        return lexical_path.basename();
+        return lexical_path.basename(s);
     }
 
     [[nodiscard]] static DeprecatedString title(DeprecatedString path)

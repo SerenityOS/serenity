@@ -109,7 +109,7 @@ private:
     struct FlexLine {
         Vector<FlexItem&> items;
         CSSPixels cross_size { 0 };
-        CSSPixels remaining_free_space { 0 };
+        Optional<CSSPixels> remaining_free_space;
         double chosen_flex_fraction { 0 };
 
         double sum_of_flex_factor_of_unfrozen_items() const;

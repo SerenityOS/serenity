@@ -1,8 +1,8 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
-  BlockContainer <html> at (1,1) content-size 798x97.817501 [BFC] children: not-inline
-    Box <body> at (10,10) content-size 780x79.817501 [GFC] children: not-inline
-      BlockContainer <h1> at (55.5,32.440000) content-size 689x34.9375 [BFC] children: inline
+  BlockContainer <html> at (1,1) content-size 798x97.8125 [BFC] children: not-inline
+    Box <body> at (10,10) content-size 780x79.8125 [GFC] children: not-inline
+      BlockContainer <h1> at (55.5,32.4375) content-size 689x34.9375 [BFC] children: inline
         line 0 width: 492.96875, height: 34.9375, bottom: 34.9375, baseline: 27.0625
-          frag 0 from TextNode start: 0, length: 31, rect: [55.5,32.440000 492.96875x34.9375]
+          frag 0 from TextNode start: 0, length: 31, rect: [55.5,32.4375 492.96875x34.9375]
             "Null publishes fine indie games"
         TextNode <#text>

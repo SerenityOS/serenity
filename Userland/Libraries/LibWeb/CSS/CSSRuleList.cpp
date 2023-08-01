@@ -93,6 +93,8 @@ WebIDL::ExceptionOr<unsigned> CSSRuleList::insert_a_css_rule(Variant<StringView,
     m_rules.insert(index, *new_rule);
 
     // 8. Return index.
+    if (on_change)
+        on_change();
     return index;
 }
 
@@ -118,6 +120,8 @@ WebIDL::ExceptionOr<void> CSSRuleList::remove_a_css_rule(u32 index)
     old_rule.set_parent_rule(nullptr);
     old_rule.set_parent_style_sheet(nullptr);
 
+    if (on_change)
+        on_change();
     return {};
 }
 
@@ -144,6 +148,7 @@ void CSSRuleList::for_each_effective_style_rule(Function<void(CSSStyleRule const
             break;
         case CSSRule::Type::Keyframe:
         case CSSRule::Type::Keyframes:
+        case CSSRule::Type::Namespace:
             break;
         }
     }
@@ -173,6 +178,8 @@ void CSSRuleList::for_each_effective_keyframes_at_rule(Function<void(CSSKeyframe
             break;
         case CSSRule::Type::Keyframes:
             callback(static_cast<CSSKeyframesRule const&>(*rule));
+            break;
+        case CSSRule::Type::Namespace:
             break;
         }
     }
@@ -212,6 +219,7 @@ bool CSSRuleList::evaluate_media_queries(HTML::Window const& window)
         }
         case CSSRule::Type::Keyframe:
         case CSSRule::Type::Keyframes:
+        case CSSRule::Type::Namespace:
             break;
         }
     }

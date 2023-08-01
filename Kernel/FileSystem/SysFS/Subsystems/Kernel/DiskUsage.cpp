@@ -35,7 +35,7 @@ ErrorOr<void> SysFSDiskUsage::try_generate(KBufferBuilder& builder)
         TRY(fs_object.add("free_inode_count"sv, fs.free_inode_count()));
         auto mount_point = TRY(mount.absolute_path());
         TRY(fs_object.add("mount_point"sv, mount_point->view()));
-        TRY(fs_object.add("block_size"sv, static_cast<u64>(fs.block_size())));
+        TRY(fs_object.add("block_size"sv, static_cast<u64>(fs.logical_block_size())));
         TRY(fs_object.add("readonly"sv, fs.is_readonly()));
         TRY(fs_object.add("mount_flags"sv, mount.flags()));
 

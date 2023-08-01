@@ -9,8 +9,10 @@
 #include <AK/QuickSort.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/CSS/Parser/Parser.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/SourceSet.h>
 #include <LibWeb/Infra/CharacterTypes.h>
+#include <LibWeb/Layout/Node.h>
 
 namespace Web::HTML {
 
@@ -337,14 +339,14 @@ descriptor_parser:
 }
 
 // https://html.spec.whatwg.org/multipage/images.html#parse-a-sizes-attribute
-CSS::Length parse_a_sizes_attribute(DOM::Document const& document, StringView sizes)
+CSS::LengthOrCalculated parse_a_sizes_attribute(DOM::Document const& document, StringView sizes)
 {
     auto css_parser = CSS::Parser::Parser::create(CSS::Parser::ParsingContext { document }, sizes).release_value_but_fixme_should_propagate_errors();
     return css_parser.parse_as_sizes_attribute();
 }
 
 // https://html.spec.whatwg.org/multipage/images.html#create-a-source-set
-SourceSet SourceSet::create(DOM::Document const& document, String default_source, String srcset, String sizes)
+SourceSet SourceSet::create(DOM::Element const& element, String default_source, String srcset, String sizes)
 {
     // 1. Let source set be an empty source set.
     SourceSet source_set;
@@ -354,7 +356,7 @@ SourceSet SourceSet::create(DOM::Document const& document, String default_source
         source_set = parse_a_srcset_attribute(srcset);
 
     // 3. Let source size be the result of parsing sizes.
-    source_set.m_source_size = parse_a_sizes_attribute(document, sizes);
+    source_set.m_source_size = parse_a_sizes_attribute(element.document(), sizes);
 
     // 4. If default source is not the empty string and source set does not contain an image source
     //    with a pixel density descriptor value of 1, and no image source with a width descriptor,
@@ -375,17 +377,30 @@ SourceSet SourceSet::create(DOM::Document const& document, String default_source
     }
 
     // 5. Normalize the source densities of source set.
-    source_set.normalize_source_densities();
+    source_set.normalize_source_densities(element);
 
     // 6. Return source set.
     return source_set;
 }
 
 // https://html.spec.whatwg.org/multipage/images.html#normalise-the-source-densities
-void SourceSet::normalize_source_densities()
+void SourceSet::normalize_source_densities(DOM::Element const& element)
 {
     // 1. Let source size be source set's source size.
-    auto source_size = m_source_size;
+    auto source_size = [&] {
+        if (!m_source_size.is_calculated())
+            return m_source_size.value();
+
+        // HACK: Flush any pending layouts here so we get an up-to-date length resolution context.
+        // FIXME: We should have a way to build a LengthResolutionContext for any DOM node without going through the layout tree.
+        const_cast<DOM::Document&>(element.document()).update_layout();
+        if (element.layout_node()) {
+            auto context = CSS::Length::ResolutionContext::for_layout_node(*element.layout_node());
+            return m_source_size.resolved(context);
+        }
+        // FIXME: This is wrong, but we don't have a better way to resolve lengths without a layout node yet.
+        return CSS::Length::make_auto();
+    }();
 
     // 2. For each image source in source set:
     for (auto& image_source : m_sources) {
@@ -403,7 +418,7 @@ void SourceSet::normalize_source_densities()
                     .value = (width_descriptor.value / source_size.absolute_length_to_px()).to_double()
                 };
             } else {
-                dbgln("FIXME: Handle relative sizes: {}", source_size);
+                dbgln("FIXME: Image element has unresolved relative length '{}' in sizes attribute", source_size);
                 image_source.descriptor = ImageSource::PixelDensityDescriptorValue {
                     .value = 1,
                 };

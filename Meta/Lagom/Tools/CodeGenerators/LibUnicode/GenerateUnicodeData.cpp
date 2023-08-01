@@ -19,15 +19,7 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
-
-// Some code points are excluded from UnicodeData.txt, and instead are part of a "range" of code
-// points, as indicated by the "name" field. For example:
-//     3400;<CJK Ideograph Extension A, First>;Lo;0;L;;;;;N;;;;;
-//     4DBF;<CJK Ideograph Extension A, Last>;Lo;0;L;;;;;N;;;;;
-struct CodePointRange {
-    u32 first;
-    u32 last;
-};
+#include <LibUnicode/CharacterTypes.h>
 
 // https://www.unicode.org/reports/tr44/#SpecialCasing.txt
 struct SpecialCasing {
@@ -56,7 +48,7 @@ struct CodePointDecomposition {
 };
 
 // https://www.unicode.org/reports/tr44/#PropList.txt
-using PropList = HashMap<DeprecatedString, Vector<CodePointRange>>;
+using PropList = HashMap<DeprecatedString, Vector<Unicode::CodePointRange>>;
 
 // https://www.unicode.org/reports/tr44/#DerivedNormalizationProps.txt
 enum class QuickCheck {
@@ -66,7 +58,7 @@ enum class QuickCheck {
 };
 
 struct Normalization {
-    CodePointRange code_point_range;
+    Unicode::CodePointRange code_point_range;
     Vector<u32> value;
     QuickCheck quick_check { QuickCheck::Yes };
 };
@@ -74,8 +66,27 @@ struct Normalization {
 using NormalizationProps = HashMap<DeprecatedString, Vector<Normalization>>;
 
 struct CodePointName {
-    CodePointRange code_point_range;
+    Unicode::CodePointRange code_point_range;
     size_t name { 0 };
+};
+
+struct CasingTable {
+    bool operator==(CasingTable const& other) const
+    {
+        return canonical_combining_class == other.canonical_combining_class
+            && simple_lowercase_mapping == other.simple_lowercase_mapping
+            && simple_uppercase_mapping == other.simple_uppercase_mapping
+            && simple_titlecase_mapping == other.simple_titlecase_mapping
+            && special_casing_indices == other.special_casing_indices
+            && case_folding_indices == other.case_folding_indices;
+    }
+
+    u8 canonical_combining_class { 0 };
+    Optional<u32> simple_uppercase_mapping;
+    Optional<u32> simple_lowercase_mapping;
+    Optional<u32> simple_titlecase_mapping;
+    Vector<u32> special_casing_indices;
+    Vector<u32> case_folding_indices;
 };
 
 // https://www.unicode.org/reports/tr44/#UnicodeData.txt
@@ -83,7 +94,6 @@ struct CodePointData {
     u32 code_point { 0 };
     DeprecatedString name;
     Optional<size_t> abbreviation;
-    u8 canonical_combining_class { 0 };
     DeprecatedString bidi_class;
     Optional<CodePointDecomposition> decomposition_mapping;
     Optional<i8> numeric_value_decimal;
@@ -92,42 +102,43 @@ struct CodePointData {
     bool bidi_mirrored { false };
     DeprecatedString unicode_1_name;
     DeprecatedString iso_comment;
-    Optional<u32> simple_uppercase_mapping;
-    Optional<u32> simple_lowercase_mapping;
-    Optional<u32> simple_titlecase_mapping;
-    Vector<u32> special_casing_indices;
-    Vector<u32> case_folding_indices;
+    CasingTable casing;
 };
 
 struct BlockName {
-    CodePointRange code_point_range;
+    Unicode::CodePointRange code_point_range;
     size_t name { 0 };
+};
+
+using PropertyTable = Vector<bool>;
+
+static constexpr auto CODE_POINT_TABLES_MSB_COUNT = 16u;
+static_assert(CODE_POINT_TABLES_MSB_COUNT < 24u);
+
+static constexpr auto CODE_POINT_TABLES_LSB_COUNT = 24u - CODE_POINT_TABLES_MSB_COUNT;
+static constexpr auto CODE_POINT_TABLES_LSB_MASK = NumericLimits<u32>::max() >> (NumericLimits<u32>::digits() - CODE_POINT_TABLES_LSB_COUNT);
+
+template<typename PropertyType>
+struct CodePointTables {
+    Vector<size_t> stage1;
+    Vector<size_t> stage2;
+    Vector<PropertyType> unique_properties;
 };
 
 struct UnicodeData {
     UniqueStringStorage unique_strings;
 
-    u32 code_points_with_non_zero_combining_class { 0 };
-
     u32 code_points_with_decomposition_mapping { 0 };
     Vector<u32> decomposition_mappings;
     Vector<DeprecatedString> compatibility_tags;
 
-    u32 simple_uppercase_mapping_size { 0 };
-    u32 simple_lowercase_mapping_size { 0 };
-    u32 simple_titlecase_mapping_size { 0 };
-
     Vector<SpecialCasing> special_casing;
-    u32 code_points_with_special_casing { 0 };
     u32 largest_special_casing_mapping_size { 0 };
-    u32 largest_special_casing_size { 0 };
     Vector<DeprecatedString> conditions;
     Vector<DeprecatedString> locales;
 
     Vector<CaseFolding> case_folding;
-    u32 code_points_with_case_folding { 0 };
     u32 largest_case_folding_mapping_size { 0 };
-    u32 largest_case_folding_size { 0 };
     Vector<StringView> statuses;
 
     Vector<CodePointData> code_point_data;
@@ -156,10 +167,6 @@ struct UnicodeData {
     Vector<Alias> script_aliases;
     PropList script_extensions;
 
-    PropList block_list {
-        { "No_Block"sv, {} },
-    };
-    Vector<Alias> block_aliases;
     Vector<BlockName> block_display_names;
 
     // FIXME: We are not yet doing anything with this data. It will be needed for String.prototype.normalize.
@@ -168,6 +175,15 @@ struct UnicodeData {
     PropList grapheme_break_props;
     PropList word_break_props;
     PropList sentence_break_props;
+
+    CodePointTables<CasingTable> casing_tables;
+    CodePointTables<PropertyTable> general_category_tables;
+    CodePointTables<PropertyTable> property_tables;
+    CodePointTables<PropertyTable> script_tables;
+    CodePointTables<PropertyTable> script_extension_tables;
+    CodePointTables<PropertyTable> grapheme_break_tables;
+    CodePointTables<PropertyTable> word_break_tables;
+    CodePointTables<PropertyTable> sentence_break_tables;
 };
 
 static DeprecatedString sanitize_entry(DeprecatedString const& entry)
@@ -199,9 +215,9 @@ static Vector<u32> parse_code_point_list(StringView list)
     return code_points;
 }
 
-static CodePointRange parse_code_point_range(StringView list)
+static Unicode::CodePointRange parse_code_point_range(StringView list)
 {
-    CodePointRange code_point_range {};
+    Unicode::CodePointRange code_point_range {};
 
     if (list.contains(".."sv)) {
         auto segments = list.split_view(".."sv);
@@ -536,13 +552,13 @@ static ErrorOr<void> parse_normalization_props(Core::InputBufferedFile& file, Un
     return {};
 }
 
-static void add_canonical_code_point_name(CodePointRange range, StringView name, UnicodeData& unicode_data)
+static void add_canonical_code_point_name(Unicode::CodePointRange range, StringView name, UnicodeData& unicode_data)
 {
     // https://www.unicode.org/versions/Unicode15.0.0/ch04.pdf#G142981
     // FIXME: Implement the NR1 rules for Hangul syllables.
 
     struct CodePointNameFormat {
-        CodePointRange code_point_range;
+        Unicode::CodePointRange code_point_range;
         StringView name;
     };
 
@@ -672,7 +688,7 @@ static ErrorOr<void> parse_unicode_data(Core::InputBufferedFile& file, UnicodeDa
         CodePointData data {};
         data.code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[0]).value();
         data.name = segments[1];
-        data.canonical_combining_class = AK::StringUtils::convert_to_uint<u8>(segments[3]).value();
+        data.casing.canonical_combining_class = AK::StringUtils::convert_to_uint<u8>(segments[3]).value();
         data.bidi_class = segments[4];
         data.decomposition_mapping = parse_decomposition_mapping(segments[5], unicode_data);
         data.numeric_value_decimal = AK::StringUtils::convert_to_int<i8>(segments[6]);
@@ -681,9 +697,9 @@ static ErrorOr<void> parse_unicode_data(Core::InputBufferedFile& file, UnicodeDa
         data.bidi_mirrored = segments[9] == "Y"sv;
         data.unicode_1_name = segments[10];
         data.iso_comment = segments[11];
-        data.simple_uppercase_mapping = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[12]);
-        data.simple_lowercase_mapping = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[13]);
-        data.simple_titlecase_mapping = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[14]);
+        data.casing.simple_uppercase_mapping = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[12]);
+        data.casing.simple_lowercase_mapping = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[13]);
+        data.casing.simple_titlecase_mapping = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[14]);
 
         if (auto abbreviation = unicode_data.code_point_abbreviations.get(data.code_point); abbreviation.has_value())
             data.abbreviation = *abbreviation;
@@ -702,7 +718,7 @@ static ErrorOr<void> parse_unicode_data(Core::InputBufferedFile& file, UnicodeDa
         } else if (data.name.starts_with("<"sv) && data.name.ends_with(", Last>"sv)) {
             VERIFY(code_point_range_start.has_value());
 
-            CodePointRange code_point_range { *code_point_range_start, data.code_point };
+            Unicode::CodePointRange code_point_range { *code_point_range_start, data.code_point };
             assigned_code_points.append(code_point_range);
 
             data.name = data.name.substring(1, data.name.length() - 8);
@@ -720,33 +736,17 @@ static ErrorOr<void> parse_unicode_data(Core::InputBufferedFile& file, UnicodeDa
             }
         }
 
-        bool has_special_casing { false };
         for (auto const& casing : unicode_data.special_casing) {
-            if (casing.code_point == data.code_point) {
-                data.special_casing_indices.append(casing.index);
-                has_special_casing = true;
-            }
+            if (casing.code_point == data.code_point)
+                data.casing.special_casing_indices.append(casing.index);
         }
 
-        bool has_case_folding { false };
         for (size_t i = 0; i < unicode_data.case_folding.size(); ++i) {
-            if (auto const& folding = unicode_data.case_folding[i]; folding.code_point == data.code_point) {
-                data.case_folding_indices.append(i);
-                has_case_folding = true;
-            }
+            if (auto const& folding = unicode_data.case_folding[i]; folding.code_point == data.code_point)
+                data.casing.case_folding_indices.append(i);
         }
 
-        unicode_data.code_points_with_non_zero_combining_class += data.canonical_combining_class != 0;
-        unicode_data.simple_uppercase_mapping_size += data.simple_uppercase_mapping.has_value();
-        unicode_data.simple_lowercase_mapping_size += data.simple_lowercase_mapping.has_value();
-        unicode_data.simple_titlecase_mapping_size += data.simple_titlecase_mapping.has_value();
         unicode_data.code_points_with_decomposition_mapping += data.decomposition_mapping.has_value();
-
-        unicode_data.code_points_with_special_casing += has_special_casing;
-        unicode_data.largest_special_casing_size = max(unicode_data.largest_special_casing_size, data.special_casing_indices.size());
-
-        unicode_data.code_points_with_case_folding += has_case_folding;
-        unicode_data.largest_case_folding_size = max(unicode_data.largest_case_folding_size, data.case_folding_indices.size());
 
         previous_code_point = data.code_point;
         unicode_data.code_point_data.append(move(data));
@@ -814,7 +814,6 @@ namespace Unicode {
     generate_enum("GeneralCategory"sv, {}, unicode_data.general_categories.keys(), unicode_data.general_category_aliases);
     generate_enum("Property"sv, {}, unicode_data.prop_list.keys(), unicode_data.prop_aliases);
     generate_enum("Script"sv, {}, unicode_data.script_list.keys(), unicode_data.script_aliases);
-    generate_enum("Block"sv, {}, unicode_data.block_list.keys(), unicode_data.block_aliases);
     generate_enum("GraphemeBreakProperty"sv, {}, unicode_data.grapheme_break_props.keys());
     generate_enum("WordBreakProperty"sv, {}, unicode_data.word_break_props.keys());
     generate_enum("SentenceBreakProperty"sv, {}, unicode_data.sentence_break_props.keys());
@@ -860,8 +859,8 @@ struct CodePointDecomposition {
 
 Optional<Locale> locale_from_string(StringView locale);
 
-ReadonlySpan<SpecialCasing const*> special_case_mapping(u32 code_point);
-ReadonlySpan<CaseFolding const*> case_folding_mapping(u32 code_point);
+ReadonlySpan<SpecialCasing> special_case_mapping(u32 code_point);
+ReadonlySpan<CaseFolding> case_folding_mapping(u32 code_point);
 
 }
 )~~~");
@@ -876,10 +875,11 @@ static ErrorOr<void> generate_unicode_data_implementation(Core::InputBufferedFil
     SourceGenerator generator { builder };
 
     generator.set("string_index_type"sv, unicode_data.unique_strings.type_that_fits());
-    generator.set("largest_special_casing_size", DeprecatedString::number(unicode_data.largest_special_casing_size));
     generator.set("special_casing_size", DeprecatedString::number(unicode_data.special_casing.size()));
-    generator.set("largest_case_folding_size", DeprecatedString::number(unicode_data.largest_case_folding_size));
     generator.set("case_folding_size", DeprecatedString::number(unicode_data.case_folding.size()));
+
+    TRY(generator.set("CODE_POINT_TABLES_LSB_COUNT", TRY(String::number(CODE_POINT_TABLES_LSB_COUNT))));
+    TRY(generator.set("CODE_POINT_TABLES_LSB_MASK", TRY(String::formatted("{:#x}", CODE_POINT_TABLES_LSB_MASK))));
 
     generator.append(R"~~~(
 #include <AK/Array.h>
@@ -954,20 +954,16 @@ static constexpr Array<CaseFolding, @case_folding_size@> s_case_folding { {)~~~"
     generator.append(R"~~~(
 } };
 
-struct CodePointMapping {
-    u32 code_point { 0 };
-    u32 mapping { 0 };
-};
+struct CasingTable {
+    u8 canonical_combining_class { 0 };
+    i32 simple_uppercase_mapping { -1 };
+    i32 simple_lowercase_mapping { -1 };
+    i32 simple_titlecase_mapping { -1 };
 
-struct SpecialCaseMapping {
-    u32 code_point { 0 };
-    Array<SpecialCasing const*, @largest_special_casing_size@> special_casing {};
+    u32 special_casing_start_index { 0 };
     u32 special_casing_size { 0 };
-};
 
-struct CaseFoldingMapping {
-    u32 code_point { 0 };
-    Array<CaseFolding const*, @largest_case_folding_size@> case_folding {};
+    u32 case_folding_start_index { 0 };
     u32 case_folding_size { 0 };
 };
 
@@ -981,13 +977,6 @@ struct CodePointComparator {
     constexpr int operator()(u32 code_point, MappingType const& mapping)
     {
         return code_point - mapping.code_point;
-    }
-};
-
-struct CodePointRangeComparator {
-    constexpr int operator()(u32 code_point, CodePointRange const& range)
-    {
-        return (code_point > range.last) - (code_point < range.first);
     }
 };
 
@@ -1073,86 +1062,122 @@ static constexpr Array<@mapping_type@, @size@> s_@name@_mappings { {
 )~~~");
     };
 
-    append_code_point_mappings("combining_class"sv, "CodePointMapping"sv, unicode_data.code_points_with_non_zero_combining_class,
-        [](auto const& data) -> Optional<u32> {
-            if (data.canonical_combining_class == 0)
-                return {};
-            return data.canonical_combining_class;
-        });
-    append_code_point_mappings("uppercase"sv, "CodePointMapping"sv, unicode_data.simple_uppercase_mapping_size, [](auto const& data) { return data.simple_uppercase_mapping; });
-    append_code_point_mappings("lowercase"sv, "CodePointMapping"sv, unicode_data.simple_lowercase_mapping_size, [](auto const& data) { return data.simple_lowercase_mapping; });
-    append_code_point_mappings("titlecase"sv, "CodePointMapping"sv, unicode_data.simple_titlecase_mapping_size, [](auto const& data) { return data.simple_titlecase_mapping; });
-    append_code_point_mappings("special_case"sv, "SpecialCaseMapping"sv, unicode_data.code_points_with_special_casing, [](auto const& data) { return data.special_casing_indices; });
-    append_code_point_mappings("case_folding"sv, "CaseFoldingMapping"sv, unicode_data.code_points_with_case_folding, [](auto const& data) { return data.case_folding_indices; });
     append_code_point_mappings("abbreviation"sv, "CodePointAbbreviation"sv, unicode_data.code_point_abbreviations.size(), [](auto const& data) { return data.abbreviation; });
+    append_code_point_mappings("decomposition"sv, "CodePointDecompositionRaw"sv, unicode_data.code_points_with_decomposition_mapping, [](auto const& data) { return data.decomposition_mapping; });
 
-    append_code_point_mappings("decomposition"sv, "CodePointDecompositionRaw"sv, unicode_data.code_points_with_decomposition_mapping,
-        [](auto const& data) {
-            return data.decomposition_mapping;
-        });
+    auto append_casing_table = [&](auto collection_snake, auto const& unique_properties) -> ErrorOr<void> {
+        TRY(generator.set("name", TRY(String::formatted("{}_unique_properties", collection_snake))));
+        TRY(generator.set("size", TRY(String::number(unique_properties.size()))));
 
-    auto append_code_point_range_list = [&](DeprecatedString name, Vector<CodePointRange> const& ranges) {
-        generator.set("name", name);
-        generator.set("size", DeprecatedString::number(ranges.size()));
+        auto optional_code_point_to_string = [](auto const& code_point) -> ErrorOr<String> {
+            if (!code_point.has_value())
+                return "-1"_short_string;
+            return String::number(*code_point);
+        };
+        auto first_index_to_string = [](auto const& list) -> ErrorOr<String> {
+            if (list.is_empty())
+                return "0"_short_string;
+            return String::number(list.first());
+        };
+
         generator.append(R"~~~(
-static constexpr Array<CodePointRange, @size@> @name@ { {
+static constexpr Array<CasingTable, @size@> @name@ { {)~~~");
+
+        for (auto const& casing : unique_properties) {
+            TRY(generator.set("canonical_combining_class", TRY(String::number(casing.canonical_combining_class))));
+            TRY(generator.set("simple_uppercase_mapping", TRY(optional_code_point_to_string(casing.simple_uppercase_mapping))));
+            TRY(generator.set("simple_lowercase_mapping", TRY(optional_code_point_to_string(casing.simple_lowercase_mapping))));
+            TRY(generator.set("simple_titlecase_mapping", TRY(optional_code_point_to_string(casing.simple_titlecase_mapping))));
+            TRY(generator.set("special_casing_start_index", TRY(first_index_to_string(casing.special_casing_indices))));
+            TRY(generator.set("special_casing_size", TRY(String::number(casing.special_casing_indices.size()))));
+            TRY(generator.set("case_folding_start_index", TRY(first_index_to_string(casing.case_folding_indices))));
+            TRY(generator.set("case_folding_size", TRY(String::number(casing.case_folding_indices.size()))));
+
+            generator.append(R"~~~(
+    { @canonical_combining_class@, @simple_uppercase_mapping@, @simple_lowercase_mapping@, @simple_titlecase_mapping@, @special_casing_start_index@, @special_casing_size@, @case_folding_start_index@, @case_folding_size@ },)~~~");
+        }
+
+        generator.append(R"~~~(
+} };
+)~~~");
+
+        return {};
+    };
+
+    auto append_property_table = [&](auto collection_snake, auto const& unique_properties) -> ErrorOr<void> {
+        TRY(generator.set("name", TRY(String::formatted("{}_unique_properties", collection_snake))));
+        TRY(generator.set("outer_size", TRY(String::number(unique_properties.size()))));
+        TRY(generator.set("inner_size", TRY(String::number(unique_properties[0].size()))));
+
+        generator.append(R"~~~(
+static constexpr Array<Array<bool, @inner_size@>, @outer_size@> @name@ { {)~~~");
+
+        for (auto const& property_set : unique_properties) {
+            generator.append(R"~~~(
+    { )~~~");
+
+            for (auto value : property_set) {
+                TRY(generator.set("value", TRY(String::formatted("{}", value))));
+                generator.append("@value@, ");
+            }
+
+            generator.append(" },");
+        }
+
+        generator.append(R"~~~(
+} };
+)~~~");
+
+        return {};
+    };
+
+    auto append_code_point_tables = [&](StringView collection_snake, auto const& tables, auto& append_unique_properties) -> ErrorOr<void> {
+        auto append_stage = [&](auto const& stage, auto name, auto type) -> ErrorOr<void> {
+            TRY(generator.set("name", TRY(String::formatted("{}_{}", collection_snake, name))));
+            TRY(generator.set("size", TRY(String::number(stage.size()))));
+            generator.set("type", type);
+
+            generator.append(R"~~~(
+static constexpr Array<@type@, @size@> @name@ { {
     )~~~");
 
-        constexpr size_t max_ranges_per_row = 20;
-        size_t ranges_in_current_row = 0;
+            static constexpr size_t max_values_per_row = 300;
+            size_t values_in_current_row = 0;
 
-        for (auto const& range : ranges) {
-            if (ranges_in_current_row++ > 0)
-                generator.append(" ");
+            for (auto value : stage) {
+                if (values_in_current_row++ > 0)
+                    generator.append(", ");
 
-            generator.set("first", DeprecatedString::formatted("{:#x}", range.first));
-            generator.set("last", DeprecatedString::formatted("{:#x}", range.last));
-            generator.append("{ @first@, @last@ },");
+                TRY(generator.set("value", TRY(String::number(value))));
+                generator.append("@value@");
 
-            if (ranges_in_current_row == max_ranges_per_row) {
-                ranges_in_current_row = 0;
-                generator.append("\n    ");
+                if (values_in_current_row == max_values_per_row) {
+                    values_in_current_row = 0;
+                    generator.append(",\n    ");
+                }
             }
-        }
 
-        generator.append(R"~~~(
-} };
-)~~~");
-    };
-
-    auto append_prop_list = [&](StringView collection_name, StringView property_format, PropList const& property_list) {
-        for (auto const& property : property_list) {
-            auto name = DeprecatedString::formatted(property_format, property.key);
-            append_code_point_range_list(move(name), property.value);
-        }
-
-        auto property_names = property_list.keys();
-        quick_sort(property_names);
-
-        generator.set("name", collection_name);
-        generator.set("size", DeprecatedString::number(property_names.size()));
-        generator.append(R"~~~(
-static constexpr Array<ReadonlySpan<CodePointRange>, @size@> @name@ { {)~~~");
-
-        for (auto const& property_name : property_names) {
-            generator.set("name", DeprecatedString::formatted(property_format, property_name));
             generator.append(R"~~~(
-    @name@.span(),)~~~");
-        }
-
-        generator.append(R"~~~(
 } };
 )~~~");
+
+            return {};
+        };
+
+        TRY(append_stage(tables.stage1, "stage1"sv, "u16"sv));
+        TRY(append_stage(tables.stage2, "stage2"sv, "u16"sv));
+        TRY(append_unique_properties(collection_snake, tables.unique_properties));
+        return {};
     };
 
-    append_prop_list("s_general_categories"sv, "s_general_category_{}"sv, unicode_data.general_categories);
-    append_prop_list("s_properties"sv, "s_property_{}"sv, unicode_data.prop_list);
-    append_prop_list("s_scripts"sv, "s_script_{}"sv, unicode_data.script_list);
-    append_prop_list("s_script_extensions"sv, "s_script_extension_{}"sv, unicode_data.script_extensions);
-    append_prop_list("s_blocks"sv, "s_block_{}"sv, unicode_data.block_list);
-    append_prop_list("s_grapheme_break_properties"sv, "s_grapheme_break_property_{}"sv, unicode_data.grapheme_break_props);
-    append_prop_list("s_word_break_properties"sv, "s_word_break_property_{}"sv, unicode_data.word_break_props);
-    append_prop_list("s_sentence_break_properties"sv, "s_sentence_break_property_{}"sv, unicode_data.sentence_break_props);
+    TRY(append_code_point_tables("s_casings"sv, unicode_data.casing_tables, append_casing_table));
+    TRY(append_code_point_tables("s_general_categories"sv, unicode_data.general_category_tables, append_property_table));
+    TRY(append_code_point_tables("s_properties"sv, unicode_data.property_tables, append_property_table));
+    TRY(append_code_point_tables("s_scripts"sv, unicode_data.script_tables, append_property_table));
+    TRY(append_code_point_tables("s_script_extensions"sv, unicode_data.script_extension_tables, append_property_table));
+    TRY(append_code_point_tables("s_grapheme_break_properties"sv, unicode_data.grapheme_break_tables, append_property_table));
+    TRY(append_code_point_tables("s_word_break_properties"sv, unicode_data.word_break_tables, append_property_table));
+    TRY(append_code_point_tables("s_sentence_break_properties"sv, unicode_data.sentence_break_tables, append_property_table));
 
     auto append_code_point_display_names = [&](StringView type, StringView name, auto const& display_names) {
         constexpr size_t max_values_per_row = 30;
@@ -1225,43 +1250,63 @@ Optional<DeprecatedString> code_point_display_name(u32 code_point)
 
     return {};
 }
+
+static CasingTable const& casing_table_for_code_point(u32 code_point)
+{
+    auto stage1_index = code_point >> @CODE_POINT_TABLES_LSB_COUNT@;
+    auto stage2_index = s_casings_stage1[stage1_index] + (code_point & @CODE_POINT_TABLES_LSB_MASK@);
+    auto unique_properties_index = s_casings_stage2[stage2_index];
+
+    return s_casings_unique_properties[unique_properties_index];
+}
 )~~~");
 
-    auto append_code_point_mapping_search = [&](StringView method, StringView mappings, StringView fallback) {
+    auto append_code_point_mapping_search = [&](StringView method, StringView mapping, Optional<StringView> const& fallback = {}) {
         generator.set("method", method);
-        generator.set("mappings", mappings);
-        generator.set("fallback", fallback);
+        generator.set("mapping", mapping);
         generator.append(R"~~~(
 u32 @method@(u32 code_point)
 {
-    auto const* mapping = binary_search(@mappings@, code_point, nullptr, CodePointComparator<CodePointMapping> {});
-    return mapping ? mapping->mapping : @fallback@;
+    auto const& casing_table = casing_table_for_code_point(code_point);
+    auto mapping = casing_table.@mapping@;
+)~~~");
+
+        if (fallback.has_value()) {
+            generator.set("fallback", *fallback);
+            generator.append(R"~~~(
+    return mapping == -1 ? @fallback@ : static_cast<u32>(mapping);)~~~");
+        } else {
+            generator.append(R"~~~(
+    return mapping;)~~~");
+        }
+
+        generator.append(R"~~~(
 }
 )~~~");
     };
 
-    append_code_point_mapping_search("canonical_combining_class"sv, "s_combining_class_mappings"sv, "0"sv);
-    append_code_point_mapping_search("to_unicode_uppercase"sv, "s_uppercase_mappings"sv, "code_point"sv);
-    append_code_point_mapping_search("to_unicode_lowercase"sv, "s_lowercase_mappings"sv, "code_point"sv);
-    append_code_point_mapping_search("to_unicode_titlecase"sv, "s_titlecase_mappings"sv, "code_point"sv);
+    append_code_point_mapping_search("canonical_combining_class"sv, "canonical_combining_class"sv);
+    append_code_point_mapping_search("to_unicode_uppercase"sv, "simple_uppercase_mapping"sv, "code_point"sv);
+    append_code_point_mapping_search("to_unicode_lowercase"sv, "simple_lowercase_mapping"sv, "code_point"sv);
+    append_code_point_mapping_search("to_unicode_titlecase"sv, "simple_titlecase_mapping"sv, "code_point"sv);
 
     generator.append(R"~~~(
-ReadonlySpan<SpecialCasing const*> special_case_mapping(u32 code_point)
+ReadonlySpan<SpecialCasing> special_case_mapping(u32 code_point)
 {
-    auto const* mapping = binary_search(s_special_case_mappings, code_point, nullptr, CodePointComparator<SpecialCaseMapping> {});
-    if (mapping == nullptr)
+    auto const& casing_table = casing_table_for_code_point(code_point);
+    if (casing_table.special_casing_size == 0)
         return {};
 
-    return mapping->special_casing.span().slice(0, mapping->special_casing_size);
+    return s_special_case.span().slice(casing_table.special_casing_start_index, casing_table.special_casing_size);
 }
 
-ReadonlySpan<CaseFolding const*> case_folding_mapping(u32 code_point)
+ReadonlySpan<CaseFolding> case_folding_mapping(u32 code_point)
 {
-    auto const* mapping = binary_search(s_case_folding_mappings, code_point, nullptr, CodePointComparator<CaseFoldingMapping> {});
-    if (mapping == nullptr)
+    auto const& casing_table = casing_table_for_code_point(code_point);
+    if (casing_table.case_folding_size == 0)
         return {};
 
-    return mapping->case_folding.span().slice(0, mapping->case_folding_size);
+    return s_case_folding.span().slice(casing_table.case_folding_start_index, casing_table.case_folding_size);
 }
 
 Optional<StringView> code_point_abbreviation(u32 code_point)
@@ -1292,20 +1337,24 @@ Optional<CodePointDecomposition const> code_point_decomposition_by_index(size_t 
 }
 )~~~");
 
-    auto append_prop_search = [&](StringView enum_title, StringView enum_snake, StringView collection_name) {
+    auto append_prop_search = [&](StringView enum_title, StringView enum_snake, StringView collection_name) -> ErrorOr<void> {
         generator.set("enum_title", enum_title);
         generator.set("enum_snake", enum_snake);
         generator.set("collection_name", collection_name);
+
         generator.append(R"~~~(
 bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
 {
-    auto index = static_cast<@enum_title@UnderlyingType>(@enum_snake@);
-    auto const& ranges = @collection_name@.at(index);
+    auto stage1_index = code_point >> @CODE_POINT_TABLES_LSB_COUNT@;
+    auto stage2_index = @collection_name@_stage1[stage1_index] + (code_point & @CODE_POINT_TABLES_LSB_MASK@);
+    auto unique_properties_index = @collection_name@_stage2[stage2_index];
 
-    auto const* range = binary_search(ranges, code_point, nullptr, CodePointRangeComparator {});
-    return range != nullptr;
+    auto const& property_set = @collection_name@_unique_properties[unique_properties_index];
+    return property_set[to_underlying(@enum_snake@)];
 }
 )~~~");
+
+        return {};
     };
 
     auto append_from_string = [&](StringView enum_title, StringView enum_snake, auto const& prop_list, Vector<Alias> const& aliases) -> ErrorOr<void> {
@@ -1333,22 +1382,19 @@ bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
 
     TRY(append_from_string("Locale"sv, "locale"sv, unicode_data.locales, {}));
 
-    append_prop_search("GeneralCategory"sv, "general_category"sv, "s_general_categories"sv);
+    TRY(append_prop_search("GeneralCategory"sv, "general_category"sv, "s_general_categories"sv));
     TRY(append_from_string("GeneralCategory"sv, "general_category"sv, unicode_data.general_categories, unicode_data.general_category_aliases));
 
-    append_prop_search("Property"sv, "property"sv, "s_properties"sv);
+    TRY(append_prop_search("Property"sv, "property"sv, "s_properties"sv));
     TRY(append_from_string("Property"sv, "property"sv, unicode_data.prop_list, unicode_data.prop_aliases));
 
-    append_prop_search("Script"sv, "script"sv, "s_scripts"sv);
-    append_prop_search("Script"sv, "script_extension"sv, "s_script_extensions"sv);
+    TRY(append_prop_search("Script"sv, "script"sv, "s_scripts"sv));
+    TRY(append_prop_search("Script"sv, "script_extension"sv, "s_script_extensions"sv));
     TRY(append_from_string("Script"sv, "script"sv, unicode_data.script_list, unicode_data.script_aliases));
 
-    append_prop_search("Block"sv, "block"sv, "s_blocks"sv);
-    TRY(append_from_string("Block"sv, "block"sv, unicode_data.block_list, unicode_data.block_aliases));
-
-    append_prop_search("GraphemeBreakProperty"sv, "grapheme_break_property"sv, "s_grapheme_break_properties"sv);
-    append_prop_search("WordBreakProperty"sv, "word_break_property"sv, "s_word_break_properties"sv);
-    append_prop_search("SentenceBreakProperty"sv, "sentence_break_property"sv, "s_sentence_break_properties"sv);
+    TRY(append_prop_search("GraphemeBreakProperty"sv, "grapheme_break_property"sv, "s_grapheme_break_properties"sv));
+    TRY(append_prop_search("WordBreakProperty"sv, "word_break_property"sv, "s_word_break_properties"sv));
+    TRY(append_prop_search("SentenceBreakProperty"sv, "sentence_break_property"sv, "s_sentence_break_properties"sv));
 
     generator.append(R"~~~(
 }
@@ -1358,7 +1404,7 @@ bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
     return {};
 }
 
-static Vector<u32> flatten_code_point_ranges(Vector<CodePointRange> const& code_points)
+static Vector<u32> flatten_code_point_ranges(Vector<Unicode::CodePointRange> const& code_points)
 {
     Vector<u32> flattened;
 
@@ -1371,9 +1417,9 @@ static Vector<u32> flatten_code_point_ranges(Vector<CodePointRange> const& code_
     return flattened;
 }
 
-static Vector<CodePointRange> form_code_point_ranges(Vector<u32> code_points)
+static Vector<Unicode::CodePointRange> form_code_point_ranges(Vector<u32> code_points)
 {
-    Vector<CodePointRange> ranges;
+    Vector<Unicode::CodePointRange> ranges;
 
     u32 range_start = code_points[0];
     u32 range_end = range_start;
@@ -1394,7 +1440,7 @@ static Vector<CodePointRange> form_code_point_ranges(Vector<u32> code_points)
     return ranges;
 }
 
-static void sort_and_merge_code_point_ranges(Vector<CodePointRange>& code_points)
+static void sort_and_merge_code_point_ranges(Vector<Unicode::CodePointRange>& code_points)
 {
     quick_sort(code_points, [](auto const& range1, auto const& range2) {
         return range1.first < range2.first;
@@ -1484,6 +1530,185 @@ static ErrorOr<void> normalize_script_extensions(PropList& script_extensions, Pr
     return {};
 }
 
+struct CasingMetadata {
+    using ConstIterator = typename Vector<CodePointData>::ConstIterator;
+
+    CasingMetadata(Vector<CodePointData> const& code_point_data)
+        : iterator(code_point_data.begin())
+        , end(code_point_data.end())
+    {
+    }
+
+    ConstIterator iterator;
+    ConstIterator const end;
+
+    Vector<size_t> current_block;
+    HashMap<decltype(current_block), size_t> unique_blocks;
+};
+
+struct PropertyMetadata {
+    static ErrorOr<PropertyMetadata> create(PropList& property_list)
+    {
+        PropertyMetadata data;
+        TRY(data.property_values.try_ensure_capacity(property_list.size()));
+        TRY(data.property_set.try_ensure_capacity(property_list.size()));
+
+        auto property_names = property_list.keys();
+        quick_sort(property_names);
+
+        for (auto& property_name : property_names) {
+            auto& code_point_ranges = property_list.get(property_name).value();
+            data.property_values.unchecked_append(move(code_point_ranges));
+        }
+
+        return data;
+    }
+
+    Vector<typename PropList::ValueType> property_values;
+    PropertyTable property_set;
+
+    Vector<size_t> current_block;
+    HashMap<decltype(current_block), size_t> unique_blocks;
+};
+
+// The goal here is to produce a set of tables that represent a category of code point properties for every code point.
+// The most naive method would be to generate a single table per category, each with one entry per code point. Each of
+// those tables would have a size of 0x10ffff though, which is a non-starter. Instead, we create a set of 2-stage lookup
+// tables per category.
+//
+// To do so, it's important to note that Unicode tends to organize code points with similar properties together. This
+// leads to long series of code points with identical properties. Therefore, if we divide the 0x10ffff code points into
+// fixed-size blocks, many of those blocks will also be identical.
+//
+// So we iterate over every code point, classifying each one for the category of interest. We represent a classification
+// as a list of booleans. We store the classification in the CodePointTables::unique_properties list for this category.
+// As the name implies, this list is de-duplicated; we store the index into this list in a separate list, which we call
+// a "block".
+//
+// As we iterate, we "pause" every BLOCK_SIZE code points to examine the block. If the block is unique so far, we extend
+// CodePointTables::stage2 with the entries of that block (so CodePointTables::stage2 is also a list of indices into
+// CodePointTables::unique_properties). We then append the index of the start of that block in CodePointTables::stage2
+// to CodePointTables::stage1.
+//
+// The value of BLOCK_SIZE is determined by CodePointTables::MSB_COUNT and CodePointTables::LSB_COUNT. We need 24 bits
+// to describe all code points; the blocks we create are based on splitting these bits into 2 segments. We currently use
+// a 16:8 bit split. So when perform a runtime lookup of a code point in the 2-stage tables, we:
+//
+//     1. Use most-significant 16 bits of the code point as the index into CodePointTables::stage1. That value is the
+//        index into CodePointTables::stage2 of the start of the block that contains properties for this code point.
+//
+//     2. Add the least-significant 8 bits of the code point to that value, to use as the index into
+//        CodePointTables::stage2. As described above, that value is the index into CodePointTables::unique_properties,
+//        which contains the classification for this code point.
+//
+// Using the code point GeneralCategory as an example, we end up with a CodePointTables::stage1 with a size of ~4000,
+// a CodePointTables::stage2 with a size of ~40,000, and a CodePointTables::unique_properties with a size of ~30. So
+// this process reduces over 1 million entries (0x10ffff) to ~44,030.
+//
+// For much more in-depth reading, see: https://icu.unicode.org/design/struct/utrie
+static ErrorOr<void> create_code_point_tables(UnicodeData& unicode_data)
+{
+    static constexpr auto MAX_CODE_POINT = 0x10ffffu;
+
+    auto update_tables = [&](auto code_point, auto& tables, auto& metadata, auto const& values) -> ErrorOr<void> {
+        static constexpr auto BLOCK_SIZE = CODE_POINT_TABLES_LSB_MASK + 1;
+
+        size_t unique_properties_index = 0;
+        if (auto block_index = tables.unique_properties.find_first_index(values); block_index.has_value()) {
+            unique_properties_index = *block_index;
+        } else {
+            unique_properties_index = tables.unique_properties.size();
+            TRY(tables.unique_properties.try_append(values));
+        }
+
+        TRY(metadata.current_block.try_append(unique_properties_index));
+
+        if (metadata.current_block.size() == BLOCK_SIZE || code_point == MAX_CODE_POINT) {
+            size_t stage2_index = 0;
+            if (auto block_index = metadata.unique_blocks.get(metadata.current_block); block_index.has_value()) {
+                stage2_index = *block_index;
+            } else {
+                stage2_index = tables.stage2.size();
+                TRY(tables.stage2.try_extend(metadata.current_block));
+
+                TRY(metadata.unique_blocks.try_set(metadata.current_block, stage2_index));
+            }
+
+            TRY(tables.stage1.try_append(stage2_index));
+            metadata.current_block.clear_with_capacity();
+        }
+
+        return {};
+    };
+
+    auto update_casing_tables = [&](auto code_point, auto& tables, auto& metadata) -> ErrorOr<void> {
+        CasingTable casing {};
+
+        while (metadata.iterator != metadata.end) {
+            if (code_point < metadata.iterator->code_point)
+                break;
+
+            if (code_point == metadata.iterator->code_point) {
+                casing = move(metadata.iterator->casing);
+                break;
+            }
+
+            ++metadata.iterator;
+        }
+
+        TRY(update_tables(code_point, tables, metadata, casing));
+        return {};
+    };
+
+    auto update_property_tables = [&](auto code_point, auto& tables, auto& metadata) -> ErrorOr<void> {
+        static Unicode::CodePointRangeComparator comparator {};
+
+        for (auto& property_values : metadata.property_values) {
+            size_t ranges_to_remove = 0;
+            auto has_property = false;
+
+            for (auto const& range : property_values) {
+                if (auto comparison = comparator(code_point, range); comparison <= 0) {
+                    has_property = comparison == 0;
+                    break;
+                }
+
+                ++ranges_to_remove;
+            }
+
+            metadata.property_set.unchecked_append(has_property);
+            property_values.remove(0, ranges_to_remove);
+        }
+
+        TRY(update_tables(code_point, tables, metadata, metadata.property_set));
+        metadata.property_set.clear_with_capacity();
+
+        return {};
+    };
+
+    CasingMetadata casing_metadata { unicode_data.code_point_data };
+    auto general_category_metadata = TRY(PropertyMetadata::create(unicode_data.general_categories));
+    auto property_metadata = TRY(PropertyMetadata::create(unicode_data.prop_list));
+    auto script_metadata = TRY(PropertyMetadata::create(unicode_data.script_list));
+    auto script_extension_metadata = TRY(PropertyMetadata::create(unicode_data.script_extensions));
+    auto grapheme_break_metadata = TRY(PropertyMetadata::create(unicode_data.grapheme_break_props));
+    auto word_break_metadata = TRY(PropertyMetadata::create(unicode_data.word_break_props));
+    auto sentence_break_metadata = TRY(PropertyMetadata::create(unicode_data.sentence_break_props));
+
+    for (u32 code_point = 0; code_point <= MAX_CODE_POINT; ++code_point) {
+        TRY(update_casing_tables(code_point, unicode_data.casing_tables, casing_metadata));
+        TRY(update_property_tables(code_point, unicode_data.general_category_tables, general_category_metadata));
+        TRY(update_property_tables(code_point, unicode_data.property_tables, property_metadata));
+        TRY(update_property_tables(code_point, unicode_data.script_tables, script_metadata));
+        TRY(update_property_tables(code_point, unicode_data.script_extension_tables, script_extension_metadata));
+        TRY(update_property_tables(code_point, unicode_data.grapheme_break_tables, grapheme_break_metadata));
+        TRY(update_property_tables(code_point, unicode_data.word_break_tables, word_break_metadata));
+        TRY(update_property_tables(code_point, unicode_data.sentence_break_tables, sentence_break_metadata));
+    }
+
+    return {};
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     StringView generated_header_path;
@@ -1564,7 +1789,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(parse_prop_list(*scripts_file, unicode_data.script_list));
     TRY(parse_prop_list(*script_extensions_file, unicode_data.script_extensions, true));
     TRY(parse_block_display_names(*blocks_file, unicode_data));
-    TRY(parse_prop_list(*blocks_file, unicode_data.block_list, false, true));
     TRY(parse_name_aliases(*name_alias_file, unicode_data));
     TRY(parse_prop_list(*grapheme_break_file, unicode_data.grapheme_break_props));
     TRY(parse_prop_list(*word_break_file, unicode_data.word_break_props));
@@ -1574,8 +1798,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(parse_unicode_data(*unicode_data_file, unicode_data));
     TRY(parse_value_alias_list(*prop_value_alias_file, "gc"sv, unicode_data.general_categories.keys(), unicode_data.general_category_aliases));
     TRY(parse_value_alias_list(*prop_value_alias_file, "sc"sv, unicode_data.script_list.keys(), unicode_data.script_aliases, false));
-    TRY(parse_value_alias_list(*prop_value_alias_file, "blk"sv, unicode_data.block_list.keys(), unicode_data.block_aliases, false, true));
     TRY(normalize_script_extensions(unicode_data.script_extensions, unicode_data.script_list, unicode_data.script_aliases));
+
+    TRY(create_code_point_tables(unicode_data));
 
     TRY(generate_unicode_data_header(*generated_header_file, unicode_data));
     TRY(generate_unicode_data_implementation(*generated_implementation_file, unicode_data));

@@ -343,7 +343,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 if (output_name.is_empty() || output_name == "/") {
                     int i = -1;
                     do {
-                        output_name = url.host();
+                        output_name = url.serialized_host().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
                         if (i > -1)
                             output_name = DeprecatedString::formatted("{}.{}", output_name, i);
                         ++i;

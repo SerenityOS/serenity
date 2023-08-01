@@ -240,7 +240,14 @@ static ErrorOr<TestResult> run_test(HeadlessWebContentView& view, StringView inp
     if (result.is_error())
         return result.release_error();
 
-    auto expectation_file = TRY(Core::File::open(expectation_path, Core::File::OpenMode::Read));
+    auto expectation_file_or_error = Core::File::open(expectation_path, Core::File::OpenMode::Read);
+    if (expectation_file_or_error.is_error()) {
+        warnln("Failed opening '{}': {}", expectation_path, expectation_file_or_error.error());
+        return expectation_file_or_error.release_error();
+    }
+
+    auto expectation_file = expectation_file_or_error.release_value();
+
     auto expectation = TRY(String::from_utf8(StringView(TRY(expectation_file->read_until_eof()).bytes())));
 
     auto actual = result.release_value();
@@ -369,7 +376,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool dump_layout_tree = false;
     bool dump_text = false;
     bool is_layout_test_mode = false;
-    bool use_javascript_bytecode = false;
+    bool use_ast_interpreter = false;
     StringView test_root_path;
 
     Core::ArgsParser args_parser;
@@ -381,7 +388,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(resources_folder, "Path of the base resources folder (defaults to /res)", "resources", 'r', "resources-root-path");
     args_parser.add_option(web_driver_ipc_path, "Path to the WebDriver IPC socket", "webdriver-ipc-path", 0, "path");
     args_parser.add_option(is_layout_test_mode, "Enable layout test mode", "layout-test-mode", 0);
-    args_parser.add_option(use_javascript_bytecode, "Enable JavaScript bytecode VM", "use-bytecode", 0);
+    args_parser.add_option(use_ast_interpreter, "Enable JavaScript AST interpreter (deprecated)", "ast", 0);
     args_parser.add_positional_argument(url, "URL to open", "url", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
@@ -403,7 +410,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         is_layout_test_mode = true;
     }
 
-    auto view = TRY(HeadlessWebContentView::create(move(theme), window_size, web_driver_ipc_path, is_layout_test_mode ? WebView::IsLayoutTestMode::Yes : WebView::IsLayoutTestMode::No, use_javascript_bytecode ? WebView::UseJavaScriptBytecode::Yes : WebView::UseJavaScriptBytecode::No));
+    auto view = TRY(HeadlessWebContentView::create(move(theme), window_size, web_driver_ipc_path, is_layout_test_mode ? WebView::IsLayoutTestMode::Yes : WebView::IsLayoutTestMode::No, use_ast_interpreter ? WebView::UseJavaScriptBytecode::No : WebView::UseJavaScriptBytecode::Yes));
     RefPtr<Core::Timer> timer;
 
     if (!test_root_path.is_empty()) {

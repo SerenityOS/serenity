@@ -4,7 +4,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       Box <div.flex> at (11,11) content-size 300x200 flex-container(row) [FFC] children: not-inline
         BlockContainer <div> at (12,12) content-size 100x20 flex-item [BFC] children: not-inline
         BlockContainer <div> at (114,12) content-size 100x20 flex-item [BFC] children: not-inline
-        BlockContainer <div> at (12,95.333333) content-size 100x20 flex-item [BFC] children: not-inline
-        BlockContainer <div> at (114,95.333333) content-size 100x20 flex-item [BFC] children: not-inline
-        BlockContainer <div> at (12,178.666666) content-size 100x20 flex-item [BFC] children: not-inline
-        BlockContainer <div> at (114,178.666666) content-size 100x20 flex-item [BFC] children: not-inline
+        BlockContainer <div> at (12,95.328125) content-size 100x20 flex-item [BFC] children: not-inline
+        BlockContainer <div> at (114,95.328125) content-size 100x20 flex-item [BFC] children: not-inline
+        BlockContainer <div> at (12,178.65625) content-size 100x20 flex-item [BFC] children: not-inline
+        BlockContainer <div> at (114,178.65625) content-size 100x20 flex-item [BFC] children: not-inline

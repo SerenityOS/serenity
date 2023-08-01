@@ -132,6 +132,7 @@ public:
         Ratio,
         Rect,
         Resolution,
+        Revert,
         Shadow,
         String,
         TextDecoration,
@@ -191,6 +192,7 @@ public:
     bool is_ratio() const { return type() == Type::Ratio; }
     bool is_rect() const { return type() == Type::Rect; }
     bool is_resolution() const { return type() == Type::Resolution; }
+    bool is_revert() const { return type() == Type::Revert; }
     bool is_shadow() const { return type() == Type::Shadow; }
     bool is_string() const { return type() == Type::String; }
     bool is_text_decoration() const { return type() == Type::TextDecoration; }

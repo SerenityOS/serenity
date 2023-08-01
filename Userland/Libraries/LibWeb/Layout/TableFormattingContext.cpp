@@ -91,7 +91,7 @@ CSSPixels TableFormattingContext::run_caption_layout(LayoutMode layout_mode, CSS
         caption_context->resolve_vertical_box_model_metrics(child_box);
         auto const& caption_state = m_state.get(child_box);
         if (phase == CSS::CaptionSide::Top) {
-            m_state.get_mutable(table_box()).set_content_y(caption_state.margin_box_height());
+            m_state.get_mutable(table_box()).set_content_y(caption_state.content_height() + caption_state.margin_box_bottom());
         } else {
             m_state.get_mutable(child_box).set_content_y(
                 m_state.get(table_box()).margin_box_height() + caption_state.margin_box_top());
@@ -408,13 +408,13 @@ void TableFormattingContext::compute_intrinsic_percentage(size_t max_cell_span)
                 //    columns spanned by the cell that have an intrinsic percentage width of the column based on cells of span up to N-1 equal to 0%.
                 CSSPixels ajusted_cell_contribution;
                 if (width_sum_of_columns_with_zero_intrinsic_percentage != 0) {
-                    ajusted_cell_contribution = cell_contribution * rows_or_columns[rc_index].max_size / width_sum_of_columns_with_zero_intrinsic_percentage;
+                    ajusted_cell_contribution = cell_contribution * rows_or_columns[rc_index].max_size / static_cast<double>(width_sum_of_columns_with_zero_intrinsic_percentage);
                 } else {
                     // However, if this ratio is undefined because the denominator is zero, instead use the 1 divided by the number of columns
                     // spanned by the cell that have an intrinsic percentage width of the column based on cells of span up to N-1 equal to zero.
                     ajusted_cell_contribution = cell_contribution * 1 / number_of_columns_with_zero_intrinsic_percentage;
                 }
-                intrinsic_percentage_contribution_by_index[rc_index] = max(ajusted_cell_contribution.to_double(), intrinsic_percentage_contribution_by_index[rc_index]);
+                intrinsic_percentage_contribution_by_index[rc_index] = max(static_cast<double>(ajusted_cell_contribution), intrinsic_percentage_contribution_by_index[rc_index]);
             }
         }
         for (size_t rc_index = 0; rc_index < rows_or_columns.size(); ++rc_index) {
@@ -486,7 +486,7 @@ void TableFormattingContext::compute_table_measures()
                     // - the outer min-content size of the cell minus the baseline min-content size and the baseline border spacing, clamped
                     //   to be at least 0 and at most the difference between the baseline max-content size and the baseline min-content size
                     auto normalized_max_min_diff = baseline_max_content_size != baseline_min_content_size
-                        ? (rows_or_columns[rc_index].max_size - rows_or_columns[rc_index].min_size) / (baseline_max_content_size - baseline_min_content_size)
+                        ? (rows_or_columns[rc_index].max_size - rows_or_columns[rc_index].min_size) / static_cast<double>(baseline_max_content_size - baseline_min_content_size)
                         : 0;
                     auto clamped_diff_to_baseline_min = min(
                         max(cell_min_size<RowOrColumn>(cell) - baseline_min_content_size - baseline_border_spacing, 0),
@@ -495,8 +495,10 @@ void TableFormattingContext::compute_table_measures()
                     // the product of:
                     // - the ratio of the max-content size based on cells of span up to N-1 of the column to the baseline max-content size
                     // - the outer min-content size of the cell minus the baseline max-content size and baseline border spacing, or 0 if this is negative
-                    cell_min_contribution += (rows_or_columns[rc_index].max_size / baseline_max_content_size)
-                        * max(CSSPixels(0), cell_min_size<RowOrColumn>(cell) - baseline_max_content_size - baseline_border_spacing);
+                    if (baseline_max_content_size != 0) {
+                        cell_min_contribution += (rows_or_columns[rc_index].max_size / static_cast<double>(baseline_max_content_size))
+                            * max(CSSPixels(0), cell_min_size<RowOrColumn>(cell) - baseline_max_content_size - baseline_border_spacing);
+                    }
 
                     // The contribution of the cell is the sum of:
                     // the max-content size of the column based on cells of span up to N-1
@@ -504,8 +506,10 @@ void TableFormattingContext::compute_table_measures()
                     // and the product of:
                     // - the ratio of the max-content size based on cells of span up to N-1 of the column to the baseline max-content size
                     // - the outer max-content size of the cell minus the baseline max-content size and the baseline border spacing, or 0 if this is negative
-                    cell_max_contribution += (rows_or_columns[rc_index].max_size / baseline_max_content_size)
-                        * max(CSSPixels(0), cell_max_size<RowOrColumn>(cell) - baseline_max_content_size - baseline_border_spacing);
+                    if (baseline_max_content_size != 0) {
+                        cell_max_contribution += (rows_or_columns[rc_index].max_size / static_cast<double>(baseline_max_content_size))
+                            * max(CSSPixels(0), cell_max_size<RowOrColumn>(cell) - baseline_max_content_size - baseline_border_spacing);
+                    }
                     cell_min_contributions_by_rc_index[rc_index].append(cell_min_contribution);
                     cell_max_contributions_by_rc_index[rc_index].append(cell_max_contribution);
                 }
@@ -645,7 +649,7 @@ void TableFormattingContext::assign_columns_width_linear_combination(Vector<CSSP
     if (columns_total_candidate_width == columns_total_used_width) {
         return;
     }
-    auto candidate_weight = ((available_width - columns_total_used_width) / (columns_total_candidate_width - columns_total_used_width)).to_double();
+    auto candidate_weight = (available_width - columns_total_used_width) / static_cast<double>(columns_total_candidate_width - columns_total_used_width);
     for (size_t i = 0; i < m_columns.size(); ++i) {
         auto& column = m_columns[i];
         column.used_width = candidate_weight * candidate_widths[i] + (1 - candidate_weight) * column.used_width;
@@ -669,7 +673,7 @@ bool TableFormattingContext::distribute_excess_width_proportionally_to_max_width
     VERIFY(total_max_width > 0);
     for (auto& column : m_columns) {
         if (column_filter(column)) {
-            column.used_width += excess_width * column.max_size / total_max_width;
+            column.used_width += excess_width * column.max_size / static_cast<double>(total_max_width);
         }
     }
     return true;
@@ -1048,7 +1052,7 @@ void TableFormattingContext::distribute_height_to_rows()
         // will be the weighted mean of the base and the reference size that yields the correct total height.
 
         for (auto& row : m_rows) {
-            auto weight = row.reference_height / sum_reference_height;
+            auto weight = row.reference_height / static_cast<double>(sum_reference_height);
             auto final_height = m_table_height * weight;
             row.final_height = final_height;
         }
@@ -1182,7 +1186,8 @@ void TableFormattingContext::position_cell_boxes()
 
 bool TableFormattingContext::border_is_less_specific(const CSS::BorderData& a, const CSS::BorderData& b)
 {
-    // Implements criteria for steps 1, 2 and 3 of border conflict resolution algorithm.
+    // Implements criteria for steps 1, 2 and 3 of border conflict resolution algorithm, as described in
+    // https://www.w3.org/TR/CSS22/tables.html#border-conflict-resolution.
     static HashMap<CSS::LineStyle, unsigned> const line_style_score = {
         { CSS::LineStyle::Inset, 0 },
         { CSS::LineStyle::Groove, 1 },
@@ -1194,6 +1199,8 @@ bool TableFormattingContext::border_is_less_specific(const CSS::BorderData& a, c
         { CSS::LineStyle::Double, 7 },
     };
 
+    // 1. Borders with the 'border-style' of 'hidden' take precedence over all other conflicting borders. Any border with this
+    //    value suppresses all borders at this location.
     if (a.line_style == CSS::LineStyle::Hidden) {
         return false;
     }
@@ -1202,12 +1209,17 @@ bool TableFormattingContext::border_is_less_specific(const CSS::BorderData& a, c
         return true;
     }
 
+    // 2. Borders with a style of 'none' have the lowest priority. Only if the border properties of all the elements meeting
+    //    at this edge are 'none' will the border be omitted (but note that 'none' is the default value for the border style.)
     if (a.line_style == CSS::LineStyle::None) {
         return true;
     }
     if (b.line_style == CSS::LineStyle::None) {
         return false;
     }
+    // 3. If none of the styles are 'hidden' and at least one of them is not 'none', then narrow borders are discarded in favor
+    //    of wider ones. If several have the same 'border-width' then styles are preferred in this order: 'double', 'solid',
+    //    'dashed', 'dotted', 'ridge', 'outset', 'groove', and the lowest: 'inset'.
     if (a.width > b.width) {
         return false;
     } else if (a.width < b.width) {
@@ -1219,11 +1231,6 @@ bool TableFormattingContext::border_is_less_specific(const CSS::BorderData& a, c
         return true;
     }
     return false;
-}
-
-static const CSS::BorderData& winning_border_style(const CSS::BorderData& a, const CSS::BorderData& b)
-{
-    return TableFormattingContext::border_is_less_specific(a, b) ? b : a;
 }
 
 const CSS::BorderData& TableFormattingContext::border_data_conflicting_edge(TableFormattingContext::ConflictingEdge const& conflicting_edge)
@@ -1248,10 +1255,52 @@ const CSS::BorderData& TableFormattingContext::border_data_conflicting_edge(Tabl
     }
 }
 
+const Painting::PaintableBox::BorderDataWithElementKind TableFormattingContext::border_data_with_element_kind_from_conflicting_edge(ConflictingEdge const& conflicting_edge)
+{
+    auto const& border_data = border_data_conflicting_edge(conflicting_edge);
+    return { .border_data = border_data, .element_kind = conflicting_edge.element_kind };
+}
+
+TableFormattingContext::ConflictingEdge const& TableFormattingContext::winning_conflicting_edge(TableFormattingContext::ConflictingEdge const& a, TableFormattingContext::ConflictingEdge const& b)
+{
+    auto a_border_data = border_data_conflicting_edge(a);
+    auto b_border_data = border_data_conflicting_edge(b);
+    // First check if step 4 of border conflict resolution applies, as described in https://www.w3.org/TR/CSS22/tables.html#border-conflict-resolution.
+    if (a_border_data.line_style == b_border_data.line_style && a_border_data.width == b_border_data.width) {
+        // 4. If border styles differ only in color, then a style set on a cell wins over one on a row, which wins over a
+        //    row group, column, column group and, lastly, table. When two elements of the same type conflict, then the one
+        //    further to the left (if the table's 'direction' is 'ltr'; right, if it is 'rtl') and further to the top wins.
+        if (static_cast<unsigned>(a.element_kind) < static_cast<unsigned>(b.element_kind)) {
+            return a;
+        } else if (static_cast<unsigned>(a.element_kind) > static_cast<unsigned>(b.element_kind)) {
+            return b;
+        }
+        // Here the element kind is the same, thus the coordinates are either both set or not set.
+        VERIFY(a.column.has_value() == b.column.has_value());
+        VERIFY(a.row.has_value() == b.row.has_value());
+        if (a.column.has_value()) {
+            if (a.column.value() < b.column.value()) {
+                return a;
+            } else if (a.column.value() > b.column.value()) {
+                return b;
+            }
+        }
+        if (a.row.has_value()) {
+            if (a.row.value() < b.row.value()) {
+                return a;
+            } else if (a.row.value() > b.row.value()) {
+                return b;
+            }
+        }
+        return a;
+    }
+    // Apply steps 1, 2 and 3 of the border conflict resolution algorithm.
+    return border_is_less_specific(a_border_data, b_border_data) ? b : a;
+}
+
 void TableFormattingContext::border_conflict_resolution()
 {
-    // Partially implements border conflict resolution, as described in
-    // https://www.w3.org/TR/CSS22/tables.html#border-conflict-resolution
+    // Implements border conflict resolution, as described in https://www.w3.org/TR/CSS22/tables.html#border-conflict-resolution.
     BorderConflictFinder finder(this);
     for (auto& cell : m_cells) {
         auto& cell_state = m_state.get_mutable(cell.box);
@@ -1264,36 +1313,55 @@ void TableFormattingContext::border_conflict_resolution()
         if (cell.box->computed_values().border_collapse() == CSS::BorderCollapse::Separate) {
             continue;
         }
-        // Execute steps 1, 2 and 3 of the algorithm for each edge.
-        Painting::BordersData override_borders_data;
-        auto const& cell_style = cell.box->computed_values();
-        auto winning_border_left = cell_style.border_left();
-        for (auto const conflicting_edge : finder.conflicting_edges(cell, ConflictingSide::Left)) {
-            winning_border_left = winning_border_style(winning_border_left, border_data_conflicting_edge(conflicting_edge));
+        Painting::PaintableBox::BordersDataWithElementKind override_borders_data;
+        ConflictingEdge winning_edge_left {
+            .element = cell.box,
+            .element_kind = Painting::PaintableBox::ConflictingElementKind::Cell,
+            .side = ConflictingSide::Left,
+            .row = cell.row_index,
+            .column = cell.column_index,
+        };
+        for (auto const& conflicting_edge : finder.conflicting_edges(cell, ConflictingSide::Left)) {
+            winning_edge_left = winning_conflicting_edge(winning_edge_left, conflicting_edge);
         }
-        override_borders_data.left = winning_border_left;
-        cell_state.border_left = winning_border_left.width;
-        auto winning_border_right = cell_style.border_right();
-        for (auto const conflicting_edge : finder.conflicting_edges(cell, ConflictingSide::Right)) {
-            winning_border_right = winning_border_style(winning_border_right, border_data_conflicting_edge(conflicting_edge));
+        override_borders_data.left = border_data_with_element_kind_from_conflicting_edge(winning_edge_left);
+        cell_state.border_left = override_borders_data.left.border_data.width;
+        ConflictingEdge winning_edge_right {
+            .element = cell.box,
+            .element_kind = Painting::PaintableBox::ConflictingElementKind::Cell,
+            .side = ConflictingSide::Right,
+            .row = cell.row_index,
+            .column = cell.column_index,
+        };
+        for (auto const& conflicting_edge : finder.conflicting_edges(cell, ConflictingSide::Right)) {
+            winning_edge_right = winning_conflicting_edge(winning_edge_right, conflicting_edge);
         }
-        override_borders_data.right = winning_border_right;
-        cell_state.border_right = winning_border_right.width;
-        auto winning_border_top = cell_style.border_top();
-        for (auto const conflicting_edge : finder.conflicting_edges(cell, ConflictingSide::Top)) {
-            winning_border_top = winning_border_style(winning_border_top, border_data_conflicting_edge(conflicting_edge));
+        override_borders_data.right = border_data_with_element_kind_from_conflicting_edge(winning_edge_right);
+        cell_state.border_right = override_borders_data.right.border_data.width;
+        ConflictingEdge winning_edge_top {
+            .element = cell.box,
+            .element_kind = Painting::PaintableBox::ConflictingElementKind::Cell,
+            .side = ConflictingSide::Top,
+            .row = cell.row_index,
+            .column = cell.column_index,
+        };
+        for (auto const& conflicting_edge : finder.conflicting_edges(cell, ConflictingSide::Top)) {
+            winning_edge_top = winning_conflicting_edge(winning_edge_top, conflicting_edge);
         }
-        override_borders_data.top = winning_border_top;
-        cell_state.border_top = winning_border_top.width;
-        auto winning_border_bottom = cell_style.border_bottom();
-        for (auto const conflicting_edge : finder.conflicting_edges(cell, ConflictingSide::Bottom)) {
-            winning_border_bottom = winning_border_style(winning_border_bottom, border_data_conflicting_edge(conflicting_edge));
+        override_borders_data.top = border_data_with_element_kind_from_conflicting_edge(winning_edge_top);
+        cell_state.border_top = override_borders_data.top.border_data.width;
+        ConflictingEdge winning_edge_bottom {
+            .element = cell.box,
+            .element_kind = Painting::PaintableBox::ConflictingElementKind::Cell,
+            .side = ConflictingSide::Bottom,
+            .row = cell.row_index,
+            .column = cell.column_index,
+        };
+        for (auto const& conflicting_edge : finder.conflicting_edges(cell, ConflictingSide::Bottom)) {
+            winning_edge_bottom = winning_conflicting_edge(winning_edge_bottom, conflicting_edge);
         }
-        override_borders_data.bottom = winning_border_bottom;
-        cell_state.border_bottom = override_borders_data.bottom.width;
-        // FIXME: 4. If border styles differ only in color, then a style set on a cell wins over one on a row, which wins over a
-        //           row group, column, column group and, lastly, table. When two elements of the same type conflict, then the one
-        //           further to the left (if the table's 'direction' is 'ltr'; right, if it is 'rtl') and further to the top wins.
+        override_borders_data.bottom = border_data_with_element_kind_from_conflicting_edge(winning_edge_bottom);
+        cell_state.border_bottom = override_borders_data.bottom.border_data.width;
         cell_state.set_override_borders_data(override_borders_data);
     }
 }
@@ -1379,103 +1447,156 @@ void TableFormattingContext::BorderConflictFinder::collect_conflicting_row_group
     });
 }
 
+void TableFormattingContext::BorderConflictFinder::collect_cell_conflicting_edges(Vector<ConflictingEdge>& result, Cell const& cell, TableFormattingContext::ConflictingSide edge) const
+{
+    // Right edge of the cell to the left.
+    if (cell.column_index >= cell.column_span && edge == ConflictingSide::Left) {
+        auto left_cell_column_index = cell.column_index - cell.column_span;
+        auto maybe_cell_to_left = m_context->m_cells_by_coordinate[cell.row_index][left_cell_column_index];
+        if (maybe_cell_to_left.has_value()) {
+            result.append({ maybe_cell_to_left->box, Painting::PaintableBox::ConflictingElementKind::Cell, ConflictingSide::Right, cell.row_index, left_cell_column_index });
+        }
+    }
+    // Left edge of the cell to the right.
+    if (cell.column_index + cell.column_span < m_context->m_cells_by_coordinate[cell.row_index].size() && edge == ConflictingSide::Right) {
+        auto right_cell_column_index = cell.column_index + cell.column_span;
+        auto maybe_cell_to_right = m_context->m_cells_by_coordinate[cell.row_index][right_cell_column_index];
+        if (maybe_cell_to_right.has_value()) {
+            result.append({ maybe_cell_to_right->box, Painting::PaintableBox::ConflictingElementKind::Cell, ConflictingSide::Left, cell.row_index, right_cell_column_index });
+        }
+    }
+    // Bottom edge of the cell above.
+    if (cell.row_index >= cell.row_span && edge == ConflictingSide::Top) {
+        auto above_cell_row_index = cell.row_index - cell.row_span;
+        auto maybe_cell_above = m_context->m_cells_by_coordinate[above_cell_row_index][cell.column_index];
+        if (maybe_cell_above.has_value()) {
+            result.append({ maybe_cell_above->box, Painting::PaintableBox::ConflictingElementKind::Cell, ConflictingSide::Bottom, above_cell_row_index, cell.column_index });
+        }
+    }
+    // Top edge of the cell below.
+    if (cell.row_index + cell.row_span < m_context->m_cells_by_coordinate.size() && edge == ConflictingSide::Bottom) {
+        auto below_cell_row_index = cell.row_index + cell.row_span;
+        auto maybe_cell_below = m_context->m_cells_by_coordinate[below_cell_row_index][cell.column_index];
+        if (maybe_cell_below.has_value()) {
+            result.append({ maybe_cell_below->box, Painting::PaintableBox::ConflictingElementKind::Cell, ConflictingSide::Top, below_cell_row_index, cell.column_index });
+        }
+    }
+}
+
+void TableFormattingContext::BorderConflictFinder::collect_row_conflicting_edges(Vector<ConflictingEdge>& result, Cell const& cell, TableFormattingContext::ConflictingSide edge) const
+{
+    // Top edge of the row.
+    if (edge == ConflictingSide::Top) {
+        result.append({ m_context->m_rows[cell.row_index].box, Painting::PaintableBox::ConflictingElementKind::Row, ConflictingSide::Top, cell.row_index, {} });
+    }
+    // Bottom edge of the row.
+    if (edge == ConflictingSide::Bottom) {
+        result.append({ m_context->m_rows[cell.row_index].box, Painting::PaintableBox::ConflictingElementKind::Row, ConflictingSide::Bottom, cell.row_index, {} });
+    }
+    // Bottom edge of the row above.
+    if (cell.row_index >= cell.row_span && edge == ConflictingSide::Top) {
+        auto above_row_index = cell.row_index - cell.row_span;
+        result.append({ m_context->m_rows[above_row_index].box, Painting::PaintableBox::ConflictingElementKind::Row, ConflictingSide::Bottom, above_row_index, {} });
+    }
+    // Top edge of the row below.
+    if (cell.row_index + cell.row_span < m_context->m_rows.size() && edge == ConflictingSide::Bottom) {
+        auto below_row_index = cell.row_index + cell.row_span;
+        result.append({ m_context->m_rows[below_row_index].box, Painting::PaintableBox::ConflictingElementKind::Row, ConflictingSide::Top, below_row_index, {} });
+    }
+}
+
+void TableFormattingContext::BorderConflictFinder::collect_row_group_conflicting_edges(Vector<ConflictingEdge>& result, Cell const& cell, TableFormattingContext::ConflictingSide edge) const
+{
+    auto const& maybe_row_group = m_row_group_elements_by_index[cell.row_index];
+    // Top edge of the row group.
+    if (maybe_row_group.has_value() && cell.row_index == maybe_row_group->start_index && edge == ConflictingSide::Top) {
+        result.append({ maybe_row_group->row_group, Painting::PaintableBox::ConflictingElementKind::RowGroup, ConflictingSide::Top, maybe_row_group->start_index, {} });
+    }
+    // Bottom edge of the row group above.
+    if (cell.row_index >= cell.row_span) {
+        auto const& maybe_row_group_above = m_row_group_elements_by_index[cell.row_index - cell.row_span];
+        if (maybe_row_group_above.has_value() && cell.row_index == maybe_row_group_above->start_index + maybe_row_group_above->row_count && edge == ConflictingSide::Top) {
+            result.append({ maybe_row_group_above->row_group, Painting::PaintableBox::ConflictingElementKind::RowGroup, ConflictingSide::Bottom, maybe_row_group_above->start_index, {} });
+        }
+    }
+    // Bottom edge of the row group.
+    if (maybe_row_group.has_value() && cell.row_index == maybe_row_group->start_index + maybe_row_group->row_count - 1 && edge == ConflictingSide::Bottom) {
+        result.append({ maybe_row_group->row_group, Painting::PaintableBox::ConflictingElementKind::RowGroup, ConflictingSide::Bottom, maybe_row_group->start_index, {} });
+    }
+    // Top edge of the row group below.
+    if (cell.row_index + cell.row_span < m_row_group_elements_by_index.size()) {
+        auto const& maybe_row_group_below = m_row_group_elements_by_index[cell.row_index + cell.row_span];
+        if (maybe_row_group_below.has_value() && cell.row_index + cell.row_span == maybe_row_group_below->start_index && edge == ConflictingSide::Bottom) {
+            result.append({ maybe_row_group_below->row_group, Painting::PaintableBox::ConflictingElementKind::RowGroup, ConflictingSide::Top, maybe_row_group_below->start_index, {} });
+        }
+    }
+}
+
+void TableFormattingContext::BorderConflictFinder::collect_column_group_conflicting_edges(Vector<ConflictingEdge>& result, Cell const& cell, TableFormattingContext::ConflictingSide edge) const
+{
+    // Left edge of the column group.
+    if (m_col_elements_by_index[cell.column_index] && edge == ConflictingSide::Left) {
+        result.append({ m_col_elements_by_index[cell.column_index], Painting::PaintableBox::ConflictingElementKind::ColumnGroup, ConflictingSide::Left, {}, cell.column_index });
+    }
+    // Right edge of the column group to the left.
+    if (cell.column_index >= cell.column_span && m_col_elements_by_index[cell.column_index - cell.column_span] && edge == ConflictingSide::Left) {
+        auto left_column_index = cell.column_index - cell.column_span;
+        result.append({ m_col_elements_by_index[left_column_index], Painting::PaintableBox::ConflictingElementKind::ColumnGroup, ConflictingSide::Right, {}, left_column_index });
+    }
+    // Right edge of the column group.
+    if (m_col_elements_by_index[cell.column_index] && edge == ConflictingSide::Right) {
+        result.append({ m_col_elements_by_index[cell.column_index], Painting::PaintableBox::ConflictingElementKind::ColumnGroup, ConflictingSide::Right, {}, cell.column_index });
+    }
+    // Left edge of the column group to the right.
+    if (cell.column_index + cell.column_span < m_col_elements_by_index.size() && m_col_elements_by_index[cell.column_index + cell.column_span] && edge == ConflictingSide::Right) {
+        auto right_column_index = cell.column_index + cell.column_span;
+        result.append({ m_col_elements_by_index[right_column_index], Painting::PaintableBox::ConflictingElementKind::ColumnGroup, ConflictingSide::Left, {}, right_column_index });
+    }
+}
+
+void TableFormattingContext::BorderConflictFinder::collect_table_box_conflicting_edges(Vector<ConflictingEdge>& result, Cell const& cell, TableFormattingContext::ConflictingSide edge) const
+{
+    // Top edge from column group or table. Left and right edges of the column group are handled in collect_column_group_conflicting_edges.
+    if (cell.row_index == 0 && edge == ConflictingSide::Top) {
+        if (m_col_elements_by_index[cell.column_index]) {
+            result.append({ m_col_elements_by_index[cell.column_index], Painting::PaintableBox::ConflictingElementKind::ColumnGroup, ConflictingSide::Top, {}, cell.column_index });
+        }
+        result.append({ &m_context->table_box(), Painting::PaintableBox::ConflictingElementKind::Table, ConflictingSide::Top, {}, {} });
+    }
+    // Bottom edge from column group or table. Left and right edges of the column group are handled in collect_column_group_conflicting_edges.
+    if (cell.row_index + cell.row_span == m_context->m_rows.size() && edge == ConflictingSide::Bottom) {
+        if (m_col_elements_by_index[cell.column_index]) {
+            result.append({ m_col_elements_by_index[cell.column_index], Painting::PaintableBox::ConflictingElementKind::ColumnGroup, ConflictingSide::Bottom, {}, cell.column_index });
+        }
+        result.append({ &m_context->table_box(), Painting::PaintableBox::ConflictingElementKind::Table, ConflictingSide::Bottom, {}, {} });
+    }
+    // Left edge from row group or table. Top and bottom edges of the row group are handled in collect_row_group_conflicting_edges.
+    if (cell.column_index == 0 && edge == ConflictingSide::Left) {
+        result.append({ m_context->m_rows[cell.row_index].box, Painting::PaintableBox::ConflictingElementKind::Row, ConflictingSide::Left, cell.row_index, {} });
+        if (m_row_group_elements_by_index[cell.row_index].has_value()) {
+            result.append({ m_row_group_elements_by_index[cell.row_index]->row_group, Painting::PaintableBox::ConflictingElementKind::RowGroup, ConflictingSide::Left, cell.row_index, {} });
+        }
+        result.append({ &m_context->table_box(), Painting::PaintableBox::ConflictingElementKind::Table, ConflictingSide::Left, {}, {} });
+    }
+    // Right edge from row group or table. Top and bottom edges of the row group are handled in collect_row_group_conflicting_edges.
+    if (cell.column_index + cell.column_span == m_context->m_columns.size() && edge == ConflictingSide::Right) {
+        result.append({ m_context->m_rows[cell.row_index].box, Painting::PaintableBox::ConflictingElementKind::Row, ConflictingSide::Right, cell.row_index, {} });
+        if (m_row_group_elements_by_index[cell.row_index].has_value()) {
+            result.append({ m_row_group_elements_by_index[cell.row_index]->row_group, Painting::PaintableBox::ConflictingElementKind::RowGroup, ConflictingSide::Right, cell.row_index, {} });
+        }
+        result.append({ &m_context->table_box(), Painting::PaintableBox::ConflictingElementKind::Table, ConflictingSide::Right, {}, {} });
+    }
+}
+
 Vector<TableFormattingContext::ConflictingEdge> TableFormattingContext::BorderConflictFinder::conflicting_edges(
     Cell const& cell, TableFormattingContext::ConflictingSide edge) const
 {
     Vector<ConflictingEdge> result = {};
-    if (cell.column_index >= cell.column_span && edge == ConflictingSide::Left) {
-        auto maybe_cell_to_left = m_context->m_cells_by_coordinate[cell.row_index][cell.column_index - cell.column_span];
-        if (maybe_cell_to_left.has_value()) {
-            result.append({ maybe_cell_to_left->box, ConflictingSide::Right });
-        }
-    }
-    if (cell.column_index + cell.column_span < m_context->m_cells_by_coordinate[cell.row_index].size() && edge == ConflictingSide::Right) {
-        auto maybe_cell_to_right = m_context->m_cells_by_coordinate[cell.row_index][cell.column_index + cell.column_span];
-        if (maybe_cell_to_right.has_value()) {
-            result.append({ maybe_cell_to_right->box, ConflictingSide::Left });
-        }
-    }
-    if (cell.row_index >= cell.row_span && edge == ConflictingSide::Top) {
-        auto maybe_cell_above = m_context->m_cells_by_coordinate[cell.row_index - cell.row_span][cell.column_index];
-        if (maybe_cell_above.has_value()) {
-            result.append({ maybe_cell_above->box, ConflictingSide::Bottom });
-        }
-    }
-    if (cell.row_index + cell.row_span < m_context->m_cells_by_coordinate.size() && edge == ConflictingSide::Bottom) {
-        auto maybe_cell_below = m_context->m_cells_by_coordinate[cell.row_index + cell.row_span][cell.column_index];
-        if (maybe_cell_below.has_value()) {
-            result.append({ maybe_cell_below->box, ConflictingSide::Top });
-        }
-    }
-    if (edge == ConflictingSide::Top) {
-        result.append({ m_context->m_rows[cell.row_index].box, ConflictingSide::Top });
-    }
-    if (edge == ConflictingSide::Bottom) {
-        result.append({ m_context->m_rows[cell.row_index].box, ConflictingSide::Bottom });
-    }
-    if (cell.row_index >= cell.row_span && edge == ConflictingSide::Top) {
-        result.append({ m_context->m_rows[cell.row_index - cell.row_span].box, ConflictingSide::Bottom });
-    }
-    if (cell.row_index + cell.row_span < m_context->m_rows.size() && edge == ConflictingSide::Bottom) {
-        result.append({ m_context->m_rows[cell.row_index + cell.row_span].box, ConflictingSide::Top });
-    }
-    auto const& maybe_row_group = m_row_group_elements_by_index[cell.row_index];
-    if (maybe_row_group.has_value() && cell.row_index == maybe_row_group->start_index && edge == ConflictingSide::Top) {
-        result.append({ maybe_row_group->row_group, ConflictingSide::Top });
-    }
-    if (cell.row_index >= cell.row_span) {
-        auto const& maybe_row_group_above = m_row_group_elements_by_index[cell.row_index - cell.row_span];
-        if (maybe_row_group_above.has_value() && cell.row_index == maybe_row_group_above->start_index + maybe_row_group_above->row_count && edge == ConflictingSide::Top) {
-            result.append({ maybe_row_group_above->row_group, ConflictingSide::Bottom });
-        }
-    }
-    if (maybe_row_group.has_value() && cell.row_index == maybe_row_group->start_index + maybe_row_group->row_count - 1 && edge == ConflictingSide::Bottom) {
-        result.append({ maybe_row_group->row_group, ConflictingSide::Bottom });
-    }
-    if (cell.row_index + cell.row_span < m_row_group_elements_by_index.size()) {
-        auto const& maybe_row_group_below = m_row_group_elements_by_index[cell.row_index + cell.row_span];
-        if (maybe_row_group_below.has_value() && cell.row_index + cell.row_span == maybe_row_group_below->start_index && edge == ConflictingSide::Bottom) {
-            result.append({ maybe_row_group_below->row_group, ConflictingSide::Top });
-        }
-    }
-    if (m_col_elements_by_index[cell.column_index] && edge == ConflictingSide::Left) {
-        result.append({ m_col_elements_by_index[cell.column_index], ConflictingSide::Left });
-    }
-    if (cell.column_index >= cell.column_span && m_col_elements_by_index[cell.column_index - cell.column_span] && edge == ConflictingSide::Left) {
-        result.append({ m_col_elements_by_index[cell.column_index - cell.column_span], ConflictingSide::Right });
-    }
-    if (m_col_elements_by_index[cell.column_index] && edge == ConflictingSide::Right) {
-        result.append({ m_col_elements_by_index[cell.column_index], ConflictingSide::Right });
-    }
-    if (cell.column_index + cell.column_span < m_col_elements_by_index.size() && m_col_elements_by_index[cell.column_index + cell.column_span] && edge == ConflictingSide::Right) {
-        result.append({ m_col_elements_by_index[cell.column_index + cell.column_span], ConflictingSide::Left });
-    }
-    if (cell.row_index == 0 && edge == ConflictingSide::Top) {
-        if (m_col_elements_by_index[cell.column_index]) {
-            result.append({ m_col_elements_by_index[cell.column_index], ConflictingSide::Top });
-        }
-        result.append({ &m_context->table_box(), ConflictingSide::Top });
-    }
-    if (cell.row_index == m_context->m_rows.size() - 1 && edge == ConflictingSide::Bottom) {
-        if (m_col_elements_by_index[cell.column_index]) {
-            result.append({ m_col_elements_by_index[cell.column_index], ConflictingSide::Bottom });
-        }
-        result.append({ &m_context->table_box(), ConflictingSide::Bottom });
-    }
-    if (cell.column_index == 0 && edge == ConflictingSide::Left) {
-        result.append({ m_context->m_rows[cell.row_index].box, ConflictingSide::Left });
-        if (m_row_group_elements_by_index[cell.row_index].has_value()) {
-            result.append({ m_row_group_elements_by_index[cell.row_index]->row_group, ConflictingSide::Left });
-        }
-        result.append({ &m_context->table_box(), ConflictingSide::Left });
-    }
-    if (cell.column_index == m_context->m_columns.size() - 1 && edge == ConflictingSide::Right) {
-        result.append({ m_context->m_rows[cell.row_index].box, ConflictingSide::Right });
-        if (m_row_group_elements_by_index[cell.row_index].has_value()) {
-            result.append({ m_row_group_elements_by_index[cell.row_index]->row_group, ConflictingSide::Right });
-        }
-        result.append({ &m_context->table_box(), ConflictingSide::Right });
-    }
+    collect_cell_conflicting_edges(result, cell, edge);
+    collect_row_conflicting_edges(result, cell, edge);
+    collect_row_group_conflicting_edges(result, cell, edge);
+    collect_column_group_conflicting_edges(result, cell, edge);
+    collect_table_box_conflicting_edges(result, cell, edge);
     return result;
 }
 

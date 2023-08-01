@@ -39,8 +39,6 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(DeprecatedFlyString con
         return DeviceRGBColorSpace::the();
     if (name == CommonNames::DeviceCMYK)
         return DeviceCMYKColorSpace::the();
-    if (name == CommonNames::Pattern)
-        return Error::rendering_unsupported_error("Pattern color spaces not yet implemented");
     VERIFY_NOT_REACHED();
 }
 
@@ -58,6 +56,15 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, Non
 
     if (color_space_name == CommonNames::ICCBased)
         return TRY(ICCBasedColorSpace::create(document, move(parameters)));
+
+    if (color_space_name == CommonNames::Indexed)
+        return Error::rendering_unsupported_error("Indexed color spaces not yet implemented");
+
+    if (color_space_name == CommonNames::Pattern)
+        return Error::rendering_unsupported_error("Pattern color spaces not yet implemented");
+
+    if (color_space_name == CommonNames::Separation)
+        return TRY(SeparationColorSpace::create(document, move(parameters)));
 
     dbgln("Unknown color space: {}", color_space_name);
     return Error::rendering_unsupported_error("unknown color space");
@@ -366,6 +373,24 @@ Vector<float> ICCBasedColorSpace::default_decode() const
         }
         return decoding_ranges;
     }
+}
+
+PDFErrorOr<NonnullRefPtr<SeparationColorSpace>> SeparationColorSpace::create(Document*, Vector<Value>&&)
+{
+    auto color_space = adopt_ref(*new SeparationColorSpace());
+    // FIXME: Implement.
+    return color_space;
+}
+
+PDFErrorOr<Color> SeparationColorSpace::color(Vector<Value> const&) const
+{
+    return Error::rendering_unsupported_error("Separation color spaces not yet implemented");
+}
+
+Vector<float> SeparationColorSpace::default_decode() const
+{
+    warnln("PDF: TODO implement SeparationColorSpace::default_decode()");
+    return {};
 }
 
 }

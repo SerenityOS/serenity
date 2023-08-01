@@ -679,7 +679,7 @@ ErrorOr<void> BarewordLiteral::highlight_in_editor(Line::Editor& editor, Shell& 
     if (FileSystem::exists(m_text)) {
         auto realpath = shell.resolve_path(m_text.bytes_as_string_view());
         auto url = URL::create_with_file_scheme(realpath);
-        url.set_host(shell.hostname);
+        url.set_host(TRY(String::from_deprecated_string(shell.hostname)));
         editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Hyperlink(url.to_deprecated_string()) });
     }
     return {};
@@ -2620,7 +2620,7 @@ ErrorOr<void> PathRedirectionNode::highlight_in_editor(Line::Editor& editor, She
         if (!path.starts_with('/'))
             path = String::formatted("{}/{}", shell.cwd, path).release_value_but_fixme_should_propagate_errors();
         auto url = URL::create_with_file_scheme(path.to_deprecated_string());
-        url.set_host(shell.hostname);
+        url.set_host(TRY(String::from_deprecated_string(shell.hostname)));
         editor.stylize({ position.start_offset, position.end_offset }, { Line::Style::Hyperlink(url.to_deprecated_string()) });
     }
     return {};
@@ -3214,7 +3214,7 @@ ErrorOr<void> Juxtaposition::highlight_in_editor(Line::Editor& editor, Shell& sh
         if (FileSystem::exists(path)) {
             auto realpath = shell.resolve_path(path);
             auto url = URL::create_with_file_scheme(realpath);
-            url.set_host(shell.hostname);
+            url.set_host(TRY(String::from_deprecated_string(shell.hostname)));
             editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Hyperlink(url.to_deprecated_string()) });
         }
 

@@ -95,6 +95,8 @@ public:
 
     VM::InterpreterExecutionScope ast_interpreter_scope(Realm&);
 
+    Optional<Value>& this_value() { return m_this_value; }
+
     void visit_edges(Cell::Visitor&);
 
 private:
@@ -119,6 +121,7 @@ private:
     Span<Value> m_current_call_frame;
     Optional<BasicBlock const*> m_pending_jump;
     BasicBlock const* m_scheduled_jump { nullptr };
+    Optional<Value> m_this_value;
     Optional<Value> m_return_value;
     Optional<Value> m_saved_exception;
     Executable* m_current_executable { nullptr };

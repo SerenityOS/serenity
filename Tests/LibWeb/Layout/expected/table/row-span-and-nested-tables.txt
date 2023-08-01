@@ -15,9 +15,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             Box <tr> at (11,11) content-size 67.828125x54.203125 table-row children: not-inline
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
-              BlockContainer <td> at (17,29.367187) content-size 11.5625x17.46875 table-cell [BFC] children: inline
+              BlockContainer <td> at (17,29.359375) content-size 11.5625x17.46875 table-cell [BFC] children: inline
                 line 0 width: 11.5625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-                  frag 0 from TextNode start: 0, length: 1, rect: [17,29.367187 11.5625x17.46875]
+                  frag 0 from TextNode start: 0, length: 1, rect: [17,29.359375 11.5625x17.46875]
                     "X"
                 TextNode <#text>
               BlockContainer <(anonymous)> (not painted) children: inline
@@ -79,9 +79,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             Box <tr> at (11,67.203125) content-size 67.828125x54.203125 table-row children: not-inline
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
-              BlockContainer <td> at (17,85.570312) content-size 11.5625x17.46875 table-cell [BFC] children: inline
+              BlockContainer <td> at (17,85.5625) content-size 11.5625x17.46875 table-cell [BFC] children: inline
                 line 0 width: 11.09375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-                  frag 0 from TextNode start: 0, length: 1, rect: [17,85.570312 11.09375x17.46875]
+                  frag 0 from TextNode start: 0, length: 1, rect: [17,85.5625 11.09375x17.46875]
                     "Y"
                 TextNode <#text>
               BlockContainer <(anonymous)> (not painted) children: inline

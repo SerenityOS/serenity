@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='cavestory'
 version='2.6.5-1'
-files=('https://github.com/gloof11/nxengine-evo/archive/0f45555c64bae21116bac30cd46002e70b1b6495.zip nxengine-evo-0f45555c64bae21116bac30cd46002e70b1b6495.zip c93cb2c1e16f49cd87bcc886cf6adf289355fabe7b5a30d506ec066cc1d86d1d')
+files=('https://github.com/gloof11/nxengine-evo/archive/b427ed7bcd403a4dbb07703fe0eb015c3350bbfc.zip nxengine-evo-b427ed7bcd403a4dbb07703fe0eb015c3350bbfc.zip 83e66960e27ec928d1217439754f0dd733765ecaf760c02832e5b35f4858ea8a')
 depends=(
     'libjpeg'
     'libpng'
@@ -10,7 +10,7 @@ depends=(
     'SDL2_mixer'
     'SDL2_ttf'
 )
-workdir="nxengine-evo-0f45555c64bae21116bac30cd46002e70b1b6495"
+workdir="nxengine-evo-b427ed7bcd403a4dbb07703fe0eb015c3350bbfc"
 launcher_name='Cave Story'
 launcher_category='Games'
 launcher_command='/usr/local/bin/nxengine-evo'

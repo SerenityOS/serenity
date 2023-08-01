@@ -121,6 +121,7 @@ protected:
         // Each block in the containing chain adds its own margin and we store the total here.
         CSSPixels left_total_containing_margin;
         CSSPixels right_total_containing_margin;
+        Box const* matching_left_float_box { nullptr };
     };
 
     struct ShrinkToFitResult {
@@ -150,6 +151,8 @@ protected:
     void compute_height_for_absolutely_positioned_replaced_element(Box const&, AvailableSpace const&, BeforeOrAfterInsideLayout);
 
     [[nodiscard]] Optional<CSSPixels> compute_auto_height_for_absolutely_positioned_element(Box const&, AvailableSpace const&, BeforeOrAfterInsideLayout) const;
+
+    [[nodiscard]] Box const* box_child_to_derive_baseline_from(Box const&) const;
 
     Type m_type {};
 

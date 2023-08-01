@@ -6,13 +6,12 @@
 
 #include "../AudioCodecPluginLadybird.h"
 #include "../EventLoopImplementationQt.h"
-#include "../FontPluginQt.h"
+#include "../FontPluginLadybird.h"
 #include "../ImageCodecPluginLadybird.h"
 #include "../RequestManagerQt.h"
 #include "../Utilities.h"
 #include "../WebSocketClientManagerLadybird.h"
 #include <AK/LexicalPath.h>
-#include <AK/Platform.h>
 #include <LibAudio/Loader.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
@@ -29,15 +28,11 @@
 #include <LibWeb/PermissionsPolicy/AutoplayAllowlist.h>
 #include <LibWeb/Platform/EventLoopPluginSerenity.h>
 #include <LibWeb/WebSockets/WebSocket.h>
-#include <QGuiApplication>
+#include <QCoreApplication>
 #include <QTimer>
 #include <WebContent/ConnectionFromClient.h>
 #include <WebContent/PageHost.h>
 #include <WebContent/WebDriverConnection.h>
-
-#if defined(AK_OS_MACOS)
-#    include "MacOSSetup.h"
-#endif
 
 static ErrorOr<void> load_content_filters();
 static ErrorOr<void> load_autoplay_allowlist();
@@ -46,11 +41,7 @@ extern DeprecatedString s_serenity_resource_root;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    QGuiApplication app(arguments.argc, arguments.argv);
-
-#if defined(AK_OS_MACOS)
-    prohibit_interaction();
-#endif
+    QCoreApplication app(arguments.argc, arguments.argv);
 
     Core::EventLoopManager::install(*new Ladybird::EventLoopManagerQt);
     Core::EventLoop event_loop;
@@ -83,7 +74,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     VERIFY(webcontent_fd_passing_socket >= 0);
 
-    Web::Platform::FontPlugin::install(*new Ladybird::FontPluginQt(is_layout_test_mode));
+    Web::Platform::FontPlugin::install(*new Ladybird::FontPluginLadybird(is_layout_test_mode));
 
     Web::FrameLoader::set_error_page_url(DeprecatedString::formatted("file://{}/res/html/error.html", s_serenity_resource_root));
 

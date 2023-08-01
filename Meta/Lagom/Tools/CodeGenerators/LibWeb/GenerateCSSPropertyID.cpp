@@ -105,6 +105,7 @@ namespace Web::CSS {
 enum class PropertyID {
     Invalid,
     Custom,
+    All,
 )~~~"));
 
     Vector<DeprecatedString> shorthand_property_ids;
@@ -361,6 +362,8 @@ Optional<PropertyID> property_id_from_camel_case_string(StringView string)
 
 Optional<PropertyID> property_id_from_string(StringView string)
 {
+    if (Infra::is_ascii_case_insensitive_match(string, "all"sv))
+        return PropertyID::All;
 )~~~"));
 
     TRY(properties.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {

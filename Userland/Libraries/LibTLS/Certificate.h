@@ -9,7 +9,6 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
-#include <AK/Singleton.h>
 #include <AK/Types.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DateTime.h>
@@ -295,11 +294,9 @@ public:
     static ErrorOr<Vector<Certificate>> parse_pem_root_certificate_authorities(ByteBuffer&);
     static ErrorOr<Vector<Certificate>> load_certificates();
 
-    static DefaultRootCACertificates& the() { return s_the; }
+    static DefaultRootCACertificates& the();
 
 private:
-    static Singleton<DefaultRootCACertificates> s_the;
-
     Vector<Certificate> m_ca_certificates;
 };
 

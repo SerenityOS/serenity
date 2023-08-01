@@ -1,15 +1,15 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
-  BlockContainer <html> at (0,0) content-size 800x69.34375 [BFC] children: not-inline
-    Box <body.pink> at (8,8) content-size 784x53.34375 flex-container(row) [FFC] children: not-inline
-      Box <div.orange> at (8,8) content-size 194.71875x53.34375 flex-container(row) flex-item [FFC] children: not-inline
-        BlockContainer <div.lime> at (8,8) content-size 87.358999x53.34375 flex-item [BFC] children: inline
+  BlockContainer <html> at (0,0) content-size 800x68.40625 [BFC] children: not-inline
+    Box <body.pink> at (8,8) content-size 784x52.40625 flex-container(row) [FFC] children: not-inline
+      Box <div.orange> at (8,8) content-size 194.71875x52.40625 flex-container(row) flex-item [FFC] children: not-inline
+        BlockContainer <div.lime> at (8,8) content-size 87.34375x52.40625 flex-item [BFC] children: inline
           line 0 width: 74.75, height: 17.46875, bottom: 17.46875, baseline: 13.53125
             frag 0 from TextNode start: 0, length: 9, rect: [8,8 74.75x17.46875]
               "This is a"
-          line 1 width: 71.828125, height: 17.9375, bottom: 35.40625, baseline: 13.53125
-            frag 0 from TextNode start: 10, length: 8, rect: [8,25 71.828125x17.46875]
+          line 1 width: 71.828125, height: 17.46875, bottom: 34.9375, baseline: 13.53125
+            frag 0 from TextNode start: 10, length: 8, rect: [8,25.46875 71.828125x17.46875]
               "bunch of"
-          line 2 width: 32.140625, height: 18.40625, bottom: 53.34375, baseline: 13.53125
-            frag 0 from TextNode start: 19, length: 4, rect: [8,42 32.140625x17.46875]
+          line 2 width: 32.140625, height: 17.46875, bottom: 52.40625, baseline: 13.53125
+            frag 0 from TextNode start: 19, length: 4, rect: [8,42.9375 32.140625x17.46875]
               "text"
           TextNode <#text>

@@ -167,15 +167,15 @@ DeprecatedString HTMLHyperlinkElementUtils::host() const
     auto& url = m_url;
 
     // 3. If url or url's host is null, return the empty string.
-    if (!url.has_value() || url->host().is_null())
+    if (!url.has_value() || url->host().has<Empty>())
         return DeprecatedString::empty();
 
     // 4. If url's port is null, return url's host, serialized.
     if (!url->port().has_value())
-        return url->host();
+        return url->serialized_host().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 
     // 5. Return url's host, serialized, followed by ":" and url's port, serialized.
-    return DeprecatedString::formatted("{}:{}", url->host(), url->port().value());
+    return DeprecatedString::formatted("{}:{}", url->serialized_host().release_value_but_fixme_should_propagate_errors(), url->port().value());
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-host
@@ -205,11 +205,14 @@ DeprecatedString HTMLHyperlinkElementUtils::hostname() const
     // 1. Reinitialize url.
     //
     // 2. Let url be this element's url.
-    //
+    AK::URL url(href());
+
     // 3. If url or url's host is null, return the empty string.
-    //
+    if (url.host().has<Empty>())
+        return DeprecatedString::empty();
+
     // 4. Return url's host, serialized.
-    return AK::URL(href()).host();
+    return url.serialized_host().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 }
 
 void HTMLHyperlinkElementUtils::set_hostname(DeprecatedString hostname)

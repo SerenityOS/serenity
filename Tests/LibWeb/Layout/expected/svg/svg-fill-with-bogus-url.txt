@@ -4,4 +4,4 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       line 0 width: 784, height: 784, bottom: 784, baseline: 784
         frag 0 from SVGSVGBox start: 0, length: 0, rect: [8,8 784x784]
       SVGSVGBox <svg> at (8,8) content-size 784x784 [SVG] children: not-inline
-        SVGGeometryBox <rect> at (7.999992,7.999992) content-size 784x784 children: not-inline
+        SVGGeometryBox <rect> at (8,8) content-size 784x784 children: not-inline

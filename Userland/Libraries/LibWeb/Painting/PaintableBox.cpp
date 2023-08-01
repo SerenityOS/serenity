@@ -224,9 +224,19 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
     }
 }
 
+BordersData PaintableBox::remove_element_kind_from_borders_data(PaintableBox::BordersDataWithElementKind borders_data)
+{
+    return {
+        .top = borders_data.top.border_data,
+        .right = borders_data.right.border_data,
+        .bottom = borders_data.bottom.border_data,
+        .left = borders_data.left.border_data,
+    };
+}
+
 void PaintableBox::paint_border(PaintContext& context) const
 {
-    auto borders_data = m_override_borders_data.has_value() ? m_override_borders_data.value() : BordersData {
+    auto borders_data = m_override_borders_data.has_value() ? remove_element_kind_from_borders_data(m_override_borders_data.value()) : BordersData {
         .top = box_model().border.top == 0 ? CSS::BorderData() : computed_values().border_top(),
         .right = box_model().border.right == 0 ? CSS::BorderData() : computed_values().border_right(),
         .bottom = box_model().border.bottom == 0 ? CSS::BorderData() : computed_values().border_bottom(),
@@ -268,7 +278,7 @@ void PaintableBox::paint_background(PaintContext& context) const
 
     // HACK: If the Box has a border, use the bordered_rect to paint the background.
     //       This way if we have a border-radius there will be no gap between the filling and actual border.
-    if (computed_values().border_top().width || computed_values().border_right().width || computed_values().border_bottom().width || computed_values().border_left().width)
+    if (computed_values().border_top().width != 0 || computed_values().border_right().width != 0 || computed_values().border_bottom().width != 0 || computed_values().border_left().width != 0)
         background_rect = absolute_border_box_rect();
 
     Painting::paint_background(context, layout_box(), background_rect, background_color, computed_values().image_rendering(), background_layers, normalized_border_radii_data());
@@ -447,7 +457,7 @@ static void paint_text_decoration(PaintContext& context, Gfx::Painter& painter, 
         if (computed_thickness.is_auto())
             return max(glyph_height * 0.1, 1.);
 
-        return computed_thickness.to_px(text_node);
+        return computed_thickness.to_px(text_node).to_double();
     }();
     auto device_line_thickness = context.rounded_device_pixels(css_line_thickness);
 

@@ -601,7 +601,7 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
     }
 
     m_margin_state.add_margin(box_state.margin_top);
-    auto introduce_clearance = clear_floating_boxes(box);
+    auto introduce_clearance = clear_floating_boxes(box, {});
     if (introduce_clearance == DidIntroduceClearance::Yes)
         m_margin_state.reset();
 
@@ -752,7 +752,7 @@ CSSPixels BlockFormattingContext::BlockMarginState::current_collapsed_margin() c
     return collapsed_margin;
 }
 
-BlockFormattingContext::DidIntroduceClearance BlockFormattingContext::clear_floating_boxes(Box const& child_box)
+BlockFormattingContext::DidIntroduceClearance BlockFormattingContext::clear_floating_boxes(Node const& child_box, Optional<InlineFormattingContext&> inline_formatting_context)
 {
     auto const& computed_values = child_box.computed_values();
     auto result = DidIntroduceClearance::No;
@@ -777,7 +777,12 @@ BlockFormattingContext::DidIntroduceClearance BlockFormattingContext::clear_floa
             for (auto* containing_block = child_box.containing_block(); containing_block && containing_block != &root(); containing_block = containing_block->containing_block())
                 clearance_y_in_containing_block -= m_state.get(*containing_block).offset.y();
 
-            if (clearance_y_in_containing_block > m_y_offset_of_current_block_container.value()) {
+            if (inline_formatting_context.has_value()) {
+                if (clearance_y_in_containing_block > inline_formatting_context->vertical_float_clearance()) {
+                    result = DidIntroduceClearance::Yes;
+                    inline_formatting_context->set_vertical_float_clearance(clearance_y_in_containing_block);
+                }
+            } else if (clearance_y_in_containing_block > m_y_offset_of_current_block_container.value()) {
                 result = DidIntroduceClearance::Yes;
                 m_y_offset_of_current_block_container = clearance_y_in_containing_block;
             }
@@ -802,6 +807,18 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically
     box_state.set_content_offset(CSSPixelPoint { box_state.offset.x(), y });
 }
 
+// Returns whether the given box has the given ancestor on the path to root, ignoring the anonymous blocks.
+static bool box_has_ancestor_in_non_anonymous_containing_block_chain(Box const* box, Box const& ancestor, Box const& root)
+{
+    Box const* current_ancestor = box ? box->non_anonymous_containing_block() : &root;
+    while (current_ancestor != &root) {
+        if (current_ancestor == &ancestor)
+            return true;
+        current_ancestor = current_ancestor->non_anonymous_containing_block();
+    }
+    return false;
+}
+
 void BlockFormattingContext::place_block_level_element_in_normal_flow_horizontally(Box const& child_box, AvailableSpace const& available_space)
 {
     auto& box_state = m_state.get_mutable(child_box);
@@ -814,7 +831,12 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_horizontal
         auto box_in_root_rect = content_box_rect_in_ancestor_coordinate_space(child_box, root());
         auto space_and_containing_margin = space_used_and_containing_margin_for_floats(box_in_root_rect.y());
         available_width_within_containing_block -= space_and_containing_margin.left_used_space + space_and_containing_margin.right_used_space;
-        x += space_and_containing_margin.left_used_space;
+        auto const& containing_box_state = m_state.get(*child_box.containing_block());
+        if (box_has_ancestor_in_non_anonymous_containing_block_chain(space_and_containing_margin.matching_left_float_box, *child_box.non_anonymous_containing_block(), root()))
+            x = space_and_containing_margin.left_used_space;
+        else
+            // If the floating box doesn't share a containing block with the child box, the child box margin should overlap with the width of the floating box.
+            x = max(space_and_containing_margin.left_used_space - containing_box_state.margin_left, 0);
     }
 
     if (child_box.containing_block()->computed_values().text_align() == CSS::TextAlign::LibwebCenter) {
@@ -862,7 +884,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
     // First we place the box normally (to get the right y coordinate.)
     // If we have a LineBuilder, we're in the middle of inline layout, otherwise this is block layout.
     if (line_builder) {
-        auto y = line_builder->y_for_float_to_be_inserted_here(box);
+        auto y = max(line_builder->y_for_float_to_be_inserted_here(box), line_builder->inline_formatting_context().vertical_float_clearance());
         box_state.set_content_y(y + box_state.margin_box_top());
     } else {
         place_block_level_element_in_normal_flow_vertically(box, y + box_state.margin_top);
@@ -1056,6 +1078,7 @@ BlockFormattingContext::SpaceUsedAndContainingMarginForFloats BlockFormattingCon
                 + floating_box_state.content_width()
                 + floating_box_state.margin_box_right();
             space_and_containing_margin.left_total_containing_margin = offset_from_containing_block_chain_margins_between_here_and_root;
+            space_and_containing_margin.matching_left_float_box = floating_box.box.ptr();
             break;
         }
     }

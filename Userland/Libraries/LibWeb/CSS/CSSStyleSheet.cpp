@@ -29,6 +29,12 @@ CSSStyleSheet::CSSStyleSheet(JS::Realm& realm, CSSRuleList& rules, MediaList& me
 
     for (auto& rule : *m_rules)
         rule->set_parent_style_sheet(this);
+
+    recalculate_namespaces();
+
+    m_rules->on_change = [this]() {
+        recalculate_namespaces();
+    };
 }
 
 JS::ThrowCompletionOr<void> CSSStyleSheet::initialize(JS::Realm& realm)
@@ -135,6 +141,42 @@ bool CSSStyleSheet::evaluate_media_queries(HTML::Window const& window)
 void CSSStyleSheet::set_style_sheet_list(Badge<StyleSheetList>, StyleSheetList* list)
 {
     m_style_sheet_list = list;
+}
+
+Optional<StringView> CSSStyleSheet::default_namespace() const
+{
+    if (m_default_namespace_rule)
+        return m_default_namespace_rule->namespace_uri().view();
+
+    return {};
+}
+
+void CSSStyleSheet::recalculate_namespaces()
+{
+    for (JS::NonnullGCPtr<CSSRule> rule : *m_rules) {
+        // "Any @namespace rules must follow all @charset and @import rules and precede all other
+        // non-ignored at-rules and style rules in a style sheet.
+        // ...
+        // A syntactically invalid @namespace rule (whether malformed or misplaced) must be ignored."
+        // https://drafts.csswg.org/css-namespaces/#syntax
+        switch (rule->type()) {
+        case CSSRule::Type::Import:
+            continue;
+
+        case CSSRule::Type::Namespace:
+            break;
+
+        default:
+            // Any other types mean that further @namespace rules are invalid, so we can stop here.
+            return;
+        }
+
+        auto& namespace_rule = verify_cast<CSSNamespaceRule>(*rule);
+        if (!namespace_rule.namespace_uri().is_empty() && namespace_rule.prefix().is_empty())
+            m_default_namespace_rule = namespace_rule;
+
+        // FIXME: Store qualified namespace rules.
+    }
 }
 
 }

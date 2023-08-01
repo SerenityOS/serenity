@@ -27,6 +27,8 @@
     A(CF)                         \
     A(CFM)                        \
     A(CalRGB)                     \
+    A(CIDFontType0)               \
+    A(CIDFontType2)               \
     A(CIDSystemInfo)              \
     A(CIDToGIDMap)                \
     A(Colors)                     \
@@ -84,6 +86,7 @@
     A(Image)                      \
     A(ImageMask)                  \
     A(Index)                      \
+    A(Indexed)                    \
     A(Info)                       \
     A(JBIG2Decode)                \
     A(JPXDecode)                  \
@@ -134,6 +137,7 @@
     A(SA)                         \
     A(SM)                         \
     A(SMask)                      \
+    A(Separation)                 \
     A(StmF)                       \
     A(StrF)                       \
     A(Subject)                    \

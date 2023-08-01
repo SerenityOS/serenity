@@ -12,9 +12,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <(anonymous)> at (10,31.46875) content-size 780x0 children: inline
         TextNode <#text>
       Box <div.grid.center> at (11,32.46875) content-size 778x19.46875 [GFC] children: not-inline
-        BlockContainer <div> at (373.476562,33.46875) content-size 53.046875x17.46875 [BFC] children: inline
+        BlockContainer <div> at (373.46875,33.46875) content-size 53.046875x17.46875 [BFC] children: inline
           line 0 width: 53.046875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 6, rect: [373.476562,33.46875 53.046875x17.46875]
+            frag 0 from TextNode start: 0, length: 6, rect: [373.46875,33.46875 53.046875x17.46875]
               "Center"
           TextNode <#text>
       BlockContainer <(anonymous)> at (10,52.9375) content-size 780x0 children: inline

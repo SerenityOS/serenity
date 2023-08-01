@@ -67,6 +67,21 @@ static ALWAYS_INLINE ErrorOr<u64> U64(LittleEndianInputBitStream& stream)
 
     return value;
 }
+
+template<Enum E>
+ErrorOr<E> read_enum(LittleEndianInputBitStream& stream)
+{
+    return static_cast<E>(U32(0, 1, 2 + TRY(stream.read_bits(4)), 18 + TRY(stream.read_bits(6))));
+}
+
+// This is not specified
+static ErrorOr<String> read_string(LittleEndianInputBitStream& stream)
+{
+    auto const name_length = U32(0, TRY(stream.read_bits(4)), 16 + TRY(stream.read_bits(5)), 48 + TRY(stream.read_bits(10)));
+    auto string_buffer = TRY(FixedArray<u8>::create(name_length));
+    TRY(stream.read_until_filled(string_buffer.span()));
+    return String::from_utf8(StringView { string_buffer.span() });
+}
 ///
 
 /// D.2 - Image dimensions
@@ -250,10 +265,48 @@ static ErrorOr<Extensions> read_extensions(LittleEndianInputBitStream& stream)
 ///
 
 /// K.2 - Non-separable upsampling
-Array<double, 15> s_d_up2 {
+Array s_d_up2 {
     -0.01716200, -0.03452303, -0.04022174, -0.02921014, -0.00624645,
     0.14111091, 0.28896755, 0.00278718, -0.01610267, 0.56661550,
     0.03777607, -0.01986694, -0.03144731, -0.01185068, -0.00213539
+};
+
+Array s_d_up4 = {
+    -0.02419067, -0.03491987, -0.03693351, -0.03094285, -0.00529785,
+    -0.01663432, -0.03556863, -0.03888905, -0.03516850, -0.00989469,
+    0.23651958, 0.33392945, -0.01073543, -0.01313181, -0.03556694,
+    0.13048175, 0.40103025, 0.03951150, -0.02077584, 0.46914198,
+    -0.00209270, -0.01484589, -0.04064806, 0.18942530, 0.56279892,
+    0.06674400, -0.02335494, -0.03551682, -0.00754830, -0.02267919,
+    -0.02363578, 0.00315804, -0.03399098, -0.01359519, -0.00091653,
+    -0.00335467, -0.01163294, -0.01610294, -0.00974088, -0.00191622,
+    -0.01095446, -0.03198464, -0.04455121, -0.02799790, -0.00645912,
+    0.06390599, 0.22963888, 0.00630981, -0.01897349, 0.67537268,
+    0.08483369, -0.02534994, -0.02205197, -0.01667999, -0.00384443
+};
+
+Array s_d_up8 {
+    -0.02928613, -0.03706353, -0.03783812, -0.03324558, -0.00447632, -0.02519406, -0.03752601, -0.03901508, -0.03663285, -0.00646649,
+    -0.02066407, -0.03838633, -0.04002101, -0.03900035, -0.00901973, -0.01626393, -0.03954148, -0.04046620, -0.03979621, -0.01224485,
+    0.29895328, 0.35757708, -0.02447552, -0.01081748, -0.04314594, 0.23903219, 0.41119301, -0.00573046, -0.01450239, -0.04246845,
+    0.17567618, 0.45220643, 0.02287757, -0.01936783, -0.03583255, 0.11572472, 0.47416733, 0.06284440, -0.02685066, 0.42720050,
+    -0.02248939, -0.01155273, -0.04562755, 0.28689496, 0.49093869, -0.00007891, -0.01545926, -0.04562659, 0.21238920, 0.53980934,
+    0.03369474, -0.02070211, -0.03866988, 0.14229550, 0.56593398, 0.08045181, -0.02888298, -0.03680918, -0.00542229, -0.02920477,
+    -0.02788574, -0.02118180, -0.03942402, -0.00775547, -0.02433614, -0.03193943, -0.02030828, -0.04044014, -0.01074016, -0.01930822,
+    -0.03620399, -0.01974125, -0.03919545, -0.01456093, -0.00045072, -0.00360110, -0.01020207, -0.01231907, -0.00638988, -0.00071592,
+    -0.00279122, -0.00957115, -0.01288327, -0.00730937, -0.00107783, -0.00210156, -0.00890705, -0.01317668, -0.00813895, -0.00153491,
+    -0.02128481, -0.04173044, -0.04831487, -0.03293190, -0.00525260, -0.01720322, -0.04052736, -0.05045706, -0.03607317, -0.00738030,
+    -0.01341764, -0.03965629, -0.05151616, -0.03814886, -0.01005819, 0.18968273, 0.33063684, -0.01300105, -0.01372950, -0.04017465,
+    0.13727832, 0.36402234, 0.01027890, -0.01832107, -0.03365072, 0.08734506, 0.38194295, 0.04338228, -0.02525993, 0.56408126,
+    0.00458352, -0.01648227, -0.04887868, 0.24585519, 0.62026135, 0.04314807, -0.02213737, -0.04158014, 0.16637289, 0.65027023,
+    0.09621636, -0.03101388, -0.04082742, -0.00904519, -0.02790922, -0.02117818, 0.00798662, -0.03995711, -0.01243427, -0.02231705,
+    -0.02946266, 0.00992055, -0.03600283, -0.01684920, -0.00111684, -0.00411204, -0.01297130, -0.01723725, -0.01022545, -0.00165306,
+    -0.00313110, -0.01218016, -0.01763266, -0.01125620, -0.00231663, -0.01374149, -0.03797620, -0.05142937, -0.03117307, -0.00581914,
+    -0.01064003, -0.03608089, -0.05272168, -0.03375670, -0.00795586, 0.09628104, 0.27129991, -0.00353779, -0.01734151, -0.03153981,
+    0.05686230, 0.28500998, 0.02230594, -0.02374955, 0.68214326, 0.05018048, -0.02320852, -0.04383616, 0.18459474, 0.71517975,
+    0.10805613, -0.03263677, -0.03637639, -0.01394373, -0.02511203, -0.01728636, 0.05407331, -0.02867568, -0.01893131, -0.00240854,
+    -0.00446511, -0.01636187, -0.02377053, -0.01522848, -0.00333334, -0.00819975, -0.02964169, -0.04499287, -0.02745350, -0.00612408,
+    0.02727416, 0.19446600, 0.00159832, -0.02232473, 0.74982506, 0.11452620, -0.03348048, -0.01605681, -0.02070339, -0.00458223
 };
 ///
 
@@ -266,19 +319,66 @@ struct AnimationHeader {
 };
 
 struct ExtraChannelInfo {
+    enum class ExtraChannelType {
+        kAlpha = 0,
+        kDepth = 1,
+        kSpotColour = 2,
+        kSelectionMask = 3,
+        kBlack = 4,
+        kCFA = 5,
+        kThermal = 6,
+        kNonOptional = 15,
+        kOptional = 16,
+    };
+
+    bool d_alpha { true };
+    ExtraChannelType type { ExtraChannelType::kAlpha };
+    BitDepth bit_depth {};
+    u32 dim_shift {};
+    String name;
+    bool alpha_associated { false };
 };
 
-static ErrorOr<ExtraChannelInfo> read_extra_channel_info(LittleEndianInputBitStream&)
+static ErrorOr<ExtraChannelInfo> read_extra_channel_info(LittleEndianInputBitStream& stream)
 {
-    TODO();
+    ExtraChannelInfo extra_channel_info;
+
+    extra_channel_info.d_alpha = TRY(stream.read_bit());
+
+    if (!extra_channel_info.d_alpha) {
+        extra_channel_info.type = TRY(read_enum<ExtraChannelInfo::ExtraChannelType>(stream));
+        extra_channel_info.bit_depth = TRY(read_bit_depth(stream));
+        extra_channel_info.dim_shift = U32(0, 3, 4, 1 + TRY(stream.read_bits(3)));
+        extra_channel_info.name = TRY(read_string(stream));
+
+        if (extra_channel_info.type == ExtraChannelInfo::ExtraChannelType::kAlpha)
+            extra_channel_info.alpha_associated = TRY(stream.read_bit());
+    }
+
+    if (extra_channel_info.type != ExtraChannelInfo::ExtraChannelType::kAlpha) {
+        TODO();
+    }
+
+    return extra_channel_info;
 }
 
 struct ToneMapping {
+    float intensity_target { 255 };
+    float min_nits { 0 };
+    bool relative_to_max_display { false };
+    float linear_below { 0 };
 };
 
-static ErrorOr<ToneMapping> read_tone_mapping(LittleEndianInputBitStream&)
+static ErrorOr<ToneMapping> read_tone_mapping(LittleEndianInputBitStream& stream)
 {
-    TODO();
+    ToneMapping tone_mapping;
+    bool const all_default = TRY(stream.read_bit());
+
+    if (!all_default) {
+        TODO();
+    }
+
+    return tone_mapping;
 }
 
 struct OpsinInverseMatrix {
@@ -307,7 +407,30 @@ struct ImageMetadata {
     u8 cw_mask { 0 };
 
     Array<double, 15> up2_weight = s_d_up2;
-    // TODO: add up[4, 8]_weight
+    Array<double, 55> up4_weight = s_d_up4;
+    Array<double, 210> up8_weight = s_d_up8;
+
+    u16 number_of_color_channels() const
+    {
+        if (!xyb_encoded && colour_encoding.colour_space == ColourEncoding::ColourSpace::kGrey)
+            return 1;
+        return 3;
+    }
+
+    u16 number_of_channels() const
+    {
+        return number_of_color_channels() + num_extra_channels;
+    }
+
+    Optional<u16> alpha_channel() const
+    {
+        for (u16 i = 0; i < ec_info.size(); ++i) {
+            if (ec_info[i].type == ExtraChannelInfo::ExtraChannelType::kAlpha)
+                return i + number_of_color_channels();
+        }
+
+        return OptionalNone {};
+    }
 };
 
 static ErrorOr<ImageMetadata> read_metadata_header(LittleEndianInputBitStream& stream)
@@ -378,23 +501,27 @@ struct BlendingInfo {
 
     BlendMode mode {};
     u8 alpha_channel {};
-    u8 clamp {};
+    bool clamp { false };
     u8 source {};
 };
 
-static ErrorOr<BlendingInfo> read_blending_info(LittleEndianInputBitStream& stream, ImageMetadata const& metadata, bool have_crop)
+static ErrorOr<BlendingInfo> read_blending_info(LittleEndianInputBitStream& stream, ImageMetadata const& metadata, bool full_frame)
 {
     BlendingInfo blending_info;
 
     blending_info.mode = static_cast<BlendingInfo::BlendMode>(U32(0, 1, 2, 3 + TRY(stream.read_bits(2))));
 
     bool const extra = metadata.num_extra_channels > 0;
-    // FIXME: also consider "cropped" image of the dimension of the frame
-    VERIFY(!have_crop);
-    bool const full_frame = !have_crop;
 
     if (extra) {
-        TODO();
+        auto const blend_or_mul_add = blending_info.mode == BlendingInfo::BlendMode::kBlend
+            || blending_info.mode == BlendingInfo::BlendMode::kMulAdd;
+
+        if (blend_or_mul_add)
+            blending_info.alpha_channel = U32(0, 1, 2, 3 + TRY(stream.read_bits(3)));
+
+        if (blend_or_mul_add || blending_info.mode == BlendingInfo::BlendMode::kMul)
+            blending_info.clamp = TRY(stream.read_bit());
     }
 
     if (blending_info.mode != BlendingInfo::BlendMode::kReplace
@@ -488,7 +615,7 @@ struct FrameHeader {
 
     Array<u8, 3> jpeg_upsampling {};
     u8 upsampling {};
-    Vector<u8> ec_upsampling {};
+    FixedArray<u8> ec_upsampling {};
 
     u8 group_size_shift { 1 };
     Passes passes {};
@@ -497,8 +624,12 @@ struct FrameHeader {
     bool have_crop { false };
 
     BlendingInfo blending_info {};
+    FixedArray<BlendingInfo> ec_blending_info {};
+
+    u32 duration {};
 
     bool is_last { true };
+    u8 save_as_reference {};
     bool save_before_ct {};
 
     String name {};
@@ -534,8 +665,9 @@ static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream
 
             frame_header.upsampling = U32(1, 2, 4, 8);
 
+            frame_header.ec_upsampling = TRY(FixedArray<u8>::create(metadata.num_extra_channels));
             for (u16 i {}; i < metadata.num_extra_channels; ++i)
-                TODO();
+                frame_header.ec_upsampling[i] = U32(1, 2, 4, 8);
         }
 
         if (frame_header.encoding == FrameHeader::Encoding::kModular)
@@ -559,11 +691,16 @@ static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream
         bool const normal_frame = frame_header.frame_type == FrameHeader::FrameType::kRegularFrame
             || frame_header.frame_type == FrameHeader::FrameType::kSkipProgressive;
 
-        if (normal_frame) {
-            frame_header.blending_info = TRY(read_blending_info(stream, metadata, frame_header.have_crop));
+        // FIXME: also consider "cropped" image of the dimension of the frame
+        VERIFY(!frame_header.have_crop);
+        bool const full_frame = !frame_header.have_crop;
 
+        if (normal_frame) {
+            frame_header.blending_info = TRY(read_blending_info(stream, metadata, full_frame));
+
+            frame_header.ec_blending_info = TRY(FixedArray<BlendingInfo>::create(metadata.num_extra_channels));
             for (u16 i {}; i < metadata.num_extra_channels; ++i)
-                TODO();
+                frame_header.ec_blending_info[i] = TRY(read_blending_info(stream, metadata, full_frame));
 
             if (metadata.animation.has_value())
                 TODO();
@@ -574,20 +711,19 @@ static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream
         // FIXME: Ensure that is_last has the correct default value
         VERIFY(normal_frame);
 
+        auto const resets_canvas = full_frame && frame_header.blending_info.mode == BlendingInfo::BlendMode::kReplace;
+        auto const can_reference = !frame_header.is_last && (frame_header.duration == 0 || frame_header.save_as_reference != 0) && frame_header.frame_type != FrameHeader::FrameType::kLFFrame;
+
         if (frame_header.frame_type != FrameHeader::FrameType::kLFFrame) {
             if (!frame_header.is_last)
                 TODO();
-            frame_header.save_before_ct = TRY(stream.read_bit());
         }
 
-        // FIXME: Ensure that save_before_ct has the correct default value
-        VERIFY(frame_header.frame_type != FrameHeader::FrameType::kLFFrame);
+        frame_header.save_before_ct = !normal_frame;
+        if (frame_header.frame_type == FrameHeader::FrameType::kReferenceOnly || (resets_canvas && can_reference))
+            frame_header.save_before_ct = TRY(stream.read_bit());
 
-        auto const name_length = U32(0, TRY(stream.read_bits(4)), 16 + TRY(stream.read_bits(5)), 48 + TRY(stream.read_bits(10)));
-        auto string_buffer = TRY(FixedArray<u8>::create(name_length));
-        TRY(stream.read_until_filled(string_buffer.span()));
-
-        frame_header.name = TRY(String::from_utf8(StringView { string_buffer.span() }));
+        frame_header.name = TRY(read_string(stream));
 
         frame_header.restoration_filter = TRY(read_restoration_filter(stream));
 
@@ -606,17 +742,11 @@ struct TOC {
 
 static u64 num_toc_entries(FrameHeader const& frame_header, u64 num_groups, u64 num_lf_groups)
 {
+    // F.3.1 - General
     if (num_groups == 1 && frame_header.passes.num_passes == 1)
         return 1;
 
-    // Otherwise, there is one entry for each of the following sections,
-    // in the order they are listed: LfGlobal, one per LfGroup in raster
-    // order, one for HfGlobal followed by HfPass data for all the passes,
-    // and num_groups * frame_header.passes.num_passes for the PassGroup sections.
-
-    auto const hf_contribution = frame_header.encoding == FrameHeader::Encoding::kVarDCT ? (1 + frame_header.passes.num_passes) : 0;
-
-    return 1 + num_lf_groups + hf_contribution + num_groups * frame_header.passes.num_passes;
+    return 1 + num_lf_groups + 1 + num_groups * frame_header.passes.num_passes;
 }
 
 static ErrorOr<TOC> read_toc(LittleEndianInputBitStream& stream, FrameHeader const& frame_header, u64 num_groups, u64 num_lf_groups)
@@ -1048,6 +1178,16 @@ public:
         return m_vshift;
     }
 
+    bool decoded() const
+    {
+        return m_decoded;
+    }
+
+    void set_decoded(bool decoded)
+    {
+        m_decoded = decoded;
+    }
+
 private:
     u32 m_width {};
     u32 m_height {};
@@ -1055,32 +1195,40 @@ private:
     u32 m_hshift {};
     u32 m_vshift {};
 
+    bool m_decoded { false };
+
     Vector<i32> m_pixels {};
 };
 
 class Image {
 public:
-    static ErrorOr<Image> create(IntSize size)
+    static ErrorOr<Image> create(IntSize size, ImageMetadata const& metadata)
     {
         Image image {};
 
-        // FIXME: Don't assume three channels and a fixed size
-        TRY(image.m_channels.try_append(TRY(Channel::create(size.width(), size.height()))));
-        TRY(image.m_channels.try_append(TRY(Channel::create(size.width(), size.height()))));
-        TRY(image.m_channels.try_append(TRY(Channel::create(size.width(), size.height()))));
+        for (u16 i = 0; i < metadata.number_of_channels(); ++i) {
+            if (i < metadata.number_of_color_channels()) {
+                TRY(image.m_channels.try_append(TRY(Channel::create(size.width(), size.height()))));
+            } else {
+                auto const dim_shift = metadata.ec_info[i - metadata.number_of_color_channels()].dim_shift;
+                TRY(image.m_channels.try_append(TRY(Channel::create(size.width() >> dim_shift, size.height() >> dim_shift))));
+            }
+        }
 
         return image;
     }
 
-    ErrorOr<NonnullRefPtr<Bitmap>> to_bitmap(u8 bits_per_sample) const
+    ErrorOr<NonnullRefPtr<Bitmap>> to_bitmap(ImageMetadata& metadata) const
     {
         // FIXME: which channel size should we use?
         auto const width = m_channels[0].width();
         auto const height = m_channels[0].height();
 
-        auto bitmap = TRY(Bitmap::create(BitmapFormat::BGRx8888, { width, height }));
+        auto bitmap = TRY(Bitmap::create(BitmapFormat::BGRA8888, { width, height }));
 
-        // FIXME: This assumes a raw image with RGB channels, other cases are possible
+        auto const alpha_channel = metadata.alpha_channel();
+
+        auto const bits_per_sample = metadata.bit_depth.bits_per_sample;
         VERIFY(bits_per_sample >= 8);
         for (u32 y {}; y < height; ++y) {
             for (u32 x {}; x < width; ++x) {
@@ -1093,11 +1241,20 @@ public:
                     return clamp(sample + .5, 0, (1 << maximum_supported_bit_depth) - 1);
                 };
 
-                Color const color {
-                    to_u8(m_channels[0].get(x, y)),
-                    to_u8(m_channels[1].get(x, y)),
-                    to_u8(m_channels[2].get(x, y)),
-                };
+                auto const color = [&]() -> Color {
+                    if (!alpha_channel.has_value()) {
+                        return { to_u8(m_channels[0].get(x, y)),
+                            to_u8(m_channels[1].get(x, y)),
+                            to_u8(m_channels[2].get(x, y)) };
+                    }
+
+                    return {
+                        to_u8(m_channels[0].get(x, y)),
+                        to_u8(m_channels[1].get(x, y)),
+                        to_u8(m_channels[2].get(x, y)),
+                        to_u8(m_channels[*alpha_channel].get(x, y)),
+                    };
+                }();
                 bitmap->set_pixel(x, y, color);
             }
         }
@@ -1146,12 +1303,15 @@ static ErrorOr<Vector<i32>> get_properties(Vector<Channel> const& channels, u16 
     TRY(properties.try_append(W));
 
     // x > 0 ? W - /* (the value of property 9 at position (x - 1, y)) */ : W
-    i32 x_1 = x - 1;
-    i32 const W_x_1 = x_1 > 0 ? channels[i].get(x_1 - 1, y) : (x_1 >= 0 && y > 0 ? channels[i].get(x_1, y - 1) : 0);
-    i32 const N_x_1 = x_1 >= 0 && y > 0 ? channels[i].get(x_1, y - 1) : W_x_1;
-    i32 const NW_x_1 = x_1 > 0 && y > 0 ? channels[i].get(x_1 - 1, y - 1) : W_x_1;
-
-    TRY(properties.try_append(W_x_1 + N_x_1 - NW_x_1));
+    if (x > 0) {
+        auto const x_1 = x - 1;
+        i32 const W_x_1 = x_1 > 0 ? channels[i].get(x_1 - 1, y) : (y > 0 ? channels[i].get(x_1, y - 1) : 0);
+        i32 const N_x_1 = y > 0 ? channels[i].get(x_1, y - 1) : W_x_1;
+        i32 const NW_x_1 = x_1 > 0 && y > 0 ? channels[i].get(x_1 - 1, y - 1) : W_x_1;
+        TRY(properties.try_append(W - (W_x_1 + N_x_1 - NW_x_1)));
+    } else {
+        TRY(properties.try_append(W));
+    }
 
     TRY(properties.try_append(W + N - NW));
     TRY(properties.try_append(W - NW));
@@ -1267,6 +1427,8 @@ static ErrorOr<ModularHeader> read_modular_header(LittleEndianInputBitStream& st
                 image.channels()[i].set(x, y, total);
             }
         }
+
+        image.channels()[i].set_decoded(true);
     }
 
     return modular_header;
@@ -1343,6 +1505,39 @@ static ErrorOr<LfGlobal> read_lf_global(LittleEndianInputBitStream& stream,
 }
 ///
 
+/// G.2 - LfGroup
+static ErrorOr<void> read_lf_group(LittleEndianInputBitStream&,
+    Image& image,
+    FrameHeader const& frame_header)
+{
+    // LF coefficients
+    if (frame_header.encoding == FrameHeader::Encoding::kVarDCT) {
+        TODO();
+    }
+
+    // ModularLfGroup
+    for (auto const& channel : image.channels()) {
+        if (channel.decoded())
+            continue;
+
+        if (channel.hshift() < 3 || channel.vshift() < 3)
+            continue;
+
+        // This code actually only detect that we need to read a null image
+        // so a no-op. It should be fully rewritten when we add proper support
+        // for LfGroup.
+        TODO();
+    }
+
+    // HF metadata
+    if (frame_header.encoding == FrameHeader::Encoding::kVarDCT) {
+        TODO();
+    }
+
+    return {};
+}
+///
+
 /// H.6 - Transformations
 static void apply_rct(Image& image, TransformInfo const& transformation)
 {
@@ -1408,8 +1603,7 @@ static void apply_transformation(Image& image, TransformInfo const& transformati
 static ErrorOr<void> read_pass_group(LittleEndianInputBitStream& stream,
     Image& image,
     FrameHeader const& frame_header,
-    u32 group_dim,
-    Vector<TransformInfo> const& transform_infos)
+    u32 group_dim)
 {
     if (frame_header.encoding == FrameHeader::Encoding::kVarDCT) {
         (void)stream;
@@ -1429,9 +1623,6 @@ static ErrorOr<void> read_pass_group(LittleEndianInputBitStream& stream,
         if (!is_meta_channel)
             TODO();
     }
-
-    for (auto const& transformation : transform_infos.in_reverse())
-        apply_transformation(image, transformation);
 
     return {};
 }
@@ -1472,8 +1663,8 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     }
 
     if (frame.frame_header.upsampling > 1) {
-        frame.width = ceil(frame.width / frame.frame_header.upsampling);
-        frame.height = ceil(frame.height / frame.frame_header.upsampling);
+        frame.width = ceil(static_cast<double>(frame.width) / frame.frame_header.upsampling);
+        frame.height = ceil(static_cast<double>(frame.height) / frame.frame_header.upsampling);
     }
 
     if (frame.frame_header.lf_level > 0)
@@ -1482,26 +1673,34 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     // F.2 - FrameHeader
     auto const group_dim = 128 << frame.frame_header.group_size_shift;
 
-    frame.num_groups = ceil(frame.width / group_dim) * ceil(frame.height / group_dim);
-    frame.num_lf_groups = ceil(frame.width / (group_dim * 8)) * ceil(frame.height / (group_dim * 8));
+    auto const frame_width = static_cast<double>(frame.width);
+    auto const frame_height = static_cast<double>(frame.height);
+    frame.num_groups = ceil(frame_width / group_dim) * ceil(frame_height / group_dim);
+    frame.num_lf_groups = ceil(frame_width / (group_dim * 8)) * ceil(frame_height / (group_dim * 8));
 
     frame.toc = TRY(read_toc(stream, frame.frame_header, frame.num_groups, frame.num_lf_groups));
 
-    image = TRY(Image::create({ frame.width, frame.height }));
+    image = TRY(Image::create({ frame.width, frame.height }, metadata));
 
     frame.lf_global = TRY(read_lf_global(stream, image, frame.frame_header, metadata, entropy_decoder));
 
     for (u32 i {}; i < frame.num_lf_groups; ++i)
-        TODO();
+        TRY(read_lf_group(stream, image, frame.frame_header));
 
     if (frame.frame_header.encoding == FrameHeader::Encoding::kVarDCT) {
         TODO();
     }
 
     auto const num_pass_group = frame.num_groups * frame.frame_header.passes.num_passes;
-    auto const& transform_info = frame.lf_global.gmodular.modular_header.transform;
+    auto const& transform_infos = frame.lf_global.gmodular.modular_header.transform;
     for (u64 i {}; i < num_pass_group; ++i)
-        TRY(read_pass_group(stream, image, frame.frame_header, group_dim, transform_info));
+        TRY(read_pass_group(stream, image, frame.frame_header, group_dim));
+
+    // G.4.2 - Modular group data
+    // When all modular groups are decoded, the inverse transforms are applied to
+    // the at that point fully decoded GlobalModular image, as specified in H.6.
+    for (auto const& transformation : transform_infos.in_reverse())
+        apply_transformation(image, transformation);
 
     return frame;
 }
@@ -1529,10 +1728,18 @@ static ErrorOr<void> apply_upsampling(Image& image, ImageMetadata const& metadat
     }
 
     if (frame.frame_header.upsampling > 1 || ec_max.value_or(0) > 1) {
-        if (frame.frame_header.upsampling > 2 || ec_max.value_or(0) > 2)
+        if (ec_max.value_or(0) > 2)
             TODO();
 
         auto const k = frame.frame_header.upsampling;
+
+        auto weight = [k, &metadata](u8 index) -> double {
+            if (k == 2)
+                return metadata.up2_weight[index];
+            if (k == 4)
+                return metadata.up4_weight[index];
+            return metadata.up8_weight[index];
+        };
 
         // FIXME: Use ec_upsampling for extra-channels
         for (auto& channel : image.channels()) {
@@ -1565,7 +1772,7 @@ static ErrorOr<void> apply_upsampling(Image& image, ImageMetadata const& metadat
                                     W_min = min(W_min, origin_sample);
                                     W_max = max(W_max, origin_sample);
 
-                                    sum += origin_sample * metadata.up2_weight[index];
+                                    sum += origin_sample * weight(index);
                                 }
                             }
 
@@ -1591,6 +1798,19 @@ static ErrorOr<void> apply_image_features(Image& image, ImageMetadata const& met
 
     if (frame.frame_header.flags != FrameHeader::Flags::None)
         TODO();
+    return {};
+}
+///
+
+/// L.4 - Extra channel rendering
+static ErrorOr<void> render_extra_channels(Image&, ImageMetadata const& metadata)
+{
+    for (u16 i = metadata.number_of_color_channels(); i < metadata.number_of_channels(); ++i) {
+        auto const ec_index = i - metadata.number_of_color_channels();
+        if (metadata.ec_info[ec_index].dim_shift != 0)
+            TODO();
+    }
+
     return {};
 }
 ///
@@ -1633,7 +1853,9 @@ public:
         if (m_metadata.xyb_encoded || frame.frame_header.do_YCbCr)
             TODO();
 
-        m_bitmap = TRY(image.to_bitmap(m_metadata.bit_depth.bits_per_sample));
+        TRY(render_extra_channels(image, m_metadata));
+
+        m_bitmap = TRY(image.to_bitmap(m_metadata));
 
         return {};
     }
@@ -1666,7 +1888,6 @@ public:
         Error,
         HeaderDecoded,
         FrameDecoded,
-        BitmapDecoded
     };
 
     State state() const
@@ -1754,7 +1975,7 @@ ErrorOr<ImageFrameDescriptor> JPEGXLImageDecoderPlugin::frame(size_t index, Opti
     if (m_context->state() == JPEGXLLoadingContext::State::Error)
         return Error::from_string_literal("JPEGXLImageDecoderPlugin: Decoding failed");
 
-    if (m_context->state() < JPEGXLLoadingContext::State::BitmapDecoded)
+    if (m_context->state() < JPEGXLLoadingContext::State::FrameDecoded)
         TRY(m_context->decode());
 
     return ImageFrameDescriptor { m_context->bitmap(), 0 };

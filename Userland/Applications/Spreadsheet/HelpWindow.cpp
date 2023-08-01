@@ -83,7 +83,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
     m_webview = splitter.add<WebView::OutOfProcessWebView>();
     m_webview->on_link_click = [this](auto& url, auto&, auto&&) {
         VERIFY(url.scheme() == "spreadsheet");
-        if (url.host() == "example") {
+        if (url.host().template has<String>() && url.host().template get<String>() == "example"sv) {
             auto example_path = url.serialize_path();
             auto entry = LexicalPath::basename(example_path);
             auto doc_option = m_docs.get_object(entry);
@@ -122,11 +122,11 @@ HelpWindow::HelpWindow(GUI::Window* parent)
 
             widget->add_sheet(sheet.release_nonnull());
             window->show();
-        } else if (url.host() == "doc") {
+        } else if (url.host() == String::from_utf8_short_string("doc"sv)) {
             auto entry = LexicalPath::basename(url.serialize_path());
             m_webview->load(URL::create_with_data("text/html", render(entry)));
         } else {
-            dbgln("Invalid spreadsheet action domain '{}'", url.host());
+            dbgln("Invalid spreadsheet action domain '{}'", url.serialized_host().release_value_but_fixme_should_propagate_errors());
         }
     };
 

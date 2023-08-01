@@ -4,13 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
 enum TruncateOperation {
     OP_Set,
@@ -46,25 +43,45 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     off_t size = 0;
 
     if (!resize.is_empty()) {
-        DeprecatedString str = resize;
-
-        switch (str[0]) {
+        switch (resize[0]) {
         case '+':
             op = OP_Grow;
-            str = str.substring(1, str.length() - 1);
+            resize = resize.substring_view(1);
             break;
         case '-':
             op = OP_Shrink;
-            str = str.substring(1, str.length() - 1);
+            resize = resize.substring_view(1);
             break;
         }
 
-        auto size_opt = str.to_int<off_t>();
-        if (!size_opt.has_value()) {
+        auto suffix = resize[resize.length() - 1];
+        i64 multiplier = 1;
+        if (!AK::is_ascii_digit(suffix)) {
+            switch (to_ascii_lowercase(suffix)) {
+            case 'k':
+                multiplier = KiB;
+                resize = resize.substring_view(0, resize.length() - 1);
+                break;
+            case 'm':
+                multiplier = MiB;
+                resize = resize.substring_view(0, resize.length() - 1);
+                break;
+            case 'g':
+                multiplier = GiB;
+                resize = resize.substring_view(0, resize.length() - 1);
+                break;
+            default:
+                args_parser.print_usage(stderr, arguments.strings[0]);
+                return 1;
+            }
+        }
+
+        auto size_opt = resize.to_int<off_t>();
+        if (!size_opt.has_value() || Checked<off_t>::multiplication_would_overflow(size_opt.value(), multiplier)) {
             args_parser.print_usage(stderr, arguments.strings[0]);
             return 1;
         }
-        size = size_opt.value();
+        size = size_opt.value() * multiplier;
     }
 
     if (!reference.is_empty()) {
@@ -82,7 +99,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         size = stat.st_size + size;
         break;
     case OP_Shrink:
-        size = stat.st_size - size;
+        size = max(stat.st_size - size, 0);
         break;
     }
 

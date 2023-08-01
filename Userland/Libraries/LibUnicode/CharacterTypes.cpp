@@ -143,9 +143,6 @@ Optional<Script> __attribute__((weak)) script_from_string(StringView) { return {
 bool __attribute__((weak)) code_point_has_script(u32, Script) { return {}; }
 bool __attribute__((weak)) code_point_has_script_extension(u32, Script) { return {}; }
 
-Optional<Block> __attribute__((weak)) block_from_string(StringView) { return {}; }
-bool __attribute__((weak)) code_point_has_block(u32, Block) { return {}; }
-
 bool __attribute__((weak)) code_point_has_grapheme_break_property(u32, GraphemeBreakProperty) { return {}; }
 bool __attribute__((weak)) code_point_has_word_break_property(u32, WordBreakProperty) { return {}; }
 bool __attribute__((weak)) code_point_has_sentence_break_property(u32, SentenceBreakProperty) { return {}; }

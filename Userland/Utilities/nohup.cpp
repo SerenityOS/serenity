@@ -44,6 +44,8 @@ void dup_out_file(int fd_to_redirect)
         exit(127);
     }
 
+    MUST(Core::System::close(fd));
+
     if (fd_to_redirect != STDERR_FILENO)
         outln(stderr, "appending output to {}", path);
 }

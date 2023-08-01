@@ -49,7 +49,7 @@ void LocationEdit::highlight_location()
     if (url.is_valid() && !hasFocus()) {
         if (url.scheme() == "http" || url.scheme() == "https" || url.scheme() == "gemini") {
             int host_start = (url.scheme().length() + 3) - cursorPosition();
-            auto host_length = url.host().length();
+            auto host_length = url.serialized_host().release_value_but_fixme_should_propagate_errors().bytes().size();
 
             // FIXME: Maybe add a generator to use https://publicsuffix.org/list/public_suffix_list.dat
             //        for now just highlight the whole host

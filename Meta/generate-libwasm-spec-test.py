@@ -71,11 +71,11 @@ def parse_typed_value(ast):
 def generate_module_source_for_compilation(entries):
     s = '('
     for entry in entries:
-        if type(entry) == tuple and len(entry) == 1 and type(entry[0]) == str:
+        if type(entry) is tuple and len(entry) == 1 and type(entry[0]) is str:
             s += entry[0] + ' '
-        elif type(entry) == str:
+        elif type(entry) is str:
             s += json.dumps(entry).replace('\\\\', '\\') + ' '
-        elif type(entry) == list:
+        elif type(entry) is list:
             s += generate_module_source_for_compilation(entry)
         else:
             raise Exception("wat? I dunno how to pretty print " + str(type(entry)))
@@ -139,7 +139,7 @@ def generate_module(ast):
 def generate(ast):
     global named_modules, named_modules_inverse, registered_modules
 
-    if type(ast) != list:
+    if type(ast) is not list:
         return []
     tests = []
     for entry in ast:
@@ -408,7 +408,7 @@ def gentest(entry, main_name):
         isempty = True
         name = str(f"_inline_test_{raw_test_number}")
         raw_test_number += 1
-    if type(name) != str:
+    if type(name) is not str:
         print("Unsupported test case (call to", name, ")", file=stderr)
         return '\n    '
     ident = '_' + re.sub("[^a-zA-Z_0-9]", "_", name)

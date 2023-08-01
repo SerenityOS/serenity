@@ -15,6 +15,7 @@
 #include <AK/Stream.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibArchive/Statistics.h>
 #include <LibCore/DateTime.h>
 #include <string.h>
 
@@ -254,7 +255,8 @@ struct ZipMember {
 class Zip {
 public:
     static Optional<Zip> try_create(ReadonlyBytes buffer);
-    ErrorOr<bool> for_each_member(Function<ErrorOr<IterationDecision>(ZipMember const&)>);
+    ErrorOr<bool> for_each_member(Function<ErrorOr<IterationDecision>(ZipMember const&)>) const;
+    ErrorOr<Statistics> calculate_statistics() const;
 
 private:
     static bool find_end_of_central_directory_offset(ReadonlyBytes, size_t& offset);

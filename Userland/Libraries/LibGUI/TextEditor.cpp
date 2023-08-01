@@ -1798,16 +1798,10 @@ void TextEditor::insert_at_cursor_or_replace_selection(StringView text)
     }
 }
 
-void TextEditor::replace_all_text_without_resetting_undo_stack(StringView text)
+void TextEditor::replace_all_text_without_resetting_undo_stack(StringView text, StringView action_text)
 {
-    auto start = GUI::TextPosition(0, 0);
-    auto last_line_index = line_count() - 1;
-    auto end = GUI::TextPosition(last_line_index, line(last_line_index).length());
-    auto range = GUI::TextRange(start, end);
-    auto normalized_range = range.normalized();
-    execute<ReplaceAllTextCommand>(text, range, "GML Playground Format Text");
+    execute<ReplaceAllTextCommand>(text, action_text);
     did_change();
-    set_cursor(normalized_range.start());
     update();
 }
 
@@ -2167,10 +2161,8 @@ void TextEditor::recompute_visual_lines(size_t line_index, Vector<TextDocumentFo
         }
     }
 
-    if (is_wrapping_enabled())
-        visual_data->visual_rect = { m_horizontal_content_padding, 0, available_width, static_cast<int>(visual_data->visual_lines.size()) * line_height() };
-    else
-        visual_data->visual_rect = { m_horizontal_content_padding, 0, text_width_for_font(line.view(), font()), line_height() };
+    auto line_width = is_wrapping_enabled() ? available_width : text_width_for_font(line.view(), font());
+    visual_data->visual_rect = { m_horizontal_content_padding, 0, line_width, static_cast<int>(visual_data->visual_lines.size()) * line_height() };
 }
 
 template<typename Callback>

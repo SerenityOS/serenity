@@ -187,9 +187,11 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next(CSSPixels availabl
     }
 
     if (is<Layout::BreakNode>(*m_current_node)) {
+        auto& node = *m_current_node;
         skip_to_next();
         return Item {
             .type = Item::Type::ForcedBreak,
+            .node = &node,
         };
     }
 

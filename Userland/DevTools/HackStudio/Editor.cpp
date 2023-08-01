@@ -146,23 +146,6 @@ EditorWrapper const& Editor::wrapper() const
     return static_cast<EditorWrapper const&>(*parent());
 }
 
-void Editor::focusin_event(GUI::FocusEvent& event)
-{
-    if (on_focus)
-        on_focus();
-    GUI::TextEditor::focusin_event(event);
-}
-
-void Editor::focusout_event(GUI::FocusEvent& event)
-{
-    GUI::TextEditor::focusout_event(event);
-}
-
-Gfx::IntRect Editor::gutter_icon_rect(size_t line_number) const
-{
-    return gutter_content_rect(line_number).translated(frame_thickness(), 0);
-}
-
 void Editor::paint_event(GUI::PaintEvent& event)
 {
     GUI::TextEditor::paint_event(event);
@@ -457,7 +440,6 @@ void Editor::clear_execution_position()
     size_t previous_position = execution_position().value();
     code_document().clear_execution_position();
     remove_gutter_indicator(m_execution_indicator_id, previous_position);
-    update(gutter_icon_rect(previous_position));
 }
 
 Gfx::Bitmap const& Editor::breakpoint_icon_bitmap()
@@ -474,9 +456,7 @@ Gfx::Bitmap const& Editor::current_position_icon_bitmap()
 
 CodeDocument const& Editor::code_document() const
 {
-    auto const& doc = document();
-    VERIFY(doc.is_code_document());
-    return static_cast<CodeDocument const&>(doc);
+    return verify_cast<CodeDocument const>(document());
 }
 
 CodeDocument& Editor::code_document()
@@ -489,7 +469,7 @@ void Editor::set_document(GUI::TextDocument& doc)
     if (has_document() && &document() == &doc)
         return;
 
-    VERIFY(doc.is_code_document());
+    VERIFY(is<CodeDocument>(doc));
     GUI::TextEditor::set_document(doc);
 
     set_override_cursor(Gfx::StandardCursor::IBeam);

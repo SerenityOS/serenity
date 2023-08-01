@@ -94,8 +94,8 @@ CSSPixelPoint Page::device_to_css_point(DevicePixelPoint point) const
 DevicePixelPoint Page::css_to_device_point(CSSPixelPoint point) const
 {
     return {
-        (point.x() * client().device_pixels_per_css_pixel()).to_int(),
-        (point.y() * client().device_pixels_per_css_pixel()).to_int(),
+        point.x() * client().device_pixels_per_css_pixel(),
+        point.y() * client().device_pixels_per_css_pixel(),
     };
 }
 

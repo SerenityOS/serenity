@@ -310,7 +310,8 @@ do_download_file() {
     fi
 }
 
-fetch() {
+# FIXME: Don't allow overriding fetch, support multiple protocols instead. See #20004
+func_defined fetch || fetch() {
     pre_fetch
 
     tried_download_again=0

@@ -1044,21 +1044,34 @@ static ErrorOr<void> read_icc_profile(JPEGStream& stream, JPEGLoadingContext& co
         context.icc_multi_chunk_state.emplace(ICCMultiChunkState { 0, TRY(FixedArray<ByteBuffer>::create(number_of_chunks)) });
     auto& chunk_state = context.icc_multi_chunk_state;
 
-    if (chunk_state->seen_number_of_icc_chunks >= number_of_chunks)
-        return Error::from_string_literal("Too many ICC chunks");
+    u8 index {};
 
-    if (chunk_state->chunks.size() != number_of_chunks)
-        return Error::from_string_literal("Inconsistent number of total ICC chunks");
+    auto const ensure_correctness = [&]() -> ErrorOr<void> {
+        if (chunk_state->seen_number_of_icc_chunks >= number_of_chunks)
+            return Error::from_string_literal("Too many ICC chunks");
 
-    if (chunk_sequence_number == 0)
-        return Error::from_string_literal("ICC chunk sequence number not 1 based");
-    u8 index = chunk_sequence_number - 1;
+        if (chunk_state->chunks.size() != number_of_chunks)
+            return Error::from_string_literal("Inconsistent number of total ICC chunks");
 
-    if (index >= chunk_state->chunks.size())
-        return Error::from_string_literal("ICC chunk sequence number larger than number of chunks");
+        if (chunk_sequence_number == 0)
+            return Error::from_string_literal("ICC chunk sequence number not 1 based");
 
-    if (!chunk_state->chunks[index].is_empty())
-        return Error::from_string_literal("Duplicate ICC chunk at sequence number");
+        index = chunk_sequence_number - 1;
+
+        if (index >= chunk_state->chunks.size())
+            return Error::from_string_literal("ICC chunk sequence number larger than number of chunks");
+
+        if (!chunk_state->chunks[index].is_empty())
+            return Error::from_string_literal("Duplicate ICC chunk at sequence number");
+
+        return {};
+    };
+
+    if (auto result = ensure_correctness(); result.is_error()) {
+        dbgln_if(JPEG_DEBUG, "JPEG: {}", result.release_error());
+        TRY(stream.discard(bytes_to_read));
+        return {};
+    }
 
     chunk_state->chunks[index] = TRY(ByteBuffer::create_zeroed(bytes_to_read));
     TRY(stream.read_until_filled(chunk_state->chunks[index]));

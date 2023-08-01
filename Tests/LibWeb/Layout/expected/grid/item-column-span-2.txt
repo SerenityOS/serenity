@@ -1,21 +1,21 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
-    BlockContainer <body> at (8,8) content-size 784x35.40625 children: not-inline
-      Box <div.container> at (8,8) content-size 784x35.40625 [GFC] children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x34.9375 children: not-inline
+      Box <div.container> at (8,8) content-size 784x34.9375 [GFC] children: not-inline
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.item-left> at (8,8) content-size 100x35.40625 [BFC] children: not-inline
+        BlockContainer <div.item-left> at (8,8) content-size 100x34.9375 [BFC] children: not-inline
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.item-right> at (108,8) content-size 683.999999x35.40625 [BFC] children: inline
+        BlockContainer <div.item-right> at (108.03125,8) content-size 683.96875x34.9375 [BFC] children: inline
           line 0 width: 625.953125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 77, rect: [108,8 625.953125x17.46875]
+            frag 0 from TextNode start: 0, length: 77, rect: [108.03125,8 625.953125x17.46875]
               "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut iaculis venenatis"
-          line 1 width: 304.0625, height: 17.9375, bottom: 35.40625, baseline: 13.53125
-            frag 0 from TextNode start: 78, length: 39, rect: [108,25 304.0625x17.46875]
+          line 1 width: 304.0625, height: 17.46875, bottom: 34.9375, baseline: 13.53125
+            frag 0 from TextNode start: 78, length: 39, rect: [108.03125,25.46875 304.0625x17.46875]
               "purus, eget blandit velit venenatis at."
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-      BlockContainer <(anonymous)> at (8,43.40625) content-size 784x0 children: inline
+      BlockContainer <(anonymous)> at (8,42.9375) content-size 784x0 children: inline
         TextNode <#text>

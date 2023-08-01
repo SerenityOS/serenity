@@ -124,6 +124,16 @@ TEST_CASE(to_unicode_casefold)
     EXPECT_EQ(result, "\u03B1\u0342\u03B9"sv);
 }
 
+BENCHMARK_CASE(casing)
+{
+    for (size_t i = 0; i < 50'000; ++i) {
+        __test_to_unicode_lowercase();
+        __test_to_unicode_uppercase();
+        __test_to_unicode_titlecase();
+        __test_to_unicode_casefold();
+    }
+}
+
 TEST_CASE(to_unicode_lowercase_unconditional_special_casing)
 {
     // LATIN SMALL LETTER SHARP S
@@ -594,6 +604,28 @@ TEST_CASE(general_category)
     }
 }
 
+BENCHMARK_CASE(general_category_performance)
+{
+    auto general_category_cased_letter = Unicode::general_category_from_string("Cased_Letter"sv).value();
+
+    for (size_t i = 0; i < 1'000'000; ++i) {
+        for (u32 code_point = 0; code_point <= 0x1f; ++code_point)
+            EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_cased_letter));
+
+        for (u32 code_point = 0x41; code_point <= 0x5a; ++code_point)
+            EXPECT(Unicode::code_point_has_general_category(code_point, general_category_cased_letter));
+
+        for (u32 code_point = 0x61; code_point <= 0x7a; ++code_point)
+            EXPECT(Unicode::code_point_has_general_category(code_point, general_category_cased_letter));
+
+        for (u32 code_point = 0xe000; code_point <= 0xe100; ++code_point)
+            EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_cased_letter));
+
+        for (u32 code_point = 0x101fe; code_point <= 0x1027f; ++code_point)
+            EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_cased_letter));
+    }
+}
+
 TEST_CASE(property)
 {
     auto property = [](StringView name) {
@@ -727,34 +759,6 @@ TEST_CASE(script)
 
 TEST_CASE(block)
 {
-    auto block = [](StringView name) {
-        auto block = Unicode::block_from_string(name);
-        VERIFY(block.has_value());
-        return *block;
-    };
-
-    auto no_block = block("No_Block"sv);
-    auto block_nb = block("NB"sv);
-    EXPECT_EQ(no_block, block_nb);
-
-    auto block_basic_latin = block("Basic_Latin"sv);
-    auto block_ascii = block("ASCII"sv);
-    EXPECT_EQ(block_basic_latin, block_ascii);
-
-    auto block_greek_coptic = block("Greek_And_Coptic"sv);
-    auto block_greek = block("Greek"sv);
-    EXPECT_EQ(block_greek_coptic, block_greek);
-
-    auto block_variation = block("Variation_Selectors_Supplement"sv);
-    auto block_vs_sup = block("VS_Sup"sv);
-    EXPECT_EQ(block_variation, block_vs_sup);
-
-    for (u32 code_point = 0x0000; code_point <= 0x007F; ++code_point)
-        EXPECT(Unicode::code_point_has_block(code_point, block_basic_latin));
-
-    for (u32 code_point = 0xE0100; code_point <= 0xE01EF; ++code_point)
-        EXPECT(Unicode::code_point_has_block(code_point, block_variation));
-
     for (u32 code_point = 0x0000; code_point <= 0x007F; ++code_point)
         EXPECT_EQ("Basic Latin"sv, Unicode::code_point_block_display_name(code_point).value());
 

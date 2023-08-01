@@ -157,10 +157,16 @@ private:
 
     struct ConflictingEdge {
         Node const* element;
+        Painting::PaintableBox::ConflictingElementKind element_kind;
         ConflictingSide side;
+        Optional<size_t> row;
+        Optional<size_t> column;
     };
 
+    static TableFormattingContext::ConflictingEdge const& winning_conflicting_edge(TableFormattingContext::ConflictingEdge const& a, TableFormattingContext::ConflictingEdge const& b);
+
     static const CSS::BorderData& border_data_conflicting_edge(ConflictingEdge const& conflicting_edge);
+    static const Painting::PaintableBox::BorderDataWithElementKind border_data_with_element_kind_from_conflicting_edge(ConflictingEdge const& conflicting_edge);
 
     class BorderConflictFinder {
     public:
@@ -170,6 +176,12 @@ private:
     private:
         void collect_conflicting_col_elements();
         void collect_conflicting_row_group_elements();
+
+        void collect_cell_conflicting_edges(Vector<ConflictingEdge>&, Cell const&, ConflictingSide) const;
+        void collect_row_conflicting_edges(Vector<ConflictingEdge>&, Cell const&, ConflictingSide) const;
+        void collect_row_group_conflicting_edges(Vector<ConflictingEdge>&, Cell const&, ConflictingSide) const;
+        void collect_column_group_conflicting_edges(Vector<ConflictingEdge>&, Cell const&, ConflictingSide) const;
+        void collect_table_box_conflicting_edges(Vector<ConflictingEdge>&, Cell const&, ConflictingSide) const;
 
         struct RowGroupInfo {
             Node const* row_group;

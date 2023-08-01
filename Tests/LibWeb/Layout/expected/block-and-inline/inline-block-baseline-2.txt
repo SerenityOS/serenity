@@ -1,0 +1,26 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (1,1) content-size 798x600 [BFC] children: not-inline
+    BlockContainer <body> at (10,10) content-size 780x60.40625 children: inline
+      line 0 width: 144.375, height: 60.40625, bottom: 60.40625, baseline: 35
+        frag 0 from TextNode start: 0, length: 13, rect: [10,31.46875 103.140625x17.46875]
+          "Hello friends"
+        frag 1 from BlockContainer start: 0, length: 0, rect: [114.140625,11 39.234375x58.40625]
+      TextNode <#text>
+      BlockContainer <div.ib> at (114.140625,11) content-size 39.234375x58.40625 inline-block [BFC] children: not-inline
+        BlockContainer <div> at (115.140625,12) content-size 37.234375x17.46875 children: inline
+          line 0 width: 22.546875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 3, rect: [115.140625,12 22.546875x17.46875]
+              "1st"
+          TextNode <#text>
+        BlockContainer <div> at (115.140625,31.46875) content-size 37.234375x17.46875 children: inline
+          line 0 width: 26.28125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 3, rect: [115.140625,31.46875 26.28125x17.46875]
+              "2nd"
+          TextNode <#text>
+        BlockContainer <div.float> at (115.140625,50.9375) content-size 37.234375x17.46875 floating [BFC] children: inline
+          line 0 width: 37.234375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 5, rect: [115.140625,50.9375 37.234375x17.46875]
+              "float"
+          TextNode <#text>
+        BlockContainer <(anonymous)> at (114.140625,49.9375) content-size 39.234375x0 children: inline
+          TextNode <#text>

@@ -15,6 +15,7 @@
 #include <LibWeb/CSS/StyleValues/GridTemplateAreaStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
+#include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IntegerStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
@@ -939,9 +940,15 @@ String StyleProperties::grid_area() const
 Color StyleProperties::stop_color() const
 {
     auto value = property(CSS::PropertyID::StopColor);
+    if (value->is_identifier()) {
+        // Workaround lack of layout node to resolve current color.
+        auto& ident = value->as_identifier();
+        if (ident.id() == CSS::ValueID::Currentcolor)
+            value = property(CSS::PropertyID::Color);
+    }
     if (value->has_color()) {
         // FIXME: This is used by the SVGStopElement, which does not participate in layout,
-        // so can't pass a layout node (so can't resolve some colors, e.g. palette ones or currentColor)
+        // so can't pass a layout node (so can't resolve some colors, e.g. palette ones)
         return value->to_color({});
     }
     return Color::Black;

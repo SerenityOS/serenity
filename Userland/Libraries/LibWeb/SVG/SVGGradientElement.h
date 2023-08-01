@@ -39,7 +39,7 @@ protected:
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
-    JS::GCPtr<SVGGradientElement const> xlink_href() const;
+    JS::GCPtr<SVGGradientElement const> linked_gradient() const;
 
     Gfx::AffineTransform gradient_paint_transform(SVGPaintContext const&) const;
 
@@ -52,8 +52,8 @@ protected:
             callback(stop);
         });
         if (!color_stops_found) {
-            if (auto href = xlink_href())
-                href->for_each_color_stop(callback);
+            if (auto gradient = linked_gradient())
+                gradient->for_each_color_stop(callback);
         }
     }
 

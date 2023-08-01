@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2023, Aliaksandr Kalenik <kalenik.aliaksandr@gmail.com>
+ * Copyright (c) 2012-2023, Apple Inc. All rights reserved.
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -50,154 +52,78 @@ constexpr DevicePixels operator%(DevicePixels left, T right) { return left.value
 /// See https://www.w3.org/TR/css-values-3/#reference-pixel
 class CSSPixels {
 public:
-    constexpr CSSPixels() = default;
+    CSSPixels() = default;
+    CSSPixels(int value);
+    CSSPixels(unsigned int value);
+    CSSPixels(unsigned long value);
+    CSSPixels(float value);
+    CSSPixels(double value);
 
-    constexpr CSSPixels(double value)
-        : m_value { value }
-    {
-    }
+    float to_float() const;
+    double to_double() const;
+    int to_int() const;
 
-    constexpr float to_float() const
-    {
-        return static_cast<float>(m_value);
-    }
+    inline int raw_value() const { return m_value; }
+    inline void set_raw_value(int value) { m_value = value; }
 
-    constexpr double to_double() const
-    {
-        return static_cast<double>(m_value);
-    }
+    bool might_be_saturated() const;
 
-    constexpr int to_int() const
-    {
-        return static_cast<int>(m_value);
-    }
+    bool operator==(CSSPixels const& other) const;
 
-    constexpr bool operator==(CSSPixels const& other) const
-    {
-        return this->m_value == other.m_value;
-    }
+    explicit operator double() const { return to_double(); }
 
-    constexpr explicit operator double() const
-    {
-        return to_double();
-    }
+    CSSPixels& operator++();
+    CSSPixels& operator--();
 
-    constexpr CSSPixels& operator++()
-    {
-        this->m_value += 1;
-        return *this;
-    }
-    constexpr CSSPixels operator++(int)
-    {
-        CSSPixels ret = this->m_value;
-        this->m_value += 1;
-        return ret;
-    }
-    constexpr CSSPixels& operator--()
-    {
-        this->m_value -= 1;
-        return *this;
-    }
-    constexpr CSSPixels operator--(int)
-    {
-        CSSPixels ret = this->m_value;
-        this->m_value -= 1;
-        return ret;
-    }
+    int operator<=>(CSSPixels const& other) const;
 
-    constexpr int operator<=>(CSSPixels const& other) const
-    {
-        return this->m_value > other.m_value ? 1 : this->m_value < other.m_value ? -1
-                                                                                 : 0;
-    }
+    CSSPixels operator+() const;
+    CSSPixels operator-() const;
 
-    constexpr CSSPixels operator+(CSSPixels const& other) const
-    {
-        return this->m_value + other.m_value;
-    }
+    CSSPixels operator+(CSSPixels const& other) const;
+    CSSPixels operator-(CSSPixels const& other) const;
+    CSSPixels operator*(CSSPixels const& other) const;
+    CSSPixels operator/(CSSPixels const& other) const;
 
-    constexpr CSSPixels operator-(CSSPixels const& other) const
-    {
-        return this->m_value - other.m_value;
-    }
+    CSSPixels& operator+=(CSSPixels const& other);
+    CSSPixels& operator-=(CSSPixels const& other);
+    CSSPixels& operator*=(CSSPixels const& other);
+    CSSPixels& operator/=(CSSPixels const& other);
 
-    constexpr CSSPixels operator+() const
-    {
-        return +this->m_value;
-    }
+    CSSPixels abs() const;
 
-    constexpr CSSPixels operator-() const
-    {
-        return -this->m_value;
-    }
-
-    constexpr CSSPixels operator*(CSSPixels const& other) const
-    {
-        return this->m_value * other.m_value;
-    }
-
-    constexpr CSSPixels operator/(CSSPixels const& other) const
-    {
-        return this->m_value / other.m_value;
-    }
-
-    constexpr CSSPixels& operator+=(CSSPixels const& other)
-    {
-        this->m_value += other.m_value;
-        return *this;
-    }
-
-    constexpr CSSPixels& operator-=(CSSPixels const& other)
-    {
-        this->m_value -= other.m_value;
-        return *this;
-    }
-
-    constexpr CSSPixels& operator*=(CSSPixels const& other)
-    {
-        this->m_value *= other.m_value;
-        return *this;
-    }
-
-    constexpr CSSPixels& operator/=(CSSPixels const& other)
-    {
-        this->m_value /= other.m_value;
-        return *this;
-    }
+    static float epsilon();
 
 private:
-    double m_value {};
+    i32 m_value { 0 };
 };
 
-template<Arithmetic T>
-constexpr bool operator==(CSSPixels left, T right) { return left.to_double() == right; }
+inline bool operator==(CSSPixels left, int right) { return left == CSSPixels(right); }
+inline bool operator==(CSSPixels left, float right) { return left.to_float() == right; }
+inline bool operator==(CSSPixels left, double right) { return left.to_double() == right; }
 
-template<Arithmetic T>
-constexpr bool operator!=(CSSPixels left, T right) { return left.to_double() != right; }
+inline bool operator>(CSSPixels left, int right) { return left > CSSPixels(right); }
+inline bool operator>(CSSPixels left, float right) { return left.to_float() > right; }
+inline bool operator>(CSSPixels left, double right) { return left.to_double() > right; }
 
-template<Arithmetic T>
-constexpr bool operator>(CSSPixels left, T right) { return left.to_double() > right; }
+inline bool operator<(CSSPixels left, int right) { return left < CSSPixels(right); }
+inline bool operator<(CSSPixels left, float right) { return left.to_float() < right; }
+inline bool operator<(CSSPixels left, double right) { return left.to_double() < right; }
 
-template<Arithmetic T>
-constexpr bool operator<(CSSPixels left, T right) { return left.to_double() < right; }
+inline CSSPixels operator*(CSSPixels left, int right) { return left * CSSPixels(right); }
+inline CSSPixels operator*(CSSPixels left, unsigned long right) { return left * CSSPixels(right); }
+inline float operator*(CSSPixels left, float right) { return left.to_float() * right; }
+inline double operator*(CSSPixels left, double right) { return left.to_double() * right; }
 
-template<Arithmetic T>
-constexpr bool operator>=(CSSPixels left, T right) { return left.to_double() >= right; }
+inline CSSPixels operator*(int left, CSSPixels right) { return right * CSSPixels(left); }
+inline CSSPixels operator*(unsigned long left, CSSPixels right) { return right * CSSPixels(left); }
+inline float operator*(float left, CSSPixels right) { return right.to_float() * left; }
+inline double operator*(double left, CSSPixels right) { return right.to_double() * left; }
 
-template<Arithmetic T>
-constexpr bool operator<=(CSSPixels left, T right) { return left.to_double() <= right; }
-
-template<Arithmetic T>
-constexpr CSSPixels operator*(CSSPixels left, T right) { return left.to_double() * right; }
-
-template<Arithmetic T>
-constexpr CSSPixels operator*(T left, CSSPixels right) { return right * left; }
-
-template<Arithmetic T>
-constexpr CSSPixels operator/(CSSPixels left, T right) { return left.to_double() / right; }
-
-template<Arithmetic T>
-constexpr CSSPixels operator%(CSSPixels left, T right) { return left.to_double() % right; }
+inline CSSPixels operator/(CSSPixels left, int right) { return left / CSSPixels(right); }
+inline CSSPixels operator/(CSSPixels left, unsigned long right) { return left / CSSPixels(right); }
+inline float operator/(CSSPixels left, float right) { return left.to_float() / right; }
+inline double operator/(CSSPixels left, double right) { return left.to_double() / right; }
 
 using CSSPixelLine = Gfx::Line<CSSPixels>;
 using CSSPixelPoint = Gfx::Point<CSSPixels>;
@@ -211,29 +137,27 @@ using DevicePixelSize = Gfx::Size<DevicePixels>;
 
 }
 
+inline Web::CSSPixels abs(Web::CSSPixels const& value)
+{
+    return value.abs();
+}
+
 constexpr Web::CSSPixels floor(Web::CSSPixels const& value)
 {
-    return ::floorf(value.to_float());
+    // FIXME: Actually floor value
+    return value;
 }
 
 constexpr Web::CSSPixels ceil(Web::CSSPixels const& value)
 {
-    return ::ceilf(value.to_float());
+    // FIXME: Actually ceil value
+    return value;
 }
 
 constexpr Web::CSSPixels round(Web::CSSPixels const& value)
 {
-    return ::roundf(value.to_float());
-}
-
-constexpr Web::CSSPixels fmod(Web::CSSPixels const& x, Web::CSSPixels const& y)
-{
-    return ::fmodf(x.to_float(), y.to_float());
-}
-
-constexpr Web::CSSPixels abs(Web::CSSPixels const& value)
-{
-    return AK::abs(value.to_float());
+    // FIXME: Actually round value
+    return value;
 }
 
 constexpr Web::DevicePixels abs(Web::DevicePixels const& value)

@@ -9,7 +9,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             Box <tr> at (10,10) content-size 43.21875x9.734375 table-row children: not-inline
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
-              BlockContainer <td> at (11,14.867187) content-size 0x0 table-cell [BFC] children: not-inline
+              BlockContainer <td> at (11,14.859375) content-size 0x0 table-cell [BFC] children: not-inline
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
               BlockContainer <td> at (16,12) content-size 37.21875x17.46875 table-cell [BFC] children: inline
@@ -27,7 +27,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             Box <tr> at (10,21.734375) content-size 43.21875x9.734375 table-row children: not-inline
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
-              BlockContainer <td> at (11,26.601562) content-size 0x0 table-cell [BFC] children: not-inline
+              BlockContainer <td> at (11,26.59375) content-size 0x0 table-cell [BFC] children: not-inline
               BlockContainer <(anonymous)> (not painted) children: inline
                 TextNode <#text>
             BlockContainer <(anonymous)> (not painted) children: inline

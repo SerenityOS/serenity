@@ -26,7 +26,7 @@ struct SubstituteIfVoid<void, Default> {
     using Type = Default;
 };
 
-template<typename DeclaredBaseType, typename DefaultBaseType, typename ValueType, typename MetadataT, typename ValueTraits>
+template<typename DeclaredBaseType, typename DefaultBaseType, typename ValueType, typename MetadataT, typename ValueTraits, template<typename, typename, typename> typename MapType>
 class Trie {
     using BaseType = typename SubstituteIfVoid<DeclaredBaseType, DefaultBaseType>::Type;
 
@@ -68,6 +68,8 @@ public:
         auto it = begin;
         return const_cast<Trie*>(this)->traverse_until_last_accessible_node(it, end);
     }
+
+    bool has_metadata() const { return m_metadata.has_value(); }
 
     Optional<MetadataType> metadata() const
     requires(!IsNullPointer<MetadataType>)
@@ -166,16 +168,16 @@ public:
         return insert(it, end);
     }
 
-    HashMap<ValueType, NonnullOwnPtr<Trie>, ValueTraits>& children() { return m_children; }
-    HashMap<ValueType, NonnullOwnPtr<Trie>, ValueTraits> const& children() const { return m_children; }
+    MapType<ValueType, NonnullOwnPtr<Trie>, ValueTraits>& children() { return m_children; }
+    MapType<ValueType, NonnullOwnPtr<Trie>, ValueTraits> const& children() const { return m_children; }
 
     template<typename Fn>
     ErrorOr<void> for_each_node_in_tree_order(Fn callback) const
     {
         struct State {
             bool did_generate_root { false };
-            typename HashMap<ValueType, NonnullOwnPtr<Trie>, ValueTraits>::ConstIteratorType it;
-            typename HashMap<ValueType, NonnullOwnPtr<Trie>, ValueTraits>::ConstIteratorType end;
+            typename MapType<ValueType, NonnullOwnPtr<Trie>, ValueTraits>::ConstIteratorType it;
+            typename MapType<ValueType, NonnullOwnPtr<Trie>, ValueTraits>::ConstIteratorType end;
         };
         Vector<State> state;
         TRY(state.try_empend(false, m_children.begin(), m_children.end()));
@@ -265,20 +267,23 @@ private:
 
     ValueType m_value;
     Optional<MetadataType> m_metadata;
-    HashMap<ValueType, NonnullOwnPtr<Trie>, ValueTraits> m_children;
+    MapType<ValueType, NonnullOwnPtr<Trie>, ValueTraits> m_children;
 };
 
-template<typename BaseType, typename DefaultBaseType, typename ValueType, typename ValueTraits>
-class Trie<BaseType, DefaultBaseType, ValueType, void, ValueTraits> : public Trie<BaseType, DefaultBaseType, ValueType, decltype(nullptr), ValueTraits> {
-    using Trie<BaseType, DefaultBaseType, ValueType, decltype(nullptr), ValueTraits>::Trie;
+template<typename BaseType, typename DefaultBaseType, typename ValueType, typename ValueTraits, template<typename, typename, typename> typename MapType>
+class Trie<BaseType, DefaultBaseType, ValueType, void, ValueTraits, MapType> : public Trie<BaseType, DefaultBaseType, ValueType, decltype(nullptr), ValueTraits, MapType> {
+    using Trie<BaseType, DefaultBaseType, ValueType, decltype(nullptr), ValueTraits, MapType>::Trie;
 };
+
+template<typename K, typename V, typename T>
+using HashMapForTrie = HashMap<K, V, T>;
 
 }
 
-template<typename ValueType, typename MetadataT = void, typename ValueTraits = Traits<ValueType>, typename BaseT = void>
-class Trie : public Detail::Trie<BaseT, Trie<ValueType, MetadataT, ValueTraits>, ValueType, MetadataT, ValueTraits> {
+template<typename ValueType, typename MetadataT = void, typename ValueTraits = Traits<ValueType>, typename BaseT = void, template<typename, typename, typename> typename MapType = Detail::HashMapForTrie>
+class Trie : public Detail::Trie<BaseT, Trie<ValueType, MetadataT, ValueTraits, void, MapType>, ValueType, MetadataT, ValueTraits, MapType> {
 public:
-    using DetailTrie = Detail::Trie<BaseT, Trie<ValueType, MetadataT, ValueTraits>, ValueType, MetadataT, ValueTraits>;
+    using DetailTrie = Detail::Trie<BaseT, Trie<ValueType, MetadataT, ValueTraits, void, MapType>, ValueType, MetadataT, ValueTraits, MapType>;
     using MetadataType = typename DetailTrie::MetadataType;
 
     Trie(ValueType value, MetadataType metadata)

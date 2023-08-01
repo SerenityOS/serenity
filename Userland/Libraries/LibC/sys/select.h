@@ -6,6 +6,10 @@
 
 #pragma once
 
+// Make sure we have the time type definitions. We include the kernel API
+// header and not the LibC <sys/time.h> to avoid issues with circular includes.
+#include <Kernel/API/POSIX/sys/time.h>
+
 // Includes essentially mandated by POSIX:
 // https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/sys_select.h.html
 #include <signal.h>
@@ -14,7 +18,6 @@
 #include <fd_set.h>
 #include <string.h>
 #include <sys/cdefs.h>
-#include <sys/time.h>
 #include <sys/types.h>
 
 __BEGIN_DECLS

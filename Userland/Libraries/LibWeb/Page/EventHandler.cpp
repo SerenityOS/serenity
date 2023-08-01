@@ -130,20 +130,6 @@ EventHandler::EventHandler(Badge<HTML::BrowsingContext>, HTML::BrowsingContext& 
 
 EventHandler::~EventHandler() = default;
 
-Layout::Viewport const* EventHandler::layout_root() const
-{
-    if (!m_browsing_context->active_document())
-        return nullptr;
-    return m_browsing_context->active_document()->layout_node();
-}
-
-Layout::Viewport* EventHandler::layout_root()
-{
-    if (!m_browsing_context->active_document())
-        return nullptr;
-    return m_browsing_context->active_document()->layout_node();
-}
-
 Painting::PaintableBox* EventHandler::paint_root()
 {
     if (!m_browsing_context->active_document())
@@ -256,7 +242,7 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, unsigned button, unsig
             node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mouseup, offset, client_offset, page_offset, buttons, button).release_value_but_fixme_should_propagate_errors());
             handled_event = true;
 
-            bool run_activation_behavior = true;
+            bool run_activation_behavior = false;
             if (node.ptr() == m_mousedown_target) {
                 if (button == GUI::MouseButton::Primary)
                     run_activation_behavior = node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::click, offset, client_offset, page_offset, button).release_value_but_fixme_should_propagate_errors());

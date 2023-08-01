@@ -146,22 +146,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (list_files) {
         outln("  Length     Date      Time     Name");
         outln("--------- ---------- --------   ----");
-        u32 members_count = 0;
-        u64 total_size = 0;
         TRY(zip_file->for_each_member([&](auto zip_member) -> ErrorOr<IterationDecision> {
-            members_count++;
-
             auto time = time_from_packed_dos(zip_member.modification_date, zip_member.modification_time);
             auto time_str = TRY(Core::DateTime::from_timestamp(time.seconds_since_epoch()).to_string());
-
-            total_size += zip_member.uncompressed_size;
 
             outln("{:>9} {}   {}", zip_member.uncompressed_size, time_str, zip_member.name);
 
             return IterationDecision::Continue;
         }));
+        auto statistics = TRY(zip_file->calculate_statistics());
         outln("---------                       ----");
-        outln("{:>9}                       {} files", total_size, members_count);
+        outln("{:>9}                       {} files", statistics.total_uncompressed_bytes(), statistics.member_count());
         return 0;
     }
 

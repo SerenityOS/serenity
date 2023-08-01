@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/IntegralMath.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Ext2FS/FileSystem.h>
 #include <Kernel/FileSystem/Ext2FS/Inode.h>
@@ -28,9 +29,26 @@ Ext2FS::~Ext2FS() = default;
 ErrorOr<void> Ext2FS::flush_super_block()
 {
     MutexLocker locker(m_lock);
-    VERIFY((sizeof(ext2_super_block) % logical_block_size()) == 0);
     auto super_block_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&m_super_block);
-    return raw_write_blocks(2, (sizeof(ext2_super_block) / logical_block_size()), super_block_buffer);
+    auto const superblock_physical_block_count = (sizeof(ext2_super_block) / device_block_size());
+
+    // FIXME: We currently have no ability of writing within a device block, but the ability to do so would allow us to use device block sizes larger than 1024.
+    VERIFY((sizeof(ext2_super_block) % device_block_size()) == 0);
+    // First superblock is always at offset 1024 (physical block index 2).
+    TRY(raw_write_blocks(1024 / device_block_size(), superblock_physical_block_count, super_block_buffer));
+
+    auto is_sparse = has_flag(get_features_readonly(), FeaturesReadOnly::SparseSuperblock);
+
+    for (auto group = 1u; group < m_block_group_count; ++group) {
+        auto first_block_in_group = first_block_of_group(group);
+        // Superblock copies with sparse layout are in group number 2 and powers of 3, 5, and 7.
+        if (!is_sparse || group == 2 || AK::is_power_of<3>(group - 1) || AK::is_power_of<5>(group - 1) || AK::is_power_of<7>(group - 1)) {
+            dbgln_if(EXT2_DEBUG, "Writing superblock backup to block group {} (block {})", group, first_block_in_group);
+            TRY(write_blocks(first_block_in_group, 1, super_block_buffer));
+        }
+    }
+
+    return {};
 }
 
 ext2_group_desc const& Ext2FS::group_descriptor(GroupIndex group_index) const
@@ -52,9 +70,9 @@ ErrorOr<void> Ext2FS::initialize_while_locked()
     VERIFY(m_lock.is_locked());
     VERIFY(!is_initialized_while_locked());
 
-    VERIFY((sizeof(ext2_super_block) % logical_block_size()) == 0);
+    VERIFY((sizeof(ext2_super_block) % device_block_size()) == 0);
     auto super_block_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&m_super_block);
-    TRY(raw_read_blocks(2, (sizeof(ext2_super_block) / logical_block_size()), super_block_buffer));
+    TRY(raw_read_blocks(1024 / device_block_size(), (sizeof(ext2_super_block) / device_block_size()), super_block_buffer));
 
     auto const& super_block = this->super_block();
     if constexpr (EXT2_DEBUG) {
@@ -79,13 +97,13 @@ ErrorOr<void> Ext2FS::initialize_while_locked()
         dmesgln("Ext2FS: Descriptor size: {}", EXT2_DESC_SIZE(&super_block));
     }
 
-    set_block_size(EXT2_BLOCK_SIZE(&super_block));
+    set_logical_block_size(EXT2_BLOCK_SIZE(&super_block));
     set_fragment_size(EXT2_FRAG_SIZE(&super_block));
 
     // Note: This depends on the block size being available.
     TRY(BlockBasedFileSystem::initialize_while_locked());
 
-    VERIFY(block_size() <= (int)max_block_size);
+    VERIFY(logical_block_size() <= (int)max_block_size);
 
     m_block_group_count = ceil_div(super_block.s_blocks_count, super_block.s_blocks_per_group);
 
@@ -94,9 +112,9 @@ ErrorOr<void> Ext2FS::initialize_while_locked()
         return EINVAL;
     }
 
-    auto blocks_to_read = ceil_div(m_block_group_count * sizeof(ext2_group_desc), block_size());
-    BlockIndex first_block_of_bgdt = block_size() == 1024 ? 2 : 1;
-    m_cached_group_descriptor_table = TRY(KBuffer::try_create_with_size("Ext2FS: Block group descriptors"sv, block_size() * blocks_to_read, Memory::Region::Access::ReadWrite));
+    auto blocks_to_read = ceil_div(m_block_group_count * sizeof(ext2_group_desc), logical_block_size());
+    BlockIndex first_block_of_bgdt = first_block_of_block_group_descriptors();
+    m_cached_group_descriptor_table = TRY(KBuffer::try_create_with_size("Ext2FS: Block group descriptors"sv, logical_block_size() * blocks_to_read, Memory::Region::Access::ReadWrite));
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(m_cached_group_descriptor_table->data());
     TRY(read_blocks(first_block_of_bgdt, blocks_to_read, buffer));
 
@@ -136,7 +154,7 @@ bool Ext2FS::find_block_containing_inode(InodeIndex inode, BlockIndex& block_ind
 
     u64 full_offset = ((inode.value() - 1) % inodes_per_group()) * inode_size();
     block_index = bgd.bg_inode_table + (full_offset >> EXT2_BLOCK_SIZE_BITS(&super_block));
-    offset = full_offset & (block_size() - 1);
+    offset = full_offset & (logical_block_size() - 1);
 
     return true;
 }
@@ -271,7 +289,7 @@ auto Ext2FS::allocate_blocks(GroupIndex preferred_group_index, size_t count) -> 
         int blocks_in_group = min(blocks_per_group(), super_block().s_blocks_count);
         auto block_bitmap = cached_bitmap->bitmap(blocks_in_group);
 
-        BlockIndex first_block_in_group = (group_index.value() - 1) * blocks_per_group() + first_block_index().value();
+        BlockIndex first_block_in_group = first_block_of_group(group_index);
         size_t free_region_size = 0;
         auto first_unset_bit_index = block_bitmap.find_longest_range_of_unset_bits(count - blocks.size(), free_region_size);
         VERIFY(first_unset_bit_index.has_value());
@@ -352,7 +370,17 @@ Ext2FS::GroupIndex Ext2FS::group_index_from_block_index(BlockIndex block_index) 
 {
     if (!block_index)
         return 0;
-    return (block_index.value() - 1) / blocks_per_group() + 1;
+    return (block_index.value() - first_block_index().value()) / blocks_per_group() + 1;
+}
+
+Ext2FS::BlockIndex Ext2FS::first_block_of_group(GroupIndex group_index) const
+{
+    return (group_index.value() - 1) * blocks_per_group() + first_block_index().value();
+}
+
+Ext2FS::BlockIndex Ext2FS::first_block_of_block_group_descriptors() const
+{
+    return logical_block_size() == 1024 ? 2 : 1;
 }
 
 auto Ext2FS::group_index_from_inode(InodeIndex inode) const -> GroupIndex
@@ -414,7 +442,7 @@ ErrorOr<void> Ext2FS::set_inode_allocation_state(InodeIndex inode_index, bool ne
 
 Ext2FS::BlockIndex Ext2FS::first_block_index() const
 {
-    return block_size() == 1024 ? 1 : 0;
+    return logical_block_size() == 1024 ? 1 : 0;
 }
 
 ErrorOr<Ext2FS::CachedBitmap*> Ext2FS::get_bitmap_block(BlockIndex bitmap_block_index)
@@ -424,9 +452,9 @@ ErrorOr<Ext2FS::CachedBitmap*> Ext2FS::get_bitmap_block(BlockIndex bitmap_block_
             return cached_bitmap.ptr();
     }
 
-    auto block = TRY(KBuffer::try_create_with_size("Ext2FS: Cached bitmap block"sv, block_size(), Memory::Region::Access::ReadWrite));
+    auto block = TRY(KBuffer::try_create_with_size("Ext2FS: Cached bitmap block"sv, logical_block_size(), Memory::Region::Access::ReadWrite));
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(block->data());
-    TRY(read_block(bitmap_block_index, &buffer, block_size()));
+    TRY(read_block(bitmap_block_index, &buffer, logical_block_size()));
     auto new_bitmap = TRY(adopt_nonnull_own_or_enomem(new (nothrow) CachedBitmap(bitmap_block_index, move(block))));
     TRY(m_cached_bitmaps.try_append(move(new_bitmap)));
     return m_cached_bitmaps.last().ptr();
@@ -611,11 +639,27 @@ ErrorOr<void> Ext2FS::free_inode(Ext2FSInode& inode)
 void Ext2FS::flush_block_group_descriptor_table()
 {
     MutexLocker locker(m_lock);
-    auto blocks_to_write = ceil_div(m_block_group_count * sizeof(ext2_group_desc), block_size());
-    auto first_block_of_bgdt = block_size() == 1024 ? 2 : 1;
+    auto blocks_to_write = ceil_div(m_block_group_count * sizeof(ext2_group_desc), logical_block_size());
+    auto first_block_of_bgdt = first_block_of_block_group_descriptors();
     auto buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)block_group_descriptors());
-    if (auto result = write_blocks(first_block_of_bgdt, blocks_to_write, buffer); result.is_error())
-        dbgln("Ext2FS[{}]::flush_block_group_descriptor_table(): Failed to write blocks: {}", fsid(), result.error());
+    auto write_bgdt_to_block = [&](BlockIndex index) {
+        if (auto result = write_blocks(index, blocks_to_write, buffer); result.is_error())
+            dbgln("Ext2FS[{}]::flush_block_group_descriptor_table(): Failed to write blocks: {}", fsid(), result.error());
+    };
+
+    write_bgdt_to_block(first_block_of_bgdt);
+
+    auto is_sparse = has_flag(get_features_readonly(), FeaturesReadOnly::SparseSuperblock);
+
+    for (auto group = 1u; group < m_block_group_count; ++group) {
+        // First block is occupied by the super block
+        BlockIndex second_block_in_group = first_block_of_group(group).value() + 1;
+        // BGDT copies with sparse layout are in group number 2 and powers of 3, 5, and 7.
+        if (!is_sparse || group == 2 || AK::is_power_of<3>(group - 1) || AK::is_power_of<5>(group - 1) || AK::is_power_of<7>(group - 1)) {
+            dbgln_if(EXT2_DEBUG, "Writing block group descriptor table backup to block group {} (block {})", group, second_block_in_group);
+            write_bgdt_to_block(second_block_in_group);
+        }
+    }
 }
 
 ErrorOr<void> Ext2FS::flush_writes()
@@ -637,7 +681,7 @@ ErrorOr<void> Ext2FS::flush_writes()
         for (auto& cached_bitmap : m_cached_bitmaps) {
             if (cached_bitmap->dirty) {
                 auto buffer = UserOrKernelBuffer::for_kernel_buffer(cached_bitmap->buffer->data());
-                if (auto result = write_block(cached_bitmap->bitmap_block_index, buffer, block_size()); result.is_error()) {
+                if (auto result = write_block(cached_bitmap->bitmap_block_index, buffer, logical_block_size()); result.is_error()) {
                     dbgln("Ext2FS[{}]::flush_writes(): Failed to write blocks: {}", fsid(), result.error());
                 }
                 cached_bitmap->dirty = false;

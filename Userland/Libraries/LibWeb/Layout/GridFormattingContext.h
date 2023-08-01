@@ -104,6 +104,7 @@ public:
 
 private:
     CSS::JustifyItems justification_for_item(Box const& box) const;
+    CSS::AlignItems alignment_for_item(Box const& box) const;
 
     void resolve_items_box_metrics(GridDimension const dimension);
 
@@ -119,7 +120,7 @@ private:
         CSSPixels base_size { 0 };
         bool base_size_frozen { false };
 
-        CSSPixels growth_limit { 0 };
+        Optional<CSSPixels> growth_limit { 0 };
         bool growth_limit_frozen { false };
         bool infinitely_growable { false };
 

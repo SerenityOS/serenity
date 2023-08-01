@@ -7,13 +7,17 @@
  */
 
 #include "PropertiesWindow.h"
+#include <AK/GenericShorthands.h>
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
 #include <Applications/FileManager/DirectoryView.h>
+#include <Applications/FileManager/PropertiesWindowArchiveTabGML.h>
 #include <Applications/FileManager/PropertiesWindowAudioTabGML.h>
 #include <Applications/FileManager/PropertiesWindowFontTabGML.h>
 #include <Applications/FileManager/PropertiesWindowGeneralTabGML.h>
 #include <Applications/FileManager/PropertiesWindowImageTabGML.h>
+#include <Applications/FileManager/PropertiesWindowPDFTabGML.h>
+#include <LibArchive/Zip.h>
 #include <LibAudio/Loader.h>
 #include <LibCore/Directory.h>
 #include <LibCore/System.h>
@@ -36,6 +40,7 @@
 #include <LibGfx/Font/WOFF/Font.h>
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ICC/Tags.h>
+#include <LibPDF/Document.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -222,6 +227,10 @@ ErrorOr<void> PropertiesWindow::create_file_type_specific_tabs(GUI::TabWidget& t
     auto file_name_guess = Core::guess_mime_type_based_on_filename(m_path);
     auto mime_type = Core::guess_mime_type_based_on_sniffed_bytes(mapped_file->bytes()).value_or(file_name_guess);
 
+    // FIXME: Support other archive types
+    if (mime_type == "application/zip"sv)
+        return create_archive_tab(tab_widget, move(mapped_file));
+
     if (mime_type.starts_with("audio/"sv))
         return create_audio_tab(tab_widget, move(mapped_file));
 
@@ -230,6 +239,31 @@ ErrorOr<void> PropertiesWindow::create_file_type_specific_tabs(GUI::TabWidget& t
 
     if (mime_type.starts_with("image/"sv))
         return create_image_tab(tab_widget, move(mapped_file), mime_type);
+
+    if (mime_type == "application/pdf"sv)
+        return create_pdf_tab(tab_widget, move(mapped_file));
+
+    return {};
+}
+
+ErrorOr<void> PropertiesWindow::create_archive_tab(GUI::TabWidget& tab_widget, NonnullRefPtr<Core::MappedFile> mapped_file)
+{
+    auto maybe_zip = Archive::Zip::try_create(mapped_file->bytes());
+    if (!maybe_zip.has_value()) {
+        warnln("Failed to read zip file '{}' ", m_path);
+        return {};
+    }
+    auto zip = maybe_zip.release_value();
+
+    auto tab = TRY(tab_widget.try_add_tab<GUI::Widget>(TRY("Archive"_string)));
+    TRY(tab->load_from_gml(properties_window_archive_tab_gml));
+
+    auto statistics = TRY(zip.calculate_statistics());
+
+    tab->find_descendant_of_type_named<GUI::Label>("archive_format")->set_text("ZIP"_short_string);
+    tab->find_descendant_of_type_named<GUI::Label>("archive_file_count")->set_text(TRY(String::number(statistics.file_count())));
+    tab->find_descendant_of_type_named<GUI::Label>("archive_directory_count")->set_text(TRY(String::number(statistics.directory_count())));
+    tab->find_descendant_of_type_named<GUI::Label>("archive_uncompressed_size")->set_text(TRY(String::from_deprecated_string(AK::human_readable_size(statistics.total_uncompressed_bytes()))));
 
     return {};
 }
@@ -417,6 +451,59 @@ ErrorOr<void> PropertiesWindow::create_image_tab(GUI::TabWidget& tab_widget, Non
 
     } else {
         hide_icc_group("None"_short_string);
+    }
+
+    return {};
+}
+
+ErrorOr<void> PropertiesWindow::create_pdf_tab(GUI::TabWidget& tab_widget, NonnullRefPtr<Core::MappedFile> mapped_file)
+{
+    auto maybe_document = PDF::Document::create(mapped_file->bytes());
+    if (maybe_document.is_error()) {
+        warnln("Failed to open '{}': {}", m_path, maybe_document.error().message());
+        return {};
+    }
+    auto document = maybe_document.release_value();
+
+    if (auto handler = document->security_handler(); handler && !handler->has_user_password()) {
+        // FIXME: Show a password dialog, once we've switched to lazy-loading
+        auto tab = TRY(tab_widget.try_add_tab<GUI::Label>("PDF"_short_string));
+        tab->set_text(TRY("PDF is password-protected."_string));
+        return {};
+    }
+
+    if (auto maybe_error = document->initialize(); maybe_error.is_error()) {
+        warnln("PDF '{}' seems to be invalid: {}", m_path, maybe_error.error().message());
+        return {};
+    }
+
+    auto tab = TRY(tab_widget.try_add_tab<GUI::Widget>("PDF"_short_string));
+    TRY(tab->load_from_gml(properties_window_pdf_tab_gml));
+
+    tab->find_descendant_of_type_named<GUI::Label>("pdf_version")->set_text(TRY(String::formatted("{}.{}", document->version().major, document->version().minor)));
+    tab->find_descendant_of_type_named<GUI::Label>("pdf_page_count")->set_text(TRY(String::number(document->get_page_count())));
+
+    auto maybe_info_dict = document->info_dict();
+    if (maybe_info_dict.is_error()) {
+        warnln("Failed to read InfoDict from '{}': {}", m_path, maybe_info_dict.error().message());
+    } else if (maybe_info_dict.value().has_value()) {
+        auto get_info_string = [](PDF::PDFErrorOr<Optional<DeprecatedString>> input) -> ErrorOr<String> {
+            if (input.is_error())
+                return String {};
+            if (!input.value().has_value())
+                return String {};
+            return String::from_deprecated_string(input.value().value());
+        };
+
+        auto info_dict = maybe_info_dict.release_value().release_value();
+        tab->find_descendant_of_type_named<GUI::Label>("pdf_title")->set_text(TRY(get_info_string(info_dict.title())));
+        tab->find_descendant_of_type_named<GUI::Label>("pdf_author")->set_text(TRY(get_info_string(info_dict.author())));
+        tab->find_descendant_of_type_named<GUI::Label>("pdf_subject")->set_text(TRY(get_info_string(info_dict.subject())));
+        tab->find_descendant_of_type_named<GUI::Label>("pdf_keywords")->set_text(TRY(get_info_string(info_dict.keywords())));
+        tab->find_descendant_of_type_named<GUI::Label>("pdf_creator")->set_text(TRY(get_info_string(info_dict.creator())));
+        tab->find_descendant_of_type_named<GUI::Label>("pdf_producer")->set_text(TRY(get_info_string(info_dict.producer())));
+        tab->find_descendant_of_type_named<GUI::Label>("pdf_creation_date")->set_text(TRY(get_info_string(info_dict.creation_date())));
+        tab->find_descendant_of_type_named<GUI::Label>("pdf_modification_date")->set_text(TRY(get_info_string(info_dict.modification_date())));
     }
 
     return {};

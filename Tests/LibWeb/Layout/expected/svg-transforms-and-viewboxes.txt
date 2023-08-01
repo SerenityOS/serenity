@@ -1,20 +1,20 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x700 [BFC] children: not-inline
     BlockContainer <body> at (50,50) content-size 700x600 children: inline
-      line 0 width: 616, height: 203.46875, bottom: 203.46875, baseline: 200
+      line 0 width: 616, height: 203.9375, bottom: 203.9375, baseline: 200
         frag 0 from SVGSVGBox start: 0, length: 0, rect: [50,150 200x100]
-        frag 1 from TextNode start: 0, length: 1, rect: [250,236 8x17.46875]
+        frag 1 from TextNode start: 0, length: 1, rect: [250,236.46875 8x17.46875]
           " "
         frag 2 from SVGSVGBox start: 0, length: 0, rect: [258,50 200x200]
-        frag 3 from TextNode start: 0, length: 1, rect: [458,236 8x17.46875]
+        frag 3 from TextNode start: 0, length: 1, rect: [458,236.46875 8x17.46875]
           " "
         frag 4 from SVGSVGBox start: 0, length: 0, rect: [466,50 200x200]
-      line 1 width: 616, height: 203.46875, bottom: 403.46875, baseline: 200
+      line 1 width: 616, height: 203.9375, bottom: 403.9375, baseline: 200
         frag 0 from SVGSVGBox start: 0, length: 0, rect: [50,250 200x200]
-        frag 1 from TextNode start: 0, length: 1, rect: [250,436 8x17.46875]
+        frag 1 from TextNode start: 0, length: 1, rect: [250,436.46875 8x17.46875]
           " "
         frag 2 from SVGSVGBox start: 0, length: 0, rect: [258,250 200x200]
-        frag 3 from TextNode start: 0, length: 1, rect: [458,436 8x17.46875]
+        frag 3 from TextNode start: 0, length: 1, rect: [458,436.46875 8x17.46875]
           " "
         frag 4 from SVGSVGBox start: 0, length: 0, rect: [466,250 200x200]
       line 2 width: 200, height: 200, bottom: 600, baseline: 200
@@ -23,12 +23,12 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         TextNode <#text>
         SVGGraphicsBox <g> at (50,150) content-size 0x0 children: inline
           TextNode <#text>
-          SVGGeometryBox <path> at (45.690780,199.828884) content-size 118.784614x47.455844 children: not-inline
+          SVGGeometryBox <path> at (45.703125,199.828125) content-size 118.78125x47.453125 children: not-inline
           TextNode <#text>
         TextNode <#text>
         SVGGraphicsBox <g> at (50,150) content-size 0x0 children: inline
           TextNode <#text>
-          SVGGeometryBox <path> at (84.5,159.499996) content-size 81x81 children: not-inline
+          SVGGeometryBox <path> at (84.5,159.484375) content-size 81x81 children: not-inline
           TextNode <#text>
         TextNode <#text>
       TextNode <#text>
@@ -43,18 +43,18 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         TextNode <#text>
         SVGGeometryBox <rect> at (506,90) content-size 120x120 children: not-inline
         TextNode <#text>
-        SVGGeometryBox <rect> at (471.358985,90) content-size 189.282043x120 children: not-inline
+        SVGGeometryBox <rect> at (471.34375,90) content-size 189.28125x120 children: not-inline
         TextNode <#text>
       TextNode <#text>
       SVGSVGBox <svg> at (50,250) content-size 200x200 [SVG] children: inline
         TextNode <#text>
-        SVGGeometryBox <rect> at (120.588233,320.588241) content-size 58.823524x58.823532 children: not-inline
+        SVGGeometryBox <rect> at (120.578125,320.578125) content-size 58.8125x58.8125 children: not-inline
         TextNode <#text>
         TextNode <#text>
-        SVGGeometryBox <rect> at (52.443771,310.373641) content-size 68.144462x68.144454 children: not-inline
+        SVGGeometryBox <rect> at (52.4375,310.375) content-size 68.140625x68.140625 children: not-inline
         TextNode <#text>
         TextNode <#text>
-        SVGGeometryBox <rect> at (179.411773,321.481903) content-size 68.14447x68.14447 children: not-inline
+        SVGGeometryBox <rect> at (179.40625,321.484375) content-size 68.140625x68.140625 children: not-inline
         TextNode <#text>
       TextNode <#text>
       SVGSVGBox <svg> at (258,250) content-size 200x200 [SVG] children: inline
@@ -76,7 +76,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         TextNode <#text>
         SVGGeometryBox <rect> at (506,290) content-size 120x120 children: not-inline
         TextNode <#text>
-        SVGGeometryBox <rect> at (506,255.358985) content-size 120x189.282043 children: not-inline
+        SVGGeometryBox <rect> at (506,255.34375) content-size 120x189.28125 children: not-inline
         TextNode <#text>
       TextNode <#text>
       SVGSVGBox <svg> at (50,450) content-size 200x200 [SVG] children: inline

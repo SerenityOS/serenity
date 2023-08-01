@@ -190,6 +190,11 @@ public:
 
     explicit RegexStringView(DeprecatedString&&) = delete;
 
+    bool is_string_view() const
+    {
+        return m_view.has<StringView>();
+    }
+
     StringView string_view() const
     {
         return m_view.get<StringView>();
@@ -429,6 +434,29 @@ public:
             [&](Utf16View const& view) -> u32 { return view.code_point_at(index); },
             [&](Utf8View const& view) -> u32 {
                 auto it = view.iterator_at_byte_offset(index);
+                VERIFY(it != view.end());
+                return *it;
+            });
+    }
+
+    u32 code_unit_at(size_t code_unit_index) const
+    {
+        if (unicode())
+            return operator[](code_unit_index);
+
+        return m_view.visit(
+            [&](StringView view) -> u32 {
+                auto ch = view[code_unit_index];
+                if constexpr (IsSigned<char>) {
+                    if (ch < 0)
+                        return 256u + ch;
+                    return ch;
+                }
+            },
+            [&](Utf32View const& view) -> u32 { return view[code_unit_index]; },
+            [&](Utf16View const& view) -> u32 { return view.code_unit_at(code_unit_index); },
+            [&](Utf8View const& view) -> u32 {
+                auto it = view.iterator_at_byte_offset(code_unit_index);
                 VERIFY(it != view.end());
                 return *it;
             });

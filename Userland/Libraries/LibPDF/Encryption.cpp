@@ -676,8 +676,10 @@ void StandardSecurityHandler::crypt(NonnullRefPtr<Object> object, Reference refe
         };
 
         if (stream->dict()->contains(CommonNames::Filter)) {
-            auto filter = stream->dict()->get_name(m_document, CommonNames::Filter).release_value_but_fixme_should_propagate_errors()->name();
-            if (filter == "Crypt")
+            // ISO 32000 (PDF 2.0), 7.4.10 Crypt filter
+            // "The Crypt filter shall be the first filter in the Filter array entry."
+            auto filters = m_document->read_filters(stream->dict()).release_value_but_fixme_should_propagate_errors();
+            if (!filters.is_empty() && filters[0] == "Crypt")
                 TODO();
         }
     } else if (object->is<StringObject>()) {

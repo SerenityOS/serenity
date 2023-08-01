@@ -1,0 +1,11 @@
+<script src="../include.js"></script>
+<script>
+    test(() => {
+        println(structuredClone(new Boolean(true)));
+        println(structuredClone(new Boolean(false)));
+        println(structuredClone(new Number(123)));
+        println(structuredClone(new Number(123.456)));
+        println(structuredClone(new String("This is a String object")));
+        println(structuredClone(Date.UTC(2023, 7, 23)));
+    });
+</script>

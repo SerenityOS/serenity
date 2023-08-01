@@ -22,6 +22,13 @@ struct CodePointRange {
     u32 last { 0 };
 };
 
+struct CodePointRangeComparator {
+    constexpr int operator()(u32 code_point, CodePointRange const& range)
+    {
+        return (code_point > range.last) - (code_point < range.first);
+    }
+};
+
 struct BlockName {
     CodePointRange code_point_range {};
     StringView display_name;
@@ -56,9 +63,6 @@ bool is_ecma262_property(Property);
 Optional<Script> script_from_string(StringView);
 bool code_point_has_script(u32 code_point, Script script);
 bool code_point_has_script_extension(u32 code_point, Script script);
-
-Optional<Block> block_from_string(StringView);
-bool code_point_has_block(u32 code_point, Block block);
 
 bool code_point_has_grapheme_break_property(u32 code_point, GraphemeBreakProperty property);
 bool code_point_has_word_break_property(u32 code_point, WordBreakProperty property);

@@ -18,7 +18,7 @@ TEST_CASE(promise_await_async_event)
         promise->resolve(42);
     });
 
-    auto& result = promise->await();
+    auto result = promise->await();
     EXPECT(!result.is_error());
     EXPECT_EQ(result.value(), 42);
 }
@@ -33,7 +33,7 @@ TEST_CASE(promise_await_async_event_rejection)
         promise->reject(AK::Error::from_string_literal("lol no"));
     });
 
-    auto& result = promise->await();
+    auto result = promise->await();
     EXPECT(result.is_error());
     EXPECT_EQ(result.error().string_literal(), "lol no"sv);
 }
@@ -53,7 +53,7 @@ TEST_CASE(promise_chain_handlers)
         promise->resolve(42);
     });
 
-    promise->await();
+    (void)promise->await();
     EXPECT(resolved);
     EXPECT(!rejected);
 }

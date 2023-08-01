@@ -42,17 +42,19 @@ void WebSocketImplSerenity::connect(ConnectionInfo const& connection_info)
     VERIFY(on_connection_error);
     VERIFY(on_ready_to_read);
     auto socket_result = [&]() -> ErrorOr<NonnullOwnPtr<Core::BufferedSocketBase>> {
+        auto host = TRY(connection_info.url().serialized_host()).to_deprecated_string();
         if (connection_info.is_secure()) {
             TLS::Options options;
             options.set_alert_handler([this](auto) {
                 on_connection_error();
             });
+
             return TRY(Core::BufferedSocket<TLS::TLSv12>::create(
-                TRY(TLS::TLSv12::connect(connection_info.url().host(), connection_info.url().port_or_default(), move(options)))));
+                TRY(TLS::TLSv12::connect(host, connection_info.url().port_or_default(), move(options)))));
         }
 
         return TRY(Core::BufferedTCPSocket::create(
-            TRY(Core::TCPSocket::connect(connection_info.url().host(), connection_info.url().port_or_default()))));
+            TRY(Core::TCPSocket::connect(host, connection_info.url().port_or_default()))));
     }();
 
     if (socket_result.is_error()) {

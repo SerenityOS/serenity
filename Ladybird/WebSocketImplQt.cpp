@@ -53,7 +53,7 @@ void WebSocketImplQt::connect(WebSocket::ConnectionInfo const& connection_info)
     if (connection_info.is_secure()) {
         auto ssl_socket = make<QSslSocket>();
         ssl_socket->connectToHostEncrypted(
-            qstring_from_ak_deprecated_string(connection_info.url().host()),
+            qstring_from_ak_string(connection_info.url().serialized_host().release_value_but_fixme_should_propagate_errors()),
             connection_info.url().port_or_default());
         QObject::connect(ssl_socket.ptr(), &QSslSocket::alertReceived, [this](QSsl::AlertLevel level, QSsl::AlertType, QString const&) {
             if (level == QSsl::AlertLevel::Fatal)
@@ -63,7 +63,7 @@ void WebSocketImplQt::connect(WebSocket::ConnectionInfo const& connection_info)
     } else {
         m_socket = make<QTcpSocket>();
         m_socket->connectToHost(
-            qstring_from_ak_deprecated_string(connection_info.url().host()),
+            qstring_from_ak_string(connection_info.url().serialized_host().release_value_but_fixme_should_propagate_errors()),
             connection_info.url().port_or_default());
     }
 

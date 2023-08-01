@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
+ * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,7 @@
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
+#include <AK/IntegralMath.h>
 #include <AK/Optional.h>
 #include <AK/SourceLocation.h>
 #include <AK/StringBuilder.h>
@@ -30,7 +32,7 @@ static void report_validation_error(SourceLocation const& location = SourceLocat
     dbgln_if(URL_PARSER_DEBUG, "URLParser::basic_parse: Validation error! {}", location);
 }
 
-static Optional<DeprecatedString> parse_opaque_host(StringView input)
+static Optional<URL::Host> parse_opaque_host(StringView input)
 {
     auto forbidden_host_characters_excluding_percent = "\0\t\n\r #/:<>?@[\\]^|"sv;
     for (auto character : forbidden_host_characters_excluding_percent) {
@@ -41,23 +43,195 @@ static Optional<DeprecatedString> parse_opaque_host(StringView input)
     }
     // FIXME: If input contains a code point that is not a URL code point and not U+0025 (%), validation error.
     // FIXME: If input contains a U+0025 (%) and the two code points following it are not ASCII hex digits, validation error.
-    return URL::percent_encode(input, URL::PercentEncodeSet::C0Control);
+    return String::from_deprecated_string(URL::percent_encode(input, URL::PercentEncodeSet::C0Control)).release_value_but_fixme_should_propagate_errors();
 }
 
-static Optional<DeprecatedString> parse_ipv4_address(StringView input)
+struct ParsedIPv4Number {
+    u32 number { 0 };
+    bool validation_error { false };
+};
+
+// https://url.spec.whatwg.org/#ipv4-number-parser
+static Optional<ParsedIPv4Number> parse_ipv4_number(StringView input)
 {
-    // FIXME: Implement the correct IPv4 parser as specified by https://url.spec.whatwg.org/#concept-ipv4-parser.
-    return input;
+    // 1. If input is the empty string, then return failure.
+    if (input.is_empty())
+        return {};
+
+    // 2. Let validationError be false.
+    bool validation_error = false;
+
+    // 3. Let R be 10.
+    u8 radix = 10;
+
+    // 4. If input contains at least two code points and the first two code points are either "0X" or "0x", then:
+    if (input.length() >= 2 && (input.starts_with("0X"sv) || input.starts_with("0x"sv))) {
+        // 1. Set validationError to true.
+        validation_error = true;
+
+        // 2. Remove the first two code points from input.
+        input = input.substring_view(2);
+
+        // 3. Set R to 16.
+        radix = 16;
+    }
+    // 5. Otherwise, if input contains at least two code points and the first code point is U+0030 (0), then:
+    else if (input.length() >= 2 && input[0] == '0') {
+        // 1. Set validationError to true.
+        validation_error = true;
+
+        // 2. Remove the first code point from input.
+        input = input.substring_view(1);
+
+        // 3. Set R to 8.
+        radix = 8;
+    }
+
+    // 6. If input is the empty string, then return (0, true).
+    if (input.is_empty())
+        return ParsedIPv4Number { 0, true };
+
+    // 7. If input contains a code point that is not a radix-R digit, then return failure.
+    if (radix == 8) {
+        if (!all_of(input, [](auto character) { return is_ascii_octal_digit(character); }))
+            return {};
+    } else if (radix == 10) {
+        if (!all_of(input, [](auto character) { return is_ascii_digit(character); }))
+            return {};
+    } else if (radix == 16) {
+        if (!all_of(input, [](auto character) { return is_ascii_hex_digit(character); }))
+            return {};
+    } else {
+        VERIFY_NOT_REACHED();
+    }
+
+    // 8. Let output be the mathematical integer value that is represented by input in radix-R notation, using ASCII hex digits for digits with values 0 through 15.
+    u32 output;
+    if (radix == 8)
+        output = StringUtils::convert_to_uint_from_octal(input).release_value();
+    else if (radix == 10)
+        output = input.to_uint().release_value();
+    else if (radix == 16)
+        output = StringUtils::convert_to_uint_from_hex(input).release_value();
+    else
+        VERIFY_NOT_REACHED();
+
+    // 9. Return (output, validationError).
+    return ParsedIPv4Number { output, validation_error };
+}
+
+// https://url.spec.whatwg.org/#concept-ipv4-parser
+static Optional<URL::IPv4Address> parse_ipv4_address(StringView input)
+{
+    // 1. Let parts be the result of strictly splitting input on U+002E (.).
+    auto parts = input.split_view("."sv, SplitBehavior::KeepEmpty);
+
+    // 2. If the last item in parts is the empty string, then:
+    if (parts.last().is_empty()) {
+        // 1. IPv4-empty-part validation error.
+        report_validation_error();
+
+        // 2. If parts’s size is greater than 1, then remove the last item from parts.
+        if (parts.size() > 1)
+            parts.take_last();
+    }
+
+    // 3. If parts’s size is greater than 4, IPv4-too-many-parts validation error, return failure.
+    if (parts.size() > 4) {
+        report_validation_error();
+        return {};
+    }
+
+    // 4. Let numbers be an empty list.
+    Vector<u32, 4> numbers;
+
+    // 5. For each part of parts:
+    for (auto const& part : parts) {
+        // 1. Let result be the result of parsing part.
+        auto const result = parse_ipv4_number(part);
+
+        // 2. If result is failure, IPv4-non-numeric-part validation error, return failure.
+        if (!result.has_value()) {
+            report_validation_error();
+            return {};
+        }
+
+        // 3. If result[1] is true, IPv4-non-decimal-part validation error.
+        if (result->validation_error)
+            report_validation_error();
+
+        // 4. Append result[0] to numbers.
+        numbers.append(result->number);
+    }
+
+    // 6. If any item in numbers is greater than 255, IPv4-out-of-range-part validation error.
+    // 7. If any but the last item in numbers is greater than 255, then return failure.
+    for (size_t i = 0; i < numbers.size(); ++i) {
+        if (numbers[i] > 255) {
+            report_validation_error();
+            if (i != numbers.size() - 1)
+                return {};
+        }
+    }
+
+    // 8. If the last item in numbers is greater than or equal to 256^(5 − numbers’s size), then return failure.
+    if (numbers.last() >= pow<size_t>(256, 5 - numbers.size()))
+        return {};
+
+    // 9. Let ipv4 be the last item in numbers.
+    auto ipv4 = numbers.last();
+
+    // 10. Remove the last item from numbers.
+    numbers.take_last();
+
+    // 11. Let counter be 0.
+    u8 counter = 0;
+
+    // 12. For each n of numbers:
+    for (u32 n : numbers) {
+        // 1. Increment ipv4 by n × 256^(3 − counter).
+        ipv4 += n * pow<size_t>(256, 3 - counter);
+
+        // 2. Increment counter by 1.
+        ++counter;
+    }
+
+    // 13. Return ipv4.
+    return ipv4;
+}
+
+// https://url.spec.whatwg.org/#concept-ipv4-serializer
+static ErrorOr<String> serialize_ipv4_address(URL::IPv4Address address)
+{
+    // 1. Let output be the empty string.
+    // NOTE: Array to avoid prepend.
+    Array<u8, 4> output;
+
+    // 2. Let n be the value of address.
+    u32 n = address;
+
+    // 3. For each i in the range 1 to 4, inclusive:
+    for (size_t i = 0; i <= 3; ++i) {
+        // 1. Prepend n % 256, serialized, to output.
+        output[3 - i] = n % 256;
+
+        // 2. If i is not 4, then prepend U+002E (.) to output.
+        // NOTE: done at end
+
+        // 3. Set n to floor(n / 256).
+        n /= 256;
+    }
+
+    // 4. Return output.
+    return String::formatted("{}.{}.{}.{}", output[0], output[1], output[2], output[3]);
 }
 
 // https://url.spec.whatwg.org/#concept-ipv6-serializer
-static ErrorOr<String> serialize_ipv6_address(Array<u16, 8> const& address)
+static void serialize_ipv6_address(URL::IPv6Address const& address, StringBuilder& output)
 {
     // 1. Let output be the empty string.
-    StringBuilder output;
 
     // 2. Let compress be an index to the first IPv6 piece in the first longest sequences of address’s IPv6 pieces that are 0.
-    // 3. If there is no sequence of address’s IPv6 pieces that are 0 that is longer than 1, then set compress to null.
     Optional<size_t> compress;
     size_t longest_sequence_length = 0;
     size_t current_sequence_length = 0;
@@ -75,6 +249,11 @@ static ErrorOr<String> serialize_ipv6_address(Array<u16, 8> const& address)
             current_sequence_length = 0;
         }
     }
+
+    // 3. If there is no sequence of address’s IPv6 pieces that are 0 that is longer than 1, then set compress to null.
+    if (longest_sequence_length <= 1)
+        compress = {};
+
     // 4. Let ignore0 be false.
     auto ignore0 = false;
 
@@ -110,11 +289,10 @@ static ErrorOr<String> serialize_ipv6_address(Array<u16, 8> const& address)
     }
 
     // 6. Return output.
-    return output.to_string();
 }
 
 // https://url.spec.whatwg.org/#concept-ipv6-parser
-static Optional<Array<u16, 8>> parse_ipv6_address(StringView input)
+static Optional<URL::IPv6Address> parse_ipv6_address(StringView input)
 {
     // 1. Let address be a new IPv6 address whose IPv6 pieces are all 0.
     Array<u16, 8> address {};
@@ -342,9 +520,40 @@ static Optional<Array<u16, 8>> parse_ipv6_address(StringView input)
     return address;
 }
 
+// https://url.spec.whatwg.org/#ends-in-a-number-checker
+static bool ends_in_a_number_checker(StringView input)
+{
+    // 1. Let parts be the result of strictly splitting input on U+002E (.).
+    auto parts = input.split_view("."sv, SplitBehavior::KeepEmpty);
+
+    // 2. If the last item in parts is the empty string, then:
+    if (parts.last().is_empty()) {
+        // 1. If parts’s size is 1, then return false.
+        if (parts.size() == 1)
+            return false;
+
+        // 2. Remove the last item from parts.
+        parts.take_last();
+    }
+
+    // 3. Let last be the last item in parts.
+    auto last = parts.last();
+
+    // 4. If last is non-empty and contains only ASCII digits, then return true.
+    if (!last.is_empty() && all_of(last, is_ascii_digit))
+        return true;
+
+    // 5. If parsing last as an IPv4 number does not return failure, then return true.
+    if (parse_ipv4_number(last).has_value())
+        return true;
+
+    // 6. Return false.
+    return false;
+}
+
 // https://url.spec.whatwg.org/#concept-host-parser
 // NOTE: This is a very bare-bones implementation.
-static Optional<DeprecatedString> parse_host(StringView input, bool is_not_special = false)
+static Optional<URL::Host> parse_host(StringView input, bool is_not_special = false)
 {
     // 1. If input starts with U+005B ([), then:
     if (input.starts_with('[')) {
@@ -358,32 +567,67 @@ static Optional<DeprecatedString> parse_host(StringView input, bool is_not_speci
         auto address = parse_ipv6_address(input.substring_view(1, input.length() - 2));
         if (!address.has_value())
             return {};
-
-        auto result = serialize_ipv6_address(*address);
-        if (result.is_error())
-            return {};
-        return result.release_value().to_deprecated_string();
+        return address.release_value();
     }
 
+    // 2. If isNotSpecial is true, then return the result of opaque-host parsing input.
     if (is_not_special)
         return parse_opaque_host(input);
+
+    // 3. Assert: input is not the empty string.
     VERIFY(!input.is_empty());
 
-    // FIXME: Let domain be the result of running UTF-8 decode without BOM on the percent-decoding of input.
+    // FIXME: 4. Let domain be the result of running UTF-8 decode without BOM on the percent-decoding of input.
     auto domain = URL::percent_decode(input);
-    // FIXME: Let asciiDomain be the result of running domain to ASCII on domain.
-    auto& ascii_domain = domain;
 
+    // FIXME: 5. Let asciiDomain be the result of running domain to ASCII on domain.
+    // FIXME: 6. If asciiDomain is failure, then return failure.
+    auto ascii_domain_or_error = String::from_deprecated_string(domain);
+    if (ascii_domain_or_error.is_error())
+        return {};
+
+    auto ascii_domain = ascii_domain_or_error.release_value();
+
+    // 7. If asciiDomain contains a forbidden domain code point, domain-invalid-code-point validation error, return failure.
     auto forbidden_host_characters = "\0\t\n\r #%/:<>?@[\\]^|"sv;
     for (auto character : forbidden_host_characters) {
-        if (ascii_domain.view().contains(character)) {
+        if (ascii_domain.bytes_as_string_view().contains(character)) {
             report_validation_error();
             return {};
         }
     }
 
-    auto ipv4_host = parse_ipv4_address(ascii_domain);
-    return ipv4_host;
+    // 8. If asciiDomain ends in a number, then return the result of IPv4 parsing asciiDomain.
+    if (ends_in_a_number_checker(ascii_domain)) {
+        auto ipv4_host = parse_ipv4_address(ascii_domain);
+        if (!ipv4_host.has_value())
+            return {};
+
+        return ipv4_host.release_value();
+    }
+
+    // 9. Return asciiDomain.
+    return ascii_domain;
+}
+
+// https://url.spec.whatwg.org/#concept-host-serializer
+ErrorOr<String> URLParser::serialize_host(URL::Host const& host)
+{
+    // 1. If host is an IPv4 address, return the result of running the IPv4 serializer on host.
+    if (host.has<URL::IPv4Address>())
+        return serialize_ipv4_address(host.get<URL::IPv4Address>());
+
+    // 2. Otherwise, if host is an IPv6 address, return U+005B ([), followed by the result of running the IPv6 serializer on host, followed by U+005D (]).
+    if (host.has<URL::IPv6Address>()) {
+        StringBuilder output;
+        TRY(output.try_append('['));
+        serialize_ipv6_address(host.get<URL::IPv6Address>(), output);
+        TRY(output.try_append(']'));
+        return output.to_string();
+    }
+
+    // 3. Otherwise, host is a domain, opaque host, or empty host, return host.
+    return host.get<String>();
 }
 
 // https://url.spec.whatwg.org/#start-with-a-windows-drive-letter
@@ -637,7 +881,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                         return *url;
 
                     // 4. If url’s scheme is "file" and its host is an empty host, then return.
-                    if (url->scheme() == "file"sv && url->host().is_empty())
+                    if (url->scheme() == "file"sv && url->host() == String {})
                         return *url;
                 }
 
@@ -1076,7 +1320,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
             url->m_scheme = "file";
 
             // 2. Set url’s host to the empty string.
-            url->m_host = "";
+            url->m_host = String {};
 
             // 3. If c is U+002F (/) or U+005C (\), then:
             if (code_point == '/' || code_point == '\\') {
@@ -1179,7 +1423,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                 // 2. Otherwise, if buffer is the empty string, then:
                 else if (buffer.is_empty()) {
                     // 1. Set url’s host to the empty string.
-                    url->m_host = "";
+                    url->m_host = String {};
 
                     // 2. If state override is given, then return.
                     if (state_override.has_value())
@@ -1199,8 +1443,8 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                         return {};
 
                     // 3. If host is "localhost", then set host to the empty string.
-                    if (host.value() == "localhost")
-                        host = "";
+                    if (host.value().has<String>() && host.value().get<String>() == "localhost"sv)
+                        host = String {};
 
                     // 4. Set url’s host to host.
                     url->m_host = host.release_value();
@@ -1255,7 +1499,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                     continue;
             }
             // 5. Otherwise, if state override is given and url’s host is null, append the empty string to url’s path.
-            else if (state_override.has_value() && url->host().is_empty()) {
+            else if (state_override.has_value() && url->host().has<Empty>()) {
                 url->append_slash();
             }
             break;

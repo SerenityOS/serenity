@@ -51,9 +51,6 @@ private:
     };
     Optional<Target> target_for_mouse_position(CSSPixelPoint position);
 
-    Layout::Viewport* layout_root();
-    Layout::Viewport const* layout_root() const;
-
     Painting::PaintableBox* paint_root();
     Painting::PaintableBox const* paint_root() const;
 

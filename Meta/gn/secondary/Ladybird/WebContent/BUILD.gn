@@ -47,7 +47,7 @@ executable("WebContent") {
     "../AudioCodecPluginLadybird.cpp",
     "../AudioThread.cpp",
     "../EventLoopImplementationQt.cpp",
-    "../FontPluginQt.cpp",
+    "../FontPluginLadybird.cpp",
     "../ImageCodecPluginLadybird.cpp",
     "../RequestManagerQt.cpp",
     "../Utilities.cpp",
@@ -62,9 +62,4 @@ executable("WebContent") {
     "main.cpp",
   ]
   sources += get_target_outputs(":generate_moc")
-
-  if (current_os == "mac") {
-    sources += [ "MacOSSetup.mm" ]
-    frameworks = [ "AppKit.framework" ]
-  }
 }

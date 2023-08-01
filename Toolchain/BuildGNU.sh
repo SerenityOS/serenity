@@ -299,7 +299,7 @@ pushd "$DIR/Build/$ARCH"
                                             --disable-nls \
                                             --disable-libstdcxx-pch \
                                             --enable-shared \
-                                            --enable-languages=c,c++ \
+                                            --enable-languages=c,c++,objc,obj-c++ \
                                             --enable-default-pie \
                                             --enable-lto \
                                             --enable-threads=posix \

@@ -14,7 +14,7 @@ ErrorOr<FlatPtr> Process::do_statvfs(FileSystem const& fs, Custody const* custod
 {
     statvfs kernelbuf = {};
 
-    kernelbuf.f_bsize = static_cast<u64>(fs.block_size());
+    kernelbuf.f_bsize = static_cast<u64>(fs.logical_block_size());
     kernelbuf.f_frsize = fs.fragment_size();
     kernelbuf.f_blocks = fs.total_block_count();
     kernelbuf.f_bfree = fs.free_block_count();

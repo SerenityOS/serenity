@@ -28,7 +28,6 @@ public:
 
     virtual ~Editor() override = default;
 
-    Function<void()> on_focus;
     Function<void(DeprecatedString)> on_open;
 
     EditorWrapper& wrapper();
@@ -64,8 +63,6 @@ public:
     void set_semantic_syntax_highlighting(bool value);
 
 private:
-    virtual void focusin_event(GUI::FocusEvent&) override;
-    virtual void focusout_event(GUI::FocusEvent&) override;
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
@@ -80,7 +77,6 @@ private:
     void on_navigatable_link_click(const GUI::TextDocumentSpan&);
     void on_identifier_click(const GUI::TextDocumentSpan&);
 
-    Gfx::IntRect gutter_icon_rect(size_t line_number) const;
     static Gfx::Bitmap const& breakpoint_icon_bitmap();
     static Gfx::Bitmap const& current_position_icon_bitmap();
     static ErrorOr<void> initialize_tooltip_window();
@@ -119,7 +115,6 @@ private:
     GUI::TextPosition m_previous_text_position { 0, 0 };
     bool m_hovering_editor { false };
     bool m_hovering_clickable { false };
-    bool m_autocomplete_in_focus { false };
     RefPtr<GUI::Action> m_move_execution_to_line_action;
     RefPtr<Core::Timer> m_tokens_info_timer; // Used for querying language server for syntax highlighting info
     OwnPtr<LanguageClient> m_language_client;

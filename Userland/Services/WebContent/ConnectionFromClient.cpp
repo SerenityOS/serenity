@@ -14,6 +14,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/SystemTheme.h>
+#include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Console.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/ConsoleObject.h>
@@ -64,6 +65,11 @@ Web::Page const& ConnectionFromClient::page() const
     return m_page_host->page();
 }
 
+void ConnectionFromClient::set_use_javascript_bytecode(bool use_bytecode)
+{
+    JS::Bytecode::Interpreter::set_enabled(use_bytecode);
+}
+
 Messages::WebContentServer::GetWindowHandleResponse ConnectionFromClient::get_window_handle()
 {
     return m_page_host->page().top_level_browsing_context().window_handle();
@@ -106,10 +112,10 @@ void ConnectionFromClient::load_url(const URL& url)
 
 #if defined(AK_OS_SERENITY)
     DeprecatedString process_name;
-    if (url.host().is_empty())
+    if (url.host().has<Empty>() || url.host() == String {})
         process_name = "WebContent";
     else
-        process_name = DeprecatedString::formatted("WebContent: {}", url.host());
+        process_name = DeprecatedString::formatted("WebContent: {}", url.serialized_host().release_value_but_fixme_should_propagate_errors());
 
     pthread_setname_np(pthread_self(), process_name.characters());
 #endif

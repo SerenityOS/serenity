@@ -139,7 +139,7 @@ enum class NeedsBigProcessLock {
     S(perf_register_string, NeedsBigProcessLock::Yes)      \
     S(pipe, NeedsBigProcessLock::No)                       \
     S(pledge, NeedsBigProcessLock::No)                     \
-    S(poll, NeedsBigProcessLock::Yes)                      \
+    S(poll, NeedsBigProcessLock::No)                       \
     S(posix_fallocate, NeedsBigProcessLock::No)            \
     S(prctl, NeedsBigProcessLock::No)                      \
     S(profiling_disable, NeedsBigProcessLock::Yes)         \

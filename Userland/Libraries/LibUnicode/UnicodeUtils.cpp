@@ -147,7 +147,7 @@ static bool is_followed_by_combining_dot_above(Utf8View const& string, size_t in
     return false;
 }
 
-static SpecialCasing const* find_matching_special_case(u32 code_point, Utf8View const& string, Optional<StringView> locale, size_t index, size_t byte_length)
+static Optional<SpecialCasing const&> find_matching_special_case(u32 code_point, Utf8View const& string, Optional<StringView> locale, size_t index, size_t byte_length)
 {
     auto requested_locale = Locale::None;
 
@@ -158,11 +158,11 @@ static SpecialCasing const* find_matching_special_case(u32 code_point, Utf8View 
 
     auto special_casings = special_case_mapping(code_point);
 
-    for (auto const* special_casing : special_casings) {
-        if (special_casing->locale != Locale::None && special_casing->locale != requested_locale)
+    for (auto const& special_casing : special_casings) {
+        if (special_casing.locale != Locale::None && special_casing.locale != requested_locale)
             continue;
 
-        switch (special_casing->condition) {
+        switch (special_casing.condition) {
         case Condition::None:
             return special_casing;
 
@@ -193,20 +193,20 @@ static SpecialCasing const* find_matching_special_case(u32 code_point, Utf8View 
         }
     }
 
-    return nullptr;
+    return {};
 }
 
 template<CaseFoldingStatus... StatusFilter>
-static CaseFolding const* find_matching_case_folding(u32 code_point)
+static Optional<CaseFolding const&> find_matching_case_folding(u32 code_point)
 {
     auto case_foldings = case_folding_mapping(code_point);
 
-    for (auto const* case_folding : case_foldings) {
-        if (((case_folding->status == StatusFilter) || ...))
+    for (auto const& case_folding : case_foldings) {
+        if (((case_folding.status == StatusFilter) || ...))
             return case_folding;
     }
 
-    return nullptr;
+    return {};
 }
 
 #endif
@@ -222,8 +222,8 @@ ErrorOr<void> build_lowercase_string([[maybe_unused]] Utf8View code_points, [[ma
         u32 code_point = *it;
         byte_length = it.underlying_code_point_length_in_bytes();
 
-        auto const* special_casing = find_matching_special_case(code_point, code_points, locale, index, byte_length);
-        if (!special_casing) {
+        auto special_casing = find_matching_special_case(code_point, code_points, locale, index, byte_length);
+        if (!special_casing.has_value()) {
             TRY(builder.try_append_code_point(to_unicode_lowercase(code_point)));
             continue;
         }
@@ -249,8 +249,8 @@ ErrorOr<void> build_uppercase_string([[maybe_unused]] Utf8View code_points, [[ma
         u32 code_point = *it;
         byte_length = it.underlying_code_point_length_in_bytes();
 
-        auto const* special_casing = find_matching_special_case(code_point, code_points, locale, index, byte_length);
-        if (!special_casing) {
+        auto special_casing = find_matching_special_case(code_point, code_points, locale, index, byte_length);
+        if (!special_casing.has_value()) {
             TRY(builder.try_append_code_point(to_unicode_uppercase(code_point)));
             continue;
         }
@@ -287,8 +287,8 @@ ErrorOr<void> build_titlecase_string([[maybe_unused]] Utf8View code_points, [[ma
     };
 
     auto append_code_point_as_titlecase = [&](auto code_point, auto code_point_offset, auto code_point_length) -> ErrorOr<void> {
-        auto const* special_casing = find_matching_special_case(code_point, code_points, locale, code_point_offset, code_point_length);
-        if (!special_casing) {
+        auto special_casing = find_matching_special_case(code_point, code_points, locale, code_point_offset, code_point_length);
+        if (!special_casing.has_value()) {
             TRY(builder.try_append_code_point(to_unicode_titlecase(code_point)));
             return {};
         }
@@ -350,7 +350,7 @@ Utf32View casefold_code_point(u32 const& code_point)
     // CaseFolding.txt in the Unicode Character Database.
     using enum CaseFoldingStatus;
 
-    if (auto const* case_folding = find_matching_case_folding<Common, Full>(code_point))
+    if (auto case_folding = find_matching_case_folding<Common, Full>(code_point); case_folding.has_value())
         return Utf32View { case_folding->mapping, case_folding->mapping_size };
 #endif
 
