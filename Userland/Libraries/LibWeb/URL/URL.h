@@ -24,6 +24,9 @@ public:
 
     virtual ~URL() override;
 
+    static WebIDL::ExceptionOr<String> create_object_url(JS::VM&, JS::NonnullGCPtr<FileAPI::Blob> object);
+    static WebIDL::ExceptionOr<void> revoke_object_url(JS::VM&, StringView url);
+
     static bool can_parse(JS::VM&, String const& url, Optional<String> const& base = {});
 
     WebIDL::ExceptionOr<String> href() const;

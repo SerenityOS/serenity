@@ -10,6 +10,7 @@
 #include <AK/IPv6Address.h>
 #include <AK/URLParser.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/FileAPI/Blob.h>
 #include <LibWeb/FileAPI/BlobURLStore.h>
 #include <LibWeb/URL/URL.h>
 
@@ -95,6 +96,38 @@ void URL::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_query.ptr());
+}
+
+// https://w3c.github.io/FileAPI/#dfn-createObjectURL
+WebIDL::ExceptionOr<String> URL::create_object_url(JS::VM& vm, JS::NonnullGCPtr<FileAPI::Blob> object)
+{
+    // The createObjectURL(obj) static method must return the result of adding an entry to the blob URL store for obj.
+    return TRY_OR_THROW_OOM(vm, FileAPI::add_entry_to_blob_url_store(object));
+}
+
+// https://w3c.github.io/FileAPI/#dfn-revokeObjectURL
+WebIDL::ExceptionOr<void> URL::revoke_object_url(JS::VM& vm, StringView url)
+{
+    // 1. Let url record be the result of parsing url.
+    auto url_record = parse(url);
+
+    // 2. If url record’s scheme is not "blob", return.
+    if (url_record.scheme() != "blob"sv)
+        return {};
+
+    // 3. Let origin be the origin of url record.
+    auto origin = url_origin(url_record);
+
+    // 4. Let settings be the current settings object.
+    auto& settings = HTML::current_settings_object();
+
+    // 5. If origin is not same origin with settings’s origin, return.
+    if (!origin.is_same_origin(settings.origin()))
+        return {};
+
+    // 6. Remove an entry from the Blob URL Store for url.
+    TRY_OR_THROW_OOM(vm, FileAPI::remove_entry_from_blob_url_store(url));
+    return {};
 }
 
 // https://url.spec.whatwg.org/#dom-url-canparse
