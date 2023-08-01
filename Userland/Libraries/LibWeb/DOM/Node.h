@@ -185,7 +185,7 @@ public:
     Painting::Paintable const* paintable() const;
 
     void set_layout_node(Badge<Layout::Node>, JS::NonnullGCPtr<Layout::Node>);
-    void detach_layout_node(Badge<DOM::Document>);
+    void detach_layout_node(Badge<Layout::TreeBuilder>);
 
     virtual bool is_child_allowed(Node const&) const { return true; }
 

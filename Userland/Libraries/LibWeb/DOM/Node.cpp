@@ -882,7 +882,7 @@ void Node::set_layout_node(Badge<Layout::Node>, JS::NonnullGCPtr<Layout::Node> l
     m_layout_node = layout_node;
 }
 
-void Node::detach_layout_node(Badge<DOM::Document>)
+void Node::detach_layout_node(Badge<Layout::TreeBuilder>)
 {
     m_layout_node = nullptr;
 }

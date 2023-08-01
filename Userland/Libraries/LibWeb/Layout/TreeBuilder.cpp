@@ -210,7 +210,21 @@ ErrorOr<void> TreeBuilder::create_pseudo_element_if_needed(DOM::Element& element
 
 ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& context)
 {
+    JS::GCPtr<Layout::Node> layout_node;
     Optional<TemporaryChange<bool>> has_svg_root_change;
+
+    ScopeGuard remove_stale_layout_node_guard = [&] {
+        // If we didn't create a layout node for this DOM node,
+        // go through the DOM tree and remove any old layout nodes since they are now all stale.
+        if (!layout_node) {
+            dom_node.for_each_in_inclusive_subtree([&](auto& node) {
+                node.detach_layout_node({});
+                if (is<DOM::Element>(node))
+                    static_cast<DOM::Element&>(node).clear_pseudo_element_nodes({});
+                return IterationDecision::Continue;
+            });
+        }
+    };
 
     if (dom_node.is_svg_container()) {
         has_svg_root_change.emplace(context.has_svg_root, true);
@@ -220,7 +234,6 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
 
     auto& document = dom_node.document();
     auto& style_computer = document.style_computer();
-    JS::GCPtr<Layout::Node> layout_node;
     RefPtr<CSS::StyleProperties> style;
     CSS::Display display;
 
