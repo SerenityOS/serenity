@@ -48,7 +48,11 @@ void Inode::sync()
 {
     if (is_metadata_dirty())
         (void)flush_metadata();
-    fs().flush_writes();
+    auto result = fs().flush_writes();
+    if (result.is_error()) {
+        // TODO: Figure out how to propagate error to a higher function.
+    }
+
 }
 
 ErrorOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(Credentials const& credentials, Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const

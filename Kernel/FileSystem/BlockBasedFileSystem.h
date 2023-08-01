@@ -19,7 +19,7 @@ public:
 
     u64 device_block_size() const { return m_device_block_size; }
 
-    virtual void flush_writes() override;
+    virtual ErrorOr<void> flush_writes() override;
     void flush_writes_impl();
 
 protected:
