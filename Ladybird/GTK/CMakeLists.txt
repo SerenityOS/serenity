@@ -69,6 +69,7 @@ set(SOURCES
     Window.cpp
     WebContentView.cpp
     ViewImpl.cpp
+    EventLoopImplementationGLib.cpp
     "${GENERATED_GRESOURCE_FILE}"
 )
 
