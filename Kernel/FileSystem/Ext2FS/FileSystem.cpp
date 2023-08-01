@@ -626,7 +626,7 @@ ErrorOr<void> Ext2FS::flush_writes()
             auto result = flush_super_block();
             if (result.is_error()) {
                 dbgln("Ext2FS[{}]::flush_writes(): Failed to write superblock: {}", fsid(), result.error());
-                return EIO;
+                return result.release_error();
             }
             m_super_block_dirty = false;
         }
@@ -666,7 +666,7 @@ ErrorOr<void> Ext2FS::flush_writes()
     auto result = BlockBasedFileSystem::flush_writes();
     if (result.is_error()) {
         dbgln("Ext2FS[{}]::flush_writes(): Failed to flush writes: {}", BlockBasedFileSystem::fsid(), result.error());
-        return EIO;
+        return result.release_error();
     }
 
     return {};
