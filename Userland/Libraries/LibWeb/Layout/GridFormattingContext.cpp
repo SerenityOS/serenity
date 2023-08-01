@@ -1049,7 +1049,7 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
 
         // 1. For intrinsic minimums: First increase the base size of tracks with an intrinsic min track sizing
         //    function by distributing extra space as needed to accommodate these items’ minimum contributions.
-        auto item_minimum_contribution = automatic_minimum_size(item, dimension);
+        auto item_minimum_contribution = calculate_minimum_contribution(item, dimension);
         distribute_extra_space_across_spanned_tracks_base_size(dimension,
             item_minimum_contribution, SpaceDistributionPhase::AccommodateMinimumContribution, spanned_tracks, [&](GridTrack const& track) {
                 return track.min_track_sizing_function.is_flexible_length();
