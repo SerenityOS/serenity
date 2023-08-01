@@ -9,29 +9,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(PkgConfig)
 pkg_check_modules(gtk4 REQUIRED IMPORTED_TARGET gtk4>=4.11.3)
 pkg_check_modules(libadwaita REQUIRED IMPORTED_TARGET libadwaita-1>=1.4)
-pkg_check_modules(gobject-introspection-1.0 REQUIRED IMPORTED_TARGET gobject-introspection-1.0>=1.77)
 
 find_program(GLIB_COMPILE_RESOURCES NAMES glib-compile-resources REQUIRED)
 
-#find_program(BLUEPRINT_COMPILER NAMES blueprint-compiler REQUIRED)
-
-include(ExternalProject)
-ExternalProject_Add(blueprint-compiler
-    GIT_REPOSITORY https://gitlab.gnome.org/jwestman/blueprint-compiler.git
-    GIT_TAG v0.10.0
-    GIT_SHALLOW ON
-    CONFIGURE_COMMAND
-        meson setup ../blueprint-compiler
-            # This is a hack to pass the proper prefix directory to Meson.
-            -D prefix=$<TARGET_PROPERTY:blueprint-compiler,_EP_INSTALL_DIR>
-    BUILD_COMMAND meson compile
-    TEST_COMMAND meson test
-    TEST_EXCLUDE_FROM_MAIN ON
-    INSTALL_COMMAND meson install
-    EXCLUDE_FROM_ALL
-)
-
-set(BLUEPRINT_COMPILER "$<TARGET_PROPERTY:blueprint-compiler,_EP_INSTALL_DIR>/bin/blueprint-compiler")
+find_program(BLUEPRINT_COMPILER NAMES blueprint-compiler REQUIRED)
 
 set(LAGOM_SOURCE_DIR "${SERENITY_SOURCE_DIR}/Meta/Lagom")
 set(LAGOM_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/Lagom")
@@ -51,24 +32,16 @@ include_directories(
 )
 add_compile_definitions(AK_DONT_REPLACE_STD)
 
-pkg_get_variable(GI_TYPELIB_PATH gobject-introspection-1.0 typelibdir)
-if (DEFINED ENV{GI_TYPELIB_PATH})
-    list(APPEND GI_TYPELIB_PATH $ENV{GI_TYPELIB_PATH})
-endif()
-list(JOIN GI_TYPELIB_PATH ":" GI_TYPELIB_PATH_ENV)
-
 set(RESOURCE_FILES)
 function(add_blueprint source_file ui_file)
     add_custom_command(
         OUTPUT "${ui_file}"
-        COMMAND "${CMAKE_COMMAND}"
+        COMMAND "${BLUEPRINT_COMPILER}"
         ARGS
-            -E env GI_TYPELIB_PATH="${GI_TYPELIB_PATH_ENV}"
-            "${BLUEPRINT_COMPILER}"
             compile
             --output "${CMAKE_CURRENT_BINARY_DIR}/${ui_file}"
             "${CMAKE_CURRENT_SOURCE_DIR}/${source_file}"
-        DEPENDS blueprint-compiler "${source_file}"
+        DEPENDS "${source_file}"
     )
     list(APPEND RESOURCE_FILES "${ui_file}")
     set(RESOURCE_FILES ${RESOURCE_FILES} PARENT_SCOPE)
