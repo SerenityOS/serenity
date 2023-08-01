@@ -690,10 +690,9 @@ public:
         VERIFY(m_output->is_open());
 
         TRY(m_output->seek(0, SeekMode::SetPosition));
-        auto source_stat = TRY(Core::System::stat(m_output_temp_file->path()));
+        auto source_stat = TRY(Core::System::stat(m_input_file_path.string()));
         return FileSystem::copy_file(
-            m_input_file_path.string(), m_output_temp_file->path(), source_stat, *m_output,
-            FileSystem::PreserveMode::Ownership | FileSystem::PreserveMode::Permissions);
+            m_input_file_path.string(), m_output_temp_file->path(), source_stat, *m_output);
     }
 
 private:
