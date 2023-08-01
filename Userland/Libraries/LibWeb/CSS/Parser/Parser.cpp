@@ -493,6 +493,8 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::LastOfType);
         if (pseudo_name.equals_ignoring_ascii_case("link"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Link);
+        if (pseudo_name.equals_ignoring_ascii_case("muted"sv))
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Muted);
         if (pseudo_name.equals_ignoring_ascii_case("only-child"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::OnlyChild);
         if (pseudo_name.equals_ignoring_ascii_case("only-of-type"sv))

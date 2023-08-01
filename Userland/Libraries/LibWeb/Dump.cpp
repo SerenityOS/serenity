@@ -551,6 +551,9 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                 case CSS::Selector::SimpleSelector::PseudoClass::Type::Seeking:
                     pseudo_class_description = "Seeking";
                     break;
+                case CSS::Selector::SimpleSelector::PseudoClass::Type::Muted:
+                    pseudo_class_description = "Muted";
+                    break;
                 }
 
                 builder.appendff(" pseudo_class={}", pseudo_class_description);
