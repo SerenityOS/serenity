@@ -216,7 +216,7 @@ ErrorOr<void> MonitorSettingsWidget::selected_screen_index_or_resolution_changed
 
     if (screen_dpi.has_value()) {
         auto dpi_label_value = TRY(String::formatted("{} dpi", screen_dpi.value()));
-        m_dpi_label->set_tooltip(screen_dpi_tooltip.to_deprecated_string());
+        m_dpi_label->set_tooltip_deprecated(screen_dpi_tooltip.to_deprecated_string());
         m_dpi_label->set_text(move(dpi_label_value));
         m_dpi_label->set_visible(true);
     } else {

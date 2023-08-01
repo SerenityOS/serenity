@@ -878,18 +878,18 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
                     auto file_name = LexicalPath::basename(path);
 
                     if (path == handlers[0]) {
-                        set_tooltip(DeprecatedString::formatted("Execute {}", app_name));
+                        set_tooltip_deprecated(DeprecatedString::formatted("Execute {}", app_name));
                     } else {
-                        set_tooltip(DeprecatedString::formatted("Open {} with {}", file_name, app_name));
+                        set_tooltip_deprecated(DeprecatedString::formatted("Open {} with {}", file_name, app_name));
                     }
                 } else {
-                    set_tooltip(DeprecatedString::formatted("Open {} with {}", attribute.href, app_name));
+                    set_tooltip_deprecated(DeprecatedString::formatted("Open {} with {}", attribute.href, app_name));
                 }
             }
         } else {
             m_hovered_href_id = {};
             m_hovered_href = {};
-            set_tooltip({});
+            set_tooltip_deprecated({});
         }
         show_or_hide_tooltip();
         if (!m_hovered_href.is_empty())
@@ -957,7 +957,7 @@ void TerminalWidget::leave_event(Core::Event&)
     bool should_update = !m_hovered_href.is_empty();
     m_hovered_href = {};
     m_hovered_href_id = {};
-    set_tooltip(m_hovered_href);
+    set_tooltip_deprecated(m_hovered_href);
     set_override_cursor(Gfx::StandardCursor::IBeam);
     if (should_update)
         update();

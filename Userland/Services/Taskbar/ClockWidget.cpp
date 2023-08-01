@@ -30,7 +30,7 @@ ClockWidget::ClockWidget()
         if (now != last_update_time) {
             tick_clock();
             last_update_time = now;
-            set_tooltip(Core::DateTime::now().to_deprecated_string("%Y-%m-%d"sv));
+            set_tooltip_deprecated(Core::DateTime::now().to_deprecated_string("%Y-%m-%d"sv));
         }
     });
     m_timer->start();
@@ -107,7 +107,7 @@ ClockWidget::ClockWidget()
     m_jump_to_button->set_button_style(Gfx::ButtonStyle::Coolbar);
     m_jump_to_button->set_fixed_size(24, 24);
     m_jump_to_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/calendar-date.png"sv).release_value_but_fixme_should_propagate_errors());
-    m_jump_to_button->set_tooltip("Jump to today");
+    m_jump_to_button->set_tooltip_deprecated("Jump to today");
     m_jump_to_button->on_click = [this](auto) {
         jump_to_current_date();
     };
@@ -116,7 +116,7 @@ ClockWidget::ClockWidget()
     m_calendar_launcher->set_button_style(Gfx::ButtonStyle::Coolbar);
     m_calendar_launcher->set_fixed_size(24, 24);
     m_calendar_launcher->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-calendar.png"sv).release_value_but_fixme_should_propagate_errors());
-    m_calendar_launcher->set_tooltip("Calendar");
+    m_calendar_launcher->set_tooltip_deprecated("Calendar");
     m_calendar_launcher->on_click = [this](auto) {
         GUI::Process::spawn_or_show_error(window(), "/bin/Calendar"sv);
     };

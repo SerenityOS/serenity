@@ -117,7 +117,7 @@ BookmarksBarWidget::BookmarksBarWidget(DeprecatedString const& bookmarks_file, b
         set_visible(false);
 
     m_additional = GUI::Button::construct();
-    m_additional->set_tooltip("Show hidden bookmarks");
+    m_additional->set_tooltip_deprecated("Show hidden bookmarks");
     m_additional->set_menu(m_additional_menu);
     auto bitmap_or_error = Gfx::Bitmap::load_from_file("/res/icons/16x16/overflow-menu.png"sv);
     if (!bitmap_or_error.is_error())
@@ -216,7 +216,7 @@ void BookmarksBarWidget::model_did_update(unsigned)
         button.set_fixed_size(font().width(title) + 32, 20);
         button.set_relative_rect(rect);
         button.set_focus_policy(GUI::FocusPolicy::TabFocus);
-        button.set_tooltip(url);
+        button.set_tooltip_deprecated(url);
         button.set_allowed_mouse_buttons_for_pressing(GUI::MouseButton::Primary | GUI::MouseButton::Middle);
 
         button.on_click = [title, url, this](auto) {

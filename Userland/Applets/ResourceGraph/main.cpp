@@ -107,7 +107,7 @@ private:
         default:
             VERIFY_NOT_REACHED();
         }
-        set_tooltip(m_tooltip);
+        set_tooltip_deprecated(m_tooltip);
         update();
     }
 

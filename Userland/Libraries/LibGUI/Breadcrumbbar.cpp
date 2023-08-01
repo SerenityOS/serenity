@@ -76,7 +76,7 @@ void Breadcrumbbar::append_segment(DeprecatedString text, Gfx::Bitmap const* ico
     button.set_button_style(Gfx::ButtonStyle::Coolbar);
     button.set_text(String::from_deprecated_string(text).release_value_but_fixme_should_propagate_errors());
     button.set_icon(icon);
-    button.set_tooltip(move(tooltip));
+    button.set_tooltip_deprecated(move(tooltip));
     button.set_focus_policy(FocusPolicy::TabFocus);
     button.set_checkable(true);
     button.set_exclusive(true);

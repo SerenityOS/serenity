@@ -62,7 +62,7 @@ private:
             m_adapter_info = adapter_info;
         }
 
-        set_tooltip(m_adapter_info);
+        set_tooltip_deprecated(m_adapter_info);
 
         if (m_connected)
             NetworkWidget::set_bitmap(m_connected_icon);

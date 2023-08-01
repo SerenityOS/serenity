@@ -93,7 +93,7 @@ void FlameGraphView::mousemove_event(GUI::MouseEvent& event)
     if (m_hovered_bar != nullptr && m_hovered_bar->index.is_valid()) {
         label = bar_label(*m_hovered_bar);
     }
-    set_tooltip(label);
+    set_tooltip_deprecated(label);
     show_or_hide_tooltip();
 
     update();
