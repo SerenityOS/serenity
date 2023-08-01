@@ -389,6 +389,12 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
         auto const& media_element = static_cast<HTML::HTMLMediaElement const&>(element);
         return media_element.paused();
     }
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::Seeking: {
+        if (!is<HTML::HTMLMediaElement>(element))
+            return false;
+        auto const& media_element = static_cast<HTML::HTMLMediaElement const&>(element);
+        return media_element.seeking();
+    }
     }
 
     return false;
