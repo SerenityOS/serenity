@@ -68,10 +68,15 @@ void RequestServerRequestAdapter::stream_into(Stream& stream)
     m_request->stream_into(stream);
 }
 
+ErrorOr<NonnullRefPtr<RequestServerAdapter>> RequestServerAdapter::try_create(NonnullRefPtr<Protocol::RequestClient> protocol_client)
+{
+    return try_make_ref_counted<RequestServerAdapter>(move(protocol_client));
+}
+
 ErrorOr<NonnullRefPtr<RequestServerAdapter>> RequestServerAdapter::try_create()
 {
     auto protocol_client = TRY(Protocol::RequestClient::try_create());
-    return adopt_nonnull_ref_or_enomem(new (nothrow) RequestServerAdapter(move(protocol_client)));
+    return try_make_ref_counted<RequestServerAdapter>(move(protocol_client));
 }
 
 RequestServerAdapter::RequestServerAdapter(NonnullRefPtr<Protocol::RequestClient> protocol_client)
