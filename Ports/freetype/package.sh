@@ -13,9 +13,3 @@ configopts=(
     "--with-harfbuzz=no"
     "--with-png=no"
 )
-
-install() {
-    run make DESTDIR="${SERENITY_INSTALL_ROOT}" "${installopts[@]}" install
-    ${CC} -shared -o "${SERENITY_INSTALL_ROOT}/usr/local/lib/libfreetype.so" -Wl,-soname,libfreetype.so -Wl,--whole-archive "${SERENITY_INSTALL_ROOT}/usr/local/lib/libfreetype.a" -Wl,--no-whole-archive
-    rm -f "${SERENITY_INSTALL_ROOT}/usr/local/lib/libfreetype.la"
-}
