@@ -1214,7 +1214,8 @@ void FlexFormattingContext::calculate_cross_size_of_each_flex_line()
 
     // If the flex container is single-line, then clamp the line’s cross-size to be within the container’s computed min and max cross sizes.
     // Note that if CSS 2.1’s definition of min/max-width/height applied more generally, this behavior would fall out automatically.
-    if (is_single_line()) {
+    // AD-HOC: We don't do this when the flex container is being sized under a min-content or max-content constraint.
+    if (is_single_line() && !m_available_space_for_flex_container->cross.is_intrinsic_sizing_constraint()) {
         auto const& computed_min_size = this->computed_cross_min_size(flex_container());
         auto const& computed_max_size = this->computed_cross_max_size(flex_container());
         auto cross_min_size = (!computed_min_size.is_auto() && !computed_min_size.contains_percentage()) ? specified_cross_min_size(flex_container()) : 0;
@@ -1530,11 +1531,17 @@ void FlexFormattingContext::determine_flex_container_used_cross_size()
             cross_size = cross_size_value.to_px(flex_container(), inner_cross_size(*flex_container().containing_block()));
         }
     }
-    auto const& computed_min_size = this->computed_cross_min_size(flex_container());
-    auto const& computed_max_size = this->computed_cross_max_size(flex_container());
-    auto cross_min_size = (!computed_min_size.is_auto() && !computed_min_size.contains_percentage()) ? specified_cross_min_size(flex_container()) : 0;
-    auto cross_max_size = (!computed_max_size.is_none() && !computed_max_size.contains_percentage()) ? specified_cross_max_size(flex_container()) : INFINITY;
-    set_cross_size(flex_container(), css_clamp(cross_size, cross_min_size, cross_max_size));
+
+    // AD-HOC: We don't apply min/max cross size constraints when sizing the flex container under an intrinsic sizing constraint.
+    if (!m_available_space_for_flex_container->cross.is_intrinsic_sizing_constraint()) {
+        auto const& computed_min_size = this->computed_cross_min_size(flex_container());
+        auto const& computed_max_size = this->computed_cross_max_size(flex_container());
+        auto cross_min_size = (!computed_min_size.is_auto() && !computed_min_size.contains_percentage()) ? specified_cross_min_size(flex_container()) : 0;
+        auto cross_max_size = (!computed_max_size.is_none() && !computed_max_size.contains_percentage()) ? specified_cross_max_size(flex_container()) : INFINITY;
+        set_cross_size(flex_container(), css_clamp(cross_size, cross_min_size, cross_max_size));
+    } else {
+        set_cross_size(flex_container(), cross_size);
+    }
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#algo-line-align
