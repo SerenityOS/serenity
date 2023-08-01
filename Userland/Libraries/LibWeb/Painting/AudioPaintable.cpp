@@ -52,7 +52,11 @@ void AudioPaintable::paint(PaintContext& context, PaintPhase phase) const
     if (phase != PaintPhase::Foreground)
         return;
 
+    Gfx::PainterStateSaver saver { context.painter() };
+
     auto audio_rect = context.rounded_device_rect(absolute_rect());
+    context.painter().add_clip_rect(audio_rect.to_type<int>());
+
     ScopedCornerRadiusClip corner_clip { context, context.painter(), audio_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
 
     auto const& audio_element = layout_box().dom_node();
