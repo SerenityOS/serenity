@@ -40,7 +40,7 @@ link_qt("ladybird_qt_components") {
 config("ladybird_config") {
   include_dirs = [
     "//Userland/Applications",
-    "//Userland",
+    "//Userland/Services",
   ]
   defines = [ "AK_DONT_REPLACE_STD" ]
 }
@@ -52,6 +52,7 @@ executable("ladybird_executable") {
   ]
   data_deps = [
     ":headless-browser",
+    "RequestServer",
     "SQLServer",
     "WebContent",
     "WebDriver",
@@ -67,6 +68,7 @@ executable("ladybird_executable") {
     "//Userland/Libraries/LibIPC",
     "//Userland/Libraries/LibJS",
     "//Userland/Libraries/LibMain",
+    "//Userland/Libraries/LibProtocol",
     "//Userland/Libraries/LibSQL",
     "//Userland/Libraries/LibWeb",
     "//Userland/Libraries/LibWebView",
@@ -119,6 +121,7 @@ executable("headless-browser") {
     "//Userland/Libraries/LibIPC",
     "//Userland/Libraries/LibJS",
     "//Userland/Libraries/LibMain",
+    "//Userland/Libraries/LibProtocol",
     "//Userland/Libraries/LibTLS",
     "//Userland/Libraries/LibWeb",
     "//Userland/Libraries/LibWebSocket",
@@ -142,11 +145,13 @@ if (current_os == "mac") {
     public_deps = [
       ":headless-browser",
       ":ladybird_executable",
+      "RequestServer",
       "SQLServer",
       "WebContent",
       "WebDriver",
     ]
     sources = [
+      "$root_out_dir/bin/RequestServer",
       "$root_out_dir/bin/SQLServer",
       "$root_out_dir/bin/WebContent",
       "$root_out_dir/bin/WebDriver",
@@ -176,6 +181,7 @@ if (current_os == "mac") {
       "//Userland/Libraries/LibJS",
       "//Userland/Libraries/LibLine",
       "//Userland/Libraries/LibMarkdown",
+      "//Userland/Libraries/LibProtocol",
       "//Userland/Libraries/LibRegex",
       "//Userland/Libraries/LibSQL",
       "//Userland/Libraries/LibSoftGPU",
@@ -209,6 +215,7 @@ if (current_os == "mac") {
       "$root_out_dir/lib/liblagom-js.dylib",
       "$root_out_dir/lib/liblagom-line.dylib",
       "$root_out_dir/lib/liblagom-markdown.dylib",
+      "$root_out_dir/lib/liblagom-protocol.dylib",
       "$root_out_dir/lib/liblagom-regex.dylib",
       "$root_out_dir/lib/liblagom-softgpu.dylib",
       "$root_out_dir/lib/liblagom-sql.dylib",
@@ -239,7 +246,9 @@ if (current_os == "mac") {
   }
 
   bundle_data("ladybird_config_resources") {
+    public_deps = [ "//Userland/Libraries/LibTLS:ca_certificates_download" ]
     sources = [
+      "$root_build_dir/cacert.pem",
       "//Base/home/anon/.config/BrowserAutoplayAllowlist.txt",
       "//Base/home/anon/.config/BrowserContentFilters.txt",
     ]

@@ -99,7 +99,7 @@ set(SOURCES
 )
 
 qt_add_executable(ladybird ${SOURCES})
-target_link_libraries(ladybird PRIVATE Qt::Core Qt::Gui Qt::Network Qt::Widgets LibCore LibFileSystem LibGfx LibGUI LibIPC LibJS LibMain LibWeb LibWebView LibSQL)
+target_link_libraries(ladybird PRIVATE Qt::Core Qt::Gui Qt::Network Qt::Widgets LibCore LibFileSystem LibGfx LibGUI LibIPC LibJS LibMain LibWeb LibWebView LibSQL LibProtocol)
 
 target_include_directories(ladybird PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/)
@@ -113,7 +113,7 @@ qt_add_executable(headless-browser
     Utilities.cpp)
 
 target_include_directories(headless-browser PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-target_link_libraries(headless-browser PRIVATE Qt::Core LibWeb LibWebView LibWebSocket LibCrypto LibFileSystem LibGemini LibHTTP LibJS LibGfx LibMain LibTLS LibIPC LibJS LibDiff)
+target_link_libraries(headless-browser PRIVATE Qt::Core LibWeb LibWebView LibWebSocket LibCrypto LibFileSystem LibGemini LibHTTP LibJS LibGfx LibMain LibTLS LibIPC LibDiff LibProtocol)
 
 set_target_properties(ladybird PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER org.SerenityOS.Ladybird
@@ -144,13 +144,15 @@ add_custom_target(debug${LADYBIRD_CUSTOM_TARGET_SUFFIX}
 add_subdirectory(SQLServer)
 add_subdirectory(WebContent)
 add_subdirectory(WebDriver)
-add_dependencies(ladybird SQLServer WebContent WebDriver headless-browser)
+add_subdirectory(RequestServer)
+add_dependencies(ladybird SQLServer WebContent WebDriver RequestServer headless-browser)
 
 if (APPLE)
     # FIXME: Create a proper app bundle for each helper process
     set(app_dir "$<TARGET_FILE_DIR:ladybird>")
     set(bundle_dir "$<TARGET_BUNDLE_DIR:ladybird>")
     add_custom_command(TARGET ladybird POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:RequestServer>" "${app_dir}"
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:SQLServer>" "${app_dir}"
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:WebContent>" "${app_dir}"
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:WebDriver>" "${app_dir}"

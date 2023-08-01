@@ -47,7 +47,7 @@ static QIcon create_tvg_icon_with_theme_colors(QString name, QPalette const& pal
     return QIcon(icon_engine);
 }
 
-Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling, WebView::UseJavaScriptBytecode use_javascript_bytecode)
+Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling, WebView::UseJavaScriptBytecode use_javascript_bytecode, UseLagomNetworking use_lagom_networking)
     : QWidget(window)
     , m_window(window)
 {
@@ -55,7 +55,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     m_layout->setSpacing(0);
     m_layout->setContentsMargins(0, 0, 0, 0);
 
-    m_view = new WebContentView(webdriver_content_ipc_path, enable_callgrind_profiling, use_javascript_bytecode);
+    m_view = new WebContentView(webdriver_content_ipc_path, enable_callgrind_profiling, use_javascript_bytecode, use_lagom_networking);
     m_toolbar = new QToolBar(this);
     m_location_edit = new LocationEdit(this);
 

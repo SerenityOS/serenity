@@ -407,6 +407,7 @@ if (BUILD_LAGOM)
         Manual
         Markdown
         PDF
+        Protocol
         Regex
         SoftGPU
         SQL
@@ -430,21 +431,26 @@ if (BUILD_LAGOM)
         list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/StylePropertiesModel.cpp")
         list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/ViewImplementation.cpp")
         list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/WebContentClient.cpp")
+        list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/RequestServerAdapter.cpp")
 
         compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebContent/WebContentServer.ipc WebContent/WebContentServerEndpoint.h)
         compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebContent/WebContentClient.ipc WebContent/WebContentClientEndpoint.h)
         compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebContent/WebDriverClient.ipc WebContent/WebDriverClientEndpoint.h)
         compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebContent/WebDriverServer.ipc WebContent/WebDriverServerEndpoint.h)
+        compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/RequestServer/RequestClient.ipc RequestServer/RequestClientEndpoint.h)
+        compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/RequestServer/RequestServer.ipc RequestServer/RequestServerEndpoint.h)
 
         list(APPEND LIBWEBVIEW_GENERATED_SOURCES WebContent/WebContentClientEndpoint.h)
         list(APPEND LIBWEBVIEW_GENERATED_SOURCES WebContent/WebContentServerEndpoint.h)
         list(APPEND LIBWEBVIEW_GENERATED_SOURCES WebContent/WebDriverClientEndpoint.h)
         list(APPEND LIBWEBVIEW_GENERATED_SOURCES WebContent/WebDriverServerEndpoint.h)
+        list(APPEND LIBWEBVIEW_GENERATED_SOURCES RequestServer/RequestClientEndpoint.h)
+        list(APPEND LIBWEBVIEW_GENERATED_SOURCES RequestServer/RequestServerEndpoint.h)
 
         set(GENERATED_SOURCES ${LIBWEBVIEW_GENERATED_SOURCES})
         lagom_lib(LibWebView webview
             SOURCES ${LIBWEBVIEW_SOURCES} ${LIBWEBVIEW_GENERATED_SOURCES}
-            LIBS LibGfx LibGUI LibIPC LibWeb)
+            LIBS LibGfx LibGUI LibIPC LibWeb LibProtocol)
         unset(GENERATED_SOURCES)
     endif()
 

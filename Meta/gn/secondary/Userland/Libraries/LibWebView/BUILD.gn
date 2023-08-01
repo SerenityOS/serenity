@@ -48,7 +48,8 @@ shared_library("LibWebView") {
   output_name = "webview"
   include_dirs = [
     "//Userland/Libraries",
-    "//Userland",
+    "//Userland/Services",
+    "//Userland/",
   ]
   deps = [
     ":WebContentClientEndpoint",
@@ -60,11 +61,13 @@ shared_library("LibWebView") {
     "//Userland/Libraries/LibGUI",
     "//Userland/Libraries/LibGfx",
     "//Userland/Libraries/LibIPC",
+    "//Userland/Libraries/LibProtocol",
     "//Userland/Libraries/LibWeb",
   ]
   sources = [
     "AccessibilityTreeModel.cpp",
     "DOMTreeModel.cpp",
+    "RequestServerAdapter.cpp",
     "StylePropertiesModel.cpp",
     "ViewImplementation.cpp",
     "WebContentClient.cpp",

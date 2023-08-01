@@ -7,6 +7,7 @@
 #include "../AudioCodecPluginLadybird.h"
 #include "../EventLoopImplementationQt.h"
 #include "../FontPluginLadybird.h"
+#include "../HelperProcess.h"
 #include "../ImageCodecPluginLadybird.h"
 #include "../RequestManagerQt.h"
 #include "../Utilities.h"
@@ -28,8 +29,8 @@
 #include <LibWeb/PermissionsPolicy/AutoplayAllowlist.h>
 #include <LibWeb/Platform/EventLoopPluginSerenity.h>
 #include <LibWeb/WebSockets/WebSocket.h>
+#include <LibWebView/RequestServerAdapter.h>
 #include <QCoreApplication>
-#include <QTimer>
 #include <WebContent/ConnectionFromClient.h>
 #include <WebContent/PageHost.h>
 #include <WebContent/WebDriverConnection.h>
@@ -55,7 +56,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return Ladybird::AudioCodecPluginLadybird::create(move(loader));
     });
 
-    Web::ResourceLoader::initialize(RequestManagerQt::create());
     Web::WebSockets::WebSocketClientManager::initialize(Ladybird::WebSocketClientManagerLadybird::create());
 
     Web::FrameLoader::set_default_favicon_path(DeprecatedString::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));
@@ -63,12 +63,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int webcontent_fd_passing_socket { -1 };
     bool is_layout_test_mode = false;
     bool use_javascript_bytecode = false;
+    bool use_lagom_networking = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(webcontent_fd_passing_socket, "File descriptor of the passing socket for the WebContent connection", "webcontent-fd-passing-socket", 'c', "webcontent_fd_passing_socket");
     args_parser.add_option(is_layout_test_mode, "Is layout test mode", "layout-test-mode", 0);
     args_parser.add_option(use_javascript_bytecode, "Enable JavaScript bytecode VM", "use-bytecode", 0);
+    args_parser.add_option(use_lagom_networking, "Enable Lagom servers for networking", "use-lagom-networking", 0);
     args_parser.parse(arguments);
+
+    if (use_lagom_networking) {
+        auto candidate_request_server_paths = TRY(get_paths_for_helper_process("RequestServer"sv));
+        auto protocol_client = TRY(launch_request_server_process(candidate_request_server_paths));
+        Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create(move(protocol_client))));
+    } else {
+        Web::ResourceLoader::initialize(RequestManagerQt::create());
+    }
 
     JS::Bytecode::Interpreter::set_enabled(use_javascript_bytecode);
 

@@ -10,6 +10,7 @@ set(WEBCONTENT_SOURCES
     ../AudioThread.cpp
     ../EventLoopImplementationQt.cpp
     ../FontPluginLadybird.cpp
+    ../HelperProcess.cpp
     ../ImageCodecPluginLadybird.cpp
     ../RequestManagerQt.cpp
     ../Utilities.cpp
@@ -23,7 +24,7 @@ qt_add_executable(WebContent ${WEBCONTENT_SOURCES})
 
 target_include_directories(WebContent PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
 target_include_directories(WebContent PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
-target_link_libraries(WebContent PRIVATE Qt::Core Qt::Network Qt::Multimedia LibAudio LibCore LibFileSystem LibGfx LibIPC LibJS LibMain LibWeb LibWebSocket)
+target_link_libraries(WebContent PRIVATE Qt::Core Qt::Network Qt::Multimedia LibAudio LibCore LibFileSystem LibGfx LibIPC LibJS LibMain LibWeb LibWebSocket LibProtocol LibSQL LibWebView)
 if (ANDROID)
     link_android_libs(WebContent)
 endif()

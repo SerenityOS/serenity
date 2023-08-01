@@ -4,7 +4,7 @@ include(GNUInstallDirs)
 
 set(package ladybird)
 
-set(ladybird_applications ladybird SQLServer WebContent WebDriver headless-browser)
+set(ladybird_applications ladybird SQLServer WebContent WebDriver RequestServer headless-browser)
 
 set(app_install_targets ${ladybird_applications})
 if (ANDROID)
@@ -89,6 +89,7 @@ install(DIRECTORY
 install(FILES
     "${SERENITY_SOURCE_DIR}/Base/home/anon/.config/BrowserAutoplayAllowlist.txt"
     "${SERENITY_SOURCE_DIR}/Base/home/anon/.config/BrowserContentFilters.txt"
+    "${Lagom_BINARY_DIR}/cacert.pem"
   DESTINATION "${CMAKE_INSTALL_DATADIR}/res/ladybird"
   COMPONENT ladybird_Runtime
 )
