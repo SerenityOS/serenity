@@ -505,8 +505,17 @@ void BlockFormattingContext::layout_inline_children(BlockContainer const& block_
         layout_mode,
         available_space);
 
-    if (!block_container_state.has_definite_width())
-        block_container_state.set_content_width(context.automatic_content_width());
+    if (!block_container_state.has_definite_width()) {
+        // NOTE: max-width for boxes with inline children can only be applied after inside layout is done
+        //       and width of box content is known
+        auto used_width_px = context.automatic_content_width();
+        if (!should_treat_max_width_as_none(block_container, available_space.width)) {
+            auto max_width_px = calculate_inner_width(block_container, available_space.width, block_container.computed_values().max_width()).to_px(block_container);
+            if (used_width_px > max_width_px)
+                used_width_px = max_width_px;
+        }
+        block_container_state.set_content_width(used_width_px);
+    }
     if (!block_container_state.has_definite_height())
         block_container_state.set_content_height(context.automatic_content_height());
 }
