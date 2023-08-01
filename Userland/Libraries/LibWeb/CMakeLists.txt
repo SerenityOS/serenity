@@ -206,6 +206,7 @@ set(SOURCES
     Fetch/Request.cpp
     Fetch/Response.cpp
     FileAPI/Blob.cpp
+    FileAPI/BlobURLStore.cpp
     FileAPI/File.cpp
     FileAPI/FileList.cpp
     FontCache.cpp
