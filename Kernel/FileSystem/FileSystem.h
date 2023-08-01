@@ -51,7 +51,7 @@ public:
         u8 file_type { 0 };
     };
 
-    virtual void flush_writes() { }
+    virtual ErrorOr<void> flush_writes() { return {}; }
 
     u64 logical_block_size() const { return m_logical_block_size; }
     size_t fragment_size() const { return m_fragment_size; }

@@ -106,7 +106,7 @@ ErrorOr<void> PowerStateSwitchTask::perform_shutdown(PowerStateSwitchTask::DoReb
 
         while (!mounts.is_empty()) {
             auto& mount = mounts.take_last();
-            mount.guest_fs().flush_writes();
+            TRY(mount.guest_fs().flush_writes());
 
             auto mount_path = TRY(mount.absolute_path());
             auto& mount_inode = mount.guest();

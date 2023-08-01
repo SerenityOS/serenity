@@ -259,8 +259,12 @@ void VirtualFileSystem::sync_filesystems()
             file_systems.append(fs);
     });
 
-    for (auto& fs : file_systems)
-        fs->flush_writes();
+    for (auto& fs : file_systems) {
+        auto result = fs->flush_writes();
+        if (result.is_error()) {
+            //TODO: Figure out how to propagate error to a higher function.
+        }
+    }
 }
 
 void VirtualFileSystem::lock_all_filesystems()

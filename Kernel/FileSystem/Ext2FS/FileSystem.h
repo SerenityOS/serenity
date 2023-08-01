@@ -77,7 +77,7 @@ private:
     ErrorOr<NonnullRefPtr<Inode>> get_inode(InodeIdentifier) const;
     ErrorOr<NonnullRefPtr<Inode>> create_inode(Ext2FSInode& parent_inode, StringView name, mode_t, dev_t, UserID, GroupID);
     ErrorOr<NonnullRefPtr<Inode>> create_directory(Ext2FSInode& parent_inode, StringView name, mode_t, UserID, GroupID);
-    virtual void flush_writes() override;
+    virtual ErrorOr<void> flush_writes() override;
 
     BlockIndex first_block_index() const;
     BlockIndex first_block_of_block_group_descriptors() const;
