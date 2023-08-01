@@ -27,10 +27,10 @@ Co-Authored-By: Shannon Booth <shannon@serenityos.org>
  4 files changed, 14 insertions(+), 6 deletions(-)
 
 diff --git a/libstdc++-v3/acinclude.m4 b/libstdc++-v3/acinclude.m4
-index 5136c0571e8cb14fd7fd37ac0301a28f32289cc7..6dec4849fb3d86891818b1abac495cf729af64c5 100644
+index 49cb0623e4f04665645b7ef2f0132bced452a892..52b0b2ef38457d5a02e1f21a3e65927402296d90 100644
 --- a/libstdc++-v3/acinclude.m4
 +++ b/libstdc++-v3/acinclude.m4
-@@ -1381,7 +1381,7 @@ AC_DEFUN([GLIBCXX_ENABLE_LIBSTDCXX_TIME], [
+@@ -1397,7 +1397,7 @@ AC_DEFUN([GLIBCXX_ENABLE_LIBSTDCXX_TIME], [
          ac_has_nanosleep=yes
          ac_has_sched_yield=yes
          ;;
@@ -39,7 +39,7 @@ index 5136c0571e8cb14fd7fd37ac0301a28f32289cc7..6dec4849fb3d86891818b1abac495cf7
          ac_has_clock_monotonic=yes
          ac_has_clock_realtime=yes
          ac_has_nanosleep=yes
-@@ -2418,7 +2418,7 @@ AC_DEFUN([GLIBCXX_ENABLE_CLOCALE], [
+@@ -2434,7 +2434,7 @@ AC_DEFUN([GLIBCXX_ENABLE_CLOCALE], [
        dragonfly* | freebsd*)
  	enable_clocale_flag=dragonfly
  	;;
@@ -49,7 +49,7 @@ index 5136c0571e8cb14fd7fd37ac0301a28f32289cc7..6dec4849fb3d86891818b1abac495cf7
  	;;
        *)
 diff --git a/libstdc++-v3/configure b/libstdc++-v3/configure
-index 68ee94c9e28e4b2f5390cc9b4bd76b0a84f8f7c7..6c3fd42ddf43baa5e2ca5ccca515c306169afe53 100755
+index 9b6027775456469940da9c515dad5c0160d3cd3d..bd6c4ed05cb9621f855ed15d8e0825e5fc4d2d8c 100755
 --- a/libstdc++-v3/configure
 +++ b/libstdc++-v3/configure
 @@ -11910,6 +11910,11 @@ else
@@ -73,7 +73,7 @@ index 68ee94c9e28e4b2f5390cc9b4bd76b0a84f8f7c7..6c3fd42ddf43baa5e2ca5ccca515c306
  	enable_clocale_flag=newlib
  	;;
        *)
-@@ -20609,7 +20614,7 @@ fi
+@@ -20675,7 +20680,7 @@ fi
          ac_has_nanosleep=yes
          ac_has_sched_yield=yes
          ;;
@@ -82,7 +82,7 @@ index 68ee94c9e28e4b2f5390cc9b4bd76b0a84f8f7c7..6c3fd42ddf43baa5e2ca5ccca515c306
          ac_has_clock_monotonic=yes
          ac_has_clock_realtime=yes
          ac_has_nanosleep=yes
-@@ -29295,7 +29300,7 @@ case "${host}" in
+@@ -29361,7 +29366,7 @@ case "${host}" in
      # This is a freestanding configuration; there is nothing to do here.
      ;;
  
@@ -92,7 +92,7 @@ index 68ee94c9e28e4b2f5390cc9b4bd76b0a84f8f7c7..6c3fd42ddf43baa5e2ca5ccca515c306
  
      $as_echo "#define HAVE_ASINF 1" >>confdefs.h
 diff --git a/libstdc++-v3/configure.host b/libstdc++-v3/configure.host
-index ec32980aa0db898623804980af65dad588e4d9f5..e060300f3777fbd38795954ca75e9c4809cfc4e3 100644
+index 9e7c7f02dfd1cce8ec663b3bd337a2ed4d736aad..609c641ff5e9b4f44db9a6909adb876b5e65349e 100644
 --- a/libstdc++-v3/configure.host
 +++ b/libstdc++-v3/configure.host
 @@ -297,6 +297,9 @@ case "${host_os}" in

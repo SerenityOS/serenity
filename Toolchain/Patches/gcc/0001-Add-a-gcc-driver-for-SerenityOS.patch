@@ -19,17 +19,17 @@ Co-Authored-By: Brian Gianforcaro <bgianf@serenityos.org>
 Co-Authored-By: Philip Herron <herron.philip@googlemail.com>
 Co-Authored-By: Shannon Booth <shannon@serenityos.org>
 ---
- gcc/config.gcc             | 23 +++++++++++++++++
+ gcc/config.gcc             | 23 ++++++++++++++++++
  gcc/config/i386/serenity.h |  7 ++++++
- gcc/config/serenity.h      | 51 ++++++++++++++++++++++++++++++++++++++
- gcc/config/serenity.opt    | 35 ++++++++++++++++++++++++++
- 4 files changed, 116 insertions(+)
+ gcc/config/serenity.h      | 48 ++++++++++++++++++++++++++++++++++++++
+ gcc/config/serenity.opt    | 35 +++++++++++++++++++++++++++
+ 4 files changed, 113 insertions(+)
  create mode 100644 gcc/config/i386/serenity.h
  create mode 100644 gcc/config/serenity.h
  create mode 100644 gcc/config/serenity.opt
 
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index 6fd1594480a1d2054f499573b498781dfafd1d93..6f4fc0f34f4c19c7371d5431aad86f9b0652342b 100644
+index 648b3dc21103e43a315b676c827ff9e6d2923e11..e8a7ea2f50bf908c30b14479bb695cd645261f9e 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
 @@ -690,6 +690,18 @@ x86_cpus="generic intel"
@@ -84,10 +84,10 @@ index 0000000000000000000000000000000000000000..53a4b8e93b74b4808a4bfed91c4d5558
 +#define PTRDIFF_TYPE    (TARGET_64BIT ? "long int" : "int")
 diff --git a/gcc/config/serenity.h b/gcc/config/serenity.h
 new file mode 100644
-index 0000000000000000000000000000000000000000..b1fc4bb63facc9514bf300a84edbaefe56fee324
+index 0000000000000000000000000000000000000000..10c6f16fbe13eab36bab8f6896f8e2a6ae48df02
 --- /dev/null
 +++ b/gcc/config/serenity.h
-@@ -0,0 +1,51 @@
+@@ -0,0 +1,48 @@
 +/* Useful if you wish to make target-specific GCC changes. */
 +#undef TARGET_SERENITY
 +#define TARGET_SERENITY 1
@@ -114,10 +114,7 @@ index 0000000000000000000000000000000000000000..b1fc4bb63facc9514bf300a84edbaefe
 +#define LINK_SPEC "%{shared:-shared} %{static:-static} %{!static: %{rdynamic:-export-dynamic} -dynamic-linker /usr/lib/Loader.so}"
 +
 +#undef CC1_SPEC
-+#define CC1_SPEC "-ftls-model=initial-exec %{!fno-pic:%{!fno-PIC:%{!fpic:%{!fPIC: -fPIC}}}} -fno-semantic-interposition"
-+
-+#undef CC1PLUS_SPEC
-+#define CC1PLUS_SPEC "-ftls-model=initial-exec"
++#define CC1_SPEC "-fno-semantic-interposition"
 +
 +#undef CPP_SPEC
 +#define CPP_SPEC "%{posix:-D_POSIX_SOURCE} %{pthread:-D_REENTRANT}"
