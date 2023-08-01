@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "Types.h"
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
@@ -40,7 +41,7 @@ class WebContentView final
     , public WebView::ViewImplementation {
     Q_OBJECT
 public:
-    explicit WebContentView(StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling, WebView::UseJavaScriptBytecode);
+    explicit WebContentView(StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling, WebView::UseJavaScriptBytecode, UseLagomNetworking);
     virtual ~WebContentView() override;
 
     Function<String(const AK::URL&, Web::HTML::ActivateTab)> on_tab_open_request;
@@ -108,6 +109,7 @@ private:
 
     qreal m_inverse_pixel_scaling_ratio { 1.0 };
     bool m_should_show_line_box_borders { false };
+    UseLagomNetworking m_use_lagom_networking {};
 
     QPointer<QDialog> m_dialog;
 

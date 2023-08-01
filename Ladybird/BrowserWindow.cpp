@@ -39,11 +39,12 @@ static QIcon const& app_icon()
     return icon;
 }
 
-BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling, WebView::UseJavaScriptBytecode use_javascript_bytecode)
+BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling, WebView::UseJavaScriptBytecode use_javascript_bytecode, UseLagomNetworking use_lagom_networking)
     : m_cookie_jar(cookie_jar)
     , m_webdriver_content_ipc_path(webdriver_content_ipc_path)
     , m_enable_callgrind_profiling(enable_callgrind_profiling)
     , m_use_javascript_bytecode(use_javascript_bytecode)
+    , m_use_lagom_networking(use_lagom_networking)
 {
     setWindowIcon(app_icon());
     m_tabs_container = new QTabWidget(this);
@@ -418,7 +419,7 @@ void BrowserWindow::debug_request(DeprecatedString const& request, DeprecatedStr
 
 Tab& BrowserWindow::new_tab(QString const& url, Web::HTML::ActivateTab activate_tab)
 {
-    auto tab = make<Tab>(this, m_webdriver_content_ipc_path, m_enable_callgrind_profiling, m_use_javascript_bytecode);
+    auto tab = make<Tab>(this, m_webdriver_content_ipc_path, m_enable_callgrind_profiling, m_use_javascript_bytecode, m_use_lagom_networking);
     auto tab_ptr = tab.ptr();
     m_tabs.append(std::move(tab));
 
