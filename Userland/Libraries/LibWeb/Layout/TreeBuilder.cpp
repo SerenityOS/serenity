@@ -288,11 +288,11 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
             for (auto* node = shadow_root->first_child(); node; node = node->next_sibling()) {
                 TRY(create_layout_tree(*node, context));
             }
+        } else {
+            // This is the same as verify_cast<DOM::ParentNode>(dom_node).for_each_child
+            for (auto* node = verify_cast<DOM::ParentNode>(dom_node).first_child(); node; node = node->next_sibling())
+                TRY(create_layout_tree(*node, context));
         }
-
-        // This is the same as verify_cast<DOM::ParentNode>(dom_node).for_each_child
-        for (auto* node = verify_cast<DOM::ParentNode>(dom_node).first_child(); node; node = node->next_sibling())
-            TRY(create_layout_tree(*node, context));
         pop_parent();
     }
 
