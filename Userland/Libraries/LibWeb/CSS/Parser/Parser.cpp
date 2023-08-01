@@ -497,6 +497,10 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::OnlyChild);
         if (pseudo_name.equals_ignoring_ascii_case("only-of-type"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::OnlyOfType);
+        if (pseudo_name.equals_ignoring_ascii_case("playing"sv))
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Playing);
+        if (pseudo_name.equals_ignoring_ascii_case("paused"sv))
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Paused);
         if (pseudo_name.equals_ignoring_ascii_case("root"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Root);
         if (pseudo_name.equals_ignoring_ascii_case("host"sv))

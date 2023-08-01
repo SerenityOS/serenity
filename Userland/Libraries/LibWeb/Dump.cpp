@@ -542,6 +542,12 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                 case CSS::Selector::SimpleSelector::PseudoClass::Type::Defined:
                     pseudo_class_description = "Defined";
                     break;
+                case CSS::Selector::SimpleSelector::PseudoClass::Type::Playing:
+                    pseudo_class_description = "Playing";
+                    break;
+                case CSS::Selector::SimpleSelector::PseudoClass::Type::Paused:
+                    pseudo_class_description = "Paused";
+                    break;
                 }
 
                 builder.appendff(" pseudo_class={}", pseudo_class_description);

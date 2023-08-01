@@ -17,6 +17,7 @@
 #include <LibWeb/HTML/HTMLFieldSetElement.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
+#include <LibWeb/HTML/HTMLMediaElement.h>
 #include <LibWeb/HTML/HTMLOptGroupElement.h>
 #include <LibWeb/HTML/HTMLOptionElement.h>
 #include <LibWeb/HTML/HTMLProgressElement.h>
@@ -289,7 +290,7 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
     case CSS::Selector::SimpleSelector::PseudoClass::Type::NthChild:
     case CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastChild:
     case CSS::Selector::SimpleSelector::PseudoClass::Type::NthOfType:
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastOfType:
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastOfType: {
         auto const step_size = pseudo_class.nth_child_pattern.step_size;
         auto const offset = pseudo_class.nth_child_pattern.offset;
         if (step_size == 0 && offset == 0)
@@ -375,6 +376,19 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
 
         // Otherwise, we start at "offset" and count forwards.
         return index >= offset && canonical_modulo(index - offset, step_size) == 0;
+    }
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::Playing: {
+        if (!is<HTML::HTMLMediaElement>(element))
+            return false;
+        auto const& media_element = static_cast<HTML::HTMLMediaElement const&>(element);
+        return !media_element.paused();
+    }
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::Paused: {
+        if (!is<HTML::HTMLMediaElement>(element))
+            return false;
+        auto const& media_element = static_cast<HTML::HTMLMediaElement const&>(element);
+        return media_element.paused();
+    }
     }
 
     return false;
