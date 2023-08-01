@@ -85,6 +85,8 @@ static void ladybird_web_content_view_init(LadybirdWebContentView* self)
     // instead of assuming that it can be successfully initialized
     // to a nullptr state by zero-initializing its bytes as GObject does.
     new (&self->impl) OwnPtr<LadybirdViewImpl>(move(impl));
+
+    self->impl->load_html("This is some <b>HTML</b>!"sv, "http://example.com"sv);
 }
 
 static void ladybird_web_content_view_dispose(GObject* object)
