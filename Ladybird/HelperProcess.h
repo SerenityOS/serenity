@@ -7,9 +7,14 @@
 #pragma once
 
 #include <AK/Error.h>
-#include <AK/Optional.h>
 #include <AK/Span.h>
 #include <AK/StringView.h>
-#include <LibCore/System.h>
 
-ErrorOr<Vector<String>> get_paths_for_helper_process(StringView process_name);
+#include <LibWebView/ViewImplementation.h>
+#include <LibWebView/WebContentClient.h>
+
+ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(WebView::ViewImplementation& view,
+    ReadonlySpan<String> candidate_web_content_paths,
+    WebView::EnableCallgrindProfiling,
+    WebView::IsLayoutTestMode,
+    WebView::UseJavaScriptBytecode);

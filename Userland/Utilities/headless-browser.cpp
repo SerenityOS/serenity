@@ -42,6 +42,7 @@
 
 #if !defined(AK_OS_SERENITY)
 #    include <Ladybird/HelperProcess.h>
+#    include <Ladybird/Utilities.h>
 #    include <QCoreApplication>
 #endif
 
@@ -57,7 +58,7 @@ public:
         (void)use_javascript_bytecode;
 #else
         auto candidate_web_content_paths = TRY(get_paths_for_helper_process("WebContent"sv));
-        view->m_client_state.client = TRY(view->launch_web_content_process(candidate_web_content_paths, WebView::EnableCallgrindProfiling::No, is_layout_test_mode, use_javascript_bytecode));
+        view->m_client_state.client = TRY(launch_web_content_process(*view, candidate_web_content_paths, WebView::EnableCallgrindProfiling::No, is_layout_test_mode, use_javascript_bytecode));
 #endif
 
         view->client().async_update_system_theme(move(theme));

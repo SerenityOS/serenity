@@ -31,7 +31,6 @@ executable("WebDriver") {
     "//Userland/Libraries/LibWebView:WebDriverServerEndpoint",
   ]
   sources = [
-    "../HelperProcess.cpp",
     "../Utilities.cpp",
     "//Userland/Services/WebDriver/Client.cpp",
     "//Userland/Services/WebDriver/Session.cpp",
