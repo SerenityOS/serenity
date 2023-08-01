@@ -1,3 +1,4 @@
+#import <FileAPI/Blob.idl>
 #import <URL/URLSearchParams.idl>
 
 // https://url.spec.whatwg.org/#url
@@ -21,4 +22,7 @@ interface URL {
     attribute USVString hash;
 
     USVString toJSON();
+
+    static DOMString createObjectURL(Blob obj); // FIXME: Should be (Blob or MediaSource).
+    static undefined revokeObjectURL(DOMString url);
 };
