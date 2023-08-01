@@ -45,10 +45,12 @@ void LadybirdViewImpl::create_client(WebView::EnableCallgrindProfiling enable_ca
         int scale = gtk_widget_get_scale_factor(GTK_WIDGET(m_widget));
         client().async_set_device_pixels_per_css_pixel(scale);
     }
-    client().async_update_system_fonts(
-        Gfx::FontDatabase::default_font_query(),
-        Gfx::FontDatabase::fixed_width_font_query(),
-        Gfx::FontDatabase::window_title_font_query());
+    /*
+        client().async_update_system_fonts(
+            Gfx::FontDatabase::default_font_query(),
+            Gfx::FontDatabase::fixed_width_font_query(),
+            Gfx::FontDatabase::window_title_font_query());
+    */
 }
 
 void LadybirdViewImpl::notify_server_did_layout(Badge<WebView::WebContentClient>, Gfx::IntSize content_size)
