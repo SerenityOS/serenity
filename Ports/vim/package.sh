@@ -14,6 +14,9 @@ export vim_cv_tgetent=zero
 export vim_cv_terminfo=yes
 export vim_cv_toupper_broken=no
 export vim_cv_tty_group=world
+export vim_cv_uname_output='SerenityOS'
+export vim_cv_uname_r_output='1.0-dev'
+export vim_cv_uname_m_output="${SERENITY_ARCH}"
 
 post_install() {
     run ln -sf vim "${SERENITY_INSTALL_ROOT}/usr/local/bin/vi"
