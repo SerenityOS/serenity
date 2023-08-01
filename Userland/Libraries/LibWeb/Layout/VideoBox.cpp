@@ -35,16 +35,6 @@ HTML::HTMLVideoElement const& VideoBox::dom_node() const
     return static_cast<HTML::HTMLVideoElement const&>(ReplacedBox::dom_node());
 }
 
-int VideoBox::preferred_width() const
-{
-    return dom_node().attribute(HTML::AttributeNames::width).to_int().value_or(dom_node().video_width());
-}
-
-int VideoBox::preferred_height() const
-{
-    return dom_node().attribute(HTML::AttributeNames::height).to_int().value_or(dom_node().video_height());
-}
-
 void VideoBox::prepare_for_replaced_layout()
 {
     auto width = static_cast<float>(dom_node().video_width());

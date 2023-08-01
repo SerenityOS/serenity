@@ -33,9 +33,6 @@ private:
 
     // ^JS::Cell
     virtual void finalize() override;
-
-    int preferred_width() const;
-    int preferred_height() const;
 };
 
 }
