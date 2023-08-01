@@ -418,6 +418,46 @@ ThrowCompletionOr<void> GetVariable::execute_impl(Bytecode::Interpreter& interpr
     return {};
 }
 
+ThrowCompletionOr<void> GetCalleeAndThisFromEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+
+    auto get_reference = [&]() -> ThrowCompletionOr<Reference> {
+        auto const& string = interpreter.current_executable().get_identifier(m_identifier);
+        if (m_cached_environment_coordinate.has_value()) {
+            auto environment = vm.running_execution_context().lexical_environment;
+            for (size_t i = 0; i < m_cached_environment_coordinate->hops; ++i)
+                environment = environment->outer_environment();
+            VERIFY(environment);
+            VERIFY(environment->is_declarative_environment());
+            if (!environment->is_permanently_screwed_by_eval()) {
+                return Reference { *environment, string, vm.in_strict_mode(), m_cached_environment_coordinate };
+            }
+            m_cached_environment_coordinate = {};
+        }
+
+        auto reference = TRY(vm.resolve_binding(string));
+        if (reference.environment_coordinate().has_value())
+            m_cached_environment_coordinate = reference.environment_coordinate();
+        return reference;
+    };
+    auto reference = TRY(get_reference());
+    interpreter.reg(m_callee_reg) = TRY(reference.get_value(vm));
+
+    Value this_value = js_undefined();
+    if (reference.is_property_reference()) {
+        this_value = reference.get_this_value();
+    } else {
+        if (reference.is_environment_reference()) {
+            if (auto base_object = reference.base_environment().with_base_object(); base_object != nullptr)
+                this_value = base_object;
+        }
+    }
+    interpreter.reg(m_this_reg) = this_value;
+
+    return {};
+}
+
 ThrowCompletionOr<void> GetGlobal::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
@@ -1496,6 +1536,11 @@ DeprecatedString CopyObjectExcludingProperties::to_deprecated_string_impl(Byteco
 DeprecatedString ConcatString::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
     return DeprecatedString::formatted("ConcatString {}", m_lhs);
+}
+
+DeprecatedString GetCalleeAndThisFromEnvironment::to_deprecated_string_impl(Bytecode::Executable const& executable) const
+{
+    return DeprecatedString::formatted("GetCalleeAndThisFromEnvironment {} -> callee: {}, this:{} ", executable.identifier_table->get(m_identifier), m_callee_reg, m_this_reg);
 }
 
 DeprecatedString GetVariable::to_deprecated_string_impl(Bytecode::Executable const& executable) const

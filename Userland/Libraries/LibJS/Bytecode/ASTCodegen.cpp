@@ -1526,6 +1526,19 @@ Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode
     } else if (is<OptionalChain>(*m_callee)) {
         auto& optional_chain = static_cast<OptionalChain const&>(*m_callee);
         TRY(generate_optional_chain(generator, optional_chain, callee_reg, this_reg));
+    } else if (is<Identifier>(*m_callee)) {
+        // If the callee is an identifier, we may need to extract a `this` value.
+        // This is important when we're inside a `with` statement and calling a method on
+        // the environment's binding object.
+        // NOTE: If the identifier refers to a known "local" or "global", we know it can't be
+        //       a `with` binding, so we can skip this.
+        auto& identifier = static_cast<Identifier const&>(*m_callee);
+        if (!identifier.is_local() && !identifier.is_global()) {
+            generator.emit<Bytecode::Op::GetCalleeAndThisFromEnvironment>(generator.intern_identifier(identifier.string()), callee_reg, this_reg);
+        } else {
+            TRY(m_callee->generate_bytecode(generator));
+            generator.emit<Bytecode::Op::Store>(callee_reg);
+        }
     } else {
         // FIXME: this = global object in sloppy mode.
         TRY(m_callee->generate_bytecode(generator));

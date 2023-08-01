@@ -441,6 +441,29 @@ private:
     size_t m_index;
 };
 
+class GetCalleeAndThisFromEnvironment final : public Instruction {
+public:
+    explicit GetCalleeAndThisFromEnvironment(IdentifierTableIndex identifier, Register callee_reg, Register this_reg)
+        : Instruction(Type::GetCalleeAndThisFromEnvironment)
+        , m_identifier(identifier)
+        , m_callee_reg(callee_reg)
+        , m_this_reg(this_reg)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+
+    IdentifierTableIndex identifier() const { return m_identifier; }
+
+private:
+    IdentifierTableIndex m_identifier;
+    Register m_callee_reg;
+    Register m_this_reg;
+
+    Optional<EnvironmentCoordinate> mutable m_cached_environment_coordinate;
+};
+
 class GetVariable final : public Instruction {
 public:
     explicit GetVariable(IdentifierTableIndex identifier)
