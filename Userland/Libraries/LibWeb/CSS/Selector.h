@@ -115,6 +115,8 @@ public:
                 Lang,
                 Scope,
                 Defined,
+                Playing,
+                Paused,
             };
             Type type;
 
@@ -304,6 +306,10 @@ constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Ty
         return "scope"sv;
     case Selector::SimpleSelector::PseudoClass::Type::Defined:
         return "defined"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Playing:
+        return "playing"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Paused:
+        return "paused"sv;
     }
     VERIFY_NOT_REACHED();
 }

@@ -1591,6 +1591,7 @@ void HTMLMediaElement::set_paused(bool paused)
 
     if (auto* layout_node = this->layout_node())
         layout_node->set_needs_display();
+    set_needs_style_update(true);
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#blocked-media-element

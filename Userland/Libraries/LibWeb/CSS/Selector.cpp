@@ -231,6 +231,8 @@ ErrorOr<String> Selector::SimpleSelector::serialize() const
         case Selector::SimpleSelector::PseudoClass::Type::Active:
         case Selector::SimpleSelector::PseudoClass::Type::Scope:
         case Selector::SimpleSelector::PseudoClass::Type::Defined:
+        case Selector::SimpleSelector::PseudoClass::Type::Playing:
+        case Selector::SimpleSelector::PseudoClass::Type::Paused:
             // If the pseudo-class does not accept arguments append ":" (U+003A), followed by the name of the pseudo-class, to s.
             TRY(s.try_append(':'));
             TRY(s.try_append(pseudo_class_name(pseudo_class.type)));
