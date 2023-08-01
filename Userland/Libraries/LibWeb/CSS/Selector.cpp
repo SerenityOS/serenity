@@ -227,6 +227,7 @@ ErrorOr<String> Selector::SimpleSelector::serialize() const
         case Selector::SimpleSelector::PseudoClass::Type::Disabled:
         case Selector::SimpleSelector::PseudoClass::Type::Enabled:
         case Selector::SimpleSelector::PseudoClass::Type::Checked:
+        case Selector::SimpleSelector::PseudoClass::Type::Indeterminate:
         case Selector::SimpleSelector::PseudoClass::Type::Active:
         case Selector::SimpleSelector::PseudoClass::Type::Scope:
         case Selector::SimpleSelector::PseudoClass::Type::Defined:
@@ -265,9 +266,6 @@ ErrorOr<String> Selector::SimpleSelector::serialize() const
             }
             TRY(s.try_append(')'));
             break;
-        default:
-            dbgln("FIXME: Unknown pseudo class type for serialization: {}", to_underlying(pseudo_class.type));
-            VERIFY_NOT_REACHED();
         }
         break;
     }
