@@ -101,27 +101,24 @@ public:
         } else if (value.is_string()) {
             m_serialized.append(ValueTag::StringPrimitive);
             TRY(serialize_string(m_serialized, value.as_string()));
-        } else if (value.is_object()) {
-            auto& value_object = value.as_object();
-            if (is<JS::BooleanObject>(value_object)) {
-                m_serialized.append(ValueTag::BooleanObject);
-                auto& boolean_object = static_cast<JS::BooleanObject&>(value_object);
-                m_serialized.append(bit_cast<u32>(static_cast<u32>(boolean_object.boolean())));
-            } else if (is<JS::NumberObject>(value_object)) {
-                m_serialized.append(ValueTag::NumberObject);
-                auto& number_object = static_cast<JS::NumberObject&>(value_object);
-                double const number = number_object.number();
-                m_serialized.append(bit_cast<u32*>(&number), 2);
-            } else if (is<JS::StringObject>(value_object)) {
-                m_serialized.append(ValueTag::StringObject);
-                auto& string_object = static_cast<JS::StringObject&>(value_object);
-                TRY(serialize_string(m_serialized, string_object.primitive_string()));
-            } else if (is<JS::Date>(value_object)) {
-                m_serialized.append(ValueTag::DateObject);
-                auto& date_object = static_cast<JS::Date&>(value_object);
-                double const date_value = date_object.date_value();
-                m_serialized.append(bit_cast<u32*>(&date_value), 2);
-            }
+        } else if (value.is_object() && is<JS::BooleanObject>(value.as_object())) {
+            m_serialized.append(ValueTag::BooleanObject);
+            auto& boolean_object = static_cast<JS::BooleanObject&>(value.as_object());
+            m_serialized.append(bit_cast<u32>(static_cast<u32>(boolean_object.boolean())));
+        } else if (value.is_object() && is<JS::NumberObject>(value.as_object())) {
+            m_serialized.append(ValueTag::NumberObject);
+            auto& number_object = static_cast<JS::NumberObject&>(value.as_object());
+            double const number = number_object.number();
+            m_serialized.append(bit_cast<u32*>(&number), 2);
+        } else if (value.is_object() && is<JS::StringObject>(value.as_object())) {
+            m_serialized.append(ValueTag::StringObject);
+            auto& string_object = static_cast<JS::StringObject&>(value.as_object());
+            TRY(serialize_string(m_serialized, string_object.primitive_string()));
+        } else if (value.is_object() && is<JS::Date>(value.as_object())) {
+            m_serialized.append(ValueTag::DateObject);
+            auto& date_object = static_cast<JS::Date&>(value.as_object());
+            double const date_value = date_object.date_value();
+            m_serialized.append(bit_cast<u32*>(&date_value), 2);
         } else {
             // TODO: Define many more types
             m_error = "Unsupported type"sv;
