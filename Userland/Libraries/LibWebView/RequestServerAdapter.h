@@ -36,6 +36,9 @@ private:
 
 class RequestServerAdapter : public Web::ResourceLoaderConnector {
 public:
+    explicit RequestServerAdapter(NonnullRefPtr<Protocol::RequestClient> protocol_client);
+
+    static ErrorOr<NonnullRefPtr<RequestServerAdapter>> try_create(NonnullRefPtr<Protocol::RequestClient>);
     static ErrorOr<NonnullRefPtr<RequestServerAdapter>> try_create();
     virtual ~RequestServerAdapter() override;
 
@@ -45,8 +48,6 @@ public:
     virtual RefPtr<Web::ResourceLoaderConnectorRequest> start_request(DeprecatedString const& method, URL const&, HashMap<DeprecatedString, DeprecatedString> const& request_headers = {}, ReadonlyBytes request_body = {}, Core::ProxyData const& = {}) override;
 
 private:
-    RequestServerAdapter(NonnullRefPtr<Protocol::RequestClient> protocol_client);
-
     RefPtr<Protocol::RequestClient> m_protocol_client;
 };
 
