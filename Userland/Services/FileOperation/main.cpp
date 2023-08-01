@@ -279,7 +279,10 @@ ErrorOr<int> execute_work_items(Vector<WorkItem> const& items)
         case WorkItem::Type::CreateDirectory: {
             outln("MKDIR {}", item.destination);
             // FIXME: Support deduplication like open_destination_file() when the directory already exists.
-            if (auto maybe_error = Core::System::mkdir(item.destination, item.mode); maybe_error.is_error() && maybe_error.error().code() != EEXIST)
+            auto old_mask = umask(0);
+            auto maybe_error = Core::System::mkdir(item.destination, item.mode);
+            umask(old_mask);
+            if (maybe_error.is_error() && maybe_error.error().code() != EEXIST)
                 return Error::from_syscall("mkdir"sv, -errno);
 
             TRY(Core::System::chown(item.destination, item.uid, item.gid));
@@ -349,7 +352,9 @@ ErrorOr<int> execute_work_items(Vector<WorkItem> const& items)
 
 ErrorOr<NonnullOwnPtr<Core::File>> open_destination_file(DeprecatedString const& destination, mode_t mode)
 {
+    auto old_mask = umask(0);
     auto destination_file_or_error = Core::File::open(destination, (Core::File::OpenMode::Write | Core::File::OpenMode::Truncate | Core::File::OpenMode::MustBeNew), mode);
+    umask(old_mask);
     if (destination_file_or_error.is_error() && destination_file_or_error.error().code() == EEXIST) {
         return open_destination_file(deduplicate_destination_file_name(destination), mode);
     }
