@@ -161,7 +161,9 @@ public:
     virtual bool is_visible_for_timer_purposes() const override;
 
     bool has_tooltip() const { return !m_tooltip.is_empty(); }
-    DeprecatedString tooltip_deprecated() const { return m_tooltip; }
+    String tooltip() const { return m_tooltip; }
+    void set_tooltip(String tooltip);
+    DeprecatedString tooltip_deprecated() const { return tooltip().to_deprecated_string(); }
     void set_tooltip_deprecated(DeprecatedString);
 
     bool is_auto_focusable() const { return m_auto_focusable; }
@@ -283,7 +285,7 @@ public:
     void set_font(Gfx::Font const*);
     void set_font(Gfx::Font const& font) { set_font(&font); }
 
-    void set_font_family(DeprecatedString const&);
+    void set_font_family(String const&);
     void set_font_size(unsigned);
     void set_font_weight(unsigned);
     void set_font_fixed_width(bool);
@@ -343,7 +345,7 @@ public:
     AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> const& override_cursor() const { return m_override_cursor; }
     void set_override_cursor(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>>);
 
-    using UnregisteredChildHandler = ErrorOr<NonnullRefPtr<Core::EventReceiver>>(DeprecatedString const&);
+    using UnregisteredChildHandler = ErrorOr<NonnullRefPtr<Core::EventReceiver>>(StringView);
     ErrorOr<void> load_from_gml(StringView);
     ErrorOr<void> load_from_gml(StringView, UnregisteredChildHandler);
 
@@ -421,6 +423,9 @@ private:
     int dummy_fixed_height() { return 0; }
     Gfx::IntSize dummy_fixed_size() { return {}; }
 
+    // HACK: Used as property getter for the font_family property, can be removed when Font is migrated from DeprecatedString.
+    String font_family() const;
+
     Window* m_window { nullptr };
     RefPtr<Layout> m_layout;
 
@@ -428,7 +433,7 @@ private:
     Gfx::ColorRole m_background_role;
     Gfx::ColorRole m_foreground_role;
     NonnullRefPtr<Gfx::Font const> m_font;
-    DeprecatedString m_tooltip;
+    String m_tooltip;
 
     UISize m_min_size { SpecialDimension::Shrink };
     UISize m_max_size { SpecialDimension::Grow };

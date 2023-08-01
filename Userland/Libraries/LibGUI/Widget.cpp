@@ -57,7 +57,7 @@ Widget::Widget()
     REGISTER_BOOL_PROPERTY("visible", is_visible, set_visible);
     REGISTER_BOOL_PROPERTY("focused", is_focused, set_focus);
     REGISTER_BOOL_PROPERTY("enabled", is_enabled, set_enabled);
-    REGISTER_DEPRECATED_STRING_PROPERTY("tooltip", tooltip_deprecated, set_tooltip_deprecated);
+    REGISTER_STRING_PROPERTY("tooltip", tooltip, set_tooltip);
 
     REGISTER_UI_SIZE_PROPERTY("min_size", min_size, set_min_size);
     REGISTER_READONLY_UI_SIZE_PROPERTY("effective_min_size", effective_min_size);
@@ -82,7 +82,7 @@ Widget::Widget()
     REGISTER_INT_PROPERTY("x", x, set_x);
     REGISTER_INT_PROPERTY("y", y, set_y);
 
-    REGISTER_DEPRECATED_STRING_PROPERTY("font", m_font->family, set_font_family);
+    REGISTER_STRING_PROPERTY("font", font_family, set_font_family);
     REGISTER_INT_PROPERTY("font_size", m_font->presentation_size, set_font_size);
     REGISTER_FONT_WEIGHT_PROPERTY("font_weight", m_font->weight, set_font_weight);
 
@@ -819,9 +819,9 @@ void Widget::set_font(Gfx::Font const* font)
     update();
 }
 
-void Widget::set_font_family(DeprecatedString const& family)
+void Widget::set_font_family(String const& family)
 {
-    set_font(Gfx::FontDatabase::the().get(family, m_font->presentation_size(), m_font->weight(), m_font->width(), m_font->slope()));
+    set_font(Gfx::FontDatabase::the().get(family.to_deprecated_string(), m_font->presentation_size(), m_font->weight(), m_font->width(), m_font->slope()));
 }
 
 void Widget::set_font_size(unsigned size)
@@ -1109,6 +1109,11 @@ Gfx::IntRect Widget::relative_non_grabbable_rect() const
 
 void Widget::set_tooltip_deprecated(DeprecatedString tooltip)
 {
+    set_tooltip(String::from_deprecated_string(move(tooltip)).release_value_but_fixme_should_propagate_errors());
+}
+
+void Widget::set_tooltip(String tooltip)
+{
     m_tooltip = move(tooltip);
     if (Application::the()->tooltip_source_widget() == this)
         show_or_hide_tooltip();
@@ -1117,7 +1122,7 @@ void Widget::set_tooltip_deprecated(DeprecatedString tooltip)
 void Widget::show_or_hide_tooltip()
 {
     if (has_tooltip())
-        Application::the()->show_tooltip(m_tooltip, this);
+        Application::the()->show_tooltip(m_tooltip.to_deprecated_string(), this);
     else
         Application::the()->hide_tooltip();
 }
@@ -1140,7 +1145,7 @@ void Widget::set_override_cursor(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<
 
 ErrorOr<void> Widget::load_from_gml(StringView gml_string)
 {
-    return load_from_gml(gml_string, [](DeprecatedString const& class_name) -> ErrorOr<NonnullRefPtr<Core::EventReceiver>> {
+    return load_from_gml(gml_string, [](StringView class_name) -> ErrorOr<NonnullRefPtr<Core::EventReceiver>> {
         dbgln("Class '{}' not registered", class_name);
         return Error::from_string_literal("Class not registered");
     });
@@ -1263,6 +1268,11 @@ void Widget::add_spacer()
 {
     VERIFY(layout());
     return layout()->add_spacer();
+}
+
+String Widget::font_family() const
+{
+    return String::from_deprecated_string(m_font->family()).release_value_but_fixme_should_propagate_errors();
 }
 
 }
