@@ -292,9 +292,11 @@ public:
     Vector<Certificate> const& certificates() const { return m_ca_certificates; }
 
     static ErrorOr<Vector<Certificate>> parse_pem_root_certificate_authorities(ByteBuffer&);
-    static ErrorOr<Vector<Certificate>> load_certificates();
+    static ErrorOr<Vector<Certificate>> load_certificates(StringView custom_cert_path = {});
 
     static DefaultRootCACertificates& the();
+
+    static void set_default_certificate_path(String);
 
 private:
     Vector<Certificate> m_ca_certificates;
