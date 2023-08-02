@@ -7576,12 +7576,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         auto stream = TokenStream { component_values };
         if (auto parsed_value = FIXME_TRY(parse_css_value_for_property(property_id, stream)))
             return parsed_value.release_nonnull();
-
-        return ParseError::SyntaxError;
-    }
-
-    // Multiple ComponentValues will usually produce multiple StyleValues, so make a StyleValueList.
-    {
+    } else {
         StyleValueVector parsed_values;
         auto stream = TokenStream { component_values };
         while (auto parsed_value = FIXME_TRY(parse_css_value_for_property(property_id, stream))) {
