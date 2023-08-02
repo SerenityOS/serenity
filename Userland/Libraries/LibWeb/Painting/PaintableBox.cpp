@@ -217,7 +217,7 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
         context.painter().draw_text(size_text_device_rect, size_text, font, Gfx::TextAlignment::Center, context.palette().color(Gfx::ColorRole::TooltipText));
     }
 
-    if (phase == PaintPhase::FocusOutline && layout_box().dom_node() && layout_box().dom_node()->is_element() && verify_cast<DOM::Element>(*layout_box().dom_node()).is_focused()) {
+    if (phase == PaintPhase::Outline && layout_box().dom_node() && layout_box().dom_node()->is_element() && verify_cast<DOM::Element>(*layout_box().dom_node()).is_focused()) {
         // FIXME: Implement this as `outline` using :focus-visible in the default UA stylesheet to make it possible to override/disable.
         auto focus_outline_rect = context.enclosing_device_rect(absolute_border_box_rect()).inflated(4, 4);
         context.painter().draw_focus_rect(focus_outline_rect.to_type<int>(), context.palette().focus_outline());
@@ -641,7 +641,7 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
     }
 
     // FIXME: Merge this loop with the above somehow..
-    if (phase == PaintPhase::FocusOutline) {
+    if (phase == PaintPhase::Outline) {
         for (auto& line_box : m_line_boxes) {
             for (auto& fragment : line_box.fragments()) {
                 auto* node = fragment.layout_node().dom_node();
