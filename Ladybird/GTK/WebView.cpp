@@ -90,22 +90,26 @@ static void ladybird_web_view_get_property(GObject* object, guint prop_id, GValu
     }
 }
 
-static void ladybird_web_view_set_adjustment(LadybirdWebView* self, GtkOrientation orientation, GtkAdjustment* adjustment)
+static void adjustment_value_changed([[maybe_unused]] GtkAdjustment* adjustment, void* user_data)
 {
-    switch (orientation) {
-    case GTK_ORIENTATION_HORIZONTAL:
-        g_set_object(&self->hadjustment, adjustment);
-        g_object_notify(G_OBJECT(self), "hadjustment");
-        break;
+    LadybirdWebView* self = LADYBIRD_WEB_VIEW(user_data);
 
-    case GTK_ORIENTATION_VERTICAL:
-        g_set_object(&self->vadjustment, adjustment);
-        g_object_notify(G_OBJECT(self), "vadjustment");
-        break;
+    gtk_widget_queue_allocate(GTK_WIDGET(self));
+}
 
-    default:
-        VERIFY_NOT_REACHED();
-    }
+static void ladybird_web_view_set_adjustment(LadybirdWebView* self, bool vertical, GtkAdjustment* adjustment)
+{
+    GtkAdjustment** self_adjustment = vertical ? &self->vadjustment : &self->hadjustment;
+    if (*self_adjustment == adjustment)
+        return;
+
+    // Let go of the old adjustment.
+    if (*self_adjustment)
+        g_signal_handlers_disconnect_by_func(*self_adjustment, (void*)adjustment_value_changed, self);
+
+    g_set_object(self_adjustment, adjustment);
+    g_signal_connect_object(adjustment, "value-changed", G_CALLBACK(adjustment_value_changed), self, G_CONNECT_DEFAULT);
+    g_object_notify(G_OBJECT(self), vertical ? "vadjustment" : "hadjustment");
 
     // Our size hasn't changed, but we want size_allocate() called on us.
     gtk_widget_queue_allocate(GTK_WIDGET(self));
@@ -121,11 +125,11 @@ static void ladybird_web_view_set_property(GObject* object, guint prop_id, GValu
         break;
 
     case PROP_HADJUSTMENT:
-        ladybird_web_view_set_adjustment(self, GTK_ORIENTATION_HORIZONTAL, (GtkAdjustment*)g_value_get_object(value));
+        ladybird_web_view_set_adjustment(self, false, (GtkAdjustment*)g_value_get_object(value));
         break;
 
     case PROP_VADJUSTMENT:
-        ladybird_web_view_set_adjustment(self, GTK_ORIENTATION_VERTICAL, (GtkAdjustment*)g_value_get_object(value));
+        ladybird_web_view_set_adjustment(self, true, (GtkAdjustment*)g_value_get_object(value));
         break;
 
     case PROP_HSCROLL_POLICY:
@@ -168,14 +172,16 @@ static void ladybird_web_view_size_allocate(GtkWidget* widget, int width, int he
 {
     LadybirdWebView* self = LADYBIRD_WEB_VIEW(widget);
 
-    double hadj = gtk_adjustment_get_value(self->hadjustment);
-    double vadj = gtk_adjustment_get_value(self->vadjustment);
+    double hadj = self->hadjustment ? gtk_adjustment_get_value(self->hadjustment) : 0.0;
+    double vadj = self->vadjustment ? gtk_adjustment_get_value(self->vadjustment) : 0.0;
 
     // TODO: CSS pixels?
     self->impl->set_viewport_rect(hadj, vadj, width, height);
 
-    gtk_adjustment_configure(self->hadjustment, hadj, 0, self->page_width, width * 0.1, width * 0.9, width);
-    gtk_adjustment_configure(self->vadjustment, vadj, 0, self->page_height, height * 0.1, height * 0.9, height);
+    if (self->hadjustment)
+        gtk_adjustment_configure(self->hadjustment, hadj, 0, self->page_width, width * 0.1, width * 0.9, width);
+    if (self->vadjustment)
+        gtk_adjustment_configure(self->vadjustment, vadj, 0, self->page_height, height * 0.1, height * 0.9, height);
 }
 
 static void ladybird_web_view_init(LadybirdWebView* self)
@@ -186,7 +192,7 @@ static void ladybird_web_view_init(LadybirdWebView* self)
     // to a nullptr state by zero-initializing its bytes as GObject does.
     new (&self->impl) OwnPtr<LadybirdViewImpl>(move(impl));
 
-    self->impl->load_html("<html><title>Title from HTML :^)</title><body>This is some <b>HTML</b>!</body></html>"sv, "http://example.com"sv);
+    self->impl->load_html("<html><title>Title from HTML :^)</title><body><p>This is some <b>HTML</b>!</p>Long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long</body></html>"sv, "http://example.com"sv);
 }
 
 static void ladybird_web_view_dispose(GObject* object)

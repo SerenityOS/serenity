@@ -127,7 +127,9 @@ void LadybirdViewImpl::create_client(WebView::EnableCallgrindProfiling enable_ca
 void LadybirdViewImpl::set_viewport_rect(int x, int y, int width, int height)
 {
     m_viewport_rect = Gfx::IntRect(x, y, width, height);
+    dbgln("LadybirdViewImpl::set_viewport_rect {}", m_viewport_rect);
     client().async_set_viewport_rect(m_viewport_rect);
+    // handle_resize();
     // TODO: do we need to call this here?
     request_repaint();
 }
