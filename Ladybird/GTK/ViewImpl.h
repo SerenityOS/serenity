@@ -9,6 +9,8 @@ public:
     static ErrorOr<NonnullOwnPtr<LadybirdViewImpl>> create(LadybirdWebView* widget);
     virtual ~LadybirdViewImpl() override;
 
+    void set_viewport_rect(int x, int y, int width, int height);
+
 private:
     LadybirdViewImpl(LadybirdWebView* widget);
 
@@ -38,5 +40,6 @@ private:
 
     virtual void create_client(WebView::EnableCallgrindProfiling) override;
 
+    Gfx::IntRect m_viewport_rect;
     LadybirdWebView* m_widget { nullptr };
 };

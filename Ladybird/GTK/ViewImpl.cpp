@@ -124,9 +124,18 @@ void LadybirdViewImpl::create_client(WebView::EnableCallgrindProfiling enable_ca
     */
 }
 
+void LadybirdViewImpl::set_viewport_rect(int x, int y, int width, int height)
+{
+    m_viewport_rect = Gfx::IntRect(x, y, width, height);
+    client().async_set_viewport_rect(m_viewport_rect);
+    // TODO: do we need to call this here?
+    request_repaint();
+}
+
 void LadybirdViewImpl::notify_server_did_layout(Badge<WebView::WebContentClient>, Gfx::IntSize content_size)
 {
     dbg("LadybirdViewImpl::notify_server_did_layout {}", content_size);
+    ladybird_web_view_set_page_size(m_widget, content_size.width(), content_size.height());
 }
 
 void LadybirdViewImpl::notify_server_did_paint(Badge<WebView::WebContentClient>, i32 bitmap_id, Gfx::IntSize)
@@ -221,20 +230,17 @@ void LadybirdViewImpl::update_zoom()
 
 Gfx::IntRect LadybirdViewImpl::viewport_rect() const
 {
-    dbg("LadybirdViewImpl::viewport_rect");
-    return {};
+    return m_viewport_rect;
 }
 
-Gfx::IntPoint LadybirdViewImpl::to_content_position(Gfx::IntPoint widget_position) const
+Gfx::IntPoint LadybirdViewImpl::to_content_position(Gfx::IntPoint) const
 {
-    (void)widget_position;
-    dbg("LadybirdViewImpl::to_content_position");
-    return {};
+    // This seems unused.
+    VERIFY_NOT_REACHED();
 }
 
-Gfx::IntPoint LadybirdViewImpl::to_widget_position(Gfx::IntPoint content_position) const
+Gfx::IntPoint LadybirdViewImpl::to_widget_position(Gfx::IntPoint) const
 {
-    (void)content_position;
-    dbg("LadybirdViewImpl::to_widget_position");
-    return {};
+    // This seems unused.
+    VERIFY_NOT_REACHED();
 }
