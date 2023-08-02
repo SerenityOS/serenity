@@ -709,6 +709,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
 
     if (auto outline_color = computed_style.property(CSS::PropertyID::OutlineColor); outline_color->has_color())
         computed_values.set_outline_color(outline_color->to_color(*this));
+    if (auto outline_offset = computed_style.property(CSS::PropertyID::OutlineOffset); outline_offset->is_length())
+        computed_values.set_outline_offset(outline_offset->as_length().length());
     if (auto outline_style = computed_style.outline_style(); outline_style.has_value())
         computed_values.set_outline_style(outline_style.value());
     if (auto outline_width = computed_style.property(CSS::PropertyID::OutlineWidth); outline_width->is_length())
