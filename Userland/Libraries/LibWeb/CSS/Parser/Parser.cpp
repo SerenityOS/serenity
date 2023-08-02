@@ -485,6 +485,8 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::FirstOfType);
         if (pseudo_name.equals_ignoring_ascii_case("focus"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Focus);
+        if (pseudo_name.equals_ignoring_ascii_case("focus-visible"sv))
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::FocusVisible);
         if (pseudo_name.equals_ignoring_ascii_case("focus-within"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::FocusWithin);
         if (pseudo_name.equals_ignoring_ascii_case("hover"sv))

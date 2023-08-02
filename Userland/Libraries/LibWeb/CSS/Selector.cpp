@@ -214,6 +214,7 @@ ErrorOr<String> Selector::SimpleSelector::serialize() const
         case Selector::SimpleSelector::PseudoClass::Type::Visited:
         case Selector::SimpleSelector::PseudoClass::Type::Hover:
         case Selector::SimpleSelector::PseudoClass::Type::Focus:
+        case Selector::SimpleSelector::PseudoClass::Type::FocusVisible:
         case Selector::SimpleSelector::PseudoClass::Type::FocusWithin:
         case Selector::SimpleSelector::PseudoClass::Type::FirstChild:
         case Selector::SimpleSelector::PseudoClass::Type::LastChild:
