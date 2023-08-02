@@ -8,3 +8,6 @@ files="https://potrace.sourceforge.net/download/${version}/potrace-${version}.ta
 configopts=(
     "--with-libpotrace"
 )
+depends=(
+    'zlib'
+)
