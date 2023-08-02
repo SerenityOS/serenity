@@ -44,6 +44,9 @@ public:
         // Some elements, such as the HTMLMediaElement, must have a unique task source per instance.
         // Keep this field last, to serve as the base value of all unique task sources.
         UniqueTaskSourceStart,
+
+        // https://html.spec.whatwg.org/multipage/canvas.html#canvas-blob-serialisation-task-source
+        CanvasBlobSerializationTask,
     };
 
     static NonnullOwnPtr<Task> create(Source source, DOM::Document const* document, JS::SafeFunction<void()> steps)

@@ -15,5 +15,7 @@ interface HTMLCanvasElement : HTMLElement {
     [CEReactions] attribute unsigned long height;
 
     USVString toDataURL(optional DOMString type = "image/png", optional double quality);
-
+    undefined toBlob(BlobCallback _callback, optional DOMString type = "image/png", optional double quality);
 };
+
+callback BlobCallback = undefined (Blob? blob);
