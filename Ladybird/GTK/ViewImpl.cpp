@@ -134,98 +134,98 @@ void LadybirdViewImpl::set_viewport_rect(int x, int y, int width, int height)
 
 void LadybirdViewImpl::notify_server_did_layout(Badge<WebView::WebContentClient>, Gfx::IntSize content_size)
 {
-    dbg("LadybirdViewImpl::notify_server_did_layout {}", content_size);
+    dbgln("LadybirdViewImpl::notify_server_did_layout {}", content_size);
     ladybird_web_view_set_page_size(m_widget, content_size.width(), content_size.height());
 }
 
 void LadybirdViewImpl::notify_server_did_paint(Badge<WebView::WebContentClient>, i32 bitmap_id, Gfx::IntSize)
 {
-    dbg("LadybirdViewImpl::notify_server_did_paint {}", bitmap_id);
+    dbgln("LadybirdViewImpl::notify_server_did_paint {}", bitmap_id);
 }
 
-void LadybirdViewImpl::notify_server_did_invalidate_content_rect(Badge<WebView::WebContentClient>, Gfx::IntRect const&)
+void LadybirdViewImpl::notify_server_did_invalidate_content_rect(Badge<WebView::WebContentClient>, Gfx::IntRect const& rect)
 {
-    dbg("LadybirdViewImpl::notify_server_did_invalidate_content_rect");
+    dbgln("LadybirdViewImpl::notify_server_did_invalidate_content_rect {}", rect);
 }
 
 void LadybirdViewImpl::notify_server_did_change_selection(Badge<WebView::WebContentClient>)
 {
-    dbg("LadybirdViewImpl::notify_server_did_change_selection");
+    dbgln("LadybirdViewImpl::notify_server_did_change_selection");
 }
 
 void LadybirdViewImpl::notify_server_did_request_cursor_change(Badge<WebView::WebContentClient>, Gfx::StandardCursor)
 {
-    dbg("LadybirdViewImpl::notify_server_did_request_cursor_change");
+    dbgln("LadybirdViewImpl::notify_server_did_request_cursor_change");
 }
 
 void LadybirdViewImpl::notify_server_did_request_scroll(Badge<WebView::WebContentClient>, i32, i32)
 {
-    dbg("LadybirdViewImpl::notify_server_did_request_scroll");
+    dbgln("LadybirdViewImpl::notify_server_did_request_scroll");
 }
 
 void LadybirdViewImpl::notify_server_did_request_scroll_to(Badge<WebView::WebContentClient>, Gfx::IntPoint)
 {
-    dbg("LadybirdViewImpl::notify_server_did_request_scroll_to");
+    dbgln("LadybirdViewImpl::notify_server_did_request_scroll_to");
 }
 
 void LadybirdViewImpl::notify_server_did_request_scroll_into_view(Badge<WebView::WebContentClient>, Gfx::IntRect const&)
 {
-    dbg("LadybirdViewImpl::notify_server_did_request_scroll_into_view");
+    dbgln("LadybirdViewImpl::notify_server_did_request_scroll_into_view");
 }
 
 void LadybirdViewImpl::notify_server_did_enter_tooltip_area(Badge<WebView::WebContentClient>, Gfx::IntPoint, DeprecatedString const&)
 {
-    dbg("LadybirdViewImpl::notify_server_did_enter_tooltip_area");
+    dbgln("LadybirdViewImpl::notify_server_did_enter_tooltip_area");
 }
 
 void LadybirdViewImpl::notify_server_did_leave_tooltip_area(Badge<WebView::WebContentClient>)
 {
-    dbg("LadybirdViewImpl::notify_server_did_leave_tooltip_area");
+    dbgln("LadybirdViewImpl::notify_server_did_leave_tooltip_area");
 }
 
 void LadybirdViewImpl::notify_server_did_request_alert(Badge<WebView::WebContentClient>, String const& message)
 {
-    dbg("LadybirdViewImpl::notify_server_did_request_alert {}", message);
+    dbgln("LadybirdViewImpl::notify_server_did_request_alert {}", message);
 }
 
 void LadybirdViewImpl::notify_server_did_request_confirm(Badge<WebView::WebContentClient>, String const& message)
 {
-    dbg("LadybirdViewImpl::notify_server_did_request_confirm {}", message);
+    dbgln("LadybirdViewImpl::notify_server_did_request_confirm {}", message);
 }
 
 void LadybirdViewImpl::notify_server_did_request_prompt(Badge<WebView::WebContentClient>, String const& message, String const& default_)
 {
-    dbg("LadybirdViewImpl::notify_server_did_request_prompt {} {}", message, default_);
+    dbgln("LadybirdViewImpl::notify_server_did_request_prompt {} {}", message, default_);
 }
 
 void LadybirdViewImpl::notify_server_did_request_set_prompt_text(Badge<WebView::WebContentClient>, String const& message)
 {
-    dbg("LadybirdViewImpl::notify_server_did_request_set_prompt_text {}", message);
+    dbgln("LadybirdViewImpl::notify_server_did_request_set_prompt_text {}", message);
 }
 
 void LadybirdViewImpl::notify_server_did_request_accept_dialog(Badge<WebView::WebContentClient>)
 {
-    dbg("LadybirdViewImpl::notify_server_did_request_accept_dialog");
+    dbgln("LadybirdViewImpl::notify_server_did_request_accept_dialog");
 }
 
 void LadybirdViewImpl::notify_server_did_request_dismiss_dialog(Badge<WebView::WebContentClient>)
 {
-    dbg("LadybirdViewImpl::notify_server_did_request_dismiss_dialog");
+    dbgln("LadybirdViewImpl::notify_server_did_request_dismiss_dialog");
 }
 
 void LadybirdViewImpl::notify_server_did_request_file(Badge<WebView::WebContentClient>, DeprecatedString const& path, i32)
 {
-    dbg("LadybirdViewImpl::notify_server_did_request_file {}", path);
+    dbgln("LadybirdViewImpl::notify_server_did_request_file {}", path);
 }
 
 void LadybirdViewImpl::notify_server_did_finish_handling_input_event(bool event_was_accepted)
 {
-    dbg("LadybirdViewImpl::notify_server_did_finish_handling_input_event {}", event_was_accepted);
+    dbgln("LadybirdViewImpl::notify_server_did_finish_handling_input_event {}", event_was_accepted);
 }
 
 void LadybirdViewImpl::update_zoom()
 {
-    dbg("LadybirdViewImpl::update_zoom");
+    dbgln("LadybirdViewImpl::update_zoom");
 }
 
 Gfx::IntRect LadybirdViewImpl::viewport_rect() const
