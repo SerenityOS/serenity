@@ -55,7 +55,6 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
             auto docs = sheet_ptr->gather_documentation();
             auto help_window = HelpWindow::the(window());
             help_window->set_docs(move(docs));
-            help_window->set_window_mode(GUI::WindowMode::Modeless);
             help_window->show();
         }
     };
