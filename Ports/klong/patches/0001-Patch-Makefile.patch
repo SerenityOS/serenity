@@ -36,6 +36,7 @@ index f692ff7..470adcd 100644
  	find . -type f | grep -v _csums | grep -v klong2015 | csum >_csums
 +
 +install:
++	mkdir -p ${DESTDIR}/usr/local/bin
 +	install kg ${DESTDIR}/usr/local/bin
 +	mkdir -p ${DESTDIR}/usr/local/lib/klong
 +	install -m 644 lib/* ${DESTDIR}/usr/local/lib/klong
