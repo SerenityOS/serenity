@@ -108,6 +108,7 @@ public:
     static CSS::Time transition_delay() { return CSS::Time::make_seconds(0); }
     static CSS::ObjectFit object_fit() { return CSS::ObjectFit::Fill; }
     static Color outline_color() { return Color::Black; }
+    static CSS::Length outline_offset() { return CSS::Length::make_px(0); }
     static CSS::OutlineStyle outline_style() { return CSS::OutlineStyle::None; }
     static CSS::Length outline_width() { return CSS::Length::make_px(3); }
 };
@@ -328,6 +329,7 @@ public:
     CSS::Time transition_delay() const { return m_noninherited.transition_delay; }
 
     Color outline_color() const { return m_noninherited.outline_color; }
+    CSS::Length outline_offset() const { return m_noninherited.outline_offset; }
     CSS::OutlineStyle outline_style() const { return m_noninherited.outline_style; }
     CSS::Length outline_width() const { return m_noninherited.outline_width; }
 
@@ -442,6 +444,7 @@ protected:
         float stop_opacity { InitialValues::stop_opacity() };
         CSS::Time transition_delay { InitialValues::transition_delay() };
         Color outline_color { InitialValues::outline_color() };
+        CSS::Length outline_offset { InitialValues::outline_offset() };
         CSS::OutlineStyle outline_style { InitialValues::outline_style() };
         CSS::Length outline_width { InitialValues::outline_width() };
     } m_noninherited;
@@ -554,6 +557,7 @@ public:
     void set_stop_opacity(float value) { m_noninherited.stop_opacity = value; }
     void set_text_anchor(CSS::TextAnchor value) { m_inherited.text_anchor = value; }
     void set_outline_color(Color value) { m_noninherited.outline_color = value; }
+    void set_outline_offset(CSS::Length value) { m_noninherited.outline_offset = value; }
     void set_outline_style(CSS::OutlineStyle value) { m_noninherited.outline_style = value; }
     void set_outline_width(CSS::Length value) { m_noninherited.outline_width = value; }
 };

@@ -1603,6 +1603,14 @@
       "color"
     ]
   },
+  "outline-offset": {
+    "affects-layout": false,
+    "inherited": false,
+    "initial": "0",
+    "valid-types": [
+      "length [-∞,∞]"
+    ]
+  },
   "outline-style": {
     "affects-layout": false,
     "inherited": false,

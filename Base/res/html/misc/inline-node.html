@@ -42,8 +42,13 @@
         }
         .outline3 {
             outline: 2px solid green;
+            outline-offset: 5px;
             border-radius: 10px;
             border: 2px solid black;
+        }
+        .outline4 {
+            outline: 1px solid red;
+            outline-offset: -20px;
         }
     </style>
 </head>
@@ -57,7 +62,7 @@
     </div>
     <div style="background-color:red;width:3px">This text should only have a strip of red on the left</div>
     <div class="box">
-        <span class="outline">This text has an outline</span> and <span class="outline2">this text has an outline with a border radius,</span> and <span class="outline3">this also has a border.</span>
+        <span class="outline">This text has an outline</span> and <span class="outline2">this text has an outline with a border radius,</span> and <span class="outline3">this also has a border.</span> <span class="outline4">This outline is a strikethrough.</span>
     </div>
 </body>
 </html>

@@ -174,9 +174,27 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
         auto outline_width = computed_values().outline_width().to_px(layout_node());
         auto borders_data = borders_data_for_outline(layout_node(), computed_values().outline_color(), computed_values().outline_style(), outline_width);
         if (borders_data.has_value()) {
+            auto outline_offset = computed_values().outline_offset().to_px(layout_node());
             auto border_radius_data = normalized_border_radii_data(ShrinkRadiiForBorders::No);
-            border_radius_data.inflate(outline_width, outline_width, outline_width, outline_width);
-            paint_all_borders(context, absolute_border_box_rect().inflated(outline_width, outline_width, outline_width, outline_width), border_radius_data, borders_data.value());
+            auto borders_rect = absolute_border_box_rect();
+
+            auto outline_offset_x = outline_offset;
+            auto outline_offset_y = outline_offset;
+            // "Both the height and the width of the outside of the shape drawn by the outline should not
+            // become smaller than twice the computed value of the outline-width property to make sure
+            // that an outline can be rendered even with large negative values."
+            // https://www.w3.org/TR/css-ui-4/#outline-offset
+            // So, if the horizontal outline offset is > half the borders_rect's width then we set it to that.
+            // (And the same for y)
+            if ((borders_rect.width() / 2) + outline_offset_x < 0)
+                outline_offset_x = -borders_rect.width() / 2;
+            if ((borders_rect.height() / 2) + outline_offset_y < 0)
+                outline_offset_y = -borders_rect.height() / 2;
+
+            border_radius_data.inflate(outline_width + outline_offset_y, outline_width + outline_offset_x, outline_width + outline_offset_y, outline_width + outline_offset_x);
+            borders_rect.inflate(outline_width + outline_offset_y, outline_width + outline_offset_x, outline_width + outline_offset_y, outline_width + outline_offset_x);
+
+            paint_all_borders(context, borders_rect, border_radius_data, borders_data.value());
         }
     }
 

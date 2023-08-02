@@ -86,7 +86,7 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
         });
     }
 
-    auto paint_border_or_outline = [&](Optional<BordersData> outline_data = {}) {
+    auto paint_border_or_outline = [&](Optional<BordersData> outline_data = {}, CSSPixels outline_offset = 0) {
         auto top_left_border_radius = computed_values().border_top_left_radius();
         auto top_right_border_radius = computed_values().border_top_right_radius();
         auto bottom_right_border_radius = computed_values().border_bottom_right_radius();
@@ -119,8 +119,21 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
             auto border_radii_data = normalized_border_radii_data(layout_node(), borders_rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
 
             if (outline_data.has_value()) {
-                border_radii_data.inflate(outline_data->top.width, outline_data->right.width, outline_data->bottom.width, outline_data->left.width);
-                borders_rect.inflate(outline_data->top.width, outline_data->right.width, outline_data->bottom.width, outline_data->left.width);
+                auto outline_offset_x = outline_offset;
+                auto outline_offset_y = outline_offset;
+                // "Both the height and the width of the outside of the shape drawn by the outline should not
+                // become smaller than twice the computed value of the outline-width property to make sure
+                // that an outline can be rendered even with large negative values."
+                // https://www.w3.org/TR/css-ui-4/#outline-offset
+                // So, if the horizontal outline offset is > half the borders_rect's width then we set it to that.
+                // (And the same for y)
+                if ((borders_rect.width() / 2) + outline_offset_x < 0)
+                    outline_offset_x = -borders_rect.width() / 2;
+                if ((borders_rect.height() / 2) + outline_offset_y < 0)
+                    outline_offset_y = -borders_rect.height() / 2;
+
+                border_radii_data.inflate(outline_data->top.width + outline_offset_y, outline_data->right.width + outline_offset_x, outline_data->bottom.width + outline_offset_y, outline_data->left.width + outline_offset_x);
+                borders_rect.inflate(outline_data->top.width + outline_offset_y, outline_data->right.width + outline_offset_x, outline_data->bottom.width + outline_offset_y, outline_data->left.width + outline_offset_x);
                 paint_all_borders(context, borders_rect, border_radii_data, *outline_data);
             } else {
                 paint_all_borders(context, borders_rect, border_radii_data, borders_data);
@@ -138,7 +151,7 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
         auto outline_width = computed_values().outline_width().to_px(layout_node());
         auto maybe_outline_data = borders_data_for_outline(layout_node(), computed_values().outline_color(), computed_values().outline_style(), outline_width);
         if (maybe_outline_data.has_value()) {
-            paint_border_or_outline(maybe_outline_data.value());
+            paint_border_or_outline(maybe_outline_data.value(), computed_values().outline_offset().to_px(layout_node()));
         }
     }
 

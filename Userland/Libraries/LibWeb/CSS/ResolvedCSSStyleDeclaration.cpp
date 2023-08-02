@@ -738,6 +738,8 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
     }
     case PropertyID::OutlineColor:
         return ColorStyleValue::create(layout_node.computed_values().outline_color());
+    case PropertyID::OutlineOffset:
+        return LengthStyleValue::create(layout_node.computed_values().outline_offset());
     case PropertyID::OutlineStyle:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().outline_style()));
     case PropertyID::OutlineWidth:
