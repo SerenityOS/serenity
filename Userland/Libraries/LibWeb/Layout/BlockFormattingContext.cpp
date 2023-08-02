@@ -510,13 +510,32 @@ void BlockFormattingContext::layout_inline_children(BlockContainer const& block_
         available_space);
 
     if (!block_container_state.has_definite_width()) {
-        // NOTE: max-width for boxes with inline children can only be applied after inside layout is done
-        //       and width of box content is known
+        // NOTE: min-width or max-width for boxes with inline children can only be applied after inside layout
+        //       is done and width of box content is known
         auto used_width_px = context.automatic_content_width();
         if (!should_treat_max_width_as_none(block_container, available_space.width)) {
             auto max_width_px = calculate_inner_width(block_container, available_space.width, block_container.computed_values().max_width()).to_px(block_container);
             if (used_width_px > max_width_px)
                 used_width_px = max_width_px;
+        }
+
+        auto should_treat_min_width_as_auto = [&] {
+            auto const& available_width = available_space.width;
+            auto const& min_width = block_container.computed_values().min_width();
+            if (min_width.is_auto())
+                return true;
+            if (min_width.is_fit_content() && available_width.is_intrinsic_sizing_constraint())
+                return true;
+            if (min_width.is_max_content() && available_width.is_max_content())
+                return true;
+            if (min_width.is_min_content() && available_width.is_min_content())
+                return true;
+            return false;
+        }();
+        if (!should_treat_min_width_as_auto) {
+            auto min_width_px = calculate_inner_width(block_container, available_space.width, block_container.computed_values().min_width()).to_px(block_container);
+            if (used_width_px < min_width_px)
+                used_width_px = min_width_px;
         }
         block_container_state.set_content_width(used_width_px);
     }
