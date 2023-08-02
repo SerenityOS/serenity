@@ -32,6 +32,19 @@
             border-radius: 6px;
             box-shadow: 4px 4px 4px darkgreen;
         }
+
+        .outline {
+            outline: 3px dotted magenta;
+        }
+        .outline2 {
+            outline: 1px solid red;
+            border-radius: 10px;
+        }
+        .outline3 {
+            outline: 2px solid green;
+            border-radius: 10px;
+            border: 2px solid black;
+        }
     </style>
 </head>
 <body>
@@ -43,5 +56,8 @@
         Hello world <span class="highlight">this is some text</span> in a box. <span class="bg-highlight">This text has a background</span> and <span class="br-highlight">this text has a shadow!</span>
     </div>
     <div style="background-color:red;width:3px">This text should only have a strip of red on the left</div>
+    <div class="box">
+        <span class="outline">This text has an outline</span> and <span class="outline2">this text has an outline with a border radius,</span> and <span class="outline3">this also has a border.</span>
+    </div>
 </body>
 </html>

@@ -124,9 +124,7 @@ void StackingContext::paint_descendants(PaintContext& context, Layout::Node cons
             paint_descendants(context, child, phase);
             break;
         case StackingContextPaintPhase::FocusAndOverlay:
-            if (context.has_focus()) {
-                paint_node(child, context, PaintPhase::Outline);
-            }
+            paint_node(child, context, PaintPhase::Outline);
             paint_node(child, context, PaintPhase::Overlay);
             paint_descendants(context, child, phase);
             break;

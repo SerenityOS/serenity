@@ -86,7 +86,7 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
         });
     }
 
-    if (phase == PaintPhase::Border) {
+    auto paint_border_or_outline = [&](Optional<BordersData> outline_data = {}) {
         auto top_left_border_radius = computed_values().border_top_left_radius();
         auto top_right_border_radius = computed_values().border_top_right_radius();
         auto bottom_right_border_radius = computed_values().border_bottom_right_radius();
@@ -115,13 +115,31 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
                 absolute_fragment_rect.set_width(absolute_fragment_rect.width() + extra_end_width);
             }
 
-            auto bordered_rect = absolute_fragment_rect.inflated(borders_data.top.width, borders_data.right.width, borders_data.bottom.width, borders_data.left.width);
-            auto border_radii_data = normalized_border_radii_data(layout_node(), bordered_rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
+            auto borders_rect = absolute_fragment_rect.inflated(borders_data.top.width, borders_data.right.width, borders_data.bottom.width, borders_data.left.width);
+            auto border_radii_data = normalized_border_radii_data(layout_node(), borders_rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
 
-            paint_all_borders(context, bordered_rect, border_radii_data, borders_data);
+            if (outline_data.has_value()) {
+                border_radii_data.inflate(outline_data->top.width, outline_data->right.width, outline_data->bottom.width, outline_data->left.width);
+                borders_rect.inflate(outline_data->top.width, outline_data->right.width, outline_data->bottom.width, outline_data->left.width);
+                paint_all_borders(context, borders_rect, border_radii_data, *outline_data);
+            } else {
+                paint_all_borders(context, borders_rect, border_radii_data, borders_data);
+            }
 
             return IterationDecision::Continue;
         });
+    };
+
+    if (phase == PaintPhase::Border) {
+        paint_border_or_outline();
+    }
+
+    if (phase == PaintPhase::Outline) {
+        auto outline_width = computed_values().outline_width().to_px(layout_node());
+        auto maybe_outline_data = borders_data_for_outline(layout_node(), computed_values().outline_color(), computed_values().outline_style(), outline_width);
+        if (maybe_outline_data.has_value()) {
+            paint_border_or_outline(maybe_outline_data.value());
+        }
     }
 
     if (phase == PaintPhase::Overlay && layout_node().document().inspected_layout_node() == &layout_node()) {

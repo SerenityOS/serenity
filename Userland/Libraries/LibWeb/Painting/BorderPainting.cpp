@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, MacDue <macdue@dueutil.tech>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -10,6 +10,8 @@
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
+#include <LibWeb/DOM/Document.h>
+#include <LibWeb/Layout/Node.h>
 #include <LibWeb/Painting/BorderPainting.h>
 #include <LibWeb/Painting/PaintContext.h>
 
@@ -625,6 +627,29 @@ void paint_all_borders(PaintContext& context, CSSPixelRect const& bordered_rect,
             VERIFY_NOT_REACHED();
         }
     }
+}
+
+Optional<BordersData> borders_data_for_outline(Layout::Node const& layout_node, Color outline_color, CSS::OutlineStyle outline_style, CSSPixels outline_width)
+{
+    CSS::LineStyle line_style;
+    if (outline_style == CSS::OutlineStyle::Auto) {
+        // `auto` lets us do whatever we want for the outline. 2px of the link colour seems reasonable.
+        line_style = CSS::LineStyle::Dotted;
+        outline_color = layout_node.document().link_color();
+        outline_width = 2;
+    } else {
+        line_style = CSS::value_id_to_line_style(CSS::to_value_id(outline_style)).value_or(CSS::LineStyle::None);
+    }
+
+    if (outline_color.alpha() == 0 || line_style == CSS::LineStyle::None || outline_width == 0)
+        return {};
+
+    CSS::BorderData border_data {
+        .color = outline_color,
+        .line_style = line_style,
+        .width = outline_width,
+    };
+    return BordersData { border_data, border_data, border_data, border_data };
 }
 
 }

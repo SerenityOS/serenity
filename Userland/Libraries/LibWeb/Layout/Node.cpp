@@ -707,6 +707,13 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     do_border_style(computed_values.border_right(), CSS::PropertyID::BorderRightWidth, CSS::PropertyID::BorderRightColor, CSS::PropertyID::BorderRightStyle);
     do_border_style(computed_values.border_bottom(), CSS::PropertyID::BorderBottomWidth, CSS::PropertyID::BorderBottomColor, CSS::PropertyID::BorderBottomStyle);
 
+    if (auto outline_color = computed_style.property(CSS::PropertyID::OutlineColor); outline_color->has_color())
+        computed_values.set_outline_color(outline_color->to_color(*this));
+    if (auto outline_style = computed_style.outline_style(); outline_style.has_value())
+        computed_values.set_outline_style(outline_style.value());
+    if (auto outline_width = computed_style.property(CSS::PropertyID::OutlineWidth); outline_width->is_length())
+        computed_values.set_outline_width(outline_width->as_length().length());
+
     computed_values.set_content(computed_style.content());
     computed_values.set_grid_auto_columns(computed_style.grid_auto_columns());
     computed_values.set_grid_auto_rows(computed_style.grid_auto_rows());
