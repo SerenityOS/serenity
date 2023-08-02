@@ -127,10 +127,27 @@ void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const&
     };
 
     auto gfx_line_style = Gfx::Painter::LineStyle::Solid;
-    if (border_style == CSS::LineStyle::Dotted)
+    switch (border_style) {
+    case CSS::LineStyle::None:
+    case CSS::LineStyle::Hidden:
+        return;
+    case CSS::LineStyle::Dotted:
         gfx_line_style = Gfx::Painter::LineStyle::Dotted;
-    if (border_style == CSS::LineStyle::Dashed)
+        break;
+    case CSS::LineStyle::Dashed:
         gfx_line_style = Gfx::Painter::LineStyle::Dashed;
+        break;
+    case CSS::LineStyle::Solid:
+        gfx_line_style = Gfx::Painter::LineStyle::Solid;
+        break;
+    case CSS::LineStyle::Double:
+    case CSS::LineStyle::Groove:
+    case CSS::LineStyle::Ridge:
+    case CSS::LineStyle::Inset:
+    case CSS::LineStyle::Outset:
+        // FIXME: Implement these
+        break;
+    }
 
     if (gfx_line_style != Gfx::Painter::LineStyle::Solid) {
         auto [p1, p2] = points_for_edge(edge, rect);
