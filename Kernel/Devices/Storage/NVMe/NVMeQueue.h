@@ -28,6 +28,8 @@ struct DoorbellRegister {
 
 struct Doorbell {
     Memory::TypedMapping<DoorbellRegister volatile> mmio_reg;
+    Memory::TypedMapping<DoorbellRegister> dbbuf_shadow;
+    Memory::TypedMapping<DoorbellRegister> dbbuf_eventidx;
 };
 
 enum class QueueType {
@@ -62,9 +64,25 @@ public:
 
 protected:
     u32 process_cq();
+
+    // Updates the shadow buffer and returns if mmio is needed
+    bool update_shadow_buf(u16 new_value, u32* dbbuf, u32* ei)
+    {
+        u32 const old = *dbbuf;
+
+        *dbbuf = new_value;
+        AK::full_memory_barrier();
+
+        bool need_mmio = static_cast<u16>(new_value - *ei - 1) < static_cast<u16>(new_value - old);
+        return need_mmio;
+    }
+
     void update_sq_doorbell()
     {
-        m_db_regs.mmio_reg->sq_tail = m_sq_tail;
+        full_memory_barrier();
+        if (m_db_regs.dbbuf_shadow.paddr.is_null()
+            || update_shadow_buf(m_sq_tail, &m_db_regs.dbbuf_shadow->sq_tail, &m_db_regs.dbbuf_eventidx->sq_tail))
+            m_db_regs.mmio_reg->sq_tail = m_sq_tail;
     }
 
     NVMeQueue(NonnullOwnPtr<Memory::Region> rw_dma_region, Memory::PhysicalPage const& rw_dma_page, u16 qid, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, OwnPtr<Memory::Region> sq_dma_region, Doorbell db_regs);
@@ -88,7 +106,10 @@ private:
     virtual void complete_current_request(u16 cmdid, u16 status) = 0;
     void update_cq_doorbell()
     {
-        m_db_regs.mmio_reg->cq_head = m_cq_head;
+        full_memory_barrier();
+        if (m_db_regs.dbbuf_shadow.paddr.is_null()
+            || update_shadow_buf(m_cq_head, &m_db_regs.dbbuf_shadow->cq_head, &m_db_regs.dbbuf_eventidx->cq_head))
+            m_db_regs.mmio_reg->cq_head = m_cq_head;
     }
 
 protected:

@@ -34,10 +34,21 @@ struct IdentifyNamespace {
     u64 rsvd3[488];
 };
 
+// FIXME: For now only one value is used. Once we start using
+// more values from id_ctrl command, use separate member variables
+// instead of using rsd array.
+struct IdentifyController {
+    u8 rsdv1[256];
+    u16 oacs;
+    u8 rsdv2[3838];
+};
+
 // DOORBELL
 static constexpr u32 REG_SQ0TDBL_START = 0x1000;
 static constexpr u32 REG_SQ0TDBL_END = 0x1003;
 static constexpr u8 DBL_REG_SIZE = 8;
+static constexpr u16 ID_CTRL_SHADOW_DBBUF_MASK = 0x0100;
+
 // CAP
 static constexpr u8 CAP_DBL_SHIFT = 32;
 static constexpr u8 CAP_DBL_MASK = 0xf;
@@ -99,8 +110,9 @@ static constexpr u16 IO_QUEUE_SIZE = 64; // TODO:Need to be configurable
 
 // IDENTIFY
 static constexpr u16 NVMe_IDENTIFY_SIZE = 4096;
-static constexpr u8 NVMe_CNS_ID_ACTIVE_NS = 0x2;
 static constexpr u8 NVMe_CNS_ID_NS = 0x0;
+static constexpr u8 NVMe_CNS_ID_CTRL = 0x1;
+static constexpr u8 NVMe_CNS_ID_ACTIVE_NS = 0x2;
 static constexpr u8 FLBA_SIZE_INDEX = 26;
 static constexpr u8 FLBA_SIZE_MASK = 0xf;
 static constexpr u8 LBA_FORMAT_SUPPORT_INDEX = 128;
@@ -112,6 +124,7 @@ enum AdminCommandOpCode {
     OP_ADMIN_CREATE_COMPLETION_QUEUE = 0x5,
     OP_ADMIN_CREATE_SUBMISSION_QUEUE = 0x1,
     OP_ADMIN_IDENTIFY = 0x6,
+    OP_ADMIN_DBBUF_CONFIG = 0x7C,
 };
 
 // IO opcodes
@@ -202,6 +215,12 @@ struct [[gnu::packed]] NVMeCreateSQCmd {
     u64 rsvd12[2];
 };
 
+struct [[gnu::packed]] NVMeDBBUFCmd {
+    u32 rsvd1[5];
+    struct DataPtr data_ptr;
+    u32 rsvd12[6];
+};
+
 struct [[gnu::packed]] NVMeSubmission {
     u8 op;
     u8 flags;
@@ -212,5 +231,6 @@ struct [[gnu::packed]] NVMeSubmission {
         NVMeRWCmd rw;
         NVMeCreateCQCmd create_cq;
         NVMeCreateSQCmd create_sq;
+        NVMeDBBUFCmd dbbuf_cmd;
     };
 };
