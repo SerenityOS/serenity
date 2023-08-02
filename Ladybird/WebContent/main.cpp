@@ -77,7 +77,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto protocol_client = TRY(launch_request_server_process(candidate_request_server_paths));
         Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create(move(protocol_client))));
     } else {
-        Web::ResourceLoader::initialize(RequestManagerQt::create());
+        Web::ResourceLoader::initialize(Ladybird::RequestManagerQt::create());
     }
 
     JS::Bytecode::Interpreter::set_enabled(use_javascript_bytecode);

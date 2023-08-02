@@ -8,6 +8,8 @@
 #include <AK/JsonObject.h>
 #include <QNetworkCookie>
 
+namespace Ladybird {
+
 RequestManagerQt::RequestManagerQt()
 {
     m_qnam = new QNetworkAccessManager(this);
@@ -106,4 +108,6 @@ void RequestManagerQt::Request::did_finish()
     }
     bool success = http_status_code != 0;
     on_buffered_request_finish(success, buffer.length(), response_headers, http_status_code, ReadonlyBytes { buffer.data(), (size_t)buffer.size() });
+}
+
 }

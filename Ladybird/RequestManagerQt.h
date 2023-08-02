@@ -10,6 +10,8 @@
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtNetwork/QNetworkReply>
 
+namespace Ladybird {
+
 class RequestManagerQt
     : public QObject
     , public Web::ResourceLoaderConnector {
@@ -57,3 +59,5 @@ private:
     HashMap<QNetworkReply*, NonnullRefPtr<Request>> m_pending;
     QNetworkAccessManager* m_qnam { nullptr };
 };
+
+}

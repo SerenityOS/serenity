@@ -17,11 +17,13 @@
 #include <QTabWidget>
 #include <QToolBar>
 
-class WebContentView;
-
 namespace Browser {
 class CookieJar;
 }
+
+namespace Ladybird {
+
+class WebContentView;
 
 class BrowserWindow : public QMainWindow {
     Q_OBJECT
@@ -119,3 +121,5 @@ private:
     WebView::UseJavaScriptBytecode m_use_javascript_bytecode;
     UseLagomNetworking m_use_lagom_networking;
 };
+
+}

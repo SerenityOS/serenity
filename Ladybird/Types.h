@@ -6,7 +6,11 @@
 
 #pragma once
 
+namespace Ladybird {
+
 enum UseLagomNetworking {
     No,
     Yes
 };
+
+}

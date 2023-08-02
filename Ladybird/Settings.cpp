@@ -9,7 +9,7 @@
 #include <AK/URL.h>
 #include <BrowserSettings/Defaults.h>
 
-namespace Browser {
+namespace Ladybird {
 
 static QString rebase_default_url_on_serenity_resource_root(StringView default_url)
 {

@@ -30,7 +30,10 @@
 #include <QResizeEvent>
 
 extern DeprecatedString s_serenity_resource_root;
-extern Browser::Settings* s_settings;
+
+namespace Ladybird {
+
+extern Settings* s_settings;
 
 static QIcon create_tvg_icon_with_theme_colors(QString name, QPalette const& palette)
 {
@@ -690,4 +693,6 @@ void Tab::close_sub_widgets()
 
     close_widget_window(m_console_widget);
     close_widget_window(m_inspector_widget);
+}
+
 }

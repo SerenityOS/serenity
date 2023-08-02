@@ -12,6 +12,8 @@
 #include <QTextLayout>
 #include <QTimer>
 
+namespace Ladybird {
+
 LocationEdit::LocationEdit(QWidget* parent)
     : QLineEdit(parent)
 {
@@ -85,4 +87,6 @@ void LocationEdit::highlight_location()
 
     QInputMethodEvent event(QString(), attributes);
     QCoreApplication::sendEvent(this, &event);
+}
+
 }
