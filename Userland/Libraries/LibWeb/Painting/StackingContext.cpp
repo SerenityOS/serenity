@@ -125,7 +125,7 @@ void StackingContext::paint_descendants(PaintContext& context, Layout::Node cons
             break;
         case StackingContextPaintPhase::FocusAndOverlay:
             if (context.has_focus()) {
-                paint_node(child, context, PaintPhase::FocusOutline);
+                paint_node(child, context, PaintPhase::Outline);
             }
             paint_node(child, context, PaintPhase::Overlay);
             paint_descendants(context, child, phase);
@@ -213,7 +213,7 @@ void StackingContext::paint_internal(PaintContext& context) const
         paint_descendants(context, layout_node, StackingContextPaintPhase::BackgroundAndBordersForInlineLevelAndReplaced);
         paint_node(layout_node, context, PaintPhase::Foreground);
         paint_descendants(context, layout_node, StackingContextPaintPhase::Foreground);
-        paint_node(layout_node, context, PaintPhase::FocusOutline);
+        paint_node(layout_node, context, PaintPhase::Outline);
         paint_node(layout_node, context, PaintPhase::Overlay);
         paint_descendants(context, layout_node, StackingContextPaintPhase::FocusAndOverlay);
         if (parent_paintable)
@@ -230,7 +230,7 @@ void StackingContext::paint_internal(PaintContext& context) const
             paint_child(child);
     }
 
-    paint_node(m_box, context, PaintPhase::FocusOutline);
+    paint_node(m_box, context, PaintPhase::Outline);
     paint_node(m_box, context, PaintPhase::Overlay);
     paint_descendants(context, m_box, StackingContextPaintPhase::FocusAndOverlay);
 }

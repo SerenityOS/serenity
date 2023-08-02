@@ -23,7 +23,7 @@ enum class PaintPhase {
     Background,
     Border,
     Foreground,
-    FocusOutline,
+    Outline,
     Overlay,
 };
 
