@@ -66,6 +66,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
     resize(530, 365);
     set_title("Spreadsheet Functions Help");
     set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-help.png"sv).release_value_but_fixme_should_propagate_errors());
+    set_window_mode(GUI::WindowMode::Modeless);
 
     auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
     widget->set_layout<GUI::VerticalBoxLayout>();
