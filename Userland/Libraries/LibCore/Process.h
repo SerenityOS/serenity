@@ -30,6 +30,8 @@ public:
         Yes,
     };
     static ErrorOr<void> set_name(StringView, SetThreadName = SetThreadName::No);
+
+    static ErrorOr<bool> is_being_debugged();
 };
 
 }

@@ -15,6 +15,7 @@
 #include <Browser/Database.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/Process.h>
 #include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibGfx/Font/FontDatabase.h>
@@ -48,20 +49,9 @@ static ErrorOr<void> handle_attached_debugger()
     // incorrectly forwards the signal to us even when it's set to
     // "nopass". See https://sourceware.org/bugzilla/show_bug.cgi?id=9425
     // for details.
-    auto unbuffered_status_file = TRY(Core::File::open("/proc/self/status"sv, Core::File::OpenMode::Read));
-    auto status_file = TRY(Core::InputBufferedFile::create(move(unbuffered_status_file)));
-    auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
-    while (TRY(status_file->can_read_line())) {
-        auto line = TRY(status_file->read_line(buffer));
-        auto const parts = line.split_view(':');
-        if (parts.size() < 2 || parts[0] != "TracerPid"sv)
-            continue;
-        auto tracer_pid = parts[1].to_uint<u32>();
-        if (tracer_pid != 0UL) {
-            dbgln("Debugger is attached, ignoring SIGINT");
-            TRY(Core::System::signal(SIGINT, SIG_IGN));
-        }
-        break;
+    if (TRY(Core::Process::is_being_debugged())) {
+        dbgln("Debugger is attached, ignoring SIGINT");
+        TRY(Core::System::signal(SIGINT, SIG_IGN));
     }
 #endif
     return {};
