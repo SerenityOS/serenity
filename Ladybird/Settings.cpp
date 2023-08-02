@@ -7,7 +7,7 @@
 #include "Settings.h"
 #include "Utilities.h"
 #include <AK/URL.h>
-#include <Applications/BrowserSettings/Defaults.h>
+#include <BrowserSettings/Defaults.h>
 
 namespace Browser {
 
