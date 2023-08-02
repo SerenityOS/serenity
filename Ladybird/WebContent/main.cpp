@@ -74,7 +74,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (use_lagom_networking) {
         auto candidate_request_server_paths = TRY(get_paths_for_helper_process("RequestServer"sv));
-        auto protocol_client = TRY(launch_request_server_process(candidate_request_server_paths));
+        auto protocol_client = TRY(launch_request_server_process(candidate_request_server_paths, s_serenity_resource_root));
         Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create(move(protocol_client))));
     } else {
         Web::ResourceLoader::initialize(Ladybird::RequestManagerQt::create());

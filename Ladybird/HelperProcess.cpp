@@ -87,7 +87,7 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(Web
     return new_client;
 }
 
-ErrorOr<NonnullRefPtr<Protocol::RequestClient>> launch_request_server_process(ReadonlySpan<String> candidate_request_server_paths)
+ErrorOr<NonnullRefPtr<Protocol::RequestClient>> launch_request_server_process(ReadonlySpan<String> candidate_request_server_paths, StringView serenity_resource_root)
 {
     int socket_fds[2] {};
     TRY(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds));
@@ -120,6 +120,8 @@ ErrorOr<NonnullRefPtr<Protocol::RequestClient>> launch_request_server_process(Re
                 path.bytes_as_string_view(),
                 "--fd-passing-socket"sv,
                 fd_passing_socket_string,
+                "--serenity-resource-root"sv,
+                serenity_resource_root,
             };
 
             result = Core::System::exec(arguments[0], arguments.span(), Core::System::SearchInPath::Yes);

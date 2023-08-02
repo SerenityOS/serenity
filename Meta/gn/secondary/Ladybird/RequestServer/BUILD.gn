@@ -1,14 +1,5 @@
-import("//Ladybird/link_qt.gni")
-
-link_qt("RequestServer_qt") {
-  qt_components = [ "Core" ]
-}
-
 executable("RequestServer") {
-  configs += [
-    "//Ladybird:ladybird_config",
-    ":RequestServer_qt",
-  ]
+  configs += [ "//Ladybird:ladybird_config" ]
   include_dirs = [
     "//Userland/Libraries",
     "//Userland/Services",
@@ -26,7 +17,6 @@ executable("RequestServer") {
     "//Userland/Libraries/LibTLS",
   ]
   sources = [
-    "../Utilities.cpp",
     "//Userland/Services/RequestServer/ConnectionCache.cpp",
     "//Userland/Services/RequestServer/ConnectionFromClient.cpp",
     "//Userland/Services/RequestServer/GeminiProtocol.cpp",

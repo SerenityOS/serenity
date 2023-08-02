@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "../Utilities.h"
 #include <AK/LexicalPath.h>
 #include <AK/OwnPtr.h>
 #include <LibCore/ArgsParser.h>
@@ -16,17 +15,16 @@
 #include <LibIPC/SingleServer.h>
 #include <LibMain/Main.h>
 #include <LibTLS/Certificate.h>
-#include <QCoreApplication>
 #include <RequestServer/ConnectionFromClient.h>
 #include <RequestServer/GeminiProtocol.h>
 #include <RequestServer/HttpProtocol.h>
 #include <RequestServer/HttpsProtocol.h>
 
-ErrorOr<String> find_certificates()
+ErrorOr<String> find_certificates(StringView serenity_resource_root)
 {
-    auto cert_path = TRY(String::formatted("{}/res/ladybird/cacert.pem", s_serenity_resource_root));
+    auto cert_path = TRY(String::formatted("{}/res/ladybird/cacert.pem", serenity_resource_root));
     if (!FileSystem::exists(cert_path)) {
-        auto app_dir = ak_deprecated_string_from_qstring(QCoreApplication::applicationDirPath());
+        auto app_dir = LexicalPath::dirname(TRY(Core::System::current_executable_path()).to_deprecated_string());
 
         cert_path = TRY(String::formatted("{}/cacert.pem", LexicalPath(app_dir).parent()));
         if (!FileSystem::exists(cert_path))
@@ -37,18 +35,17 @@ ErrorOr<String> find_certificates()
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    QCoreApplication application(arguments.argc, arguments.argv);
-    platform_init();
-
-    // Ensure the certificates are read out here.
-    DefaultRootCACertificates::set_default_certificate_path(TRY(find_certificates()));
-    [[maybe_unused]] auto& certs = DefaultRootCACertificates::the();
-
     int fd_passing_socket { -1 };
+    StringView serenity_resource_root;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(fd_passing_socket, "File descriptor of the fd passing socket", "fd-passing-socket", 'c', "fd-passing-socket");
+    args_parser.add_option(serenity_resource_root, "Absolute path to directory for serenity resources", "serenity-resource-root", 'r', "serenity-resource-root");
     args_parser.parse(arguments);
+
+    // Ensure the certificates are read out here.
+    DefaultRootCACertificates::set_default_certificate_path(TRY(find_certificates(serenity_resource_root)));
+    [[maybe_unused]] auto& certs = DefaultRootCACertificates::the();
 
     Core::EventLoop event_loop;
 
