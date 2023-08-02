@@ -9,6 +9,16 @@ LadybirdViewImpl::LadybirdViewImpl(LadybirdWebView* widget)
     on_title_change = [this](DeprecatedString const& title) {
         ladybird_web_view_set_page_title(m_widget, title.characters());
     };
+    on_load_start = [this](AK::URL const& url, [[maybe_unused]] bool is_redirect) {
+        DeprecatedString url_string = url.serialize();
+        ladybird_web_view_set_page_url(m_widget, url_string.characters());
+        ladybird_web_view_set_loading(m_widget, true);
+    };
+    on_load_finish = [this](AK::URL const& url) {
+        DeprecatedString url_string = url.serialize();
+        ladybird_web_view_set_page_url(m_widget, url_string.characters());
+        ladybird_web_view_set_loading(m_widget, false);
+    };
 }
 
 LadybirdViewImpl::~LadybirdViewImpl()

@@ -10,14 +10,19 @@ struct _LadybirdWebView {
     GtkScrollablePolicy vscroll_policy;
     GtkAdjustment* vadjustment;
 
+    char* page_url;
     char* page_title;
     int page_width;
     int page_height;
+
+    bool loading : 1;
 };
 
 enum {
     PROP_0,
     PROP_PAGE_TITLE,
+    PROP_PAGE_URL,
+    PROP_LOADING,
     NUM_PROPS,
 
     PROP_HADJUSTMENT,
@@ -59,6 +64,47 @@ void ladybird_web_view_set_page_size(LadybirdWebView* self, int width, int heigh
     gtk_widget_queue_resize(GTK_WIDGET(self));
 }
 
+char const* ladybird_web_view_get_page_url(LadybirdWebView* self)
+{
+    g_return_val_if_fail(LADYBIRD_IS_WEB_VIEW(self), nullptr);
+
+    return self->page_url;
+}
+
+void ladybird_web_view_set_page_url(LadybirdWebView* self, char const* page_url)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+
+    if (g_set_str(&self->page_url, page_url))
+        g_object_notify_by_pspec(G_OBJECT(self), props[PROP_PAGE_URL]);
+}
+
+void ladybird_web_view_load_url(LadybirdWebView* self, char const* url)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+    g_return_if_fail(url != nullptr);
+
+    AK::URL ak_url = StringView(url, strlen(url));
+    self->impl->load(ak_url);
+}
+
+bool ladybird_web_view_get_loading(LadybirdWebView* self)
+{
+    g_return_val_if_fail(LADYBIRD_IS_WEB_VIEW(self), false);
+
+    return self->loading;
+}
+
+void ladybird_web_view_set_loading(LadybirdWebView* self, bool loading)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+
+    if (self->loading == loading)
+        return;
+    self->loading = loading;
+    g_object_notify_by_pspec(G_OBJECT(self), props[PROP_LOADING]);
+}
+
 static void ladybird_web_view_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* pspec)
 {
     LadybirdWebView* self = LADYBIRD_WEB_VIEW(object);
@@ -66,6 +112,14 @@ static void ladybird_web_view_get_property(GObject* object, guint prop_id, GValu
     switch (prop_id) {
     case PROP_PAGE_TITLE:
         g_value_set_string(value, self->page_title);
+        break;
+
+    case PROP_PAGE_URL:
+        g_value_set_string(value, self->page_url);
+        break;
+
+    case PROP_LOADING:
+        g_value_set_boolean(value, self->loading);
         break;
 
     case PROP_HADJUSTMENT:
@@ -122,6 +176,14 @@ static void ladybird_web_view_set_property(GObject* object, guint prop_id, GValu
     switch (prop_id) {
     case PROP_PAGE_TITLE:
         ladybird_web_view_set_page_title(self, g_value_get_string(value));
+        break;
+
+    case PROP_PAGE_URL:
+        ladybird_web_view_set_page_url(self, g_value_get_string(value));
+        break;
+
+    case PROP_LOADING:
+        ladybird_web_view_set_loading(self, g_value_get_boolean(value));
         break;
 
     case PROP_HADJUSTMENT:
@@ -220,7 +282,11 @@ static void ladybird_web_view_class_init(LadybirdWebViewClass* klass)
     g_object_class_override_property(object_class, PROP_HSCROLL_POLICY, "hscroll-policy");
     g_object_class_override_property(object_class, PROP_VSCROLL_POLICY, "vscroll-policy");
 
-    props[PROP_PAGE_TITLE] = g_param_spec_string("page-title", nullptr, nullptr, nullptr, GParamFlags(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY));
+    constexpr GParamFlags param_flags = GParamFlags(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+
+    props[PROP_PAGE_TITLE] = g_param_spec_string("page-title", nullptr, nullptr, nullptr, param_flags);
+    props[PROP_PAGE_URL] = g_param_spec_string("page-url", nullptr, nullptr, nullptr, param_flags);
+    props[PROP_LOADING] = g_param_spec_boolean("loading", nullptr, nullptr, false, param_flags);
     g_object_class_install_properties(object_class, NUM_PROPS, props);
 
     widget_class->measure = ladybird_web_view_measure;
