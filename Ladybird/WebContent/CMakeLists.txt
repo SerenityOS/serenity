@@ -6,16 +6,16 @@ set(WEBCONTENT_SOURCES
     ${WEBCONTENT_SOURCE_DIR}/PageHost.cpp
     ${WEBCONTENT_SOURCE_DIR}/WebContentConsoleClient.cpp
     ${WEBCONTENT_SOURCE_DIR}/WebDriverConnection.cpp
-    ../AudioCodecPluginLadybird.cpp
+    ../AudioCodecPluginQt.cpp
     ../AudioThread.cpp
     ../EventLoopImplementationQt.cpp
-    ../FontPluginLadybird.cpp
+    ../FontPlugin.cpp
     ../HelperProcess.cpp
-    ../ImageCodecPluginLadybird.cpp
+    ../ImageCodecPlugin.cpp
     ../RequestManagerQt.cpp
     ../Utilities.cpp
-    ../WebSocketClientManagerLadybird.cpp
-    ../WebSocketLadybird.cpp
+    ../WebSocketClientManagerQt.cpp
+    ../WebSocketQt.cpp
     ../WebSocketImplQt.cpp
     main.cpp
 )

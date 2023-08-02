@@ -12,10 +12,10 @@
 
 namespace Ladybird {
 
-class FontPluginLadybird final : public Web::Platform::FontPlugin {
+class FontPlugin final : public Web::Platform::FontPlugin {
 public:
-    FontPluginLadybird(bool is_layout_test_mode);
-    virtual ~FontPluginLadybird();
+    FontPlugin(bool is_layout_test_mode);
+    virtual ~FontPlugin();
 
     virtual Gfx::Font& default_font() override;
     virtual Gfx::Font& default_fixed_width_font() override;

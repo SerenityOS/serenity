@@ -14,15 +14,15 @@
 
 namespace Ladybird {
 
-class WebSocketClientManagerLadybird : public Web::WebSockets::WebSocketClientManager {
+class WebSocketClientManagerQt : public Web::WebSockets::WebSocketClientManager {
 public:
-    static NonnullRefPtr<WebSocketClientManagerLadybird> create();
+    static NonnullRefPtr<WebSocketClientManagerQt> create();
 
-    virtual ~WebSocketClientManagerLadybird() override;
+    virtual ~WebSocketClientManagerQt() override;
     virtual RefPtr<Web::WebSockets::WebSocketClientSocket> connect(AK::URL const&, DeprecatedString const& origin, Vector<DeprecatedString> const& protocols) override;
 
 private:
-    WebSocketClientManagerLadybird();
+    WebSocketClientManagerQt();
 };
 
 }
