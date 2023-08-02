@@ -23,16 +23,23 @@ template $LadybirdWindow : Adw.ApplicationWindow {
 
           Button back_button {
             icon-name: "go-previous-symbolic";
+            action-name: "win.navigate-back";
+            tooltip-text: _("Navigate Back");
           }
           Button forward_button {
             icon-name: "go-next-symbolic";
+            action-name: "win.navigate-forward";
+            tooltip-text: _("Navigate Forward");
           }
           Button refresh_button {
             icon-name: "view-refresh-symbolic";
+            action-name: "win.reload-page";
+            tooltip-text: _("Reload Page");
           }
           Button new_tab_button {
             icon-name: "tab-new-symbolic";
             action-name: "win.new-tab";
+            tooltip-text: _("New Tab");
           }
         }
 
@@ -54,12 +61,21 @@ template $LadybirdWindow : Adw.ApplicationWindow {
           spacing: 6;
           margin-start: 6;
 
+          MenuButton {
+              icon-name: "user-bookmarks-symbolic";
+              tooltip-text: _("Bookmarks");
+          }
           Button overview_button {
             icon-name: "view-grid-symbolic";
             action-name: "overview.open";
+            tooltip-text: _("Tab Overview");
           }
-          Button menu_button {
+          MenuButton {
             icon-name: "open-menu-symbolic";
+            tooltip-text: _("Main Menu");
+            popover: PopoverMenu popover_menu {
+                menu-model: main_menu;
+            };
           }
         }
       }
@@ -73,4 +89,39 @@ template $LadybirdWindow : Adw.ApplicationWindow {
       };
     };
   }
+}
+
+menu main_menu {
+    section {
+        item {
+            custom: "zoom";
+        }
+    }
+    item (_("_New Window"), "app.new-window")
+    item (_("_Keyboard Shortcuts"), "app.shortcuts")
+    item (_("_About Ladybird"), "app.about")
+}
+
+Box menu_zoom_box {
+    orientation: horizontal;
+    homogeneous: true;
+    styles ["linked"]
+
+    Button {
+        tooltip-text: _("Zoom Out");
+        icon-name: "zoom-out-symbolic";
+        action-name: "win.zoom-out";
+    }
+    Button {
+        tooltip-text: _("Restore Zoom");
+        action-name: "win.zoom-normal";
+        Label {
+            width-chars: 5;
+        }
+    }
+    Button {
+        tooltip-text: _("Zoom In");
+        icon-name: "zoom-in-symbolic";
+        action-name: "win.zoom-in";
+    }
 }
