@@ -806,6 +806,22 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         window);
     copy_action->set_enabled(false);
 
+    auto copy_path_action = GUI::Action::create(
+        "Copy Path", [&](GUI::Action const&) {
+            Vector<DeprecatedString> selected_paths;
+            if (directory_view->active_widget()->is_focused()) {
+                selected_paths = directory_view->selected_file_paths();
+            } else if (tree_view.is_focused()) {
+                selected_paths = tree_view_selected_file_paths();
+            }
+            VERIFY(!selected_paths.is_empty());
+
+            StringBuilder joined_paths_builder;
+            joined_paths_builder.join('\n', selected_paths.span());
+            GUI::Clipboard::the().set_plain_text(joined_paths_builder.string_view());
+        },
+        window);
+
     auto open_in_new_window_action
         = GUI::Action::create(
             "Open in New &Window",
@@ -1149,6 +1165,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         auto& selection = view.selection();
         cut_action->set_enabled(!selection.is_empty() && access(directory_view->path().characters(), W_OK) == 0);
         copy_action->set_enabled(!selection.is_empty());
+        copy_path_action->set_text(selection.size() > 1 ? "Copy Paths" : "Copy Path");
         focus_dependent_delete_action->set_enabled((!tree_view.selection().is_empty() && tree_view.is_focused())
             || (!directory_view->current_view().selection().is_empty() && access(directory_view->path().characters(), W_OK) == 0));
     };
@@ -1163,6 +1180,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     TRY(directory_context_menu->try_add_separator());
     TRY(directory_context_menu->try_add_action(cut_action));
     TRY(directory_context_menu->try_add_action(copy_action));
+    TRY(directory_context_menu->try_add_action(copy_path_action));
     TRY(directory_context_menu->try_add_action(folder_specific_paste_action));
     TRY(directory_context_menu->try_add_action(directory_view->delete_action()));
     TRY(directory_context_menu->try_add_action(directory_view->rename_action()));
@@ -1187,6 +1205,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     TRY(tree_view_directory_context_menu->try_add_action(touch_action));
     TRY(tree_view_directory_context_menu->try_add_action(cut_action));
     TRY(tree_view_directory_context_menu->try_add_action(copy_action));
+    TRY(tree_view_directory_context_menu->try_add_action(copy_path_action));
     TRY(tree_view_directory_context_menu->try_add_action(paste_action));
     TRY(tree_view_directory_context_menu->try_add_action(tree_view_delete_action));
     TRY(tree_view_directory_context_menu->try_add_separator());
@@ -1213,6 +1232,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
 
                 file_context_menu->add_action(cut_action);
                 file_context_menu->add_action(copy_action);
+                file_context_menu->add_action(copy_path_action);
                 file_context_menu->add_action(paste_action);
                 file_context_menu->add_action(directory_view->delete_action());
                 file_context_menu->add_action(directory_view->rename_action());
