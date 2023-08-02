@@ -5,3 +5,4 @@ files="https://www.sqlite.org/2023/sqlite-autoconf-${version}.tar.gz sqlite-auto
 useconfigure='true'
 use_fresh_config_sub='true'
 workdir="sqlite-autoconf-${version}"
+depends=('zlib')
