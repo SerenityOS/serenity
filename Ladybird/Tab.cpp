@@ -516,14 +516,15 @@ void Tab::focus_location_editor()
     m_location_edit->selectAll();
 }
 
-void Tab::navigate(QString url, LoadType load_type)
+void Tab::navigate(QString url_qstring, LoadType load_type)
 {
-    if (url.startsWith("/"))
-        url = "file://" + url;
-    else if (!url.startsWith("http://", Qt::CaseInsensitive) && !url.startsWith("https://", Qt::CaseInsensitive) && !url.startsWith("file://", Qt::CaseInsensitive) && !url.startsWith("about:", Qt::CaseInsensitive) && !url.startsWith("data:", Qt::CaseInsensitive))
-        url = "https://" + url;
+    auto url_string = ak_deprecated_string_from_qstring(url_qstring);
+    if (url_string.starts_with('/'))
+        url_string = DeprecatedString::formatted("file://{}", url_string);
+    else if (URL url = url_string; !url.is_valid())
+        url_string = DeprecatedString::formatted("https://{}", url_string);
     m_is_history_navigation = (load_type == LoadType::HistoryNavigation);
-    view().load(ak_deprecated_string_from_qstring(url));
+    view().load(url_string);
 }
 
 void Tab::back()
