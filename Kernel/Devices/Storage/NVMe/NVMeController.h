@@ -58,6 +58,7 @@ private:
     NVMeController(PCI::DeviceIdentifier const&, u32 hardware_relative_controller_id);
 
     ErrorOr<void> identify_and_init_namespaces();
+    ErrorOr<void> identify_and_init_controller();
     Tuple<u64, u8> get_ns_features(IdentifyNamespace& identify_data_struct);
     ErrorOr<void> create_admin_queue(QueueType queue_type);
     ErrorOr<void> create_io_queue(u8 qid, QueueType queue_type);
@@ -72,6 +73,8 @@ private:
     Vector<NonnullLockRefPtr<NVMeQueue>> m_queues;
     Vector<NonnullLockRefPtr<NVMeNameSpace>> m_namespaces;
     Memory::TypedMapping<ControllerRegister volatile> m_controller_regs;
+    RefPtr<Memory::PhysicalPage> m_dbbuf_shadow_page;
+    RefPtr<Memory::PhysicalPage> m_dbbuf_eventidx_page;
     bool m_admin_queue_ready { false };
     size_t m_device_count { 0 };
     AK::Duration m_ready_timeout;

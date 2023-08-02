@@ -101,7 +101,6 @@ void NVMeQueue::submit_sqe(NVMeSubmission& sub)
     }
 
     dbgln_if(NVME_DEBUG, "NVMe: Submission with command identifier {}. SQ_TAIL: {}", sub.cmdid, m_sq_tail);
-    full_memory_barrier();
     update_sq_doorbell();
 }
 

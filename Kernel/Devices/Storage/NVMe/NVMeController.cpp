@@ -62,6 +62,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::initialize(bool is_queue_polled)
     VERIFY(IO_QUEUE_SIZE < MQES(caps));
     dbgln_if(NVME_DEBUG, "NVMe: IO queue depth is: {}", IO_QUEUE_SIZE);
 
+    TRY(identify_and_init_controller());
     // Create an IO queue per core
     for (u32 cpuid = 0; cpuid < nr_of_queues; ++cpuid) {
         // qid is zero is used for admin queue
@@ -216,6 +217,65 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::identify_and_init_namespaces()
     return {};
 }
 
+ErrorOr<void> NVMeController::identify_and_init_controller()
+{
+    RefPtr<Memory::PhysicalPage> prp_dma_buffer;
+    OwnPtr<Memory::Region> prp_dma_region;
+    IdentifyController ctrl {};
+
+    {
+        auto buffer = TRY(MM.allocate_dma_buffer_page("Identify PRP"sv, Memory::Region::Access::ReadWrite, prp_dma_buffer));
+        prp_dma_region = move(buffer);
+    }
+
+    // Check if the controller supports shadow doorbell
+    {
+        NVMeSubmission sub {};
+        u16 status = 0;
+        sub.op = OP_ADMIN_IDENTIFY;
+        sub.identify.data_ptr.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(prp_dma_buffer->paddr().as_ptr()));
+        sub.identify.cns = NVMe_CNS_ID_CTRL & 0xff;
+        status = submit_admin_command(sub, true);
+        if (status) {
+            dmesgln_pci(*this, "Failed to identify active namespace command");
+            return EFAULT;
+        }
+        if (void* fault_at; !safe_memcpy(&ctrl, prp_dma_region->vaddr().as_ptr(), NVMe_IDENTIFY_SIZE, fault_at)) {
+            return EFAULT;
+        }
+    }
+
+    if (ctrl.oacs & ID_CTRL_SHADOW_DBBUF_MASK) {
+        OwnPtr<Memory::Region> dbbuf_dma_region;
+        OwnPtr<Memory::Region> eventidx_dma_region;
+
+        {
+            auto buffer = TRY(MM.allocate_dma_buffer_page("shadow dbbuf"sv, Memory::Region::Access::ReadWrite, m_dbbuf_shadow_page));
+            dbbuf_dma_region = move(buffer);
+            memset(dbbuf_dma_region->vaddr().as_ptr(), 0, PAGE_SIZE);
+        }
+
+        {
+            auto buffer = TRY(MM.allocate_dma_buffer_page("eventidx"sv, Memory::Region::Access::ReadWrite, m_dbbuf_eventidx_page));
+            eventidx_dma_region = move(buffer);
+            memset(eventidx_dma_region->vaddr().as_ptr(), 0, PAGE_SIZE);
+        }
+
+        {
+            NVMeSubmission sub {};
+            sub.op = OP_ADMIN_DBBUF_CONFIG;
+            sub.dbbuf_cmd.data_ptr.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(m_dbbuf_shadow_page->paddr().as_ptr()));
+            sub.dbbuf_cmd.data_ptr.prp2 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(m_dbbuf_eventidx_page->paddr().as_ptr()));
+
+            submit_admin_command(sub, true);
+        }
+
+        dbgln_if(NVME_DEBUG, "Shadow doorbell Enabled!");
+    }
+
+    return {};
+}
+
 UNMAP_AFTER_INIT Tuple<u64, u8> NVMeController::get_ns_features(IdentifyNamespace& identify_data_struct)
 {
     auto flbas = identify_data_struct.flbas & FLBA_SIZE_MASK;
@@ -283,6 +343,8 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(QueueType queu
     auto doorbell_regs = TRY(Memory::map_typed_writable<DoorbellRegister volatile>(PhysicalAddress(m_bar + REG_SQ0TDBL_START)));
     Doorbell doorbell = {
         .mmio_reg = move(doorbell_regs),
+        .dbbuf_shadow = {},
+        .dbbuf_eventidx = {},
     };
 
     m_controller_regs->acq = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(cq_dma_pages.first()->paddr().as_ptr()));
@@ -352,10 +414,20 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 qid, QueueType
         submit_admin_command(sub, true);
     }
 
-    auto queue_doorbell_offset = REG_SQ0TDBL_START + ((2 * qid) * (4 << m_dbl_stride));
-    auto doorbell_regs = TRY(Memory::map_typed_writable<DoorbellRegister volatile>(PhysicalAddress(m_bar + queue_doorbell_offset)));
+    auto queue_doorbell_offset = (2 * qid) * (4 << m_dbl_stride);
+    auto doorbell_regs = TRY(Memory::map_typed_writable<DoorbellRegister volatile>(PhysicalAddress(m_bar + REG_SQ0TDBL_START + queue_doorbell_offset)));
+    Memory::TypedMapping<DoorbellRegister> shadow_doorbell_regs {};
+    Memory::TypedMapping<DoorbellRegister> eventidx_doorbell_regs {};
+
+    if (!m_dbbuf_shadow_page.is_null()) {
+        shadow_doorbell_regs = TRY(Memory::map_typed_writable<DoorbellRegister>(m_dbbuf_shadow_page->paddr().offset(queue_doorbell_offset)));
+        eventidx_doorbell_regs = TRY(Memory::map_typed_writable<DoorbellRegister>(m_dbbuf_eventidx_page->paddr().offset(queue_doorbell_offset)));
+    }
+
     Doorbell doorbell = {
         .mmio_reg = move(doorbell_regs),
+        .dbbuf_shadow = move(shadow_doorbell_regs),
+        .dbbuf_eventidx = move(eventidx_doorbell_regs),
     };
 
     auto irq = TRY(allocate_irq(qid));
