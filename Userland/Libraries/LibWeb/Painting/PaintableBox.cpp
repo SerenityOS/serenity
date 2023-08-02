@@ -170,6 +170,16 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
         paint_border(context);
     }
 
+    if (phase == PaintPhase::Outline) {
+        auto outline_width = computed_values().outline_width().to_px(layout_node());
+        auto borders_data = borders_data_for_outline(layout_node(), computed_values().outline_color(), computed_values().outline_style(), outline_width);
+        if (borders_data.has_value()) {
+            auto border_radius_data = normalized_border_radii_data(ShrinkRadiiForBorders::No);
+            border_radius_data.inflate(outline_width, outline_width, outline_width, outline_width);
+            paint_all_borders(context, absolute_border_box_rect().inflated(outline_width, outline_width, outline_width, outline_width), border_radius_data, borders_data.value());
+        }
+    }
+
     if (phase == PaintPhase::Overlay && should_clip_rect)
         context.painter().restore();
 
@@ -215,12 +225,6 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
         context.painter().fill_rect(size_text_device_rect, context.palette().color(Gfx::ColorRole::Tooltip));
         context.painter().draw_rect(size_text_device_rect, context.palette().threed_shadow1());
         context.painter().draw_text(size_text_device_rect, size_text, font, Gfx::TextAlignment::Center, context.palette().color(Gfx::ColorRole::TooltipText));
-    }
-
-    if (phase == PaintPhase::Outline && layout_box().dom_node() && layout_box().dom_node()->is_element() && verify_cast<DOM::Element>(*layout_box().dom_node()).is_focused()) {
-        // FIXME: Implement this as `outline` using :focus-visible in the default UA stylesheet to make it possible to override/disable.
-        auto focus_outline_rect = context.enclosing_device_rect(absolute_border_box_rect()).inflated(4, 4);
-        context.painter().draw_focus_rect(focus_outline_rect.to_type<int>(), context.palette().focus_outline());
     }
 }
 
@@ -638,25 +642,6 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
         context.painter().restore();
         if (corner_clipper.has_value())
             corner_clipper->blit_corner_clipping(context.painter());
-    }
-
-    // FIXME: Merge this loop with the above somehow..
-    if (phase == PaintPhase::Outline) {
-        for (auto& line_box : m_line_boxes) {
-            for (auto& fragment : line_box.fragments()) {
-                auto* node = fragment.layout_node().dom_node();
-                if (!node)
-                    continue;
-                auto* parent = node->parent_element();
-                if (!parent)
-                    continue;
-                if (parent->is_focused()) {
-                    // FIXME: Implement this as `outline` using :focus-visible in the default UA stylesheet to make it possible to override/disable.
-                    auto focus_outline_rect = context.enclosing_device_rect(fragment.absolute_rect()).to_type<int>().inflated(4, 4);
-                    context.painter().draw_focus_rect(focus_outline_rect, context.palette().focus_outline());
-                }
-            }
-        }
     }
 }
 

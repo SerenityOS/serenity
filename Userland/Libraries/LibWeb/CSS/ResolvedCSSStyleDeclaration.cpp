@@ -729,6 +729,19 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
         return NumberStyleValue::create(layout_node.computed_values().opacity());
     case PropertyID::Order:
         return IntegerStyleValue::create(layout_node.computed_values().order());
+    case PropertyID::Outline: {
+        return StyleValueList::create(
+            { TRY(style_value_for_property(layout_node, PropertyID::OutlineColor)).release_nonnull(),
+                TRY(style_value_for_property(layout_node, PropertyID::OutlineStyle)).release_nonnull(),
+                TRY(style_value_for_property(layout_node, PropertyID::OutlineWidth)).release_nonnull() },
+            StyleValueList::Separator::Space);
+    }
+    case PropertyID::OutlineColor:
+        return ColorStyleValue::create(layout_node.computed_values().outline_color());
+    case PropertyID::OutlineStyle:
+        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().outline_style()));
+    case PropertyID::OutlineWidth:
+        return LengthStyleValue::create(layout_node.computed_values().outline_width());
     case PropertyID::OverflowX:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().overflow_x()));
     case PropertyID::OverflowY:

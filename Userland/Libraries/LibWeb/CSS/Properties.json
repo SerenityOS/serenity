@@ -1587,8 +1587,7 @@
   "outline": {
     "affects-layout": false,
     "inherited": false,
-    "__comment": "FIXME: Initial value is really `medium invert none` but we don't yet parse the outline shorthand.",
-    "initial": "none",
+    "initial": "medium currentColor none",
     "longhands": [
       "outline-color",
       "outline-style",
@@ -1598,12 +1597,10 @@
   "outline-color": {
     "affects-layout": false,
     "inherited": false,
-    "initial": "invert",
+    "__comment": "FIXME: We don't yet support `invert`. Until we do, the spec directs us to use `currentColor` as the default instead, and reject `invert`",
+    "initial": "currentColor",
     "valid-types": [
       "color"
-    ],
-    "valid-identifiers": [
-      "invert"
     ]
   },
   "outline-style": {
@@ -1611,7 +1608,7 @@
     "inherited": false,
     "initial": "none",
     "valid-types": [
-      "line-style"
+      "outline-style"
     ]
   },
   "outline-width": {

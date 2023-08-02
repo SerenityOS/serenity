@@ -626,6 +626,12 @@ Optional<CSS::LineStyle> StyleProperties::line_style(CSS::PropertyID property_id
     return value_id_to_line_style(value->to_identifier());
 }
 
+Optional<CSS::OutlineStyle> StyleProperties::outline_style() const
+{
+    auto value = property(CSS::PropertyID::OutlineStyle);
+    return value_id_to_outline_style(value->to_identifier());
+}
+
 Optional<CSS::Float> StyleProperties::float_() const
 {
     auto value = property(CSS::PropertyID::Float);

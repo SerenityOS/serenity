@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -55,6 +56,11 @@ struct BorderRadiiData {
         bottom_right.shrink(right, bottom);
         bottom_left.shrink(left, bottom);
     }
+
+    inline void inflate(CSSPixels top, CSSPixels right, CSSPixels bottom, CSSPixels left)
+    {
+        shrink(-top, -right, -bottom, -left);
+    }
 };
 
 BorderRadiiData normalized_border_radii_data(Layout::Node const&, CSSPixelRect const&, CSS::BorderRadiusData top_left_radius, CSS::BorderRadiusData top_right_radius, CSS::BorderRadiusData bottom_right_radius, CSS::BorderRadiusData bottom_left_radius);
@@ -71,6 +77,9 @@ struct BordersData {
     CSS::BorderData bottom;
     CSS::BorderData left;
 };
+
+// Returns OptionalNone if there is no outline to paint.
+Optional<BordersData> borders_data_for_outline(Layout::Node const&, Color outline_color, CSS::OutlineStyle outline_style, CSSPixels outline_width);
 
 RefPtr<Gfx::Bitmap> get_cached_corner_bitmap(DevicePixelSize corners_size);
 

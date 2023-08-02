@@ -68,6 +68,7 @@ public:
     Optional<CSS::Cursor> cursor() const;
     Optional<CSS::WhiteSpace> white_space() const;
     Optional<CSS::LineStyle> line_style(CSS::PropertyID) const;
+    Optional<CSS::OutlineStyle> outline_style() const;
     Vector<CSS::TextDecorationLine> text_decoration_line() const;
     Optional<CSS::TextDecorationStyle> text_decoration_style() const;
     Optional<CSS::TextTransform> text_transform() const;
