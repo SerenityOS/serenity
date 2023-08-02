@@ -26,7 +26,9 @@
 #include <QTabBar>
 
 extern DeprecatedString s_serenity_resource_root;
-extern Browser::Settings* s_settings;
+
+namespace Ladybird {
+extern Settings* s_settings;
 
 static QIcon const& app_icon()
 {
@@ -687,4 +689,6 @@ bool BrowserWindow::eventFilter(QObject* obj, QEvent* event)
     }
 
     return QMainWindow::eventFilter(obj, event);
+}
+
 }

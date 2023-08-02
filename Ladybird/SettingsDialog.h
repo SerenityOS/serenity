@@ -12,6 +12,8 @@
 
 #pragma once
 
+namespace Ladybird {
+
 class SettingsDialog : public QDialog {
     Q_OBJECT
 public:
@@ -27,3 +29,5 @@ private:
     QLineEdit* m_new_tab_page { nullptr };
     QMainWindow* m_window { nullptr };
 };
+
+}

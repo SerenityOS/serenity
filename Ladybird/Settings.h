@@ -9,7 +9,7 @@
 #include <AK/DeprecatedString.h>
 #include <QSettings>
 
-namespace Browser {
+namespace Ladybird {
 
 class Settings : public QObject {
 public:

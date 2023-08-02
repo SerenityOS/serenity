@@ -11,7 +11,7 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(Web
     WebView::EnableCallgrindProfiling enable_callgrind_profiling,
     WebView::IsLayoutTestMode is_layout_test_mode,
     WebView::UseJavaScriptBytecode use_javascript_bytecode,
-    UseLagomNetworking use_lagom_networking)
+    Ladybird::UseLagomNetworking use_lagom_networking)
 {
     int socket_fds[2] {};
     TRY(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds));
@@ -55,7 +55,7 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(Web
                 arguments.append("--layout-test-mode"sv);
             if (use_javascript_bytecode == WebView::UseJavaScriptBytecode::Yes)
                 arguments.append("--use-bytecode"sv);
-            if (use_lagom_networking == UseLagomNetworking::Yes)
+            if (use_lagom_networking == Ladybird::UseLagomNetworking::Yes)
                 arguments.append("--use-lagom-networking"sv);
 
             result = Core::System::exec(arguments[0], arguments.span(), Core::System::SearchInPath::Yes);

@@ -34,6 +34,8 @@ class WebContentClient;
 
 using WebView::WebContentClient;
 
+namespace Ladybird {
+
 class Tab;
 
 class WebContentView final
@@ -117,3 +119,5 @@ private:
 
     StringView m_webdriver_content_ipc_path;
 };
+
+}

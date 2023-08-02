@@ -20,9 +20,9 @@
 #include <QTextEdit>
 #include <QVBoxLayout>
 
-bool is_using_dark_system_theme(QWidget&);
-
 namespace Ladybird {
+
+bool is_using_dark_system_theme(QWidget&);
 
 ConsoleWidget::ConsoleWidget()
 {

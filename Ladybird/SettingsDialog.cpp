@@ -9,7 +9,9 @@
 #include <QCloseEvent>
 #include <QLabel>
 
-extern Browser::Settings* s_settings;
+namespace Ladybird {
+
+extern Settings* s_settings;
 
 SettingsDialog::SettingsDialog(QMainWindow* window)
     : m_window(window)
@@ -43,4 +45,6 @@ void SettingsDialog::save()
 {
     // FIXME: Validate data.
     s_settings->set_new_tab_page(m_new_tab_page->text());
+}
+
 }

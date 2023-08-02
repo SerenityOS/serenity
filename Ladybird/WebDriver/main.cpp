@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "../HelperProcess.h"
 #include "../Utilities.h"
 #include <AK/Platform.h>
 #include <LibCore/ArgsParser.h>
@@ -58,7 +57,7 @@ static ErrorOr<pid_t> launch_headless_browser(DeprecatedString const& socket_pat
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    // Note: only creating this to get access to its static methods in HelperProcess
+    // Note: only creating this to get access to its static methods in Utilities
     QCoreApplication application(arguments.argc, arguments.argv);
 
     auto listen_address = "0.0.0.0"sv;

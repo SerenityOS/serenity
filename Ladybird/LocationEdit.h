@@ -8,6 +8,8 @@
 
 #include <QLineEdit>
 
+namespace Ladybird {
+
 class LocationEdit final : public QLineEdit {
     Q_OBJECT
 public:
@@ -19,3 +21,5 @@ private:
 
     void highlight_location();
 };
+
+}

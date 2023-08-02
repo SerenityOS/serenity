@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "TVGIconEngine.h"
+#include "Utilities.h"
 #include <AK/MemoryStream.h>
 #include <AK/String.h>
 #include <LibGfx/Painter.h>
@@ -12,8 +14,7 @@
 #include <QPainter>
 #include <QPixmapCache>
 
-#include "TVGIconEngine.h"
-#include "Utilities.h"
+namespace Ladybird {
 
 void TVGIconEngine::paint(QPainter* qpainter, QRect const& rect, QIcon::Mode mode, QIcon::State state)
 {
@@ -69,4 +70,6 @@ TVGIconEngine* TVGIconEngine::from_file(QString const& path)
     if (auto tvg = Gfx::TinyVGDecodedImageData::decode(icon_bytes); !tvg.is_error())
         return new TVGIconEngine(tvg.release_value());
     return nullptr;
+}
+
 }

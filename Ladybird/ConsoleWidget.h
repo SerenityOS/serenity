@@ -16,9 +16,9 @@
 #include <QWidget>
 
 class QLineEdit;
-class WebContentView;
-
 namespace Ladybird {
+
+class WebContentView;
 
 class ConsoleWidget final : public QWidget {
     Q_OBJECT

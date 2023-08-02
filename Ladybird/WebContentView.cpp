@@ -49,6 +49,8 @@
 #include <QTimer>
 #include <QToolTip>
 
+namespace Ladybird {
+
 bool is_using_dark_system_theme(QWidget&);
 
 WebContentView::WebContentView(StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling, WebView::UseJavaScriptBytecode use_javascript_bytecode, UseLagomNetworking use_lagom_networking)
@@ -819,4 +821,6 @@ void WebContentView::notify_server_did_finish_handling_input_event(bool event_wa
 ErrorOr<String> WebContentView::dump_layout_tree()
 {
     return String::from_deprecated_string(client().dump_layout_tree());
+}
+
 }

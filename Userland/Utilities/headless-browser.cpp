@@ -58,7 +58,7 @@ public:
         (void)use_javascript_bytecode;
 #else
         auto candidate_web_content_paths = TRY(get_paths_for_helper_process("WebContent"sv));
-        view->m_client_state.client = TRY(launch_web_content_process(*view, candidate_web_content_paths, WebView::EnableCallgrindProfiling::No, is_layout_test_mode, use_javascript_bytecode, UseLagomNetworking::No));
+        view->m_client_state.client = TRY(launch_web_content_process(*view, candidate_web_content_paths, WebView::EnableCallgrindProfiling::No, is_layout_test_mode, use_javascript_bytecode, Ladybird::UseLagomNetworking::No));
 #endif
 
         view->client().async_update_system_theme(move(theme));

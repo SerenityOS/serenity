@@ -12,6 +12,8 @@
 #include <LibGfx/ImageFormats/TinyVGLoader.h>
 #include <QIconEngine>
 
+namespace Ladybird {
+
 class TVGIconEngine : public QIconEngine {
 public:
     TVGIconEngine(Gfx::TinyVGDecodedImageData const& image_data)
@@ -62,3 +64,5 @@ private:
     NonnullRefPtr<Gfx::TinyVGDecodedImageData> m_image_data;
     unsigned m_cache_id { next_cache_id() };
 };
+
+}

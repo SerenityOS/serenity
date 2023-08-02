@@ -19,6 +19,6 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(Web
     WebView::EnableCallgrindProfiling,
     WebView::IsLayoutTestMode,
     WebView::UseJavaScriptBytecode,
-    UseLagomNetworking);
+    Ladybird::UseLagomNetworking);
 
 ErrorOr<NonnullRefPtr<Protocol::RequestClient>> launch_request_server_process(ReadonlySpan<String> candidate_request_server_paths);

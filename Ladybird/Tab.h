@@ -18,12 +18,11 @@
 #include <QToolButton>
 #include <QWidget>
 
-class BrowserWindow;
-
 namespace Ladybird {
+
+class BrowserWindow;
 class ConsoleWidget;
 class InspectorWidget;
-}
 
 class Tab final : public QWidget {
     Q_OBJECT
@@ -117,3 +116,5 @@ private:
     OwnPtr<QMenu> m_console_context_menu;
     Ladybird::InspectorWidget* m_inspector_widget { nullptr };
 };
+
+}
