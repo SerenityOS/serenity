@@ -17,9 +17,11 @@
 #include <spawn.h>
 #include <unistd.h>
 
-#ifdef AK_OS_SERENITY
+#if defined(AK_OS_SERENITY)
 #    include <serenity.h>
 #    include <syscall.h>
+#elif defined(AK_OS_BSD_GENERIC)
+#    include <sys/sysctl.h>
 #endif
 
 namespace Core {
@@ -147,7 +149,7 @@ ErrorOr<void> Process::set_name([[maybe_unused]] StringView name, [[maybe_unused
 
 ErrorOr<bool> Process::is_being_debugged()
 {
-#ifdef AK_OS_LINUX
+#if defined(AK_OS_LINUX)
     auto unbuffered_status_file = TRY(Core::File::open("/proc/self/status"sv, Core::File::OpenMode::Read));
     auto status_file = TRY(Core::InputBufferedFile::create(move(unbuffered_status_file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
@@ -160,9 +162,26 @@ ErrorOr<bool> Process::is_being_debugged()
         return (tracer_pid != 0UL);
     }
     return false;
+#elif defined(AK_OS_MACOS)
+    // https://developer.apple.com/library/archive/qa/qa1361/_index.html
+    int mib[4] = {};
+    struct kinfo_proc info = {};
+    size_t size = sizeof(info);
+
+    // Initialize mib, which tells sysctl the info we want, in this case
+    // we're looking for information about a specific process ID.
+    mib[0] = CTL_KERN;
+    mib[1] = KERN_PROC;
+    mib[2] = KERN_PROC_PID;
+    mib[3] = getpid();
+
+    if (sysctl(mib, sizeof(mib) / sizeof(*mib), &info, &size, NULL, 0) < 0)
+        return Error::from_syscall("sysctl"sv, -errno);
+
+    // We're being debugged if the P_TRACED flag is set.
+    return ((info.kp_proc.p_flag & P_TRACED) != 0);
 #endif
     // FIXME: Implement this for more platforms.
-    // MacOS version: https://developer.apple.com/library/archive/qa/qa1361/_index.html
     return Error::from_string_view("Platform does not support checking for debugger"sv);
 }
 
