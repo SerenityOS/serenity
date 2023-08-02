@@ -31,6 +31,7 @@ public:
     };
     static ErrorOr<void> set_name(StringView, SetThreadName = SetThreadName::No);
 
+    static void wait_for_debugger_and_break();
     static ErrorOr<bool> is_being_debugged();
 };
 

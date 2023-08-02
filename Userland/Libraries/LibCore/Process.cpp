@@ -166,4 +166,26 @@ ErrorOr<bool> Process::is_being_debugged()
     return Error::from_string_view("Platform does not support checking for debugger"sv);
 }
 
+// Forces the process to sleep until a debugger is attached, then breaks.
+void Process::wait_for_debugger_and_break()
+{
+    bool should_print_process_info { true };
+    for (;;) {
+        auto check = Process::is_being_debugged();
+        if (check.is_error()) {
+            dbgln("Cannot wait for debugger: {}. Continuing.", check.release_error());
+            return;
+        }
+        if (check.value()) {
+            kill(getpid(), SIGTRAP);
+            return;
+        }
+        if (should_print_process_info) {
+            dbgln("Process {} with pid {} is sleeping, waiting for debugger.", Process::get_name(), getpid());
+            should_print_process_info = false;
+        }
+        ::usleep(100 * 1000);
+    }
+}
+
 }
