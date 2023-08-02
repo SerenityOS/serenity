@@ -1,18 +1,5 @@
-import("//Ladybird/link_qt.gni")
-
-link_qt("SQLServer_qt") {
-  qt_components = [
-    "Core",
-    "Gui",
-    "Network",
-  ]
-}
-
 executable("SQLServer") {
-  configs += [
-    "//Ladybird:ladybird_config",
-    ":SQLServer_qt",
-  ]
+  configs += [ "//Ladybird:ladybird_config" ]
   include_dirs = [
     "//Userland/Libraries",
     "//Userland/Services",
