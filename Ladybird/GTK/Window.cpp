@@ -25,6 +25,7 @@ static void ladybird_window_dispose(GObject* object)
 static AdwTabPage* open_new_tab(LadybirdWindow* self)
 {
     LadybirdWebView* web_view = (LadybirdWebView*)g_object_new(LADYBIRD_TYPE_WEB_VIEW, nullptr);
+    gtk_widget_add_css_class(GTK_WIDGET(web_view), "view");
     GtkWidget* scrolled_window = gtk_scrolled_window_new();
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scrolled_window), GTK_WIDGET(web_view));
     AdwTabPage* tab_page = adw_tab_view_append(self->tab_view, scrolled_window);

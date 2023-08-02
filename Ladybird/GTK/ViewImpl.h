@@ -10,6 +10,7 @@ public:
     virtual ~LadybirdViewImpl() override;
 
     void set_viewport_rect(int x, int y, int width, int height);
+    void scale_factor_changed();
 
 private:
     LadybirdViewImpl(LadybirdWebView* widget);

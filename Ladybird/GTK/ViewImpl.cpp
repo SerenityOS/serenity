@@ -122,10 +122,6 @@ void LadybirdViewImpl::create_client(WebView::EnableCallgrindProfiling enable_ca
     m_client_state.client_handle = Web::Crypto::generate_random_uuid().release_value_but_fixme_should_propagate_errors();
     client().async_set_window_handle(m_client_state.client_handle);
 
-    if (m_widget) {
-        int scale = gtk_widget_get_scale_factor(GTK_WIDGET(m_widget));
-        client().async_set_device_pixels_per_css_pixel(scale);
-    }
     /*
         client().async_update_system_fonts(
             Gfx::FontDatabase::default_font_query(),
@@ -139,9 +135,14 @@ void LadybirdViewImpl::set_viewport_rect(int x, int y, int width, int height)
     m_viewport_rect = Gfx::IntRect(x, y, width, height);
     dbgln("LadybirdViewImpl::set_viewport_rect {}", m_viewport_rect);
     client().async_set_viewport_rect(m_viewport_rect);
-    // handle_resize();
-    // TODO: do we need to call this here?
+    handle_resize();
     request_repaint();
+}
+
+void LadybirdViewImpl::scale_factor_changed()
+{
+    int scale_factor = gtk_widget_get_scale_factor(GTK_WIDGET(m_widget));
+    client().async_set_device_pixels_per_css_pixel(scale_factor * m_zoom_level);
 }
 
 void LadybirdViewImpl::notify_server_did_layout(Badge<WebView::WebContentClient>, Gfx::IntSize content_size)
@@ -150,14 +151,31 @@ void LadybirdViewImpl::notify_server_did_layout(Badge<WebView::WebContentClient>
     ladybird_web_view_set_page_size(m_widget, content_size.width(), content_size.height());
 }
 
-void LadybirdViewImpl::notify_server_did_paint(Badge<WebView::WebContentClient>, i32 bitmap_id, Gfx::IntSize)
+void LadybirdViewImpl::notify_server_did_paint(Badge<WebView::WebContentClient>, i32 bitmap_id, Gfx::IntSize size)
 {
-    dbgln("LadybirdViewImpl::notify_server_did_paint {}", bitmap_id);
+    dbgln("LadybirdViewImpl::notify_server_did_paint {} {}", bitmap_id, size);
+
+    // TODO: Can this not be true? Can WebContent paint into the front bitmap?
+    if (m_client_state.back_bitmap.id == bitmap_id) {
+        m_client_state.has_usable_bitmap = true;
+        m_client_state.back_bitmap.pending_paints--;
+        m_client_state.back_bitmap.last_painted_size = size;
+        swap(m_client_state.back_bitmap, m_client_state.front_bitmap);
+        m_backup_bitmap = nullptr;
+
+        ladybird_web_view_push_bitmap(m_widget, m_client_state.front_bitmap.bitmap.ptr(), size.width(), size.height());
+
+        if (m_client_state.got_repaint_requests_while_painting) {
+            m_client_state.got_repaint_requests_while_painting = false;
+            request_repaint();
+        }
+    }
 }
 
 void LadybirdViewImpl::notify_server_did_invalidate_content_rect(Badge<WebView::WebContentClient>, Gfx::IntRect const& rect)
 {
     dbgln("LadybirdViewImpl::notify_server_did_invalidate_content_rect {}", rect);
+    request_repaint();
 }
 
 void LadybirdViewImpl::notify_server_did_change_selection(Badge<WebView::WebContentClient>)

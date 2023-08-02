@@ -5,6 +5,7 @@ struct _LadybirdWebView {
     GtkWidget parent_instance;
 
     OwnPtr<LadybirdViewImpl> impl;
+    GdkTexture* texture;
     GtkScrollablePolicy hscroll_policy;
     GtkAdjustment* hadjustment;
     GtkScrollablePolicy vscroll_policy;
@@ -12,6 +13,7 @@ struct _LadybirdWebView {
 
     char* page_url;
     char* page_title;
+    // These two are in device pixels (same as texture size).
     int page_width;
     int page_height;
 
@@ -62,6 +64,13 @@ void ladybird_web_view_set_page_size(LadybirdWebView* self, int width, int heigh
     self->page_width = width;
     self->page_height = height;
     gtk_widget_queue_resize(GTK_WIDGET(self));
+}
+
+static void scale_size_down(LadybirdWebView* self, int device_width, int device_height, int* logical_width, int* logical_height)
+{
+    int scale_factor = gtk_widget_get_scale_factor(GTK_WIDGET(self));
+    *logical_width = ceil((double)device_width / scale_factor);
+    *logical_height = ceil((double)device_height / scale_factor);
 }
 
 char const* ladybird_web_view_get_page_url(LadybirdWebView* self)
@@ -211,16 +220,18 @@ static void ladybird_web_view_set_property(GObject* object, guint prop_id, GValu
 static void ladybird_web_view_measure(GtkWidget* widget, GtkOrientation orientation, [[maybe_unused]] int for_size, int* minimum, int* natural, int* minimum_baseline, int* natural_baseline)
 {
     LadybirdWebView* self = LADYBIRD_WEB_VIEW(widget);
+    int page_width, page_height;
+    scale_size_down(self, self->page_width, self->page_height, &page_width, &page_height);
 
     switch (orientation) {
     case GTK_ORIENTATION_HORIZONTAL:
         *minimum = 0;
-        *natural = self->page_width;
+        *natural = page_width;
         break;
 
     case GTK_ORIENTATION_VERTICAL:
         *minimum = 0;
-        *natural = self->page_height;
+        *natural = page_height;
         break;
 
     default:
@@ -236,14 +247,78 @@ static void ladybird_web_view_size_allocate(GtkWidget* widget, int width, int he
 
     double hadj = self->hadjustment ? gtk_adjustment_get_value(self->hadjustment) : 0.0;
     double vadj = self->vadjustment ? gtk_adjustment_get_value(self->vadjustment) : 0.0;
+    int scale_factor = gtk_widget_get_scale_factor(widget);
+    int full_width, full_height;
+    scale_size_down(self, self->page_width, self->page_height, &full_width, &full_height);
 
-    // TODO: CSS pixels?
-    self->impl->set_viewport_rect(hadj, vadj, width, height);
+    self->impl->set_viewport_rect(hadj * scale_factor, vadj * scale_factor, width * scale_factor, height * scale_factor);
 
     if (self->hadjustment)
-        gtk_adjustment_configure(self->hadjustment, hadj, 0, self->page_width, width * 0.1, width * 0.9, width);
+        gtk_adjustment_configure(self->hadjustment, hadj, 0, full_width, width * 0.1, width * 0.9, width);
     if (self->vadjustment)
-        gtk_adjustment_configure(self->vadjustment, vadj, 0, self->page_height, height * 0.1, height * 0.9, height);
+        gtk_adjustment_configure(self->vadjustment, vadj, 0, full_height, height * 0.1, height * 0.9, height);
+}
+
+void ladybird_web_view_push_bitmap(LadybirdWebView* self, Gfx::Bitmap const* bitmap, int width, int height)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+
+    dbgln("ladybird_web_view_push_bitmap size {}x{}", width, height);
+
+    if (bitmap == nullptr) {
+        g_clear_object(&self->texture);
+        gtk_widget_queue_draw(GTK_WIDGET(self));
+        return;
+    }
+
+    GdkMemoryFormat format;
+#if 0
+    switch (bitmap->format()) {
+    case Gfx::BitmapFormat::BGRx8888:
+        format = GDK_MEMORY_B8G8R8;
+        break;
+    case Gfx::BitmapFormat::BGRA8888:
+        format = GDK_MEMORY_B8G8R8A8;
+        break;
+    case Gfx::BitmapFormat::RGBA8888:
+        format = GDK_MEMORY_R8G8B8A8;
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+#else
+    format = GDK_MEMORY_B8G8R8A8;
+#endif
+
+    // TODO: Try to avoid excessive copying here?
+    GBytes* bytes = g_bytes_new(bitmap->scanline_u8(0), bitmap->size_in_bytes());
+    GdkTexture* texture = gdk_memory_texture_new(width, height, format, bytes, bitmap->pitch());
+    g_bytes_unref(bytes);
+    g_set_object(&self->texture, texture);
+    g_object_unref(texture);
+
+    gtk_widget_queue_draw(GTK_WIDGET(self));
+}
+
+static void ladybird_web_view_snapshot(GtkWidget* widget, GtkSnapshot* snapshot)
+{
+    LadybirdWebView* self = LADYBIRD_WEB_VIEW(widget);
+
+    if (self->texture == nullptr)
+        return;
+
+    int texture_width, texture_height;
+    scale_size_down(self, gdk_texture_get_width(self->texture), gdk_texture_get_height(self->texture), &texture_width, &texture_height);
+    graphene_rect_t bounds = GRAPHENE_RECT_INIT(0, 0, (float)texture_width, (float)texture_height);
+    gtk_snapshot_append_texture(snapshot, self->texture, &bounds);
+}
+
+static void on_scale_factor_change(GObject* object)
+{
+    LadybirdWebView* self = LADYBIRD_WEB_VIEW(object);
+
+    gtk_widget_queue_allocate(GTK_WIDGET(self));
+    self->impl->scale_factor_changed();
 }
 
 static void ladybird_web_view_init(LadybirdWebView* self)
@@ -254,16 +329,27 @@ static void ladybird_web_view_init(LadybirdWebView* self)
     // to a nullptr state by zero-initializing its bytes as GObject does.
     new (&self->impl) OwnPtr<LadybirdViewImpl>(move(impl));
 
-    self->impl->load_html("<html><title>Title from HTML :^)</title><body><p>This is some <b>HTML</b>!</p>Long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long</body></html>"sv, "http://example.com"sv);
+    // I don't know why both are required. Maybe because scale-factor happens
+    // to have the right value from the start, and so :notify is never emitted?
+    g_signal_connect(self, "realize", G_CALLBACK(on_scale_factor_change), nullptr);
+    g_signal_connect(self, "notify::scale-factor", G_CALLBACK(on_scale_factor_change), nullptr);
+
+    gtk_widget_set_overflow(GTK_WIDGET(self), GTK_OVERFLOW_HIDDEN);
+
+    self->impl->load_html("<html><title>Title from HTML :^)</title><body><p>This is some <b>HTML</b>!</p><p><font color=\"red\">This should be red</font>, <font color=\"green\">this should be green</font>, <font color=\"blue\">this should be blue</font></p>Long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long</body></html>"sv, "http://example.com"sv);
 }
 
 static void ladybird_web_view_dispose(GObject* object)
 {
     LadybirdWebView* self = LADYBIRD_WEB_VIEW(object);
 
+    self->impl.clear();
+
+    g_clear_object(&self->texture);
     g_clear_object(&self->hadjustment);
     g_clear_object(&self->vadjustment);
-    self->impl.clear();
+    g_clear_pointer(&self->page_url, g_free);
+    g_clear_pointer(&self->page_title, g_free);
 
     G_OBJECT_CLASS(ladybird_web_view_parent_class)->dispose(object);
 }
@@ -291,6 +377,7 @@ static void ladybird_web_view_class_init(LadybirdWebViewClass* klass)
 
     widget_class->measure = ladybird_web_view_measure;
     widget_class->size_allocate = ladybird_web_view_size_allocate;
+    widget_class->snapshot = ladybird_web_view_snapshot;
 }
 
 G_END_DECLS

@@ -20,4 +20,10 @@ void ladybird_web_view_load_url(LadybirdWebView* self, char const* url);
 bool ladybird_web_view_get_loading(LadybirdWebView* self);
 void ladybird_web_view_set_loading(LadybirdWebView* self, bool loading);
 
+namespace Gfx {
+class Bitmap;
+}
+
+void ladybird_web_view_push_bitmap(LadybirdWebView* self, Gfx::Bitmap const*, int width, int height);
+
 G_END_DECLS
