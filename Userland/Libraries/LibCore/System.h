@@ -273,4 +273,6 @@ ErrorOr<String> resolve_executable_from_environment(StringView filename, int fla
 
 char** environment();
 
+ErrorOr<String> current_executable_path();
+
 }
