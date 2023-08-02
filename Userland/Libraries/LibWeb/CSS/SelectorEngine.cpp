@@ -217,6 +217,9 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
         return matches_hover_pseudo_class(element);
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Focus:
         return element.is_focused();
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::FocusVisible:
+        // FIXME: We should only apply this when a visible focus is useful. Decide when that is!
+        return element.is_focused();
     case CSS::Selector::SimpleSelector::PseudoClass::Type::FocusWithin: {
         auto* focused_element = element.document().focused_element();
         return focused_element && element.is_inclusive_ancestor_of(*focused_element);
