@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "../AudioCodecPluginLadybird.h"
+#include "../AudioCodecPluginQt.h"
 #include "../EventLoopImplementationQt.h"
-#include "../FontPluginLadybird.h"
+#include "../FontPlugin.h"
 #include "../HelperProcess.h"
-#include "../ImageCodecPluginLadybird.h"
+#include "../ImageCodecPlugin.h"
 #include "../RequestManagerQt.h"
 #include "../Utilities.h"
-#include "../WebSocketClientManagerLadybird.h"
+#include "../WebSocketClientManagerQt.h"
 #include <AK/LexicalPath.h>
 #include <LibAudio/Loader.h>
 #include <LibCore/ArgsParser.h>
@@ -50,13 +50,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     platform_init();
 
     Web::Platform::EventLoopPlugin::install(*new Web::Platform::EventLoopPluginSerenity);
-    Web::Platform::ImageCodecPlugin::install(*new Ladybird::ImageCodecPluginLadybird);
+    Web::Platform::ImageCodecPlugin::install(*new Ladybird::ImageCodecPlugin);
 
     Web::Platform::AudioCodecPlugin::install_creation_hook([](auto loader) {
-        return Ladybird::AudioCodecPluginLadybird::create(move(loader));
+        return Ladybird::AudioCodecPluginQt::create(move(loader));
     });
 
-    Web::WebSockets::WebSocketClientManager::initialize(Ladybird::WebSocketClientManagerLadybird::create());
+    Web::WebSockets::WebSocketClientManager::initialize(Ladybird::WebSocketClientManagerQt::create());
 
     Web::FrameLoader::set_default_favicon_path(DeprecatedString::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));
 
@@ -84,7 +84,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     VERIFY(webcontent_fd_passing_socket >= 0);
 
-    Web::Platform::FontPlugin::install(*new Ladybird::FontPluginLadybird(is_layout_test_mode));
+    Web::Platform::FontPlugin::install(*new Ladybird::FontPlugin(is_layout_test_mode));
 
     Web::FrameLoader::set_error_page_url(DeprecatedString::formatted("file://{}/res/html/error.html", s_serenity_resource_root));
 

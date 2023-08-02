@@ -3,7 +3,7 @@ import("//Ladybird/moc_qt_objects.gni")
 
 moc_qt_objects("generate_moc") {
   sources = [
-    "//Ladybird/AudioCodecPluginLadybird.h",
+    "//Ladybird/AudioCodecPluginQt.h",
     "//Ladybird/AudioThread.h",
     "//Ladybird/RequestManagerQt.h",
   ]
@@ -45,17 +45,17 @@ executable("WebContent") {
     "//Userland/Libraries/LibWebView:WebDriverServerEndpoint",
   ]
   sources = [
-    "../AudioCodecPluginLadybird.cpp",
+    "../AudioCodecPluginQt.cpp",
     "../AudioThread.cpp",
     "../EventLoopImplementationQt.cpp",
-    "../FontPluginLadybird.cpp",
+    "../FontPlugin.cpp",
     "../HelperProcess.cpp",
-    "../ImageCodecPluginLadybird.cpp",
+    "../ImageCodecPlugin.cpp",
     "../RequestManagerQt.cpp",
     "../Utilities.cpp",
-    "../WebSocketClientManagerLadybird.cpp",
+    "../WebSocketClientManagerQt.cpp",
     "../WebSocketImplQt.cpp",
-    "../WebSocketLadybird.cpp",
+    "../WebSocketQt.cpp",
     "//Userland/Services/WebContent/ConnectionFromClient.cpp",
     "//Userland/Services/WebContent/ConsoleGlobalEnvironmentExtensions.cpp",
     "//Userland/Services/WebContent/PageHost.cpp",

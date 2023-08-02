@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "FontPluginLadybird.h"
+#include "FontPlugin.h"
 #include <AK/DeprecatedString.h>
 #include <AK/String.h>
 #include <LibCore/StandardPaths.h>
@@ -16,7 +16,7 @@ extern DeprecatedString s_serenity_resource_root;
 
 namespace Ladybird {
 
-FontPluginLadybird::FontPluginLadybird(bool is_layout_test_mode)
+FontPlugin::FontPlugin(bool is_layout_test_mode)
     : m_is_layout_test_mode(is_layout_test_mode)
 {
     // Load the default SerenityOS fonts...
@@ -42,19 +42,19 @@ FontPluginLadybird::FontPluginLadybird(bool is_layout_test_mode)
     VERIFY(m_default_fixed_width_font);
 }
 
-FontPluginLadybird::~FontPluginLadybird() = default;
+FontPlugin::~FontPlugin() = default;
 
-Gfx::Font& FontPluginLadybird::default_font()
+Gfx::Font& FontPlugin::default_font()
 {
     return *m_default_font;
 }
 
-Gfx::Font& FontPluginLadybird::default_fixed_width_font()
+Gfx::Font& FontPlugin::default_fixed_width_font()
 {
     return *m_default_fixed_width_font;
 }
 
-void FontPluginLadybird::update_generic_fonts()
+void FontPlugin::update_generic_fonts()
 {
     // How we choose which system font to use for each CSS font:
     // 1. Try a list of known-suitable fonts with their names hard-coded below.
@@ -109,7 +109,7 @@ void FontPluginLadybird::update_generic_fonts()
     update_mapping(Web::Platform::GenericFont::UiSerif, serif_fallbacks);
 }
 
-DeprecatedString FontPluginLadybird::generic_font_name(Web::Platform::GenericFont generic_font)
+DeprecatedString FontPlugin::generic_font_name(Web::Platform::GenericFont generic_font)
 {
     return m_generic_font_names[static_cast<size_t>(generic_font)];
 }

@@ -5,15 +5,15 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "ImageCodecPluginLadybird.h"
+#include "ImageCodecPlugin.h"
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
 
 namespace Ladybird {
 
-ImageCodecPluginLadybird::~ImageCodecPluginLadybird() = default;
+ImageCodecPlugin::~ImageCodecPlugin() = default;
 
-Optional<Web::Platform::DecodedImage> ImageCodecPluginLadybird::decode_image(ReadonlyBytes data)
+Optional<Web::Platform::DecodedImage> ImageCodecPlugin::decode_image(ReadonlyBytes data)
 {
     auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(data);
 

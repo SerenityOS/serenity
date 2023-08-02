@@ -5,16 +5,16 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "WebSocketLadybird.h"
+#include "WebSocketQt.h"
 
 namespace Ladybird {
 
-NonnullRefPtr<WebSocketLadybird> WebSocketLadybird::create(NonnullRefPtr<WebSocket::WebSocket> underlying_socket)
+NonnullRefPtr<WebSocketQt> WebSocketQt::create(NonnullRefPtr<WebSocket::WebSocket> underlying_socket)
 {
-    return adopt_ref(*new WebSocketLadybird(move(underlying_socket)));
+    return adopt_ref(*new WebSocketQt(move(underlying_socket)));
 }
 
-WebSocketLadybird::WebSocketLadybird(NonnullRefPtr<WebSocket::WebSocket> underlying_socket)
+WebSocketQt::WebSocketQt(NonnullRefPtr<WebSocket::WebSocket> underlying_socket)
     : m_websocket(move(underlying_socket))
 {
     m_websocket->on_open = [weak_this = make_weak_ptr()] {
@@ -57,9 +57,9 @@ WebSocketLadybird::WebSocketLadybird(NonnullRefPtr<WebSocket::WebSocket> underly
     };
 }
 
-WebSocketLadybird::~WebSocketLadybird() = default;
+WebSocketQt::~WebSocketQt() = default;
 
-Web::WebSockets::WebSocket::ReadyState WebSocketLadybird::ready_state()
+Web::WebSockets::WebSocket::ReadyState WebSocketQt::ready_state()
 {
     switch (m_websocket->ready_state()) {
     case WebSocket::ReadyState::Connecting:
@@ -74,22 +74,22 @@ Web::WebSockets::WebSocket::ReadyState WebSocketLadybird::ready_state()
     VERIFY_NOT_REACHED();
 }
 
-DeprecatedString WebSocketLadybird::subprotocol_in_use()
+DeprecatedString WebSocketQt::subprotocol_in_use()
 {
     return m_websocket->subprotocol_in_use();
 }
 
-void WebSocketLadybird::send(ByteBuffer binary_or_text_message, bool is_text)
+void WebSocketQt::send(ByteBuffer binary_or_text_message, bool is_text)
 {
     m_websocket->send(WebSocket::Message(binary_or_text_message, is_text));
 }
 
-void WebSocketLadybird::send(StringView message)
+void WebSocketQt::send(StringView message)
 {
     m_websocket->send(WebSocket::Message(message));
 }
 
-void WebSocketLadybird::close(u16 code, DeprecatedString reason)
+void WebSocketQt::close(u16 code, DeprecatedString reason)
 {
     m_websocket->close(code, reason);
 }

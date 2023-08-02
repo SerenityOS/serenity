@@ -12,13 +12,13 @@
 
 namespace Ladybird {
 
-class WebSocketLadybird
+class WebSocketQt
     : public Web::WebSockets::WebSocketClientSocket
-    , public Weakable<WebSocketLadybird> {
+    , public Weakable<WebSocketQt> {
 public:
-    static NonnullRefPtr<WebSocketLadybird> create(NonnullRefPtr<WebSocket::WebSocket>);
+    static NonnullRefPtr<WebSocketQt> create(NonnullRefPtr<WebSocket::WebSocket>);
 
-    virtual ~WebSocketLadybird() override;
+    virtual ~WebSocketQt() override;
 
     virtual Web::WebSockets::WebSocket::ReadyState ready_state() override;
     virtual DeprecatedString subprotocol_in_use() override;
@@ -27,7 +27,7 @@ public:
     virtual void close(u16 code, DeprecatedString reason) override;
 
 private:
-    explicit WebSocketLadybird(NonnullRefPtr<WebSocket::WebSocket>);
+    explicit WebSocketQt(NonnullRefPtr<WebSocket::WebSocket>);
 
     NonnullRefPtr<WebSocket::WebSocket> m_websocket;
 };

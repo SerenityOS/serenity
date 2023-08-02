@@ -17,14 +17,14 @@ namespace Ladybird {
 
 class AudioThread;
 
-class AudioCodecPluginLadybird final
+class AudioCodecPluginQt final
     : public QObject
     , public Web::Platform::AudioCodecPlugin {
     Q_OBJECT
 
 public:
-    static ErrorOr<NonnullOwnPtr<AudioCodecPluginLadybird>> create(NonnullRefPtr<Audio::Loader>);
-    virtual ~AudioCodecPluginLadybird() override;
+    static ErrorOr<NonnullOwnPtr<AudioCodecPluginQt>> create(NonnullRefPtr<Audio::Loader>);
+    virtual ~AudioCodecPluginQt() override;
 
     virtual void resume_playback() override;
     virtual void pause_playback() override;
@@ -34,7 +34,7 @@ public:
     virtual Duration duration() override;
 
 private:
-    explicit AudioCodecPluginLadybird(NonnullOwnPtr<AudioThread>);
+    explicit AudioCodecPluginQt(NonnullOwnPtr<AudioThread>);
 
     NonnullOwnPtr<AudioThread> m_audio_thread;
 };

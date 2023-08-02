@@ -11,10 +11,10 @@
 
 namespace Ladybird {
 
-class ImageCodecPluginLadybird final : public Web::Platform::ImageCodecPlugin {
+class ImageCodecPlugin final : public Web::Platform::ImageCodecPlugin {
 public:
-    ImageCodecPluginLadybird() = default;
-    virtual ~ImageCodecPluginLadybird() override;
+    ImageCodecPlugin() = default;
+    virtual ~ImageCodecPlugin() override;
 
     virtual Optional<Web::Platform::DecodedImage> decode_image(ReadonlyBytes data) override;
 };
