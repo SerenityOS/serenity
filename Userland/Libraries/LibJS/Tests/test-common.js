@@ -90,7 +90,7 @@ class ExpectationError extends Error {
         toBeCloseTo(value) {
             this.__expect(
                 typeof this.target === "number",
-                () => `toBeCloseTo: expected target of type number, got ${typeof value}`
+                () => `toBeCloseTo: expected target of type number, got ${typeof this.target}`
             );
             this.__expect(
                 typeof value === "number",
