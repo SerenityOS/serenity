@@ -1,350 +1,350 @@
 {
-    "align-content": [
-        "flex-start",
-        "flex-end",
-        "center",
-        "space-between",
-        "space-around",
-        "space-evenly",
-        "stretch"
-    ],
-    "align-items": [
-        "baseline",
-        "center",
-        "end",
-        "flex-end",
-        "flex-start",
-        "normal",
-        "safe",
-        "self-end",
-        "self-start",
-        "start",
-        "stretch",
-        "unsafe"
-    ],
-    "align-self": [
-        "auto",
-        "baseline",
-        "center",
-        "end",
-        "flex-end",
-        "flex-start",
-        "normal",
-        "safe",
-        "self-end",
-        "self-start",
-        "start",
-        "stretch",
-        "unsafe"
-    ],
-    "animation-fill-mode": [
-        "backwards",
-        "both",
-        "forwards",
-        "none"
-    ],
-    "animation-direction": [
-        "alternate",
-        "alternate-reverse",
-        "normal",
-        "reverse"
-    ],
-    "appearance": [
-        "auto",
-        "button",
-        "checkbox",
-        "listbox",
-        "menulist",
-        "meter",
-        "menulist-button",
-        "none",
-        "push-button",
-        "progress-bar",
-        "radio",
-        "searchfield",
-        "slider-horizontal",
-        "square-button",
-        "textarea",
-        "textfield"
-    ],
-    "background-attachment": [
-        "fixed",
-        "local",
-        "scroll"
-    ],
-    "background-box": [
-        "border-box",
-        "content-box",
-        "padding-box"
-    ],
-    "border-collapse": [
-      "separate",
-      "collapse"
-    ],
-    "box-sizing": [
-        "border-box",
-        "content-box"
-    ],
-    "caption-side": [
-        "top",
-        "bottom"
-    ],
-    "clear": [
-        "none",
-        "left",
-        "right",
-        "both"
-    ],
-    "cursor": [
-        "auto",
-        "default",
-        "none",
-        "context-menu",
-        "help",
-        "pointer",
-        "progress",
-        "wait",
-        "cell",
-        "crosshair",
-        "text",
-        "vertical-text",
-        "alias",
-        "copy",
-        "move",
-        "no-drop",
-        "not-allowed",
-        "grab",
-        "grabbing",
-        "e-resize",
-        "n-resize",
-        "ne-resize",
-        "nw-resize",
-        "s-resize",
-        "se-resize",
-        "sw-resize",
-        "w-resize",
-        "ew-resize",
-        "ns-resize",
-        "nesw-resize",
-        "nwse-resize",
-        "col-resize",
-        "row-resize",
-        "all-scroll",
-        "zoom-in",
-        "zoom-out"
-    ],
-    "fill-rule": [
-        "nonzero",
-        "evenodd"
-    ],
-    "flex-direction": [
-        "row",
-        "row-reverse",
-        "column",
-        "column-reverse"
-    ],
-    "flex-wrap": [
-        "nowrap",
-        "wrap",
-        "wrap-reverse"
-    ],
-    "float": [
-        "none",
-        "left",
-        "right"
-    ],
-    "font-variant": [
-        "normal",
-        "small-caps"
-    ],
-    "image-rendering": [
-        "auto",
-        "crisp-edges",
-        "high-quality",
-        "pixelated",
-        "smooth",
-        "optimizespeed=pixelated",
-        "optimizequality=smooth"
-    ],
-    "justify-content": [
-        "start",
-        "end",
-        "flex-start",
-        "flex-end",
-        "center",
-        "space-between",
-        "space-around",
-        "space-evenly"
-    ],
-    "justify-items": [
-        "baseline",
-        "center",
-        "end",
-        "flex-end",
-        "flex-start",
-        "legacy",
-        "normal",
-        "safe",
-        "self-end",
-        "self-start",
-        "start",
-        "stretch",
-        "unsafe"
-    ],
-    "justify-self": [
-        "auto",
-        "baseline",
-        "center",
-        "end",
-        "flex-end",
-        "flex-start",
-        "normal",
-        "safe",
-        "self-end",
-        "self-start",
-        "start",
-        "stretch",
-        "unsafe"
-    ],
-    "line-style": [
-        "none",
-        "hidden",
-        "dotted",
-        "dashed",
-        "solid",
-        "double",
-        "groove",
-        "ridge",
-        "inset",
-        "outset"
-    ],
-    "list-style-type": [
-        "circle",
-        "decimal",
-        "decimal-leading-zero",
-        "disc",
-        "disclosure-closed",
-        "disclosure-open",
-        "lower-alpha",
-        "lower-latin",
-        "lower-roman",
-        "none",
-        "square",
-        "upper-alpha",
-        "upper-latin",
-        "upper-roman"
-    ],
-    "list-style-position": [
-        "inside",
-        "outside"
-    ],
-    "object-fit": [
-      "fill",
-      "contain",
-      "cover",
-      "none",
-      "scale-down"
-    ],
-    "overflow": [
-        "auto",
-        "clip",
-        "hidden",
-        "scroll",
-        "visible"
-    ],
-    "pointer-events": [
-        "auto",
-        "all",
-        "none"
-    ],
-    "position": [
-        "absolute",
-        "fixed",
-        "relative",
-        "static",
-        "sticky"
-    ],
-    "position-edge": [
-        "left",
-        "right",
-        "top",
-        "bottom"
-    ],
-    "repeat": [
-        "no-repeat",
-        "repeat",
-        "round",
-        "space"
-    ],
-    "rounding-strategy": [
-        "down",
-        "nearest",
-        "to-zero",
-        "up"
-    ],
-    "text-anchor": [
-        "start",
-        "middle",
-        "end"
-    ],
-    "text-align": [
-        "center",
-        "justify",
-        "left",
-        "right",
-        "-libweb-center",
-        "-libweb-left",
-        "-libweb-right"
-    ],
-    "text-decoration-line": [
-        "blink",
-        "line-through",
-        "none",
-        "overline",
-        "underline"
-    ],
-    "text-decoration-style": [
-        "dashed",
-        "dotted",
-        "double",
-        "solid",
-        "wavy"
-    ],
-    "text-justify": [
-        "auto",
-        "none",
-        "inter-word",
-        "inter-character",
-        "distribute=inter-character"
-    ],
-    "text-transform": [
-        "capitalize",
-        "full-size-kana",
-        "full-width",
-        "lowercase",
-        "none",
-        "uppercase"
-    ],
-    "vertical-align": [
-        "baseline",
-        "bottom",
-        "middle",
-        "sub",
-        "super",
-        "text-bottom",
-        "text-top",
-        "top"
-    ],
-    "visibility": [
-        "collapse",
-        "hidden",
-        "visible"
-    ],
-    "white-space": [
-        "normal",
-        "nowrap",
-        "pre",
-        "pre-line",
-        "pre-wrap"
-    ]
+  "align-content": [
+    "flex-start",
+    "flex-end",
+    "center",
+    "space-between",
+    "space-around",
+    "space-evenly",
+    "stretch"
+  ],
+  "align-items": [
+    "baseline",
+    "center",
+    "end",
+    "flex-end",
+    "flex-start",
+    "normal",
+    "safe",
+    "self-end",
+    "self-start",
+    "start",
+    "stretch",
+    "unsafe"
+  ],
+  "align-self": [
+    "auto",
+    "baseline",
+    "center",
+    "end",
+    "flex-end",
+    "flex-start",
+    "normal",
+    "safe",
+    "self-end",
+    "self-start",
+    "start",
+    "stretch",
+    "unsafe"
+  ],
+  "animation-fill-mode": [
+    "backwards",
+    "both",
+    "forwards",
+    "none"
+  ],
+  "animation-direction": [
+    "alternate",
+    "alternate-reverse",
+    "normal",
+    "reverse"
+  ],
+  "appearance": [
+    "auto",
+    "button",
+    "checkbox",
+    "listbox",
+    "menulist",
+    "meter",
+    "menulist-button",
+    "none",
+    "push-button",
+    "progress-bar",
+    "radio",
+    "searchfield",
+    "slider-horizontal",
+    "square-button",
+    "textarea",
+    "textfield"
+  ],
+  "background-attachment": [
+    "fixed",
+    "local",
+    "scroll"
+  ],
+  "background-box": [
+    "border-box",
+    "content-box",
+    "padding-box"
+  ],
+  "border-collapse": [
+    "separate",
+    "collapse"
+  ],
+  "box-sizing": [
+    "border-box",
+    "content-box"
+  ],
+  "caption-side": [
+    "top",
+    "bottom"
+  ],
+  "clear": [
+    "none",
+    "left",
+    "right",
+    "both"
+  ],
+  "cursor": [
+    "auto",
+    "default",
+    "none",
+    "context-menu",
+    "help",
+    "pointer",
+    "progress",
+    "wait",
+    "cell",
+    "crosshair",
+    "text",
+    "vertical-text",
+    "alias",
+    "copy",
+    "move",
+    "no-drop",
+    "not-allowed",
+    "grab",
+    "grabbing",
+    "e-resize",
+    "n-resize",
+    "ne-resize",
+    "nw-resize",
+    "s-resize",
+    "se-resize",
+    "sw-resize",
+    "w-resize",
+    "ew-resize",
+    "ns-resize",
+    "nesw-resize",
+    "nwse-resize",
+    "col-resize",
+    "row-resize",
+    "all-scroll",
+    "zoom-in",
+    "zoom-out"
+  ],
+  "fill-rule": [
+    "nonzero",
+    "evenodd"
+  ],
+  "flex-direction": [
+    "row",
+    "row-reverse",
+    "column",
+    "column-reverse"
+  ],
+  "flex-wrap": [
+    "nowrap",
+    "wrap",
+    "wrap-reverse"
+  ],
+  "float": [
+    "none",
+    "left",
+    "right"
+  ],
+  "font-variant": [
+    "normal",
+    "small-caps"
+  ],
+  "image-rendering": [
+    "auto",
+    "crisp-edges",
+    "high-quality",
+    "pixelated",
+    "smooth",
+    "optimizespeed=pixelated",
+    "optimizequality=smooth"
+  ],
+  "justify-content": [
+    "start",
+    "end",
+    "flex-start",
+    "flex-end",
+    "center",
+    "space-between",
+    "space-around",
+    "space-evenly"
+  ],
+  "justify-items": [
+    "baseline",
+    "center",
+    "end",
+    "flex-end",
+    "flex-start",
+    "legacy",
+    "normal",
+    "safe",
+    "self-end",
+    "self-start",
+    "start",
+    "stretch",
+    "unsafe"
+  ],
+  "justify-self": [
+    "auto",
+    "baseline",
+    "center",
+    "end",
+    "flex-end",
+    "flex-start",
+    "normal",
+    "safe",
+    "self-end",
+    "self-start",
+    "start",
+    "stretch",
+    "unsafe"
+  ],
+  "line-style": [
+    "none",
+    "hidden",
+    "dotted",
+    "dashed",
+    "solid",
+    "double",
+    "groove",
+    "ridge",
+    "inset",
+    "outset"
+  ],
+  "list-style-type": [
+    "circle",
+    "decimal",
+    "decimal-leading-zero",
+    "disc",
+    "disclosure-closed",
+    "disclosure-open",
+    "lower-alpha",
+    "lower-latin",
+    "lower-roman",
+    "none",
+    "square",
+    "upper-alpha",
+    "upper-latin",
+    "upper-roman"
+  ],
+  "list-style-position": [
+    "inside",
+    "outside"
+  ],
+  "object-fit": [
+    "fill",
+    "contain",
+    "cover",
+    "none",
+    "scale-down"
+  ],
+  "overflow": [
+    "auto",
+    "clip",
+    "hidden",
+    "scroll",
+    "visible"
+  ],
+  "pointer-events": [
+    "auto",
+    "all",
+    "none"
+  ],
+  "position": [
+    "absolute",
+    "fixed",
+    "relative",
+    "static",
+    "sticky"
+  ],
+  "position-edge": [
+    "left",
+    "right",
+    "top",
+    "bottom"
+  ],
+  "repeat": [
+    "no-repeat",
+    "repeat",
+    "round",
+    "space"
+  ],
+  "rounding-strategy": [
+    "down",
+    "nearest",
+    "to-zero",
+    "up"
+  ],
+  "text-anchor": [
+    "start",
+    "middle",
+    "end"
+  ],
+  "text-align": [
+    "center",
+    "justify",
+    "left",
+    "right",
+    "-libweb-center",
+    "-libweb-left",
+    "-libweb-right"
+  ],
+  "text-decoration-line": [
+    "blink",
+    "line-through",
+    "none",
+    "overline",
+    "underline"
+  ],
+  "text-decoration-style": [
+    "dashed",
+    "dotted",
+    "double",
+    "solid",
+    "wavy"
+  ],
+  "text-justify": [
+    "auto",
+    "none",
+    "inter-word",
+    "inter-character",
+    "distribute=inter-character"
+  ],
+  "text-transform": [
+    "capitalize",
+    "full-size-kana",
+    "full-width",
+    "lowercase",
+    "none",
+    "uppercase"
+  ],
+  "vertical-align": [
+    "baseline",
+    "bottom",
+    "middle",
+    "sub",
+    "super",
+    "text-bottom",
+    "text-top",
+    "top"
+  ],
+  "visibility": [
+    "collapse",
+    "hidden",
+    "visible"
+  ],
+  "white-space": [
+    "normal",
+    "nowrap",
+    "pre",
+    "pre-line",
+    "pre-wrap"
+  ]
 }

@@ -1,87 +1,230 @@
 {
-    "matrix": {
-        "parameters": [
-            { "type": "<number>", "required": true },
-            { "type": "<number>", "required": true },
-            { "type": "<number>", "required": true },
-            { "type": "<number>", "required": true },
-            { "type": "<number>", "required": true },
-            { "type": "<number>", "required": true }
-        ]
-    },
-    "matrix3d": {
-        "parameters": [
-            { "type": "<number>", "required": true },
-            { "type": "<number>", "required": true },
-            { "type": "<number>", "required": true },
-            { "type": "<number>", "required": true },
-            { "type": "<number>", "required": true },
-            { "type": "<number>", "required": true },
-            { "type": "<number>", "required": true },
-            { "type": "<number>", "required": true },
-            { "type": "<number>", "required": true },
-            { "type": "<number>", "required": true },
-            { "type": "<number>", "required": true },
-            { "type": "<number>", "required": true },
-            { "type": "<number>", "required": true },
-            { "type": "<number>", "required": true },
-            { "type": "<number>", "required": true },
-            { "type": "<number>", "required": true }
-        ]
-    },
-    "translate": {
-        "parameters": [
-            { "type": "<length-percentage>", "required": true },
-            { "type": "<length-percentage>", "required": false }
-        ]
-    },
-    "translate3d": {
-        "parameters": [
-            { "type": "<length-percentage>", "required": true },
-            { "type": "<length-percentage>", "required": true },
-            { "type": "<length>", "required": true }
-        ]
-    },
-    "translateX": {
-        "parameters": [{ "type": "<length-percentage>", "required": true }]
-    },
-    "translateY": {
-        "parameters": [{ "type": "<length-percentage>", "required": true }]
-    },
-    "scale": {
-        "parameters": [
-            { "type": "<number>", "required": true },
-            { "type": "<number>", "required": false }
-        ]
-    },
-    "scaleX": {
-        "parameters": [{ "type": "<number>", "required": true }]
-    },
-    "scaleY": {
-        "parameters": [{ "type": "<number>", "required": true }]
-    },
-    "rotate": {
-        "parameters": [{ "type": "<angle>", "required": true }]
-    },
-    "rotateX": {
-        "parameters": [{ "type": "<angle>", "required": true }]
-    },
-    "rotateY": {
-        "parameters": [{ "type": "<angle>", "required": true }]
-    },
-    "rotateZ": {
-        "parameters": [{ "type": "<angle>", "required": true }]
-    },
-    "skew": {
-        "parameters": [
-            { "type": "<angle>", "required": true },
-            { "type": "<angle>", "required": false }
-        ]
-    },
-    "skewX": {
-        "parameters": [{ "type": "<angle>", "required": true }]
-    },
-    "skewY": {
-        "parameters": [{ "type": "<angle>", "required": true }]
-    }
+  "matrix": {
+    "parameters": [
+      {
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "type": "<number>",
+        "required": true
+      }
+    ]
+  },
+  "matrix3d": {
+    "parameters": [
+      {
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "type": "<number>",
+        "required": true
+      }
+    ]
+  },
+  "translate": {
+    "parameters": [
+      {
+        "type": "<length-percentage>",
+        "required": true
+      },
+      {
+        "type": "<length-percentage>",
+        "required": false
+      }
+    ]
+  },
+  "translate3d": {
+    "parameters": [
+      {
+        "type": "<length-percentage>",
+        "required": true
+      },
+      {
+        "type": "<length-percentage>",
+        "required": true
+      },
+      {
+        "type": "<length>",
+        "required": true
+      }
+    ]
+  },
+  "translateX": {
+    "parameters": [
+      {
+        "type": "<length-percentage>",
+        "required": true
+      }
+    ]
+  },
+  "translateY": {
+    "parameters": [
+      {
+        "type": "<length-percentage>",
+        "required": true
+      }
+    ]
+  },
+  "scale": {
+    "parameters": [
+      {
+        "type": "<number>",
+        "required": true
+      },
+      {
+        "type": "<number>",
+        "required": false
+      }
+    ]
+  },
+  "scaleX": {
+    "parameters": [
+      {
+        "type": "<number>",
+        "required": true
+      }
+    ]
+  },
+  "scaleY": {
+    "parameters": [
+      {
+        "type": "<number>",
+        "required": true
+      }
+    ]
+  },
+  "rotate": {
+    "parameters": [
+      {
+        "type": "<angle>",
+        "required": true
+      }
+    ]
+  },
+  "rotateX": {
+    "parameters": [
+      {
+        "type": "<angle>",
+        "required": true
+      }
+    ]
+  },
+  "rotateY": {
+    "parameters": [
+      {
+        "type": "<angle>",
+        "required": true
+      }
+    ]
+  },
+  "rotateZ": {
+    "parameters": [
+      {
+        "type": "<angle>",
+        "required": true
+      }
+    ]
+  },
+  "skew": {
+    "parameters": [
+      {
+        "type": "<angle>",
+        "required": true
+      },
+      {
+        "type": "<angle>",
+        "required": false
+      }
+    ]
+  },
+  "skewX": {
+    "parameters": [
+      {
+        "type": "<angle>",
+        "required": true
+      }
+    ]
+  },
+  "skewY": {
+    "parameters": [
+      {
+        "type": "<angle>",
+        "required": true
+      }
+    ]
+  }
 }
