@@ -8,11 +8,15 @@
 #include <AK/Checked.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageFormats/PNGWriter.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/CanvasRenderingContext2D.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
+#include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/Layout/CanvasBox.h>
+#include <LibWeb/Platform/EventLoopPlugin.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 
 namespace Web::HTML {
 
@@ -217,6 +221,47 @@ DeprecatedString HTMLCanvasElement::to_data_url(DeprecatedString const& type, Op
         return "data:,";
     }
     return AK::URL::create_with_data(file.value().mime_type, base64_encoded_or_error.release_value(), true).to_deprecated_string();
+}
+
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-canvas-toblob
+WebIDL::ExceptionOr<void> HTMLCanvasElement::to_blob(JS::NonnullGCPtr<WebIDL::CallbackType> callback, DeprecatedString const& type, Optional<double> quality)
+{
+    // FIXME: 1. If this canvas element's bitmap's origin-clean flag is set to false, then throw a "SecurityError" DOMException.
+
+    // 2. Let result be null.
+    RefPtr<Gfx::Bitmap> bitmap_result;
+
+    // 3. If this canvas element's bitmap has pixels (i.e., neither its horizontal dimension nor its vertical dimension is zero),
+    //    then set result to a copy of this canvas element's bitmap.
+    if (m_bitmap)
+        bitmap_result = TRY_OR_THROW_OOM(vm(), m_bitmap->clone());
+
+    // 4. Run these steps in parallel:
+    Platform::EventLoopPlugin::the().deferred_invoke([this, callback, bitmap_result, type, quality] {
+        // 1. If result is non-null, then set result to a serialization of result as a file with type and quality if given.
+        Optional<SerializeBitmapResult> file_result;
+        if (bitmap_result) {
+            if (auto result = serialize_bitmap(*bitmap_result, type, move(quality)); !result.is_error())
+                file_result = result.release_value();
+        }
+
+        // 2. Queue an element task on the canvas blob serialization task source given the canvas element to run these steps:
+        queue_an_element_task(Task::Source::CanvasBlobSerializationTask, [this, callback, file_result = move(file_result)] {
+            auto maybe_error = Bindings::throw_dom_exception_if_needed(vm(), [&]() -> WebIDL::ExceptionOr<void> {
+                // 1. If result is non-null, then set result to a new Blob object, created in the relevant realm of this canvas element, representing result. [FILEAPI]
+                JS::GCPtr<FileAPI::Blob> blob_result;
+                if (file_result.has_value())
+                    blob_result = TRY(FileAPI::Blob::create(realm(), file_result->buffer, TRY_OR_THROW_OOM(vm(), String::from_utf8(file_result->mime_type))));
+
+                // 2. Invoke callback with « result ».
+                TRY(WebIDL::invoke_callback(*callback, {}, move(blob_result)));
+                return {};
+            });
+            if (maybe_error.is_throw_completion())
+                report_exception(maybe_error.throw_completion(), realm());
+        });
+    });
+    return {};
 }
 
 void HTMLCanvasElement::present()
