@@ -1,7 +1,7 @@
-#include "WebContentView.h"
+#include "WebView.h"
 #include "ViewImpl.h"
 
-struct _LadybirdWebContentView {
+struct _LadybirdWebView {
     GtkWidget parent_instance;
 
     OwnPtr<LadybirdViewImpl> impl;
@@ -21,12 +21,12 @@ enum {
 
 G_BEGIN_DECLS
 
-G_DEFINE_FINAL_TYPE_WITH_CODE(LadybirdWebContentView, ladybird_web_content_view, GTK_TYPE_WIDGET,
+G_DEFINE_FINAL_TYPE_WITH_CODE(LadybirdWebView, ladybird_web_view, GTK_TYPE_WIDGET,
     G_IMPLEMENT_INTERFACE(GTK_TYPE_SCROLLABLE, NULL))
 
-static void ladybird_web_content_view_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* pspec)
+static void ladybird_web_view_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* pspec)
 {
-    LadybirdWebContentView* self = LADYBIRD_WEB_CONTENT_VIEW(object);
+    LadybirdWebView* self = LADYBIRD_WEB_VIEW(object);
 
     switch (prop_id) {
     case PROP_HADJUSTMENT:
@@ -51,9 +51,9 @@ static void ladybird_web_content_view_get_property(GObject* object, guint prop_i
     }
 }
 
-static void ladybird_web_content_view_set_property(GObject* object, guint prop_id, GValue const* value, GParamSpec* pspec)
+static void ladybird_web_view_set_property(GObject* object, guint prop_id, GValue const* value, GParamSpec* pspec)
 {
-    LadybirdWebContentView* self = LADYBIRD_WEB_CONTENT_VIEW(object);
+    LadybirdWebView* self = LADYBIRD_WEB_VIEW(object);
 
     switch (prop_id) {
     case PROP_HADJUSTMENT:
@@ -78,7 +78,7 @@ static void ladybird_web_content_view_set_property(GObject* object, guint prop_i
     }
 }
 
-static void ladybird_web_content_view_init(LadybirdWebContentView* self)
+static void ladybird_web_view_init(LadybirdWebView* self)
 {
     auto impl = LadybirdViewImpl::create(self).release_value_but_fixme_should_propagate_errors();
     // Let's be good boys and properly construct an OwnPtr in place
@@ -89,24 +89,24 @@ static void ladybird_web_content_view_init(LadybirdWebContentView* self)
     self->impl->load_html("This is some <b>HTML</b>!"sv, "http://example.com"sv);
 }
 
-static void ladybird_web_content_view_dispose(GObject* object)
+static void ladybird_web_view_dispose(GObject* object)
 {
-    LadybirdWebContentView* self = LADYBIRD_WEB_CONTENT_VIEW(object);
+    LadybirdWebView* self = LADYBIRD_WEB_VIEW(object);
 
     g_clear_object(&self->hadjustment);
     g_clear_object(&self->vadjustment);
     self->impl.clear();
 
-    G_OBJECT_CLASS(ladybird_web_content_view_parent_class)->dispose(object);
+    G_OBJECT_CLASS(ladybird_web_view_parent_class)->dispose(object);
 }
 
-static void ladybird_web_content_view_class_init(LadybirdWebContentViewClass* klass)
+static void ladybird_web_view_class_init(LadybirdWebViewClass* klass)
 {
     GObjectClass* object_class = G_OBJECT_CLASS(klass);
 
-    object_class->get_property = ladybird_web_content_view_get_property;
-    object_class->set_property = ladybird_web_content_view_set_property;
-    object_class->dispose = ladybird_web_content_view_dispose;
+    object_class->get_property = ladybird_web_view_get_property;
+    object_class->set_property = ladybird_web_view_set_property;
+    object_class->dispose = ladybird_web_view_dispose;
 
     g_object_class_override_property(object_class, PROP_HADJUSTMENT, "hadjustment");
     g_object_class_override_property(object_class, PROP_VADJUSTMENT, "vadjustment");

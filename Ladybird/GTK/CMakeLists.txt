@@ -67,7 +67,7 @@ add_custom_command(
 set(SOURCES
     main.cpp
     Window.cpp
-    WebContentView.cpp
+    WebView.cpp
     ViewImpl.cpp
     EventLoopImplementationGLib.cpp
     "${GENERATED_GRESOURCE_FILE}"

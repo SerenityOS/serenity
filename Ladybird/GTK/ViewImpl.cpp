@@ -11,7 +11,7 @@ LadybirdViewImpl::~LadybirdViewImpl()
 {
 }
 
-ErrorOr<NonnullOwnPtr<LadybirdViewImpl>> LadybirdViewImpl::create(LadybirdWebContentView* widget)
+ErrorOr<NonnullOwnPtr<LadybirdViewImpl>> LadybirdViewImpl::create(LadybirdWebView* widget)
 {
     auto impl = TRY(adopt_nonnull_own_or_enomem(new (nothrow) LadybirdViewImpl));
     impl->m_widget = widget;

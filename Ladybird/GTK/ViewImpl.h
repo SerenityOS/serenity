@@ -1,12 +1,12 @@
 #pragma once
 
-#include "WebContentView.h"
+#include "WebView.h"
 #include <LibWebView/ViewImplementation.h>
 
 class LadybirdViewImpl final
     : public WebView::ViewImplementation {
 public:
-    static ErrorOr<NonnullOwnPtr<LadybirdViewImpl>> create(LadybirdWebContentView* widget);
+    static ErrorOr<NonnullOwnPtr<LadybirdViewImpl>> create(LadybirdWebView* widget);
     virtual ~LadybirdViewImpl() override;
 
 private:
@@ -38,5 +38,5 @@ private:
 
     virtual void create_client(WebView::EnableCallgrindProfiling) override;
 
-    LadybirdWebContentView* m_widget { nullptr };
+    LadybirdWebView* m_widget { nullptr };
 };

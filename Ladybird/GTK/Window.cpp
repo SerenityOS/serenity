@@ -1,5 +1,5 @@
 #include "Window.h"
-#include "WebContentView.h"
+#include "WebView.h"
 
 struct _LadybirdWindow {
     AdwApplicationWindow parent_instance;
@@ -24,12 +24,12 @@ static void ladybird_window_dispose(GObject* object)
 
 static AdwTabPage* open_new_tab(LadybirdWindow* self)
 {
-    LadybirdWebContentView* web_content_view = (LadybirdWebContentView*)g_object_new(LADYBIRD_TYPE_WEB_CONTENT_VIEW, nullptr);
+    LadybirdWebView* web_view = (LadybirdWebView*)g_object_new(LADYBIRD_TYPE_WEB_VIEW, nullptr);
     GtkWidget* scrolled_window = gtk_scrolled_window_new();
-    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scrolled_window), GTK_WIDGET(web_content_view));
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scrolled_window), GTK_WIDGET(web_view));
     AdwTabPage* tab_page = adw_tab_view_append(self->tab_view, scrolled_window);
     adw_tab_view_set_selected_page(self->tab_view, tab_page);
-    // g_object_unref(web_content_view);
+    // g_object_unref(web_view);
     // g_object_unref(scrolled_window);
     adw_tab_page_set_title(tab_page, "Well hello friends! :^)");
     return tab_page;
