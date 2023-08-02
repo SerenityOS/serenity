@@ -26,6 +26,10 @@ struct DoorbellRegister {
     u32 cq_head;
 };
 
+struct Doorbell {
+    Memory::TypedMapping<DoorbellRegister volatile> mmio_reg;
+};
+
 enum class QueueType {
     Polled,
     IRQ
@@ -48,7 +52,7 @@ struct NVMeIO {
 class NVMeController;
 class NVMeQueue : public AtomicRefCounted<NVMeQueue> {
 public:
-    static ErrorOr<NonnullLockRefPtr<NVMeQueue>> try_create(NVMeController& device, u16 qid, u8 irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, OwnPtr<Memory::Region> sq_dma_region, Memory::TypedMapping<DoorbellRegister volatile> db_regs, QueueType queue_type);
+    static ErrorOr<NonnullLockRefPtr<NVMeQueue>> try_create(NVMeController& device, u16 qid, u8 irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, OwnPtr<Memory::Region> sq_dma_region, Doorbell db_regs, QueueType queue_type);
     bool is_admin_queue() { return m_admin_queue; }
     u16 submit_sync_sqe(NVMeSubmission&);
     void read(AsyncBlockDeviceRequest& request, u16 nsid, u64 index, u32 count);
@@ -60,9 +64,10 @@ protected:
     u32 process_cq();
     void update_sq_doorbell()
     {
-        m_db_regs->sq_tail = m_sq_tail;
+        m_db_regs.mmio_reg->sq_tail = m_sq_tail;
     }
-    NVMeQueue(NonnullOwnPtr<Memory::Region> rw_dma_region, Memory::PhysicalPage const& rw_dma_page, u16 qid, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, OwnPtr<Memory::Region> sq_dma_region, Memory::TypedMapping<DoorbellRegister volatile> db_regs);
+
+    NVMeQueue(NonnullOwnPtr<Memory::Region> rw_dma_region, Memory::PhysicalPage const& rw_dma_page, u16 qid, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, OwnPtr<Memory::Region> sq_dma_region, Doorbell db_regs);
 
     [[nodiscard]] u32 get_request_cid()
     {
@@ -83,7 +88,7 @@ private:
     virtual void complete_current_request(u16 cmdid, u16 status) = 0;
     void update_cq_doorbell()
     {
-        m_db_regs->cq_head = m_cq_head;
+        m_db_regs.mmio_reg->cq_head = m_cq_head;
     }
 
 protected:
@@ -106,7 +111,7 @@ private:
     OwnPtr<Memory::Region> m_sq_dma_region;
     Span<NVMeCompletion> m_cqe_array;
     WaitQueue m_sync_wait_queue;
-    Memory::TypedMapping<DoorbellRegister volatile> m_db_regs;
+    Doorbell m_db_regs;
     NonnullRefPtr<Memory::PhysicalPage const> const m_rw_dma_page;
 };
 }
