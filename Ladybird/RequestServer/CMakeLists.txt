@@ -11,15 +11,14 @@ set(REQUESTSERVER_SOURCES
     ${REQUESTSERVER_SOURCE_DIR}/HttpsRequest.cpp
     ${REQUESTSERVER_SOURCE_DIR}/HttpsProtocol.cpp
     ${REQUESTSERVER_SOURCE_DIR}/Protocol.cpp
-    ../Utilities.cpp
     main.cpp
 )
 
-qt_add_executable(RequestServer ${REQUESTSERVER_SOURCES})
+add_executable(RequestServer ${REQUESTSERVER_SOURCES})
 
 target_include_directories(RequestServer PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
 target_include_directories(RequestServer PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
-target_link_libraries(RequestServer PRIVATE Qt::Core LibCore LibMain LibCrypto LibFileSystem LibGemini LibHTTP LibIPC LibMain LibTLS LibWebView)
+target_link_libraries(RequestServer PRIVATE LibCore LibMain LibCrypto LibFileSystem LibGemini LibHTTP LibIPC LibMain LibTLS LibWebView)
 if (ANDROID)
     link_android_libs(RequestServer)
 endif()
