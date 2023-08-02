@@ -2,9 +2,13 @@
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibWeb/Crypto/Crypto.h>
 
-LadybirdViewImpl::LadybirdViewImpl()
+LadybirdViewImpl::LadybirdViewImpl(LadybirdWebView* widget)
     : WebView::ViewImplementation::ViewImplementation(WebView::UseJavaScriptBytecode::Yes)
+    , m_widget(widget)
 {
+    on_title_change = [this](DeprecatedString const& title) {
+        ladybird_web_view_set_page_title(m_widget, title.characters());
+    };
 }
 
 LadybirdViewImpl::~LadybirdViewImpl()
@@ -13,8 +17,7 @@ LadybirdViewImpl::~LadybirdViewImpl()
 
 ErrorOr<NonnullOwnPtr<LadybirdViewImpl>> LadybirdViewImpl::create(LadybirdWebView* widget)
 {
-    auto impl = TRY(adopt_nonnull_own_or_enomem(new (nothrow) LadybirdViewImpl));
-    impl->m_widget = widget;
+    auto impl = TRY(adopt_nonnull_own_or_enomem(new (nothrow) LadybirdViewImpl(widget)));
     impl->create_client(WebView::EnableCallgrindProfiling::No);
     return impl;
 }

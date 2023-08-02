@@ -10,7 +10,7 @@ public:
     virtual ~LadybirdViewImpl() override;
 
 private:
-    LadybirdViewImpl();
+    LadybirdViewImpl(LadybirdWebView* widget);
 
     virtual void notify_server_did_layout(Badge<WebView::WebContentClient>, Gfx::IntSize content_size) override;
     virtual void notify_server_did_paint(Badge<WebView::WebContentClient>, i32 bitmap_id, Gfx::IntSize) override;

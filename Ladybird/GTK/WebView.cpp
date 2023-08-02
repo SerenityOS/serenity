@@ -9,26 +9,52 @@ struct _LadybirdWebView {
     GtkAdjustment* hadjustment;
     GtkScrollablePolicy vscroll_policy;
     GtkAdjustment* vadjustment;
+
+    char* page_title;
 };
 
 enum {
     PROP_0,
+    PROP_PAGE_TITLE,
+    NUM_PROPS,
+
     PROP_HADJUSTMENT,
     PROP_VADJUSTMENT,
     PROP_HSCROLL_POLICY,
     PROP_VSCROLL_POLICY
 };
 
+static GParamSpec* props[NUM_PROPS];
+
 G_BEGIN_DECLS
 
 G_DEFINE_FINAL_TYPE_WITH_CODE(LadybirdWebView, ladybird_web_view, GTK_TYPE_WIDGET,
     G_IMPLEMENT_INTERFACE(GTK_TYPE_SCROLLABLE, NULL))
+
+char const* ladybird_web_view_get_page_title(LadybirdWebView* self)
+{
+    g_return_val_if_fail(LADYBIRD_IS_WEB_VIEW(self), nullptr);
+
+    return self->page_title;
+}
+
+void ladybird_web_view_set_page_title(LadybirdWebView* self, char const* title)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+
+    if (g_set_str(&self->page_title, title))
+        g_object_notify_by_pspec(G_OBJECT(self), props[PROP_PAGE_TITLE]);
+}
 
 static void ladybird_web_view_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* pspec)
 {
     LadybirdWebView* self = LADYBIRD_WEB_VIEW(object);
 
     switch (prop_id) {
+    case PROP_PAGE_TITLE:
+        g_value_set_string(value, self->page_title);
+        break;
+
     case PROP_HADJUSTMENT:
         g_value_set_object(value, self->hadjustment);
         break;
@@ -56,6 +82,10 @@ static void ladybird_web_view_set_property(GObject* object, guint prop_id, GValu
     LadybirdWebView* self = LADYBIRD_WEB_VIEW(object);
 
     switch (prop_id) {
+    case PROP_PAGE_TITLE:
+        ladybird_web_view_set_page_title(self, g_value_get_string(value));
+        break;
+
     case PROP_HADJUSTMENT:
         g_set_object(&self->hadjustment, (GtkAdjustment*)g_value_get_object(value));
         break;
@@ -86,7 +116,7 @@ static void ladybird_web_view_init(LadybirdWebView* self)
     // to a nullptr state by zero-initializing its bytes as GObject does.
     new (&self->impl) OwnPtr<LadybirdViewImpl>(move(impl));
 
-    self->impl->load_html("This is some <b>HTML</b>!"sv, "http://example.com"sv);
+    self->impl->load_html("<html><title>Title from HTML :^)</title><body>This is some <b>HTML</b>!</body></html>"sv, "http://example.com"sv);
 }
 
 static void ladybird_web_view_dispose(GObject* object)
@@ -112,6 +142,9 @@ static void ladybird_web_view_class_init(LadybirdWebViewClass* klass)
     g_object_class_override_property(object_class, PROP_VADJUSTMENT, "vadjustment");
     g_object_class_override_property(object_class, PROP_HSCROLL_POLICY, "hscroll-policy");
     g_object_class_override_property(object_class, PROP_VSCROLL_POLICY, "vscroll-policy");
+
+    props[PROP_PAGE_TITLE] = g_param_spec_string("page-title", nullptr, nullptr, nullptr, GParamFlags(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY));
+    g_object_class_install_properties(object_class, NUM_PROPS, props);
 }
 
 G_END_DECLS

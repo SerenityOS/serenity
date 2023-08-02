@@ -28,10 +28,11 @@ static AdwTabPage* open_new_tab(LadybirdWindow* self)
     GtkWidget* scrolled_window = gtk_scrolled_window_new();
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scrolled_window), GTK_WIDGET(web_view));
     AdwTabPage* tab_page = adw_tab_view_append(self->tab_view, scrolled_window);
+    adw_tab_page_set_title(tab_page, "New tab");
+    g_object_bind_property(web_view, "page-title", tab_page, "title", G_BINDING_DEFAULT);
     adw_tab_view_set_selected_page(self->tab_view, tab_page);
     // g_object_unref(web_view);
     // g_object_unref(scrolled_window);
-    adw_tab_page_set_title(tab_page, "Well hello friends! :^)");
     return tab_page;
 }
 
