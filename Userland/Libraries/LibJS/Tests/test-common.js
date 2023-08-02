@@ -86,8 +86,7 @@ class ExpectationError extends Error {
             });
         }
 
-        // FIXME: Take a precision argument like jest's toBeCloseTo matcher
-        toBeCloseTo(value) {
+        toBeCloseTo(value, precision = 5) {
             this.__expect(
                 typeof this.target === "number",
                 () => `toBeCloseTo: expected target of type number, got ${typeof this.target}`
@@ -96,9 +95,14 @@ class ExpectationError extends Error {
                 typeof value === "number",
                 () => `toBeCloseTo: expected argument of type number, got ${typeof value}`
             );
+            this.__expect(
+                typeof precision === "number",
+                () => `toBeCloseTo: expected precision of type number, got ${typeof precision}`
+            );
 
+            const epsilon = 10 ** -precision / 2;
             this.__doMatcher(() => {
-                this.__expect(Math.abs(this.target - value) < 0.000001);
+                this.__expect(Math.abs(this.target - value) < epsilon);
             });
         }
 
