@@ -10,6 +10,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibCore/File.h>
 #include <LibCore/Process.h>
 #include <LibCore/System.h>
 #include <errno.h>
@@ -142,6 +143,27 @@ ErrorOr<void> Process::set_name([[maybe_unused]] StringView name, [[maybe_unused
     // FIXME: Implement Process::set_name() for other platforms.
     return {};
 #endif
+}
+
+ErrorOr<bool> Process::is_being_debugged()
+{
+#ifdef AK_OS_LINUX
+    auto unbuffered_status_file = TRY(Core::File::open("/proc/self/status"sv, Core::File::OpenMode::Read));
+    auto status_file = TRY(Core::InputBufferedFile::create(move(unbuffered_status_file)));
+    auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
+    while (TRY(status_file->can_read_line())) {
+        auto line = TRY(status_file->read_line(buffer));
+        auto const parts = line.split_view(':');
+        if (parts.size() < 2 || parts[0] != "TracerPid"sv)
+            continue;
+        auto tracer_pid = parts[1].to_uint<u32>();
+        return (tracer_pid != 0UL);
+    }
+    return false;
+#endif
+    // FIXME: Implement this for more platforms.
+    // MacOS version: https://developer.apple.com/library/archive/qa/qa1361/_index.html
+    return Error::from_string_view("Platform does not support checking for debugger"sv);
 }
 
 }
