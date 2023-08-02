@@ -36,6 +36,16 @@ test("toBeCloseTo", () => {
     expect(1).not.toBeCloseTo(1.00001);
     expect(1).toBeCloseTo(1.000001);
 
+    expect(1).not.toBeCloseTo(1.001, 3);
+    expect(1).toBeCloseTo(1.001, 2);
+    expect(1).not.toBeCloseTo(0, 0);
+    expect(6).toBeCloseTo(10, -1);
+    expect(125).toBeCloseTo(100, -2);
+    expect(3.14159).toBeCloseTo(3.14158, 4);
+    expect(() => {
+        expect(1).toBeCloseTo(1, "foo").toThrow(ExpectationError);
+    }).toThrow(ExpectationError);
+
     [
         ["foo", 1],
         [1, "foo"],
