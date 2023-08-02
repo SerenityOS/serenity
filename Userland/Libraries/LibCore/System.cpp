@@ -44,9 +44,14 @@ static int memfd_create(char const* name, unsigned int flags)
 
 #if defined(AK_OS_MACOS)
 #    include <crt_externs.h>
+#    include <mach-o/dyld.h>
 #    include <sys/mman.h>
 #else
 extern char** environ;
+#endif
+
+#if defined(AK_OS_BSD_GENERIC)
+#    include <sys/sysctl.h>
 #endif
 
 #define HANDLE_SYSCALL_RETURN_VALUE(syscall_name, rc, success_value) \
@@ -1724,6 +1729,44 @@ char** environment()
 #else
     return environ;
 #endif
+}
+
+ErrorOr<String> current_executable_path()
+{
+    char path[4096] = {};
+#if defined(AK_OS_LINUX) || defined(AK_OS_ANDROID) || defined(AK_OS_SERENITY)
+    auto ret = ::readlink("/proc/self/exe", path, sizeof(path) - 1);
+    // Ignore error if it wasn't a symlink
+    if (ret == -1 && errno != EINVAL)
+        return Error::from_syscall("readlink"sv, -errno);
+#elif defined(AK_OS_DRAGONFLY)
+    return String::from_deprecated_string(TRY(readlink("/proc/curproc/file"sv)));
+#elif defined(AK_OS_SOLARIS)
+    return String::from_deprecated_string(TRY(readlink("/proc/self/path/a.out"sv)));
+#elif defined(AK_OS_FREEBSD)
+    int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
+    size_t len = sizeof(path);
+    if (sysctl(mib, 4, path, &len, nullptr, 0) < 0)
+        return Errno::from_syscall("sysctl"sv, -errno);
+#elif defined(AK_OS_NETBSD)
+    int mib[4] = { CTL_KERN, KERN_PROC_ARGS, -1, KERN_PROC_PATHNAME };
+    size_t len = sizeof(path);
+    if (sysctl(mib, 4, path, &len, nullptr, 0) < 0)
+        return Errno::from_syscall("sysctl"sv, -errno);
+#elif defined(AK_OS_MACOS)
+    u32 size = sizeof(path);
+    auto ret = _NSGetExecutablePath(path, &size);
+    if (ret != 0)
+        return Error::from_errno(ENAMETOOLONG);
+#elif defined(AK_OS_EMSCRIPTEN)
+    return Error::from_string_view("current_executable_path() unknown on this platform"sv);
+#else
+#    warning "Not sure how to get current_executable_path on this platform!"
+    // GetModuleFileName on Windows, unsure about OpenBSD.
+    return Error::from_string_view("current_executable_path unknown"sv);
+#endif
+    path[sizeof(path) - 1] = '\0';
+    return String::from_utf8({ path, strlen(path) });
 }
 
 }
