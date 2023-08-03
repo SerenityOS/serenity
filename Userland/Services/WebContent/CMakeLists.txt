@@ -11,7 +11,6 @@ compile_ipc(WebDriverClient.ipc WebDriverClientEndpoint.h)
 compile_ipc(WebDriverServer.ipc WebDriverServerEndpoint.h)
 
 set(SOURCES
-    AudioCodecPluginSerenity.cpp
     ConnectionFromClient.cpp
     ConsoleGlobalEnvironmentExtensions.cpp
     ImageCodecPluginSerenity.cpp
