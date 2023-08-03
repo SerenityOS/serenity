@@ -179,23 +179,44 @@ bool HTMLCanvasElement::create_bitmap(size_t minimum_width, size_t minimum_heigh
     return m_bitmap;
 }
 
-DeprecatedString HTMLCanvasElement::to_data_url(DeprecatedString const& type, [[maybe_unused]] Optional<double> quality) const
+struct SerializeBitmapResult {
+    ByteBuffer buffer;
+    StringView mime_type;
+};
+
+// https://html.spec.whatwg.org/multipage/canvas.html#a-serialisation-of-the-bitmap-as-a-file
+static ErrorOr<SerializeBitmapResult> serialize_bitmap(Gfx::Bitmap const& bitmap, [[maybe_unused]] StringView type, [[maybe_unused]] Optional<double> quality)
 {
+    // User agents must support PNG ("image/png"). User agents may support other types.
+    // If the user agent does not support the requested type, then it must create the file using the PNG format. [PNG]
+    return SerializeBitmapResult { TRY(Gfx::PNGWriter::encode(bitmap)), "image/png"sv };
+}
+
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-canvas-todataurl
+DeprecatedString HTMLCanvasElement::to_data_url(DeprecatedString const& type, Optional<double> quality) const
+{
+    // FIXME: 1. If this canvas element's bitmap's origin-clean flag is set to false, then throw a "SecurityError" DOMException.
+
+    // 2. If this canvas element's bitmap has no pixels (i.e. either its horizontal dimension or its vertical dimension is zero)
+    //    then return the string "data:,". (This is the shortest data: URL; it represents the empty string in a text/plain resource.)
     if (!m_bitmap)
-        return {};
-    if (type != "image/png")
-        return {};
-    auto encoded_bitmap_or_error = Gfx::PNGWriter::encode(*m_bitmap);
-    if (encoded_bitmap_or_error.is_error()) {
-        dbgln("Gfx::PNGWriter failed to encode the HTMLCanvasElement: {}", encoded_bitmap_or_error.error());
-        return {};
+        return "data:,";
+
+    // 3. Let file be a serialization of this canvas element's bitmap as a file, passing type and quality if given.
+    auto file = serialize_bitmap(*m_bitmap, type, move(quality));
+
+    // 4. If file is null then return "data:,".
+    if (file.is_error()) {
+        dbgln("HTMLCanvasElement: Failed to encode canvas bitmap to {}: {}", type, file.error());
+        return "data:,";
     }
-    auto base64_encoded_or_error = encode_base64(encoded_bitmap_or_error.value());
+
+    // 5. Return a data: URL representing file. [RFC2397]
+    auto base64_encoded_or_error = encode_base64(file.value().buffer);
     if (base64_encoded_or_error.is_error()) {
-        // FIXME: propagate error
-        return {};
+        return "data:,";
     }
-    return AK::URL::create_with_data(type, base64_encoded_or_error.release_value(), true).to_deprecated_string();
+    return AK::URL::create_with_data(file.value().mime_type, base64_encoded_or_error.release_value(), true).to_deprecated_string();
 }
 
 void HTMLCanvasElement::present()
