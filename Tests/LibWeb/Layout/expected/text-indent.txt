@@ -26,3 +26,14 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           frag 0 from TextNode start: 26, length: 4, rect: [11,134.34375 37.765625x17.46875]
             "snab"
         TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x162.8125]
+    PaintableWithLines (BlockContainer<BODY>) [9,9 782x144.8125]
+      PaintableWithLines (BlockContainer<DIV>.px-indent) [10,10 780x70.9375]
+        PaintableWithLines (BlockContainer(anonymous)) [11,11 778x17.46875]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<P>) [11,44.46875 778x19.46875]
+          TextPaintable (TextNode<#text>)
+      PaintableWithLines (BlockContainer<DIV>.pct-indent) [10,80.9375 102x71.875]
+        TextPaintable (TextNode<#text>)

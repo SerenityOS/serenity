@@ -10,3 +10,16 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         BlockContainer <div> at (64,156) content-size 30x30 flex-item [BFC] children: not-inline
         BlockContainer <div> at (12,228) content-size 30x30 flex-item [BFC] children: not-inline
         BlockContainer <div> at (64,228) content-size 30x30 flex-item [BFC] children: not-inline
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600] overflow: [0,0 800x602]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x602]
+    PaintableWithLines (BlockContainer<BODY>) [9,9 782x252]
+      PaintableBox (Box<DIV>.flexbox) [10,10 102x250]
+        PaintableWithLines (BlockContainer<DIV>) [11,11 32x32]
+        PaintableWithLines (BlockContainer<DIV>) [63,11 32x32]
+        PaintableWithLines (BlockContainer<DIV>) [11,83 32x32]
+        PaintableWithLines (BlockContainer<DIV>) [63,83 32x32]
+        PaintableWithLines (BlockContainer<DIV>) [11,155 32x32]
+        PaintableWithLines (BlockContainer<DIV>) [63,155 32x32]
+        PaintableWithLines (BlockContainer<DIV>) [11,227 32x32]
+        PaintableWithLines (BlockContainer<DIV>) [63,227 32x32]

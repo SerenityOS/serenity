@@ -60,3 +60,10 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       TextNode <#text>
       BlockContainer <div.right> at (489,213) content-size 300x200 floating [BFC] children: not-inline
       TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600] overflow: [0,0 800x602]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x602]
+    PaintableWithLines (BlockContainer<BODY>) [251,9 540x400.90625]
+      PaintableWithLines (BlockContainer<DIV>.left) [252,10 302x202]
+      PaintableWithLines (BlockContainer<DIV>.right) [488,212 302x202]
+      TextPaintable (TextNode<#text>)

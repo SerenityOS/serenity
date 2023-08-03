@@ -29,3 +29,15 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
                   frag 0 from TextNode start: 424, length: 7, rect: [66,99.34375 47.21875x17.46875]
                     "client."
                 TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x112.8125] overflow: [8,8 786x112.8125]
+      PaintableWithLines (TableWrapper(anonymous)) [8,8 784x112.8125] overflow: [8,8 786x112.8125]
+        PaintableBox (Box<TABLE>.ambox) [8,8 786x112.8125]
+          PaintableBox (Box<TBODY>) [9,9 778x106.8125] overflow: [9,9 782x108.8125]
+            PaintableBox (Box<TR>) [11,11 778x106.8125] overflow: [11,11 780x106.8125]
+              PaintableWithLines (BlockContainer<TD>.mbox-image) [11,11 52x106.8125]
+                PaintableWithLines (BlockContainer<DIV>.mbox-image-div) [12,39.40625 50x50]
+              PaintableWithLines (BlockContainer<TD>.mbox-text) [65,11 726x106.8125]
+                TextPaintable (TextNode<#text>)

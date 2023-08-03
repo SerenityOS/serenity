@@ -75,6 +75,7 @@ private:
     virtual void inspect_accessibility_tree() override;
     virtual Messages::WebContentServer::GetHoveredNodeIdResponse get_hovered_node_id() override;
     virtual Messages::WebContentServer::DumpLayoutTreeResponse dump_layout_tree() override;
+    virtual Messages::WebContentServer::DumpPaintTreeResponse dump_paint_tree() override;
     virtual Messages::WebContentServer::DumpTextResponse dump_text() override;
     virtual void set_content_filters(Vector<String> const&) override;
     virtual void set_autoplay_allowed_on_all_websites() override;

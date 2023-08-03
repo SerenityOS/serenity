@@ -8,3 +8,12 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <div.orange> at (0,100) content-size 150x50 floating [BFC] children: not-inline
       BlockContainer <(anonymous)> at (0,0) content-size 200x0 children: inline
         TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x150]
+    PaintableWithLines (BlockContainer<BODY>) [0,0 200x0] overflow: [0,0 200x150]
+      PaintableWithLines (BlockContainer<UL>) [0,0 200x0]
+        PaintableWithLines (BlockContainer<DIV>.red) [0,0 150x50]
+        PaintableWithLines (BlockContainer<DIV>.green) [0,50 150x50]
+      PaintableWithLines (BlockContainer<DIV>.orange) [0,100 150x50]
+      PaintableWithLines (BlockContainer(anonymous)) [0,0 200x0]

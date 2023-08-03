@@ -6,3 +6,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           frag 0 from TextNode start: 0, length: 25, rect: [11,11 552.09375x32]
             "The Linux Kernel Archives"
         TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x54]
+    PaintableWithLines (BlockContainer<BODY>) [9,9 782x36]
+      PaintableWithLines (BlockContainer<DIV>) [10,10 780x34]
+        TextPaintable (TextNode<#text>)

@@ -20,3 +20,13 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             frag 0 from TextNode start: 0, length: 6, rect: [454.671875,12 53.328125x17.46875]
               "Reject"
           TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x72]
+    PaintableBox (Box<BODY>) [9,9 502x54]
+      PaintableWithLines (BlockContainer<DIV>.big) [10,10 383.625x52]
+      PaintableWithLines (BlockContainer<DIV>.buttons) [393.625,10 116.375x52]
+        PaintableWithLines (BlockContainer<DIV>.button) [394.625,11 59.046875x19.46875]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.button) [453.671875,11 55.328125x19.46875]
+          TextPaintable (TextNode<#text>)

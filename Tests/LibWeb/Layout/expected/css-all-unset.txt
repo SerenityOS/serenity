@@ -10,3 +10,11 @@ Viewport <#document> at (0,0) content-size 800x600 children: inline
         TextNode <#text>
     InlineNode <body>
       TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  InlinePaintable (InlineNode<HTML>)
+    InlinePaintable (InlineNode<HEAD>)
+      InlinePaintable (InlineNode<STYLE>)
+        TextPaintable (TextNode<#text>)
+    InlinePaintable (InlineNode<BODY>)
+      TextPaintable (TextNode<#text>)

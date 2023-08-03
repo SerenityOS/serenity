@@ -4,3 +4,8 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       line 0 width: 0, height: 17.46875, bottom: 17.46875, baseline: 13.53125
         frag 0 from SVGSVGBox start: 0, length: 0, rect: [8,21.53125 0x0]
       SVGSVGBox <svg> at (8,21.53125) content-size 0x0 [SVG] children: not-inline
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x33.46875]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 0x17.46875]
+      SVGSVGPaintable (SVGSVGBox<svg>) [8,21.53125 0x0]

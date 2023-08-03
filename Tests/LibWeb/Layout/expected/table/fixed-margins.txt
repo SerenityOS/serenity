@@ -13,3 +13,13 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
                   frag 0 from TextNode start: 59, length: 40, rect: [108,25.46875 399.9375x17.46875]
                     "To AdJuSt PRiCiNG sTYLiNG ceLL oF TAbLeS"
                 TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x34.9375]
+      PaintableWithLines (BlockContainer<DIV>.wrapper) [8,8 784x34.9375]
+        PaintableWithLines (TableWrapper(anonymous)) [108,8 584x34.9375]
+          PaintableBox (Box<DIV>.box) [108,8 584x34.9375]
+            PaintableBox (Box(anonymous)) [108,8 584x34.9375]
+              PaintableWithLines (BlockContainer<DIV>.cell) [108,8 584x34.9375]
+                TextPaintable (TextNode<#text>)

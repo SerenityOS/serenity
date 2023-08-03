@@ -67,3 +67,25 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
               TextNode <#text>
           BlockContainer <(anonymous)> (not painted) children: inline
             TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x127.40625]
+      PaintableWithLines (TableWrapper(anonymous)) [8,8 112.8125x127.40625]
+        PaintableBox (Box<TABLE>) [8,8 112.8125x127.40625]
+          PaintableBox (Box<TBODY>) [8,8 112.8125x127.40625]
+            PaintableBox (Box<TR>.td-thick-border) [8,8 112.8125x42.46875]
+              PaintableWithLines (BlockContainer<TD>) [8,8 57.265625x42.46875]
+                TextPaintable (TextNode<#text>)
+              PaintableWithLines (BlockContainer<TD>) [65.265625,8 55.546875x42.46875]
+                TextPaintable (TextNode<#text>)
+            PaintableBox (Box<TR>) [8,50.46875 112.8125x42.46875]
+              PaintableWithLines (BlockContainer<TD>) [8,50.46875 57.265625x42.46875]
+                TextPaintable (TextNode<#text>)
+              PaintableWithLines (BlockContainer<TD>) [65.265625,50.46875 55.546875x42.46875]
+                TextPaintable (TextNode<#text>)
+            PaintableBox (Box<TR>.td-thick-border) [8,92.9375 112.8125x42.46875]
+              PaintableWithLines (BlockContainer<TD>) [8,92.9375 57.265625x42.46875]
+                TextPaintable (TextNode<#text>)
+              PaintableWithLines (BlockContainer<TD>) [65.265625,92.9375 55.546875x42.46875]
+                TextPaintable (TextNode<#text>)

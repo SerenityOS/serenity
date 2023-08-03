@@ -88,3 +88,32 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x127.40625]
+      PaintableBox (Box<DIV>.grid-container) [8,8 784x17.46875]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,8 392x17.46875]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [400,8 392x17.46875]
+          TextPaintable (TextNode<#text>)
+      PaintableWithLines (BlockContainer(anonymous)) [8,25.46875 784x0]
+      PaintableBox (Box<DIV>.grid-container) [8,25.46875 784x75]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,25.46875 261.328125x75]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [530.65625,25.46875 261.328125x50]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [269.328125,25.46875 261.328125x25]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [269.328125,75.46875 522.65625x25]
+          TextPaintable (TextNode<#text>)
+      PaintableWithLines (BlockContainer(anonymous)) [8,100.46875 784x0]
+      PaintableBox (Box<DIV>.grid-container) [8,100.46875 784x34.9375]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [58,100.46875 100x17.46875]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [158,100.46875 50x17.46875]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [208,100.46875 100x17.46875]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,117.9375 50x17.46875]
+          TextPaintable (TextNode<#text>)

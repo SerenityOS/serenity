@@ -10,3 +10,15 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <div.atan2> at (8,788) content-size 100x200 positioned children: not-inline
       BlockContainer <(anonymous)> at (8,988) content-size 784x0 children: inline
         TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600] overflow: [0,0 800x996]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x996]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x980]
+      PaintableWithLines (BlockContainer<DIV>.sin) [8,8 79.984375x100]
+      PaintableWithLines (BlockContainer<DIV>.cos) [8,108 99.984375x100]
+      PaintableWithLines (BlockContainer<DIV>.tan) [8,208 119.984375x100]
+      PaintableWithLines (BlockContainer<DIV>.asin) [8,308 100x140]
+      PaintableWithLines (BlockContainer<DIV>.acos) [8,448 100x160]
+      PaintableWithLines (BlockContainer<DIV>.atan) [8,608 100x180]
+      PaintableWithLines (BlockContainer<DIV>.atan2) [8,788 100x200]
+      PaintableWithLines (BlockContainer(anonymous)) [8,988 784x0]

@@ -6,3 +6,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           frag 0 from TextNode start: 0, length: 10, rect: [11,11 91.59375x17.46875]
             "border box"
         TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x2] overflow: [9,9 95.59375x21.46875]
+    PaintableWithLines (BlockContainer<BODY>) [9,9 95.59375x21.46875]
+      PaintableWithLines (BlockContainer<NAV>) [10,10 93.59375x19.46875]
+        TextPaintable (TextNode<#text>)

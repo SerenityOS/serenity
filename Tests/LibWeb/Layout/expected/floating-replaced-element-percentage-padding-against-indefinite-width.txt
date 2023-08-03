@@ -4,3 +4,10 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       Box <div#box1> at (8,8) content-size 784x64 flex-container(row) [FFC] children: not-inline
         BlockContainer <div> at (8,8) content-size 16x64 flex-item [BFC] children: not-inline
           ImageBox <img#box2> at (24,24) content-size 16x32 floating flex-container(row) children: not-inline
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x80]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x64]
+      PaintableBox (Box<DIV>#box1) [8,8 784x64]
+        PaintableWithLines (BlockContainer<DIV>) [8,8 16x64] overflow: [8,8 48x64]
+          ImagePaintable (ImageBox<IMG>#box2) [8,8 48x64]

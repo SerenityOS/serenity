@@ -4,3 +4,8 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       line 0 width: 81.6875, height: 62, bottom: 62, baseline: 62
         frag 0 from ImageBox start: 0, length: 0, rect: [11,11 79.6875x60]
       ImageBox <img> at (11,11) content-size 79.6875x60 children: not-inline
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x82]
+    PaintableWithLines (BlockContainer<BODY>) [9,9 782x64]
+      ImagePaintable (ImageBox<IMG>) [10,10 81.6875x62]

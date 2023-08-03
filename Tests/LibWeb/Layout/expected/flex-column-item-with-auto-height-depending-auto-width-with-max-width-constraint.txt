@@ -18,3 +18,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           frag 0 from TextNode start: 40, length: 11, rect: [102,265 351.5625x65.5]
             "background."
         TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x333.5]
+    PaintableBox (Box<BODY>.hero) [1,1 602x331.5]
+      PaintableWithLines (BlockContainer<DIV>.header) [101,2 402x329.5]
+        TextPaintable (TextNode<#text>)

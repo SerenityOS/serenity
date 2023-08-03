@@ -7,3 +7,10 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             frag 0 from TextNode start: 0, length: 22, rect: [18,8 189.875x17.46875]
               "My super long message!"
           TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x33.46875]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x17.46875]
+      PaintableWithLines (BlockContainer<DIV>.outer) [18,8 80x17.46875]
+        PaintableWithLines (BlockContainer<SPAN>.text) [18,8 80x17.46875] overflow: [18,8 189.875x17.46875]
+          TextPaintable (TextNode<#text>)

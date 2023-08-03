@@ -81,3 +81,30 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x169.875]
+      PaintableBox (Box<DIV>.grid-container) [8,8 784x17.46875]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,8 522.5x17.46875]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [530.5,8 261.25x17.46875]
+          TextPaintable (TextNode<#text>)
+      PaintableWithLines (BlockContainer(anonymous)) [8,25.46875 784x0]
+      PaintableBox (Box<DIV>.grid-container) [8,25.46875 784x17.46875]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,25.46875 261.25x17.46875]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [269.25,25.46875 522.5x17.46875]
+          TextPaintable (TextNode<#text>)
+      PaintableWithLines (BlockContainer(anonymous)) [8,42.9375 784x0]
+      PaintableBox (Box<DIV>.grid-container) [8,42.9375 784x100]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,42.9375 784x40]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,82.9375 784x60]
+          TextPaintable (TextNode<#text>)
+      PaintableWithLines (BlockContainer(anonymous)) [8,142.9375 784x0]
+      PaintableBox (Box<DIV>.grid-container) [8,142.9375 784x34.9375]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,142.9375 784x17.46875]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,160.40625 392x17.46875]
+          TextPaintable (TextNode<#text>)

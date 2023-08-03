@@ -6,3 +6,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           frag 0 from TextNode start: 0, length: 31, rect: [55.5,32.4375 492.96875x34.9375]
             "Null publishes fine indie games"
         TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x99.8125]
+    PaintableBox (Box<BODY>) [9,9 782x81.8125]
+      PaintableWithLines (BlockContainer<H1>) [54.5,31.4375 691x36.9375]
+        TextPaintable (TextNode<#text>)

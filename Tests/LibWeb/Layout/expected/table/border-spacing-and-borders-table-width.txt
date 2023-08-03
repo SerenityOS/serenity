@@ -25,3 +25,15 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
                 TextNode <#text>
             BlockContainer <(anonymous)> (not painted) children: inline
               TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x77.46875]
+      PaintableWithLines (TableWrapper(anonymous)) [8,8 143.609375x77.46875]
+        PaintableBox (Box<TABLE>) [8,8 143.609375x77.46875]
+          PaintableBox (Box<TBODY>) [23,13 83.609375x47.46875] overflow: [23,13 103.609375x57.46875]
+            PaintableBox (Box<TR>) [33,23 83.609375x47.46875] overflow: [33,23 93.609375x47.46875]
+              PaintableWithLines (BlockContainer<TD>) [33,23 44.265625x47.46875]
+                TextPaintable (TextNode<#text>)
+              PaintableWithLines (BlockContainer<TD>) [87.265625,23 39.34375x47.46875]
+                TextPaintable (TextNode<#text>)

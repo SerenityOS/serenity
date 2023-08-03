@@ -162,3 +162,56 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x428.28125] overflow: [8,8 784x435.75]
+      PaintableBox (Box<DIV>.grid-container) [8,8 784x74.9375]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,8 392x37.46875]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [400,8 392x37.46875]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,45.46875 392x37.46875]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [400,45.46875 392x37.46875]
+          TextPaintable (TextNode<#text>)
+      PaintableWithLines (BlockContainer(anonymous)) [8,82.9375 784x0]
+      PaintableBox (Box<DIV>.grid-container) [8,82.9375 784x107.46875]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,82.9375 392x70]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [400,82.9375 392x70]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,152.9375 392x37.46875]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [400,152.9375 392x37.46875]
+          TextPaintable (TextNode<#text>)
+      PaintableWithLines (BlockContainer(anonymous)) [8,190.40625 784x0]
+      PaintableBox (Box<DIV>.grid-container) [8,190.40625 784x84.9375]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,190.40625 367x37.46875]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [425,190.40625 367x37.46875]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,237.875 367x37.46875]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [425,237.875 367x37.46875]
+          TextPaintable (TextNode<#text>)
+      PaintableWithLines (BlockContainer(anonymous)) [8,275.34375 784x0]
+      PaintableBox (Box<DIV>.grid-container) [8,275.34375 784x90.9375]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [434.1875,275.34375 357.796875x37.46875]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,328.8125 357.796875x37.46875]
+          TextPaintable (TextNode<#text>)
+      PaintableWithLines (BlockContainer(anonymous)) [8,366.28125 784x0]
+      PaintableBox (Box<DIV>.grid-container) [8,366.28125 784x50] overflow: [8,366.28125 784x52.46875]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,366.28125 300x25] overflow: [18,376.28125 280x17.46875]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [308,366.28125 300x25] overflow: [318,376.28125 280x17.46875]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,391.28125 300x25] overflow: [18,401.28125 280x17.46875]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [308,391.28125 300x25] overflow: [318,401.28125 280x17.46875]
+          TextPaintable (TextNode<#text>)
+      PaintableWithLines (BlockContainer(anonymous)) [8,416.28125 784x0]
+      PaintableBox (Box<DIV>.grid-container) [8,416.28125 784x20] overflow: [8,416.28125 784x27.46875]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,416.28125 784x20] overflow: [18,426.28125 6.34375x17.46875]
+          TextPaintable (TextNode<#text>)

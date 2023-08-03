@@ -12,3 +12,12 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             frag 0 from TextNode start: 0, length: 6, rect: [51.953125,12 54.46875x17.46875]
               "yeehaw"
           TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x32.46875]
+    PaintableWithLines (BlockContainer<BODY>) [9,9 782x2] overflow: [10,10 98.421875x21.46875]
+      PaintableBox (Box<DIV>.grid) [10,10 98.421875x21.46875]
+        PaintableWithLines (BlockContainer<DIV>.whee) [11,11 39.953125x19.46875]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.yeehaw) [50.953125,11 56.46875x19.46875]
+          TextPaintable (TextNode<#text>)

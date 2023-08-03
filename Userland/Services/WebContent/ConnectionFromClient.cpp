@@ -678,6 +678,22 @@ Messages::WebContentServer::DumpLayoutTreeResponse ConnectionFromClient::dump_la
     return builder.to_deprecated_string();
 }
 
+Messages::WebContentServer::DumpPaintTreeResponse ConnectionFromClient::dump_paint_tree()
+{
+    auto* document = page().top_level_browsing_context().active_document();
+    if (!document)
+        return DeprecatedString { "(no DOM tree)" };
+    document->update_layout();
+    auto* layout_root = document->layout_node();
+    if (!layout_root)
+        return DeprecatedString { "(no layout tree)" };
+    if (!layout_root->paintable())
+        return DeprecatedString { "(no paint tree)" };
+    StringBuilder builder;
+    Web::dump_tree(builder, *layout_root->paintable());
+    return builder.to_deprecated_string();
+}
+
 Messages::WebContentServer::DumpTextResponse ConnectionFromClient::dump_text()
 {
     auto* document = page().top_level_browsing_context().active_document();

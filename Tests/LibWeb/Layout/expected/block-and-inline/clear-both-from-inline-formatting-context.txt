@@ -21,3 +21,14 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
               "X"
           TextNode <#text>
         TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x0]
+      PaintableWithLines (BlockContainer<DIV>) [8,8 784x0]
+        PaintableWithLines (BlockContainer<H1>.left) [8,29.4375 28.53125x34.9375]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<H1>.right) [773.3125,29.4375 18.6875x34.9375]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.c) [8,155.8125 11.5625x17.46875]
+          TextPaintable (TextNode<#text>)

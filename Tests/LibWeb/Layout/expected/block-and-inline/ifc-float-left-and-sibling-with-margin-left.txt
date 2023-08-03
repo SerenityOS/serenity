@@ -7,3 +7,10 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           frag 0 from TextNode start: 0, length: 14, rect: [91,11 125.125x17.46875]
             "Chrono Trigger"
         TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x63]
+    PaintableWithLines (BlockContainer<BODY>) [9,9 782x21.46875] overflow: [10,10 780x52]
+      PaintableWithLines (BlockContainer<DIV>.thumbnail) [10,10 52x52]
+      PaintableWithLines (BlockContainer<DIV>.title) [90,10 700x19.46875]
+        TextPaintable (TextNode<#text>)
