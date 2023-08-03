@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "AudioCodecPluginSerenity.h"
 #include "ImageCodecPluginSerenity.h"
 #include <LibAudio/Loader.h>
 #include <LibCore/EventLoop.h>
@@ -16,6 +15,7 @@
 #include <LibMain/Main.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Platform/AudioCodecPluginAgnostic.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/Platform/EventLoopPluginSerenity.h>
 #include <LibWeb/Platform/FontPluginSerenity.h>
@@ -48,7 +48,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     Web::Platform::FontPlugin::install(*new Web::Platform::FontPluginSerenity);
 
     Web::Platform::AudioCodecPlugin::install_creation_hook([](auto loader) {
-        return WebContent::AudioCodecPluginSerenity::create(move(loader));
+        return Web::Platform::AudioCodecPluginAgnostic::create(move(loader));
     });
 
     Web::WebSockets::WebSocketClientManager::initialize(TRY(WebView::WebSocketClientManagerAdapter::try_create()));
