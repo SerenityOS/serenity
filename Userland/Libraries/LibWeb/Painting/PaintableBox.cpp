@@ -241,7 +241,7 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
             border_radius_data.inflate(outline_width + outline_offset_y, outline_width + outline_offset_x, outline_width + outline_offset_y, outline_width + outline_offset_x);
             borders_rect.inflate(outline_width + outline_offset_y, outline_width + outline_offset_x, outline_width + outline_offset_y, outline_width + outline_offset_x);
 
-            paint_all_borders(context, borders_rect, border_radius_data, borders_data.value());
+            paint_all_borders(context, context.rounded_device_rect(borders_rect), border_radius_data, borders_data.value());
         }
     }
 
@@ -311,7 +311,7 @@ void PaintableBox::paint_border(PaintContext& context) const
         .bottom = box_model().border.bottom == 0 ? CSS::BorderData() : computed_values().border_bottom(),
         .left = box_model().border.left == 0 ? CSS::BorderData() : computed_values().border_left(),
     };
-    paint_all_borders(context, absolute_border_box_rect(), normalized_border_radii_data(), borders_data);
+    paint_all_borders(context, context.rounded_device_rect(absolute_border_box_rect()), normalized_border_radii_data(), borders_data);
 }
 
 void PaintableBox::paint_backdrop_filter(PaintContext& context) const

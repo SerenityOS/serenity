@@ -134,9 +134,9 @@ void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
 
                 border_radii_data.inflate(outline_data->top.width + outline_offset_y, outline_data->right.width + outline_offset_x, outline_data->bottom.width + outline_offset_y, outline_data->left.width + outline_offset_x);
                 borders_rect.inflate(outline_data->top.width + outline_offset_y, outline_data->right.width + outline_offset_x, outline_data->bottom.width + outline_offset_y, outline_data->left.width + outline_offset_x);
-                paint_all_borders(context, borders_rect, border_radii_data, *outline_data);
+                paint_all_borders(context, context.rounded_device_rect(borders_rect), border_radii_data, *outline_data);
             } else {
-                paint_all_borders(context, borders_rect, border_radii_data, borders_data);
+                paint_all_borders(context, context.rounded_device_rect(borders_rect), border_radii_data, borders_data);
             }
 
             return IterationDecision::Continue;

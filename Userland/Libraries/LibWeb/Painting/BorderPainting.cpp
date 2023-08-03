@@ -544,12 +544,10 @@ RefPtr<Gfx::Bitmap> get_cached_corner_bitmap(DevicePixelSize corners_size)
     return corner_bitmap;
 }
 
-void paint_all_borders(PaintContext& context, CSSPixelRect const& bordered_rect, BorderRadiiData const& border_radii_data, BordersData const& borders_data)
+void paint_all_borders(PaintContext& context, DevicePixelRect const& border_rect, BorderRadiiData const& border_radii_data, BordersData const& borders_data)
 {
     if (borders_data.top.width <= 0 && borders_data.right.width <= 0 && borders_data.left.width <= 0 && borders_data.bottom.width <= 0)
         return;
-
-    auto border_rect = context.rounded_device_rect(bordered_rect);
 
     auto top_left = border_radii_data.top_left.as_corner(context);
     auto top_right = border_radii_data.top_right.as_corner(context);
