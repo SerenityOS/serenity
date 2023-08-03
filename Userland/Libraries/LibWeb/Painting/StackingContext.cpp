@@ -104,11 +104,13 @@ void StackingContext::paint_descendants(PaintContext& context, Layout::Node cons
         case StackingContextPaintPhase::BackgroundAndBorders:
             if (!child_is_inline_or_replaced && !child.is_floating()) {
                 paint_node(child, context, PaintPhase::Background);
-                if ((!child.display().is_table_cell() && !child.display().is_table_inside()) || child.computed_values().border_collapse() == CSS::BorderCollapse::Separate)
+                bool is_table_with_collapsed_borders = child.display().is_table_inside() && child.computed_values().border_collapse() == CSS::BorderCollapse::Collapse;
+                if (!child.display().is_table_cell() && !is_table_with_collapsed_borders)
                     paint_node(child, context, PaintPhase::Border);
                 paint_descendants(context, child, phase);
-                if (child.computed_values().border_collapse() == CSS::BorderCollapse::Collapse)
-                    paint_table_collapsed_borders(context, child);
+                if (child.display().is_table_inside() || child.computed_values().border_collapse() == CSS::BorderCollapse::Collapse) {
+                    paint_table_borders(context, child);
+                }
             }
             break;
         case StackingContextPaintPhase::Floats:

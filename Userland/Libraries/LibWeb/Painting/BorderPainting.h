@@ -84,7 +84,7 @@ Optional<BordersData> borders_data_for_outline(Layout::Node const&, Color outlin
 RefPtr<Gfx::Bitmap> get_cached_corner_bitmap(DevicePixelSize corners_size);
 
 void paint_border(PaintContext& context, BorderEdge edge, DevicePixelRect const& rect, Gfx::AntiAliasingPainter::CornerRadius const& radius, Gfx::AntiAliasingPainter::CornerRadius const& opposite_radius, BordersData const& borders_data, Gfx::Path& path, bool last);
-void paint_all_borders(PaintContext& context, CSSPixelRect const& bordered_rect, BorderRadiiData const& border_radii_data, BordersData const&);
+void paint_all_borders(PaintContext& context, DevicePixelRect const& border_rect, BorderRadiiData const& border_radii_data, BordersData const&);
 
 Gfx::Color border_color(BorderEdge edge, BordersData const& borders_data);
 
