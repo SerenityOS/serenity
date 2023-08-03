@@ -80,6 +80,8 @@ public:
         Bindings::ImageSmoothingQuality image_smoothing_quality { Bindings::ImageSmoothingQuality::Low };
         float global_alpha = { 1 };
         Optional<CanvasClip> clip;
+        Bindings::CanvasTextAlign text_align { Bindings::CanvasTextAlign::Start };
+        Bindings::CanvasTextBaseline text_baseline { Bindings::CanvasTextBaseline::Alphabetic };
     };
     DrawingState& drawing_state() { return m_drawing_state; }
     DrawingState const& drawing_state() const { return m_drawing_state; }

@@ -36,6 +36,8 @@ class OptionConstructor;
 enum class AudioContextLatencyCategory;
 enum class CanPlayTypeResult;
 enum class CanvasFillRule;
+enum class CanvasTextAlign;
+enum class CanvasTextBaseline;
 enum class DOMParserSupportedType;
 enum class EndingType;
 enum class ImageSmoothingQuality;

@@ -7,12 +7,17 @@
 #import <HTML/Canvas/CanvasImageSmoothing.idl>
 #import <HTML/Canvas/CanvasPath.idl>
 #import <HTML/Canvas/CanvasPathDrawingStyles.idl>
+#import <HTML/Canvas/CanvasTextDrawingStyles.idl>
 #import <HTML/Canvas/CanvasRect.idl>
 #import <HTML/Canvas/CanvasState.idl>
 #import <HTML/Canvas/CanvasText.idl>
 #import <HTML/Canvas/CanvasTransform.idl>
 
 enum ImageSmoothingQuality { "low", "medium", "high" };
+
+// FIXME: This should be in CanvasTextDrawingStyles.idl but then it is not exported
+enum CanvasTextAlign { "start", "end", "left", "right", "center" };
+enum CanvasTextBaseline { "top", "hanging", "middle", "alphabetic", "ideographic", "bottom" };
 
 // https://html.spec.whatwg.org/multipage/canvas.html#canvasrenderingcontext2d
 [Exposed=Window]
@@ -34,5 +39,5 @@ CanvasRenderingContext2D includes CanvasText;
 CanvasRenderingContext2D includes CanvasDrawImage;
 CanvasRenderingContext2D includes CanvasImageData;
 CanvasRenderingContext2D includes CanvasPathDrawingStyles;
-// FIXME: CanvasRenderingContext2D includes CanvasTextDrawingStyles;
+CanvasRenderingContext2D includes CanvasTextDrawingStyles;
 CanvasRenderingContext2D includes CanvasPath;
