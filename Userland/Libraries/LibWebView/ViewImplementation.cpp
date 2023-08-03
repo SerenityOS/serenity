@@ -207,7 +207,7 @@ void ViewImplementation::resize_backing_stores_if_needed(WindowResizeInProgress 
 
     auto reallocate_backing_store_if_needed = [&](SharedBitmap& backing_store) {
         if (!backing_store.bitmap || !backing_store.bitmap->size().contains(minimum_needed_size)) {
-            if (auto new_bitmap_or_error = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::BGRx8888, minimum_needed_size); !new_bitmap_or_error.is_error()) {
+            if (auto new_bitmap_or_error = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::BGRA8888, minimum_needed_size); !new_bitmap_or_error.is_error()) {
                 if (backing_store.bitmap)
                     client().async_remove_backing_store(backing_store.id);
 
