@@ -17,11 +17,11 @@
 namespace Core {
 
 namespace {
-thread_local Vector<EventLoop&>* s_event_loop_stack;
 Vector<EventLoop&>& event_loop_stack()
 {
-    if (!s_event_loop_stack)
-        s_event_loop_stack = new Vector<EventLoop&>;
+    thread_local OwnPtr<Vector<EventLoop&>> s_event_loop_stack = nullptr;
+    if (s_event_loop_stack == nullptr)
+        s_event_loop_stack = make<Vector<EventLoop&>>();
     return *s_event_loop_stack;
 }
 }
