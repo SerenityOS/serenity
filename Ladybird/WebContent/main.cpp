@@ -30,6 +30,7 @@
 #include <LibWeb/Platform/EventLoopPluginSerenity.h>
 #include <LibWeb/WebSockets/WebSocket.h>
 #include <LibWebView/RequestServerAdapter.h>
+#include <LibWebView/WebSocketClientAdapter.h>
 #include <QCoreApplication>
 #include <WebContent/ConnectionFromClient.h>
 #include <WebContent/PageHost.h>
@@ -56,8 +57,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return Ladybird::AudioCodecPluginQt::create(move(loader));
     });
 
-    Web::WebSockets::WebSocketClientManager::initialize(Ladybird::WebSocketClientManagerQt::create());
-
     Web::FrameLoader::set_default_favicon_path(DeprecatedString::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));
 
     int webcontent_fd_passing_socket { -1 };
@@ -74,10 +73,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (use_lagom_networking) {
         auto candidate_request_server_paths = TRY(get_paths_for_helper_process("RequestServer"sv));
-        auto protocol_client = TRY(launch_request_server_process(candidate_request_server_paths, s_serenity_resource_root));
-        Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create(move(protocol_client))));
+        auto request_server_client = TRY(launch_request_server_process(candidate_request_server_paths, s_serenity_resource_root));
+        Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create(move(request_server_client))));
+
+        auto candidate_web_socket_paths = TRY(get_paths_for_helper_process("WebSocket"sv));
+        auto web_socket_client = TRY(launch_web_socket_process(candidate_web_socket_paths, s_serenity_resource_root));
+        Web::WebSockets::WebSocketClientManager::initialize(TRY(WebView::WebSocketClientManagerAdapter::try_create(move(web_socket_client))));
     } else {
         Web::ResourceLoader::initialize(Ladybird::RequestManagerQt::create());
+        Web::WebSockets::WebSocketClientManager::initialize(Ladybird::WebSocketClientManagerQt::create());
     }
 
     JS::Bytecode::Interpreter::set_enabled(use_javascript_bytecode);

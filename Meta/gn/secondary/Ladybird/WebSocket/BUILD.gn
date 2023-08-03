@@ -1,0 +1,21 @@
+executable("WebSocket") {
+  configs += [ "//Ladybird:ladybird_config" ]
+  include_dirs = [
+    "//Userland/Libraries",
+    "//Userland/Services",
+  ]
+  deps = [
+    "//AK",
+    "//Userland/Libraries/LibCore",
+    "//Userland/Libraries/LibFileSystem",
+    "//Userland/Libraries/LibIPC",
+    "//Userland/Libraries/LibMain",
+    "//Userland/Libraries/LibProtocol",
+    "//Userland/Libraries/LibTLS",
+    "//Userland/Libraries/LibWebSocket",
+  ]
+  sources = [
+    "//Userland/Services/WebSocket/ConnectionFromClient.cpp",
+    "main.cpp",
+  ]
+}

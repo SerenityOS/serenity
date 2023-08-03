@@ -1,12 +1,11 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Dex♪ <dexes.ttp@gmail.com>
  * Copyright (c) 2023, Andrew Kaster <akaster@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/LexicalPath.h>
-#include <AK/OwnPtr.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
@@ -15,10 +14,7 @@
 #include <LibIPC/SingleServer.h>
 #include <LibMain/Main.h>
 #include <LibTLS/Certificate.h>
-#include <RequestServer/ConnectionFromClient.h>
-#include <RequestServer/GeminiProtocol.h>
-#include <RequestServer/HttpProtocol.h>
-#include <RequestServer/HttpsProtocol.h>
+#include <WebSocket/ConnectionFromClient.h>
 
 // FIXME: Share b/w RequestServer and WebSocket
 ErrorOr<String> find_certificates(StringView serenity_resource_root)
@@ -50,17 +46,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::EventLoop event_loop;
 
-    [[maybe_unused]] auto gemini = make<RequestServer::GeminiProtocol>();
-    [[maybe_unused]] auto http = make<RequestServer::HttpProtocol>();
-    [[maybe_unused]] auto https = make<RequestServer::HttpsProtocol>();
-
-    auto client = TRY(IPC::take_over_accepted_client_from_system_server<RequestServer::ConnectionFromClient>());
+    auto client = TRY(IPC::take_over_accepted_client_from_system_server<WebSocket::ConnectionFromClient>());
     client->set_fd_passing_socket(TRY(Core::LocalSocket::adopt_fd(fd_passing_socket)));
 
-    auto result = event_loop.exec();
-
-    // FIXME: We exit instead of returning, so that protocol destructors don't get called.
-    //        The Protocol base class should probably do proper de-registration instead of
-    //        just VERIFY_NOT_REACHED().
-    exit(result);
+    return event_loop.exec();
 }

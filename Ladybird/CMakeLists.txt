@@ -144,8 +144,9 @@ add_custom_target(debug${LADYBIRD_CUSTOM_TARGET_SUFFIX}
 add_subdirectory(SQLServer)
 add_subdirectory(WebContent)
 add_subdirectory(WebDriver)
+add_subdirectory(WebSocket)
 add_subdirectory(RequestServer)
-add_dependencies(ladybird SQLServer WebContent WebDriver RequestServer headless-browser)
+add_dependencies(ladybird SQLServer WebContent WebDriver WebSocketServer RequestServer headless-browser)
 
 if (APPLE)
     # FIXME: Create a proper app bundle for each helper process
@@ -156,6 +157,7 @@ if (APPLE)
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:SQLServer>" "${app_dir}"
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:WebContent>" "${app_dir}"
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:WebDriver>" "${app_dir}"
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:WebSocketServer>" "${app_dir}"
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:headless-browser>" "${app_dir}"
     )
 endif()
