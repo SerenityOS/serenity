@@ -124,6 +124,7 @@ public:
         Optional<CSSPixelRect> timeline_rect;
         Optional<CSSPixelRect> speaker_button_rect;
         Optional<CSSPixelRect> volume_rect;
+        Optional<CSSPixelRect> volume_scrub_rect;
     };
     CachedLayoutBoxes& cached_layout_boxes(Badge<Painting::MediaPaintable>) const { return m_layout_boxes; }
 
