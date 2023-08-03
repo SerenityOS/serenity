@@ -51,6 +51,7 @@ void CSSStyleSheet::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_style_sheet_list.ptr());
     visitor.visit(m_rules);
     visitor.visit(m_owner_css_rule);
+    visitor.visit(m_default_namespace_rule);
 }
 
 // https://www.w3.org/TR/cssom/#dom-cssstylesheet-insertrule
