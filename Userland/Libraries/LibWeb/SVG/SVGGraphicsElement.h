@@ -56,8 +56,18 @@ protected:
     Optional<Gfx::PaintStyle const&> svg_paint_computed_value_to_gfx_paint_style(SVGPaintContext const& paint_context, Optional<CSS::SVGPaint> const& paint_value) const;
 
     Gfx::AffineTransform m_transform = {};
+
+private:
+    virtual bool is_svg_graphics_element() const final { return true; }
 };
 
 Gfx::AffineTransform transform_from_transform_list(ReadonlySpan<Transform> transform_list);
+
+}
+
+namespace Web::DOM {
+
+template<>
+inline bool Node::fast_is<SVG::SVGGraphicsElement>() const { return is_svg_graphics_element(); }
 
 }
