@@ -21,7 +21,7 @@ steps:
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
         sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-15 main'
         sudo apt-get update
-        sudo apt-get install ccache gcc-12 g++-12 clang-15 libstdc++-12-dev ninja-build unzip qt6-base-dev qt6-tools-dev-tools libqt6svg6-dev qt6-multimedia-dev libgl1-mesa-dev
+        sudo apt-get install ccache gcc-12 g++-12 clang-15 libstdc++-12-dev ninja-build unzip qt6-base-dev qt6-tools-dev-tools libqt6svg6-dev qt6-multimedia-dev libgl1-mesa-dev libpulse-dev
 
         sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-15 100
         sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-15 100
