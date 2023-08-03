@@ -32,6 +32,11 @@ ErrorOr<NonnullOwnPtr<LadybirdViewImpl>> LadybirdViewImpl::create(LadybirdWebVie
     return impl;
 }
 
+static Core::AnonymousBuffer make_theme(void)
+{
+    return Gfx::load_system_theme(DeprecatedString::formatted("{}/Base/res/themes/Default.ini", getenv("SERENITY_SOURCE_DIR"))).release_value_but_fixme_should_propagate_errors();
+}
+
 static ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(LadybirdViewImpl& view_impl,
     ReadonlySpan<String> candidate_web_content_paths,
     WebView::EnableCallgrindProfiling enable_callgrind_profiling)
@@ -121,6 +126,7 @@ void LadybirdViewImpl::create_client(WebView::EnableCallgrindProfiling enable_ca
     };
     m_client_state.client_handle = Web::Crypto::generate_random_uuid().release_value_but_fixme_should_propagate_errors();
     client().async_set_window_handle(m_client_state.client_handle);
+    client().async_update_system_theme(make_theme());
 
     /*
         client().async_update_system_fonts(
@@ -133,7 +139,6 @@ void LadybirdViewImpl::create_client(WebView::EnableCallgrindProfiling enable_ca
 void LadybirdViewImpl::set_viewport_rect(int x, int y, int width, int height)
 {
     m_viewport_rect = Gfx::IntRect(x, y, width, height);
-    dbgln("LadybirdViewImpl::set_viewport_rect {}", m_viewport_rect);
     client().async_set_viewport_rect(m_viewport_rect);
     handle_resize();
     request_repaint();
@@ -141,20 +146,34 @@ void LadybirdViewImpl::set_viewport_rect(int x, int y, int width, int height)
 
 void LadybirdViewImpl::scale_factor_changed()
 {
-    int scale_factor = gtk_widget_get_scale_factor(GTK_WIDGET(m_widget));
-    client().async_set_device_pixels_per_css_pixel(scale_factor * m_zoom_level);
+    update_zoom();
+}
+
+void LadybirdViewImpl::mouse_down(int x, int y, unsigned button, unsigned buttons, unsigned modifiers)
+{
+    Gfx::IntPoint point(x, y);
+    client().async_mouse_down(point, button, buttons, modifiers);
+}
+
+void LadybirdViewImpl::mouse_move(int x, int y, unsigned buttons, unsigned modifiers)
+{
+    Gfx::IntPoint point(x, y);
+    client().async_mouse_move(point, 0, buttons, modifiers);
+}
+
+void LadybirdViewImpl::mouse_up(int x, int y, unsigned button, unsigned buttons, unsigned modifiers)
+{
+    Gfx::IntPoint point(x, y);
+    client().async_mouse_up(point, button, buttons, modifiers);
 }
 
 void LadybirdViewImpl::notify_server_did_layout(Badge<WebView::WebContentClient>, Gfx::IntSize content_size)
 {
-    dbgln("LadybirdViewImpl::notify_server_did_layout {}", content_size);
     ladybird_web_view_set_page_size(m_widget, content_size.width(), content_size.height());
 }
 
 void LadybirdViewImpl::notify_server_did_paint(Badge<WebView::WebContentClient>, i32 bitmap_id, Gfx::IntSize size)
 {
-    dbgln("LadybirdViewImpl::notify_server_did_paint {} {}", bitmap_id, size);
-
     // TODO: Can this not be true? Can WebContent paint into the front bitmap?
     if (m_client_state.back_bitmap.id == bitmap_id) {
         m_client_state.has_usable_bitmap = true;
@@ -172,20 +191,77 @@ void LadybirdViewImpl::notify_server_did_paint(Badge<WebView::WebContentClient>,
     }
 }
 
-void LadybirdViewImpl::notify_server_did_invalidate_content_rect(Badge<WebView::WebContentClient>, Gfx::IntRect const& rect)
+void LadybirdViewImpl::notify_server_did_invalidate_content_rect(Badge<WebView::WebContentClient>, [[maybe_unused]] Gfx::IntRect const& rect)
 {
-    dbgln("LadybirdViewImpl::notify_server_did_invalidate_content_rect {}", rect);
     request_repaint();
 }
 
 void LadybirdViewImpl::notify_server_did_change_selection(Badge<WebView::WebContentClient>)
 {
     dbgln("LadybirdViewImpl::notify_server_did_change_selection");
+    request_repaint();
 }
 
-void LadybirdViewImpl::notify_server_did_request_cursor_change(Badge<WebView::WebContentClient>, Gfx::StandardCursor)
+void LadybirdViewImpl::notify_server_did_request_cursor_change(Badge<WebView::WebContentClient>, Gfx::StandardCursor cursor)
 {
-    dbgln("LadybirdViewImpl::notify_server_did_request_cursor_change");
+    char const* name;
+
+    switch (cursor) {
+    case Gfx::StandardCursor::None:
+    case Gfx::StandardCursor::Hidden:
+        name = "none";
+        break;
+    case Gfx::StandardCursor::Arrow:
+    default:
+        name = "default";
+        break;
+    case Gfx::StandardCursor::Crosshair:
+        name = "crosshair";
+        break;
+    case Gfx::StandardCursor::IBeam:
+        name = "text";
+        break;
+    case Gfx::StandardCursor::ResizeHorizontal:
+    case Gfx::StandardCursor::ResizeColumn:
+        name = "col-resize";
+        break;
+    case Gfx::StandardCursor::ResizeVertical:
+    case Gfx::StandardCursor::ResizeRow:
+        name = "row-resize";
+        break;
+    case Gfx::StandardCursor::ResizeDiagonalTLBR:
+        name = "nwse-resize";
+        break;
+    case Gfx::StandardCursor::ResizeDiagonalBLTR:
+        name = "nesw-resize";
+        break;
+    case Gfx::StandardCursor::Hand:
+        name = "pointer";
+        break;
+    case Gfx::StandardCursor::Help:
+        name = "help";
+        break;
+    case Gfx::StandardCursor::Drag:
+        name = "grabbing";
+        break;
+    case Gfx::StandardCursor::DragCopy:
+        name = "copy";
+        break;
+    case Gfx::StandardCursor::Move:
+        // not "move"!
+        name = "grabbing";
+        break;
+    case Gfx::StandardCursor::Wait:
+        name = "wait";
+        break;
+    case Gfx::StandardCursor::Disallowed:
+        name = "not-allowed";
+        break;
+        // case Gfx::StandardCursor::Eyedropper:
+        // case Gfx::StandardCursor::Zoom:
+    }
+
+    gtk_widget_set_cursor_from_name(GTK_WIDGET(m_widget), name);
 }
 
 void LadybirdViewImpl::notify_server_did_request_scroll(Badge<WebView::WebContentClient>, i32, i32)
@@ -210,7 +286,7 @@ void LadybirdViewImpl::notify_server_did_enter_tooltip_area(Badge<WebView::WebCo
 
 void LadybirdViewImpl::notify_server_did_leave_tooltip_area(Badge<WebView::WebContentClient>)
 {
-    dbgln("LadybirdViewImpl::notify_server_did_leave_tooltip_area");
+    // dbgln("LadybirdViewImpl::notify_server_did_leave_tooltip_area");
 }
 
 void LadybirdViewImpl::notify_server_did_request_alert(Badge<WebView::WebContentClient>, String const& message)
@@ -248,14 +324,18 @@ void LadybirdViewImpl::notify_server_did_request_file(Badge<WebView::WebContentC
     dbgln("LadybirdViewImpl::notify_server_did_request_file {}", path);
 }
 
-void LadybirdViewImpl::notify_server_did_finish_handling_input_event(bool event_was_accepted)
+void LadybirdViewImpl::notify_server_did_finish_handling_input_event([[maybe_unused]] bool event_was_accepted)
 {
-    dbgln("LadybirdViewImpl::notify_server_did_finish_handling_input_event {}", event_was_accepted);
+    // dbgln("LadybirdViewImpl::notify_server_did_finish_handling_input_event {}", event_was_accepted);
 }
 
 void LadybirdViewImpl::update_zoom()
 {
-    dbgln("LadybirdViewImpl::update_zoom");
+    int scale_factor = gtk_widget_get_scale_factor(GTK_WIDGET(m_widget));
+    client().async_set_device_pixels_per_css_pixel(scale_factor * m_zoom_level);
+    request_repaint();
+    // TODO: Why do we have to do this here?
+    gtk_widget_queue_allocate(GTK_WIDGET(m_widget));
 }
 
 Gfx::IntRect LadybirdViewImpl::viewport_rect() const

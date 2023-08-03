@@ -26,4 +26,9 @@ class Bitmap;
 
 void ladybird_web_view_push_bitmap(LadybirdWebView* self, Gfx::Bitmap const*, int width, int height);
 
+void ladybird_web_view_zoom_in(LadybirdWebView* self);
+void ladybird_web_view_zoom_out(LadybirdWebView* self);
+void ladybird_web_view_zoom_reset(LadybirdWebView* self);
+guint ladybird_web_view_get_zoom_percent(LadybirdWebView* self);
+
 G_END_DECLS

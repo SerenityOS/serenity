@@ -23,17 +23,17 @@ template $LadybirdWindow : Adw.ApplicationWindow {
 
           Button back_button {
             icon-name: "go-previous-symbolic";
-            action-name: "win.navigate-back";
+            action-name: "page.navigate-back";
             tooltip-text: _("Navigate Back");
           }
           Button forward_button {
             icon-name: "go-next-symbolic";
-            action-name: "win.navigate-forward";
+            action-name: "page.navigate-forward";
             tooltip-text: _("Navigate Forward");
           }
           Button refresh_button {
             icon-name: "view-refresh-symbolic";
-            action-name: "win.reload-page";
+            action-name: "page.reload-page";
             tooltip-text: _("Reload Page");
           }
           Button new_tab_button {
@@ -64,6 +64,16 @@ template $LadybirdWindow : Adw.ApplicationWindow {
           MenuButton {
               icon-name: "user-bookmarks-symbolic";
               tooltip-text: _("Bookmarks");
+              popover: Popover {
+                  Adw.StatusPage {
+                      title: "Bookmarks & History";
+                      description: "...will appear here, once we implement them :^)";
+                      icon-name: "applications-engineering-symbolic";
+                      width-request: 300;
+                      height-request: 350;
+                      styles ["compact"]
+                  }
+              };
           }
           Button overview_button {
             icon-name: "view-grid-symbolic";
@@ -110,18 +120,19 @@ Box menu_zoom_box {
     Button {
         tooltip-text: _("Zoom Out");
         icon-name: "zoom-out-symbolic";
-        action-name: "win.zoom-out";
+        action-name: "page.zoom-out";
     }
     Button {
         tooltip-text: _("Restore Zoom");
-        action-name: "win.zoom-normal";
+        action-name: "page.zoom-reset";
         Label {
             width-chars: 5;
+            label: bind ((tab_view.selected-page.child as <ScrolledWindow>).child as <$LadybirdWebView>).zoom-percent;
         }
     }
     Button {
         tooltip-text: _("Zoom In");
         icon-name: "zoom-in-symbolic";
-        action-name: "win.zoom-in";
+        action-name: "page.zoom-in";
     }
 }

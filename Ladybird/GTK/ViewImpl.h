@@ -12,6 +12,10 @@ public:
     void set_viewport_rect(int x, int y, int width, int height);
     void scale_factor_changed();
 
+    void mouse_down(int x, int y, unsigned button, unsigned buttons, unsigned modifiers);
+    void mouse_move(int x, int y, unsigned buttons, unsigned modifiers);
+    void mouse_up(int x, int y, unsigned button, unsigned buttons, unsigned modifiers);
+
 private:
     LadybirdViewImpl(LadybirdWebView* widget);
 

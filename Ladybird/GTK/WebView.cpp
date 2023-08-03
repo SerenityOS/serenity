@@ -25,6 +25,7 @@ enum {
     PROP_PAGE_TITLE,
     PROP_PAGE_URL,
     PROP_LOADING,
+    PROP_ZOOM_PERCENT,
     NUM_PROPS,
 
     PROP_HADJUSTMENT,
@@ -114,6 +115,40 @@ void ladybird_web_view_set_loading(LadybirdWebView* self, bool loading)
     g_object_notify_by_pspec(G_OBJECT(self), props[PROP_LOADING]);
 }
 
+void ladybird_web_view_zoom_in(LadybirdWebView* self)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+
+    self->impl->zoom_in();
+    g_object_notify_by_pspec(G_OBJECT(self), props[PROP_ZOOM_PERCENT]);
+    gtk_widget_queue_allocate(GTK_WIDGET(self));
+}
+
+void ladybird_web_view_zoom_out(LadybirdWebView* self)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+
+    self->impl->zoom_out();
+    g_object_notify_by_pspec(G_OBJECT(self), props[PROP_ZOOM_PERCENT]);
+    gtk_widget_queue_allocate(GTK_WIDGET(self));
+}
+
+void ladybird_web_view_zoom_reset(LadybirdWebView* self)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+
+    self->impl->reset_zoom();
+    g_object_notify_by_pspec(G_OBJECT(self), props[PROP_ZOOM_PERCENT]);
+    gtk_widget_queue_allocate(GTK_WIDGET(self));
+}
+
+guint ladybird_web_view_get_zoom_percent(LadybirdWebView* self)
+{
+    g_return_val_if_fail(LADYBIRD_IS_WEB_VIEW(self), 0);
+
+    return round(self->impl->zoom_level() * 100.0);
+}
+
 static void ladybird_web_view_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* pspec)
 {
     LadybirdWebView* self = LADYBIRD_WEB_VIEW(object);
@@ -129,6 +164,10 @@ static void ladybird_web_view_get_property(GObject* object, guint prop_id, GValu
 
     case PROP_LOADING:
         g_value_set_boolean(value, self->loading);
+        break;
+
+    case PROP_ZOOM_PERCENT:
+        g_value_set_uint(value, ladybird_web_view_get_zoom_percent(self));
         break;
 
     case PROP_HADJUSTMENT:
@@ -263,8 +302,6 @@ void ladybird_web_view_push_bitmap(LadybirdWebView* self, Gfx::Bitmap const* bit
 {
     g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
 
-    dbgln("ladybird_web_view_push_bitmap size {}x{}", width, height);
-
     if (bitmap == nullptr) {
         g_clear_object(&self->texture);
         gtk_widget_queue_draw(GTK_WIDGET(self));
@@ -272,11 +309,7 @@ void ladybird_web_view_push_bitmap(LadybirdWebView* self, Gfx::Bitmap const* bit
     }
 
     GdkMemoryFormat format;
-#if 0
     switch (bitmap->format()) {
-    case Gfx::BitmapFormat::BGRx8888:
-        format = GDK_MEMORY_B8G8R8;
-        break;
     case Gfx::BitmapFormat::BGRA8888:
         format = GDK_MEMORY_B8G8R8A8;
         break;
@@ -286,9 +319,6 @@ void ladybird_web_view_push_bitmap(LadybirdWebView* self, Gfx::Bitmap const* bit
     default:
         VERIFY_NOT_REACHED();
     }
-#else
-    format = GDK_MEMORY_B8G8R8A8;
-#endif
 
     // TODO: Try to avoid excessive copying here?
     GBytes* bytes = g_bytes_new(bitmap->scanline_u8(0), bitmap->size_in_bytes());
@@ -321,6 +351,119 @@ static void on_scale_factor_change(GObject* object)
     self->impl->scale_factor_changed();
 }
 
+static void translate_coordinates(LadybirdWebView* self, double widget_x, double widget_y, int* page_x, int* page_y)
+{
+    int scale_factor = gtk_widget_get_scale_factor(GTK_WIDGET(self));
+    double hadj = self->hadjustment ? gtk_adjustment_get_value(self->hadjustment) : 0.0;
+    double vadj = self->vadjustment ? gtk_adjustment_get_value(self->vadjustment) : 0.0;
+    *page_x = (widget_x + hadj) * scale_factor;
+    *page_y = (widget_y + vadj) * scale_factor;
+}
+
+static unsigned translate_mouse_button(guint button)
+{
+    switch (button) {
+    case GDK_BUTTON_PRIMARY:
+        return 1;
+    case GDK_BUTTON_SECONDARY:
+        return 2;
+    case GDK_BUTTON_MIDDLE:
+        return 4;
+    // TODO: apparently there are values for the forward/backward mouse buttons?
+    default:
+        return 0;
+    }
+}
+
+static unsigned translate_buttons(GdkModifierType modifiers)
+{
+    unsigned buttons = 0;
+
+    if (modifiers & GDK_BUTTON1_MASK)
+        buttons |= 1;
+    if (modifiers & GDK_BUTTON2_MASK)
+        buttons |= 2;
+    if (modifiers & GDK_BUTTON3_MASK)
+        buttons |= 4;
+    // TODO: ditto
+
+    return buttons;
+}
+
+static unsigned translate_modifiers(GdkModifierType gdk_modifiers)
+{
+    unsigned modifiers = 0;
+
+    if (gdk_modifiers & GDK_SHIFT_MASK)
+        modifiers |= KeyModifier::Mod_Shift;
+    if (gdk_modifiers & GDK_CONTROL_MASK)
+        modifiers |= KeyModifier::Mod_Ctrl;
+    if (gdk_modifiers & GDK_ALT_MASK)
+        modifiers |= KeyModifier::Mod_Alt;
+    if (gdk_modifiers & GDK_SUPER_MASK)
+        modifiers |= KeyModifier::Mod_Super;
+
+    return modifiers;
+}
+
+static void translate_state(GtkEventController* controller, unsigned* button, unsigned* buttons, unsigned* modifiers)
+{
+    if (GTK_IS_GESTURE_SINGLE(controller))
+        *button = translate_mouse_button(gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(controller)));
+    else
+        *button = 0;
+
+    GdkModifierType gdk_modifiers = gtk_event_controller_get_current_event_state(controller);
+    *buttons = translate_buttons(gdk_modifiers);
+    *modifiers = translate_modifiers(gdk_modifiers);
+}
+
+static void on_click_pressed(GtkGestureClick* gesture_click, gint n_press, gdouble x, gdouble y, void* user_data)
+{
+    LadybirdWebView* self = LADYBIRD_WEB_VIEW(user_data);
+
+    unsigned button, buttons, modifiers;
+    translate_state(GTK_EVENT_CONTROLLER(gesture_click), &button, &buttons, &modifiers);
+    int page_x, page_y;
+    translate_coordinates(self, x, y, &page_x, &page_y);
+
+    if (button == 0) {
+        gtk_gesture_set_state(GTK_GESTURE(gesture_click), GTK_EVENT_SEQUENCE_DENIED);
+        return;
+    }
+    // gtk_gesture_set_state(GTK_GESTURE(gesture_click), GTK_EVENT_SEQUENCE_CLAIMED);
+
+    if (n_press > 1) {
+        // TODO doubleclick
+    } else {
+        self->impl->mouse_down(page_x, page_y, button, buttons, modifiers);
+    }
+}
+
+static void on_click_released(GtkGestureClick* gesture_click, [[maybe_unused]] gint n_press, gdouble x, gdouble y, void* user_data)
+{
+    LadybirdWebView* self = LADYBIRD_WEB_VIEW(user_data);
+
+    unsigned button, buttons, modifiers;
+    translate_state(GTK_EVENT_CONTROLLER(gesture_click), &button, &buttons, &modifiers);
+    int page_x, page_y;
+    translate_coordinates(self, x, y, &page_x, &page_y);
+
+    self->impl->mouse_up(page_x, page_y, button, buttons, modifiers);
+}
+
+static void on_motion(GtkEventControllerMotion* motion, gdouble x, gdouble y, void* user_data)
+{
+    LadybirdWebView* self = LADYBIRD_WEB_VIEW(user_data);
+
+    unsigned button, buttons, modifiers;
+    translate_state(GTK_EVENT_CONTROLLER(motion), &button, &buttons, &modifiers);
+    int page_x, page_y;
+    translate_coordinates(self, x, y, &page_x, &page_y);
+
+    self->impl->mouse_move(page_x, page_y, buttons, modifiers);
+}
+
 static void ladybird_web_view_init(LadybirdWebView* self)
 {
     auto impl = LadybirdViewImpl::create(self).release_value_but_fixme_should_propagate_errors();
@@ -336,7 +479,17 @@ static void ladybird_web_view_init(LadybirdWebView* self)
 
     gtk_widget_set_overflow(GTK_WIDGET(self), GTK_OVERFLOW_HIDDEN);
 
-    self->impl->load_html("<html><title>Title from HTML :^)</title><body><p>This is some <b>HTML</b>!</p><p><font color=\"red\">This should be red</font>, <font color=\"green\">this should be green</font>, <font color=\"blue\">this should be blue</font></p>Long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long</body></html>"sv, "http://example.com"sv);
+    GtkGesture* gesture_click = gtk_gesture_click_new();
+    g_signal_connect_object(gesture_click, "pressed", G_CALLBACK(on_click_pressed), self, G_CONNECT_DEFAULT);
+    g_signal_connect_object(gesture_click, "released", G_CALLBACK(on_click_released), self, G_CONNECT_DEFAULT);
+    gtk_widget_add_controller(GTK_WIDGET(self), GTK_EVENT_CONTROLLER(gesture_click));
+
+    GtkEventController* motion = gtk_event_controller_motion_new();
+    g_signal_connect_object(motion, "enter", G_CALLBACK(on_motion), self, G_CONNECT_DEFAULT);
+    g_signal_connect_object(motion, "motion", G_CALLBACK(on_motion), self, G_CONNECT_DEFAULT);
+    gtk_widget_add_controller(GTK_WIDGET(self), motion);
+
+    self->impl->load_html("<html><title>Title from HTML :^)</title><body><p>This is some <b>HTML</b>!</p><p><font color=\"red\">This should be red</font>, <font color=\"green\">this should be green</font>, <font color=\"blue\">this should be blue</font></p><form><input type=\"text\"><br><input type=\"radio\">A radio button<br><input type=\"checkbox\">A checkbox<br><input type=\"submit\" value=\"A button (don't click tho)\"></form>Long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long</body></html>"sv, "http://example.com"sv);
 }
 
 static void ladybird_web_view_dispose(GObject* object)
@@ -369,10 +522,12 @@ static void ladybird_web_view_class_init(LadybirdWebViewClass* klass)
     g_object_class_override_property(object_class, PROP_VSCROLL_POLICY, "vscroll-policy");
 
     constexpr GParamFlags param_flags = GParamFlags(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
+    constexpr GParamFlags ro_param_flags = GParamFlags(G_PARAM_READABLE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
     props[PROP_PAGE_TITLE] = g_param_spec_string("page-title", nullptr, nullptr, nullptr, param_flags);
     props[PROP_PAGE_URL] = g_param_spec_string("page-url", nullptr, nullptr, nullptr, param_flags);
     props[PROP_LOADING] = g_param_spec_boolean("loading", nullptr, nullptr, false, param_flags);
+    props[PROP_ZOOM_PERCENT] = g_param_spec_uint("zoom-percent", nullptr, nullptr, 30, 500, 100, ro_param_flags);
     g_object_class_install_properties(object_class, NUM_PROPS, props);
 
     widget_class->measure = ladybird_web_view_measure;

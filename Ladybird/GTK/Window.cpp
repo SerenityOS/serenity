@@ -41,19 +41,70 @@ static AdwTabPage* open_new_tab(LadybirdWindow* self)
     return tab_page;
 }
 
-static void win_new_tab_action(GtkWidget* widget, char const* action_name, GVariant* param)
+static void win_new_tab_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
+{
+    LadybirdWindow* self = LADYBIRD_WINDOW(widget);
+    open_new_tab(self);
+}
+
+static void tab_close_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
 {
     LadybirdWindow* self = LADYBIRD_WINDOW(widget);
 
-    (void)action_name;
-    (void)param;
+    if (adw_tab_view_get_n_pages(self->tab_view) <= 1) {
+        // If this was the last page, close the window.
+        g_idle_add_once(
+            +[](void* user_data) {
+                gtk_window_close(GTK_WINDOW(user_data));
+            },
+            self);
+        return;
+    }
 
-    open_new_tab(self);
+    AdwTabPage* tab_page = adw_tab_view_get_selected_page(self->tab_view);
+    if (tab_page)
+        adw_tab_view_close_page(self->tab_view, tab_page);
+}
+
+static LadybirdWebView* get_web_view_from_tab_page(AdwTabPage* tab_page)
+{
+    GtkScrolledWindow* scrolled_window = GTK_SCROLLED_WINDOW(adw_tab_page_get_child(tab_page));
+    return LADYBIRD_WEB_VIEW(gtk_scrolled_window_get_child(scrolled_window));
+}
+
+static LadybirdWebView* ladybird_window_get_current_page(LadybirdWindow* self)
+{
+    AdwTabPage* tab_page = adw_tab_view_get_selected_page(self->tab_view);
+    if (!tab_page)
+        return nullptr;
+    return get_web_view_from_tab_page(tab_page);
+}
+
+static void page_zoom_in_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
+{
+    LadybirdWindow* self = LADYBIRD_WINDOW(widget);
+
+    ladybird_web_view_zoom_in(ladybird_window_get_current_page(self));
+}
+
+static void page_zoom_out_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
+{
+    LadybirdWindow* self = LADYBIRD_WINDOW(widget);
+
+    ladybird_web_view_zoom_out(ladybird_window_get_current_page(self));
+}
+
+static void page_zoom_reset_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
+{
+    LadybirdWindow* self = LADYBIRD_WINDOW(widget);
+
+    ladybird_web_view_zoom_reset(ladybird_window_get_current_page(self));
 }
 
 static void ladybird_window_init(LadybirdWindow* self)
 {
     GtkWidget* widget = GTK_WIDGET(self);
+    g_type_ensure(LADYBIRD_TYPE_WEB_VIEW);
     gtk_widget_init_template(widget);
 
     // Workaround what seems to be initialization order issue with GtkBuilder.
@@ -79,6 +130,16 @@ static void ladybird_window_class_init(LadybirdWindowClass* klass)
     gtk_widget_class_bind_template_callback(widget_class, open_new_tab);
 
     gtk_widget_class_install_action(widget_class, "win.new-tab", NULL, win_new_tab_action);
+    gtk_widget_class_install_action(widget_class, "tab.close", NULL, tab_close_action);
+    gtk_widget_class_add_binding_action(widget_class, GDK_KEY_t, GDK_CONTROL_MASK, "win.new-tab", NULL);
+    gtk_widget_class_add_binding_action(widget_class, GDK_KEY_w, GDK_CONTROL_MASK, "tab.close", NULL);
+
+    gtk_widget_class_install_action(widget_class, "page.zoom-in", NULL, page_zoom_in_action);
+    gtk_widget_class_install_action(widget_class, "page.zoom-out", NULL, page_zoom_out_action);
+    gtk_widget_class_install_action(widget_class, "page.zoom-reset", NULL, page_zoom_reset_action);
+    gtk_widget_class_add_binding_action(widget_class, GDK_KEY_equal, GDK_CONTROL_MASK, "page.zoom-in", NULL);
+    gtk_widget_class_add_binding_action(widget_class, GDK_KEY_minus, GDK_CONTROL_MASK, "page.zoom-out", NULL);
+    gtk_widget_class_add_binding_action(widget_class, GDK_KEY_0, GDK_CONTROL_MASK, "page.zoom-reset", NULL);
 }
 
 LadybirdWindow* ladybird_window_new(GtkApplication* app)
