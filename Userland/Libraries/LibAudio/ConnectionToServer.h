@@ -54,6 +54,8 @@ public:
     // How many buffers (i.e. short sample arrays) the server hasn't played yet.
     // Non-realtime code needn't worry about this.
     size_t remaining_buffers() const;
+    // Whether there is room in the realtime audio queue for another sample buffer.
+    bool can_enqueue() const;
 
     void set_self_sample_rate(u32 sample_rate);
 

@@ -8,6 +8,7 @@
 #include <AK/MemoryStream.h>
 #include <AK/WeakPtr.h>
 #include <LibAudio/PlaybackStream.h>
+#include <LibCore/EventLoop.h>
 #include <LibTest/TestSuite.h>
 #include <unistd.h>
 
@@ -15,10 +16,23 @@
 #    include <LibAudio/PulseAudioWrappers.h>
 #endif
 
-TEST_CASE(create_and_destroy_playback_stream)
+// FIXME: CI doesn't run an AudioServer currently. Creating one in /etc/SystemServer.ini does not
+//        allow this test to pass since CI runs in a Shell that will setsid() if it finds that the
+//        current session ID is 0, and AudioServer's socket address depends on the current sid.
+//        If we can fix that, this test can run on CI.
+//        https://github.com/SerenityOS/serenity/issues/20538
+#if defined(AK_OS_SERENITY)
+#    define STREAM_TEST BENCHMARK_CASE
+#else
+#    define STREAM_TEST TEST_CASE
+#endif
+
+STREAM_TEST(create_and_destroy_playback_stream)
 {
+    Core::EventLoop event_loop;
+
     bool has_implementation = false;
-#if defined(HAVE_PULSEAUDIO)
+#if defined(AK_OS_SERENITY) || defined(HAVE_PULSEAUDIO)
     has_implementation = true;
 #endif
 
