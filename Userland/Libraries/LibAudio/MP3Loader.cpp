@@ -146,6 +146,7 @@ MaybeLoaderError MP3LoaderPlugin::build_seek_table()
     int sample_count = 0;
     size_t frame_count = 0;
     m_seek_table = {};
+    TRY(m_seek_table.insert_seek_point({ 0, 0 }));
 
     m_bitstream->align_to_byte_boundary();
 
