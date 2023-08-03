@@ -1,13 +1,6 @@
 // https://html.spec.whatwg.org/multipage/canvas.html#canvaslinecap
 enum CanvasLineCap { "butt", "round", "square" };
 enum CanvasLineJoin { "round", "bevel", "miter" };
-enum CanvasTextAlign { "start", "end", "left", "right", "center" };
-enum CanvasTextBaseline { "top", "hanging", "middle", "alphabetic", "ideographic", "bottom" };
-enum CanvasDirection { "ltr", "rtl", "inherit" };
-enum CanvasFontKerning { "auto", "normal", "none" };
-enum CanvasFontStretch { "ultra-condensed", "extra-condensed", "condensed", "semi-condensed", "normal", "semi-expanded", "expanded", "extra-expanded", "ultra-expanded" };
-enum CanvasFontVariantCaps { "normal", "small-caps", "all-small-caps", "petite-caps", "all-petite-caps", "unicase", "titling-caps" };
-enum CanvasTextRendering { "auto", "optimizeSpeed", "optimizeLegibility", "geometricPrecision" };
 
 // https://html.spec.whatwg.org/multipage/canvas.html#canvaspathdrawingstyles
 interface mixin CanvasPathDrawingStyles {

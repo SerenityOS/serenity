@@ -28,6 +28,7 @@
 #include <LibWeb/HTML/Canvas/CanvasRect.h>
 #include <LibWeb/HTML/Canvas/CanvasState.h>
 #include <LibWeb/HTML/Canvas/CanvasText.h>
+#include <LibWeb/HTML/Canvas/CanvasTextDrawingStyles.h>
 #include <LibWeb/HTML/Canvas/CanvasTransform.h>
 #include <LibWeb/HTML/CanvasGradient.h>
 #include <LibWeb/Layout/InlineNode.h>
@@ -53,7 +54,8 @@ class CanvasRenderingContext2D
     , public CanvasImageData
     , public CanvasImageSmoothing
     , public CanvasCompositing
-    , public CanvasPathDrawingStyles<CanvasRenderingContext2D> {
+    , public CanvasPathDrawingStyles<CanvasRenderingContext2D>
+    , public CanvasTextDrawingStyles<CanvasRenderingContext2D> {
 
     WEB_PLATFORM_OBJECT(CanvasRenderingContext2D, Bindings::PlatformObject);
 

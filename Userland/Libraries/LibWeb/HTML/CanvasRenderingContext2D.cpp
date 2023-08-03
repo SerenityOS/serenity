@@ -205,7 +205,32 @@ void CanvasRenderingContext2D::fill_text(DeprecatedString const& text, float x, 
     draw_clipped([&](auto& painter) {
         auto& drawing_state = this->drawing_state();
         auto& base_painter = painter.underlying_painter();
+
         auto text_rect = Gfx::FloatRect(x, y, max_width.has_value() ? static_cast<float>(max_width.value()) : base_painter.font().width(text), base_painter.font().pixel_size());
+
+        // Apply text align to text_rect
+        // FIXME: CanvasTextAlign::Start and CanvasTextAlign::End currently do not nothing for right-to-left languages:
+        //        https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-textalign-start
+        // Default alignment of draw_text is left so do nothing by CanvasTextAlign::Start and CanvasTextAlign::Left
+        if (drawing_state.text_align == Bindings::CanvasTextAlign::Center) {
+            text_rect.translate_by(-text_rect.width() / 2, 0);
+        }
+        if (drawing_state.text_align == Bindings::CanvasTextAlign::End || drawing_state.text_align == Bindings::CanvasTextAlign::Right) {
+            text_rect.translate_by(-text_rect.width(), 0);
+        }
+
+        // Apply text baseline to text_rect
+        // FIXME: Implement CanvasTextBasline::Hanging, Bindings::CanvasTextAlign::Alphabetic and Bindings::CanvasTextAlign::Ideographic for real
+        //        right now they are just handled as textBaseline = top or bottom.
+        //        https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-textbaseline-hanging
+        // Default baseline of draw_text is top so do nothing by CanvasTextBaseline::Top and CanvasTextBasline::Hanging
+        if (drawing_state.text_baseline == Bindings::CanvasTextBaseline::Middle) {
+            text_rect.translate_by(0, -base_painter.font().pixel_size() / 2);
+        }
+        if (drawing_state.text_baseline == Bindings::CanvasTextBaseline::Alphabetic || drawing_state.text_baseline == Bindings::CanvasTextBaseline::Ideographic || drawing_state.text_baseline == Bindings::CanvasTextBaseline::Bottom) {
+            text_rect.translate_by(0, -base_painter.font().pixel_size());
+        }
+
         auto transformed_rect = drawing_state.transform.map(text_rect);
         auto color = drawing_state.fill_style.to_color_but_fixme_should_accept_any_paint_style();
         base_painter.draw_text(transformed_rect, text, Gfx::TextAlignment::TopLeft, color.with_opacity(drawing_state.global_alpha));
