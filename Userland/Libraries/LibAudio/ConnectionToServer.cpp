@@ -150,6 +150,11 @@ size_t ConnectionToServer::remaining_buffers() const
     return m_buffer->size() - m_buffer->weak_remaining_capacity();
 }
 
+bool ConnectionToServer::can_enqueue() const
+{
+    return m_buffer->can_enqueue();
+}
+
 void ConnectionToServer::client_volume_changed(double volume)
 {
     if (on_client_volume_change)
