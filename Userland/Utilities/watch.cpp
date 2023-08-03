@@ -132,19 +132,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto watch_callback = [&] {
         // Clear the screen, then reset the cursor position to the top left.
-        warn("\033[H\033[2J");
+        out("\033[H\033[2J");
         // Print the header.
         if (!flag_noheader) {
-            warnln("{}", header);
-            warnln();
+            outln("{}", header);
+            outln();
         } else {
-            fflush(stderr);
+            fflush(stdout);
         }
         if (run_command(command) != 0) {
             exit_code = 1;
             if (flag_beep_on_fail) {
-                warnln("\a");
-                fflush(stderr);
+                out("\a");
+                fflush(stdout);
             }
         }
     };
