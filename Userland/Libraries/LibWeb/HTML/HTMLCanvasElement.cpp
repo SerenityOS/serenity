@@ -6,7 +6,9 @@
 
 #include <AK/Base64.h>
 #include <AK/Checked.h>
+#include <AK/MemoryStream.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/ImageFormats/JPEGWriter.h>
 #include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/CSS/StyleComputer.h>
@@ -189,8 +191,23 @@ struct SerializeBitmapResult {
 };
 
 // https://html.spec.whatwg.org/multipage/canvas.html#a-serialisation-of-the-bitmap-as-a-file
-static ErrorOr<SerializeBitmapResult> serialize_bitmap(Gfx::Bitmap const& bitmap, [[maybe_unused]] StringView type, [[maybe_unused]] Optional<double> quality)
+static ErrorOr<SerializeBitmapResult> serialize_bitmap(Gfx::Bitmap const& bitmap, StringView type, Optional<double> quality)
 {
+    // If type is an image format that supports variable quality (such as "image/jpeg"), quality is given, and type is not "image/png", then,
+    // if Type(quality) is Number, and quality is in the range 0.0 to 1.0 inclusive, the user agent must treat quality as the desired quality level.
+    // Otherwise, the user agent must use its default quality value, as if the quality argument had not been given.
+    if (quality.has_value() && !(*quality >= 0.0 && *quality <= 1.0))
+        quality = OptionalNone {};
+
+    if (type.equals_ignoring_ascii_case("image/jpeg"sv)) {
+        AllocatingMemoryStream file;
+        Gfx::JPEGWriter::Options jpeg_options;
+        if (quality.has_value())
+            jpeg_options.quality = static_cast<int>(quality.value() * 100);
+        TRY(Gfx::JPEGWriter::encode(file, bitmap, jpeg_options));
+        return SerializeBitmapResult { TRY(file.read_until_eof()), "image/jpeg"sv };
+    }
+
     // User agents must support PNG ("image/png"). User agents may support other types.
     // If the user agent does not support the requested type, then it must create the file using the PNG format. [PNG]
     return SerializeBitmapResult { TRY(Gfx::PNGWriter::encode(bitmap)), "image/png"sv };
