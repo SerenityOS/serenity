@@ -174,8 +174,6 @@ private:
     void build_rule_cache();
     void build_rule_cache_if_needed() const;
 
-    Vector<MatchingRule> filter_namespace_rules(DOM::Element const&, Vector<MatchingRule> const&) const;
-
     JS::NonnullGCPtr<DOM::Document> m_document;
 
     struct AnimationKeyFrameSet {
