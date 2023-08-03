@@ -16,6 +16,7 @@ set(FUZZER_TARGETS
     HttpRequest
     ICCProfile
     ICOLoader
+    ILBMLoader
     IMAPParser
     JPEGLoader
     Js
@@ -86,6 +87,7 @@ set(FUZZER_DEPENDENCIES_HebrewDecoder LibTextCodec)
 set(FUZZER_DEPENDENCIES_HttpRequest LibHTTP)
 set(FUZZER_DEPENDENCIES_ICCProfile LibGfx)
 set(FUZZER_DEPENDENCIES_ICOLoader LibGfx)
+set(FUZZER_DEPENDENCIES_ILBMLoader LibGfx)
 set(FUZZER_DEPENDENCIES_IMAPParser LibIMAP)
 set(FUZZER_DEPENDENCIES_JPEGLoader LibGfx)
 set(FUZZER_DEPENDENCIES_Js LibJS)

@@ -30,6 +30,7 @@
     T(HttpRequest)           \
     T(ICCProfile)            \
     T(ICOLoader)             \
+    T(ILBMLoader)            \
     T(IMAPParser)            \
     T(JPEGLoader)            \
     T(Js)                    \
