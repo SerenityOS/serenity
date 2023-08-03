@@ -38,6 +38,7 @@ private:
         DevicePixels speaker_button_size;
 
         DevicePixelRect volume_rect;
+        DevicePixelRect volume_scrub_rect;
         DevicePixels volume_button_size;
     };
 

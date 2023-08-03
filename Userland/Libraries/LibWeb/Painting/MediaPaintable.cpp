@@ -102,6 +102,8 @@ MediaPaintable::Components MediaPaintable::compute_control_bar_components(PaintC
             components.volume_rect = remaining_rect;
             components.volume_rect.take_from_left(remaining_rect.width() - volume_width);
             remaining_rect.take_from_right(volume_width);
+
+            components.volume_scrub_rect = components.volume_rect.shrunken(components.volume_button_size, components.volume_rect.height() - components.volume_button_size / 2);
         }
 
         components.speaker_button_rect = remaining_rect;
@@ -126,6 +128,7 @@ MediaPaintable::Components MediaPaintable::compute_control_bar_components(PaintC
     media_element.cached_layout_boxes({}).timeline_rect = context.scale_to_css_rect(components.timeline_rect);
     media_element.cached_layout_boxes({}).speaker_button_rect = context.scale_to_css_rect(components.speaker_button_rect);
     media_element.cached_layout_boxes({}).volume_rect = context.scale_to_css_rect(components.volume_rect);
+    media_element.cached_layout_boxes({}).volume_scrub_rect = context.scale_to_css_rect(components.volume_scrub_rect);
 
     return components;
 }
@@ -241,25 +244,22 @@ void MediaPaintable::paint_control_bar_volume(PaintContext& context, HTML::HTMLM
     if (components.volume_rect.is_empty())
         return;
 
-    auto volume_scrub_rect = components.volume_rect;
-    volume_scrub_rect.shrink(components.volume_button_size, volume_scrub_rect.height() - components.volume_button_size / 2);
-
-    auto volume_position = static_cast<double>(static_cast<int>(volume_scrub_rect.width())) * media_element.volume();
+    auto volume_position = static_cast<double>(static_cast<int>(components.volume_scrub_rect.width())) * media_element.volume();
     auto volume_button_offset_x = static_cast<DevicePixels>(round(volume_position));
 
     Gfx::AntiAliasingPainter painter { context.painter() };
 
-    auto volume_lower_rect = volume_scrub_rect;
+    auto volume_lower_rect = components.volume_scrub_rect;
     volume_lower_rect.set_width(volume_button_offset_x);
     painter.fill_rect_with_rounded_corners(volume_lower_rect.to_type<int>(), control_highlight_color.lightened(), 4);
 
-    auto volume_higher_rect = volume_scrub_rect;
+    auto volume_higher_rect = components.volume_scrub_rect;
     volume_higher_rect.take_from_left(volume_button_offset_x);
     painter.fill_rect_with_rounded_corners(volume_higher_rect.to_type<int>(), Color::Black, 4);
 
-    auto volume_button_rect = volume_scrub_rect;
-    volume_button_rect.shrink(volume_scrub_rect.width() - components.volume_button_size, volume_scrub_rect.height() - components.volume_button_size);
-    volume_button_rect.set_x(volume_scrub_rect.x() + volume_button_offset_x - components.volume_button_size / 2);
+    auto volume_button_rect = components.volume_scrub_rect;
+    volume_button_rect.shrink(components.volume_scrub_rect.width() - components.volume_button_size, components.volume_scrub_rect.height() - components.volume_button_size);
+    volume_button_rect.set_x(components.volume_scrub_rect.x() + volume_button_offset_x - components.volume_button_size / 2);
 
     auto volume_is_hovered = rect_is_hovered(media_element, components.volume_rect, mouse_position, HTML::HTMLMediaElement::MouseTrackingComponent::Volume);
     auto volume_color = control_button_color(volume_is_hovered);
@@ -279,7 +279,7 @@ MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mousedown(Badge<E
         set_current_time(media_element, *cached_layout_boxes.timeline_rect, position, Temporary::Yes);
     } else if (cached_layout_boxes.volume_rect.has_value() && cached_layout_boxes.volume_rect->contains(position)) {
         media_element.set_layout_mouse_tracking_component({}, HTML::HTMLMediaElement::MouseTrackingComponent::Volume);
-        set_volume(media_element, *cached_layout_boxes.volume_rect, position);
+        set_volume(media_element, *cached_layout_boxes.volume_scrub_rect, position);
     }
 
     if (media_element.layout_mouse_tracking_component({}).has_value())
@@ -348,7 +348,7 @@ MediaPaintable::DispatchEventOfSameName MediaPaintable::handle_mousemove(Badge<E
 
         case HTML::HTMLMediaElement::MouseTrackingComponent::Volume:
             if (cached_layout_boxes.volume_rect.has_value()) {
-                set_volume(media_element, *cached_layout_boxes.volume_rect, position);
+                set_volume(media_element, *cached_layout_boxes.volume_scrub_rect, position);
 
                 if (auto* page = browsing_context().page()) {
                     auto volume = static_cast<u8>(media_element.volume() * 100.0);
