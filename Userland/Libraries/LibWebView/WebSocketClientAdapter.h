@@ -40,6 +40,7 @@ private:
 
 class WebSocketClientManagerAdapter : public Web::WebSockets::WebSocketClientManager {
 public:
+    static ErrorOr<NonnullRefPtr<WebSocketClientManagerAdapter>> try_create(NonnullRefPtr<Protocol::WebSocketClient>);
     static ErrorOr<NonnullRefPtr<WebSocketClientManagerAdapter>> try_create();
 
     virtual ~WebSocketClientManagerAdapter() override;

@@ -21,6 +21,8 @@ class WebSocketClient final
     IPC_CLIENT_CONNECTION(WebSocketClient, "/tmp/session/%sid/portal/websocket"sv)
 
 public:
+    explicit WebSocketClient(NonnullOwnPtr<Core::LocalSocket>);
+
     RefPtr<WebSocket> connect(const URL&, DeprecatedString const& origin = {}, Vector<DeprecatedString> const& protocols = {}, Vector<DeprecatedString> const& extensions = {}, HashMap<DeprecatedString, DeprecatedString> const& request_headers = {});
 
     u32 ready_state(Badge<WebSocket>, WebSocket&);
@@ -30,8 +32,6 @@ public:
     bool set_certificate(Badge<WebSocket>, WebSocket&, DeprecatedString, DeprecatedString);
 
 private:
-    WebSocketClient(NonnullOwnPtr<Core::LocalSocket>);
-
     virtual void connected(i32) override;
     virtual void received(i32, bool, ByteBuffer const&) override;
     virtual void errored(i32, i32) override;

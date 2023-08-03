@@ -107,6 +107,11 @@ void WebSocketClientSocketAdapter::close(u16 code, DeprecatedString reason)
     m_websocket->close(code, reason);
 }
 
+ErrorOr<NonnullRefPtr<WebSocketClientManagerAdapter>> WebSocketClientManagerAdapter::try_create(NonnullRefPtr<Protocol::WebSocketClient> websocket_client)
+{
+    return adopt_nonnull_ref_or_enomem(new (nothrow) WebSocketClientManagerAdapter(move(websocket_client)));
+}
+
 ErrorOr<NonnullRefPtr<WebSocketClientManagerAdapter>> WebSocketClientManagerAdapter::try_create()
 {
     auto websocket_client = TRY(Protocol::WebSocketClient::try_create());
