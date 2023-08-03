@@ -1057,6 +1057,7 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
 
         for (auto& track : spanned_tracks) {
             track.base_size += track.planned_increase;
+            track.planned_increase = 0;
         }
 
         // 4. If at this point any track’s growth limit is now less than its base size, increase its growth limit to
