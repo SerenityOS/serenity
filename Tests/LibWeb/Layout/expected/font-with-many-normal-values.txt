@@ -28,3 +28,18 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       InlineNode <span.four>
         TextNode <#text>
       TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x215.984375]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x199.984375] overflow: [8,8 784x200]
+      InlinePaintable (InlineNode<SPAN>.one)
+        TextPaintable (TextNode<#text>)
+      TextPaintable (TextNode<#text>)
+      InlinePaintable (InlineNode<SPAN>.two)
+        TextPaintable (TextNode<#text>)
+      TextPaintable (TextNode<#text>)
+      InlinePaintable (InlineNode<SPAN>.three)
+        TextPaintable (TextNode<#text>)
+      TextPaintable (TextNode<#text>)
+      InlinePaintable (InlineNode<SPAN>.four)
+        TextPaintable (TextNode<#text>)

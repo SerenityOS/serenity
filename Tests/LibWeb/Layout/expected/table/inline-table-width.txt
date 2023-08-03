@@ -29,3 +29,21 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
                     frag 0 from TextNode start: 0, length: 5, rect: [103.90625,33.46875 38.078125x17.46875]
                       "false"
                   TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x46.9375]
+      PaintableWithLines (BlockContainer<TABLE>) [8,8 137.984375x46.9375]
+        PaintableWithLines (TableWrapper(anonymous)) [9,9 135.984375x44.9375]
+          PaintableBox (Box(anonymous)) [9,9 135.984375x44.9375]
+            PaintableBox (Box<TBODY>) [9,9 129.984375x38.9375] overflow: [9,9 133.984375x42.9375]
+              PaintableBox (Box<TR>) [11,11 129.984375x19.46875] overflow: [11,11 131.984375x19.46875]
+                PaintableWithLines (BlockContainer<TD>) [11,11 89.90625x19.46875]
+                  TextPaintable (TextNode<#text>)
+                PaintableWithLines (BlockContainer<TD>) [102.90625,11 40.078125x19.46875]
+                  TextPaintable (TextNode<#text>)
+              PaintableBox (Box<TR>) [11,32.46875 129.984375x19.46875] overflow: [11,32.46875 131.984375x19.46875]
+                PaintableWithLines (BlockContainer<TD>) [11,32.46875 89.90625x19.46875]
+                  TextPaintable (TextNode<#text>)
+                PaintableWithLines (BlockContainer<TD>) [102.90625,32.46875 40.078125x19.46875]
+                  TextPaintable (TextNode<#text>)

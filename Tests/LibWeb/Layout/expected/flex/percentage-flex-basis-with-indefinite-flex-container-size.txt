@@ -7,3 +7,10 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             frag 0 from TextNode start: 0, length: 20, rect: [8,8 174.234375x17.46875]
               "percentages are hard"
           TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x33.46875]
+    PaintableBox (Box<BODY>.outer) [8,8 200x17.46875]
+      PaintableWithLines (BlockContainer<DIV>.middle) [8,8 200x17.46875]
+        PaintableWithLines (BlockContainer<DIV>.inner) [8,8 200x17.46875]
+          TextPaintable (TextNode<#text>)

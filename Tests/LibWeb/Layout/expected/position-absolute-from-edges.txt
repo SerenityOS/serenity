@@ -12,3 +12,12 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         BlockContainer <div#yellow> at (408,308) content-size 100x100 positioned [BFC] children: not-inline
         TextNode <#text>
       TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x0]
+      PaintableWithLines (BlockContainer<DIV>#container) [8,8 540x440]
+        PaintableWithLines (BlockContainer<DIV>#red) [48,48 120x120]
+        PaintableWithLines (BlockContainer<DIV>#green) [358,98 100x100]
+        PaintableWithLines (BlockContainer<DIV>#blue) [48,308 100x100]
+        PaintableWithLines (BlockContainer<DIV>#yellow) [408,308 100x100]

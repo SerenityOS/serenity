@@ -16,3 +16,14 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             frag 0 from TextNode start: 1, length: 3, rect: [11,211 27.640625x17.46875]
               "bar"
           TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600] overflow: [0,0 800x602]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x602]
+    PaintableWithLines (BlockContainer<BODY>) [9,9 782x14] overflow: [10,10 780x218.46875]
+      PaintableWithLines (BlockContainer(anonymous)) [10,10 780x0]
+      PaintableWithLines (BlockContainer<DIV>.cb) [10,10 602x12] overflow: [11,11 600x217.46875]
+        PaintableWithLines (BlockContainer(anonymous)) [11,11 600x0]
+        PaintableWithLines (BlockContainer<DIV>.foo) [11,11 600x200]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer(anonymous)) [11,211 600x17.46875]
+          TextPaintable (TextNode<#text>)

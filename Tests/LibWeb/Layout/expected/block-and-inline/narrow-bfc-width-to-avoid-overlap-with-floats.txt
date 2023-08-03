@@ -20,3 +20,11 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             frag 0 from TextNode start: 252, length: 57, rect: [18,87.875 455.375x17.46875]
               "pulvinar ipsum eget nulla dapibus, ac varius mi eleifend."
           TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600] overflow: [0,0 800x1008]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x1008]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x107.34375] overflow: [8,8 784x1000]
+      PaintableWithLines (BlockContainer<DIV>.wrapper) [8,8 784x107.34375] overflow: [8,8 784x1000]
+        PaintableWithLines (BlockContainer<DIV>.float) [592,8 200x1000]
+        PaintableWithLines (BlockContainer<DIV>.bfc) [8,8 584x107.34375]
+          TextPaintable (TextNode<#text>)

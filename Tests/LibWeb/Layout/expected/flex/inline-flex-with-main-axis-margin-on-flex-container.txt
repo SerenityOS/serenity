@@ -8,3 +8,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           frag 0 from TextNode start: 0, length: 20, rect: [11,11 160.40625x17.46875]
             "Immobilie inserieren"
         TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 502x39.46875]
+    PaintableBox (Box<BODY>) [9,9 164.40625x21.46875]
+      PaintableWithLines (BlockContainer<DIV>) [10,10 162.40625x19.46875]
+        TextPaintable (TextNode<#text>)

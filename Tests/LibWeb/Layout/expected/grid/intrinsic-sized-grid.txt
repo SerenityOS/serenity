@@ -7,3 +7,10 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             frag 0 from TextNode start: 0, length: 4, rect: [12,12 37.953125x17.46875]
               "whee"
           TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x41.46875]
+    PaintableWithLines (BlockContainer<BODY>) [9,9 43.953125x23.46875]
+      PaintableBox (Box<DIV>.grid) [10,10 41.953125x21.46875]
+        PaintableWithLines (BlockContainer<DIV>.whee) [11,11 39.953125x19.46875]
+          TextPaintable (TextNode<#text>)

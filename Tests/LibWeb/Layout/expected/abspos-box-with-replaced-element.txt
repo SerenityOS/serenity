@@ -5,3 +5,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         line 0 width: 250, height: 25.25, bottom: 25.25, baseline: 25.25
           frag 0 from ImageBox start: 0, length: 0, rect: [262,12 248x23.25]
         ImageBox <img> at (262,12) content-size 248x23.25 children: not-inline
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x2] overflow: [9,9 502x102]
+    PaintableWithLines (BlockContainer<BODY>) [9,9 502x102]
+      PaintableWithLines (BlockContainer<DIV>.image-container) [260,10 250x27.25] overflow: [261,11 249x25.25]
+        ImagePaintable (ImageBox<IMG>) [261,11 250x25.25]

@@ -9,3 +9,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           frag 0 from TextNode start: 20, length: 21, rect: [61,28.46875 163.875x17.46875]
             "intruding on this div"
         TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x56.9375]
+    PaintableWithLines (BlockContainer<BODY>) [109,9 302x38.9375] overflow: [60,10 350x36.9375]
+      PaintableWithLines (BlockContainer<DIV>) [60,10 202x36.9375]
+        TextPaintable (TextNode<#text>)

@@ -11,3 +11,11 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           frag 0 from TextNode start: 0, length: 6, rect: [24,25.46875 53.171875x17.46875]
             "athena"
         TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x66.9375]
+    PaintableWithLines (BlockContainer<BODY>) [10,10 604x46.9375]
+      PaintableWithLines (BlockContainer<DIV>.exekiller) [12,12 204x21.46875]
+        TextPaintable (TextNode<#text>)
+      PaintableWithLines (BlockContainer<DIV>.athena) [22,23.46875 204x21.46875]
+        TextPaintable (TextNode<#text>)

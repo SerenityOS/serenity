@@ -84,6 +84,11 @@ public:
         return String::from_deprecated_string(client().dump_layout_tree());
     }
 
+    ErrorOr<String> dump_paint_tree()
+    {
+        return String::from_deprecated_string(client().dump_paint_tree());
+    }
+
     ErrorOr<String> dump_text()
     {
         return String::from_deprecated_string(client().dump_text());
@@ -207,7 +212,11 @@ static ErrorOr<String> run_one_test(HeadlessWebContentView& view, StringView inp
             //       It also causes a lot more code to run, which is good for finding bugs. :^)
             (void)view.take_screenshot();
 
-            result = view.dump_layout_tree().release_value_but_fixme_should_propagate_errors();
+            StringBuilder builder;
+            builder.append(view.dump_layout_tree().release_value_but_fixme_should_propagate_errors());
+            builder.append("\n"sv);
+            builder.append(view.dump_paint_tree().release_value_but_fixme_should_propagate_errors());
+            result = builder.to_string().release_value_but_fixme_should_propagate_errors();
             loop.quit(0);
         };
     } else if (mode == TestMode::Text) {
@@ -422,8 +431,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         view->on_load_finish = [&](auto const&) {
             (void)view->take_screenshot();
             auto layout_tree = view->dump_layout_tree().release_value_but_fixme_should_propagate_errors();
+            auto paint_tree = view->dump_paint_tree().release_value_but_fixme_should_propagate_errors();
 
-            out("{}", layout_tree);
+            out("{}\n{}", layout_tree, paint_tree);
             fflush(stdout);
 
             event_loop.quit(0);

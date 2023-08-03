@@ -106,3 +106,14 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x351.90625] overflow: [8,8 785.46875x351.90625]
+      PaintableBox (Box<DIV>.grid-container) [8,8 784x351.90625] overflow: [8,8 785.46875x351.90625]
+        PaintableWithLines (BlockContainer<DIV>.grid-item.item-span-one-one) [411.46875,8 382x139.75]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item.item-span-one-two) [411.46875,167.75 382x192.15625]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.grid-item.item-span-two) [8,8 383.46875x351.90625]
+          TextPaintable (TextNode<#text>)

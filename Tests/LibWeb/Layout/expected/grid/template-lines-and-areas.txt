@@ -12,3 +12,12 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             frag 0 from TextNode start: 0, length: 3, rect: [530.65625,8 21.609375x17.46875]
               "1fr"
           TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x17.46875]
+      PaintableBox (Box<DIV>.grid) [8,8 784x17.46875]
+        PaintableWithLines (BlockContainer<DIV>.item-left) [8,8 261.328125x17.46875]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>.item-right) [530.65625,8 261.328125x17.46875]
+          TextPaintable (TextNode<#text>)

@@ -8,3 +8,11 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
               "Hello"
           InlineNode <span>
             TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x121.46875]
+    PaintableWithLines (BlockContainer<BODY>) [9,9 502x103.46875]
+      PaintableWithLines (BlockContainer<DIV>.a) [10,10 500x101.46875]
+        PaintableWithLines (BlockContainer<DIV>.b) [71,51 378x19.46875]
+          InlinePaintable (InlineNode<SPAN>)
+            TextPaintable (TextNode<#text>)
