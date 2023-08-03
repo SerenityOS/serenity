@@ -220,23 +220,14 @@ StyleComputer::RuleCache const& StyleComputer::rule_cache_for_cascade_origin(Cas
     }
 }
 
-Vector<MatchingRule> StyleComputer::filter_namespace_rules(DOM::Element const& element, Vector<MatchingRule> const& rules) const
+[[nodiscard]] static bool filter_namespace_rule(DOM::Element const& element, MatchingRule const& rule)
 {
-    Vector<MatchingRule> filtered_rules;
-
-    for (auto const& rule : rules) {
-        auto namespace_uri = rule.sheet->default_namespace();
-        if (namespace_uri.has_value()) {
-            if (namespace_uri.value() == element.namespace_uri())
-                filtered_rules.append(rule);
-        } else {
-            filtered_rules.append(rule);
-        }
-    }
-
     // FIXME: Filter out non-default namespace using prefixes
-
-    return filtered_rules;
+    auto namespace_uri = rule.sheet->default_namespace();
+    if (namespace_uri.has_value() && namespace_uri.value() != element.namespace_uri()) {
+        return false;
+    }
+    return true;
 }
 
 Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& element, CascadeOrigin cascade_origin, Optional<CSS::Selector::PseudoElement> pseudo_element) const
@@ -245,15 +236,17 @@ Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& e
 
     Vector<MatchingRule> rules_to_run;
     auto add_rules_to_run = [&](Vector<MatchingRule> const& rules) {
-        Vector<MatchingRule> namespace_filtered_rules = filter_namespace_rules(element, rules);
-
+        rules_to_run.grow_capacity(rules_to_run.size() + rules.size());
         if (pseudo_element.has_value()) {
-            for (auto& rule : namespace_filtered_rules) {
-                if (rule.contains_pseudo_element)
+            for (auto const& rule : rules) {
+                if (rule.contains_pseudo_element && filter_namespace_rule(element, rule))
                     rules_to_run.append(rule);
             }
         } else {
-            rules_to_run.extend(namespace_filtered_rules);
+            for (auto const& rule : rules) {
+                if (filter_namespace_rule(element, rule))
+                    rules_to_run.append(rule);
+            }
         }
     };
 
