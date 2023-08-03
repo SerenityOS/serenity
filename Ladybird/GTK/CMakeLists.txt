@@ -87,8 +87,8 @@ set(WEBCONTENT_SOURCES
     "${WEBCONTENT_SOURCE_DIR}/PageHost.cpp"
     "${WEBCONTENT_SOURCE_DIR}/WebContentConsoleClient.cpp"
     "${WEBCONTENT_SOURCE_DIR}/WebDriverConnection.cpp"
-    "${SERENITY_SOURCE_DIR}/Ladybird/FontPluginLadybird.cpp"
-    "${SERENITY_SOURCE_DIR}/Ladybird/ImageCodecPluginLadybird.cpp"
+    "${SERENITY_SOURCE_DIR}/Ladybird/FontPlugin.cpp"
+    "${SERENITY_SOURCE_DIR}/Ladybird/ImageCodecPlugin.cpp"
     WebContentMain.cpp
 )
 add_executable(WebContent ${WEBCONTENT_SOURCES})
