@@ -93,7 +93,7 @@ static ErrorOr<Vector<String>> month_lines_to_print(Header header_mode, int star
         header = TRY(String::from_utf8(TRY(month_name(month))));
         break;
     case Header::MonthAndYear:
-        header = TRY(String::formatted("{} - {}", TRY(month_name(month)), year));
+        header = TRY(String::formatted("{} - {:04}", TRY(month_name(month)), year));
         break;
     }
 
@@ -165,6 +165,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath cpath"));
 
+    // FIXME: Do not allow passing negative numbers or zero to the year and month argument
     int month = 0;
     int year = 0;
     StringView week_start_day_name {};
@@ -174,23 +175,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display a nice overview of a month or year, defaulting to the current month.");
     // FIXME: This should ensure one value gets parsed as just a year
-    args_parser.add_positional_argument(month, "Month", "month", Core::ArgsParser::Required::No);
-    args_parser.add_positional_argument(year, "Year", "year", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(month, "Month as a number", "month", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(year, "Year as a number", "year", Core::ArgsParser::Required::No);
     args_parser.add_option(week_start_day_name, "Day that starts the week", "starting-day", 's', "day");
-    args_parser.add_option(year_mode, "Show the whole year at once", "year", 'y');
-    args_parser.add_option(three_month_mode, "Show the previous and next month beside the current one", "three-month-view", '3');
+    args_parser.add_option(year_mode, "Show all 12 months of the current year at once", "year", 'y');
+    args_parser.add_option(three_month_mode, "Besides any one month also show previous and next month", "three-month-view", '3');
     args_parser.parse(arguments);
-
-    if (three_month_mode && year_mode) {
-        warnln("cal: Cannot specify both --year and --three-month-mode at the same time");
-        return 1;
-    }
-
-    time_t now = time(nullptr);
-    auto* tm = localtime(&now);
-    current_year = tm->tm_year + 1900;
-    current_month = tm->tm_mon + 1;
-    current_day = tm->tm_mday;
 
     // Hack: workaround one value parsing as a month
     if (month && !year) {
@@ -201,11 +191,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!month && year)
         year_mode = true;
 
+    if (three_month_mode && year_mode) {
+        warnln("cal: Cannot use --three-month-view when displaying a year.");
+        return 1;
+    }
+
     int week_start_day;
     if (week_start_day_name.is_empty())
         week_start_day = TRY(default_weekday_start());
     else
         week_start_day = TRY(weekday_index(week_start_day_name));
+
+    time_t now = time(nullptr);
+    auto* tm = localtime(&now);
+    current_year = tm->tm_year + 1900;
+    current_month = tm->tm_mon + 1;
+    current_day = tm->tm_mday;
 
     if (!year)
         year = current_year;
@@ -213,14 +214,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         month = current_month;
 
     if (year_mode) {
-        outln("{: ^{}}", TRY(String::formatted("Year {}", year)), year_width);
+        outln("{: ^{}}", TRY(String::formatted("Year {:04}", year)), year_width);
 
-        for (int month_index = 1; month_index < 12; ++month_index) {
+        for (int month_index = 1; month_index <= 12;) {
             outln();
             outln();
             Vector<String> lines_left = TRY(month_lines_to_print(Header::Month, week_start_day, month_index++, year));
             Vector<String> lines_center = TRY(month_lines_to_print(Header::Month, week_start_day, month_index++, year));
-            Vector<String> lines_right = TRY(month_lines_to_print(Header::Month, week_start_day, month_index, year));
+            Vector<String> lines_right = TRY(month_lines_to_print(Header::Month, week_start_day, month_index++, year));
             print_months_side_by_side(lines_left, lines_center, lines_right);
         }
     } else if (three_month_mode) {
