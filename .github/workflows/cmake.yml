@@ -231,12 +231,12 @@ jobs:
         run: ./check-symbols.sh
 
       - name: Create Serenity Rootfs
-        if: ${{ matrix.debug-options == 'NORMAL_DEBUG'}}
+        if: ${{ matrix.debug-options == 'NORMAL_DEBUG' }}
         working-directory: ${{ github.workspace }}/Build/${{ matrix.arch }}
         run: ninja install && ninja qemu-image
 
       - name: Run On-Target Tests
-        if: ${{ matrix.debug-options == 'NORMAL_DEBUG'}}
+        if: ${{ matrix.debug-options == 'NORMAL_DEBUG' && matrix.arch != 'aarch64' }}
         working-directory: ${{ github.workspace }}/Build/${{ matrix.arch }}
         env:
           SERENITY_QEMU_CPU: "max,vmx=off"
@@ -246,10 +246,6 @@ jobs:
           echo "::group::ninja run # Qemu output"
           ninja run
           echo "::endgroup::"
-          if ${{ matrix.arch == 'aarch64' }}; then
-            # FIXME: Actually verify test results when all tests are expected to pass.
-            exit 0
-          fi
           echo "::group::Verify Output File"
           mkdir fsmount
           sudo mount -t ext2 -o loop,rw _disk_image fsmount
