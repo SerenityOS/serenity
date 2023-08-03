@@ -10,6 +10,7 @@
 #include <LibGfx/ImageFormats/BMPLoader.h>
 #include <LibGfx/ImageFormats/GIFLoader.h>
 #include <LibGfx/ImageFormats/ICOLoader.h>
+#include <LibGfx/ImageFormats/ILBMLoader.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
 #include <LibGfx/ImageFormats/JPEGXLLoader.h>
@@ -86,6 +87,15 @@ TEST_CASE(test_bmp_embedded_in_ico)
     auto plugin_decoder = MUST(Gfx::ICOImageDecoderPlugin::create(file->bytes()));
 
     expect_single_frame(*plugin_decoder);
+}
+
+TEST_CASE(test_ilbm)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("ilbm/gradient.iff"sv)));
+    EXPECT(Gfx::ILBMImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Gfx::ILBMImageDecoderPlugin::create(file->bytes()));
+
+    expect_single_frame_of_size(*plugin_decoder, { 320, 200 });
 }
 
 TEST_CASE(test_jpeg_sof0_one_scan)
