@@ -87,36 +87,37 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(Web
     return new_client;
 }
 
-ErrorOr<NonnullRefPtr<Protocol::RequestClient>> launch_request_server_process(ReadonlySpan<String> candidate_request_server_paths, StringView serenity_resource_root)
+template<typename Client>
+ErrorOr<NonnullRefPtr<Client>> launch_generic_server_process(ReadonlySpan<String> candidate_server_paths, StringView serenity_resource_root, StringView server_name)
 {
     int socket_fds[2] {};
     TRY(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds));
 
     int ui_fd = socket_fds[0];
-    int rc_fd = socket_fds[1];
+    int server_fd = socket_fds[1];
 
     int fd_passing_socket_fds[2] {};
     TRY(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, fd_passing_socket_fds));
 
     int ui_fd_passing_fd = fd_passing_socket_fds[0];
-    int rc_fd_passing_fd = fd_passing_socket_fds[1];
+    int server_fd_passing_fd = fd_passing_socket_fds[1];
 
     if (auto child_pid = TRY(Core::System::fork()); child_pid == 0) {
         TRY(Core::System::close(ui_fd));
         TRY(Core::System::close(ui_fd_passing_fd));
 
-        auto takeover_string = TRY(String::formatted("RequestServer:{}", rc_fd));
+        auto takeover_string = TRY(String::formatted("{}:{}", server_name, server_fd));
         TRY(Core::System::setenv("SOCKET_TAKEOVER"sv, takeover_string, true));
 
-        auto fd_passing_socket_string = TRY(String::number(rc_fd_passing_fd));
+        auto fd_passing_socket_string = TRY(String::number(server_fd_passing_fd));
 
         ErrorOr<void> result;
-        for (auto const& path : candidate_request_server_paths) {
+        for (auto const& path : candidate_server_paths) {
 
             if (Core::System::access(path, X_OK).is_error())
                 continue;
 
-            auto arguments = Vector {
+            auto arguments = Vector<StringView, 5> {
                 path.bytes_as_string_view(),
                 "--fd-passing-socket"sv,
                 fd_passing_socket_string,
@@ -130,18 +131,28 @@ ErrorOr<NonnullRefPtr<Protocol::RequestClient>> launch_request_server_process(Re
         }
 
         if (result.is_error())
-            warnln("Could not launch any of {}: {}", candidate_request_server_paths, result.error());
+            warnln("Could not launch any of {}: {}", candidate_server_paths, result.error());
         VERIFY_NOT_REACHED();
     }
 
-    TRY(Core::System::close(rc_fd));
-    TRY(Core::System::close(rc_fd_passing_fd));
+    TRY(Core::System::close(server_fd));
+    TRY(Core::System::close(server_fd_passing_fd));
 
     auto socket = TRY(Core::LocalSocket::adopt_fd(ui_fd));
     TRY(socket->set_blocking(true));
 
-    auto new_client = TRY(try_make_ref_counted<Protocol::RequestClient>(move(socket)));
+    auto new_client = TRY(try_make_ref_counted<Client>(move(socket)));
     new_client->set_fd_passing_socket(TRY(Core::LocalSocket::adopt_fd(ui_fd_passing_fd)));
 
     return new_client;
+}
+
+ErrorOr<NonnullRefPtr<Protocol::RequestClient>> launch_request_server_process(ReadonlySpan<String> candidate_request_server_paths, StringView serenity_resource_root)
+{
+    return launch_generic_server_process<Protocol::RequestClient>(candidate_request_server_paths, serenity_resource_root, "RequestServer"sv);
+}
+
+ErrorOr<NonnullRefPtr<Protocol::WebSocketClient>> launch_web_socket_process(ReadonlySpan<String> candidate_web_socket_paths, StringView serenity_resource_root)
+{
+    return launch_generic_server_process<Protocol::WebSocketClient>(candidate_web_socket_paths, serenity_resource_root, "WebSocket"sv);
 }

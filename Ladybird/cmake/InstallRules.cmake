@@ -4,7 +4,7 @@ include(GNUInstallDirs)
 
 set(package ladybird)
 
-set(ladybird_applications ladybird SQLServer WebContent WebDriver RequestServer headless-browser)
+set(ladybird_applications ladybird SQLServer WebContent WebDriver WebSocketServer RequestServer headless-browser)
 
 set(app_install_targets ${ladybird_applications})
 if (ANDROID)

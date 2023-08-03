@@ -22,6 +22,28 @@ compiled_action("RequestServerEndpoint") {
   ]
 }
 
+compiled_action("WebSocketClientEndpoint") {
+  tool = "//Meta/Lagom/Tools/CodeGenerators/IPCCompiler"
+  inputs = [ "//Userland/Services/WebSocket/WebSocketClient.ipc" ]
+  outputs = [ "$root_gen_dir/WebSocket/WebSocketClientEndpoint.h" ]
+  args = [
+    rebase_path(inputs[0], root_build_dir),
+    "-o",
+    rebase_path(outputs[0], root_build_dir),
+  ]
+}
+
+compiled_action("WebSocketServerEndpoint") {
+  tool = "//Meta/Lagom/Tools/CodeGenerators/IPCCompiler"
+  inputs = [ "//Userland/Services/WebSocket/WebSocketServer.ipc" ]
+  outputs = [ "$root_gen_dir/WebSocket/WebSocketServerEndpoint.h" ]
+  args = [
+    rebase_path(inputs[0], root_build_dir),
+    "-o",
+    rebase_path(outputs[0], root_build_dir),
+  ]
+}
+
 shared_library("LibProtocol") {
   output_name = "protocol"
   include_dirs = [
@@ -31,6 +53,8 @@ shared_library("LibProtocol") {
   deps = [
     ":RequestClientEndpoint",
     ":RequestServerEndpoint",
+    ":WebSocketClientEndpoint",
+    ":WebSocketServerEndpoint",
     "//AK",
     "//Userland/Libraries/LibCore",
     "//Userland/Libraries/LibIPC",
@@ -38,9 +62,11 @@ shared_library("LibProtocol") {
   sources = [
     "Request.cpp",
     "RequestClient.cpp",
-
-    # TODO: Add WebSocket sources + IPC
+    "WebSocket.cpp",
+    "WebSocketClient.cpp",
   ]
   sources += get_target_outputs(":RequestClientEndpoint") +
-             get_target_outputs(":RequestServerEndpoint")
+             get_target_outputs(":RequestServerEndpoint") +
+             get_target_outputs(":WebSocketClientEndpoint") +
+             get_target_outputs(":WebSocketServerEndpoint")
 }

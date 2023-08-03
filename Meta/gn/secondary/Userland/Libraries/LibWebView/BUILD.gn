@@ -71,6 +71,7 @@ shared_library("LibWebView") {
     "StylePropertiesModel.cpp",
     "ViewImplementation.cpp",
     "WebContentClient.cpp",
+    "WebSocketClientAdapter.cpp",
   ]
   sources += get_target_outputs(":WebContentClientEndpoint") +
              get_target_outputs(":WebContentServerEndpoint") +
