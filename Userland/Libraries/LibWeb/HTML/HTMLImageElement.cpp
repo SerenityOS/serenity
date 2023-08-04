@@ -700,10 +700,43 @@ void HTMLImageElement::react_to_changes_in_the_environment()
 
     // FIXME: 13. End the synchronous section, continuing the remaining steps in parallel.
 
+    auto step_15 = [this](String const& selected_source, NonnullRefPtr<ImageRequest> const& image_request, ListOfAvailableImages::Key const& key, NonnullRefPtr<DecodedImageData> const& image_data) {
+        // 15. Queue an element task on the DOM manipulation task source given the img element and the following steps:
+        queue_an_element_task(HTML::Task::Source::DOMManipulation, [this, selected_source, image_request, key, image_data] {
+            // 1. FIXME: If the img element has experienced relevant mutations since this algorithm started, then let pending request be null and abort these steps.
+            // AD-HOC: Check if we have a pending request still, otherwise we will crash when upgrading the request. This will happen if the image has experienced mutations,
+            //        but since the pending request may be set by another task soon after it is cleared, this check is probably not sufficient.
+            if (!m_pending_request)
+                return;
+
+            // 2. Let the img element's last selected source be selected source and the img element's current pixel density be selected pixel density.
+            m_last_selected_source = selected_source;
+
+            // 3. Set the image request's state to completely available.
+            image_request->set_state(ImageRequest::State::CompletelyAvailable);
+
+            // 4. Add the image to the list of available images using the key key, with the ignore higher-layer caching flag set.
+            document().list_of_available_images().add(key, image_data, true).release_value_but_fixme_should_propagate_errors();
+
+            // 5. Upgrade the pending request to the current request.
+            upgrade_pending_request_to_current_request();
+
+            // 6. Prepare image request for presentation given the img element.
+            image_request->prepare_for_presentation(*this);
+            // FIXME: This is ad-hoc, updating the layout here should probably be handled by prepare_for_presentation().
+            set_needs_style_update(true);
+            document().set_needs_layout();
+
+            // 7. Fire an event named load at the img element.
+            dispatch_event(DOM::Event::create(realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
+        });
+    };
+
     // 14. If the list of available images contains an entry for key, then set image request's image data to that of the entry.
     //     Continue to the next step.
     if (auto entry = document().list_of_available_images().get(key)) {
         image_request->set_image_data(entry->image_data);
+        step_15(selected_source.value(), image_request, key, entry->image_data);
     }
     // Otherwise:
     else {
@@ -719,8 +752,41 @@ void HTMLImageElement::react_to_changes_in_the_environment()
 
         // FIXME: 4. Set request's priority to the current state of the element's fetchpriority attribute.
 
+        // Set the callbacks to handle steps 6 and 7 before starting the fetch request.
+        image_request->add_callbacks(
+            [step_15, selected_source = selected_source.value(), image_request, key]() mutable {
+                // 6. If response's unsafe response is a network error
+                // NOTE: This is handled in the second callback below.
+
+                // FIXME: or if the image format is unsupported (as determined by applying the image sniffing rules, again as mentioned earlier),
+
+                // or if the user agent is able to determine that image request's image is corrupted in some
+                // fatal way such that the image dimensions cannot be obtained,
+                // NOTE: This is also handled in the other callback.
+
+                // FIXME: or if the resource type is multipart/x-mixed-replace,
+
+                // then let pending request be null and abort these steps.
+
+                batching_dispatcher().enqueue([step_15, selected_source = move(selected_source), image_request, key] {
+                    // 7. Otherwise, response's unsafe response is image request's image data. It can be either CORS-same-origin
+                    //    or CORS-cross-origin; this affects the image's interaction with other APIs (e.g., when used on a canvas).
+                    VERIFY(image_request->shared_image_request());
+                    auto image_data = image_request->shared_image_request()->image_data();
+                    image_request->set_image_data(image_data);
+                    step_15(selected_source, image_request, key, NonnullRefPtr(*image_data));
+                });
+            },
+            [this]() {
+                // 6. If response's unsafe response is a network error
+                //    or if the image format is unsupported (as determined by applying the image sniffing rules, again as mentioned earlier),
+                //    ...
+                //    or if the user agent is able to determine that image request's image is corrupted in some
+                //    fatal way such that the image dimensions cannot be obtained,
+                m_pending_request = nullptr;
+            });
+
         // 5. Let response be the result of fetching request.
-        add_callbacks_to_image_request(image_request, false, url_string, AK::URL());
         image_request->fetch_image(realm(), request);
     }
 }
