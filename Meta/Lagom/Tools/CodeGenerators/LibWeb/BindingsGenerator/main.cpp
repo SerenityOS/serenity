@@ -128,7 +128,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto write_if_changed = [&](auto generator_function, StringView file_path) -> ErrorOr<void> {
         (*generator_function)(interface, output_builder);
 
-        auto output_file = TRY(Core::File::open(file_path, Core::File::OpenMode::ReadWrite));
+        auto output_file = TRY(Core::File::open(file_path, Core::File::OpenMode::ReadWrite | Core::File::OpenMode::Truncate));
 
         // Only write to disk if contents have changed
         auto previous_contents = TRY(output_file->read_until_eof());
