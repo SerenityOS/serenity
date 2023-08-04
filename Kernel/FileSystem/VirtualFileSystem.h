@@ -115,7 +115,8 @@ private:
 
     ErrorOr<void> traverse_directory_inode(Inode&, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>);
 
-    bool mount_point_exists_at_inode(InodeIdentifier inode);
+    static bool check_matching_absolute_path_hierarchy(Custody const& first_custody, Custody const& second_custody);
+    bool mount_point_exists_at_custody(Custody& mount_point);
 
     // FIXME: These functions are totally unsafe as someone could unmount the returned Mount underneath us.
     Mount* find_mount_for_host(InodeIdentifier);
