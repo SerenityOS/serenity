@@ -86,6 +86,7 @@ makeopts=("-j${MAKEJOBS}")
 installopts=()
 configscript=configure
 configopts=()
+generator="make"
 useconfigure=false
 config_sub_paths=("config.sub")
 config_guess_paths=("config.guess")
@@ -173,6 +174,19 @@ get_new_config_guess() {
     if ! run grep -q SerenityOS "$config_guess"; then
         run do_download_file "https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess" "${config_guess}" false
     fi
+}
+
+get_cmake_binary_dir() {
+    for configopt in "${configopts[@]}"; do
+        # capture the value of the build option
+        if [[ "$configopt" =~ ^(-B)([[:space:]]*)(.*)$ ]]; then
+            # BASH_REMATCH is an array containing all the group matches
+            # from regex match above
+            # https://www.bashsupport.com/bash/variables/bash/bash_rematch/
+            echo "${BASH_REMATCH[3]}"
+            return
+        fi
+    done
 }
 
 ensure_new_config_sub() {
@@ -413,7 +427,16 @@ func_defined pre_configure || pre_configure() {
 }
 func_defined configure || configure() {
     if [[ "$configscript" == "cmake" ]]; then
-        run cmake "${configopts[@]}"
+        case "$generator" in
+            ninja)
+                configopts+=("-GNinja")
+            ;;
+        esac
+
+        # FIXME: run get_cmake_binary_dir only once here
+        run cmake -S "${PORT_BUILD_DIR}/${workdir}" -B "${PORT_BUILD_DIR}/${workdir}/$(get_cmake_binary_dir)"  \
+            -DCMAKE_TOOLCHAIN_FILE="${SERENITY_BUILD_DIR}/CMakeToolchain.txt" \
+            "${configopts[@]}"
         return
     fi
 
@@ -428,9 +451,18 @@ func_defined post_configure || post_configure() {
     :
 }
 func_defined build || build() {
+    if [[ "$configscript" == "cmake" ]]; then
+        run cmake --build "${PORT_BUILD_DIR}/${workdir}/$(get_cmake_binary_dir)" "${makeopts[@]}"
+        return
+    fi
     run make "${makeopts[@]}"
 }
 func_defined install || install() {
+     if [[ "$configscript" == "cmake" ]]; then
+        run cmake --build "${PORT_BUILD_DIR}/${workdir}/$(get_cmake_binary_dir)" --target install "${installopts[@]}"
+        return
+    fi
+
     run make DESTDIR=$DESTDIR "${installopts[@]}" install
 }
 func_defined post_install || post_install() {
