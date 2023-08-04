@@ -114,8 +114,7 @@ private:
     static bool check_matching_absolute_path_hierarchy(Custody const& first_custody, Custody const& second_custody);
     bool mount_point_exists_at_custody(Custody& mount_point);
 
-    // FIXME: This function is totally unsafe as someone could unmount the returned Mount underneath us.
-    Mount* find_mount_for_host_custody(Custody const& current_custody);
+    ErrorOr<void> apply_to_mount_for_host_custody(Custody const& current_custody, Function<void(Mount&)>);
 
     RefPtr<Inode> m_root_inode;
 
