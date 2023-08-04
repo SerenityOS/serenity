@@ -412,6 +412,11 @@ func_defined pre_configure || pre_configure() {
     :
 }
 func_defined configure || configure() {
+    if [[ "$configscript" == "cmake" ]]; then
+        run cmake "${configopts[@]}"
+        return
+    fi
+
     chmod +x "${workdir}"/"$configscript"
     if [[ -n "${SERENITY_SOURCE_DIR:-}" ]]; then
         run ./"$configscript" --host="${SERENITY_ARCH}-pc-serenity" "${configopts[@]}"
