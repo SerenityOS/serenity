@@ -119,7 +119,7 @@ private:
     bool mount_point_exists_at_custody(Custody& mount_point);
 
     // FIXME: These functions are totally unsafe as someone could unmount the returned Mount underneath us.
-    Mount* find_mount_for_host(InodeIdentifier);
+    Mount* find_mount_for_host_custody(Custody const& current_custody);
     Mount* find_mount_for_guest(InodeIdentifier);
 
     RefPtr<Inode> m_root_inode;

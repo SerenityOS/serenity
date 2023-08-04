@@ -378,12 +378,23 @@ ErrorOr<void> VirtualFileSystem::mount_root(FileSystem& fs)
     return {};
 }
 
-auto VirtualFileSystem::find_mount_for_host(InodeIdentifier id) -> Mount*
+auto VirtualFileSystem::find_mount_for_host_custody(Custody const& current_custody) -> Mount*
 {
     return m_mounts.with([&](auto& mounts) -> Mount* {
-        for (auto& mount : mounts) {
-            if (mount.host() && mount.host()->identifier() == id)
-                return &mount;
+        // NOTE: We either search for the root mount or for a mount that has a parent custody!
+        if (!current_custody.parent()) {
+            for (auto& mount : mounts) {
+                if (!mount.host_custody())
+                    return &mount;
+            }
+            // NOTE: There must be a root mount entry, so fail if we don't find it.
+            VERIFY_NOT_REACHED();
+        } else {
+            for (auto& mount : mounts) {
+                if (mount.host_custody() && check_matching_absolute_path_hierarchy(*mount.host_custody(), current_custody)) {
+                    return &mount;
+                }
+            }
         }
         return nullptr;
     });
@@ -1232,14 +1243,17 @@ ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path_without_veil(Cre
 
         int mount_flags_for_child = parent.mount_flags();
 
+        auto current_custody = TRY(Custody::try_create(&parent, part, *child_inode, mount_flags_for_child));
+
         // See if there's something mounted on the child; in that case
         // we would need to return the guest inode, not the host inode.
-        if (auto mount = find_mount_for_host(child_inode->identifier())) {
+        if (auto mount = find_mount_for_host_custody(current_custody)) {
             child_inode = mount->guest();
             mount_flags_for_child = mount->flags();
+            custody = TRY(Custody::try_create(&parent, part, *child_inode, mount_flags_for_child));
+        } else {
+            custody = current_custody;
         }
-
-        custody = TRY(Custody::try_create(&parent, part, *child_inode, mount_flags_for_child));
 
         if (child_inode->metadata().is_symlink()) {
             if (!have_more_parts) {
