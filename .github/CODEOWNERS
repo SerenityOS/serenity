@@ -1,4 +1,5 @@
 /Kernel/Devices/Audio @GMTA
+/Lagom/Tools/CodeGenerators/LibWeb @AtkinsSJ
 /Userland/Applications/Spreadsheet @alimpfard
 /Userland/Libraries/LibCrypto @alimpfard
 /Userland/Libraries/LibGL @GMTA
@@ -13,6 +14,7 @@
 /Userland/Libraries/LibTimeZone @trflynn89
 /Userland/Libraries/LibUnicode @trflynn89
 /Userland/Libraries/LibWasm @alimpfard
+/Userland/Libraries/LibWeb/CSS @AtkinsSJ
 /Userland/Libraries/LibWeb/WebAssembly @alimpfard
 /Userland/Libraries/LibWeb/WebDriver @trflynn89
 /Userland/Libraries/LibXML @alimpfard
