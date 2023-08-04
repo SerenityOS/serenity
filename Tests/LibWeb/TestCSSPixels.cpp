@@ -87,4 +87,12 @@ TEST_CASE(saturated_subtraction)
     EXPECT_EQ(value - -1, CSSPixels(INFINITY));
 }
 
+TEST_CASE(multiplication_uses_i64_for_raw_values)
+{
+    CSSPixels a(1200);
+    CSSPixels b(647);
+    CSSPixels c = a * b;
+    EXPECT_EQ(c, CSSPixels(776400));
+}
+
 }
