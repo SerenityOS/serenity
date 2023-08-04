@@ -45,6 +45,7 @@ public:
     void content_filters_changed();
     void autoplay_allowlist_changed();
     void proxy_mappings_changed();
+    void update_zoom_menu();
 
     void broadcast_window_position(Gfx::IntPoint);
     void broadcast_window_size(Gfx::IntSize);
