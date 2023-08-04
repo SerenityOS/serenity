@@ -114,7 +114,7 @@ ErrorOr<void> VirtualFileSystem::add_file_system_to_mount_table(FileSystem& file
     auto new_mount = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Mount(file_system, &mount_point, flags)));
     return m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
         auto& inode = mount_point.inode();
-        dbgln("VirtualFileSystem: FileSystemID {} (non file-backed), Mounting {} at inode {} with flags {}",
+        dbgln("VirtualFileSystem: FileSystemID {}, Mounting {} at inode {} with flags {}",
             file_system.fsid(),
             file_system.class_name(),
             inode.identifier(),
