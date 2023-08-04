@@ -14,6 +14,7 @@ moc_qt_objects("generate_moc") {
   sources = [
     "BrowserWindow.h",
     "ConsoleWidget.h",
+    "EventLoopImplementationQtEventTarget.h",
     "InspectorWidget.h",
     "LocationEdit.h",
     "ModelTranslator.h",
@@ -81,6 +82,7 @@ executable("ladybird_executable") {
     "BrowserWindow.cpp",
     "ConsoleWidget.cpp",
     "EventLoopImplementationQt.cpp",
+    "EventLoopImplementationQtEventTarget.cpp",
     "HelperProcess.cpp",
     "InspectorWidget.cpp",
     "LocationEdit.cpp",

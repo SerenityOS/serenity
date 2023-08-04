@@ -5,6 +5,7 @@ moc_qt_objects("generate_moc") {
   sources = [
     "//Ladybird/AudioCodecPluginQt.h",
     "//Ladybird/AudioThread.h",
+    "//Ladybird/EventLoopImplementationQtEventTarget.h",
     "//Ladybird/RequestManagerQt.h",
   ]
 }
@@ -48,6 +49,7 @@ executable("WebContent") {
     "../AudioCodecPluginQt.cpp",
     "../AudioThread.cpp",
     "../EventLoopImplementationQt.cpp",
+    "../EventLoopImplementationQtEventTarget.cpp",
     "../FontPlugin.cpp",
     "../HelperProcess.cpp",
     "../ImageCodecPlugin.cpp",
