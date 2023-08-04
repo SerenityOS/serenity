@@ -1,3 +1,5 @@
+import("//Meta/gn/build/libs/pulse/enable.gni")
+
 # TODO: AudioClient IPC files for serenity
 
 shared_library("LibAudio") {
@@ -8,6 +10,7 @@ shared_library("LibAudio") {
     "Loader.cpp",
     "MP3Loader.cpp",
     "Metadata.cpp",
+    "PlaybackStream.cpp",
     "QOALoader.cpp",
     "QOATypes.cpp",
     "RIFFTypes.cpp",
@@ -17,8 +20,15 @@ shared_library("LibAudio") {
     "WavLoader.cpp",
     "WavWriter.cpp",
   ]
+  if (enable_pulseaudio) {
+    sources += [
+      "PlaybackStreamPulseAudio.cpp",
+      "PulseAudioWrappers.cpp",
+    ]
+  }
   deps = [
     "//AK",
+    "//Meta/gn/build/libs/pulse",
     "//Userland/Libraries/LibCore",
     "//Userland/Libraries/LibCrypto",
     "//Userland/Libraries/LibIPC",
