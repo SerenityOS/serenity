@@ -797,9 +797,7 @@ void GridFormattingContext::distribute_extra_space_across_spanned_tracks_base_si
     auto extra_space = max(CSSPixels(0), item_size_contribution - spanned_tracks_sizes_sum);
 
     // 2. Distribute space up to limits:
-    // FIXME: If a fixed-point type were used to represent CSS pixels, it would be possible to compare with 0
-    //        instead of epsilon.
-    while (extra_space > CSSPixels::epsilon()) {
+    while (true) {
         auto all_frozen = all_of(affected_tracks, [](auto const& track) { return track.base_size_frozen; });
         if (all_frozen)
             break;
@@ -808,6 +806,8 @@ void GridFormattingContext::distribute_extra_space_across_spanned_tracks_base_si
         // equally among such tracks, freezing a track’s item-incurred increase as its affected size + item-incurred
         // increase reaches its limit
         CSSPixels increase_per_track = extra_space / affected_tracks.size();
+        if (increase_per_track == 0)
+            break;
         for (auto& track : affected_tracks) {
             if (track.base_size_frozen)
                 continue;
@@ -887,9 +887,7 @@ void GridFormattingContext::distribute_extra_space_across_spanned_tracks_growth_
     auto extra_space = max(CSSPixels(0), item_size_contribution - spanned_tracks_sizes_sum);
 
     // 2. Distribute space up to limits:
-    // FIXME: If a fixed-point type were used to represent CSS pixels, it would be possible to compare with 0
-    //        instead of epsilon.
-    while (extra_space > CSSPixels::epsilon()) {
+    while (true) {
         auto all_frozen = all_of(affected_tracks, [](auto const& track) { return track.growth_limit_frozen; });
         if (all_frozen)
             break;
@@ -898,6 +896,8 @@ void GridFormattingContext::distribute_extra_space_across_spanned_tracks_growth_
         // equally among such tracks, freezing a track’s item-incurred increase as its affected size + item-incurred
         // increase reaches its limit
         CSSPixels increase_per_track = extra_space / affected_tracks.size();
+        if (increase_per_track == 0)
+            break;
         for (auto& track : affected_tracks) {
             if (track.growth_limit_frozen)
                 continue;
