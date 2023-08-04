@@ -1508,12 +1508,12 @@ public:
 
     i32 get(u32 x, u32 y) const
     {
-        return m_pixels[x * m_width + y];
+        return m_pixels[y * m_width + x];
     }
 
     void set(u32 x, u32 y, i32 value)
     {
-        m_pixels[x * m_width + y] = value;
+        m_pixels[y * m_width + x] = value;
     }
 
     u32 width() const
