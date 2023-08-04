@@ -119,7 +119,7 @@ CSSPixels CSSPixels::operator-(CSSPixels const& other) const
 CSSPixels CSSPixels::operator*(CSSPixels const& other) const
 {
     CSSPixels result;
-    result.set_raw_value((raw_value() * other.raw_value()) >> fractional_bits);
+    result.set_raw_value((static_cast<i64>(raw_value()) * other.raw_value()) >> fractional_bits);
     return result;
 }
 
