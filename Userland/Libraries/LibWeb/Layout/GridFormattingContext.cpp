@@ -754,9 +754,8 @@ void GridFormattingContext::resolve_intrinsic_track_sizes(AvailableSpace const& 
     size_t max_item_span = 1;
     for (auto& item : m_grid_items)
         max_item_span = max(item.span(dimension), max_item_span);
-    for (size_t span = 2; span <= max_item_span; span++) {
-        increase_sizes_to_accommodate_spanning_items_crossing_content_sized_tracks(available_space, dimension, 2);
-    }
+    for (size_t span = 2; span <= max_item_span; span++)
+        increase_sizes_to_accommodate_spanning_items_crossing_content_sized_tracks(available_space, dimension, span);
 
     // 4. Increase sizes to accommodate spanning items crossing flexible tracks: Next, repeat the previous
     // step instead considering (together, rather than grouped by span size) all items that do span a
