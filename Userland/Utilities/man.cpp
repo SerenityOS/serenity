@@ -98,7 +98,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto const title = "SerenityOS manual"_string;
 
     int spaces = max(view_width / 2 - page_name.code_points().length() - section_number.code_points().length() - title.code_points().length() / 2 - 4, 0);
-    outln("{}({}){}{}", page_name, section_number, String::repeated(' ', spaces), title);
+    outln("{}({}){}{}", page_name, section_number, TRY(String::repeated(' ', spaces)), title);
 
     auto document = Markdown::Document::parse(buffer);
     VERIFY(document);
