@@ -50,6 +50,7 @@ public:
     void set_style_sheet_list(Badge<StyleSheetList>, StyleSheetList*);
 
     Optional<StringView> default_namespace() const;
+    Optional<StringView> namespace_uri(StringView namespace_prefix) const;
 
 private:
     CSSStyleSheet(JS::Realm&, CSSRuleList&, MediaList&, Optional<AK::URL> location);
@@ -61,6 +62,7 @@ private:
 
     JS::GCPtr<CSSRuleList> m_rules;
     JS::GCPtr<CSSNamespaceRule> m_default_namespace_rule;
+    HashMap<FlyString, JS::GCPtr<CSSNamespaceRule>> m_namespace_rules;
 
     JS::GCPtr<StyleSheetList> m_style_sheet_list;
     JS::GCPtr<CSSRule> m_owner_css_rule;

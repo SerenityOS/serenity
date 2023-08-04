@@ -50,6 +50,8 @@ void CSSStyleSheet::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_rules);
     visitor.visit(m_owner_css_rule);
     visitor.visit(m_default_namespace_rule);
+    for (auto& [key, namespace_rule] : m_namespace_rules)
+        visitor.visit(namespace_rule);
 }
 
 // https://www.w3.org/TR/cssom/#dom-cssstylesheet-insertrule
@@ -150,8 +152,19 @@ Optional<StringView> CSSStyleSheet::default_namespace() const
     return {};
 }
 
+Optional<StringView> CSSStyleSheet::namespace_uri(StringView namespace_prefix) const
+{
+    return m_namespace_rules.get(namespace_prefix)
+        .map([](JS::GCPtr<CSSNamespaceRule> namespace_) {
+            return namespace_->namespace_uri().view();
+        });
+}
+
 void CSSStyleSheet::recalculate_namespaces()
 {
+    m_default_namespace_rule = nullptr;
+    m_namespace_rules.clear();
+
     for (JS::NonnullGCPtr<CSSRule> rule : *m_rules) {
         // "Any @namespace rules must follow all @charset and @import rules and precede all other
         // non-ignored at-rules and style rules in a style sheet.
@@ -174,7 +187,7 @@ void CSSStyleSheet::recalculate_namespaces()
         if (!namespace_rule.namespace_uri().is_empty() && namespace_rule.prefix().is_empty())
             m_default_namespace_rule = namespace_rule;
 
-        // FIXME: Store qualified namespace rules.
+        m_namespace_rules.set(FlyString::from_deprecated_fly_string(namespace_rule.prefix()).release_value_but_fixme_should_propagate_errors(), namespace_rule);
     }
 }
 
