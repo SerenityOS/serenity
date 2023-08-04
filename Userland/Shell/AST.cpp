@@ -654,6 +654,8 @@ ErrorOr<void> BarewordLiteral::highlight_in_editor(Line::Editor& editor, Shell& 
 #endif
 
             editor.stylize({ m_position.start_offset, m_position.end_offset }, style);
+        } else if (auto suggestions = shell.complete_program_name(m_text, m_text.bytes().size()); !suggestions.is_empty()) {
+            editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow) });
         } else {
             editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Red) });
         }
