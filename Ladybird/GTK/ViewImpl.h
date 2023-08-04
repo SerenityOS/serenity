@@ -45,6 +45,9 @@ private:
 
     virtual void create_client(WebView::EnableCallgrindProfiling) override;
 
+    void update_theme();
+
     Gfx::IntRect m_viewport_rect;
     LadybirdWebView* m_widget { nullptr };
+    gulong m_update_style_id { 0 };
 };

@@ -1,6 +1,7 @@
 #include "ViewImpl.h"
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibWeb/Crypto/Crypto.h>
+#include <adwaita.h>
 
 LadybirdViewImpl::LadybirdViewImpl(LadybirdWebView* widget)
     : WebView::ViewImplementation::ViewImplementation(WebView::UseJavaScriptBytecode::Yes)
@@ -19,10 +20,20 @@ LadybirdViewImpl::LadybirdViewImpl(LadybirdWebView* widget)
         ladybird_web_view_set_page_url(m_widget, url_string.characters());
         ladybird_web_view_set_loading(m_widget, false);
     };
+
+    AdwStyleManager* style_manager = adw_style_manager_get_default();
+    m_update_style_id = g_signal_connect_swapped(style_manager, "notify::dark", G_CALLBACK(+[](void* user_data) {
+        LadybirdViewImpl* self = reinterpret_cast<LadybirdViewImpl*>(user_data);
+        self->update_theme();
+    }),
+        this);
 }
 
 LadybirdViewImpl::~LadybirdViewImpl()
 {
+    AdwStyleManager* style_manager = adw_style_manager_get_default();
+    if (m_update_style_id)
+        g_signal_handler_disconnect(style_manager, m_update_style_id);
 }
 
 ErrorOr<NonnullOwnPtr<LadybirdViewImpl>> LadybirdViewImpl::create(LadybirdWebView* widget)
@@ -30,11 +41,6 @@ ErrorOr<NonnullOwnPtr<LadybirdViewImpl>> LadybirdViewImpl::create(LadybirdWebVie
     auto impl = TRY(adopt_nonnull_own_or_enomem(new (nothrow) LadybirdViewImpl(widget)));
     impl->create_client(WebView::EnableCallgrindProfiling::No);
     return impl;
-}
-
-static Core::AnonymousBuffer make_theme(void)
-{
-    return Gfx::load_system_theme(DeprecatedString::formatted("{}/Base/res/themes/Default.ini", getenv("SERENITY_SOURCE_DIR"))).release_value_but_fixme_should_propagate_errors();
 }
 
 static ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(LadybirdViewImpl& view_impl,
@@ -126,7 +132,7 @@ void LadybirdViewImpl::create_client(WebView::EnableCallgrindProfiling enable_ca
     };
     m_client_state.client_handle = Web::Crypto::generate_random_uuid().release_value_but_fixme_should_propagate_errors();
     client().async_set_window_handle(m_client_state.client_handle);
-    client().async_update_system_theme(make_theme());
+    update_theme();
 
     /*
         client().async_update_system_fonts(
@@ -134,6 +140,43 @@ void LadybirdViewImpl::create_client(WebView::EnableCallgrindProfiling enable_ca
             Gfx::FontDatabase::fixed_width_font_query(),
             Gfx::FontDatabase::window_title_font_query());
     */
+}
+
+void LadybirdViewImpl::update_theme()
+{
+    auto theme = Gfx::load_system_theme(DeprecatedString::formatted("{}/Base/res/themes/Default.ini", getenv("SERENITY_SOURCE_DIR"))).release_value_but_fixme_should_propagate_errors();
+    auto palette_impl = Gfx::PaletteImpl::create_with_anonymous_buffer(theme);
+    auto palette = Gfx::Palette(move(palette_impl));
+
+    AdwStyleManager* style_manager = adw_style_manager_get_default();
+    bool is_dark = adw_style_manager_get_dark(style_manager);
+    palette.set_flag(Gfx::FlagRole::IsDark, is_dark);
+
+    // TODO: Once https://gitlab.gnome.org/GNOME/libadwaita/-/merge_requests/369 lands,
+    // we're going to have actual libadwaita API for dynamically querying these colors
+    // (in addition to easily setting them). For now, we hardcode the color values as
+    // documented at https://gnome.pages.gitlab.gnome.org/libadwaita/doc/main/named-colors.html
+    Gfx::Color base, accent, selection, base_text, button;
+    if (!is_dark) {
+        base = Gfx::Color::from_rgb(0xfafafa);
+        accent = Gfx::Color::from_rgb(0x1c71d8);
+        base_text = Gfx::Color(Gfx::Color::Black).with_alpha(204);
+    } else {
+        base = Gfx::Color::from_rgb(0x242424);
+        accent = Gfx::Color::from_rgb(0x78aeed);
+        base_text = Gfx::Color::White;
+    }
+    selection = accent.with_alpha(77);                      // gtkalpha($accent_bg_color, 0.3)
+    button = base_text.with_alpha(base_text.alpha() * 0.1); // gtkalpha(currentColor, .1)
+    palette.set_color(Gfx::ColorRole::Accent, accent);
+    palette.set_color(Gfx::ColorRole::Selection, selection);
+    palette.set_color(Gfx::ColorRole::Base, base);
+    palette.set_color(Gfx::ColorRole::BaseText, base_text);
+    palette.set_color(Gfx::ColorRole::SelectionText, base_text);
+    palette.set_color(Gfx::ColorRole::ButtonText, base_text);
+    palette.set_color(Gfx::ColorRole::Button, button);
+
+    client().async_update_system_theme(theme);
 }
 
 void LadybirdViewImpl::set_viewport_rect(int x, int y, int width, int height)
