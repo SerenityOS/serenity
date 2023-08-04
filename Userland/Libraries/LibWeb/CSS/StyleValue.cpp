@@ -51,6 +51,7 @@
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PlaceContentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PlaceItemsStyleValue.h>
+#include <LibWeb/CSS/StyleValues/PlaceSelfStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RadialGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RatioStyleValue.h>
@@ -323,6 +324,12 @@ PlaceItemsStyleValue const& StyleValue::as_place_items() const
 {
     VERIFY(is_place_items());
     return static_cast<PlaceItemsStyleValue const&>(*this);
+}
+
+PlaceSelfStyleValue const& StyleValue::as_place_self() const
+{
+    VERIFY(is_place_self());
+    return static_cast<PlaceSelfStyleValue const&>(*this);
 }
 
 PositionStyleValue const& StyleValue::as_position() const

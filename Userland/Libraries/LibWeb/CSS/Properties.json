@@ -1785,6 +1785,14 @@
       "justify-items"
     ]
   },
+  "place-self": {
+    "inherited": false,
+    "initial": "normal",
+    "longhands": [
+      "align-self",
+      "justify-self"
+    ]
+  },
   "pointer-events": {
     "affects-layout": false,
     "inherited": true,

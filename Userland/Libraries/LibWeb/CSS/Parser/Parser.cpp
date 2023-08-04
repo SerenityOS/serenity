@@ -72,6 +72,7 @@
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PlaceContentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PlaceItemsStyleValue.h>
+#include <LibWeb/CSS/StyleValues/PlaceSelfStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RadialGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RatioStyleValue.h>
@@ -6314,6 +6315,25 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_place_items_value(Vector<ComponentValu
     return PlaceItemsStyleValue::create(*maybe_align_items_value, *maybe_justify_items_value);
 }
 
+ErrorOr<RefPtr<StyleValue>> Parser::parse_place_self_value(Vector<ComponentValue> const& component_values)
+{
+    auto tokens = TokenStream { component_values };
+    auto maybe_align_self_value = TRY(parse_css_value_for_property(PropertyID::AlignSelf, tokens));
+    if (!maybe_align_self_value)
+        return nullptr;
+
+    if (component_values.size() == 1) {
+        if (!property_accepts_identifier(PropertyID::JustifySelf, maybe_align_self_value->to_identifier()))
+            return nullptr;
+        return PlaceSelfStyleValue::create(*maybe_align_self_value, *maybe_align_self_value);
+    }
+
+    auto maybe_justify_self_value = TRY(parse_css_value_for_property(PropertyID::JustifySelf, tokens));
+    if (!maybe_justify_self_value)
+        return nullptr;
+    return PlaceItemsStyleValue::create(*maybe_align_self_value, *maybe_justify_self_value);
+}
+
 ErrorOr<RefPtr<StyleValue>> Parser::parse_text_decoration_value(Vector<ComponentValue> const& component_values)
 {
     RefPtr<StyleValue> decoration_line;
@@ -7553,6 +7573,10 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         return ParseError::SyntaxError;
     case PropertyID::PlaceItems:
         if (auto parsed_value = FIXME_TRY(parse_place_items_value(component_values)))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
+    case PropertyID::PlaceSelf:
+        if (auto parsed_value = FIXME_TRY(parse_place_self_value(component_values)))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::TextDecoration:

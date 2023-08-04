@@ -127,6 +127,7 @@ public:
         Percentage,
         PlaceContent,
         PlaceItems,
+        PlaceSelf,
         Position,
         RadialGradient,
         Ratio,
@@ -187,6 +188,7 @@ public:
     bool is_percentage() const { return type() == Type::Percentage; }
     bool is_place_content() const { return type() == Type::PlaceContent; }
     bool is_place_items() const { return type() == Type::PlaceItems; }
+    bool is_place_self() const { return type() == Type::PlaceSelf; }
     bool is_position() const { return type() == Type::Position; }
     bool is_radial_gradient() const { return type() == Type::RadialGradient; }
     bool is_ratio() const { return type() == Type::Ratio; }
@@ -246,6 +248,7 @@ public:
     PercentageStyleValue const& as_percentage() const;
     PlaceContentStyleValue const& as_place_content() const;
     PlaceItemsStyleValue const& as_place_items() const;
+    PlaceSelfStyleValue const& as_place_self() const;
     PositionStyleValue const& as_position() const;
     RadialGradientStyleValue const& as_radial_gradient() const;
     RatioStyleValue const& as_ratio() const;
@@ -301,6 +304,7 @@ public:
     PercentageStyleValue& as_percentage() { return const_cast<PercentageStyleValue&>(const_cast<StyleValue const&>(*this).as_percentage()); }
     PlaceContentStyleValue& as_place_content() { return const_cast<PlaceContentStyleValue&>(const_cast<StyleValue const&>(*this).as_place_content()); }
     PlaceItemsStyleValue& as_place_items() { return const_cast<PlaceItemsStyleValue&>(const_cast<StyleValue const&>(*this).as_place_items()); }
+    PlaceSelfStyleValue& as_place_self() { return const_cast<PlaceSelfStyleValue&>(const_cast<StyleValue const&>(*this).as_place_self()); }
     PositionStyleValue& as_position() { return const_cast<PositionStyleValue&>(const_cast<StyleValue const&>(*this).as_position()); }
     RadialGradientStyleValue& as_radial_gradient() { return const_cast<RadialGradientStyleValue&>(const_cast<StyleValue const&>(*this).as_radial_gradient()); }
     RatioStyleValue& as_ratio() { return const_cast<RatioStyleValue&>(const_cast<StyleValue const&>(*this).as_ratio()); }
