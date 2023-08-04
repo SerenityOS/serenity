@@ -135,6 +135,12 @@ done
 chmod 700 mnt/boot
 chmod 700 mnt/mod
 chmod 1777 mnt/tmp
+
+# Filesystem Hierarchy Standard (Linux Standard Base) - 4.9. /usr/local:
+# "The following directories, or symbolic links to directories, must be in /usr/local:"
+for dir in bin etc games include lib man sbin share src; do
+    mkdir -p mnt/usr/local/${dir}
+done
 echo "done"
 
 printf "creating utmp file... "
