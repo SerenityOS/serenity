@@ -27,14 +27,26 @@ static void show_about([[maybe_unused]] GSimpleAction* action, [[maybe_unused]] 
         nullptr
     };
 
-    adw_show_about_window(gtk_application_get_active_window(app),
+    AdwAboutWindow* about_window = ADW_ABOUT_WINDOW(g_object_new(ADW_TYPE_ABOUT_WINDOW,
         "application-name", "Ladybird",
         "version", "WIP",
+        "application-icon", "application-x-executable", // TODO: we need an icon!
+        "developer-name", "SerenityOS developers",
         "website", "https://ladybird.dev",
+        "issue-url", "https://github.com/SerenityOS/serenity/issues",
         "copyright", "© 2023 SerenityOS developers",
         "license-type", GTK_LICENSE_BSD,
         "developers", developers,
-        nullptr);
+        "comments", "Ladybird is a browser based on LibWeb web engine and LibJS JavaScript engine,"
+                    " developed by a large team of contributors as a part of the SerenityOS project.",
+        nullptr));
+
+    adw_about_window_add_link(about_window, "SerenityOS website", "https://serenityos.org");
+
+    GtkWindow* active_window = gtk_application_get_active_window(app);
+    if (active_window)
+        gtk_window_set_transient_for(GTK_WINDOW(about_window), active_window);
+    gtk_window_present(GTK_WINDOW(about_window));
 }
 
 static void do_quit([[maybe_unused]] GSimpleAction* action, [[maybe_unused]] GVariant* state, void* user_data)
