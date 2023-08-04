@@ -189,9 +189,7 @@ class AKStringView:
         if int(self.val["m_length"]) == 0:
             return '""'
         else:
-            characters = self.val["m_characters"]
-            str_type = characters.type.target().array(self.val["m_length"]).pointer()
-            return str(characters.cast(str_type).dereference())
+            return self.val["m_characters"].string(length=self.val["m_length"])
 
     @classmethod
     def prettyprint_type(cls, type):
@@ -213,8 +211,7 @@ class AKStringImpl:
         if int(self.val["m_length"]) == 0:
             return '""'
         else:
-            str_type = gdb.lookup_type("char").array(self.val["m_length"])
-            return get_field_unalloced(self.val, "m_inline_buffer", str_type)
+            return self.val["m_inline_buffer"].string(length=self.val["m_length"])
 
     @classmethod
     def prettyprint_type(cls, type):
