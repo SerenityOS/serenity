@@ -245,11 +245,9 @@ ErrorOr<void> VirtualFileSystem::remount(Custody& mount_point, int new_flags)
 {
     dbgln("VirtualFileSystem: Remounting inode {}", mount_point.inode().identifier());
 
-    auto* mount = find_mount_for_host_custody(mount_point);
-    if (!mount)
-        return ENODEV;
-
-    mount->set_flags(new_flags);
+    TRY(apply_to_mount_for_host_custody(mount_point, [new_flags](auto& mount) {
+        mount.set_flags(new_flags);
+    }));
     return {};
 }
 
@@ -372,25 +370,28 @@ ErrorOr<void> VirtualFileSystem::mount_root(FileSystem& fs)
     return {};
 }
 
-auto VirtualFileSystem::find_mount_for_host_custody(Custody const& current_custody) -> Mount*
+ErrorOr<void> VirtualFileSystem::apply_to_mount_for_host_custody(Custody const& current_custody, Function<void(Mount&)> callback)
 {
-    return m_mounts.with([&](auto& mounts) -> Mount* {
+    return m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
         // NOTE: We either search for the root mount or for a mount that has a parent custody!
         if (!current_custody.parent()) {
             for (auto& mount : mounts) {
-                if (!mount.host_custody())
-                    return &mount;
+                if (!mount.host_custody()) {
+                    callback(mount);
+                    return {};
+                }
             }
             // NOTE: There must be a root mount entry, so fail if we don't find it.
             VERIFY_NOT_REACHED();
         } else {
             for (auto& mount : mounts) {
                 if (mount.host_custody() && check_matching_absolute_path_hierarchy(*mount.host_custody(), current_custody)) {
-                    return &mount;
+                    callback(mount);
+                    return {};
                 }
             }
         }
-        return nullptr;
+        return Error::from_errno(ENODEV);
     });
 }
 
@@ -1225,9 +1226,11 @@ ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path_without_veil(Cre
 
         // See if there's something mounted on the child; in that case
         // we would need to return the guest inode, not the host inode.
-        if (auto mount = find_mount_for_host_custody(current_custody)) {
-            child_inode = mount->guest();
-            mount_flags_for_child = mount->flags();
+        auto found_mount_or_error = apply_to_mount_for_host_custody(current_custody, [&child_inode, &mount_flags_for_child](auto& mount) {
+            child_inode = mount.guest();
+            mount_flags_for_child = mount.flags();
+        });
+        if (!found_mount_or_error.is_error()) {
             custody = TRY(Custody::try_create(&parent, part, *child_inode, mount_flags_for_child));
         } else {
             custody = current_custody;
