@@ -408,21 +408,7 @@ bool VirtualFileSystem::is_vfs_root(InodeIdentifier inode) const
 ErrorOr<void> VirtualFileSystem::traverse_directory_inode(Inode& dir_inode, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback)
 {
     return dir_inode.traverse_as_directory([&](auto& entry) -> ErrorOr<void> {
-        InodeIdentifier resolved_inode;
-        if (auto mount = find_mount_for_host(entry.inode))
-            resolved_inode = mount->guest().identifier();
-        else
-            resolved_inode = entry.inode;
-
-        // FIXME: This is now broken considering chroot and bind mounts.
-        bool is_root_inode = dir_inode.identifier() == dir_inode.fs().root_inode().identifier();
-        if (is_root_inode && !is_vfs_root(dir_inode.identifier()) && entry.name == "..") {
-            auto mount = find_mount_for_guest(dir_inode.identifier());
-            VERIFY(mount);
-            VERIFY(mount->host());
-            resolved_inode = mount->host()->identifier();
-        }
-        TRY(callback({ entry.name, resolved_inode, entry.file_type }));
+        TRY(callback({ entry.name, entry.inode, entry.file_type }));
         return {};
     });
 }
