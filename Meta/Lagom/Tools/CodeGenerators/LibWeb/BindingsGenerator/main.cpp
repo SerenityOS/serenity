@@ -128,13 +128,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto write_if_changed = [&](auto generator_function, StringView file_path) -> ErrorOr<void> {
         (*generator_function)(interface, output_builder);
 
-        auto output_file = TRY(Core::File::open(file_path, Core::File::OpenMode::ReadWrite | Core::File::OpenMode::Truncate));
+        auto current_file_or_error = Core::File::open(file_path, Core::File::OpenMode::Read);
+        if (current_file_or_error.is_error() && current_file_or_error.error().code() != ENOENT)
+            return current_file_or_error.release_error();
 
+        ByteBuffer current_contents;
+        if (!current_file_or_error.is_error())
+            current_contents = TRY(current_file_or_error.value()->read_until_eof());
         // Only write to disk if contents have changed
-        auto previous_contents = TRY(output_file->read_until_eof());
-        TRY(output_file->seek(0, SeekMode::SetPosition));
-        if (previous_contents != output_builder.string_view().bytes())
+        if (current_contents != output_builder.string_view().bytes()) {
+            auto output_file = TRY(Core::File::open(file_path, Core::File::OpenMode::Write | Core::File::OpenMode::Truncate));
             TRY(output_file->write_until_depleted(output_builder.string_view().bytes()));
+        }
         // FIXME: Can we add clear_with_capacity to StringBuilder instead of throwing away the allocated buffer?
         output_builder.clear();
         return {};
