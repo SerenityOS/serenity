@@ -1140,7 +1140,7 @@ public:
             dbgln("JPEGXLLoader: ANS decoder left in invalid state");
     }
 
-    static ErrorOr<EntropyDecoder> create(LittleEndianInputBitStream& stream, u8 initial_num_distrib)
+    static ErrorOr<EntropyDecoder> create(LittleEndianInputBitStream& stream, u32 initial_num_distrib)
     {
         EntropyDecoder entropy_decoder;
         // C.2 - Distribution decoding
@@ -1200,7 +1200,7 @@ public:
         return entropy_decoder;
     }
 
-    ErrorOr<u32> decode_hybrid_uint(LittleEndianInputBitStream& stream, u16 context)
+    ErrorOr<u32> decode_hybrid_uint(LittleEndianInputBitStream& stream, u32 context)
     {
         // C.3.3 - Hybrid integer decoding
 
@@ -1276,7 +1276,7 @@ private:
         return config;
     }
 
-    ErrorOr<void> read_pre_clustered_distributions(LittleEndianInputBitStream& stream, u8 num_distrib)
+    ErrorOr<void> read_pre_clustered_distributions(LittleEndianInputBitStream& stream, u32 num_distrib)
     {
         // C.2.2  Distribution clustering
         if (num_distrib == 1) {
@@ -1293,7 +1293,7 @@ private:
         u16 num_clusters = 0;
 
         auto const read_clusters = [&](auto&& reader) -> ErrorOr<void> {
-            for (u8 i {}; i < num_distrib; ++i) {
+            for (u32 i {}; i < num_distrib; ++i) {
                 m_clusters[i] = TRY(reader());
                 if (m_clusters[i] >= num_clusters)
                     num_clusters = m_clusters[i] + 1;
@@ -1335,7 +1335,7 @@ private:
 class MATree {
 public:
     struct LeafNode {
-        u8 ctx {};
+        u32 ctx {};
         u8 predictor {};
         i32 offset {};
         u32 multiplier {};
