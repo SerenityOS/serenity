@@ -161,9 +161,4 @@ CSSPixels CSSPixels::abs() const
     return result;
 }
 
-float CSSPixels::epsilon()
-{
-    return 1.0f / fixed_point_denominator;
-}
-
 }

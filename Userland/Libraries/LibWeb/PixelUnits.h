@@ -92,8 +92,6 @@ public:
 
     CSSPixels abs() const;
 
-    static float epsilon();
-
 private:
     i32 m_value { 0 };
 };
