@@ -494,8 +494,10 @@ void Editor::case_change_word(Editor::CaseChangeOp change_op)
             m_buffer[m_cursor] = to_ascii_lowercase(m_buffer[m_cursor]);
         }
         ++m_cursor;
-        m_refresh_needed = true;
     }
+
+    m_refresh_needed = true;
+    m_chars_touched_in_the_middle = 1;
 }
 
 void Editor::capitalize_word()
