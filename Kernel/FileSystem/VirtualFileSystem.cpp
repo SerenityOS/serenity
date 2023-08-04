@@ -100,11 +100,31 @@ InodeIdentifier VirtualFileSystem::root_inode_id() const
     return m_root_inode->identifier();
 }
 
-bool VirtualFileSystem::mount_point_exists_at_inode(InodeIdentifier inode_identifier)
+bool VirtualFileSystem::check_matching_absolute_path_hierarchy(Custody const& first_custody, Custody const& second_custody)
+{
+    // Are both custodies the root mount?
+    if (!first_custody.parent() && !second_custody.parent())
+        return true;
+    if (first_custody.name() != second_custody.name())
+        return false;
+    auto const* custody1 = &first_custody;
+    auto const* custody2 = &second_custody;
+    while (custody1->parent()) {
+        if (!custody2->parent())
+            return false;
+        if (custody1->parent().ptr() != custody2->parent().ptr())
+            return false;
+        custody1 = custody1->parent();
+        custody2 = custody2->parent();
+    }
+    return true;
+}
+
+bool VirtualFileSystem::mount_point_exists_at_custody(Custody& mount_point)
 {
     return m_mounts.with([&](auto& mounts) -> bool {
-        return any_of(mounts, [&inode_identifier](auto const& existing_mount) {
-            return existing_mount.host() && existing_mount.host()->identifier() == inode_identifier;
+        return any_of(mounts, [&mount_point](auto const& existing_mount) {
+            return existing_mount.host_custody() && check_matching_absolute_path_hierarchy(*existing_mount.host_custody(), mount_point);
         });
     });
 }
@@ -113,14 +133,14 @@ ErrorOr<void> VirtualFileSystem::add_file_system_to_mount_table(FileSystem& file
 {
     auto new_mount = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Mount(file_system, &mount_point, flags)));
     return m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
-        auto& inode = mount_point.inode();
+        auto& mount_point_inode = mount_point.inode();
         dbgln("VirtualFileSystem: FileSystemID {}, Mounting {} at inode {} with flags {}",
             file_system.fsid(),
             file_system.class_name(),
-            inode.identifier(),
+            mount_point_inode.identifier(),
             flags);
-        if (mount_point_exists_at_inode(inode.identifier())) {
-            dbgln("VirtualFileSystem: Mounting unsuccessful - inode {} is already a mount-point.", inode.identifier());
+        if (mount_point_exists_at_custody(mount_point)) {
+            dbgln("VirtualFileSystem: Mounting unsuccessful - inode {} is already a mount-point.", mount_point_inode.identifier());
             return EBUSY;
         }
         // Note: Actually add a mount for the filesystem and increment the filesystem mounted count
@@ -211,7 +231,7 @@ ErrorOr<void> VirtualFileSystem::bind_mount(Custody& source, Custody& mount_poin
     return m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
         auto& inode = mount_point.inode();
         dbgln("VirtualFileSystem: Bind-mounting inode {} at inode {}", source.inode().identifier(), inode.identifier());
-        if (mount_point_exists_at_inode(inode.identifier())) {
+        if (mount_point_exists_at_custody(mount_point)) {
             dbgln("VirtualFileSystem: Bind-mounting unsuccessful - inode {} is already a mount-point.",
                 mount_point.inode().identifier());
             return EBUSY;
