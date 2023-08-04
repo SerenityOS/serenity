@@ -9,28 +9,16 @@ depends=(
   'zlib'
   'zstd'
 )
-configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
-
-configure() {
-    mkdir -p curl-build
-    cmake -G Ninja \
-    -S curl-${version} \
-    -B curl-build \
-    "${configopts[@]}" \
-    -DCURL_USE_OPENSSL=ON \
-    -DCURL_ZSTD=ON \
-    -DCURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
-    -DCURL_CA_PATH=none \
-    -DCURL_DISABLE_NTLM=ON \
-    -DCURL_DISABLE_SOCKETPAIR=ON \
-    -DCURL_DISABLE_TESTS=ON \
+configopts=(
+    -Bbuild
+    -DCURL_USE_OPENSSL=ON 
+    -DCURL_ZSTD=ON 
+    -DCURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+    -DCURL_CA_PATH=none
+    -DCURL_DISABLE_NTLM=ON
+    -DCURL_DISABLE_SOCKETPAIR=ON
+    -DCURL_DISABLE_TESTS=ON
     -DCURL_HIDDEN_SYMBOLS=OFF
-}
-
-build() {
-    ninja -C curl-build
-}
-
-install() {
-    ninja -C curl-build install
-}
+)
+configscript=cmake
+generator=ninja
