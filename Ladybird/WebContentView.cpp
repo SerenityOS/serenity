@@ -81,7 +81,7 @@ WebContentView::WebContentView(StringView webdriver_content_ipc_path, WebView::E
 
 WebContentView::~WebContentView() = default;
 
-unsigned get_button_from_qt_event(QMouseEvent const& event)
+unsigned get_button_from_qt_event(QSinglePointEvent const& event)
 {
     if (event.button() == Qt::MouseButton::LeftButton)
         return 1;
@@ -96,7 +96,7 @@ unsigned get_button_from_qt_event(QMouseEvent const& event)
     return 0;
 }
 
-unsigned get_buttons_from_qt_event(QMouseEvent const& event)
+unsigned get_buttons_from_qt_event(QSinglePointEvent const& event)
 {
     unsigned buttons = 0;
     if (event.buttons() & Qt::MouseButton::LeftButton)
@@ -112,7 +112,7 @@ unsigned get_buttons_from_qt_event(QMouseEvent const& event)
     return buttons;
 }
 
-unsigned get_modifiers_from_qt_mouse_event(QMouseEvent const& event)
+unsigned get_modifiers_from_qt_mouse_event(QSinglePointEvent const& event)
 {
     unsigned modifiers = 0;
     if (event.modifiers() & Qt::Modifier::ALT)
@@ -278,7 +278,18 @@ KeyCode get_keycode_from_qt_keyboard_event(QKeyEvent const& event)
 void WebContentView::wheelEvent(QWheelEvent* event)
 {
     if (!event->modifiers().testFlag(Qt::ControlModifier)) {
-        QAbstractScrollArea::wheelEvent(event);
+        Gfx::IntPoint position(event->position().x() / m_inverse_pixel_scaling_ratio, event->position().y() / m_inverse_pixel_scaling_ratio);
+        auto button = get_button_from_qt_event(*event);
+        auto buttons = get_buttons_from_qt_event(*event);
+        auto modifiers = get_modifiers_from_qt_mouse_event(*event);
+        auto num_pixels = -event->pixelDelta() / m_inverse_pixel_scaling_ratio;
+        auto num_degrees = -event->angleDelta() / 8;
+        if (!num_pixels.isNull()) {
+            client().async_mouse_wheel(to_content_position(position), button, buttons, modifiers, num_pixels.x(), num_pixels.y());
+        } else if (!num_degrees.isNull()) {
+            client().async_mouse_wheel(to_content_position(position), button, buttons, modifiers, num_degrees.x(), num_degrees.y());
+        }
+
         event->accept();
         return;
     }
