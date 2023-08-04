@@ -88,8 +88,6 @@ public:
 
     ErrorOr<void> for_each_mount(Function<ErrorOr<void>(Mount const&)>) const;
 
-    InodeIdentifier root_inode_id() const;
-
     void sync_filesystems();
     void lock_all_filesystems();
 
@@ -111,16 +109,13 @@ private:
 
     ErrorOr<void> add_file_system_to_mount_table(FileSystem& file_system, Custody& mount_point, int flags);
 
-    bool is_vfs_root(InodeIdentifier) const;
-
     ErrorOr<void> traverse_directory_inode(Inode&, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>);
 
     static bool check_matching_absolute_path_hierarchy(Custody const& first_custody, Custody const& second_custody);
     bool mount_point_exists_at_custody(Custody& mount_point);
 
-    // FIXME: These functions are totally unsafe as someone could unmount the returned Mount underneath us.
+    // FIXME: This function is totally unsafe as someone could unmount the returned Mount underneath us.
     Mount* find_mount_for_host_custody(Custody const& current_custody);
-    Mount* find_mount_for_guest(InodeIdentifier);
 
     RefPtr<Inode> m_root_inode;
 

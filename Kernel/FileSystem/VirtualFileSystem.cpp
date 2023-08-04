@@ -94,12 +94,6 @@ UNMAP_AFTER_INIT VirtualFileSystem::VirtualFileSystem()
 
 UNMAP_AFTER_INIT VirtualFileSystem::~VirtualFileSystem() = default;
 
-InodeIdentifier VirtualFileSystem::root_inode_id() const
-{
-    VERIFY(m_root_inode);
-    return m_root_inode->identifier();
-}
-
 bool VirtualFileSystem::check_matching_absolute_path_hierarchy(Custody const& first_custody, Custody const& second_custody)
 {
     // Are both custodies the root mount?
@@ -251,7 +245,7 @@ ErrorOr<void> VirtualFileSystem::remount(Custody& mount_point, int new_flags)
 {
     dbgln("VirtualFileSystem: Remounting inode {}", mount_point.inode().identifier());
 
-    auto* mount = find_mount_for_guest(mount_point.inode().identifier());
+    auto* mount = find_mount_for_host_custody(mount_point);
     if (!mount)
         return ENODEV;
 
@@ -398,22 +392,6 @@ auto VirtualFileSystem::find_mount_for_host_custody(Custody const& current_custo
         }
         return nullptr;
     });
-}
-
-auto VirtualFileSystem::find_mount_for_guest(InodeIdentifier id) -> Mount*
-{
-    return m_mounts.with([&](auto& mounts) -> Mount* {
-        for (auto& mount : mounts) {
-            if (mount.guest().identifier() == id)
-                return &mount;
-        }
-        return nullptr;
-    });
-}
-
-bool VirtualFileSystem::is_vfs_root(InodeIdentifier inode) const
-{
-    return inode == root_inode_id();
 }
 
 ErrorOr<void> VirtualFileSystem::traverse_directory_inode(Inode& dir_inode, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback)
