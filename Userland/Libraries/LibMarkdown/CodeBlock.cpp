@@ -66,9 +66,8 @@ Vector<DeprecatedString> CodeBlock::render_lines_for_terminal(size_t) const
             indentation = "  "sv;
     }
 
-    for (auto const& line : m_code.split('\n'))
+    for (auto const& line : m_code.split('\n', SplitBehavior::KeepEmpty))
         lines.append(DeprecatedString::formatted("{}{}", indentation, line));
-    lines.append("");
 
     return lines;
 }
