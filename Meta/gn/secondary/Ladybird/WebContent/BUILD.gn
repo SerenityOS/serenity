@@ -1,5 +1,6 @@
 import("//Ladybird/link_qt.gni")
 import("//Ladybird/moc_qt_objects.gni")
+import("//Meta/gn/build/libs/pulse/enable.gni")
 
 moc_qt_objects("generate_moc") {
   sources = [
@@ -30,6 +31,7 @@ executable("WebContent") {
   deps = [
     ":generate_moc",
     "//AK",
+    "//Meta/gn/build/libs/pulse",
     "//Userland/Libraries/LibCore",
     "//Userland/Libraries/LibFileSystem",
     "//Userland/Libraries/LibGfx",

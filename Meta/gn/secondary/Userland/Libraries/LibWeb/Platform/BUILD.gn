@@ -3,6 +3,7 @@ source_set("Platform") {
   deps = [ "//Userland/Libraries/LibWeb:all_generated" ]
   sources = [
     "AudioCodecPlugin.cpp",
+    "AudioCodecPluginAgnostic.cpp",
     "EventLoopPlugin.cpp",
     "EventLoopPluginSerenity.cpp",
     "FontPlugin.cpp",
