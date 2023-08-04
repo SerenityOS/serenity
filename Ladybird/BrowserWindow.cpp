@@ -614,6 +614,13 @@ void BrowserWindow::reset_zoom()
     update_displayed_zoom_level();
 }
 
+void BrowserWindow::update_zoom_menu()
+{
+    VERIFY(m_zoom_menu);
+    auto zoom_level_text = MUST(String::formatted("&Zoom ({}%)", round_to<int>(m_current_tab->view().zoom_level() * 100)));
+    m_zoom_menu->setTitle(qstring_from_ak_string(zoom_level_text));
+}
+
 void BrowserWindow::select_all()
 {
     if (!m_current_tab)
@@ -627,9 +634,8 @@ void BrowserWindow::select_all()
 
 void BrowserWindow::update_displayed_zoom_level()
 {
-    VERIFY(m_zoom_menu && m_current_tab);
-    auto zoom_level_text = MUST(String::formatted("&Zoom ({}%)", round_to<int>(m_current_tab->view().zoom_level() * 100)));
-    m_zoom_menu->setTitle(qstring_from_ak_string(zoom_level_text));
+    VERIFY(m_current_tab);
+    update_zoom_menu();
     m_current_tab->update_reset_zoom_button();
 }
 

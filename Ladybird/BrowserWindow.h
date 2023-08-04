@@ -85,6 +85,7 @@ public slots:
     void zoom_in();
     void zoom_out();
     void reset_zoom();
+    void update_zoom_menu();
     void select_all();
     void copy_selected_text();
 

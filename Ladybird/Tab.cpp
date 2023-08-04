@@ -94,6 +94,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     QObject::connect(m_reset_zoom_button, &QAbstractButton::clicked, [this] {
         view().reset_zoom();
         update_reset_zoom_button();
+        m_window->update_zoom_menu();
     });
 
     view().on_activate_tab = [this] {

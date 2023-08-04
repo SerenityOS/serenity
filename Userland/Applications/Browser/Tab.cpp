@@ -207,6 +207,7 @@ Tab::Tab(BrowserWindow& window, WebView::UseJavaScriptBytecode use_javascript_by
     m_reset_zoom_button->on_click = [&](auto) {
         view().reset_zoom();
         update_reset_zoom_button();
+        window.update_zoom_menu();
     };
     m_reset_zoom_button->set_button_style(Gfx::ButtonStyle::Coolbar);
     m_reset_zoom_button->set_visible(false);
