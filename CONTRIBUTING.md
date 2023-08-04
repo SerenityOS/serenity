@@ -82,7 +82,18 @@ Ping them right away if it's something urgent! If it's less urgent, advertise yo
 
 ### Who are the project maintainers?
 
-The project maintainers at this time are [@awesomekling](https://github.com/awesomekling), [@alimpfard](https://github.com/alimpfard), [@trflynn89](https://github.com/trflynn89), [@AtkinsSJ](https://github.com/AtkinsSJ), [@ADKaster](https://github.com/ADKaster), and [@GMTA](https://github.com/gmta).
+The project founder and [BDFL](https://en.wikipedia.org/wiki/Benevolent_dictator_for_life) is [@awesomekling](https://github.com/awesomekling).
+
+There is also a group of maintainers with the ability to approve and merge PRs:
+- [@ADKaster](https://github.com/ADKaster)
+- [@alimpfard](https://github.com/alimpfard)
+- [@AtkinsSJ](https://github.com/AtkinsSJ)
+- [@BertalanD](https://github.com/BertalanD)
+- [@GMTA](https://github.com/gmta)
+- [@kalenikaliaksandr](https://github.com/kalenikaliaksandr)
+- [@Lubrsi](https://github.com/Lubrsi)
+- [@timschumi](https://github.com/timschumi)
+- [@trflynn89](https://github.com/trflynn89)
 
 Maintainership is by invitation only and does not correlate with any particular metric.
 
