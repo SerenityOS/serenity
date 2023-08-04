@@ -56,10 +56,7 @@ bool CSSPixels::might_be_saturated() const
     return raw_value() == NumericLimits<i32>::max() || raw_value() == NumericLimits<i32>::min();
 }
 
-bool CSSPixels::operator==(CSSPixels const& other) const
-{
-    return raw_value() == other.raw_value();
-}
+bool CSSPixels::operator==(CSSPixels const& other) const = default;
 
 CSSPixels& CSSPixels::operator++()
 {
