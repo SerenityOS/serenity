@@ -210,6 +210,9 @@ void ConnectionFromClient::process_next_input_event()
                     event.button, event.buttons, event.modifiers));
                 break;
             case QueuedMouseEvent::Type::MouseWheel:
+                for (size_t i = 0; i < event.coalesced_event_count; ++i) {
+                    report_finished_handling_input_event(false);
+                }
                 report_finished_handling_input_event(page().handle_mousewheel(
                     event.position.to_type<Web::DevicePixels>(),
                     event.button, event.buttons, event.modifiers, event.wheel_delta_x, event.wheel_delta_y));
@@ -279,16 +282,29 @@ void ConnectionFromClient::mouse_up(Gfx::IntPoint position, unsigned int button,
 
 void ConnectionFromClient::mouse_wheel(Gfx::IntPoint position, unsigned int button, unsigned int buttons, unsigned int modifiers, i32 wheel_delta_x, i32 wheel_delta_y)
 {
-    enqueue_input_event(
-        QueuedMouseEvent {
-            .type = QueuedMouseEvent::Type::MouseWheel,
-            .position = position,
-            .button = button,
-            .buttons = buttons,
-            .modifiers = modifiers,
-            .wheel_delta_x = wheel_delta_x,
-            .wheel_delta_y = wheel_delta_y,
-        });
+    auto event = QueuedMouseEvent {
+        .type = QueuedMouseEvent::Type::MouseWheel,
+        .position = position,
+        .button = button,
+        .buttons = buttons,
+        .modifiers = modifiers,
+        .wheel_delta_x = wheel_delta_x,
+        .wheel_delta_y = wheel_delta_y,
+    };
+
+    // OPTIMIZATION: Coalesce with previous unprocessed event if the previous event is also a MouseWheel event.
+    if (!m_input_event_queue.is_empty()
+        && m_input_event_queue.tail().has<QueuedMouseEvent>()
+        && m_input_event_queue.tail().get<QueuedMouseEvent>().type == QueuedMouseEvent::Type::MouseWheel) {
+        auto const& last_event = m_input_event_queue.tail().get<QueuedMouseEvent>();
+        event.coalesced_event_count = last_event.coalesced_event_count + 1;
+        event.wheel_delta_x += last_event.wheel_delta_x;
+        event.wheel_delta_y += last_event.wheel_delta_y;
+        m_input_event_queue.tail() = event;
+        return;
+    }
+
+    enqueue_input_event(move(event));
 }
 
 void ConnectionFromClient::doubleclick(Gfx::IntPoint position, unsigned int button, unsigned int buttons, unsigned int modifiers)
