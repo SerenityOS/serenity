@@ -111,6 +111,7 @@ set(SOURCES
     CSS/StyleValues/OverflowStyleValue.cpp
     CSS/StyleValues/PlaceContentStyleValue.cpp
     CSS/StyleValues/PlaceItemsStyleValue.cpp
+    CSS/StyleValues/PlaceSelfStyleValue.cpp
     CSS/StyleValues/PositionStyleValue.cpp
     CSS/StyleValues/RadialGradientStyleValue.cpp
     CSS/StyleValues/RectStyleValue.cpp
