@@ -11,17 +11,28 @@ namespace Web {
 
 CSSPixels::CSSPixels(int value)
 {
-    m_value = value * fixed_point_denominator;
+    if (value > max_integer_value) [[unlikely]]
+        m_value = NumericLimits<int>::max();
+    else if (value < min_integer_value) [[unlikely]]
+        m_value = NumericLimits<int>::min();
+    else
+        m_value = value << fractional_bits;
 }
 
 CSSPixels::CSSPixels(unsigned int value)
 {
-    m_value = value * fixed_point_denominator;
+    if (value > max_integer_value) [[unlikely]]
+        m_value = NumericLimits<int>::max();
+    else
+        m_value = static_cast<int>(value) << fractional_bits;
 }
 
 CSSPixels::CSSPixels(unsigned long value)
 {
-    m_value = value * fixed_point_denominator;
+    if (value > max_integer_value) [[unlikely]]
+        m_value = NumericLimits<int>::max();
+    else
+        m_value = static_cast<int>(value) << fractional_bits;
 }
 
 CSSPixels::CSSPixels(float value)

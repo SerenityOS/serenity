@@ -57,6 +57,9 @@ public:
 
     static constexpr i32 radix_mask = fixed_point_denominator - 1;
 
+    static constexpr i32 max_integer_value = NumericLimits<int>::max() >> fractional_bits;
+    static constexpr i32 min_integer_value = NumericLimits<int>::min() >> fractional_bits;
+
     CSSPixels() = default;
     CSSPixels(int value);
     CSSPixels(unsigned int value);
