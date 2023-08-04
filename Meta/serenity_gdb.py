@@ -38,6 +38,8 @@ def handler_class_for_type(type, re=re.compile('^([^<]+)(<.*>)?$')):
         return AKSinglyLinkedList
     elif klass == 'AK::String':
         return AKString
+    elif klass == 'AK::DeprecatedString':
+        return AKDeprecatedString
     elif klass == 'AK::StringView':
         return AKStringView
     elif klass == 'AK::StringImpl':
@@ -150,6 +152,24 @@ class AKString:
         self.val = val
 
     def to_string(self):
+        # Using the internal structure directly is quite convoluted here because of the packing optimizations
+        # of AK::String (could be a short string, a substring, or a normal string).
+        # This workaround was described in the gdb bugzilla on a discussion of supporting direct method calls
+        # on values: https://sourceware.org/bugzilla/show_bug.cgi?id=13326
+        gdb.set_convenience_variable('_tmp', self.val.reference_value())
+        string_view = gdb.parse_and_eval('$_tmp.bytes_as_string_view()')
+        return AKStringView(string_view).to_string()
+
+    @classmethod
+    def prettyprint_type(cls, type):
+        return 'AK::String'
+
+
+class AKDeprecatedString:
+    def __init__(self, val):
+        self.val = val
+
+    def to_string(self):
         if int(self.val["m_impl"]["m_ptr"]) == 0:
             return '""'
         else:
@@ -158,7 +178,7 @@ class AKString:
 
     @classmethod
     def prettyprint_type(cls, type):
-        return 'AK::String'
+        return 'AK::DeprecatedString'
 
 
 class AKStringView:
