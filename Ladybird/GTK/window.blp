@@ -25,21 +25,25 @@ template $LadybirdWindow : Adw.ApplicationWindow {
             icon-name: "go-previous-symbolic";
             action-name: "page.navigate-back";
             tooltip-text: _("Navigate Back");
+            focus-on-click: false;
           }
           Button forward_button {
             icon-name: "go-next-symbolic";
             action-name: "page.navigate-forward";
             tooltip-text: _("Navigate Forward");
+            focus-on-click: false;
           }
           Button refresh_button {
             icon-name: "view-refresh-symbolic";
             action-name: "page.reload-page";
             tooltip-text: _("Reload Page");
+            focus-on-click: false;
           }
           Button new_tab_button {
             icon-name: "tab-new-symbolic";
             action-name: "win.new-tab";
             tooltip-text: _("New Tab");
+            focus-on-click: false;
           }
         }
 
