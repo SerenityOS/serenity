@@ -1208,17 +1208,7 @@ public:
             TODO();
 
         // Read symbol from entropy coded stream using D[clusters[ctx]]
-        u32 token {};
-        TRY(m_distributions.visit(
-            [&](Vector<BrotliCanonicalCode> const& distributions) -> ErrorOr<void> {
-                token = TRY(distributions[m_clusters[context]].read_symbol(stream));
-                return {};
-            },
-            [&](Vector<ANSHistogram> const& distributions) -> ErrorOr<void> {
-                token = TRY(distributions[m_clusters[context]].read_symbol(stream, m_state));
-                return {};
-            }));
-
+        auto const token = TRY(read_symbol(stream, context));
         auto r = TRY(read_uint(stream, m_configs[m_clusters[context]], token));
         return r;
     }
@@ -1274,6 +1264,21 @@ private:
 
         config.split = 1 << config.split_exponent;
         return config;
+    }
+
+    ErrorOr<u32> read_symbol(LittleEndianInputBitStream& stream, u32 context)
+    {
+        u32 token {};
+        TRY(m_distributions.visit(
+            [&](Vector<BrotliCanonicalCode> const& distributions) -> ErrorOr<void> {
+                token = TRY(distributions[m_clusters[context]].read_symbol(stream));
+                return {};
+            },
+            [&](Vector<ANSHistogram> const& distributions) -> ErrorOr<void> {
+                token = TRY(distributions[m_clusters[context]].read_symbol(stream, m_state));
+                return {};
+            }));
+        return token;
     }
 
     ErrorOr<void> read_pre_clustered_distributions(LittleEndianInputBitStream& stream, u32 num_distrib)
