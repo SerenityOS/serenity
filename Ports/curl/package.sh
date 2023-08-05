@@ -10,7 +10,6 @@ depends=(
   'zstd'
 )
 configopts=(
-    -Bbuild
     -DCURL_USE_OPENSSL=ON 
     -DCURL_ZSTD=ON 
     -DCURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
@@ -20,4 +19,3 @@ configopts=(
     -DCURL_DISABLE_TESTS=ON
     -DCURL_HIDDEN_SYMBOLS=OFF
 )
-configscript=cmake

@@ -115,6 +115,23 @@ fi
 mkdir -p "${PORT_BUILD_DIR}"
 cd "${PORT_BUILD_DIR}"
 
+# Extract build directory from configopts
+CMAKE_BINARY_DIR="build"
+new_configopts=()
+for configopt in "${configopts[@]}"; do
+    # capture the value of the build option
+    if [[ "$configopt" =~ ^(-B)([[:space:]]*)(.*)$ ]]; then
+        # BASH_REMATCH is an array that holds all the group matches
+        # from the previous regex match.
+        # https://www.bashsupport.com/bash/variables/bash/bash_rematch/
+        CMAKE_BINARY_DIR="${BASH_REMATCH[3]}"
+    else
+        new_configopts+=("$configopt")
+    fi
+done
+configopts=("${new_configopts[@]}")
+unset new_configopts
+
 cleanup_git() {
     echo "WARNING: Reverting changes to $workdir as we are in dev mode!"
     run git clean -xffd >/dev/null 2>&1
@@ -173,19 +190,6 @@ get_new_config_guess() {
     if ! run grep -q SerenityOS "$config_guess"; then
         run do_download_file "https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess" "${config_guess}" false
     fi
-}
-
-get_cmake_binary_dir() {
-    for configopt in "${configopts[@]}"; do
-        # capture the value of the build option
-        if [[ "$configopt" =~ ^(-B)([[:space:]]*)(.*)$ ]]; then
-            # BASH_REMATCH is an array containing all the group matches
-            # from regex match above
-            # https://www.bashsupport.com/bash/variables/bash/bash_rematch/
-            echo "${BASH_REMATCH[3]}"
-            return
-        fi
-    done
 }
 
 ensure_new_config_sub() {
@@ -425,15 +429,8 @@ func_defined pre_configure || pre_configure() {
     :
 }
 func_defined configure || configure() {
-    if [[ "$configscript" == "cmake" ]]; then
-        case "$generator" in
-            ninja)
-                configopts+=("-GNinja")
-            ;;
-        esac
-
-        # FIXME: run get_cmake_binary_dir only once here
-        run cmake -S "${PORT_BUILD_DIR}/${workdir}" -B "${PORT_BUILD_DIR}/${workdir}/$(get_cmake_binary_dir)"  \
+    if [[ -n "$(run find -maxdepth 1 -iname cmakelists.txt)" ]]; then
+        run cmake -B "$CMAKE_BINARY_DIR"  \
             -DCMAKE_TOOLCHAIN_FILE="${SERENITY_BUILD_DIR}/CMakeToolchain.txt" \
             "${configopts[@]}"
         return
@@ -450,15 +447,15 @@ func_defined post_configure || post_configure() {
     :
 }
 func_defined build || build() {
-    if [[ "$configscript" == "cmake" ]]; then
-        run cmake --build "${PORT_BUILD_DIR}/${workdir}/$(get_cmake_binary_dir)" "${makeopts[@]}"
+    if [[ -n "$(run find -maxdepth 1 -iname cmakelists.txt)" ]]; then
+        run cmake --build "$CMAKE_BINARY_DIR" -- "${makeopts[@]}"
         return
     fi
     run make "${makeopts[@]}"
 }
 func_defined install || install() {
-     if [[ "$configscript" == "cmake" ]]; then
-        run cmake --build "${PORT_BUILD_DIR}/${workdir}/$(get_cmake_binary_dir)" --target install "${installopts[@]}"
+    if [[ -n "$(run find -maxdepth 1 -iname cmakelists.txt)" ]]; then
+        run cmake --build "$CMAKE_BINARY_DIR" --target install -- "${makeopts[@]}"
         return
     fi
 
