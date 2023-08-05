@@ -863,6 +863,8 @@ void Optimizer::append_alternation(ByteCode& target, Span<ByteCode> alternatives
     Vector<HashMap<size_t, Vector<JumpEdge>>> incoming_jump_edges_for_each_alternative;
     incoming_jump_edges_for_each_alternative.resize(alternatives.size());
 
+    auto has_any_backwards_jump = false;
+
     MatchState state;
 
     for (size_t i = 0; i < alternatives.size(); ++i) {
@@ -882,24 +884,31 @@ void Optimizer::append_alternation(ByteCode& target, Span<ByteCode> alternatives
             switch (opcode.opcode_id()) {
             case OpCodeId::Jump:
                 incoming_jump_edges.ensure(static_cast<OpCode_Jump const&>(opcode).offset() + state.instruction_position).append({ opcode_bytes });
+                has_any_backwards_jump |= static_cast<OpCode_Jump const&>(opcode).offset() < 0;
                 break;
             case OpCodeId::JumpNonEmpty:
                 incoming_jump_edges.ensure(static_cast<OpCode_JumpNonEmpty const&>(opcode).offset() + state.instruction_position).append({ opcode_bytes });
+                has_any_backwards_jump |= static_cast<OpCode_JumpNonEmpty const&>(opcode).offset() < 0;
                 break;
             case OpCodeId::ForkJump:
                 incoming_jump_edges.ensure(static_cast<OpCode_ForkJump const&>(opcode).offset() + state.instruction_position).append({ opcode_bytes });
+                has_any_backwards_jump |= static_cast<OpCode_ForkJump const&>(opcode).offset() < 0;
                 break;
             case OpCodeId::ForkStay:
                 incoming_jump_edges.ensure(static_cast<OpCode_ForkStay const&>(opcode).offset() + state.instruction_position).append({ opcode_bytes });
+                has_any_backwards_jump |= static_cast<OpCode_ForkStay const&>(opcode).offset() < 0;
                 break;
             case OpCodeId::ForkReplaceJump:
                 incoming_jump_edges.ensure(static_cast<OpCode_ForkReplaceJump const&>(opcode).offset() + state.instruction_position).append({ opcode_bytes });
+                has_any_backwards_jump |= static_cast<OpCode_ForkReplaceJump const&>(opcode).offset() < 0;
                 break;
             case OpCodeId::ForkReplaceStay:
                 incoming_jump_edges.ensure(static_cast<OpCode_ForkReplaceStay const&>(opcode).offset() + state.instruction_position).append({ opcode_bytes });
+                has_any_backwards_jump |= static_cast<OpCode_ForkReplaceStay const&>(opcode).offset() < 0;
                 break;
             case OpCodeId::Repeat:
                 incoming_jump_edges.ensure(static_cast<OpCode_Repeat const&>(opcode).offset() + state.instruction_position).append({ opcode_bytes });
+                has_any_backwards_jump = true;
                 break;
             default:
                 break;
@@ -1067,6 +1076,16 @@ void Optimizer::append_alternation(ByteCode& target, Span<ByteCode> alternatives
         Queue<Tree*> nodes_to_visit;
         nodes_to_visit.enqueue(&trie);
 
+        HashMap<size_t, NonnullOwnPtr<RedBlackTree<u64, u64>>> instruction_positions;
+        if (has_any_backwards_jump)
+            MUST(instruction_positions.try_ensure_capacity(alternatives.size()));
+
+        auto ip_mapping_for_alternative = [&](size_t i) -> RedBlackTree<u64, u64>& {
+            return *instruction_positions.ensure(i, [] {
+                return make<RedBlackTree<u64, u64>>();
+            });
+        };
+
         // each node:
         //   node.re
         //   forkjump child1
@@ -1088,6 +1107,11 @@ void Optimizer::append_alternation(ByteCode& target, Span<ByteCode> alternatives
                 target.ensure_capacity(target.size() + insn_bytes.size());
                 state.instruction_position = target.size();
                 target.append(insn_bytes);
+
+                if (has_any_backwards_jump) {
+                    for (auto& ip : node->metadata_value())
+                        ip_mapping_for_alternative(ip.alternative_index).insert(ip.instruction_position, state.instruction_position);
+                }
 
                 auto& opcode = target.get_opcode(state);
 
@@ -1124,8 +1148,31 @@ void Optimizer::append_alternation(ByteCode& target, Span<ByteCode> alternatives
 
                 if (is_jump) {
                     VERIFY(node->has_metadata());
-                    auto& ip = node->metadata_value().first();
-                    patch_locations.append({ QualifiedIP { ip.alternative_index, ip.instruction_position + jump_offset + opcode.size() }, patch_location });
+                    QualifiedIP ip = node->metadata_value().first();
+                    auto intended_jump_ip = ip.instruction_position + jump_offset + opcode.size();
+                    if (jump_offset < 0 && intended_jump_ip > 0) {
+                        VERIFY(has_any_backwards_jump);
+                        // We should've already seen this instruction, so we can just patch it in.
+                        auto& ip_mapping = ip_mapping_for_alternative(ip.alternative_index);
+                        auto target_ip = ip_mapping.find(intended_jump_ip);
+                        if (!target_ip) {
+                            RegexDebug dbg;
+                            size_t x = 0;
+                            for (auto& entry : alternatives) {
+                                warnln("----------- {} ----------", x++);
+                                dbg.print_bytecode(entry);
+                            }
+
+                            dbgln("Regex Tree / Unknown backwards jump: {}@{} -> {}",
+                                ip.instruction_position,
+                                ip.alternative_index,
+                                intended_jump_ip);
+                            VERIFY_NOT_REACHED();
+                        }
+                        target[patch_location] = static_cast<ByteCodeValueType>(*target_ip - patch_location - 1);
+                    } else {
+                        patch_locations.append({ QualifiedIP { ip.alternative_index, intended_jump_ip }, patch_location });
+                    }
                 }
             }
 
