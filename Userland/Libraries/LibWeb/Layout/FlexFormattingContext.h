@@ -211,7 +211,7 @@ private:
     [[nodiscard]] CSSPixels calculate_fit_content_main_size(FlexItem const&) const;
     [[nodiscard]] CSSPixels calculate_fit_content_cross_size(FlexItem const&) const;
 
-    CSSPixels calculate_clamped_fit_content_width(Box const&, AvailableSpace const&) const;
+    [[nodiscard]] CSSPixels calculate_width_to_use_when_determining_intrinsic_height_of_item(FlexItem const&) const;
 
     virtual void parent_context_did_dimension_child_root_box() override;
 
