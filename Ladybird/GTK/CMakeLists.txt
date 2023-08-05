@@ -63,6 +63,9 @@ add_custom_command(
         "${SOURCE_GRESOURCE_FILE}"
     DEPENDS "${SOURCE_GRESOURCE_FILE}" ${RESOURCE_FILES}
 )
+add_library(resources OBJECT "${GENERATED_GRESOURCE_FILE}")
+target_link_libraries(resources PRIVATE PkgConfig::gtk4)
+set_target_properties(resources PROPERTIES COMPILE_OPTIONS "")
 
 set(SOURCES
     main.cpp
@@ -70,7 +73,7 @@ set(SOURCES
     WebView.cpp
     ViewImpl.cpp
     EventLoopImplementationGLib.cpp
-    "${GENERATED_GRESOURCE_FILE}"
+    $<TARGET_OBJECTS:resources>
 )
 
 add_executable(ladybird ${SOURCES})
