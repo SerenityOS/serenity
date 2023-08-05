@@ -10,7 +10,11 @@ namespace Web::CSS {
 
 ErrorOr<String> PlaceSelfStyleValue::to_string() const
 {
-    return String::formatted("{} {}", TRY(m_properties.align_self->to_string()), TRY(m_properties.justify_self->to_string()));
+    auto align_self = TRY(m_properties.align_self->to_string());
+    auto justify_self = TRY(m_properties.justify_self->to_string());
+    if (align_self == justify_self)
+        return String::formatted("{}", align_self);
+    return String::formatted("{} {}", align_self, justify_self);
 }
 
 }
