@@ -21,4 +21,3 @@ configopts=(
     -DCURL_HIDDEN_SYMBOLS=OFF
 )
 configscript=cmake
-generator=ninja

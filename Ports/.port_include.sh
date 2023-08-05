@@ -86,7 +86,6 @@ makeopts=("-j${MAKEJOBS}")
 installopts=()
 configscript=configure
 configopts=()
-generator="make"
 useconfigure=false
 config_sub_paths=("config.sub")
 config_guess_paths=("config.guess")
