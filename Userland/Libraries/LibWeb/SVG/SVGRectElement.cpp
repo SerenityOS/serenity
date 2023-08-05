@@ -132,12 +132,12 @@ Gfx::FloatSize SVGRectElement::calculate_used_corner_radius_values() const
         ry = 0;
     }
     // 3. Otherwise, if a properly specified value is provided for ‘rx’, but not for ‘ry’, then set both rx and ry to the value of ‘rx’.
-    else if (m_radius_x.has_value()) {
+    else if (m_radius_x.has_value() && !m_radius_y.has_value()) {
         rx = m_radius_x.value();
         ry = m_radius_x.value();
     }
     // 4. Otherwise, if a properly specified value is provided for ‘ry’, but not for ‘rx’, then set both rx and ry to the value of ‘ry’.
-    else if (m_radius_y.has_value()) {
+    else if (m_radius_y.has_value() && !m_radius_x.has_value()) {
         rx = m_radius_y.value();
         ry = m_radius_y.value();
     }
