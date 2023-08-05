@@ -613,6 +613,17 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
                     .argument_selector_list = move(not_selector) }
             };
         }
+        if (pseudo_function.name().equals_ignoring_ascii_case("host"sv)) {
+            auto function_token_stream = TokenStream(pseudo_function.values());
+            auto host_selector = TRY(parse_a_selector_list(function_token_stream, SelectorType::Standalone));
+
+            return Selector::SimpleSelector {
+                .type = Selector::SimpleSelector::Type::PseudoClass,
+                .value = Selector::SimpleSelector::PseudoClass {
+                    .type = Selector::SimpleSelector::PseudoClass::Type::Host,
+                    .argument_selector_list = move(host_selector) }
+            };
+        }
         if (pseudo_function.name().equals_ignoring_ascii_case("lang"sv)) {
             if (pseudo_function.values().is_empty()) {
                 dbgln_if(CSS_PARSER_DEBUG, "Empty :lang() selector");
