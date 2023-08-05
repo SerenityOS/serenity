@@ -68,6 +68,7 @@ DirectoryEntry DirectoryEntry::from_stat(DIR* d, dirent const& de)
     return DirectoryEntry {
         .type = directory_entry_type_from_stat(statbuf.st_mode),
         .name = de.d_name,
+        .inode_number = de.d_ino,
     };
 }
 
@@ -77,6 +78,7 @@ DirectoryEntry DirectoryEntry::from_dirent(dirent const& de)
     return DirectoryEntry {
         .type = directory_entry_type_from_posix(de.d_type),
         .name = de.d_name,
+        .inode_number = de.d_ino,
     };
 }
 #endif
