@@ -574,6 +574,7 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                     builder.join(',', pseudo_class.languages);
                     builder.append(')');
                 } else if (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::Not
+                    || pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::Host
                     || pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::Is
                     || pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::Where) {
                     builder.append("(["sv);
