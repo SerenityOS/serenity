@@ -429,7 +429,7 @@ func_defined pre_configure || pre_configure() {
     :
 }
 func_defined configure || configure() {
-    if [[ -n "$(run find -maxdepth 1 -iname cmakelists.txt)" ]]; then
+    if [[ -f "${workdir}/CMakeLists.txt" ]]; then
         run cmake -B "$CMAKE_BINARY_DIR"  \
             -DCMAKE_TOOLCHAIN_FILE="${SERENITY_BUILD_DIR}/CMakeToolchain.txt" \
             "${configopts[@]}"
@@ -447,14 +447,14 @@ func_defined post_configure || post_configure() {
     :
 }
 func_defined build || build() {
-    if [[ -n "$(run find -maxdepth 1 -iname cmakelists.txt)" ]]; then
+    if [[ -f "${workdir}/CMakeLists.txt" ]]; then
         run cmake --build "$CMAKE_BINARY_DIR" -- "${makeopts[@]}"
         return
     fi
     run make "${makeopts[@]}"
 }
 func_defined install || install() {
-    if [[ -n "$(run find -maxdepth 1 -iname cmakelists.txt)" ]]; then
+    if [[ -f "${workdir}/CMakeLists.txt" ]]; then
         run cmake --build "$CMAKE_BINARY_DIR" --target install -- "${makeopts[@]}"
         return
     fi
