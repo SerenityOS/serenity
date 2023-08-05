@@ -260,6 +260,38 @@ if (current_os == "mac") {
     outputs = [ "{{bundle_resources_dir}}/res/ladybird/{{source_file_part}}" ]
   }
 
+  action("ladybird_create_icon") {
+    script = "//Meta/gn/secondary/Ladybird/invoke_process_with_args.py"
+    icon_path = "//Ladybird/Icons/macos/app_icon.iconset"
+    sources = [
+      "$icon_path/icon_128x128.png",
+      "$icon_path/icon_128x128@2x.png",
+      "$icon_path/icon_16x16.png",
+      "$icon_path/icon_16x16@2x.png",
+      "$icon_path/icon_256x256.png",
+      "$icon_path/icon_256x256@2x.png",
+      "$icon_path/icon_32x32.png",
+      "$icon_path/icon_32x32@2x.png",
+      "$icon_path/icon_512x512.png",
+      "$icon_path/icon_512x512@2x.png",
+    ]
+    outputs = [ "$target_gen_dir/app_icon.icns" ]
+    args = [
+      "iconutil",
+      "--convert",
+      "icns",
+      rebase_path(icon_path, root_build_dir),
+      "--output",
+      rebase_path(outputs[0], root_build_dir),
+    ]
+  }
+
+  bundle_data("ladybird_icon") {
+    public_deps = [ ":ladybird_create_icon" ]
+    sources = get_target_outputs(public_deps[0])
+    outputs = [ "{{bundle_resources_dir}}/{{source_file_part}}" ]
+  }
+
   create_bundle("ladybird.app") {
     product_type = "com.apple.product-type.application"
 
@@ -273,6 +305,7 @@ if (current_os == "mac") {
       ":ladybird_bundle_info_plist",
       ":ladybird_bundle_libs",
       ":ladybird_config_resources",
+      ":ladybird_icon",
       ":ladybird_resources",
     ]
   }
