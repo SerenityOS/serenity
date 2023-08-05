@@ -915,6 +915,18 @@ DOM::Node* Node::dom_node()
     return m_dom_node.ptr();
 }
 
+DOM::Element const* Node::pseudo_element_generator() const
+{
+    VERIFY(m_generated_for != GeneratedFor::NotGenerated);
+    return m_pseudo_element_generator.ptr();
+}
+
+DOM::Element* Node::pseudo_element_generator()
+{
+    VERIFY(m_generated_for != GeneratedFor::NotGenerated);
+    return m_pseudo_element_generator.ptr();
+}
+
 DOM::Document& Node::document()
 {
     return m_dom_node->document();
