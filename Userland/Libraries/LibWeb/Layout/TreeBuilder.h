@@ -39,7 +39,8 @@ private:
     void fixup_tables(NodeWithStyle& root);
     void remove_irrelevant_boxes(NodeWithStyle& root);
     void generate_missing_child_wrappers(NodeWithStyle& root);
-    void generate_missing_parents(NodeWithStyle& root);
+    Vector<JS::Handle<Box>> generate_missing_parents(NodeWithStyle& root);
+    void missing_cells_fixup(Vector<JS::Handle<Box>> const&);
 
     enum class AppendOrPrepend {
         Append,

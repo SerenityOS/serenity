@@ -12,26 +12,6 @@
 #include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/TableFormattingContext.h>
 
-struct GridPosition {
-    size_t x;
-    size_t y;
-};
-
-inline bool operator==(GridPosition const& a, GridPosition const& b)
-{
-    return a.x == b.x && a.y == b.y;
-}
-
-namespace AK {
-template<>
-struct Traits<GridPosition> : public GenericTraits<GridPosition> {
-    static unsigned hash(GridPosition const& key)
-    {
-        return pair_int_hash(key.x, key.y);
-    }
-};
-}
-
 namespace Web::Layout {
 
 TableFormattingContext::TableFormattingContext(LayoutState& state, Box const& root, FormattingContext* parent)

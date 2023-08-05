@@ -25,6 +25,7 @@
 #include <LibWeb/Layout/ListItemMarkerBox.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/Progress.h>
+#include <LibWeb/Layout/TableGrid.h>
 #include <LibWeb/Layout/TableWrapper.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Layout/TreeBuilder.h>
@@ -451,7 +452,8 @@ void TreeBuilder::fixup_tables(NodeWithStyle& root)
 {
     remove_irrelevant_boxes(root);
     generate_missing_child_wrappers(root);
-    generate_missing_parents(root);
+    auto table_root_boxes = generate_missing_parents(root);
+    missing_cells_fixup(table_root_boxes);
 }
 
 void TreeBuilder::remove_irrelevant_boxes(NodeWithStyle& root)
@@ -621,7 +623,7 @@ void TreeBuilder::generate_missing_child_wrappers(NodeWithStyle& root)
     });
 }
 
-void TreeBuilder::generate_missing_parents(NodeWithStyle& root)
+Vector<JS::Handle<Box>> TreeBuilder::generate_missing_parents(NodeWithStyle& root)
 {
     Vector<JS::Handle<Box>> table_roots_to_wrap;
     root.for_each_in_inclusive_subtree_of_type<Box>([&](auto& parent) {
@@ -671,6 +673,57 @@ void TreeBuilder::generate_missing_parents(NodeWithStyle& root)
         else
             parent.append_child(*wrapper);
     }
+
+    return table_roots_to_wrap;
 }
 
+template<typename Matcher, typename Callback>
+static void for_each_child_box_matching(Box& parent, Matcher matcher, Callback callback)
+{
+    parent.for_each_child_of_type<Box>([&](Box& child_box) {
+        if (matcher(child_box))
+            callback(child_box);
+    });
+}
+
+static void fixup_row(Box& row_box, TableGrid const& table_grid, size_t row_index)
+{
+    bool missing_cells_run_has_started = false;
+    for (size_t column_index = 0; column_index < table_grid.column_count(); ++column_index) {
+        if (table_grid.occupancy_grid().contains({ column_index, row_index })) {
+            VERIFY(!missing_cells_run_has_started);
+            continue;
+        }
+        missing_cells_run_has_started = true;
+        auto row_computed_values = row_box.computed_values().clone_inherited_values();
+        auto& cell_computed_values = static_cast<CSS::MutableComputedValues&>(row_computed_values);
+        cell_computed_values.set_display(Web::CSS::Display { CSS::Display::Internal::TableCell });
+        // Ensure that the cell (with zero content height) will have the same height as the row by setting vertical-align to middle.
+        cell_computed_values.set_vertical_align(CSS::VerticalAlign::Middle);
+        auto cell_box = row_box.heap().template allocate_without_realm<BlockContainer>(row_box.document(), nullptr, cell_computed_values);
+        row_box.append_child(cell_box);
+    }
+}
+
+void TreeBuilder::missing_cells_fixup(Vector<JS::Handle<Box>> const& table_root_boxes)
+{
+    // Implements https://www.w3.org/TR/css-tables-3/#missing-cells-fixup.
+    for (auto& table_box : table_root_boxes) {
+        auto table_grid = TableGrid::calculate_row_column_grid(*table_box);
+        size_t row_index = 0;
+        for_each_child_box_matching(*table_box, TableGrid::is_table_row_group, [&](auto& row_group_box) {
+            for_each_child_box_matching(row_group_box, is_table_row, [&](auto& row_box) {
+                fixup_row(row_box, table_grid, row_index);
+                ++row_index;
+                return IterationDecision::Continue;
+            });
+        });
+
+        for_each_child_box_matching(*table_box, is_table_row, [&](auto& row_box) {
+            fixup_row(row_box, table_grid, row_index);
+            ++row_index;
+            return IterationDecision::Continue;
+        });
+    }
+}
 }
