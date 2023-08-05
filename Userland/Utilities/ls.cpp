@@ -38,6 +38,7 @@
 struct FileMetadata {
     DeprecatedString name;
     DeprecatedString path;
+    ino_t raw_inode_number;
     struct stat stat {
     };
 };
@@ -57,6 +58,7 @@ static bool flag_show_almost_all_dotfiles = false;
 static bool flag_ignore_backups = false;
 static bool flag_list_directories_only = false;
 static bool flag_show_inode = false;
+static bool flag_show_raw_inode = false;
 static bool flag_print_numeric = false;
 static bool flag_hide_group = false;
 static bool flag_human_readable = false;
@@ -111,6 +113,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(flag_classify, "Append a file type indicator to entries", "classify", 'F');
     args_parser.add_option(flag_colorize, "Use pretty colors", nullptr, 'G');
     args_parser.add_option(flag_show_inode, "Show inode ids", "inode", 'i');
+    args_parser.add_option(flag_show_raw_inode, "Show raw inode ids if possible", "raw-inode", 'I');
     args_parser.add_option(flag_print_numeric, "In long format, display numeric UID/GID", "numeric-uid-gid", 'n');
     args_parser.add_option(flag_hide_group, "In long format, do not show group information", nullptr, 'o');
     args_parser.add_option(flag_human_readable, "Print human-readable sizes", "human-readable", 'h');
@@ -146,7 +149,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Vector<FileMetadata> files;
     for (auto& path : paths) {
-        FileMetadata metadata;
+        FileMetadata metadata {};
         metadata.name = path;
 
         int rc = lstat(DeprecatedString(path).characters(), &metadata.stat);
@@ -300,10 +303,16 @@ static size_t print_name(const struct stat& st, DeprecatedString const& name, Op
     return nprinted;
 }
 
-static bool print_filesystem_object(DeprecatedString const& path, DeprecatedString const& name, const struct stat& st)
+static bool print_filesystem_object(DeprecatedString const& path, DeprecatedString const& name, const struct stat& st, Optional<ino_t> raw_inode_number)
 {
-    if (flag_show_inode)
+    if (flag_show_inode) {
         printf("%s ", DeprecatedString::formatted("{}", st.st_ino).characters());
+    } else if (flag_show_raw_inode) {
+        if (raw_inode_number.has_value())
+            printf("%s ", DeprecatedString::formatted("{}", raw_inode_number.value()).characters());
+        else
+            printf("n/a ");
+    }
 
     if (S_ISDIR(st.st_mode))
         printf("d");
@@ -375,6 +384,11 @@ static bool print_filesystem_object(DeprecatedString const& path, DeprecatedStri
     return true;
 }
 
+static bool print_filesystem_metadata_object(FileMetadata const& file)
+{
+    return print_filesystem_object(file.path, file.name, file.stat, file.raw_inode_number);
+}
+
 static int do_file_system_object_long(DeprecatedString const& path)
 {
     if (flag_list_directories_only) {
@@ -383,7 +397,9 @@ static int do_file_system_object_long(DeprecatedString const& path)
         int rc = lstat(path.characters(), &stat);
         if (rc < 0)
             perror("lstat");
-        if (print_filesystem_object(path, path, stat))
+        if (flag_show_raw_inode)
+            fprintf(stderr, "warning: can't print raw inode numbers\n");
+        if (print_filesystem_object(path, path, stat, {}))
             return 0;
         return 2;
     }
@@ -404,7 +420,9 @@ static int do_file_system_object_long(DeprecatedString const& path)
             int rc = lstat(path.characters(), &stat);
             if (rc < 0)
                 perror("lstat");
-            if (print_filesystem_object(path, path, stat))
+            if (flag_show_raw_inode)
+                fprintf(stderr, "warning: can't print raw inode numbers\n");
+            if (print_filesystem_object(path, path, stat, {}))
                 return 0;
             return 2;
         }
@@ -414,8 +432,10 @@ static int do_file_system_object_long(DeprecatedString const& path)
 
     Vector<FileMetadata> files;
     while (di.has_next()) {
-        FileMetadata metadata;
-        metadata.name = di.next_path();
+        auto dirent = di.next().value();
+        FileMetadata metadata {};
+        metadata.name = dirent.name;
+        metadata.raw_inode_number = dirent.inode_number;
         VERIFY(!metadata.name.is_empty());
 
         if (metadata.name.ends_with('~') && flag_ignore_backups && metadata.name != path)
@@ -437,13 +457,13 @@ static int do_file_system_object_long(DeprecatedString const& path)
     quick_sort(files, filemetadata_comparator);
 
     for (auto& file : files) {
-        if (!print_filesystem_object(file.path, file.name, file.stat))
+        if (!print_filesystem_metadata_object(file))
             return 2;
     }
     return 0;
 }
 
-static bool print_filesystem_object_short(DeprecatedString const& path, char const* name, size_t* nprinted)
+static bool print_filesystem_object_short(DeprecatedString const& path, char const* name, Optional<ino_t> raw_inode_number, size_t* nprinted)
 {
     struct stat st;
     int rc = lstat(path.characters(), &st);
@@ -452,8 +472,14 @@ static bool print_filesystem_object_short(DeprecatedString const& path, char con
         return false;
     }
 
-    if (flag_show_inode)
+    if (flag_show_inode) {
         printf("%s ", DeprecatedString::formatted("{}", st.st_ino).characters());
+    } else if (flag_show_raw_inode) {
+        if (raw_inode_number.has_value())
+            printf("%s ", DeprecatedString::formatted("{}", raw_inode_number.value()).characters());
+        else
+            printf("n/a ");
+    }
 
     *nprinted = print_name(st, name, {}, path);
     return true;
@@ -469,7 +495,7 @@ static bool print_names(char const* path, size_t longest_name, Vector<FileMetada
         builder.append({ path, strlen(path) });
         builder.append('/');
         builder.append(name);
-        if (!print_filesystem_object_short(builder.to_deprecated_string(), name.characters(), &nprinted))
+        if (!print_filesystem_object_short(builder.to_deprecated_string(), name.characters(), files[i].raw_inode_number, &nprinted))
             return 2;
         int offset = 0;
         if (terminal_columns > longest_name)
@@ -496,8 +522,10 @@ static bool print_names(char const* path, size_t longest_name, Vector<FileMetada
 int do_file_system_object_short(DeprecatedString const& path)
 {
     if (flag_list_directories_only) {
+        if (flag_show_raw_inode)
+            fprintf(stderr, "warning: can't print raw inode numbers\n");
         size_t nprinted = 0;
-        bool status = print_filesystem_object_short(path, path.characters(), &nprinted);
+        bool status = print_filesystem_object_short(path, path.characters(), {}, &nprinted);
         printf("\n");
         if (status)
             return 0;
@@ -515,7 +543,9 @@ int do_file_system_object_short(DeprecatedString const& path)
         auto error = di.error();
         if (error.code() == ENOTDIR) {
             size_t nprinted = 0;
-            bool status = print_filesystem_object_short(path, path.characters(), &nprinted);
+            if (flag_show_raw_inode)
+                fprintf(stderr, "warning: can't print raw inode numbers\n");
+            bool status = print_filesystem_object_short(path, path.characters(), {}, &nprinted);
             printf("\n");
             if (status)
                 return 0;
@@ -528,8 +558,10 @@ int do_file_system_object_short(DeprecatedString const& path)
     Vector<FileMetadata> files;
     size_t longest_name = 0;
     while (di.has_next()) {
-        FileMetadata metadata;
-        metadata.name = di.next_path();
+        auto dirent = di.next().value();
+        FileMetadata metadata {};
+        metadata.name = dirent.name;
+        metadata.raw_inode_number = dirent.inode_number;
 
         if (metadata.name.ends_with('~') && flag_ignore_backups && metadata.name != path)
             continue;
