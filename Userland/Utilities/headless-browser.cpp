@@ -43,7 +43,6 @@
 #if !defined(AK_OS_SERENITY)
 #    include <Ladybird/HelperProcess.h>
 #    include <Ladybird/Utilities.h>
-#    include <QCoreApplication>
 #endif
 
 class HeadlessWebContentView final : public WebView::ViewImplementation {
@@ -374,9 +373,6 @@ static ErrorOr<int> run_tests(HeadlessWebContentView& view, StringView test_root
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-#if !defined(AK_OS_SERENITY)
-    QCoreApplication app(arguments.argc, arguments.argv);
-#endif
     Core::EventLoop event_loop;
 
     int screenshot_timeout = 1;

@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "../AudioCodecPluginQt.h"
-#include "../EventLoopImplementationQt.h"
-#include "../FontPlugin.h"
-#include "../HelperProcess.h"
-#include "../ImageCodecPlugin.h"
-#include "../RequestManagerQt.h"
-#include "../Utilities.h"
-#include "../WebSocketClientManagerQt.h"
 #include <AK/LexicalPath.h>
+#include <Ladybird/FontPlugin.h>
+#include <Ladybird/HelperProcess.h>
+#include <Ladybird/ImageCodecPlugin.h>
+#include <Ladybird/Qt/AudioCodecPluginQt.h>
+#include <Ladybird/Qt/EventLoopImplementationQt.h>
+#include <Ladybird/Qt/RequestManagerQt.h>
+#include <Ladybird/Qt/WebSocketClientManagerQt.h>
+#include <Ladybird/Utilities.h>
 #include <LibAudio/Loader.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
@@ -40,8 +40,6 @@
 
 static ErrorOr<void> load_content_filters();
 static ErrorOr<void> load_autoplay_allowlist();
-
-extern DeprecatedString s_serenity_resource_root;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

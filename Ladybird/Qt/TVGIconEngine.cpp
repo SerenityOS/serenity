@@ -5,7 +5,7 @@
  */
 
 #include "TVGIconEngine.h"
-#include "Utilities.h"
+#include "StringUtils.h"
 #include <AK/MemoryStream.h>
 #include <AK/String.h>
 #include <LibGfx/Painter.h>

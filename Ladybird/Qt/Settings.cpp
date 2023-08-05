@@ -5,9 +5,10 @@
  */
 
 #include "Settings.h"
-#include "Utilities.h"
+#include "StringUtils.h"
 #include <AK/URL.h>
 #include <BrowserSettings/Defaults.h>
+#include <Ladybird/Utilities.h>
 
 namespace Ladybird {
 
