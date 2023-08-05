@@ -46,8 +46,22 @@ public:
     DOM::Node const* dom_node() const;
     DOM::Node* dom_node();
 
-    bool is_generated() const { return m_generated; }
-    void set_generated(bool b) { m_generated = b; }
+    DOM::Element const* pseudo_element_generator() const;
+    DOM::Element* pseudo_element_generator();
+
+    enum class GeneratedFor {
+        NotGenerated,
+        PseudoBefore,
+        PseudoAfter
+    };
+    bool is_generated() const { return m_generated_for != GeneratedFor::NotGenerated; }
+    bool is_generated_for_before_pseudo_element() const { return m_generated_for == GeneratedFor::PseudoBefore; }
+    bool is_generated_for_after_pseudo_element() const { return m_generated_for == GeneratedFor::PseudoAfter; }
+    void set_generated_for(GeneratedFor type, DOM::Element& element)
+    {
+        m_generated_for = type;
+        m_pseudo_element_generator = &element;
+    }
 
     Painting::Paintable* paintable() { return m_paintable; }
     Painting::Paintable const* paintable() const { return m_paintable; }
@@ -169,6 +183,8 @@ private:
 
     JS::NonnullGCPtr<HTML::BrowsingContext> m_browsing_context;
 
+    JS::GCPtr<DOM::Element> m_pseudo_element_generator;
+
     bool m_anonymous { false };
     bool m_has_style { false };
     bool m_visible { true };
@@ -176,7 +192,7 @@ private:
     SelectionState m_selection_state { SelectionState::None };
 
     bool m_is_flex_item { false };
-    bool m_generated { false };
+    GeneratedFor m_generated_for { GeneratedFor::NotGenerated };
 };
 
 class NodeWithStyle : public Node {

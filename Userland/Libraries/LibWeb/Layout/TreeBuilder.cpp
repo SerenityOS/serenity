@@ -189,12 +189,23 @@ ErrorOr<void> TreeBuilder::create_pseudo_element_if_needed(DOM::Element& element
     if (!pseudo_element_node)
         return {};
 
-    pseudo_element_node->set_generated(true);
+    auto generated_for = Node::GeneratedFor::NotGenerated;
+    if (pseudo_element == CSS::Selector::PseudoElement::Before) {
+        generated_for = Node::GeneratedFor::PseudoBefore;
+    } else if (pseudo_element == CSS::Selector::PseudoElement::After) {
+        generated_for = Node::GeneratedFor::PseudoAfter;
+    } else {
+        VERIFY_NOT_REACHED();
+    }
+
+    pseudo_element_node->set_generated_for(generated_for, element);
+
     // FIXME: Handle images, and multiple values
     if (pseudo_element_content.type == CSS::ContentData::Type::String) {
         auto text = document.heap().allocate<DOM::Text>(document.realm(), document, pseudo_element_content.data.to_deprecated_string()).release_allocated_value_but_fixme_should_propagate_errors();
         auto text_node = document.heap().allocate_without_realm<Layout::TextNode>(document, *text);
-        text_node->set_generated(true);
+        text_node->set_generated_for(generated_for, element);
+
         push_parent(verify_cast<NodeWithStyle>(*pseudo_element_node));
         insert_node_into_inline_or_block_ancestor(*text_node, text_node->display(), AppendOrPrepend::Append);
         pop_parent();
