@@ -97,6 +97,6 @@ set(WEBCONTENT_SOURCES
 add_executable(WebContent ${WEBCONTENT_SOURCES})
 target_link_libraries(WebContent PRIVATE Lagom::Audio Lagom::Core Lagom::FileSystem Lagom::Gfx Lagom::IPC Lagom::JS Lagom::Main Lagom::Web Lagom::WebSocket)
 
-install(TARGETS LibAudio LibCore LibFileSystem LibGfx LibIPC LibJS LibMain LibWeb LibWebView LibWebSocket LibProtocol LibGUI LibMarkdown LibGemini LibHTTP LibGL LibSoftGPU LibVideo LibWasm LibXML LibIDL LibTextCodec LibCrypto LibLocale LibRegex LibSyntax LibUnicode LibCompress LibTLS LibGLSL LibGPU LibThreading)
+install(TARGETS LibAudio LibCore LibFileSystem LibGfx LibIPC LibJS LibWeb LibWebView LibWebSocket LibProtocol LibGUI LibMarkdown LibGemini LibHTTP LibGL LibSoftGPU LibVideo LibWasm LibXML LibIDL LibTextCodec LibCrypto LibLocale LibRegex LibSyntax LibUnicode LibCompress LibTLS LibGLSL LibGPU LibThreading)
 install(TARGETS ladybird)
 install(TARGETS WebContent DESTINATION lib)
