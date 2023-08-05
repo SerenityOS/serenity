@@ -1049,6 +1049,8 @@ TEST_CASE(optimizer_alternation)
         Tuple { "a|"sv, "a"sv, 1u },
         Tuple { "a|a|a|a|a|a|a|a|a|b"sv, "a"sv, 1u },
         Tuple { "ab|ac|ad|bc"sv, "bc"sv, 2u },
+        // Should not crash on backwards jumps introduced by '.*'.
+        Tuple { "\\bDroid\\b.*Build|XT912|XT928|XT926|XT915|XT919|XT925|XT1021|\\bMoto E\\b|XT1068|XT1092|XT1052"sv, "XT1068"sv, 6u },
     };
 
     for (auto& test : tests) {
