@@ -665,13 +665,12 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
         // NOTE: This is one of many situations where that causes trouble: if this is a flex column layout,
         //       we may need to calculate the intrinsic height of a flex item. This requires a width, but a
         //       width won't be determined until later on in the flex layout algorithm.
-        //       In the specific case above (E), the spec mentions using `fit-content` if "a cross size is
-        //       needed to determine the main size", so that's exactly what we do.
+        //       In the specific case above (E), the spec mentions using `fit-content` in place of `auto`
+        //       if "a cross size is needed to determine the main size", so that's exactly what we do.
 
-        // NOTE: Substituting the fit-content size actually happens elsewhere, in the various helpers that
-        //       calculate the intrinsic sizes of a flex item, e.g. calculate_min_content_main_size().
-        //       This means that *all* intrinsic heights computed within a flex formatting context will
-        //       automatically use the fit-content width in case a used width is not known yet.
+        // NOTE: Finding a suitable width for intrinsic height determination actually happens elsewhere,
+        //       in the various helpers that calculate the intrinsic sizes of a flex item,
+        //       e.g. calculate_min_content_main_size().
 
         if (item.used_flex_basis->has<CSS::FlexBasisContent>()) {
             return calculate_max_content_main_size(item);
@@ -1138,14 +1137,29 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
         return;
     }
 
-    if (should_treat_cross_size_as_auto(item.box)) {
-        // Item has automatic cross size, layout with "fit-content"
+    if (item.box->has_preferred_aspect_ratio() && item.main_size.has_value()) {
+        item.hypothetical_cross_size = calculate_cross_size_from_main_size_and_aspect_ratio(item.main_size.value(), item.box->preferred_aspect_ratio().value());
+        return;
+    }
 
-        if (item.box->has_preferred_aspect_ratio() && item.main_size.has_value()) {
-            item.hypothetical_cross_size = calculate_cross_size_from_main_size_and_aspect_ratio(item.main_size.value(), item.box->preferred_aspect_ratio().value());
-            return;
-        }
+    auto computed_cross_size = [&]() -> CSS::Size {
+        // "... treating auto as fit-content"
+        if (should_treat_cross_size_as_auto(item.box))
+            return CSS::Size::make_fit_content();
+        return this->computed_cross_size(item.box);
+    }();
 
+    if (computed_cross_size.is_min_content()) {
+        item.hypothetical_cross_size = css_clamp(calculate_min_content_cross_size(item), clamp_min, clamp_max);
+        return;
+    }
+
+    if (computed_cross_size.is_max_content()) {
+        item.hypothetical_cross_size = css_clamp(calculate_max_content_cross_size(item), clamp_min, clamp_max);
+        return;
+    }
+
+    if (computed_cross_size.is_fit_content()) {
         CSSPixels fit_content_cross_size = 0;
         if (is_row_layout()) {
             auto available_width = item.main_size.has_value() ? AvailableSize::make_definite(item.main_size.value()) : AvailableSize::make_indefinite();
@@ -1969,14 +1983,24 @@ CSSPixels FlexFormattingContext::calculate_cross_max_content_contribution(FlexIt
     return item.add_cross_margin_box_sizes(clamped_inner_size);
 }
 
-CSSPixels FlexFormattingContext::calculate_clamped_fit_content_width(Box const& box, AvailableSpace const& available_space) const
+CSSPixels FlexFormattingContext::calculate_width_to_use_when_determining_intrinsic_height_of_item(FlexItem const& item) const
 {
-    auto const& computed_min_size = box.computed_values().min_width();
-    auto const& computed_max_size = box.computed_values().max_width();
-    auto clamp_min = (!computed_min_size.is_auto() && (!computed_min_size.contains_percentage())) ? specified_cross_min_size(box) : 0;
-    auto clamp_max = (!computed_max_size.is_none() && (!computed_max_size.contains_percentage())) ? specified_cross_max_size(box) : NumericLimits<float>::max();
-    auto size = FormattingContext::calculate_fit_content_width(box, available_space);
-    return css_clamp(size, clamp_min, clamp_max);
+    auto const& box = *item.box;
+    auto computed_width = box.computed_values().width();
+    auto const& computed_min_width = box.computed_values().min_width();
+    auto const& computed_max_width = box.computed_values().max_width();
+    auto clamp_min = (!computed_min_width.is_auto() && (!computed_min_width.contains_percentage())) ? specified_cross_min_size(box) : 0;
+    auto clamp_max = (!computed_max_width.is_none() && (!computed_max_width.contains_percentage())) ? specified_cross_max_size(box) : NumericLimits<float>::max();
+
+    CSSPixels width;
+    if (should_treat_width_as_auto(box, m_available_space_for_items->space) || computed_width.is_fit_content())
+        width = calculate_fit_content_width(box, m_available_space_for_items->space);
+    else if (computed_width.is_min_content())
+        width = calculate_min_content_width(box);
+    else if (computed_width.is_max_content())
+        width = calculate_max_content_width(box);
+
+    return css_clamp(width, clamp_min, clamp_max);
 }
 
 CSSPixels FlexFormattingContext::calculate_min_content_main_size(FlexItem const& item) const
@@ -1986,7 +2010,7 @@ CSSPixels FlexFormattingContext::calculate_min_content_main_size(FlexItem const&
     }
     auto available_space = m_state.get(item.box).available_inner_space_or_constraints_from(m_available_space_for_items->space);
     if (available_space.width.is_indefinite()) {
-        available_space.width = AvailableSize::make_definite(calculate_clamped_fit_content_width(item.box, m_available_space_for_items->space));
+        available_space.width = AvailableSize::make_definite(calculate_width_to_use_when_determining_intrinsic_height_of_item(item));
     }
     return calculate_min_content_height(item.box, available_space.width);
 }
@@ -1998,7 +2022,7 @@ CSSPixels FlexFormattingContext::calculate_max_content_main_size(FlexItem const&
     }
     auto available_space = m_state.get(item.box).available_inner_space_or_constraints_from(m_available_space_for_items->space);
     if (available_space.width.is_indefinite()) {
-        available_space.width = AvailableSize::make_definite(calculate_clamped_fit_content_width(item.box, m_available_space_for_items->space));
+        available_space.width = AvailableSize::make_definite(calculate_width_to_use_when_determining_intrinsic_height_of_item(item));
     }
     return calculate_max_content_height(item.box, available_space.width);
 }
@@ -2022,7 +2046,7 @@ CSSPixels FlexFormattingContext::calculate_min_content_cross_size(FlexItem const
     if (is_row_layout()) {
         auto available_space = m_state.get(item.box).available_inner_space_or_constraints_from(m_available_space_for_flex_container->space);
         if (available_space.width.is_indefinite()) {
-            available_space.width = AvailableSize::make_definite(calculate_clamped_fit_content_width(item.box, m_available_space_for_items->space));
+            available_space.width = AvailableSize::make_definite(calculate_width_to_use_when_determining_intrinsic_height_of_item(item));
         }
         return calculate_min_content_height(item.box, available_space.width);
     }
@@ -2034,7 +2058,7 @@ CSSPixels FlexFormattingContext::calculate_max_content_cross_size(FlexItem const
     if (is_row_layout()) {
         auto available_space = m_state.get(item.box).available_inner_space_or_constraints_from(m_available_space_for_flex_container->space);
         if (available_space.width.is_indefinite()) {
-            available_space.width = AvailableSize::make_definite(calculate_clamped_fit_content_width(item.box, m_available_space_for_items->space));
+            available_space.width = AvailableSize::make_definite(calculate_width_to_use_when_determining_intrinsic_height_of_item(item));
         }
         return calculate_max_content_height(item.box, available_space.width);
     }
