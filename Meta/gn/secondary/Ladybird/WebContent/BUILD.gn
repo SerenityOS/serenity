@@ -4,10 +4,10 @@ import("//Meta/gn/build/libs/pulse/enable.gni")
 
 moc_qt_objects("generate_moc") {
   sources = [
-    "//Ladybird/AudioCodecPluginQt.h",
-    "//Ladybird/AudioThread.h",
-    "//Ladybird/EventLoopImplementationQtEventTarget.h",
-    "//Ladybird/RequestManagerQt.h",
+    "//Ladybird/Qt/AudioCodecPluginQt.h",
+    "//Ladybird/Qt/AudioThread.h",
+    "//Ladybird/Qt/EventLoopImplementationQtEventTarget.h",
+    "//Ladybird/Qt/RequestManagerQt.h",
   ]
 }
 
@@ -48,18 +48,19 @@ executable("WebContent") {
     "//Userland/Libraries/LibWebView:WebDriverServerEndpoint",
   ]
   sources = [
-    "../AudioCodecPluginQt.cpp",
-    "../AudioThread.cpp",
-    "../EventLoopImplementationQt.cpp",
-    "../EventLoopImplementationQtEventTarget.cpp",
-    "../FontPlugin.cpp",
-    "../HelperProcess.cpp",
-    "../ImageCodecPlugin.cpp",
-    "../RequestManagerQt.cpp",
-    "../Utilities.cpp",
-    "../WebSocketClientManagerQt.cpp",
-    "../WebSocketImplQt.cpp",
-    "../WebSocketQt.cpp",
+    "//Ladybird/FontPlugin.cpp",
+    "//Ladybird/HelperProcess.cpp",
+    "//Ladybird/ImageCodecPlugin.cpp",
+    "//Ladybird/Qt/AudioCodecPluginQt.cpp",
+    "//Ladybird/Qt/AudioThread.cpp",
+    "//Ladybird/Qt/EventLoopImplementationQt.cpp",
+    "//Ladybird/Qt/EventLoopImplementationQtEventTarget.cpp",
+    "//Ladybird/Qt/RequestManagerQt.cpp",
+    "//Ladybird/Qt/StringUtils.cpp",
+    "//Ladybird/Qt/WebSocketClientManagerQt.cpp",
+    "//Ladybird/Qt/WebSocketImplQt.cpp",
+    "//Ladybird/Qt/WebSocketQt.cpp",
+    "//Ladybird/Utilities.cpp",
     "//Userland/Services/WebContent/ConnectionFromClient.cpp",
     "//Userland/Services/WebContent/ConsoleGlobalEnvironmentExtensions.cpp",
     "//Userland/Services/WebContent/PageHost.cpp",

@@ -12,20 +12,20 @@ group("ladybird") {
 
 moc_qt_objects("generate_moc") {
   sources = [
-    "BrowserWindow.h",
-    "ConsoleWidget.h",
-    "EventLoopImplementationQtEventTarget.h",
-    "InspectorWidget.h",
-    "LocationEdit.h",
-    "ModelTranslator.h",
-    "SettingsDialog.h",
-    "Tab.h",
-    "WebContentView.h",
+    "Qt/BrowserWindow.h",
+    "Qt/ConsoleWidget.h",
+    "Qt/EventLoopImplementationQtEventTarget.h",
+    "Qt/InspectorWidget.h",
+    "Qt/LocationEdit.h",
+    "Qt/ModelTranslator.h",
+    "Qt/SettingsDialog.h",
+    "Qt/Tab.h",
+    "Qt/WebContentView.h",
   ]
 }
 
 compile_qt_resource_file("compile_resource_file") {
-  sources = [ "ladybird.qrc" ]
+  sources = [ "Qt/ladybird.qrc" ]
 }
 
 link_qt("ladybird_qt_components") {
@@ -79,21 +79,22 @@ executable("ladybird_executable") {
     "//Userland/Applications/Browser/CookieJar.cpp",
     "//Userland/Applications/Browser/Database.cpp",
     "//Userland/Applications/Browser/History.cpp",
-    "BrowserWindow.cpp",
-    "ConsoleWidget.cpp",
-    "EventLoopImplementationQt.cpp",
-    "EventLoopImplementationQtEventTarget.cpp",
     "HelperProcess.cpp",
-    "InspectorWidget.cpp",
-    "LocationEdit.cpp",
-    "ModelTranslator.cpp",
-    "Settings.cpp",
-    "SettingsDialog.cpp",
-    "TVGIconEngine.cpp",
-    "Tab.cpp",
+    "Qt/BrowserWindow.cpp",
+    "Qt/ConsoleWidget.cpp",
+    "Qt/EventLoopImplementationQt.cpp",
+    "Qt/EventLoopImplementationQtEventTarget.cpp",
+    "Qt/InspectorWidget.cpp",
+    "Qt/LocationEdit.cpp",
+    "Qt/ModelTranslator.cpp",
+    "Qt/Settings.cpp",
+    "Qt/SettingsDialog.cpp",
+    "Qt/StringUtils.cpp",
+    "Qt/TVGIconEngine.cpp",
+    "Qt/Tab.cpp",
+    "Qt/WebContentView.cpp",
+    "Qt/main.cpp",
     "Utilities.cpp",
-    "WebContentView.cpp",
-    "main.cpp",
   ]
   sources += get_target_outputs(":generate_moc") +
              get_target_outputs(":compile_resource_file")
@@ -103,16 +104,9 @@ executable("ladybird_executable") {
   output_name = "ladybird"
 }
 
-link_qt("headless_browser_qt") {
-  qt_components = [ "Core" ]
-}
-
 executable("headless-browser") {
   include_dirs = [ "//Userland/Services" ]
-  configs += [
-    ":ladybird_config",
-    ":headless_browser_qt",
-  ]
+  configs += [ ":ladybird_config" ]
   deps = [
     "//Userland/Libraries/LibCore",
     "//Userland/Libraries/LibCrypto",

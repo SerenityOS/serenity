@@ -6,18 +6,19 @@ set(WEBCONTENT_SOURCES
     ${WEBCONTENT_SOURCE_DIR}/PageHost.cpp
     ${WEBCONTENT_SOURCE_DIR}/WebContentConsoleClient.cpp
     ${WEBCONTENT_SOURCE_DIR}/WebDriverConnection.cpp
-    ../AudioCodecPluginQt.cpp
-    ../AudioThread.cpp
-    ../EventLoopImplementationQt.cpp
-    ../EventLoopImplementationQtEventTarget.cpp
     ../FontPlugin.cpp
     ../HelperProcess.cpp
     ../ImageCodecPlugin.cpp
-    ../RequestManagerQt.cpp
     ../Utilities.cpp
-    ../WebSocketClientManagerQt.cpp
-    ../WebSocketQt.cpp
-    ../WebSocketImplQt.cpp
+    ../Qt/AudioCodecPluginQt.cpp
+    ../Qt/AudioThread.cpp
+    ../Qt/EventLoopImplementationQt.cpp
+    ../Qt/EventLoopImplementationQtEventTarget.cpp
+    ../Qt/RequestManagerQt.cpp
+    ../Qt/StringUtils.cpp
+    ../Qt/WebSocketClientManagerQt.cpp
+    ../Qt/WebSocketQt.cpp
+    ../Qt/WebSocketImplQt.cpp
     main.cpp
 )
 

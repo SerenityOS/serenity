@@ -7,12 +7,12 @@
 
 #pragma once
 
-#include "Types.h"
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/URL.h>
+#include <Ladybird/Types.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/StandardCursor.h>

@@ -5,7 +5,7 @@
  */
 
 #include "ModelTranslator.h"
-#include "Utilities.h"
+#include "StringUtils.h"
 #include <QIcon>
 
 namespace Ladybird {

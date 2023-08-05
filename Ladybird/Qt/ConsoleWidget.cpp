@@ -8,7 +8,7 @@
  */
 
 #include "ConsoleWidget.h"
-#include "Utilities.h"
+#include "StringUtils.h"
 #include "WebContentView.h"
 #include <AK/StringBuilder.h>
 #include <LibJS/MarkupGenerator.h>

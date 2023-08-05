@@ -11,10 +11,11 @@
 #include "ConsoleWidget.h"
 #include "Settings.h"
 #include "SettingsDialog.h"
-#include "Utilities.h"
+#include "StringUtils.h"
 #include "WebContentView.h"
 #include <AK/TypeCasts.h>
 #include <Browser/CookieJar.h>
+#include <Ladybird/Utilities.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <QAction>
@@ -24,8 +25,6 @@
 #include <QInputDialog>
 #include <QPlainTextEdit>
 #include <QTabBar>
-
-extern DeprecatedString s_serenity_resource_root;
 
 namespace Ladybird {
 extern Settings* s_settings;

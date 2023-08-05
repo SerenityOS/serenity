@@ -5,7 +5,7 @@
  */
 
 #include "LocationEdit.h"
-#include "Utilities.h"
+#include "StringUtils.h"
 #include <AK/URL.h>
 #include <QCoreApplication>
 #include <QPalette>

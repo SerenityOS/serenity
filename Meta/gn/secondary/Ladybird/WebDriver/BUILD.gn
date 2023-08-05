@@ -1,17 +1,7 @@
 import("//Ladybird/link_qt.gni")
 
-link_qt("WebDriver_qt") {
-  qt_components = [
-    "Core",
-    "Network",
-  ]
-}
-
 executable("WebDriver") {
-  configs += [
-    "//Ladybird:ladybird_config",
-    ":WebDriver_qt",
-  ]
+  configs += [ "//Ladybird:ladybird_config" ]
   include_dirs = [
     "//Userland/Services",
     "//Ladybird",
@@ -31,7 +21,7 @@ executable("WebDriver") {
     "//Userland/Libraries/LibWebView:WebDriverServerEndpoint",
   ]
   sources = [
-    "../Utilities.cpp",
+    "//Ladybird/Utilities.cpp",
     "//Userland/Services/WebDriver/Client.cpp",
     "//Userland/Services/WebDriver/Session.cpp",
     "//Userland/Services/WebDriver/WebContentConnection.cpp",

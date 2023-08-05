@@ -81,22 +81,23 @@ set(SOURCES
     ${BROWSER_SOURCE_DIR}/CookieJar.cpp
     ${BROWSER_SOURCE_DIR}/Database.cpp
     ${BROWSER_SOURCE_DIR}/History.cpp
-    BrowserWindow.cpp
-    ConsoleWidget.cpp
-    EventLoopImplementationQt.cpp
-    EventLoopImplementationQtEventTarget.cpp
     HelperProcess.cpp
-    InspectorWidget.cpp
-    LocationEdit.cpp
-    ModelTranslator.cpp
-    Settings.cpp
-    SettingsDialog.cpp
-    Tab.cpp
-    TVGIconEngine.cpp
     Utilities.cpp
-    WebContentView.cpp
-    ladybird.qrc
-    main.cpp
+    Qt/BrowserWindow.cpp
+    Qt/ConsoleWidget.cpp
+    Qt/EventLoopImplementationQt.cpp
+    Qt/EventLoopImplementationQtEventTarget.cpp
+    Qt/InspectorWidget.cpp
+    Qt/LocationEdit.cpp
+    Qt/ModelTranslator.cpp
+    Qt/Settings.cpp
+    Qt/SettingsDialog.cpp
+    Qt/Tab.cpp
+    Qt/TVGIconEngine.cpp
+    Qt/StringUtils.cpp
+    Qt/WebContentView.cpp
+    Qt/ladybird.qrc
+    Qt/main.cpp
 )
 
 qt_add_executable(ladybird ${SOURCES})
@@ -107,14 +108,14 @@ target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/)
 target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Applications/)
 target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
 
-qt_add_executable(headless-browser
+add_executable(headless-browser
     ${SERENITY_SOURCE_DIR}/Userland/Utilities/headless-browser.cpp
     ${SERENITY_SOURCE_DIR}/Userland/Services/WebContent/WebDriverConnection.cpp
     HelperProcess.cpp
     Utilities.cpp)
 
 target_include_directories(headless-browser PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-target_link_libraries(headless-browser PRIVATE Qt::Core LibWeb LibWebView LibWebSocket LibCrypto LibFileSystem LibGemini LibHTTP LibJS LibGfx LibMain LibTLS LibIPC LibDiff LibProtocol)
+target_link_libraries(headless-browser PRIVATE LibWeb LibWebView LibWebSocket LibCrypto LibFileSystem LibGemini LibHTTP LibJS LibGfx LibMain LibTLS LibIPC LibDiff LibProtocol)
 
 set_target_properties(ladybird PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER org.SerenityOS.Ladybird

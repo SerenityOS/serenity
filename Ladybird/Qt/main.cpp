@@ -6,13 +6,13 @@
 
 #include "BrowserWindow.h"
 #include "EventLoopImplementationQt.h"
-#include "HelperProcess.h"
 #include "Settings.h"
-#include "Utilities.h"
 #include "WebContentView.h"
 #include <AK/OwnPtr.h>
 #include <Browser/CookieJar.h>
 #include <Browser/Database.h>
+#include <Ladybird/HelperProcess.h>
+#include <Ladybird/Utilities.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Process.h>

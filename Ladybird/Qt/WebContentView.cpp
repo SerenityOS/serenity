@@ -6,8 +6,7 @@
  */
 
 #include "WebContentView.h"
-#include "HelperProcess.h"
-#include "Utilities.h"
+#include "StringUtils.h"
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Format.h>
@@ -17,6 +16,8 @@
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <Kernel/API/KeyCode.h>
+#include <Ladybird/HelperProcess.h>
+#include <Ladybird/Utilities.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/System.h>

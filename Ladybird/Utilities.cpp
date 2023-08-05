@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Andrew Kaster <akaster@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,30 +8,16 @@
 #include "Utilities.h"
 #include <AK/LexicalPath.h>
 #include <AK/Platform.h>
+#include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
-#include <QCoreApplication>
 
 DeprecatedString s_serenity_resource_root;
 
-AK::DeprecatedString ak_deprecated_string_from_qstring(QString const& qstring)
+ErrorOr<String> application_directory()
 {
-    return AK::DeprecatedString(qstring.toUtf8().data());
-}
-
-ErrorOr<String> ak_string_from_qstring(QString const& qstring)
-{
-    return String::from_utf8(StringView(qstring.toUtf8().data(), qstring.size()));
-}
-
-QString qstring_from_ak_deprecated_string(AK::DeprecatedString const& ak_deprecated_string)
-{
-    return QString::fromUtf8(ak_deprecated_string.characters(), ak_deprecated_string.length());
-}
-
-QString qstring_from_ak_string(String const& ak_string)
-{
-    auto view = ak_string.bytes_as_string_view();
-    return QString::fromUtf8(view.characters_without_null_termination(), view.length());
+    auto current_executable_path = TRY(Core::System::current_executable_path());
+    auto dirname = LexicalPath::dirname(current_executable_path.to_deprecated_string());
+    return String::from_deprecated_string(dirname);
 }
 
 void platform_init()
@@ -49,7 +36,7 @@ void platform_init()
         auto home_lagom = DeprecatedString::formatted("{}/.lagom", home);
         if (FileSystem::is_directory(home_lagom))
             return home_lagom;
-        auto app_dir = ak_deprecated_string_from_qstring(QCoreApplication::applicationDirPath());
+        auto app_dir = application_directory().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 #    ifdef AK_OS_MACOS
         return LexicalPath(app_dir).parent().append("Resources"sv).string();
 #    else
@@ -61,11 +48,9 @@ void platform_init()
 
 ErrorOr<Vector<String>> get_paths_for_helper_process(StringView process_name)
 {
-    auto application_path = TRY(ak_string_from_qstring(QCoreApplication::applicationDirPath()));
+    auto application_path = TRY(application_directory());
     Vector<String> paths;
 
-    TRY(paths.try_append(TRY(String::formatted("./{}/{}", process_name, process_name))));
-    TRY(paths.try_append(TRY(String::formatted("{}/{}/{}", application_path, process_name, process_name))));
     TRY(paths.try_append(TRY(String::formatted("{}/{}", application_path, process_name))));
     TRY(paths.try_append(TRY(String::formatted("./{}", process_name))));
     // NOTE: Add platform-specific paths here
