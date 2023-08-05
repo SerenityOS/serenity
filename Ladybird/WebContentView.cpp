@@ -282,13 +282,8 @@ void WebContentView::wheelEvent(QWheelEvent* event)
         auto button = get_button_from_qt_event(*event);
         auto buttons = get_buttons_from_qt_event(*event);
         auto modifiers = get_modifiers_from_qt_mouse_event(*event);
-        auto num_pixels = -event->pixelDelta() / m_inverse_pixel_scaling_ratio;
         auto num_degrees = -event->angleDelta() / 8;
-        if (!num_pixels.isNull()) {
-            client().async_mouse_wheel(to_content_position(position), button, buttons, modifiers, num_pixels.x(), num_pixels.y());
-        } else if (!num_degrees.isNull()) {
-            client().async_mouse_wheel(to_content_position(position), button, buttons, modifiers, num_degrees.x(), num_degrees.y());
-        }
+        client().async_mouse_wheel(to_content_position(position), button, buttons, modifiers, num_degrees.x(), num_degrees.y());
 
         event->accept();
         return;
