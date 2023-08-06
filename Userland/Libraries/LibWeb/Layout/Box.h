@@ -54,7 +54,6 @@ public:
     bool is_scroll_container() const;
 
     bool is_scrollable() const;
-    CSSPixelPoint scroll_offset() const;
     void set_scroll_offset(CSSPixelPoint);
 
 protected:
