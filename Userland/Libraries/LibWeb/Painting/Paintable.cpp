@@ -34,19 +34,8 @@ Paintable::DispatchEventOfSameName Paintable::handle_mousemove(Badge<EventHandle
     return DispatchEventOfSameName::Yes;
 }
 
-bool Paintable::handle_mousewheel(Badge<EventHandler>, CSSPixelPoint, unsigned, unsigned, int wheel_delta_x, int wheel_delta_y)
+bool Paintable::handle_mousewheel(Badge<EventHandler>, CSSPixelPoint, unsigned, unsigned, int, int)
 {
-    if (auto const* containing_block = this->containing_block()) {
-        if (!containing_block->is_scrollable())
-            return false;
-        auto new_offset = containing_block->scroll_offset();
-        new_offset.translate_by(wheel_delta_x, wheel_delta_y);
-        // FIXME: This const_cast is gross.
-        // FIXME: Scroll offset shouldn't live in the layout tree.
-        const_cast<Layout::Box*>(containing_block)->set_scroll_offset(new_offset);
-        return true;
-    }
-
     return false;
 }
 
