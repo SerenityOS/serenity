@@ -661,6 +661,11 @@ if (BUILD_LAGOM)
         # The FLAC tests need a special working directory to find the test files
         lagom_test(../../Tests/LibAudio/TestFLACSpec.cpp LIBS LibAudio WORKING_DIRECTORY "${FLAC_TEST_PATH}/..")
 
+        lagom_test(../../Tests/LibAudio/TestPlaybackStream.cpp LIBS LibAudio)
+        if (HAVE_PULSEAUDIO)
+            target_compile_definitions(TestPlaybackStream PRIVATE HAVE_PULSEAUDIO=1)
+        endif()
+
         # LibCore
         if ((LINUX OR APPLE) AND NOT EMSCRIPTEN)
             lagom_test(../../Tests/LibCore/TestLibCoreFileWatcher.cpp)
