@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,6 +22,7 @@ class DeferredInvocationContext;
 class ElapsedTimer;
 class Event;
 class EventLoop;
+class EventReceiver;
 class File;
 class LocalServer;
 class LocalSocket;
@@ -30,8 +31,6 @@ class MimeData;
 class NetworkJob;
 class NetworkResponse;
 class Notifier;
-class Object;
-class ObjectClassRegistration;
 class ProcessStatisticsReader;
 class Socket;
 template<typename Result, typename TError = AK::Error>

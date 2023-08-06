@@ -10,19 +10,19 @@
 #include <AK/JsonObject.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <stdio.h>
 
 namespace Core {
 
-Object::Object(Object* parent)
+EventReceiver::EventReceiver(EventReceiver* parent)
     : m_parent(parent)
 {
     if (m_parent)
         m_parent->add_child(*this);
 }
 
-Object::~Object()
+EventReceiver::~EventReceiver()
 {
     // NOTE: We move our children out to a stack vector to prevent other
     //       code from trying to iterate over them.
@@ -37,7 +37,7 @@ Object::~Object()
         m_parent->remove_child(*this);
 }
 
-void Object::event(Core::Event& event)
+void EventReceiver::event(Core::Event& event)
 {
     switch (event.type()) {
     case Core::Event::Timer:
@@ -55,7 +55,7 @@ void Object::event(Core::Event& event)
     }
 }
 
-ErrorOr<void> Object::try_add_child(Object& object)
+ErrorOr<void> EventReceiver::try_add_child(EventReceiver& object)
 {
     // FIXME: Should we support reparenting objects?
     VERIFY(!object.parent() || object.parent() == this);
@@ -66,12 +66,12 @@ ErrorOr<void> Object::try_add_child(Object& object)
     return {};
 }
 
-void Object::add_child(Object& object)
+void EventReceiver::add_child(EventReceiver& object)
 {
     MUST(try_add_child(object));
 }
 
-void Object::insert_child_before(Object& new_child, Object& before_child)
+void EventReceiver::insert_child_before(EventReceiver& new_child, EventReceiver& before_child)
 {
     // FIXME: Should we support reparenting objects?
     VERIFY(!new_child.parent() || new_child.parent() == this);
@@ -81,12 +81,12 @@ void Object::insert_child_before(Object& new_child, Object& before_child)
     event(child_event);
 }
 
-void Object::remove_child(Object& object)
+void EventReceiver::remove_child(EventReceiver& object)
 {
     for (size_t i = 0; i < m_children.size(); ++i) {
         if (m_children[i] == &object) {
             // NOTE: We protect the child so it survives the handling of ChildRemoved.
-            NonnullRefPtr<Object> protector = object;
+            NonnullRefPtr<EventReceiver> protector = object;
             object.m_parent = nullptr;
             m_children.remove(i);
             Core::ChildEvent child_event(Core::Event::ChildRemoved, object);
@@ -97,25 +97,25 @@ void Object::remove_child(Object& object)
     VERIFY_NOT_REACHED();
 }
 
-void Object::remove_all_children()
+void EventReceiver::remove_all_children()
 {
     while (!m_children.is_empty())
         m_children.first()->remove_from_parent();
 }
 
-void Object::timer_event(Core::TimerEvent&)
+void EventReceiver::timer_event(Core::TimerEvent&)
 {
 }
 
-void Object::child_event(Core::ChildEvent&)
+void EventReceiver::child_event(Core::ChildEvent&)
 {
 }
 
-void Object::custom_event(CustomEvent&)
+void EventReceiver::custom_event(CustomEvent&)
 {
 }
 
-void Object::start_timer(int ms, TimerShouldFireWhenNotVisible fire_when_not_visible)
+void EventReceiver::start_timer(int ms, TimerShouldFireWhenNotVisible fire_when_not_visible)
 {
     if (m_timer_id) {
         dbgln("{} {:p} already has a timer!", class_name(), this);
@@ -125,7 +125,7 @@ void Object::start_timer(int ms, TimerShouldFireWhenNotVisible fire_when_not_vis
     m_timer_id = Core::EventLoop::register_timer(*this, ms, true, fire_when_not_visible);
 }
 
-void Object::stop_timer()
+void EventReceiver::stop_timer()
 {
     if (!m_timer_id)
         return;
@@ -136,12 +136,12 @@ void Object::stop_timer()
     m_timer_id = 0;
 }
 
-void Object::deferred_invoke(Function<void()> invokee)
+void EventReceiver::deferred_invoke(Function<void()> invokee)
 {
     Core::deferred_invoke([invokee = move(invokee), strong_this = NonnullRefPtr(*this)] { invokee(); });
 }
 
-bool Object::is_ancestor_of(Object const& other) const
+bool EventReceiver::is_ancestor_of(EventReceiver const& other) const
 {
     if (&other == this)
         return false;
@@ -152,7 +152,7 @@ bool Object::is_ancestor_of(Object const& other) const
     return false;
 }
 
-void Object::dispatch_event(Core::Event& e, Object* stay_within)
+void EventReceiver::dispatch_event(Core::Event& e, EventReceiver* stay_within)
 {
     VERIFY(!stay_within || stay_within == this || stay_within->is_ancestor_of(*this));
     auto* target = this;
@@ -169,14 +169,14 @@ void Object::dispatch_event(Core::Event& e, Object* stay_within)
     } while (target && !e.is_accepted());
 }
 
-bool Object::is_visible_for_timer_purposes() const
+bool EventReceiver::is_visible_for_timer_purposes() const
 {
     if (parent())
         return parent()->is_visible_for_timer_purposes();
     return true;
 }
 
-void Object::set_event_filter(Function<bool(Core::Event&)> filter)
+void EventReceiver::set_event_filter(Function<bool(Core::Event&)> filter)
 {
     m_event_filter = move(filter);
 }

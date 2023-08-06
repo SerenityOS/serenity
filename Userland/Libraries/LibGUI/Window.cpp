@@ -71,7 +71,7 @@ Window* Window::from_window_id(int window_id)
     return nullptr;
 }
 
-Window::Window(Core::Object* parent)
+Window::Window(Core::EventReceiver* parent)
     : GUI::Object(parent)
     , m_menubar(Menubar::construct())
 {
@@ -760,7 +760,7 @@ void Window::event(Core::Event& event)
     if (event.type() == Event::AppletAreaRectChange)
         return handle_applet_area_rect_change_event(static_cast<AppletAreaRectChangeEvent&>(event));
 
-    Core::Object::event(event);
+    Core::EventReceiver::event(event);
 }
 
 bool Window::is_visible() const

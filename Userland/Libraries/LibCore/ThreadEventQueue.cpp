@@ -7,7 +7,7 @@
 #include <AK/Vector.h>
 #include <LibCore/DeferredInvocationContext.h>
 #include <LibCore/EventLoopImplementation.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibCore/Promise.h>
 #include <LibCore/ThreadEventQueue.h>
 #include <LibThreading/Mutex.h>
@@ -21,7 +21,7 @@ struct ThreadEventQueue::Private {
         AK_MAKE_DEFAULT_MOVABLE(QueuedEvent);
 
     public:
-        QueuedEvent(Object& receiver, NonnullOwnPtr<Event> event)
+        QueuedEvent(EventReceiver& receiver, NonnullOwnPtr<Event> event)
             : receiver(receiver)
             , event(move(event))
         {
@@ -29,13 +29,13 @@ struct ThreadEventQueue::Private {
 
         ~QueuedEvent() = default;
 
-        WeakPtr<Object> receiver;
+        WeakPtr<EventReceiver> receiver;
         NonnullOwnPtr<Event> event;
     };
 
     Threading::Mutex mutex;
     Vector<QueuedEvent, 128> queued_events;
-    Vector<NonnullRefPtr<Promise<NonnullRefPtr<Object>>>, 16> pending_promises;
+    Vector<NonnullRefPtr<Promise<NonnullRefPtr<EventReceiver>>>, 16> pending_promises;
     bool warned_promise_count { false };
 };
 
@@ -57,7 +57,7 @@ ThreadEventQueue::ThreadEventQueue()
 
 ThreadEventQueue::~ThreadEventQueue() = default;
 
-void ThreadEventQueue::post_event(Core::Object& receiver, NonnullOwnPtr<Core::Event> event)
+void ThreadEventQueue::post_event(Core::EventReceiver& receiver, NonnullOwnPtr<Core::Event> event)
 {
     {
         Threading::MutexLocker lock(m_private->mutex);
@@ -66,7 +66,7 @@ void ThreadEventQueue::post_event(Core::Object& receiver, NonnullOwnPtr<Core::Ev
     Core::EventLoopManager::the().did_post_event();
 }
 
-void ThreadEventQueue::add_job(NonnullRefPtr<Promise<NonnullRefPtr<Object>>> promise)
+void ThreadEventQueue::add_job(NonnullRefPtr<Promise<NonnullRefPtr<EventReceiver>>> promise)
 {
     Threading::MutexLocker lock(m_private->mutex);
     m_private->pending_promises.append(move(promise));
@@ -107,7 +107,7 @@ size_t ThreadEventQueue::process()
         } else if (event.type() == Event::Type::DeferredInvoke) {
             static_cast<DeferredInvocationEvent&>(event).m_invokee();
         } else {
-            NonnullRefPtr<Object> protector(*receiver);
+            NonnullRefPtr<EventReceiver> protector(*receiver);
             receiver->dispatch_event(event);
         }
         ++processed_events;

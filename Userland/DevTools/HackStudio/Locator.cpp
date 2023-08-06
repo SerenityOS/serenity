@@ -95,7 +95,7 @@ LocatorSuggestionModel::Suggestion LocatorSuggestionModel::Suggestion::create_sy
     return s;
 }
 
-Locator::Locator(Core::Object* parent)
+Locator::Locator(Core::EventReceiver* parent)
 {
     set_layout<GUI::VerticalBoxLayout>();
     set_fixed_height(22);

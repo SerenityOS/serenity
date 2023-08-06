@@ -10,7 +10,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/IntrusiveList.h>
 #include <AK/WeakPtr.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/DisjointRectSet.h>
 #include <LibGfx/Rect.h>
@@ -81,7 +81,7 @@ enum class WindowMinimizedState : u32 {
     Hidden,
 };
 
-class Window final : public Core::Object {
+class Window final : public Core::EventReceiver {
     C_OBJECT(Window);
 
 public:
@@ -375,7 +375,7 @@ public:
 
 private:
     Window(ConnectionFromClient&, WindowType, WindowMode, int window_id, bool minimizable, bool closeable, bool frameless, bool resizable, bool fullscreen, Window* parent_window = nullptr);
-    Window(Core::Object&, WindowType);
+    Window(Core::EventReceiver&, WindowType);
 
     virtual void event(Core::Event&) override;
     void handle_mouse_event(MouseEvent const&);

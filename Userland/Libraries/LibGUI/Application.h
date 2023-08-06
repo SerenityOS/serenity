@@ -12,7 +12,7 @@
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Shortcut.h>
 #include <LibGUI/Widget.h>
@@ -21,7 +21,7 @@
 
 namespace GUI {
 
-class Application : public Core::Object {
+class Application : public Core::EventReceiver {
     C_OBJECT_ABSTRACT(Application);
 
 public:

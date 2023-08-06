@@ -8,15 +8,15 @@
 #pragma once
 
 #include <AK/IPv4Address.h>
+#include <LibCore/EventReceiver.h>
 #include <LibCore/Notifier.h>
-#include <LibCore/Object.h>
 
 namespace Core {
 
-class TCPServer : public Object {
+class TCPServer : public EventReceiver {
     C_OBJECT_ABSTRACT(TCPServer)
 public:
-    static ErrorOr<NonnullRefPtr<TCPServer>> try_create(Object* parent = nullptr);
+    static ErrorOr<NonnullRefPtr<TCPServer>> try_create(EventReceiver* parent = nullptr);
     virtual ~TCPServer() override;
 
     enum class AllowAddressReuse {
@@ -36,7 +36,7 @@ public:
     Function<void()> on_ready_to_accept;
 
 private:
-    explicit TCPServer(int fd, Object* parent = nullptr);
+    explicit TCPServer(int fd, EventReceiver* parent = nullptr);
 
     int m_fd { -1 };
     bool m_listening { false };

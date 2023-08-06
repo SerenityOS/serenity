@@ -95,18 +95,18 @@ private:
 
 class ChildEvent final : public Event {
 public:
-    ChildEvent(Type, Object& child, Object* insertion_before_child = nullptr);
+    ChildEvent(Type, EventReceiver& child, EventReceiver* insertion_before_child = nullptr);
     ~ChildEvent() = default;
 
-    Object* child();
-    Object const* child() const;
+    EventReceiver* child();
+    EventReceiver const* child() const;
 
-    Object* insertion_before_child();
-    Object const* insertion_before_child() const;
+    EventReceiver* insertion_before_child();
+    EventReceiver const* insertion_before_child() const;
 
 private:
-    WeakPtr<Object> m_child;
-    WeakPtr<Object> m_insertion_before_child;
+    WeakPtr<EventReceiver> m_child;
+    WeakPtr<EventReceiver> m_insertion_before_child;
 };
 
 class CustomEvent : public Event {

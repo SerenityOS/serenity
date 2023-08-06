@@ -6,12 +6,12 @@
 
 #pragma once
 
+#include <LibCore/EventReceiver.h>
 #include <LibCore/Notifier.h>
-#include <LibCore/Object.h>
 
 namespace Core {
 
-class LocalServer : public Object {
+class LocalServer : public EventReceiver {
     C_OBJECT(LocalServer)
 public:
     virtual ~LocalServer() override;
@@ -26,7 +26,7 @@ public:
     Function<void(Error)> on_accept_error;
 
 private:
-    explicit LocalServer(Object* parent = nullptr);
+    explicit LocalServer(EventReceiver* parent = nullptr);
 
     void setup_notifier();
 

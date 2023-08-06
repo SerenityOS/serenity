@@ -9,7 +9,7 @@
 #pragma once
 
 #include <AK/Format.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/CharacterBitmap.h>
@@ -77,7 +77,7 @@ enum class Suit : u8 {
     __Count
 };
 
-class Card final : public Core::Object {
+class Card final : public Core::EventReceiver {
     C_OBJECT(Card)
 public:
     static constexpr int width = 80;

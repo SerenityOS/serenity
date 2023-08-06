@@ -20,7 +20,7 @@
 
 namespace LookupServer {
 
-MulticastDNS::MulticastDNS(Object* parent)
+MulticastDNS::MulticastDNS(Core::EventReceiver* parent)
     : Core::UDPServer(parent)
     , m_hostname("courage.local")
 {

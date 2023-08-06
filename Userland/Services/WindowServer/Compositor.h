@@ -8,7 +8,7 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/DisjointRectSet.h>
 #include <LibGfx/Font/Font.h>
@@ -87,7 +87,7 @@ struct CompositorScreenData {
     }
 };
 
-class Compositor final : public Core::Object {
+class Compositor final : public Core::EventReceiver {
     C_OBJECT(Compositor)
     friend struct CompositorScreenData;
     friend class Overlay;

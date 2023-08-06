@@ -8,7 +8,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/WeakPtr.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Forward.h>
@@ -23,7 +23,7 @@ class ConnectionFromClient;
 class Menubar;
 class Window;
 
-class Menu final : public Core::Object {
+class Menu final : public Core::EventReceiver {
     C_OBJECT(Menu);
 
 public:

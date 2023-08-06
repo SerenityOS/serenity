@@ -32,7 +32,7 @@ struct DeferredInvoker {
     virtual void schedule(Function<void()>) = 0;
 };
 
-class ConnectionBase : public Core::Object {
+class ConnectionBase : public Core::EventReceiver {
     C_OBJECT_ABSTRACT(ConnectionBase);
 
 public:
@@ -161,5 +161,5 @@ protected:
 }
 
 template<typename LocalEndpoint, typename PeerEndpoint>
-struct AK::Formatter<IPC::Connection<LocalEndpoint, PeerEndpoint>> : Formatter<Core::Object> {
+struct AK::Formatter<IPC::Connection<LocalEndpoint, PeerEndpoint>> : Formatter<Core::EventReceiver> {
 };

@@ -129,7 +129,7 @@ ErrorOr<void> ScrollableContainerWidget::load_from_gml_ast(NonnullRefPtr<GUI::GM
         auto const& content_widget = static_cast<GUI::GML::Object const&>(*content_widget_value);
         auto class_name = content_widget.name();
 
-        RefPtr<Core::Object> child;
+        RefPtr<Core::EventReceiver> child;
         if (auto* registration = GUI::ObjectClassRegistration::find(class_name)) {
             child = TRY(registration->construct());
         } else {

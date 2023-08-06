@@ -13,7 +13,7 @@
 #include <LibAudio/Sample.h>
 #include <LibAudio/WavWriter.h>
 #include <LibCore/Event.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibDSP/Music.h>
 #include <LibThreading/MutexProtected.h>
 #include <LibThreading/Thread.h>
@@ -22,7 +22,7 @@ class TrackManager;
 
 // Wrapper class accepting custom events to advance the track playing and forward audio data to the system.
 // This does not run on a separate thread, preventing IPC multithreading madness.
-class AudioPlayerLoop final : public Core::Object {
+class AudioPlayerLoop final : public Core::EventReceiver {
     C_OBJECT(AudioPlayerLoop)
 public:
     virtual ~AudioPlayerLoop() override;

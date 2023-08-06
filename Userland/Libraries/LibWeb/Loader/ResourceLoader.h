@@ -11,7 +11,7 @@
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/URL.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibCore/Proxy.h>
 #include <LibWeb/Loader/Resource.h>
 #include <LibWeb/Page/Page.h>
@@ -87,7 +87,7 @@ protected:
     explicit ResourceLoaderConnector();
 };
 
-class ResourceLoader : public Core::Object {
+class ResourceLoader : public Core::EventReceiver {
     C_OBJECT_ABSTRACT(ResourceLoader)
 public:
     static void initialize(RefPtr<ResourceLoaderConnector>);

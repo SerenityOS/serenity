@@ -123,7 +123,7 @@ private:
     FadingProperty<double> m_volume { 1 };
 };
 
-class Mixer : public Core::Object {
+class Mixer : public Core::EventReceiver {
     C_OBJECT_ABSTRACT(Mixer)
 public:
     static ErrorOr<NonnullRefPtr<Mixer>> try_create(NonnullRefPtr<Core::ConfigFile> config)

@@ -7,11 +7,11 @@
 
 #pragma once
 
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 
 namespace Core {
 
-class DeferredInvocationContext final : public Core::Object {
+class DeferredInvocationContext final : public Core::EventReceiver {
     C_OBJECT(DeferredInvocationContext)
 private:
     DeferredInvocationContext() = default;

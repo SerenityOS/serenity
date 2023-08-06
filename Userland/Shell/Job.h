@@ -15,7 +15,7 @@
 #include <AK/JsonValue.h>
 #include <AK/OwnPtr.h>
 #include <LibCore/ElapsedTimer.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 
 namespace Shell {
 

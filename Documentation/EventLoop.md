@@ -29,7 +29,7 @@ The **event loop stack** is mainly used for nesting GUI windows. Each window add
 An event loop handles several kinds of events:
 
 -   POSIX signals can be registered with `EventLoop::register_signal()`. This means that the event loop of the calling thread registers the specified POSIX signal and callback with the kernel, and you can be sure that the signal handler will run as a normal event without the weirdness that comes with POSIX signal handlers (such as unspecified thread).
--   EventLoop::post_event() allows calling code to fire an event targeting a specific Core::Object the next time the event loop is pumped.
+-   EventLoop::post_event() allows calling code to fire an event targeting a specific Core::EventReceiver the next time the event loop is pumped.
 -   Similarly, an arbitrary callback can be called on the next event loop iteration with `EventLoop::deferred_invoke()`.
 -   Timer events, i.e. events that fire after a certain timeout, possibly repeatedly, can be created with `EventLoop::register_timer` and `Object::start_timer()`. A more user-friendly version is the `Core::Timer` utility class which does the same thing and allows you to attach any callback to the timer.
 -   For when a "file" becomes readable or writeable, the utility class `Core::Notifier` interfaces with the event loop system to handle exactly that.

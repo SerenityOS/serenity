@@ -8,21 +8,21 @@
 #pragma once
 
 #include <AK/String.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibCore/Socket.h>
 #include <LibHTTP/Forward.h>
 #include <LibHTTP/HttpRequest.h>
 
 namespace WebServer {
 
-class Client final : public Core::Object {
+class Client final : public Core::EventReceiver {
     C_OBJECT(Client);
 
 public:
     void start();
 
 private:
-    Client(NonnullOwnPtr<Core::BufferedTCPSocket>, Core::Object* parent);
+    Client(NonnullOwnPtr<Core::BufferedTCPSocket>, Core::EventReceiver* parent);
 
     using WrappedError = Variant<AK::Error, HTTP::HttpRequest::ParseError>;
 

@@ -8,19 +8,19 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 
 namespace Core {
 
-class Timer final : public Object {
+class Timer final : public EventReceiver {
     C_OBJECT(Timer);
 
 public:
-    static ErrorOr<NonnullRefPtr<Timer>> create_repeating(int interval_ms, Function<void()>&& timeout_handler, Object* parent = nullptr)
+    static ErrorOr<NonnullRefPtr<Timer>> create_repeating(int interval_ms, Function<void()>&& timeout_handler, EventReceiver* parent = nullptr)
     {
         return adopt_nonnull_ref_or_enomem(new Timer(interval_ms, move(timeout_handler), parent));
     }
-    static ErrorOr<NonnullRefPtr<Timer>> create_single_shot(int interval_ms, Function<void()>&& timeout_handler, Object* parent = nullptr)
+    static ErrorOr<NonnullRefPtr<Timer>> create_single_shot(int interval_ms, Function<void()>&& timeout_handler, EventReceiver* parent = nullptr)
     {
         auto timer = TRY(adopt_nonnull_ref_or_enomem(new Timer(interval_ms, move(timeout_handler), parent)));
         timer->set_single_shot(true);
@@ -53,8 +53,8 @@ public:
     Function<void()> on_timeout;
 
 private:
-    explicit Timer(Object* parent = nullptr);
-    Timer(int interval_ms, Function<void()>&& timeout_handler, Object* parent = nullptr);
+    explicit Timer(EventReceiver* parent = nullptr);
+    Timer(int interval_ms, Function<void()>&& timeout_handler, EventReceiver* parent = nullptr);
 
     virtual void timer_event(TimerEvent&) override;
 

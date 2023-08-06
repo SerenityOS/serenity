@@ -17,7 +17,7 @@
 #include <AK/Types.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibJS/Interpreter.h>
 
 namespace Spreadsheet {
@@ -41,7 +41,7 @@ private:
     CellTypeMetadata m_new_type_metadata;
 };
 
-class Sheet : public Core::Object {
+class Sheet : public Core::EventReceiver {
     C_OBJECT(Sheet);
 
 public:

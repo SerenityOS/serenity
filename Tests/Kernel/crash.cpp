@@ -12,7 +12,7 @@
 #    include <Kernel/Arch/x86_64/IO.h>
 #endif
 #include <LibCore/ArgsParser.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibTest/CrashTest.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -327,7 +327,7 @@ int main(int argc, char** argv)
 
     if (do_deref_null_refptr || do_all_crash_types) {
         any_failures |= !Crash("Dereference a null RefPtr", [] {
-            RefPtr<Core::Object> p;
+            RefPtr<Core::EventReceiver> p;
             *p;
             return Crash::Failure::DidNotCrash;
         }).run(run_type);

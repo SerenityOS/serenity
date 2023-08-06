@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/NonnullRefPtr.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibDSP/ProcessorParameter.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Widget.h>

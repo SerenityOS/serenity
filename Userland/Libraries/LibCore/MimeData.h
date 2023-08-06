@@ -10,11 +10,11 @@
 #include <AK/ByteBuffer.h>
 #include <AK/HashMap.h>
 #include <AK/URL.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 
 namespace Core {
 
-class MimeData : public Object {
+class MimeData : public EventReceiver {
     C_OBJECT(MimeData);
 
 public:

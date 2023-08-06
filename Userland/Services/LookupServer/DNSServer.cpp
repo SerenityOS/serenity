@@ -13,7 +13,7 @@ namespace LookupServer {
 
 using namespace DNS;
 
-DNSServer::DNSServer(Object* parent)
+DNSServer::DNSServer(Core::EventReceiver* parent)
     : Core::UDPServer(parent)
 {
     bind(IPv4Address(), 53);

@@ -7,7 +7,7 @@
 #pragma once
 
 #include "Image.h"
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibGUI/Frame.h>
 
 namespace PixelPaint {

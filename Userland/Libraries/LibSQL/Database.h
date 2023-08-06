@@ -10,7 +10,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefPtr.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Heap.h>
 #include <LibSQL/Meta.h>
@@ -24,7 +24,7 @@ namespace SQL {
  * to store in it. It has BTree pointers for B-Trees holding the definitions
  * of tables, columns, indexes, and other SQL objects.
  */
-class Database : public Core::Object {
+class Database : public Core::EventReceiver {
     C_OBJECT(Database);
 
 public:

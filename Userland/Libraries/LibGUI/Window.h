@@ -242,7 +242,7 @@ public:
     void propagate_shortcuts(KeyEvent& event, Widget* widget, ShortcutPropagationBoundary = ShortcutPropagationBoundary::Application);
 
 protected:
-    Window(Core::Object* parent = nullptr);
+    Window(Core::EventReceiver* parent = nullptr);
     virtual void wm_event(WMEvent&);
     virtual void screen_rects_change_event(ScreenRectsChangeEvent&);
     virtual void applet_area_rect_change_event(AppletAreaRectChangeEvent&);
@@ -329,5 +329,5 @@ private:
 }
 
 template<>
-struct AK::Formatter<GUI::Window> : Formatter<Core::Object> {
+struct AK::Formatter<GUI::Window> : Formatter<Core::EventReceiver> {
 };

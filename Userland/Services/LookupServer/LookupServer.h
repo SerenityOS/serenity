@@ -9,8 +9,8 @@
 #include "ConnectionFromClient.h"
 #include "DNSServer.h"
 #include "MulticastDNS.h"
+#include <LibCore/EventReceiver.h>
 #include <LibCore/FileWatcher.h>
-#include <LibCore/Object.h>
 #include <LibDNS/Name.h>
 #include <LibDNS/Packet.h>
 #include <LibIPC/MultiServer.h>
@@ -19,7 +19,7 @@ namespace LookupServer {
 
 using namespace DNS;
 
-class LookupServer final : public Core::Object {
+class LookupServer final : public Core::EventReceiver {
     C_OBJECT(LookupServer);
 
 public:

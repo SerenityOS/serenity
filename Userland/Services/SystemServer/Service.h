@@ -10,10 +10,10 @@
 #include <AK/RefPtr.h>
 #include <LibCore/Account.h>
 #include <LibCore/ElapsedTimer.h>
+#include <LibCore/EventReceiver.h>
 #include <LibCore/Notifier.h>
-#include <LibCore/Object.h>
 
-class Service final : public Core::Object {
+class Service final : public Core::EventReceiver {
     C_OBJECT_ABSTRACT(Service)
 
 public:

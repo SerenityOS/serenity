@@ -10,7 +10,7 @@
 #include <AK/Tuple.h>
 #include <AK/Variant.h>
 #include <LibCore/DateTime.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 
 namespace IMAP {
 enum class CommandType {

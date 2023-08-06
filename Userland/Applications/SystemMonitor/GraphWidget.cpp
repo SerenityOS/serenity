@@ -6,7 +6,7 @@
  */
 
 #include "GraphWidget.h"
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font/Font.h>

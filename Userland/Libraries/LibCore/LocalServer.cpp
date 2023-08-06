@@ -22,8 +22,8 @@
 
 namespace Core {
 
-LocalServer::LocalServer(Object* parent)
-    : Object(parent)
+LocalServer::LocalServer(EventReceiver* parent)
+    : EventReceiver(parent)
 {
 }
 

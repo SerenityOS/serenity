@@ -36,7 +36,7 @@ struct DHCPv4Transaction {
     u32 offered_lease_time { 0 };
 };
 
-class DHCPv4Client final : public Core::Object {
+class DHCPv4Client final : public Core::EventReceiver {
     C_OBJECT(DHCPv4Client)
 
 public:

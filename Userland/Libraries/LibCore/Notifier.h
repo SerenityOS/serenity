@@ -7,11 +7,11 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 
 namespace Core {
 
-class Notifier final : public Object {
+class Notifier final : public EventReceiver {
     C_OBJECT(Notifier);
 
 public:
@@ -37,7 +37,7 @@ public:
     void event(Core::Event&) override;
 
 private:
-    Notifier(int fd, Type type, Object* parent = nullptr);
+    Notifier(int fd, Type type, EventReceiver* parent = nullptr);
 
     int m_fd { -1 };
     Type m_type { Type::None };

@@ -9,14 +9,14 @@
 #include <AK/DeprecatedString.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
+#include <LibCore/EventReceiver.h>
 #include <LibCore/FileWatcher.h>
-#include <LibCore/Object.h>
 #include <LibKeyboard/CharacterMap.h>
 #include <WindowServer/WMConnectionFromClient.h>
 
 namespace WindowServer {
 
-class KeymapSwitcher final : public Core::Object {
+class KeymapSwitcher final : public Core::EventReceiver {
     C_OBJECT(KeymapSwitcher)
 public:
     virtual ~KeymapSwitcher() override = default;

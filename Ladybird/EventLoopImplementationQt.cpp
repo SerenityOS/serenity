@@ -8,8 +8,8 @@
 #include "EventLoopImplementationQtEventTarget.h"
 #include <AK/IDAllocator.h>
 #include <LibCore/Event.h>
+#include <LibCore/EventReceiver.h>
 #include <LibCore/Notifier.h>
-#include <LibCore/Object.h>
 #include <LibCore/ThreadEventQueue.h>
 #include <QCoreApplication>
 #include <QTimer>
@@ -73,14 +73,14 @@ void EventLoopImplementationQt::wake()
         m_event_loop.wakeUp();
 }
 
-void EventLoopImplementationQt::post_event(Core::Object& receiver, NonnullOwnPtr<Core::Event>&& event)
+void EventLoopImplementationQt::post_event(Core::EventReceiver& receiver, NonnullOwnPtr<Core::Event>&& event)
 {
     m_thread_event_queue.post_event(receiver, move(event));
     if (&m_thread_event_queue != &Core::ThreadEventQueue::current())
         wake();
 }
 
-static void qt_timer_fired(int timer_id, Core::TimerShouldFireWhenNotVisible should_fire_when_not_visible, Core::Object& object)
+static void qt_timer_fired(int timer_id, Core::TimerShouldFireWhenNotVisible should_fire_when_not_visible, Core::EventReceiver& object)
 {
     if (should_fire_when_not_visible == Core::TimerShouldFireWhenNotVisible::No) {
         if (!object.is_visible_for_timer_purposes())
@@ -90,7 +90,7 @@ static void qt_timer_fired(int timer_id, Core::TimerShouldFireWhenNotVisible sho
     object.dispatch_event(event);
 }
 
-int EventLoopManagerQt::register_timer(Core::Object& object, int milliseconds, bool should_reload, Core::TimerShouldFireWhenNotVisible should_fire_when_not_visible)
+int EventLoopManagerQt::register_timer(Core::EventReceiver& object, int milliseconds, bool should_reload, Core::TimerShouldFireWhenNotVisible should_fire_when_not_visible)
 {
     auto& thread_data = ThreadData::the();
     auto timer = make<QTimer>();

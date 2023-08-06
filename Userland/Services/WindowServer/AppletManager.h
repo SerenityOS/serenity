@@ -11,7 +11,7 @@
 
 namespace WindowServer {
 
-class AppletManager : public Core::Object {
+class AppletManager : public Core::EventReceiver {
     C_OBJECT(AppletManager)
 public:
     ~AppletManager() = default;

@@ -1559,7 +1559,7 @@ void WindowManager::event(Core::Event& event)
         return;
     }
 
-    Core::Object::event(event);
+    Core::EventReceiver::event(event);
 }
 
 bool WindowManager::is_window_in_modal_chain(Window& chain_window, Window& other_window)

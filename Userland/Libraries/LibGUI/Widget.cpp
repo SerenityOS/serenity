@@ -249,7 +249,7 @@ void Widget::child_event(Core::ChildEvent& event)
         }
         update();
     }
-    return Core::Object::child_event(event);
+    return Core::EventReceiver::child_event(event);
 }
 
 void Widget::set_relative_rect(Gfx::IntRect const& a_rect)
@@ -347,7 +347,7 @@ void Widget::event(Core::Event& event)
     case Event::AppletAreaRectChange:
         return applet_area_rect_change_event(static_cast<AppletAreaRectChangeEvent&>(event));
     default:
-        return Core::Object::event(event);
+        return Core::EventReceiver::event(event);
     }
 }
 
@@ -1134,7 +1134,7 @@ void Widget::set_override_cursor(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<
 
 ErrorOr<void> Widget::load_from_gml(StringView gml_string)
 {
-    return load_from_gml(gml_string, [](DeprecatedString const& class_name) -> ErrorOr<NonnullRefPtr<Core::Object>> {
+    return load_from_gml(gml_string, [](DeprecatedString const& class_name) -> ErrorOr<NonnullRefPtr<Core::EventReceiver>> {
         dbgln("Class '{}' not registered", class_name);
         return Error::from_string_literal("Class not registered");
     });
@@ -1195,7 +1195,7 @@ ErrorOr<void> Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node const> ast,
             }
             this->layout()->add_spacer();
         } else {
-            RefPtr<Core::Object> child;
+            RefPtr<Core::EventReceiver> child;
             if (auto* registration = GUI::ObjectClassRegistration::find(class_name)) {
                 child = TRY(registration->construct());
                 if (!registration->is_derived_from(widget_class)) {

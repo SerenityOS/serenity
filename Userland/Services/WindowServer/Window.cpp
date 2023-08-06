@@ -84,8 +84,8 @@ static Gfx::Bitmap& move_icon()
     return *s_icon;
 }
 
-Window::Window(Core::Object& parent, WindowType type)
-    : Core::Object(&parent)
+Window::Window(Core::EventReceiver& parent, WindowType type)
+    : Core::EventReceiver(&parent)
     , m_type(type)
     , m_icon(default_window_icon())
     , m_frame(*this)
@@ -95,7 +95,7 @@ Window::Window(Core::Object& parent, WindowType type)
 }
 
 Window::Window(ConnectionFromClient& client, WindowType window_type, WindowMode window_mode, int window_id, bool minimizable, bool closeable, bool frameless, bool resizable, bool fullscreen, Window* parent_window)
-    : Core::Object(&client)
+    : Core::EventReceiver(&client)
     , m_client(&client)
     , m_type(window_type)
     , m_mode(window_mode)

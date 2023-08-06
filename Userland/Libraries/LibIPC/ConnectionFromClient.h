@@ -69,5 +69,5 @@ private:
 }
 
 template<typename ClientEndpoint, typename ServerEndpoint>
-struct AK::Formatter<IPC::ConnectionFromClient<ClientEndpoint, ServerEndpoint>> : Formatter<Core::Object> {
+struct AK::Formatter<IPC::ConnectionFromClient<ClientEndpoint, ServerEndpoint>> : Formatter<Core::EventReceiver> {
 };

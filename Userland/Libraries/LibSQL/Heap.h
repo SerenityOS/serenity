@@ -12,8 +12,8 @@
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/Vector.h>
+#include <LibCore/EventReceiver.h>
 #include <LibCore/File.h>
-#include <LibCore/Object.h>
 
 namespace SQL {
 
@@ -64,7 +64,7 @@ private:
  * A Heap can be thought of the backing storage of a single database. It's
  * assumed that a single SQL database is backed by a single Heap.
  */
-class Heap : public Core::Object {
+class Heap : public Core::EventReceiver {
     C_OBJECT(Heap);
 
 public:

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibDSP/ProcessorParameter.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/Widget.h>

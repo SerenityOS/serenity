@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibGfx/Bitmap.h>
 
 namespace GUI {
 
 class ConnectionToNotificationServer;
 
-class Notification : public Core::Object {
+class Notification : public Core::EventReceiver {
     C_OBJECT(Notification);
 
     friend class ConnectionToNotificationServer;

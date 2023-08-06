@@ -57,5 +57,5 @@ private:
 }
 
 template<>
-struct AK::Formatter<GUI::Dialog> : Formatter<Core::Object> {
+struct AK::Formatter<GUI::Dialog> : Formatter<Core::EventReceiver> {
 };

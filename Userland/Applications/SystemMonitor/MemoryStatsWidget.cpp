@@ -9,7 +9,7 @@
 #include "GraphWidget.h"
 #include <AK/JsonObject.h>
 #include <AK/NumberFormat.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>

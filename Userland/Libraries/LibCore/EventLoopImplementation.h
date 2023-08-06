@@ -23,7 +23,7 @@ public:
 
     virtual NonnullOwnPtr<EventLoopImplementation> make_implementation() = 0;
 
-    virtual int register_timer(Object&, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible) = 0;
+    virtual int register_timer(EventReceiver&, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible) = 0;
     virtual bool unregister_timer(int timer_id) = 0;
 
     virtual void register_notifier(Notifier&) = 0;
@@ -53,7 +53,7 @@ public:
     virtual void quit(int) = 0;
     virtual void wake() = 0;
 
-    virtual void post_event(Object& receiver, NonnullOwnPtr<Event>&&) = 0;
+    virtual void post_event(EventReceiver& receiver, NonnullOwnPtr<Event>&&) = 0;
 
     // FIXME: These APIs only exist for obscure use-cases inside SerenityOS. Try to get rid of them.
     virtual void unquit() = 0;

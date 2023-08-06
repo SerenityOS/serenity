@@ -11,8 +11,8 @@
 #include <AK/WeakPtr.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoopImplementationUnix.h>
+#include <LibCore/EventReceiver.h>
 #include <LibCore/Notifier.h>
-#include <LibCore/Object.h>
 #include <LibCore/Socket.h>
 #include <LibCore/System.h>
 #include <LibCore/ThreadEventQueue.h>
@@ -33,7 +33,7 @@ struct EventLoopTimer {
     MonotonicTime fire_time { MonotonicTime::now_coarse() };
     bool should_reload { false };
     TimerShouldFireWhenNotVisible fire_when_not_visible { TimerShouldFireWhenNotVisible::No };
-    WeakPtr<Object> owner;
+    WeakPtr<EventReceiver> owner;
 
     void reload(MonotonicTime const& now) { fire_time = now + interval; }
     bool has_expired(MonotonicTime const& now) const { return now > fire_time; }
@@ -126,7 +126,7 @@ bool EventLoopImplementationUnix::was_exit_requested() const
     return m_exit_requested;
 }
 
-void EventLoopImplementationUnix::post_event(Object& receiver, NonnullOwnPtr<Event>&& event)
+void EventLoopImplementationUnix::post_event(EventReceiver& receiver, NonnullOwnPtr<Event>&& event)
 {
     m_thread_event_queue.post_event(receiver, move(event));
     if (&m_thread_event_queue != &ThreadEventQueue::current())
@@ -481,7 +481,7 @@ void EventLoopManagerUnix::unregister_signal(int handler_id)
         info.signal_handlers.remove(remove_signal_number);
 }
 
-int EventLoopManagerUnix::register_timer(Object& object, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible fire_when_not_visible)
+int EventLoopManagerUnix::register_timer(EventReceiver& object, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible fire_when_not_visible)
 {
     VERIFY(milliseconds >= 0);
     auto& thread_data = ThreadData::the();

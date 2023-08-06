@@ -14,7 +14,7 @@
 
 namespace WindowServer {
 
-class MenuManager final : public Core::Object {
+class MenuManager final : public Core::EventReceiver {
     C_OBJECT(MenuManager);
 
 public:
