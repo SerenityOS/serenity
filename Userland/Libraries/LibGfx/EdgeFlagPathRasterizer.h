@@ -160,10 +160,22 @@ private:
         return (coverage << alpha_shift) - 1;
     }
 
+    struct EdgeExtent {
+        int min_x;
+        int max_x;
+
+        template<typename T>
+        void memset_extent(T* data, int value)
+        {
+            if (min_x <= max_x)
+                memset(data + min_x, value, (max_x - min_x + 1) * sizeof(T));
+        }
+    };
+
     void fill_internal(Painter&, Path const&, auto color_or_function, Painter::WindingRule, FloatPoint offset);
-    Detail::Edge* plot_edges_for_scanline(int scanline, auto plot_edge, Detail::Edge* active_edges = nullptr);
-    void accumulate_even_odd_scanline(Painter&, int scanline, auto& color_or_function);
-    void accumulate_non_zero_scanline(Painter&, int scanline, auto& color_or_function);
+    Detail::Edge* plot_edges_for_scanline(int scanline, auto plot_edge, EdgeExtent&, Detail::Edge* active_edges = nullptr);
+    void accumulate_even_odd_scanline(Painter&, int scanline, EdgeExtent, auto& color_or_function);
+    void accumulate_non_zero_scanline(Painter&, int scanline, EdgeExtent, auto& color_or_function);
     Color scanline_color(int scanline, int offset, u8 alpha, auto& color_or_function);
     void write_pixel(Painter&, int scanline, int offset, SampleType sample, auto& color_or_function);
 
