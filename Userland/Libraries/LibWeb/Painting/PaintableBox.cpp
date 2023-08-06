@@ -65,7 +65,7 @@ CSSPixelPoint PaintableBox::scroll_offset() const
     if (node.is_generated_for_after_pseudo_element())
         return node.pseudo_element_generator()->scroll_offset(DOM::Element::ScrollOffsetFor::PseudoAfter);
 
-    if (!is<DOM::Element>(*dom_node()))
+    if (!(dom_node() && is<DOM::Element>(*dom_node())))
         return {};
 
     return static_cast<DOM::Element const*>(dom_node())->scroll_offset(DOM::Element::ScrollOffsetFor::Self);
