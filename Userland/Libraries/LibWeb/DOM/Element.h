@@ -314,6 +314,14 @@ public:
     void unregister_intersection_observer(Badge<IntersectionObserver::IntersectionObserver>, JS::NonnullGCPtr<IntersectionObserver::IntersectionObserver>);
     IntersectionObserver::IntersectionObserverRegistration& get_intersection_observer_registration(Badge<DOM::Document>, IntersectionObserver::IntersectionObserver const&);
 
+    enum class ScrollOffsetFor {
+        Self,
+        PseudoBefore,
+        PseudoAfter
+    };
+    CSSPixelPoint scroll_offset(ScrollOffsetFor type) const { return m_scroll_offset[to_underlying(type)]; }
+    void set_scroll_offset(ScrollOffsetFor type, CSSPixelPoint offset) { m_scroll_offset[to_underlying(type)] = offset; }
+
 protected:
     Element(Document&, DOM::QualifiedName);
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
@@ -367,6 +375,8 @@ private:
     // https://www.w3.org/TR/intersection-observer/#dom-element-registeredintersectionobservers-slot
     // Element objects have an internal [[RegisteredIntersectionObservers]] slot, which is initialized to an empty list.
     Vector<IntersectionObserver::IntersectionObserverRegistration> m_registered_intersection_observers;
+
+    Array<CSSPixelPoint, 3> m_scroll_offset;
 };
 
 template<>
