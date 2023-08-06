@@ -234,7 +234,6 @@ ErrorOr<NonnullRefPtr<PulseAudioStream>> PulseAudioContext::create_stream(Output
         return Error::from_string_literal("Error while connecting the PulseAudio stream");
     }
 
-    // FIXME: This should be asynchronous if connection can take longer than a fraction of a second.
     while (true) {
         bool is_ready = false;
         switch (stream_wrapper->get_connection_state()) {
