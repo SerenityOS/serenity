@@ -5,12 +5,13 @@ Subject: [PATCH] Add Serenity to Makefile
 
 - Add `-lSDL2 -lgui -lipc -lgfx -lcore -lpthread -lregex`
 - Disable RTTI
+- Add SDL2 include path to compile flags
 ---
- Makefile | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ Makefile | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 527a3d0..fa1b849 100644
+index 527a3d08998163dadcd6a8d48c93a2906e19c31c..37fbb516e1c1f57daf911f373cb801585a3b2549 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -58,7 +58,7 @@ c_objects   = $(addprefix $(BUILD_DIR)/,$(c_sources:=.o))
@@ -37,3 +38,12 @@ index 527a3d0..fa1b849 100644
      link_flags    += $(optimizations) -fuse-linker-plugin
  endif
  
+@@ -133,7 +133,7 @@ endif
+ 
+ # _FILE_OFFSET_BITS=64 gives nicer errors for large files (even though we don't
+ # support them on 32-bit systems)
+-compile_flags += $(warnings) -D_FILE_OFFSET_BITS=64 $(shell sdl2-config --cflags)
++compile_flags += $(warnings) -D_FILE_OFFSET_BITS=64 -I$(SERENITY_INSTALL_ROOT)/usr/local/include/SDL2
+ 
+ #
+ # Targets
