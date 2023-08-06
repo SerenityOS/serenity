@@ -230,7 +230,7 @@ ErrorOr<NonnullRefPtr<PulseAudioStream>> PulseAudioContext::create_stream(Output
         stream_wrapper.ptr());
 
     if (auto error = pa_stream_connect_playback(stream, nullptr, &buffer_attributes, flags, nullptr, nullptr); error != 0) {
-        warnln("PulseAudio stream connection failed with error: {}", pulse_audio_error_to_string(static_cast<PulseAudioErrorCode>(error)));
+        warnln("Failed to start PulseAudio stream connection with error: {}", pulse_audio_error_to_string(static_cast<PulseAudioErrorCode>(error)));
         return Error::from_string_literal("Error while connecting the PulseAudio stream");
     }
 
@@ -244,6 +244,7 @@ ErrorOr<NonnullRefPtr<PulseAudioStream>> PulseAudioContext::create_stream(Output
             is_ready = true;
             break;
         case PulseAudioStreamState::Failed:
+            warnln("PulseAudio stream connection failed with error: {}", pulse_audio_error_to_string(get_last_error()));
             return Error::from_string_literal("Failed to connect to PulseAudio daemon");
         case PulseAudioStreamState::Unconnected:
         case PulseAudioStreamState::Terminated:
