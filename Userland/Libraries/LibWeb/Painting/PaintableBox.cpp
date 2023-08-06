@@ -663,13 +663,16 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
     }
 }
 
-bool PaintableWithLines::handle_mousewheel(Badge<EventHandler>, CSSPixelPoint, unsigned, unsigned, int wheel_delta_x, int wheel_delta_y)
+bool PaintableBox::handle_mousewheel(Badge<EventHandler>, CSSPixelPoint, unsigned, unsigned, int wheel_delta_x, int wheel_delta_y)
 {
     if (!layout_box().is_scrollable())
         return false;
-    auto new_offset = layout_box().scroll_offset();
-    new_offset.translate_by(wheel_delta_x, wheel_delta_y);
-    layout_box().set_scroll_offset(new_offset);
+    auto max_x_offset = scrollable_overflow_rect()->width() - content_size().width();
+    auto max_y_offset = scrollable_overflow_rect()->height() - content_size().height();
+    auto current_offset = layout_box().scroll_offset();
+    auto new_offset_x = clamp(current_offset.x() + wheel_delta_x, 0, max_x_offset);
+    auto new_offset_y = clamp(current_offset.y() + wheel_delta_y, 0, max_y_offset);
+    layout_box().set_scroll_offset({ new_offset_x, new_offset_y });
     return true;
 }
 

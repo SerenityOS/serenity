@@ -126,6 +126,8 @@ public:
 
     virtual Optional<HitTestResult> hit_test(CSSPixelPoint, HitTestType) const override;
 
+    virtual bool handle_mousewheel(Badge<EventHandler>, CSSPixelPoint, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y) override;
+
     void invalidate_stacking_context();
 
     bool is_out_of_view(PaintContext&) const;
@@ -235,7 +237,6 @@ public:
 
     virtual void paint(PaintContext&, PaintPhase) const override;
     virtual bool wants_mouse_events() const override { return false; }
-    virtual bool handle_mousewheel(Badge<EventHandler>, CSSPixelPoint, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y) override;
 
     virtual Optional<HitTestResult> hit_test(CSSPixelPoint, HitTestType) const override;
 
