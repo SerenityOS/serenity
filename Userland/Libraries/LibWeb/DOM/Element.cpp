@@ -1779,7 +1779,8 @@ HashMap<DeprecatedFlyString, CSS::StyleProperty> const& Element::custom_properti
 // https://drafts.csswg.org/cssom-view/#dom-element-scroll
 void Element::scroll(double x, double y)
 {
-    dbgln("FIXME: Implement Element::scroll(x: {}, y: {}", x, y);
+    // AD-HOC:
+    const_cast<Painting::PaintableBox*>(paintable_box())->scroll_by(x, y);
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-scroll
