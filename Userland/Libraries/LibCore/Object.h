@@ -126,8 +126,6 @@ public:
 
     void set_event_filter(Function<bool(Core::Event&)>);
 
-    void dump_tree(int indent = 0);
-
     void deferred_invoke(Function<void()>);
 
     void dispatch_event(Core::Event&, Object* stay_within = nullptr);
