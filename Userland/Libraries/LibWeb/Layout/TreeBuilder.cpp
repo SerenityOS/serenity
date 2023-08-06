@@ -18,6 +18,7 @@
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/HTML/HTMLButtonElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/HTML/HTMLProgressElement.h>
 #include <LibWeb/Layout/ListItemBox.h>
@@ -219,6 +220,27 @@ ErrorOr<void> TreeBuilder::create_pseudo_element_if_needed(DOM::Element& element
     return {};
 }
 
+static bool is_ignorable_whitespace(Layout::Node const& node)
+{
+    if (node.is_text_node() && static_cast<TextNode const&>(node).text_for_rendering().is_whitespace())
+        return true;
+
+    if (node.is_anonymous() && node.is_block_container() && static_cast<BlockContainer const&>(node).children_are_inline()) {
+        bool contains_only_white_space = true;
+        node.for_each_in_inclusive_subtree_of_type<TextNode>([&contains_only_white_space](auto& text_node) {
+            if (!text_node.text_for_rendering().is_whitespace()) {
+                contains_only_white_space = false;
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
+        if (contains_only_white_space)
+            return true;
+    }
+
+    return false;
+}
+
 ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& context)
 {
     JS::GCPtr<Layout::Node> layout_node;
@@ -350,6 +372,46 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
         }
     }
 
+    // https://html.spec.whatwg.org/multipage/rendering.html#button-layout
+    // If the element is an input element, or if it is a button element and its computed value for
+    // 'display' is not 'inline-grid', 'grid', 'inline-flex', or 'flex', then the element's box has
+    // a child anonymous button content box with the following behaviors:
+    if (is<HTML::HTMLButtonElement>(dom_node) && !display.is_grid_inside() && !display.is_flex_inside()) {
+        auto& parent = *dom_node.layout_node();
+
+        // If the box does not overflow in the vertical axis, then it is centered vertically.
+        auto table_computed_values = CSS::ComputedValues();
+        static_cast<CSS::MutableComputedValues&>(table_computed_values).set_display(CSS::Display::from_short(CSS::Display::Short::Table));
+        static_cast<CSS::MutableComputedValues&>(table_computed_values).set_height(CSS::Size::make_percentage(CSS::Percentage(100)));
+
+        auto cell_computed_values = CSS::ComputedValues();
+        static_cast<CSS::MutableComputedValues&>(cell_computed_values).set_display(CSS::Display { CSS::Display::Internal::TableCell });
+        static_cast<CSS::MutableComputedValues&>(cell_computed_values).set_vertical_align(CSS::VerticalAlign::Middle);
+
+        auto flow_root_computed_values = CSS::ComputedValues();
+        static_cast<CSS::MutableComputedValues&>(flow_root_computed_values).set_width(CSS::Size::make_percentage(CSS::Percentage(100)));
+        static_cast<CSS::MutableComputedValues&>(flow_root_computed_values).set_display(CSS::Display::from_short(CSS::Display::Short::InlineBlock));
+
+        auto table_wrapper = parent.heap().template allocate_without_realm<BlockContainer>(parent.document(), nullptr, move(table_computed_values));
+        auto cell_wrapper = parent.heap().template allocate_without_realm<BlockContainer>(parent.document(), nullptr, move(cell_computed_values));
+        auto flow_root_wrapper = parent.heap().template allocate_without_realm<BlockContainer>(parent.document(), nullptr, move(flow_root_computed_values));
+
+        Vector<JS::Handle<Node>> sequence;
+        for (auto child = parent.first_child(); child; child = child->next_sibling()) {
+            if (!is_ignorable_whitespace(*child))
+                sequence.append(*child);
+        }
+
+        for (auto& node : sequence) {
+            parent.remove_child(*node);
+            flow_root_wrapper->append_child(*node);
+        }
+
+        cell_wrapper->append_child(*flow_root_wrapper);
+        table_wrapper->append_child(*cell_wrapper);
+        parent.append_child(*table_wrapper);
+    }
+
     return {};
 }
 
@@ -477,27 +539,6 @@ static bool is_not_table_cell(Node const& node)
     if (!node.has_style())
         return true;
     return !is_table_cell(node);
-}
-
-static bool is_ignorable_whitespace(Layout::Node const& node)
-{
-    if (node.is_text_node() && static_cast<TextNode const&>(node).text_for_rendering().is_whitespace())
-        return true;
-
-    if (node.is_anonymous() && node.is_block_container() && static_cast<BlockContainer const&>(node).children_are_inline()) {
-        bool contains_only_white_space = true;
-        node.for_each_in_inclusive_subtree_of_type<TextNode>([&contains_only_white_space](auto& text_node) {
-            if (!text_node.text_for_rendering().is_whitespace()) {
-                contains_only_white_space = false;
-                return IterationDecision::Break;
-            }
-            return IterationDecision::Continue;
-        });
-        if (contains_only_white_space)
-            return true;
-    }
-
-    return false;
 }
 
 template<typename Matcher, typename Callback>
