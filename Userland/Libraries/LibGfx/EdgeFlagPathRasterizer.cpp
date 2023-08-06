@@ -141,7 +141,11 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::fill_internal(Painter& painter, Pa
     // FIXME: We could probably clip some of the egde plotting if we know it won't be shown.
     // Though care would have to be taken to ensure the active edges are correct at the first drawn scaline.
 
-    auto for_each_sample = [&](Detail::Edge& edge, int start_subpixel_y, int end_subpixel_y, auto callback) {
+    auto empty_edge_extent = [&] {
+        return EdgeExtent { m_size.width() - 1, 0 };
+    };
+
+    auto for_each_sample = [&](Detail::Edge& edge, int start_subpixel_y, int end_subpixel_y, EdgeExtent& edge_extent, auto callback) {
         for (int y = start_subpixel_y; y < end_subpixel_y; y++) {
             int xi = static_cast<int>(edge.x + SubpixelSample::nrooks_subpixel_offsets[y]);
             if (xi < 0 || xi >= (int)m_scanline.size()) {
@@ -154,20 +158,23 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::fill_internal(Painter& painter, Pa
             SampleType sample = 1 << y;
             callback(xi, y, sample);
             edge.x += edge.dxdy;
+            edge_extent.min_x = min(edge_extent.min_x, xi);
+            edge_extent.max_x = max(edge_extent.max_x, xi);
         }
     };
 
     Detail::Edge* active_edges = nullptr;
 
     if (winding_rule == Painter::WindingRule::EvenOdd) {
-        auto plot_edge = [&](Detail::Edge& edge, int start_subpixel_y, int end_subpixel_y) {
-            for_each_sample(edge, start_subpixel_y, end_subpixel_y, [&](int xi, int, SampleType sample) {
+        auto plot_edge = [&](Detail::Edge& edge, int start_subpixel_y, int end_subpixel_y, EdgeExtent& edge_extent) {
+            for_each_sample(edge, start_subpixel_y, end_subpixel_y, edge_extent, [&](int xi, int, SampleType sample) {
                 m_scanline[xi] ^= sample;
             });
         };
         for (int scanline = min_scanline; scanline <= max_scanline; scanline++) {
-            active_edges = plot_edges_for_scanline(scanline, plot_edge, active_edges);
-            accumulate_even_odd_scanline(painter, scanline, color_or_function);
+            auto edge_extent = empty_edge_extent();
+            active_edges = plot_edges_for_scanline(scanline, plot_edge, edge_extent, active_edges);
+            accumulate_even_odd_scanline(painter, scanline, edge_extent, color_or_function);
         }
     } else {
         VERIFY(winding_rule == Painter::WindingRule::Nonzero);
@@ -176,15 +183,16 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::fill_internal(Painter& painter, Pa
         if (m_windings.is_empty())
             m_windings.resize(m_size.width());
 
-        auto plot_edge = [&](Detail::Edge& edge, int start_subpixel_y, int end_subpixel_y) {
-            for_each_sample(edge, start_subpixel_y, end_subpixel_y, [&](int xi, int y, SampleType sample) {
+        auto plot_edge = [&](Detail::Edge& edge, int start_subpixel_y, int end_subpixel_y, EdgeExtent& edge_extent) {
+            for_each_sample(edge, start_subpixel_y, end_subpixel_y, edge_extent, [&](int xi, int y, SampleType sample) {
                 m_scanline[xi] |= sample;
                 m_windings[xi].counts[y] += edge.winding;
             });
         };
         for (int scanline = min_scanline; scanline <= max_scanline; scanline++) {
-            active_edges = plot_edges_for_scanline(scanline, plot_edge, active_edges);
-            accumulate_non_zero_scanline(painter, scanline, color_or_function);
+            auto edge_extent = empty_edge_extent();
+            active_edges = plot_edges_for_scanline(scanline, plot_edge, edge_extent, active_edges);
+            accumulate_non_zero_scanline(painter, scanline, edge_extent, color_or_function);
         }
     }
 }
@@ -205,7 +213,7 @@ Color EdgeFlagPathRasterizer<SamplesPerPixel>::scanline_color(int scanline, int 
 }
 
 template<unsigned SamplesPerPixel>
-Detail::Edge* EdgeFlagPathRasterizer<SamplesPerPixel>::plot_edges_for_scanline(int scanline, auto plot_edge, Detail::Edge* active_edges)
+Detail::Edge* EdgeFlagPathRasterizer<SamplesPerPixel>::plot_edges_for_scanline(int scanline, auto plot_edge, EdgeExtent& edge_extent, Detail::Edge* active_edges)
 {
     auto y_subpixel = [](int y) {
         return y & (SamplesPerPixel - 1);
@@ -220,7 +228,7 @@ Detail::Edge* EdgeFlagPathRasterizer<SamplesPerPixel>::plot_edges_for_scanline(i
         int end_scanline = current_edge->max_y / SamplesPerPixel;
         if (scanline == end_scanline) {
             // This edge ends this scanline.
-            plot_edge(*current_edge, 0, y_subpixel(current_edge->max_y));
+            plot_edge(*current_edge, 0, y_subpixel(current_edge->max_y), edge_extent);
             // Remove this edge from the AET
             current_edge = current_edge->next_edge;
             if (prev_edge)
@@ -229,7 +237,7 @@ Detail::Edge* EdgeFlagPathRasterizer<SamplesPerPixel>::plot_edges_for_scanline(i
                 active_edges = current_edge;
         } else {
             // This egde sticks around for a few more scanlines.
-            plot_edge(*current_edge, 0, SamplesPerPixel);
+            plot_edge(*current_edge, 0, SamplesPerPixel, edge_extent);
             prev_edge = current_edge;
             current_edge = current_edge->next_edge;
         }
@@ -242,10 +250,10 @@ Detail::Edge* EdgeFlagPathRasterizer<SamplesPerPixel>::plot_edges_for_scanline(i
         int end_scanline = current_edge->max_y / SamplesPerPixel;
         if (scanline == end_scanline) {
             // This edge will end this scanlines (no need to add to AET).
-            plot_edge(*current_edge, y_subpixel(current_edge->min_y), y_subpixel(current_edge->max_y));
+            plot_edge(*current_edge, y_subpixel(current_edge->min_y), y_subpixel(current_edge->max_y), edge_extent);
         } else {
             // This edge will live on for a few more scanlines.
-            plot_edge(*current_edge, y_subpixel(current_edge->min_y), SamplesPerPixel);
+            plot_edge(*current_edge, y_subpixel(current_edge->min_y), SamplesPerPixel, edge_extent);
             // Add this edge to the AET
             if (prev_edge)
                 prev_edge->next_edge = current_edge;
@@ -278,18 +286,18 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::write_pixel(Painter& painter, int 
 }
 
 template<unsigned SamplesPerPixel>
-void EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_even_odd_scanline(Painter& painter, int scanline, auto& color_or_function)
+void EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_even_odd_scanline(Painter& painter, int scanline, EdgeExtent edge_extent, auto& color_or_function)
 {
     auto dest_y = m_blit_origin.y() + scanline;
     if (!m_clip.contains_vertically(dest_y)) {
         // FIXME: This memset only really needs to be done on transition from clipped to not clipped,
         // or not at all if we properly clipped egde plotting.
-        memset(m_scanline.data(), 0, sizeof(SampleType) * m_scanline.size());
+        edge_extent.memset_extent(m_scanline.data(), 0);
         return;
     }
 
     SampleType sample = 0;
-    for (int x = 0; x < m_size.width(); x += 1) {
+    for (int x = edge_extent.min_x; x <= edge_extent.max_x; x += 1) {
         sample ^= m_scanline[x];
         write_pixel(painter, scanline, x, sample, color_or_function);
         m_scanline[x] = 0;
@@ -297,19 +305,19 @@ void EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_even_odd_scanline(Paint
 }
 
 template<unsigned SamplesPerPixel>
-void EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_non_zero_scanline(Painter& painter, int scanline, auto& color_or_function)
+void EdgeFlagPathRasterizer<SamplesPerPixel>::accumulate_non_zero_scanline(Painter& painter, int scanline, EdgeExtent edge_extent, auto& color_or_function)
 {
     // NOTE: Same FIXMEs apply from accumulate_even_odd_scanline()
     auto dest_y = m_blit_origin.y() + scanline;
     if (!m_clip.contains_vertically(dest_y)) {
-        memset(m_scanline.data(), 0, sizeof(SampleType) * m_scanline.size());
-        memset(m_windings.data(), 0, sizeof(WindingCounts) * m_windings.size());
+        edge_extent.memset_extent(m_scanline.data(), 0);
+        edge_extent.memset_extent(m_windings.data(), 0);
         return;
     }
 
     SampleType sample = 0;
     WindingCounts sum_winding = {};
-    for (int x = 0; x < m_size.width(); x += 1) {
+    for (int x = edge_extent.min_x; x <= edge_extent.max_x; x += 1) {
         if (auto edges = m_scanline[x]) {
             // We only need to process the windings when we hit some edges.
             for (auto y_sub = 0u; y_sub < SamplesPerPixel; y_sub++) {
