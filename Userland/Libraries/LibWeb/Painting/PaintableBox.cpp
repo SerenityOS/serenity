@@ -71,6 +71,26 @@ CSSPixelPoint PaintableBox::scroll_offset() const
     return static_cast<DOM::Element const*>(dom_node())->scroll_offset(DOM::Element::ScrollOffsetFor::Self);
 }
 
+void PaintableBox::set_scroll_offset(CSSPixelPoint offset)
+{
+    // FIXME: If there is horizontal and vertical scroll ignore only part of the new offset
+    if (offset.y() < 0 || scroll_offset() == offset)
+        return;
+
+    auto& node = layout_node();
+    if (node.is_generated_for_before_pseudo_element()) {
+        node.pseudo_element_generator()->set_scroll_offset(DOM::Element::ScrollOffsetFor::PseudoBefore, offset);
+    } else if (node.is_generated_for_after_pseudo_element()) {
+        node.pseudo_element_generator()->set_scroll_offset(DOM::Element::ScrollOffsetFor::PseudoAfter, offset);
+    } else if (is<DOM::Element>(*dom_node())) {
+        static_cast<DOM::Element*>(dom_node())->set_scroll_offset(DOM::Element::ScrollOffsetFor::Self, offset);
+    } else {
+        return;
+    }
+
+    node.set_needs_display();
+}
+
 void PaintableBox::scroll_by(int delta_x, int delta_y)
 {
     auto scrollable_overflow_rect = this->scrollable_overflow_rect();
@@ -81,7 +101,7 @@ void PaintableBox::scroll_by(int delta_x, int delta_y)
     auto current_offset = scroll_offset();
     auto new_offset_x = clamp(current_offset.x() + delta_x, 0, max_x_offset);
     auto new_offset_y = clamp(current_offset.y() + delta_y, 0, max_y_offset);
-    layout_box().set_scroll_offset({ new_offset_x, new_offset_y });
+    set_scroll_offset({ new_offset_x, new_offset_y });
 }
 
 void PaintableBox::set_offset(CSSPixelPoint offset)
