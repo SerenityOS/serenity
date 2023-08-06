@@ -26,8 +26,16 @@ namespace Web::Painting {
 
 static void paint_node(Layout::Node const& layout_node, PaintContext& context, PaintPhase phase)
 {
-    if (auto const* paintable = layout_node.paintable())
-        paintable->paint(context, phase);
+    if (auto const* paintable = layout_node.paintable()) {
+        if (paintable->containing_block() && paintable->containing_block()->is_scrollable()) {
+            Gfx::PainterStateSaver saver(context.painter());
+            auto scroll_offset = -paintable->containing_block()->scroll_offset();
+            context.painter().translate({ context.enclosing_device_pixels(scroll_offset.x()), context.enclosing_device_pixels(scroll_offset.y()) });
+            paintable->paint(context, phase);
+        } else {
+            paintable->paint(context, phase);
+        }
+    }
 }
 
 StackingContext::StackingContext(Layout::Box& box, StackingContext* parent, size_t index_in_tree_order)
