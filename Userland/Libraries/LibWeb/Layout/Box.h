@@ -54,7 +54,7 @@ public:
     bool is_scroll_container() const;
 
     bool is_scrollable() const;
-    CSSPixelPoint scroll_offset() const { return m_scroll_offset; }
+    CSSPixelPoint scroll_offset() const;
     void set_scroll_offset(CSSPixelPoint);
 
 protected:
@@ -63,8 +63,6 @@ protected:
 
 private:
     virtual bool is_box() const final { return true; }
-
-    CSSPixelPoint m_scroll_offset;
 
     Optional<CSSPixels> m_natural_width;
     Optional<CSSPixels> m_natural_height;
