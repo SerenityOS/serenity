@@ -36,40 +36,40 @@ URL URL::complete_url(StringView relative_url) const
     return URLParser::basic_parse(relative_url, *this);
 }
 
-DeprecatedString URL::username(ApplyPercentDecoding apply_percent_decoding) const
+DeprecatedString URL::username() const
 {
-    return apply_percent_decoding == ApplyPercentDecoding::Yes ? percent_decode(m_username) : m_username;
+    return percent_decode(m_username);
 }
 
-DeprecatedString URL::password(ApplyPercentDecoding apply_percent_decoding) const
+DeprecatedString URL::password() const
 {
-    return apply_percent_decoding == ApplyPercentDecoding::Yes ? percent_decode(m_password) : m_password;
+    return percent_decode(m_password);
 }
 
-DeprecatedString URL::path_segment_at_index(size_t index, ApplyPercentDecoding apply_percent_decoding) const
+DeprecatedString URL::path_segment_at_index(size_t index) const
 {
     VERIFY(index < path_segment_count());
-    return apply_percent_decoding == ApplyPercentDecoding::Yes ? percent_decode(m_paths[index]) : m_paths[index];
+    return percent_decode(m_paths[index]);
 }
 
-DeprecatedString URL::basename(ApplyPercentDecoding apply_percent_decoding) const
+DeprecatedString URL::basename() const
 {
     if (!m_valid)
         return {};
     if (m_paths.is_empty())
         return {};
     auto& last_segment = m_paths.last();
-    return apply_percent_decoding == ApplyPercentDecoding::Yes ? percent_decode(last_segment) : last_segment;
+    return percent_decode(last_segment);
 }
 
-DeprecatedString URL::query(ApplyPercentDecoding apply_percent_decoding) const
+DeprecatedString URL::query() const
 {
-    return apply_percent_decoding == ApplyPercentDecoding::Yes ? percent_decode(m_query) : m_query;
+    return m_query;
 }
 
-DeprecatedString URL::fragment(ApplyPercentDecoding apply_percent_decoding) const
+DeprecatedString URL::fragment() const
 {
-    return apply_percent_decoding == ApplyPercentDecoding::Yes ? percent_decode(m_fragment) : m_fragment;
+    return percent_decode(m_fragment);
 }
 
 // NOTE: This only exists for compatibility with the existing URL tests which check for both .is_null() and .is_empty().
@@ -276,14 +276,14 @@ bool URL::is_special_scheme(StringView scheme)
     return scheme.is_one_of("ftp", "file", "http", "https", "ws", "wss");
 }
 
-DeprecatedString URL::serialize_path(ApplyPercentDecoding apply_percent_decoding) const
+DeprecatedString URL::serialize_path() const
 {
     if (cannot_be_a_base_url())
         return m_paths[0];
     StringBuilder builder;
     for (auto& path : m_paths) {
         builder.append('/');
-        builder.append(apply_percent_decoding == ApplyPercentDecoding::Yes ? percent_decode(path) : path);
+        builder.append(percent_decode(path));
     }
     return builder.to_deprecated_string();
 }
