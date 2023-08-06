@@ -266,11 +266,18 @@ ErrorOr<NonnullRefPtr<PulseAudioStream>> PulseAudioContext::create_stream(Output
         wait_for_signal();
     }
 
+    pa_stream_set_state_callback(stream, nullptr, nullptr);
+
     return stream_wrapper;
 }
 
 PulseAudioStream::~PulseAudioStream()
 {
+    auto locker = m_context->main_loop_locker();
+    pa_stream_set_write_callback(m_stream, nullptr, nullptr);
+    pa_stream_set_underflow_callback(m_stream, nullptr, nullptr);
+    pa_stream_set_started_callback(m_stream, nullptr, nullptr);
+    pa_stream_disconnect(m_stream);
     pa_stream_unref(m_stream);
 }
 
