@@ -45,7 +45,6 @@ ErrorOr<NonnullRefPtr<PlaybackStream>> PlaybackStreamPulseAudio::create(OutputSt
     },
         "Audio::PlaybackStream"sv));
 
-    internal_state->set_thread(thread);
     thread->start();
     thread->detach();
     return playback_stream;
@@ -136,12 +135,6 @@ ErrorOr<void> PlaybackStreamPulseAudio::InternalState::check_is_running()
     return {};
 }
 
-void PlaybackStreamPulseAudio::InternalState::set_thread(NonnullRefPtr<Threading::Thread> const& thread)
-{
-    Threading::MutexLocker locker { m_mutex };
-    m_thread = thread;
-}
-
 void PlaybackStreamPulseAudio::InternalState::set_stream(NonnullRefPtr<PulseAudioStream> const& stream)
 {
     m_stream = stream;
@@ -177,10 +170,6 @@ void PlaybackStreamPulseAudio::InternalState::thread_loop()
         }
         task();
     }
-
-    // Stop holding onto our thread so it can be deleted.
-    Threading::MutexLocker locker { m_mutex };
-    m_thread = nullptr;
 }
 
 void PlaybackStreamPulseAudio::InternalState::exit()
