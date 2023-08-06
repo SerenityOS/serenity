@@ -162,6 +162,7 @@ if (APPLE)
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:headless-browser>" "${app_dir}"
         COMMAND "mkdir" -p "${bundle_dir}/Contents/Resources"
         COMMAND "iconutil" --convert icns "${CMAKE_CURRENT_SOURCE_DIR}/Icons/macos/app_icon.iconset" --output "${bundle_dir}/Contents/Resources/app_icon.icns"
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${Lagom_BINARY_DIR}/cacert.pem" "${bundle_dir}/Contents"
     )
 endif()
 
