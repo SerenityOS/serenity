@@ -1054,7 +1054,7 @@ void Element::set_scroll_left(double x)
     // FIXME: Implement this in terms of calling "scroll the element".
     auto scroll_offset = paintable_box()->scroll_offset();
     scroll_offset.set_x(static_cast<float>(x));
-    const_cast<Painting::PaintableBox*>(paintable_box())->set_scroll_offset(scroll_offset);
+    paintable_box()->set_scroll_offset(scroll_offset);
 }
 
 void Element::set_scroll_top(double y)
@@ -1122,7 +1122,7 @@ void Element::set_scroll_top(double y)
     // FIXME: Implement this in terms of calling "scroll the element".
     auto scroll_offset = paintable_box()->scroll_offset();
     scroll_offset.set_y(static_cast<float>(y));
-    const_cast<Painting::PaintableBox*>(paintable_box())->set_scroll_offset(scroll_offset);
+    paintable_box()->set_scroll_offset(scroll_offset);
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-scrollwidth
@@ -1780,7 +1780,7 @@ HashMap<DeprecatedFlyString, CSS::StyleProperty> const& Element::custom_properti
 void Element::scroll(double x, double y)
 {
     // AD-HOC:
-    const_cast<Painting::PaintableBox*>(paintable_box())->scroll_by(x, y);
+    paintable_box()->scroll_by(x, y);
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-scroll
