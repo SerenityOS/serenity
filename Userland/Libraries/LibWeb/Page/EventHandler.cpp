@@ -134,14 +134,14 @@ Painting::PaintableBox* EventHandler::paint_root()
 {
     if (!m_browsing_context->active_document())
         return nullptr;
-    return const_cast<Painting::PaintableBox*>(m_browsing_context->active_document()->paintable_box());
+    return m_browsing_context->active_document()->paintable_box();
 }
 
 Painting::PaintableBox const* EventHandler::paint_root() const
 {
     if (!m_browsing_context->active_document())
         return nullptr;
-    return const_cast<Painting::PaintableBox*>(m_browsing_context->active_document()->paintable_box());
+    return m_browsing_context->active_document()->paintable_box();
 }
 
 bool EventHandler::handle_mousewheel(CSSPixelPoint position, unsigned button, unsigned buttons, unsigned int modifiers, int wheel_delta_x, int wheel_delta_y)

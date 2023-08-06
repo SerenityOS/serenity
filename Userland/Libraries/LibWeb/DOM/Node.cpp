@@ -1454,6 +1454,15 @@ Painting::PaintableBox const* Node::paintable_box() const
     return static_cast<Layout::Box const&>(*layout_node()).paintable_box();
 }
 
+Painting::PaintableBox* Node::paintable_box()
+{
+    if (!layout_node())
+        return nullptr;
+    if (!layout_node()->is_box())
+        return nullptr;
+    return static_cast<Layout::Box&>(*layout_node()).paintable_box();
+}
+
 // https://dom.spec.whatwg.org/#queue-a-mutation-record
 void Node::queue_mutation_record(FlyString const& type, DeprecatedString attribute_name, DeprecatedString attribute_namespace, DeprecatedString old_value, Vector<JS::Handle<Node>> added_nodes, Vector<JS::Handle<Node>> removed_nodes, Node* previous_sibling, Node* next_sibling) const
 {
