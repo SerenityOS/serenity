@@ -11,10 +11,15 @@
 
 namespace Audio {
 
-ErrorOr<NonnullRefPtr<PulseAudioContext>> PulseAudioContext::instance()
+WeakPtr<PulseAudioContext> PulseAudioContext::weak_instance()
 {
     // Use a weak pointer to allow the context to be shut down if we stop outputting audio.
     static WeakPtr<PulseAudioContext> the_instance;
+    return the_instance;
+}
+
+ErrorOr<NonnullRefPtr<PulseAudioContext>> PulseAudioContext::instance()
+{
     static Threading::Mutex instantiation_mutex;
     // Lock and unlock the mutex to ensure that the mutex is fully unlocked at application
     // exit.
@@ -25,6 +30,7 @@ ErrorOr<NonnullRefPtr<PulseAudioContext>> PulseAudioContext::instance()
 
     auto instantiation_locker = Threading::MutexLocker(instantiation_mutex);
 
+    auto the_instance = weak_instance();
     RefPtr<PulseAudioContext> strong_instance_pointer = the_instance.strong_ref();
 
     if (strong_instance_pointer == nullptr) {

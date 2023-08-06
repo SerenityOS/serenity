@@ -40,6 +40,7 @@ class PulseAudioContext
     : public AtomicRefCounted<PulseAudioContext>
     , public Weakable<PulseAudioContext> {
 public:
+    static AK::WeakPtr<PulseAudioContext> weak_instance();
     static ErrorOr<NonnullRefPtr<PulseAudioContext>> instance();
 
     explicit PulseAudioContext(pa_threaded_mainloop*, pa_mainloop_api*, pa_context*);

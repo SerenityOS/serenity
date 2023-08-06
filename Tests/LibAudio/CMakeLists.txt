@@ -1,5 +1,6 @@
 set(TEST_SOURCES
     TestFLACSpec.cpp
+    TestPlaybackStream.cpp
 )
 
 foreach(source IN LISTS TEST_SOURCES)
