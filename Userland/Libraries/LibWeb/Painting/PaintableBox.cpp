@@ -57,6 +57,19 @@ PaintableWithLines::~PaintableWithLines()
 {
 }
 
+void PaintableBox::scroll_by(int delta_x, int delta_y)
+{
+    auto scrollable_overflow_rect = this->scrollable_overflow_rect();
+    if (!scrollable_overflow_rect.has_value())
+        return;
+    auto max_x_offset = scrollable_overflow_rect->width() - content_size().width();
+    auto max_y_offset = scrollable_overflow_rect->height() - content_size().height();
+    auto current_offset = layout_box().scroll_offset();
+    auto new_offset_x = clamp(current_offset.x() + delta_x, 0, max_x_offset);
+    auto new_offset_y = clamp(current_offset.y() + delta_y, 0, max_y_offset);
+    layout_box().set_scroll_offset({ new_offset_x, new_offset_y });
+}
+
 void PaintableBox::set_offset(CSSPixelPoint offset)
 {
     m_offset = offset;
@@ -667,12 +680,7 @@ bool PaintableBox::handle_mousewheel(Badge<EventHandler>, CSSPixelPoint, unsigne
 {
     if (!layout_box().is_scrollable())
         return false;
-    auto max_x_offset = scrollable_overflow_rect()->width() - content_size().width();
-    auto max_y_offset = scrollable_overflow_rect()->height() - content_size().height();
-    auto current_offset = layout_box().scroll_offset();
-    auto new_offset_x = clamp(current_offset.x() + wheel_delta_x, 0, max_x_offset);
-    auto new_offset_y = clamp(current_offset.y() + wheel_delta_y, 0, max_y_offset);
-    layout_box().set_scroll_offset({ new_offset_x, new_offset_y });
+    scroll_by(wheel_delta_x, wheel_delta_y);
     return true;
 }
 
