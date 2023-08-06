@@ -192,20 +192,6 @@ bool Object::is_visible_for_timer_purposes() const
     return true;
 }
 
-void Object::increment_inspector_count(Badge<InspectorServerConnection>)
-{
-    ++m_inspector_count;
-    if (m_inspector_count == 1)
-        did_begin_inspection();
-}
-
-void Object::decrement_inspector_count(Badge<InspectorServerConnection>)
-{
-    --m_inspector_count;
-    if (!m_inspector_count)
-        did_end_inspection();
-}
-
 void Object::set_event_filter(Function<bool(Core::Event&)> filter)
 {
     m_event_filter = move(filter);

@@ -404,9 +404,6 @@ protected:
     virtual void screen_rects_change_event(ScreenRectsChangeEvent&);
     virtual void applet_area_rect_change_event(AppletAreaRectChangeEvent&);
 
-    virtual void did_begin_inspection() override;
-    virtual void did_end_inspection() override;
-
     void show_or_hide_tooltip();
 
     void add_focus_delegator(Widget*);
