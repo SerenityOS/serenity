@@ -31,8 +31,6 @@ private:
     // the UI thread.
     class InternalState : public AtomicRefCounted<InternalState> {
     public:
-        void set_thread(NonnullRefPtr<Threading::Thread> const&);
-
         void set_stream(NonnullRefPtr<PulseAudioStream> const&);
         RefPtr<PulseAudioStream> stream();
 
@@ -49,8 +47,6 @@ private:
         Threading::ConditionVariable m_wake_condition { m_mutex };
 
         Atomic<bool> m_exit { false };
-
-        RefPtr<Threading::Thread> m_thread { nullptr };
     };
 
     PlaybackStreamPulseAudio(NonnullRefPtr<InternalState>);
