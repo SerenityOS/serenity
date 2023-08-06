@@ -20,8 +20,6 @@
 
 namespace Core {
 
-class InspectorServerConnection;
-
 enum class TimerShouldFireWhenNotVisible {
     No = 0,
     Yes
@@ -158,11 +156,6 @@ public:
 
     virtual bool is_visible_for_timer_purposes() const;
 
-    bool is_being_inspected() const { return m_inspector_count; }
-
-    void increment_inspector_count(Badge<InspectorServerConnection>);
-    void decrement_inspector_count(Badge<InspectorServerConnection>);
-
 protected:
     explicit Object(Object* parent = nullptr);
 
@@ -174,14 +167,10 @@ protected:
     // NOTE: You may get child events for children that are not yet fully constructed!
     virtual void child_event(ChildEvent&);
 
-    virtual void did_begin_inspection() { }
-    virtual void did_end_inspection() { }
-
 private:
     Object* m_parent { nullptr };
     DeprecatedString m_name;
     int m_timer_id { 0 };
-    unsigned m_inspector_count { 0 };
     Vector<NonnullRefPtr<Object>> m_children;
     Function<bool(Core::Event&)> m_event_filter;
 };

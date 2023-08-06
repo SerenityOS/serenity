@@ -415,11 +415,6 @@ void Widget::handle_paint_event(PaintEvent& event)
         Painter painter(*this);
         painter.draw_rect(rect(), Color::Red);
     }
-
-    if (is_being_inspected()) {
-        Painter painter(*this);
-        painter.draw_rect(rect(), Color::Magenta);
-    }
 }
 
 void Widget::set_layout(NonnullRefPtr<Layout> layout)
@@ -1087,16 +1082,6 @@ void Widget::set_foreground_role(ColorRole role)
 Gfx::Palette Widget::palette() const
 {
     return Gfx::Palette(*m_palette);
-}
-
-void Widget::did_begin_inspection()
-{
-    update();
-}
-
-void Widget::did_end_inspection()
-{
-    update();
 }
 
 void Widget::set_grabbable_margins(Margins const& margins)
