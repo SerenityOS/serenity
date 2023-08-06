@@ -12,8 +12,7 @@
 namespace Threading {
 
 Thread::Thread(Function<intptr_t()> action, StringView thread_name)
-    : Core::EventReceiver(nullptr)
-    , m_action(move(action))
+    : m_action(move(action))
     , m_thread_name(thread_name.is_null() ? ""sv : thread_name)
 {
 }
