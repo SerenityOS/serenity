@@ -10,7 +10,7 @@
 #include <AK/Function.h>
 #include <AK/JsonValue.h>
 
-namespace Core {
+namespace GUI {
 
 class Property {
     AK_MAKE_NONCOPYABLE(Property);

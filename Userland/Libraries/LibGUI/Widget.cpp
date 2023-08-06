@@ -31,17 +31,27 @@
 #include <LibGfx/SystemTheme.h>
 #include <unistd.h>
 
-REGISTER_CORE_OBJECT(GUI, Widget)
+REGISTER_GUI_OBJECT(GUI, Widget)
 
 namespace GUI {
 
 Widget::Widget()
-    : Core::Object(nullptr)
-    , m_background_role(Gfx::ColorRole::Window)
+    : m_background_role(Gfx::ColorRole::Window)
     , m_foreground_role(Gfx::ColorRole::WindowText)
     , m_font(Gfx::FontDatabase::default_font())
     , m_palette(Application::the()->palette().impl())
 {
+    REGISTER_READONLY_STRING_PROPERTY("class_name", class_name);
+    REGISTER_DEPRECATED_STRING_PROPERTY("name", name, set_name);
+
+    register_property(
+        "address", [this] { return FlatPtr(this); },
+        [](auto&) { return false; });
+
+    register_property(
+        "parent", [this] { return FlatPtr(this->parent()); },
+        [](auto&) { return false; });
+
     REGISTER_RECT_PROPERTY("relative_rect", relative_rect, set_relative_rect);
     REGISTER_BOOL_PROPERTY("fill_with_background_color", fill_with_background_color, set_fill_with_background_color);
     REGISTER_BOOL_PROPERTY("visible", is_visible, set_visible);
@@ -1170,8 +1180,8 @@ ErrorOr<void> Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node const> ast,
             return Error::from_string_literal("Invalid layout class name");
         }
 
-        auto& layout_class = *Core::ObjectClassRegistration::find("GUI::Layout"sv);
-        if (auto* registration = Core::ObjectClassRegistration::find(class_name)) {
+        auto& layout_class = *GUI::ObjectClassRegistration::find("GUI::Layout"sv);
+        if (auto* registration = GUI::ObjectClassRegistration::find(class_name)) {
             auto layout = TRY(registration->construct());
             if (!registration->is_derived_from(layout_class)) {
                 dbgln("Invalid layout class: '{}'", class_name.to_deprecated_string());
@@ -1188,7 +1198,7 @@ ErrorOr<void> Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node const> ast,
         });
     }
 
-    auto& widget_class = *Core::ObjectClassRegistration::find("GUI::Widget"sv);
+    auto& widget_class = *GUI::ObjectClassRegistration::find("GUI::Widget"sv);
     bool is_tab_widget = is<TabWidget>(*this);
     TRY(object.try_for_each_child_object([&](auto const& child_data) -> ErrorOr<void> {
         auto class_name = child_data.name();
@@ -1201,7 +1211,7 @@ ErrorOr<void> Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node const> ast,
             this->layout()->add_spacer();
         } else {
             RefPtr<Core::Object> child;
-            if (auto* registration = Core::ObjectClassRegistration::find(class_name)) {
+            if (auto* registration = GUI::ObjectClassRegistration::find(class_name)) {
                 child = TRY(registration->construct());
                 if (!registration->is_derived_from(widget_class)) {
                     dbgln("Invalid widget class: '{}'", class_name);

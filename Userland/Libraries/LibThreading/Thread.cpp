@@ -16,11 +16,6 @@ Thread::Thread(Function<intptr_t()> action, StringView thread_name)
     , m_action(move(action))
     , m_thread_name(thread_name.is_null() ? ""sv : thread_name)
 {
-    register_property("thread_name", [&] { return JsonValue { m_thread_name }; });
-#if defined(AK_OS_SERENITY) || defined(AK_OS_LINUX)
-    // FIXME: Print out a pretty TID for BSD and macOS platforms, too
-    register_property("tid", [&] { return JsonValue { m_tid }; });
-#endif
 }
 
 Thread::~Thread()

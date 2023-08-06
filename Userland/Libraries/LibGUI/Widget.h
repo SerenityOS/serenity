@@ -13,13 +13,14 @@
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/Variant.h>
-#include <LibCore/Object.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/FocusPolicy.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/GML/AST.h>
 #include <LibGUI/Margins.h>
+#include <LibGUI/Object.h>
+#include <LibGUI/Property.h>
 #include <LibGUI/UIDimensions.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>
@@ -27,14 +28,14 @@
 #include <LibGfx/Rect.h>
 #include <LibGfx/StandardCursor.h>
 
-namespace Core::Registration {
-extern Core::ObjectClassRegistration registration_Widget;
+namespace GUI::Registration {
+extern GUI::ObjectClassRegistration registration_Widget;
 }
 
-#define REGISTER_WIDGET(namespace_, class_name)                                                                                                                                                     \
-    namespace Core::Registration {                                                                                                                                                                  \
-    Core::ObjectClassRegistration registration_##class_name(                                                                                                                                        \
-        #namespace_ "::" #class_name##sv, []() -> ErrorOr<NonnullRefPtr<Core::Object>> { return static_ptr_cast<Core::Object>(TRY(namespace_::class_name::try_create())); }, &registration_Widget); \
+#define REGISTER_WIDGET(namespace_, class_name)                                                                                                                                                   \
+    namespace GUI::Registration {                                                                                                                                                                 \
+    GUI::ObjectClassRegistration registration_##class_name(                                                                                                                                       \
+        #namespace_ "::" #class_name##sv, []() -> ErrorOr<NonnullRefPtr<GUI::Object>> { return static_ptr_cast<GUI::Object>(TRY(namespace_::class_name::try_create())); }, &registration_Widget); \
     }
 
 namespace GUI {
@@ -70,7 +71,7 @@ enum class AllowCallback {
     Yes
 };
 
-class Widget : public Core::Object {
+class Widget : public GUI::Object {
     C_OBJECT(Widget)
 public:
     virtual ~Widget() override;

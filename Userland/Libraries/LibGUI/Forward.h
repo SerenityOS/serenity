@@ -54,6 +54,7 @@ class ModelIndex;
 class MouseEvent;
 class MultiPaintEvent;
 class MultiView;
+class Object;
 class OpacitySlider;
 class PaintEvent;
 class Painter;
