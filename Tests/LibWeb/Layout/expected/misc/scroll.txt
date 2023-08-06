@@ -1,0 +1,11 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x202 children: not-inline
+      BlockContainer <div#scrollbox> at (9,9) content-size 200x200 [BFC] children: not-inline
+        BlockContainer <div#content> at (9,9) content-size 200x1000 children: not-inline
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x202]
+      PaintableWithLines (BlockContainer<DIV>#scrollbox) [8,8 202x202] overflow: [9,9 200x1000] scroll-offset: [0,100]
+        PaintableWithLines (BlockContainer<DIV>#content) [9,9 200x1000]
