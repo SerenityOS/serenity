@@ -54,7 +54,6 @@ public:
     bool is_scroll_container() const;
 
     bool is_scrollable() const;
-    void set_scroll_offset(CSSPixelPoint);
 
 protected:
     Box(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
