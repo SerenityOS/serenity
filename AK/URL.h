@@ -112,7 +112,7 @@ public:
     void append_slash()
     {
         // NOTE: To indicate that we want to end the path with a slash, we have to append an empty path segment.
-        append_path("", ApplyPercentEncoding::No);
+        m_paths.append("");
     }
 
     DeprecatedString serialize_path(ApplyPercentDecoding = ApplyPercentDecoding::Yes) const;

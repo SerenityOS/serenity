@@ -1359,7 +1359,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                     // 2. If the code point substring from pointer to the end of input does not start with a Windows drive letter and base’s path[0] is a normalized Windows drive letter, then append base’s path[0] to url’s path.
                     auto substring_from_pointer = input.substring_view(iterator - input.begin()).as_string();
                     if (!starts_with_windows_drive_letter(substring_from_pointer) && is_normalized_windows_drive_letter(base_url->m_paths[0]))
-                        url->append_path(base_url->m_paths[0], URL::ApplyPercentEncoding::No);
+                        url->m_paths.append(base_url->m_paths[0]);
                 }
 
                 // 2. Set state to path state, and decrease pointer by 1.
@@ -1499,8 +1499,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                         buffer.append(':');
                     }
                     // 2. Append buffer to url’s path.
-                    //    FIXME: It would be nicer (and closer to spec) if URLParser could just directly append the path.
-                    url->append_path(buffer.string_view(), URL::ApplyPercentEncoding::No);
+                    url->m_paths.append(buffer.string_view());
                 }
 
                 // 5. Set buffer to the empty string.
