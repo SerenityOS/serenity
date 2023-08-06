@@ -105,8 +105,11 @@ PulseAudioContext::PulseAudioContext(pa_threaded_mainloop* main_loop, pa_mainloo
 
 PulseAudioContext::~PulseAudioContext()
 {
-    pa_context_disconnect(m_context);
-    pa_context_unref(m_context);
+    {
+        auto locker = main_loop_locker();
+        pa_context_disconnect(m_context);
+        pa_context_unref(m_context);
+    }
     pa_threaded_mainloop_stop(m_main_loop);
     pa_threaded_mainloop_free(m_main_loop);
 }
