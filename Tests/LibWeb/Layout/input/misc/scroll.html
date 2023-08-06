@@ -1,0 +1,22 @@
+<style>
+    #scrollbox {
+        width: 200px;
+        height: 200px;
+        overflow: scroll;
+        border: 1px solid black;
+    }
+
+    #content {
+        height: 1000px;
+    }
+</style>
+<script>
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+            document.getElementById("scrollbox").scroll(0, 100);
+        },
+        false
+    );
+</script>
+<div id="scrollbox"><div id="content"></div></div>
