@@ -6,6 +6,7 @@ Add Serenity to Makefile
 
 - Add `-lSDL2 -lgui -lipc -lgfx -lcore -lpthread -lregex`
 - Disable RTTI
+- Add SDL2 include path to compile flags
 
 ## `0002-Disable-backtracing.patch`
 
