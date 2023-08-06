@@ -8,6 +8,7 @@
 
 #include "HitTestResult.h"
 #include <AK/DeprecatedString.h>
+#include <AK/IntrusiveList.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Object.h>
 #include <LibGfx/Bitmap.h>

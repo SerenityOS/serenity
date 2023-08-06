@@ -11,7 +11,6 @@
 #include <AK/Forward.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
-#include <AK/IntrusiveList.h>
 #include <AK/Noncopyable.h>
 #include <AK/OwnPtr.h>
 #include <AK/StringView.h>
@@ -59,8 +58,6 @@ class Object
 
     AK_MAKE_NONCOPYABLE(Object);
     AK_MAKE_NONMOVABLE(Object);
-
-    IntrusiveListNode<Object> m_all_objects_list_node;
 
 public:
     virtual ~Object();
@@ -134,8 +131,6 @@ public:
     void dump_tree(int indent = 0);
 
     void deferred_invoke(Function<void()>);
-
-    static IntrusiveList<&Object::m_all_objects_list_node>& all_objects();
 
     void dispatch_event(Core::Event&, Object* stay_within = nullptr);
 
