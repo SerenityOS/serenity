@@ -9,40 +9,48 @@
 #include <LibMain/Main.h>
 #include <Userland/Shell/Shell.h>
 
-#define ENUMERATE_UTILITIES(E) \
-    E(cat)                     \
-    E(checksum)                \
-    E(chmod)                   \
-    E(chown)                   \
-    E(cp)                      \
-    E(df)                      \
-    E(env)                     \
-    E(file)                    \
-    E(find)                    \
-    E(id)                      \
-    E(less)                    \
-    E(ln)                      \
-    E(ls)                      \
-    E(lsblk)                   \
-    E(mkdir)                   \
-    E(mknod)                   \
-    E(mount)                   \
-    E(mv)                      \
-    E(ps)                      \
-    E(rm)                      \
-    E(sh)                      \
-    E(rmdir)                   \
-    E(tail)                    \
-    E(tree)                    \
-    E(umount)                  \
-    E(uname)                   \
+#define ENUMERATE_UTILITIES(E, ALIAS) \
+    E(cat)                            \
+    E(checksum)                       \
+    E(chmod)                          \
+    E(chown)                          \
+    E(cp)                             \
+    E(df)                             \
+    E(env)                            \
+    E(file)                           \
+    E(find)                           \
+    E(id)                             \
+    E(less)                           \
+    E(ln)                             \
+    E(ls)                             \
+    E(lsblk)                          \
+    ALIAS(md5sum, checksum)           \
+    E(mkdir)                          \
+    E(mknod)                          \
+    E(mount)                          \
+    E(mv)                             \
+    E(ps)                             \
+    E(rm)                             \
+    E(rmdir)                          \
+    E(sh)                             \
+    ALIAS(sha1sum, checksum)          \
+    ALIAS(sha256sum, checksum)        \
+    ALIAS(sha512sum, checksum)        \
+    ALIAS(Shell, sh)                  \
+    E(tail)                           \
+    E(tree)                           \
+    E(umount)                         \
+    E(uname)                          \
     E(uniq)
 
 // Declare the entrypoints of all the tools that we delegate to.
+// Some tools have additional aliases that we skip in the declarations.
 // Relying on `decltype(serenity_main)` ensures that we always stay consistent with the `serenity_main` signature.
 #define DECLARE_ENTRYPOINT(name) decltype(serenity_main) name##_main;
-ENUMERATE_UTILITIES(DECLARE_ENTRYPOINT)
+#define SKIP(alias, name)
+ENUMERATE_UTILITIES(DECLARE_ENTRYPOINT, SKIP)
 #undef DECLARE_ENTRYPOINT
+#undef SKIP
 
 static void fail()
 {
@@ -61,15 +69,10 @@ struct Runner {
 
 static constexpr Runner s_runners[] = {
 #define RUNNER_ENTRY(name) { #name##sv, name##_main },
-    ENUMERATE_UTILITIES(RUNNER_ENTRY)
+#define ALIAS_RUNNER_ENTRY(alias, name) { #alias##sv, name##_main },
+    ENUMERATE_UTILITIES(RUNNER_ENTRY, ALIAS_RUNNER_ENTRY)
 #undef RUNNER_ENTRY
-
-    // Some tools have additional aliases.
-    { "md5sum"sv, checksum_main },
-    { "sha1sum"sv, checksum_main },
-    { "sha256sum"sv, checksum_main },
-    { "sha512sum"sv, checksum_main },
-    { "Shell"sv, sh_main },
+#undef ALIAS_RUNNER_ENTRY
 };
 
 static ErrorOr<int> run_program(Main::Arguments arguments, LexicalPath const& runbase, bool& found_runner)
