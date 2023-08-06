@@ -57,6 +57,20 @@ PaintableWithLines::~PaintableWithLines()
 {
 }
 
+CSSPixelPoint PaintableBox::scroll_offset() const
+{
+    auto const& node = layout_node();
+    if (node.is_generated_for_before_pseudo_element())
+        return node.pseudo_element_generator()->scroll_offset(DOM::Element::ScrollOffsetFor::PseudoBefore);
+    if (node.is_generated_for_after_pseudo_element())
+        return node.pseudo_element_generator()->scroll_offset(DOM::Element::ScrollOffsetFor::PseudoAfter);
+
+    if (!is<DOM::Element>(*dom_node()))
+        return {};
+
+    return static_cast<DOM::Element const*>(dom_node())->scroll_offset(DOM::Element::ScrollOffsetFor::Self);
+}
+
 void PaintableBox::scroll_by(int delta_x, int delta_y)
 {
     auto scrollable_overflow_rect = this->scrollable_overflow_rect();
@@ -64,7 +78,7 @@ void PaintableBox::scroll_by(int delta_x, int delta_y)
         return;
     auto max_x_offset = scrollable_overflow_rect->width() - content_size().width();
     auto max_y_offset = scrollable_overflow_rect->height() - content_size().height();
-    auto current_offset = layout_box().scroll_offset();
+    auto current_offset = scroll_offset();
     auto new_offset_x = clamp(current_offset.x() + delta_x, 0, max_x_offset);
     auto new_offset_y = clamp(current_offset.y() + delta_y, 0, max_y_offset);
     layout_box().set_scroll_offset({ new_offset_x, new_offset_y });
@@ -610,7 +624,7 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
         // FIXME: Handle overflow-x and overflow-y being different values.
         auto clip_box = context.rounded_device_rect(absolute_padding_box_rect());
         context.painter().add_clip_rect(clip_box.to_type<int>());
-        auto scroll_offset = context.rounded_device_point(static_cast<Layout::BlockContainer const&>(layout_box()).scroll_offset());
+        auto scroll_offset = context.rounded_device_point(this->scroll_offset());
         context.painter().translate(-scroll_offset.to_type<int>());
 
         auto border_radii = normalized_border_radii_data(ShrinkRadiiForBorders::Yes);

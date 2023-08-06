@@ -38,6 +38,7 @@ public:
     CSSPixelRect absolute_rect() const;
     CSSPixelPoint effective_offset() const;
 
+    CSSPixelPoint scroll_offset() const;
     void scroll_by(int delta_x, int delta_y);
 
     void set_offset(CSSPixelPoint);

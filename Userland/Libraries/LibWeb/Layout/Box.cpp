@@ -61,23 +61,10 @@ bool Box::is_scrollable() const
     return computed_values().overflow_y() == CSS::Overflow::Scroll;
 }
 
-CSSPixelPoint Box::scroll_offset() const
-{
-    if (is_generated_for_before_pseudo_element())
-        return pseudo_element_generator()->scroll_offset(DOM::Element::ScrollOffsetFor::PseudoBefore);
-    if (is_generated_for_after_pseudo_element())
-        return pseudo_element_generator()->scroll_offset(DOM::Element::ScrollOffsetFor::PseudoAfter);
-
-    if (!is<DOM::Element>(*dom_node()))
-        return {};
-
-    return static_cast<DOM::Element const*>(dom_node())->scroll_offset(DOM::Element::ScrollOffsetFor::Self);
-}
-
 void Box::set_scroll_offset(CSSPixelPoint offset)
 {
     // FIXME: If there is horizontal and vertical scroll ignore only part of the new offset
-    if (offset.y() < 0 || scroll_offset() == offset)
+    if (offset.y() < 0 || paintable_box()->scroll_offset() == offset)
         return;
 
     if (is_generated_for_before_pseudo_element()) {

@@ -943,11 +943,9 @@ double Element::scroll_top() const
     if (!layout_node() || !is<Layout::Box>(layout_node()))
         return 0.0;
 
-    auto const* box = static_cast<Layout::Box const*>(layout_node());
-
     // 9. Return the y-coordinate of the scrolling area at the alignment point with the top of the padding edge of the element.
     // FIXME: Is this correct?
-    return box->scroll_offset().y().to_double();
+    return paintable_box()->scroll_offset().y().to_double();
 }
 
 double Element::scroll_left() const
@@ -985,11 +983,9 @@ double Element::scroll_left() const
     if (!layout_node() || !is<Layout::Box>(layout_node()))
         return 0.0;
 
-    auto const* box = static_cast<Layout::Box const*>(layout_node());
-
     // 9. Return the x-coordinate of the scrolling area at the alignment point with the left of the padding edge of the element.
     // FIXME: Is this correct?
-    return box->scroll_offset().x().to_double();
+    return paintable_box()->scroll_offset().x().to_double();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-scrollleft
@@ -1056,7 +1052,7 @@ void Element::set_scroll_left(double x)
 
     // 11. Scroll the element to x,scrollTop, with the scroll behavior being "auto".
     // FIXME: Implement this in terms of calling "scroll the element".
-    auto scroll_offset = box->scroll_offset();
+    auto scroll_offset = paintable_box()->scroll_offset();
     scroll_offset.set_x(static_cast<float>(x));
     box->set_scroll_offset(scroll_offset);
 }
@@ -1124,7 +1120,7 @@ void Element::set_scroll_top(double y)
 
     // 11. Scroll the element to scrollLeft,y, with the scroll behavior being "auto".
     // FIXME: Implement this in terms of calling "scroll the element".
-    auto scroll_offset = box->scroll_offset();
+    auto scroll_offset = paintable_box()->scroll_offset();
     scroll_offset.set_y(static_cast<float>(y));
     box->set_scroll_offset(scroll_offset);
 }

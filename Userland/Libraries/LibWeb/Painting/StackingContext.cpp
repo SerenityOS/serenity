@@ -29,7 +29,7 @@ static void paint_node(Layout::Node const& layout_node, PaintContext& context, P
     if (auto const* paintable = layout_node.paintable()) {
         if (paintable->containing_block() && paintable->containing_block()->is_scrollable()) {
             Gfx::PainterStateSaver saver(context.painter());
-            auto scroll_offset = -paintable->containing_block()->scroll_offset();
+            auto scroll_offset = -paintable->containing_block()->paintable_box()->scroll_offset();
             context.painter().translate({ context.enclosing_device_pixels(scroll_offset.x()), context.enclosing_device_pixels(scroll_offset.y()) });
             paintable->paint(context, phase);
         } else {
