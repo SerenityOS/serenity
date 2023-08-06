@@ -72,7 +72,7 @@ Window* Window::from_window_id(int window_id)
 }
 
 Window::Window(Core::Object* parent)
-    : Core::Object(parent)
+    : GUI::Object(parent)
     , m_menubar(Menubar::construct())
 {
     if (parent)

@@ -79,6 +79,7 @@ set(SOURCES
     MouseTracker.cpp
     MultiView.cpp
     Notification.cpp
+    Object.cpp
     OpacitySlider.cpp
     Painter.cpp
     PasswordInputDialog.cpp
@@ -87,6 +88,7 @@ set(SOURCES
     Process.cpp
     ProcessChooser.cpp
     Progressbar.cpp
+    Property.cpp
     RadioButton.cpp
     RangeSlider.cpp
     RegularEditingEngine.cpp

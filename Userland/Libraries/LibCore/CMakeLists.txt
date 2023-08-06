@@ -21,7 +21,6 @@ set(SOURCES
     Object.cpp
     Process.cpp
     ProcessStatisticsReader.cpp
-    Property.cpp
     SecretString.cpp
     SessionManagement.cpp
     Socket.cpp

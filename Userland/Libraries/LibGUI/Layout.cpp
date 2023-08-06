@@ -10,7 +10,7 @@
 #include <LibGUI/Layout.h>
 #include <LibGUI/Widget.h>
 
-REGISTER_ABSTRACT_CORE_OBJECT(GUI, Layout)
+REGISTER_ABSTRACT_GUI_OBJECT(GUI, Layout)
 
 namespace GUI {
 

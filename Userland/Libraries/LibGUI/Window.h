@@ -13,9 +13,9 @@
 #include <AK/OwnPtr.h>
 #include <AK/Variant.h>
 #include <AK/WeakPtr.h>
-#include <LibCore/Object.h>
 #include <LibGUI/FocusSource.h>
 #include <LibGUI/Forward.h>
+#include <LibGUI/Object.h>
 #include <LibGUI/ResizeDirection.h>
 #include <LibGUI/WindowMode.h>
 #include <LibGUI/WindowType.h>
@@ -27,7 +27,7 @@ namespace GUI {
 
 class WindowBackingStore;
 
-class Window : public Core::Object {
+class Window : public GUI::Object {
     C_OBJECT(Window)
 public:
     virtual ~Window() override;

@@ -5,9 +5,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCore/Property.h>
+#include <LibGUI/Property.h>
 
-namespace Core {
+namespace GUI {
 
 Property::Property(DeprecatedString name, Function<JsonValue()> getter, Function<bool(JsonValue const&)> setter)
     : m_name(move(name))
