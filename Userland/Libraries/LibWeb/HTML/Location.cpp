@@ -309,7 +309,7 @@ WebIDL::ExceptionOr<void> Location::set_hash(String const& value)
     auto input = value.bytes_as_string_view().trim("#"sv, TrimMode::Left);
 
     // 5. Set copyURL's fragment to the empty string.
-    copy_url.set_fragment("");
+    copy_url.set_fragment(""sv);
 
     // 6. Basic URL parse input, with copyURL as url and fragment state as state override.
     auto result_url = URLParser::basic_parse(input, {}, copy_url, URLParser::State::Fragment);

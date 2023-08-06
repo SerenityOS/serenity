@@ -95,20 +95,16 @@ public:
     bool includes_credentials() const { return !m_username.is_empty() || !m_password.is_empty(); }
     bool is_special() const { return is_special_scheme(m_scheme); }
 
-    enum class ApplyPercentEncoding {
-        Yes,
-        No
-    };
     void set_scheme(DeprecatedString);
-    void set_username(DeprecatedString, ApplyPercentEncoding = ApplyPercentEncoding::Yes);
-    void set_password(DeprecatedString, ApplyPercentEncoding = ApplyPercentEncoding::Yes);
+    void set_username(StringView);
+    void set_password(StringView);
     void set_host(Host);
     void set_port(Optional<u16>);
-    void set_paths(Vector<DeprecatedString>, ApplyPercentEncoding = ApplyPercentEncoding::Yes);
-    void set_query(DeprecatedString, ApplyPercentEncoding = ApplyPercentEncoding::Yes);
-    void set_fragment(DeprecatedString fragment, ApplyPercentEncoding = ApplyPercentEncoding::Yes);
+    void set_paths(Vector<DeprecatedString> const&);
+    void set_query(StringView);
+    void set_fragment(StringView fragment);
     void set_cannot_be_a_base_url(bool value) { m_cannot_be_a_base_url = value; }
-    void append_path(DeprecatedString, ApplyPercentEncoding = ApplyPercentEncoding::Yes);
+    void append_path(StringView);
     void append_slash()
     {
         // NOTE: To indicate that we want to end the path with a slash, we have to append an empty path segment.
