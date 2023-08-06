@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Property.h>
 
@@ -44,7 +44,7 @@ private:
     ObjectClassRegistration* m_parent_class { nullptr };
 };
 
-class Object : public Core::Object {
+class Object : public Core::EventReceiver {
     C_OBJECT_ABSTRACT(Object);
 
 public:
@@ -55,7 +55,7 @@ public:
     HashMap<DeprecatedString, NonnullOwnPtr<Property>> const& properties() const { return m_properties; }
 
 protected:
-    explicit Object(Core::Object* parent = nullptr);
+    explicit Object(Core::EventReceiver* parent = nullptr);
 
     void register_property(DeprecatedString const& name, Function<JsonValue()> getter, Function<bool(JsonValue const&)> setter = nullptr);
 

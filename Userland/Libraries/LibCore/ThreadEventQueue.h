@@ -25,10 +25,10 @@ public:
     size_t process();
 
     // Posts an event to the event queue.
-    void post_event(Object& receiver, NonnullOwnPtr<Event>);
+    void post_event(EventReceiver& receiver, NonnullOwnPtr<Event>);
 
     // Used by Threading::BackgroundAction.
-    void add_job(NonnullRefPtr<Promise<NonnullRefPtr<Object>>>);
+    void add_job(NonnullRefPtr<Promise<NonnullRefPtr<EventReceiver>>>);
     void cancel_all_pending_jobs();
 
     // Returns true if there are events waiting to be flushed.

@@ -24,7 +24,7 @@ public:
     ErrorOr<Vector<Answer>> lookup(Name const&, RecordType record_type);
 
 private:
-    explicit MulticastDNS(Object* parent = nullptr);
+    explicit MulticastDNS(Core::EventReceiver* parent = nullptr);
 
     void announce();
     ErrorOr<size_t> emit_packet(Packet const&, sockaddr_in const* destination = nullptr);

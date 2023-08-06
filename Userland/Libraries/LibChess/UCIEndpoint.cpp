@@ -51,7 +51,7 @@ void Endpoint::event(Core::Event& event)
     case Command::Type::UCINewGame:
         return handle_ucinewgame();
     default:
-        Object::event(event);
+        EventReceiver::event(event);
         break;
     }
 }

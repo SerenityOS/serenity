@@ -12,7 +12,7 @@
 #include <AK/AtomicRefCounted.h>
 #include <AK/Concepts.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibThreading/Mutex.h>
 
 namespace Core {
@@ -179,8 +179,8 @@ private:
     }
 
     ThreadedPromise() = default;
-    ThreadedPromise(Object* parent)
-        : Object(parent)
+    ThreadedPromise(EventReceiver* parent)
+        : EventReceiver(parent)
     {
     }
 

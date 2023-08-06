@@ -49,16 +49,16 @@ public:                                            \
         return #klass##sv;                         \
     }
 
-class Object
-    : public RefCounted<Object>
-    , public Weakable<Object> {
-    // NOTE: No C_OBJECT macro for Core::Object itself.
+class EventReceiver
+    : public RefCounted<EventReceiver>
+    , public Weakable<EventReceiver> {
+    // NOTE: No C_OBJECT macro for Core::EventReceiver itself.
 
-    AK_MAKE_NONCOPYABLE(Object);
-    AK_MAKE_NONMOVABLE(Object);
+    AK_MAKE_NONCOPYABLE(EventReceiver);
+    AK_MAKE_NONMOVABLE(EventReceiver);
 
 public:
-    virtual ~Object();
+    virtual ~EventReceiver();
 
     virtual StringView class_name() const = 0;
 
@@ -70,8 +70,8 @@ public:
     DeprecatedString const& name() const { return m_name; }
     void set_name(DeprecatedString name) { m_name = move(name); }
 
-    Vector<NonnullRefPtr<Object>>& children() { return m_children; }
-    Vector<NonnullRefPtr<Object>> const& children() const { return m_children; }
+    Vector<NonnullRefPtr<EventReceiver>>& children() { return m_children; }
+    Vector<NonnullRefPtr<EventReceiver>> const& children() const { return m_children; }
 
     template<typename Callback>
     void for_each_child(Callback callback)
@@ -84,51 +84,51 @@ public:
 
     template<typename T, typename Callback>
     void for_each_child_of_type(Callback callback)
-    requires IsBaseOf<Object, T>;
+    requires IsBaseOf<EventReceiver, T>;
 
     template<typename T>
     T* find_child_of_type_named(StringView)
-    requires IsBaseOf<Object, T>;
+    requires IsBaseOf<EventReceiver, T>;
 
     template<typename T, size_t N>
     ALWAYS_INLINE T* find_child_of_type_named(char const (&string_literal)[N])
-    requires IsBaseOf<Object, T>
+    requires IsBaseOf<EventReceiver, T>
     {
         return find_child_of_type_named<T>(StringView { string_literal, N - 1 });
     }
 
     template<typename T>
     T* find_descendant_of_type_named(StringView)
-    requires IsBaseOf<Object, T>;
+    requires IsBaseOf<EventReceiver, T>;
 
     template<typename T, size_t N>
     ALWAYS_INLINE T* find_descendant_of_type_named(char const (&string_literal)[N])
-    requires IsBaseOf<Object, T>
+    requires IsBaseOf<EventReceiver, T>
     {
         return find_descendant_of_type_named<T>(StringView { string_literal, N - 1 });
     }
 
-    bool is_ancestor_of(Object const&) const;
+    bool is_ancestor_of(EventReceiver const&) const;
 
-    Object* parent() { return m_parent; }
-    Object const* parent() const { return m_parent; }
+    EventReceiver* parent() { return m_parent; }
+    EventReceiver const* parent() const { return m_parent; }
 
     void start_timer(int ms, TimerShouldFireWhenNotVisible = TimerShouldFireWhenNotVisible::No);
     void stop_timer();
     bool has_timer() const { return m_timer_id; }
 
-    ErrorOr<void> try_add_child(Object&);
+    ErrorOr<void> try_add_child(EventReceiver&);
 
-    void add_child(Object&);
-    void insert_child_before(Object& new_child, Object& before_child);
-    void remove_child(Object&);
+    void add_child(EventReceiver&);
+    void insert_child_before(EventReceiver& new_child, EventReceiver& before_child);
+    void remove_child(EventReceiver&);
     void remove_all_children();
 
     void set_event_filter(Function<bool(Core::Event&)>);
 
     void deferred_invoke(Function<void()>);
 
-    void dispatch_event(Core::Event&, Object* stay_within = nullptr);
+    void dispatch_event(Core::Event&, EventReceiver* stay_within = nullptr);
 
     void remove_from_parent()
     {
@@ -155,7 +155,7 @@ public:
     virtual bool is_visible_for_timer_purposes() const;
 
 protected:
-    explicit Object(Object* parent = nullptr);
+    explicit EventReceiver(EventReceiver* parent = nullptr);
 
     virtual void event(Core::Event&);
 
@@ -166,18 +166,18 @@ protected:
     virtual void child_event(ChildEvent&);
 
 private:
-    Object* m_parent { nullptr };
+    EventReceiver* m_parent { nullptr };
     DeprecatedString m_name;
     int m_timer_id { 0 };
-    Vector<NonnullRefPtr<Object>> m_children;
+    Vector<NonnullRefPtr<EventReceiver>> m_children;
     Function<bool(Core::Event&)> m_event_filter;
 };
 
 }
 
 template<>
-struct AK::Formatter<Core::Object> : AK::Formatter<FormatString> {
-    ErrorOr<void> format(FormatBuilder& builder, Core::Object const& value)
+struct AK::Formatter<Core::EventReceiver> : AK::Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Core::EventReceiver const& value)
     {
         return AK::Formatter<FormatString>::format(builder, "{}({})"sv, value.class_name(), &value);
     }
@@ -185,8 +185,8 @@ struct AK::Formatter<Core::Object> : AK::Formatter<FormatString> {
 
 namespace Core {
 template<typename T, typename Callback>
-inline void Object::for_each_child_of_type(Callback callback)
-requires IsBaseOf<Object, T>
+inline void EventReceiver::for_each_child_of_type(Callback callback)
+requires IsBaseOf<EventReceiver, T>
 {
     for_each_child([&](auto& child) {
         if (is<T>(child))
@@ -196,8 +196,8 @@ requires IsBaseOf<Object, T>
 }
 
 template<typename T>
-T* Object::find_child_of_type_named(StringView name)
-requires IsBaseOf<Object, T>
+T* EventReceiver::find_child_of_type_named(StringView name)
+requires IsBaseOf<EventReceiver, T>
 {
     T* found_child = nullptr;
     for_each_child_of_type<T>([&](auto& child) {
@@ -212,8 +212,8 @@ requires IsBaseOf<Object, T>
 }
 
 template<typename T>
-T* Object::find_descendant_of_type_named(StringView name)
-requires IsBaseOf<Object, T>
+T* EventReceiver::find_descendant_of_type_named(StringView name)
+requires IsBaseOf<EventReceiver, T>
 {
     if (is<T>(*this) && this->name() == name) {
         return static_cast<T*>(this);

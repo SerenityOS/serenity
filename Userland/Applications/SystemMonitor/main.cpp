@@ -21,7 +21,7 @@
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Action.h>

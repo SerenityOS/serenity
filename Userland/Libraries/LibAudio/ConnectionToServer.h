@@ -14,7 +14,7 @@
 #include <LibAudio/Queue.h>
 #include <LibAudio/UserSampleQueue.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibIPC/ConnectionToServer.h>
 #include <LibThreading/Mutex.h>
 #include <LibThreading/Thread.h>

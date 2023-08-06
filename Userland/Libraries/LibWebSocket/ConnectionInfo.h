@@ -8,7 +8,7 @@
 
 #include <AK/URL.h>
 #include <AK/Vector.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibTLS/TLSv12.h>
 #include <LibWebSocket/Message.h>
 

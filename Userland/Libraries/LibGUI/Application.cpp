@@ -328,7 +328,7 @@ void Application::event(Core::Event& event)
         if (on_theme_change)
             on_theme_change();
     }
-    Object::event(event);
+    EventReceiver::event(event);
 }
 
 void Application::set_config_domain(String config_domain)

@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/WeakPtr.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Heap.h>
 #include <LibSQL/Index.h>

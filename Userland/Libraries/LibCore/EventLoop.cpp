@@ -10,7 +10,7 @@
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/EventLoopImplementationUnix.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibCore/Promise.h>
 #include <LibCore/ThreadEventQueue.h>
 
@@ -98,12 +98,12 @@ size_t EventLoop::pump(WaitMode mode)
     return m_impl->pump(mode == WaitMode::WaitForEvents ? EventLoopImplementation::PumpMode::WaitForEvents : EventLoopImplementation::PumpMode::DontWaitForEvents);
 }
 
-void EventLoop::post_event(Object& receiver, NonnullOwnPtr<Event>&& event)
+void EventLoop::post_event(EventReceiver& receiver, NonnullOwnPtr<Event>&& event)
 {
     m_impl->post_event(receiver, move(event));
 }
 
-void EventLoop::add_job(NonnullRefPtr<Promise<NonnullRefPtr<Object>>> job_promise)
+void EventLoop::add_job(NonnullRefPtr<Promise<NonnullRefPtr<EventReceiver>>> job_promise)
 {
     ThreadEventQueue::current().add_job(move(job_promise));
 }
@@ -123,7 +123,7 @@ void EventLoop::notify_forked(ForkEvent)
     current().m_impl->notify_forked_and_in_child();
 }
 
-int EventLoop::register_timer(Object& object, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible fire_when_not_visible)
+int EventLoop::register_timer(EventReceiver& object, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible fire_when_not_visible)
 {
     return EventLoopManager::the().register_timer(object, milliseconds, should_reload, fire_when_not_visible);
 }

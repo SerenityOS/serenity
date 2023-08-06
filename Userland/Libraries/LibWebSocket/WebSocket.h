@@ -8,7 +8,7 @@
 #pragma once
 
 #include <AK/Span.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibWebSocket/ConnectionInfo.h>
 #include <LibWebSocket/Impl/WebSocketImpl.h>
 #include <LibWebSocket/Message.h>
@@ -22,7 +22,7 @@ enum class ReadyState {
     Closed = 3,
 };
 
-class WebSocket final : public Core::Object {
+class WebSocket final : public Core::EventReceiver {
     C_OBJECT(WebSocket)
 public:
     static NonnullRefPtr<WebSocket> create(ConnectionInfo, RefPtr<WebSocketImpl> = nullptr);

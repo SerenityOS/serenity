@@ -10,13 +10,13 @@
 
 #include <AK/Badge.h>
 #include <AK/IterationDecision.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Menu.h>
 
 namespace GUI {
 
-class Menubar : public Core::Object {
+class Menubar : public Core::EventReceiver {
     C_OBJECT(Menubar);
 
 public:

@@ -6,7 +6,7 @@
  */
 
 #include <AK/Debug.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibGUI/HeaderView.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>

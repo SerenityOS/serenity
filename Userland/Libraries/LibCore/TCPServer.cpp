@@ -14,7 +14,7 @@
 
 namespace Core {
 
-ErrorOr<NonnullRefPtr<TCPServer>> TCPServer::try_create(Object* parent)
+ErrorOr<NonnullRefPtr<TCPServer>> TCPServer::try_create(EventReceiver* parent)
 {
 #ifdef SOCK_NONBLOCK
     int fd = TRY(Core::System::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0));
@@ -28,8 +28,8 @@ ErrorOr<NonnullRefPtr<TCPServer>> TCPServer::try_create(Object* parent)
     return adopt_nonnull_ref_or_enomem(new (nothrow) TCPServer(fd, parent));
 }
 
-TCPServer::TCPServer(int fd, Object* parent)
-    : Object(parent)
+TCPServer::TCPServer(int fd, EventReceiver* parent)
+    : EventReceiver(parent)
     , m_fd(fd)
 {
     VERIFY(m_fd >= 0);

@@ -6,7 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibGUI/AbstractTableView.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Button.h>

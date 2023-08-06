@@ -10,7 +10,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/Result.h>
 #include <AK/Vector.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Heap.h>
 #include <LibSQL/Type.h>
@@ -23,7 +23,7 @@ namespace SQL {
  * It remains to be seen if this will survive in it's current form.
  */
 
-class Relation : public Core::Object {
+class Relation : public Core::EventReceiver {
     C_OBJECT_ABSTRACT(Relation);
 
 public:
@@ -36,14 +36,14 @@ public:
 
 protected:
     Relation(DeprecatedString name, Block::Index block_index, Relation* parent = nullptr)
-        : Core::Object(parent)
+        : Core::EventReceiver(parent)
         , m_block_index(block_index)
     {
         set_name(move(name));
     }
 
     explicit Relation(DeprecatedString name, Relation* parent = nullptr)
-        : Core::Object(parent)
+        : Core::EventReceiver(parent)
         , m_block_index(0)
     {
         set_name(move(name));

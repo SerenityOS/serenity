@@ -9,7 +9,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/URL.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/Forward.h>
@@ -116,7 +116,7 @@ protected:
     explicit WebSocketClientSocket();
 };
 
-class WebSocketClientManager : public Core::Object {
+class WebSocketClientManager : public Core::EventReceiver {
     C_OBJECT_ABSTRACT(WebSocketClientManager)
 public:
     static void initialize(RefPtr<WebSocketClientManager>);

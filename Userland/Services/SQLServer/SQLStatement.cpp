@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibSQL/AST/Parser.h>
 #include <SQLServer/ConnectionFromClient.h>
 #include <SQLServer/DatabaseConnection.h>
@@ -35,7 +35,7 @@ SQL::ResultOr<NonnullRefPtr<SQLStatement>> SQLStatement::create(DatabaseConnecti
 }
 
 SQLStatement::SQLStatement(DatabaseConnection& connection, NonnullRefPtr<SQL::AST::Statement> statement)
-    : Core::Object(&connection)
+    : Core::EventReceiver(&connection)
     , m_statement_id(s_next_statement_id++)
     , m_statement(move(statement))
 {

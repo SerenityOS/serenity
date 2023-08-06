@@ -18,8 +18,8 @@
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <LibCore/EventReceiver.h>
 #include <LibCore/Notifier.h>
-#include <LibCore/Object.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
 #include <termios.h>
@@ -97,7 +97,7 @@ enum class POSIXModeRequirement {
     InAllModes,
 };
 
-class Shell : public Core::Object {
+class Shell : public Core::EventReceiver {
     C_OBJECT(Shell);
 
 public:

@@ -10,7 +10,7 @@
 #include <AK/JsonObject.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 
 namespace HackStudio {
 

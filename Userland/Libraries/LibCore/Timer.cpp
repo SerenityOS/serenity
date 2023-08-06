@@ -9,13 +9,13 @@
 
 namespace Core {
 
-Timer::Timer(Object* parent)
-    : Object(parent)
+Timer::Timer(EventReceiver* parent)
+    : EventReceiver(parent)
 {
 }
 
-Timer::Timer(int interval_ms, Function<void()>&& timeout_handler, Object* parent)
-    : Object(parent)
+Timer::Timer(int interval_ms, Function<void()>&& timeout_handler, EventReceiver* parent)
+    : EventReceiver(parent)
     , on_timeout(move(timeout_handler))
     , m_interval_ms(interval_ms)
 {

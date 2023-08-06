@@ -21,8 +21,8 @@
 #include <AK/Vector.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/EventReceiver.h>
 #include <LibCore/Notifier.h>
-#include <LibCore/Object.h>
 #include <LibLine/KeyCallbackMachine.h>
 #include <LibLine/Span.h>
 #include <LibLine/StringMetrics.h>
@@ -132,7 +132,7 @@ struct Configuration {
 #define EDITOR_INTERNAL_FUNCTION(name) \
     [](auto& editor) { editor.name();  return false; }
 
-class Editor : public Core::Object {
+class Editor : public Core::EventReceiver {
     C_OBJECT(Editor);
 
 public:

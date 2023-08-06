@@ -282,7 +282,7 @@ ErrorOr<void> Service::did_exit(int status)
 }
 
 Service::Service(Core::ConfigFile const& config, StringView name)
-    : Core::Object(nullptr)
+    : Core::EventReceiver(nullptr)
 {
     VERIFY(config.has_group(name));
 

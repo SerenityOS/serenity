@@ -10,12 +10,12 @@
 
 #include <AK/Concepts.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 
 namespace Core {
 
 template<typename Result, typename TError>
-class Promise : public Object {
+class Promise : public EventReceiver {
     C_OBJECT(Promise);
 
 public:
@@ -116,8 +116,8 @@ private:
     }
 
     Promise() = default;
-    Promise(Object* parent)
-        : Object(parent)
+    Promise(EventReceiver* parent)
+        : EventReceiver(parent)
     {
     }
 

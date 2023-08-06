@@ -8,7 +8,7 @@
 
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ColorFilterer.h>
 #include <LibGUI/Event.h>
@@ -23,7 +23,7 @@ ErrorOr<NonnullRefPtr<Menu>> make_accessibility_menu(GUI::ColorFilterer&);
 
 };
 
-class Menu final : public Core::Object {
+class Menu final : public Core::EventReceiver {
     C_OBJECT(Menu)
 public:
     virtual ~Menu() override;

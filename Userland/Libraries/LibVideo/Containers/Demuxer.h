@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/NonnullOwnPtr.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibVideo/DecoderError.h>
 #include <LibVideo/Sample.h>
 #include <LibVideo/Track.h>

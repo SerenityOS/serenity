@@ -8,13 +8,13 @@
 #pragma once
 
 #include <LibChess/UCICommand.h>
+#include <LibCore/EventReceiver.h>
 #include <LibCore/File.h>
 #include <LibCore/Notifier.h>
-#include <LibCore/Object.h>
 
 namespace Chess::UCI {
 
-class Endpoint : public Core::Object {
+class Endpoint : public Core::EventReceiver {
     C_OBJECT(Endpoint)
 public:
     virtual ~Endpoint() override = default;

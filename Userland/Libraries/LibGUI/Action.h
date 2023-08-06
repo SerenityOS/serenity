@@ -15,7 +15,7 @@
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Shortcut.h>
@@ -25,39 +25,39 @@ namespace GUI {
 
 namespace CommonActions {
 NonnullRefPtr<Action> make_about_action(DeprecatedString const& app_name, Icon const& app_icon, Window* parent = nullptr);
-NonnullRefPtr<Action> make_open_action(Function<void(Action&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_save_action(Function<void(Action&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_save_as_action(Function<void(Action&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_undo_action(Function<void(Action&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_redo_action(Function<void(Action&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_cut_action(Function<void(Action&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_copy_action(Function<void(Action&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_paste_action(Function<void(Action&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_delete_action(Function<void(Action&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_move_to_front_action(Function<void(Action&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_move_to_back_action(Function<void(Action&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_insert_emoji_action(Function<void(Action&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_fullscreen_action(Function<void(Action&)>, Core::Object* parent = nullptr);
+NonnullRefPtr<Action> make_open_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_save_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_save_as_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_undo_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_redo_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_cut_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_copy_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_paste_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_delete_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_move_to_front_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_move_to_back_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_insert_emoji_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_fullscreen_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
 NonnullRefPtr<Action> make_quit_action(Function<void(Action&)>);
-NonnullRefPtr<Action> make_help_action(Function<void(Action&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_go_back_action(Function<void(Action&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_go_forward_action(Function<void(Action&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_go_home_action(Function<void(Action&)> callback, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_close_tab_action(Function<void(Action&)> callback, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_reload_action(Function<void(Action&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_select_all_action(Function<void(Action&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_rename_action(Function<void(Action&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_properties_action(Function<void(Action&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_zoom_in_action(Function<void(Action&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_zoom_out_action(Function<void(Action&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_reset_zoom_action(Function<void(Action&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_rotate_clockwise_action(Function<void(Action&)>, Core::Object* parent = nullptr);
-NonnullRefPtr<Action> make_rotate_counterclockwise_action(Function<void(Action&)>, Core::Object* parent = nullptr);
+NonnullRefPtr<Action> make_help_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_go_back_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_go_forward_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_go_home_action(Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_close_tab_action(Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_reload_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_select_all_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_rename_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_properties_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_zoom_in_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_zoom_out_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_reset_zoom_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_rotate_clockwise_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
+NonnullRefPtr<Action> make_rotate_counterclockwise_action(Function<void(Action&)>, Core::EventReceiver* parent = nullptr);
 NonnullRefPtr<Action> make_command_palette_action(Window* window = nullptr);
 
 };
 
-class Action final : public Core::Object {
+class Action final : public Core::EventReceiver {
     C_OBJECT(Action)
 public:
     enum class ShortcutScope {
@@ -66,20 +66,20 @@ public:
         WindowLocal,
         ApplicationGlobal,
     };
-    static NonnullRefPtr<Action> create(DeprecatedString text, Function<void(Action&)> callback, Core::Object* parent = nullptr);
-    static NonnullRefPtr<Action> create(DeprecatedString text, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::Object* parent = nullptr);
-    static NonnullRefPtr<Action> create(DeprecatedString text, Shortcut const& shortcut, Function<void(Action&)> callback, Core::Object* parent = nullptr);
-    static NonnullRefPtr<Action> create(DeprecatedString text, Shortcut const& shortcut, Shortcut const& alternate_shortcut, Function<void(Action&)> callback, Core::Object* parent = nullptr);
-    static NonnullRefPtr<Action> create(DeprecatedString text, Shortcut const& shortcut, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::Object* parent = nullptr);
-    static NonnullRefPtr<Action> create(DeprecatedString text, Shortcut const& shortcut, Shortcut const& alternate_shortcut, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::Object* parent = nullptr);
-    static NonnullRefPtr<Action> create_checkable(DeprecatedString text, Function<void(Action&)> callback, Core::Object* parent = nullptr);
-    static NonnullRefPtr<Action> create_checkable(DeprecatedString text, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::Object* parent = nullptr);
-    static NonnullRefPtr<Action> create_checkable(DeprecatedString text, Shortcut const& shortcut, Function<void(Action&)> callback, Core::Object* parent = nullptr);
-    static NonnullRefPtr<Action> create_checkable(DeprecatedString text, Shortcut const& shortcut, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::Object* parent = nullptr);
+    static NonnullRefPtr<Action> create(DeprecatedString text, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
+    static NonnullRefPtr<Action> create(DeprecatedString text, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
+    static NonnullRefPtr<Action> create(DeprecatedString text, Shortcut const& shortcut, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
+    static NonnullRefPtr<Action> create(DeprecatedString text, Shortcut const& shortcut, Shortcut const& alternate_shortcut, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
+    static NonnullRefPtr<Action> create(DeprecatedString text, Shortcut const& shortcut, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
+    static NonnullRefPtr<Action> create(DeprecatedString text, Shortcut const& shortcut, Shortcut const& alternate_shortcut, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
+    static NonnullRefPtr<Action> create_checkable(DeprecatedString text, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
+    static NonnullRefPtr<Action> create_checkable(DeprecatedString text, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
+    static NonnullRefPtr<Action> create_checkable(DeprecatedString text, Shortcut const& shortcut, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
+    static NonnullRefPtr<Action> create_checkable(DeprecatedString text, Shortcut const& shortcut, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
 
-    static ErrorOr<NonnullRefPtr<Action>> try_create_checkable(DeprecatedString text, Shortcut const& shortcut, Function<void(Action&)> callback, Core::Object* parent = nullptr);
+    static ErrorOr<NonnullRefPtr<Action>> try_create_checkable(DeprecatedString text, Shortcut const& shortcut, Function<void(Action&)> callback, Core::EventReceiver* parent = nullptr);
 
-    static RefPtr<Action> find_action_for_shortcut(Core::Object& object, Shortcut const& shortcut);
+    static RefPtr<Action> find_action_for_shortcut(Core::EventReceiver& object, Shortcut const& shortcut);
 
     virtual ~Action() override;
 
@@ -97,12 +97,12 @@ public:
     Gfx::Bitmap const* icon() const { return m_icon.ptr(); }
     void set_icon(Gfx::Bitmap const*);
 
-    Core::Object const* activator() const { return m_activator.ptr(); }
-    Core::Object* activator() { return m_activator.ptr(); }
+    Core::EventReceiver const* activator() const { return m_activator.ptr(); }
+    Core::EventReceiver* activator() { return m_activator.ptr(); }
 
     Function<void(Action&)> on_activation;
 
-    void activate(Core::Object* activator = nullptr);
+    void activate(Core::EventReceiver* activator = nullptr);
     void process_event(Window& window, Event& event);
     void flash_menubar_menu(GUI::Window& window);
 
@@ -138,11 +138,11 @@ public:
     HashTable<MenuItem*> const& menu_items() const { return m_menu_items; }
 
 private:
-    Action(DeprecatedString, Function<void(Action&)> = nullptr, Core::Object* = nullptr, bool checkable = false);
-    Action(DeprecatedString, Shortcut const&, Function<void(Action&)> = nullptr, Core::Object* = nullptr, bool checkable = false);
-    Action(DeprecatedString, Shortcut const&, Shortcut const&, Function<void(Action&)> = nullptr, Core::Object* = nullptr, bool checkable = false);
-    Action(DeprecatedString, Shortcut const&, Shortcut const&, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> = nullptr, Core::Object* = nullptr, bool checkable = false);
-    Action(DeprecatedString, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> = nullptr, Core::Object* = nullptr, bool checkable = false);
+    Action(DeprecatedString, Function<void(Action&)> = nullptr, Core::EventReceiver* = nullptr, bool checkable = false);
+    Action(DeprecatedString, Shortcut const&, Function<void(Action&)> = nullptr, Core::EventReceiver* = nullptr, bool checkable = false);
+    Action(DeprecatedString, Shortcut const&, Shortcut const&, Function<void(Action&)> = nullptr, Core::EventReceiver* = nullptr, bool checkable = false);
+    Action(DeprecatedString, Shortcut const&, Shortcut const&, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> = nullptr, Core::EventReceiver* = nullptr, bool checkable = false);
+    Action(DeprecatedString, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> = nullptr, Core::EventReceiver* = nullptr, bool checkable = false);
 
     template<typename Callback>
     void for_each_toolbar_button(Callback);
@@ -166,7 +166,7 @@ private:
     HashTable<Button*> m_buttons;
     HashTable<MenuItem*> m_menu_items;
     WeakPtr<ActionGroup> m_action_group;
-    WeakPtr<Core::Object> m_activator;
+    WeakPtr<Core::EventReceiver> m_activator;
 };
 
 }

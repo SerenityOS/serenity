@@ -45,7 +45,7 @@ class DndOverlay;
 class WindowGeometryOverlay;
 class TileWindowOverlay;
 
-class WindowManager : public Core::Object {
+class WindowManager : public Core::EventReceiver {
     C_OBJECT(WindowManager)
 
     friend class Compositor;

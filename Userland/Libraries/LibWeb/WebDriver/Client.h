@@ -13,7 +13,7 @@
 #include <AK/String.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibCore/Socket.h>
 #include <LibHTTP/Forward.h>
 #include <LibHTTP/HttpRequest.h>
@@ -24,7 +24,7 @@ namespace Web::WebDriver {
 
 using Parameters = Vector<String>;
 
-class Client : public Core::Object {
+class Client : public Core::EventReceiver {
     C_OBJECT_ABSTRACT(Client);
 
 public:
@@ -106,7 +106,7 @@ public:
     virtual Response print_page(Parameters parameters, JsonValue payload) = 0;
 
 protected:
-    Client(NonnullOwnPtr<Core::BufferedTCPSocket>, Core::Object* parent);
+    Client(NonnullOwnPtr<Core::BufferedTCPSocket>, Core::EventReceiver* parent);
 
 private:
     using WrappedError = Variant<AK::Error, HTTP::HttpRequest::ParseError, WebDriver::Error>;

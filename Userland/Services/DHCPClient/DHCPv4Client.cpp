@@ -35,7 +35,7 @@ static MACAddress mac_from_string(DeprecatedString const& str)
     };
 }
 
-static bool send(InterfaceDescriptor const& iface, DHCPv4Packet const& packet, Core::Object*)
+static bool send(InterfaceDescriptor const& iface, DHCPv4Packet const& packet, Core::EventReceiver*)
 {
     int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (fd < 0) {

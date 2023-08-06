@@ -11,7 +11,7 @@
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibCore/Account.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/TextBox.h>

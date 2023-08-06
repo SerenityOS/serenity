@@ -126,7 +126,7 @@ void ThreadStackWidget::refresh()
         [weak_this = make_weak_ptr()](auto result) -> ErrorOr<void> {
             if (!weak_this)
                 return {};
-            Core::EventLoop::current().post_event(const_cast<Core::Object&>(*weak_this), make<CompletionEvent>(move(result)));
+            Core::EventLoop::current().post_event(const_cast<Core::EventReceiver&>(*weak_this), make<CompletionEvent>(move(result)));
             return {};
         });
 }

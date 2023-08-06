@@ -8,7 +8,7 @@
 
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
 
@@ -17,7 +17,7 @@ namespace WindowServer {
 class KeyEvent;
 class Window;
 
-class WindowSwitcher final : public Core::Object {
+class WindowSwitcher final : public Core::EventReceiver {
     C_OBJECT(WindowSwitcher)
 public:
     enum class Mode {

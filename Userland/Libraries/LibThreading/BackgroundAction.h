@@ -14,7 +14,7 @@
 #include <AK/Queue.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibCore/Promise.h>
 #include <LibThreading/Thread.h>
 
@@ -35,14 +35,14 @@ private:
 };
 
 template<typename Result>
-class BackgroundAction final : public Core::Object
+class BackgroundAction final : public Core::EventReceiver
     , private BackgroundActionBase {
     C_OBJECT(BackgroundAction);
 
 public:
     // Promise is an implementation detail of BackgroundAction in order to communicate with EventLoop.
     // All of the promise's callbacks and state are either managed by us or by EventLoop.
-    using Promise = Core::Promise<NonnullRefPtr<Core::Object>>;
+    using Promise = Core::Promise<NonnullRefPtr<Core::EventReceiver>>;
 
     virtual ~BackgroundAction() = default;
 
@@ -55,13 +55,13 @@ public:
 
 private:
     BackgroundAction(Function<ErrorOr<Result>(BackgroundAction&)> action, Function<ErrorOr<void>(Result)> on_complete, Optional<Function<void(Error)>> on_error = {})
-        : Core::Object(&background_thread())
+        : Core::EventReceiver(&background_thread())
         , m_promise(Promise::try_create().release_value_but_fixme_should_propagate_errors())
         , m_action(move(action))
         , m_on_complete(move(on_complete))
     {
         if (m_on_complete) {
-            m_promise->on_resolution = [](NonnullRefPtr<Core::Object>& object) -> ErrorOr<void> {
+            m_promise->on_resolution = [](NonnullRefPtr<Core::EventReceiver>& object) -> ErrorOr<void> {
                 auto self = static_ptr_cast<BackgroundAction<Result>>(object);
                 VERIFY(self->m_result.has_value());
                 if (auto maybe_error = self->m_on_complete(self->m_result.value()); maybe_error.is_error())

@@ -10,8 +10,8 @@
 
 namespace Core {
 
-Notifier::Notifier(int fd, Type type, Object* parent)
-    : Object(parent)
+Notifier::Notifier(int fd, Type type, EventReceiver* parent)
+    : EventReceiver(parent)
     , m_fd(fd)
     , m_type(type)
 {
@@ -48,7 +48,7 @@ void Notifier::event(Core::Event& event)
             on_activation();
         return;
     }
-    Object::event(event);
+    EventReceiver::event(event);
 }
 
 }

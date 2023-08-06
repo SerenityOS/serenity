@@ -8,7 +8,7 @@
 
 #include <AK/NonnullRefPtr.h>
 #include <AK/Vector.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibSQL/AST/AST.h>
 #include <LibSQL/Result.h>
 #include <LibSQL/ResultSet.h>
@@ -18,7 +18,7 @@
 
 namespace SQLServer {
 
-class SQLStatement final : public Core::Object {
+class SQLStatement final : public Core::EventReceiver {
     C_OBJECT_ABSTRACT(SQLStatement)
 
 public:

@@ -90,7 +90,7 @@ ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::try_create(GUI::Icon const& icon)
     main_widget->m_editor->on_change = [main_widget = main_widget.ptr()] {
         main_widget->m_preview->remove_all_children();
         // FIXME: Parsing errors happen while the user is typing. What should we do about them?
-        (void)main_widget->m_preview->load_from_gml(main_widget->m_editor->text(), [](DeprecatedString const& class_name) -> ErrorOr<NonnullRefPtr<Core::Object>> {
+        (void)main_widget->m_preview->load_from_gml(main_widget->m_editor->text(), [](DeprecatedString const& class_name) -> ErrorOr<NonnullRefPtr<Core::EventReceiver>> {
             return UnregisteredWidget::try_create(class_name);
         });
     };

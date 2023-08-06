@@ -10,13 +10,13 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Forward.h>
 #include <AK/Function.h>
+#include <LibCore/EventReceiver.h>
 #include <LibCore/Forward.h>
-#include <LibCore/Object.h>
 #include <LibCore/SocketAddress.h>
 
 namespace Core {
 
-class UDPServer : public Object {
+class UDPServer : public EventReceiver {
     C_OBJECT(UDPServer)
 public:
     virtual ~UDPServer() override;
@@ -41,7 +41,7 @@ public:
     Function<void()> on_ready_to_receive;
 
 protected:
-    explicit UDPServer(Object* parent = nullptr);
+    explicit UDPServer(EventReceiver* parent = nullptr);
 
 private:
     int m_fd { -1 };

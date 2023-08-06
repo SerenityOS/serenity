@@ -12,7 +12,7 @@
 #include <AK/DistinctNumeric.h>
 #include <AK/Function.h>
 #include <AK/Result.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <pthread.h>
 
 namespace Threading {
@@ -41,7 +41,7 @@ enum class ThreadState : u8 {
     Joined,
 };
 
-class Thread final : public Core::Object {
+class Thread final : public Core::EventReceiver {
     C_OBJECT(Thread);
 
 public:

@@ -231,7 +231,7 @@ void CommandPalette::collect_actions(GUI::Window& parent_window)
 {
     OrderedHashTable<NonnullRefPtr<GUI::Action>> actions;
 
-    auto collect_action_children = [&](Core::Object& action_parent) {
+    auto collect_action_children = [&](Core::EventReceiver& action_parent) {
         action_parent.for_each_child_of_type<GUI::Action>([&](GUI::Action& action) {
             if (action.is_enabled() && action.is_visible())
                 actions.set(action);

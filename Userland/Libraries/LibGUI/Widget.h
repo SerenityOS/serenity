@@ -350,7 +350,7 @@ public:
     AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> const& override_cursor() const { return m_override_cursor; }
     void set_override_cursor(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>>);
 
-    using UnregisteredChildHandler = ErrorOr<NonnullRefPtr<Core::Object>>(DeprecatedString const&);
+    using UnregisteredChildHandler = ErrorOr<NonnullRefPtr<Core::EventReceiver>>(DeprecatedString const&);
     ErrorOr<void> load_from_gml(StringView);
     ErrorOr<void> load_from_gml(StringView, UnregisteredChildHandler);
 
@@ -477,8 +477,8 @@ inline Widget const* Widget::parent_widget() const
 }
 
 template<>
-inline bool Core::Object::fast_is<GUI::Widget>() const { return is_widget(); }
+inline bool Core::EventReceiver::fast_is<GUI::Widget>() const { return is_widget(); }
 
 template<>
-struct AK::Formatter<GUI::Widget> : AK::Formatter<Core::Object> {
+struct AK::Formatter<GUI::Widget> : AK::Formatter<Core::EventReceiver> {
 };

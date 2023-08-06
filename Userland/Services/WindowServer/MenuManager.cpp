@@ -149,7 +149,7 @@ void MenuManager::event(Core::Event& event)
         }
     }
 
-    return Core::Object::event(event);
+    return Core::EventReceiver::event(event);
 }
 
 void MenuManager::handle_mouse_event(MouseEvent& mouse_event)

@@ -12,7 +12,7 @@
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
 #include <AK/WeakPtr.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>
 #include <LibIPC/ConnectionFromClient.h>

@@ -63,9 +63,9 @@ public:
     void spin_until(Function<bool()>);
 
     // Post an event to this event loop.
-    void post_event(Object& receiver, NonnullOwnPtr<Event>&&);
+    void post_event(EventReceiver& receiver, NonnullOwnPtr<Event>&&);
 
-    void add_job(NonnullRefPtr<Promise<NonnullRefPtr<Object>>> job_promise);
+    void add_job(NonnullRefPtr<Promise<NonnullRefPtr<EventReceiver>>> job_promise);
 
     void deferred_invoke(Function<void()>);
 
@@ -76,7 +76,7 @@ public:
     bool was_exit_requested() const;
 
     // The registration functions act upon the current loop of the current thread.
-    static int register_timer(Object&, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible);
+    static int register_timer(EventReceiver&, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible);
     static bool unregister_timer(int timer_id);
 
     static void register_notifier(Badge<Notifier>, Notifier&);

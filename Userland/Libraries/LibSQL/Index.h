@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Meta.h>
 #include <LibSQL/Serializer.h>
@@ -31,7 +31,7 @@ private:
     Block::Index m_block_index;
 };
 
-class Index : public Core::Object {
+class Index : public Core::EventReceiver {
     C_OBJECT_ABSTRACT(Index);
 
 public:

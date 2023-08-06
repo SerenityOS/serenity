@@ -49,8 +49,7 @@ ErrorOr<NonnullRefPtr<DatabaseConnection>> DatabaseConnection::create(StringView
 }
 
 DatabaseConnection::DatabaseConnection(NonnullRefPtr<SQL::Database> database, DeprecatedString database_name, int client_id)
-    : Object()
-    , m_database(move(database))
+    : m_database(move(database))
     , m_database_name(move(database_name))
     , m_connection_id(s_next_connection_id++)
     , m_client_id(client_id)

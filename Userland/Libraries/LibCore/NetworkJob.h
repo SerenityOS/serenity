@@ -9,12 +9,12 @@
 
 #include <AK/Function.h>
 #include <AK/Stream.h>
+#include <LibCore/EventReceiver.h>
 #include <LibCore/Forward.h>
-#include <LibCore/Object.h>
 
 namespace Core {
 
-class NetworkJob : public Object {
+class NetworkJob : public EventReceiver {
     C_OBJECT_ABSTRACT(NetworkJob)
 public:
     enum class Error {
@@ -70,5 +70,5 @@ char const* to_string(NetworkJob::Error);
 }
 
 template<>
-struct AK::Formatter<Core::NetworkJob> : Formatter<Core::Object> {
+struct AK::Formatter<Core::NetworkJob> : Formatter<Core::EventReceiver> {
 };

@@ -8,14 +8,14 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
+#include <LibCore/EventReceiver.h>
 #include <LibCore/MimeData.h>
-#include <LibCore/Object.h>
 #include <LibGUI/Forward.h>
 #include <LibGfx/Forward.h>
 
 namespace GUI {
 
-class DragOperation : public Core::Object {
+class DragOperation : public Core::EventReceiver {
     C_OBJECT(DragOperation)
 public:
     enum class Outcome {
@@ -38,7 +38,7 @@ public:
     static void notify_cancelled(Badge<ConnectionToWindowServer>);
 
 protected:
-    explicit DragOperation(Core::Object* parent = nullptr);
+    explicit DragOperation(Core::EventReceiver* parent = nullptr);
 
 private:
     void done(Outcome);

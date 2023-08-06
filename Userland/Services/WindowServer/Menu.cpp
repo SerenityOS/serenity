@@ -39,7 +39,7 @@ u32 find_ampersand_shortcut_character(StringView string)
 }
 
 Menu::Menu(ConnectionFromClient* client, int menu_id, String name)
-    : Core::Object(client)
+    : Core::EventReceiver(client)
     , m_client(client)
     , m_menu_id(menu_id)
     , m_name(move(name))
@@ -491,7 +491,7 @@ void Menu::event(Core::Event& event)
             return;
         }
     }
-    Core::Object::event(event);
+    Core::EventReceiver::event(event);
 }
 
 void Menu::clear_hovered_item()

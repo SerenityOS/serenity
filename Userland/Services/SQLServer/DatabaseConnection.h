@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/NonnullRefPtr.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibSQL/Database.h>
 #include <LibSQL/Result.h>
 #include <LibSQL/Type.h>
@@ -15,7 +15,7 @@
 
 namespace SQLServer {
 
-class DatabaseConnection final : public Core::Object {
+class DatabaseConnection final : public Core::EventReceiver {
     C_OBJECT_ABSTRACT(DatabaseConnection)
 
 public:

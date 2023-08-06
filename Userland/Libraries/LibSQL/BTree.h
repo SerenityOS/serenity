@@ -12,7 +12,7 @@
 #include <AK/Optional.h>
 #include <AK/RefPtr.h>
 #include <AK/Vector.h>
-#include <LibCore/Object.h>
+#include <LibCore/EventReceiver.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Heap.h>
 #include <LibSQL/Index.h>

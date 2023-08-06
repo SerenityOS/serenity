@@ -17,7 +17,7 @@ public:
 
     virtual NonnullOwnPtr<EventLoopImplementation> make_implementation() override;
 
-    virtual int register_timer(Object&, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible) override;
+    virtual int register_timer(EventReceiver&, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible) override;
     virtual bool unregister_timer(int timer_id) override;
 
     virtual void register_notifier(Notifier&) override;
@@ -52,7 +52,7 @@ public:
     virtual void unquit() override;
     virtual bool was_exit_requested() const override;
     virtual void notify_forked_and_in_child() override;
-    virtual void post_event(Object& receiver, NonnullOwnPtr<Event>&&) override;
+    virtual void post_event(EventReceiver& receiver, NonnullOwnPtr<Event>&&) override;
 
 private:
     bool m_exit_requested { false };

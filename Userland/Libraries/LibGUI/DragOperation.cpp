@@ -16,8 +16,8 @@ namespace GUI {
 
 static DragOperation* s_current_drag_operation;
 
-DragOperation::DragOperation(Core::Object* parent)
-    : Core::Object(parent)
+DragOperation::DragOperation(Core::EventReceiver* parent)
+    : Core::EventReceiver(parent)
 {
 }
 

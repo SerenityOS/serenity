@@ -8,8 +8,8 @@
 
 namespace GUI {
 
-Object::Object(Core::Object* parent)
-    : Core::Object(parent)
+Object::Object(Core::EventReceiver* parent)
+    : Core::EventReceiver(parent)
 {
 }
 
