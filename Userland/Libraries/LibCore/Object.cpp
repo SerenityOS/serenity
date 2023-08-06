@@ -136,22 +136,6 @@ void Object::stop_timer()
     m_timer_id = 0;
 }
 
-void Object::dump_tree(int indent)
-{
-    for (int i = 0; i < indent; ++i) {
-        out(" ");
-    }
-    out("{}{{{:p}}}", class_name(), this);
-    if (!name().is_null())
-        out(" {}", name());
-    outln();
-
-    for_each_child([&](auto& child) {
-        child.dump_tree(indent + 2);
-        return IterationDecision::Continue;
-    });
-}
-
 void Object::deferred_invoke(Function<void()> invokee)
 {
     Core::deferred_invoke([invokee = move(invokee), strong_this = NonnullRefPtr(*this)] { invokee(); });
