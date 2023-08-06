@@ -856,6 +856,10 @@ void dump_tree(StringBuilder& builder, Painting::Paintable const& paintable, boo
         if (paintable_box.has_scrollable_overflow()) {
             builder.appendff(" overflow: {}", paintable_box.scrollable_overflow_rect());
         }
+
+        if (!paintable_box.scroll_offset().is_zero()) {
+            builder.appendff(" scroll-offset: {}", paintable_box.scroll_offset());
+        }
     }
     builder.append("\n"sv);
     for (auto const* child = paintable.first_child(); child; child = child->next_sibling()) {
