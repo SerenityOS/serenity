@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/AtomicRefCounted.h>
 #include <AK/DeprecatedString.h>
 #include <AK/DistinctNumeric.h>
 #include <AK/Function.h>
@@ -42,7 +43,7 @@ enum class ThreadState : u8 {
 };
 
 class Thread final
-    : public RefCounted<Thread>
+    : public AtomicRefCounted<Thread>
     , public Weakable<Thread> {
 public:
     static NonnullRefPtr<Thread> construct(Function<intptr_t()> action, StringView thread_name = {})
