@@ -77,15 +77,15 @@ public:
         No
     };
     DeprecatedString const& scheme() const { return m_scheme; }
-    DeprecatedString username(ApplyPercentDecoding = ApplyPercentDecoding::Yes) const;
-    DeprecatedString password(ApplyPercentDecoding = ApplyPercentDecoding::Yes) const;
+    DeprecatedString username() const;
+    DeprecatedString password() const;
     Host const& host() const { return m_host; }
     ErrorOr<String> serialized_host() const;
-    DeprecatedString basename(ApplyPercentDecoding = ApplyPercentDecoding::Yes) const;
-    DeprecatedString query(ApplyPercentDecoding = ApplyPercentDecoding::No) const;
-    DeprecatedString fragment(ApplyPercentDecoding = ApplyPercentDecoding::Yes) const;
+    DeprecatedString basename() const;
+    DeprecatedString query() const;
+    DeprecatedString fragment() const;
     Optional<u16> port() const { return m_port; }
-    DeprecatedString path_segment_at_index(size_t index, ApplyPercentDecoding = ApplyPercentDecoding::Yes) const;
+    DeprecatedString path_segment_at_index(size_t index) const;
     size_t path_segment_count() const { return m_paths.size(); }
 
     u16 port_or_default() const { return m_port.value_or(default_port_for_scheme(m_scheme)); }
@@ -111,7 +111,7 @@ public:
         m_paths.append("");
     }
 
-    DeprecatedString serialize_path(ApplyPercentDecoding = ApplyPercentDecoding::Yes) const;
+    DeprecatedString serialize_path() const;
     DeprecatedString serialize(ExcludeFragment = ExcludeFragment::No) const;
     DeprecatedString serialize_for_display() const;
     DeprecatedString to_deprecated_string() const { return serialize(); }
