@@ -21,10 +21,10 @@ jobs:
       - name: Checkout SerenityOS/serenity
         uses: actions/checkout@v3
 
-      - name: Checkout linusg/libjs-test262
+      - name: Checkout SerenityOS/libjs-test262
         uses: actions/checkout@v3
         with:
-          repository: linusg/libjs-test262
+          repository: SerenityOS/libjs-test262
           path: libjs-test262
 
       - name: Checkout linusg/libjs-website
