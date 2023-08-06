@@ -15,16 +15,9 @@
 
 namespace Core {
 
-IntrusiveList<&Object::m_all_objects_list_node>& Object::all_objects()
-{
-    static IntrusiveList<&Object::m_all_objects_list_node> objects;
-    return objects;
-}
-
 Object::Object(Object* parent)
     : m_parent(parent)
 {
-    all_objects().append(*this);
     if (m_parent)
         m_parent->add_child(*this);
 }
@@ -39,7 +32,6 @@ Object::~Object()
     for (auto& child : children)
         child->m_parent = nullptr;
 
-    all_objects().remove(*this);
     stop_timer();
     if (m_parent)
         m_parent->remove_child(*this);
