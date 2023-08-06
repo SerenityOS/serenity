@@ -86,19 +86,19 @@ void URL::set_scheme(DeprecatedString scheme)
     m_valid = compute_validity();
 }
 
-void URL::set_username(DeprecatedString username, ApplyPercentEncoding apply_percent_encoding)
+// https://url.spec.whatwg.org/#set-the-username
+void URL::set_username(StringView username)
 {
-    if (apply_percent_encoding == ApplyPercentEncoding::Yes)
-        username = deprecated_string_percent_encode(username, PercentEncodeSet::Userinfo);
-    m_username = move(username);
+    // To set the username given a url and username, set url’s username to the result of running UTF-8 percent-encode on username using the userinfo percent-encode set.
+    m_username = deprecated_string_percent_encode(username, PercentEncodeSet::Userinfo);
     m_valid = compute_validity();
 }
 
-void URL::set_password(DeprecatedString password, ApplyPercentEncoding apply_percent_encoding)
+// https://url.spec.whatwg.org/#set-the-password
+void URL::set_password(StringView password)
 {
-    if (apply_percent_encoding == ApplyPercentEncoding::Yes)
-        password = deprecated_string_percent_encode(password, PercentEncodeSet::Userinfo);
-    m_password = move(password);
+    // To set the password given a url and password, set url’s password to the result of running UTF-8 percent-encode on password using the userinfo percent-encode set.
+    m_password = deprecated_string_percent_encode(password, PercentEncodeSet::Userinfo);
     m_valid = compute_validity();
 }
 
@@ -124,39 +124,28 @@ void URL::set_port(Optional<u16> port)
     m_valid = compute_validity();
 }
 
-void URL::set_paths(Vector<DeprecatedString> paths, ApplyPercentEncoding apply_percent_encoding)
+void URL::set_paths(Vector<DeprecatedString> const& paths)
 {
-    if (apply_percent_encoding == ApplyPercentEncoding::Yes) {
-        Vector<DeprecatedString> encoded_paths;
-        encoded_paths.ensure_capacity(paths.size());
-        for (auto& segment : paths)
-            encoded_paths.unchecked_append(deprecated_string_percent_encode(segment, PercentEncodeSet::Path));
-        m_paths = move(encoded_paths);
-    } else {
-        m_paths = move(paths);
-    }
+    m_paths.clear_with_capacity();
+    m_paths.ensure_capacity(paths.size());
+    for (auto const& segment : paths)
+        m_paths.unchecked_append(deprecated_string_percent_encode(segment, PercentEncodeSet::Path));
     m_valid = compute_validity();
 }
 
-void URL::append_path(DeprecatedString path, ApplyPercentEncoding apply_percent_encoding)
+void URL::append_path(StringView path)
 {
-    if (apply_percent_encoding == ApplyPercentEncoding::Yes)
-        path = deprecated_string_percent_encode(path, PercentEncodeSet::Path);
-    m_paths.append(path);
+    m_paths.append(deprecated_string_percent_encode(path, PercentEncodeSet::Path));
 }
 
-void URL::set_query(DeprecatedString query, ApplyPercentEncoding apply_percent_encoding)
+void URL::set_query(StringView query)
 {
-    if (apply_percent_encoding == ApplyPercentEncoding::Yes)
-        query = deprecated_string_percent_encode(query, is_special() ? PercentEncodeSet::SpecialQuery : PercentEncodeSet::Query);
-    m_query = move(query);
+    m_query = deprecated_string_percent_encode(query, is_special() ? PercentEncodeSet::SpecialQuery : PercentEncodeSet::Query);
 }
 
-void URL::set_fragment(DeprecatedString fragment, ApplyPercentEncoding apply_percent_encoding)
+void URL::set_fragment(StringView fragment)
 {
-    if (apply_percent_encoding == ApplyPercentEncoding::Yes)
-        fragment = deprecated_string_percent_encode(fragment, PercentEncodeSet::Fragment);
-    m_fragment = move(fragment);
+    m_fragment = deprecated_string_percent_encode(fragment, PercentEncodeSet::Fragment);
 }
 
 // https://url.spec.whatwg.org/#cannot-have-a-username-password-port

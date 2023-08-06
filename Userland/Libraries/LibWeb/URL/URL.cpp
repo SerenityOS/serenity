@@ -237,7 +237,7 @@ void URL::set_username(String const& username)
         return;
 
     // 2. Set the username given this’s URL and the given value.
-    m_url.set_username(username.to_deprecated_string(), AK::URL::ApplyPercentEncoding::Yes);
+    m_url.set_username(username);
 }
 
 // https://url.spec.whatwg.org/#dom-url-password
@@ -257,7 +257,7 @@ void URL::set_password(String const& password)
         return;
 
     // 2. Set the password given this’s URL and the given value.
-    m_url.set_password(password.to_deprecated_string(), AK::URL::ApplyPercentEncoding::Yes);
+    m_url.set_password(password);
 }
 
 // https://url.spec.whatwg.org/#dom-url-host
