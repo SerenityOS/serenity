@@ -77,6 +77,11 @@ JS::GCPtr<Painting::Paintable> Box::create_paintable() const
     return Painting::PaintableBox::create(*this);
 }
 
+Painting::PaintableBox* Box::paintable_box()
+{
+    return static_cast<Painting::PaintableBox*>(Node::paintable());
+}
+
 Painting::PaintableBox const* Box::paintable_box() const
 {
     return static_cast<Painting::PaintableBox const*>(Node::paintable());

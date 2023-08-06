@@ -23,6 +23,7 @@ class Box : public NodeWithStyleAndBoxModelMetrics {
 
 public:
     Painting::PaintableBox const* paintable_box() const;
+    Painting::PaintableBox* paintable_box();
 
     virtual void set_needs_display() override;
 
