@@ -250,6 +250,11 @@ static void serialize_ipv6_address(URL::IPv6Address const& address, StringBuilde
         }
     }
 
+    if (current_sequence_length > longest_sequence_length) {
+        longest_sequence_length = current_sequence_length;
+        compress = current_sequence_start;
+    }
+
     // 3. If there is no sequence of address’s IPv6 pieces that are 0 that is longer than 1, then set compress to null.
     if (longest_sequence_length <= 1)
         compress = {};
