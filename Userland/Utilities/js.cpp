@@ -198,30 +198,21 @@ static ErrorOr<void> write_to_file(String const& path)
     return {};
 }
 
-static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView source, StringView source_name)
+static ErrorOr<bool> parse_and_run(JS::Realm& realm, StringView source, StringView source_name)
 {
-    enum class ReturnEarly {
-        No,
-        Yes,
-    };
+    auto& vm = realm.vm();
 
     JS::ThrowCompletionOr<JS::Value> result { JS::js_undefined() };
 
-    auto run_script_or_module = [&](auto& script_or_module) -> ErrorOr<ReturnEarly> {
+    auto run_script_or_module = [&](auto& script_or_module) {
         if (s_dump_ast)
             script_or_module->parse_node().dump(0);
 
-        if (auto* bytecode_interpreter = g_vm->bytecode_interpreter_if_exists()) {
-            result = bytecode_interpreter->run(*script_or_module);
-        } else {
-            result = interpreter.run(*script_or_module);
-        }
-
-        return ReturnEarly::No;
+        result = vm.bytecode_interpreter().run(*script_or_module);
     };
 
     if (!s_as_module) {
-        auto script_or_error = JS::Script::parse(source, interpreter.realm(), source_name);
+        auto script_or_error = JS::Script::parse(source, realm, source_name);
         if (script_or_error.is_error()) {
             auto error = script_or_error.error()[0];
             auto hint = error.source_location_hint(source);
@@ -230,14 +221,12 @@ static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView sour
 
             auto error_string = TRY(error.to_string());
             outln("{}", error_string);
-            result = interpreter.vm().throw_completion<JS::SyntaxError>(move(error_string));
+            result = vm.throw_completion<JS::SyntaxError>(move(error_string));
         } else {
-            auto return_early = TRY(run_script_or_module(script_or_error.value()));
-            if (return_early == ReturnEarly::Yes)
-                return true;
+            run_script_or_module(script_or_error.value());
         }
     } else {
-        auto module_or_error = JS::SourceTextModule::parse(source, interpreter.realm(), source_name);
+        auto module_or_error = JS::SourceTextModule::parse(source, realm, source_name);
         if (module_or_error.is_error()) {
             auto error = module_or_error.error()[0];
             auto hint = error.source_location_hint(source);
@@ -246,11 +235,9 @@ static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView sour
 
             auto error_string = TRY(error.to_string());
             outln("{}", error_string);
-            result = interpreter.vm().throw_completion<JS::SyntaxError>(move(error_string));
+            result = vm.throw_completion<JS::SyntaxError>(move(error_string));
         } else {
-            auto return_early = TRY(run_script_or_module(module_or_error.value()));
-            if (return_early == ReturnEarly::Yes)
-                return true;
+            run_script_or_module(module_or_error.value());
         }
     }
 
@@ -464,7 +451,7 @@ JS_DEFINE_NATIVE_FUNCTION(ScriptObject::print)
     return JS::js_undefined();
 }
 
-static ErrorOr<void> repl(JS::Interpreter& interpreter)
+static ErrorOr<void> repl(JS::Realm& realm)
 {
     while (!s_fail_repl) {
         auto const piece = TRY(read_next_piece());
@@ -472,7 +459,7 @@ static ErrorOr<void> repl(JS::Interpreter& interpreter)
             continue;
 
         g_repl_statements.append(piece);
-        TRY(parse_and_run(interpreter, piece, "REPL"sv));
+        TRY(parse_and_run(realm, piece, "REPL"sv));
     }
     return {};
 }
@@ -572,13 +559,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool use_test262_global = false;
     StringView evaluate_script;
     Vector<StringView> script_paths;
-    bool use_ast_interpreter = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This is a JavaScript interpreter.");
     args_parser.add_option(s_dump_ast, "Dump the AST", "dump-ast", 'A');
     args_parser.add_option(JS::Bytecode::g_dump_bytecode, "Dump the bytecode", "dump-bytecode", 'd');
-    args_parser.add_option(use_ast_interpreter, "Enable JavaScript AST interpreter (deprecated)", "ast", 0);
     args_parser.add_option(s_as_module, "Treat as module", "as-module", 'm');
     args_parser.add_option(s_print_last_result, "Print last result", "print-last-result", 'l');
     args_parser.add_option(s_strip_ansi, "Disable ANSI colors", "disable-ansi-colors", 'i');
@@ -591,7 +576,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(script_paths, "Path to script files", "scripts", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    JS::Bytecode::Interpreter::set_enabled(!use_ast_interpreter);
+    JS::Bytecode::Interpreter::set_enabled(true);
 
     bool syntax_highlight = !disable_syntax_highlight;
 
@@ -620,19 +605,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         };
     }
 
-    OwnPtr<JS::Interpreter> interpreter;
-
     // FIXME: Figure out some way to interrupt the interpreter now that vm.exception() is gone.
 
     if (evaluate_script.is_empty() && script_paths.is_empty()) {
         s_print_last_result = true;
-        interpreter = JS::Interpreter::create<ReplObject>(*g_vm);
-        auto& console_object = *interpreter->realm().intrinsics().console_object();
+
+        auto root_execution_context = JS::create_simple_execution_context<ReplObject>(*g_vm);
+        auto& realm = *root_execution_context->realm;
+
+        auto& console_object = *realm.intrinsics().console_object();
         ReplConsoleClient console_client(console_object.console());
         console_object.console().set_client(console_client);
-        interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
+        g_vm->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
 
-        auto& global_environment = interpreter->realm().global_environment();
+        auto& global_environment = realm.global_environment();
 
         s_editor = Line::Editor::construct();
         s_editor->load_history(s_history_path.to_deprecated_string());
@@ -706,7 +692,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             editor.set_prompt(prompt_for_level(open_indents).release_value_but_fixme_should_propagate_errors().to_deprecated_string());
         };
 
-        auto complete = [&interpreter, &global_environment](Line::Editor const& editor) -> Vector<Line::CompletionSuggestion> {
+        auto complete = [&realm, &global_environment](Line::Editor const& editor) -> Vector<Line::CompletionSuggestion> {
             auto line = editor.line(editor.cursor());
 
             JS::Lexer lexer { line };
@@ -815,7 +801,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 break;
             }
             case CompleteVariable: {
-                auto const& variable = interpreter->realm().global_object();
+                auto const& variable = realm.global_object();
                 list_all_properties(variable.shape(), variable_name);
 
                 for (auto const& name : global_environment.declarative_record().bindings()) {
@@ -834,19 +820,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return results;
         };
         s_editor->on_tab_complete = move(complete);
-        TRY(repl(*interpreter));
+        TRY(repl(realm));
         s_editor->save_history(s_history_path.to_deprecated_string());
     } else {
-        if (use_test262_global) {
-            interpreter = JS::Interpreter::create<JS::Test262::GlobalObject>(*g_vm);
-        } else {
-            interpreter = JS::Interpreter::create<ScriptObject>(*g_vm);
-        }
+        OwnPtr<JS::ExecutionContext> root_execution_context;
+        if (use_test262_global)
+            root_execution_context = JS::create_simple_execution_context<JS::Test262::GlobalObject>(*g_vm);
+        else
+            root_execution_context = JS::create_simple_execution_context<ScriptObject>(*g_vm);
 
-        auto& console_object = *interpreter->realm().intrinsics().console_object();
+        auto& realm = *root_execution_context->realm;
+        auto& console_object = *realm.intrinsics().console_object();
         ReplConsoleClient console_client(console_object.console());
         console_object.console().set_client(console_client);
-        interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
+        g_vm->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
 
         signal(SIGINT, [](int) {
             sigint_handler();
@@ -883,7 +870,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         // We resolve modules as if it is the first file
 
-        if (!TRY(parse_and_run(*interpreter, builder.string_view(), source_name)))
+        if (!TRY(parse_and_run(realm, builder.string_view(), source_name)))
             return 1;
     }
 
