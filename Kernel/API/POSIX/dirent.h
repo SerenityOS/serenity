@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <Kernel/API/POSIX/sys/limits.h>
 #include <Kernel/API/POSIX/sys/types.h>
 
 #ifdef __cplusplus
@@ -32,6 +33,8 @@ enum {
     DT_WHT = 14
 #define DT_WHT DT_WHT
 };
+
+#define MAXNAMLEN NAME_MAX
 
 #ifdef __cplusplus
 }
