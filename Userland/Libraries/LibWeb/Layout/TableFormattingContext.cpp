@@ -253,7 +253,13 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
         // The outer min-content width of a table-cell is max(min-width, min-content width) adjusted by the cell intrinsic offsets.
         auto min_width = computed_values.min_width().to_px(cell.box, containing_block.content_width());
         auto cell_intrinsic_width_offsets = padding_left + padding_right + border_left + border_right;
-        cell.outer_min_width = max(min_width, min_content_width) + cell_intrinsic_width_offsets;
+        // For fixed mode, according to https://www.w3.org/TR/css-tables-3/#computing-column-measures:
+        // The min-content and max-content width of cells is considered zero unless they are directly specified as a length-percentage,
+        // in which case they are resolved based on the table width (if it is definite, otherwise use 0).
+        auto width_is_specified_length_or_percentage = computed_values.width().is_length() || computed_values.width().is_percentage();
+        if (!use_fixed_mode_layout() || width_is_specified_length_or_percentage) {
+            cell.outer_min_width = max(min_width, min_content_width) + cell_intrinsic_width_offsets;
+        }
 
         // The tables specification isn't explicit on how to use the height and max-height CSS properties in the outer max-content formulas.
         // However, during this early phase we don't have enough information to resolve percentage sizes yet and the formulas for outer sizes
@@ -274,6 +280,9 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
         // See the explanation for height and max_height above.
         auto width = computed_values.width().is_length() ? computed_values.width().to_px(cell.box, containing_block.content_width()) : 0;
         auto max_width = computed_values.max_width().is_length() ? computed_values.max_width().to_px(cell.box, containing_block.content_width()) : INFINITY;
+        if (use_fixed_mode_layout() && !width_is_specified_length_or_percentage) {
+            continue;
+        }
         if (m_columns[cell.column_index].is_constrained) {
             // The outer max-content width of a table-cell in a constrained column is
             // max(min-width, width, min-content width, min(max-width, width)) adjusted by the cell intrinsic offsets.
@@ -342,8 +351,11 @@ void TableFormattingContext::initialize_table_measures<TableFormattingContext::R
 template<>
 void TableFormattingContext::initialize_table_measures<TableFormattingContext::Column>()
 {
+    // Implement the following parts of the specification, accounting for fixed layout mode:
+    // https://www.w3.org/TR/css-tables-3/#min-content-width-of-a-column-based-on-cells-of-span-up-to-1
+    // https://www.w3.org/TR/css-tables-3/#max-content-width-of-a-column-based-on-cells-of-span-up-to-1
     for (auto& cell : m_cells) {
-        if (cell.column_span == 1) {
+        if (cell.column_span == 1 && (cell.row_index == 0 || !use_fixed_mode_layout())) {
             m_columns[cell.column_index].min_size = max(m_columns[cell.column_index].min_size, cell.outer_min_width);
             m_columns[cell.column_index].max_size = max(m_columns[cell.column_index].max_size, cell.outer_max_width);
         }
@@ -656,24 +668,24 @@ void TableFormattingContext::assign_columns_width_linear_combination(Vector<CSSP
     }
 }
 
-template<class ColumnFilter>
-bool TableFormattingContext::distribute_excess_width_proportionally_to_max_width(CSSPixels excess_width, ColumnFilter column_filter)
+template<class ColumnFilter, class BaseWidthGetter>
+bool TableFormattingContext::distribute_excess_width_proportionally_to_base_width(CSSPixels excess_width, ColumnFilter column_filter, BaseWidthGetter base_width_getter)
 {
     bool found_matching_columns = false;
-    CSSPixels total_max_width = 0;
+    CSSPixels total_base_width = 0;
     for (auto const& column : m_columns) {
         if (column_filter(column)) {
-            total_max_width += column.max_size;
+            total_base_width += base_width_getter(column);
             found_matching_columns = true;
         }
     }
     if (!found_matching_columns) {
         return false;
     }
-    VERIFY(total_max_width > 0);
+    VERIFY(total_base_width > 0);
     for (auto& column : m_columns) {
         if (column_filter(column)) {
-            column.used_width += excess_width * column.max_size / static_cast<double>(total_max_width);
+            column.used_width += excess_width * base_width_getter(column) / static_cast<double>(total_base_width);
         }
     }
     return true;
@@ -740,6 +752,11 @@ void TableFormattingContext::distribute_width_to_columns()
     // 1. The min-content sizing-guess is the set of column width assignments where each column is assigned its min-content width.
     for (size_t i = 0; i < m_columns.size(); ++i) {
         auto& column = m_columns[i];
+        // In fixed mode, the min-content width of percent-columns and auto-columns is considered to be zero:
+        // https://www.w3.org/TR/css-tables-3/#width-distribution-in-fixed-mode
+        if (use_fixed_mode_layout() && !column.is_constrained) {
+            continue;
+        }
         column.used_width = column.min_size;
         candidate_widths[i] = column.min_size;
     }
@@ -821,14 +838,20 @@ void TableFormattingContext::distribute_excess_width_to_columns(CSSPixels availa
         return;
     }
 
+    if (use_fixed_mode_layout()) {
+        distribute_excess_width_to_columns_fixed_mode(excess_width);
+        return;
+    }
+
     // 1. If there are non-constrained columns that have originating cells with intrinsic percentage width of 0% and with nonzero
     //    max-content width (aka the columns allowed to grow by this rule), the distributed widths of the columns allowed to grow
     //    by this rule are increased in proportion to max-content width so the total increase adds to the excess width.
-    if (distribute_excess_width_proportionally_to_max_width(
+    if (distribute_excess_width_proportionally_to_base_width(
             excess_width,
             [](auto const& column) {
                 return !column.is_constrained && column.has_originating_cells && column.intrinsic_percentage == 0 && column.max_size > 0;
-            })) {
+            },
+            [](auto const& column) { return column.max_size; })) {
         excess_width = available_width - compute_columns_total_used_width();
     }
     if (excess_width == 0) {
@@ -849,11 +872,12 @@ void TableFormattingContext::distribute_excess_width_to_columns(CSSPixels availa
     // 3. Otherwise, if there are constrained columns with intrinsic percentage width of 0% and with nonzero max-content width
     //    (aka the columns allowed to grow by this rule, which, due to other rules, must have originating cells), the distributed widths of the
     //    columns allowed to grow by this rule are increased in proportion to max-content width so the total increase adds to the excess width.
-    if (distribute_excess_width_proportionally_to_max_width(
+    if (distribute_excess_width_proportionally_to_base_width(
             excess_width,
             [](auto const& column) {
                 return column.is_constrained && column.intrinsic_percentage == 0 && column.max_size > 0;
-            })) {
+            },
+            [](auto const& column) { return column.max_size; })) {
         excess_width = available_width - compute_columns_total_used_width();
     }
     if (excess_width == 0) {
@@ -882,6 +906,27 @@ void TableFormattingContext::distribute_excess_width_to_columns(CSSPixels availa
     }
     // 6. Otherwise, the distributed widths of all columns are increased by equal amounts so the total increase adds to the excess width.
     distribute_excess_width_equally(excess_width, [](auto const&) { return true; });
+}
+
+void TableFormattingContext::distribute_excess_width_to_columns_fixed_mode(CSSPixels excess_width)
+{
+    // Implements the fixed mode for https://www.w3.org/TR/css-tables-3/#distributing-width-to-columns.
+
+    // If there are any columns with no width specified, the excess width is distributed in equally to such columns
+    if (distribute_excess_width_equally(excess_width, [](auto const& column) { return !column.is_constrained && !column.has_intrinsic_percentage; })) {
+        return;
+    }
+    // otherwise, if there are columns with non-zero length widths from the base assignment, the excess width is distributed proportionally to width among those columns
+    if (distribute_excess_width_proportionally_to_base_width(
+            excess_width, [](auto const& column) { return column.used_width > 0; }, [](auto const& column) { return column.used_width; })) {
+        return;
+    }
+    // otherwise, if there are columns with non-zero percentage widths from the base assignment, the excess width is distributed proportionally to percentage width among those columns
+    if (distribute_excess_width_by_intrinsic_percentage(excess_width, [](auto const& column) { return column.intrinsic_percentage > 0; })) {
+        return;
+    }
+    // otherwise, the excess width is distributed equally to the zero-sized columns
+    distribute_excess_width_equally(excess_width, [](auto const& column) { return column.used_width == 0; });
 }
 
 void TableFormattingContext::compute_table_height(LayoutMode layout_mode)
@@ -1182,6 +1227,16 @@ void TableFormattingContext::position_cell_boxes()
             cell_state.border_box_left() + m_columns[cell.column_index].left_offset + cell.column_index * border_spacing_horizontal(),
             cell_state.border_box_top());
     }
+}
+
+bool TableFormattingContext::use_fixed_mode_layout() const
+{
+    // Implements https://www.w3.org/TR/css-tables-3/#in-fixed-mode.
+    // A table-root is said to be laid out in fixed mode whenever the computed value of the table-layout property is equal to fixed, and the
+    // specified width of the table root is either a <length-percentage>, min-content or fit-content. When the specified width is not one of
+    // those values, or if the computed value of the table-layout property is auto, then the table-root is said to be laid out in auto mode.
+    auto const& width = table_box().computed_values().width();
+    return table_box().computed_values().table_layout() == CSS::TableLayout::Fixed && (width.is_length() || width.is_percentage() || width.is_min_content() || width.is_fit_content());
 }
 
 bool TableFormattingContext::border_is_less_specific(const CSS::BorderData& a, const CSS::BorderData& b)

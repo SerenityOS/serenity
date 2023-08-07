@@ -50,6 +50,7 @@ private:
     void compute_table_width();
     void distribute_width_to_columns();
     void distribute_excess_width_to_columns(CSSPixels available_width);
+    void distribute_excess_width_to_columns_fixed_mode(CSSPixels excess_width);
     void compute_table_height(LayoutMode layout_mode);
     void distribute_height_to_rows();
     void position_row_boxes();
@@ -62,12 +63,14 @@ private:
     void commit_candidate_column_widths(Vector<CSSPixels> const& candidate_widths);
     void assign_columns_width_linear_combination(Vector<CSSPixels> const& candidate_widths, CSSPixels available_width);
 
-    template<class ColumnFilter>
-    bool distribute_excess_width_proportionally_to_max_width(CSSPixels excess_width, ColumnFilter column_filter);
+    template<class ColumnFilter, class BaseWidthGetter>
+    bool distribute_excess_width_proportionally_to_base_width(CSSPixels excess_width, ColumnFilter column_filter, BaseWidthGetter base_width_getter);
     template<class ColumnFilter>
     bool distribute_excess_width_equally(CSSPixels excess_width, ColumnFilter column_filter);
     template<class ColumnFilter>
     bool distribute_excess_width_by_intrinsic_percentage(CSSPixels excess_width, ColumnFilter column_filter);
+
+    bool use_fixed_mode_layout() const;
 
     CSSPixels m_table_height { 0 };
     CSSPixels m_automatic_content_height { 0 };
