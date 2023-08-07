@@ -76,11 +76,13 @@ set(SOURCES
     WebView.cpp
     ViewImpl.cpp
     EventLoopImplementationGLib.cpp
+    "${SERENITY_SOURCE_DIR}/Ladybird/Utilities.cpp"
+    "${SERENITY_SOURCE_DIR}/Ladybird/HelperProcess.cpp"
     $<TARGET_OBJECTS:resources>
 )
 
 add_executable(ladybird ${SOURCES})
-target_link_libraries(ladybird PRIVATE PkgConfig::gtk4 PkgConfig::libadwaita Lagom::Core Lagom::WebView Lagom::Gfx Lagom::Web Lagom::IPC)
+target_link_libraries(ladybird PRIVATE PkgConfig::gtk4 PkgConfig::libadwaita Lagom::Core Lagom::WebView Lagom::Gfx Lagom::Web Lagom::IPC Lagom::FileSystem Lagom::SQL Lagom::Protocol)
 
 include_directories(
     "${SERENITY_SOURCE_DIR}/Userland/Services"
@@ -95,6 +97,7 @@ set(WEBCONTENT_SOURCES
     "${WEBCONTENT_SOURCE_DIR}/WebDriverConnection.cpp"
     "${SERENITY_SOURCE_DIR}/Ladybird/FontPlugin.cpp"
     "${SERENITY_SOURCE_DIR}/Ladybird/ImageCodecPlugin.cpp"
+    "${SERENITY_SOURCE_DIR}/Ladybird/Utilities.cpp"
     WebContentMain.cpp
 )
 add_executable(WebContent ${WEBCONTENT_SOURCES})
