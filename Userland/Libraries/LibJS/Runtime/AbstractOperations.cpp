@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,7 +11,6 @@
 #include <AK/Optional.h>
 #include <AK/Utf16View.h>
 #include <LibJS/Bytecode/Interpreter.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Accessor.h>
@@ -24,6 +23,7 @@
 #include <LibJS/Runtime/ErrorTypes.h>
 #include <LibJS/Runtime/FunctionEnvironment.h>
 #include <LibJS/Runtime/FunctionObject.h>
+#include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/ObjectEnvironment.h>
@@ -700,26 +700,21 @@ ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller,
 
     // 29. If result.[[Type]] is normal, then
     //     a. Set result to the result of evaluating body.
-    if (auto* bytecode_interpreter = vm.bytecode_interpreter_if_exists()) {
-        auto executable_result = Bytecode::Generator::generate(program);
-        if (executable_result.is_error())
-            return vm.throw_completion<InternalError>(ErrorType::NotImplemented, TRY_OR_THROW_OOM(vm, executable_result.error().to_string()));
+    auto executable_result = Bytecode::Generator::generate(program);
+    if (executable_result.is_error())
+        return vm.throw_completion<InternalError>(ErrorType::NotImplemented, TRY_OR_THROW_OOM(vm, executable_result.error().to_string()));
 
-        auto executable = executable_result.release_value();
-        executable->name = "eval"sv;
-        if (Bytecode::g_dump_bytecode)
-            executable->dump();
-        auto result_or_error = bytecode_interpreter->run_and_return_frame(eval_realm, *executable, nullptr);
-        if (result_or_error.value.is_error())
-            return result_or_error.value.release_error();
+    auto executable = executable_result.release_value();
+    executable->name = "eval"sv;
+    if (Bytecode::g_dump_bytecode)
+        executable->dump();
+    auto result_or_error = vm.bytecode_interpreter().run_and_return_frame(eval_realm, *executable, nullptr);
+    if (result_or_error.value.is_error())
+        return result_or_error.value.release_error();
 
-        auto& result = result_or_error.frame->registers[0];
-        if (!result.is_empty())
-            eval_result = result;
-    } else {
-        auto& ast_interpreter = vm.interpreter();
-        eval_result = TRY(program->execute(ast_interpreter));
-    }
+    auto& result = result_or_error.frame->registers[0];
+    if (!result.is_empty())
+        eval_result = result;
 
     // 30. If result.[[Type]] is normal and result.[[Value]] is empty, then
     //     a. Set result to NormalCompletion(undefined).

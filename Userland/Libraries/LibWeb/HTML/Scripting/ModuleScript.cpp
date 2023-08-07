@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/ModuleRequest.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/Fetching.h>
@@ -135,9 +134,6 @@ JS::Promise* JavaScriptModuleScript::run(PreventErrorReporting)
         // 1. Let record be script's record.
         auto record = m_record;
         VERIFY(record);
-
-        auto interpreter = JS::Interpreter::create_with_existing_realm(settings.realm());
-        JS::VM::InterpreterExecutionScope scope(*interpreter);
 
         // 2. Set evaluationPromise to record.Evaluate().
         auto elevation_promise_or_error = record->evaluate(vm());

@@ -7,7 +7,6 @@
 #include <AK/Debug.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibJS/Bytecode/Interpreter.h>
-#include <LibJS/Interpreter.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
@@ -95,12 +94,7 @@ JS::Completion ClassicScript::run(RethrowErrors rethrow_errors, JS::GCPtr<JS::En
         auto timer = Core::ElapsedTimer::start_new();
 
         // 6. Otherwise, set evaluationStatus to ScriptEvaluation(script's record).
-        if (auto* bytecode_interpreter = vm().bytecode_interpreter_if_exists()) {
-            evaluation_status = bytecode_interpreter->run(*m_script_record, lexical_environment_override);
-        } else {
-            auto interpreter = JS::Interpreter::create_with_existing_realm(m_script_record->realm());
-            evaluation_status = interpreter->run(*m_script_record, lexical_environment_override);
-        }
+        evaluation_status = vm().bytecode_interpreter().run(*m_script_record, lexical_environment_override);
 
         // FIXME: If ScriptEvaluation does not complete because the user agent has aborted the running script, leave evaluationStatus as null.
 

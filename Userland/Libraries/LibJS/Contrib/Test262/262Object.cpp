@@ -14,7 +14,6 @@
 #include <LibJS/Contrib/Test262/GlobalObject.h>
 #include <LibJS/Contrib/Test262/IsHTMLDDA.h>
 #include <LibJS/Heap/Cell.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
@@ -103,12 +102,7 @@ JS_DEFINE_NATIVE_FUNCTION($262Object::eval_script)
     }
 
     // 5. Let status be ScriptEvaluation(s).
-    auto status = [&] {
-        if (auto* bytecode_interpreter = vm.bytecode_interpreter_if_exists())
-            return bytecode_interpreter->run(script_or_error.value());
-        else
-            return vm.interpreter().run(script_or_error.value());
-    }();
+    auto status = vm.bytecode_interpreter().run(script_or_error.value());
 
     // 6. Return Completion(status).
     return status;

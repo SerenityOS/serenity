@@ -6,10 +6,10 @@
  */
 
 #include <AK/TypeCasts.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
+#include <LibJS/Runtime/VM.h>
 
 namespace JS {
 

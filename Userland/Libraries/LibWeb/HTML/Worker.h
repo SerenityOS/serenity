@@ -8,7 +8,6 @@
 
 #include <AK/RefCounted.h>
 #include <AK/URLParser.h>
-#include <LibJS/Interpreter.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/MessageEvent.h>
@@ -79,9 +78,7 @@ private:
     Bindings::WebEngineCustomData m_custom_data;
 
     NonnullRefPtr<JS::VM> m_worker_vm;
-    NonnullOwnPtr<JS::Interpreter> m_interpreter;
     JS::GCPtr<WorkerEnvironmentSettingsObject> m_inner_settings;
-    JS::VM::InterpreterExecutionScope m_interpreter_scope;
     RefPtr<WorkerDebugConsoleClient> m_console;
 
     JS::NonnullGCPtr<MessagePort> m_implicit_port;

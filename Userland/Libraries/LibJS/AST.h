@@ -53,7 +53,6 @@ public:
     // NOTE: This is here to stop ASAN complaining about mismatch between new/delete sizes in ASTNodeWithTailArray.
     void operator delete(void* ptr) { ::operator delete(ptr); }
 
-    virtual Completion execute(Interpreter&) const = 0;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const;
     virtual void dump(int indent) const;
 
@@ -166,7 +165,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&) const;
@@ -197,7 +195,6 @@ class IterationStatement : public Statement {
 public:
     using Statement::Statement;
 
-    virtual Completion loop_evaluation(Interpreter&, Vector<DeprecatedFlyString> const&) const = 0;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&) const;
 
 private:
@@ -210,7 +207,6 @@ public:
         : Statement(source_range)
     {
     }
-    Completion execute(Interpreter&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 };
 
@@ -220,7 +216,6 @@ public:
         : Statement(source_range)
     {
     }
-    Completion execute(Interpreter&) const override { return {}; }
 };
 
 class ExpressionStatement final : public Statement {
@@ -231,7 +226,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -297,8 +291,6 @@ public:
     Vector<NonnullRefPtr<Statement const>> const& children() const { return m_children; }
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
-
-    Completion evaluate_statements(Interpreter&) const;
 
     void add_var_scoped_declaration(NonnullRefPtr<Declaration const> variables);
     void add_lexical_declaration(NonnullRefPtr<Declaration const> variables);
@@ -383,8 +375,6 @@ public:
         for (auto& entry : m_entries)
             entry.m_module_request = &m_module_request;
     }
-
-    virtual Completion execute(Interpreter&) const override;
 
     virtual void dump(int indent) const override;
 
@@ -483,8 +473,6 @@ public:
         }
     }
 
-    virtual Completion execute(Interpreter&) const override;
-
     virtual void dump(int indent) const override;
 
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
@@ -527,8 +515,6 @@ public:
         , m_type(program_type)
     {
     }
-
-    virtual Completion execute(Interpreter&) const override;
 
     bool is_strict_mode() const { return m_is_strict_mode; }
     void set_strict_mode() { m_is_strict_mode = true; }
@@ -575,7 +561,6 @@ public:
         : ScopeNode(source_range)
     {
     }
-    Completion execute(Interpreter&) const override;
 };
 
 class FunctionBody final : public ScopeNode {
@@ -589,8 +574,6 @@ public:
 
     bool in_strict_mode() const { return m_in_strict_mode; }
 
-    virtual Completion execute(Interpreter&) const override;
-
 private:
     bool m_in_strict_mode { false };
 };
@@ -601,7 +584,6 @@ public:
         : ASTNode(source_range)
     {
     }
-    virtual ThrowCompletionOr<Reference> to_reference(Interpreter&) const;
 };
 
 class Declaration : public Statement {
@@ -625,7 +607,6 @@ public:
         : Declaration(source_range)
     {
     }
-    Completion execute(Interpreter&) const override { return {}; }
 
     ThrowCompletionOr<void> for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&&) const override
     {
@@ -681,9 +662,7 @@ public:
     bool is_global() const { return m_is_global; }
     void set_is_global() { m_is_global = true; }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
-    virtual ThrowCompletionOr<Reference> to_reference(Interpreter&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
 private:
@@ -765,7 +744,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -791,7 +769,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
 
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
@@ -811,8 +788,6 @@ public:
         : Expression(source_range)
     {
     }
-
-    Completion execute(Interpreter&) const override { return {}; }
 };
 
 class YieldExpression final : public Expression {
@@ -827,7 +802,6 @@ public:
     Expression const* argument() const { return m_argument; }
     bool is_yield_from() const { return m_is_yield_from; }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -844,7 +818,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -862,7 +835,6 @@ public:
 
     Expression const* argument() const { return m_argument; }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -884,7 +856,6 @@ public:
     Statement const& consequent() const { return *m_consequent; }
     Statement const* alternate() const { return m_alternate; }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -906,8 +877,6 @@ public:
     Expression const& test() const { return *m_test; }
     Statement const& body() const { return *m_body; }
 
-    virtual Completion execute(Interpreter&) const override;
-    virtual Completion loop_evaluation(Interpreter&, Vector<DeprecatedFlyString> const&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&) const override;
@@ -929,8 +898,6 @@ public:
     Expression const& test() const { return *m_test; }
     Statement const& body() const { return *m_body; }
 
-    virtual Completion execute(Interpreter&) const override;
-    virtual Completion loop_evaluation(Interpreter&, Vector<DeprecatedFlyString> const&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&) const override;
@@ -952,7 +919,6 @@ public:
     Expression const& object() const { return *m_object; }
     Statement const& body() const { return *m_body; }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -977,15 +943,11 @@ public:
     Expression const* update() const { return m_update; }
     Statement const& body() const { return *m_body; }
 
-    virtual Completion execute(Interpreter&) const override;
-    virtual Completion loop_evaluation(Interpreter&, Vector<DeprecatedFlyString> const&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&) const override;
 
 private:
-    Completion for_body_evaluation(Interpreter&, Vector<DeprecatedFlyString> const&, size_t per_iteration_bindings_size) const;
-
     RefPtr<ASTNode const> m_init;
     RefPtr<Expression const> m_test;
     RefPtr<Expression const> m_update;
@@ -1006,10 +968,8 @@ public:
     Expression const& rhs() const { return *m_rhs; }
     Statement const& body() const { return *m_body; }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&) const override;
-    virtual Completion loop_evaluation(Interpreter&, Vector<DeprecatedFlyString> const&) const override;
     virtual void dump(int indent) const override;
 
 private:
@@ -1032,10 +992,8 @@ public:
     Expression const& rhs() const { return *m_rhs; }
     Statement const& body() const { return *m_body; }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&) const override;
-    virtual Completion loop_evaluation(Interpreter&, Vector<DeprecatedFlyString> const&) const override;
     virtual void dump(int indent) const override;
 
 private:
@@ -1054,10 +1012,8 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&) const override;
-    virtual Completion loop_evaluation(Interpreter&, Vector<DeprecatedFlyString> const&) const override;
     virtual void dump(int indent) const override;
 
 private:
@@ -1101,7 +1057,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -1127,7 +1082,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -1156,7 +1110,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -1175,7 +1128,6 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Completion execute(Interpreter&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
 private:
@@ -1198,7 +1150,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -1214,7 +1165,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -1230,7 +1180,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -1246,7 +1195,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -1265,7 +1213,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 };
@@ -1282,7 +1229,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -1310,7 +1256,6 @@ public:
 
     DeprecatedFlyString const& string() const { return m_string; }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
 
     virtual bool is_private_identifier() const override { return true; }
@@ -1326,8 +1271,6 @@ public:
         , m_is_static(is_static)
     {
     }
-
-    virtual Completion execute(Interpreter&) const override;
 
     enum class ElementKind {
         Method,
@@ -1431,7 +1374,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -1455,7 +1397,6 @@ public:
     DeprecatedString const& source_text() const { return m_source_text; }
     RefPtr<FunctionExpression const> constructor() const { return m_constructor; }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode_with_lhs_name(Bytecode::Generator&, Optional<Bytecode::IdentifierTableIndex> lhs_name) const;
@@ -1485,7 +1426,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -1514,7 +1454,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter& interpreter) const override;
     virtual void dump(int) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -1531,7 +1470,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -1545,7 +1483,6 @@ public:
         : Expression(source_range)
     {
     }
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 };
@@ -1576,7 +1513,6 @@ public:
 
     static NonnullRefPtr<CallExpression> create(SourceRange, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments, InvocationStyleEnum invocation_style, InsideParenthesesEnum inside_parens);
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -1597,17 +1533,9 @@ protected:
     {
     }
 
-private:
-    struct ThisAndCallee {
-        Value this_value;
-        Value callee;
-    };
-    ThrowCompletionOr<ThisAndCallee> compute_this_and_callee(Interpreter&, Reference const&) const;
-
 protected:
     virtual bool is_call_expression() const override { return true; }
 
-    Completion throw_type_error_for_callee(Interpreter&, Value callee_value, StringView call_type) const;
     Optional<DeprecatedString> expression_string() const;
 
     NonnullRefPtr<Expression const> m_callee;
@@ -1618,8 +1546,6 @@ class NewExpression final : public CallExpression {
 
 public:
     static NonnullRefPtr<NewExpression> create(SourceRange, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments, InvocationStyleEnum invocation_style, InsideParenthesesEnum inside_parens);
-
-    virtual Completion execute(Interpreter&) const override;
 
     virtual bool is_new_expression() const override { return true; }
 
@@ -1656,7 +1582,6 @@ public:
         VERIFY(is_part_of_synthetic_constructor == IsPartOfSyntheticConstructor::Yes);
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -1702,7 +1627,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -1727,7 +1651,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -1770,7 +1693,6 @@ public:
     auto& target() const { return m_target; }
     Expression const* init() const { return m_init; }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
 
 private:
@@ -1789,7 +1711,6 @@ public:
 
     DeclarationKind declaration_kind() const { return m_declaration_kind; }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -1816,7 +1737,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
 
     ThrowCompletionOr<void> for_each_bound_identifier(ThrowCompletionOrVoidCallback<Identifier const&>&&) const override;
@@ -1861,7 +1781,6 @@ public:
     bool is_method() const { return m_is_method; }
 
     virtual void dump(int indent) const override;
-    virtual Completion execute(Interpreter&) const override;
 
 private:
     Type m_property_type;
@@ -1878,7 +1797,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -1898,7 +1816,6 @@ public:
 
     Vector<RefPtr<Expression const>> const& elements() const { return m_elements; }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -1923,7 +1840,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -1944,11 +1860,8 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
-
-    ThrowCompletionOr<Value> get_template_object(Interpreter&) const;
 
 private:
     NonnullRefPtr<Expression const> const m_tag;
@@ -1966,9 +1879,7 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
-    virtual ThrowCompletionOr<Reference> to_reference(Interpreter&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
     bool is_computed() const { return m_computed; }
@@ -2020,8 +1931,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
-    virtual ThrowCompletionOr<JS::Reference> to_reference(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -2029,12 +1938,6 @@ public:
     Vector<Reference> const& references() const { return m_references; }
 
 private:
-    struct ReferenceAndValue {
-        JS::Reference reference;
-        Value value;
-    };
-    ThrowCompletionOr<ReferenceAndValue> to_reference_and_value(Interpreter&) const;
-
     NonnullRefPtr<Expression const> m_base;
     Vector<Reference> m_references;
 };
@@ -2052,7 +1955,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -2070,7 +1972,6 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Completion execute(Interpreter&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
 private:
@@ -2091,7 +1992,6 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Completion execute(Interpreter&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
 private:
@@ -2120,7 +2020,6 @@ public:
     BlockStatement const& body() const { return m_body; }
 
     virtual void dump(int indent) const override;
-    virtual Completion execute(Interpreter&) const override;
 
 private:
     Variant<DeprecatedFlyString, NonnullRefPtr<BindingPattern const>> m_parameter;
@@ -2142,7 +2041,6 @@ public:
     BlockStatement const* finalizer() const { return m_finalizer; }
 
     virtual void dump(int indent) const override;
-    virtual Completion execute(Interpreter&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
 private:
@@ -2162,7 +2060,6 @@ public:
     Expression const& argument() const { return m_argument; }
 
     virtual void dump(int indent) const override;
-    virtual Completion execute(Interpreter&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
 private:
@@ -2180,7 +2077,6 @@ public:
     Expression const* test() const { return m_test; }
 
     virtual void dump(int indent) const override;
-    virtual Completion execute(Interpreter&) const override;
 
 private:
     RefPtr<Expression const> m_test;
@@ -2195,11 +2091,9 @@ public:
     }
 
     virtual void dump(int indent) const override;
-    virtual Completion execute(Interpreter&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_labelled_evaluation(Bytecode::Generator&, Vector<DeprecatedFlyString> const&) const;
 
-    Completion execute_impl(Interpreter&) const;
     void add_case(NonnullRefPtr<SwitchCase const> switch_case) { m_cases.append(move(switch_case)); }
 
 private:
@@ -2214,8 +2108,6 @@ public:
         , m_target_label(move(target_label))
     {
     }
-
-    virtual Completion execute(Interpreter&) const override;
 
     DeprecatedFlyString const& target_label() const { return m_target_label; }
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
@@ -2232,7 +2124,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
     DeprecatedFlyString const& target_label() const { return m_target_label; }
@@ -2248,7 +2139,6 @@ public:
     {
     }
 
-    virtual Completion execute(Interpreter&) const override;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 };
 
@@ -2260,9 +2150,6 @@ public:
         , m_value(value)
     {
     }
-
-    virtual Completion execute(Interpreter&) const override { return m_value; }
-    virtual ThrowCompletionOr<Reference> to_reference(Interpreter&) const override { return m_reference; }
 
 private:
     Reference m_reference;

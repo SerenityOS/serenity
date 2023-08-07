@@ -13,7 +13,6 @@
 #include <AK/Utf16View.h>
 #include <AK/Utf8View.h>
 #include <LibJS/Heap/DeferGC.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/AggregateErrorConstructor.h>
 #include <LibJS/Runtime/ArrayBufferConstructor.h>

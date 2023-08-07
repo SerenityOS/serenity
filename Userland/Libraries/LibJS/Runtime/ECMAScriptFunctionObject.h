@@ -108,7 +108,7 @@ private:
     ThrowCompletionOr<void> prepare_for_ordinary_call(ExecutionContext& callee_context, Object* new_target);
     void ordinary_call_bind_this(ExecutionContext&, Value this_argument);
 
-    ThrowCompletionOr<void> function_declaration_instantiation(Interpreter*);
+    ThrowCompletionOr<void> function_declaration_instantiation();
 
     DeprecatedFlyString m_name;
     OwnPtr<Bytecode::Executable> m_bytecode_executable;
