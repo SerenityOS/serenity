@@ -36,9 +36,6 @@ struct CallFrame {
 
 class Interpreter {
 public:
-    [[nodiscard]] static bool enabled();
-    static void set_enabled(bool);
-
     explicit Interpreter(VM&);
     ~Interpreter();
 

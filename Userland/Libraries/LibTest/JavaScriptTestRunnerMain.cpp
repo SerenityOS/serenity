@@ -134,8 +134,6 @@ int main(int argc, char** argv)
         AK::set_debug_enabled(false);
     }
 
-    JS::Bytecode::Interpreter::set_enabled(true);
-
     DeprecatedString test_root;
 
     if (!specified_test_root.is_empty()) {

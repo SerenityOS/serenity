@@ -208,8 +208,6 @@ Bytecode::Interpreter& VM::bytecode_interpreter()
 
 Bytecode::Interpreter* VM::bytecode_interpreter_if_exists()
 {
-    if (!Bytecode::Interpreter::enabled())
-        return nullptr;
     return m_bytecode_interpreter;
 }
 
