@@ -80,6 +80,8 @@ public:
         Bindings::ImageSmoothingQuality image_smoothing_quality { Bindings::ImageSmoothingQuality::Low };
         float global_alpha = { 1 };
         Optional<CanvasClip> clip;
+        RefPtr<CSS::StyleValue> font_style_value { nullptr };
+        RefPtr<Gfx::Font const> current_font { nullptr };
         Bindings::CanvasTextAlign text_align { Bindings::CanvasTextAlign::Start };
         Bindings::CanvasTextBaseline text_baseline { Bindings::CanvasTextBaseline::Alphabetic };
     };

@@ -100,6 +100,9 @@ public:
     virtual float global_alpha() const override;
     virtual void set_global_alpha(float) override;
 
+    HTMLCanvasElement& canvas_element();
+    HTMLCanvasElement const& canvas_element() const;
+
 private:
     explicit CanvasRenderingContext2D(JS::Realm&, HTMLCanvasElement&);
 
@@ -132,13 +135,12 @@ private:
         did_draw(draw_rect);
     }
 
+    RefPtr<Gfx::Font const> current_font();
+
     PreparedText prepare_text(DeprecatedString const& text, float max_width = INFINITY);
 
     Gfx::Painter* painter();
     Optional<Gfx::AntiAliasingPainter> antialiased_painter();
-
-    HTMLCanvasElement& canvas_element();
-    HTMLCanvasElement const& canvas_element() const;
 
     Gfx::Path rect_path(float x, float y, float width, float height);
 
