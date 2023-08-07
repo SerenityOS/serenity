@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibCore/EventReceiver.h>
+#include <AK/RefCounted.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Meta.h>
 #include <LibSQL/Serializer.h>
@@ -31,11 +31,9 @@ private:
     Block::Index m_block_index;
 };
 
-class Index : public Core::EventReceiver {
-    C_OBJECT_ABSTRACT(Index);
-
+class Index : public RefCounted<Index> {
 public:
-    ~Index() override = default;
+    virtual ~Index() = default;
 
     NonnullRefPtr<TupleDescriptor> descriptor() const { return m_descriptor; }
     [[nodiscard]] bool duplicates_allowed() const { return !m_unique; }

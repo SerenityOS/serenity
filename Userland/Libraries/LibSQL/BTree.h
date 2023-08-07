@@ -92,10 +92,9 @@ private:
 };
 
 class BTree : public Index {
-    C_OBJECT(BTree);
-
 public:
-    ~BTree() override = default;
+    static ErrorOr<NonnullRefPtr<BTree>> create(Serializer&, NonnullRefPtr<TupleDescriptor> const&, bool unique, Block::Index);
+    static ErrorOr<NonnullRefPtr<BTree>> create(Serializer&, NonnullRefPtr<TupleDescriptor> const&, Block::Index);
 
     Block::Index root() const { return m_root ? m_root->block_index() : 0; }
     bool insert(Key const&);
@@ -110,7 +109,6 @@ public:
 
 private:
     BTree(Serializer&, NonnullRefPtr<TupleDescriptor> const&, bool unique, Block::Index);
-    BTree(Serializer&, NonnullRefPtr<TupleDescriptor> const&, Block::Index);
     void initialize_root();
     TreeNode* new_root();
     OwnPtr<TreeNode> m_root { nullptr };

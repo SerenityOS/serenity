@@ -134,7 +134,7 @@ NonnullRefPtr<SQL::BTree> setup_btree(SQL::Serializer& serializer)
         root_pointer = serializer.heap().request_new_block_index();
         serializer.heap().set_user_value(0, root_pointer);
     }
-    auto btree = SQL::BTree::construct(serializer, tuple_descriptor, true, root_pointer);
+    auto btree = MUST(SQL::BTree::create(serializer, tuple_descriptor, true, root_pointer));
     btree->on_new_root = [&]() {
         serializer.heap().set_user_value(0, btree->root());
     };
