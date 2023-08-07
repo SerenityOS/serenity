@@ -43,8 +43,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    TRY(Core::System::setegid(0));
-
     TRY(Core::System::pledge("stdio wpath rpath cpath fattr tty"));
     TRY(Core::System::unveil("/etc", "rwc"));
 
