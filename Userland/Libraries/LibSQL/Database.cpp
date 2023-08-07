@@ -32,17 +32,17 @@ ResultOr<void> Database::open()
     VERIFY(!m_open);
     TRY(m_heap->open());
 
-    m_schemas = BTree::construct(m_serializer, SchemaDef::index_def()->to_tuple_descriptor(), m_heap->schemas_root());
+    m_schemas = TRY(BTree::create(m_serializer, SchemaDef::index_def()->to_tuple_descriptor(), m_heap->schemas_root()));
     m_schemas->on_new_root = [&]() {
         m_heap->set_schemas_root(m_schemas->root());
     };
 
-    m_tables = BTree::construct(m_serializer, TableDef::index_def()->to_tuple_descriptor(), m_heap->tables_root());
+    m_tables = TRY(BTree::create(m_serializer, TableDef::index_def()->to_tuple_descriptor(), m_heap->tables_root()));
     m_tables->on_new_root = [&]() {
         m_heap->set_tables_root(m_tables->root());
     };
 
-    m_table_columns = BTree::construct(m_serializer, ColumnDef::index_def()->to_tuple_descriptor(), m_heap->table_columns_root());
+    m_table_columns = TRY(BTree::create(m_serializer, ColumnDef::index_def()->to_tuple_descriptor(), m_heap->table_columns_root()));
     m_table_columns->on_new_root = [&]() {
         m_heap->set_table_columns_root(m_table_columns->root());
     };

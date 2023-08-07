@@ -9,14 +9,19 @@
 
 namespace SQL {
 
+ErrorOr<NonnullRefPtr<BTree>> BTree::create(Serializer& serializer, NonnullRefPtr<TupleDescriptor> const& descriptor, bool unique, Block::Index block_index)
+{
+    return adopt_nonnull_ref_or_enomem(new (nothrow) BTree(serializer, descriptor, unique, block_index));
+}
+
+ErrorOr<NonnullRefPtr<BTree>> BTree::create(Serializer& serializer, NonnullRefPtr<TupleDescriptor> const& descriptor, Block::Index block_index)
+{
+    return create(serializer, descriptor, true, block_index);
+}
+
 BTree::BTree(Serializer& serializer, NonnullRefPtr<TupleDescriptor> const& descriptor, bool unique, Block::Index block_index)
     : Index(serializer, descriptor, unique, block_index)
     , m_root(nullptr)
-{
-}
-
-BTree::BTree(Serializer& serializer, NonnullRefPtr<TupleDescriptor> const& descriptor, Block::Index block_index)
-    : BTree(serializer, descriptor, true, block_index)
 {
 }
 
