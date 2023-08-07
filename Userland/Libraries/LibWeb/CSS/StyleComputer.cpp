@@ -2293,6 +2293,8 @@ CSSPixels StyleComputer::parent_or_root_element_line_height(DOM::Element const* 
     if (!parent_element)
         return m_root_element_font_metrics.line_height;
     auto const* computed_values = parent_element->computed_css_values();
+    if (!computed_values)
+        return m_root_element_font_metrics.line_height;
     auto parent_font_pixel_metrics = computed_values->computed_font().pixel_metrics();
     auto parent_font_size = computed_values->property(CSS::PropertyID::FontSize)->as_length().length();
     // FIXME: Can the parent font size be non-absolute here?
