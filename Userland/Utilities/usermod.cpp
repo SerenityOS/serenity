@@ -118,7 +118,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto account_or_error = Core::Account::from_name(username);
 
     if (account_or_error.is_error()) {
-        warnln("Core::Account::from_name: {}", account_or_error.error());
+        warnln("usermod: {}", strerror(account_or_error.error().code()));
         return 1;
     }
 
