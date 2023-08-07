@@ -3,7 +3,7 @@ port=scummvm
 useconfigure="true"
 version="2.7.0"
 files=(
-    "https://downloads.scummvm.org/frs/scummvm/${version}/scummvm-${version}.tar.xz scummvm-${version}.tar.xz 444b1ffd61774fe867824e57bb3033c9998ffa8a4ed3a13246b01611d5cf9993"
+    "https://downloads.scummvm.org/frs/scummvm/${version}/scummvm-${version}.tar.xz 444b1ffd61774fe867824e57bb3033c9998ffa8a4ed3a13246b01611d5cf9993"
 )
 depends=("freetype" "libiconv" "libjpeg" "libmad" "libmpeg2" "libpng" "libtheora" "SDL2")
 configopts=(

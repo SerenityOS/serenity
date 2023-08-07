@@ -2,7 +2,7 @@
 port=bass
 version="cd-1.2"
 files=(
-    "https://downloads.scummvm.org/frs/extras/Beneath%20a%20Steel%20Sky/bass-${version}.zip bass-${version}.zip 53209b9400eab6fd7fa71518b2f357c8de75cfeaa5ba57024575ab79cc974593"
+    "https://downloads.scummvm.org/frs/extras/Beneath%20a%20Steel%20Sky/bass-${version}.zip 53209b9400eab6fd7fa71518b2f357c8de75cfeaa5ba57024575ab79cc974593"
 )
 depends=("scummvm")
 

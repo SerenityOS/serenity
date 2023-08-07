@@ -5,7 +5,7 @@ workdir="Angband-${version}"
 useconfigure=true
 use_fresh_config_sub=true
 files=(
-    "https://github.com/angband/angband/releases/download/${version}/Angband-${version}.tar.gz Angband-${version}.tar.gz a07c78c1dd05e48ddbe4d8ef5d1880fcdeab55fd05f1336d9cba5dd110b15ff3"
+    "https://github.com/angband/angband/releases/download/${version}/Angband-${version}.tar.gz a07c78c1dd05e48ddbe4d8ef5d1880fcdeab55fd05f1336d9cba5dd110b15ff3"
 )
 depends=("ncurses" "SDL2" "SDL2_image" "SDL2_ttf" "SDL2_mixer")
 configopts=(

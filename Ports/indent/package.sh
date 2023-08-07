@@ -2,7 +2,7 @@
 port=indent
 version=2.2.11
 files=(
-    "https://ftpmirror.gnu.org/gnu/indent/indent-${version}.tar.gz indent-${version}.tar.gz aaff60ce4d255efb985f0eb78cca4d1ad766c6e051666073050656b6753a0893"
+    "https://ftpmirror.gnu.org/gnu/indent/indent-${version}.tar.gz aaff60ce4d255efb985f0eb78cca4d1ad766c6e051666073050656b6753a0893"
 )
 useconfigure=true
 use_fresh_config_sub=true

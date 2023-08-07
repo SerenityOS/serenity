@@ -3,7 +3,7 @@ port=zlib
 version=1.2.13
 useconfigure=true
 files=(
-    "https://www.zlib.net/zlib-${version}.tar.gz zlib-${version}.tar.gz b3a24de97a8fdbc835b9833169501030b8977031bcb54b3b3ac13740f846ab30"
+    "https://www.zlib.net/zlib-${version}.tar.gz b3a24de97a8fdbc835b9833169501030b8977031bcb54b3b3ac13740f846ab30"
 )
 
 configure() {

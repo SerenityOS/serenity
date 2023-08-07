@@ -4,7 +4,7 @@ version=8.2.4554
 workdir="${port}-${version}"
 useconfigure="true"
 files=(
-    "https://github.com/vim/vim/archive/refs/tags/v${version}.tar.gz v${version}.tar.gz 206c8fc2535df33b9ea62fa1c9acae66c981a3e3aa4de0f652ef3a25e2b92571"
+    "https://github.com/vim/vim/archive/refs/tags/v${version}.tar.gz 206c8fc2535df33b9ea62fa1c9acae66c981a3e3aa4de0f652ef3a25e2b92571"
 )
 configopts=("--with-tlib=tinfo" "--with-features=normal")
 depends=("ncurses" "gettext")

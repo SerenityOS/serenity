@@ -13,7 +13,7 @@ configopts=(
     '-Duse_png=false'
 )
 files=(
-    "https://github.com/dosbox-staging/dosbox-staging/archive/refs/tags/v${version}.tar.gz v${version}.tar.gz 85359efb7cd5c5c0336d88bdf023b7b462a8233490e00274fef0b85cca2f5f3c"
+    "https://github.com/dosbox-staging/dosbox-staging/archive/refs/tags/v${version}.tar.gz 85359efb7cd5c5c0336d88bdf023b7b462a8233490e00274fef0b85cca2f5f3c"
 )
 depends=(
     'libslirp'

@@ -2,7 +2,7 @@
 port=soltys
 version="1.0"
 files=(
-    "https://downloads.scummvm.org/frs/extras/Soltys/soltys-en-v1.0.zip ${port}-en-v${version}.zip 87b89e654b8a5b8ebe342cb4c5c6049ab9a43a5efb474d9c49bafb77dcce48f6"
+    "https://downloads.scummvm.org/frs/extras/Soltys/soltys-en-v1.0.zip 87b89e654b8a5b8ebe342cb4c5c6049ab9a43a5efb474d9c49bafb77dcce48f6"
 )
 depends=("scummvm")
 

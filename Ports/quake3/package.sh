@@ -4,7 +4,7 @@ version=1.34
 commit_hash=6d74896557d8c193a9f19bc6845a47e9d0f77db2
 archive_hash=1db91cfd05170ed5b37c1ab56cdf7bbe6b3c86fc6baee8b68e8e539fddfd88c1
 files=(
-    "https://github.com/ioquake/ioq3/archive/$commit_hash.tar.gz $commit_hash.tar.gz $archive_hash"
+    "https://github.com/ioquake/ioq3/archive/$commit_hash.tar.gz $archive_hash"
 )
 workdir="ioq3-${commit_hash}"
 depends=("SDL2")

@@ -9,5 +9,5 @@ configopts=(
     '--enable-shared'
 )
 files=(
-    "https://github.com/libsndfile/libsamplerate/releases/download/${version}/libsamplerate-${version}.tar.xz libsamplerate-${version}.tar.xz 3258da280511d24b49d6b08615bbe824d0cacc9842b0e4caf11c52cf2b043893"
+    "https://github.com/libsndfile/libsamplerate/releases/download/${version}/libsamplerate-${version}.tar.xz 3258da280511d24b49d6b08615bbe824d0cacc9842b0e4caf11c52cf2b043893"
 )

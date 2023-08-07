@@ -8,7 +8,7 @@ config_sub_paths=("support/config.sub")
 config_guess_paths=("support/config.guess")
 configopts=("--disable-nls" "--without-bash-malloc")
 files=(
-    "https://ftpmirror.gnu.org/gnu/bash/bash-${version}.tar.gz bash-${version}.tar.gz 13720965b5f4fc3a0d4b61dd37e7565c741da9a5be24edc2ae00182fc1b3588c"
+    "https://ftpmirror.gnu.org/gnu/bash/bash-${version}.tar.gz 13720965b5f4fc3a0d4b61dd37e7565c741da9a5be24edc2ae00182fc1b3588c"
 )
 
 build() {

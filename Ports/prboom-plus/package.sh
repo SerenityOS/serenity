@@ -4,8 +4,8 @@ version='2.6.2'
 useconfigure='true'
 squashed_version=$(echo "${version}" | tr -d '.')
 files=(
-    "https://github.com/coelckers/prboom-plus/archive/refs/tags/v${version}.tar.gz v${version}.tar.gz 5cfeec96fbfe4fc3bd5dbc2b8d581ff5f6617dd74b2799680ba5b1e2e38c4aff"
-    "https://github.com/coelckers/prboom-plus/releases/download/v${version}/prboom-plus-${squashed_version}-w32.zip prboom-plus-${squashed_version}-w32.zip 20313e00d8841a618e23e7c671d65870194bee634468fecd2f3697ac05f21476"
+    "https://github.com/coelckers/prboom-plus/archive/refs/tags/v${version}.tar.gz 5cfeec96fbfe4fc3bd5dbc2b8d581ff5f6617dd74b2799680ba5b1e2e38c4aff"
+    "https://github.com/coelckers/prboom-plus/releases/download/v${version}/prboom-plus-${squashed_version}-w32.zip 20313e00d8841a618e23e7c671d65870194bee634468fecd2f3697ac05f21476"
 )
 workdir="prboom-plus-${version}/prboom2"
 depends=("glu" "libmad" "libvorbis" "SDL2" "SDL2_image" "SDL2_mixer" "SDL2_net")
