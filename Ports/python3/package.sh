@@ -11,13 +11,13 @@ useconfigure='true'
 use_fresh_config_sub='true'
 files=(
     "${PYTHON_ARCHIVE_URL} ${PYTHON_ARCHIVE} ${PYTHON_ARCHIVE_SHA256SUM}"
-    "https://raw.githubusercontent.com/python/cpython/942dd9f3f77eef08fabddbd9fb883a866ad6d4cb/PC/pycon.ico launcher.ico 55c1e1fcabc2f254a6d02242912359d29f141d11c4892c20375d58b6dcd89ac0"
+    "https://raw.githubusercontent.com/python/cpython/942dd9f3f77eef08fabddbd9fb883a866ad6d4cb/PC/pycon.ico pycon.ico 55c1e1fcabc2f254a6d02242912359d29f141d11c4892c20375d58b6dcd89ac0"
 )
 launcher_name='Python'
 launcher_category='Development'
 launcher_command='/usr/local/bin/python3'
 launcher_run_in_terminal='true'
-icon_file='../launcher.ico' # This is an older icon that's downloaded separately, so we need to go outside of $workdir
+icon_file='../pycon.ico' # This is an older icon that's downloaded separately, so we need to go outside of $workdir
 depends=(
     'bzip2'
     'libffi'

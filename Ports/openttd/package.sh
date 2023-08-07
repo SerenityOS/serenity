@@ -3,7 +3,7 @@ port=openttd
 version=12.2
 depends=("freetype" "SDL2" "libicu" "libpng" "zlib" "xz" "openttd-opengfx" "openttd-opensfx")
 files=(
-    "https://cdn.openttd.org/openttd-releases/${version}/openttd-${version}-source.tar.xz openttd-${version}.tar.xz 81508f0de93a0c264b216ef56a05f8381fff7bffa6d010121a21490b4dace95c"
+    "https://cdn.openttd.org/openttd-releases/${version}/openttd-${version}-source.tar.xz openttd-${version}-source.tar.xz 81508f0de93a0c264b216ef56a05f8381fff7bffa6d010121a21490b4dace95c"
 )
 useconfigure=true
 configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")

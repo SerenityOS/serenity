@@ -2,7 +2,7 @@
 port=epsilon
 version=15.5.0
 files=(
-    "https://github.com/numworks/epsilon/archive/refs/tags/${version}.tar.gz ${port}-${version}.tar.gz 38c3b6baaf00863bbd179bce5e9cc42bbdbd0cd485b5bf3bbf4473383591bf83"
+    "https://github.com/numworks/epsilon/archive/refs/tags/${version}.tar.gz ${version}.tar.gz 38c3b6baaf00863bbd179bce5e9cc42bbdbd0cd485b5bf3bbf4473383591bf83"
 )
 makeopts=("PLATFORM=simulator" "TARGET=serenity" "SERENITY_INSTALL_ROOT=${SERENITY_INSTALL_ROOT}")
 depends=("SDL2" "libpng" "libjpeg" "freetype")

@@ -5,7 +5,7 @@ useconfigure='true'
 commit_hash='d26d00845e95dc7d781459d0c1a7fd48ea4b6be3'
 archive_hash='f940d71e0a4e15c040776979c6c99cb3520208744b3c22921f484d70ba82d675'
 files=(
-    "https://github.com/shamazmazum/quake2sdl/archive/${commit_hash}.tar.gz quake2.tar.gz ${archive_hash}"
+    "https://github.com/shamazmazum/quake2sdl/archive/${commit_hash}.tar.gz ${commit_hash}.tar.gz ${archive_hash}"
 )
 workdir="quake2sdl-${commit_hash}"
 makeopts=()

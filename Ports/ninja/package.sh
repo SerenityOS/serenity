@@ -2,7 +2,7 @@
 port='ninja'
 version='1.11.0'
 files=(
-    "https://github.com/ninja-build/ninja/archive/v${version}.tar.gz ninja-v${version}.tar.gz 3c6ba2e66400fe3f1ae83deb4b235faf3137ec20bd5b08c29bfc368db143e4c6"
+    "https://github.com/ninja-build/ninja/archive/v${version}.tar.gz v${version}.tar.gz 3c6ba2e66400fe3f1ae83deb4b235faf3137ec20bd5b08c29bfc368db143e4c6"
 )
 
 build() {

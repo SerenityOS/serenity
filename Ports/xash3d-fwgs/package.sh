@@ -12,13 +12,13 @@ useconfigure='true'
 depends=("SDL2" "fontconfig" "freetype")
 workdir="xash3d-fwgs-${_xash3d_commit}"
 files=(
-    "https://github.com/FWGS/xash3d-fwgs/archive/${_xash3d_commit}.tar.gz xash3d-fwgs-${_xash3d_commit}.tar.gz 71bcf9f61d05e6f9ff8866a28cdc9c644ca9aeab9e4143e279d61b1b8ebff9e5"
-    "https://github.com/FWGS/vgui_support/archive/${_vgui_support_commit}.tar.gz vgui_support-${_vgui_support_commit}.tar.gz 2f241fe093b8ab1ff757bdc4ae7a531223525ec3be8f2da3a0eddf76543e90a0"
-    "https://github.com/FWGS/vgui-dev/archive/${_vgui_dev_commit}.tar.gz vgui-dev-${_vgui_dev_commit}.tar.gz eb9315fba8ae444fdae240c10afebaf7f3b157233bf1589f0af557b2286928fa"
-    "https://github.com/FWGS/mainui_cpp/archive/${_mainui_commit}.tar.gz mainui_cpp-${_mainui_commit}.tar.gz 05a3ff20055ba53d46ac65fee04a689df52889d3077661dc618f7659a2d2138f"
-    "https://github.com/FWGS/MiniUTL/archive/${_miniutl_commit}.tar.gz MiniUTL-${_miniutl_commit}.tar.gz 7b7b26377854b3fc741c8d652d8b3c9c540512644943ca6efb63df941b2861e3"
-    "https://github.com/xiph/opus/archive/${_opus_commit}.tar.gz opus-${_opus_commit}.tar.gz 56156f1f7a19fcd356041604ce9fdd7d70a67a0e91153f25970dcc8710ea057e"
-    "https://github.com/FWGS/xash-extras/archive/${_extras_commit}.tar.gz xash-extras-${_extras_commit}.tar.gz 020b4c35f97fabbd70a7444a98451f0f5be4dcbf149e42e5e49598a5651805ab"
+    "https://github.com/FWGS/xash3d-fwgs/archive/${_xash3d_commit}.tar.gz ${_xash3d_commit}.tar.gz 71bcf9f61d05e6f9ff8866a28cdc9c644ca9aeab9e4143e279d61b1b8ebff9e5"
+    "https://github.com/FWGS/vgui_support/archive/${_vgui_support_commit}.tar.gz ${_vgui_support_commit}.tar.gz 2f241fe093b8ab1ff757bdc4ae7a531223525ec3be8f2da3a0eddf76543e90a0"
+    "https://github.com/FWGS/vgui-dev/archive/${_vgui_dev_commit}.tar.gz ${_vgui_dev_commit}.tar.gz eb9315fba8ae444fdae240c10afebaf7f3b157233bf1589f0af557b2286928fa"
+    "https://github.com/FWGS/mainui_cpp/archive/${_mainui_commit}.tar.gz ${_mainui_commit}.tar.gz 05a3ff20055ba53d46ac65fee04a689df52889d3077661dc618f7659a2d2138f"
+    "https://github.com/FWGS/MiniUTL/archive/${_miniutl_commit}.tar.gz ${_miniutl_commit}.tar.gz 7b7b26377854b3fc741c8d652d8b3c9c540512644943ca6efb63df941b2861e3"
+    "https://github.com/xiph/opus/archive/${_opus_commit}.tar.gz ${_opus_commit}.tar.gz 56156f1f7a19fcd356041604ce9fdd7d70a67a0e91153f25970dcc8710ea057e"
+    "https://github.com/FWGS/xash-extras/archive/${_extras_commit}.tar.gz ${_extras_commit}.tar.gz 020b4c35f97fabbd70a7444a98451f0f5be4dcbf149e42e5e49598a5651805ab"
 )
 
 export PKG_CONFIG_PATH="${SERENITY_INSTALL_ROOT}/usr/local/lib/pkgconfig"
