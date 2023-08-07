@@ -18,12 +18,10 @@ SVGLinearGradientElement::SVGLinearGradientElement(DOM::Document& document, DOM:
 {
 }
 
-JS::ThrowCompletionOr<void> SVGLinearGradientElement::initialize(JS::Realm& realm)
+void SVGLinearGradientElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGLinearGradientElementPrototype>(realm, "SVGLinearGradientElement"));
-
-    return {};
 }
 
 void SVGLinearGradientElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)

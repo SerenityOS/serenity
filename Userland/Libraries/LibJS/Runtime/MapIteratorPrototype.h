@@ -15,7 +15,7 @@ class MapIteratorPrototype final : public PrototypeObject<MapIteratorPrototype, 
     JS_PROTOTYPE_OBJECT(MapIteratorPrototype, MapIterator, MapIterator);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~MapIteratorPrototype() override = default;
 
 private:

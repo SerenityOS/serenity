@@ -34,7 +34,7 @@ public:
 private:
     MediaQueryList(DOM::Document&, Vector<NonnullRefPtr<MediaQuery>>&&);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::NonnullGCPtr<DOM::Document> m_document;

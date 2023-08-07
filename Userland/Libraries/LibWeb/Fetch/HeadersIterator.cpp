@@ -37,12 +37,10 @@ HeadersIterator::HeadersIterator(Headers const& headers, JS::Object::PropertyKin
 
 HeadersIterator::~HeadersIterator() = default;
 
-JS::ThrowCompletionOr<void> HeadersIterator::initialize(JS::Realm& realm)
+void HeadersIterator::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HeadersIteratorPrototype>(realm, "HeadersIterator"));
-
-    return {};
 }
 
 void HeadersIterator::visit_edges(JS::Cell::Visitor& visitor)

@@ -42,7 +42,7 @@ public:
 private:
     FileList(JS::Realm&, Vector<JS::NonnullGCPtr<File>>&&);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     // ^Bindings::LegacyPlatformObject

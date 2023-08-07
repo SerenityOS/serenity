@@ -15,7 +15,7 @@ class DatePrototype final : public PrototypeObject<DatePrototype, Date> {
     JS_PROTOTYPE_OBJECT(DatePrototype, Date, Date);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~DatePrototype() override = default;
 
 private:

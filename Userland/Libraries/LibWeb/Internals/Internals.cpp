@@ -18,11 +18,10 @@ Internals::Internals(JS::Realm& realm)
 
 Internals::~Internals() = default;
 
-JS::ThrowCompletionOr<void> Internals::initialize(JS::Realm& realm)
+void Internals::initialize(JS::Realm& realm)
 {
-    TRY(Base::initialize(realm));
+    Base::initialize(realm);
     Object::set_prototype(&Bindings::ensure_web_prototype<Bindings::InternalsPrototype>(realm, "Internals"));
-    return {};
 }
 
 void Internals::gc()

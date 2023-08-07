@@ -34,12 +34,10 @@ DOMRect::DOMRect(JS::Realm& realm, double x, double y, double width, double heig
 
 DOMRect::~DOMRect() = default;
 
-JS::ThrowCompletionOr<void> DOMRect::initialize(JS::Realm& realm)
+void DOMRect::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMRectPrototype>(realm, "DOMRect"));
-
-    return {};
 }
 
 }

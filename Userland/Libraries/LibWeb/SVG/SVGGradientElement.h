@@ -37,7 +37,7 @@ public:
 protected:
     SVGGradientElement(DOM::Document&, DOM::QualifiedName);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     JS::GCPtr<SVGGradientElement const> linked_gradient() const;
 

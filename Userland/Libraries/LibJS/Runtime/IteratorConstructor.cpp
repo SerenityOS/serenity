@@ -20,9 +20,9 @@ IteratorConstructor::IteratorConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> IteratorConstructor::initialize(Realm& realm)
+void IteratorConstructor::initialize(Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
     auto& vm = this->vm();
 
@@ -33,8 +33,6 @@ ThrowCompletionOr<void> IteratorConstructor::initialize(Realm& realm)
     define_native_function(realm, vm.names.from, from, 1, attr);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
-
-    return {};
 }
 
 // 3.1.1.1.1 Iterator ( ), https://tc39.es/proposal-iterator-helpers/#sec-iterator

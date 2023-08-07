@@ -89,12 +89,10 @@ SVGPathElement::SVGPathElement(DOM::Document& document, DOM::QualifiedName quali
 {
 }
 
-JS::ThrowCompletionOr<void> SVGPathElement::initialize(JS::Realm& realm)
+void SVGPathElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGPathElementPrototype>(realm, "SVGPathElement"));
-
-    return {};
 }
 
 void SVGPathElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)

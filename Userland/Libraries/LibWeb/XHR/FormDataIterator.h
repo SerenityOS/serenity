@@ -24,7 +24,7 @@ public:
 private:
     FormDataIterator(FormData const&, JS::Object::PropertyKind iterator_kind);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::NonnullGCPtr<FormData const> m_form_data;

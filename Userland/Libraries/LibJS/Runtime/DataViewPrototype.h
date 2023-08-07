@@ -15,7 +15,7 @@ class DataViewPrototype final : public PrototypeObject<DataViewPrototype, DataVi
     JS_PROTOTYPE_OBJECT(DataViewPrototype, DataView, DataView);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~DataViewPrototype() override = default;
 
 private:

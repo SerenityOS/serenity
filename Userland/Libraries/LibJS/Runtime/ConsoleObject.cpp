@@ -18,10 +18,10 @@ ConsoleObject::ConsoleObject(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> ConsoleObject::initialize(Realm& realm)
+void ConsoleObject::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Enumerable | Attribute::Configurable;
     define_native_function(realm, vm.names.assert, assert_, 0, attr);
     define_native_function(realm, vm.names.clear, clear, 0, attr);
@@ -40,8 +40,6 @@ ThrowCompletionOr<void> ConsoleObject::initialize(Realm& realm)
     define_native_function(realm, vm.names.time, time, 0, attr);
     define_native_function(realm, vm.names.timeLog, time_log, 0, attr);
     define_native_function(realm, vm.names.timeEnd, time_end, 0, attr);
-
-    return {};
 }
 
 // 1.1.1. assert(condition, ...data), https://console.spec.whatwg.org/#assert

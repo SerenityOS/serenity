@@ -29,12 +29,10 @@ ProgressEvent::ProgressEvent(JS::Realm& realm, FlyString const& event_name, Prog
 
 ProgressEvent::~ProgressEvent() = default;
 
-JS::ThrowCompletionOr<void> ProgressEvent::initialize(JS::Realm& realm)
+void ProgressEvent::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::ProgressEventPrototype>(realm, "ProgressEvent"));
-
-    return {};
 }
 
 }

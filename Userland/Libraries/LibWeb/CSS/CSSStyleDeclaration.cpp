@@ -20,11 +20,10 @@ CSSStyleDeclaration::CSSStyleDeclaration(JS::Realm& realm)
 {
 }
 
-JS::ThrowCompletionOr<void> CSSStyleDeclaration::initialize(JS::Realm& realm)
+void CSSStyleDeclaration::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSStyleDeclarationPrototype>(realm, "CSSStyleDeclaration"));
-    return {};
 }
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<PropertyOwningCSSStyleDeclaration>> PropertyOwningCSSStyleDeclaration::create(JS::Realm& realm, Vector<StyleProperty> properties, HashMap<DeprecatedString, StyleProperty> custom_properties)

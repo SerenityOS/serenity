@@ -21,9 +21,9 @@ DisplayNamesConstructor::DisplayNamesConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> DisplayNamesConstructor::initialize(Realm& realm)
+void DisplayNamesConstructor::initialize(Realm& realm)
 {
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     auto& vm = this->vm();
 
@@ -34,8 +34,6 @@ ThrowCompletionOr<void> DisplayNamesConstructor::initialize(Realm& realm)
     define_native_function(realm, vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
 
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
-
-    return {};
 }
 
 // 12.1.1 Intl.DisplayNames ( locales, options ), https://tc39.es/ecma402/#sec-Intl.DisplayNames

@@ -17,12 +17,10 @@ BaseAudioContext::BaseAudioContext(JS::Realm& realm)
 
 BaseAudioContext::~BaseAudioContext() = default;
 
-JS::ThrowCompletionOr<void> BaseAudioContext::initialize(JS::Realm& realm)
+void BaseAudioContext::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::BaseAudioContextPrototype>(realm, "BaseAudioContext"));
-
-    return {};
 }
 
 void BaseAudioContext::set_onstatechange(WebIDL::CallbackType* event_handler)

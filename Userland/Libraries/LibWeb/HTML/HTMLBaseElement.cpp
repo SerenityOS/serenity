@@ -16,12 +16,10 @@ HTMLBaseElement::HTMLBaseElement(DOM::Document& document, DOM::QualifiedName qua
 
 HTMLBaseElement::~HTMLBaseElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLBaseElement::initialize(JS::Realm& realm)
+void HTMLBaseElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLBaseElementPrototype>(realm, "HTMLBaseElement"));
-
-    return {};
 }
 
 void HTMLBaseElement::inserted()

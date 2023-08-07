@@ -14,7 +14,7 @@ class AtomicsObject : public Object {
     JS_OBJECT(AtomicsObject, Object);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~AtomicsObject() override = default;
 
 private:

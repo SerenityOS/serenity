@@ -32,7 +32,7 @@ public:
 protected:
     explicit BaseAudioContext(JS::Realm&);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
 private:
     float m_sample_rate { 0 };

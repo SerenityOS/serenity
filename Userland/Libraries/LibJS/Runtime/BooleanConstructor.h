@@ -14,7 +14,7 @@ class BooleanConstructor final : public NativeFunction {
     JS_OBJECT(BooleanConstructor, NativeFunction);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~BooleanConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

@@ -43,7 +43,7 @@ public:
 private:
     VideoTrack(JS::Realm&, JS::NonnullGCPtr<HTMLMediaElement>, NonnullOwnPtr<Video::PlaybackManager>);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     // https://html.spec.whatwg.org/multipage/media.html#dom-videotrack-id

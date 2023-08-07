@@ -47,14 +47,14 @@ HTMLMediaElement::HTMLMediaElement(DOM::Document& document, DOM::QualifiedName q
 
 HTMLMediaElement::~HTMLMediaElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLMediaElement::initialize(JS::Realm& realm)
+void HTMLMediaElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLMediaElementPrototype>(realm, "HTMLMediaElement"));
 
-    m_audio_tracks = TRY(realm.heap().allocate<AudioTrackList>(realm, realm));
-    m_video_tracks = TRY(realm.heap().allocate<VideoTrackList>(realm, realm));
-    m_document_observer = TRY(realm.heap().allocate<DOM::DocumentObserver>(realm, realm, document()));
+    m_audio_tracks = MUST(realm.heap().allocate<AudioTrackList>(realm, realm));
+    m_video_tracks = MUST(realm.heap().allocate<VideoTrackList>(realm, realm));
+    m_document_observer = MUST(realm.heap().allocate<DOM::DocumentObserver>(realm, realm, document()));
 
     // https://html.spec.whatwg.org/multipage/media.html#playing-the-media-resource:media-element-82
     m_document_observer->document_became_inactive = [this]() {
@@ -62,8 +62,6 @@ JS::ThrowCompletionOr<void> HTMLMediaElement::initialize(JS::Realm& realm)
         // the document is active again.
         pause_element().release_value_but_fixme_should_propagate_errors();
     };
-
-    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#queue-a-media-element-task

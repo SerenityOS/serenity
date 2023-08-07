@@ -23,12 +23,10 @@ Storage::Storage(JS::Realm& realm)
 
 Storage::~Storage() = default;
 
-JS::ThrowCompletionOr<void> Storage::initialize(JS::Realm& realm)
+void Storage::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::StoragePrototype>(realm, "Storage"));
-
-    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/webstorage.html#dom-storage-length

@@ -15,7 +15,7 @@ class NumberFormatPrototype final : public PrototypeObject<NumberFormatPrototype
     JS_PROTOTYPE_OBJECT(NumberFormatPrototype, NumberFormat, Intl.NumberFormat);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~NumberFormatPrototype() override = default;
 
 private:

@@ -30,7 +30,7 @@ public:
 private:
     WebGLContextEvent(JS::Realm&, FlyString const& type, WebGLContextEventInit const& event_init);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     String m_status_message;
 };

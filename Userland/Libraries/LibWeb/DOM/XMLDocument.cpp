@@ -14,12 +14,10 @@ XMLDocument::XMLDocument(JS::Realm& realm, AK::URL const& url)
 {
 }
 
-JS::ThrowCompletionOr<void> XMLDocument::initialize(JS::Realm& realm)
+void XMLDocument::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::XMLDocumentPrototype>(realm, "XMLDocument"));
-
-    return {};
 }
 
 }

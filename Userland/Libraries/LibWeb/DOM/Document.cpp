@@ -336,16 +336,14 @@ Document::~Document()
     HTML::main_thread_event_loop().unregister_document({}, *this);
 }
 
-JS::ThrowCompletionOr<void> Document::initialize(JS::Realm& realm)
+void Document::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::DocumentPrototype>(realm, "Document"));
 
-    m_selection = MUST_OR_THROW_OOM(heap().allocate<Selection::Selection>(realm, realm, *this));
+    m_selection = MUST(heap().allocate<Selection::Selection>(realm, realm, *this));
 
-    m_list_of_available_images = TRY_OR_THROW_OOM(realm.vm(), try_make<HTML::ListOfAvailableImages>());
-
-    return {};
+    m_list_of_available_images = make<HTML::ListOfAvailableImages>();
 }
 
 void Document::visit_edges(Cell::Visitor& visitor)

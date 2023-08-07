@@ -14,7 +14,7 @@ class InstantConstructor final : public NativeFunction {
     JS_OBJECT(InstantConstructor, NativeFunction);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~InstantConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

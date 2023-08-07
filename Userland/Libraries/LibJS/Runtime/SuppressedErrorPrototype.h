@@ -14,7 +14,7 @@ class SuppressedErrorPrototype final : public Object {
     JS_OBJECT(SuppressedErrorPrototype, Object);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~SuppressedErrorPrototype() override = default;
 
 private:

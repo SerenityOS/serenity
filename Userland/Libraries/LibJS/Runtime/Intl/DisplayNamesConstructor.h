@@ -14,7 +14,7 @@ class DisplayNamesConstructor final : public NativeFunction {
     JS_OBJECT(DisplayNamesConstructor, NativeFunction);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~DisplayNamesConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

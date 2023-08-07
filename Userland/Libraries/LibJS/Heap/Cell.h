@@ -31,7 +31,7 @@ class Cell {
     AK_MAKE_NONMOVABLE(Cell);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&);
+    virtual void initialize(Realm&);
     virtual ~Cell() = default;
 
     bool is_marked() const { return m_mark; }

@@ -19,7 +19,7 @@ public:
     static NonnullGCPtr<NumberFormatFunction> create(Realm&, NumberFormat&);
 
     virtual ~NumberFormatFunction() override = default;
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
 
     virtual ThrowCompletionOr<Value> call() override;
 

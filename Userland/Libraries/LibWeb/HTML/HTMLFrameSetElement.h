@@ -23,7 +23,7 @@ public:
 private:
     HTMLFrameSetElement(DOM::Document&, DOM::QualifiedName);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void attribute_changed(DeprecatedFlyString const&, DeprecatedString const&) override;
 
     // ^HTML::GlobalEventHandlers

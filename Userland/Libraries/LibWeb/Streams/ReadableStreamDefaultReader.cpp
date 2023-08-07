@@ -40,12 +40,10 @@ ReadableStreamDefaultReader::ReadableStreamDefaultReader(JS::Realm& realm)
 {
 }
 
-JS::ThrowCompletionOr<void> ReadableStreamDefaultReader::initialize(JS::Realm& realm)
+void ReadableStreamDefaultReader::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::ReadableStreamDefaultReaderPrototype>(realm, "ReadableStreamDefaultReader"));
-
-    return {};
 }
 
 void ReadableStreamDefaultReader::visit_edges(Cell::Visitor& visitor)

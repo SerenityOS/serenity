@@ -26,14 +26,14 @@ ZonedDateTimePrototype::ZonedDateTimePrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> ZonedDateTimePrototype::initialize(Realm& realm)
+void ZonedDateTimePrototype::initialize(Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
     auto& vm = this->vm();
 
     // 6.3.2 Temporal.ZonedDateTime.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Temporal.ZonedDateTime"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Temporal.ZonedDateTime"sv)), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.calendar, calendar_getter, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.timeZone, time_zone_getter, {}, Attribute::Configurable);
@@ -90,8 +90,6 @@ ThrowCompletionOr<void> ZonedDateTimePrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.toPlainYearMonth, to_plain_year_month, 0, attr);
     define_native_function(realm, vm.names.toPlainMonthDay, to_plain_month_day, 0, attr);
     define_native_function(realm, vm.names.getISOFields, get_iso_fields, 0, attr);
-
-    return {};
 }
 
 // 6.3.3 get Temporal.ZonedDateTime.prototype.calendar, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.calendar

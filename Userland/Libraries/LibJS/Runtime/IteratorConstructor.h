@@ -15,7 +15,7 @@ class IteratorConstructor : public NativeFunction {
     JS_OBJECT(IteratorConstructor, NativeFunction);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
 
     virtual ThrowCompletionOr<Value> call() override;
     virtual ThrowCompletionOr<NonnullGCPtr<Object>> construct(FunctionObject& new_target) override;

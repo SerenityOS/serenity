@@ -14,7 +14,7 @@ class PromiseConstructor final : public NativeFunction {
     JS_OBJECT(PromiseConstructor, NativeFunction);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~PromiseConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

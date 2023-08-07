@@ -39,7 +39,7 @@ public:
 protected:
     DOMPointReadOnly(JS::Realm&, double x, double y, double z, double w);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     double m_x;
     double m_y;

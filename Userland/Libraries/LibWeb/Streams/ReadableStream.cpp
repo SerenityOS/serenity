@@ -106,12 +106,10 @@ WebIDL::ExceptionOr<ReadableStreamReader> ReadableStream::get_reader(ReadableStr
     return ReadableStreamReader { TRY(acquire_readable_stream_byob_reader(*this)) };
 }
 
-JS::ThrowCompletionOr<void> ReadableStream::initialize(JS::Realm& realm)
+void ReadableStream::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::ReadableStreamPrototype>(realm, "ReadableStream"));
-
-    return {};
 }
 
 void ReadableStream::visit_edges(Cell::Visitor& visitor)

@@ -16,10 +16,10 @@ SymbolConstructor::SymbolConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> SymbolConstructor::initialize(Realm& realm)
+void SymbolConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     // 20.4.2.9 Symbol.prototype, https://tc39.es/ecma262/#sec-symbol.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().symbol_prototype(), 0);
@@ -34,8 +34,6 @@ ThrowCompletionOr<void> SymbolConstructor::initialize(Realm& realm)
 #undef __JS_ENUMERATE
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
-
-    return {};
 }
 
 // 20.4.1.1 Symbol ( [ description ] ), https://tc39.es/ecma262/#sec-symbol-description

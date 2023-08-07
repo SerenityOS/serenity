@@ -2540,12 +2540,12 @@ static void generate_prototype_or_global_mixin_definitions(IDL::Interface const&
 #define define_native_function (object.define_native_function)
 #define set_prototype (object.set_prototype)
 
-JS::ThrowCompletionOr<void> @class_name@::initialize(JS::Realm& realm, JS::Object& object)
+void @class_name@::initialize(JS::Realm& realm, JS::Object& object)
 {
 )~~~");
     } else {
         generator.append(R"~~~(
-JS::ThrowCompletionOr<void> @class_name@::initialize(JS::Realm& realm)
+void @class_name@::initialize(JS::Realm& realm)
 {
 )~~~");
     }
@@ -2682,17 +2682,16 @@ JS::ThrowCompletionOr<void> @class_name@::initialize(JS::Realm& realm)
     }
 
     generator.append(R"~~~(
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm, "@namespaced_name@"sv)), JS::Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(JS::PrimitiveString::create(vm, "@namespaced_name@"sv)), JS::Attribute::Configurable);
 )~~~");
 
     if (!is_global_interface) {
         generator.append(R"~~~(
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 )~~~");
     }
 
     generator.append(R"~~~(
-    return {};
 }
 )~~~");
 
@@ -3051,7 +3050,7 @@ class @namespace_class@ final : public JS::Object {
 
 public:
     explicit @namespace_class@(JS::Realm&);
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual ~@namespace_class@() override;
 
 private:
@@ -3151,12 +3150,12 @@ namespace Web::Bindings {
 {
 }
 
-JS::ThrowCompletionOr<void> @namespace_class@::initialize(JS::Realm& realm)
+void @namespace_class@::initialize(JS::Realm& realm)
 {
     [[maybe_unused]] auto& vm = this->vm();
     [[maybe_unused]] u8 default_attributes = JS::Attribute::Enumerable;
 
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
 )~~~");
 
@@ -3173,7 +3172,6 @@ JS::ThrowCompletionOr<void> @namespace_class@::initialize(JS::Realm& realm)
     }
 
     generator.append(R"~~~(
-    return {};
 }
 )~~~");
 
@@ -3217,7 +3215,7 @@ class @constructor_class@ : public JS::NativeFunction {
     JS_OBJECT(@constructor_class@, JS::NativeFunction);
 public:
     explicit @constructor_class@(JS::Realm&);
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual ~@constructor_class@() override;
 
     virtual JS::ThrowCompletionOr<JS::Value> call() override;
@@ -3546,12 +3544,12 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> @constructor_class@::constru
     generator.append(R"~~~(
 }
 
-JS::ThrowCompletionOr<void> @constructor_class@::initialize(JS::Realm& realm)
+void @constructor_class@::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
     [[maybe_unused]] u8 default_attributes = JS::Attribute::Enumerable;
 
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     define_direct_property(vm.names.prototype, &ensure_web_prototype<@prototype_class@>(realm, "@namespaced_name@"), 0);
     define_direct_property(vm.names.length, JS::Value(@constructor.length@), JS::Attribute::Configurable);
 
@@ -3581,7 +3579,6 @@ JS::ThrowCompletionOr<void> @constructor_class@::initialize(JS::Realm& realm)
     }
 
     generator.append(R"~~~(
-    return {};
 }
 )~~~");
 
@@ -3616,7 +3613,7 @@ class @prototype_class@ : public JS::Object {
     JS_OBJECT(@prototype_class@, JS::Object);
 public:
     explicit @prototype_class@(JS::Realm&);
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual ~@prototype_class@() override;
 private:
 )~~~");
@@ -3776,10 +3773,9 @@ namespace Web::Bindings {
     auto is_global_interface = interface.extended_attributes.contains("Global");
     if (is_global_interface) {
         generator.append(R"~~~(
-JS::ThrowCompletionOr<void> @prototype_class@::initialize(JS::Realm& realm)
+void @prototype_class@::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
-    return {};
+    Base::initialize(realm);
 }
 )~~~");
     } else {
@@ -3809,7 +3805,7 @@ class @prototype_class@ : public JS::Object {
     JS_OBJECT(@prototype_class@, JS::Object);
 public:
     explicit @prototype_class@(JS::Realm&);
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual ~@prototype_class@() override;
 
 private:
@@ -3887,14 +3883,12 @@ namespace Web::Bindings {
 {
 }
 
-JS::ThrowCompletionOr<void> @prototype_class@::initialize(JS::Realm& realm)
+void @prototype_class@::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     define_native_function(realm, vm.names.next, next, 0, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm, "Iterator"sv)), JS::Attribute::Configurable);
-
-    return {};
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(JS::PrimitiveString::create(vm, "Iterator"sv)), JS::Attribute::Configurable);
 }
 
 static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm)
@@ -3930,7 +3924,7 @@ namespace Web::Bindings {
 
 class @class_name@ {
 public:
-    JS::ThrowCompletionOr<void> initialize(JS::Realm&, JS::Object&);
+    void initialize(JS::Realm&, JS::Object&);
     @class_name@();
     virtual ~@class_name@();
 

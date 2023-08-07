@@ -16,7 +16,7 @@ class CollatorCompareFunction : public NativeFunction {
 public:
     static NonnullGCPtr<CollatorCompareFunction> create(Realm&, Collator&);
 
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~CollatorCompareFunction() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

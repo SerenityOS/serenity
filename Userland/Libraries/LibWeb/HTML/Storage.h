@@ -34,7 +34,7 @@ public:
 private:
     explicit Storage(JS::Realm&);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     // ^LegacyPlatformObject
     virtual WebIDL::ExceptionOr<JS::Value> named_item_value(DeprecatedFlyString const&) const override;

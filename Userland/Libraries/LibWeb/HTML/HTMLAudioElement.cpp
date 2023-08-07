@@ -19,12 +19,10 @@ HTMLAudioElement::HTMLAudioElement(DOM::Document& document, DOM::QualifiedName q
 
 HTMLAudioElement::~HTMLAudioElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLAudioElement::initialize(JS::Realm& realm)
+void HTMLAudioElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLAudioElementPrototype>(realm, "HTMLAudioElement"));
-
-    return {};
 }
 
 JS::GCPtr<Layout::Node> HTMLAudioElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)

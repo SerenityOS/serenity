@@ -25,7 +25,7 @@ public:
 private:
     PluginArray(JS::Realm&);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     // ^Bindings::LegacyPlatformObject
     virtual Vector<DeprecatedString> supported_property_names() const override;

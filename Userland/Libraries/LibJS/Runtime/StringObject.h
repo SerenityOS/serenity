@@ -16,7 +16,7 @@ class StringObject : public Object {
 public:
     static ThrowCompletionOr<NonnullGCPtr<StringObject>> create(Realm&, PrimitiveString&, Object& prototype);
 
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~StringObject() override = default;
 
     PrimitiveString const& primitive_string() const { return m_string; }

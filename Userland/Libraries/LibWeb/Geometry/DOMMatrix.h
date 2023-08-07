@@ -52,7 +52,7 @@ private:
     DOMMatrix(JS::Realm&, Optional<Variant<String, Vector<double>>> const& init);
     DOMMatrix(JS::Realm&, DOMMatrixReadOnly const& read_only_matrix);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 };
 
 }

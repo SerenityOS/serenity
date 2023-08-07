@@ -33,12 +33,10 @@ HTMLObjectElement::HTMLObjectElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLObjectElement::~HTMLObjectElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLObjectElement::initialize(JS::Realm& realm)
+void HTMLObjectElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLObjectElementPrototype>(realm, "HTMLObjectElement"));
-
-    return {};
 }
 
 void HTMLObjectElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)

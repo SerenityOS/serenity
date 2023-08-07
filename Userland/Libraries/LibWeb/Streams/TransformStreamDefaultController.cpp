@@ -17,12 +17,10 @@ TransformStreamDefaultController::TransformStreamDefaultController(JS::Realm& re
 
 TransformStreamDefaultController::~TransformStreamDefaultController() = default;
 
-JS::ThrowCompletionOr<void> TransformStreamDefaultController::initialize(JS::Realm& realm)
+void TransformStreamDefaultController::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::TransformStreamDefaultControllerPrototype>(realm, "TransformStreamDefaultController"));
-
-    return {};
 }
 
 void TransformStreamDefaultController::visit_edges(Cell::Visitor& visitor)

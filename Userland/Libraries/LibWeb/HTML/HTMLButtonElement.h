@@ -26,7 +26,7 @@ class HTMLButtonElement final
 public:
     virtual ~HTMLButtonElement() override;
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     enum class TypeAttributeState {
 #define __ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTE(_, state) state,

@@ -52,12 +52,10 @@ void HTMLDetailsElement::run_details_notification_task_steps()
     });
 }
 
-JS::ThrowCompletionOr<void> HTMLDetailsElement::initialize(JS::Realm& realm)
+void HTMLDetailsElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLDetailsElementPrototype>(realm, "HTMLDetailsElement"));
-
-    return {};
 }
 
 }

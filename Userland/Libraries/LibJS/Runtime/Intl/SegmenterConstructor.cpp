@@ -21,9 +21,9 @@ SegmenterConstructor::SegmenterConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> SegmenterConstructor::initialize(Realm& realm)
+void SegmenterConstructor::initialize(Realm& realm)
 {
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     auto& vm = this->vm();
 
@@ -33,8 +33,6 @@ ThrowCompletionOr<void> SegmenterConstructor::initialize(Realm& realm)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
-
-    return {};
 }
 
 // 18.1.1 Intl.Segmenter ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-intl.segmenter

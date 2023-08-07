@@ -26,12 +26,10 @@ DOMParser::DOMParser(JS::Realm& realm)
 
 DOMParser::~DOMParser() = default;
 
-JS::ThrowCompletionOr<void> DOMParser::initialize(JS::Realm& realm)
+void DOMParser::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMParserPrototype>(realm, "DOMParser"));
-
-    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-domparser-parsefromstring

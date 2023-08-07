@@ -24,12 +24,10 @@ TextEncoder::TextEncoder(JS::Realm& realm)
 
 TextEncoder::~TextEncoder() = default;
 
-JS::ThrowCompletionOr<void> TextEncoder::initialize(JS::Realm& realm)
+void TextEncoder::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::TextEncoderPrototype>(realm, "TextEncoder"));
-
-    return {};
 }
 
 // https://encoding.spec.whatwg.org/#dom-textencoder-encode

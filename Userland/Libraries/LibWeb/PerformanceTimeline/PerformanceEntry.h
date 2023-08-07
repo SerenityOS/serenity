@@ -40,7 +40,7 @@ public:
 
 protected:
     PerformanceEntry(JS::Realm&, String const& name, HighResolutionTime::DOMHighResTimeStamp start_time, HighResolutionTime::DOMHighResTimeStamp duration);
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
 private:
     // https://www.w3.org/TR/performance-timeline/#dom-performanceentry-name

@@ -51,7 +51,7 @@ private:
 
     explicit FormData(JS::Realm&, Vector<FormDataEntry> entry_list = {});
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     WebIDL::ExceptionOr<void> append_impl(String const& name, Variant<JS::NonnullGCPtr<FileAPI::Blob>, String> const& value, Optional<String> const& filename = {});
     WebIDL::ExceptionOr<void> set_impl(String const& name, Variant<JS::NonnullGCPtr<FileAPI::Blob>, String> const& value, Optional<String> const& filename = {});

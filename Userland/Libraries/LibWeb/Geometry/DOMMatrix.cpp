@@ -67,12 +67,10 @@ DOMMatrix::DOMMatrix(JS::Realm& realm, DOMMatrixReadOnly const& read_only_matrix
 
 DOMMatrix::~DOMMatrix() = default;
 
-JS::ThrowCompletionOr<void> DOMMatrix::initialize(JS::Realm& realm)
+void DOMMatrix::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMMatrixPrototype>(realm, "DOMMatrix"));
-
-    return {};
 }
 
 // https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-m11

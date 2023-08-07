@@ -14,7 +14,7 @@ class SuppressedErrorConstructor final : public NativeFunction {
     JS_OBJECT(SuppressedErrorConstructor, NativeFunction);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~SuppressedErrorConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

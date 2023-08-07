@@ -22,15 +22,13 @@ ModuleNamespaceObject::ModuleNamespaceObject(Realm& realm, Module* module, Vecto
     });
 }
 
-ThrowCompletionOr<void> ModuleNamespaceObject::initialize(Realm& realm)
+void ModuleNamespaceObject::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
     // 28.3.1 @@toStringTag, https://tc39.es/ecma262/#sec-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Module"sv)), 0);
-
-    return {};
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Module"sv)), 0);
 }
 
 // 10.4.6.1 [[GetPrototypeOf]] ( ), https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-getprototypeof

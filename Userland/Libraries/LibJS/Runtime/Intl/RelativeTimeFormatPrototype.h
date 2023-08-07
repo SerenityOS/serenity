@@ -15,7 +15,7 @@ class RelativeTimeFormatPrototype final : public PrototypeObject<RelativeTimeFor
     JS_PROTOTYPE_OBJECT(RelativeTimeFormatPrototype, RelativeTimeFormat, Intl.RelativeTimeFormat);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~RelativeTimeFormatPrototype() override = default;
 
 private:

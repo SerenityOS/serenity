@@ -20,14 +20,14 @@ PlainMonthDayPrototype::PlainMonthDayPrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> PlainMonthDayPrototype::initialize(Realm& realm)
+void PlainMonthDayPrototype::initialize(Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
     auto& vm = this->vm();
 
     // 10.3.2 Temporal.PlainMonthDay.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Temporal.PlainMonthDay"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Temporal.PlainMonthDay"sv)), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.calendar, calendar_getter, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.monthCode, month_code_getter, {}, Attribute::Configurable);
@@ -42,8 +42,6 @@ ThrowCompletionOr<void> PlainMonthDayPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.valueOf, value_of, 0, attr);
     define_native_function(realm, vm.names.toPlainDate, to_plain_date, 1, attr);
     define_native_function(realm, vm.names.getISOFields, get_iso_fields, 0, attr);
-
-    return {};
 }
 
 // 10.3.3 get Temporal.PlainMonthDay.prototype.calendar, https://tc39.es/proposal-temporal/#sec-get-temporal.plainmonthday.prototype.calendar

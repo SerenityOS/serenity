@@ -31,7 +31,7 @@ public:
 private:
     File(JS::Realm&, ByteBuffer, String file_name, String type, i64 last_modified);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     String m_name;
     i64 m_last_modified { 0 };

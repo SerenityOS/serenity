@@ -57,12 +57,10 @@ WebGLRenderingContext::WebGLRenderingContext(JS::Realm& realm, HTML::HTMLCanvasE
 
 WebGLRenderingContext::~WebGLRenderingContext() = default;
 
-JS::ThrowCompletionOr<void> WebGLRenderingContext::initialize(JS::Realm& realm)
+void WebGLRenderingContext::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::WebGLRenderingContextPrototype>(realm, "WebGLRenderingContext"));
-
-    return {};
 }
 
 }

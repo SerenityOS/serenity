@@ -30,7 +30,7 @@ public:
 private:
     HTMLTableRowElement(DOM::Document&, DOM::QualifiedName);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 

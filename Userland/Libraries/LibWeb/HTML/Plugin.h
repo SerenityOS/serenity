@@ -30,7 +30,7 @@ private:
     // https://html.spec.whatwg.org/multipage/system-state.html#concept-plugin-name
     String m_name;
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     // ^Bindings::LegacyPlatformObject
     virtual Vector<DeprecatedString> supported_property_names() const override;

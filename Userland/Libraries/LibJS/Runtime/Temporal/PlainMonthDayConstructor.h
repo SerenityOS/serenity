@@ -14,7 +14,7 @@ class PlainMonthDayConstructor final : public NativeFunction {
     JS_OBJECT(PlainMonthDayConstructor, NativeFunction);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~PlainMonthDayConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

@@ -19,12 +19,10 @@ PluginArray::PluginArray(JS::Realm& realm)
 
 PluginArray::~PluginArray() = default;
 
-JS::ThrowCompletionOr<void> PluginArray::initialize(JS::Realm& realm)
+void PluginArray::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::PluginArrayPrototype>(realm, "PluginArray"));
-
-    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/system-state.html#dom-pluginarray-refresh

@@ -14,7 +14,7 @@ class FunctionPrototype final : public FunctionObject {
     JS_OBJECT(FunctionPrototype, FunctionObject);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~FunctionPrototype() override = default;
 
     virtual ThrowCompletionOr<Value> internal_call(Value this_argument, MarkedVector<Value> arguments_list) override;

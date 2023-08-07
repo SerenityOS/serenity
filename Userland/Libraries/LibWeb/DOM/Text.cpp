@@ -24,12 +24,10 @@ Text::Text(Document& document, NodeType type, DeprecatedString const& data)
 {
 }
 
-JS::ThrowCompletionOr<void> Text::initialize(JS::Realm& realm)
+void Text::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::TextPrototype>(realm, "Text"));
-
-    return {};
 }
 
 void Text::visit_edges(Cell::Visitor& visitor)

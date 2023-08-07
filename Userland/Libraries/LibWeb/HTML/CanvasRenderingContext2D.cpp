@@ -40,12 +40,10 @@ CanvasRenderingContext2D::CanvasRenderingContext2D(JS::Realm& realm, HTMLCanvasE
 
 CanvasRenderingContext2D::~CanvasRenderingContext2D() = default;
 
-JS::ThrowCompletionOr<void> CanvasRenderingContext2D::initialize(JS::Realm& realm)
+void CanvasRenderingContext2D::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CanvasRenderingContext2DPrototype>(realm, "CanvasRenderingContext2D"));
-
-    return {};
 }
 
 void CanvasRenderingContext2D::visit_edges(Cell::Visitor& visitor)

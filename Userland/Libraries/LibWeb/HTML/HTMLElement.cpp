@@ -44,16 +44,12 @@ HTMLElement::HTMLElement(DOM::Document& document, DOM::QualifiedName qualified_n
 
 HTMLElement::~HTMLElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLElement::initialize(JS::Realm& realm)
+void HTMLElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLElementPrototype>(realm, "HTMLElement"));
 
-    m_dataset = TRY(Bindings::throw_dom_exception_if_needed(realm.vm(), [&]() {
-        return DOMStringMap::create(*this);
-    }));
-
-    return {};
+    m_dataset = MUST(DOMStringMap::create(*this));
 }
 
 void HTMLElement::visit_edges(Cell::Visitor& visitor)

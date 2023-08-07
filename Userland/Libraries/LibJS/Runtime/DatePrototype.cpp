@@ -34,10 +34,10 @@ DatePrototype::DatePrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> DatePrototype::initialize(Realm& realm)
+void DatePrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.getDate, get_date, 0, attr);
     define_native_function(realm, vm.names.getDay, get_day, 0, attr);
@@ -95,8 +95,6 @@ ThrowCompletionOr<void> DatePrototype::initialize(Realm& realm)
     // B.2.4.3 Date.prototype.toGMTString ( ), https://tc39.es/ecma262/#sec-date.prototype.togmtstring
     // The initial value of the "toGMTString" property is %Date.prototype.toUTCString%, defined in 21.4.4.43.
     define_direct_property(vm.names.toGMTString, get_without_side_effects(vm.names.toUTCString), attr);
-
-    return {};
 }
 
 // thisTimeValue ( value ), https://tc39.es/ecma262/#thistimevalue

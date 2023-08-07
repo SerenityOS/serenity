@@ -23,12 +23,10 @@ WheelEvent::WheelEvent(JS::Realm& realm, FlyString const& event_name, WheelEvent
 
 WheelEvent::~WheelEvent() = default;
 
-JS::ThrowCompletionOr<void> WheelEvent::initialize(JS::Realm& realm)
+void WheelEvent::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::WheelEventPrototype>(realm, "WheelEvent"));
-
-    return {};
 }
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WheelEvent>> WheelEvent::create(JS::Realm& realm, FlyString const& event_name, WheelEventInit const& event_init)

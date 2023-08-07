@@ -27,7 +27,7 @@ public:
 private:
     CSSNamespaceRule(JS::Realm&, Optional<StringView> prefix, StringView namespace_uri);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     virtual DeprecatedString serialized() const override;
     DeprecatedString m_namespace_uri;

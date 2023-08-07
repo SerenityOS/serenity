@@ -28,7 +28,7 @@ public:
 private:
     explicit MessageChannel(JS::Realm&);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::GCPtr<MessagePort> m_port1;

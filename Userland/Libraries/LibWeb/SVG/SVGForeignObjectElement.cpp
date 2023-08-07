@@ -22,28 +22,16 @@ SVGForeignObjectElement::SVGForeignObjectElement(DOM::Document& document, DOM::Q
 
 SVGForeignObjectElement::~SVGForeignObjectElement() = default;
 
-JS::ThrowCompletionOr<void> SVGForeignObjectElement::initialize(JS::Realm& realm)
+void SVGForeignObjectElement::initialize(JS::Realm& realm)
 {
-    auto& vm = realm.vm();
-
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGForeignObjectElementPrototype>(realm, "SVGForeignObjectElement"));
 
     // FIXME: These never actually get updated!
-    m_x = TRY(Bindings::throw_dom_exception_if_needed(vm, [&]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<SVGAnimatedLength>> {
-        return SVGAnimatedLength::create(realm, TRY(SVGLength::create(realm, 0, 0)), TRY(SVGLength::create(realm, 0, 0)));
-    }));
-    m_y = TRY(Bindings::throw_dom_exception_if_needed(vm, [&]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<SVGAnimatedLength>> {
-        return SVGAnimatedLength::create(realm, TRY(SVGLength::create(realm, 0, 0)), TRY(SVGLength::create(realm, 0, 0)));
-    }));
-    m_width = TRY(Bindings::throw_dom_exception_if_needed(vm, [&]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<SVGAnimatedLength>> {
-        return SVGAnimatedLength::create(realm, TRY(SVGLength::create(realm, 0, 0)), TRY(SVGLength::create(realm, 0, 0)));
-    }));
-    m_height = TRY(Bindings::throw_dom_exception_if_needed(vm, [&]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<SVGAnimatedLength>> {
-        return SVGAnimatedLength::create(realm, TRY(SVGLength::create(realm, 0, 0)), TRY(SVGLength::create(realm, 0, 0)));
-    }));
-
-    return {};
+    m_x = MUST(SVGAnimatedLength::create(realm, MUST(SVGLength::create(realm, 0, 0)), MUST(SVGLength::create(realm, 0, 0))));
+    m_y = MUST(SVGAnimatedLength::create(realm, MUST(SVGLength::create(realm, 0, 0)), MUST(SVGLength::create(realm, 0, 0))));
+    m_width = MUST(SVGAnimatedLength::create(realm, MUST(SVGLength::create(realm, 0, 0)), MUST(SVGLength::create(realm, 0, 0))));
+    m_height = MUST(SVGAnimatedLength::create(realm, MUST(SVGLength::create(realm, 0, 0)), MUST(SVGLength::create(realm, 0, 0))));
 }
 
 void SVGForeignObjectElement::visit_edges(Cell::Visitor& visitor)

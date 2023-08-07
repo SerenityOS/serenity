@@ -11,9 +11,8 @@
 
 namespace JS {
 
-ThrowCompletionOr<void> JS::Cell::initialize(JS::Realm&)
+void JS::Cell::initialize(JS::Realm&)
 {
-    return {};
 }
 
 void JS::Cell::Visitor::visit(JS::Value value)

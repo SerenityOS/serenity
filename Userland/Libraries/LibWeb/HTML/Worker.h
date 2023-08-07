@@ -68,7 +68,7 @@ private:
         return static_cast<Bindings::WebEngineCustomData*>(target_vm.custom_data())->event_loop;
     }
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     String m_script_url;

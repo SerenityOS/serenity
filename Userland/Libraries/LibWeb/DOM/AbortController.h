@@ -28,7 +28,7 @@ public:
 private:
     AbortController(JS::Realm&, JS::NonnullGCPtr<AbortSignal>);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     // https://dom.spec.whatwg.org/#abortcontroller-signal

@@ -23,12 +23,10 @@ History::History(JS::Realm& realm, DOM::Document& document)
 
 History::~History() = default;
 
-JS::ThrowCompletionOr<void> History::initialize(JS::Realm& realm)
+void History::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HistoryPrototype>(realm, "History"));
-
-    return {};
 }
 
 void History::visit_edges(Cell::Visitor& visitor)

@@ -22,12 +22,10 @@ SVGTextPositioningElement::SVGTextPositioningElement(DOM::Document& document, DO
 {
 }
 
-JS::ThrowCompletionOr<void> SVGTextPositioningElement::initialize(JS::Realm& realm)
+void SVGTextPositioningElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGTextPositioningElementPrototype>(realm, "SVGTextPositioningElement"));
-
-    return {};
 }
 
 void SVGTextPositioningElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)

@@ -23,7 +23,6 @@ public:
     static NonnullGCPtr<NativeFunction> create(Realm&, SafeFunction<ThrowCompletionOr<Value>(VM&)> behaviour, i32 length, PropertyKey const& name, Optional<Realm*> = {}, Optional<Object*> prototype = {}, Optional<StringView> const& prefix = {});
     static NonnullGCPtr<NativeFunction> create(Realm&, DeprecatedFlyString const& name, SafeFunction<ThrowCompletionOr<Value>(VM&)>);
 
-    virtual ThrowCompletionOr<void> initialize(Realm&) override { return {}; }
     virtual ~NativeFunction() override = default;
 
     virtual ThrowCompletionOr<Value> internal_call(Value this_argument, MarkedVector<Value> arguments_list) override;

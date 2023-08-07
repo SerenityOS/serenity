@@ -108,7 +108,7 @@ public:
 protected:
     DOMException(JS::Realm&, DeprecatedFlyString const& name, DeprecatedFlyString const& message);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
 private:
     DeprecatedFlyString m_name;

@@ -18,17 +18,15 @@ WeakMapConstructor::WeakMapConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> WeakMapConstructor::initialize(Realm& realm)
+void WeakMapConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     // 24.3.2.1 WeakMap.prototype, https://tc39.es/ecma262/#sec-weakmap.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().weak_map_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
-
-    return {};
 }
 
 // 24.3.1.1 WeakMap ( [ iterable ] ), https://tc39.es/ecma262/#sec-weakmap-iterable

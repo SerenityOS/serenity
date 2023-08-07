@@ -16,16 +16,14 @@ WrapForValidIteratorPrototype::WrapForValidIteratorPrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> WrapForValidIteratorPrototype::initialize(Realm& realm)
+void WrapForValidIteratorPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.next, next, 0, attr);
     define_native_function(realm, vm.names.return_, return_, 0, attr);
-
-    return {};
 }
 
 // 3.1.1.2.2.1.1 %WrapForValidIteratorPrototype%.next ( ), https://tc39.es/proposal-iterator-helpers/#sec-wrapforvaliditeratorprototype.next

@@ -20,16 +20,12 @@ SVGElement::SVGElement(DOM::Document& document, DOM::QualifiedName qualified_nam
 {
 }
 
-JS::ThrowCompletionOr<void> SVGElement::initialize(JS::Realm& realm)
+void SVGElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGElementPrototype>(realm, "SVGElement"));
 
-    m_dataset = TRY(Bindings::throw_dom_exception_if_needed(realm.vm(), [&]() {
-        return HTML::DOMStringMap::create(*this);
-    }));
-
-    return {};
+    m_dataset = MUST(HTML::DOMStringMap::create(*this));
 }
 
 void SVGElement::visit_edges(Cell::Visitor& visitor)

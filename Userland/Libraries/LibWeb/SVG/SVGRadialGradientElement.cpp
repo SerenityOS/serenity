@@ -15,12 +15,10 @@ SVGRadialGradientElement::SVGRadialGradientElement(DOM::Document& document, DOM:
 {
 }
 
-JS::ThrowCompletionOr<void> SVGRadialGradientElement::initialize(JS::Realm& realm)
+void SVGRadialGradientElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGRadialGradientElementPrototype>(realm, "SVGRadialGradientElement"));
-
-    return {};
 }
 
 void SVGRadialGradientElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)

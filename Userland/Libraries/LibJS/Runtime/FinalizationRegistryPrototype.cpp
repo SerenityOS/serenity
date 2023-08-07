@@ -15,10 +15,10 @@ FinalizationRegistryPrototype::FinalizationRegistryPrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> FinalizationRegistryPrototype::initialize(Realm& realm)
+void FinalizationRegistryPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     define_native_function(realm, vm.names.cleanupSome, cleanup_some, 0, attr);
@@ -27,8 +27,6 @@ ThrowCompletionOr<void> FinalizationRegistryPrototype::initialize(Realm& realm)
 
     // 26.2.3.4 FinalizationRegistry.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-finalization-registry.prototype-@@tostringtag
     define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.FinalizationRegistry.as_string()), Attribute::Configurable);
-
-    return {};
 }
 
 // @STAGE 2@ FinalizationRegistry.prototype.cleanupSome ( [ callback ] ), https://github.com/tc39/proposal-cleanup-some/blob/master/spec/finalization-registry.html

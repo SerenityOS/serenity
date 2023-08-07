@@ -820,8 +820,8 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
 
     Object::set_prototype(&Bindings::ensure_web_prototype<Bindings::WindowPrototype>(realm, "Window"));
 
-    MUST_OR_THROW_OOM(Bindings::WindowGlobalMixin::initialize(realm, *this));
-    MUST_OR_THROW_OOM(WindowOrWorkerGlobalScopeMixin::initialize(realm));
+    Bindings::WindowGlobalMixin::initialize(realm, *this);
+    WindowOrWorkerGlobalScopeMixin::initialize(realm);
 
     if (s_internals_object_exposed)
         define_direct_property("internals", MUST_OR_THROW_OOM(heap().allocate<Internals::Internals>(realm, realm)), JS::default_attributes);

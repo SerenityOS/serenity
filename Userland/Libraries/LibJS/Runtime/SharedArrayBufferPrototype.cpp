@@ -17,19 +17,17 @@ SharedArrayBufferPrototype::SharedArrayBufferPrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> SharedArrayBufferPrototype::initialize(Realm& realm)
+void SharedArrayBufferPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
 
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_accessor(realm, vm.names.byteLength, byte_length_getter, {}, Attribute::Configurable);
     define_native_function(realm, vm.names.slice, slice, 2, attr);
 
     // 25.2.4.4 SharedArrayBuffer.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-sharedarraybuffer.prototype.toString
     define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.SharedArrayBuffer.as_string()), Attribute::Configurable);
-
-    return {};
 }
 
 // 25.2.4.1 get SharedArrayBuffer.prototype.byteLength, https://tc39.es/ecma262/#sec-get-sharedarraybuffer.prototype.bytelength

@@ -14,7 +14,7 @@ class Intl final : public Object {
     JS_OBJECT(Intl, Object);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~Intl() override = default;
 
 private:

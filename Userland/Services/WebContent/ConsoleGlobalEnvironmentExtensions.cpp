@@ -21,16 +21,14 @@ ConsoleGlobalEnvironmentExtensions::ConsoleGlobalEnvironmentExtensions(JS::Realm
 {
 }
 
-JS::ThrowCompletionOr<void> ConsoleGlobalEnvironmentExtensions::initialize(JS::Realm& realm)
+void ConsoleGlobalEnvironmentExtensions::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
     define_native_accessor(realm, "$0", $0_getter, nullptr, 0);
     define_native_accessor(realm, "$_", $__getter, nullptr, 0);
     define_native_function(realm, "$", $_function, 2, JS::default_attributes);
     define_native_function(realm, "$$", $$_function, 2, JS::default_attributes);
-
-    return {};
 }
 
 void ConsoleGlobalEnvironmentExtensions::visit_edges(Visitor& visitor)

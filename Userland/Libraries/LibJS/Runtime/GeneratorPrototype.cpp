@@ -14,19 +14,17 @@ GeneratorPrototype::GeneratorPrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> GeneratorPrototype::initialize(Realm& realm)
+void GeneratorPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.next, next, 1, attr);
     define_native_function(realm, vm.names.return_, return_, 1, attr);
     define_native_function(realm, vm.names.throw_, throw_, 1, attr);
 
     // 27.5.1.5 Generator.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-generator.prototype-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Generator"sv)), Attribute::Configurable);
-
-    return {};
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Generator"sv)), Attribute::Configurable);
 }
 
 // 27.5.1.2 Generator.prototype.next ( value ), https://tc39.es/ecma262/#sec-generator.prototype.next

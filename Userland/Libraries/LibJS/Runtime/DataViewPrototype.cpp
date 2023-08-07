@@ -15,10 +15,10 @@ DataViewPrototype::DataViewPrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> DataViewPrototype::initialize(Realm& realm)
+void DataViewPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     define_native_function(realm, vm.names.getBigInt64, get_big_int_64, 1, attr);
@@ -48,8 +48,6 @@ ThrowCompletionOr<void> DataViewPrototype::initialize(Realm& realm)
 
     // 25.3.4.25 DataView.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-dataview.prototype-@@tostringtag
     define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.DataView.as_string()), Attribute::Configurable);
-
-    return {};
 }
 
 // 25.3.1.1 GetViewValue ( view, requestIndex, isLittleEndian, type ), https://tc39.es/ecma262/#sec-getviewvalue

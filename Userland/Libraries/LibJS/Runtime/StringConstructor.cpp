@@ -22,10 +22,10 @@ StringConstructor::StringConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> StringConstructor::initialize(Realm& realm)
+void StringConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     // 22.1.2.3 String.prototype, https://tc39.es/ecma262/#sec-string.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().string_prototype(), 0);
@@ -36,8 +36,6 @@ ThrowCompletionOr<void> StringConstructor::initialize(Realm& realm)
     define_native_function(realm, vm.names.fromCodePoint, from_code_point, 1, attr);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
-
-    return {};
 }
 
 // 22.1.1.1 String ( value ), https://tc39.es/ecma262/#sec-string-constructor-string-value

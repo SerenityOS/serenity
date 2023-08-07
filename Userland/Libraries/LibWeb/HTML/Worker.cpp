@@ -29,12 +29,10 @@ Worker::Worker(String const& script_url, WorkerOptions const options, DOM::Docum
 {
 }
 
-JS::ThrowCompletionOr<void> Worker::initialize(JS::Realm& realm)
+void Worker::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::WorkerPrototype>(realm, "Worker"));
-
-    return {};
 }
 
 void Worker::visit_edges(Cell::Visitor& visitor)

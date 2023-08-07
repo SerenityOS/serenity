@@ -15,7 +15,7 @@ class SegmentIteratorPrototype final : public PrototypeObject<SegmentIteratorPro
     JS_PROTOTYPE_OBJECT(SegmentIteratorPrototype, SegmentIterator, SegmentIterator);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~SegmentIteratorPrototype() override = default;
 
 private:

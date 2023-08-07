@@ -16,21 +16,19 @@ RelativeTimeFormatPrototype::RelativeTimeFormatPrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> RelativeTimeFormatPrototype::initialize(Realm& realm)
+void RelativeTimeFormatPrototype::initialize(Realm& realm)
 {
-    MUST_OR_THROW_OOM(Object::initialize(realm));
+    Base::initialize(realm);
 
     auto& vm = this->vm();
 
     // 17.3.2 Intl.RelativeTimeFormat.prototype[ @@toStringTag ], https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat.prototype-toStringTag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Intl.RelativeTimeFormat"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Intl.RelativeTimeFormat"sv)), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.format, format, 2, attr);
     define_native_function(realm, vm.names.formatToParts, format_to_parts, 2, attr);
     define_native_function(realm, vm.names.resolvedOptions, resolved_options, 0, attr);
-
-    return {};
 }
 
 // 17.3.3 Intl.RelativeTimeFormat.prototype.format ( value, unit ), https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat.prototype.format

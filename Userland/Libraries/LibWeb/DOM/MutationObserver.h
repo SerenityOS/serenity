@@ -51,7 +51,7 @@ public:
 private:
     MutationObserver(JS::Realm&, JS::GCPtr<WebIDL::CallbackType>);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     // https://dom.spec.whatwg.org/#concept-mo-callback

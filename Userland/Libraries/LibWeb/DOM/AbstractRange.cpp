@@ -21,12 +21,10 @@ AbstractRange::AbstractRange(Node& start_container, u32 start_offset, Node& end_
 
 AbstractRange::~AbstractRange() = default;
 
-JS::ThrowCompletionOr<void> AbstractRange::initialize(JS::Realm& realm)
+void AbstractRange::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::AbstractRangePrototype>(realm, "AbstractRange"));
-
-    return {};
 }
 
 void AbstractRange::visit_edges(Cell::Visitor& visitor)

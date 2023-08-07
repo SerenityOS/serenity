@@ -26,7 +26,7 @@ public:
 private:
     FocusEvent(JS::Realm&, FlyString const& event_name, FocusEventInit const&);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 };
 
 }

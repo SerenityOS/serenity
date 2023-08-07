@@ -15,7 +15,7 @@ class LocalePrototype final : public PrototypeObject<LocalePrototype, Locale> {
     JS_PROTOTYPE_OBJECT(LocalePrototype, Locale, Intl.Locale);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~LocalePrototype() override = default;
 
 private:

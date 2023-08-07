@@ -139,12 +139,10 @@ Blob::Blob(JS::Realm& realm, ByteBuffer byte_buffer)
 
 Blob::~Blob() = default;
 
-JS::ThrowCompletionOr<void> Blob::initialize(JS::Realm& realm)
+void Blob::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::BlobPrototype>(realm, "Blob"));
-
-    return {};
 }
 
 // https://w3c.github.io/FileAPI/#ref-for-dom-blob-blob

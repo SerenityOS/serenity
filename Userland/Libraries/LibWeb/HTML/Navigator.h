@@ -52,7 +52,7 @@ protected:
 private:
     explicit Navigator(JS::Realm&);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     JS::GCPtr<PluginArray> m_plugin_array;
     JS::GCPtr<MimeTypeArray> m_mime_type_array;

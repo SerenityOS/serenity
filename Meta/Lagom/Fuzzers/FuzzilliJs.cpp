@@ -120,7 +120,7 @@ class TestRunnerGlobalObject final : public JS::GlobalObject {
 
 public:
     TestRunnerGlobalObject(JS::Realm&);
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual ~TestRunnerGlobalObject() override;
 
 private:
@@ -167,13 +167,11 @@ JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::fuzzilli)
     return JS::js_undefined();
 }
 
-JS::ThrowCompletionOr<void> TestRunnerGlobalObject::initialize(JS::Realm& realm)
+void TestRunnerGlobalObject::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     define_direct_property("global", this, JS::Attribute::Enumerable);
     define_native_function(realm, "fuzzilli", fuzzilli, 2, JS::default_attributes);
-
-    return {};
 }
 
 int main(int, char**)

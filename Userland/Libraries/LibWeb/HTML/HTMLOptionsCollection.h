@@ -27,7 +27,7 @@ public:
 private:
     HTMLOptionsCollection(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 };
 
 }

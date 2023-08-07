@@ -16,12 +16,10 @@ HTMLTableColElement::HTMLTableColElement(DOM::Document& document, DOM::Qualified
 
 HTMLTableColElement::~HTMLTableColElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLTableColElement::initialize(JS::Realm& realm)
+void HTMLTableColElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTableColElementPrototype>(realm, "HTMLTableColElement"));
-
-    return {};
 }
 
 }

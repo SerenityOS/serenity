@@ -17,15 +17,13 @@ HTMLTemplateElement::HTMLTemplateElement(DOM::Document& document, DOM::Qualified
 
 HTMLTemplateElement::~HTMLTemplateElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLTemplateElement::initialize(JS::Realm& realm)
+void HTMLTemplateElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTemplateElementPrototype>(realm, "HTMLTemplateElement"));
 
-    m_content = MUST_OR_THROW_OOM(heap().allocate<DOM::DocumentFragment>(realm, m_document->appropriate_template_contents_owner_document()));
+    m_content = MUST(heap().allocate<DOM::DocumentFragment>(realm, m_document->appropriate_template_contents_owner_document()));
     m_content->set_host(this);
-
-    return {};
 }
 
 void HTMLTemplateElement::visit_edges(Cell::Visitor& visitor)

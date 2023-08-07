@@ -29,7 +29,7 @@ public:
 private:
     explicit WorkerNavigator(WorkerGlobalScope&);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 };
 
 }

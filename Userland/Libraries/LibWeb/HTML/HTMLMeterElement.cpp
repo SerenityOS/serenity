@@ -16,12 +16,10 @@ HTMLMeterElement::HTMLMeterElement(DOM::Document& document, DOM::QualifiedName q
 
 HTMLMeterElement::~HTMLMeterElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLMeterElement::initialize(JS::Realm& realm)
+void HTMLMeterElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLMeterElementPrototype>(realm, "HTMLMeterElement"));
-
-    return {};
 }
 
 }

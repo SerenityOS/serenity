@@ -62,7 +62,7 @@ private:
 
     Headers(JS::Realm&, JS::NonnullGCPtr<Infrastructure::HeaderList>);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(JS::Cell::Visitor&) override;
 
     WebIDL::ExceptionOr<bool> validate(Infrastructure::Header const&) const;

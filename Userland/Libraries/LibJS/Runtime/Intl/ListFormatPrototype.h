@@ -15,7 +15,7 @@ class ListFormatPrototype final : public PrototypeObject<ListFormatPrototype, Li
     JS_PROTOTYPE_OBJECT(ListFormatPrototype, ListFormat, Intl.ListFormat);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~ListFormatPrototype() override = default;
 
 private:

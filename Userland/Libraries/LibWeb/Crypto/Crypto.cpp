@@ -27,15 +27,11 @@ Crypto::Crypto(JS::Realm& realm)
 
 Crypto::~Crypto() = default;
 
-JS::ThrowCompletionOr<void> Crypto::initialize(JS::Realm& realm)
+void Crypto::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CryptoPrototype>(realm, "Crypto"));
-    m_subtle = TRY(Bindings::throw_dom_exception_if_needed(realm.vm(), [&]() {
-        return SubtleCrypto::create(realm);
-    }));
-
-    return {};
+    m_subtle = MUST(SubtleCrypto::create(realm));
 }
 
 JS::NonnullGCPtr<SubtleCrypto> Crypto::subtle() const

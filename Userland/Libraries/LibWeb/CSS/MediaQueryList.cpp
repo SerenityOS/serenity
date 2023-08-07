@@ -28,12 +28,10 @@ MediaQueryList::MediaQueryList(DOM::Document& document, Vector<NonnullRefPtr<Med
     evaluate();
 }
 
-JS::ThrowCompletionOr<void> MediaQueryList::initialize(JS::Realm& realm)
+void MediaQueryList::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::MediaQueryListPrototype>(realm, "MediaQueryList"));
-
-    return {};
 }
 
 void MediaQueryList::visit_edges(Cell::Visitor& visitor)

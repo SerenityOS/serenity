@@ -57,11 +57,9 @@ bool HTMLSummaryElement::is_summary_for_its_parent_details()
 
 HTMLSummaryElement::~HTMLSummaryElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLSummaryElement::initialize(JS::Realm& realm)
+void HTMLSummaryElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
-
-    return {};
+    Base::initialize(realm);
 }
 
 }

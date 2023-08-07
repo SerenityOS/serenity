@@ -52,14 +52,12 @@ void HTMLImageElement::finalize()
         browsing_context->unregister_viewport_client(*this);
 }
 
-JS::ThrowCompletionOr<void> HTMLImageElement::initialize(JS::Realm& realm)
+void HTMLImageElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLImageElementPrototype>(realm, "HTMLImageElement"));
 
-    m_current_request = TRY_OR_THROW_OOM(vm(), ImageRequest::create(*document().page()));
-
-    return {};
+    m_current_request = MUST(ImageRequest::create(*document().page()));
 }
 
 void HTMLImageElement::apply_presentational_hints(CSS::StyleProperties& style) const

@@ -29,14 +29,14 @@ CalendarPrototype::CalendarPrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> CalendarPrototype::initialize(Realm& realm)
+void CalendarPrototype::initialize(Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
     auto& vm = this->vm();
 
     // 12.4.2 Temporal.Calendar.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Temporal.Calendar"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Temporal.Calendar"sv)), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.id, id_getter, {}, Attribute::Configurable);
 
@@ -65,8 +65,6 @@ ThrowCompletionOr<void> CalendarPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.toJSON, to_json, 0, attr);
     define_native_function(realm, vm.names.era, era, 1, attr);
     define_native_function(realm, vm.names.eraYear, era_year, 1, attr);
-
-    return {};
 }
 
 // 12.4.3 get Temporal.Calendar.prototype.id, https://tc39.es/proposal-temporal/#sec-get-temporal.calendar.prototype.id

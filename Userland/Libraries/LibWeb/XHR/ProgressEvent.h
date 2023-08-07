@@ -36,7 +36,7 @@ public:
 private:
     ProgressEvent(JS::Realm&, FlyString const& event_name, ProgressEventInit const& event_init);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     bool m_length_computable { false };
     u64 m_loaded { 0 };

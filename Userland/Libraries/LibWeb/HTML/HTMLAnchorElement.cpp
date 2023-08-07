@@ -21,12 +21,10 @@ HTMLAnchorElement::HTMLAnchorElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLAnchorElement::~HTMLAnchorElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLAnchorElement::initialize(JS::Realm& realm)
+void HTMLAnchorElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLAnchorElementPrototype>(realm, "HTMLAnchorElement"));
-
-    return {};
 }
 
 void HTMLAnchorElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)

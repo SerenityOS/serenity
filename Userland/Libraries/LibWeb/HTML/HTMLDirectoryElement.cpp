@@ -16,12 +16,10 @@ HTMLDirectoryElement::HTMLDirectoryElement(DOM::Document& document, DOM::Qualifi
 
 HTMLDirectoryElement::~HTMLDirectoryElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLDirectoryElement::initialize(JS::Realm& realm)
+void HTMLDirectoryElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLDirectoryElementPrototype>(realm, "HTMLDirectoryElement"));
-
-    return {};
 }
 
 }

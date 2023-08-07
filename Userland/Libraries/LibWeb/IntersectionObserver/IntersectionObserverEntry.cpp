@@ -37,12 +37,10 @@ IntersectionObserverEntry::IntersectionObserverEntry(JS::Realm& realm, HighResol
 
 IntersectionObserverEntry::~IntersectionObserverEntry() = default;
 
-JS::ThrowCompletionOr<void> IntersectionObserverEntry::initialize(JS::Realm& realm)
+void IntersectionObserverEntry::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::IntersectionObserverEntryPrototype>(realm, "IntersectionObserverEntry"));
-
-    return {};
 }
 
 void IntersectionObserverEntry::visit_edges(JS::Cell::Visitor& visitor)

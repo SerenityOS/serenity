@@ -25,12 +25,10 @@ HTMLOptionsCollection::HTMLOptionsCollection(DOM::ParentNode& root, Function<boo
 
 HTMLOptionsCollection::~HTMLOptionsCollection() = default;
 
-JS::ThrowCompletionOr<void> HTMLOptionsCollection::initialize(JS::Realm& realm)
+void HTMLOptionsCollection::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLOptionsCollectionPrototype>(realm, "HTMLOptionsCollection"));
-
-    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#dom-htmloptionscollection-add

@@ -23,12 +23,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Comment>> Comment::construct_impl(JS::Realm
     return MUST_OR_THROW_OOM(realm.heap().allocate<Comment>(realm, window.associated_document(), data));
 }
 
-JS::ThrowCompletionOr<void> Comment::initialize(JS::Realm& realm)
+void Comment::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CommentPrototype>(realm, "Comment"));
-
-    return {};
 }
 
 }

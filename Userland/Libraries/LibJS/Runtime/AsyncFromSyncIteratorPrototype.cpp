@@ -19,17 +19,15 @@ AsyncFromSyncIteratorPrototype::AsyncFromSyncIteratorPrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> AsyncFromSyncIteratorPrototype::initialize(Realm& realm)
+void AsyncFromSyncIteratorPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.next, next, 1, attr);
     define_native_function(realm, vm.names.return_, return_, 1, attr);
     define_native_function(realm, vm.names.throw_, throw_, 1, attr);
-
-    return {};
 }
 
 // 27.1.4.4 AsyncFromSyncIteratorContinuation ( result, promiseCapability ), https://tc39.es/ecma262/#sec-asyncfromsynciteratorcontinuation

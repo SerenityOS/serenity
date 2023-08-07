@@ -14,7 +14,7 @@ class AsyncGeneratorFunctionPrototype final : public PrototypeObject<AsyncGenera
     JS_PROTOTYPE_OBJECT(AsyncGeneratorFunctionPrototype, AsyncGeneratorFunction, AsyncGeneratorFunction);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~AsyncGeneratorFunctionPrototype() override = default;
 
 private:

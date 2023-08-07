@@ -146,7 +146,7 @@ public:
 protected:
     void initialize_event(String const&, bool, bool);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Visitor&) override;
 
 private:

@@ -71,12 +71,10 @@ XMLHttpRequest::XMLHttpRequest(JS::Realm& realm, XMLHttpRequestUpload& upload_ob
 
 XMLHttpRequest::~XMLHttpRequest() = default;
 
-JS::ThrowCompletionOr<void> XMLHttpRequest::initialize(JS::Realm& realm)
+void XMLHttpRequest::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::XMLHttpRequestPrototype>(realm, "XMLHttpRequest"));
-
-    return {};
 }
 
 void XMLHttpRequest::visit_edges(Cell::Visitor& visitor)

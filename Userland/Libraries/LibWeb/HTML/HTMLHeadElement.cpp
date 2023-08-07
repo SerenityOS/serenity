@@ -16,12 +16,10 @@ HTMLHeadElement::HTMLHeadElement(DOM::Document& document, DOM::QualifiedName qua
 
 HTMLHeadElement::~HTMLHeadElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLHeadElement::initialize(JS::Realm& realm)
+void HTMLHeadElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLHeadElementPrototype>(realm, "HTMLHeadElement"));
-
-    return {};
 }
 
 }

@@ -56,12 +56,10 @@ Path2D::Path2D(JS::Realm& realm, Optional<Variant<JS::Handle<Path2D>, Deprecated
 
 Path2D::~Path2D() = default;
 
-JS::ThrowCompletionOr<void> Path2D::initialize(JS::Realm& realm)
+void Path2D::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::Path2DPrototype>(realm, "Path2D"));
-
-    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-path2d-addpath

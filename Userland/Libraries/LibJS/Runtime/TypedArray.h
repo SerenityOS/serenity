@@ -479,7 +479,7 @@ ThrowCompletionOr<double> compare_typed_array_elements(VM&, Value x, Value y, Fu
         JS_OBJECT(PrototypeName, Object);                                                                         \
                                                                                                                   \
     public:                                                                                                       \
-        virtual ThrowCompletionOr<void> initialize(Realm&) override;                                              \
+        virtual void initialize(Realm&) override;                                                                 \
         virtual ~PrototypeName() override;                                                                        \
                                                                                                                   \
     private:                                                                                                      \
@@ -489,7 +489,7 @@ ThrowCompletionOr<double> compare_typed_array_elements(VM&, Value x, Value y, Fu
         JS_OBJECT(ConstructorName, TypedArrayConstructor);                                                        \
                                                                                                                   \
     public:                                                                                                       \
-        virtual ThrowCompletionOr<void> initialize(Realm&) override;                                              \
+        virtual void initialize(Realm&) override;                                                                 \
         virtual ~ConstructorName() override;                                                                      \
                                                                                                                   \
         virtual ThrowCompletionOr<Value> call() override;                                                         \

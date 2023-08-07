@@ -17,12 +17,10 @@ ProcessingInstruction::ProcessingInstruction(Document& document, DeprecatedStrin
 {
 }
 
-JS::ThrowCompletionOr<void> ProcessingInstruction::initialize(JS::Realm& realm)
+void ProcessingInstruction::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::ProcessingInstructionPrototype>(realm, "ProcessingInstruction"));
-
-    return {};
 }
 
 }

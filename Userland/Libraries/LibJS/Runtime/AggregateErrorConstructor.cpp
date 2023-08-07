@@ -19,17 +19,15 @@ AggregateErrorConstructor::AggregateErrorConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> AggregateErrorConstructor::initialize(Realm& realm)
+void AggregateErrorConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     // 20.5.7.2.1 AggregateError.prototype, https://tc39.es/ecma262/#sec-aggregate-error.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().aggregate_error_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
-
-    return {};
 }
 
 // 20.5.7.1.1 AggregateError ( errors, message [ , options ] ), https://tc39.es/ecma262/#sec-aggregate-error

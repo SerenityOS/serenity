@@ -244,10 +244,10 @@ PromiseConstructor::PromiseConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> PromiseConstructor::initialize(Realm& realm)
+void PromiseConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     // 27.2.4.4 Promise.prototype, https://tc39.es/ecma262/#sec-promise.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().promise_prototype(), 0);
@@ -264,8 +264,6 @@ ThrowCompletionOr<void> PromiseConstructor::initialize(Realm& realm)
     define_native_accessor(realm, vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
-
-    return {};
 }
 
 // 27.2.3.1 Promise ( executor ), https://tc39.es/ecma262/#sec-promise-executor

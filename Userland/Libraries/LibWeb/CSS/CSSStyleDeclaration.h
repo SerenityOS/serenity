@@ -19,7 +19,7 @@ class CSSStyleDeclaration : public Bindings::PlatformObject {
 
 public:
     virtual ~CSSStyleDeclaration() = default;
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     virtual size_t length() const = 0;
     virtual DeprecatedString item(size_t index) const = 0;

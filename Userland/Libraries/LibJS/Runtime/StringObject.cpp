@@ -35,14 +35,12 @@ StringObject::StringObject(PrimitiveString& string, Object& prototype)
 {
 }
 
-ThrowCompletionOr<void> StringObject::initialize(Realm& realm)
+void StringObject::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
-    define_direct_property(vm.names.length, Value(MUST_OR_THROW_OOM(m_string->utf16_string_view()).length_in_code_units()), 0);
-
-    return {};
+    define_direct_property(vm.names.length, Value(MUST(m_string->utf16_string_view()).length_in_code_units()), 0);
 }
 
 void StringObject::visit_edges(Cell::Visitor& visitor)

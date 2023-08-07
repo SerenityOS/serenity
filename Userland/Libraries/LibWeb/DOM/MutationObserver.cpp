@@ -31,12 +31,10 @@ MutationObserver::MutationObserver(JS::Realm& realm, JS::GCPtr<WebIDL::CallbackT
 
 MutationObserver::~MutationObserver() = default;
 
-JS::ThrowCompletionOr<void> MutationObserver::initialize(JS::Realm& realm)
+void MutationObserver::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::MutationObserverPrototype>(realm, "MutationObserver"));
-
-    return {};
 }
 
 void MutationObserver::visit_edges(Cell::Visitor& visitor)

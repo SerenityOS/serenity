@@ -16,12 +16,10 @@ SVGPolylineElement::SVGPolylineElement(DOM::Document& document, DOM::QualifiedNa
 {
 }
 
-JS::ThrowCompletionOr<void> SVGPolylineElement::initialize(JS::Realm& realm)
+void SVGPolylineElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGPolylineElementPrototype>(realm, "SVGPolylineElement"));
-
-    return {};
 }
 
 void SVGPolylineElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)

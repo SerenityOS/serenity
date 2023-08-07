@@ -22,12 +22,10 @@ AbortSignal::AbortSignal(JS::Realm& realm)
 {
 }
 
-JS::ThrowCompletionOr<void> AbortSignal::initialize(JS::Realm& realm)
+void AbortSignal::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::AbortSignalPrototype>(realm, "AbortSignal"));
-
-    return {};
 }
 
 // https://dom.spec.whatwg.org/#abortsignal-add

@@ -17,12 +17,10 @@ HTMLFrameSetElement::HTMLFrameSetElement(DOM::Document& document, DOM::Qualified
 
 HTMLFrameSetElement::~HTMLFrameSetElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLFrameSetElement::initialize(JS::Realm& realm)
+void HTMLFrameSetElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLFrameSetElementPrototype>(realm, "HTMLFrameSetElement"));
-
-    return {};
 }
 
 void HTMLFrameSetElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)

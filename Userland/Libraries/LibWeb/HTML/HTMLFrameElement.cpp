@@ -16,12 +16,10 @@ HTMLFrameElement::HTMLFrameElement(DOM::Document& document, DOM::QualifiedName q
 
 HTMLFrameElement::~HTMLFrameElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLFrameElement::initialize(JS::Realm& realm)
+void HTMLFrameElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLFrameElementPrototype>(realm, "HTMLFrameElement"));
-
-    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-tabindex

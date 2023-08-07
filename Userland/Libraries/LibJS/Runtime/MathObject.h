@@ -14,7 +14,7 @@ class MathObject final : public Object {
     JS_OBJECT(MathObject, Object);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~MathObject() override = default;
 
 private:

@@ -42,7 +42,7 @@ public:
 private:
     Table(JS::Realm&, Wasm::TableAddress);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     Wasm::TableAddress m_address;
 };

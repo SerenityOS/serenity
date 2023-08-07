@@ -21,10 +21,10 @@ TypedArrayPrototype::TypedArrayPrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> TypedArrayPrototype::initialize(Realm& realm)
+void TypedArrayPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     define_native_accessor(realm, vm.names.buffer, buffer_getter, nullptr, Attribute::Configurable);
@@ -70,8 +70,6 @@ ThrowCompletionOr<void> TypedArrayPrototype::initialize(Realm& realm)
 
     // 23.2.3.37 %TypedArray%.prototype [ @@iterator ] ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype-@@iterator
     define_direct_property(vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.values), attr);
-
-    return {};
 }
 
 static ThrowCompletionOr<TypedArrayBase*> typed_array_from_this(VM& vm)

@@ -64,7 +64,7 @@ public:
 private:
     KeyboardEvent(JS::Realm&, FlyString const& event_name, KeyboardEventInit const& event_init);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     String m_key;
     String m_code;

@@ -15,7 +15,7 @@ class TypedArrayConstructor : public NativeFunction {
 
 public:
     explicit TypedArrayConstructor(Realm&);
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~TypedArrayConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

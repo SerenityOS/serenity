@@ -19,7 +19,7 @@ class Set : public Object {
 public:
     static NonnullGCPtr<Set> create(Realm&);
 
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~Set() override = default;
 
     // NOTE: Unlike what the spec says, we implement Sets using an underlying map,

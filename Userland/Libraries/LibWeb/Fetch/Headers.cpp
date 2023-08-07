@@ -37,12 +37,10 @@ Headers::Headers(JS::Realm& realm, JS::NonnullGCPtr<Infrastructure::HeaderList> 
 
 Headers::~Headers() = default;
 
-JS::ThrowCompletionOr<void> Headers::initialize(JS::Realm& realm)
+void Headers::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HeadersPrototype>(realm, "Headers"));
-
-    return {};
 }
 
 void Headers::visit_edges(JS::Cell::Visitor& visitor)

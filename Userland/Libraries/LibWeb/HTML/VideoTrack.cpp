@@ -70,15 +70,13 @@ VideoTrack::~VideoTrack()
     s_video_track_id_allocator.deallocate(id.value());
 }
 
-JS::ThrowCompletionOr<void> VideoTrack::initialize(JS::Realm& realm)
+void VideoTrack::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::VideoTrackPrototype>(realm, "VideoTrack"));
 
     auto id = s_video_track_id_allocator.allocate();
-    m_id = TRY_OR_THROW_OOM(realm.vm(), String::number(id));
-
-    return {};
+    m_id = MUST(String::number(id));
 }
 
 void VideoTrack::visit_edges(Cell::Visitor& visitor)

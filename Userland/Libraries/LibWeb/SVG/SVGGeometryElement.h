@@ -26,7 +26,7 @@ public:
 protected:
     SVGGeometryElement(DOM::Document& document, DOM::QualifiedName qualified_name);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 };
 
 }

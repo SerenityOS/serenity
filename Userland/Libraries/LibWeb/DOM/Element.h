@@ -324,7 +324,7 @@ public:
 
 protected:
     Element(Document&, DOM::QualifiedName);
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     virtual void children_changed() override;
     virtual i32 default_tab_index_value() const;

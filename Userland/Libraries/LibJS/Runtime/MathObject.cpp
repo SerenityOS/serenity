@@ -21,10 +21,10 @@ MathObject::MathObject(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> MathObject::initialize(Realm& realm)
+void MathObject::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.abs, abs, 1, attr);
     define_native_function(realm, vm.names.random, random, 0, attr);
@@ -74,8 +74,6 @@ ThrowCompletionOr<void> MathObject::initialize(Realm& realm)
 
     // 21.3.1.9 Math [ @@toStringTag ], https://tc39.es/ecma262/#sec-math-@@tostringtag
     define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.Math.as_string()), Attribute::Configurable);
-
-    return {};
 }
 
 // 21.3.2.1 Math.abs ( x ), https://tc39.es/ecma262/#sec-math.abs

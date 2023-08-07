@@ -15,7 +15,7 @@ class TimeZonePrototype final : public PrototypeObject<TimeZonePrototype, TimeZo
     JS_PROTOTYPE_OBJECT(TimeZonePrototype, TimeZone, Temporal.TimeZone);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~TimeZonePrototype() override = default;
 
 private:

@@ -17,12 +17,10 @@ HTMLTitleElement::HTMLTitleElement(DOM::Document& document, DOM::QualifiedName q
 
 HTMLTitleElement::~HTMLTitleElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLTitleElement::initialize(JS::Realm& realm)
+void HTMLTitleElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTitleElementPrototype>(realm, "HTMLTitleElement"));
-
-    return {};
 }
 
 void HTMLTitleElement::children_changed()

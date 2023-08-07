@@ -58,7 +58,7 @@ public:
 protected:
     MouseEvent(JS::Realm&, FlyString const& event_name, MouseEventInit const& event_init);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
 private:
     void set_event_characteristics();

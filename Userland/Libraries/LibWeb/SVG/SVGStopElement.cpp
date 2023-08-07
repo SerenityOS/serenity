@@ -63,12 +63,10 @@ JS::NonnullGCPtr<SVGAnimatedNumber> SVGStopElement::offset() const
     TODO();
 }
 
-JS::ThrowCompletionOr<void> SVGStopElement::initialize(JS::Realm& realm)
+void SVGStopElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGStopElementPrototype>(realm, "SVGStopElement"));
-
-    return {};
 }
 
 }

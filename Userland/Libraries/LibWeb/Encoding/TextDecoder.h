@@ -35,7 +35,7 @@ private:
     // https://encoding.spec.whatwg.org/#dom-textdecoder
     TextDecoder(JS::Realm&, TextCodec::Decoder&, DeprecatedFlyString encoding, bool fatal, bool ignore_bom);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     TextCodec::Decoder& m_decoder;
     DeprecatedFlyString m_encoding;

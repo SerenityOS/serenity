@@ -42,7 +42,7 @@ public:
     ThrowCompletionOr<NonnullGCPtr<RegExpObject>> regexp_initialize(VM&, Value pattern, Value flags);
     DeprecatedString escape_regexp_pattern() const;
 
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~RegExpObject() override = default;
 
     DeprecatedString const& pattern() const { return m_pattern; }

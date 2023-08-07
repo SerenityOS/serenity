@@ -16,12 +16,10 @@ CDATASection::CDATASection(Document& document, DeprecatedString const& data)
 
 CDATASection::~CDATASection() = default;
 
-JS::ThrowCompletionOr<void> CDATASection::initialize(JS::Realm& realm)
+void CDATASection::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CDATASectionPrototype>(realm, "CDATASection"));
-
-    return {};
 }
 
 }

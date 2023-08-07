@@ -29,7 +29,7 @@ public:
     bool persisted() const { return m_persisted; }
 
 private:
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     bool m_persisted { false };
 };

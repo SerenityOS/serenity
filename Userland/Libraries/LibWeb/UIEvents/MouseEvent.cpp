@@ -29,12 +29,10 @@ MouseEvent::MouseEvent(JS::Realm& realm, FlyString const& event_name, MouseEvent
 
 MouseEvent::~MouseEvent() = default;
 
-JS::ThrowCompletionOr<void> MouseEvent::initialize(JS::Realm& realm)
+void MouseEvent::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::MouseEventPrototype>(realm, "MouseEvent"));
-
-    return {};
 }
 
 // https://www.w3.org/TR/uievents/#dom-mouseevent-button

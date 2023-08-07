@@ -22,10 +22,10 @@ ObjectConstructor::ObjectConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> ObjectConstructor::initialize(Realm& realm)
+void ObjectConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     // 20.1.2.19 Object.prototype, https://tc39.es/ecma262/#sec-object.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().object_prototype(), 0);
@@ -56,8 +56,6 @@ ThrowCompletionOr<void> ObjectConstructor::initialize(Realm& realm)
     define_native_function(realm, vm.names.assign, assign, 2, attr);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
-
-    return {};
 }
 
 // 20.1.1.1 Object ( [ value ] ), https://tc39.es/ecma262/#sec-object-value

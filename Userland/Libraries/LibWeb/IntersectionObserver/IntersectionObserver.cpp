@@ -60,12 +60,10 @@ IntersectionObserver::~IntersectionObserver()
     });
 }
 
-JS::ThrowCompletionOr<void> IntersectionObserver::initialize(JS::Realm& realm)
+void IntersectionObserver::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::IntersectionObserverPrototype>(realm, "IntersectionObserver"));
-
-    return {};
 }
 
 void IntersectionObserver::visit_edges(JS::Cell::Visitor& visitor)

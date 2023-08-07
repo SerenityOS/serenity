@@ -570,12 +570,10 @@ KeyboardEvent::KeyboardEvent(JS::Realm& realm, FlyString const& event_name, Keyb
 
 KeyboardEvent::~KeyboardEvent() = default;
 
-JS::ThrowCompletionOr<void> KeyboardEvent::initialize(JS::Realm& realm)
+void KeyboardEvent::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::KeyboardEventPrototype>(realm, "KeyboardEvent"));
-
-    return {};
 }
 
 }

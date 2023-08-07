@@ -53,7 +53,7 @@ protected:
     Blob(JS::Realm&, ByteBuffer, String type);
     Blob(JS::Realm&, ByteBuffer);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
 private:
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Streams::ReadableStream>> get_stream();

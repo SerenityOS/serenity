@@ -24,12 +24,10 @@ CSSStyleRule::CSSStyleRule(JS::Realm& realm, Vector<NonnullRefPtr<Selector>>&& s
 {
 }
 
-JS::ThrowCompletionOr<void> CSSStyleRule::initialize(JS::Realm& realm)
+void CSSStyleRule::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSStyleRulePrototype>(realm, "CSSStyleRule"));
-
-    return {};
 }
 
 void CSSStyleRule::visit_edges(Cell::Visitor& visitor)

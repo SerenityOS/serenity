@@ -20,10 +20,10 @@ ReflectObject::ReflectObject(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> ReflectObject::initialize(Realm& realm)
+void ReflectObject::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.apply, apply, 3, attr);
     define_native_function(realm, vm.names.construct, construct, 2, attr);
@@ -41,8 +41,6 @@ ThrowCompletionOr<void> ReflectObject::initialize(Realm& realm)
 
     // 28.1.14 Reflect [ @@toStringTag ], https://tc39.es/ecma262/#sec-reflect-@@tostringtag
     define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.Reflect.as_string()), Attribute::Configurable);
-
-    return {};
 }
 
 // 28.1.1 Reflect.apply ( target, thisArgument, argumentsList ), https://tc39.es/ecma262/#sec-reflect.apply

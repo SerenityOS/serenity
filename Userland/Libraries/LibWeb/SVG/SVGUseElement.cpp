@@ -21,23 +21,21 @@ SVGUseElement::SVGUseElement(DOM::Document& document, DOM::QualifiedName qualifi
 {
 }
 
-JS::ThrowCompletionOr<void> SVGUseElement::initialize(JS::Realm& realm)
+void SVGUseElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGUseElementPrototype>(realm, "SVGUseElement"));
 
     // The shadow tree is open (inspectable by script), but read-only.
-    auto shadow_root = TRY(heap().allocate<DOM::ShadowRoot>(realm, document(), *this, Bindings::ShadowRootMode::Open));
+    auto shadow_root = MUST(heap().allocate<DOM::ShadowRoot>(realm, document(), *this, Bindings::ShadowRootMode::Open));
 
     // The user agent must create a use-element shadow tree whose host is the ‘use’ element itself
     set_shadow_root(shadow_root);
 
-    m_document_observer = TRY(realm.heap().allocate<DOM::DocumentObserver>(realm, realm, document()));
+    m_document_observer = MUST(realm.heap().allocate<DOM::DocumentObserver>(realm, realm, document()));
     m_document_observer->document_completely_loaded = [this]() {
         clone_element_tree_as_our_shadow_tree(referenced_element());
     };
-
-    return {};
 }
 
 void SVGUseElement::visit_edges(Cell::Visitor& visitor)

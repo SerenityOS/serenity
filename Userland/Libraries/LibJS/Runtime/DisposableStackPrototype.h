@@ -15,7 +15,7 @@ class DisposableStackPrototype final : public PrototypeObject<DisposableStackPro
     JS_PROTOTYPE_OBJECT(DisposableStackPrototype, DisposableStack, DisposableStack);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~DisposableStackPrototype() override = default;
 
 private:

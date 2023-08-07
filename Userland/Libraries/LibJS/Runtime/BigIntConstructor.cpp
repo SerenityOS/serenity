@@ -21,10 +21,10 @@ BigIntConstructor::BigIntConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> BigIntConstructor::initialize(Realm& realm)
+void BigIntConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     // 21.2.2.3 BigInt.prototype, https://tc39.es/ecma262/#sec-bigint.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().bigint_prototype(), 0);
@@ -34,8 +34,6 @@ ThrowCompletionOr<void> BigIntConstructor::initialize(Realm& realm)
     define_native_function(realm, vm.names.asUintN, as_uint_n, 2, attr);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
-
-    return {};
 }
 
 // 21.2.1.1 BigInt ( value ), https://tc39.es/ecma262/#sec-bigint-constructor-number-value

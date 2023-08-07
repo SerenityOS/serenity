@@ -15,7 +15,7 @@ class SharedArrayBufferPrototype final : public PrototypeObject<SharedArrayBuffe
     JS_PROTOTYPE_OBJECT(SharedArrayBufferPrototype, ArrayBuffer, SharedArrayBuffer);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~SharedArrayBufferPrototype() override = default;
 
 private:

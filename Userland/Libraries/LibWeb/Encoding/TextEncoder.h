@@ -32,7 +32,7 @@ protected:
     // https://encoding.spec.whatwg.org/#dom-textencoder
     explicit TextEncoder(JS::Realm&);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 };
 
 }

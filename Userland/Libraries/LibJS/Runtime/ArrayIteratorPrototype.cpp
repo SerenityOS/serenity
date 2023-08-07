@@ -19,17 +19,15 @@ ArrayIteratorPrototype::ArrayIteratorPrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> ArrayIteratorPrototype::initialize(Realm& realm)
+void ArrayIteratorPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
     define_native_function(realm, vm.names.next, next, 0, Attribute::Configurable | Attribute::Writable);
 
     // 23.1.5.2.2 %ArrayIteratorPrototype% [ @@toStringTag ], https://tc39.es/ecma262/#sec-%arrayiteratorprototype%-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Array Iterator"sv)), Attribute::Configurable);
-
-    return {};
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Array Iterator"sv)), Attribute::Configurable);
 }
 
 // 23.1.5.2.1 %ArrayIteratorPrototype%.next ( ), https://tc39.es/ecma262/#sec-%arrayiteratorprototype%.next

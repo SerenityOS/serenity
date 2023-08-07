@@ -27,7 +27,7 @@ public:
 private:
     SVGLength(JS::Realm&, u8 unit_type, float value);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     u8 m_unit_type { 0 };
     float m_value { 0 };

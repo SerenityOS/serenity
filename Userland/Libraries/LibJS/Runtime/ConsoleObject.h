@@ -14,7 +14,7 @@ class ConsoleObject final : public Object {
     JS_OBJECT(ConsoleObject, Object);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~ConsoleObject() override = default;
 
     Console& console() { return *m_console; }

@@ -154,7 +154,7 @@ private:
     // ^DOM::Element
     virtual i32 default_tab_index_value() const override;
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     static TypeAttributeState parse_type_attribute(StringView);

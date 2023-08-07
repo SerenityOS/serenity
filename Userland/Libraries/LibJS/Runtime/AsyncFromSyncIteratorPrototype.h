@@ -19,7 +19,7 @@ class AsyncFromSyncIteratorPrototype final : public PrototypeObject<AsyncFromSyn
     JS_PROTOTYPE_OBJECT(AsyncFromSyncIteratorPrototype, AsyncFromSyncIterator, AsyncFromSyncIterator);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~AsyncFromSyncIteratorPrototype() override = default;
 
 private:

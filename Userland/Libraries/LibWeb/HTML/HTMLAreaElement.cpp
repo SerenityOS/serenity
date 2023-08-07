@@ -17,12 +17,10 @@ HTMLAreaElement::HTMLAreaElement(DOM::Document& document, DOM::QualifiedName qua
 
 HTMLAreaElement::~HTMLAreaElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLAreaElement::initialize(JS::Realm& realm)
+void HTMLAreaElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLAreaElementPrototype>(realm, "HTMLAreaElement"));
-
-    return {};
 }
 
 void HTMLAreaElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)

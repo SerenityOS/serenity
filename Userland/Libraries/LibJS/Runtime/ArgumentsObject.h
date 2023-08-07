@@ -16,7 +16,7 @@ class ArgumentsObject final : public Object {
     JS_OBJECT(ArgumentsObject, Object);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~ArgumentsObject() override = default;
 
     Environment& environment() { return m_environment; }

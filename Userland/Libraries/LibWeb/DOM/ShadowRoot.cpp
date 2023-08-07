@@ -19,11 +19,10 @@ ShadowRoot::ShadowRoot(Document& document, Element& host, Bindings::ShadowRootMo
     set_host(&host);
 }
 
-JS::ThrowCompletionOr<void> ShadowRoot::initialize(JS::Realm& realm)
+void ShadowRoot::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::ShadowRootPrototype>(realm, "ShadowRoot"));
-    return {};
 }
 
 // https://dom.spec.whatwg.org/#ref-for-get-the-parent%E2%91%A6

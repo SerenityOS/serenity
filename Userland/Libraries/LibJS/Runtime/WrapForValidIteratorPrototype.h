@@ -16,7 +16,7 @@ class WrapForValidIteratorPrototype final : public PrototypeObject<WrapForValidI
     JS_PROTOTYPE_OBJECT(WrapForValidIteratorPrototype, Iterator, Iterator);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
 
 private:
     explicit WrapForValidIteratorPrototype(Realm&);

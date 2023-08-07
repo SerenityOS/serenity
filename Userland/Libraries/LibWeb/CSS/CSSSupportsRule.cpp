@@ -22,12 +22,10 @@ CSSSupportsRule::CSSSupportsRule(JS::Realm& realm, NonnullRefPtr<Supports>&& sup
 {
 }
 
-JS::ThrowCompletionOr<void> CSSSupportsRule::initialize(JS::Realm& realm)
+void CSSSupportsRule::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSSupportsRulePrototype>(realm, "CSSSupportsRule"));
-
-    return {};
 }
 
 DeprecatedString CSSSupportsRule::condition_text() const

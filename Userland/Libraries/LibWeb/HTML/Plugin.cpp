@@ -20,12 +20,10 @@ Plugin::Plugin(JS::Realm& realm, String name)
 
 Plugin::~Plugin() = default;
 
-JS::ThrowCompletionOr<void> Plugin::initialize(JS::Realm& realm)
+void Plugin::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::PluginPrototype>(realm, "Plugin"));
-
-    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/system-state.html#dom-plugin-name

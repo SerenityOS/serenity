@@ -20,12 +20,10 @@ HTMLSelectElement::HTMLSelectElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLSelectElement::~HTMLSelectElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLSelectElement::initialize(JS::Realm& realm)
+void HTMLSelectElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLSelectElementPrototype>(realm, "HTMLSelectElement"));
-
-    return {};
 }
 
 void HTMLSelectElement::visit_edges(Cell::Visitor& visitor)

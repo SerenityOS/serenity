@@ -15,7 +15,7 @@ class DurationFormatPrototype final : public PrototypeObject<DurationFormatProto
     JS_PROTOTYPE_OBJECT(DurationFormatPrototype, DurationFormat, Intl.DurationFormat);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~DurationFormatPrototype() override = default;
 
 private:

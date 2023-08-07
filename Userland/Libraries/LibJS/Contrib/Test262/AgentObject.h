@@ -15,7 +15,7 @@ class AgentObject final : public Object {
     JS_OBJECT(AgentObject, Object);
 
 public:
-    virtual JS::ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~AgentObject() override = default;
 
 private:

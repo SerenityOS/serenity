@@ -14,7 +14,7 @@ class ArrayConstructor final : public NativeFunction {
     JS_OBJECT(ArrayConstructor, NativeFunction);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~ArrayConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

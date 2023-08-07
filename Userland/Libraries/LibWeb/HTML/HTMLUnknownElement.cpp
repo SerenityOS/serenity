@@ -16,12 +16,10 @@ HTMLUnknownElement::HTMLUnknownElement(DOM::Document& document, DOM::QualifiedNa
 
 HTMLUnknownElement::~HTMLUnknownElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLUnknownElement::initialize(JS::Realm& realm)
+void HTMLUnknownElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLUnknownElementPrototype>(realm, "HTMLUnknownElement"));
-
-    return {};
 }
 
 }

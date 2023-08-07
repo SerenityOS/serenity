@@ -15,17 +15,15 @@ DisposableStackConstructor::DisposableStackConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> DisposableStackConstructor::initialize(Realm& realm)
+void DisposableStackConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     // 26.2.2.1 DisposableStack.prototype, https://tc39.es/ecma262/#sec-finalization-registry.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().disposable_stack_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
-
-    return {};
 }
 
 // 11.3.1.1 DisposableStack ( ), https://tc39.es/proposal-explicit-resource-management/#sec-disposablestack

@@ -87,7 +87,7 @@ public:
 private:
     explicit WritableStream(JS::Realm&);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     virtual void visit_edges(Cell::Visitor&) override;
 

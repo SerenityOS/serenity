@@ -29,7 +29,7 @@ public:
 private:
     CanvasGradient(JS::Realm&, Gfx::GradientPaintStyle& gradient);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     NonnullRefPtr<Gfx::GradientPaintStyle> m_gradient;
 };

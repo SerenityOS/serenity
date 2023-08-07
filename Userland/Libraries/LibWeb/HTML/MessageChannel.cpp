@@ -38,12 +38,10 @@ void MessageChannel::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_port2.ptr());
 }
 
-JS::ThrowCompletionOr<void> MessageChannel::initialize(JS::Realm& realm)
+void MessageChannel::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::MessageChannelPrototype>(realm, "MessageChannel"));
-
-    return {};
 }
 
 MessagePort* MessageChannel::port1()
