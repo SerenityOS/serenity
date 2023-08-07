@@ -575,8 +575,6 @@ int main(int argc, char** argv)
     args_parser.add_option(disable_core_dumping, "Disable core dumping", "disable-core-dump", 0);
     args_parser.parse(arguments);
 
-    JS::Bytecode::Interpreter::set_enabled(true);
-
 #if !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN)
     if (disable_core_dumping && prctl(PR_SET_DUMPABLE, 0, 0) < 0) {
         perror("prctl(PR_SET_DUMPABLE)");

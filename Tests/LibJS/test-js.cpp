@@ -14,7 +14,8 @@ TESTJS_PROGRAM_FLAG(test262_parser_tests, "Run test262 parser tests", "test262-p
 
 TESTJS_GLOBAL_FUNCTION(is_bytecode_interpreter_enabled, isBytecodeInterpreterEnabled, 0)
 {
-    return JS::Value(JS::Bytecode::Interpreter::enabled());
+    // FIXME: Remove this function after updating the tests.
+    return JS::Value(true);
 }
 
 TESTJS_GLOBAL_FUNCTION(is_strict_mode, isStrictMode, 0)

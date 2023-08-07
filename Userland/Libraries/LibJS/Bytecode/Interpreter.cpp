@@ -19,18 +19,6 @@
 
 namespace JS::Bytecode {
 
-static bool s_bytecode_interpreter_enabled = false;
-
-bool Interpreter::enabled()
-{
-    return s_bytecode_interpreter_enabled;
-}
-
-void Interpreter::set_enabled(bool enabled)
-{
-    s_bytecode_interpreter_enabled = enabled;
-}
-
 bool g_dump_bytecode = false;
 
 Interpreter::Interpreter(VM& vm)
