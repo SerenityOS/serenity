@@ -144,10 +144,10 @@ void EventLoopManagerGLib::unregister_notifier(Core::Notifier& notifier)
     g_source_unref(source);
 }
 
-int EventLoopManagerGLib::register_timer(Core::Object& object, int milliseconds, bool should_reload, Core::TimerShouldFireWhenNotVisible should_fire_when_not_visible)
+int EventLoopManagerGLib::register_timer(Core::EventReceiver& object, int milliseconds, bool should_reload, Core::TimerShouldFireWhenNotVisible should_fire_when_not_visible)
 {
     struct Closure {
-        Core::Object* object;
+        Core::EventReceiver* object;
         int timer_id;
         bool should_reload : 1;
         Core::TimerShouldFireWhenNotVisible should_fire_when_not_visible : 1;
@@ -195,7 +195,7 @@ void EventLoopImplementationGLib::wake()
     g_main_context_wakeup(m_context);
 }
 
-void EventLoopImplementationGLib::post_event(Core::Object& receiver, NonnullOwnPtr<Core::Event>&& event)
+void EventLoopImplementationGLib::post_event(Core::EventReceiver& receiver, NonnullOwnPtr<Core::Event>&& event)
 {
     Core::ThreadEventQueue::current().post_event(receiver, move(event));
     if (m_context != g_main_context_get_thread_default())

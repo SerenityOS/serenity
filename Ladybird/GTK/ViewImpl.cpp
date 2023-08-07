@@ -4,7 +4,7 @@
 #include <adwaita.h>
 
 LadybirdViewImpl::LadybirdViewImpl(LadybirdWebView* widget)
-    : WebView::ViewImplementation::ViewImplementation(WebView::UseJavaScriptBytecode::Yes)
+    : WebView::ViewImplementation::ViewImplementation()
     , m_widget(widget)
 {
     on_title_change = [this](DeprecatedString const& title) {
@@ -118,7 +118,7 @@ void LadybirdViewImpl::create_client(WebView::EnableCallgrindProfiling enable_ca
     (void)enable_callgrind_profiling;
     // auto candidate_web_content_paths = get_paths_for_helper_process("WebContent"sv).release_value_but_fixme_should_propagate_errors();
     Vector<String> candidate_web_content_paths;
-    candidate_web_content_paths.append("./WebContent"_string.release_value_but_fixme_should_propagate_errors());
+    candidate_web_content_paths.append("./WebContent"_string);
     auto new_client = launch_web_content_process(*this,
         candidate_web_content_paths,
         enable_callgrind_profiling)
