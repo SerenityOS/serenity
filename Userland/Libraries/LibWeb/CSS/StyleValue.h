@@ -327,6 +327,7 @@ public:
 
     [[nodiscard]] int to_font_weight() const;
     [[nodiscard]] int to_font_slope() const;
+    [[nodiscard]] int to_font_stretch_width() const;
 
     virtual bool equals(StyleValue const& other) const = 0;
 
