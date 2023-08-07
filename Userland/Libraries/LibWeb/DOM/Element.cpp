@@ -707,7 +707,7 @@ JS::NonnullGCPtr<Geometry::DOMRect> Element::get_bounding_client_rect() const
     VERIFY(document().browsing_context());
     auto viewport_offset = document().browsing_context()->viewport_scroll_offset();
 
-    return Geometry::DOMRect::create(realm(), paintable_box->absolute_rect().translated(-viewport_offset.x(), -viewport_offset.y()).to_type<double>().to_type<float>()).release_value_but_fixme_should_propagate_errors();
+    return Geometry::DOMRect::create(realm(), paintable_box->absolute_rect().translated(-viewport_offset.x(), -viewport_offset.y()).to_type<float>()).release_value_but_fixme_should_propagate_errors();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-getclientrects

@@ -187,8 +187,8 @@ Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, 
 void RadialGradientStyleValue::resolve_for_size(Layout::Node const& node, CSSPixelSize paint_size) const
 {
     CSSPixelRect gradient_box { { 0, 0 }, paint_size };
-    auto center = m_properties.position.resolved(node, gradient_box).to_type<double>().to_type<float>();
-    auto gradient_size = resolve_size(node, center, gradient_box.to_type<double>().to_type<float>());
+    auto center = m_properties.position.resolved(node, gradient_box).to_type<float>();
+    auto gradient_size = resolve_size(node, center, gradient_box.to_type<float>());
     if (m_resolved.has_value() && m_resolved->gradient_size == gradient_size)
         return;
     m_resolved = ResolvedData {

@@ -1958,7 +1958,7 @@ void Document::run_the_resize_steps()
     if (!browsing_context())
         return;
 
-    auto viewport_size = browsing_context()->viewport_rect().size().to_type<double>().to_type<float>().to_type<int>();
+    auto viewport_size = browsing_context()->viewport_rect().size().to_type<int>();
     if (m_last_viewport_size == viewport_size)
         return;
     m_last_viewport_size = viewport_size;

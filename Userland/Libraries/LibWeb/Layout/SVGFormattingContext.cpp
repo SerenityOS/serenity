@@ -174,7 +174,7 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
                 // The initial value for preserveAspectRatio is xMidYMid meet.
                 auto preserve_aspect_ratio = svg_svg_element.preserve_aspect_ratio().value_or(SVG::PreserveAspectRatio {});
                 auto viewbox_transform = scale_and_align_viewbox_content(preserve_aspect_ratio, view_box, { scale_width, scale_height }, svg_box_state);
-                path_transform = Gfx::AffineTransform {}.translate(viewbox_transform.offset.to_type<double>().to_type<float>()).scale(viewbox_transform.scale_factor, viewbox_transform.scale_factor).translate({ -view_box.min_x, -view_box.min_y }).multiply(path_transform);
+                path_transform = Gfx::AffineTransform {}.translate(viewbox_transform.offset.to_type<float>()).scale(viewbox_transform.scale_factor, viewbox_transform.scale_factor).translate({ -view_box.min_x, -view_box.min_y }).multiply(path_transform);
                 viewbox_scale = viewbox_transform.scale_factor;
             }
 
