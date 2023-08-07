@@ -218,7 +218,7 @@ void ColorPicker::build_ui()
 
     build_ui_palette(tab_palette);
 
-    auto& tab_custom_color = tab_widget.add_tab<Widget>("Custom Color"_string.release_value_but_fixme_should_propagate_errors());
+    auto& tab_custom_color = tab_widget.add_tab<Widget>("Custom Color"_string);
     tab_custom_color.set_layout<VerticalBoxLayout>(4, 4);
 
     build_ui_custom(tab_custom_color);
@@ -412,7 +412,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     make_spinbox(Blue, m_color.blue());
     make_spinbox(Alpha, m_color.alpha());
 
-    m_selector_button = vertical_container.add<GUI::Button>("Select on Screen"_string.release_value_but_fixme_should_propagate_errors());
+    m_selector_button = vertical_container.add<GUI::Button>("Select on Screen"_string);
     m_selector_button->on_click = [this](auto) {
         auto selector = ColorSelectOverlay::construct();
         auto original_color = m_color;

@@ -154,7 +154,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(view_menu->try_add_action(show_grid_action));
     TRY(view_menu->try_add_action(choose_grid_color_action));
 
-    auto timeline_menu = TRY(window->try_add_menu(TRY("&Timeline"_string)));
+    auto timeline_menu = TRY(window->try_add_menu("&Timeline"_string));
     auto previous_frame_action = GUI::Action::create(
         "&Previous frame", { Key_Left }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"sv)), [&](auto&) {
             pause_action->set_checked(true);

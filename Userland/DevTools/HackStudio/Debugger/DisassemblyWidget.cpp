@@ -51,7 +51,7 @@ void DisassemblyWidget::update_state(Debug::DebugSession const& debug_session, P
         if (containing_function.has_value())
             m_function_name_label->set_text(String::from_deprecated_string(containing_function.value().name).release_value_but_fixme_should_propagate_errors());
         else
-            m_function_name_label->set_text("<missing>"_string.release_value_but_fixme_should_propagate_errors());
+            m_function_name_label->set_text("<missing>"_string);
         show_disassembly();
     } else {
         hide_disassembly("No disassembly to show for this function");

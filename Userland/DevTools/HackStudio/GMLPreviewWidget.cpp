@@ -22,7 +22,7 @@ void GMLPreviewWidget::load_gml(DeprecatedString const& gml)
 
     if (gml.is_empty()) {
         auto& label = add<GUI::Label>();
-        label.set_text("Open a .gml file to show the preview"_string.release_value_but_fixme_should_propagate_errors());
+        label.set_text("Open a .gml file to show the preview"_string);
 
         return;
     }
@@ -34,7 +34,7 @@ void GMLPreviewWidget::load_gml(DeprecatedString const& gml)
 
     if (children().is_empty()) {
         auto& label = add<GUI::Label>();
-        label.set_text("Failed to load GML!"_string.release_value_but_fixme_should_propagate_errors());
+        label.set_text("Failed to load GML!"_string);
     }
 }
 

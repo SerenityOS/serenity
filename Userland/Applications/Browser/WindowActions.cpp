@@ -31,7 +31,7 @@ WindowActions::WindowActions(GUI::Window& window)
                 on_create_new_tab();
         },
         &window);
-    m_create_new_tab_action->set_status_tip("Open a new tab"_string.release_value_but_fixme_should_propagate_errors());
+    m_create_new_tab_action->set_status_tip("Open a new tab"_string);
 
     m_create_new_window_action = GUI::Action::create(
         "&New Window", { Mod_Ctrl, Key_N }, g_icon_bag.new_window, [this](auto&) {
@@ -40,7 +40,7 @@ WindowActions::WindowActions(GUI::Window& window)
             }
         },
         &window);
-    m_create_new_window_action->set_status_tip("Open a new browser window"_string.release_value_but_fixme_should_propagate_errors());
+    m_create_new_window_action->set_status_tip("Open a new browser window"_string);
 
     m_next_tab_action = GUI::Action::create(
         "&Next Tab", { Mod_Ctrl, Key_PageDown }, [this](auto&) {
@@ -48,7 +48,7 @@ WindowActions::WindowActions(GUI::Window& window)
                 on_next_tab();
         },
         &window);
-    m_next_tab_action->set_status_tip("Switch to the next tab"_string.release_value_but_fixme_should_propagate_errors());
+    m_next_tab_action->set_status_tip("Switch to the next tab"_string);
 
     m_previous_tab_action = GUI::Action::create(
         "&Previous Tab", { Mod_Ctrl, Key_PageUp }, [this](auto&) {
@@ -56,7 +56,7 @@ WindowActions::WindowActions(GUI::Window& window)
                 on_previous_tab();
         },
         &window);
-    m_previous_tab_action->set_status_tip("Switch to the previous tab"_string.release_value_but_fixme_should_propagate_errors());
+    m_previous_tab_action->set_status_tip("Switch to the previous tab"_string);
 
     for (auto i = 0; i <= 7; ++i) {
         m_tab_actions.append(GUI::Action::create(
@@ -73,7 +73,7 @@ WindowActions::WindowActions(GUI::Window& window)
                 on_tabs[8]();
         },
         &window));
-    m_tab_actions.last()->set_status_tip("Switch to last tab"_string.release_value_but_fixme_should_propagate_errors());
+    m_tab_actions.last()->set_status_tip("Switch to last tab"_string);
 
     m_about_action = GUI::CommonActions::make_about_action("Ladybird", GUI::Icon::default_icon("app-browser"sv), &window);
 
@@ -84,7 +84,7 @@ WindowActions::WindowActions(GUI::Window& window)
                 on_show_bookmarks_bar(action);
         },
         &window);
-    m_show_bookmarks_bar_action->set_status_tip("Show/hide the bookmarks bar"_string.release_value_but_fixme_should_propagate_errors());
+    m_show_bookmarks_bar_action->set_status_tip("Show/hide the bookmarks bar"_string);
 
     m_vertical_tabs_action = GUI::Action::create_checkable(
         "&Vertical Tabs", { Mod_Ctrl, Key_Comma },
@@ -93,7 +93,7 @@ WindowActions::WindowActions(GUI::Window& window)
                 on_vertical_tabs(action);
         },
         &window);
-    m_vertical_tabs_action->set_status_tip("Enable/Disable vertical tabs"_string.release_value_but_fixme_should_propagate_errors());
+    m_vertical_tabs_action->set_status_tip("Enable/Disable vertical tabs"_string);
 }
 
 }

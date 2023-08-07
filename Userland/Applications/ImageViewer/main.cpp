@@ -45,7 +45,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Config::pledge_domains({ "ImageViewer", "WindowManager" });
 
-    app->set_config_domain(TRY("ImageViewer"_string));
+    app->set_config_domain("ImageViewer"_string);
 
     TRY(Desktop::Launcher::add_allowed_handler_with_any_url("/bin/ImageViewer"));
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme("/usr/share/man/man1/Applications/ImageViewer.md") }));
@@ -331,7 +331,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(image_menu->try_add_separator());
     TRY(image_menu->try_add_action(desktop_wallpaper_action));
 
-    auto navigate_menu = TRY(window->try_add_menu(TRY("&Navigate"_string)));
+    auto navigate_menu = TRY(window->try_add_menu("&Navigate"_string));
     TRY(navigate_menu->try_add_action(go_first_action));
     TRY(navigate_menu->try_add_action(go_back_action));
     TRY(navigate_menu->try_add_action(go_forward_action));
@@ -346,7 +346,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(view_menu->try_add_action(zoom_out_action));
     TRY(view_menu->try_add_separator());
 
-    auto scaling_mode_menu = TRY(view_menu->try_add_submenu(TRY("&Scaling Mode"_string)));
+    auto scaling_mode_menu = TRY(view_menu->try_add_submenu("&Scaling Mode"_string));
     scaling_mode_menu->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/scale.png"sv)));
 
     auto scaling_mode_group = make<GUI::ActionGroup>();

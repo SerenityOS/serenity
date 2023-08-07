@@ -24,7 +24,7 @@ ErrorOr<NonnullRefPtr<ProcessUnveiledPathsWidget>> ProcessUnveiledPathsWidget::t
 
     Vector<GUI::JsonArrayModel::FieldSpec> pid_unveil_fields;
     TRY(pid_unveil_fields.try_empend("path", "Path"_short_string, Gfx::TextAlignment::CenterLeft));
-    TRY(pid_unveil_fields.try_empend("permissions", TRY("Permissions"_string), Gfx::TextAlignment::CenterLeft));
+    TRY(pid_unveil_fields.try_empend("permissions", "Permissions"_string, Gfx::TextAlignment::CenterLeft));
 
     widget->m_model = GUI::JsonArrayModel::create({}, move(pid_unveil_fields));
     widget->m_table_view->set_model(TRY(GUI::SortingProxyModel::create(*widget->m_model)));

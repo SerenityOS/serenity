@@ -59,7 +59,7 @@ ErrorOr<NonnullRefPtr<Menu>> make_accessibility_menu(ColorFilterer& filterer)
     group->add_action(*achromatomaly_accessibility_action);
     (void)group.leak_ptr();
 
-    auto menu = TRY(Menu::try_create(TRY("&Accessibility"_string)));
+    auto menu = TRY(Menu::try_create("&Accessibility"_string));
     menu->add_action(default_accessibility_action);
     menu->add_action(pratanopia_accessibility_action);
     menu->add_action(pratanomaly_accessibility_action);

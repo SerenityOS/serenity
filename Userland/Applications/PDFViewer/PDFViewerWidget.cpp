@@ -233,7 +233,7 @@ ErrorOr<void> PDFViewerWidget::initialize_menubar(GUI::Window& window)
     auto view_menu = TRY(window.try_add_menu("&View"_short_string));
     TRY(view_menu->try_add_action(*m_toggle_sidebar_action));
     TRY(view_menu->try_add_separator());
-    auto view_mode_menu = TRY(view_menu->try_add_submenu(TRY("View &Mode"_string)));
+    auto view_mode_menu = TRY(view_menu->try_add_submenu("View &Mode"_string));
     TRY(view_mode_menu->try_add_action(*m_page_view_mode_single));
     TRY(view_mode_menu->try_add_action(*m_page_view_mode_multiple));
     TRY(view_menu->try_add_separator());
@@ -323,12 +323,12 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     m_page_view_mode_single = GUI::Action::create_checkable("Single", [&](auto&) {
         m_viewer->set_page_view_mode(PDFViewer::PageViewMode::Single);
     });
-    m_page_view_mode_single->set_status_tip("Show single page at a time"_string.release_value_but_fixme_should_propagate_errors());
+    m_page_view_mode_single->set_status_tip("Show single page at a time"_string);
 
     m_page_view_mode_multiple = GUI::Action::create_checkable("Multiple", [&](auto&) {
         m_viewer->set_page_view_mode(PDFViewer::PageViewMode::Multiple);
     });
-    m_page_view_mode_multiple->set_status_tip("Show multiple pages at a time"_string.release_value_but_fixme_should_propagate_errors());
+    m_page_view_mode_multiple->set_status_tip("Show multiple pages at a time"_string);
 
     if (m_viewer->page_view_mode() == PDFViewer::PageViewMode::Single) {
         m_page_view_mode_single->set_checked(true);
@@ -351,11 +351,11 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     toolbar.add_separator();
 
     m_show_clipping_paths = toolbar.add<GUI::CheckBox>();
-    m_show_clipping_paths->set_text("Show clipping paths"_string.release_value_but_fixme_should_propagate_errors());
+    m_show_clipping_paths->set_text("Show clipping paths"_string);
     m_show_clipping_paths->set_checked(m_viewer->show_clipping_paths(), GUI::AllowCallback::No);
     m_show_clipping_paths->on_checked = [&](auto checked) { m_viewer->set_show_clipping_paths(checked); };
     m_show_images = toolbar.add<GUI::CheckBox>();
-    m_show_images->set_text("Show images"_string.release_value_but_fixme_should_propagate_errors());
+    m_show_images->set_text("Show images"_string);
     m_show_images->set_checked(m_viewer->show_images(), GUI::AllowCallback::No);
     m_show_images->on_checked = [&](auto checked) { m_viewer->set_show_images(checked); };
 }

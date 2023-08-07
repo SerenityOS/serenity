@@ -37,11 +37,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool background_settings_changed = false;
 
     auto window = TRY(GUI::SettingsWindow::create("Display Settings"));
-    (void)TRY(window->add_tab<DisplaySettings::BackgroundSettingsWidget>(TRY("Background"_string), "background"sv, background_settings_changed));
+    (void)TRY(window->add_tab<DisplaySettings::BackgroundSettingsWidget>("Background"_string, "background"sv, background_settings_changed));
     (void)TRY(window->add_tab<DisplaySettings::ThemesSettingsWidget>("Themes"_short_string, "themes"sv, background_settings_changed));
     (void)TRY(window->add_tab<DisplaySettings::FontSettingsWidget>("Fonts"_short_string, "fonts"sv));
     (void)TRY(window->add_tab<DisplaySettings::MonitorSettingsWidget>("Monitor"_short_string, "monitor"sv));
-    (void)TRY(window->add_tab<DisplaySettings::DesktopSettingsWidget>(TRY("Workspaces"_string), "workspaces"sv));
+    (void)TRY(window->add_tab<DisplaySettings::DesktopSettingsWidget>("Workspaces"_string, "workspaces"sv));
     (void)TRY(window->add_tab<GUI::DisplaySettings::EffectsSettingsWidget>("Effects"_short_string, "effects"sv));
     window->set_active_tab(selected_tab);
 

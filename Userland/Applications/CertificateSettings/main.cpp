@@ -28,7 +28,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     auto app_icon = GUI::Icon::default_icon("certificate"sv);
     auto window = TRY(GUI::SettingsWindow::create("Certificate Settings", GUI::SettingsWindow::ShowDefaultsButton::No));
-    auto cert_store_widget = TRY(window->add_tab<CertificateSettings::CertificateStoreWidget>(TRY("Certificate Store"_string), "certificate"sv));
+    auto cert_store_widget = TRY(window->add_tab<CertificateSettings::CertificateStoreWidget>("Certificate Store"_string, "certificate"sv));
     window->set_icon(app_icon.bitmap_for_size(16));
 
     window->show();

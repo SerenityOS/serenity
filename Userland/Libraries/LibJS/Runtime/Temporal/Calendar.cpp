@@ -99,7 +99,7 @@ ThrowCompletionOr<Calendar*> get_builtin_calendar(VM& vm, String const& identifi
 Calendar* get_iso8601_calendar(VM& vm)
 {
     // 1. Return ! GetBuiltinCalendar("iso8601").
-    return MUST(get_builtin_calendar(vm, "iso8601"_string.release_value_but_fixme_should_propagate_errors()));
+    return MUST(get_builtin_calendar(vm, "iso8601"_string));
 }
 
 // 12.2.4 CalendarFields ( calendar, fieldNames ), https://tc39.es/proposal-temporal/#sec-temporal-calendarfields
@@ -825,9 +825,9 @@ ThrowCompletionOr<ISODateRecord> iso_date_from_fields(VM& vm, Object const& fiel
     // 2. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », « "year", "day" »).
     auto* prepared_fields = TRY(prepare_temporal_fields(vm, fields,
         { "day"_short_string,
-            TRY_OR_THROW_OOM(vm, "month"_string),
-            TRY_OR_THROW_OOM(vm, "monthCode"_string),
-            TRY_OR_THROW_OOM(vm, "year"_string) },
+            "month"_string,
+            "monthCode"_string,
+            "year"_string },
         Vector<StringView> { "year"sv, "day"sv }));
 
     // 3. Let overflow be ? ToTemporalOverflow(options).
@@ -859,9 +859,9 @@ ThrowCompletionOr<ISOYearMonth> iso_year_month_from_fields(VM& vm, Object const&
 
     // 2. Set fields to ? PrepareTemporalFields(fields, « "month", "monthCode", "year" », « "year" »).
     auto* prepared_fields = TRY(prepare_temporal_fields(vm, fields,
-        { TRY_OR_THROW_OOM(vm, "month"_string),
-            TRY_OR_THROW_OOM(vm, "monthCode"_string),
-            TRY_OR_THROW_OOM(vm, "year"_string) },
+        { "month"_string,
+            "monthCode"_string,
+            "year"_string },
         Vector<StringView> { "year"sv }));
 
     // 3. Let overflow be ? ToTemporalOverflow(options).
@@ -891,9 +891,9 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(VM& vm, Object const& f
     // 2. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », « "day" »).
     auto* prepared_fields = TRY(prepare_temporal_fields(vm, fields,
         { "day"_short_string,
-            TRY_OR_THROW_OOM(vm, "month"_string),
-            TRY_OR_THROW_OOM(vm, "monthCode"_string),
-            TRY_OR_THROW_OOM(vm, "year"_string) },
+            "month"_string,
+            "monthCode"_string,
+            "year"_string },
         Vector<StringView> { "day"sv }));
 
     // 3. Let overflow be ? ToTemporalOverflow(options).

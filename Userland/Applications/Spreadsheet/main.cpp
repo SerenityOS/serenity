@@ -42,7 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     Config::pledge_domain("Spreadsheet");
-    app->set_config_domain(TRY("Spreadsheet"_string));
+    app->set_config_domain("Spreadsheet"_string);
 
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/webcontent", "rw"));

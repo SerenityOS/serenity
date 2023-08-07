@@ -395,7 +395,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         window->set_fullscreen(!window->is_fullscreen());
     }));
 
-    auto& rotation_axis_menu = view_menu.add_submenu(TRY("Rotation &Axis"_string));
+    auto& rotation_axis_menu = view_menu.add_submenu("Rotation &Axis"_string);
     auto rotation_x_action = GUI::Action::create_checkable("&X", [&widget](auto&) {
         widget->toggle_rotate_x();
     });
@@ -413,7 +413,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     rotation_x_action->set_checked(true);
     rotation_z_action->set_checked(true);
 
-    auto& rotation_speed_menu = view_menu.add_submenu(TRY("Rotation &Speed"_string));
+    auto& rotation_speed_menu = view_menu.add_submenu("Rotation &Speed"_string);
     GUI::ActionGroup rotation_speed_actions;
     rotation_speed_actions.set_exclusive(true);
 
@@ -448,7 +448,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     view_menu.add_action(*show_frame_rate_action);
 
-    auto& texture_menu = window->add_menu(TRY("&Texture"_string));
+    auto& texture_menu = window->add_menu("&Texture"_string);
 
     auto texture_enabled_action = GUI::Action::create_checkable("&Enable Texture", [&widget](auto& action) {
         widget->set_texture_enabled(action.is_checked());
@@ -542,7 +542,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     texture_scale_1_action->set_checked(true);
 
-    auto& texture_mag_filter_menu = texture_menu.add_submenu(TRY("Mag Filter"_string));
+    auto& texture_mag_filter_menu = texture_menu.add_submenu("Mag Filter"_string);
     GUI::ActionGroup texture_mag_filter_actions;
     texture_mag_filter_actions.set_exclusive(true);
 

@@ -129,7 +129,7 @@ ErrorOr<GUI::Widget*> LineTool::get_properties_widget()
         thickness_container->set_fixed_height(20);
         (void)TRY(thickness_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto thickness_label = TRY(thickness_container->try_add<GUI::Label>(TRY("Thickness:"_string)));
+        auto thickness_label = TRY(thickness_container->try_add<GUI::Label>("Thickness:"_string));
         thickness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         thickness_label->set_fixed_size(80, 20);
 
@@ -150,7 +150,7 @@ ErrorOr<GUI::Widget*> LineTool::get_properties_widget()
         mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         mode_label->set_fixed_size(80, 20);
 
-        auto aa_enable_checkbox = TRY(mode_container->try_add<GUI::CheckBox>(TRY("Anti-alias"_string)));
+        auto aa_enable_checkbox = TRY(mode_container->try_add<GUI::CheckBox>("Anti-alias"_string));
         aa_enable_checkbox->on_checked = [this](bool checked) {
             m_antialias_enabled = checked;
         };

@@ -32,7 +32,7 @@ SidebarWidget::SidebarWidget()
         on_destination_selected(destination);
     };
 
-    auto& thumbnails_container = tab_bar.add_tab<GUI::Widget>("Thumbnails"_string.release_value_but_fixme_should_propagate_errors());
+    auto& thumbnails_container = tab_bar.add_tab<GUI::Widget>("Thumbnails"_string);
     thumbnails_container.set_layout<GUI::VerticalBoxLayout>(4);
 
     // FIXME: Add thumbnail previews

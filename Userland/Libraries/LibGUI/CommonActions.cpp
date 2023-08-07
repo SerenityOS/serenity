@@ -28,42 +28,42 @@ NonnullRefPtr<Action> make_about_action(DeprecatedString const& app_name, Icon c
             weak_parent)
             .release_value_but_fixme_should_propagate_errors();
     });
-    action->set_status_tip("Show application about box"_string.release_value_but_fixme_should_propagate_errors());
+    action->set_status_tip("Show application about box"_string);
     return action;
 }
 
 NonnullRefPtr<Action> make_open_action(Function<void(Action&)> callback, Core::EventReceiver* parent)
 {
     auto action = Action::create("&Open...", { Mod_Ctrl, Key_O }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors(), move(callback), parent);
-    action->set_status_tip("Open an existing file"_string.release_value_but_fixme_should_propagate_errors());
+    action->set_status_tip("Open an existing file"_string);
     return action;
 }
 
 NonnullRefPtr<Action> make_save_action(Function<void(Action&)> callback, Core::EventReceiver* parent)
 {
     auto action = Action::create("&Save", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"sv).release_value_but_fixme_should_propagate_errors(), move(callback), parent);
-    action->set_status_tip("Save the current file"_string.release_value_but_fixme_should_propagate_errors());
+    action->set_status_tip("Save the current file"_string);
     return action;
 }
 
 NonnullRefPtr<Action> make_save_as_action(Function<void(Action&)> callback, Core::EventReceiver* parent)
 {
     auto action = Action::create("Save &As...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save-as.png"sv).release_value_but_fixme_should_propagate_errors(), move(callback), parent);
-    action->set_status_tip("Save the current file with a new name"_string.release_value_but_fixme_should_propagate_errors());
+    action->set_status_tip("Save the current file with a new name"_string);
     return action;
 }
 
 NonnullRefPtr<Action> make_move_to_front_action(Function<void(Action&)> callback, Core::EventReceiver* parent)
 {
     auto action = Action::create("Move to &Front", { Mod_Ctrl | Mod_Shift, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/move-to-front.png"sv).release_value_but_fixme_should_propagate_errors(), move(callback), parent);
-    action->set_status_tip("Move to the top of the stack"_string.release_value_but_fixme_should_propagate_errors());
+    action->set_status_tip("Move to the top of the stack"_string);
     return action;
 }
 
 NonnullRefPtr<Action> make_move_to_back_action(Function<void(Action&)> callback, Core::EventReceiver* parent)
 {
     auto action = Action::create("Move to &Back", { Mod_Ctrl | Mod_Shift, Key_Down }, Gfx::Bitmap::load_from_file("/res/icons/16x16/move-to-back.png"sv).release_value_but_fixme_should_propagate_errors(), move(callback), parent);
-    action->set_status_tip("Move to the bottom of the stack"_string.release_value_but_fixme_should_propagate_errors());
+    action->set_status_tip("Move to the bottom of the stack"_string);
     return action;
 }
 
@@ -85,35 +85,35 @@ NonnullRefPtr<Action> make_delete_action(Function<void(Action&)> callback, Core:
 NonnullRefPtr<Action> make_cut_action(Function<void(Action&)> callback, Core::EventReceiver* parent)
 {
     auto action = Action::create("Cu&t", { Mod_Ctrl, Key_X }, Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-cut.png"sv).release_value_but_fixme_should_propagate_errors(), move(callback), parent);
-    action->set_status_tip("Cut to clipboard"_string.release_value_but_fixme_should_propagate_errors());
+    action->set_status_tip("Cut to clipboard"_string);
     return action;
 }
 
 NonnullRefPtr<Action> make_copy_action(Function<void(Action&)> callback, Core::EventReceiver* parent)
 {
     auto action = Action::create("&Copy", { Mod_Ctrl, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"sv).release_value_but_fixme_should_propagate_errors(), move(callback), parent);
-    action->set_status_tip("Copy to clipboard"_string.release_value_but_fixme_should_propagate_errors());
+    action->set_status_tip("Copy to clipboard"_string);
     return action;
 }
 
 NonnullRefPtr<Action> make_paste_action(Function<void(Action&)> callback, Core::EventReceiver* parent)
 {
     auto action = Action::create("&Paste", { Mod_Ctrl, Key_V }, Gfx::Bitmap::load_from_file("/res/icons/16x16/paste.png"sv).release_value_but_fixme_should_propagate_errors(), move(callback), parent);
-    action->set_status_tip("Paste from clipboard"_string.release_value_but_fixme_should_propagate_errors());
+    action->set_status_tip("Paste from clipboard"_string);
     return action;
 }
 
 NonnullRefPtr<Action> make_insert_emoji_action(Function<void(Action&)> callback, Core::EventReceiver* parent)
 {
     auto action = Action::create("&Insert Emoji...", { Mod_Ctrl | Mod_Alt, Key_Space }, Gfx::Bitmap::load_from_file("/res/icons/16x16/emoji.png"sv).release_value_but_fixme_should_propagate_errors(), move(callback), parent);
-    action->set_status_tip("Open the Emoji Picker"_string.release_value_but_fixme_should_propagate_errors());
+    action->set_status_tip("Open the Emoji Picker"_string);
     return action;
 }
 
 NonnullRefPtr<Action> make_fullscreen_action(Function<void(Action&)> callback, Core::EventReceiver* parent)
 {
     auto action = Action::create("&Fullscreen", { Mod_None, Key_F11 }, move(callback), parent);
-    action->set_status_tip("Enter fullscreen mode"_string.release_value_but_fixme_should_propagate_errors());
+    action->set_status_tip("Enter fullscreen mode"_string);
     action->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/fullscreen.png"sv).release_value_but_fixme_should_propagate_errors());
     return action;
 }
@@ -121,28 +121,28 @@ NonnullRefPtr<Action> make_fullscreen_action(Function<void(Action&)> callback, C
 NonnullRefPtr<Action> make_quit_action(Function<void(Action&)> callback)
 {
     auto action = Action::create("&Quit", { Mod_Alt, Key_F4 }, move(callback));
-    action->set_status_tip("Quit the application"_string.release_value_but_fixme_should_propagate_errors());
+    action->set_status_tip("Quit the application"_string);
     return action;
 }
 
 NonnullRefPtr<Action> make_help_action(Function<void(Action&)> callback, Core::EventReceiver* parent)
 {
     auto action = Action::create("&Manual", { Mod_None, Key_F1 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-help.png"sv).release_value_but_fixme_should_propagate_errors(), move(callback), parent);
-    action->set_status_tip("Show help contents"_string.release_value_but_fixme_should_propagate_errors());
+    action->set_status_tip("Show help contents"_string);
     return action;
 }
 
 NonnullRefPtr<Action> make_go_back_action(Function<void(Action&)> callback, Core::EventReceiver* parent)
 {
     auto action = Action::create("Go &Back", { Mod_Alt, Key_Left }, { MouseButton::Backward }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"sv).release_value_but_fixme_should_propagate_errors(), move(callback), parent);
-    action->set_status_tip("Move one step backward in history"_string.release_value_but_fixme_should_propagate_errors());
+    action->set_status_tip("Move one step backward in history"_string);
     return action;
 }
 
 NonnullRefPtr<Action> make_go_forward_action(Function<void(Action&)> callback, Core::EventReceiver* parent)
 {
     auto action = Action::create("Go &Forward", { Mod_Alt, Key_Right }, { MouseButton::Forward }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv).release_value_but_fixme_should_propagate_errors(), move(callback), parent);
-    action->set_status_tip("Move one step forward in history"_string.release_value_but_fixme_should_propagate_errors());
+    action->set_status_tip("Move one step forward in history"_string);
     return action;
 }
 
@@ -154,7 +154,7 @@ NonnullRefPtr<Action> make_go_home_action(Function<void(Action&)> callback, Core
 NonnullRefPtr<Action> make_close_tab_action(Function<void(Action&)> callback, Core::EventReceiver* parent)
 {
     auto action = Action::create("&Close Tab", { Mod_Ctrl, Key_W }, Gfx::Bitmap::load_from_file("/res/icons/16x16/close-tab.png"sv).release_value_but_fixme_should_propagate_errors(), move(callback), parent);
-    action->set_status_tip("Close current tab"_string.release_value_but_fixme_should_propagate_errors());
+    action->set_status_tip("Close current tab"_string);
     return action;
 }
 
@@ -214,7 +214,7 @@ NonnullRefPtr<Action> make_command_palette_action(Window* window)
         action->flash_menubar_menu(*window);
         action->activate();
     });
-    action->set_status_tip("Open the command palette"_string.release_value_but_fixme_should_propagate_errors());
+    action->set_status_tip("Open the command palette"_string);
     return action;
 }
 

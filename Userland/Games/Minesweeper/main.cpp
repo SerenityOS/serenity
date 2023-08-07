@@ -78,7 +78,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         GUI::Application::the()->quit();
     })));
 
-    auto difficulty_menu = TRY(window->try_add_menu(TRY("&Difficulty"_string)));
+    auto difficulty_menu = TRY(window->try_add_menu("&Difficulty"_string));
     GUI::ActionGroup difficulty_actions;
     difficulty_actions.set_exclusive(true);
 

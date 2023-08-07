@@ -131,7 +131,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto tab_widget = TRY(main_splitter->try_add<GUI::TabWidget>());
 
-    auto tree_tab = TRY(tab_widget->try_add_tab<GUI::Widget>(TRY("Call Tree"_string)));
+    auto tree_tab = TRY(tab_widget->try_add_tab<GUI::Widget>("Call Tree"_string));
     TRY(tree_tab->try_set_layout<GUI::VerticalBoxLayout>(4));
     auto bottom_splitter = TRY(tree_tab->try_add<GUI::VerticalSplitter>());
 
@@ -180,7 +180,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         update_source_model();
     });
 
-    auto samples_tab = TRY(tab_widget->try_add_tab<GUI::Widget>(TRY("Samples"_string)));
+    auto samples_tab = TRY(tab_widget->try_add_tab<GUI::Widget>("Samples"_string));
     TRY(samples_tab->try_set_layout<GUI::VerticalBoxLayout>(4));
 
     auto samples_splitter = TRY(samples_tab->try_add<GUI::HorizontalSplitter>());
@@ -194,7 +194,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         individual_sample_view->set_model(move(model));
     };
 
-    auto signposts_tab = TRY(tab_widget->try_add_tab<GUI::Widget>(TRY("Signposts"_string)));
+    auto signposts_tab = TRY(tab_widget->try_add_tab<GUI::Widget>("Signposts"_string));
     TRY(signposts_tab->try_set_layout<GUI::VerticalBoxLayout>(4));
 
     auto signposts_splitter = TRY(signposts_tab->try_add<GUI::HorizontalSplitter>());
@@ -208,7 +208,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         individual_signpost_view->set_model(move(model));
     };
 
-    auto flamegraph_tab = TRY(tab_widget->try_add_tab<GUI::Widget>(TRY("Flame Graph"_string)));
+    auto flamegraph_tab = TRY(tab_widget->try_add_tab<GUI::Widget>("Flame Graph"_string));
     TRY(flamegraph_tab->try_set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 4, 4, 4, 4 }));
 
     auto flamegraph_view = TRY(flamegraph_tab->try_add<FlameGraphView>(profile->model(), ProfileModel::Column::StackFrame, ProfileModel::Column::SampleCount));
@@ -256,7 +256,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     timeline_view->on_selection_change = [&] { statusbar_update(); };
     flamegraph_view->on_hover_change = [&] { statusbar_update(); };
 
-    auto filesystem_events_tab = TRY(tab_widget->try_add_tab<GUI::Widget>(TRY("Filesystem events"_string)));
+    auto filesystem_events_tab = TRY(tab_widget->try_add_tab<GUI::Widget>("Filesystem events"_string));
     TRY(filesystem_events_tab->try_set_layout<GUI::VerticalBoxLayout>(4));
 
     auto filesystem_events_tree_view = TRY(filesystem_events_tab->try_add<GUI::TreeView>());

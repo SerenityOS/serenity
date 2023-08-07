@@ -37,7 +37,7 @@ ErrorOr<void> DesktopSettingsWidget::create_frame()
     };
 
     auto& keyboard_shortcuts_label = *find_descendant_of_type_named<GUI::Label>("keyboard_shortcuts_label");
-    keyboard_shortcuts_label.set_text(TRY("\xE2\x84\xB9\tCtrl+Alt+{Shift}+Arrows moves between workspaces"_string));
+    keyboard_shortcuts_label.set_text("\xE2\x84\xB9\tCtrl+Alt+{Shift}+Arrows moves between workspaces"_string);
 
     return {};
 }

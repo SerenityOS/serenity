@@ -502,7 +502,7 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     m_editor->update();
 
     m_bytes_per_row_actions.set_exclusive(true);
-    auto bytes_per_row_menu = TRY(view_menu->try_add_submenu(TRY("Bytes per &Row"_string)));
+    auto bytes_per_row_menu = TRY(view_menu->try_add_submenu("Bytes per &Row"_string));
     for (int i = 8; i <= 32; i += 8) {
         auto action = GUI::Action::create_checkable(DeprecatedString::number(i), [this, i](auto&) {
             m_editor->set_bytes_per_row(i);
@@ -516,7 +516,7 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     }
 
     m_value_inspector_mode_actions.set_exclusive(true);
-    auto inspector_mode_menu = TRY(view_menu->try_add_submenu(TRY("Value Inspector &Mode"_string)));
+    auto inspector_mode_menu = TRY(view_menu->try_add_submenu("Value Inspector &Mode"_string));
     auto little_endian_mode = GUI::Action::create_checkable("&Little Endian", [&](auto& action) {
         m_value_inspector_little_endian = action.is_checked();
         update_inspector_values(m_editor->selection_start_offset());

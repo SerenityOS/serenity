@@ -34,17 +34,17 @@ ErrorOr<String> SamplesModel::column_name(int column) const
     case Column::SampleIndex:
         return "#"_short_string;
     case Column::Timestamp:
-        return TRY("Timestamp"_string);
+        return "Timestamp"_string;
     case Column::ProcessID:
         return "PID"_short_string;
     case Column::ThreadID:
         return "TID"_short_string;
     case Column::ExecutableName:
-        return TRY("Executable"_string);
+        return "Executable"_string;
     case Column::LostSamples:
-        return TRY("Lost Samples"_string);
+        return "Lost Samples"_string;
     case Column::InnermostStackFrame:
-        return TRY("Innermost Frame"_string);
+        return "Innermost Frame"_string;
     case Column::Path:
         return "Path"_short_string;
     default:

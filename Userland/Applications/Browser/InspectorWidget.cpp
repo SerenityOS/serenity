@@ -92,7 +92,7 @@ InspectorWidget::InspectorWidget()
         set_selection(index);
     };
 
-    auto& accessibility_tree_container = top_tab_widget.add_tab<GUI::Widget>("Accessibility"_string.release_value_but_fixme_should_propagate_errors());
+    auto& accessibility_tree_container = top_tab_widget.add_tab<GUI::Widget>("Accessibility"_string);
     accessibility_tree_container.set_layout<GUI::VerticalBoxLayout>(4);
     m_accessibility_tree_view = accessibility_tree_container.add<GUI::TreeView>();
     m_accessibility_tree_view->on_selection_change = [this] {
@@ -102,24 +102,24 @@ InspectorWidget::InspectorWidget()
 
     auto& bottom_tab_widget = splitter.add<GUI::TabWidget>();
 
-    auto& computed_style_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Computed"_string.release_value_but_fixme_should_propagate_errors());
+    auto& computed_style_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Computed"_string);
     computed_style_table_container.set_layout<GUI::VerticalBoxLayout>(4);
     m_computed_style_table_view = computed_style_table_container.add<GUI::TableView>();
 
-    auto& resolved_style_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Resolved"_string.release_value_but_fixme_should_propagate_errors());
+    auto& resolved_style_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Resolved"_string);
     resolved_style_table_container.set_layout<GUI::VerticalBoxLayout>(4);
     m_resolved_style_table_view = resolved_style_table_container.add<GUI::TableView>();
 
-    auto& custom_properties_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Variables"_string.release_value_but_fixme_should_propagate_errors());
+    auto& custom_properties_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Variables"_string);
     custom_properties_table_container.set_layout<GUI::VerticalBoxLayout>(4);
     m_custom_properties_table_view = custom_properties_table_container.add<GUI::TableView>();
 
-    auto& box_model_widget = bottom_tab_widget.add_tab<GUI::Widget>("Box Model"_string.release_value_but_fixme_should_propagate_errors());
+    auto& box_model_widget = bottom_tab_widget.add_tab<GUI::Widget>("Box Model"_string);
     box_model_widget.set_layout<GUI::VerticalBoxLayout>(4);
     m_element_size_view = box_model_widget.add<ElementSizePreviewWidget>();
     m_element_size_view->set_should_hide_unnecessary_scrollbars(true);
 
-    auto& aria_properties_state_widget = bottom_tab_widget.add_tab<GUI::Widget>("ARIA"_string.release_value_but_fixme_should_propagate_errors());
+    auto& aria_properties_state_widget = bottom_tab_widget.add_tab<GUI::Widget>("ARIA"_string);
     aria_properties_state_widget.set_layout<GUI::VerticalBoxLayout>(4);
     m_aria_properties_state_view = aria_properties_state_widget.add<GUI::TableView>();
 

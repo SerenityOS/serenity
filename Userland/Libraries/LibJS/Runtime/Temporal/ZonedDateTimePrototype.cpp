@@ -769,7 +769,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::with)
     auto field_names = TRY(calendar_fields(vm, calendar, { "day"sv, "hour"sv, "microsecond"sv, "millisecond"sv, "minute"sv, "month"sv, "monthCode"sv, "nanosecond"sv, "second"sv, "year"sv }));
 
     // 7. Append "offset" to fieldNames.
-    field_names.append(TRY_OR_THROW_OOM(vm, "offset"_string));
+    field_names.append("offset"_string);
 
     // 8. Let partialZonedDateTime be ? PrepareTemporalFields(temporalZonedDateTimeLike, fieldNames, partial).
     auto* partial_zoned_date_time = TRY(prepare_temporal_fields(vm, temporal_zoned_date_time_like.as_object(), field_names, PrepareTemporalFieldsPartial {}));
@@ -787,7 +787,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::with)
     auto& time_zone = zoned_date_time->time_zone();
 
     // 13. Append "timeZone" to fieldNames.
-    field_names.append(TRY_OR_THROW_OOM(vm, "timeZone"_string));
+    field_names.append("timeZone"_string);
 
     // 14. Let fields be ? PrepareTemporalFields(zonedDateTime, fieldNames, « "timeZone", "offset" »).
     auto* fields = TRY(prepare_temporal_fields(vm, zoned_date_time, field_names, Vector<StringView> { "timeZone"sv, "offset"sv }));

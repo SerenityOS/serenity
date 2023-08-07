@@ -433,7 +433,7 @@ ErrorOr<void> TreeMapWidget::analyze(GUI::Statusbar& statusbar)
         }
         statusbar.set_text(TRY(builder.to_string()));
     } else {
-        statusbar.set_text(TRY("No errors"_string));
+        statusbar.set_text("No errors"_string);
     }
 
     m_tree = move(tree);

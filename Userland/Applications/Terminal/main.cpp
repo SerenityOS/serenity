@@ -141,7 +141,7 @@ static ErrorOr<void> run_command(StringView command, bool keep_open)
 {
     auto shell = TRY(String::from_deprecated_string(TRY(Core::Account::self(Core::Account::Read::PasswdOnly)).shell()));
     if (shell.is_empty())
-        shell = TRY("/bin/Shell"_string);
+        shell = "/bin/Shell"_string;
 
     Vector<StringView> arguments;
     arguments.append(shell);
@@ -193,8 +193,8 @@ static ErrorOr<NonnullRefPtr<GUI::Window>> create_find_window(VT::TerminalWidget
         find_forwards->click();
     };
 
-    auto match_case = TRY(main_widget->try_add<GUI::CheckBox>(TRY("Case sensitive"_string)));
-    auto wrap_around = TRY(main_widget->try_add<GUI::CheckBox>(TRY("Wrap around"_string)));
+    auto match_case = TRY(main_widget->try_add<GUI::CheckBox>("Case sensitive"_string));
+    auto wrap_around = TRY(main_widget->try_add<GUI::CheckBox>("Wrap around"_string));
 
     find_backwards->on_click = [&terminal, find_textbox, match_case, wrap_around](auto) {
         auto needle = find_textbox->text();
@@ -363,14 +363,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Optional<String> close_message;
         auto title = "Running Process"sv;
         if (tty_has_foreground_process()) {
-            close_message = "Close Terminal and kill its foreground process?"_string.release_value_but_fixme_should_propagate_errors();
+            close_message = "Close Terminal and kill its foreground process?"_string;
         } else {
             auto child_process_count = shell_child_process_count();
             if (child_process_count > 1) {
                 title = "Running Processes"sv;
                 close_message = String::formatted("Close Terminal and kill its {} background processes?", child_process_count).release_value_but_fixme_should_propagate_errors();
             } else if (child_process_count == 1) {
-                close_message = "Close Terminal and kill its background process?"_string.release_value_but_fixme_should_propagate_errors();
+                close_message = "Close Terminal and kill its background process?"_string;
             }
         }
         if (close_message.has_value())

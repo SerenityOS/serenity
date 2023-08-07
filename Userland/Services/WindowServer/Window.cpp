@@ -708,7 +708,7 @@ void Window::request_update(Gfx::IntRect const& rect, bool ignore_occlusion)
 void Window::ensure_window_menu()
 {
     if (!m_window_menu) {
-        m_window_menu = Menu::construct(nullptr, -1, "(Window Menu)"_string.release_value_but_fixme_should_propagate_errors());
+        m_window_menu = Menu::construct(nullptr, -1, "(Window Menu)"_string);
         m_window_menu->set_window_menu_of(*this);
 
         auto minimize_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::MinimizeOrUnminimize, "");

@@ -28,7 +28,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Desktop::Launcher::seal_allowlist());
 
     Config::pledge_domain("HexEditor");
-    app->set_config_domain(TRY("HexEditor"_string));
+    app->set_config_domain("HexEditor"_string);
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-hex-editor"sv));
 

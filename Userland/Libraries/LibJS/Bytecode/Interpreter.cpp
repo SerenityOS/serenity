@@ -300,7 +300,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
         for (size_t i = 0; i < registers().size(); ++i) {
             String value_string;
             if (registers()[i].is_empty())
-                value_string = MUST("(empty)"_string);
+                value_string = "(empty)"_string;
             else
                 value_string = MUST(registers()[i].to_string_without_side_effects());
             dbgln("[{:3}] {}", i, value_string);

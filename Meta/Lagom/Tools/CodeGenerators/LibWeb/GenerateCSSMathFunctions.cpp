@@ -242,10 +242,10 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_math_function(PropertyID property
                 bool parameter_is_calculation;
                 if (parameter_type_string == "<rounding-strategy>") {
                     parameter_is_calculation = false;
-                    TRY(parameter_generator.set("parameter_type", TRY("RoundingStrategy"_string)));
-                    TRY(parameter_generator.set("parse_function", TRY("parse_rounding_strategy(arguments[argument_index])"_string)));
-                    TRY(parameter_generator.set("check_function", TRY(".has_value()"_string)));
-                    TRY(parameter_generator.set("release_function", TRY(".release_value()"_string)));
+                    TRY(parameter_generator.set("parameter_type", "RoundingStrategy"_string));
+                    TRY(parameter_generator.set("parse_function", "parse_rounding_strategy(arguments[argument_index])"_string));
+                    TRY(parameter_generator.set("check_function", ".has_value()"_string));
+                    TRY(parameter_generator.set("release_function", ".release_value()"_string));
                     if (auto default_value = parameter.get_deprecated_string("default"sv); default_value.has_value()) {
                         TRY(parameter_generator.set("parameter_default", TRY(String::formatted(" = RoundingStrategy::{}", TRY(title_casify(default_value.value()))))));
                     } else {
@@ -254,10 +254,10 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_math_function(PropertyID property
                 } else {
                     // NOTE: This assumes everything not handled above is a calculation node of some kind.
                     parameter_is_calculation = true;
-                    TRY(parameter_generator.set("parameter_type", TRY("OwnPtr<CalculationNode>"_string)));
-                    TRY(parameter_generator.set("parse_function", TRY("TRY(parse_a_calculation(arguments[argument_index]))"_string)));
-                    TRY(parameter_generator.set("check_function", TRY(" != nullptr"_string)));
-                    TRY(parameter_generator.set("release_function", TRY(".release_nonnull()"_string)));
+                    TRY(parameter_generator.set("parameter_type", "OwnPtr<CalculationNode>"_string));
+                    TRY(parameter_generator.set("parse_function", "TRY(parse_a_calculation(arguments[argument_index]))"_string));
+                    TRY(parameter_generator.set("check_function", " != nullptr"_string));
+                    TRY(parameter_generator.set("release_function", ".release_nonnull()"_string));
 
                     // NOTE: We have exactly one default value in the data right now, and it's a `<calc-constant>`,
                     //       so that's all we handle.
@@ -354,7 +354,7 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_math_function(PropertyID property
                     TRY(parameter_generator.set("release_value"sv, ""_short_string));
                 } else {
                     // NOTE: This assumes everything not handled above is a calculation node of some kind.
-                    TRY(parameter_generator.set("release_value"sv, TRY(".release_nonnull()"_string)));
+                    TRY(parameter_generator.set("release_value"sv, ".release_nonnull()"_string));
                 }
 
                 if (parameter_index == 0) {

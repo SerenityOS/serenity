@@ -75,7 +75,7 @@ private:
     ErrorOr<void> establish_web_socket_connection(AK::URL& url_record, Vector<String>& protocols, HTML::EnvironmentSettingsObject& client);
 
     AK::URL m_url;
-    String m_binary_type { "blob"_string.release_value_but_fixme_should_propagate_errors() };
+    String m_binary_type { "blob"_string };
     RefPtr<WebSocketClientSocket> m_websocket;
 };
 

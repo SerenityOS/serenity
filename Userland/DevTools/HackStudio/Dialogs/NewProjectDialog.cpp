@@ -115,7 +115,7 @@ void NewProjectDialog::update_dialog()
     if (project_template) {
         m_description_label->set_text(String::from_deprecated_string(project_template->description()).release_value_but_fixme_should_propagate_errors());
     } else {
-        m_description_label->set_text("Select a project template to continue."_string.release_value_but_fixme_should_propagate_errors());
+        m_description_label->set_text("Select a project template to continue."_string);
         m_input_valid = false;
     }
 
@@ -124,7 +124,7 @@ void NewProjectDialog::update_dialog()
     if (maybe_project_path.has_value()) {
         m_full_path_label->set_text(String::from_deprecated_string(maybe_project_path.value()).release_value_but_fixme_should_propagate_errors());
     } else {
-        m_full_path_label->set_text("Invalid name or creation directory."_string.release_value_but_fixme_should_propagate_errors());
+        m_full_path_label->set_text("Invalid name or creation directory."_string);
         m_input_valid = false;
     }
 

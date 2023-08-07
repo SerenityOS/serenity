@@ -24,7 +24,7 @@ GalleryWidget::GalleryWidget()
 
 ErrorOr<void> GalleryWidget::load_basic_model_tab()
 {
-    auto tab = TRY(m_tab_widget->try_add_tab<GUI::Widget>(TRY("Basic Model"_string)));
+    auto tab = TRY(m_tab_widget->try_add_tab<GUI::Widget>("Basic Model"_string));
     TRY(tab->load_from_gml(basic_model_tab_gml));
 
     m_basic_model = BasicModel::create();

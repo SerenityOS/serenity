@@ -265,7 +265,7 @@ void BookmarksBarWidget::update_content_size()
     } else {
         // hide all items > m_last_visible_index and create new bookmarks menu for them
         m_additional->set_visible(true);
-        m_additional_menu = GUI::Menu::construct("Additional Bookmarks"_string.release_value_but_fixme_should_propagate_errors());
+        m_additional_menu = GUI::Menu::construct("Additional Bookmarks"_string);
         m_additional->set_menu(m_additional_menu);
         for (size_t i = m_last_visible_index; i < m_bookmarks.size(); ++i) {
             auto& bookmark = m_bookmarks.at(i);

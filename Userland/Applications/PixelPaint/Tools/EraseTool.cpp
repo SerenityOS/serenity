@@ -82,7 +82,7 @@ ErrorOr<GUI::Widget*> EraseTool::get_properties_widget()
         hardness_container->set_fixed_height(20);
         (void)TRY(hardness_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto hardness_label = TRY(hardness_container->try_add<GUI::Label>(TRY("Hardness:"_string)));
+        auto hardness_label = TRY(hardness_container->try_add<GUI::Label>("Hardness:"_string));
         hardness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         hardness_label->set_fixed_size(80, 20);
 
@@ -101,7 +101,7 @@ ErrorOr<GUI::Widget*> EraseTool::get_properties_widget()
 
         auto use_secondary_color_checkbox = TRY(secondary_color_container->try_add<GUI::CheckBox>());
         use_secondary_color_checkbox->set_checked(m_use_secondary_color);
-        use_secondary_color_checkbox->set_text(TRY("Use secondary color"_string));
+        use_secondary_color_checkbox->set_text("Use secondary color"_string);
         use_secondary_color_checkbox->on_checked = [this](bool checked) {
             m_use_secondary_color = checked;
         };
@@ -109,7 +109,7 @@ ErrorOr<GUI::Widget*> EraseTool::get_properties_widget()
         auto mode_container = TRY(properties_widget->try_add<GUI::Widget>());
         mode_container->set_fixed_height(46);
         (void)TRY(mode_container->try_set_layout<GUI::HorizontalBoxLayout>());
-        auto mode_label = TRY(mode_container->try_add<GUI::Label>(TRY("Draw Mode:"_string)));
+        auto mode_label = TRY(mode_container->try_add<GUI::Label>("Draw Mode:"_string));
         mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         mode_label->set_fixed_size(80, 20);
 

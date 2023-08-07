@@ -33,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-calendar"sv);
 
     auto window = TRY(GUI::SettingsWindow::create("Calendar Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
-    (void)TRY(window->add_tab<CalendarSettingsWidget>(TRY("Calendar"_string), "Calendar"sv));
+    (void)TRY(window->add_tab<CalendarSettingsWidget>("Calendar"_string, "Calendar"sv));
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_active_tab(selected_tab);
 

@@ -56,12 +56,12 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget* graph)
         return label;
     };
 
-    m_physical_pages_label = build_widgets_for_label("Physical memory:"_string.release_value_but_fixme_should_propagate_errors());
-    m_physical_pages_committed_label = build_widgets_for_label("Committed memory:"_string.release_value_but_fixme_should_propagate_errors());
-    m_kmalloc_space_label = build_widgets_for_label("Kernel heap:"_string.release_value_but_fixme_should_propagate_errors());
-    m_kmalloc_count_label = build_widgets_for_label("Calls kmalloc:"_string.release_value_but_fixme_should_propagate_errors());
-    m_kfree_count_label = build_widgets_for_label("Calls kfree:"_string.release_value_but_fixme_should_propagate_errors());
-    m_kmalloc_difference_label = build_widgets_for_label("Difference:"_string.release_value_but_fixme_should_propagate_errors());
+    m_physical_pages_label = build_widgets_for_label("Physical memory:"_string);
+    m_physical_pages_committed_label = build_widgets_for_label("Committed memory:"_string);
+    m_kmalloc_space_label = build_widgets_for_label("Kernel heap:"_string);
+    m_kmalloc_count_label = build_widgets_for_label("Calls kmalloc:"_string);
+    m_kfree_count_label = build_widgets_for_label("Calls kfree:"_string);
+    m_kmalloc_difference_label = build_widgets_for_label("Difference:"_string);
 
     refresh();
 }

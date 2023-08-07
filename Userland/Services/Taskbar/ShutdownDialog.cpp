@@ -65,7 +65,7 @@ ShutdownDialog::ShutdownDialog()
     auto& right_container = content_container.add<GUI::Widget>();
     right_container.set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 12, 12, 8, 0 });
 
-    auto& label = right_container.add<GUI::Label>("What would you like to do?"_string.release_value_but_fixme_should_propagate_errors());
+    auto& label = right_container.add<GUI::Label>("What would you like to do?"_string);
     label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     label.set_fixed_height(22);
     label.set_font(Gfx::FontDatabase::default_font().bold_variant());

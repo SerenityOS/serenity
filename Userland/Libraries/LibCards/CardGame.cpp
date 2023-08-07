@@ -23,7 +23,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> make_cards_settings_action(GUI::Window* pare
             GUI::Process::spawn_or_show_error(parent, "/bin/GamesSettings"sv, Array { "--open-tab", "cards" });
         },
         parent);
-    action->set_status_tip(TRY("Open the Game Settings for Cards"_string));
+    action->set_status_tip("Open the Game Settings for Cards"_string);
     return action;
 }
 

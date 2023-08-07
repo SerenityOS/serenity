@@ -136,7 +136,7 @@ ErrorOr<GUI::Widget*> EllipseTool::get_properties_widget()
         thickness_container->set_fixed_height(20);
         (void)TRY(thickness_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto thickness_label = TRY(thickness_container->try_add<GUI::Label>(TRY("Thickness:"_string)));
+        auto thickness_label = TRY(thickness_container->try_add<GUI::Label>("Thickness:"_string));
         thickness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         thickness_label->set_fixed_size(80, 20);
 
@@ -159,7 +159,7 @@ ErrorOr<GUI::Widget*> EllipseTool::get_properties_widget()
         (void)TRY(mode_radio_container->try_set_layout<GUI::VerticalBoxLayout>());
         auto outline_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Outline"_short_string));
         auto fill_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Fill"_short_string));
-        auto aa_enable_checkbox = TRY(mode_radio_container->try_add<GUI::CheckBox>(TRY("Anti-alias"_string)));
+        auto aa_enable_checkbox = TRY(mode_radio_container->try_add<GUI::CheckBox>("Anti-alias"_string));
 
         aa_enable_checkbox->on_checked = [this](bool checked) {
             m_antialias_enabled = checked;
@@ -180,7 +180,7 @@ ErrorOr<GUI::Widget*> EllipseTool::get_properties_widget()
         aspect_container->set_fixed_height(20);
         (void)TRY(aspect_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto aspect_label = TRY(aspect_container->try_add<GUI::Label>(TRY("Aspect Ratio:"_string)));
+        auto aspect_label = TRY(aspect_container->try_add<GUI::Label>("Aspect Ratio:"_string));
         aspect_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         aspect_label->set_fixed_size(80, 20);
 

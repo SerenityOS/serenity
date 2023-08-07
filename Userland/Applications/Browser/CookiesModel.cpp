@@ -46,9 +46,9 @@ ErrorOr<String> CookiesModel::column_name(int column) const
     case Column::Value:
         return "Value"_short_string;
     case Column::ExpiryTime:
-        return TRY("Expiry time"_string);
+        return "Expiry time"_string;
     case Column::SameSite:
-        return TRY("SameSite"_string);
+        return "SameSite"_string;
     case Column::__Count:
         return String {};
     }

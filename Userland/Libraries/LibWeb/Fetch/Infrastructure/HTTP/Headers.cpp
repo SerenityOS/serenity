@@ -401,7 +401,7 @@ ErrorOr<Optional<MimeSniff::MimeType>> HeaderList::extract_mime_type() const
         }
         // 5. Otherwise, if mimeType’s parameters["charset"] does not exist, and charset is non-null, set mimeType’s parameters["charset"] to charset.
         else if (!mime_type->parameters().contains("charset"sv) && charset.has_value()) {
-            TRY(mime_type->set_parameter(TRY("charset"_string), charset.release_value()));
+            TRY(mime_type->set_parameter("charset"_string, charset.release_value()));
         }
     }
 

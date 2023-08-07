@@ -148,7 +148,7 @@ RefPtr<GUI::Menu> DebugInfoWidget::get_context_menu_for_variable(const GUI::Mode
 NonnullRefPtr<GUI::Widget> DebugInfoWidget::build_variables_tab()
 {
     auto variables_widget = GUI::Widget::construct();
-    variables_widget->set_title("Variables"_string.release_value_but_fixme_should_propagate_errors());
+    variables_widget->set_title("Variables"_string);
     variables_widget->set_layout<GUI::HorizontalBoxLayout>();
 
     m_variables_view = variables_widget->add<GUI::TreeView>();
@@ -165,7 +165,7 @@ NonnullRefPtr<GUI::Widget> DebugInfoWidget::build_variables_tab()
 NonnullRefPtr<GUI::Widget> DebugInfoWidget::build_registers_tab()
 {
     auto registers_widget = GUI::Widget::construct();
-    registers_widget->set_title("Registers"_string.release_value_but_fixme_should_propagate_errors());
+    registers_widget->set_title("Registers"_string);
     registers_widget->set_layout<GUI::HorizontalBoxLayout>();
 
     m_registers_view = registers_widget->add<GUI::TableView>();

@@ -92,7 +92,7 @@ void KeyboardMapperWidget::create_frame()
     add_map_radio_button("shift_map"sv, "Shift"_short_string);
     add_map_radio_button("altgr_map"sv, "AltGr"_short_string);
     add_map_radio_button("alt_map"sv, "Alt"_short_string);
-    add_map_radio_button("shift_altgr_map"sv, "Shift+AltGr"_string.release_value_but_fixme_should_propagate_errors());
+    add_map_radio_button("shift_altgr_map"sv, "Shift+AltGr"_string);
 
     bottom_widget.add_spacer().release_value_but_fixme_should_propagate_errors();
 }

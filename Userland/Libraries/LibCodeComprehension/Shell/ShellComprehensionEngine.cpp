@@ -108,7 +108,7 @@ NonnullRefPtr<::Shell::AST::Node> ShellComprehensionEngine::DocumentData::parse(
     if (auto node = parser.parse())
         return node.release_nonnull();
 
-    return ::Shell::AST::make_ref_counted<::Shell::AST::SyntaxError>(::Shell::AST::Position {}, "Unable to parse file"_string.release_value_but_fixme_should_propagate_errors());
+    return ::Shell::AST::make_ref_counted<::Shell::AST::SyntaxError>(::Shell::AST::Position {}, "Unable to parse file"_string);
 }
 
 size_t ShellComprehensionEngine::resolve(ShellComprehensionEngine::DocumentData const& document, const GUI::TextPosition& position)

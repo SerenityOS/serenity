@@ -53,7 +53,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         net_adapters_fields.empend("name", "Name"_short_string, Gfx::TextAlignment::CenterLeft);
         net_adapters_fields.empend("class_name", "Class"_short_string, Gfx::TextAlignment::CenterLeft);
         net_adapters_fields.empend("mac_address", "MAC"_short_string, Gfx::TextAlignment::CenterLeft);
-        net_adapters_fields.empend("Link status"_string.release_value_but_fixme_should_propagate_errors(), Gfx::TextAlignment::CenterLeft,
+        net_adapters_fields.empend("Link status"_string, Gfx::TextAlignment::CenterLeft,
             [](JsonObject const& object) -> DeprecatedString {
                 if (!object.get_bool("link_up"sv).value_or(false))
                     return "Down";
@@ -67,8 +67,8 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
             });
         net_adapters_fields.empend("packets_in", "Pkt In"_short_string, Gfx::TextAlignment::CenterRight);
         net_adapters_fields.empend("packets_out", "Pkt Out"_short_string, Gfx::TextAlignment::CenterRight);
-        net_adapters_fields.empend("bytes_in", "Bytes In"_string.release_value_but_fixme_should_propagate_errors(), Gfx::TextAlignment::CenterRight);
-        net_adapters_fields.empend("bytes_out", "Bytes Out"_string.release_value_but_fixme_should_propagate_errors(), Gfx::TextAlignment::CenterRight);
+        net_adapters_fields.empend("bytes_in", "Bytes In"_string, Gfx::TextAlignment::CenterRight);
+        net_adapters_fields.empend("bytes_out", "Bytes Out"_string, Gfx::TextAlignment::CenterRight);
         m_adapter_model = GUI::JsonArrayModel::create("/sys/kernel/net/adapters", move(net_adapters_fields));
         m_adapter_table_view->set_model(MUST(GUI::SortingProxyModel::create(*m_adapter_model)));
         m_adapter_context_menu = MUST(GUI::Menu::try_create());
@@ -106,8 +106,8 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         net_tcp_fields.empend("sequence_number", "Seq#"_short_string, Gfx::TextAlignment::CenterRight);
         net_tcp_fields.empend("packets_in", "Pkt In"_short_string, Gfx::TextAlignment::CenterRight);
         net_tcp_fields.empend("packets_out", "Pkt Out"_short_string, Gfx::TextAlignment::CenterRight);
-        net_tcp_fields.empend("bytes_in", "Bytes In"_string.release_value_but_fixme_should_propagate_errors(), Gfx::TextAlignment::CenterRight);
-        net_tcp_fields.empend("bytes_out", "Bytes Out"_string.release_value_but_fixme_should_propagate_errors(), Gfx::TextAlignment::CenterRight);
+        net_tcp_fields.empend("bytes_in", "Bytes In"_string, Gfx::TextAlignment::CenterRight);
+        net_tcp_fields.empend("bytes_out", "Bytes Out"_string, Gfx::TextAlignment::CenterRight);
         m_tcp_socket_model = GUI::JsonArrayModel::create("/sys/kernel/net/tcp", move(net_tcp_fields));
         m_tcp_socket_table_view->set_model(MUST(GUI::SortingProxyModel::create(*m_tcp_socket_model)));
 

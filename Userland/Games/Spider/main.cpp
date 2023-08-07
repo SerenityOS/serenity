@@ -129,9 +129,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     };
 
-    statusbar.set_text(0, TRY("Score: 0"_string));
+    statusbar.set_text(0, "Score: 0"_string);
     reset_statistic_status();
-    statusbar.set_text(2, TRY("Time: 00:00:00"_string));
+    statusbar.set_text(2, "Time: 00:00:00"_string);
 
     app->on_action_enter = [&](GUI::Action& action) {
         statusbar.set_override_text(action.status_tip());
@@ -156,7 +156,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     game.on_game_start = [&]() {
         seconds_elapsed = 0;
         timer->start();
-        statusbar.set_text(2, "Time: 00:00:00"_string.release_value_but_fixme_should_propagate_errors());
+        statusbar.set_text(2, "Time: 00:00:00"_string);
     };
     game.on_game_end = [&](Spider::GameOverReason reason, uint32_t score) {
         auto game_was_in_progress = timer->is_active();
@@ -181,7 +181,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             reset_statistic_status();
         }
-        statusbar.set_text(2, "Timer starts after your first move"_string.release_value_but_fixme_should_propagate_errors());
+        statusbar.set_text(2, "Timer starts after your first move"_string);
     };
 
     auto confirm_end_current_game = [&]() {

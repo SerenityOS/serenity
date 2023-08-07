@@ -77,7 +77,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         GUI::Application::the()->quit();
     })));
 
-    auto settings_menu = TRY(window->try_add_menu(TRY("&Settings"_string)));
+    auto settings_menu = TRY(window->try_add_menu("&Settings"_string));
 
     TRY(settings_menu->try_add_action(GUI::Action::create("Set &Word Length...", [&](auto&) {
         auto word_length = Config::read_i32("MasterWord"sv, ""sv, "word_length"sv, 5);

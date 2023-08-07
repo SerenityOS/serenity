@@ -89,7 +89,7 @@ ErrorOr<Dialog::ExecResult> MessageBox::try_ask_about_unsaved_changes(Window* pa
         box->set_icon(parent_window->icon());
 
     if (path.is_empty())
-        box->m_yes_button->set_text(TRY("Save As..."_string));
+        box->m_yes_button->set_text("Save As..."_string);
     else
         box->m_yes_button->set_text("Save"_short_string);
     box->m_no_button->set_text("Discard"_short_string);

@@ -41,7 +41,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto decoder_client = TRY(ImageDecoderClient::Client::try_create());
 
     Config::pledge_domains({ "SoundPlayer", "FileManager" });
-    app->set_config_domain(TRY("SoundPlayer"_string));
+    app->set_config_domain("SoundPlayer"_string);
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath thread proc"));
 
@@ -73,7 +73,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         app->quit();
     })));
 
-    auto playback_menu = TRY(window->try_add_menu(TRY("&Playback"_string)));
+    auto playback_menu = TRY(window->try_add_menu("&Playback"_string));
     GUI::ActionGroup loop_actions;
     loop_actions.set_exclusive(true);
     auto loop_none = GUI::Action::create_checkable("&No Loop", { Mod_Ctrl, Key_N }, [&](auto&) {
@@ -120,7 +120,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
     TRY(playback_menu->try_add_action(shuffle_mode));
 
-    auto visualization_menu = TRY(window->try_add_menu(TRY("&Visualization"_string)));
+    auto visualization_menu = TRY(window->try_add_menu("&Visualization"_string));
     GUI::ActionGroup visualization_actions;
     visualization_actions.set_exclusive(true);
 

@@ -79,7 +79,7 @@ private:
             }
         }
 
-        auto& norm_checkbox = main_widget->template add<GUI::CheckBox>("Normalize"_string.release_value_but_fixme_should_propagate_errors());
+        auto& norm_checkbox = main_widget->template add<GUI::CheckBox>("Normalize"_string);
         norm_checkbox.set_checked(false);
 
         auto& wrap_checkbox = main_widget->template add<GUI::CheckBox>("Wrap"_short_string);

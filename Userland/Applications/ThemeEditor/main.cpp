@@ -29,7 +29,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::create(arguments));
 
     Config::pledge_domain("ThemeEditor");
-    app->set_config_domain(TRY("ThemeEditor"_string));
+    app->set_config_domain("ThemeEditor"_string);
 
     StringView file_to_edit;
 

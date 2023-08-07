@@ -829,7 +829,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::select_resource()
         // 1. ⌛ If the src attribute's value is the empty string, then end the synchronous section, and jump down to the failed with attribute step below.
         auto source = attribute(HTML::AttributeNames::src);
         if (source.is_empty()) {
-            failed_with_attribute(TRY_OR_THROW_OOM(vm, "The 'src' attribute is empty"_string));
+            failed_with_attribute("The 'src' attribute is empty"_string);
             return {};
         }
 
@@ -850,7 +850,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::select_resource()
             return {};
         }
 
-        failed_with_attribute(TRY_OR_THROW_OOM(vm, "Failed to parse 'src' attribute as a URL"_string));
+        failed_with_attribute("Failed to parse 'src' attribute as a URL"_string);
 
         // 8. Return. The element won't attempt to load another resource until this algorithm is triggered again.
         return {};

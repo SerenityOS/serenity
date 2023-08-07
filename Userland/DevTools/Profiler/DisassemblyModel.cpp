@@ -135,15 +135,15 @@ ErrorOr<String> DisassemblyModel::column_name(int column) const
 {
     switch (column) {
     case Column::SampleCount:
-        return m_profile.show_percentages() ? TRY("% Samples"_string) : TRY("# Samples"_string);
+        return m_profile.show_percentages() ? "% Samples"_string : "# Samples"_string;
     case Column::Address:
         return "Address"_short_string;
     case Column::InstructionBytes:
-        return TRY("Insn Bytes"_string);
+        return "Insn Bytes"_string;
     case Column::Disassembly:
-        return TRY("Disassembly"_string);
+        return "Disassembly"_string;
     case Column::SourceLocation:
-        return TRY("Source Location"_string);
+        return "Source Location"_string;
     default:
         VERIFY_NOT_REACHED();
     }

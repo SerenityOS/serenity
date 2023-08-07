@@ -148,9 +148,9 @@ ErrorOr<String> FileEventModel::column_name(int column) const
     case Column::Path:
         return "Path"_short_string;
     case Column::Count:
-        return TRY("Event Count"_string);
+        return "Event Count"_string;
     case Column::Duration:
-        return TRY("Duration [ms]"_string);
+        return "Duration [ms]"_string;
     default:
         VERIFY_NOT_REACHED();
     }

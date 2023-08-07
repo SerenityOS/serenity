@@ -126,11 +126,11 @@ ErrorOr<String> SourceModel::column_name(int column) const
 {
     switch (column) {
     case Column::SampleCount:
-        return m_profile.show_percentages() ? TRY("% Samples"_string) : TRY("# Samples"_string);
+        return m_profile.show_percentages() ? "% Samples"_string : "# Samples"_string;
     case Column::SourceCode:
-        return TRY("Source Code"_string);
+        return "Source Code"_string;
     case Column::Location:
-        return TRY("Location"_string);
+        return "Location"_string;
     case Column::LineNumber:
         return "Line"_short_string;
     default:

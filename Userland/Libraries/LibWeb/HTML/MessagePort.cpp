@@ -98,7 +98,7 @@ void MessagePort::post_message(JS::Value message)
     main_thread_event_loop().task_queue().add(HTML::Task::create(HTML::Task::Source::PostedMessage, nullptr, [target_port, message] {
         MessageEventInit event_init {};
         event_init.data = message;
-        event_init.origin = "<origin>"_string.release_value_but_fixme_should_propagate_errors();
+        event_init.origin = "<origin>"_string;
         target_port->dispatch_event(MessageEvent::create(target_port->realm(), HTML::EventNames::message, event_init).release_value_but_fixme_should_propagate_errors());
     }));
 }

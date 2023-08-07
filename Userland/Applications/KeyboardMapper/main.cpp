@@ -79,7 +79,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto auto_modifier_action = GUI::Action::create("Auto-Modifier", [&](auto& act) {
         keyboard_mapper_widget->set_automatic_modifier(act.is_checked());
     });
-    auto_modifier_action->set_status_tip(TRY("Toggle automatic modifier"_string));
+    auto_modifier_action->set_status_tip("Toggle automatic modifier"_string);
     auto_modifier_action->set_checkable(true);
     auto_modifier_action->set_checked(false);
 
@@ -90,7 +90,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     file_menu.add_separator();
     file_menu.add_action(quit_action);
 
-    auto& settings_menu = window->add_menu(TRY("&Settings"_string));
+    auto& settings_menu = window->add_menu("&Settings"_string);
     settings_menu.add_action(auto_modifier_action);
 
     auto& help_menu = window->add_menu("&Help"_short_string);

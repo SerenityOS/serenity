@@ -79,9 +79,9 @@ ErrorOr<String> DisassemblyModel::column_name(int column) const
     case Column::Address:
         return "Address"_short_string;
     case Column::InstructionBytes:
-        return TRY("Insn Bytes"_string);
+        return "Insn Bytes"_string;
     case Column::Disassembly:
-        return TRY("Disassembly"_string);
+        return "Disassembly"_string;
     default:
         VERIFY_NOT_REACHED();
     }

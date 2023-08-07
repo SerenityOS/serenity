@@ -62,7 +62,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto snake_skin_name = Config::read_string("Snake"sv, "Snake"sv, "SnakeSkin"sv, "Classic"sv);
 
     auto& statusbar = *widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar"sv);
-    statusbar.set_text(0, TRY("Score: 0"_string));
+    statusbar.set_text(0, "Score: 0"_string);
     statusbar.set_text(1, TRY(String::formatted("High Score: {}", high_score)));
     GUI::Application::the()->on_action_enter = [&statusbar](GUI::Action& action) {
         statusbar.set_override_text(action.status_tip());

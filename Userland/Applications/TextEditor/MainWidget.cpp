@@ -317,7 +317,7 @@ MainWidget::MainWidget()
         Desktop::Launcher::open(URL::create_with_file_scheme(lexical_path.dirname(), lexical_path.basename()));
     });
     m_open_folder_action->set_enabled(!m_path.is_empty());
-    m_open_folder_action->set_status_tip("Open the current file location in File Manager"_string.release_value_but_fixme_should_propagate_errors());
+    m_open_folder_action->set_status_tip("Open the current file location in File Manager"_string);
 
     m_toolbar->add_action(*m_new_action);
     m_toolbar->add_action(*m_open_action);
@@ -481,7 +481,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(view_menu->try_add_separator());
 
     m_wrapping_mode_actions.set_exclusive(true);
-    auto wrapping_mode_menu = TRY(view_menu->try_add_submenu(TRY("&Wrapping Mode"_string)));
+    auto wrapping_mode_menu = TRY(view_menu->try_add_submenu("&Wrapping Mode"_string));
     m_no_wrapping_action = GUI::Action::create_checkable("&No Wrapping", [&](auto&) {
         m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
         Config::write_string("TextEditor"sv, "View"sv, "WrappingMode"sv, "None"sv);
@@ -516,7 +516,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     }
 
     m_soft_tab_width_actions.set_exclusive(true);
-    auto soft_tab_width_menu = TRY(view_menu->try_add_submenu(TRY("&Tab Width"_string)));
+    auto soft_tab_width_menu = TRY(view_menu->try_add_submenu("&Tab Width"_string));
     m_soft_tab_1_width_action = GUI::Action::create_checkable("1", [&](auto&) {
         m_editor->set_soft_tab_width(1);
     });
@@ -557,8 +557,8 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     });
 
     m_visualize_trailing_whitespace_action->set_checked(true);
-    m_visualize_trailing_whitespace_action->set_status_tip(TRY("Visualize trailing whitespace"_string));
-    m_visualize_leading_whitespace_action->set_status_tip(TRY("Visualize leading whitespace"_string));
+    m_visualize_trailing_whitespace_action->set_status_tip("Visualize trailing whitespace"_string);
+    m_visualize_leading_whitespace_action->set_status_tip("Visualize leading whitespace"_string);
 
     TRY(view_menu->try_add_action(*m_visualize_trailing_whitespace_action));
     TRY(view_menu->try_add_action(*m_visualize_leading_whitespace_action));
@@ -568,7 +568,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     });
 
     m_cursor_line_highlighting_action->set_checked(true);
-    m_cursor_line_highlighting_action->set_status_tip(TRY("Highlight the current line"_string));
+    m_cursor_line_highlighting_action->set_status_tip("Highlight the current line"_string);
 
     TRY(view_menu->try_add_action(*m_cursor_line_highlighting_action));
 
@@ -581,7 +581,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_relative_line_number_action->set_checked(show_relative_line_number);
     m_editor->set_relative_line_number(show_relative_line_number);
 
-    m_relative_line_number_action->set_status_tip(TRY("Set relative line number"_string));
+    m_relative_line_number_action->set_status_tip("Set relative line number"_string);
 
     TRY(view_menu->try_add_action(*m_relative_line_number_action));
 
@@ -596,12 +596,12 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     auto syntax_menu = TRY(view_menu->try_add_submenu("&Syntax"_short_string));
     m_plain_text_highlight = GUI::Action::create_checkable("&Plain Text", [&](auto&) {
-        m_statusbar->set_text(1, "Plain Text"_string.release_value_but_fixme_should_propagate_errors());
+        m_statusbar->set_text(1, "Plain Text"_string);
         m_editor->set_syntax_highlighter({});
         m_editor->update();
     });
     m_plain_text_highlight->set_checked(true);
-    m_statusbar->set_text(1, TRY("Plain Text"_string));
+    m_statusbar->set_text(1, "Plain Text"_string);
     syntax_actions.add_action(*m_plain_text_highlight);
     TRY(syntax_menu->try_add_action(*m_plain_text_highlight));
 
@@ -696,12 +696,12 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     })));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Text Editor", GUI::Icon::default_icon("app-text-editor"sv), &window)));
 
-    auto wrapping_statusbar_menu = TRY(m_line_column_statusbar_menu->try_add_submenu(TRY("&Wrapping Mode"_string)));
+    auto wrapping_statusbar_menu = TRY(m_line_column_statusbar_menu->try_add_submenu("&Wrapping Mode"_string));
     TRY(wrapping_statusbar_menu->try_add_action(*m_no_wrapping_action));
     TRY(wrapping_statusbar_menu->try_add_action(*m_wrap_anywhere_action));
     TRY(wrapping_statusbar_menu->try_add_action(*m_wrap_at_words_action));
 
-    auto tab_width_statusbar_menu = TRY(m_line_column_statusbar_menu->try_add_submenu(TRY("&Tab Width"_string)));
+    auto tab_width_statusbar_menu = TRY(m_line_column_statusbar_menu->try_add_submenu("&Tab Width"_string));
     TRY(tab_width_statusbar_menu->try_add_action(*m_soft_tab_1_width_action));
     TRY(tab_width_statusbar_menu->try_add_action(*m_soft_tab_2_width_action));
     TRY(tab_width_statusbar_menu->try_add_action(*m_soft_tab_4_width_action));
