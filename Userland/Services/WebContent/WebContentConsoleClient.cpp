@@ -8,9 +8,9 @@
 
 #include "WebContentConsoleClient.h"
 #include <AK/TemporaryChange.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/MarkupGenerator.h>
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/ObjectEnvironment.h>
 #include <LibJS/Runtime/Realm.h>
 #include <LibJS/Runtime/ThrowableStringBuilder.h>

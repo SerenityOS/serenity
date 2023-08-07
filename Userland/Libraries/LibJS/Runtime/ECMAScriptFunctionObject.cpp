@@ -13,7 +13,6 @@
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Interpreter.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/AsyncFunctionDriverWrapper.h>
@@ -23,6 +22,7 @@
 #include <LibJS/Runtime/ExecutionContext.h>
 #include <LibJS/Runtime/FunctionEnvironment.h>
 #include <LibJS/Runtime/GeneratorObject.h>
+#include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/PromiseCapability.h>
@@ -152,8 +152,6 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
 
     // Non-standard
     callee_context.arguments.extend(move(arguments_list));
-    if (auto* interpreter = vm.interpreter_if_exists(); interpreter && interpreter->current_node())
-        callee_context.source_range = interpreter->current_node()->unrealized_source_range();
 
     // 2. Let calleeContext be PrepareForOrdinaryCall(F, undefined).
     // NOTE: We throw if the end of the native stack is reached, so unlike in the spec this _does_ need an exception check.
@@ -223,8 +221,6 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ECMAScriptFunctionObject::internal_const
 
     // Non-standard
     callee_context.arguments.extend(move(arguments_list));
-    if (auto* interpreter = vm.interpreter_if_exists(); interpreter && interpreter->current_node())
-        callee_context.source_range = interpreter->current_node()->unrealized_source_range();
 
     // 4. Let calleeContext be PrepareForOrdinaryCall(F, newTarget).
     // NOTE: We throw if the end of the native stack is reached, so unlike in the spec this _does_ need an exception check.
@@ -329,7 +325,7 @@ void ECMAScriptFunctionObject::make_method(Object& home_object)
 }
 
 // 10.2.11 FunctionDeclarationInstantiation ( func, argumentsList ), https://tc39.es/ecma262/#sec-functiondeclarationinstantiation
-ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantiation(Interpreter* interpreter)
+ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantiation()
 {
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
@@ -560,18 +556,11 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 } else if (i < execution_context_arguments.size() && !execution_context_arguments[i].is_undefined()) {
                     argument_value = execution_context_arguments[i];
                 } else if (parameter.default_value) {
-                    auto* bytecode_interpreter = vm.bytecode_interpreter_if_exists();
-                    if (static_cast<FunctionKind>(m_kind) == FunctionKind::Generator || static_cast<FunctionKind>(m_kind) == FunctionKind::AsyncGenerator)
-                        bytecode_interpreter = &vm.bytecode_interpreter();
-                    if (bytecode_interpreter) {
-                        auto value_and_frame = bytecode_interpreter->run_and_return_frame(realm, *m_default_parameter_bytecode_executables[default_parameter_index - 1], nullptr);
-                        if (value_and_frame.value.is_error())
-                            return value_and_frame.value.release_error();
-                        // Resulting value is in the accumulator.
-                        argument_value = value_and_frame.frame->registers.at(0);
-                    } else if (interpreter) {
-                        argument_value = TRY(parameter.default_value->execute(*interpreter)).release_value();
-                    }
+                    auto value_and_frame = vm.bytecode_interpreter().run_and_return_frame(realm, *m_default_parameter_bytecode_executables[default_parameter_index - 1], nullptr);
+                    if (value_and_frame.value.is_error())
+                        return value_and_frame.value.release_error();
+                    // Resulting value is in the accumulator.
+                    argument_value = value_and_frame.frame->registers.at(0);
                 } else {
                     argument_value = js_undefined();
                 }
@@ -579,18 +568,15 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 Environment* used_environment = has_duplicates ? nullptr : environment;
 
                 if constexpr (IsSame<NonnullRefPtr<Identifier const> const&, decltype(param)>) {
-                    if ((vm.bytecode_interpreter_if_exists() || kind() == FunctionKind::Generator || kind() == FunctionKind::AsyncGenerator) && param->is_local()) {
-                        // NOTE: Local variables are supported only in bytecode interpreter
+                    if (param->is_local()) {
                         callee_context.local_variables[param->local_variable_index()] = argument_value;
                         return {};
-                    } else {
-                        Reference reference = TRY(vm.resolve_binding(param->string(), used_environment));
-                        // Here the difference from hasDuplicates is important
-                        if (has_duplicates)
-                            return reference.put_value(vm, argument_value);
-                        else
-                            return reference.initialize_referenced_binding(vm, argument_value);
                     }
+                    Reference reference = TRY(vm.resolve_binding(param->string(), used_environment));
+                    // Here the difference from hasDuplicates is important
+                    if (has_duplicates)
+                        return reference.put_value(vm, argument_value);
+                    return reference.initialize_referenced_binding(vm, argument_value);
                 }
                 if constexpr (IsSame<NonnullRefPtr<BindingPattern const> const&, decltype(param)>) {
                     // Here the difference from hasDuplicates is important
@@ -957,16 +943,12 @@ void async_block_start(VM& vm, T const& async_body, PromiseCapability const& pro
         // a. If asyncBody is a Parse Node, then
         if constexpr (!IsCallableWithArguments<T, Completion>) {
             // a. Let result be the result of evaluating asyncBody.
-            if (auto* bytecode_interpreter = vm.bytecode_interpreter_if_exists()) {
-                // FIXME: Cache this executable somewhere.
-                auto maybe_executable = Bytecode::compile(vm, async_body, FunctionKind::Async, "AsyncBlockStart"sv);
-                if (maybe_executable.is_error())
-                    result = maybe_executable.release_error();
-                else
-                    result = bytecode_interpreter->run_and_return_frame(realm, *maybe_executable.value(), nullptr).value;
-            } else {
-                result = async_body->execute(vm.interpreter());
-            }
+            // FIXME: Cache this executable somewhere.
+            auto maybe_executable = Bytecode::compile(vm, async_body, FunctionKind::Async, "AsyncBlockStart"sv);
+            if (maybe_executable.is_error())
+                result = maybe_executable.release_error();
+            else
+                result = vm.bytecode_interpreter().run_and_return_frame(realm, *maybe_executable.value(), nullptr).value;
         }
         // b. Else,
         else {
@@ -1035,8 +1017,8 @@ void async_block_start(VM& vm, T const& async_body, PromiseCapability const& pro
     // 8. Return unused.
 }
 
-template void async_block_start(VM&, NonnullGCPtr<Statement const> const& async_body, PromiseCapability const&, ExecutionContext&);
-template void async_function_start(VM&, PromiseCapability const&, NonnullGCPtr<Statement const> const& async_function_body);
+template void async_block_start(VM&, NonnullRefPtr<Statement const> const& async_body, PromiseCapability const&, ExecutionContext&);
+template void async_function_start(VM&, PromiseCapability const&, NonnullRefPtr<Statement const> const& async_function_body);
 
 template void async_block_start(VM&, SafeFunction<Completion()> const& async_body, PromiseCapability const&, ExecutionContext&);
 template void async_function_start(VM&, PromiseCapability const&, SafeFunction<Completion()> const& async_function_body);
@@ -1048,136 +1030,68 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
 
-    auto* bytecode_interpreter = vm.bytecode_interpreter_if_exists();
+    // NOTE: There's a subtle ordering issue here:
+    //       - We have to compile the default parameter values before instantiating the function.
+    //       - We have to instantiate the function before compiling the function body.
+    //       This is why FunctionDeclarationInstantiation is invoked in the middle.
+    //       The issue is that FunctionDeclarationInstantiation may mark certain functions as hoisted
+    //       per Annex B. This affects code generation for FunctionDeclaration nodes.
 
-    // The bytecode interpreter can execute generator functions while the AST interpreter cannot.
-    // This simply makes it create a new bytecode interpreter when one doesn't exist when executing a generator function.
-    // Doing so makes it automatically switch to the bytecode interpreter to execute any future code until it exits the generator. See below.
-    // This allows us to keep all of the existing functionality that works in AST while adding generator support on top of it.
-    // However, this does cause an awkward situation with features not supported in bytecode, where features that work outside of generators with AST
-    // suddenly stop working inside of generators.
-    // This is a stop gap until bytecode mode becomes the default.
-    if ((m_kind == FunctionKind::Generator || m_kind == FunctionKind::AsyncGenerator) && !bytecode_interpreter) {
-        bytecode_interpreter = &vm.bytecode_interpreter();
+    if (!m_bytecode_executable) {
+        size_t default_parameter_index = 0;
+        for (auto& parameter : m_formal_parameters) {
+            if (!parameter.default_value)
+                continue;
+            auto executable = TRY(Bytecode::compile(vm, *parameter.default_value, FunctionKind::Normal, DeprecatedString::formatted("default parameter #{} for {}", default_parameter_index, m_name)));
+            m_default_parameter_bytecode_executables.append(move(executable));
+        }
     }
 
-    if (bytecode_interpreter) {
-        // NOTE: There's a subtle ordering issue here:
-        //       - We have to compile the default parameter values before instantiating the function.
-        //       - We have to instantiate the function before compiling the function body.
-        //       This is why FunctionDeclarationInstantiation is invoked in the middle.
-        //       The issue is that FunctionDeclarationInstantiation may mark certain functions as hoisted
-        //       per Annex B. This affects code generation for FunctionDeclaration nodes.
+    auto declaration_result = function_declaration_instantiation();
 
-        if (!m_bytecode_executable) {
-            size_t default_parameter_index = 0;
-            for (auto& parameter : m_formal_parameters) {
-                if (!parameter.default_value)
-                    continue;
-                auto executable = TRY(Bytecode::compile(vm, *parameter.default_value, FunctionKind::Normal, DeprecatedString::formatted("default parameter #{} for {}", default_parameter_index, m_name)));
-                m_default_parameter_bytecode_executables.append(move(executable));
-            }
-        }
+    if (m_kind == FunctionKind::Normal || m_kind == FunctionKind::Generator || m_kind == FunctionKind::AsyncGenerator) {
+        if (declaration_result.is_error())
+            return declaration_result.release_error();
+    }
 
-        auto declaration_result = function_declaration_instantiation(nullptr);
+    if (!m_bytecode_executable)
+        m_bytecode_executable = TRY(Bytecode::compile(vm, *m_ecmascript_code, m_kind, m_name));
 
-        if (m_kind == FunctionKind::Normal || m_kind == FunctionKind::Generator || m_kind == FunctionKind::AsyncGenerator) {
-            if (declaration_result.is_error())
-                return declaration_result.release_error();
-        }
-
-        if (!m_bytecode_executable)
-            m_bytecode_executable = TRY(Bytecode::compile(vm, *m_ecmascript_code, m_kind, m_name));
-
-        if (m_kind == FunctionKind::Async) {
-            if (declaration_result.is_throw_completion()) {
-                auto promise_capability = MUST(new_promise_capability(vm, realm.intrinsics().promise_constructor()));
-                MUST(call(vm, *promise_capability->reject(), js_undefined(), *declaration_result.throw_completion().value()));
-                return Completion { Completion::Type::Return, promise_capability->promise(), {} };
-            }
-        }
-
-        auto result_and_frame = bytecode_interpreter->run_and_return_frame(realm, *m_bytecode_executable, nullptr);
-
-        VERIFY(result_and_frame.frame != nullptr);
-        if (result_and_frame.value.is_error())
-            return result_and_frame.value.release_error();
-
-        auto result = result_and_frame.value.release_value();
-
-        // NOTE: Running the bytecode should eventually return a completion.
-        // Until it does, we assume "return" and include the undefined fallback from the call site.
-        if (m_kind == FunctionKind::Normal)
-            return { Completion::Type::Return, result.value_or(js_undefined()), {} };
-
-        if (m_kind == FunctionKind::AsyncGenerator) {
-            auto async_generator_object = TRY(AsyncGenerator::create(realm, result, this, vm.running_execution_context().copy(), move(*result_and_frame.frame)));
-            return { Completion::Type::Return, async_generator_object, {} };
-        }
-
-        auto generator_object = TRY(GeneratorObject::create(realm, result, this, vm.running_execution_context().copy(), move(*result_and_frame.frame)));
-
-        // NOTE: Async functions are entirely transformed to generator functions, and wrapped in a custom driver that returns a promise
-        //       See AwaitExpression::generate_bytecode() for the transformation.
-        if (m_kind == FunctionKind::Async)
-            return { Completion::Type::Return, TRY(AsyncFunctionDriverWrapper::create(realm, generator_object)), {} };
-
-        VERIFY(m_kind == FunctionKind::Generator);
-        return { Completion::Type::Return, generator_object, {} };
-    } else {
-        if (m_kind == FunctionKind::Generator)
-            return vm.throw_completion<InternalError>(ErrorType::NotImplemented, "Generator function execution in AST interpreter");
-        if (m_kind == FunctionKind::AsyncGenerator)
-            return vm.throw_completion<InternalError>(ErrorType::NotImplemented, "Async generator function execution in AST interpreter");
-        OwnPtr<Interpreter> local_interpreter;
-        Interpreter* ast_interpreter = vm.interpreter_if_exists();
-
-        if (!ast_interpreter) {
-            local_interpreter = Interpreter::create_with_existing_realm(realm);
-            ast_interpreter = local_interpreter.ptr();
-        }
-
-        VM::InterpreterExecutionScope scope(*ast_interpreter);
-
-        // FunctionBody : FunctionStatementList
-        if (m_kind == FunctionKind::Normal) {
-            // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
-            TRY(function_declaration_instantiation(ast_interpreter));
-
-            // 2. Let result be result of evaluating FunctionStatementList.
-            auto result = m_ecmascript_code->execute(*ast_interpreter);
-
-            // 3. Let env be the running execution context's LexicalEnvironment.
-            auto env = vm.running_execution_context().lexical_environment;
-            VERIFY(is<DeclarativeEnvironment>(*env));
-
-            // 4. Return ? DisposeResources(env, result).
-            return dispose_resources(vm, static_cast<DeclarativeEnvironment*>(env.ptr()), result);
-        }
-        // AsyncFunctionBody : FunctionBody
-        else if (m_kind == FunctionKind::Async) {
-            // 1. Let promiseCapability be ! NewPromiseCapability(%Promise%).
+    if (m_kind == FunctionKind::Async) {
+        if (declaration_result.is_throw_completion()) {
             auto promise_capability = MUST(new_promise_capability(vm, realm.intrinsics().promise_constructor()));
-
-            // 2. Let declResult be Completion(FunctionDeclarationInstantiation(functionObject, argumentsList)).
-            auto declaration_result = function_declaration_instantiation(ast_interpreter);
-
-            // 3. If declResult is an abrupt completion, then
-            if (declaration_result.is_throw_completion()) {
-                // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « declResult.[[Value]] »).
-                MUST(call(vm, *promise_capability->reject(), js_undefined(), *declaration_result.throw_completion().value()));
-            }
-            // 4. Else,
-            else {
-                // a. Perform AsyncFunctionStart(promiseCapability, FunctionBody).
-                async_function_start(vm, promise_capability, m_ecmascript_code);
-            }
-
-            // 5. Return Completion Record { [[Type]]: return, [[Value]]: promiseCapability.[[Promise]], [[Target]]: empty }.
+            MUST(call(vm, *promise_capability->reject(), js_undefined(), *declaration_result.throw_completion().value()));
             return Completion { Completion::Type::Return, promise_capability->promise(), {} };
         }
     }
-    VERIFY_NOT_REACHED();
+
+    auto result_and_frame = vm.bytecode_interpreter().run_and_return_frame(realm, *m_bytecode_executable, nullptr);
+
+    VERIFY(result_and_frame.frame != nullptr);
+    if (result_and_frame.value.is_error())
+        return result_and_frame.value.release_error();
+
+    auto result = result_and_frame.value.release_value();
+
+    // NOTE: Running the bytecode should eventually return a completion.
+    // Until it does, we assume "return" and include the undefined fallback from the call site.
+    if (m_kind == FunctionKind::Normal)
+        return { Completion::Type::Return, result.value_or(js_undefined()), {} };
+
+    if (m_kind == FunctionKind::AsyncGenerator) {
+        auto async_generator_object = TRY(AsyncGenerator::create(realm, result, this, vm.running_execution_context().copy(), move(*result_and_frame.frame)));
+        return { Completion::Type::Return, async_generator_object, {} };
+    }
+
+    auto generator_object = TRY(GeneratorObject::create(realm, result, this, vm.running_execution_context().copy(), move(*result_and_frame.frame)));
+
+    // NOTE: Async functions are entirely transformed to generator functions, and wrapped in a custom driver that returns a promise
+    //       See AwaitExpression::generate_bytecode() for the transformation.
+    if (m_kind == FunctionKind::Async)
+        return { Completion::Type::Return, TRY(AsyncFunctionDriverWrapper::create(realm, generator_object)), {} };
+
+    VERIFY(m_kind == FunctionKind::Generator);
+    return { Completion::Type::Return, generator_object, {} };
 }
 
 void ECMAScriptFunctionObject::set_name(DeprecatedFlyString const& name)
@@ -1187,5 +1101,4 @@ void ECMAScriptFunctionObject::set_name(DeprecatedFlyString const& name)
     m_name = name;
     MUST(define_property_or_throw(vm.names.name, { .value = PrimitiveString::create(vm, m_name), .writable = false, .enumerable = false, .configurable = true }));
 }
-
 }

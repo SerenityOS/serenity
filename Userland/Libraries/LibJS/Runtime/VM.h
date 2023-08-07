@@ -46,24 +46,7 @@ public:
     Bytecode::Interpreter& bytecode_interpreter();
     Bytecode::Interpreter* bytecode_interpreter_if_exists();
 
-    Interpreter& interpreter();
-    Interpreter* interpreter_if_exists();
-
-    void push_interpreter(Interpreter&);
-    void pop_interpreter(Interpreter&);
-
     void dump_backtrace() const;
-
-    class InterpreterExecutionScope {
-    public:
-        InterpreterExecutionScope(Interpreter&);
-        ~InterpreterExecutionScope();
-
-        Interpreter& interpreter() { return m_interpreter; }
-
-    private:
-        Interpreter& m_interpreter;
-    };
 
     void gather_roots(HashTable<Cell*>&);
 
@@ -249,7 +232,6 @@ public:
     void restore_execution_context_stack();
 
     // Do not call this method unless you are sure this is the only and first module to be loaded in this vm.
-    ThrowCompletionOr<void> link_and_eval_module(Badge<Interpreter>, SourceTextModule& module);
     ThrowCompletionOr<void> link_and_eval_module(Badge<Bytecode::Interpreter>, SourceTextModule& module);
 
     ScriptOrModule get_active_script_or_module() const;
@@ -304,7 +286,6 @@ private:
     HashMap<DeprecatedString, GCPtr<PrimitiveString>> m_deprecated_string_cache;
 
     Heap m_heap;
-    Vector<Interpreter*> m_interpreters;
 
     Vector<ExecutionContext*> m_execution_context_stack;
 

@@ -15,7 +15,6 @@
 #include <LibJS/Heap/Handle.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Heap/HeapBlock.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/WeakContainer.h>
 #include <LibJS/SafeFunction.h>

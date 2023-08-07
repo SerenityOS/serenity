@@ -5,7 +5,6 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <LibJS/Interpreter.h>
 #include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/DOM/Document.h>

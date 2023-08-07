@@ -15,7 +15,6 @@
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Console.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Print.h>
 #include <LibJS/Runtime/ConsoleObject.h>

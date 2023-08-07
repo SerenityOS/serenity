@@ -23,8 +23,6 @@ Worker::Worker(String const& script_url, WorkerOptions const options, DOM::Docum
     , m_document(&document)
     , m_custom_data()
     , m_worker_vm(JS::VM::create(adopt_own(m_custom_data)).release_value_but_fixme_should_propagate_errors())
-    , m_interpreter(JS::Interpreter::create<JS::GlobalObject>(m_worker_vm))
-    , m_interpreter_scope(*m_interpreter)
     , m_implicit_port(MessagePort::create(document.realm()).release_value_but_fixme_should_propagate_errors())
 {
 }

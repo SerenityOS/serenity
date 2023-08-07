@@ -11,7 +11,6 @@
 #include <AK/URL.h>
 #include <LibDesktop/AppFile.h>
 #include <LibGUI/Desktop.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibThreading/BackgroundAction.h>
 #include <typeinfo>

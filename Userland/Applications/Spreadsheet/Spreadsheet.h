@@ -18,7 +18,6 @@
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <LibCore/EventReceiver.h>
-#include <LibJS/Interpreter.h>
 
 namespace Spreadsheet {
 

@@ -20,7 +20,6 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibJS/Bytecode/Interpreter.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Lexer.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Array.h>
