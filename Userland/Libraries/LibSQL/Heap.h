@@ -11,8 +11,8 @@
 #include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
+#include <AK/RefCounted.h>
 #include <AK/Vector.h>
-#include <LibCore/EventReceiver.h>
 #include <LibCore/File.h>
 
 namespace SQL {
@@ -64,13 +64,14 @@ private:
  * A Heap can be thought of the backing storage of a single database. It's
  * assumed that a single SQL database is backed by a single Heap.
  */
-class Heap : public Core::EventReceiver {
-    C_OBJECT(Heap);
-
+class Heap : public RefCounted<Heap> {
 public:
     static constexpr u32 VERSION = 4;
 
-    virtual ~Heap() override;
+    static ErrorOr<NonnullRefPtr<Heap>> create(DeprecatedString);
+    virtual ~Heap();
+
+    DeprecatedString const& name() const { return m_name; }
 
     ErrorOr<void> open();
     ErrorOr<size_t> file_size_in_bytes() const;
@@ -134,6 +135,8 @@ private:
     ErrorOr<void> read_zero_block();
     ErrorOr<void> initialize_zero_block();
     ErrorOr<void> update_zero_block();
+
+    DeprecatedString m_name;
 
     OwnPtr<Core::InputBufferedFile> m_file;
     Block::Index m_highest_block_written { 0 };
