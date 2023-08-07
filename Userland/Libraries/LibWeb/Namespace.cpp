@@ -12,7 +12,7 @@ namespace Web::Namespace {
 ENUMERATE_NAMESPACES
 #undef __ENUMERATE_NAMESPACE
 
-ErrorOr<void> initialize_strings()
+void initialize_strings()
 {
     static bool s_initialized = false;
     VERIFY(!s_initialized);
@@ -23,7 +23,6 @@ ErrorOr<void> initialize_strings()
 #undef __ENUMERATE_NAMESPACE
 
     s_initialized = true;
-    return {};
 }
 
 }

@@ -20,6 +20,6 @@ namespace Web::WebGL::EventNames {
 ENUMERATE_GL_EVENTS
 #undef __ENUMERATE_GL_EVENT
 
-ErrorOr<void> initialize_strings();
+void initialize_strings();
 
 }

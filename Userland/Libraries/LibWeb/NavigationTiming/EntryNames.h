@@ -37,6 +37,6 @@ namespace Web::NavigationTiming::EntryNames {
 ENUMERATE_NAVIGATION_TIMING_ENTRY_NAMES
 #undef __ENUMERATE_NAVIGATION_TIMING_ENTRY_NAME
 
-ErrorOr<void> initialize_strings();
+void initialize_strings();
 
 }

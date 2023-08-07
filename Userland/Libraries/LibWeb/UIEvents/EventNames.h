@@ -36,6 +36,6 @@ namespace Web::UIEvents::EventNames {
 ENUMERATE_UI_EVENTS
 #undef __ENUMERATE_UI_EVENT
 
-ErrorOr<void> initialize_strings();
+void initialize_strings();
 
 }

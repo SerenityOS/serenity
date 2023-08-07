@@ -510,7 +510,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::load_element()
 
             // 2. Take pending play promises and reject pending play promises with the result and an "AbortError" DOMException.
             auto promises = take_pending_play_promises();
-            reject_pending_play_promises<WebIDL::AbortError>(promises, TRY_OR_THROW_OOM(vm, "Media playback was aborted"_fly_string));
+            reject_pending_play_promises<WebIDL::AbortError>(promises, "Media playback was aborted"_fly_string);
         }
 
         // 7. If seeking is true, set it to false.
@@ -1251,7 +1251,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::handle_media_source_failure(Span<JS:
     dispatch_event(TRY(DOM::Event::create(realm, HTML::EventNames::error)));
 
     // 6. Reject pending play promises with promises and a "NotSupportedError" DOMException.
-    reject_pending_play_promises<WebIDL::NotSupportedError>(promises, TRY_OR_THROW_OOM(vm, "Media is not supported"_fly_string));
+    reject_pending_play_promises<WebIDL::NotSupportedError>(promises, "Media is not supported"_fly_string);
 
     // 7. Set the element's delaying-the-load-event flag to false. This stops delaying the load event.
     m_delaying_the_load_event.clear();
@@ -1477,7 +1477,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::pause_element()
             dispatch_event(DOM::Event::create(realm, HTML::EventNames::pause).release_value_but_fixme_should_propagate_errors());
 
             // 3. Reject pending play promises with promises and an "AbortError" DOMException.
-            reject_pending_play_promises<WebIDL::AbortError>(promises, "Media playback was paused"_fly_string.release_value_but_fixme_should_propagate_errors());
+            reject_pending_play_promises<WebIDL::AbortError>(promises, "Media playback was paused"_fly_string);
         });
 
         // 4. Set the official playback position to the current playback position.
@@ -1724,7 +1724,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::reached_end_of_media_playback()
 
             // 3. Take pending play promises and reject pending play promises with the result and an "AbortError" DOMException.
             auto promises = take_pending_play_promises();
-            reject_pending_play_promises<WebIDL::AbortError>(promises, "Media playback has ended"_fly_string.release_value_but_fixme_should_propagate_errors());
+            reject_pending_play_promises<WebIDL::AbortError>(promises, "Media playback has ended"_fly_string);
         }
     });
 

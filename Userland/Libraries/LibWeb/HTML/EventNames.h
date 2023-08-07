@@ -106,6 +106,6 @@ namespace Web::HTML::EventNames {
 ENUMERATE_HTML_EVENTS
 #undef __ENUMERATE_HTML_EVENT
 
-ErrorOr<void> initialize_strings();
+void initialize_strings();
 
 }

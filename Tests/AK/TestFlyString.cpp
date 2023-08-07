@@ -68,15 +68,15 @@ TEST_CASE(long_string)
 
 TEST_CASE(from_string_view)
 {
-    auto fly1 = MUST("thisisdefinitelymorethan7bytes"_fly_string);
+    auto fly1 = "thisisdefinitelymorethan7bytes"_fly_string;
     EXPECT_EQ(fly1, "thisisdefinitelymorethan7bytes"sv);
     EXPECT_EQ(FlyString::number_of_fly_strings(), 1u);
 
-    auto fly2 = MUST("thisisdefinitelymorethan7bytes"_fly_string);
+    auto fly2 = "thisisdefinitelymorethan7bytes"_fly_string;
     EXPECT_EQ(fly2, "thisisdefinitelymorethan7bytes"sv);
     EXPECT_EQ(FlyString::number_of_fly_strings(), 1u);
 
-    auto fly3 = MUST("foo"_fly_string);
+    auto fly3 = "foo"_fly_string;
     EXPECT_EQ(fly3, "foo"sv);
     EXPECT_EQ(FlyString::number_of_fly_strings(), 1u);
 

@@ -43,6 +43,6 @@ namespace Web::SVG::TagNames {
 ENUMERATE_SVG_TAGS
 #undef __ENUMERATE_SVG_TAG
 
-ErrorOr<void> initialize_strings();
+void initialize_strings();
 
 }

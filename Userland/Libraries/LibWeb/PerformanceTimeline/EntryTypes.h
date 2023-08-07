@@ -28,6 +28,6 @@ namespace Web::PerformanceTimeline::EntryTypes {
 ENUMERATE_PERFORMANCE_TIMELINE_ENTRY_TYPES
 #undef __ENUMERATE_PERFORMANCE_TIMELINE_ENTRY_TYPE
 
-ErrorOr<void> initialize_strings();
+void initialize_strings();
 
 }

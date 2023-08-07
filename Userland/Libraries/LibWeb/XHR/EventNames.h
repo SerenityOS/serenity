@@ -25,6 +25,6 @@ namespace Web::XHR::EventNames {
 ENUMERATE_XHR_EVENTS
 #undef __ENUMERATE_XHR_EVENT
 
-ErrorOr<void> initialize_strings();
+void initialize_strings();
 
 }

@@ -100,6 +100,6 @@ namespace Web::SVG::AttributeNames {
 ENUMERATE_SVG_ATTRIBUTES(__ENUMERATE_SVG_ATTRIBUTE)
 #undef __ENUMERATE_SVG_ATTRIBUTE
 
-ErrorOr<void> initialize_strings();
+void initialize_strings();
 
 }

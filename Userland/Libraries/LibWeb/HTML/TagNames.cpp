@@ -12,7 +12,7 @@ namespace Web::HTML::TagNames {
 ENUMERATE_HTML_TAGS
 #undef __ENUMERATE_HTML_TAG
 
-ErrorOr<void> initialize_strings()
+void initialize_strings()
 {
     static bool s_initialized = false;
     VERIFY(!s_initialized);
@@ -25,7 +25,6 @@ ErrorOr<void> initialize_strings()
     template_ = "template";
 
     s_initialized = true;
-    return {};
 }
 
 }
