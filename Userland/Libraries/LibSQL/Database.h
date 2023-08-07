@@ -10,7 +10,6 @@
 #include <AK/DeprecatedString.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefPtr.h>
-#include <LibCore/EventReceiver.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Heap.h>
 #include <LibSQL/Meta.h>
@@ -24,11 +23,10 @@ namespace SQL {
  * to store in it. It has BTree pointers for B-Trees holding the definitions
  * of tables, columns, indexes, and other SQL objects.
  */
-class Database : public Core::EventReceiver {
-    C_OBJECT(Database);
-
+class Database : public RefCounted<Database> {
 public:
-    ~Database() override;
+    static ErrorOr<NonnullRefPtr<Database>> create(DeprecatedString);
+    ~Database();
 
     ResultOr<void> open();
     bool is_open() const { return m_open; }
@@ -50,7 +48,7 @@ public:
     ErrorOr<void> update(Row&);
 
 private:
-    explicit Database(DeprecatedString);
+    explicit Database(NonnullRefPtr<Heap>);
 
     bool m_open { false };
     NonnullRefPtr<Heap> m_heap;

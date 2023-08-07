@@ -21,7 +21,7 @@ static ErrorOr<NonnullRefPtr<SQL::Database>> find_or_create_database(StringView 
     }
 
     auto database_file = DeprecatedString::formatted("{}/{}.db", database_path, database_name);
-    return SQL::Database::try_create(move(database_file));
+    return SQL::Database::create(move(database_file));
 }
 
 RefPtr<DatabaseConnection> DatabaseConnection::connection_for(SQL::ConnectionID connection_id)

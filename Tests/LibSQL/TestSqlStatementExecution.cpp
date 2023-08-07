@@ -72,7 +72,7 @@ void create_two_tables(NonnullRefPtr<SQL::Database> database)
 TEST_CASE(create_schema)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_schema(database);
     auto schema = MUST(database->get_schema("TESTSCHEMA"));
@@ -81,7 +81,7 @@ TEST_CASE(create_schema)
 TEST_CASE(create_table)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     auto table = MUST(database->get_table("TESTSCHEMA", "TESTTABLE"));
@@ -90,7 +90,7 @@ TEST_CASE(create_table)
 TEST_CASE(insert_into_table)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     auto result = execute(database, "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ( 'Test', 42 );");
@@ -111,7 +111,7 @@ TEST_CASE(insert_into_table)
 TEST_CASE(insert_into_table_wrong_data_types)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     auto result = try_execute(database, "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES (43, 'Test_2');");
@@ -122,7 +122,7 @@ TEST_CASE(insert_into_table_wrong_data_types)
 TEST_CASE(insert_into_table_multiple_tuples_wrong_data_types)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     auto result = try_execute(database, "INSERT INTO TestSchema.TestTable ( TextColumn, IntColumn ) VALUES ('Test_1', 42), (43, 'Test_2');");
@@ -133,7 +133,7 @@ TEST_CASE(insert_into_table_multiple_tuples_wrong_data_types)
 TEST_CASE(insert_wrong_number_of_values)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     auto result = try_execute(database, "INSERT INTO TestSchema.TestTable VALUES ( 42 );");
@@ -144,7 +144,7 @@ TEST_CASE(insert_wrong_number_of_values)
 TEST_CASE(insert_identifier_as_value)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     auto result = try_execute(database, "INSERT INTO TestSchema.TestTable VALUES ( identifier, 42 );");
@@ -155,7 +155,7 @@ TEST_CASE(insert_identifier_as_value)
 TEST_CASE(insert_quoted_identifier_as_value)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     auto result = try_execute(database, "INSERT INTO TestSchema.TestTable VALUES ( \"QuotedIdentifier\", 42 );");
@@ -166,7 +166,7 @@ TEST_CASE(insert_quoted_identifier_as_value)
 TEST_CASE(insert_without_column_names)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     auto result = execute(database, "INSERT INTO TestSchema.TestTable VALUES ('Test_1', 42), ('Test_2', 43);");
@@ -181,7 +181,7 @@ TEST_CASE(insert_with_placeholders)
 {
     ScopeGuard guard([]() { unlink(db_name); });
 
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
 
@@ -233,7 +233,7 @@ TEST_CASE(insert_with_placeholders)
 TEST_CASE(select_from_empty_table)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     auto result = execute(database, "SELECT * FROM TestSchema.TestTable;");
@@ -243,7 +243,7 @@ TEST_CASE(select_from_empty_table)
 TEST_CASE(select_from_table)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     auto result = execute(database,
@@ -261,7 +261,7 @@ TEST_CASE(select_from_table)
 TEST_CASE(select_with_column_names)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     auto result = execute(database,
@@ -280,7 +280,7 @@ TEST_CASE(select_with_column_names)
 TEST_CASE(select_with_nonexisting_column_name)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     auto result = execute(database,
@@ -300,7 +300,7 @@ TEST_CASE(select_with_nonexisting_column_name)
 TEST_CASE(select_with_where)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     auto result = execute(database,
@@ -321,7 +321,7 @@ TEST_CASE(select_with_where)
 TEST_CASE(select_cross_join)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_two_tables(database);
     auto result = execute(database,
@@ -354,7 +354,7 @@ TEST_CASE(select_cross_join)
 TEST_CASE(select_inner_join)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_two_tables(database);
     auto result = execute(database,
@@ -387,7 +387,7 @@ TEST_CASE(select_inner_join)
 TEST_CASE(select_with_like)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     auto result = execute(database,
@@ -445,7 +445,7 @@ TEST_CASE(select_with_like)
 TEST_CASE(select_with_order)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     auto result = execute(database,
@@ -477,7 +477,7 @@ TEST_CASE(select_with_order)
 TEST_CASE(select_with_regexp)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     auto result = execute(database,
@@ -512,7 +512,7 @@ TEST_CASE(select_with_regexp)
 TEST_CASE(handle_regexp_errors)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     auto result = execute(database,
@@ -528,7 +528,7 @@ TEST_CASE(handle_regexp_errors)
 TEST_CASE(select_with_order_two_columns)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     auto result = execute(database,
@@ -557,7 +557,7 @@ TEST_CASE(select_with_order_two_columns)
 TEST_CASE(select_with_order_by_column_not_in_result)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     auto result = execute(database,
@@ -581,7 +581,7 @@ TEST_CASE(select_with_order_by_column_not_in_result)
 TEST_CASE(select_with_limit)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     for (auto count = 0; count < 100; count++) {
@@ -597,7 +597,7 @@ TEST_CASE(select_with_limit)
 TEST_CASE(select_with_limit_and_offset)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     for (auto count = 0; count < 100; count++) {
@@ -612,7 +612,7 @@ TEST_CASE(select_with_limit_and_offset)
 TEST_CASE(select_with_order_limit_and_offset)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     for (auto count = 0; count < 100; count++) {
@@ -637,7 +637,7 @@ TEST_CASE(select_with_order_limit_and_offset)
 TEST_CASE(select_with_limit_out_of_bounds)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     for (auto count = 0; count < 100; count++) {
@@ -652,7 +652,7 @@ TEST_CASE(select_with_limit_out_of_bounds)
 TEST_CASE(select_with_offset_out_of_bounds)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     for (auto count = 0; count < 100; count++) {
@@ -667,7 +667,7 @@ TEST_CASE(select_with_offset_out_of_bounds)
 TEST_CASE(describe_table)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
     auto result = execute(database, "DESCRIBE TABLE TestSchema.TestTable;");
@@ -683,7 +683,7 @@ TEST_CASE(describe_table)
 TEST_CASE(binary_operator_execution)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
 
@@ -757,7 +757,7 @@ TEST_CASE(binary_operator_execution)
 TEST_CASE(binary_operator_failure)
 {
     ScopeGuard guard([]() { unlink(db_name); });
-    auto database = SQL::Database::construct(db_name);
+    auto database = MUST(SQL::Database::create(db_name));
     MUST(database->open());
     create_table(database);
 
@@ -808,14 +808,14 @@ TEST_CASE(describe_large_table_after_persist)
 {
     ScopeGuard guard([]() { unlink(db_name); });
     {
-        auto database = SQL::Database::construct(db_name);
+        auto database = MUST(SQL::Database::create(db_name));
         MUST(database->open());
 
         auto result = execute(database, "CREATE TABLE Cookies ( name TEXT, value TEXT, same_site INTEGER, creation_time INTEGER, last_access_time INTEGER, expiry_time INTEGER, domain TEXT, path TEXT, secure INTEGER, http_only INTEGER, host_only INTEGER, persistent INTEGER );");
         EXPECT_EQ(result.command(), SQL::SQLCommand::Create);
     }
     {
-        auto database = SQL::Database::construct(db_name);
+        auto database = MUST(SQL::Database::create(db_name));
         MUST(database->open());
 
         auto result = execute(database, "DESCRIBE TABLE Cookies;");
@@ -827,7 +827,7 @@ TEST_CASE(delete_single_row)
 {
     ScopeGuard guard([]() { unlink(db_name); });
     {
-        auto database = SQL::Database::construct(db_name);
+        auto database = MUST(SQL::Database::create(db_name));
         MUST(database->open());
 
         create_table(database);
@@ -840,7 +840,7 @@ TEST_CASE(delete_single_row)
         EXPECT_EQ(result.size(), 10u);
     }
     {
-        auto database = SQL::Database::construct(db_name);
+        auto database = MUST(SQL::Database::create(db_name));
         MUST(database->open());
 
         execute(database, "DELETE FROM TestSchema.TestTable WHERE (IntColumn = 4);");
@@ -854,7 +854,7 @@ TEST_CASE(delete_single_row)
             EXPECT_EQ(result[i].row[0], i + 1);
     }
     {
-        auto database = SQL::Database::construct(db_name);
+        auto database = MUST(SQL::Database::create(db_name));
         MUST(database->open());
 
         auto result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable ORDER BY IntColumn;");
@@ -871,7 +871,7 @@ TEST_CASE(delete_multiple_rows)
 {
     ScopeGuard guard([]() { unlink(db_name); });
     {
-        auto database = SQL::Database::construct(db_name);
+        auto database = MUST(SQL::Database::create(db_name));
         MUST(database->open());
 
         create_table(database);
@@ -884,7 +884,7 @@ TEST_CASE(delete_multiple_rows)
         EXPECT_EQ(result.size(), 10u);
     }
     {
-        auto database = SQL::Database::construct(db_name);
+        auto database = MUST(SQL::Database::create(db_name));
         MUST(database->open());
 
         execute(database, "DELETE FROM TestSchema.TestTable WHERE (IntColumn >= 4);");
@@ -896,7 +896,7 @@ TEST_CASE(delete_multiple_rows)
             EXPECT_EQ(result[i].row[0], i);
     }
     {
-        auto database = SQL::Database::construct(db_name);
+        auto database = MUST(SQL::Database::create(db_name));
         MUST(database->open());
 
         auto result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable ORDER BY IntColumn;");
@@ -911,7 +911,7 @@ TEST_CASE(delete_all_rows)
 {
     ScopeGuard guard([]() { unlink(db_name); });
     {
-        auto database = SQL::Database::construct(db_name);
+        auto database = MUST(SQL::Database::create(db_name));
         MUST(database->open());
 
         create_table(database);
@@ -924,7 +924,7 @@ TEST_CASE(delete_all_rows)
         EXPECT_EQ(result.size(), 10u);
     }
     {
-        auto database = SQL::Database::construct(db_name);
+        auto database = MUST(SQL::Database::create(db_name));
         MUST(database->open());
 
         execute(database, "DELETE FROM TestSchema.TestTable;");
@@ -933,7 +933,7 @@ TEST_CASE(delete_all_rows)
         EXPECT(result.is_empty());
     }
     {
-        auto database = SQL::Database::construct(db_name);
+        auto database = MUST(SQL::Database::create(db_name));
         MUST(database->open());
 
         auto result = execute(database, "SELECT * FROM TestSchema.TestTable;");
@@ -945,7 +945,7 @@ TEST_CASE(update_single_row)
 {
     ScopeGuard guard([]() { unlink(db_name); });
     {
-        auto database = SQL::Database::construct(db_name);
+        auto database = MUST(SQL::Database::create(db_name));
         MUST(database->open());
 
         create_table(database);
@@ -969,7 +969,7 @@ TEST_CASE(update_single_row)
         }
     }
     {
-        auto database = SQL::Database::construct(db_name);
+        auto database = MUST(SQL::Database::create(db_name));
         MUST(database->open());
 
         auto result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable ORDER BY IntColumn;");
@@ -990,7 +990,7 @@ TEST_CASE(update_multiple_rows)
 {
     ScopeGuard guard([]() { unlink(db_name); });
     {
-        auto database = SQL::Database::construct(db_name);
+        auto database = MUST(SQL::Database::create(db_name));
         MUST(database->open());
 
         create_table(database);
@@ -1012,7 +1012,7 @@ TEST_CASE(update_multiple_rows)
         }
     }
     {
-        auto database = SQL::Database::construct(db_name);
+        auto database = MUST(SQL::Database::create(db_name));
         MUST(database->open());
 
         auto result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable ORDER BY IntColumn;");
@@ -1031,7 +1031,7 @@ TEST_CASE(update_all_rows)
 {
     ScopeGuard guard([]() { unlink(db_name); });
     {
-        auto database = SQL::Database::construct(db_name);
+        auto database = MUST(SQL::Database::create(db_name));
         MUST(database->open());
 
         create_table(database);
@@ -1049,7 +1049,7 @@ TEST_CASE(update_all_rows)
             EXPECT_EQ(result[i].row[0], 123456);
     }
     {
-        auto database = SQL::Database::construct(db_name);
+        auto database = MUST(SQL::Database::create(db_name));
         MUST(database->open());
 
         auto result = execute(database, "SELECT IntColumn FROM TestSchema.TestTable ORDER BY IntColumn;");
