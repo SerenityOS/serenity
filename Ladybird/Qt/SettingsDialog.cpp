@@ -6,6 +6,8 @@
 
 #include "SettingsDialog.h"
 #include "Settings.h"
+#include "StringUtils.h"
+#include <AK/URL.h>
 #include <QCloseEvent>
 #include <QLabel>
 
@@ -43,7 +45,9 @@ void SettingsDialog::closeEvent(QCloseEvent* event)
 
 void SettingsDialog::save()
 {
-    // FIXME: Validate data.
+    auto url_string = MUST(ak_string_from_qstring(m_new_tab_page->text()));
+    if (!URL(url_string).is_valid())
+        return;
     s_settings->set_new_tab_page(m_new_tab_page->text());
 }
 
