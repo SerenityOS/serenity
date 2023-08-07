@@ -285,6 +285,80 @@ Optional<Selector::Combinator> Parser::parse_selector_combinator(TokenStream<Com
     return {};
 }
 
+Optional<Selector::SimpleSelector::QualifiedName> Parser::parse_selector_qualified_name(TokenStream<ComponentValue>& tokens, AllowWildcardName allow_wildcard_name)
+{
+    auto is_name = [](ComponentValue const& token) {
+        return token.is_delim('*') || token.is(Token::Type::Ident);
+    };
+    auto get_name = [](ComponentValue const& token) {
+        if (token.is_delim('*'))
+            return FlyString::from_utf8("*"sv);
+        return FlyString::from_utf8(token.token().ident());
+    };
+
+    // There are 3 possibilities here:
+    // (Where <name> and <namespace> are either an <ident> or a `*` delim)
+    // 1) `|<name>`
+    // 2) `<namespace>|<name>`
+    // 3) `<name>`
+    // Whitespace is forbidden between any of these parts. https://www.w3.org/TR/selectors-4/#white-space
+
+    auto transaction = tokens.begin_transaction();
+
+    auto first_token = tokens.next_token();
+    if (first_token.is_delim('|')) {
+        // Case 1: `|<name>`
+        if (is_name(tokens.peek_token())) {
+            auto name_token = tokens.next_token();
+
+            if (allow_wildcard_name == AllowWildcardName::No && name_token.is_delim('*'))
+                return {};
+
+            transaction.commit();
+            return Selector::SimpleSelector::QualifiedName {
+                .namespace_type = Selector::SimpleSelector::QualifiedName::NamespaceType::None,
+                .name = get_name(name_token).release_value_but_fixme_should_propagate_errors(),
+            };
+        }
+        return {};
+    }
+
+    if (!is_name(first_token))
+        return {};
+
+    if (tokens.peek_token().is_delim('|') && is_name(tokens.peek_token(1))) {
+        // Case 2: `<namespace>|<name>`
+        (void)tokens.next_token(); // `|`
+        auto namespace_ = get_name(first_token).release_value_but_fixme_should_propagate_errors();
+        auto name = get_name(tokens.next_token()).release_value_but_fixme_should_propagate_errors();
+
+        if (allow_wildcard_name == AllowWildcardName::No && name == "*"sv)
+            return {};
+
+        auto namespace_type = namespace_ == "*"sv
+            ? Selector::SimpleSelector::QualifiedName::NamespaceType::Any
+            : Selector::SimpleSelector::QualifiedName::NamespaceType::Named;
+
+        transaction.commit();
+        return Selector::SimpleSelector::QualifiedName {
+            .namespace_type = namespace_type,
+            .namespace_ = namespace_,
+            .name = name,
+        };
+    }
+
+    // Case 3: `<name>`
+    auto& name_token = first_token;
+    if (allow_wildcard_name == AllowWildcardName::No && name_token.is_delim('*'))
+        return {};
+
+    transaction.commit();
+    return Selector::SimpleSelector::QualifiedName {
+        .namespace_type = Selector::SimpleSelector::QualifiedName::NamespaceType::Default,
+        .name = get_name(name_token).release_value_but_fixme_should_propagate_errors(),
+    };
+}
+
 Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_attribute_simple_selector(ComponentValue const& first_value)
 {
     auto attribute_tokens = TokenStream { first_value.block().values() };
