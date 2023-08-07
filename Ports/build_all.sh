@@ -1,89 +1,112 @@
 #!/usr/bin/env bash
 
-clean=false
-verbose=false
+some_failed='false'
+action='build'
+verbose='false'
+failfast='false'
 
-case "$1" in
-    clean)
-        clean=true
-        ;;
-    verbose)
-        verbose=true
-        ;;
-    *)
-        ;;
-esac
-
-case "$2" in
-    clean)
-        clean=true
-        ;;
-    verbose)
-        verbose=true
-        ;;
-    *)
-        ;;
-esac
-
-some_failed=false
-built_ports=""
-
-for file in *; do
-    if [ -d $file ]; then
-        pushd $file > /dev/null
-            port=$(basename $file)
-            port_built=0
-            for built_port in $built_ports; do
-                if [ "$built_port" = "$port" ]; then
-                    port_built=1
-                    break
-                fi
-            done
-            if [ $port_built -eq 1 ]; then
-                echo "Built $port."
-                popd > /dev/null
-                continue
-            fi
-            if ! [ -f package.sh ]; then
-                echo "ERROR: Skipping $port because its package.sh script is missing."
-                popd > /dev/null
-                continue
-            fi
-
-            if [ "$clean" == true ]; then
-                if [ "$verbose" == true ]; then
-                    ./package.sh clean_all
-                else
-                    ./package.sh clean_all > /dev/null 2>&1
-                fi
-            fi
-            if [ "$verbose" == true ]; then
-                if ./package.sh; then
-                    echo "Built ${port}."
-                else
-                    echo "ERROR: Build of ${port} was not successful!"
-                    some_failed=true
-                    popd > /dev/null
-                    continue
-                fi
-            else
-                if ./package.sh > /dev/null 2>&1; then
-                    echo "Built ${port}."
-                else
-                    echo "ERROR: Build of ${port} was not successful!"
-                    some_failed=true
-                    popd > /dev/null
-                    continue
-                fi
-            fi
-
-            built_ports="$built_ports $port $(./package.sh showproperty depends) "
-        popd > /dev/null
-    fi
+for arg in "$@"; do
+    case "$arg" in
+        clean*)
+            action="$arg"
+            ;;
+        verbose)
+            verbose='true'
+            ;;
+        failfast)
+            failfast='true'
+            ;;
+    esac
 done
 
-if [ "$some_failed" == false ]; then
-    exit 0
-else
+some_failed=false
+processed_ports=()
+
+log_success() {
+    echo -e "\033[1;32m[#]\033[0m $1"
+}
+
+log_warn() {
+    echo -e "\033[1;33m[!]\033[0m $1"
+}
+
+log_info() {
+    echo -e "\033[1;36m[*]\033[0m $1"
+}
+
+log_process() {
+    echo -e "\033[1m[~]\033[0m $1"
+}
+
+log_error() {
+    echo -e "\033[1;31m[x]\033[0m $1"
+}
+
+do_build_port() {
+    log_process "Building $port_name"
+    if $verbose; then
+        ./package.sh
+    else
+        ./package.sh &> /dev/null
+    fi
+}
+
+do_clean_port() {
+    log_process "Cleaning $port_name"
+    if $verbose; then
+        ./package.sh "$1"
+    else
+        ./package.sh "$1" &> /dev/null
+    fi
+}
+
+ports_dir=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
+while IFS= read -r -d '' port_dir; do
+    port_name="$(basename "$port_dir")"
+    if [[ " ${processed_ports[*]} " == *" $port_name "* ]]; then
+        log_info "$port_name is already processed"
+        continue
+    fi
+
+    if ! cd "$port_dir"; then
+        log_error "Can not change directory to '$port_name'"
+        exit 1
+    fi
+
+    if [[ ! -x ./package.sh ]]; then
+        log_warn "$port_name does not have executable package.sh"
+        continue
+    fi
+
+    case "$action" in
+        clean*)
+            if do_clean_port "$action"; then
+                log_success "Cleaned $port_name"
+            else
+                log_error "Failed cleaning $port_name"
+                some_failed='true'
+                if $failfast; then
+                    exit 1
+                fi
+            fi
+        ;;
+        build)
+            if do_build_port; then
+                log_success "Built $port_name"
+            else
+                log_error "Failed building $port_name"
+                some_failed='true'
+                if $failfast; then
+                    exit 1
+                fi
+            fi
+        ;;
+    esac
+
+    # shellcheck disable=SC2207
+    processed_ports+=("$port_name" $(./package.sh showproperty depends))
+done < <(find "$ports_dir" -mindepth 1 -maxdepth 1 -type d -print0 | sort -z)
+
+if $some_failed; then
     exit 1
 fi
