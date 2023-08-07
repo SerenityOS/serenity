@@ -33,7 +33,7 @@ WavWriter::~WavWriter()
 
 ErrorOr<void> WavWriter::set_file(StringView path)
 {
-    m_file = TRY(Core::File::open(path, Core::File::OpenMode::ReadWrite));
+    m_file = TRY(Core::File::open(path, Core::File::OpenMode::Write));
     TRY(m_file->seek(44, SeekMode::SetPosition));
     m_finalized = false;
     return {};
