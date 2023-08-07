@@ -8,6 +8,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/NonnullRefPtr.h>
+#include <AK/RefCounted.h>
 #include <AK/Result.h>
 #include <AK/Vector.h>
 #include <LibCore/EventReceiver.h>
@@ -23,53 +24,54 @@ namespace SQL {
  * It remains to be seen if this will survive in it's current form.
  */
 
-class Relation : public Core::EventReceiver {
-    C_OBJECT_ABSTRACT(Relation);
-
+class Relation : public RefCounted<Relation> {
 public:
+    virtual ~Relation() = default;
+
+    DeprecatedString const& name() const { return m_name; }
+    Relation const* parent() const { return m_parent; }
+
     u32 hash() const;
     Block::Index block_index() const { return m_block_index; }
     void set_block_index(Block::Index block_index) { m_block_index = block_index; }
-    ~Relation() override = default;
     virtual Key key() const = 0;
-    Relation const* parent_relation() const { return dynamic_cast<Relation const*>(parent()); }
 
 protected:
     Relation(DeprecatedString name, Block::Index block_index, Relation* parent = nullptr)
-        : Core::EventReceiver(parent)
+        : m_name(move(name))
         , m_block_index(block_index)
+        , m_parent(parent)
     {
-        set_name(move(name));
     }
 
     explicit Relation(DeprecatedString name, Relation* parent = nullptr)
-        : Core::EventReceiver(parent)
-        , m_block_index(0)
+        : Relation(move(name), 0, parent)
     {
-        set_name(move(name));
     }
 
 private:
+    DeprecatedString m_name;
     Block::Index m_block_index { 0 };
+    Relation const* m_parent { nullptr };
 };
 
 class SchemaDef : public Relation {
-    C_OBJECT(SchemaDef);
-
 public:
+    static ErrorOr<NonnullRefPtr<SchemaDef>> create(DeprecatedString name);
+    static ErrorOr<NonnullRefPtr<SchemaDef>> create(Key const&);
+
     Key key() const override;
     static NonnullRefPtr<IndexDef> index_def();
     static Key make_key();
 
 private:
     explicit SchemaDef(DeprecatedString);
-    explicit SchemaDef(Key const&);
 };
 
 class ColumnDef : public Relation {
-    C_OBJECT(ColumnDef);
-
 public:
+    static ErrorOr<NonnullRefPtr<ColumnDef>> create(Relation*, size_t, DeprecatedString, SQLType);
+
     Key key() const override;
     SQLType type() const { return m_type; }
     size_t column_number() const { return m_index; }
@@ -92,22 +94,21 @@ private:
 };
 
 class KeyPartDef : public ColumnDef {
-    C_OBJECT(KeyPartDef);
-
 public:
+    static ErrorOr<NonnullRefPtr<KeyPartDef>> create(IndexDef*, DeprecatedString, SQLType, Order = Order::Ascending);
+
     Order sort_order() const { return m_sort_order; }
 
 private:
-    KeyPartDef(IndexDef*, DeprecatedString, SQLType, Order = Order::Ascending);
+    KeyPartDef(IndexDef*, DeprecatedString, SQLType, Order);
 
     Order m_sort_order { Order::Ascending };
 };
 
 class IndexDef : public Relation {
-    C_OBJECT(IndexDef);
-
 public:
-    ~IndexDef() override = default;
+    static ErrorOr<NonnullRefPtr<IndexDef>> create(TableDef*, DeprecatedString, bool unique = true, u32 pointer = 0);
+    static ErrorOr<NonnullRefPtr<IndexDef>> create(DeprecatedString, bool unique = true, u32 pointer = 0);
 
     Vector<NonnullRefPtr<KeyPartDef>> const& key_definition() const { return m_key_definition; }
     bool unique() const { return m_unique; }
@@ -119,8 +120,7 @@ public:
     static Key make_key(TableDef const& table_def);
 
 private:
-    IndexDef(TableDef*, DeprecatedString, bool unique = true, u32 pointer = 0);
-    explicit IndexDef(DeprecatedString, bool unique = true, u32 pointer = 0);
+    IndexDef(TableDef*, DeprecatedString, bool unique, u32 pointer);
 
     Vector<NonnullRefPtr<KeyPartDef>> m_key_definition;
     bool m_unique { false };
@@ -129,9 +129,9 @@ private:
 };
 
 class TableDef : public Relation {
-    C_OBJECT(TableDef);
-
 public:
+    static ErrorOr<NonnullRefPtr<TableDef>> create(SchemaDef*, DeprecatedString);
+
     Key key() const override;
     void append_column(DeprecatedString, SQLType);
     void append_column(Key const&);

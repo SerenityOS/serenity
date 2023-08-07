@@ -12,7 +12,7 @@ namespace SQL::AST {
 ResultOr<ResultSet> CreateTable::execute(ExecutionContext& context) const
 {
     auto schema_def = TRY(context.database->get_schema(m_schema_name));
-    auto table_def = TableDef::construct(schema_def, m_table_name);
+    auto table_def = TRY(TableDef::create(schema_def, m_table_name));
 
     for (auto const& column : m_columns) {
         SQLType type;
