@@ -93,8 +93,6 @@ public:
     size_t pc() const;
     DeprecatedString debug_position() const;
 
-    VM::InterpreterExecutionScope ast_interpreter_scope(Realm&);
-
     Optional<Value>& this_value() { return m_this_value; }
 
     void visit_edges(Cell::Visitor&);
@@ -125,7 +123,6 @@ private:
     Optional<Value> m_return_value;
     Optional<Value> m_saved_exception;
     Executable* m_current_executable { nullptr };
-    OwnPtr<JS::Interpreter> m_ast_interpreter;
     BasicBlock const* m_current_block { nullptr };
     InstructionStreamIterator* m_pc { nullptr };
 };
