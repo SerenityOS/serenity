@@ -12,7 +12,7 @@ namespace SQL::AST {
 
 ResultOr<ResultSet> CreateSchema::execute(ExecutionContext& context) const
 {
-    auto schema_def = SchemaDef::construct(m_schema_name);
+    auto schema_def = TRY(SchemaDef::create(m_schema_name));
 
     if (auto result = context.database->add_schema(*schema_def); result.is_error()) {
         if (result.error().error() != SQLErrorCode::SchemaExists || m_is_error_if_schema_exists)

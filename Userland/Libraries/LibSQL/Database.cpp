@@ -54,7 +54,7 @@ ResultOr<void> Database::open()
             if (result.error().error() != SQLErrorCode::SchemaDoesNotExist)
                 return result.release_error();
 
-            auto schema_def = SchemaDef::construct(schema_name);
+            auto schema_def = TRY(SchemaDef::create(schema_name));
             TRY(add_schema(*schema_def));
             return schema_def;
         } else {
@@ -69,7 +69,7 @@ ResultOr<void> Database::open()
         if (result.error().error() != SQLErrorCode::TableDoesNotExist)
             return result.release_error();
 
-        auto internal_describe_table = TableDef::construct(master_schema, "internal_describe_table");
+        auto internal_describe_table = TRY(TableDef::create(master_schema, "internal_describe_table"));
         internal_describe_table->append_column("Name", SQLType::Text);
         internal_describe_table->append_column("Type", SQLType::Text);
         TRY(add_table(*internal_describe_table));
@@ -119,7 +119,7 @@ ResultOr<NonnullRefPtr<SchemaDef>> Database::get_schema(DeprecatedString const& 
     if (schema_iterator.is_end() || (*schema_iterator != key))
         return Result { SQLCommand::Unknown, SQLErrorCode::SchemaDoesNotExist, schema_name };
 
-    auto schema_def = SchemaDef::construct(*schema_iterator);
+    auto schema_def = TRY(SchemaDef::create(*schema_iterator));
     m_schema_cache.set(key.hash(), schema_def);
     return schema_def;
 }
@@ -163,7 +163,7 @@ ResultOr<NonnullRefPtr<TableDef>> Database::get_table(DeprecatedString const& sc
         return Result { SQLCommand::Unknown, SQLErrorCode::TableDoesNotExist, DeprecatedString::formatted("{}.{}", schema_name, name) };
 
     auto schema_def = TRY(get_schema(schema));
-    auto table_def = TableDef::construct(schema_def, name);
+    auto table_def = TRY(TableDef::create(schema_def, name));
     table_def->set_block_index((*table_iterator).block_index());
     m_table_cache.set(key.hash(), table_def);
 

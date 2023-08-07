@@ -20,7 +20,7 @@
 
 static NonnullRefPtr<SQL::SchemaDef> setup_schema(SQL::Database& db)
 {
-    auto schema = SQL::SchemaDef::construct("TestSchema");
+    auto schema = MUST(SQL::SchemaDef::create("TestSchema"));
     MUST(db.add_schema(schema));
     return schema;
 }
@@ -29,7 +29,7 @@ static NonnullRefPtr<SQL::SchemaDef> setup_schema(SQL::Database& db)
 static NonnullRefPtr<SQL::TableDef> setup_table(SQL::Database& db)
 {
     auto schema = setup_schema(db);
-    auto table = SQL::TableDef::construct(schema, "TestTable");
+    auto table = MUST(SQL::TableDef::create(schema, "TestTable"));
     table->append_column("TextColumn", SQL::SQLType::Text);
     table->append_column("IntColumn", SQL::SQLType::Integer);
     EXPECT_EQ(table->num_columns(), 2u);
