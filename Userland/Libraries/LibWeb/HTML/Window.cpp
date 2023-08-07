@@ -1163,7 +1163,7 @@ void Window::scroll(ScrollToOptions const& options)
     // 1. If invoked with one argument, follow these substeps:
 
     // 1. Let options be the argument.
-    auto viewport_rect = top_level_browsing_context.viewport_rect().to_type<double>().to_type<float>();
+    auto viewport_rect = top_level_browsing_context.viewport_rect().to_type<float>();
 
     // 2. Let x be the value of the left dictionary member of options, if present, or the viewport’s current scroll
     //    position on the x axis otherwise.

@@ -113,6 +113,8 @@ public:
     constexpr bool operator==(CSSPixels const& other) const = default;
 
     explicit operator double() const { return to_double(); }
+    explicit operator float() const { return to_float(); }
+    explicit operator int() const { return to_int(); }
 
     constexpr CSSPixels& operator++()
     {

@@ -36,7 +36,7 @@ Optional<HitTestResult> SVGGeometryPaintable::hit_test(CSSPixelPoint position, H
     if (auto transform = layout_box().layout_transform(); transform.has_value()) {
         auto transformed_bounding_box = transform->map_to_quad(
             const_cast<SVG::SVGGeometryElement&>(geometry_element).get_path().bounding_box());
-        if (!transformed_bounding_box.contains(position.to_type<double>().to_type<float>()))
+        if (!transformed_bounding_box.contains(position.to_type<float>()))
             return {};
     }
     return result;
@@ -103,7 +103,7 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
     auto svg_viewport = [&] {
         if (maybe_view_box.has_value())
             return Gfx::FloatRect { maybe_view_box->min_x, maybe_view_box->min_y, maybe_view_box->width, maybe_view_box->height };
-        return Gfx::FloatRect { { 0, 0 }, svg_element_rect.size().to_type<double>().to_type<float>() };
+        return Gfx::FloatRect { { 0, 0 }, svg_element_rect.size().to_type<float>() };
     }();
 
     SVG::SVGPaintContext paint_context {

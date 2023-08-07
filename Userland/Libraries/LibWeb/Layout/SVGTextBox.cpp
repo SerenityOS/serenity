@@ -29,10 +29,10 @@ Optional<Gfx::AffineTransform> SVGTextBox::layout_transform() const
     auto& geometry_element = dom_node();
     auto transform = geometry_element.get_transform();
     auto* svg_box = geometry_element.first_ancestor_of_type<SVG::SVGSVGElement>();
-    auto origin = viewbox_origin().to_type<double>().to_type<float>();
+    auto origin = viewbox_origin().to_type<float>();
     Gfx::FloatPoint paint_offset = {};
     if (svg_box && svg_box->view_box().has_value())
-        paint_offset = svg_box->paintable_box()->absolute_rect().location().to_type<double>().to_type<float>();
+        paint_offset = svg_box->paintable_box()->absolute_rect().location().to_type<float>();
     return Gfx::AffineTransform {}.translate(paint_offset).translate(-origin).multiply(transform);
 }
 

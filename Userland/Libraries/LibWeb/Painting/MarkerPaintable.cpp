@@ -37,7 +37,7 @@ void MarkerPaintable::paint(PaintContext& context, PaintPhase phase) const
         return;
 
     // FIXME: All this does is round to the nearest whole CSS pixel, but it's goofy.
-    CSSPixelRect enclosing = absolute_rect().to_type<double>().to_type<float>().to_rounded<float>().to_type<CSSPixels>();
+    CSSPixelRect enclosing = absolute_rect().to_type<float>().to_rounded<float>().to_type<CSSPixels>();
     auto device_enclosing = context.enclosing_device_rect(enclosing);
 
     CSSPixels marker_width = enclosing.height() / 2.0;
