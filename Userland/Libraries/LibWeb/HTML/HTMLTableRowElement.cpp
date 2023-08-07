@@ -27,12 +27,10 @@ HTMLTableRowElement::HTMLTableRowElement(DOM::Document& document, DOM::Qualified
 
 HTMLTableRowElement::~HTMLTableRowElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLTableRowElement::initialize(JS::Realm& realm)
+void HTMLTableRowElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTableRowElementPrototype>(realm, "HTMLTableRowElement"));
-
-    return {};
 }
 
 void HTMLTableRowElement::apply_presentational_hints(CSS::StyleProperties& style) const

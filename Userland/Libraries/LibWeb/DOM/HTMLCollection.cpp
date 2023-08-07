@@ -28,12 +28,10 @@ HTMLCollection::HTMLCollection(ParentNode& root, Scope scope, Function<bool(Elem
 
 HTMLCollection::~HTMLCollection() = default;
 
-JS::ThrowCompletionOr<void> HTMLCollection::initialize(JS::Realm& realm)
+void HTMLCollection::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLCollectionPrototype>(realm, "HTMLCollection"));
-
-    return {};
 }
 
 void HTMLCollection::visit_edges(Cell::Visitor& visitor)

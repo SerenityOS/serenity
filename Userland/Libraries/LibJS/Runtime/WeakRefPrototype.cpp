@@ -14,16 +14,14 @@ WeakRefPrototype::WeakRefPrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> WeakRefPrototype::initialize(Realm& realm)
+void WeakRefPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
     define_native_function(realm, vm.names.deref, deref, 0, Attribute::Writable | Attribute::Configurable);
 
     define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.WeakRef.as_string()), Attribute::Configurable);
-
-    return {};
 }
 
 // 26.1.3.2 WeakRef.prototype.deref ( ), https://tc39.es/ecma262/#sec-weak-ref.prototype.deref

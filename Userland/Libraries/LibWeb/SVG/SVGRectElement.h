@@ -31,7 +31,7 @@ public:
 private:
     SVGRectElement(DOM::Document&, DOM::QualifiedName);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     Gfx::FloatSize calculate_used_corner_radius_values() const;
 

@@ -18,10 +18,10 @@ SetConstructor::SetConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> SetConstructor::initialize(Realm& realm)
+void SetConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     // 24.2.2.1 Set.prototype, https://tc39.es/ecma262/#sec-set.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().set_prototype(), 0);
@@ -29,8 +29,6 @@ ThrowCompletionOr<void> SetConstructor::initialize(Realm& realm)
     define_native_accessor(realm, vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
-
-    return {};
 }
 
 // 24.2.1.1 Set ( [ iterable ] ), https://tc39.es/ecma262/#sec-set-iterable

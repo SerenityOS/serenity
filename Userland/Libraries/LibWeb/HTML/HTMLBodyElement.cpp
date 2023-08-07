@@ -22,12 +22,10 @@ HTMLBodyElement::HTMLBodyElement(DOM::Document& document, DOM::QualifiedName qua
 
 HTMLBodyElement::~HTMLBodyElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLBodyElement::initialize(JS::Realm& realm)
+void HTMLBodyElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLBodyElementPrototype>(realm, "HTMLBodyElement"));
-
-    return {};
 }
 
 void HTMLBodyElement::apply_presentational_hints(CSS::StyleProperties& style) const

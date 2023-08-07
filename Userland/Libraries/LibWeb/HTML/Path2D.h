@@ -31,7 +31,7 @@ public:
 private:
     Path2D(JS::Realm&, Optional<Variant<JS::Handle<Path2D>, DeprecatedString>> const&);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 };
 
 }

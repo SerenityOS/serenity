@@ -25,12 +25,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSNamespaceRule>> CSSNamespaceRule::create
     return MUST_OR_THROW_OOM(realm.heap().allocate<CSSNamespaceRule>(realm, realm, prefix, namespace_uri));
 }
 
-JS::ThrowCompletionOr<void> CSSNamespaceRule::initialize(JS::Realm& realm)
+void CSSNamespaceRule::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSNamespaceRulePrototype>(realm, "CSSNamespaceRule"));
-
-    return {};
 }
 
 // https://www.w3.org/TR/cssom/#serialize-a-css-rule

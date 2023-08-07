@@ -32,7 +32,7 @@ public:
 private:
     SVGSVGElement(DOM::Document&, DOM::QualifiedName);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     virtual bool is_svg_svg_element() const override { return true; }
 

@@ -52,7 +52,7 @@ public:
 private:
     CanvasPattern(JS::Realm&, CanvasPatternPaintStyle&);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     NonnullRefPtr<CanvasPatternPaintStyle> m_pattern;
 };

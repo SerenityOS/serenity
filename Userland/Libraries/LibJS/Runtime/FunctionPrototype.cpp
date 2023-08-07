@@ -25,10 +25,10 @@ FunctionPrototype::FunctionPrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> FunctionPrototype::initialize(Realm& realm)
+void FunctionPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.apply, apply, 2, attr);
     define_native_function(realm, vm.names.bind, bind, 1, attr);
@@ -37,8 +37,6 @@ ThrowCompletionOr<void> FunctionPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.well_known_symbol_has_instance(), symbol_has_instance, 1, 0);
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
     define_direct_property(vm.names.name, PrimitiveString::create(vm, String {}), Attribute::Configurable);
-
-    return {};
 }
 
 ThrowCompletionOr<Value> FunctionPrototype::internal_call(Value, MarkedVector<Value>)

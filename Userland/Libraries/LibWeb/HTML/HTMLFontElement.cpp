@@ -19,12 +19,10 @@ HTMLFontElement::HTMLFontElement(DOM::Document& document, DOM::QualifiedName qua
 
 HTMLFontElement::~HTMLFontElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLFontElement::initialize(JS::Realm& realm)
+void HTMLFontElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLFontElementPrototype>(realm, "HTMLFontElement"));
-
-    return {};
 }
 
 void HTMLFontElement::apply_presentational_hints(CSS::StyleProperties& style) const

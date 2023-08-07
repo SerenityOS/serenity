@@ -128,12 +128,10 @@ WebSocket::WebSocket(JS::Realm& realm)
 
 WebSocket::~WebSocket() = default;
 
-JS::ThrowCompletionOr<void> WebSocket::initialize(JS::Realm& realm)
+void WebSocket::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::WebSocketPrototype>(realm, "WebSocket"));
-
-    return {};
 }
 
 ErrorOr<void> WebSocket::establish_web_socket_connection(AK::URL& url_record, Vector<String>& protocols, HTML::EnvironmentSettingsObject& client)

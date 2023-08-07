@@ -55,7 +55,7 @@ public:
     ErrorOr<Vector<JS::Handle<PerformanceTimeline::PerformanceEntry>>> filter_buffer_map_by_name_and_type(Optional<String> name, Optional<String> type) const;
 
 protected:
-    JS::ThrowCompletionOr<void> initialize(JS::Realm&);
+    void initialize(JS::Realm&);
     void visit_edges(JS::Cell::Visitor&);
 
 private:

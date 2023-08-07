@@ -24,12 +24,10 @@ MediaList::MediaList(JS::Realm& realm, Vector<NonnullRefPtr<MediaQuery>>&& media
 {
 }
 
-JS::ThrowCompletionOr<void> MediaList::initialize(JS::Realm& realm)
+void MediaList::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::MediaListPrototype>(realm, "MediaList"));
-
-    return {};
 }
 
 // https://www.w3.org/TR/cssom-1/#dom-medialist-mediatext

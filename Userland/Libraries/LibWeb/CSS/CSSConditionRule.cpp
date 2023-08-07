@@ -28,12 +28,10 @@ void CSSConditionRule::for_each_effective_keyframes_at_rule(Function<void(CSSKey
         CSSGroupingRule::for_each_effective_keyframes_at_rule(callback);
 }
 
-JS::ThrowCompletionOr<void> CSSConditionRule::initialize(JS::Realm& realm)
+void CSSConditionRule::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSConditionRulePrototype>(realm, "CSSConditionRule"));
-
-    return {};
 }
 
 }

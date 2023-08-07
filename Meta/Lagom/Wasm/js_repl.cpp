@@ -93,7 +93,7 @@ public:
         : GlobalObject(realm)
     {
     }
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual ~ReplObject() override = default;
 
 private:
@@ -211,9 +211,9 @@ static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView sour
     return true;
 }
 
-JS::ThrowCompletionOr<void> ReplObject::initialize(JS::Realm& realm)
+void ReplObject::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
     define_direct_property("global", this, JS::Attribute::Enumerable);
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
@@ -238,8 +238,6 @@ JS::ThrowCompletionOr<void> ReplObject::initialize(JS::Realm& realm)
             return value;
         },
         attr);
-
-    return {};
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReplObject::print)

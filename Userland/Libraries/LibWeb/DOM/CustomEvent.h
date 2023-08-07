@@ -29,7 +29,7 @@ public:
     // https://dom.spec.whatwg.org/#dom-customevent-detail
     JS::Value detail() const { return m_detail; }
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(JS::Cell::Visitor&) override;
 
     void init_custom_event(String const& type, bool bubbles, bool cancelable, JS::Value detail);

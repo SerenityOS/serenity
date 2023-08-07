@@ -35,12 +35,10 @@ TextDecoder::TextDecoder(JS::Realm& realm, TextCodec::Decoder& decoder, Deprecat
 
 TextDecoder::~TextDecoder() = default;
 
-JS::ThrowCompletionOr<void> TextDecoder::initialize(JS::Realm& realm)
+void TextDecoder::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::TextDecoderPrototype>(realm, "TextDecoder"));
-
-    return {};
 }
 
 // https://encoding.spec.whatwg.org/#dom-textdecoder-decode

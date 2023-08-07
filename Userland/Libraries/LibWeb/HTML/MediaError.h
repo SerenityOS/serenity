@@ -29,7 +29,7 @@ public:
 private:
     MediaError(JS::Realm&, Code code, String message);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     // https://html.spec.whatwg.org/multipage/media.html#dom-mediaerror-code
     Code m_code;

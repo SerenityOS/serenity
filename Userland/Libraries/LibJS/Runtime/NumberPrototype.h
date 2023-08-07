@@ -14,7 +14,7 @@ class NumberPrototype final : public NumberObject {
     JS_OBJECT(NumberPrototype, NumberObject);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~NumberPrototype() override = default;
 
     JS_DECLARE_NATIVE_FUNCTION(to_exponential);

@@ -17,12 +17,10 @@ HTMLHtmlElement::HTMLHtmlElement(DOM::Document& document, DOM::QualifiedName qua
 
 HTMLHtmlElement::~HTMLHtmlElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLHtmlElement::initialize(JS::Realm& realm)
+void HTMLHtmlElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLHtmlElementPrototype>(realm, "HTMLHtmlElement"));
-
-    return {};
 }
 
 bool HTMLHtmlElement::should_use_body_background_properties() const

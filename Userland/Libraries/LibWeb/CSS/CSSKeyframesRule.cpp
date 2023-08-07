@@ -22,12 +22,10 @@ void CSSKeyframesRule::visit_edges(Visitor& visitor)
         visitor.visit(keyframe);
 }
 
-JS::ThrowCompletionOr<void> CSSKeyframesRule::initialize(JS::Realm& realm)
+void CSSKeyframesRule::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSKeyframesRulePrototype>(realm, "CSSKeyframesRule"));
-
-    return {};
 }
 
 DeprecatedString CSSKeyframesRule::serialized() const

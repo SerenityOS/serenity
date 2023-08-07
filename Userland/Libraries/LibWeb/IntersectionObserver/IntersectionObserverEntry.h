@@ -54,7 +54,7 @@ public:
 private:
     IntersectionObserverEntry(JS::Realm&, HighResolutionTime::DOMHighResTimeStamp time, JS::GCPtr<Geometry::DOMRectReadOnly> root_bounds, JS::NonnullGCPtr<Geometry::DOMRectReadOnly> bounding_client_rect, JS::NonnullGCPtr<Geometry::DOMRectReadOnly> intersection_rect, bool is_intersecting, double intersection_ratio, JS::NonnullGCPtr<DOM::Element> target);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(JS::Cell::Visitor&) override;
 
     // https://www.w3.org/TR/intersection-observer/#dom-intersectionobserverentry-time

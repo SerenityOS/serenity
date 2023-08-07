@@ -193,13 +193,13 @@ public:
         : JS::GlobalObject(realm)
     {
     }
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual ~TestRunnerGlobalObject() override = default;
 };
 
-inline JS::ThrowCompletionOr<void> TestRunnerGlobalObject::initialize(JS::Realm& realm)
+inline void TestRunnerGlobalObject::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
     define_direct_property("global", this, JS::Attribute::Enumerable);
     for (auto& entry : s_exposed_global_functions) {
@@ -210,8 +210,6 @@ inline JS::ThrowCompletionOr<void> TestRunnerGlobalObject::initialize(JS::Realm&
             },
             entry.value.length, JS::default_attributes);
     }
-
-    return {};
 }
 
 inline ByteBuffer load_entire_file(StringView path)

@@ -23,7 +23,7 @@ public:
 private:
     explicit XMLSerializer(JS::Realm&);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 };
 
 enum class RequireWellFormed {

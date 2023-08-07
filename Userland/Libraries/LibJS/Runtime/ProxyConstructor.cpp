@@ -43,16 +43,14 @@ ProxyConstructor::ProxyConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> ProxyConstructor::initialize(Realm& realm)
+void ProxyConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.revocable, revocable, 2, attr);
 
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
-
-    return {};
 }
 
 // 28.2.1.1 Proxy ( target, handler ), https://tc39.es/ecma262/#sec-proxy-target-handler

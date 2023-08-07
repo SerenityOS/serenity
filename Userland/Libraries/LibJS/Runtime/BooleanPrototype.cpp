@@ -18,15 +18,13 @@ BooleanPrototype::BooleanPrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> BooleanPrototype::initialize(Realm& realm)
+void BooleanPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(BooleanObject::initialize(realm));
+    Base::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.toString, to_string, 0, attr);
     define_native_function(realm, vm.names.valueOf, value_of, 0, attr);
-
-    return {};
 }
 
 // thisBooleanValue ( value ), https://tc39.es/ecma262/#thisbooleanvalue

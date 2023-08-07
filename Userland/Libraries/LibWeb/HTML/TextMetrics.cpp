@@ -22,12 +22,10 @@ TextMetrics::TextMetrics(JS::Realm& realm)
 
 TextMetrics::~TextMetrics() = default;
 
-JS::ThrowCompletionOr<void> TextMetrics::initialize(JS::Realm& realm)
+void TextMetrics::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::TextMetricsPrototype>(realm, "TextMetrics"));
-
-    return {};
 }
 
 }

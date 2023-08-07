@@ -27,12 +27,10 @@ WebGLContextEvent::WebGLContextEvent(JS::Realm& realm, FlyString const& type, We
 
 WebGLContextEvent::~WebGLContextEvent() = default;
 
-JS::ThrowCompletionOr<void> WebGLContextEvent::initialize(JS::Realm& realm)
+void WebGLContextEvent::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::WebGLContextEventPrototype>(realm, "WebGLContextEvent"));
-
-    return {};
 }
 
 }

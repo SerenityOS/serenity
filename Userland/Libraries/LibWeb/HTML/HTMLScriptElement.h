@@ -59,7 +59,7 @@ private:
 
     virtual bool is_html_script_element() const override { return true; }
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     virtual void attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value) override;

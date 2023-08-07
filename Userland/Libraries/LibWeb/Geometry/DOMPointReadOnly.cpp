@@ -34,12 +34,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMPointReadOnly>> DOMPointReadOnly::from_p
 
 DOMPointReadOnly::~DOMPointReadOnly() = default;
 
-JS::ThrowCompletionOr<void> DOMPointReadOnly::initialize(JS::Realm& realm)
+void DOMPointReadOnly::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMPointReadOnlyPrototype>(realm, "DOMPointReadOnly"));
-
-    return {};
 }
 
 }

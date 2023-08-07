@@ -14,7 +14,7 @@ class AsyncFunctionConstructor final : public NativeFunction {
     JS_OBJECT(AsyncFunctionConstructor, NativeFunction);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~AsyncFunctionConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

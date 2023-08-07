@@ -37,12 +37,10 @@ HTMLFormElement::HTMLFormElement(DOM::Document& document, DOM::QualifiedName qua
 
 HTMLFormElement::~HTMLFormElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLFormElement::initialize(JS::Realm& realm)
+void HTMLFormElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLFormElementPrototype>(realm, "HTMLFormElement"));
-
-    return {};
 }
 
 void HTMLFormElement::visit_edges(Cell::Visitor& visitor)

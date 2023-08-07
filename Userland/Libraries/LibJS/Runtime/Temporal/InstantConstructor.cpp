@@ -18,9 +18,9 @@ InstantConstructor::InstantConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> InstantConstructor::initialize(Realm& realm)
+void InstantConstructor::initialize(Realm& realm)
 {
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     auto& vm = this->vm();
 
@@ -36,8 +36,6 @@ ThrowCompletionOr<void> InstantConstructor::initialize(Realm& realm)
     define_native_function(realm, vm.names.compare, compare, 2, attr);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
-
-    return {};
 }
 
 // 8.1.1 Temporal.Instant ( epochNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal.instant

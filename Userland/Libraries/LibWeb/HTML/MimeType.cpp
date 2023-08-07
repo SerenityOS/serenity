@@ -19,12 +19,10 @@ MimeType::MimeType(JS::Realm& realm, String type)
 
 MimeType::~MimeType() = default;
 
-JS::ThrowCompletionOr<void> MimeType::initialize(JS::Realm& realm)
+void MimeType::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::MimeTypePrototype>(realm, "MimeType"));
-
-    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/system-state.html#concept-mimetype-type

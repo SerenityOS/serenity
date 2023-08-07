@@ -16,12 +16,10 @@ HTMLLegendElement::HTMLLegendElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLLegendElement::~HTMLLegendElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLLegendElement::initialize(JS::Realm& realm)
+void HTMLLegendElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLLegendElementPrototype>(realm, "HTMLLegendElement"));
-
-    return {};
 }
 
 }

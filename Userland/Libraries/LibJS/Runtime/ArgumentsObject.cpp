@@ -16,13 +16,11 @@ ArgumentsObject::ArgumentsObject(Realm& realm, Environment& environment)
 {
 }
 
-ThrowCompletionOr<void> ArgumentsObject::initialize(Realm& realm)
+void ArgumentsObject::initialize(Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_has_parameter_map();
     m_parameter_map = Object::create(realm, nullptr);
-
-    return {};
 }
 
 void ArgumentsObject::visit_edges(Cell::Visitor& visitor)

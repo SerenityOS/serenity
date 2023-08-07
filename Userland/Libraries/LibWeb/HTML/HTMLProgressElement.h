@@ -42,7 +42,7 @@ private:
     // ^DOM::Node
     virtual bool is_html_progress_element() const final { return true; }
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     void progress_position_updated();
 

@@ -40,21 +40,18 @@ WindowOrWorkerGlobalScopeMixin::~WindowOrWorkerGlobalScopeMixin() = default;
     __ENUMERATE_SUPPORTED_PERFORMANCE_ENTRY_TYPES(PerformanceTimeline::EntryTypes::mark, UserTiming::PerformanceMark) \
     __ENUMERATE_SUPPORTED_PERFORMANCE_ENTRY_TYPES(PerformanceTimeline::EntryTypes::measure, UserTiming::PerformanceMeasure)
 
-JS::ThrowCompletionOr<void> WindowOrWorkerGlobalScopeMixin::initialize(JS::Realm& realm)
+void WindowOrWorkerGlobalScopeMixin::initialize(JS::Realm&)
 {
-    auto& vm = realm.vm();
-
-#define __ENUMERATE_SUPPORTED_PERFORMANCE_ENTRY_TYPES(entry_type, cpp_class)                                                                     \
-    TRY_OR_THROW_OOM(vm, m_performance_entry_buffer_map.try_set(entry_type, PerformanceTimeline::PerformanceEntryTuple {                         \
-                                                                                .performance_entry_buffer = {},                                  \
-                                                                                .max_buffer_size = cpp_class::max_buffer_size(),                 \
-                                                                                .available_from_timeline = cpp_class::available_from_timeline(), \
-                                                                                .dropped_entries_count = 0,                                      \
-                                                                            }));
+#define __ENUMERATE_SUPPORTED_PERFORMANCE_ENTRY_TYPES(entry_type, cpp_class) \
+    m_performance_entry_buffer_map.set(entry_type,                           \
+        PerformanceTimeline::PerformanceEntryTuple {                         \
+            .performance_entry_buffer = {},                                  \
+            .max_buffer_size = cpp_class::max_buffer_size(),                 \
+            .available_from_timeline = cpp_class::available_from_timeline(), \
+            .dropped_entries_count = 0,                                      \
+        });
     ENUMERATE_SUPPORTED_PERFORMANCE_ENTRY_TYPES
 #undef __ENUMERATE_SUPPORTED_PERFORMANCE_ENTRY_TYPES
-
-    return {};
 }
 
 void WindowOrWorkerGlobalScopeMixin::visit_edges(JS::Cell::Visitor& visitor)

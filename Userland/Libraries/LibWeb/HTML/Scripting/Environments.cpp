@@ -33,11 +33,10 @@ EnvironmentSettingsObject::~EnvironmentSettingsObject()
     responsible_event_loop().unregister_environment_settings_object({}, *this);
 }
 
-JS::ThrowCompletionOr<void> EnvironmentSettingsObject::initialize(JS::Realm& realm)
+void EnvironmentSettingsObject::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     m_module_map = realm.heap().allocate_without_realm<ModuleMap>();
-    return {};
 }
 
 void EnvironmentSettingsObject::visit_edges(Cell::Visitor& visitor)

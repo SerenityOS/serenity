@@ -19,7 +19,6 @@ class AsyncFromSyncIterator final : public Object {
 public:
     static NonnullGCPtr<AsyncFromSyncIterator> create(Realm&, IteratorRecord sync_iterator_record);
 
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
     virtual ~AsyncFromSyncIterator() override = default;
 
     void visit_edges(Visitor& visitor) override;

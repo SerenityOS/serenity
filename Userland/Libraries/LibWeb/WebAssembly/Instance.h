@@ -27,7 +27,7 @@ public:
 private:
     Instance(JS::Realm&, size_t index);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Visitor&) override;
 
     JS::NonnullGCPtr<Object> m_exports;

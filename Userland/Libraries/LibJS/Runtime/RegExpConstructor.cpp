@@ -17,10 +17,10 @@ RegExpConstructor::RegExpConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> RegExpConstructor::initialize(Realm& realm)
+void RegExpConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     // 22.2.5.1 RegExp.prototype, https://tc39.es/ecma262/#sec-regexp.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().regexp_prototype(), 0);
@@ -49,8 +49,6 @@ ThrowCompletionOr<void> RegExpConstructor::initialize(Realm& realm)
     define_native_accessor(realm, vm.names.$7, group_7_getter, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.$8, group_8_getter, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.$9, group_9_getter, {}, Attribute::Configurable);
-
-    return {};
 }
 
 // 22.2.4.1 RegExp ( pattern, flags ), https://tc39.es/ecma262/#sec-regexp-pattern-flags

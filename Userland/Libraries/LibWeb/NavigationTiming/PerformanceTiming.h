@@ -43,7 +43,7 @@ public:
 private:
     explicit PerformanceTiming(HTML::Window&);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::GCPtr<HTML::Window> m_window;

@@ -18,21 +18,19 @@ DurationFormatPrototype::DurationFormatPrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> DurationFormatPrototype::initialize(Realm& realm)
+void DurationFormatPrototype::initialize(Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
     auto& vm = this->vm();
 
     // 1.4.2 Intl.DurationFormat.prototype [ @@toStringTag ], https://tc39.es/proposal-intl-duration-format/#sec-Intl.DurationFormat.prototype-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Intl.DurationFormat"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Intl.DurationFormat"sv)), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.format, format, 1, attr);
     define_native_function(realm, vm.names.formatToParts, format_to_parts, 1, attr);
     define_native_function(realm, vm.names.resolvedOptions, resolved_options, 0, attr);
-
-    return {};
 }
 
 // 1.4.3 Intl.DurationFormat.prototype.format ( duration ), https://tc39.es/proposal-intl-duration-format/#sec-Intl.DurationFormat.prototype.format

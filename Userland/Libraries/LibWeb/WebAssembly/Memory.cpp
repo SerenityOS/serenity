@@ -39,12 +39,10 @@ Memory::Memory(JS::Realm& realm, Wasm::MemoryAddress address)
 {
 }
 
-JS::ThrowCompletionOr<void> Memory::initialize(JS::Realm& realm)
+void Memory::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::MemoryPrototype>(realm, "WebAssembly.Memory"sv));
-
-    return {};
 }
 
 // https://webassembly.github.io/spec/js-api/#dom-memory-grow

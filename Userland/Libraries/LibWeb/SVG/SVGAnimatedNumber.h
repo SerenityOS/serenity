@@ -28,7 +28,7 @@ public:
 private:
     SVGAnimatedNumber(JS::Realm&, float base_val, float anim_val);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     float m_base_val;
     float m_anim_val;

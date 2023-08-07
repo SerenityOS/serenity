@@ -35,12 +35,10 @@ void HTMLDivElement::apply_presentational_hints(CSS::StyleProperties& style) con
     });
 }
 
-JS::ThrowCompletionOr<void> HTMLDivElement::initialize(JS::Realm& realm)
+void HTMLDivElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLDivElementPrototype>(realm, "HTMLDivElement"));
-
-    return {};
 }
 
 }

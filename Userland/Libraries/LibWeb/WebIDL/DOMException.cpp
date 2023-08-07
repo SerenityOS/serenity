@@ -28,12 +28,10 @@ DOMException::DOMException(JS::Realm& realm, DeprecatedFlyString const& name, De
 
 DOMException::~DOMException() = default;
 
-JS::ThrowCompletionOr<void> DOMException::initialize(JS::Realm& realm)
+void DOMException::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMExceptionPrototype>(realm, "DOMException"));
-
-    return {};
 }
 
 }

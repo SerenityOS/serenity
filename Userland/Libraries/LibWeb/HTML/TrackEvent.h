@@ -32,7 +32,7 @@ public:
 private:
     TrackEvent(JS::Realm&, FlyString const& event_name, TrackEventInit event_init);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     TrackEventInit::TrackType m_track;
 };

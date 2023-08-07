@@ -33,12 +33,10 @@ UIEvent::UIEvent(JS::Realm& realm, FlyString const& event_name, UIEventInit cons
 
 UIEvent::~UIEvent() = default;
 
-JS::ThrowCompletionOr<void> UIEvent::initialize(JS::Realm& realm)
+void UIEvent::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::UIEventPrototype>(realm, "UIEvent"));
-
-    return {};
 }
 
 void UIEvent::visit_edges(Cell::Visitor& visitor)

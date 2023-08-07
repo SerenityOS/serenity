@@ -19,10 +19,10 @@ SharedArrayBufferConstructor::SharedArrayBufferConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> SharedArrayBufferConstructor::initialize(Realm& realm)
+void SharedArrayBufferConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     // 25.2.4.2 SharedArrayBuffer.prototype, https://tc39.es/ecma262/#sec-sharedarraybuffer.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().shared_array_buffer_prototype(), 0);
@@ -31,8 +31,6 @@ ThrowCompletionOr<void> SharedArrayBufferConstructor::initialize(Realm& realm)
     define_native_accessor(realm, vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
-
-    return {};
 }
 
 // 25.2.2.1 SharedArrayBuffer ( length ), https://tc39.es/ecma262/#sec-sharedarraybuffer-length

@@ -30,7 +30,7 @@ public:
 private:
     explicit DOMImplementation(Document&);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     Document& document() { return m_document; }

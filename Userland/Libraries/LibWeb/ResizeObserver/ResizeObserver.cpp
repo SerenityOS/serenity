@@ -25,12 +25,10 @@ ResizeObserver::ResizeObserver(JS::Realm& realm)
 
 ResizeObserver::~ResizeObserver() = default;
 
-JS::ThrowCompletionOr<void> ResizeObserver::initialize(JS::Realm& realm)
+void ResizeObserver::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::ResizeObserverPrototype>(realm, "ResizeObserver"));
-
-    return {};
 }
 
 // https://drafts.csswg.org/resize-observer/#dom-resizeobserver-observe

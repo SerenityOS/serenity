@@ -19,12 +19,10 @@ VideoTrackList::VideoTrackList(JS::Realm& realm)
 {
 }
 
-JS::ThrowCompletionOr<void> VideoTrackList::initialize(JS::Realm& realm)
+void VideoTrackList::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::VideoTrackListPrototype>(realm, "VideoTrackList"));
-
-    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#dom-tracklist-item

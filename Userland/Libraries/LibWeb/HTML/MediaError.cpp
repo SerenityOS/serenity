@@ -18,12 +18,10 @@ MediaError::MediaError(JS::Realm& realm, Code code, String message)
 {
 }
 
-JS::ThrowCompletionOr<void> MediaError::initialize(JS::Realm& realm)
+void MediaError::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::MediaErrorPrototype>(realm, "MediaError"));
-
-    return {};
 }
 
 }

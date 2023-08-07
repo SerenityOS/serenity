@@ -36,12 +36,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSRuleList>> CSSRuleList::create_empty(JS:
     return MUST_OR_THROW_OOM(realm.heap().allocate<CSSRuleList>(realm, realm));
 }
 
-JS::ThrowCompletionOr<void> CSSRuleList::initialize(JS::Realm& realm)
+void CSSRuleList::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSRuleListPrototype>(realm, "CSSRuleList"));
-
-    return {};
 }
 
 void CSSRuleList::visit_edges(Cell::Visitor& visitor)

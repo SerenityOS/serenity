@@ -103,12 +103,10 @@ WritableStream::WritableStream(JS::Realm& realm)
 {
 }
 
-JS::ThrowCompletionOr<void> WritableStream::initialize(JS::Realm& realm)
+void WritableStream::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::WritableStreamPrototype>(realm, "WritableStream"));
-
-    return {};
 }
 
 void WritableStream::visit_edges(Cell::Visitor& visitor)

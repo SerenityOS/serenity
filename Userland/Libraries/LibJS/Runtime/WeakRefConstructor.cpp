@@ -17,17 +17,15 @@ WeakRefConstructor::WeakRefConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> WeakRefConstructor::initialize(Realm& realm)
+void WeakRefConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     // 26.1.2.1 WeakRef.prototype, https://tc39.es/ecma262/#sec-weak-ref.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().weak_ref_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
-
-    return {};
 }
 
 // 26.1.1.1 WeakRef ( target ), https://tc39.es/ecma262/#sec-weak-ref-target

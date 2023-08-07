@@ -15,7 +15,7 @@ class InstantPrototype final : public PrototypeObject<InstantPrototype, Instant>
     JS_PROTOTYPE_OBJECT(InstantPrototype, Instant, Temporal.Instant);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~InstantPrototype() override = default;
 
 private:

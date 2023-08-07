@@ -44,15 +44,13 @@ AudioTrack::~AudioTrack()
     s_audio_track_id_allocator.deallocate(id.value());
 }
 
-JS::ThrowCompletionOr<void> AudioTrack::initialize(JS::Realm& realm)
+void AudioTrack::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::AudioTrackPrototype>(realm, "AudioTrack"));
 
     auto id = s_audio_track_id_allocator.allocate();
-    m_id = TRY_OR_THROW_OOM(realm.vm(), String::number(id));
-
-    return {};
+    m_id = MUST(String::number(id));
 }
 
 void AudioTrack::play(Badge<HTMLAudioElement>)

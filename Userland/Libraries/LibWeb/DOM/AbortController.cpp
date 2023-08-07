@@ -25,12 +25,10 @@ AbortController::AbortController(JS::Realm& realm, JS::NonnullGCPtr<AbortSignal>
 
 AbortController::~AbortController() = default;
 
-JS::ThrowCompletionOr<void> AbortController::initialize(JS::Realm& realm)
+void AbortController::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::AbortControllerPrototype>(realm, "AbortController"));
-
-    return {};
 }
 
 void AbortController::visit_edges(Cell::Visitor& visitor)

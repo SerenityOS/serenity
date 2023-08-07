@@ -17,9 +17,9 @@ AgentObject::AgentObject(Realm& realm)
 {
 }
 
-JS::ThrowCompletionOr<void> AgentObject::initialize(JS::Realm& realm)
+void AgentObject::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, "monotonicNow", monotonic_now, 0, attr);
@@ -27,8 +27,6 @@ JS::ThrowCompletionOr<void> AgentObject::initialize(JS::Realm& realm)
     // TODO: broadcast
     // TODO: getReport
     // TODO: start
-
-    return {};
 }
 
 JS_DEFINE_NATIVE_FUNCTION(AgentObject::monotonic_now)

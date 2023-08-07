@@ -21,10 +21,10 @@ TypedArrayConstructor::TypedArrayConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> TypedArrayConstructor::initialize(Realm& realm)
+void TypedArrayConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     // 23.2.2.3 %TypedArray%.prototype, https://tc39.es/ecma262/#sec-%typedarray%.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().typed_array_prototype(), 0);
@@ -36,8 +36,6 @@ ThrowCompletionOr<void> TypedArrayConstructor::initialize(Realm& realm)
     define_native_accessor(realm, vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
-
-    return {};
 }
 
 // 23.2.1.1 %TypedArray% ( ), https://tc39.es/ecma262/#sec-%typedarray%

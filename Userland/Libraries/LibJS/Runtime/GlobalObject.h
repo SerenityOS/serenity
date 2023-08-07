@@ -19,7 +19,7 @@ class GlobalObject : public Object {
     friend class Intrinsics;
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~GlobalObject() override;
 
 protected:

@@ -16,7 +16,7 @@ class GeneratorFunctionPrototype final : public Object {
     JS_OBJECT(GeneratorFunctionPrototype, Object);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~GeneratorFunctionPrototype() override = default;
 
 private:

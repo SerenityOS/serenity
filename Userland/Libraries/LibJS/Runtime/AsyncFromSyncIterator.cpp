@@ -22,12 +22,6 @@ AsyncFromSyncIterator::AsyncFromSyncIterator(Realm& realm, IteratorRecord sync_i
 {
 }
 
-ThrowCompletionOr<void> AsyncFromSyncIterator::initialize(Realm& realm)
-{
-    MUST_OR_THROW_OOM(Base::initialize(realm));
-    return {};
-}
-
 void AsyncFromSyncIterator::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);

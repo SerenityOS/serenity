@@ -19,7 +19,7 @@ class RegExpPrototype final : public PrototypeObject<RegExpPrototype, RegExpObje
     JS_PROTOTYPE_OBJECT(RegExpPrototype, RegExpObject, RegExp);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~RegExpPrototype() override = default;
 
 private:

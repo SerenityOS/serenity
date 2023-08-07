@@ -16,12 +16,10 @@ SVGCircleElement::SVGCircleElement(DOM::Document& document, DOM::QualifiedName q
 {
 }
 
-JS::ThrowCompletionOr<void> SVGCircleElement::initialize(JS::Realm& realm)
+void SVGCircleElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGCircleElementPrototype>(realm, "SVGCircleElement"));
-
-    return {};
 }
 
 void SVGCircleElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)

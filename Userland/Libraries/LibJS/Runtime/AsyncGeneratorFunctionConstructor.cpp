@@ -17,18 +17,16 @@ AsyncGeneratorFunctionConstructor::AsyncGeneratorFunctionConstructor(Realm& real
 {
 }
 
-ThrowCompletionOr<void> AsyncGeneratorFunctionConstructor::initialize(Realm& realm)
+void AsyncGeneratorFunctionConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     // 27.4.2.1 AsyncGeneratorFunction.length, https://tc39.es/ecma262/#sec-asyncgeneratorfunction-length
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 
     // 27.4.2.2 AsyncGeneratorFunction.prototype, https://tc39.es/ecma262/#sec-asyncgeneratorfunction-prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().async_generator_function_prototype(), 0);
-
-    return {};
 }
 
 // 27.4.1.1 AsyncGeneratorFunction ( p1, p2, … , pn, body ), https://tc39.es/ecma262/#sec-asyncgeneratorfunction

@@ -19,17 +19,15 @@ SuppressedErrorConstructor::SuppressedErrorConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> SuppressedErrorConstructor::initialize(Realm& realm)
+void SuppressedErrorConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     // 10.1.4.2.1 SuppressedError.prototype, https://tc39.es/proposal-explicit-resource-management/#sec-suppressederror.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().suppressed_error_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(3), Attribute::Configurable);
-
-    return {};
 }
 
 // 10.1.4.1.1 SuppressedError ( error, suppressed, message [ , options ] ), https://tc39.es/proposal-explicit-resource-management/#sec-suppressederror

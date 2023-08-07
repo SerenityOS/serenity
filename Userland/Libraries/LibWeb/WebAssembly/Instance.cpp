@@ -38,19 +38,19 @@ Instance::Instance(JS::Realm& realm, size_t index)
 {
 }
 
-JS::ThrowCompletionOr<void> Instance::initialize(JS::Realm& realm)
+void Instance::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
 
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::InstancePrototype>(realm, "WebAssembly.Instance"sv));
 
     auto& instance = *Detail::s_instantiated_modules[m_index];
     auto& cache = Detail::s_module_caches.at(m_index);
 
     for (auto& export_ : instance.exports()) {
-        TRY(export_.value().visit(
-            [&](Wasm::FunctionAddress const& address) -> JS::ThrowCompletionOr<void> {
+        export_.value().visit(
+            [&](Wasm::FunctionAddress const& address) {
                 Optional<JS::GCPtr<JS::FunctionObject>> object = cache.function_instances.get(address);
                 if (!object.has_value()) {
                     object = Detail::create_native_function(vm, address, export_.name());
@@ -58,36 +58,31 @@ JS::ThrowCompletionOr<void> Instance::initialize(JS::Realm& realm)
                 }
 
                 m_exports->define_direct_property(export_.name(), *object, JS::default_attributes);
-                return {};
             },
-            [&](Wasm::MemoryAddress const& address) -> JS::ThrowCompletionOr<void> {
+            [&](Wasm::MemoryAddress const& address) {
                 Optional<JS::GCPtr<Memory>> object = cache.memory_instances.get(address);
                 if (!object.has_value()) {
-                    object = MUST_OR_THROW_OOM(heap().allocate<Memory>(realm, realm, address));
+                    object = MUST(heap().allocate<Memory>(realm, realm, address));
                     cache.memory_instances.set(address, *object);
                 }
 
                 m_exports->define_direct_property(export_.name(), *object, JS::default_attributes);
-                return {};
             },
-            [&](Wasm::TableAddress const& address) -> JS::ThrowCompletionOr<void> {
+            [&](Wasm::TableAddress const& address) {
                 Optional<JS::GCPtr<Table>> object = cache.table_instances.get(address);
                 if (!object.has_value()) {
-                    object = MUST_OR_THROW_OOM(heap().allocate<Table>(realm, realm, address));
+                    object = MUST(heap().allocate<Table>(realm, realm, address));
                     cache.table_instances.set(address, *object);
                 }
 
                 m_exports->define_direct_property(export_.name(), *object, JS::default_attributes);
-                return {};
             },
-            [&](auto const&) -> JS::ThrowCompletionOr<void> {
+            [&](auto const&) {
                 // FIXME: Implement other exports!
-                return {};
-            }));
+            });
     }
 
     MUST(m_exports->set_integrity_level(IntegrityLevel::Frozen));
-    return {};
 }
 
 void Instance::visit_edges(Visitor& visitor)

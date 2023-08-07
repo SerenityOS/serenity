@@ -24,14 +24,14 @@ InstantPrototype::InstantPrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> InstantPrototype::initialize(Realm& realm)
+void InstantPrototype::initialize(Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
     auto& vm = this->vm();
 
     // 8.3.2 Temporal.Instant.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Temporal.Instant"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Temporal.Instant"sv)), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.epochSeconds, epoch_seconds_getter, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.epochMilliseconds, epoch_milliseconds_getter, {}, Attribute::Configurable);
@@ -51,8 +51,6 @@ ThrowCompletionOr<void> InstantPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.valueOf, value_of, 0, attr);
     define_native_function(realm, vm.names.toZonedDateTime, to_zoned_date_time, 1, attr);
     define_native_function(realm, vm.names.toZonedDateTimeISO, to_zoned_date_time_iso, 1, attr);
-
-    return {};
 }
 
 // 8.3.3 get Temporal.Instant.prototype.epochSeconds, https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochseconds

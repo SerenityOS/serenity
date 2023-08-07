@@ -14,7 +14,7 @@ class PluralRulesConstructor final : public NativeFunction {
     JS_OBJECT(PluralRulesConstructor, NativeFunction);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~PluralRulesConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

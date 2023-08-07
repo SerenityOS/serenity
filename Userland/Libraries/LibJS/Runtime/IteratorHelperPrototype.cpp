@@ -15,19 +15,17 @@ IteratorHelperPrototype::IteratorHelperPrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> IteratorHelperPrototype::initialize(Realm& realm)
+void IteratorHelperPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.next, next, 0, attr);
     define_native_function(realm, vm.names.return_, return_, 0, attr);
 
     // 3.1.2.1.3 %IteratorHelperPrototype% [ @@toStringTag ], https://tc39.es/proposal-iterator-helpers/#sec-%iteratorhelperprototype%-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Iterator Helper"sv)), Attribute::Configurable);
-
-    return {};
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Iterator Helper"sv)), Attribute::Configurable);
 }
 
 // 3.1.2.1.1 %IteratorHelperPrototype%.next ( ), https://tc39.es/proposal-iterator-helpers/#sec-%iteratorhelperprototype%.next

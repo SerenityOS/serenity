@@ -18,12 +18,10 @@ HTMLMetaElement::HTMLMetaElement(DOM::Document& document, DOM::QualifiedName qua
 
 HTMLMetaElement::~HTMLMetaElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLMetaElement::initialize(JS::Realm& realm)
+void HTMLMetaElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLMetaElementPrototype>(realm, "HTMLMetaElement"));
-
-    return {};
 }
 
 Optional<HTMLMetaElement::HttpEquivAttributeState> HTMLMetaElement::http_equiv_state() const

@@ -222,17 +222,15 @@ LocaleConstructor::LocaleConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> LocaleConstructor::initialize(Realm& realm)
+void LocaleConstructor::initialize(Realm& realm)
 {
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     auto& vm = this->vm();
 
     // 14.2.1 Intl.Locale.prototype, https://tc39.es/ecma402/#sec-Intl.Locale.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().intl_locale_prototype(), 0);
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
-
-    return {};
 }
 
 // 14.1.1 Intl.Locale ( tag [ , options ] ), https://tc39.es/ecma402/#sec-Intl.Locale

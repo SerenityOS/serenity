@@ -52,7 +52,7 @@ public:
 protected:
     HTMLCollection(ParentNode& root, Scope, Function<bool(Element const&)> filter);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     JS::NonnullGCPtr<ParentNode> root() { return *m_root; }
 

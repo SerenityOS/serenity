@@ -18,12 +18,10 @@ HTMLSourceElement::HTMLSourceElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLSourceElement::~HTMLSourceElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLSourceElement::initialize(JS::Realm& realm)
+void HTMLSourceElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLSourceElementPrototype>(realm, "HTMLSourceElement"));
-
-    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/embedded-content.html#the-source-element:the-source-element-15

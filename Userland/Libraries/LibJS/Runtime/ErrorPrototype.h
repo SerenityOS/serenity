@@ -16,7 +16,7 @@ class ErrorPrototype final : public PrototypeObject<ErrorPrototype, Error> {
     JS_PROTOTYPE_OBJECT(ErrorPrototype, Error, Error);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~ErrorPrototype() override = default;
 
 private:
@@ -32,7 +32,7 @@ private:
         JS_PROTOTYPE_OBJECT(PrototypeName, ClassName, ClassName);                             \
                                                                                               \
     public:                                                                                   \
-        virtual ThrowCompletionOr<void> initialize(Realm&) override;                          \
+        virtual void initialize(Realm&) override;                                             \
         virtual ~PrototypeName() override = default;                                          \
                                                                                               \
     private:                                                                                  \

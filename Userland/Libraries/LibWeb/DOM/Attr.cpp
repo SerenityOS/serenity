@@ -38,12 +38,10 @@ Attr::Attr(Document& document, QualifiedName qualified_name, DeprecatedString va
 {
 }
 
-JS::ThrowCompletionOr<void> Attr::initialize(JS::Realm& realm)
+void Attr::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::AttrPrototype>(realm, "Attr"));
-
-    return {};
 }
 
 void Attr::visit_edges(Cell::Visitor& visitor)

@@ -16,12 +16,10 @@ SVGPolygonElement::SVGPolygonElement(DOM::Document& document, DOM::QualifiedName
 {
 }
 
-JS::ThrowCompletionOr<void> SVGPolygonElement::initialize(JS::Realm& realm)
+void SVGPolygonElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGPolygonElementPrototype>(realm, "SVGPolygonElement"));
-
-    return {};
 }
 
 void SVGPolygonElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)

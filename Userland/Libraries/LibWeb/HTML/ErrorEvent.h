@@ -48,7 +48,7 @@ public:
 private:
     ErrorEvent(JS::Realm&, FlyString const& event_name, ErrorEventInit const& event_init);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     String m_message;

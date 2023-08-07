@@ -23,12 +23,10 @@ IdleDeadline::IdleDeadline(JS::Realm& realm, bool did_timeout)
 {
 }
 
-JS::ThrowCompletionOr<void> IdleDeadline::initialize(JS::Realm& realm)
+void IdleDeadline::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::IdleDeadlinePrototype>(realm, "IdleDeadline"));
-
-    return {};
 }
 
 IdleDeadline::~IdleDeadline() = default;

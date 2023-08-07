@@ -16,12 +16,10 @@ HTMLDataElement::HTMLDataElement(DOM::Document& document, DOM::QualifiedName qua
 
 HTMLDataElement::~HTMLDataElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLDataElement::initialize(JS::Realm& realm)
+void HTMLDataElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLDataElementPrototype>(realm, "HTMLDataElement"));
-
-    return {};
 }
 
 }

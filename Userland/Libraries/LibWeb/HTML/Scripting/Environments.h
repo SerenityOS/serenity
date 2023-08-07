@@ -57,7 +57,7 @@ struct EnvironmentSettingsObject
     JS_CELL(EnvironmentSettingsObject, JS::Cell);
 
     virtual ~EnvironmentSettingsObject() override;
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#concept-environment-target-browsing-context
     JS::ExecutionContext& realm_execution_context();

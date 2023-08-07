@@ -23,9 +23,9 @@ DateTimeFormatConstructor::DateTimeFormatConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> DateTimeFormatConstructor::initialize(Realm& realm)
+void DateTimeFormatConstructor::initialize(Realm& realm)
 {
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     auto& vm = this->vm();
 
@@ -36,8 +36,6 @@ ThrowCompletionOr<void> DateTimeFormatConstructor::initialize(Realm& realm)
     define_native_function(realm, vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
-
-    return {};
 }
 
 // 11.1.1 Intl.DateTimeFormat ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-intl.datetimeformat

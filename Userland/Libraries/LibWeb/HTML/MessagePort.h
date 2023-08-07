@@ -51,7 +51,7 @@ public:
 private:
     explicit MessagePort(JS::Realm&);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     bool is_entangled() const { return m_remote_port; }

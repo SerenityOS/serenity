@@ -36,7 +36,7 @@ public:
 private:
     explicit DocumentType(Document&);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     DeprecatedString m_name;
     DeprecatedString m_public_id;

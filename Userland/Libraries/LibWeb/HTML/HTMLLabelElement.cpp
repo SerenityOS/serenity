@@ -17,12 +17,10 @@ HTMLLabelElement::HTMLLabelElement(DOM::Document& document, DOM::QualifiedName q
 
 HTMLLabelElement::~HTMLLabelElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLLabelElement::initialize(JS::Realm& realm)
+void HTMLLabelElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLLabelElementPrototype>(realm, "HTMLLabelElement"));
-
-    return {};
 }
 
 JS::GCPtr<Layout::Node> HTMLLabelElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)

@@ -27,12 +27,10 @@ Navigator::Navigator(JS::Realm& realm)
 
 Navigator::~Navigator() = default;
 
-JS::ThrowCompletionOr<void> Navigator::initialize(JS::Realm& realm)
+void Navigator::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::NavigatorPrototype>(realm, "Navigator"));
-
-    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-pdfviewerenabled

@@ -40,12 +40,10 @@ CSSImportRule::CSSImportRule(AK::URL url, DOM::Document& document)
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
 }
 
-JS::ThrowCompletionOr<void> CSSImportRule::initialize(JS::Realm& realm)
+void CSSImportRule::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSImportRulePrototype>(realm, "CSSImportRule"));
-
-    return {};
 }
 
 void CSSImportRule::visit_edges(Cell::Visitor& visitor)

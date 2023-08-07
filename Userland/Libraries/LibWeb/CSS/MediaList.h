@@ -39,7 +39,7 @@ public:
 private:
     MediaList(JS::Realm&, Vector<NonnullRefPtr<MediaQuery>>&&);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     // ^Bindings::LegacyPlatformObject
     virtual bool supports_indexed_properties() const override { return true; }

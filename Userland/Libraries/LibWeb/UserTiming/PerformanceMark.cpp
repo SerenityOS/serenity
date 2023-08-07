@@ -96,12 +96,10 @@ FlyString const& PerformanceMark::entry_type() const
     return PerformanceTimeline::EntryTypes::mark;
 }
 
-JS::ThrowCompletionOr<void> PerformanceMark::initialize(JS::Realm& realm)
+void PerformanceMark::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::PerformanceMarkPrototype>(realm, "PerformanceMark"));
-
-    return {};
 }
 
 void PerformanceMark::visit_edges(JS::Cell::Visitor& visitor)

@@ -21,12 +21,10 @@ NodeIterator::NodeIterator(Node& root)
 
 NodeIterator::~NodeIterator() = default;
 
-JS::ThrowCompletionOr<void> NodeIterator::initialize(JS::Realm& realm)
+void NodeIterator::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::NodeIteratorPrototype>(realm, "NodeIterator"));
-
-    return {};
 }
 
 void NodeIterator::finalize()

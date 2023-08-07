@@ -16,17 +16,15 @@ ShadowRealmConstructor::ShadowRealmConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> ShadowRealmConstructor::initialize(Realm& realm)
+void ShadowRealmConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     // 3.3.1 ShadowRealm.prototype, https://tc39.es/proposal-shadowrealm/#sec-shadowrealm.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().shadow_realm_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
-
-    return {};
 }
 
 // 3.2.1 ShadowRealm ( ), https://tc39.es/proposal-shadowrealm/#sec-shadowrealm
@@ -70,7 +68,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ShadowRealmConstructor::construct(Functi
     auto& global_object = set_default_global_bindings(object->shadow_realm());
 
     // FIXME: 12. Perform ? HostInitializeShadowRealm(O.[[ShadowRealm]]).
-    MUST_OR_THROW_OOM(global_object.initialize(object->shadow_realm()));
+    global_object.initialize(object->shadow_realm());
 
     // 13. Return O.
     return object;

@@ -19,20 +19,18 @@ ErrorPrototype::ErrorPrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> ErrorPrototype::initialize(Realm& realm)
+void ErrorPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_direct_property(vm.names.name, MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Error"sv)), attr);
+    define_direct_property(vm.names.name, MUST(PrimitiveString::create(vm, "Error"sv)), attr);
     define_direct_property(vm.names.message, PrimitiveString::create(vm, String {}), attr);
     define_native_function(realm, vm.names.toString, to_string, 0, attr);
     // Non standard property "stack"
     // Every other engine seems to have this in some way or another, and the spec
     // proposal for this is only Stage 1
     define_native_accessor(realm, vm.names.stack, stack_getter, stack_setter, attr);
-
-    return {};
 }
 
 // 20.5.3.4 Error.prototype.toString ( ), https://tc39.es/ecma262/#sec-error.prototype.tostring
@@ -124,21 +122,19 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack_setter)
     return TRY(this_object.create_data_property_or_throw(vm.names.stack, vm.argument(0)));
 }
 
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                             \
-    PrototypeName::PrototypeName(Realm& realm)                                                                       \
-        : PrototypeObject(realm.intrinsics().error_prototype())                                                      \
-    {                                                                                                                \
-    }                                                                                                                \
-                                                                                                                     \
-    ThrowCompletionOr<void> PrototypeName::initialize(Realm& realm)                                                  \
-    {                                                                                                                \
-        auto& vm = this->vm();                                                                                       \
-        MUST_OR_THROW_OOM(Base::initialize(realm));                                                                  \
-        u8 attr = Attribute::Writable | Attribute::Configurable;                                                     \
-        define_direct_property(vm.names.name, MUST_OR_THROW_OOM(PrimitiveString::create(vm, #ClassName##sv)), attr); \
-        define_direct_property(vm.names.message, PrimitiveString::create(vm, String {}), attr);                      \
-                                                                                                                     \
-        return {};                                                                                                   \
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                \
+    PrototypeName::PrototypeName(Realm& realm)                                                          \
+        : PrototypeObject(realm.intrinsics().error_prototype())                                         \
+    {                                                                                                   \
+    }                                                                                                   \
+                                                                                                        \
+    void PrototypeName::initialize(Realm& realm)                                                        \
+    {                                                                                                   \
+        auto& vm = this->vm();                                                                          \
+        Base::initialize(realm);                                                                        \
+        u8 attr = Attribute::Writable | Attribute::Configurable;                                        \
+        define_direct_property(vm.names.name, MUST(PrimitiveString::create(vm, #ClassName##sv)), attr); \
+        define_direct_property(vm.names.message, PrimitiveString::create(vm, String {}), attr);         \
     }
 
 JS_ENUMERATE_NATIVE_ERRORS

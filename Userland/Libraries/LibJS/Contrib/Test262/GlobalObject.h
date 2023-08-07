@@ -15,7 +15,7 @@ class GlobalObject final : public JS::GlobalObject {
     JS_OBJECT(GlobalObject, JS::GlobalObject);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~GlobalObject() override = default;
 
     $262Object* $262() const { return m_$262; }

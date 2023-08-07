@@ -15,7 +15,7 @@ class MapPrototype final : public PrototypeObject<MapPrototype, Map> {
     JS_PROTOTYPE_OBJECT(MapPrototype, Map, Map);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~MapPrototype() override = default;
 
 private:

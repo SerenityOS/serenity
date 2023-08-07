@@ -16,12 +16,10 @@ SVGLineElement::SVGLineElement(DOM::Document& document, DOM::QualifiedName quali
 {
 }
 
-JS::ThrowCompletionOr<void> SVGLineElement::initialize(JS::Realm& realm)
+void SVGLineElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGLineElementPrototype>(realm, "SVGLineElement"));
-
-    return {};
 }
 
 void SVGLineElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)

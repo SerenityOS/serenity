@@ -31,7 +31,7 @@ public:
 
 private:
     ShadowRoot(Document&, Element& host, Bindings::ShadowRootMode);
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     // ^Node
     virtual DeprecatedFlyString node_name() const override { return "#shadow-root"; }

@@ -19,12 +19,10 @@ CharacterData::CharacterData(Document& document, NodeType type, DeprecatedString
 {
 }
 
-JS::ThrowCompletionOr<void> CharacterData::initialize(JS::Realm& realm)
+void CharacterData::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CharacterDataPrototype>(realm, "CharacterData"));
-
-    return {};
 }
 
 // https://dom.spec.whatwg.org/#dom-characterdata-data

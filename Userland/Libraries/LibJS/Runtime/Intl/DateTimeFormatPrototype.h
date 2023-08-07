@@ -15,7 +15,7 @@ class DateTimeFormatPrototype final : public PrototypeObject<DateTimeFormatProto
     JS_PROTOTYPE_OBJECT(DateTimeFormatPrototype, DateTimeFormat, Intl.DateTimeFormat);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~DateTimeFormatPrototype() override = default;
 
 private:

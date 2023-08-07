@@ -163,10 +163,10 @@ StringPrototype::StringPrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> StringPrototype::initialize(Realm& realm)
+void StringPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(StringObject::initialize(realm));
+    Base::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     // 22.1.3 Properties of the String Prototype Object, https://tc39.es/ecma262/#sec-properties-of-the-string-prototype-object
@@ -223,8 +223,6 @@ ThrowCompletionOr<void> StringPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.sup, sup, 0, attr);
     define_direct_property(vm.names.trimLeft, get_without_side_effects(vm.names.trimStart), attr);
     define_direct_property(vm.names.trimRight, get_without_side_effects(vm.names.trimEnd), attr);
-
-    return {};
 }
 
 // thisStringValue ( value ), https://tc39.es/ecma262/#thisstringvalue

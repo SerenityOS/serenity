@@ -40,7 +40,7 @@ public:
 private:
     AudioTrack(JS::Realm&, JS::NonnullGCPtr<HTMLMediaElement>, NonnullRefPtr<Audio::Loader>);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     // https://html.spec.whatwg.org/multipage/media.html#dom-audiotrack-id

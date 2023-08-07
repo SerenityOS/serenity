@@ -45,7 +45,7 @@ class PromiseResolvingElementFunction : public NativeFunction {
     JS_OBJECT(PromiseResolvingFunction, NativeFunction);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~PromiseResolvingElementFunction() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

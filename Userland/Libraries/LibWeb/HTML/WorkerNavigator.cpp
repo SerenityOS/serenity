@@ -23,12 +23,10 @@ WorkerNavigator::WorkerNavigator(WorkerGlobalScope& global_scope)
 
 WorkerNavigator::~WorkerNavigator() = default;
 
-JS::ThrowCompletionOr<void> WorkerNavigator::initialize(JS::Realm& realm)
+void WorkerNavigator::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::WorkerNavigatorPrototype>(realm, "WorkerNavigator"));
-
-    return {};
 }
 
 }

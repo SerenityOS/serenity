@@ -27,12 +27,10 @@ SubmitEvent::SubmitEvent(JS::Realm& realm, FlyString const& event_name, SubmitEv
 
 SubmitEvent::~SubmitEvent() = default;
 
-JS::ThrowCompletionOr<void> SubmitEvent::initialize(JS::Realm& realm)
+void SubmitEvent::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SubmitEventPrototype>(realm, "SubmitEvent"));
-
-    return {};
 }
 
 void SubmitEvent::visit_edges(Cell::Visitor& visitor)

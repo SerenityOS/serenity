@@ -17,10 +17,10 @@ DisposableStackPrototype::DisposableStackPrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> DisposableStackPrototype::initialize(Realm& realm)
+void DisposableStackPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     define_native_accessor(realm, vm.names.disposed, disposed_getter, {}, attr);
@@ -35,8 +35,6 @@ ThrowCompletionOr<void> DisposableStackPrototype::initialize(Realm& realm)
 
     // 11.3.3.8 DisposableStack.prototype [ @@toStringTag ], https://tc39.es/proposal-explicit-resource-management/#sec-disposablestack.prototype-@@toStringTag
     define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.DisposableStack.as_string()), Attribute::Configurable);
-
-    return {};
 }
 
 // 11.3.3.1 get DisposableStack.prototype.disposed, https://tc39.es/proposal-explicit-resource-management/#sec-get-disposablestack.prototype.disposed

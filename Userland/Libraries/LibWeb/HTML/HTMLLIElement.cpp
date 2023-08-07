@@ -16,12 +16,10 @@ HTMLLIElement::HTMLLIElement(DOM::Document& document, DOM::QualifiedName qualifi
 
 HTMLLIElement::~HTMLLIElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLLIElement::initialize(JS::Realm& realm)
+void HTMLLIElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLLIElementPrototype>(realm, "HTMLLIElement"));
-
-    return {};
 }
 
 }

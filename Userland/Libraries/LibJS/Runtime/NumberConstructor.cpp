@@ -29,10 +29,10 @@ NumberConstructor::NumberConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> NumberConstructor::initialize(Realm& realm)
+void NumberConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     // 21.1.2.15 Number.prototype, https://tc39.es/ecma262/#sec-number.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().number_prototype(), 0);
@@ -54,8 +54,6 @@ ThrowCompletionOr<void> NumberConstructor::initialize(Realm& realm)
     define_direct_property(vm.names.NaN, js_nan(), 0);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
-
-    return {};
 }
 
 // Most of 21.1.1.1 Number ( value ) factored into a separate function for sharing between call() and construct().

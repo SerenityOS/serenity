@@ -36,12 +36,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::CallbackType>> ByteLengthQueuingStr
     return global_object().byte_length_queuing_strategy_size_function();
 }
 
-JS::ThrowCompletionOr<void> ByteLengthQueuingStrategy::initialize(JS::Realm& realm)
+void ByteLengthQueuingStrategy::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::ByteLengthQueuingStrategyPrototype>(realm, "ByteLengthQueuingStrategy"));
-
-    return {};
 }
 
 }

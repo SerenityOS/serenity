@@ -15,7 +15,7 @@ class PlainTimePrototype final : public PrototypeObject<PlainTimePrototype, Plai
     JS_PROTOTYPE_OBJECT(PlainTimePrototype, PlainTime, Temporal.PlainTime);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~PlainTimePrototype() override = default;
 
 private:

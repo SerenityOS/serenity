@@ -28,7 +28,7 @@ public:
 private:
     FormDataEvent(JS::Realm&, FlyString const& event_name, FormDataEventInit const& event_init);
 
-    JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    void initialize(JS::Realm&) override;
 
     virtual void visit_edges(Cell::Visitor&) override;
 

@@ -18,17 +18,15 @@ FinalizationRegistryConstructor::FinalizationRegistryConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> FinalizationRegistryConstructor::initialize(Realm& realm)
+void FinalizationRegistryConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     // 26.2.2.1 FinalizationRegistry.prototype, https://tc39.es/ecma262/#sec-finalization-registry.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().finalization_registry_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
-
-    return {};
 }
 
 // 26.2.1.1 FinalizationRegistry ( cleanupCallback ), https://tc39.es/ecma262/#sec-finalization-registry-cleanup-callback

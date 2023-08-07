@@ -19,20 +19,18 @@ DisplayNamesPrototype::DisplayNamesPrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> DisplayNamesPrototype::initialize(Realm& realm)
+void DisplayNamesPrototype::initialize(Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
     auto& vm = this->vm();
 
     // 12.3.2 Intl.DisplayNames.prototype[ @@toStringTag ], https://tc39.es/ecma402/#sec-Intl.DisplayNames.prototype-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Intl.DisplayNames"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Intl.DisplayNames"sv)), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.of, of, 1, attr);
     define_native_function(realm, vm.names.resolvedOptions, resolved_options, 0, attr);
-
-    return {};
 }
 
 // 12.3.3 Intl.DisplayNames.prototype.of ( code ), https://tc39.es/ecma402/#sec-Intl.DisplayNames.prototype.of

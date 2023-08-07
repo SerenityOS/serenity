@@ -70,16 +70,12 @@ Element::Element(Document& document, DOM::QualifiedName qualified_name)
 
 Element::~Element() = default;
 
-JS::ThrowCompletionOr<void> Element::initialize(JS::Realm& realm)
+void Element::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::ElementPrototype>(realm, "Element"));
 
-    m_attributes = TRY(Bindings::throw_dom_exception_if_needed(realm.vm(), [&]() {
-        return NamedNodeMap::create(*this);
-    }));
-
-    return {};
+    m_attributes = MUST(NamedNodeMap::create(*this));
 }
 
 void Element::visit_edges(Cell::Visitor& visitor)

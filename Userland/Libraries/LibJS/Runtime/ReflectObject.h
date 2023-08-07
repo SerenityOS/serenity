@@ -14,7 +14,7 @@ class ReflectObject final : public Object {
     JS_OBJECT(ReflectObject, Object);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~ReflectObject() override = default;
 
 private:

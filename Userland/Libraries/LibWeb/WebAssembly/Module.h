@@ -28,7 +28,7 @@ public:
 private:
     Module(JS::Realm&, size_t index);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     size_t m_index { 0 };
 };

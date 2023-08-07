@@ -18,9 +18,9 @@ PlainTimeConstructor::PlainTimeConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> PlainTimeConstructor::initialize(Realm& realm)
+void PlainTimeConstructor::initialize(Realm& realm)
 {
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     auto& vm = this->vm();
 
@@ -32,8 +32,6 @@ ThrowCompletionOr<void> PlainTimeConstructor::initialize(Realm& realm)
     define_native_function(realm, vm.names.compare, compare, 2, attr);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
-
-    return {};
 }
 
 // 4.1.1 Temporal.PlainTime ( [ hour [ , minute [ , second [ , millisecond [ , microsecond [ , nanosecond ] ] ] ] ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime

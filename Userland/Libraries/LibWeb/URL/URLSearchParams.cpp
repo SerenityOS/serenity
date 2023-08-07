@@ -25,12 +25,10 @@ URLSearchParams::URLSearchParams(JS::Realm& realm, Vector<QueryParam> list)
 
 URLSearchParams::~URLSearchParams() = default;
 
-JS::ThrowCompletionOr<void> URLSearchParams::initialize(JS::Realm& realm)
+void URLSearchParams::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::URLSearchParamsPrototype>(realm, "URLSearchParams"));
-
-    return {};
 }
 
 void URLSearchParams::visit_edges(Cell::Visitor& visitor)

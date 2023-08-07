@@ -19,7 +19,7 @@ public:
 private:
     XMLDocument(JS::Realm& realm, AK::URL const& url);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 };
 
 }

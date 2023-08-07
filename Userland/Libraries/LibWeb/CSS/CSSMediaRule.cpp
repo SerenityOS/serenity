@@ -23,12 +23,10 @@ CSSMediaRule::CSSMediaRule(JS::Realm& realm, MediaList& media, CSSRuleList& rule
 {
 }
 
-JS::ThrowCompletionOr<void> CSSMediaRule::initialize(JS::Realm& realm)
+void CSSMediaRule::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSMediaRulePrototype>(realm, "CSSMediaRule"));
-
-    return {};
 }
 
 void CSSMediaRule::visit_edges(Cell::Visitor& visitor)

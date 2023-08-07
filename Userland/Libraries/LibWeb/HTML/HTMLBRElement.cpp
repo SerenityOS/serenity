@@ -17,12 +17,10 @@ HTMLBRElement::HTMLBRElement(DOM::Document& document, DOM::QualifiedName qualifi
 
 HTMLBRElement::~HTMLBRElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLBRElement::initialize(JS::Realm& realm)
+void HTMLBRElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLBRElementPrototype>(realm, "HTMLBRElement"));
-
-    return {};
 }
 
 JS::GCPtr<Layout::Node> HTMLBRElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)

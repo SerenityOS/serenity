@@ -27,7 +27,7 @@ public:
 private:
     SVGStyleElement(DOM::Document&, DOM::QualifiedName);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     // The semantics and processing of a ‘style’ and its attributes must be the same as is defined for the HTML ‘style’ element.

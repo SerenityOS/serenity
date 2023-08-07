@@ -23,12 +23,10 @@ SVGTextContentElement::SVGTextContentElement(DOM::Document& document, DOM::Quali
 {
 }
 
-JS::ThrowCompletionOr<void> SVGTextContentElement::initialize(JS::Realm& realm)
+void SVGTextContentElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGTextContentElementPrototype>(realm, "SVGTextContentElement"));
-
-    return {};
 }
 
 Optional<TextAnchor> SVGTextContentElement::text_anchor() const

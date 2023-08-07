@@ -68,12 +68,10 @@ DOMTokenList::DOMTokenList(Element& associated_element, DeprecatedFlyString asso
     associated_attribute_changed(value);
 }
 
-JS::ThrowCompletionOr<void> DOMTokenList::initialize(JS::Realm& realm)
+void DOMTokenList::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMTokenListPrototype>(realm, "DOMTokenList"));
-
-    return {};
 }
 
 void DOMTokenList::visit_edges(Cell::Visitor& visitor)

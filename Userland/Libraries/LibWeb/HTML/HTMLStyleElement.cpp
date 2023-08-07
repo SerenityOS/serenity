@@ -16,12 +16,10 @@ HTMLStyleElement::HTMLStyleElement(DOM::Document& document, DOM::QualifiedName q
 
 HTMLStyleElement::~HTMLStyleElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLStyleElement::initialize(JS::Realm& realm)
+void HTMLStyleElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLStyleElementPrototype>(realm, "HTMLStyleElement"));
-
-    return {};
 }
 
 void HTMLStyleElement::visit_edges(Cell::Visitor& visitor)

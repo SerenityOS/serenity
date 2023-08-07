@@ -41,7 +41,7 @@ public:
 private:
     explicit AudioContext(JS::Realm&, AudioContextOptions const& context_options);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     double m_base_latency { 0 };

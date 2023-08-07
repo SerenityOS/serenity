@@ -144,9 +144,9 @@ JS::ThrowCompletionOr<bool> SheetGlobalObject::internal_set(const JS::PropertyKe
     return Base::internal_set(property_name, value, receiver);
 }
 
-JS::ThrowCompletionOr<void> SheetGlobalObject::initialize(JS::Realm& realm)
+void SheetGlobalObject::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
     define_native_function(realm, "get_real_cell_contents", get_real_cell_contents, 1, attr);
@@ -157,8 +157,6 @@ JS::ThrowCompletionOr<void> SheetGlobalObject::initialize(JS::Realm& realm)
     define_native_function(realm, "column_index", column_index, 1, attr);
     define_native_function(realm, "get_column_bound", get_column_bound, 1, attr);
     define_native_accessor(realm, "name", get_name, nullptr, attr);
-
-    return {};
 }
 
 void SheetGlobalObject::visit_edges(Visitor& visitor)
@@ -378,12 +376,10 @@ WorkbookObject::WorkbookObject(JS::Realm& realm, Workbook& workbook)
 {
 }
 
-JS::ThrowCompletionOr<void> WorkbookObject::initialize(JS::Realm& realm)
+void WorkbookObject::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Object::initialize(realm));
+    Base::initialize(realm);
     define_native_function(realm, "sheet", sheet, 1, JS::default_attributes);
-
-    return {};
 }
 
 void WorkbookObject::visit_edges(Visitor& visitor)

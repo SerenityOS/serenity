@@ -52,16 +52,14 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<EventTarget>> EventTarget::construct_impl(J
     return MUST_OR_THROW_OOM(realm.heap().allocate<EventTarget>(realm, realm));
 }
 
-JS::ThrowCompletionOr<void> EventTarget::initialize(JS::Realm& realm)
+void EventTarget::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
     // FIXME: We can't do this for HTML::Window currently, as this will run when creating the initial global object.
     //        During this time, the ESO is not setup, so it will cause a nullptr dereference in host_defined_intrinsics.
     if (!is<HTML::Window>(this))
         set_prototype(&Bindings::ensure_web_prototype<Bindings::EventTargetPrototype>(realm, "EventTarget"));
-
-    return {};
 }
 
 void EventTarget::visit_edges(Cell::Visitor& visitor)

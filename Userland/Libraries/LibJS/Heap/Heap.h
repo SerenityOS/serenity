@@ -48,7 +48,7 @@ public:
         auto* memory = allocate_cell(sizeof(T));
         new (memory) T(forward<Args>(args)...);
         auto* cell = static_cast<T*>(memory);
-        MUST_OR_THROW_OOM(memory->initialize(realm));
+        memory->initialize(realm);
         return *cell;
     }
 

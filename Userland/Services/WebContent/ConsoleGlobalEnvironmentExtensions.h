@@ -18,7 +18,7 @@ class ConsoleGlobalEnvironmentExtensions final : public JS::Object {
 
 public:
     ConsoleGlobalEnvironmentExtensions(JS::Realm&, Web::HTML::Window&);
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual ~ConsoleGlobalEnvironmentExtensions() override = default;
 
     void set_most_recent_result(JS::Value result) { m_most_recent_result = move(result); }

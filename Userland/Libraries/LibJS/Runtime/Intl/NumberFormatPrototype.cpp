@@ -19,14 +19,14 @@ NumberFormatPrototype::NumberFormatPrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> NumberFormatPrototype::initialize(Realm& realm)
+void NumberFormatPrototype::initialize(Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
     auto& vm = this->vm();
 
     // 15.3.2 Intl.NumberFormat.prototype [ @@toStringTag ], https://tc39.es/ecma402/#sec-intl.numberformat.prototype-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Intl.NumberFormat"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Intl.NumberFormat"sv)), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.format, format, nullptr, Attribute::Configurable);
 
@@ -35,8 +35,6 @@ ThrowCompletionOr<void> NumberFormatPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.formatRange, format_range, 2, attr);
     define_native_function(realm, vm.names.formatRangeToParts, format_range_to_parts, 2, attr);
     define_native_function(realm, vm.names.resolvedOptions, resolved_options, 0, attr);
-
-    return {};
 }
 
 // 15.3.3 get Intl.NumberFormat.prototype.format, https://tc39.es/ecma402/#sec-intl.numberformat.prototype.format

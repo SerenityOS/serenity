@@ -35,7 +35,7 @@ public:
 private:
     CSSStyleRule(JS::Realm&, Vector<NonnullRefPtr<Selector>>&&, CSSStyleDeclaration&);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
     virtual DeprecatedString serialized() const override;
 

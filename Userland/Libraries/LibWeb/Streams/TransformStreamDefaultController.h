@@ -33,7 +33,7 @@ public:
     void set_stream(JS::GCPtr<TransformStream> stream) { m_stream = stream; }
 
 private:
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     virtual void visit_edges(Cell::Visitor&) override;
 

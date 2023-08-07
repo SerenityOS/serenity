@@ -17,7 +17,7 @@ class $262Object final : public Object {
     JS_OBJECT($262Object, Object);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~$262Object() override = default;
 
 private:

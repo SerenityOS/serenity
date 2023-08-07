@@ -29,12 +29,10 @@ CustomEvent::CustomEvent(JS::Realm& realm, FlyString const& event_name, CustomEv
 
 CustomEvent::~CustomEvent() = default;
 
-JS::ThrowCompletionOr<void> CustomEvent::initialize(JS::Realm& realm)
+void CustomEvent::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CustomEventPrototype>(realm, "CustomEvent"));
-
-    return {};
 }
 
 void CustomEvent::visit_edges(JS::Cell::Visitor& visitor)

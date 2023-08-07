@@ -16,17 +16,15 @@ GeneratorFunctionConstructor::GeneratorFunctionConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> GeneratorFunctionConstructor::initialize(Realm& realm)
+void GeneratorFunctionConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     // 27.3.2.1 GeneratorFunction.length, https://tc39.es/ecma262/#sec-generatorfunction.length
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
     // 27.3.2.2 GeneratorFunction.prototype, https://tc39.es/ecma262/#sec-generatorfunction.length
     define_direct_property(vm.names.prototype, realm.intrinsics().generator_function_prototype(), 0);
-
-    return {};
 }
 
 // 27.3.1.1 GeneratorFunction ( p1, p2, … , pn, body ), https://tc39.es/ecma262/#sec-generatorfunction

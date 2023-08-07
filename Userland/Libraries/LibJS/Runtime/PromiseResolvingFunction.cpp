@@ -24,12 +24,10 @@ PromiseResolvingFunction::PromiseResolvingFunction(Promise& promise, AlreadyReso
 {
 }
 
-ThrowCompletionOr<void> PromiseResolvingFunction::initialize(Realm& realm)
+void PromiseResolvingFunction::initialize(Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     define_direct_property(vm().names.length, Value(1), Attribute::Configurable);
-
-    return {};
 }
 
 ThrowCompletionOr<Value> PromiseResolvingFunction::call()

@@ -29,12 +29,10 @@ CloseEvent::CloseEvent(JS::Realm& realm, FlyString const& event_name, CloseEvent
 
 CloseEvent::~CloseEvent() = default;
 
-JS::ThrowCompletionOr<void> CloseEvent::initialize(JS::Realm& realm)
+void CloseEvent::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CloseEventPrototype>(realm, "CloseEvent"));
-
-    return {};
 }
 
 }

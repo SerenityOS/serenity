@@ -18,17 +18,15 @@ WeakSetConstructor::WeakSetConstructor(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> WeakSetConstructor::initialize(Realm& realm)
+void WeakSetConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    Base::initialize(realm);
 
     // 24.4.2.1 WeakSet.prototype, https://tc39.es/ecma262/#sec-weakset.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().weak_set_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
-
-    return {};
 }
 
 // 24.4.1.1 WeakSet ( [ iterable ] ), https://tc39.es/ecma262/#sec-weakset-iterable

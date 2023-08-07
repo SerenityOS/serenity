@@ -14,12 +14,10 @@ HTMLTimeElement::HTMLTimeElement(DOM::Document& document, DOM::QualifiedName qua
 {
 }
 
-JS::ThrowCompletionOr<void> HTMLTimeElement::initialize(JS::Realm& realm)
+void HTMLTimeElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTimeElementPrototype>(realm, "HTMLTimeElement"));
-
-    return {};
 }
 
 HTMLTimeElement::~HTMLTimeElement() = default;

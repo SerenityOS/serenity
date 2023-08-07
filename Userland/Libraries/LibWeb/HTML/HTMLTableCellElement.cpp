@@ -23,12 +23,10 @@ HTMLTableCellElement::HTMLTableCellElement(DOM::Document& document, DOM::Qualifi
 
 HTMLTableCellElement::~HTMLTableCellElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLTableCellElement::initialize(JS::Realm& realm)
+void HTMLTableCellElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTableCellElementPrototype>(realm, "HTMLTableCellElement"));
-
-    return {};
 }
 
 void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& style) const

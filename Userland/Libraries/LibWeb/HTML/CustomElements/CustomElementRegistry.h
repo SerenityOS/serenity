@@ -34,7 +34,7 @@ public:
 private:
     CustomElementRegistry(JS::Realm&);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     // Every CustomElementRegistry has a set of custom element definitions, initially empty. In general, algorithms in this specification look up elements in the registry by any of name, local name, or constructor.
     Vector<JS::Handle<CustomElementDefinition>> m_custom_element_definitions;

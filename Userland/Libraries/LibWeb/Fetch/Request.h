@@ -102,7 +102,7 @@ public:
 private:
     Request(JS::Realm&, JS::NonnullGCPtr<Infrastructure::Request>);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     // https://fetch.spec.whatwg.org/#concept-request-request

@@ -31,12 +31,10 @@ DOMImplementation::DOMImplementation(Document& document)
 
 DOMImplementation::~DOMImplementation() = default;
 
-JS::ThrowCompletionOr<void> DOMImplementation::initialize(JS::Realm& realm)
+void DOMImplementation::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMImplementationPrototype>(realm, "DOMImplementation"));
-
-    return {};
 }
 
 void DOMImplementation::visit_edges(Cell::Visitor& visitor)

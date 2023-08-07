@@ -40,12 +40,10 @@ ImageData::ImageData(JS::Realm& realm, NonnullRefPtr<Gfx::Bitmap> bitmap, JS::No
 
 ImageData::~ImageData() = default;
 
-JS::ThrowCompletionOr<void> ImageData::initialize(JS::Realm& realm)
+void ImageData::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::ImageDataPrototype>(realm, "ImageData"));
-
-    return {};
 }
 
 void ImageData::visit_edges(Cell::Visitor& visitor)

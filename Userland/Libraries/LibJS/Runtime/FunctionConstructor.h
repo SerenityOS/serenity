@@ -17,7 +17,7 @@ class FunctionConstructor final : public NativeFunction {
 public:
     static ThrowCompletionOr<ECMAScriptFunctionObject*> create_dynamic_function(VM&, FunctionObject& constructor, FunctionObject* new_target, FunctionKind kind, MarkedVector<Value> const& args);
 
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~FunctionConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

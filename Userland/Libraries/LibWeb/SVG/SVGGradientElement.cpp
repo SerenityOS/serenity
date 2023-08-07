@@ -99,11 +99,10 @@ JS::GCPtr<SVGGradientElement const> SVGGradientElement::linked_gradient() const
     return {};
 }
 
-JS::ThrowCompletionOr<void> SVGGradientElement::initialize(JS::Realm& realm)
+void SVGGradientElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGGradientElementPrototype>(realm, "SVGGradientElement"));
-    return {};
 }
 
 }

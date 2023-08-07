@@ -21,12 +21,10 @@ SVGSymbolElement::SVGSymbolElement(DOM::Document& document, DOM::QualifiedName q
 {
 }
 
-JS::ThrowCompletionOr<void> SVGSymbolElement::initialize(JS::Realm& realm)
+void SVGSymbolElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGSymbolElementPrototype>(realm, "SVGSymbolElement"));
-
-    return {};
 }
 
 // https://svgwg.org/svg2-draft/struct.html#SymbolNotes

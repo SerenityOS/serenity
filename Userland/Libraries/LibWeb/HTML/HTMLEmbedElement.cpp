@@ -16,12 +16,10 @@ HTMLEmbedElement::HTMLEmbedElement(DOM::Document& document, DOM::QualifiedName q
 
 HTMLEmbedElement::~HTMLEmbedElement() = default;
 
-JS::ThrowCompletionOr<void> HTMLEmbedElement::initialize(JS::Realm& realm)
+void HTMLEmbedElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLEmbedElementPrototype>(realm, "HTMLEmbedElement"));
-
-    return {};
 }
 
 }

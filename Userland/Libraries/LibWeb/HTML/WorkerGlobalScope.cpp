@@ -24,14 +24,10 @@ WorkerGlobalScope::WorkerGlobalScope(JS::Realm& realm)
 
 WorkerGlobalScope::~WorkerGlobalScope() = default;
 
-JS::ThrowCompletionOr<void> WorkerGlobalScope::initialize(JS::Realm& realm)
+void WorkerGlobalScope::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
-    m_navigator = TRY(Bindings::throw_dom_exception_if_needed(realm.vm(), [&]() {
-        return WorkerNavigator::create(*this);
-    }));
-
-    return {};
+    Base::initialize(realm);
+    m_navigator = MUST(WorkerNavigator::create(*this));
 }
 
 void WorkerGlobalScope::visit_edges(Cell::Visitor& visitor)

@@ -19,9 +19,9 @@ LocalePrototype::LocalePrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> LocalePrototype::initialize(Realm& realm)
+void LocalePrototype::initialize(Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
     auto& vm = this->vm();
 
@@ -31,7 +31,7 @@ ThrowCompletionOr<void> LocalePrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.toString, to_string, 0, attr);
 
     // 14.3.2 Intl.Locale.prototype[ @@toStringTag ], https://tc39.es/ecma402/#sec-Intl.Locale.prototype-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Intl.Locale"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Intl.Locale"sv)), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.baseName, base_name, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.calendar, calendar, {}, Attribute::Configurable);
@@ -50,8 +50,6 @@ ThrowCompletionOr<void> LocalePrototype::initialize(Realm& realm)
     define_native_accessor(realm, vm.names.timeZones, time_zones, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.textInfo, text_info, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.weekInfo, week_info, {}, Attribute::Configurable);
-
-    return {};
 }
 
 // 14.3.3 Intl.Locale.prototype.maximize ( ), https://tc39.es/ecma402/#sec-Intl.Locale.prototype.maximize

@@ -36,7 +36,7 @@ public:
 private:
     explicit CountQueuingStrategy(JS::Realm&, double high_water_mark);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     // https://streams.spec.whatwg.org/#countqueuingstrategy-highwatermark
     double m_high_water_mark { 0 };

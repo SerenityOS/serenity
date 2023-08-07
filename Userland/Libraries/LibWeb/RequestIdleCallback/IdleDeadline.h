@@ -24,7 +24,7 @@ public:
 private:
     IdleDeadline(JS::Realm&, bool did_timeout);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     bool m_did_timeout { false };
 };

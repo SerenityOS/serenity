@@ -15,7 +15,7 @@ class IteratorHelperPrototype final : public PrototypeObject<IteratorHelperProto
     JS_PROTOTYPE_OBJECT(IteratorHelperPrototype, IteratorHelper, IteratorHelper);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
 
 private:
     explicit IteratorHelperPrototype(Realm&);

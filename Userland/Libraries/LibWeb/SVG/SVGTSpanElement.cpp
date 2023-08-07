@@ -15,12 +15,10 @@ SVGTSpanElement::SVGTSpanElement(DOM::Document& document, DOM::QualifiedName qua
 {
 }
 
-JS::ThrowCompletionOr<void> SVGTSpanElement::initialize(JS::Realm& realm)
+void SVGTSpanElement::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGTSpanElementPrototype>(realm, "SVGTSpanElement"));
-
-    return {};
 }
 
 JS::GCPtr<Layout::Node> SVGTSpanElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)

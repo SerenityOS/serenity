@@ -20,14 +20,14 @@ DurationPrototype::DurationPrototype(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> DurationPrototype::initialize(Realm& realm)
+void DurationPrototype::initialize(Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
     auto& vm = this->vm();
 
     // 7.3.2 Temporal.Duration.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Temporal.Duration"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Temporal.Duration"sv)), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.years, years_getter, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.months, months_getter, {}, Attribute::Configurable);
@@ -54,8 +54,6 @@ ThrowCompletionOr<void> DurationPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.toJSON, to_json, 0, attr);
     define_native_function(realm, vm.names.toLocaleString, to_locale_string, 0, attr);
     define_native_function(realm, vm.names.valueOf, value_of, 0, attr);
-
-    return {};
 }
 
 // 7.3.3 get Temporal.Duration.prototype.years, https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.years

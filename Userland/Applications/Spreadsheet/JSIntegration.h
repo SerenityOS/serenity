@@ -24,7 +24,7 @@ class SheetGlobalObject final : public JS::GlobalObject {
 
 public:
     SheetGlobalObject(JS::Realm&, Sheet&);
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual ~SheetGlobalObject() override = default;
 
     virtual JS::ThrowCompletionOr<bool> internal_has_property(JS::PropertyKey const& name) const override;
@@ -53,7 +53,7 @@ public:
 
     virtual ~WorkbookObject() override = default;
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
 
     JS_DECLARE_NATIVE_FUNCTION(sheet);
 

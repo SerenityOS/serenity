@@ -26,12 +26,10 @@ CustomElementRegistry::CustomElementRegistry(JS::Realm& realm)
 
 CustomElementRegistry::~CustomElementRegistry() = default;
 
-JS::ThrowCompletionOr<void> CustomElementRegistry::initialize(JS::Realm& realm)
+void CustomElementRegistry::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CustomElementRegistryPrototype>(realm, "CustomElementRegistry"));
-
-    return {};
 }
 
 // https://webidl.spec.whatwg.org/#es-callback-function

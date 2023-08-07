@@ -25,12 +25,10 @@ CSSFontFaceRule::CSSFontFaceRule(JS::Realm& realm, FontFace&& font_face)
 {
 }
 
-JS::ThrowCompletionOr<void> CSSFontFaceRule::initialize(JS::Realm& realm)
+void CSSFontFaceRule::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSFontFaceRulePrototype>(realm, "CSSFontFaceRule"));
-
-    return {};
 }
 
 CSSStyleDeclaration* CSSFontFaceRule::style()

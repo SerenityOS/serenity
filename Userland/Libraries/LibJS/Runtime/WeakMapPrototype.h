@@ -15,7 +15,7 @@ class WeakMapPrototype final : public PrototypeObject<WeakMapPrototype, WeakMap>
     JS_PROTOTYPE_OBJECT(WeakMapPrototype, WeakMap, WeakMap);
 
 public:
-    virtual ThrowCompletionOr<void> initialize(Realm&) override;
+    virtual void initialize(Realm&) override;
     virtual ~WeakMapPrototype() override = default;
 
 private:

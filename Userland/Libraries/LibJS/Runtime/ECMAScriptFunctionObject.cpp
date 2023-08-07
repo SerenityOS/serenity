@@ -101,10 +101,10 @@ ECMAScriptFunctionObject::ECMAScriptFunctionObject(DeprecatedFlyString name, Dep
     });
 }
 
-ThrowCompletionOr<void> ECMAScriptFunctionObject::initialize(Realm& realm)
+void ECMAScriptFunctionObject::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     // Note: The ordering of these properties must be: length, name, prototype which is the order
     //       they are defined in the spec: https://tc39.es/ecma262/#sec-function-instances .
     //       This is observable through something like: https://tc39.es/ecma262/#sec-ordinaryownpropertykeys
@@ -118,7 +118,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::initialize(Realm& realm)
         Object* prototype = nullptr;
         switch (m_kind) {
         case FunctionKind::Normal:
-            prototype = MUST_OR_THROW_OOM(vm.heap().allocate<Object>(realm, realm.intrinsics().new_ordinary_function_prototype_object_shape()));
+            prototype = MUST(vm.heap().allocate<Object>(realm, realm.intrinsics().new_ordinary_function_prototype_object_shape()));
             MUST(prototype->define_property_or_throw(vm.names.constructor, { .value = this, .writable = true, .enumerable = false, .configurable = true }));
             break;
         case FunctionKind::Generator:
@@ -136,8 +136,6 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::initialize(Realm& realm)
         if (m_kind != FunctionKind::Async)
             define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
     }
-
-    return {};
 }
 
 // 10.2.1 [[Call]] ( thisArgument, argumentsList ), https://tc39.es/ecma262/#sec-ecmascript-function-objects-call-thisargument-argumentslist

@@ -26,14 +26,14 @@ Now::Now(Realm& realm)
 {
 }
 
-ThrowCompletionOr<void> Now::initialize(Realm& realm)
+void Now::initialize(Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
 
     auto& vm = this->vm();
 
     // 2.1.1 Temporal.Now [ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal-now-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Temporal.Now"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Temporal.Now"sv)), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.timeZone, time_zone, 0, attr);
@@ -45,8 +45,6 @@ ThrowCompletionOr<void> Now::initialize(Realm& realm)
     define_native_function(realm, vm.names.plainDate, plain_date, 1, attr);
     define_native_function(realm, vm.names.plainDateISO, plain_date_iso, 0, attr);
     define_native_function(realm, vm.names.plainTimeISO, plain_time_iso, 0, attr);
-
-    return {};
 }
 
 // 2.2.1 Temporal.Now.timeZone ( ), https://tc39.es/proposal-temporal/#sec-temporal.now.timezone

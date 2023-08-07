@@ -20,12 +20,10 @@ PerformanceEntry::PerformanceEntry(JS::Realm& realm, String const& name, HighRes
 
 PerformanceEntry::~PerformanceEntry() = default;
 
-JS::ThrowCompletionOr<void> PerformanceEntry::initialize(JS::Realm& realm)
+void PerformanceEntry::initialize(JS::Realm& realm)
 {
-    MUST_OR_THROW_OOM(Base::initialize(realm));
+    Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::PerformanceEntryPrototype>(realm, "PerformanceEntry"));
-
-    return {};
 }
 
 }

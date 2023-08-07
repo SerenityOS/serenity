@@ -64,7 +64,7 @@ public:
 private:
     explicit IntersectionObserver(JS::Realm&, JS::GCPtr<WebIDL::CallbackType> callback, Optional<Variant<JS::Handle<DOM::Element>, JS::Handle<DOM::Document>>> const& root, Vector<double>&& thresholds);
 
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(JS::Cell::Visitor&) override;
 
     // https://www.w3.org/TR/intersection-observer/#dom-intersectionobserver-callback-slot

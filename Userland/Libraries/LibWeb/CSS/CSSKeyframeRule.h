@@ -48,7 +48,7 @@ private:
     }
 
     virtual void visit_edges(Visitor&) override;
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void initialize(JS::Realm&) override;
     virtual DeprecatedString serialized() const override;
 
     CSS::Percentage m_key;
