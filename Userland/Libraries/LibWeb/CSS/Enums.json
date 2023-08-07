@@ -294,6 +294,10 @@
     "to-zero",
     "up"
   ],
+  "table-layout": [
+    "auto",
+    "fixed"
+  ],
   "text-anchor": [
     "start",
     "middle",
