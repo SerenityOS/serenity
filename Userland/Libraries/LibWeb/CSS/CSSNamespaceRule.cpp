@@ -14,14 +14,14 @@
 
 namespace Web::CSS {
 
-CSSNamespaceRule::CSSNamespaceRule(JS::Realm& realm, Optional<StringView> prefix, StringView namespace_uri)
+CSSNamespaceRule::CSSNamespaceRule(JS::Realm& realm, Optional<DeprecatedString> prefix, StringView namespace_uri)
     : CSSRule(realm)
     , m_namespace_uri(namespace_uri)
-    , m_prefix(prefix.has_value() ? prefix.value() : ""sv)
+    , m_prefix(prefix.value_or(""sv))
 {
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSNamespaceRule>> CSSNamespaceRule::create(JS::Realm& realm, Optional<AK::StringView> prefix, AK::StringView namespace_uri)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSNamespaceRule>> CSSNamespaceRule::create(JS::Realm& realm, Optional<DeprecatedString> prefix, AK::StringView namespace_uri)
 {
     return MUST_OR_THROW_OOM(realm.heap().allocate<CSSNamespaceRule>(realm, realm, prefix, namespace_uri));
 }

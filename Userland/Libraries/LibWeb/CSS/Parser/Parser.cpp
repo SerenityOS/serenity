@@ -3331,7 +3331,7 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
             token_stream.skip_whitespace();
 
             auto token = token_stream.next_token();
-            Optional<StringView> prefix = {};
+            Optional<DeprecatedString> prefix = {};
             if (token.is(Token::Type::Ident)) {
                 prefix = token.token().ident();
                 token_stream.skip_whitespace();
