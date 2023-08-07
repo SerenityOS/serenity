@@ -15,8 +15,14 @@
 
 namespace SQL {
 
-Database::Database(DeprecatedString name)
-    : m_heap(Heap::create(move(name)).release_value_but_fixme_should_propagate_errors())
+ErrorOr<NonnullRefPtr<Database>> Database::create(DeprecatedString name)
+{
+    auto heap = TRY(Heap::create(move(name)));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Database(move(heap)));
+}
+
+Database::Database(NonnullRefPtr<Heap> heap)
+    : m_heap(move(heap))
     , m_serializer(m_heap)
 {
 }

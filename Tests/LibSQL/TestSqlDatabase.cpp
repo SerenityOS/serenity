@@ -79,19 +79,19 @@ static void insert_and_verify(int count)
 {
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     {
-        auto db = SQL::Database::construct("/tmp/test.db");
+        auto db = MUST(SQL::Database::create("/tmp/test.db"));
         MUST(db->open());
         (void)setup_table(db);
         commit(db);
     }
     {
-        auto db = SQL::Database::construct("/tmp/test.db");
+        auto db = MUST(SQL::Database::create("/tmp/test.db"));
         MUST(db->open());
         insert_into_table(db, count);
         commit(db);
     }
     {
-        auto db = SQL::Database::construct("/tmp/test.db");
+        auto db = MUST(SQL::Database::create("/tmp/test.db"));
         MUST(db->open());
         verify_table_contents(db, count);
     }
@@ -129,7 +129,7 @@ TEST_CASE(create_in_non_existing_dir)
 TEST_CASE(create_database)
 {
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
-    auto db = SQL::Database::construct("/tmp/test.db");
+    auto db = MUST(SQL::Database::create("/tmp/test.db"));
     MUST(db->open());
     commit(db);
 }
@@ -137,7 +137,7 @@ TEST_CASE(create_database)
 TEST_CASE(add_schema_to_database)
 {
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
-    auto db = SQL::Database::construct("/tmp/test.db");
+    auto db = MUST(SQL::Database::create("/tmp/test.db"));
     MUST(db->open());
     (void)setup_schema(db);
     commit(db);
@@ -147,13 +147,13 @@ TEST_CASE(get_schema_from_database)
 {
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     {
-        auto db = SQL::Database::construct("/tmp/test.db");
+        auto db = MUST(SQL::Database::create("/tmp/test.db"));
         MUST(db->open());
         (void)setup_schema(db);
         commit(db);
     }
     {
-        auto db = SQL::Database::construct("/tmp/test.db");
+        auto db = MUST(SQL::Database::create("/tmp/test.db"));
         MUST(db->open());
         auto schema = MUST(db->get_schema("TestSchema"));
     }
@@ -162,7 +162,7 @@ TEST_CASE(get_schema_from_database)
 TEST_CASE(add_table_to_database)
 {
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
-    auto db = SQL::Database::construct("/tmp/test.db");
+    auto db = MUST(SQL::Database::create("/tmp/test.db"));
     MUST(db->open());
     (void)setup_table(db);
     commit(db);
@@ -172,13 +172,13 @@ TEST_CASE(get_table_from_database)
 {
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     {
-        auto db = SQL::Database::construct("/tmp/test.db");
+        auto db = MUST(SQL::Database::create("/tmp/test.db"));
         MUST(db->open());
         (void)setup_table(db);
         commit(db);
     }
     {
-        auto db = SQL::Database::construct("/tmp/test.db");
+        auto db = MUST(SQL::Database::create("/tmp/test.db"));
         MUST(db->open());
 
         auto table = MUST(db->get_table("TestSchema", "TestTable"));
@@ -210,7 +210,7 @@ TEST_CASE(insert_100_into_table)
 TEST_CASE(reuse_row_storage)
 {
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
-    auto db = SQL::Database::construct("/tmp/test.db");
+    auto db = MUST(SQL::Database::create("/tmp/test.db"));
     MUST(db->open());
     (void)setup_table(db);
     auto table = MUST(db->get_table("TestSchema", "TestTable"));
