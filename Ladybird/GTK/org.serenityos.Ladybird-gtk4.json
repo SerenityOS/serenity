@@ -38,8 +38,8 @@
                     "dest": "serenity"
                 },
                 {
-                    "type": "git",
-                    "url": "https://github.com/bugaevc/ladybird-gtk4.git"
+                    "type": "dir",
+                    "path": "."
                 }
             ],
             "config-opts": ["-DSERENITY_SOURCE_DIR=serenity"],
