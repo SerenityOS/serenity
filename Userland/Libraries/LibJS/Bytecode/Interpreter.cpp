@@ -382,14 +382,6 @@ ThrowCompletionOr<void> Interpreter::continue_pending_unwind(Label const& resume
     return {};
 }
 
-VM::InterpreterExecutionScope Interpreter::ast_interpreter_scope(Realm& realm)
-{
-    if (!m_ast_interpreter)
-        m_ast_interpreter = JS::Interpreter::create_with_existing_realm(realm);
-
-    return { *m_ast_interpreter };
-}
-
 size_t Interpreter::pc() const
 {
     return m_pc ? m_pc->offset() : 0;
