@@ -15,7 +15,6 @@ set(SOURCES
     BTree.cpp
     BTreeIterator.cpp
     Database.cpp
-    HashIndex.cpp
     Heap.cpp
     Index.cpp
     Key.cpp
