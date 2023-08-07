@@ -65,11 +65,6 @@ Web::Page const& ConnectionFromClient::page() const
     return m_page_host->page();
 }
 
-void ConnectionFromClient::set_use_javascript_bytecode(bool use_bytecode)
-{
-    JS::Bytecode::Interpreter::set_enabled(use_bytecode);
-}
-
 Messages::WebContentServer::GetWindowHandleResponse ConnectionFromClient::get_window_handle()
 {
     return m_page_host->page().top_level_browsing_context().window_handle();

@@ -9,9 +9,6 @@
 
 endpoint WebContentServer
 {
-    // NOTE: This is only used on SerenityOS when attaching to a WebContent process served by SystemServer.
-    set_use_javascript_bytecode(bool use_javascript_bytecode) =|
-
     get_window_handle() => (String handle)
     set_window_handle(String handle) =|
 

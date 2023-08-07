@@ -108,7 +108,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto cookie_jar = database ? TRY(Browser::CookieJar::create(*database)) : Browser::CookieJar::create();
 
     Ladybird::s_settings = adopt_own_if_nonnull(new Ladybird::Settings());
-    Ladybird::BrowserWindow window(cookie_jar, webdriver_content_ipc_path, enable_callgrind_profiling ? WebView::EnableCallgrindProfiling::Yes : WebView::EnableCallgrindProfiling::No, WebView::UseJavaScriptBytecode::Yes, use_lagom_networking ? Ladybird::UseLagomNetworking::Yes : Ladybird::UseLagomNetworking::No);
+    Ladybird::BrowserWindow window(cookie_jar, webdriver_content_ipc_path, enable_callgrind_profiling ? WebView::EnableCallgrindProfiling::Yes : WebView::EnableCallgrindProfiling::No, use_lagom_networking ? Ladybird::UseLagomNetworking::Yes : Ladybird::UseLagomNetworking::No);
     window.setWindowTitle("Ladybird");
     window.resize(800, 600);
     window.show();
