@@ -242,7 +242,7 @@ namespace AttributeNames {
 ENUMERATE_HTML_ATTRIBUTES
 #undef __ENUMERATE_HTML_ATTRIBUTE
 
-ErrorOr<void> initialize_strings();
+void initialize_strings();
 
 }
 

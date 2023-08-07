@@ -23,6 +23,6 @@ namespace Web::Namespace {
 ENUMERATE_NAMESPACES
 #undef __ENUMERATE_NAMESPACE
 
-ErrorOr<void> initialize_strings();
+void initialize_strings();
 
 }

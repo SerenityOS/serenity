@@ -12,7 +12,7 @@ namespace Web::SVG::TagNames {
 ENUMERATE_SVG_TAGS
 #undef __ENUMERATE_SVG_TAG
 
-ErrorOr<void> initialize_strings()
+void initialize_strings()
 {
     static bool s_initialized = false;
     VERIFY(!s_initialized);
@@ -22,7 +22,6 @@ ErrorOr<void> initialize_strings()
 #undef __ENUMERATE_SVG_TAG
 
     s_initialized = true;
-    return {};
 }
 
 }

@@ -12,7 +12,7 @@ namespace Web::SVG::AttributeNames {
 ENUMERATE_SVG_ATTRIBUTES(__ENUMERATE_SVG_ATTRIBUTE)
 #undef __ENUMERATE_SVG_ATTRIBUTE
 
-ErrorOr<void> initialize_strings()
+void initialize_strings()
 {
     static bool s_initialized = false;
     VERIFY(!s_initialized);
@@ -23,7 +23,6 @@ ErrorOr<void> initialize_strings()
 #undef __ENUMERATE_SVG_ATTRIBUTE
 
     s_initialized = true;
-    return {};
 }
 
 }

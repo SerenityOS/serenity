@@ -161,6 +161,6 @@ namespace Web::HTML::TagNames {
 ENUMERATE_HTML_TAGS
 #undef __ENUMERATE_HTML_TAG
 
-ErrorOr<void> initialize_strings();
+void initialize_strings();
 
 }

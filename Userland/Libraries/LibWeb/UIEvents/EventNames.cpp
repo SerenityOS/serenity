@@ -12,18 +12,17 @@ namespace Web::UIEvents::EventNames {
 ENUMERATE_UI_EVENTS
 #undef __ENUMERATE_UI_EVENT
 
-ErrorOr<void> initialize_strings()
+void initialize_strings()
 {
     static bool s_initialized = false;
     VERIFY(!s_initialized);
 
 #define __ENUMERATE_UI_EVENT(name) \
-    name = TRY(#name##_fly_string);
+    name = #name##_fly_string;
     ENUMERATE_UI_EVENTS
 #undef __ENUMERATE_UI_EVENT
 
     s_initialized = true;
-    return {};
 }
 
 }

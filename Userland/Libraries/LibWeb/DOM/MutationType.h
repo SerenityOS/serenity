@@ -20,6 +20,6 @@ namespace Web::DOM::MutationType {
 ENUMERATE_MUTATION_TYPES
 #undef __ENUMERATE_MUTATION_TYPE
 
-ErrorOr<void> initialize_strings();
+void initialize_strings();
 
 }

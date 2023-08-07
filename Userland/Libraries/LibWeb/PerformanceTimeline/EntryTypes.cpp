@@ -12,23 +12,22 @@ namespace Web::PerformanceTimeline::EntryTypes {
 ENUMERATE_PERFORMANCE_TIMELINE_ENTRY_TYPES
 #undef __ENUMERATE_PERFORMANCE_TIMELINE_ENTRY_TYPE
 
-ErrorOr<void> initialize_strings()
+void initialize_strings()
 {
     static bool s_initialized = false;
     VERIFY(!s_initialized);
 
 #define __ENUMERATE_PERFORMANCE_TIMELINE_ENTRY_TYPE(name) \
-    name = TRY(#name##_fly_string);
+    name = #name##_fly_string;
     ENUMERATE_PERFORMANCE_TIMELINE_ENTRY_TYPES
 #undef __ENUMERATE_PERFORMANCE_TIMELINE_ENTRY_TYPE
 
     // NOTE: Special cases for attributes with dashes in them.
-    first_input = TRY("first-input"_fly_string);
-    largest_contentful_paint = TRY("largest-contentful-paint"_fly_string);
-    layout_shift = TRY("layout-shift"_fly_string);
+    first_input = "first-input"_fly_string;
+    largest_contentful_paint = "largest-contentful-paint"_fly_string;
+    layout_shift = "layout-shift"_fly_string;
 
     s_initialized = true;
-    return {};
 }
 
 }

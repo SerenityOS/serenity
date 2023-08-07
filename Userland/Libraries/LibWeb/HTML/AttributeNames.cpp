@@ -13,7 +13,7 @@ namespace AttributeNames {
 ENUMERATE_HTML_ATTRIBUTES
 #undef __ENUMERATE_HTML_ATTRIBUTE
 
-ErrorOr<void> initialize_strings()
+void initialize_strings()
 {
     static bool s_initialized = false;
     VERIFY(!s_initialized);
@@ -34,7 +34,6 @@ ErrorOr<void> initialize_strings()
     http_equiv = "http-equiv";
 
     s_initialized = true;
-    return {};
 }
 
 }
