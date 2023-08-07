@@ -90,25 +90,15 @@
 #define TEST_ROOT(path) \
     DeprecatedString Test::JS::g_test_root_fragment = path
 
-#define TESTJS_RUN_FILE_FUNCTION(...)                                                                                        \
-    struct __TestJS_run_file {                                                                                               \
-        __TestJS_run_file()                                                                                                  \
-        {                                                                                                                    \
-            ::Test::JS::g_run_file = hook;                                                                                   \
-        }                                                                                                                    \
-        static ::Test::JS::IntermediateRunFileResult hook(DeprecatedString const&, JS::Interpreter&, JS::ExecutionContext&); \
-    } __testjs_common_run_file {};                                                                                           \
+#define TESTJS_RUN_FILE_FUNCTION(...)                                                                                  \
+    struct __TestJS_run_file {                                                                                         \
+        __TestJS_run_file()                                                                                            \
+        {                                                                                                              \
+            ::Test::JS::g_run_file = hook;                                                                             \
+        }                                                                                                              \
+        static ::Test::JS::IntermediateRunFileResult hook(DeprecatedString const&, JS::Realm&, JS::ExecutionContext&); \
+    } __testjs_common_run_file {};                                                                                     \
     ::Test::JS::IntermediateRunFileResult __TestJS_run_file::hook(__VA_ARGS__)
-
-#define TESTJS_CREATE_INTERPRETER_HOOK(...)               \
-    struct __TestJS_create_interpreter_hook {             \
-        __TestJS_create_interpreter_hook()                \
-        {                                                 \
-            ::Test::JS::g_create_interpreter_hook = hook; \
-        }                                                 \
-        static NonnullOwnPtr<JS::Interpreter> hook();     \
-    } __testjs_create_interpreter_hook {};                \
-    NonnullOwnPtr<JS::Interpreter> __TestJS_create_interpreter_hook::hook(__VA_ARGS__)
 
 namespace Test::JS {
 
@@ -138,7 +128,6 @@ extern DeprecatedString g_test_root;
 extern int g_test_argc;
 extern char** g_test_argv;
 extern Function<void()> g_main_hook;
-extern Function<NonnullOwnPtr<JS::Interpreter>()> g_create_interpreter_hook;
 extern HashMap<bool*, Tuple<DeprecatedString, DeprecatedString, char>> g_extra_args;
 
 struct ParserError {
@@ -163,7 +152,7 @@ enum class RunFileHookResult {
 };
 
 using IntermediateRunFileResult = AK::Result<JSFileResult, RunFileHookResult>;
-extern IntermediateRunFileResult (*g_run_file)(DeprecatedString const&, JS::Interpreter&, JS::ExecutionContext&);
+extern IntermediateRunFileResult (*g_run_file)(DeprecatedString const&, JS::Realm&, JS::ExecutionContext&);
 
 class TestRunner : public ::Test::TestRunner {
 public:
@@ -256,9 +245,9 @@ inline AK::Result<JS::NonnullGCPtr<JS::SourceTextModule>, ParserError> parse_mod
     return script_or_errors.release_value();
 }
 
-inline ErrorOr<JsonValue> get_test_results(JS::Interpreter& interpreter)
+inline ErrorOr<JsonValue> get_test_results(JS::Realm& realm)
 {
-    auto results = MUST(interpreter.realm().global_object().get("__TestResults__"));
+    auto results = MUST(realm.global_object().get("__TestResults__"));
     auto json_string = MUST(JS::JSONObject::stringify_impl(*g_vm, results, JS::js_undefined(), JS::js_undefined()));
 
     return JsonValue::from_string(json_string);
@@ -297,23 +286,24 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
 #endif
 
     double start_time = get_time_in_ms();
-    auto interpreter = JS::Interpreter::create<TestRunnerGlobalObject>(*g_vm);
 
-    // Since g_vm is reused for each new interpreter, Interpreter::create will end up pushing multiple
-    // global execution contexts onto the VM's execution context stack. To prevent this, we immediately
-    // pop the global execution context off the execution context stack and manually handle pushing
-    // and popping it. Since the global execution context should be the only thing on the stack
-    // at interpreter creation, let's assert there is only one.
-    VERIFY(g_vm->execution_context_stack().size() == 1);
-    auto& global_execution_context = *g_vm->execution_context_stack().take_first();
+    JS::GCPtr<JS::Realm> realm;
+    JS::GCPtr<TestRunnerGlobalObject> global_object;
+    auto root_execution_context = MUST(JS::Realm::initialize_host_defined_realm(
+        *g_vm,
+        [&](JS::Realm& realm_) -> JS::GlobalObject* {
+            realm = &realm_;
+            global_object = g_vm->heap().allocate<TestRunnerGlobalObject>(*realm, *realm).release_allocated_value_but_fixme_should_propagate_errors();
+            return global_object;
+        },
+        nullptr));
+    auto& global_execution_context = *root_execution_context;
+    g_vm->pop_execution_context();
 
-    // FIXME: This is a hack while we're refactoring Interpreter/VM stuff.
-    JS::VM::InterpreterExecutionScope scope(*interpreter);
-
-    interpreter->heap().set_should_collect_on_every_allocation(g_collect_on_every_allocation);
+    g_vm->heap().set_should_collect_on_every_allocation(g_collect_on_every_allocation);
 
     if (g_run_file) {
-        auto result = g_run_file(test_path, *interpreter, global_execution_context);
+        auto result = g_run_file(test_path, *realm, global_execution_context);
         if (result.is_error() && result.error() == RunFileHookResult::SkipFile) {
             return {
                 test_path,
@@ -347,9 +337,9 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
         }
     }
 
-    // FIXME: Since a new interpreter is created every time with a new realm, we no longer cache the test-common.js file as scripts are parsed for the current realm only.
+    // FIXME: Since a new realm is created every time, we no longer cache the test-common.js file as scripts are parsed for the current realm only.
     //        Find a way to cache this.
-    auto result = parse_script(m_common_path, interpreter->realm());
+    auto result = parse_script(m_common_path, *realm);
     if (result.is_error()) {
         warnln("Unable to parse test-common.js");
         warnln("{}", result.error().error.to_deprecated_string());
@@ -358,30 +348,20 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
     }
     auto test_script = result.release_value();
 
-    if (auto* bytecode_interpreter = g_vm->bytecode_interpreter_if_exists()) {
-        g_vm->push_execution_context(global_execution_context);
-        MUST(bytecode_interpreter->run(*test_script));
-        g_vm->pop_execution_context();
-    } else {
-        g_vm->push_execution_context(global_execution_context);
-        MUST(interpreter->run(*test_script));
-        g_vm->pop_execution_context();
-    }
+    g_vm->push_execution_context(global_execution_context);
+    MUST(g_vm->bytecode_interpreter().run(*test_script));
+    g_vm->pop_execution_context();
 
-    auto file_script = parse_script(test_path, interpreter->realm());
+    auto file_script = parse_script(test_path, *realm);
     JS::ThrowCompletionOr<JS::Value> top_level_result { JS::js_undefined() };
     if (file_script.is_error())
         return { test_path, file_script.error() };
     g_vm->push_execution_context(global_execution_context);
-    if (auto* bytecode_interpreter = g_vm->bytecode_interpreter_if_exists()) {
-        top_level_result = bytecode_interpreter->run(file_script.value());
-    } else {
-        top_level_result = interpreter->run(file_script.value());
-    }
+    top_level_result = g_vm->bytecode_interpreter().run(file_script.value());
     g_vm->pop_execution_context();
 
     g_vm->push_execution_context(global_execution_context);
-    auto test_json = get_test_results(*interpreter);
+    auto test_json = get_test_results(*realm);
     g_vm->pop_execution_context();
     if (test_json.is_error()) {
         warnln("Received malformed JSON from test \"{}\"", test_path);
@@ -391,7 +371,7 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
     JSFileResult file_result { test_path.substring(m_test_root.length() + 1, test_path.length() - m_test_root.length() - 1) };
 
     // Collect logged messages
-    auto user_output = MUST(interpreter->realm().global_object().get("__UserOutput__"));
+    auto user_output = MUST(realm->global_object().get("__UserOutput__"));
 
     auto& arr = user_output.as_array();
     for (auto& entry : arr.indexed_properties()) {

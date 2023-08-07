@@ -15,10 +15,10 @@ static constexpr auto s_spreadsheet_runtime_path = "/res/js/Spreadsheet/runtime.
 static constexpr auto s_spreadsheet_runtime_path = "../../../../Base/res/js/Spreadsheet/runtime.js"sv;
 #endif
 
-TESTJS_RUN_FILE_FUNCTION(DeprecatedString const&, JS::Interpreter& interpreter, JS::ExecutionContext& global_execution_context)
+TESTJS_RUN_FILE_FUNCTION(DeprecatedString const&, JS::Realm& realm, JS::ExecutionContext& global_execution_context)
 {
     auto run_file = [&](StringView name) {
-        auto result = Test::JS::parse_script(name, interpreter.realm());
+        auto result = Test::JS::parse_script(name, realm);
         if (result.is_error()) {
             warnln("Unable to parse {}", name);
             warnln("{}", result.error().error.to_deprecated_string());
@@ -27,9 +27,9 @@ TESTJS_RUN_FILE_FUNCTION(DeprecatedString const&, JS::Interpreter& interpreter, 
         }
         auto script = result.release_value();
 
-        interpreter.vm().push_execution_context(global_execution_context);
-        MUST(interpreter.run(*script));
-        interpreter.vm().pop_execution_context();
+        realm.vm().push_execution_context(global_execution_context);
+        MUST(realm.vm().bytecode_interpreter().run(*script));
+        realm.vm().pop_execution_context();
     };
 
 #ifdef AK_OS_SERENITY
