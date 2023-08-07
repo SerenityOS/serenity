@@ -14,7 +14,7 @@ static constexpr auto db_path = "/tmp/test.db"sv;
 
 static NonnullRefPtr<SQL::Heap> create_heap()
 {
-    auto heap = MUST(SQL::Heap::try_create(db_path));
+    auto heap = MUST(SQL::Heap::create(db_path));
     MUST(heap->open());
     return heap;
 }

@@ -140,7 +140,7 @@ void insert_and_get_to_and_from_hash_index(int num_keys)
 {
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     {
-        auto heap = SQL::Heap::construct("/tmp/test.db");
+        auto heap = MUST(SQL::Heap::create("/tmp/test.db"));
         TRY_OR_FAIL(heap->open());
         SQL::Serializer serializer(heap);
         auto hash_index = setup_hash_index(serializer);
@@ -158,7 +158,7 @@ void insert_and_get_to_and_from_hash_index(int num_keys)
     }
 
     {
-        auto heap = SQL::Heap::construct("/tmp/test.db");
+        auto heap = MUST(SQL::Heap::create("/tmp/test.db"));
         TRY_OR_FAIL(heap->open());
         SQL::Serializer serializer(heap);
         auto hash_index = setup_hash_index(serializer);
@@ -238,7 +238,7 @@ void insert_into_and_scan_hash_index(int num_keys)
 {
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     {
-        auto heap = SQL::Heap::construct("/tmp/test.db");
+        auto heap = MUST(SQL::Heap::create("/tmp/test.db"));
         TRY_OR_FAIL(heap->open());
         SQL::Serializer serializer(heap);
         auto hash_index = setup_hash_index(serializer);
@@ -256,7 +256,7 @@ void insert_into_and_scan_hash_index(int num_keys)
     }
 
     {
-        auto heap = SQL::Heap::construct("/tmp/test.db");
+        auto heap = MUST(SQL::Heap::create("/tmp/test.db"));
         TRY_OR_FAIL(heap->open());
         SQL::Serializer serializer(heap);
         auto hash_index = setup_hash_index(serializer);

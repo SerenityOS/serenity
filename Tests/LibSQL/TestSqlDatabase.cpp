@@ -100,28 +100,28 @@ static void insert_and_verify(int count)
 TEST_CASE(create_heap)
 {
     ScopeGuard guard([]() { unlink("/tmp/test.db"); });
-    auto heap = SQL::Heap::construct("/tmp/test.db");
+    auto heap = MUST(SQL::Heap::create("/tmp/test.db"));
     TRY_OR_FAIL(heap->open());
     EXPECT_EQ(heap->version(), SQL::Heap::VERSION);
 }
 
 TEST_CASE(create_from_dev_random)
 {
-    auto heap = SQL::Heap::construct("/dev/random");
+    auto heap = MUST(SQL::Heap::create("/dev/random"));
     auto should_be_error = heap->open();
     EXPECT(should_be_error.is_error());
 }
 
 TEST_CASE(create_from_unreadable_file)
 {
-    auto heap = SQL::Heap::construct("/etc/shadow");
+    auto heap = MUST(SQL::Heap::create("/etc/shadow"));
     auto should_be_error = heap->open();
     EXPECT(should_be_error.is_error());
 }
 
 TEST_CASE(create_in_non_existing_dir)
 {
-    auto heap = SQL::Heap::construct("/tmp/bogus/test.db");
+    auto heap = MUST(SQL::Heap::create("/tmp/bogus/test.db"));
     auto should_be_error = heap->open();
     EXPECT(should_be_error.is_error());
 }

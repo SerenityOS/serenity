@@ -16,7 +16,7 @@
 namespace SQL {
 
 Database::Database(DeprecatedString name)
-    : m_heap(Heap::construct(move(name)))
+    : m_heap(Heap::create(move(name)).release_value_but_fixme_should_propagate_errors())
     , m_serializer(m_heap)
 {
 }

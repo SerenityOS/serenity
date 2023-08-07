@@ -14,9 +14,14 @@
 
 namespace SQL {
 
-Heap::Heap(DeprecatedString file_name)
+ErrorOr<NonnullRefPtr<Heap>> Heap::create(DeprecatedString file_name)
 {
-    set_name(move(file_name));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Heap(move(file_name)));
+}
+
+Heap::Heap(DeprecatedString file_name)
+    : m_name(move(file_name))
+{
 }
 
 Heap::~Heap()
