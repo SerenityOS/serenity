@@ -637,6 +637,13 @@
       "caption-side"
     ]
   },
+  "table-layout": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-types": [
+      "table-layout"
+    ]
+  },
   "clear": {
     "inherited": false,
     "initial": "none",

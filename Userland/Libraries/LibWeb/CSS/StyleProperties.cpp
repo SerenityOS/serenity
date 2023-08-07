@@ -949,6 +949,12 @@ Optional<CSS::ObjectFit> StyleProperties::object_fit() const
     return value_id_to_object_fit(value->to_identifier());
 }
 
+Optional<CSS::TableLayout> StyleProperties::table_layout() const
+{
+    auto value = property(CSS::PropertyID::TableLayout);
+    return value_id_to_table_layout(value->to_identifier());
+}
+
 Color StyleProperties::stop_color() const
 {
     auto value = property(CSS::PropertyID::StopColor);

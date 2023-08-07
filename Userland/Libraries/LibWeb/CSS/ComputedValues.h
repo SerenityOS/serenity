@@ -111,6 +111,7 @@ public:
     static CSS::Length outline_offset() { return CSS::Length::make_px(0); }
     static CSS::OutlineStyle outline_style() { return CSS::OutlineStyle::None; }
     static CSS::Length outline_width() { return CSS::Length::make_px(3); }
+    static CSS::TableLayout table_layout() { return CSS::TableLayout::Auto; }
 };
 
 enum class BackgroundSize {
@@ -333,6 +334,8 @@ public:
     CSS::OutlineStyle outline_style() const { return m_noninherited.outline_style; }
     CSS::Length outline_width() const { return m_noninherited.outline_width; }
 
+    CSS::TableLayout table_layout() const { return m_noninherited.table_layout; }
+
     ComputedValues clone_inherited_values() const
     {
         ComputedValues clone;
@@ -447,6 +450,7 @@ protected:
         CSS::Length outline_offset { InitialValues::outline_offset() };
         CSS::OutlineStyle outline_style { InitialValues::outline_style() };
         CSS::Length outline_width { InitialValues::outline_width() };
+        CSS::TableLayout table_layout { InitialValues::table_layout() };
     } m_noninherited;
 };
 
@@ -546,6 +550,7 @@ public:
     void set_border_collapse(CSS::BorderCollapse const& border_collapse) { m_inherited.border_collapse = border_collapse; }
     void set_grid_template_areas(Vector<Vector<String>> const& grid_template_areas) { m_noninherited.grid_template_areas = grid_template_areas; }
     void set_transition_delay(CSS::Time const& transition_delay) { m_noninherited.transition_delay = transition_delay; }
+    void set_table_layout(CSS::TableLayout value) { m_noninherited.table_layout = value; }
 
     void set_fill(SVGPaint value) { m_inherited.fill = value; }
     void set_stroke(SVGPaint value) { m_inherited.stroke = value; }

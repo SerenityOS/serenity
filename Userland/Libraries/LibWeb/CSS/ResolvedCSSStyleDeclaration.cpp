@@ -776,6 +776,8 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
         return NumberStyleValue::create(layout_node.computed_values().stroke_opacity());
     case PropertyID::StrokeWidth:
         return style_value_for_length_percentage(layout_node.computed_values().stroke_width());
+    case PropertyID::TableLayout:
+        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().table_layout()));
     case PropertyID::TextAlign:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().text_align()));
     case PropertyID::TextDecorationLine: {

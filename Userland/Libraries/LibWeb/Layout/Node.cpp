@@ -765,6 +765,9 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     if (auto border_collapse = computed_style.border_collapse(); border_collapse.has_value())
         computed_values.set_border_collapse(border_collapse.value());
 
+    if (auto table_layout = computed_style.table_layout(); table_layout.has_value())
+        computed_values.set_table_layout(table_layout.value());
+
     auto aspect_ratio = computed_style.property(CSS::PropertyID::AspectRatio);
     if (aspect_ratio->is_value_list()) {
         auto& values_list = aspect_ratio->as_value_list().values();
