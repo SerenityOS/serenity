@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/NonnullRefPtr.h>
-#include <LibCore/EventReceiver.h>
+#include <AK/RefCounted.h>
 #include <LibSQL/Database.h>
 #include <LibSQL/Result.h>
 #include <LibSQL/Type.h>
@@ -15,12 +15,9 @@
 
 namespace SQLServer {
 
-class DatabaseConnection final : public Core::EventReceiver {
-    C_OBJECT_ABSTRACT(DatabaseConnection)
-
+class DatabaseConnection final : public RefCounted<DatabaseConnection> {
 public:
     static ErrorOr<NonnullRefPtr<DatabaseConnection>> create(StringView database_path, DeprecatedString database_name, int client_id);
-    ~DatabaseConnection() override = default;
 
     static RefPtr<DatabaseConnection> connection_for(SQL::ConnectionID connection_id);
     SQL::ConnectionID connection_id() const { return m_connection_id; }
