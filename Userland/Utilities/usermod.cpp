@@ -38,11 +38,6 @@ static Optional<gid_t> group_string_to_gid(StringView group)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (geteuid() != 0) {
-        warnln("Not running as root :^(");
-        return 1;
-    }
-
     TRY(Core::System::pledge("stdio wpath rpath cpath fattr tty"));
     TRY(Core::System::unveil("/etc", "rwc"));
 
