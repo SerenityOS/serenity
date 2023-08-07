@@ -47,17 +47,16 @@
 
 class HeadlessWebContentView final : public WebView::ViewImplementation {
 public:
-    static ErrorOr<NonnullOwnPtr<HeadlessWebContentView>> create(Core::AnonymousBuffer theme, Gfx::IntSize const& window_size, StringView web_driver_ipc_path, WebView::IsLayoutTestMode is_layout_test_mode = WebView::IsLayoutTestMode::No, WebView::UseJavaScriptBytecode use_javascript_bytecode = WebView::UseJavaScriptBytecode::No)
+    static ErrorOr<NonnullOwnPtr<HeadlessWebContentView>> create(Core::AnonymousBuffer theme, Gfx::IntSize const& window_size, StringView web_driver_ipc_path, WebView::IsLayoutTestMode is_layout_test_mode = WebView::IsLayoutTestMode::No)
     {
-        auto view = TRY(adopt_nonnull_own_or_enomem(new (nothrow) HeadlessWebContentView(use_javascript_bytecode)));
+        auto view = TRY(adopt_nonnull_own_or_enomem(new (nothrow) HeadlessWebContentView));
 
 #if defined(AK_OS_SERENITY)
         view->m_client_state.client = TRY(WebView::WebContentClient::try_create(*view));
         (void)is_layout_test_mode;
-        (void)use_javascript_bytecode;
 #else
         auto candidate_web_content_paths = TRY(get_paths_for_helper_process("WebContent"sv));
-        view->m_client_state.client = TRY(launch_web_content_process(*view, candidate_web_content_paths, WebView::EnableCallgrindProfiling::No, is_layout_test_mode, use_javascript_bytecode, Ladybird::UseLagomNetworking::No));
+        view->m_client_state.client = TRY(launch_web_content_process(*view, candidate_web_content_paths, WebView::EnableCallgrindProfiling::No, is_layout_test_mode, Ladybird::UseLagomNetworking::No));
 #endif
 
         view->client().async_update_system_theme(move(theme));
@@ -99,10 +98,7 @@ public:
     }
 
 private:
-    HeadlessWebContentView(WebView::UseJavaScriptBytecode use_javascript_bytecode)
-        : WebView::ViewImplementation(use_javascript_bytecode)
-    {
-    }
+    HeadlessWebContentView() = default;
 
     void notify_server_did_layout(Badge<WebView::WebContentClient>, Gfx::IntSize) override { }
     void notify_server_did_paint(Badge<WebView::WebContentClient>, i32, Gfx::IntSize) override { }
@@ -414,7 +410,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         is_layout_test_mode = true;
     }
 
-    auto view = TRY(HeadlessWebContentView::create(move(theme), window_size, web_driver_ipc_path, is_layout_test_mode ? WebView::IsLayoutTestMode::Yes : WebView::IsLayoutTestMode::No, WebView::UseJavaScriptBytecode::Yes));
+    auto view = TRY(HeadlessWebContentView::create(move(theme), window_size, web_driver_ipc_path, is_layout_test_mode ? WebView::IsLayoutTestMode::Yes : WebView::IsLayoutTestMode::No));
     RefPtr<Core::Timer> timer;
 
     if (!test_root_path.is_empty()) {

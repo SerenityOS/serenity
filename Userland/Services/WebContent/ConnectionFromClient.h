@@ -48,7 +48,6 @@ private:
     Web::Page& page();
     Web::Page const& page() const;
 
-    virtual void set_use_javascript_bytecode(bool) override;
     virtual Messages::WebContentServer::GetWindowHandleResponse get_window_handle() override;
     virtual void set_window_handle(String const& handle) override;
     virtual void connect_to_webdriver(DeprecatedString const& webdriver_ipc_path) override;

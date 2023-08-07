@@ -28,7 +28,7 @@ ConsoleWidget::ConsoleWidget()
 {
     setLayout(new QVBoxLayout);
 
-    m_output_view = new WebContentView({}, WebView::EnableCallgrindProfiling::No, WebView::UseJavaScriptBytecode::No, UseLagomNetworking::No);
+    m_output_view = new WebContentView({}, WebView::EnableCallgrindProfiling::No, UseLagomNetworking::No);
     if (is_using_dark_system_theme(*this))
         m_output_view->update_palette(WebContentView::PaletteMode::Dark);
 

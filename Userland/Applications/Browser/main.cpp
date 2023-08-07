@@ -173,7 +173,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         first_url = TRY(url_from_argument_string(specified_urls.first()));
 
     auto cookie_jar = TRY(Browser::CookieJar::create(*database));
-    auto window = Browser::BrowserWindow::construct(cookie_jar, first_url, WebView::UseJavaScriptBytecode::Yes);
+    auto window = Browser::BrowserWindow::construct(cookie_jar, first_url);
 
     auto content_filters_watcher = TRY(Core::FileWatcher::create());
     content_filters_watcher->on_change = [&](Core::FileWatcherEvent const&) {

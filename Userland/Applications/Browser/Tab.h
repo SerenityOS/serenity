@@ -99,7 +99,7 @@ public:
     WebView::OutOfProcessWebView& view() { return *m_web_content_view; }
 
 private:
-    Tab(BrowserWindow&, WebView::UseJavaScriptBytecode);
+    explicit Tab(BrowserWindow&);
 
     virtual void show_event(GUI::ShowEvent&) override;
     virtual void hide_event(GUI::HideEvent&) override;

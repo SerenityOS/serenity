@@ -25,8 +25,7 @@ REGISTER_WIDGET(WebView, OutOfProcessWebView)
 
 namespace WebView {
 
-OutOfProcessWebView::OutOfProcessWebView(UseJavaScriptBytecode use_javascript_bytecode)
-    : ViewImplementation(use_javascript_bytecode)
+OutOfProcessWebView::OutOfProcessWebView()
 {
     set_should_hide_unnecessary_scrollbars(true);
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
@@ -46,8 +45,6 @@ void OutOfProcessWebView::create_client(EnableCallgrindProfiling)
             handle_web_content_process_crash();
         });
     };
-
-    client().async_set_use_javascript_bytecode(use_javascript_bytecode() == UseJavaScriptBytecode::Yes);
 
     m_client_state.client_handle = Web::Crypto::generate_random_uuid().release_value_but_fixme_should_propagate_errors();
     client().async_set_window_handle(m_client_state.client_handle);

@@ -10,7 +10,6 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(Web
     ReadonlySpan<String> candidate_web_content_paths,
     WebView::EnableCallgrindProfiling enable_callgrind_profiling,
     WebView::IsLayoutTestMode is_layout_test_mode,
-    WebView::UseJavaScriptBytecode use_javascript_bytecode,
     Ladybird::UseLagomNetworking use_lagom_networking)
 {
     int socket_fds[2] {};
@@ -53,8 +52,6 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(Web
                 arguments.remove(0, callgrind_prefix_length);
             if (is_layout_test_mode == WebView::IsLayoutTestMode::Yes)
                 arguments.append("--layout-test-mode"sv);
-            if (use_javascript_bytecode == WebView::UseJavaScriptBytecode::Yes)
-                arguments.append("--use-bytecode"sv);
             if (use_lagom_networking == Ladybird::UseLagomNetworking::Yes)
                 arguments.append("--use-lagom-networking"sv);
 

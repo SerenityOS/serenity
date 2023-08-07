@@ -43,7 +43,7 @@ class WebContentView final
     , public WebView::ViewImplementation {
     Q_OBJECT
 public:
-    explicit WebContentView(StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling, WebView::UseJavaScriptBytecode, UseLagomNetworking);
+    explicit WebContentView(StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling, UseLagomNetworking);
     virtual ~WebContentView() override;
 
     Function<String(const AK::URL&, Web::HTML::ActivateTab)> on_tab_open_request;

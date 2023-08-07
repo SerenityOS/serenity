@@ -65,13 +65,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     int webcontent_fd_passing_socket { -1 };
     bool is_layout_test_mode = false;
-    bool use_javascript_bytecode = false;
     bool use_lagom_networking = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(webcontent_fd_passing_socket, "File descriptor of the passing socket for the WebContent connection", "webcontent-fd-passing-socket", 'c', "webcontent_fd_passing_socket");
     args_parser.add_option(is_layout_test_mode, "Is layout test mode", "layout-test-mode", 0);
-    args_parser.add_option(use_javascript_bytecode, "Enable JavaScript bytecode VM", "use-bytecode", 0);
     args_parser.add_option(use_lagom_networking, "Enable Lagom servers for networking", "use-lagom-networking", 0);
     args_parser.parse(arguments);
 
@@ -89,8 +87,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     Web::HTML::Window::set_internals_object_exposed(is_layout_test_mode);
-
-    JS::Bytecode::Interpreter::set_enabled(use_javascript_bytecode);
 
     VERIFY(webcontent_fd_passing_socket >= 0);
 

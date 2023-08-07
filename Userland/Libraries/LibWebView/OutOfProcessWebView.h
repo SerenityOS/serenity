@@ -55,7 +55,7 @@ public:
     void set_content_scales_to_viewport(bool);
 
 private:
-    explicit OutOfProcessWebView(UseJavaScriptBytecode = UseJavaScriptBytecode::No);
+    OutOfProcessWebView();
 
     // ^Widget
     virtual void paint_event(GUI::PaintEvent&) override;

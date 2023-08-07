@@ -30,11 +30,6 @@ enum class IsLayoutTestMode {
     Yes
 };
 
-enum class UseJavaScriptBytecode {
-    No,
-    Yes
-};
-
 class ViewImplementation {
 public:
     virtual ~ViewImplementation() { }
@@ -73,8 +68,6 @@ public:
     ErrorOr<DOMNodeProperties> inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element);
     void clear_inspected_dom_node();
     i32 get_hovered_node_id();
-
-    UseJavaScriptBytecode use_javascript_bytecode() const { return m_use_javascript_bytecode; }
 
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument = {});
 
@@ -160,7 +153,7 @@ protected:
     static constexpr auto ZOOM_MAX_LEVEL = 5.0f;
     static constexpr auto ZOOM_STEP = 0.1f;
 
-    explicit ViewImplementation(UseJavaScriptBytecode);
+    ViewImplementation();
 
     WebContentClient& client();
     WebContentClient const& client() const;
@@ -208,8 +201,6 @@ protected:
 
     size_t m_crash_count = 0;
     RefPtr<Core::Timer> m_repeated_crash_timer;
-
-    UseJavaScriptBytecode m_use_javascript_bytecode {};
 };
 
 }
