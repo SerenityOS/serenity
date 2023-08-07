@@ -15,7 +15,7 @@
 
 namespace Web::Platform {
 
-constexpr int update_interval = 10;
+constexpr int update_interval = 50;
 
 static Duration timestamp_from_samples(i64 samples, u32 sample_rate)
 {
