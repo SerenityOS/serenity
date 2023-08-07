@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2023, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,6 +15,7 @@
 #include <AK/RefCounted.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
+#include <LibCore/Promise.h>
 #include <LibSQL/SQLClient.h>
 #include <LibSQL/Type.h>
 #include <LibSQL/Value.h>
@@ -34,14 +36,24 @@ public:
     template<typename... PlaceholderValues>
     void execute_statement(SQL::StatementID statement_id, OnResult on_result, OnComplete on_complete, OnError on_error, PlaceholderValues&&... placeholder_values)
     {
+        auto sync_promise = Core::Promise<Empty>::construct();
+
         PendingExecution pending_execution {
             .on_result = move(on_result),
-            .on_complete = move(on_complete),
-            .on_error = move(on_error),
+            .on_complete = [sync_promise, on_complete = move(on_complete)] {
+                if (on_complete)
+                    on_complete();
+                sync_promise->resolve({}); },
+            .on_error = [sync_promise, on_error = move(on_error)](auto message) {
+                if (on_error)
+                    on_error(message);
+                sync_promise->resolve({}); },
         };
 
         Vector<SQL::Value> values { SQL::Value(forward<PlaceholderValues>(placeholder_values))... };
         execute_statement(statement_id, move(values), move(pending_execution));
+
+        MUST(sync_promise->await());
     }
 
 private:

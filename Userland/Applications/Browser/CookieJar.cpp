@@ -2,6 +2,7 @@
  * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
+ * Copyright (c) 2023, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -349,11 +350,14 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
     if (source != Web::Cookie::Source::Http && cookie.http_only)
         return;
 
+    // Synchronize persisting the cookie
+    auto sync_promise = Core::Promise<Empty>::construct();
+
     select_cookie_from_database(
         move(cookie),
 
         // 11. If the cookie store contains a cookie with the same name, domain, and path as the newly created cookie:
-        [this, source](auto& cookie, auto old_cookie) {
+        [this, source, sync_promise](auto& cookie, auto old_cookie) {
             // If the newly created cookie was received from a "non-HTTP" API and the old-cookie's http-only-flag is set, abort these
             // steps and ignore the newly created cookie entirely.
             if (source != Web::Cookie::Source::Http && old_cookie.http_only)
@@ -365,12 +369,16 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
             // Remove the old-cookie from the cookie store.
             // NOTE: Rather than deleting then re-inserting this cookie, we update it in-place.
             update_cookie_in_database(cookie);
+            sync_promise->resolve({});
         },
 
         // 12. Insert the newly created cookie into the cookie store.
-        [this](auto cookie) {
+        [this, sync_promise](auto cookie) {
             insert_cookie_into_database(cookie);
+            sync_promise->resolve({});
         });
+
+    MUST(sync_promise->await());
 }
 
 Vector<Web::Cookie::Cookie> CookieJar::get_matching_cookies(const URL& url, DeprecatedString const& canonicalized_domain, Web::Cookie::Source source, MatchingCookiesSpecMode mode)
@@ -600,8 +608,6 @@ void CookieJar::select_all_cookies_from_database(OnSelectAllCookiesResult on_res
     // FIXME: Make surrounding APIs asynchronous.
     m_storage.visit(
         [&](PersistedStorage& storage) {
-            auto promise = Core::Promise<Empty>::construct();
-
             storage.database.execute_statement(
                 storage.statements.select_all_cookies,
                 [on_result = move(on_result)](auto row) {
@@ -610,14 +616,8 @@ void CookieJar::select_all_cookies_from_database(OnSelectAllCookiesResult on_res
                     else
                         on_result(cookie.release_value());
                 },
-                [&]() {
-                    promise->resolve({});
-                },
-                [&](auto) {
-                    promise->resolve({});
-                });
-
-            MUST(promise->await());
+                {},
+                {});
         },
         [&](TransientStorage& storage) {
             for (auto const& cookie : storage)
