@@ -12,7 +12,7 @@ configopts=(
     '-DALSOFT_BACKEND_SDL2=ON'
 )
 files=(
-    "https://openal-soft.org/openal-releases/openal-soft-${version}.tar.bz2 openal-soft-${version}.tar.bz2 c8ad767e9a3230df66756a21cc8ebf218a9d47288f2514014832204e666af5d8"
+    "https://openal-soft.org/openal-releases/openal-soft-${version}.tar.bz2 c8ad767e9a3230df66756a21cc8ebf218a9d47288f2514014832204e666af5d8"
 )
 
 configure() {

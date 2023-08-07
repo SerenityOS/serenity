@@ -2,7 +2,7 @@
 port='libxml2'
 version='2.9.14'
 files=(
-    "https://download.gnome.org/sources/libxml2/2.9/libxml2-${version}.tar.xz libxml2-${version}.tar.xz 60d74a257d1ccec0475e749cba2f21559e48139efba6ff28224357c7c798dfee"
+    "https://download.gnome.org/sources/libxml2/2.9/libxml2-${version}.tar.xz 60d74a257d1ccec0475e749cba2f21559e48139efba6ff28224357c7c798dfee"
 )
 useconfigure='true'
 use_fresh_config_sub='true'

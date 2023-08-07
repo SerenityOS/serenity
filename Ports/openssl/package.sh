@@ -4,7 +4,7 @@ version='3.0.9'
 useconfigure='true'
 configscript='Configure'
 files=(
-    "https://www.openssl.org/source/openssl-${version}.tar.gz openssl-${version}.tar.gz eb1ab04781474360f77c318ab89d8c5a03abc38e63d65a603cabbf1b00a1dc90"
+    "https://www.openssl.org/source/openssl-${version}.tar.gz eb1ab04781474360f77c318ab89d8c5a03abc38e63d65a603cabbf1b00a1dc90"
 )
 depends=(
     'zlib'

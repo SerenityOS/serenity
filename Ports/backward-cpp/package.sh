@@ -3,7 +3,7 @@ port='backward-cpp'
 version='65a769f'
 _commit='65a769ffe77cf9d759d801bc792ac56af8e911a3'
 files=(
-    "https://github.com/bombela/backward-cpp/archive/${_commit}.tar.gz ${_commit}.tar.gz 452d230984e55d92a761709a467a0cc13a7cd5e205a2f954269a7d9d79fc356f"
+    "https://github.com/bombela/backward-cpp/archive/${_commit}.tar.gz 452d230984e55d92a761709a467a0cc13a7cd5e205a2f954269a7d9d79fc356f"
 )
 workdir="backward-cpp-${_commit}"
 useconfigure='true'

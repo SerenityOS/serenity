@@ -3,7 +3,7 @@ port='nlohmann-json'
 version='3.11.2'
 workdir="json-${version}"
 files=(
-    "https://github.com/nlohmann/json/archive/refs/tags/v${version}.tar.gz v${version}.tar.gz d69f9deb6a75e2580465c6c4c5111b89c4dc2fa94e3a85fcd2ffcd9a143d9273"
+    "https://github.com/nlohmann/json/archive/refs/tags/v${version}.tar.gz d69f9deb6a75e2580465c6c4c5111b89c4dc2fa94e3a85fcd2ffcd9a143d9273"
 )
 useconfigure='true'
 configopts=(

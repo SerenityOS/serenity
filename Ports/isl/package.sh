@@ -4,7 +4,7 @@ version=0.24
 useconfigure=true
 use_fresh_config_sub=true
 files=(
-    "https://libisl.sourceforge.io/isl-${version}.tar.xz isl-${version}.tar.xz 043105cc544f416b48736fff8caf077fb0663a717d06b1113f16e391ac99ebad"
+    "https://libisl.sourceforge.io/isl-${version}.tar.xz 043105cc544f416b48736fff8caf077fb0663a717d06b1113f16e391ac99ebad"
 )
 depends=("gmp")
 

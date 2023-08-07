@@ -2,7 +2,7 @@
 port=guile
 version=3.0.8
 files=(
-    "https://ftpmirror.gnu.org/gnu/guile/guile-${version}.tar.gz guile-${version}.tar.gz f25ae0c26e911af1b5005292d4f56621879f74d6958b30741cf67d8b6feb2016"
+    "https://ftpmirror.gnu.org/gnu/guile/guile-${version}.tar.gz f25ae0c26e911af1b5005292d4f56621879f74d6958b30741cf67d8b6feb2016"
 )
 depends=("gmp" "libunistring" "libffi" "bdwgc" "libiconv")
 

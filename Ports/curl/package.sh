@@ -3,7 +3,7 @@ port='curl'
 version='8.2.0'
 useconfigure='true'
 files=(
-    "https://curl.se/download/curl-${version}.tar.bz2 curl-${version}.tar.bz2 080aaa5bef29ab3f592101e7a95f32ddbe88b92125cb28dde479d5a104928ea4"
+    "https://curl.se/download/curl-${version}.tar.bz2 080aaa5bef29ab3f592101e7a95f32ddbe88b92125cb28dde479d5a104928ea4"
 )
 depends=(
   'ca-certificates'

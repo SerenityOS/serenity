@@ -3,7 +3,7 @@ port=vlang
 version=weekly.2021.31
 workdir="v-${version}"
 files=(
-    "https://github.com/vlang/v/archive/${version}.tar.gz ${version}.tar.gz b0daf0a2e2cb6d463710952f4d2e8705c17d02a9270355b20861ff3fd5f72563"
+    "https://github.com/vlang/v/archive/${version}.tar.gz b0daf0a2e2cb6d463710952f4d2e8705c17d02a9270355b20861ff3fd5f72563"
 )
 
 build() {

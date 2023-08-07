@@ -10,8 +10,8 @@ workdir="Python-${version}"
 useconfigure='true'
 use_fresh_config_sub='true'
 files=(
-    "${PYTHON_ARCHIVE_URL} ${PYTHON_ARCHIVE} ${PYTHON_ARCHIVE_SHA256SUM}"
-    "https://raw.githubusercontent.com/python/cpython/942dd9f3f77eef08fabddbd9fb883a866ad6d4cb/PC/pycon.ico pycon.ico 55c1e1fcabc2f254a6d02242912359d29f141d11c4892c20375d58b6dcd89ac0"
+    "${PYTHON_ARCHIVE_URL} ${PYTHON_ARCHIVE_SHA256SUM}"
+    "https://raw.githubusercontent.com/python/cpython/942dd9f3f77eef08fabddbd9fb883a866ad6d4cb/PC/pycon.ico 55c1e1fcabc2f254a6d02242912359d29f141d11c4892c20375d58b6dcd89ac0"
 )
 launcher_name='Python'
 launcher_category='Development'

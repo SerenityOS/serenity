@@ -3,7 +3,7 @@ port=dash
 version=0.5.10.2
 useconfigure=true
 files=(
-    "http://gondor.apana.org.au/~herbert/dash/files/dash-${version}.tar.gz dash-${version}.tar.gz 3c663919dc5c66ec991da14c7cf7e0be8ad00f3db73986a987c118862b5f6071"
+    "http://gondor.apana.org.au/~herbert/dash/files/dash-${version}.tar.gz 3c663919dc5c66ec991da14c7cf7e0be8ad00f3db73986a987c118862b5f6071"
 )
 
 configure() {

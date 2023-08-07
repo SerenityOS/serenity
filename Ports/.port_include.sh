@@ -312,13 +312,9 @@ do_download_file() {
 
 fetch_simple() {
     url="${1}"
-    filename="${2}"
-    checksum="${3}"
+    checksum="${2}"
 
-    if [ "${filename}" != "$(basename "${url}")" ]; then
-        echo "Filename '${filename}' does not match basename of '${url}'"
-        exit 1
-    fi
+    filename="$(basename "${url}")"
 
     tried_download_again=0
 
@@ -371,8 +367,8 @@ func_defined fetch || fetch() {
     pre_fetch
 
     for f in "${files[@]}"; do
-        read url filename auth_sum <<< $(echo "${f}")
-        fetch_simple "${url}" "${filename}" "${auth_sum}"
+        read url auth_sum <<< $(echo "${f}")
+        fetch_simple "${url}" "${auth_sum}"
     done
 
     post_fetch

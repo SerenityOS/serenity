@@ -3,7 +3,7 @@ port=vitetris
 useconfigure="true"
 version="0.59.1"
 files=(
-    "https://github.com/vicgeralds/vitetris/archive/refs/tags/v${version}.tar.gz v${version}.tar.gz 699443df03c8d4bf2051838c1015da72039bbbdd0ab0eede891c59c840bdf58d"
+    "https://github.com/vicgeralds/vitetris/archive/refs/tags/v${version}.tar.gz 699443df03c8d4bf2051838c1015da72039bbbdd0ab0eede891c59c840bdf58d"
 )
 configopts=("--without-xlib" "--without-joystick" "--without-network")
 launcher_name=vitetris
