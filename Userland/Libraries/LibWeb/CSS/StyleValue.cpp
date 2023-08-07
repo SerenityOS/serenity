@@ -477,4 +477,64 @@ int StyleValue::to_font_slope() const
     return normal_slope;
 }
 
+int StyleValue::to_font_stretch_width() const
+{
+    int width = Gfx::FontWidth::Normal;
+    if (is_identifier()) {
+        switch (static_cast<IdentifierStyleValue const&>(*this).id()) {
+        case CSS::ValueID::UltraCondensed:
+            width = Gfx::FontWidth::UltraCondensed;
+            break;
+        case CSS::ValueID::ExtraCondensed:
+            width = Gfx::FontWidth::ExtraCondensed;
+            break;
+        case CSS::ValueID::Condensed:
+            width = Gfx::FontWidth::Condensed;
+            break;
+        case CSS::ValueID::SemiCondensed:
+            width = Gfx::FontWidth::SemiCondensed;
+            break;
+        case CSS::ValueID::Normal:
+            width = Gfx::FontWidth::Normal;
+            break;
+        case CSS::ValueID::SemiExpanded:
+            width = Gfx::FontWidth::SemiExpanded;
+            break;
+        case CSS::ValueID::Expanded:
+            width = Gfx::FontWidth::Expanded;
+            break;
+        case CSS::ValueID::ExtraExpanded:
+            width = Gfx::FontWidth::ExtraExpanded;
+            break;
+        case CSS::ValueID::UltraExpanded:
+            width = Gfx::FontWidth::UltraExpanded;
+            break;
+        default:
+            break;
+        }
+    } else if (is_percentage()) {
+        float percentage = as_percentage().percentage().value();
+        if (percentage <= 50) {
+            width = Gfx::FontWidth::UltraCondensed;
+        } else if (percentage <= 62.5f) {
+            width = Gfx::FontWidth::ExtraCondensed;
+        } else if (percentage <= 75.0f) {
+            width = Gfx::FontWidth::Condensed;
+        } else if (percentage <= 87.5f) {
+            width = Gfx::FontWidth::SemiCondensed;
+        } else if (percentage <= 100.0f) {
+            width = Gfx::FontWidth::Normal;
+        } else if (percentage <= 112.5f) {
+            width = Gfx::FontWidth::SemiExpanded;
+        } else if (percentage <= 125.0f) {
+            width = Gfx::FontWidth::Expanded;
+        } else if (percentage <= 150.0f) {
+            width = Gfx::FontWidth::ExtraExpanded;
+        } else {
+            width = Gfx::FontWidth::UltraExpanded;
+        }
+    }
+    return width;
+}
+
 }
