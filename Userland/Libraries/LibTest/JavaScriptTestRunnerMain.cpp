@@ -23,9 +23,8 @@ bool g_collect_on_every_allocation = false;
 DeprecatedString g_currently_running_test;
 HashMap<DeprecatedString, FunctionWithLength> s_exposed_global_functions;
 Function<void()> g_main_hook;
-Function<NonnullOwnPtr<JS::Interpreter>()> g_create_interpreter_hook;
 HashMap<bool*, Tuple<DeprecatedString, DeprecatedString, char>> g_extra_args;
-IntermediateRunFileResult (*g_run_file)(DeprecatedString const&, JS::Interpreter&, JS::ExecutionContext&) = nullptr;
+IntermediateRunFileResult (*g_run_file)(DeprecatedString const&, JS::Realm&, JS::ExecutionContext&) = nullptr;
 DeprecatedString g_test_root;
 int g_test_argc;
 char** g_test_argv;
@@ -93,7 +92,6 @@ int main(int argc, char** argv)
 #endif
     bool print_json = false;
     bool per_file = false;
-    bool use_ast_interpreter = false;
     StringView specified_test_root;
     DeprecatedString common_path;
     DeprecatedString test_glob;
@@ -119,7 +117,6 @@ int main(int argc, char** argv)
     args_parser.add_option(print_json, "Show results as JSON", "json", 'j');
     args_parser.add_option(per_file, "Show detailed per-file results as JSON (implies -j)", "per-file", 0);
     args_parser.add_option(g_collect_on_every_allocation, "Collect garbage after every allocation", "collect-often", 'g');
-    args_parser.add_option(use_ast_interpreter, "Enable JavaScript AST interpreter (deprecated)", "ast", 0);
     args_parser.add_option(JS::Bytecode::g_dump_bytecode, "Dump the bytecode", "dump-bytecode", 'd');
     args_parser.add_option(test_glob, "Only run tests matching the given glob", "filter", 'f', "glob");
     for (auto& entry : g_extra_args)
@@ -137,12 +134,7 @@ int main(int argc, char** argv)
         AK::set_debug_enabled(false);
     }
 
-    if (JS::Bytecode::g_dump_bytecode && use_ast_interpreter) {
-        warnln("--dump-bytecode can not be used when --ast is specified.");
-        return 1;
-    }
-
-    JS::Bytecode::Interpreter::set_enabled(!use_ast_interpreter);
+    JS::Bytecode::Interpreter::set_enabled(true);
 
     DeprecatedString test_root;
 

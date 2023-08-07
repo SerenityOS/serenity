@@ -93,7 +93,7 @@ TESTJS_GLOBAL_FUNCTION(detach_array_buffer, detachArrayBuffer)
     return JS::js_null();
 }
 
-TESTJS_RUN_FILE_FUNCTION(DeprecatedString const& test_file, JS::Interpreter& interpreter, JS::ExecutionContext&)
+TESTJS_RUN_FILE_FUNCTION(DeprecatedString const& test_file, JS::Realm& realm, JS::ExecutionContext&)
 {
     if (!test262_parser_tests)
         return Test::JS::RunFileHookResult::RunAsNormal;
@@ -123,9 +123,9 @@ TESTJS_RUN_FILE_FUNCTION(DeprecatedString const& test_file, JS::Interpreter& int
     auto program_type = path.basename().ends_with(".module.js"sv) ? JS::Program::Type::Module : JS::Program::Type::Script;
     bool parse_succeeded = false;
     if (program_type == JS::Program::Type::Module)
-        parse_succeeded = !Test::JS::parse_module(test_file, interpreter.realm()).is_error();
+        parse_succeeded = !Test::JS::parse_module(test_file, realm).is_error();
     else
-        parse_succeeded = !Test::JS::parse_script(test_file, interpreter.realm()).is_error();
+        parse_succeeded = !Test::JS::parse_script(test_file, realm).is_error();
 
     bool test_passed = true;
     DeprecatedString message;
