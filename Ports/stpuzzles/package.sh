@@ -5,7 +5,7 @@ version=git
 workdir="${port}-main"
 configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
 files=(
-    "https://github.com/SerenityPorts/stpuzzles/archive/refs/heads/main.zip ${port}.zip"
+    "https://github.com/SerenityPorts/stpuzzles/archive/refs/heads/main.zip main.zip 31affa1f7d3c3501af4c92155d1d3beba8a5eaa1c9ce6d2e0682dc87f3f5d1e6"
 )
 
 configure() {

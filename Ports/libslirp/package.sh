@@ -3,7 +3,7 @@ port='libslirp'
 version='4.7.0'
 workdir="libslirp-v${version}"
 files=(
-    "https://gitlab.freedesktop.org/slirp/libslirp/-/archive/v${version}/libslirp-v${version}.tar.gz libslirp-v${version}.tar.xz 9398f0ec5a581d4e1cd6856b88ae83927e458d643788c3391a39e61b75db3d3b"
+    "https://gitlab.freedesktop.org/slirp/libslirp/-/archive/v${version}/libslirp-v${version}.tar.gz libslirp-v${version}.tar.gz 9398f0ec5a581d4e1cd6856b88ae83927e458d643788c3391a39e61b75db3d3b"
 )
 useconfigure='true'
 configopts=("--cross-file=${SERENITY_BUILD_DIR}/meson-cross-file.txt")

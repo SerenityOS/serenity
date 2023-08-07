@@ -3,7 +3,7 @@
 port='ClassiCube'
 version='1.3.3'
 files=(
-    "https://github.com/UnknownShadow200/ClassiCube/archive/refs/tags/${version}.tar.gz ClassiCube-${version}.tar.gz f90acfeb82fd440ead6e086694d99bd1583b0174da1801687c4c3d0fcb21d83d"
+    "https://github.com/UnknownShadow200/ClassiCube/archive/refs/tags/${version}.tar.gz ${version}.tar.gz f90acfeb82fd440ead6e086694d99bd1583b0174da1801687c4c3d0fcb21d83d"
 )
 workdir="${port}-${version}/src/"
 depends=(
