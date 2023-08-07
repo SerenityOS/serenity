@@ -20,6 +20,23 @@ Ensure your gcc version is >= 12 with `gcc --version`. Otherwise, install it. If
 called `gcc` you have to specify the names of your C and C++ compiler when you run cmake, e.g.
 `cmake ../.. -GNinja -DCMAKE_C_COMPILER=gcc-12 -DCMAKE_CXX_COMPILER=g++-12`.
 
+### Legacy renegotiation is disabled
+
+Ensure your `/etc/ssl/openssl.cnf` file has the following options:
+
+```console
+[openssl_init]
+ssl_conf = ssl_sect
+
+[ssl_sect]
+system_default = system_default_sect
+
+[system_default_sect]
+MinProtocol = TLSv1.2
+CipherString = DEFAULT@SECLEVEL=1
+Options = UnsafeLegacyRenegotiation
+```
+
 ## Running SerenityOS
 
 ### The VM is really slow
