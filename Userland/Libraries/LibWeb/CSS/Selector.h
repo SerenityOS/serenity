@@ -136,6 +136,31 @@ public:
             Vector<FlyString> languages {};
         };
 
+        struct Name {
+            Name(FlyString n)
+                : name(move(n))
+                , lowercase_name(name.to_string().to_lowercase().release_value_but_fixme_should_propagate_errors())
+            {
+            }
+
+            FlyString name;
+            FlyString lowercase_name;
+        };
+
+        // Equivalent to `<wq-name>`
+        // https://www.w3.org/TR/selectors-4/#typedef-wq-name
+        struct QualifiedName {
+            enum class NamespaceType {
+                Default, // `E`
+                None,    // `|E`
+                Any,     // `*|E`
+                Named,   // `ns|E`
+            };
+            NamespaceType namespace_type { NamespaceType::Default };
+            FlyString namespace_ {};
+            Name name;
+        };
+
         struct Attribute {
             enum class MatchType {
                 HasAttribute,
@@ -155,17 +180,6 @@ public:
             FlyString name {};
             String value {};
             CaseType case_type;
-        };
-
-        struct Name {
-            Name(FlyString n)
-                : name(move(n))
-                , lowercase_name(name.to_string().to_lowercase().release_value_but_fixme_should_propagate_errors())
-            {
-            }
-
-            FlyString name;
-            FlyString lowercase_name;
         };
 
         Type type;
