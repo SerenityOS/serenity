@@ -236,27 +236,27 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& progressbar = *widget->find_descendant_of_type_named<GUI::Progressbar>("progressbar");
     auto& tab_widget = *widget->find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
 
-    auto backtrace_tab = TRY(tab_widget.try_add_tab<GUI::Widget>(TRY("Backtrace"_string)));
+    auto backtrace_tab = TRY(tab_widget.try_add_tab<GUI::Widget>("Backtrace"_string));
     TRY(backtrace_tab->try_set_layout<GUI::VerticalBoxLayout>(4));
 
-    auto backtrace_label = TRY(backtrace_tab->try_add<GUI::Label>(TRY("A backtrace for each thread alive during the crash is listed below:"_string)));
+    auto backtrace_label = TRY(backtrace_tab->try_add<GUI::Label>("A backtrace for each thread alive during the crash is listed below:"_string));
     backtrace_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     backtrace_label->set_fixed_height(16);
 
     auto backtrace_tab_widget = TRY(backtrace_tab->try_add<GUI::TabWidget>());
     backtrace_tab_widget->set_tab_position(GUI::TabWidget::TabPosition::Bottom);
 
-    auto cpu_registers_tab = TRY(tab_widget.try_add_tab<GUI::Widget>(TRY("CPU Registers"_string)));
+    auto cpu_registers_tab = TRY(tab_widget.try_add_tab<GUI::Widget>("CPU Registers"_string));
     cpu_registers_tab->set_layout<GUI::VerticalBoxLayout>(4);
 
-    auto cpu_registers_label = TRY(cpu_registers_tab->try_add<GUI::Label>(TRY("The CPU register state for each thread alive during the crash is listed below:"_string)));
+    auto cpu_registers_label = TRY(cpu_registers_tab->try_add<GUI::Label>("The CPU register state for each thread alive during the crash is listed below:"_string));
     cpu_registers_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     cpu_registers_label->set_fixed_height(16);
 
     auto cpu_registers_tab_widget = TRY(cpu_registers_tab->try_add<GUI::TabWidget>());
     cpu_registers_tab_widget->set_tab_position(GUI::TabWidget::TabPosition::Bottom);
 
-    auto environment_tab = TRY(tab_widget.try_add_tab<GUI::Widget>(TRY("Environment"_string)));
+    auto environment_tab = TRY(tab_widget.try_add_tab<GUI::Widget>("Environment"_string));
     TRY(environment_tab->try_set_layout<GUI::VerticalBoxLayout>(4));
 
     auto environment_text_editor = TRY(environment_tab->try_add<GUI::TextEditor>());
@@ -265,7 +265,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     environment_text_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
     environment_text_editor->set_should_hide_unnecessary_scrollbars(true);
 
-    auto memory_regions_tab = TRY(tab_widget.try_add_tab<GUI::Widget>(TRY("Memory Regions"_string)));
+    auto memory_regions_tab = TRY(tab_widget.try_add_tab<GUI::Widget>("Memory Regions"_string));
     TRY(memory_regions_tab->try_set_layout<GUI::VerticalBoxLayout>(4));
 
     auto memory_regions_text_editor = TRY(memory_regions_tab->try_add<GUI::TextEditor>());

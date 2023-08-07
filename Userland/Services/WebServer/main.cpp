@@ -22,9 +22,9 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    static auto const default_listen_address = TRY("0.0.0.0"_string);
+    static auto const default_listen_address = "0.0.0.0"_string;
     static auto const default_port = 8000;
-    static auto const default_document_root_path = TRY("/www"_string);
+    static auto const default_document_root_path = "/www"_string;
 
     DeprecatedString listen_address = default_listen_address.to_deprecated_string();
     int port = default_port;

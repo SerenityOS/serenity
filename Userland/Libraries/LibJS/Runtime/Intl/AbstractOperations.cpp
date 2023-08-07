@@ -463,7 +463,7 @@ ThrowCompletionOr<LocaleResult> resolve_locale(VM& vm, Vector<String> const& req
             // 4. Else if keyLocaleData contains "true", then
             else if (key_locale_data.contains_slow("true"sv)) {
                 // a. Let value be "true".
-                value = TRY_OR_THROW_OOM(vm, "true"_string);
+                value = "true"_string;
 
                 // b. Let supportedExtensionAddition be the string-concatenation of "-" and key.
                 supported_extension_addition = ::Locale::Keyword { TRY_OR_THROW_OOM(vm, String::from_utf8(key)), {} };
@@ -486,7 +486,7 @@ ThrowCompletionOr<LocaleResult> resolve_locale(VM& vm, Vector<String> const& req
             // 3. If optionsValue is the empty String, then
             if (options_value->is_empty()) {
                 // a. Let optionsValue be "true".
-                options_value = TRY_OR_THROW_OOM(vm, "true"_string);
+                options_value = "true"_string;
             }
         }
 

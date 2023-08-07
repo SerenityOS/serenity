@@ -54,16 +54,16 @@ FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation
 
     switch (m_operation) {
     case FileOperation::Copy:
-        files_copied_label.set_text("Copying files..."_string.release_value_but_fixme_should_propagate_errors());
-        current_file_action_label.set_text("Copying: "_string.release_value_but_fixme_should_propagate_errors());
+        files_copied_label.set_text("Copying files..."_string);
+        current_file_action_label.set_text("Copying: "_string);
         break;
     case FileOperation::Move:
-        files_copied_label.set_text("Moving files..."_string.release_value_but_fixme_should_propagate_errors());
-        current_file_action_label.set_text("Moving: "_string.release_value_but_fixme_should_propagate_errors());
+        files_copied_label.set_text("Moving files..."_string);
+        current_file_action_label.set_text("Moving: "_string);
         break;
     case FileOperation::Delete:
-        files_copied_label.set_text("Deleting files..."_string.release_value_but_fixme_should_propagate_errors());
-        current_file_action_label.set_text("Deleting: "_string.release_value_but_fixme_should_propagate_errors());
+        files_copied_label.set_text("Deleting files..."_string);
+        current_file_action_label.set_text("Deleting: "_string);
         break;
     default:
         VERIFY_NOT_REACHED();

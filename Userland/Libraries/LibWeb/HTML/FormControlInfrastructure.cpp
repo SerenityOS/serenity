@@ -37,7 +37,7 @@ WebIDL::ExceptionOr<XHR::FormDataEntry> create_entry(JS::Realm& realm, String co
             if (filename.has_value())
                 name_attribute = filename.value();
             else
-                name_attribute = TRY_OR_THROW_OOM(vm, "blob"_string);
+                name_attribute = "blob"_string;
             return JS::make_handle(TRY(FileAPI::File::create(realm, { JS::make_handle(*blob) }, move(name_attribute), {})));
         }));
 
@@ -136,7 +136,7 @@ WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(J
             // 1. If there are no selected files, then create an entry with name and a new File object with an empty name, application/octet-stream as type, and an empty body, and append it to entry list.
             if (file_element->files()->length() == 0) {
                 FileAPI::FilePropertyBag options {};
-                options.type = TRY_OR_THROW_OOM(vm, "application/octet-stream"_string);
+                options.type = "application/octet-stream"_string;
                 auto file = TRY(FileAPI::File::create(realm, {}, String {}, options));
                 TRY_OR_THROW_OOM(vm, entry_list.try_append(XHR::FormDataEntry { .name = move(name), .value = JS::make_handle(file) }));
             }
@@ -151,7 +151,7 @@ WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(J
         // 9. Otherwise, if the field element is an input element whose type attribute is in the Hidden state and name is an ASCII case-insensitive match for "_charset_":
         else if (auto* hidden_input = dynamic_cast<HTML::HTMLInputElement*>(control.ptr()); hidden_input && hidden_input->type_state() == HTMLInputElement::TypeAttributeState::Hidden && Infra::is_ascii_case_insensitive_match(name, "_charset_"sv)) {
             // 1. Let charset be the name of encoding if encoding is given, and "UTF-8" otherwise.
-            auto charset = encoding.has_value() ? encoding.value() : TRY_OR_THROW_OOM(vm, "UTF-8"_string);
+            auto charset = encoding.has_value() ? encoding.value() : "UTF-8"_string;
 
             // 2. Create an entry with name and charset, and append it to entry list.
             TRY_OR_THROW_OOM(vm, entry_list.try_append(XHR::FormDataEntry { .name = move(name), .value = move(charset) }));

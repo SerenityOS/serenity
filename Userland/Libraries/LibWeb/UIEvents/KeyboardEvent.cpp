@@ -221,7 +221,7 @@ static ErrorOr<String> get_event_key(KeyCode platform_key, u32 code_point)
     // 5. Return key as the key attribute value for this key event.
     if (key.has_value())
         return key.release_value();
-    return TRY("Unidentified"_string);
+    return "Unidentified"_string;
 }
 
 // 3. Keyboard Event code Value Tables, https://www.w3.org/TR/uievents-code/#code-value-tables

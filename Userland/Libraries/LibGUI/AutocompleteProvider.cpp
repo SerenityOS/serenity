@@ -108,7 +108,7 @@ AutocompleteBox::AutocompleteBox(TextEditor& editor)
         apply_suggestion();
     };
 
-    m_no_suggestions_view = main_widget->add<GUI::Label>("No suggestions"_string.release_value_but_fixme_should_propagate_errors());
+    m_no_suggestions_view = main_widget->add<GUI::Label>("No suggestions"_string);
 }
 
 void AutocompleteBox::update_suggestions(Vector<CodeComprehension::AutocompleteResultEntry>&& suggestions)

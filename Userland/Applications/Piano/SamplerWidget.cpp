@@ -60,7 +60,7 @@ SamplerWidget::SamplerWidget(TrackManager& track_manager)
         m_wave_editor->update();
     };
 
-    m_recorded_sample_name = m_open_button_and_recorded_sample_name_container->add<GUI::Label>("No sample loaded"_string.release_value_but_fixme_should_propagate_errors());
+    m_recorded_sample_name = m_open_button_and_recorded_sample_name_container->add<GUI::Label>("No sample loaded"_string);
     m_recorded_sample_name->set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     m_wave_editor = add<WaveEditor>(m_track_manager);

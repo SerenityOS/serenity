@@ -95,7 +95,7 @@ ErrorOr<String> ProcessModel::column_name(int column) const
     case Column::Virtual:
         return "Virtual"_short_string;
     case Column::Physical:
-        return TRY("Physical"_string);
+        return "Physical"_string;
     case Column::DirtyPrivate:
         return "Private"_short_string;
     case Column::CleanInode:
@@ -107,11 +107,11 @@ ErrorOr<String> ProcessModel::column_name(int column) const
     case Column::CPU:
         return "CPU"_short_string;
     case Column::Processor:
-        return TRY("Processor"_string);
+        return "Processor"_string;
     case Column::Name:
         return "Name"_short_string;
     case Column::Syscalls:
-        return TRY("Syscalls"_string);
+        return "Syscalls"_string;
     case Column::InodeFaults:
         return "F:Inode"_short_string;
     case Column::ZeroFaults:
@@ -121,15 +121,15 @@ ErrorOr<String> ProcessModel::column_name(int column) const
     case Column::IPv4SocketReadBytes:
         return "IPv4 In"_short_string;
     case Column::IPv4SocketWriteBytes:
-        return TRY("IPv4 Out"_string);
+        return "IPv4 Out"_string;
     case Column::UnixSocketReadBytes:
         return "Unix In"_short_string;
     case Column::UnixSocketWriteBytes:
-        return TRY("Unix Out"_string);
+        return "Unix Out"_string;
     case Column::FileReadBytes:
         return "File In"_short_string;
     case Column::FileWriteBytes:
-        return TRY("File Out"_string);
+        return "File Out"_string;
     case Column::Pledge:
         return "Pledge"_short_string;
     case Column::Veil:

@@ -33,7 +33,7 @@ ErrorOr<GUI::Widget*> ZoomTool::get_properties_widget()
         sensitivity_container->set_fixed_height(20);
         (void)TRY(sensitivity_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto sensitivity_label = TRY(sensitivity_container->try_add<GUI::Label>(TRY("Sensitivity:"_string)));
+        auto sensitivity_label = TRY(sensitivity_container->try_add<GUI::Label>("Sensitivity:"_string));
         sensitivity_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         sensitivity_label->set_fixed_size(80, 20);
 

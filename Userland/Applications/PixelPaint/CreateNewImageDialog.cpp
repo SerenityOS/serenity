@@ -80,7 +80,7 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
         return BackgroundIndex::Custom;
     }();
 
-    auto& background_label = main_widget->add<GUI::Label>("Background:"_string.release_value_but_fixme_should_propagate_errors());
+    auto& background_label = main_widget->add<GUI::Label>("Background:"_string);
     background_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     auto& background_color_combo = main_widget->add<GUI::ComboBox>();
     auto& background_color_input = main_widget->add<GUI::ColorInput>();
@@ -110,7 +110,7 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
     };
 
     auto& set_defaults_checkbox = main_widget->add<GUI::CheckBox>();
-    set_defaults_checkbox.set_text("Use these settings as default"_string.release_value_but_fixme_should_propagate_errors());
+    set_defaults_checkbox.set_text("Use these settings as default"_string);
 
     auto& button_container = main_widget->add<GUI::Widget>();
     button_container.set_layout<GUI::HorizontalBoxLayout>();

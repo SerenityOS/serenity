@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Config::pledge_domain("VideoPlayer");
 
     auto app = TRY(GUI::Application::create(arguments));
-    app->set_config_domain(TRY("VideoPlayer"_string));
+    app->set_config_domain("VideoPlayer"_string);
 
     auto window = TRY(GUI::Window::try_create());
     window->resize(640, 480);

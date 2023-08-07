@@ -154,7 +154,7 @@ ErrorOr<GUI::Widget*> CloneTool::get_properties_widget()
         hardness_container->set_fixed_height(20);
         (void)TRY(hardness_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto hardness_label = TRY(hardness_container->try_add<GUI::Label>(TRY("Hardness:"_string)));
+        auto hardness_label = TRY(hardness_container->try_add<GUI::Label>("Hardness:"_string));
         hardness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         hardness_label->set_fixed_size(80, 20);
 

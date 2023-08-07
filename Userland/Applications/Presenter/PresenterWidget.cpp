@@ -71,7 +71,7 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
         GUI::Application::the()->quit();
     })));
 
-    auto presentation_menu = TRY(window->try_add_menu(TRY("&Presentation"_string)));
+    auto presentation_menu = TRY(window->try_add_menu("&Presentation"_string));
     m_next_slide_action = GUI::Action::create("&Next", { KeyCode::Key_Right }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)), [this](auto&) {
         if (m_current_presentation) {
             m_current_presentation->next_frame();

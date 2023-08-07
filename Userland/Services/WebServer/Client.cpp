@@ -116,7 +116,7 @@ ErrorOr<bool> Client::handle_request(HTTP::HttpRequest const& request)
     if (Configuration::the().credentials().has_value()) {
         bool has_authenticated = verify_credentials(request.headers());
         if (!has_authenticated) {
-            auto const basic_auth_header = TRY("WWW-Authenticate: Basic realm=\"WebServer\", charset=\"UTF-8\""_string);
+            auto const basic_auth_header = "WWW-Authenticate: Basic realm=\"WebServer\", charset=\"UTF-8\""_string;
             Vector<String> headers {};
             TRY(headers.try_append(basic_auth_header));
             TRY(send_error_response(401, request, move(headers)));
@@ -325,7 +325,7 @@ ErrorOr<void> Client::handle_directory_listing(String const& requested_path, Str
 
     auto response = builder.to_deprecated_string();
     FixedMemoryStream stream { response.bytes() };
-    return send_response(stream, request, { .type = TRY("text/html"_string), .length = response.length() });
+    return send_response(stream, request, { .type = "text/html"_string, .length = response.length() });
 }
 
 ErrorOr<void> Client::send_error_response(unsigned code, HTTP::HttpRequest const& request, Vector<String> const& headers)

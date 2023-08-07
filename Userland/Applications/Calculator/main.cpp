@@ -58,7 +58,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }));
 
-    auto& constants_menu = window->add_menu(TRY("&Constants"_string));
+    auto& constants_menu = window->add_menu("&Constants"_string);
     auto const power = Crypto::NumberTheory::Power("10"_bigint, "10"_bigint);
 
     constants_menu.add_action(GUI::Action::create("&Pi", TRY(Gfx::Bitmap::load_from_file("/res/icons/calculator/pi.png"sv)), [&](auto&) {

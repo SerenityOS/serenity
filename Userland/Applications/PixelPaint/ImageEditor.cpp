@@ -30,7 +30,7 @@ constexpr int marching_ant_length = 4;
 
 ImageEditor::ImageEditor(NonnullRefPtr<Image> image)
     : m_image(move(image))
-    , m_title("Untitled"_string.release_value_but_fixme_should_propagate_errors())
+    , m_title("Untitled"_string)
     , m_gui_event_loop(Core::EventLoop::current())
 {
     set_focus_policy(GUI::FocusPolicy::StrongFocus);

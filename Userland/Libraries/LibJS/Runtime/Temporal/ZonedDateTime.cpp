@@ -150,10 +150,10 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
         auto field_names = TRY(calendar_fields(vm, *calendar, { "day"sv, "hour"sv, "microsecond"sv, "millisecond"sv, "minute"sv, "month"sv, "monthCode"sv, "nanosecond"sv, "second"sv, "year"sv }));
 
         // d. Append "timeZone" to fieldNames.
-        field_names.append(TRY_OR_THROW_OOM(vm, "timeZone"_string));
+        field_names.append("timeZone"_string);
 
         // e. Append "offset" to fieldNames.
-        field_names.append(TRY_OR_THROW_OOM(vm, "offset"_string));
+        field_names.append("offset"_string);
 
         // f. Let fields be ? PrepareTemporalFields(item, fieldNames, « "timeZone" »).
         auto* fields = TRY(prepare_temporal_fields(vm, item_object, field_names, Vector<StringView> { "timeZone"sv }));

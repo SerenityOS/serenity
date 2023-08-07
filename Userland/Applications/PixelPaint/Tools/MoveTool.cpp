@@ -298,15 +298,15 @@ ErrorOr<GUI::Widget*> MoveTool::get_properties_widget()
         auto selection_mode_container = TRY(properties_widget->try_add<GUI::Widget>());
         (void)TRY(selection_mode_container->try_set_layout<GUI::HorizontalBoxLayout>());
         selection_mode_container->set_fixed_height(46);
-        auto selection_mode_label = TRY(selection_mode_container->try_add<GUI::Label>(TRY("Selection Mode:"_string)));
+        auto selection_mode_label = TRY(selection_mode_container->try_add<GUI::Label>("Selection Mode:"_string));
         selection_mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         selection_mode_label->set_fixed_size(80, 40);
 
         auto mode_radio_container = TRY(selection_mode_container->try_add<GUI::Widget>());
         (void)TRY(mode_radio_container->try_set_layout<GUI::VerticalBoxLayout>());
-        m_selection_mode_foreground = TRY(mode_radio_container->try_add<GUI::RadioButton>(TRY("Foreground"_string)));
+        m_selection_mode_foreground = TRY(mode_radio_container->try_add<GUI::RadioButton>("Foreground"_string));
 
-        m_selection_mode_active = TRY(mode_radio_container->try_add<GUI::RadioButton>(TRY("Active Layer"_string)));
+        m_selection_mode_active = TRY(mode_radio_container->try_add<GUI::RadioButton>("Active Layer"_string));
 
         m_selection_mode_foreground->on_checked = [this](bool) {
             m_layer_selection_mode = LayerSelectionMode::ForegroundLayer;

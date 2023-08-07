@@ -18,7 +18,7 @@ ErrorOr<NonnullRefPtr<ProgressWindow>> ProgressWindow::try_create(StringView tit
     main_widget->set_fill_with_background_color(true);
     TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>());
 
-    auto label = TRY(main_widget->try_add<GUI::Label>(TRY("Analyzing storage space..."_string)));
+    auto label = TRY(main_widget->try_add<GUI::Label>("Analyzing storage space..."_string));
     label->set_fixed_height(22);
 
     window->m_progress_label = TRY(main_widget->try_add<GUI::Label>());

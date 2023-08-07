@@ -36,7 +36,7 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
     top_container.set_layout<GUI::VerticalBoxLayout>(4);
     top_container.set_fixed_height(45);
 
-    auto& add_label = top_container.add<GUI::Label>("Add title & date:"_string.release_value_but_fixme_should_propagate_errors());
+    auto& add_label = top_container.add<GUI::Label>("Add title & date:"_string);
     add_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     add_label.set_fixed_height(14);
     add_label.set_font(Gfx::FontDatabase::default_font().bold_variant());
@@ -134,7 +134,7 @@ ErrorOr<String> AddEventDialog::MeridiemListModel::column_name(int column) const
 {
     switch (column) {
     case Column::Meridiem:
-        return TRY("Meridiem"_string);
+        return "Meridiem"_string;
     default:
         VERIFY_NOT_REACHED();
     }

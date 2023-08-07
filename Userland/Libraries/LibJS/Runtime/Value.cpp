@@ -420,14 +420,14 @@ ThrowCompletionOr<String> Value::to_string(VM& vm) const
         return vm.throw_completion<TypeError>(ErrorType::Convert, "symbol", "string");
     // 3. If argument is undefined, return "undefined".
     case UNDEFINED_TAG:
-        return TRY_OR_THROW_OOM(vm, "undefined"_string);
+        return "undefined"_string;
     // 4. If argument is null, return "null".
     case NULL_TAG:
-        return TRY_OR_THROW_OOM(vm, "null"_string);
+        return "null"_string;
     // 5. If argument is true, return "true".
     // 6. If argument is false, return "false".
     case BOOLEAN_TAG:
-        return TRY_OR_THROW_OOM(vm, as_bool() ? "true"_string : "false"_string);
+        return as_bool() ? "true"_string : "false"_string;
     // 7. If argument is a Number, return Number::toString(argument, 10).
     case INT32_TAG:
         return TRY_OR_THROW_OOM(vm, String::number(as_i32()));

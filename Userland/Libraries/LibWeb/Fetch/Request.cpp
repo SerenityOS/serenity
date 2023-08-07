@@ -543,7 +543,7 @@ WebIDL::ExceptionOr<String> Request::referrer() const
                 return String {};
             // 2. If this’s request’s referrer is "client", then return "about:client".
             case Infrastructure::Request::Referrer::Client:
-                return TRY_OR_THROW_OOM(vm, "about:client"_string);
+                return "about:client"_string;
             default:
                 VERIFY_NOT_REACHED();
             }

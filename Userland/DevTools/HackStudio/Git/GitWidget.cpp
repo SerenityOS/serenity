@@ -36,7 +36,7 @@ GitWidget::GitWidget()
     refresh_button.on_click = [this](int) { refresh(); };
 
     auto& unstaged_label = unstaged_header.add<GUI::Label>();
-    unstaged_label.set_text("Unstaged"_string.release_value_but_fixme_should_propagate_errors());
+    unstaged_label.set_text("Unstaged"_string);
 
     unstaged_header.set_fixed_height(20);
     m_unstaged_files = unstaged.add<GitFilesView>(

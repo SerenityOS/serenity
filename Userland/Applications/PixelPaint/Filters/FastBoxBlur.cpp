@@ -42,12 +42,12 @@ ErrorOr<RefPtr<GUI::Widget>> FastBoxBlur::get_settings_widget()
         auto settings_widget = TRY(GUI::Widget::try_create());
         TRY(settings_widget->try_set_layout<GUI::VerticalBoxLayout>());
 
-        auto name_label = TRY(settings_widget->try_add<GUI::Label>(TRY("Fast Box Blur Filter"_string)));
+        auto name_label = TRY(settings_widget->try_add<GUI::Label>("Fast Box Blur Filter"_string));
         name_label->set_font_weight(Gfx::FontWeight::Bold);
         name_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         name_label->set_fixed_height(10);
 
-        auto asymmetric_checkbox = TRY(settings_widget->try_add<GUI::CheckBox>(TRY("Use Asymmetric Radii"_string)));
+        auto asymmetric_checkbox = TRY(settings_widget->try_add<GUI::CheckBox>("Use Asymmetric Radii"_string));
         asymmetric_checkbox->set_checked(false);
         asymmetric_checkbox->set_fixed_height(15);
         asymmetric_checkbox->on_checked = [this](bool checked) {
@@ -68,7 +68,7 @@ ErrorOr<RefPtr<GUI::Widget>> FastBoxBlur::get_settings_widget()
             update_preview();
         };
 
-        m_vector_checkbox = TRY(settings_widget->try_add<GUI::CheckBox>(TRY("Use Direction and magnitude"_string)));
+        m_vector_checkbox = TRY(settings_widget->try_add<GUI::CheckBox>("Use Direction and magnitude"_string));
         m_vector_checkbox->set_checked(false);
         m_vector_checkbox->set_visible(false);
         m_vector_checkbox->set_fixed_height(15);
@@ -109,7 +109,7 @@ ErrorOr<RefPtr<GUI::Widget>> FastBoxBlur::get_settings_widget()
         radius_x_container->set_fixed_height(20);
         radius_x_container->set_layout<GUI::HorizontalBoxLayout>();
 
-        auto radius_x_label = TRY(radius_x_container->try_add<GUI::Label>(TRY("Radius X:"_string)));
+        auto radius_x_label = TRY(radius_x_container->try_add<GUI::Label>("Radius X:"_string));
         radius_x_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         radius_x_label->set_fixed_size(50, 20);
 
@@ -125,7 +125,7 @@ ErrorOr<RefPtr<GUI::Widget>> FastBoxBlur::get_settings_widget()
         radius_y_container->set_fixed_height(20);
         TRY(radius_y_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto radius_y_label = TRY(radius_y_container->try_add<GUI::Label>(TRY("Radius Y:"_string)));
+        auto radius_y_label = TRY(radius_y_container->try_add<GUI::Label>("Radius Y:"_string));
         radius_y_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         radius_y_label->set_fixed_size(50, 20);
 
@@ -162,7 +162,7 @@ ErrorOr<RefPtr<GUI::Widget>> FastBoxBlur::get_settings_widget()
         magnitude_container->set_fixed_height(20);
         TRY(magnitude_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto magnitude_label = TRY(magnitude_container->try_add<GUI::Label>(TRY("Magnitude:"_string)));
+        auto magnitude_label = TRY(magnitude_container->try_add<GUI::Label>("Magnitude:"_string));
         magnitude_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         magnitude_label->set_fixed_size(60, 20);
 
@@ -178,7 +178,7 @@ ErrorOr<RefPtr<GUI::Widget>> FastBoxBlur::get_settings_widget()
         gaussian_container->set_fixed_height(20);
         TRY(gaussian_container->try_set_layout<GUI::HorizontalBoxLayout>(GUI::Margins { 4, 0, 4, 0 }));
 
-        m_gaussian_checkbox = TRY(gaussian_container->try_add<GUI::CheckBox>(TRY("Approximate Gaussian Blur"_string)));
+        m_gaussian_checkbox = TRY(gaussian_container->try_add<GUI::CheckBox>("Approximate Gaussian Blur"_string));
         m_gaussian_checkbox->set_checked(m_approximate_gauss);
         m_gaussian_checkbox->set_tooltip("A real gaussian blur can be approximated by running the box blur multiple times with different weights.");
         m_gaussian_checkbox->on_checked = [this](bool checked) {

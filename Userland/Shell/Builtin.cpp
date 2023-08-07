@@ -1418,7 +1418,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
     auto try_convert = [](StringView value, Type type) -> ErrorOr<Optional<RefPtr<AST::Value>>> {
         switch (type) {
         case Type::Bool:
-            return AST::make_ref_counted<AST::StringValue>(TRY("true"_string));
+            return AST::make_ref_counted<AST::StringValue>("true"_string);
         case Type::String:
             return AST::make_ref_counted<AST::StringValue>(TRY(String::from_utf8(value)));
         case Type::I32:
@@ -1602,7 +1602,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
             if (type == Type::Bool) {
                 set_local_variable(
                     current_variable,
-                    make_ref_counted<AST::StringValue>(MUST("false"_string)),
+                    make_ref_counted<AST::StringValue>("false"_string),
                     true);
             }
             return true;

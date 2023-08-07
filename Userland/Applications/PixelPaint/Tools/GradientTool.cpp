@@ -207,7 +207,7 @@ ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
         auto mode_container = TRY(properties_widget->try_add<GUI::Widget>());
         mode_container->set_fixed_height(20);
         (void)TRY(mode_container->try_set_layout<GUI::HorizontalBoxLayout>());
-        auto mode_label = TRY(mode_container->try_add<GUI::Label>(TRY("Gradient Type:"_string)));
+        auto mode_label = TRY(mode_container->try_add<GUI::Label>("Gradient Type:"_string));
         mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         mode_label->set_fixed_size(80, 20);
 
@@ -237,7 +237,7 @@ ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
         opacity_container->set_fixed_height(20);
         (void)TRY(opacity_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto opacity_label = TRY(opacity_container->try_add<GUI::Label>(TRY("Opacity:"_string)));
+        auto opacity_label = TRY(opacity_container->try_add<GUI::Label>("Opacity:"_string));
         opacity_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         opacity_label->set_fixed_size(80, 20);
 
@@ -271,7 +271,7 @@ ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
             hardness_container->set_visible(m_mode == GradientMode::Radial);
         };
 
-        auto hardness_label = TRY(hardness_container->try_add<GUI::Label>(TRY("Hardness:"_string)));
+        auto hardness_label = TRY(hardness_container->try_add<GUI::Label>("Hardness:"_string));
         hardness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         hardness_label->set_fixed_size(80, 20);
 
@@ -286,7 +286,7 @@ ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
         };
         set_secondary_slider(hardness_slider);
 
-        auto use_secondary_color_checkbox = TRY(properties_widget->try_add<GUI::CheckBox>(TRY("Use secondary color"_string)));
+        auto use_secondary_color_checkbox = TRY(properties_widget->try_add<GUI::CheckBox>("Use secondary color"_string));
         use_secondary_color_checkbox->on_checked = [this](bool checked) {
             m_use_secondary_color = checked;
             m_editor->update();

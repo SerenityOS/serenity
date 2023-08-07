@@ -83,7 +83,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collat
     // 21. Let collation be r.[[co]].
     // 22. If collation is null, let collation be "default".
     // 23. Set collator.[[Collation]] to collation.
-    collator.set_collation(result.co.has_value() ? result.co.release_value() : TRY_OR_THROW_OOM(vm, "default"_string));
+    collator.set_collation(result.co.has_value() ? result.co.release_value() : "default"_string);
 
     // 24. If relevantExtensionKeys contains "kn", then
     if (relevant_extension_keys.span().contains_slow("kn"sv) && result.kn.has_value()) {

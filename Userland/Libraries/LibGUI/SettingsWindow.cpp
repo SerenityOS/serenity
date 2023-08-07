@@ -43,7 +43,7 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(DeprecatedString t
     TRY(button_container->try_set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 6));
 
     if (show_defaults_button == ShowDefaultsButton::Yes) {
-        window->m_reset_button = TRY(button_container->try_add<GUI::DialogButton>(TRY("Defaults"_string)));
+        window->m_reset_button = TRY(button_container->try_add<GUI::DialogButton>("Defaults"_string));
         window->m_reset_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) {
             window->reset_default_values();
         };

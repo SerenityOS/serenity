@@ -88,7 +88,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (!final_file_template.has_value()) {
-        final_file_template = TRY("tmp.XXXXXXXXXX"_string);
+        final_file_template = "tmp.XXXXXXXXXX"_string;
     }
 
     if (!final_file_template->find_byte_offset("XXX"sv).has_value()) {

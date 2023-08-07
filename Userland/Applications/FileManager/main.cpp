@@ -362,7 +362,7 @@ bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView c
 
     if (current_file_launch_handlers.size() > 1) {
         added_open_menu_items = true;
-        auto& file_open_with_menu = menu->add_submenu("Open with"_string.release_value_but_fixme_should_propagate_errors());
+        auto& file_open_with_menu = menu->add_submenu("Open with"_string);
         for (auto& handler : current_file_launch_handlers) {
             if (handler == default_file_handler)
                 continue;
@@ -476,7 +476,7 @@ ErrorOr<int> run_in_desktop_mode()
         paste_action->set_enabled(data_type == "text/uri-list" && access(directory_view->path().characters(), W_OK) == 0);
     };
 
-    auto desktop_view_context_menu = TRY(GUI::Menu::try_create(TRY("Directory View"_string)));
+    auto desktop_view_context_menu = TRY(GUI::Menu::try_create("Directory View"_string));
 
     auto file_manager_action = GUI::Action::create("Open in File &Manager", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"sv)), [&](auto&) {
         auto paths = directory_view->selected_file_paths();
@@ -518,7 +518,7 @@ ErrorOr<int> run_in_desktop_mode()
     TRY(desktop_view_context_menu->try_add_separator());
     TRY(desktop_view_context_menu->try_add_action(display_properties_action));
 
-    auto desktop_context_menu = TRY(GUI::Menu::try_create(TRY("Directory View Directory"_string)));
+    auto desktop_context_menu = TRY(GUI::Menu::try_create("Directory View Directory"_string));
 
     TRY(desktop_context_menu->try_add_action(file_manager_action));
     TRY(desktop_context_menu->try_add_action(open_terminal_action));
@@ -541,7 +541,7 @@ ErrorOr<int> run_in_desktop_mode()
             if (node.is_directory()) {
                 desktop_context_menu->popup(event.screen_position(), file_manager_action);
             } else {
-                file_context_menu = GUI::Menu::construct("Directory View File"_string.release_value_but_fixme_should_propagate_errors());
+                file_context_menu = GUI::Menu::construct("Directory View File"_string);
 
                 bool added_open_menu_items = add_launch_handler_actions_to_menu(file_context_menu, directory_view, node.full_path(), file_context_menu_action_default_action, current_file_handlers);
                 if (added_open_menu_items)
@@ -685,9 +685,9 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         directory_view->refresh();
     };
 
-    auto directory_context_menu = TRY(GUI::Menu::try_create(TRY("Directory View Directory"_string)));
-    auto directory_view_context_menu = TRY(GUI::Menu::try_create(TRY("Directory View"_string)));
-    auto tree_view_directory_context_menu = TRY(GUI::Menu::try_create(TRY("Tree View Directory"_string)));
+    auto directory_context_menu = TRY(GUI::Menu::try_create("Directory View Directory"_string));
+    auto directory_view_context_menu = TRY(GUI::Menu::try_create("Directory View"_string));
+    auto tree_view_directory_context_menu = TRY(GUI::Menu::try_create("Tree View Directory"_string));
 
     auto open_parent_directory_action = GUI::Action::create("Open &Parent Directory", { Mod_Alt, Key_Up }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"sv)), [&](GUI::Action const&) {
         directory_view->open_parent_directory();
@@ -1205,7 +1205,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
                 folder_specific_paste_action->set_enabled(should_get_enabled);
                 directory_context_menu->popup(event.screen_position(), directory_open_action);
             } else {
-                file_context_menu = GUI::Menu::construct("Directory View File"_string.release_value_but_fixme_should_propagate_errors());
+                file_context_menu = GUI::Menu::construct("Directory View File"_string);
 
                 bool added_launch_file_handlers = add_launch_handler_actions_to_menu(file_context_menu, directory_view, node.full_path(), file_context_menu_action_default_action, current_file_handlers);
                 if (added_launch_file_handlers)

@@ -69,7 +69,7 @@ public:
         case Column::Type:
             return "Type"_short_string;
         case Column::Value:
-            return m_is_little_endian ? TRY("Value (Little Endian)"_string) : TRY("Value (Big Endian)"_string);
+            return m_is_little_endian ? "Value (Little Endian)"_string : "Value (Big Endian)"_string;
         }
         VERIFY_NOT_REACHED();
     }

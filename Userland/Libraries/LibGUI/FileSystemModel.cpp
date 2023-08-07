@@ -778,11 +778,11 @@ ErrorOr<String> FileSystemModel::column_name(int column) const
     case Column::Permissions:
         return "Mode"_short_string;
     case Column::ModificationTime:
-        return TRY("Modified"_string);
+        return "Modified"_string;
     case Column::Inode:
         return "Inode"_short_string;
     case Column::SymlinkTarget:
-        return TRY("Symlink target"_string);
+        return "Symlink target"_string;
     }
     VERIFY_NOT_REACHED();
 }

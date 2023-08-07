@@ -1314,7 +1314,7 @@ ErrorOr<void> MainWidget::create_default_image()
     m_layer_list_widget->set_image(image);
 
     auto& editor = create_new_editor(*image);
-    editor.set_title(TRY("Untitled"_string));
+    editor.set_title("Untitled"_string);
     editor.set_active_layer(bg_layer);
     editor.set_unmodified();
 
@@ -1333,7 +1333,7 @@ ErrorOr<void> MainWidget::create_image_from_clipboard()
     image->add_layer(*layer);
 
     auto& editor = create_new_editor(*image);
-    editor.set_title(TRY("Untitled"_string));
+    editor.set_title("Untitled"_string);
 
     m_layer_list_widget->set_image(image);
     m_layer_list_widget->set_selected_layer(layer);
@@ -1362,7 +1362,7 @@ ImageEditor* MainWidget::current_image_editor()
 
 ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
 {
-    auto& image_editor = m_tab_widget->add_tab<PixelPaint::ImageEditor>("Untitled"_string.release_value_but_fixme_should_propagate_errors(), image);
+    auto& image_editor = m_tab_widget->add_tab<PixelPaint::ImageEditor>("Untitled"_string, image);
 
     image_editor.on_active_layer_change = [&](auto* layer) {
         if (current_image_editor() != &image_editor)

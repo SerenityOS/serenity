@@ -186,7 +186,7 @@ void BoardWidget::context_menu_event(GUI::ContextMenuEvent& event)
     if (!m_context_menu) {
         m_context_menu = GUI::Menu::construct();
 
-        auto& insert_pattern_menu = m_context_menu->add_submenu("&Insert Pattern"_string.release_value_but_fixme_should_propagate_errors());
+        auto& insert_pattern_menu = m_context_menu->add_submenu("&Insert Pattern"_string);
         for_each_pattern([&](auto& pattern) {
             if (pattern.action())
                 insert_pattern_menu.add_action(*pattern.action());

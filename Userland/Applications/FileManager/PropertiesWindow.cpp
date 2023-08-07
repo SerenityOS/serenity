@@ -182,7 +182,7 @@ ErrorOr<void> PropertiesWindow::create_general_tab(GUI::TabWidget& tab_widget, b
 
     m_size_label = general_tab->find_descendant_of_type_named<GUI::Label>("size");
     m_size_label->set_text(S_ISDIR(st.st_mode)
-            ? TRY("Calculating..."_string)
+            ? "Calculating..."_string
             : TRY(String::from_deprecated_string(human_readable_size_long(st.st_size, UseThousandsSeparator::Yes))));
 
     auto* owner = general_tab->find_descendant_of_type_named<GUI::Label>("owner");
@@ -255,7 +255,7 @@ ErrorOr<void> PropertiesWindow::create_archive_tab(GUI::TabWidget& tab_widget, N
     }
     auto zip = maybe_zip.release_value();
 
-    auto tab = TRY(tab_widget.try_add_tab<GUI::Widget>(TRY("Archive"_string)));
+    auto tab = TRY(tab_widget.try_add_tab<GUI::Widget>("Archive"_string));
     TRY(tab->load_from_gml(properties_window_archive_tab_gml));
 
     auto statistics = TRY(zip.calculate_statistics());
@@ -365,19 +365,19 @@ ErrorOr<void> PropertiesWindow::create_font_tab(GUI::TabWidget& tab_widget, Nonn
     String format_name;
     switch (font_info.format) {
     case FontInfo::Format::BitmapFont:
-        format_name = TRY("Bitmap Font"_string);
+        format_name = "Bitmap Font"_string;
         break;
     case FontInfo::Format::OpenType:
-        format_name = TRY("OpenType"_string);
+        format_name = "OpenType"_string;
         break;
     case FontInfo::Format::TrueType:
-        format_name = TRY("TrueType"_string);
+        format_name = "TrueType"_string;
         break;
     case FontInfo::Format::WOFF:
-        format_name = TRY("WOFF"_string);
+        format_name = "WOFF"_string;
         break;
     case FontInfo::Format::WOFF2:
-        format_name = TRY("WOFF2"_string);
+        format_name = "WOFF2"_string;
         break;
     }
     tab->find_descendant_of_type_named<GUI::Label>("font_format")->set_text(format_name);
@@ -438,11 +438,11 @@ ErrorOr<void> PropertiesWindow::create_image_tab(GUI::TabWidget& tab_widget, Non
     if (auto embedded_icc_bytes = TRY(image_decoder->icc_data()); embedded_icc_bytes.has_value()) {
         auto icc_profile_or_error = Gfx::ICC::Profile::try_load_from_externally_owned_memory(embedded_icc_bytes.value());
         if (icc_profile_or_error.is_error()) {
-            hide_icc_group(TRY("Present but invalid"_string));
+            hide_icc_group("Present but invalid"_string);
         } else {
             auto icc_profile = icc_profile_or_error.release_value();
 
-            tab->find_descendant_of_type_named<GUI::Label>("image_has_icc_profile")->set_text(TRY("See below"_string));
+            tab->find_descendant_of_type_named<GUI::Label>("image_has_icc_profile")->set_text("See below"_string);
             tab->find_descendant_of_type_named<GUI::Label>("image_icc_profile")->set_text(icc_profile->tag_string_data(Gfx::ICC::profileDescriptionTag).value_or({}));
             tab->find_descendant_of_type_named<GUI::Label>("image_icc_copyright")->set_text(icc_profile->tag_string_data(Gfx::ICC::copyrightTag).value_or({}));
             tab->find_descendant_of_type_named<GUI::Label>("image_icc_color_space")->set_text(TRY(String::from_utf8(data_color_space_name(icc_profile->data_color_space()))));
@@ -468,7 +468,7 @@ ErrorOr<void> PropertiesWindow::create_pdf_tab(GUI::TabWidget& tab_widget, Nonnu
     if (auto handler = document->security_handler(); handler && !handler->has_user_password()) {
         // FIXME: Show a password dialog, once we've switched to lazy-loading
         auto tab = TRY(tab_widget.try_add_tab<GUI::Label>("PDF"_short_string));
-        tab->set_text(TRY("PDF is password-protected."_string));
+        tab->set_text("PDF is password-protected."_string);
         return {};
     }
 

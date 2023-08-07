@@ -45,7 +45,7 @@ ErrorOr<GUI::Widget*> PenTool::get_properties_widget()
         size_container->set_fixed_height(20);
         (void)TRY(size_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto size_label = TRY(size_container->try_add<GUI::Label>(TRY("Thickness:"_string)));
+        auto size_label = TRY(size_container->try_add<GUI::Label>("Thickness:"_string));
         size_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         size_label->set_fixed_size(80, 20);
 

@@ -57,7 +57,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     game.set_focus(true);
 
     auto& statusbar = *widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
-    statusbar.set_text(0, TRY("Score: 0"_string));
+    statusbar.set_text(0, "Score: 0"_string);
 
     DeprecatedString player_name = Config::read_string("Hearts"sv, ""sv, "player_name"sv, "Gunnar"sv);
 

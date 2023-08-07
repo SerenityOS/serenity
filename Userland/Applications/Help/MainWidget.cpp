@@ -216,7 +216,7 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
     TRY(go_menu->try_add_action(*m_go_home_action));
 
     auto help_menu = TRY(window.try_add_menu("&Help"_short_string));
-    String help_page_path = TRY(TRY(try_make_ref_counted<Manual::PageNode>(Manual::sections[1 - 1], TRY("Applications/Help"_string)))->path());
+    String help_page_path = TRY(TRY(try_make_ref_counted<Manual::PageNode>(Manual::sections[1 - 1], "Applications/Help"_string))->path());
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(&window)));
     TRY(help_menu->try_add_action(GUI::Action::create("&Contents", { Key_F1 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-unknown.png"sv)), [this, help_page_path = move(help_page_path)](auto&) {
         open_page(help_page_path);

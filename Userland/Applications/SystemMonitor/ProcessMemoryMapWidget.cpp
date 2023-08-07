@@ -61,7 +61,7 @@ ErrorOr<NonnullRefPtr<ProcessMemoryMapWidget>> ProcessMemoryMapWidget::try_creat
         [](auto& object) { return DeprecatedString::formatted("{:p}", object.get_u64("address"sv).value_or(0)); },
         [](auto& object) { return object.get_u64("address"sv).value_or(0); }));
     TRY(pid_vm_fields.try_empend("size", "Size"_short_string, Gfx::TextAlignment::CenterRight));
-    TRY(pid_vm_fields.try_empend("amount_resident", TRY("Resident"_string), Gfx::TextAlignment::CenterRight));
+    TRY(pid_vm_fields.try_empend("amount_resident", "Resident"_string, Gfx::TextAlignment::CenterRight));
     TRY(pid_vm_fields.try_empend("amount_dirty", "Dirty"_short_string, Gfx::TextAlignment::CenterRight));
     TRY(pid_vm_fields.try_empend("Access"_short_string, Gfx::TextAlignment::CenterLeft, [](auto& object) {
         StringBuilder builder;
@@ -79,19 +79,19 @@ ErrorOr<NonnullRefPtr<ProcessMemoryMapWidget>> ProcessMemoryMapWidget::try_creat
             builder.append('T');
         return builder.to_deprecated_string();
     }));
-    TRY(pid_vm_fields.try_empend(TRY("VMObject type"_string), Gfx::TextAlignment::CenterLeft, [](auto& object) {
+    TRY(pid_vm_fields.try_empend("VMObject type"_string, Gfx::TextAlignment::CenterLeft, [](auto& object) {
         auto type = object.get_deprecated_string("vmobject"sv).value_or({});
         if (type.ends_with("VMObject"sv))
             type = type.substring(0, type.length() - 8);
         return type;
     }));
-    TRY(pid_vm_fields.try_empend(TRY("Purgeable"_string), Gfx::TextAlignment::CenterLeft, [](auto& object) {
+    TRY(pid_vm_fields.try_empend("Purgeable"_string, Gfx::TextAlignment::CenterLeft, [](auto& object) {
         if (object.get_bool("volatile"sv).value_or(false))
             return "Volatile";
         return "Non-volatile";
     }));
     TRY(pid_vm_fields.try_empend(
-        TRY("Page map"_string), Gfx::TextAlignment::CenterLeft,
+        "Page map"_string, Gfx::TextAlignment::CenterLeft,
         [](auto&) {
             return GUI::Variant();
         },

@@ -186,7 +186,7 @@ ErrorOr<GUI::Widget*> GuideTool::get_properties_widget()
         snapping_container->set_fixed_height(20);
         (void)TRY(snapping_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto snapping_label = TRY(snapping_container->try_add<GUI::Label>(TRY("Snap offset:"_string)));
+        auto snapping_label = TRY(snapping_container->try_add<GUI::Label>("Snap offset:"_string));
         snapping_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         snapping_label->set_fixed_size(80, 20);
         snapping_label->set_tooltip("Press Shift to snap");

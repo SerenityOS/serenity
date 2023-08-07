@@ -21,7 +21,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd thread rpath unix cpath wpath"));
 
     auto app = TRY(GUI::Application::create(arguments));
-    app->set_config_domain(TRY("FontEditor"_string));
+    app->set_config_domain("FontEditor"_string);
 
     FontEditor::g_resources = FontEditor::Resources::create();
 

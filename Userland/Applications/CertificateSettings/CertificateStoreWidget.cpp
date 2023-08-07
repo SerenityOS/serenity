@@ -38,11 +38,11 @@ ErrorOr<String> CertificateStoreModel::column_name(int column) const
 {
     switch (column) {
     case Column::IssuedTo:
-        return TRY("Issued To"_string);
+        return "Issued To"_string;
     case Column::IssuedBy:
-        return TRY("Issued By"_string);
+        return "Issued By"_string;
     case Column::Expire:
-        return TRY("Expiration Date"_string);
+        return "Expiration Date"_string;
     default:
         VERIFY_NOT_REACHED();
     }

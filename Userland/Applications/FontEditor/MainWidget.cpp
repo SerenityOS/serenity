@@ -128,7 +128,7 @@ ErrorOr<void> MainWidget::create_actions()
         if (auto result = initialize({}, move(maybe_font.value())); result.is_error())
             show_error(result.release_error(), "Initializing new font failed"sv);
     });
-    m_new_action->set_status_tip(TRY("Create a new font"_string));
+    m_new_action->set_status_tip("Create a new font"_string);
 
     m_open_action = GUI::CommonActions::make_open_action([this](auto&) {
         if (!request_close())
@@ -221,7 +221,7 @@ ErrorOr<void> MainWidget::create_actions()
         if (m_font_preview_window)
             m_font_preview_window->show();
     });
-    m_open_preview_action->set_status_tip(TRY("Preview the current font"_string));
+    m_open_preview_action->set_status_tip("Preview the current font"_string);
 
     bool show_metadata = Config::read_bool("FontEditor"sv, "Layout"sv, "ShowMetadata"sv, true);
     m_font_metadata_groupbox->set_visible(show_metadata);
@@ -230,7 +230,7 @@ ErrorOr<void> MainWidget::create_actions()
         Config::write_bool("FontEditor"sv, "Layout"sv, "ShowMetadata"sv, action.is_checked());
     });
     m_show_metadata_action->set_checked(show_metadata);
-    m_show_metadata_action->set_status_tip(TRY("Show or hide metadata about the current font"_string));
+    m_show_metadata_action->set_status_tip("Show or hide metadata about the current font"_string);
 
     bool show_unicode_blocks = Config::read_bool("FontEditor"sv, "Layout"sv, "ShowUnicodeBlocks"sv, true);
     m_unicode_block_container->set_visible(show_unicode_blocks);
@@ -243,7 +243,7 @@ ErrorOr<void> MainWidget::create_actions()
         Config::write_bool("FontEditor"sv, "Layout"sv, "ShowUnicodeBlocks"sv, action.is_checked());
     });
     m_show_unicode_blocks_action->set_checked(show_unicode_blocks);
-    m_show_unicode_blocks_action->set_status_tip(TRY("Show or hide the Unicode block list"_string));
+    m_show_unicode_blocks_action->set_status_tip("Show or hide the Unicode block list"_string);
 
     bool show_toolbar = Config::read_bool("FontEditor"sv, "Layout"sv, "ShowToolbar"sv, true);
     m_toolbar_container->set_visible(show_toolbar);
@@ -252,7 +252,7 @@ ErrorOr<void> MainWidget::create_actions()
         Config::write_bool("FontEditor"sv, "Layout"sv, "ShowToolbar"sv, action.is_checked());
     });
     m_show_toolbar_action->set_checked(show_toolbar);
-    m_show_toolbar_action->set_status_tip(TRY("Show or hide the toolbar"_string));
+    m_show_toolbar_action->set_status_tip("Show or hide the toolbar"_string);
 
     bool show_statusbar = Config::read_bool("FontEditor"sv, "Layout"sv, "ShowStatusbar"sv, true);
     m_statusbar->set_visible(show_statusbar);
@@ -262,7 +262,7 @@ ErrorOr<void> MainWidget::create_actions()
         Config::write_bool("FontEditor"sv, "Layout"sv, "ShowStatusbar"sv, action.is_checked());
     });
     m_show_statusbar_action->set_checked(show_statusbar);
-    m_show_statusbar_action->set_status_tip(TRY("Show or hide the status bar"_string));
+    m_show_statusbar_action->set_status_tip("Show or hide the status bar"_string);
 
     bool highlight_modifications = Config::read_bool("FontEditor"sv, "GlyphMap"sv, "HighlightModifications"sv, true);
     m_glyph_map_widget->set_highlight_modifications(highlight_modifications);
@@ -271,7 +271,7 @@ ErrorOr<void> MainWidget::create_actions()
         Config::write_bool("FontEditor"sv, "GlyphMap"sv, "HighlightModifications"sv, action.is_checked());
     });
     m_highlight_modifications_action->set_checked(highlight_modifications);
-    m_highlight_modifications_action->set_status_tip(TRY("Show or hide highlights on modified glyphs"_string));
+    m_highlight_modifications_action->set_status_tip("Show or hide highlights on modified glyphs"_string);
 
     bool show_system_emoji = Config::read_bool("FontEditor"sv, "GlyphMap"sv, "ShowSystemEmoji"sv, true);
     m_glyph_map_widget->set_show_system_emoji(show_system_emoji);
@@ -280,7 +280,7 @@ ErrorOr<void> MainWidget::create_actions()
         Config::write_bool("FontEditor"sv, "GlyphMap"sv, "ShowSystemEmoji"sv, action.is_checked());
     });
     m_show_system_emoji_action->set_checked(show_system_emoji);
-    m_show_system_emoji_action->set_status_tip(TRY("Show or hide system emoji"_string));
+    m_show_system_emoji_action->set_status_tip("Show or hide system emoji"_string);
 
     m_go_to_glyph_action = GUI::Action::create("&Go to Glyph...", { Mod_Ctrl, Key_G }, g_resources.go_to_glyph, [this](auto&) {
         String input;
@@ -296,17 +296,17 @@ ErrorOr<void> MainWidget::create_actions()
             m_glyph_map_widget->scroll_to_glyph(code_point);
         }
     });
-    m_go_to_glyph_action->set_status_tip(TRY("Go to the specified code point"_string));
+    m_go_to_glyph_action->set_status_tip("Go to the specified code point"_string);
 
     m_previous_glyph_action = GUI::Action::create("Pre&vious Glyph", { Mod_Alt, Key_Left }, g_resources.previous_glyph, [this](auto&) {
         m_glyph_map_widget->select_previous_existing_glyph();
     });
-    m_previous_glyph_action->set_status_tip(TRY("Seek the previous visible glyph"_string));
+    m_previous_glyph_action->set_status_tip("Seek the previous visible glyph"_string);
 
     m_next_glyph_action = GUI::Action::create("&Next Glyph", { Mod_Alt, Key_Right }, g_resources.next_glyph, [this](auto&) {
         m_glyph_map_widget->select_next_existing_glyph();
     });
-    m_next_glyph_action->set_status_tip(TRY("Seek the next visible glyph"_string));
+    m_next_glyph_action->set_status_tip("Seek the next visible glyph"_string);
 
     i32 scale = Config::read_i32("FontEditor"sv, "GlyphEditor"sv, "Scale"sv, 10);
     m_glyph_editor_widget->set_scale(scale);
@@ -314,17 +314,17 @@ ErrorOr<void> MainWidget::create_actions()
         set_scale_and_save(5);
     });
     m_scale_five_action->set_checked(scale == 5);
-    m_scale_five_action->set_status_tip(TRY("Scale the editor in proportion to the current font"_string));
+    m_scale_five_action->set_status_tip("Scale the editor in proportion to the current font"_string);
     m_scale_ten_action = GUI::Action::create_checkable("1000%", { Mod_Ctrl, Key_2 }, [this](auto&) {
         set_scale_and_save(10);
     });
     m_scale_ten_action->set_checked(scale == 10);
-    m_scale_ten_action->set_status_tip(TRY("Scale the editor in proportion to the current font"_string));
+    m_scale_ten_action->set_status_tip("Scale the editor in proportion to the current font"_string);
     m_scale_fifteen_action = GUI::Action::create_checkable("1500%", { Mod_Ctrl, Key_3 }, [this](auto&) {
         set_scale_and_save(15);
     });
     m_scale_fifteen_action->set_checked(scale == 15);
-    m_scale_fifteen_action->set_status_tip(TRY("Scale the editor in proportion to the current font"_string));
+    m_scale_fifteen_action->set_status_tip("Scale the editor in proportion to the current font"_string);
 
     m_glyph_editor_scale_actions.add_action(*m_scale_five_action);
     m_glyph_editor_scale_actions.add_action(*m_scale_ten_action);
@@ -370,7 +370,7 @@ ErrorOr<void> MainWidget::create_actions()
         }
         GUI::Clipboard::the().set_plain_text(builder.to_deprecated_string());
     });
-    m_copy_text_action->set_status_tip(TRY("Copy to clipboard as text"_string));
+    m_copy_text_action->set_status_tip("Copy to clipboard as text"_string);
 
     return {};
 }

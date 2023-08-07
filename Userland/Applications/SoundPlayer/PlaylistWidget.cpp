@@ -63,7 +63,7 @@ ErrorOr<String> PlaylistModel::column_name(int column) const
     case Column::Title:
         return "Title"_short_string;
     case Column::Duration:
-        return TRY("Duration"_string);
+        return "Duration"_string;
     case Column::Group:
         return "Group"_short_string;
     case Column::Album:
@@ -71,7 +71,7 @@ ErrorOr<String> PlaylistModel::column_name(int column) const
     case Column::Artist:
         return "Artist"_short_string;
     case Column::Filesize:
-        return TRY("Filesize"_string);
+        return "Filesize"_string;
     }
     VERIFY_NOT_REACHED();
 }

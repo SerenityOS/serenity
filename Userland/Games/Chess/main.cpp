@@ -145,7 +145,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             GUI::Process::spawn_or_show_error(window, "/bin/GamesSettings"sv, Array { "--open-tab", "chess" });
         },
         window);
-    settings_action->set_status_tip(TRY("Open the Game Settings for Chess"_string));
+    settings_action->set_status_tip("Open the Game Settings for Chess"_string);
     TRY(game_menu->try_add_action(settings_action));
 
     auto show_available_moves_action = GUI::Action::create_checkable("Show Available Moves", [&](auto& action) {

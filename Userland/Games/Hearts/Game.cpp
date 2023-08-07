@@ -78,7 +78,7 @@ Game::Game()
     m_players[3].name = "Lisa";
     m_players[3].taken_cards_target = { width, height / 2 - Card::height / 2 };
 
-    m_passing_button = add<GUI::Button>("Pass Left"_string.release_value_but_fixme_should_propagate_errors());
+    m_passing_button = add<GUI::Button>("Pass Left"_string);
     constexpr int button_width = 120;
     constexpr int button_height = 30;
     m_passing_button->set_relative_rect(width / 2 - button_width / 2, height - 3 * outer_border_size - Card::height - button_height, button_width, button_height);
@@ -178,13 +178,13 @@ void Game::setup(DeprecatedString player_name, int hand_number)
         m_human_can_play = true;
         switch (passing_direction()) {
         case PassingDirection::Left:
-            m_passing_button->set_text("Pass Left"_string.release_value_but_fixme_should_propagate_errors());
+            m_passing_button->set_text("Pass Left"_string);
             break;
         case PassingDirection::Across:
-            m_passing_button->set_text("Pass Across"_string.release_value_but_fixme_should_propagate_errors());
+            m_passing_button->set_text("Pass Across"_string);
             break;
         case PassingDirection::Right:
-            m_passing_button->set_text("Pass Right"_string.release_value_but_fixme_should_propagate_errors());
+            m_passing_button->set_text("Pass Right"_string);
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -405,7 +405,7 @@ void Game::let_player_play_card()
     auto& player = current_player();
 
     if (&player == &m_players[0])
-        on_status_change("Select a card to play."_string.release_value_but_fixme_should_propagate_errors());
+        on_status_change("Select a card to play."_string);
     else
         on_status_change(String::formatted("Waiting for {} to play a card...", player).release_value_but_fixme_should_propagate_errors());
 
@@ -455,7 +455,7 @@ void Game::advance_game()
 
     if (m_state == State::Play && game_ended()) {
         m_state = State::GameEnded;
-        on_status_change("Game ended."_string.release_value_but_fixme_should_propagate_errors());
+        on_status_change("Game ended."_string);
         advance_game();
         return;
     }

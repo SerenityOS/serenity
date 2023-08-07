@@ -43,7 +43,7 @@ public:
     {
         switch (column) {
         case Column::Filename:
-            return TRY("Filename"_string);
+            return "Filename"_string;
         case Column::Location:
             return "#"_short_string;
         case Column::MatchedText:
@@ -122,7 +122,7 @@ FindInFilesWidget::FindInFilesWidget()
 
     m_textbox = top_container.add<GUI::TextBox>();
 
-    m_button = top_container.add<GUI::Button>("Find"_string.release_value_but_fixme_should_propagate_errors());
+    m_button = top_container.add<GUI::Button>("Find"_string);
     m_button->set_fixed_width(50);
 
     m_result_view = add<GUI::TableView>();

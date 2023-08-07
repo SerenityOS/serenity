@@ -117,7 +117,7 @@ ErrorOr<GUI::Widget*> SprayTool::get_properties_widget()
         density_container->set_fixed_height(20);
         (void)TRY(density_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto density_label = TRY(density_container->try_add<GUI::Label>(TRY("Density:"_string)));
+        auto density_label = TRY(density_container->try_add<GUI::Label>("Density:"_string));
         density_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         density_label->set_fixed_size(80, 20);
 

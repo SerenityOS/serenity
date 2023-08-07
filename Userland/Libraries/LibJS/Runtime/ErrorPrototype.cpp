@@ -47,7 +47,7 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
 
     // 4. If name is undefined, set name to "Error"; otherwise set name to ? ToString(name).
     auto name = name_property.is_undefined()
-        ? TRY_OR_THROW_OOM(vm, "Error"_string)
+        ? "Error"_string
         : TRY(name_property.to_string(vm));
 
     // 5. Let msg be ? Get(O, "message").
@@ -90,7 +90,7 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack_getter)
     if (auto name_property = TRY(error.get(vm.names.name)); !name_property.is_undefined())
         name = TRY(name_property.to_string(vm));
     else
-        name = TRY_OR_THROW_OOM(vm, "Error"_string);
+        name = "Error"_string;
 
     String message {};
     if (auto message_property = TRY(error.get(vm.names.message)); !message_property.is_undefined())

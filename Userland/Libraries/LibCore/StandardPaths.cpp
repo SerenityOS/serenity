@@ -116,14 +116,14 @@ ErrorOr<Vector<String>> StandardPaths::font_directories()
 {
     return Vector { {
 #if defined(AK_OS_SERENITY)
-        TRY("/res/fonts"_string),
+        "/res/fonts"_string,
 #elif defined(AK_OS_MACOS)
-        TRY("/System/Library/Fonts"_string),
-        TRY("/Library/Fonts"_string),
+        "/System/Library/Fonts"_string,
+        "/Library/Fonts"_string,
         TRY(String::formatted("{}/Library/Fonts"sv, home_directory())),
 #else
-        TRY("/usr/share/fonts"_string),
-        TRY("/usr/local/share/fonts"_string),
+        "/usr/share/fonts"_string,
+        "/usr/local/share/fonts"_string,
         TRY(String::formatted("{}/.local/share/fonts"sv, home_directory())),
 #endif
     } };

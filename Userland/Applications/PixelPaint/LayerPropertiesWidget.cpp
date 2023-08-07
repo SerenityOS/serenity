@@ -45,7 +45,7 @@ LayerPropertiesWidget::LayerPropertiesWidget()
     opacity_container.set_fixed_height(20);
     opacity_container.set_layout<GUI::HorizontalBoxLayout>();
 
-    auto& opacity_label = opacity_container.add<GUI::Label>("Opacity:"_string.release_value_but_fixme_should_propagate_errors());
+    auto& opacity_label = opacity_container.add<GUI::Label>("Opacity:"_string);
     opacity_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     opacity_label.set_fixed_size(80, 20);
 

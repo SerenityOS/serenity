@@ -18,8 +18,8 @@ public:
     virtual ~Plugin() override;
 
     String const& name() const;
-    JS::ThrowCompletionOr<String> description() const;
-    JS::ThrowCompletionOr<String> filename() const;
+    String description() const;
+    String filename() const;
     size_t length() const;
     JS::GCPtr<MimeType> item(u32 index) const;
     JS::GCPtr<MimeType> named_item(String const& name) const;

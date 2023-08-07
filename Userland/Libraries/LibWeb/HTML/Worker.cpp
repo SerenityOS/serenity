@@ -169,7 +169,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
             event_loop.task_queue().add(HTML::Task::create(HTML::Task::Source::PostedMessage, nullptr, [this, message] {
                 MessageEventInit event_init {};
                 event_init.data = message;
-                event_init.origin = "<origin>"_string.release_value_but_fixme_should_propagate_errors();
+                event_init.origin = "<origin>"_string;
                 dispatch_event(MessageEvent::create(*m_worker_realm, HTML::EventNames::message, event_init).release_value_but_fixme_should_propagate_errors());
             }));
 

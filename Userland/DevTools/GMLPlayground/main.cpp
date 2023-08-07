@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::create(arguments));
 
     Config::pledge_domains({ "GMLPlayground", "Calendar" });
-    app->set_config_domain(TRY("GMLPlayground"_string));
+    app->set_config_domain("GMLPlayground"_string);
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));

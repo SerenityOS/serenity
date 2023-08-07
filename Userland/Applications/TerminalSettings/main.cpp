@@ -33,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::SettingsWindow::create("Terminal Settings"));
     window->set_icon(app_icon.bitmap_for_size(16));
     (void)TRY(window->add_tab<TerminalSettingsViewWidget>("View"_short_string, "view"sv));
-    (void)TRY(window->add_tab<TerminalSettingsMainWidget>(TRY("Terminal"_string), "terminal"sv));
+    (void)TRY(window->add_tab<TerminalSettingsMainWidget>("Terminal"_string, "terminal"sv));
     window->set_active_tab(selected_tab);
 
     window->show();

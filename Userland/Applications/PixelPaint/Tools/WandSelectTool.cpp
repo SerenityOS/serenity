@@ -79,7 +79,7 @@ ErrorOr<GUI::Widget*> WandSelectTool::get_properties_widget()
     threshold_container->set_fixed_height(20);
     (void)TRY(threshold_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-    auto threshold_label = TRY(threshold_container->try_add<GUI::Label>(TRY("Threshold:"_string)));
+    auto threshold_label = TRY(threshold_container->try_add<GUI::Label>("Threshold:"_string));
     threshold_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     threshold_label->set_fixed_size(80, 20);
 

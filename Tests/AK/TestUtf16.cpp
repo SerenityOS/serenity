@@ -53,7 +53,7 @@ TEST_CASE(decode_utf8)
 TEST_CASE(encode_utf8)
 {
     {
-        auto utf8_string = MUST("Привет, мир! 😀 γειά σου κόσμος こんにちは世界"_string);
+        auto utf8_string = "Привет, мир! 😀 γειά σου κόσμος こんにちは世界"_string;
         auto string = MUST(AK::utf8_to_utf16(utf8_string));
         Utf16View view { string };
         EXPECT_EQ(MUST(view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes)), utf8_string);

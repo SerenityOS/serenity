@@ -154,7 +154,7 @@ void CSVImportDialogPage::update_preview()
     m_previously_made_reader = make_reader();
     if (!m_previously_made_reader.has_value()) {
         m_data_preview_table_view->set_model(nullptr);
-        m_data_preview_error_label->set_text("Could not read the given file"_string.release_value_but_fixme_should_propagate_errors());
+        m_data_preview_error_label->set_text("Could not read the given file"_string);
         m_data_preview_widget->set_active_widget(m_data_preview_error_label);
         return;
     }

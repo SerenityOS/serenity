@@ -492,7 +492,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> HackStudioWidget::create_project_tree_view_con
     m_tree_view_rename_action = GUI::CommonActions::make_rename_action([this](GUI::Action const&) {
         m_project_tree_view->begin_editing(m_project_tree_view->cursor_index());
     });
-    auto project_tree_view_context_menu = GUI::Menu::construct(TRY("Project Files"_string));
+    auto project_tree_view_context_menu = GUI::Menu::construct("Project Files"_string);
 
     auto& new_file_submenu = project_tree_view_context_menu->add_submenu("N&ew..."_short_string);
     for (auto& new_file_action : m_new_file_actions) {
@@ -777,7 +777,7 @@ void HackStudioWidget::add_new_editor_tab_widget(GUI::Widget& parent)
 
 void HackStudioWidget::add_new_editor(GUI::TabWidget& parent)
 {
-    auto& wrapper = parent.add_tab<EditorWrapper>("(Untitled)"_string.release_value_but_fixme_should_propagate_errors());
+    auto& wrapper = parent.add_tab<EditorWrapper>("(Untitled)"_string);
     parent.set_active_widget(&wrapper);
     if (parent.children().size() > 1 || m_all_editor_tab_widgets.size() > 1)
         parent.set_close_button_enabled(true);
@@ -985,7 +985,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_add_terminal_action
     return GUI::Action::create("Add New &Terminal", { Mod_Ctrl | Mod_Alt, Key_T },
         icon,
         [this](auto&) {
-            auto& terminal_wrapper = m_action_tab_widget->add_tab<TerminalWrapper>("Terminal"_string.release_value_but_fixme_should_propagate_errors());
+            auto& terminal_wrapper = m_action_tab_widget->add_tab<TerminalWrapper>("Terminal"_string);
             terminal_wrapper.on_command_exit = [&]() {
                 deferred_invoke([this]() {
                     m_action_tab_widget->remove_tab(*m_action_tab_widget->active_widget());
@@ -1342,7 +1342,7 @@ ErrorOr<void> HackStudioWidget::create_action_tab(GUI::Widget& parent)
         first_time = false;
     };
 
-    m_find_in_files_widget = m_action_tab_widget->add_tab<FindInFilesWidget>(TRY("Find"_string));
+    m_find_in_files_widget = m_action_tab_widget->add_tab<FindInFilesWidget>("Find"_string);
     m_todo_entries_widget = m_action_tab_widget->add_tab<ToDoEntriesWidget>("TODO"_short_string);
     m_terminal_wrapper = m_action_tab_widget->add_tab<TerminalWrapper>("Console"_short_string, false);
     auto debug_info_widget = TRY(DebugInfoWidget::create());
@@ -1353,13 +1353,13 @@ ErrorOr<void> HackStudioWidget::create_action_tab(GUI::Widget& parent)
         open_file(get_absolute_path(source_position.file_path), source_position.line_number - 1);
     };
 
-    m_disassembly_widget = m_action_tab_widget->add_tab<DisassemblyWidget>(TRY("Disassembly"_string));
+    m_disassembly_widget = m_action_tab_widget->add_tab<DisassemblyWidget>("Disassembly"_string);
     m_git_widget = m_action_tab_widget->add_tab<GitWidget>("Git"_short_string);
     m_git_widget->set_view_diff_callback([this](auto const& original_content, auto const& diff) {
         m_diff_viewer->set_content(original_content, diff);
         set_edit_mode(EditMode::Diff);
     });
-    m_gml_preview_widget = m_action_tab_widget->add_tab<GMLPreviewWidget>(TRY("GML Preview"_string), "");
+    m_gml_preview_widget = m_action_tab_widget->add_tab<GMLPreviewWidget>("GML Preview"_string, "");
 
     ToDoEntries::the().on_update = [this]() {
         m_todo_entries_widget->refresh();
@@ -1432,7 +1432,7 @@ ErrorOr<void> HackStudioWidget::create_file_menu(GUI::Window& window)
     new_submenu.add_action(*m_new_directory_action);
 
     file_menu.add_action(*m_open_action);
-    m_recent_projects_submenu = &file_menu.add_submenu(TRY("Open &Recent"_string));
+    m_recent_projects_submenu = &file_menu.add_submenu("Open &Recent"_string);
     {
         auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/open-recent.png"sv));
         m_recent_projects_submenu->set_icon(icon);
@@ -1511,7 +1511,7 @@ ErrorOr<void> HackStudioWidget::create_view_menu(GUI::Window& window)
     view_menu.add_separator();
 
     m_wrapping_mode_actions.set_exclusive(true);
-    auto& wrapping_mode_menu = view_menu.add_submenu(TRY("&Wrapping Mode"_string));
+    auto& wrapping_mode_menu = view_menu.add_submenu("&Wrapping Mode"_string);
     m_no_wrapping_action = GUI::Action::create_checkable("&No Wrapping", [&](auto&) {
         m_wrapping_mode = GUI::TextEditor::WrappingMode::NoWrap;
         for (auto& wrapper : m_all_editor_wrappers)

@@ -34,7 +34,7 @@ public:
     {
         switch (column) {
         case Column::Filename:
-            return TRY("Filename"_string);
+            return "Filename"_string;
         case Column::Text:
             return "Text"_short_string;
         case Column::Line:

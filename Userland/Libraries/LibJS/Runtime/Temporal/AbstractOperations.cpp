@@ -159,7 +159,7 @@ ThrowCompletionOr<String> to_temporal_overflow(VM& vm, Object const* options)
 {
     // 1. If options is undefined, return "constrain".
     if (options == nullptr)
-        return TRY_OR_THROW_OOM(vm, "constrain"_string);
+        return "constrain"_string;
 
     // 2. Return ? GetOption(options, "overflow", "string", « "constrain", "reject" », "constrain").
     auto option = TRY(get_option(vm, *options, vm.names.overflow, OptionType::String, { "constrain"sv, "reject"sv }, "constrain"sv));
@@ -173,7 +173,7 @@ ThrowCompletionOr<String> to_temporal_disambiguation(VM& vm, Object const* optio
 {
     // 1. If options is undefined, return "compatible".
     if (options == nullptr)
-        return TRY_OR_THROW_OOM(vm, "compatible"_string);
+        return "compatible"_string;
 
     // 2. Return ? GetOption(options, "disambiguation", "string", « "compatible", "earlier", "later", "reject" », "compatible").
     auto option = TRY(get_option(vm, *options, vm.names.disambiguation, OptionType::String, { "compatible"sv, "earlier"sv, "later"sv, "reject"sv }, "compatible"sv));
@@ -1425,7 +1425,7 @@ ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(VM& vm, StringV
     // 4. If result.[[TimeZone]].[[Z]] is true, then
     if (result.time_zone.z) {
         // a. Set offsetString to "+00:00".
-        offset_string = TRY_OR_THROW_OOM(vm, "+00:00"_string);
+        offset_string = "+00:00"_string;
     }
 
     // 6. Assert: offsetString is not undefined.
@@ -1460,7 +1460,7 @@ ThrowCompletionOr<String> parse_temporal_calendar_string(VM& vm, StringView iso_
 
         // b. If calendar is undefined, return "iso8601".
         if (!calendar.has_value())
-            return TRY_OR_THROW_OOM(vm, "iso8601"_string);
+            return "iso8601"_string;
         // c. Else, return calendar.
         else
             return calendar.release_value();

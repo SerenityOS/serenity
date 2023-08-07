@@ -18,7 +18,7 @@ public:
     virtual ~MimeType() override;
 
     String const& type() const;
-    JS::ThrowCompletionOr<String> description() const;
+    String description() const;
     String const& suffixes() const;
     JS::NonnullGCPtr<Plugin> enabled_plugin() const;
 

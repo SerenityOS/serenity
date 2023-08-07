@@ -78,15 +78,15 @@ ErrorOr<String> ProfileModel::column_name(int column) const
 {
     switch (column) {
     case Column::SampleCount:
-        return m_profile.show_percentages() ? TRY("% Samples"_string) : TRY("# Samples"_string);
+        return m_profile.show_percentages() ? "% Samples"_string : "# Samples"_string;
     case Column::SelfCount:
         return m_profile.show_percentages() ? "% Self"_short_string : "# Self"_short_string;
     case Column::ObjectName:
         return "Object"_short_string;
     case Column::StackFrame:
-        return TRY("Stack Frame"_string);
+        return "Stack Frame"_string;
     case Column::SymbolAddress:
-        return TRY("Symbol Address"_string);
+        return "Symbol Address"_string;
     default:
         VERIFY_NOT_REACHED();
     }

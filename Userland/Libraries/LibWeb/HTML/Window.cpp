@@ -730,11 +730,11 @@ Vector<JS::NonnullGCPtr<Plugin>> Window::pdf_viewer_plugin_objects()
 
     if (m_pdf_viewer_plugin_objects.is_empty()) {
         // FIXME: Propagate errors.
-        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), "PDF Viewer"_string.release_value_but_fixme_should_propagate_errors()).release_allocated_value_but_fixme_should_propagate_errors());
-        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), "Chrome PDF Viewer"_string.release_value_but_fixme_should_propagate_errors()).release_allocated_value_but_fixme_should_propagate_errors());
-        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), "Chromium PDF Viewer"_string.release_value_but_fixme_should_propagate_errors()).release_allocated_value_but_fixme_should_propagate_errors());
-        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), "Microsoft Edge PDF Viewer"_string.release_value_but_fixme_should_propagate_errors()).release_allocated_value_but_fixme_should_propagate_errors());
-        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), "WebKit built-in PDF"_string.release_value_but_fixme_should_propagate_errors()).release_allocated_value_but_fixme_should_propagate_errors());
+        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), "PDF Viewer"_string).release_allocated_value_but_fixme_should_propagate_errors());
+        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), "Chrome PDF Viewer"_string).release_allocated_value_but_fixme_should_propagate_errors());
+        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), "Chromium PDF Viewer"_string).release_allocated_value_but_fixme_should_propagate_errors());
+        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), "Microsoft Edge PDF Viewer"_string).release_allocated_value_but_fixme_should_propagate_errors());
+        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), "WebKit built-in PDF"_string).release_allocated_value_but_fixme_should_propagate_errors());
     }
 
     return m_pdf_viewer_plugin_objects;
@@ -753,8 +753,8 @@ Vector<JS::NonnullGCPtr<MimeType>> Window::pdf_viewer_mime_type_objects()
         return {};
 
     if (m_pdf_viewer_mime_type_objects.is_empty()) {
-        m_pdf_viewer_mime_type_objects.append(realm().heap().allocate<MimeType>(realm(), realm(), "application/pdf"_string.release_value_but_fixme_should_propagate_errors()).release_allocated_value_but_fixme_should_propagate_errors());
-        m_pdf_viewer_mime_type_objects.append(realm().heap().allocate<MimeType>(realm(), realm(), "text/pdf"_string.release_value_but_fixme_should_propagate_errors()).release_allocated_value_but_fixme_should_propagate_errors());
+        m_pdf_viewer_mime_type_objects.append(realm().heap().allocate<MimeType>(realm(), realm(), "application/pdf"_string).release_allocated_value_but_fixme_should_propagate_errors());
+        m_pdf_viewer_mime_type_objects.append(realm().heap().allocate<MimeType>(realm(), realm(), "text/pdf"_string).release_allocated_value_but_fixme_should_propagate_errors());
     }
 
     return m_pdf_viewer_mime_type_objects;
@@ -1042,7 +1042,7 @@ void Window::post_message(JS::Value message, String const&)
     queue_global_task(Task::Source::PostedMessage, *this, [this, message] {
         MessageEventInit event_init {};
         event_init.data = message;
-        event_init.origin = "<origin>"_string.release_value_but_fixme_should_propagate_errors();
+        event_init.origin = "<origin>"_string;
         dispatch_event(MessageEvent::create(realm(), EventNames::message, event_init).release_value_but_fixme_should_propagate_errors());
     });
 }

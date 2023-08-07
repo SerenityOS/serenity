@@ -29,16 +29,16 @@ ErrorOr<NonnullRefPtr<ProcessFileDescriptorMapWidget>> ProcessFileDescriptorMapW
     TRY(pid_fds_fields.try_empend("Access"_short_string, Gfx::TextAlignment::CenterLeft, [](auto& object) {
         return object.get_bool("seekable"sv).value_or(false) ? "Seekable" : "Sequential";
     }));
-    TRY(pid_fds_fields.try_empend(TRY("Blocking"_string), Gfx::TextAlignment::CenterLeft, [](auto& object) {
+    TRY(pid_fds_fields.try_empend("Blocking"_string, Gfx::TextAlignment::CenterLeft, [](auto& object) {
         return object.get_bool("blocking"sv).value_or(false) ? "Blocking" : "Nonblocking";
     }));
     TRY(pid_fds_fields.try_empend("On exec"_short_string, Gfx::TextAlignment::CenterLeft, [](auto& object) {
         return object.get_bool("cloexec"sv).value_or(false) ? "Close" : "Keep";
     }));
-    TRY(pid_fds_fields.try_empend(TRY("Can read"_string), Gfx::TextAlignment::CenterLeft, [](auto& object) {
+    TRY(pid_fds_fields.try_empend("Can read"_string, Gfx::TextAlignment::CenterLeft, [](auto& object) {
         return object.get_bool("can_read"sv).value_or(false) ? "Yes" : "No";
     }));
-    TRY(pid_fds_fields.try_empend(TRY("Can write"_string), Gfx::TextAlignment::CenterLeft, [](auto& object) {
+    TRY(pid_fds_fields.try_empend("Can write"_string, Gfx::TextAlignment::CenterLeft, [](auto& object) {
         return object.get_bool("can_write"sv).value_or(false) ? "Yes" : "No";
     }));
 

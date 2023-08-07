@@ -34,7 +34,7 @@ unsigned PageNode::section_number() const
 
 ErrorOr<NonnullRefPtr<PageNode>> PageNode::help_index_page()
 {
-    static NonnullRefPtr<PageNode> const help_index_page = TRY(try_make_ref_counted<PageNode>(sections[7 - 1], TRY("Help-index"_string)));
+    static NonnullRefPtr<PageNode> const help_index_page = TRY(try_make_ref_counted<PageNode>(sections[7 - 1], "Help-index"_string));
     return help_index_page;
 }
 

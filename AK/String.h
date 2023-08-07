@@ -280,9 +280,9 @@ struct Formatter<String> : Formatter<StringView> {
 
 }
 
-[[nodiscard]] ALWAYS_INLINE AK::ErrorOr<AK::String> operator""_string(char const* cstring, size_t length)
+[[nodiscard]] ALWAYS_INLINE AK::String operator""_string(char const* cstring, size_t length)
 {
-    return AK::String::from_utf8(AK::StringView(cstring, length));
+    return AK::String::from_utf8(AK::StringView(cstring, length)).release_value();
 }
 
 [[nodiscard]] ALWAYS_INLINE AK_SHORT_STRING_CONSTEVAL AK::String operator""_short_string(char const* cstring, size_t length)

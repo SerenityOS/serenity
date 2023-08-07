@@ -267,7 +267,7 @@ ErrorOr<MimeSniff::MimeType> XMLHttpRequest::get_response_mime_type() const
 
     // 2. If mimeType is failure, then set mimeType to text/xml.
     if (!mime_type.has_value())
-        return MimeSniff::MimeType::create(TRY("text"_string), "xml"_short_string);
+        return MimeSniff::MimeType::create("text"_string, "xml"_short_string);
 
     // 3. Return mimeType.
     return mime_type.release_value();
@@ -498,7 +498,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
                     auto charset_parameter_iterator = content_type_record->parameters().find("charset"sv);
                     if (charset_parameter_iterator != content_type_record->parameters().end() && !Infra::is_ascii_case_insensitive_match(charset_parameter_iterator->value, "UTF-8"sv)) {
                         // 1. Set contentTypeRecord’s parameters["charset"] to "UTF-8".
-                        TRY_OR_THROW_OOM(vm, content_type_record->set_parameter(TRY_OR_THROW_OOM(vm, "charset"_string), TRY_OR_THROW_OOM(vm, "UTF-8"_string)));
+                        TRY_OR_THROW_OOM(vm, content_type_record->set_parameter("charset"_string, "UTF-8"_string));
 
                         // 2. Let newContentTypeSerialized be the result of serializing contentTypeRecord.
                         auto new_content_type_serialized = TRY_OR_THROW_OOM(vm, content_type_record->serialized());
@@ -925,7 +925,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::override_mime_type(String const& mime)
 
     // 3. If this’s override MIME type is failure, then set this’s override MIME type to application/octet-stream.
     if (!m_override_mime_type.has_value())
-        m_override_mime_type = TRY_OR_THROW_OOM(vm, MimeSniff::MimeType::create(TRY_OR_THROW_OOM(vm, "application"_string), TRY_OR_THROW_OOM(vm, "octet-stream"_string)));
+        m_override_mime_type = TRY_OR_THROW_OOM(vm, MimeSniff::MimeType::create("application"_string, "octet-stream"_string));
 
     return {};
 }

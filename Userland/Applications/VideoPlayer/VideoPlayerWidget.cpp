@@ -399,7 +399,7 @@ ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
     })));
 
     // Playback menu
-    auto playback_menu = TRY(window.try_add_menu(TRY("&Playback"_string)));
+    auto playback_menu = TRY(window.try_add_menu("&Playback"_string));
 
     // FIXME: Maybe seek mode should be in an options dialog instead. The playback menu may get crowded.
     //        For now, leave it here for convenience.
@@ -411,7 +411,7 @@ ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
     auto view_menu = TRY(window.try_add_menu("&View"_short_string));
     TRY(view_menu->try_add_action(*m_toggle_fullscreen_action));
 
-    auto sizing_mode_menu = TRY(view_menu->try_add_submenu(TRY("&Sizing Mode"_string)));
+    auto sizing_mode_menu = TRY(view_menu->try_add_submenu("&Sizing Mode"_string));
     sizing_mode_menu->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/fit-image-to-view.png"sv)));
 
     m_sizing_mode_group = make<GUI::ActionGroup>();

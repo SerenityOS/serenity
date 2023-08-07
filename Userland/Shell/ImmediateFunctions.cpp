@@ -81,7 +81,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_length_impl(AST::ImmediateExpression
             // ImmediateExpression(length <mode_name> <entry>)
             resulting_nodes.unchecked_append(AST::make_ref_counted<AST::ImmediateExpression>(
                 expr_node->position(),
-                AST::NameWithPosition { TRY("length"_string), invoking_node.function_position() },
+                AST::NameWithPosition { "length"_string, invoking_node.function_position() },
                 Vector<NonnullRefPtr<AST::Node>> { Vector<NonnullRefPtr<AST::Node>> {
                     static_cast<NonnullRefPtr<AST::Node>>(AST::make_ref_counted<AST::BarewordLiteral>(expr_node->position(), TRY(String::from_utf8(mode_name)))),
                     AST::make_ref_counted<AST::SyntheticNode>(expr_node->position(), NonnullRefPtr<AST::Value>(entry)),
@@ -825,7 +825,7 @@ ErrorOr<Node> parse_assignment_expression(Span<Token>& tokens)
     if (auto op = token.get_pointer<Operator>(); op && is_assignment_operator(*op)) {
         if (!lhs.value.has<String>()) {
             return Node {
-                make<ErrorNode>(TRY("Left-hand side of assignment must be a variable"_string))
+                make<ErrorNode>("Left-hand side of assignment must be a variable"_string)
             };
         }
 
@@ -851,7 +851,7 @@ ErrorOr<Node> parse_ternary_expression(Span<Token>& tokens)
 
     if (!next_token_is_operator(tokens, Operator::TernaryColon)) {
         return Node {
-            make<ErrorNode>(TRY("Expected ':' after true value in ternary expression"_string))
+            make<ErrorNode>("Expected ':' after true value in ternary expression"_string)
         };
     }
 
@@ -932,7 +932,7 @@ ErrorOr<Node> parse_unary_expression(Span<Token>& tokens)
 {
     if (tokens.is_empty()) {
         return Node {
-            make<ErrorNode>(TRY("Expected expression, got end of input"_string))
+            make<ErrorNode>("Expected expression, got end of input"_string)
         };
     }
 
@@ -953,7 +953,7 @@ ErrorOr<Node> parse_unary_expression(Span<Token>& tokens)
 ErrorOr<Node> parse_primary_expression(Span<Token>& tokens)
 {
     if (tokens.is_empty())
-        return Node { make<ErrorNode>(TRY("Expected expression, got end of input"_string)) };
+        return Node { make<ErrorNode>("Expected expression, got end of input"_string) };
 
     auto& token = tokens.first();
     return token.visit(
@@ -972,7 +972,7 @@ ErrorOr<Node> parse_primary_expression(Span<Token>& tokens)
                 auto value = TRY(parse_expression(tokens));
                 if (!next_token_is_operator(tokens, Operator::CloseParen)) {
                     return Node {
-                        make<ErrorNode>(TRY("Expected ')' after expression in parentheses"_string))
+                        make<ErrorNode>("Expected ')' after expression in parentheses"_string)
                     };
                 }
                 tokens = tokens.slice(1);
@@ -980,7 +980,7 @@ ErrorOr<Node> parse_primary_expression(Span<Token>& tokens)
             }
             default:
                 return Node {
-                    make<ErrorNode>(TRY("Expected expression, got operator"_string))
+                    make<ErrorNode>("Expected expression, got operator"_string)
                 };
             }
         });

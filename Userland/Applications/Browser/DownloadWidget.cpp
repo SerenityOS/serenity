@@ -93,7 +93,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     destination_label.set_fixed_height(16);
     destination_label.set_text_wrapping(Gfx::TextWrapping::DontWrap);
 
-    m_close_on_finish_checkbox = add<GUI::CheckBox>("Close when finished"_string.release_value_but_fixme_should_propagate_errors());
+    m_close_on_finish_checkbox = add<GUI::CheckBox>("Close when finished"_string);
     m_close_on_finish_checkbox->set_checked(close_on_finish);
 
     m_close_on_finish_checkbox->on_checked = [&](bool checked) {
@@ -156,7 +156,7 @@ void DownloadWidget::did_finish(bool success)
     m_browser_image->load_from_file("/res/graphics/download-finished.gif"sv);
     window()->set_title("Download finished!");
     m_close_button->set_enabled(true);
-    m_cancel_button->set_text("Open in Folder"_string.release_value_but_fixme_should_propagate_errors());
+    m_cancel_button->set_text("Open in Folder"_string);
     m_cancel_button->on_click = [this](auto) {
         Desktop::Launcher::open(URL::create_with_file_scheme(Core::StandardPaths::downloads_directory(), m_url.basename()));
         window()->close();

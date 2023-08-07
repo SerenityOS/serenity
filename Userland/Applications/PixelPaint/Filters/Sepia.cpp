@@ -23,7 +23,7 @@ ErrorOr<RefPtr<GUI::Widget>> Sepia::get_settings_widget()
         auto settings_widget = TRY(GUI::Widget::try_create());
         TRY(settings_widget->try_set_layout<GUI::VerticalBoxLayout>());
 
-        auto name_label = TRY(settings_widget->try_add<GUI::Label>(TRY("Sepia Filter"_string)));
+        auto name_label = TRY(settings_widget->try_add<GUI::Label>("Sepia Filter"_string));
         name_label->set_font_weight(Gfx::FontWeight::Bold);
         name_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         name_label->set_fixed_height(20);
