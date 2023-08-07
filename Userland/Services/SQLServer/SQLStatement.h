@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/NonnullRefPtr.h>
+#include <AK/RefCounted.h>
 #include <AK/Vector.h>
-#include <LibCore/EventReceiver.h>
 #include <LibSQL/AST/AST.h>
 #include <LibSQL/Result.h>
 #include <LibSQL/ResultSet.h>
@@ -18,16 +18,13 @@
 
 namespace SQLServer {
 
-class SQLStatement final : public Core::EventReceiver {
-    C_OBJECT_ABSTRACT(SQLStatement)
-
+class SQLStatement final : public RefCounted<SQLStatement> {
 public:
     static SQL::ResultOr<NonnullRefPtr<SQLStatement>> create(DatabaseConnection&, StringView sql);
-    ~SQLStatement() override = default;
 
     static RefPtr<SQLStatement> statement_for(SQL::StatementID statement_id);
     SQL::StatementID statement_id() const { return m_statement_id; }
-    DatabaseConnection* connection() { return dynamic_cast<DatabaseConnection*>(parent()); }
+    DatabaseConnection& connection() { return m_connection; }
     Optional<SQL::ExecutionID> execute(Vector<SQL::Value> placeholder_values);
 
 private:
@@ -37,6 +34,7 @@ private:
     void next(SQL::ExecutionID execution_id, SQL::ResultSet result, size_t result_size);
     void report_error(SQL::Result, SQL::ExecutionID execution_id);
 
+    DatabaseConnection& m_connection;
     SQL::StatementID m_statement_id { 0 };
 
     HashTable<SQL::ExecutionID> m_ongoing_executions;
