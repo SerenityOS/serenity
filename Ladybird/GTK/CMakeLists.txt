@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
-project(ladybird-gtk4 C CXX)
+project(ladybird-gtk4
+  VERSION 1.0.0
+  LANGUAGES C CXX
+)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -97,6 +100,6 @@ set(WEBCONTENT_SOURCES
 add_executable(WebContent ${WEBCONTENT_SOURCES})
 target_link_libraries(WebContent PRIVATE Lagom::Audio Lagom::Core Lagom::FileSystem Lagom::Gfx Lagom::IPC Lagom::JS Lagom::Main Lagom::Web Lagom::WebSocket)
 
-install(TARGETS LibAudio LibCore LibFileSystem LibGfx LibIPC LibJS LibWeb LibWebView LibWebSocket LibProtocol LibGUI LibMarkdown LibGemini LibHTTP LibGL LibSoftGPU LibVideo LibWasm LibXML LibIDL LibTextCodec LibCrypto LibLocale LibRegex LibSyntax LibUnicode LibCompress LibTLS LibGLSL LibGPU LibThreading)
-install(TARGETS ladybird)
-install(TARGETS WebContent DESTINATION lib)
+if (NOT CMAKE_SKIP_INSTALL_RULES)
+  include(cmake/InstallRules.cmake)
+endif()
