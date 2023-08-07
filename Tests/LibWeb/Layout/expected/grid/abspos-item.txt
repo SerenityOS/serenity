@@ -1,0 +1,23 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x17.46875 children: not-inline
+      Box <div.outer-grid> at (8,8) content-size 784x17.46875 [GFC] children: not-inline
+        BlockContainer <div.inner-absolute-block> at (8,8) content-size 80.765625x17.46875 positioned [BFC] children: inline
+          line 0 width: 80.765625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 9, rect: [8,8 80.765625x17.46875]
+              "some text"
+          TextNode <#text>
+        BlockContainer <div> at (8,8) content-size 784x17.46875 [BFC] children: inline
+          line 0 width: 80.25, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 9, rect: [8,8 80.25x17.46875]
+              "more text"
+          TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x17.46875]
+      PaintableBox (Box<DIV>.outer-grid) [8,8 784x17.46875]
+        PaintableWithLines (BlockContainer<DIV>.inner-absolute-block) [8,8 80.765625x17.46875]
+          TextPaintable (TextNode<#text>)
+        PaintableWithLines (BlockContainer<DIV>) [8,8 784x17.46875]
+          TextPaintable (TextNode<#text>)

@@ -1317,6 +1317,10 @@ void GridFormattingContext::place_grid_items(AvailableSpace const& available_spa
     grid_container().for_each_child_of_type<Box>([&](Box& child_box) {
         if (can_skip_is_anonymous_text_run(child_box))
             return IterationDecision::Continue;
+
+        if (child_box.is_out_of_flow(*this))
+            return IterationDecision::Continue;
+
         m_boxes_to_place.append(child_box);
         return IterationDecision::Continue;
     });
@@ -1778,6 +1782,18 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             grid_item.gap_adjusted_column(box) + resolved_column_span,
             grid_item.box);
     }
+}
+
+void GridFormattingContext::parent_context_did_dimension_child_root_box()
+{
+    grid_container().for_each_child_of_type<Box>([&](Layout::Box& box) {
+        if (box.is_absolutely_positioned()) {
+            auto& cb_state = m_state.get(*box.containing_block());
+            auto available_width = AvailableSize::make_definite(cb_state.content_width() + cb_state.padding_left + cb_state.padding_right);
+            auto available_height = AvailableSize::make_definite(cb_state.content_height() + cb_state.padding_top + cb_state.padding_bottom);
+            layout_absolutely_positioned_element(box, AvailableSpace(available_width, available_height));
+        }
+    });
 }
 
 void GridFormattingContext::determine_intrinsic_size_of_grid_container(AvailableSpace const& available_space)
