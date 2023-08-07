@@ -2061,28 +2061,13 @@ RefPtr<Gfx::Font const> StyleComputer::font_matching_algorithm(FontFaceKey const
     return {};
 }
 
-void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
+RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element, StyleValue const& font_family, StyleValue const& font_size, StyleValue const& font_style, StyleValue const& font_weight, StyleValue const& font_stretch) const
 {
-    // To compute the font, first ensure that we've defaulted the relevant CSS font properties.
-    // FIXME: This should be more sophisticated.
-    compute_defaulted_property_value(style, element, CSS::PropertyID::FontFamily, pseudo_element);
-    compute_defaulted_property_value(style, element, CSS::PropertyID::FontSize, pseudo_element);
-    compute_defaulted_property_value(style, element, CSS::PropertyID::FontStretch, pseudo_element);
-    compute_defaulted_property_value(style, element, CSS::PropertyID::FontStyle, pseudo_element);
-    compute_defaulted_property_value(style, element, CSS::PropertyID::FontWeight, pseudo_element);
-    compute_defaulted_property_value(style, element, CSS::PropertyID::LineHeight, pseudo_element);
-
     auto* parent_element = element_to_inherit_style_from(element, pseudo_element);
 
-    auto font_size = style.property(CSS::PropertyID::FontSize);
-    auto font_style = style.property(CSS::PropertyID::FontStyle);
-    auto font_weight = style.property(CSS::PropertyID::FontWeight);
-    auto font_stretch = style.property(CSS::PropertyID::FontStretch);
+    auto width = font_stretch.to_font_stretch_width();
 
-    int width = font_stretch->to_font_stretch_width();
-
-    auto weight = font_weight->to_font_weight();
-
+    auto weight = font_weight.to_font_weight();
     bool bold = weight > Gfx::FontWeight::Regular;
 
     // FIXME: Should be based on "user's default font size"
@@ -2110,7 +2095,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     };
     Length::FontMetrics font_metrics { parent_font_size(), font_pixel_metrics, parent_line_height };
 
-    if (font_size->is_identifier()) {
+    if (font_size.is_identifier()) {
         // https://w3c.github.io/csswg-drafts/css-fonts/#absolute-size-mapping
         AK::HashMap<Web::CSS::ValueID, float> absolute_size_mapping = {
             { CSS::ValueID::XxSmall, 0.6 },
@@ -2125,7 +2110,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             { CSS::ValueID::Larger, 1.25 },
         };
 
-        auto const identifier = static_cast<IdentifierStyleValue const&>(*font_size).id();
+        auto const identifier = static_cast<IdentifierStyleValue const&>(font_size).id();
 
         // https://w3c.github.io/csswg-drafts/css-fonts/#valdef-font-size-relative-size
         // TODO: If the parent element has a keyword font size in the absolute size keyword mapping table,
@@ -2147,14 +2132,14 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         };
 
         Optional<Length> maybe_length;
-        if (font_size->is_percentage()) {
+        if (font_size.is_percentage()) {
             // Percentages refer to parent element's font size
-            maybe_length = Length::make_px(font_size->as_percentage().percentage().as_fraction() * parent_font_size().to_double());
+            maybe_length = Length::make_px(font_size.as_percentage().percentage().as_fraction() * parent_font_size().to_double());
 
-        } else if (font_size->is_length()) {
-            maybe_length = font_size->as_length().length();
-        } else if (font_size->is_calculated()) {
-            maybe_length = font_size->as_calculated().resolve_length(length_resolution_context);
+        } else if (font_size.is_length()) {
+            maybe_length = font_size.as_length().length();
+        } else if (font_size.is_calculated()) {
+            maybe_length = font_size.as_calculated().resolve_length(length_resolution_context);
         }
         if (maybe_length.has_value()) {
             auto px = maybe_length.value().to_px(length_resolution_context).to_int();
@@ -2163,7 +2148,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         }
     }
 
-    auto slope = font_style->to_font_slope();
+    auto slope = font_style.to_font_slope();
 
     // FIXME: Implement the full font-matching algorithm: https://www.w3.org/TR/css-fonts-4/#font-matching-algorithm
 
@@ -2237,9 +2222,8 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
 
     RefPtr<Gfx::Font const> found_font;
 
-    auto family_value = style.property(PropertyID::FontFamily);
-    if (family_value->is_value_list()) {
-        auto const& family_list = static_cast<StyleValueList const&>(*family_value).values();
+    if (font_family.is_value_list()) {
+        auto const& family_list = static_cast<StyleValueList const&>(font_family).values();
         for (auto const& family : family_list) {
             if (family->is_identifier()) {
                 found_font = find_generic_font(family->to_identifier());
@@ -2249,10 +2233,10 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             if (found_font)
                 break;
         }
-    } else if (family_value->is_identifier()) {
-        found_font = find_generic_font(family_value->to_identifier());
-    } else if (family_value->is_string()) {
-        found_font = find_font(family_value->to_string().release_value_but_fixme_should_propagate_errors());
+    } else if (font_family.is_identifier()) {
+        found_font = find_generic_font(font_family.to_identifier());
+    } else if (font_family.is_string()) {
+        found_font = find_font(font_family.to_string().release_value_but_fixme_should_propagate_errors());
     }
 
     if (!found_font) {
@@ -2265,8 +2249,30 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
 
     FontCache::the().set(font_selector, *found_font);
 
-    style.set_property(CSS::PropertyID::FontSize, LengthStyleValue::create(CSS::Length::make_px(font_size_in_px)).release_value_but_fixme_should_propagate_errors(), nullptr);
-    style.set_property(CSS::PropertyID::FontWeight, NumberStyleValue::create(weight).release_value_but_fixme_should_propagate_errors(), nullptr);
+    return found_font;
+}
+
+void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
+{
+    // To compute the font, first ensure that we've defaulted the relevant CSS font properties.
+    // FIXME: This should be more sophisticated.
+    compute_defaulted_property_value(style, element, CSS::PropertyID::FontFamily, pseudo_element);
+    compute_defaulted_property_value(style, element, CSS::PropertyID::FontSize, pseudo_element);
+    compute_defaulted_property_value(style, element, CSS::PropertyID::FontStretch, pseudo_element);
+    compute_defaulted_property_value(style, element, CSS::PropertyID::FontStyle, pseudo_element);
+    compute_defaulted_property_value(style, element, CSS::PropertyID::FontWeight, pseudo_element);
+    compute_defaulted_property_value(style, element, CSS::PropertyID::LineHeight, pseudo_element);
+
+    auto font_family = style.property(CSS::PropertyID::FontFamily);
+    auto font_size = style.property(CSS::PropertyID::FontSize);
+    auto font_style = style.property(CSS::PropertyID::FontStyle);
+    auto font_weight = style.property(CSS::PropertyID::FontWeight);
+    auto font_stretch = style.property(CSS::PropertyID::FontStretch);
+
+    auto found_font = compute_font_for_style_values(element, pseudo_element, font_family, font_size, font_style, font_weight, font_stretch);
+
+    style.set_property(CSS::PropertyID::FontSize, LengthStyleValue::create(CSS::Length::make_px(found_font->pixel_size())).release_value_but_fixme_should_propagate_errors(), nullptr);
+    style.set_property(CSS::PropertyID::FontWeight, NumberStyleValue::create(found_font->weight()).release_value_but_fixme_should_propagate_errors(), nullptr);
 
     style.set_computed_font(found_font.release_nonnull());
 

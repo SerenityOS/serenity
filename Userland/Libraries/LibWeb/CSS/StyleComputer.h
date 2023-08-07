@@ -91,6 +91,8 @@ public:
 
     void load_fonts_from_sheet(CSSStyleSheet const&);
 
+    RefPtr<Gfx::Font const> compute_font_for_style_values(DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element, StyleValue const& font_family, StyleValue const& font_size, StyleValue const& font_style, StyleValue const& font_weight, StyleValue const& font_stretch) const;
+
     struct AnimationKey {
         CSS::CSSStyleDeclaration const* source_declaration;
         DOM::Element const* element;
