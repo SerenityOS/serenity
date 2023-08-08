@@ -13,6 +13,7 @@
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/AllocationStrategy.h>
+#include <Kernel/Memory/MemorySections.h>
 #include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/Memory/PhysicalRegion.h>
 #include <Kernel/Memory/Region.h>
@@ -298,27 +299,6 @@ private:
 
     SpinlockProtected<GlobalData, LockRank::None> m_global_data;
 };
-
-inline bool is_user_address(VirtualAddress vaddr)
-{
-    return vaddr.get() < USER_RANGE_CEILING;
-}
-
-inline bool is_user_range(VirtualAddress vaddr, size_t size)
-{
-    if (vaddr.offset(size) < vaddr)
-        return false;
-    if (!is_user_address(vaddr))
-        return false;
-    if (size <= 1)
-        return true;
-    return is_user_address(vaddr.offset(size - 1));
-}
-
-inline bool is_user_range(VirtualRange const& range)
-{
-    return is_user_range(range.base(), range.size());
-}
 
 inline bool PhysicalPage::is_shared_zero_page() const
 {
