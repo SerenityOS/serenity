@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Undefine <undefine@undefine.pl>
+ * Copyright (c) 2022-2023, Undefine <undefine@undefine.pl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -103,6 +103,43 @@ u8 FATFS::internal_file_type_to_directory_entry_type(DirectoryEntryView const& e
         return DT_REG;
     }
     return DT_UNKNOWN;
+}
+
+ErrorOr<u32> FATFS::fat_read(u32 cluster)
+{
+    MutexLocker locker(m_lock);
+
+    auto fat_sector = TRY(KBuffer::try_create_with_size("FATFS: FAT read buffer"sv, logical_block_size()));
+    auto fat_sector_buffer = UserOrKernelBuffer::for_kernel_buffer(fat_sector->data());
+
+    u32 fat_offset = cluster * sizeof(u32);
+    u32 fat_sector_index = boot_record()->reserved_sector_count + (fat_offset / logical_block_size());
+    u32 entry_offset = fat_offset % logical_block_size();
+
+    // TODO: Add caching for the FAT
+    TRY(raw_read(fat_sector_index, fat_sector_buffer));
+
+    return *reinterpret_cast<u32*>(&fat_sector->data()[entry_offset]) & cluster_number_mask;
+}
+
+ErrorOr<void> FATFS::fat_write(u32 cluster, u32 value)
+{
+    MutexLocker locker(m_lock);
+
+    auto fat_sector = TRY(KBuffer::try_create_with_size("FATFS: FAT read buffer"sv, logical_block_size()));
+    auto fat_sector_buffer = UserOrKernelBuffer::for_kernel_buffer(fat_sector->data());
+
+    u32 fat_offset = cluster * sizeof(u32);
+    u32 fat_sector_index = boot_record()->reserved_sector_count + (fat_offset / logical_block_size());
+    u32 entry_offset = fat_offset % logical_block_size();
+
+    TRY(raw_read(fat_sector_index, fat_sector_buffer));
+
+    *reinterpret_cast<u32*>(&fat_sector->data()[entry_offset]) = value & cluster_number_mask;
+
+    TRY(raw_write(fat_sector_index, fat_sector_buffer));
+
+    return {};
 }
 
 }

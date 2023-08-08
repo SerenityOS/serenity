@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Undefine <undefine@undefine.pl>
+ * Copyright (c) 2022-2023, Undefine <undefine@undefine.pl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -31,7 +31,6 @@ private:
     FATInode(FATFS&, FATEntry, NonnullOwnPtr<KString> filename);
 
     static constexpr u32 no_more_clusters = 0x0FFFFFF8;
-    static constexpr u32 cluster_number_mask = 0x0FFFFFFF;
 
     static constexpr u8 end_entry_byte = 0x00;
     static constexpr u8 unused_entry_byte = 0xE5;

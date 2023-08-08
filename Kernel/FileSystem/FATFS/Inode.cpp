@@ -52,9 +52,6 @@ ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> FATInode::compute_block_list()
 
     Vector<BlockBasedFileSystem::BlockIndex> block_list;
 
-    auto fat_sector = TRY(KBuffer::try_create_with_size("FATFS: FAT read buffer"sv, fs().m_device_block_size));
-    auto fat_sector_buffer = UserOrKernelBuffer::for_kernel_buffer(fat_sector->data());
-
     while (cluster < no_more_clusters) {
         dbgln_if(FAT_DEBUG, "FATFS: Appending cluster {} to inode {}'s cluster chain", cluster, index());
 
@@ -62,14 +59,7 @@ ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> FATInode::compute_block_list()
         for (u8 i = 0; i < fs().boot_record()->sectors_per_cluster; i++)
             block_list.append(BlockBasedFileSystem::BlockIndex { first_block.value() + i });
 
-        u32 fat_offset = cluster * sizeof(u32);
-        u32 fat_sector_index = fs().boot_record()->reserved_sector_count + (fat_offset / fs().m_device_block_size);
-        u32 entry_offset = fat_offset % fs().m_device_block_size;
-
-        TRY(fs().raw_read(fat_sector_index, fat_sector_buffer));
-
-        cluster = *reinterpret_cast<u32*>(&fat_sector->data()[entry_offset]);
-        cluster &= cluster_number_mask;
+        cluster = TRY(fs().fat_read(cluster));
     }
 
     return block_list;

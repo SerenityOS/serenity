@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Undefine <undefine@undefine.pl>
+ * Copyright (c) 2022-2023, Undefine <undefine@undefine.pl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -42,9 +42,14 @@ private:
 
     static constexpr u32 first_data_cluster = 2;
 
+    static constexpr u32 cluster_number_mask = 0x0FFFFFFF;
+
     FAT32BootRecord const* boot_record() const { return reinterpret_cast<FAT32BootRecord const*>(m_boot_record->data()); }
 
     BlockBasedFileSystem::BlockIndex first_block_of_cluster(u32 cluster) const;
+
+    ErrorOr<u32> fat_read(u32 cluster);
+    ErrorOr<void> fat_write(u32 cluster, u32 value);
 
     OwnPtr<KBuffer> m_boot_record {};
     RefPtr<FATInode> m_root_inode;
