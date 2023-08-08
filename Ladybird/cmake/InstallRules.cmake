@@ -24,6 +24,10 @@ install(TARGETS ${app_install_targets}
     COMPONENT ladybird_Runtime
     NAMELINK_COMPONENT ladybird_Development
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  FILE_SET browser
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILE_SET ladybird
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
 include("${SERENITY_SOURCE_DIR}/Meta/Lagom/get_linked_lagom_libraries.cmake")

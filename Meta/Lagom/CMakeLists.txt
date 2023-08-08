@@ -377,6 +377,11 @@ install(
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.h"
 )
+install(FILES
+    ${Lagom_BINARY_DIR}/AK/Debug.h
+    COMPONENT Lagom_Development
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/AK"
+)
 
 # Code Generators and other host tools
 if (BUILD_LAGOM_TOOLS)
@@ -452,11 +457,14 @@ if (BUILD_LAGOM)
         list(APPEND LIBWEBVIEW_GENERATED_SOURCES WebSocket/WebSocketClientEndpoint.h)
         list(APPEND LIBWEBVIEW_GENERATED_SOURCES WebSocket/WebSocketServerEndpoint.h)
 
-        set(GENERATED_SOURCES ${LIBWEBVIEW_GENERATED_SOURCES})
         lagom_lib(LibWebView webview
             SOURCES ${LIBWEBVIEW_SOURCES} ${LIBWEBVIEW_GENERATED_SOURCES}
             LIBS LibGfx LibGUI LibIPC LibWeb LibProtocol)
-        unset(GENERATED_SOURCES)
+        foreach(header ${LIBWEBVIEW_GENERATED_SOURCES})
+            get_filename_component(subdirectory ${header} DIRECTORY)
+            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${header}" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${subdirectory}")
+        endforeach()
+        install(FILES "${SERENITY_PROJECT_ROOT}/Userland/Services/RequestServer/ConnectionCache.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/RequestServer")
     endif()
 
     if (NOT EMSCRIPTEN)
@@ -487,6 +495,9 @@ if (BUILD_LAGOM)
     lagom_lib(LibGUI gui
         SOURCES ${LIBGUI_SOURCES}
         LIBS LibGfx LibSyntax)
+
+    # FIXME: How about we don't include Kernel/API from random high-level libraries?
+    install(FILES ${SERENITY_PROJECT_ROOT}/Kernel/API/KeyCode.h DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/Kernel/API")
 
     # FIXME: LibLocaleData is an object lib in Lagom, because the weak symbol trick we use on serenity
     #    straight up isn't supposed to work per ELF rules

@@ -1,12 +1,12 @@
 function (generate_css_implementation)
     set(LIBWEB_INPUT_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}")
     invoke_generator(
-            "EasingFunctions.cpp"
-            Lagom::GenerateCSSEasingFunctions
-            "${LIBWEB_INPUT_FOLDER}/CSS/EasingFunctions.json"
-            "CSS/EasingFunctions.h"
-            "CSS/EasingFunctions.cpp"
-            arguments -j "${LIBWEB_INPUT_FOLDER}/CSS/EasingFunctions.json"
+        "EasingFunctions.cpp"
+        Lagom::GenerateCSSEasingFunctions
+        "${LIBWEB_INPUT_FOLDER}/CSS/EasingFunctions.json"
+        "CSS/EasingFunctions.h"
+        "CSS/EasingFunctions.cpp"
+        arguments -j "${LIBWEB_INPUT_FOLDER}/CSS/EasingFunctions.json"
     )
 
     invoke_generator(
@@ -89,6 +89,18 @@ function (generate_css_implementation)
     add_custom_target(generate_QuirksModeStyleSheetSource.cpp DEPENDS CSS/QuirksModeStyleSheetSource.cpp)
     add_dependencies(all_generated generate_QuirksModeStyleSheetSource.cpp)
 
+    set(CSS_GENERATED_TO_INSTALL
+        "CSS/EasingFunctions.h"
+        "CSS/Enums.h"
+        "CSS/MathFunctions.h"
+        "CSS/MediaFeatureID.h"
+        "CSS/PropertyID.h"
+        "CSS/TransformFunctions.h"
+        "CSS/ValueID.h"
+    )
+    list(TRANSFORM CSS_GENERATED_TO_INSTALL PREPEND "${CMAKE_CURRENT_BINARY_DIR}/")
+    install(FILES ${CSS_GENERATED_TO_INSTALL} DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/LibWeb/CSS")
+
 endfunction()
 
 function (generate_js_bindings target)
@@ -154,6 +166,10 @@ function (generate_js_bindings target)
         add_dependencies(all_generated generate_${basename})
         add_dependencies(${target} generate_${basename})
 
+        # install generated sources
+        list(FILTER BINDINGS_SOURCES INCLUDE REGEX "\.h$")
+        install(FILES ${BINDINGS_SOURCES} DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/LibWeb/Bindings")
+
         list(APPEND LIBWEB_ALL_IDL_FILES "${LIBWEB_INPUT_FOLDER}/${class}.idl")
         set(LIBWEB_ALL_IDL_FILES ${LIBWEB_ALL_IDL_FILES} PARENT_SCOPE)
     endfunction()
@@ -185,6 +201,10 @@ function (generate_js_bindings target)
         add_custom_target(generate_exposed_interfaces DEPENDS ${exposed_interface_sources})
         add_dependencies(all_generated generate_exposed_interfaces)
         add_dependencies(${target} generate_exposed_interfaces)
+
+        list(FILTER exposed_interface_sources INCLUDE REGEX "\.h$")
+        list(TRANSFORM exposed_interface_sources PREPEND "${CMAKE_CURRENT_BINARY_DIR}/")
+        install(FILES ${exposed_interface_sources} DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/LibWeb/Bindings")
     endfunction()
 
     include("idl_files.cmake")

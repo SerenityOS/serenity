@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16...3.22)
+cmake_minimum_required(VERSION 3.23)
 
 project(ladybird
     VERSION 0.0.1
@@ -92,6 +92,16 @@ set(SOURCES
     HelperProcess.cpp
     Utilities.cpp
 )
+set(BROWSER_HEADERS
+    ${BROWSER_SOURCE_DIR}/CookieJar.h
+    ${BROWSER_SOURCE_DIR}/Database.h
+    ${BROWSER_SOURCE_DIR}/History.h
+)
+set(LADYBIRD_HEADERS
+    HelperProcess.h
+    Types.h
+    Utilities.h
+)
 
 if (ENABLE_QT)
     qt_add_executable(ladybird ${SOURCES})
@@ -129,6 +139,14 @@ else()
     #       For now, we can export a static library of common files for chromes to link to
     add_library(ladybird STATIC ${SOURCES})
 endif()
+target_sources(ladybird PUBLIC FILE_SET browser TYPE HEADERS
+    BASE_DIRS ${SERENITY_SOURCE_DIR}/Userland/Applications
+    FILES ${BROWSER_HEADERS}
+)
+target_sources(ladybird PUBLIC FILE_SET ladybird TYPE HEADERS
+    BASE_DIRS ${SERENITY_SOURCE_DIR}
+    FILES ${LADYBIRD_HEADERS}
+)
 target_link_libraries(ladybird PRIVATE LibCore LibFileSystem LibGfx LibGUI LibIPC LibJS LibMain LibWeb LibWebView LibSQL LibProtocol)
 
 target_include_directories(ladybird PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
