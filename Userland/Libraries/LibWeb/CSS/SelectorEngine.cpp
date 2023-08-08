@@ -120,11 +120,15 @@ static inline bool matches_indeterminate_pseudo_class(DOM::Element const& elemen
     return false;
 }
 
-static inline bool matches_attribute(CSS::Selector::SimpleSelector::Attribute const& attribute, DOM::Element const& element)
+static inline bool matches_attribute(CSS::Selector::SimpleSelector::Attribute const& attribute, [[maybe_unused]] Optional<CSS::CSSStyleSheet const&> style_sheet_for_rule, DOM::Element const& element)
 {
+    // FIXME: Check the attribute's namespace, once we support that in DOM::Element!
+
+    auto attribute_name = attribute.qualified_name.name.name.to_deprecated_fly_string();
+
     if (attribute.match_type == CSS::Selector::SimpleSelector::Attribute::MatchType::HasAttribute) {
         // Early way out in case of an attribute existence selector.
-        return element.has_attribute(attribute.name.to_string().to_deprecated_string());
+        return element.has_attribute(attribute_name);
     }
 
     auto const case_insensitive_match = (attribute.case_type == CSS::Selector::SimpleSelector::Attribute::CaseType::CaseInsensitiveMatch);
@@ -135,14 +139,14 @@ static inline bool matches_attribute(CSS::Selector::SimpleSelector::Attribute co
     switch (attribute.match_type) {
     case CSS::Selector::SimpleSelector::Attribute::MatchType::ExactValueMatch:
         return case_insensitive_match
-            ? Infra::is_ascii_case_insensitive_match(element.attribute(attribute.name.to_string().to_deprecated_string()), attribute.value)
-            : element.attribute(attribute.name.to_string().to_deprecated_string()) == attribute.value.to_deprecated_string();
+            ? Infra::is_ascii_case_insensitive_match(element.attribute(attribute_name), attribute.value)
+            : element.attribute(attribute_name) == attribute.value.to_deprecated_string();
     case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsWord: {
         if (attribute.value.is_empty()) {
             // This selector is always false is match value is empty.
             return false;
         }
-        auto const view = element.attribute(attribute.name.to_string().to_deprecated_string()).split_view(' ');
+        auto const view = element.attribute(attribute_name).split_view(' ');
         auto const size = view.size();
         for (size_t i = 0; i < size; ++i) {
             auto const value = view.at(i);
@@ -156,9 +160,9 @@ static inline bool matches_attribute(CSS::Selector::SimpleSelector::Attribute co
     }
     case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsString:
         return !attribute.value.is_empty()
-            && element.attribute(attribute.name.to_string().to_deprecated_string()).contains(attribute.value, case_sensitivity);
+            && element.attribute(attribute_name).contains(attribute.value, case_sensitivity);
     case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithSegment: {
-        auto const element_attr_value = element.attribute(attribute.name.to_string().to_deprecated_string());
+        auto const element_attr_value = element.attribute(attribute_name);
         if (element_attr_value.is_empty()) {
             // If the attribute value on element is empty, the selector is true
             // if the match value is also empty and false otherwise.
@@ -174,10 +178,10 @@ static inline bool matches_attribute(CSS::Selector::SimpleSelector::Attribute co
     }
     case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithString:
         return !attribute.value.is_empty()
-            && element.attribute(attribute.name.to_string().to_deprecated_string()).starts_with(attribute.value, case_sensitivity);
+            && element.attribute(attribute_name).starts_with(attribute.value, case_sensitivity);
     case CSS::Selector::SimpleSelector::Attribute::MatchType::EndsWithString:
         return !attribute.value.is_empty()
-            && element.attribute(attribute.name.to_string().to_deprecated_string()).ends_with(attribute.value, case_sensitivity);
+            && element.attribute(attribute_name).ends_with(attribute.value, case_sensitivity);
     default:
         break;
     }
@@ -476,7 +480,7 @@ static inline bool matches(CSS::Selector::SimpleSelector const& component, Optio
     case CSS::Selector::SimpleSelector::Type::Class:
         return element.has_class(component.name());
     case CSS::Selector::SimpleSelector::Type::Attribute:
-        return matches_attribute(component.attribute(), element);
+        return matches_attribute(component.attribute(), style_sheet_for_rule, element);
     case CSS::Selector::SimpleSelector::Type::PseudoClass:
         return matches_pseudo_class(component.pseudo_class(), style_sheet_for_rule, element, scope);
     case CSS::Selector::SimpleSelector::Type::PseudoElement:

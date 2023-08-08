@@ -370,10 +370,9 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_attribute_simple_se
         return ParseError::SyntaxError;
     }
 
-    // FIXME: Handle namespace prefix for attribute name.
-    auto const& attribute_part = attribute_tokens.next_token();
-    if (!attribute_part.is(Token::Type::Ident)) {
-        dbgln_if(CSS_PARSER_DEBUG, "Expected ident for attribute name, got: '{}'", attribute_part.to_debug_string());
+    auto maybe_qualified_name = parse_selector_qualified_name(attribute_tokens, AllowWildcardName::No);
+    if (!maybe_qualified_name.has_value()) {
+        dbgln_if(CSS_PARSER_DEBUG, "Expected qualified-name for attribute name, got: '{}'", attribute_tokens.peek_token().to_debug_string());
         return ParseError::SyntaxError;
     }
 
@@ -386,7 +385,7 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_attribute_simple_se
             // they are converted to lowercase, so we do that here too. If we want to be
             // correct with XML later, we'll need to keep the original case and then do
             // a case-insensitive compare later.
-            .name = FlyString::from_deprecated_fly_string(attribute_part.token().ident().to_lowercase_string()).release_value_but_fixme_should_propagate_errors(),
+            .qualified_name = maybe_qualified_name.release_value(),
             .case_type = Selector::SimpleSelector::Attribute::CaseType::DefaultMatch,
         }
     };

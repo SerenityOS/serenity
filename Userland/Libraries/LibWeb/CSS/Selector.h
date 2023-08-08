@@ -177,7 +177,7 @@ public:
                 CaseInsensitiveMatch,
             };
             MatchType match_type;
-            FlyString name {};
+            QualifiedName qualified_name;
             String value {};
             CaseType case_type;
         };
