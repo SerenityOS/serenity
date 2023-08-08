@@ -79,14 +79,14 @@ ALWAYS_INLINE CellAllocator& Heap::allocator_for_size(size_t cell_size)
 Cell* Heap::allocate_cell(size_t size)
 {
     if (should_collect_on_every_allocation()) {
+        m_allocated_bytes_since_last_gc = 0;
         collect_garbage();
-    } else if (m_allocations_since_last_gc > m_max_allocations_between_gc) {
-        m_allocations_since_last_gc = 0;
+    } else if (m_allocated_bytes_since_last_gc + size > m_gc_bytes_threshold) {
+        m_allocated_bytes_since_last_gc = 0;
         collect_garbage();
-    } else {
-        ++m_allocations_since_last_gc;
     }
 
+    m_allocated_bytes_since_last_gc += size;
     auto& allocator = allocator_for_size(size);
     return allocator.allocate_cell(*this);
 }
@@ -353,6 +353,8 @@ void Heap::sweep_dead_cells(bool print_report, Core::ElapsedTimer const& measure
             return IterationDecision::Continue;
         });
     }
+
+    m_gc_bytes_threshold = live_cell_bytes > GC_MIN_BYTES_THRESHOLD ? live_cell_bytes : GC_MIN_BYTES_THRESHOLD;
 
     if (print_report) {
         Duration const time_spent = measurement_timer.elapsed_time();
