@@ -20,15 +20,20 @@ class FATInode final : public Inode {
     friend FATFS;
 
 public:
+    struct EntryLocation {
+        BlockBasedFileSystem::BlockIndex block;
+        u32 entry;
+    };
+
     virtual ~FATInode() override = default;
 
-    static ErrorOr<NonnullRefPtr<FATInode>> create(FATFS&, FATEntry, Vector<FATLongFileNameEntry> const& = {});
+    static ErrorOr<NonnullRefPtr<FATInode>> create(FATFS&, FATEntry, EntryLocation inode_metadata_location, Vector<FATLongFileNameEntry> const& = {});
 
     FATFS& fs() { return static_cast<FATFS&>(Inode::fs()); }
     FATFS const& fs() const { return static_cast<FATFS const&>(Inode::fs()); }
 
 private:
-    FATInode(FATFS&, FATEntry, NonnullOwnPtr<KString> filename);
+    FATInode(FATFS&, FATEntry, EntryLocation inode_metadata_location, NonnullOwnPtr<KString> filename);
 
     static constexpr u32 no_more_clusters = 0x0FFFFFF8;
 
@@ -64,10 +69,13 @@ private:
     virtual ErrorOr<void> chown(UserID, GroupID) override;
     virtual ErrorOr<void> flush_metadata() override;
 
-    Vector<BlockBasedFileSystem::BlockIndex> m_block_list;
     FATEntry m_entry;
+
+    EntryLocation m_inode_metadata_location { 0, 0 };
+
     NonnullOwnPtr<KString> m_filename;
     InodeMetadata m_metadata;
+    Vector<BlockBasedFileSystem::BlockIndex> m_block_list;
 };
 
 }

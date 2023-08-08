@@ -76,7 +76,7 @@ ErrorOr<void> FATFS::initialize_while_locked()
     root_entry.first_cluster_high = boot_record()->root_directory_cluster >> 16;
 
     root_entry.attributes = FATAttributes::Directory;
-    m_root_inode = TRY(FATInode::create(*this, root_entry));
+    m_root_inode = TRY(FATInode::create(*this, root_entry, { 0, 1 }));
 
     return {};
 }
