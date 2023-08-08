@@ -10,8 +10,7 @@ test("parse optional-chaining", () => {
     expect("a?.b?.``").not.toEval();
     expect("new Foo?.bar").not.toEval();
     expect("new (Foo?.bar)").toEval();
-    // FIXME: This should pass.
-    // expect("(new Foo)?.bar").toEval();
+    expect("(new Foo)?.bar").toEval();
 });
 
 test("evaluate optional-chaining", () => {
