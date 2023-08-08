@@ -16,7 +16,7 @@
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/FileIconProvider.h>
-#include <LibJS/Interpreter.h>
+#include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Script.h>
 #include <errno.h>
@@ -97,14 +97,14 @@ void CalculatorProvider::query(DeprecatedString const& query, Function<void(Vect
         return;
 
     auto vm = JS::VM::create().release_value_but_fixme_should_propagate_errors();
-    auto interpreter = JS::Interpreter::create<JS::GlobalObject>(*vm);
+    auto root_execution_context = JS::create_simple_execution_context<JS::GlobalObject>(*vm);
 
     auto source_code = query.substring(1);
-    auto parse_result = JS::Script::parse(source_code, interpreter->realm());
+    auto parse_result = JS::Script::parse(source_code, *root_execution_context->realm);
     if (parse_result.is_error())
         return;
 
-    auto completion = interpreter->run(parse_result.value());
+    auto completion = vm->bytecode_interpreter().run(parse_result.value());
     if (completion.is_error())
         return;
 
