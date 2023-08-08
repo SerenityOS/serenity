@@ -73,21 +73,6 @@ public:
     // Creates a new String by reading byte_count bytes from a UTF-8 encoded Stream.
     static ErrorOr<String> from_stream(Stream&, size_t byte_count);
 
-    // Creates a new String from a short sequence of UTF-8 encoded code points. If the provided string
-    // does not fit in the short string storage, a compilation error will be emitted.
-    static AK_SHORT_STRING_CONSTEVAL String from_utf8_short_string(StringView string)
-    {
-        VERIFY(string.length() <= MAX_SHORT_STRING_BYTE_COUNT);
-        VERIFY(Utf8View { string }.validate());
-
-        ShortString short_string;
-        for (size_t i = 0; i < string.length(); ++i)
-            short_string.storage[i] = string.characters_without_null_termination()[i];
-        short_string.byte_count_and_short_string_flag = (string.length() << 1) | SHORT_STRING_FLAG;
-
-        return String { short_string };
-    }
-
     // Creates a new String from a single code point.
     static constexpr String from_code_point(u32 code_point)
     {
@@ -283,9 +268,4 @@ struct Formatter<String> : Formatter<StringView> {
 [[nodiscard]] ALWAYS_INLINE AK::String operator""_string(char const* cstring, size_t length)
 {
     return AK::String::from_utf8(AK::StringView(cstring, length)).release_value();
-}
-
-[[nodiscard]] ALWAYS_INLINE AK_SHORT_STRING_CONSTEVAL AK::String operator""_short_string(char const* cstring, size_t length)
-{
-    return AK::String::from_utf8_short_string(AK::StringView(cstring, length));
 }
