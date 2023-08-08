@@ -40,7 +40,7 @@ static QIcon const& app_icon()
     return icon;
 }
 
-BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling, UseLagomNetworking use_lagom_networking)
+BrowserWindow::BrowserWindow(Optional<URL> const& initial_url, Browser::CookieJar& cookie_jar, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling, UseLagomNetworking use_lagom_networking)
     : m_cookie_jar(cookie_jar)
     , m_webdriver_content_ipc_path(webdriver_content_ipc_path)
     , m_enable_callgrind_profiling(enable_callgrind_profiling)
@@ -397,7 +397,12 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     m_go_back_action->setEnabled(false);
     m_go_forward_action->setEnabled(false);
 
-    new_tab(s_settings->new_tab_page(), Web::HTML::ActivateTab::Yes);
+    if (initial_url.has_value()) {
+        auto initial_url_string = qstring_from_ak_deprecated_string(initial_url->serialize());
+        new_tab(initial_url_string, Web::HTML::ActivateTab::Yes);
+    } else {
+        new_tab(s_settings->new_tab_page(), Web::HTML::ActivateTab::Yes);
+    }
 
     setCentralWidget(m_tabs_container);
     setContextMenuPolicy(Qt::PreventContextMenu);

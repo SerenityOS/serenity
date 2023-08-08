@@ -107,17 +107,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto cookie_jar = database ? TRY(Browser::CookieJar::create(*database)) : Browser::CookieJar::create();
 
+    Optional<URL> initial_url;
+    if (auto url = TRY(get_formatted_url(raw_url)); url.is_valid())
+        initial_url = move(url);
+
     Ladybird::s_settings = adopt_own_if_nonnull(new Ladybird::Settings());
-    Ladybird::BrowserWindow window(cookie_jar, webdriver_content_ipc_path, enable_callgrind_profiling ? WebView::EnableCallgrindProfiling::Yes : WebView::EnableCallgrindProfiling::No, use_lagom_networking ? Ladybird::UseLagomNetworking::Yes : Ladybird::UseLagomNetworking::No);
+    Ladybird::BrowserWindow window(initial_url, cookie_jar, webdriver_content_ipc_path, enable_callgrind_profiling ? WebView::EnableCallgrindProfiling::Yes : WebView::EnableCallgrindProfiling::No, use_lagom_networking ? Ladybird::UseLagomNetworking::Yes : Ladybird::UseLagomNetworking::No);
     window.setWindowTitle("Ladybird");
     window.resize(800, 600);
     window.show();
-
-    if (auto url = TRY(get_formatted_url(raw_url)); url.is_valid()) {
-        window.view().load(url);
-    } else {
-        window.view().load("about:blank"sv);
-    }
 
     return event_loop.exec();
 }
