@@ -344,4 +344,16 @@ private:
     OwnPtr<Bytecode::Interpreter> m_bytecode_interpreter;
 };
 
+template<typename GlobalObjectType, typename... Args>
+[[nodiscard]] static NonnullOwnPtr<ExecutionContext> create_simple_execution_context(VM& vm, Args&&... args)
+{
+    auto root_execution_context = MUST(Realm::initialize_host_defined_realm(
+        vm,
+        [&](Realm& realm_) -> GlobalObject* {
+            return vm.heap().allocate_without_realm<GlobalObjectType>(realm_, forward<Args>(args)...);
+        },
+        nullptr));
+    return root_execution_context;
+}
+
 }
