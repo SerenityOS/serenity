@@ -77,7 +77,7 @@ bool PrimitiveString::is_empty() const
 ThrowCompletionOr<String> PrimitiveString::utf8_string() const
 {
     auto& vm = this->vm();
-    TRY(resolve_rope_if_needed(EncodingPreference::UTF8));
+    resolve_rope_if_needed(EncodingPreference::UTF8);
 
     if (!has_utf8_string()) {
         if (has_deprecated_string())
@@ -99,7 +99,7 @@ ThrowCompletionOr<StringView> PrimitiveString::utf8_string_view() const
 
 ThrowCompletionOr<DeprecatedString> PrimitiveString::deprecated_string() const
 {
-    TRY(resolve_rope_if_needed(EncodingPreference::UTF8));
+    resolve_rope_if_needed(EncodingPreference::UTF8);
 
     if (!has_deprecated_string()) {
         if (has_utf8_string())
@@ -115,7 +115,7 @@ ThrowCompletionOr<DeprecatedString> PrimitiveString::deprecated_string() const
 
 ThrowCompletionOr<Utf16String> PrimitiveString::utf16_string() const
 {
-    TRY(resolve_rope_if_needed(EncodingPreference::UTF16));
+    resolve_rope_if_needed(EncodingPreference::UTF16);
 
     if (!has_utf16_string()) {
         if (has_utf8_string()) {
@@ -245,10 +245,10 @@ NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, PrimitiveString& l
     return vm.heap().allocate_without_realm<PrimitiveString>(lhs, rhs);
 }
 
-ThrowCompletionOr<void> PrimitiveString::resolve_rope_if_needed(EncodingPreference preference) const
+void PrimitiveString::resolve_rope_if_needed(EncodingPreference preference) const
 {
     if (!m_is_rope)
-        return {};
+        return;
 
     auto& vm = this->vm();
 
@@ -259,16 +259,16 @@ ThrowCompletionOr<void> PrimitiveString::resolve_rope_if_needed(EncodingPreferen
     // NOTE: We traverse the rope tree without using recursion, since we'd run out of
     //       stack space quickly when handling a long sequence of unresolved concatenations.
     Vector<PrimitiveString const*> stack;
-    TRY_OR_THROW_OOM(vm, stack.try_append(m_rhs));
-    TRY_OR_THROW_OOM(vm, stack.try_append(m_lhs));
+    stack.append(m_rhs);
+    stack.append(m_lhs);
     while (!stack.is_empty()) {
         auto const* current = stack.take_last();
         if (current->m_is_rope) {
-            TRY_OR_THROW_OOM(vm, stack.try_append(current->m_rhs));
-            TRY_OR_THROW_OOM(vm, stack.try_append(current->m_lhs));
+            stack.append(current->m_rhs);
+            stack.append(current->m_lhs);
             continue;
         }
-        TRY_OR_THROW_OOM(vm, pieces.try_append(current));
+        pieces.append(current);
     }
 
     if (preference == EncodingPreference::UTF16) {
@@ -277,38 +277,38 @@ ThrowCompletionOr<void> PrimitiveString::resolve_rope_if_needed(EncodingPreferen
 
         Utf16Data code_units;
         for (auto const* current : pieces)
-            code_units.extend(TRY(current->utf16_string()).string());
+            code_units.extend(MUST(current->utf16_string()).string());
 
-        m_utf16_string = TRY(Utf16String::create(vm, move(code_units)));
+        m_utf16_string = MUST(Utf16String::create(vm, move(code_units)));
         m_is_rope = false;
         m_lhs = nullptr;
         m_rhs = nullptr;
-        return {};
+        return;
     }
 
     // Now that we have all the pieces, we can concatenate them using a StringBuilder.
-    ThrowableStringBuilder builder(vm);
+    StringBuilder builder;
 
     // We keep track of the previous piece in order to handle surrogate pairs spread across two pieces.
     PrimitiveString const* previous = nullptr;
     for (auto const* current : pieces) {
         if (!previous) {
             // This is the very first piece, just append it and continue.
-            TRY(builder.append(TRY(current->utf8_string())));
+            builder.append(MUST(current->utf8_string()));
             previous = current;
             continue;
         }
 
         // Get the UTF-8 representations for both strings.
-        auto current_string_as_utf8 = TRY(current->utf8_string_view());
-        auto previous_string_as_utf8 = TRY(previous->utf8_string_view());
+        auto current_string_as_utf8 = MUST(current->utf8_string_view());
+        auto previous_string_as_utf8 = MUST(previous->utf8_string_view());
 
         // NOTE: Now we need to look at the end of the previous string and the start
         //       of the current string, to see if they should be combined into a surrogate.
 
         // Surrogates encoded as UTF-8 are 3 bytes.
         if ((previous_string_as_utf8.length() < 3) || (current_string_as_utf8.length() < 3)) {
-            TRY(builder.append(current_string_as_utf8));
+            builder.append(current_string_as_utf8);
             previous = current;
             continue;
         }
@@ -316,7 +316,7 @@ ThrowCompletionOr<void> PrimitiveString::resolve_rope_if_needed(EncodingPreferen
         // Might the previous string end with a UTF-8 encoded surrogate?
         if ((static_cast<u8>(previous_string_as_utf8[previous_string_as_utf8.length() - 3]) & 0xf0) != 0xe0) {
             // If not, just append the current string and continue.
-            TRY(builder.append(current_string_as_utf8));
+            builder.append(current_string_as_utf8);
             previous = current;
             continue;
         }
@@ -324,7 +324,7 @@ ThrowCompletionOr<void> PrimitiveString::resolve_rope_if_needed(EncodingPreferen
         // Might the current string begin with a UTF-8 encoded surrogate?
         if ((static_cast<u8>(current_string_as_utf8[0]) & 0xf0) != 0xe0) {
             // If not, just append the current string and continue.
-            TRY(builder.append(current_string_as_utf8));
+            builder.append(current_string_as_utf8);
             previous = current;
             continue;
         }
@@ -333,25 +333,24 @@ ThrowCompletionOr<void> PrimitiveString::resolve_rope_if_needed(EncodingPreferen
         auto low_surrogate = *Utf8View(current_string_as_utf8).begin();
 
         if (!Utf16View::is_high_surrogate(high_surrogate) || !Utf16View::is_low_surrogate(low_surrogate)) {
-            TRY(builder.append(current_string_as_utf8));
+            builder.append(current_string_as_utf8);
             previous = current;
             continue;
         }
 
         // Remove 3 bytes from the builder and replace them with the UTF-8 encoded code point.
         builder.trim(3);
-        TRY(builder.append_code_point(Utf16View::decode_surrogate_pair(high_surrogate, low_surrogate)));
+        builder.append_code_point(Utf16View::decode_surrogate_pair(high_surrogate, low_surrogate));
 
         // Append the remaining part of the current string.
-        TRY(builder.append(current_string_as_utf8.substring_view(3)));
+        builder.append(current_string_as_utf8.substring_view(3));
         previous = current;
     }
 
-    m_utf8_string = TRY(builder.to_string());
+    m_utf8_string = MUST(builder.to_string());
     m_is_rope = false;
     m_lhs = nullptr;
     m_rhs = nullptr;
-    return {};
 }
 
 }
