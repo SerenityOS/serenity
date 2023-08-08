@@ -563,13 +563,10 @@ int main(int argc, char** argv)
     int timeout = 10;
     bool enable_debug_printing = false;
     bool disable_core_dumping = false;
-    bool use_bytecode = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("LibJS test262 runner for streaming tests");
     args_parser.add_option(s_harness_file_directory, "Directory containing the harness files", "harness-location", 'l', "harness-files");
-    // FIXME: Remove this option after updating the test262 scripts.
-    args_parser.add_option(use_bytecode, "Use the bytecode interpreter", "use-bytecode", 'b');
     args_parser.add_option(s_parse_only, "Only parse the files", "parse-only", 'p');
     args_parser.add_option(timeout, "Seconds before test should timeout", "timeout", 't', "seconds");
     args_parser.add_option(enable_debug_printing, "Enable debug printing", "debug", 'd');
