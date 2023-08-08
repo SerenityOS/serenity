@@ -44,8 +44,8 @@ public:
 private:
     Vector<NonnullRefPtr<Sheet>> m_sheets;
     NonnullRefPtr<JS::VM> m_vm;
-    NonnullOwnPtr<JS::Interpreter> m_interpreter;
-    JS::VM::InterpreterExecutionScope m_interpreter_scope;
+    NonnullOwnPtr<JS::ExecutionContext> m_root_execution_context;
+
     JS::GCPtr<WorkbookObject> m_workbook_object;
     JS::ExecutionContext m_main_execution_context;
     GUI::Window& m_parent_window;

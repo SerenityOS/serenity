@@ -17,7 +17,8 @@
 #include <AK/TemporaryChange.h>
 #include <AK/URL.h>
 #include <LibCore/File.h>
-#include <LibJS/Interpreter.h>
+#include <LibJS/Bytecode/Interpreter.h>
+#include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/FunctionObject.h>
@@ -40,10 +41,13 @@ Sheet::Sheet(StringView name, Workbook& workbook)
 
 Sheet::Sheet(Workbook& workbook)
     : m_workbook(workbook)
-    , m_interpreter(JS::Interpreter::create<SheetGlobalObject>(m_workbook.vm(), *this))
+    , m_vm(workbook.vm())
+    , m_root_execution_context(JS::create_simple_execution_context<SheetGlobalObject>(m_workbook.vm(), *this))
 {
-    JS::DeferGC defer_gc(m_workbook.vm().heap());
-    m_global_object = static_cast<SheetGlobalObject*>(&m_interpreter->realm().global_object());
+    auto& vm = m_workbook.vm();
+    JS::DeferGC defer_gc(vm.heap());
+    auto& realm = *m_root_execution_context->realm;
+    m_global_object = static_cast<SheetGlobalObject*>(&realm.global_object());
     global_object().define_direct_property("workbook", m_workbook.workbook_object(), JS::default_attributes);
     global_object().define_direct_property("thisSheet", &global_object(), JS::default_attributes); // Self-reference is unfortunate, but required.
 
@@ -52,7 +56,7 @@ Sheet::Sheet(Workbook& workbook)
     auto file_or_error = Core::File::open(runtime_file_path, Core::File::OpenMode::Read);
     if (!file_or_error.is_error()) {
         auto buffer = file_or_error.value()->read_until_eof().release_value_but_fixme_should_propagate_errors();
-        auto script_or_error = JS::Script::parse(buffer, interpreter().realm(), runtime_file_path);
+        auto script_or_error = JS::Script::parse(buffer, realm, runtime_file_path);
         if (script_or_error.is_error()) {
             warnln("Spreadsheet: Failed to parse runtime code");
             for (auto& error : script_or_error.error()) {
@@ -60,14 +64,14 @@ Sheet::Sheet(Workbook& workbook)
                 warnln("SyntaxError: {}", error.to_deprecated_string());
             }
         } else {
-            auto result = interpreter().run(script_or_error.value());
+            auto result = vm.bytecode_interpreter().run(script_or_error.value());
             if (result.is_error()) {
                 warnln("Spreadsheet: Failed to run runtime code:");
                 auto thrown_value = *result.throw_completion().value();
                 warn("Threw: {}", MUST(thrown_value.to_string_without_side_effects()));
                 if (thrown_value.is_object() && is<JS::Error>(thrown_value.as_object())) {
                     auto& error = static_cast<JS::Error const&>(thrown_value.as_object());
-                    warnln(" with message '{}'", error.get_without_side_effects(interpreter().vm().names.message));
+                    warnln(" with message '{}'", error.get_without_side_effects(vm.names.message));
                     for (auto& traceback_frame : error.traceback()) {
                         auto& function_name = traceback_frame.function_name;
                         auto& source_range = traceback_frame.source_range();
@@ -79,11 +83,6 @@ Sheet::Sheet(Workbook& workbook)
             }
         }
     }
-}
-
-JS::Interpreter& Sheet::interpreter() const
-{
-    return const_cast<JS::Interpreter&>(*m_interpreter);
 }
 
 size_t Sheet::add_row()
@@ -168,13 +167,13 @@ JS::ThrowCompletionOr<JS::Value> Sheet::evaluate(StringView source, Cell* on_beh
     auto name = on_behalf_of ? on_behalf_of->name_for_javascript(*this) : "cell <unknown>"sv;
     auto script_or_error = JS::Script::parse(
         source,
-        interpreter().realm(),
+        realm(),
         name);
 
     if (script_or_error.is_error())
-        return interpreter().vm().throw_completion<JS::SyntaxError>(TRY_OR_THROW_OOM(interpreter().vm(), script_or_error.error().first().to_string()));
+        return vm().throw_completion<JS::SyntaxError>(TRY_OR_THROW_OOM(vm(), script_or_error.error().first().to_string()));
 
-    return interpreter().run(script_or_error.value());
+    return vm().bytecode_interpreter().run(script_or_error.value());
 }
 
 Cell* Sheet::at(StringView name)
@@ -425,7 +424,7 @@ RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
                 cell = make<Cell>(obj.get_deprecated_string("value"sv).value_or({}), position, *sheet);
                 break;
             case Cell::Formula: {
-                auto& vm = sheet->interpreter().vm();
+                auto& vm = sheet->vm();
                 auto value_or_error = JS::call(vm, parse_function, json, JS::PrimitiveString::create(vm, obj.get_deprecated_string("value"sv).value_or({})));
                 if (value_or_error.is_error()) {
                     warnln("Failed to load previous value for cell {}, leaving as undefined", position.to_cell_identifier(sheet));
@@ -557,10 +556,9 @@ JsonObject Sheet::to_json() const
         JsonObject data;
         data.set("kind", it.value->kind() == Cell::Kind::Formula ? "Formula" : "LiteralString");
         if (it.value->kind() == Cell::Formula) {
-            auto& vm = interpreter().vm();
             data.set("source", it.value->data());
-            auto json = interpreter().realm().global_object().get_without_side_effects("JSON");
-            auto stringified_or_error = JS::call(vm, json.as_object().get_without_side_effects("stringify").as_function(), json, it.value->evaluated_data());
+            auto json = realm().global_object().get_without_side_effects("JSON");
+            auto stringified_or_error = JS::call(vm(), json.as_object().get_without_side_effects("stringify").as_function(), json, it.value->evaluated_data());
             VERIFY(!stringified_or_error.is_error());
             data.set("value", stringified_or_error.release_value().to_string_without_side_effects().release_value_but_fixme_should_propagate_errors().to_deprecated_string());
         } else {
@@ -702,8 +700,8 @@ JsonObject Sheet::gather_documentation() const
             dbgln("Sheet::gather_documentation(): Failed to parse the documentation for '{}'!", it.key.to_display_string());
     };
 
-    for (auto& it : interpreter().realm().global_object().shape().property_table())
-        add_docs_from(it, interpreter().realm().global_object());
+    for (auto& it : realm().global_object().shape().property_table())
+        add_docs_from(it, realm().global_object());
 
     for (auto& it : global_object().shape().property_table())
         add_docs_from(it, global_object());

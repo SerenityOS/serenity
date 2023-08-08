@@ -27,7 +27,7 @@ JS::ThrowCompletionOr<DeprecatedString> StringCell::display(Cell& cell, CellType
 
 JS::ThrowCompletionOr<JS::Value> StringCell::js_value(Cell& cell, CellTypeMetadata const& metadata) const
 {
-    auto& vm = cell.sheet().interpreter().vm();
+    auto& vm = cell.sheet().vm();
     auto string = TRY(display(cell, metadata));
     return JS::PrimitiveString::create(vm, string);
 }
