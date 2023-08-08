@@ -87,7 +87,7 @@ ThrowCompletionOr<void> copy_name_and_length(VM& vm, FunctionObject& function, F
         target_name = PrimitiveString::create(vm, String {});
 
     // 8. Perform SetFunctionName(F, targetName, prefix).
-    function.set_function_name({ TRY(target_name.as_string().deprecated_string()) }, move(prefix));
+    function.set_function_name({ target_name.as_string().deprecated_string() }, move(prefix));
 
     return {};
 }

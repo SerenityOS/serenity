@@ -188,7 +188,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
     if (!to_string_tag.is_string())
         tag = move(builtin_tag);
     else
-        tag = TRY(to_string_tag.as_string().deprecated_string());
+        tag = to_string_tag.as_string().deprecated_string();
 
     // 17. Return the string-concatenation of "[object ", tag, and "]".
     return PrimitiveString::create(vm, DeprecatedString::formatted("[object {}]", tag));
