@@ -8,10 +8,6 @@
 #include <Ladybird/FontPlugin.h>
 #include <Ladybird/HelperProcess.h>
 #include <Ladybird/ImageCodecPlugin.h>
-#include <Ladybird/Qt/AudioCodecPluginQt.h>
-#include <Ladybird/Qt/EventLoopImplementationQt.h>
-#include <Ladybird/Qt/RequestManagerQt.h>
-#include <Ladybird/Qt/WebSocketClientManagerQt.h>
 #include <Ladybird/Utilities.h>
 #include <LibAudio/Loader.h>
 #include <LibCore/ArgsParser.h>
@@ -33,19 +29,29 @@
 #include <LibWeb/WebSockets/WebSocket.h>
 #include <LibWebView/RequestServerAdapter.h>
 #include <LibWebView/WebSocketClientAdapter.h>
-#include <QCoreApplication>
 #include <WebContent/ConnectionFromClient.h>
 #include <WebContent/PageHost.h>
 #include <WebContent/WebDriverConnection.h>
 
+#if defined(HAVE_QT)
+#    include <Ladybird/Qt/AudioCodecPluginQt.h>
+#    include <Ladybird/Qt/EventLoopImplementationQt.h>
+#    include <Ladybird/Qt/RequestManagerQt.h>
+#    include <Ladybird/Qt/WebSocketClientManagerQt.h>
+#    include <QCoreApplication>
+#endif
+
 static ErrorOr<void> load_content_filters();
 static ErrorOr<void> load_autoplay_allowlist();
+static ErrorOr<void> initialize_lagom_networking();
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+#if defined(HAVE_QT)
     QCoreApplication app(arguments.argc, arguments.argv);
 
     Core::EventLoopManager::install(*new Ladybird::EventLoopManagerQt);
+#endif
     Core::EventLoop event_loop;
 
     platform_init();
@@ -56,8 +62,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Web::Platform::AudioCodecPlugin::install_creation_hook([](auto loader) {
 #if defined(HAVE_PULSEAUDIO)
         return Web::Platform::AudioCodecPluginAgnostic::create(move(loader));
-#else
+#elif defined(HAVE_QT)
         return Ladybird::AudioCodecPluginQt::create(move(loader));
+#else
+#    error "Don't know how to initialize audio in this configuration!"
 #endif
     });
 
@@ -73,17 +81,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(use_lagom_networking, "Enable Lagom servers for networking", "use-lagom-networking", 0);
     args_parser.parse(arguments);
 
-    if (use_lagom_networking) {
-        auto candidate_request_server_paths = TRY(get_paths_for_helper_process("RequestServer"sv));
-        auto request_server_client = TRY(launch_request_server_process(candidate_request_server_paths, s_serenity_resource_root));
-        Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create(move(request_server_client))));
-
-        auto candidate_web_socket_paths = TRY(get_paths_for_helper_process("WebSocket"sv));
-        auto web_socket_client = TRY(launch_web_socket_process(candidate_web_socket_paths, s_serenity_resource_root));
-        Web::WebSockets::WebSocketClientManager::initialize(TRY(WebView::WebSocketClientManagerAdapter::try_create(move(web_socket_client))));
-    } else {
+#if defined(HAVE_QT)
+    if (!use_lagom_networking) {
         Web::ResourceLoader::initialize(Ladybird::RequestManagerQt::create());
         Web::WebSockets::WebSocketClientManager::initialize(Ladybird::WebSocketClientManagerQt::create());
+    } else
+#endif
+    {
+        TRY(initialize_lagom_networking());
     }
 
     Web::HTML::Window::set_internals_object_exposed(is_layout_test_mode);
@@ -165,6 +170,19 @@ static ErrorOr<void> load_autoplay_allowlist()
 
     auto& autoplay_allowlist = Web::PermissionsPolicy::AutoplayAllowlist::the();
     TRY(autoplay_allowlist.enable_for_origins(origins));
+
+    return {};
+}
+
+static ErrorOr<void> initialize_lagom_networking()
+{
+    auto candidate_request_server_paths = TRY(get_paths_for_helper_process("RequestServer"sv));
+    auto request_server_client = TRY(launch_request_server_process(candidate_request_server_paths, s_serenity_resource_root));
+    Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create(move(request_server_client))));
+
+    auto candidate_web_socket_paths = TRY(get_paths_for_helper_process("WebSocket"sv));
+    auto web_socket_client = TRY(launch_web_socket_process(candidate_web_socket_paths, s_serenity_resource_root));
+    Web::WebSockets::WebSocketClientManager::initialize(TRY(WebView::WebSocketClientManagerAdapter::try_create(move(web_socket_client))));
 
     return {};
 }

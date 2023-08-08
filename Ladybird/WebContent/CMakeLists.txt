@@ -10,23 +10,31 @@ set(WEBCONTENT_SOURCES
     ../HelperProcess.cpp
     ../ImageCodecPlugin.cpp
     ../Utilities.cpp
-    ../Qt/AudioCodecPluginQt.cpp
-    ../Qt/AudioThread.cpp
-    ../Qt/EventLoopImplementationQt.cpp
-    ../Qt/EventLoopImplementationQtEventTarget.cpp
-    ../Qt/RequestManagerQt.cpp
-    ../Qt/StringUtils.cpp
-    ../Qt/WebSocketClientManagerQt.cpp
-    ../Qt/WebSocketQt.cpp
-    ../Qt/WebSocketImplQt.cpp
     main.cpp
 )
 
-qt_add_executable(WebContent ${WEBCONTENT_SOURCES})
+if (ENABLE_QT)
+    qt_add_executable(WebContent ${WEBCONTENT_SOURCES})
+    target_sources(WebContent PRIVATE
+        ../Qt/AudioCodecPluginQt.cpp
+        ../Qt/AudioThread.cpp
+        ../Qt/EventLoopImplementationQt.cpp
+        ../Qt/EventLoopImplementationQtEventTarget.cpp
+        ../Qt/RequestManagerQt.cpp
+        ../Qt/StringUtils.cpp
+        ../Qt/WebSocketClientManagerQt.cpp
+        ../Qt/WebSocketQt.cpp
+        ../Qt/WebSocketImplQt.cpp
+    )
+    target_link_libraries(WebContent PRIVATE Qt::Core Qt::Network Qt::Multimedia)
+    target_compile_definitions(WebContent PRIVATE HAVE_QT=1)
+else()
+    add_executable(WebContent ${WEBCONTENT_SOURCES})
+endif()
 
 target_include_directories(WebContent PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
 target_include_directories(WebContent PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
-target_link_libraries(WebContent PRIVATE Qt::Core Qt::Network Qt::Multimedia LibAudio LibCore LibFileSystem LibGfx LibIPC LibJS LibMain LibWeb LibWebSocket LibProtocol LibSQL LibWebView)
+target_link_libraries(WebContent PRIVATE LibAudio LibCore LibFileSystem LibGfx LibIPC LibJS LibMain LibWeb LibWebSocket LibProtocol LibSQL LibWebView)
 if (ANDROID)
     link_android_libs(WebContent)
 endif()
