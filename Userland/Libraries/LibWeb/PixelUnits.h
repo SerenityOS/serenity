@@ -13,6 +13,7 @@
 #include <AK/Math.h>
 #include <AK/Traits.h>
 #include <LibGfx/Forward.h>
+#include <LibGfx/Rect.h>
 #include <math.h>
 
 namespace Web {
@@ -277,6 +278,18 @@ constexpr Web::CSSPixels round(Web::CSSPixels const& value)
 constexpr Web::DevicePixels abs(Web::DevicePixels const& value)
 {
     return AK::abs(value.value());
+}
+
+template<>
+template<>
+[[nodiscard]] ALWAYS_INLINE Web::CSSPixelRect Web::CSSPixelRect::to_rounded<Web::CSSPixels>() const
+{
+    return {
+        round(x()),
+        round(y()),
+        round(width()),
+        round(height()),
+    };
 }
 
 namespace AK {
