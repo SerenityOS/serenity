@@ -12,3 +12,7 @@ test("basic functionality", () => {
     expect((typeof "x" === "string") === true).toBeTrue();
     expect(!(typeof "x" === "string") === false).toBeTrue();
 });
+
+test("unary +/- operators bind higher than binary", () => {
+    expect(10 ** -3 / 2).toEqual(0.0005);
+});
