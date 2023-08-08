@@ -155,10 +155,15 @@ ErrorOr<String> Selector::SimpleSelector::serialize() const
         // 1. Append "[" (U+005B) to s.
         TRY(s.try_append('['));
 
-        // FIXME: 2. If the namespace prefix maps to a namespace that is not the null namespace (not in a namespace) append the serialization of the namespace prefix as an identifier, followed by a "|" (U+007C) to s.
+        // 2. If the namespace prefix maps to a namespace that is not the null namespace (not in a namespace)
+        //    append the serialization of the namespace prefix as an identifier, followed by a "|" (U+007C) to s.
+        if (attribute.qualified_name.namespace_type == QualifiedName::NamespaceType::Named) {
+            TRY(serialize_an_identifier(s, attribute.qualified_name.namespace_));
+            TRY(s.try_append('|'));
+        }
 
         // 3. Append the serialization of the attribute name as an identifier to s.
-        TRY(serialize_an_identifier(s, attribute.name));
+        TRY(serialize_an_identifier(s, attribute.qualified_name.name.name));
 
         // 4. If there is an attribute value specified, append "=", "~=", "|=", "^=", "$=", or "*=" as appropriate (depending on the type of attribute selector),
         //    followed by the serialization of the attribute value as a string, to s.

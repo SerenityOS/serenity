@@ -386,6 +386,26 @@ void dump_selector(CSS::Selector const& selector)
     dbgln("{}", builder.string_view());
 }
 
+static void dump_qualified_name(StringBuilder& builder, CSS::Selector::SimpleSelector::QualifiedName const& qualified_name)
+{
+    StringView namespace_type;
+    switch (qualified_name.namespace_type) {
+    case CSS::Selector::SimpleSelector::QualifiedName::NamespaceType::Default:
+        namespace_type = "Default"sv;
+        break;
+    case CSS::Selector::SimpleSelector::QualifiedName::NamespaceType::None:
+        namespace_type = "None"sv;
+        break;
+    case CSS::Selector::SimpleSelector::QualifiedName::NamespaceType::Any:
+        namespace_type = "Any"sv;
+        break;
+    case CSS::Selector::SimpleSelector::QualifiedName::NamespaceType::Named:
+        namespace_type = "Named"sv;
+        break;
+    }
+    builder.appendff("NamespaceType={}, Namespace='{}', Name='{}'", namespace_type, qualified_name.namespace_, qualified_name.name.name);
+}
+
 void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
 {
     builder.append("  CSS::Selector:\n"sv);
@@ -446,27 +466,12 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
             }
 
             builder.appendff("{}:", type_description);
+
             // FIXME: This is goofy
             if (simple_selector.value.has<CSS::Selector::SimpleSelector::Name>()) {
                 builder.append(simple_selector.name());
             } else if (simple_selector.value.has<CSS::Selector::SimpleSelector::QualifiedName>()) {
-                auto qualified_name = simple_selector.qualified_name();
-                StringView namespace_type;
-                switch (qualified_name.namespace_type) {
-                case CSS::Selector::SimpleSelector::QualifiedName::NamespaceType::Default:
-                    namespace_type = "Default"sv;
-                    break;
-                case CSS::Selector::SimpleSelector::QualifiedName::NamespaceType::None:
-                    namespace_type = "None"sv;
-                    break;
-                case CSS::Selector::SimpleSelector::QualifiedName::NamespaceType::Any:
-                    namespace_type = "Any"sv;
-                    break;
-                case CSS::Selector::SimpleSelector::QualifiedName::NamespaceType::Named:
-                    namespace_type = "Named"sv;
-                    break;
-                }
-                builder.appendff(" [NamespaceType={}, Namespace='{}', Name='{}']", namespace_type, qualified_name.namespace_, qualified_name.name.name);
+                dump_qualified_name(builder, simple_selector.qualified_name());
             }
 
             if (simple_selector.type == CSS::Selector::SimpleSelector::Type::PseudoClass) {
@@ -681,7 +686,9 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                     break;
                 }
 
-                builder.appendff(" [{}, name='{}', value='{}']", attribute_match_type_description, attribute.name, attribute.value);
+                builder.appendff(" [{}, ", attribute_match_type_description);
+                dump_qualified_name(builder, attribute.qualified_name);
+                builder.appendff(", value='{}']", attribute.value);
             }
 
             if (i != relative_selector.simple_selectors.size() - 1)
