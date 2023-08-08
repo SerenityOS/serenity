@@ -976,6 +976,10 @@ public:
         return Rect<U>(*this);
     }
 
+    // For extern specialization, like CSSPixels
+    template<typename U>
+    [[nodiscard]] Rect<U> to_rounded() const = delete;
+
     template<FloatingPoint U>
     [[nodiscard]] ALWAYS_INLINE Rect<U> to_rounded() const
     {
