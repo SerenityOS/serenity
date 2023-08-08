@@ -155,7 +155,7 @@ int pthread_mutex_lock(pthread_mutex_t* mutex)
         value = AK::atomic_exchange(&mutex->lock, MUTEX_LOCKED_NEED_TO_WAKE, AK::memory_order_acquire);
 
     while (value != MUTEX_UNLOCKED) {
-        futex_wait(&mutex->lock, value, nullptr, 0, false);
+        futex_wait(&mutex->lock, MUTEX_LOCKED_NEED_TO_WAKE, nullptr, 0, false);
         value = AK::atomic_exchange(&mutex->lock, MUTEX_LOCKED_NEED_TO_WAKE, AK::memory_order_acquire);
     }
 
