@@ -70,10 +70,18 @@ add_compile_options(-DAK_DONT_REPLACE_STD)
 add_compile_options(-Wno-expansion-to-defined)
 add_compile_options(-Wno-user-defined-literals)
 
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network Multimedia)
+serenity_option(ENABLE_QT ON CACHE BOOL "Build ladybird application using Qt GUI")
+
+if (APPLE AND NOT ENABLE_QT)
+    message(FATAL_ERROR "Non-Qt builds not supported on macOS yet!")
+endif()
+
+if (ENABLE_QT)
+    set(CMAKE_AUTOMOC ON)
+    set(CMAKE_AUTORCC ON)
+    set(CMAKE_AUTOUIC ON)
+    find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network Multimedia)
+endif()
 
 set(BROWSER_SOURCE_DIR ${SERENITY_SOURCE_DIR}/Userland/Applications/Browser/)
 
@@ -83,25 +91,45 @@ set(SOURCES
     ${BROWSER_SOURCE_DIR}/History.cpp
     HelperProcess.cpp
     Utilities.cpp
-    Qt/BrowserWindow.cpp
-    Qt/ConsoleWidget.cpp
-    Qt/EventLoopImplementationQt.cpp
-    Qt/EventLoopImplementationQtEventTarget.cpp
-    Qt/InspectorWidget.cpp
-    Qt/LocationEdit.cpp
-    Qt/ModelTranslator.cpp
-    Qt/Settings.cpp
-    Qt/SettingsDialog.cpp
-    Qt/Tab.cpp
-    Qt/TVGIconEngine.cpp
-    Qt/StringUtils.cpp
-    Qt/WebContentView.cpp
-    Qt/ladybird.qrc
-    Qt/main.cpp
 )
 
-qt_add_executable(ladybird ${SOURCES})
-target_link_libraries(ladybird PRIVATE Qt::Core Qt::Gui Qt::Network Qt::Widgets LibCore LibFileSystem LibGfx LibGUI LibIPC LibJS LibMain LibWeb LibWebView LibSQL LibProtocol)
+if (ENABLE_QT)
+    qt_add_executable(ladybird ${SOURCES})
+    target_sources(ladybird PRIVATE
+        Qt/BrowserWindow.cpp
+        Qt/ConsoleWidget.cpp
+        Qt/EventLoopImplementationQt.cpp
+        Qt/EventLoopImplementationQtEventTarget.cpp
+        Qt/InspectorWidget.cpp
+        Qt/LocationEdit.cpp
+        Qt/ModelTranslator.cpp
+        Qt/Settings.cpp
+        Qt/SettingsDialog.cpp
+        Qt/Tab.cpp
+        Qt/TVGIconEngine.cpp
+        Qt/StringUtils.cpp
+        Qt/WebContentView.cpp
+        Qt/ladybird.qrc
+        Qt/main.cpp
+    )
+    target_link_libraries(ladybird PRIVATE Qt::Core Qt::Gui Qt::Network Qt::Widgets)
+
+    # FIXME: Set these for non-qt executables as well, when those exist
+    set_target_properties(ladybird PROPERTIES
+        MACOSX_BUNDLE_GUI_IDENTIFIER org.SerenityOS.Ladybird
+        MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+        MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
+        MACOSX_BUNDLE TRUE
+        WIN32_EXECUTABLE TRUE
+        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER org.SerenityOS.Ladybird
+    )
+else()
+    # TODO: Check for other GUI frameworks here when we move them in-tree
+    #       For now, we can export a static library of common files for chromes to link to
+    add_library(ladybird STATIC ${SOURCES})
+endif()
+target_link_libraries(ladybird PRIVATE LibCore LibFileSystem LibGfx LibGUI LibIPC LibJS LibMain LibWeb LibWebView LibSQL LibProtocol)
 
 target_include_directories(ladybird PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/)
@@ -116,16 +144,6 @@ add_executable(headless-browser
 
 target_include_directories(headless-browser PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(headless-browser PRIVATE LibWeb LibWebView LibWebSocket LibCrypto LibFileSystem LibGemini LibHTTP LibJS LibGfx LibMain LibTLS LibIPC LibDiff LibProtocol)
-
-set_target_properties(ladybird PROPERTIES
-    MACOSX_BUNDLE_GUI_IDENTIFIER org.SerenityOS.Ladybird
-    MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
-    MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
-    MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
-    MACOSX_BUNDLE TRUE
-    WIN32_EXECUTABLE TRUE
-    XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER org.SerenityOS.Ladybird
-)
 
 if (ANDROID)
     include(cmake/AndroidExtras.cmake)
