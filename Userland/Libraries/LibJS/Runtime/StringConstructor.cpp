@@ -99,7 +99,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_char_code)
     }
 
     // 3. Return result.
-    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, move(string))));
+    return PrimitiveString::create(vm, Utf16String::create(move(string)));
 }
 
 // 22.1.2.2 String.fromCodePoint ( ...codePoints ), https://tc39.es/ecma262/#sec-string.fromcodepoint
@@ -134,7 +134,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_code_point)
         VERIFY(string.is_empty());
 
     // 4. Return result.
-    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, move(string))));
+    return PrimitiveString::create(vm, Utf16String::create(move(string)));
 }
 
 // 22.1.2.4 String.raw ( template, ...substitutions ), https://tc39.es/ecma262/#sec-string.raw

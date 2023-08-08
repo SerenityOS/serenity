@@ -274,7 +274,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::at)
         return js_undefined();
 
     // 7. Return ? Get(O, ! ToString(𝔽(k))).
-    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, string.substring_view(index.value(), 1))));
+    return PrimitiveString::create(vm, Utf16String::create(string.substring_view(index.value(), 1)));
 }
 
 // 22.1.3.2 String.prototype.charAt ( pos ), https://tc39.es/ecma262/#sec-string.prototype.charat
@@ -293,7 +293,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_at)
         return PrimitiveString::create(vm, String {});
 
     // 6. Return the substring of S from position to position + 1.
-    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, string.substring_view(position, 1))));
+    return PrimitiveString::create(vm, Utf16String::create(string.substring_view(position, 1)));
 }
 
 // 22.1.3.3 String.prototype.charCodeAt ( pos ), https://tc39.es/ecma262/#sec-string.prototype.charcodeat
@@ -693,7 +693,7 @@ static ThrowCompletionOr<Value> pad_string(VM& vm, Utf16String string, Value max
         return PrimitiveString::create(vm, move(string));
 
     // 5. If fillString is undefined, let filler be the String value consisting solely of the code unit 0x0020 (SPACE).
-    auto filler = TRY(Utf16String::create(vm, Utf16Data { 0x20 }));
+    auto filler = Utf16String::create(Utf16Data { 0x20 });
     if (!fill_string.is_undefined()) {
         // 6. Else, let filler be ? ToString(fillString).
         filler = TRY(fill_string.to_utf16_string(vm));
@@ -1052,7 +1052,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
         return PrimitiveString::create(vm, String {});
 
     // 13. Return the substring of S from from to to.
-    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, string.substring_view(int_start, int_end - int_start))));
+    return PrimitiveString::create(vm, Utf16String::create(string.substring_view(int_start, int_end - int_start)));
 }
 
 // 22.1.3.23 String.prototype.split ( separator, limit ), https://tc39.es/ecma262/#sec-string.prototype.split
@@ -1133,7 +1133,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
         auto segment = string.substring_view(start, position - start);
 
         // b. Append T to substrings.
-        MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, TRY(Utf16String::create(vm, segment)))));
+        MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, Utf16String::create(segment))));
         ++array_length;
 
         // c. If the number of elements in substrings is lim, return CreateArrayFromList(substrings).
@@ -1151,7 +1151,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
     auto rest = string.substring_view(start);
 
     // 16. Append T to substrings.
-    MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, TRY(Utf16String::create(vm, rest)))));
+    MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, Utf16String::create(rest))));
 
     // 17. Return CreateArrayFromList(substrings).
     return array;
@@ -1243,7 +1243,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substring)
     size_t to = max(final_start, final_end);
 
     // 10. Return the substring of S from from to to.
-    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, string.substring_view(from, to - from))));
+    return PrimitiveString::create(vm, Utf16String::create(string.substring_view(from, to - from)));
 }
 
 enum class TargetCase {
@@ -1512,7 +1512,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substr)
         return PrimitiveString::create(vm, String {});
 
     // 11. Return the substring of S from intStart to intEnd.
-    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, string.substring_view(int_start, int_end - int_start))));
+    return PrimitiveString::create(vm, Utf16String::create(string.substring_view(int_start, int_end - int_start)));
 }
 
 // B.2.2.2.1 CreateHTML ( string, tag, attribute, value ), https://tc39.es/ecma262/#sec-createhtml
