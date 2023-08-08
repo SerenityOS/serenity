@@ -432,12 +432,14 @@ Optional<CSSPixelRect> PaintableBox::calculate_overflow_clipped_rect() const
 void PaintableBox::before_children_paint(PaintContext& context, PaintPhase) const
 {
     auto scroll_offset = -this->scroll_offset();
+    context.translate_scroll_offset_by(scroll_offset);
     context.painter().translate({ context.enclosing_device_pixels(scroll_offset.x()), context.enclosing_device_pixels(scroll_offset.y()) });
 }
 
 void PaintableBox::after_children_paint(PaintContext& context, PaintPhase) const
 {
     auto scroll_offset = this->scroll_offset();
+    context.translate_scroll_offset_by(scroll_offset);
     context.painter().translate({ context.enclosing_device_pixels(scroll_offset.x()), context.enclosing_device_pixels(scroll_offset.y()) });
 }
 
@@ -456,7 +458,10 @@ void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase ph
 
     if (!m_clipping_overflow) {
         context.painter().save();
+        auto scroll_offset = context.scroll_offset();
+        context.painter().translate({ -context.enclosing_device_pixels(scroll_offset.x()), -context.enclosing_device_pixels(scroll_offset.y()) });
         context.painter().add_clip_rect(context.enclosing_device_rect(*clip_rect).to_type<int>());
+        context.painter().translate({ context.enclosing_device_pixels(scroll_offset.x()), context.enclosing_device_pixels(scroll_offset.y()) });
         m_clipping_overflow = true;
     }
 

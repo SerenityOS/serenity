@@ -59,6 +59,9 @@ public:
 
     double device_pixels_per_css_pixel() const { return m_device_pixels_per_css_pixel; }
 
+    CSSPixelPoint scroll_offset() const { return m_scroll_offset; }
+    void translate_scroll_offset_by(CSSPixelPoint offset) { m_scroll_offset.translate_by(offset); }
+
 private:
     Gfx::Painter& m_painter;
     Palette m_palette;
@@ -66,6 +69,7 @@ private:
     DevicePixelRect m_device_viewport_rect;
     bool m_should_show_line_box_borders { false };
     bool m_focus { false };
+    CSSPixelPoint m_scroll_offset;
 };
 
 }
