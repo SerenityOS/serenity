@@ -665,12 +665,15 @@ void Tab::show_console_window()
         m_console_widget->setWindowTitle("JS Console");
         m_console_widget->resize(640, 480);
 
-        // Make the copy action available in the window via the bound copy key shortcut.
-        // Simply adding it to the context menu is not enough.
+        // Make these actions available on the window itself. Adding them to the context menu alone
+        // does not enable activattion via keyboard shortcuts.
         m_console_widget->addAction(&m_window->copy_selection_action());
+        m_console_widget->addAction(&m_window->select_all_action());
 
         m_console_context_menu = make<QMenu>("Context menu", m_console_widget);
         m_console_context_menu->addAction(&m_window->copy_selection_action());
+        m_console_context_menu->addAction(&m_window->select_all_action());
+
         m_console_widget->view().on_context_menu_request = [this](Gfx::IntPoint) {
             auto screen_position = QCursor::pos();
             m_console_context_menu->exec(screen_position);
