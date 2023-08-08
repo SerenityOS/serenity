@@ -36,7 +36,7 @@ void CalendarPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 12.4.2 Temporal.Calendar.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Temporal.Calendar"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Temporal.Calendar"_string), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.id, id_getter, {}, Attribute::Configurable);
 

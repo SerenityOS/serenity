@@ -25,7 +25,7 @@ void ListFormatPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 13.3.2 Intl.ListFormat.prototype [ @@toStringTag ], https://tc39.es/ecma402/#sec-Intl.ListFormat.prototype-toStringTag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Intl.ListFormat"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Intl.ListFormat"_string), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.format, format, 1, attr);
@@ -84,8 +84,8 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::resolved_options)
     //     c. Assert: v is not undefined.
     //     d. Perform ! CreateDataPropertyOrThrow(options, p, v).
     MUST(options->create_data_property_or_throw(vm.names.locale, PrimitiveString::create(vm, list_format->locale())));
-    MUST(options->create_data_property_or_throw(vm.names.type, MUST_OR_THROW_OOM(PrimitiveString::create(vm, list_format->type_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.style, MUST_OR_THROW_OOM(PrimitiveString::create(vm, list_format->style_string()))));
+    MUST(options->create_data_property_or_throw(vm.names.type, PrimitiveString::create(vm, list_format->type_string())));
+    MUST(options->create_data_property_or_throw(vm.names.style, PrimitiveString::create(vm, list_format->style_string())));
 
     // 5. Return options.
     return options;

@@ -31,7 +31,7 @@ void LocalePrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.toString, to_string, 0, attr);
 
     // 14.3.2 Intl.Locale.prototype[ @@toStringTag ], https://tc39.es/ecma402/#sec-Intl.Locale.prototype-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Intl.Locale"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Intl.Locale"_string), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.baseName, base_name, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.calendar, calendar, {}, Attribute::Configurable);
@@ -264,7 +264,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::text_info)
     auto direction = MUST_OR_THROW_OOM(character_direction_of_locale(vm, locale_object));
 
     // 5. Perform ! CreateDataPropertyOrThrow(info, "direction", dir).
-    MUST(info->create_data_property_or_throw(vm.names.direction, MUST_OR_THROW_OOM(PrimitiveString::create(vm, direction))));
+    MUST(info->create_data_property_or_throw(vm.names.direction, PrimitiveString::create(vm, direction)));
 
     // 6. Return info.
     return info;

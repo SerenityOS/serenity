@@ -38,19 +38,6 @@ public:
         return Array::create_from(realm, values);
     }
 
-    // Non-standard but equivalent to CreateArrayFromList.
-    template<typename T, FallibleFunction<T const&> Callback>
-    static ThrowCompletionOr<NonnullGCPtr<Array>> try_create_from(VM& vm, Realm& realm, ReadonlySpan<T> elements, Callback map_fn)
-    {
-        auto values = MarkedVector<Value> { realm.heap() };
-        TRY_OR_THROW_OOM(vm, values.try_ensure_capacity(elements.size()));
-
-        for (auto const& element : elements)
-            TRY_OR_THROW_OOM(vm, values.try_append(TRY(map_fn(element))));
-
-        return Array::create_from(realm, values);
-    }
-
     virtual ~Array() override = default;
 
     virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyKey const&) const override;

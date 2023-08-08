@@ -62,8 +62,8 @@ static ThrowCompletionOr<NonnullGCPtr<Array>> create_array_from_list_or_restrict
     }
 
     // 2. Return ! CreateArrayFromList( list ).
-    return Array::try_create_from<StringView>(vm, realm, list, [&vm](auto value) -> ThrowCompletionOr<Value> {
-        return PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, String::from_utf8(value)));
+    return Array::create_from<StringView>(realm, list, [&vm](auto value) {
+        return PrimitiveString::create(vm, String::from_utf8(value).release_value());
     });
 }
 
@@ -158,8 +158,8 @@ ThrowCompletionOr<NonnullGCPtr<Array>> time_zones_of_locale(VM& vm, StringView r
     quick_sort(list);
 
     // 5. Return ! CreateArrayFromList( list ).
-    return Array::try_create_from<StringView>(vm, realm, list, [&vm](auto value) -> ThrowCompletionOr<Value> {
-        return PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, String::from_utf8(value)));
+    return Array::create_from<StringView>(realm, list, [&vm](auto value) {
+        return PrimitiveString::create(vm, String::from_utf8(value).release_value());
     });
 }
 

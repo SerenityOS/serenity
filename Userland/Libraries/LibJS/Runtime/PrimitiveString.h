@@ -29,7 +29,7 @@ public:
     [[nodiscard]] static NonnullGCPtr<PrimitiveString> create(VM&, DeprecatedString);
     [[nodiscard]] static NonnullGCPtr<PrimitiveString> create(VM&, DeprecatedFlyString const&);
     [[nodiscard]] static NonnullGCPtr<PrimitiveString> create(VM&, PrimitiveString&, PrimitiveString&);
-    static ThrowCompletionOr<NonnullGCPtr<PrimitiveString>> create(VM&, StringView);
+    [[nodiscard]] static NonnullGCPtr<PrimitiveString> create(VM&, StringView);
 
     virtual ~PrimitiveString();
 

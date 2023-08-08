@@ -194,9 +194,9 @@ NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, FlyString const& s
     return create(vm, string.to_string());
 }
 
-ThrowCompletionOr<NonnullGCPtr<PrimitiveString>> PrimitiveString::create(VM& vm, StringView string)
+NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, StringView string)
 {
-    return create(vm, TRY_OR_THROW_OOM(vm, String::from_utf8(string)));
+    return create(vm, String::from_utf8(string).release_value());
 }
 
 NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, DeprecatedString string)

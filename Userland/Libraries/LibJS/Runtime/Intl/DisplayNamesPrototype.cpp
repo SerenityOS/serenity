@@ -26,7 +26,7 @@ void DisplayNamesPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 12.3.2 Intl.DisplayNames.prototype[ @@toStringTag ], https://tc39.es/ecma402/#sec-Intl.DisplayNames.prototype-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Intl.DisplayNames"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Intl.DisplayNames"_string), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.of, of, 1, attr);
@@ -109,7 +109,7 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
     }
 
     if (result.has_value())
-        return MUST_OR_THROW_OOM(PrimitiveString::create(vm, result.release_value()));
+        return PrimitiveString::create(vm, result.release_value());
     if (formatted_result.has_value())
         return PrimitiveString::create(vm, formatted_result.release_value());
 
@@ -139,13 +139,13 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::resolved_options)
     //     c. Assert: v is not undefined.
     //     d. Perform ! CreateDataPropertyOrThrow(options, p, v).
     MUST(options->create_data_property_or_throw(vm.names.locale, PrimitiveString::create(vm, display_names->locale())));
-    MUST(options->create_data_property_or_throw(vm.names.style, MUST_OR_THROW_OOM(PrimitiveString::create(vm, display_names->style_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.type, MUST_OR_THROW_OOM(PrimitiveString::create(vm, display_names->type_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.fallback, MUST_OR_THROW_OOM(PrimitiveString::create(vm, display_names->fallback_string()))));
+    MUST(options->create_data_property_or_throw(vm.names.style, PrimitiveString::create(vm, display_names->style_string())));
+    MUST(options->create_data_property_or_throw(vm.names.type, PrimitiveString::create(vm, display_names->type_string())));
+    MUST(options->create_data_property_or_throw(vm.names.fallback, PrimitiveString::create(vm, display_names->fallback_string())));
 
     // NOTE: Step 4c indicates languageDisplay must not be undefined, but it is only set when the type option is language.
     if (display_names->has_language_display())
-        MUST(options->create_data_property_or_throw(vm.names.languageDisplay, MUST_OR_THROW_OOM(PrimitiveString::create(vm, display_names->language_display_string()))));
+        MUST(options->create_data_property_or_throw(vm.names.languageDisplay, PrimitiveString::create(vm, display_names->language_display_string())));
 
     // 5. Return options.
     return options;

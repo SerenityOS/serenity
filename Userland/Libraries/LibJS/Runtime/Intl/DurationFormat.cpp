@@ -492,14 +492,14 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
             // ii. Else,
             else {
                 // 1. Perform ! CreateDataPropertyOrThrow(nfOpts, "style", "unit").
-                MUST(number_format_options->create_data_property_or_throw(vm.names.style, MUST_OR_THROW_OOM(PrimitiveString::create(vm, "unit"sv))));
+                MUST(number_format_options->create_data_property_or_throw(vm.names.style, PrimitiveString::create(vm, "unit"_string)));
 
                 // 2. Perform ! CreateDataPropertyOrThrow(nfOpts, "unit", numberFormatUnit).
-                MUST(number_format_options->create_data_property_or_throw(vm.names.unit, MUST_OR_THROW_OOM(PrimitiveString::create(vm, number_format_unit))));
+                MUST(number_format_options->create_data_property_or_throw(vm.names.unit, PrimitiveString::create(vm, number_format_unit)));
 
                 // 3. Perform ! CreateDataPropertyOrThrow(nfOpts, "unitDisplay", style).
                 auto unicode_style = ::Locale::style_to_string(static_cast<::Locale::Style>(style));
-                MUST(number_format_options->create_data_property_or_throw(vm.names.unitDisplay, MUST_OR_THROW_OOM(PrimitiveString::create(vm, unicode_style))));
+                MUST(number_format_options->create_data_property_or_throw(vm.names.unitDisplay, PrimitiveString::create(vm, unicode_style)));
 
                 // 4. Let nf be ! Construct(%NumberFormat%, « durationFormat.[[Locale]], nfOpts »).
                 auto* number_format = static_cast<NumberFormat*>(MUST(construct(vm, realm.intrinsics().intl_number_format_constructor(), PrimitiveString::create(vm, duration_format.locale()), number_format_options)).ptr());
@@ -526,7 +526,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
     auto list_format_options = Object::create(realm, nullptr);
 
     // 5. Perform ! CreateDataPropertyOrThrow(lfOpts, "type", "unit").
-    MUST(list_format_options->create_data_property_or_throw(vm.names.type, MUST_OR_THROW_OOM(PrimitiveString::create(vm, "unit"sv))));
+    MUST(list_format_options->create_data_property_or_throw(vm.names.type, PrimitiveString::create(vm, "unit"_string)));
 
     // 6. Let listStyle be durationFormat.[[Style]].
     auto list_style = duration_format.style();
@@ -540,7 +540,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
     auto unicode_list_style = ::Locale::style_to_string(static_cast<::Locale::Style>(list_style));
 
     // 8. Perform ! CreateDataPropertyOrThrow(lfOpts, "style", listStyle).
-    MUST(list_format_options->create_data_property_or_throw(vm.names.style, MUST_OR_THROW_OOM(PrimitiveString::create(vm, unicode_list_style))));
+    MUST(list_format_options->create_data_property_or_throw(vm.names.style, PrimitiveString::create(vm, unicode_list_style)));
 
     // 9. Let lf be ! Construct(%ListFormat%, « durationFormat.[[Locale]], lfOpts »).
     auto* list_format = static_cast<ListFormat*>(MUST(construct(vm, realm.intrinsics().intl_list_format_constructor(), PrimitiveString::create(vm, duration_format.locale()), list_format_options)).ptr());

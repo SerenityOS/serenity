@@ -25,7 +25,7 @@ void DurationFormatPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 1.4.2 Intl.DurationFormat.prototype [ @@toStringTag ], https://tc39.es/proposal-intl-duration-format/#sec-Intl.DurationFormat.prototype-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Intl.DurationFormat"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Intl.DurationFormat"_string), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.format, format, 1, attr);
@@ -86,7 +86,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format_to_parts)
         auto object = Object::create(realm, realm.intrinsics().object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(obj, "type", part.[[Type]]).
-        MUST(object->create_data_property_or_throw(vm.names.type, MUST_OR_THROW_OOM(PrimitiveString::create(vm, part.type))));
+        MUST(object->create_data_property_or_throw(vm.names.type, PrimitiveString::create(vm, part.type)));
 
         // c. Perform ! CreateDataPropertyOrThrow(obj, "value", part.[[Value]]).
         MUST(object->create_data_property_or_throw(vm.names.value, PrimitiveString::create(vm, part.value)));
@@ -119,27 +119,27 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::resolved_options)
     //     c. Assert: v is not undefined.
     //     d. Perform ! CreateDataPropertyOrThrow(options, p, v).
     MUST(options->create_data_property_or_throw(vm.names.locale, PrimitiveString::create(vm, duration_format->locale())));
-    MUST(options->create_data_property_or_throw(vm.names.style, MUST_OR_THROW_OOM(PrimitiveString::create(vm, duration_format->style_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.years, MUST_OR_THROW_OOM(PrimitiveString::create(vm, duration_format->years_style_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.yearsDisplay, MUST_OR_THROW_OOM(PrimitiveString::create(vm, duration_format->years_display_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.months, MUST_OR_THROW_OOM(PrimitiveString::create(vm, duration_format->months_style_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.monthsDisplay, MUST_OR_THROW_OOM(PrimitiveString::create(vm, duration_format->months_display_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.weeks, MUST_OR_THROW_OOM(PrimitiveString::create(vm, duration_format->weeks_style_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.weeksDisplay, MUST_OR_THROW_OOM(PrimitiveString::create(vm, duration_format->weeks_display_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.days, MUST_OR_THROW_OOM(PrimitiveString::create(vm, duration_format->days_style_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.daysDisplay, MUST_OR_THROW_OOM(PrimitiveString::create(vm, duration_format->days_display_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.hours, MUST_OR_THROW_OOM(PrimitiveString::create(vm, duration_format->hours_style_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.hoursDisplay, MUST_OR_THROW_OOM(PrimitiveString::create(vm, duration_format->hours_display_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.minutes, MUST_OR_THROW_OOM(PrimitiveString::create(vm, duration_format->minutes_style_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.minutesDisplay, MUST_OR_THROW_OOM(PrimitiveString::create(vm, duration_format->minutes_display_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.seconds, MUST_OR_THROW_OOM(PrimitiveString::create(vm, duration_format->seconds_style_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.secondsDisplay, MUST_OR_THROW_OOM(PrimitiveString::create(vm, duration_format->seconds_display_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.milliseconds, MUST_OR_THROW_OOM(PrimitiveString::create(vm, duration_format->milliseconds_style_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.millisecondsDisplay, MUST_OR_THROW_OOM(PrimitiveString::create(vm, duration_format->milliseconds_display_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.microseconds, MUST_OR_THROW_OOM(PrimitiveString::create(vm, duration_format->microseconds_style_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.microsecondsDisplay, MUST_OR_THROW_OOM(PrimitiveString::create(vm, duration_format->microseconds_display_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.nanoseconds, MUST_OR_THROW_OOM(PrimitiveString::create(vm, duration_format->nanoseconds_style_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.nanosecondsDisplay, MUST_OR_THROW_OOM(PrimitiveString::create(vm, duration_format->nanoseconds_display_string()))));
+    MUST(options->create_data_property_or_throw(vm.names.style, PrimitiveString::create(vm, duration_format->style_string())));
+    MUST(options->create_data_property_or_throw(vm.names.years, PrimitiveString::create(vm, duration_format->years_style_string())));
+    MUST(options->create_data_property_or_throw(vm.names.yearsDisplay, PrimitiveString::create(vm, duration_format->years_display_string())));
+    MUST(options->create_data_property_or_throw(vm.names.months, PrimitiveString::create(vm, duration_format->months_style_string())));
+    MUST(options->create_data_property_or_throw(vm.names.monthsDisplay, PrimitiveString::create(vm, duration_format->months_display_string())));
+    MUST(options->create_data_property_or_throw(vm.names.weeks, PrimitiveString::create(vm, duration_format->weeks_style_string())));
+    MUST(options->create_data_property_or_throw(vm.names.weeksDisplay, PrimitiveString::create(vm, duration_format->weeks_display_string())));
+    MUST(options->create_data_property_or_throw(vm.names.days, PrimitiveString::create(vm, duration_format->days_style_string())));
+    MUST(options->create_data_property_or_throw(vm.names.daysDisplay, PrimitiveString::create(vm, duration_format->days_display_string())));
+    MUST(options->create_data_property_or_throw(vm.names.hours, PrimitiveString::create(vm, duration_format->hours_style_string())));
+    MUST(options->create_data_property_or_throw(vm.names.hoursDisplay, PrimitiveString::create(vm, duration_format->hours_display_string())));
+    MUST(options->create_data_property_or_throw(vm.names.minutes, PrimitiveString::create(vm, duration_format->minutes_style_string())));
+    MUST(options->create_data_property_or_throw(vm.names.minutesDisplay, PrimitiveString::create(vm, duration_format->minutes_display_string())));
+    MUST(options->create_data_property_or_throw(vm.names.seconds, PrimitiveString::create(vm, duration_format->seconds_style_string())));
+    MUST(options->create_data_property_or_throw(vm.names.secondsDisplay, PrimitiveString::create(vm, duration_format->seconds_display_string())));
+    MUST(options->create_data_property_or_throw(vm.names.milliseconds, PrimitiveString::create(vm, duration_format->milliseconds_style_string())));
+    MUST(options->create_data_property_or_throw(vm.names.millisecondsDisplay, PrimitiveString::create(vm, duration_format->milliseconds_display_string())));
+    MUST(options->create_data_property_or_throw(vm.names.microseconds, PrimitiveString::create(vm, duration_format->microseconds_style_string())));
+    MUST(options->create_data_property_or_throw(vm.names.microsecondsDisplay, PrimitiveString::create(vm, duration_format->microseconds_display_string())));
+    MUST(options->create_data_property_or_throw(vm.names.nanoseconds, PrimitiveString::create(vm, duration_format->nanoseconds_style_string())));
+    MUST(options->create_data_property_or_throw(vm.names.nanosecondsDisplay, PrimitiveString::create(vm, duration_format->nanoseconds_display_string())));
     MUST(options->create_data_property_or_throw(vm.names.fractionalDigits, duration_format->has_fractional_digits() ? Value(duration_format->fractional_digits()) : js_undefined()));
     MUST(options->create_data_property_or_throw(vm.names.numberingSystem, PrimitiveString::create(vm, duration_format->numbering_system())));
 

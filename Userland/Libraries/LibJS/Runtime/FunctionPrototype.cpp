@@ -168,7 +168,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
 
     // 4. If Type(func) is Object and IsCallable(func) is true, return an implementation-defined String source code representation of func. The representation must have the syntax of a NativeFunction.
     // NOTE: ProxyObject, BoundFunction, WrappedFunction
-    return MUST_OR_THROW_OOM(PrimitiveString::create(vm, "function () { [native code] }"sv));
+    return PrimitiveString::create(vm, "function () { [native code] }"_string);
 }
 
 // 20.2.3.6 Function.prototype [ @@hasInstance ] ( V ), https://tc39.es/ecma262/#sec-function.prototype-@@hasinstance

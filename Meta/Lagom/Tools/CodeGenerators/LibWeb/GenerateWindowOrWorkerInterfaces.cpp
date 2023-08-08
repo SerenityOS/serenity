@@ -196,7 +196,7 @@ void Intrinsics::create_web_prototype_and_constructor<@prototype_class@>(JS::Rea
     m_constructors.set("@interface_name@"sv, constructor);
 
     prototype->define_direct_property(vm.names.constructor, constructor.ptr(), JS::Attribute::Writable | JS::Attribute::Configurable);
-    constructor->define_direct_property(vm.names.name, JS::PrimitiveString::create(vm, "@interface_name@"sv).release_allocated_value_but_fixme_should_propagate_errors(), JS::Attribute::Configurable);
+    constructor->define_direct_property(vm.names.name, JS::PrimitiveString::create(vm, "@interface_name@"_string), JS::Attribute::Configurable);
 )~~~");
 
         if (legacy_constructor.has_value()) {
@@ -206,7 +206,7 @@ void Intrinsics::create_web_prototype_and_constructor<@prototype_class@>(JS::Rea
     auto legacy_constructor = heap().allocate<@legacy_constructor_class@>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
     m_constructors.set("@legacy_interface_name@"sv, legacy_constructor);
 
-    legacy_constructor->define_direct_property(vm.names.name, JS::PrimitiveString::create(vm, "@legacy_interface_name@"sv).release_allocated_value_but_fixme_should_propagate_errors(), JS::Attribute::Configurable);)~~~");
+    legacy_constructor->define_direct_property(vm.names.name, JS::PrimitiveString::create(vm, "@legacy_interface_name@"_string), JS::Attribute::Configurable);)~~~");
         }
 
         gen.append(R"~~~(
