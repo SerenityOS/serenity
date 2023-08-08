@@ -67,6 +67,7 @@ There are some optional features that can be enabled during compilation that are
 - `SERENITY_ARCH`: Specifies which architecture to build for. Currently supported options are `x86_64`.
 - `BUILD_<component>`: builds the specified component, e.g. `BUILD_HEARTS` (note: must be all caps). Check the components.ini file in your build directory for a list of available components. Make sure to run `ninja clean` and `rm -rf Build/x86_64/Root` after disabling components. These options can be easily configured by using the `ConfigureComponents` utility. See the [Component Configuration](#component-configuration) section below.
 - `BUILD_EVERYTHING`: builds all optional components, overrides other `BUILD_<component>` flags when enabled
+- `SERENITY_CACHE_DIR`: sets the location of a shared cache of downloaded files. Should not need to be set unless managing a distribution package.
 
 Many parts of the SerenityOS codebase have debug functionality, mostly consisting of additional messages printed to the debug console. This is done via the `<component_name>_DEBUG` macros, which can be enabled individually at build time. They are listed in [this file](../Meta/CMake/all_the_debug_macros.cmake).
 

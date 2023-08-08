@@ -24,3 +24,5 @@ serenity_option(HACKSTUDIO_BUILD OFF CACHE BOOL "Automatically enabled when buil
 
 serenity_option(ENABLE_JAKT OFF CACHE BOOL "Enable building jakt files")
 serenity_option(JAKT_SOURCE_DIR "" CACHE STRING "Pre-existing jakt language source directory")
+
+serenity_option(SERENITY_CACHE_DIR "${PROJECT_BINARY_DIR}/../caches" CACHE PATH "Location of shared cache of downloaded files")
