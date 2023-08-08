@@ -128,7 +128,7 @@ protected:
     {
         static_assert(sizeof(ActualDerived) == sizeof(Derived), "This leaf class cannot add more members");
         static_assert(alignof(ActualDerived) % alignof(T) == 0, "Need padding for tail array");
-        auto memory = ::operator new(sizeof(ActualDerived) + tail_size * sizeof(T));
+        auto* memory = ::operator new(sizeof(ActualDerived) + tail_size * sizeof(T));
         return adopt_ref(*::new (memory) ActualDerived(move(source_range), forward<Args>(args)...));
     }
 
@@ -150,7 +150,7 @@ private:
 class Statement : public ASTNode {
 public:
     explicit Statement(SourceRange source_range)
-        : ASTNode(source_range)
+        : ASTNode(move(source_range))
     {
     }
 };
@@ -159,7 +159,7 @@ public:
 class LabelledStatement : public Statement {
 public:
     LabelledStatement(SourceRange source_range, DeprecatedFlyString label, NonnullRefPtr<Statement const> labelled_item)
-        : Statement(source_range)
+        : Statement(move(source_range))
         , m_label(move(label))
         , m_labelled_item(move(labelled_item))
     {
@@ -204,7 +204,7 @@ private:
 class EmptyStatement final : public Statement {
 public:
     explicit EmptyStatement(SourceRange source_range)
-        : Statement(source_range)
+        : Statement(move(source_range))
     {
     }
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
@@ -213,7 +213,7 @@ public:
 class ErrorStatement final : public Statement {
 public:
     explicit ErrorStatement(SourceRange source_range)
-        : Statement(source_range)
+        : Statement(move(source_range))
     {
     }
 };
@@ -221,7 +221,7 @@ public:
 class ExpressionStatement final : public Statement {
 public:
     ExpressionStatement(SourceRange source_range, NonnullRefPtr<Expression const> expression)
-        : Statement(source_range)
+        : Statement(move(source_range))
         , m_expression(move(expression))
     {
     }
@@ -318,13 +318,13 @@ public:
     size_t add_local_variable(DeprecatedFlyString name)
     {
         auto index = m_local_variables_names.size();
-        m_local_variables_names.append(name);
+        m_local_variables_names.append(move(name));
         return index;
     }
 
 protected:
     explicit ScopeNode(SourceRange source_range)
-        : Statement(source_range)
+        : Statement(move(source_range))
     {
     }
 
@@ -368,7 +368,7 @@ private:
 class ImportStatement final : public Statement {
 public:
     explicit ImportStatement(SourceRange source_range, ModuleRequest from_module, Vector<ImportEntry> entries = {})
-        : Statement(source_range)
+        : Statement(move(source_range))
         , m_module_request(move(from_module))
         , m_entries(move(entries))
     {
@@ -461,7 +461,7 @@ public:
     static DeprecatedFlyString local_name_for_default;
 
     ExportStatement(SourceRange source_range, RefPtr<ASTNode const> statement, Vector<ExportEntry> entries, bool is_default_export, ModuleRequest module_request)
-        : Statement(source_range)
+        : Statement(move(source_range))
         , m_statement(move(statement))
         , m_entries(move(entries))
         , m_is_default_export(is_default_export)
@@ -511,7 +511,7 @@ public:
     };
 
     explicit Program(SourceRange source_range, Type program_type)
-        : ScopeNode(source_range)
+        : ScopeNode(move(source_range))
         , m_type(program_type)
     {
     }
@@ -524,13 +524,13 @@ public:
     void append_import(NonnullRefPtr<ImportStatement const> import_statement)
     {
         m_imports.append(import_statement);
-        append(import_statement);
+        append(move(import_statement));
     }
 
     void append_export(NonnullRefPtr<ExportStatement const> export_statement)
     {
         m_exports.append(export_statement);
-        append(export_statement);
+        append(move(export_statement));
     }
 
     Vector<NonnullRefPtr<ImportStatement const>> const& imports() const { return m_imports; }
@@ -558,7 +558,7 @@ private:
 class BlockStatement final : public ScopeNode {
 public:
     explicit BlockStatement(SourceRange source_range)
-        : ScopeNode(source_range)
+        : ScopeNode(move(source_range))
     {
     }
 };
@@ -566,7 +566,7 @@ public:
 class FunctionBody final : public ScopeNode {
 public:
     explicit FunctionBody(SourceRange source_range)
-        : ScopeNode(source_range)
+        : ScopeNode(move(source_range))
     {
     }
 
@@ -581,7 +581,7 @@ private:
 class Expression : public ASTNode {
 public:
     explicit Expression(SourceRange source_range)
-        : ASTNode(source_range)
+        : ASTNode(move(source_range))
     {
     }
 };
@@ -589,7 +589,7 @@ public:
 class Declaration : public Statement {
 public:
     explicit Declaration(SourceRange source_range)
-        : Statement(source_range)
+        : Statement(move(source_range))
     {
     }
 
@@ -604,7 +604,7 @@ public:
 class ErrorDeclaration final : public Declaration {
 public:
     explicit ErrorDeclaration(SourceRange source_range)
-        : Declaration(source_range)
+        : Declaration(move(source_range))
     {
     }
 
@@ -644,7 +644,7 @@ struct BindingPattern : RefCounted<BindingPattern> {
 class Identifier final : public Expression {
 public:
     explicit Identifier(SourceRange source_range, DeprecatedFlyString string)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_string(move(string))
     {
     }
@@ -708,7 +708,7 @@ protected:
         , m_might_need_arguments_object(might_need_arguments_object)
         , m_contains_direct_call_to_eval(contains_direct_call_to_eval)
         , m_is_arrow_function(is_arrow_function)
-        , m_local_variables_names(local_variables_names)
+        , m_local_variables_names(move(local_variables_names))
     {
         if (m_is_arrow_function)
             VERIFY(!m_might_need_arguments_object);
@@ -739,8 +739,8 @@ public:
     static bool must_have_name() { return true; }
 
     FunctionDeclaration(SourceRange source_range, RefPtr<Identifier const> name, DeprecatedString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, Vector<DeprecatedFlyString> local_variables_names)
-        : Declaration(source_range)
-        , FunctionNode(name, move(source_text), move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, false, move(local_variables_names))
+        : Declaration(move(source_range))
+        , FunctionNode(move(name), move(source_text), move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, false, move(local_variables_names))
     {
     }
 
@@ -764,8 +764,8 @@ public:
     static bool must_have_name() { return false; }
 
     FunctionExpression(SourceRange source_range, RefPtr<Identifier const> name, DeprecatedString source_text, NonnullRefPtr<Statement const> body, Vector<FunctionParameter> parameters, i32 function_length, FunctionKind kind, bool is_strict_mode, bool might_need_arguments_object, bool contains_direct_call_to_eval, Vector<DeprecatedFlyString> local_variables_names, bool is_arrow_function = false)
-        : Expression(source_range)
-        , FunctionNode(name, move(source_text), move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function, move(local_variables_names))
+        : Expression(move(source_range))
+        , FunctionNode(move(name), move(source_text), move(body), move(parameters), function_length, kind, is_strict_mode, might_need_arguments_object, contains_direct_call_to_eval, is_arrow_function, move(local_variables_names))
     {
     }
 
@@ -785,7 +785,7 @@ private:
 class ErrorExpression final : public Expression {
 public:
     explicit ErrorExpression(SourceRange source_range)
-        : Expression(source_range)
+        : Expression(move(source_range))
     {
     }
 };
@@ -793,7 +793,7 @@ public:
 class YieldExpression final : public Expression {
 public:
     explicit YieldExpression(SourceRange source_range, RefPtr<Expression const> argument, bool is_yield_from)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_argument(move(argument))
         , m_is_yield_from(is_yield_from)
     {
@@ -813,7 +813,7 @@ private:
 class AwaitExpression final : public Expression {
 public:
     explicit AwaitExpression(SourceRange source_range, NonnullRefPtr<Expression const> argument)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_argument(move(argument))
     {
     }
@@ -828,7 +828,7 @@ private:
 class ReturnStatement final : public Statement {
 public:
     explicit ReturnStatement(SourceRange source_range, RefPtr<Expression const> argument)
-        : Statement(source_range)
+        : Statement(move(source_range))
         , m_argument(move(argument))
     {
     }
@@ -845,7 +845,7 @@ private:
 class IfStatement final : public Statement {
 public:
     IfStatement(SourceRange source_range, NonnullRefPtr<Expression const> predicate, NonnullRefPtr<Statement const> consequent, RefPtr<Statement const> alternate)
-        : Statement(source_range)
+        : Statement(move(source_range))
         , m_predicate(move(predicate))
         , m_consequent(move(consequent))
         , m_alternate(move(alternate))
@@ -868,7 +868,7 @@ private:
 class WhileStatement final : public IterationStatement {
 public:
     WhileStatement(SourceRange source_range, NonnullRefPtr<Expression const> test, NonnullRefPtr<Statement const> body)
-        : IterationStatement(source_range)
+        : IterationStatement(move(source_range))
         , m_test(move(test))
         , m_body(move(body))
     {
@@ -889,7 +889,7 @@ private:
 class DoWhileStatement final : public IterationStatement {
 public:
     DoWhileStatement(SourceRange source_range, NonnullRefPtr<Expression const> test, NonnullRefPtr<Statement const> body)
-        : IterationStatement(source_range)
+        : IterationStatement(move(source_range))
         , m_test(move(test))
         , m_body(move(body))
     {
@@ -910,7 +910,7 @@ private:
 class WithStatement final : public Statement {
 public:
     WithStatement(SourceRange source_range, NonnullRefPtr<Expression const> object, NonnullRefPtr<Statement const> body)
-        : Statement(source_range)
+        : Statement(move(source_range))
         , m_object(move(object))
         , m_body(move(body))
     {
@@ -930,7 +930,7 @@ private:
 class ForStatement final : public IterationStatement {
 public:
     ForStatement(SourceRange source_range, RefPtr<ASTNode const> init, RefPtr<Expression const> test, RefPtr<Expression const> update, NonnullRefPtr<Statement const> body)
-        : IterationStatement(source_range)
+        : IterationStatement(move(source_range))
         , m_init(move(init))
         , m_test(move(test))
         , m_update(move(update))
@@ -957,7 +957,7 @@ private:
 class ForInStatement final : public IterationStatement {
 public:
     ForInStatement(SourceRange source_range, Variant<NonnullRefPtr<ASTNode const>, NonnullRefPtr<BindingPattern const>> lhs, NonnullRefPtr<Expression const> rhs, NonnullRefPtr<Statement const> body)
-        : IterationStatement(source_range)
+        : IterationStatement(move(source_range))
         , m_lhs(move(lhs))
         , m_rhs(move(rhs))
         , m_body(move(body))
@@ -981,7 +981,7 @@ private:
 class ForOfStatement final : public IterationStatement {
 public:
     ForOfStatement(SourceRange source_range, Variant<NonnullRefPtr<ASTNode const>, NonnullRefPtr<BindingPattern const>> lhs, NonnullRefPtr<Expression const> rhs, NonnullRefPtr<Statement const> body)
-        : IterationStatement(source_range)
+        : IterationStatement(move(source_range))
         , m_lhs(move(lhs))
         , m_rhs(move(rhs))
         , m_body(move(body))
@@ -1005,7 +1005,7 @@ private:
 class ForAwaitOfStatement final : public IterationStatement {
 public:
     ForAwaitOfStatement(SourceRange source_range, Variant<NonnullRefPtr<ASTNode const>, NonnullRefPtr<BindingPattern const>> lhs, NonnullRefPtr<Expression const> rhs, NonnullRefPtr<Statement const> body)
-        : IterationStatement(source_range)
+        : IterationStatement(move(source_range))
         , m_lhs(move(lhs))
         , m_rhs(move(rhs))
         , m_body(move(body))
@@ -1050,7 +1050,7 @@ enum class BinaryOp {
 class BinaryExpression final : public Expression {
 public:
     BinaryExpression(SourceRange source_range, BinaryOp op, NonnullRefPtr<Expression const> lhs, NonnullRefPtr<Expression const> rhs)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_op(op)
         , m_lhs(move(lhs))
         , m_rhs(move(rhs))
@@ -1075,7 +1075,7 @@ enum class LogicalOp {
 class LogicalExpression final : public Expression {
 public:
     LogicalExpression(SourceRange source_range, LogicalOp op, NonnullRefPtr<Expression const> lhs, NonnullRefPtr<Expression const> rhs)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_op(op)
         , m_lhs(move(lhs))
         , m_rhs(move(rhs))
@@ -1104,7 +1104,7 @@ enum class UnaryOp {
 class UnaryExpression final : public Expression {
 public:
     UnaryExpression(SourceRange source_range, UnaryOp op, NonnullRefPtr<Expression const> lhs)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_op(op)
         , m_lhs(move(lhs))
     {
@@ -1121,7 +1121,7 @@ private:
 class SequenceExpression final : public Expression {
 public:
     SequenceExpression(SourceRange source_range, Vector<NonnullRefPtr<Expression const>> expressions)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_expressions(move(expressions))
     {
         VERIFY(m_expressions.size() >= 2);
@@ -1137,7 +1137,7 @@ private:
 class Literal : public Expression {
 protected:
     explicit Literal(SourceRange source_range)
-        : Expression(source_range)
+        : Expression(move(source_range))
     {
     }
 };
@@ -1145,7 +1145,7 @@ protected:
 class BooleanLiteral final : public Literal {
 public:
     explicit BooleanLiteral(SourceRange source_range, bool value)
-        : Literal(source_range)
+        : Literal(move(source_range))
         , m_value(value)
     {
     }
@@ -1160,7 +1160,7 @@ private:
 class NumericLiteral final : public Literal {
 public:
     explicit NumericLiteral(SourceRange source_range, double value)
-        : Literal(source_range)
+        : Literal(move(source_range))
         , m_value(value)
     {
     }
@@ -1175,7 +1175,7 @@ private:
 class BigIntLiteral final : public Literal {
 public:
     explicit BigIntLiteral(SourceRange source_range, DeprecatedString value)
-        : Literal(source_range)
+        : Literal(move(source_range))
         , m_value(move(value))
     {
     }
@@ -1190,7 +1190,7 @@ private:
 class StringLiteral final : public Literal {
 public:
     explicit StringLiteral(SourceRange source_range, DeprecatedString value)
-        : Literal(source_range)
+        : Literal(move(source_range))
         , m_value(move(value))
     {
     }
@@ -1209,7 +1209,7 @@ private:
 class NullLiteral final : public Literal {
 public:
     explicit NullLiteral(SourceRange source_range)
-        : Literal(source_range)
+        : Literal(move(source_range))
     {
     }
 
@@ -1220,10 +1220,10 @@ public:
 class RegExpLiteral final : public Literal {
 public:
     RegExpLiteral(SourceRange source_range, regex::Parser::Result parsed_regex, DeprecatedString parsed_pattern, regex::RegexOptions<ECMAScriptFlags> parsed_flags, DeprecatedString pattern, DeprecatedString flags)
-        : Literal(source_range)
+        : Literal(move(source_range))
         , m_parsed_regex(move(parsed_regex))
         , m_parsed_pattern(move(parsed_pattern))
-        , m_parsed_flags(move(parsed_flags))
+        , m_parsed_flags(parsed_flags)
         , m_pattern(move(pattern))
         , m_flags(move(flags))
     {
@@ -1249,7 +1249,7 @@ private:
 class PrivateIdentifier final : public Expression {
 public:
     explicit PrivateIdentifier(SourceRange source_range, DeprecatedFlyString string)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_string(move(string))
     {
     }
@@ -1267,7 +1267,7 @@ private:
 class ClassElement : public ASTNode {
 public:
     ClassElement(SourceRange source_range, bool is_static)
-        : ASTNode(source_range)
+        : ASTNode(move(source_range))
         , m_is_static(is_static)
     {
     }
@@ -1300,7 +1300,7 @@ public:
     };
 
     ClassMethod(SourceRange source_range, NonnullRefPtr<Expression const> key, NonnullRefPtr<FunctionExpression const> function, Kind kind, bool is_static)
-        : ClassElement(source_range, is_static)
+        : ClassElement(move(source_range), is_static)
         , m_key(move(key))
         , m_function(move(function))
         , m_kind(kind)
@@ -1325,7 +1325,7 @@ private:
 class ClassField final : public ClassElement {
 public:
     ClassField(SourceRange source_range, NonnullRefPtr<Expression const> key, RefPtr<Expression const> init, bool contains_direct_call_to_eval, bool is_static)
-        : ClassElement(source_range, is_static)
+        : ClassElement(move(source_range), is_static)
         , m_key(move(key))
         , m_initializer(move(init))
         , m_contains_direct_call_to_eval(contains_direct_call_to_eval)
@@ -1351,7 +1351,7 @@ private:
 class StaticInitializer final : public ClassElement {
 public:
     StaticInitializer(SourceRange source_range, NonnullRefPtr<FunctionBody> function_body, bool contains_direct_call_to_eval)
-        : ClassElement(source_range, true)
+        : ClassElement(move(source_range), true)
         , m_function_body(move(function_body))
         , m_contains_direct_call_to_eval(contains_direct_call_to_eval)
     {
@@ -1370,7 +1370,7 @@ private:
 class SuperExpression final : public Expression {
 public:
     explicit SuperExpression(SourceRange source_range)
-        : Expression(source_range)
+        : Expression(move(source_range))
     {
     }
 
@@ -1383,7 +1383,7 @@ public:
 class ClassExpression final : public Expression {
 public:
     ClassExpression(SourceRange source_range, RefPtr<Identifier const> name, DeprecatedString source_text, RefPtr<FunctionExpression const> constructor, RefPtr<Expression const> super_class, Vector<NonnullRefPtr<ClassElement const>> elements)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_name(move(name))
         , m_source_text(move(source_text))
         , m_constructor(move(constructor))
@@ -1421,7 +1421,7 @@ private:
 class ClassDeclaration final : public Declaration {
 public:
     ClassDeclaration(SourceRange source_range, NonnullRefPtr<ClassExpression const> class_expression)
-        : Declaration(source_range)
+        : Declaration(move(source_range))
         , m_class_expression(move(class_expression))
     {
     }
@@ -1465,7 +1465,7 @@ private:
 class SpreadExpression final : public Expression {
 public:
     explicit SpreadExpression(SourceRange source_range, NonnullRefPtr<Expression const> target)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_target(move(target))
     {
     }
@@ -1480,7 +1480,7 @@ private:
 class ThisExpression final : public Expression {
 public:
     explicit ThisExpression(SourceRange source_range)
-        : Expression(source_range)
+        : Expression(move(source_range))
     {
     }
     virtual void dump(int indent) const override;
@@ -1533,7 +1533,6 @@ protected:
     {
     }
 
-protected:
     virtual bool is_call_expression() const override { return true; }
 
     Optional<DeprecatedString> expression_string() const;
@@ -1568,14 +1567,14 @@ public:
     };
 
     SuperCall(SourceRange source_range, Vector<CallExpression::Argument> arguments)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_arguments(move(arguments))
         , m_is_synthetic(IsPartOfSyntheticConstructor::No)
     {
     }
 
     SuperCall(SourceRange source_range, IsPartOfSyntheticConstructor is_part_of_synthetic_constructor, CallExpression::Argument constructor_argument)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_arguments({ move(constructor_argument) })
         , m_is_synthetic(IsPartOfSyntheticConstructor::Yes)
     {
@@ -1612,7 +1611,7 @@ enum class AssignmentOp {
 class AssignmentExpression final : public Expression {
 public:
     AssignmentExpression(SourceRange source_range, AssignmentOp op, NonnullRefPtr<Expression const> lhs, NonnullRefPtr<Expression const> rhs)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_op(op)
         , m_lhs(move(lhs))
         , m_rhs(move(rhs))
@@ -1620,7 +1619,7 @@ public:
     }
 
     AssignmentExpression(SourceRange source_range, AssignmentOp op, NonnullRefPtr<BindingPattern const> lhs, NonnullRefPtr<Expression const> rhs)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_op(op)
         , m_lhs(move(lhs))
         , m_rhs(move(rhs))
@@ -1644,7 +1643,7 @@ enum class UpdateOp {
 class UpdateExpression final : public Expression {
 public:
     UpdateExpression(SourceRange source_range, UpdateOp op, NonnullRefPtr<Expression const> argument, bool prefixed = false)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_op(op)
         , m_argument(move(argument))
         , m_prefixed(prefixed)
@@ -1671,20 +1670,20 @@ enum class DeclarationKind {
 class VariableDeclarator final : public ASTNode {
 public:
     VariableDeclarator(SourceRange source_range, NonnullRefPtr<Identifier const> id)
-        : ASTNode(source_range)
+        : ASTNode(move(source_range))
         , m_target(move(id))
     {
     }
 
     VariableDeclarator(SourceRange source_range, NonnullRefPtr<Identifier const> target, RefPtr<Expression const> init)
-        : ASTNode(source_range)
+        : ASTNode(move(source_range))
         , m_target(move(target))
         , m_init(move(init))
     {
     }
 
     VariableDeclarator(SourceRange source_range, Variant<NonnullRefPtr<Identifier const>, NonnullRefPtr<BindingPattern const>> target, RefPtr<Expression const> init)
-        : ASTNode(source_range)
+        : ASTNode(move(source_range))
         , m_target(move(target))
         , m_init(move(init))
     {
@@ -1703,7 +1702,7 @@ private:
 class VariableDeclaration final : public Declaration {
 public:
     VariableDeclaration(SourceRange source_range, DeclarationKind declaration_kind, Vector<NonnullRefPtr<VariableDeclarator const>> declarations)
-        : Declaration(source_range)
+        : Declaration(move(source_range))
         , m_declaration_kind(declaration_kind)
         , m_declarations(move(declarations))
     {
@@ -1762,7 +1761,7 @@ public:
     };
 
     ObjectProperty(SourceRange source_range, NonnullRefPtr<Expression const> key, RefPtr<Expression const> value, Type property_type, bool is_method)
-        : ASTNode(source_range)
+        : ASTNode(move(source_range))
         , m_property_type(property_type)
         , m_is_method(is_method)
         , m_key(move(key))
@@ -1792,7 +1791,7 @@ private:
 class ObjectExpression final : public Expression {
 public:
     explicit ObjectExpression(SourceRange source_range, Vector<NonnullRefPtr<ObjectProperty>> properties = {})
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_properties(move(properties))
     {
     }
@@ -1809,7 +1808,7 @@ private:
 class ArrayExpression final : public Expression {
 public:
     ArrayExpression(SourceRange source_range, Vector<RefPtr<Expression const>> elements)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_elements(move(elements))
     {
     }
@@ -1828,13 +1827,13 @@ private:
 class TemplateLiteral final : public Expression {
 public:
     TemplateLiteral(SourceRange source_range, Vector<NonnullRefPtr<Expression const>> expressions)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_expressions(move(expressions))
     {
     }
 
     TemplateLiteral(SourceRange source_range, Vector<NonnullRefPtr<Expression const>> expressions, Vector<NonnullRefPtr<Expression const>> raw_strings)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_expressions(move(expressions))
         , m_raw_strings(move(raw_strings))
     {
@@ -1854,7 +1853,7 @@ private:
 class TaggedTemplateLiteral final : public Expression {
 public:
     TaggedTemplateLiteral(SourceRange source_range, NonnullRefPtr<Expression const> tag, NonnullRefPtr<TemplateLiteral const> template_literal)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_tag(move(tag))
         , m_template_literal(move(template_literal))
     {
@@ -1872,7 +1871,7 @@ private:
 class MemberExpression final : public Expression {
 public:
     MemberExpression(SourceRange source_range, NonnullRefPtr<Expression const> object, NonnullRefPtr<Expression const> property, bool computed = false)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_computed(computed)
         , m_object(move(object))
         , m_property(move(property))
@@ -1925,7 +1924,7 @@ public:
     using Reference = Variant<Call, ComputedReference, MemberReference, PrivateMemberReference>;
 
     OptionalChain(SourceRange source_range, NonnullRefPtr<Expression const> base, Vector<Reference> references)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_base(move(base))
         , m_references(move(references))
     {
@@ -1950,7 +1949,7 @@ public:
     };
 
     MetaProperty(SourceRange source_range, Type type)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_type(type)
     {
     }
@@ -1965,7 +1964,7 @@ private:
 class ImportCall final : public Expression {
 public:
     ImportCall(SourceRange source_range, NonnullRefPtr<Expression const> specifier, RefPtr<Expression const> options)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_specifier(move(specifier))
         , m_options(move(options))
     {
@@ -1984,7 +1983,7 @@ private:
 class ConditionalExpression final : public Expression {
 public:
     ConditionalExpression(SourceRange source_range, NonnullRefPtr<Expression const> test, NonnullRefPtr<Expression const> consequent, NonnullRefPtr<Expression const> alternate)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_test(move(test))
         , m_consequent(move(consequent))
         , m_alternate(move(alternate))
@@ -2003,14 +2002,14 @@ private:
 class CatchClause final : public ASTNode {
 public:
     CatchClause(SourceRange source_range, DeprecatedFlyString parameter, NonnullRefPtr<BlockStatement const> body)
-        : ASTNode(source_range)
+        : ASTNode(move(source_range))
         , m_parameter(move(parameter))
         , m_body(move(body))
     {
     }
 
     CatchClause(SourceRange source_range, NonnullRefPtr<BindingPattern const> parameter, NonnullRefPtr<BlockStatement const> body)
-        : ASTNode(source_range)
+        : ASTNode(move(source_range))
         , m_parameter(move(parameter))
         , m_body(move(body))
     {
@@ -2029,7 +2028,7 @@ private:
 class TryStatement final : public Statement {
 public:
     TryStatement(SourceRange source_range, NonnullRefPtr<BlockStatement const> block, RefPtr<CatchClause const> handler, RefPtr<BlockStatement const> finalizer)
-        : Statement(source_range)
+        : Statement(move(source_range))
         , m_block(move(block))
         , m_handler(move(handler))
         , m_finalizer(move(finalizer))
@@ -2052,7 +2051,7 @@ private:
 class ThrowStatement final : public Statement {
 public:
     explicit ThrowStatement(SourceRange source_range, NonnullRefPtr<Expression const> argument)
-        : Statement(source_range)
+        : Statement(move(source_range))
         , m_argument(move(argument))
     {
     }
@@ -2069,7 +2068,7 @@ private:
 class SwitchCase final : public ScopeNode {
 public:
     SwitchCase(SourceRange source_range, RefPtr<Expression const> test)
-        : ScopeNode(source_range)
+        : ScopeNode(move(source_range))
         , m_test(move(test))
     {
     }
@@ -2085,7 +2084,7 @@ private:
 class SwitchStatement final : public ScopeNode {
 public:
     SwitchStatement(SourceRange source_range, NonnullRefPtr<Expression const> discriminant)
-        : ScopeNode(source_range)
+        : ScopeNode(move(source_range))
         , m_discriminant(move(discriminant))
     {
     }
@@ -2104,7 +2103,7 @@ private:
 class BreakStatement final : public Statement {
 public:
     BreakStatement(SourceRange source_range, DeprecatedFlyString target_label)
-        : Statement(source_range)
+        : Statement(move(source_range))
         , m_target_label(move(target_label))
     {
     }
@@ -2119,7 +2118,7 @@ private:
 class ContinueStatement final : public Statement {
 public:
     ContinueStatement(SourceRange source_range, DeprecatedFlyString target_label)
-        : Statement(source_range)
+        : Statement(move(source_range))
         , m_target_label(move(target_label))
     {
     }
@@ -2135,7 +2134,7 @@ private:
 class DebuggerStatement final : public Statement {
 public:
     explicit DebuggerStatement(SourceRange source_range)
-        : Statement(source_range)
+        : Statement(move(source_range))
     {
     }
 
@@ -2145,7 +2144,7 @@ public:
 class SyntheticReferenceExpression final : public Expression {
 public:
     explicit SyntheticReferenceExpression(SourceRange source_range, Reference reference, Value value)
-        : Expression(source_range)
+        : Expression(move(source_range))
         , m_reference(move(reference))
         , m_value(value)
     {
