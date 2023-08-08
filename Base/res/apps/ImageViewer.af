@@ -4,4 +4,4 @@ Executable=/bin/ImageViewer
 Category=Graphics
 
 [Launcher]
-FileTypes=bmp,pbm,pgm,png,ppm,gif,jpg,jpeg,dds,qoi,tga,tvg,ico
+FileTypes=bmp,dds,gif,ico,jpeg,jpg,jxl,pbm,pgm,png,ppm,qoi,tga,tvg
