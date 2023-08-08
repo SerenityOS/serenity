@@ -83,7 +83,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return true;
     };
 
-    auto game_menu = TRY(window->try_add_menu("&Game"_short_string));
+    auto game_menu = TRY(window->try_add_menu("&Game"_string));
 
     TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         game.reset();
@@ -123,7 +123,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     GUI::ActionGroup skin_action_group;
     skin_action_group.set_exclusive(true);
 
-    auto skin_menu = TRY(game_menu->try_add_submenu("&Skin"_short_string));
+    auto skin_menu = TRY(game_menu->try_add_submenu("&Skin"_string));
     skin_menu->set_icon(app_icon.bitmap_for_size(16));
 
     auto add_skin_action = [&](StringView name, bool enable_color) -> ErrorOr<void> {
@@ -151,7 +151,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         GUI::Application::the()->quit();
     })));
 
-    auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
+    auto help_menu = TRY(window->try_add_menu("&Help"_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man6/Snake.md"), "/bin/Help");

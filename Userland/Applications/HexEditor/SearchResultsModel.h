@@ -44,9 +44,9 @@ public:
     {
         switch (column) {
         case Column::Offset:
-            return "Offset"_short_string;
+            return "Offset"_string;
         case Column::Value:
-            return "Value"_short_string;
+            return "Value"_string;
         }
         VERIFY_NOT_REACHED();
     }

@@ -1743,7 +1743,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
     else if (!options.invoke_program_for_autocomplete)
         return Error::from_string_literal("Refusing to use the program itself as completion source");
 
-    completion_command.argv.extend({ "--complete"_string, "--"_short_string });
+    completion_command.argv.extend({ "--complete"_string, "--"_string });
 
     struct Visitor : public AST::NodeVisitor {
         Visitor(Shell& shell, AST::Position position)

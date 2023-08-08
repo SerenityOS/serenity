@@ -153,7 +153,7 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url, WebView::UseJavaScr
 
 void BrowserWindow::build_menus()
 {
-    auto& file_menu = add_menu("&File"_short_string);
+    auto& file_menu = add_menu("&File"_string);
     file_menu.add_action(WindowActions::the().create_new_tab_action());
     file_menu.add_action(WindowActions::the().create_new_window_action());
 
@@ -168,11 +168,11 @@ void BrowserWindow::build_menus()
         GUI::Application::the()->quit();
     }));
 
-    auto& view_menu = add_menu("&View"_short_string);
+    auto& view_menu = add_menu("&View"_string);
     view_menu.add_action(WindowActions::the().show_bookmarks_bar_action());
     view_menu.add_action(WindowActions::the().vertical_tabs_action());
     view_menu.add_separator();
-    m_zoom_menu = view_menu.add_submenu("&Zoom"_short_string);
+    m_zoom_menu = view_menu.add_submenu("&Zoom"_string);
     m_zoom_menu->add_action(GUI::CommonActions::make_zoom_in_action(
         [this](auto&) {
             auto& tab = active_tab();
@@ -219,7 +219,7 @@ void BrowserWindow::build_menus()
     m_reload_action = GUI::CommonActions::make_reload_action([this](auto&) { active_tab().reload(); }, this);
     m_reload_action->set_status_tip("Reload current page"_string);
 
-    auto& go_menu = add_menu("&Go"_short_string);
+    auto& go_menu = add_menu("&Go"_string);
     go_menu.add_action(*m_go_back_action);
     go_menu.add_action(*m_go_forward_action);
     go_menu.add_action(*m_go_home_action);
@@ -340,7 +340,7 @@ void BrowserWindow::build_menus()
         });
     settings_menu.add_action(move(open_settings_action));
 
-    auto& debug_menu = add_menu("&Debug"_short_string);
+    auto& debug_menu = add_menu("&Debug"_string);
     debug_menu.add_action(GUI::Action::create(
         "Dump &DOM Tree", g_icon_bag.dom_tree, [this](auto&) {
             active_tab().view().debug_request("dump-dom-tree");
@@ -462,7 +462,7 @@ void BrowserWindow::build_menus()
     same_origin_policy_action->set_checked(false);
     debug_menu.add_action(same_origin_policy_action);
 
-    auto& help_menu = add_menu("&Help"_short_string);
+    auto& help_menu = add_menu("&Help"_string);
     help_menu.add_action(GUI::CommonActions::make_command_palette_action(this));
     help_menu.add_action(WindowActions::the().about_action());
 }
@@ -564,7 +564,7 @@ void BrowserWindow::set_window_title_for_tab(Tab const& tab)
 
 Tab& BrowserWindow::create_new_tab(URL url, Web::HTML::ActivateTab activate)
 {
-    auto& new_tab = m_tab_widget->add_tab<Browser::Tab>("New tab"_short_string, *this, m_use_javascript_bytecode);
+    auto& new_tab = m_tab_widget->add_tab<Browser::Tab>("New tab"_string, *this, m_use_javascript_bytecode);
 
     m_tab_widget->set_bar_visible(!is_fullscreen() && m_tab_widget->children().size() > 1);
 

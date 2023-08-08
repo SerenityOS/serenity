@@ -27,7 +27,7 @@ SettingsDialog::SettingsDialog(GUI::Window* parent, DeprecatedString player_name
     auto& name_box = main_widget->add<GUI::Widget>();
     name_box.set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 4);
 
-    auto& name_label = name_box.add<GUI::Label>("Name:"_short_string);
+    auto& name_label = name_box.add<GUI::Label>("Name:"_string);
     name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     auto& textbox = name_box.add<GUI::TextBox>();
@@ -39,11 +39,11 @@ SettingsDialog::SettingsDialog(GUI::Window* parent, DeprecatedString player_name
     auto& button_box = main_widget->add<GUI::Widget>();
     button_box.set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 12);
 
-    button_box.add<GUI::Button>("Cancel"_short_string).on_click = [this](auto) {
+    button_box.add<GUI::Button>("Cancel"_string).on_click = [this](auto) {
         done(ExecResult::Cancel);
     };
 
-    button_box.add<GUI::Button>("OK"_short_string).on_click = [this](auto) {
+    button_box.add<GUI::Button>("OK"_string).on_click = [this](auto) {
         done(ExecResult::OK);
     };
 }

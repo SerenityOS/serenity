@@ -45,7 +45,7 @@ ErrorOr<void> PlayerWidget::initialize()
     set_fill_with_background_color(true);
     TRY(m_track_number_choices.try_append("1"));
 
-    RefPtr<GUI::Label> label = TRY(try_add<GUI::Label>("Track"_short_string));
+    RefPtr<GUI::Label> label = TRY(try_add<GUI::Label>("Track"_string));
     label->set_max_width(75);
 
     m_track_dropdown = TRY(try_add<GUI::ComboBox>());

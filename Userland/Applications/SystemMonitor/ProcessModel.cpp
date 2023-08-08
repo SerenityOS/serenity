@@ -77,65 +77,65 @@ ErrorOr<String> ProcessModel::column_name(int column) const
     case Column::Icon:
         return String {};
     case Column::PID:
-        return "PID"_short_string;
+        return "PID"_string;
     case Column::TID:
-        return "TID"_short_string;
+        return "TID"_string;
     case Column::PPID:
-        return "PPID"_short_string;
+        return "PPID"_string;
     case Column::PGID:
-        return "PGID"_short_string;
+        return "PGID"_string;
     case Column::SID:
-        return "SID"_short_string;
+        return "SID"_string;
     case Column::State:
-        return "State"_short_string;
+        return "State"_string;
     case Column::User:
-        return "User"_short_string;
+        return "User"_string;
     case Column::Priority:
-        return "Pr"_short_string;
+        return "Pr"_string;
     case Column::Virtual:
-        return "Virtual"_short_string;
+        return "Virtual"_string;
     case Column::Physical:
         return "Physical"_string;
     case Column::DirtyPrivate:
-        return "Private"_short_string;
+        return "Private"_string;
     case Column::CleanInode:
-        return "CleanI"_short_string;
+        return "CleanI"_string;
     case Column::PurgeableVolatile:
-        return "Purg:V"_short_string;
+        return "Purg:V"_string;
     case Column::PurgeableNonvolatile:
-        return "Purg:N"_short_string;
+        return "Purg:N"_string;
     case Column::CPU:
-        return "CPU"_short_string;
+        return "CPU"_string;
     case Column::Processor:
         return "Processor"_string;
     case Column::Name:
-        return "Name"_short_string;
+        return "Name"_string;
     case Column::Syscalls:
         return "Syscalls"_string;
     case Column::InodeFaults:
-        return "F:Inode"_short_string;
+        return "F:Inode"_string;
     case Column::ZeroFaults:
-        return "F:Zero"_short_string;
+        return "F:Zero"_string;
     case Column::CowFaults:
-        return "F:CoW"_short_string;
+        return "F:CoW"_string;
     case Column::IPv4SocketReadBytes:
-        return "IPv4 In"_short_string;
+        return "IPv4 In"_string;
     case Column::IPv4SocketWriteBytes:
         return "IPv4 Out"_string;
     case Column::UnixSocketReadBytes:
-        return "Unix In"_short_string;
+        return "Unix In"_string;
     case Column::UnixSocketWriteBytes:
         return "Unix Out"_string;
     case Column::FileReadBytes:
-        return "File In"_short_string;
+        return "File In"_string;
     case Column::FileWriteBytes:
         return "File Out"_string;
     case Column::Pledge:
-        return "Pledge"_short_string;
+        return "Pledge"_string;
     case Column::Veil:
-        return "Veil"_short_string;
+        return "Veil"_string;
     case Column::Command:
-        return "Command"_short_string;
+        return "Command"_string;
     default:
         VERIFY_NOT_REACHED();
     }
@@ -226,7 +226,7 @@ GUI::Variant ProcessModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
         case Column::Name:
             return thread.current_state.name;
         case Column::Command:
-            return thread.current_state.command.visit([](String const& cmdline) { return cmdline; }, [](auto const&) { return ""_short_string; });
+            return thread.current_state.command.visit([](String const& cmdline) { return cmdline; }, [](auto const&) { return ""_string; });
         case Column::Syscalls:
             return thread.current_state.syscall_count;
         case Column::InodeFaults:
@@ -296,7 +296,7 @@ GUI::Variant ProcessModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
                 return DeprecatedString::formatted("{} (*)", thread.current_state.name);
             return thread.current_state.name;
         case Column::Command:
-            return thread.current_state.command.visit([](String const& cmdline) { return cmdline; }, [](auto const&) { return ""_short_string; });
+            return thread.current_state.command.visit([](String const& cmdline) { return cmdline; }, [](auto const&) { return ""_string; });
         case Column::Syscalls:
             return thread.current_state.syscall_count;
         case Column::InodeFaults:

@@ -48,7 +48,7 @@ ErrorOr<void> MainWidget::initialize()
 
     m_roll_widget->set_fixed_height(300);
 
-    (void)TRY(m_tab_widget->try_add_tab<SamplerWidget>("Sampler"_short_string, m_track_manager));
+    (void)TRY(m_tab_widget->try_add_tab<SamplerWidget>("Sampler"_string, m_track_manager));
     m_player_widget = TRY(try_add<PlayerWidget>(m_track_manager, *this, m_audio_loop));
 
     m_keys_and_knobs_container = TRY(try_add<GUI::Widget>());
@@ -61,7 +61,7 @@ ErrorOr<void> MainWidget::initialize()
     m_octave_container = TRY(m_keys_and_knobs_container->try_add<GUI::Widget>());
     m_octave_container->set_preferred_width(GUI::SpecialDimension::Fit);
     TRY(m_octave_container->try_set_layout<GUI::VerticalBoxLayout>());
-    auto octave_label = TRY(m_octave_container->try_add<GUI::Label>("Octave"_short_string));
+    auto octave_label = TRY(m_octave_container->try_add<GUI::Label>("Octave"_string));
     octave_label->set_preferred_width(GUI::SpecialDimension::Fit);
     m_octave_value = TRY(m_octave_container->try_add<GUI::Label>(TRY(String::number(m_track_manager.keyboard()->virtual_keyboard_octave()))));
     m_octave_value->set_preferred_width(GUI::SpecialDimension::Fit);

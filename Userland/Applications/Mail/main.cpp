@@ -45,14 +45,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("Mail");
     window->resize(640, 400);
 
-    auto& file_menu = window->add_menu("&File"_short_string);
+    auto& file_menu = window->add_menu("&File"_string);
 
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         mail_widget->on_window_close();
         app->quit();
     }));
 
-    auto& help_menu = window->add_menu("&Help"_short_string);
+    auto& help_menu = window->add_menu("&Help"_string);
     help_menu.add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu.add_action(GUI::CommonActions::make_about_action("Mail", app_icon, window));
 

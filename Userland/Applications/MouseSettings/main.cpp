@@ -34,7 +34,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-mouse"sv);
 
     auto window = TRY(GUI::SettingsWindow::create("Mouse Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
-    (void)TRY(window->add_tab<MouseWidget>("Mouse"_short_string, "mouse"sv));
+    (void)TRY(window->add_tab<MouseWidget>("Mouse"_string, "mouse"sv));
     (void)TRY(window->add_tab<ThemeWidget>("Cursor Theme"_string, "cursor-theme"sv));
     (void)TRY(window->add_tab<HighlightWidget>("Cursor Highlight"_string, "cursor-highlight"sv));
 

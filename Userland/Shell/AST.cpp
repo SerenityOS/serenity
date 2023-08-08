@@ -1261,7 +1261,7 @@ ErrorOr<RefPtr<Value>> ForLoop::run(RefPtr<Shell> shell)
     };
 
     if (m_iterated_expression) {
-        auto variable_name = m_variable.has_value() ? m_variable->name : "it"_short_string;
+        auto variable_name = m_variable.has_value() ? m_variable->name : "it"_string;
         Optional<StringView> index_name = m_index_variable.has_value() ? Optional<StringView>(m_index_variable->name) : Optional<StringView>();
         size_t i = 0;
         TRY(m_iterated_expression->for_each_entry(shell, [&](auto value) -> ErrorOr<IterationDecision> {
@@ -3895,9 +3895,9 @@ ErrorOr<Vector<String>> SpecialVariableValue::resolve_as_list(RefPtr<Shell> shel
                 auto list_argv = static_cast<AST::ListValue const*>(argv.ptr());
                 return { resolve_slices(shell, Vector { TRY(String::number(list_argv->values().size())) }, m_slices) };
             }
-            return { resolve_slices(shell, Vector { "1"_short_string }, m_slices) };
+            return { resolve_slices(shell, Vector { "1"_string }, m_slices) };
         }
-        return { resolve_slices(shell, Vector { "0"_short_string }, m_slices) };
+        return { resolve_slices(shell, Vector { "0"_string }, m_slices) };
     default:
         return { resolve_slices(shell, Vector { String {} }, m_slices) };
     }

@@ -57,13 +57,13 @@ ErrorOr<NonnullRefPtr<ProcessMemoryMapWidget>> ProcessMemoryMapWidget::try_creat
 
     Vector<GUI::JsonArrayModel::FieldSpec> pid_vm_fields;
     TRY(pid_vm_fields.try_empend(
-        "Address"_short_string, Gfx::TextAlignment::CenterLeft,
+        "Address"_string, Gfx::TextAlignment::CenterLeft,
         [](auto& object) { return DeprecatedString::formatted("{:p}", object.get_u64("address"sv).value_or(0)); },
         [](auto& object) { return object.get_u64("address"sv).value_or(0); }));
-    TRY(pid_vm_fields.try_empend("size", "Size"_short_string, Gfx::TextAlignment::CenterRight));
+    TRY(pid_vm_fields.try_empend("size", "Size"_string, Gfx::TextAlignment::CenterRight));
     TRY(pid_vm_fields.try_empend("amount_resident", "Resident"_string, Gfx::TextAlignment::CenterRight));
-    TRY(pid_vm_fields.try_empend("amount_dirty", "Dirty"_short_string, Gfx::TextAlignment::CenterRight));
-    TRY(pid_vm_fields.try_empend("Access"_short_string, Gfx::TextAlignment::CenterLeft, [](auto& object) {
+    TRY(pid_vm_fields.try_empend("amount_dirty", "Dirty"_string, Gfx::TextAlignment::CenterRight));
+    TRY(pid_vm_fields.try_empend("Access"_string, Gfx::TextAlignment::CenterLeft, [](auto& object) {
         StringBuilder builder;
         if (object.get_bool("readable"sv).value_or(false))
             builder.append('R');
@@ -102,8 +102,8 @@ ErrorOr<NonnullRefPtr<ProcessMemoryMapWidget>> ProcessMemoryMapWidget::try_creat
             auto pagemap = object.get_deprecated_string("pagemap"sv).value_or({});
             return pagemap;
         }));
-    TRY(pid_vm_fields.try_empend("cow_pages", "# CoW"_short_string, Gfx::TextAlignment::CenterRight));
-    TRY(pid_vm_fields.try_empend("name", "Name"_short_string, Gfx::TextAlignment::CenterLeft));
+    TRY(pid_vm_fields.try_empend("cow_pages", "# CoW"_string, Gfx::TextAlignment::CenterRight));
+    TRY(pid_vm_fields.try_empend("name", "Name"_string, Gfx::TextAlignment::CenterLeft));
     widget->m_json_model = GUI::JsonArrayModel::create({}, move(pid_vm_fields));
     widget->m_table_view->set_model(TRY(GUI::SortingProxyModel::create(*widget->m_json_model)));
 

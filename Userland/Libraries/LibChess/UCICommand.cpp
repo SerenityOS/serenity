@@ -21,7 +21,7 @@ ErrorOr<NonnullOwnPtr<UCICommand>> UCICommand::from_string(StringView command)
 
 ErrorOr<String> UCICommand::to_string() const
 {
-    return "uci\n"_short_string;
+    return "uci\n"_string;
 }
 
 ErrorOr<NonnullOwnPtr<DebugCommand>> DebugCommand::from_string(StringView command)
@@ -244,7 +244,7 @@ ErrorOr<NonnullOwnPtr<StopCommand>> StopCommand::from_string(StringView command)
 
 ErrorOr<String> StopCommand::to_string() const
 {
-    return "stop\n"_short_string;
+    return "stop\n"_string;
 }
 
 ErrorOr<NonnullOwnPtr<IdCommand>> IdCommand::from_string(StringView command)
@@ -291,7 +291,7 @@ ErrorOr<NonnullOwnPtr<UCIOkCommand>> UCIOkCommand::from_string(StringView comman
 
 ErrorOr<String> UCIOkCommand::to_string() const
 {
-    return "uciok\n"_short_string;
+    return "uciok\n"_string;
 }
 
 ErrorOr<NonnullOwnPtr<ReadyOkCommand>> ReadyOkCommand::from_string(StringView command)
@@ -519,7 +519,7 @@ ErrorOr<NonnullOwnPtr<QuitCommand>> QuitCommand::from_string(StringView command)
 
 ErrorOr<String> QuitCommand::to_string() const
 {
-    return "quit\n"_short_string;
+    return "quit\n"_string;
 }
 
 ErrorOr<NonnullOwnPtr<UCINewGameCommand>> UCINewGameCommand::from_string(StringView command)

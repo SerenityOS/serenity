@@ -30,17 +30,17 @@ ErrorOr<String> SignpostsModel::column_name(int column) const
 {
     switch (column) {
     case Column::SignpostIndex:
-        return "#"_short_string;
+        return "#"_string;
     case Column::Timestamp:
         return "Timestamp"_string;
     case Column::ProcessID:
-        return "PID"_short_string;
+        return "PID"_string;
     case Column::ThreadID:
-        return "TID"_short_string;
+        return "TID"_string;
     case Column::ExecutableName:
         return "Executable"_string;
     case Column::SignpostString:
-        return "String"_short_string;
+        return "String"_string;
     case Column::SignpostArgument:
         return "Argument"_string;
     default:

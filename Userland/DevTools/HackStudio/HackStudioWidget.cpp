@@ -494,7 +494,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> HackStudioWidget::create_project_tree_view_con
     });
     auto project_tree_view_context_menu = GUI::Menu::construct("Project Files"_string);
 
-    auto& new_file_submenu = project_tree_view_context_menu->add_submenu("N&ew..."_short_string);
+    auto& new_file_submenu = project_tree_view_context_menu->add_submenu("N&ew..."_string);
     for (auto& new_file_action : m_new_file_actions) {
         new_file_submenu.add_action(new_file_action);
     }
@@ -1343,10 +1343,10 @@ ErrorOr<void> HackStudioWidget::create_action_tab(GUI::Widget& parent)
     };
 
     m_find_in_files_widget = m_action_tab_widget->add_tab<FindInFilesWidget>("Find"_string);
-    m_todo_entries_widget = m_action_tab_widget->add_tab<ToDoEntriesWidget>("TODO"_short_string);
-    m_terminal_wrapper = m_action_tab_widget->add_tab<TerminalWrapper>("Console"_short_string, false);
+    m_todo_entries_widget = m_action_tab_widget->add_tab<ToDoEntriesWidget>("TODO"_string);
+    m_terminal_wrapper = m_action_tab_widget->add_tab<TerminalWrapper>("Console"_string, false);
     auto debug_info_widget = TRY(DebugInfoWidget::create());
-    TRY(m_action_tab_widget->add_tab(debug_info_widget, "Debug"_short_string));
+    TRY(m_action_tab_widget->add_tab(debug_info_widget, "Debug"_string));
     m_debug_info_widget = debug_info_widget;
 
     m_debug_info_widget->on_backtrace_frame_selection = [this](Debug::DebugInfo::SourcePosition const& source_position) {
@@ -1354,7 +1354,7 @@ ErrorOr<void> HackStudioWidget::create_action_tab(GUI::Widget& parent)
     };
 
     m_disassembly_widget = m_action_tab_widget->add_tab<DisassemblyWidget>("Disassembly"_string);
-    m_git_widget = m_action_tab_widget->add_tab<GitWidget>("Git"_short_string);
+    m_git_widget = m_action_tab_widget->add_tab<GitWidget>("Git"_string);
     m_git_widget->set_view_diff_callback([this](auto const& original_content, auto const& diff) {
         m_diff_viewer->set_content(original_content, diff);
         set_edit_mode(EditMode::Diff);
@@ -1373,13 +1373,13 @@ void HackStudioWidget::create_project_tab(GUI::Widget& parent)
     m_project_tab = parent.add<GUI::TabWidget>();
     m_project_tab->set_tab_position(GUI::TabWidget::TabPosition::Bottom);
 
-    auto& tree_view_container = m_project_tab->add_tab<GUI::Widget>("Files"_short_string);
+    auto& tree_view_container = m_project_tab->add_tab<GUI::Widget>("Files"_string);
     tree_view_container.set_layout<GUI::VerticalBoxLayout>(GUI::Margins {}, 2);
 
     m_project_tree_view = tree_view_container.add<GUI::TreeView>();
     configure_project_tree_view();
 
-    auto& class_view_container = m_project_tab->add_tab<GUI::Widget>("Classes"_short_string);
+    auto& class_view_container = m_project_tab->add_tab<GUI::Widget>("Classes"_string);
     class_view_container.set_layout<GUI::VerticalBoxLayout>(2);
 
     m_class_view = class_view_container.add<ClassViewWidget>();
@@ -1414,9 +1414,9 @@ void HackStudioWidget::update_recent_projects_submenu()
 
 ErrorOr<void> HackStudioWidget::create_file_menu(GUI::Window& window)
 {
-    auto& file_menu = window.add_menu("&File"_short_string);
+    auto& file_menu = window.add_menu("&File"_string);
 
-    auto& new_submenu = file_menu.add_submenu("&New..."_short_string);
+    auto& new_submenu = file_menu.add_submenu("&New..."_string);
     new_submenu.add_action(*m_new_project_action);
     new_submenu.add_separator();
     for (auto& new_file_action : m_new_file_actions) {
@@ -1449,7 +1449,7 @@ ErrorOr<void> HackStudioWidget::create_file_menu(GUI::Window& window)
 
 ErrorOr<void> HackStudioWidget::create_edit_menu(GUI::Window& window)
 {
-    auto& edit_menu = window.add_menu("&Edit"_short_string);
+    auto& edit_menu = window.add_menu("&Edit"_string);
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv));
     edit_menu.add_action(GUI::Action::create("&Find in Files...", { Mod_Ctrl | Mod_Shift, Key_F }, icon, [this](auto&) {
         reveal_action_tab(*m_find_in_files_widget);
@@ -1477,7 +1477,7 @@ ErrorOr<void> HackStudioWidget::create_edit_menu(GUI::Window& window)
 
 void HackStudioWidget::create_build_menu(GUI::Window& window)
 {
-    auto& build_menu = window.add_menu("&Build"_short_string);
+    auto& build_menu = window.add_menu("&Build"_string);
     build_menu.add_action(*m_build_action);
     build_menu.add_separator();
     build_menu.add_action(*m_run_action);
@@ -1500,7 +1500,7 @@ ErrorOr<void> HackStudioWidget::create_view_menu(GUI::Window& window)
     });
     show_dotfiles_action->set_checked(Config::read_bool("HackStudio"sv, "Global"sv, "ShowDotfiles"sv, false));
 
-    auto& view_menu = window.add_menu("&View"_short_string);
+    auto& view_menu = window.add_menu("&View"_string);
     view_menu.add_action(hide_action_tabs_action);
     view_menu.add_action(open_locator_action);
     view_menu.add_action(show_dotfiles_action);
@@ -1581,7 +1581,7 @@ ErrorOr<void> HackStudioWidget::create_view_menu(GUI::Window& window)
 
 void HackStudioWidget::create_help_menu(GUI::Window& window)
 {
-    auto& help_menu = window.add_menu("&Help"_short_string);
+    auto& help_menu = window.add_menu("&Help"_string);
     help_menu.add_action(GUI::CommonActions::make_command_palette_action(&window));
     help_menu.add_action(GUI::CommonActions::make_about_action("Hack Studio", GUI::Icon::default_icon("app-hack-studio"sv), &window));
 }

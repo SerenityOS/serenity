@@ -124,10 +124,10 @@ public:
 
             Vector<GUI::JsonArrayModel::FieldSpec> df_fields;
             df_fields.empend("mount_point", "Mount point"_string, Gfx::TextAlignment::CenterLeft);
-            df_fields.empend("class_name", "Class"_short_string, Gfx::TextAlignment::CenterLeft);
-            df_fields.empend("source", "Source"_short_string, Gfx::TextAlignment::CenterLeft);
+            df_fields.empend("class_name", "Class"_string, Gfx::TextAlignment::CenterLeft);
+            df_fields.empend("source", "Source"_string, Gfx::TextAlignment::CenterLeft);
             df_fields.empend(
-                "Size"_short_string, Gfx::TextAlignment::CenterRight,
+                "Size"_string, Gfx::TextAlignment::CenterRight,
                 [](JsonObject const& object) {
                     StringBuilder size_builder;
                     size_builder.append(' ');
@@ -148,7 +148,7 @@ public:
                     return percentage;
                 });
             df_fields.empend(
-                "Used"_short_string, Gfx::TextAlignment::CenterRight,
+                "Used"_string, Gfx::TextAlignment::CenterRight,
                 [](JsonObject const& object) {
             auto total_blocks = object.get_u64("total_block_count"sv).value_or(0);
             auto free_blocks = object.get_u64("free_block_count"sv).value_or(0);
@@ -168,7 +168,7 @@ public:
                 [](JsonObject const& object) {
                     return object.get_u64("free_block_count"sv).value_or(0) * object.get_u64("block_size"sv).value_or(0);
                 });
-            df_fields.empend("Access"_short_string, Gfx::TextAlignment::CenterLeft, [](JsonObject const& object) {
+            df_fields.empend("Access"_string, Gfx::TextAlignment::CenterLeft, [](JsonObject const& object) {
                 bool readonly = object.get_bool("readonly"sv).value_or(false);
                 int mount_flags = object.get_i32("mount_flags"sv).value_or(0);
                 return readonly || (mount_flags & MS_RDONLY) ? "Read-only" : "Read/Write";
@@ -427,7 +427,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         },
         &process_table_view);
 
-    auto file_menu = TRY(window->try_add_menu("&File"_short_string));
+    auto file_menu = TRY(window->try_add_menu("&File"_string));
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     })));
@@ -466,7 +466,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(make_frequency_action(3));
     TRY(make_frequency_action(5));
 
-    auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
+    auto help_menu = TRY(window->try_add_menu("&Help"_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("System Monitor", app_icon, window)));
 

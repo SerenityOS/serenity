@@ -29,7 +29,7 @@ ErrorOr<String> PartitionModel::column_name(int column) const
     case Column::TotalBlocks:
         return "Total Blocks"_string;
     case Column::Size:
-        return "Size"_short_string;
+        return "Size"_string;
     default:
         VERIFY_NOT_REACHED();
     }

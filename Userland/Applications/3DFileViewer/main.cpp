@@ -372,7 +372,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     time.set_x(widget->width() - time.width() - 6);
     widget->set_stat_label(time);
 
-    auto& file_menu = window->add_menu("&File"_short_string);
+    auto& file_menu = window->add_menu("&File"_string);
 
     file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
         FileSystemAccessClient::OpenFileOptions options {
@@ -390,7 +390,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         app->quit();
     }));
 
-    auto& view_menu = window->add_menu("&View"_short_string);
+    auto& view_menu = window->add_menu("&View"_string);
     view_menu.add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
         window->set_fullscreen(!window->is_fullscreen());
     }));
@@ -456,7 +456,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     texture_enabled_action->set_checked(true);
     texture_menu.add_action(texture_enabled_action);
 
-    auto& wrap_u_menu = texture_menu.add_submenu("Wrap &S"_short_string);
+    auto& wrap_u_menu = texture_menu.add_submenu("Wrap &S"_string);
     GUI::ActionGroup wrap_s_actions;
     wrap_s_actions.set_exclusive(true);
 
@@ -480,7 +480,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     wrap_u_repeat_action->set_checked(true);
 
-    auto& wrap_t_menu = texture_menu.add_submenu("Wrap &T"_short_string);
+    auto& wrap_t_menu = texture_menu.add_submenu("Wrap &T"_string);
     GUI::ActionGroup wrap_t_actions;
     wrap_t_actions.set_exclusive(true);
 
@@ -504,7 +504,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     wrap_t_repeat_action->set_checked(true);
 
-    auto& texture_scale_menu = texture_menu.add_submenu("S&cale"_short_string);
+    auto& texture_scale_menu = texture_menu.add_submenu("S&cale"_string);
     GUI::ActionGroup texture_scale_actions;
     texture_scale_actions.set_exclusive(true);
 
@@ -562,7 +562,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     texture_mag_filter_nearest_action->set_checked(true);
 
-    auto& help_menu = window->add_menu("&Help"_short_string);
+    auto& help_menu = window->add_menu("&Help"_string);
     help_menu.add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu.add_action(GUI::CommonActions::make_about_action("3D File Viewer", app_icon, window));
 

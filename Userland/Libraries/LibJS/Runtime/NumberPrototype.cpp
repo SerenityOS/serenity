@@ -450,9 +450,9 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
     if (number_value.is_negative_infinity())
         return MUST_OR_THROW_OOM(PrimitiveString::create(vm, "-Infinity"sv));
     if (number_value.is_nan())
-        return PrimitiveString::create(vm, "NaN"_short_string);
+        return PrimitiveString::create(vm, "NaN"_string);
     if (number_value.is_positive_zero() || number_value.is_negative_zero())
-        return PrimitiveString::create(vm, "0"_short_string);
+        return PrimitiveString::create(vm, "0"_string);
 
     double number = number_value.as_double();
     bool negative = number < 0;

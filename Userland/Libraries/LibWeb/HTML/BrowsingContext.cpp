@@ -1142,7 +1142,7 @@ WebIDL::ExceptionOr<void> BrowsingContext::navigate(
         } else {
             // Otherwise let navigation id be the result of generating a random UUID. [UUID]
             // FIXME: Generate a UUID.
-            navigation_id = "FIXME"_short_string;
+            navigation_id = "FIXME"_string;
         }
     }
 

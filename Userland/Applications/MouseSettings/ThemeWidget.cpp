@@ -21,7 +21,7 @@ ErrorOr<String> MouseCursorModel::column_name(int column_index) const
     case Column::Bitmap:
         return String {};
     case Column::Name:
-        return "Name"_short_string;
+        return "Name"_string;
     }
     VERIFY_NOT_REACHED();
 }

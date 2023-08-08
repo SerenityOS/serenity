@@ -80,12 +80,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     partition_table_view.set_model(partition_model);
     partition_table_view.set_focus(true);
 
-    auto& file_menu = window->add_menu("&File"_short_string);
+    auto& file_menu = window->add_menu("&File"_string);
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit();
     }));
 
-    auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
+    auto help_menu = TRY(window->try_add_menu("&Help"_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Partition Editor", app_icon, window)));
 

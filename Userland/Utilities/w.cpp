@@ -87,8 +87,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             return {};
 
         StringBuilder builder;
-        String idle_string = "n/a"_short_string;
-        String what = "n/a"_short_string;
+        String idle_string = "n/a"_string;
+        String what = "n/a"_string;
         StringView tty_display_name = tty;
         auto maybe_stat = Core::System::stat(tty);
         if (!maybe_stat.is_error()) {

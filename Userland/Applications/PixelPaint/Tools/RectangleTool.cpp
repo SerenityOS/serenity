@@ -154,7 +154,7 @@ ErrorOr<GUI::Widget*> RectangleTool::get_properties_widget()
         thickness_or_radius_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         thickness_or_radius_label->set_fixed_size(80, 20);
 
-        auto thickness_or_radius_slider = TRY(thickness_or_radius_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_short_string));
+        auto thickness_or_radius_slider = TRY(thickness_or_radius_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_string));
 
         thickness_or_radius_slider->on_change = [&](int value) {
             if (m_fill_mode == FillMode::RoundedCorners) {
@@ -181,18 +181,18 @@ ErrorOr<GUI::Widget*> RectangleTool::get_properties_widget()
         auto mode_container = TRY(properties_widget->try_add<GUI::Widget>());
         mode_container->set_fixed_height(90);
         (void)TRY(mode_container->try_set_layout<GUI::HorizontalBoxLayout>());
-        auto mode_label = TRY(mode_container->try_add<GUI::Label>("Mode:"_short_string));
+        auto mode_label = TRY(mode_container->try_add<GUI::Label>("Mode:"_string));
         mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         mode_label->set_fixed_size(30, 20);
 
         auto mode_radio_container = TRY(mode_container->try_add<GUI::Widget>());
         (void)TRY(mode_radio_container->try_set_layout<GUI::VerticalBoxLayout>());
-        auto outline_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Outline"_short_string));
-        auto fill_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Fill"_short_string));
+        auto outline_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Outline"_string));
+        auto fill_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Fill"_string));
         auto gradient_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Gradient"_string));
         mode_radio_container->set_fixed_width(70);
 
-        auto rounded_corners_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Rounded"_short_string));
+        auto rounded_corners_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Rounded"_string));
 
         outline_mode_radio->on_checked = [this, update_slider](bool) {
             m_fill_mode = FillMode::Outline;
@@ -246,7 +246,7 @@ ErrorOr<GUI::Widget*> RectangleTool::get_properties_widget()
             }
         };
 
-        auto multiply_label = TRY(aspect_fields_container->try_add<GUI::Label>("x"_short_string));
+        auto multiply_label = TRY(aspect_fields_container->try_add<GUI::Label>("x"_string));
         multiply_label->set_text_alignment(Gfx::TextAlignment::Center);
         multiply_label->set_fixed_size(10, 20);
 

@@ -382,7 +382,7 @@ void VideoPlayerWidget::set_sizing_mode(VideoSizingMode sizing_mode)
 ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
 {
     // File menu
-    auto file_menu = TRY(window.try_add_menu("&File"_short_string));
+    auto file_menu = TRY(window.try_add_menu("&File"_string));
     TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
         FileSystemAccessClient::OpenFileOptions options {
             .allowed_file_types = { { GUI::FileTypeFilter { "Video Files", { { "mkv", "webm" } } }, GUI::FileTypeFilter::all_files() } },
@@ -408,7 +408,7 @@ ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
     set_seek_mode(Video::PlaybackManager::DEFAULT_SEEK_MODE);
 
     // View menu
-    auto view_menu = TRY(window.try_add_menu("&View"_short_string));
+    auto view_menu = TRY(window.try_add_menu("&View"_string));
     TRY(view_menu->try_add_action(*m_toggle_fullscreen_action));
 
     auto sizing_mode_menu = TRY(view_menu->try_add_submenu("&Sizing Mode"_string));
@@ -427,7 +427,7 @@ ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
     TRY(sizing_mode_menu->try_add_action(*m_size_fullsize_action));
 
     // Help menu
-    auto help_menu = TRY(window.try_add_menu("&Help"_short_string));
+    auto help_menu = TRY(window.try_add_menu("&Help"_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Video Player", TRY(GUI::Icon::try_create_default_icon("app-video-player"sv)), &window)));
 
     return {};

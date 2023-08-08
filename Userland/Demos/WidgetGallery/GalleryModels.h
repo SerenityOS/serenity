@@ -33,7 +33,7 @@ public:
         case Column::Bitmap:
             return String {};
         case Column::Name:
-            return "Name"_short_string;
+            return "Name"_string;
         }
         VERIFY_NOT_REACHED();
     }
@@ -120,7 +120,7 @@ public:
         case Column::LittleIcon:
             return String {};
         case Column::Name:
-            return "Name"_short_string;
+            return "Name"_string;
         }
         VERIFY_NOT_REACHED();
     }

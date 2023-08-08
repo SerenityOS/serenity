@@ -100,11 +100,11 @@ ErrorOr<GUI::Widget*> SprayTool::get_properties_widget()
         size_container->set_fixed_height(20);
         (void)TRY(size_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto size_label = TRY(size_container->try_add<GUI::Label>("Size:"_short_string));
+        auto size_label = TRY(size_container->try_add<GUI::Label>("Size:"_string));
         size_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         size_label->set_fixed_size(80, 20);
 
-        auto size_slider = TRY(size_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_short_string));
+        auto size_slider = TRY(size_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_string));
         size_slider->set_range(1, 20);
         size_slider->set_value(m_thickness);
 
@@ -121,7 +121,7 @@ ErrorOr<GUI::Widget*> SprayTool::get_properties_widget()
         density_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         density_label->set_fixed_size(80, 20);
 
-        auto density_slider = TRY(density_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "%"_short_string));
+        auto density_slider = TRY(density_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "%"_string));
         density_slider->set_range(1, 100);
         density_slider->set_value(m_density);
 

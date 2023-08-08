@@ -61,7 +61,7 @@ ProcessChooser::ProcessChooser(StringView window_title, String button_label, Gfx
         auto index = m_table_view->selection().first();
         set_pid_from_index_and_close(index);
     };
-    auto& cancel_button = button_container.add<GUI::Button>("Cancel"_short_string);
+    auto& cancel_button = button_container.add<GUI::Button>("Cancel"_string);
     cancel_button.set_fixed_width(80);
     cancel_button.on_click = [this](auto) {
         done(ExecResult::Cancel);

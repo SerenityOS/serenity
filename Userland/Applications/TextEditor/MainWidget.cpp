@@ -365,7 +365,7 @@ WebView::OutOfProcessWebView& MainWidget::ensure_web_view()
 
 ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 {
-    auto file_menu = TRY(window.try_add_menu("&File"_short_string));
+    auto file_menu = TRY(window.try_add_menu("&File"_string));
     TRY(file_menu->try_add_action(*m_new_action));
     TRY(file_menu->try_add_action(*m_open_action));
     TRY(file_menu->try_add_action(*m_save_action));
@@ -396,7 +396,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         GUI::Application::the()->quit();
     })));
 
-    auto edit_menu = TRY(window.try_add_menu("&Edit"_short_string));
+    auto edit_menu = TRY(window.try_add_menu("&Edit"_string));
     TRY(edit_menu->try_add_action(m_editor->undo_action()));
     TRY(edit_menu->try_add_action(m_editor->redo_action()));
     TRY(edit_menu->try_add_separator());
@@ -460,8 +460,8 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_layout_ruler_action->set_checked(show_ruler);
     m_editor->set_ruler_visible(show_ruler);
 
-    auto view_menu = TRY(window.try_add_menu("&View"_short_string));
-    auto layout_menu = TRY(view_menu->try_add_submenu("&Layout"_short_string));
+    auto view_menu = TRY(window.try_add_menu("&View"_string));
+    auto layout_menu = TRY(view_menu->try_add_submenu("&Layout"_string));
     TRY(layout_menu->try_add_action(*m_layout_toolbar_action));
     TRY(layout_menu->try_add_action(*m_layout_statusbar_action));
     TRY(layout_menu->try_add_action(*m_layout_ruler_action));
@@ -594,7 +594,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     syntax_actions.set_exclusive(true);
 
-    auto syntax_menu = TRY(view_menu->try_add_submenu("&Syntax"_short_string));
+    auto syntax_menu = TRY(view_menu->try_add_submenu("&Syntax"_string));
     m_plain_text_highlight = GUI::Action::create_checkable("&Plain Text", [&](auto&) {
         m_statusbar->set_text(1, "Plain Text"_string);
         m_editor->set_syntax_highlighter({});
@@ -689,7 +689,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     syntax_actions.add_action(*m_sql_highlight);
     TRY(syntax_menu->try_add_action(*m_sql_highlight));
 
-    auto help_menu = TRY(window.try_add_menu("&Help"_short_string));
+    auto help_menu = TRY(window.try_add_menu("&Help"_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(&window)));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/TextEditor.md"), "/bin/Help");

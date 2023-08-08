@@ -33,11 +33,11 @@ ErrorOr<String> IndividualSampleModel::column_name(int column) const
 {
     switch (column) {
     case Column::Address:
-        return "Address"_short_string;
+        return "Address"_string;
     case Column::ObjectName:
-        return "Object"_short_string;
+        return "Object"_string;
     case Column::Symbol:
-        return "Symbol"_short_string;
+        return "Symbol"_string;
     default:
         VERIFY_NOT_REACHED();
     }

@@ -36,9 +36,9 @@ ErrorOr<String> AriaPropertiesStateModel::column_name(int column_index) const
 {
     switch (column_index) {
     case Column::PropertyName:
-        return "Name"_short_string;
+        return "Name"_string;
     case Column::PropertyValue:
-        return "Value"_short_string;
+        return "Value"_string;
     default:
         return Error::from_string_view("Unexpected column index"sv);
     }

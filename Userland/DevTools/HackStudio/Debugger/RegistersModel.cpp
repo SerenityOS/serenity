@@ -92,7 +92,7 @@ ErrorOr<String> RegistersModel::column_name(int column) const
     case Column::Register:
         return "Register"_string;
     case Column::Value:
-        return "Value"_short_string;
+        return "Value"_string;
     default:
         VERIFY_NOT_REACHED();
     }

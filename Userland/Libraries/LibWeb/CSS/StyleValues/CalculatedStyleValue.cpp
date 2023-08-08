@@ -993,9 +993,9 @@ ErrorOr<String> ConstantCalculationNode::to_string() const
 {
     switch (m_constant) {
     case CalculationNode::ConstantType::E:
-        return "e"_short_string;
+        return "e"_string;
     case CalculationNode::ConstantType::Pi:
-        return "pi"_short_string;
+        return "pi"_string;
     case CalculationNode::ConstantType::Infinity:
         return "infinity"_string;
     case CalculationNode::ConstantType::MinusInfinity:

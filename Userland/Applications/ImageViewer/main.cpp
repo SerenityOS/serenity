@@ -306,7 +306,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     (void)TRY(main_toolbar->try_add_action(reset_zoom_action));
     (void)TRY(main_toolbar->try_add_action(zoom_out_action));
 
-    auto file_menu = TRY(window->try_add_menu("&File"_short_string));
+    auto file_menu = TRY(window->try_add_menu("&File"_string));
     TRY(file_menu->try_add_action(open_action));
     TRY(file_menu->try_add_action(delete_action));
     TRY(file_menu->try_add_separator());
@@ -323,7 +323,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(file_menu->try_add_action(quit_action));
 
-    auto image_menu = TRY(window->try_add_menu("&Image"_short_string));
+    auto image_menu = TRY(window->try_add_menu("&Image"_string));
     TRY(image_menu->try_add_action(rotate_counterclockwise_action));
     TRY(image_menu->try_add_action(rotate_clockwise_action));
     TRY(image_menu->try_add_action(vertical_flip_action));
@@ -337,7 +337,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(navigate_menu->try_add_action(go_forward_action));
     TRY(navigate_menu->try_add_action(go_last_action));
 
-    auto view_menu = TRY(window->try_add_menu("&View"_short_string));
+    auto view_menu = TRY(window->try_add_menu("&View"_string));
     TRY(view_menu->try_add_action(full_screen_action));
     TRY(view_menu->try_add_separator());
     TRY(view_menu->try_add_action(zoom_in_action));
@@ -364,7 +364,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(view_menu->try_add_separator());
     TRY(view_menu->try_add_action(hide_show_toolbar_action));
 
-    auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
+    auto help_menu = TRY(window->try_add_menu("&Help"_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/ImageViewer.md"), "/bin/Help");

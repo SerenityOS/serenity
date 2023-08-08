@@ -75,7 +75,7 @@ public:
     {
         if constexpr (IsTwoDimensional)
             return m_column_names[index];
-        return "Data"_short_string;
+        return "Data"_string;
     }
 
     virtual Variant data(ModelIndex const& index, ModelRole role) const override

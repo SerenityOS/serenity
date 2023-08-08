@@ -58,7 +58,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto field = TRY(Field::create(flag_label, time_label, face_button));
     TRY(widget->try_add_child(field));
 
-    auto game_menu = TRY(window->try_add_menu("&Game"_short_string));
+    auto game_menu = TRY(window->try_add_menu("&Game"_string));
 
     TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         field->reset();
@@ -118,7 +118,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(difficulty_menu->try_add_action(action));
     difficulty_actions.add_action(action);
 
-    auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
+    auto help_menu = TRY(window->try_add_menu("&Help"_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man6/Minesweeper.md"), "/bin/Help");

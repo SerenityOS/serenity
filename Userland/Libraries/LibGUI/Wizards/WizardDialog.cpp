@@ -41,12 +41,12 @@ ErrorOr<void> WizardDialog::build()
     nav_container_widget->set_fixed_height(42);
     TRY(nav_container_widget->add_spacer());
 
-    m_back_button = TRY(nav_container_widget->try_add<DialogButton>("< Back"_short_string));
+    m_back_button = TRY(nav_container_widget->try_add<DialogButton>("< Back"_string));
     m_back_button->on_click = [&](auto) {
         pop_page();
     };
 
-    m_next_button = TRY(nav_container_widget->try_add<DialogButton>("Next >"_short_string));
+    m_next_button = TRY(nav_container_widget->try_add<DialogButton>("Next >"_string));
     m_next_button->on_click = [&](auto) {
         VERIFY(has_pages());
 
@@ -63,7 +63,7 @@ ErrorOr<void> WizardDialog::build()
     auto button_spacer = TRY(nav_container_widget->try_add<Widget>());
     button_spacer->set_fixed_width(10);
 
-    m_cancel_button = TRY(nav_container_widget->try_add<DialogButton>("Cancel"_short_string));
+    m_cancel_button = TRY(nav_container_widget->try_add<DialogButton>("Cancel"_string));
     m_cancel_button->on_click = [&](auto) {
         handle_cancel();
     };
@@ -128,11 +128,11 @@ void WizardDialog::update_navigation()
     if (has_pages()) {
         m_next_button->set_enabled(current_page().is_final_page() || current_page().can_go_next());
         if (current_page().is_final_page())
-            m_next_button->set_text("Finish"_short_string);
+            m_next_button->set_text("Finish"_string);
         else
-            m_next_button->set_text("Next >"_short_string);
+            m_next_button->set_text("Next >"_string);
     } else {
-        m_next_button->set_text("Next >"_short_string);
+        m_next_button->set_text("Next >"_string);
         m_next_button->set_enabled(false);
     }
 }

@@ -23,7 +23,7 @@
         AK_IGNORE_DIAGNOSTIC("-Wshadow",                                               \
                              auto _error = _value_or_error.release_error();)           \
         if (_error.is_errno() && _error.code() == ENOMEM)                              \
-            return create<AST::SyntaxError>("OOM"_short_string);                       \
+            return create<AST::SyntaxError>("OOM"_string);                             \
         return create<AST::SyntaxError>(MUST(String::formatted("Error: {}", _error))); \
     }                                                                                  \
     _value_or_error.release_value();                                                   \
@@ -38,7 +38,7 @@
         AK_IGNORE_DIAGNOSTIC("-Wshadow",                                          \
                              auto _error = _value_or_error.release_error();)      \
         if (_error.is_errno() && _error.code() == ENOMEM)                         \
-            _string_value = "OOM"_short_string;                                   \
+            _string_value = "OOM"_string;                                         \
         else                                                                      \
             _string_value = MUST(String::formatted("Error: {}", _error));         \
     }                                                                             \
@@ -1762,7 +1762,7 @@ RefPtr<AST::Node> Parser::parse_history_designator()
         consume();
         selector.event.kind = AST::HistorySelector::EventKind::IndexFromEnd;
         selector.event.index = 0;
-        selector.event.text = "!"_short_string;
+        selector.event.text = "!"_string;
         break;
     case '?':
         consume();

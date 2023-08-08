@@ -138,7 +138,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto get_formatted_user = [&](i32 uid) -> ErrorOr<String> {
         if (uid == -1)
-            return "-"_short_string;
+            return "-"_string;
 
         return String::number(uid);
     };

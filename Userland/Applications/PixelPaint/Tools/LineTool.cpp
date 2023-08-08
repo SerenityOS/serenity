@@ -133,7 +133,7 @@ ErrorOr<GUI::Widget*> LineTool::get_properties_widget()
         thickness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         thickness_label->set_fixed_size(80, 20);
 
-        auto thickness_slider = TRY(thickness_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_short_string));
+        auto thickness_slider = TRY(thickness_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_string));
         thickness_slider->set_range(1, 10);
         thickness_slider->set_value(m_thickness);
 
@@ -146,7 +146,7 @@ ErrorOr<GUI::Widget*> LineTool::get_properties_widget()
         mode_container->set_fixed_height(20);
         (void)TRY(mode_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto mode_label = TRY(mode_container->try_add<GUI::Label>("Mode:"_short_string));
+        auto mode_label = TRY(mode_container->try_add<GUI::Label>("Mode:"_string));
         mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         mode_label->set_fixed_size(80, 20);
 

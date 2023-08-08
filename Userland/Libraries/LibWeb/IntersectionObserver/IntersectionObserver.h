@@ -15,7 +15,7 @@ namespace Web::IntersectionObserver {
 
 struct IntersectionObserverInit {
     Optional<Variant<JS::Handle<DOM::Element>, JS::Handle<DOM::Document>>> root;
-    String root_margin { "0px"_short_string };
+    String root_margin { "0px"_string };
     Variant<double, Vector<double>> threshold { 0 };
 };
 

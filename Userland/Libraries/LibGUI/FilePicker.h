@@ -62,11 +62,11 @@ private:
         case Mode::Open:
         case Mode::OpenMultiple:
         case Mode::OpenFolder:
-            return "Open"_short_string;
+            return "Open"_string;
         case Mode::Save:
-            return "Save"_short_string;
+            return "Save"_string;
         default:
-            return "OK"_short_string;
+            return "OK"_string;
         }
     }
 

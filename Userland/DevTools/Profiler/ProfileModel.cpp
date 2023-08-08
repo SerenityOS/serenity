@@ -80,9 +80,9 @@ ErrorOr<String> ProfileModel::column_name(int column) const
     case Column::SampleCount:
         return m_profile.show_percentages() ? "% Samples"_string : "# Samples"_string;
     case Column::SelfCount:
-        return m_profile.show_percentages() ? "% Self"_short_string : "# Self"_short_string;
+        return m_profile.show_percentages() ? "% Self"_string : "# Self"_string;
     case Column::ObjectName:
-        return "Object"_short_string;
+        return "Object"_string;
     case Column::StackFrame:
         return "Stack Frame"_string;
     case Column::SymbolAddress:

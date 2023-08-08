@@ -97,7 +97,7 @@ ErrorOr<void> BrowserSettingsWidget::setup()
     };
 
     Vector<GUI::JsonArrayModel::FieldSpec> search_engine_fields;
-    search_engine_fields.empend("title", "Title"_short_string, Gfx::TextAlignment::CenterLeft);
+    search_engine_fields.empend("title", "Title"_string, Gfx::TextAlignment::CenterLeft);
     search_engine_fields.empend("url_format", "Url format"_string, Gfx::TextAlignment::CenterLeft);
     auto search_engines_model = GUI::JsonArrayModel::create(DeprecatedString::formatted("{}/SearchEngines.json", Core::StandardPaths::config_directory()), move(search_engine_fields));
     search_engines_model->invalidate();

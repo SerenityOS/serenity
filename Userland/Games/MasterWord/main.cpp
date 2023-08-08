@@ -66,7 +66,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     window->set_focused_widget(&game);
 
-    auto game_menu = TRY(window->try_add_menu("&Game"_short_string));
+    auto game_menu = TRY(window->try_add_menu("&Game"_string));
 
     TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [&](auto&) {
         game.reset();
@@ -104,7 +104,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     toggle_check_guesses->set_checked(game.is_checking_guesses());
     TRY(settings_menu->try_add_action(toggle_check_guesses));
 
-    auto theme_menu = TRY(window->try_add_menu("&Theme"_short_string));
+    auto theme_menu = TRY(window->try_add_menu("&Theme"_string));
     auto system_theme_action = GUI::Action::create("&System", [&](auto&) {
         game.set_use_system_theme(true);
         Config::write_bool("MasterWord"sv, ""sv, "use_system_theme"sv, true);
@@ -127,7 +127,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     theme_actions.add_action(system_theme_action);
     theme_actions.add_action(wordle_theme_action);
 
-    auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
+    auto help_menu = TRY(window->try_add_menu("&Help"_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man6/MasterWord.md"), "/bin/Help");

@@ -84,7 +84,7 @@ InspectorWidget::InspectorWidget()
 
     auto& top_tab_widget = splitter.add<GUI::TabWidget>();
 
-    auto& dom_tree_container = top_tab_widget.add_tab<GUI::Widget>("DOM"_short_string);
+    auto& dom_tree_container = top_tab_widget.add_tab<GUI::Widget>("DOM"_string);
     dom_tree_container.set_layout<GUI::VerticalBoxLayout>(4);
     m_dom_tree_view = dom_tree_container.add<GUI::TreeView>();
     m_dom_tree_view->on_selection_change = [this] {

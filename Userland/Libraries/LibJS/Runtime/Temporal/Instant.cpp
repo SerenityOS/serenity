@@ -267,7 +267,7 @@ ThrowCompletionOr<String> temporal_instant_to_string(VM& vm, Instant& instant, V
     // 8. If timeZone is undefined, then
     if (time_zone.is_undefined()) {
         // a. Let timeZoneString be "Z".
-        time_zone_string = "Z"_short_string;
+        time_zone_string = "Z"_string;
     }
     // 9. Else,
     else {

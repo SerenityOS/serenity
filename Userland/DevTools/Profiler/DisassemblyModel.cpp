@@ -137,7 +137,7 @@ ErrorOr<String> DisassemblyModel::column_name(int column) const
     case Column::SampleCount:
         return m_profile.show_percentages() ? "% Samples"_string : "# Samples"_string;
     case Column::Address:
-        return "Address"_short_string;
+        return "Address"_string;
     case Column::InstructionBytes:
         return "Insn Bytes"_string;
     case Column::Disassembly:

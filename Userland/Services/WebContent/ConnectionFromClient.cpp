@@ -404,7 +404,7 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
                     dbgln("+ Element {}", element->debug_description());
                     auto& properties = styles->properties();
                     for (size_t i = 0; i < properties.size(); ++i)
-                        dbgln("|  {} = {}", Web::CSS::string_from_property_id(static_cast<Web::CSS::PropertyID>(i)), properties[i].has_value() ? properties[i]->style->to_string() : ""_short_string);
+                        dbgln("|  {} = {}", Web::CSS::string_from_property_id(static_cast<Web::CSS::PropertyID>(i)), properties[i].has_value() ? properties[i]->style->to_string() : ""_string);
                     dbgln("---");
                 }
             }

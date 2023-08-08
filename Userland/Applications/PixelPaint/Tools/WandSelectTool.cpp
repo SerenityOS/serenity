@@ -83,7 +83,7 @@ ErrorOr<GUI::Widget*> WandSelectTool::get_properties_widget()
     threshold_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     threshold_label->set_fixed_size(80, 20);
 
-    auto threshold_slider = TRY(threshold_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "%"_short_string));
+    auto threshold_slider = TRY(threshold_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "%"_string));
     threshold_slider->set_range(0, 100);
     threshold_slider->set_value(m_threshold);
 
@@ -97,7 +97,7 @@ ErrorOr<GUI::Widget*> WandSelectTool::get_properties_widget()
     (void)TRY(mode_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
     auto mode_label = TRY(mode_container->try_add<GUI::Label>());
-    mode_label->set_text("Mode:"_short_string);
+    mode_label->set_text("Mode:"_string);
     mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     mode_label->set_fixed_size(80, 20);
 

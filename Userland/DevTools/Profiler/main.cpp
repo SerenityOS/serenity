@@ -265,10 +265,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     filesystem_events_tree_view->set_selection_behavior(GUI::TreeView::SelectionBehavior::SelectRows);
     filesystem_events_tree_view->set_model(profile->file_event_model());
 
-    auto file_menu = TRY(window->try_add_menu("&File"_short_string));
+    auto file_menu = TRY(window->try_add_menu("&File"_string));
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
 
-    auto view_menu = TRY(window->try_add_menu("&View"_short_string));
+    auto view_menu = TRY(window->try_add_menu("&View"_string));
 
     auto invert_action = GUI::Action::create_checkable("&Invert Tree", { Mod_Ctrl, Key_I }, [&](auto& action) {
         profile->set_inverted(action.is_checked());
@@ -294,7 +294,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(view_menu->try_add_action(disassembly_action));
     TRY(view_menu->try_add_action(source_action));
 
-    auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
+    auto help_menu = TRY(window->try_add_menu("&Help"_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/Profiler.md"), "/bin/Help");
@@ -317,7 +317,7 @@ static bool prompt_to_stop_profiling(pid_t pid, DeprecatedString const& process_
     widget->set_fill_with_background_color(true);
     widget->set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 0, 0, 16 });
 
-    auto& timer_label = widget->add<GUI::Label>("..."_short_string);
+    auto& timer_label = widget->add<GUI::Label>("..."_string);
     Core::ElapsedTimer clock;
     clock.start();
     auto update_timer = Core::Timer::create_repeating(100, [&] {
@@ -325,7 +325,7 @@ static bool prompt_to_stop_profiling(pid_t pid, DeprecatedString const& process_
     }).release_value_but_fixme_should_propagate_errors();
     update_timer->start();
 
-    auto& stop_button = widget->add<GUI::Button>("Stop"_short_string);
+    auto& stop_button = widget->add<GUI::Button>("Stop"_string);
     stop_button.set_fixed_size(140, 22);
     stop_button.on_click = [&](auto) {
         GUI::Application::the()->quit();
@@ -338,7 +338,7 @@ static bool prompt_to_stop_profiling(pid_t pid, DeprecatedString const& process_
 bool generate_profile(pid_t& pid)
 {
     if (!pid) {
-        auto process_chooser = GUI::ProcessChooser::construct("Profiler"sv, "Profile"_short_string, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-profiler.png"sv).release_value_but_fixme_should_propagate_errors());
+        auto process_chooser = GUI::ProcessChooser::construct("Profiler"sv, "Profile"_string, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-profiler.png"sv).release_value_but_fixme_should_propagate_errors());
         if (process_chooser->exec() == GUI::Dialog::ExecResult::Cancel)
             return false;
         pid = process_chooser->pid();

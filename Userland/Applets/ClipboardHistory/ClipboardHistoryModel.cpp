@@ -27,13 +27,13 @@ ErrorOr<String> ClipboardHistoryModel::column_name(int column) const
 {
     switch (column) {
     case Column::Data:
-        return "Data"_short_string;
+        return "Data"_string;
     case Column::Type:
-        return "Type"_short_string;
+        return "Type"_string;
     case Column::Size:
-        return "Size"_short_string;
+        return "Size"_string;
     case Column::Time:
-        return "Time"_short_string;
+        return "Time"_string;
     default:
         VERIFY_NOT_REACHED();
     }

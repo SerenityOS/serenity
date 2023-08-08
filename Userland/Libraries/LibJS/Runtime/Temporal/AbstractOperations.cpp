@@ -1269,7 +1269,7 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, ParseResult const& pa
     }
 
     // 7. Let yearMV be ! ToIntegerOrInfinity(CodePointsToString(year)).
-    auto year_mv = *normalized_year.value_or("0"_short_string).to_number<i32>();
+    auto year_mv = *normalized_year.value_or("0"_string).to_number<i32>();
 
     // 8. If month is empty, then
     //    a. Let monthMV be 1.

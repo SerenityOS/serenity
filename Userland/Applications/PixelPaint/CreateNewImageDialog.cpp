@@ -32,7 +32,7 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
 
     main_widget->set_layout<GUI::VerticalBoxLayout>(4);
 
-    auto& name_label = main_widget->add<GUI::Label>("Name:"_short_string);
+    auto& name_label = main_widget->add<GUI::Label>("Name:"_string);
     name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     m_name_textbox = main_widget->add<GUI::TextBox>();
@@ -42,12 +42,12 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
     auto default_name = Config::read_string("PixelPaint"sv, "NewImage"sv, "Name"sv);
     m_name_textbox->set_text(default_name);
 
-    auto& width_label = main_widget->add<GUI::Label>("Width:"_short_string);
+    auto& width_label = main_widget->add<GUI::Label>("Width:"_string);
     width_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     auto& width_spinbox = main_widget->add<GUI::SpinBox>();
 
-    auto& height_label = main_widget->add<GUI::Label>("Height:"_short_string);
+    auto& height_label = main_widget->add<GUI::Label>("Height:"_string);
     height_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     auto& height_spinbox = main_widget->add<GUI::SpinBox>();
@@ -115,7 +115,7 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
     auto& button_container = main_widget->add<GUI::Widget>();
     button_container.set_layout<GUI::HorizontalBoxLayout>();
 
-    auto& ok_button = button_container.add<GUI::Button>("OK"_short_string);
+    auto& ok_button = button_container.add<GUI::Button>("OK"_string);
     ok_button.on_click = [&](auto) {
         if (set_defaults_checkbox.is_checked()) {
             Config::write_string("PixelPaint"sv, "NewImage"sv, "Name"sv, m_image_name);
@@ -128,7 +128,7 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
     };
     ok_button.set_default(true);
 
-    auto& cancel_button = button_container.add<GUI::Button>("Cancel"_short_string);
+    auto& cancel_button = button_container.add<GUI::Button>("Cancel"_string);
     cancel_button.on_click = [this](auto) {
         done(ExecResult::Cancel);
     };

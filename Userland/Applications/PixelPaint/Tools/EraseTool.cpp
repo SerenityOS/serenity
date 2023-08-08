@@ -64,11 +64,11 @@ ErrorOr<GUI::Widget*> EraseTool::get_properties_widget()
         size_container->set_fixed_height(20);
         (void)TRY(size_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto size_label = TRY(size_container->try_add<GUI::Label>("Size:"_short_string));
+        auto size_label = TRY(size_container->try_add<GUI::Label>("Size:"_string));
         size_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         size_label->set_fixed_size(80, 20);
 
-        auto size_slider = TRY(size_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_short_string));
+        auto size_slider = TRY(size_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_string));
         size_slider->set_range(1, 100);
         size_slider->set_value(size());
 
@@ -86,7 +86,7 @@ ErrorOr<GUI::Widget*> EraseTool::get_properties_widget()
         hardness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         hardness_label->set_fixed_size(80, 20);
 
-        auto hardness_slider = TRY(hardness_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "%"_short_string));
+        auto hardness_slider = TRY(hardness_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "%"_string));
         hardness_slider->set_range(1, 100);
         hardness_slider->set_value(hardness());
 
@@ -115,8 +115,8 @@ ErrorOr<GUI::Widget*> EraseTool::get_properties_widget()
 
         auto mode_radio_container = TRY(mode_container->try_add<GUI::Widget>());
         (void)TRY(mode_radio_container->try_set_layout<GUI::VerticalBoxLayout>());
-        auto pencil_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Pencil"_short_string));
-        auto brush_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Brush"_short_string));
+        auto pencil_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Pencil"_string));
+        auto brush_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Brush"_string));
 
         pencil_mode_radio->on_checked = [this, hardness_slider, size_slider](bool) {
             m_draw_mode = DrawMode::Pencil;

@@ -191,7 +191,7 @@ ErrorOr<GUI::Widget*> GuideTool::get_properties_widget()
         snapping_label->set_fixed_size(80, 20);
         snapping_label->set_tooltip("Press Shift to snap");
 
-        auto snapping_slider = TRY(snapping_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_short_string));
+        auto snapping_slider = TRY(snapping_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_string));
         snapping_slider->set_range(0, 50);
         snapping_slider->set_value(m_snap_size);
 

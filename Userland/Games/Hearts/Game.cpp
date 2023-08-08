@@ -133,7 +133,7 @@ void Game::show_score_card(bool game_over)
     button_container.set_shrink_to_fit(true);
     button_container.set_layout<GUI::VerticalBoxLayout>();
 
-    auto& close_button = button_container.add<GUI::Button>("OK"_short_string);
+    auto& close_button = button_container.add<GUI::Button>("OK"_string);
     close_button.on_click = [&score_dialog](auto) {
         score_dialog->done(GUI::Dialog::ExecResult::OK);
     };
@@ -869,7 +869,7 @@ void Game::pass_cards()
     }
 
     m_state = State::PassingAccept;
-    m_passing_button->set_text("OK"_short_string);
+    m_passing_button->set_text("OK"_string);
     m_passing_button->set_enabled(true);
 }
 

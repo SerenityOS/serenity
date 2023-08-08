@@ -146,7 +146,7 @@ ErrorOr<String> FileEventModel::column_name(int column) const
 {
     switch (column) {
     case Column::Path:
-        return "Path"_short_string;
+        return "Path"_string;
     case Column::Count:
         return "Event Count"_string;
     case Column::Duration:

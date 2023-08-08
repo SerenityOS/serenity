@@ -150,7 +150,7 @@ ErrorOr<String> UnsignedBigInteger::to_base(u16 N) const
 {
     VERIFY(N <= 36);
     if (*this == UnsignedBigInteger { 0 })
-        return "0"_short_string;
+        return "0"_string;
 
     StringBuilder builder;
     UnsignedBigInteger temp(*this);

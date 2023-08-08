@@ -58,7 +58,7 @@ public:
 #ifdef KERNEL
             return Kernel::KString::try_create("::"sv);
 #else
-            return "::"_short_string;
+            return "::"_string;
 #endif
         }
 

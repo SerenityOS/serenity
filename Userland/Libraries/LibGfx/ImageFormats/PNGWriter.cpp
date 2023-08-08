@@ -115,7 +115,7 @@ ErrorOr<void> PNGWriter::add_png_header()
 
 ErrorOr<void> PNGWriter::add_IHDR_chunk(u32 width, u32 height, u8 bit_depth, PNG::ColorType color_type, u8 compression_method, u8 filter_method, u8 interlace_method)
 {
-    PNGChunk png_chunk { "IHDR"_short_string };
+    PNGChunk png_chunk { "IHDR"_string };
     TRY(png_chunk.add_as_big_endian(width));
     TRY(png_chunk.add_as_big_endian(height));
     TRY(png_chunk.add_u8(bit_depth));
@@ -130,7 +130,7 @@ ErrorOr<void> PNGWriter::add_IHDR_chunk(u32 width, u32 height, u8 bit_depth, PNG
 ErrorOr<void> PNGWriter::add_iCCP_chunk(ReadonlyBytes icc_data)
 {
     // https://www.w3.org/TR/png/#11iCCP
-    PNGChunk chunk { "iCCP"_short_string };
+    PNGChunk chunk { "iCCP"_string };
 
     TRY(chunk.add("embedded profile"sv.bytes()));
     TRY(chunk.add_u8(0)); // \0-terminate profile name
@@ -144,7 +144,7 @@ ErrorOr<void> PNGWriter::add_iCCP_chunk(ReadonlyBytes icc_data)
 
 ErrorOr<void> PNGWriter::add_IEND_chunk()
 {
-    PNGChunk png_chunk { "IEND"_short_string };
+    PNGChunk png_chunk { "IEND"_string };
     TRY(add_chunk(png_chunk));
     return {};
 }
@@ -169,7 +169,7 @@ static_assert(AssertSize<Pixel, 4>());
 
 ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
 {
-    PNGChunk png_chunk { "IDAT"_short_string };
+    PNGChunk png_chunk { "IDAT"_string };
     TRY(png_chunk.reserve(bitmap.size_in_bytes()));
 
     ByteBuffer uncompressed_block_data;

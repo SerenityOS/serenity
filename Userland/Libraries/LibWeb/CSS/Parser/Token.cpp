@@ -49,29 +49,29 @@ ErrorOr<String> Token::to_string() const
     case Type::Dimension:
         return String::formatted("{}{}", m_number_value.value(), dimension_unit());
     case Type::Whitespace:
-        return " "_short_string;
+        return " "_string;
     case Type::CDO:
         return "<!--"_string;
     case Type::CDC:
-        return "-->"_short_string;
+        return "-->"_string;
     case Type::Colon:
-        return ":"_short_string;
+        return ":"_string;
     case Type::Semicolon:
-        return ";"_short_string;
+        return ";"_string;
     case Type::Comma:
-        return ","_short_string;
+        return ","_string;
     case Type::OpenSquare:
-        return "["_short_string;
+        return "["_string;
     case Type::CloseSquare:
-        return "]"_short_string;
+        return "]"_string;
     case Type::OpenParen:
-        return "("_short_string;
+        return "("_string;
     case Type::CloseParen:
-        return ")"_short_string;
+        return ")"_string;
     case Type::OpenCurly:
-        return "{"_short_string;
+        return "{"_string;
     case Type::CloseCurly:
-        return "}"_short_string;
+        return "}"_string;
     case Type::Invalid:
     default:
         VERIFY_NOT_REACHED();

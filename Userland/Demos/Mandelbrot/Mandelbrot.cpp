@@ -413,9 +413,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(window->minimum_size() * 2);
     auto mandelbrot = TRY(window->set_main_widget<Mandelbrot>());
 
-    auto file_menu = TRY(window->try_add_menu("&File"_short_string));
+    auto file_menu = TRY(window->try_add_menu("&File"_string));
 
-    auto& export_submenu = file_menu->add_submenu("&Export"_short_string);
+    auto& export_submenu = file_menu->add_submenu("&Export"_string);
 
     TRY(export_submenu.try_add_action(GUI::Action::create("As &BMP...",
         [&](GUI::Action&) {
@@ -469,12 +469,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-mandelbrot"sv);
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto view_menu = TRY(window->try_add_menu("&View"_short_string));
+    auto view_menu = TRY(window->try_add_menu("&View"_string));
     TRY(view_menu->try_add_action(zoom_in_action));
     TRY(view_menu->try_add_action(reset_zoom_action));
     TRY(view_menu->try_add_action(zoom_out_action));
 
-    auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
+    auto help_menu = TRY(window->try_add_menu("&Help"_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Mandelbrot Demo", app_icon, window)));
 
