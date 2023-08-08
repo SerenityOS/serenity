@@ -158,7 +158,7 @@ JS::Value Cell::js_data()
     if (m_kind == Formula)
         return m_evaluated_data;
 
-    auto& vm = m_sheet->interpreter().vm();
+    auto& vm = m_sheet->vm();
     return JS::PrimitiveString::create(vm, m_data);
 }
 

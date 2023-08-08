@@ -127,7 +127,6 @@ public:
     }
 
     JS::ThrowCompletionOr<JS::Value> evaluate(StringView, Cell* = nullptr);
-    JS::Interpreter& interpreter() const;
     SheetGlobalObject& global_object() const { return *m_global_object; }
 
     Cell*& current_evaluated_cell() { return m_current_cell_being_evaluated; }
@@ -149,6 +148,9 @@ public:
 
     DeprecatedString generate_inline_documentation_for(StringView function, size_t argument_index);
 
+    JS::Realm& realm() const { return *m_root_execution_context->realm; }
+    JS::VM& vm() const { return realm().vm(); }
+
 private:
     explicit Sheet(Workbook&);
     explicit Sheet(StringView name, Workbook&);
@@ -162,7 +164,8 @@ private:
     Workbook& m_workbook;
     mutable JS::GCPtr<SheetGlobalObject> m_global_object;
 
-    NonnullOwnPtr<JS::Interpreter> m_interpreter;
+    NonnullRefPtr<JS::VM> m_vm;
+    NonnullOwnPtr<JS::ExecutionContext> m_root_execution_context;
 
     Cell* m_current_cell_being_evaluated { nullptr };
 
