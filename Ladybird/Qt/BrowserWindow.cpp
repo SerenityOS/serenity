@@ -495,12 +495,8 @@ Tab& BrowserWindow::new_tab(QString const& url, Web::HTML::ActivateTab activate_
 
     tab_ptr->focus_location_editor();
 
-    // We *don't* load the initial page if we are connected to a WebDriver, as the Set URL command may come in very
-    // quickly, and become replaced by this load.
-    if (m_webdriver_content_ipc_path.is_empty()) {
-        // We make it HistoryNavigation so that the initial page doesn't get added to the history.
-        tab_ptr->navigate(url, Tab::LoadType::HistoryNavigation);
-    }
+    // We make it HistoryNavigation so that the initial page doesn't get added to the history.
+    tab_ptr->navigate(url, Tab::LoadType::HistoryNavigation);
 
     return *tab_ptr;
 }
