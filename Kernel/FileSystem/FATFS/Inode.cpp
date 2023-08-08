@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Undefine <undefine@undefine.pl>
+ * Copyright (c) 2022-2023, Undefine <undefine@undefine.pl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -205,11 +205,13 @@ ErrorOr<size_t> FATInode::read_bytes_locked(off_t offset, size_t size, UserOrKer
     if (offset >= m_metadata.size)
         return 0;
 
+    size_t size_to_read = min(size, m_entry.file_size - offset);
+
     // FIXME: Read only the needed blocks instead of the whole file
     auto blocks = TRY(const_cast<FATInode&>(*this).read_block_list());
-    TRY(buffer.write(blocks->data() + offset, min(size, m_block_list.size() * fs().m_device_block_size - offset)));
+    TRY(buffer.write(blocks->data() + offset, size_to_read));
 
-    return min(size, m_block_list.size() * fs().m_device_block_size - offset);
+    return size_to_read;
 }
 
 InodeMetadata FATInode::metadata() const
