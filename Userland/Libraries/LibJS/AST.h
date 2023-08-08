@@ -669,7 +669,6 @@ private:
     virtual bool is_identifier() const override { return true; }
 
     DeprecatedFlyString m_string;
-    mutable EnvironmentCoordinate m_cached_environment_coordinate;
 
     Optional<size_t> m_local_variable_index;
     bool m_is_global { false };
@@ -1865,7 +1864,6 @@ public:
 private:
     NonnullRefPtr<Expression const> const m_tag;
     NonnullRefPtr<TemplateLiteral const> const m_template_literal;
-    mutable HashMap<GCPtr<Realm>, Handle<Array>> m_cached_values;
 };
 
 class MemberExpression final : public Expression {
