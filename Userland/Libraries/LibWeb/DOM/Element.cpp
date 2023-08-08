@@ -1045,7 +1045,7 @@ void Element::set_scroll_left(double x)
         return;
 
     auto* box = static_cast<Layout::Box*>(layout_node());
-    if (!box->is_scrollable())
+    if (!box->is_scroll_container())
         return;
 
     // FIXME: or the element has no overflow.
@@ -1113,7 +1113,7 @@ void Element::set_scroll_top(double y)
         return;
 
     auto* box = static_cast<Layout::Box*>(layout_node());
-    if (!box->is_scrollable())
+    if (!box->is_scroll_container())
         return;
 
     // FIXME: or the element has no overflow.
