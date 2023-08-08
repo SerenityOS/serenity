@@ -54,7 +54,7 @@ public:
 
     bool is_scroll_container() const;
 
-    bool is_scrollable() const;
+    bool is_user_scrollable() const;
 
 protected:
     Box(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);

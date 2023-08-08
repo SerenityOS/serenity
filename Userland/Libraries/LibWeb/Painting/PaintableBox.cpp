@@ -729,7 +729,7 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
 
 bool PaintableBox::handle_mousewheel(Badge<EventHandler>, CSSPixelPoint, unsigned, unsigned, int wheel_delta_x, int wheel_delta_y)
 {
-    if (!layout_box().is_scrollable())
+    if (!layout_box().is_user_scrollable())
         return false;
     scroll_by(wheel_delta_x, wheel_delta_y);
     return true;
