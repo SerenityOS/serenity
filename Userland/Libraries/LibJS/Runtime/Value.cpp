@@ -370,18 +370,7 @@ ErrorOr<String> Value::to_string_without_side_effects() const
     case INT32_TAG:
         return String::number(as_i32());
     case STRING_TAG:
-        if (auto string = as_string().utf8_string(); string.is_throw_completion()) {
-            auto completion = string.release_error();
-
-            // We can't explicitly check for OOM because InternalError does not store the ErrorType
-            VERIFY(completion.value().has_value());
-            VERIFY(completion.value()->is_object());
-            VERIFY(is<InternalError>(completion.value()->as_object()));
-
-            return AK::Error::from_errno(ENOMEM);
-        } else {
-            return string.release_value();
-        }
+        return as_string().utf8_string();
     case SYMBOL_TAG:
         return as_symbol().descriptive_string();
     case BIGINT_TAG:
@@ -414,7 +403,7 @@ ThrowCompletionOr<String> Value::to_string(VM& vm) const
     switch (m_value.tag) {
     // 1. If argument is a String, return argument.
     case STRING_TAG:
-        return TRY(as_string().utf8_string());
+        return as_string().utf8_string();
     // 2. If argument is a Symbol, throw a TypeError exception.
     case SYMBOL_TAG:
         return vm.throw_completion<TypeError>(ErrorType::Convert, "symbol", "string");

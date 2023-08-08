@@ -33,10 +33,10 @@ static ThrowCompletionOr<Optional<String>> get_string_option(VM& vm, Object cons
     if (option.is_undefined())
         return OptionalNone {};
 
-    if (validator && !validator(TRY(option.as_string().utf8_string_view())))
+    if (validator && !validator(option.as_string().utf8_string_view()))
         return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, option, property);
 
-    return TRY(option.as_string().utf8_string());
+    return option.as_string().utf8_string();
 }
 
 // 14.1.2 ApplyOptionsToTag ( tag, options ), https://tc39.es/ecma402/#sec-apply-options-to-tag

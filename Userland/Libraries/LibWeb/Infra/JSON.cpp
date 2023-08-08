@@ -52,7 +52,7 @@ WebIDL::ExceptionOr<String> serialize_javascript_value_to_json_string(JS::VM& vm
     VERIFY(result.is_string());
 
     // 4. Return result.
-    return TRY(result.as_string().utf8_string());
+    return result.as_string().utf8_string();
 }
 
 // https://infra.spec.whatwg.org/#serialize-a-javascript-value-to-json-bytes

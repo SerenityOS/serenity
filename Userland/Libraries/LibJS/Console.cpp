@@ -59,7 +59,7 @@ ThrowCompletionOr<Value> Console::assert_()
         // 3. Otherwise:
         else {
             // 1. Let concat be the concatenation of message, U+003A (:), U+0020 SPACE, and first.
-            auto concat = TRY_OR_THROW_OOM(vm, String::formatted("{}: {}", TRY(message->utf8_string()), MUST(first.to_string(vm))));
+            auto concat = TRY_OR_THROW_OOM(vm, String::formatted("{}: {}", message->utf8_string(), MUST(first.to_string(vm))));
             // 2. Set data[0] to concat.
             data[0] = PrimitiveString::create(vm, move(concat));
         }

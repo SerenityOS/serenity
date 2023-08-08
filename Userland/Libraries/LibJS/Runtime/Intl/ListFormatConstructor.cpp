@@ -80,13 +80,13 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ListFormatConstructor::construct(Functio
     auto type = TRY(get_option(vm, *options, vm.names.type, OptionType::String, { "conjunction"sv, "disjunction"sv, "unit"sv }, "conjunction"sv));
 
     // 12. Set listFormat.[[Type]] to type.
-    list_format->set_type(TRY(type.as_string().utf8_string_view()));
+    list_format->set_type(type.as_string().utf8_string_view());
 
     // 13. Let style be ? GetOption(options, "style", string, « "long", "short", "narrow" », "long").
     auto style = TRY(get_option(vm, *options, vm.names.style, OptionType::String, { "long"sv, "short"sv, "narrow"sv }, "long"sv));
 
     // 14. Set listFormat.[[Style]] to style.
-    list_format->set_style(TRY(style.as_string().utf8_string_view()));
+    list_format->set_style(style.as_string().utf8_string_view());
 
     // Note: The remaining steps are skipped in favor of deferring to LibUnicode.
 

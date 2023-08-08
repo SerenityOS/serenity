@@ -94,7 +94,7 @@ ThrowCompletionOr<PluralRules*> initialize_plural_rules(VM& vm, PluralRules& plu
     auto type = TRY(get_option(vm, *options, vm.names.type, OptionType::String, AK::Array { "cardinal"sv, "ordinal"sv }, "cardinal"sv));
 
     // 7. Set pluralRules.[[Type]] to t.
-    plural_rules.set_type(TRY(type.as_string().utf8_string_view()));
+    plural_rules.set_type(type.as_string().utf8_string_view());
 
     // 8. Perform ? SetNumberFormatDigitOptions(pluralRules, options, +0𝔽, 3𝔽, "standard").
     TRY(set_number_format_digit_options(vm, plural_rules, *options, 0, 3, NumberFormat::Notation::Standard));

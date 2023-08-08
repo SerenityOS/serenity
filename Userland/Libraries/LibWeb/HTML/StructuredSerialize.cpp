@@ -166,9 +166,7 @@ private:
 
     WebIDL::ExceptionOr<void> serialize_string(Vector<u32>& vector, JS::PrimitiveString const& primitive_string)
     {
-        auto string = TRY(Bindings::throw_dom_exception_if_needed(m_vm, [&primitive_string]() {
-            return primitive_string.utf8_string();
-        }));
+        auto string = primitive_string.utf8_string();
         TRY(serialize_string(vector, string));
         return {};
     }

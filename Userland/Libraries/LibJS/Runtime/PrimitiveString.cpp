@@ -74,14 +74,13 @@ bool PrimitiveString::is_empty() const
     VERIFY_NOT_REACHED();
 }
 
-ThrowCompletionOr<String> PrimitiveString::utf8_string() const
+String PrimitiveString::utf8_string() const
 {
-    auto& vm = this->vm();
     resolve_rope_if_needed(EncodingPreference::UTF8);
 
     if (!has_utf8_string()) {
         if (has_deprecated_string())
-            m_utf8_string = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(*m_deprecated_string));
+            m_utf8_string = MUST(String::from_deprecated_string(*m_deprecated_string));
         else if (has_utf16_string())
             m_utf8_string = m_utf16_string->to_utf8();
         else
@@ -91,9 +90,9 @@ ThrowCompletionOr<String> PrimitiveString::utf8_string() const
     return *m_utf8_string;
 }
 
-ThrowCompletionOr<StringView> PrimitiveString::utf8_string_view() const
+StringView PrimitiveString::utf8_string_view() const
 {
-    (void)TRY(utf8_string());
+    (void)utf8_string();
     return m_utf8_string->bytes_as_string_view();
 }
 
@@ -292,14 +291,14 @@ void PrimitiveString::resolve_rope_if_needed(EncodingPreference preference) cons
     for (auto const* current : pieces) {
         if (!previous) {
             // This is the very first piece, just append it and continue.
-            builder.append(MUST(current->utf8_string()));
+            builder.append(current->utf8_string());
             previous = current;
             continue;
         }
 
         // Get the UTF-8 representations for both strings.
-        auto current_string_as_utf8 = MUST(current->utf8_string_view());
-        auto previous_string_as_utf8 = MUST(previous->utf8_string_view());
+        auto current_string_as_utf8 = current->utf8_string_view();
+        auto previous_string_as_utf8 = previous->utf8_string_view();
 
         // NOTE: Now we need to look at the end of the previous string and the start
         //       of the current string, to see if they should be combined into a surrogate.
