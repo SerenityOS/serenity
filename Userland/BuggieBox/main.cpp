@@ -54,12 +54,30 @@ ENUMERATE_UTILITIES(DECLARE_ENTRYPOINT, SKIP)
 
 static void fail()
 {
-    out(stderr, "Direct running of BuggieBox was detected without finding a proper requested utility.\n");
-    out(stderr, "The following programs are supported: uname, env, lsblk, file, df, mount, umount, mkdir, ");
-    out(stderr, "rmdir, rm, chown, chmod, cp, ln, ls, mv, cat, md5sum, sha1sum, sha256sum, sha512sum, sh, uniq, id, tail, ");
-    out(stderr, "find, less, mknod, ps\n");
-    out(stderr, "To use one of these included utilities, create a symbolic link with the target being this binary, and ensure the basename");
-    out(stderr, "is included within.\n");
+#define TOOL_NAME(name) #name##sv,
+#define ALIAS_NAME(alias, name) #alias##sv,
+    auto const tool_names = {
+        ENUMERATE_UTILITIES(TOOL_NAME, ALIAS_NAME)
+    };
+#undef TOOL_NAME
+#undef ALIAS_NAME
+
+    outln(stderr);
+    outln(stderr, "Usage:");
+    outln(stderr, "* Specify a utility as an argument:");
+    outln(stderr, "  $ BuggieBox UTILITY");
+    outln(stderr, "* Create a symbolic link with the target being this binary,");
+    outln(stderr, "  and ensure the basename is one of the supported utilities' name.");
+
+    outln(stderr);
+    outln(stderr, "The following utilities are supported:");
+    int count = 0;
+    for (auto const& tool_name : tool_names) {
+        if (++count % 5 == 1)
+            out(stderr, "\n\t");
+        out(stderr, "{:12}", tool_name);
+    }
+    outln(stderr);
 }
 
 struct Runner {
@@ -89,14 +107,17 @@ static ErrorOr<int> run_program(Main::Arguments arguments, LexicalPath const& ru
 static ErrorOr<int> buggiebox_main(Main::Arguments arguments)
 {
     if (arguments.argc == 0) {
+        outln(stderr, "Detected directly running BuggieBox without specifying a utility.");
         fail();
         return 1;
     }
     bool found_runner = false;
     LexicalPath runbase { arguments.strings[0] };
     auto result = TRY(run_program(arguments, runbase, found_runner));
-    if (!found_runner)
+    if (!found_runner) {
+        outln(stderr, "'{}' is not supported by BuggieBox.", runbase);
         fail();
+    }
     return result;
 }
 
