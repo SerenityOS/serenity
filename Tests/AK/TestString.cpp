@@ -47,40 +47,21 @@ TEST_CASE(short_strings)
     EXPECT_EQ(string1.bytes().size(), 7u);
     EXPECT_EQ(string1.bytes_as_string_view(), "abcdefg"sv);
 
-    constexpr auto string2 = String::from_utf8_short_string("abcdefg"sv);
+    auto string2 = "abcdefg"_string;
     EXPECT_EQ(string2.is_short_string(), true);
     EXPECT_EQ(string2.bytes().size(), 7u);
     EXPECT_EQ(string2, string1);
 
-    auto string3 = "abcdefg"_string;
-    EXPECT_EQ(string3.is_short_string(), true);
-    EXPECT_EQ(string3.bytes().size(), 7u);
-    EXPECT_EQ(string3, string1);
-
-    constexpr auto string4 = "abcdefg"_short_string;
-    EXPECT_EQ(string4.is_short_string(), true);
-    EXPECT_EQ(string4.bytes().size(), 7u);
-    EXPECT_EQ(string4, string1);
 #else
     auto string1 = MUST(String::from_utf8("abc"sv));
     EXPECT_EQ(string1.is_short_string(), true);
     EXPECT_EQ(string1.bytes().size(), 3u);
     EXPECT_EQ(string1.bytes_as_string_view(), "abc"sv);
 
-    constexpr auto string2 = String::from_utf8_short_string("abc"sv);
+    auto string2 = "abc"_string;
     EXPECT_EQ(string2.is_short_string(), true);
     EXPECT_EQ(string2.bytes().size(), 3u);
     EXPECT_EQ(string2, string1);
-
-    auto string3 = "abc"_string;
-    EXPECT_EQ(string3.is_short_string(), true);
-    EXPECT_EQ(string3.bytes().size(), 3u);
-    EXPECT_EQ(string3, string1);
-
-    constexpr auto string4 = "abc"_short_string;
-    EXPECT_EQ(string4.is_short_string(), true);
-    EXPECT_EQ(string4.bytes().size(), 3u);
-    EXPECT_EQ(string4, string1);
 #endif
 }
 
