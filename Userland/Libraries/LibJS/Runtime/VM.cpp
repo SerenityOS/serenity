@@ -259,15 +259,6 @@ ThrowCompletionOr<Value> VM::named_evaluation_if_anonymous_function(ASTNode cons
     return execute_ast_node(expression);
 }
 
-// 13.15.5.2 Runtime Semantics: DestructuringAssignmentEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-destructuringassignmentevaluation
-ThrowCompletionOr<void> VM::destructuring_assignment_evaluation(NonnullRefPtr<BindingPattern const> const& target, Value value)
-{
-    // Note: DestructuringAssignmentEvaluation is just like BindingInitialization without an environment
-    //       And it allows member expressions. We thus trust the parser to disallow member expressions
-    //       in any non assignment binding and just call BindingInitialization with a nullptr environment
-    return binding_initialization(target, value, nullptr);
-}
-
 // 8.5.2 Runtime Semantics: BindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-bindinginitialization
 ThrowCompletionOr<void> VM::binding_initialization(DeprecatedFlyString const& target, Value value, Environment* environment)
 {
