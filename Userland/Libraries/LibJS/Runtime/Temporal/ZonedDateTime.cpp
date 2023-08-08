@@ -176,7 +176,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
             offset_behavior = OffsetBehavior::Wall;
         } else {
             // NOTE: Not in the spec, since it directly assigns to offsetString in step i, but we can't do it there as it's a type mismatch.
-            offset_string = TRY(offset_string_value.as_string().utf8_string());
+            offset_string = offset_string_value.as_string().utf8_string();
         }
 
         // l. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, options).

@@ -3131,7 +3131,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> transform_stream_default_
             TRY(transform_stream_error(stream, reason));
 
             // 2. Throw readable.[[storedError]].
-            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, TRY(readable->stored_error().as_string().utf8_string_view()) };
+            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, readable->stored_error().as_string().utf8_string() };
         });
 
     return WebIDL::create_resolved_promise(realm, react_result);

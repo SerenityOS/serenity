@@ -276,7 +276,7 @@ ThrowCompletionOr<Vector<String>> string_list_from_iterable(VM& vm, Value iterab
             }
 
             // iii. Append nextValue to the end of the List list.
-            TRY_OR_THROW_OOM(vm, list.try_append(TRY(next_value.as_string().utf8_string())));
+            TRY_OR_THROW_OOM(vm, list.try_append(next_value.as_string().utf8_string()));
         }
     } while (next != nullptr);
 

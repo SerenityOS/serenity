@@ -102,11 +102,11 @@ ThrowCompletionOr<NumberFormat*> initialize_number_format(VM& vm, NumberFormat& 
     // 7. If numberingSystem is not undefined, then
     if (!numbering_system.is_undefined()) {
         // a. If numberingSystem does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
-        if (!::Locale::is_type_identifier(TRY(numbering_system.as_string().utf8_string_view())))
+        if (!::Locale::is_type_identifier(numbering_system.as_string().utf8_string_view()))
             return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, numbering_system, "numberingSystem"sv);
 
         // 8. Set opt.[[nu]] to numberingSystem.
-        opt.nu = TRY(numbering_system.as_string().utf8_string());
+        opt.nu = numbering_system.as_string().utf8_string();
     }
 
     // 9. Let localeData be %NumberFormat%.[[LocaleData]].
@@ -162,7 +162,7 @@ ThrowCompletionOr<NumberFormat*> initialize_number_format(VM& vm, NumberFormat& 
     auto notation = TRY(get_option(vm, *options, vm.names.notation, OptionType::String, { "standard"sv, "scientific"sv, "engineering"sv, "compact"sv }, "standard"sv));
 
     // 19. Set numberFormat.[[Notation]] to notation.
-    number_format.set_notation(TRY(notation.as_string().utf8_string_view()));
+    number_format.set_notation(notation.as_string().utf8_string_view());
 
     // 20. Perform ? SetNumberFormatDigitOptions(numberFormat, options, mnfdDefault, mxfdDefault, notation).
     TRY(set_number_format_digit_options(vm, number_format, *options, default_min_fraction_digits, default_max_fraction_digits, number_format.notation()));
@@ -176,7 +176,7 @@ ThrowCompletionOr<NumberFormat*> initialize_number_format(VM& vm, NumberFormat& 
     // 23. If notation is "compact", then
     if (number_format.notation() == NumberFormat::Notation::Compact) {
         // a. Set numberFormat.[[CompactDisplay]] to compactDisplay.
-        number_format.set_compact_display(TRY(compact_display.as_string().utf8_string_view()));
+        number_format.set_compact_display(compact_display.as_string().utf8_string_view());
 
         // b. Set defaultUseGrouping to "min2".
         default_use_grouping = "min2"sv;
@@ -205,7 +205,7 @@ ThrowCompletionOr<NumberFormat*> initialize_number_format(VM& vm, NumberFormat& 
     auto sign_display = TRY(get_option(vm, *options, vm.names.signDisplay, OptionType::String, { "auto"sv, "never"sv, "always"sv, "exceptZero"sv, "negative"sv }, "auto"sv));
 
     // 30. Set numberFormat.[[SignDisplay]] to signDisplay.
-    number_format.set_sign_display(TRY(sign_display.as_string().utf8_string_view()));
+    number_format.set_sign_display(sign_display.as_string().utf8_string_view());
 
     // 31. Return numberFormat.
     return &number_format;
@@ -234,7 +234,7 @@ ThrowCompletionOr<void> set_number_format_digit_options(VM& vm, NumberFormatBase
 
     // 7. Let roundingPriority be ? GetOption(options, "roundingPriority", string, « "auto", "morePrecision", "lessPrecision" », "auto").
     auto rounding_priority_option = TRY(get_option(vm, options, vm.names.roundingPriority, OptionType::String, { "auto"sv, "morePrecision"sv, "lessPrecision"sv }, "auto"sv));
-    auto rounding_priority = MUST_OR_THROW_OOM(rounding_priority_option.as_string().utf8_string_view());
+    auto rounding_priority = rounding_priority_option.as_string().utf8_string_view();
 
     // 8. Let roundingIncrement be ? GetNumberOption(options, "roundingIncrement", 1, 5000, 1).
     auto rounding_increment = TRY(get_number_option(vm, options, vm.names.roundingIncrement, 1, 5000, 1));
@@ -261,10 +261,10 @@ ThrowCompletionOr<void> set_number_format_digit_options(VM& vm, NumberFormatBase
     intl_object.set_rounding_increment(*rounding_increment);
 
     // 15. Set intlObj.[[RoundingMode]] to roundingMode.
-    intl_object.set_rounding_mode(TRY(rounding_mode.as_string().utf8_string_view()));
+    intl_object.set_rounding_mode(rounding_mode.as_string().utf8_string_view());
 
     // 16. Set intlObj.[[TrailingZeroDisplay]] to trailingZeroDisplay.
-    intl_object.set_trailing_zero_display(TRY(trailing_zero_display.as_string().utf8_string_view()));
+    intl_object.set_trailing_zero_display(trailing_zero_display.as_string().utf8_string_view());
 
     // 17. If mnsd is not undefined or mxsd is not undefined, then
     //     a. Let hasSd be true.
@@ -417,7 +417,7 @@ ThrowCompletionOr<void> set_number_format_unit_options(VM& vm, NumberFormat& int
     auto style = TRY(get_option(vm, options, vm.names.style, OptionType::String, { "decimal"sv, "percent"sv, "currency"sv, "unit"sv }, "decimal"sv));
 
     // 4. Set intlObj.[[Style]] to style.
-    intl_object.set_style(TRY(style.as_string().utf8_string_view()));
+    intl_object.set_style(style.as_string().utf8_string_view());
 
     // 5. Let currency be ? GetOption(options, "currency", string, empty, undefined).
     auto currency = TRY(get_option(vm, options, vm.names.currency, OptionType::String, {}, Empty {}));
@@ -430,7 +430,7 @@ ThrowCompletionOr<void> set_number_format_unit_options(VM& vm, NumberFormat& int
     }
     // 7. Else,
     //     a. If IsWellFormedCurrencyCode(currency) is false, throw a RangeError exception.
-    else if (!is_well_formed_currency_code(TRY(currency.as_string().utf8_string_view())))
+    else if (!is_well_formed_currency_code(currency.as_string().utf8_string_view()))
         return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, currency, "currency"sv);
 
     // 8. Let currencyDisplay be ? GetOption(options, "currencyDisplay", string, « "code", "symbol", "narrowSymbol", "name" », "symbol").
@@ -450,7 +450,7 @@ ThrowCompletionOr<void> set_number_format_unit_options(VM& vm, NumberFormat& int
     }
     // 12. Else,
     //     a. If ! IsWellFormedUnitIdentifier(unit) is false, throw a RangeError exception.
-    else if (!is_well_formed_unit_identifier(TRY(unit.as_string().utf8_string_view())))
+    else if (!is_well_formed_unit_identifier(unit.as_string().utf8_string_view()))
         return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, unit, "unit"sv);
 
     // 13. Let unitDisplay be ? GetOption(options, "unitDisplay", string, « "short", "narrow", "long" », "short").
@@ -459,22 +459,22 @@ ThrowCompletionOr<void> set_number_format_unit_options(VM& vm, NumberFormat& int
     // 14. If style is "currency", then
     if (intl_object.style() == NumberFormat::Style::Currency) {
         // a. Set intlObj.[[Currency]] to the ASCII-uppercase of currency.
-        intl_object.set_currency(TRY_OR_THROW_OOM(vm, TRY(currency.as_string().utf8_string()).to_uppercase()));
+        intl_object.set_currency(TRY_OR_THROW_OOM(vm, currency.as_string().utf8_string().to_uppercase()));
 
         // c. Set intlObj.[[CurrencyDisplay]] to currencyDisplay.
-        intl_object.set_currency_display(TRY(currency_display.as_string().utf8_string_view()));
+        intl_object.set_currency_display(currency_display.as_string().utf8_string_view());
 
         // d. Set intlObj.[[CurrencySign]] to currencySign.
-        intl_object.set_currency_sign(TRY(currency_sign.as_string().utf8_string_view()));
+        intl_object.set_currency_sign(currency_sign.as_string().utf8_string_view());
     }
 
     // 15. If style is "unit", then
     if (intl_object.style() == NumberFormat::Style::Unit) {
         // a. Set intlObj.[[Unit]] to unit.
-        intl_object.set_unit(TRY(unit.as_string().utf8_string()));
+        intl_object.set_unit(unit.as_string().utf8_string());
 
         // b. Set intlObj.[[UnitDisplay]] to unitDisplay.
-        intl_object.set_unit_display(TRY(unit_display.as_string().utf8_string_view()));
+        intl_object.set_unit_display(unit_display.as_string().utf8_string_view());
     }
 
     return {};

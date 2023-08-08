@@ -146,7 +146,7 @@ ThrowCompletionOr<Value> get_option(VM& vm, Object const& options, PropertyKey c
     if (!values.is_empty()) {
         // NOTE: Every location in the spec that invokes GetOption with type=boolean also has values=undefined.
         VERIFY(value.is_string());
-        if (auto value_string = TRY(value.as_string().utf8_string()); !values.contains_slow(value_string))
+        if (auto value_string = value.as_string().utf8_string(); !values.contains_slow(value_string))
             return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, value_string, property.as_string());
     }
 
@@ -530,7 +530,7 @@ ThrowCompletionOr<Optional<String>> get_temporal_unit(VM& vm, Object const& norm
 
     auto value = option_value.is_undefined()
         ? Optional<String> {}
-        : TRY(option_value.as_string().utf8_string());
+        : option_value.as_string().utf8_string();
 
     // 11. If value is listed in the Plural column of Table 13, then
     for (auto const& row : temporal_units) {

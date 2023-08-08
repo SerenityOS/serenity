@@ -384,7 +384,7 @@ ThrowCompletionOr<LocaleResult> resolve_locale(VM& vm, Vector<String> const& req
     MatcherResult matcher_result;
 
     // 2. If matcher is "lookup", then
-    if (matcher.is_string() && (TRY(matcher.as_string().utf8_string_view()) == "lookup"sv)) {
+    if (matcher.is_string() && (matcher.as_string().utf8_string_view()) == "lookup"sv) {
         // a. Let r be ! LookupMatcher(availableLocales, requestedLocales).
         matcher_result = MUST_OR_THROW_OOM(lookup_matcher(vm, requested_locales));
     }
@@ -576,7 +576,7 @@ ThrowCompletionOr<Array*> supported_locales(VM& vm, Vector<String> const& reques
     Vector<String> supported_locales;
 
     // 3. If matcher is "best fit", then
-    if (TRY(matcher.as_string().utf8_string_view()) == "best fit"sv) {
+    if (matcher.as_string().utf8_string_view() == "best fit"sv) {
         // a. Let supportedLocales be BestFitSupportedLocales(availableLocales, requestedLocales).
         supported_locales = TRY(best_fit_supported_locales(vm, requested_locales));
     }

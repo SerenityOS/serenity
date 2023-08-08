@@ -801,7 +801,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::with)
 
     // 18. Assert: Type(offsetString) is String.
     VERIFY(offset_string_value.is_string());
-    auto offset_string = TRY(offset_string_value.as_string().utf8_string());
+    auto offset_string = offset_string_value.as_string().utf8_string();
 
     // 19. Let dateTimeResult be ? InterpretTemporalDateTimeFields(calendar, fields, options).
     auto date_time_result = TRY(interpret_temporal_date_time_fields(vm, calendar, *fields, options));

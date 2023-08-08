@@ -559,7 +559,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
             return *TRY(iterator_close(vm, iterator_record, move(completion)));
         }
 
-        auto next_value_string = TRY(next_value.as_string().utf8_string());
+        auto next_value_string = next_value.as_string().utf8_string();
 
         // iii. If fieldNames contains nextValue, then
         if (field_names.contains_slow(next_value)) {
