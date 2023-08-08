@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, MacDue <macdue@dueutil.tech>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -14,6 +14,7 @@
 #include <LibWeb/Painting/BorderRadiusCornerClipper.h>
 #include <LibWeb/Painting/GradientPainting.h>
 #include <LibWeb/Painting/PaintContext.h>
+#include <LibWeb/Painting/PaintableBox.h>
 
 namespace Web::Painting {
 
@@ -131,6 +132,15 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             background_positioning_area = layout_node.root().browsing_context().viewport_rect();
             break;
         case CSS::BackgroundAttachment::Local:
+            background_positioning_area = get_box(layer.origin).rect;
+            if (is<Layout::Box>(layout_node)) {
+                auto* paintable_box = static_cast<Layout::Box const&>(layout_node).paintable_box();
+                if (paintable_box) {
+                    auto scroll_offset = paintable_box->scroll_offset();
+                    background_positioning_area.translate_by(-scroll_offset.x(), -scroll_offset.y());
+                }
+            }
+            break;
         case CSS::BackgroundAttachment::Scroll:
             background_positioning_area = get_box(layer.origin).rect;
             break;
