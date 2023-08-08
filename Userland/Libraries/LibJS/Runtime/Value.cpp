@@ -459,10 +459,10 @@ ThrowCompletionOr<DeprecatedString> Value::to_deprecated_string(VM& vm) const
 ThrowCompletionOr<Utf16String> Value::to_utf16_string(VM& vm) const
 {
     if (is_string())
-        return TRY(as_string().utf16_string());
+        return as_string().utf16_string();
 
     auto utf8_string = TRY(to_string(vm));
-    return Utf16String::create(vm, utf8_string.bytes_as_string_view());
+    return Utf16String::create(utf8_string.bytes_as_string_view());
 }
 
 // 7.1.2 ToBoolean ( argument ), https://tc39.es/ecma262/#sec-toboolean

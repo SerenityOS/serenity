@@ -83,7 +83,7 @@ ThrowCompletionOr<String> PrimitiveString::utf8_string() const
         if (has_deprecated_string())
             m_utf8_string = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(*m_deprecated_string));
         else if (has_utf16_string())
-            m_utf8_string = TRY(m_utf16_string->to_utf8(vm));
+            m_utf8_string = m_utf16_string->to_utf8();
         else
             VERIFY_NOT_REACHED();
     }
@@ -105,7 +105,7 @@ ThrowCompletionOr<DeprecatedString> PrimitiveString::deprecated_string() const
         if (has_utf8_string())
             m_deprecated_string = m_utf8_string->to_deprecated_string();
         else if (has_utf16_string())
-            m_deprecated_string = TRY(m_utf16_string->to_deprecated_string(vm()));
+            m_deprecated_string = m_utf16_string->to_deprecated_string();
         else
             VERIFY_NOT_REACHED();
     }
@@ -113,25 +113,25 @@ ThrowCompletionOr<DeprecatedString> PrimitiveString::deprecated_string() const
     return *m_deprecated_string;
 }
 
-ThrowCompletionOr<Utf16String> PrimitiveString::utf16_string() const
+Utf16String PrimitiveString::utf16_string() const
 {
     resolve_rope_if_needed(EncodingPreference::UTF16);
 
     if (!has_utf16_string()) {
         if (has_utf8_string()) {
-            m_utf16_string = TRY(Utf16String::create(vm(), m_utf8_string->bytes_as_string_view()));
+            m_utf16_string = Utf16String::create(m_utf8_string->bytes_as_string_view());
         } else {
             VERIFY(has_deprecated_string());
-            m_utf16_string = TRY(Utf16String::create(vm(), *m_deprecated_string));
+            m_utf16_string = Utf16String::create(*m_deprecated_string);
         }
     }
 
     return *m_utf16_string;
 }
 
-ThrowCompletionOr<Utf16View> PrimitiveString::utf16_string_view() const
+Utf16View PrimitiveString::utf16_string_view() const
 {
-    (void)TRY(utf16_string());
+    (void)utf16_string();
     return m_utf16_string->view();
 }
 
@@ -141,18 +141,18 @@ ThrowCompletionOr<Optional<Value>> PrimitiveString::get(VM& vm, PropertyKey cons
         return Optional<Value> {};
     if (property_key.is_string()) {
         if (property_key.as_string() == vm.names.length.as_string()) {
-            auto length = TRY(utf16_string()).length_in_code_units();
+            auto length = utf16_string().length_in_code_units();
             return Value(static_cast<double>(length));
         }
     }
     auto index = MUST_OR_THROW_OOM(canonical_numeric_index_string(vm, property_key, CanonicalIndexMode::IgnoreNumericRoundtrip));
     if (!index.is_index())
         return Optional<Value> {};
-    auto str = TRY(utf16_string_view());
+    auto str = utf16_string_view();
     auto length = str.length_in_code_units();
     if (length <= index.as_index())
         return Optional<Value> {};
-    return create(vm, TRY(Utf16String::create(vm, str.substring_view(index.as_index(), 1))));
+    return create(vm, Utf16String::create(str.substring_view(index.as_index(), 1)));
 }
 
 NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, Utf16String string)
@@ -250,8 +250,6 @@ void PrimitiveString::resolve_rope_if_needed(EncodingPreference preference) cons
     if (!m_is_rope)
         return;
 
-    auto& vm = this->vm();
-
     // This vector will hold all the pieces of the rope that need to be assembled
     // into the resolved string.
     Vector<PrimitiveString const*> pieces;
@@ -277,9 +275,9 @@ void PrimitiveString::resolve_rope_if_needed(EncodingPreference preference) cons
 
         Utf16Data code_units;
         for (auto const* current : pieces)
-            code_units.extend(MUST(current->utf16_string()).string());
+            code_units.extend(current->utf16_string().string());
 
-        m_utf16_string = MUST(Utf16String::create(vm, move(code_units)));
+        m_utf16_string = Utf16String::create(move(code_units));
         m_is_rope = false;
         m_lhs = nullptr;
         m_rhs = nullptr;

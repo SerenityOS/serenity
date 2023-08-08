@@ -68,13 +68,13 @@ ThrowCompletionOr<NonnullGCPtr<Object>> create_segment_data_object(VM& vm, Segme
     auto segment = string.substring_view(start_index, end_index - start_index);
 
     // 7. Perform ! CreateDataPropertyOrThrow(result, "segment", segment).
-    MUST(result->create_data_property_or_throw(vm.names.segment, PrimitiveString::create(vm, TRY(Utf16String::create(vm, segment)))));
+    MUST(result->create_data_property_or_throw(vm.names.segment, PrimitiveString::create(vm, Utf16String::create(segment))));
 
     // 8. Perform ! CreateDataPropertyOrThrow(result, "index", 𝔽(startIndex)).
     MUST(result->create_data_property_or_throw(vm.names.index, Value(start_index)));
 
     // 9. Perform ! CreateDataPropertyOrThrow(result, "input", string).
-    MUST(result->create_data_property_or_throw(vm.names.input, PrimitiveString::create(vm, TRY(Utf16String::create(vm, string)))));
+    MUST(result->create_data_property_or_throw(vm.names.input, PrimitiveString::create(vm, Utf16String::create(string))));
 
     // 10. Let granularity be segmenter.[[SegmenterGranularity]].
     auto granularity = segmenter.segmenter_granularity();

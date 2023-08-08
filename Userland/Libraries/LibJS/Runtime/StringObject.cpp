@@ -40,7 +40,7 @@ void StringObject::initialize(Realm& realm)
     auto& vm = this->vm();
     Base::initialize(realm);
 
-    define_direct_property(vm.names.length, Value(MUST(m_string->utf16_string_view()).length_in_code_units()), 0);
+    define_direct_property(vm.names.length, Value(m_string->utf16_string_view().length_in_code_units()), 0);
 }
 
 void StringObject::visit_edges(Cell::Visitor& visitor)
@@ -73,7 +73,7 @@ static ThrowCompletionOr<Optional<PropertyDescriptor>> string_get_own_property(S
 
     // 6. Let str be S.[[StringData]].
     // 7. Assert: Type(str) is String.
-    auto str = TRY(string.primitive_string().utf16_string_view());
+    auto str = string.primitive_string().utf16_string_view();
 
     // 8. Let len be the length of str.
     auto length = str.length_in_code_units();
@@ -83,7 +83,7 @@ static ThrowCompletionOr<Optional<PropertyDescriptor>> string_get_own_property(S
         return Optional<PropertyDescriptor> {};
 
     // 10. Let resultStr be the String value of length 1, containing one code unit from str, specifically the code unit at index ℝ(index).
-    auto result_str = PrimitiveString::create(vm, TRY(Utf16String::create(vm, str.substring_view(index.as_index(), 1))));
+    auto result_str = PrimitiveString::create(vm, Utf16String::create(str.substring_view(index.as_index(), 1)));
 
     // 11. Return the PropertyDescriptor { [[Value]]: resultStr, [[Writable]]: false, [[Enumerable]]: true, [[Configurable]]: false }.
     return PropertyDescriptor {
@@ -140,7 +140,7 @@ ThrowCompletionOr<MarkedVector<Value>> StringObject::internal_own_property_keys(
     auto keys = MarkedVector<Value> { heap() };
 
     // 2. Let str be O.[[StringData]].
-    auto str = TRY(m_string->utf16_string_view());
+    auto str = m_string->utf16_string_view();
 
     // 3. Assert: Type(str) is String.
 

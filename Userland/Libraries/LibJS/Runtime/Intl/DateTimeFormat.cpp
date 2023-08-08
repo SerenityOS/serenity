@@ -633,7 +633,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
                 // 2. If the "length" property of fv is greater than 2, let fv be the substring of fv containing the last two characters.
                 // NOTE: The first length check here isn't enough, but lets us avoid UTF-16 transcoding when the formatted value is ASCII.
                 if (formatted_value.bytes_as_string_view().length() > 2) {
-                    auto utf16_formatted_value = TRY(Utf16String::create(vm, formatted_value));
+                    auto utf16_formatted_value = Utf16String::create(formatted_value);
                     if (utf16_formatted_value.length_in_code_units() > 2)
                         formatted_value = TRY_OR_THROW_OOM(vm, utf16_formatted_value.substring_view(utf16_formatted_value.length_in_code_units() - 2).to_utf8());
                 }
