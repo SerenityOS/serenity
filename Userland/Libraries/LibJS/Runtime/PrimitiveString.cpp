@@ -96,7 +96,7 @@ StringView PrimitiveString::utf8_string_view() const
     return m_utf8_string->bytes_as_string_view();
 }
 
-ThrowCompletionOr<DeprecatedString> PrimitiveString::deprecated_string() const
+DeprecatedString PrimitiveString::deprecated_string() const
 {
     resolve_rope_if_needed(EncodingPreference::UTF8);
 

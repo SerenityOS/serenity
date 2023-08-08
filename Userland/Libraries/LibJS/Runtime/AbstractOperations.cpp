@@ -595,7 +595,7 @@ ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller,
         .in_class_field_initializer = in_class_field_initializer,
     };
 
-    Parser parser { Lexer { TRY(code_string.deprecated_string()) }, Program::Type::Script, move(initial_state) };
+    Parser parser { Lexer { code_string.deprecated_string() }, Program::Type::Script, move(initial_state) };
     auto program = parser.parse_program(strict_caller == CallerMode::Strict);
 
     //     b. If script is a List of errors, throw a SyntaxError exception.
@@ -1545,7 +1545,7 @@ ThrowCompletionOr<Value> perform_import_call(VM& vm, Value specifier, Value opti
                 // 4. If supportedAssertions contains key, then
                 if (supported_assertions.contains_slow(property_key.to_string())) {
                     // a. Append { [[Key]]: key, [[Value]]: value } to assertions.
-                    assertions.empend(property_key.to_string(), TRY(value.as_string().deprecated_string()));
+                    assertions.empend(property_key.to_string(), value.as_string().deprecated_string());
                 }
             }
         }

@@ -42,7 +42,7 @@ public:
     [[nodiscard]] StringView utf8_string_view() const;
     bool has_utf8_string() const { return m_utf8_string.has_value(); }
 
-    ThrowCompletionOr<DeprecatedString> deprecated_string() const;
+    [[nodiscard]] DeprecatedString deprecated_string() const;
     bool has_deprecated_string() const { return m_deprecated_string.has_value(); }
 
     [[nodiscard]] Utf16String utf16_string() const;

@@ -20,7 +20,7 @@ ThrowCompletionOr<Value> IsHTMLDDA::call()
     auto& vm = this->vm();
     if (vm.argument_count() == 0)
         return js_null();
-    if (vm.argument(0).is_string() && TRY(vm.argument(0).as_string().deprecated_string()).is_empty())
+    if (vm.argument(0).is_string() && vm.argument(0).as_string().is_empty())
         return js_null();
     // Not sure if this really matters, INTERPRETING.md simply says:
     // * IsHTMLDDA - (present only in implementations that can provide it) an object that:

@@ -711,7 +711,7 @@ ThrowCompletionOr<Value> Value::to_number(VM& vm) const
         return Value(as_bool() ? 1 : 0);
     // 6. If argument is a String, return StringToNumber(argument).
     case STRING_TAG:
-        return string_to_number(TRY(as_string().deprecated_string()));
+        return string_to_number(as_string().deprecated_string());
     // 7. Assert: argument is an Object.
     case OBJECT_TAG: {
         // 8. Let primValue be ? ToPrimitive(argument, number).
@@ -765,7 +765,7 @@ ThrowCompletionOr<NonnullGCPtr<BigInt>> Value::to_bigint(VM& vm) const
         return primitive.as_bigint();
     case STRING_TAG: {
         // 1. Let n be ! StringToBigInt(prim).
-        auto bigint = string_to_bigint(vm, TRY(primitive.as_string().deprecated_string()));
+        auto bigint = string_to_bigint(vm, primitive.as_string().deprecated_string());
 
         // 2. If n is undefined, throw a SyntaxError exception.
         if (!bigint.has_value())
@@ -2205,8 +2205,7 @@ bool same_value_non_number(Value lhs, Value rhs)
     // 5. If x is a String, then
     if (lhs.is_string()) {
         // a. If x and y are exactly the same sequence of code units (same length and same code units at corresponding indices), return true; otherwise, return false.
-        // FIXME: Propagate this error.
-        return MUST(lhs.as_string().deprecated_string()) == MUST(rhs.as_string().deprecated_string());
+        return lhs.as_string().deprecated_string() == rhs.as_string().deprecated_string();
     }
 
     // 3. If x is undefined, return true.
@@ -2287,7 +2286,7 @@ ThrowCompletionOr<bool> is_loosely_equal(VM& vm, Value lhs, Value rhs)
     // 7. If Type(x) is BigInt and Type(y) is String, then
     if (lhs.is_bigint() && rhs.is_string()) {
         // a. Let n be StringToBigInt(y).
-        auto bigint = string_to_bigint(vm, TRY(rhs.as_string().deprecated_string()));
+        auto bigint = string_to_bigint(vm, rhs.as_string().deprecated_string());
 
         // b. If n is undefined, return false.
         if (!bigint.has_value())
@@ -2368,8 +2367,8 @@ ThrowCompletionOr<TriState> is_less_than(VM& vm, Value lhs, Value rhs, bool left
 
     // 3. If px is a String and py is a String, then
     if (x_primitive.is_string() && y_primitive.is_string()) {
-        auto x_string = TRY(x_primitive.as_string().deprecated_string());
-        auto y_string = TRY(y_primitive.as_string().deprecated_string());
+        auto x_string = x_primitive.as_string().deprecated_string();
+        auto y_string = y_primitive.as_string().deprecated_string();
 
         Utf8View x_code_points { x_string };
         Utf8View y_code_points { y_string };
@@ -2404,7 +2403,7 @@ ThrowCompletionOr<TriState> is_less_than(VM& vm, Value lhs, Value rhs, bool left
     // a. If px is a BigInt and py is a String, then
     if (x_primitive.is_bigint() && y_primitive.is_string()) {
         // i. Let ny be StringToBigInt(py).
-        auto y_bigint = string_to_bigint(vm, TRY(y_primitive.as_string().deprecated_string()));
+        auto y_bigint = string_to_bigint(vm, y_primitive.as_string().deprecated_string());
 
         // ii. If ny is undefined, return undefined.
         if (!y_bigint.has_value())
@@ -2419,7 +2418,7 @@ ThrowCompletionOr<TriState> is_less_than(VM& vm, Value lhs, Value rhs, bool left
     // b. If px is a String and py is a BigInt, then
     if (x_primitive.is_string() && y_primitive.is_bigint()) {
         // i. Let nx be StringToBigInt(px).
-        auto x_bigint = string_to_bigint(vm, TRY(x_primitive.as_string().deprecated_string()));
+        auto x_bigint = string_to_bigint(vm, x_primitive.as_string().deprecated_string());
 
         // ii. If nx is undefined, return undefined.
         if (!x_bigint.has_value())
