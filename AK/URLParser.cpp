@@ -632,7 +632,9 @@ ErrorOr<String> URLParser::serialize_host(URL::Host const& host)
     }
 
     // 3. Otherwise, host is a domain, opaque host, or empty host, return host.
-    return host.get<String>();
+    if (host.has<String>())
+        return host.get<String>();
+    return String {};
 }
 
 // https://url.spec.whatwg.org/#start-with-a-windows-drive-letter
