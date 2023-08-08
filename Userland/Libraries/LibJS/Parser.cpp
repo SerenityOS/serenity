@@ -503,6 +503,18 @@ public:
         return p;
     }
 
+    constexpr int get_unary(TokenType token) const
+    {
+        constexpr int operator_precedence_unary_plus_minus = 17;
+        switch (token) {
+        case TokenType::Minus:
+        case TokenType::Plus:
+            return operator_precedence_unary_plus_minus;
+        default:
+            return get(token);
+        }
+    }
+
 private:
     int m_token_precedence[cs_num_of_js_tokens];
 
@@ -1791,7 +1803,7 @@ static bool is_simple_assignment_target(Expression const& expression, bool allow
 NonnullRefPtr<Expression const> Parser::parse_unary_prefixed_expression()
 {
     auto rule_start = push_start();
-    auto precedence = g_operator_precedence.get(m_state.current_token.type());
+    auto precedence = g_operator_precedence.get_unary(m_state.current_token.type());
     auto associativity = operator_associativity(m_state.current_token.type());
     switch (m_state.current_token.type()) {
     case TokenType::PlusPlus: {
