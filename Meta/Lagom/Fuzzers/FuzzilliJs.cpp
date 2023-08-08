@@ -7,8 +7,8 @@
 #include <AK/Format.h>
 #include <AK/Function.h>
 #include <AK/StringView.h>
+#include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Forward.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Lexer.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -188,7 +188,8 @@ int main(int, char**)
     VERIFY(reprl_input != MAP_FAILED);
 
     auto vm = MUST(JS::VM::create());
-    auto interpreter = JS::Interpreter::create<TestRunnerGlobalObject>(*vm);
+    auto root_execution_context = JS::create_simple_execution_context<TestRunnerGlobalObject>(*vm);
+    auto& realm = *root_execution_context->realm;
 
     while (true) {
         unsigned action;
@@ -211,11 +212,11 @@ int main(int, char**)
         if (!Utf8View(js).validate()) {
             result = 1;
         } else {
-            auto parse_result = JS::Script::parse(js, interpreter->realm());
+            auto parse_result = JS::Script::parse(js, realm);
             if (parse_result.is_error()) {
                 result = 1;
             } else {
-                auto completion = interpreter->run(parse_result.value());
+                auto completion = vm->bytecode_interpreter().run(parse_result.value());
                 if (completion.is_error()) {
                     result = 1;
                 }

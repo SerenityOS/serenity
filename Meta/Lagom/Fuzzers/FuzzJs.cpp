@@ -6,7 +6,7 @@
  */
 
 #include <AK/StringView.h>
-#include <LibJS/Interpreter.h>
+#include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Script.h>
 #include <stddef.h>
@@ -19,10 +19,11 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
     if (!Utf8View(js).validate())
         return 0;
     auto vm = MUST(JS::VM::create());
-    auto interpreter = JS::Interpreter::create<JS::GlobalObject>(*vm);
-    auto parse_result = JS::Script::parse(js, interpreter->realm());
+    auto root_execution_context = JS::create_simple_execution_context<JS::GlobalObject>(*vm);
+    auto& realm = *root_execution_context->realm;
+    auto parse_result = JS::Script::parse(js, realm);
     if (!parse_result.is_error())
-        (void)interpreter->run(parse_result.value());
+        (void)vm->bytecode_interpreter().run(parse_result.value());
 
     return 0;
 }
