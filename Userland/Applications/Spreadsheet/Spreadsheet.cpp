@@ -264,7 +264,7 @@ Optional<Position> Sheet::position_from_url(const URL& url) const
         return {};
     }
 
-    if (url.scheme() != "spreadsheet" || url.host() != String::from_utf8_short_string("cell"sv)) {
+    if (url.scheme() != "spreadsheet" || url.host() != "cell"_short_string) {
         dbgln("Bad url: {}", url.to_deprecated_string());
         return {};
     }
@@ -757,7 +757,7 @@ URL Position::to_url(Sheet const& sheet) const
 {
     URL url;
     url.set_scheme("spreadsheet");
-    url.set_host(String::from_utf8_short_string("cell"sv));
+    url.set_host("cell"_short_string);
     url.set_paths({ DeprecatedString::number(getpid()) });
     url.set_fragment(to_cell_identifier(sheet));
     return url;
