@@ -8,8 +8,6 @@
 #include "Image.h"
 #include "Layer.h"
 #include <AK/JsonObject.h>
-#include <AK/Result.h>
-#include <LibCore/MappedFile.h>
 #include <LibImageDecoderClient/Client.h>
 
 namespace PixelPaint {
