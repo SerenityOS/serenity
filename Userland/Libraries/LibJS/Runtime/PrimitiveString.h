@@ -63,7 +63,7 @@ private:
         UTF8,
         UTF16,
     };
-    ThrowCompletionOr<void> resolve_rope_if_needed(EncodingPreference) const;
+    void resolve_rope_if_needed(EncodingPreference) const;
 
     mutable bool m_is_rope { false };
 
