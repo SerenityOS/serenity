@@ -165,7 +165,7 @@ bool EventHandler::handle_mousewheel(CSSPixelPoint position, unsigned button, un
 
     auto* containing_block = paintable->containing_block();
     while (containing_block) {
-        if (containing_block->is_scrollable()) {
+        if (containing_block->is_user_scrollable()) {
             const_cast<Painting::PaintableBox*>(containing_block->paintable_box())->handle_mousewheel({}, position, buttons, modifiers, wheel_delta_x * scroll_step_size, wheel_delta_y * scroll_step_size);
             break;
         }
