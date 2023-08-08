@@ -30,8 +30,6 @@ struct WorkItem {
     DeprecatedString destination;
     off_t size;
     mode_t mode { 0 };
-    uid_t uid { 0 };
-    gid_t gid { 0 };
 };
 
 static void report_warning(StringView message);
@@ -91,8 +89,6 @@ static ErrorOr<int> collect_copy_work_items(DeprecatedString const& source, Depr
             .destination = LexicalPath::join(destination, LexicalPath::basename(source)).string(),
             .size = st.st_size,
             .mode = st.st_mode,
-            .uid = st.st_uid,
-            .gid = st.st_gid,
         });
         return 0;
     }
@@ -104,8 +100,6 @@ static ErrorOr<int> collect_copy_work_items(DeprecatedString const& source, Depr
         .destination = LexicalPath::join(destination, LexicalPath::basename(source)).string(),
         .size = 0,
         .mode = st.st_mode,
-        .uid = st.st_uid,
-        .gid = st.st_gid,
     });
 
     Core::DirIterator dt(source, Core::DirIterator::SkipParentAndBaseDir);
@@ -142,8 +136,6 @@ static ErrorOr<int> collect_move_work_items(DeprecatedString const& source, Depr
             .destination = LexicalPath::join(destination, LexicalPath::basename(source)).string(),
             .size = st.st_size,
             .mode = st.st_mode,
-            .uid = st.st_uid,
-            .gid = st.st_gid,
         });
         return 0;
     }
@@ -155,8 +147,6 @@ static ErrorOr<int> collect_move_work_items(DeprecatedString const& source, Depr
         .destination = LexicalPath::join(destination, LexicalPath::basename(source)).string(),
         .size = 0,
         .mode = st.st_mode,
-        .uid = st.st_uid,
-        .gid = st.st_gid,
     });
 
     Core::DirIterator dt(source, Core::DirIterator::SkipParentAndBaseDir);
@@ -245,11 +235,10 @@ ErrorOr<int> execute_work_items(Vector<WorkItem> const& items)
             outln("PROGRESS {} {} {} {} {} {} {}", i, items.size(), executed_work_bytes, total_work_bytes, item_done, item.size, item.source);
         };
 
-        auto copy_file = [&](DeprecatedString const& source, DeprecatedString const& destination, mode_t mode, uid_t uid, gid_t gid) -> ErrorOr<int> {
+        auto copy_file = [&](DeprecatedString const& source, DeprecatedString const& destination, mode_t mode) -> ErrorOr<int> {
             auto source_file = TRY(Core::File::open(source, Core::File::OpenMode::Read));
             // FIXME: When the file already exists, let the user choose the next action instead of renaming it by default.
             auto destination_file = TRY(open_destination_file(destination, mode));
-            TRY(Core::System::fchown(destination_file->fd(), uid, gid));
             auto buffer = TRY(ByteBuffer::create_zeroed(64 * KiB));
 
             while (true) {
@@ -285,7 +274,6 @@ ErrorOr<int> execute_work_items(Vector<WorkItem> const& items)
             if (maybe_error.is_error() && maybe_error.error().code() != EEXIST)
                 return Error::from_syscall("mkdir"sv, -errno);
 
-            TRY(Core::System::chown(item.destination, item.uid, item.gid));
             break;
         }
 
@@ -295,7 +283,7 @@ ErrorOr<int> execute_work_items(Vector<WorkItem> const& items)
         }
 
         case WorkItem::Type::CopyFile: {
-            TRY(copy_file(item.source, item.destination, item.mode, item.uid, item.gid));
+            TRY(copy_file(item.source, item.destination, item.mode));
             break;
         }
 
@@ -323,7 +311,7 @@ ErrorOr<int> execute_work_items(Vector<WorkItem> const& items)
                 }
 
                 // EXDEV means we have to copy the file data and then remove the original
-                TRY(copy_file(item.source, item.destination, item.mode, item.uid, item.gid));
+                TRY(copy_file(item.source, item.destination, item.mode));
                 TRY(Core::System::unlink(item.source));
                 break;
             }
