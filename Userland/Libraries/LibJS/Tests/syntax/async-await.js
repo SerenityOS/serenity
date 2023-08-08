@@ -202,8 +202,7 @@ describe("await cannot be used in class static init blocks", () => {
 });
 
 describe("await thenables", () => {
-    // FIXME: This test crashes for AST, and fails for bytecode.
-    test.skip("async returning a thanable variable without fulfilling", () => {
+    test.xfail("async returning a thanable variable without fulfilling", () => {
         let isCalled = false;
         const obj = {
             then() {
