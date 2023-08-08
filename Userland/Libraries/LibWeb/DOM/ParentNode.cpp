@@ -39,7 +39,7 @@ WebIDL::ExceptionOr<JS::GCPtr<Element>> ParentNode::query_selector(StringView se
     // FIXME: This should be shadow-including. https://drafts.csswg.org/selectors-4/#match-a-selector-against-a-tree
     for_each_in_subtree_of_type<Element>([&](auto& element) {
         for (auto& selector : selectors) {
-            if (SelectorEngine::matches(selector, element, {}, this)) {
+            if (SelectorEngine::matches(selector, {}, element, {}, this)) {
                 result = &element;
                 return IterationDecision::Break;
             }
@@ -71,7 +71,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<NodeList>> ParentNode::query_selector_all(S
     // FIXME: This should be shadow-including. https://drafts.csswg.org/selectors-4/#match-a-selector-against-a-tree
     for_each_in_subtree_of_type<Element>([&](auto& element) {
         for (auto& selector : selectors) {
-            if (SelectorEngine::matches(selector, element, {}, this)) {
+            if (SelectorEngine::matches(selector, {}, element, {}, this)) {
                 elements.append(&element);
             }
         }

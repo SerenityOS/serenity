@@ -740,15 +740,28 @@ Parser::ParseErrorOr<Optional<Selector::SimpleSelector>> Parser::parse_simple_se
     if (peek_token_ends_selector())
         return Optional<Selector::SimpleSelector> {};
 
+    // Handle universal and tag-name types together, since both can be namespaced
+    if (auto qualified_name = parse_selector_qualified_name(tokens, AllowWildcardName::Yes); qualified_name.has_value()) {
+        if (qualified_name->name.name == "*"sv) {
+            return Selector::SimpleSelector {
+                .type = Selector::SimpleSelector::Type::Universal,
+                .value = qualified_name.release_value(),
+            };
+        }
+        return Selector::SimpleSelector {
+            .type = Selector::SimpleSelector::Type::TagName,
+            .value = qualified_name.release_value(),
+        };
+    }
+
     auto const& first_value = tokens.next_token();
 
     if (first_value.is(Token::Type::Delim)) {
         u32 delim = first_value.token().delim();
         switch (delim) {
         case '*':
-            return Selector::SimpleSelector {
-                .type = Selector::SimpleSelector::Type::Universal
-            };
+            // Handled already
+            VERIFY_NOT_REACHED();
         case '.': {
             if (peek_token_ends_selector())
                 return ParseError::SyntaxError;
@@ -787,13 +800,7 @@ Parser::ParseErrorOr<Optional<Selector::SimpleSelector>> Parser::parse_simple_se
             .value = Selector::SimpleSelector::Name { FlyString::from_utf8(first_value.token().hash_value()).release_value_but_fixme_should_propagate_errors() }
         };
     }
-    if (first_value.is(Token::Type::Ident)) {
-        return Selector::SimpleSelector {
-            .type = Selector::SimpleSelector::Type::TagName,
-            // FIXME: XML requires case-sensitivity for identifiers, while HTML does not. As such, this should be reworked if XML support is added.
-            .value = Selector::SimpleSelector::Name { FlyString::from_deprecated_fly_string(first_value.token().ident().to_lowercase_string()).release_value_but_fixme_should_propagate_errors() }
-        };
-    }
+
     if (first_value.is_block() && first_value.block().is_square())
         return TRY(parse_attribute_simple_selector(first_value));
 

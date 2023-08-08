@@ -183,7 +183,7 @@ public:
         };
 
         Type type;
-        Variant<Empty, Attribute, PseudoClass, PseudoElement, Name> value {};
+        Variant<Empty, Attribute, PseudoClass, PseudoElement, Name, QualifiedName> value {};
 
         Attribute const& attribute() const { return value.get<Attribute>(); }
         Attribute& attribute() { return value.get<Attribute>(); }
@@ -196,6 +196,8 @@ public:
         FlyString& name() { return value.get<Name>().name; }
         FlyString const& lowercase_name() const { return value.get<Name>().lowercase_name; }
         FlyString& lowercase_name() { return value.get<Name>().lowercase_name; }
+        QualifiedName const& qualified_name() const { return value.get<QualifiedName>(); }
+        QualifiedName& qualified_name() { return value.get<QualifiedName>(); }
 
         ErrorOr<String> serialize() const;
     };
