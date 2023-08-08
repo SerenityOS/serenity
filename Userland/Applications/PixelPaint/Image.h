@@ -11,6 +11,7 @@
 #include "Selection.h"
 #include <AK/HashTable.h>
 #include <AK/JsonObjectSerializer.h>
+#include <AK/Optional.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/Result.h>
@@ -48,7 +49,7 @@ public:
     static ErrorOr<NonnullRefPtr<Image>> create_from_pixel_paint_json(JsonObject const&);
     static ErrorOr<NonnullRefPtr<Image>> create_from_bitmap(NonnullRefPtr<Gfx::Bitmap> const&);
 
-    static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> decode_bitmap(ReadonlyBytes);
+    static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> decode_bitmap(ReadonlyBytes, Optional<StringView> guessed_mime_type);
 
     // This generates a new Bitmap with the final image (all layers composed according to their attributes.)
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> compose_bitmap(Gfx::BitmapFormat format) const;
