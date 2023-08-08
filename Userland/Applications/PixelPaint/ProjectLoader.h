@@ -18,7 +18,7 @@ public:
     ProjectLoader() = default;
     ~ProjectLoader() = default;
 
-    ErrorOr<void> load_from_file(NonnullOwnPtr<Core::File>);
+    ErrorOr<void> load_from_file(StringView filename, NonnullOwnPtr<Core::File>);
 
     bool is_raw_image() const { return m_is_raw_image; }
     RefPtr<Image> release_image() const { return move(m_image); }
