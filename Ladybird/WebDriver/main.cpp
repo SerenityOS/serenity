@@ -36,6 +36,7 @@ static ErrorOr<pid_t> launch_browser(DeprecatedString const& socket_path)
         Array {
             "--webdriver-content-path",
             socket_path.characters(),
+            "about:blank",
         });
 }
 
