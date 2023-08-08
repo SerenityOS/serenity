@@ -28,7 +28,7 @@ class WebContentView;
 class BrowserWindow : public QMainWindow {
     Q_OBJECT
 public:
-    explicit BrowserWindow(Browser::CookieJar&, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling, UseLagomNetworking);
+    explicit BrowserWindow(Optional<URL> const& initial_url, Browser::CookieJar&, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling, UseLagomNetworking);
 
     WebContentView& view() const { return m_current_tab->view(); }
 
