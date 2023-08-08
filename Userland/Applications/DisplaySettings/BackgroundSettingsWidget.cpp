@@ -60,7 +60,7 @@ ErrorOr<void> BackgroundSettingsWidget::create_frame()
     m_wallpaper_view->set_model(GUI::FileSystemModel::create("/res/wallpapers"));
     m_wallpaper_view->set_model_column(GUI::FileSystemModel::Column::Name);
     m_wallpaper_view->on_selection_change = [this] {
-        String path = String::from_utf8_short_string(""sv);
+        String path;
         if (!m_wallpaper_view->selection().is_empty()) {
             auto index = m_wallpaper_view->selection().first();
             auto path_or_error = String::from_deprecated_string(static_cast<GUI::FileSystemModel*>(m_wallpaper_view->model())->full_path(index));
