@@ -521,11 +521,10 @@ void BrowserWindow::open_file()
 
 void BrowserWindow::close_current_tab()
 {
-    auto count = m_tabs_container->count() - 1;
-    if (!count)
+    close_tab(m_tabs_container->currentIndex());
+
+    if (m_tabs_container->count() == 0)
         close();
-    else
-        close_tab(m_tabs_container->currentIndex());
 }
 
 int BrowserWindow::tab_index(Tab* tab)
