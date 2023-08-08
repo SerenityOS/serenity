@@ -44,9 +44,6 @@ if(NOT SERENITY_TOOLCHAIN STREQUAL "GNU")
 endif()
 set(SERENITY_BUILD_DIR "${PROJECT_BINARY_DIR}/../${SERENITY_ARCH}${SERENITY_BUILD_DIR_SUFFIX}")
 
-# Location to cache artifacts downloaded during the build.
-file(REAL_PATH "${PROJECT_BINARY_DIR}/../caches" SERENITY_CACHE_DIR)
-
 # Pkgconf incorrectly discards a sysroot if it doesn't match the start of the path to the
 # library file. To avoid that, resolve our sysroot into an absolute and canonical path
 # that matches pkgconf's result for resolving the library file.

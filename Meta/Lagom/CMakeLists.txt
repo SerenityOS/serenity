@@ -25,8 +25,6 @@ get_filename_component(
 )
 set(SerenityOS_SOURCE_DIR "${SERENITY_PROJECT_ROOT}" CACHE STRING "")
 
-set(SERENITY_CACHE_DIR "${PROJECT_BINARY_DIR}" CACHE STRING "")
-
 list(APPEND CMAKE_MODULE_PATH "${SERENITY_PROJECT_ROOT}/Meta/CMake")
 
 if(NOT COMMAND serenity_option)

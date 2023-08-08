@@ -51,7 +51,7 @@ jobs:
         os: '${{ parameters.os }}'
         arch: 'Lagom'
         toolchain: '$(toolchain)'
-        download_cache_path: 'Meta/Lagom/Build'
+        download_cache_path: 'Meta/Lagom/caches'
         serenity_ccache_path: '$(SERENITY_CCACHE_DIR)'
         with_remote_data_caches: true
         ${{ if eq(parameters.os, 'macOS') }}:
