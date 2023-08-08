@@ -31,7 +31,7 @@ void InstantPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 8.3.2 Temporal.Instant.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Temporal.Instant"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Temporal.Instant"_string), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.epochSeconds, epoch_seconds_getter, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.epochMilliseconds, epoch_milliseconds_getter, {}, Attribute::Configurable);

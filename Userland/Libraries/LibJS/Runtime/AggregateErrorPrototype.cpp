@@ -20,7 +20,7 @@ void AggregateErrorPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
     Base::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_direct_property(vm.names.name, MUST(PrimitiveString::create(vm, "AggregateError"sv)), attr);
+    define_direct_property(vm.names.name, PrimitiveString::create(vm, "AggregateError"_string), attr);
     define_direct_property(vm.names.message, PrimitiveString::create(vm, String {}), attr);
 }
 

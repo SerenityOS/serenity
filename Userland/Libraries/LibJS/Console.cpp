@@ -33,7 +33,7 @@ ThrowCompletionOr<Value> Console::assert_()
         return js_undefined();
 
     // 2. Let message be a string without any formatting specifiers indicating generically an assertion failure (such as "Assertion failed").
-    auto message = MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Assertion failed"sv));
+    auto message = PrimitiveString::create(vm, "Assertion failed"_string);
 
     // NOTE: Assemble `data` from the function arguments.
     MarkedVector<Value> data { vm.heap() };

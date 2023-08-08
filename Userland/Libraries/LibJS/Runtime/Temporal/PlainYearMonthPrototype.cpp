@@ -29,7 +29,7 @@ void PlainYearMonthPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 9.3.2 Temporal.PlainYearMonth.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Temporal.PlainYearMonth"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Temporal.PlainYearMonth"_string), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.calendar, calendar_getter, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.year, year_getter, {}, Attribute::Configurable);

@@ -104,7 +104,7 @@ ThrowCompletionOr<Value> PromiseAllSettledResolveElementFunction::resolve_elemen
     auto object = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 10. Perform ! CreateDataPropertyOrThrow(obj, "status", "fulfilled").
-    MUST(object->create_data_property_or_throw(vm.names.status, MUST_OR_THROW_OOM(PrimitiveString::create(vm, "fulfilled"sv))));
+    MUST(object->create_data_property_or_throw(vm.names.status, PrimitiveString::create(vm, "fulfilled"_string)));
 
     // 11. Perform ! CreateDataPropertyOrThrow(obj, "value", x).
     MUST(object->create_data_property_or_throw(vm.names.value, vm.argument(0)));
@@ -145,7 +145,7 @@ ThrowCompletionOr<Value> PromiseAllSettledRejectElementFunction::resolve_element
     auto object = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 10. Perform ! CreateDataPropertyOrThrow(obj, "status", "rejected").
-    MUST(object->create_data_property_or_throw(vm.names.status, MUST_OR_THROW_OOM(PrimitiveString::create(vm, "rejected"sv))));
+    MUST(object->create_data_property_or_throw(vm.names.status, PrimitiveString::create(vm, "rejected"_string)));
 
     // 11. Perform ! CreateDataPropertyOrThrow(obj, "reason", x).
     MUST(object->create_data_property_or_throw(vm.names.reason, vm.argument(0)));

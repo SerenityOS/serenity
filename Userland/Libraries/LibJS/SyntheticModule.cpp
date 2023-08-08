@@ -151,7 +151,7 @@ ThrowCompletionOr<NonnullGCPtr<Module>> parse_json_module(StringView source_text
     auto json_parse = realm.intrinsics().json_parse_function();
 
     // 2. Let json be ? Call(jsonParse, undefined, « sourceText »).
-    auto json = TRY(call(vm, *json_parse, js_undefined(), MUST_OR_THROW_OOM(PrimitiveString::create(realm.vm(), source_text))));
+    auto json = TRY(call(vm, *json_parse, js_undefined(), PrimitiveString::create(realm.vm(), source_text)));
 
     // 3. Return CreateDefaultExportSyntheticModule(json, realm, hostDefined).
     return SyntheticModule::create_default_export_synthetic_module(json, realm, filename);

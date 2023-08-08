@@ -33,7 +33,7 @@ void PlainDateTimePrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 5.3.2 Temporal.PlainDateTime.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Temporal.PlainDateTime"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Temporal.PlainDateTime"_string), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.calendar, calendar_getter, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.year, year_getter, {}, Attribute::Configurable);

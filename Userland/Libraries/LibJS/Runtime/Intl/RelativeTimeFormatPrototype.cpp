@@ -23,7 +23,7 @@ void RelativeTimeFormatPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 17.3.2 Intl.RelativeTimeFormat.prototype[ @@toStringTag ], https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat.prototype-toStringTag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Intl.RelativeTimeFormat"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Intl.RelativeTimeFormat"_string), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.format, format, 2, attr);
@@ -84,8 +84,8 @@ JS_DEFINE_NATIVE_FUNCTION(RelativeTimeFormatPrototype::resolved_options)
     //     c. Assert: v is not undefined.
     //     d. Perform ! CreateDataPropertyOrThrow(options, p, v).
     MUST(options->create_data_property_or_throw(vm.names.locale, PrimitiveString::create(vm, relative_time_format->locale())));
-    MUST(options->create_data_property_or_throw(vm.names.style, MUST_OR_THROW_OOM(PrimitiveString::create(vm, relative_time_format->style_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.numeric, MUST_OR_THROW_OOM(PrimitiveString::create(vm, relative_time_format->numeric_string()))));
+    MUST(options->create_data_property_or_throw(vm.names.style, PrimitiveString::create(vm, relative_time_format->style_string())));
+    MUST(options->create_data_property_or_throw(vm.names.numeric, PrimitiveString::create(vm, relative_time_format->numeric_string())));
     MUST(options->create_data_property_or_throw(vm.names.numberingSystem, PrimitiveString::create(vm, relative_time_format->numbering_system())));
 
     // 5. Return options.

@@ -20,7 +20,7 @@ void SuppressedErrorPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
     Base::initialize(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_direct_property(vm.names.name, MUST(PrimitiveString::create(vm, "SuppressedError"sv)), attr);
+    define_direct_property(vm.names.name, PrimitiveString::create(vm, "SuppressedError"_string), attr);
     define_direct_property(vm.names.message, PrimitiveString::create(vm, String {}), attr);
 }
 

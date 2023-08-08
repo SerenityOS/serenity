@@ -444,9 +444,9 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
 
     // 6. Return the String representation of this Number value using the radix specified by radixMV. Letters a-z are used for digits with values 10 through 35. The precise algorithm is implementation-defined, however the algorithm should be a generalization of that specified in 6.1.6.1.20.
     if (number_value.is_positive_infinity())
-        return MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Infinity"sv));
+        return PrimitiveString::create(vm, "Infinity"_string);
     if (number_value.is_negative_infinity())
-        return MUST_OR_THROW_OOM(PrimitiveString::create(vm, "-Infinity"sv));
+        return PrimitiveString::create(vm, "-Infinity"_string);
     if (number_value.is_nan())
         return PrimitiveString::create(vm, "NaN"_string);
     if (number_value.is_positive_zero() || number_value.is_negative_zero())

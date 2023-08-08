@@ -152,7 +152,7 @@ static ThrowCompletionOr<Value> not_(VM&, Value value)
 
 static ThrowCompletionOr<Value> typeof_(VM& vm, Value value)
 {
-    return MUST_OR_THROW_OOM(PrimitiveString::create(vm, value.typeof()));
+    return PrimitiveString::create(vm, value.typeof());
 }
 
 #define JS_DEFINE_COMMON_UNARY_OP(OpTitleCase, op_snake_case)                                   \
@@ -1427,7 +1427,7 @@ ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& inte
     // 2. If val is a Reference Record, then
     //    a. If IsUnresolvableReference(val) is true, return "undefined".
     if (reference.is_unresolvable()) {
-        interpreter.accumulator() = MUST_OR_THROW_OOM(PrimitiveString::create(vm, "undefined"sv));
+        interpreter.accumulator() = PrimitiveString::create(vm, "undefined"_string);
         return {};
     }
 
@@ -1436,7 +1436,7 @@ ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& inte
 
     // 4. NOTE: This step is replaced in section B.3.6.3.
     // 5. Return a String according to Table 41.
-    interpreter.accumulator() = MUST_OR_THROW_OOM(PrimitiveString::create(vm, value.typeof()));
+    interpreter.accumulator() = PrimitiveString::create(vm, value.typeof());
     return {};
 }
 
@@ -1444,7 +1444,7 @@ ThrowCompletionOr<void> TypeofLocal::execute_impl(Bytecode::Interpreter& interpr
 {
     auto& vm = interpreter.vm();
     auto const& value = vm.running_execution_context().local_variables[m_index];
-    interpreter.accumulator() = MUST_OR_THROW_OOM(PrimitiveString::create(vm, value.typeof()));
+    interpreter.accumulator() = PrimitiveString::create(vm, value.typeof());
     return {};
 }
 

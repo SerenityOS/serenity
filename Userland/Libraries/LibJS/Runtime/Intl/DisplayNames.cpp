@@ -166,7 +166,7 @@ ThrowCompletionOr<Value> canonical_code_for_display_names(VM& vm, DisplayNames::
             return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, code, "dateTimeField"sv);
 
         // b. Return code.
-        return MUST_OR_THROW_OOM(PrimitiveString::create(vm, code));
+        return PrimitiveString::create(vm, code);
     }
 
     // 6. Assert: type is "currency".

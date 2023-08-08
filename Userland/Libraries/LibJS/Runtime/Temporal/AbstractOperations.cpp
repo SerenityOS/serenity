@@ -116,7 +116,7 @@ ThrowCompletionOr<Value> get_option(VM& vm, Object const& options, PropertyKey c
             [](Empty) -> ThrowCompletionOr<Value> { return js_undefined(); },
             [](bool b) -> ThrowCompletionOr<Value> { return Value(b); },
             [](double d) -> ThrowCompletionOr<Value> { return Value(d); },
-            [&vm](StringView s) -> ThrowCompletionOr<Value> { return MUST_OR_THROW_OOM(PrimitiveString::create(vm, s)); });
+            [&vm](StringView s) -> ThrowCompletionOr<Value> { return PrimitiveString::create(vm, s); });
     }
 
     // 5. If type is "boolean", then
@@ -602,7 +602,7 @@ ThrowCompletionOr<Value> to_relative_temporal_object(VM& vm, Object const& optio
         auto date_options = Object::create(realm, nullptr);
 
         // g. Perform ! CreateDataPropertyOrThrow(dateOptions, "overflow", "constrain").
-        MUST(date_options->create_data_property_or_throw(vm.names.overflow, MUST_OR_THROW_OOM(PrimitiveString::create(vm, "constrain"sv))));
+        MUST(date_options->create_data_property_or_throw(vm.names.overflow, PrimitiveString::create(vm, "constrain"_string)));
 
         // h. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, dateOptions).
         result = TRY(interpret_temporal_date_time_fields(vm, *calendar, *fields, date_options));

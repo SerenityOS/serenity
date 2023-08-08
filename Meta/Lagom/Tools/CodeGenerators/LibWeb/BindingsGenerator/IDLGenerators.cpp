@@ -2682,7 +2682,7 @@ void @class_name@::initialize(JS::Realm& realm)
     }
 
     generator.append(R"~~~(
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(JS::PrimitiveString::create(vm, "@namespaced_name@"sv)), JS::Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), JS::PrimitiveString::create(vm, "@namespaced_name@"_string), JS::Attribute::Configurable);
 )~~~");
 
     if (!is_global_interface) {
@@ -3888,7 +3888,7 @@ void @prototype_class@::initialize(JS::Realm& realm)
     auto& vm = this->vm();
     Base::initialize(realm);
     define_native_function(realm, vm.names.next, next, 0, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(JS::PrimitiveString::create(vm, "Iterator"sv)), JS::Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), JS::PrimitiveString::create(vm, "Iterator"_string), JS::Attribute::Configurable);
 }
 
 static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm)

@@ -120,9 +120,9 @@ ThrowCompletionOr<Vector<String>> calendar_fields(VM& vm, Object& calendar, Vect
     }
 
     // 3. Let fieldsArray be ? Call(fields, calendar, « CreateArrayFromList(fieldNames) »).
-    auto field_names_array = MUST_OR_THROW_OOM(Array::try_create_from<StringView>(vm, realm, field_names, [&](auto value) {
+    auto field_names_array = Array::create_from<StringView>(realm, field_names, [&](auto value) {
         return PrimitiveString::create(vm, value);
-    }));
+    });
     auto fields_array = TRY(call(vm, *fields, &calendar, field_names_array));
 
     // 4. Return ? IterableToListOfType(fieldsArray, « String »).

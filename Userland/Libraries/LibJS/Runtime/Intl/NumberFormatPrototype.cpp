@@ -26,7 +26,7 @@ void NumberFormatPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 15.3.2 Intl.NumberFormat.prototype [ @@toStringTag ], https://tc39.es/ecma402/#sec-intl.numberformat.prototype-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Intl.NumberFormat"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Intl.NumberFormat"_string), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.format, format, nullptr, Attribute::Configurable);
 
@@ -152,17 +152,17 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::resolved_options)
     //         i. Perform ! CreateDataPropertyOrThrow(options, p, v).
     MUST(options->create_data_property_or_throw(vm.names.locale, PrimitiveString::create(vm, number_format->locale())));
     MUST(options->create_data_property_or_throw(vm.names.numberingSystem, PrimitiveString::create(vm, number_format->numbering_system())));
-    MUST(options->create_data_property_or_throw(vm.names.style, MUST_OR_THROW_OOM(PrimitiveString::create(vm, number_format->style_string()))));
+    MUST(options->create_data_property_or_throw(vm.names.style, PrimitiveString::create(vm, number_format->style_string())));
     if (number_format->has_currency())
         MUST(options->create_data_property_or_throw(vm.names.currency, PrimitiveString::create(vm, number_format->currency())));
     if (number_format->has_currency_display())
-        MUST(options->create_data_property_or_throw(vm.names.currencyDisplay, MUST_OR_THROW_OOM(PrimitiveString::create(vm, number_format->currency_display_string()))));
+        MUST(options->create_data_property_or_throw(vm.names.currencyDisplay, PrimitiveString::create(vm, number_format->currency_display_string())));
     if (number_format->has_currency_sign())
-        MUST(options->create_data_property_or_throw(vm.names.currencySign, MUST_OR_THROW_OOM(PrimitiveString::create(vm, number_format->currency_sign_string()))));
+        MUST(options->create_data_property_or_throw(vm.names.currencySign, PrimitiveString::create(vm, number_format->currency_sign_string())));
     if (number_format->has_unit())
         MUST(options->create_data_property_or_throw(vm.names.unit, PrimitiveString::create(vm, number_format->unit())));
     if (number_format->has_unit_display())
-        MUST(options->create_data_property_or_throw(vm.names.unitDisplay, MUST_OR_THROW_OOM(PrimitiveString::create(vm, number_format->unit_display_string()))));
+        MUST(options->create_data_property_or_throw(vm.names.unitDisplay, PrimitiveString::create(vm, number_format->unit_display_string())));
     MUST(options->create_data_property_or_throw(vm.names.minimumIntegerDigits, Value(number_format->min_integer_digits())));
     if (number_format->has_min_fraction_digits())
         MUST(options->create_data_property_or_throw(vm.names.minimumFractionDigits, Value(number_format->min_fraction_digits())));
@@ -173,29 +173,29 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::resolved_options)
     if (number_format->has_max_significant_digits())
         MUST(options->create_data_property_or_throw(vm.names.maximumSignificantDigits, Value(number_format->max_significant_digits())));
     MUST(options->create_data_property_or_throw(vm.names.useGrouping, MUST_OR_THROW_OOM(number_format->use_grouping_to_value(vm))));
-    MUST(options->create_data_property_or_throw(vm.names.notation, MUST_OR_THROW_OOM(PrimitiveString::create(vm, number_format->notation_string()))));
+    MUST(options->create_data_property_or_throw(vm.names.notation, PrimitiveString::create(vm, number_format->notation_string())));
     if (number_format->has_compact_display())
-        MUST(options->create_data_property_or_throw(vm.names.compactDisplay, MUST_OR_THROW_OOM(PrimitiveString::create(vm, number_format->compact_display_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.signDisplay, MUST_OR_THROW_OOM(PrimitiveString::create(vm, number_format->sign_display_string()))));
-    MUST(options->create_data_property_or_throw(vm.names.roundingMode, MUST_OR_THROW_OOM(PrimitiveString::create(vm, number_format->rounding_mode_string()))));
+        MUST(options->create_data_property_or_throw(vm.names.compactDisplay, PrimitiveString::create(vm, number_format->compact_display_string())));
+    MUST(options->create_data_property_or_throw(vm.names.signDisplay, PrimitiveString::create(vm, number_format->sign_display_string())));
+    MUST(options->create_data_property_or_throw(vm.names.roundingMode, PrimitiveString::create(vm, number_format->rounding_mode_string())));
     MUST(options->create_data_property_or_throw(vm.names.roundingIncrement, Value(number_format->rounding_increment())));
-    MUST(options->create_data_property_or_throw(vm.names.trailingZeroDisplay, MUST_OR_THROW_OOM(PrimitiveString::create(vm, number_format->trailing_zero_display_string()))));
+    MUST(options->create_data_property_or_throw(vm.names.trailingZeroDisplay, PrimitiveString::create(vm, number_format->trailing_zero_display_string())));
 
     switch (number_format->rounding_type()) {
     // 6. If nf.[[RoundingType]] is morePrecision, then
     case NumberFormatBase::RoundingType::MorePrecision:
         // a. Perform ! CreateDataPropertyOrThrow(options, "roundingPriority", "morePrecision").
-        MUST(options->create_data_property_or_throw(vm.names.roundingPriority, MUST_OR_THROW_OOM(PrimitiveString::create(vm, "morePrecision"sv))));
+        MUST(options->create_data_property_or_throw(vm.names.roundingPriority, PrimitiveString::create(vm, "morePrecision"_string)));
         break;
     // 7. Else if nf.[[RoundingType]] is lessPrecision, then
     case NumberFormatBase::RoundingType::LessPrecision:
         // a. Perform ! CreateDataPropertyOrThrow(options, "roundingPriority", "lessPrecision").
-        MUST(options->create_data_property_or_throw(vm.names.roundingPriority, MUST_OR_THROW_OOM(PrimitiveString::create(vm, "lessPrecision"sv))));
+        MUST(options->create_data_property_or_throw(vm.names.roundingPriority, PrimitiveString::create(vm, "lessPrecision"_string)));
         break;
     // 8. Else,
     default:
         // a. Perform ! CreateDataPropertyOrThrow(options, "roundingPriority", "auto").
-        MUST(options->create_data_property_or_throw(vm.names.roundingPriority, MUST_OR_THROW_OOM(PrimitiveString::create(vm, "auto"sv))));
+        MUST(options->create_data_property_or_throw(vm.names.roundingPriority, PrimitiveString::create(vm, "auto"_string)));
         break;
     }
 

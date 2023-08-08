@@ -27,7 +27,7 @@ void PlainMonthDayPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 10.3.2 Temporal.PlainMonthDay.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Temporal.PlainMonthDay"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Temporal.PlainMonthDay"_string), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.calendar, calendar_getter, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.monthCode, month_code_getter, {}, Attribute::Configurable);

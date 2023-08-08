@@ -88,7 +88,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collat
     // 24. If relevantExtensionKeys contains "kn", then
     if (relevant_extension_keys.span().contains_slow("kn"sv) && result.kn.has_value()) {
         // a. Set collator.[[Numeric]] to SameValue(r.[[kn]], "true").
-        collator.set_numeric(same_value(PrimitiveString::create(vm, result.kn.release_value()), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "true"sv))));
+        collator.set_numeric(same_value(PrimitiveString::create(vm, result.kn.release_value()), PrimitiveString::create(vm, "true"_string)));
     }
 
     // 25. If relevantExtensionKeys contains "kf", then
@@ -105,14 +105,14 @@ static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collat
         // a. If usage is "sort", then
         if (collator.usage() == Collator::Usage::Sort) {
             // i. Let sensitivity be "variant".
-            sensitivity = MUST_OR_THROW_OOM(PrimitiveString::create(vm, "variant"sv));
+            sensitivity = PrimitiveString::create(vm, "variant"_string);
         }
         // b. Else,
         else {
             // i. Let dataLocale be r.[[dataLocale]].
             // ii. Let dataLocaleData be localeData.[[<dataLocale>]].
             // iii. Let sensitivity be dataLocaleData.[[sensitivity]].
-            sensitivity = MUST_OR_THROW_OOM(PrimitiveString::create(vm, "base"sv));
+            sensitivity = PrimitiveString::create(vm, "base"_string);
         }
     }
 

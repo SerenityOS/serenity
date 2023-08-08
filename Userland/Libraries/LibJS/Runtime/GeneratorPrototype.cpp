@@ -24,7 +24,7 @@ void GeneratorPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.throw_, throw_, 1, attr);
 
     // 27.5.1.5 Generator.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-generator.prototype-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Generator"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Generator"_string), Attribute::Configurable);
 }
 
 // 27.5.1.2 Generator.prototype.next ( value ), https://tc39.es/ecma262/#sec-generator.prototype.next

@@ -25,7 +25,7 @@ void IteratorHelperPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.return_, return_, 0, attr);
 
     // 3.1.2.1.3 %IteratorHelperPrototype% [ @@toStringTag ], https://tc39.es/proposal-iterator-helpers/#sec-%iteratorhelperprototype%-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Iterator Helper"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Iterator Helper"_string), Attribute::Configurable);
 }
 
 // 3.1.2.1.1 %IteratorHelperPrototype%.next ( ), https://tc39.es/proposal-iterator-helpers/#sec-%iteratorhelperprototype%.next

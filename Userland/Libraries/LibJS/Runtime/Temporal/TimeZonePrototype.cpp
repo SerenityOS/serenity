@@ -42,7 +42,7 @@ void TimeZonePrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.toJSON, to_json, 0, attr);
 
     // 11.4.2 Temporal.TimeZone.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype-@@tostringtag
-    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST(PrimitiveString::create(vm, "Temporal.TimeZone"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Temporal.TimeZone"_string), Attribute::Configurable);
 }
 
 // 11.4.3 get Temporal.TimeZone.prototype.id, https://tc39.es/proposal-temporal/#sec-get-temporal.timezone.prototype.id
