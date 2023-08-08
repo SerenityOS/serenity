@@ -101,8 +101,9 @@ private:
         }
     }
 
-    size_t m_max_allocations_between_gc { 100000 };
-    size_t m_allocations_since_last_gc { 0 };
+    static constexpr size_t GC_MIN_BYTES_THRESHOLD { 4 * 1024 * 1024 };
+    size_t m_gc_bytes_threshold { GC_MIN_BYTES_THRESHOLD };
+    size_t m_allocated_bytes_since_last_gc { 0 };
 
     bool m_should_collect_on_every_allocation { false };
 
