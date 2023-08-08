@@ -1,22 +1,31 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=scummvm
-useconfigure="true"
-version="2.7.0"
+port='scummvm'
+useconfigure='true'
+version='2.7.1'
 files=(
-    "https://downloads.scummvm.org/frs/scummvm/${version}/scummvm-${version}.tar.xz 444b1ffd61774fe867824e57bb3033c9998ffa8a4ed3a13246b01611d5cf9993"
+    "https://downloads.scummvm.org/frs/scummvm/${version}/scummvm-${version}.tar.xz d6bbf62e33154759a609d59f3034d71652ecdb64ed5c800156718ab1f1d5d063"
 )
-depends=("freetype" "libiconv" "libjpeg" "libmad" "libmpeg2" "libpng" "libtheora" "SDL2")
+depends=(
+    'freetype'
+    'libiconv'
+    'libjpeg'
+    'libmad'
+    'libmpeg2'
+    'libpng'
+    'libtheora'
+    'SDL2'
+)
 configopts=(
-    "--enable-engine=monkey4"
-    "--enable-release"
+    '--enable-engine=monkey4'
+    '--enable-release'
     "--with-sdl-prefix=${SERENITY_INSTALL_ROOT}/usr/local"
 )
-launcher_name=ScummVM
-launcher_category=Games
-launcher_command=/usr/local/bin/scummvm
-icon_file=icons/scummvm.ico
+launcher_name='ScummVM'
+launcher_category='Games'
+launcher_command='/usr/local/bin/scummvm'
+icon_file='icons/scummvm.ico'
 
-export CPPFLAGS="-fvisibility=hidden"
+export CPPFLAGS='-fvisibility=hidden'
 export FREETYPE2_CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/freetype2"
 export OPENGL_CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/include/LibGL"
 export SDL_CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/SDL2"

@@ -8,10 +8,10 @@ Subject: [PATCH] Teach configure about serenity
  1 file changed, 3 insertions(+)
 
 diff --git a/configure b/configure
-index a9f4b0e2..a061df20 100755
+index 5c28f7e35038236debbdeb3c396ce65f1189b13d..5bbf819fe31d24ac215d59f730bd64eac69c0bfd 100755
 --- a/configure
 +++ b/configure
-@@ -5543,6 +5543,9 @@ EOF
+@@ -5843,6 +5843,9 @@ EOF
  			mingw*)
  				OPENGL_LIBS="-lopengl32"
  				;;
