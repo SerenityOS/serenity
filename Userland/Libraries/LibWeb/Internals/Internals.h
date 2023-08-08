@@ -17,6 +17,7 @@ public:
     virtual ~Internals() override;
 
     void gc();
+    JS::Object* hit_test(double x, double y);
 
 private:
     explicit Internals(JS::Realm&);

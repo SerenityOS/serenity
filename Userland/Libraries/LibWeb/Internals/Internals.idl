@@ -1,5 +1,6 @@
 [Exposed=Nobody] interface Internals {
 
     undefined gc();
+    object hitTest(double x, double y);
 
 };
