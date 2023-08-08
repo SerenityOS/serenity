@@ -124,17 +124,31 @@ ErrorOr<String> Selector::SimpleSelector::serialize() const
     StringBuilder s;
     switch (type) {
     case Selector::SimpleSelector::Type::TagName:
-    case Selector::SimpleSelector::Type::Universal:
-        // FIXME: 1. If the namespace prefix maps to a namespace that is not the default namespace and is not the null namespace (not in a namespace) append the serialization of the namespace prefix as an identifier, followed by a "|" (U+007C) to s.
-        // FIXME: 2. If the namespace prefix maps to a namespace that is the null namespace (not in a namespace) append "|" (U+007C) to s.
-        // 3. If this is a type selector append the serialization of the element name as an identifier to s.
-        if (type == Selector::SimpleSelector::Type::TagName) {
-            TRY(serialize_an_identifier(s, name()));
+    case Selector::SimpleSelector::Type::Universal: {
+        auto qualified_name = this->qualified_name();
+        // 1. If the namespace prefix maps to a namespace that is not the default namespace and is not the null
+        //    namespace (not in a namespace) append the serialization of the namespace prefix as an identifier,
+        //    followed by a "|" (U+007C) to s.
+        if (qualified_name.namespace_type == QualifiedName::NamespaceType::Named) {
+            TRY(serialize_an_identifier(s, qualified_name.namespace_));
+            TRY(s.try_append('|'));
         }
+
+        // 2. If the namespace prefix maps to a namespace that is the null namespace (not in a namespace)
+        //    append "|" (U+007C) to s.
+        if (qualified_name.namespace_type == QualifiedName::NamespaceType::None)
+            TRY(s.try_append('|'));
+
+        // 3. If this is a type selector append the serialization of the element name as an identifier to s.
+        if (type == Selector::SimpleSelector::Type::TagName)
+            TRY(serialize_an_identifier(s, qualified_name.name.name));
+
         // 4. If this is a universal selector append "*" (U+002A) to s.
         if (type == Selector::SimpleSelector::Type::Universal)
             TRY(s.try_append('*'));
+
         break;
+    }
     case Selector::SimpleSelector::Type::Attribute: {
         auto& attribute = this->attribute();
 
@@ -300,11 +314,23 @@ ErrorOr<String> Selector::serialize() const
             && compound_selector.simple_selectors.first().type == Selector::SimpleSelector::Type::Universal) {
             TRY(s.try_append(TRY(compound_selector.simple_selectors.first().serialize())));
         }
-        // 2. Otherwise, for each simple selector in the compound selectors...
-        //    FIXME: ...that is not a universal selector of which the namespace prefix maps to a namespace that is not the default namespace...
-        //    ...serialize the simple selector and append the result to s.
+        // 2. Otherwise, for each simple selector in the compound selectors that is not a universal selector
+        //    of which the namespace prefix maps to a namespace that is not the default namespace
+        //    serialize the simple selector and append the result to s.
         else {
             for (auto& simple_selector : compound_selector.simple_selectors) {
+                if (simple_selector.type == SimpleSelector::Type::Universal) {
+                    auto qualified_name = simple_selector.qualified_name();
+                    if (qualified_name.namespace_type == SimpleSelector::QualifiedName::NamespaceType::Default)
+                        continue;
+                    // FIXME: I *think* if we have a namespace prefix that happens to equal the same as the default namespace,
+                    //        we also should skip it. But we don't have access to that here. eg:
+                    // <style>
+                    //   @namespace "http://example";
+                    //   @namespace foo "http://example";
+                    //   foo|*.bar { } /* This would skip the `foo|*` when serializing. */
+                    // </style>
+                }
                 TRY(s.try_append(TRY(simple_selector.serialize())));
             }
         }

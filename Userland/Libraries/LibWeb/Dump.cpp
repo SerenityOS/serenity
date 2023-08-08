@@ -447,8 +447,27 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
 
             builder.appendff("{}:", type_description);
             // FIXME: This is goofy
-            if (simple_selector.value.has<CSS::Selector::SimpleSelector::Name>())
+            if (simple_selector.value.has<CSS::Selector::SimpleSelector::Name>()) {
                 builder.append(simple_selector.name());
+            } else if (simple_selector.value.has<CSS::Selector::SimpleSelector::QualifiedName>()) {
+                auto qualified_name = simple_selector.qualified_name();
+                StringView namespace_type;
+                switch (qualified_name.namespace_type) {
+                case CSS::Selector::SimpleSelector::QualifiedName::NamespaceType::Default:
+                    namespace_type = "Default"sv;
+                    break;
+                case CSS::Selector::SimpleSelector::QualifiedName::NamespaceType::None:
+                    namespace_type = "None"sv;
+                    break;
+                case CSS::Selector::SimpleSelector::QualifiedName::NamespaceType::Any:
+                    namespace_type = "Any"sv;
+                    break;
+                case CSS::Selector::SimpleSelector::QualifiedName::NamespaceType::Named:
+                    namespace_type = "Named"sv;
+                    break;
+                }
+                builder.appendff(" [NamespaceType={}, Namespace='{}', Name='{}']", namespace_type, qualified_name.namespace_, qualified_name.name.name);
+            }
 
             if (simple_selector.type == CSS::Selector::SimpleSelector::Type::PseudoClass) {
                 auto const& pseudo_class = simple_selector.pseudo_class();

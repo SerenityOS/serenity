@@ -267,7 +267,7 @@ Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& e
     matching_rules.ensure_capacity(rules_to_run.size());
     for (auto const& rule_to_run : rules_to_run) {
         auto const& selector = rule_to_run.rule->selectors()[rule_to_run.selector_index];
-        if (SelectorEngine::matches(selector, element, pseudo_element))
+        if (SelectorEngine::matches(selector, *rule_to_run.sheet, element, pseudo_element))
             matching_rules.append(rule_to_run);
     }
     return matching_rules;
@@ -2614,7 +2614,7 @@ NonnullOwnPtr<StyleComputer::RuleCache> StyleComputer::make_rule_cache_for_casca
                         break;
                     }
                     if (simple_selector.type == CSS::Selector::SimpleSelector::Type::TagName) {
-                        rule_cache->rules_by_tag_name.ensure(simple_selector.name()).append(move(matching_rule));
+                        rule_cache->rules_by_tag_name.ensure(simple_selector.qualified_name().name.lowercase_name).append(move(matching_rule));
                         ++num_tag_name_rules;
                         added_to_bucket = true;
                         break;
