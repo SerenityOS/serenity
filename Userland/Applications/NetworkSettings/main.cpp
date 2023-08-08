@@ -36,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     auto app_icon = GUI::Icon::default_icon("network"sv);
     auto window = TRY(GUI::SettingsWindow::create("Network Settings", GUI::SettingsWindow::ShowDefaultsButton::No));
-    auto network_settings_widget = TRY(window->add_tab<NetworkSettings::NetworkSettingsWidget>("Network"_short_string, "network"sv));
+    auto network_settings_widget = TRY(window->add_tab<NetworkSettings::NetworkSettingsWidget>("Network"_string, "network"sv));
     if (!adapter.is_null()) {
         network_settings_widget->switch_adapter(adapter);
     }

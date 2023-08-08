@@ -51,11 +51,11 @@ ErrorOr<String> RunningProcessesModel::column_name(int column_index) const
     case Column::Icon:
         return String {};
     case Column::PID:
-        return "PID"_short_string;
+        return "PID"_string;
     case Column::UID:
-        return "UID"_short_string;
+        return "UID"_string;
     case Column::Name:
-        return "Name"_short_string;
+        return "Name"_string;
     }
     VERIFY_NOT_REACHED();
 }

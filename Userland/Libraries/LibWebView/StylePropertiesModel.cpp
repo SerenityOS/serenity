@@ -34,9 +34,9 @@ ErrorOr<String> StylePropertiesModel::column_name(int column_index) const
 {
     switch (column_index) {
     case Column::PropertyName:
-        return "Name"_short_string;
+        return "Name"_string;
     case Column::PropertyValue:
-        return "Value"_short_string;
+        return "Value"_string;
     default:
         VERIFY_NOT_REACHED();
     }

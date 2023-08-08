@@ -168,7 +168,7 @@ ErrorOr<GUI::Widget*> LassoSelectTool::get_properties_widget()
     (void)TRY(mode_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
     auto mode_label = TRY(mode_container->try_add<GUI::Label>());
-    mode_label->set_text("Mode:"_short_string);
+    mode_label->set_text("Mode:"_string);
     mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     mode_label->set_fixed_size(80, 20);
 

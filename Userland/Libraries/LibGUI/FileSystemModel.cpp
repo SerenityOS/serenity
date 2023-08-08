@@ -768,19 +768,19 @@ ErrorOr<String> FileSystemModel::column_name(int column) const
     case Column::Icon:
         return String {};
     case Column::Name:
-        return "Name"_short_string;
+        return "Name"_string;
     case Column::Size:
-        return "Size"_short_string;
+        return "Size"_string;
     case Column::User:
-        return "User"_short_string;
+        return "User"_string;
     case Column::Group:
-        return "Group"_short_string;
+        return "Group"_string;
     case Column::Permissions:
-        return "Mode"_short_string;
+        return "Mode"_string;
     case Column::ModificationTime:
         return "Modified"_string;
     case Column::Inode:
-        return "Inode"_short_string;
+        return "Inode"_string;
     case Column::SymlinkTarget:
         return "Symlink target"_string;
     }

@@ -214,7 +214,7 @@ void Field::reset()
     m_first_click = true;
     set_updates_enabled(false);
     m_time_elapsed = 0;
-    m_time_label.set_text("00:00"_short_string);
+    m_time_label.set_text("00:00"_string);
     m_flags_left = m_mine_count;
     m_flag_label.set_text(String::number(m_flags_left).release_value_but_fixme_should_propagate_errors());
     m_timer->stop();

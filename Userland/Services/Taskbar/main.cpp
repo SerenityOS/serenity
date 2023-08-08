@@ -117,7 +117,7 @@ ErrorOr<Vector<DeprecatedString>> discover_apps_and_categories()
 ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
 {
     Vector<DeprecatedString> const sorted_app_categories = TRY(discover_apps_and_categories());
-    auto system_menu = TRY(GUI::Menu::try_create("\xE2\x9A\xA1"_short_string)); // HIGH VOLTAGE SIGN
+    auto system_menu = TRY(GUI::Menu::try_create("\xE2\x9A\xA1"_string)); // HIGH VOLTAGE SIGN
 
     system_menu->add_action(GUI::Action::create("&About SerenityOS", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/ladyball.png"sv)), [&](auto&) {
         GUI::Process::spawn_or_show_error(&window, "/bin/About"sv);
@@ -205,7 +205,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
     g_themes_group.set_exclusive(true);
     g_themes_group.set_unchecking_allowed(false);
 
-    g_themes_menu = &system_menu->add_submenu("&Themes"_short_string);
+    g_themes_menu = &system_menu->add_submenu("&Themes"_string);
     g_themes_menu->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/themes.png"sv)));
 
     g_themes = TRY(Gfx::list_installed_system_themes());

@@ -103,7 +103,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     auto& button_container = add<GUI::Widget>();
     button_container.set_layout<GUI::HorizontalBoxLayout>();
     button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
-    m_cancel_button = button_container.add<GUI::Button>("Cancel"_short_string);
+    m_cancel_button = button_container.add<GUI::Button>("Cancel"_string);
     m_cancel_button->set_fixed_size(100, 22);
     m_cancel_button->on_click = [this](auto) {
         bool success = m_download->stop();
@@ -111,7 +111,7 @@ DownloadWidget::DownloadWidget(const URL& url)
         window()->close();
     };
 
-    m_close_button = button_container.add<GUI::Button>("OK"_short_string);
+    m_close_button = button_container.add<GUI::Button>("OK"_string);
     m_close_button->set_enabled(false);
     m_close_button->set_fixed_size(100, 22);
     m_close_button->on_click = [this](auto) {

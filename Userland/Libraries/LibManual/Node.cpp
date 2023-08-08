@@ -82,7 +82,7 @@ ErrorOr<NonnullRefPtr<PageNode const>> Node::try_create_from_query(Vector<String
 
 ErrorOr<NonnullRefPtr<Node const>> Node::try_find_from_help_url(URL const& url)
 {
-    if (url.host() != "man"_short_string)
+    if (url.host() != "man"_string)
         return Error::from_string_view("Bad help operation"sv);
     if (url.path_segment_count() < 2)
         return Error::from_string_view("Bad help page URL"sv);

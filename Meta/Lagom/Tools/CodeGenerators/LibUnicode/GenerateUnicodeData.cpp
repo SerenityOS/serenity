@@ -1071,12 +1071,12 @@ static constexpr Array<@mapping_type@, @size@> s_@name@_mappings { {
 
         auto optional_code_point_to_string = [](auto const& code_point) -> ErrorOr<String> {
             if (!code_point.has_value())
-                return "-1"_short_string;
+                return "-1"_string;
             return String::number(*code_point);
         };
         auto first_index_to_string = [](auto const& list) -> ErrorOr<String> {
             if (list.is_empty())
-                return "0"_short_string;
+                return "0"_string;
             return String::number(list.first());
         };
 

@@ -56,7 +56,7 @@ CellTypeDialog::CellTypeDialog(Vector<Position> const& positions, Sheet& sheet, 
     buttonbox.set_shrink_to_fit(true);
     buttonbox.set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 10);
     buttonbox.add_spacer().release_value_but_fixme_should_propagate_errors();
-    auto& ok_button = buttonbox.add<GUI::Button>("OK"_short_string);
+    auto& ok_button = buttonbox.add<GUI::Button>("OK"_string);
     ok_button.set_fixed_width(80);
     ok_button.on_click = [&](auto) { done(ExecResult::OK); };
 }
@@ -132,7 +132,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, Vector<Position> const& po
         m_conditional_formats = cell.conditional_formats();
     }
 
-    auto& type_tab = tabs.add_tab<GUI::Widget>("Type"_short_string);
+    auto& type_tab = tabs.add_tab<GUI::Widget>("Type"_string);
     type_tab.set_layout<GUI::HorizontalBoxLayout>(4);
     {
         auto& left_side = type_tab.add<GUI::Widget>();
@@ -264,7 +264,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, Vector<Position> const& po
         }
     }
 
-    auto& colors_tab = tabs.add_tab<GUI::Widget>("Color"_short_string);
+    auto& colors_tab = tabs.add_tab<GUI::Widget>("Color"_string);
     colors_tab.set_layout<GUI::VerticalBoxLayout>(4);
     {
         // Static formatting

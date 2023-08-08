@@ -824,7 +824,7 @@ ThrowCompletionOr<ISODateRecord> iso_date_from_fields(VM& vm, Object const& fiel
 
     // 2. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », « "year", "day" »).
     auto* prepared_fields = TRY(prepare_temporal_fields(vm, fields,
-        { "day"_short_string,
+        { "day"_string,
             "month"_string,
             "monthCode"_string,
             "year"_string },
@@ -890,7 +890,7 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(VM& vm, Object const& f
 
     // 2. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », « "day" »).
     auto* prepared_fields = TRY(prepare_temporal_fields(vm, fields,
-        { "day"_short_string,
+        { "day"_string,
             "month"_string,
             "monthCode"_string,
             "year"_string },

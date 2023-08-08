@@ -39,9 +39,9 @@ ErrorOr<String> StorageModel::column_name(int column) const
 {
     switch (column) {
     case Column::Key:
-        return "Key"_short_string;
+        return "Key"_string;
     case Column::Value:
-        return "Value"_short_string;
+        return "Value"_string;
     case Column::__Count:
         return String {};
     }

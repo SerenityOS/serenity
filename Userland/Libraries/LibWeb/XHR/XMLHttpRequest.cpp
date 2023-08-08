@@ -267,7 +267,7 @@ ErrorOr<MimeSniff::MimeType> XMLHttpRequest::get_response_mime_type() const
 
     // 2. If mimeType is failure, then set mimeType to text/xml.
     if (!mime_type.has_value())
-        return MimeSniff::MimeType::create("text"_string, "xml"_short_string);
+        return MimeSniff::MimeType::create("text"_string, "xml"_string);
 
     // 3. Return mimeType.
     return mime_type.release_value();

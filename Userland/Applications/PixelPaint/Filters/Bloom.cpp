@@ -69,7 +69,7 @@ ErrorOr<RefPtr<GUI::Widget>> Bloom::get_settings_widget()
         radius_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         radius_label->set_fixed_height(20);
 
-        auto radius_slider = TRY(radius_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_short_string));
+        auto radius_slider = TRY(radius_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_string));
         radius_slider->set_range(0, 50);
         radius_slider->set_value(m_blur_radius);
         radius_slider->on_change = [&](int value) {

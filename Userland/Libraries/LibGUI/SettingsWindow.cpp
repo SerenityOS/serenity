@@ -51,19 +51,19 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(DeprecatedString t
 
     TRY(button_container->add_spacer());
 
-    window->m_ok_button = TRY(button_container->try_add<GUI::DialogButton>("OK"_short_string));
+    window->m_ok_button = TRY(button_container->try_add<GUI::DialogButton>("OK"_string));
     window->m_ok_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) {
         window->apply_settings();
         GUI::Application::the()->quit();
     };
 
-    window->m_cancel_button = TRY(button_container->try_add<GUI::DialogButton>("Cancel"_short_string));
+    window->m_cancel_button = TRY(button_container->try_add<GUI::DialogButton>("Cancel"_string));
     window->m_cancel_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) {
         window->cancel_settings();
         GUI::Application::the()->quit();
     };
 
-    window->m_apply_button = TRY(button_container->try_add<GUI::DialogButton>("Apply"_short_string));
+    window->m_apply_button = TRY(button_container->try_add<GUI::DialogButton>("Apply"_string));
     window->m_apply_button->set_enabled(false);
     window->m_apply_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) {
         window->apply_settings();

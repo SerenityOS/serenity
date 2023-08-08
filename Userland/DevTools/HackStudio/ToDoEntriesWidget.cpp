@@ -36,11 +36,11 @@ public:
         case Column::Filename:
             return "Filename"_string;
         case Column::Text:
-            return "Text"_short_string;
+            return "Text"_string;
         case Column::Line:
-            return "Line"_short_string;
+            return "Line"_string;
         case Column::Column:
-            return "Col"_short_string;
+            return "Col"_string;
         default:
             VERIFY_NOT_REACHED();
         }

@@ -149,7 +149,7 @@ static constexpr int s_zoom_level_fit_image = 10;
 
 ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 {
-    auto file_menu = TRY(window.try_add_menu("&File"_short_string));
+    auto file_menu = TRY(window.try_add_menu("&File"_string));
 
     m_new_image_action = GUI::Action::create(
         "&New Image...", { Mod_Ctrl, Key_N }, g_icon_bag.filetype_pixelpaint, [&](auto&) {
@@ -223,7 +223,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(file_menu->try_add_action(*m_save_image_action));
     TRY(file_menu->try_add_action(*m_save_image_as_action));
 
-    m_export_submenu = TRY(file_menu->try_add_submenu("&Export"_short_string));
+    m_export_submenu = TRY(file_menu->try_add_submenu("&Export"_string));
 
     TRY(m_export_submenu->try_add_action(
         GUI::Action::create(
@@ -292,7 +292,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             GUI::Application::the()->quit();
     })));
 
-    m_edit_menu = TRY(window.try_add_menu("&Edit"_short_string));
+    m_edit_menu = TRY(window.try_add_menu("&Edit"_string));
 
     m_cut_action = GUI::CommonActions::make_cut_action([&](auto&) {
         auto* editor = current_image_editor();
@@ -488,7 +488,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 GUI::MessageBox::show_error(&window, MUST(String::formatted("Writing color palette failed: {}", result.release_error())));
         })));
 
-    m_view_menu = TRY(window.try_add_menu("&View"_short_string));
+    m_view_menu = TRY(window.try_add_menu("&View"_string));
 
     m_zoom_in_action = GUI::CommonActions::make_zoom_in_action(
         [&](auto&) {
@@ -600,18 +600,18 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     vectorscope_action->set_checked(Config::read_bool("PixelPaint"sv, "Scopes"sv, "ShowVectorscope"sv, false));
     m_vectorscope_widget->parent_widget()->set_visible(vectorscope_action->is_checked());
 
-    auto scopes_menu = TRY(m_view_menu->try_add_submenu("&Scopes"_short_string));
+    auto scopes_menu = TRY(m_view_menu->try_add_submenu("&Scopes"_string));
     TRY(scopes_menu->try_add_action(histogram_action));
     TRY(scopes_menu->try_add_action(vectorscope_action));
 
-    m_tool_menu = TRY(window.try_add_menu("&Tool"_short_string));
+    m_tool_menu = TRY(window.try_add_menu("&Tool"_string));
     m_toolbox->for_each_tool([&](auto& tool) {
         if (tool.action())
             m_tool_menu->add_action(*tool.action());
         return IterationDecision::Continue;
     });
 
-    m_image_menu = TRY(window.try_add_menu("&Image"_short_string));
+    m_image_menu = TRY(window.try_add_menu("&Image"_string));
     TRY(m_image_menu->try_add_action(GUI::Action::create(
         "Flip Image &Vertically", g_icon_bag.edit_flip_vertical, [&](auto&) {
             auto* editor = current_image_editor();
@@ -713,7 +713,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             editor->did_complete_action("Crop Image to Content"sv);
         })));
 
-    m_layer_menu = TRY(window.try_add_menu("&Layer"_short_string));
+    m_layer_menu = TRY(window.try_add_menu("&Layer"_string));
 
     m_layer_menu->on_visibility_change = [this](bool visible) {
         if (!visible)
@@ -810,7 +810,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         };
     };
 
-    auto mask_submenu = TRY(m_layer_menu->try_add_submenu("&Masks"_short_string));
+    auto mask_submenu = TRY(m_layer_menu->try_add_submenu("&Masks"_string));
 
     m_add_mask_action = GUI::Action::create(
         "Add M&ask", { Mod_Ctrl | Mod_Shift, Key_M }, g_icon_bag.add_mask, create_layer_mask_callback("Add Mask", [&](Layer* active_layer) {
@@ -1140,7 +1140,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             editor->did_complete_action("Crop Layer to Content"sv);
         })));
 
-    m_filter_menu = TRY(window.try_add_menu("&Filter"_short_string));
+    m_filter_menu = TRY(window.try_add_menu("&Filter"_string));
 
     TRY(m_filter_menu->try_add_action(GUI::Action::create("Filter &Gallery", g_icon_bag.filter, [&](auto&) {
         auto* editor = current_image_editor();
@@ -1164,7 +1164,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         }
     })));
 
-    auto help_menu = TRY(window.try_add_menu("&Help"_short_string));
+    auto help_menu = TRY(window.try_add_menu("&Help"_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(&window)));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Pixel Paint", GUI::Icon::default_icon("app-pixel-paint"sv), &window)));
 

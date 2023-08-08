@@ -249,7 +249,7 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_math_function(PropertyID property
                     if (auto default_value = parameter.get_deprecated_string("default"sv); default_value.has_value()) {
                         TRY(parameter_generator.set("parameter_default", TRY(String::formatted(" = RoundingStrategy::{}", TRY(title_casify(default_value.value()))))));
                     } else {
-                        TRY(parameter_generator.set("parameter_default", ""_short_string));
+                        TRY(parameter_generator.set("parameter_default", ""_string));
                     }
                 } else {
                     // NOTE: This assumes everything not handled above is a calculation node of some kind.
@@ -264,7 +264,7 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_math_function(PropertyID property
                     if (auto default_value = parameter.get_deprecated_string("default"sv); default_value.has_value()) {
                         TRY(parameter_generator.set("parameter_default", TRY(String::formatted(" = TRY(ConstantCalculationNode::create(CalculationNode::constant_type_from_string(\"{}\"sv).value()))", TRY(String::from_deprecated_string(default_value.value()))))));
                     } else {
-                        TRY(parameter_generator.set("parameter_default", ""_short_string));
+                        TRY(parameter_generator.set("parameter_default", ""_string));
                     }
                 }
 
@@ -351,7 +351,7 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_math_function(PropertyID property
                 TRY(parameter_generator.set("parameter_index"sv, TRY(String::number(parameter_index))));
 
                 if (parameter_type_string == "<rounding-strategy>"sv) {
-                    TRY(parameter_generator.set("release_value"sv, ""_short_string));
+                    TRY(parameter_generator.set("release_value"sv, ""_string));
                 } else {
                     // NOTE: This assumes everything not handled above is a calculation node of some kind.
                     TRY(parameter_generator.set("release_value"sv, ".release_nonnull()"_string));

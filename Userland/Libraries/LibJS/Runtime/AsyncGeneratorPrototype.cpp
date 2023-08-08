@@ -46,7 +46,7 @@ static ThrowCompletionOr<NonnullGCPtr<AsyncGenerator>> async_generator_validate(
 
     // 4. If generator.[[GeneratorBrand]] is not generatorBrand, throw a TypeError exception.
     if (async_generator.generator_brand() != generator_brand)
-        return vm.throw_completion<TypeError>(ErrorType::GeneratorBrandMismatch, async_generator.generator_brand().value_or("emp"_short_string), generator_brand.value_or("emp"_short_string));
+        return vm.throw_completion<TypeError>(ErrorType::GeneratorBrandMismatch, async_generator.generator_brand().value_or("emp"_string), generator_brand.value_or("emp"_string));
 
     // 5. Return unused.
     return async_generator;

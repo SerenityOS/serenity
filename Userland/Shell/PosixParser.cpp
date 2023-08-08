@@ -17,7 +17,7 @@
         AK_IGNORE_DIAGNOSTIC("-Wshadow",                                                                   \
                              auto _error = _value_or_error.release_error();)                               \
         if (_error.is_errno() && _error.code() == ENOMEM)                                                  \
-            return make_ref_counted<AST::SyntaxError>(position, "OOM"_short_string);                       \
+            return make_ref_counted<AST::SyntaxError>(position, "OOM"_string);                             \
         return make_ref_counted<AST::SyntaxError>(position, MUST(String::formatted("Error: {}", _error))); \
     }                                                                                                      \
     _value_or_error.release_value();                                                                       \
@@ -796,7 +796,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_pipe_sequence(bool is_negated)
                     Vector<NonnullRefPtr<AST::Node>> {
                         make_ref_counted<AST::BarewordLiteral>(
                             node->position(),
-                            "not"_short_string),
+                            "not"_string),
                         *static_cast<AST::CastToCommand&>(*node).inner() }));
         }
     }
@@ -1388,7 +1388,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_for_clause()
         name_position = peek().position;
         name = consume().value;
     } else {
-        name = "it"_short_string;
+        name = "it"_string;
         error(peek(), "Expected a variable name, not {}", peek().type_name());
     }
 
@@ -1926,7 +1926,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_simple_command()
     if (!definitions.is_empty()) {
         nodes.append(make_ref_counted<AST::BarewordLiteral>(
             empty_position(),
-            "--"_short_string));
+            "--"_string));
     }
 
     // WORD or io_redirect: IO_NUMBER or io_file

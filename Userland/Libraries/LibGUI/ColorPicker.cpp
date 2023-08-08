@@ -213,7 +213,7 @@ void ColorPicker::build_ui()
 
     auto& tab_widget = root_container->add<GUI::TabWidget>();
 
-    auto& tab_palette = tab_widget.add_tab<Widget>("Palette"_short_string);
+    auto& tab_palette = tab_widget.add_tab<Widget>("Palette"_string);
     tab_palette.set_layout<VerticalBoxLayout>(4, 4);
 
     build_ui_palette(tab_palette);
@@ -229,7 +229,7 @@ void ColorPicker::build_ui()
     button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
 
     auto& ok_button = button_container.add<DialogButton>();
-    ok_button.set_text("OK"_short_string);
+    ok_button.set_text("OK"_string);
     ok_button.on_click = [this](auto) {
         if (on_color_changed)
             on_color_changed(m_color);
@@ -238,7 +238,7 @@ void ColorPicker::build_ui()
     ok_button.set_default(true);
 
     auto& cancel_button = button_container.add<DialogButton>();
-    cancel_button.set_text("Cancel"_short_string);
+    cancel_button.set_text("Cancel"_string);
     cancel_button.on_click = [this](auto) {
         if (on_color_changed)
             on_color_changed(m_original_color);
@@ -337,7 +337,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     auto& html_label = html_container.add<GUI::Label>();
     html_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     html_label.set_preferred_width(48);
-    html_label.set_text("HTML:"_short_string);
+    html_label.set_text("HTML:"_string);
 
     m_html_text = html_container.add<GUI::TextBox>();
     m_html_text->set_text(m_color_has_alpha_channel ? m_color.to_deprecated_string() : m_color.to_deprecated_string_without_alpha());
@@ -393,16 +393,16 @@ void ColorPicker::build_ui_custom(Widget& root_container)
         };
 
         if (component == Red) {
-            rgb_label.set_text("Red:"_short_string);
+            rgb_label.set_text("Red:"_string);
             m_red_spinbox = spinbox;
         } else if (component == Green) {
-            rgb_label.set_text("Green:"_short_string);
+            rgb_label.set_text("Green:"_string);
             m_green_spinbox = spinbox;
         } else if (component == Blue) {
-            rgb_label.set_text("Blue:"_short_string);
+            rgb_label.set_text("Blue:"_string);
             m_blue_spinbox = spinbox;
         } else if (component == Alpha) {
-            rgb_label.set_text("Alpha:"_short_string);
+            rgb_label.set_text("Alpha:"_string);
             m_alpha_spinbox = spinbox;
         }
     };

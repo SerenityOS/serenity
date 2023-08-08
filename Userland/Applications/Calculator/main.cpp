@@ -39,12 +39,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto& file_menu = window->add_menu("&File"_short_string);
+    auto& file_menu = window->add_menu("&File"_string);
     file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
 
-    auto& edit_menu = window->add_menu("&Edit"_short_string);
+    auto& edit_menu = window->add_menu("&Edit"_string);
     edit_menu.add_action(GUI::CommonActions::make_copy_action([&](auto&) {
         GUI::Clipboard::the().set_plain_text(widget->get_entry());
     }));
@@ -71,7 +71,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         widget->set_typed_entry(Crypto::BigFraction { Crypto::SignedBigInteger(16180339887), power });
     }));
 
-    auto& round_menu = window->add_menu("&Round"_short_string);
+    auto& round_menu = window->add_menu("&Round"_string);
     GUI::ActionGroup preview_actions;
 
     static constexpr auto rounding_modes = Array { 0, 2, 4 };
@@ -121,7 +121,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     round_menu.action_at(last_rounding_mode.value())->activate();
 
-    auto& help_menu = window->add_menu("&Help"_short_string);
+    auto& help_menu = window->add_menu("&Help"_string);
     help_menu.add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu.add_action(GUI::CommonActions::make_about_action("Calculator", app_icon, window));
 

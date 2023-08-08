@@ -92,13 +92,13 @@ ShutdownDialog::ShutdownDialog()
     button_container.set_fixed_height(23);
     button_container.set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 5);
     button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
-    auto& ok_button = button_container.add<GUI::Button>("OK"_short_string);
+    auto& ok_button = button_container.add<GUI::Button>("OK"_string);
     ok_button.set_fixed_size(80, 23);
     ok_button.on_click = [this](auto) {
         done(ExecResult::OK);
     };
     ok_button.set_default(true);
-    auto& cancel_button = button_container.add<GUI::Button>("Cancel"_short_string);
+    auto& cancel_button = button_container.add<GUI::Button>("Cancel"_string);
     cancel_button.set_fixed_size(80, 23);
     cancel_button.on_click = [this](auto) {
         done(ExecResult::Cancel);

@@ -91,9 +91,9 @@ ErrorOr<Dialog::ExecResult> MessageBox::try_ask_about_unsaved_changes(Window* pa
     if (path.is_empty())
         box->m_yes_button->set_text("Save As..."_string);
     else
-        box->m_yes_button->set_text("Save"_short_string);
-    box->m_no_button->set_text("Discard"_short_string);
-    box->m_cancel_button->set_text("Cancel"_short_string);
+        box->m_yes_button->set_text("Save"_string);
+    box->m_no_button->set_text("Discard"_string);
+    box->m_cancel_button->set_text("Cancel"_string);
 
     return box->exec();
 }
@@ -181,13 +181,13 @@ ErrorOr<void> MessageBox::build()
 
     TRY(button_container->add_spacer());
     if (should_include_ok_button())
-        m_ok_button = TRY(add_button("OK"_short_string, ExecResult::OK));
+        m_ok_button = TRY(add_button("OK"_string, ExecResult::OK));
     if (should_include_yes_button())
-        m_yes_button = TRY(add_button("Yes"_short_string, ExecResult::Yes));
+        m_yes_button = TRY(add_button("Yes"_string, ExecResult::Yes));
     if (should_include_no_button())
-        m_no_button = TRY(add_button("No"_short_string, ExecResult::No));
+        m_no_button = TRY(add_button("No"_string, ExecResult::No));
     if (should_include_cancel_button())
-        m_cancel_button = TRY(add_button("Cancel"_short_string, ExecResult::Cancel));
+        m_cancel_button = TRY(add_button("Cancel"_string, ExecResult::Cancel));
     TRY(button_container->add_spacer());
 
     return {};

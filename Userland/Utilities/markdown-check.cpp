@@ -191,7 +191,7 @@ RecursionDecision MarkdownLinkage::visit(Markdown::Text::LinkNode const& link_no
             return RecursionDecision::Recurse;
         }
         if (url.scheme() == "help") {
-            if (url.host() != "man"_short_string) {
+            if (url.host() != "man"_string) {
                 warnln("help:// URL without 'man': {}", href);
                 m_has_invalid_link = true;
                 return RecursionDecision::Recurse;

@@ -1233,7 +1233,7 @@ ThrowCompletionOr<RawFormatResult> to_raw_fixed(VM& vm, MathematicalValue const&
 
     // 7. If n = 0, let m be "0". Otherwise, let m be the String consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
     result.formatted_string = n.is_zero()
-        ? "0"_short_string
+        ? "0"_string
         : MUST_OR_THROW_OOM(n.to_string(vm));
 
     // 8. If f ≠ 0, then

@@ -134,7 +134,7 @@ void MainWidget::load_file(FileSystemAccessClient::File file)
 
 ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 {
-    auto file_menu = TRY(window.try_add_menu("&File"_short_string));
+    auto file_menu = TRY(window.try_add_menu("&File"_string));
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
         LexicalPath initial_path(m_file_path.is_empty() ? "Untitled.gml" : m_file_path);
@@ -206,7 +206,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             GUI::Application::the()->quit();
     })));
 
-    auto edit_menu = TRY(window.try_add_menu("&Edit"_short_string));
+    auto edit_menu = TRY(window.try_add_menu("&Edit"_string));
     TRY(edit_menu->try_add_action(m_editor->undo_action()));
     TRY(edit_menu->try_add_action(m_editor->redo_action()));
     TRY(edit_menu->try_add_separator());
@@ -241,7 +241,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     vim_emulation_setting_action->set_checked(false);
     TRY(edit_menu->try_add_action(vim_emulation_setting_action));
 
-    auto view_menu = TRY(window.try_add_menu("&View"_short_string));
+    auto view_menu = TRY(window.try_add_menu("&View"_string));
     m_views_group.set_exclusive(true);
     m_views_group.set_unchecking_allowed(false);
 
@@ -272,7 +272,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         m_view_frame_action->activate();
     };
 
-    auto help_menu = TRY(window.try_add_menu("&Help"_short_string));
+    auto help_menu = TRY(window.try_add_menu("&Help"_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(&window)));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/GMLPlayground.md"), "/bin/Help");

@@ -37,7 +37,7 @@ ErrorOr<GUI::Widget*> ZoomTool::get_properties_widget()
         sensitivity_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         sensitivity_label->set_fixed_size(80, 20);
 
-        auto sensitivity_slider = TRY(sensitivity_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "%"_short_string));
+        auto sensitivity_slider = TRY(sensitivity_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "%"_string));
         sensitivity_slider->set_range(1, 100);
         sensitivity_slider->set_value(100 * m_sensitivity);
 

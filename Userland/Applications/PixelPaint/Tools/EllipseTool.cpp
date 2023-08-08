@@ -140,7 +140,7 @@ ErrorOr<GUI::Widget*> EllipseTool::get_properties_widget()
         thickness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         thickness_label->set_fixed_size(80, 20);
 
-        auto thickness_slider = TRY(thickness_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_short_string));
+        auto thickness_slider = TRY(thickness_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_string));
         thickness_slider->set_range(1, 10);
         thickness_slider->set_value(m_thickness);
 
@@ -152,13 +152,13 @@ ErrorOr<GUI::Widget*> EllipseTool::get_properties_widget()
         auto mode_container = TRY(properties_widget->try_add<GUI::Widget>());
         mode_container->set_fixed_height(70);
         (void)TRY(mode_container->try_set_layout<GUI::HorizontalBoxLayout>());
-        auto mode_label = TRY(mode_container->try_add<GUI::Label>("Mode:"_short_string));
+        auto mode_label = TRY(mode_container->try_add<GUI::Label>("Mode:"_string));
         mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
         auto mode_radio_container = TRY(mode_container->try_add<GUI::Widget>());
         (void)TRY(mode_radio_container->try_set_layout<GUI::VerticalBoxLayout>());
-        auto outline_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Outline"_short_string));
-        auto fill_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Fill"_short_string));
+        auto outline_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Outline"_string));
+        auto fill_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Fill"_string));
         auto aa_enable_checkbox = TRY(mode_radio_container->try_add<GUI::CheckBox>("Anti-alias"_string));
 
         aa_enable_checkbox->on_checked = [this](bool checked) {
@@ -197,7 +197,7 @@ ErrorOr<GUI::Widget*> EllipseTool::get_properties_widget()
             }
         };
 
-        auto multiply_label = TRY(aspect_container->try_add<GUI::Label>("x"_short_string));
+        auto multiply_label = TRY(aspect_container->try_add<GUI::Label>("x"_string));
         multiply_label->set_text_alignment(Gfx::TextAlignment::Center);
         multiply_label->set_fixed_size(10, 20);
 

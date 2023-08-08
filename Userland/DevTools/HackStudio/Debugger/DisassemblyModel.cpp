@@ -77,7 +77,7 @@ ErrorOr<String> DisassemblyModel::column_name(int column) const
 {
     switch (column) {
     case Column::Address:
-        return "Address"_short_string;
+        return "Address"_string;
     case Column::InstructionBytes:
         return "Insn Bytes"_string;
     case Column::Disassembly:

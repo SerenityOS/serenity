@@ -12,9 +12,9 @@ namespace DSP::Effects {
 
 Delay::Delay(NonnullRefPtr<Transport> transport)
     : EffectProcessor(move(transport))
-    , m_delay_decay("Decay"_short_string, 0.01, 0.99, 0.33, Logarithmic::No)
+    , m_delay_decay("Decay"_string, 0.01, 0.99, 0.33, Logarithmic::No)
     , m_delay_time("Delay Time"_string, 3, 2000, 900, Logarithmic::Yes)
-    , m_dry_gain("Dry"_short_string, 0, 1, 0.9, Logarithmic::No)
+    , m_dry_gain("Dry"_string, 0, 1, 0.9, Logarithmic::No)
 {
 
     m_parameters.append(m_delay_decay);
@@ -59,9 +59,9 @@ void Delay::process_impl(Signal const& input_signal, Signal& output_signal)
 
 Mastering::Mastering(NonnullRefPtr<Transport> transport)
     : EffectProcessor(move(transport))
-    , m_pan("Pan"_short_string, -1, 1, 0, Logarithmic::No)
-    , m_volume("Volume"_short_string, 0, 1, 1, Logarithmic::No)
-    , m_muted("Mute"_short_string, false)
+    , m_pan("Pan"_string, -1, 1, 0, Logarithmic::No)
+    , m_volume("Volume"_string, 0, 1, 1, Logarithmic::No)
+    , m_muted("Mute"_string, false)
 {
     m_parameters.append(m_muted);
     m_parameters.append(m_volume);

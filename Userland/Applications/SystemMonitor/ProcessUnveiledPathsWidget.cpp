@@ -23,7 +23,7 @@ ErrorOr<NonnullRefPtr<ProcessUnveiledPathsWidget>> ProcessUnveiledPathsWidget::t
     widget->m_table_view = TRY(widget->try_add<GUI::TableView>());
 
     Vector<GUI::JsonArrayModel::FieldSpec> pid_unveil_fields;
-    TRY(pid_unveil_fields.try_empend("path", "Path"_short_string, Gfx::TextAlignment::CenterLeft));
+    TRY(pid_unveil_fields.try_empend("path", "Path"_string, Gfx::TextAlignment::CenterLeft));
     TRY(pid_unveil_fields.try_empend("permissions", "Permissions"_string, Gfx::TextAlignment::CenterLeft));
 
     widget->m_model = GUI::JsonArrayModel::create({}, move(pid_unveil_fields));

@@ -257,7 +257,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     };
 
     auto& cancel_button = *widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
-    cancel_button.set_text("Cancel"_short_string);
+    cancel_button.set_text("Cancel"_string);
     cancel_button.on_click = [this](auto) {
         done(ExecResult::Cancel);
     };

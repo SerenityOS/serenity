@@ -196,9 +196,9 @@ ErrorOr<String> Move::to_algebraic() const
 {
     if (piece.type == Type::King && from.file == 4) {
         if (to.file == 2)
-            return "O-O-O"_short_string;
+            return "O-O-O"_string;
         if (to.file == 6)
-            return "O-O"_short_string;
+            return "O-O"_string;
     }
 
     StringBuilder builder;

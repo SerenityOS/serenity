@@ -147,11 +147,11 @@ ErrorOr<GUI::Widget*> BrushTool::get_properties_widget()
         size_container->set_fixed_height(20);
         (void)TRY(size_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto size_label = TRY(size_container->try_add<GUI::Label>("Size:"_short_string));
+        auto size_label = TRY(size_container->try_add<GUI::Label>("Size:"_string));
         size_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         size_label->set_fixed_size(80, 20);
 
-        auto size_slider = TRY(size_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_short_string));
+        auto size_slider = TRY(size_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_string));
         size_slider->set_range(1, 100);
         size_slider->set_value(m_size);
         size_slider->set_override_cursor(cursor());
@@ -171,7 +171,7 @@ ErrorOr<GUI::Widget*> BrushTool::get_properties_widget()
         hardness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         hardness_label->set_fixed_size(80, 20);
 
-        auto hardness_slider = TRY(hardness_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "%"_short_string));
+        auto hardness_slider = TRY(hardness_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "%"_string));
         hardness_slider->set_range(1, 100);
         hardness_slider->set_value(m_hardness);
 

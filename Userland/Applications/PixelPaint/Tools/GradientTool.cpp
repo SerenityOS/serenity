@@ -275,7 +275,7 @@ ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
         hardness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         hardness_label->set_fixed_size(80, 20);
 
-        auto hardness_slider = TRY(hardness_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "%"_short_string));
+        auto hardness_slider = TRY(hardness_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "%"_string));
         hardness_slider->set_range(1, 99);
         hardness_slider->set_value(m_hardness);
         hardness_slider->on_change = [this](int value) {
@@ -297,7 +297,7 @@ ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
         TRY(button_container->try_set_layout<GUI::HorizontalBoxLayout>());
         button_container->add_spacer().release_value_but_fixme_should_propagate_errors();
 
-        auto apply_button = TRY(button_container->try_add<GUI::DialogButton>("Apply"_short_string));
+        auto apply_button = TRY(button_container->try_add<GUI::DialogButton>("Apply"_string));
         apply_button->on_click = [this](auto) {
             rasterize_gradient();
         };

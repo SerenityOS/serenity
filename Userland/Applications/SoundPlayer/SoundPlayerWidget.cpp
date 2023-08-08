@@ -253,7 +253,7 @@ void SoundPlayerWidget::file_name_changed(StringView name)
     DeprecatedString title = name;
     if (playback_manager().loader()) {
         auto const& metadata = playback_manager().loader()->metadata();
-        if (auto artists_or_error = metadata.all_artists(" / "_short_string);
+        if (auto artists_or_error = metadata.all_artists(" / "_string);
             !artists_or_error.is_error() && artists_or_error.value().has_value() && metadata.title.has_value()) {
             title = DeprecatedString::formatted("{} – {}", metadata.title.value(), artists_or_error.release_value().release_value());
         } else if (metadata.title.has_value()) {

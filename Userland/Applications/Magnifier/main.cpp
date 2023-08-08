@@ -61,7 +61,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
     auto magnifier = TRY(window->set_main_widget<MagnifierWidget>());
 
-    auto file_menu = TRY(window->try_add_menu("&File"_short_string));
+    auto file_menu = TRY(window->try_add_menu("&File"_string));
     TRY(file_menu->try_add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
         AK::DeprecatedString filename = "file for saving";
         auto do_save = [&]() -> ErrorOr<void> {
@@ -142,7 +142,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     size_action_group->add_action(eight_x_action);
     size_action_group->set_exclusive(true);
 
-    auto view_menu = TRY(window->try_add_menu("&View"_short_string));
+    auto view_menu = TRY(window->try_add_menu("&View"_string));
     TRY(view_menu->try_add_action(two_x_action));
     TRY(view_menu->try_add_action(four_x_action));
     TRY(view_menu->try_add_action(eight_x_action));
@@ -172,7 +172,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(window->try_add_menu(TRY(GUI::CommonMenus::make_accessibility_menu(magnifier))));
 
-    auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
+    auto help_menu = TRY(window->try_add_menu("&Help"_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/Magnifier.md"), "/bin/Help");

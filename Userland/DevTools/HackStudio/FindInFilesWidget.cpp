@@ -45,9 +45,9 @@ public:
         case Column::Filename:
             return "Filename"_string;
         case Column::Location:
-            return "#"_short_string;
+            return "#"_string;
         case Column::MatchedText:
-            return "Text"_short_string;
+            return "Text"_string;
         default:
             VERIFY_NOT_REACHED();
         }

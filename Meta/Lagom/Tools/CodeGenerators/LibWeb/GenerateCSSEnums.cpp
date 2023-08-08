@@ -65,13 +65,13 @@ enum class ValueID;
         // Find the smallest possible type to use.
         auto member_max_value = members.size() - 1;
         if (NumericLimits<u8>::max() >= member_max_value) {
-            TRY(enum_generator.set("enum_type", "u8"_short_string));
+            TRY(enum_generator.set("enum_type", "u8"_string));
         } else if (NumericLimits<u16>::max() >= member_max_value) {
-            TRY(enum_generator.set("enum_type", "u16"_short_string));
+            TRY(enum_generator.set("enum_type", "u16"_string));
         } else if (NumericLimits<u32>::max() >= member_max_value) {
-            TRY(enum_generator.set("enum_type", "u32"_short_string));
+            TRY(enum_generator.set("enum_type", "u32"_string));
         } else {
-            TRY(enum_generator.set("enum_type", "u64"_short_string));
+            TRY(enum_generator.set("enum_type", "u64"_string));
         }
 
         TRY(enum_generator.try_appendln("enum class @name:titlecase@ : @enum_type@ {"));

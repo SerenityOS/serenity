@@ -161,7 +161,7 @@ ErrorOr<void> InputBox::build()
     TRY(button_container->try_set_layout<HorizontalBoxLayout>(0, 6));
     TRY(button_container->add_spacer());
 
-    m_ok_button = TRY(button_container->try_add<DialogButton>("OK"_short_string));
+    m_ok_button = TRY(button_container->try_add<DialogButton>("OK"_string));
     m_ok_button->on_click = [this](auto) {
         if (m_spinbox)
             m_spinbox->set_value_from_current_text();
@@ -169,7 +169,7 @@ ErrorOr<void> InputBox::build()
     };
     m_ok_button->set_default(true);
 
-    m_cancel_button = TRY(button_container->try_add<DialogButton>("Cancel"_short_string));
+    m_cancel_button = TRY(button_container->try_add<DialogButton>("Cancel"_string));
     m_cancel_button->on_click = [this](auto) { done(ExecResult::Cancel); };
 
     auto guarantee_width = [this, button_container] {

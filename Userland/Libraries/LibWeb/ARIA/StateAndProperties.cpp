@@ -22,19 +22,19 @@ ErrorOr<String> state_or_property_to_string_value(StateAndProperties state_or_pr
             value = aria_data.aria_atomic_or_default(default_value.get<bool>());
         else
             value = aria_data.aria_atomic_or_default();
-        return value ? "true"_short_string : "false"_short_string;
+        return value ? "true"_string : "false"_string;
     }
     case StateAndProperties::AriaAutoComplete: {
         auto value = aria_data.aria_auto_complete_or_default();
         switch (value) {
         case AriaAutocomplete::None:
-            return "none"_short_string;
+            return "none"_string;
         case AriaAutocomplete::List:
-            return "list"_short_string;
+            return "list"_string;
         case AriaAutocomplete::Both:
-            return "both"_short_string;
+            return "both"_string;
         case AriaAutocomplete::Inline:
-            return "inline"_short_string;
+            return "inline"_string;
         }
         VERIFY_NOT_REACHED();
     }
@@ -54,19 +54,19 @@ ErrorOr<String> state_or_property_to_string_value(StateAndProperties state_or_pr
         auto value = aria_data.aria_current_or_default();
         switch (value) {
         case AriaCurrent::False:
-            return "false"_short_string;
+            return "false"_string;
         case AriaCurrent::True:
-            return "true"_short_string;
+            return "true"_string;
         case AriaCurrent::Date:
-            return "date"_short_string;
+            return "date"_string;
         case AriaCurrent::Location:
             return "location"_string;
         case AriaCurrent::Page:
-            return "page"_short_string;
+            return "page"_string;
         case AriaCurrent::Step:
-            return "step"_short_string;
+            return "step"_string;
         case AriaCurrent::Time:
-            return "time"_short_string;
+            return "time"_string;
         }
         VERIFY_NOT_REACHED();
     }
@@ -77,7 +77,7 @@ ErrorOr<String> state_or_property_to_string_value(StateAndProperties state_or_pr
         return value.has_value() ? String::from_deprecated_string(value.value()) : String::from_utf8(""sv);
     }
     case StateAndProperties::AriaDisabled:
-        return aria_data.aria_disabled_or_default() ? "true"_short_string : "false"_short_string;
+        return aria_data.aria_disabled_or_default() ? "true"_string : "false"_string;
     case StateAndProperties::AriaDropEffect: {
         StringBuilder builder;
         auto value = aria_data.aria_drop_effect_or_default();
@@ -126,19 +126,19 @@ ErrorOr<String> state_or_property_to_string_value(StateAndProperties state_or_pr
         auto value = aria_data.aria_has_popup_or_default();
         switch (value) {
         case AriaHasPopup::False:
-            return "false"_short_string;
+            return "false"_string;
         case AriaHasPopup::True:
-            return "true"_short_string;
+            return "true"_string;
         case AriaHasPopup::Menu:
-            return "menu"_short_string;
+            return "menu"_string;
         case AriaHasPopup::Listbox:
             return "listbox"_string;
         case AriaHasPopup::Tree:
-            return "tree"_short_string;
+            return "tree"_string;
         case AriaHasPopup::Grid:
-            return "grid"_short_string;
+            return "grid"_string;
         case AriaHasPopup::Dialog:
-            return "dialog"_short_string;
+            return "dialog"_string;
         }
         VERIFY_NOT_REACHED();
     }
@@ -148,13 +148,13 @@ ErrorOr<String> state_or_property_to_string_value(StateAndProperties state_or_pr
         auto value = aria_data.aria_invalid_or_default();
         switch (value) {
         case AriaInvalid::Grammar:
-            return "grammar"_short_string;
+            return "grammar"_string;
         case AriaInvalid::False:
-            return "false"_short_string;
+            return "false"_string;
         case AriaInvalid::Spelling:
             return "spelling"_string;
         case AriaInvalid::True:
-            return "true"_short_string;
+            return "true"_string;
         }
         VERIFY_NOT_REACHED();
     }
@@ -177,18 +177,18 @@ ErrorOr<String> state_or_property_to_string_value(StateAndProperties state_or_pr
         case AriaLive::Assertive:
             return "assertive"_string;
         case AriaLive::Off:
-            return "off"_short_string;
+            return "off"_string;
         case AriaLive::Polite:
-            return "polite"_short_string;
+            return "polite"_string;
         }
         VERIFY_NOT_REACHED();
     }
     case StateAndProperties::AriaModal:
-        return aria_data.aria_modal_or_default() ? "true"_short_string : "false"_short_string;
+        return aria_data.aria_modal_or_default() ? "true"_string : "false"_string;
     case StateAndProperties::AriaMultiLine:
-        return aria_data.aria_multi_line_or_default() ? "true"_short_string : "false"_short_string;
+        return aria_data.aria_multi_line_or_default() ? "true"_string : "false"_string;
     case StateAndProperties::AriaMultiSelectable:
-        return aria_data.aria_multi_selectable_or_default() ? "true"_short_string : "false"_short_string;
+        return aria_data.aria_multi_selectable_or_default() ? "true"_string : "false"_string;
     case StateAndProperties::AriaOrientation: {
         AriaOrientation value;
         if (default_value.has<AriaOrientation>())
@@ -215,7 +215,7 @@ ErrorOr<String> state_or_property_to_string_value(StateAndProperties state_or_pr
     case StateAndProperties::AriaPressed:
         return ARIA::tristate_to_string(aria_data.aria_pressed_or_default());
     case StateAndProperties::AriaReadOnly:
-        return aria_data.aria_read_only_or_default() ? "true"_short_string : "false"_short_string;
+        return aria_data.aria_read_only_or_default() ? "true"_string : "false"_string;
     case StateAndProperties::AriaRelevant: {
         StringBuilder builder;
         auto value = aria_data.aria_relevant_or_default();
@@ -269,9 +269,9 @@ ErrorOr<String> state_or_property_to_string_value(StateAndProperties state_or_pr
         case AriaSort::Descending:
             return "descending"_string;
         case AriaSort::None:
-            return "none"_short_string;
+            return "none"_string;
         case AriaSort::Other:
-            return "other"_short_string;
+            return "other"_string;
         }
         VERIFY_NOT_REACHED();
     }
@@ -297,13 +297,13 @@ ErrorOr<String> tristate_to_string(Tristate value)
 {
     switch (value) {
     case Tristate::False:
-        return "false"_short_string;
+        return "false"_string;
     case Tristate::True:
-        return "true"_short_string;
+        return "true"_string;
     case Tristate::Undefined:
         return "undefined"_string;
     case Tristate::Mixed:
-        return "mixed"_short_string;
+        return "mixed"_string;
     }
     VERIFY_NOT_REACHED();
 }
@@ -320,8 +320,8 @@ ErrorOr<String> optional_bool_to_string(Optional<bool> value)
     if (!value.has_value())
         return "undefined"_string;
     if (value.value())
-        return "true"_short_string;
-    return "false"_short_string;
+        return "true"_string;
+    return "false"_string;
 }
 
 ErrorOr<String> optional_number_to_string(Optional<f64> value)

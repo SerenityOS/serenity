@@ -638,7 +638,7 @@ TEST_CASE(join)
     auto string5 = MUST(String::join(',', Array { 1, 2, 3 }, "[{}]"sv));
     EXPECT_EQ(string5, "[1],[2],[3]"sv);
 
-    auto string6 = MUST(String::join("!!!"_short_string, Array { "foo"sv, "bar"sv, "baz"sv }));
+    auto string6 = MUST(String::join("!!!"_string, Array { "foo"sv, "bar"sv, "baz"sv }));
     EXPECT_EQ(string6, "foo!!!bar!!!baz"sv);
 
     auto string7 = MUST(String::join(" - "sv, Array { 1, 16, 256, 4096 }, "[{:#04x}]"sv));
@@ -763,28 +763,28 @@ TEST_CASE(contains)
     EXPECT(!String {}.contains(" "sv));
     EXPECT(!String {}.contains(0));
 
-    EXPECT("a"_short_string.contains("a"sv));
-    EXPECT(!"a"_short_string.contains({}));
-    EXPECT(!"a"_short_string.contains("b"sv));
-    EXPECT(!"a"_short_string.contains("ab"sv));
+    EXPECT("a"_string.contains("a"sv));
+    EXPECT(!"a"_string.contains({}));
+    EXPECT(!"a"_string.contains("b"sv));
+    EXPECT(!"a"_string.contains("ab"sv));
 
-    EXPECT("a"_short_string.contains(0x0061));
-    EXPECT(!"a"_short_string.contains(0x0062));
+    EXPECT("a"_string.contains(0x0061));
+    EXPECT(!"a"_string.contains(0x0062));
 
-    EXPECT("abc"_short_string.contains("a"sv));
-    EXPECT("abc"_short_string.contains("b"sv));
-    EXPECT("abc"_short_string.contains("c"sv));
-    EXPECT("abc"_short_string.contains("ab"sv));
-    EXPECT("abc"_short_string.contains("bc"sv));
-    EXPECT("abc"_short_string.contains("abc"sv));
-    EXPECT(!"abc"_short_string.contains({}));
-    EXPECT(!"abc"_short_string.contains("ac"sv));
-    EXPECT(!"abc"_short_string.contains("abcd"sv));
+    EXPECT("abc"_string.contains("a"sv));
+    EXPECT("abc"_string.contains("b"sv));
+    EXPECT("abc"_string.contains("c"sv));
+    EXPECT("abc"_string.contains("ab"sv));
+    EXPECT("abc"_string.contains("bc"sv));
+    EXPECT("abc"_string.contains("abc"sv));
+    EXPECT(!"abc"_string.contains({}));
+    EXPECT(!"abc"_string.contains("ac"sv));
+    EXPECT(!"abc"_string.contains("abcd"sv));
 
-    EXPECT("abc"_short_string.contains(0x0061));
-    EXPECT("abc"_short_string.contains(0x0062));
-    EXPECT("abc"_short_string.contains(0x0063));
-    EXPECT(!"abc"_short_string.contains(0x0064));
+    EXPECT("abc"_string.contains(0x0061));
+    EXPECT("abc"_string.contains(0x0062));
+    EXPECT("abc"_string.contains(0x0063));
+    EXPECT(!"abc"_string.contains(0x0064));
 
     auto emoji = "😀"_string;
     EXPECT(emoji.contains("\xF0"sv));
@@ -809,24 +809,24 @@ TEST_CASE(starts_with)
     EXPECT(!String {}.starts_with_bytes(" "sv));
     EXPECT(!String {}.starts_with(0));
 
-    EXPECT("a"_short_string.starts_with_bytes({}));
-    EXPECT("a"_short_string.starts_with_bytes("a"sv));
-    EXPECT(!"a"_short_string.starts_with_bytes("b"sv));
-    EXPECT(!"a"_short_string.starts_with_bytes("ab"sv));
+    EXPECT("a"_string.starts_with_bytes({}));
+    EXPECT("a"_string.starts_with_bytes("a"sv));
+    EXPECT(!"a"_string.starts_with_bytes("b"sv));
+    EXPECT(!"a"_string.starts_with_bytes("ab"sv));
 
-    EXPECT("a"_short_string.starts_with(0x0061));
-    EXPECT(!"a"_short_string.starts_with(0x0062));
+    EXPECT("a"_string.starts_with(0x0061));
+    EXPECT(!"a"_string.starts_with(0x0062));
 
-    EXPECT("abc"_short_string.starts_with_bytes({}));
-    EXPECT("abc"_short_string.starts_with_bytes("a"sv));
-    EXPECT("abc"_short_string.starts_with_bytes("ab"sv));
-    EXPECT("abc"_short_string.starts_with_bytes("abc"sv));
-    EXPECT(!"abc"_short_string.starts_with_bytes("b"sv));
-    EXPECT(!"abc"_short_string.starts_with_bytes("bc"sv));
+    EXPECT("abc"_string.starts_with_bytes({}));
+    EXPECT("abc"_string.starts_with_bytes("a"sv));
+    EXPECT("abc"_string.starts_with_bytes("ab"sv));
+    EXPECT("abc"_string.starts_with_bytes("abc"sv));
+    EXPECT(!"abc"_string.starts_with_bytes("b"sv));
+    EXPECT(!"abc"_string.starts_with_bytes("bc"sv));
 
-    EXPECT("abc"_short_string.starts_with(0x0061));
-    EXPECT(!"abc"_short_string.starts_with(0x0062));
-    EXPECT(!"abc"_short_string.starts_with(0x0063));
+    EXPECT("abc"_string.starts_with(0x0061));
+    EXPECT(!"abc"_string.starts_with(0x0062));
+    EXPECT(!"abc"_string.starts_with(0x0063));
 
     auto emoji = "😀🙃"_string;
     EXPECT(emoji.starts_with_bytes("\xF0"sv));
@@ -850,24 +850,24 @@ TEST_CASE(ends_with)
     EXPECT(!String {}.ends_with_bytes(" "sv));
     EXPECT(!String {}.ends_with(0));
 
-    EXPECT("a"_short_string.ends_with_bytes({}));
-    EXPECT("a"_short_string.ends_with_bytes("a"sv));
-    EXPECT(!"a"_short_string.ends_with_bytes("b"sv));
-    EXPECT(!"a"_short_string.ends_with_bytes("ba"sv));
+    EXPECT("a"_string.ends_with_bytes({}));
+    EXPECT("a"_string.ends_with_bytes("a"sv));
+    EXPECT(!"a"_string.ends_with_bytes("b"sv));
+    EXPECT(!"a"_string.ends_with_bytes("ba"sv));
 
-    EXPECT("a"_short_string.ends_with(0x0061));
-    EXPECT(!"a"_short_string.ends_with(0x0062));
+    EXPECT("a"_string.ends_with(0x0061));
+    EXPECT(!"a"_string.ends_with(0x0062));
 
-    EXPECT("abc"_short_string.ends_with_bytes({}));
-    EXPECT("abc"_short_string.ends_with_bytes("c"sv));
-    EXPECT("abc"_short_string.ends_with_bytes("bc"sv));
-    EXPECT("abc"_short_string.ends_with_bytes("abc"sv));
-    EXPECT(!"abc"_short_string.ends_with_bytes("b"sv));
-    EXPECT(!"abc"_short_string.ends_with_bytes("ab"sv));
+    EXPECT("abc"_string.ends_with_bytes({}));
+    EXPECT("abc"_string.ends_with_bytes("c"sv));
+    EXPECT("abc"_string.ends_with_bytes("bc"sv));
+    EXPECT("abc"_string.ends_with_bytes("abc"sv));
+    EXPECT(!"abc"_string.ends_with_bytes("b"sv));
+    EXPECT(!"abc"_string.ends_with_bytes("ab"sv));
 
-    EXPECT("abc"_short_string.ends_with(0x0063));
-    EXPECT(!"abc"_short_string.ends_with(0x0062));
-    EXPECT(!"abc"_short_string.ends_with(0x0061));
+    EXPECT("abc"_string.ends_with(0x0063));
+    EXPECT(!"abc"_string.ends_with(0x0062));
+    EXPECT(!"abc"_string.ends_with(0x0061));
 
     auto emoji = "😀🙃"_string;
     EXPECT(emoji.ends_with_bytes("\x83"sv));

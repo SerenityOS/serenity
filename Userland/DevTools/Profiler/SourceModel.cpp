@@ -132,7 +132,7 @@ ErrorOr<String> SourceModel::column_name(int column) const
     case Column::Location:
         return "Location"_string;
     case Column::LineNumber:
-        return "Line"_short_string;
+        return "Line"_string;
     default:
         VERIFY_NOT_REACHED();
     }

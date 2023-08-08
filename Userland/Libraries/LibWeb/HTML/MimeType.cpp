@@ -46,7 +46,7 @@ String MimeType::description() const
 String const& MimeType::suffixes() const
 {
     // The MimeType interface's suffixes getter steps are to return "pdf".
-    static String suffixes_string = "pdf"_short_string;
+    static String suffixes_string = "pdf"_string;
     return suffixes_string;
 }
 

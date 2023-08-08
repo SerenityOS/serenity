@@ -34,7 +34,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-mail"sv);
 
     auto window = TRY(GUI::SettingsWindow::create("Mail Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
-    (void)TRY(window->add_tab<MailSettingsWidget>("Mail"_short_string, "mail"sv));
+    (void)TRY(window->add_tab<MailSettingsWidget>("Mail"_string, "mail"sv));
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_active_tab(selected_tab);
 

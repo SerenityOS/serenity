@@ -93,10 +93,10 @@ static ErrorOr<String> column_to_string(ColumnId column_id, Core::ProcessStatist
     case ColumnId::SessionId:
         return String::number(process.sid);
     case ColumnId::TTY:
-        return process.tty == "" ? "n/a"_short_string : String::from_deprecated_string(process.tty);
+        return process.tty == "" ? "n/a"_string : String::from_deprecated_string(process.tty);
     case ColumnId::State:
         return process.threads.is_empty()
-            ? "Zombie"_short_string
+            ? "Zombie"_string
             : String::from_deprecated_string(process.threads.first().state);
     case ColumnId::Command:
         return String::from_deprecated_string(process.name);
@@ -141,7 +141,7 @@ static ErrorOr<String> determine_tty_pseudo_name()
 {
     auto tty_stat = TRY(Core::System::fstat(STDIN_FILENO));
     auto maybe_tty_pseudo_name = TRY(tty_stat_to_pseudo_name(tty_stat));
-    return maybe_tty_pseudo_name.value_or("n/a"_short_string);
+    return maybe_tty_pseudo_name.value_or("n/a"_string);
 }
 
 static ErrorOr<String> parse_tty_pseudo_name(StringView tty_name)

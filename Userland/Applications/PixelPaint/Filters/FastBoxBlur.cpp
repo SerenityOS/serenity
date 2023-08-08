@@ -88,11 +88,11 @@ ErrorOr<RefPtr<GUI::Widget>> FastBoxBlur::get_settings_widget()
         m_radius_container->set_fixed_height(20);
         TRY(m_radius_container->try_set_layout<GUI::HorizontalBoxLayout>(GUI::Margins { 4, 0, 4, 0 }));
 
-        auto radius_label = TRY(m_radius_container->try_add<GUI::Label>("Radius:"_short_string));
+        auto radius_label = TRY(m_radius_container->try_add<GUI::Label>("Radius:"_string));
         radius_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         radius_label->set_fixed_size(50, 20);
 
-        auto radius_slider = TRY(m_radius_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_short_string));
+        auto radius_slider = TRY(m_radius_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_string));
         radius_slider->set_range(0, 25);
         radius_slider->set_value(m_radius);
         radius_slider->on_change = [&](int value) {
@@ -113,7 +113,7 @@ ErrorOr<RefPtr<GUI::Widget>> FastBoxBlur::get_settings_widget()
         radius_x_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         radius_x_label->set_fixed_size(50, 20);
 
-        m_radius_x_slider = TRY(radius_x_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_short_string));
+        m_radius_x_slider = TRY(radius_x_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_string));
         m_radius_x_slider->set_range(0, 50);
         m_radius_x_slider->set_value(m_radius_x);
         m_radius_x_slider->on_change = [&](int value) {
@@ -129,7 +129,7 @@ ErrorOr<RefPtr<GUI::Widget>> FastBoxBlur::get_settings_widget()
         radius_y_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         radius_y_label->set_fixed_size(50, 20);
 
-        m_radius_y_slider = TRY(radius_y_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_short_string));
+        m_radius_y_slider = TRY(radius_y_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_string));
         m_radius_y_slider->set_range(0, 50);
         m_radius_y_slider->set_value(m_radius_y);
         m_radius_y_slider->on_change = [&](int value) {
@@ -146,11 +146,11 @@ ErrorOr<RefPtr<GUI::Widget>> FastBoxBlur::get_settings_widget()
         angle_container->set_fixed_height(20);
         TRY(angle_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto angle_label = TRY(angle_container->try_add<GUI::Label>("Angle:"_short_string));
+        auto angle_label = TRY(angle_container->try_add<GUI::Label>("Angle:"_string));
         angle_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         angle_label->set_fixed_size(60, 20);
 
-        m_angle_slider = TRY(angle_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "°"_short_string));
+        m_angle_slider = TRY(angle_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "°"_string));
         m_angle_slider->set_range(0, 360);
         m_angle_slider->set_value(m_angle);
         m_angle_slider->on_change = [&](int value) {
@@ -166,7 +166,7 @@ ErrorOr<RefPtr<GUI::Widget>> FastBoxBlur::get_settings_widget()
         magnitude_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         magnitude_label->set_fixed_size(60, 20);
 
-        m_magnitude_slider = TRY(magnitude_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_short_string));
+        m_magnitude_slider = TRY(magnitude_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_string));
         m_magnitude_slider->set_range(0, 50);
         m_magnitude_slider->set_value(m_radius);
         m_magnitude_slider->on_change = [&](int value) {

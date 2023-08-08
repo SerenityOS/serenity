@@ -21,9 +21,9 @@ ErrorOr<String> InboxModel::column_name(int column_index) const
 {
     switch (column_index) {
     case Column::From:
-        return "From"_short_string;
+        return "From"_string;
     case Subject:
-        return "Subject"_short_string;
+        return "Subject"_string;
     default:
         VERIFY_NOT_REACHED();
     }

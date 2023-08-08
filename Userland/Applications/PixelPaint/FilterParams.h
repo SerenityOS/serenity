@@ -82,10 +82,10 @@ private:
         auto& norm_checkbox = main_widget->template add<GUI::CheckBox>("Normalize"_string);
         norm_checkbox.set_checked(false);
 
-        auto& wrap_checkbox = main_widget->template add<GUI::CheckBox>("Wrap"_short_string);
+        auto& wrap_checkbox = main_widget->template add<GUI::CheckBox>("Wrap"_string);
         wrap_checkbox.set_checked(m_should_wrap);
 
-        auto& button = main_widget->template add<GUI::Button>("Done"_short_string);
+        auto& button = main_widget->template add<GUI::Button>("Done"_string);
         button.on_click = [&](auto) {
             m_should_wrap = wrap_checkbox.is_checked();
             if (norm_checkbox.is_checked())

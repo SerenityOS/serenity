@@ -227,11 +227,11 @@ TEST_CASE(take)
 
     EXPECT(!map.take("foo"sv).has_value());
     EXPECT(!map.take("bar"sv).has_value());
-    EXPECT(!map.take("baz"_short_string).has_value());
+    EXPECT(!map.take("baz"_string).has_value());
 
-    map.set("foo"_short_string, 1);
-    map.set("bar"_short_string, 2);
-    map.set("baz"_short_string, 3);
+    map.set("foo"_string, 1);
+    map.set("bar"_string, 2);
+    map.set("baz"_string, 3);
 
     auto foo = map.take("foo"sv);
     EXPECT_EQ(foo, 1);
@@ -245,10 +245,10 @@ TEST_CASE(take)
     bar = map.take("bar"sv);
     EXPECT(!bar.has_value());
 
-    auto baz = map.take("baz"_short_string);
+    auto baz = map.take("baz"_string);
     EXPECT_EQ(baz, 3);
 
-    baz = map.take("baz"_short_string);
+    baz = map.take("baz"_string);
     EXPECT(!baz.has_value());
 }
 

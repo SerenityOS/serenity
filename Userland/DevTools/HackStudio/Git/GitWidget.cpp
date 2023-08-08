@@ -64,7 +64,7 @@ GitWidget::GitWidget()
     commit_button.on_click = [this](int) { commit(); };
 
     auto& staged_label = staged_header.add<GUI::Label>();
-    staged_label.set_text("Staged"_short_string);
+    staged_label.set_text("Staged"_string);
 
     staged_header.set_fixed_height(20);
     m_staged_files = staged.add<GitFilesView>(

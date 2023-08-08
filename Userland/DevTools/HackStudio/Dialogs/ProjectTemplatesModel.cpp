@@ -57,11 +57,11 @@ ErrorOr<String> ProjectTemplatesModel::column_name(int column) const
 {
     switch (column) {
     case Column::Icon:
-        return "Icon"_short_string;
+        return "Icon"_string;
     case Column::Id:
-        return "ID"_short_string;
+        return "ID"_string;
     case Column::Name:
-        return "Name"_short_string;
+        return "Name"_string;
     }
     VERIFY_NOT_REACHED();
 }

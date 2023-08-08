@@ -80,7 +80,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             final_target_directory = TRY(String::from_utf8(resolved_path.dirname()));
             final_file_template = TRY(String::from_utf8(resolved_path.basename()));
         } else {
-            final_target_directory = "/tmp"_short_string;
+            final_target_directory = "/tmp"_string;
             auto const* env_directory = getenv("TMPDIR");
             if (env_directory != nullptr && *env_directory != 0)
                 final_target_directory = TRY(String::from_utf8({ env_directory, strlen(env_directory) }));

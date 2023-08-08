@@ -50,9 +50,9 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
                 else
                     return object.get_deprecated_string("ipv4_address"sv).value_or("").is_empty() ? *m_network_disconnected_bitmap : *m_network_connected_bitmap;
             });
-        net_adapters_fields.empend("name", "Name"_short_string, Gfx::TextAlignment::CenterLeft);
-        net_adapters_fields.empend("class_name", "Class"_short_string, Gfx::TextAlignment::CenterLeft);
-        net_adapters_fields.empend("mac_address", "MAC"_short_string, Gfx::TextAlignment::CenterLeft);
+        net_adapters_fields.empend("name", "Name"_string, Gfx::TextAlignment::CenterLeft);
+        net_adapters_fields.empend("class_name", "Class"_string, Gfx::TextAlignment::CenterLeft);
+        net_adapters_fields.empend("mac_address", "MAC"_string, Gfx::TextAlignment::CenterLeft);
         net_adapters_fields.empend("Link status"_string, Gfx::TextAlignment::CenterLeft,
             [](JsonObject const& object) -> DeprecatedString {
                 if (!object.get_bool("link_up"sv).value_or(false))
@@ -61,12 +61,12 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
                 return DeprecatedString::formatted("{} Mb/s {}-duplex", object.get_i32("link_speed"sv).value_or(0),
                     object.get_bool("link_full_duplex"sv).value_or(false) ? "full"sv : "half"sv);
             });
-        net_adapters_fields.empend("IPv4"_short_string, Gfx::TextAlignment::CenterLeft,
+        net_adapters_fields.empend("IPv4"_string, Gfx::TextAlignment::CenterLeft,
             [](JsonObject const& object) -> DeprecatedString {
                 return object.get_deprecated_string("ipv4_address"sv).value_or(""sv);
             });
-        net_adapters_fields.empend("packets_in", "Pkt In"_short_string, Gfx::TextAlignment::CenterRight);
-        net_adapters_fields.empend("packets_out", "Pkt Out"_short_string, Gfx::TextAlignment::CenterRight);
+        net_adapters_fields.empend("packets_in", "Pkt In"_string, Gfx::TextAlignment::CenterRight);
+        net_adapters_fields.empend("packets_out", "Pkt Out"_string, Gfx::TextAlignment::CenterRight);
         net_adapters_fields.empend("bytes_in", "Bytes In"_string, Gfx::TextAlignment::CenterRight);
         net_adapters_fields.empend("bytes_out", "Bytes Out"_string, Gfx::TextAlignment::CenterRight);
         m_adapter_model = GUI::JsonArrayModel::create("/sys/kernel/net/adapters", move(net_adapters_fields));
@@ -97,15 +97,15 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         m_tcp_socket_table_view = tcp_sockets_group_box.add<GUI::TableView>();
 
         Vector<GUI::JsonArrayModel::FieldSpec> net_tcp_fields;
-        net_tcp_fields.empend("peer_address", "Peer"_short_string, Gfx::TextAlignment::CenterLeft);
-        net_tcp_fields.empend("peer_port", "Port"_short_string, Gfx::TextAlignment::CenterRight);
-        net_tcp_fields.empend("local_address", "Local"_short_string, Gfx::TextAlignment::CenterLeft);
-        net_tcp_fields.empend("local_port", "Port"_short_string, Gfx::TextAlignment::CenterRight);
-        net_tcp_fields.empend("state", "State"_short_string, Gfx::TextAlignment::CenterLeft);
-        net_tcp_fields.empend("ack_number", "Ack#"_short_string, Gfx::TextAlignment::CenterRight);
-        net_tcp_fields.empend("sequence_number", "Seq#"_short_string, Gfx::TextAlignment::CenterRight);
-        net_tcp_fields.empend("packets_in", "Pkt In"_short_string, Gfx::TextAlignment::CenterRight);
-        net_tcp_fields.empend("packets_out", "Pkt Out"_short_string, Gfx::TextAlignment::CenterRight);
+        net_tcp_fields.empend("peer_address", "Peer"_string, Gfx::TextAlignment::CenterLeft);
+        net_tcp_fields.empend("peer_port", "Port"_string, Gfx::TextAlignment::CenterRight);
+        net_tcp_fields.empend("local_address", "Local"_string, Gfx::TextAlignment::CenterLeft);
+        net_tcp_fields.empend("local_port", "Port"_string, Gfx::TextAlignment::CenterRight);
+        net_tcp_fields.empend("state", "State"_string, Gfx::TextAlignment::CenterLeft);
+        net_tcp_fields.empend("ack_number", "Ack#"_string, Gfx::TextAlignment::CenterRight);
+        net_tcp_fields.empend("sequence_number", "Seq#"_string, Gfx::TextAlignment::CenterRight);
+        net_tcp_fields.empend("packets_in", "Pkt In"_string, Gfx::TextAlignment::CenterRight);
+        net_tcp_fields.empend("packets_out", "Pkt Out"_string, Gfx::TextAlignment::CenterRight);
         net_tcp_fields.empend("bytes_in", "Bytes In"_string, Gfx::TextAlignment::CenterRight);
         net_tcp_fields.empend("bytes_out", "Bytes Out"_string, Gfx::TextAlignment::CenterRight);
         m_tcp_socket_model = GUI::JsonArrayModel::create("/sys/kernel/net/tcp", move(net_tcp_fields));
@@ -117,10 +117,10 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         m_udp_socket_table_view = udp_sockets_group_box.add<GUI::TableView>();
 
         Vector<GUI::JsonArrayModel::FieldSpec> net_udp_fields;
-        net_udp_fields.empend("peer_address", "Peer"_short_string, Gfx::TextAlignment::CenterLeft);
-        net_udp_fields.empend("peer_port", "Port"_short_string, Gfx::TextAlignment::CenterRight);
-        net_udp_fields.empend("local_address", "Local"_short_string, Gfx::TextAlignment::CenterLeft);
-        net_udp_fields.empend("local_port", "Port"_short_string, Gfx::TextAlignment::CenterRight);
+        net_udp_fields.empend("peer_address", "Peer"_string, Gfx::TextAlignment::CenterLeft);
+        net_udp_fields.empend("peer_port", "Port"_string, Gfx::TextAlignment::CenterRight);
+        net_udp_fields.empend("local_address", "Local"_string, Gfx::TextAlignment::CenterLeft);
+        net_udp_fields.empend("local_port", "Port"_string, Gfx::TextAlignment::CenterRight);
         m_udp_socket_model = GUI::JsonArrayModel::create("/sys/kernel/net/udp", move(net_udp_fields));
         m_udp_socket_table_view->set_model(MUST(GUI::SortingProxyModel::create(*m_udp_socket_model)));
 

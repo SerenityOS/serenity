@@ -145,7 +145,7 @@ bool media_feature_type_is_range(MediaFeatureID media_feature_id)
         VERIFY(feature.has("type"sv));
         auto feature_type = feature.get_deprecated_string("type"sv);
         VERIFY(feature_type.has_value());
-        TRY(member_generator.set("is_range", feature_type.value() == "range" ? "true"_short_string : "false"_short_string));
+        TRY(member_generator.set("is_range", feature_type.value() == "range" ? "true"_string : "false"_string));
         TRY(member_generator.try_append(R"~~~(
     case MediaFeatureID::@name:titlecase@:
         return @is_range@;)~~~"));

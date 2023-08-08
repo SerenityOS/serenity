@@ -17,7 +17,7 @@ SidebarWidget::SidebarWidget()
 
     auto& tab_bar = add<GUI::TabWidget>();
 
-    auto& outline_container = tab_bar.add_tab<GUI::Widget>("Outline"_short_string);
+    auto& outline_container = tab_bar.add_tab<GUI::Widget>("Outline"_string);
     outline_container.set_layout<GUI::VerticalBoxLayout>(4);
 
     m_outline_tree_view = outline_container.add<GUI::TreeView>();

@@ -357,7 +357,7 @@ struct Token {
     {
         return {
             .type = Type::Newline,
-            .value = "\n"_short_string,
+            .value = "\n"_string,
             .position = {},
             .expansions = {},
             .original_text = {},

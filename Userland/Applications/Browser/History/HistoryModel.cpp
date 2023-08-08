@@ -38,9 +38,9 @@ ErrorOr<String> HistoryModel::column_name(int column) const
 {
     switch (column) {
     case Column::Title:
-        return "Title"_short_string;
+        return "Title"_string;
     case Column::URL:
-        return "URL"_short_string;
+        return "URL"_string;
     default:
         VERIFY_NOT_REACHED();
     }

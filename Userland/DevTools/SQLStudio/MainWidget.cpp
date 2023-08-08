@@ -235,7 +235,7 @@ ErrorOr<void> MainWidget::setup()
 
     m_action_tab_widget = find_descendant_of_type_named<GUI::TabWidget>("action_tab_widget"sv);
 
-    m_query_results_widget = m_action_tab_widget->add_tab<GUI::Widget>("Results"_short_string);
+    m_query_results_widget = m_action_tab_widget->add_tab<GUI::Widget>("Results"_string);
     m_query_results_widget->set_layout<GUI::VerticalBoxLayout>(6);
     m_query_results_table_view = m_query_results_widget->add<GUI::TableView>();
 
@@ -301,7 +301,7 @@ ErrorOr<void> MainWidget::setup()
 
 ErrorOr<void> MainWidget::initialize_menu(GUI::Window* window)
 {
-    auto file_menu = TRY(window->try_add_menu("&File"_short_string));
+    auto file_menu = TRY(window->try_add_menu("&File"_string));
     TRY(file_menu->try_add_action(*m_new_action));
     TRY(file_menu->try_add_action(*m_open_action));
     TRY(file_menu->try_add_action(*m_save_action));
@@ -312,7 +312,7 @@ ErrorOr<void> MainWidget::initialize_menu(GUI::Window* window)
         GUI::Application::the()->quit();
     })));
 
-    auto edit_menu = TRY(window->try_add_menu("&Edit"_short_string));
+    auto edit_menu = TRY(window->try_add_menu("&Edit"_string));
     TRY(edit_menu->try_add_action(*m_copy_action));
     TRY(edit_menu->try_add_action(*m_cut_action));
     TRY(edit_menu->try_add_action(*m_paste_action));
@@ -322,7 +322,7 @@ ErrorOr<void> MainWidget::initialize_menu(GUI::Window* window)
     TRY(edit_menu->try_add_separator());
     TRY(edit_menu->try_add_action(*m_run_script_action));
 
-    auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
+    auto help_menu = TRY(window->try_add_menu("&Help"_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/SQLStudio.md"), "/bin/Help");

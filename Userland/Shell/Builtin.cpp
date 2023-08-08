@@ -1826,7 +1826,7 @@ ErrorOr<int> Shell::builtin_read(Main::Arguments arguments)
     if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::Ignore))
         return 1;
 
-    auto split_by_any_of = " \t\n"_short_string;
+    auto split_by_any_of = " \t\n"_string;
 
     if (auto const* value_from_env = getenv("IFS"); value_from_env)
         split_by_any_of = TRY(String::from_utf8({ value_from_env, strlen(value_from_env) }));

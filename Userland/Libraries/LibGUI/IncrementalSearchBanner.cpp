@@ -37,7 +37,7 @@ IncrementalSearchBanner::IncrementalSearchBanner(TextEditor& editor)
     };
 
     m_close_button = find_descendant_of_type_named<Button>("incremental_search_banner_close_button");
-    m_close_button->set_text("\xE2\x9D\x8C"_short_string);
+    m_close_button->set_text("\xE2\x9D\x8C"_string);
     m_close_button->on_click = [this](auto) {
         hide();
     };
