@@ -114,7 +114,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Ladybird::s_settings = adopt_own_if_nonnull(new Ladybird::Settings());
     Ladybird::BrowserWindow window(initial_url, cookie_jar, webdriver_content_ipc_path, enable_callgrind_profiling ? WebView::EnableCallgrindProfiling::Yes : WebView::EnableCallgrindProfiling::No, use_lagom_networking ? Ladybird::UseLagomNetworking::Yes : Ladybird::UseLagomNetworking::No);
     window.setWindowTitle("Ladybird");
-    window.resize(800, 600);
+
+    if (Ladybird::s_settings->is_maximized()) {
+        window.showMaximized();
+    } else {
+        auto last_position = Ladybird::s_settings->last_position();
+        if (last_position.has_value())
+            window.move(last_position.value());
+        window.resize(Ladybird::s_settings->last_size());
+    }
+
     window.show();
 
     return event_loop.exec();

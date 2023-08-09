@@ -695,4 +695,13 @@ bool BrowserWindow::eventFilter(QObject* obj, QEvent* event)
     return QMainWindow::eventFilter(obj, event);
 }
 
+void BrowserWindow::closeEvent(QCloseEvent* event)
+{
+    s_settings->set_last_position(pos());
+    s_settings->set_last_size(size());
+    s_settings->set_is_maximized(isMaximized());
+
+    QMainWindow::closeEvent(event);
+}
+
 }

@@ -33,6 +33,38 @@ Settings::Settings()
     m_qsettings = new QSettings("Serenity", "Ladybird", this);
 }
 
+Optional<QPoint> Settings::last_position()
+{
+    if (m_qsettings->contains("last_position"))
+        return m_qsettings->value("last_position", QPoint()).toPoint();
+    return {};
+}
+
+void Settings::set_last_position(QPoint const& last_position)
+{
+    m_qsettings->setValue("last_position", last_position);
+}
+
+QSize Settings::last_size()
+{
+    return m_qsettings->value("last_size", QSize(800, 600)).toSize();
+}
+
+void Settings::set_last_size(QSize const& last_size)
+{
+    m_qsettings->setValue("last_size", last_size);
+}
+
+bool Settings::is_maximized()
+{
+    return m_qsettings->value("is_maximized", QVariant(false)).toBool();
+}
+
+void Settings::set_is_maximized(bool is_maximized)
+{
+    m_qsettings->setValue("is_maximized", is_maximized);
+}
+
 QString Settings::new_tab_page()
 {
     static auto const default_new_tab_url = rebase_default_url_on_serenity_resource_root(Browser::default_new_tab_url);
