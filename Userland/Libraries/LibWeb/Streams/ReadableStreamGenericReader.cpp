@@ -45,6 +45,7 @@ void ReadableStreamGenericReaderMixin::visit_edges(JS::Cell::Visitor& visitor)
 {
     visitor.visit(m_closed_promise);
     visitor.visit(m_stream);
+    visitor.visit(m_realm);
 }
 
 }
