@@ -34,6 +34,53 @@
             "buildsystem": "cmake-ninja",
             "sources": [
                 {
+                    "type": "archive",
+                    "url": "https://www.unicode.org/Public/15.0.0/ucd/UCD.zip",
+                    "dest": "Caches/UCD/",
+                    "sha256": "5fbde400f3e687d25cc9b0a8d30d7619e76cb2f4c3e85ba9df8ec1312cb6718c",
+                    "strip-components": 0,
+                    "dest-filename": "UCD.zip"
+                },
+                {
+                    "type": "file",
+                    "url": "https://www.unicode.org/Public/emoji/15.0/emoji-test.txt",
+                    "dest": "Caches/UCD/",
+                    "sha256": "8445f23ac8388e096be19d0262e14fceff856ff52093f2356dc89485f1a853db"
+                },
+                {
+                    "type": "archive",
+                    "url": "https://github.com/unicode-org/cldr-json/releases/download/43.1.0/cldr-43.1.0-json-modern.zip",
+                    "dest": "Caches/CLDR/",
+                    "sha256": "5b770d59f052f19573d5e0783b6581269f6c86a193cc6e84ebd0796e143153cd",
+                    "strip-components": 0,
+                    "dest-filename": "cldr.zip"
+                },
+                {
+                    "type": "archive",
+                    "url": "https://data.iana.org/time-zones/releases/tzdata2023c.tar.gz",
+                    "dest": "Caches/TZDB/",
+                    "sha256": "3f510b5d1b4ae9bb38e485aa302a776b317fb3637bdb6404c4adf7b6cadd965c",
+                    "strip-components": 0,
+                    "dest-filename": "tzdb.tar.gz"
+                },
+                {
+                    "type": "file",
+                    "url": "https://curl.se/ca/cacert-2023-05-30.pem",
+                    "dest": "Caches/CACERT/",
+                    "sha256": "5fadcae90aa4ae041150f8e2d26c37d980522cdb49f923fc1e1b5eb8d74e71ad"
+                },
+                {
+                    "type": "shell",
+                    "commands": [
+                        "echo -n 15.0.0 > Caches/UCD/version.txt",
+                        "echo -n 43.1.0 > Caches/CLDR/version.txt",
+                        "echo -n 2023c > Caches/TZDB/version.txt",
+                        "echo -n 2023-05-30 > Caches/CACERT/version.txt",
+                        "# FIXME Is there an easier way to set an absolute path in config-opts?",
+                        "echo set\\(SERENITY_CACHE_DIR \"$PWD/Caches\" CACHE STRING \\\"\\\"\\) > Cache.cmake"
+                    ]
+                },
+                {
                     "type": "git",
                     "url": "https://github.com/SerenityOS/serenity.git",
                     "dest": "serenity"
@@ -43,7 +90,7 @@
                     "path": "."
                 }
             ],
-            "config-opts": ["-DSERENITY_SOURCE_DIR=serenity"],
+            "config-opts": [ "-DSERENITY_SOURCE_DIR=serenity", "-CCache.cmake" ],
             "build-options": {
                 "build-args": ["--share=network"]
             }
