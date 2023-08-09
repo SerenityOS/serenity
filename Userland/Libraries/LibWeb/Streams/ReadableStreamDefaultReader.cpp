@@ -23,6 +23,13 @@
 
 namespace Web::Streams {
 
+void ReadLoopReadRequest::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_realm);
+    visitor.visit(m_reader);
+}
+
 // https://streams.spec.whatwg.org/#default-reader-constructor
 WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStreamDefaultReader>> ReadableStreamDefaultReader::construct_impl(JS::Realm& realm, JS::NonnullGCPtr<ReadableStream> stream)
 {
@@ -50,6 +57,8 @@ void ReadableStreamDefaultReader::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     ReadableStreamGenericReaderMixin::visit_edges(visitor);
+    for (auto& request : m_read_requests)
+        visitor.visit(request);
 }
 
 // https://streams.spec.whatwg.org/#read-loop
@@ -108,7 +117,9 @@ void ReadLoopReadRequest::on_error(JS::Value error)
     m_failure_steps(error);
 }
 
-class DefaultReaderReadRequest : public ReadRequest {
+class DefaultReaderReadRequest final : public ReadRequest {
+    JS_CELL(DefaultReaderReadRequest, Cell);
+
 public:
     DefaultReaderReadRequest(JS::Realm& realm, WebIDL::Promise& promise)
         : m_realm(realm)
@@ -132,6 +143,13 @@ public:
     }
 
 private:
+    virtual void visit_edges(Visitor& visitor) override
+    {
+        Base::visit_edges(visitor);
+        visitor.visit(m_realm);
+        visitor.visit(m_promise);
+    }
+
     JS::Realm& m_realm;
     WebIDL::Promise& m_promise;
 };
@@ -158,7 +176,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> ReadableStreamDefaultReader::
     //        Resolve promise with «[ "value" → undefined, "done" → true ]».
     //    error steps, given e
     //        Reject promise with e.
-    auto read_request = adopt_ref(*new DefaultReaderReadRequest(realm, promise_capability));
+    auto read_request = heap().allocate_without_realm<DefaultReaderReadRequest>(realm, promise_capability);
 
     // 4. Perform ! ReadableStreamDefaultReaderRead(this, readRequest).
     TRY(readable_stream_default_reader_read(*this, read_request));
@@ -175,7 +193,7 @@ WebIDL::ExceptionOr<void> ReadableStreamDefaultReader::read_all_bytes(ReadLoopRe
 
     // 1. Let readRequest be a new read request with the following items:
     //    NOTE: items and steps in ReadLoopReadRequest.
-    auto read_request = adopt_ref(*new ReadLoopReadRequest(vm, realm, *this, move(success_steps), move(failure_steps)));
+    auto read_request = heap().allocate_without_realm<ReadLoopReadRequest>(vm, realm, *this, move(success_steps), move(failure_steps));
 
     // 2. Perform ! ReadableStreamDefaultReaderRead(this, readRequest).
     TRY(readable_stream_default_reader_read(*this, read_request));

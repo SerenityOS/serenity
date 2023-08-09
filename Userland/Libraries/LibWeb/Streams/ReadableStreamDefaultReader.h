@@ -20,7 +20,9 @@ struct ReadableStreamReadResult {
     bool done;
 };
 
-class ReadRequest : public RefCounted<ReadRequest> {
+class ReadRequest : public JS::Cell {
+    JS_CELL(ReadRequest, JS::Cell);
+
 public:
     virtual ~ReadRequest() = default;
 
@@ -29,7 +31,9 @@ public:
     virtual void on_error(JS::Value error) = 0;
 };
 
-class ReadLoopReadRequest : public ReadRequest {
+class ReadLoopReadRequest final : public ReadRequest {
+    JS_CELL(ReadLoopReadRequest, JS::Cell);
+
 public:
     // successSteps, which is an algorithm accepting a byte sequence
     using SuccessSteps = JS::SafeFunction<void(ByteBuffer)>;
@@ -46,6 +50,8 @@ public:
     virtual void on_error(JS::Value error) override;
 
 private:
+    virtual void visit_edges(Visitor&) override;
+
     JS::VM& m_vm;
     JS::Realm& m_realm;
     ReadableStreamDefaultReader& m_reader;
@@ -72,7 +78,7 @@ public:
 
     WebIDL::ExceptionOr<void> release_lock();
 
-    SinglyLinkedList<NonnullRefPtr<ReadRequest>>& read_requests() { return m_read_requests; }
+    SinglyLinkedList<JS::NonnullGCPtr<ReadRequest>>& read_requests() { return m_read_requests; }
 
 private:
     explicit ReadableStreamDefaultReader(JS::Realm&);
@@ -81,7 +87,7 @@ private:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
-    SinglyLinkedList<NonnullRefPtr<ReadRequest>> m_read_requests;
+    SinglyLinkedList<JS::NonnullGCPtr<ReadRequest>> m_read_requests;
 };
 
 }

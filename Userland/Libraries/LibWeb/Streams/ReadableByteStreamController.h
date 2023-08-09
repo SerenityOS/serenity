@@ -119,7 +119,7 @@ public:
     void set_stream(JS::GCPtr<ReadableStream> stream) { m_stream = stream; }
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> cancel_steps(JS::Value reason);
-    WebIDL::ExceptionOr<void> pull_steps(NonnullRefPtr<ReadRequest>);
+    WebIDL::ExceptionOr<void> pull_steps(JS::NonnullGCPtr<ReadRequest>);
     WebIDL::ExceptionOr<void> release_steps();
 
 private:

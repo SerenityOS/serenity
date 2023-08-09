@@ -37,7 +37,7 @@ WebIDL::ExceptionOr<double> extract_high_water_mark(QueuingStrategy const&, doub
 
 void readable_stream_close(ReadableStream&);
 void readable_stream_error(ReadableStream&, JS::Value error);
-void readable_stream_add_read_request(ReadableStream&, ReadRequest const&);
+void readable_stream_add_read_request(ReadableStream&, ReadRequest&);
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> readable_stream_cancel(ReadableStream&, JS::Value reason);
 void readable_stream_fulfill_read_request(ReadableStream&, JS::Value chunk, bool done);
 size_t readable_stream_get_num_read_into_requests(ReadableStream const&);
@@ -84,7 +84,7 @@ void readable_byte_stream_controller_clear_algorithms(ReadableByteStreamControll
 void readable_byte_stream_controller_clear_pending_pull_intos(ReadableByteStreamController&);
 WebIDL::ExceptionOr<void> readable_byte_stream_controller_close(ReadableByteStreamController&);
 void readable_byte_stream_controller_error(ReadableByteStreamController&, JS::Value error);
-WebIDL::ExceptionOr<void> readable_byte_stream_controller_fill_read_request_from_queue(ReadableByteStreamController&, NonnullRefPtr<ReadRequest>);
+WebIDL::ExceptionOr<void> readable_byte_stream_controller_fill_read_request_from_queue(ReadableByteStreamController&, JS::NonnullGCPtr<ReadRequest>);
 Optional<double> readable_byte_stream_controller_get_desired_size(ReadableByteStreamController const&);
 WebIDL::ExceptionOr<void> readable_byte_stream_controller_handle_queue_drain(ReadableByteStreamController&);
 void readable_byte_stream_controller_invalidate_byob_request(ReadableByteStreamController&);

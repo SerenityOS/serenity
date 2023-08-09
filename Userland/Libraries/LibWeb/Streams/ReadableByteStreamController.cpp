@@ -69,7 +69,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> ReadableByteStreamControl
 }
 
 // https://streams.spec.whatwg.org/#rbs-controller-private-pull
-WebIDL::ExceptionOr<void> ReadableByteStreamController::pull_steps(NonnullRefPtr<ReadRequest> read_request)
+WebIDL::ExceptionOr<void> ReadableByteStreamController::pull_steps(JS::NonnullGCPtr<ReadRequest> read_request)
 {
     auto& vm = this->vm();
     auto& realm = this->realm();
@@ -86,7 +86,6 @@ WebIDL::ExceptionOr<void> ReadableByteStreamController::pull_steps(NonnullRefPtr
 
         // 2. Perform ! ReadableByteStreamControllerFillReadRequestFromQueue(this, readRequest).
         TRY(readable_byte_stream_controller_fill_read_request_from_queue(*this, read_request));
-
         // 3. Return.
         return {};
     }

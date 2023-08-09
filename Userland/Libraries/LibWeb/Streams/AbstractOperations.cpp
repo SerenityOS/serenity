@@ -320,7 +320,7 @@ void readable_stream_error(ReadableStream& stream, JS::Value error)
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-add-read-request
-void readable_stream_add_read_request(ReadableStream& stream, ReadRequest const& read_request)
+void readable_stream_add_read_request(ReadableStream& stream, ReadRequest& read_request)
 {
     // 1. Assert: stream.[[reader]] implements ReadableStreamDefaultReader.
     VERIFY(stream.reader().has_value() && stream.reader()->has<JS::NonnullGCPtr<ReadableStreamDefaultReader>>());
@@ -1032,7 +1032,7 @@ void readable_byte_stream_controller_error(ReadableByteStreamController& control
 }
 
 // https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamcontrollerfillreadrequestfromqueue
-WebIDL::ExceptionOr<void> readable_byte_stream_controller_fill_read_request_from_queue(ReadableByteStreamController& controller, NonnullRefPtr<ReadRequest> read_request)
+WebIDL::ExceptionOr<void> readable_byte_stream_controller_fill_read_request_from_queue(ReadableByteStreamController& controller, JS::NonnullGCPtr<ReadRequest> read_request)
 {
     auto& vm = controller.vm();
     auto& realm = controller.realm();
