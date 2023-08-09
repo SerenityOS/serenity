@@ -144,7 +144,7 @@ ThrowCompletionOr<Optional<Value>> PrimitiveString::get(VM& vm, PropertyKey cons
             return Value(static_cast<double>(length));
         }
     }
-    auto index = MUST_OR_THROW_OOM(canonical_numeric_index_string(vm, property_key, CanonicalIndexMode::IgnoreNumericRoundtrip));
+    auto index = canonical_numeric_index_string(property_key, CanonicalIndexMode::IgnoreNumericRoundtrip);
     if (!index.is_index())
         return Optional<Value> {};
     auto str = utf16_string_view();
