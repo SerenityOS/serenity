@@ -8,7 +8,7 @@ function registerInDifferentScope(registry) {
     return target;
 }
 
-test.xfailIf(isBytecodeInterpreterEnabled(), "basic functionality", () => {
+test.xfail("basic functionality", () => {
     var registry = new FinalizationRegistry(() => {});
 
     var count = 0;

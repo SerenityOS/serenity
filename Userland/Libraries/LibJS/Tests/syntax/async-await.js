@@ -64,7 +64,7 @@ test("async function cannot use await in default parameters", () => {
     // Even as a reference to some variable it is not allowed
     expect(`
         var await = 4;
-        async function foo(x = await) {} 
+        async function foo(x = await) {}
     `).not.toEval();
 });
 
@@ -216,55 +216,43 @@ describe("await thenables", () => {
         expect(isCalled).toBe(true);
     });
 
-    test.xfailIf(
-        isBytecodeInterpreterEnabled(),
-        "async returning a thanable variable that fulfills",
-        () => {
-            let isCalled = false;
-            const obj = {
-                then(fulfill) {
-                    isCalled = true;
-                    fulfill(isCalled);
-                },
-            };
+    test.xfail("async returning a thanable variable that fulfills", () => {
+        let isCalled = false;
+        const obj = {
+            then(fulfill) {
+                isCalled = true;
+                fulfill(isCalled);
+            },
+        };
 
-            const f = async () => await obj;
-            f();
-            runQueuedPromiseJobs();
-            expect(isCalled).toBe(true);
-        }
-    );
+        const f = async () => await obj;
+        f();
+        runQueuedPromiseJobs();
+        expect(isCalled).toBe(true);
+    });
 
-    test.xfailIf(
-        isBytecodeInterpreterEnabled(),
-        "async returning a thenable directly without fulfilling",
-        () => {
-            let isCalled = false;
-            const f = async () => ({
-                then() {
-                    isCalled = true;
-                },
-            });
-            f();
-            runQueuedPromiseJobs();
-            expect(isCalled).toBe(true);
-        }
-    );
+    test.xfail("async returning a thenable directly without fulfilling", () => {
+        let isCalled = false;
+        const f = async () => ({
+            then() {
+                isCalled = true;
+            },
+        });
+        f();
+        runQueuedPromiseJobs();
+        expect(isCalled).toBe(true);
+    });
 
-    test.xfailIf(
-        isBytecodeInterpreterEnabled(),
-        "async returning a thenable directly that fulfills",
-        () => {
-            let isCalled = false;
-            const f = async () => ({
-                then(fulfill) {
-                    isCalled = true;
-                    fulfill(isCalled);
-                },
-            });
-            f();
-            runQueuedPromiseJobs();
-            expect(isCalled).toBe(true);
-        }
-    );
+    test.xfail("async returning a thenable directly that fulfills", () => {
+        let isCalled = false;
+        const f = async () => ({
+            then(fulfill) {
+                isCalled = true;
+                fulfill(isCalled);
+            },
+        });
+        f();
+        runQueuedPromiseJobs();
+        expect(isCalled).toBe(true);
+    });
 });

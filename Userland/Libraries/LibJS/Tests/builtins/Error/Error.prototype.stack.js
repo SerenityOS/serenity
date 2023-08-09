@@ -3,7 +3,7 @@ const stackGetter = stackDescriptor.get;
 const stackSetter = stackDescriptor.set;
 
 describe("getter - normal behavior", () => {
-    test.xfailIf(isBytecodeInterpreterEnabled(), "basic functionality", () => {
+    test.xfail("basic functionality", () => {
         const stackFrames = [
             /^    at .*Error \(.*\/Error\.prototype\.stack\.js:\d+:\d+\)$/,
             /^    at .+\/Error\/Error\.prototype\.stack\.js:\d+:\d+$/,
