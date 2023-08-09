@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Ryan C. Gordon <icculus@icculus.org>
+Date: Sat, 5 Nov 2022 10:38:33 -0400
+Subject: [PATCH] audio: Avoid accumulation errors in resampler.
+
+Fixes #6391.
+---
+ src/audio/SDL_audiocvt.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/audio/SDL_audiocvt.c b/src/audio/SDL_audiocvt.c
+index 85faa4b0b75a51c2121938d19a3303712ad13edf..841dd00d4b6a5c7d2789d5a655fd962cf014e3c6 100644
+--- a/src/audio/SDL_audiocvt.c
++++ b/src/audio/SDL_audiocvt.c
+@@ -247,7 +247,7 @@ SDL_ResampleAudio(const int chans, const int inrate, const int outrate,
+             *(dst++) = outsample;
+         }
+ 
+-        outtime += outtimeincr;
++        outtime = outtimeincr * i;
+     }
+ 
+     return outframes * chans * sizeof (float);
