@@ -23,6 +23,11 @@ namespace Web::DOM {
 // https://html.spec.whatwg.org/multipage/semantics.html#update-a-style-block
 void StyleElementUtils::update_a_style_block(DOM::Element& style_element)
 {
+    // OPTIMIZATION: Skip parsing CSS if we're in the middle of parsing a HTML fragment.
+    //               The style block will be parsed upon insertion into a proper document.
+    if (style_element.document().is_temporary_document_for_fragment_parsing())
+        return;
+
     // 1. Let element be the style element.
     // 2. If element has an associated CSS style sheet, remove the CSS style sheet in question.
 

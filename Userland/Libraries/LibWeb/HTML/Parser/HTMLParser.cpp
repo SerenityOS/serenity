@@ -3665,6 +3665,8 @@ Vector<JS::Handle<DOM::Node>> HTMLParser::parse_html_fragment(DOM::Element& cont
     auto temp_document = DOM::Document::create(context_element.realm()).release_value_but_fixme_should_propagate_errors();
     temp_document->set_document_type(DOM::Document::Type::HTML);
 
+    temp_document->set_is_temporary_document_for_fragment_parsing({});
+
     // 2. If the node document of the context element is in quirks mode, then let the Document be in quirks mode.
     //    Otherwise, the node document of the context element is in limited-quirks mode, then let the Document be in limited-quirks mode.
     //    Otherwise, leave the Document in no-quirks mode.

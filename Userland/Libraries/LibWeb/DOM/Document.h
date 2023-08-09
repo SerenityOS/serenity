@@ -387,6 +387,9 @@ public:
     void set_parser(Badge<HTML::HTMLParser>, HTML::HTMLParser&);
     void detach_parser(Badge<HTML::HTMLParser>);
 
+    void set_is_temporary_document_for_fragment_parsing(Badge<HTML::HTMLParser>) { m_temporary_document_for_fragment_parsing = true; }
+    [[nodiscard]] bool is_temporary_document_for_fragment_parsing() const { return m_temporary_document_for_fragment_parsing; }
+
     static bool is_valid_name(DeprecatedString const&);
 
     struct PrefixAndTagName {
@@ -688,6 +691,8 @@ private:
     bool m_will_declaratively_refresh { false };
 
     RefPtr<Core::Timer> m_active_refresh_timer;
+
+    bool m_temporary_document_for_fragment_parsing { false };
 };
 
 template<>
