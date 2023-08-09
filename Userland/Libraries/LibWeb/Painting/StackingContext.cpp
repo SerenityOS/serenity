@@ -341,6 +341,32 @@ Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformati
         if (count == 1)
             return Gfx::rotation_matrix({ 0.0f, 0.0f, 1.0f }, value(0));
         break;
+    case CSS::TransformFunction::Skew:
+        if (count == 1)
+            return Gfx::FloatMatrix4x4(1, tanf(value(0)), 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1);
+        if (count == 2)
+            return Gfx::FloatMatrix4x4(1, tanf(value(0)), 0, 0,
+                tanf(value(1)), 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1);
+        break;
+    case CSS::TransformFunction::SkewX:
+        if (count == 1)
+            return Gfx::FloatMatrix4x4(1, tanf(value(0)), 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1);
+        break;
+    case CSS::TransformFunction::SkewY:
+        if (count == 1)
+            return Gfx::FloatMatrix4x4(1, 0, 0, 0,
+                tanf(value(0)), 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1);
+        break;
     default:
         dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Unhandled transformation function {}", MUST(CSS::TransformationStyleValue::create(transformation.function, {}))->to_string());
     }
