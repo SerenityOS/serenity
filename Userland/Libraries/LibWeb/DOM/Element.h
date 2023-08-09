@@ -88,6 +88,7 @@ public:
     DeprecatedFlyString const& namespace_uri() const { return namespace_(); }
 
     bool has_attribute(DeprecatedFlyString const& name) const;
+    bool has_attribute_ns(DeprecatedFlyString namespace_, DeprecatedFlyString const& name) const;
     bool has_attributes() const;
     DeprecatedString attribute(DeprecatedFlyString const& name) const { return get_attribute(name); }
     DeprecatedString get_attribute(DeprecatedFlyString const& name) const;

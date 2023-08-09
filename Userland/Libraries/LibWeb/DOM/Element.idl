@@ -35,6 +35,7 @@ interface Element : Node {
     [CEReactions] undefined removeAttribute(DOMString qualifiedName);
     [CEReactions] boolean toggleAttribute(DOMString qualifiedName, optional boolean force);
     boolean hasAttribute(DOMString qualifiedName);
+    boolean hasAttributeNS(DOMString? namespace, DOMString localName);
     boolean hasAttributes();
     [SameObject] readonly attribute NamedNodeMap attributes;
     sequence<DOMString> getAttributeNames();
