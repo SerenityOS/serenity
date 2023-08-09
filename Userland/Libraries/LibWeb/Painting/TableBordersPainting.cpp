@@ -34,8 +34,9 @@ static void collect_cell_boxes(Vector<PaintableBox const*>& cell_boxes, Layout::
 {
     box.for_each_child([&](auto& child) {
         if (child.display().is_table_cell()) {
-            VERIFY(is<Layout::Box>(child) && child.paintable());
-            cell_boxes.append(static_cast<Layout::Box const&>(child).paintable_box());
+            VERIFY(is<Layout::Box>(child));
+            if (child.paintable())
+                cell_boxes.append(static_cast<Layout::Box const&>(child).paintable_box());
         } else {
             collect_cell_boxes(cell_boxes, child);
         }
