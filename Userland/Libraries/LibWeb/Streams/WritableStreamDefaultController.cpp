@@ -4,10 +4,20 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/Streams/WritableStream.h>
 #include <LibWeb/Streams/WritableStreamDefaultController.h>
 
 namespace Web::Streams {
+
+void WritableStreamDefaultController::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_signal);
+    for (auto& value : m_queue)
+        visitor.visit(value.value);
+    visitor.visit(m_stream);
+}
 
 // https://streams.spec.whatwg.org/#ws-default-controller-error
 WebIDL::ExceptionOr<void> WritableStreamDefaultController::error(JS::Value error)
