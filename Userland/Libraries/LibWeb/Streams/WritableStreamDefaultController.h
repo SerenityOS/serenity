@@ -55,6 +55,8 @@ public:
 private:
     explicit WritableStreamDefaultController(JS::Realm&);
 
+    virtual void visit_edges(Visitor&) override;
+
     // https://streams.spec.whatwg.org/#writablestreamdefaultcontroller-abortalgorithm
     // A promise-returning algorithm, taking one argument (the abort reason), which communicates a requested abort to the underlying sink
     Optional<AbortAlgorithm> m_abort_algorithm;
