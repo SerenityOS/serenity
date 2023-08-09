@@ -72,6 +72,11 @@ DeprecatedString URL::fragment() const
     return percent_decode(m_fragment);
 }
 
+DeprecatedString URL::raw_fragment() const
+{
+    return m_fragment;
+}
+
 // NOTE: This only exists for compatibility with the existing URL tests which check for both .is_null() and .is_empty().
 static DeprecatedString deprecated_string_percent_encode(DeprecatedString const& input, URL::PercentEncodeSet set = URL::PercentEncodeSet::Userinfo, URL::SpaceAsPlus space_as_plus = URL::SpaceAsPlus::No)
 {
