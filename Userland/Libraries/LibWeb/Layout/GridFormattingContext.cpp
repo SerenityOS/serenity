@@ -1314,7 +1314,7 @@ void GridFormattingContext::place_grid_items(AvailableSpace const& available_spa
     // flex items), which are then assigned to predefined areas in the grid. They can be explicitly
     // placed using coordinates through the grid-placement properties or implicitly placed into
     // empty areas using auto-placement.
-    Vector<JS::NonnullGCPtr<Box const>> boxes_to_place;
+    HashMap<int, Vector<JS::NonnullGCPtr<Box const>>> order_item_bucket;
     grid_container().for_each_child_of_type<Box>([&](Box& child_box) {
         if (can_skip_is_anonymous_text_run(child_box))
             return IterationDecision::Continue;
@@ -1322,7 +1322,9 @@ void GridFormattingContext::place_grid_items(AvailableSpace const& available_spa
         if (child_box.is_out_of_flow(*this))
             return IterationDecision::Continue;
 
-        boxes_to_place.append(child_box);
+        auto& order_bucket = order_item_bucket.ensure(child_box.computed_values().order());
+        order_bucket.append(child_box);
+
         return IterationDecision::Continue;
     });
 
@@ -1333,28 +1335,37 @@ void GridFormattingContext::place_grid_items(AvailableSpace const& available_spa
     // https://drafts.csswg.org/css-grid/#auto-placement-algo
     // 8.5. Grid Item Placement Algorithm
 
+    auto keys = order_item_bucket.keys();
+    quick_sort(keys, [](auto& a, auto& b) { return a < b; });
+
     // FIXME: 0. Generate anonymous grid items
 
     // 1. Position anything that's not auto-positioned.
-    for (size_t i = 0; i < boxes_to_place.size(); i++) {
-        auto const& child_box = boxes_to_place[i];
-        if (is_auto_positioned_row(child_box->computed_values().grid_row_start(), child_box->computed_values().grid_row_end())
-            || is_auto_positioned_column(child_box->computed_values().grid_column_start(), child_box->computed_values().grid_column_end()))
-            continue;
-        place_item_with_row_and_column_position(child_box);
-        boxes_to_place.remove(i);
-        i--;
+    for (auto key : keys) {
+        auto& boxes_to_place = order_item_bucket.get(key).value();
+        for (size_t i = 0; i < boxes_to_place.size(); i++) {
+            auto const& child_box = boxes_to_place[i];
+            if (is_auto_positioned_row(child_box->computed_values().grid_row_start(), child_box->computed_values().grid_row_end())
+                || is_auto_positioned_column(child_box->computed_values().grid_column_start(), child_box->computed_values().grid_column_end()))
+                continue;
+            place_item_with_row_and_column_position(child_box);
+            boxes_to_place.remove(i);
+            i--;
+        }
     }
 
     // 2. Process the items locked to a given row.
     // FIXME: Do "dense" packing
-    for (size_t i = 0; i < boxes_to_place.size(); i++) {
-        auto const& child_box = boxes_to_place[i];
-        if (is_auto_positioned_row(child_box->computed_values().grid_row_start(), child_box->computed_values().grid_row_end()))
-            continue;
-        place_item_with_row_position(child_box);
-        boxes_to_place.remove(i);
-        i--;
+    for (auto key : keys) {
+        auto& boxes_to_place = order_item_bucket.get(key).value();
+        for (size_t i = 0; i < boxes_to_place.size(); i++) {
+            auto const& child_box = boxes_to_place[i];
+            if (is_auto_positioned_row(child_box->computed_values().grid_row_start(), child_box->computed_values().grid_row_end()))
+                continue;
+            place_item_with_row_position(child_box);
+            boxes_to_place.remove(i);
+            i--;
+        }
     }
 
     // 3. Determine the columns in the implicit grid.
@@ -1373,15 +1384,18 @@ void GridFormattingContext::place_grid_items(AvailableSpace const& available_spa
     // 3.3. If the largest column span among all the items without a definite column position is larger
     // than the width of the implicit grid, add columns to the end of the implicit grid to accommodate
     // that column span.
-    for (auto const& child_box : boxes_to_place) {
-        int column_span = 1;
-        if (child_box->computed_values().grid_column_start().is_span())
-            column_span = child_box->computed_values().grid_column_start().raw_value();
-        else if (child_box->computed_values().grid_column_end().is_span())
-            column_span = child_box->computed_values().grid_column_end().raw_value();
+    for (auto key : keys) {
+        auto& boxes_to_place = order_item_bucket.get(key).value();
+        for (auto const& child_box : boxes_to_place) {
+            int column_span = 1;
+            if (child_box->computed_values().grid_column_start().is_span())
+                column_span = child_box->computed_values().grid_column_start().raw_value();
+            else if (child_box->computed_values().grid_column_end().is_span())
+                column_span = child_box->computed_values().grid_column_end().raw_value();
 
-        if (column_span - 1 > m_occupation_grid.max_column_index())
-            m_occupation_grid.set_max_column_index(column_span - 1);
+            if (column_span - 1 > m_occupation_grid.max_column_index())
+                m_occupation_grid.set_max_column_index(column_span - 1);
+        }
     }
 
     // 4. Position the remaining grid items.
@@ -1389,23 +1403,26 @@ void GridFormattingContext::place_grid_items(AvailableSpace const& available_spa
     // order:
     auto auto_placement_cursor_x = 0;
     auto auto_placement_cursor_y = 0;
-    for (size_t i = 0; i < boxes_to_place.size(); i++) {
-        auto const& child_box = boxes_to_place[i];
-        // 4.1. For sparse packing:
-        // FIXME: no distinction made. See #4.2
+    for (auto key : keys) {
+        auto& boxes_to_place = order_item_bucket.get(key).value();
+        for (size_t i = 0; i < boxes_to_place.size(); i++) {
+            auto const& child_box = boxes_to_place[i];
+            // 4.1. For sparse packing:
+            // FIXME: no distinction made. See #4.2
 
-        // 4.1.1. If the item has a definite column position:
-        if (!is_auto_positioned_column(child_box->computed_values().grid_column_start(), child_box->computed_values().grid_column_end()))
-            place_item_with_column_position(child_box, auto_placement_cursor_x, auto_placement_cursor_y);
+            // 4.1.1. If the item has a definite column position:
+            if (!is_auto_positioned_column(child_box->computed_values().grid_column_start(), child_box->computed_values().grid_column_end()))
+                place_item_with_column_position(child_box, auto_placement_cursor_x, auto_placement_cursor_y);
 
-        // 4.1.2. If the item has an automatic grid position in both axes:
-        else
-            place_item_with_no_declared_position(child_box, auto_placement_cursor_x, auto_placement_cursor_y);
+            // 4.1.2. If the item has an automatic grid position in both axes:
+            else
+                place_item_with_no_declared_position(child_box, auto_placement_cursor_x, auto_placement_cursor_y);
 
-        boxes_to_place.remove(i);
-        i--;
+            boxes_to_place.remove(i);
+            i--;
 
-        // FIXME: 4.2. For dense packing:
+            // FIXME: 4.2. For dense packing:
+        }
     }
 
     // NOTE: When final implicit grid sizes are known, we can offset their positions so leftmost grid track has 0 index.
