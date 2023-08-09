@@ -7,7 +7,7 @@ describe("correct behaviour", () => {
         yield b + 1;
         yield Promise.resolve(b + 2);
         yield* [Promise.resolve(b + 3), Promise.resolve(b + 4), Promise.resolve(b + 5)];
-        return b + 6;
+        return Promise.resolve(b + 6);
     }
 
     test("length is 1", () => {
@@ -64,7 +64,7 @@ describe("correct behaviour", () => {
         expect(seventhRunResult).toBe(9);
     });
 
-    test("can return a value", () => {
+    test("can return a value and return implicitly awaits", () => {
         const eighthRunResult = runGenerator("bad7", false);
         expect(eighthRunResult.value).toBe(10);
         expect(eighthRunResult.done).toBeTrue();

@@ -9,6 +9,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/PromiseCapability.h>
+#include <LibJS/Runtime/PromiseConstructor.h>
 #include <LibJS/Runtime/VM.h>
 
 namespace JS {
@@ -21,7 +22,7 @@ ThrowCompletionOr<Value> AsyncFunctionDriverWrapper::create(Realm& realm, Genera
     auto wrapper = MUST_OR_THROW_OOM(realm.heap().allocate<AsyncFunctionDriverWrapper>(realm, realm, *generator_object, *top_level_promise));
     // Prime the generator:
     // This runs until the first `await value;`
-    wrapper->continue_async_execution(realm.vm(), js_undefined(), true);
+    wrapper->continue_async_execution(realm.vm(), js_undefined(), true, IsInitialExecution::Yes);
 
     return top_level_promise;
 }
@@ -29,39 +30,102 @@ ThrowCompletionOr<Value> AsyncFunctionDriverWrapper::create(Realm& realm, Genera
 AsyncFunctionDriverWrapper::AsyncFunctionDriverWrapper(Realm& realm, NonnullGCPtr<GeneratorObject> generator_object, NonnullGCPtr<Promise> top_level_promise)
     : Promise(realm.intrinsics().promise_prototype())
     , m_generator_object(generator_object)
-    , m_on_fulfillment(*NativeFunction::create(realm, "async.on_fulfillment"sv, [this](VM& vm) -> ThrowCompletionOr<Value> {
-        auto arg = vm.argument(0);
-        if (m_expect_promise) {
-            continue_async_execution(vm, arg, true);
-            m_expect_promise = false;
-            return js_undefined();
-        }
-        return arg;
-    }))
-    , m_on_rejection(*NativeFunction::create(realm, "async.on_rejection"sv, [this](VM& vm) -> ThrowCompletionOr<Value> {
-        auto arg = vm.argument(0);
-        if (m_expect_promise) {
-            continue_async_execution(vm, arg, false);
-            m_expect_promise = false;
-            return js_undefined();
-        }
-        return throw_completion(arg);
-    }))
     , m_top_level_promise(top_level_promise)
     , m_self_handle(make_handle(*this))
 {
 }
 
-void AsyncFunctionDriverWrapper::continue_async_execution(VM& vm, Value value, bool is_successful)
+// 27.7.5.3 Await ( value ), https://tc39.es/ecma262/#await
+ThrowCompletionOr<void> AsyncFunctionDriverWrapper::await(JS::Value value)
+{
+    auto& vm = this->vm();
+    auto& realm = *vm.current_realm();
+
+    // 1. Let asyncContext be the running execution context.
+    m_suspended_execution_context = vm.running_execution_context().copy();
+
+    // 2. Let promise be ? PromiseResolve(%Promise%, value).
+    auto* promise_object = TRY(promise_resolve(vm, realm.intrinsics().promise_constructor(), value));
+
+    // 3. Let fulfilledClosure be a new Abstract Closure with parameters (v) that captures asyncContext and performs the
+    //    following steps when called:
+    auto fulfilled_closure = [this](VM& vm) -> ThrowCompletionOr<Value> {
+        auto value = vm.argument(0);
+
+        // a. Let prevContext be the running execution context.
+        auto& prev_context = vm.running_execution_context();
+
+        // FIXME: b. Suspend prevContext.
+
+        // c. Push asyncContext onto the execution context stack; asyncContext is now the running execution context.
+        TRY(vm.push_execution_context(m_suspended_execution_context.value(), {}));
+
+        // d. Resume the suspended evaluation of asyncContext using NormalCompletion(v) as the result of the operation that
+        //    suspended it.
+        continue_async_execution(vm, value, true);
+
+        // e. Assert: When we reach this step, asyncContext has already been removed from the execution context stack and
+        //    prevContext is the currently running execution context.
+        VERIFY(&vm.running_execution_context() == &prev_context);
+
+        // f. Return undefined.
+        return js_undefined();
+    };
+
+    // 4. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 1, "", « »).
+    auto on_fulfilled = NativeFunction::create(realm, move(fulfilled_closure), 1, "");
+
+    // 5. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures asyncContext and performs the
+    //    following steps when called:
+    auto rejected_closure = [this](VM& vm) -> ThrowCompletionOr<Value> {
+        auto reason = vm.argument(0);
+
+        // a. Let prevContext be the running execution context.
+        auto& prev_context = vm.running_execution_context();
+
+        // FIXME: b. Suspend prevContext.
+
+        // c. Push asyncContext onto the execution context stack; asyncContext is now the running execution context.
+        TRY(vm.push_execution_context(m_suspended_execution_context.value(), {}));
+
+        // d. Resume the suspended evaluation of asyncContext using ThrowCompletion(reason) as the result of the operation that
+        //    suspended it.
+        continue_async_execution(vm, reason, false);
+
+        // e. Assert: When we reach this step, asyncContext has already been removed from the execution context stack and
+        //    prevContext is the currently running execution context.
+        VERIFY(&vm.running_execution_context() == &prev_context);
+
+        // f. Return undefined.
+        return js_undefined();
+    };
+
+    // 6. Let onRejected be CreateBuiltinFunction(rejectedClosure, 1, "", « »).
+    auto on_rejected = NativeFunction::create(realm, move(rejected_closure), 1, "");
+
+    // 7. Perform PerformPromiseThen(promise, onFulfilled, onRejected).
+    m_current_promise = verify_cast<Promise>(promise_object);
+    m_current_promise->perform_then(on_fulfilled, on_rejected, {});
+
+    // 8. Remove asyncContext from the execution context stack and restore the execution context that is at the top of the
+    //    execution context stack as the running execution context.
+    // NOTE: This is done later on for us in continue_async_execution.
+
+    // NOTE: None of these are necessary. 10-12 are handled by step d of the above lambdas.
+    // 9. Let callerContext be the running execution context.
+    // 10. Resume callerContext passing empty. If asyncContext is ever resumed again, let completion be the Completion Record with which it is resumed.
+    // 11. Assert: If control reaches here, then asyncContext is the running execution context again.
+    // 12. Return completion.
+    return {};
+}
+
+void AsyncFunctionDriverWrapper::continue_async_execution(VM& vm, Value value, bool is_successful, IsInitialExecution is_initial_execution)
 {
     auto generator_result = is_successful
         ? m_generator_object->resume(vm, value, {})
         : m_generator_object->resume_abrupt(vm, throw_completion(value), {});
 
     auto result = [&, this]() -> ThrowCompletionOr<void> {
-        // This loop is for the trivial case of awaiting a non-Promise value,
-        // and pseudo promises, that are actually resolved in a synchronous manner
-        // It's either this, a goto, or a needles indirection
         while (true) {
             if (generator_result.is_throw_completion())
                 return generator_result.throw_completion();
@@ -95,39 +159,12 @@ void AsyncFunctionDriverWrapper::continue_async_execution(VM& vm, Value value, b
                 return {};
             }
 
-            if (!promise_value.is_object() || !is<Promise>(promise_value.as_object())) {
-                // We hit the trivial case of `await value`, where value is not a
-                // Promise, so we can just continue the execution
-                generator_result = m_generator_object->resume(vm, promise_value, {});
-                continue;
-            }
-
             // We hit `await Promise`
-            m_current_promise = static_cast<Promise*>(&promise_value.as_object());
-            // FIXME: We need to be a bit explicit here,
-            //        because for non async promises we arrive late to register us as handlers,
-            //        so we need to just pretend we are early and do the main logic ourselves,
-            //        Boon: This allows us to short-circuit to immediately continuing the execution
-            // FIXME: This then causes a warning to be printed to the console, that we supposedly did not handle the promise
-            if (m_current_promise->state() == Promise::State::Fulfilled) {
-                generator_result = m_generator_object->resume(vm, m_current_promise->result(), {});
+            auto await_result = this->await(promise_value);
+            if (await_result.is_throw_completion()) {
+                generator_result = m_generator_object->resume_abrupt(vm, await_result.release_error(), {});
                 continue;
             }
-            if (m_current_promise->state() == Promise::State::Rejected) {
-                generator_result = m_generator_object->resume_abrupt(vm, throw_completion(m_current_promise->result()), {});
-                continue;
-            }
-            // Due to the nature of promise capabilities we might get called on either one path,
-            // so we use a flag to make sure only accept one call
-            // FIXME: There might be a cleaner way to accomplish this
-            m_expect_promise = true;
-            auto promise_capability = PromiseCapability::create(vm, *m_current_promise,
-                m_on_fulfillment,
-                m_on_rejection);
-            m_current_promise->perform_then(
-                m_on_fulfillment,
-                m_on_rejection,
-                promise_capability);
             return {};
         }
     }();
@@ -138,17 +175,21 @@ void AsyncFunctionDriverWrapper::continue_async_execution(VM& vm, Value value, b
         // We should not execute anymore, so we are safe to allow our selfs to be GC'd
         m_self_handle = {};
     }
+
+    // For the initial execution, the execution context will be popped for us later on by ECMAScriptFunctionObject.
+    if (is_initial_execution == IsInitialExecution::No)
+        vm.pop_execution_context();
 }
 
 void AsyncFunctionDriverWrapper::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_generator_object);
-    visitor.visit(m_on_fulfillment);
-    visitor.visit(m_on_rejection);
     visitor.visit(m_top_level_promise);
     if (m_current_promise)
         visitor.visit(m_current_promise);
+    if (m_suspended_execution_context.has_value())
+        m_suspended_execution_context->visit_edges(visitor);
 }
 
 }
