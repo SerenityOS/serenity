@@ -96,6 +96,7 @@ private:
     virtual void resizeEvent(QResizeEvent*) override;
     virtual void moveEvent(QMoveEvent*) override;
     virtual void wheelEvent(QWheelEvent*) override;
+    virtual void closeEvent(QCloseEvent*) override;
 
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument = "");
 
