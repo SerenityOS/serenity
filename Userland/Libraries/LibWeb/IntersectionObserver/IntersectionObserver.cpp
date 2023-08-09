@@ -53,7 +53,9 @@ IntersectionObserver::IntersectionObserver(JS::Realm& realm, JS::GCPtr<WebIDL::C
     });
 }
 
-IntersectionObserver::~IntersectionObserver()
+IntersectionObserver::~IntersectionObserver() = default;
+
+void IntersectionObserver::finalize()
 {
     intersection_root().visit([this](auto& node) {
         node->document().unregister_intersection_observer({}, *this);

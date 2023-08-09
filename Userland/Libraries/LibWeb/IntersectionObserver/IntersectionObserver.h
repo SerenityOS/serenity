@@ -66,6 +66,7 @@ private:
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(JS::Cell::Visitor&) override;
+    virtual void finalize() override;
 
     // https://www.w3.org/TR/intersection-observer/#dom-intersectionobserver-callback-slot
     JS::GCPtr<WebIDL::CallbackType> m_callback;
