@@ -216,7 +216,6 @@ private:
 
     OccupationGrid m_occupation_grid;
     Vector<GridItem> m_grid_items;
-    Vector<JS::NonnullGCPtr<Box const>> m_boxes_to_place;
 
     Optional<AvailableSpace> m_available_space;
 
