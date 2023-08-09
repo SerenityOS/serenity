@@ -234,6 +234,17 @@ bool Element::has_attribute(DeprecatedFlyString const& name) const
     return m_attributes->get_attribute(name) != nullptr;
 }
 
+// https://dom.spec.whatwg.org/#dom-element-hasattributens
+bool Element::has_attribute_ns(DeprecatedFlyString namespace_, DeprecatedFlyString const& name) const
+{
+    // 1. If namespace is the empty string, then set it to null.
+    if (namespace_.is_empty())
+        namespace_ = {};
+
+    // 2. Return true if this has an attribute whose namespace is namespace and local name is localName; otherwise false.
+    return m_attributes->get_attribute_ns(namespace_, name) != nullptr;
+}
+
 // https://dom.spec.whatwg.org/#dom-element-toggleattribute
 WebIDL::ExceptionOr<bool> Element::toggle_attribute(DeprecatedFlyString const& name, Optional<bool> force)
 {
