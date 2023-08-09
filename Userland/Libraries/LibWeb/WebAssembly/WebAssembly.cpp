@@ -201,7 +201,7 @@ JS::ThrowCompletionOr<size_t> instantiate_module(JS::VM& vm, Wasm::Module const&
 
                             auto method = TRY(result.get_method(vm, vm.names.iterator));
                             if (method == JS::js_undefined())
-                                return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotIterable, TRY_OR_THROW_OOM(vm, result.to_string_without_side_effects()));
+                                return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotIterable, result.to_string_without_side_effects());
 
                             auto values = TRY(JS::iterator_to_list(vm, TRY(JS::get_iterator_from_method(vm, result, *method))));
 

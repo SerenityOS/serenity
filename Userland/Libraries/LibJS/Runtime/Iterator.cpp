@@ -39,7 +39,7 @@ ThrowCompletionOr<IteratorRecord> get_iterator_from_method(VM& vm, Value object,
 
     // 2. If iterator is not an Object, throw a TypeError exception.
     if (!iterator.is_object())
-        return vm.throw_completion<TypeError>(ErrorType::NotIterable, TRY_OR_THROW_OOM(vm, object.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotIterable, object.to_string_without_side_effects());
 
     // 3. Let nextMethod be ? Get(iterator, "next").
     auto next_method = TRY(iterator.get(vm, vm.names.next));
@@ -68,7 +68,7 @@ ThrowCompletionOr<IteratorRecord> get_iterator(VM& vm, Value object, IteratorHin
 
             // ii. If syncMethod is undefined, throw a TypeError exception.
             if (!sync_method)
-                return vm.throw_completion<TypeError>(ErrorType::NotIterable, TRY_OR_THROW_OOM(vm, object.to_string_without_side_effects()));
+                return vm.throw_completion<TypeError>(ErrorType::NotIterable, object.to_string_without_side_effects());
 
             // iii. Let syncIteratorRecord be ? GetIteratorFromMethod(obj, syncMethod).
             auto sync_iterator_record = TRY(get_iterator_from_method(vm, object, *sync_method));
@@ -85,7 +85,7 @@ ThrowCompletionOr<IteratorRecord> get_iterator(VM& vm, Value object, IteratorHin
 
     // 3. If method is undefined, throw a TypeError exception.
     if (!method)
-        return vm.throw_completion<TypeError>(ErrorType::NotIterable, TRY_OR_THROW_OOM(vm, object.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotIterable, object.to_string_without_side_effects());
 
     // 4. Return ? GetIteratorFromMethod(obj, method).
     return TRY(get_iterator_from_method(vm, object, *method));
@@ -111,7 +111,7 @@ ThrowCompletionOr<IteratorRecord> get_iterator_flattenable(VM& vm, Value object,
     if (!object.is_object()) {
         // a. If stringHandling is reject-strings or obj is not a String, throw a TypeError exception.
         if (string_handling == StringHandling::RejectStrings || !object.is_string())
-            return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, object.to_string_without_side_effects()));
+            return vm.throw_completion<TypeError>(ErrorType::NotAnObject, object.to_string_without_side_effects());
     }
 
     // 2. Let method be ? GetMethod(obj, @@iterator).
@@ -132,7 +132,7 @@ ThrowCompletionOr<IteratorRecord> get_iterator_flattenable(VM& vm, Value object,
 
     // 5. If iterator is not an Object, throw a TypeError exception.
     if (!iterator.is_object())
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, iterator.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, iterator.to_string_without_side_effects());
 
     // 6. Return ? GetIteratorDirect(iterator).
     return TRY(get_iterator_direct(vm, iterator.as_object()));

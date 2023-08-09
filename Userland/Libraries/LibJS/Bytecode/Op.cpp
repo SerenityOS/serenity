@@ -73,7 +73,7 @@ static ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value thi
     case PropertyKind::KeyValue: {
         bool succeeded = TRY(object->internal_set(name, value, this_value));
         if (!succeeded && vm.in_strict_mode())
-            return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, TRY_OR_THROW_OOM(vm, base.to_string_without_side_effects()));
+            return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, base.to_string_without_side_effects());
         break;
     }
     case PropertyKind::DirectKeyValue:
@@ -860,7 +860,7 @@ static MarkedVector<Value> argument_list_evaluation(Bytecode::Interpreter& inter
     auto arguments = interpreter.accumulator();
 
     if (!(arguments.is_object() && is<Array>(arguments.as_object()))) {
-        dbgln("[{}] Call arguments are not an array, but: {}", interpreter.debug_position(), MUST(arguments.to_string_without_side_effects()));
+        dbgln("[{}] Call arguments are not an array, but: {}", interpreter.debug_position(), arguments.to_string_without_side_effects());
         interpreter.current_executable().dump();
         VERIFY_NOT_REACHED();
     }
@@ -885,9 +885,9 @@ static Completion throw_type_error_for_callee(Bytecode::Interpreter& interpreter
     auto callee = interpreter.reg(call.callee());
 
     if (call.expression_string().has_value())
-        return vm.throw_completion<TypeError>(ErrorType::IsNotAEvaluatedFrom, TRY_OR_THROW_OOM(vm, callee.to_string_without_side_effects()), callee_type, interpreter.current_executable().get_string(call.expression_string()->value()));
+        return vm.throw_completion<TypeError>(ErrorType::IsNotAEvaluatedFrom, callee.to_string_without_side_effects(), callee_type, interpreter.current_executable().get_string(call.expression_string()->value()));
 
-    return vm.throw_completion<TypeError>(ErrorType::IsNotA, TRY_OR_THROW_OOM(vm, callee.to_string_without_side_effects()), callee_type);
+    return vm.throw_completion<TypeError>(ErrorType::IsNotA, callee.to_string_without_side_effects(), callee_type);
 }
 
 static ThrowCompletionOr<void> throw_if_needed_for_call(Interpreter& interpreter, auto& call, Value callee)
@@ -1054,7 +1054,7 @@ ThrowCompletionOr<void> ThrowIfNotObject::execute_impl(Bytecode::Interpreter& in
 {
     auto& vm = interpreter.vm();
     if (!interpreter.accumulator().is_object())
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, interpreter.accumulator().to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, interpreter.accumulator().to_string_without_side_effects());
     return {};
 }
 
@@ -1063,7 +1063,7 @@ ThrowCompletionOr<void> ThrowIfNullish::execute_impl(Bytecode::Interpreter& inte
     auto& vm = interpreter.vm();
     auto value = interpreter.accumulator();
     if (value.is_nullish())
-        return vm.throw_completion<TypeError>(ErrorType::NotObjectCoercible, TRY_OR_THROW_OOM(vm, value.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotObjectCoercible, value.to_string_without_side_effects());
     return {};
 }
 
@@ -1888,7 +1888,7 @@ DeprecatedString IteratorClose::to_deprecated_string_impl(Bytecode::Executable c
     if (!m_completion_value.has_value())
         return DeprecatedString::formatted("IteratorClose completion_type={} completion_value=<empty>", to_underlying(m_completion_type));
 
-    auto completion_value_string = m_completion_value->to_string_without_side_effects().release_value_but_fixme_should_propagate_errors();
+    auto completion_value_string = m_completion_value->to_string_without_side_effects();
     return DeprecatedString::formatted("IteratorClose completion_type={} completion_value={}", to_underlying(m_completion_type), completion_value_string);
 }
 
@@ -1897,7 +1897,7 @@ DeprecatedString AsyncIteratorClose::to_deprecated_string_impl(Bytecode::Executa
     if (!m_completion_value.has_value())
         return DeprecatedString::formatted("AsyncIteratorClose completion_type={} completion_value=<empty>", to_underlying(m_completion_type));
 
-    auto completion_value_string = m_completion_value->to_string_without_side_effects().release_value_but_fixme_should_propagate_errors();
+    auto completion_value_string = m_completion_value->to_string_without_side_effects();
     return DeprecatedString::formatted("AsyncIteratorClose completion_type={} completion_value={}", to_underlying(m_completion_type), completion_value_string);
 }
 

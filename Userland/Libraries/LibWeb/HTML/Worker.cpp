@@ -326,7 +326,7 @@ WebIDL::ExceptionOr<void> Worker::terminate()
 // https://html.spec.whatwg.org/multipage/workers.html#dom-worker-postmessage
 void Worker::post_message(JS::Value message, JS::Value)
 {
-    dbgln_if(WEB_WORKER_DEBUG, "WebWorker: Post Message: {}", MUST(message.to_string_without_side_effects()));
+    dbgln_if(WEB_WORKER_DEBUG, "WebWorker: Post Message: {}", message.to_string_without_side_effects());
 
     // 1. Let targetPort be the port with which this is entangled, if any; otherwise let it be null.
     auto& target_port = m_outside_port;

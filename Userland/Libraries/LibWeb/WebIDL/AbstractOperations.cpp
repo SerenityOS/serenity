@@ -154,7 +154,7 @@ JS::Completion call_user_object_operation(WebIDL::CallbackType& callback, Deprec
 
         // 4. If ! IsCallable(X) is false, then set completion to a new Completion{[[Type]]: throw, [[Value]]: a newly created TypeError object, [[Target]]: empty}, and jump to the step labeled return.
         if (!get_result.value().is_function()) {
-            completion = realm.vm().template throw_completion<JS::TypeError>(JS::ErrorType::NotAFunction, TRY_OR_THROW_OOM(realm.vm(), get_result.value().to_string_without_side_effects()));
+            completion = realm.vm().template throw_completion<JS::TypeError>(JS::ErrorType::NotAFunction, get_result.value().to_string_without_side_effects());
             return clean_up_on_return(stored_settings, relevant_settings, completion, callback.operation_returns_promise);
         }
 
@@ -258,7 +258,7 @@ JS::Completion construct(WebIDL::CallbackType& callback, JS::MarkedVector<JS::Va
 
     // 3. If IsConstructor(F) is false, throw a TypeError exception.
     if (!JS::Value(function_object).is_constructor())
-        return realm.vm().template throw_completion<JS::TypeError>(JS::ErrorType::NotAConstructor, TRY_OR_THROW_OOM(realm.vm(), JS::Value(function_object).to_string_without_side_effects()));
+        return realm.vm().template throw_completion<JS::TypeError>(JS::ErrorType::NotAConstructor, JS::Value(function_object).to_string_without_side_effects());
 
     // 5. Let relevant settings be realm’s settings object.
     auto& relevant_settings = Bindings::host_defined_environment_settings_object(realm);

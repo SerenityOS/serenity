@@ -50,7 +50,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> DataViewConstructor::construct(FunctionO
 
     // 2. Perform ? RequireInternalSlot(buffer, [[ArrayBufferData]]).
     if (!buffer.is_object() || !is<ArrayBuffer>(buffer.as_object()))
-        return vm.throw_completion<TypeError>(ErrorType::IsNotAn, TRY_OR_THROW_OOM(vm, buffer.to_string_without_side_effects()), vm.names.ArrayBuffer);
+        return vm.throw_completion<TypeError>(ErrorType::IsNotAn, buffer.to_string_without_side_effects(), vm.names.ArrayBuffer);
 
     auto& array_buffer = static_cast<ArrayBuffer&>(buffer.as_object());
 

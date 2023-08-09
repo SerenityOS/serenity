@@ -92,7 +92,7 @@ JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::key_for)
 
     // 1. If sym is not a Symbol, throw a TypeError exception.
     if (!argument.is_symbol())
-        return vm.throw_completion<TypeError>(ErrorType::NotASymbol, TRY_OR_THROW_OOM(vm, argument.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotASymbol, argument.to_string_without_side_effects());
 
     // 2. Return KeyForSymbol(sym).
     auto key = argument.as_symbol().key();

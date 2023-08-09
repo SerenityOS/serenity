@@ -3297,7 +3297,7 @@ JS::ThrowCompletionOr<JS::Handle<WebIDL::CallbackType>> property_to_callback(JS:
         return JS::Handle<WebIDL::CallbackType> {};
 
     if (!property.is_function())
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, property.to_string_without_side_effects()));
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunction, property.to_string_without_side_effects());
 
     return vm.heap().allocate_without_realm<WebIDL::CallbackType>(property.as_object(), HTML::incumbent_settings_object(), operation_returns_promise);
 }

@@ -129,7 +129,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::for_each)
 
     // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
     if (!callback_fn.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, vm.argument(0).to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, vm.argument(0).to_string_without_side_effects());
 
     // 4. Let entries be S.[[SetData]].
     // 5. Let numEntries be the number of elements in entries.
@@ -210,7 +210,7 @@ static ThrowCompletionOr<SetRecord> get_set_record(VM& vm, Value value)
 {
     // 1. If obj is not an Object, throw a TypeError exception.
     if (!value.is_object())
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, value.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, value.to_string_without_side_effects());
     auto const& object = value.as_object();
 
     // 2. Let rawSize be ? Get(obj, "size").
@@ -236,14 +236,14 @@ static ThrowCompletionOr<SetRecord> get_set_record(VM& vm, Value value)
 
     // 9. If IsCallable(has) is false, throw a TypeError exception.
     if (!has.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, has.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, has.to_string_without_side_effects());
 
     // 10. Let keys be ? Get(obj, "keys").
     auto keys = TRY(object.get(vm.names.keys));
 
     // 11. If IsCallable(keys) is false, throw a TypeError exception.
     if (!keys.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, keys.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, keys.to_string_without_side_effects());
 
     // 12. Return a new Set Record { [[Set]]: obj, [[Size]]: intSize, [[Has]]: has, [[Keys]]: keys }.
     return SetRecord { .set = object, .size = integer_size, .has = has.as_function(), .keys = keys.as_function() };

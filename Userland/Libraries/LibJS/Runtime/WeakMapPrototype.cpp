@@ -113,7 +113,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::set)
 
     // 3. If CanBeHeldWeakly(key) is false, throw a TypeError exception.
     if (!can_be_held_weakly(key))
-        return vm.throw_completion<TypeError>(ErrorType::CannotBeHeldWeakly, TRY_OR_THROW_OOM(vm, value.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::CannotBeHeldWeakly, value.to_string_without_side_effects());
 
     // 4. For each Record { [[Key]], [[Value]] } p of M.[[WeakMapData]], do
     //    a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, then

@@ -113,7 +113,7 @@ void CalculatorProvider::query(DeprecatedString const& query, Function<void(Vect
     if (!result.is_number()) {
         calculation = "0";
     } else {
-        calculation = result.to_string_without_side_effects().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+        calculation = result.to_string_without_side_effects().to_deprecated_string();
     }
 
     Vector<NonnullRefPtr<Result>> results;

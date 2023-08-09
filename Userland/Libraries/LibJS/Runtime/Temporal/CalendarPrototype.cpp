@@ -92,7 +92,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_from_fields)
     // 4. If Type(fields) is not Object, throw a TypeError exception.
     auto fields = vm.argument(0);
     if (!fields.is_object())
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, fields.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, fields.to_string_without_side_effects());
 
     // 5. Set options to ? GetOptionsObject(options).
     auto const* options = TRY(get_options_object(vm, vm.argument(1)));
@@ -118,7 +118,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::year_month_from_fields)
     // 4. If Type(fields) is not Object, throw a TypeError exception.
     auto fields = vm.argument(0);
     if (!fields.is_object())
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, fields.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, fields.to_string_without_side_effects());
 
     // 5. Set options to ? GetOptionsObject(options).
     auto const* options = TRY(get_options_object(vm, vm.argument(1)));
@@ -144,7 +144,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_day_from_fields)
     // 4. If Type(fields) is not Object, throw a TypeError exception.
     auto fields = vm.argument(0);
     if (!fields.is_object())
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, fields.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, fields.to_string_without_side_effects());
 
     // 5. Set options to ? GetOptionsObject(options).
     auto const* options = TRY(get_options_object(vm, vm.argument(1)));
@@ -553,7 +553,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
         // ii. If Type(nextValue) is not String, then
         if (!next_value.is_string()) {
             // 1. Let completion be ThrowCompletion(a newly created TypeError object).
-            auto completion = vm.throw_completion<TypeError>(ErrorType::TemporalInvalidCalendarFieldValue, TRY_OR_THROW_OOM(vm, next_value.to_string_without_side_effects()));
+            auto completion = vm.throw_completion<TypeError>(ErrorType::TemporalInvalidCalendarFieldValue, next_value.to_string_without_side_effects());
 
             // 2. Return ? IteratorClose(iteratorRecord, completion).
             return *TRY(iterator_close(vm, iterator_record, move(completion)));
