@@ -1,0 +1,16 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x33.46875 [BFC] children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x17.46875 children: not-inline
+      Box <div#grid> at (8,8) content-size 784x17.46875 [GFC] children: not-inline
+        BlockContainer <a#box> at (8,8) content-size 288x17.46875 [BFC] children: inline
+          line 0 width: 102.75, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 13, rect: [8,8 102.75x17.46875]
+              "Start Selling"
+          TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x33.46875]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x17.46875]
+      PaintableBox (Box<DIV>#grid) [8,8 784x17.46875]
+        PaintableWithLines (BlockContainer<A>#box) [8,8 288x17.46875]
+          TextPaintable (TextNode<#text>)

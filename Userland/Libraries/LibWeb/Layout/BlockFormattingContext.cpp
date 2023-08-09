@@ -40,6 +40,8 @@ BlockFormattingContext::~BlockFormattingContext()
 
 CSSPixels BlockFormattingContext::automatic_content_width() const
 {
+    if (root().children_are_inline())
+        return m_state.get(root()).content_width();
     return greatest_child_width(root());
 }
 
