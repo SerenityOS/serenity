@@ -394,7 +394,7 @@ public:
     ThrowCompletionOr<Value> get(VM&, PropertyKey const&) const;
     ThrowCompletionOr<GCPtr<FunctionObject>> get_method(VM&, PropertyKey const&) const;
 
-    ErrorOr<String> to_string_without_side_effects() const;
+    [[nodiscard]] String to_string_without_side_effects() const;
 
     Value value_or(Value fallback) const
     {
@@ -684,7 +684,7 @@ struct Formatter<JS::Value> : Formatter<StringView> {
     {
         if (value.is_empty())
             return Formatter<StringView>::format(builder, "<empty>"sv);
-        return Formatter<StringView>::format(builder, TRY(value.to_string_without_side_effects()));
+        return Formatter<StringView>::format(builder, value.to_string_without_side_effects());
     }
 };
 

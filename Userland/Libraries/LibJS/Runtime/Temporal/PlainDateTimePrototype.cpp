@@ -380,7 +380,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::with)
     // 3. If Type(temporalDateTimeLike) is not Object, then
     if (!temporal_date_time_like.is_object()) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, temporal_date_time_like.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, temporal_date_time_like.to_string_without_side_effects());
     }
 
     // 4. Perform ? RejectObjectWithCalendarOrTimeZone(temporalDateTimeLike).

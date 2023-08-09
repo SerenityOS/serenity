@@ -1243,10 +1243,10 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::symbol_to_primitive)
 {
     auto this_value = vm.this_value();
     if (!this_value.is_object())
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, this_value.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, this_value.to_string_without_side_effects());
     auto hint_value = vm.argument(0);
     if (!hint_value.is_string())
-        return vm.throw_completion<TypeError>(ErrorType::InvalidHint, TRY_OR_THROW_OOM(vm, hint_value.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::InvalidHint, hint_value.to_string_without_side_effects());
     auto hint = hint_value.as_string().deprecated_string();
     Value::PreferredType try_first;
     if (hint == "string" || hint == "default")

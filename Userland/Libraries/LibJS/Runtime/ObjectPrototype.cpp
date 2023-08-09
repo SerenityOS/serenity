@@ -251,7 +251,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_getter)
 
     // 2. If IsCallable(getter) is false, throw a TypeError exception.
     if (!getter.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, getter.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, getter.to_string_without_side_effects());
 
     // 3. Let desc be PropertyDescriptor { [[Get]]: getter, [[Enumerable]]: true, [[Configurable]]: true }.
     auto descriptor = PropertyDescriptor { .get = &getter.as_function(), .enumerable = true, .configurable = true };
@@ -277,7 +277,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_setter)
 
     // 2. If IsCallable(setter) is false, throw a TypeError exception.
     if (!setter.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, setter.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, setter.to_string_without_side_effects());
 
     // 3. Let desc be PropertyDescriptor { [[Set]]: setter, [[Enumerable]]: true, [[Configurable]]: true }.
     auto descriptor = PropertyDescriptor { .set = &setter.as_function(), .enumerable = true, .configurable = true };

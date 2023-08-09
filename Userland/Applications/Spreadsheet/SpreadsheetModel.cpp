@@ -33,7 +33,7 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
                     auto message = object.get_without_side_effects("message");
                     auto error = message.to_deprecated_string(vm);
                     if (error.is_throw_completion())
-                        builder.append(message.to_string_without_side_effects().release_value_but_fixme_should_propagate_errors());
+                        builder.append(message.to_string_without_side_effects());
                     else
                         builder.append(error.release_value());
                     return builder.to_deprecated_string();
@@ -120,7 +120,7 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
         auto& error = static_cast<JS::Error&>(object);
         auto const& trace = error.traceback();
         StringBuilder builder;
-        builder.appendff("{}\n", error.get_without_side_effects(object.vm().names.message).to_string_without_side_effects().release_value_but_fixme_should_propagate_errors());
+        builder.appendff("{}\n", error.get_without_side_effects(object.vm().names.message).to_string_without_side_effects());
         for (auto const& frame : trace.in_reverse()) {
             if (frame.source_range().filename().contains("runtime.js"sv)) {
                 if (frame.function_name == "<unknown>")

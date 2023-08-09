@@ -53,7 +53,7 @@ ThrowCompletionOr<void> Reference::put_value(VM& vm, Value value)
 
         // d. If succeeded is false and V.[[Strict]] is true, throw a TypeError exception.
         if (!succeeded && m_strict)
-            return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, m_name, TRY_OR_THROW_OOM(vm, m_base_value.to_string_without_side_effects()));
+            return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, m_name, m_base_value.to_string_without_side_effects());
 
         // e. Return unused.
         return {};
@@ -178,7 +178,7 @@ ThrowCompletionOr<bool> Reference::delete_(VM& vm)
 
         // e. If deleteStatus is false and ref.[[Strict]] is true, throw a TypeError exception.
         if (!delete_status && m_strict)
-            return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishDeleteProperty, m_name, TRY_OR_THROW_OOM(vm, m_base_value.to_string_without_side_effects()));
+            return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishDeleteProperty, m_name, m_base_value.to_string_without_side_effects());
 
         // f. Return deleteStatus.
         return delete_status;

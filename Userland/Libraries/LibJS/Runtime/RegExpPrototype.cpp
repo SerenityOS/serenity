@@ -395,7 +395,7 @@ ThrowCompletionOr<Value> regexp_exec(VM& vm, Object& regexp_object, Utf16String 
 
         // b. If Type(result) is neither Object nor Null, throw a TypeError exception.
         if (!result.is_object() && !result.is_null())
-            return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOrNull, TRY_OR_THROW_OOM(vm, result.to_string_without_side_effects()));
+            return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOrNull, result.to_string_without_side_effects());
 
         // c. Return result.
         return result;
@@ -1103,7 +1103,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::compile)
     if (pattern.is_object() && is<RegExpObject>(pattern.as_object())) {
         // a. If flags is not undefined, throw a TypeError exception.
         if (!flags.is_undefined())
-            return vm.throw_completion<TypeError>(ErrorType::NotUndefined, TRY_OR_THROW_OOM(vm, flags.to_string_without_side_effects()));
+            return vm.throw_completion<TypeError>(ErrorType::NotUndefined, flags.to_string_without_side_effects());
 
         auto& regexp_pattern = static_cast<RegExpObject&>(pattern.as_object());
 

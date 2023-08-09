@@ -353,7 +353,7 @@ StringView Value::typeof() const
     }
 }
 
-ErrorOr<String> Value::to_string_without_side_effects() const
+String Value::to_string_without_side_effects() const
 {
     if (is_double())
         return number_to_string(m_value.as_double);
@@ -366,15 +366,15 @@ ErrorOr<String> Value::to_string_without_side_effects() const
     case BOOLEAN_TAG:
         return as_bool() ? "true"_string : "false"_string;
     case INT32_TAG:
-        return String::number(as_i32());
+        return String::number(as_i32()).release_value();
     case STRING_TAG:
         return as_string().utf8_string();
     case SYMBOL_TAG:
-        return as_symbol().descriptive_string();
+        return as_symbol().descriptive_string().release_value();
     case BIGINT_TAG:
-        return as_bigint().to_string();
+        return as_bigint().to_string().release_value();
     case OBJECT_TAG:
-        return String::formatted("[object {}]", as_object().class_name());
+        return String::formatted("[object {}]", as_object().class_name()).release_value();
     case ACCESSOR_TAG:
         return "<accessor>"_string;
     case EMPTY_TAG:
@@ -525,7 +525,7 @@ ThrowCompletionOr<Value> Value::to_primitive(VM& vm, PreferredType preferred_typ
                 return result;
 
             // vi. Throw a TypeError exception.
-            return vm.throw_completion<TypeError>(ErrorType::ToPrimitiveReturnedObject, TRY_OR_THROW_OOM(vm, to_string_without_side_effects()), hint);
+            return vm.throw_completion<TypeError>(ErrorType::ToPrimitiveReturnedObject, to_string_without_side_effects(), hint);
         }
 
         // c. If preferredType is not present, let preferredType be number.
@@ -1229,7 +1229,7 @@ ThrowCompletionOr<GCPtr<FunctionObject>> Value::get_method(VM& vm, PropertyKey c
 
     // 4. If IsCallable(func) is false, throw a TypeError exception.
     if (!function.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, function.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, function.to_string_without_side_effects());
 
     // 5. Return func.
     return function.as_function();
@@ -2070,7 +2070,7 @@ ThrowCompletionOr<Value> instance_of(VM& vm, Value value, Value target)
 {
     // 1. If target is not an Object, throw a TypeError exception.
     if (!target.is_object())
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, target.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, target.to_string_without_side_effects());
 
     // 2. Let instOfHandler be ? GetMethod(target, @@hasInstance).
     auto instance_of_handler = TRY(target.get_method(vm, vm.well_known_symbol_has_instance()));
@@ -2083,7 +2083,7 @@ ThrowCompletionOr<Value> instance_of(VM& vm, Value value, Value target)
 
     // 4. If IsCallable(target) is false, throw a TypeError exception.
     if (!target.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, target.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, target.to_string_without_side_effects());
 
     // 5. Return ? OrdinaryHasInstance(target, V).
     return ordinary_has_instance(vm, target, value);
@@ -2118,7 +2118,7 @@ ThrowCompletionOr<Value> ordinary_has_instance(VM& vm, Value lhs, Value rhs)
 
     // 5. If P is not an Object, throw a TypeError exception.
     if (!rhs_prototype.is_object())
-        return vm.throw_completion<TypeError>(ErrorType::InstanceOfOperatorBadPrototype, TRY_OR_THROW_OOM(vm, rhs.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::InstanceOfOperatorBadPrototype, rhs.to_string_without_side_effects());
 
     // 6. Repeat,
     while (true) {

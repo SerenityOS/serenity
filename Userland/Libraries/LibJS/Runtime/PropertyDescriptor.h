@@ -54,7 +54,7 @@ struct Formatter<JS::PropertyDescriptor> : Formatter<StringView> {
     {
         Vector<String> parts;
         if (property_descriptor.value.has_value())
-            TRY(parts.try_append(TRY(String::formatted("[[Value]]: {}", TRY(property_descriptor.value->to_string_without_side_effects())))));
+            TRY(parts.try_append(TRY(String::formatted("[[Value]]: {}", property_descriptor.value->to_string_without_side_effects()))));
         if (property_descriptor.get.has_value())
             TRY(parts.try_append(TRY(String::formatted("[[Get]]: JS::Function* @ {:p}", property_descriptor.get->ptr()))));
         if (property_descriptor.set.has_value())

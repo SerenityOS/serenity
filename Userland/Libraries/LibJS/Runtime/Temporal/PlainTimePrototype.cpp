@@ -174,7 +174,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
     // 3. If Type(temporalTimeLike) is not Object, then
     if (!temporal_time_like_argument.is_object()) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, temporal_time_like_argument.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, temporal_time_like_argument.to_string_without_side_effects());
     }
 
     auto& temporal_time_like = temporal_time_like_argument.as_object();

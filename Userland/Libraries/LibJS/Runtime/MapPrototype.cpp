@@ -97,7 +97,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::for_each)
 
     // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
     if (!callbackfn.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, callbackfn.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, callbackfn.to_string_without_side_effects());
 
     // 4. Let entries be M.[[MapData]].
     // 5. Let numEntries be the number of elements in entries.

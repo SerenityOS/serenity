@@ -63,7 +63,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
 
     // 2. If IsConstructor(C) is false, throw a TypeError exception.
     if (!constructor.is_constructor())
-        return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, TRY_OR_THROW_OOM(vm, constructor.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
 
     // 3. If mapfn is undefined, let mapping be false.
     GCPtr<FunctionObject> map_fn;
@@ -72,7 +72,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
     if (!map_fn_value.is_undefined()) {
         // a. If IsCallable(mapfn) is false, throw a TypeError exception.
         if (!map_fn_value.is_function())
-            return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, map_fn_value.to_string_without_side_effects()));
+            return vm.throw_completion<TypeError>(ErrorType::NotAFunction, map_fn_value.to_string_without_side_effects());
 
         // b. Let mapping be true.
         map_fn = &map_fn_value.as_function();
@@ -183,7 +183,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::of)
 
     // 3. If IsConstructor(C) is false, throw a TypeError exception.
     if (!constructor.is_constructor())
-        return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, TRY_OR_THROW_OOM(vm, constructor.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
 
     // 4. Let newObj be ? TypedArrayCreate(C, « 𝔽(len) »).
     MarkedVector<Value> arguments(vm.heap());

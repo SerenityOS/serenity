@@ -54,7 +54,7 @@ ThrowCompletionOr<NonnullGCPtr<PromiseCapability>> new_promise_capability(VM& vm
 
     // 1. If IsConstructor(C) is false, throw a TypeError exception.
     if (!constructor.is_constructor())
-        return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, TRY_OR_THROW_OOM(vm, constructor.to_string_without_side_effects()));
+        return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
 
     // 2. NOTE: C is assumed to be a constructor function that supports the parameter conventions of the Promise constructor (see 27.2.3.1).
 
