@@ -197,8 +197,7 @@ test("deleting a symbol returned by @@toPrimitive", () => {
     expect(obj[Symbol.toStringTag]).toBeUndefined();
 });
 
-// FIXME: This currently does not work with the AST interpreter, but works with Bytecode.
-test.xfailIf(!isBytecodeInterpreterEnabled(), "delete always evaluates the lhs", () => {
+test("delete always evaluates the lhs", () => {
     const obj = { prop: 1 };
     let called = false;
     function a() {
