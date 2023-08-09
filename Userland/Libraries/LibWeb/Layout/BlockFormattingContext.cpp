@@ -515,8 +515,9 @@ void BlockFormattingContext::layout_inline_children(BlockContainer const& block_
         // NOTE: min-width or max-width for boxes with inline children can only be applied after inside layout
         //       is done and width of box content is known
         auto used_width_px = context.automatic_content_width();
+        auto available_width = AvailableSize::make_definite(used_width_px);
         if (!should_treat_max_width_as_none(block_container, available_space.width)) {
-            auto max_width_px = calculate_inner_width(block_container, available_space.width, block_container.computed_values().max_width()).to_px(block_container);
+            auto max_width_px = calculate_inner_width(block_container, available_width, block_container.computed_values().max_width()).to_px(block_container);
             if (used_width_px > max_width_px)
                 used_width_px = max_width_px;
         }
@@ -535,7 +536,7 @@ void BlockFormattingContext::layout_inline_children(BlockContainer const& block_
             return false;
         }();
         if (!should_treat_min_width_as_auto) {
-            auto min_width_px = calculate_inner_width(block_container, available_space.width, block_container.computed_values().min_width()).to_px(block_container);
+            auto min_width_px = calculate_inner_width(block_container, available_width, block_container.computed_values().min_width()).to_px(block_container);
             if (used_width_px < min_width_px)
                 used_width_px = min_width_px;
         }
