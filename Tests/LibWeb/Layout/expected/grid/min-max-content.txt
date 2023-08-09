@@ -4,23 +4,23 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       Box <div.grid-container> at (8,8) content-size 784x17.46875 [GFC] children: not-inline
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.grid-item> at (8,8) content-size 0x17.46875 [BFC] children: inline
+        BlockContainer <div.grid-item> at (8,8) content-size 46.890625x17.46875 [BFC] children: inline
           line 0 width: 93.765625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
             frag 0 from TextNode start: 0, length: 11, rect: [8,8 93.765625x17.46875]
               "min-content"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.grid-item> at (8,8) content-size 98.640625x17.46875 [BFC] children: inline
+        BlockContainer <div.grid-item> at (54.890625,8) content-size 98.640625x17.46875 [BFC] children: inline
           line 0 width: 98.640625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 11, rect: [8,8 98.640625x17.46875]
+            frag 0 from TextNode start: 0, length: 11, rect: [54.890625,8 98.640625x17.46875]
               "max-content"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.grid-item> at (106.640625,8) content-size 685.359375x17.46875 [BFC] children: inline
+        BlockContainer <div.grid-item> at (153.53125,8) content-size 638.46875x17.46875 [BFC] children: inline
           line 0 width: 21.609375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 3, rect: [106.640625,8 21.609375x17.46875]
+            frag 0 from TextNode start: 0, length: 3, rect: [153.53125,8 21.609375x17.46875]
               "1fr"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
@@ -30,9 +30,9 @@ PaintableWithLines (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
     PaintableWithLines (BlockContainer<BODY>) [8,8 784x17.46875]
       PaintableBox (Box<DIV>.grid-container) [8,8 784x17.46875]
-        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,8 0x17.46875] overflow: [8,8 93.765625x17.46875]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,8 46.890625x17.46875] overflow: [8,8 93.765625x17.46875]
           TextPaintable (TextNode<#text>)
-        PaintableWithLines (BlockContainer<DIV>.grid-item) [8,8 98.640625x17.46875]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [54.890625,8 98.640625x17.46875]
           TextPaintable (TextNode<#text>)
-        PaintableWithLines (BlockContainer<DIV>.grid-item) [106.640625,8 685.359375x17.46875]
+        PaintableWithLines (BlockContainer<DIV>.grid-item) [153.53125,8 638.46875x17.46875]
           TextPaintable (TextNode<#text>)
