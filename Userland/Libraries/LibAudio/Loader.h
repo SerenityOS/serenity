@@ -103,7 +103,7 @@ public:
         return m_plugin->seek(position);
     }
 
-    int loaded_samples() const { return m_plugin->loaded_samples(); }
+    int loaded_samples() const { return m_plugin->loaded_samples() - (int)m_buffer.size(); }
     int total_samples() const { return m_plugin->total_samples(); }
     u32 sample_rate() const { return m_plugin->sample_rate(); }
     u16 num_channels() const { return m_plugin->num_channels(); }

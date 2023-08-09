@@ -69,7 +69,7 @@ ErrorOr<NonnullOwnPtr<LoaderPlugin>, LoaderError> Loader::create_plugin(NonnullO
 
 LoaderSamples Loader::get_more_samples(size_t samples_to_read_from_input)
 {
-    if (m_plugin_at_end_of_stream)
+    if (m_plugin_at_end_of_stream && m_buffer.is_empty())
         return FixedArray<Sample> {};
 
     size_t remaining_samples = total_samples() - loaded_samples();
