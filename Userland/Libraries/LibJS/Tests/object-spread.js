@@ -144,7 +144,7 @@ describe("modification of spreadable objects during spread", () => {
         expect(Object.getOwnPropertyNames(result)).toContain("bar");
     });
 
-    test.xfailIf(isBytecodeInterpreterEnabled(), "spreading array", () => {
+    test.xfail("spreading array", () => {
         const array = [0];
         array[2] = 2;
         array[999] = 999;

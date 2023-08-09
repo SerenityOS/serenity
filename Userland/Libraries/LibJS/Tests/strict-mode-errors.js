@@ -1,6 +1,6 @@
 "use strict";
 
-test.xfailIf(isBytecodeInterpreterEnabled(), "basic functionality", () => {
+test.xfail("basic functionality", () => {
     [true, false, "foo", 123].forEach(primitive => {
         expect(() => {
             primitive.foo = "bar";

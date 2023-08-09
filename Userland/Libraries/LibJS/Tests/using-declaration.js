@@ -1,5 +1,5 @@
 describe("basic usage", () => {
-    test.xfailIf(isBytecodeInterpreterEnabled(), "disposes after block exit", () => {
+    test.xfail("disposes after block exit", () => {
         let disposed = false;
         let inBlock = false;
         {
@@ -13,7 +13,7 @@ describe("basic usage", () => {
         expect(disposed).toBeTrue();
     });
 
-    test.xfailIf(isBytecodeInterpreterEnabled(), "disposes in reverse order after block exit", () => {
+    test.xfail("disposes in reverse order after block exit", () => {
         const disposed = [];
         {
             expect(disposed).toHaveLength(0);
@@ -25,7 +25,7 @@ describe("basic usage", () => {
         expect(disposed).toEqual(['b', 'a']);
     });
 
-    test.xfailIf(isBytecodeInterpreterEnabled(), "disposes in reverse order after block exit even in same declaration", () => {
+    test.xfail("disposes in reverse order after block exit even in same declaration", () => {
         const disposed = [];
         {
             expect(disposed).toHaveLength(0);
@@ -41,7 +41,7 @@ describe("basic usage", () => {
 describe("behavior with exceptions", () => {
     function ExpectedError(name) { this.name = name; }
 
-    test.xfailIf(isBytecodeInterpreterEnabled(), "is run even after throw", () => {
+    test.xfail("is run even after throw", () => {
         let disposed = false;
         let inBlock = false;
         let inCatch = false;
@@ -62,7 +62,7 @@ describe("behavior with exceptions", () => {
         expect(inCatch).toBeTrue();
     });
 
-    test.xfailIf(isBytecodeInterpreterEnabled(), "throws error if dispose method does", () => {
+    test.xfail("throws error if dispose method does", () => {
         let disposed = false;
         let endOfTry = false;
         let inCatch = false;
@@ -84,7 +84,7 @@ describe("behavior with exceptions", () => {
         expect(inCatch).toBeTrue();
     });
 
-    test.xfailIf(isBytecodeInterpreterEnabled(), "if block and using throw get suppressed error", () => {
+    test.xfail("if block and using throw get suppressed error", () => {
         let disposed = false;
         let inCatch = false;
         try {
@@ -108,7 +108,7 @@ describe("behavior with exceptions", () => {
         expect(inCatch).toBeTrue();
     });
 
-    test.xfailIf(isBytecodeInterpreterEnabled(), "multiple throwing disposes give suppressed error", () => {
+    test.xfail("multiple throwing disposes give suppressed error", () => {
         let inCatch = false;
         try {
             {
@@ -133,7 +133,7 @@ describe("behavior with exceptions", () => {
         expect(inCatch).toBeTrue();
     });
 
-    test.xfailIf(isBytecodeInterpreterEnabled(), "3 throwing disposes give chaining suppressed error", () => {
+    test.xfail("3 throwing disposes give chaining suppressed error", () => {
         let inCatch = false;
         try {
             {
@@ -168,7 +168,7 @@ describe("behavior with exceptions", () => {
         expect(inCatch).toBeTrue();
     });
 
-    test.xfailIf(isBytecodeInterpreterEnabled(), "normal error and multiple disposing erorrs give chaining suppressed errors", () => {
+    test.xfail("normal error and multiple disposing erorrs give chaining suppressed errors", () => {
         let inCatch = false;
         try {
             using a = { [Symbol.dispose]() {
@@ -199,7 +199,7 @@ describe("behavior with exceptions", () => {
 });
 
 describe("works in a bunch of scopes", () => {
-    test.xfailIf(isBytecodeInterpreterEnabled(), "works in block", () => {
+    test.xfail("works in block", () => {
         let dispose = false;
         expect(dispose).toBeFalse();
         {
@@ -210,7 +210,7 @@ describe("works in a bunch of scopes", () => {
         expect(dispose).toBeTrue();
     });
 
-    test.xfailIf(isBytecodeInterpreterEnabled(), "works in static class block", () => {
+    test.xfail("works in static class block", () => {
         let dispose = false;
         expect(dispose).toBeFalse();
         class A {
@@ -223,7 +223,7 @@ describe("works in a bunch of scopes", () => {
         expect(dispose).toBeTrue();
     });
 
-    test.xfailIf(isBytecodeInterpreterEnabled(), "works in function", () => {
+    test.xfail("works in function", () => {
         let dispose = [];
         function f(val) {
             const disposeLength = dispose.length;
@@ -237,7 +237,7 @@ describe("works in a bunch of scopes", () => {
         expect(dispose).toEqual([0, 1]);
     });
 
-    test.xfailIf(isBytecodeInterpreterEnabled(), "switch block is treated as full block in function", () => {
+    test.xfail("switch block is treated as full block in function", () => {
         let disposeFull = [];
         let disposeInner = false;
 
@@ -284,13 +284,13 @@ describe("works in a bunch of scopes", () => {
 });
 
 describe("invalid using bindings", () => {
-    test.xfailIf(isBytecodeInterpreterEnabled(), "nullish values do not throw", () => {
+    test.xfail("nullish values do not throw", () => {
         using a = null, b = undefined;
         expect(a).toBeNull();
         expect(b).toBeUndefined();
     });
 
-    test.xfailIf(isBytecodeInterpreterEnabled(), "non-object throws", () => {
+    test.xfail("non-object throws", () => {
         [0, "a", true, NaN, 4n, Symbol.dispose].forEach(value => {
             expect(() => {
                 using v = value;
@@ -298,13 +298,13 @@ describe("invalid using bindings", () => {
         });
     });
 
-    test.xfailIf(isBytecodeInterpreterEnabled(), "object without dispose throws", () => {
+    test.xfail("object without dispose throws", () => {
         expect(() => {
             using a = {};
         }).toThrowWithMessage(TypeError, "does not have dispose method");
     });
 
-    test.xfailIf(isBytecodeInterpreterEnabled(), "object with non callable dispose throws", () => {
+    test.xfail("object with non callable dispose throws", () => {
         [0, "a", true, NaN, 4n, Symbol.dispose, [], {}].forEach(value => {
             expect(() => {
                 using a = { [Symbol.dispose]: value };
@@ -332,7 +332,7 @@ describe("using is still a valid variable name", () => {
         expect(using).toBe(1);
     });
 
-    test.xfailIf(isBytecodeInterpreterEnabled(), "using", () => {
+    test.xfail("using", () => {
         "use strict";
         using using = null;
         expect(using).toBeNull();

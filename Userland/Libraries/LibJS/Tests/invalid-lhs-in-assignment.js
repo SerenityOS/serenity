@@ -1,4 +1,4 @@
-test.xfailIf(isBytecodeInterpreterEnabled(), "assignment to function call", () => {
+test.xfail("assignment to function call", () => {
     expect(() => {
         function foo() {}
         foo() = "foo";
@@ -9,7 +9,7 @@ test("assignment to function call in strict mode", () => {
     expect("'use strict'; foo() = 'foo'").toEval();
 });
 
-test.xfailIf(isBytecodeInterpreterEnabled(), "assignment to inline function call", () => {
+test.xfail("assignment to inline function call", () => {
     expect(() => {
         (function () {})() = "foo";
     }).toThrowWithMessage(ReferenceError, "Invalid left-hand side in assignment");

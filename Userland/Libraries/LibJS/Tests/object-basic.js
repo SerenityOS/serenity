@@ -221,13 +221,13 @@ describe("naming of anon functions", () => {
         expect({ func() {} }.func.name).toBe("func");
     });
 
-    test.xfailIf(isBytecodeInterpreterEnabled(), "getter has name", () => {
+    test.xfail("getter has name", () => {
         expect(Object.getOwnPropertyDescriptor({ get func() {} }, "func").get.name).toBe(
             "get func"
         );
     });
 
-    test.xfailIf(isBytecodeInterpreterEnabled(), "setter has name", () => {
+    test.xfail("setter has name", () => {
         expect(Object.getOwnPropertyDescriptor({ set func(v) {} }, "func").set.name).toBe(
             "set func"
         );
