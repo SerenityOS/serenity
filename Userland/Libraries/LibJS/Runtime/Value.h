@@ -561,8 +561,8 @@ enum class NumberToStringMode {
     WithExponent,
     WithoutExponent,
 };
-ErrorOr<String> number_to_string(double, NumberToStringMode = NumberToStringMode::WithExponent);
-DeprecatedString number_to_deprecated_string(double, NumberToStringMode = NumberToStringMode::WithExponent);
+[[nodiscard]] String number_to_string(double, NumberToStringMode = NumberToStringMode::WithExponent);
+[[nodiscard]] DeprecatedString number_to_deprecated_string(double, NumberToStringMode = NumberToStringMode::WithExponent);
 double string_to_number(StringView);
 
 inline bool Value::operator==(Value const& value) const { return same_value(*this, value); }

@@ -298,7 +298,7 @@ ThrowCompletionOr<String> MathematicalValue::to_string(VM& vm) const
 {
     return m_value.visit(
         [&](double value) -> ThrowCompletionOr<String> {
-            return TRY_OR_THROW_OOM(vm, number_to_string(value, NumberToStringMode::WithoutExponent));
+            return number_to_string(value, NumberToStringMode::WithoutExponent);
         },
         [&](Crypto::SignedBigInteger const& value) -> ThrowCompletionOr<String> {
             return TRY_OR_THROW_OOM(vm, value.to_base(10));

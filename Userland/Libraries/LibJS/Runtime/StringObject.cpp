@@ -63,7 +63,7 @@ static ThrowCompletionOr<Optional<PropertyDescriptor>> string_get_own_property(S
         return Optional<PropertyDescriptor> {};
 
     // 2. Let index be CanonicalNumericIndexString(P).
-    auto index = MUST_OR_THROW_OOM(canonical_numeric_index_string(vm, property_key, CanonicalIndexMode::IgnoreNumericRoundtrip));
+    auto index = canonical_numeric_index_string(property_key, CanonicalIndexMode::IgnoreNumericRoundtrip);
 
     // 3. If index is undefined, return undefined.
     // 4. If IsIntegralNumber(index) is false, return undefined.

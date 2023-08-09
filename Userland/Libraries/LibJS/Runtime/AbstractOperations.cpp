@@ -1168,7 +1168,7 @@ Object* create_mapped_arguments_object(VM& vm, FunctionObject& function, Vector<
 }
 
 // 7.1.21 CanonicalNumericIndexString ( argument ), https://tc39.es/ecma262/#sec-canonicalnumericindexstring
-ThrowCompletionOr<CanonicalIndex> canonical_numeric_index_string(VM& vm, PropertyKey const& property_key, CanonicalIndexMode mode)
+CanonicalIndex canonical_numeric_index_string(PropertyKey const& property_key, CanonicalIndexMode mode)
 {
     // NOTE: If the property name is a number type (An implementation-defined optimized
     // property key type), it can be treated as a string property that has already been
@@ -1221,7 +1221,7 @@ ThrowCompletionOr<CanonicalIndex> canonical_numeric_index_string(VM& vm, Propert
 
     // FIXME: We return 0 instead of n but it might not observable?
     // 3. If SameValue(! ToString(n), argument) is true, return n.
-    if (TRY_OR_THROW_OOM(vm, number_to_string(*maybe_double)) == argument.view())
+    if (number_to_string(*maybe_double) == argument.view())
         return CanonicalIndex(CanonicalIndex::Type::Numeric, 0);
 
     // 4. Return undefined.

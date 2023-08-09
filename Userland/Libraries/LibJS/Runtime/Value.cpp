@@ -72,7 +72,7 @@ ALWAYS_INLINE bool both_bigint(Value const& lhs, Value const& rhs)
 
 // 6.1.6.1.20 Number::toString ( x ), https://tc39.es/ecma262/#sec-numeric-types-number-tostring
 // Implementation for radix = 10
-static ErrorOr<void> number_to_string_impl(StringBuilder& builder, double d, NumberToStringMode mode)
+static void number_to_string_impl(StringBuilder& builder, double d, NumberToStringMode mode)
 {
     auto convert_to_decimal_digits_array = [](auto x, auto& digits, auto& length) {
         for (; x; x /= 10)
@@ -83,25 +83,25 @@ static ErrorOr<void> number_to_string_impl(StringBuilder& builder, double d, Num
 
     // 1. If x is NaN, return "NaN".
     if (isnan(d)) {
-        TRY(builder.try_append("NaN"sv));
-        return {};
+        builder.append("NaN"sv);
+        return;
     }
 
     // 2. If x is +0𝔽 or -0𝔽, return "0".
     if (d == +0.0 || d == -0.0) {
-        TRY(builder.try_append("0"sv));
-        return {};
+        builder.append("0"sv);
+        return;
     }
 
     // 4. If x is +∞𝔽, return "Infinity".
     if (isinf(d)) {
         if (d > 0) {
-            TRY(builder.try_append("Infinity"sv));
-            return {};
+            builder.append("Infinity"sv);
+            return;
         }
 
-        TRY(builder.try_append("-Infinity"sv));
-        return {};
+        builder.append("-Infinity"sv);
+        return;
     }
 
     // 5. Let n, k, and s be integers such that k ≥ 1, radix ^ (k - 1) ≤ s < radix ^ k,
@@ -120,7 +120,7 @@ static ErrorOr<void> number_to_string_impl(StringBuilder& builder, double d, Num
 
     // 3. If x < -0𝔽, return the string-concatenation of "-" and Number::toString(-x, radix).
     if (sign)
-        TRY(builder.try_append('-'));
+        builder.append('-');
 
     // Non-standard: Intl needs number-to-string conversions for extremely large numbers without any
     // exponential formatting, as it will handle such formatting itself in a locale-aware way.
@@ -132,34 +132,34 @@ static ErrorOr<void> number_to_string_impl(StringBuilder& builder, double d, Num
         if (n >= k) {
             // i. Return the string-concatenation of:
             // the code units of the k digits of the representation of s using radix radix
-            TRY(builder.try_append(mantissa_digits.data(), k));
+            builder.append(mantissa_digits.data(), k);
             // n - k occurrences of the code unit 0x0030 (DIGIT ZERO)
-            TRY(builder.try_append_repeated('0', n - k));
+            builder.append_repeated('0', n - k);
             // b. Else if n > 0, then
         } else if (n > 0) {
             // i. Return the string-concatenation of:
             // the code units of the most significant n digits of the representation of s using radix radix
-            TRY(builder.try_append(mantissa_digits.data(), n));
+            builder.append(mantissa_digits.data(), n);
             // the code unit 0x002E (FULL STOP)
-            TRY(builder.try_append('.'));
+            builder.append('.');
             // the code units of the remaining k - n digits of the representation of s using radix radix
-            TRY(builder.try_append(mantissa_digits.data() + n, k - n));
+            builder.append(mantissa_digits.data() + n, k - n);
             // c. Else,
         } else {
             // i. Assert: n ≤ 0.
             VERIFY(n <= 0);
             // ii. Return the string-concatenation of:
             // the code unit 0x0030 (DIGIT ZERO)
-            TRY(builder.try_append('0'));
+            builder.append('0');
             // the code unit 0x002E (FULL STOP)
-            TRY(builder.try_append('.'));
+            builder.append('.');
             // -n occurrences of the code unit 0x0030 (DIGIT ZERO)
-            TRY(builder.try_append_repeated('0', -n));
+            builder.append_repeated('0', -n);
             // the code units of the k digits of the representation of s using radix radix
-            TRY(builder.try_append(mantissa_digits.data(), k));
+            builder.append(mantissa_digits.data(), k);
         }
 
-        return {};
+        return;
     }
 
     // 7. NOTE: In this case, the input will be represented using scientific E notation, such as 1.2e+3.
@@ -178,45 +178,43 @@ static ErrorOr<void> number_to_string_impl(StringBuilder& builder, double d, Num
     if (k == 1) {
         // a. Return the string-concatenation of:
         // the code unit of the single digit of s
-        TRY(builder.try_append(mantissa_digits[0]));
+        builder.append(mantissa_digits[0]);
         // the code unit 0x0065 (LATIN SMALL LETTER E)
-        TRY(builder.try_append('e'));
+        builder.append('e');
         // exponentSign
-        TRY(builder.try_append(exponent_sign));
+        builder.append(exponent_sign);
         // the code units of the decimal representation of abs(n - 1)
-        TRY(builder.try_append(exponent_digits.data(), exponent_length));
+        builder.append(exponent_digits.data(), exponent_length);
 
-        return {};
+        return;
     }
 
     // 12. Return the string-concatenation of:
     // the code unit of the most significant digit of the decimal representation of s
-    TRY(builder.try_append(mantissa_digits[0]));
+    builder.append(mantissa_digits[0]);
     // the code unit 0x002E (FULL STOP)
-    TRY(builder.try_append('.'));
+    builder.append('.');
     // the code units of the remaining k - 1 digits of the decimal representation of s
-    TRY(builder.try_append(mantissa_digits.data() + 1, k - 1));
+    builder.append(mantissa_digits.data() + 1, k - 1);
     // the code unit 0x0065 (LATIN SMALL LETTER E)
-    TRY(builder.try_append('e'));
+    builder.append('e');
     // exponentSign
-    TRY(builder.try_append(exponent_sign));
+    builder.append(exponent_sign);
     // the code units of the decimal representation of abs(n - 1)
-    TRY(builder.try_append(exponent_digits.data(), exponent_length));
-
-    return {};
+    builder.append(exponent_digits.data(), exponent_length);
 }
 
-ErrorOr<String> number_to_string(double d, NumberToStringMode mode)
+String number_to_string(double d, NumberToStringMode mode)
 {
     StringBuilder builder;
-    TRY(number_to_string_impl(builder, d, mode));
-    return builder.to_string();
+    number_to_string_impl(builder, d, mode);
+    return builder.to_string().release_value();
 }
 
 DeprecatedString number_to_deprecated_string(double d, NumberToStringMode mode)
 {
     StringBuilder builder;
-    MUST(number_to_string_impl(builder, d, mode));
+    number_to_string_impl(builder, d, mode);
     return builder.to_deprecated_string();
 }
 
@@ -398,7 +396,7 @@ ThrowCompletionOr<NonnullGCPtr<PrimitiveString>> Value::to_primitive_string(VM& 
 ThrowCompletionOr<String> Value::to_string(VM& vm) const
 {
     if (is_double())
-        return TRY_OR_THROW_OOM(vm, number_to_string(m_value.as_double));
+        return number_to_string(m_value.as_double);
 
     switch (m_value.tag) {
     // 1. If argument is a String, return argument.
