@@ -202,7 +202,7 @@ describe("await cannot be used in class static init blocks", () => {
 });
 
 describe("await thenables", () => {
-    test.xfail("async returning a thanable variable without fulfilling", () => {
+    test("async returning a thanable variable without fulfilling", () => {
         let isCalled = false;
         const obj = {
             then() {
@@ -216,7 +216,7 @@ describe("await thenables", () => {
         expect(isCalled).toBe(true);
     });
 
-    test.xfail("async returning a thanable variable that fulfills", () => {
+    test("async returning a thanable variable that fulfills", () => {
         let isCalled = false;
         const obj = {
             then(fulfill) {
@@ -231,7 +231,7 @@ describe("await thenables", () => {
         expect(isCalled).toBe(true);
     });
 
-    test.xfail("async returning a thenable directly without fulfilling", () => {
+    test("async returning a thenable directly without fulfilling", () => {
         let isCalled = false;
         const f = async () => ({
             then() {
@@ -243,7 +243,7 @@ describe("await thenables", () => {
         expect(isCalled).toBe(true);
     });
 
-    test.xfail("async returning a thenable directly that fulfills", () => {
+    test("async returning a thenable directly that fulfills", () => {
         let isCalled = false;
         const f = async () => ({
             then(fulfill) {
@@ -255,4 +255,40 @@ describe("await thenables", () => {
         runQueuedPromiseJobs();
         expect(isCalled).toBe(true);
     });
+});
+
+describe("await observably looks up constructor of Promise objects", () => {
+    let calls = 0;
+    function makeConstructorObservable(promise) {
+        Object.defineProperty(promise, "constructor", {
+            get() {
+                calls++;
+                return Promise;
+            },
+        });
+        return promise;
+    }
+
+    async function test() {
+        await makeConstructorObservable(Promise.resolve(1));
+        await makeConstructorObservable(
+            new Promise(resolve => {
+                resolve();
+            })
+        );
+        await makeConstructorObservable(new Boolean(true));
+        await makeConstructorObservable({});
+        await makeConstructorObservable(new Number(2));
+        try {
+            await makeConstructorObservable(Promise.reject(3));
+        } catch {}
+        try {
+            return makeConstructorObservable(Promise.reject(1));
+        } catch {
+            return 2;
+        }
+    }
+    test();
+    runQueuedPromiseJobs();
+    expect(calls).toBe(4);
 });

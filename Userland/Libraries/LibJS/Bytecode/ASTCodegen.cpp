@@ -1582,12 +1582,39 @@ Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode
     return {};
 }
 
+static void generate_await(Bytecode::Generator& generator, Bytecode::Register received_completion_register, Bytecode::Register received_completion_type_register, Bytecode::Register received_completion_value_register, Bytecode::IdentifierTableIndex type_identifier, Bytecode::IdentifierTableIndex value_identifier);
+
+// https://tc39.es/ecma262/#sec-return-statement-runtime-semantics-evaluation
 Bytecode::CodeGenerationErrorOr<void> ReturnStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
-    if (m_argument)
+    if (m_argument) {
+        //  ReturnStatement : return Expression ;
+        //     1. Let exprRef be ? Evaluation of Expression.
+        //     2. Let exprValue be ? GetValue(exprRef).
         TRY(m_argument->generate_bytecode(generator));
-    else
+
+        //     3. If GetGeneratorKind() is async, set exprValue to ? Await(exprValue).
+        // Spec Issue?: The spec doesn't seem to do implicit await on explicit return for async functions, but does for
+        //              async generators. However, the major engines do so, and this is observable via constructor lookups
+        //              on Promise objects and custom thenables.
+        //              See: https://tc39.es/ecma262/#sec-asyncblockstart
+        //              c. Assert: If we return here, the async function either threw an exception or performed an implicit or explicit return; all awaiting is done.
+        if (generator.is_in_async_function()) {
+            auto received_completion_register = generator.allocate_register();
+            auto received_completion_type_register = generator.allocate_register();
+            auto received_completion_value_register = generator.allocate_register();
+
+            auto type_identifier = generator.intern_identifier("type");
+            auto value_identifier = generator.intern_identifier("value");
+            generate_await(generator, received_completion_register, received_completion_type_register, received_completion_value_register, type_identifier, value_identifier);
+        }
+
+        //     4. Return Completion Record { [[Type]]: return, [[Value]]: exprValue, [[Target]]: empty }.
+    } else {
+        //  ReturnStatement : return ;
+        //    1. Return Completion Record { [[Type]]: return, [[Value]]: undefined, [[Target]]: empty }.
         generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+    }
 
     if (generator.is_in_generator_or_async_function()) {
         generator.perform_needed_unwinds<Bytecode::Op::Yield>();
@@ -1612,8 +1639,6 @@ static void get_received_completion_type_and_value(Bytecode::Generator& generato
     generator.emit_get_by_id(value_identifier);
     generator.emit<Bytecode::Op::Store>(received_completion_value_register);
 }
-
-static void generate_await(Bytecode::Generator& generator, Bytecode::Register received_completion_register, Bytecode::Register received_completion_type_register, Bytecode::Register received_completion_value_register, Bytecode::IdentifierTableIndex type_identifier, Bytecode::IdentifierTableIndex value_identifier);
 
 enum class AwaitBeforeYield {
     No,
