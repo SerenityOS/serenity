@@ -1,8 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Daniel Bertalan <dani@danielbertalan.dev>
 Date: Thu, 14 Apr 2022 10:12:54 +0200
-Subject: [PATCH] [Driver] Default to -ftls-model=initial-exec on
- SerenityOS
+Subject: [PATCH] [Driver] Default to -ftls-model=initial-exec on SerenityOS
 
 This is a hack to make Clang use the initial-exec TLS model instead of
 the default local-exec when building code for Serenity.
@@ -13,7 +12,7 @@ This patch should be removed when we implement proper TLS support.
  1 file changed, 7 insertions(+), 1 deletion(-)
 
 diff --git a/clang/lib/Driver/ToolChains/Clang.cpp b/clang/lib/Driver/ToolChains/Clang.cpp
-index ec6860113..c5c07e5ee 100644
+index 77554aa2c..84eebee36 100644
 --- a/clang/lib/Driver/ToolChains/Clang.cpp
 +++ b/clang/lib/Driver/ToolChains/Clang.cpp
 @@ -6100,7 +6100,13 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
