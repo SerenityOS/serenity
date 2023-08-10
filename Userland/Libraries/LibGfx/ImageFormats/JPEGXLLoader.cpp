@@ -949,7 +949,26 @@ static ErrorOr<WPHeader> read_self_correcting_predictor(LittleEndianInputBitStre
 }
 ///
 
-///
+/// H.6 - Transformations
+struct SqueezeParams {
+    bool horizontal {};
+    bool in_place {};
+    u32 begin_c {};
+    u32 num_c {};
+};
+
+static ErrorOr<SqueezeParams> read_squeeze_params(LittleEndianInputBitStream& stream)
+{
+    SqueezeParams squeeze_params;
+
+    squeeze_params.horizontal = TRY(stream.read_bit());
+    squeeze_params.in_place = TRY(stream.read_bit());
+    squeeze_params.begin_c = U32(TRY(stream.read_bits(3)), 8 + TRY(stream.read_bits(6)), 72 + TRY(stream.read_bits(10)), 1096 + TRY(stream.read_bits(13)));
+    squeeze_params.num_c = U32(1, 2, 3, 4 + TRY(stream.read_bits(4)));
+
+    return squeeze_params;
+}
+
 struct TransformInfo {
     enum class TransformId {
         kRCT = 0,
@@ -960,6 +979,13 @@ struct TransformInfo {
     TransformId tr {};
     u32 begin_c {};
     u32 rct_type {};
+
+    u32 num_c {};
+    u32 nb_colours {};
+    u32 nb_deltas {};
+    u8 d_pred {};
+
+    FixedArray<SqueezeParams> sp {};
 };
 
 static ErrorOr<TransformInfo> read_transform_info(LittleEndianInputBitStream& stream)
@@ -984,8 +1010,19 @@ static ErrorOr<TransformInfo> read_transform_info(LittleEndianInputBitStream& st
             10 + TRY(stream.read_bits(6)));
     }
 
-    if (transform_info.tr != TransformInfo::TransformId::kRCT)
-        TODO();
+    if (transform_info.tr == TransformInfo::TransformId::kPalette) {
+        transform_info.num_c = U32(1, 3, 4, 1 + TRY(stream.read_bits(13)));
+        transform_info.nb_colours = U32(TRY(stream.read_bits(8)), 256 + TRY(stream.read_bits(10)), 1280 + TRY(stream.read_bits(12)), 5376 + TRY(stream.read_bits(16)));
+        transform_info.nb_deltas = U32(0, 1 + TRY(stream.read_bits(8)), 257 + TRY(stream.read_bits(10)), 1281 + TRY(stream.read_bits(16)));
+        transform_info.d_pred = TRY(stream.read_bits(4));
+    }
+
+    if (transform_info.tr == TransformInfo::TransformId::kSqueeze) {
+        auto const num_sq = U32(0, 1 + TRY(stream.read_bits(4)), 9 + TRY(stream.read_bits(6)), 41 + TRY(stream.read_bits(8)));
+        transform_info.sp = TRY(FixedArray<SqueezeParams>::create(num_sq));
+        for (u32 i = 0; i < num_sq; ++i)
+            transform_info.sp[i] = TRY(read_squeeze_params(stream));
+    }
 
     return transform_info;
 }
