@@ -422,7 +422,8 @@ clean() {
 }
 clean_dist() {
     for f in "${files[@]}"; do
-        read url filename hash <<< $(echo "$f")
+        read url hash <<< "$f"
+        filename=$(basename "$url")
         rm -f "${PORT_META_DIR}/${filename}"
     done
 }
