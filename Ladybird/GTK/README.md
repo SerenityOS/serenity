@@ -12,33 +12,38 @@ This project is licensed under a 2-clause BSD license.
 
 ## Building
 
-The easiest way to build is to use `flatpak-builder` to create a flatpak dev environment.
+This project depends on the yet-unreleased libadwaita version. You're either
+going to have to build libadwaita from source, or you can use `flatpak-builder`
+to create a [Flatpak](https://flatpak.org/) dev environment.
 
 
-### Setup: Install flatpak and dependencies
+### Setup: Install Flatpak and dependencies
 
-
-On a Debian-based system like Ubuntu, the flatpak installation steps will look like below:
+If you don't already have Flatpak installed on your system, install it from
+your package manager. On a Debian-based system like Ubuntu, the Flatpak
+installation steps will look like below:
 
 ```sh
-# Install flatpak if it's not already
 sudo apt install flatpak flatpak-builder
 ```
 
-You will likely need to re-log your user session after installing flatpak to setup the environment variables properly.
-To verify that ``XDG_DATA_DIRS`` is setup properly, run ``env | grep XDG``. Something similar to the output below should be present.
+You will likely need to re-log into your user session after installing Flatpak
+to ensure your environment variables are updated properly. To verify that
+`XDG_DATA_DIRS` is set up properly, run `env | grep XDG`. Something similar
+to the output below should be present:
 
 ```
 XDG_DATA_DIRS=$HOME/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:<os-defaults>
 ```
 
-### Setup: Install GNOME development flatpak packages
+### Setup: Install GNOME development Flatpak packages
 
-Once flatpak is installed on your system, install the GNOME Platform and Sdk packages from the gnome-nightly repository.
-The project requires unreleased libadwaita-1 features.
+Once Flatpak is installed on your system, install the GNOME Platform and SDK
+packages from the gnome-nightly repository. You need to use the master branch,
+since this project requires unreleased libadwaita features.
 
 ```sh
-# Make sure that the gnome-nightly repositories are in your user install directory
+# Make sure that the gnome-nightly repositories are in your user Flatpak installation
 flatpak remote-add --user --if-not-exists gnome-nightly https://nightly.gnome.org/gnome-nightly.flatpakrepo
 
 # Install the GNOME SDK
@@ -48,7 +53,7 @@ flatpak install --user org.gnome.Platform//master org.gnome.Sdk//master
 ### Build: Build the application package
 
 ```sh
-# Build and install the application to your local flatpak install
+# Build and install the application to your local Flatpak installation
 flatpak-builder --user --install --force-clean --ccache build org.serenityos.Ladybird-gtk4.json 
 
 # Run the app
