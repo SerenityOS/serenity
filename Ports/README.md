@@ -130,14 +130,16 @@ script simply defines some well-known variables and looks like this:
 
 ```bash
 #!/usr/bin/env -S bash ../.port_include.sh
-
-port="foo"
-version="1.2.3"
-useconfigure="true"
+port='foo'
+version='1.2.3'
+useconfigure='true'
 files=(
     "https://example.com/foo-${version}.tar.gz 9acd50f9a2af37e471f761c3fe7b8dea5617e51dac802fe6c177b74abf0abb5a"
 )
-depends=("bar" "baz")
+depends=(
+  'bar'
+  'baz'
+)
 ```
 
 The script in the shebang, [`.port_include.sh`](./.port_include.sh), is where
