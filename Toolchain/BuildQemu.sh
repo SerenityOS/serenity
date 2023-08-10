@@ -73,7 +73,7 @@ echo Using $UI_LIB based UI
 
 pushd "$DIR/Build/qemu"
     "$DIR"/Tarballs/qemu-"${QEMU_VERSION}"/configure --prefix="$PREFIX" \
-                                            --target-list=aarch64-softmmu,x86_64-softmmu \
+                                            --target-list=aarch64-softmmu,x86_64-softmmu,riscv64-softmmu \
                                             --enable-$UI_LIB \
                                             --enable-slirp \
                                             $EXTRA_ARGS || exit 1
