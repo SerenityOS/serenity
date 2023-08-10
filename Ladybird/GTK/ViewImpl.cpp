@@ -88,15 +88,12 @@ void LadybirdViewImpl::update_theme()
     // (in addition to easily setting them). For now, we hardcode the color values as
     // documented at https://gnome.pages.gitlab.gnome.org/libadwaita/doc/main/named-colors.html
     Gfx::Color base, accent, selection, base_text, button;
-    if (!is_dark) {
-        base = Gfx::Color::from_rgb(0xfafafa);
-        accent = Gfx::Color::from_rgb(0x1c71d8);
-        base_text = Gfx::Color(Gfx::Color::Black).with_alpha(204);
-    } else {
-        base = Gfx::Color::from_rgb(0x242424);
-        accent = Gfx::Color::from_rgb(0x78aeed);
-        base_text = Gfx::Color::White;
-    }
+
+    // XXX: Always send the light theme colors, even when the current style is dark.
+    base = Gfx::Color::from_rgb(0xfafafa);
+    accent = Gfx::Color::from_rgb(0x1c71d8);
+    base_text = Gfx::Color(Gfx::Color::Black).with_alpha(204);
+
     selection = accent.with_alpha(77);                      // gtkalpha($accent_bg_color, 0.3)
     button = base_text.with_alpha(base_text.alpha() * 0.1); // gtkalpha(currentColor, .1)
     palette.set_color(Gfx::ColorRole::Accent, accent);
