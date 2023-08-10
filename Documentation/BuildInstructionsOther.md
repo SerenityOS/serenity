@@ -48,11 +48,12 @@ apk add coreutils
 apk add build-base
 
 # qemu
-apk add qemu qemu-system-i386 qemu-img qemu-ui-gtk
+apk add qemu qemu-system-x86_64 qemu-img qemu-ui-gtk qemu-audio-pa
 
 # build tools (samurai is a drop-in replacement for ninja)
 apk add cmake e2fsprogs grub-bios samurai mpc1-dev mpfr-dev gmp-dev ccache rsync texinfo
 ```
+Optional: `fuse2fs` for [building images without root](https://github.com/SerenityOS/serenity/pull/11224).
 
 ## OpenBSD prerequisites
 
