@@ -543,6 +543,7 @@ set(SOURCES
     SVG/SVGLength.cpp
     SVG/SVGLineElement.cpp
     SVG/SVGLinearGradientElement.cpp
+    SVG/SVGMaskElement.cpp
     SVG/SVGPolygonElement.cpp
     SVG/SVGPolylineElement.cpp
     SVG/SVGRectElement.cpp
