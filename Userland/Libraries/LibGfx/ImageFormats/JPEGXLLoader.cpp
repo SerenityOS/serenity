@@ -681,6 +681,10 @@ struct FrameHeader {
 
     u8 lf_level {};
     bool have_crop { false };
+    i32 x0 {};
+    i32 y0 {};
+    u32 width {};
+    u32 height {};
 
     BlendingInfo blending_info {};
     FixedArray<BlendingInfo> ec_blending_info {};
@@ -701,7 +705,9 @@ static int operator&(FrameHeader::Flags first, FrameHeader::Flags second)
     return static_cast<int>(first) & static_cast<int>(second);
 }
 
-static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream, ImageMetadata const& metadata)
+static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream,
+    SizeHeader size_header,
+    ImageMetadata const& metadata)
 {
     FrameHeader frame_header;
     bool const all_default = TRY(stream.read_bit());
@@ -744,15 +750,29 @@ static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream
         if (frame_header.frame_type != FrameHeader::FrameType::kLFFrame)
             frame_header.have_crop = TRY(stream.read_bit());
 
-        if (frame_header.have_crop)
-            TODO();
+        if (frame_header.have_crop) {
+            auto const read_crop_dimension = [&]() -> ErrorOr<u32> {
+                return U32(TRY(stream.read_bits(8)), 256 + TRY(stream.read_bits(11)), 2304 + TRY(stream.read_bits(14)), 18688 + TRY(stream.read_bits(30)));
+            };
+
+            if (frame_header.frame_type != FrameHeader::FrameType::kReferenceOnly) {
+                frame_header.x0 = unpack_signed(TRY(read_crop_dimension()));
+                frame_header.y0 = unpack_signed(TRY(read_crop_dimension()));
+            }
+
+            frame_header.width = TRY(read_crop_dimension());
+            frame_header.height = TRY(read_crop_dimension());
+        }
 
         bool const normal_frame = frame_header.frame_type == FrameHeader::FrameType::kRegularFrame
             || frame_header.frame_type == FrameHeader::FrameType::kSkipProgressive;
 
-        // FIXME: also consider "cropped" image of the dimension of the frame
-        VERIFY(!frame_header.have_crop);
-        bool const full_frame = !frame_header.have_crop;
+        // Let full_frame be true if and only if have_crop is false or if the frame area given
+        // by width and height and offsets x0 and y0 completely covers the image area.
+        bool const cover_image_area = frame_header.x0 <= 0 && frame_header.y0 <= 0
+            && (frame_header.width + frame_header.x0 >= size_header.width)
+            && (frame_header.height + frame_header.y0 == size_header.height);
+        bool const full_frame = !frame_header.have_crop || cover_image_area;
 
         if (normal_frame) {
             frame_header.blending_info = TRY(read_blending_info(stream, metadata, full_frame));
@@ -2304,13 +2324,14 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
 
     Frame frame;
 
-    frame.frame_header = TRY(read_frame_header(stream, metadata));
+    frame.frame_header = TRY(read_frame_header(stream, size_header, metadata));
 
     if (!frame.frame_header.have_crop) {
         frame.width = size_header.width;
         frame.height = size_header.height;
     } else {
-        TODO();
+        frame.width = frame.frame_header.width;
+        frame.height = frame.frame_header.height;
     }
 
     if (frame.frame_header.upsampling > 1) {
