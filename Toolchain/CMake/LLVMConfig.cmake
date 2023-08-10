@@ -6,7 +6,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${SERENITY_MODULE_PATH}" CACHE STRIN
 
 set(CMAKE_BUILD_TYPE Release CACHE STRING "")
 
-set(LLVM_TARGETS_TO_BUILD "X86;AArch64" CACHE STRING "")
+set(LLVM_TARGETS_TO_BUILD "X86;AArch64;RISCV" CACHE STRING "")
 
 set(LLVM_ENABLE_PROJECTS "llvm;clang;lld;clang-tools-extra" CACHE STRING "")
 set(LLVM_ENABLE_RUNTIMES "compiler-rt" CACHE STRING "")
@@ -25,7 +25,7 @@ set(LLVM_INSTALL_BINUTILS_SYMLINKS OFF CACHE BOOL "")
 set(CLANG_ENABLE_CLANGD OFF CACHE BOOL "")
 
 set(compiler_flags "-nostdlib -nostdlib++")
-foreach(target x86_64-pc-serenity;aarch64-pc-serenity)
+foreach(target x86_64-pc-serenity;aarch64-pc-serenity;riscv64-pc-serenity)
     list(APPEND targets "${target}")
 
     set(RUNTIMES_${target}_CMAKE_BUILD_TYPE Release CACHE STRING "")

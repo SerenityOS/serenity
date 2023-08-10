@@ -15,7 +15,7 @@ echo "$DIR"
 PREFIX="$DIR/Local/clang/"
 BUILD="$DIR/../Build/"
 USERLAND_ARCHS="x86_64"
-ARCHS="$USERLAND_ARCHS aarch64"
+ARCHS="$USERLAND_ARCHS aarch64 riscv64"
 
 MD5SUM="md5sum"
 REALPATH="realpath"
@@ -296,6 +296,7 @@ pushd "$DIR/Build/clang"
             -G Ninja \
             -DSERENITY_x86_64-pc-serenity_SYSROOT="$BUILD/x86_64clang/Root" \
             -DSERENITY_aarch64-pc-serenity_SYSROOT="$BUILD/aarch64clang/Root" \
+            -DSERENITY_riscv64-pc-serenity_SYSROOT="$BUILD/riscv64clang/Root" \
             -DCMAKE_INSTALL_PREFIX="$PREFIX" \
             -DSERENITY_MODULE_PATH="$DIR/CMake" \
             -C "$DIR/CMake/LLVMConfig.cmake" \

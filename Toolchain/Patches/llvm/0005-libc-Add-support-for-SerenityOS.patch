@@ -36,7 +36,7 @@ index a12aa1de1..075ebbe81 100644
    __support/solaris/wchar.h
    __support/solaris/xlocale.h
 diff --git a/libcxx/include/__config b/libcxx/include/__config
-index 5e30a4217..5dea34814 100644
+index 108153883..e4434809c 100644
 --- a/libcxx/include/__config
 +++ b/libcxx/include/__config
 @@ -930,7 +930,8 @@ _LIBCPP_BEGIN_NAMESPACE_STD _LIBCPP_END_NAMESPACE_STD

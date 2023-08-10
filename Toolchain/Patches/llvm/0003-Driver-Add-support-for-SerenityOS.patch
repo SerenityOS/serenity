@@ -2,25 +2,30 @@ From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Daniel Bertalan <dani@danielbertalan.dev>
 Date: Thu, 14 Apr 2022 10:09:50 +0200
 Subject: [PATCH] [Driver] Add support for SerenityOS
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
 Adds support for the `$arch-pc-serenity` target to the Clang front end.
 This makes the compiler look for libraries and headers in the right
 places, and enables some security mitigations like stack-smashing
 protection and position-independent code by default.
+
+Co-authored-by: kleines Filmröllchen <filmroellchen@serenityos.org>
 ---
- clang/lib/Basic/Targets.cpp              |   6 +
+ clang/lib/Basic/Targets.cpp              |   8 +
  clang/lib/Basic/Targets/OSTargets.h      |  18 ++
  clang/lib/Driver/CMakeLists.txt          |   1 +
  clang/lib/Driver/Driver.cpp              |   4 +
  clang/lib/Driver/ToolChain.cpp           |   2 +
  clang/lib/Driver/ToolChains/Serenity.cpp | 336 +++++++++++++++++++++++
  clang/lib/Driver/ToolChains/Serenity.h   | 100 +++++++
- 7 files changed, 467 insertions(+)
+ 7 files changed, 469 insertions(+)
  create mode 100644 clang/lib/Driver/ToolChains/Serenity.cpp
  create mode 100644 clang/lib/Driver/ToolChains/Serenity.h
 
 diff --git a/clang/lib/Basic/Targets.cpp b/clang/lib/Basic/Targets.cpp
-index 8400774db..f105bed29 100644
+index 8400774db..f82618dc8 100644
 --- a/clang/lib/Basic/Targets.cpp
 +++ b/clang/lib/Basic/Targets.cpp
 @@ -153,6 +153,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
@@ -32,7 +37,16 @@ index 8400774db..f105bed29 100644
      case llvm::Triple::Win32:
        switch (Triple.getEnvironment()) {
        case llvm::Triple::GNU:
-@@ -542,6 +544,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
+@@ -424,6 +426,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
+       return new FuchsiaTargetInfo<RISCV64TargetInfo>(Triple, Opts);
+     case llvm::Triple::Linux:
+       return new LinuxTargetInfo<RISCV64TargetInfo>(Triple, Opts);
++    case llvm::Triple::Serenity:
++      return new SerenityTargetInfo<RISCV64TargetInfo>(Triple, Opts);
+     default:
+       return new RISCV64TargetInfo(Triple, Opts);
+     }
+@@ -542,6 +546,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
        return new MCUX86_32TargetInfo(Triple, Opts);
      case llvm::Triple::Hurd:
        return new HurdTargetInfo<X86_32TargetInfo>(Triple, Opts);
@@ -41,7 +55,7 @@ index 8400774db..f105bed29 100644
      default:
        return new X86_32TargetInfo(Triple, Opts);
      }
-@@ -596,6 +600,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
+@@ -596,6 +602,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
        return new PS4OSTargetInfo<X86_64TargetInfo>(Triple, Opts);
      case llvm::Triple::PS5:
        return new PS5OSTargetInfo<X86_64TargetInfo>(Triple, Opts);
