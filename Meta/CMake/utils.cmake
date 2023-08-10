@@ -225,6 +225,9 @@ endfunction()
 
 function(download_file_multisource urls path)
     if (NOT EXISTS "${path}")
+        if (NOT ENABLE_NETWORK_DOWNLOADS)
+            message(FATAL_ERROR "${path} does not exist, and unable to download it")
+        endif()
         get_filename_component(file "${path}" NAME)
 
         foreach(url ${urls})
