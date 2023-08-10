@@ -15,9 +15,9 @@ Co-Authored-By: Philip Herron <herron.philip@googlemail.com>
 Co-Authored-By: Shannon Booth <shannon@serenityos.org>
 ---
  gcc/configure               |  3 +++
- libgcc/config.host          | 16 ++++++++++++++++
+ libgcc/config.host          | 21 +++++++++++++++++++++
  libgcc/unwind-dw2-fde-dip.c |  6 ++++++
- 3 files changed, 25 insertions(+)
+ 3 files changed, 30 insertions(+)
 
 diff --git a/gcc/configure b/gcc/configure
 index c7b26d1927de62d7b3a49ea9ac0a998979659cf2..5fcfaa3cfff30d2e8d1cdf3f62bf2125e2f99179 100755
@@ -34,10 +34,22 @@ index c7b26d1927de62d7b3a49ea9ac0a998979659cf2..5fcfaa3cfff30d2e8d1cdf3f62bf2125
  
  if test x$gcc_cv_target_dl_iterate_phdr = xyes; then
 diff --git a/libgcc/config.host b/libgcc/config.host
-index b9975de902357576003cf391850fef2dc336aee1..7b1f6775b989410ccd6766f50740a288c6934794 100644
+index b9975de902357576003cf391850fef2dc336aee1..d6cbaae46be819b6b17932d28327dd2658d3f2ad 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
-@@ -1507,6 +1507,22 @@ nvptx-*)
+@@ -1294,6 +1294,11 @@ riscv*-*-freebsd*)
+ 	tmake_file="${tmake_file} riscv/t-softfp${host_address} t-softfp riscv/t-elf riscv/t-elf${host_address} t-slibgcc-libgcc"
+ 	extra_parts="$extra_parts crtbegin.o crtend.o crti.o crtn.o crtendS.o crtbeginT.o"
+ 	;;
++riscv64-*-serenity*)
++	extra_parts="$extra_parts crti.o crtbegin.o crtbeginS.o crtend.o crtendS.o crtn.o"
++	tmake_file="$tmake_file riscv/t-softfp64 t-softfp riscv/t-elf riscv/t-elf64 t-slibgcc-libgcc t-eh-dw2-dip"
++	tmake_file="$tmake_file riscv/t-crtstuff t-crtstuff-pic t-libgcc-pic t-slibgcc t-slibgcc-gld-nover"
++	;;
+ riscv*-*-*)
+ 	tmake_file="${tmake_file} riscv/t-softfp${host_address} t-softfp riscv/t-elf riscv/t-elf${host_address}"
+ 	extra_parts="$extra_parts crtbegin.o crtend.o crti.o crtn.o"
+@@ -1507,6 +1512,22 @@ nvptx-*)
  	tmake_file="$tmake_file nvptx/t-nvptx"
  	extra_parts="crt0.o"
  	;;

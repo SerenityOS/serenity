@@ -10,4 +10,6 @@
 #    include <Kernel/Arch/x86_64/mcontext.h>
 #elif defined(__aarch64__)
 #    include <Kernel/Arch/aarch64/mcontext.h>
+#elif defined(__riscv) && __riscv_xlen == 64
+#    include <Kernel/Arch/riscv64/mcontext.h>
 #endif
