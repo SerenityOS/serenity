@@ -27,7 +27,7 @@ static constexpr u8 flag_bit_count(Opcode opcode)
     switch (to_underlying(opcode)) {
 #define __ENUMERATE_OPENTYPE_OPCODES(mnemonic, range_start, range_end) \
     case range_start ... range_end:                                    \
-        return AK::ceil_log2(range_end - range_start);
+        return AK::ceil_log2<u8>(range_end - range_start);
         ENUMERATE_OPENTYPE_OPCODES
 #undef __ENUMERATE_OPENTYPE_OPCODES
     }

@@ -8,6 +8,8 @@
 
 #include <AK/BuiltinWrappers.h>
 #include <AK/Concepts.h>
+#include <AK/NumericLimits.h>
+#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 
 namespace AK {
@@ -15,24 +17,34 @@ namespace AK {
 template<Integral T>
 constexpr T exp2(T exponent)
 {
-    return 1u << exponent;
+    if (exponent < 0)
+        return 0;
+
+    if (static_cast<MakeUnsigned<T>>(exponent) >= (8 * sizeof(T) - NumericLimits<T>::is_signed()))
+        return NumericLimits<T>::max();
+
+    return static_cast<T>(1) << exponent;
 }
 
 template<Integral T>
 constexpr T log2(T x)
 {
-    return x ? (8 * sizeof(T) - 1) - count_leading_zeroes(static_cast<MakeUnsigned<T>>(x)) : 0;
+    if (x <= 0)
+        return NumericLimits<T>::min();
+
+    return 8 * sizeof(T) - 1 - count_leading_zeroes(static_cast<MakeUnsigned<T>>(x));
 }
 
 template<Integral T>
 constexpr T ceil_log2(T x)
 {
-    if (!x)
+    if (x <= 0)
+        return NumericLimits<T>::min();
+
+    if (x == static_cast<T>(1))
         return 0;
 
-    T log = AK::log2(x);
-    log += (x & ((((T)1) << (log - 1)) - 1)) != 0;
-    return log;
+    return log2(x) + !is_power_of_two(x);
 }
 
 template<Integral I>
