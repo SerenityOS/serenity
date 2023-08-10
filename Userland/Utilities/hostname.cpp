@@ -16,6 +16,9 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 {
     StringView hostname {};
 
+    TRY(Core::System::unveil("/sys/kernel/conf/hostname", "rw"));
+    TRY(Core::System::unveil(nullptr, nullptr));
+
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(hostname, "Hostname to set", "hostname", Core::ArgsParser::Required::No);
     args_parser.parse(args);
