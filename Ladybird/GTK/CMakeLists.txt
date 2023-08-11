@@ -12,6 +12,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(PkgConfig)
 pkg_check_modules(gtk4 REQUIRED IMPORTED_TARGET gtk4>=4.11.3)
 pkg_check_modules(libadwaita REQUIRED IMPORTED_TARGET libadwaita-1>=1.4)
+pkg_check_modules(libsoup IMPORTED_TARGET libsoup-3.0)
 
 find_program(GLIB_COMPILE_RESOURCES NAMES glib-compile-resources REQUIRED)
 
@@ -70,6 +71,10 @@ add_library(resources OBJECT "${GENERATED_GRESOURCE_FILE}")
 target_link_libraries(resources PRIVATE PkgConfig::gtk4)
 set_target_properties(resources PROPERTIES COMPILE_OPTIONS "")
 
+if (libsoup_FOUND)
+    add_compile_definitions(HAVE_LIBSOUP)
+endif ()
+
 set(SOURCES
     main.cpp
     Window.cpp
@@ -96,12 +101,24 @@ set(WEBCONTENT_SOURCES
     "${WEBCONTENT_SOURCE_DIR}/WebContentConsoleClient.cpp"
     "${WEBCONTENT_SOURCE_DIR}/WebDriverConnection.cpp"
     "${SERENITY_SOURCE_DIR}/Ladybird/FontPlugin.cpp"
+    "${SERENITY_SOURCE_DIR}/Ladybird/HelperProcess.cpp"
     "${SERENITY_SOURCE_DIR}/Ladybird/ImageCodecPlugin.cpp"
     "${SERENITY_SOURCE_DIR}/Ladybird/Utilities.cpp"
     WebContentMain.cpp
 )
+if (libsoup_FOUND)
+    set(WEBCONTENT_SOURCES
+        RequestManagerSoup.cpp
+        EventLoopImplementationGLib.cpp
+        ${WEBCONTENT_SOURCES}
+    )
+endif()
+
 add_executable(WebContent ${WEBCONTENT_SOURCES})
-target_link_libraries(WebContent PRIVATE Lagom::Audio Lagom::Core Lagom::FileSystem Lagom::Gfx Lagom::IPC Lagom::JS Lagom::Main Lagom::Web Lagom::WebSocket)
+target_link_libraries(WebContent PRIVATE Lagom::Audio Lagom::Core Lagom::FileSystem Lagom::Gfx Lagom::IPC Lagom::JS Lagom::Main Lagom::Web Lagom::WebSocket Lagom::WebView Lagom::Protocol)
+if (libsoup_FOUND)
+    target_link_libraries(WebContent PRIVATE PkgConfig::libsoup)
+endif()
 
 if (NOT CMAKE_SKIP_INSTALL_RULES)
   include(cmake/InstallRules.cmake)

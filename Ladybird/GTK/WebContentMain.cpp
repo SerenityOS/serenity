@@ -1,5 +1,7 @@
+#include "EventLoopImplementationGLib.h"
 #include <AK/DeprecatedString.h>
 #include <Ladybird/FontPlugin.h>
+#include <Ladybird/HelperProcess.h>
 #include <Ladybird/ImageCodecPlugin.h>
 #include <Ladybird/Utilities.h>
 #include <LibCore/ArgsParser.h>
@@ -10,14 +12,18 @@
 #include <LibMain/Main.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Loader/FrameLoader.h>
+#include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Platform/EventLoopPluginSerenity.h>
+#include <LibWebView/RequestServerAdapter.h>
+#include <LibWebView/WebSocketClientAdapter.h>
 #include <WebContent/ConnectionFromClient.h>
+
+#ifdef HAVE_LIBSOUP
+#    include "RequestManagerSoup.h"
+#endif
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    Web::Platform::EventLoopPlugin::install(*new Web::Platform::EventLoopPluginSerenity);
-    Core::EventLoop event_loop;
-
     platform_init();
 
     int webcontent_fd_passing_socket = -1;
@@ -34,6 +40,27 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Web::FrameLoader::set_default_favicon_path(DeprecatedString::formatted("{}/res/icons/16x16/app-browser.png", s_serenity_resource_root));
     Web::FrameLoader::set_error_page_url(DeprecatedString::formatted("file://{}/res/html/error.html", s_serenity_resource_root));
     Web::Platform::FontPlugin::install(*new Ladybird::FontPlugin(is_layout_test_mode));
+    Web::Platform::EventLoopPlugin::install(*new Web::Platform::EventLoopPluginSerenity);
+
+    if (use_lagom_networking) {
+        auto candidate_request_server_paths = TRY(get_paths_for_helper_process("RequestServer"sv));
+        auto request_server_client = TRY(launch_request_server_process(candidate_request_server_paths, s_serenity_resource_root));
+        Web::ResourceLoader::initialize(TRY(WebView::RequestServerAdapter::try_create(move(request_server_client))));
+
+        auto candidate_web_socket_paths = TRY(get_paths_for_helper_process("WebSocket"sv));
+        auto web_socket_client = TRY(launch_web_socket_process(candidate_web_socket_paths, s_serenity_resource_root));
+        Web::WebSockets::WebSocketClientManager::initialize(TRY(WebView::WebSocketClientManagerAdapter::try_create(move(web_socket_client))));
+    } else {
+        Core::EventLoopManager::install(*new EventLoopManagerGLib);
+#ifdef HAVE_LIBSOUP
+        Web::ResourceLoader::initialize(RequestManagerSoup::create());
+        // Web::WebSockets::WebSocketClientManager::initialize(WebSocketClientManagerSoup::create());
+#else
+        VERIFY_NOT_REACHED();
+#endif
+    }
+
+    Core::EventLoop event_loop;
 
     VERIFY(webcontent_fd_passing_socket >= 0);
 
