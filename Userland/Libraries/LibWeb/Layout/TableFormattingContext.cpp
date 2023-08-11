@@ -567,7 +567,7 @@ void TableFormattingContext::compute_table_width()
 
     auto& computed_values = table_box().computed_values();
 
-    CSSPixels width_of_table_containing_block = m_state.get(*table_box().containing_block()).content_width();
+    CSSPixels width_of_table_containing_block = m_available_space->width.to_px();
 
     // Percentages on 'width' and 'height' on the table are relative to the table wrapper box's containing block,
     // not the table wrapper box itself.
