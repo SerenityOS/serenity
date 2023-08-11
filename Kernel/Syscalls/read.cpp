@@ -101,9 +101,7 @@ ErrorOr<FlatPtr> Process::read_impl(int fd, Userspace<u8*> buffer, size_t size)
     return TRY(description->read(user_buffer, size));
 }
 
-// NOTE: The offset is passed by pointer because off_t is 64bit,
-// hence it can't be passed by register on 32bit platforms.
-ErrorOr<FlatPtr> Process::sys$pread(int fd, Userspace<u8*> buffer, size_t size, Userspace<off_t const*> userspace_offset)
+ErrorOr<FlatPtr> Process::sys$pread(int fd, Userspace<u8*> buffer, size_t size, off_t offset)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::stdio));
@@ -111,7 +109,6 @@ ErrorOr<FlatPtr> Process::sys$pread(int fd, Userspace<u8*> buffer, size_t size, 
         return 0;
     if (size > NumericLimits<ssize_t>::max())
         return EINVAL;
-    auto offset = TRY(copy_typed_from_user(userspace_offset));
     if (offset < 0)
         return EINVAL;
     dbgln_if(IO_DEBUG, "sys$pread({}, {}, {}, {})", fd, buffer.ptr(), size, offset);

@@ -213,7 +213,7 @@ private:
     u32 virt$pledge(u32);
     int virt$poll(FlatPtr);
     int virt$profiling_disable(pid_t);
-    int virt$profiling_enable(pid_t);
+    int virt$profiling_enable(pid_t, u64);
     int virt$purge(int mode);
     u32 virt$read(int, FlatPtr, ssize_t);
     int virt$readlink(FlatPtr);

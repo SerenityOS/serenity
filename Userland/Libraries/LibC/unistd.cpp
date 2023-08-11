@@ -392,7 +392,7 @@ ssize_t pread(int fd, void* buf, size_t count, off_t offset)
 {
     __pthread_maybe_cancel();
 
-    int rc = syscall(SC_pread, fd, buf, count, &offset);
+    int rc = syscall(SC_pread, fd, buf, count, offset);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
@@ -897,7 +897,7 @@ char* getlogin()
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/ftruncate.html
 int ftruncate(int fd, off_t length)
 {
-    int rc = syscall(SC_ftruncate, fd, &length);
+    int rc = syscall(SC_ftruncate, fd, length);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

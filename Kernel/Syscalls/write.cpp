@@ -11,9 +11,7 @@
 
 namespace Kernel {
 
-// NOTE: The offset is passed by pointer because off_t is 64bit,
-// hence it can't be passed by register on 32bit platforms.
-ErrorOr<FlatPtr> Process::sys$pwritev(int fd, Userspace<const struct iovec*> iov, int iov_count, Userspace<off_t const*> userspace_offset)
+ErrorOr<FlatPtr> Process::sys$pwritev(int fd, Userspace<const struct iovec*> iov, int iov_count, off_t base_offset)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::stdio));
@@ -33,11 +31,10 @@ ErrorOr<FlatPtr> Process::sys$pwritev(int fd, Userspace<const struct iovec*> iov
             return EINVAL;
     }
 
-    // NOTE: Negative offset means "operate like writev" which seeks the file.
-    auto base_offset = TRY(copy_typed_from_user(userspace_offset));
     auto description = TRY(open_file_description(fd));
     if (!description->is_writable())
         return EBADF;
+    // NOTE: Negative offset means "operate like writev" which seeks the file.
     if (base_offset >= 0 && !description->file().is_seekable())
         return EINVAL;
 

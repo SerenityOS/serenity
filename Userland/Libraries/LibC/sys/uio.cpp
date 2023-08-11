@@ -28,7 +28,7 @@ ssize_t pwritev(int fd, struct iovec const* iov, int iov_count, off_t offset)
 {
     __pthread_maybe_cancel();
 
-    int rc = syscall(SC_pwritev, fd, iov, iov_count, &offset);
+    int rc = syscall(SC_pwritev, fd, iov, iov_count, offset);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 }
