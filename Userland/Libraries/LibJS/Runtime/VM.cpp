@@ -192,11 +192,6 @@ Bytecode::Interpreter& VM::bytecode_interpreter()
     return *m_bytecode_interpreter;
 }
 
-Bytecode::Interpreter* VM::bytecode_interpreter_if_exists()
-{
-    return m_bytecode_interpreter;
-}
-
 void VM::gather_roots(HashTable<Cell*>& roots)
 {
     roots.set(m_empty_string);

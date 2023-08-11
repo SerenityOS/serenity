@@ -271,8 +271,7 @@ void Heap::mark_live_cells(HashTable<Cell*> const& roots)
 
     MarkingVisitor visitor(roots);
 
-    if (auto* bytecode_interpreter = vm().bytecode_interpreter_if_exists())
-        bytecode_interpreter->visit_edges(visitor);
+    vm().bytecode_interpreter().visit_edges(visitor);
 
     visitor.mark_all_live_cells();
 
