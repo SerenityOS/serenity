@@ -185,7 +185,7 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     case SC_profiling_disable:
         return virt$profiling_disable(arg1);
     case SC_profiling_enable:
-        return virt$profiling_enable(arg1);
+        return virt$profiling_enable(arg1, arg2);
     case SC_purge:
         return virt$purge(arg1);
     case SC_read:
@@ -281,9 +281,9 @@ int Emulator::virt$recvfd(int socket, int options)
     return syscall(SC_recvfd, socket, options);
 }
 
-int Emulator::virt$profiling_enable(pid_t pid)
+int Emulator::virt$profiling_enable(pid_t pid, u64 mask)
 {
-    return syscall(SC_profiling_enable, pid);
+    return syscall(SC_profiling_enable, pid, mask);
 }
 
 int Emulator::virt$profiling_disable(pid_t pid)
@@ -474,11 +474,10 @@ int Emulator::virt$get_stack_bounds(FlatPtr base, FlatPtr size)
     return 0;
 }
 
-int Emulator::virt$ftruncate(int fd, FlatPtr length_addr)
+int Emulator::virt$ftruncate(int fd, off_t length)
 {
     off_t length;
-    mmu().copy_from_vm(&length, length_addr, sizeof(off_t));
-    return syscall(SC_ftruncate, fd, &length);
+    return syscall(SC_ftruncate, fd, length);
 }
 
 int Emulator::virt$uname(FlatPtr params_addr)
