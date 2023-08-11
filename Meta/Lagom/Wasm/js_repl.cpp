@@ -117,11 +117,7 @@ static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView sour
         if (s_dump_ast)
             script_or_module->parse_node().dump(0);
 
-        if (auto* bytecode_interpreter = g_vm->bytecode_interpreter_if_exists()) {
-            result = bytecode_interpreter->run(*script_or_module);
-        } else {
-            result = interpreter.run(*script_or_module);
-        }
+        result = interpreter.run(*script_or_module);
 
         return ReturnEarly::No;
     };
