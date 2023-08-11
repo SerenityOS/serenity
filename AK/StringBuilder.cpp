@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,6 +24,17 @@ namespace AK {
 
 inline ErrorOr<void> StringBuilder::will_append(size_t size)
 {
+    if (m_use_inline_capacity_only == UseInlineCapacityOnly::Yes) {
+        VERIFY(m_buffer.capacity() == StringBuilder::inline_capacity);
+        Checked<size_t> current_pointer = m_buffer.size();
+        current_pointer += size;
+        VERIFY(!current_pointer.has_overflow());
+        if (current_pointer <= StringBuilder::inline_capacity) {
+            return {};
+        }
+        return Error::from_errno(ENOMEM);
+    }
+
     Checked<size_t> needed_capacity = m_buffer.size();
     needed_capacity += size;
     VERIFY(!needed_capacity.has_overflow());
@@ -46,6 +58,27 @@ ErrorOr<StringBuilder> StringBuilder::create(size_t initial_capacity)
 StringBuilder::StringBuilder(size_t initial_capacity)
 {
     m_buffer.ensure_capacity(initial_capacity);
+}
+
+StringBuilder::StringBuilder(UseInlineCapacityOnly use_inline_capacity_only)
+    : m_use_inline_capacity_only(use_inline_capacity_only)
+{
+}
+
+size_t StringBuilder::length() const
+{
+    return m_buffer.size();
+}
+
+bool StringBuilder::is_empty() const
+{
+    return m_buffer.is_empty();
+}
+
+void StringBuilder::trim(size_t count)
+{
+    auto decrease_count = min(m_buffer.size(), count);
+    m_buffer.resize(m_buffer.size() - decrease_count);
 }
 
 ErrorOr<void> StringBuilder::try_append(StringView string)
@@ -128,6 +161,16 @@ ErrorOr<FlyString> StringBuilder::to_fly_string() const
     return FlyString::from_utf8(string_view());
 }
 #endif
+
+u8* StringBuilder::data()
+{
+    return m_buffer.data();
+}
+
+u8 const* StringBuilder::data() const
+{
+    return m_buffer.data();
+}
 
 StringView StringBuilder::string_view() const
 {

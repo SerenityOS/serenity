@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Array.h>
+#include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/TypedTransfer.h>
 #include <AK/Userspace.h>
@@ -22,6 +23,24 @@ namespace AK {
 template<size_t Size>
 class FixedStringBuffer {
 public:
+    [[nodiscard]] static ErrorOr<FixedStringBuffer<Size>> vformatted(StringView fmtstr, AK::TypeErasedFormatParams& params)
+    requires(Size < StringBuilder::inline_capacity)
+    {
+        StringBuilder builder { StringBuilder::UseInlineCapacityOnly::Yes };
+        TRY(AK::vformat(builder, fmtstr, params));
+        FixedStringBuffer<Size> buffer {};
+        buffer.store_characters(builder.string_view());
+        return buffer;
+    }
+
+    template<typename... Parameters>
+    [[nodiscard]] static ErrorOr<FixedStringBuffer<Size>> formatted(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
+    requires(Size < StringBuilder::inline_capacity)
+    {
+        AK::VariadicFormatParams<AK::AllowDebugOnlyFormatters::No, Parameters...> variadic_format_parameters { parameters... };
+        return vformatted(fmtstr.view(), variadic_format_parameters);
+    }
+
     void store_characters(StringView characters)
     {
         // NOTE: Only store the characters up to the first null terminator
