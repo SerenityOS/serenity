@@ -31,6 +31,8 @@ configopts=(
     '-DENABLE_GOBJECT_INTROSPECTION=OFF'
     '-DENABLE_GTK_DOC=OFF'
     '-DENABLE_LIBOPENJPEG=unmaintained'
+    '-DWITH_Gpgmepp=OFF'
+    '-DWITH_NSS3=OFF'
 )
 
 configure() {
