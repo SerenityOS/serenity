@@ -421,14 +421,6 @@ CSSPixels BlockFormattingContext::compute_table_box_width_inside_table_wrapper(B
     auto available_width = width_of_containing_block - margin_left.to_px(box) - margin_right.to_px(box);
 
     LayoutState throwaway_state(&m_state);
-    if (available_space.width.is_definite())
-        throwaway_state.get_mutable(box).set_content_width(available_width);
-    else if (available_space.width.is_min_content())
-        throwaway_state.get_mutable(box).set_min_content_width();
-    else {
-        VERIFY(available_space.width.is_max_content());
-        throwaway_state.get_mutable(box).set_max_content_width();
-    }
     auto context = create_independent_formatting_context_if_needed(throwaway_state, box);
     VERIFY(context);
     context->run(box, LayoutMode::IntrinsicSizing, m_state.get(box).available_inner_space_or_constraints_from(available_space));

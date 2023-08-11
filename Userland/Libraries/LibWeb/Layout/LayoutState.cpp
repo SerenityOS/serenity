@@ -426,18 +426,4 @@ void LayoutState::UsedValues::set_indefinite_content_height()
     m_has_definite_height = false;
 }
 
-void LayoutState::UsedValues::set_min_content_width()
-{
-    width_constraint = SizeConstraint::MinContent;
-    m_content_width = 0;
-    m_has_definite_height = false;
-}
-
-void LayoutState::UsedValues::set_max_content_width()
-{
-    width_constraint = SizeConstraint::MaxContent;
-    m_content_width = INFINITY;
-    m_has_definite_width = false;
-}
-
 }
