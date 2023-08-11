@@ -245,6 +245,7 @@ public:
         Backward,
     };
     TextRange find_text(StringView needle, SearchDirection, GUI::TextDocument::SearchShouldWrap, bool use_regex, bool match_case);
+    void highlight_all_occurances_of(DeprecatedString const selected_text);
     void reset_search_results();
     Optional<size_t> search_result_index() const { return m_search_result_index; }
     Vector<TextRange> const& search_results() const { return m_search_results; }
@@ -389,6 +390,7 @@ private:
     void on_search_results(GUI::TextRange current, Vector<GUI::TextRange> all_results);
 
     static constexpr auto search_results_span_collection_index = 1;
+    static constexpr auto highlight_selected_text_span_collection_index = 1;
 
     Type m_type { MultiLine };
     Mode m_mode { Editable };
