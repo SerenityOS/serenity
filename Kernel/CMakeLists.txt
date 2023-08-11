@@ -611,7 +611,10 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set_source_files_properties(Library/MiniStdLib.cpp
         PROPERTIES COMPILE_FLAGS "-fno-tree-loop-distribution -fno-tree-loop-distribute-patterns")
 
-    add_link_options(LINKER:-z,pack-relative-relocs)
+    if ("${SERENITY_ARCH}" STREQUAL "x86_64")
+        # The BFD linker only supports RELR relocations on x86 and POWER.
+        add_link_options(LINKER:-z,pack-relative-relocs)
+    endif()
 else() # Assume Clang
     add_compile_options(-Waddress-of-packed-member)
     add_compile_options(-faligned-allocation)
