@@ -6,7 +6,10 @@ struct _LadybirdWindow {
 
     AdwTabOverview* tab_overview;
     AdwTabView* tab_view;
+    LadybirdWebView* last_selected_web_view;
     GtkEntry* url_entry;
+
+    gulong page_url_changed_id;
 };
 
 G_BEGIN_DECLS
@@ -17,6 +20,8 @@ static void ladybird_window_dispose(GObject* object)
 {
     LadybirdWindow* self = LADYBIRD_WINDOW(object);
 
+    if (self->last_selected_web_view && self->page_url_changed_id)
+        g_signal_handler_disconnect(self->last_selected_web_view, self->page_url_changed_id);
     gtk_widget_dispose_template(GTK_WIDGET(self), LADYBIRD_TYPE_WINDOW);
 
     G_OBJECT_CLASS(ladybird_window_parent_class)->dispose(object);
@@ -115,6 +120,45 @@ static LadybirdWebView* ladybird_window_get_current_page(LadybirdWindow* self)
     return get_web_view_from_tab_page(tab_page);
 }
 
+static void on_url_entered(LadybirdWindow* self, GtkEntry* url_entry)
+{
+    LadybirdWebView* web_view = ladybird_window_get_current_page(self);
+    if (!web_view)
+        return;
+
+    char const* url = gtk_entry_buffer_get_text(gtk_entry_get_buffer(url_entry));
+    ladybird_web_view_load_url(web_view, url);
+}
+
+static void on_page_url_changed(LadybirdWindow* self)
+{
+    GtkEntryBuffer* entry_buffer = gtk_entry_get_buffer(self->url_entry);
+    LadybirdWebView* web_view = ladybird_window_get_current_page(self);
+    if (!web_view) {
+        gtk_entry_buffer_delete_text(entry_buffer, 0, -1);
+        return;
+    }
+
+    char const* url = ladybird_web_view_get_page_url(web_view);
+    if (url)
+        gtk_entry_buffer_set_text(entry_buffer, url, -1);
+    else
+        gtk_entry_buffer_delete_text(entry_buffer, 0, -1);
+}
+
+static void on_selected_page_changed(LadybirdWindow* self)
+{
+    if (self->last_selected_web_view && self->page_url_changed_id)
+        g_signal_handler_disconnect(self->last_selected_web_view, self->page_url_changed_id);
+    self->page_url_changed_id = 0;
+    LadybirdWebView* web_view = self->last_selected_web_view = ladybird_window_get_current_page(self);
+    if (!web_view)
+        return;
+
+    self->page_url_changed_id = g_signal_connect_object(web_view, "notify::page-url", G_CALLBACK(on_page_url_changed), self, G_CONNECT_SWAPPED);
+    on_page_url_changed(self);
+}
+
 static void page_zoom_in_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
 {
     LadybirdWindow* self = LADYBIRD_WINDOW(widget);
@@ -158,6 +202,8 @@ static void ladybird_window_class_init(LadybirdWindowClass* klass)
     gtk_widget_class_bind_template_child(widget_class, LadybirdWindow, tab_view);
     gtk_widget_class_bind_template_child(widget_class, LadybirdWindow, url_entry);
     gtk_widget_class_bind_template_callback(widget_class, open_new_tab);
+    gtk_widget_class_bind_template_callback(widget_class, on_url_entered);
+    gtk_widget_class_bind_template_callback(widget_class, on_selected_page_changed);
 
     gtk_widget_class_install_action(widget_class, "win.new-tab", NULL, win_new_tab_action);
     gtk_widget_class_install_action(widget_class, "win.open-file", nullptr, win_open_file_action);

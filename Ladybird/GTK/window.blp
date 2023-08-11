@@ -68,6 +68,7 @@ template $LadybirdWindow : Adw.ApplicationWindow {
           Entry url_entry {
             input-purpose: url;
             placeholder-text: "Enter a URL to open...";
+            activate => $on_url_entered(template) swapped;
           }
         }
 
@@ -138,6 +139,7 @@ template $LadybirdWindow : Adw.ApplicationWindow {
       }
 
       content: Adw.TabView tab_view {
+        notify::selected-page => $on_selected_page_changed(template) swapped;
       };
     };
   }
