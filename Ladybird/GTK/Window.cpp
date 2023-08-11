@@ -218,6 +218,18 @@ static void page_zoom_reset_action(GtkWidget* widget, [[maybe_unused]] char cons
     ladybird_web_view_zoom_reset(ladybird_window_get_current_page(self));
 }
 
+static void page_reload_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
+{
+    LadybirdWindow* self = LADYBIRD_WINDOW(widget);
+
+    LadybirdWebView* web_view = ladybird_window_get_current_page(self);
+    if (!web_view)
+        return;
+
+    char const* url = ladybird_web_view_get_page_url(web_view);
+    ladybird_web_view_load_url(web_view, url);
+}
+
 static void ladybird_window_init(LadybirdWindow* self)
 {
     GtkWidget* widget = GTK_WIDGET(self);
@@ -260,6 +272,10 @@ static void ladybird_window_class_init(LadybirdWindowClass* klass)
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_equal, GDK_CONTROL_MASK, "page.zoom-in", NULL);
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_minus, GDK_CONTROL_MASK, "page.zoom-out", NULL);
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_0, GDK_CONTROL_MASK, "page.zoom-reset", NULL);
+
+    gtk_widget_class_install_action(widget_class, "page.reload-page", nullptr, page_reload_action);
+    gtk_widget_class_add_binding_action(widget_class, GDK_KEY_F5, GdkModifierType(0), "page.reload-page", nullptr);
+    gtk_widget_class_add_binding_action(widget_class, GDK_KEY_r, GDK_CONTROL_MASK, "page.reload-page", nullptr);
 }
 
 LadybirdWindow* ladybird_window_new(GtkApplication* app, bool add_initial_tab)
