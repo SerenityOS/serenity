@@ -10,7 +10,6 @@
 #include "ConnectionFromClient.h"
 #include "FadingProperty.h"
 #include <AK/Atomic.h>
-#include <AK/Badge.h>
 #include <AK/Debug.h>
 #include <AK/RefCounted.h>
 #include <AK/WeakPtr.h>
@@ -20,22 +19,29 @@ namespace AudioServer {
 
 class ClientAudioStream : public RefCounted<ClientAudioStream> {
 public:
+    enum class ErrorState {
+        ClientDisconnected,
+        ClientPaused,
+        ClientUnderrun,
+        ResamplingError,
+    };
+
     explicit ClientAudioStream(ConnectionFromClient&);
     ~ClientAudioStream() = default;
 
-    bool get_next_sample(Audio::Sample& sample, u32 audiodevice_sample_rate);
+    ErrorOr<Audio::Sample, ErrorState> get_next_sample(u32 audiodevice_sample_rate);
     void clear();
 
     bool is_connected() const;
 
-    ConnectionFromClient* client();
+    Optional<ConnectionFromClient&> client();
 
-    void set_buffer(OwnPtr<Audio::AudioQueue> buffer);
+    void set_buffer(NonnullOwnPtr<Audio::AudioQueue> buffer);
 
     void set_paused(bool paused);
     FadingProperty<double>& volume();
     double volume() const;
-    void set_volume(double const volume);
+    void set_volume(double volume);
     bool is_muted() const;
     void set_muted(bool muted);
     u32 sample_rate() const;

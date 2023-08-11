@@ -15,9 +15,9 @@ ClientAudioStream::ClientAudioStream(ConnectionFromClient& client)
 {
 }
 
-ConnectionFromClient* ClientAudioStream::client()
+Optional<ConnectionFromClient&> ClientAudioStream::client()
 {
-    return m_client.ptr();
+    return m_client.has_value() ? *m_client : Optional<ConnectionFromClient&> {};
 }
 
 bool ClientAudioStream::is_connected() const
@@ -25,14 +25,14 @@ bool ClientAudioStream::is_connected() const
     return m_client && m_client->is_open();
 }
 
-bool ClientAudioStream::get_next_sample(Audio::Sample& sample, u32 audiodevice_sample_rate)
+ErrorOr<Audio::Sample, ClientAudioStream::ErrorState> ClientAudioStream::get_next_sample(u32 audiodevice_sample_rate)
 {
     // Note: Even though we only check client state here, we will probably close the client much earlier.
     if (!is_connected())
-        return false;
+        return ErrorState::ClientDisconnected;
 
     if (m_paused)
-        return false;
+        return ErrorState::ClientUnderrun;
 
     if (m_in_chunk_location >= m_current_audio_chunk.size()) {
         auto result = m_buffer->dequeue();
@@ -41,30 +41,26 @@ bool ClientAudioStream::get_next_sample(Audio::Sample& sample, u32 audiodevice_s
                 dbgln_if(AUDIO_DEBUG, "Audio client {} can't keep up!", m_client->client_id());
             }
 
-            return false;
+            return ErrorState::ClientUnderrun;
         }
         // FIXME: Our resampler and the way we resample here are bad.
         //        Ideally, we should both do perfect band-corrected resampling,
         //        as well as carry resampling state over between buffers.
-        auto attempted_resample = Audio::ResampleHelper<Audio::Sample> {
-            m_sample_rate == 0 ? audiodevice_sample_rate : m_sample_rate, audiodevice_sample_rate
-        }
-                                      .try_resample(result.release_value());
-        if (attempted_resample.is_error())
-            return false;
+        auto maybe_resampled = Audio::ResampleHelper<Audio::Sample> { m_sample_rate == 0 ? audiodevice_sample_rate : m_sample_rate, audiodevice_sample_rate }
+                                   .try_resample(result.release_value());
+        if (maybe_resampled.is_error())
+            return ErrorState::ResamplingError;
 
         // If the sample rate changes underneath us, we will still play the existing buffer unchanged until we're done.
         // This is not a significant problem since the buffers are very small (~100 samples or less).
-        m_current_audio_chunk = attempted_resample.release_value();
+        m_current_audio_chunk = maybe_resampled.release_value();
         m_in_chunk_location = 0;
     }
 
-    sample = m_current_audio_chunk[m_in_chunk_location++];
-
-    return true;
+    return m_current_audio_chunk[m_in_chunk_location++];
 }
 
-void ClientAudioStream::set_buffer(OwnPtr<Audio::AudioQueue> buffer)
+void ClientAudioStream::set_buffer(NonnullOwnPtr<Audio::AudioQueue> buffer)
 {
     m_buffer = move(buffer);
 }
