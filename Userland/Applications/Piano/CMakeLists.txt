@@ -5,7 +5,7 @@ serenity_component(
     DEPENDS AudioServer
 )
 
-compile_gml(ExportProgressWidget.gml ExportProgressWidget.h export_progress_widget)
+stringify_gml(ExportProgressWidget.gml ExportProgressWidget.h export_progress_widget)
 
 set(SOURCES
     AudioPlayerLoop.cpp

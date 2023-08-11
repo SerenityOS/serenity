@@ -4,7 +4,7 @@ serenity_component(
     TARGETS MailSettings
 )
 
-compile_gml(MailSettingsWidget.gml MailSettingsWidgetGML.h mail_settings_widget_gml)
+stringify_gml(MailSettingsWidget.gml MailSettingsWidgetGML.h mail_settings_widget_gml)
 
 set(SOURCES
     main.cpp

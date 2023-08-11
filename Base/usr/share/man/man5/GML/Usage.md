@@ -8,10 +8,10 @@ How to use GML in SerenityOS C++ applications
 
 ## CMake
 
-Include `compile_gml()` your applications CMake file. The header file name and GML string name are not fixed but must follow this convention.
+Include `stringify_gml()` your applications CMake file. The header file name and GML string name are not fixed but must follow this convention.
 
 ```cmake
-compile_gml(MyApp.gml MyAppGML.h my_app_gml)
+stringify_gml(MyApp.gml MyAppGML.h my_app_gml)
 ```
 
 Include the name of the header file that will be compiled from your GML file in your `SOURCES`.

@@ -3,7 +3,7 @@ serenity_component(
     TARGETS PartitionEditor
 )
 
-compile_gml(PartitionEditorWindow.gml PartitionEditorWindowGML.h partition_editor_window_gml)
+stringify_gml(PartitionEditorWindow.gml PartitionEditorWindowGML.h partition_editor_window_gml)
 
 set(SOURCES
     main.cpp

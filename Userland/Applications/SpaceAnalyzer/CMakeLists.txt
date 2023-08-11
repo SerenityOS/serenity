@@ -3,7 +3,7 @@ serenity_component(
     TARGETS SpaceAnalyzer
 )
 
-compile_gml(SpaceAnalyzer.gml SpaceAnalyzerGML.h space_analyzer_gml)
+stringify_gml(SpaceAnalyzer.gml SpaceAnalyzerGML.h space_analyzer_gml)
 
 set(SOURCES
     ProgressWindow.cpp

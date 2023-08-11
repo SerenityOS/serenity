@@ -4,7 +4,7 @@ serenity_component(
     TARGETS Escalator
 )
 
-compile_gml(Escalator.gml EscalatorGML.h escalator_gml)
+stringify_gml(Escalator.gml EscalatorGML.h escalator_gml)
 
 set(SOURCES
     main.cpp

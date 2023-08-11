@@ -4,7 +4,7 @@ serenity_component(
     TARGETS CrashReporter
 )
 
-compile_gml(CrashReporterWindow.gml CrashReporterWindowGML.h crash_reporter_window_gml)
+stringify_gml(CrashReporterWindow.gml CrashReporterWindowGML.h crash_reporter_window_gml)
 
 
 set(SOURCES

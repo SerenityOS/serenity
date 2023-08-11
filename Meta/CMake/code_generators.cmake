@@ -2,7 +2,7 @@
 # Functions for generating sources using host tools
 #
 
-function(compile_gml source output string_name)
+function(stringify_gml source output string_name)
     set(source ${CMAKE_CURRENT_SOURCE_DIR}/${source})
     add_custom_command(
         OUTPUT ${output}

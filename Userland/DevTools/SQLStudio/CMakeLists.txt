@@ -4,7 +4,7 @@ serenity_component(
     TARGETS SQLStudio
 )
 
-compile_gml(SQLStudio.gml SQLStudioGML.h sql_studio_gml)
+stringify_gml(SQLStudio.gml SQLStudioGML.h sql_studio_gml)
 
 set(SOURCES
     main.cpp
