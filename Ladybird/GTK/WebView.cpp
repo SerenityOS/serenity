@@ -39,7 +39,7 @@ static GParamSpec* props[NUM_PROPS];
 G_BEGIN_DECLS
 
 G_DEFINE_FINAL_TYPE_WITH_CODE(LadybirdWebView, ladybird_web_view, GTK_TYPE_WIDGET,
-    G_IMPLEMENT_INTERFACE(GTK_TYPE_SCROLLABLE, NULL))
+    G_IMPLEMENT_INTERFACE(GTK_TYPE_SCROLLABLE, nullptr))
 
 char const* ladybird_web_view_get_page_title(LadybirdWebView* self)
 {

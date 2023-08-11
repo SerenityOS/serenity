@@ -132,7 +132,7 @@ void EventLoopManagerGLib::register_notifier(Core::Notifier& notifier)
         notifier.dispatch_event(event);
         return true;
     }),
-        &notifier, NULL);
+        &notifier, nullptr);
 
     g_source_attach(source, current_thread_context());
 }

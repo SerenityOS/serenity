@@ -259,19 +259,19 @@ static void ladybird_window_class_init(LadybirdWindowClass* klass)
     gtk_widget_class_bind_template_callback(widget_class, on_create_window);
     gtk_widget_class_bind_template_callback(widget_class, on_selected_page_changed);
 
-    gtk_widget_class_install_action(widget_class, "win.new-tab", NULL, win_new_tab_action);
+    gtk_widget_class_install_action(widget_class, "win.new-tab", nullptr, win_new_tab_action);
     gtk_widget_class_install_action(widget_class, "win.open-file", nullptr, win_open_file_action);
-    gtk_widget_class_install_action(widget_class, "tab.close", NULL, tab_close_action);
-    gtk_widget_class_add_binding_action(widget_class, GDK_KEY_t, GDK_CONTROL_MASK, "win.new-tab", NULL);
+    gtk_widget_class_install_action(widget_class, "tab.close", nullptr, tab_close_action);
+    gtk_widget_class_add_binding_action(widget_class, GDK_KEY_t, GDK_CONTROL_MASK, "win.new-tab", nullptr);
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_o, GDK_CONTROL_MASK, "win.open-file", nullptr);
-    gtk_widget_class_add_binding_action(widget_class, GDK_KEY_w, GDK_CONTROL_MASK, "tab.close", NULL);
+    gtk_widget_class_add_binding_action(widget_class, GDK_KEY_w, GDK_CONTROL_MASK, "tab.close", nullptr);
 
-    gtk_widget_class_install_action(widget_class, "page.zoom-in", NULL, page_zoom_in_action);
-    gtk_widget_class_install_action(widget_class, "page.zoom-out", NULL, page_zoom_out_action);
-    gtk_widget_class_install_action(widget_class, "page.zoom-reset", NULL, page_zoom_reset_action);
-    gtk_widget_class_add_binding_action(widget_class, GDK_KEY_equal, GDK_CONTROL_MASK, "page.zoom-in", NULL);
-    gtk_widget_class_add_binding_action(widget_class, GDK_KEY_minus, GDK_CONTROL_MASK, "page.zoom-out", NULL);
-    gtk_widget_class_add_binding_action(widget_class, GDK_KEY_0, GDK_CONTROL_MASK, "page.zoom-reset", NULL);
+    gtk_widget_class_install_action(widget_class, "page.zoom-in", nullptr, page_zoom_in_action);
+    gtk_widget_class_install_action(widget_class, "page.zoom-out", nullptr, page_zoom_out_action);
+    gtk_widget_class_install_action(widget_class, "page.zoom-reset", nullptr, page_zoom_reset_action);
+    gtk_widget_class_add_binding_action(widget_class, GDK_KEY_equal, GDK_CONTROL_MASK, "page.zoom-in", nullptr);
+    gtk_widget_class_add_binding_action(widget_class, GDK_KEY_minus, GDK_CONTROL_MASK, "page.zoom-out", nullptr);
+    gtk_widget_class_add_binding_action(widget_class, GDK_KEY_0, GDK_CONTROL_MASK, "page.zoom-reset", nullptr);
 
     gtk_widget_class_install_action(widget_class, "page.reload-page", nullptr, page_reload_action);
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_F5, GdkModifierType(0), "page.reload-page", nullptr);
