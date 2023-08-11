@@ -11,6 +11,7 @@
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibWeb/CSS/PseudoClass.h>
 
 namespace Web::CSS {
 
@@ -84,48 +85,8 @@ public:
             }
         };
 
-        struct PseudoClass {
-            enum class Type {
-                Link,
-                Visited,
-                Hover,
-                Focus,
-                FocusVisible,
-                FocusWithin,
-                FirstChild,
-                LastChild,
-                OnlyChild,
-                NthChild,
-                NthLastChild,
-                Empty,
-                Root,
-                Host,
-                FirstOfType,
-                LastOfType,
-                OnlyOfType,
-                NthOfType,
-                NthLastOfType,
-                Disabled,
-                Enabled,
-                Checked,
-                Indeterminate,
-                Is,
-                Not,
-                Where,
-                Active,
-                Lang,
-                Scope,
-                Defined,
-                Playing,
-                Paused,
-                Seeking,
-                Muted,
-                VolumeLocked,
-                Buffering,
-                Stalled,
-                Target,
-            };
-            Type type;
+        struct PseudoClassSelector {
+            PseudoClass type;
 
             // FIXME: We don't need this field on every single SimpleSelector, but it's also annoying to malloc it somewhere.
             // Only used when "pseudo_class" is "NthChild" or "NthLastChild".
@@ -184,12 +145,12 @@ public:
         };
 
         Type type;
-        Variant<Empty, Attribute, PseudoClass, PseudoElement, Name, QualifiedName> value {};
+        Variant<Empty, Attribute, PseudoClassSelector, PseudoElement, Name, QualifiedName> value {};
 
         Attribute const& attribute() const { return value.get<Attribute>(); }
         Attribute& attribute() { return value.get<Attribute>(); }
-        PseudoClass const& pseudo_class() const { return value.get<PseudoClass>(); }
-        PseudoClass& pseudo_class() { return value.get<PseudoClass>(); }
+        PseudoClassSelector const& pseudo_class() const { return value.get<PseudoClassSelector>(); }
+        PseudoClassSelector& pseudo_class() { return value.get<PseudoClassSelector>(); }
         PseudoElement const& pseudo_element() const { return value.get<PseudoElement>(); }
         PseudoElement& pseudo_element() { return value.get<PseudoElement>(); }
 
@@ -267,89 +228,6 @@ constexpr StringView pseudo_element_name(Selector::PseudoElement pseudo_element)
 }
 
 Optional<Selector::PseudoElement> pseudo_element_from_string(StringView);
-
-constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Type pseudo_class)
-{
-    switch (pseudo_class) {
-    case Selector::SimpleSelector::PseudoClass::Type::Link:
-        return "link"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::Visited:
-        return "visited"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::Hover:
-        return "hover"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::Focus:
-        return "focus"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::FocusVisible:
-        return "focus-visible"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::FocusWithin:
-        return "focus-within"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::FirstChild:
-        return "first-child"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::LastChild:
-        return "last-child"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::OnlyChild:
-        return "only-child"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::Empty:
-        return "empty"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::Root:
-        return "root"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::Host:
-        return "host"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::FirstOfType:
-        return "first-of-type"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::LastOfType:
-        return "last-of-type"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::OnlyOfType:
-        return "only-of-type"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::NthOfType:
-        return "nth-of-type"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::NthLastOfType:
-        return "nth-last-of-type"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::Disabled:
-        return "disabled"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::Enabled:
-        return "enabled"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::Checked:
-        return "checked"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::Indeterminate:
-        return "indeterminate"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::Active:
-        return "active"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::NthChild:
-        return "nth-child"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::NthLastChild:
-        return "nth-last-child"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::Is:
-        return "is"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::Not:
-        return "not"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::Where:
-        return "where"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::Lang:
-        return "lang"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::Scope:
-        return "scope"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::Defined:
-        return "defined"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::Playing:
-        return "playing"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::Paused:
-        return "paused"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::Seeking:
-        return "seeking"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::Muted:
-        return "muted"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::VolumeLocked:
-        return "volume-locked"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::Buffering:
-        return "buffering"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::Stalled:
-        return "stalled"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::Target:
-        return "target"sv;
-    }
-    VERIFY_NOT_REACHED();
-}
 
 ErrorOr<String> serialize_a_group_of_selectors(Vector<NonnullRefPtr<Selector>> const& selectors);
 
