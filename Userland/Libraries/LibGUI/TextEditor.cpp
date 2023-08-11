@@ -248,6 +248,26 @@ TextPosition TextEditor::text_position_at(Gfx::IntPoint widget_position) const
     return text_position_at_content_position(content_position);
 }
 
+void TextEditor::highlight_all_occurances_of(DeprecatedString const selected_text)
+{
+    auto search_result = document().find_all(selected_text, false, true);
+    if (search_result.size() > 1) {
+        Vector<GUI::TextDocumentSpan> spans;
+        for (size_t i = 0; i < search_result.size(); ++i) {
+            auto& result = search_result[i];
+            GUI::TextDocumentSpan span;
+            span.range = result;
+            span.attributes.color = Color::from_argb(0xff000000);
+            span.attributes.background_color = palette().bright_yellow();
+            span.attributes.bold = true;
+            span.attributes.underline_style = Gfx::TextAttributes::UnderlineStyle::Solid;
+            spans.append(move(span));
+        }
+        document().set_spans(highlight_selected_text_span_collection_index, spans);
+        update();
+    }
+}
+
 void TextEditor::doubleclick_event(MouseEvent& event)
 {
     if (event.button() != MouseButton::Primary)
@@ -286,6 +306,10 @@ void TextEditor::doubleclick_event(MouseEvent& event)
         m_selection.set_end(document().first_word_break_after(position));
     }
 
+    auto selection = selected_text();
+    if (!selection.is_whitespace())
+        highlight_all_occurances_of(selected_text());
+
     set_cursor(m_selection.end());
     update();
     did_update_selection();
@@ -298,6 +322,7 @@ void TextEditor::mousedown_event(MouseEvent& event)
     if (event.button() != MouseButton::Primary) {
         return;
     }
+    document().set_spans(highlight_selected_text_span_collection_index, {});
 
     auto text_position = text_position_at(event.position());
     if (event.modifiers() == 0 && folding_indicator_rect(text_position.line()).contains(event.position())) {
