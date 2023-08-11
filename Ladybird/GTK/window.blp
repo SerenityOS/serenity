@@ -1,6 +1,17 @@
 using Gtk 4.0;
 using Adw 1;
 
+menu main_menu {
+  section {
+    item {
+      custom: "zoom";
+    }
+  }
+  item (_("_New Window"), "app.new-window")
+  item (_("_Keyboard Shortcuts"), "app.shortcuts")
+  item (_("_About Ladybird"), "app.about")
+}
+
 template $LadybirdWindow : Adw.ApplicationWindow {
   title: "Ladybird";
   default-height: 560;
@@ -66,18 +77,18 @@ template $LadybirdWindow : Adw.ApplicationWindow {
           margin-start: 6;
 
           MenuButton {
-              icon-name: "user-bookmarks-symbolic";
-              tooltip-text: _("Bookmarks");
-              popover: Popover {
-                  Adw.StatusPage {
-                      title: "Bookmarks & History";
-                      description: "...will appear here, once we implement them :^)";
-                      icon-name: "applications-engineering-symbolic";
-                      width-request: 300;
-                      height-request: 350;
-                      styles ["compact"]
-                  }
-              };
+            icon-name: "user-bookmarks-symbolic";
+            tooltip-text: _("Bookmarks");
+            popover: Popover {
+              Adw.StatusPage {
+                title: "Bookmarks & History";
+                description: "...will appear here, once we implement them :^)";
+                icon-name: "applications-engineering-symbolic";
+                width-request: 300;
+                height-request: 350;
+                styles ["compact"]
+              }
+            };
           }
           Button overview_button {
             icon-name: "view-grid-symbolic";
@@ -88,7 +99,33 @@ template $LadybirdWindow : Adw.ApplicationWindow {
             icon-name: "open-menu-symbolic";
             tooltip-text: _("Main Menu");
             popover: PopoverMenu popover_menu {
-                menu-model: main_menu;
+              menu-model: main_menu;
+
+              [zoom]
+              Box {
+                orientation: horizontal;
+                homogeneous: true;
+                styles ["linked"]
+
+                Button {
+                  tooltip-text: _("Zoom Out");
+                  icon-name: "zoom-out-symbolic";
+                  action-name: "page.zoom-out";
+                }
+                Button {
+                  tooltip-text: _("Restore Zoom");
+                  action-name: "page.zoom-reset";
+                  Label {
+                    width-chars: 5;
+                    label: bind ((tab_view.selected-page.child as <ScrolledWindow>).child as <$LadybirdWebView>).zoom-percent;
+                  }
+                }
+                Button {
+                  tooltip-text: _("Zoom In");
+                  icon-name: "zoom-in-symbolic";
+                  action-name: "page.zoom-in";
+                }
+              }
             };
           }
         }
@@ -103,40 +140,4 @@ template $LadybirdWindow : Adw.ApplicationWindow {
       };
     };
   }
-}
-
-menu main_menu {
-    section {
-        item {
-            custom: "zoom";
-        }
-    }
-    item (_("_New Window"), "app.new-window")
-    item (_("_Keyboard Shortcuts"), "app.shortcuts")
-    item (_("_About Ladybird"), "app.about")
-}
-
-Box menu_zoom_box {
-    orientation: horizontal;
-    homogeneous: true;
-    styles ["linked"]
-
-    Button {
-        tooltip-text: _("Zoom Out");
-        icon-name: "zoom-out-symbolic";
-        action-name: "page.zoom-out";
-    }
-    Button {
-        tooltip-text: _("Restore Zoom");
-        action-name: "page.zoom-reset";
-        Label {
-            width-chars: 5;
-            label: bind ((tab_view.selected-page.child as <ScrolledWindow>).child as <$LadybirdWebView>).zoom-percent;
-        }
-    }
-    Button {
-        tooltip-text: _("Zoom In");
-        icon-name: "zoom-in-symbolic";
-        action-name: "page.zoom-in";
-    }
 }

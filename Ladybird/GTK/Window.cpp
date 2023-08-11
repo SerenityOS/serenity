@@ -7,9 +7,6 @@ struct _LadybirdWindow {
     AdwTabOverview* tab_overview;
     AdwTabView* tab_view;
     GtkEntry* url_entry;
-
-    GtkBox* menu_zoom_box;
-    GtkPopoverMenu* popover_menu;
 };
 
 G_BEGIN_DECLS
@@ -107,9 +104,6 @@ static void ladybird_window_init(LadybirdWindow* self)
     g_type_ensure(LADYBIRD_TYPE_WEB_VIEW);
     gtk_widget_init_template(widget);
 
-    // Workaround what seems to be initialization order issue with GtkBuilder.
-    gtk_popover_menu_add_child(self->popover_menu, GTK_WIDGET(self->menu_zoom_box), "zoom");
-
     // Let's try adding a tab -- what could possibly go wrong?
     gtk_widget_activate_action(widget, "win.new-tab", NULL);
 }
@@ -125,8 +119,6 @@ static void ladybird_window_class_init(LadybirdWindowClass* klass)
     gtk_widget_class_bind_template_child(widget_class, LadybirdWindow, tab_overview);
     gtk_widget_class_bind_template_child(widget_class, LadybirdWindow, tab_view);
     gtk_widget_class_bind_template_child(widget_class, LadybirdWindow, url_entry);
-    gtk_widget_class_bind_template_child(widget_class, LadybirdWindow, menu_zoom_box);
-    gtk_widget_class_bind_template_child(widget_class, LadybirdWindow, popover_menu);
     gtk_widget_class_bind_template_callback(widget_class, open_new_tab);
 
     gtk_widget_class_install_action(widget_class, "win.new-tab", NULL, win_new_tab_action);
