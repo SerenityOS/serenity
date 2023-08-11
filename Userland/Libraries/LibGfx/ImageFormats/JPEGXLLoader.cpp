@@ -2453,6 +2453,42 @@ static ErrorOr<void> apply_image_features(Image& image, ImageMetadata const& met
 }
 ///
 
+/// L.2 - XYB + L.3 - YCbCr
+static void ycbcr_to_rgb(Image& image, u8 bits_per_sample)
+{
+    auto& channels = image.channels();
+    VERIFY(channels.size() >= 3);
+
+    VERIFY(channels[0].width() == channels[1].width() && channels[1].width() == channels[2].width());
+    VERIFY(channels[0].height() == channels[1].height() && channels[1].height() == channels[2].height());
+
+    auto const half_range_offset = (1 << bits_per_sample) / 2;
+    for (u32 y = 0; y < channels[0].height(); ++y) {
+        for (u32 x = 0; x < channels[0].width(); ++x) {
+            auto const cb = channels[0].get(x, y);
+            auto const luma = channels[1].get(x, y);
+            auto const cr = channels[2].get(x, y);
+
+            channels[0].set(x, y, luma + half_range_offset + 1.402 * cr);
+            channels[1].set(x, y, luma + half_range_offset - 0.344136 * cb - 0.714136 * cr);
+            channels[2].set(x, y, luma + half_range_offset + 1.772 * cb);
+        }
+    }
+}
+
+static void apply_colour_transformation(Image& image, ImageMetadata const& metadata, Frame const& frame)
+{
+    if (frame.frame_header.do_YCbCr)
+        ycbcr_to_rgb(image, metadata.bit_depth.bits_per_sample);
+
+    if (metadata.xyb_encoded) {
+        TODO();
+    } else {
+        // FIXME: Do a proper color transformation with metadata.colour_encoding
+    }
+}
+///
+
 /// L.4 - Extra channel rendering
 static ErrorOr<void> render_extra_channels(Image&, ImageMetadata const& metadata)
 {
@@ -2500,9 +2536,7 @@ public:
 
         TRY(apply_image_features(image, m_metadata, frame));
 
-        // FIXME: Do a proper color transformation with metadata.colour_encoding
-        if (m_metadata.xyb_encoded || frame.frame_header.do_YCbCr)
-            TODO();
+        apply_colour_transformation(image, m_metadata, frame);
 
         TRY(render_extra_channels(image, m_metadata));
 
