@@ -370,27 +370,41 @@ ThrowCompletionOr<void> set_number_format_digit_options(VM& vm, NumberFormatBase
 
         // e. Set intlObj.[[RoundingType]] to morePrecision.
         intl_object.set_rounding_type(NumberFormatBase::RoundingType::MorePrecision);
+
+        // f. Set intlObj.[[ComputedRoundingPriority]] to "morePrecision".
+        intl_object.set_computed_rounding_priority(NumberFormatBase::ComputedRoundingPriority::MorePrecision);
     }
     // 27. Else if roundingPriority is "morePrecision", then
     else if (rounding_priority == "morePrecision"sv) {
         // a. Set intlObj.[[RoundingType]] to morePrecision.
         intl_object.set_rounding_type(NumberFormatBase::RoundingType::MorePrecision);
 
+        // b. Set intlObj.[[ComputedRoundingPriority]] to "morePrecision".
+        intl_object.set_computed_rounding_priority(NumberFormatBase::ComputedRoundingPriority::MorePrecision);
     }
     // 28. Else if roundingPriority is "lessPrecision", then
     else if (rounding_priority == "lessPrecision"sv) {
         // a. Set intlObj.[[RoundingType]] to lessPrecision.
         intl_object.set_rounding_type(NumberFormatBase::RoundingType::LessPrecision);
+
+        // b. Set intlObj.[[ComputedRoundingPriority]] to "lessPrecision".
+        intl_object.set_computed_rounding_priority(NumberFormatBase::ComputedRoundingPriority::LessPrecision);
     }
     // 29. Else if hasSd is true, then
     else if (has_significant_digits) {
         // a. Set intlObj.[[RoundingType]] to significantDigits.
         intl_object.set_rounding_type(NumberFormatBase::RoundingType::SignificantDigits);
+
+        // b. Set intlObj.[[ComputedRoundingPriority]] to "auto".
+        intl_object.set_computed_rounding_priority(NumberFormatBase::ComputedRoundingPriority::Auto);
     }
     // 30. Else,
     else {
         // a. Set intlObj.[[RoundingType]] to fractionDigits.
         intl_object.set_rounding_type(NumberFormatBase::RoundingType::FractionDigits);
+
+        // b. Set intlObj.[[ComputedRoundingPriority]] to "auto".
+        intl_object.set_computed_rounding_priority(NumberFormatBase::ComputedRoundingPriority::Auto);
     }
 
     // 31. If roundingIncrement is not 1, then

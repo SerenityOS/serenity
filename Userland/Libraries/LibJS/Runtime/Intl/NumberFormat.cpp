@@ -171,6 +171,20 @@ StringView NumberFormatBase::rounding_type_string() const
     }
 }
 
+StringView NumberFormatBase::computed_rounding_priority_string() const
+{
+    switch (m_computed_rounding_priority) {
+    case ComputedRoundingPriority::Auto:
+        return "auto"sv;
+    case ComputedRoundingPriority::MorePrecision:
+        return "morePrecision"sv;
+    case ComputedRoundingPriority::LessPrecision:
+        return "lessPrecision"sv;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 StringView NumberFormatBase::rounding_mode_string() const
 {
     switch (m_rounding_mode) {
