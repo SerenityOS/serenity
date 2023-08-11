@@ -4,7 +4,7 @@ serenity_component(
     TARGETS LoginServer
 )
 
-compile_gml(LoginWindow.gml LoginWindowGML.h login_window_gml)
+stringify_gml(LoginWindow.gml LoginWindowGML.h login_window_gml)
 
 set(SOURCES
     LoginWindow.cpp

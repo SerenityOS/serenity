@@ -5,10 +5,10 @@ serenity_component(
 )
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
-compile_gml(FontEditorWindow.gml FontEditorWindowGML.h font_editor_window_gml)
-compile_gml(FontPreviewWindow.gml FontPreviewWindowGML.h font_preview_window_gml)
-compile_gml(NewFontDialogPage1.gml NewFontDialogPage1GML.h new_font_dialog_page_1_gml)
-compile_gml(NewFontDialogPage2.gml NewFontDialogPage2GML.h new_font_dialog_page_2_gml)
+stringify_gml(FontEditorWindow.gml FontEditorWindowGML.h font_editor_window_gml)
+stringify_gml(FontPreviewWindow.gml FontPreviewWindowGML.h font_preview_window_gml)
+stringify_gml(NewFontDialogPage1.gml NewFontDialogPage1GML.h new_font_dialog_page_1_gml)
+stringify_gml(NewFontDialogPage2.gml NewFontDialogPage2GML.h new_font_dialog_page_2_gml)
 
 set(SOURCES
     MainWidget.cpp

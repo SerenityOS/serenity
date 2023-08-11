@@ -1,9 +1,9 @@
-compile_gml(AboutDialog.gml AboutDialogGML.h about_dialog_gml)
-compile_gml(EmojiInputDialog.gml EmojiInputDialogGML.h emoji_input_dialog_gml)
-compile_gml(FontPickerDialog.gml FontPickerDialogGML.h font_picker_dialog_gml)
-compile_gml(FilePickerDialog.gml FilePickerDialogGML.h file_picker_dialog_gml)
-compile_gml(IncrementalSearchBanner.gml IncrementalSearchBannerGML.h incremental_search_banner_gml)
-compile_gml(PasswordInputDialog.gml PasswordInputDialogGML.h password_input_dialog_gml)
+stringify_gml(AboutDialog.gml AboutDialogGML.h about_dialog_gml)
+stringify_gml(EmojiInputDialog.gml EmojiInputDialogGML.h emoji_input_dialog_gml)
+stringify_gml(FontPickerDialog.gml FontPickerDialogGML.h font_picker_dialog_gml)
+stringify_gml(FilePickerDialog.gml FilePickerDialogGML.h file_picker_dialog_gml)
+stringify_gml(IncrementalSearchBanner.gml IncrementalSearchBannerGML.h incremental_search_banner_gml)
+stringify_gml(PasswordInputDialog.gml PasswordInputDialogGML.h password_input_dialog_gml)
 
 set(SOURCES
     AboutDialog.cpp

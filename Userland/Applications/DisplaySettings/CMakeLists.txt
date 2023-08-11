@@ -4,12 +4,12 @@ serenity_component(
     TARGETS DisplaySettings
 )
 
-compile_gml(BackgroundSettings.gml BackgroundSettingsGML.h background_settings_gml)
-compile_gml(DesktopSettings.gml DesktopSettingsGML.h desktop_settings_gml)
-compile_gml(EffectsSettings.gml EffectsSettingsGML.h effects_settings_gml)
-compile_gml(FontSettings.gml FontSettingsGML.h font_settings_gml)
-compile_gml(MonitorSettings.gml MonitorSettingsGML.h monitor_settings_window_gml)
-compile_gml(ThemesSettings.gml ThemesSettingsGML.h themes_settings_gml)
+stringify_gml(BackgroundSettings.gml BackgroundSettingsGML.h background_settings_gml)
+stringify_gml(DesktopSettings.gml DesktopSettingsGML.h desktop_settings_gml)
+stringify_gml(EffectsSettings.gml EffectsSettingsGML.h effects_settings_gml)
+stringify_gml(FontSettings.gml FontSettingsGML.h font_settings_gml)
+stringify_gml(MonitorSettings.gml MonitorSettingsGML.h monitor_settings_window_gml)
+stringify_gml(ThemesSettings.gml ThemesSettingsGML.h themes_settings_gml)
 
 set(SOURCES
     BackgroundSettingsWidget.cpp

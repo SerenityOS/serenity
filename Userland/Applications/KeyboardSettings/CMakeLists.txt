@@ -4,8 +4,8 @@ serenity_component(
     TARGETS KeyboardSettings
 )
 
-compile_gml(Keyboard.gml KeyboardWidgetGML.h keyboard_widget_gml)
-compile_gml(KeymapDialog.gml KeymapDialogGML.h keymap_dialog_gml)
+stringify_gml(Keyboard.gml KeyboardWidgetGML.h keyboard_widget_gml)
+stringify_gml(KeymapDialog.gml KeymapDialogGML.h keymap_dialog_gml)
 
 set(SOURCES
     KeyboardSettingsWidget.cpp

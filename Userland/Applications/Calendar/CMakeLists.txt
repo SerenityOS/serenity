@@ -3,7 +3,7 @@ serenity_component(
     TARGETS Calendar
 )
 
-compile_gml(CalendarWindow.gml CalendarWindowGML.h calendar_window_gml)
+stringify_gml(CalendarWindow.gml CalendarWindowGML.h calendar_window_gml)
 
 set(SOURCES
     AddEventDialog.cpp
