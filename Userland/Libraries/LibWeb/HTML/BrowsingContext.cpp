@@ -1407,11 +1407,8 @@ WebIDL::ExceptionOr<void> BrowsingContext::traverse_the_history(size_t entry_ind
     }
 
     // 10. If entry's persisted user state is null, and its URL's fragment is non-null, then scroll to the fragment.
-    if (!entry->url.fragment().is_null()) {
-        // FIXME: Implement the full "scroll to the fragment" algorithm:
-        // https://html.spec.whatwg.org/multipage/browsing-the-web.html#scroll-to-the-fragment-identifier
-        scroll_to_anchor(entry->url.fragment());
-    }
+    if (!entry->url.fragment().is_null())
+        active_document()->scroll_to_the_fragment();
 
     // 11. Set the current entry to entry.
     m_session_history_index = entry_index;
