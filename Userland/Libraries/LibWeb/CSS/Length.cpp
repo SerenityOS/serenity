@@ -59,15 +59,7 @@ Length Length::percentage_of(Percentage const& percentage) const
         return *this;
     }
 
-    // HACK: We round to 3 decimal places to emulate what happens in browsers that used fixed point math.
-    // FIXME: Remove this when converting CSSPixels to a fixed-point type.
-    //        https://github.com/SerenityOS/serenity/issues/18566
-    auto value = percentage.as_fraction() * raw_value();
-    value *= 1000;
-    value = round(value);
-    value /= 1000;
-
-    return Length { value, m_type };
+    return Length { percentage.as_fraction() * raw_value(), m_type };
 }
 
 CSSPixels Length::font_relative_length_to_px(Length::FontMetrics const& font_metrics, Length::FontMetrics const& root_font_metrics) const
