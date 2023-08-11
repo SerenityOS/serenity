@@ -16,6 +16,7 @@
 #include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/CSS/CSSSupportsRule.h>
 #include <LibWeb/CSS/PropertyID.h>
+#include <LibWeb/CSS/PseudoClass.h>
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
@@ -458,7 +459,7 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                 type_description = "Attribute";
                 break;
             case CSS::Selector::SimpleSelector::Type::PseudoClass:
-                type_description = "PseudoClass";
+                type_description = "PseudoClassSelector";
                 break;
             case CSS::Selector::SimpleSelector::Type::PseudoElement:
                 type_description = "PseudoElement";
@@ -477,141 +478,14 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
             if (simple_selector.type == CSS::Selector::SimpleSelector::Type::PseudoClass) {
                 auto const& pseudo_class = simple_selector.pseudo_class();
 
-                char const* pseudo_class_description = "";
-                switch (pseudo_class.type) {
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Link:
-                    pseudo_class_description = "Link";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Visited:
-                    pseudo_class_description = "Visited";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Active:
-                    pseudo_class_description = "Active";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Root:
-                    pseudo_class_description = "Root";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Host:
-                    pseudo_class_description = "Host";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::FirstOfType:
-                    pseudo_class_description = "FirstOfType";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::LastOfType:
-                    pseudo_class_description = "LastOfType";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::OnlyOfType:
-                    pseudo_class_description = "OnlyOfType";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::NthOfType:
-                    pseudo_class_description = "NthOfType";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastOfType:
-                    pseudo_class_description = "NthLastOfType";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::NthChild:
-                    pseudo_class_description = "NthChild";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastChild:
-                    pseudo_class_description = "NthLastChild";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Focus:
-                    pseudo_class_description = "Focus";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::FocusVisible:
-                    pseudo_class_description = "FocusVisible";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::FocusWithin:
-                    pseudo_class_description = "FocusWithin";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Empty:
-                    pseudo_class_description = "Empty";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Hover:
-                    pseudo_class_description = "Hover";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::LastChild:
-                    pseudo_class_description = "LastChild";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::FirstChild:
-                    pseudo_class_description = "FirstChild";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::OnlyChild:
-                    pseudo_class_description = "OnlyChild";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Disabled:
-                    pseudo_class_description = "Disabled";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Enabled:
-                    pseudo_class_description = "Enabled";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Checked:
-                    pseudo_class_description = "Checked";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Indeterminate:
-                    pseudo_class_description = "Indeterminate";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Not:
-                    pseudo_class_description = "Not";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Is:
-                    pseudo_class_description = "Is";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Where:
-                    pseudo_class_description = "Where";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Lang:
-                    pseudo_class_description = "Lang";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Scope:
-                    pseudo_class_description = "Scope";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Defined:
-                    pseudo_class_description = "Defined";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Playing:
-                    pseudo_class_description = "Playing";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Paused:
-                    pseudo_class_description = "Paused";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Seeking:
-                    pseudo_class_description = "Seeking";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Muted:
-                    pseudo_class_description = "Muted";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::VolumeLocked:
-                    pseudo_class_description = "VolumeLocked";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Buffering:
-                    pseudo_class_description = "Buffering";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Stalled:
-                    pseudo_class_description = "Stalled";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Target:
-                    pseudo_class_description = "Target";
-                    break;
-                }
+                builder.appendff(" pseudo_class={}", CSS::pseudo_class_name(pseudo_class.type));
+                auto pseudo_class_metadata = CSS::pseudo_class_metadata(pseudo_class.type);
 
-                builder.appendff(" pseudo_class={}", pseudo_class_description);
-                if (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::Lang) {
-                    builder.append('(');
-                    builder.join(',', pseudo_class.languages);
-                    builder.append(')');
-                } else if (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::Not
-                    || pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::Host
-                    || pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::Is
-                    || pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::Where) {
-                    builder.append("(["sv);
-                    for (auto& selector : pseudo_class.argument_selector_list)
-                        dump_selector(builder, selector);
-                    builder.append("])"sv);
-                } else if ((pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthChild)
-                    || (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastChild)
-                    || (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthOfType)
-                    || (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastOfType)) {
+                switch (pseudo_class_metadata.parameter_type) {
+                case CSS::PseudoClassMetadata::ParameterType::None:
+                    break;
+                case CSS::PseudoClassMetadata::ParameterType::ANPlusB:
+                case CSS::PseudoClassMetadata::ParameterType::ANPlusBOf: {
                     builder.appendff("(step={}, offset={}", pseudo_class.nth_child_pattern.step_size, pseudo_class.nth_child_pattern.offset);
                     if (!pseudo_class.argument_selector_list.is_empty()) {
                         builder.append(", selectors=["sv);
@@ -620,6 +494,22 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                         builder.append("]"sv);
                     }
                     builder.append(")"sv);
+                    break;
+                }
+                case CSS::PseudoClassMetadata::ParameterType::ForgivingSelectorList:
+                case CSS::PseudoClassMetadata::ParameterType::SelectorList: {
+                    builder.append("(["sv);
+                    for (auto& selector : pseudo_class.argument_selector_list)
+                        dump_selector(builder, selector);
+                    builder.append("])"sv);
+                    break;
+                }
+                case CSS::PseudoClassMetadata::ParameterType::LanguageRanges: {
+                    builder.append('(');
+                    builder.join(',', pseudo_class.languages);
+                    builder.append(')');
+                    break;
+                }
                 }
             }
 

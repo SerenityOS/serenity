@@ -207,34 +207,34 @@ static inline DOM::Element const* next_sibling_with_same_tag_name(DOM::Element c
     return nullptr;
 }
 
-static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoClass const& pseudo_class, Optional<CSS::CSSStyleSheet const&> style_sheet_for_rule, DOM::Element const& element, JS::GCPtr<DOM::ParentNode const> scope)
+static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoClassSelector const& pseudo_class, Optional<CSS::CSSStyleSheet const&> style_sheet_for_rule, DOM::Element const& element, JS::GCPtr<DOM::ParentNode const> scope)
 {
     switch (pseudo_class.type) {
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Link:
+    case CSS::PseudoClass::Link:
         return matches_link_pseudo_class(element);
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Visited:
+    case CSS::PseudoClass::Visited:
         // FIXME: Maybe match this selector sometimes?
         return false;
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Active:
+    case CSS::PseudoClass::Active:
         return element.is_active();
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Hover:
+    case CSS::PseudoClass::Hover:
         return matches_hover_pseudo_class(element);
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Focus:
+    case CSS::PseudoClass::Focus:
         return element.is_focused();
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::FocusVisible:
+    case CSS::PseudoClass::FocusVisible:
         // FIXME: We should only apply this when a visible focus is useful. Decide when that is!
         return element.is_focused();
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::FocusWithin: {
+    case CSS::PseudoClass::FocusWithin: {
         auto* focused_element = element.document().focused_element();
         return focused_element && element.is_inclusive_ancestor_of(*focused_element);
     }
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::FirstChild:
+    case CSS::PseudoClass::FirstChild:
         return !element.previous_element_sibling();
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::LastChild:
+    case CSS::PseudoClass::LastChild:
         return !element.next_element_sibling();
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::OnlyChild:
+    case CSS::PseudoClass::OnlyChild:
         return !(element.previous_element_sibling() || element.next_element_sibling());
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Empty: {
+    case CSS::PseudoClass::Empty: {
         if (!element.has_children())
             return true;
         if (element.first_child_of_type<DOM::Element>())
@@ -251,53 +251,53 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
         });
         return !has_nonempty_text_child;
     }
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Root:
+    case CSS::PseudoClass::Root:
         return is<HTML::HTMLHtmlElement>(element);
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Host:
+    case CSS::PseudoClass::Host:
         // FIXME: Implement :host selector.
         return false;
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Scope:
+    case CSS::PseudoClass::Scope:
         return scope ? &element == scope : is<HTML::HTMLHtmlElement>(element);
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::FirstOfType:
+    case CSS::PseudoClass::FirstOfType:
         return !previous_sibling_with_same_tag_name(element);
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::LastOfType:
+    case CSS::PseudoClass::LastOfType:
         return !next_sibling_with_same_tag_name(element);
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::OnlyOfType:
+    case CSS::PseudoClass::OnlyOfType:
         return !previous_sibling_with_same_tag_name(element) && !next_sibling_with_same_tag_name(element);
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Lang:
+    case CSS::PseudoClass::Lang:
         return matches_lang_pseudo_class(element, pseudo_class.languages);
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Disabled:
+    case CSS::PseudoClass::Disabled:
         // https://html.spec.whatwg.org/multipage/semantics-other.html#selector-disabled
         // The :disabled pseudo-class must match any element that is actually disabled.
         return element.is_actually_disabled();
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Enabled:
+    case CSS::PseudoClass::Enabled:
         // https://html.spec.whatwg.org/multipage/semantics-other.html#selector-enabled
         // The :enabled pseudo-class must match any button, input, select, textarea, optgroup, option, fieldset element, or form-associated custom element that is not actually disabled.
         return (is<HTML::HTMLButtonElement>(element) || is<HTML::HTMLInputElement>(element) || is<HTML::HTMLSelectElement>(element) || is<HTML::HTMLTextAreaElement>(element) || is<HTML::HTMLOptGroupElement>(element) || is<HTML::HTMLOptionElement>(element) || is<HTML::HTMLFieldSetElement>(element))
             && !element.is_actually_disabled();
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Checked:
+    case CSS::PseudoClass::Checked:
         return matches_checked_pseudo_class(element);
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Indeterminate:
+    case CSS::PseudoClass::Indeterminate:
         return matches_indeterminate_pseudo_class(element);
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Defined:
+    case CSS::PseudoClass::Defined:
         return element.is_defined();
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Is:
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Where:
+    case CSS::PseudoClass::Is:
+    case CSS::PseudoClass::Where:
         for (auto& selector : pseudo_class.argument_selector_list) {
             if (matches(selector, style_sheet_for_rule, element))
                 return true;
         }
         return false;
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Not:
+    case CSS::PseudoClass::Not:
         for (auto& selector : pseudo_class.argument_selector_list) {
             if (matches(selector, style_sheet_for_rule, element))
                 return false;
         }
         return true;
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::NthChild:
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastChild:
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::NthOfType:
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastOfType: {
+    case CSS::PseudoClass::NthChild:
+    case CSS::PseudoClass::NthLastChild:
+    case CSS::PseudoClass::NthOfType:
+    case CSS::PseudoClass::NthLastOfType: {
         auto const step_size = pseudo_class.nth_child_pattern.step_size;
         auto const offset = pseudo_class.nth_child_pattern.offset;
         if (step_size == 0 && offset == 0)
@@ -320,7 +320,7 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
 
         int index = 1;
         switch (pseudo_class.type) {
-        case CSS::Selector::SimpleSelector::PseudoClass::Type::NthChild: {
+        case CSS::PseudoClass::NthChild: {
             if (!matches_selector_list(pseudo_class.argument_selector_list, element))
                 return false;
             for (auto* child = parent->first_child_of_type<DOM::Element>(); child && child != &element; child = child->next_element_sibling()) {
@@ -329,7 +329,7 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
             }
             break;
         }
-        case CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastChild: {
+        case CSS::PseudoClass::NthLastChild: {
             if (!matches_selector_list(pseudo_class.argument_selector_list, element))
                 return false;
             for (auto* child = parent->last_child_of_type<DOM::Element>(); child && child != &element; child = child->previous_element_sibling()) {
@@ -338,12 +338,12 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
             }
             break;
         }
-        case CSS::Selector::SimpleSelector::PseudoClass::Type::NthOfType: {
+        case CSS::PseudoClass::NthOfType: {
             for (auto* child = previous_sibling_with_same_tag_name(element); child; child = previous_sibling_with_same_tag_name(*child))
                 ++index;
             break;
         }
-        case CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastOfType: {
+        case CSS::PseudoClass::NthLastOfType: {
             for (auto* child = next_sibling_with_same_tag_name(element); child; child = next_sibling_with_same_tag_name(*child))
                 ++index;
             break;
@@ -384,48 +384,48 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
         // Otherwise, we start at "offset" and count forwards.
         return index >= offset && canonical_modulo(index - offset, step_size) == 0;
     }
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Playing: {
+    case CSS::PseudoClass::Playing: {
         if (!is<HTML::HTMLMediaElement>(element))
             return false;
         auto const& media_element = static_cast<HTML::HTMLMediaElement const&>(element);
         return !media_element.paused();
     }
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Paused: {
+    case CSS::PseudoClass::Paused: {
         if (!is<HTML::HTMLMediaElement>(element))
             return false;
         auto const& media_element = static_cast<HTML::HTMLMediaElement const&>(element);
         return media_element.paused();
     }
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Seeking: {
+    case CSS::PseudoClass::Seeking: {
         if (!is<HTML::HTMLMediaElement>(element))
             return false;
         auto const& media_element = static_cast<HTML::HTMLMediaElement const&>(element);
         return media_element.seeking();
     }
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Muted: {
+    case CSS::PseudoClass::Muted: {
         if (!is<HTML::HTMLMediaElement>(element))
             return false;
         auto const& media_element = static_cast<HTML::HTMLMediaElement const&>(element);
         return media_element.muted();
     }
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::VolumeLocked: {
+    case CSS::PseudoClass::VolumeLocked: {
         // FIXME: Currently we don't allow the user to specify an override volume, so this is always false.
         //        Once we do, implement this!
         return false;
     }
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Buffering: {
+    case CSS::PseudoClass::Buffering: {
         if (!is<HTML::HTMLMediaElement>(element))
             return false;
         auto const& media_element = static_cast<HTML::HTMLMediaElement const&>(element);
         return media_element.blocked();
     }
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Stalled: {
+    case CSS::PseudoClass::Stalled: {
         if (!is<HTML::HTMLMediaElement>(element))
             return false;
         auto const& media_element = static_cast<HTML::HTMLMediaElement const&>(element);
         return media_element.stalled();
     }
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Target:
+    case CSS::PseudoClass::Target:
         return element.is_target();
     }
 

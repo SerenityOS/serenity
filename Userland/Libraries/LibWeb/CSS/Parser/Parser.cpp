@@ -31,6 +31,7 @@
 #include <LibWeb/CSS/Parser/Function.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/Parser/Rule.h>
+#include <LibWeb/CSS/PseudoClass.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/CSS/StyleValues/AngleStyleValue.h>
@@ -532,71 +533,17 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
         auto make_pseudo_class_selector = [](auto pseudo_class) {
             return Selector::SimpleSelector {
                 .type = Selector::SimpleSelector::Type::PseudoClass,
-                .value = Selector::SimpleSelector::PseudoClass {
-                    .type = pseudo_class }
+                .value = Selector::SimpleSelector::PseudoClassSelector { .type = pseudo_class }
             };
         };
 
-        if (pseudo_name.equals_ignoring_ascii_case("active"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Active);
-        if (pseudo_name.equals_ignoring_ascii_case("buffering"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Buffering);
-        if (pseudo_name.equals_ignoring_ascii_case("checked"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Checked);
-        if (pseudo_name.equals_ignoring_ascii_case("indeterminate"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Indeterminate);
-        if (pseudo_name.equals_ignoring_ascii_case("defined"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Defined);
-        if (pseudo_name.equals_ignoring_ascii_case("disabled"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Disabled);
-        if (pseudo_name.equals_ignoring_ascii_case("empty"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Empty);
-        if (pseudo_name.equals_ignoring_ascii_case("enabled"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Enabled);
-        if (pseudo_name.equals_ignoring_ascii_case("first-child"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::FirstChild);
-        if (pseudo_name.equals_ignoring_ascii_case("first-of-type"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::FirstOfType);
-        if (pseudo_name.equals_ignoring_ascii_case("focus"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Focus);
-        if (pseudo_name.equals_ignoring_ascii_case("focus-visible"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::FocusVisible);
-        if (pseudo_name.equals_ignoring_ascii_case("focus-within"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::FocusWithin);
-        if (pseudo_name.equals_ignoring_ascii_case("hover"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Hover);
-        if (pseudo_name.equals_ignoring_ascii_case("last-child"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::LastChild);
-        if (pseudo_name.equals_ignoring_ascii_case("last-of-type"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::LastOfType);
-        if (pseudo_name.equals_ignoring_ascii_case("link"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Link);
-        if (pseudo_name.equals_ignoring_ascii_case("muted"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Muted);
-        if (pseudo_name.equals_ignoring_ascii_case("only-child"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::OnlyChild);
-        if (pseudo_name.equals_ignoring_ascii_case("only-of-type"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::OnlyOfType);
-        if (pseudo_name.equals_ignoring_ascii_case("playing"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Playing);
-        if (pseudo_name.equals_ignoring_ascii_case("paused"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Paused);
-        if (pseudo_name.equals_ignoring_ascii_case("root"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Root);
-        if (pseudo_name.equals_ignoring_ascii_case("seeking"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Seeking);
-        if (pseudo_name.equals_ignoring_ascii_case("stalled"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Stalled);
-        if (pseudo_name.equals_ignoring_ascii_case("target"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Target);
-        if (pseudo_name.equals_ignoring_ascii_case("host"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Host);
-        if (pseudo_name.equals_ignoring_ascii_case("visited"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Visited);
-        if (pseudo_name.equals_ignoring_ascii_case("volume-locked"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::VolumeLocked);
-        if (pseudo_name.equals_ignoring_ascii_case("scope"sv))
-            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Scope);
+        if (auto pseudo_class = pseudo_class_from_string(pseudo_name); pseudo_class.has_value()) {
+            if (!pseudo_class_metadata(pseudo_class.value()).is_valid_as_identifier) {
+                dbgln_if(CSS_PARSER_DEBUG, "Pseudo-class ':{}' is only valid as a function", pseudo_name);
+                return ParseError::SyntaxError;
+            }
+            return make_pseudo_class_selector(pseudo_class.value());
+        }
 
         // Single-colon syntax allowed for ::after, ::before, ::first-letter and ::first-line for compatibility.
         // https://www.w3.org/TR/selectors/#pseudo-element-syntax
@@ -632,7 +579,7 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
             if (!tokens.has_next_token()) {
                 return Selector::SimpleSelector {
                     .type = Selector::SimpleSelector::Type::PseudoClass,
-                    .value = Selector::SimpleSelector::PseudoClass {
+                    .value = Selector::SimpleSelector::PseudoClassSelector {
                         .type = pseudo_class,
                         .nth_child_pattern = nth_child_pattern.release_value() }
                 };
@@ -655,7 +602,7 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
 
             return Selector::SimpleSelector {
                 .type = Selector::SimpleSelector::Type::PseudoClass,
-                .value = Selector::SimpleSelector::PseudoClass {
+                .value = Selector::SimpleSelector::PseudoClassSelector {
                     .type = pseudo_class,
                     .nth_child_pattern = nth_child_pattern.release_value(),
                     .argument_selector_list = move(selector_list) }
@@ -663,69 +610,67 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
         };
 
         auto const& pseudo_function = pseudo_class_token.function();
-        if (pseudo_function.name().equals_ignoring_ascii_case("is"sv)
-            || pseudo_function.name().equals_ignoring_ascii_case("where"sv)) {
+        auto maybe_pseudo_class = pseudo_class_from_string(pseudo_function.name());
+        if (!maybe_pseudo_class.has_value()) {
+            dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-class function: ':{}'()", pseudo_function.name());
+            return ParseError::SyntaxError;
+        }
+        auto pseudo_class = maybe_pseudo_class.value();
+        auto metadata = pseudo_class_metadata(pseudo_class);
+
+        if (!metadata.is_valid_as_function) {
+            dbgln_if(CSS_PARSER_DEBUG, "Pseudo-class ':{}' is not valid as a function", pseudo_function.name());
+            return ParseError::SyntaxError;
+        }
+
+        if (pseudo_function.values().is_empty()) {
+            dbgln_if(CSS_PARSER_DEBUG, "Empty :{}() selector", pseudo_function.name());
+            return ParseError::SyntaxError;
+        }
+
+        switch (metadata.parameter_type) {
+        case PseudoClassMetadata::ParameterType::ANPlusB:
+            return parse_nth_child_selector(pseudo_class, pseudo_function.values(), false);
+        case PseudoClassMetadata::ParameterType::ANPlusBOf:
+            return parse_nth_child_selector(pseudo_class, pseudo_function.values(), true);
+        case PseudoClassMetadata::ParameterType::ForgivingSelectorList: {
             auto function_token_stream = TokenStream(pseudo_function.values());
             // NOTE: Because it's forgiving, even complete garbage will parse OK as an empty selector-list.
             auto argument_selector_list = MUST(parse_a_selector_list(function_token_stream, SelectorType::Standalone, SelectorParsingMode::Forgiving));
 
             return Selector::SimpleSelector {
                 .type = Selector::SimpleSelector::Type::PseudoClass,
-                .value = Selector::SimpleSelector::PseudoClass {
-                    .type = pseudo_function.name().equals_ignoring_ascii_case("is"sv)
-                        ? Selector::SimpleSelector::PseudoClass::Type::Is
-                        : Selector::SimpleSelector::PseudoClass::Type::Where,
+                .value = Selector::SimpleSelector::PseudoClassSelector {
+                    .type = pseudo_class,
                     .argument_selector_list = move(argument_selector_list) }
             };
         }
-        if (pseudo_function.name().equals_ignoring_ascii_case("not"sv)) {
-            auto function_token_stream = TokenStream(pseudo_function.values());
-            auto not_selector = TRY(parse_a_selector_list(function_token_stream, SelectorType::Standalone));
-
-            return Selector::SimpleSelector {
-                .type = Selector::SimpleSelector::Type::PseudoClass,
-                .value = Selector::SimpleSelector::PseudoClass {
-                    .type = Selector::SimpleSelector::PseudoClass::Type::Not,
-                    .argument_selector_list = move(not_selector) }
-            };
-        }
-        if (pseudo_function.name().equals_ignoring_ascii_case("host"sv)) {
-            auto function_token_stream = TokenStream(pseudo_function.values());
-            auto host_selector = TRY(parse_a_selector_list(function_token_stream, SelectorType::Standalone));
-
-            return Selector::SimpleSelector {
-                .type = Selector::SimpleSelector::Type::PseudoClass,
-                .value = Selector::SimpleSelector::PseudoClass {
-                    .type = Selector::SimpleSelector::PseudoClass::Type::Host,
-                    .argument_selector_list = move(host_selector) }
-            };
-        }
-        if (pseudo_function.name().equals_ignoring_ascii_case("lang"sv)) {
-            if (pseudo_function.values().is_empty()) {
-                dbgln_if(CSS_PARSER_DEBUG, "Empty :lang() selector");
-                return ParseError::SyntaxError;
-            }
+        case PseudoClassMetadata::ParameterType::LanguageRanges: {
             // FIXME: Support multiple, comma-separated, language ranges.
             Vector<FlyString> languages;
             languages.append(pseudo_function.values().first().token().to_string().release_value_but_fixme_should_propagate_errors());
             return Selector::SimpleSelector {
                 .type = Selector::SimpleSelector::Type::PseudoClass,
-                .value = Selector::SimpleSelector::PseudoClass {
-                    .type = Selector::SimpleSelector::PseudoClass::Type::Lang,
+                .value = Selector::SimpleSelector::PseudoClassSelector {
+                    .type = pseudo_class,
                     .languages = move(languages) }
             };
         }
-        if (pseudo_function.name().equals_ignoring_ascii_case("nth-child"sv))
-            return parse_nth_child_selector(Selector::SimpleSelector::PseudoClass::Type::NthChild, pseudo_function.values(), true);
-        if (pseudo_function.name().equals_ignoring_ascii_case("nth-last-child"sv))
-            return parse_nth_child_selector(Selector::SimpleSelector::PseudoClass::Type::NthLastChild, pseudo_function.values(), true);
-        if (pseudo_function.name().equals_ignoring_ascii_case("nth-of-type"sv))
-            return parse_nth_child_selector(Selector::SimpleSelector::PseudoClass::Type::NthOfType, pseudo_function.values(), false);
-        if (pseudo_function.name().equals_ignoring_ascii_case("nth-last-of-type"sv))
-            return parse_nth_child_selector(Selector::SimpleSelector::PseudoClass::Type::NthLastOfType, pseudo_function.values(), false);
+        case PseudoClassMetadata::ParameterType::SelectorList: {
+            auto function_token_stream = TokenStream(pseudo_function.values());
+            auto not_selector = TRY(parse_a_selector_list(function_token_stream, SelectorType::Standalone));
 
-        dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-class function: ':{}'()", pseudo_function.name());
-        return ParseError::SyntaxError;
+            return Selector::SimpleSelector {
+                .type = Selector::SimpleSelector::Type::PseudoClass,
+                .value = Selector::SimpleSelector::PseudoClassSelector {
+                    .type = pseudo_class,
+                    .argument_selector_list = move(not_selector) }
+            };
+        }
+        case PseudoClassMetadata::ParameterType::None:
+            // `None` means this is not a function-type pseudo-class, so this state should be impossible.
+            VERIFY_NOT_REACHED();
+        }
     }
     dbgln_if(CSS_PARSER_DEBUG, "Unexpected Block in pseudo-class name, expected a function or identifier. '{}'", pseudo_class_token.to_debug_string());
     return ParseError::SyntaxError;
