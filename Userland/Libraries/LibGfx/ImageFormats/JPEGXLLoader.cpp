@@ -2600,9 +2600,6 @@ private:
 
     SizeHeader m_header;
     ImageMetadata m_metadata;
-
-    FrameHeader m_frame_header;
-    TOC m_toc;
 };
 
 JPEGXLImageDecoderPlugin::JPEGXLImageDecoderPlugin(NonnullOwnPtr<FixedMemoryStream> stream)
