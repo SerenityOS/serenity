@@ -39,9 +39,3 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
     link_directories(${TOOLCHAIN_ROOT}/lib/clang/${LLVM_MAJOR_VERSION}/lib/${SERENITY_ARCH}-pc-serenity/)
 endif()
 
-if ("${SERENITY_ARCH}" STREQUAL "aarch64")
-    # Unaligned memory access will cause a trap, so to make sure the compiler doesn't generate
-    # those unaligned accesses, the strict-align flag is added.
-    # FIXME: Remove -Wno-cast-align when we are able to build everything without this warning turned on.
-    add_compile_options(-mstrict-align -Wno-cast-align)
-endif()
