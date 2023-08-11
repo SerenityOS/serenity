@@ -235,19 +235,19 @@ void LadybirdViewImpl::notify_server_did_request_cursor_change(Badge<WebView::We
     gtk_widget_set_cursor_from_name(GTK_WIDGET(m_widget), name);
 }
 
-void LadybirdViewImpl::notify_server_did_request_scroll(Badge<WebView::WebContentClient>, i32, i32)
+void LadybirdViewImpl::notify_server_did_request_scroll(Badge<WebView::WebContentClient>, i32 x_delta, i32 y_delta)
 {
-    dbgln("LadybirdViewImpl::notify_server_did_request_scroll");
+    ladybird_web_view_scroll_by(m_widget, x_delta, y_delta);
 }
 
-void LadybirdViewImpl::notify_server_did_request_scroll_to(Badge<WebView::WebContentClient>, Gfx::IntPoint)
+void LadybirdViewImpl::notify_server_did_request_scroll_to(Badge<WebView::WebContentClient>, Gfx::IntPoint point)
 {
-    dbgln("LadybirdViewImpl::notify_server_did_request_scroll_to");
+    ladybird_web_view_scroll_to(m_widget, point.x(), point.y());
 }
 
-void LadybirdViewImpl::notify_server_did_request_scroll_into_view(Badge<WebView::WebContentClient>, Gfx::IntRect const&)
+void LadybirdViewImpl::notify_server_did_request_scroll_into_view(Badge<WebView::WebContentClient>, Gfx::IntRect const& rect)
 {
-    dbgln("LadybirdViewImpl::notify_server_did_request_scroll_into_view");
+    ladybird_web_view_scroll_into_view(m_widget, rect.left(), rect.top(), rect.width(), rect.height());
 }
 
 void LadybirdViewImpl::notify_server_did_enter_tooltip_area(Badge<WebView::WebContentClient>, Gfx::IntPoint, DeprecatedString const&)

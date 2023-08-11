@@ -298,6 +298,69 @@ static void ladybird_web_view_size_allocate(GtkWidget* widget, int width, int he
         gtk_adjustment_configure(self->vadjustment, vadj, 0, full_height, height * 0.1, height * 0.9, height);
 }
 
+void ladybird_web_view_scroll_by(LadybirdWebView* self, int page_x_delta, int page_y_delta)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+
+    int x_delta, y_delta;
+    scale_size_down(self, page_x_delta, page_y_delta, &x_delta, &y_delta);
+
+    if (self->hadjustment && x_delta) {
+        double adj = gtk_adjustment_get_value(self->hadjustment);
+        gtk_adjustment_set_value(self->hadjustment, adj + x_delta);
+    }
+    if (self->vadjustment && y_delta) {
+        double adj = gtk_adjustment_get_value(self->vadjustment);
+        gtk_adjustment_set_value(self->vadjustment, adj + y_delta);
+    }
+}
+
+void ladybird_web_view_scroll_to(LadybirdWebView* self, int page_x, int page_y)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+
+    int x, y;
+    scale_size_down(self, page_x, page_y, &x, &y);
+
+    if (self->hadjustment && x)
+        gtk_adjustment_set_value(self->hadjustment, x);
+    if (self->vadjustment && y)
+        gtk_adjustment_set_value(self->vadjustment, y);
+}
+
+void ladybird_web_view_scroll_into_view(LadybirdWebView* self, int page_x, int page_y, int page_width, int page_height)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+
+    int x, y;
+    scale_size_down(self, page_x, page_y, &x, &y);
+    int width, height;
+    scale_size_down(self, page_width, page_height, &width, &height);
+
+    if (self->hadjustment) {
+        double adj = gtk_adjustment_get_value(self->hadjustment);
+        int viewport_width = gtk_widget_get_width(GTK_WIDGET(self));
+        if (adj >= x) {
+            // If our viewport's left border is to the right of its left border, set our left border to its.
+            gtk_adjustment_set_value(self->hadjustment, x);
+        } else if (adj + viewport_width <= x + width) {
+            // If our viewport's right border is to the left of its right border, set our right border to its.
+            gtk_adjustment_set_value(self->hadjustment, x + width - viewport_width);
+        }
+    }
+    if (self->vadjustment) {
+        double adj = gtk_adjustment_get_value(self->vadjustment);
+        int viewport_height = gtk_widget_get_height(GTK_WIDGET(self));
+        if (adj >= y) {
+            // If our viewport's top border is below its top border, set our top border to its.
+            gtk_adjustment_set_value(self->vadjustment, y);
+        } else if (adj + viewport_height <= y + height) {
+            // If our viewport's bottom border is above its bottom border, set our bottom border to its.
+            gtk_adjustment_set_value(self->vadjustment, y + height - viewport_height);
+        }
+    }
+}
+
 void ladybird_web_view_push_bitmap(LadybirdWebView* self, Gfx::Bitmap const* bitmap, int width, int height)
 {
     g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));

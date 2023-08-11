@@ -31,4 +31,8 @@ void ladybird_web_view_zoom_out(LadybirdWebView* self);
 void ladybird_web_view_zoom_reset(LadybirdWebView* self);
 guint ladybird_web_view_get_zoom_percent(LadybirdWebView* self);
 
+void ladybird_web_view_scroll_by(LadybirdWebView* self, int page_x_delta, int page_y_delta);
+void ladybird_web_view_scroll_to(LadybirdWebView* self, int page_x, int page_y);
+void ladybird_web_view_scroll_into_view(LadybirdWebView* self, int page_x, int page_y, int page_width, int page_height);
+
 G_END_DECLS
