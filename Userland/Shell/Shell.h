@@ -54,6 +54,7 @@
     __ENUMERATE_SHELL_BUILTIN(wait, InAllModes)              \
     __ENUMERATE_SHELL_BUILTIN(dump, InAllModes)              \
     __ENUMERATE_SHELL_BUILTIN(kill, InAllModes)              \
+    __ENUMERATE_SHELL_BUILTIN(reset, InAllModes)             \
     __ENUMERATE_SHELL_BUILTIN(noop, InAllModes)              \
     __ENUMERATE_SHELL_BUILTIN(break, OnlyInPOSIXMode)        \
     __ENUMERATE_SHELL_BUILTIN(continue, OnlyInPOSIXMode)     \
@@ -413,6 +414,9 @@ private:
     Shell(Line::Editor&, bool attempt_interactive, bool posix_mode = false);
     Shell();
     virtual ~Shell() override;
+
+    void destroy();
+    void initialize(bool attempt_interactive);
 
     RefPtr<AST::Node> parse(StringView, bool interactive = false, bool as_command = true) const;
 

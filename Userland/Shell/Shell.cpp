@@ -2258,9 +2258,7 @@ Shell::Shell()
     cache_path();
 }
 
-Shell::Shell(Line::Editor& editor, bool attempt_interactive, bool posix_mode)
-    : m_in_posix_mode(posix_mode)
-    , m_editor(editor)
+void Shell::initialize(bool attempt_interactive)
 {
     uid = getuid();
     tcsetpgrp(0, getpgrp());
@@ -2305,11 +2303,22 @@ Shell::Shell(Line::Editor& editor, bool attempt_interactive, bool posix_mode)
         m_editor->load_history(get_history_path());
         cache_path();
     }
+}
 
+Shell::Shell(Line::Editor& editor, bool attempt_interactive, bool posix_mode)
+    : m_in_posix_mode(posix_mode)
+    , m_editor(editor)
+{
+    initialize(attempt_interactive);
     start_timer(3000);
 }
 
 Shell::~Shell()
+{
+    destroy();
+}
+
+void Shell::destroy()
 {
     if (m_default_constructed)
         return;
