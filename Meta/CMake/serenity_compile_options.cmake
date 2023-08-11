@@ -18,7 +18,6 @@ add_compile_options(-Wwrite-strings)
 
 add_compile_options(-fno-delete-null-pointer-checks)
 add_compile_options(-ffile-prefix-map=${SerenityOS_SOURCE_DIR}=.)
-add_compile_options(-fno-semantic-interposition)
 add_compile_options(-fsized-deallocation)
 add_compile_options(-fstack-clash-protection)
 add_compile_options(-fstack-protector-strong)
