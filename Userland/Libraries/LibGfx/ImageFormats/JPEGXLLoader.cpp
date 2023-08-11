@@ -2310,10 +2310,11 @@ struct Frame {
 
     u64 num_groups {};
     u64 num_lf_groups {};
+
+    Image image {};
 };
 
 static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
-    Image& image,
     SizeHeader const& size_header,
     ImageMetadata const& metadata,
     Optional<EntropyDecoder>& entropy_decoder)
@@ -2352,12 +2353,12 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
 
     frame.toc = TRY(read_toc(stream, frame.frame_header, frame.num_groups, frame.num_lf_groups));
 
-    image = TRY(Image::create({ frame.width, frame.height }, metadata));
+    frame.image = TRY(Image::create({ frame.width, frame.height }, metadata));
 
-    frame.lf_global = TRY(read_lf_global(stream, image, frame.frame_header, metadata, entropy_decoder));
+    frame.lf_global = TRY(read_lf_global(stream, frame.image, frame.frame_header, metadata, entropy_decoder));
 
     for (u32 i {}; i < frame.num_lf_groups; ++i)
-        TRY(read_lf_group(stream, image, frame.frame_header));
+        TRY(read_lf_group(stream, frame.image, frame.frame_header));
 
     if (frame.frame_header.encoding == FrameHeader::Encoding::kVarDCT) {
         TODO();
@@ -2366,13 +2367,13 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     auto const num_pass_group = frame.num_groups * frame.frame_header.passes.num_passes;
     auto const& transform_infos = frame.lf_global.gmodular.modular_header.transform;
     for (u64 i {}; i < num_pass_group; ++i)
-        TRY(read_pass_group(stream, image, frame.frame_header, group_dim));
+        TRY(read_pass_group(stream, frame.image, frame.frame_header, group_dim));
 
     // G.4.2 - Modular group data
     // When all modular groups are decoded, the inverse transforms are applied to
     // the at that point fully decoded GlobalModular image, as specified in H.6.
     for (auto const& transformation : transform_infos.in_reverse())
-        apply_transformation(image, transformation);
+        apply_transformation(frame.image, transformation);
 
     return frame;
 }
@@ -2391,7 +2392,7 @@ static u32 mirror_1d(i32 coord, u32 size)
 ///
 
 /// K - Image features
-static ErrorOr<void> apply_upsampling(Image& image, ImageMetadata const& metadata, Frame const& frame)
+static ErrorOr<void> apply_upsampling(Frame& frame, ImageMetadata const& metadata)
 {
     Optional<u32> ec_max;
     for (auto upsampling : frame.frame_header.ec_upsampling) {
@@ -2414,7 +2415,7 @@ static ErrorOr<void> apply_upsampling(Image& image, ImageMetadata const& metadat
         };
 
         // FIXME: Use ec_upsampling for extra-channels
-        for (auto& channel : image.channels()) {
+        for (auto& channel : frame.image.channels()) {
             auto upsampled = TRY(Channel::create(k * channel.width(), k * channel.height()));
 
             // Loop over the original image
@@ -2464,9 +2465,9 @@ static ErrorOr<void> apply_upsampling(Image& image, ImageMetadata const& metadat
     return {};
 }
 
-static ErrorOr<void> apply_image_features(Image& image, ImageMetadata const& metadata, Frame const& frame)
+static ErrorOr<void> apply_image_features(Frame& frame, ImageMetadata const& metadata)
 {
-    TRY(apply_upsampling(image, metadata, frame));
+    TRY(apply_upsampling(frame, metadata));
 
     if (frame.frame_header.flags != FrameHeader::Flags::None)
         TODO();
@@ -2497,10 +2498,10 @@ static void ycbcr_to_rgb(Image& image, u8 bits_per_sample)
     }
 }
 
-static void apply_colour_transformation(Image& image, ImageMetadata const& metadata, Frame const& frame)
+static void apply_colour_transformation(Frame& frame, ImageMetadata const& metadata)
 {
     if (frame.frame_header.do_YCbCr)
-        ycbcr_to_rgb(image, metadata.bit_depth.bits_per_sample);
+        ycbcr_to_rgb(frame.image, metadata.bit_depth.bits_per_sample);
 
     if (metadata.xyb_encoded) {
         TODO();
@@ -2548,20 +2549,18 @@ public:
 
     ErrorOr<void> decode_frame()
     {
-        Image image {};
-
-        auto const frame = TRY(read_frame(m_stream, image, m_header, m_metadata, m_entropy_decoder));
+        auto frame = TRY(read_frame(m_stream, m_header, m_metadata, m_entropy_decoder));
 
         if (frame.frame_header.restoration_filter.gab || frame.frame_header.restoration_filter.epf_iters != 0)
             TODO();
 
-        TRY(apply_image_features(image, m_metadata, frame));
+        TRY(apply_image_features(frame, m_metadata));
 
-        apply_colour_transformation(image, m_metadata, frame);
+        apply_colour_transformation(frame, m_metadata);
 
-        TRY(render_extra_channels(image, m_metadata));
+        TRY(render_extra_channels(frame.image, m_metadata));
 
-        m_bitmap = TRY(image.to_bitmap(m_metadata));
+        m_bitmap = TRY(frame.image.to_bitmap(m_metadata));
 
         return {};
     }
