@@ -56,8 +56,8 @@
 #define INT_WIDTH 32
 #define UINT_WIDTH 32
 
-#define LONG_WIDTH 32
-#define ULONG_WIDTH 32
+#define LONG_WIDTH 64
+#define ULONG_WIDTH 64
 
 #define LLONG_WIDTH 64
 #define ULLONG_WIDTH 64
