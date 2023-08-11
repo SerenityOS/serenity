@@ -387,6 +387,7 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
         auto cell_computed_values = CSS::ComputedValues();
         static_cast<CSS::MutableComputedValues&>(cell_computed_values).set_display(CSS::Display { CSS::Display::Internal::TableCell });
         static_cast<CSS::MutableComputedValues&>(cell_computed_values).set_vertical_align(CSS::VerticalAlign::Middle);
+        static_cast<CSS::MutableComputedValues&>(cell_computed_values).set_white_space(CSS::WhiteSpace::Nowrap);
 
         auto flow_root_computed_values = CSS::ComputedValues();
         static_cast<CSS::MutableComputedValues&>(flow_root_computed_values).set_width(CSS::Size::make_percentage(CSS::Percentage(100)));
@@ -394,20 +395,20 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
 
         auto table_wrapper = parent.heap().template allocate_without_realm<BlockContainer>(parent.document(), nullptr, move(table_computed_values));
         auto cell_wrapper = parent.heap().template allocate_without_realm<BlockContainer>(parent.document(), nullptr, move(cell_computed_values));
-        auto flow_root_wrapper = parent.heap().template allocate_without_realm<BlockContainer>(parent.document(), nullptr, move(flow_root_computed_values));
+
+        cell_wrapper->set_line_height(parent.line_height());
+        cell_wrapper->set_children_are_inline(parent.children_are_inline());
 
         Vector<JS::Handle<Node>> sequence;
         for (auto child = parent.first_child(); child; child = child->next_sibling()) {
-            if (!is_ignorable_whitespace(*child))
-                sequence.append(*child);
+            sequence.append(*child);
         }
 
         for (auto& node : sequence) {
             parent.remove_child(*node);
-            flow_root_wrapper->append_child(*node);
+            cell_wrapper->append_child(*node);
         }
 
-        cell_wrapper->append_child(*flow_root_wrapper);
         table_wrapper->append_child(*cell_wrapper);
         parent.append_child(*table_wrapper);
     }
