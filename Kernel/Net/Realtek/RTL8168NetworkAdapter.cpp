@@ -196,7 +196,7 @@ UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> RTL8168NetworkAdapter::c
     u8 irq = pci_device_identifier.interrupt_line().value();
     auto interface_name = TRY(NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier));
     auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
-    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) RTL8168NetworkAdapter(pci_device_identifier, irq, move(registers_io_window), move(interface_name))));
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) RTL8168NetworkAdapter(interface_name.representable_view(), pci_device_identifier, irq, move(registers_io_window))));
 }
 
 bool RTL8168NetworkAdapter::determine_supported_version() const
@@ -244,8 +244,8 @@ bool RTL8168NetworkAdapter::determine_supported_version() const
     }
 }
 
-UNMAP_AFTER_INIT RTL8168NetworkAdapter::RTL8168NetworkAdapter(PCI::DeviceIdentifier const& device_identifier, u8 irq, NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<KString> interface_name)
-    : NetworkAdapter(move(interface_name))
+UNMAP_AFTER_INIT RTL8168NetworkAdapter::RTL8168NetworkAdapter(StringView interface_name, PCI::DeviceIdentifier const& device_identifier, u8 irq, NonnullOwnPtr<IOWindow> registers_io_window)
+    : NetworkAdapter(interface_name)
     , PCI::Device(device_identifier)
     , IRQHandler(irq)
     , m_registers_io_window(move(registers_io_window))

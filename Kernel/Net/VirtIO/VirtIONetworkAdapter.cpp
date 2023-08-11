@@ -102,12 +102,12 @@ UNMAP_AFTER_INIT ErrorOr<bool> VirtIONetworkAdapter::probe(PCI::DeviceIdentifier
 UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> VirtIONetworkAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     auto interface_name = TRY(NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier));
-    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) VirtIONetworkAdapter(pci_device_identifier, move(interface_name))));
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) VirtIONetworkAdapter(interface_name.representable_view(), pci_device_identifier)));
 }
 
-UNMAP_AFTER_INIT VirtIONetworkAdapter::VirtIONetworkAdapter(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<KString> interface_name)
+UNMAP_AFTER_INIT VirtIONetworkAdapter::VirtIONetworkAdapter(StringView interface_name, PCI::DeviceIdentifier const& pci_device_identifier)
     : VirtIO::Device(pci_device_identifier)
-    , NetworkAdapter(move(interface_name))
+    , NetworkAdapter(interface_name)
 {
 }
 

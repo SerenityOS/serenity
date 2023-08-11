@@ -42,10 +42,10 @@ protected:
     void setup_interrupts();
     void setup_link();
 
-    E1000NetworkAdapter(PCI::DeviceIdentifier const&, u8 irq,
+    E1000NetworkAdapter(StringView, PCI::DeviceIdentifier const&, u8 irq,
         NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<Memory::Region> rx_buffer_region,
         NonnullOwnPtr<Memory::Region> tx_buffer_region, NonnullOwnPtr<Memory::Region> rx_descriptors_region,
-        NonnullOwnPtr<Memory::Region> tx_descriptors_region, NonnullOwnPtr<KString>);
+        NonnullOwnPtr<Memory::Region> tx_descriptors_region);
 
     virtual bool handle_irq(RegisterState const&) override;
     virtual StringView class_name() const override { return "E1000NetworkAdapter"sv; }

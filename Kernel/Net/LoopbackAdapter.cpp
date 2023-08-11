@@ -13,12 +13,11 @@ static bool s_loopback_initialized = false;
 
 ErrorOr<NonnullRefPtr<LoopbackAdapter>> LoopbackAdapter::try_create()
 {
-    auto interface_name = TRY(KString::try_create("loop"sv));
-    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) LoopbackAdapter(move(interface_name))));
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) LoopbackAdapter("loop"sv)));
 }
 
-LoopbackAdapter::LoopbackAdapter(NonnullOwnPtr<KString> interface_name)
-    : NetworkAdapter(move(interface_name))
+LoopbackAdapter::LoopbackAdapter(StringView interface_name)
+    : NetworkAdapter(interface_name)
 {
     VERIFY(!s_loopback_initialized);
     s_loopback_initialized = true;

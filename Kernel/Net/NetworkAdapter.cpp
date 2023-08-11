@@ -14,9 +14,9 @@
 
 namespace Kernel {
 
-NetworkAdapter::NetworkAdapter(NonnullOwnPtr<KString> interface_name)
-    : m_name(move(interface_name))
+NetworkAdapter::NetworkAdapter(StringView interface_name)
 {
+    m_name.store_characters(interface_name);
 }
 
 NetworkAdapter::~NetworkAdapter() = default;
