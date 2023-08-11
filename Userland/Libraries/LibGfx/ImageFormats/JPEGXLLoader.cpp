@@ -1681,6 +1681,37 @@ public:
         return image;
     }
 
+    void blend_into(Image& image, FrameHeader const& frame_header) const
+    {
+        // FIXME: We should use ec_blending_info when appropriate
+
+        if (frame_header.blending_info.mode != BlendingInfo::BlendMode::kReplace)
+            TODO();
+
+        for (u16 i = 0; i < m_channels.size(); ++i) {
+            auto const& input_channel = m_channels[i];
+            auto& output_channel = image.channels()[i];
+
+            for (u32 y = 0; y < input_channel.height(); ++y) {
+                auto const corrected_y = static_cast<i64>(y) + frame_header.y0;
+                if (corrected_y < 0)
+                    continue;
+                if (corrected_y >= output_channel.height())
+                    break;
+
+                for (u32 x = 0; x < input_channel.width(); ++x) {
+                    auto const corrected_x = static_cast<i64>(x) + frame_header.x0;
+                    if (corrected_x < 0)
+                        continue;
+                    if (corrected_x >= output_channel.width())
+                        break;
+
+                    output_channel.set(corrected_x, corrected_y, input_channel.get(x, y));
+                }
+            }
+        };
+    }
+
     ErrorOr<NonnullRefPtr<Bitmap>> to_bitmap(ImageMetadata& metadata) const
     {
         // FIXME: which channel size should we use?
@@ -2560,7 +2591,10 @@ public:
 
         TRY(render_extra_channels(frame.image, m_metadata));
 
-        m_bitmap = TRY(frame.image.to_bitmap(m_metadata));
+        if (!m_image.has_value())
+            m_image = TRY(Image::create({ m_header.width, m_header.height }, m_metadata));
+
+        frame.image.blend_into(*m_image, frame.frame_header);
 
         return {};
     }
@@ -2579,6 +2613,9 @@ public:
                 TODO();
 
             TRY(decode_frame());
+
+            m_bitmap = TRY(m_image->to_bitmap(m_metadata));
+            m_image.clear();
 
             return {};
         }();
@@ -2615,6 +2652,10 @@ private:
 
     LittleEndianInputBitStream m_stream;
     RefPtr<Gfx::Bitmap> m_bitmap;
+
+    // JPEG XL images can be composed of multiples sub-images, this variable is an internal
+    // representation of this blending before the final rendering (in m_bitmap)
+    Optional<Image> m_image;
 
     Optional<EntropyDecoder> m_entropy_decoder {};
 
