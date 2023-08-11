@@ -3,15 +3,17 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
     BlockContainer <body> at (8,8) content-size 784x17.46875 children: inline
       line 0 width: 10, height: 17.46875, bottom: 17.46875, baseline: 13.53125
         frag 0 from BlockContainer start: 0, length: 0, rect: [13,19 0x0]
-      BlockContainer <button> at (13,19) content-size 0x0 inline-block [BFC] children: inline
-        TextNode <#text>
-        TableWrapper <(anonymous)> (not painted) [BFC] children: not-inline
-          BlockContainer <(anonymous)> (not painted) table-box [TFC] children: not-inline
-            Box <(anonymous)> (not painted) table-row children: not-inline
-              BlockContainer <(anonymous)> (not painted) table-cell [BFC] children: not-inline
-                BlockContainer <(anonymous)> (not painted) inline-block [BFC] children: not-inline
+      BlockContainer <button> at (13,19) content-size 0x0 inline-block [BFC] children: not-inline
+        TableWrapper <(anonymous)> at (13,19) content-size 0x0 [BFC] children: not-inline
+          BlockContainer <(anonymous)> at (13,19) content-size 0x0 table-box [TFC] children: not-inline
+            Box <(anonymous)> at (13,19) content-size 0x0 table-row children: not-inline
+              BlockContainer <(anonymous)> at (13,19) content-size 0x0 table-cell [BFC] children: not-inline
 
 PaintableWithLines (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
     PaintableWithLines (BlockContainer<BODY>) [8,8 784x17.46875]
       PaintableWithLines (BlockContainer<BUTTON>) [8,17 10x4]
+        PaintableWithLines (TableWrapper(anonymous)) [13,19 0x0]
+          PaintableWithLines (BlockContainer(anonymous)) [13,19 0x0]
+            PaintableBox (Box(anonymous)) [13,19 0x0]
+              PaintableWithLines (BlockContainer(anonymous)) [13,19 0x0]
