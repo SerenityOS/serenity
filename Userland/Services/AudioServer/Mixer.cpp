@@ -73,18 +73,20 @@ void Mixer::mix()
 
         // Mix the buffers together into the output
         for (auto& queue : active_mix_queues) {
-            if (!queue->client()) {
+            if (!queue->client().has_value()) {
                 queue->clear();
                 continue;
             }
             queue->volume().advance_time();
 
+            // FIXME: Perform sample extraction and mixing in two separate loops so they can be more easily vectorized.
             for (auto& mixed_sample : mixed_buffer) {
-                Audio::Sample sample;
-                if (!queue->get_next_sample(sample, audiodevice_get_sample_rate()))
+                auto sample_or_error = queue->get_next_sample(audiodevice_get_sample_rate());
+                if (sample_or_error.is_error())
                     break;
                 if (queue->is_muted())
                     continue;
+                auto sample = sample_or_error.release_value();
                 sample.log_multiply(SAMPLE_HEADROOM);
                 sample.log_multiply(static_cast<float>(queue->volume()));
                 mixed_sample += sample;
