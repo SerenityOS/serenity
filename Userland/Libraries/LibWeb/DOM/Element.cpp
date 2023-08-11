@@ -634,6 +634,11 @@ bool Element::is_active() const
     return document().active_element() == this;
 }
 
+bool Element::is_target() const
+{
+    return document().target_element() == this;
+}
+
 JS::NonnullGCPtr<HTMLCollection> Element::get_elements_by_class_name(DeprecatedFlyString const& class_names)
 {
     Vector<FlyString> list_of_class_names;

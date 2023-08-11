@@ -295,6 +295,9 @@ public:
 
     void set_active_element(Element*);
 
+    Element const* target_element() const { return m_target_element.ptr(); }
+    void set_target_element(Element*);
+
     bool created_for_appropriate_template_contents() const { return m_created_for_appropriate_template_contents; }
 
     JS::NonnullGCPtr<Document> appropriate_template_contents_owner_document();
@@ -565,6 +568,7 @@ private:
 
     JS::GCPtr<Element> m_focused_element;
     JS::GCPtr<Element> m_active_element;
+    JS::GCPtr<Element> m_target_element;
 
     bool m_created_for_appropriate_template_contents { false };
     JS::GCPtr<Document> m_associated_inert_template_document;
