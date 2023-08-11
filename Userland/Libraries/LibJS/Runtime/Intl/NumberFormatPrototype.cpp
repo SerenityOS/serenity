@@ -180,26 +180,9 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::resolved_options)
     MUST(options->create_data_property_or_throw(vm.names.roundingMode, PrimitiveString::create(vm, number_format->rounding_mode_string())));
     MUST(options->create_data_property_or_throw(vm.names.roundingIncrement, Value(number_format->rounding_increment())));
     MUST(options->create_data_property_or_throw(vm.names.trailingZeroDisplay, PrimitiveString::create(vm, number_format->trailing_zero_display_string())));
+    MUST(options->create_data_property_or_throw(vm.names.roundingPriority, PrimitiveString::create(vm, number_format->computed_rounding_priority_string())));
 
-    switch (number_format->rounding_type()) {
-    // 6. If nf.[[RoundingType]] is morePrecision, then
-    case NumberFormatBase::RoundingType::MorePrecision:
-        // a. Perform ! CreateDataPropertyOrThrow(options, "roundingPriority", "morePrecision").
-        MUST(options->create_data_property_or_throw(vm.names.roundingPriority, PrimitiveString::create(vm, "morePrecision"_string)));
-        break;
-    // 7. Else if nf.[[RoundingType]] is lessPrecision, then
-    case NumberFormatBase::RoundingType::LessPrecision:
-        // a. Perform ! CreateDataPropertyOrThrow(options, "roundingPriority", "lessPrecision").
-        MUST(options->create_data_property_or_throw(vm.names.roundingPriority, PrimitiveString::create(vm, "lessPrecision"_string)));
-        break;
-    // 8. Else,
-    default:
-        // a. Perform ! CreateDataPropertyOrThrow(options, "roundingPriority", "auto").
-        MUST(options->create_data_property_or_throw(vm.names.roundingPriority, PrimitiveString::create(vm, "auto"_string)));
-        break;
-    }
-
-    // 9. Return options.
+    // 6. Return options.
     return options;
 }
 
