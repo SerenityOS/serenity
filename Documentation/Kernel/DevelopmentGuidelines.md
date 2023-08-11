@@ -42,7 +42,7 @@ As you might understand, we put a respectable amount of effort into making the k
 One approach to achieve this is to allow error propagation where possible.
 The other approach is to eliminate heap allocations altogether where possible.
 
-To do so, the FixedStringBuffer class was introduced into the AK library, and is used
+To do so, the `FixedStringBuffer` class was introduced into the AK library, and is used
 extensively in kernel syscall handlers' code.
 The idea is very simple - if we know the maximum length of an inspected string during
 a syscall and it's relatively short (so it doesn't exceed the stack size), something like
@@ -52,16 +52,15 @@ to create a KString. This is especially useful when inspecting a string only dur
 syscall handler scope, because doing an heap allocation is wasteful on memory resources
 and puts a strain on the kernel memory manager for no good reason.
 
-The FixedStringBuffer puts some safety guards - like zeroing the memory when storing new
+The `Process` and `Thread` classes use a `FixedStringBuffer` to store their names,
+to completely circumvent OOM conditions due to needing to allocate heap storage
+for their names in the past.
+
+The `FixedStringBuffer` puts some safety guards - like zeroing the memory when storing new
 StringView, as well as truncating it if its length exceeds the allocated stack storage size.
 
-It should be noted that there are helpers to handle a FixedStringBuffer storage:
-* `Process::get_syscall_name_string_argument_into_static_char_buffer(...)`
-* `Process::get_syscall_string_argument_into_static_char_buffer(...)`
-* `try_copy_name_from_user_into_static_char_buffer(...)`
-* `try_copy_string_from_user_into_static_char_buffer(...)`
-
-These helpers will ensure that if the given string is exceeding the allocated stack storage size, then an error will be released instead of just truncating the string and continue execution.
+There are many helpers (in the `Process` class and also in the `Kernel/Library/StdLib.h` file) that will do a check on whether the input size is exceeding the allocated `FixedStringBuffer` storage size.
+An appropriate error will be released instead of just truncating the string and continue execution in these helpers.
 
 ## We don't break userspace - the SerenityOS version
 
