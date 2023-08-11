@@ -32,3 +32,8 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # FIXME: This warning seems useful but has too many false positives with GCC 13.
     add_compile_options(-Wno-dangling-reference)
 endif()
+
+if (UNIX AND NOT APPLE AND NOT ENABLE_FUZZERS)
+    add_compile_options(-fno-semantic-interposition)
+    add_compile_options(-fvisibility-inlines-hidden)
+endif()
