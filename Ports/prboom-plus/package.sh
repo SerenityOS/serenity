@@ -14,7 +14,11 @@ configopts=(
     "-DCMAKE_PREFIX_PATH=${SERENITY_INSTALL_ROOT}/usr/local"
     "-DFORCE_CROSSCOMPILE=ON"
     "-DOPENGL_gl_LIBRARY=${SERENITY_INSTALL_ROOT}/usr/lib/libgl.so"
+    "-DWITH_ALSA=OFF"
+    "-DWITH_DUMB=OFF"
+    "-DWITH_FLUIDSYNTH=OFF"
     "-DWITH_PCRE=OFF"
+    "-DWITH_PORTMIDI=OFF"
     "-Wno-dev"
 )
 
