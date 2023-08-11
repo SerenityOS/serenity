@@ -149,6 +149,17 @@ ErrorOr<int> Shell::builtin_where(Main::Arguments arguments)
     return at_least_one_succeded ? 0 : 1;
 }
 
+ErrorOr<int> Shell::builtin_reset(Main::Arguments)
+{
+    destroy();
+    initialize(m_is_interactive);
+
+    // NOTE: As the last step before returning, clear (flush) the shell text entirely.
+    fprintf(stderr, "\033[3J\033[H\033[2J");
+    fflush(stderr);
+    return 0;
+}
+
 ErrorOr<int> Shell::builtin_alias(Main::Arguments arguments)
 {
     Vector<DeprecatedString> aliases;
