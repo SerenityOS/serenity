@@ -587,6 +587,8 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Seeking);
         if (pseudo_name.equals_ignoring_ascii_case("stalled"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Stalled);
+        if (pseudo_name.equals_ignoring_ascii_case("target"sv))
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Target);
         if (pseudo_name.equals_ignoring_ascii_case("host"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Host);
         if (pseudo_name.equals_ignoring_ascii_case("visited"sv))

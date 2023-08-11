@@ -123,6 +123,7 @@ public:
                 VolumeLocked,
                 Buffering,
                 Stalled,
+                Target,
             };
             Type type;
 
@@ -344,6 +345,8 @@ constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Ty
         return "buffering"sv;
     case Selector::SimpleSelector::PseudoClass::Type::Stalled:
         return "stalled"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Target:
+        return "target"sv;
     }
     VERIFY_NOT_REACHED();
 }
