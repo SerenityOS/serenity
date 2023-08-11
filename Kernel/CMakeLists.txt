@@ -490,10 +490,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
     )
 
     # Otherwise linker errors e.g undefined reference to `__aarch64_cas8_acq_rel'
-    add_compile_options(-mno-outline-atomics -latomic)
-
-    # FIXME: Remove this once compiling MemoryManager.cpp doesn't give the nonnull error anymore.
-    add_compile_options(-Wno-nonnull)
+    add_compile_options(-mno-outline-atomics)
 
     # NOTE: These files cannot use a stack protector and sanitizers, as these will cause accesses to global variables to be inserted
     #       by the compiler. The CPU cannot access global variables without the MMU as the kernel is linked for a virtual address in high memory.
