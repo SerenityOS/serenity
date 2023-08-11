@@ -1627,7 +1627,7 @@ void ScopeNode::block_declaration_instantiation(VM& vm, Environment* environment
         // NOTE: Due to the use of MUST with `create_immutable_binding` and `create_mutable_binding` below,
         //       an exception should not result from `for_each_bound_name`.
         MUST(declaration.for_each_bound_identifier([&](auto const& identifier) {
-            if (vm.bytecode_interpreter_if_exists() && identifier.is_local()) {
+            if (identifier.is_local()) {
                 // NOTE: No need to create bindings for local variables as their values are not stored in an environment.
                 return;
             }
@@ -1644,7 +1644,7 @@ void ScopeNode::block_declaration_instantiation(VM& vm, Environment* environment
         if (is<FunctionDeclaration>(declaration)) {
             auto& function_declaration = static_cast<FunctionDeclaration const&>(declaration);
             auto function = ECMAScriptFunctionObject::create(realm, function_declaration.name(), function_declaration.source_text(), function_declaration.body(), function_declaration.parameters(), function_declaration.function_length(), function_declaration.local_variables_names(), environment, private_environment, function_declaration.kind(), function_declaration.is_strict_mode(), function_declaration.might_need_arguments_object(), function_declaration.contains_direct_call_to_eval());
-            if (vm.bytecode_interpreter_if_exists() && function_declaration.name_identifier()->is_local()) {
+            if (function_declaration.name_identifier()->is_local()) {
                 vm.running_execution_context().local_variables[function_declaration.name_identifier()->local_variable_index()] = function;
             } else {
                 VERIFY(is<DeclarativeEnvironment>(*environment));

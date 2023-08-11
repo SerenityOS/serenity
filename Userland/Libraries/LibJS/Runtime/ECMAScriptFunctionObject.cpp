@@ -610,7 +610,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 
                     // 2. Perform ! env.CreateMutableBinding(n, false).
                     // 3. Perform ! env.InitializeBinding(n, undefined).
-                    if (vm.bytecode_interpreter_if_exists() && id.is_local()) {
+                    if (id.is_local()) {
                         callee_context.local_variables[id.local_variable_index()] = js_undefined();
                     } else {
                         MUST(environment->create_mutable_binding(vm, id.string(), false));
@@ -663,7 +663,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                     }
 
                     // 5. Perform ! varEnv.InitializeBinding(n, initialValue).
-                    if (vm.bytecode_interpreter_if_exists() && id.is_local()) {
+                    if (id.is_local()) {
                         // NOTE: Local variables are supported only in bytecode interpreter
                         callee_context.local_variables[id.local_variable_index()] = initial_value;
                     } else {
@@ -738,7 +738,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 
         // b. For each element dn of the BoundNames of d, do
         MUST(declaration.for_each_bound_identifier([&](auto const& id) {
-            if (vm.bytecode_interpreter_if_exists() && id.is_local()) {
+            if (id.is_local()) {
                 // NOTE: Local variables are supported only in bytecode interpreter
                 return;
             }
@@ -766,7 +766,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         auto function = ECMAScriptFunctionObject::create(realm, declaration.name(), declaration.source_text(), declaration.body(), declaration.parameters(), declaration.function_length(), declaration.local_variables_names(), lex_environment, private_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object(), declaration.contains_direct_call_to_eval());
 
         // c. Perform ! varEnv.SetMutableBinding(fn, fo, false).
-        if ((vm.bytecode_interpreter_if_exists() || kind() == FunctionKind::Generator || kind() == FunctionKind::AsyncGenerator) && declaration.name_identifier()->is_local()) {
+        if (declaration.name_identifier()->is_local()) {
             callee_context.local_variables[declaration.name_identifier()->local_variable_index()] = function;
         } else {
             MUST(var_environment->set_mutable_binding(vm, declaration.name(), function, false));

@@ -44,7 +44,6 @@ public:
     Heap const& heap() const { return m_heap; }
 
     Bytecode::Interpreter& bytecode_interpreter();
-    Bytecode::Interpreter* bytecode_interpreter_if_exists();
 
     void dump_backtrace() const;
 
