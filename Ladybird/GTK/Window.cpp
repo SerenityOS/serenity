@@ -160,6 +160,14 @@ static void on_url_entered(LadybirdWindow* self, GtkEntry* url_entry)
     ladybird_web_view_load_url(web_view, url);
 }
 
+static AdwTabView* on_create_window(LadybirdWindow* self)
+{
+    GtkApplication* app = gtk_window_get_application(GTK_WINDOW(self));
+    LadybirdWindow* new_window = ladybird_window_new(app, false);
+    gtk_window_present(GTK_WINDOW(new_window));
+    return new_window->tab_view;
+}
+
 static void on_page_url_changed(LadybirdWindow* self)
 {
     GtkEntryBuffer* entry_buffer = gtk_entry_get_buffer(self->url_entry);
@@ -236,6 +244,7 @@ static void ladybird_window_class_init(LadybirdWindowClass* klass)
     gtk_widget_class_bind_template_child(widget_class, LadybirdWindow, url_entry);
     gtk_widget_class_bind_template_callback(widget_class, open_new_tab);
     gtk_widget_class_bind_template_callback(widget_class, on_url_entered);
+    gtk_widget_class_bind_template_callback(widget_class, on_create_window);
     gtk_widget_class_bind_template_callback(widget_class, on_selected_page_changed);
 
     gtk_widget_class_install_action(widget_class, "win.new-tab", NULL, win_new_tab_action);

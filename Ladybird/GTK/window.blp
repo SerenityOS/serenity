@@ -139,6 +139,7 @@ template $LadybirdWindow : Adw.ApplicationWindow {
       }
 
       content: Adw.TabView tab_view {
+        create-window => $on_create_window(template) swapped;
         notify::selected-page => $on_selected_page_changed(template) swapped;
       };
     };
