@@ -49,6 +49,7 @@
 #include <LibWeb/HTML/DocumentState.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/EventNames.h>
+#include <LibWeb/HTML/Focus.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLAreaElement.h>
 #include <LibWeb/HTML/HTMLBaseElement.h>
@@ -1794,6 +1795,64 @@ Element* Document::find_a_potential_indicated_element(DeprecatedString fragment)
 
     // 3. Return null.
     return nullptr;
+}
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#scroll-to-the-fragment-identifier
+void Document::scroll_to_the_fragment()
+{
+    // To scroll to the fragment given a Document document:
+
+    // 1. If document's indicated part is null, then set document's target element to null.
+    auto indicated_part = determine_the_indicated_part();
+    if (indicated_part.has<Element*>() && indicated_part.get<Element*>() == nullptr) {
+        set_target_element(nullptr);
+    }
+
+    // 2. Otherwise, if document's indicated part is top of the document, then:
+    else if (indicated_part.has<TopOfTheDocument>()) {
+        // 1. Set document's target element to null.
+        set_target_element(nullptr);
+
+        // 2. Scroll to the beginning of the document for document. [CSSOMVIEW]
+        scroll_to_the_beginning_of_the_document();
+
+        // 3. Return.
+        return;
+    }
+
+    // 3. Otherwise:
+    else {
+        // 1. Assert: document's indicated part is an element.
+        VERIFY(indicated_part.has<Element*>());
+
+        // 2. Let target be document's indicated part.
+        auto target = indicated_part.get<Element*>();
+
+        // 3. Set document's target element to target.
+        set_target_element(target);
+
+        // FIXME: 4. Run the ancestor details revealing algorithm on target.
+
+        // FIXME: 5. Run the ancestor hidden-until-found revealing algorithm on target.
+
+        // 6. Scroll target into view, with behavior set to "auto", block set to "start", and inline set to "nearest". [CSSOMVIEW]
+        // FIXME: Do this properly!
+        (void)target->scroll_into_view();
+
+        // 7. Run the focusing steps for target, with the Document's viewport as the fallback target.
+        // FIXME: Pass the Document's viewport somehow.
+        HTML::run_focusing_steps(target);
+
+        // FIXME: 8. Move the sequential focus navigation starting point to target.
+    }
+}
+
+// https://drafts.csswg.org/cssom-view-1/#scroll-to-the-beginning-of-the-document
+void Document::scroll_to_the_beginning_of_the_document()
+{
+    // FIXME: Actually implement this algorithm
+    if (auto browsing_context = this->browsing_context())
+        browsing_context->scroll_to({ 0, 0 });
 }
 
 DeprecatedString Document::ready_state() const

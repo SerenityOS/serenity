@@ -298,6 +298,9 @@ public:
     Element const* target_element() const { return m_target_element.ptr(); }
     void set_target_element(Element*);
 
+    void scroll_to_the_fragment();
+    void scroll_to_the_beginning_of_the_document();
+
     bool created_for_appropriate_template_contents() const { return m_created_for_appropriate_template_contents; }
 
     JS::NonnullGCPtr<Document> appropriate_template_contents_owner_document();
