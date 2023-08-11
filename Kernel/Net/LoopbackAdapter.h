@@ -12,7 +12,7 @@ namespace Kernel {
 
 class LoopbackAdapter final : public NetworkAdapter {
 private:
-    LoopbackAdapter(NonnullOwnPtr<KString>);
+    LoopbackAdapter(StringView);
 
 public:
     static ErrorOr<NonnullRefPtr<LoopbackAdapter>> try_create();

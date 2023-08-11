@@ -177,13 +177,13 @@ UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> E1000NetworkAdapter::cre
     auto rx_descriptors_region = TRY(MM.allocate_contiguous_kernel_region(TRY(Memory::page_round_up(sizeof(e1000_rx_desc) * number_of_rx_descriptors)), "E1000 RX Descriptors"sv, Memory::Region::Access::ReadWrite));
     auto tx_descriptors_region = TRY(MM.allocate_contiguous_kernel_region(TRY(Memory::page_round_up(sizeof(e1000_tx_desc) * number_of_tx_descriptors)), "E1000 TX Descriptors"sv, Memory::Region::Access::ReadWrite));
 
-    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) E1000NetworkAdapter(pci_device_identifier,
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) E1000NetworkAdapter(interface_name.representable_view(),
+        pci_device_identifier,
         irq, move(registers_io_window),
         move(rx_buffer_region),
         move(tx_buffer_region),
         move(rx_descriptors_region),
-        move(tx_descriptors_region),
-        move(interface_name))));
+        move(tx_descriptors_region))));
 }
 
 UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::initialize(Badge<NetworkingManagement>)
@@ -225,11 +225,12 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::setup_interrupts()
     enable_irq();
 }
 
-UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(PCI::DeviceIdentifier const& device_identifier, u8 irq,
+UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(StringView interface_name,
+    PCI::DeviceIdentifier const& device_identifier, u8 irq,
     NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<Memory::Region> rx_buffer_region,
     NonnullOwnPtr<Memory::Region> tx_buffer_region, NonnullOwnPtr<Memory::Region> rx_descriptors_region,
-    NonnullOwnPtr<Memory::Region> tx_descriptors_region, NonnullOwnPtr<KString> interface_name)
-    : NetworkAdapter(move(interface_name))
+    NonnullOwnPtr<Memory::Region> tx_descriptors_region)
+    : NetworkAdapter(interface_name)
     , PCI::Device(device_identifier)
     , IRQHandler(irq)
     , m_registers_io_window(move(registers_io_window))

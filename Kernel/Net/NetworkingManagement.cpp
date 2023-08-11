@@ -83,12 +83,12 @@ RefPtr<NetworkAdapter> NetworkingManagement::lookup_by_name(StringView name) con
     });
 }
 
-ErrorOr<NonnullOwnPtr<KString>> NetworkingManagement::generate_interface_name_from_pci_address(PCI::DeviceIdentifier const& device_identifier)
+ErrorOr<FixedStringBuffer<IFNAMSIZ>> NetworkingManagement::generate_interface_name_from_pci_address(PCI::DeviceIdentifier const& device_identifier)
 {
     VERIFY(device_identifier.class_code().value() == 0x2);
     // Note: This stands for e - "Ethernet", p - "Port" as for PCI bus, "s" for slot as for PCI slot
-    auto name = TRY(KString::formatted("ep{}s{}", device_identifier.address().bus(), device_identifier.address().device()));
-    VERIFY(!NetworkingManagement::the().lookup_by_name(name->view()));
+    auto name = TRY(FixedStringBuffer<IFNAMSIZ>::formatted("ep{}s{}", device_identifier.address().bus(), device_identifier.address().device()));
+    VERIFY(!NetworkingManagement::the().lookup_by_name(name.representable_view()));
     return name;
 }
 

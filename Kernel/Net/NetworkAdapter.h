@@ -60,7 +60,7 @@ public:
     virtual Type adapter_type() const = 0;
     virtual ErrorOr<void> initialize(Badge<NetworkingManagement>) = 0;
 
-    StringView name() const { return m_name->view(); }
+    StringView name() const { return m_name.representable_view(); }
     MACAddress mac_address() { return m_mac_address; }
     IPv4Address ipv4_address() const { return m_ipv4_address; }
     IPv4Address ipv4_netmask() const { return m_ipv4_netmask; }
@@ -102,7 +102,7 @@ public:
     void send_packet(ReadonlyBytes);
 
 protected:
-    NetworkAdapter(NonnullOwnPtr<KString>);
+    NetworkAdapter(StringView);
     void set_mac_address(MACAddress const& mac_address) { m_mac_address = mac_address; }
     void did_receive(ReadonlyBytes);
     virtual void send_raw(ReadonlyBytes) = 0;
@@ -120,7 +120,7 @@ private:
     PacketList m_packet_queue;
     size_t m_packet_queue_size { 0 };
     SpinlockProtected<PacketList, LockRank::None> m_unused_packets {};
-    NonnullOwnPtr<KString> m_name;
+    FixedStringBuffer<IFNAMSIZ> m_name;
     u32 m_packets_in { 0 };
     u32 m_bytes_in { 0 };
     u32 m_packets_out { 0 };

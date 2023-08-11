@@ -35,7 +35,7 @@ public:
     virtual i32 link_speed() override { return m_link_speed; }
 
 private:
-    explicit VirtIONetworkAdapter(PCI::DeviceIdentifier const&, NonnullOwnPtr<KString> interface_name);
+    explicit VirtIONetworkAdapter(StringView interface_name, PCI::DeviceIdentifier const&);
 
     // VirtIO::Device
     virtual bool handle_device_config_change() override;
