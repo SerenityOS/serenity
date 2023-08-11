@@ -6,7 +6,7 @@
 static void open_new_window([[maybe_unused]] GSimpleAction* action, [[maybe_unused]] GVariant* state, void* user_data)
 {
     GtkApplication* app = GTK_APPLICATION(user_data);
-    LadybirdWindow* window = ladybird_window_new(app);
+    LadybirdWindow* window = ladybird_window_new(app, true);
     gtk_window_present(GTK_WINDOW(window));
 }
 
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
     AdwApplication* app = adw_application_new("org.serenityos.ladybird-gtk4", G_APPLICATION_HANDLES_OPEN);
 
     g_signal_connect(app, "activate", G_CALLBACK(+[](GtkApplication* app) {
-        LadybirdWindow* window = ladybird_window_new(app);
+        LadybirdWindow* window = ladybird_window_new(app, true);
         gtk_window_present(GTK_WINDOW(window));
     }),
         nullptr);

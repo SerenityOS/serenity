@@ -12,6 +12,14 @@ struct _LadybirdWindow {
     gulong page_url_changed_id;
 };
 
+enum {
+    PROP_0,
+    PROP_ADD_INITIAL_TAB,
+    NUM_PROPS,
+};
+
+static GParamSpec* props[NUM_PROPS];
+
 G_BEGIN_DECLS
 
 G_DEFINE_FINAL_TYPE(LadybirdWindow, ladybird_window, ADW_TYPE_APPLICATION_WINDOW)
@@ -41,6 +49,28 @@ static AdwTabPage* open_new_tab(LadybirdWindow* self)
     // g_object_unref(web_view);
     // g_object_unref(scrolled_window);
     return tab_page;
+}
+
+static void ladybird_window_get_property(GObject* object, guint prop_id, [[maybe_unused]] GValue* value, GParamSpec* pspec)
+{
+    // We have no readable properties.
+    G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+}
+
+static void ladybird_window_set_property(GObject* object, guint prop_id, GValue const* value, GParamSpec* pspec)
+{
+    LadybirdWindow* self = LADYBIRD_WINDOW(object);
+
+    switch (prop_id) {
+    case PROP_ADD_INITIAL_TAB:
+        if (g_value_get_boolean(value))
+            open_new_tab(self);
+        break;
+
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
 }
 
 static void win_new_tab_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
@@ -185,9 +215,6 @@ static void ladybird_window_init(LadybirdWindow* self)
     GtkWidget* widget = GTK_WIDGET(self);
     g_type_ensure(LADYBIRD_TYPE_WEB_VIEW);
     gtk_widget_init_template(widget);
-
-    // Let's try adding a tab -- what could possibly go wrong?
-    gtk_widget_activate_action(widget, "win.new-tab", NULL);
 }
 
 static void ladybird_window_class_init(LadybirdWindowClass* klass)
@@ -195,7 +222,13 @@ static void ladybird_window_class_init(LadybirdWindowClass* klass)
     GtkWidgetClass* widget_class = GTK_WIDGET_CLASS(klass);
     GObjectClass* object_class = G_OBJECT_CLASS(klass);
 
+    object_class->get_property = ladybird_window_get_property;
+    object_class->set_property = ladybird_window_set_property;
     object_class->dispose = ladybird_window_dispose;
+
+    props[PROP_ADD_INITIAL_TAB] = g_param_spec_boolean("add-initial-tab", nullptr, nullptr, true,
+        GParamFlags(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT_ONLY));
+    g_object_class_install_properties(object_class, NUM_PROPS, props);
 
     gtk_widget_class_set_template_from_resource(widget_class, "/org/serenityos/ladybird-gtk4/window.ui");
     gtk_widget_class_bind_template_child(widget_class, LadybirdWindow, tab_overview);
@@ -220,9 +253,12 @@ static void ladybird_window_class_init(LadybirdWindowClass* klass)
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_0, GDK_CONTROL_MASK, "page.zoom-reset", NULL);
 }
 
-LadybirdWindow* ladybird_window_new(GtkApplication* app)
+LadybirdWindow* ladybird_window_new(GtkApplication* app, bool add_initial_tab)
 {
-    return LADYBIRD_WINDOW(g_object_new(LADYBIRD_TYPE_WINDOW, "application", app, nullptr));
+    return LADYBIRD_WINDOW(g_object_new(LADYBIRD_TYPE_WINDOW,
+        "application", app,
+        "add-initial-tab", (gboolean)add_initial_tab,
+        nullptr));
 }
 
 G_END_DECLS
