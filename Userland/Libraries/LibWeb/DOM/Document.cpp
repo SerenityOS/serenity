@@ -2,7 +2,7 @@
  * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021-2023, Luke Wilde <lukew@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -1708,6 +1708,23 @@ void Document::set_active_element(Element* element)
         return;
 
     m_active_element = element;
+
+    if (m_layout_root)
+        m_layout_root->set_needs_display();
+}
+
+void Document::set_target_element(Element* element)
+{
+    if (m_target_element.ptr() == element)
+        return;
+
+    if (m_target_element)
+        m_target_element->set_needs_style_update(true);
+
+    m_target_element = element;
+
+    if (m_target_element)
+        m_target_element->set_needs_style_update(true);
 
     if (m_layout_root)
         m_layout_root->set_needs_display();
