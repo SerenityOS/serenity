@@ -370,6 +370,17 @@ install(TARGETS LibTimeZone EXPORT LagomTargets)
 # This is used by the BindingsGenerator so needs to always be built.
 add_serenity_subdirectory(Userland/Libraries/LibIDL)
 
+# LibGUI - only GML
+# This is used by the GML compiler and therefore always needed.
+set(LIBGUI_GML_SOURCES
+    GML/Lexer.cpp
+    GML/Parser.cpp
+)
+list(TRANSFORM LIBGUI_GML_SOURCES PREPEND "${SERENITY_PROJECT_ROOT}/Userland/Libraries/LibGUI/")
+lagom_lib(LibGUI_GML gui_gml
+    SOURCES ${LIBGUI_GML_SOURCES}
+)
+
 # Manually install AK headers
 install(
     DIRECTORY "${SERENITY_PROJECT_ROOT}/AK"
