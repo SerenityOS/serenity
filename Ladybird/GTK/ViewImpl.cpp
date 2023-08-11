@@ -290,9 +290,13 @@ void LadybirdViewImpl::notify_server_did_request_dismiss_dialog(Badge<WebView::W
     dbgln("LadybirdViewImpl::notify_server_did_request_dismiss_dialog");
 }
 
-void LadybirdViewImpl::notify_server_did_request_file(Badge<WebView::WebContentClient>, DeprecatedString const& path, i32)
+void LadybirdViewImpl::notify_server_did_request_file(Badge<WebView::WebContentClient>, DeprecatedString const& path, i32 request_id)
 {
-    dbgln("LadybirdViewImpl::notify_server_did_request_file {}", path);
+    auto file = Core::File::open(path, Core::File::OpenMode::Read);
+    if (file.is_error())
+        client().async_handle_file_return(file.error().code(), {}, request_id);
+    else
+        client().async_handle_file_return(0, IPC::File(*file.value()), request_id);
 }
 
 void LadybirdViewImpl::notify_server_did_finish_handling_input_event([[maybe_unused]] bool event_was_accepted)

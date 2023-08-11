@@ -44,6 +44,44 @@ static void win_new_tab_action(GtkWidget* widget, [[maybe_unused]] char const* a
     open_new_tab(self);
 }
 
+static void win_open_file_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
+{
+    LadybirdWindow* self = LADYBIRD_WINDOW(widget);
+
+    GtkFileDialog* dialog = gtk_file_dialog_new();
+    gtk_file_dialog_open_multiple(
+        dialog, GTK_WINDOW(self), nullptr, +[](GObject* object, GAsyncResult* res, void* user_data) {
+            LadybirdWindow* self = LADYBIRD_WINDOW(user_data);
+            GtkFileDialog* dialog = GTK_FILE_DIALOG(object);
+            GError* error = nullptr;
+            GListModel* selected_files = gtk_file_dialog_open_multiple_finish(dialog, res, &error);
+
+            if (g_error_matches(error, GTK_DIALOG_ERROR, GTK_DIALOG_ERROR_DISMISSED)) {
+                g_error_free(error);
+                return;
+            } else if (error) {
+                GtkWidget* message_dialog = adw_message_dialog_new(GTK_WINDOW(self), "Failed to pick file", error->message);
+                g_error_free(error);
+                adw_message_dialog_add_response(ADW_MESSAGE_DIALOG(message_dialog), "ok", "OK");
+                gtk_window_present(GTK_WINDOW(message_dialog));
+                return;
+            }
+
+            for (size_t i = 0; i < g_list_model_get_n_items(selected_files); i++) {
+                GFile* file = G_FILE(g_list_model_get_item(selected_files, i));
+                char* uri = g_file_get_uri(file);
+                AdwTabPage* tab_page = open_new_tab(self);
+                GtkScrolledWindow* scrolled_window = GTK_SCROLLED_WINDOW(adw_tab_page_get_child(tab_page));
+                LadybirdWebView* web_view = LADYBIRD_WEB_VIEW(gtk_scrolled_window_get_child(scrolled_window));
+                ladybird_web_view_load_url(web_view, uri);
+                g_free(uri);
+            }
+            g_object_unref(selected_files);
+        },
+        self);
+    g_object_unref(dialog);
+}
+
 static void tab_close_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
 {
     LadybirdWindow* self = LADYBIRD_WINDOW(widget);
@@ -122,8 +160,10 @@ static void ladybird_window_class_init(LadybirdWindowClass* klass)
     gtk_widget_class_bind_template_callback(widget_class, open_new_tab);
 
     gtk_widget_class_install_action(widget_class, "win.new-tab", NULL, win_new_tab_action);
+    gtk_widget_class_install_action(widget_class, "win.open-file", nullptr, win_open_file_action);
     gtk_widget_class_install_action(widget_class, "tab.close", NULL, tab_close_action);
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_t, GDK_CONTROL_MASK, "win.new-tab", NULL);
+    gtk_widget_class_add_binding_action(widget_class, GDK_KEY_o, GDK_CONTROL_MASK, "win.open-file", nullptr);
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_w, GDK_CONTROL_MASK, "tab.close", NULL);
 
     gtk_widget_class_install_action(widget_class, "page.zoom-in", NULL, page_zoom_in_action);
