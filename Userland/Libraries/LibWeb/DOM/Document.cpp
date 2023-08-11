@@ -1730,6 +1730,72 @@ void Document::set_target_element(Element* element)
         m_layout_root->set_needs_display();
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#the-indicated-part-of-the-document
+Document::IndicatedPart Document::determine_the_indicated_part() const
+{
+    // For an HTML document document, the following processing model must be followed to determine its indicated part:
+
+    // 1. Let fragment be document's URL's fragment.
+    auto fragment = url().raw_fragment();
+
+    // 2. If fragment is the empty string, then return the special value top of the document.
+    if (fragment.is_empty())
+        return Document::TopOfTheDocument {};
+
+    // 3. Let potentialIndicatedElement be the result of finding a potential indicated element given document and fragment.
+    auto potential_indicated_element = find_a_potential_indicated_element(fragment);
+
+    // 4. If potentialIndicatedElement is not null, then return potentialIndicatedElement.
+    if (potential_indicated_element)
+        return potential_indicated_element;
+
+    // 5. Let fragmentBytes be the result of percent-decoding fragment.
+    // 6. Let decodedFragment be the result of running UTF-8 decode without BOM on fragmentBytes.
+    // NOTE: 5 and 6 are done as a single step in `AK::URL::fragment()`.
+    auto decoded_fragment = url().fragment();
+
+    // 7. Set potentialIndicatedElement to the result of finding a potential indicated element given document and decodedFragment.
+    potential_indicated_element = find_a_potential_indicated_element(decoded_fragment);
+
+    // 8. If potentialIndicatedElement is not null, then return potentialIndicatedElement.
+    if (potential_indicated_element)
+        return potential_indicated_element;
+
+    // 9. If decodedFragment is an ASCII case-insensitive match for the string top, then return the top of the document.
+    if (Infra::is_ascii_case_insensitive_match(decoded_fragment, "top"sv))
+        return Document::TopOfTheDocument {};
+
+    // 10. Return null.
+    return nullptr;
+}
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#find-a-potential-indicated-element
+Element* Document::find_a_potential_indicated_element(DeprecatedString fragment) const
+{
+    // To find a potential indicated element given a Document document and a string fragment, run these steps:
+
+    // 1. If there is an element in the document tree whose root is document and that has an ID equal to
+    //    fragment, then return the first such element in tree order.
+    if (auto element = get_element_by_id(fragment))
+        return const_cast<Element*>(element.ptr());
+
+    // 2. If there is an a element in the document tree whose root is document that has a name attribute
+    //    whose value is equal to fragment, then return the first such element in tree order.
+    Element* element_with_name;
+    root().for_each_in_subtree_of_type<Element>([&](Element const& element) {
+        if (element.name() == fragment) {
+            element_with_name = const_cast<Element*>(&element);
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    if (element_with_name)
+        return element_with_name;
+
+    // 3. Return null.
+    return nullptr;
+}
+
 DeprecatedString Document::ready_state() const
 {
     switch (m_readiness) {
