@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='tree'
-version='2.0.4'
+version='2.1.1'
 files=(
-    "https://github.com/Old-Man-Programmer/tree/archive/refs/tags/${version}.tar.gz 3ebeaf77a3b3829bcf665329e9d0f3624079c2c4cb4ef14cf6d7129a1a208b59"
+    "https://github.com/Old-Man-Programmer/tree/archive/refs/tags/${version}.tar.gz 1b70253994dca48a59d6ed99390132f4d55c486bf0658468f8520e7e63666a06"
 )
 
 build() {
