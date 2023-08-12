@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2022, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2022-2023, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <Kernel/Devices/HID/Management.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/CapsLockRemap.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Configuration/CapsLockRemap.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {

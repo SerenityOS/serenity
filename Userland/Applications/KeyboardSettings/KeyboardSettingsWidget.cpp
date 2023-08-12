@@ -322,7 +322,7 @@ void KeyboardSettingsWidget::write_caps_lock_to_ctrl_sys_variable(bool caps_lock
 
 ErrorOr<bool> KeyboardSettingsWidget::read_caps_lock_to_ctrl_sys_variable()
 {
-    auto file = TRY(Core::File::open("/sys/kernel/variables/caps_lock_to_ctrl"sv, Core::File::OpenMode::Read));
+    auto file = TRY(Core::File::open("/sys/kernel/conf/caps_lock_to_ctrl"sv, Core::File::OpenMode::Read));
     auto buffer = TRY(file->read_until_eof());
     StringView contents_string((char const*)buffer.data(), min(1, buffer.size()));
     return contents_string == "1";

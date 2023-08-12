@@ -29,7 +29,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/bin/keymap", "x"));
     TRY(Core::System::unveil("/bin/sysctl", "x"));
     TRY(Core::System::unveil("/sys/kernel/keymap", "r"));
-    TRY(Core::System::unveil("/sys/kernel/variables/caps_lock_to_ctrl", "r"));
+    TRY(Core::System::unveil("/sys/kernel/conf/caps_lock_to_ctrl", "r"));
     TRY(Core::System::unveil("/etc/Keyboard.ini", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

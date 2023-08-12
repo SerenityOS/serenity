@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2022-2023, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,7 +8,7 @@
 
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/StringVariable.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Configuration/StringVariable.h>
 #include <Kernel/Library/UserOrKernelBuffer.h>
 
 namespace Kernel {

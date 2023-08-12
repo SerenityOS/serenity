@@ -14,7 +14,7 @@ static bool s_set_variable = false;
 
 static DeprecatedString get_variable(StringView name)
 {
-    auto path = DeprecatedString::formatted("/sys/kernel/variables/{}", name);
+    auto path = DeprecatedString::formatted("/sys/kernel/conf/{}", name);
     auto file = Core::File::open(path, Core::File::OpenMode::Read);
     if (file.is_error()) {
         warnln("Failed to open {}: {}", path, file.error());
@@ -42,7 +42,7 @@ static bool write_variable(StringView name, StringView value)
     auto old_value = get_variable(name);
     if (old_value.is_null())
         return false;
-    auto path = DeprecatedString::formatted("/sys/kernel/variables/{}", name);
+    auto path = DeprecatedString::formatted("/sys/kernel/conf/{}", name);
     auto file = Core::File::open(path, Core::File::OpenMode::Write);
     if (file.is_error()) {
         warnln("Failed to open {}: {}", path, file.error());
@@ -80,7 +80,7 @@ static int handle_variables(Vector<StringView> const& variables)
 
 static int handle_show_all()
 {
-    Core::DirIterator di("/sys/kernel/variables", Core::DirIterator::SkipDots);
+    Core::DirIterator di("/sys/kernel/conf", Core::DirIterator::SkipDots);
     if (di.has_error()) {
         outln("DirIterator: {}", di.error());
         return 1;

@@ -102,7 +102,7 @@ Special restrictions on filesystem also apply:
 - Write access is forbidden to the `/sys/kernel/power_state` node.
 - Read accesses is forbidden by default to all nodes in `/sys/kernel` directory, except for:
     `df`, `interrupts`, `keymap`, `memstat`, `processes`, `stats` and `uptime`.
-- Write access is forbidden to kernel variables (which are located in `/sys/kernel/variables`).
+- Write access is forbidden to kernel configuration variables (which are located in `/sys/kernel/conf`).
 - Open access is forbidden to all device nodes except for `/dev/full`, `/dev/null`, `/dev/zero`, `/dev/random` and various
     other TTY/PTY devices (not including Kernel virtual consoles).
 - Executing SUID binaries is forbidden.
