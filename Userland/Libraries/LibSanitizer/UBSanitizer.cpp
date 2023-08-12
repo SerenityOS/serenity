@@ -15,6 +15,12 @@ Atomic<bool> AK::UBSanitizer::g_ubsan_is_deadly;
     warnln(fmt, ##__VA_ARGS__);    \
     dbgln("\x1B[31m" fmt "\x1B[0m", ##__VA_ARGS__);
 
+#define ABORT_ALWAYS()                                            \
+    do {                                                          \
+        WARNLN_AND_DBGLN("UBSAN: This error is not recoverable"); \
+        abort();                                                  \
+    } while (0)
+
 extern "C" {
 
 static void print_location(SourceLocation const& location)
@@ -46,6 +52,10 @@ static void print_location(SourceLocation const& location)
         VERIFY_NOT_REACHED();
     }
 }
+
+// Calls to these functions are automatically inserted by the compiler,
+// so there is no point in declaring them in a header.
+#pragma GCC diagnostic ignored "-Wmissing-declarations"
 
 void __ubsan_handle_load_invalid_value(InvalidValueData&, ValueHandle) __attribute__((used));
 void __ubsan_handle_load_invalid_value(InvalidValueData& data, ValueHandle)
@@ -233,24 +243,18 @@ void __ubsan_handle_alignment_assumption(AlignmentAssumptionData& data, ValueHan
     print_location(location);
 }
 
-void __ubsan_handle_builtin_unreachable(UnreachableData&) __attribute__((used));
-void __ubsan_handle_builtin_unreachable(UnreachableData& data)
+[[gnu::used, noreturn]] void __ubsan_handle_builtin_unreachable(UnreachableData& data)
 {
-    auto location = data.location.permanently_clear();
-    if (!location.needs_logging())
-        return;
     WARNLN_AND_DBGLN("UBSAN: execution reached an unreachable program point");
-    print_location(location);
+    print_location(data.location);
+    ABORT_ALWAYS();
 }
 
-void __ubsan_handle_missing_return(UnreachableData&) __attribute__((used));
-void __ubsan_handle_missing_return(UnreachableData& data)
+[[gnu::used, noreturn]] void __ubsan_handle_missing_return(UnreachableData& data)
 {
-    auto location = data.location.permanently_clear();
-    if (!location.needs_logging())
-        return;
     WARNLN_AND_DBGLN("UBSAN: execution reached the end of a value-returning function without returning a value");
-    print_location(location);
+    print_location(data.location);
+    ABORT_ALWAYS();
 }
 
 void __ubsan_handle_implicit_conversion(ImplicitConversionData&, ValueHandle, ValueHandle) __attribute__((used));
