@@ -24,7 +24,14 @@ config("compiler_defaults") {
   ldflags = []
 
   if (symbol_level == 2) {
-    cflags += [ "-g" ]
+    if (is_debug_gdb) {
+      cflags += [ "-ggdb" ]
+    } else if (is_clang && is_debug_lldb) {
+      # GCC (as of version 13) does not support lldb-specific debug information
+      cflags += [ "-glldb" ]
+    } else {
+      cflags += [ "-g" ]
+    }
 
     # For full debug-info -g builds, --gdb-index makes links ~15% slower, and
     # gdb symbol reading time 1500% faster (lld links in 4.4 instead of 3.9s,
