@@ -875,18 +875,17 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                     state = State::File;
                 }
                 // 6. Otherwise, if url is special, base is non-null, and base’s scheme is url’s scheme:
-                // 7. Otherwise, if url is special, set state to special authority slashes state.
-                // FIXME: Write this block closer to spec text.
-                else if (url->is_special()) {
-                    // FIXME: 1. Assert: base is is special (and therefore does not have an opaque path).
+                else if (url->is_special() && base_url.has_value() && base_url->scheme() == url->m_scheme) {
+                    // 1. Assert: base is is special (and therefore does not have an opaque path).
+                    VERIFY(base_url->is_special());
 
                     // 2. Set state to special relative or authority state.
-                    if (base_url.has_value() && base_url->m_scheme == url->m_scheme)
-                        state = State::SpecialRelativeOrAuthority;
-                    else
-                        state = State::SpecialAuthoritySlashes;
+                    state = State::SpecialRelativeOrAuthority;
                 }
-
+                // 7. Otherwise, if url is special, set state to special authority slashes state.
+                else if (url->is_special()) {
+                    state = State::SpecialAuthoritySlashes;
+                }
                 // 8. Otherwise, if remaining starts with an U+002F (/), set state to path or authority state and increase pointer by 1.
                 else if (get_remaining().starts_with("/"sv)) {
                     state = State::PathOrAuthority;
