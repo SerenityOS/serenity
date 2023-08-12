@@ -10,6 +10,7 @@ configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
 launcher_name=OpenTTD
 launcher_category=Games
 launcher_command=/usr/local/games/openttd
+icon_file='media/openttd.32.png'
 
 configure() {
     host_env
