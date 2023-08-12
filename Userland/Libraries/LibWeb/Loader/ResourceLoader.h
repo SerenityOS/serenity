@@ -50,6 +50,7 @@ namespace Web {
 #define BROWSER_VERSION "1.0"
 
 constexpr auto default_user_agent = "Mozilla/5.0 (" OS_STRING "; " CPU_STRING ") LibWeb+LibJS/1.0 " BROWSER_NAME "/" BROWSER_VERSION ""sv;
+constexpr auto default_platform = OS_STRING " " CPU_STRING ""sv;
 
 class ResourceLoaderConnectorRequest : public RefCounted<ResourceLoaderConnectorRequest> {
 public:
@@ -110,6 +111,9 @@ public:
     DeprecatedString const& user_agent() const { return m_user_agent; }
     void set_user_agent(DeprecatedString const& user_agent) { m_user_agent = user_agent; }
 
+    DeprecatedString const& platform() const { return m_platform; }
+    void set_platform(DeprecatedString const& platform) { m_platform = platform; }
+
     void clear_cache();
     void evict_from_cache(LoadRequest const&);
 
@@ -124,6 +128,7 @@ private:
     HashTable<NonnullRefPtr<ResourceLoaderConnectorRequest>> m_active_requests;
     NonnullRefPtr<ResourceLoaderConnector> m_connector;
     DeprecatedString m_user_agent;
+    DeprecatedString m_platform;
     Optional<Page&> m_page {};
 };
 

@@ -58,6 +58,7 @@ ErrorOr<NonnullRefPtr<ResourceLoader>> ResourceLoader::try_create(NonnullRefPtr<
 ResourceLoader::ResourceLoader(NonnullRefPtr<ResourceLoaderConnector> connector)
     : m_connector(move(connector))
     , m_user_agent(default_user_agent)
+    , m_platform(default_platform)
 {
 }
 
