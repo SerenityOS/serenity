@@ -36,21 +36,6 @@ enum class SimpleGlyfFlags {
     YPositiveShortVector = 0x24,
 };
 
-enum class CompositeGlyfFlags {
-    Arg1AndArg2AreWords = 0x0001,
-    ArgsAreXYValues = 0x0002,
-    RoundXYToGrid = 0x0004,
-    WeHaveAScale = 0x0008,
-    MoreComponents = 0x0020,
-    WeHaveAnXAndYScale = 0x0040,
-    WeHaveATwoByTwo = 0x0080,
-    WeHaveInstructions = 0x0100,
-    UseMyMetrics = 0x0200,
-    OverlapCompound = 0x0400, // Not relevant - can overlap without this set
-    ScaledComponentOffset = 0x0800,
-    UnscaledComponentOffset = 0x1000,
-};
-
 class PointIterator {
 public:
     struct Item {
@@ -139,7 +124,7 @@ Optional<Glyf::Glyph::ComponentIterator::Item> Glyf::Glyph::ComponentIterator::n
     u16 glyph_id = be_u16(m_slice.offset_pointer(m_offset));
     m_offset += 2;
     i16 arg1 = 0, arg2 = 0;
-    if (flags & (u16)CompositeGlyfFlags::Arg1AndArg2AreWords) {
+    if (flags & (u16)CompositeFlags::Arg1AndArg2AreWords) {
         arg1 = be_i16(m_slice.offset_pointer(m_offset));
         m_offset += 2;
         arg2 = be_i16(m_slice.offset_pointer(m_offset));
@@ -149,7 +134,7 @@ Optional<Glyf::Glyph::ComponentIterator::Item> Glyf::Glyph::ComponentIterator::n
         arg2 = (i8)m_slice[m_offset++];
     }
     float a = 1.0, b = 0.0, c = 0.0, d = 1.0, e = 0.0, f = 0.0;
-    if (flags & (u16)CompositeGlyfFlags::WeHaveATwoByTwo) {
+    if (flags & (u16)CompositeFlags::WeHaveATwoByTwo) {
         a = be_fword(m_slice.offset_pointer(m_offset));
         m_offset += 2;
         b = be_fword(m_slice.offset_pointer(m_offset));
@@ -158,33 +143,33 @@ Optional<Glyf::Glyph::ComponentIterator::Item> Glyf::Glyph::ComponentIterator::n
         m_offset += 2;
         d = be_fword(m_slice.offset_pointer(m_offset));
         m_offset += 2;
-    } else if (flags & (u16)CompositeGlyfFlags::WeHaveAnXAndYScale) {
+    } else if (flags & (u16)CompositeFlags::WeHaveAnXAndYScale) {
         a = be_fword(m_slice.offset_pointer(m_offset));
         m_offset += 2;
         d = be_fword(m_slice.offset_pointer(m_offset));
         m_offset += 2;
-    } else if (flags & (u16)CompositeGlyfFlags::WeHaveAScale) {
+    } else if (flags & (u16)CompositeFlags::WeHaveAScale) {
         a = be_fword(m_slice.offset_pointer(m_offset));
         m_offset += 2;
         d = a;
     }
     // FIXME: Handle UseMyMetrics, ScaledComponentOffset, UnscaledComponentOffset, non-ArgsAreXYValues
-    if (flags & (u16)CompositeGlyfFlags::ArgsAreXYValues) {
+    if (flags & (u16)CompositeFlags::ArgsAreXYValues) {
         e = arg1;
         f = arg2;
     } else {
         // FIXME: Implement this. There's no TODO() here since many fonts work just fine without this.
     }
-    if (flags & (u16)CompositeGlyfFlags::UseMyMetrics) {
+    if (flags & (u16)CompositeFlags::UseMyMetrics) {
         // FIXME: Implement this. There's no TODO() here since many fonts work just fine without this.
     }
-    if (flags & (u16)CompositeGlyfFlags::ScaledComponentOffset) {
+    if (flags & (u16)CompositeFlags::ScaledComponentOffset) {
         // FIXME: Implement this. There's no TODO() here since many fonts work just fine without this.
     }
-    if (flags & (u16)CompositeGlyfFlags::UnscaledComponentOffset) {
+    if (flags & (u16)CompositeFlags::UnscaledComponentOffset) {
         // FIXME: Implement this. There's no TODO() here since many fonts work just fine without this.
     }
-    m_has_more = (flags & (u16)CompositeGlyfFlags::MoreComponents);
+    m_has_more = (flags & (u16)CompositeFlags::MoreComponents);
     return Item {
         .glyph_id = glyph_id,
         .affine = Gfx::AffineTransform(a, b, c, d, e, f),
