@@ -6,6 +6,7 @@
 
 #include <AK/Forward.h>
 #include <AK/HashTable.h>
+#include <AK/LexicalPath.h>
 #include <AK/SourceGenerator.h>
 #include <AK/String.h>
 #include <AK/Try.h>
@@ -78,7 +79,7 @@ static bool takes_deprecated_string(StringView property)
     return deprecated_string_properties.contains(property);
 }
 
-static ErrorOr<String> include_path_for(StringView class_name)
+static ErrorOr<String> include_path_for(StringView class_name, LexicalPath const& gml_file_name)
 {
     String pathed_name;
     if (auto mapping = map_class_to_file(class_name); mapping.has_value())
@@ -90,19 +91,24 @@ static ErrorOr<String> include_path_for(StringView class_name)
         return String::formatted("<Lib{}.h>", pathed_name);
 
     // We assume that all other paths are within the current application, for now.
-    return String::formatted("<Applications/{}.h>", pathed_name);
+    // To figure out what kind of userland program this is (application, service, ...) we consider the path to the original GML file.
+    auto const& paths = gml_file_name.parts_view();
+    auto path_iter = paths.find("Userland"sv);
+    path_iter++;
+    auto const userland_subdirectory = (path_iter == paths.end()) ? "Applications"_string : TRY(String::from_utf8(*path_iter));
+    return String::formatted("<{}/{}.h>", userland_subdirectory, pathed_name);
 }
 
 // Each entry is an include path, without the "#include" itself.
-static ErrorOr<HashTable<String>> extract_necessary_includes(GUI::GML::Object const& gml_hierarchy)
+static ErrorOr<HashTable<String>> extract_necessary_includes(GUI::GML::Object const& gml_hierarchy, LexicalPath const& gml_file_name)
 {
     HashTable<String> necessary_includes;
-    TRY(necessary_includes.try_set(TRY(include_path_for(gml_hierarchy.name()))));
+    TRY(necessary_includes.try_set(TRY(include_path_for(gml_hierarchy.name(), gml_file_name))));
     if (gml_hierarchy.layout_object() != nullptr)
-        TRY(necessary_includes.try_set(TRY(include_path_for(gml_hierarchy.layout_object()->name()))));
+        TRY(necessary_includes.try_set(TRY(include_path_for(gml_hierarchy.layout_object()->name(), gml_file_name))));
 
     TRY(gml_hierarchy.try_for_each_child_object([&](auto const& object) -> ErrorOr<void> {
-        auto necessary_child_includes = TRY(extract_necessary_includes(object));
+        auto necessary_child_includes = TRY(extract_necessary_includes(object, gml_file_name));
         for (auto const& include : necessary_child_includes)
             TRY(necessary_includes.try_set(include));
         return {};
@@ -323,7 +329,7 @@ static ErrorOr<void> generate_loader_for_object(GUI::GML::Object const& gml_obje
     return {};
 }
 
-static ErrorOr<String> generate_cpp(NonnullRefPtr<GUI::GML::GMLFile> gml)
+static ErrorOr<String> generate_cpp(NonnullRefPtr<GUI::GML::GMLFile> gml, LexicalPath const& gml_file_name)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -331,7 +337,7 @@ static ErrorOr<String> generate_cpp(NonnullRefPtr<GUI::GML::GMLFile> gml)
     generator.append(header);
 
     auto& main_class = gml->main_class();
-    auto necessary_includes = TRY(extract_necessary_includes(main_class));
+    auto necessary_includes = TRY(extract_necessary_includes(main_class, gml_file_name));
     static String const always_necessary_includes[] = {
         TRY(String::from_utf8("<AK/Error.h>"sv)),
         TRY(String::from_utf8("<AK/JsonValue.h>"sv)),
@@ -363,7 +369,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto gml_text = TRY(TRY(Core::File::open(gml_file_name, Core::File::OpenMode::Read))->read_until_eof());
     auto parsed_gml = TRY(GUI::GML::parse_gml(gml_text));
-    auto generated_cpp = TRY(generate_cpp(parsed_gml));
+    auto generated_cpp = TRY(generate_cpp(parsed_gml, LexicalPath { gml_file_name }));
     outln("{}", generated_cpp);
     return 0;
 }
