@@ -100,7 +100,7 @@ JS::NonnullGCPtr<Document> DOMImplementation::create_html_document(Optional<Stri
 
     // 3. Append a new doctype, with "html" as its name and with its node document set to doc, to doc.
     auto doctype = heap().allocate<DocumentType>(realm(), html_document);
-    doctype->set_name("html");
+    doctype->set_name("html"_string);
     MUST(html_document->append_child(*doctype));
 
     // 4. Append the result of creating an element given doc, html, and the HTML namespace, to doc.
@@ -141,9 +141,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentType>> DOMImplementation::create_do
 
     // 2. Return a new doctype, with qualifiedName as its name, publicId as its public ID, and systemId as its system ID, and with its node document set to the associated document of this.
     auto document_type = DocumentType::create(document());
-    document_type->set_name(qualified_name.to_deprecated_string());
-    document_type->set_public_id(public_id.to_deprecated_string());
-    document_type->set_system_id(system_id.to_deprecated_string());
+    document_type->set_name(qualified_name);
+    document_type->set_public_id(public_id);
+    document_type->set_system_id(system_id);
     return document_type;
 }
 
