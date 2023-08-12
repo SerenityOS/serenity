@@ -57,6 +57,33 @@ private:
     CSSPixels m_value {};
 };
 
+inline bool operator>(CSSPixels left, AvailableSize const& right)
+{
+    if (right.is_max_content() || right.is_indefinite())
+        return false;
+    if (right.is_min_content())
+        return true;
+    return left > right.to_px_or_zero();
+}
+
+inline bool operator<(CSSPixels left, AvailableSize const& right)
+{
+    if (right.is_max_content() || right.is_indefinite())
+        return true;
+    if (right.is_min_content())
+        return false;
+    return left < right.to_px_or_zero();
+}
+
+inline bool operator<(AvailableSize const& left, CSSPixels right)
+{
+    if (left.is_min_content())
+        return true;
+    if (left.is_max_content() || left.is_indefinite())
+        return false;
+    return left.to_px_or_zero() < right;
+}
+
 class AvailableSpace {
 public:
     AvailableSpace(AvailableSize w, AvailableSize h)
