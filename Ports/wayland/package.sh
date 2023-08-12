@@ -12,6 +12,7 @@ configopts=(
 )
 depends=(
     'expat'
+    'libffi'
     'libxml2'
 )
 files=(
