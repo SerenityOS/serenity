@@ -8,6 +8,7 @@
 #include <AK/Try.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/CPUInfo.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Configuration/Directory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Constants/Directory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Directory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/DiskUsage.h>
@@ -23,7 +24,6 @@
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Profile.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/SystemStatistics.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Uptime.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/Directory.h>
 
 namespace Kernel {
 
@@ -47,7 +47,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<SysFSGlobalKernelStatsDirectory> SysFSGlobalKerne
         list.append(SysFSJails::must_create(*global_kernel_stats_directory));
 
         list.append(SysFSGlobalNetworkStatsDirectory::must_create(*global_kernel_stats_directory));
-        list.append(SysFSGlobalKernelVariablesDirectory::must_create(*global_kernel_stats_directory));
+        list.append(SysFSKernelConfigurationDirectory::must_create(*global_kernel_stats_directory));
         return {};
     }));
     return global_kernel_stats_directory;

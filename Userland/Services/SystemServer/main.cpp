@@ -501,7 +501,7 @@ static ErrorOr<void> create_tmp_coredump_directory()
 static ErrorOr<void> set_default_coredump_directory()
 {
     dbgln("Setting /tmp/coredump as the coredump directory");
-    auto sysfs_coredump_directory_variable_fd = TRY(Core::System::open("/sys/kernel/variables/coredump_directory"sv, O_RDWR));
+    auto sysfs_coredump_directory_variable_fd = TRY(Core::System::open("/sys/kernel/conf/coredump_directory"sv, O_RDWR));
     ScopeGuard close_on_exit([&] {
         close(sysfs_coredump_directory_variable_fd);
     });

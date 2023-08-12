@@ -202,13 +202,13 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Network/UDP.cpp
     FileSystem/SysFS/Subsystems/Kernel/Constants/ConstantInformation.cpp
     FileSystem/SysFS/Subsystems/Kernel/Constants/Directory.cpp
-    FileSystem/SysFS/Subsystems/Kernel/Variables/BooleanVariable.cpp
-    FileSystem/SysFS/Subsystems/Kernel/Variables/CapsLockRemap.cpp
-    FileSystem/SysFS/Subsystems/Kernel/Variables/CoredumpDirectory.cpp
-    FileSystem/SysFS/Subsystems/Kernel/Variables/Directory.cpp
-    FileSystem/SysFS/Subsystems/Kernel/Variables/DumpKmallocStack.cpp
-    FileSystem/SysFS/Subsystems/Kernel/Variables/StringVariable.cpp
-    FileSystem/SysFS/Subsystems/Kernel/Variables/UBSANDeadly.cpp
+    FileSystem/SysFS/Subsystems/Kernel/Configuration/BooleanVariable.cpp
+    FileSystem/SysFS/Subsystems/Kernel/Configuration/CapsLockRemap.cpp
+    FileSystem/SysFS/Subsystems/Kernel/Configuration/CoredumpDirectory.cpp
+    FileSystem/SysFS/Subsystems/Kernel/Configuration/Directory.cpp
+    FileSystem/SysFS/Subsystems/Kernel/Configuration/DumpKmallocStack.cpp
+    FileSystem/SysFS/Subsystems/Kernel/Configuration/StringVariable.cpp
+    FileSystem/SysFS/Subsystems/Kernel/Configuration/UBSANDeadly.cpp
     FileSystem/VirtualFileSystem.cpp
     Firmware/ACPI/Initialize.cpp
     Firmware/ACPI/Parser.cpp
