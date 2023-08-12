@@ -77,8 +77,8 @@ public:
         No
     };
     DeprecatedString const& scheme() const { return m_scheme; }
-    DeprecatedString username() const;
-    DeprecatedString password() const;
+    ErrorOr<String> username() const;
+    ErrorOr<String> password() const;
     Host const& host() const { return m_host; }
     ErrorOr<String> serialized_host() const;
     DeprecatedString basename() const;
@@ -98,8 +98,8 @@ public:
     bool is_special() const { return is_special_scheme(m_scheme); }
 
     void set_scheme(DeprecatedString);
-    void set_username(StringView);
-    void set_password(StringView);
+    ErrorOr<void> set_username(StringView);
+    ErrorOr<void> set_password(StringView);
     void set_host(Host);
     void set_port(Optional<u16>);
     void set_paths(Vector<DeprecatedString> const&);
@@ -151,6 +151,9 @@ public:
 
     static bool code_point_is_in_percent_encode_set(u32 code_point, URL::PercentEncodeSet);
 
+    String const& raw_username() const { return m_username; }
+    String const& raw_password() const { return m_password; }
+
 private:
     bool compute_validity() const;
 
@@ -163,10 +166,10 @@ private:
     DeprecatedString m_scheme;
 
     // A URL’s username is an ASCII string identifying a username. It is initially the empty string.
-    DeprecatedString m_username;
+    String m_username;
 
     // A URL’s password is an ASCII string identifying a password. It is initially the empty string.
-    DeprecatedString m_password;
+    String m_password;
 
     // A URL’s host is null or a host. It is initially null.
     Host m_host;
