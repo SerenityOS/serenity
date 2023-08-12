@@ -1,10 +1,14 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=citron
-version=0.0.9.3
-useconfigure=false
-depends=(sparsehash libffi pcre)
-commit_hash='c0bafa246bb2282125858da54e084c8085288d5c'
-archive_hash='f4d77cc8f70a59a4d495fbf0cfc8a9654742817f87c50f5b0e46eef54b5413f7'
+port='citron'
+version='0.0.9.3'
+useconfigure='false'
+depends=(
+    'libffi'
+    'pcre'
+    'sparsehash'
+)
+commit_hash=''c0bafa246bb2282125858da54e084c8085288d5c''
+archive_hash=''f4d77cc8f70a59a4d495fbf0cfc8a9654742817f87c50f5b0e46eef54b5413f7''
 files=(
     "https://github.com/alimpfard/citron/archive/$commit_hash.tar.gz $archive_hash"
 )
