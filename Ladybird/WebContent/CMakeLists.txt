@@ -33,6 +33,7 @@ else()
     add_library(webcontent STATIC ${WEBCONTENT_SOURCES})
     target_include_directories(webcontent PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
     target_include_directories(webcontent PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
+    target_link_libraries(webcontent PRIVATE LibAudio LibCore LibFileSystem LibGfx LibIPC LibJS LibMain LibWeb LibWebSocket LibProtocol LibSQL LibWebView)
 
     add_executable(WebContent main.cpp)
     target_link_libraries(WebContent PRIVATE webcontent)
