@@ -182,6 +182,7 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Interrupts.cpp
     FileSystem/SysFS/Subsystems/Kernel/Processes.cpp
     FileSystem/SysFS/Subsystems/Kernel/CPUInfo.cpp
+    FileSystem/SysFS/Subsystems/Kernel/ConstantInformation.cpp
     FileSystem/SysFS/Subsystems/Kernel/Jails.cpp
     FileSystem/SysFS/Subsystems/Kernel/Keymap.cpp
     FileSystem/SysFS/Subsystems/Kernel/Profile.cpp
@@ -200,8 +201,6 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Network/Route.cpp
     FileSystem/SysFS/Subsystems/Kernel/Network/TCP.cpp
     FileSystem/SysFS/Subsystems/Kernel/Network/UDP.cpp
-    FileSystem/SysFS/Subsystems/Kernel/Constants/ConstantInformation.cpp
-    FileSystem/SysFS/Subsystems/Kernel/Constants/Directory.cpp
     FileSystem/SysFS/Subsystems/Kernel/Configuration/BooleanVariable.cpp
     FileSystem/SysFS/Subsystems/Kernel/Configuration/CapsLockRemap.cpp
     FileSystem/SysFS/Subsystems/Kernel/Configuration/CoredumpDirectory.cpp

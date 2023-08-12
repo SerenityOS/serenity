@@ -72,7 +72,7 @@ static ErrorOr<void> determine_system_mode()
             g_system_mode = "text";
     });
 
-    auto file_or_error = Core::File::open("/sys/kernel/constants/system_mode"sv, Core::File::OpenMode::Read);
+    auto file_or_error = Core::File::open("/sys/kernel/system_mode"sv, Core::File::OpenMode::Read);
     if (file_or_error.is_error()) {
         dbgln("Failed to read system_mode: {}", file_or_error.error());
         // Continue and assume "text" mode.
