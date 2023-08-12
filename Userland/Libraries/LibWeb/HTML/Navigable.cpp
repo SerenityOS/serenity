@@ -543,9 +543,7 @@ static WebIDL::ExceptionOr<Optional<NavigationParams>> create_navigation_params_
         response_origin = determine_the_origin(*response->url(), final_sandbox_flags, entry->document_state->initiator_origin(), {});
 
         // 14. Set locationURL to response's location URL given currentURL's fragment.
-        auto const& fragment = current_url.fragment();
-        auto fragment_string = fragment.is_null() ? Optional<String> {} : TRY_OR_THROW_OOM(vm, String::from_deprecated_string(fragment));
-        auto location_url = response->location_url(fragment_string);
+        auto location_url = response->location_url(current_url.fragment());
 
         VERIFY(!location_url.is_error());
 
@@ -844,7 +842,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
     if (document_resource.has<Empty>()
         && !response
         && url.equals(active_session_history_entry()->url, AK::URL::ExcludeFragment::Yes)
-        && !url.fragment().is_null()) {
+        && url.fragment().has_value()) {
         // 1. Navigate to a fragment given navigable, url, historyHandling, and navigationId.
         TRY(navigate_to_a_fragment(url, history_handling, navigation_id));
 

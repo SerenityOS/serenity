@@ -118,8 +118,8 @@ ErrorOr<Optional<AK::URL>> Response::location_url(Optional<String> const& reques
         return Error::from_string_view("Invalid 'Location' header URL"sv);
 
     // 4. If location is a URL whose fragment is null, then set location’s fragment to requestFragment.
-    if (location.fragment().is_null())
-        location.set_fragment(request_fragment.has_value() ? request_fragment->to_deprecated_string() : DeprecatedString {});
+    if (!location.fragment().has_value())
+        location.set_fragment(request_fragment);
 
     // 5. Return location.
     return location;

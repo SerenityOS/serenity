@@ -1737,14 +1737,16 @@ Document::IndicatedPart Document::determine_the_indicated_part() const
     // For an HTML document document, the following processing model must be followed to determine its indicated part:
 
     // 1. Let fragment be document's URL's fragment.
-    auto fragment = url().fragment();
+    VERIFY(url().fragment().has_value());
+
+    auto fragment = url().fragment().value();
 
     // 2. If fragment is the empty string, then return the special value top of the document.
     if (fragment.is_empty())
         return Document::TopOfTheDocument {};
 
     // 3. Let potentialIndicatedElement be the result of finding a potential indicated element given document and fragment.
-    auto potential_indicated_element = find_a_potential_indicated_element(fragment);
+    auto* potential_indicated_element = find_a_potential_indicated_element(fragment.to_deprecated_string());
 
     // 4. If potentialIndicatedElement is not null, then return potentialIndicatedElement.
     if (potential_indicated_element)

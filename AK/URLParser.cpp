@@ -924,7 +924,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                 url->m_scheme = base_url->m_scheme;
                 url->m_paths = base_url->m_paths;
                 url->m_query = base_url->m_query;
-                url->m_fragment = "";
+                url->m_fragment = String {};
                 url->m_cannot_be_a_base_url = true;
                 state = State::Fragment;
             }
@@ -999,7 +999,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                 }
                 // 3. Otherwise, if c is U+0023 (#), set url’s fragment to the empty string and state to fragment state.
                 else if (code_point == '#') {
-                    url->m_fragment = "";
+                    url->m_fragment = String {};
                     state = State::Fragment;
                 }
                 // 4. Otherwise, if c is not the EOF code point:
@@ -1309,7 +1309,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                 }
                 // 3. Otherwise, if c is U+0023 (#), set url’s fragment to the empty string and state to fragment state.
                 else if (code_point == '#') {
-                    url->m_fragment = "";
+                    url->m_fragment = String {};
                     state = State::Fragment;
                 }
                 // 4. Otherwise, if c is not the EOF code point:
@@ -1450,7 +1450,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
             }
             // 3. Otherwise, if state override is not given and c is U+0023 (#), set url’s fragment to the empty string and state to fragment state.
             else if (!state_override.has_value() && code_point == '#') {
-                url->m_fragment = "";
+                url->m_fragment = String {};
                 state = State::Fragment;
             }
             // 4. Otherwise, if c is not the EOF code point:
@@ -1519,7 +1519,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                 }
                 // 7. If c is U+0023 (#), then set url’s fragment to the empty string and state to fragment state.
                 else if (code_point == '#') {
-                    url->m_fragment = "";
+                    url->m_fragment = String {};
                     state = State::Fragment;
                 }
             }
@@ -1551,7 +1551,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
             else if (code_point == '#') {
                 // NOTE: This needs to be percent decoded since the member variables contain decoded data.
                 url->m_paths[0] = buffer.string_view();
-                url->m_fragment = "";
+                url->m_fragment = String {};
                 buffer.clear();
                 state = State::Fragment;
             }
@@ -1597,7 +1597,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
 
                 // 4. If c is U+0023 (#), then set url’s fragment to the empty string and state to fragment state.
                 if (code_point == '#') {
-                    url->m_fragment = "";
+                    url->m_fragment = String {};
                     state = State::Fragment;
                 }
             }
@@ -1627,7 +1627,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                 // FIXME: 3. UTF-8 percent-encode c using the fragment percent-encode set and append the result to url’s fragment.
                 buffer.append_code_point(code_point);
             } else {
-                url->m_fragment = buffer.string_view();
+                url->m_fragment = buffer.to_string().release_value_but_fixme_should_propagate_errors();
                 buffer.clear();
             }
             break;

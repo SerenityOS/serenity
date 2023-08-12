@@ -284,8 +284,8 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, unsigned button, unsig
                     if (button == GUI::MouseButton::Primary) {
                         if (href.starts_with("javascript:"sv)) {
                             document->navigate_to_javascript_url(href);
-                        } else if (!url.fragment().is_null() && url.equals(document->url(), AK::URL::ExcludeFragment::Yes)) {
-                            m_browsing_context->scroll_to_anchor(url.fragment());
+                        } else if (url.fragment().has_value() && url.equals(document->url(), AK::URL::ExcludeFragment::Yes)) {
+                            m_browsing_context->scroll_to_anchor(url.fragment()->to_deprecated_string());
                         } else {
                             if (m_browsing_context->is_top_level()) {
                                 if (auto* page = m_browsing_context->page())

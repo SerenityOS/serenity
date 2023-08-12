@@ -93,7 +93,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
                 return;
             }
             auto& doc = doc_option.value();
-            auto name = url.fragment();
+            auto name = url.fragment().value_or(String {});
 
             auto maybe_example_data = doc.get_object("example_data"sv);
             if (!maybe_example_data.has_value()) {

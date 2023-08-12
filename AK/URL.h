@@ -83,7 +83,7 @@ public:
     ErrorOr<String> serialized_host() const;
     DeprecatedString basename() const;
     Optional<String> const& query() const { return m_query; }
-    DeprecatedString fragment() const;
+    Optional<String> const& fragment() const { return m_fragment; }
     Optional<u16> port() const { return m_port; }
     DeprecatedString path_segment_at_index(size_t index) const;
     size_t path_segment_count() const { return m_paths.size(); }
@@ -102,7 +102,7 @@ public:
     void set_port(Optional<u16>);
     void set_paths(Vector<DeprecatedString> const&);
     void set_query(Optional<String> query) { m_query = move(query); }
-    void set_fragment(StringView fragment);
+    void set_fragment(Optional<String> fragment) { m_fragment = move(fragment); }
     void set_cannot_be_a_base_url(bool value) { m_cannot_be_a_base_url = value; }
     void append_path(StringView);
     void append_slash()
@@ -183,7 +183,7 @@ private:
     Optional<String> m_query;
 
     // A URL’s fragment is either null or an ASCII string that can be used for further processing on the resource the URL’s other components identify. It is initially null.
-    DeprecatedString m_fragment;
+    Optional<String> m_fragment;
 
     bool m_cannot_be_a_base_url { false };
 };

@@ -123,11 +123,11 @@ WebIDL::ExceptionOr<String> WorkerLocation::hash() const
     auto const& fragment = m_global_scope->url().fragment();
 
     // 2. If fragment is either null or the empty string, return the empty string.
-    if (fragment.is_empty())
+    if (!fragment.has_value() || fragment->is_empty())
         return String {};
 
     // 3. Return "#", followed by fragment.
-    return TRY_OR_THROW_OOM(vm, String::formatted("#{}", fragment.view()));
+    return TRY_OR_THROW_OOM(vm, String::formatted("#{}", *fragment));
 }
 
 WorkerLocation::WorkerLocation(WorkerGlobalScope& global_scope)

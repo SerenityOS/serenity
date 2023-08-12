@@ -271,7 +271,7 @@ Optional<Position> Sheet::position_from_url(const URL& url) const
     // FIXME: Figure out a way to do this cross-process.
     VERIFY(url.serialize_path() == DeprecatedString::formatted("/{}", getpid()));
 
-    return parse_cell_name(url.fragment());
+    return parse_cell_name(url.fragment().value_or(String {}));
 }
 
 Position Sheet::offset_relative_to(Position const& base, Position const& offset, Position const& offset_base) const
@@ -757,7 +757,7 @@ URL Position::to_url(Sheet const& sheet) const
     url.set_scheme("spreadsheet"_string);
     url.set_host("cell"_string);
     url.set_paths({ DeprecatedString::number(getpid()) });
-    url.set_fragment(to_cell_identifier(sheet));
+    url.set_fragment(String::from_deprecated_string(to_cell_identifier(sheet)).release_value());
     return url;
 }
 

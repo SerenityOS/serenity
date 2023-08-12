@@ -357,12 +357,12 @@ bool Launcher::open_file_url(const URL& url)
 
     if (S_ISDIR(st.st_mode)) {
         Vector<DeprecatedString> fm_arguments;
-        if (url.fragment().is_empty()) {
+        if (!url.fragment().has_value() || url.fragment()->is_empty()) {
             fm_arguments.append(file_path);
         } else {
             fm_arguments.append("-s");
             fm_arguments.append("-r");
-            fm_arguments.append(DeprecatedString::formatted("{}/{}", file_path, url.fragment()));
+            fm_arguments.append(DeprecatedString::formatted("{}/{}", file_path, *url.fragment()));
         }
 
         auto handler_optional = m_file_handlers.get("directory");

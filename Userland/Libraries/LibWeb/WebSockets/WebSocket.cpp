@@ -79,7 +79,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> WebSocket::construct_impl(JS::R
         return WebIDL::SyntaxError::create(realm, "Invalid protocol"sv);
 
     // 7. If urlRecord’s fragment is non-null, then throw a "SyntaxError" DOMException.
-    if (!url_record.fragment().is_empty())
+    if (url_record.fragment().has_value())
         return WebIDL::SyntaxError::create(realm, "Presence of URL fragment is invalid"sv);
 
     Vector<String> protocols_sequence;

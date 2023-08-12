@@ -46,8 +46,10 @@ Optional<Gfx::PaintStyle const&> SVGGraphicsElement::svg_paint_computed_value_to
     // FIXME: This entire function is an ad-hoc hack:
     if (!paint_value.has_value() || !paint_value->is_url())
         return {};
-    auto& url = paint_value->as_url();
-    auto gradient = document().get_element_by_id(url.fragment());
+    auto const& url = paint_value->as_url();
+    if (!url.fragment().has_value())
+        return {};
+    auto gradient = document().get_element_by_id(url.fragment()->to_deprecated_string());
     if (!gradient)
         return {};
     if (is<SVG::SVGGradientElement>(*gradient))
