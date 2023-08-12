@@ -64,11 +64,6 @@ DeprecatedString URL::basename() const
 
 DeprecatedString URL::fragment() const
 {
-    return percent_decode(m_fragment);
-}
-
-DeprecatedString URL::raw_fragment() const
-{
     return m_fragment;
 }
 
@@ -142,7 +137,7 @@ void URL::append_path(StringView path)
 
 void URL::set_fragment(StringView fragment)
 {
-    m_fragment = deprecated_string_percent_encode(fragment, PercentEncodeSet::Fragment);
+    m_fragment = fragment;
 }
 
 // https://url.spec.whatwg.org/#cannot-have-a-username-password-port
