@@ -228,51 +228,16 @@ ErrorOr<String> Selector::SimpleSelector::serialize() const
     case Selector::SimpleSelector::Type::PseudoClass: {
         auto& pseudo_class = this->pseudo_class();
 
-        switch (pseudo_class.type) {
-        case PseudoClass::Link:
-        case PseudoClass::Visited:
-        case PseudoClass::Hover:
-        case PseudoClass::Focus:
-        case PseudoClass::FocusVisible:
-        case PseudoClass::FocusWithin:
-        case PseudoClass::FirstChild:
-        case PseudoClass::LastChild:
-        case PseudoClass::OnlyChild:
-        case PseudoClass::Empty:
-        case PseudoClass::Root:
-        case PseudoClass::Host:
-        case PseudoClass::FirstOfType:
-        case PseudoClass::LastOfType:
-        case PseudoClass::OnlyOfType:
-        case PseudoClass::Disabled:
-        case PseudoClass::Enabled:
-        case PseudoClass::Checked:
-        case PseudoClass::Indeterminate:
-        case PseudoClass::Active:
-        case PseudoClass::Scope:
-        case PseudoClass::Defined:
-        case PseudoClass::Playing:
-        case PseudoClass::Paused:
-        case PseudoClass::Seeking:
-        case PseudoClass::Muted:
-        case PseudoClass::VolumeLocked:
-        case PseudoClass::Buffering:
-        case PseudoClass::Stalled:
-        case PseudoClass::Target:
-            // If the pseudo-class does not accept arguments append ":" (U+003A), followed by the name of the pseudo-class, to s.
+        auto metadata = pseudo_class_metadata(pseudo_class.type);
+
+        // If the pseudo-class does not accept arguments append ":" (U+003A), followed by the name of the pseudo-class, to s.
+        if (metadata.is_valid_as_identifier) {
             TRY(s.try_append(':'));
             TRY(s.try_append(pseudo_class_name(pseudo_class.type)));
-            break;
-        case PseudoClass::NthChild:
-        case PseudoClass::NthLastChild:
-        case PseudoClass::NthOfType:
-        case PseudoClass::NthLastOfType:
-        case PseudoClass::Not:
-        case PseudoClass::Is:
-        case PseudoClass::Where:
-        case PseudoClass::Lang:
-            // Otherwise, append ":" (U+003A), followed by the name of the pseudo-class, followed by "(" (U+0028),
-            // followed by the value of the pseudo-class argument(s) determined as per below, followed by ")" (U+0029), to s.
+        }
+        // Otherwise, append ":" (U+003A), followed by the name of the pseudo-class, followed by "(" (U+0028),
+        // followed by the value of the pseudo-class argument(s) determined as per below, followed by ")" (U+0029), to s.
+        else {
             TRY(s.try_append(':'));
             TRY(s.try_append(pseudo_class_name(pseudo_class.type)));
             TRY(s.try_append('('));
@@ -293,7 +258,6 @@ ErrorOr<String> Selector::SimpleSelector::serialize() const
                 s.join(", "sv, pseudo_class.languages);
             }
             TRY(s.try_append(')'));
-            break;
         }
         break;
     }
