@@ -1265,17 +1265,17 @@ CSSPixels FormattingContext::calculate_fit_content_height(Layout::Box const& box
     // equal to clamp(min-content size, stretch-fit size, max-content size)
     // (i.e. max(min-content size, min(max-content size, stretch-fit size))).
     if (available_space.height.is_definite()) {
-        return max(calculate_min_content_height(box, available_space.width),
+        return max(calculate_min_content_height(box, available_space.width.to_px_or_zero()),
             min(calculate_stretch_fit_height(box, available_space.height),
-                calculate_max_content_height(box, available_space.width)));
+                calculate_max_content_height(box, available_space.width.to_px_or_zero())));
     }
 
     // When sizing under a min-content constraint, equal to the min-content size.
     if (available_space.height.is_min_content())
-        return calculate_min_content_height(box, available_space.width);
+        return calculate_min_content_height(box, available_space.width.to_px_or_zero());
 
     // Otherwise, equal to the max-content size in that axis.
-    return calculate_max_content_height(box, available_space.width);
+    return calculate_max_content_height(box, available_space.width.to_px_or_zero());
 }
 
 CSSPixels FormattingContext::calculate_min_content_width(Layout::Box const& box) const
@@ -1355,29 +1355,19 @@ CSSPixels FormattingContext::calculate_max_content_width(Layout::Box const& box)
 }
 
 // https://www.w3.org/TR/css-sizing-3/#min-content-block-size
-CSSPixels FormattingContext::calculate_min_content_height(Layout::Box const& box, AvailableSize const& available_width) const
+CSSPixels FormattingContext::calculate_min_content_height(Layout::Box const& box, CSSPixels width) const
 {
     // For block containers, tables, and inline boxes, this is equivalent to the max-content block size.
     if (box.is_block_container() || box.display().is_table_inside())
-        return calculate_max_content_height(box, available_width);
+        return calculate_max_content_height(box, width);
 
     if (box.has_natural_height())
         return *box.natural_height();
 
-    bool is_cacheable = available_width.is_definite() || available_width.is_intrinsic_sizing_constraint();
-
     auto get_cache_slot = [&]() -> Optional<CSSPixels>* {
-        if (!is_cacheable)
-            return {};
         auto& root_state = m_state.m_root;
         auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new LayoutState::IntrinsicSizes); });
-        if (available_width.is_definite())
-            return &cache.min_content_height_with_definite_available_width.ensure(available_width.to_px());
-        if (available_width.is_min_content())
-            return &cache.min_content_height_with_min_content_available_width;
-        if (available_width.is_max_content())
-            return &cache.min_content_height_with_max_content_available_width;
-        return {};
+        return &cache.min_content_height.ensure(width);
     };
 
     if (auto* cache_slot = get_cache_slot(); cache_slot && cache_slot->has_value())
@@ -1388,15 +1378,14 @@ CSSPixels FormattingContext::calculate_min_content_height(Layout::Box const& box
     auto& box_state = throwaway_state.get_mutable(box);
     box_state.height_constraint = SizeConstraint::MinContent;
     box_state.set_indefinite_content_height();
-    if (available_width.is_definite())
-        box_state.set_content_width(available_width.to_px());
+    box_state.set_content_width(width);
 
     auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
     if (!context) {
         context = make<BlockFormattingContext>(throwaway_state, verify_cast<BlockContainer>(box), nullptr);
     }
 
-    context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(available_width, AvailableSize::make_min_content()));
+    context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(AvailableSize::make_definite(width), AvailableSize::make_min_content()));
 
     auto min_content_height = context->automatic_content_height();
     if (!isfinite(min_content_height.to_double())) {
@@ -1411,28 +1400,18 @@ CSSPixels FormattingContext::calculate_min_content_height(Layout::Box const& box
     return min_content_height;
 }
 
-CSSPixels FormattingContext::calculate_max_content_height(Layout::Box const& box, AvailableSize const& available_width) const
+CSSPixels FormattingContext::calculate_max_content_height(Layout::Box const& box, CSSPixels width) const
 {
-    if (box.has_preferred_aspect_ratio() && available_width.is_definite())
-        return available_width.to_px() / static_cast<double>(*box.preferred_aspect_ratio());
+    if (box.has_preferred_aspect_ratio())
+        return width / static_cast<double>(*box.preferred_aspect_ratio());
 
     if (box.has_natural_height())
         return *box.natural_height();
 
-    bool is_cacheable = available_width.is_definite() || available_width.is_intrinsic_sizing_constraint();
-
     auto get_cache_slot = [&]() -> Optional<CSSPixels>* {
-        if (!is_cacheable)
-            return {};
         auto& root_state = m_state.m_root;
         auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new LayoutState::IntrinsicSizes); });
-        if (available_width.is_definite())
-            return &cache.max_content_height_with_definite_available_width.ensure(available_width.to_px());
-        if (available_width.is_min_content())
-            return &cache.max_content_height_with_min_content_available_width;
-        if (available_width.is_max_content())
-            return &cache.max_content_height_with_max_content_available_width;
-        return {};
+        return &cache.max_content_height.ensure(width);
     };
 
     if (auto* cache_slot = get_cache_slot(); cache_slot && cache_slot->has_value())
@@ -1443,15 +1422,14 @@ CSSPixels FormattingContext::calculate_max_content_height(Layout::Box const& box
     auto& box_state = throwaway_state.get_mutable(box);
     box_state.height_constraint = SizeConstraint::MaxContent;
     box_state.set_indefinite_content_height();
-    if (available_width.is_definite())
-        box_state.set_content_width(available_width.to_px());
+    box_state.set_content_width(width);
 
     auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
     if (!context) {
         context = make<BlockFormattingContext>(throwaway_state, verify_cast<BlockContainer>(box), nullptr);
     }
 
-    context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(available_width, AvailableSize::make_max_content()));
+    context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(AvailableSize::make_definite(width), AvailableSize::make_max_content()));
 
     auto max_content_height = context->automatic_content_height();
 

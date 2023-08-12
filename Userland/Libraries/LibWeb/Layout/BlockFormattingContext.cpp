@@ -550,16 +550,16 @@ CSSPixels BlockFormattingContext::compute_auto_height_for_block_level_element(Bo
     if (display.is_flex_inside()) {
         // https://drafts.csswg.org/css-flexbox-1/#algo-main-container
         // NOTE: The automatic block size of a block-level flex container is its max-content size.
-        return calculate_max_content_height(box, available_space.width);
+        return calculate_max_content_height(box, available_space.width.to_px_or_zero());
     }
     if (display.is_grid_inside()) {
         // https://www.w3.org/TR/css-grid-2/#intrinsic-sizes
         // In both inline and block formatting contexts, the grid container’s auto block size is its
         // max-content size.
-        return calculate_max_content_height(box, available_space.width);
+        return calculate_max_content_height(box, available_space.width.to_px_or_zero());
     }
     if (display.is_table_inside()) {
-        return calculate_max_content_height(box, available_space.width);
+        return calculate_max_content_height(box, available_space.width.to_px_or_zero());
     }
 
     // https://www.w3.org/TR/CSS22/visudet.html#normal-block

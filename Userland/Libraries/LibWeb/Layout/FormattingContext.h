@@ -59,8 +59,8 @@ public:
 
     CSSPixels calculate_min_content_width(Layout::Box const&) const;
     CSSPixels calculate_max_content_width(Layout::Box const&) const;
-    CSSPixels calculate_min_content_height(Layout::Box const&, AvailableSize const& available_width) const;
-    CSSPixels calculate_max_content_height(Layout::Box const&, AvailableSize const& available_width) const;
+    CSSPixels calculate_min_content_height(Layout::Box const&, CSSPixels width) const;
+    CSSPixels calculate_max_content_height(Layout::Box const&, CSSPixels width) const;
 
     CSSPixels calculate_fit_content_height(Layout::Box const&, AvailableSpace const&) const;
     CSSPixels calculate_fit_content_width(Layout::Box const&, AvailableSpace const&) const;

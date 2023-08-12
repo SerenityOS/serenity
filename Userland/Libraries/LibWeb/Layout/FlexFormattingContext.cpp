@@ -834,7 +834,7 @@ void FlexFormattingContext::determine_main_size_of_flex_container()
         }
     } else {
         if (!has_definite_main_size(flex_container()))
-            set_main_size(flex_container(), calculate_max_content_height(flex_container(), m_available_space_for_flex_container->space.width));
+            set_main_size(flex_container(), calculate_max_content_height(flex_container(), m_available_space_for_flex_container->space.width.to_px()));
     }
 }
 
@@ -2012,7 +2012,7 @@ CSSPixels FlexFormattingContext::calculate_min_content_main_size(FlexItem const&
     if (available_space.width.is_indefinite()) {
         available_space.width = AvailableSize::make_definite(calculate_width_to_use_when_determining_intrinsic_height_of_item(item));
     }
-    return calculate_min_content_height(item.box, available_space.width);
+    return calculate_min_content_height(item.box, available_space.width.to_px_or_zero());
 }
 
 CSSPixels FlexFormattingContext::calculate_max_content_main_size(FlexItem const& item) const
@@ -2024,7 +2024,7 @@ CSSPixels FlexFormattingContext::calculate_max_content_main_size(FlexItem const&
     if (available_space.width.is_indefinite()) {
         available_space.width = AvailableSize::make_definite(calculate_width_to_use_when_determining_intrinsic_height_of_item(item));
     }
-    return calculate_max_content_height(item.box, available_space.width);
+    return calculate_max_content_height(item.box, available_space.width.to_px_or_zero());
 }
 
 CSSPixels FlexFormattingContext::calculate_fit_content_main_size(FlexItem const& item) const
@@ -2048,7 +2048,7 @@ CSSPixels FlexFormattingContext::calculate_min_content_cross_size(FlexItem const
         if (available_space.width.is_indefinite()) {
             available_space.width = AvailableSize::make_definite(calculate_width_to_use_when_determining_intrinsic_height_of_item(item));
         }
-        return calculate_min_content_height(item.box, available_space.width);
+        return calculate_min_content_height(item.box, available_space.width.to_px_or_zero());
     }
     return calculate_min_content_width(item.box);
 }
@@ -2060,7 +2060,7 @@ CSSPixels FlexFormattingContext::calculate_max_content_cross_size(FlexItem const
         if (available_space.width.is_indefinite()) {
             available_space.width = AvailableSize::make_definite(calculate_width_to_use_when_determining_intrinsic_height_of_item(item));
         }
-        return calculate_max_content_height(item.box, available_space.width);
+        return calculate_max_content_height(item.box, available_space.width.to_px_or_zero());
     }
     return calculate_max_content_width(item.box);
 }

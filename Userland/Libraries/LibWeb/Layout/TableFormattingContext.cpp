@@ -241,8 +241,8 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
         CSSPixels border_left = use_collapsing_borders_model ? round(cell_state.border_left / 2) : computed_values.border_left().width;
         CSSPixels border_right = use_collapsing_borders_model ? round(cell_state.border_right / 2) : computed_values.border_right().width;
 
-        auto min_content_height = calculate_min_content_height(cell.box, available_space.width);
-        auto max_content_height = calculate_max_content_height(cell.box, available_space.width);
+        auto min_content_height = calculate_min_content_height(cell.box, available_space.width.to_px_or_zero());
+        auto max_content_height = calculate_max_content_height(cell.box, available_space.width.to_px_or_zero());
         auto min_content_width = calculate_min_content_width(cell.box);
         auto max_content_width = calculate_max_content_width(cell.box);
 
