@@ -380,19 +380,19 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
         auto& parent = *dom_node.layout_node();
 
         // If the box does not overflow in the vertical axis, then it is centered vertically.
-        auto table_computed_values = CSS::ComputedValues();
+        auto table_computed_values = parent.computed_values().clone_inherited_values();
         static_cast<CSS::MutableComputedValues&>(table_computed_values).set_display(CSS::Display::from_short(CSS::Display::Short::Table));
         static_cast<CSS::MutableComputedValues&>(table_computed_values).set_height(CSS::Size::make_percentage(CSS::Percentage(100)));
 
-        auto cell_computed_values = CSS::ComputedValues();
+        auto cell_computed_values = parent.computed_values().clone_inherited_values();
         static_cast<CSS::MutableComputedValues&>(cell_computed_values).set_display(CSS::Display { CSS::Display::Internal::TableCell });
         static_cast<CSS::MutableComputedValues&>(cell_computed_values).set_vertical_align(CSS::VerticalAlign::Middle);
-        static_cast<CSS::MutableComputedValues&>(cell_computed_values).set_white_space(CSS::WhiteSpace::Nowrap);
 
         auto table_wrapper = parent.heap().template allocate_without_realm<BlockContainer>(parent.document(), nullptr, move(table_computed_values));
         auto cell_wrapper = parent.heap().template allocate_without_realm<BlockContainer>(parent.document(), nullptr, move(cell_computed_values));
 
         cell_wrapper->set_line_height(parent.line_height());
+        cell_wrapper->set_font(parent.font());
         cell_wrapper->set_children_are_inline(parent.children_are_inline());
 
         Vector<JS::Handle<Node>> sequence;
