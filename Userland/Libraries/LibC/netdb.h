@@ -27,6 +27,7 @@ struct hostent {
 };
 
 struct hostent* gethostbyname(char const*);
+int gethostbyname_r(char const* __restrict name, struct hostent* __restrict ret, char* buffer, size_t buffer_size, struct hostent** __restrict result, int* __restrict h_errnop);
 struct hostent* gethostbyaddr(void const* addr, socklen_t len, int type);
 
 struct servent {

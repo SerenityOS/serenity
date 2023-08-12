@@ -210,6 +210,178 @@ hostent* gethostbyname(char const* name)
     return &__gethostbyname_buffer;
 }
 
+int gethostbyname_r(char const* __restrict name, struct hostent* __restrict ret, char* buffer, size_t buffer_size, struct hostent** __restrict result, int* __restrict h_errnop)
+{
+    *h_errnop = 0;
+    *result = nullptr;
+    size_t buffer_offset = 0;
+    memset(buffer, 0, buffer_size);
+
+    auto add_string_to_buffer = [&](char const* data) -> Optional<char*> {
+        size_t data_lenth = strlen(data);
+
+        if (buffer_offset + data_lenth + 1 >= buffer_size)
+            return {};
+
+        auto* buffer_beginning = buffer + buffer_offset;
+
+        memcpy(buffer + buffer_offset, data, data_lenth);
+        buffer_offset += data_lenth;
+        buffer[buffer_offset++] = '\0';
+
+        buffer_offset += 8 - (buffer_offset % 8);
+
+        return buffer_beginning;
+    };
+
+    auto add_data_to_buffer = [&](void const* data, size_t size, size_t count = 1) -> Optional<void*> {
+        auto bytes = size * count;
+
+        if (buffer_offset + bytes >= buffer_size)
+            return {};
+
+        auto* buffer_beginning = buffer + buffer_offset;
+
+        memcpy(buffer + buffer_offset, data, bytes);
+        buffer_offset += bytes;
+
+        buffer_offset += 8 - (buffer_offset % 8);
+
+        return buffer_beginning;
+    };
+
+    auto add_ptr_to_buffer = [&](void* ptr) -> Optional<void*> {
+        return add_data_to_buffer(&ptr, sizeof(ptr));
+    };
+
+    auto populate_ret = [&](char const* name, in_addr_t address) -> int {
+        auto h_name = add_string_to_buffer(name);
+        if (!h_name.has_value())
+            return ERANGE;
+
+        ret->h_name = static_cast<char*>(h_name.value());
+
+        auto null_list_item = add_ptr_to_buffer(nullptr);
+        if (!null_list_item.has_value())
+            return ERANGE;
+
+        ret->h_aliases = static_cast<char**>(null_list_item.value());
+
+        auto address_item = add_data_to_buffer(&address, sizeof(address));
+        if (!address_item.has_value())
+            return ERANGE;
+
+        auto address_list = add_ptr_to_buffer(address_item.value());
+        if (!address_list.has_value())
+            return ERANGE;
+
+        if (!add_ptr_to_buffer(nullptr).has_value())
+            return ERANGE;
+
+        ret->h_addr_list = static_cast<char**>(address_list.value());
+
+        ret->h_addrtype = AF_INET;
+        ret->h_length = 4;
+
+        *result = ret;
+        return 0;
+    };
+
+    auto ipv4_address = IPv4Address::from_string({ name, strlen(name) });
+
+    if (ipv4_address.has_value()) {
+        return populate_ret(ipv4_address.value().to_deprecated_string().characters(), ipv4_address.value().to_in_addr_t());
+    }
+
+    int fd = connect_to_lookup_server();
+    if (fd < 0) {
+        *h_errnop = TRY_AGAIN;
+        return -TRY_AGAIN;
+    }
+
+    auto close_fd_on_exit = ScopeGuard([fd] {
+        close(fd);
+    });
+
+    auto name_length = strlen(name);
+    VERIFY(name_length <= NumericLimits<i32>::max());
+
+    struct [[gnu::packed]] {
+        u32 message_size;
+        u32 endpoint_magic;
+        i32 message_id;
+        u32 name_length;
+    } request_header = {
+        (u32)(sizeof(request_header) - sizeof(request_header.message_size) + name_length),
+        lookup_server_endpoint_magic,
+        1,
+        static_cast<u32>(name_length),
+    };
+    if (auto nsent = write(fd, &request_header, sizeof(request_header)); nsent < 0) {
+        *h_errnop = TRY_AGAIN;
+        return -TRY_AGAIN;
+    } else if (nsent != sizeof(request_header)) {
+        *h_errnop = NO_RECOVERY;
+        return -NO_RECOVERY;
+    }
+
+    if (auto nsent = write(fd, name, name_length); nsent < 0) {
+        *h_errnop = TRY_AGAIN;
+        return -TRY_AGAIN;
+    } else if (static_cast<size_t>(nsent) != name_length) {
+        *h_errnop = NO_RECOVERY;
+        return -NO_RECOVERY;
+    }
+
+    struct [[gnu::packed]] {
+        u32 message_size;
+        u32 endpoint_magic;
+        i32 message_id;
+        i32 code;
+        u32 addresses_count;
+    } response_header;
+
+    if (auto nreceived = read(fd, &response_header, sizeof(response_header)); nreceived < 0) {
+        *h_errnop = TRY_AGAIN;
+        return -TRY_AGAIN;
+    } else if (nreceived != sizeof(response_header)) {
+        *h_errnop = NO_RECOVERY;
+        return -NO_RECOVERY;
+    }
+    if (response_header.endpoint_magic != lookup_server_endpoint_magic || response_header.message_id != 2) {
+        *h_errnop = NO_RECOVERY;
+        return -NO_RECOVERY;
+    }
+    if (response_header.code != 0) {
+        *h_errnop = NO_RECOVERY;
+        return -NO_RECOVERY;
+    }
+    if (response_header.addresses_count == 0) {
+        *h_errnop = HOST_NOT_FOUND;
+        return -HOST_NOT_FOUND;
+    }
+    i32 response_length;
+    if (auto nreceived = read(fd, &response_length, sizeof(response_length)); nreceived < 0) {
+        *h_errnop = TRY_AGAIN;
+        return -TRY_AGAIN;
+    } else if (nreceived != sizeof(response_length)
+        || response_length != sizeof(in_addr_t)) {
+        *h_errnop = NO_RECOVERY;
+        return -NO_RECOVERY;
+    }
+
+    in_addr_t address;
+    if (auto nreceived = read(fd, &address, response_length); nreceived < 0) {
+        *h_errnop = TRY_AGAIN;
+        return -TRY_AGAIN;
+    } else if (nreceived != response_length) {
+        *h_errnop = NO_RECOVERY;
+        return -NO_RECOVERY;
+    }
+
+    return populate_ret(name, address);
+}
+
 static DeprecatedString gethostbyaddr_name_buffer;
 
 hostent* gethostbyaddr(void const* addr, socklen_t addr_size, int type)
