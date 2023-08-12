@@ -326,6 +326,14 @@ void Glyf::Glyph::rasterize_impl(Gfx::Painter& painter, Gfx::AffineTransform con
 
 RefPtr<Gfx::Bitmap> Glyf::Glyph::rasterize_simple(i16 font_ascender, i16 font_descender, float x_scale, float y_scale, Gfx::GlyphSubpixelOffset subpixel_offset) const
 {
+    if (m_xmin > m_xmax) [[unlikely]] {
+        dbgln("OpenType: Glyph has invalid xMin ({}) > xMax ({})", m_xmin, m_xmax);
+        return nullptr;
+    }
+    if (font_descender > font_ascender) [[unlikely]] {
+        dbgln("OpenType: Glyph has invalid ascender ({}) > descender ({})", font_ascender, font_descender);
+        return nullptr;
+    }
     u32 width = (u32)(ceilf((m_xmax - m_xmin) * x_scale)) + 2;
     u32 height = (u32)(ceilf((font_ascender - font_descender) * y_scale)) + 2;
     auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { width, height }).release_value_but_fixme_should_propagate_errors();
