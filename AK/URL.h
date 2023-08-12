@@ -83,9 +83,7 @@ public:
     ErrorOr<String> serialized_host() const;
     DeprecatedString basename() const;
     Optional<String> const& query() const { return m_query; }
-    // NOTE: fragment() is percent-decoded, raw_fragment() is not.
     DeprecatedString fragment() const;
-    DeprecatedString raw_fragment() const;
     Optional<u16> port() const { return m_port; }
     DeprecatedString path_segment_at_index(size_t index) const;
     size_t path_segment_count() const { return m_paths.size(); }
