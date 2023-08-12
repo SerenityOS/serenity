@@ -10,7 +10,6 @@ set(WEBCONTENT_SOURCES
     ../HelperProcess.cpp
     ../ImageCodecPlugin.cpp
     ../Utilities.cpp
-    main.cpp
 )
 
 if (ENABLE_QT)
@@ -25,11 +24,18 @@ if (ENABLE_QT)
         ../Qt/WebSocketClientManagerQt.cpp
         ../Qt/WebSocketQt.cpp
         ../Qt/WebSocketImplQt.cpp
+        main.cpp
     )
     target_link_libraries(WebContent PRIVATE Qt::Core Qt::Network Qt::Multimedia)
     target_compile_definitions(WebContent PRIVATE HAVE_QT=1)
 else()
-    add_executable(WebContent ${WEBCONTENT_SOURCES})
+    # FIXME: Remove when chromes are upstreamed
+    add_library(webcontent STATIC ${WEBCONTENT_SOURCES})
+    target_include_directories(webcontent PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
+    target_include_directories(webcontent PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
+
+    add_executable(WebContent main.cpp)
+    target_link_libraries(WebContent PRIVATE webcontent)
 endif()
 
 target_include_directories(WebContent PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
@@ -41,4 +47,7 @@ endif()
 
 if (HAVE_PULSEAUDIO)
     target_compile_definitions(WebContent PRIVATE HAVE_PULSEAUDIO=1)
+    if (TARGET webcontent)
+        target_compile_definitions(webcontent PRIVATE HAVE_PULSEAUDIO=1)
+    endif()
 endif()

@@ -37,6 +37,11 @@ foreach (application IN LISTS ladybird_applications)
 endforeach()
 list(REMOVE_DUPLICATES all_required_lagom_libraries)
 
+# Install webcontent impl library if it exists
+if (TARGET webcontent)
+  list(APPEND all_required_lagom_libraries webcontent)
+endif()
+
 install(TARGETS ${all_required_lagom_libraries}
   EXPORT ladybirdTargets
   COMPONENT ladybird_Runtime
