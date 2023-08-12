@@ -175,10 +175,10 @@ Optional<AK::URL> strip_url_for_use_as_referrer(Optional<AK::URL> url, OriginOnl
         return {};
 
     // 3. Set url’s username to the empty string.
-    url->set_username(""sv);
+    MUST(url->set_username(""sv));
 
     // 4. Set url’s password to the empty string.
-    url->set_password(""sv);
+    MUST(url->set_password(""sv));
 
     // 5. Set url’s fragment to null.
     url->set_fragment({});

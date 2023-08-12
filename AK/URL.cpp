@@ -36,14 +36,14 @@ URL URL::complete_url(StringView relative_url) const
     return URLParser::basic_parse(relative_url, *this);
 }
 
-DeprecatedString URL::username() const
+ErrorOr<String> URL::username() const
 {
-    return percent_decode(m_username);
+    return String::from_deprecated_string(percent_decode(m_username));
 }
 
-DeprecatedString URL::password() const
+ErrorOr<String> URL::password() const
 {
-    return percent_decode(m_password);
+    return String::from_deprecated_string(percent_decode(m_password));
 }
 
 DeprecatedString URL::path_segment_at_index(size_t index) const
@@ -92,19 +92,21 @@ void URL::set_scheme(DeprecatedString scheme)
 }
 
 // https://url.spec.whatwg.org/#set-the-username
-void URL::set_username(StringView username)
+ErrorOr<void> URL::set_username(StringView username)
 {
     // To set the username given a url and username, set url’s username to the result of running UTF-8 percent-encode on username using the userinfo percent-encode set.
-    m_username = deprecated_string_percent_encode(username, PercentEncodeSet::Userinfo);
+    m_username = TRY(String::from_deprecated_string(deprecated_string_percent_encode(username, PercentEncodeSet::Userinfo)));
     m_valid = compute_validity();
+    return {};
 }
 
 // https://url.spec.whatwg.org/#set-the-password
-void URL::set_password(StringView password)
+ErrorOr<void> URL::set_password(StringView password)
 {
     // To set the password given a url and password, set url’s password to the result of running UTF-8 percent-encode on password using the userinfo percent-encode set.
-    m_password = deprecated_string_percent_encode(password, PercentEncodeSet::Userinfo);
+    m_password = TRY(String::from_deprecated_string(deprecated_string_percent_encode(password, PercentEncodeSet::Userinfo)));
     m_valid = compute_validity();
+    return {};
 }
 
 void URL::set_host(Host host)

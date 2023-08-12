@@ -97,7 +97,7 @@ DeprecatedString HTMLHyperlinkElementUtils::username() const
         return DeprecatedString::empty();
 
     // 3. Return this element's url's username.
-    return m_url->username();
+    return m_url->username().release_value().to_deprecated_string();
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-username
@@ -114,7 +114,7 @@ void HTMLHyperlinkElementUtils::set_username(DeprecatedString username)
         return;
 
     // 4. Set the username given this’s URL and the given value.
-    url->set_username(username);
+    MUST(url->set_username(username));
 
     // 5. Update href.
     update_href();
@@ -134,7 +134,7 @@ DeprecatedString HTMLHyperlinkElementUtils::password() const
         return DeprecatedString::empty();
 
     // 4. Return url's password.
-    return url->password();
+    return url->password().release_value().to_deprecated_string();
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-password
@@ -151,7 +151,7 @@ void HTMLHyperlinkElementUtils::set_password(DeprecatedString password)
         return;
 
     // 4. Set the password, given url and the given value.
-    url->set_password(move(password));
+    MUST(url->set_password(password));
 
     // 5. Update href.
     update_href();

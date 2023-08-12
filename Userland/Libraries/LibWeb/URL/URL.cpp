@@ -224,7 +224,7 @@ WebIDL::ExceptionOr<String> URL::username() const
     auto& vm = realm().vm();
 
     // The username getter steps are to return this’s URL’s username.
-    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_url.username()));
+    return TRY_OR_THROW_OOM(vm, m_url.username());
 }
 
 // https://url.spec.whatwg.org/#ref-for-dom-url-username%E2%91%A0
@@ -235,7 +235,7 @@ void URL::set_username(String const& username)
         return;
 
     // 2. Set the username given this’s URL and the given value.
-    m_url.set_username(username);
+    MUST(m_url.set_username(username));
 }
 
 // https://url.spec.whatwg.org/#dom-url-password
@@ -244,7 +244,7 @@ WebIDL::ExceptionOr<String> URL::password() const
     auto& vm = realm().vm();
 
     // The password getter steps are to return this’s URL’s password.
-    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_url.password()));
+    return TRY_OR_THROW_OOM(vm, m_url.password());
 }
 
 // https://url.spec.whatwg.org/#ref-for-dom-url-password%E2%91%A0
@@ -255,7 +255,7 @@ void URL::set_password(String const& password)
         return;
 
     // 2. Set the password given this’s URL and the given value.
-    m_url.set_password(password);
+    MUST(m_url.set_password(password));
 }
 
 // https://url.spec.whatwg.org/#dom-url-host

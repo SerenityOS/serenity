@@ -1102,15 +1102,15 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                     builder.clear();
                     // 3. If passwordTokenSeen is true, then append encodedCodePoints to url’s password.
                     if (password_token_seen) {
-                        builder.append(url->password());
+                        builder.append(url->m_password);
                         URL::append_percent_encoded_if_necessary(builder, c, URL::PercentEncodeSet::Userinfo);
-                        url->m_password = builder.string_view();
+                        url->m_password = builder.to_string().release_value_but_fixme_should_propagate_errors();
                     }
                     // 4. Otherwise, append encodedCodePoints to url’s username.
                     else {
-                        builder.append(url->username());
+                        builder.append(url->m_username);
                         URL::append_percent_encoded_if_necessary(builder, c, URL::PercentEncodeSet::Userinfo);
-                        url->m_username = builder.string_view();
+                        url->m_username = builder.to_string().release_value_but_fixme_should_propagate_errors();
                     }
                 }
 

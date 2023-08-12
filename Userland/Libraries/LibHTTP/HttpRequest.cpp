@@ -252,9 +252,9 @@ Optional<HttpRequest::Header> HttpRequest::get_http_basic_authentication_header(
     if (!url.includes_credentials())
         return {};
     StringBuilder builder;
-    builder.append(url.username());
+    builder.append(url.username().release_value_but_fixme_should_propagate_errors());
     builder.append(':');
-    builder.append(url.password());
+    builder.append(url.password().release_value_but_fixme_should_propagate_errors());
 
     // FIXME: change to TRY() and make method fallible
     auto token = MUST(encode_base64(MUST(builder.to_string()).bytes()));

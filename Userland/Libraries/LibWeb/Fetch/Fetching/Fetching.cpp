@@ -1455,7 +1455,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
                 //    true, set authorizationValue to httpRequest’s current URL, converted to an `Authorization` value.
                 else if (http_request->current_url().includes_credentials() && is_authentication_fetch == IsAuthenticationFetch::Yes) {
                     auto const& url = http_request->current_url();
-                    auto payload = TRY_OR_THROW_OOM(vm, String::formatted("{}:{}", url.username(), url.password()));
+                    auto payload = MUST(String::formatted("{}:{}", MUST(url.username()), MUST(url.password())));
                     authorization_value = TRY_OR_THROW_OOM(vm, encode_base64(payload.bytes()));
                 }
 
@@ -1612,10 +1612,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
                 auto password = DeprecatedString::empty();
 
                 // 3. Set the username given request’s current URL and username.
-                request->current_url().set_username(move(username));
+                MUST(request->current_url().set_username(username));
 
                 // 4. Set the password given request’s current URL and password.
-                request->current_url().set_password(move(password));
+                MUST(request->current_url().set_password(password));
             }
 
             // 4. Set response to the result of running HTTP-network-or-cache fetch given fetchParams and true.
