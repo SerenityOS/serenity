@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Constants/ConstantInformation.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Kernel/ConstantInformation.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/Process.h>
 
