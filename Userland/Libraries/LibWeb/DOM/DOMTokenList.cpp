@@ -15,20 +15,20 @@
 namespace {
 
 // https://infra.spec.whatwg.org/#set-append
-inline void append_to_ordered_set(Vector<DeprecatedString>& set, DeprecatedString item)
+inline void append_to_ordered_set(Vector<String>& set, String item)
 {
     if (!set.contains_slow(item))
         set.append(move(item));
 }
 
 // https://infra.spec.whatwg.org/#list-remove
-inline void remove_from_ordered_set(Vector<DeprecatedString>& set, StringView item)
+inline void remove_from_ordered_set(Vector<String>& set, StringView item)
 {
     set.remove_first_matching([&](auto const& value) { return value == item; });
 }
 
 // https://infra.spec.whatwg.org/#set-replace
-inline void replace_in_ordered_set(Vector<DeprecatedString>& set, StringView item, DeprecatedString replacement)
+inline void replace_in_ordered_set(Vector<String>& set, String const& item, String replacement)
 {
     auto item_index = set.find_first_index(item);
     VERIFY(item_index.has_value());
@@ -52,19 +52,19 @@ inline void replace_in_ordered_set(Vector<DeprecatedString>& set, StringView ite
 
 namespace Web::DOM {
 
-JS::NonnullGCPtr<DOMTokenList> DOMTokenList::create(Element& associated_element, DeprecatedFlyString associated_attribute)
+JS::NonnullGCPtr<DOMTokenList> DOMTokenList::create(Element& associated_element, FlyString associated_attribute)
 {
     auto& realm = associated_element.realm();
     return realm.heap().allocate<DOMTokenList>(realm, associated_element, move(associated_attribute));
 }
 
 // https://dom.spec.whatwg.org/#ref-for-domtokenlist%E2%91%A0%E2%91%A2
-DOMTokenList::DOMTokenList(Element& associated_element, DeprecatedFlyString associated_attribute)
+DOMTokenList::DOMTokenList(Element& associated_element, FlyString associated_attribute)
     : Bindings::LegacyPlatformObject(associated_element.realm())
     , m_associated_element(associated_element)
     , m_associated_attribute(move(associated_attribute))
 {
-    auto value = associated_element.get_attribute(m_associated_attribute);
+    auto value = associated_element.get_attribute(m_associated_attribute.to_deprecated_fly_string());
     associated_attribute_changed(value);
 }
 
@@ -90,7 +90,7 @@ void DOMTokenList::associated_attribute_changed(StringView value)
 
     auto split_values = value.split_view_if(Infra::is_ascii_whitespace);
     for (auto const& split_value : split_values)
-        append_to_ordered_set(m_token_set, split_value);
+        append_to_ordered_set(m_token_set, String::from_utf8(split_value).release_value_but_fixme_should_propagate_errors());
 }
 
 // https://dom.spec.whatwg.org/#ref-for-dfn-supported-property-indices%E2%91%A3
@@ -100,26 +100,24 @@ bool DOMTokenList::is_supported_property_index(u32 index) const
 }
 
 // https://dom.spec.whatwg.org/#dom-domtokenlist-item
-DeprecatedString const& DOMTokenList::item(size_t index) const
+Optional<String> DOMTokenList::item(size_t index) const
 {
-    static const DeprecatedString null_string {};
-
     // 1. If index is equal to or greater than this’s token set’s size, then return null.
     if (index >= m_token_set.size())
-        return null_string;
+        return {};
 
     // 2. Return this’s token set[index].
     return m_token_set[index];
 }
 
 // https://dom.spec.whatwg.org/#dom-domtokenlist-contains
-bool DOMTokenList::contains(StringView token)
+bool DOMTokenList::contains(String const& token)
 {
     return m_token_set.contains_slow(token);
 }
 
 // https://dom.spec.whatwg.org/#dom-domtokenlist-add
-WebIDL::ExceptionOr<void> DOMTokenList::add(Vector<DeprecatedString> const& tokens)
+WebIDL::ExceptionOr<void> DOMTokenList::add(Vector<String> const& tokens)
 {
     // 1. For each token in tokens:
     for (auto const& token : tokens) {
@@ -137,7 +135,7 @@ WebIDL::ExceptionOr<void> DOMTokenList::add(Vector<DeprecatedString> const& toke
 }
 
 // https://dom.spec.whatwg.org/#dom-domtokenlist-remove
-WebIDL::ExceptionOr<void> DOMTokenList::remove(Vector<DeprecatedString> const& tokens)
+WebIDL::ExceptionOr<void> DOMTokenList::remove(Vector<String> const& tokens)
 {
     // 1. For each token in tokens:
     for (auto const& token : tokens) {
@@ -155,7 +153,7 @@ WebIDL::ExceptionOr<void> DOMTokenList::remove(Vector<DeprecatedString> const& t
 }
 
 // https://dom.spec.whatwg.org/#dom-domtokenlist-toggle
-WebIDL::ExceptionOr<bool> DOMTokenList::toggle(DeprecatedString const& token, Optional<bool> force)
+WebIDL::ExceptionOr<bool> DOMTokenList::toggle(String const& token, Optional<bool> force)
 {
     // 1. If token is the empty string, then throw a "SyntaxError" DOMException.
     // 2. If token contains any ASCII whitespace, then throw an "InvalidCharacterError" DOMException.
@@ -186,7 +184,7 @@ WebIDL::ExceptionOr<bool> DOMTokenList::toggle(DeprecatedString const& token, Op
 }
 
 // https://dom.spec.whatwg.org/#dom-domtokenlist-replace
-WebIDL::ExceptionOr<bool> DOMTokenList::replace(DeprecatedString const& token, DeprecatedString const& new_token)
+WebIDL::ExceptionOr<bool> DOMTokenList::replace(String const& token, String const& new_token)
 {
     // 1. If either token or newToken is the empty string, then throw a "SyntaxError" DOMException.
     // 2. If either token or newToken contains any ASCII whitespace, then throw an "InvalidCharacterError" DOMException.
@@ -222,21 +220,21 @@ WebIDL::ExceptionOr<bool> DOMTokenList::supports([[maybe_unused]] StringView tok
 }
 
 // https://dom.spec.whatwg.org/#dom-domtokenlist-value
-DeprecatedString DOMTokenList::value() const
+String DOMTokenList::value() const
 {
     StringBuilder builder;
     builder.join(' ', m_token_set);
-    return builder.to_deprecated_string();
+    return MUST(builder.to_string());
 }
 
 // https://dom.spec.whatwg.org/#ref-for-concept-element-attributes-set-value%E2%91%A2
-void DOMTokenList::set_value(DeprecatedString value)
+void DOMTokenList::set_value(String const& value)
 {
     JS::GCPtr<DOM::Element> associated_element = m_associated_element.ptr();
     if (!associated_element)
         return;
 
-    MUST(associated_element->set_attribute(m_associated_attribute, move(value)));
+    MUST(associated_element->set_attribute(m_associated_attribute.to_deprecated_fly_string(), value.to_deprecated_string()));
 }
 
 WebIDL::ExceptionOr<void> DOMTokenList::validate_token(StringView token) const
@@ -255,20 +253,22 @@ void DOMTokenList::run_update_steps()
     if (!associated_element)
         return;
 
+    auto deprecated_attribute = m_associated_attribute.to_deprecated_fly_string();
+
     // 1. If the associated element does not have an associated attribute and token set is empty, then return.
-    if (!associated_element->has_attribute(m_associated_attribute) && m_token_set.is_empty())
+    if (!associated_element->has_attribute(deprecated_attribute) && m_token_set.is_empty())
         return;
 
     // 2. Set an attribute value for the associated element using associated attribute’s local name and the result of running the ordered set serializer for token set.
-    MUST(associated_element->set_attribute(m_associated_attribute, value()));
+    MUST(associated_element->set_attribute(deprecated_attribute, value().to_deprecated_string()));
 }
 
 WebIDL::ExceptionOr<JS::Value> DOMTokenList::item_value(size_t index) const
 {
-    auto const& string = item(index);
-    if (string.is_null())
+    auto string = item(index);
+    if (!string.has_value())
         return JS::js_undefined();
-    return JS::PrimitiveString::create(vm(), string);
+    return JS::PrimitiveString::create(vm(), string.release_value());
 }
 
 }
