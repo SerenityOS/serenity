@@ -639,6 +639,12 @@ bool Element::is_target() const
     return document().target_element() == this;
 }
 
+// https://dom.spec.whatwg.org/#document-element
+bool Element::is_document_element() const
+{
+    return document().document_element() == this;
+}
+
 JS::NonnullGCPtr<HTMLCollection> Element::get_elements_by_class_name(DeprecatedFlyString const& class_names)
 {
     Vector<FlyString> list_of_class_names;
