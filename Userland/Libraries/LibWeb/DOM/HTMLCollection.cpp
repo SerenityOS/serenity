@@ -77,8 +77,10 @@ Element* HTMLCollection::item(size_t index) const
 }
 
 // https://dom.spec.whatwg.org/#dom-htmlcollection-nameditem-key
-Element* HTMLCollection::named_item(DeprecatedFlyString const& name) const
+Element* HTMLCollection::named_item(FlyString const& name_) const
 {
+    auto name = name_.to_deprecated_fly_string();
+
     // 1. If key is the empty string, return null.
     if (name.is_empty())
         return nullptr;
@@ -147,7 +149,7 @@ WebIDL::ExceptionOr<JS::Value> HTMLCollection::item_value(size_t index) const
 
 WebIDL::ExceptionOr<JS::Value> HTMLCollection::named_item_value(DeprecatedFlyString const& index) const
 {
-    auto* element = named_item(index);
+    auto* element = named_item(FlyString::from_deprecated_fly_string(index).release_value());
     if (!element)
         return JS::js_undefined();
     return const_cast<Element*>(element);

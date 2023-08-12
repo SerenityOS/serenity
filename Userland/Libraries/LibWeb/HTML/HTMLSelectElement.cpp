@@ -65,7 +65,7 @@ DOM::Element* HTMLSelectElement::item(size_t index)
 DOM::Element* HTMLSelectElement::named_item(DeprecatedFlyString const& name)
 {
     // The namedItem(name) method must return the value returned by the method of the same name on the options collection, when invoked with the same argument.
-    return const_cast<HTMLOptionsCollection&>(*options()).named_item(name);
+    return const_cast<HTMLOptionsCollection&>(*options()).named_item(FlyString::from_deprecated_fly_string(name).release_value());
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-add

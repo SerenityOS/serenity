@@ -1,6 +1,6 @@
 #import <DOM/Element.idl>
 
-[Exposed=Window, LegacyUnenumerableNamedProperties]
+[Exposed=Window, LegacyUnenumerableNamedProperties, UseNewAKString]
 interface HTMLCollection {
 
     readonly attribute unsigned long length;
