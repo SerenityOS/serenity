@@ -223,18 +223,18 @@ embed_as_string_view("generate_default_stylesheet_source") {
   namespace = "Web::CSS"
 }
 
+embed_as_string_view("generate_mathml_stylesheet_source") {
+  input = "MathML/Default.css"
+  output = "$target_gen_dir/MathML/MathMLStyleSheetSource.cpp"
+  variable_name = "mathml_stylesheet_source"
+  namespace = "Web::CSS"
+}
+
 embed_as_string_view("generate_quirks_mode_stylesheet_source") {
   input = "CSS/QuirksMode.css"
   output = "$target_gen_dir/CSS/QuirksModeStyleSheetSource.cpp"
   variable_name = "quirks_mode_stylesheet_source"
   namespace = "Web::CSS"
-}
-
-embed_as_string_view("generate_mathml_stylesheet_source") {
-  input = "MathML/Default.css"
-  output = "$target_gen_dir/MathML/MathMLStyleSheetSource.cpp"
-  variable_name = "mathml_stylesheet_source"
-  namespace = "Web::MathML"
 }
 
 source_set("all_generated") {
@@ -249,6 +249,7 @@ source_set("all_generated") {
     ":generate_css_transform_functions",
     ":generate_css_value_id",
     ":generate_default_stylesheet_source",
+    ":generate_mathml_stylesheet_source",
     ":generate_quirks_mode_stylesheet_source",
     ":generate_window_or_worker_interfaces",
   ]
@@ -293,9 +294,11 @@ shared_library("LibWeb") {
            "HTML",
            "HighResolutionTime",
            "Infra",
+           "Internals",
            "IntersectionObserver",
            "Layout",
            "Loader",
+           "MathML",
            "MimeSniff",
            "NavigationTiming",
            "Page",
