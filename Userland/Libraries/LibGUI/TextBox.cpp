@@ -180,7 +180,7 @@ void UrlBox::highlight_url()
     if (url.is_valid() && !is_focused()) {
         if (url.scheme() == "http" || url.scheme() == "https" || url.scheme() == "gemini") {
             auto serialized_host = url.serialized_host().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
-            auto host_start = url.scheme().length() + 3;
+            auto host_start = url.scheme().bytes_as_string_view().length() + 3;
             auto host_length = serialized_host.length();
 
             // FIXME: Maybe add a generator to use https://publicsuffix.org/list/public_suffix_list.dat
@@ -208,7 +208,7 @@ void UrlBox::highlight_url()
             Gfx::TextAttributes scheme_format;
             scheme_format.color = palette().color(Gfx::ColorRole::PlaceholderText);
             spans.append({
-                { { 0, 0 }, { 0, url.scheme().length() + 3 } },
+                { { 0, 0 }, { 0, url.scheme().bytes_as_string_view().length() + 3 } },
                 scheme_format,
             });
         }

@@ -69,10 +69,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> WebSocket::construct_impl(JS::R
 
     // 4. If urlRecord’s scheme is "http", then set urlRecord’s scheme to "ws".
     if (url_record.scheme() == "http"sv)
-        url_record.set_scheme("ws"sv);
+        url_record.set_scheme("ws"_string);
     // 5. Otherwise, if urlRecord’s scheme is "https", set urlRecord’s scheme to "wss".
     else if (url_record.scheme() == "https"sv)
-        url_record.set_scheme("wss"sv);
+        url_record.set_scheme("wss"_string);
 
     // 6. If urlRecord’s scheme is not "ws" or "wss", then throw a "SyntaxError" DOMException.
     if (!url_record.scheme().is_one_of("ws"sv, "wss"sv))

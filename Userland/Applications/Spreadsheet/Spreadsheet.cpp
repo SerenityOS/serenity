@@ -754,7 +754,7 @@ DeprecatedString Position::to_cell_identifier(Sheet const& sheet) const
 URL Position::to_url(Sheet const& sheet) const
 {
     URL url;
-    url.set_scheme("spreadsheet");
+    url.set_scheme("spreadsheet"_string);
     url.set_host("cell"_string);
     url.set_paths({ DeprecatedString::number(getpid()) });
     url.set_fragment(to_cell_identifier(sheet));
