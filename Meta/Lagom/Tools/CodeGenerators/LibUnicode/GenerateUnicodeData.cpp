@@ -125,6 +125,11 @@ struct CodePointTables {
     Vector<PropertyType> unique_properties;
 };
 
+struct CodePointBidiClass {
+    Unicode::CodePointRange code_point_range;
+    DeprecatedString bidi_class;
+};
+
 struct UnicodeData {
     UniqueStringStorage unique_strings;
 
@@ -184,6 +189,9 @@ struct UnicodeData {
     CodePointTables<PropertyTable> grapheme_break_tables;
     CodePointTables<PropertyTable> word_break_tables;
     CodePointTables<PropertyTable> sentence_break_tables;
+
+    HashTable<DeprecatedString> bidirectional_classes;
+    Vector<CodePointBidiClass> code_point_bidirectional_classes;
 };
 
 static DeprecatedString sanitize_entry(DeprecatedString const& entry)
@@ -725,8 +733,10 @@ static ErrorOr<void> parse_unicode_data(Core::InputBufferedFile& file, UnicodeDa
             code_point_range_start.clear();
 
             add_canonical_code_point_name(code_point_range, data.name, unicode_data);
+            unicode_data.code_point_bidirectional_classes.append({ code_point_range, data.bidi_class });
         } else {
             add_canonical_code_point_name({ data.code_point, data.code_point }, data.name, unicode_data);
+            unicode_data.code_point_bidirectional_classes.append({ { data.code_point, data.code_point }, data.bidi_class });
 
             if ((data.code_point > 0) && (data.code_point - previous_code_point) != 1) {
                 VERIFY(assigned_code_point_range_start.has_value());
@@ -747,6 +757,8 @@ static ErrorOr<void> parse_unicode_data(Core::InputBufferedFile& file, UnicodeDa
         }
 
         unicode_data.code_points_with_decomposition_mapping += data.decomposition_mapping.has_value();
+
+        unicode_data.bidirectional_classes.set(data.bidi_class, AK::HashSetExistingEntryBehavior::Keep);
 
         previous_code_point = data.code_point;
         unicode_data.code_point_data.append(move(data));
@@ -818,6 +830,7 @@ namespace Unicode {
     generate_enum("WordBreakProperty"sv, {}, unicode_data.word_break_props.keys());
     generate_enum("SentenceBreakProperty"sv, {}, unicode_data.sentence_break_props.keys());
     generate_enum("CompatibilityFormattingTag"sv, "Canonical"sv, unicode_data.compatibility_tags);
+    generate_enum("BidirectionalClass"sv, {}, unicode_data.bidirectional_classes.values());
 
     generator.append(R"~~~(
 struct SpecialCasing {
@@ -1003,6 +1016,19 @@ struct CodePointNameComparator : public CodePointRangeComparator {
         return CodePointRangeComparator::operator()(code_point, name.code_point_range);
     }
 };
+
+struct BidiClassData {
+    CodePointRange code_point_range {};
+    BidirectionalClass bidi_class {};
+};
+
+struct CodePointBidiClassComparator : public CodePointRangeComparator {
+    constexpr int operator()(u32 code_point, BidiClassData const& bidi_class)
+    {
+        return CodePointRangeComparator::operator()(code_point, bidi_class.code_point_range);
+    }
+};
+
 )~~~");
 
     generator.set("decomposition_mappings_size", DeprecatedString::number(unicode_data.decomposition_mappings.size()));
@@ -1212,6 +1238,33 @@ static constexpr Array<@type@, @size@> @name@ { {
     append_code_point_display_names("BlockNameData"sv, "s_block_display_names"sv, unicode_data.block_display_names);
     append_code_point_display_names("CodePointName"sv, "s_code_point_display_names"sv, unicode_data.code_point_display_names);
 
+    {
+        constexpr size_t max_bidi_classes_per_row = 20;
+        size_t bidi_classes_in_current_row = 0;
+
+        generator.set("size"sv, DeprecatedString::number(unicode_data.code_point_bidirectional_classes.size()));
+        generator.append(R"~~~(
+static constexpr Array<BidiClassData, @size@> s_bidirectional_classes { {
+)~~~");
+        for (auto const& data : unicode_data.code_point_bidirectional_classes) {
+            if (bidi_classes_in_current_row++ > 0)
+                generator.append(", ");
+
+            generator.set("first", DeprecatedString::formatted("{:#x}", data.code_point_range.first));
+            generator.set("last", DeprecatedString::formatted("{:#x}", data.code_point_range.last));
+            generator.set("bidi_class", data.bidi_class);
+            generator.append("{ { @first@, @last@ }, BidirectionalClass::@bidi_class@ }");
+
+            if (bidi_classes_in_current_row == max_bidi_classes_per_row) {
+                bidi_classes_in_current_row = 0;
+                generator.append(",\n    ");
+            }
+        }
+        generator.append(R"~~~(
+} };
+)~~~");
+    }
+
     generator.append(R"~~~(
 Optional<StringView> code_point_block_display_name(u32 code_point)
 {
@@ -1335,6 +1388,14 @@ Optional<CodePointDecomposition const> code_point_decomposition_by_index(size_t 
     auto const& mapping = s_decomposition_mappings[index];
     return CodePointDecomposition { mapping.code_point, mapping.tag, ReadonlySpan<u32> { s_decomposition_mappings_data.data() + mapping.decomposition_index, mapping.decomposition_count } };
 }
+
+Optional<BidirectionalClass> bidirectional_class(u32 code_point)
+{
+    if (auto const* entry = binary_search(s_bidirectional_classes, code_point, nullptr, CodePointBidiClassComparator {}))
+        return entry->bidi_class;
+
+    return {};
+}
 )~~~");
 
     auto append_prop_search = [&](StringView enum_title, StringView enum_snake, StringView collection_name) -> ErrorOr<void> {
@@ -1395,6 +1456,8 @@ bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
     TRY(append_prop_search("GraphemeBreakProperty"sv, "grapheme_break_property"sv, "s_grapheme_break_properties"sv));
     TRY(append_prop_search("WordBreakProperty"sv, "word_break_property"sv, "s_word_break_properties"sv));
     TRY(append_prop_search("SentenceBreakProperty"sv, "sentence_break_property"sv, "s_sentence_break_properties"sv));
+
+    TRY(append_from_string("BidirectionalClass"sv, "bidirectional_class"sv, unicode_data.bidirectional_classes, {}));
 
     generator.append(R"~~~(
 }

@@ -68,4 +68,7 @@ bool code_point_has_grapheme_break_property(u32 code_point, GraphemeBreakPropert
 bool code_point_has_word_break_property(u32 code_point, WordBreakProperty property);
 bool code_point_has_sentence_break_property(u32 code_point, SentenceBreakProperty property);
 
+Optional<BidirectionalClass> bidirectional_class_from_string(StringView);
+Optional<BidirectionalClass> bidirectional_class(u32 code_point);
+
 }

@@ -10,6 +10,7 @@
 
 namespace Unicode {
 
+enum class BidirectionalClass : u8;
 enum class Block : u16;
 enum class EmojiGroup : u8;
 enum class GeneralCategory : u8;

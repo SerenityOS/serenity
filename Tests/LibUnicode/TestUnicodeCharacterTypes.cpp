@@ -848,3 +848,28 @@ TEST_CASE(code_point_display_name)
     EXPECT_EQ(code_point_display_name(0x2f802), "CJK COMPATIBILITY IDEOGRAPH-2F802"sv);
     EXPECT_EQ(code_point_display_name(0x2fa1d), "CJK COMPATIBILITY IDEOGRAPH-2FA1D"sv);
 }
+
+TEST_CASE(code_point_bidirectional_character_type)
+{
+    auto code_point_bidi_class = [](u32 code_point) {
+        auto bidi_class = Unicode::bidirectional_class(code_point);
+        VERIFY(bidi_class.has_value());
+        return bidi_class.release_value();
+    };
+
+    auto bidi_class_from_string = [](StringView name) {
+        auto result = Unicode::bidirectional_class_from_string(name);
+        VERIFY(result.has_value());
+        return result.release_value();
+    };
+
+    // Left-to-right
+    EXPECT_EQ(code_point_bidi_class('A'), bidi_class_from_string("L"sv));
+    EXPECT_EQ(code_point_bidi_class('z'), bidi_class_from_string("L"sv));
+    // European number
+    EXPECT_EQ(code_point_bidi_class('7'), bidi_class_from_string("EN"sv));
+    // Whitespace
+    EXPECT_EQ(code_point_bidi_class(' '), bidi_class_from_string("WS"sv));
+    // Arabic right-to-left (U+FEB4 ARABIC LETTER SEEN MEDIAL FORM)
+    EXPECT_EQ(code_point_bidi_class(0xFEB4), bidi_class_from_string("AL"sv));
+}
