@@ -169,6 +169,7 @@ public:
     bool is_focused() const;
     bool is_active() const;
     bool is_target() const;
+    bool is_document_element() const;
 
     JS::NonnullGCPtr<HTMLCollection> get_elements_by_class_name(DeprecatedFlyString const&);
 
