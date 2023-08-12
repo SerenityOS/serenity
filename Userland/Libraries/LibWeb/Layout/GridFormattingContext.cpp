@@ -59,7 +59,7 @@ CSSPixels GridFormattingContext::resolve_definite_track_size(CSS::GridSize const
     switch (grid_size.type()) {
     case CSS::GridSize::Type::LengthPercentage: {
         if (!grid_size.length_percentage().is_auto()) {
-            return grid_size.css_size().to_px(grid_container(), available_space.width.to_px());
+            return grid_size.css_size().to_px(grid_container(), available_space.width.to_px_or_zero());
         }
         break;
     }
@@ -119,7 +119,7 @@ int GridFormattingContext::count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS:
             sum_of_grid_track_sizes += min(resolve_definite_track_size(track_sizing_function.grid_size(), available_space), resolve_definite_track_size(track_sizing_function.grid_size(), available_space));
         }
     }
-    return max(1, static_cast<int>((get_free_space(available_space, GridDimension::Column).to_px() / sum_of_grid_track_sizes).to_double()));
+    return max(1, static_cast<int>((get_free_space(available_space, GridDimension::Column).to_px_or_zero() / sum_of_grid_track_sizes).to_double()));
 
     // For the purpose of finding the number of auto-repeated tracks in a standalone axis, the UA must
     // floor the track size to a UA-specified value to avoid division by zero. It is suggested that this
@@ -665,7 +665,7 @@ void GridFormattingContext::initialize_gap_tracks(AvailableSpace const& availabl
     // the specified size, which is spanned by any grid items that span across its corresponding grid
     // line.
     if (!grid_container().computed_values().column_gap().is_auto() && m_grid_columns.size() > 0) {
-        auto column_gap_width = grid_container().computed_values().column_gap().to_px(grid_container(), available_space.width.to_px());
+        auto column_gap_width = grid_container().computed_values().column_gap().to_px(grid_container(), available_space.width.to_px_or_zero());
         m_column_gap_tracks.ensure_capacity(m_grid_columns.size() - 1);
         for (size_t column_index = 0; column_index < m_grid_columns.size(); column_index++) {
             m_grid_columns_and_gaps.append(m_grid_columns[column_index]);
@@ -680,7 +680,7 @@ void GridFormattingContext::initialize_gap_tracks(AvailableSpace const& availabl
         }
     }
     if (!grid_container().computed_values().row_gap().is_auto() && m_grid_rows.size() > 0) {
-        auto row_gap_height = grid_container().computed_values().row_gap().to_px(grid_container(), available_space.height.to_px());
+        auto row_gap_height = grid_container().computed_values().row_gap().to_px(grid_container(), available_space.height.to_px_or_zero());
         m_row_gap_tracks.ensure_capacity(m_grid_rows.size() - 1);
         for (size_t row_index = 0; row_index < m_grid_rows.size(); row_index++) {
             m_grid_rows_and_gaps.append(m_grid_rows[row_index]);
@@ -710,13 +710,13 @@ void GridFormattingContext::initialize_track_sizes(AvailableSpace const& availab
             continue;
 
         if (track.min_track_sizing_function.is_fixed(available_size)) {
-            track.base_size = track.min_track_sizing_function.css_size().to_px(grid_container(), available_size.to_px());
+            track.base_size = track.min_track_sizing_function.css_size().to_px(grid_container(), available_size.to_px_or_zero());
         } else if (track.min_track_sizing_function.is_intrinsic(available_size)) {
             track.base_size = 0;
         }
 
         if (track.max_track_sizing_function.is_fixed(available_size)) {
-            track.growth_limit = track.max_track_sizing_function.css_size().to_px(grid_container(), available_size.to_px());
+            track.growth_limit = track.max_track_sizing_function.css_size().to_px(grid_container(), available_size.to_px_or_zero());
         } else if (track.max_track_sizing_function.is_flexible_length()) {
             track.growth_limit = {};
         } else if (track.max_track_sizing_function.is_intrinsic(available_size)) {
@@ -1079,12 +1079,12 @@ void GridFormattingContext::maximize_tracks(AvailableSpace const& available_spac
         // For the purpose of this step: if sizing the grid container under a max-content constraint, the
         // free space is infinite; if sizing under a min-content constraint, the free space is zero.
         auto free_space = get_free_space(available_space, dimension);
-        if (free_space.is_max_content()) {
+        if (free_space.is_max_content() || free_space.is_indefinite()) {
             return INFINITY;
         } else if (free_space.is_min_content()) {
             return 0;
         } else {
-            return free_space.to_px();
+            return free_space.to_px_or_zero();
         }
     };
 
@@ -1156,14 +1156,14 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& availab
     auto flex_fraction = [&]() {
         auto free_space = get_free_space(available_space, dimension);
         // If the free space is zero or if sizing the grid container under a min-content constraint:
-        if (free_space.to_px() == 0 || available_size.is_min_content()) {
+        if ((free_space.is_definite() && free_space.to_px_or_zero() == 0) || available_size.is_min_content()) {
             // The used flex fraction is zero.
             return CSSPixels(0);
             // Otherwise, if the free space is a definite length:
         } else if (free_space.is_definite()) {
             // The used flex fraction is the result of finding the size of an fr using all of the grid tracks and a space
             // to fill of the available grid space.
-            return find_the_size_of_an_fr(tracks_and_gaps, available_size.to_px());
+            return find_the_size_of_an_fr(tracks_and_gaps, available_size.to_px_or_zero());
         } else {
             // Otherwise, if the free space is an indefinite length:
             // The used flex fraction is the maximum of:
@@ -1226,7 +1226,7 @@ void GridFormattingContext::stretch_auto_tracks(AvailableSpace const& available_
             used_space += track.base_size;
     }
 
-    CSSPixels remaining_space = available_size.is_definite() ? available_size.to_px() - used_space : 0;
+    CSSPixels remaining_space = available_size.is_definite() ? available_size.to_px_or_zero() - used_space : 0;
     auto count_of_auto_max_sizing_tracks = 0;
     for (auto& track : tracks_and_gaps) {
         if (track.max_track_sizing_function.is_auto(available_size))
@@ -1874,7 +1874,7 @@ AvailableSize GridFormattingContext::get_free_space(AvailableSpace const& availa
         CSSPixels sum_base_sizes = 0;
         for (auto& track : tracks)
             sum_base_sizes += track.base_size;
-        return AvailableSize::make_definite(max(CSSPixels(0), available_size.to_px() - sum_base_sizes));
+        return AvailableSize::make_definite(max(CSSPixels(0), available_size.to_px_or_zero() - sum_base_sizes));
     }
 
     return available_size;
