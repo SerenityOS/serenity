@@ -21,6 +21,7 @@
 #include <LibGfx/Font/ScaledFont.h>
 #include <LibGfx/Font/VectorFont.h>
 #include <LibGfx/Font/WOFF/Font.h>
+#include <LibGfx/Font/WOFF2/Font.h>
 #include <LibWeb/CSS/CSSFontFaceRule.h>
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
@@ -158,13 +159,25 @@ private:
             return TRY(OpenType::Font::try_load_from_externally_owned_memory(resource()->encoded_data()));
         if (mime_type == "font/woff"sv || mime_type == "application/font-woff"sv)
             return TRY(WOFF::Font::try_load_from_externally_owned_memory(resource()->encoded_data()));
+        if (mime_type == "font/woff2"sv || mime_type == "application/font-woff2"sv) {
+            auto woff2 = WOFF2::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
+            if (woff2.is_error()) {
+                dbgln("WOFF2 error: {}", woff2.error());
+                return woff2.release_error();
+            }
+            return woff2.release_value();
+        }
         auto ttf = OpenType::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
         if (!ttf.is_error())
             return ttf.release_value();
         auto woff = WOFF::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
         if (!woff.is_error())
             return woff.release_value();
-        return ttf.release_error();
+        auto woff2 = WOFF2::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
+        if (!woff2.is_error())
+            return woff2.release_value();
+        dbgln("WOFF2 error: {}", woff2.error());
+        return woff2.release_error();
     }
 
     StyleComputer& m_style_computer;
