@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "SettingsWidget.h"
 #include <AK/Types.h>
 #include <LibGUI/Dialog.h>
 
@@ -17,7 +18,7 @@ public:
     size_t board_columns() const { return m_board_columns; }
 
 private:
-    SettingsDialog(NonnullRefPtr<GUI::Widget> settings_widget, GUI::Window* parent, size_t board_rows, size_t board_columns);
+    SettingsDialog(NonnullRefPtr<Flood::SettingsWidget> settings_widget, GUI::Window* parent, size_t board_rows, size_t board_columns);
 
     size_t m_board_rows;
     size_t m_board_columns;

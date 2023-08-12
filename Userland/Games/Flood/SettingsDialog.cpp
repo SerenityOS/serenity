@@ -7,7 +7,6 @@
 #include "SettingsDialog.h"
 #include <AK/IntegralMath.h>
 #include <AK/QuickSort.h>
-#include <Games/Flood/SettingsDialogGML.h>
 #include <LibCore/DirIterator.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -19,13 +18,12 @@
 
 ErrorOr<NonnullRefPtr<SettingsDialog>> SettingsDialog::try_create(GUI::Window* parent, size_t board_rows, size_t board_columns)
 {
-    auto settings_widget = GUI::Widget::construct();
-    TRY(settings_widget->load_from_gml(settings_dialog_gml));
+    auto settings_widget = TRY(Flood::SettingsWidget::try_create());
     auto settings_dialog = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) SettingsDialog(move(settings_widget), move(parent), move(board_rows), move(board_columns))));
     return settings_dialog;
 }
 
-SettingsDialog::SettingsDialog(NonnullRefPtr<GUI::Widget> settings_widget, GUI::Window* parent, size_t board_rows, size_t board_columns)
+SettingsDialog::SettingsDialog(NonnullRefPtr<Flood::SettingsWidget> settings_widget, GUI::Window* parent, size_t board_rows, size_t board_columns)
     : GUI::Dialog(parent)
     , m_board_rows(board_rows)
     , m_board_columns(board_columns)
