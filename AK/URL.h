@@ -72,10 +72,6 @@ public:
 
     bool is_valid() const { return m_valid; }
 
-    enum class ApplyPercentDecoding {
-        Yes,
-        No
-    };
     String const& scheme() const { return m_scheme; }
     ErrorOr<String> username() const;
     ErrorOr<String> password() const;
