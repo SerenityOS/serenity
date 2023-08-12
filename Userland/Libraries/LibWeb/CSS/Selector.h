@@ -12,6 +12,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibWeb/CSS/PseudoClass.h>
+#include <LibWeb/CSS/ValueID.h>
 
 namespace Web::CSS {
 
@@ -96,6 +97,9 @@ public:
 
             // Used for :lang(en-gb,dk)
             Vector<FlyString> languages {};
+
+            // Used by :dir()
+            Optional<ValueID> identifier {};
         };
 
         struct Name {

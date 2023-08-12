@@ -512,6 +512,29 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
                     .argument_selector_list = move(argument_selector_list) }
             };
         }
+        case PseudoClassMetadata::ParameterType::Ident: {
+            auto function_token_stream = TokenStream(pseudo_function.values());
+            function_token_stream.skip_whitespace();
+            auto maybe_ident_token = function_token_stream.next_token();
+            function_token_stream.skip_whitespace();
+            if (!maybe_ident_token.is(Token::Type::Ident) || function_token_stream.has_next_token()) {
+                dbgln_if(CSS_PARSER_DEBUG, "Failed to parse :{}() parameter as an ident: not an ident", pseudo_function.name());
+                return ParseError::SyntaxError;
+            }
+
+            auto maybe_ident = value_id_from_string(maybe_ident_token.token().ident());
+            if (!maybe_ident.has_value()) {
+                dbgln_if(CSS_PARSER_DEBUG, "Failed to parse :{}() parameter as an ident: unrecognized ident", pseudo_function.name());
+                return ParseError::SyntaxError;
+            }
+
+            return Selector::SimpleSelector {
+                .type = Selector::SimpleSelector::Type::PseudoClass,
+                .value = Selector::SimpleSelector::PseudoClassSelector {
+                    .type = pseudo_class,
+                    .identifier = maybe_ident.value() }
+            };
+        }
         case PseudoClassMetadata::ParameterType::LanguageRanges: {
             Vector<FlyString> languages;
             auto function_token_stream = TokenStream(pseudo_function.values());
