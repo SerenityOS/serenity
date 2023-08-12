@@ -41,6 +41,9 @@ endif()
 
 if (ENABLE_UNDEFINED_SANITIZER)
     add_compile_options(-fsanitize=undefined -fno-omit-frame-pointer)
+    if (UNDEFINED_BEHAVIOR_IS_FATAL)
+        add_compile_options(-fno-sanitize-recover=undefined)
+    endif()
     add_link_options(-fsanitize=undefined)
 endif()
 

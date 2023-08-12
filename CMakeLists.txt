@@ -192,13 +192,6 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/Userland/Services)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/Userland/Libraries)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/Userland)
 
-# FIXME: vptr sanitizing requires.. intense ABI wrangling of std::type_info
-#     And would be better served by porting ubsan_type_hash_itanium.cpp from compiler-rt
-if (ENABLE_UNDEFINED_SANITIZER)
-    add_compile_options(-fsanitize=undefined -fno-sanitize=vptr)
-    add_link_options(-fsanitize=undefined -fno-sanitize=vptr)
-endif()
-
 add_custom_target(components ALL)
 option(BUILD_EVERYTHING "Build all optional components" ON)
 
@@ -218,6 +211,17 @@ endif()
 
 add_subdirectory(AK)
 add_subdirectory(Kernel)
+
+# FIXME: vptr sanitizing requires.. intense ABI wrangling of std::type_info
+#        And would be better served by porting ubsan_type_hash_itanium.cpp from compiler-rt
+if (ENABLE_UNDEFINED_SANITIZER)
+    add_compile_options(-fsanitize=undefined -fno-sanitize=vptr)
+    add_link_options(-fsanitize=undefined -fno-sanitize=vptr)
+
+    if (UNDEFINED_BEHAVIOR_IS_FATAL)
+        add_compile_options(-fno-sanitize-recover=undefined)
+    endif()
+endif()
 
 if (ENABLE_MOLD_LINKER)
     add_link_options(-fuse-ld=mold)
