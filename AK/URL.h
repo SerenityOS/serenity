@@ -176,7 +176,6 @@ private:
 
     // A URL’s path is either a URL path segment or a list of zero or more URL path segments, usually identifying a location. It is initially « ».
     // A URL path segment is an ASCII string. It commonly refers to a directory or a file, but has no predefined meaning.
-    DeprecatedString m_path;
     Vector<DeprecatedString> m_paths;
 
     // A URL’s query is either null or an ASCII string. It is initially null.
