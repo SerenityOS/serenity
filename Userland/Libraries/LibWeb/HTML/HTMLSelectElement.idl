@@ -2,7 +2,7 @@
 #import <HTML/HTMLOptionsCollection.idl>
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#htmlselectelement
-[Exposed=Window]
+[Exposed=Window, UseNewAKString]
 interface HTMLSelectElement : HTMLElement {
 
     [HTMLConstructor] constructor();

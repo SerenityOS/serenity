@@ -62,10 +62,10 @@ DOM::Element* HTMLSelectElement::item(size_t index)
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-nameditem
-DOM::Element* HTMLSelectElement::named_item(DeprecatedFlyString const& name)
+DOM::Element* HTMLSelectElement::named_item(FlyString const& name)
 {
     // The namedItem(name) method must return the value returned by the method of the same name on the options collection, when invoked with the same argument.
-    return const_cast<HTMLOptionsCollection&>(*options()).named_item(FlyString::from_deprecated_fly_string(name).release_value());
+    return const_cast<HTMLOptionsCollection&>(*options()).named_item(name);
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-add
@@ -149,11 +149,11 @@ i32 HTMLSelectElement::default_tab_index_value() const
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-type
-DeprecatedString const& HTMLSelectElement::type() const
+String const& HTMLSelectElement::type() const
 {
     // The type IDL attribute, on getting, must return the string "select-one" if the multiple attribute is absent, and the string "select-multiple" if the multiple attribute is present.
-    static DeprecatedString select_one = "select-one"sv;
-    static DeprecatedString select_multiple = "select-multiple"sv;
+    static String const select_one = "select-one"_string;
+    static String const select_multiple = "select-multiple"_string;
 
     if (!has_attribute(AttributeNames::multiple))
         return select_one;
