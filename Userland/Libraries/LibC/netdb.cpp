@@ -822,11 +822,96 @@ int getaddrinfo(char const* __restrict node, char const* __restrict service, con
 
     long port;
     int socktype;
-    servent* svc_ent = nullptr;
-    if (!hints || (hints->ai_flags & AI_NUMERICSERV) == 0) {
-        svc_ent = getservbyname(service, proto);
+
+    struct ServiceData {
+        String protocol;
+        u32 port;
+    };
+    Optional<ServiceData> service_data = {};
+
+    if ((!hints || (hints->ai_flags & AI_NUMERICSERV) == 0) && service) {
+        services_file = fopen(services_path, "r");
+        if (!services_file) {
+            return EAI_FAIL;
+        }
+
+        while (true) {
+            char* line = nullptr;
+            size_t length = 0;
+            ssize_t read;
+
+            // Read lines from services file until an actual service name is found.
+            do {
+                read = getline(&line, &length, services_file);
+                if (read > 0 && (line[0] >= 65 && line[0] <= 122)) {
+                    break;
+                }
+            } while (read != -1);
+
+            if (read == -1) {
+                break;
+            }
+
+            auto split_line = StringView(line, read).replace(" "sv, "\t"sv, ReplaceMode::All).split('\t');
+            if (split_line.size() < 2)
+                return EAI_FAIL;
+
+            auto name_or_error = String::from_deprecated_string(split_line[0]);
+            if (name_or_error.is_error())
+                return EAI_SYSTEM;
+
+            auto name = name_or_error.release_value();
+            if (name != service)
+                continue;
+
+            auto port_protocol_or_error = String::from_deprecated_string(split_line[1]);
+            if (port_protocol_or_error.is_error())
+                return EAI_SYSTEM;
+
+            auto port_protocol = port_protocol_or_error.release_value();
+
+            auto port_protocol_split_or_error = port_protocol.split('/');
+            if (port_protocol_split_or_error.is_error())
+                return EAI_SYSTEM;
+
+            auto port_protocol_split = port_protocol_split_or_error.release_value();
+
+            if (port_protocol_split.size() < 2)
+                return EAI_SYSTEM;
+
+            auto number = port_protocol_split[0].to_number<u32>();
+            if (!number.has_value())
+                return EAI_SYSTEM;
+
+            auto port = number.value();
+
+            // Remove any annoying whitespace at the end of the protocol.
+            auto protocol_or_error = port_protocol_split[1].replace(" "sv, ""sv, ReplaceMode::All);
+            if (protocol_or_error.is_error())
+                return EAI_SYSTEM;
+
+            protocol_or_error = protocol_or_error.value().replace("\t"sv, ""sv, ReplaceMode::All);
+            if (protocol_or_error.is_error())
+                return EAI_SYSTEM;
+
+            protocol_or_error = protocol_or_error.value().replace("\n"sv, ""sv, ReplaceMode::All);
+            if (protocol_or_error.is_error())
+                return EAI_SYSTEM;
+
+            auto protocol = protocol_or_error.release_value();
+
+            if (protocol != proto)
+                continue;
+
+            service_data = { { protocol,
+                port } };
+            break;
+        }
+
+        if (fclose(services_file) < 0)
+            return EAI_SYSTEM;
     }
-    if (!svc_ent) {
+    if (!service_data.has_value()) {
         if (service) {
             char* end;
             port = htons(strtol(service, &end, 10));
@@ -841,8 +926,8 @@ int getaddrinfo(char const* __restrict node, char const* __restrict service, con
         else
             socktype = SOCK_STREAM;
     } else {
-        port = svc_ent->s_port;
-        socktype = strcmp(svc_ent->s_proto, "tcp") ? SOCK_STREAM : SOCK_DGRAM;
+        port = service_data.value().port;
+        socktype = service_data.value().protocol == "tcp" ? SOCK_STREAM : SOCK_DGRAM;
     }
 
     addrinfo* first_info = nullptr;
