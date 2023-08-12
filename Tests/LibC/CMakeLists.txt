@@ -8,6 +8,7 @@ set(TEST_SOURCES
     TestLibCDirEnt.cpp
     TestLibCInodeWatcher.cpp
     TestLibCMkTemp.cpp
+    TestLibCNetdb.cpp
     TestLibCSetjmp.cpp
     TestLibCString.cpp
     TestLibCTime.cpp
