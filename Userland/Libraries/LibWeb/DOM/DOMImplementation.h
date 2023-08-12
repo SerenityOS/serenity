@@ -25,7 +25,11 @@ public:
     WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentType>> create_document_type(DeprecatedString const& qualified_name, DeprecatedString const& public_id, DeprecatedString const& system_id);
 
     // https://dom.spec.whatwg.org/#dom-domimplementation-hasfeature
-    bool has_feature() const { return true; }
+    bool has_feature() const
+    {
+        // The hasFeature() method steps are to return true.
+        return true;
+    }
 
 private:
     explicit DOMImplementation(Document&);
