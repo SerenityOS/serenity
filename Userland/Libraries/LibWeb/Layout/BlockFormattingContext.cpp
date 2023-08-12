@@ -135,7 +135,7 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
         // CSS2 does not define when a UA may put said element next to the float or by how much said element may
         // become narrower.
         auto intrusion = intrusion_by_floats_into_box(box, 0);
-        auto remaining_width = available_space.width.to_px() - intrusion.left - intrusion.right;
+        auto remaining_width = available_space.width.to_px_or_zero() - intrusion.left - intrusion.right;
         remaining_available_space.width = AvailableSize::make_definite(remaining_width);
     }
 
@@ -163,7 +163,7 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
 
     auto const& computed_values = box.computed_values();
 
-    auto width_of_containing_block = remaining_available_space.width.to_px();
+    auto width_of_containing_block = remaining_available_space.width.to_px_or_zero();
     auto width_of_containing_block_as_length_for_resolve = remaining_available_space.width.is_definite() ? CSS::Length::make_px(width_of_containing_block) : CSS::Length::make_px(0);
 
     auto zero_value = CSS::Length::make_px(0);
@@ -271,7 +271,7 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
     //    but this time using the value of 'min-width' as the computed value for 'width'.
     if (!computed_values.min_width().is_auto()) {
         auto min_width = calculate_inner_width(box, remaining_available_space.width, computed_values.min_width());
-        auto used_width_px = used_width.is_auto() ? remaining_available_space.width.to_px() : used_width.to_px(box);
+        auto used_width_px = used_width.is_auto() ? remaining_available_space.width : AvailableSize::make_definite(used_width.to_px(box));
         if (used_width_px < min_width.to_px(box)) {
             used_width = try_compute_width(min_width);
         }
@@ -290,7 +290,7 @@ void BlockFormattingContext::compute_width_for_floating_box(Box const& box, Avai
     auto& computed_values = box.computed_values();
 
     auto zero_value = CSS::Length::make_px(0);
-    auto width_of_containing_block = available_space.width.to_px();
+    auto width_of_containing_block = available_space.width.to_px_or_zero();
     auto width_of_containing_block_as_length_for_resolve = CSS::Length::make_px(width_of_containing_block);
     if (!available_space.width.is_definite())
         width_of_containing_block_as_length_for_resolve = CSS::Length::make_px(0);
@@ -367,7 +367,7 @@ void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_n
     auto& computed_values = box.computed_values();
 
     auto zero_value = CSS::Length::make_px(0);
-    auto width_of_containing_block = available_space.width.to_px();
+    auto width_of_containing_block = available_space.width.to_px_or_zero();
     auto width_of_containing_block_as_length_for_resolve = CSS::Length::make_px(width_of_containing_block);
     if (!available_space.width.is_definite())
         width_of_containing_block_as_length_for_resolve = CSS::Length::make_px(0);
@@ -403,7 +403,7 @@ CSSPixels BlockFormattingContext::compute_table_box_width_inside_table_wrapper(B
 
     auto const& computed_values = box.computed_values();
 
-    auto width_of_containing_block = available_space.width.to_px();
+    auto width_of_containing_block = available_space.width.to_px_or_zero();
     auto width_of_containing_block_as_length_for_resolve = available_space.width.is_definite() ? CSS::Length::make_px(width_of_containing_block) : CSS::Length::make_px(0);
 
     auto zero_value = CSS::Length::make_px(0);
@@ -442,7 +442,7 @@ CSSPixels BlockFormattingContext::compute_table_box_width_inside_table_wrapper(B
 void BlockFormattingContext::compute_height(Box const& box, AvailableSpace const& available_space)
 {
     auto const& computed_values = box.computed_values();
-    auto containing_block_height = CSS::Length::make_px(available_space.height.to_px());
+    auto containing_block_height = CSS::Length::make_px(available_space.height.to_px_or_zero());
 
     // Then work out what the height is, based on box type and CSS properties.
     CSSPixels height = 0;
@@ -850,7 +850,7 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_horizontal
     auto& box_state = m_state.get_mutable(child_box);
 
     CSSPixels x = 0;
-    CSSPixels available_width_within_containing_block = available_space.width.to_px();
+    CSSPixels available_width_within_containing_block = available_space.width.to_px_or_zero();
 
     if ((!m_left_floats.current_boxes.is_empty() || !m_right_floats.current_boxes.is_empty())
         && creates_block_formatting_context(child_box)) {
@@ -899,7 +899,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
     VERIFY(box.is_floating());
 
     auto& box_state = m_state.get_mutable(box);
-    CSSPixels width_of_containing_block = available_space.width.to_px();
+    CSSPixels width_of_containing_block = available_space.width.to_px_or_zero();
 
     resolve_vertical_box_model_metrics(box);
 
