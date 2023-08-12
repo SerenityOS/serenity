@@ -46,6 +46,15 @@ function (generate_css_implementation)
     )
 
     invoke_generator(
+        "PseudoClass.cpp"
+        Lagom::GenerateCSSPseudoClass
+        "${LIBWEB_INPUT_FOLDER}/CSS/PseudoClasses.json"
+        "CSS/PseudoClass.h"
+        "CSS/PseudoClass.cpp"
+        arguments -j "${LIBWEB_INPUT_FOLDER}/CSS/PseudoClasses.json"
+    )
+
+    invoke_generator(
         "TransformFunctions.cpp"
         Lagom::GenerateCSSTransformFunctions
         "${LIBWEB_INPUT_FOLDER}/CSS/TransformFunctions.json"

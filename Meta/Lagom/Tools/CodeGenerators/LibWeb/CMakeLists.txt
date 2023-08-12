@@ -5,6 +5,7 @@ lagom_tool(GenerateCSSEnums                 SOURCES GenerateCSSEnums.cpp LIBS Li
 lagom_tool(GenerateCSSMathFunctions         SOURCES GenerateCSSMathFunctions.cpp LIBS LibMain)
 lagom_tool(GenerateCSSMediaFeatureID        SOURCES GenerateCSSMediaFeatureID.cpp LIBS LibMain)
 lagom_tool(GenerateCSSPropertyID            SOURCES GenerateCSSPropertyID.cpp LIBS LibMain)
+lagom_tool(GenerateCSSPseudoClass           SOURCES GenerateCSSPseudoClass.cpp LIBS LibMain)
 lagom_tool(GenerateCSSTransformFunctions    SOURCES GenerateCSSTransformFunctions.cpp LIBS LibMain)
 lagom_tool(GenerateCSSValueID               SOURCES GenerateCSSValueID.cpp LIBS LibMain)
 lagom_tool(GenerateWindowOrWorkerInterfaces SOURCES GenerateWindowOrWorkerInterfaces.cpp LIBS LibMain LibIDL)
