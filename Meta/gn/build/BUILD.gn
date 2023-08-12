@@ -98,6 +98,7 @@ config("compiler_defaults") {
       "-Wno-user-defined-literals",
       "-fconstexpr-steps=16777216",
       "-Wno-unused-private-field",
+      "-Wno-implicit-const-int-float-conversion",
     ]
   } else {
     cflags += [
