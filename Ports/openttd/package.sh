@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=openttd
-version=12.2
+version='13.4'
 depends=("freetype" "SDL2" "libicu" "libpng" "zlib" "xz" "openttd-opengfx" "openttd-opensfx")
 files=(
-    "https://cdn.openttd.org/openttd-releases/${version}/openttd-${version}-source.tar.xz 81508f0de93a0c264b216ef56a05f8381fff7bffa6d010121a21490b4dace95c"
+    "https://cdn.openttd.org/openttd-releases/${version}/openttd-${version}-source.tar.xz 2a1deba01bfe58e2188879f450c3fa4f3819271ab49bf348dd66545f040d146f"
 )
 useconfigure=true
 configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
