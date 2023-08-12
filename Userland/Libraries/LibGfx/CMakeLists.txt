@@ -24,6 +24,7 @@ set(SOURCES
     Font/ScaledFont.cpp
     Font/Typeface.cpp
     Font/WOFF/Font.cpp
+    Font/WOFF2/Font.cpp
     GradientPainting.cpp
     ICC/BinaryWriter.cpp
     ICC/Profile.cpp
