@@ -567,7 +567,7 @@ void TableFormattingContext::compute_table_width()
 
     auto& computed_values = table_box().computed_values();
 
-    CSSPixels width_of_table_containing_block = m_available_space->width.to_px();
+    auto width_of_table_containing_block = m_available_space->width;
 
     // Percentages on 'width' and 'height' on the table are relative to the table wrapper box's containing block,
     // not the table wrapper box itself.
@@ -602,7 +602,10 @@ void TableFormattingContext::compute_table_width()
     if (computed_values.width().is_auto()) {
         // If the table-root has 'width: auto', the used width is the greater of
         // min(GRIDMAX, the table’s containing block width), the used min-width of the table.
-        used_width = max(min(grid_max, width_of_table_containing_block), used_min_width);
+        if (width_of_table_containing_block.is_definite())
+            used_width = max(min(grid_max, width_of_table_containing_block.to_px_or_zero()), used_min_width);
+        else
+            used_width = max(grid_max, used_min_width);
         // https://www.w3.org/TR/CSS22/tables.html#auto-table-layout
         // A percentage value for a column width is relative to the table width. If the table has 'width: auto',
         // a percentage represents a constraint on the column's width, which a UA should try to satisfy.
@@ -611,7 +614,10 @@ void TableFormattingContext::compute_table_width()
             auto const& cell_width = cell.box->computed_values().width();
             if (cell_width.is_percentage()) {
                 adjusted_used_width = ceil(100 / cell_width.percentage().value() * cell.outer_max_width.to_double());
-                used_width = min(max(used_width, adjusted_used_width), width_of_table_containing_block);
+                if (width_of_table_containing_block.is_definite())
+                    used_width = min(max(used_width, adjusted_used_width), width_of_table_containing_block.to_px_or_zero());
+                else
+                    used_width = max(used_width, adjusted_used_width);
             }
         }
     } else {
