@@ -114,7 +114,7 @@ void HTMLHyperlinkElementUtils::set_username(DeprecatedString username)
         return;
 
     // 4. Set the username given this’s URL and the given value.
-    url->set_username(AK::URL::percent_encode(username, AK::URL::PercentEncodeSet::Userinfo));
+    url->set_username(username);
 
     // 5. Update href.
     update_href();
