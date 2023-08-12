@@ -15,6 +15,7 @@ launcher_name='ClassiCube'
 launcher_category='Games'
 launcher_workdir='/home/anon/Games/ClassiCube'
 launcher_command='/usr/local/bin/ClassiCube'
+icon_file='../misc/CCicon.ico'
 
 makeopts+=(
     'ClassiCube'
