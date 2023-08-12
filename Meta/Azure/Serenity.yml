@@ -47,6 +47,7 @@ jobs:
           -DSERENITY_ARCH=${{ parameters.arch }} \
           -DSERENITY_TOOLCHAIN=Clang \
           -DENABLE_UNDEFINED_SANITIZER=ON \
+          -DUNDEFINED_BEHAVIOR_IS_FATAL=ON \
           -DENABLE_USERSPACE_COVERAGE_COLLECTION=${{ parameters.coverage }} \
           -DDUMP_REGIONS_ON_CRASH=ON \
           -DENABLE_PCI_IDS_DOWNLOAD=OFF \

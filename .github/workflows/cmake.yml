@@ -204,6 +204,7 @@ jobs:
             -DCMAKE_C_COMPILER=gcc-12 \
             -DCMAKE_CXX_COMPILER=g++-12 \
             -DENABLE_UNDEFINED_SANITIZER=ON \
+            -DUNDEFINED_BEHAVIOR_IS_FATAL=ON \
             -DDUMP_REGIONS_ON_CRASH=ON \
             -DENABLE_PCI_IDS_DOWNLOAD=OFF \
             -DENABLE_USB_IDS_DOWNLOAD=OFF
