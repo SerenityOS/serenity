@@ -34,6 +34,20 @@ else()
     target_include_directories(webcontent PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
     target_include_directories(webcontent PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
     target_link_libraries(webcontent PRIVATE LibAudio LibCore LibFileSystem LibGfx LibIPC LibJS LibMain LibWeb LibWebSocket LibProtocol LibSQL LibWebView)
+    target_sources(webcontent PUBLIC FILE_SET ladybird TYPE HEADERS
+        BASE_DIRS ${SERENITY_SOURCE_DIR}
+        FILES ../FontPlugin.h
+              ../ImageCodecPlugin.h
+    )
+    target_sources(webcontent PUBLIC FILE_SET server TYPE HEADERS
+        BASE_DIRS ${SERENITY_SOURCE_DIR}/Userland/Services
+        FILES ${WEBCONTENT_SOURCE_DIR}/ConnectionFromClient.h
+              ${WEBCONTENT_SOURCE_DIR}/ConsoleGlobalEnvironmentExtensions.h
+              ${WEBCONTENT_SOURCE_DIR}/Forward.h
+              ${WEBCONTENT_SOURCE_DIR}/PageHost.h
+              ${WEBCONTENT_SOURCE_DIR}/WebContentConsoleClient.h
+              ${WEBCONTENT_SOURCE_DIR}/WebDriverConnection.h
+    )
 
     add_executable(WebContent main.cpp)
     target_link_libraries(WebContent PRIVATE webcontent)

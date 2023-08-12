@@ -49,6 +49,10 @@ install(TARGETS ${all_required_lagom_libraries}
     COMPONENT ladybird_Runtime
     NAMELINK_COMPONENT ladybird_Development
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  FILE_SET server
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILE_SET ladybird
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
 write_basic_package_version_file(
