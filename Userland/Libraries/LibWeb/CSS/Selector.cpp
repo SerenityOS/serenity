@@ -229,9 +229,22 @@ ErrorOr<String> Selector::SimpleSelector::serialize() const
         auto& pseudo_class = this->pseudo_class();
 
         auto metadata = pseudo_class_metadata(pseudo_class.type);
-
+        // HACK: `:host()` has both a function and a non-function form, so handle that first.
+        //       It's also not in the spec.
+        if (pseudo_class.type == PseudoClass::Host) {
+            if (pseudo_class.argument_selector_list.is_empty()) {
+                TRY(s.try_append(':'));
+                TRY(s.try_append(pseudo_class_name(pseudo_class.type)));
+            } else {
+                TRY(s.try_append(':'));
+                TRY(s.try_append(pseudo_class_name(pseudo_class.type)));
+                TRY(s.try_append('('));
+                TRY(s.try_append(TRY(serialize_a_group_of_selectors(pseudo_class.argument_selector_list))));
+                TRY(s.try_append(')'));
+            }
+        }
         // If the pseudo-class does not accept arguments append ":" (U+003A), followed by the name of the pseudo-class, to s.
-        if (metadata.is_valid_as_identifier) {
+        else if (metadata.is_valid_as_identifier) {
             TRY(s.try_append(':'));
             TRY(s.try_append(pseudo_class_name(pseudo_class.type)));
         }
