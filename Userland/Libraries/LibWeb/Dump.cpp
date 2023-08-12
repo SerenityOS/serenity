@@ -505,6 +505,9 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                     builder.append("])"sv);
                     break;
                 }
+                case CSS::PseudoClassMetadata::ParameterType::Ident:
+                    builder.appendff("(ident={})", string_from_value_id(pseudo_class.identifier.value()));
+                    break;
                 case CSS::PseudoClassMetadata::ParameterType::LanguageRanges: {
                     builder.append('(');
                     builder.join(',', pseudo_class.languages);
