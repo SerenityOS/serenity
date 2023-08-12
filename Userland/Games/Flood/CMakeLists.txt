@@ -4,19 +4,16 @@ serenity_component(
     TARGETS Flood
 )
 
-stringify_gml(FloodWindow.gml FloodWindowGML.h flood_window_gml)
-stringify_gml(SettingsDialog.gml SettingsDialogGML.h settings_dialog_gml)
+compile_gml(FloodWindow.gml FloodWindowGML.cpp)
+compile_gml(SettingsWidget.gml SettingsWidgetGML.cpp)
 
 set(SOURCES
     Board.cpp
     BoardWidget.cpp
+    FloodWindowGML.cpp
     SettingsDialog.cpp
+    SettingsWidgetGML.cpp
     main.cpp
-)
-
-set(GENERATED_SOURCES
-    FloodWindowGML.h
-    SettingsDialogGML.h
 )
 
 serenity_app(Flood ICON app-flood)

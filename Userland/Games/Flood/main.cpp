@@ -5,9 +5,9 @@
  */
 
 #include "BoardWidget.h"
+#include "MainWidget.h"
 #include "SettingsDialog.h"
 #include <AK/URL.h>
-#include <Games/Flood/FloodWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -82,8 +82,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("Flood");
     window->resize(304, 325);
 
-    auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
-    TRY(main_widget->load_from_gml(flood_window_gml));
+    auto main_widget = TRY(Flood::MainWidget::try_create());
+    window->set_main_widget(main_widget);
 
     auto board_widget = TRY(main_widget->find_descendant_of_type_named<GUI::Widget>("board_widget_container")->try_add<BoardWidget>(board_rows, board_columns));
     board_widget->board()->randomize();
