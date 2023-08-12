@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2023, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,8 +19,14 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     bool write_to_stdout { false };
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(keep_input_files, "Keep (don't delete) input files", "keep", 'k');
-    args_parser.add_option(write_to_stdout, "Write to stdout, keep original files unchanged", "stdout", 'c');
+    // NOTE: If the user run this program via the /bin/zcat symlink,
+    // then emulate gzip decompression to stdout.
+    if (args.argc > 0 && args.strings[0] == "zcat"sv) {
+        write_to_stdout = true;
+    } else {
+        args_parser.add_option(keep_input_files, "Keep (don't delete) input files", "keep", 'k');
+        args_parser.add_option(write_to_stdout, "Write to stdout, keep original files unchanged", "stdout", 'c');
+    }
     args_parser.add_positional_argument(filenames, "File to decompress", "FILE");
     args_parser.parse(args);
 
