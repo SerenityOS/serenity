@@ -442,7 +442,7 @@ WebIDL::ExceptionOr<String> URL::hash() const
     auto& vm = realm().vm();
 
     // 1. If this’s URL’s fragment is either null or the empty string, then return the empty string.
-    if (m_url.fragment().is_null() || m_url.fragment().is_empty())
+    if (!m_url.fragment().has_value() || m_url.fragment()->is_empty())
         return String {};
 
     // 2. Return U+0023 (#), followed by this’s URL’s fragment.
@@ -469,7 +469,7 @@ void URL::set_hash(String const& hash)
 
     // 3. Set this’s URL’s fragment to the empty string.
     auto url = m_url; // We copy the URL here to follow other browser's behavior of reverting the hash change if the parse failed.
-    url.set_fragment(DeprecatedString::empty());
+    url.set_fragment(String {});
 
     // 4. Basic URL parse input with this’s URL as url and fragment state as state override.
     auto result_url = URLParser::basic_parse(input, {}, move(url), URLParser::State::Fragment);

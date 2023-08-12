@@ -87,9 +87,9 @@ JS::GCPtr<SVGGradientElement const> SVGGradientElement::linked_gradient() const
     if (auto href = link; !href.is_empty()) {
         auto url = document().parse_url(href);
         auto id = url.fragment();
-        if (id.is_empty())
+        if (!id.has_value() || id->is_empty())
             return {};
-        auto element = document().get_element_by_id(id);
+        auto element = document().get_element_by_id(id->to_deprecated_string());
         if (!element)
             return {};
         if (!is<SVGGradientElement>(*element))

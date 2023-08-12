@@ -1077,9 +1077,7 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> http_redirect_f
         : static_cast<Infrastructure::FilteredResponse const&>(response).internal_response();
 
     // 3. Let locationURL be actualResponse’s location URL given request’s current URL’s fragment.
-    auto const& fragment = request->current_url().fragment();
-    auto fragment_string = fragment.is_null() ? Optional<String> {} : TRY_OR_THROW_OOM(vm, String::from_deprecated_string(fragment));
-    auto location_url_or_error = actual_response->location_url(fragment_string);
+    auto location_url_or_error = actual_response->location_url(request->current_url().fragment());
 
     // 4. If locationURL is null, then return response.
     if (!location_url_or_error.is_error() && !location_url_or_error.value().has_value())

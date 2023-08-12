@@ -279,11 +279,11 @@ WebIDL::ExceptionOr<String> Location::hash() const
     auto url = this->url();
 
     // 2. If this's url's fragment is either null or the empty string, return the empty string.
-    if (url.fragment().is_empty())
+    if (!url.fragment().has_value() || url.fragment()->is_empty())
         return String {};
 
     // 3. Return "#", followed by this's url's fragment.
-    return TRY_OR_THROW_OOM(vm, String::formatted("#{}", url.fragment()));
+    return TRY_OR_THROW_OOM(vm, String::formatted("#{}", *url.fragment()));
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-location-hash
@@ -307,7 +307,7 @@ WebIDL::ExceptionOr<void> Location::set_hash(String const& value)
     auto input = value.bytes_as_string_view().trim("#"sv, TrimMode::Left);
 
     // 5. Set copyURL's fragment to the empty string.
-    copy_url.set_fragment(""sv);
+    copy_url.set_fragment(String {});
 
     // 6. Basic URL parse input, with copyURL as url and fragment state as state override.
     auto result_url = URLParser::basic_parse(input, {}, copy_url, URLParser::State::Fragment);

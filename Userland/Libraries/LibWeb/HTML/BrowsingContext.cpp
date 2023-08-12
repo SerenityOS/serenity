@@ -1167,7 +1167,7 @@ WebIDL::ExceptionOr<void> BrowsingContext::navigate(
     //    and resource's URL's fragment is non-null, then:
     if (history_handling != HistoryHandlingBehavior::Reload
         && resource->url().equals(active_document()->url(), AK::URL::ExcludeFragment::Yes)
-        && !resource->url().fragment().is_null()) {
+        && resource->url().fragment().has_value()) {
         // 1. Navigate to a fragment given browsingContext, resource's URL, historyHandling, and navigationId.
         TRY(navigate_to_a_fragment(resource->url(), history_handling, *navigation_id));
 
@@ -1406,7 +1406,7 @@ WebIDL::ExceptionOr<void> BrowsingContext::traverse_the_history(size_t entry_ind
     }
 
     // 10. If entry's persisted user state is null, and its URL's fragment is non-null, then scroll to the fragment.
-    if (!entry->url.fragment().is_null())
+    if (entry->url.fragment().has_value())
         active_document()->scroll_to_the_fragment();
 
     // 11. Set the current entry to entry.

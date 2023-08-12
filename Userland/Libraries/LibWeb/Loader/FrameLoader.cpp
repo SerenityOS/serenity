@@ -302,8 +302,8 @@ void FrameLoader::resource_did_load()
         return;
     }
 
-    if (!url.fragment().is_empty())
-        browsing_context().scroll_to_anchor(url.fragment());
+    if (url.fragment().has_value() && !url.fragment()->is_empty())
+        browsing_context().scroll_to_anchor(url.fragment()->to_deprecated_string());
     else
         browsing_context().scroll_to({ 0, 0 });
 
