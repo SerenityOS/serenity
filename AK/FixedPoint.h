@@ -111,7 +111,7 @@ public:
         // fract(m_value) >= .5?
         if (m_value & (1u << (precision - 1))) {
             // fract(m_value) > .5?
-            if (m_value & (radix_mask >> 2u)) {
+            if (m_value & (radix_mask >> 1)) {
                 // yes: round "up";
                 value += 1;
             } else {
@@ -219,7 +219,7 @@ public:
         // If last bit cut off is 1:
         if (value & (1u << (precision - 1))) {
             // If the bit after is 1 as well
-            if (value & (radix_mask >> 2u)) {
+            if (value & (radix_mask >> 1)) {
                 // We round away from 0
                 ret.raw() += 1;
             } else {
