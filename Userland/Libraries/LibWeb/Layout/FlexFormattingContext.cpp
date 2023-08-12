@@ -67,10 +67,10 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode, AvailableSpace c
 
     auto available_width = available_content_space.width;
     if (available_width.is_definite())
-        available_width = AvailableSize::make_definite(available_width.to_px() + m_flex_container_state.border_box_left() + m_flex_container_state.border_box_right());
+        available_width = AvailableSize::make_definite(available_width.to_px_or_zero() + m_flex_container_state.border_box_left() + m_flex_container_state.border_box_right());
     auto available_height = available_content_space.height;
     if (available_height.is_definite())
-        available_height = AvailableSize::make_definite(available_height.to_px() + m_flex_container_state.border_box_top() + m_flex_container_state.border_box_bottom());
+        available_height = AvailableSize::make_definite(available_height.to_px_or_zero() + m_flex_container_state.border_box_top() + m_flex_container_state.border_box_bottom());
 
     m_available_space_for_flex_container = AxisAgnosticAvailableSpace {
         .main = is_row_layout() ? available_width : available_height,
@@ -456,7 +456,7 @@ void FlexFormattingContext::determine_available_space_for_items(AvailableSpace c
             available_width_for_items = available_space.width;
         } else {
             if (available_space.width.is_definite()) {
-                auto remaining = available_space.width.to_px()
+                auto remaining = available_space.width.to_px_or_zero()
                     - m_flex_container_state.margin_left
                     - m_flex_container_state.margin_right
                     - m_flex_container_state.border_left
@@ -478,7 +478,7 @@ void FlexFormattingContext::determine_available_space_for_items(AvailableSpace c
             available_height_for_items = available_space.height;
         } else {
             if (available_space.height.is_definite()) {
-                auto remaining = available_space.height.to_px()
+                auto remaining = available_space.height.to_px_or_zero()
                     - m_flex_container_state.margin_top
                     - m_flex_container_state.margin_bottom
                     - m_flex_container_state.border_top
@@ -834,7 +834,7 @@ void FlexFormattingContext::determine_main_size_of_flex_container()
         }
     } else {
         if (!has_definite_main_size(flex_container()))
-            set_main_size(flex_container(), calculate_max_content_height(flex_container(), m_available_space_for_flex_container->space.width.to_px()));
+            set_main_size(flex_container(), calculate_max_content_height(flex_container(), m_available_space_for_flex_container->space.width.to_px_or_zero()));
     }
 }
 
@@ -866,7 +866,7 @@ void FlexFormattingContext::collect_flex_items_into_flex_lines()
     CSSPixels line_main_size = 0;
     for (auto& item : m_flex_items) {
         auto const outer_hypothetical_main_size = item.outer_hypothetical_main_size();
-        if (!line.items.is_empty() && (line_main_size + outer_hypothetical_main_size) > m_available_space_for_items->main.to_px()) {
+        if (!line.items.is_empty() && (line_main_size + outer_hypothetical_main_size) > m_available_space_for_items->main) {
             m_flex_lines.append(move(line));
             line = {};
             line_main_size = 0;
@@ -888,11 +888,11 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
     //         but the inner main size has not been assigned yet.
     //         We solve this by calculating our own "available main size" here, which is essentially
     //         infinity under max-content, 0 under min-content, and the inner main size otherwise.
-    CSSPixels available_main_size;
+    AvailableSize available_main_size { AvailableSize::make_indefinite() };
     if (m_available_space_for_items->main.is_intrinsic_sizing_constraint())
-        available_main_size = m_available_space_for_items->main.to_px();
+        available_main_size = m_available_space_for_items->main;
     else
-        available_main_size = inner_main_size(flex_container());
+        available_main_size = AvailableSize::make_definite(inner_main_size(flex_container()));
 
     // 1. Determine the used flex factor.
 
@@ -951,7 +951,7 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
     auto calculate_remaining_free_space = [&]() -> Optional<CSSPixels> {
         // AD-HOC: If the container is sized under max-content constraints, then remaining_free_space won't have
         //         a value to avoid leaking an infinite value into layout calculations.
-        if (available_main_size.might_be_saturated())
+        if (available_main_size.is_intrinsic_sizing_constraint())
             return {};
         CSSPixels sum = 0;
         for (auto const& item : line.items) {
@@ -965,7 +965,7 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
 
         // AD-HOC: Note that we're using our own "available main size" explained above
         //         instead of the flex container’s inner main size.
-        return available_main_size - sum;
+        return available_main_size.to_px_or_zero() - sum;
     };
     auto const initial_free_space = calculate_remaining_free_space();
 
