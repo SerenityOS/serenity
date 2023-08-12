@@ -37,7 +37,7 @@ public:
         return false;
     }
 
-    CSSPixels available_width_for_current_line() const { return m_available_width_for_current_line; }
+    AvailableSize available_width_for_current_line() const { return m_available_width_for_current_line; }
 
     void update_last_line();
 
@@ -61,7 +61,7 @@ private:
     InlineFormattingContext& m_context;
     LayoutState& m_layout_state;
     LayoutState::UsedValues& m_containing_block_state;
-    CSSPixels m_available_width_for_current_line { 0 };
+    AvailableSize m_available_width_for_current_line { AvailableSize::make_indefinite() };
     CSSPixels m_current_y { 0 };
     CSSPixels m_max_height_on_current_line { 0 };
     CSSPixels m_text_indent { 0 };

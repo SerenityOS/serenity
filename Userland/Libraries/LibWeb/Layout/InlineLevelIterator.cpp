@@ -121,7 +121,7 @@ void InlineLevelIterator::skip_to_next()
     compute_next();
 }
 
-Optional<InlineLevelIterator::Item> InlineLevelIterator::next(CSSPixels available_width)
+Optional<InlineLevelIterator::Item> InlineLevelIterator::next(AvailableSize available_width)
 {
     if (!m_current_node)
         return {};

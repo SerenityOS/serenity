@@ -53,10 +53,14 @@ CSSPixels InlineFormattingContext::leftmost_x_offset_at(CSSPixels y) const
     return left_side_floats_limit_to_right - max(CSSPixels(0), box_in_root_rect.x());
 }
 
-CSSPixels InlineFormattingContext::available_space_for_line(CSSPixels y) const
+AvailableSize InlineFormattingContext::available_space_for_line(CSSPixels y) const
 {
     auto intrusions = parent().intrusion_by_floats_into_box(containing_block(), y);
-    return m_available_space->width.to_px() - (intrusions.left + intrusions.right);
+    if (m_available_space->width.is_definite()) {
+        return AvailableSize::make_definite(m_available_space->width.to_px_or_zero() - (intrusions.left + intrusions.right));
+    } else {
+        return m_available_space->width;
+    }
 }
 
 CSSPixels InlineFormattingContext::automatic_content_width() const
@@ -130,15 +134,19 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
     if (should_treat_width_as_auto(box, *m_available_space)) {
         auto result = calculate_shrink_to_fit_widths(box);
 
-        auto available_width = m_available_space->width.to_px()
-            - box_state.margin_left
-            - box_state.border_left
-            - box_state.padding_left
-            - box_state.padding_right
-            - box_state.border_right
-            - box_state.margin_right;
+        if (m_available_space->width.is_definite()) {
+            auto available_width = m_available_space->width.to_px_or_zero()
+                - box_state.margin_left
+                - box_state.border_left
+                - box_state.padding_left
+                - box_state.padding_right
+                - box_state.border_right
+                - box_state.margin_right;
 
-        unconstrained_width = min(max(result.preferred_minimum_width, available_width), result.preferred_width);
+            unconstrained_width = min(max(result.preferred_minimum_width, available_width), result.preferred_width);
+        } else {
+            unconstrained_width = result.preferred_width;
+        }
     } else {
         if (width_value.contains_percentage() && !m_available_space->width.is_definite()) {
             // NOTE: We can't resolve percentages yet. We'll have to wait until after inner layout.
@@ -195,7 +203,7 @@ void InlineFormattingContext::apply_justification_to_fragments(CSS::TextJustify 
     if (is_last_line || line_box.m_has_forced_break)
         return;
 
-    CSSPixels excess_horizontal_space = line_box.original_available_width() - line_box.width();
+    CSSPixels excess_horizontal_space = line_box.original_available_width().to_px_or_zero() - line_box.width();
     CSSPixels excess_horizontal_space_including_whitespace = excess_horizontal_space;
     size_t whitespace_count = 0;
     for (auto& fragment : line_box.fragments()) {
@@ -343,7 +351,7 @@ bool InlineFormattingContext::can_fit_new_line_at_y(CSSPixels y) const
     };
 
     auto right_edge = [this](auto& space) -> CSSPixels {
-        return m_available_space->width.to_px() - space.right;
+        return m_available_space->width.to_px_or_zero() - space.right;
     };
 
     auto top_left_edge = left_edge(top_intrusions);

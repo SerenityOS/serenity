@@ -30,7 +30,7 @@ public:
     bool is_empty_or_ends_in_whitespace() const;
     bool is_empty() const { return m_fragments.is_empty() && !m_has_break; }
 
-    CSSPixels original_available_width() const { return m_original_available_width; }
+    AvailableSize original_available_width() const { return m_original_available_width; }
 
     CSSPixelRect const& absolute_rect() const { return m_absolute_rect; }
     void set_absolute_rect(CSSPixelRect const& rect) { m_absolute_rect = rect; }
@@ -49,7 +49,7 @@ private:
     CSSPixels m_baseline { 0 };
 
     // The amount of available width that was originally available when creating this line box. Used for text justification.
-    CSSPixels m_original_available_width { 0 };
+    AvailableSize m_original_available_width { AvailableSize::make_indefinite() };
 
     bool m_has_break { false };
     bool m_has_forced_break { false };
