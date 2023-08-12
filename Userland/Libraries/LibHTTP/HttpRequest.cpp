@@ -53,9 +53,9 @@ ErrorOr<ByteBuffer> HttpRequest::to_raw_request() const
     auto path = m_url.serialize_path();
     VERIFY(!path.is_empty());
     TRY(builder.try_append(URL::percent_encode(path, URL::PercentEncodeSet::EncodeURI)));
-    if (!m_url.query().is_empty()) {
+    if (m_url.query().has_value()) {
         TRY(builder.try_append('?'));
-        TRY(builder.try_append(m_url.query()));
+        TRY(builder.try_append(*m_url.query()));
     }
     TRY(builder.try_append(" HTTP/1.1\r\nHost: "sv));
     TRY(builder.try_append(TRY(m_url.serialized_host())));
@@ -230,7 +230,7 @@ ErrorOr<HttpRequest, HttpRequest::ParseError> HttpRequest::from_raw_request(Read
     if (url_parts.size() == 2) {
         request.m_resource = url_parts[0];
         request.m_url.set_paths({ url_parts[0] });
-        request.m_url.set_query(url_parts[1]);
+        request.m_url.set_query(String::from_deprecated_string(url_parts[1]).release_value_but_fixme_should_propagate_errors());
     } else {
         request.m_resource = resource;
         request.m_url.set_paths({ resource });

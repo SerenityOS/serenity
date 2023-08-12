@@ -106,11 +106,11 @@ WebIDL::ExceptionOr<String> WorkerLocation::search() const
     auto const& query = m_global_scope->url().query();
 
     // 2. If query is either null or the empty string, return the empty string.
-    if (query.is_empty())
+    if (!query.has_value() || query->is_empty())
         return String {};
 
     // 3. Return "?", followed by query.
-    return TRY_OR_THROW_OOM(vm, String::formatted("?{}", query.view()));
+    return TRY_OR_THROW_OOM(vm, String::formatted("?{}", *query));
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-workerlocation-hash

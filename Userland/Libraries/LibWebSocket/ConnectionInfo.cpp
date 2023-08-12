@@ -32,10 +32,11 @@ DeprecatedString ConnectionInfo::resource_name() const
     // The path component
     builder.append(path);
     // "?" if the query component is non-empty
-    if (!m_url.query().is_empty())
+    if (m_url.query().has_value() && !m_url.query()->is_empty()) {
         builder.append('?');
-    // the query component
-    builder.append(m_url.query());
+        // the query component
+        builder.append(*m_url.query());
+    }
     return builder.to_deprecated_string();
 }
 

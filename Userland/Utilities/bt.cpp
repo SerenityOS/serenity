@@ -58,7 +58,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     if (access(full_path.characters(), F_OK) == 0) {
                         linked = true;
                         auto url = URL::create_with_file_scheme(full_path, {}, hostname);
-                        url.set_query(DeprecatedString::formatted("line_number={}", source_position.line_number));
+                        url.set_query(TRY(String::formatted("line_number={}", source_position.line_number)));
                         out("\033]8;;{}\033\\", url.serialize());
                     }
 
