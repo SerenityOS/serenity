@@ -40,7 +40,7 @@ DeprecatedString NavigatorIDMixin::platform() const
     // platform.
 
     // FIXME: Use some portion of the user agent string to make spoofing work 100%
-    return "SerenityOS";
+    return ResourceLoader::the().platform();
 }
 
 // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-useragent
