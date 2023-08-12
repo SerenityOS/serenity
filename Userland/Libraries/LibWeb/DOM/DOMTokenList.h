@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
-#include <AK/DeprecatedString.h>
+#include <AK/FlyString.h>
 #include <AK/Optional.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibWeb/Bindings/LegacyPlatformObject.h>
@@ -24,7 +24,7 @@ class DOMTokenList final : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(DOMTokenList, Bindings::LegacyPlatformObject);
 
 public:
-    [[nodiscard]] static JS::NonnullGCPtr<DOMTokenList> create(Element& associated_element, DeprecatedFlyString associated_attribute);
+    [[nodiscard]] static JS::NonnullGCPtr<DOMTokenList> create(Element& associated_element, FlyString associated_attribute);
     ~DOMTokenList() = default;
 
     void associated_attribute_changed(StringView value);
@@ -33,18 +33,18 @@ public:
     virtual WebIDL::ExceptionOr<JS::Value> item_value(size_t index) const override;
 
     size_t length() const { return m_token_set.size(); }
-    DeprecatedString const& item(size_t index) const;
-    bool contains(StringView token);
-    WebIDL::ExceptionOr<void> add(Vector<DeprecatedString> const& tokens);
-    WebIDL::ExceptionOr<void> remove(Vector<DeprecatedString> const& tokens);
-    WebIDL::ExceptionOr<bool> toggle(DeprecatedString const& token, Optional<bool> force);
-    WebIDL::ExceptionOr<bool> replace(DeprecatedString const& token, DeprecatedString const& new_token);
+    Optional<String> item(size_t index) const;
+    bool contains(String const& token);
+    WebIDL::ExceptionOr<void> add(Vector<String> const& tokens);
+    WebIDL::ExceptionOr<void> remove(Vector<String> const& tokens);
+    WebIDL::ExceptionOr<bool> toggle(String const& token, Optional<bool> force);
+    WebIDL::ExceptionOr<bool> replace(String const& token, String const& new_token);
     WebIDL::ExceptionOr<bool> supports(StringView token);
-    DeprecatedString value() const;
-    void set_value(DeprecatedString value);
+    String value() const;
+    void set_value(String const& value);
 
 private:
-    DOMTokenList(Element& associated_element, DeprecatedFlyString associated_attribute);
+    DOMTokenList(Element& associated_element, FlyString associated_attribute);
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -66,8 +66,8 @@ private:
     void run_update_steps();
 
     JS::NonnullGCPtr<Element> m_associated_element;
-    DeprecatedFlyString m_associated_attribute;
-    Vector<DeprecatedString> m_token_set;
+    FlyString m_associated_attribute;
+    Vector<String> m_token_set;
 };
 
 }
