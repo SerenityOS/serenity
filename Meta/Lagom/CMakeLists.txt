@@ -438,6 +438,12 @@ if (BUILD_LAGOM)
         XML
     )
 
+    # These are needed for both LibWeb and LibProtocol.
+    compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/RequestServer/RequestClient.ipc RequestServer/RequestClientEndpoint.h)
+    compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/RequestServer/RequestServer.ipc RequestServer/RequestServerEndpoint.h)
+    compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebSocket/WebSocketClient.ipc WebSocket/WebSocketClientEndpoint.h)
+    compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebSocket/WebSocketServer.ipc WebSocket/WebSocketServerEndpoint.h)
+
     if (ENABLE_LAGOM_LIBWEB)
         list(APPEND lagom_standard_libraries Web)
 
@@ -454,10 +460,6 @@ if (BUILD_LAGOM)
         compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebContent/WebContentClient.ipc WebContent/WebContentClientEndpoint.h)
         compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebContent/WebDriverClient.ipc WebContent/WebDriverClientEndpoint.h)
         compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebContent/WebDriverServer.ipc WebContent/WebDriverServerEndpoint.h)
-        compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/RequestServer/RequestClient.ipc RequestServer/RequestClientEndpoint.h)
-        compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/RequestServer/RequestServer.ipc RequestServer/RequestServerEndpoint.h)
-        compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebSocket/WebSocketClient.ipc WebSocket/WebSocketClientEndpoint.h)
-        compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebSocket/WebSocketServer.ipc WebSocket/WebSocketServerEndpoint.h)
 
         list(APPEND LIBWEBVIEW_GENERATED_SOURCES WebContent/WebContentClientEndpoint.h)
         list(APPEND LIBWEBVIEW_GENERATED_SOURCES WebContent/WebContentServerEndpoint.h)
