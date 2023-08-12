@@ -24,7 +24,7 @@ TEST_CASE(basic)
         EXPECT_EQ(MUST(url.serialized_host()), "www.serenityos.org");
         EXPECT_EQ(url.port_or_default(), 80);
         EXPECT_EQ(url.serialize_path(), "/");
-        EXPECT(url.query().is_null());
+        EXPECT(!url.query().has_value());
         EXPECT(url.fragment().is_null());
     }
     {
@@ -34,7 +34,7 @@ TEST_CASE(basic)
         EXPECT_EQ(MUST(url.serialized_host()), "www.serenityos.org");
         EXPECT_EQ(url.port_or_default(), 443);
         EXPECT_EQ(url.serialize_path(), "/index.html");
-        EXPECT(url.query().is_null());
+        EXPECT(!url.query().has_value());
         EXPECT(url.fragment().is_null());
     }
     {
@@ -44,7 +44,7 @@ TEST_CASE(basic)
         EXPECT_EQ(MUST(url.serialized_host()), "www.serenityos.org1");
         EXPECT_EQ(url.port_or_default(), 443);
         EXPECT_EQ(url.serialize_path(), "/index.html");
-        EXPECT(url.query().is_null());
+        EXPECT(!url.query().has_value());
         EXPECT(url.fragment().is_null());
     }
     {
@@ -54,7 +54,7 @@ TEST_CASE(basic)
         EXPECT_EQ(MUST(url.serialized_host()), "localhost");
         EXPECT_EQ(url.port_or_default(), 1234);
         EXPECT_EQ(url.serialize_path(), "/~anon/test/page.html");
-        EXPECT(url.query().is_null());
+        EXPECT(!url.query().has_value());
         EXPECT(url.fragment().is_null());
     }
     {
@@ -84,7 +84,7 @@ TEST_CASE(basic)
         EXPECT_EQ(MUST(url.serialized_host()), "www.serenityos.org");
         EXPECT_EQ(url.port_or_default(), 80);
         EXPECT_EQ(url.serialize_path(), "/index.html");
-        EXPECT(url.query().is_null());
+        EXPECT(!url.query().has_value());
         EXPECT_EQ(url.fragment(), "fragment");
     }
     {
@@ -130,7 +130,7 @@ TEST_CASE(file_url_with_hostname)
     EXPECT_EQ(url.port_or_default(), 0);
     EXPECT_EQ(url.serialize_path(), "/my/file");
     EXPECT_EQ(url.serialize(), "file://courage/my/file");
-    EXPECT(url.query().is_null());
+    EXPECT(!url.query().has_value());
     EXPECT(url.fragment().is_null());
 }
 
@@ -160,7 +160,7 @@ TEST_CASE(file_url_with_encoded_characters)
     EXPECT(url.is_valid());
     EXPECT_EQ(url.scheme(), "file");
     EXPECT_EQ(url.serialize_path(), "/my/file/test#file.txt");
-    EXPECT(url.query().is_null());
+    EXPECT(!url.query().has_value());
     EXPECT(url.fragment().is_null());
 }
 
@@ -170,7 +170,7 @@ TEST_CASE(file_url_with_fragment)
     EXPECT(url.is_valid());
     EXPECT_EQ(url.scheme(), "file");
     EXPECT_EQ(url.serialize_path(), "/my/file");
-    EXPECT(url.query().is_null());
+    EXPECT(!url.query().has_value());
     EXPECT_EQ(url.fragment(), "fragment");
 }
 
@@ -205,7 +205,7 @@ TEST_CASE(about_url)
     EXPECT_EQ(url.scheme(), "about");
     EXPECT(url.host().has<Empty>());
     EXPECT_EQ(url.serialize_path(), "blank");
-    EXPECT(url.query().is_null());
+    EXPECT(!url.query().has_value());
     EXPECT(url.fragment().is_null());
     EXPECT_EQ(url.serialize(), "about:blank");
 }
@@ -219,7 +219,7 @@ TEST_CASE(mailto_url)
     EXPECT_EQ(url.port_or_default(), 0);
     EXPECT_EQ(url.path_segment_count(), 1u);
     EXPECT_EQ(url.path_segment_at_index(0), "mail@example.com");
-    EXPECT(url.query().is_null());
+    EXPECT(!url.query().has_value());
     EXPECT(url.fragment().is_null());
     EXPECT_EQ(url.serialize(), "mailto:mail@example.com");
 }
@@ -379,7 +379,7 @@ TEST_CASE(create_with_file_scheme)
     EXPECT_EQ(url.path_segment_at_index(1), "anon");
     EXPECT_EQ(url.path_segment_at_index(2), "README.md");
     EXPECT_EQ(url.serialize_path(), "/home/anon/README.md");
-    EXPECT(url.query().is_null());
+    EXPECT(!url.query().has_value());
     EXPECT(url.fragment().is_null());
 
     url = URL::create_with_file_scheme("/home/anon/");
@@ -402,8 +402,7 @@ TEST_CASE(complete_url)
     EXPECT_EQ(url.scheme(), "http");
     EXPECT_EQ(MUST(url.serialized_host()), "serenityos.org");
     EXPECT_EQ(url.serialize_path(), "/test.html");
-    EXPECT(url.query().is_null());
-    EXPECT(url.query().is_null());
+    EXPECT(!url.query().has_value());
     EXPECT_EQ(url.cannot_be_a_base_url(), false);
 
     EXPECT(base_url.complete_url("../index.html#fragment"sv).equals(base_url));
@@ -435,7 +434,7 @@ TEST_CASE(unicode)
     URL url { "http://example.com/_ünicöde_téxt_©"sv };
     EXPECT(url.is_valid());
     EXPECT_EQ(url.serialize_path(), "/_ünicöde_téxt_©");
-    EXPECT(url.query().is_null());
+    EXPECT(!url.query().has_value());
     EXPECT(url.fragment().is_null());
 }
 

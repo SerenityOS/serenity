@@ -393,15 +393,16 @@ bool Launcher::open_file_url(const URL& url)
     Vector<DeprecatedString> additional_parameters;
     DeprecatedString filepath = url.serialize_path();
 
-    auto parameters = url.query().split('&');
-    for (auto const& parameter : parameters) {
-        auto pair = parameter.split('=');
-        if (pair.size() == 2 && pair[0] == "line_number") {
-            auto line = pair[1].to_int();
-            if (line.has_value())
-                // TextEditor uses file:line:col to open a file at a specific line number
-                filepath = DeprecatedString::formatted("{}:{}", filepath, line.value());
-        }
+    if (url.query().has_value()) {
+        url.query()->bytes_as_string_view().for_each_split_view('&', SplitBehavior::Nothing, [&](auto parameter) {
+            auto pair = parameter.split_view('=');
+            if (pair.size() == 2 && pair[0] == "line_number") {
+                auto line = pair[1].to_int();
+                if (line.has_value())
+                    // TextEditor uses file:line:col to open a file at a specific line number
+                    filepath = DeprecatedString::formatted("{}:{}", filepath, line.value());
+            }
+        });
     }
 
     additional_parameters.append(filepath);

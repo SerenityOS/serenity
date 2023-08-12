@@ -330,7 +330,7 @@ DeprecatedString HTMLHyperlinkElementUtils::search() const
     // 2. Let url be this element's url.
 
     // 3. If url is null, or url's query is either null or the empty string, return the empty string.
-    if (!m_url.has_value() || m_url->query().is_null() || m_url->query().is_empty())
+    if (!m_url.has_value() || m_url->query().has_value() || m_url->query()->is_empty())
         return DeprecatedString::empty();
 
     // 4. Return "?", followed by url's query.
@@ -358,7 +358,7 @@ void HTMLHyperlinkElementUtils::set_search(DeprecatedString search)
 
         //    2. Set url's query to the empty string.
         auto url_copy = m_url; // We copy the URL here to follow other browser's behavior of reverting the search change if the parse failed.
-        url_copy->set_query(DeprecatedString::empty());
+        url_copy->set_query(String {});
 
         //    3. Basic URL parse input, with null, this element's node document's document's character encoding, url as url, and query state as state override.
         auto result_url = URLParser::basic_parse(input, {}, move(url_copy), URLParser::State::Query);

@@ -62,11 +62,6 @@ DeprecatedString URL::basename() const
     return percent_decode(last_segment);
 }
 
-DeprecatedString URL::query() const
-{
-    return m_query;
-}
-
 DeprecatedString URL::fragment() const
 {
     return percent_decode(m_fragment);
@@ -143,11 +138,6 @@ void URL::set_paths(Vector<DeprecatedString> const& paths)
 void URL::append_path(StringView path)
 {
     m_paths.append(deprecated_string_percent_encode(path, PercentEncodeSet::Path));
-}
-
-void URL::set_query(StringView query)
-{
-    m_query = deprecated_string_percent_encode(query, is_special() ? PercentEncodeSet::SpecialQuery : PercentEncodeSet::Query);
 }
 
 void URL::set_fragment(StringView fragment)
@@ -346,9 +336,9 @@ DeprecatedString URL::serialize(ExcludeFragment exclude_fragment) const
     }
 
     // 5. If url’s query is non-null, append U+003F (?), followed by url’s query, to output.
-    if (!m_query.is_null()) {
+    if (m_query.has_value()) {
         output.append('?');
-        output.append(m_query);
+        output.append(*m_query);
     }
 
     // 6. If exclude fragment is false and url’s fragment is non-null, then append U+0023 (#), followed by url’s fragment, to output.
@@ -391,9 +381,9 @@ DeprecatedString URL::serialize_for_display() const
         }
     }
 
-    if (!m_query.is_null()) {
+    if (m_query.has_value()) {
         builder.append('?');
-        builder.append(m_query);
+        builder.append(*m_query);
     }
 
     if (!m_fragment.is_null()) {

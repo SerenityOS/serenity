@@ -50,8 +50,6 @@ static Optional<AK::URL> parse_api_url(String const& url, Optional<String> const
 // https://url.spec.whatwg.org/#dom-url-url
 WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> URL::construct_impl(JS::Realm& realm, String const& url, Optional<String> const& base)
 {
-    auto& vm = realm.vm();
-
     // 1. Let parsedURL be the result of running the API URL parser on url with base, if given.
     auto parsed_url = parse_api_url(url, base);
 
@@ -60,7 +58,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> URL::construct_impl(JS::Realm& realm,
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid URL"sv };
 
     // 3. Let query be parsedURL’s query, if that is non-null, and the empty string otherwise.
-    auto query = parsed_url->query().is_null() ? String {} : TRY_OR_THROW_OOM(vm, String::from_deprecated_string(parsed_url->query()));
+    auto query = parsed_url->query().value_or(String {});
 
     // 4. Set this’s URL to parsedURL.
     // 5. Set this’s query object to a new URLSearchParams object.
@@ -182,8 +180,8 @@ WebIDL::ExceptionOr<void> URL::set_href(String const& href)
     auto query = m_url.query();
 
     // 6. If query is non-null, then set this’s query object’s list to the result of parsing query.
-    if (!query.is_null())
-        m_query->m_list = TRY_OR_THROW_OOM(vm, url_decode(query));
+    if (query.has_value())
+        m_query->m_list = TRY_OR_THROW_OOM(vm, url_decode(*query));
     return {};
 }
 
@@ -382,11 +380,11 @@ WebIDL::ExceptionOr<String> URL::search() const
     auto& vm = realm().vm();
 
     // 1. If this’s URL’s query is either null or the empty string, then return the empty string.
-    if (m_url.query().is_null() || m_url.query().is_empty())
+    if (!m_url.query().has_value() || m_url.query()->is_empty())
         return String {};
 
     // 2. Return U+003F (?), followed by this’s URL’s query.
-    return TRY_OR_THROW_OOM(vm, String::formatted("?{}", m_url.query()));
+    return TRY_OR_THROW_OOM(vm, String::formatted("?{}", *m_url.query()));
 }
 
 // https://url.spec.whatwg.org/#ref-for-dom-url-search%E2%91%A0
@@ -417,7 +415,7 @@ WebIDL::ExceptionOr<void> URL::set_search(String const& search)
 
     // 4. Set url’s query to the empty string.
     auto url_copy = url; // We copy the URL here to follow other browser's behavior of reverting the search change if the parse failed.
-    url_copy.set_query(DeprecatedString::empty());
+    url_copy.set_query(String {});
 
     // 5. Basic URL parse input with url as url and query state as state override.
     auto result_url = URLParser::basic_parse(input, {}, move(url_copy), URLParser::State::Query);

@@ -994,7 +994,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
 
                 // 2. If c is U+003F (?), then set url’s query to the empty string, and state to query state.
                 if (code_point == '?') {
-                    url->m_query = "";
+                    url->m_query = String {};
                     state = State::Query;
                 }
                 // 3. Otherwise, if c is U+0023 (#), set url’s fragment to the empty string and state to fragment state.
@@ -1304,7 +1304,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
 
                 // 2. If c is U+003F (?), then set url’s query to the empty string and state to query state.
                 if (code_point == '?') {
-                    url->m_query = "";
+                    url->m_query = String {};
                     state = State::Query;
                 }
                 // 3. Otherwise, if c is U+0023 (#), set url’s fragment to the empty string and state to fragment state.
@@ -1445,7 +1445,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
             }
             // 2. Otherwise, if state override is not given and c is U+003F (?), set url’s query to the empty string and state to query state.
             else if (!state_override.has_value() && code_point == '?') {
-                url->m_query = "";
+                url->m_query = String {};
                 state = State::Query;
             }
             // 3. Otherwise, if state override is not given and c is U+0023 (#), set url’s fragment to the empty string and state to fragment state.
@@ -1514,7 +1514,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
 
                 // 6. If c is U+003F (?), then set url’s query to the empty string and state to query state.
                 if (code_point == '?') {
-                    url->m_query = "";
+                    url->m_query = String {};
                     state = State::Query;
                 }
                 // 7. If c is U+0023 (#), then set url’s fragment to the empty string and state to fragment state.
@@ -1543,7 +1543,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
             // 1. If c is U+003F (?), then set url’s query to the empty string and state to query state.
             if (code_point == '?') {
                 url->m_paths[0] = buffer.string_view();
-                url->m_query = "";
+                url->m_query = String {};
                 buffer.clear();
                 state = State::Query;
             }
@@ -1584,14 +1584,13 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
             //    * c is the EOF code point
             if ((!state_override.has_value() && code_point == '#')
                 || code_point == end_of_file) {
-                VERIFY(url->m_query == "");
                 // then:
 
                 // 1. Let queryPercentEncodeSet be the special-query percent-encode set if url is special; otherwise the query percent-encode set.
                 auto query_percent_encode_set = url->is_special() ? URL::PercentEncodeSet::SpecialQuery : URL::PercentEncodeSet::Query;
 
                 // 2. Percent-encode after encoding, with encoding, buffer, and queryPercentEncodeSet, and append the result to url’s query.
-                url->m_query = percent_encode_after_encoding(buffer.string_view(), query_percent_encode_set);
+                url->m_query = String::from_deprecated_string(percent_encode_after_encoding(buffer.string_view(), query_percent_encode_set)).release_value_but_fixme_should_propagate_errors();
 
                 // 3. Set buffer to the empty string.
                 buffer.clear();

@@ -65,7 +65,7 @@ public:
 
     WebIDL::ExceptionOr<String> to_json() const;
 
-    void set_query(Badge<URLSearchParams>, StringView query) { m_url.set_query(query); }
+    void set_query(Badge<URLSearchParams>, Optional<String> query) { m_url.set_query(move(query)); }
 
 private:
     URL(JS::Realm&, AK::URL, JS::NonnullGCPtr<URLSearchParams> query);

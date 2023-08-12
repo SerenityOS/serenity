@@ -253,7 +253,7 @@ WebIDL::ExceptionOr<String> Location::search() const
     auto url = this->url();
 
     // 2. If this's url's query is either null or the empty string, return the empty string.
-    if (url.query().is_empty())
+    if (!url.query().has_value() || url.query()->is_empty())
         return String {};
 
     // 3. Return "?", followed by this's url's query.

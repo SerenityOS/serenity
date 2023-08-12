@@ -82,7 +82,7 @@ public:
     Host const& host() const { return m_host; }
     ErrorOr<String> serialized_host() const;
     DeprecatedString basename() const;
-    DeprecatedString query() const;
+    Optional<String> const& query() const { return m_query; }
     // NOTE: fragment() is percent-decoded, raw_fragment() is not.
     DeprecatedString fragment() const;
     DeprecatedString raw_fragment() const;
@@ -103,7 +103,7 @@ public:
     void set_host(Host);
     void set_port(Optional<u16>);
     void set_paths(Vector<DeprecatedString> const&);
-    void set_query(StringView);
+    void set_query(Optional<String> query) { m_query = move(query); }
     void set_fragment(StringView fragment);
     void set_cannot_be_a_base_url(bool value) { m_cannot_be_a_base_url = value; }
     void append_path(StringView);
@@ -182,7 +182,7 @@ private:
     Vector<DeprecatedString> m_paths;
 
     // A URL’s query is either null or an ASCII string. It is initially null.
-    DeprecatedString m_query;
+    Optional<String> m_query;
 
     // A URL’s fragment is either null or an ASCII string that can be used for further processing on the resource the URL’s other components identify. It is initially null.
     DeprecatedString m_fragment;
