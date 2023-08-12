@@ -450,7 +450,7 @@ CSSPixels FormattingContext::compute_width_for_replaced_element(Box const& box, 
     // 10.3.2 Inline, replaced elements
 
     auto zero_value = CSS::Length::make_px(0);
-    auto width_of_containing_block = available_space.width.to_px();
+    auto width_of_containing_block = available_space.width.to_px_or_zero();
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
 
     auto computed_width = should_treat_width_as_auto(box, available_space) ? CSS::Size::make_auto() : box.computed_values().width();
@@ -564,7 +564,7 @@ CSSPixels FormattingContext::compute_height_for_replaced_element(Box const& box,
 
 void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_element(Box const& box, AvailableSpace const& available_space)
 {
-    auto width_of_containing_block = available_space.width.to_px();
+    auto width_of_containing_block = available_space.width.to_px_or_zero();
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
     auto& computed_values = box.computed_values();
     auto zero_value = CSS::Length::make_px(0);
@@ -744,7 +744,7 @@ void FormattingContext::compute_width_for_absolutely_positioned_replaced_element
     }
 
     auto width = compute_width_for_replaced_element(box, available_space);
-    auto width_of_containing_block = available_space.width.to_px();
+    auto width_of_containing_block = available_space.width.to_px_or_zero();
     auto available = width_of_containing_block - width;
     auto const& computed_values = box.computed_values();
     auto left = computed_values.inset().left();
@@ -834,7 +834,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
 
     auto width_of_containing_block = containing_block_width_for(box);
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
-    auto height_of_containing_block = available_space.height.to_px();
+    auto height_of_containing_block = available_space.height.to_px_or_zero();
     auto height_of_containing_block_as_length = CSS::Length::make_px(height_of_containing_block);
 
     enum class ClampToZero {
@@ -1093,8 +1093,8 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
     auto& containing_block_state = m_state.get_mutable(*box.containing_block());
     auto& box_state = m_state.get_mutable(box);
 
-    auto width_of_containing_block = available_space.width.to_px();
-    auto height_of_containing_block = available_space.height.to_px();
+    auto width_of_containing_block = available_space.width.to_px_or_zero();
+    auto height_of_containing_block = available_space.height.to_px_or_zero();
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
     auto height_of_containing_block_as_length = CSS::Length::make_px(height_of_containing_block);
 
@@ -1135,7 +1135,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_replaced_elemen
     // The used value of 'height' is determined as for inline replaced elements.
     auto height = compute_height_for_replaced_element(box, available_space);
 
-    auto height_of_containing_block = available_space.height.to_px();
+    auto height_of_containing_block = available_space.height.to_px_or_zero();
     auto available = height_of_containing_block - height;
     auto const& computed_values = box.computed_values();
     auto top = computed_values.inset().top();
@@ -1587,7 +1587,7 @@ CSSPixels FormattingContext::calculate_stretch_fit_width(Box const& box, Availab
         return 0;
 
     auto const& box_state = m_state.get(box);
-    return available_width.to_px()
+    return available_width.to_px_or_zero()
         - box_state.margin_left
         - box_state.margin_right
         - box_state.padding_left
@@ -1603,7 +1603,7 @@ CSSPixels FormattingContext::calculate_stretch_fit_height(Box const& box, Availa
     // in other words, the stretch fit into the available space, if that is definite.
     // Undefined if the available space is indefinite.
     auto const& box_state = m_state.get(box);
-    return available_height.to_px()
+    return available_height.to_px_or_zero()
         - box_state.margin_top
         - box_state.margin_bottom
         - box_state.padding_top
