@@ -164,6 +164,23 @@ compiled_action("generate_css_property_id") {
   ]
 }
 
+compiled_action("generate_css_pseudo_class") {
+  tool = "//Meta/Lagom/Tools/CodeGenerators/LibWeb:GenerateCSSPseudoClass"
+  inputs = [ "CSS/PseudoClasses.json" ]
+  outputs = [
+    "$target_gen_dir/CSS/PseudoClass.h",
+    "$target_gen_dir/CSS/PseudoClass.cpp",
+  ]
+  args = [
+    "-h",
+    rebase_path(outputs[0], root_build_dir),
+    "-c",
+    rebase_path(outputs[1], root_build_dir),
+    "-j",
+    rebase_path(inputs[0], root_build_dir),
+  ]
+}
+
 compiled_action("generate_css_transform_functions") {
   tool =
       "//Meta/Lagom/Tools/CodeGenerators/LibWeb:GenerateCSSTransformFunctions"
@@ -228,6 +245,7 @@ source_set("all_generated") {
     ":generate_css_math_functions",
     ":generate_css_media_feature_id",
     ":generate_css_property_id",
+    ":generate_css_pseudo_class",
     ":generate_css_transform_functions",
     ":generate_css_value_id",
     ":generate_default_stylesheet_source",

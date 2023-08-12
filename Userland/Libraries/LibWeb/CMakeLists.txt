@@ -630,6 +630,7 @@ set(GENERATED_SOURCES
     CSS/MathFunctions.cpp
     CSS/MediaFeatureID.cpp
     CSS/PropertyID.cpp
+    CSS/PseudoClass.cpp
     CSS/QuirksModeStyleSheetSource.cpp
     CSS/TransformFunctions.cpp
     CSS/ValueID.cpp
