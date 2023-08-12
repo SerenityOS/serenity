@@ -783,9 +783,28 @@ int getaddrinfo(char const* __restrict node, char const* __restrict service, con
             node = "127.0.0.1";
     }
 
-    auto host_ent = gethostbyname(node);
-    if (!host_ent)
-        return EAI_FAIL;
+    size_t buffer_size = 1024;
+    char* buffer = nullptr;
+    int gethostbyname_errno = 0;
+    struct hostent ret = {};
+    struct hostent* host_ent = nullptr;
+
+    while (true) {
+        buffer = (char*)realloc(buffer, buffer_size);
+
+        if (buffer == nullptr)
+            return EAI_MEMORY;
+
+        int rc = gethostbyname_r(node, &ret, buffer, buffer_size, &host_ent, &gethostbyname_errno);
+        if (rc == ERANGE) {
+            buffer_size *= 2;
+            continue;
+        }
+
+        if (!host_ent)
+            return EAI_FAIL;
+        break;
+    }
 
     char const* proto = nullptr;
     if (hints && hints->ai_socktype) {
