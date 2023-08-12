@@ -33,11 +33,6 @@ public:
     bool is_max_content() const { return m_type == Type::MaxContent; }
     bool is_intrinsic_sizing_constraint() const { return is_min_content() || is_max_content(); }
 
-    CSSPixels to_px() const
-    {
-        return m_value;
-    }
-
     CSSPixels to_px_or_zero() const
     {
         if (!is_definite())
