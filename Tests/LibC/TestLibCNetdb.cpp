@@ -67,3 +67,53 @@ TEST_CASE(gethostbyname_r)
     EXPECT_EQ(result->h_addr_list[1], nullptr);
     EXPECT_EQ(result->h_addrtype, AF_INET);
 }
+
+TEST_CASE(getaddrinfo_should_find_https)
+{
+    struct addrinfo hints;
+    struct addrinfo* result;
+
+    memset(&hints, 0, sizeof(struct addrinfo));
+
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;
+
+    int status = getaddrinfo(nullptr, "https", &hints, &result);
+    EXPECT_EQ(status, 0);
+
+    freeaddrinfo(result);
+}
+
+TEST_CASE(getaddrinfo_should_not_find_service_that_doesnt_exist)
+{
+    struct addrinfo hints;
+    struct addrinfo* result;
+
+    memset(&hints, 0, sizeof(struct addrinfo));
+
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;
+
+    int status = getaddrinfo(nullptr, "unknownservicethatdoesntexistandhopefullyneverwill", &hints, &result);
+    EXPECT_EQ(status, EAI_FAIL);
+
+    freeaddrinfo(result);
+}
+
+TEST_CASE(getaddrinfo_should_find_googles_ip)
+{
+    struct addrinfo hints;
+    struct addrinfo* result;
+
+    memset(&hints, 0, sizeof(struct addrinfo));
+
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+
+    int status = getaddrinfo("google.com", nullptr, &hints, &result);
+    EXPECT_EQ(status, 0);
+
+    freeaddrinfo(result);
+}
