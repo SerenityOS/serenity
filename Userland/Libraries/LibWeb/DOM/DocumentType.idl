@@ -2,7 +2,7 @@
 #import <DOM/Node.idl>
 
 // https://dom.spec.whatwg.org/#documenttype
-[Exposed=Window]
+[Exposed=Window, UseNewAKString]
 interface DocumentType : Node {
     readonly attribute DOMString name;
     readonly attribute DOMString publicId;

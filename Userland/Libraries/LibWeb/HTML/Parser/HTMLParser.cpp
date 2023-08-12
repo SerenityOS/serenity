@@ -497,9 +497,9 @@ void HTMLParser::handle_initial(HTMLToken& token)
 
     if (token.is_doctype()) {
         auto doctype = realm().heap().allocate<DOM::DocumentType>(realm(), document());
-        doctype->set_name(token.doctype_data().name);
-        doctype->set_public_id(token.doctype_data().public_identifier);
-        doctype->set_system_id(token.doctype_data().system_identifier);
+        doctype->set_name(String::from_deprecated_string(token.doctype_data().name).release_value());
+        doctype->set_public_id(String::from_deprecated_string(token.doctype_data().public_identifier).release_value());
+        doctype->set_system_id(String::from_deprecated_string(token.doctype_data().system_identifier).release_value());
         MUST(document().append_child(*doctype));
         document().set_quirks_mode(which_quirks_mode(token));
         m_insertion_mode = InsertionMode::BeforeHTML;
