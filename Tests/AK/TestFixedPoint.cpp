@@ -58,6 +58,9 @@ TEST_CASE(rounding)
     EXPECT_EQ(Type(-1.5).ceil(), Type(-1));
     EXPECT_EQ(Type(-1.25).trunc(), Type(-1));
 
+    EXPECT_EQ(Type(2.75).rint(), Type(3));
+    EXPECT_EQ(Type(-1.25).rint(), Type(-1));
+
     EXPECT_EQ(Type(0.5).lrint(), 0);
     EXPECT_EQ(Type(0.5).lfloor(), 0);
     EXPECT_EQ(Type(0.5).lceil(), 1);
