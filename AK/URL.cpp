@@ -166,7 +166,7 @@ bool URL::compute_validity() const
 }
 
 // https://url.spec.whatwg.org/#default-port
-u16 URL::default_port_for_scheme(StringView scheme)
+Optional<u16> URL::default_port_for_scheme(StringView scheme)
 {
     // Spec defined mappings with port:
     if (scheme == "ftp")
@@ -188,7 +188,7 @@ u16 URL::default_port_for_scheme(StringView scheme)
     if (scheme == "ircs")
         return 6697;
 
-    return 0;
+    return {};
 }
 
 URL URL::create_with_file_scheme(DeprecatedString const& path, DeprecatedString const& fragment, DeprecatedString const& hostname)
