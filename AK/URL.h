@@ -84,7 +84,7 @@ public:
     DeprecatedString path_segment_at_index(size_t index) const;
     size_t path_segment_count() const { return m_paths.size(); }
 
-    u16 port_or_default() const { return m_port.value_or(default_port_for_scheme(m_scheme)); }
+    u16 port_or_default() const { return m_port.value_or(default_port_for_scheme(m_scheme).value_or(0)); }
     bool cannot_be_a_base_url() const { return m_cannot_be_a_base_url; }
     bool cannot_have_a_username_or_password_or_port() const;
 
@@ -131,7 +131,7 @@ public:
     static URL create_with_help_scheme(DeprecatedString const& path, DeprecatedString const& fragment = {}, DeprecatedString const& hostname = {});
     static URL create_with_data(StringView mime_type, StringView payload, bool is_base64 = false);
 
-    static u16 default_port_for_scheme(StringView);
+    static Optional<u16> default_port_for_scheme(StringView);
     static bool is_special_scheme(StringView);
 
     enum class SpaceAsPlus {
