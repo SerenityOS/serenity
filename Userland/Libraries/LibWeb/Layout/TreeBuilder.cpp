@@ -389,10 +389,6 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
         static_cast<CSS::MutableComputedValues&>(cell_computed_values).set_vertical_align(CSS::VerticalAlign::Middle);
         static_cast<CSS::MutableComputedValues&>(cell_computed_values).set_white_space(CSS::WhiteSpace::Nowrap);
 
-        auto flow_root_computed_values = CSS::ComputedValues();
-        static_cast<CSS::MutableComputedValues&>(flow_root_computed_values).set_width(CSS::Size::make_percentage(CSS::Percentage(100)));
-        static_cast<CSS::MutableComputedValues&>(flow_root_computed_values).set_display(CSS::Display::from_short(CSS::Display::Short::InlineBlock));
-
         auto table_wrapper = parent.heap().template allocate_without_realm<BlockContainer>(parent.document(), nullptr, move(table_computed_values));
         auto cell_wrapper = parent.heap().template allocate_without_realm<BlockContainer>(parent.document(), nullptr, move(cell_computed_values));
 
