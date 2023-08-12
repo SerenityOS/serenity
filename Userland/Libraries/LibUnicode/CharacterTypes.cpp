@@ -147,4 +147,7 @@ bool __attribute__((weak)) code_point_has_grapheme_break_property(u32, GraphemeB
 bool __attribute__((weak)) code_point_has_word_break_property(u32, WordBreakProperty) { return {}; }
 bool __attribute__((weak)) code_point_has_sentence_break_property(u32, SentenceBreakProperty) { return {}; }
 
+Optional<BidirectionalClass> __attribute__((weak)) bidirectional_class_from_string(StringView) { return {}; }
+Optional<BidirectionalClass> __attribute__((weak)) bidirectional_class(u32) { return {}; }
+
 }
