@@ -48,6 +48,7 @@ public:
     DeprecatedString to_deprecated_string() const;
 
     bool operator==(AvailableSize const& other) const = default;
+    bool operator<(AvailableSize const& other) const { return m_value < other.m_value; }
 
 private:
     AvailableSize(Type type, CSSPixels);
