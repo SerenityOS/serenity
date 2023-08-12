@@ -30,7 +30,7 @@ public:
     void dimension_box_on_line(Box const&, LayoutMode);
 
     CSSPixels leftmost_x_offset_at(CSSPixels y) const;
-    CSSPixels available_space_for_line(CSSPixels y) const;
+    AvailableSize available_space_for_line(CSSPixels y) const;
     bool any_floats_intrude_at_y(CSSPixels y) const;
     bool can_fit_new_line_at_y(CSSPixels y) const;
 

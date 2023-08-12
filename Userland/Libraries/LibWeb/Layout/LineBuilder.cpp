@@ -136,7 +136,7 @@ CSSPixels LineBuilder::y_for_float_to_be_inserted_here(Box const& box)
 
 bool LineBuilder::should_break(CSSPixels next_item_width)
 {
-    if (!isfinite(m_available_width_for_current_line.to_double()))
+    if (m_available_width_for_current_line.is_max_content())
         return false;
 
     auto const& line_boxes = m_containing_block_state.line_boxes;
@@ -169,7 +169,7 @@ void LineBuilder::update_last_line()
     CSSPixels x_offset_bottom = m_context.leftmost_x_offset_at(m_current_y + current_line_height - 1);
     CSSPixels x_offset = max(x_offset_top, x_offset_bottom);
 
-    CSSPixels excess_horizontal_space = m_available_width_for_current_line - line_box.width();
+    CSSPixels excess_horizontal_space = m_available_width_for_current_line.to_px_or_zero() - line_box.width();
 
     // If (after justification, if any) the inline contents of a line box are too long to fit within it,
     // then the contents are start-aligned: any content that doesn't fit overflows the line box’s end edge.
