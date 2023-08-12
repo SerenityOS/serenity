@@ -219,7 +219,7 @@ void TableFormattingContext::compute_constrainedness()
     }
 }
 
-void TableFormattingContext::compute_cell_measures(AvailableSpace const& available_space)
+void TableFormattingContext::compute_cell_measures()
 {
     // Implements https://www.w3.org/TR/css-tables-3/#computing-cell-measures.
     auto const& containing_block = m_state.get(*table_wrapper().containing_block());
@@ -241,10 +241,10 @@ void TableFormattingContext::compute_cell_measures(AvailableSpace const& availab
         CSSPixels border_left = use_collapsing_borders_model ? round(cell_state.border_left / 2) : computed_values.border_left().width;
         CSSPixels border_right = use_collapsing_borders_model ? round(cell_state.border_right / 2) : computed_values.border_right().width;
 
-        auto min_content_height = calculate_min_content_height(cell.box, available_space.width.to_px_or_zero());
-        auto max_content_height = calculate_max_content_height(cell.box, available_space.width.to_px_or_zero());
         auto min_content_width = calculate_min_content_width(cell.box);
         auto max_content_width = calculate_max_content_width(cell.box);
+        auto min_content_height = calculate_min_content_height(cell.box, max_content_width);
+        auto max_content_height = calculate_max_content_height(cell.box, min_content_width);
 
         // The outer min-content height of a table-cell is max(min-height, min-content height) adjusted by the cell intrinsic offsets.
         auto min_height = computed_values.min_height().to_px(cell.box, containing_block.content_height());
@@ -1673,7 +1673,7 @@ void TableFormattingContext::run(Box const& box, LayoutMode layout_mode, Availab
     border_conflict_resolution();
 
     // Compute the minimum width of each column.
-    compute_cell_measures(available_space);
+    compute_cell_measures();
     compute_outer_content_sizes();
     compute_table_measures<Column>();
 
