@@ -80,7 +80,7 @@ static DeprecatedString deprecated_string_percent_encode(DeprecatedString const&
     return URL::percent_encode(input.view(), set, space_as_plus);
 }
 
-void URL::set_scheme(DeprecatedString scheme)
+void URL::set_scheme(String scheme)
 {
     m_scheme = move(scheme);
     m_valid = compute_validity();
@@ -213,7 +213,7 @@ URL URL::create_with_file_scheme(DeprecatedString const& path, DeprecatedString 
         return {};
 
     URL url;
-    url.set_scheme("file");
+    url.set_scheme("file"_string);
     // NOTE: If the hostname is localhost (or null, which implies localhost), it should be set to the empty string.
     //       This is because a file URL always needs a non-null hostname.
     url.set_host(hostname.is_null() || hostname == "localhost" ? String {} : String::from_deprecated_string(hostname).release_value_but_fixme_should_propagate_errors());
@@ -229,7 +229,7 @@ URL URL::create_with_help_scheme(DeprecatedString const& path, DeprecatedString 
     LexicalPath lexical_path(path);
 
     URL url;
-    url.set_scheme("help");
+    url.set_scheme("help"_string);
     // NOTE: If the hostname is localhost (or null, which implies localhost), it should be set to the empty string.
     //       This is because a file URL always needs a non-null hostname.
     url.set_host(hostname.is_null() || hostname == "localhost" ? String {} : String::from_deprecated_string(hostname).release_value_but_fixme_should_propagate_errors());
@@ -255,7 +255,7 @@ URL URL::create_with_data(StringView mime_type, StringView payload, bool is_base
 {
     URL url;
     url.set_cannot_be_a_base_url(true);
-    url.set_scheme("data"sv);
+    url.set_scheme("data"_string);
 
     StringBuilder builder;
     builder.append(mime_type);

@@ -31,7 +31,7 @@ WebIDL::ExceptionOr<String> WorkerLocation::protocol() const
 {
     auto& vm = realm().vm();
     // The protocol getter steps are to return this's WorkerGlobalScope object's url's scheme, followed by ":".
-    return TRY_OR_THROW_OOM(vm, String::formatted("{}:", m_global_scope->url().scheme().view()));
+    return TRY_OR_THROW_OOM(vm, String::formatted("{}:", m_global_scope->url().scheme()));
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-workerlocation-host

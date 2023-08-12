@@ -146,8 +146,8 @@ Vector<DeprecatedString> Launcher::handlers_for_url(const URL& url)
             return true;
         });
     } else {
-        for_each_handler(url.scheme(), m_protocol_handlers, [&](auto const& handler) -> bool {
-            if (handler.handler_type != Handler::Type::Default || handler.protocols.contains(url.scheme())) {
+        for_each_handler(url.scheme().to_deprecated_string(), m_protocol_handlers, [&](auto const& handler) -> bool {
+            if (handler.handler_type != Handler::Type::Default || handler.protocols.contains(url.scheme().to_deprecated_string())) {
                 handlers.append(handler.executable);
                 return true;
             }
@@ -166,8 +166,8 @@ Vector<DeprecatedString> Launcher::handlers_with_details_for_url(const URL& url)
             return true;
         });
     } else {
-        for_each_handler(url.scheme(), m_protocol_handlers, [&](auto const& handler) -> bool {
-            if (handler.handler_type != Handler::Type::Default || handler.protocols.contains(url.scheme())) {
+        for_each_handler(url.scheme().to_deprecated_string(), m_protocol_handlers, [&](auto const& handler) -> bool {
+            if (handler.handler_type != Handler::Type::Default || handler.protocols.contains(url.scheme().to_deprecated_string())) {
                 handlers.append(handler.to_details_str());
                 return true;
             }
@@ -194,7 +194,7 @@ bool Launcher::open_url(const URL& url, DeprecatedString const& handler_name)
     if (url.scheme() == "file")
         return open_file_url(url);
 
-    return open_with_user_preferences(m_protocol_handlers, url.scheme(), { url.to_deprecated_string() });
+    return open_with_user_preferences(m_protocol_handlers, url.scheme().to_deprecated_string(), { url.to_deprecated_string() });
 }
 
 bool Launcher::open_with_handler_name(const URL& url, DeprecatedString const& handler_name)

@@ -850,7 +850,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                 }
 
                 // 2. Set url’s scheme to buffer.
-                url->m_scheme = buffer.to_deprecated_string();
+                url->m_scheme = buffer.to_string().release_value_but_fixme_should_propagate_errors();
 
                 // 3. If state override is given, then:
                 if (state_override.has_value()) {
@@ -1281,7 +1281,7 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
         // -> file state, https://url.spec.whatwg.org/#file-state
         case State::File:
             // 1. Set url’s scheme to "file".
-            url->m_scheme = "file";
+            url->m_scheme = String::from_utf8("file"sv).release_value_but_fixme_should_propagate_errors();
 
             // 2. Set url’s host to the empty string.
             url->m_host = String {};

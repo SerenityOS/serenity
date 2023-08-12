@@ -513,14 +513,14 @@ HTML::Origin url_origin(AK::URL const& url)
     // -> "wss"
     if (url.scheme().is_one_of("ftp"sv, "http"sv, "https"sv, "ws"sv, "wss"sv)) {
         // Return the tuple origin (url’s scheme, url’s host, url’s port, null).
-        return HTML::Origin(url.scheme(), url.host(), url.port().value_or(0));
+        return HTML::Origin(url.scheme().to_deprecated_string(), url.host(), url.port().value_or(0));
     }
 
     // -> "file"
     if (url.scheme() == "file"sv) {
         // Unfortunate as it is, this is left as an exercise to the reader. When in doubt, return a new opaque origin.
         // Note: We must return an origin with the `file://' protocol for `file://' iframes to work from `file://' pages.
-        return HTML::Origin(url.scheme(), String {}, 0);
+        return HTML::Origin(url.scheme().to_deprecated_string(), String {}, 0);
     }
 
     // -> Otherwise

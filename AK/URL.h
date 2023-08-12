@@ -76,7 +76,7 @@ public:
         Yes,
         No
     };
-    DeprecatedString const& scheme() const { return m_scheme; }
+    String const& scheme() const { return m_scheme; }
     ErrorOr<String> username() const;
     ErrorOr<String> password() const;
     Host const& host() const { return m_host; }
@@ -97,7 +97,7 @@ public:
     bool includes_credentials() const { return !m_username.is_empty() || !m_password.is_empty(); }
     bool is_special() const { return is_special_scheme(m_scheme); }
 
-    void set_scheme(DeprecatedString);
+    void set_scheme(String);
     ErrorOr<void> set_username(StringView);
     ErrorOr<void> set_password(StringView);
     void set_host(Host);
@@ -163,7 +163,7 @@ private:
     bool m_valid { false };
 
     // A URL’s scheme is an ASCII string that identifies the type of URL and can be used to dispatch a URL for further processing after parsing. It is initially the empty string.
-    DeprecatedString m_scheme;
+    String m_scheme;
 
     // A URL’s username is an ASCII string identifying a username. It is initially the empty string.
     String m_username;
