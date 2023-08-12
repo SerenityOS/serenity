@@ -71,6 +71,7 @@ struct PseudoClassMetadata {
         None,
         ANPlusB,
         ANPlusBOf,
+        CompoundSelector,
         ForgivingSelectorList,
         LanguageRanges,
         SelectorList,
@@ -164,6 +165,8 @@ PseudoClassMetadata pseudo_class_metadata(PseudoClass pseudo_class)
                 parameter_type = "ANPlusB"_string;
             } else if (argument_string == "<an+b-of>"sv) {
                 parameter_type = "ANPlusBOf"_string;
+            } else if (argument_string == "<compound-selector>"sv) {
+                parameter_type = "CompoundSelector"_string;
             } else if (argument_string == "<forgiving-selector-list>"sv) {
                 parameter_type = "ForgivingSelectorList"_string;
             } else if (argument_string == "<language-ranges>"sv) {
