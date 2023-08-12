@@ -496,6 +496,7 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                     builder.append(")"sv);
                     break;
                 }
+                case CSS::PseudoClassMetadata::ParameterType::CompoundSelector:
                 case CSS::PseudoClassMetadata::ParameterType::ForgivingSelectorList:
                 case CSS::PseudoClassMetadata::ParameterType::SelectorList: {
                     builder.append("(["sv);

@@ -633,6 +633,24 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
             return parse_nth_child_selector(pseudo_class, pseudo_function.values(), false);
         case PseudoClassMetadata::ParameterType::ANPlusBOf:
             return parse_nth_child_selector(pseudo_class, pseudo_function.values(), true);
+        case PseudoClassMetadata::ParameterType::CompoundSelector: {
+            auto function_token_stream = TokenStream(pseudo_function.values());
+            auto compound_selector = MUST(parse_compound_selector(function_token_stream));
+            if (!compound_selector.has_value()) {
+                dbgln_if(CSS_PARSER_DEBUG, "Failed to parse :{}() parameter as a compound selector", pseudo_function.name());
+                return ParseError::SyntaxError;
+            }
+
+            Vector compound_selectors { compound_selector.release_value() };
+            auto selector = Selector::create(move(compound_selectors));
+
+            return Selector::SimpleSelector {
+                .type = Selector::SimpleSelector::Type::PseudoClass,
+                .value = Selector::SimpleSelector::PseudoClassSelector {
+                    .type = pseudo_class,
+                    .argument_selector_list = { move(selector) } }
+            };
+        }
         case PseudoClassMetadata::ParameterType::ForgivingSelectorList: {
             auto function_token_stream = TokenStream(pseudo_function.values());
             // NOTE: Because it's forgiving, even complete garbage will parse OK as an empty selector-list.
