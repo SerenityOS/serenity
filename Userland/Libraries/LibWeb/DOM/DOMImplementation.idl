@@ -1,7 +1,7 @@
 #import <DOM/Document.idl>
 
 // https://dom.spec.whatwg.org/#domimplementation
-[Exposed=Window]
+[Exposed=Window, UseNewAKString]
 interface DOMImplementation {
 
     // FIXME: This should return XMLDocument instead of Document.

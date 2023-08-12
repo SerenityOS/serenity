@@ -44,7 +44,7 @@ void DOMImplementation::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://dom.spec.whatwg.org/#dom-domimplementation-createdocument
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_document(DeprecatedString const& namespace_, DeprecatedString const& qualified_name, JS::GCPtr<DocumentType> doctype) const
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_document(Optional<String> const& namespace_, String const& qualified_name, JS::GCPtr<DocumentType> doctype) const
 {
     // FIXME: 1. Let document be a new XMLDocument
     auto xml_document = Document::create(realm());
@@ -56,7 +56,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_docume
 
     // 3. If qualifiedName is not the empty string, then set element to the result of running the internal createElementNS steps, given document, namespace, qualifiedName, and an empty dictionary.
     if (!qualified_name.is_empty())
-        element = TRY(xml_document->create_element_ns(namespace_, qualified_name, ElementCreationOptions {}));
+        element = TRY(xml_document->create_element_ns(namespace_.value().to_deprecated_string(), qualified_name.to_deprecated_string(), ElementCreationOptions {}));
 
     // 4. If doctype is non-null, append doctype to document.
     if (doctype)
@@ -70,10 +70,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_docume
     xml_document->set_origin(document().origin());
 
     // 7. document’s content type is determined by namespace:
-    if (namespace_ == Namespace::HTML) {
+    auto deprecated_namespace = namespace_.has_value() ? namespace_->to_deprecated_string() : DeprecatedString::empty();
+
+    if (deprecated_namespace == Namespace::HTML) {
         // -> HTML namespace
         xml_document->set_content_type("application/xhtml+xml");
-    } else if (namespace_ == Namespace::SVG) {
+    } else if (deprecated_namespace == Namespace::SVG) {
         // -> SVG namespace
         xml_document->set_content_type("image/svg+xml");
     } else {
@@ -86,7 +88,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_docume
 }
 
 // https://dom.spec.whatwg.org/#dom-domimplementation-createhtmldocument
-JS::NonnullGCPtr<Document> DOMImplementation::create_html_document(DeprecatedString const& title) const
+JS::NonnullGCPtr<Document> DOMImplementation::create_html_document(Optional<String> const& title) const
 {
     // 1. Let doc be a new document that is an HTML document.
     auto html_document = Document::create(realm());
@@ -110,13 +112,13 @@ JS::NonnullGCPtr<Document> DOMImplementation::create_html_document(DeprecatedStr
     MUST(html_element->append_child(head_element));
 
     // 6. If title is given:
-    if (!title.is_null()) {
+    if (title.has_value()) {
         // 1. Append the result of creating an element given doc, title, and the HTML namespace, to the head element created earlier.
         auto title_element = create_element(html_document, HTML::TagNames::title, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
         MUST(head_element->append_child(title_element));
 
         // 2. Append a new Text node, with its data set to title (which could be the empty string) and its node document set to doc, to the title element created earlier.
-        auto text_node = heap().allocate<Text>(realm(), html_document, title);
+        auto text_node = heap().allocate<Text>(realm(), html_document, title->to_deprecated_string());
         MUST(title_element->append_child(*text_node));
     }
 
@@ -132,16 +134,16 @@ JS::NonnullGCPtr<Document> DOMImplementation::create_html_document(DeprecatedStr
 }
 
 // https://dom.spec.whatwg.org/#dom-domimplementation-createdocumenttype
-WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentType>> DOMImplementation::create_document_type(DeprecatedString const& qualified_name, DeprecatedString const& public_id, DeprecatedString const& system_id)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentType>> DOMImplementation::create_document_type(String const& qualified_name, String const& public_id, String const& system_id)
 {
     // 1. Validate qualifiedName.
-    TRY(Document::validate_qualified_name(realm(), qualified_name));
+    TRY(Document::validate_qualified_name(realm(), qualified_name.to_deprecated_string()));
 
     // 2. Return a new doctype, with qualifiedName as its name, publicId as its public ID, and systemId as its system ID, and with its node document set to the associated document of this.
     auto document_type = DocumentType::create(document());
-    document_type->set_name(qualified_name);
-    document_type->set_public_id(public_id);
-    document_type->set_system_id(system_id);
+    document_type->set_name(qualified_name.to_deprecated_string());
+    document_type->set_public_id(public_id.to_deprecated_string());
+    document_type->set_system_id(system_id.to_deprecated_string());
     return document_type;
 }
 
