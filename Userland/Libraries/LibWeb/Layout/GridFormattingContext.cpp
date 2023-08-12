@@ -1954,7 +1954,7 @@ CSSPixels GridFormattingContext::calculate_min_content_size(GridItem const& item
     if (dimension == GridDimension::Column) {
         return calculate_min_content_width(item.box);
     } else {
-        return calculate_min_content_height(item.box, get_available_space_for_item(item).width);
+        return calculate_min_content_height(item.box, get_available_space_for_item(item).width.to_px_or_zero());
     }
 }
 
@@ -1963,7 +1963,7 @@ CSSPixels GridFormattingContext::calculate_max_content_size(GridItem const& item
     if (dimension == GridDimension::Column) {
         return calculate_max_content_width(item.box);
     } else {
-        return calculate_max_content_height(item.box, get_available_space_for_item(item).width);
+        return calculate_max_content_height(item.box, get_available_space_for_item(item).width.to_px_or_zero());
     }
 }
 

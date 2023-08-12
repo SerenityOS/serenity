@@ -164,14 +164,8 @@ struct LayoutState {
         Optional<CSSPixels> min_content_width;
         Optional<CSSPixels> max_content_width;
 
-        // NOTE: Since intrinsic heights depend on the amount of available width, we have to cache
-        //       three separate kinds of results, depending on the available width at the time of calculation.
-        HashMap<CSSPixels, Optional<CSSPixels>> min_content_height_with_definite_available_width;
-        HashMap<CSSPixels, Optional<CSSPixels>> max_content_height_with_definite_available_width;
-        Optional<CSSPixels> min_content_height_with_min_content_available_width;
-        Optional<CSSPixels> max_content_height_with_min_content_available_width;
-        Optional<CSSPixels> min_content_height_with_max_content_available_width;
-        Optional<CSSPixels> max_content_height_with_max_content_available_width;
+        HashMap<CSSPixels, Optional<CSSPixels>> min_content_height;
+        HashMap<CSSPixels, Optional<CSSPixels>> max_content_height;
     };
 
     HashMap<JS::GCPtr<NodeWithStyleAndBoxModelMetrics const>, NonnullOwnPtr<IntrinsicSizes>> mutable intrinsic_sizes;
