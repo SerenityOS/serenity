@@ -7,6 +7,7 @@
 #include "BoardWidget.h"
 #include "MainWidget.h"
 #include "SettingsDialog.h"
+#include <AK/String.h>
 #include <AK/URL.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
@@ -145,12 +146,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             board_widget->board()->update_values();
             update();
             if (board_widget->board()->is_flooded()) {
-                DeprecatedString dialog_text("You have tied with the AI."sv);
+                auto dialog_text = "You have tied with the AI."_string;
                 auto dialog_title("Congratulations!"sv);
                 if (ai_moves - moves_made == 1)
-                    dialog_text = "You defeated the AI by 1 move."sv;
+                    dialog_text = "You defeated the AI by 1 move."_string;
                 else if (ai_moves - moves_made > 1)
-                    dialog_text = DeprecatedString::formatted("You defeated the AI by {} moves.", ai_moves - moves_made);
+                    dialog_text = String::formatted("You defeated the AI by {} moves.", ai_moves - moves_made).release_value_but_fixme_should_propagate_errors();
                 else
                     dialog_title = "Game over!"sv;
                 GUI::MessageBox::show(window,
