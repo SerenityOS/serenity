@@ -8,5 +8,5 @@ files=(
 )
 launcher_name=Nyancat
 launcher_category=Games
-launcher_command=nyancat
+launcher_command='/usr/local/bin/nyancat'
 launcher_run_in_terminal=true
