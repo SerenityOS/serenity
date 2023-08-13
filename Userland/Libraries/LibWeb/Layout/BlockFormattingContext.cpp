@@ -442,7 +442,6 @@ CSSPixels BlockFormattingContext::compute_table_box_width_inside_table_wrapper(B
 void BlockFormattingContext::compute_height(Box const& box, AvailableSpace const& available_space)
 {
     auto const& computed_values = box.computed_values();
-    auto containing_block_height = CSS::Length::make_px(available_space.height.to_px_or_zero());
 
     // Then work out what the height is, based on box type and CSS properties.
     CSSPixels height = 0;
