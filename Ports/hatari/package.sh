@@ -9,7 +9,7 @@ files=(
 )
 launcher_name=Hatari
 launcher_category=Games
-launcher_command=hatari
+launcher_command='/usr/local/bin/hatari'
 
 configure() {
     run cmake "${configopts[@]}"
