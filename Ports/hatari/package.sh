@@ -10,6 +10,7 @@ files=(
 launcher_name=Hatari
 launcher_category=Games
 launcher_command='/usr/local/bin/hatari'
+icon_file='share/icons/hicolor/32x32/apps/hatari.png'
 
 configure() {
     run cmake "${configopts[@]}"
