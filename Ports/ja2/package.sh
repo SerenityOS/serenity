@@ -12,6 +12,7 @@ makeopts+=(
 launcher_name="Jagged Alliance 2"
 launcher_category=Games
 launcher_command="/opt/ja2/ja2"
+icon_file='Build/Res/jagged3.ico'
 
 install() {
     installdir="${SERENITY_INSTALL_ROOT}/opt/ja2"
