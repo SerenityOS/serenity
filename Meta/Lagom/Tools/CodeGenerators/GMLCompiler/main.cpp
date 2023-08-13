@@ -301,7 +301,7 @@ static ErrorOr<void> generate_loader_for_object(GUI::GML::Object const& gml_obje
     TRY(gml_object.try_for_each_child_object([&](auto const& child) -> ErrorOr<void> {
         // Spacer is a pseudo-class that insteads causes a call to `Widget::add_spacer` on the parent object.
         if (child.name() == "GUI::Layout::Spacer"sv) {
-            TRY(append(generator, "TRY(@object_name@->add_spacer());"));
+            TRY(append(generator, "@object_name@->add_spacer();"));
             return {};
         }
 

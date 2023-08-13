@@ -86,12 +86,12 @@ ShutdownDialog::ShutdownDialog()
         }
     }
 
-    right_container.add_spacer().release_value_but_fixme_should_propagate_errors();
+    right_container.add_spacer();
 
     auto& button_container = right_container.add<GUI::Widget>();
     button_container.set_fixed_height(23);
     button_container.set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 5);
-    button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
+    button_container.add_spacer();
     auto& ok_button = button_container.add<GUI::Button>("OK"_string);
     ok_button.set_fixed_size(80, 23);
     ok_button.on_click = [this](auto) {

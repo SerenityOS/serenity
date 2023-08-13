@@ -40,7 +40,6 @@ public:
 
     ErrorOr<void> try_add_widget(Widget&);
     ErrorOr<void> try_insert_widget_before(Widget& widget, Widget& before_widget);
-    ErrorOr<void> try_add_spacer();
 
     void remove_widget(Widget&);
 

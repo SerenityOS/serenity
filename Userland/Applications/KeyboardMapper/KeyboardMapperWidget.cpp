@@ -94,7 +94,7 @@ void KeyboardMapperWidget::create_frame()
     add_map_radio_button("alt_map"sv, "Alt"_string);
     add_map_radio_button("shift_altgr_map"sv, "Shift+AltGr"_string);
 
-    bottom_widget.add_spacer().release_value_but_fixme_should_propagate_errors();
+    bottom_widget.add_spacer();
 }
 
 void KeyboardMapperWidget::add_map_radio_button(const StringView map_name, String button_text)

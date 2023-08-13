@@ -226,7 +226,7 @@ void ColorPicker::build_ui()
     auto& button_container = root_container->add<Widget>();
     button_container.set_preferred_height(GUI::SpecialDimension::Fit);
     button_container.set_layout<HorizontalBoxLayout>(4);
-    button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
+    button_container.add_spacer();
 
     auto& ok_button = button_container.add<DialogButton>();
     ok_button.set_text("OK"_string);
@@ -327,7 +327,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     // Preview selected color
     m_preview_widget = preview_container.add<ColorPreview>(m_color);
 
-    vertical_container.add_spacer().release_value_but_fixme_should_propagate_errors();
+    vertical_container.add_spacer();
 
     // HTML
     auto& html_container = vertical_container.add<GUI::Widget>();

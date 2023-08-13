@@ -174,7 +174,7 @@ ErrorOr<void> Toolbar::create_overflow_objects()
     m_overflow_action->set_status_tip("Show hidden toolbar actions"_string);
     m_overflow_action->set_enabled(false);
 
-    TRY(add_spacer());
+    add_spacer();
 
     m_overflow_button = TRY(try_add_action(*m_overflow_action));
     m_overflow_button->set_visible(false);

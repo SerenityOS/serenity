@@ -73,15 +73,9 @@ void Layout::add_entry(Entry&& entry)
     MUST(try_add_entry(move(entry)));
 }
 
-ErrorOr<void> Layout::try_add_spacer()
-{
-    TRY(try_add_entry(Entry { .type = Entry::Type::Spacer }));
-    return {};
-}
-
 void Layout::add_spacer()
 {
-    MUST(try_add_spacer());
+    add_entry(Entry { .type = Entry::Type::Spacer });
 }
 
 void Layout::add_layout(OwnPtr<Layout>&& layout)

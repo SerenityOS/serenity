@@ -159,7 +159,7 @@ ErrorOr<void> InputBox::build()
 
     auto button_container = TRY(main_widget->try_add<Widget>());
     button_container->set_layout<HorizontalBoxLayout>(0, 6);
-    TRY(button_container->add_spacer());
+    button_container->add_spacer();
 
     m_ok_button = TRY(button_container->try_add<DialogButton>("OK"_string));
     m_ok_button->on_click = [this](auto) {
