@@ -100,6 +100,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Web::FrameLoader::set_resource_directory_url(DeprecatedString::formatted("file://{}/res", s_serenity_resource_root));
     Web::FrameLoader::set_error_page_url(DeprecatedString::formatted("file://{}/res/html/error.html", s_serenity_resource_root));
+    Web::FrameLoader::set_directory_page_url(DeprecatedString::formatted("file://{}/res/html/directory.html", s_serenity_resource_root));
 
     TRY(Web::Bindings::initialize_main_thread_vm());
 
