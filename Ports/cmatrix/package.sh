@@ -9,7 +9,7 @@ files=(
 )
 launcher_name=cmatrix
 launcher_category=Games
-launcher_command=cmatrix
+launcher_command='/usr/local/bin/cmatrix'
 launcher_run_in_terminal=true
 
 configure() {
@@ -17,5 +17,6 @@ configure() {
 }
 
 install() {
-    run cp cmatrix "${SERENITY_INSTALL_ROOT}/bin"
+    mkdir -p "${SERENITY_INSTALL_ROOT}/usr/local/bin"
+    run cp cmatrix "${SERENITY_INSTALL_ROOT}/usr/local/bin"
 }
