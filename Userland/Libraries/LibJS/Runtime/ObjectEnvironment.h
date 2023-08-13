@@ -10,7 +10,7 @@
 
 namespace JS {
 
-class ObjectEnvironment : public Environment {
+class ObjectEnvironment final : public Environment {
     JS_ENVIRONMENT(ObjectEnvironment, Environment);
 
 public:

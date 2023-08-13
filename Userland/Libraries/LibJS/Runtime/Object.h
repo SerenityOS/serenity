@@ -164,7 +164,7 @@ public:
     void define_direct_accessor(PropertyKey const&, FunctionObject* getter, FunctionObject* setter, PropertyAttributes attributes);
 
     using IntrinsicAccessor = Value (*)(Realm&);
-    virtual void define_intrinsic_accessor(PropertyKey const&, PropertyAttributes attributes, IntrinsicAccessor accessor);
+    void define_intrinsic_accessor(PropertyKey const&, PropertyAttributes attributes, IntrinsicAccessor accessor);
 
     void define_native_function(Realm&, PropertyKey const&, SafeFunction<ThrowCompletionOr<Value>(VM&)>, i32 length, PropertyAttributes attributes);
     void define_native_accessor(Realm&, PropertyKey const&, SafeFunction<ThrowCompletionOr<Value>(VM&)> getter, SafeFunction<ThrowCompletionOr<Value>(VM&)> setter, PropertyAttributes attributes);

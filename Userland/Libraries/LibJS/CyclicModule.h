@@ -27,8 +27,8 @@ class CyclicModule : public Module {
 public:
     // Note: Do not call these methods directly unless you are HostResolveImportedModule.
     //       Badges cannot be used because other hosts must be able to call this (and it is called recursively)
-    virtual ThrowCompletionOr<void> link(VM& vm) override;
-    virtual ThrowCompletionOr<Promise*> evaluate(VM& vm) override;
+    virtual ThrowCompletionOr<void> link(VM& vm) override final;
+    virtual ThrowCompletionOr<Promise*> evaluate(VM& vm) override final;
 
     Vector<ModuleRequest> const& requested_modules() const { return m_requested_modules; }
 
@@ -37,8 +37,8 @@ protected:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
-    virtual ThrowCompletionOr<u32> inner_module_linking(VM& vm, Vector<Module*>& stack, u32 index) override;
-    virtual ThrowCompletionOr<u32> inner_module_evaluation(VM& vm, Vector<Module*>& stack, u32 index) override;
+    virtual ThrowCompletionOr<u32> inner_module_linking(VM& vm, Vector<Module*>& stack, u32 index) override final;
+    virtual ThrowCompletionOr<u32> inner_module_evaluation(VM& vm, Vector<Module*>& stack, u32 index) override final;
 
     virtual ThrowCompletionOr<void> initialize_environment(VM& vm);
     virtual ThrowCompletionOr<void> execute_module(VM& vm, GCPtr<PromiseCapability> capability = {});
