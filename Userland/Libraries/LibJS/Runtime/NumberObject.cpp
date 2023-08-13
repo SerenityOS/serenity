@@ -11,7 +11,7 @@ namespace JS {
 
 NonnullGCPtr<NumberObject> NumberObject::create(Realm& realm, double value)
 {
-    return realm.heap().allocate<NumberObject>(realm, value, realm.intrinsics().number_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<NumberObject>(realm, value, realm.intrinsics().number_prototype());
 }
 
 NumberObject::NumberObject(double value, Object& prototype)

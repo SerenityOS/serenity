@@ -33,7 +33,7 @@ void ReadLoopReadRequest::visit_edges(Visitor& visitor)
 // https://streams.spec.whatwg.org/#default-reader-constructor
 WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStreamDefaultReader>> ReadableStreamDefaultReader::construct_impl(JS::Realm& realm, JS::NonnullGCPtr<ReadableStream> stream)
 {
-    auto reader = TRY(realm.heap().allocate<ReadableStreamDefaultReader>(realm, realm));
+    auto reader = realm.heap().allocate<ReadableStreamDefaultReader>(realm, realm);
 
     // 1. Perform ? SetUpReadableStreamDefaultReader(this, stream);
     TRY(set_up_readable_stream_default_reader(reader, *stream));

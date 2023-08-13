@@ -27,7 +27,7 @@ class MessagePort final : public DOM::EventTarget {
     WEB_PLATFORM_OBJECT(MessagePort, DOM::EventTarget);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<MessagePort>> create(JS::Realm&);
+    [[nodiscard]] static JS::NonnullGCPtr<MessagePort> create(JS::Realm&);
 
     virtual ~MessagePort() override;
 

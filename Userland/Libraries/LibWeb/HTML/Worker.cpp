@@ -23,7 +23,7 @@ Worker::Worker(String const& script_url, WorkerOptions const options, DOM::Docum
     , m_document(&document)
     , m_custom_data()
     , m_worker_vm(JS::VM::create(adopt_own(m_custom_data)).release_value_but_fixme_should_propagate_errors())
-    , m_implicit_port(MessagePort::create(document.realm()).release_value_but_fixme_should_propagate_errors())
+    , m_implicit_port(MessagePort::create(document.realm()))
 {
 }
 
@@ -77,10 +77,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(String const& scrip
     // 5. Let worker URL be the resulting URL record.
 
     // 6. Let worker be a new Worker object.
-    auto worker = MUST_OR_THROW_OOM(document.heap().allocate<Worker>(document.realm(), script_url, options, document));
+    auto worker = document.heap().allocate<Worker>(document.realm(), script_url, options, document);
 
     // 7. Let outside port be a new MessagePort in outside settings's Realm.
-    auto outside_port = TRY(MessagePort::create(outside_settings.realm()));
+    auto outside_port = MessagePort::create(outside_settings.realm());
 
     // 8. Associate the outside port with worker
     worker->m_outside_port = outside_port;
@@ -166,7 +166,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
                 MessageEventInit event_init {};
                 event_init.data = message;
                 event_init.origin = "<origin>"_string;
-                dispatch_event(MessageEvent::create(*m_worker_realm, HTML::EventNames::message, event_init).release_value_but_fixme_should_propagate_errors());
+                dispatch_event(MessageEvent::create(*m_worker_realm, HTML::EventNames::message, event_init));
             }));
 
             return JS::js_undefined();
@@ -263,7 +263,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
             // FIXME: Global scope association
 
             // 16. Let inside port be a new MessagePort object in inside settings's Realm.
-            auto inside_port = MessagePort::create(m_inner_settings->realm()).release_value_but_fixme_should_propagate_errors();
+            auto inside_port = MessagePort::create(m_inner_settings->realm());
 
             // 17. Associate inside port with worker global scope.
             // FIXME: Global scope association

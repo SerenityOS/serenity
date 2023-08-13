@@ -45,12 +45,12 @@ WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm,
     else if (auto const* blob_handle = object.get_pointer<JS::Handle<FileAPI::Blob>>()) {
         // FIXME: "set stream to the result of running object’s get stream"
         (void)blob_handle;
-        stream = MUST_OR_THROW_OOM(realm.heap().allocate<Streams::ReadableStream>(realm, realm));
+        stream = realm.heap().allocate<Streams::ReadableStream>(realm, realm);
     }
     // 4. Otherwise, set stream to a new ReadableStream object, and set up stream.
     else {
         // FIXME: "set up stream"
-        stream = MUST_OR_THROW_OOM(realm.heap().allocate<Streams::ReadableStream>(realm, realm));
+        stream = realm.heap().allocate<Streams::ReadableStream>(realm, realm);
     }
 
     // 5. Assert: stream is a ReadableStream object.

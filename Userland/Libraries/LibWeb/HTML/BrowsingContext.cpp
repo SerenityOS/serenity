@@ -150,10 +150,10 @@ JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context
     auto realm_execution_context = Bindings::create_a_new_javascript_realm(
         Bindings::main_thread_vm(),
         [&](JS::Realm& realm) -> JS::Object* {
-            browsing_context->m_window_proxy = realm.heap().allocate<WindowProxy>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+            browsing_context->m_window_proxy = realm.heap().allocate<WindowProxy>(realm, realm);
 
             // - For the global object, create a new Window object.
-            window = HTML::Window::create(realm).release_value_but_fixme_should_propagate_errors();
+            window = HTML::Window::create(realm);
             return window.ptr();
         },
         [&](JS::Realm&) -> JS::Object* {
@@ -173,8 +173,7 @@ JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context
         move(realm_execution_context),
         {},
         top_level_creation_url,
-        top_level_origin)
-        .release_value_but_fixme_should_propagate_errors();
+        top_level_origin);
 
     // 12. Let loadTimingInfo be a new document load timing info with its navigation start time set to the result of calling
     //     coarsen time with unsafeContextCreationTime and the new environment settings object's cross-origin isolated capability.
@@ -204,7 +203,7 @@ JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context
     //     load timing info is loadTimingInfo,
     //     FIXME: navigation id is null,
     //     and which is ready for post-load tasks.
-    auto document = HTML::HTMLDocument::create(window->realm()).release_value_but_fixme_should_propagate_errors();
+    auto document = HTML::HTMLDocument::create(window->realm());
 
     // Non-standard
     document->set_window(*window);
@@ -329,10 +328,10 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
         Bindings::main_thread_vm(),
         [&](JS::Realm& realm) -> JS::Object* {
             auto window_proxy = realm.heap().allocate<WindowProxy>(realm, realm);
-            browsing_context->set_window_proxy(window_proxy.release_allocated_value_but_fixme_should_propagate_errors());
+            browsing_context->set_window_proxy(window_proxy);
 
             // - For the global object, create a new Window object.
-            window = Window::create(realm).release_value_but_fixme_should_propagate_errors();
+            window = Window::create(realm);
             return window.ptr();
         },
         [&](JS::Realm&) -> JS::Object* {
@@ -347,12 +346,12 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
     auto top_level_origin = !embedder ? origin : relevant_settings_object(*embedder).origin();
 
     // 12. Set up a window environment settings object with about:blank, realm execution context, null, topLevelCreationURL, and topLevelOrigin.
-    TRY(WindowEnvironmentSettingsObject::setup(
+    WindowEnvironmentSettingsObject::setup(
         AK::URL("about:blank"),
         move(realm_execution_context),
         {},
         top_level_creation_url,
-        top_level_origin));
+        top_level_origin);
 
     // 13. Let loadTimingInfo be a new document load timing info with its navigation start time set to the result of calling
     //     coarsen time with unsafeContextCreationTime and the new environment settings object's cross-origin isolated capability.
@@ -362,7 +361,7 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
         verify_cast<WindowEnvironmentSettingsObject>(Bindings::host_defined_environment_settings_object(window->realm())).cross_origin_isolated_capability() == CanUseCrossOriginIsolatedAPIs::Yes);
 
     // 14. Let document be a new Document, with:
-    auto document = TRY(HTML::HTMLDocument::create(window->realm()));
+    auto document = HTML::HTMLDocument::create(window->realm());
 
     // Non-standard
     document->set_window(*window);
@@ -1435,7 +1434,7 @@ WebIDL::ExceptionOr<void> BrowsingContext::traverse_the_history(size_t entry_ind
             // and the newURL attribute initialized to newURL.
 
             // FIXME: Implement a proper HashChangeEvent class.
-            auto event = DOM::Event::create(verify_cast<HTML::Window>(relevant_global_object(*new_document)).realm(), HTML::EventNames::hashchange).release_value_but_fixme_should_propagate_errors();
+            auto event = DOM::Event::create(verify_cast<HTML::Window>(relevant_global_object(*new_document)).realm(), HTML::EventNames::hashchange);
             new_document->dispatch_event(event);
         });
     }

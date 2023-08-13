@@ -292,7 +292,7 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
         *g_vm,
         [&](JS::Realm& realm_) -> JS::GlobalObject* {
             realm = &realm_;
-            global_object = g_vm->heap().allocate<TestRunnerGlobalObject>(*realm, *realm).release_allocated_value_but_fixme_should_propagate_errors();
+            global_object = g_vm->heap().allocate<TestRunnerGlobalObject>(*realm, *realm);
             return global_object;
         },
         nullptr));

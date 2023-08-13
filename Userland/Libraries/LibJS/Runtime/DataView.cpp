@@ -10,7 +10,7 @@ namespace JS {
 
 NonnullGCPtr<DataView> DataView::create(Realm& realm, ArrayBuffer* viewed_buffer, size_t byte_length, size_t byte_offset)
 {
-    return realm.heap().allocate<DataView>(realm, viewed_buffer, byte_length, byte_offset, realm.intrinsics().data_view_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<DataView>(realm, viewed_buffer, byte_length, byte_offset, realm.intrinsics().data_view_prototype());
 }
 
 DataView::DataView(ArrayBuffer* viewed_buffer, size_t byte_length, size_t byte_offset, Object& prototype)

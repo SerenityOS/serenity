@@ -18,7 +18,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ByteLengthQueuingStrategy>> ByteLengthQueui
 {
     // The new ByteLengthQueuingStrategy(init) constructor steps are:
     // 1. Set this.[[highWaterMark]] to init["highWaterMark"].
-    return MUST_OR_THROW_OOM(realm.heap().allocate<ByteLengthQueuingStrategy>(realm, realm, init.high_water_mark));
+    return realm.heap().allocate<ByteLengthQueuingStrategy>(realm, realm, init.high_water_mark);
 }
 
 ByteLengthQueuingStrategy::ByteLengthQueuingStrategy(JS::Realm& realm, double high_water_mark)

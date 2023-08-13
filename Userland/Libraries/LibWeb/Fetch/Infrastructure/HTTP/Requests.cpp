@@ -202,7 +202,7 @@ ErrorOr<ByteBuffer> Request::byte_serialize_origin() const
 }
 
 // https://fetch.spec.whatwg.org/#concept-request-clone
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::clone(JS::Realm& realm) const
+JS::NonnullGCPtr<Request> Request::clone(JS::Realm& realm) const
 {
     // To clone a request request, run these steps:
     auto& vm = realm.vm();
@@ -250,7 +250,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::clone(JS::Realm& realm) 
 
     // 2. If request’s body is non-null, set newRequest’s body to the result of cloning request’s body.
     if (auto const* body = m_body.get_pointer<Body>())
-        new_request->set_body(TRY(body->clone(realm)));
+        new_request->set_body(body->clone(realm));
 
     // 3. Return newRequest.
     return new_request;

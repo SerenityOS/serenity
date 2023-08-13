@@ -29,7 +29,7 @@ class WheelEvent final : public MouseEvent {
     WEB_PLATFORM_OBJECT(WheelEvent, MouseEvent);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<WheelEvent>> create(JS::Realm&, FlyString const& event_name, WheelEventInit const& event_init = {});
+    [[nodiscard]] static JS::NonnullGCPtr<WheelEvent> create(JS::Realm&, FlyString const& event_name, WheelEventInit const& event_init = {});
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<WheelEvent>> create_from_platform_event(JS::Realm&, FlyString const& event_name, CSSPixels offset_x, CSSPixels offset_y, CSSPixels client_x, CSSPixels client_y, double delta_x, double delta_y, unsigned buttons, unsigned button);
 
     virtual ~WheelEvent() override;

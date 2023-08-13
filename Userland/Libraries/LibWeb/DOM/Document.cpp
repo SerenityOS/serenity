@@ -200,7 +200,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(
             Bindings::main_thread_vm(),
             [&](JS::Realm& realm) -> JS::Object* {
                 // - For the global object, create a new Window object.
-                window = HTML::Window::create(realm).release_value_but_fixme_should_propagate_errors();
+                window = HTML::Window::create(realm);
                 return window;
             },
             [&](JS::Realm&) -> JS::Object* {
@@ -232,12 +232,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(
 
         // FIXME: Why do we assume `creation_url` is non-empty here? Is this a spec bug?
         // FIXME: Why do we assume `top_level_creation_url` is non-empty here? Is this a spec bug?
-        TRY(HTML::WindowEnvironmentSettingsObject::setup(
+        HTML::WindowEnvironmentSettingsObject::setup(
             creation_url.value(),
             move(realm_execution_context),
             navigation_params.reserved_environment,
             top_level_creation_url.value(),
-            top_level_origin));
+            top_level_origin);
     }
 
     // FIXME: 7. Let loadTimingInfo be a new document load timing info with its navigation start time set to response's timing info's start time.
@@ -252,7 +252,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(
     //    FIXME: and cross-origin opener policy is navigationParams's cross-origin opener policy,
     //    FIXME: load timing info is loadTimingInfo,
     //    and navigation id is navigationParams's id.
-    auto document = TRY(HTML::HTMLDocument::create(window->realm()));
+    auto document = HTML::HTMLDocument::create(window->realm());
     document->m_type = type;
     document->m_content_type = move(content_type);
     document->set_origin(navigation_params.origin);
@@ -310,9 +310,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::construct_impl(JS::Rea
     return Document::create(realm);
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create(JS::Realm& realm, AK::URL const& url)
+JS::NonnullGCPtr<Document> Document::create(JS::Realm& realm, AK::URL const& url)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<Document>(realm, realm, url));
+    return realm.heap().allocate<Document>(realm, realm, url);
 }
 
 Document::Document(JS::Realm& realm, const AK::URL& url)
@@ -341,7 +341,7 @@ void Document::initialize(JS::Realm& realm)
     Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::DocumentPrototype>(realm, "Document"));
 
-    m_selection = MUST(heap().allocate<Selection::Selection>(realm, realm, *this));
+    m_selection = heap().allocate<Selection::Selection>(realm, realm, *this);
 
     m_list_of_available_images = make<HTML::ListOfAvailableImages>();
 }
@@ -1162,7 +1162,7 @@ void Document::set_hovered_node(Node* node)
         // FIXME: Check if we need to dispatch these events in a specific order.
         for (auto target = old_hovered_node; target && target.ptr() != common_ancestor; target = target->parent()) {
             // FIXME: Populate the event with mouse coordinates, etc.
-            target->dispatch_event(UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseleave).release_value_but_fixme_should_propagate_errors());
+            target->dispatch_event(UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseleave));
         }
     }
 
@@ -1171,7 +1171,7 @@ void Document::set_hovered_node(Node* node)
         // FIXME: Check if we need to dispatch these events in a specific order.
         for (auto target = m_hovered_node; target && target.ptr() != common_ancestor; target = target->parent()) {
             // FIXME: Populate the event with mouse coordinates, etc.
-            target->dispatch_event(UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseenter).release_value_but_fixme_should_propagate_errors());
+            target->dispatch_event(UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseenter));
         }
     }
 }
@@ -1180,7 +1180,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_name(DeprecatedString
 {
     return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [name](Element const& element) {
         return element.name() == name;
-    }).release_value_but_fixme_should_propagate_errors();
+    });
 }
 
 JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_class_name(DeprecatedFlyString const& class_names)
@@ -1195,14 +1195,14 @@ JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_class_name(Deprecated
                 return false;
         }
         return true;
-    }).release_value_but_fixme_should_propagate_errors();
+    });
 }
 
 // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-applets
 JS::NonnullGCPtr<HTMLCollection> Document::applets()
 {
     if (!m_applets)
-        m_applets = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](auto&) { return false; }).release_value_but_fixme_should_propagate_errors();
+        m_applets = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](auto&) { return false; });
     return *m_applets;
 }
 
@@ -1212,7 +1212,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::anchors()
     if (!m_anchors) {
         m_anchors = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const& element) {
             return is<HTML::HTMLAnchorElement>(element) && element.has_attribute(HTML::AttributeNames::name);
-        }).release_value_but_fixme_should_propagate_errors();
+        });
     }
     return *m_anchors;
 }
@@ -1223,7 +1223,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::images()
     if (!m_images) {
         m_images = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const& element) {
             return is<HTML::HTMLImageElement>(element);
-        }).release_value_but_fixme_should_propagate_errors();
+        });
     }
     return *m_images;
 }
@@ -1234,7 +1234,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::embeds()
     if (!m_embeds) {
         m_embeds = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const& element) {
             return is<HTML::HTMLEmbedElement>(element);
-        }).release_value_but_fixme_should_propagate_errors();
+        });
     }
     return *m_embeds;
 }
@@ -1251,7 +1251,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::links()
     if (!m_links) {
         m_links = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const& element) {
             return (is<HTML::HTMLAnchorElement>(element) || is<HTML::HTMLAreaElement>(element)) && element.has_attribute(HTML::AttributeNames::href);
-        }).release_value_but_fixme_should_propagate_errors();
+        });
     }
     return *m_links;
 }
@@ -1262,7 +1262,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::forms()
     if (!m_forms) {
         m_forms = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const& element) {
             return is<HTML::HTMLFormElement>(element);
-        }).release_value_but_fixme_should_propagate_errors();
+        });
     }
     return *m_forms;
 }
@@ -1273,7 +1273,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::scripts()
     if (!m_scripts) {
         m_scripts = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const& element) {
             return is<HTML::HTMLScriptElement>(element);
-        }).release_value_but_fixme_should_propagate_errors();
+        });
     }
     return *m_scripts;
 }
@@ -1284,7 +1284,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::all()
     if (!m_all) {
         m_all = HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const&) {
             return true;
-        }).release_value_but_fixme_should_propagate_errors();
+        });
     }
     return *m_all;
 }
@@ -1417,17 +1417,17 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(Depre
 
 JS::NonnullGCPtr<DocumentFragment> Document::create_document_fragment()
 {
-    return heap().allocate<DocumentFragment>(realm(), *this).release_allocated_value_but_fixme_should_propagate_errors();
+    return heap().allocate<DocumentFragment>(realm(), *this);
 }
 
 JS::NonnullGCPtr<Text> Document::create_text_node(DeprecatedString const& data)
 {
-    return heap().allocate<Text>(realm(), *this, data).release_allocated_value_but_fixme_should_propagate_errors();
+    return heap().allocate<Text>(realm(), *this, data);
 }
 
 JS::NonnullGCPtr<Comment> Document::create_comment(DeprecatedString const& data)
 {
-    return heap().allocate<Comment>(realm(), *this, data).release_allocated_value_but_fixme_should_propagate_errors();
+    return heap().allocate<Comment>(realm(), *this, data);
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createprocessinginstruction
@@ -1438,12 +1438,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ProcessingInstruction>> Document::create_pr
     // FIXME: 2. If data contains the string "?>", then throw an "InvalidCharacterError" DOMException.
 
     // 3. Return a new ProcessingInstruction node, with target set to target, data set to data, and node document set to this.
-    return MUST_OR_THROW_OOM(heap().allocate<ProcessingInstruction>(realm(), *this, data, target));
+    return heap().allocate<ProcessingInstruction>(realm(), *this, data, target);
 }
 
 JS::NonnullGCPtr<Range> Document::create_range()
 {
-    return Range::create(*this).release_value_but_fixme_should_propagate_errors();
+    return Range::create(*this);
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createevent
@@ -1458,44 +1458,44 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(DeprecatedSt
     // 2. If interface is an ASCII case-insensitive match for any of the strings in the first column in the following table,
     //      then set constructor to the interface in the second column on the same row as the matching string:
     if (Infra::is_ascii_case_insensitive_match(interface, "beforeunloadevent"sv)) {
-        event = TRY(Event::create(realm, FlyString {})); // FIXME: Create BeforeUnloadEvent
+        event = Event::create(realm, FlyString {}); // FIXME: Create BeforeUnloadEvent
     } else if (Infra::is_ascii_case_insensitive_match(interface, "compositionevent"sv)) {
-        event = TRY(Event::create(realm, FlyString {})); // FIXME: Create CompositionEvent
+        event = Event::create(realm, FlyString {}); // FIXME: Create CompositionEvent
     } else if (Infra::is_ascii_case_insensitive_match(interface, "customevent"sv)) {
-        event = TRY(CustomEvent::create(realm, FlyString {}));
+        event = CustomEvent::create(realm, FlyString {});
     } else if (Infra::is_ascii_case_insensitive_match(interface, "devicemotionevent"sv)) {
-        event = TRY(Event::create(realm, FlyString {})); // FIXME: Create DeviceMotionEvent
+        event = Event::create(realm, FlyString {}); // FIXME: Create DeviceMotionEvent
     } else if (Infra::is_ascii_case_insensitive_match(interface, "deviceorientationevent"sv)) {
-        event = TRY(Event::create(realm, FlyString {})); // FIXME: Create DeviceOrientationEvent
+        event = Event::create(realm, FlyString {}); // FIXME: Create DeviceOrientationEvent
     } else if (Infra::is_ascii_case_insensitive_match(interface, "dragevent"sv)) {
-        event = TRY(Event::create(realm, FlyString {})); // FIXME: Create DragEvent
+        event = Event::create(realm, FlyString {}); // FIXME: Create DragEvent
     } else if (Infra::is_ascii_case_insensitive_match(interface, "event"sv)
         || Infra::is_ascii_case_insensitive_match(interface, "events"sv)) {
-        event = TRY(Event::create(realm, FlyString {}));
+        event = Event::create(realm, FlyString {});
     } else if (Infra::is_ascii_case_insensitive_match(interface, "focusevent"sv)) {
-        event = TRY(UIEvents::FocusEvent::create(realm, FlyString {}));
+        event = UIEvents::FocusEvent::create(realm, FlyString {});
     } else if (Infra::is_ascii_case_insensitive_match(interface, "hashchangeevent"sv)) {
-        event = TRY(Event::create(realm, FlyString {})); // FIXME: Create HashChangeEvent
+        event = Event::create(realm, FlyString {}); // FIXME: Create HashChangeEvent
     } else if (Infra::is_ascii_case_insensitive_match(interface, "htmlevents"sv)) {
-        event = TRY(Event::create(realm, FlyString {}));
+        event = Event::create(realm, FlyString {});
     } else if (Infra::is_ascii_case_insensitive_match(interface, "keyboardevent"sv)) {
-        event = TRY(UIEvents::KeyboardEvent::create(realm, String {}));
+        event = UIEvents::KeyboardEvent::create(realm, String {});
     } else if (Infra::is_ascii_case_insensitive_match(interface, "messageevent"sv)) {
-        event = TRY(HTML::MessageEvent::create(realm, String {}));
+        event = HTML::MessageEvent::create(realm, String {});
     } else if (Infra::is_ascii_case_insensitive_match(interface, "mouseevent"sv)
         || Infra::is_ascii_case_insensitive_match(interface, "mouseevents"sv)) {
-        event = TRY(UIEvents::MouseEvent::create(realm, FlyString {}));
+        event = UIEvents::MouseEvent::create(realm, FlyString {});
     } else if (Infra::is_ascii_case_insensitive_match(interface, "storageevent"sv)) {
-        event = TRY(Event::create(realm, FlyString {})); // FIXME: Create StorageEvent
+        event = Event::create(realm, FlyString {}); // FIXME: Create StorageEvent
     } else if (Infra::is_ascii_case_insensitive_match(interface, "svgevents"sv)) {
-        event = TRY(Event::create(realm, FlyString {}));
+        event = Event::create(realm, FlyString {});
     } else if (Infra::is_ascii_case_insensitive_match(interface, "textevent"sv)) {
-        event = TRY(Event::create(realm, FlyString {})); // FIXME: Create CompositionEvent
+        event = Event::create(realm, FlyString {}); // FIXME: Create CompositionEvent
     } else if (Infra::is_ascii_case_insensitive_match(interface, "touchevent"sv)) {
-        event = TRY(Event::create(realm, FlyString {})); // FIXME: Create TouchEvent
+        event = Event::create(realm, FlyString {}); // FIXME: Create TouchEvent
     } else if (Infra::is_ascii_case_insensitive_match(interface, "uievent"sv)
         || Infra::is_ascii_case_insensitive_match(interface, "uievents"sv)) {
-        event = TRY(UIEvents::UIEvent::create(realm, FlyString {}));
+        event = UIEvents::UIEvent::create(realm, FlyString {});
     }
 
     // 3. If constructor is null, then throw a "NotSupportedError" DOMException.
@@ -1896,7 +1896,7 @@ void Document::update_readiness(HTML::DocumentReadyState readiness_value)
     }
 
     // 4. Fire an event named readystatechange at document.
-    dispatch_event(Event::create(realm(), HTML::EventNames::readystatechange).release_value_but_fixme_should_propagate_errors());
+    dispatch_event(Event::create(realm(), HTML::EventNames::readystatechange));
 }
 
 Page* Document::page()
@@ -1948,7 +1948,7 @@ void Document::completely_finish_loading()
     // 5. Otherwise, if container is non-null, then queue an element task on the DOM manipulation task source given container to fire an event named load at container.
     else if (container) {
         container->queue_an_element_task(HTML::Task::Source::DOMManipulation, [container] {
-            container->dispatch_event(DOM::Event::create(container->realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
+            container->dispatch_event(DOM::Event::create(container->realm(), HTML::EventNames::load));
         });
     }
 
@@ -2037,7 +2037,7 @@ bool Document::is_active() const
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-document-location
-WebIDL::ExceptionOr<JS::GCPtr<HTML::Location>> Document::location()
+JS::GCPtr<HTML::Location> Document::location()
 {
     // The Document object's location attribute's getter must return this Document object's relevant global object's Location object,
     // if this Document object is fully active, and null otherwise.
@@ -2045,7 +2045,7 @@ WebIDL::ExceptionOr<JS::GCPtr<HTML::Location>> Document::location()
     if (!is_fully_active())
         return nullptr;
 
-    return TRY(window().location());
+    return window().location();
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-document-hidden
@@ -2084,7 +2084,7 @@ void Document::update_the_visibility_state(HTML::VisibilityState visibility_stat
     // FIXME: 3. Run any page visibility change steps which may be defined in other specifications, with visibility state and document.
 
     // 4. Fire an event named visibilitychange at document, with its bubbles attribute initialized to true.
-    auto event = DOM::Event::create(realm(), HTML::EventNames::visibilitychange).release_value_but_fixme_should_propagate_errors();
+    auto event = DOM::Event::create(realm(), HTML::EventNames::visibilitychange);
     event->set_bubbles(true);
     dispatch_event(event);
 }
@@ -2105,7 +2105,7 @@ void Document::run_the_resize_steps()
         return;
     m_last_viewport_size = viewport_size;
 
-    window().dispatch_event(DOM::Event::create(realm(), UIEvents::EventNames::resize).release_value_but_fixme_should_propagate_errors());
+    window().dispatch_event(DOM::Event::create(realm(), UIEvents::EventNames::resize));
 
     schedule_layout_update();
 }
@@ -2117,14 +2117,14 @@ void Document::run_the_scroll_steps()
     for (auto& target : m_pending_scroll_event_targets) {
         // 1. If target is a Document, fire an event named scroll that bubbles at target and fire an event named scroll at the VisualViewport that is associated with target.
         if (is<Document>(*target)) {
-            auto event = DOM::Event::create(realm(), HTML::EventNames::scroll).release_value_but_fixme_should_propagate_errors();
+            auto event = DOM::Event::create(realm(), HTML::EventNames::scroll);
             event->set_bubbles(true);
             target->dispatch_event(event);
             // FIXME: Fire at the associated VisualViewport
         }
         // 2. Otherwise, fire an event named scroll at target.
         else {
-            auto event = DOM::Event::create(realm(), HTML::EventNames::scroll).release_value_but_fixme_should_propagate_errors();
+            auto event = DOM::Event::create(realm(), HTML::EventNames::scroll);
             target->dispatch_event(event);
         }
     }
@@ -2164,7 +2164,7 @@ void Document::evaluate_media_queries_and_report_changes()
             CSS::MediaQueryListEventInit init;
             init.media = String::from_deprecated_string(media_query_list->media()).release_value_but_fixme_should_propagate_errors();
             init.matches = now_matches;
-            auto event = CSS::MediaQueryListEvent::create(realm(), HTML::EventNames::change, init).release_value_but_fixme_should_propagate_errors();
+            auto event = CSS::MediaQueryListEvent::create(realm(), HTML::EventNames::change, init);
             event->set_is_trusted(true);
             media_query_list->dispatch_event(*event);
         }
@@ -2191,7 +2191,7 @@ void Document::evaluate_media_rules()
 DOMImplementation* Document::implementation()
 {
     if (!m_implementation)
-        m_implementation = DOMImplementation::create(*this).release_value_but_fixme_should_propagate_errors();
+        m_implementation = DOMImplementation::create(*this);
     return m_implementation;
 }
 
@@ -2323,7 +2323,7 @@ JS::NonnullGCPtr<NodeIterator> Document::create_node_iterator(Node& root, unsign
 // https://dom.spec.whatwg.org/#dom-document-createtreewalker
 JS::NonnullGCPtr<TreeWalker> Document::create_tree_walker(Node& root, unsigned what_to_show, JS::GCPtr<NodeFilter> filter)
 {
-    return TreeWalker::create(root, what_to_show, filter).release_value_but_fixme_should_propagate_errors();
+    return TreeWalker::create(root, what_to_show, filter);
 }
 
 void Document::register_node_iterator(Badge<NodeIterator>, NodeIterator& node_iterator)
@@ -2386,7 +2386,7 @@ void Document::check_favicon_after_loading_link_resource()
             return false;
 
         return static_cast<HTML::HTMLLinkElement const&>(element).has_loaded_icon();
-    }).release_value_but_fixme_should_propagate_errors();
+    });
 
     if (favicon_link_elements->length() == 0) {
         dbgln_if(SPAM_DEBUG, "No favicon found to be used");
@@ -2437,7 +2437,7 @@ JS::GCPtr<HTML::CustomElementDefinition> Document::lookup_custom_element_definit
         return nullptr;
 
     // 3. Let registry be document's relevant global object's CustomElementRegistry object.
-    auto registry = window().custom_elements().release_value_but_fixme_should_propagate_errors();
+    auto registry = window().custom_elements();
 
     // 4. If there is custom element definition in registry with name and local name both equal to localName, return that custom element definition.
     auto converted_local_name = String::from_deprecated_string(local_name).release_value_but_fixme_should_propagate_errors();
@@ -2458,7 +2458,7 @@ JS::GCPtr<HTML::CustomElementDefinition> Document::lookup_custom_element_definit
 CSS::StyleSheetList& Document::style_sheets()
 {
     if (!m_style_sheets)
-        m_style_sheets = CSS::StyleSheetList::create(*this).release_value_but_fixme_should_propagate_errors();
+        m_style_sheets = CSS::StyleSheetList::create(*this);
     return *m_style_sheets;
 }
 
@@ -2470,7 +2470,7 @@ CSS::StyleSheetList const& Document::style_sheets() const
 JS::NonnullGCPtr<HTML::History> Document::history()
 {
     if (!m_history)
-        m_history = HTML::History::create(realm(), *this).release_value_but_fixme_should_propagate_errors();
+        m_history = HTML::History::create(realm(), *this);
     return *m_history;
 }
 
@@ -2747,7 +2747,7 @@ void Document::unload(bool recursive_flag, Optional<DocumentUnloadTimingInfo> un
         // then fire an event named unload at document's relevant global object, with legacy target override flag set.
         // FIXME: The legacy target override flag is currently set by a virtual override of dispatch_event()
         //        We should reorganize this so that the flag appears explicitly here instead.
-        auto event = DOM::Event::create(realm(), HTML::EventNames::unload).release_value_but_fixme_should_propagate_errors();
+        auto event = DOM::Event::create(realm(), HTML::EventNames::unload);
         global_object().dispatch_event(event);
     }
 
@@ -2860,7 +2860,7 @@ JS::NonnullGCPtr<DOM::Document> Document::appropriate_template_contents_owner_do
         // 1. If doc does not yet have an associated inert template document, then:
         if (!m_associated_inert_template_document) {
             // 1. Let new doc be a new Document (whose browsing context is null). This is "a Document created by this algorithm" for the purposes of the step above.
-            auto new_document = HTML::HTMLDocument::create(realm()).release_value_but_fixme_should_propagate_errors();
+            auto new_document = HTML::HTMLDocument::create(realm());
             new_document->m_created_for_appropriate_template_contents = true;
 
             // 2. If doc is an HTML document, mark new doc as an HTML document also.
@@ -2880,7 +2880,7 @@ JS::NonnullGCPtr<DOM::Document> Document::appropriate_template_contents_owner_do
 DeprecatedString Document::dump_accessibility_tree_as_json()
 {
     StringBuilder builder;
-    auto accessibility_tree = AccessibilityTreeNode::create(this, nullptr).release_value_but_fixme_should_propagate_errors();
+    auto accessibility_tree = AccessibilityTreeNode::create(this, nullptr);
     build_accessibility_tree(*&accessibility_tree);
     auto json = MUST(JsonObjectSerializer<>::try_create(builder));
 
@@ -2950,7 +2950,7 @@ HTML::ListOfAvailableImages const& Document::list_of_available_images() const
 JS::NonnullGCPtr<CSS::VisualViewport> Document::visual_viewport()
 {
     if (!m_visual_viewport)
-        m_visual_viewport = CSS::VisualViewport::create(*this).release_value_but_fixme_should_propagate_errors();
+        m_visual_viewport = CSS::VisualViewport::create(*this);
     return *m_visual_viewport;
 }
 
@@ -3025,7 +3025,7 @@ void Document::queue_an_intersection_observer_entry(IntersectionObserver::Inters
     auto& realm = this->realm();
 
     // 1. Construct an IntersectionObserverEntry, passing in time, rootBounds, boundingClientRect, intersectionRect, isIntersecting, and target.
-    auto entry = realm.heap().allocate<IntersectionObserver::IntersectionObserverEntry>(realm, realm, time, root_bounds, bounding_client_rect, intersection_rect, is_intersecting, intersection_ratio, target).release_allocated_value_but_fixme_should_propagate_errors();
+    auto entry = realm.heap().allocate<IntersectionObserver::IntersectionObserverEntry>(realm, realm, time, root_bounds, bounding_client_rect, intersection_rect, is_intersecting, intersection_ratio, target);
 
     // 2. Append it to observer’s internal [[QueuedEntries]] slot.
     observer.queue_entry({}, entry);

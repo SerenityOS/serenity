@@ -11,7 +11,7 @@ namespace JS {
 
 NonnullGCPtr<BooleanObject> BooleanObject::create(Realm& realm, bool value)
 {
-    return realm.heap().allocate<BooleanObject>(realm, value, realm.intrinsics().boolean_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<BooleanObject>(realm, value, realm.intrinsics().boolean_prototype());
 }
 
 BooleanObject::BooleanObject(bool value, Object& prototype)

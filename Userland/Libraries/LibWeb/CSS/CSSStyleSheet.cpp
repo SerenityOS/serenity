@@ -15,9 +15,9 @@
 
 namespace Web::CSS {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSStyleSheet>> CSSStyleSheet::create(JS::Realm& realm, CSSRuleList& rules, MediaList& media, Optional<AK::URL> location)
+JS::NonnullGCPtr<CSSStyleSheet> CSSStyleSheet::create(JS::Realm& realm, CSSRuleList& rules, MediaList& media, Optional<AK::URL> location)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<CSSStyleSheet>(realm, realm, rules, media, move(location)));
+    return realm.heap().allocate<CSSStyleSheet>(realm, realm, rules, media, move(location));
 }
 
 CSSStyleSheet::CSSStyleSheet(JS::Realm& realm, CSSRuleList& rules, MediaList& media, Optional<AK::URL> location)

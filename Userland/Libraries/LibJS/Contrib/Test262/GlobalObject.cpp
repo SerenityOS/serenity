@@ -18,7 +18,7 @@ void GlobalObject::initialize(Realm& realm)
 {
     Base::initialize(realm);
 
-    m_$262 = MUST(vm().heap().allocate<$262Object>(realm, realm));
+    m_$262 = vm().heap().allocate<$262Object>(realm, realm);
 
     // https://github.com/tc39/test262/blob/master/INTERPRETING.md#host-defined-functions
     u8 attr = Attribute::Writable | Attribute::Configurable;

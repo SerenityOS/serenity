@@ -28,7 +28,7 @@ Workbook::Workbook(Vector<NonnullRefPtr<Sheet>>&& sheets, GUI::Window& parent_wi
 {
     auto& realm = *m_root_execution_context->realm;
     auto& vm = realm.vm();
-    m_workbook_object = vm.heap().allocate<WorkbookObject>(realm, realm, *this).release_allocated_value_but_fixme_should_propagate_errors();
+    m_workbook_object = vm.heap().allocate<WorkbookObject>(realm, realm, *this);
     realm.global_object().define_direct_property("workbook", workbook_object(), JS::default_attributes);
 
     m_main_execution_context.this_value = &realm.global_object();

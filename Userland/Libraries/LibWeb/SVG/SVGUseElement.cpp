@@ -27,12 +27,12 @@ void SVGUseElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGUseElementPrototype>(realm, "SVGUseElement"));
 
     // The shadow tree is open (inspectable by script), but read-only.
-    auto shadow_root = MUST(heap().allocate<DOM::ShadowRoot>(realm, document(), *this, Bindings::ShadowRootMode::Open));
+    auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm, document(), *this, Bindings::ShadowRootMode::Open);
 
     // The user agent must create a use-element shadow tree whose host is the ‘use’ element itself
     set_shadow_root(shadow_root);
 
-    m_document_observer = MUST(realm.heap().allocate<DOM::DocumentObserver>(realm, realm, document()));
+    m_document_observer = realm.heap().allocate<DOM::DocumentObserver>(realm, realm, document());
     m_document_observer->document_completely_loaded = [this]() {
         clone_element_tree_as_our_shadow_tree(referenced_element());
     };
@@ -136,9 +136,9 @@ JS::NonnullGCPtr<SVGAnimatedLength> SVGUseElement::x() const
 {
     // FIXME: Populate the unit type when it is parsed (0 here is "unknown").
     // FIXME: Create a proper animated value when animations are supported.
-    auto base_length = SVGLength::create(realm(), 0, m_x.value_or(0)).release_value_but_fixme_should_propagate_errors();
-    auto anim_length = SVGLength::create(realm(), 0, m_x.value_or(0)).release_value_but_fixme_should_propagate_errors();
-    return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length)).release_value_but_fixme_should_propagate_errors();
+    auto base_length = SVGLength::create(realm(), 0, m_x.value_or(0));
+    auto anim_length = SVGLength::create(realm(), 0, m_x.value_or(0));
+    return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length));
 }
 
 // https://www.w3.org/TR/SVG11/shapes.html#RectElementYAttribute
@@ -146,9 +146,9 @@ JS::NonnullGCPtr<SVGAnimatedLength> SVGUseElement::y() const
 {
     // FIXME: Populate the unit type when it is parsed (0 here is "unknown").
     // FIXME: Create a proper animated value when animations are supported.
-    auto base_length = SVGLength::create(realm(), 0, m_y.value_or(0)).release_value_but_fixme_should_propagate_errors();
-    auto anim_length = SVGLength::create(realm(), 0, m_y.value_or(0)).release_value_but_fixme_should_propagate_errors();
-    return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length)).release_value_but_fixme_should_propagate_errors();
+    auto base_length = SVGLength::create(realm(), 0, m_y.value_or(0));
+    auto anim_length = SVGLength::create(realm(), 0, m_y.value_or(0));
+    return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length));
 }
 
 JS::NonnullGCPtr<SVGAnimatedLength> SVGUseElement::width() const

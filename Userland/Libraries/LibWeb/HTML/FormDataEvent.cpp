@@ -12,7 +12,7 @@ namespace Web::HTML {
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<FormDataEvent>> FormDataEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, FormDataEventInit const& event_init)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<FormDataEvent>(realm, realm, event_name, event_init));
+    return realm.heap().allocate<FormDataEvent>(realm, realm, event_name, event_init);
 }
 
 FormDataEvent::FormDataEvent(JS::Realm& realm, FlyString const& event_name, FormDataEventInit const& event_init)

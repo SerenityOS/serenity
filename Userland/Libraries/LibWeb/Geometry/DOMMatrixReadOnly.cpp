@@ -24,7 +24,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrixReadOnly>> DOMMatrixReadOnly::cons
             return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, TRY_OR_THROW_OOM(vm, String::formatted("Sequence must contain exactly 6 or 16 elements, got {} element(s)", double_sequence->size())) };
     }
 
-    return realm.heap().allocate<DOMMatrixReadOnly>(realm, realm, init).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<DOMMatrixReadOnly>(realm, realm, init);
 }
 
 // https://drafts.fxtf.org/geometry/#create-a-dommatrixreadonly-from-the-2d-dictionary
@@ -43,7 +43,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrixReadOnly>> DOMMatrixReadOnly::crea
 
     // 2. Return the result of invoking create a 2d matrix of type DOMMatrixReadOnly or DOMMatrix as appropriate, with a sequence of numbers,
     //    the values being the 6 elements m11, m12, m21, m22, m41 and m42 of other in the given order.
-    return realm.heap().allocate<DOMMatrixReadOnly>(realm, realm, init.m11.value(), init.m12.value(), init.m21.value(), init.m22.value(), init.m41.value(), init.m42.value()).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<DOMMatrixReadOnly>(realm, realm, init.m11.value(), init.m12.value(), init.m21.value(), init.m22.value(), init.m41.value(), init.m42.value());
 }
 
 DOMMatrixReadOnly::DOMMatrixReadOnly(JS::Realm& realm, double m11, double m12, double m21, double m22, double m41, double m42)

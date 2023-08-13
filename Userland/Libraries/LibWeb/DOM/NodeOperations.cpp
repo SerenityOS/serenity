@@ -22,19 +22,19 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> convert_nodes_to_single_node(Vector<
     // 4. Otherwise, set node to a new DocumentFragment node whose node document is document, and then append each node in nodes, if any, to it.
     // 5. Return node.
 
-    auto potentially_convert_string_to_text_node = [&document](Variant<JS::Handle<Node>, DeprecatedString> const& node) -> JS::ThrowCompletionOr<JS::NonnullGCPtr<Node>> {
+    auto potentially_convert_string_to_text_node = [&document](Variant<JS::Handle<Node>, DeprecatedString> const& node) -> JS::NonnullGCPtr<Node> {
         if (node.has<JS::Handle<Node>>())
             return *node.get<JS::Handle<Node>>();
 
-        return MUST_OR_THROW_OOM(document.heap().allocate<DOM::Text>(document.realm(), document, node.get<DeprecatedString>()));
+        return document.heap().allocate<DOM::Text>(document.realm(), document, node.get<DeprecatedString>());
     };
 
     if (nodes.size() == 1)
-        return TRY(potentially_convert_string_to_text_node(nodes.first()));
+        return potentially_convert_string_to_text_node(nodes.first());
 
-    auto document_fragment = MUST_OR_THROW_OOM(document.heap().allocate<DOM::DocumentFragment>(document.realm(), document));
+    auto document_fragment = document.heap().allocate<DOM::DocumentFragment>(document.realm(), document);
     for (auto& unconverted_node : nodes) {
-        auto node = TRY(potentially_convert_string_to_text_node(unconverted_node));
+        auto node = potentially_convert_string_to_text_node(unconverted_node);
         (void)TRY(document_fragment->append_child(node));
     }
 

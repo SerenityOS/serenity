@@ -16,7 +16,7 @@ class History final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(History, Bindings::PlatformObject);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<History>> create(JS::Realm&, DOM::Document&);
+    [[nodiscard]] static JS::NonnullGCPtr<History> create(JS::Realm&, DOM::Document&);
 
     virtual ~History() override;
 

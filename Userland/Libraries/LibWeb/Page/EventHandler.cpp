@@ -693,12 +693,12 @@ bool EventHandler::fire_keyboard_event(FlyString const& event_name, HTML::Browsi
                 return fire_keyboard_event(event_name, *navigable_container.nested_browsing_context(), key, modifiers, code_point);
         }
 
-        auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->realm(), event_name, key, modifiers, code_point).release_value_but_fixme_should_propagate_errors();
+        auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->realm(), event_name, key, modifiers, code_point);
         return !focused_element->dispatch_event(event);
     }
 
     // FIXME: De-duplicate this. This is just to prevent wasting a KeyboardEvent allocation when recursing into an (i)frame.
-    auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->realm(), event_name, key, modifiers, code_point).release_value_but_fixme_should_propagate_errors();
+    auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->realm(), event_name, key, modifiers, code_point);
 
     if (JS::GCPtr<HTML::HTMLElement> body = document->body())
         return !body->dispatch_event(event);

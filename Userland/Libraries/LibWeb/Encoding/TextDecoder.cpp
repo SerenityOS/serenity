@@ -20,7 +20,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<TextDecoder>> TextDecoder::construct_impl(J
     if (!decoder.has_value())
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, TRY_OR_THROW_OOM(vm, String::formatted("Invalid encoding {}", encoding)) };
 
-    return MUST_OR_THROW_OOM(realm.heap().allocate<TextDecoder>(realm, realm, *decoder, move(encoding), false, false));
+    return realm.heap().allocate<TextDecoder>(realm, realm, *decoder, move(encoding), false, false);
 }
 
 // https://encoding.spec.whatwg.org/#dom-textdecoder

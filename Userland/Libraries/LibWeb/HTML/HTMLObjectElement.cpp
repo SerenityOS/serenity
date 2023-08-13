@@ -125,7 +125,7 @@ void HTMLObjectElement::queue_element_task_to_run_object_representation_steps()
 
             // 3. If that failed, fire an event named error at the element, then jump to the step below labeled fallback.
             if (!url.is_valid()) {
-                dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
+                dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error));
                 return run_object_representation_fallback_steps();
             }
 
@@ -152,7 +152,7 @@ void HTMLObjectElement::queue_element_task_to_run_object_representation_steps()
 void HTMLObjectElement::resource_did_fail()
 {
     // 4.7. If the load failed (e.g. there was an HTTP 404 error, there was a DNS error), fire an event named error at the element, then jump to the step below labeled fallback.
-    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
+    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error));
     run_object_representation_fallback_steps();
 }
 
@@ -290,7 +290,7 @@ void HTMLObjectElement::run_object_representation_completed_steps(Representation
     // 4.11. If the object element does not represent its nested browsing context, then once the resource is completely loaded, queue an element task on the DOM manipulation task source given the object element to fire an event named load at the element.
     if (representation != Representation::NestedBrowsingContext) {
         queue_an_element_task(HTML::Task::Source::DOMManipulation, [&]() {
-            dispatch_event(DOM::Event::create(realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
+            dispatch_event(DOM::Event::create(realm(), HTML::EventNames::load));
         });
     }
 

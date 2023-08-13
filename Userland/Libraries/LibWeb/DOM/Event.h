@@ -45,7 +45,7 @@ public:
 
     using Path = Vector<PathEntry>;
 
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> create(JS::Realm&, FlyString const& event_name, EventInit const& event_init = {});
+    [[nodiscard]] static JS::NonnullGCPtr<Event> create(JS::Realm&, FlyString const& event_name, EventInit const& event_init = {});
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> construct_impl(JS::Realm&, FlyString const& event_name, EventInit const& event_init);
 
     Event(JS::Realm&, FlyString const& type);

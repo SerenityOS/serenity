@@ -135,7 +135,7 @@ JS::GCPtr<FileAPI::FileList> HTMLInputElement::files()
         return nullptr;
 
     if (!m_selected_files)
-        m_selected_files = FileAPI::FileList::create(realm(), {}).release_value_but_fixme_should_propagate_errors();
+        m_selected_files = FileAPI::FileList::create(realm(), {});
     return m_selected_files;
 }
 
@@ -159,11 +159,11 @@ void HTMLInputElement::update_the_file_selection(JS::NonnullGCPtr<FileAPI::FileL
         this->set_files(files.ptr());
 
         // 2. Fire an event named input at the input element, with the bubbles and composed attributes initialized to true.
-        auto input_event = DOM::Event::create(this->realm(), EventNames::input, { .bubbles = true, .composed = true }).release_value_but_fixme_should_propagate_errors();
+        auto input_event = DOM::Event::create(this->realm(), EventNames::input, { .bubbles = true, .composed = true });
         this->dispatch_event(input_event);
 
         // 3. Fire an event named change at the input element, with the bubbles attribute initialized to true.
-        auto change_event = DOM::Event::create(this->realm(), EventNames::change, { .bubbles = true }).release_value_but_fixme_should_propagate_errors();
+        auto change_event = DOM::Event::create(this->realm(), EventNames::change, { .bubbles = true });
         this->dispatch_event(change_event);
     });
 }
@@ -250,13 +250,13 @@ WebIDL::ExceptionOr<void> HTMLInputElement::run_input_activation_behavior()
             return {};
 
         // 2. Fire an event named input at the element with the bubbles and composed attributes initialized to true.
-        auto input_event = DOM::Event::create(realm(), HTML::EventNames::input).release_value_but_fixme_should_propagate_errors();
+        auto input_event = DOM::Event::create(realm(), HTML::EventNames::input);
         input_event->set_bubbles(true);
         input_event->set_composed(true);
         dispatch_event(input_event);
 
         // 3. Fire an event named change at the element with the bubbles attribute initialized to true.
-        auto change_event = DOM::Event::create(realm(), HTML::EventNames::change).release_value_but_fixme_should_propagate_errors();
+        auto change_event = DOM::Event::create(realm(), HTML::EventNames::change);
         change_event->set_bubbles(true);
         dispatch_event(*change_event);
     } else if (type_state() == TypeAttributeState::SubmitButton) {
@@ -274,7 +274,7 @@ WebIDL::ExceptionOr<void> HTMLInputElement::run_input_activation_behavior()
     } else if (type_state() == TypeAttributeState::FileUpload) {
         show_the_picker_if_applicable(*this);
     } else {
-        dispatch_event(DOM::Event::create(realm(), EventNames::change).release_value_but_fixme_should_propagate_errors());
+        dispatch_event(DOM::Event::create(realm(), EventNames::change));
     }
 
     return {};
@@ -291,7 +291,7 @@ void HTMLInputElement::did_edit_text_node(Badge<BrowsingContext>)
     // NOTE: This is a bit ad-hoc, but basically implements part of "4.10.5.5 Common event behaviors"
     //       https://html.spec.whatwg.org/multipage/input.html#common-input-element-events
     queue_an_element_task(HTML::Task::Source::UserInteraction, [this] {
-        auto input_event = DOM::Event::create(realm(), HTML::EventNames::input).release_value_but_fixme_should_propagate_errors();
+        auto input_event = DOM::Event::create(realm(), HTML::EventNames::input);
         input_event->set_bubbles(true);
         input_event->set_composed(true);
         dispatch_event(*input_event);
@@ -431,7 +431,7 @@ void HTMLInputElement::create_shadow_tree_if_needed()
         break;
     }
 
-    auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this, Bindings::ShadowRootMode::Closed).release_allocated_value_but_fixme_should_propagate_errors();
+    auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this, Bindings::ShadowRootMode::Closed);
     auto initial_value = m_value;
     if (initial_value.is_null())
         initial_value = DeprecatedString::empty();
@@ -445,10 +445,10 @@ void HTMLInputElement::create_shadow_tree_if_needed()
         padding: 1px 2px;
 )~~~"));
 
-    m_placeholder_element = heap().allocate<PlaceholderElement>(realm(), document()).release_allocated_value_but_fixme_should_propagate_errors();
+    m_placeholder_element = heap().allocate<PlaceholderElement>(realm(), document());
     MUST(m_placeholder_element->style_for_bindings()->set_property(CSS::PropertyID::Height, "1lh"sv));
 
-    m_placeholder_text_node = heap().allocate<DOM::Text>(realm(), document(), initial_value).release_allocated_value_but_fixme_should_propagate_errors();
+    m_placeholder_text_node = heap().allocate<DOM::Text>(realm(), document(), initial_value);
     m_placeholder_text_node->set_data(attribute(HTML::AttributeNames::placeholder));
     m_placeholder_text_node->set_owner_input_element({}, *this);
     MUST(m_placeholder_element->append_child(*m_placeholder_text_node));
@@ -457,7 +457,7 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     m_inner_text_element = DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(m_inner_text_element->style_for_bindings()->set_property(CSS::PropertyID::Height, "1lh"sv));
 
-    m_text_node = heap().allocate<DOM::Text>(realm(), document(), initial_value).release_allocated_value_but_fixme_should_propagate_errors();
+    m_text_node = heap().allocate<DOM::Text>(realm(), document(), initial_value);
     m_text_node->set_always_editable(m_type != TypeAttributeState::FileUpload);
     m_text_node->set_owner_input_element({}, *this);
 
@@ -485,7 +485,7 @@ void HTMLInputElement::did_lose_focus()
     // The change event fires when the value is committed, if that makes sense for the control,
     // or else when the control loses focus
     queue_an_element_task(HTML::Task::Source::UserInteraction, [this] {
-        auto change_event = DOM::Event::create(realm(), HTML::EventNames::change).release_value_but_fixme_should_propagate_errors();
+        auto change_event = DOM::Event::create(realm(), HTML::EventNames::change);
         change_event->set_bubbles(true);
         dispatch_event(change_event);
     });
@@ -842,7 +842,7 @@ void HTMLInputElement::reset_algorithm()
     m_checked = has_attribute(AttributeNames::checked);
 
     // empty the list of selected files,
-    m_selected_files = FileAPI::FileList::create(realm(), {}).release_value_but_fixme_should_propagate_errors();
+    m_selected_files = FileAPI::FileList::create(realm(), {});
 
     // and then invoke the value sanitization algorithm, if the type attribute's current state defines one.
     m_value = value_sanitization_algorithm(m_value);

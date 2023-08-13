@@ -32,8 +32,8 @@ class Blob : public Bindings::PlatformObject {
 public:
     virtual ~Blob() override;
 
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> create(JS::Realm&, ByteBuffer, String type);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> create(JS::Realm&, Optional<Vector<BlobPart>> const& blob_parts = {}, Optional<BlobPropertyBag> const& options = {});
+    [[nodiscard]] static JS::NonnullGCPtr<Blob> create(JS::Realm&, ByteBuffer, String type);
+    [[nodiscard]] static JS::NonnullGCPtr<Blob> create(JS::Realm&, Optional<Vector<BlobPart>> const& blob_parts = {}, Optional<BlobPropertyBag> const& options = {});
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> construct_impl(JS::Realm&, Optional<Vector<BlobPart>> const& blob_parts = {}, Optional<BlobPropertyBag> const& options = {});
 
     // https://w3c.github.io/FileAPI/#dfn-size

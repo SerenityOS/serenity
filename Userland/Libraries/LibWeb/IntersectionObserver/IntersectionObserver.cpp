@@ -39,7 +39,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<IntersectionObserver>> IntersectionObserver
     // 2. Set this’s internal [[callback]] slot to callback.
     // 8. The thresholds attribute getter will return this sorted thresholds list.
     // 9. Return this.
-    return MUST_OR_THROW_OOM(realm.heap().allocate<IntersectionObserver>(realm, realm, callback, options.root, move(thresholds)));
+    return realm.heap().allocate<IntersectionObserver>(realm, realm, callback, options.root, move(thresholds));
 }
 
 IntersectionObserver::IntersectionObserver(JS::Realm& realm, JS::GCPtr<WebIDL::CallbackType> callback, Optional<Variant<JS::Handle<DOM::Element>, JS::Handle<DOM::Document>>> const& root, Vector<double>&& thresholds)

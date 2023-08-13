@@ -22,7 +22,7 @@ void HTMLTemplateElement::initialize(JS::Realm& realm)
     Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTemplateElementPrototype>(realm, "HTMLTemplateElement"));
 
-    m_content = MUST(heap().allocate<DOM::DocumentFragment>(realm, m_document->appropriate_template_contents_owner_document()));
+    m_content = heap().allocate<DOM::DocumentFragment>(realm, m_document->appropriate_template_contents_owner_document());
     m_content->set_host(this);
 }
 

@@ -23,7 +23,7 @@ public:
         Yes,
     };
 
-    static ThrowCompletionOr<Value> create(Realm&, GeneratorObject*);
+    [[nodiscard]] static NonnullGCPtr<Promise> create(Realm&, GeneratorObject*);
 
     virtual ~AsyncFunctionDriverWrapper() override = default;
     void visit_edges(Cell::Visitor&) override;

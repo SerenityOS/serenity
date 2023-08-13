@@ -503,12 +503,10 @@ static DOMKeyLocation get_event_location(KeyCode platform_key, unsigned modifier
     return DOMKeyLocation::Standard;
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyboardEvent>> KeyboardEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, KeyCode platform_key, unsigned modifiers, u32 code_point)
+JS::NonnullGCPtr<KeyboardEvent> KeyboardEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, KeyCode platform_key, unsigned modifiers, u32 code_point)
 {
-    auto& vm = realm.vm();
-
-    auto event_key = TRY_OR_THROW_OOM(vm, get_event_key(platform_key, code_point));
-    auto event_code = TRY_OR_THROW_OOM(vm, get_event_code(platform_key, modifiers));
+    auto event_key = MUST(get_event_key(platform_key, code_point));
+    auto event_code = MUST(get_event_code(platform_key, modifiers));
 
     auto key_code = determine_key_code(platform_key, code_point);
     KeyboardEventInit event_init {};
@@ -542,9 +540,9 @@ bool KeyboardEvent::get_modifier_state(String const& key_arg)
     return false;
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyboardEvent>> KeyboardEvent::create(JS::Realm& realm, FlyString const& event_name, KeyboardEventInit const& event_init)
+JS::NonnullGCPtr<KeyboardEvent> KeyboardEvent::create(JS::Realm& realm, FlyString const& event_name, KeyboardEventInit const& event_init)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<KeyboardEvent>(realm, realm, event_name, event_init));
+    return realm.heap().allocate<KeyboardEvent>(realm, realm, event_name, event_init);
 }
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyboardEvent>> KeyboardEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, KeyboardEventInit const& event_init)

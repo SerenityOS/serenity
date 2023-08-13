@@ -28,10 +28,10 @@ void SVGForeignObjectElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGForeignObjectElementPrototype>(realm, "SVGForeignObjectElement"));
 
     // FIXME: These never actually get updated!
-    m_x = MUST(SVGAnimatedLength::create(realm, MUST(SVGLength::create(realm, 0, 0)), MUST(SVGLength::create(realm, 0, 0))));
-    m_y = MUST(SVGAnimatedLength::create(realm, MUST(SVGLength::create(realm, 0, 0)), MUST(SVGLength::create(realm, 0, 0))));
-    m_width = MUST(SVGAnimatedLength::create(realm, MUST(SVGLength::create(realm, 0, 0)), MUST(SVGLength::create(realm, 0, 0))));
-    m_height = MUST(SVGAnimatedLength::create(realm, MUST(SVGLength::create(realm, 0, 0)), MUST(SVGLength::create(realm, 0, 0))));
+    m_x = SVGAnimatedLength::create(realm, SVGLength::create(realm, 0, 0), SVGLength::create(realm, 0, 0));
+    m_y = SVGAnimatedLength::create(realm, SVGLength::create(realm, 0, 0), SVGLength::create(realm, 0, 0));
+    m_width = SVGAnimatedLength::create(realm, SVGLength::create(realm, 0, 0), SVGLength::create(realm, 0, 0));
+    m_height = SVGAnimatedLength::create(realm, SVGLength::create(realm, 0, 0), SVGLength::create(realm, 0, 0));
 }
 
 void SVGForeignObjectElement::visit_edges(Cell::Visitor& visitor)

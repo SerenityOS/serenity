@@ -18,7 +18,7 @@ static void fire_webgl_context_event(HTML::HTMLCanvasElement& canvas_element, Fl
 {
     // To fire a WebGL context event named e means that an event using the WebGLContextEvent interface, with its type attribute [DOM4] initialized to e, its cancelable attribute initialized to true, and its isTrusted attribute [DOM4] initialized to true, is to be dispatched at the given object.
     // FIXME: Consider setting a status message.
-    auto event = WebGLContextEvent::create(canvas_element.realm(), type, WebGLContextEventInit {}).release_value_but_fixme_should_propagate_errors();
+    auto event = WebGLContextEvent::create(canvas_element.realm(), type, WebGLContextEventInit {});
     event->set_is_trusted(true);
     event->set_cancelable(true);
     canvas_element.dispatch_event(*event);
@@ -47,7 +47,7 @@ JS::ThrowCompletionOr<JS::GCPtr<WebGLRenderingContext>> WebGLRenderingContext::c
         fire_webgl_context_creation_error(canvas_element);
         return JS::GCPtr<WebGLRenderingContext> { nullptr };
     }
-    return MUST_OR_THROW_OOM(realm.heap().allocate<WebGLRenderingContext>(realm, realm, canvas_element, context_or_error.release_value(), context_attributes, context_attributes));
+    return realm.heap().allocate<WebGLRenderingContext>(realm, realm, canvas_element, context_or_error.release_value(), context_attributes, context_attributes);
 }
 
 WebGLRenderingContext::WebGLRenderingContext(JS::Realm& realm, HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<GL::GLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters)

@@ -14,7 +14,7 @@ namespace Web::Encoding {
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<TextEncoder>> TextEncoder::construct_impl(JS::Realm& realm)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<TextEncoder>(realm, realm));
+    return realm.heap().allocate<TextEncoder>(realm, realm);
 }
 
 TextEncoder::TextEncoder(JS::Realm& realm)

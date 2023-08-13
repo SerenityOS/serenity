@@ -14,12 +14,12 @@
 
 namespace JS {
 
-ThrowCompletionOr<Value> AsyncFunctionDriverWrapper::create(Realm& realm, GeneratorObject* generator_object)
+NonnullGCPtr<Promise> AsyncFunctionDriverWrapper::create(Realm& realm, GeneratorObject* generator_object)
 {
     auto top_level_promise = Promise::create(realm);
     // Note: This generates a handle to itself, which it clears upon completing its execution
     //       The top_level_promise is also kept alive by this Wrapper
-    auto wrapper = MUST_OR_THROW_OOM(realm.heap().allocate<AsyncFunctionDriverWrapper>(realm, realm, *generator_object, *top_level_promise));
+    auto wrapper = realm.heap().allocate<AsyncFunctionDriverWrapper>(realm, realm, *generator_object, *top_level_promise);
     // Prime the generator:
     // This runs until the first `await value;`
     wrapper->continue_async_execution(realm.vm(), js_undefined(), true, IsInitialExecution::Yes);

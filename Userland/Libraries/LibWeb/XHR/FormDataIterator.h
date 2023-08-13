@@ -15,7 +15,7 @@ class FormDataIterator : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(FormDataIterator, Bindings::PlatformObject);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<FormDataIterator>> create(FormData const&, JS::Object::PropertyKind iterator_kind);
+    [[nodiscard]] static JS::NonnullGCPtr<FormDataIterator> create(FormData const&, JS::Object::PropertyKind iterator_kind);
 
     virtual ~FormDataIterator() override;
 

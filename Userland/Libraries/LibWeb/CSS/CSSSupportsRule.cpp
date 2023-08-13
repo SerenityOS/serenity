@@ -11,9 +11,9 @@
 
 namespace Web::CSS {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSSupportsRule>> CSSSupportsRule::create(JS::Realm& realm, NonnullRefPtr<Supports>&& supports, CSSRuleList& rules)
+JS::NonnullGCPtr<CSSSupportsRule> CSSSupportsRule::create(JS::Realm& realm, NonnullRefPtr<Supports>&& supports, CSSRuleList& rules)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<CSSSupportsRule>(realm, realm, move(supports), rules));
+    return realm.heap().allocate<CSSSupportsRule>(realm, realm, move(supports), rules);
 }
 
 CSSSupportsRule::CSSSupportsRule(JS::Realm& realm, NonnullRefPtr<Supports>&& supports, CSSRuleList& rules)

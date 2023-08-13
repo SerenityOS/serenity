@@ -161,9 +161,9 @@ CSSStyleSheet* Parser::parse_as_css_stylesheet(Optional<AK::URL> location)
             rules.append(rule);
     }
 
-    auto rule_list = CSSRuleList::create(m_context.realm(), rules).release_value_but_fixme_should_propagate_errors();
-    auto media_list = MediaList::create(m_context.realm(), {}).release_value_but_fixme_should_propagate_errors();
-    return CSSStyleSheet::create(m_context.realm(), rule_list, media_list, move(location)).release_value_but_fixme_should_propagate_errors();
+    auto rule_list = CSSRuleList::create(m_context.realm(), rules);
+    auto media_list = MediaList::create(m_context.realm(), {});
+    return CSSStyleSheet::create(m_context.realm(), rule_list, media_list, move(location));
 }
 
 Optional<SelectorList> Parser::parse_as_selector(SelectorParsingMode parsing_mode)
@@ -2360,7 +2360,7 @@ ElementInlineCSSStyleDeclaration* Parser::parse_as_style_attribute(DOM::Element&
 {
     auto declarations_and_at_rules = parse_a_list_of_declarations(m_token_stream);
     auto [properties, custom_properties] = extract_properties(declarations_and_at_rules);
-    return ElementInlineCSSStyleDeclaration::create(element, move(properties), move(custom_properties)).release_value_but_fixme_should_propagate_errors();
+    return ElementInlineCSSStyleDeclaration::create(element, move(properties), move(custom_properties));
 }
 
 Optional<AK::URL> Parser::parse_url_function(ComponentValue const& component_value)
@@ -3149,7 +3149,7 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
             }
 
             if (url.has_value())
-                return CSSImportRule::create(url.value(), const_cast<DOM::Document&>(*m_context.document())).release_value_but_fixme_should_propagate_errors();
+                return CSSImportRule::create(url.value(), const_cast<DOM::Document&>(*m_context.document()));
             dbgln_if(CSS_PARSER_DEBUG, "Unable to parse url from @import rule");
             return {};
         }
@@ -3166,9 +3166,9 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
                 if (auto* child_rule = convert_to_rule(raw_rule))
                     child_rules.append(child_rule);
             }
-            auto media_list = MediaList::create(m_context.realm(), move(media_query_list)).release_value_but_fixme_should_propagate_errors();
-            auto rule_list = CSSRuleList::create(m_context.realm(), child_rules).release_value_but_fixme_should_propagate_errors();
-            return CSSMediaRule::create(m_context.realm(), media_list, rule_list).release_value_but_fixme_should_propagate_errors();
+            auto media_list = MediaList::create(m_context.realm(), move(media_query_list));
+            auto rule_list = CSSRuleList::create(m_context.realm(), child_rules);
+            return CSSMediaRule::create(m_context.realm(), media_list, rule_list);
         }
         if (rule->at_rule_name().equals_ignoring_ascii_case("supports"sv)) {
             auto supports_tokens = TokenStream { rule->prelude() };
@@ -3191,8 +3191,8 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
                     child_rules.append(child_rule);
             }
 
-            auto rule_list = CSSRuleList::create(m_context.realm(), child_rules).release_value_but_fixme_should_propagate_errors();
-            return CSSSupportsRule::create(m_context.realm(), supports.release_nonnull(), rule_list).release_value_but_fixme_should_propagate_errors();
+            auto rule_list = CSSRuleList::create(m_context.realm(), child_rules);
+            return CSSSupportsRule::create(m_context.realm(), supports.release_nonnull(), rule_list);
         }
         if (rule->at_rule_name().equals_ignoring_ascii_case("keyframes"sv)) {
             auto prelude_stream = TokenStream { rule->prelude() };
@@ -3286,7 +3286,7 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
                     auto block_declarations = parse_a_list_of_declarations(block_stream);
                     auto style = convert_to_style_declaration(block_declarations);
                     for (auto& selector : selectors) {
-                        auto keyframe_rule = CSSKeyframeRule::create(m_context.realm(), selector, *style).release_value_but_fixme_should_propagate_errors();
+                        auto keyframe_rule = CSSKeyframeRule::create(m_context.realm(), selector, *style);
                         keyframes.append(keyframe_rule);
                     }
                 } else {
@@ -3294,7 +3294,7 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
                 }
             }
 
-            return CSSKeyframesRule::create(m_context.realm(), name, move(keyframes)).release_value_but_fixme_should_propagate_errors();
+            return CSSKeyframesRule::create(m_context.realm(), name, move(keyframes));
         }
         if (rule->at_rule_name().equals_ignoring_ascii_case("namespace"sv)) {
             // https://drafts.csswg.org/css-namespaces/#syntax
@@ -3325,7 +3325,7 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
                 return {};
             }
 
-            return CSSNamespaceRule::create(m_context.realm(), prefix, namespace_uri).release_value_but_fixme_should_propagate_errors();
+            return CSSNamespaceRule::create(m_context.realm(), prefix, namespace_uri);
         }
 
         // FIXME: More at rules!
@@ -3363,7 +3363,7 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
         return {};
     }
 
-    return CSSStyleRule::create(m_context.realm(), move(selectors.value()), *declaration).release_value_but_fixme_should_propagate_errors();
+    return CSSStyleRule::create(m_context.realm(), move(selectors.value()), *declaration);
 }
 
 auto Parser::extract_properties(Vector<DeclarationOrAtRule> const& declarations_and_at_rules) -> PropertiesAndCustomProperties
@@ -3392,7 +3392,7 @@ auto Parser::extract_properties(Vector<DeclarationOrAtRule> const& declarations_
 PropertyOwningCSSStyleDeclaration* Parser::convert_to_style_declaration(Vector<DeclarationOrAtRule> const& declarations_and_at_rules)
 {
     auto [properties, custom_properties] = extract_properties(declarations_and_at_rules);
-    return PropertyOwningCSSStyleDeclaration::create(m_context.realm(), move(properties), move(custom_properties)).release_value_but_fixme_should_propagate_errors();
+    return PropertyOwningCSSStyleDeclaration::create(m_context.realm(), move(properties), move(custom_properties));
 }
 
 Optional<StyleProperty> Parser::convert_to_style_property(Declaration const& declaration)
@@ -6133,7 +6133,7 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
         unicode_range.empend(0x0u, 0x10FFFFu);
     }
 
-    return CSSFontFaceRule::create(m_context.realm(), FontFace { font_family.release_value(), weight, slope, move(src), move(unicode_range) }).release_value_but_fixme_should_propagate_errors();
+    return CSSFontFaceRule::create(m_context.realm(), FontFace { font_family.release_value(), weight, slope, move(src), move(unicode_range) });
 }
 
 Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>& component_values)

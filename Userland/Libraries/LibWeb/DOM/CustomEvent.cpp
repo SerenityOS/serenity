@@ -11,9 +11,9 @@
 
 namespace Web::DOM {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<CustomEvent>> CustomEvent::create(JS::Realm& realm, FlyString const& event_name, CustomEventInit const& event_init)
+JS::NonnullGCPtr<CustomEvent> CustomEvent::create(JS::Realm& realm, FlyString const& event_name, CustomEventInit const& event_init)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<CustomEvent>(realm, realm, event_name, event_init));
+    return realm.heap().allocate<CustomEvent>(realm, realm, event_name, event_init);
 }
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<CustomEvent>> CustomEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, CustomEventInit const& event_init)

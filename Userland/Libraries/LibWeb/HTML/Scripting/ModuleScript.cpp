@@ -37,7 +37,7 @@ WebIDL::ExceptionOr<JS::GCPtr<JavaScriptModuleScript>> JavaScriptModuleScript::c
     auto& realm = settings_object.realm();
 
     // 2. Let script be a new module script that this algorithm will subsequently initialize.
-    auto script = MUST_OR_THROW_OOM(realm.heap().allocate<JavaScriptModuleScript>(realm, move(base_url), filename, settings_object));
+    auto script = realm.heap().allocate<JavaScriptModuleScript>(realm, move(base_url), filename, settings_object);
 
     // 3. Set script's settings object to settings.
     // NOTE: This was already done when constructing.

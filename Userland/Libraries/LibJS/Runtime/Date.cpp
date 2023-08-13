@@ -25,7 +25,7 @@ Crypto::SignedBigInteger const ns_per_day_bigint { static_cast<i64>(ns_per_day) 
 
 NonnullGCPtr<Date> Date::create(Realm& realm, double date_value)
 {
-    return realm.heap().allocate<Date>(realm, date_value, realm.intrinsics().date_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<Date>(realm, date_value, realm.intrinsics().date_prototype());
 }
 
 Date::Date(double date_value, Object& prototype)

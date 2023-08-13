@@ -15,7 +15,7 @@ class IdleDeadline final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(IdleDeadline, Bindings::PlatformObject);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<IdleDeadline>> create(JS::Realm&, bool did_timeout = false);
+    [[nodiscard]] static JS::NonnullGCPtr<IdleDeadline> create(JS::Realm&, bool did_timeout = false);
     virtual ~IdleDeadline() override;
 
     double time_remaining() const;

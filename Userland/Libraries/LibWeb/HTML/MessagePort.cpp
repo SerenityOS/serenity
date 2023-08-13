@@ -14,9 +14,9 @@
 
 namespace Web::HTML {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<MessagePort>> MessagePort::create(JS::Realm& realm)
+JS::NonnullGCPtr<MessagePort> MessagePort::create(JS::Realm& realm)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<MessagePort>(realm, realm));
+    return realm.heap().allocate<MessagePort>(realm, realm);
 }
 
 MessagePort::MessagePort(JS::Realm& realm)
@@ -97,7 +97,7 @@ void MessagePort::post_message(JS::Value message)
         MessageEventInit event_init {};
         event_init.data = message;
         event_init.origin = "<origin>"_string;
-        target_port->dispatch_event(MessageEvent::create(target_port->realm(), HTML::EventNames::message, event_init).release_value_but_fixme_should_propagate_errors());
+        target_port->dispatch_event(MessageEvent::create(target_port->realm(), HTML::EventNames::message, event_init));
     }));
 }
 

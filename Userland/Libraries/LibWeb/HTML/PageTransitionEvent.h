@@ -19,8 +19,8 @@ class PageTransitionEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(PageTransitionEvent, DOM::Event);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<PageTransitionEvent>> create(JS::Realm&, FlyString const& event_name, PageTransitionEventInit const& event_init);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<PageTransitionEvent>> construct_impl(JS::Realm&, FlyString const& event_name, PageTransitionEventInit const& event_init);
+    [[nodiscard]] static JS::NonnullGCPtr<PageTransitionEvent> create(JS::Realm&, FlyString const& event_name, PageTransitionEventInit const&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<PageTransitionEvent>> construct_impl(JS::Realm&, FlyString const& event_name, PageTransitionEventInit const&);
 
     PageTransitionEvent(JS::Realm&, FlyString const& event_name, PageTransitionEventInit const& event_init);
 

@@ -88,7 +88,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PerformanceMark>> PerformanceMark::construc
     }
 
     // 2. Create a new PerformanceMark object (entry) with the current global object's realm.
-    return MUST_OR_THROW_OOM(realm.heap().allocate<PerformanceMark>(realm, realm, name, start_time, duration, detail));
+    return realm.heap().allocate<PerformanceMark>(realm, realm, name, start_time, duration, detail);
 }
 
 FlyString const& PerformanceMark::entry_type() const

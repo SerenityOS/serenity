@@ -316,7 +316,7 @@ static bool fire_an_event(FlyString name, Optional<Web::DOM::Element&> target)
     if (!target.has_value())
         return false;
 
-    auto event = T::create(target->realm(), name).release_value_but_fixme_should_propagate_errors();
+    auto event = T::create(target->realm(), name);
     return target->dispatch_event(event);
 }
 

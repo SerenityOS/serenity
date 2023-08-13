@@ -29,10 +29,10 @@ static HashMap<GCPtr<Object const>, HashMap<DeprecatedFlyString, Object::Intrins
 NonnullGCPtr<Object> Object::create(Realm& realm, Object* prototype)
 {
     if (!prototype)
-        return realm.heap().allocate<Object>(realm, realm.intrinsics().empty_object_shape()).release_allocated_value_but_fixme_should_propagate_errors();
+        return realm.heap().allocate<Object>(realm, realm.intrinsics().empty_object_shape());
     if (prototype == realm.intrinsics().object_prototype())
-        return realm.heap().allocate<Object>(realm, realm.intrinsics().new_object_shape()).release_allocated_value_but_fixme_should_propagate_errors();
-    return realm.heap().allocate<Object>(realm, ConstructWithPrototypeTag::Tag, *prototype).release_allocated_value_but_fixme_should_propagate_errors();
+        return realm.heap().allocate<Object>(realm, realm.intrinsics().new_object_shape());
+    return realm.heap().allocate<Object>(realm, ConstructWithPrototypeTag::Tag, *prototype);
 }
 
 Object::Object(GlobalObjectTag, Realm& realm)

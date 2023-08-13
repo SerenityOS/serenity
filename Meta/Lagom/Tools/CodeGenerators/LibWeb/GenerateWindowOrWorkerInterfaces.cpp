@@ -157,7 +157,7 @@ namespace Web::Bindings {
 template<>
 void Intrinsics::create_web_namespace<@namespace_class@>(JS::Realm& realm)
 {
-    auto namespace_object = heap().allocate<@namespace_class@>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    auto namespace_object = heap().allocate<@namespace_class@>(realm, realm);
     m_namespaces.set("@interface_name@"sv, namespace_object);
 
     [[maybe_unused]] static constexpr u8 attr = JS::Attribute::Writable | JS::Attribute::Configurable;)~~~");
@@ -189,10 +189,10 @@ void Intrinsics::create_web_prototype_and_constructor<@prototype_class@>(JS::Rea
 {
     auto& vm = realm.vm();
 
-    auto prototype = heap().allocate<@prototype_class@>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    auto prototype = heap().allocate<@prototype_class@>(realm, realm);
     m_prototypes.set("@interface_name@"sv, prototype);
 
-    auto constructor = heap().allocate<@constructor_class@>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    auto constructor = heap().allocate<@constructor_class@>(realm, realm);
     m_constructors.set("@interface_name@"sv, constructor);
 
     prototype->define_direct_property(vm.names.constructor, constructor.ptr(), JS::Attribute::Writable | JS::Attribute::Configurable);
@@ -203,7 +203,7 @@ void Intrinsics::create_web_prototype_and_constructor<@prototype_class@>(JS::Rea
             gen.set("legacy_interface_name", legacy_constructor->name);
             gen.set("legacy_constructor_class", legacy_constructor->constructor_class);
             gen.append(R"~~~(
-    auto legacy_constructor = heap().allocate<@legacy_constructor_class@>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    auto legacy_constructor = heap().allocate<@legacy_constructor_class@>(realm, realm);
     m_constructors.set("@legacy_interface_name@"sv, legacy_constructor);
 
     legacy_constructor->define_direct_property(vm.names.name, JS::PrimitiveString::create(vm, "@legacy_interface_name@"_string), JS::Attribute::Configurable);)~~~");

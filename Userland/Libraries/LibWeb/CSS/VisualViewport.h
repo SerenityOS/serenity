@@ -15,7 +15,7 @@ class VisualViewport final : public DOM::EventTarget {
     WEB_PLATFORM_OBJECT(VisualViewport, DOM::EventTarget);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<VisualViewport>> create(DOM::Document&);
+    [[nodiscard]] static JS::NonnullGCPtr<VisualViewport> create(DOM::Document&);
 
     virtual ~VisualViewport() override = default;
 

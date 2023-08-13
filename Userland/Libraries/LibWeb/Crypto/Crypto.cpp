@@ -15,9 +15,9 @@
 
 namespace Web::Crypto {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Crypto>> Crypto::create(JS::Realm& realm)
+JS::NonnullGCPtr<Crypto> Crypto::create(JS::Realm& realm)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<Crypto>(realm, realm));
+    return realm.heap().allocate<Crypto>(realm, realm);
 }
 
 Crypto::Crypto(JS::Realm& realm)
@@ -31,7 +31,7 @@ void Crypto::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CryptoPrototype>(realm, "Crypto"));
-    m_subtle = MUST(SubtleCrypto::create(realm));
+    m_subtle = SubtleCrypto::create(realm);
 }
 
 JS::NonnullGCPtr<SubtleCrypto> Crypto::subtle() const

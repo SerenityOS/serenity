@@ -52,10 +52,10 @@ inline void replace_in_ordered_set(Vector<DeprecatedString>& set, StringView ite
 
 namespace Web::DOM {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMTokenList>> DOMTokenList::create(Element& associated_element, DeprecatedFlyString associated_attribute)
+JS::NonnullGCPtr<DOMTokenList> DOMTokenList::create(Element& associated_element, DeprecatedFlyString associated_attribute)
 {
     auto& realm = associated_element.realm();
-    return MUST_OR_THROW_OOM(realm.heap().allocate<DOMTokenList>(realm, associated_element, move(associated_attribute)));
+    return realm.heap().allocate<DOMTokenList>(realm, associated_element, move(associated_attribute));
 }
 
 // https://dom.spec.whatwg.org/#ref-for-domtokenlist%E2%91%A0%E2%91%A2

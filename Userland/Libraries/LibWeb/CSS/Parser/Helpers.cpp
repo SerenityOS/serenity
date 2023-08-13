@@ -18,9 +18,9 @@ namespace Web {
 CSS::CSSStyleSheet* parse_css_stylesheet(CSS::Parser::ParsingContext const& context, StringView css, Optional<AK::URL> location)
 {
     if (css.is_empty()) {
-        auto rule_list = CSS::CSSRuleList::create_empty(context.realm()).release_value_but_fixme_should_propagate_errors();
-        auto media_list = CSS::MediaList::create(context.realm(), {}).release_value_but_fixme_should_propagate_errors();
-        return CSS::CSSStyleSheet::create(context.realm(), rule_list, media_list, location).release_value_but_fixme_should_propagate_errors();
+        auto rule_list = CSS::CSSRuleList::create_empty(context.realm());
+        auto media_list = CSS::MediaList::create(context.realm(), {});
+        return CSS::CSSStyleSheet::create(context.realm(), rule_list, media_list, location);
     }
     auto parser = CSS::Parser::Parser::create(context, css).release_value_but_fixme_should_propagate_errors();
     return parser.parse_as_css_stylesheet(location);
@@ -29,7 +29,7 @@ CSS::CSSStyleSheet* parse_css_stylesheet(CSS::Parser::ParsingContext const& cont
 CSS::ElementInlineCSSStyleDeclaration* parse_css_style_attribute(CSS::Parser::ParsingContext const& context, StringView css, DOM::Element& element)
 {
     if (css.is_empty())
-        return CSS::ElementInlineCSSStyleDeclaration::create(element, {}, {}).release_value_but_fixme_should_propagate_errors();
+        return CSS::ElementInlineCSSStyleDeclaration::create(element, {}, {});
     auto parser = CSS::Parser::Parser::create(context, css).release_value_but_fixme_should_propagate_errors();
     return parser.parse_as_style_attribute(element);
 }

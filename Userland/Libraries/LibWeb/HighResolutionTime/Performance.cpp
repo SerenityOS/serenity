@@ -43,7 +43,7 @@ void Performance::visit_edges(Cell::Visitor& visitor)
 JS::GCPtr<NavigationTiming::PerformanceTiming> Performance::timing()
 {
     if (!m_timing)
-        m_timing = heap().allocate<NavigationTiming::PerformanceTiming>(realm(), *m_window).release_allocated_value_but_fixme_should_propagate_errors();
+        m_timing = heap().allocate<NavigationTiming::PerformanceTiming>(realm(), *m_window);
     return m_timing;
 }
 
@@ -290,7 +290,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<UserTiming::PerformanceMeasure>> Performanc
     // NOTE: Already the default value of `detail`.
 
     // 4. Create a new PerformanceMeasure object (entry) with this's relevant realm.
-    auto entry = MUST_OR_THROW_OOM(realm.heap().allocate<UserTiming::PerformanceMeasure>(realm, realm, measure_name, start_time, duration, detail));
+    auto entry = realm.heap().allocate<UserTiming::PerformanceMeasure>(realm, realm, measure_name, start_time, duration, detail);
 
     // 10. Queue entry.
     TRY(window_or_worker->queue_performance_entry(entry));

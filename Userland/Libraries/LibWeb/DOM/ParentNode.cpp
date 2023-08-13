@@ -115,7 +115,7 @@ JS::NonnullGCPtr<HTMLCollection> ParentNode::children()
     if (!m_children) {
         m_children = HTMLCollection::create(*this, HTMLCollection::Scope::Children, [](Element const&) {
             return true;
-        }).release_value_but_fixme_should_propagate_errors();
+        });
     }
     return *m_children;
 }
@@ -128,7 +128,7 @@ JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name(Deprecated
     if (qualified_name == "*") {
         return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const&) {
             return true;
-        }).release_value_but_fixme_should_propagate_errors();
+        });
     }
 
     // 2. Otherwise, if root’s node document is an HTML document, return a HTMLCollection rooted at root, whose filter matches the following descendant elements:
@@ -140,13 +140,13 @@ JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name(Deprecated
 
             // - Whose namespace is not the HTML namespace and whose qualified name is qualifiedName.
             return element.qualified_name() == qualified_name;
-        }).release_value_but_fixme_should_propagate_errors();
+        });
     }
 
     // 3. Otherwise, return a HTMLCollection rooted at root, whose filter matches descendant elements whose qualified name is qualifiedName.
     return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [qualified_name](Element const& element) {
         return element.qualified_name() == qualified_name;
-    }).release_value_but_fixme_should_propagate_errors();
+    });
 }
 
 // https://dom.spec.whatwg.org/#concept-getelementsbytagnamens
@@ -162,27 +162,27 @@ JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name_ns(Depreca
     if (namespace_ == "*" && local_name == "*") {
         return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [](Element const&) {
             return true;
-        }).release_value_but_fixme_should_propagate_errors();
+        });
     }
 
     // 3. Otherwise, if namespace is "*" (U+002A), return a HTMLCollection rooted at root, whose filter matches descendant elements whose local name is localName.
     if (namespace_ == "*") {
         return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [local_name](Element const& element) {
             return element.local_name() == local_name;
-        }).release_value_but_fixme_should_propagate_errors();
+        });
     }
 
     // 4. Otherwise, if localName is "*" (U+002A), return a HTMLCollection rooted at root, whose filter matches descendant elements whose namespace is namespace.
     if (local_name == "*") {
         return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [namespace_](Element const& element) {
             return element.namespace_() == namespace_;
-        }).release_value_but_fixme_should_propagate_errors();
+        });
     }
 
     // 5. Otherwise, return a HTMLCollection rooted at root, whose filter matches descendant elements whose namespace is namespace and local name is localName.
     return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [namespace_, local_name](Element const& element) {
         return element.namespace_() == namespace_ && element.local_name() == local_name;
-    }).release_value_but_fixme_should_propagate_errors();
+    });
 }
 
 // https://dom.spec.whatwg.org/#dom-parentnode-prepend

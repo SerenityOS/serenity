@@ -16,7 +16,7 @@ namespace Web::HTML {
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Path2D>> Path2D::construct_impl(JS::Realm& realm, Optional<Variant<JS::Handle<Path2D>, DeprecatedString>> const& path)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<Path2D>(realm, realm, path));
+    return realm.heap().allocate<Path2D>(realm, realm, path);
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-path2d

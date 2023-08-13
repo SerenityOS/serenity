@@ -13,7 +13,7 @@ namespace JS {
 
 ThrowCompletionOr<NonnullGCPtr<IteratorHelper>> IteratorHelper::create(Realm& realm, IteratorRecord underlying_iterator, Closure closure, Optional<AbruptClosure> abrupt_closure)
 {
-    return TRY(realm.heap().allocate<IteratorHelper>(realm, realm, realm.intrinsics().iterator_helper_prototype(), move(underlying_iterator), move(closure), move(abrupt_closure)));
+    return realm.heap().allocate<IteratorHelper>(realm, realm, realm.intrinsics().iterator_helper_prototype(), move(underlying_iterator), move(closure), move(abrupt_closure));
 }
 
 IteratorHelper::IteratorHelper(Realm& realm, Object& prototype, IteratorRecord underlying_iterator, Closure closure, Optional<AbruptClosure> abrupt_closure)

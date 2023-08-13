@@ -101,7 +101,7 @@ WebIDL::ExceptionOr<void> HTMLFormElement::submit_form(JS::NonnullGCPtr<HTMLElem
         //    cancelable attribute initialized to true.
         SubmitEventInit event_init {};
         event_init.submitter = submitter_button;
-        auto submit_event = SubmitEvent::create(realm, EventNames::submit, event_init).release_value_but_fixme_should_propagate_errors();
+        auto submit_event = SubmitEvent::create(realm, EventNames::submit, event_init);
         submit_event->set_bubbles(true);
         submit_event->set_cancelable(true);
         bool should_continue = dispatch_event(*submit_event);
@@ -258,7 +258,7 @@ WebIDL::ExceptionOr<void> HTMLFormElement::submit_form(JS::NonnullGCPtr<HTMLElem
 void HTMLFormElement::reset_form()
 {
     // 1. Let reset be the result of firing an event named reset at form, with the bubbles and cancelable attributes initialized to true.
-    auto reset_event = DOM::Event::create(realm(), HTML::EventNames::reset).release_value_but_fixme_should_propagate_errors();
+    auto reset_event = DOM::Event::create(realm(), HTML::EventNames::reset);
     reset_event->set_bubbles(true);
     reset_event->set_cancelable(true);
 
@@ -411,7 +411,7 @@ JS::NonnullGCPtr<DOM::HTMLCollection> HTMLFormElement::elements() const
     if (!m_elements) {
         m_elements = DOM::HTMLCollection::create(const_cast<HTMLFormElement&>(*this), DOM::HTMLCollection::Scope::Descendants, [](Element const& element) {
             return is_form_control(element);
-        }).release_value_but_fixme_should_propagate_errors();
+        });
     }
     return *m_elements;
 }

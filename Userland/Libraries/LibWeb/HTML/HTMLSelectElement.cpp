@@ -42,7 +42,7 @@ JS::GCPtr<HTMLOptionsCollection> const& HTMLSelectElement::options()
             // the select element, and all the option element children of all the optgroup element children
             // of the select element, in tree order.
             return is<HTMLOptionElement>(element);
-        }).release_value_but_fixme_should_propagate_errors();
+        });
     }
     return m_options;
 }

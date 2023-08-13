@@ -18,7 +18,7 @@ class DocumentType final
     WEB_PLATFORM_OBJECT(DocumentType, Node);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentType>> create(Document&);
+    [[nodiscard]] static JS::NonnullGCPtr<DocumentType> create(Document&);
 
     virtual ~DocumentType() override = default;
 

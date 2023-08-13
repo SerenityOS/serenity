@@ -17,7 +17,7 @@ class DOMImplementation final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(DOMImplementation, Bindings::PlatformObject);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMImplementation>> create(Document&);
+    [[nodiscard]] static JS::NonnullGCPtr<DOMImplementation> create(Document&);
     virtual ~DOMImplementation();
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> create_document(DeprecatedString const&, DeprecatedString const&, JS::GCPtr<DocumentType>) const;

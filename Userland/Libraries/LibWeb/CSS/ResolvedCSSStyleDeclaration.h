@@ -14,7 +14,7 @@ class ResolvedCSSStyleDeclaration final : public CSSStyleDeclaration {
     WEB_PLATFORM_OBJECT(ResolvedCSSStyleDeclaration, CSSStyleDeclaration);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<ResolvedCSSStyleDeclaration>> create(DOM::Element& element);
+    [[nodiscard]] static JS::NonnullGCPtr<ResolvedCSSStyleDeclaration> create(DOM::Element&);
 
     virtual ~ResolvedCSSStyleDeclaration() override = default;
 

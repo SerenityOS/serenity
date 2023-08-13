@@ -51,11 +51,11 @@ namespace Web::XHR {
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<XMLHttpRequest>> XMLHttpRequest::construct_impl(JS::Realm& realm)
 {
-    auto upload_object = MUST_OR_THROW_OOM(realm.heap().allocate<XMLHttpRequestUpload>(realm, realm));
+    auto upload_object = realm.heap().allocate<XMLHttpRequestUpload>(realm, realm);
     auto author_request_headers = Fetch::Infrastructure::HeaderList::create(realm.vm());
     auto response = Fetch::Infrastructure::Response::network_error(realm.vm(), "Not sent yet"sv);
     auto fetch_controller = Fetch::Infrastructure::FetchController::create(realm.vm());
-    return MUST_OR_THROW_OOM(realm.heap().allocate<XMLHttpRequest>(realm, realm, *upload_object, *author_request_headers, *response, *fetch_controller));
+    return realm.heap().allocate<XMLHttpRequest>(realm, realm, *upload_object, *author_request_headers, *response, *fetch_controller);
 }
 
 XMLHttpRequest::XMLHttpRequest(JS::Realm& realm, XMLHttpRequestUpload& upload_object, Fetch::Infrastructure::HeaderList& author_request_headers, Fetch::Infrastructure::Response& response, Fetch::Infrastructure::FetchController& fetch_controller)
@@ -100,7 +100,7 @@ static void fire_progress_event(XMLHttpRequestEventTarget& target, FlyString con
     event_init.loaded = transmitted;
     event_init.total = length;
     // FIXME: If we're in an async context, this will propagate to a callback context which can't propagate it anywhere else and does not expect this to fail.
-    target.dispatch_event(*ProgressEvent::create(target.realm(), event_name, event_init).release_value_but_fixme_should_propagate_errors());
+    target.dispatch_event(*ProgressEvent::create(target.realm(), event_name, event_init));
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-responsetext
@@ -179,8 +179,8 @@ WebIDL::ExceptionOr<JS::Value> XMLHttpRequest::response()
     // 6. Otherwise, if this’s response type is "blob", set this’s response object to a new Blob object representing this’s received bytes with type set to the result of get a final MIME type for this.
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Blob) {
         auto mime_type_as_string = TRY_OR_THROW_OOM(vm, TRY_OR_THROW_OOM(vm, get_final_mime_type()).serialized());
-        auto blob_part = TRY(FileAPI::Blob::create(realm(), m_received_bytes, move(mime_type_as_string)));
-        auto blob = TRY(FileAPI::Blob::create(realm(), Vector<FileAPI::BlobPart> { JS::make_handle(*blob_part) }));
+        auto blob_part = FileAPI::Blob::create(realm(), m_received_bytes, move(mime_type_as_string));
+        auto blob = FileAPI::Blob::create(realm(), Vector<FileAPI::BlobPart> { JS::make_handle(*blob_part) });
         m_response_object = JS::Value(blob.ptr());
     }
     // 7. Otherwise, if this’s response type is "document", set a document response for this.
@@ -434,7 +434,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, Stri
         m_state = State::Opened;
 
         // 2. Fire an event named readystatechange at this.
-        dispatch_event(TRY(DOM::Event::create(realm(), EventNames::readystatechange)));
+        dispatch_event(DOM::Event::create(realm(), EventNames::readystatechange));
     }
 
     return {};
@@ -684,7 +684,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
 
             // 5. Fire an event named readystatechange at this.
             // FIXME: We're in an async context, so we can't propagate the error anywhere.
-            dispatch_event(*DOM::Event::create(this->realm(), EventNames::readystatechange).release_value_but_fixme_should_propagate_errors());
+            dispatch_event(*DOM::Event::create(this->realm(), EventNames::readystatechange));
 
             // 6. If this’s state is not headers received, then return.
             if (m_state != State::HeadersReceived)
@@ -1086,7 +1086,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::handle_response_end_of_body()
 
     // 9. Fire an event named readystatechange at xhr.
     // FIXME: If we're in an async context, this will propagate to a callback context which can't propagate it anywhere else and does not expect this to fail.
-    dispatch_event(*DOM::Event::create(realm, EventNames::readystatechange).release_value_but_fixme_should_propagate_errors());
+    dispatch_event(*DOM::Event::create(realm, EventNames::readystatechange));
 
     // 10. Fire a progress event named load at xhr with transmitted and length.
     fire_progress_event(*this, EventNames::load, transmitted, length);
@@ -1138,7 +1138,7 @@ JS::ThrowCompletionOr<void> XMLHttpRequest::request_error_steps(FlyString const&
 
     // 5. Fire an event named readystatechange at xhr.
     // FIXME: Since we're in an async context, this will propagate to a callback context which can't propagate it anywhere else and does not expect this to fail.
-    dispatch_event(*DOM::Event::create(realm(), EventNames::readystatechange).release_value_but_fixme_should_propagate_errors());
+    dispatch_event(*DOM::Event::create(realm(), EventNames::readystatechange));
 
     // 6. If xhr’s upload complete flag is unset, then:
     if (!m_upload_complete) {

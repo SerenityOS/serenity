@@ -25,7 +25,7 @@ class PerformanceMeasure final : public PerformanceTimeline::PerformanceEntry {
 public:
     virtual ~PerformanceMeasure();
 
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<PerformanceMeasure>> create(JS::Realm&, String const& measure_name, HighResolutionTime::DOMHighResTimeStamp start_time, HighResolutionTime::DOMHighResTimeStamp duration, JS::Value detail);
+    [[nodiscard]] static JS::NonnullGCPtr<PerformanceMeasure> create(JS::Realm&, String const& measure_name, HighResolutionTime::DOMHighResTimeStamp start_time, HighResolutionTime::DOMHighResTimeStamp duration, JS::Value detail);
 
     // NOTE: These three functions are answered by the registry for the given entry type.
     // https://w3c.github.io/timing-entrytypes-registry/#registry

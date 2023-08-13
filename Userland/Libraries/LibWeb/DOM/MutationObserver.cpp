@@ -13,7 +13,7 @@ namespace Web::DOM {
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<MutationObserver>> MutationObserver::construct_impl(JS::Realm& realm, JS::GCPtr<WebIDL::CallbackType> callback)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<MutationObserver>(realm, realm, callback));
+    return realm.heap().allocate<MutationObserver>(realm, realm, callback);
 }
 
 // https://dom.spec.whatwg.org/#dom-mutationobserver-mutationobserver

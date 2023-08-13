@@ -23,7 +23,7 @@ class CSSStyleSheet final
     WEB_PLATFORM_OBJECT(CSSStyleSheet, StyleSheet);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSStyleSheet>> create(JS::Realm&, CSSRuleList& rules, MediaList& media, Optional<AK::URL> location);
+    [[nodiscard]] static JS::NonnullGCPtr<CSSStyleSheet> create(JS::Realm&, CSSRuleList&, MediaList&, Optional<AK::URL> location);
 
     virtual ~CSSStyleSheet() override = default;
 

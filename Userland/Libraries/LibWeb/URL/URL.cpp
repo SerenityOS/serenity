@@ -16,9 +16,9 @@
 
 namespace Web::URL {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> URL::create(JS::Realm& realm, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query)
+JS::NonnullGCPtr<URL> URL::create(JS::Realm& realm, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<URL>(realm, realm, move(url), move(query)));
+    return realm.heap().allocate<URL>(realm, realm, move(url), move(query));
 }
 
 // https://url.spec.whatwg.org/#api-url-parser
@@ -67,7 +67,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> URL::construct_impl(JS::Realm& realm,
     auto query_object = MUST(URLSearchParams::construct_impl(realm, query));
 
     // 6. Initialize this’s query object with query.
-    auto result_url = TRY(URL::create(realm, parsed_url.release_value(), move(query_object)));
+    auto result_url = URL::create(realm, parsed_url.release_value(), move(query_object));
 
     // 7. Set this’s query object’s URL object to this.
     result_url->m_query->m_url = result_url;

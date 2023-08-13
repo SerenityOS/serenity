@@ -153,7 +153,7 @@ void VideoTrack::set_selected(bool selected)
 
         if (previously_unselected_track_is_selected || selected_track_was_unselected_without_another_selection) {
             m_media_element->queue_a_media_element_task([this]() {
-                m_video_track_list->dispatch_event(DOM::Event::create(realm(), HTML::EventNames::change).release_value_but_fixme_should_propagate_errors());
+                m_video_track_list->dispatch_event(DOM::Event::create(realm(), HTML::EventNames::change));
             });
         }
     }

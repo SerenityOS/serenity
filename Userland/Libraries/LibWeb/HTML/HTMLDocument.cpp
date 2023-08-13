@@ -20,9 +20,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLDocument>> HTMLDocument::construct_impl
     return HTMLDocument::create(realm);
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLDocument>> HTMLDocument::create(JS::Realm& realm, AK::URL const& url)
+JS::NonnullGCPtr<HTMLDocument> HTMLDocument::create(JS::Realm& realm, AK::URL const& url)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<HTMLDocument>(realm, realm, url));
+    return realm.heap().allocate<HTMLDocument>(realm, realm, url);
 }
 
 }

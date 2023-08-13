@@ -13,10 +13,10 @@
 
 namespace Web::DOM {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<NamedNodeMap>> NamedNodeMap::create(Element& element)
+JS::NonnullGCPtr<NamedNodeMap> NamedNodeMap::create(Element& element)
 {
     auto& realm = element.realm();
-    return MUST_OR_THROW_OOM(realm.heap().allocate<NamedNodeMap>(realm, element));
+    return realm.heap().allocate<NamedNodeMap>(realm, element);
 }
 
 NamedNodeMap::NamedNodeMap(Element& element)

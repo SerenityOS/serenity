@@ -13,9 +13,9 @@
 
 namespace Web::DOM {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLCollection>> HTMLCollection::create(ParentNode& root, Scope scope, Function<bool(Element const&)> filter)
+JS::NonnullGCPtr<HTMLCollection> HTMLCollection::create(ParentNode& root, Scope scope, Function<bool(Element const&)> filter)
 {
-    return MUST_OR_THROW_OOM(root.heap().allocate<HTMLCollection>(root.realm(), root, scope, move(filter)));
+    return root.heap().allocate<HTMLCollection>(root.realm(), root, scope, move(filter));
 }
 
 HTMLCollection::HTMLCollection(ParentNode& root, Scope scope, Function<bool(Element const&)> filter)

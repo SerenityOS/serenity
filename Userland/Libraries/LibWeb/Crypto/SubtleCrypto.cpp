@@ -14,9 +14,9 @@
 
 namespace Web::Crypto {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<SubtleCrypto>> SubtleCrypto::create(JS::Realm& realm)
+JS::NonnullGCPtr<SubtleCrypto> SubtleCrypto::create(JS::Realm& realm)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<SubtleCrypto>(realm, realm));
+    return realm.heap().allocate<SubtleCrypto>(realm, realm);
 }
 
 SubtleCrypto::SubtleCrypto(JS::Realm& realm)

@@ -22,7 +22,7 @@ void MathMLElement::initialize(JS::Realm& realm)
     Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::MathMLElementPrototype>(realm, "MathMLElement"));
 
-    m_dataset = MUST(HTML::DOMStringMap::create(*this));
+    m_dataset = HTML::DOMStringMap::create(*this);
 }
 
 Optional<ARIA::Role> MathMLElement::default_role() const

@@ -18,7 +18,7 @@ class DOMRectList final : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(DOMRectList, Bindings::LegacyPlatformObject);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMRectList>> create(JS::Realm&, Vector<JS::Handle<DOMRect>>);
+    [[nodiscard]] static JS::NonnullGCPtr<DOMRectList> create(JS::Realm&, Vector<JS::Handle<DOMRect>>);
 
     virtual ~DOMRectList() override;
 

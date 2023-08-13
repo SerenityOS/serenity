@@ -15,7 +15,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ResizeObserver>> ResizeObserver::construct_
 {
     // FIXME: Implement
     (void)callback;
-    return MUST_OR_THROW_OOM(realm.heap().allocate<ResizeObserver>(realm, realm));
+    return realm.heap().allocate<ResizeObserver>(realm, realm);
 }
 
 ResizeObserver::ResizeObserver(JS::Realm& realm)

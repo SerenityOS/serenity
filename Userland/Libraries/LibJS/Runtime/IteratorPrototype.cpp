@@ -439,7 +439,7 @@ JS_DEFINE_NATIVE_FUNCTION(IteratorPrototype::flat_map)
     // 4. Let iterated be ? GetIteratorDirect(O).
     auto iterated = TRY(get_iterator_direct(vm, object));
 
-    auto flat_map_iterator = MUST_OR_THROW_OOM(vm.heap().allocate<FlatMapIterator>(realm));
+    auto flat_map_iterator = vm.heap().allocate<FlatMapIterator>(realm);
 
     // 5. Let closure be a new Abstract Closure with no parameters that captures iterated and mapper and performs the following steps when called:
     IteratorHelper::Closure closure = [flat_map_iterator, mapper = NonnullGCPtr { mapper.as_function() }](auto& vm, auto& iterator) mutable -> ThrowCompletionOr<Value> {

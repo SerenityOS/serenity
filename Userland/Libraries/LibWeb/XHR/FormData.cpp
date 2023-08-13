@@ -35,7 +35,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<FormData>> FormData::construct_impl(JS::Rea
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<FormData>> FormData::construct_impl(JS::Realm& realm, Vector<FormDataEntry> entry_list)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<FormData>(realm, realm, move(entry_list)));
+    return realm.heap().allocate<FormData>(realm, realm, move(entry_list));
 }
 
 FormData::FormData(JS::Realm& realm, Vector<FormDataEntry> entry_list)

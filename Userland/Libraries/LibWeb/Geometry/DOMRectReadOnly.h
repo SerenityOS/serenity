@@ -26,7 +26,7 @@ class DOMRectReadOnly : public Bindings::PlatformObject {
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMRectReadOnly>> construct_impl(JS::Realm&, double x = 0, double y = 0, double width = 0, double height = 0);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMRectReadOnly>> from_rect(JS::VM&, DOMRectInit const&);
+    [[nodiscard]] static JS::NonnullGCPtr<DOMRectReadOnly> from_rect(JS::VM&, DOMRectInit const&);
 
     virtual ~DOMRectReadOnly() override;
 

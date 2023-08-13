@@ -17,7 +17,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Headers>> Headers::construct_impl(JS::Realm
     auto& vm = realm.vm();
 
     // The new Headers(init) constructor steps are:
-    auto headers = MUST_OR_THROW_OOM(realm.heap().allocate<Headers>(realm, realm, Infrastructure::HeaderList::create(vm)));
+    auto headers = realm.heap().allocate<Headers>(realm, realm, Infrastructure::HeaderList::create(vm));
 
     // 1. Set this’s guard to "none".
     headers->m_guard = Guard::None;

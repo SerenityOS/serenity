@@ -28,7 +28,7 @@ WebContentConsoleClient::WebContentConsoleClient(JS::Console& console, JS::Realm
     , m_client(client)
 {
     auto& window = verify_cast<Web::HTML::Window>(realm.global_object());
-    m_console_global_environment_extensions = realm.heap().allocate<ConsoleGlobalEnvironmentExtensions>(realm, realm, window).release_allocated_value_but_fixme_should_propagate_errors().ptr();
+    m_console_global_environment_extensions = realm.heap().allocate<ConsoleGlobalEnvironmentExtensions>(realm, realm, window);
 }
 
 void WebContentConsoleClient::handle_input(DeprecatedString const& js_source)

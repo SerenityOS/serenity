@@ -44,7 +44,7 @@ ThrowCompletionOr<Object*> promise_resolve(VM& vm, Object& constructor, Value va
 
 NonnullGCPtr<Promise> Promise::create(Realm& realm)
 {
-    return realm.heap().allocate<Promise>(realm, realm.intrinsics().promise_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<Promise>(realm, realm.intrinsics().promise_prototype());
 }
 
 // 27.2 Promise Objects, https://tc39.es/ecma262/#sec-promise-objects

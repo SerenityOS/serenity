@@ -11,9 +11,9 @@
 
 namespace Web::HTML {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Storage>> Storage::create(JS::Realm& realm)
+JS::NonnullGCPtr<Storage> Storage::create(JS::Realm& realm)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<Storage>(realm, realm));
+    return realm.heap().allocate<Storage>(realm, realm);
 }
 
 Storage::Storage(JS::Realm& realm)
