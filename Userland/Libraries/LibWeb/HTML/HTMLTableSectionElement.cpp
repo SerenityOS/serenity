@@ -41,7 +41,7 @@ JS::NonnullGCPtr<DOM::HTMLCollection> HTMLTableSectionElement::rows() const
     if (!m_rows) {
         m_rows = DOM::HTMLCollection::create(const_cast<HTMLTableSectionElement&>(*this), DOM::HTMLCollection::Scope::Children, [](Element const& element) {
             return is<HTMLTableRowElement>(element);
-        }).release_value_but_fixme_should_propagate_errors();
+        });
     }
     return *m_rows;
 }

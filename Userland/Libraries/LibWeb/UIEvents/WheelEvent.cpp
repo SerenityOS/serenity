@@ -29,9 +29,9 @@ void WheelEvent::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::WheelEventPrototype>(realm, "WheelEvent"));
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WheelEvent>> WheelEvent::create(JS::Realm& realm, FlyString const& event_name, WheelEventInit const& event_init)
+JS::NonnullGCPtr<WheelEvent> WheelEvent::create(JS::Realm& realm, FlyString const& event_name, WheelEventInit const& event_init)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<WheelEvent>(realm, realm, event_name, event_init));
+    return realm.heap().allocate<WheelEvent>(realm, realm, event_name, event_init);
 }
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WheelEvent>> WheelEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, CSSPixels offset_x, CSSPixels offset_y, CSSPixels client_x, CSSPixels client_y, double delta_x, double delta_y, unsigned buttons, unsigned button)

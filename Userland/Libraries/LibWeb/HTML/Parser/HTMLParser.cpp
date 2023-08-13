@@ -281,7 +281,7 @@ void HTMLParser::the_end()
         document->load_timing_info().dom_content_loaded_event_start_time = HighResolutionTime::unsafe_shared_current_time();
 
         // 2. Fire an event named DOMContentLoaded at the Document object, with its bubbles attribute initialized to true.
-        auto content_loaded_event = DOM::Event::create(document->realm(), HTML::EventNames::DOMContentLoaded).release_value_but_fixme_should_propagate_errors();
+        auto content_loaded_event = DOM::Event::create(document->realm(), HTML::EventNames::DOMContentLoaded);
         content_loaded_event->set_bubbles(true);
         document->dispatch_event(content_loaded_event);
 
@@ -322,7 +322,7 @@ void HTMLParser::the_end()
         // 5. Fire an event named load at window, with legacy target override flag set.
         // FIXME: The legacy target override flag is currently set by a virtual override of dispatch_event()
         //        We should reorganize this so that the flag appears explicitly here instead.
-        window->dispatch_event(DOM::Event::create(document->realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
+        window->dispatch_event(DOM::Event::create(document->realm(), HTML::EventNames::load));
 
         // FIXME: 6. Invoke WebDriver BiDi load complete with the Document's browsing context, and a new WebDriver BiDi navigation status whose id is the Document object's navigation id, status is "complete", and url is the Document object's URL.
 
@@ -490,13 +490,13 @@ void HTMLParser::handle_initial(HTMLToken& token)
     }
 
     if (token.is_comment()) {
-        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment()).release_allocated_value_but_fixme_should_propagate_errors();
+        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment());
         MUST(document().append_child(*comment));
         return;
     }
 
     if (token.is_doctype()) {
-        auto doctype = realm().heap().allocate<DOM::DocumentType>(realm(), document()).release_allocated_value_but_fixme_should_propagate_errors();
+        auto doctype = realm().heap().allocate<DOM::DocumentType>(realm(), document());
         doctype->set_name(token.doctype_data().name);
         doctype->set_public_id(token.doctype_data().public_identifier);
         doctype->set_system_id(token.doctype_data().system_identifier);
@@ -525,7 +525,7 @@ void HTMLParser::handle_before_html(HTMLToken& token)
     // -> A comment token
     if (token.is_comment()) {
         // Insert a comment as the last child of the Document object.
-        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment()).release_allocated_value_but_fixme_should_propagate_errors();
+        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment());
         MUST(document().append_child(*comment));
         return;
     }
@@ -822,7 +822,7 @@ AnythingElse:
 void HTMLParser::insert_comment(HTMLToken& token)
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
-    adjusted_insertion_location.parent->insert_before(realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment()).release_allocated_value_but_fixme_should_propagate_errors(), adjusted_insertion_location.insert_before_sibling);
+    adjusted_insertion_location.parent->insert_before(realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment()), adjusted_insertion_location.insert_before_sibling);
 }
 
 void HTMLParser::handle_in_head(HTMLToken& token)
@@ -1004,7 +1004,7 @@ DOM::Text* HTMLParser::find_character_insertion_node()
     if (adjusted_insertion_location.insert_before_sibling) {
         if (adjusted_insertion_location.insert_before_sibling->previous_sibling() && adjusted_insertion_location.insert_before_sibling->previous_sibling()->is_text())
             return static_cast<DOM::Text*>(adjusted_insertion_location.insert_before_sibling->previous_sibling());
-        auto new_text_node = realm().heap().allocate<DOM::Text>(realm(), document(), "").release_allocated_value_but_fixme_should_propagate_errors();
+        auto new_text_node = realm().heap().allocate<DOM::Text>(realm(), document(), "");
         adjusted_insertion_location.parent->insert_before(*new_text_node, *adjusted_insertion_location.insert_before_sibling);
         return new_text_node;
     }
@@ -1012,7 +1012,7 @@ DOM::Text* HTMLParser::find_character_insertion_node()
         return nullptr;
     if (adjusted_insertion_location.parent->last_child() && adjusted_insertion_location.parent->last_child()->is_text())
         return verify_cast<DOM::Text>(adjusted_insertion_location.parent->last_child());
-    auto new_text_node = realm().heap().allocate<DOM::Text>(realm(), document(), "").release_allocated_value_but_fixme_should_propagate_errors();
+    auto new_text_node = realm().heap().allocate<DOM::Text>(realm(), document(), "");
     MUST(adjusted_insertion_location.parent->append_child(*new_text_node));
     return new_text_node;
 }
@@ -1137,7 +1137,7 @@ void HTMLParser::handle_after_body(HTMLToken& token)
 
     if (token.is_comment()) {
         auto& insertion_location = m_stack_of_open_elements.first();
-        MUST(insertion_location.append_child(realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment()).release_allocated_value_but_fixme_should_propagate_errors()));
+        MUST(insertion_location.append_child(realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment())));
         return;
     }
 
@@ -1173,7 +1173,7 @@ void HTMLParser::handle_after_body(HTMLToken& token)
 void HTMLParser::handle_after_after_body(HTMLToken& token)
 {
     if (token.is_comment()) {
-        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment()).release_allocated_value_but_fixme_should_propagate_errors();
+        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment());
         MUST(document().append_child(*comment));
         return;
     }
@@ -3402,7 +3402,7 @@ void HTMLParser::handle_after_frameset(HTMLToken& token)
 void HTMLParser::handle_after_after_frameset(HTMLToken& token)
 {
     if (token.is_comment()) {
-        auto comment = document().heap().allocate<DOM::Comment>(document().realm(), document(), token.comment()).release_allocated_value_but_fixme_should_propagate_errors();
+        auto comment = document().heap().allocate<DOM::Comment>(document().realm(), document(), token.comment());
         MUST(document().append_child(comment));
         return;
     }
@@ -3669,7 +3669,7 @@ DOM::Document& HTMLParser::document()
 Vector<JS::Handle<DOM::Node>> HTMLParser::parse_html_fragment(DOM::Element& context_element, StringView markup)
 {
     // 1. Create a new Document node, and mark it as being an HTML document.
-    auto temp_document = DOM::Document::create(context_element.realm()).release_value_but_fixme_should_propagate_errors();
+    auto temp_document = DOM::Document::create(context_element.realm());
     temp_document->set_document_type(DOM::Document::Type::HTML);
 
     temp_document->set_is_temporary_document_for_fragment_parsing({});

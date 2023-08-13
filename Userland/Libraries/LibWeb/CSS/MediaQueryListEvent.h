@@ -20,7 +20,7 @@ class MediaQueryListEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(MediaQueryListEvent, DOM::Event);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<MediaQueryListEvent>> construct_impl(JS::Realm&, FlyString const& event_name, MediaQueryListEventInit const& event_init = {});
+    [[nodiscard]] static JS::NonnullGCPtr<MediaQueryListEvent> construct_impl(JS::Realm&, FlyString const& event_name, MediaQueryListEventInit const& = {});
 
     virtual ~MediaQueryListEvent() override;
 

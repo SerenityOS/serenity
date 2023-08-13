@@ -15,9 +15,9 @@
 
 namespace Web::HTML {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Navigator>> Navigator::create(JS::Realm& realm)
+JS::NonnullGCPtr<Navigator> Navigator::create(JS::Realm& realm)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<Navigator>(realm, realm));
+    return realm.heap().allocate<Navigator>(realm, realm);
 }
 
 Navigator::Navigator(JS::Realm& realm)
@@ -59,17 +59,17 @@ void Navigator::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_plugin_array);
 }
 
-JS::ThrowCompletionOr<JS::NonnullGCPtr<MimeTypeArray>> Navigator::mime_types()
+JS::NonnullGCPtr<MimeTypeArray> Navigator::mime_types()
 {
     if (!m_mime_type_array)
-        m_mime_type_array = TRY(heap().allocate<MimeTypeArray>(realm(), realm()));
+        m_mime_type_array = heap().allocate<MimeTypeArray>(realm(), realm());
     return *m_mime_type_array;
 }
 
-JS::ThrowCompletionOr<JS::NonnullGCPtr<PluginArray>> Navigator::plugins()
+JS::NonnullGCPtr<PluginArray> Navigator::plugins()
 {
     if (!m_plugin_array)
-        m_plugin_array = TRY(heap().allocate<PluginArray>(realm(), realm()));
+        m_plugin_array = heap().allocate<PluginArray>(realm(), realm());
     return *m_plugin_array;
 }
 

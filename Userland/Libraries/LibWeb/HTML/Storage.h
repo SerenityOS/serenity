@@ -17,7 +17,7 @@ class Storage : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(Storage, Bindings::LegacyPlatformObject);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Storage>> create(JS::Realm&);
+    [[nodiscard]] static JS::NonnullGCPtr<Storage> create(JS::Realm&);
     ~Storage();
 
     size_t length() const;

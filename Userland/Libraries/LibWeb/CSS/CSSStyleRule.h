@@ -18,7 +18,7 @@ class CSSStyleRule final : public CSSRule {
     WEB_PLATFORM_OBJECT(CSSStyleRule, CSSRule);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSStyleRule>> create(JS::Realm&, Vector<NonnullRefPtr<Selector>>&&, CSSStyleDeclaration&);
+    [[nodiscard]] static JS::NonnullGCPtr<CSSStyleRule> create(JS::Realm&, Vector<NonnullRefPtr<Selector>>&&, CSSStyleDeclaration&);
 
     virtual ~CSSStyleRule() override = default;
 

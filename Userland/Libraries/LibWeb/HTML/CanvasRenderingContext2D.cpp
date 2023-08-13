@@ -26,9 +26,9 @@
 
 namespace Web::HTML {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<CanvasRenderingContext2D>> CanvasRenderingContext2D::create(JS::Realm& realm, HTMLCanvasElement& element)
+JS::NonnullGCPtr<CanvasRenderingContext2D> CanvasRenderingContext2D::create(JS::Realm& realm, HTMLCanvasElement& element)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<CanvasRenderingContext2D>(realm, realm, element));
+    return realm.heap().allocate<CanvasRenderingContext2D>(realm, realm, element);
 }
 
 CanvasRenderingContext2D::CanvasRenderingContext2D(JS::Realm& realm, HTMLCanvasElement& element)
@@ -394,7 +394,7 @@ JS::NonnullGCPtr<TextMetrics> CanvasRenderingContext2D::measure_text(DeprecatedS
     // TextMetrics object with members behaving as described in the following
     // list:
     auto prepared_text = prepare_text(text);
-    auto metrics = TextMetrics::create(realm()).release_value_but_fixme_should_propagate_errors();
+    auto metrics = TextMetrics::create(realm());
     // FIXME: Use the font that was used to create the glyphs in prepared_text.
     auto font = current_font();
 

@@ -11,9 +11,9 @@
 
 namespace Web::Selection {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Selection>> Selection::create(JS::NonnullGCPtr<JS::Realm> realm, JS::NonnullGCPtr<DOM::Document> document)
+JS::NonnullGCPtr<Selection> Selection::create(JS::NonnullGCPtr<JS::Realm> realm, JS::NonnullGCPtr<DOM::Document> document)
 {
-    return MUST_OR_THROW_OOM(realm->heap().allocate<Selection>(realm, realm, document));
+    return realm->heap().allocate<Selection>(realm, realm, document);
 }
 
 Selection::Selection(JS::NonnullGCPtr<JS::Realm> realm, JS::NonnullGCPtr<DOM::Document> document)
@@ -185,7 +185,7 @@ WebIDL::ExceptionOr<void> Selection::collapse(JS::GCPtr<DOM::Node> node, unsigne
         return {};
 
     // 4. Otherwise, let newRange be a new range.
-    auto new_range = TRY(DOM::Range::create(*m_document));
+    auto new_range = DOM::Range::create(*m_document);
 
     // 5. Set the start the start and the end of newRange to (node, offset).
     TRY(new_range->set_start(*node, offset));
@@ -212,7 +212,7 @@ WebIDL::ExceptionOr<void> Selection::collapse_to_start()
     }
 
     // 2. Otherwise, it must create a new range
-    auto new_range = TRY(DOM::Range::create(*m_document));
+    auto new_range = DOM::Range::create(*m_document);
 
     // 3. Set the start both its start and end to the start of this's range
     TRY(new_range->set_start(*anchor_node(), m_range->start_offset()));
@@ -232,7 +232,7 @@ WebIDL::ExceptionOr<void> Selection::collapse_to_end()
     }
 
     // 2. Otherwise, it must create a new range
-    auto new_range = TRY(DOM::Range::create(*m_document));
+    auto new_range = DOM::Range::create(*m_document);
 
     // 3. Set the start both its start and end to the start of this's range
     TRY(new_range->set_start(*anchor_node(), m_range->end_offset()));
@@ -264,7 +264,7 @@ WebIDL::ExceptionOr<void> Selection::extend(JS::NonnullGCPtr<DOM::Node> node, un
     auto new_focus_offset = offset;
 
     // 4. Let newRange be a new range.
-    auto new_range = TRY(DOM::Range::create(*m_document));
+    auto new_range = DOM::Range::create(*m_document);
 
     // 5. If node's root is not the same as the this's range's root, set the start newRange's start and end to newFocus.
     if (&node->root() != &m_range->start_container()->root()) {
@@ -313,7 +313,7 @@ WebIDL::ExceptionOr<void> Selection::set_base_and_extent(JS::NonnullGCPtr<DOM::N
     // 3. Let anchor be the boundary point (anchorNode, anchorOffset) and let focus be the boundary point (focusNode, focusOffset).
 
     // 4. Let newRange be a new range.
-    auto new_range = TRY(DOM::Range::create(*m_document));
+    auto new_range = DOM::Range::create(*m_document);
 
     // 5. If anchor is before focus, set the start the newRange's start to anchor and its end to focus. Otherwise, set the start them to focus and anchor respectively.
     auto position_of_anchor_relative_to_focus = DOM::position_of_boundary_point_relative_to_other_boundary_point(anchor_node, anchor_offset, focus_node, focus_offset);
@@ -346,7 +346,7 @@ WebIDL::ExceptionOr<void> Selection::select_all_children(JS::NonnullGCPtr<DOM::N
         return {};
 
     // 2. Let newRange be a new range and childCount be the number of children of node.
-    auto new_range = TRY(DOM::Range::create(*m_document));
+    auto new_range = DOM::Range::create(*m_document);
     auto child_count = node->child_count();
 
     // 3. Set newRange's start to (node, 0).

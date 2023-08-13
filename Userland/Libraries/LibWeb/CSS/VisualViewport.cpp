@@ -15,9 +15,9 @@
 
 namespace Web::CSS {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<VisualViewport>> VisualViewport::create(DOM::Document& document)
+JS::NonnullGCPtr<VisualViewport> VisualViewport::create(DOM::Document& document)
 {
-    return MUST_OR_THROW_OOM(document.heap().allocate<VisualViewport>(document.realm(), document));
+    return document.heap().allocate<VisualViewport>(document.realm(), document);
 }
 
 VisualViewport::VisualViewport(DOM::Document& document)

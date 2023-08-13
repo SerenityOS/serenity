@@ -14,9 +14,9 @@
 
 namespace Web::CSS {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSFontFaceRule>> CSSFontFaceRule::create(JS::Realm& realm, FontFace&& font_face)
+JS::NonnullGCPtr<CSSFontFaceRule> CSSFontFaceRule::create(JS::Realm& realm, FontFace&& font_face)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<CSSFontFaceRule>(realm, realm, move(font_face)));
+    return realm.heap().allocate<CSSFontFaceRule>(realm, realm, move(font_face));
 }
 
 CSSFontFaceRule::CSSFontFaceRule(JS::Realm& realm, FontFace&& font_face)

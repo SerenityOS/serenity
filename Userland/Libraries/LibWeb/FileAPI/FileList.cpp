@@ -11,9 +11,9 @@
 
 namespace Web::FileAPI {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<FileList>> FileList::create(JS::Realm& realm, Vector<JS::NonnullGCPtr<File>>&& files)
+JS::NonnullGCPtr<FileList> FileList::create(JS::Realm& realm, Vector<JS::NonnullGCPtr<File>>&& files)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<FileList>(realm, realm, move(files)));
+    return realm.heap().allocate<FileList>(realm, realm, move(files));
 }
 
 FileList::FileList(JS::Realm& realm, Vector<JS::NonnullGCPtr<File>>&& files)

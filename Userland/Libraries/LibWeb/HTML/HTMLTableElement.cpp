@@ -272,7 +272,7 @@ JS::NonnullGCPtr<DOM::HTMLCollection> HTMLTableElement::t_bodies()
     if (!m_t_bodies) {
         m_t_bodies = DOM::HTMLCollection::create(*this, DOM::HTMLCollection::Scope::Children, [](DOM::Element const& element) {
             return element.local_name() == TagNames::tbody;
-        }).release_value_but_fixme_should_propagate_errors();
+        });
     }
     return *m_t_bodies;
 }
@@ -329,7 +329,7 @@ JS::NonnullGCPtr<DOM::HTMLCollection> HTMLTableElement::rows()
             }
 
             return false;
-        }).release_value_but_fixme_should_propagate_errors();
+        });
     }
     return *m_rows;
 }

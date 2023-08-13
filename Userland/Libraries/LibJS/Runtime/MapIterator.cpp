@@ -11,7 +11,7 @@ namespace JS {
 
 NonnullGCPtr<MapIterator> MapIterator::create(Realm& realm, Map& map, Object::PropertyKind iteration_kind)
 {
-    return realm.heap().allocate<MapIterator>(realm, map, iteration_kind, realm.intrinsics().map_iterator_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<MapIterator>(realm, map, iteration_kind, realm.intrinsics().map_iterator_prototype());
 }
 
 MapIterator::MapIterator(Map& map, Object::PropertyKind iteration_kind, Object& prototype)

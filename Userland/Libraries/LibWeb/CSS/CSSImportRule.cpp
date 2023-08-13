@@ -19,10 +19,10 @@
 
 namespace Web::CSS {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSImportRule>> CSSImportRule::create(AK::URL url, DOM::Document& document)
+JS::NonnullGCPtr<CSSImportRule> CSSImportRule::create(AK::URL url, DOM::Document& document)
 {
     auto& realm = document.realm();
-    return MUST_OR_THROW_OOM(realm.heap().allocate<CSSImportRule>(realm, move(url), document));
+    return realm.heap().allocate<CSSImportRule>(realm, move(url), document);
 }
 
 CSSImportRule::CSSImportRule(AK::URL url, DOM::Document& document)

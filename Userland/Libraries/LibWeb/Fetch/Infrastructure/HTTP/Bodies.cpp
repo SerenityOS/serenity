@@ -26,12 +26,12 @@ Body::Body(JS::Handle<Streams::ReadableStream> stream, SourceType source, Option
 }
 
 // https://fetch.spec.whatwg.org/#concept-body-clone
-WebIDL::ExceptionOr<Body> Body::clone(JS::Realm& realm) const
+Body Body::clone(JS::Realm& realm) const
 {
     // To clone a body body, run these steps:
     // FIXME: 1. Let « out1, out2 » be the result of teeing body’s stream.
     // FIXME: 2. Set body’s stream to out1.
-    auto out2 = MUST_OR_THROW_OOM(realm.heap().allocate<Streams::ReadableStream>(realm, realm));
+    auto out2 = realm.heap().allocate<Streams::ReadableStream>(realm, realm);
 
     // 3. Return a body whose stream is out2 and other members are copied from body.
     return Body { JS::make_handle(out2), m_source, m_length };

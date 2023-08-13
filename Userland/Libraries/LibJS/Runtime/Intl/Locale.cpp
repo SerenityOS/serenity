@@ -16,7 +16,7 @@ namespace JS::Intl {
 
 ThrowCompletionOr<NonnullGCPtr<Locale>> Locale::create(Realm& realm, ::Locale::LocaleID locale_id)
 {
-    auto locale = MUST_OR_THROW_OOM(realm.heap().allocate<Locale>(realm, realm.intrinsics().intl_locale_prototype()));
+    auto locale = realm.heap().allocate<Locale>(realm, realm.intrinsics().intl_locale_prototype());
     locale->set_locale(TRY_OR_THROW_OOM(realm.vm(), locale_id.to_string()));
 
     for (auto& extension : locale_id.extensions) {

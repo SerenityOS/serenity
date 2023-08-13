@@ -79,18 +79,18 @@ Optional<Infrastructure::Body&> Request::body_impl()
 }
 
 // https://fetch.spec.whatwg.org/#request-create
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::create(JS::Realm& realm, JS::NonnullGCPtr<Infrastructure::Request> request, Headers::Guard guard)
+JS::NonnullGCPtr<Request> Request::create(JS::Realm& realm, JS::NonnullGCPtr<Infrastructure::Request> request, Headers::Guard guard)
 {
     // 1. Let requestObject be a new Request object with realm.
     // 2. Set requestObject’s request to request.
-    auto request_object = MUST_OR_THROW_OOM(realm.heap().allocate<Request>(realm, realm, request));
+    auto request_object = realm.heap().allocate<Request>(realm, realm, request);
 
     // 3. Set requestObject’s headers to a new Headers object with realm, whose headers list is request’s headers list and guard is guard.
-    request_object->m_headers = MUST_OR_THROW_OOM(realm.heap().allocate<Headers>(realm, realm, request->header_list()));
+    request_object->m_headers = realm.heap().allocate<Headers>(realm, realm, request->header_list());
     request_object->m_headers->set_guard(guard);
 
     // 4. Set requestObject’s signal to a new AbortSignal object with realm.
-    request_object->m_signal = MUST_OR_THROW_OOM(realm.heap().allocate<DOM::AbortSignal>(realm, realm));
+    request_object->m_signal = realm.heap().allocate<DOM::AbortSignal>(realm, realm);
 
     // 5. Return requestObject.
     return request_object;
@@ -102,7 +102,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
     auto& vm = realm.vm();
 
     // Referred to as 'this' in the spec.
-    auto request_object = MUST_OR_THROW_OOM(realm.heap().allocate<Request>(realm, realm, Infrastructure::Request::create(vm)));
+    auto request_object = realm.heap().allocate<Request>(realm, realm, Infrastructure::Request::create(vm));
 
     // 1. Let request be null.
     JS::GCPtr<Infrastructure::Request> input_request;
@@ -387,14 +387,14 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
 
     // 28. Set this’s signal to a new AbortSignal object with this’s relevant Realm.
     auto& this_relevant_realm = HTML::relevant_realm(*request_object);
-    request_object->m_signal = MUST_OR_THROW_OOM(realm.heap().allocate<DOM::AbortSignal>(this_relevant_realm, this_relevant_realm));
+    request_object->m_signal = realm.heap().allocate<DOM::AbortSignal>(this_relevant_realm, this_relevant_realm);
 
     // 29. If signal is not null, then make this’s signal follow signal.
     if (input_signal != nullptr)
         request_object->m_signal->follow(*input_signal);
 
     // 30. Set this’s headers to a new Headers object with this’s relevant Realm, whose header list is request’s header list and guard is "request".
-    request_object->m_headers = MUST_OR_THROW_OOM(realm.heap().allocate<Headers>(realm, realm, request->header_list()));
+    request_object->m_headers = realm.heap().allocate<Headers>(realm, realm, request->header_list());
     request_object->m_headers->set_guard(Headers::Guard::Request);
 
     // 31. If this’s request’s mode is "no-cors", then:
@@ -639,10 +639,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::clone() const
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Request is unusable"sv };
 
     // 2. Let clonedRequest be the result of cloning this’s request.
-    auto cloned_request = TRY(m_request->clone(realm));
+    auto cloned_request = m_request->clone(realm);
 
     // 3. Let clonedRequestObject be the result of creating a Request object, given clonedRequest, this’s headers’s guard, and this’s relevant Realm.
-    auto cloned_request_object = TRY(Request::create(HTML::relevant_realm(*this), cloned_request, m_headers->guard()));
+    auto cloned_request_object = Request::create(HTML::relevant_realm(*this), cloned_request, m_headers->guard());
 
     // 4. Make clonedRequestObject’s signal follow this’s signal.
     cloned_request_object->m_signal->follow(*m_signal);

@@ -27,7 +27,7 @@ void WindowEnvironmentSettingsObject::visit_edges(JS::Cell::Visitor& visitor)
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#set-up-a-window-environment-settings-object
-WebIDL::ExceptionOr<void> WindowEnvironmentSettingsObject::setup(AK::URL const& creation_url, NonnullOwnPtr<JS::ExecutionContext> execution_context, Optional<Environment> reserved_environment, AK::URL top_level_creation_url, Origin top_level_origin)
+void WindowEnvironmentSettingsObject::setup(AK::URL const& creation_url, NonnullOwnPtr<JS::ExecutionContext> execution_context, Optional<Environment> reserved_environment, AK::URL top_level_creation_url, Origin top_level_origin)
 {
     // 1. Let realm be the value of execution context's Realm component.
     auto realm = execution_context->realm;
@@ -38,7 +38,7 @@ WebIDL::ExceptionOr<void> WindowEnvironmentSettingsObject::setup(AK::URL const& 
 
     // 3. Let settings object be a new environment settings object whose algorithms are defined as follows:
     // NOTE: See the functions defined for this class.
-    auto settings_object = MUST_OR_THROW_OOM(realm->heap().allocate<WindowEnvironmentSettingsObject>(*realm, window, move(execution_context)));
+    auto settings_object = realm->heap().allocate<WindowEnvironmentSettingsObject>(*realm, window, move(execution_context));
 
     // 4. If reservedEnvironment is non-null, then:
     if (reserved_environment.has_value()) {
@@ -71,15 +71,13 @@ WebIDL::ExceptionOr<void> WindowEnvironmentSettingsObject::setup(AK::URL const& 
 
     // 7. Set realm's [[HostDefined]] field to settings object.
     // Non-Standard: We store the ESO next to the web intrinsics in a custom HostDefined object
-    auto intrinsics = MUST_OR_THROW_OOM(realm->heap().allocate<Bindings::Intrinsics>(*realm, *realm));
+    auto intrinsics = realm->heap().allocate<Bindings::Intrinsics>(*realm, *realm);
     auto host_defined = make<Bindings::HostDefined>(settings_object, intrinsics);
     realm->set_host_defined(move(host_defined));
 
     // Non-Standard: We cannot fully initialize window object until *after* the we set up
     //    the realm's [[HostDefined]] internal slot as the internal slot contains the web platform intrinsics
-    TRY(window.initialize_web_interfaces({}));
-
-    return {};
+    MUST(window.initialize_web_interfaces({}));
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#script-settings-for-window-objects:responsible-document

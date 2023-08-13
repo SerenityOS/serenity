@@ -53,7 +53,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebSocket>> WebSocket::construct_impl(JS::R
 {
     auto& vm = realm.vm();
 
-    auto web_socket = MUST_OR_THROW_OOM(realm.heap().allocate<WebSocket>(realm, realm));
+    auto web_socket = realm.heap().allocate<WebSocket>(realm, realm);
     auto& relevant_settings_object = HTML::relevant_settings_object(*web_socket);
 
     // 1. Let baseURL be this's relevant settings object's API base URL.
@@ -264,13 +264,13 @@ void WebSocket::on_open()
     // 1. Change the readyState attribute's value to OPEN (1).
     // 2. Change the extensions attribute's value to the extensions in use, if it is not the null value. [WSP]
     // 3. Change the protocol attribute's value to the subprotocol in use, if it is not the null value. [WSP]
-    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::open).release_value_but_fixme_should_propagate_errors());
+    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::open));
 }
 
 // https://websockets.spec.whatwg.org/#feedback-from-the-protocol
 void WebSocket::on_error()
 {
-    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
+    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error));
 }
 
 // https://websockets.spec.whatwg.org/#feedback-from-the-protocol
@@ -282,7 +282,7 @@ void WebSocket::on_close(u16 code, String reason, bool was_clean)
     event_init.was_clean = was_clean;
     event_init.code = code;
     event_init.reason = reason;
-    dispatch_event(HTML::CloseEvent::create(realm(), HTML::EventNames::close, event_init).release_value_but_fixme_should_propagate_errors());
+    dispatch_event(HTML::CloseEvent::create(realm(), HTML::EventNames::close, event_init));
 }
 
 // https://websockets.spec.whatwg.org/#feedback-from-the-protocol
@@ -295,7 +295,7 @@ void WebSocket::on_message(ByteBuffer message, bool is_text)
         HTML::MessageEventInit event_init;
         event_init.data = JS::PrimitiveString::create(vm(), text_message);
         event_init.origin = url().release_value_but_fixme_should_propagate_errors();
-        dispatch_event(HTML::MessageEvent::create(realm(), HTML::EventNames::message, event_init).release_value_but_fixme_should_propagate_errors());
+        dispatch_event(HTML::MessageEvent::create(realm(), HTML::EventNames::message, event_init));
         return;
     }
 
@@ -307,7 +307,7 @@ void WebSocket::on_message(ByteBuffer message, bool is_text)
         HTML::MessageEventInit event_init;
         event_init.data = JS::ArrayBuffer::create(realm(), message);
         event_init.origin = url().release_value_but_fixme_should_propagate_errors();
-        dispatch_event(HTML::MessageEvent::create(realm(), HTML::EventNames::message, event_init).release_value_but_fixme_should_propagate_errors());
+        dispatch_event(HTML::MessageEvent::create(realm(), HTML::EventNames::message, event_init));
         return;
     }
 

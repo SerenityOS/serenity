@@ -13,9 +13,9 @@
 
 namespace Web::HTML {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLOptionsCollection>> HTMLOptionsCollection::create(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter)
+JS::NonnullGCPtr<HTMLOptionsCollection> HTMLOptionsCollection::create(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter)
 {
-    return MUST_OR_THROW_OOM(root.heap().allocate<HTMLOptionsCollection>(root.realm(), root, move(filter)));
+    return root.heap().allocate<HTMLOptionsCollection>(root.realm(), root, move(filter));
 }
 
 HTMLOptionsCollection::HTMLOptionsCollection(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter)

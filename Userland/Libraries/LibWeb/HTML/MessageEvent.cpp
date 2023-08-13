@@ -9,9 +9,9 @@
 
 namespace Web::HTML {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<MessageEvent>> MessageEvent::create(JS::Realm& realm, FlyString const& event_name, MessageEventInit const& event_init)
+JS::NonnullGCPtr<MessageEvent> MessageEvent::create(JS::Realm& realm, FlyString const& event_name, MessageEventInit const& event_init)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<MessageEvent>(realm, realm, event_name, event_init));
+    return realm.heap().allocate<MessageEvent>(realm, realm, event_name, event_init);
 }
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<MessageEvent>> MessageEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, MessageEventInit const& event_init)

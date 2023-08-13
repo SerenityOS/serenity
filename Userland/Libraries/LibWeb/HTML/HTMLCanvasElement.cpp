@@ -101,7 +101,7 @@ HTMLCanvasElement::HasOrCreatedContext HTMLCanvasElement::create_2d_context()
     if (!m_context.has<Empty>())
         return m_context.has<JS::NonnullGCPtr<CanvasRenderingContext2D>>() ? HasOrCreatedContext::Yes : HasOrCreatedContext::No;
 
-    m_context = CanvasRenderingContext2D::create(realm(), *this).release_value_but_fixme_should_propagate_errors();
+    m_context = CanvasRenderingContext2D::create(realm(), *this);
     return HasOrCreatedContext::Yes;
 }
 
@@ -266,7 +266,7 @@ WebIDL::ExceptionOr<void> HTMLCanvasElement::to_blob(JS::NonnullGCPtr<WebIDL::Ca
                 // 1. If result is non-null, then set result to a new Blob object, created in the relevant realm of this canvas element, representing result. [FILEAPI]
                 JS::GCPtr<FileAPI::Blob> blob_result;
                 if (file_result.has_value())
-                    blob_result = TRY(FileAPI::Blob::create(realm(), file_result->buffer, TRY_OR_THROW_OOM(vm(), String::from_utf8(file_result->mime_type))));
+                    blob_result = FileAPI::Blob::create(realm(), file_result->buffer, TRY_OR_THROW_OOM(vm(), String::from_utf8(file_result->mime_type)));
 
                 // 2. Invoke callback with « result ».
                 TRY(WebIDL::invoke_callback(*callback, {}, move(blob_result)));

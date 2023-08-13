@@ -18,7 +18,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<CountQueuingStrategy>> CountQueuingStrategy
 {
     // The new CountQueuingStrategy(init) constructor steps are:
     // 1. Set this.[[highWaterMark]] to init["highWaterMark"].
-    return MUST_OR_THROW_OOM(realm.heap().allocate<CountQueuingStrategy>(realm, realm, init.high_water_mark));
+    return realm.heap().allocate<CountQueuingStrategy>(realm, realm, init.high_water_mark);
 }
 
 CountQueuingStrategy::CountQueuingStrategy(JS::Realm& realm, double high_water_mark)

@@ -11,7 +11,7 @@ namespace JS {
 
 NonnullGCPtr<ArrayIterator> ArrayIterator::create(Realm& realm, Value array, Object::PropertyKind iteration_kind)
 {
-    return realm.heap().allocate<ArrayIterator>(realm, array, iteration_kind, realm.intrinsics().array_iterator_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<ArrayIterator>(realm, array, iteration_kind, realm.intrinsics().array_iterator_prototype());
 }
 
 ArrayIterator::ArrayIterator(Value array, Object::PropertyKind iteration_kind, Object& prototype)

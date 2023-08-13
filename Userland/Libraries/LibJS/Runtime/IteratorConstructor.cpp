@@ -78,7 +78,7 @@ JS_DEFINE_NATIVE_FUNCTION(IteratorConstructor::from)
 
     // 4. Let wrapper be OrdinaryObjectCreate(%WrapForValidIteratorPrototype%, « [[Iterated]] »).
     // 5. Set wrapper.[[Iterated]] to iteratorRecord.
-    auto wrapper = MUST_OR_THROW_OOM(Iterator::create(realm, realm.intrinsics().wrap_for_valid_iterator_prototype(), move(iterator_record)));
+    auto wrapper = Iterator::create(realm, realm.intrinsics().wrap_for_valid_iterator_prototype(), move(iterator_record));
 
     // 6. Return wrapper.
     return wrapper;

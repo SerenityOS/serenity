@@ -21,7 +21,7 @@ class UIEvent : public DOM::Event {
     WEB_PLATFORM_OBJECT(UIEvent, DOM::Event);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<UIEvent>> create(JS::Realm&, FlyString const& type);
+    [[nodiscard]] static JS::NonnullGCPtr<UIEvent> create(JS::Realm&, FlyString const& type);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<UIEvent>> construct_impl(JS::Realm&, FlyString const& event_name, UIEventInit const& event_init);
 
     virtual ~UIEvent() override;

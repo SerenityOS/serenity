@@ -12,9 +12,9 @@
 
 namespace Web::CSS {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSStyleRule>> CSSStyleRule::create(JS::Realm& realm, Vector<NonnullRefPtr<Web::CSS::Selector>>&& selectors, CSSStyleDeclaration& declaration)
+JS::NonnullGCPtr<CSSStyleRule> CSSStyleRule::create(JS::Realm& realm, Vector<NonnullRefPtr<Web::CSS::Selector>>&& selectors, CSSStyleDeclaration& declaration)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<CSSStyleRule>(realm, realm, move(selectors), declaration));
+    return realm.heap().allocate<CSSStyleRule>(realm, realm, move(selectors), declaration);
 }
 
 CSSStyleRule::CSSStyleRule(JS::Realm& realm, Vector<NonnullRefPtr<Selector>>&& selectors, CSSStyleDeclaration& declaration)

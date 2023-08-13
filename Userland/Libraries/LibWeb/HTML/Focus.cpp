@@ -65,7 +65,7 @@ static void run_focus_update_steps(Vector<JS::Handle<DOM::Node>> old_chain, Vect
         //    with related blur target as the related target.
         if (blur_event_target) {
             // FIXME: Implement the "fire a focus event" spec operation.
-            auto blur_event = UIEvents::FocusEvent::create(blur_event_target->realm(), HTML::EventNames::blur).release_value_but_fixme_should_propagate_errors();
+            auto blur_event = UIEvents::FocusEvent::create(blur_event_target->realm(), HTML::EventNames::blur);
             blur_event->set_related_target(related_blur_target);
             blur_event_target->dispatch_event(blur_event);
         }
@@ -108,7 +108,7 @@ static void run_focus_update_steps(Vector<JS::Handle<DOM::Node>> old_chain, Vect
         //    with related focus target as the related target.
         if (focus_event_target) {
             // FIXME: Implement the "fire a focus event" spec operation.
-            auto focus_event = UIEvents::FocusEvent::create(focus_event_target->realm(), HTML::EventNames::focus).release_value_but_fixme_should_propagate_errors();
+            auto focus_event = UIEvents::FocusEvent::create(focus_event_target->realm(), HTML::EventNames::focus);
             focus_event->set_related_target(related_focus_target);
             focus_event_target->dispatch_event(focus_event);
         }

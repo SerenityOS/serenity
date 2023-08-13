@@ -48,7 +48,7 @@ void HTMLElement::initialize(JS::Realm& realm)
     Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLElementPrototype>(realm, "HTMLElement"));
 
-    m_dataset = MUST(DOMStringMap::create(*this));
+    m_dataset = DOMStringMap::create(*this);
 }
 
 void HTMLElement::visit_edges(Cell::Visitor& visitor)
@@ -283,7 +283,7 @@ bool HTMLElement::fire_a_synthetic_pointer_event(FlyString const& type, DOM::Ele
     // 1. Let event be the result of creating an event using PointerEvent.
     // 2. Initialize event's type attribute to e.
     // FIXME: Actually create a PointerEvent!
-    auto event = UIEvents::MouseEvent::create(realm(), type).release_value_but_fixme_should_propagate_errors();
+    auto event = UIEvents::MouseEvent::create(realm(), type);
 
     // 3. Initialize event's bubbles and cancelable attributes to true.
     event->set_bubbles(true);

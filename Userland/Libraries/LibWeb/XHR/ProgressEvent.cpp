@@ -9,9 +9,9 @@
 
 namespace Web::XHR {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<ProgressEvent>> ProgressEvent::create(JS::Realm& realm, FlyString const& event_name, ProgressEventInit const& event_init)
+JS::NonnullGCPtr<ProgressEvent> ProgressEvent::create(JS::Realm& realm, FlyString const& event_name, ProgressEventInit const& event_init)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<ProgressEvent>(realm, realm, event_name, event_init));
+    return realm.heap().allocate<ProgressEvent>(realm, realm, event_name, event_init);
 }
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<ProgressEvent>> ProgressEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, ProgressEventInit const& event_init)

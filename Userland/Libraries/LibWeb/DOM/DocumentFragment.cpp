@@ -35,7 +35,7 @@ void DocumentFragment::set_host(Web::DOM::Element* element)
 WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> DocumentFragment::construct_impl(JS::Realm& realm)
 {
     auto& window = verify_cast<HTML::Window>(realm.global_object());
-    return MUST_OR_THROW_OOM(realm.heap().allocate<DocumentFragment>(realm, window.associated_document()));
+    return realm.heap().allocate<DocumentFragment>(realm, window.associated_document());
 }
 
 }

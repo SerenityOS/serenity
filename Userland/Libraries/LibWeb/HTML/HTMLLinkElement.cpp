@@ -133,7 +133,7 @@ void HTMLLinkElement::resource_did_fail()
 {
     dbgln_if(CSS_LOADER_DEBUG, "HTMLLinkElement: Resource did fail. URL: {}", resource()->url());
     if (m_relationship & Relationship::Preload) {
-        dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
+        dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::error));
     }
 }
 
@@ -145,7 +145,7 @@ void HTMLLinkElement::resource_did_load()
         m_document_load_event_delayer.clear();
     }
     if (m_relationship & Relationship::Preload) {
-        dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
+        dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::load));
     }
 }
 
@@ -353,13 +353,13 @@ void HTMLLinkElement::process_stylesheet_resource(bool success, Fetch::Infrastru
         if (!decoder.has_value()) {
             // If we don't support the encoding yet, let's error out instead of trying to decode it as something it's most likely not.
             dbgln("FIXME: Style sheet encoding '{}' is not supported yet", encoding);
-            dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
+            dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::error));
         } else {
             auto const& encoded_string = body_bytes.get<ByteBuffer>();
             auto maybe_decoded_string = TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, encoded_string);
             if (maybe_decoded_string.is_error()) {
                 dbgln("Style sheet {} claimed to be '{}' but decoding failed", response.url().value_or(AK::URL()), encoding);
-                dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
+                dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::error));
             } else {
                 auto const decoded_string = maybe_decoded_string.release_value();
                 m_loaded_style_sheet = parse_css_stylesheet(CSS::Parser::ParsingContext(document(), *response.url()), decoded_string);
@@ -373,13 +373,13 @@ void HTMLLinkElement::process_stylesheet_resource(bool success, Fetch::Infrastru
                 }
 
                 // 2. Fire an event named load at el.
-                dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
+                dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::load));
             }
         }
     }
     // 5. Otherwise, fire an event named error at el.
     else {
-        dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
+        dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::error));
     }
 
     // FIXME: 6. If el contributes a script-blocking style sheet, then:

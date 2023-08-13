@@ -62,10 +62,10 @@ void StyleSheetList::remove_sheet(CSSStyleSheet& sheet)
     m_document->invalidate_style();
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<StyleSheetList>> StyleSheetList::create(DOM::Document& document)
+JS::NonnullGCPtr<StyleSheetList> StyleSheetList::create(DOM::Document& document)
 {
     auto& realm = document.realm();
-    return MUST_OR_THROW_OOM(realm.heap().allocate<StyleSheetList>(realm, document));
+    return realm.heap().allocate<StyleSheetList>(realm, document);
 }
 
 StyleSheetList::StyleSheetList(DOM::Document& document)

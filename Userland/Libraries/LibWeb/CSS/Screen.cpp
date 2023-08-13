@@ -13,9 +13,9 @@
 
 namespace Web::CSS {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Screen>> Screen::create(HTML::Window& window)
+JS::NonnullGCPtr<Screen> Screen::create(HTML::Window& window)
 {
-    return MUST_OR_THROW_OOM(window.heap().allocate<Screen>(window.realm(), window));
+    return window.heap().allocate<Screen>(window.realm(), window);
 }
 
 Screen::Screen(HTML::Window& window)

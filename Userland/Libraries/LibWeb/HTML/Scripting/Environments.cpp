@@ -259,7 +259,7 @@ void EnvironmentSettingsObject::notify_about_rejected_promises(Badge<EventLoop>)
             // FIXME: This currently assumes that global is a WindowObject.
             auto& window = verify_cast<HTML::Window>(global);
 
-            auto promise_rejection_event = PromiseRejectionEvent::create(window.realm(), HTML::EventNames::unhandledrejection, event_init).release_value_but_fixme_should_propagate_errors();
+            auto promise_rejection_event = PromiseRejectionEvent::create(window.realm(), HTML::EventNames::unhandledrejection, event_init);
 
             bool not_handled = window.dispatch_event(*promise_rejection_event);
 

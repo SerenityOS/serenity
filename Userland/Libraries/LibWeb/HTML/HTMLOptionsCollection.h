@@ -19,7 +19,7 @@ class HTMLOptionsCollection final : public DOM::HTMLCollection {
     WEB_PLATFORM_OBJECT(HTMLOptionsCollection, DOM::HTMLCollection);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLOptionsCollection>> create(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter);
+    [[nodiscard]] static JS::NonnullGCPtr<HTMLOptionsCollection> create(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter);
     virtual ~HTMLOptionsCollection() override;
 
     WebIDL::ExceptionOr<void> add(HTMLOptionOrOptGroupElement element, Optional<HTMLElementOrElementIndex> before = {});

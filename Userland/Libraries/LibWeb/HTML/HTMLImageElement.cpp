@@ -391,7 +391,7 @@ ErrorOr<void> HTMLImageElement::update_the_image_data(bool restart_animations, b
 
                 // 3. If maybe omit events is not set or previousURL is not equal to urlString, then fire an event named load at the img element.
                 if (!maybe_omit_events || previous_url != url_string)
-                    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
+                    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::load));
             });
 
             // 8. Abort the update the image data algorithm.
@@ -434,7 +434,7 @@ after_step_7:
                 if (
                     (has_attribute(HTML::AttributeNames::src) || uses_srcset_or_picture())
                     && (!maybe_omit_events || m_current_request->current_url() != ""sv)) {
-                    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
+                    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error));
                 }
             });
 
@@ -463,7 +463,7 @@ after_step_7:
 
                 // 2. If maybe omit events is not set or previousURL is not equal to selected source, then fire an event named error at the img element.
                 if (!maybe_omit_events || previous_url != selected_source.value().url)
-                    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
+                    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error));
             });
 
             // 5. Return.
@@ -585,7 +585,7 @@ void HTMLImageElement::add_callbacks_to_image_request(NonnullRefPtr<ImageRequest
 
                 // 4. If maybe omit events is not set or previousURL is not equal to urlString, then fire an event named load at the img element.
                 if (!maybe_omit_events || previous_url != url_string)
-                    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
+                    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::load));
 
                 set_needs_style_update(true);
                 document().set_needs_layout();
@@ -617,7 +617,7 @@ void HTMLImageElement::add_callbacks_to_image_request(NonnullRefPtr<ImageRequest
             // queue an element task on the DOM manipulation task source given the img element
             // to fire an event named error at the img element.
             if (!maybe_omit_events || previous_url != url_string)
-                dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
+                dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error));
 
             m_load_event_delayer.clear();
         });
@@ -726,7 +726,7 @@ void HTMLImageElement::react_to_changes_in_the_environment()
             document().set_needs_layout();
 
             // 7. Fire an event named load at the img element.
-            dispatch_event(DOM::Event::create(realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
+            dispatch_event(DOM::Event::create(realm(), HTML::EventNames::load));
         });
     };
 
@@ -803,7 +803,7 @@ void HTMLImageElement::upgrade_pending_request_to_current_request()
 void HTMLImageElement::handle_failed_fetch()
 {
     // AD-HOC
-    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
+    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error));
 }
 
 // https://html.spec.whatwg.org/multipage/rendering.html#restart-the-animation

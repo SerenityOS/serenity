@@ -16,7 +16,7 @@ class StyleSheetList : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(StyleSheetList, Bindings::LegacyPlatformObject);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<StyleSheetList>> create(DOM::Document& document);
+    [[nodiscard]] static JS::NonnullGCPtr<StyleSheetList> create(DOM::Document&);
 
     void add_sheet(CSSStyleSheet&);
     void remove_sheet(CSSStyleSheet&);

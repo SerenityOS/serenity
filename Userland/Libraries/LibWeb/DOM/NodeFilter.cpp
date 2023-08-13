@@ -10,9 +10,9 @@
 
 namespace Web::DOM {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<NodeFilter>> NodeFilter::create(JS::Realm& realm, WebIDL::CallbackType& callback)
+JS::NonnullGCPtr<NodeFilter> NodeFilter::create(JS::Realm& realm, WebIDL::CallbackType& callback)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<NodeFilter>(realm, realm, callback));
+    return realm.heap().allocate<NodeFilter>(realm, realm, callback);
 }
 
 NodeFilter::NodeFilter(JS::Realm& realm, WebIDL::CallbackType& callback)

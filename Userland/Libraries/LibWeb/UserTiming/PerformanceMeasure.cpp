@@ -24,9 +24,9 @@ PerformanceMeasure::PerformanceMeasure(JS::Realm& realm, String const& name, Hig
 
 PerformanceMeasure::~PerformanceMeasure() = default;
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<PerformanceMeasure>> PerformanceMeasure::create(JS::Realm& realm, String const& measure_name, HighResolutionTime::DOMHighResTimeStamp start_time, HighResolutionTime::DOMHighResTimeStamp duration, JS::Value detail)
+JS::NonnullGCPtr<PerformanceMeasure> PerformanceMeasure::create(JS::Realm& realm, String const& measure_name, HighResolutionTime::DOMHighResTimeStamp start_time, HighResolutionTime::DOMHighResTimeStamp duration, JS::Value detail)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<PerformanceMeasure>(realm, realm, measure_name, start_time, duration, detail));
+    return realm.heap().allocate<PerformanceMeasure>(realm, realm, measure_name, start_time, duration, detail);
 }
 
 FlyString const& PerformanceMeasure::entry_type() const

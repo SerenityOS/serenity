@@ -29,7 +29,7 @@ class MouseEvent : public UIEvent {
     WEB_PLATFORM_OBJECT(MouseEvent, UIEvent);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> create(JS::Realm&, FlyString const& event_name, MouseEventInit const& event_init = {});
+    [[nodiscard]] static JS::NonnullGCPtr<MouseEvent> create(JS::Realm&, FlyString const& event_name, MouseEventInit const& = {});
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> create_from_platform_event(JS::Realm&, FlyString const& event_name, CSSPixelPoint offset, CSSPixelPoint client_offset, CSSPixelPoint page_offset, unsigned buttons, unsigned mouse_button = 1);
 
     virtual ~MouseEvent() override;

@@ -33,7 +33,7 @@ class Response final
     WEB_PLATFORM_OBJECT(Response, Bindings::PlatformObject);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> create(JS::Realm&, JS::NonnullGCPtr<Infrastructure::Response>, Headers::Guard);
+    [[nodiscard]] static JS::NonnullGCPtr<Response> create(JS::Realm&, JS::NonnullGCPtr<Infrastructure::Response>, Headers::Guard);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> construct_impl(JS::Realm&, Optional<BodyInit> const& body = {}, ResponseInit const& init = {});
 
     virtual ~Response() override;
@@ -48,7 +48,7 @@ public:
     [[nodiscard]] JS::NonnullGCPtr<Infrastructure::Response> response() const { return m_response; }
 
     // JS API functions
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> error(JS::VM&);
+    [[nodiscard]] static JS::NonnullGCPtr<Response> error(JS::VM&);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> redirect(JS::VM&, String const& url, u16 status);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> json(JS::VM&, JS::Value data, ResponseInit const& init = {});
     [[nodiscard]] Bindings::ResponseType type() const;

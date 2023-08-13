@@ -24,7 +24,7 @@ class Navigator : public Bindings::PlatformObject
     WEB_PLATFORM_OBJECT(Navigator, Bindings::PlatformObject);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Navigator>> create(JS::Realm&);
+    [[nodiscard]] static JS::NonnullGCPtr<Navigator> create(JS::Realm&);
 
     // FIXME: Implement NavigatorContentUtilsMixin
 
@@ -41,8 +41,8 @@ public:
 
     bool webdriver() const;
 
-    JS::ThrowCompletionOr<JS::NonnullGCPtr<MimeTypeArray>> mime_types();
-    JS::ThrowCompletionOr<JS::NonnullGCPtr<PluginArray>> plugins();
+    [[nodiscard]] JS::NonnullGCPtr<MimeTypeArray> mime_types();
+    [[nodiscard]] JS::NonnullGCPtr<PluginArray> plugins();
 
     virtual ~Navigator() override;
 

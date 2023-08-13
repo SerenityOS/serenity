@@ -118,7 +118,7 @@ ErrorOr<Vector<QueryParam>> url_decode(StringView input)
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<URLSearchParams>> URLSearchParams::create(JS::Realm& realm, Vector<QueryParam> list)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<URLSearchParams>(realm, realm, move(list)));
+    return realm.heap().allocate<URLSearchParams>(realm, realm, move(list));
 }
 
 // https://url.spec.whatwg.org/#dom-urlsearchparams-urlsearchparams

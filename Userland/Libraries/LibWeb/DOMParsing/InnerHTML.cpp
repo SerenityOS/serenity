@@ -21,7 +21,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::DocumentFragment>> parse_fragment(Depr
     auto& realm = context_element.realm();
 
     auto new_children = HTML::HTMLParser::parse_html_fragment(context_element, markup);
-    auto fragment = MUST_OR_THROW_OOM(realm.heap().allocate<DOM::DocumentFragment>(realm, context_element.document()));
+    auto fragment = realm.heap().allocate<DOM::DocumentFragment>(realm, context_element.document());
 
     for (auto& child : new_children) {
         // I don't know if this can throw here, but let's be safe.

@@ -46,7 +46,7 @@ class Window final
     WEB_PLATFORM_OBJECT(Window, DOM::EventTarget);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Window>> create(JS::Realm&);
+    [[nodiscard]] static JS::NonnullGCPtr<Window> create(JS::Realm&);
 
     ~Window();
 
@@ -131,7 +131,7 @@ public:
     JS::NonnullGCPtr<DOM::Document const> document() const;
     String name() const;
     void set_name(String const&);
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<Location>> location();
+    [[nodiscard]] JS::NonnullGCPtr<Location> location();
     JS::NonnullGCPtr<History> history() const;
     void focus();
 
@@ -142,7 +142,7 @@ public:
     JS::GCPtr<DOM::Element const> frame_element() const;
     WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> open(Optional<String> const& url, Optional<String> const& target, Optional<String> const& features);
 
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<Navigator>> navigator();
+    [[nodiscard]] JS::NonnullGCPtr<Navigator> navigator();
 
     void alert(String const& message = {});
     bool confirm(Optional<String> const& message);
@@ -152,11 +152,11 @@ public:
 
     Variant<JS::Handle<DOM::Event>, JS::Value> event() const;
 
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<CSS::CSSStyleDeclaration>> get_computed_style(DOM::Element&, Optional<String> const& pseudo_element) const;
+    [[nodiscard]] JS::NonnullGCPtr<CSS::CSSStyleDeclaration> get_computed_style(DOM::Element&, Optional<String> const& pseudo_element) const;
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<CSS::MediaQueryList>> match_media(String const& query);
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<CSS::Screen>> screen();
-    WebIDL::ExceptionOr<JS::GCPtr<CSS::VisualViewport>> visual_viewport();
+    [[nodiscard]] JS::NonnullGCPtr<CSS::Screen> screen();
+    [[nodiscard]] JS::GCPtr<CSS::VisualViewport> visual_viewport();
 
     i32 inner_width() const;
     i32 inner_height() const;
@@ -182,11 +182,11 @@ public:
 
     JS::GCPtr<Selection::Selection> get_selection() const;
 
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> performance();
+    [[nodiscard]] JS::NonnullGCPtr<HighResolutionTime::Performance> performance();
 
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<Crypto::Crypto>> crypto();
+    [[nodiscard]] JS::NonnullGCPtr<Crypto::Crypto> crypto();
 
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<CustomElementRegistry>> custom_elements();
+    [[nodiscard]] JS::NonnullGCPtr<CustomElementRegistry> custom_elements();
 
     HighResolutionTime::DOMHighResTimeStamp get_last_activation_timestamp() const { return m_last_activation_timestamp; }
     void set_last_activation_timestamp(HighResolutionTime::DOMHighResTimeStamp timestamp) { m_last_activation_timestamp = timestamp; }

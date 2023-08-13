@@ -12,7 +12,7 @@ namespace JS {
 
 NonnullGCPtr<SuppressedError> SuppressedError::create(Realm& realm)
 {
-    return realm.heap().allocate<SuppressedError>(realm, realm.intrinsics().suppressed_error_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<SuppressedError>(realm, realm.intrinsics().suppressed_error_prototype());
 }
 
 SuppressedError::SuppressedError(Object& prototype)

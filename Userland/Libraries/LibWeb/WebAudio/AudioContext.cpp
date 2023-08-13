@@ -15,7 +15,7 @@ namespace Web::WebAudio {
 // https://webaudio.github.io/web-audio-api/#dom-audiocontext-audiocontext
 WebIDL::ExceptionOr<JS::NonnullGCPtr<AudioContext>> AudioContext::construct_impl(JS::Realm& realm, AudioContextOptions const& context_options)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<AudioContext>(realm, realm, context_options));
+    return realm.heap().allocate<AudioContext>(realm, realm, context_options);
 }
 
 AudioContext::AudioContext(JS::Realm& realm, AudioContextOptions const& context_options)
@@ -72,7 +72,7 @@ AudioContext::AudioContext(JS::Realm& realm, AudioContextOptions const& context_
             BaseAudioContext::set_control_state(Bindings::AudioContextState::Running);
 
             // 5.3.2: queue a media element task to fire an event named statechange at the AudioContext.
-            this->dispatch_event(DOM::Event::create(realm, HTML::EventNames::statechange).release_value_but_fixme_should_propagate_errors());
+            this->dispatch_event(DOM::Event::create(realm, HTML::EventNames::statechange));
         });
     }
 }
@@ -174,7 +174,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> AudioContext::resume()
 
             // 7.5.4.2: queue a media element task to fire an event named statechange at the AudioContext.
             queue_a_media_element_task([&realm, this]() {
-                this->dispatch_event(DOM::Event::create(realm, HTML::EventNames::statechange).release_value_but_fixme_should_propagate_errors());
+                this->dispatch_event(DOM::Event::create(realm, HTML::EventNames::statechange));
             });
         }
     });
@@ -229,7 +229,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> AudioContext::suspend()
 
             // 7.3.2.2: queue a media element task to fire an event named statechange at the AudioContext.
             queue_a_media_element_task([&realm, this]() {
-                this->dispatch_event(DOM::Event::create(realm, HTML::EventNames::statechange).release_value_but_fixme_should_propagate_errors());
+                this->dispatch_event(DOM::Event::create(realm, HTML::EventNames::statechange));
             });
         }
     });
@@ -280,7 +280,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> AudioContext::close()
 
         // 5.4.2.2: queue a media element task to fire an event named statechange at the AudioContext.
         // FIXME: Attempting to queue another task in here causes an assertion fail at Vector.h:148
-        this->dispatch_event(DOM::Event::create(realm, HTML::EventNames::statechange).release_value_but_fixme_should_propagate_errors());
+        this->dispatch_event(DOM::Event::create(realm, HTML::EventNames::statechange));
     });
 
     // 6. Return promise

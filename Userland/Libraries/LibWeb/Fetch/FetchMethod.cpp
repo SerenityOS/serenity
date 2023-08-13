@@ -111,7 +111,7 @@ JS::NonnullGCPtr<JS::Promise> fetch(JS::VM& vm, RequestInfo const& input, Reques
 
         // 4. Set responseObject to the result of creating a Response object, given response, "immutable", and
         //    relevantRealm.
-        auto response_object = Response::create(relevant_realm, response, Headers::Guard::Immutable).release_value_but_fixme_should_propagate_errors();
+        auto response_object = Response::create(relevant_realm, response, Headers::Guard::Immutable);
         response_object_handle = JS::make_handle(response_object);
 
         // 5. Resolve p with responseObject.

@@ -34,7 +34,7 @@ public:
         Children,
         Descendants,
     };
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLCollection>> create(ParentNode& root, Scope, Function<bool(Element const&)> filter);
+    [[nodiscard]] static JS::NonnullGCPtr<HTMLCollection> create(ParentNode& root, Scope, Function<bool(Element const&)> filter);
 
     virtual ~HTMLCollection() override;
 

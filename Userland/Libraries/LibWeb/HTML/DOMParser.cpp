@@ -16,7 +16,7 @@ namespace Web::HTML {
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMParser>> DOMParser::construct_impl(JS::Realm& realm)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<DOMParser>(realm, realm));
+    return realm.heap().allocate<DOMParser>(realm, realm);
 }
 
 DOMParser::DOMParser(JS::Realm& realm)
@@ -42,7 +42,7 @@ JS::NonnullGCPtr<DOM::Document> DOMParser::parse_from_string(DeprecatedString co
     if (type == Bindings::DOMParserSupportedType::Text_Html) {
         // -> "text/html"
         // 1. Set document's type to "html".
-        document = HTML::HTMLDocument::create(realm(), verify_cast<HTML::Window>(relevant_global_object(*this)).associated_document().url()).release_value_but_fixme_should_propagate_errors();
+        document = HTML::HTMLDocument::create(realm(), verify_cast<HTML::Window>(relevant_global_object(*this)).associated_document().url());
         document->set_content_type(Bindings::idl_enum_to_deprecated_string(type));
         document->set_document_type(DOM::Document::Type::HTML);
 
@@ -56,7 +56,7 @@ JS::NonnullGCPtr<DOM::Document> DOMParser::parse_from_string(DeprecatedString co
         parser->run("about:blank"sv);
     } else {
         // -> Otherwise
-        document = DOM::Document::create(realm(), verify_cast<HTML::Window>(relevant_global_object(*this)).associated_document().url()).release_value_but_fixme_should_propagate_errors();
+        document = DOM::Document::create(realm(), verify_cast<HTML::Window>(relevant_global_object(*this)).associated_document().url());
         document->set_content_type(Bindings::idl_enum_to_deprecated_string(type));
 
         // 1. Create an XML parser parse, associated with document, and with XML scripting support disabled.

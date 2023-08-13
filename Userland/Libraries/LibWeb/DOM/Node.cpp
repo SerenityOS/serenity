@@ -777,7 +777,7 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
     else if (is<Document>(this)) {
         // Document
         auto document_ = verify_cast<Document>(this);
-        auto document_copy = Document::create(this->realm(), document_->url()).release_value_but_fixme_should_propagate_errors();
+        auto document_copy = Document::create(this->realm(), document_->url());
 
         // Set copy’s encoding, content type, URL, origin, type, and mode to those of node.
         document_copy->set_encoding(document_->encoding());
@@ -790,7 +790,7 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
     } else if (is<DocumentType>(this)) {
         // DocumentType
         auto document_type = verify_cast<DocumentType>(this);
-        auto document_type_copy = heap().allocate<DocumentType>(realm(), *document).release_allocated_value_but_fixme_should_propagate_errors();
+        auto document_type_copy = heap().allocate<DocumentType>(realm(), *document);
 
         // Set copy’s name, public ID, and system ID to those of node.
         document_type_copy->set_name(document_type->name());
@@ -807,26 +807,26 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
         auto text = verify_cast<Text>(this);
 
         // Set copy’s data to that of node.
-        auto text_copy = heap().allocate<Text>(realm(), *document, text->data()).release_allocated_value_but_fixme_should_propagate_errors();
+        auto text_copy = heap().allocate<Text>(realm(), *document, text->data());
         copy = move(text_copy);
     } else if (is<Comment>(this)) {
         // Comment
         auto comment = verify_cast<Comment>(this);
 
         // Set copy’s data to that of node.
-        auto comment_copy = heap().allocate<Comment>(realm(), *document, comment->data()).release_allocated_value_but_fixme_should_propagate_errors();
+        auto comment_copy = heap().allocate<Comment>(realm(), *document, comment->data());
         copy = move(comment_copy);
     } else if (is<ProcessingInstruction>(this)) {
         // ProcessingInstruction
         auto processing_instruction = verify_cast<ProcessingInstruction>(this);
 
         // Set copy’s target and data to those of node.
-        auto processing_instruction_copy = heap().allocate<ProcessingInstruction>(realm(), *document, processing_instruction->data(), processing_instruction->target()).release_allocated_value_but_fixme_should_propagate_errors();
+        auto processing_instruction_copy = heap().allocate<ProcessingInstruction>(realm(), *document, processing_instruction->data(), processing_instruction->target());
         copy = processing_instruction_copy;
     }
     // Otherwise, Do nothing.
     else if (is<DocumentFragment>(this)) {
-        copy = heap().allocate<DocumentFragment>(realm(), *document).release_allocated_value_but_fixme_should_propagate_errors();
+        copy = heap().allocate<DocumentFragment>(realm(), *document);
     }
 
     // FIXME: 4. Set copy’s node document and document to copy, if copy is a document, and set copy’s node document to document otherwise.
@@ -937,7 +937,7 @@ JS::NonnullGCPtr<NodeList> Node::child_nodes()
     if (!m_child_nodes) {
         m_child_nodes = LiveNodeList::create(realm(), *this, LiveNodeList::Scope::Children, [](auto&) {
             return true;
-        }).release_value_but_fixme_should_propagate_errors();
+        });
     }
     return *m_child_nodes;
 }
@@ -1259,7 +1259,7 @@ void Node::string_replace_all(DeprecatedString const& string)
 
     // 2. If string is not the empty string, then set node to a new Text node whose data is string and node document is parent’s node document.
     if (!string.is_empty())
-        node = heap().allocate<Text>(realm(), document(), string).release_allocated_value_but_fixme_should_propagate_errors();
+        node = heap().allocate<Text>(realm(), document(), string);
 
     // 3. Replace all with node within parent.
     replace_all(node);
@@ -1517,14 +1517,14 @@ void Node::queue_mutation_record(FlyString const& type, DeprecatedString attribu
     if (interested_observers.is_empty())
         return;
 
-    auto added_nodes_list = StaticNodeList::create(realm(), move(added_nodes)).release_value_but_fixme_should_propagate_errors();
-    auto removed_nodes_list = StaticNodeList::create(realm(), move(removed_nodes)).release_value_but_fixme_should_propagate_errors();
+    auto added_nodes_list = StaticNodeList::create(realm(), move(added_nodes));
+    auto removed_nodes_list = StaticNodeList::create(realm(), move(removed_nodes));
 
     // 4. For each observer → mappedOldValue of interestedObservers:
     for (auto& interested_observer : interested_observers) {
         // 1. Let record be a new MutationRecord object with its type set to type, target set to target, attributeName set to name, attributeNamespace set to namespace, oldValue set to mappedOldValue,
         //    addedNodes set to addedNodes, removedNodes set to removedNodes, previousSibling set to previousSibling, and nextSibling set to nextSibling.
-        auto record = MutationRecord::create(realm(), type, *this, added_nodes_list, removed_nodes_list, previous_sibling, next_sibling, attribute_name, attribute_namespace, /* mappedOldValue */ interested_observer.value).release_value_but_fixme_should_propagate_errors();
+        auto record = MutationRecord::create(realm(), type, *this, added_nodes_list, removed_nodes_list, previous_sibling, next_sibling, attribute_name, attribute_namespace, /* mappedOldValue */ interested_observer.value);
 
         // 2. Enqueue record to observer’s record queue.
         interested_observer.key->enqueue_record({}, move(record));
@@ -1661,7 +1661,7 @@ void Node::build_accessibility_tree(AccessibilityTreeNode& parent)
             return;
 
         if (element->include_in_accessibility_tree()) {
-            auto current_node = AccessibilityTreeNode::create(&document(), this).release_value_but_fixme_should_propagate_errors();
+            auto current_node = AccessibilityTreeNode::create(&document(), this);
             parent.append_child(current_node);
             if (has_child_nodes()) {
                 for_each_child([&current_node](DOM::Node& child) {
@@ -1674,7 +1674,7 @@ void Node::build_accessibility_tree(AccessibilityTreeNode& parent)
             });
         }
     } else if (is_text()) {
-        parent.append_child(AccessibilityTreeNode::create(&document(), this).release_value_but_fixme_should_propagate_errors());
+        parent.append_child(AccessibilityTreeNode::create(&document(), this));
         if (has_child_nodes()) {
             for_each_child([&parent](DOM::Node& child) {
                 child.build_accessibility_tree(parent);

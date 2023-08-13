@@ -164,7 +164,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::clone(JS::Realm& realm
 
     // 3. If response’s body is non-null, then set newResponse’s body to the result of cloning response’s body.
     if (m_body.has_value())
-        new_response->set_body(TRY(m_body->clone(realm)));
+        new_response->set_body(m_body->clone(realm));
 
     // 4. Return newResponse.
     return new_response;

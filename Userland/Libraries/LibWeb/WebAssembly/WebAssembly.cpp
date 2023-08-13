@@ -88,7 +88,7 @@ WebIDL::ExceptionOr<JS::Value> compile(JS::VM& vm, JS::Handle<JS::Object>& bytes
     if (module.is_error()) {
         promise->reject(*module.release_error().value());
     } else {
-        auto module_object = MUST_OR_THROW_OOM(vm.heap().allocate<Module>(realm, realm, module.release_value()));
+        auto module_object = vm.heap().allocate<Module>(realm, realm, module.release_value());
         promise->fulfill(module_object);
     }
 
@@ -118,8 +118,8 @@ WebIDL::ExceptionOr<JS::Value> instantiate(JS::VM& vm, JS::Handle<JS::Object>& b
     if (result.is_error()) {
         promise->reject(*result.release_error().value());
     } else {
-        auto module_object = MUST_OR_THROW_OOM(vm.heap().allocate<Module>(realm, realm, Detail::s_compiled_modules.size() - 1));
-        auto instance_object = MUST_OR_THROW_OOM(vm.heap().allocate<Instance>(realm, realm, result.release_value()));
+        auto module_object = vm.heap().allocate<Module>(realm, realm, Detail::s_compiled_modules.size() - 1);
+        auto instance_object = vm.heap().allocate<Instance>(realm, realm, result.release_value());
 
         auto object = JS::Object::create(realm, nullptr);
         object->define_direct_property("module", module_object, JS::default_attributes);
@@ -145,7 +145,7 @@ WebIDL::ExceptionOr<JS::Value> instantiate(JS::VM& vm, Module const& module_obje
     if (result.is_error()) {
         promise->reject(*result.release_error().value());
     } else {
-        auto instance_object = MUST_OR_THROW_OOM(vm.heap().allocate<Instance>(realm, realm, result.release_value()));
+        auto instance_object = vm.heap().allocate<Instance>(realm, realm, result.release_value());
         promise->fulfill(instance_object);
     }
 
@@ -426,7 +426,7 @@ JS::Value to_js_value(JS::VM& vm, Wasm::Value& wasm_value)
     auto& realm = *vm.current_realm();
     switch (wasm_value.type().kind()) {
     case Wasm::ValueType::I64:
-        return realm.heap().allocate<JS::BigInt>(realm, ::Crypto::SignedBigInteger { wasm_value.to<i64>().value() }).release_allocated_value_but_fixme_should_propagate_errors();
+        return realm.heap().allocate<JS::BigInt>(realm, ::Crypto::SignedBigInteger { wasm_value.to<i64>().value() });
     case Wasm::ValueType::I32:
         return JS::Value(wasm_value.to<i32>().value());
     case Wasm::ValueType::F64:

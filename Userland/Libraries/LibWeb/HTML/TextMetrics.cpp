@@ -10,9 +10,9 @@
 
 namespace Web::HTML {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<TextMetrics>> TextMetrics::create(JS::Realm& realm)
+JS::NonnullGCPtr<TextMetrics> TextMetrics::create(JS::Realm& realm)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<TextMetrics>(realm, realm));
+    return realm.heap().allocate<TextMetrics>(realm, realm);
 }
 
 TextMetrics::TextMetrics(JS::Realm& realm)

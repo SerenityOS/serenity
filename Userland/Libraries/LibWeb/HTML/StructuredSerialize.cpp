@@ -235,7 +235,7 @@ public:
             case ValueTag::StringObject: {
                 auto* realm = m_vm.current_realm();
                 auto string = TRY(deserialize_string_primitive(m_vm, m_vector, position));
-                m_memory.append(TRY(JS::StringObject::create(*realm, string, realm->intrinsics().string_prototype())));
+                m_memory.append(JS::StringObject::create(*realm, string, realm->intrinsics().string_prototype()));
                 break;
             }
             case ValueTag::DateObject: {

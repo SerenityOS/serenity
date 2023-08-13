@@ -23,7 +23,7 @@ public:
         Descendants,
     };
 
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<NodeList>> create(JS::Realm&, Node& root, Scope, Function<bool(Node const&)> filter);
+    [[nodiscard]] static JS::NonnullGCPtr<NodeList> create(JS::Realm&, Node& root, Scope, Function<bool(Node const&)> filter);
     virtual ~LiveNodeList() override;
 
     virtual u32 length() const override;

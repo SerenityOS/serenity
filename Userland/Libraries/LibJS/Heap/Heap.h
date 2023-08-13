@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -43,7 +43,7 @@ public:
     }
 
     template<typename T, typename... Args>
-    ThrowCompletionOr<NonnullGCPtr<T>> allocate(Realm& realm, Args&&... args)
+    NonnullGCPtr<T> allocate(Realm& realm, Args&&... args)
     {
         auto* memory = allocate_cell(sizeof(T));
         new (memory) T(forward<Args>(args)...);

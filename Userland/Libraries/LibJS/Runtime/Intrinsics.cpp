@@ -194,27 +194,27 @@ ThrowCompletionOr<void> Intrinsics::initialize_intrinsics(Realm& realm)
 
 #define __JS_ENUMERATE(ClassName, snake_name) \
     VERIFY(!m_##snake_name##_prototype);      \
-    m_##snake_name##_prototype = heap().allocate<ClassName##Prototype>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    m_##snake_name##_prototype = heap().allocate<ClassName##Prototype>(realm, realm);
     JS_ENUMERATE_ITERATOR_PROTOTYPES
 #undef __JS_ENUMERATE
 
     // These must be initialized separately as they have no companion constructor
-    m_async_from_sync_iterator_prototype = heap().allocate<AsyncFromSyncIteratorPrototype>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
-    m_async_generator_prototype = heap().allocate<AsyncGeneratorPrototype>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
-    m_generator_prototype = heap().allocate<GeneratorPrototype>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
-    m_intl_segments_prototype = heap().allocate<Intl::SegmentsPrototype>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
-    m_wrap_for_valid_iterator_prototype = heap().allocate<WrapForValidIteratorPrototype>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    m_async_from_sync_iterator_prototype = heap().allocate<AsyncFromSyncIteratorPrototype>(realm, realm);
+    m_async_generator_prototype = heap().allocate<AsyncGeneratorPrototype>(realm, realm);
+    m_generator_prototype = heap().allocate<GeneratorPrototype>(realm, realm);
+    m_intl_segments_prototype = heap().allocate<Intl::SegmentsPrototype>(realm, realm);
+    m_wrap_for_valid_iterator_prototype = heap().allocate<WrapForValidIteratorPrototype>(realm, realm);
 
     // These must be initialized before allocating...
     // - AggregateErrorPrototype, which uses ErrorPrototype as its prototype
     // - AggregateErrorConstructor, which uses ErrorConstructor as its prototype
     // - AsyncFunctionConstructor, which uses FunctionConstructor as its prototype
-    m_error_prototype = heap().allocate<ErrorPrototype>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
-    m_error_constructor = heap().allocate<ErrorConstructor>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
-    m_function_constructor = heap().allocate<FunctionConstructor>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    m_error_prototype = heap().allocate<ErrorPrototype>(realm, realm);
+    m_error_constructor = heap().allocate<ErrorConstructor>(realm, realm);
+    m_function_constructor = heap().allocate<FunctionConstructor>(realm, realm);
 
     // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct prototype
-    m_proxy_constructor = heap().allocate<ProxyConstructor>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    m_proxy_constructor = heap().allocate<ProxyConstructor>(realm, realm);
 
     // Global object functions
     m_eval_function = NativeFunction::create(realm, GlobalObject::eval, 1, vm.names.eval, &realm);
@@ -229,7 +229,7 @@ ThrowCompletionOr<void> Intrinsics::initialize_intrinsics(Realm& realm)
     m_escape_function = NativeFunction::create(realm, GlobalObject::escape, 1, vm.names.escape, &realm);
     m_unescape_function = NativeFunction::create(realm, GlobalObject::unescape, 1, vm.names.unescape, &realm);
 
-    m_object_constructor = heap().allocate<ObjectConstructor>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    m_object_constructor = heap().allocate<ObjectConstructor>(realm, realm);
 
     // 10.2.4.1 %ThrowTypeError% ( ), https://tc39.es/ecma262/#sec-%throwtypeerror%
     m_throw_type_error_function = NativeFunction::create(
@@ -274,52 +274,52 @@ constexpr inline bool IsTypedArrayConstructor = false;
 JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
-#define __JS_ENUMERATE_INNER(ClassName, snake_name, PrototypeName, ConstructorName, Namespace, snake_namespace)                                                                                                    \
-    void Intrinsics::initialize_##snake_namespace##snake_name()                                                                                                                                                    \
-    {                                                                                                                                                                                                              \
-        auto& vm = this->vm();                                                                                                                                                                                     \
-                                                                                                                                                                                                                   \
-        VERIFY(!m_##snake_namespace##snake_name##_prototype);                                                                                                                                                      \
-        VERIFY(!m_##snake_namespace##snake_name##_constructor);                                                                                                                                                    \
-        if constexpr (IsTypedArrayConstructor<Namespace::ConstructorName>) {                                                                                                                                       \
-            m_##snake_namespace##snake_name##_prototype = heap().allocate<Namespace::PrototypeName>(m_realm, *typed_array_prototype()).release_allocated_value_but_fixme_should_propagate_errors();                \
-            m_##snake_namespace##snake_name##_constructor = heap().allocate<Namespace::ConstructorName>(m_realm, m_realm, *typed_array_constructor()).release_allocated_value_but_fixme_should_propagate_errors(); \
-        } else {                                                                                                                                                                                                   \
-            m_##snake_namespace##snake_name##_prototype = heap().allocate<Namespace::PrototypeName>(m_realm, m_realm).release_allocated_value_but_fixme_should_propagate_errors();                                 \
-            m_##snake_namespace##snake_name##_constructor = heap().allocate<Namespace::ConstructorName>(m_realm, m_realm).release_allocated_value_but_fixme_should_propagate_errors();                             \
-        }                                                                                                                                                                                                          \
-                                                                                                                                                                                                                   \
-        /* FIXME: Add these special cases to JS_ENUMERATE_NATIVE_OBJECTS */                                                                                                                                        \
-        if constexpr (IsSame<Namespace::ConstructorName, BigIntConstructor>)                                                                                                                                       \
-            initialize_constructor(vm, vm.names.BigInt, *m_##snake_namespace##snake_name##_constructor, m_##snake_namespace##snake_name##_prototype);                                                              \
-        else if constexpr (IsSame<Namespace::ConstructorName, BooleanConstructor>)                                                                                                                                 \
-            initialize_constructor(vm, vm.names.Boolean, *m_##snake_namespace##snake_name##_constructor, m_##snake_namespace##snake_name##_prototype);                                                             \
-        else if constexpr (IsSame<Namespace::ConstructorName, FunctionConstructor>)                                                                                                                                \
-            initialize_constructor(vm, vm.names.Function, *m_##snake_namespace##snake_name##_constructor, m_##snake_namespace##snake_name##_prototype);                                                            \
-        else if constexpr (IsSame<Namespace::ConstructorName, NumberConstructor>)                                                                                                                                  \
-            initialize_constructor(vm, vm.names.Number, *m_##snake_namespace##snake_name##_constructor, m_##snake_namespace##snake_name##_prototype);                                                              \
-        else if constexpr (IsSame<Namespace::ConstructorName, RegExpConstructor>)                                                                                                                                  \
-            initialize_constructor(vm, vm.names.RegExp, *m_##snake_namespace##snake_name##_constructor, m_##snake_namespace##snake_name##_prototype);                                                              \
-        else if constexpr (IsSame<Namespace::ConstructorName, StringConstructor>)                                                                                                                                  \
-            initialize_constructor(vm, vm.names.String, *m_##snake_namespace##snake_name##_constructor, m_##snake_namespace##snake_name##_prototype);                                                              \
-        else if constexpr (IsSame<Namespace::ConstructorName, SymbolConstructor>)                                                                                                                                  \
-            initialize_constructor(vm, vm.names.Symbol, *m_##snake_namespace##snake_name##_constructor, m_##snake_namespace##snake_name##_prototype);                                                              \
-        else                                                                                                                                                                                                       \
-            initialize_constructor(vm, vm.names.ClassName, *m_##snake_namespace##snake_name##_constructor, m_##snake_namespace##snake_name##_prototype);                                                           \
-    }                                                                                                                                                                                                              \
-                                                                                                                                                                                                                   \
-    NonnullGCPtr<Namespace::ConstructorName> Intrinsics::snake_namespace##snake_name##_constructor()                                                                                                               \
-    {                                                                                                                                                                                                              \
-        if (!m_##snake_namespace##snake_name##_constructor)                                                                                                                                                        \
-            initialize_##snake_namespace##snake_name();                                                                                                                                                            \
-        return *m_##snake_namespace##snake_name##_constructor;                                                                                                                                                     \
-    }                                                                                                                                                                                                              \
-                                                                                                                                                                                                                   \
-    NonnullGCPtr<Object> Intrinsics::snake_namespace##snake_name##_prototype()                                                                                                                                     \
-    {                                                                                                                                                                                                              \
-        if (!m_##snake_namespace##snake_name##_prototype)                                                                                                                                                          \
-            initialize_##snake_namespace##snake_name();                                                                                                                                                            \
-        return *m_##snake_namespace##snake_name##_prototype;                                                                                                                                                       \
+#define __JS_ENUMERATE_INNER(ClassName, snake_name, PrototypeName, ConstructorName, Namespace, snake_namespace)                                          \
+    void Intrinsics::initialize_##snake_namespace##snake_name()                                                                                          \
+    {                                                                                                                                                    \
+        auto& vm = this->vm();                                                                                                                           \
+                                                                                                                                                         \
+        VERIFY(!m_##snake_namespace##snake_name##_prototype);                                                                                            \
+        VERIFY(!m_##snake_namespace##snake_name##_constructor);                                                                                          \
+        if constexpr (IsTypedArrayConstructor<Namespace::ConstructorName>) {                                                                             \
+            m_##snake_namespace##snake_name##_prototype = heap().allocate<Namespace::PrototypeName>(m_realm, *typed_array_prototype());                  \
+            m_##snake_namespace##snake_name##_constructor = heap().allocate<Namespace::ConstructorName>(m_realm, m_realm, *typed_array_constructor());   \
+        } else {                                                                                                                                         \
+            m_##snake_namespace##snake_name##_prototype = heap().allocate<Namespace::PrototypeName>(m_realm, m_realm);                                   \
+            m_##snake_namespace##snake_name##_constructor = heap().allocate<Namespace::ConstructorName>(m_realm, m_realm);                               \
+        }                                                                                                                                                \
+                                                                                                                                                         \
+        /* FIXME: Add these special cases to JS_ENUMERATE_NATIVE_OBJECTS */                                                                              \
+        if constexpr (IsSame<Namespace::ConstructorName, BigIntConstructor>)                                                                             \
+            initialize_constructor(vm, vm.names.BigInt, *m_##snake_namespace##snake_name##_constructor, m_##snake_namespace##snake_name##_prototype);    \
+        else if constexpr (IsSame<Namespace::ConstructorName, BooleanConstructor>)                                                                       \
+            initialize_constructor(vm, vm.names.Boolean, *m_##snake_namespace##snake_name##_constructor, m_##snake_namespace##snake_name##_prototype);   \
+        else if constexpr (IsSame<Namespace::ConstructorName, FunctionConstructor>)                                                                      \
+            initialize_constructor(vm, vm.names.Function, *m_##snake_namespace##snake_name##_constructor, m_##snake_namespace##snake_name##_prototype);  \
+        else if constexpr (IsSame<Namespace::ConstructorName, NumberConstructor>)                                                                        \
+            initialize_constructor(vm, vm.names.Number, *m_##snake_namespace##snake_name##_constructor, m_##snake_namespace##snake_name##_prototype);    \
+        else if constexpr (IsSame<Namespace::ConstructorName, RegExpConstructor>)                                                                        \
+            initialize_constructor(vm, vm.names.RegExp, *m_##snake_namespace##snake_name##_constructor, m_##snake_namespace##snake_name##_prototype);    \
+        else if constexpr (IsSame<Namespace::ConstructorName, StringConstructor>)                                                                        \
+            initialize_constructor(vm, vm.names.String, *m_##snake_namespace##snake_name##_constructor, m_##snake_namespace##snake_name##_prototype);    \
+        else if constexpr (IsSame<Namespace::ConstructorName, SymbolConstructor>)                                                                        \
+            initialize_constructor(vm, vm.names.Symbol, *m_##snake_namespace##snake_name##_constructor, m_##snake_namespace##snake_name##_prototype);    \
+        else                                                                                                                                             \
+            initialize_constructor(vm, vm.names.ClassName, *m_##snake_namespace##snake_name##_constructor, m_##snake_namespace##snake_name##_prototype); \
+    }                                                                                                                                                    \
+                                                                                                                                                         \
+    NonnullGCPtr<Namespace::ConstructorName> Intrinsics::snake_namespace##snake_name##_constructor()                                                     \
+    {                                                                                                                                                    \
+        if (!m_##snake_namespace##snake_name##_constructor)                                                                                              \
+            initialize_##snake_namespace##snake_name();                                                                                                  \
+        return *m_##snake_namespace##snake_name##_constructor;                                                                                           \
+    }                                                                                                                                                    \
+                                                                                                                                                         \
+    NonnullGCPtr<Object> Intrinsics::snake_namespace##snake_name##_prototype()                                                                           \
+    {                                                                                                                                                    \
+        if (!m_##snake_namespace##snake_name##_prototype)                                                                                                \
+            initialize_##snake_namespace##snake_name();                                                                                                  \
+        return *m_##snake_namespace##snake_name##_prototype;                                                                                             \
     }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
@@ -339,12 +339,12 @@ JS_ENUMERATE_TEMPORAL_OBJECTS
 
 #undef __JS_ENUMERATE_INNER
 
-#define __JS_ENUMERATE(ClassName, snake_name)                                                                                                   \
-    NonnullGCPtr<ClassName> Intrinsics::snake_name##_object()                                                                                   \
-    {                                                                                                                                           \
-        if (!m_##snake_name##_object)                                                                                                           \
-            m_##snake_name##_object = heap().allocate<ClassName>(m_realm, m_realm).release_allocated_value_but_fixme_should_propagate_errors(); \
-        return *m_##snake_name##_object;                                                                                                        \
+#define __JS_ENUMERATE(ClassName, snake_name)                                       \
+    NonnullGCPtr<ClassName> Intrinsics::snake_name##_object()                       \
+    {                                                                               \
+        if (!m_##snake_name##_object)                                               \
+            m_##snake_name##_object = heap().allocate<ClassName>(m_realm, m_realm); \
+        return *m_##snake_name##_object;                                            \
     }
 JS_ENUMERATE_BUILTIN_NAMESPACE_OBJECTS
 #undef __JS_ENUMERATE

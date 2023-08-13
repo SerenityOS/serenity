@@ -52,7 +52,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Table>> Table::construct_impl(JS::Realm& re
     for (auto& element : table.elements())
         element = reference;
 
-    return MUST_OR_THROW_OOM(vm.heap().allocate<Table>(realm, realm, *address));
+    return vm.heap().allocate<Table>(realm, realm, *address);
 }
 
 Table::Table(JS::Realm& realm, Wasm::TableAddress address)

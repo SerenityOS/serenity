@@ -10,7 +10,7 @@ namespace JS {
 
 NonnullGCPtr<Set> Set::create(Realm& realm)
 {
-    return realm.heap().allocate<Set>(realm, realm.intrinsics().set_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<Set>(realm, realm.intrinsics().set_prototype());
 }
 
 Set::Set(Object& prototype)

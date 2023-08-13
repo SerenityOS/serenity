@@ -109,7 +109,7 @@ JS::GCPtr<DOM::Attr> prescan_get_attribute(DOM::Document& document, ByteBuffer c
         } else if (input[position] == '\t' || input[position] == '\n' || input[position] == '\f' || input[position] == '\r' || input[position] == ' ')
             goto spaces;
         else if (input[position] == '/' || input[position] == '>')
-            return *DOM::Attr::create(document, attribute_name.to_deprecated_string(), "").release_value_but_fixme_should_propagate_errors();
+            return *DOM::Attr::create(document, attribute_name.to_deprecated_string(), "");
         else
             attribute_name.append_as_lowercase(input[position]);
         ++position;
@@ -121,7 +121,7 @@ spaces:
     if (!prescan_skip_whitespace_and_slashes(input, position))
         return {};
     if (input[position] != '=')
-        return DOM::Attr::create(document, attribute_name.to_deprecated_string(), "").release_value_but_fixme_should_propagate_errors();
+        return DOM::Attr::create(document, attribute_name.to_deprecated_string(), "");
     ++position;
 
 value:
@@ -134,13 +134,13 @@ value:
         ++position;
         for (; !prescan_should_abort(input, position); ++position) {
             if (input[position] == quote_character)
-                return DOM::Attr::create(document, attribute_name.to_deprecated_string(), attribute_value.to_deprecated_string()).release_value_but_fixme_should_propagate_errors();
+                return DOM::Attr::create(document, attribute_name.to_deprecated_string(), attribute_value.to_deprecated_string());
             else
                 attribute_value.append_as_lowercase(input[position]);
         }
         return {};
     } else if (input[position] == '>')
-        return DOM::Attr::create(document, attribute_name.to_deprecated_string(), "").release_value_but_fixme_should_propagate_errors();
+        return DOM::Attr::create(document, attribute_name.to_deprecated_string(), "");
     else
         attribute_value.append_as_lowercase(input[position]);
 
@@ -150,7 +150,7 @@ value:
 
     for (; !prescan_should_abort(input, position); ++position) {
         if (input[position] == '\t' || input[position] == '\n' || input[position] == '\f' || input[position] == '\r' || input[position] == ' ' || input[position] == '>')
-            return DOM::Attr::create(document, attribute_name.to_deprecated_string(), attribute_value.to_deprecated_string()).release_value_but_fixme_should_propagate_errors();
+            return DOM::Attr::create(document, attribute_name.to_deprecated_string(), attribute_value.to_deprecated_string());
         else
             attribute_value.append_as_lowercase(input[position]);
     }

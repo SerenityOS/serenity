@@ -48,7 +48,7 @@ void HTMLDetailsElement::run_details_notification_task_steps()
         // 1. FIXME: If another task has been queued to run the details notification task steps for this details element, then return.
 
         // 2. Fire an event named toggle at the details element.
-        dispatch_event(Web::DOM::Event::create(realm(), HTML::EventNames::toggle).release_value_but_fixme_should_propagate_errors());
+        dispatch_event(Web::DOM::Event::create(realm(), HTML::EventNames::toggle));
     });
 }
 

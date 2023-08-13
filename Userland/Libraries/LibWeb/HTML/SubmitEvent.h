@@ -19,7 +19,7 @@ class SubmitEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(SubmitEvent, DOM::Event);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<SubmitEvent>> create(JS::Realm&, FlyString const& event_name, SubmitEventInit const& event_init);
+    [[nodiscard]] static JS::NonnullGCPtr<SubmitEvent> create(JS::Realm&, FlyString const& event_name, SubmitEventInit const& event_init);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<SubmitEvent>> construct_impl(JS::Realm&, FlyString const& event_name, SubmitEventInit const& event_init);
 
     virtual ~SubmitEvent() override;

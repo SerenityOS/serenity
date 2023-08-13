@@ -25,7 +25,7 @@ void SVGElement::initialize(JS::Realm& realm)
     Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGElementPrototype>(realm, "SVGElement"));
 
-    m_dataset = MUST(HTML::DOMStringMap::create(*this));
+    m_dataset = HTML::DOMStringMap::create(*this);
 }
 
 void SVGElement::visit_edges(Cell::Visitor& visitor)

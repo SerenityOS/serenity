@@ -25,7 +25,7 @@ class ErrorEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(ErrorEvent, DOM::Event);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<ErrorEvent>> create(JS::Realm&, FlyString const& event_name, ErrorEventInit const& event_init = {});
+    [[nodiscard]] static JS::NonnullGCPtr<ErrorEvent> create(JS::Realm&, FlyString const& event_name, ErrorEventInit const& = {});
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<ErrorEvent>> construct_impl(JS::Realm&, FlyString const& event_name, ErrorEventInit const& event_init);
 
     virtual ~ErrorEvent() override;

@@ -15,7 +15,7 @@ class Selection final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(Selection, Bindings::PlatformObject);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Selection>> create(JS::NonnullGCPtr<JS::Realm>, JS::NonnullGCPtr<DOM::Document>);
+    [[nodiscard]] static JS::NonnullGCPtr<Selection> create(JS::NonnullGCPtr<JS::Realm>, JS::NonnullGCPtr<DOM::Document>);
 
     virtual ~Selection() override;
 

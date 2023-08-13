@@ -12,10 +12,10 @@
 
 namespace Web::HTML {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMStringMap>> DOMStringMap::create(DOM::Element& element)
+JS::NonnullGCPtr<DOMStringMap> DOMStringMap::create(DOM::Element& element)
 {
     auto& realm = element.realm();
-    return MUST_OR_THROW_OOM(realm.heap().allocate<DOMStringMap>(realm, element));
+    return realm.heap().allocate<DOMStringMap>(realm, element);
 }
 
 DOMStringMap::DOMStringMap(DOM::Element& element)

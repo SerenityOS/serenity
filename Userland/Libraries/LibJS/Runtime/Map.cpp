@@ -10,7 +10,7 @@ namespace JS {
 
 NonnullGCPtr<Map> Map::create(Realm& realm)
 {
-    return realm.heap().allocate<Map>(realm, realm.intrinsics().map_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<Map>(realm, realm.intrinsics().map_prototype());
 }
 
 Map::Map(Object& prototype)

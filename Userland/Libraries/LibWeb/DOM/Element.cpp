@@ -75,7 +75,7 @@ void Element::initialize(JS::Realm& realm)
     Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::ElementPrototype>(realm, "Element"));
 
-    m_attributes = MUST(NamedNodeMap::create(*this));
+    m_attributes = NamedNodeMap::create(*this);
 }
 
 void Element::visit_edges(Cell::Visitor& visitor)
@@ -130,7 +130,7 @@ WebIDL::ExceptionOr<void> Element::set_attribute(DeprecatedFlyString const& name
 
     // 4. If attribute is null, create an attribute whose local name is qualifiedName, value is value, and node document is this’s node document, then append this attribute to this, and then return.
     if (!attribute) {
-        auto new_attribute = TRY(Attr::create(document(), insert_as_lowercase ? name.to_lowercase() : name, value));
+        auto new_attribute = Attr::create(document(), insert_as_lowercase ? name.to_lowercase() : name, value);
         m_attributes->append_attribute(new_attribute);
 
         attribute = new_attribute.ptr();
@@ -264,7 +264,7 @@ WebIDL::ExceptionOr<bool> Element::toggle_attribute(DeprecatedFlyString const& n
     if (!attribute) {
         // 1. If force is not given or is true, create an attribute whose local name is qualifiedName, value is the empty string, and node document is this’s node document, then append this attribute to this, and then return true.
         if (!force.has_value() || force.value()) {
-            auto new_attribute = TRY(Attr::create(document(), insert_as_lowercase ? name.to_lowercase() : name, ""));
+            auto new_attribute = Attr::create(document(), insert_as_lowercase ? name.to_lowercase() : name, "");
             m_attributes->append_attribute(new_attribute);
 
             attribute_changed(new_attribute->local_name(), "");
@@ -476,7 +476,7 @@ Element::RequiredInvalidationAfterStyleChange Element::recompute_style()
 
 NonnullRefPtr<CSS::StyleProperties> Element::resolved_css_values()
 {
-    auto element_computed_style = CSS::ResolvedCSSStyleDeclaration::create(*this).release_value_but_fixme_should_propagate_errors();
+    auto element_computed_style = CSS::ResolvedCSSStyleDeclaration::create(*this);
     auto properties = CSS::StyleProperties::create();
 
     for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {
@@ -493,7 +493,7 @@ NonnullRefPtr<CSS::StyleProperties> Element::resolved_css_values()
 DOMTokenList* Element::class_list()
 {
     if (!m_class_list)
-        m_class_list = DOMTokenList::create(*this, HTML::AttributeNames::class_).release_value_but_fixme_should_propagate_errors();
+        m_class_list = DOMTokenList::create(*this, HTML::AttributeNames::class_);
     return m_class_list;
 }
 
@@ -528,7 +528,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ShadowRoot>> Element::attach_shadow(ShadowR
         return WebIDL::NotSupportedError::create(realm(), "Element already is a shadow host");
 
     // 5. Let shadow be a new shadow root whose node document is this’s node document, host is this, and mode is init["mode"].
-    auto shadow = MUST_OR_THROW_OOM(heap().allocate<ShadowRoot>(realm(), document(), *this, init.mode));
+    auto shadow = heap().allocate<ShadowRoot>(realm(), document(), *this, init.mode);
 
     // 6. Set shadow’s delegates focus to init["delegatesFocus"].
     shadow->set_delegates_focus(init.delegates_focus);
@@ -651,7 +651,7 @@ JS::NonnullGCPtr<HTMLCollection> Element::get_elements_by_class_name(DeprecatedF
                 return false;
         }
         return true;
-    }).release_value_but_fixme_should_propagate_errors();
+    });
 }
 
 // https://dom.spec.whatwg.org/#element-shadow-host
@@ -676,7 +676,7 @@ void Element::set_shadow_root(JS::GCPtr<ShadowRoot> shadow_root)
 CSS::CSSStyleDeclaration* Element::style_for_bindings()
 {
     if (!m_inline_style)
-        m_inline_style = CSS::ElementInlineCSSStyleDeclaration::create(*this, {}, {}).release_value_but_fixme_should_propagate_errors();
+        m_inline_style = CSS::ElementInlineCSSStyleDeclaration::create(*this, {}, {});
     return m_inline_style;
 }
 
@@ -723,7 +723,7 @@ JS::NonnullGCPtr<Geometry::DOMRect> Element::get_bounding_client_rect() const
     VERIFY(document().browsing_context());
     auto viewport_offset = document().browsing_context()->viewport_scroll_offset();
 
-    return Geometry::DOMRect::create(realm(), paintable_box->absolute_rect().translated(-viewport_offset.x(), -viewport_offset.y()).to_type<float>()).release_value_but_fixme_should_propagate_errors();
+    return Geometry::DOMRect::create(realm(), paintable_box->absolute_rect().translated(-viewport_offset.x(), -viewport_offset.y()).to_type<float>());
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-getclientrects
@@ -736,7 +736,7 @@ JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
 
     // 1. If the element on which it was invoked does not have an associated layout box return an empty DOMRectList object and stop this algorithm.
     if (!layout_node() || !layout_node()->is_box())
-        return Geometry::DOMRectList::create(realm(), move(rects)).release_value_but_fixme_should_propagate_errors();
+        return Geometry::DOMRectList::create(realm(), move(rects));
 
     // FIXME: 2. If the element has an associated SVG layout box return a DOMRectList object containing a single DOMRect object that describes
     // the bounding box of the element as defined by the SVG specification, applying the transforms that apply to the element and its ancestors.
@@ -750,7 +750,7 @@ JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
 
     auto bounding_rect = get_bounding_client_rect();
     rects.append(*bounding_rect);
-    return Geometry::DOMRectList::create(realm(), move(rects)).release_value_but_fixme_should_propagate_errors();
+    return Geometry::DOMRectList::create(realm(), move(rects));
 }
 
 int Element::client_top() const
@@ -1364,7 +1364,7 @@ WebIDL::ExceptionOr<JS::GCPtr<Element>> Element::insert_adjacent_element(Depreca
 WebIDL::ExceptionOr<void> Element::insert_adjacent_text(DeprecatedString const& where, DeprecatedString const& data)
 {
     // 1. Let text be a new Text node whose data is data and node document is this’s node document.
-    auto text = MUST_OR_THROW_OOM(heap().allocate<DOM::Text>(realm(), document(), data));
+    auto text = heap().allocate<DOM::Text>(realm(), document(), data);
 
     // 2. Run insert adjacent, given this, where, and text.
     // Spec Note: This method returns nothing because it existed before we had a chance to design it.

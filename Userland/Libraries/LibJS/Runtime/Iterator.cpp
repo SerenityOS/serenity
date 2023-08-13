@@ -15,9 +15,9 @@
 
 namespace JS {
 
-ThrowCompletionOr<NonnullGCPtr<Iterator>> Iterator::create(Realm& realm, Object& prototype, IteratorRecord iterated)
+NonnullGCPtr<Iterator> Iterator::create(Realm& realm, Object& prototype, IteratorRecord iterated)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<Iterator>(realm, prototype, move(iterated)));
+    return realm.heap().allocate<Iterator>(realm, prototype, move(iterated));
 }
 
 Iterator::Iterator(Object& prototype, IteratorRecord iterated)

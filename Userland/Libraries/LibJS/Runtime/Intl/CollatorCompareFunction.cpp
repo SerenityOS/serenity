@@ -13,7 +13,7 @@ namespace JS::Intl {
 
 NonnullGCPtr<CollatorCompareFunction> CollatorCompareFunction::create(Realm& realm, Collator& collator)
 {
-    return realm.heap().allocate<CollatorCompareFunction>(realm, realm, collator).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<CollatorCompareFunction>(realm, realm, collator);
 }
 
 CollatorCompareFunction::CollatorCompareFunction(Realm& realm, Collator& collator)

@@ -27,7 +27,7 @@ class Iterator : public Object {
     JS_OBJECT(Iterator, Object);
 
 public:
-    static ThrowCompletionOr<NonnullGCPtr<Iterator>> create(Realm&, Object& prototype, IteratorRecord iterated);
+    static NonnullGCPtr<Iterator> create(Realm&, Object& prototype, IteratorRecord iterated);
 
     IteratorRecord const& iterated() const { return m_iterated; }
 

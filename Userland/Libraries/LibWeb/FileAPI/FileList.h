@@ -18,7 +18,7 @@ class FileList : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(FileList, Bindings::LegacyPlatformObject);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<FileList>> create(JS::Realm&, Vector<JS::NonnullGCPtr<File>>&&);
+    [[nodiscard]] static JS::NonnullGCPtr<FileList> create(JS::Realm&, Vector<JS::NonnullGCPtr<File>>&&);
     virtual ~FileList() override;
 
     // https://w3c.github.io/FileAPI/#dfn-length

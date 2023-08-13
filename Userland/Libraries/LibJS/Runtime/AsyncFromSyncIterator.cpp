@@ -13,7 +13,7 @@ namespace JS {
 
 NonnullGCPtr<AsyncFromSyncIterator> AsyncFromSyncIterator::create(Realm& realm, IteratorRecord sync_iterator_record)
 {
-    return realm.heap().allocate<AsyncFromSyncIterator>(realm, realm, sync_iterator_record).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<AsyncFromSyncIterator>(realm, realm, sync_iterator_record);
 }
 
 AsyncFromSyncIterator::AsyncFromSyncIterator(Realm& realm, IteratorRecord sync_iterator_record)

@@ -28,7 +28,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Instance>> Instance::construct_impl(JS::Rea
     auto& vm = realm.vm();
 
     auto index = TRY(Detail::instantiate_module(vm, module.module()));
-    return MUST_OR_THROW_OOM(vm.heap().allocate<Instance>(realm, realm, index));
+    return vm.heap().allocate<Instance>(realm, realm, index);
 }
 
 Instance::Instance(JS::Realm& realm, size_t index)
@@ -62,7 +62,7 @@ void Instance::initialize(JS::Realm& realm)
             [&](Wasm::MemoryAddress const& address) {
                 Optional<JS::GCPtr<Memory>> object = cache.memory_instances.get(address);
                 if (!object.has_value()) {
-                    object = MUST(heap().allocate<Memory>(realm, realm, address));
+                    object = heap().allocate<Memory>(realm, realm, address);
                     cache.memory_instances.set(address, *object);
                 }
 
@@ -71,7 +71,7 @@ void Instance::initialize(JS::Realm& realm)
             [&](Wasm::TableAddress const& address) {
                 Optional<JS::GCPtr<Table>> object = cache.table_instances.get(address);
                 if (!object.has_value()) {
-                    object = MUST(heap().allocate<Table>(realm, realm, address));
+                    object = heap().allocate<Table>(realm, realm, address);
                     cache.table_instances.set(address, *object);
                 }
 

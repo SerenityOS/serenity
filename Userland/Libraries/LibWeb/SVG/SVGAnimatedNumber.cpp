@@ -9,9 +9,9 @@
 
 namespace Web::SVG {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<SVGAnimatedNumber>> SVGAnimatedNumber::create(JS::Realm& realm, float base_val, float anim_val)
+JS::NonnullGCPtr<SVGAnimatedNumber> SVGAnimatedNumber::create(JS::Realm& realm, float base_val, float anim_val)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<SVGAnimatedNumber>(realm, realm, base_val, anim_val));
+    return realm.heap().allocate<SVGAnimatedNumber>(realm, realm, base_val, anim_val);
 }
 
 SVGAnimatedNumber::SVGAnimatedNumber(JS::Realm& realm, float base_val, float anim_val)

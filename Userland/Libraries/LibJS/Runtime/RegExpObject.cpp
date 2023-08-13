@@ -132,12 +132,12 @@ ThrowCompletionOr<DeprecatedString> parse_regex_pattern(VM& vm, StringView patte
 
 NonnullGCPtr<RegExpObject> RegExpObject::create(Realm& realm)
 {
-    return realm.heap().allocate<RegExpObject>(realm, realm.intrinsics().regexp_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<RegExpObject>(realm, realm.intrinsics().regexp_prototype());
 }
 
 NonnullGCPtr<RegExpObject> RegExpObject::create(Realm& realm, Regex<ECMA262> regex, DeprecatedString pattern, DeprecatedString flags)
 {
-    return realm.heap().allocate<RegExpObject>(realm, move(regex), move(pattern), move(flags), realm.intrinsics().regexp_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<RegExpObject>(realm, move(regex), move(pattern), move(flags), realm.intrinsics().regexp_prototype());
 }
 
 RegExpObject::RegExpObject(Object& prototype)

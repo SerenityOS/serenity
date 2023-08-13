@@ -13,9 +13,9 @@
 
 namespace Web::CSS {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<MediaList>> MediaList::create(JS::Realm& realm, Vector<NonnullRefPtr<MediaQuery>>&& media)
+JS::NonnullGCPtr<MediaList> MediaList::create(JS::Realm& realm, Vector<NonnullRefPtr<MediaQuery>>&& media)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<MediaList>(realm, realm, move(media)));
+    return realm.heap().allocate<MediaList>(realm, realm, move(media));
 }
 
 MediaList::MediaList(JS::Realm& realm, Vector<NonnullRefPtr<MediaQuery>>&& media)

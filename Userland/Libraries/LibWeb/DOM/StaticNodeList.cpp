@@ -10,9 +10,9 @@
 
 namespace Web::DOM {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<NodeList>> StaticNodeList::create(JS::Realm& realm, Vector<JS::Handle<Node>> static_nodes)
+JS::NonnullGCPtr<NodeList> StaticNodeList::create(JS::Realm& realm, Vector<JS::Handle<Node>> static_nodes)
 {
-    return MUST_OR_THROW_OOM(realm.heap().allocate<StaticNodeList>(realm, realm, move(static_nodes)));
+    return realm.heap().allocate<StaticNodeList>(realm, realm, move(static_nodes));
 }
 
 StaticNodeList::StaticNodeList(JS::Realm& realm, Vector<JS::Handle<Node>> static_nodes)

@@ -3473,7 +3473,7 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> @constructor_class@::constru
         // 3. Set element's namespace to the HTML namespace.
         // 4. Set element's namespace prefix to null.
         // 5. Set element's local name to definition's local name.
-        auto element = realm.heap().allocate<@fully_qualified_name@>(realm, window.associated_document(), DOM::QualifiedName { definition->local_name().to_deprecated_string(), {}, Namespace::HTML }).release_allocated_value_but_fixme_should_propagate_errors();
+        auto element = realm.heap().allocate<@fully_qualified_name@>(realm, window.associated_document(), DOM::QualifiedName { definition->local_name().to_deprecated_string(), {}, Namespace::HTML });
 
         // https://webidl.spec.whatwg.org/#internally-create-a-new-object-implementing-the-interface
         // Important steps from "internally create a new object implementing the interface"
