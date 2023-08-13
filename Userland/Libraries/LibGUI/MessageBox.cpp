@@ -179,7 +179,7 @@ ErrorOr<void> MessageBox::build()
         return button;
     };
 
-    TRY(button_container->add_spacer());
+    button_container->add_spacer();
     if (should_include_ok_button())
         m_ok_button = TRY(add_button("OK"_string, ExecResult::OK));
     if (should_include_yes_button())
@@ -188,7 +188,7 @@ ErrorOr<void> MessageBox::build()
         m_no_button = TRY(add_button("No"_string, ExecResult::No));
     if (should_include_cancel_button())
         m_cancel_button = TRY(add_button("Cancel"_string, ExecResult::Cancel));
-    TRY(button_container->add_spacer());
+    button_container->add_spacer();
 
     return {};
 }

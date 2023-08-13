@@ -69,7 +69,7 @@ DownloadWidget::DownloadWidget(const URL& url)
 
     m_browser_image = animation_container.add<GUI::ImageWidget>();
     m_browser_image->load_from_file("/res/graphics/download-animation.gif"sv);
-    animation_container.add_spacer().release_value_but_fixme_should_propagate_errors();
+    animation_container.add_spacer();
 
     auto& source_label = add<GUI::Label>(String::formatted("File: {}", m_url.basename()).release_value_but_fixme_should_propagate_errors());
     source_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -102,7 +102,7 @@ DownloadWidget::DownloadWidget(const URL& url)
 
     auto& button_container = add<GUI::Widget>();
     button_container.set_layout<GUI::HorizontalBoxLayout>();
-    button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
+    button_container.add_spacer();
     m_cancel_button = button_container.add<GUI::Button>("Cancel"_string);
     m_cancel_button->set_fixed_size(100, 22);
     m_cancel_button->on_click = [this](auto) {

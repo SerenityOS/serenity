@@ -82,7 +82,7 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
     button_widget->set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 5);
     button_widget->set_fixed_height(22);
 
-    TRY(button_widget->add_spacer());
+    button_widget->add_spacer();
 
     auto ok_button = TRY(make_button("OK"_string, button_widget));
     ok_button->on_click = [this](auto) {

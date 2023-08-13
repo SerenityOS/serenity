@@ -36,7 +36,7 @@ ErrorOr<NonnullRefPtr<TrackControlsWidget>> TrackControlsWidget::try_create(Weak
 
     TRY(widget->m_processor_groups.try_append(mastering_parameters));
 
-    TRY(widget->add_spacer());
+    widget->add_spacer();
 
     for (auto& processor : strong_track->processor_chain()) {
         auto processor_parameters = TRY(widget->try_add<GUI::GroupBox>());

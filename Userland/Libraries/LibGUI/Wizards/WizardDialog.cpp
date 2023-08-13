@@ -39,7 +39,7 @@ ErrorOr<void> WizardDialog::build()
     auto nav_container_widget = TRY(main_widget->try_add<Widget>());
     nav_container_widget->set_layout<HorizontalBoxLayout>(Margins { 0, 10 }, 0);
     nav_container_widget->set_fixed_height(42);
-    TRY(nav_container_widget->add_spacer());
+    nav_container_widget->add_spacer();
 
     m_back_button = TRY(nav_container_widget->try_add<DialogButton>("< Back"_string));
     m_back_button->on_click = [&](auto) {

@@ -295,7 +295,7 @@ ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
         auto button_container = TRY(properties_widget->try_add<GUI::Widget>());
         button_container->set_fixed_height(22);
         button_container->set_layout<GUI::HorizontalBoxLayout>();
-        button_container->add_spacer().release_value_but_fixme_should_propagate_errors();
+        button_container->add_spacer();
 
         auto apply_button = TRY(button_container->try_add<GUI::DialogButton>("Apply"_string));
         apply_button->on_click = [this](auto) {

@@ -1199,7 +1199,7 @@ ErrorOr<void> Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node const> ast,
             if (!this->layout()) {
                 return Error::from_string_literal("Specified GUI::Layout::Spacer in GML, but the parent has no Layout.");
             }
-            this->layout()->add_spacer();
+            add_spacer();
         } else {
             RefPtr<Core::EventReceiver> child;
             if (auto* registration = GUI::ObjectClassRegistration::find(class_name)) {
@@ -1259,10 +1259,10 @@ bool Widget::is_visible_for_timer_purposes() const
     return is_visible() && Object::is_visible_for_timer_purposes();
 }
 
-ErrorOr<void> Widget::add_spacer()
+void Widget::add_spacer()
 {
     VERIFY(layout());
-    return layout()->try_add_spacer();
+    return layout()->add_spacer();
 }
 
 }

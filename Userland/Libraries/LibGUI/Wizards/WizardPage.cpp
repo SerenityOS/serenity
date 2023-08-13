@@ -39,7 +39,7 @@ ErrorOr<void> WizardPage::build(String title, String subtitle)
     m_subtitle_label = TRY(header_widget->try_add<Label>(move(subtitle)));
     m_subtitle_label->set_text_alignment(Gfx::TextAlignment::TopLeft);
     m_subtitle_label->set_fixed_height(m_subtitle_label->font().pixel_size_rounded_up());
-    TRY(header_widget->add_spacer());
+    header_widget->add_spacer();
 
     auto separator = TRY(try_add<SeparatorWidget>(Gfx::Orientation::Horizontal));
     separator->set_fixed_height(2);
