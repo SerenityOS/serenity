@@ -7,11 +7,13 @@
 
 #include <AK/Debug.h>
 #include <AK/JsonObject.h>
+#include <LibCore/Directory.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/MimeData.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/Loader/ContentFilter.h>
+#include <LibWeb/Loader/FileDirectoryLoader.h>
 #include <LibWeb/Loader/LoadRequest.h>
 #include <LibWeb/Loader/ProxyMappings.h>
 #include <LibWeb/Loader/Resource.h>
@@ -251,6 +253,25 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
 
             auto const fd = file_or_error.value();
 
+            // When local file is a directory use file directory loader to generate response
+            auto maybe_is_valid_directory = Core::Directory::is_valid_directory(fd);
+            if (!maybe_is_valid_directory.is_error() && maybe_is_valid_directory.value()) {
+                auto maybe_response = load_file_directory_page(request);
+                if (maybe_response.is_error()) {
+                    log_failure(request, maybe_response.error());
+                    if (error_callback)
+                        error_callback(DeprecatedString::formatted("{}", maybe_response.error()), 500u);
+                    return;
+                }
+
+                log_success(request);
+                HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> response_headers;
+                response_headers.set("Content-Type"sv, "text/html"sv);
+                success_callback(maybe_response.release_value().bytes(), response_headers, {});
+                return;
+            }
+
+            // Try to read file normally
             auto maybe_file = Core::File::adopt_fd(fd, Core::File::OpenMode::Read);
             if (maybe_file.is_error()) {
                 log_failure(request, maybe_file.error());

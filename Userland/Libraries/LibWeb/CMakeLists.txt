@@ -444,6 +444,7 @@ set(SOURCES
     Layout/TreeBuilder.cpp
     Layout/VideoBox.cpp
     Loader/ContentFilter.cpp
+    Loader/FileDirectoryLoader.cpp
     Loader/FileRequest.cpp
     Loader/FrameLoader.cpp
     Loader/LoadRequest.cpp

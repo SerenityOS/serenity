@@ -193,6 +193,18 @@ void FrameLoader::set_error_page_url(DeprecatedString error_page_url)
     s_error_page_url = error_page_url;
 }
 
+static DeprecatedString s_directory_page_url = "file:///res/html/directory.html";
+
+DeprecatedString FrameLoader::directory_page_url()
+{
+    return s_directory_page_url;
+}
+
+void FrameLoader::set_directory_page_url(DeprecatedString directory_page_url)
+{
+    s_directory_page_url = directory_page_url;
+}
+
 // FIXME: Use an actual templating engine (our own one when it's built, preferably
 // with a way to check these usages at compile time)
 
