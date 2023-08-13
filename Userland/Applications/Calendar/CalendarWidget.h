@@ -42,6 +42,8 @@ private:
     ErrorOr<NonnullRefPtr<GUI::Action>> create_view_year_action();
     ErrorOr<NonnullRefPtr<GUI::Action>> create_open_settings_action();
 
+    OwnPtr<GUI::ActionGroup> m_view_type_action_group;
+
     RefPtr<EventCalendar> m_event_calendar;
 };
 

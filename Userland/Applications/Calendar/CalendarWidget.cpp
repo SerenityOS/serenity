@@ -49,11 +49,12 @@ ErrorOr<NonnullRefPtr<CalendarWidget>> CalendarWidget::create(GUI::Window* paren
     view_month_action->set_checked(true);
 
     auto view_year_action = TRY(widget->create_view_year_action());
-    auto view_type_action_group = make<GUI::ActionGroup>();
 
-    view_type_action_group->set_exclusive(true);
-    view_type_action_group->add_action(*view_month_action);
-    view_type_action_group->add_action(*view_year_action);
+    widget->m_view_type_action_group = make<GUI::ActionGroup>();
+    widget->m_view_type_action_group->set_exclusive(true);
+    widget->m_view_type_action_group->add_action(*view_month_action);
+    widget->m_view_type_action_group->add_action(*view_year_action);
+
     auto default_view = Config::read_string("Calendar"sv, "View"sv, "DefaultView"sv, "Month"sv);
     if (default_view == "Year")
         view_year_action->set_checked(true);
