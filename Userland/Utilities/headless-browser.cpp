@@ -9,6 +9,8 @@
 #include <AK/Badge.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
+#include <AK/JsonObject.h>
+#include <AK/JsonParser.h>
 #include <AK/LexicalPath.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Platform.h>
@@ -184,9 +186,16 @@ static ErrorOr<URL> format_url(StringView url)
 enum class TestMode {
     Layout,
     Text,
+    Ref,
 };
 
-static ErrorOr<String> run_one_test(HeadlessWebContentView& view, StringView input_path, StringView expectation_path, TestMode mode, int timeout_in_milliseconds = 15000)
+enum class TestResult {
+    Pass,
+    Fail,
+    Timeout,
+};
+
+static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringView input_path, StringView expectation_path, TestMode mode, int timeout_in_milliseconds = 15000)
 {
     Core::EventLoop loop;
     bool did_timeout = false;
@@ -197,7 +206,6 @@ static ErrorOr<String> run_one_test(HeadlessWebContentView& view, StringView inp
     }));
 
     view.load(URL::create_with_file_scheme(TRY(FileSystem::real_path(input_path)).to_deprecated_string()));
-    (void)expectation_path;
 
     String result;
 
@@ -225,25 +233,7 @@ static ErrorOr<String> run_one_test(HeadlessWebContentView& view, StringView inp
     loop.exec();
 
     if (did_timeout)
-        return Error::from_errno(ETIMEDOUT);
-
-    return result;
-}
-
-enum class TestResult {
-    Pass,
-    Fail,
-    Timeout,
-};
-
-static ErrorOr<TestResult> run_test(HeadlessWebContentView& view, StringView input_path, StringView expectation_path, TestMode mode)
-{
-    auto result = run_one_test(view, input_path, expectation_path, mode);
-
-    if (result.is_error() && result.error().code() == ETIMEDOUT)
         return TestResult::Timeout;
-    if (result.is_error())
-        return result.release_error();
 
     auto expectation_file_or_error = Core::File::open(expectation_path, Core::File::OpenMode::Read);
     if (expectation_file_or_error.is_error()) {
@@ -255,7 +245,7 @@ static ErrorOr<TestResult> run_test(HeadlessWebContentView& view, StringView inp
 
     auto expectation = TRY(String::from_utf8(StringView(TRY(expectation_file->read_until_eof()).bytes())));
 
-    auto actual = result.release_value();
+    auto actual = result;
     auto actual_trimmed = TRY(actual.trim("\n"sv, TrimMode::Right));
     auto expectation_trimmed = TRY(expectation.trim("\n"sv, TrimMode::Right));
 
@@ -279,6 +269,58 @@ static ErrorOr<TestResult> run_test(HeadlessWebContentView& view, StringView inp
     return TestResult::Fail;
 }
 
+static ErrorOr<TestResult> run_ref_test(HeadlessWebContentView& view, StringView input_path, StringView expectation_path, int timeout_in_milliseconds = 15000)
+{
+    Core::EventLoop loop;
+    bool did_timeout = false;
+
+    auto timeout_timer = TRY(Core::Timer::create_single_shot(5000, [&] {
+        did_timeout = true;
+        loop.quit(0);
+    }));
+
+    view.load(URL::create_with_file_scheme(TRY(FileSystem::real_path(input_path)).to_deprecated_string()));
+    auto expectation_real_path = TRY(FileSystem::real_path(expectation_path)).to_deprecated_string();
+
+    RefPtr<Gfx::Bitmap> actual_screenshot, expectation_screenshot;
+    view.on_load_finish = [&](auto const&) {
+        if (actual_screenshot) {
+            expectation_screenshot = view.take_screenshot();
+            loop.quit(0);
+        } else {
+            actual_screenshot = view.take_screenshot();
+            view.load(URL::create_with_file_scheme(expectation_real_path));
+        }
+    };
+
+    timeout_timer->start(timeout_in_milliseconds);
+    loop.exec();
+
+    if (did_timeout)
+        return TestResult::Timeout;
+
+    VERIFY(actual_screenshot);
+    VERIFY(expectation_screenshot);
+
+    if (actual_screenshot->visually_equals(*expectation_screenshot))
+        return TestResult::Pass;
+
+    return TestResult::Fail;
+}
+
+static ErrorOr<TestResult> run_test(HeadlessWebContentView& view, StringView input_path, StringView expectation_path, TestMode mode)
+{
+    switch (mode) {
+    case TestMode::Text:
+    case TestMode::Layout:
+        return run_dump_test(view, input_path, expectation_path, mode);
+    case TestMode::Ref:
+        return run_ref_test(view, input_path, expectation_path);
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 struct Test {
     String input_path;
     String expectation_path;
@@ -286,14 +328,14 @@ struct Test {
     Optional<TestResult> result;
 };
 
-static ErrorOr<void> collect_tests(Vector<Test>& tests, StringView path, StringView trail, TestMode mode)
+static ErrorOr<void> collect_dump_tests(Vector<Test>& tests, StringView path, StringView trail, TestMode mode)
 {
     Core::DirIterator it(TRY(String::formatted("{}/input/{}", path, trail)).to_deprecated_string(), Core::DirIterator::Flags::SkipDots);
     while (it.has_next()) {
         auto name = it.next_path();
         auto input_path = TRY(FileSystem::real_path(TRY(String::formatted("{}/input/{}/{}", path, trail, name))));
         if (FileSystem::is_directory(input_path)) {
-            TRY(collect_tests(tests, path, TRY(String::formatted("{}/{}", trail, name)), mode));
+            TRY(collect_dump_tests(tests, path, TRY(String::formatted("{}/{}", trail, name)), mode));
             continue;
         }
         if (!name.ends_with(".html"sv))
@@ -306,13 +348,37 @@ static ErrorOr<void> collect_tests(Vector<Test>& tests, StringView path, StringV
     return {};
 }
 
+static ErrorOr<void> collect_ref_tests(Vector<Test>& tests, StringView path)
+{
+    auto manifest_path = TRY(String::formatted("{}/manifest.json", path));
+    auto manifest_file_or_error = Core::File::open(manifest_path, Core::File::OpenMode::Read);
+    if (manifest_file_or_error.is_error()) {
+        warnln("Failed opening '{}': {}", manifest_path, manifest_file_or_error.error());
+        return manifest_file_or_error.release_error();
+    }
+
+    auto manifest_file = manifest_file_or_error.release_value();
+    auto manifest = TRY(String::from_utf8(StringView(TRY(manifest_file->read_until_eof()).bytes())));
+    auto manifest_json = TRY(JsonParser(manifest).parse());
+    TRY(manifest_json.as_object().try_for_each_member([&](DeprecatedString const& key, AK::JsonValue const& value) -> ErrorOr<void> {
+        TRY(String::from_deprecated_string(key));
+        auto input_path = TRY(String::formatted("{}/{}", path, key));
+        auto expectation_path = TRY(String::formatted("{}/{}", path, value.to_deprecated_string()));
+        tests.append({ input_path, expectation_path, TestMode::Ref, {} });
+        return {};
+    }));
+
+    return {};
+}
+
 static ErrorOr<int> run_tests(HeadlessWebContentView& view, StringView test_root_path)
 {
     view.clear_content_filters();
 
     Vector<Test> tests;
-    TRY(collect_tests(tests, TRY(String::formatted("{}/Layout", test_root_path)), "."sv, TestMode::Layout));
-    TRY(collect_tests(tests, TRY(String::formatted("{}/Text", test_root_path)), "."sv, TestMode::Text));
+    TRY(collect_dump_tests(tests, TRY(String::formatted("{}/Layout", test_root_path)), "."sv, TestMode::Layout));
+    TRY(collect_dump_tests(tests, TRY(String::formatted("{}/Text", test_root_path)), "."sv, TestMode::Text));
+    TRY(collect_ref_tests(tests, TRY(String::formatted("{}/Ref", test_root_path))));
 
     size_t pass_count = 0;
     size_t fail_count = 0;
