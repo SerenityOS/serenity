@@ -87,15 +87,16 @@ private:
     ErrorOr<void> write_header();
 
     ErrorOr<void> write_frame();
-    ErrorOr<void> write_subframe(ReadonlySpan<i64> subframe, BigEndianOutputBitStream& bit_stream);
-    ErrorOr<void> write_lpc_subframe(FlacLPCEncodedSubframe lpc_subframe, BigEndianOutputBitStream& bit_stream);
-    ErrorOr<void> write_verbatim_subframe(ReadonlySpan<i64> subframe, BigEndianOutputBitStream& bit_stream);
+    ErrorOr<void> write_frame_for(ReadonlySpan<Vector<i64, block_size>> subblock, FlacFrameChannelType channel_type);
+    ErrorOr<void> write_subframe(ReadonlySpan<i64> subframe, BigEndianOutputBitStream& bit_stream, u8 bits_per_sample);
+    ErrorOr<void> write_lpc_subframe(FlacLPCEncodedSubframe lpc_subframe, BigEndianOutputBitStream& bit_stream, u8 bits_per_sample);
+    ErrorOr<void> write_verbatim_subframe(ReadonlySpan<i64> subframe, BigEndianOutputBitStream& bit_stream, u8 bits_per_sample);
     // Assumes 4-bit k for now.
     ErrorOr<void> write_rice_partition(u8 k, ReadonlySpan<i64> residuals, BigEndianOutputBitStream& bit_stream);
 
     // Aborts encoding once the costs exceed the previous minimum, thereby speeding up the encoder's parameter search.
     // In this case, an empty Optional is returned.
-    ErrorOr<Optional<FlacLPCEncodedSubframe>> encode_fixed_lpc(FlacFixedLPC order, ReadonlySpan<i64> subframe, size_t current_min_cost);
+    ErrorOr<Optional<FlacLPCEncodedSubframe>> encode_fixed_lpc(FlacFixedLPC order, ReadonlySpan<i64> subframe, size_t current_min_cost, u8 bits_per_sample);
 
     NonnullOwnPtr<SeekableStream> m_stream;
     WriteState m_state { WriteState::HeaderUnwritten };

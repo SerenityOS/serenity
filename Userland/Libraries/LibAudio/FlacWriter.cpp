@@ -6,9 +6,11 @@
 
 #include "FlacWriter.h"
 #include <AK/BitStream.h>
+#include <AK/DisjointChunks.h>
 #include <AK/Endian.h>
 #include <AK/IntegralMath.h>
 #include <AK/MemoryStream.h>
+#include <AK/Statistics.h>
 #include <LibCrypto/Checksum/ChecksummingStream.h>
 
 namespace Audio {
@@ -315,13 +317,51 @@ ErrorOr<void> FlacWriter::write_frame()
             TRY(subframe_samples[i].try_append(static_cast<i64>(sample.right * sample_rescale)));
     }
 
+    auto channel_type = static_cast<FlacFrameChannelType>(m_num_channels - 1);
+
+    if (channel_type == FlacFrameChannelType::Stereo) {
+        auto const& left_channel = subframe_samples[0];
+        auto const& right_channel = subframe_samples[1];
+        Vector<i64, block_size> mid_channel;
+        Vector<i64, block_size> side_channel;
+        TRY(mid_channel.try_ensure_capacity(left_channel.size()));
+        TRY(side_channel.try_ensure_capacity(left_channel.size()));
+        for (auto i = 0u; i < left_channel.size(); ++i) {
+            auto mid = (left_channel[i] + right_channel[i]) / 2;
+            auto side = left_channel[i] - right_channel[i];
+            mid_channel.unchecked_append(mid);
+            side_channel.unchecked_append(side);
+        }
+
+        AK::Statistics<i64, AK::DisjointSpans<i64>> normal_costs {
+            AK::DisjointSpans<i64> { { subframe_samples[0], subframe_samples[1] } }
+        };
+        AK::Statistics<i64, AK::DisjointSpans<i64>> correlated_costs {
+            AK::DisjointSpans<i64> { { mid_channel, side_channel } }
+        };
+
+        if (correlated_costs.standard_deviation() < normal_costs.standard_deviation()) {
+            dbgln_if(FLAC_ENCODER_DEBUG, "Using channel coupling since sample stddev {} is better than {}", correlated_costs.standard_deviation(), normal_costs.standard_deviation());
+            channel_type = FlacFrameChannelType::MidSideStereo;
+            subframe_samples[0] = move(mid_channel);
+            subframe_samples[1] = move(side_channel);
+        }
+    }
+
+    return write_frame_for(subframe_samples, channel_type);
+}
+
+ErrorOr<void> FlacWriter::write_frame_for(ReadonlySpan<Vector<i64, block_size>> subblock, FlacFrameChannelType channel_type)
+{
+    auto sample_count = subblock.first().size();
+
     FlacFrameHeader header {
         .sample_rate = m_sample_rate,
-        .sample_count = static_cast<u16>(frame_samples.size()),
+        .sample_count = static_cast<u16>(sample_count),
         .sample_or_frame_index = static_cast<u32>(m_current_frame),
         .blocking_strategy = BlockingStrategy::Fixed,
         // FIXME: We should brute-force channel coupling for stereo.
-        .channels = static_cast<FlacFrameChannelType>(m_num_channels - 1),
+        .channels = channel_type,
         .bit_depth = static_cast<u8>(m_bits_per_sample),
         // Calculated for us during header write.
         .checksum = 0,
@@ -333,8 +373,17 @@ ErrorOr<void> FlacWriter::write_frame()
     TRY(frame_stream.write_value(header));
 
     BigEndianOutputBitStream bit_stream { MaybeOwned<Stream> { frame_stream } };
-    for (auto const& subframe : subframe_samples)
-        TRY(write_subframe(subframe.span(), bit_stream));
+    for (auto i = 0u; i < subblock.size(); ++i) {
+        auto const& subframe = subblock[i];
+        auto bits_per_sample = m_bits_per_sample;
+        // Side channels need an extra bit per sample.
+        if ((i == 1 && (channel_type == FlacFrameChannelType::LeftSideStereo || channel_type == FlacFrameChannelType::MidSideStereo))
+            || (i == 0 && channel_type == FlacFrameChannelType::RightSideStereo)) {
+            bits_per_sample++;
+        }
+
+        TRY(write_subframe(subframe.span(), bit_stream, bits_per_sample));
+    }
 
     TRY(bit_stream.align_to_byte_boundary());
     auto frame_crc = frame_stream.digest();
@@ -347,12 +396,12 @@ ErrorOr<void> FlacWriter::write_frame()
     m_min_frame_size = min(m_min_frame_size, frame_size);
 
     m_current_frame++;
-    m_sample_count += frame_samples.size();
+    m_sample_count += sample_count;
 
     return {};
 }
 
-ErrorOr<void> FlacWriter::write_subframe(ReadonlySpan<i64> subframe, BigEndianOutputBitStream& bit_stream)
+ErrorOr<void> FlacWriter::write_subframe(ReadonlySpan<i64> subframe, BigEndianOutputBitStream& bit_stream, u8 bits_per_sample)
 {
     // The current subframe encoding strategy is as follows:
     // - Check if the subframe is constant; use constant encoding in this case.
@@ -376,11 +425,11 @@ ErrorOr<void> FlacWriter::write_subframe(ReadonlySpan<i64> subframe, BigEndianOu
         TRY(bit_stream.write_bits(1u, 0));
         TRY(bit_stream.write_bits(to_underlying(FlacSubframeType::Constant), 6));
         TRY(bit_stream.write_bits(1u, 0));
-        TRY(bit_stream.write_bits(bit_cast<u64>(constant_value), m_bits_per_sample));
+        TRY(bit_stream.write_bits(bit_cast<u64>(constant_value), bits_per_sample));
         return {};
     }
 
-    auto verbatim_cost_bits = subframe.size() * m_bits_per_sample;
+    auto verbatim_cost_bits = subframe.size() * bits_per_sample;
 
     Optional<FlacLPCEncodedSubframe> best_lpc_subframe;
     auto current_min_cost = verbatim_cost_bits;
@@ -389,7 +438,7 @@ ErrorOr<void> FlacWriter::write_subframe(ReadonlySpan<i64> subframe, BigEndianOu
         if (to_underlying(order) > subframe.size())
             continue;
 
-        auto encode_result = TRY(encode_fixed_lpc(order, subframe, current_min_cost));
+        auto encode_result = TRY(encode_fixed_lpc(order, subframe, current_min_cost, bits_per_sample));
         if (encode_result.has_value() && encode_result.value().residual_cost_bits < current_min_cost) {
             current_min_cost = encode_result.value().residual_cost_bits;
             best_lpc_subframe = encode_result.release_value();
@@ -399,23 +448,23 @@ ErrorOr<void> FlacWriter::write_subframe(ReadonlySpan<i64> subframe, BigEndianOu
     // No LPC encoding was better than verbatim.
     if (!best_lpc_subframe.has_value()) {
         dbgln_if(FLAC_ENCODER_DEBUG, "Best subframe type was Verbatim; encoding {} samples at {} bps = {} bits", subframe.size(), m_bits_per_sample, verbatim_cost_bits);
-        TRY(write_verbatim_subframe(subframe, bit_stream));
+        TRY(write_verbatim_subframe(subframe, bit_stream, bits_per_sample));
     } else {
         dbgln_if(FLAC_ENCODER_DEBUG, "Best subframe type was Fixed LPC order {} (estimated cost {} bits); encoding {} samples", to_underlying(best_lpc_subframe->coefficients.get<FlacFixedLPC>()), best_lpc_subframe->residual_cost_bits, subframe.size());
-        TRY(write_lpc_subframe(best_lpc_subframe.release_value(), bit_stream));
+        TRY(write_lpc_subframe(best_lpc_subframe.release_value(), bit_stream, bits_per_sample));
     }
 
     return {};
 }
 
-ErrorOr<Optional<FlacLPCEncodedSubframe>> FlacWriter::encode_fixed_lpc(FlacFixedLPC order, ReadonlySpan<i64> subframe, size_t current_min_cost)
+ErrorOr<Optional<FlacLPCEncodedSubframe>> FlacWriter::encode_fixed_lpc(FlacFixedLPC order, ReadonlySpan<i64> subframe, size_t current_min_cost, u8 bits_per_sample)
 {
     FlacLPCEncodedSubframe lpc {
         .warm_up_samples = Vector<i64> { subframe.trim(to_underlying(order)) },
         .coefficients = order,
         .residuals {},
         // Warm-up sample cost.
-        .residual_cost_bits = to_underlying(order) * m_bits_per_sample,
+        .residual_cost_bits = to_underlying(order) * bits_per_sample,
         .single_partition_optimal_order {},
     };
     TRY(lpc.residuals.try_ensure_capacity(subframe.size() - to_underlying(order)));
@@ -532,19 +581,19 @@ void predict_fixed_lpc(FlacFixedLPC order, ReadonlySpan<i64> samples, Span<i64> 
 }
 
 // https://www.ietf.org/archive/id/draft-ietf-cellar-flac-08.html#name-verbatim-subframe
-ErrorOr<void> FlacWriter::write_verbatim_subframe(ReadonlySpan<i64> subframe, BigEndianOutputBitStream& bit_stream)
+ErrorOr<void> FlacWriter::write_verbatim_subframe(ReadonlySpan<i64> subframe, BigEndianOutputBitStream& bit_stream, u8 bits_per_sample)
 {
     TRY(bit_stream.write_bits(0u, 1));
     TRY(bit_stream.write_bits(to_underlying(FlacSubframeType::Verbatim), 6));
     TRY(bit_stream.write_bits(0u, 1));
     for (auto const& sample : subframe)
-        TRY(bit_stream.write_bits(bit_cast<u64>(sample), m_bits_per_sample));
+        TRY(bit_stream.write_bits(bit_cast<u64>(sample), bits_per_sample));
 
     return {};
 }
 
 // https://www.ietf.org/archive/id/draft-ietf-cellar-flac-08.html#name-fixed-predictor-subframe
-ErrorOr<void> FlacWriter::write_lpc_subframe(FlacLPCEncodedSubframe lpc_subframe, BigEndianOutputBitStream& bit_stream)
+ErrorOr<void> FlacWriter::write_lpc_subframe(FlacLPCEncodedSubframe lpc_subframe, BigEndianOutputBitStream& bit_stream, u8 bits_per_sample)
 {
     // Reserved.
     TRY(bit_stream.write_bits(0u, 1));
@@ -560,7 +609,7 @@ ErrorOr<void> FlacWriter::write_lpc_subframe(FlacLPCEncodedSubframe lpc_subframe
     TRY(bit_stream.write_bits(0u, 1));
 
     for (auto const& warm_up_sample : lpc_subframe.warm_up_samples)
-        TRY(bit_stream.write_bits(bit_cast<u64>(warm_up_sample), m_bits_per_sample));
+        TRY(bit_stream.write_bits(bit_cast<u64>(warm_up_sample), bits_per_sample));
 
     // 4-bit Rice parameters.
     TRY(bit_stream.write_bits(0b00u, 2));
