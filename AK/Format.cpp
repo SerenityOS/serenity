@@ -369,16 +369,16 @@ ErrorOr<void> FormatBuilder::put_fixed_point(
     i64 integer_value,
     u64 fraction_value,
     u64 fraction_one,
+    size_t precision,
     u8 base,
     bool upper_case,
     bool zero_pad,
     bool use_separator,
     Align align,
     size_t min_width,
-    size_t precision,
+    size_t fraction_max_width,
     char fill,
-    SignMode sign_mode,
-    RealNumberDisplayMode display_mode)
+    SignMode sign_mode)
 {
     StringBuilder string_builder;
     FormatBuilder format_builder { string_builder };
@@ -388,55 +388,50 @@ ErrorOr<void> FormatBuilder::put_fixed_point(
 
     TRY(format_builder.put_u64(static_cast<u64>(integer_value), base, false, upper_case, false, use_separator, Align::Right, 0, ' ', sign_mode, is_negative));
 
-    if (precision > 0) {
+    if (fraction_max_width && (zero_pad || fraction_value)) {
         // FIXME: This is a terrible approximation but doing it properly would be a lot of work. If someone is up for that, a good
         // place to start would be the following video from CppCon 2019:
         // https://youtu.be/4P_kbF0EbZM (Stephan T. Lavavej “Floating-Point <charconv>: Making Your Code 10x Faster With C++17's Final Boss”)
 
-        u64 scale = pow<u64>(10, precision);
+        if (is_negative && fraction_value)
+            fraction_value = fraction_one - fraction_value;
 
-        auto fraction = (scale * fraction_value) / fraction_one; // TODO: overflows
-        if (is_negative && fraction != 0)
-            fraction = scale - fraction;
+        TRY(string_builder.try_append('.'));
 
-        size_t leading_zeroes = 0;
-        {
-            auto scale_tmp = scale / 10;
-            for (; fraction < scale_tmp; ++leading_zeroes) {
-                scale_tmp /= 10;
-            }
+        if (base == 10) {
+            u64 scale = pow<u64>(5, precision);
+            // FIXME: overflows (not before: fraction_value = (2^precision - 1) and precision >= 20) (use wider integer type)
+            auto fraction = scale * fraction_value;
+            TRY(format_builder.put_u64(fraction, base, false, upper_case, true, use_separator, Align::Right, precision));
+        } else if (base == 16) {
+            auto fraction = fraction_value << ((4 - (precision % 4)) % 4);
+            TRY(format_builder.put_u64(fraction, base, false, upper_case, false, use_separator, Align::Right, precision/4 + (precision % 4 != 0), '0'));
+        } else {
+            VERIFY_NOT_REACHED();
         }
-
-        while (fraction != 0 && fraction % 10 == 0)
-            fraction /= 10;
-
-        size_t visible_precision = 0;
-        {
-            auto fraction_tmp = fraction;
-            for (; visible_precision < precision; ++visible_precision) {
-                if (fraction_tmp == 0 && display_mode != RealNumberDisplayMode::FixedPoint)
-                    break;
-                fraction_tmp /= 10;
-            }
-        }
-
-        if (visible_precision == 0)
-            leading_zeroes = 0;
-
-        if (zero_pad || visible_precision > 0)
-            TRY(string_builder.try_append('.'));
-
-        if (leading_zeroes > 0)
-            TRY(format_builder.put_u64(0, base, false, false, true, use_separator, Align::Right, leading_zeroes));
-
-        if (visible_precision > 0)
-            TRY(format_builder.put_u64(fraction, base, false, upper_case, true, use_separator, Align::Right, visible_precision));
-
-        if (zero_pad && (precision - leading_zeroes - visible_precision) > 0)
-            TRY(format_builder.put_u64(0, base, false, false, true, use_separator, Align::Right, precision - leading_zeroes - visible_precision));
     }
 
-    TRY(put_string(string_builder.string_view(), align, min_width, NumericLimits<size_t>::max(), fill));
+    auto formatted_string = string_builder.string_view();
+    if (fraction_max_width && (zero_pad || fraction_value)) {
+        auto point_index = formatted_string.find('.').value_or(0);
+        if (!point_index)
+            VERIFY_NOT_REACHED();
+
+        if (auto formatted_length = (formatted_string.length() - point_index - 1); formatted_length > fraction_max_width) {
+            formatted_string = formatted_string.substring_view(0, 1 + point_index + fraction_max_width);
+        } else {
+            string_builder.append_repeated('0', fraction_max_width - formatted_length);
+            formatted_string = string_builder.string_view();
+        }
+
+        if (!zero_pad)
+            formatted_string = formatted_string.trim("0"sv, TrimMode::Right);
+
+        if (formatted_string.ends_with('.'))
+            formatted_string = formatted_string.trim("."sv, TrimMode::Right);
+    }
+
+    TRY(put_string(formatted_string, align, min_width, NumericLimits<size_t>::max(), fill));
     return {};
 }
 

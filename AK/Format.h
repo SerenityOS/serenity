@@ -214,16 +214,16 @@ public:
         i64 integer_value,
         u64 fraction_value,
         u64 fraction_one,
+        size_t precision,
         u8 base = 10,
         bool upper_case = false,
         bool zero_pad = false,
         bool use_separator = false,
         Align align = Align::Right,
         size_t min_width = 0,
-        size_t precision = 6,
+        size_t fraction_max_width = 6,
         char fill = ' ',
-        SignMode sign_mode = SignMode::OnlyIfNeeded,
-        RealNumberDisplayMode = RealNumberDisplayMode::Default);
+        SignMode sign_mode = SignMode::OnlyIfNeeded);
 
 #ifndef KERNEL
     ErrorOr<void> put_f80(

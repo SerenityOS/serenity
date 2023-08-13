@@ -169,7 +169,7 @@ TEST_CASE(cast)
 TEST_CASE(formatter)
 {
     EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(123.456)), "123.455993"sv);
-    EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(-123.456)), "-123.455994"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(-123.456)), "-123.455993"sv);
     EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<4>(123.456)), "123.4375"sv);
     EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<4>(-123.456)), "-123.4375"sv);
     EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16> {}), "0"sv);
@@ -178,11 +178,113 @@ TEST_CASE(formatter)
     EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(0.003)), "0.003005"sv);
     EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(0.0004)), "0.000396"sv);
     EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(0.0000000005)), "0"sv);
-    EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(-0.1)), "-0.100007"sv);
-    EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(-0.02)), "-0.020005"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(-0.1)), "-0.100006"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(-0.02)), "-0.020004"sv);
     EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(-0.0000000005)), "0"sv);
 
     EXPECT_EQ(DeprecatedString::formatted("{}", Type(-1)), "-1"sv);
     EXPECT_EQ(DeprecatedString::formatted("{}", Type(-2)), "-2"sv);
     EXPECT_EQ(DeprecatedString::formatted("{}", Type(-3)), "-3"sv);
+
+    // exact representation
+    EXPECT_EQ(DeprecatedString::formatted("{:.30}", FixedPoint<16>(123.456)), "123.45599365234375"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30}", FixedPoint<16>(-0.1)), "-0.100006103515625"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30}", FixedPoint<16>(-0.02)), "-0.0200042724609375"sv);
+
+    // maximum fraction per precision; 1 - 2^-precision
+    EXPECT_EQ(DeprecatedString::formatted("{:0.20}", AK::FixedPoint<7, u64>::create_raw((1ull << 7) - 1)), "0.99218750000000000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.20}", AK::FixedPoint<8, u64>::create_raw((1ull << 8) - 1)), "0.99609375000000000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.20}", AK::FixedPoint<9, u64>::create_raw((1ull << 9) - 1)), "0.99804687500000000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.20}", AK::FixedPoint<10, u64>::create_raw((1ull << 10) - 1)), "0.99902343750000000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.20}", AK::FixedPoint<11, u64>::create_raw((1ull << 11) - 1)), "0.99951171875000000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.20}", AK::FixedPoint<12, u64>::create_raw((1ull << 12) - 1)), "0.99975585937500000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.20}", AK::FixedPoint<13, u64>::create_raw((1ull << 13) - 1)), "0.99987792968750000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.20}", AK::FixedPoint<14, u64>::create_raw((1ull << 14) - 1)), "0.99993896484375000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.20}", AK::FixedPoint<15, u64>::create_raw((1ull << 15) - 1)), "0.99996948242187500000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.20}", AK::FixedPoint<16, u64>::create_raw((1ull << 16) - 1)), "0.99998474121093750000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.20}", AK::FixedPoint<17, u64>::create_raw((1ull << 17) - 1)), "0.99999237060546875000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.20}", AK::FixedPoint<18, u64>::create_raw((1ull << 18) - 1)), "0.99999618530273437500"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.20}", AK::FixedPoint<19, u64>::create_raw((1ull << 19) - 1)), "0.99999809265136718750"sv);
+    // maximum factor and precision >= 20 bits/digits will overflow u64: (5^20)*(2^20 - 1) > 2^64
+    // EXPECT_EQ(DeprecatedString::formatted("{:0.30}", AK::FixedPoint<20, u64>::create_raw((1ull << 20) - 1)), "0.99999904632568359375"sv);
+
+    // minimum fraction per precision; 2^-precision
+    EXPECT_EQ(DeprecatedString::formatted("{:0.30}", AK::FixedPoint<7, u64>::create_raw(1)), "0.007812500000000000000000000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.30}", AK::FixedPoint<8, u64>::create_raw(1)), "0.003906250000000000000000000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.30}", AK::FixedPoint<9, u64>::create_raw(1)), "0.001953125000000000000000000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.30}", AK::FixedPoint<10, u64>::create_raw(1)), "0.000976562500000000000000000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.30}", AK::FixedPoint<11, u64>::create_raw(1)), "0.000488281250000000000000000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.30}", AK::FixedPoint<12, u64>::create_raw(1)), "0.000244140625000000000000000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.30}", AK::FixedPoint<13, u64>::create_raw(1)), "0.000122070312500000000000000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.30}", AK::FixedPoint<14, u64>::create_raw(1)), "0.000061035156250000000000000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.30}", AK::FixedPoint<15, u64>::create_raw(1)), "0.000030517578125000000000000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.30}", AK::FixedPoint<16, u64>::create_raw(1)), "0.000015258789062500000000000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.30}", AK::FixedPoint<17, u64>::create_raw(1)), "0.000007629394531250000000000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.30}", AK::FixedPoint<18, u64>::create_raw(1)), "0.000003814697265625000000000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.30}", AK::FixedPoint<19, u64>::create_raw(1)), "0.000001907348632812500000000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.30}", AK::FixedPoint<20, u64>::create_raw(1)), "0.000000953674316406250000000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.30}", AK::FixedPoint<21, u64>::create_raw(1)), "0.000000476837158203125000000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.30}", AK::FixedPoint<22, u64>::create_raw(1)), "0.000000238418579101562500000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.30}", AK::FixedPoint<23, u64>::create_raw(1)), "0.000000119209289550781250000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.30}", AK::FixedPoint<24, u64>::create_raw(1)), "0.000000059604644775390625000000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.30}", AK::FixedPoint<25, u64>::create_raw(1)), "0.000000029802322387695312500000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.30}", AK::FixedPoint<26, u64>::create_raw(1)), "0.000000014901161193847656250000"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.30}", AK::FixedPoint<27, u64>::create_raw(1)), "0.000000007450580596923828125000"sv);
+    // minimum factor and precision >= 28 bits/digits will overflow u64: (5^28)*(1) > 2^64
+    // EXPECT_EQ(DeprecatedString::formatted("{:0.30}", AK::FixedPoint<28, u64>::create_raw(1)), "0.000000003725290298461914062500"sv);
+
+    EXPECT_EQ(DeprecatedString::formatted("{:a}", FixedPoint<16>(42.42)), "2a.6b85"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:0.10a}", FixedPoint<16>(69.69)), "45.b0a4000000"sv);
+
+    // maximum fraction per precision rendered in hexadecimal; 1 - 2^-precision; no overflow
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<7, u64>::create_raw((1ull << 7) - 1)), "0.fe"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<8, u64>::create_raw((1ull << 8) - 1)), "0.ff"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<9, u64>::create_raw((1ull << 9) - 1)), "0.ff8"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<10, u64>::create_raw((1ull << 10) - 1)), "0.ffc"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<11, u64>::create_raw((1ull << 11) - 1)), "0.ffe"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<12, u64>::create_raw((1ull << 12) - 1)), "0.fff"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<13, u64>::create_raw((1ull << 13) - 1)), "0.fff8"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<14, u64>::create_raw((1ull << 14) - 1)), "0.fffc"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<15, u64>::create_raw((1ull << 15) - 1)), "0.fffe"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<16, u64>::create_raw((1ull << 16) - 1)), "0.ffff"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<17, u64>::create_raw((1ull << 17) - 1)), "0.ffff8"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<18, u64>::create_raw((1ull << 18) - 1)), "0.ffffc"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<19, u64>::create_raw((1ull << 19) - 1)), "0.ffffe"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<20, u64>::create_raw((1ull << 20) - 1)), "0.fffff"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<21, u64>::create_raw((1ull << 21) - 1)), "0.fffff8"sv);
+    // ...skip some precisions
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<56, u64>::create_raw((1ull << 56) - 1)), "0.ffffffffffffff"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<57, u64>::create_raw((1ull << 57) - 1)), "0.ffffffffffffff8"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<58, u64>::create_raw((1ull << 58) - 1)), "0.ffffffffffffffc"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<59, u64>::create_raw((1ull << 59) - 1)), "0.ffffffffffffffe"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<60, u64>::create_raw((1ull << 60) - 1)), "0.fffffffffffffff"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<61, u64>::create_raw((1ull << 61) - 1)), "0.fffffffffffffff8"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<62, u64>::create_raw((1ull << 62) - 1)), "0.fffffffffffffffc"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<63, u64>::create_raw((1ull << 63) - 1)), "0.fffffffffffffffe"sv);
+
+    // minimum fraction per precision rendered in hexadecimal; 2^-precision; no overflow
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<7, u64>::create_raw(1)), "0.02"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<8, u64>::create_raw(1)), "0.01"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<9, u64>::create_raw(1)), "0.008"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<10, u64>::create_raw(1)), "0.004"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<11, u64>::create_raw(1)), "0.002"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<12, u64>::create_raw(1)), "0.001"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<13, u64>::create_raw(1)), "0.0008"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<14, u64>::create_raw(1)), "0.0004"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<15, u64>::create_raw(1)), "0.0002"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<16, u64>::create_raw(1)), "0.0001"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<17, u64>::create_raw(1)), "0.00008"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<18, u64>::create_raw(1)), "0.00004"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<19, u64>::create_raw(1)), "0.00002"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<20, u64>::create_raw(1)), "0.00001"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<21, u64>::create_raw(1)), "0.000008"sv);
+    // ..skip some precisions
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<56, u64>::create_raw(1)), "0.00000000000001"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<57, u64>::create_raw(1)), "0.000000000000008"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<58, u64>::create_raw(1)), "0.000000000000004"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<59, u64>::create_raw(1)), "0.000000000000002"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<60, u64>::create_raw(1)), "0.000000000000001"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<61, u64>::create_raw(1)), "0.0000000000000008"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<62, u64>::create_raw(1)), "0.0000000000000004"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{:.30a}", AK::FixedPoint<63, u64>::create_raw(1)), "0.0000000000000002"sv);
 }
