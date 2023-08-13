@@ -20,6 +20,7 @@
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/ImageCodecPlugin.h>
+#include <LibWeb/ReferrerPolicy/AbstractOperations.h>
 #include <LibWeb/XML/XMLDocumentBuilder.h>
 
 namespace Web {
@@ -76,6 +77,12 @@ bool FrameLoader::load(LoadRequest& request, Type type)
     //                   `text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8`
     if (!request.headers().contains("Accept"))
         request.set_header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+
+    // HACK: We're crudely computing the referer value and shoving it into the
+    //       request until fetch infrastructure is used here.
+    auto referrer_url = ReferrerPolicy::strip_url_for_use_as_referrer(url);
+    if (referrer_url.has_value() && !request.headers().contains("Referer"))
+        request.set_header("Referer", referrer_url->serialize());
 
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
 
