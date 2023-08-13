@@ -108,7 +108,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     update();
 
     auto change_settings = [&] {
-        auto settings_dialog = SettingsDialog::construct(window, board_rows, board_columns);
+        auto settings_dialog_or_error = SettingsDialog::try_create(window, board_rows, board_columns);
+        if (settings_dialog_or_error.is_error()) {
+            GUI::MessageBox::show(window, "Failed to load the settings window"sv, "Unable to Open Settings"sv, GUI::MessageBox::Type::Error);
+            return;
+        }
+
+        auto settings_dialog = settings_dialog_or_error.release_value();
         if (settings_dialog->exec() != GUI::Dialog::ExecResult::OK)
             return;
 
