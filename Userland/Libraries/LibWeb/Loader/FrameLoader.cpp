@@ -169,7 +169,24 @@ void FrameLoader::load_html(StringView html, const AK::URL& url)
     parser->run(url);
 }
 
+static DeprecatedString s_resource_directory_url = "file:///res";
+
+DeprecatedString FrameLoader::resource_directory_url()
+{
+    return s_resource_directory_url;
+}
+
+void FrameLoader::set_resource_directory_url(DeprecatedString resource_directory_url)
+{
+    s_resource_directory_url = resource_directory_url;
+}
+
 static DeprecatedString s_error_page_url = "file:///res/html/error.html";
+
+DeprecatedString FrameLoader::error_page_url()
+{
+    return s_error_page_url;
+}
 
 void FrameLoader::set_error_page_url(DeprecatedString error_page_url)
 {
@@ -189,6 +206,7 @@ void FrameLoader::load_error_page(const AK::URL& failed_url, DeprecatedString co
             VERIFY(!data.is_null());
             StringBuilder builder;
             SourceGenerator generator { builder };
+            generator.set("resource_directory_url", resource_directory_url());
             generator.set("failed_url", escape_html_entities(failed_url.to_deprecated_string()));
             generator.set("error", escape_html_entities(error));
             generator.append(data);
