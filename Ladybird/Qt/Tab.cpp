@@ -517,14 +517,13 @@ void Tab::focus_location_editor()
     m_location_edit->selectAll();
 }
 
-void Tab::navigate(QString url_qstring, LoadType load_type)
+void Tab::navigate(QString url_qstring)
 {
     auto url_string = ak_deprecated_string_from_qstring(url_qstring);
     if (url_string.starts_with('/'))
         url_string = DeprecatedString::formatted("file://{}", url_string);
     else if (URL url = url_string; !url.is_valid())
         url_string = DeprecatedString::formatted("https://{}", url_string);
-    m_is_history_navigation = (load_type == LoadType::HistoryNavigation);
     view().load(url_string);
 }
 

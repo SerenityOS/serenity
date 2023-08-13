@@ -32,11 +32,7 @@ public:
 
     WebContentView& view() { return *m_view; }
 
-    enum class LoadType {
-        Normal,
-        HistoryNavigation,
-    };
-    void navigate(QString, LoadType = LoadType::Normal);
+    void navigate(QString);
     void back();
     void forward();
     void reload();
