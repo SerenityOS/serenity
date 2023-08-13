@@ -8,7 +8,7 @@ files=(
 configopts=("--without-xlib" "--without-joystick" "--without-network")
 launcher_name=vitetris
 launcher_category=Games
-launcher_command=tetris
+launcher_command='/usr/local/bin/tetris'
 launcher_run_in_terminal=true
 
 configure() {
