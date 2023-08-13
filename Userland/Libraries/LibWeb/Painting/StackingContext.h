@@ -49,6 +49,7 @@ private:
     Vector<StackingContext*> m_children;
     size_t m_index_in_tree_order { 0 };
 
+    void paint_child(PaintContext&, StackingContext const&) const;
     void paint_internal(PaintContext&) const;
     Gfx::FloatMatrix4x4 get_transformation_matrix(CSS::Transformation const& transformation) const;
     Gfx::FloatMatrix4x4 combine_transformations(Vector<CSS::Transformation> const& transformations) const;
