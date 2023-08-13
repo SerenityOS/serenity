@@ -10,7 +10,7 @@ they're found.
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index 3558a6c..d074e48 100644
+index 3558a6c78bda56023dc23b271d01a9026a7aed5b..d074e488bf2b493a553e1920fd8fafdb8b1965ea 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
 @@ -14,10 +14,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${SDLPoP_SOURCE_DIR}/..")
