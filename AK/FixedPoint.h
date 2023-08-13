@@ -420,12 +420,9 @@ struct Formatter<FixedPoint<precision, Underlying>> : StandardFormatter {
     {
         u8 base;
         bool upper_case;
-        FormatBuilder::RealNumberDisplayMode real_number_display_mode = FormatBuilder::RealNumberDisplayMode::General;
         if (m_mode == Mode::Default || m_mode == Mode::FixedPoint) {
             base = 10;
             upper_case = false;
-            if (m_mode == Mode::FixedPoint)
-                real_number_display_mode = FormatBuilder::RealNumberDisplayMode::FixedPoint;
         } else if (m_mode == Mode::Hexfloat) {
             base = 16;
             upper_case = false;
@@ -446,7 +443,7 @@ struct Formatter<FixedPoint<precision, Underlying>> : StandardFormatter {
         i64 integer = value.ltrunc();
         constexpr u64 one = static_cast<Underlying>(1) << precision;
         u64 fraction_raw = value.raw() & (one - 1);
-        return builder.put_fixed_point(is_negative, integer, fraction_raw, one, base, upper_case, m_zero_pad, m_use_separator, m_align, m_width.value(), m_precision.value(), m_fill, m_sign_mode, real_number_display_mode);
+        return builder.put_fixed_point(is_negative, integer, fraction_raw, one, precision, base, upper_case, m_zero_pad, m_use_separator, m_align, m_width.value(), m_precision.value(), m_fill, m_sign_mode);
     }
 };
 
