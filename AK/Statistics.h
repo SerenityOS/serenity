@@ -17,11 +17,18 @@ namespace AK {
 static constexpr int ODD_NAIVE_MEDIAN_CUTOFF = 200;
 static constexpr int EVEN_NAIVE_MEDIAN_CUTOFF = 350;
 
-template<Arithmetic T = float>
+template<Arithmetic T = float, typename ContainerType = Vector<T>>
 class Statistics {
 public:
     Statistics() = default;
     ~Statistics() = default;
+
+    explicit Statistics(ContainerType&& existing_container)
+        : m_values(forward<ContainerType>(existing_container))
+    {
+        for (auto const& value : m_values)
+            m_sum += value;
+    }
 
     void add(T const& value)
     {
@@ -107,11 +114,11 @@ public:
         return summation;
     }
 
-    Vector<T> const& values() const { return m_values; }
+    ContainerType const& values() const { return m_values; }
     size_t size() const { return m_values.size(); }
 
 private:
-    Vector<T> m_values;
+    ContainerType m_values;
     T m_sum {};
 };
 
