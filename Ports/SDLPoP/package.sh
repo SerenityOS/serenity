@@ -12,6 +12,7 @@ files=(
 launcher_name="Prince of Persia"
 launcher_category=Games
 launcher_command=/opt/PrinceOfPersia/prince
+icon_file='src/icon.ico'
 
 configure() {
     run cmake "${configopts[@]}" ./src
