@@ -24,8 +24,8 @@ private:
     int calculate_new_offset(int offset);
     int m_selection_offset { 0 };
     int m_buffer_size { 0 };
-    Vector<DeprecatedString> m_offset_type;
-    Vector<DeprecatedString> m_offset_from;
+    Vector<StringView> m_offset_type;
+    Vector<StringView> m_offset_from;
 
     RefPtr<GUI::TextEditor> m_text_editor;
     RefPtr<GUI::Button> m_go_button;
