@@ -33,7 +33,7 @@ public:
 };
 
 template<typename T, size_t inline_capacity>
-class MarkedVector
+class MarkedVector final
     : public MarkedVectorBase
     , public Vector<T, inline_capacity> {
 

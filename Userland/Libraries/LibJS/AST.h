@@ -156,7 +156,7 @@ public:
 };
 
 // 14.13 Labelled Statements, https://tc39.es/ecma262/#sec-labelled-statements
-class LabelledStatement : public Statement {
+class LabelledStatement final : public Statement {
 public:
     LabelledStatement(SourceRange source_range, DeprecatedFlyString label, NonnullRefPtr<Statement const> labelled_item)
         : Statement(move(source_range))
