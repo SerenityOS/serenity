@@ -23,14 +23,14 @@ ErrorOr<NonnullRefPtr<WizardPage>> WizardPage::create(StringView title, StringVi
 
 ErrorOr<void> WizardPage::build(String title, String subtitle)
 {
-    TRY(try_set_layout<VerticalBoxLayout>(Margins {}, 0));
+    set_layout<VerticalBoxLayout>(Margins {}, 0);
 
     auto header_widget = TRY(try_add<Widget>());
     header_widget->set_fill_with_background_color(true);
     header_widget->set_background_role(Gfx::ColorRole::Base);
     header_widget->set_fixed_height(58);
 
-    TRY(header_widget->try_set_layout<VerticalBoxLayout>(Margins { 15, 30, 0 }));
+    header_widget->set_layout<VerticalBoxLayout>(Margins { 15, 30, 0 });
     m_title_label = TRY(header_widget->try_add<Label>(move(title)));
     m_title_label->set_font(Gfx::FontDatabase::default_font().bold_variant());
     m_title_label->set_fixed_height(m_title_label->font().pixel_size_rounded_up() + 2);
@@ -45,7 +45,7 @@ ErrorOr<void> WizardPage::build(String title, String subtitle)
     separator->set_fixed_height(2);
 
     m_body_widget = TRY(try_add<Widget>());
-    TRY(m_body_widget->try_set_layout<VerticalBoxLayout>(20));
+    m_body_widget->set_layout<VerticalBoxLayout>(20);
 
     return {};
 }

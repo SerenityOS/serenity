@@ -58,11 +58,11 @@ ErrorOr<GUI::Widget*> EraseTool::get_properties_widget()
 {
     if (!m_properties_widget) {
         auto properties_widget = TRY(GUI::Widget::try_create());
-        (void)TRY(properties_widget->try_set_layout<GUI::VerticalBoxLayout>());
+        properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
         auto size_container = TRY(properties_widget->try_add<GUI::Widget>());
         size_container->set_fixed_height(20);
-        (void)TRY(size_container->try_set_layout<GUI::HorizontalBoxLayout>());
+        size_container->set_layout<GUI::HorizontalBoxLayout>();
 
         auto size_label = TRY(size_container->try_add<GUI::Label>("Size:"_string));
         size_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -80,7 +80,7 @@ ErrorOr<GUI::Widget*> EraseTool::get_properties_widget()
 
         auto hardness_container = TRY(properties_widget->try_add<GUI::Widget>());
         hardness_container->set_fixed_height(20);
-        (void)TRY(hardness_container->try_set_layout<GUI::HorizontalBoxLayout>());
+        hardness_container->set_layout<GUI::HorizontalBoxLayout>();
 
         auto hardness_label = TRY(hardness_container->try_add<GUI::Label>("Hardness:"_string));
         hardness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -97,7 +97,7 @@ ErrorOr<GUI::Widget*> EraseTool::get_properties_widget()
 
         auto secondary_color_container = TRY(properties_widget->try_add<GUI::Widget>());
         secondary_color_container->set_fixed_height(20);
-        (void)TRY(secondary_color_container->try_set_layout<GUI::HorizontalBoxLayout>());
+        secondary_color_container->set_layout<GUI::HorizontalBoxLayout>();
 
         auto use_secondary_color_checkbox = TRY(secondary_color_container->try_add<GUI::CheckBox>());
         use_secondary_color_checkbox->set_checked(m_use_secondary_color);
@@ -108,13 +108,13 @@ ErrorOr<GUI::Widget*> EraseTool::get_properties_widget()
 
         auto mode_container = TRY(properties_widget->try_add<GUI::Widget>());
         mode_container->set_fixed_height(46);
-        (void)TRY(mode_container->try_set_layout<GUI::HorizontalBoxLayout>());
+        mode_container->set_layout<GUI::HorizontalBoxLayout>();
         auto mode_label = TRY(mode_container->try_add<GUI::Label>("Draw Mode:"_string));
         mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         mode_label->set_fixed_size(80, 20);
 
         auto mode_radio_container = TRY(mode_container->try_add<GUI::Widget>());
-        (void)TRY(mode_radio_container->try_set_layout<GUI::VerticalBoxLayout>());
+        mode_radio_container->set_layout<GUI::VerticalBoxLayout>();
         auto pencil_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Pencil"_string));
         auto brush_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Brush"_string));
 

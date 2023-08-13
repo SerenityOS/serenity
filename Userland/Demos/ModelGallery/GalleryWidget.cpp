@@ -13,7 +13,7 @@ GalleryWidget::GalleryWidget()
     set_layout<GUI::VerticalBoxLayout>();
 
     auto& inner_widget = add<GUI::Widget>();
-    inner_widget.try_set_layout<GUI::VerticalBoxLayout>(4).release_value_but_fixme_should_propagate_errors();
+    inner_widget.set_layout<GUI::VerticalBoxLayout>(4);
 
     m_tab_widget = inner_widget.try_add<GUI::TabWidget>().release_value_but_fixme_should_propagate_errors();
     m_statusbar = add<GUI::Statusbar>();

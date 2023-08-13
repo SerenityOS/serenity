@@ -42,7 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto catdog_widget = TRY(CatDog::create());
     window->set_main_widget(catdog_widget);
-    TRY(catdog_widget->try_set_layout<GUI::VerticalBoxLayout>(GUI::Margins {}, 0));
+    catdog_widget->set_layout<GUI::VerticalBoxLayout>(GUI::Margins {}, 0);
 
     auto context_menu = TRY(GUI::Menu::try_create());
     TRY(context_menu->try_add_action(GUI::CommonActions::make_about_action("CatDog Demo", app_icon, window)));
@@ -62,7 +62,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     advice_window->set_alpha_hit_threshold(1.0f);
 
     auto advice_widget = TRY(advice_window->set_main_widget<SpeechBubble>(catdog_widget));
-    TRY(advice_widget->try_set_layout<GUI::VerticalBoxLayout>(GUI::Margins {}, 0));
+    advice_widget->set_layout<GUI::VerticalBoxLayout>(GUI::Margins {}, 0);
 
     auto advice_timer = TRY(Core::Timer::create_single_shot(15'000, [&] {
         window->move_to_front();

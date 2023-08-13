@@ -36,7 +36,7 @@ MainWidget::MainWidget(TrackManager& track_manager, AudioPlayerLoop& loop)
 
 ErrorOr<void> MainWidget::initialize()
 {
-    TRY(try_set_layout<GUI::VerticalBoxLayout>(2, 2));
+    set_layout<GUI::VerticalBoxLayout>(2, 2);
     set_fill_with_background_color(true);
 
     m_wave_widget = TRY(try_add<WaveWidget>(m_track_manager));
@@ -52,7 +52,7 @@ ErrorOr<void> MainWidget::initialize()
     m_player_widget = TRY(try_add<PlayerWidget>(m_track_manager, *this, m_audio_loop));
 
     m_keys_and_knobs_container = TRY(try_add<GUI::Widget>());
-    TRY(m_keys_and_knobs_container->try_set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 2));
+    m_keys_and_knobs_container->set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 2);
     m_keys_and_knobs_container->set_fixed_height(130);
     m_keys_and_knobs_container->set_fill_with_background_color(true);
 
@@ -60,7 +60,7 @@ ErrorOr<void> MainWidget::initialize()
 
     m_octave_container = TRY(m_keys_and_knobs_container->try_add<GUI::Widget>());
     m_octave_container->set_preferred_width(GUI::SpecialDimension::Fit);
-    TRY(m_octave_container->try_set_layout<GUI::VerticalBoxLayout>());
+    m_octave_container->set_layout<GUI::VerticalBoxLayout>();
     auto octave_label = TRY(m_octave_container->try_add<GUI::Label>("Octave"_string));
     octave_label->set_preferred_width(GUI::SpecialDimension::Fit);
     m_octave_value = TRY(m_octave_container->try_add<GUI::Label>(TRY(String::number(m_track_manager.keyboard()->virtual_keyboard_octave()))));

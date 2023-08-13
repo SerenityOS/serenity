@@ -130,11 +130,11 @@ ErrorOr<GUI::Widget*> EllipseTool::get_properties_widget()
 {
     if (!m_properties_widget) {
         auto properties_widget = TRY(GUI::Widget::try_create());
-        (void)TRY(properties_widget->try_set_layout<GUI::VerticalBoxLayout>());
+        properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
         auto thickness_container = TRY(properties_widget->try_add<GUI::Widget>());
         thickness_container->set_fixed_height(20);
-        (void)TRY(thickness_container->try_set_layout<GUI::HorizontalBoxLayout>());
+        thickness_container->set_layout<GUI::HorizontalBoxLayout>();
 
         auto thickness_label = TRY(thickness_container->try_add<GUI::Label>("Thickness:"_string));
         thickness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -151,12 +151,12 @@ ErrorOr<GUI::Widget*> EllipseTool::get_properties_widget()
 
         auto mode_container = TRY(properties_widget->try_add<GUI::Widget>());
         mode_container->set_fixed_height(70);
-        (void)TRY(mode_container->try_set_layout<GUI::HorizontalBoxLayout>());
+        mode_container->set_layout<GUI::HorizontalBoxLayout>();
         auto mode_label = TRY(mode_container->try_add<GUI::Label>("Mode:"_string));
         mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
         auto mode_radio_container = TRY(mode_container->try_add<GUI::Widget>());
-        (void)TRY(mode_radio_container->try_set_layout<GUI::VerticalBoxLayout>());
+        mode_radio_container->set_layout<GUI::VerticalBoxLayout>();
         auto outline_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Outline"_string));
         auto fill_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Fill"_string));
         auto aa_enable_checkbox = TRY(mode_radio_container->try_add<GUI::CheckBox>("Anti-alias"_string));
@@ -178,7 +178,7 @@ ErrorOr<GUI::Widget*> EllipseTool::get_properties_widget()
 
         auto aspect_container = TRY(properties_widget->try_add<GUI::Widget>());
         aspect_container->set_fixed_height(20);
-        (void)TRY(aspect_container->try_set_layout<GUI::HorizontalBoxLayout>());
+        aspect_container->set_layout<GUI::HorizontalBoxLayout>();
 
         auto aspect_label = TRY(aspect_container->try_add<GUI::Label>("Aspect Ratio:"_string));
         aspect_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);

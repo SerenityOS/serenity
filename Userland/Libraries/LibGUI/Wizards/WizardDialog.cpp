@@ -27,17 +27,17 @@ ErrorOr<void> WizardDialog::build()
 {
     auto main_widget = TRY(set_main_widget<Widget>());
     main_widget->set_fill_with_background_color(true);
-    TRY(main_widget->try_set_layout<VerticalBoxLayout>(Margins {}, 0));
+    main_widget->set_layout<VerticalBoxLayout>(Margins {}, 0);
 
     m_page_container_widget = TRY(main_widget->try_add<Widget>());
     m_page_container_widget->set_fixed_size(500, 315);
-    TRY(m_page_container_widget->try_set_layout<VerticalBoxLayout>());
+    m_page_container_widget->set_layout<VerticalBoxLayout>();
 
     auto separator = TRY(main_widget->try_add<SeparatorWidget>(Gfx::Orientation::Horizontal));
     separator->set_fixed_height(2);
 
     auto nav_container_widget = TRY(main_widget->try_add<Widget>());
-    TRY(nav_container_widget->try_set_layout<HorizontalBoxLayout>(Margins { 0, 10 }, 0));
+    nav_container_widget->set_layout<HorizontalBoxLayout>(Margins { 0, 10 }, 0);
     nav_container_widget->set_fixed_height(42);
     TRY(nav_container_widget->add_spacer());
 

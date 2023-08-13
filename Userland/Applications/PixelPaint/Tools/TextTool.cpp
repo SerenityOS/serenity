@@ -109,7 +109,7 @@ ErrorOr<GUI::Widget*> TextTool::get_properties_widget()
         return m_properties_widget.ptr();
 
     auto properties_widget = TRY(GUI::Widget::try_create());
-    (void)TRY(properties_widget->try_set_layout<GUI::VerticalBoxLayout>());
+    properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
     auto font_header = TRY(properties_widget->try_add<GUI::Label>("Current Font:"_string));
     font_header->set_text_alignment(Gfx::TextAlignment::CenterLeft);

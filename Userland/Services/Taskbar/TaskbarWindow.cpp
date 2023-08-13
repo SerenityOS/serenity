@@ -73,13 +73,13 @@ TaskbarWindow::TaskbarWindow()
 ErrorOr<void> TaskbarWindow::populate_taskbar()
 {
     auto main_widget = TRY(set_main_widget<TaskbarWidget>());
-    TRY(main_widget->try_set_layout<GUI::HorizontalBoxLayout>(GUI::Margins { 2, 3, 0, 3 }));
+    main_widget->set_layout<GUI::HorizontalBoxLayout>(GUI::Margins { 2, 3, 0, 3 });
 
     m_quick_launch = TRY(Taskbar::QuickLaunchWidget::create());
     TRY(main_widget->try_add_child(*m_quick_launch));
 
     m_task_button_container = TRY(main_widget->try_add<GUI::Widget>());
-    TRY(m_task_button_container->try_set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 3));
+    m_task_button_container->set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 3);
 
     m_default_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png"sv));
 

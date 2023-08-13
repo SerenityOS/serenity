@@ -41,7 +41,7 @@ PlayerWidget::PlayerWidget(TrackManager& manager, MainWidget& main_widget, Audio
 
 ErrorOr<void> PlayerWidget::initialize()
 {
-    TRY(try_set_layout<GUI::HorizontalBoxLayout>());
+    set_layout<GUI::HorizontalBoxLayout>();
     set_fill_with_background_color(true);
     TRY(m_track_number_choices.try_append("1"));
 

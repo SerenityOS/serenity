@@ -466,12 +466,12 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
 
     auto properties_list = TRY(GUI::Widget::try_create());
     scrollable_container->set_widget(properties_list);
-    TRY(properties_list->try_set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 8 }, 12));
+    properties_list->set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 8 }, 12);
 
     for (auto const& group : property_tab.property_groups) {
         NonnullRefPtr<GUI::GroupBox> group_box = TRY(properties_list->try_add<GUI::GroupBox>(group.title));
         // 1px less on the left makes the text line up with the group title.
-        TRY(group_box->try_set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 8, 8, 8, 7 }, 12));
+        group_box->set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 8, 8, 8, 7 }, 12);
         group_box->set_preferred_height(GUI::SpecialDimension::Fit);
 
         for (auto const& property : group.properties) {

@@ -52,7 +52,7 @@ public:
 ErrorOr<NonnullRefPtr<ProcessMemoryMapWidget>> ProcessMemoryMapWidget::try_create()
 {
     auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ProcessMemoryMapWidget()));
-    TRY(widget->try_set_layout<GUI::VerticalBoxLayout>(4));
+    widget->set_layout<GUI::VerticalBoxLayout>(4);
     widget->m_table_view = TRY(widget->try_add<GUI::TableView>());
 
     Vector<GUI::JsonArrayModel::FieldSpec> pid_vm_fields;

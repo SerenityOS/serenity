@@ -27,11 +27,11 @@ ErrorOr<GUI::Widget*> ZoomTool::get_properties_widget()
 {
     if (!m_properties_widget) {
         auto properties_widget = TRY(GUI::Widget::try_create());
-        (void)TRY(properties_widget->try_set_layout<GUI::VerticalBoxLayout>());
+        properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
         auto sensitivity_container = TRY(properties_widget->try_add<GUI::Widget>());
         sensitivity_container->set_fixed_height(20);
-        (void)TRY(sensitivity_container->try_set_layout<GUI::HorizontalBoxLayout>());
+        sensitivity_container->set_layout<GUI::HorizontalBoxLayout>();
 
         auto sensitivity_label = TRY(sensitivity_container->try_add<GUI::Label>("Sensitivity:"_string));
         sensitivity_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);

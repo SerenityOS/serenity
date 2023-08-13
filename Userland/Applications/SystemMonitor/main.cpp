@@ -578,7 +578,7 @@ ErrorOr<void> build_performance_tab(GUI::Widget& graphs_container)
     Vector<SystemMonitor::GraphWidget&> cpu_graphs;
     for (auto row = 0u; row < cpu_graph_rows; ++row) {
         auto cpu_graph_row = TRY(cpu_graph_group_box.try_add<GUI::Widget>());
-        TRY(cpu_graph_row->try_set_layout<GUI::HorizontalBoxLayout>(6));
+        cpu_graph_row->set_layout<GUI::HorizontalBoxLayout>(6);
         cpu_graph_row->set_fixed_height(108);
         for (auto i = 0u; i < cpu_graphs_per_row; ++i) {
             auto cpu_graph = TRY(cpu_graph_row->try_add<SystemMonitor::GraphWidget>());

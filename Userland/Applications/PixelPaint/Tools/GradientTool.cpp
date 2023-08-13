@@ -202,11 +202,11 @@ ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
 {
     if (!m_properties_widget) {
         auto properties_widget = TRY(GUI::Widget::try_create());
-        (void)TRY(properties_widget->try_set_layout<GUI::VerticalBoxLayout>());
+        properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
         auto mode_container = TRY(properties_widget->try_add<GUI::Widget>());
         mode_container->set_fixed_height(20);
-        (void)TRY(mode_container->try_set_layout<GUI::HorizontalBoxLayout>());
+        mode_container->set_layout<GUI::HorizontalBoxLayout>();
         auto mode_label = TRY(mode_container->try_add<GUI::Label>("Gradient Type:"_string));
         mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         mode_label->set_fixed_size(80, 20);
@@ -235,7 +235,7 @@ ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
 
         auto opacity_container = TRY(properties_widget->try_add<GUI::Widget>());
         opacity_container->set_fixed_height(20);
-        (void)TRY(opacity_container->try_set_layout<GUI::HorizontalBoxLayout>());
+        opacity_container->set_layout<GUI::HorizontalBoxLayout>();
 
         auto opacity_label = TRY(opacity_container->try_add<GUI::Label>("Opacity:"_string));
         opacity_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -253,7 +253,7 @@ ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
         set_primary_slider(opacity_slider);
 
         auto hardness_container = TRY(properties_widget->try_add<GUI::Widget>());
-        (void)TRY(hardness_container->try_set_layout<GUI::HorizontalBoxLayout>());
+        hardness_container->set_layout<GUI::HorizontalBoxLayout>();
         hardness_container->set_fixed_height(20);
         hardness_container->set_visible(m_mode == GradientMode::Radial);
 
@@ -294,7 +294,7 @@ ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
 
         auto button_container = TRY(properties_widget->try_add<GUI::Widget>());
         button_container->set_fixed_height(22);
-        TRY(button_container->try_set_layout<GUI::HorizontalBoxLayout>());
+        button_container->set_layout<GUI::HorizontalBoxLayout>();
         button_container->add_spacer().release_value_but_fixme_should_propagate_errors();
 
         auto apply_button = TRY(button_container->try_add<GUI::DialogButton>("Apply"_string));
