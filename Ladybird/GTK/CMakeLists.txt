@@ -45,13 +45,14 @@ function(add_blueprint source_file ui_file)
             compile
             --output "${CMAKE_CURRENT_BINARY_DIR}/${ui_file}"
             "${CMAKE_CURRENT_SOURCE_DIR}/${source_file}"
-        DEPENDS "${source_file}"
+        DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${source_file}"
     )
     list(APPEND RESOURCE_FILES "${ui_file}")
     set(RESOURCE_FILES ${RESOURCE_FILES} PARENT_SCOPE)
 endfunction()
 
 add_blueprint(window.blp window.ui)
+add_blueprint(shortcuts-dialog.blp shortcuts-dialog.ui)
 
 set(SOURCE_GRESOURCE_FILE "${CMAKE_CURRENT_SOURCE_DIR}/gresources.xml")
 set(GENERATED_GRESOURCE_FILE "${CMAKE_CURRENT_BINARY_DIR}/ladybird-resources.c")

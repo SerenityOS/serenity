@@ -1,0 +1,84 @@
+using Gtk 4.0;
+
+ShortcutsWindow shortcuts_dialog {
+  modal: true;
+
+  ShortcutsSection {
+    ShortcutsGroup {
+      title: _("General");
+
+      ShortcutsShortcut {
+        title: _("New window");
+        accelerator: "<Primary>N";
+      }
+      ShortcutsShortcut {
+        title: _("Open file");
+        accelerator: "<Primary>O";
+      }
+      ShortcutsShortcut {
+        title: _("Show shortcuts");
+        accelerator: "<Primary>question";
+      }
+      ShortcutsShortcut	{
+        title: _("Quit");
+        accelerator: "<Primary>Q";
+      }
+    }
+
+    ShortcutsGroup {
+      title: _("Navigation");
+
+      ShortcutsShortcut {
+        title: _("Navigate back");
+        accelerator: "<alt>Left";
+      }
+      ShortcutsShortcut {
+        title: _("Navigate forward");
+        accelerator: "<alt>Right";
+      }
+      ShortcutsShortcut {
+        title: _("Reload current page");
+        accelerator: "<Primary>R F5";
+      }
+    }
+
+    ShortcutsGroup {
+      title: _("Tabs");
+
+      ShortcutsShortcut {
+        title: _("New tab");
+        accelerator: "<Primary>T";
+      }
+      ShortcutsShortcut {
+        title: _("Close current tab");
+        accelerator: "<Primary>W";
+      }
+      ShortcutsShortcut {
+        title: _("Next tab");
+        accelerator: "<Primary>Tab";
+      }
+      ShortcutsShortcut {
+        title: _("Previous tab");
+        accelerator: "<Primary><shift>Tab";
+      }
+    }
+
+    ShortcutsGroup {
+      title: _("Zoom");
+
+      ShortcutsShortcut {
+        title: _("Zoom in");
+        // Actually <Primary>equals
+        accelerator: "<Primary>plus";
+      }
+      ShortcutsShortcut {
+        title: _("Zoom out");
+        accelerator: "<Primary>minus";
+      }
+      ShortcutsShortcut {
+        title: _("Reset zoom");
+        accelerator: "<Primary>0";
+      }
+    }
+  }
+}

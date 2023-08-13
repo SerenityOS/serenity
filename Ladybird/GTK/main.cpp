@@ -13,9 +13,11 @@ static void open_new_window([[maybe_unused]] GSimpleAction* action, [[maybe_unus
 static void show_shortcuts([[maybe_unused]] GSimpleAction* action, [[maybe_unused]] GVariant* state, void* user_data)
 {
     GtkApplication* app = GTK_APPLICATION(user_data);
-    GtkWidget* dialog = adw_message_dialog_new(gtk_application_get_active_window(app), "TODO", "Somebody should implement the Keyboard Shortcuts window :^)");
-    adw_message_dialog_add_response(ADW_MESSAGE_DIALOG(dialog), "i-see", "I see");
+    GtkBuilder* builder = gtk_builder_new_from_resource("/org/serenityos/ladybird-gtk4/shortcuts-dialog.ui");
+    GtkWindow* dialog = GTK_WINDOW(gtk_builder_get_object(builder, "shortcuts_dialog"));
+    gtk_window_set_transient_for(dialog, gtk_application_get_active_window(app));
     gtk_window_present(GTK_WINDOW(dialog));
+    g_object_unref(builder);
 }
 
 static void show_about([[maybe_unused]] GSimpleAction* action, [[maybe_unused]] GVariant* state, void* user_data)
