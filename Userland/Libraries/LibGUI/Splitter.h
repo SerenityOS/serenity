@@ -35,8 +35,8 @@ protected:
     virtual void did_layout() override;
     virtual void custom_layout() override;
 
-    OpportunisticResizee opportunisitic_resizee() const { return m_opportunistic_resizee; }
-    void set_opportunisitic_resizee(OpportunisticResizee resizee) { m_opportunistic_resizee = resizee; }
+    OpportunisticResizee opportunistic_resizee() const { return m_opportunistic_resizee; }
+    void set_opportunistic_resizee(OpportunisticResizee resizee) { m_opportunistic_resizee = resizee; }
 
 private:
     void override_cursor(bool do_override);
