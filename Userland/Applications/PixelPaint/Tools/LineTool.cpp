@@ -123,11 +123,11 @@ ErrorOr<GUI::Widget*> LineTool::get_properties_widget()
 {
     if (!m_properties_widget) {
         auto properties_widget = TRY(GUI::Widget::try_create());
-        (void)TRY(properties_widget->try_set_layout<GUI::VerticalBoxLayout>());
+        properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
         auto thickness_container = TRY(properties_widget->try_add<GUI::Widget>());
         thickness_container->set_fixed_height(20);
-        (void)TRY(thickness_container->try_set_layout<GUI::HorizontalBoxLayout>());
+        thickness_container->set_layout<GUI::HorizontalBoxLayout>();
 
         auto thickness_label = TRY(thickness_container->try_add<GUI::Label>("Thickness:"_string));
         thickness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -144,7 +144,7 @@ ErrorOr<GUI::Widget*> LineTool::get_properties_widget()
 
         auto mode_container = TRY(properties_widget->try_add<GUI::Widget>());
         mode_container->set_fixed_height(20);
-        (void)TRY(mode_container->try_set_layout<GUI::HorizontalBoxLayout>());
+        mode_container->set_layout<GUI::HorizontalBoxLayout>();
 
         auto mode_label = TRY(mode_container->try_add<GUI::Label>("Mode:"_string));
         mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);

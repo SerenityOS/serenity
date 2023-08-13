@@ -237,7 +237,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& tab_widget = *widget->find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
 
     auto backtrace_tab = TRY(tab_widget.try_add_tab<GUI::Widget>("Backtrace"_string));
-    TRY(backtrace_tab->try_set_layout<GUI::VerticalBoxLayout>(4));
+    backtrace_tab->set_layout<GUI::VerticalBoxLayout>(4);
 
     auto backtrace_label = TRY(backtrace_tab->try_add<GUI::Label>("A backtrace for each thread alive during the crash is listed below:"_string));
     backtrace_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -257,7 +257,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     cpu_registers_tab_widget->set_tab_position(GUI::TabWidget::TabPosition::Bottom);
 
     auto environment_tab = TRY(tab_widget.try_add_tab<GUI::Widget>("Environment"_string));
-    TRY(environment_tab->try_set_layout<GUI::VerticalBoxLayout>(4));
+    environment_tab->set_layout<GUI::VerticalBoxLayout>(4);
 
     auto environment_text_editor = TRY(environment_tab->try_add<GUI::TextEditor>());
     environment_text_editor->set_text(DeprecatedString::join('\n', environment));
@@ -266,7 +266,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     environment_text_editor->set_should_hide_unnecessary_scrollbars(true);
 
     auto memory_regions_tab = TRY(tab_widget.try_add_tab<GUI::Widget>("Memory Regions"_string));
-    TRY(memory_regions_tab->try_set_layout<GUI::VerticalBoxLayout>(4));
+    memory_regions_tab->set_layout<GUI::VerticalBoxLayout>(4);
 
     auto memory_regions_text_editor = TRY(memory_regions_tab->try_add<GUI::TextEditor>());
     memory_regions_text_editor->set_text(DeprecatedString::join('\n', memory_regions));
@@ -331,7 +331,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         [&](auto results) -> ErrorOr<void> {
             for (auto& backtrace : results.thread_backtraces) {
                 auto container = TRY(backtrace_tab_widget->try_add_tab<GUI::Widget>(TRY(String::from_deprecated_string(backtrace.title))));
-                TRY(container->template try_set_layout<GUI::VerticalBoxLayout>(4));
+                container->template set_layout<GUI::VerticalBoxLayout>(4);
                 auto backtrace_text_editor = TRY(container->template try_add<GUI::TextEditor>());
                 backtrace_text_editor->set_text(backtrace.text);
                 backtrace_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);
@@ -342,7 +342,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             for (auto& cpu_registers : results.thread_cpu_registers) {
                 auto container = TRY(cpu_registers_tab_widget->try_add_tab<GUI::Widget>(TRY(String::from_deprecated_string(cpu_registers.title))));
-                TRY(container->template try_set_layout<GUI::VerticalBoxLayout>(4));
+                container->template set_layout<GUI::VerticalBoxLayout>(4);
                 auto cpu_registers_text_editor = TRY(container->template try_add<GUI::TextEditor>());
                 cpu_registers_text_editor->set_text(cpu_registers.text);
                 cpu_registers_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);

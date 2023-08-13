@@ -24,13 +24,13 @@ ErrorOr<void> CoverWizardPage::build(String title, String subtitle)
 {
     set_fill_with_background_color(true);
     set_background_role(Gfx::ColorRole::Base);
-    TRY(try_set_layout<HorizontalBoxLayout>());
+    set_layout<HorizontalBoxLayout>();
     m_banner_image_widget = TRY(try_add<ImageWidget>());
     m_banner_image_widget->set_fixed_size(160, 315);
     m_banner_image_widget->load_from_file("/res/graphics/wizard-banner-simple.png"sv);
 
     m_content_widget = TRY(try_add<Widget>());
-    TRY(m_content_widget->try_set_layout<VerticalBoxLayout>(20));
+    m_content_widget->set_layout<VerticalBoxLayout>(20);
 
     m_header_label = TRY(m_content_widget->try_add<Label>(move(title)));
     m_header_label->set_font(Gfx::FontDatabase::the().get("Pebbleton", 14, 700, Gfx::FontWidth::Normal, 0));

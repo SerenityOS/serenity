@@ -388,7 +388,7 @@ ErrorOr<int> run_in_desktop_mode()
     window->set_icon(desktop_icon);
 
     auto desktop_widget = TRY(window->set_main_widget<FileManager::DesktopWidget>());
-    TRY(desktop_widget->try_set_layout<GUI::VerticalBoxLayout>());
+    desktop_widget->set_layout<GUI::VerticalBoxLayout>();
 
     auto directory_view = TRY(desktop_widget->try_add<DirectoryView>(DirectoryView::Mode::Desktop));
     directory_view->set_name("directory_view");

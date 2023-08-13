@@ -27,7 +27,7 @@ ErrorOr<NonnullRefPtr<PathBreadcrumbbar>> PathBreadcrumbbar::try_create()
     auto breadcrumbbar = TRY(Breadcrumbbar::try_create());
 
     auto path_breadcrumbbar = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PathBreadcrumbbar(*location_text_box, *breadcrumbbar)));
-    (void)TRY(path_breadcrumbbar->try_set_layout<GUI::VerticalBoxLayout>());
+    path_breadcrumbbar->set_layout<GUI::VerticalBoxLayout>();
     TRY(path_breadcrumbbar->try_add_child(location_text_box));
     TRY(path_breadcrumbbar->try_add_child(breadcrumbbar));
 

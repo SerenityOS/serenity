@@ -144,11 +144,11 @@ ErrorOr<GUI::Widget*> RectangleTool::get_properties_widget()
 {
     if (!m_properties_widget) {
         auto properties_widget = TRY(GUI::Widget::try_create());
-        (void)TRY(properties_widget->try_set_layout<GUI::VerticalBoxLayout>());
+        properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
         auto thickness_or_radius_container = TRY(properties_widget->try_add<GUI::Widget>());
         thickness_or_radius_container->set_fixed_height(20);
-        (void)TRY(thickness_or_radius_container->try_set_layout<GUI::HorizontalBoxLayout>());
+        thickness_or_radius_container->set_layout<GUI::HorizontalBoxLayout>();
 
         auto thickness_or_radius_label = TRY(thickness_or_radius_container->try_add<GUI::Label>());
         thickness_or_radius_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -180,13 +180,13 @@ ErrorOr<GUI::Widget*> RectangleTool::get_properties_widget()
 
         auto mode_container = TRY(properties_widget->try_add<GUI::Widget>());
         mode_container->set_fixed_height(90);
-        (void)TRY(mode_container->try_set_layout<GUI::HorizontalBoxLayout>());
+        mode_container->set_layout<GUI::HorizontalBoxLayout>();
         auto mode_label = TRY(mode_container->try_add<GUI::Label>("Mode:"_string));
         mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         mode_label->set_fixed_size(30, 20);
 
         auto mode_radio_container = TRY(mode_container->try_add<GUI::Widget>());
-        (void)TRY(mode_radio_container->try_set_layout<GUI::VerticalBoxLayout>());
+        mode_radio_container->set_layout<GUI::VerticalBoxLayout>();
         auto outline_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Outline"_string));
         auto fill_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Fill"_string));
         auto gradient_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Gradient"_string));
@@ -213,7 +213,7 @@ ErrorOr<GUI::Widget*> RectangleTool::get_properties_widget()
         outline_mode_radio->set_checked(true);
 
         auto mode_extras_container = TRY(mode_container->try_add<GUI::Widget>());
-        (void)TRY(mode_extras_container->try_set_layout<GUI::VerticalBoxLayout>());
+        mode_extras_container->set_layout<GUI::VerticalBoxLayout>();
 
         auto aa_enable_checkbox = TRY(mode_extras_container->try_add<GUI::CheckBox>("Anti-alias"_string));
         aa_enable_checkbox->on_checked = [this](bool checked) {
@@ -222,7 +222,7 @@ ErrorOr<GUI::Widget*> RectangleTool::get_properties_widget()
         aa_enable_checkbox->set_checked(true);
 
         auto aspect_container = TRY(mode_extras_container->try_add<GUI::Widget>());
-        (void)TRY(aspect_container->try_set_layout<GUI::VerticalBoxLayout>());
+        aspect_container->set_layout<GUI::VerticalBoxLayout>();
         aspect_container->set_fixed_width(75);
 
         auto aspect_label = TRY(aspect_container->try_add<GUI::Label>("Aspect Ratio:"_string));
@@ -231,7 +231,7 @@ ErrorOr<GUI::Widget*> RectangleTool::get_properties_widget()
 
         auto aspect_fields_container = TRY(aspect_container->try_add<GUI::Widget>());
         aspect_fields_container->set_fixed_width(75);
-        (void)TRY(aspect_fields_container->try_set_layout<GUI::HorizontalBoxLayout>());
+        aspect_fields_container->set_layout<GUI::HorizontalBoxLayout>();
 
         m_aspect_w_textbox = TRY(aspect_fields_container->try_add<GUI::TextBox>());
         m_aspect_w_textbox->set_fixed_height(20);

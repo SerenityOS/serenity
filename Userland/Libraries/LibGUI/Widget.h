@@ -81,14 +81,6 @@ public:
     void set_layout(NonnullRefPtr<Layout>);
 
     template<class T, class... Args>
-    ErrorOr<void> try_set_layout(Args&&... args)
-    {
-        auto layout = TRY(T::try_create(forward<Args>(args)...));
-        set_layout(*layout);
-        return {};
-    }
-
-    template<class T, class... Args>
     inline void set_layout(Args&&... args)
     {
         auto layout = T::construct(forward<Args>(args)...);

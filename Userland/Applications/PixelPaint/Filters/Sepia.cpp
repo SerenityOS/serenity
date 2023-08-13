@@ -21,7 +21,7 @@ ErrorOr<RefPtr<GUI::Widget>> Sepia::get_settings_widget()
 {
     if (!m_settings_widget) {
         auto settings_widget = TRY(GUI::Widget::try_create());
-        TRY(settings_widget->try_set_layout<GUI::VerticalBoxLayout>());
+        settings_widget->set_layout<GUI::VerticalBoxLayout>();
 
         auto name_label = TRY(settings_widget->try_add<GUI::Label>("Sepia Filter"_string));
         name_label->set_font_weight(Gfx::FontWeight::Bold);
@@ -30,7 +30,7 @@ ErrorOr<RefPtr<GUI::Widget>> Sepia::get_settings_widget()
 
         auto amount_container = TRY(settings_widget->try_add<GUI::Widget>());
         amount_container->set_fixed_height(20);
-        TRY(amount_container->try_set_layout<GUI::HorizontalBoxLayout>(GUI::Margins { 4, 0, 4, 0 }));
+        amount_container->set_layout<GUI::HorizontalBoxLayout>(GUI::Margins { 4, 0, 4, 0 });
 
         auto amount_label = TRY(amount_container->try_add<GUI::Label>("Amount:"_string));
         amount_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);

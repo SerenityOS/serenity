@@ -38,7 +38,7 @@ ErrorOr<RefPtr<GUI::Widget>> Bloom::get_settings_widget()
 {
     if (!m_settings_widget) {
         auto settings_widget = TRY(GUI::Widget::try_create());
-        TRY(settings_widget->try_set_layout<GUI::VerticalBoxLayout>());
+        settings_widget->set_layout<GUI::VerticalBoxLayout>();
 
         auto name_label = TRY(settings_widget->try_add<GUI::Label>("Bloom Filter"_string));
         name_label->set_font_weight(Gfx::FontWeight::Bold);
@@ -47,7 +47,7 @@ ErrorOr<RefPtr<GUI::Widget>> Bloom::get_settings_widget()
 
         auto luma_lower_container = TRY(settings_widget->try_add<GUI::Widget>());
         luma_lower_container->set_fixed_height(50);
-        TRY(luma_lower_container->try_set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 4, 0, 4, 0 }));
+        luma_lower_container->set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 4, 0, 4, 0 });
 
         auto luma_lower_label = TRY(luma_lower_container->try_add<GUI::Label>("Luma lower bound:"_string));
         luma_lower_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -63,7 +63,7 @@ ErrorOr<RefPtr<GUI::Widget>> Bloom::get_settings_widget()
 
         auto radius_container = TRY(settings_widget->try_add<GUI::Widget>());
         radius_container->set_fixed_height(50);
-        TRY(radius_container->try_set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 4, 0, 4, 0 }));
+        radius_container->set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 4, 0, 4, 0 });
 
         auto radius_label = TRY(radius_container->try_add<GUI::Label>("Blur Radius:"_string));
         radius_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
