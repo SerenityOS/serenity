@@ -10,7 +10,7 @@ accessible as <SDL2/...>.
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/src/types.h b/src/types.h
-index 1f696d1..b5ede07 100644
+index 1f696d17ee20a1623fbd4501f0d9afb9aec99f93..b5ede077a4686911912463310b425fe431bd0138 100644
 --- a/src/types.h
 +++ b/src/types.h
 @@ -31,8 +31,8 @@ The authors of this program may be contacted at https://forum.princed.org
