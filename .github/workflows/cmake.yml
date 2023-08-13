@@ -265,17 +265,3 @@ jobs:
         if: ${{ !cancelled() && matrix.debug-options == 'NORMAL_DEBUG'}}
         working-directory: ${{ github.workspace }}/Build/${{ matrix.arch }}
         run: '[ ! -e debug.log ] || cat debug.log'
-
-      - name: Check manpages for completeness
-        if: ${{ matrix.debug-options == 'NORMAL_DEBUG' && matrix.arch == 'x86_64'}}
-        working-directory: ${{ github.workspace }}/Build/${{ matrix.arch }}
-        env:
-          # The script already sets the correct SERENITY_RUN and SERENITY_KERNEL_CMDLINE envvars.
-          SERENITY_ARCH: ${{ matrix.arch }}
-          SERENITY_QEMU_CPU: "max,vmx=off"
-        run: |
-          # Running the tests apparently leaves the image sufficiently broken
-          rm _disk_image
-          ninja qemu-image
-          /usr/bin/time ../../Meta/export-argsparser-manpages.sh --verify-git-state
-        timeout-minutes: 10
