@@ -1,7 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=ja2
-version=0.15.x
-depends=("SDL2")
+port='ja2'
+version='0.15.x'
+depends=(
+    'SDL2'
+)
 workdir="ja2-stracciatella-${version}"
 files=(
     "https://github.com/ja2-stracciatella/ja2-stracciatella/archive/refs/heads/${version}.zip 178375de4859d16a76276c781455bf48d3fa862841387c8aa6cfa4162f4f0ca4"
@@ -9,9 +11,9 @@ files=(
 makeopts+=(
     'SERENITY=1'
 )
-launcher_name="Jagged Alliance 2"
-launcher_category=Games
-launcher_command="/opt/ja2/ja2"
+launcher_name='Jagged Alliance 2'
+launcher_category='Games'
+launcher_command='/opt/ja2/ja2'
 icon_file='Build/Res/jagged3.ico'
 
 install() {
