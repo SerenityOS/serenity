@@ -21,7 +21,7 @@ namespace GUI {
 Splitter::Splitter(Orientation orientation)
     : m_orientation(orientation)
 {
-    REGISTER_ENUM_PROPERTY("opportunistic_resizee", opportunisitic_resizee, set_opportunisitic_resizee, OpportunisticResizee,
+    REGISTER_ENUM_PROPERTY("opportunistic_resizee", opportunistic_resizee, set_opportunistic_resizee, OpportunisticResizee,
         { OpportunisticResizee::First, "First" },
         { OpportunisticResizee::Second, "Second" });
 
@@ -216,21 +216,21 @@ void Splitter::mousemove_event(MouseEvent& event)
     auto new_second_resizee_size = clamp(m_second_resizee_start_size.primary_size_for_orientation(m_orientation) - delta, 0, m_second_resizee_max_size);
 
     if (m_orientation == Orientation::Horizontal) {
-        if (opportunisitic_resizee() == OpportunisticResizee::First) {
+        if (opportunistic_resizee() == OpportunisticResizee::First) {
             m_first_resizee->set_preferred_width(SpecialDimension::OpportunisticGrow);
             m_second_resizee->set_preferred_width(new_second_resizee_size);
         } else {
-            VERIFY(opportunisitic_resizee() == OpportunisticResizee::Second);
+            VERIFY(opportunistic_resizee() == OpportunisticResizee::Second);
             m_second_resizee->set_preferred_width(SpecialDimension::OpportunisticGrow);
             m_first_resizee->set_preferred_width(new_first_resizee_size);
         }
     } else {
-        if (opportunisitic_resizee() == OpportunisticResizee::First) {
+        if (opportunistic_resizee() == OpportunisticResizee::First) {
             m_first_resizee->set_preferred_height(SpecialDimension::OpportunisticGrow);
             m_second_resizee->set_preferred_height(new_second_resizee_size);
 
         } else {
-            VERIFY(opportunisitic_resizee() == OpportunisticResizee::Second);
+            VERIFY(opportunistic_resizee() == OpportunisticResizee::Second);
             m_second_resizee->set_preferred_height(SpecialDimension::OpportunisticGrow);
             m_first_resizee->set_preferred_height(new_first_resizee_size);
         }
