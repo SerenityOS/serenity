@@ -40,10 +40,11 @@ ErrorOr<void> FlacWriter::finalize()
     if (m_state == WriteState::FullyFinalized)
         return Error::from_string_view("File is already finalized"sv);
 
-    // TODO: Write missing sample data instead of discarding it.
-
     if (m_state == WriteState::HeaderUnwritten)
         TRY(finalize_header_format());
+
+    if (!m_sample_buffer.is_empty())
+        TRY(write_frame());
 
     {
         // 1 byte metadata block header + 3 bytes size + 2*2 bytes min/max block size
