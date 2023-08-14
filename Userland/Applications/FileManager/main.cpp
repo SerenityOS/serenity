@@ -362,11 +362,11 @@ bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView c
 
     if (current_file_launch_handlers.size() > 1) {
         added_open_menu_items = true;
-        auto& file_open_with_menu = menu->add_submenu("Open with"_string);
+        auto file_open_with_menu = menu->add_submenu("Open with"_string);
         for (auto& handler : current_file_launch_handlers) {
             if (handler == default_file_handler)
                 continue;
-            file_open_with_menu.add_action(handler->create_launch_action([&, full_path = move(full_path)](auto& launcher_handler) {
+            file_open_with_menu->add_action(handler->create_launch_action([&, full_path = move(full_path)](auto& launcher_handler) {
                 directory_view.launch(URL::create_with_file_scheme(full_path), launcher_handler);
             }));
         }
@@ -1045,7 +1045,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     show_dotfiles_in_view(show_dotfiles);
 
     auto view_menu = TRY(window->try_add_menu("&View"_string));
-    auto layout_menu = TRY(view_menu->try_add_submenu("&Layout"_string));
+    auto layout_menu = view_menu->add_submenu("&Layout"_string);
     TRY(layout_menu->try_add_action(*layout_toolbar_action));
     TRY(layout_menu->try_add_action(*layout_location_action));
     TRY(layout_menu->try_add_action(*layout_statusbar_action));

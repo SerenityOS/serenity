@@ -346,7 +346,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(view_menu->try_add_action(zoom_out_action));
     view_menu->add_separator();
 
-    auto scaling_mode_menu = TRY(view_menu->try_add_submenu("&Scaling Mode"_string));
+    auto scaling_mode_menu = view_menu->add_submenu("&Scaling Mode"_string);
     scaling_mode_menu->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/scale.png"sv)));
 
     auto scaling_mode_group = make<GUI::ActionGroup>();

@@ -151,12 +151,12 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
                 VERIFY(parent_menu);
             }
         }
-        auto& category_menu = parent_menu->add_submenu(String::from_deprecated_string(child_category).release_value_but_fixme_should_propagate_errors());
+        auto category_menu = parent_menu->add_submenu(String::from_deprecated_string(child_category).release_value_but_fixme_should_propagate_errors());
         auto category_icon_path = category_icons->read_entry("16x16", category);
         if (!category_icon_path.is_empty()) {
             auto icon_or_error = Gfx::Bitmap::load_from_file(category_icon_path);
             if (!icon_or_error.is_error())
-                category_menu.set_icon(icon_or_error.release_value());
+                category_menu->set_icon(icon_or_error.release_value());
         }
         app_category_menus.set(category, category_menu);
     };
@@ -205,7 +205,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
     g_themes_group.set_exclusive(true);
     g_themes_group.set_unchecking_allowed(false);
 
-    g_themes_menu = &system_menu->add_submenu("&Themes"_string);
+    g_themes_menu = system_menu->add_submenu("&Themes"_string);
     g_themes_menu->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/themes.png"sv)));
 
     g_themes = TRY(Gfx::list_installed_system_themes());

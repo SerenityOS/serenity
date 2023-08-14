@@ -307,8 +307,8 @@ void BrowserWindow::build_menus()
         dbgln("Failed to open search-engines file: {}", load_search_engines_result.error());
     }
 
-    auto& color_scheme_menu = settings_menu.add_submenu("&Color Scheme"_string);
-    color_scheme_menu.set_icon(g_icon_bag.color_chooser);
+    auto color_scheme_menu = settings_menu.add_submenu("&Color Scheme"_string);
+    color_scheme_menu->set_icon(g_icon_bag.color_chooser);
     {
         auto current_setting = Web::CSS::preferred_color_scheme_from_string(Config::read_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, Browser::default_color_scheme));
         m_color_scheme_actions.set_exclusive(true);
@@ -322,7 +322,7 @@ void BrowserWindow::build_menus()
                 this);
             if (current_setting == preference_value)
                 action->set_checked(true);
-            color_scheme_menu.add_action(action);
+            color_scheme_menu->add_action(action);
             m_color_scheme_actions.add_action(action);
         };
 
@@ -398,13 +398,13 @@ void BrowserWindow::build_menus()
     }));
 
     m_user_agent_spoof_actions.set_exclusive(true);
-    auto& spoof_user_agent_menu = debug_menu.add_submenu("Spoof &User Agent"_string);
+    auto spoof_user_agent_menu = debug_menu.add_submenu("Spoof &User Agent"_string);
     m_disable_user_agent_spoofing = GUI::Action::create_checkable("Disabled", [this](auto&) {
         active_tab().view().debug_request("spoof-user-agent", Web::default_user_agent);
     });
     m_disable_user_agent_spoofing->set_status_tip(String::from_utf8(Web::default_user_agent).release_value_but_fixme_should_propagate_errors());
-    spoof_user_agent_menu.add_action(*m_disable_user_agent_spoofing);
-    spoof_user_agent_menu.set_icon(g_icon_bag.spoof);
+    spoof_user_agent_menu->add_action(*m_disable_user_agent_spoofing);
+    spoof_user_agent_menu->set_icon(g_icon_bag.spoof);
     m_user_agent_spoof_actions.add_action(*m_disable_user_agent_spoofing);
     m_disable_user_agent_spoofing->set_checked(true);
 
@@ -413,7 +413,7 @@ void BrowserWindow::build_menus()
             active_tab().view().debug_request("spoof-user-agent", user_agent);
         });
         action->set_status_tip(String::from_utf8(user_agent).release_value_but_fixme_should_propagate_errors());
-        spoof_user_agent_menu.add_action(action);
+        spoof_user_agent_menu->add_action(action);
         m_user_agent_spoof_actions.add_action(action);
     };
     add_user_agent("Chrome Linux Desktop", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.128 Safari/537.36"sv);
@@ -432,7 +432,7 @@ void BrowserWindow::build_menus()
         active_tab().view().debug_request("spoof-user-agent", user_agent.to_deprecated_string());
         action.set_status_tip(user_agent);
     });
-    spoof_user_agent_menu.add_action(custom_user_agent);
+    spoof_user_agent_menu->add_action(custom_user_agent);
     m_user_agent_spoof_actions.add_action(custom_user_agent);
 
     debug_menu.add_separator();
@@ -468,8 +468,8 @@ void BrowserWindow::build_menus()
 ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
 {
     m_search_engine_actions.set_exclusive(true);
-    auto& search_engine_menu = settings_menu.add_submenu("&Search Engine"_string);
-    search_engine_menu.set_icon(g_icon_bag.find);
+    auto search_engine_menu = settings_menu.add_submenu("&Search Engine"_string);
+    search_engine_menu->set_icon(g_icon_bag.find);
     bool search_engine_set = false;
 
     m_disable_search_engine_action = GUI::Action::create_checkable(
@@ -478,7 +478,7 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
             Config::write_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, g_search_engine);
         },
         this);
-    search_engine_menu.add_action(*m_disable_search_engine_action);
+    search_engine_menu->add_action(*m_disable_search_engine_action);
     m_search_engine_actions.add_action(*m_disable_search_engine_action);
     m_disable_search_engine_action->set_checked(true);
 
@@ -502,7 +502,7 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
                         Config::write_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, g_search_engine);
                     },
                     this);
-                search_engine_menu.add_action(action);
+                search_engine_menu->add_action(action);
                 m_search_engine_actions.add_action(action);
 
                 if (g_search_engine == url_format) {
@@ -532,7 +532,7 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
         Config::write_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, g_search_engine);
         action.set_status_tip(search_engine);
     });
-    search_engine_menu.add_action(custom_search_engine_action);
+    search_engine_menu->add_action(custom_search_engine_action);
     m_search_engine_actions.add_action(custom_search_engine_action);
 
     if (!search_engine_set && !g_search_engine.is_empty()) {

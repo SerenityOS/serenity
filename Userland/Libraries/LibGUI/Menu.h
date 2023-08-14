@@ -42,11 +42,10 @@ public:
     Action* action_at(size_t);
 
     ErrorOr<void> try_add_action(NonnullRefPtr<Action>);
-    ErrorOr<NonnullRefPtr<Menu>> try_add_submenu(String name);
 
     void add_action(NonnullRefPtr<Action>);
     void add_separator();
-    Menu& add_submenu(String name);
+    [[nodiscard]] NonnullRefPtr<Menu> add_submenu(String name);
     void remove_all_actions();
 
     ErrorOr<void> add_recent_files_list(Function<void(Action&)>);

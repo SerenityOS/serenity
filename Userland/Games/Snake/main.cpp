@@ -123,7 +123,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     GUI::ActionGroup skin_action_group;
     skin_action_group.set_exclusive(true);
 
-    auto skin_menu = TRY(game_menu->try_add_submenu("&Skin"_string));
+    auto skin_menu = game_menu->add_submenu("&Skin"_string);
     skin_menu->set_icon(app_icon.bitmap_for_size(16));
 
     auto add_skin_action = [&](StringView name, bool enable_color) -> ErrorOr<void> {

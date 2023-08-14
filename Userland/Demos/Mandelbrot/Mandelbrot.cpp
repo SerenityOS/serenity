@@ -415,9 +415,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file_menu = TRY(window->try_add_menu("&File"_string));
 
-    auto& export_submenu = file_menu->add_submenu("&Export"_string);
+    auto export_submenu = file_menu->add_submenu("&Export"_string);
 
-    TRY(export_submenu.try_add_action(GUI::Action::create("As &BMP...",
+    TRY(export_submenu->try_add_action(GUI::Action::create("As &BMP...",
         [&](GUI::Action&) {
             Optional<DeprecatedString> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "bmp");
             if (!export_path.has_value())
@@ -425,7 +425,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (auto result = mandelbrot->export_image(export_path.value(), ImageType::BMP); result.is_error())
                 GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
         })));
-    TRY(export_submenu.try_add_action(GUI::Action::create("As &PNG...", { Mod_Ctrl | Mod_Shift, Key_S },
+    TRY(export_submenu->try_add_action(GUI::Action::create("As &PNG...", { Mod_Ctrl | Mod_Shift, Key_S },
         [&](GUI::Action&) {
             Optional<DeprecatedString> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "png");
             if (!export_path.has_value())
@@ -433,7 +433,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (auto result = mandelbrot->export_image(export_path.value(), ImageType::PNG); result.is_error())
                 GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
         })));
-    TRY(export_submenu.try_add_action(GUI::Action::create("As &QOI...",
+    TRY(export_submenu->try_add_action(GUI::Action::create("As &QOI...",
         [&](GUI::Action&) {
             Optional<DeprecatedString> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "qoi");
             if (!export_path.has_value())
@@ -442,7 +442,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
         })));
 
-    export_submenu.set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"sv)));
+    export_submenu->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"sv)));
 
     file_menu->add_separator();
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));

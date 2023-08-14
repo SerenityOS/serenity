@@ -165,7 +165,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     GUI::ActionGroup engines_action_group;
     engines_action_group.set_exclusive(true);
-    auto engine_submenu = TRY(engine_menu->try_add_submenu("&Engine"_string));
+    auto engine_submenu = engine_menu->add_submenu("&Engine"_string);
     auto human_engine_checkbox = GUI::Action::create_checkable("Human", [&](auto&) {
         widget->set_engine(nullptr);
     });
