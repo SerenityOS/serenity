@@ -25,8 +25,7 @@ NonnullRefPtr<Action> make_about_action(DeprecatedString const& app_name, Icon c
             String::from_deprecated_string(app_name).release_value_but_fixme_should_propagate_errors(),
             Core::Version::read_long_version_string().release_value_but_fixme_should_propagate_errors(),
             app_icon.bitmap_for_size(32),
-            weak_parent)
-            .release_value_but_fixme_should_propagate_errors();
+            weak_parent);
     });
     action->set_status_tip("Show application about box"_string);
     return action;
