@@ -330,7 +330,7 @@ DeprecatedString HTMLHyperlinkElementUtils::search() const
     // 2. Let url be this element's url.
 
     // 3. If url is null, or url's query is either null or the empty string, return the empty string.
-    if (!m_url.has_value() || m_url->query().has_value() || m_url->query()->is_empty())
+    if (!m_url.has_value() || !m_url->query().has_value() || m_url->query()->is_empty())
         return DeprecatedString::empty();
 
     // 4. Return "?", followed by url's query.
