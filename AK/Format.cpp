@@ -403,9 +403,10 @@ ErrorOr<void> FormatBuilder::put_fixed_point(
             // FIXME: overflows (not before: fraction_value = (2^precision - 1) and precision >= 20) (use wider integer type)
             auto fraction = scale * fraction_value;
             TRY(format_builder.put_u64(fraction, base, false, upper_case, true, use_separator, Align::Right, precision));
-        } else if (base == 16) {
-            auto fraction = fraction_value << ((4 - (precision % 4)) % 4);
-            TRY(format_builder.put_u64(fraction, base, false, upper_case, false, use_separator, Align::Right, precision/4 + (precision % 4 != 0), '0'));
+        } else if (base == 16 || base == 8 || base == 2) {
+            auto bits_per_character = log2(base);
+            auto fraction = fraction_value << ((bits_per_character - (precision % bits_per_character)) % bits_per_character);
+            TRY(format_builder.put_u64(fraction, base, false, upper_case, false, use_separator, Align::Right, precision / bits_per_character + (precision % bits_per_character != 0), '0'));
         } else {
             VERIFY_NOT_REACHED();
         }
