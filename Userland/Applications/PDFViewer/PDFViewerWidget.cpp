@@ -233,7 +233,7 @@ ErrorOr<void> PDFViewerWidget::initialize_menubar(GUI::Window& window)
     auto view_menu = TRY(window.try_add_menu("&View"_string));
     TRY(view_menu->try_add_action(*m_toggle_sidebar_action));
     view_menu->add_separator();
-    auto view_mode_menu = TRY(view_menu->try_add_submenu("View &Mode"_string));
+    auto view_mode_menu = view_menu->add_submenu("View &Mode"_string);
     TRY(view_mode_menu->try_add_action(*m_page_view_mode_single));
     TRY(view_mode_menu->try_add_action(*m_page_view_mode_multiple));
     view_menu->add_separator();

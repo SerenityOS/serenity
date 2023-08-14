@@ -395,7 +395,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         window->set_fullscreen(!window->is_fullscreen());
     }));
 
-    auto& rotation_axis_menu = view_menu.add_submenu("Rotation &Axis"_string);
+    auto rotation_axis_menu = view_menu.add_submenu("Rotation &Axis"_string);
     auto rotation_x_action = GUI::Action::create_checkable("&X", [&widget](auto&) {
         widget->toggle_rotate_x();
     });
@@ -406,14 +406,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         widget->toggle_rotate_z();
     });
 
-    rotation_axis_menu.add_action(*rotation_x_action);
-    rotation_axis_menu.add_action(*rotation_y_action);
-    rotation_axis_menu.add_action(*rotation_z_action);
+    rotation_axis_menu->add_action(*rotation_x_action);
+    rotation_axis_menu->add_action(*rotation_y_action);
+    rotation_axis_menu->add_action(*rotation_z_action);
 
     rotation_x_action->set_checked(true);
     rotation_z_action->set_checked(true);
 
-    auto& rotation_speed_menu = view_menu.add_submenu("Rotation &Speed"_string);
+    auto rotation_speed_menu = view_menu.add_submenu("Rotation &Speed"_string);
     GUI::ActionGroup rotation_speed_actions;
     rotation_speed_actions.set_exclusive(true);
 
@@ -435,10 +435,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     rotation_speed_actions.add_action(*normal_rotation_action);
     rotation_speed_actions.add_action(*fast_rotation_action);
 
-    rotation_speed_menu.add_action(*no_rotation_action);
-    rotation_speed_menu.add_action(*slow_rotation_action);
-    rotation_speed_menu.add_action(*normal_rotation_action);
-    rotation_speed_menu.add_action(*fast_rotation_action);
+    rotation_speed_menu->add_action(*no_rotation_action);
+    rotation_speed_menu->add_action(*slow_rotation_action);
+    rotation_speed_menu->add_action(*normal_rotation_action);
+    rotation_speed_menu->add_action(*fast_rotation_action);
 
     normal_rotation_action->set_checked(true);
 
@@ -456,7 +456,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     texture_enabled_action->set_checked(true);
     texture_menu.add_action(texture_enabled_action);
 
-    auto& wrap_u_menu = texture_menu.add_submenu("Wrap &S"_string);
+    auto wrap_u_menu = texture_menu.add_submenu("Wrap &S"_string);
     GUI::ActionGroup wrap_s_actions;
     wrap_s_actions.set_exclusive(true);
 
@@ -474,13 +474,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     wrap_s_actions.add_action(*wrap_u_mirrored_repeat_action);
     wrap_s_actions.add_action(*wrap_u_clamp_action);
 
-    wrap_u_menu.add_action(*wrap_u_repeat_action);
-    wrap_u_menu.add_action(*wrap_u_mirrored_repeat_action);
-    wrap_u_menu.add_action(*wrap_u_clamp_action);
+    wrap_u_menu->add_action(*wrap_u_repeat_action);
+    wrap_u_menu->add_action(*wrap_u_mirrored_repeat_action);
+    wrap_u_menu->add_action(*wrap_u_clamp_action);
 
     wrap_u_repeat_action->set_checked(true);
 
-    auto& wrap_t_menu = texture_menu.add_submenu("Wrap &T"_string);
+    auto wrap_t_menu = texture_menu.add_submenu("Wrap &T"_string);
     GUI::ActionGroup wrap_t_actions;
     wrap_t_actions.set_exclusive(true);
 
@@ -498,13 +498,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     wrap_t_actions.add_action(*wrap_t_mirrored_repeat_action);
     wrap_t_actions.add_action(*wrap_t_clamp_action);
 
-    wrap_t_menu.add_action(*wrap_t_repeat_action);
-    wrap_t_menu.add_action(*wrap_t_mirrored_repeat_action);
-    wrap_t_menu.add_action(*wrap_t_clamp_action);
+    wrap_t_menu->add_action(*wrap_t_repeat_action);
+    wrap_t_menu->add_action(*wrap_t_mirrored_repeat_action);
+    wrap_t_menu->add_action(*wrap_t_clamp_action);
 
     wrap_t_repeat_action->set_checked(true);
 
-    auto& texture_scale_menu = texture_menu.add_submenu("S&cale"_string);
+    auto texture_scale_menu = texture_menu.add_submenu("S&cale"_string);
     GUI::ActionGroup texture_scale_actions;
     texture_scale_actions.set_exclusive(true);
 
@@ -534,15 +534,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     texture_scale_actions.add_action(*texture_scale_2_action);
     texture_scale_actions.add_action(*texture_scale_4_action);
 
-    texture_scale_menu.add_action(*texture_scale_025_action);
-    texture_scale_menu.add_action(*texture_scale_05_action);
-    texture_scale_menu.add_action(*texture_scale_1_action);
-    texture_scale_menu.add_action(*texture_scale_2_action);
-    texture_scale_menu.add_action(*texture_scale_4_action);
+    texture_scale_menu->add_action(*texture_scale_025_action);
+    texture_scale_menu->add_action(*texture_scale_05_action);
+    texture_scale_menu->add_action(*texture_scale_1_action);
+    texture_scale_menu->add_action(*texture_scale_2_action);
+    texture_scale_menu->add_action(*texture_scale_4_action);
 
     texture_scale_1_action->set_checked(true);
 
-    auto& texture_mag_filter_menu = texture_menu.add_submenu("Mag Filter"_string);
+    auto texture_mag_filter_menu = texture_menu.add_submenu("Mag Filter"_string);
     GUI::ActionGroup texture_mag_filter_actions;
     texture_mag_filter_actions.set_exclusive(true);
 
@@ -557,8 +557,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     texture_mag_filter_actions.add_action(*texture_mag_filter_nearest_action);
     texture_mag_filter_actions.add_action(*texture_mag_filter_linear_action);
 
-    texture_mag_filter_menu.add_action(*texture_mag_filter_nearest_action);
-    texture_mag_filter_menu.add_action(*texture_mag_filter_linear_action);
+    texture_mag_filter_menu->add_action(*texture_mag_filter_nearest_action);
+    texture_mag_filter_menu->add_action(*texture_mag_filter_linear_action);
 
     texture_mag_filter_nearest_action->set_checked(true);
 

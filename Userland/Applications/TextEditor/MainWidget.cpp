@@ -461,7 +461,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_editor->set_ruler_visible(show_ruler);
 
     auto view_menu = TRY(window.try_add_menu("&View"_string));
-    auto layout_menu = TRY(view_menu->try_add_submenu("&Layout"_string));
+    auto layout_menu = view_menu->add_submenu("&Layout"_string);
     TRY(layout_menu->try_add_action(*m_layout_toolbar_action));
     TRY(layout_menu->try_add_action(*m_layout_statusbar_action));
     TRY(layout_menu->try_add_action(*m_layout_ruler_action));
@@ -481,7 +481,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     view_menu->add_separator();
 
     m_wrapping_mode_actions.set_exclusive(true);
-    auto wrapping_mode_menu = TRY(view_menu->try_add_submenu("&Wrapping Mode"_string));
+    auto wrapping_mode_menu = view_menu->add_submenu("&Wrapping Mode"_string);
     m_no_wrapping_action = GUI::Action::create_checkable("&No Wrapping", [&](auto&) {
         m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
         Config::write_string("TextEditor"sv, "View"sv, "WrappingMode"sv, "None"sv);
@@ -516,7 +516,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     }
 
     m_soft_tab_width_actions.set_exclusive(true);
-    auto soft_tab_width_menu = TRY(view_menu->try_add_submenu("&Tab Width"_string));
+    auto soft_tab_width_menu = view_menu->add_submenu("&Tab Width"_string);
     m_soft_tab_1_width_action = GUI::Action::create_checkable("1", [&](auto&) {
         m_editor->set_soft_tab_width(1);
     });
@@ -594,7 +594,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     syntax_actions.set_exclusive(true);
 
-    auto syntax_menu = TRY(view_menu->try_add_submenu("&Syntax"_string));
+    auto syntax_menu = view_menu->add_submenu("&Syntax"_string);
     m_plain_text_highlight = GUI::Action::create_checkable("&Plain Text", [&](auto&) {
         m_statusbar->set_text(1, "Plain Text"_string);
         m_editor->set_syntax_highlighter({});
@@ -696,12 +696,12 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     })));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Text Editor", GUI::Icon::default_icon("app-text-editor"sv), &window)));
 
-    auto wrapping_statusbar_menu = TRY(m_line_column_statusbar_menu->try_add_submenu("&Wrapping Mode"_string));
+    auto wrapping_statusbar_menu = m_line_column_statusbar_menu->add_submenu("&Wrapping Mode"_string);
     TRY(wrapping_statusbar_menu->try_add_action(*m_no_wrapping_action));
     TRY(wrapping_statusbar_menu->try_add_action(*m_wrap_anywhere_action));
     TRY(wrapping_statusbar_menu->try_add_action(*m_wrap_at_words_action));
 
-    auto tab_width_statusbar_menu = TRY(m_line_column_statusbar_menu->try_add_submenu("&Tab Width"_string));
+    auto tab_width_statusbar_menu = m_line_column_statusbar_menu->add_submenu("&Tab Width"_string);
     TRY(tab_width_statusbar_menu->try_add_action(*m_soft_tab_1_width_action));
     TRY(tab_width_statusbar_menu->try_add_action(*m_soft_tab_2_width_action));
     TRY(tab_width_statusbar_menu->try_add_action(*m_soft_tab_4_width_action));

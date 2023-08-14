@@ -494,15 +494,15 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> HackStudioWidget::create_project_tree_view_con
     });
     auto project_tree_view_context_menu = GUI::Menu::construct("Project Files"_string);
 
-    auto& new_file_submenu = project_tree_view_context_menu->add_submenu("N&ew..."_string);
+    auto new_file_submenu = project_tree_view_context_menu->add_submenu("N&ew..."_string);
     for (auto& new_file_action : m_new_file_actions) {
-        new_file_submenu.add_action(new_file_action);
+        new_file_submenu->add_action(new_file_action);
     }
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"sv));
-    new_file_submenu.set_icon(icon);
-    new_file_submenu.add_action(*m_new_plain_file_action);
-    new_file_submenu.add_separator();
-    new_file_submenu.add_action(*m_new_directory_action);
+    new_file_submenu->set_icon(icon);
+    new_file_submenu->add_action(*m_new_plain_file_action);
+    new_file_submenu->add_separator();
+    new_file_submenu->add_action(*m_new_directory_action);
 
     project_tree_view_context_menu->add_action(*m_open_selected_action);
     project_tree_view_context_menu->add_action(*m_show_in_file_manager_action);
@@ -1416,23 +1416,23 @@ ErrorOr<void> HackStudioWidget::create_file_menu(GUI::Window& window)
 {
     auto& file_menu = window.add_menu("&File"_string);
 
-    auto& new_submenu = file_menu.add_submenu("&New..."_string);
-    new_submenu.add_action(*m_new_project_action);
-    new_submenu.add_separator();
+    auto new_submenu = file_menu.add_submenu("&New..."_string);
+    new_submenu->add_action(*m_new_project_action);
+    new_submenu->add_separator();
     for (auto& new_file_action : m_new_file_actions) {
-        new_submenu.add_action(new_file_action);
+        new_submenu->add_action(new_file_action);
     }
 
     {
         auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"sv));
-        new_submenu.set_icon(icon);
+        new_submenu->set_icon(icon);
     }
-    new_submenu.add_action(*m_new_plain_file_action);
-    new_submenu.add_separator();
-    new_submenu.add_action(*m_new_directory_action);
+    new_submenu->add_action(*m_new_plain_file_action);
+    new_submenu->add_separator();
+    new_submenu->add_action(*m_new_directory_action);
 
     file_menu.add_action(*m_open_action);
-    m_recent_projects_submenu = &file_menu.add_submenu("Open &Recent"_string);
+    m_recent_projects_submenu = file_menu.add_submenu("Open &Recent"_string);
     {
         auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/open-recent.png"sv));
         m_recent_projects_submenu->set_icon(icon);
@@ -1511,7 +1511,7 @@ ErrorOr<void> HackStudioWidget::create_view_menu(GUI::Window& window)
     view_menu.add_separator();
 
     m_wrapping_mode_actions.set_exclusive(true);
-    auto& wrapping_mode_menu = view_menu.add_submenu("&Wrapping Mode"_string);
+    auto wrapping_mode_menu = view_menu.add_submenu("&Wrapping Mode"_string);
     m_no_wrapping_action = GUI::Action::create_checkable("&No Wrapping", [&](auto&) {
         m_wrapping_mode = GUI::TextEditor::WrappingMode::NoWrap;
         for (auto& wrapper : m_all_editor_wrappers)
@@ -1532,9 +1532,9 @@ ErrorOr<void> HackStudioWidget::create_view_menu(GUI::Window& window)
     m_wrapping_mode_actions.add_action(*m_wrap_anywhere_action);
     m_wrapping_mode_actions.add_action(*m_wrap_at_words_action);
 
-    wrapping_mode_menu.add_action(*m_no_wrapping_action);
-    wrapping_mode_menu.add_action(*m_wrap_anywhere_action);
-    wrapping_mode_menu.add_action(*m_wrap_at_words_action);
+    wrapping_mode_menu->add_action(*m_no_wrapping_action);
+    wrapping_mode_menu->add_action(*m_wrap_anywhere_action);
+    wrapping_mode_menu->add_action(*m_wrap_at_words_action);
 
     switch (m_wrapping_mode) {
     case GUI::TextEditor::NoWrap:
