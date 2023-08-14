@@ -78,19 +78,19 @@ jobs:
       - name: TimeZoneData cache
         uses: actions/cache@v3
         with:
-          path: ${{ github.workspace }}/libjs-test262/Build/TZDB
+          path: ${{ github.workspace }}/libjs-test262/Build/caches/TZDB
           key: TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}
 
       - name: UnicodeData cache
         uses: actions/cache@v3
         with:
-          path: ${{ github.workspace }}/libjs-test262/Build/UCD
+          path: ${{ github.workspace }}/libjs-test262/Build/caches/UCD
           key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
 
       - name: UnicodeLocale cache
         uses: actions/cache@v3
         with:
-          path: ${{ github.workspace }}/libjs-test262/Build/CLDR
+          path: ${{ github.workspace }}/libjs-test262/Build/caches/CLDR
           key: UnicodeLocale-${{ hashFiles('Meta/CMake/locale_data.cmake') }}
 
       - name: Get previous results
@@ -102,7 +102,13 @@ jobs:
         working-directory: libjs-test262
         run: |
           env PATH="/opt/wabt-1.0.27/bin:$PATH" \
-              cmake -GNinja -B Build -DCMAKE_C_COMPILER=gcc-12 -DCMAKE_CXX_COMPILER=g++-12 -DWASM_SPEC_TEST_SKIP_FORMATTING=ON -DINCLUDE_WASM_SPEC_TESTS=ON -DSERENITY_SOURCE_DIR=${{ env.SERENITY_SOURCE_DIR }}
+            cmake -GNinja -B Build \
+              -DCMAKE_C_COMPILER=gcc-12 \
+              -DCMAKE_CXX_COMPILER=g++-12 \
+              -DWASM_SPEC_TEST_SKIP_FORMATTING=ON \
+              -DINCLUDE_WASM_SPEC_TESTS=ON \
+              -DSERENITY_SOURCE_DIR=${{ env.SERENITY_SOURCE_DIR }} \
+              -DSERENITY_CACHE_DIR=Build/caches
           ninja -C Build test262-runner test-js test-wasm
 
       - name: Run test262 and test262-parser-tests
