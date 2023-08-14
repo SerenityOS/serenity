@@ -6,6 +6,7 @@ struct _LadybirdWebView {
 
     OwnPtr<LadybirdViewImpl> impl;
     GdkTexture* texture;
+    Browser::CookieJar* cookie_jar;
     GtkScrollablePolicy hscroll_policy;
     GtkAdjustment* hadjustment;
     GtkScrollablePolicy vscroll_policy;
@@ -26,6 +27,7 @@ enum {
     PROP_PAGE_URL,
     PROP_LOADING,
     PROP_ZOOM_PERCENT,
+    PROP_COOKIE_JAR,
     NUM_PROPS,
 
     PROP_HADJUSTMENT,
@@ -149,6 +151,24 @@ guint ladybird_web_view_get_zoom_percent(LadybirdWebView* self)
     return round(self->impl->zoom_level() * 100.0);
 }
 
+Browser::CookieJar* ladybird_web_view_get_cookie_jar(LadybirdWebView* self)
+{
+    g_return_val_if_fail(LADYBIRD_IS_WEB_VIEW(self), nullptr);
+
+    return self->cookie_jar;
+}
+
+void ladybird_web_view_set_cookie_jar(LadybirdWebView* self, Browser::CookieJar* cookie_jar)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+
+    if (self->cookie_jar == cookie_jar)
+        return;
+
+    self->cookie_jar = cookie_jar;
+    g_object_notify_by_pspec(G_OBJECT(self), props[PROP_COOKIE_JAR]);
+}
+
 static void ladybird_web_view_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* pspec)
 {
     LadybirdWebView* self = LADYBIRD_WEB_VIEW(object);
@@ -168,6 +188,10 @@ static void ladybird_web_view_get_property(GObject* object, guint prop_id, GValu
 
     case PROP_ZOOM_PERCENT:
         g_value_set_uint(value, ladybird_web_view_get_zoom_percent(self));
+        break;
+
+    case PROP_COOKIE_JAR:
+        g_value_set_pointer(value, self->cookie_jar);
         break;
 
     case PROP_HADJUSTMENT:
@@ -232,6 +256,10 @@ static void ladybird_web_view_set_property(GObject* object, guint prop_id, GValu
 
     case PROP_LOADING:
         ladybird_web_view_set_loading(self, g_value_get_boolean(value));
+        break;
+
+    case PROP_COOKIE_JAR:
+        ladybird_web_view_set_cookie_jar(self, reinterpret_cast<Browser::CookieJar*>(g_value_get_pointer(value)));
         break;
 
     case PROP_HADJUSTMENT:
@@ -591,6 +619,7 @@ static void ladybird_web_view_class_init(LadybirdWebViewClass* klass)
     props[PROP_PAGE_URL] = g_param_spec_string("page-url", nullptr, nullptr, nullptr, param_flags);
     props[PROP_LOADING] = g_param_spec_boolean("loading", nullptr, nullptr, false, param_flags);
     props[PROP_ZOOM_PERCENT] = g_param_spec_uint("zoom-percent", nullptr, nullptr, 30, 500, 100, ro_param_flags);
+    props[PROP_COOKIE_JAR] = g_param_spec_pointer("cookie-jar", nullptr, nullptr, param_flags);
     g_object_class_install_properties(object_class, NUM_PROPS, props);
 
     widget_class->measure = ladybird_web_view_measure;

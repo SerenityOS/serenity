@@ -1,4 +1,5 @@
 #include "ViewImpl.h"
+#include <Browser/CookieJar.h>
 #include <Ladybird/HelperProcess.h>
 #include <Ladybird/Utilities.h>
 #include <LibGfx/Font/FontDatabase.h>
@@ -23,7 +24,24 @@ LadybirdViewImpl::LadybirdViewImpl(LadybirdWebView* widget)
         ladybird_web_view_set_loading(m_widget, false);
     };
 
-    AdwStyleManager* style_manager = adw_style_manager_get_default();
+    on_get_all_cookies = [this](AK::URL const& url) {
+        return cookie_jar().get_all_cookies(url);
+    };
+    on_get_named_cookie = [this](AK::URL const& url, DeprecatedString const& name) {
+        return cookie_jar().get_named_cookie(url, name);
+    };
+    on_get_cookie = [this](AK::URL const& url, Web::Cookie::Source source) {
+        return cookie_jar().get_cookie(url, source);
+    };
+    on_set_cookie = [this](AK::URL const& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source) {
+        cookie_jar().set_cookie(url, cookie, source);
+    };
+    on_update_cookie = [this](Web::Cookie::Cookie const& cookie) {
+        cookie_jar().update_cookie(cookie);
+    };
+
+    AdwStyleManager* style_manager
+        = adw_style_manager_get_default();
     m_update_style_id = g_signal_connect_swapped(style_manager, "notify::dark", G_CALLBACK(+[](void* user_data) {
         LadybirdViewImpl* self = reinterpret_cast<LadybirdViewImpl*>(user_data);
         self->update_theme();
@@ -43,6 +61,13 @@ ErrorOr<NonnullOwnPtr<LadybirdViewImpl>> LadybirdViewImpl::create(LadybirdWebVie
     auto impl = TRY(adopt_nonnull_own_or_enomem(new (nothrow) LadybirdViewImpl(widget)));
     impl->create_client(WebView::EnableCallgrindProfiling::No);
     return impl;
+}
+
+Browser::CookieJar& LadybirdViewImpl::cookie_jar()
+{
+    Browser::CookieJar* jar = ladybird_web_view_get_cookie_jar(m_widget);
+    VERIFY(jar);
+    return *jar;
 }
 
 void LadybirdViewImpl::create_client(WebView::EnableCallgrindProfiling enable_callgrind_profiling)

@@ -11,11 +11,12 @@ struct _LadybirdWindow {
     GtkEntry* url_entry;
 
     gulong page_url_changed_id;
+    bool incognito;
 };
 
 enum {
     PROP_0,
-    PROP_ADD_INITIAL_TAB,
+    PROP_INCOGNITO,
     NUM_PROPS,
 };
 
@@ -38,10 +39,19 @@ static void ladybird_window_dispose(GObject* object)
 
 static AdwTabPage* open_new_tab(LadybirdWindow* self)
 {
-    LadybirdWebView* web_view = (LadybirdWebView*)g_object_new(LADYBIRD_TYPE_WEB_VIEW, nullptr);
+    LadybirdApplication* app = LADYBIRD_APPLICATION(gtk_window_get_application(GTK_WINDOW(self)));
+    Browser::CookieJar* cookie_jar = self->incognito
+        ? ladybird_application_get_incognito_cookie_jar(app)
+        : ladybird_application_get_cookie_jar(app);
+
+    LadybirdWebView* web_view = (LadybirdWebView*)g_object_new(LADYBIRD_TYPE_WEB_VIEW,
+        "cookie-jar", cookie_jar,
+        nullptr);
     gtk_widget_add_css_class(GTK_WIDGET(web_view), "view");
+
     GtkWidget* scrolled_window = gtk_scrolled_window_new();
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scrolled_window), GTK_WIDGET(web_view));
+
     AdwTabPage* tab_page = adw_tab_view_append(self->tab_view, scrolled_window);
     adw_tab_page_set_title(tab_page, "New tab");
     g_object_bind_property(web_view, "page-title", tab_page, "title", G_BINDING_DEFAULT);
@@ -54,8 +64,17 @@ static AdwTabPage* open_new_tab(LadybirdWindow* self)
 
 static void ladybird_window_get_property(GObject* object, guint prop_id, [[maybe_unused]] GValue* value, GParamSpec* pspec)
 {
-    // We have no readable properties.
-    G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+    LadybirdWindow* self = LADYBIRD_WINDOW(object);
+
+    switch (prop_id) {
+    case PROP_INCOGNITO:
+        g_value_set_boolean(value, self->incognito);
+        break;
+
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
 }
 
 static void ladybird_window_set_property(GObject* object, guint prop_id, GValue const* value, GParamSpec* pspec)
@@ -63,9 +82,9 @@ static void ladybird_window_set_property(GObject* object, guint prop_id, GValue 
     LadybirdWindow* self = LADYBIRD_WINDOW(object);
 
     switch (prop_id) {
-    case PROP_ADD_INITIAL_TAB:
-        if (g_value_get_boolean(value))
-            open_new_tab(self);
+    case PROP_INCOGNITO:
+        self->incognito = g_value_get_boolean(value);
+        // No need to emit notify, since it's construct-only.
         break;
 
     default:
@@ -159,7 +178,7 @@ static void on_url_entered(LadybirdWindow* self, GtkEntry* url_entry)
 static AdwTabView* on_create_window(LadybirdWindow* self)
 {
     GtkApplication* app = gtk_window_get_application(GTK_WINDOW(self));
-    LadybirdWindow* new_window = ladybird_window_new(LADYBIRD_APPLICATION(app), false);
+    LadybirdWindow* new_window = ladybird_window_new(LADYBIRD_APPLICATION(app), false, self->incognito);
     gtk_window_present(GTK_WINDOW(new_window));
     return new_window->tab_view;
 }
@@ -255,8 +274,8 @@ static void ladybird_window_class_init(LadybirdWindowClass* klass)
     object_class->set_property = ladybird_window_set_property;
     object_class->dispose = ladybird_window_dispose;
 
-    props[PROP_ADD_INITIAL_TAB] = g_param_spec_boolean("add-initial-tab", nullptr, nullptr, true,
-        GParamFlags(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT_ONLY));
+    props[PROP_INCOGNITO] = g_param_spec_boolean("incognito", nullptr, nullptr, false,
+        GParamFlags(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT_ONLY));
     g_object_class_install_properties(object_class, NUM_PROPS, props);
 
     gtk_widget_class_set_template_from_resource(widget_class, "/org/serenityos/ladybird-gtk4/window.ui");
@@ -287,12 +306,17 @@ static void ladybird_window_class_init(LadybirdWindowClass* klass)
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_r, GDK_CONTROL_MASK, "page.reload-page", nullptr);
 }
 
-LadybirdWindow* ladybird_window_new(LadybirdApplication* app, bool add_initial_tab)
+LadybirdWindow* ladybird_window_new(LadybirdApplication* app, bool add_initial_tab, bool incognito)
 {
-    return LADYBIRD_WINDOW(g_object_new(LADYBIRD_TYPE_WINDOW,
+    LadybirdWindow* self = LADYBIRD_WINDOW(g_object_new(LADYBIRD_TYPE_WINDOW,
         "application", app,
-        "add-initial-tab", (gboolean)add_initial_tab,
+        "incognito", (gboolean)incognito,
         nullptr));
+
+    if (add_initial_tab)
+        open_new_tab(self);
+
+    return self;
 }
 
 G_END_DECLS

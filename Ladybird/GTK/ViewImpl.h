@@ -46,6 +46,7 @@ private:
     virtual void create_client(WebView::EnableCallgrindProfiling) override;
 
     void update_theme();
+    Browser::CookieJar& cookie_jar();
 
     Gfx::IntRect m_viewport_rect;
     LadybirdWebView* m_widget { nullptr };

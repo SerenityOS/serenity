@@ -1,8 +1,13 @@
 #include "Application.h"
 #include "Window.h"
+#include <AK/OwnPtr.h>
+#include <Browser/CookieJar.h>
 
 struct _LadybirdApplication {
     AdwApplication parent_instance;
+
+    OwnPtr<Browser::CookieJar> cookie_jar;
+    OwnPtr<Browser::CookieJar> incognito_cookie_jar;
 };
 
 G_BEGIN_DECLS
@@ -12,7 +17,7 @@ G_DEFINE_FINAL_TYPE(LadybirdApplication, ladybird_application, ADW_TYPE_APPLICAT
 static void open_new_window([[maybe_unused]] GSimpleAction* action, [[maybe_unused]] GVariant* state, void* user_data)
 {
     LadybirdApplication* app = LADYBIRD_APPLICATION(user_data);
-    LadybirdWindow* window = ladybird_window_new(app, true);
+    LadybirdWindow* window = ladybird_window_new(app, true, false);
     gtk_window_present(GTK_WINDOW(window));
 }
 
@@ -79,7 +84,7 @@ static void ladybird_application_activate(GApplication* app)
     // Chain up (for no good reason...)
     G_APPLICATION_CLASS(ladybird_application_parent_class)->activate(app);
 
-    LadybirdWindow* window = ladybird_window_new(LADYBIRD_APPLICATION(app), true);
+    LadybirdWindow* window = ladybird_window_new(LADYBIRD_APPLICATION(app), true, false);
     gtk_window_present(GTK_WINDOW(window));
 }
 
@@ -91,7 +96,7 @@ static void ladybird_application_open(GApplication* app, GFile** files, int num_
     // Look for a window to add the tabs to.
     LadybirdWindow* window = LADYBIRD_WINDOW(gtk_application_get_active_window(GTK_APPLICATION(app)));
     if (!window)
-        window = ladybird_window_new(LADYBIRD_APPLICATION(app), false);
+        window = ladybird_window_new(LADYBIRD_APPLICATION(app), false, false);
 
     for (int i = 0; i < num_files; i++)
         ladybird_window_open_file(window, files[i]);
@@ -99,8 +104,46 @@ static void ladybird_application_open(GApplication* app, GFile** files, int num_
     gtk_window_present(GTK_WINDOW(window));
 }
 
+Browser::CookieJar* ladybird_application_get_cookie_jar(LadybirdApplication* self)
+{
+    g_return_val_if_fail(LADYBIRD_IS_APPLICATION(self), nullptr);
+
+    if (!self->cookie_jar) {
+        // TODO: This should attempt creating the jar from a database.
+        auto jar = Browser::CookieJar::create();
+        self->cookie_jar = make<Browser::CookieJar>(move(jar));
+    }
+
+    return self->cookie_jar;
+}
+
+Browser::CookieJar* ladybird_application_get_incognito_cookie_jar(LadybirdApplication* self)
+{
+    g_return_val_if_fail(LADYBIRD_IS_APPLICATION(self), nullptr);
+
+    if (!self->incognito_cookie_jar) {
+        auto jar = Browser::CookieJar::create();
+        self->incognito_cookie_jar = make<Browser::CookieJar>(move(jar));
+    }
+
+    return self->incognito_cookie_jar;
+}
+
+static void ladybird_application_dispose(GObject* object)
+{
+    LadybirdApplication* self = LADYBIRD_APPLICATION(object);
+
+    self->cookie_jar.clear();
+    self->incognito_cookie_jar.clear();
+
+    G_OBJECT_CLASS(ladybird_application_parent_class)->dispose(object);
+}
+
 static void ladybird_application_init([[maybe_unused]] LadybirdApplication* self)
 {
+    new (&self->cookie_jar) OwnPtr<Browser::CookieJar>;
+    new (&self->incognito_cookie_jar) OwnPtr<Browser::CookieJar>;
+
     GtkApplication* gtk_app = GTK_APPLICATION(self);
 
     g_action_map_add_action_entries(G_ACTION_MAP(self), app_entries, G_N_ELEMENTS(app_entries), self);
@@ -111,7 +154,10 @@ static void ladybird_application_init([[maybe_unused]] LadybirdApplication* self
 
 static void ladybird_application_class_init(LadybirdApplicationClass* klass)
 {
+    GObjectClass* object_class = G_OBJECT_CLASS(klass);
     GApplicationClass* g_application_class = G_APPLICATION_CLASS(klass);
+
+    object_class->dispose = ladybird_application_dispose;
 
     g_application_class->activate = ladybird_application_activate;
     g_application_class->open = ladybird_application_open;

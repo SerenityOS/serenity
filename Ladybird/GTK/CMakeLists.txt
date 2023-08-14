@@ -31,8 +31,11 @@ add_subdirectory("${LAGOM_SOURCE_DIR}" "${LAGOM_BINARY_DIR}" EXCLUDE_FROM_ALL)
 include_directories(
     "${SERENITY_SOURCE_DIR}"
     "${SERENITY_SOURCE_DIR}/Userland/Libraries"
+    "${SERENITY_SOURCE_DIR}/Userland/Applications"
+    "${SERENITY_SOURCE_DIR}/Userland/Services"
     "${LAGOM_BINARY_DIR}"
     "${LAGOM_BINARY_DIR}/Userland/Libraries"
+    "${LAGOM_BINARY_DIR}/Userland/Services"
 )
 add_compile_definitions(AK_DONT_REPLACE_STD)
 
@@ -85,15 +88,13 @@ set(SOURCES
     EventLoopImplementationGLib.cpp
     "${SERENITY_SOURCE_DIR}/Ladybird/Utilities.cpp"
     "${SERENITY_SOURCE_DIR}/Ladybird/HelperProcess.cpp"
+    "${SERENITY_SOURCE_DIR}/Userland/Applications/Browser/CookieJar.cpp"
+    "${SERENITY_SOURCE_DIR}/Userland/Applications/Browser/Database.cpp"
     $<TARGET_OBJECTS:resources>
 )
 
 add_executable(ladybird ${SOURCES})
 target_link_libraries(ladybird PRIVATE PkgConfig::gtk4 PkgConfig::libadwaita Lagom::Core Lagom::WebView Lagom::Gfx Lagom::Web Lagom::IPC Lagom::FileSystem Lagom::SQL Lagom::Protocol)
-
-include_directories(
-    "${SERENITY_SOURCE_DIR}/Userland/Services"
-)
 
 set(WEBCONTENT_SOURCE_DIR "${SERENITY_SOURCE_DIR}/Userland/Services/WebContent")
 set(WEBCONTENT_SOURCES

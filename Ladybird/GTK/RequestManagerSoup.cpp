@@ -1,4 +1,7 @@
 #include "RequestManagerSoup.h"
+#include <AK/JsonArray.h>
+#include <AK/JsonObject.h>
+#include <AK/JsonValue.h>
 #include <libsoup/soup.h>
 
 NonnullRefPtr<RequestManagerSoup> RequestManagerSoup::create()
@@ -76,16 +79,26 @@ void RequestSoup::complete(GBytes* bytes, GError* error)
     SoupStatus status_code = soup_message_get_status(m_message);
     ReadonlyBytes body { g_bytes_get_data(bytes, nullptr), g_bytes_get_size(bytes) };
 
-    HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> response_headers;
+    struct Closure {
+        HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> response_headers;
+        JsonArray set_cookies;
+    };
+    Closure closure;
+
     soup_message_headers_foreach(
         soup_message_get_response_headers(m_message),
         +[](char const* name, char const* value, void* user_data) {
-            auto& response_headers = *reinterpret_cast<HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits>*>(user_data);
-            response_headers.set(name, value);
+            Closure& closure = *reinterpret_cast<Closure*>(user_data);
+            if (!strcasecmp(name, "set-cookie")) {
+                closure.set_cookies.must_append(value);
+            } else {
+                closure.response_headers.set(name, value);
+            }
         },
-        &response_headers);
+        &closure);
 
-    on_buffered_request_finish(true, g_bytes_get_size(bytes), response_headers, status_code, body);
+    closure.response_headers.set("Set-Cookie", move(closure.set_cookies).to_deprecated_string());
+    on_buffered_request_finish(true, g_bytes_get_size(bytes), move(closure.response_headers), status_code, body);
     // FIXME: Is this it? Are we expected to drop the bytes here?
     g_bytes_unref(bytes);
 }
