@@ -27,7 +27,7 @@ Example from LibGUI:
 
 ErrorOr<NonnullRefPtr<Menu>> Window::try_add_menu(String name)
 {
-    auto menu = TRY(m_menubar->try_add_menu({}, move(name)));
+    auto menu = m_menubar->add_menu({}, move(name));
     if (m_window_id) {
         menu->realize_menu_if_needed();
         ConnectionToWindowServer::the().async_add_menu(m_window_id, menu->menu_id());
