@@ -59,7 +59,7 @@ public:
     static URL basic_parse(StringView input, Optional<URL> const& base_url = {}, Optional<URL> url = {}, Optional<State> state_override = {});
 
     // https://url.spec.whatwg.org/#string-percent-encode-after-encoding
-    static DeprecatedString percent_encode_after_encoding(StringView input, URL::PercentEncodeSet percent_encode_set, bool space_as_plus = false);
+    static ErrorOr<String> percent_encode_after_encoding(StringView input, URL::PercentEncodeSet percent_encode_set, bool space_as_plus = false);
 
     // https://url.spec.whatwg.org/#concept-host-serializer
     static ErrorOr<String> serialize_host(URL::Host const&);
