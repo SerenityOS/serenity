@@ -78,6 +78,7 @@ endif ()
 
 set(SOURCES
     main.cpp
+    Application.cpp
     Window.cpp
     WebView.cpp
     ViewImpl.cpp

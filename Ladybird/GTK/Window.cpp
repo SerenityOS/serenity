@@ -1,4 +1,5 @@
 #include "Window.h"
+#include "Application.h"
 #include "WebView.h"
 
 struct _LadybirdWindow {
@@ -104,12 +105,7 @@ static void win_open_file_action(GtkWidget* widget, [[maybe_unused]] char const*
 
             for (size_t i = 0; i < g_list_model_get_n_items(selected_files); i++) {
                 GFile* file = G_FILE(g_list_model_get_item(selected_files, i));
-                char* uri = g_file_get_uri(file);
-                AdwTabPage* tab_page = open_new_tab(self);
-                GtkScrolledWindow* scrolled_window = GTK_SCROLLED_WINDOW(adw_tab_page_get_child(tab_page));
-                LadybirdWebView* web_view = LADYBIRD_WEB_VIEW(gtk_scrolled_window_get_child(scrolled_window));
-                ladybird_web_view_load_url(web_view, uri);
-                g_free(uri);
+                ladybird_window_open_file(self, file);
             }
             g_object_unref(selected_files);
         },
@@ -163,7 +159,7 @@ static void on_url_entered(LadybirdWindow* self, GtkEntry* url_entry)
 static AdwTabView* on_create_window(LadybirdWindow* self)
 {
     GtkApplication* app = gtk_window_get_application(GTK_WINDOW(self));
-    LadybirdWindow* new_window = ladybird_window_new(app, false);
+    LadybirdWindow* new_window = ladybird_window_new(LADYBIRD_APPLICATION(app), false);
     gtk_window_present(GTK_WINDOW(new_window));
     return new_window->tab_view;
 }
@@ -230,6 +226,19 @@ static void page_reload_action(GtkWidget* widget, [[maybe_unused]] char const* a
     ladybird_web_view_load_url(web_view, url);
 }
 
+void ladybird_window_open_file(LadybirdWindow* self, GFile* file)
+{
+    g_return_if_fail(LADYBIRD_IS_WINDOW(self));
+    g_return_if_fail(G_IS_FILE(file));
+
+    char* uri = g_file_get_uri(file);
+    AdwTabPage* tab_page = open_new_tab(self);
+    GtkScrolledWindow* scrolled_window = GTK_SCROLLED_WINDOW(adw_tab_page_get_child(tab_page));
+    LadybirdWebView* web_view = LADYBIRD_WEB_VIEW(gtk_scrolled_window_get_child(scrolled_window));
+    ladybird_web_view_load_url(web_view, uri);
+    g_free(uri);
+}
+
 static void ladybird_window_init(LadybirdWindow* self)
 {
     GtkWidget* widget = GTK_WIDGET(self);
@@ -278,7 +287,7 @@ static void ladybird_window_class_init(LadybirdWindowClass* klass)
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_r, GDK_CONTROL_MASK, "page.reload-page", nullptr);
 }
 
-LadybirdWindow* ladybird_window_new(GtkApplication* app, bool add_initial_tab)
+LadybirdWindow* ladybird_window_new(LadybirdApplication* app, bool add_initial_tab)
 {
     return LADYBIRD_WINDOW(g_object_new(LADYBIRD_TYPE_WINDOW,
         "application", app,
