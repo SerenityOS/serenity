@@ -305,7 +305,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             GUI::Application::the()->quit();
     }));
 
-    TRY(window.try_add_menu(TRY(GUI::CommonMenus::make_accessibility_menu(*m_preview_widget))));
+    TRY(window.try_add_menu(GUI::CommonMenus::make_accessibility_menu(*m_preview_widget)));
 
     auto help_menu = TRY(window.try_add_menu("&Help"_string));
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(&window));
