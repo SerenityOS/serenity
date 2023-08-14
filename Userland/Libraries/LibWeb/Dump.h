@@ -13,6 +13,7 @@
 
 namespace Web {
 
+void dump_tree(HTML::TraversableNavigable&);
 void dump_tree(StringBuilder&, DOM::Node const&);
 void dump_tree(DOM::Node const&);
 void dump_tree(StringBuilder&, Layout::Node const&, bool show_box_model = false, bool show_specified_style = false, bool colorize = false);
