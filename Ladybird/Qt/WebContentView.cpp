@@ -282,13 +282,19 @@ void WebContentView::wheelEvent(QWheelEvent* event)
         auto button = get_button_from_qt_event(*event);
         auto buttons = get_buttons_from_qt_event(*event);
         auto modifiers = get_modifiers_from_qt_mouse_event(*event);
-        auto num_degrees = -event->angleDelta();
-        float delta_x = -num_degrees.x() / 120;
-        float delta_y = num_degrees.y() / 120;
-        auto step_x = delta_x * QApplication::wheelScrollLines() * devicePixelRatio();
-        auto step_y = delta_y * QApplication::wheelScrollLines() * devicePixelRatio();
-        constexpr int scroll_step_size = 24;
-        client().async_mouse_wheel(to_content_position(position), button, buttons, modifiers, step_x * scroll_step_size, step_y * scroll_step_size);
+
+        auto num_pixels = -event->pixelDelta();
+        if (!num_pixels.isNull()) {
+            client().async_mouse_wheel(to_content_position(position), button, buttons, modifiers, num_pixels.x(), num_pixels.y());
+        } else {
+            auto num_degrees = -event->angleDelta();
+            float delta_x = -num_degrees.x() / 120;
+            float delta_y = num_degrees.y() / 120;
+            auto step_x = delta_x * QApplication::wheelScrollLines() * devicePixelRatio();
+            auto step_y = delta_y * QApplication::wheelScrollLines() * devicePixelRatio();
+            int scroll_step_size = verticalScrollBar()->singleStep();
+            client().async_mouse_wheel(to_content_position(position), button, buttons, modifiers, step_x * scroll_step_size, step_y * scroll_step_size);
+        }
         event->accept();
         return;
     }
