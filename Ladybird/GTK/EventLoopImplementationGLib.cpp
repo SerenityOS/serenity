@@ -58,6 +58,7 @@ EventLoopImplementationGLib::EventLoopImplementationGLib()
 
     m_thread_event_queue_source = g_source_new(&thread_event_queue_source_funcs, sizeof(GSource));
     g_source_set_name(m_thread_event_queue_source, "ThreadEventQueueSource");
+    g_source_set_can_recurse(m_thread_event_queue_source, true);
     g_source_attach(m_thread_event_queue_source, m_context);
 }
 
@@ -126,6 +127,7 @@ void EventLoopManagerGLib::register_notifier(Core::Notifier& notifier)
     }
 
     GSource* source = g_unix_fd_source_new(notifier.fd(), condition);
+    g_source_set_can_recurse(source, true);
     g_source_set_callback(source, G_SOURCE_FUNC(+[](int fd, [[maybe_unused]] GIOCondition condition, void* user_data) -> gboolean {
         Core::Notifier& notifier = *reinterpret_cast<Core::Notifier*>(user_data);
         Core::NotifierActivationEvent event(fd);
@@ -159,6 +161,7 @@ int EventLoopManagerGLib::register_timer(Core::EventReceiver& object, int millis
     closure->should_fire_when_not_visible = should_fire_when_not_visible;
 
     GSource* source = g_timeout_source_new(milliseconds);
+    g_source_set_can_recurse(source, true);
     g_source_set_callback(
         source, G_SOURCE_FUNC(+[](void* user_data) -> gboolean {
             Closure& closure = *reinterpret_cast<Closure*>(user_data);
