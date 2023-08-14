@@ -73,7 +73,7 @@ ErrorOr<NonnullRefPtr<CalendarWidget>> CalendarWidget::create(GUI::Window* paren
 
     widget->create_on_tile_doubleclick();
 
-    calendar->on_month_click = [&] {
+    calendar->on_month_click = [view_month_action] {
         view_month_action->set_checked(true);
     };
 
