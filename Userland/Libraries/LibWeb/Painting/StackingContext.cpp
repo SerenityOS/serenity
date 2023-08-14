@@ -136,6 +136,8 @@ void StackingContext::paint_descendants(PaintContext& context, Layout::Node cons
             if (child_is_inline_or_replaced) {
                 paint_node(child, context, PaintPhase::Background);
                 paint_node(child, context, PaintPhase::Border);
+                if (child.display().is_table_inside() && child.computed_values().border_collapse() == CSS::BorderCollapse::Separate)
+                    paint_table_borders(context, child);
                 paint_descendants(context, child, StackingContextPaintPhase::BackgroundAndBorders);
             }
             paint_descendants(context, child, phase);
