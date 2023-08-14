@@ -65,7 +65,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 #elif defined(HAVE_QT)
         return Ladybird::AudioCodecPluginQt::create(move(loader));
 #else
-#    error "Don't know how to initialize audio in this configuration!"
+        (void)loader;
+        return Error::from_string_literal("Don't know how to initialize audio in this configuration!");
 #endif
     });
 
