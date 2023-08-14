@@ -341,12 +341,13 @@ void TraversableNavigable::apply_the_history_step(int step, Optional<SourceSnaps
                 // 5. Set targetEntry's document state's reload pending to false.
                 target_entry->document_state->set_reload_pending(false);
 
-                // FIXME: 6. Let allowPOST be targetEntry's document state's reload pending.
+                // 6. Let allowPOST be targetEntry's document state's reload pending.
+                auto allow_POST = target_entry->document_state->reload_pending();
 
                 // 7. In parallel, attempt to populate the history entry's document for targetEntry, given navigable, potentiallyTargetSpecificSourceSnapshotParams,
                 //    targetSnapshotParams, with allowPOST set to allowPOST and completionSteps set to queue a global task on the navigation and traversal task source given
                 //    navigable's active window to run afterDocumentPopulated.
-                navigable->populate_session_history_entry_document(target_entry, {}, {}, *potentially_target_specific_source_snapshot_params, [this, after_document_populated]() mutable {
+                navigable->populate_session_history_entry_document(target_entry, {}, {}, *potentially_target_specific_source_snapshot_params, allow_POST, [this, after_document_populated]() mutable {
                              queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), [after_document_populated]() mutable {
                                  after_document_populated();
                              });
