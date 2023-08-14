@@ -649,7 +649,7 @@ static WebIDL::ExceptionOr<Optional<NavigationParams>> create_navigation_params_
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#attempt-to-populate-the-history-entry's-document
-WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(JS::GCPtr<SessionHistoryEntry> entry, Optional<NavigationParams> navigation_params, Optional<String> navigation_id, SourceSnapshotParams const& source_snapshot_params, Function<void()> completion_steps)
+WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(JS::GCPtr<SessionHistoryEntry> entry, Optional<NavigationParams> navigation_params, Optional<String> navigation_id, SourceSnapshotParams const& source_snapshot_params, bool allow_POST, Function<void()> completion_steps)
 {
     // FIXME: 1. Assert: this is running in parallel.
 
@@ -673,8 +673,8 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(JS:
         }
         // 2. Otherwise, if both of the following are true:
         //    - entry's URL's scheme is a fetch scheme; and
-        //    - documentResource is null, FIXME: or allowPOST is true and documentResource's request body is not failure
-        else if (Fetch::Infrastructure::is_fetch_scheme(entry->url.scheme()) && document_resource.has<Empty>()) {
+        //    - documentResource is null, or allowPOST is true and documentResource's request body is not failure (FIXME: check if request body is not failure)
+        else if (Fetch::Infrastructure::is_fetch_scheme(entry->url.scheme()) && (document_resource.has<Empty>() || allow_POST)) {
             navigation_params = create_navigation_params_by_fetching(entry, this, source_snapshot_params, navigation_id).release_value_but_fixme_should_propagate_errors();
         }
         // FIXME: 3. Otherwise, if entry's URL's scheme is not a fetch scheme, then set navigationParams to a new non-fetch scheme navigation params, with
@@ -939,7 +939,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
         //     for historyEntry, given navigable, "navigate", sourceSnapshotParams,
         //     targetSnapshotParams, navigationId, navigationParams, cspNavigationType, with allowPOST
         //     set to true and completionSteps set to the following step:
-        populate_session_history_entry_document(history_entry, navigation_params, navigation_id, source_snapshot_params, [this, history_entry, history_handling, navigation_id] {
+        populate_session_history_entry_document(history_entry, navigation_params, navigation_id, source_snapshot_params, true, [this, history_entry, history_handling, navigation_id] {
             traversable_navigable()->append_session_history_traversal_steps([this, history_entry, history_handling, navigation_id] {
                 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#finalize-a-cross-document-navigation
 
