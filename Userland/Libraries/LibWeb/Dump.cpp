@@ -23,9 +23,11 @@
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/HTML/DocumentState.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/HTML/HTMLTemplateElement.h>
 #include <LibWeb/HTML/ImageRequest.h>
+#include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Layout/FrameBox.h>
@@ -44,6 +46,28 @@ static void indent(StringBuilder& builder, int levels)
 {
     for (int i = 0; i < levels; i++)
         builder.append("  "sv);
+}
+
+static ErrorOr<void> dump_session_history_entry(StringBuilder& builder, HTML::SessionHistoryEntry const& session_history_entry, int indent_levels)
+{
+    indent(builder, indent_levels);
+    auto const& document = session_history_entry.document_state->document();
+    TRY(builder.try_appendff("step=({}) url=({}) is-active=({})\n", session_history_entry.step.get<int>(), session_history_entry.url, document && document->is_active()));
+    for (auto const& nested_history : session_history_entry.document_state->nested_histories()) {
+        for (auto const& nested_she : nested_history.entries) {
+            TRY(dump_session_history_entry(builder, *nested_she, indent_levels + 1));
+        }
+    }
+    return {};
+}
+
+void dump_tree(HTML::TraversableNavigable& traversable)
+{
+    StringBuilder builder;
+    for (auto const& she : traversable.session_history_entries()) {
+        dump_session_history_entry(builder, *she, 0).release_value_but_fixme_should_propagate_errors();
+    }
+    dbgln("{}", builder.string_view());
 }
 
 void dump_tree(DOM::Node const& node)

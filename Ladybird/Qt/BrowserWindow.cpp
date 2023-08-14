@@ -195,6 +195,12 @@ BrowserWindow::BrowserWindow(Vector<URL> const& initial_urls, WebView::CookieJar
 
     auto* debug_menu = menuBar()->addMenu("&Debug");
 
+    auto* dump_session_history_tree_action = new QAction("Dump Session History Tree", this);
+    debug_menu->addAction(dump_session_history_tree_action);
+    QObject::connect(dump_session_history_tree_action, &QAction::triggered, this, [this] {
+        debug_request("dump-session-history");
+    });
+
     auto* dump_dom_tree_action = new QAction("Dump &DOM Tree", this);
     dump_dom_tree_action->setIcon(QIcon(QString("%1/res/icons/browser/dom-tree.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(dump_dom_tree_action);
