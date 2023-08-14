@@ -19,13 +19,13 @@
 
 namespace GUI {
 
-ErrorOr<NonnullRefPtr<AboutDialog>> AboutDialog::try_create(String name, String version, RefPtr<Gfx::Bitmap const> icon, Window* parent_window)
+NonnullRefPtr<AboutDialog> AboutDialog::create(String name, String version, RefPtr<Gfx::Bitmap const> icon, Window* parent_window)
 {
-    auto dialog = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AboutDialog(name, version, icon, parent_window)));
+    auto dialog = adopt_ref(*new AboutDialog(name, version, icon, parent_window));
     dialog->set_title(DeprecatedString::formatted("About {}", name));
 
-    auto widget = TRY(dialog->set_main_widget<Widget>());
-    TRY(widget->load_from_gml(about_dialog_gml));
+    auto widget = MUST(dialog->set_main_widget<Widget>());
+    MUST(widget->load_from_gml(about_dialog_gml));
 
     auto icon_wrapper = widget->find_descendant_of_type_named<Widget>("icon_wrapper");
     if (icon) {
@@ -62,13 +62,12 @@ AboutDialog::AboutDialog(String name, String version, RefPtr<Gfx::Bitmap const> 
         set_icon(parent_window->icon());
 }
 
-ErrorOr<void> AboutDialog::show(String name, String version, RefPtr<Gfx::Bitmap const> icon, Window* parent_window, RefPtr<Gfx::Bitmap const> window_icon)
+void AboutDialog::show(String name, String version, RefPtr<Gfx::Bitmap const> icon, Window* parent_window, RefPtr<Gfx::Bitmap const> window_icon)
 {
-    auto dialog = TRY(AboutDialog::try_create(move(name), move(version), move(icon), parent_window));
+    auto dialog = AboutDialog::create(move(name), move(version), move(icon), parent_window);
     if (window_icon)
         dialog->set_icon(window_icon);
     dialog->exec();
-    return {};
 }
 
 }
