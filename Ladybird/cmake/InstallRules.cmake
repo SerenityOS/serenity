@@ -106,3 +106,24 @@ install(FILES
   DESTINATION "${CMAKE_INSTALL_DATADIR}/res/ladybird"
   COMPONENT ladybird_Runtime
 )
+
+if (APPLE)
+  # Fixup the app bundle and copy:
+  #   - Libraries from lib/ to ladybird.app/Contents/lib
+  #   - Resources from share/res/ to ladybird.app/Contents/Resources/res
+  install(CODE "
+    set(res_dir \${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/res)
+    if (IS_ABSOLUTE ${CMAKE_INSTALL_DATADIR})
+      set(res_dir ${CMAKE_INSTALL_DATADIR}/res)
+    endif()
+    set(lib_dir \${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
+    if (IS_ABSOLUTE ${CMAKE_INSTALL_LIBDIR})
+      set(lib_dir ${CMAKE_INSTALL_LIBDIR})
+    endif()
+
+    set(contents_dir \${CMAKE_INSTALL_PREFIX}/bundle/ladybird.app/Contents)
+    file(COPY \${res_dir} DESTINATION \${contents_dir}/Resources)
+    file(COPY \${lib_dir} DESTINATION \${contents_dir})
+  "
+  COMPONENT ladybird_Runtime)
+endif()
