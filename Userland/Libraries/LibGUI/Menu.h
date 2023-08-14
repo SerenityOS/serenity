@@ -19,7 +19,7 @@ namespace GUI {
 
 namespace CommonMenus {
 
-ErrorOr<NonnullRefPtr<Menu>> make_accessibility_menu(GUI::ColorFilterer&);
+[[nodiscard]] NonnullRefPtr<Menu> make_accessibility_menu(GUI::ColorFilterer&);
 
 };
 

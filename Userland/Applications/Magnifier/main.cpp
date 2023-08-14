@@ -170,7 +170,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     timeline_menu->add_action(previous_frame_action);
     timeline_menu->add_action(next_frame_action);
 
-    TRY(window->try_add_menu(TRY(GUI::CommonMenus::make_accessibility_menu(magnifier))));
+    TRY(window->try_add_menu(GUI::CommonMenus::make_accessibility_menu(magnifier)));
 
     auto help_menu = TRY(window->try_add_menu("&Help"_string));
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
