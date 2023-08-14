@@ -309,7 +309,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto file_menu = TRY(window->try_add_menu("&File"_string));
     TRY(file_menu->try_add_action(open_action));
     TRY(file_menu->try_add_action(delete_action));
-    TRY(file_menu->try_add_separator());
+    file_menu->add_separator();
 
     TRY(file_menu->add_recent_files_list([&](auto& action) {
         auto path = action.text();
@@ -328,7 +328,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(image_menu->try_add_action(rotate_clockwise_action));
     TRY(image_menu->try_add_action(vertical_flip_action));
     TRY(image_menu->try_add_action(horizontal_flip_action));
-    TRY(image_menu->try_add_separator());
+    image_menu->add_separator();
     TRY(image_menu->try_add_action(desktop_wallpaper_action));
 
     auto navigate_menu = TRY(window->try_add_menu("&Navigate"_string));
@@ -339,12 +339,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto view_menu = TRY(window->try_add_menu("&View"_string));
     TRY(view_menu->try_add_action(full_screen_action));
-    TRY(view_menu->try_add_separator());
+    view_menu->add_separator();
     TRY(view_menu->try_add_action(zoom_in_action));
     TRY(view_menu->try_add_action(reset_zoom_action));
     TRY(view_menu->try_add_action(fit_image_to_view_action));
     TRY(view_menu->try_add_action(zoom_out_action));
-    TRY(view_menu->try_add_separator());
+    view_menu->add_separator();
 
     auto scaling_mode_menu = TRY(view_menu->try_add_submenu("&Scaling Mode"_string));
     scaling_mode_menu->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/scale.png"sv)));
@@ -361,7 +361,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(scaling_mode_menu->try_add_action(bilinear_action));
     TRY(scaling_mode_menu->try_add_action(box_sampling_action));
 
-    TRY(view_menu->try_add_separator());
+    view_menu->add_separator();
     TRY(view_menu->try_add_action(hide_show_toolbar_action));
 
     auto help_menu = TRY(window->try_add_menu("&Help"_string));

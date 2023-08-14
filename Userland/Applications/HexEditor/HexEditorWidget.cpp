@@ -417,7 +417,7 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     TRY(file_menu->try_add_action(*m_open_action));
     TRY(file_menu->try_add_action(*m_save_action));
     TRY(file_menu->try_add_action(*m_save_as_action));
-    TRY(file_menu->try_add_separator());
+    file_menu->add_separator();
     TRY(file_menu->add_recent_files_list([&](auto& action) {
         auto path = action.text();
         auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, path);
@@ -436,17 +436,17 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     auto edit_menu = TRY(window.try_add_menu("&Edit"_string));
     TRY(edit_menu->try_add_action(*m_undo_action));
     TRY(edit_menu->try_add_action(*m_redo_action));
-    TRY(edit_menu->try_add_separator());
+    edit_menu->add_separator();
     TRY(edit_menu->try_add_action(GUI::CommonActions::make_select_all_action([this](auto&) {
         m_editor->select_all();
         m_editor->update();
     })));
     TRY(edit_menu->try_add_action(*m_fill_selection_action));
-    TRY(edit_menu->try_add_separator());
+    edit_menu->add_separator();
     TRY(edit_menu->try_add_action(*m_copy_hex_action));
     TRY(edit_menu->try_add_action(*m_copy_text_action));
     TRY(edit_menu->try_add_action(*m_copy_as_c_code_action));
-    TRY(edit_menu->try_add_separator());
+    edit_menu->add_separator();
     TRY(edit_menu->try_add_action(*m_find_action));
     TRY(edit_menu->try_add_action(GUI::Action::create("Find &Next", { Mod_None, Key_F3 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/find-next.png"sv)), [&](const GUI::Action&) {
         if (m_search_text.is_empty() || m_search_buffer.is_empty()) {
@@ -477,7 +477,7 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
         set_search_results_visible(true);
         m_editor->update();
     })));
-    TRY(edit_menu->try_add_separator());
+    edit_menu->add_separator();
     TRY(edit_menu->try_add_action(*m_goto_offset_action));
 
     auto view_menu = TRY(window.try_add_menu("&View"_string));
@@ -495,7 +495,7 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     TRY(view_menu->try_add_action(*m_layout_toolbar_action));
     TRY(view_menu->try_add_action(*m_layout_search_results_action));
     TRY(view_menu->try_add_action(*m_layout_value_inspector_action));
-    TRY(view_menu->try_add_separator());
+    view_menu->add_separator();
 
     auto bytes_per_row = Config::read_i32("HexEditor"sv, "Layout"sv, "BytesPerRow"sv, 16);
     m_editor->set_bytes_per_row(bytes_per_row);

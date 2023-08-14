@@ -436,10 +436,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(process_context_menu->try_add_action(kill_action));
     TRY(process_context_menu->try_add_action(stop_action));
     TRY(process_context_menu->try_add_action(continue_action));
-    TRY(process_context_menu->try_add_separator());
+    process_context_menu->add_separator();
     TRY(process_context_menu->try_add_action(profile_action));
     TRY(process_context_menu->try_add_action(debug_action));
-    TRY(process_context_menu->try_add_separator());
+    process_context_menu->add_separator();
     TRY(process_context_menu->try_add_action(process_properties_action));
     process_table_view.on_context_menu_request = [&]([[maybe_unused]] const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
         if (index.is_valid())

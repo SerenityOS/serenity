@@ -370,9 +370,9 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(file_menu->try_add_action(*m_open_action));
     TRY(file_menu->try_add_action(*m_save_action));
     TRY(file_menu->try_add_action(*m_save_as_action));
-    TRY(file_menu->try_add_separator());
+    file_menu->add_separator();
     TRY(file_menu->try_add_action(*m_open_folder_action));
-    TRY(file_menu->try_add_separator());
+    file_menu->add_separator();
 
     TRY(file_menu->add_recent_files_list([&](auto& action) {
         if (editor().document().is_modified()) {
@@ -399,14 +399,14 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     auto edit_menu = TRY(window.try_add_menu("&Edit"_string));
     TRY(edit_menu->try_add_action(m_editor->undo_action()));
     TRY(edit_menu->try_add_action(m_editor->redo_action()));
-    TRY(edit_menu->try_add_separator());
+    edit_menu->add_separator();
     TRY(edit_menu->try_add_action(m_editor->cut_action()));
     TRY(edit_menu->try_add_action(m_editor->copy_action()));
     TRY(edit_menu->try_add_action(m_editor->paste_action()));
-    TRY(edit_menu->try_add_separator());
+    edit_menu->add_separator();
     TRY(edit_menu->try_add_action(m_editor->insert_emoji_action()));
     TRY(edit_menu->try_add_action(*m_vim_emulation_setting_action));
-    TRY(edit_menu->try_add_separator());
+    edit_menu->add_separator();
     TRY(edit_menu->try_add_action(*m_find_replace_action));
     TRY(edit_menu->try_add_action(*m_find_next_action));
     TRY(edit_menu->try_add_action(*m_find_previous_action));
@@ -466,7 +466,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(layout_menu->try_add_action(*m_layout_statusbar_action));
     TRY(layout_menu->try_add_action(*m_layout_ruler_action));
 
-    TRY(view_menu->try_add_separator());
+    view_menu->add_separator();
 
     TRY(view_menu->try_add_action(GUI::Action::create("Change &Font...", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"sv)),
         [&](auto&) {
@@ -478,7 +478,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             }
         })));
 
-    TRY(view_menu->try_add_separator());
+    view_menu->add_separator();
 
     m_wrapping_mode_actions.set_exclusive(true);
     auto wrapping_mode_menu = TRY(view_menu->try_add_submenu("&Wrapping Mode"_string));
@@ -547,7 +547,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     m_soft_tab_4_width_action->set_checked(true);
 
-    TRY(view_menu->try_add_separator());
+    view_menu->add_separator();
 
     m_visualize_trailing_whitespace_action = GUI::Action::create_checkable("T&railing Whitespace", [&](auto&) {
         m_editor->set_visualize_trailing_whitespace(m_visualize_trailing_whitespace_action->is_checked());
@@ -585,12 +585,12 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     TRY(view_menu->try_add_action(*m_relative_line_number_action));
 
-    TRY(view_menu->try_add_separator());
+    view_menu->add_separator();
     TRY(view_menu->try_add_action(*m_no_preview_action));
     TRY(view_menu->try_add_action(*m_markdown_preview_action));
     TRY(view_menu->try_add_action(*m_html_preview_action));
     m_no_preview_action->set_checked(true);
-    TRY(view_menu->try_add_separator());
+    view_menu->add_separator();
 
     syntax_actions.set_exclusive(true);
 
@@ -708,7 +708,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(tab_width_statusbar_menu->try_add_action(*m_soft_tab_8_width_action));
     TRY(tab_width_statusbar_menu->try_add_action(*m_soft_tab_16_width_action));
 
-    TRY(m_line_column_statusbar_menu->try_add_separator());
+    m_line_column_statusbar_menu->add_separator();
     TRY(m_line_column_statusbar_menu->try_add_action(*m_cursor_line_highlighting_action));
 
     TRY(m_syntax_statusbar_menu->try_add_action(*m_plain_text_highlight));

@@ -393,7 +393,7 @@ ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
 
         open_file(response.release_value());
     })));
-    TRY(file_menu->try_add_separator());
+    file_menu->add_separator();
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         window.close();
     })));

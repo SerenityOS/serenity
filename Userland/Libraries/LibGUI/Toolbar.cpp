@@ -258,7 +258,7 @@ ErrorOr<void> Toolbar::update_overflow_menu()
                 TRY(m_overflow_menu->try_add_action(*item->action));
         }
         if (item->action && peek_item->type == Item::Type::Separator)
-            TRY(m_overflow_menu->try_add_separator());
+            m_overflow_menu->add_separator();
     }
 
     return {};

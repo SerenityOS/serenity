@@ -170,12 +170,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         start_a_new_game();
     })));
 
-    TRY(game_menu->try_add_separator());
+    game_menu->add_separator();
     TRY(game_menu->try_add_action(GUI::Action::create("&Settings", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"sv)), [&](auto&) {
         change_settings();
     })));
 
-    TRY(game_menu->try_add_separator());
+    game_menu->add_separator();
     TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     })));

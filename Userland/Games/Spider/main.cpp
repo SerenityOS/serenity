@@ -242,17 +242,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         game.setup(mode);
     })));
-    TRY(game_menu->try_add_separator());
+    game_menu->add_separator();
     auto undo_action = GUI::CommonActions::make_undo_action([&](auto&) {
         game.perform_undo();
     });
     undo_action->set_enabled(false);
     TRY(game_menu->try_add_action(undo_action));
-    TRY(game_menu->try_add_separator());
+    game_menu->add_separator();
     TRY(game_menu->try_add_action(TRY(Cards::make_cards_settings_action(window))));
     TRY(game_menu->try_add_action(single_suit_action));
     TRY(game_menu->try_add_action(two_suit_action));
-    TRY(game_menu->try_add_separator());
+    game_menu->add_separator();
     TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
 
     auto view_menu = TRY(window->try_add_menu("&View"_string));

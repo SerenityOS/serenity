@@ -332,7 +332,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             GUI::Process::spawn_or_show_error(window, "/bin/TerminalSettings"sv);
         });
 
-    TRY(terminal->context_menu().try_add_separator());
+    terminal->context_menu().add_separator();
     TRY(terminal->context_menu().try_add_action(open_settings_action));
 
     auto file_menu = TRY(window->try_add_menu("&File"_string));
@@ -341,7 +341,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     })));
 
     TRY(file_menu->try_add_action(open_settings_action));
-    TRY(file_menu->try_add_separator());
+    file_menu->add_separator();
 
     auto tty_has_foreground_process = [&] {
         pid_t fg_pid = tcgetpgrp(ptm_fd);
@@ -387,7 +387,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto edit_menu = TRY(window->try_add_menu("&Edit"_string));
     TRY(edit_menu->try_add_action(terminal->copy_action()));
     TRY(edit_menu->try_add_action(terminal->paste_action()));
-    TRY(edit_menu->try_add_separator());
+    edit_menu->add_separator();
     TRY(edit_menu->try_add_action(GUI::Action::create("&Find...", { Mod_Ctrl | Mod_Shift, Key_F }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv)),
         [&](auto&) {
             find_window->show();
@@ -410,7 +410,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     };
 
-    TRY(view_menu->try_add_separator());
+    view_menu->add_separator();
     TRY(view_menu->try_add_action(GUI::CommonActions::make_zoom_in_action([&](auto&) {
         adjust_font_size(1);
     })));

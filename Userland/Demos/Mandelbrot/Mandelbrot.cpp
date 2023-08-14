@@ -444,7 +444,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     export_submenu.set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"sv)));
 
-    TRY(file_menu->try_add_separator());
+    file_menu->add_separator();
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
 
     auto zoom_in_action = GUI::CommonActions::make_zoom_in_action(

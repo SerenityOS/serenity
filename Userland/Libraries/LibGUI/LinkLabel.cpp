@@ -51,7 +51,7 @@ ErrorOr<void> LinkLabel::create_menus()
 {
     m_context_menu = TRY(Menu::try_create());
     TRY(m_context_menu->try_add_action(*m_open_action));
-    TRY(m_context_menu->try_add_separator());
+    m_context_menu->add_separator();
     TRY(m_context_menu->try_add_action(*m_copy_action));
     return {};
 }

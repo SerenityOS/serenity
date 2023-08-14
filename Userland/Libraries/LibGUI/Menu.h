@@ -42,7 +42,6 @@ public:
     Action* action_at(size_t);
 
     ErrorOr<void> try_add_action(NonnullRefPtr<Action>);
-    ErrorOr<void> try_add_separator();
     ErrorOr<NonnullRefPtr<Menu>> try_add_submenu(String name);
 
     void add_action(NonnullRefPtr<Action>);

@@ -226,7 +226,7 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
     TRY(m_context_menu->try_add_action(*m_go_back_action));
     TRY(m_context_menu->try_add_action(*m_go_forward_action));
     TRY(m_context_menu->try_add_action(*m_go_home_action));
-    TRY(m_context_menu->try_add_separator());
+    m_context_menu->add_separator();
     TRY(m_context_menu->try_add_action(*m_copy_action));
     TRY(m_context_menu->try_add_action(*m_select_all_action));
 

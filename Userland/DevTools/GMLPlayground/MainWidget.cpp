@@ -190,7 +190,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(file_menu->try_add_action(open_action));
     TRY(file_menu->try_add_action(*m_save_action));
     TRY(file_menu->try_add_action(*m_save_as_action));
-    TRY(file_menu->try_add_separator());
+    file_menu->add_separator();
 
     TRY(file_menu->add_recent_files_list([&](auto& action) {
         if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
@@ -209,14 +209,14 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     auto edit_menu = TRY(window.try_add_menu("&Edit"_string));
     TRY(edit_menu->try_add_action(m_editor->undo_action()));
     TRY(edit_menu->try_add_action(m_editor->redo_action()));
-    TRY(edit_menu->try_add_separator());
+    edit_menu->add_separator();
     TRY(edit_menu->try_add_action(m_editor->cut_action()));
     TRY(edit_menu->try_add_action(m_editor->copy_action()));
     TRY(edit_menu->try_add_action(m_editor->paste_action()));
-    TRY(edit_menu->try_add_separator());
+    edit_menu->add_separator();
     TRY(edit_menu->try_add_action(m_editor->select_all_action()));
     TRY(edit_menu->try_add_action(m_editor->go_to_line_or_column_action()));
-    TRY(edit_menu->try_add_separator());
+    edit_menu->add_separator();
 
     auto format_gml_action = GUI::Action::create("&Format GML", { Mod_Ctrl | Mod_Shift, Key_I }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reformat.png"sv)), [&](auto&) {
         auto formatted_gml_or_error = GUI::GML::format_gml(m_editor->text());

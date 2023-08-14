@@ -68,7 +68,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     show_shadow_piece_action->set_checked(game->show_shadow_hint());
 
     TRY(game_menu->try_add_action(show_shadow_piece_action));
-    TRY(game_menu->try_add_separator());
+    game_menu->add_separator();
     TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     })));
