@@ -146,8 +146,6 @@ Painting::PaintableBox const* EventHandler::paint_root() const
 
 bool EventHandler::handle_mousewheel(CSSPixelPoint position, unsigned button, unsigned buttons, unsigned int modifiers, int wheel_delta_x, int wheel_delta_y)
 {
-    constexpr int scroll_step_size = 24;
-
     if (m_browsing_context->active_document())
         m_browsing_context->active_document()->update_layout();
 
@@ -167,7 +165,7 @@ bool EventHandler::handle_mousewheel(CSSPixelPoint position, unsigned button, un
         auto* containing_block = paintable->containing_block();
         while (containing_block) {
             if (containing_block->is_user_scrollable()) {
-                const_cast<Painting::PaintableBox*>(containing_block->paintable_box())->handle_mousewheel({}, position, buttons, modifiers, wheel_delta_x * scroll_step_size, wheel_delta_y * scroll_step_size);
+                const_cast<Painting::PaintableBox*>(containing_block->paintable_box())->handle_mousewheel({}, position, buttons, modifiers, wheel_delta_x, wheel_delta_y);
                 break;
             }
             containing_block = containing_block->containing_block();
@@ -192,7 +190,7 @@ bool EventHandler::handle_mousewheel(CSSPixelPoint position, unsigned button, un
             if (node->dispatch_event(UIEvents::WheelEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::wheel, offset.x(), offset.y(), position.x(), position.y(), wheel_delta_x, wheel_delta_y, buttons, button).release_value_but_fixme_should_propagate_errors())) {
                 if (auto* page = m_browsing_context->page()) {
                     if (m_browsing_context == &page->top_level_browsing_context())
-                        page->client().page_did_request_scroll(wheel_delta_x * scroll_step_size, wheel_delta_y * scroll_step_size);
+                        page->client().page_did_request_scroll(wheel_delta_x, wheel_delta_y);
                 }
             }
 
