@@ -92,20 +92,20 @@ ErrorOr<NonnullRefPtr<CalendarWidget>> CalendarWidget::create(GUI::Window* paren
 
     file_menu.add_separator();
 
-    TRY(file_menu.try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
-    })));
+    }));
 
     auto& event_menu = parent_window->add_menu("&Event"_string);
     event_menu.add_action(add_event_action);
 
     auto view_menu = TRY(parent_window->try_add_menu("&View"_string));
-    TRY(view_menu->try_add_action(*view_month_action));
-    TRY(view_menu->try_add_action(*view_year_action));
+    view_menu->add_action(*view_month_action);
+    view_menu->add_action(*view_year_action);
 
     auto help_menu = TRY(parent_window->try_add_menu("&Help"_string));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(parent_window)));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Calendar", TRY(GUI::Icon::try_create_default_icon("app-calendar"sv)), parent_window)));
+    help_menu->add_action(GUI::CommonActions::make_command_palette_action(parent_window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Calendar", TRY(GUI::Icon::try_create_default_icon("app-calendar"sv)), parent_window));
 
     return widget;
 }

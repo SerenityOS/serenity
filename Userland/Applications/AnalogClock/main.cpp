@@ -38,7 +38,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         });
     show_window_frame_action->set_checked(clock->show_window_frame());
     auto menu = TRY(GUI::Menu::try_create());
-    TRY(menu->try_add_action(*show_window_frame_action));
+    menu->add_action(*show_window_frame_action);
 
     clock->on_context_menu_request = [&](auto& event) {
         menu->popup(event.screen_position());

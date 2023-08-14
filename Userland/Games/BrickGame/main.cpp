@@ -53,12 +53,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto game_menu = TRY(window->try_add_menu("&Game"_string));
 
-    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
+    game_menu->add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         game->reset();
-    })));
-    TRY(game_menu->try_add_action(GUI::Action::create("Toggle &Pause", { Mod_None, Key_P }, [&](auto&) {
+    }));
+    game_menu->add_action(GUI::Action::create("Toggle &Pause", { Mod_None, Key_P }, [&](auto&) {
         game->toggle_pause();
-    })));
+    }));
 
     auto show_shadow_piece_action = TRY(GUI::Action::try_create_checkable("Show Shadow Piece", GUI::Shortcut {}, [&](auto& action) {
         game->set_show_shadow_hint(action.is_checked());
@@ -67,18 +67,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     game->set_show_shadow_hint(Config::read_bool(app_name, app_name, "ShowShadowPiece"sv, true));
     show_shadow_piece_action->set_checked(game->show_shadow_hint());
 
-    TRY(game_menu->try_add_action(show_shadow_piece_action));
+    game_menu->add_action(show_shadow_piece_action);
     game_menu->add_separator();
-    TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    game_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
-    })));
+    }));
 
     auto help_menu = TRY(window->try_add_menu("&Help"_string));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([&man_file](auto&) {
+    help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
+    help_menu->add_action(GUI::CommonActions::make_help_action([&man_file](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme(man_file), "/bin/Help");
-    })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(title, app_icon, window)));
+    }));
+    help_menu->add_action(GUI::CommonActions::make_about_action(title, app_icon, window));
 
     window->show();
 

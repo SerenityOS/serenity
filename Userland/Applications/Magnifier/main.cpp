@@ -62,7 +62,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto magnifier = TRY(window->set_main_widget<MagnifierWidget>());
 
     auto file_menu = TRY(window->try_add_menu("&File"_string));
-    TRY(file_menu->try_add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
+    file_menu->add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
         AK::DeprecatedString filename = "file for saving";
         auto do_save = [&]() -> ErrorOr<void> {
             auto response = FileSystemAccessClient::Client::the().save_file(window, "Capture", "png");
@@ -82,11 +82,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             GUI::MessageBox::show(window, "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
             warnln("Error saving bitmap to {}: {}", filename, result.error().string_literal());
         }
-    })));
+    }));
     file_menu->add_separator();
-    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+    file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit();
-    })));
+    }));
 
     auto size_action_group = make<GUI::ActionGroup>();
 
@@ -143,16 +143,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     size_action_group->set_exclusive(true);
 
     auto view_menu = TRY(window->try_add_menu("&View"_string));
-    TRY(view_menu->try_add_action(two_x_action));
-    TRY(view_menu->try_add_action(four_x_action));
-    TRY(view_menu->try_add_action(eight_x_action));
+    view_menu->add_action(two_x_action);
+    view_menu->add_action(four_x_action);
+    view_menu->add_action(eight_x_action);
     two_x_action->set_checked(true);
 
     view_menu->add_separator();
-    TRY(view_menu->try_add_action(pause_action));
-    TRY(view_menu->try_add_action(lock_location_action));
-    TRY(view_menu->try_add_action(show_grid_action));
-    TRY(view_menu->try_add_action(choose_grid_color_action));
+    view_menu->add_action(pause_action);
+    view_menu->add_action(lock_location_action);
+    view_menu->add_action(show_grid_action);
+    view_menu->add_action(choose_grid_color_action);
 
     auto timeline_menu = TRY(window->try_add_menu("&Timeline"_string));
     auto previous_frame_action = GUI::Action::create(
@@ -167,17 +167,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             magnifier->pause_capture(true);
             magnifier->display_next_frame();
         });
-    TRY(timeline_menu->try_add_action(previous_frame_action));
-    TRY(timeline_menu->try_add_action(next_frame_action));
+    timeline_menu->add_action(previous_frame_action);
+    timeline_menu->add_action(next_frame_action);
 
     TRY(window->try_add_menu(TRY(GUI::CommonMenus::make_accessibility_menu(magnifier))));
 
     auto help_menu = TRY(window->try_add_menu("&Help"_string));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
+    help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
+    help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/Magnifier.md"), "/bin/Help");
-    })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Magnifier", app_icon, window)));
+    }));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Magnifier", app_icon, window));
 
     window->show();
     window->set_always_on_top(true);

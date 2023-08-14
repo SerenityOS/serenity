@@ -719,12 +719,12 @@ void SpreadsheetWidget::clipboard_action(bool is_cut)
 ErrorOr<void> SpreadsheetWidget::initialize_menubar(GUI::Window& window)
 {
     auto file_menu = TRY(window.try_add_menu("&File"_string));
-    TRY(file_menu->try_add_action(*m_new_action));
-    TRY(file_menu->try_add_action(*m_open_action));
-    TRY(file_menu->try_add_action(*m_save_action));
-    TRY(file_menu->try_add_action(*m_save_as_action));
+    file_menu->add_action(*m_new_action);
+    file_menu->add_action(*m_open_action);
+    file_menu->add_action(*m_save_action);
+    file_menu->add_action(*m_save_as_action);
     file_menu->add_separator();
-    TRY(file_menu->try_add_action(*m_import_action));
+    file_menu->add_action(*m_import_action);
     file_menu->add_separator();
     TRY(file_menu->add_recent_files_list([&](auto& action) {
         if (!request_close())
@@ -735,21 +735,21 @@ ErrorOr<void> SpreadsheetWidget::initialize_menubar(GUI::Window& window)
             return;
         load_file(response.value().filename(), response.value().stream());
     }));
-    TRY(file_menu->try_add_action(*m_quit_action));
+    file_menu->add_action(*m_quit_action);
 
     auto edit_menu = TRY(window.try_add_menu("&Edit"_string));
-    TRY(edit_menu->try_add_action(*m_undo_action));
-    TRY(edit_menu->try_add_action(*m_redo_action));
+    edit_menu->add_action(*m_undo_action);
+    edit_menu->add_action(*m_redo_action);
     edit_menu->add_separator();
-    TRY(edit_menu->try_add_action(*m_cut_action));
-    TRY(edit_menu->try_add_action(*m_copy_action));
-    TRY(edit_menu->try_add_action(*m_paste_action));
-    TRY(edit_menu->try_add_action(*m_insert_emoji_action));
+    edit_menu->add_action(*m_cut_action);
+    edit_menu->add_action(*m_copy_action);
+    edit_menu->add_action(*m_paste_action);
+    edit_menu->add_action(*m_insert_emoji_action);
 
     auto help_menu = TRY(window.try_add_menu("&Help"_string));
-    TRY(help_menu->try_add_action(*m_search_action));
-    TRY(help_menu->try_add_action(*m_functions_help_action));
-    TRY(help_menu->try_add_action(*m_about_action));
+    help_menu->add_action(*m_search_action);
+    help_menu->add_action(*m_functions_help_action);
+    help_menu->add_action(*m_about_action);
 
     return {};
 }

@@ -428,19 +428,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         &process_table_view);
 
     auto file_menu = TRY(window->try_add_menu("&File"_string));
-    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    file_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
-    })));
+    }));
 
     auto process_context_menu = TRY(GUI::Menu::try_create());
-    TRY(process_context_menu->try_add_action(kill_action));
-    TRY(process_context_menu->try_add_action(stop_action));
-    TRY(process_context_menu->try_add_action(continue_action));
+    process_context_menu->add_action(kill_action);
+    process_context_menu->add_action(stop_action);
+    process_context_menu->add_action(continue_action);
     process_context_menu->add_separator();
-    TRY(process_context_menu->try_add_action(profile_action));
-    TRY(process_context_menu->try_add_action(debug_action));
+    process_context_menu->add_action(profile_action);
+    process_context_menu->add_action(debug_action);
     process_context_menu->add_separator();
-    TRY(process_context_menu->try_add_action(process_properties_action));
+    process_context_menu->add_action(process_properties_action);
     process_table_view.on_context_menu_request = [&]([[maybe_unused]] const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
         if (index.is_valid())
             process_context_menu->popup(event.screen_position(), process_properties_action);
@@ -458,7 +458,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         action->set_status_tip(TRY(String::formatted("Refresh every {} seconds", seconds)));
         action->set_checked(frequency == seconds);
         frequency_action_group.add_action(*action);
-        TRY(frequency_menu->try_add_action(*action));
+        frequency_menu->add_action(*action);
         return {};
     };
 
@@ -467,8 +467,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(make_frequency_action(5));
 
     auto help_menu = TRY(window->try_add_menu("&Help"_string));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("System Monitor", app_icon, window)));
+    help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("System Monitor", app_icon, window));
 
     process_table_view.on_activation = [&](auto&) {
         if (process_properties_action->is_enabled())

@@ -41,8 +41,6 @@ public:
 
     Action* action_at(size_t);
 
-    ErrorOr<void> try_add_action(NonnullRefPtr<Action>);
-
     void add_action(NonnullRefPtr<Action>);
     void add_separator();
     [[nodiscard]] NonnullRefPtr<Menu> add_submenu(String name);

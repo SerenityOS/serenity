@@ -48,21 +48,12 @@ void Menu::set_icon(Gfx::Bitmap const* icon)
     m_icon = icon;
 }
 
-ErrorOr<void> Menu::try_add_action(NonnullRefPtr<Action> action)
-{
-    // NOTE: We grow the vector first, to get allocation failure handled immediately.
-    TRY(m_items.try_ensure_capacity(m_items.size() + 1));
-
-    auto item = TRY(adopt_nonnull_own_or_enomem(new (nothrow) MenuItem(m_menu_id, move(action))));
-    if (m_menu_id != -1)
-        realize_menu_item(*item, m_items.size());
-    m_items.unchecked_append(move(item));
-    return {};
-}
-
 void Menu::add_action(NonnullRefPtr<Action> action)
 {
-    MUST(try_add_action(move(action)));
+    auto item = make<MenuItem>(m_menu_id, move(action));
+    if (m_menu_id != -1)
+        realize_menu_item(*item, m_items.size());
+    m_items.append(move(item));
 }
 
 void Menu::remove_all_actions()
@@ -250,7 +241,7 @@ ErrorOr<void> Menu::add_recent_files_list(Function<void(Action&)> callback)
     app->register_recent_file_actions({}, recent_file_actions);
 
     for (auto& action : recent_file_actions) {
-        TRY(try_add_action(action));
+        add_action(action);
     }
 
     add_separator();

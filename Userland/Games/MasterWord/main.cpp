@@ -68,33 +68,33 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto game_menu = TRY(window->try_add_menu("&Game"_string));
 
-    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [&](auto&) {
+    game_menu->add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [&](auto&) {
         game.reset();
-    })));
+    }));
 
     game_menu->add_separator();
-    TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    game_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
-    })));
+    }));
 
     auto settings_menu = TRY(window->try_add_menu("&Settings"_string));
 
-    TRY(settings_menu->try_add_action(GUI::Action::create("Set &Word Length...", [&](auto&) {
+    settings_menu->add_action(GUI::Action::create("Set &Word Length...", [&](auto&) {
         auto word_length = Config::read_i32("MasterWord"sv, ""sv, "word_length"sv, 5);
         auto result = GUI::InputBox::show_numeric(window, word_length, shortest_word, longest_word, "Word Length"sv);
         if (!result.is_error() && result.value() == GUI::InputBox::ExecResult::OK) {
             Config::write_i32("MasterWord"sv, ""sv, "word_length"sv, word_length);
             game.set_word_length(word_length);
         }
-    })));
-    TRY(settings_menu->try_add_action(GUI::Action::create("Set &Number of Guesses...", [&](auto&) {
+    }));
+    settings_menu->add_action(GUI::Action::create("Set &Number of Guesses...", [&](auto&) {
         auto max_guesses = Config::read_i32("MasterWord"sv, ""sv, "max_guesses"sv, 5);
         auto result = GUI::InputBox::show_numeric(window, max_guesses, 1, 20, "Number of Guesses"sv);
         if (!result.is_error() && result.value() == GUI::InputBox::ExecResult::OK) {
             Config::write_i32("MasterWord"sv, ""sv, "max_guesses"sv, max_guesses);
             game.set_max_guesses(max_guesses);
         }
-    })));
+    }));
 
     auto toggle_check_guesses = GUI::Action::create_checkable("Check &Guesses in Dictionary", [&](auto& action) {
         auto checked = action.is_checked();
@@ -102,7 +102,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Config::write_bool("MasterWord"sv, ""sv, "check_guesses_in_dictionary"sv, checked);
     });
     toggle_check_guesses->set_checked(game.is_checking_guesses());
-    TRY(settings_menu->try_add_action(toggle_check_guesses));
+    settings_menu->add_action(toggle_check_guesses);
 
     auto theme_menu = TRY(window->try_add_menu("&Theme"_string));
     auto system_theme_action = GUI::Action::create("&System", [&](auto&) {
@@ -111,7 +111,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
     system_theme_action->set_checkable(true);
     system_theme_action->set_checked(use_system_theme);
-    TRY(theme_menu->try_add_action(system_theme_action));
+    theme_menu->add_action(system_theme_action);
 
     auto wordle_theme_action = GUI::Action::create("&Wordle", [&](auto&) {
         game.set_use_system_theme(false);
@@ -119,7 +119,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
     wordle_theme_action->set_checkable(true);
     wordle_theme_action->set_checked(!use_system_theme);
-    TRY(theme_menu->try_add_action(wordle_theme_action));
+    theme_menu->add_action(wordle_theme_action);
 
     GUI::ActionGroup theme_actions;
     theme_actions.set_exclusive(true);
@@ -128,11 +128,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     theme_actions.add_action(wordle_theme_action);
 
     auto help_menu = TRY(window->try_add_menu("&Help"_string));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
+    help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
+    help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man6/MasterWord.md"), "/bin/Help");
-    })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("MasterWord", app_icon, window)));
+    }));
+    help_menu->add_action(GUI::CommonActions::make_about_action("MasterWord", app_icon, window));
 
     game.on_message = [&](auto message) {
         if (!message.has_value())

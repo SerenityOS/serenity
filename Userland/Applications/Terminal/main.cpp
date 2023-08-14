@@ -333,14 +333,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         });
 
     terminal->context_menu().add_separator();
-    TRY(terminal->context_menu().try_add_action(open_settings_action));
+    terminal->context_menu().add_action(open_settings_action);
 
     auto file_menu = TRY(window->try_add_menu("&File"_string));
-    TRY(file_menu->try_add_action(GUI::Action::create("Open New &Terminal", { Mod_Ctrl | Mod_Shift, Key_N }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"sv)), [&](auto&) {
+    file_menu->add_action(GUI::Action::create("Open New &Terminal", { Mod_Ctrl | Mod_Shift, Key_N }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"sv)), [&](auto&) {
         GUI::Process::spawn_or_show_error(window, "/bin/Terminal"sv);
-    })));
+    }));
 
-    TRY(file_menu->try_add_action(open_settings_action));
+    file_menu->add_action(open_settings_action);
     file_menu->add_separator();
 
     auto tty_has_foreground_process = [&] {
@@ -378,27 +378,27 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return GUI::MessageBox::ExecResult::OK;
     };
 
-    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+    file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         dbgln("Terminal: Quit menu activated!");
         if (check_terminal_quit() == GUI::MessageBox::ExecResult::OK)
             GUI::Application::the()->quit();
-    })));
+    }));
 
     auto edit_menu = TRY(window->try_add_menu("&Edit"_string));
-    TRY(edit_menu->try_add_action(terminal->copy_action()));
-    TRY(edit_menu->try_add_action(terminal->paste_action()));
+    edit_menu->add_action(terminal->copy_action());
+    edit_menu->add_action(terminal->paste_action());
     edit_menu->add_separator();
-    TRY(edit_menu->try_add_action(GUI::Action::create("&Find...", { Mod_Ctrl | Mod_Shift, Key_F }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv)),
+    edit_menu->add_action(GUI::Action::create("&Find...", { Mod_Ctrl | Mod_Shift, Key_F }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv)),
         [&](auto&) {
             find_window->show();
             find_window->move_to_front();
-        })));
+        }));
 
     auto view_menu = TRY(window->try_add_menu("&View"_string));
-    TRY(view_menu->try_add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
+    view_menu->add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
         window->set_fullscreen(!window->is_fullscreen());
-    })));
-    TRY(view_menu->try_add_action(terminal->clear_including_history_action()));
+    }));
+    view_menu->add_action(terminal->clear_including_history_action());
 
     auto adjust_font_size = [&](float adjustment) {
         auto& font = terminal->font();
@@ -411,19 +411,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     view_menu->add_separator();
-    TRY(view_menu->try_add_action(GUI::CommonActions::make_zoom_in_action([&](auto&) {
+    view_menu->add_action(GUI::CommonActions::make_zoom_in_action([&](auto&) {
         adjust_font_size(1);
-    })));
-    TRY(view_menu->try_add_action(GUI::CommonActions::make_zoom_out_action([&](auto&) {
+    }));
+    view_menu->add_action(GUI::CommonActions::make_zoom_out_action([&](auto&) {
         adjust_font_size(-1);
-    })));
+    }));
 
     auto help_menu = TRY(window->try_add_menu("&Help"_string));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
+    help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
+    help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/Terminal.md"), "/bin/Help");
-    })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Terminal", app_icon, window)));
+    }));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Terminal", app_icon, window));
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
         if (check_terminal_quit() == GUI::MessageBox::ExecResult::OK)

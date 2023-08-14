@@ -236,24 +236,24 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     suit_actions.add_action(two_suit_action);
 
     auto game_menu = TRY(window->try_add_menu("&Game"_string));
-    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
+    game_menu->add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         if (!confirm_end_current_game())
             return;
 
         game.setup(mode);
-    })));
+    }));
     game_menu->add_separator();
     auto undo_action = GUI::CommonActions::make_undo_action([&](auto&) {
         game.perform_undo();
     });
     undo_action->set_enabled(false);
-    TRY(game_menu->try_add_action(undo_action));
+    game_menu->add_action(undo_action);
     game_menu->add_separator();
-    TRY(game_menu->try_add_action(TRY(Cards::make_cards_settings_action(window))));
-    TRY(game_menu->try_add_action(single_suit_action));
-    TRY(game_menu->try_add_action(two_suit_action));
+    game_menu->add_action(TRY(Cards::make_cards_settings_action(window)));
+    game_menu->add_action(single_suit_action);
+    game_menu->add_action(two_suit_action);
     game_menu->add_separator();
-    TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
+    game_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
     auto view_menu = TRY(window->try_add_menu("&View"_string));
 
@@ -274,8 +274,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     best_time_actions->set_checked(statistic_display == StatisticDisplay::BestTime);
     statistic_display_actions.add_action(best_time_actions);
 
-    TRY(view_menu->try_add_action(high_score_action));
-    TRY(view_menu->try_add_action(best_time_actions));
+    view_menu->add_action(high_score_action);
+    view_menu->add_action(best_time_actions);
 
     auto help_menu = TRY(window->try_add_menu("&Help"_string));
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));

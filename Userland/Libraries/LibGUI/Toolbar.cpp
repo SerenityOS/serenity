@@ -255,7 +255,7 @@ ErrorOr<void> Toolbar::update_overflow_menu()
             item->widget->set_visible(false);
             peek_item = m_items[i + 1];
             if (item->action)
-                TRY(m_overflow_menu->try_add_action(*item->action));
+                m_overflow_menu->add_action(*item->action);
         }
         if (item->action && peek_item->type == Item::Type::Separator)
             m_overflow_menu->add_separator();

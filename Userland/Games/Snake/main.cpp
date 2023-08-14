@@ -85,14 +85,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto game_menu = TRY(window->try_add_menu("&Game"_string));
 
-    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
+    game_menu->add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         game.reset();
-    })));
+    }));
     static DeprecatedString const pause_text = "&Pause Game"sv;
     auto const pause_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/pause.png"sv));
     static DeprecatedString const continue_text = "&Continue Game"sv;
     auto const continue_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv));
-    TRY(game_menu->try_add_action(GUI::Action::create(pause_text, { Mod_None, Key_Space }, pause_icon, [&](auto& action) {
+    game_menu->add_action(GUI::Action::create(pause_text, { Mod_None, Key_Space }, pause_icon, [&](auto& action) {
         if (game.has_timer()) {
             game.pause();
             action.set_text(continue_text);
@@ -102,7 +102,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             action.set_text(pause_text);
             action.set_icon(pause_icon);
         }
-    })));
+    }));
 
     auto change_snake_color = GUI::Action::create("&Change Snake Color", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/color-chooser.png"sv)), [&](auto&) {
         auto was_paused = game.is_paused();
@@ -118,7 +118,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             game.start();
     });
     change_snake_color->set_enabled(snake_skin_name == "Classic"sv);
-    TRY(game_menu->try_add_action(change_snake_color));
+    game_menu->add_action(change_snake_color);
 
     GUI::ActionGroup skin_action_group;
     skin_action_group.set_exclusive(true);
@@ -136,7 +136,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         skin_action_group.add_action(*action);
         if (snake_skin_name == name)
             action->set_checked(true);
-        TRY(skin_menu->try_add_action(*action));
+        skin_menu->add_action(*action);
         return {};
     };
 
@@ -147,16 +147,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(add_skin_action("Classic"sv, true));
 
     game_menu->add_separator();
-    TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    game_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
-    })));
+    }));
 
     auto help_menu = TRY(window->try_add_menu("&Help"_string));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
+    help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
+    help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man6/Snake.md"), "/bin/Help");
-    })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Snake", app_icon, window)));
+    }));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Snake", app_icon, window));
 
     window->show();
 
