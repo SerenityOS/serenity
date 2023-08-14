@@ -419,16 +419,21 @@ struct Formatter<FixedPoint<precision, Underlying>> : StandardFormatter {
     ErrorOr<void> format(FormatBuilder& builder, FixedPoint<precision, Underlying> value)
     {
         u8 base;
-        bool upper_case;
+        bool upper_case = false;
         if (m_mode == Mode::Default || m_mode == Mode::FixedPoint) {
             base = 10;
-            upper_case = false;
         } else if (m_mode == Mode::Hexfloat) {
             base = 16;
-            upper_case = false;
         } else if (m_mode == Mode::HexfloatUppercase) {
             base = 16;
             upper_case = true;
+        } else if (m_mode == Mode::Binary) {
+            base = 2;
+        } else if (m_mode == Mode::BinaryUppercase) {
+            base = 2;
+            upper_case = true;
+        } else if (m_mode == Mode::Octal) {
+            base = 8;
         } else {
             VERIFY_NOT_REACHED();
         }
