@@ -588,7 +588,7 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                         m_tiles[l][i].height);
                     m_tiles[l][i].rect = tile_rect.translated(frame_thickness(), frame_thickness());
 
-                    paint_tile(painter, m_tiles[0][i], tile_rect, x_offset, y_offset, k);
+                    paint_tile(painter, m_tiles[l][i], tile_rect, x_offset, y_offset, k);
 
                     i++;
                 }
