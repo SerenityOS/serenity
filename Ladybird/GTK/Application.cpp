@@ -14,10 +14,12 @@ G_BEGIN_DECLS
 
 G_DEFINE_FINAL_TYPE(LadybirdApplication, ladybird_application, ADW_TYPE_APPLICATION)
 
-static void open_new_window([[maybe_unused]] GSimpleAction* action, [[maybe_unused]] GVariant* state, void* user_data)
+static void open_new_window(GSimpleAction* action, [[maybe_unused]] GVariant* state, void* user_data)
 {
     LadybirdApplication* app = LADYBIRD_APPLICATION(user_data);
-    LadybirdWindow* window = ladybird_window_new(app, true, false);
+    char const* action_name = g_action_get_name(G_ACTION(action));
+    bool incognito = !strcmp(action_name, "new-incognito-window");
+    LadybirdWindow* window = ladybird_window_new(app, true, incognito);
     gtk_window_present(GTK_WINDOW(window));
 }
 
@@ -70,12 +72,14 @@ static void do_quit([[maybe_unused]] GSimpleAction* action, [[maybe_unused]] GVa
 
 static GActionEntry const app_entries[] = {
     { "new-window", open_new_window, nullptr, nullptr, nullptr, { 0 } },
+    { "new-incognito-window", open_new_window, nullptr, nullptr, nullptr, { 0 } },
     { "shortcuts", show_shortcuts, nullptr, nullptr, nullptr, { 0 } },
     { "about", show_about, nullptr, nullptr, nullptr, { 0 } },
     { "quit", do_quit, nullptr, nullptr, nullptr, { 0 } }
 };
 
 static char const* const new_window_accels[] = { "<Primary>n", nullptr };
+static char const* const new_incognito_window_accels[] = { "<Primary><shift>n", nullptr };
 static char const* const shortcuts_accels[] = { "<Primary>question", nullptr };
 static char const* const quit_accels[] = { "<Primary>q", nullptr };
 
@@ -148,6 +152,7 @@ static void ladybird_application_init([[maybe_unused]] LadybirdApplication* self
 
     g_action_map_add_action_entries(G_ACTION_MAP(self), app_entries, G_N_ELEMENTS(app_entries), self);
     gtk_application_set_accels_for_action(gtk_app, "app.new-window", new_window_accels);
+    gtk_application_set_accels_for_action(gtk_app, "app.new-incognito-window", new_incognito_window_accels);
     gtk_application_set_accels_for_action(gtk_app, "app.shortcuts", shortcuts_accels);
     gtk_application_set_accels_for_action(gtk_app, "app.quit", quit_accels);
 }
