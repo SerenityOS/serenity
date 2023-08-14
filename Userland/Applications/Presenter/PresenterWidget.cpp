@@ -66,7 +66,7 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
         this->set_file(response.value().filename());
     });
     TRY(file_menu->try_add_action(open_action));
-    TRY(file_menu->try_add_separator());
+    file_menu->add_separator();
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     })));

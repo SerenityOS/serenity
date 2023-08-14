@@ -136,10 +136,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(game_menu->try_add_action(clear_board_action));
     TRY(game_menu->try_add_action(randomize_cells_action));
-    TRY(game_menu->try_add_separator());
+    game_menu->add_separator();
     TRY(game_menu->try_add_action(toggle_running_action));
     TRY(game_menu->try_add_action(run_one_generation_action));
-    TRY(game_menu->try_add_separator());
+    game_menu->add_separator();
     TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     })));

@@ -86,7 +86,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file_menu = TRY(window->try_add_menu("&File"_string));
     TRY(file_menu->try_add_action(move(show_window_frame_action)));
-    TRY(file_menu->try_add_separator());
+    file_menu->add_separator();
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
 
     auto help_menu = TRY(window->try_add_menu("&Help"_string));

@@ -738,7 +738,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(file_menu->try_add_action(*m_open_action));
     TRY(file_menu->try_add_action(*m_save_action));
     TRY(file_menu->try_add_action(*m_save_as_action));
-    TRY(file_menu->try_add_separator());
+    file_menu->add_separator();
     TRY(file_menu->add_recent_files_list([this](auto& action) {
         if (!request_close())
             return;
@@ -758,14 +758,14 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     auto edit_menu = TRY(window.try_add_menu("&Edit"_string));
     TRY(edit_menu->try_add_action(*m_undo_action));
     TRY(edit_menu->try_add_action(*m_redo_action));
-    TRY(edit_menu->try_add_separator());
+    edit_menu->add_separator();
     TRY(edit_menu->try_add_action(*m_cut_action));
     TRY(edit_menu->try_add_action(*m_copy_action));
     TRY(edit_menu->try_add_action(*m_paste_action));
     TRY(edit_menu->try_add_action(*m_delete_action));
-    TRY(edit_menu->try_add_separator());
+    edit_menu->add_separator();
     TRY(edit_menu->try_add_action(*m_select_all_action));
-    TRY(edit_menu->try_add_separator());
+    edit_menu->add_separator();
     TRY(edit_menu->try_add_action(*m_copy_text_action));
 
     m_context_menu = edit_menu;
@@ -781,12 +781,12 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(layout_menu->try_add_action(*m_show_statusbar_action));
     TRY(layout_menu->try_add_action(*m_show_metadata_action));
     TRY(layout_menu->try_add_action(*m_show_unicode_blocks_action));
-    TRY(view_menu->try_add_separator());
+    view_menu->add_separator();
     TRY(view_menu->try_add_action(*m_open_preview_action));
-    TRY(view_menu->try_add_separator());
+    view_menu->add_separator();
     TRY(view_menu->try_add_action(*m_highlight_modifications_action));
     TRY(view_menu->try_add_action(*m_show_system_emoji_action));
-    TRY(view_menu->try_add_separator());
+    view_menu->add_separator();
     auto scale_menu = TRY(view_menu->try_add_submenu("&Scale"_string));
     scale_menu->set_icon(g_resources.scale_editor);
     TRY(scale_menu->try_add_action(*m_scale_five_action));

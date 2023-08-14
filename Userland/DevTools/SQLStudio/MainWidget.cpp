@@ -307,7 +307,7 @@ ErrorOr<void> MainWidget::initialize_menu(GUI::Window* window)
     TRY(file_menu->try_add_action(*m_save_action));
     TRY(file_menu->try_add_action(*m_save_as_action));
     TRY(file_menu->try_add_action(*m_save_all_action));
-    TRY(file_menu->try_add_separator());
+    file_menu->add_separator();
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     })));
@@ -316,10 +316,10 @@ ErrorOr<void> MainWidget::initialize_menu(GUI::Window* window)
     TRY(edit_menu->try_add_action(*m_copy_action));
     TRY(edit_menu->try_add_action(*m_cut_action));
     TRY(edit_menu->try_add_action(*m_paste_action));
-    TRY(edit_menu->try_add_separator());
+    edit_menu->add_separator();
     TRY(edit_menu->try_add_action(*m_undo_action));
     TRY(edit_menu->try_add_action(*m_redo_action));
-    TRY(edit_menu->try_add_separator());
+    edit_menu->add_separator();
     TRY(edit_menu->try_add_action(*m_run_script_action));
 
     auto help_menu = TRY(window->try_add_menu("&Help"_string));

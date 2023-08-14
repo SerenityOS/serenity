@@ -723,9 +723,9 @@ ErrorOr<void> SpreadsheetWidget::initialize_menubar(GUI::Window& window)
     TRY(file_menu->try_add_action(*m_open_action));
     TRY(file_menu->try_add_action(*m_save_action));
     TRY(file_menu->try_add_action(*m_save_as_action));
-    TRY(file_menu->try_add_separator());
+    file_menu->add_separator();
     TRY(file_menu->try_add_action(*m_import_action));
-    TRY(file_menu->try_add_separator());
+    file_menu->add_separator();
     TRY(file_menu->add_recent_files_list([&](auto& action) {
         if (!request_close())
             return;
@@ -740,7 +740,7 @@ ErrorOr<void> SpreadsheetWidget::initialize_menubar(GUI::Window& window)
     auto edit_menu = TRY(window.try_add_menu("&Edit"_string));
     TRY(edit_menu->try_add_action(*m_undo_action));
     TRY(edit_menu->try_add_action(*m_redo_action));
-    TRY(edit_menu->try_add_separator());
+    edit_menu->add_separator();
     TRY(edit_menu->try_add_action(*m_cut_action));
     TRY(edit_menu->try_add_action(*m_copy_action));
     TRY(edit_menu->try_add_action(*m_paste_action));

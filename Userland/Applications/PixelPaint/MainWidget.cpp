@@ -269,7 +269,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     m_export_submenu->set_icon(g_icon_bag.file_export);
 
-    TRY(file_menu->try_add_separator());
+    file_menu->add_separator();
 
     TRY(file_menu->add_recent_files_list([&](auto& action) {
         auto path = action.text();
@@ -409,12 +409,12 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     TRY(m_edit_menu->try_add_action(*m_undo_action));
     TRY(m_edit_menu->try_add_action(*m_redo_action));
-    TRY(m_edit_menu->try_add_separator());
+    m_edit_menu->add_separator();
     TRY(m_edit_menu->try_add_action(*m_cut_action));
     TRY(m_edit_menu->try_add_action(*m_copy_action));
     TRY(m_edit_menu->try_add_action(*m_copy_merged_action));
     TRY(m_edit_menu->try_add_action(*m_paste_action));
-    TRY(m_edit_menu->try_add_separator());
+    m_edit_menu->add_separator();
 
     TRY(m_edit_menu->try_add_action(GUI::CommonActions::make_select_all_action([&](auto&) {
         auto* editor = current_image_editor();
@@ -440,7 +440,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             editor->did_complete_action("Invert Selection"sv);
         })));
 
-    TRY(m_edit_menu->try_add_separator());
+    m_edit_menu->add_separator();
     TRY(m_edit_menu->try_add_action(GUI::Action::create(
         "S&wap Colors", { Mod_None, Key_X }, g_icon_bag.swap_colors, [&](auto&) {
             auto* editor = current_image_editor();
@@ -542,7 +542,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             VERIFY(editor);
             editor->fit_image_to_view();
         })));
-    TRY(m_view_menu->try_add_separator());
+    m_view_menu->add_separator();
     TRY(m_view_menu->try_add_action(*m_add_guide_action));
     TRY(m_view_menu->try_add_action(*m_show_guides_action));
 
@@ -552,7 +552,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             VERIFY(editor);
             editor->clear_guides();
         })));
-    TRY(m_view_menu->try_add_separator());
+    m_view_menu->add_separator();
 
     auto show_pixel_grid_action = GUI::Action::create_checkable(
         "Show &Pixel Grid", [&](auto& action) {
@@ -584,7 +584,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_show_active_layer_boundary_action->set_checked(Config::read_bool("PixelPaint"sv, "ImageEditor"sv, "ShowActiveLayerBoundary"sv, true));
     TRY(m_view_menu->try_add_action(*m_show_active_layer_boundary_action));
 
-    TRY(m_view_menu->try_add_separator());
+    m_view_menu->add_separator();
 
     auto histogram_action = GUI::Action::create_checkable("&Histogram", [&](auto& action) {
         Config::write_bool("PixelPaint"sv, "Scopes"sv, "ShowHistogram"sv, action.is_checked());
@@ -634,7 +634,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             }
             editor->did_complete_action("Flip Image Horizontally"sv);
         })));
-    TRY(m_image_menu->try_add_separator());
+    m_image_menu->add_separator();
 
     TRY(m_image_menu->try_add_action(GUI::Action::create("Rotate Image &Counterclockwise", { Mod_Ctrl | Mod_Shift, Key_LessThan }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-rotate-ccw.png"sv)),
         [&](auto&) {
@@ -659,7 +659,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             }
             editor->did_complete_action("Rotate Image Clockwise"sv);
         })));
-    TRY(m_image_menu->try_add_separator());
+    m_image_menu->add_separator();
     TRY(m_image_menu->try_add_action(GUI::Action::create(
         "&Resize Image...", { Mod_Ctrl | Mod_Shift, Key_R }, g_icon_bag.resize_image, [&](auto&) {
             auto* editor = current_image_editor();
@@ -791,7 +791,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         });
     TRY(m_layer_menu->try_add_action(*m_layer_via_cut));
 
-    TRY(m_layer_menu->try_add_separator());
+    m_layer_menu->add_separator();
 
     auto create_layer_mask_callback = [&](auto const& action_name, Function<void(Layer*)> mask_function) {
         return [&, mask_function = move(mask_function)](GUI::Action&) {
@@ -898,7 +898,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     TRY(mask_submenu->try_add_action(*m_open_color_masking_action));
 
-    TRY(m_layer_menu->try_add_separator());
+    m_layer_menu->add_separator();
 
     TRY(m_layer_menu->try_add_action(GUI::Action::create(
         "Select &Previous Layer", { 0, Key_PageUp }, g_icon_bag.previous_layer, [&](auto&) {
@@ -916,7 +916,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         "Select B&ottom Layer", { 0, Key_End }, g_icon_bag.bottom_layer, [&](auto&) {
             m_layer_list_widget->select_bottom_layer();
         })));
-    TRY(m_layer_menu->try_add_separator());
+    m_layer_menu->add_separator();
     TRY(m_layer_menu->try_add_action(GUI::CommonActions::make_move_to_front_action(
         [&](auto&) {
             auto* editor = current_image_editor();
@@ -937,7 +937,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             editor->image().move_layer_to_back(*active_layer);
             editor->layers_did_change();
         })));
-    TRY(m_layer_menu->try_add_separator());
+    m_layer_menu->add_separator();
     TRY(m_layer_menu->try_add_action(GUI::Action::create(
         "Move Active Layer &Up", { Mod_Ctrl, Key_PageUp }, g_icon_bag.active_layer_up, [&](auto&) {
             auto* editor = current_image_editor();
@@ -956,7 +956,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 return;
             editor->image().move_layer_down(*active_layer);
         })));
-    TRY(m_layer_menu->try_add_separator());
+    m_layer_menu->add_separator();
     TRY(m_layer_menu->try_add_action(GUI::Action::create(
         "&Remove Active Layer", { Mod_Ctrl, Key_D }, g_icon_bag.delete_layer, [&](auto&) {
             auto* editor = current_image_editor();
@@ -987,7 +987,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_layer_list_widget->on_context_menu_request = [&](auto& event) {
         m_layer_menu->popup(event.screen_position());
     };
-    TRY(m_layer_menu->try_add_separator());
+    m_layer_menu->add_separator();
     TRY(m_layer_menu->try_add_action(GUI::Action::create(
         "Fl&atten Image", { Mod_Ctrl, Key_F }, g_icon_bag.flatten_image, [&](auto&) {
             auto* editor = current_image_editor();
@@ -1040,7 +1040,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             editor->did_complete_action("Merge Active Layer Down"sv);
         })));
 
-    TRY(m_layer_menu->try_add_separator());
+    m_layer_menu->add_separator();
     TRY(m_layer_menu->try_add_action(GUI::Action::create(
         "Flip Layer &Vertically", g_icon_bag.edit_flip_vertical, [&](auto&) {
             auto* editor = current_image_editor();
@@ -1069,7 +1069,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             }
             editor->did_complete_action("Flip Layer Horizontally"sv);
         })));
-    TRY(m_layer_menu->try_add_separator());
+    m_layer_menu->add_separator();
 
     TRY(m_layer_menu->try_add_action(GUI::Action::create("Rotate Layer &Counterclockwise", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-rotate-ccw.png"sv)),
         [&](auto&) {
@@ -1101,7 +1101,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             editor->did_complete_action("Rotate Layer Clockwise"sv);
         })));
 
-    TRY(m_layer_menu->try_add_separator());
+    m_layer_menu->add_separator();
     TRY(m_layer_menu->try_add_action(GUI::Action::create(
         "&Crop Layer to Selection", g_icon_bag.crop, [&](auto&) {
             auto* editor = current_image_editor();
@@ -1150,7 +1150,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             return;
     })));
 
-    TRY(m_filter_menu->try_add_separator());
+    m_filter_menu->add_separator();
     TRY(m_filter_menu->try_add_action(GUI::Action::create("Generic 5x5 &Convolution", g_icon_bag.generic_5x5_convolution, [&](auto&) {
         auto* editor = current_image_editor();
         VERIFY(editor);

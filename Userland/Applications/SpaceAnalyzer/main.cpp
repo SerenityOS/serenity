@@ -74,7 +74,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
         }
     })));
-    TRY(file_menu->try_add_separator());
+    file_menu->add_separator();
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit();
     })));

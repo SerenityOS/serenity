@@ -285,7 +285,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             return;
         save_to_file(result.value().filename(), result.value().release_stream());
     })));
-    TRY(file_menu->try_add_separator());
+    file_menu->add_separator();
 
     TRY(file_menu->add_recent_files_list([&](auto& action) {
         if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)

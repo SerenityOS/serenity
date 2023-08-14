@@ -46,7 +46,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto context_menu = TRY(GUI::Menu::try_create());
     TRY(context_menu->try_add_action(GUI::CommonActions::make_about_action("CatDog Demo", app_icon, window)));
-    TRY(context_menu->try_add_separator());
+    context_menu->add_separator();
     TRY(context_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
 
     window->show();

@@ -83,7 +83,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             warnln("Error saving bitmap to {}: {}", filename, result.error().string_literal());
         }
     })));
-    TRY(file_menu->try_add_separator());
+    file_menu->add_separator();
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit();
     })));
@@ -148,7 +148,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(view_menu->try_add_action(eight_x_action));
     two_x_action->set_checked(true);
 
-    TRY(view_menu->try_add_separator());
+    view_menu->add_separator();
     TRY(view_menu->try_add_action(pause_action));
     TRY(view_menu->try_add_action(lock_location_action));
     TRY(view_menu->try_add_action(show_grid_action));

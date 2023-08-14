@@ -97,7 +97,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(game_menu->try_add_action(GUI::Action::create("&Flip Board", { Mod_Ctrl, Key_F }, [&](auto&) {
         widget->flip_board();
     })));
-    TRY(game_menu->try_add_separator());
+    game_menu->add_separator();
 
     TRY(game_menu->try_add_action(GUI::Action::create("&Import PGN...", { Mod_Ctrl, Key_O }, [&](auto&) {
         FileSystemAccessClient::OpenFileOptions options {
@@ -129,7 +129,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         GUI::Clipboard::the().set_data(widget->get_fen().release_value_but_fixme_should_propagate_errors().bytes());
         GUI::MessageBox::show(window, "Board state copied to clipboard as FEN."sv, "Copy FEN"sv, GUI::MessageBox::Type::Information);
     })));
-    TRY(game_menu->try_add_separator());
+    game_menu->add_separator();
 
     TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         if (widget->board().game_result() == Chess::Board::Result::NotFinished) {
@@ -138,7 +138,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         widget->reset();
     })));
-    TRY(game_menu->try_add_separator());
+    game_menu->add_separator();
 
     auto settings_action = GUI::Action::create(
         "Chess &Settings", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/games.png"sv)), [window](auto&) {
@@ -155,7 +155,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
     show_available_moves_action->set_checked(widget->show_available_moves());
     TRY(game_menu->try_add_action(show_available_moves_action));
-    TRY(game_menu->try_add_separator());
+    game_menu->add_separator();
 
     TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();

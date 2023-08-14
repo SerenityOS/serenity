@@ -68,7 +68,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     })));
 
-    TRY(file_menu->try_add_separator());
+    file_menu->add_separator();
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit();
     })));
@@ -97,9 +97,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto linear_volume_slider = GUI::Action::create_checkable("&Nonlinear Volume Slider", [&](auto& action) {
         static_cast<SoundPlayerWidget*>(player)->set_nonlinear_volume_slider(action.is_checked());
     });
-    TRY(playback_menu->try_add_separator());
+    playback_menu->add_separator();
     TRY(playback_menu->try_add_action(linear_volume_slider));
-    TRY(playback_menu->try_add_separator());
+    playback_menu->add_separator();
 
     auto playlist_toggle = GUI::Action::create_checkable("&Show Playlist", [&](auto& action) {
         static_cast<SoundPlayerWidget*>(player)->set_playlist_visible(action.is_checked());

@@ -220,7 +220,7 @@ ErrorOr<void> PDFViewerWidget::initialize_menubar(GUI::Window& window)
         if (!response.is_error())
             open_file(response.value().filename(), response.value().release_stream());
     })));
-    TRY(file_menu->try_add_separator());
+    file_menu->add_separator();
     TRY(file_menu->add_recent_files_list([&](auto& action) {
         auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text());
         if (!response.is_error())
@@ -232,11 +232,11 @@ ErrorOr<void> PDFViewerWidget::initialize_menubar(GUI::Window& window)
 
     auto view_menu = TRY(window.try_add_menu("&View"_string));
     TRY(view_menu->try_add_action(*m_toggle_sidebar_action));
-    TRY(view_menu->try_add_separator());
+    view_menu->add_separator();
     auto view_mode_menu = TRY(view_menu->try_add_submenu("View &Mode"_string));
     TRY(view_mode_menu->try_add_action(*m_page_view_mode_single));
     TRY(view_mode_menu->try_add_action(*m_page_view_mode_multiple));
-    TRY(view_menu->try_add_separator());
+    view_menu->add_separator();
     TRY(view_menu->try_add_action(*m_zoom_in_action));
     TRY(view_menu->try_add_action(*m_zoom_out_action));
     TRY(view_menu->try_add_action(*m_reset_zoom_action));

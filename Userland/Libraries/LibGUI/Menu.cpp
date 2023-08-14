@@ -127,21 +127,12 @@ Menu& Menu::add_submenu(String name)
     return menu;
 }
 
-ErrorOr<void> Menu::try_add_separator()
-{
-    // NOTE: We grow the vector first, to get allocation failure handled immediately.
-    TRY(m_items.try_ensure_capacity(m_items.size() + 1));
-
-    auto item = TRY(adopt_nonnull_own_or_enomem(new (nothrow) MenuItem(m_menu_id, MenuItem::Type::Separator)));
-    if (m_menu_id != -1)
-        realize_menu_item(*item, m_items.size());
-    m_items.unchecked_append(move(item));
-    return {};
-}
-
 void Menu::add_separator()
 {
-    MUST(try_add_separator());
+    auto item = make<MenuItem>(m_menu_id, MenuItem::Type::Separator);
+    if (m_menu_id != -1)
+        realize_menu_item(*item, m_items.size());
+    m_items.append(move(item));
 }
 
 void Menu::realize_if_needed(RefPtr<Action> const& default_action)
@@ -271,7 +262,7 @@ ErrorOr<void> Menu::add_recent_files_list(Function<void(Action&)> callback)
         TRY(try_add_action(action));
     }
 
-    TRY(try_add_separator());
+    add_separator();
     return {};
 }
 

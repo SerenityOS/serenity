@@ -146,7 +146,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }));
     TRY(add_skin_action("Classic"sv, true));
 
-    TRY(game_menu->try_add_separator());
+    game_menu->add_separator();
     TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     })));
