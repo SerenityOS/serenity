@@ -235,7 +235,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     two_suit_action->set_checked(mode == Spider::Mode::TwoSuit);
     suit_actions.add_action(two_suit_action);
 
-    auto game_menu = TRY(window->try_add_menu("&Game"_string));
+    auto game_menu = window->add_menu("&Game"_string);
     game_menu->add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         if (!confirm_end_current_game())
             return;
@@ -255,7 +255,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     game_menu->add_separator();
     game_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
-    auto view_menu = TRY(window->try_add_menu("&View"_string));
+    auto view_menu = window->add_menu("&View"_string);
 
     GUI::ActionGroup statistic_display_actions;
     statistic_display_actions.set_exclusive(true);
@@ -277,7 +277,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     view_menu->add_action(high_score_action);
     view_menu->add_action(best_time_actions);
 
-    auto help_menu = TRY(window->try_add_menu("&Help"_string));
+    auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu->add_action(GUI::CommonActions::make_about_action("Spider", app_icon, window));
 

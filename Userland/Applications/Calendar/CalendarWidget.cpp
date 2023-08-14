@@ -83,27 +83,27 @@ ErrorOr<NonnullRefPtr<CalendarWidget>> CalendarWidget::create(GUI::Window* paren
     auto save_as_action = widget->create_save_as_action();
     auto save_action = widget->create_save_action(save_as_action);
 
-    auto& file_menu = parent_window->add_menu("&File"_string);
-    file_menu.add_action(open_settings_action);
-    file_menu.add_action(new_calendar_action);
-    file_menu.add_action(open_calendar_action);
-    file_menu.add_action(save_as_action);
-    file_menu.add_action(save_action);
+    auto file_menu = parent_window->add_menu("&File"_string);
+    file_menu->add_action(open_settings_action);
+    file_menu->add_action(new_calendar_action);
+    file_menu->add_action(open_calendar_action);
+    file_menu->add_action(save_as_action);
+    file_menu->add_action(save_action);
 
-    file_menu.add_separator();
+    file_menu->add_separator();
 
-    file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    file_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
 
-    auto& event_menu = parent_window->add_menu("&Event"_string);
-    event_menu.add_action(add_event_action);
+    auto event_menu = parent_window->add_menu("&Event"_string);
+    event_menu->add_action(add_event_action);
 
-    auto view_menu = TRY(parent_window->try_add_menu("&View"_string));
+    auto view_menu = parent_window->add_menu("&View"_string);
     view_menu->add_action(*view_month_action);
     view_menu->add_action(*view_year_action);
 
-    auto help_menu = TRY(parent_window->try_add_menu("&Help"_string));
+    auto help_menu = parent_window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(parent_window));
     help_menu->add_action(GUI::CommonActions::make_about_action("Calendar", TRY(GUI::Icon::try_create_default_icon("app-calendar"sv)), parent_window));
 

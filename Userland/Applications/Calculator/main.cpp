@@ -39,16 +39,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto& file_menu = window->add_menu("&File"_string);
-    file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    auto file_menu = window->add_menu("&File"_string);
+    file_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
 
-    auto& edit_menu = window->add_menu("&Edit"_string);
-    edit_menu.add_action(GUI::CommonActions::make_copy_action([&](auto&) {
+    auto edit_menu = window->add_menu("&Edit"_string);
+    edit_menu->add_action(GUI::CommonActions::make_copy_action([&](auto&) {
         GUI::Clipboard::the().set_plain_text(widget->get_entry());
     }));
-    edit_menu.add_action(GUI::CommonActions::make_paste_action([&](auto&) {
+    edit_menu->add_action(GUI::CommonActions::make_paste_action([&](auto&) {
         auto clipboard = GUI::Clipboard::the().fetch_data_and_type();
         if (clipboard.mime_type == "text/plain") {
             if (!clipboard.data.is_empty()) {
@@ -58,20 +58,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }));
 
-    auto& constants_menu = window->add_menu("&Constants"_string);
+    auto constants_menu = window->add_menu("&Constants"_string);
     auto const power = Crypto::NumberTheory::Power("10"_bigint, "10"_bigint);
 
-    constants_menu.add_action(GUI::Action::create("&Pi", TRY(Gfx::Bitmap::load_from_file("/res/icons/calculator/pi.png"sv)), [&](auto&) {
+    constants_menu->add_action(GUI::Action::create("&Pi", TRY(Gfx::Bitmap::load_from_file("/res/icons/calculator/pi.png"sv)), [&](auto&) {
         widget->set_typed_entry(Crypto::BigFraction { Crypto::SignedBigInteger(31415926535), power });
     }));
-    constants_menu.add_action(GUI::Action::create("&Euler's Number", TRY(Gfx::Bitmap::load_from_file("/res/icons/calculator/eulers_number.png"sv)), [&](auto&) {
+    constants_menu->add_action(GUI::Action::create("&Euler's Number", TRY(Gfx::Bitmap::load_from_file("/res/icons/calculator/eulers_number.png"sv)), [&](auto&) {
         widget->set_typed_entry(Crypto::BigFraction { Crypto::SignedBigInteger(27182818284), power });
     }));
-    constants_menu.add_action(GUI::Action::create("&Phi", TRY(Gfx::Bitmap::load_from_file("/res/icons/calculator/phi.png"sv)), [&](auto&) {
+    constants_menu->add_action(GUI::Action::create("&Phi", TRY(Gfx::Bitmap::load_from_file("/res/icons/calculator/phi.png"sv)), [&](auto&) {
         widget->set_typed_entry(Crypto::BigFraction { Crypto::SignedBigInteger(16180339887), power });
     }));
 
-    auto& round_menu = window->add_menu("&Round"_string);
+    auto round_menu = window->add_menu("&Round"_string);
     GUI::ActionGroup preview_actions;
 
     static constexpr auto rounding_modes = Array { 0, 2, 4 };
@@ -85,7 +85,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             });
 
         preview_actions.add_action(*round_action);
-        round_menu.add_action(*round_action);
+        round_menu->add_action(*round_action);
     }
 
     constexpr auto format { "&Custom - {}..."sv };
@@ -97,7 +97,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             widget->set_rounding_length(custom_rounding_length);
             last_rounding_mode.clear();
         } else if (last_rounding_mode.has_value())
-            round_menu.action_at(last_rounding_mode.value())
+            round_menu->action_at(last_rounding_mode.value())
                 ->activate();
     });
 
@@ -116,14 +116,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     preview_actions.add_action(*round_custom);
     preview_actions.set_exclusive(true);
-    round_menu.add_action(*round_custom);
-    round_menu.add_action(*shrink_action);
+    round_menu->add_action(*round_custom);
+    round_menu->add_action(*shrink_action);
 
-    round_menu.action_at(last_rounding_mode.value())->activate();
+    round_menu->action_at(last_rounding_mode.value())->activate();
 
-    auto& help_menu = window->add_menu("&Help"_string);
-    help_menu.add_action(GUI::CommonActions::make_command_palette_action(window));
-    help_menu.add_action(GUI::CommonActions::make_about_action("Calculator", app_icon, window));
+    auto help_menu = window->add_menu("&Help"_string);
+    help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Calculator", app_icon, window));
 
     window->show();
 

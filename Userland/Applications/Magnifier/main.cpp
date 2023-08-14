@@ -61,7 +61,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
     auto magnifier = TRY(window->set_main_widget<MagnifierWidget>());
 
-    auto file_menu = TRY(window->try_add_menu("&File"_string));
+    auto file_menu = window->add_menu("&File"_string);
     file_menu->add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
         AK::DeprecatedString filename = "file for saving";
         auto do_save = [&]() -> ErrorOr<void> {
@@ -142,7 +142,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     size_action_group->add_action(eight_x_action);
     size_action_group->set_exclusive(true);
 
-    auto view_menu = TRY(window->try_add_menu("&View"_string));
+    auto view_menu = window->add_menu("&View"_string);
     view_menu->add_action(two_x_action);
     view_menu->add_action(four_x_action);
     view_menu->add_action(eight_x_action);
@@ -154,7 +154,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     view_menu->add_action(show_grid_action);
     view_menu->add_action(choose_grid_color_action);
 
-    auto timeline_menu = TRY(window->try_add_menu("&Timeline"_string));
+    auto timeline_menu = window->add_menu("&Timeline"_string);
     auto previous_frame_action = GUI::Action::create(
         "&Previous frame", { Key_Left }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"sv)), [&](auto&) {
             pause_action->set_checked(true);
@@ -170,9 +170,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     timeline_menu->add_action(previous_frame_action);
     timeline_menu->add_action(next_frame_action);
 
-    TRY(window->try_add_menu(GUI::CommonMenus::make_accessibility_menu(magnifier)));
+    window->add_menu(GUI::CommonMenus::make_accessibility_menu(magnifier));
 
-    auto help_menu = TRY(window->try_add_menu("&Help"_string));
+    auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/Magnifier.md"), "/bin/Help");

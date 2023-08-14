@@ -427,7 +427,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         },
         &process_table_view);
 
-    auto file_menu = TRY(window->try_add_menu("&File"_string));
+    auto file_menu = window->add_menu("&File"_string);
     file_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
@@ -446,7 +446,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             process_context_menu->popup(event.screen_position(), process_properties_action);
     };
 
-    auto frequency_menu = TRY(window->try_add_menu("F&requency"_string));
+    auto frequency_menu = window->add_menu("F&requency"_string);
     GUI::ActionGroup frequency_action_group;
     frequency_action_group.set_exclusive(true);
 
@@ -466,7 +466,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(make_frequency_action(3));
     TRY(make_frequency_action(5));
 
-    auto help_menu = TRY(window->try_add_menu("&Help"_string));
+    auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu->add_action(GUI::CommonActions::make_about_action("System Monitor", app_icon, window));
 

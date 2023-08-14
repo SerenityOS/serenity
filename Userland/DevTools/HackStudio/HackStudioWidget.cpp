@@ -1414,9 +1414,9 @@ void HackStudioWidget::update_recent_projects_submenu()
 
 ErrorOr<void> HackStudioWidget::create_file_menu(GUI::Window& window)
 {
-    auto& file_menu = window.add_menu("&File"_string);
+    auto file_menu = window.add_menu("&File"_string);
 
-    auto new_submenu = file_menu.add_submenu("&New..."_string);
+    auto new_submenu = file_menu->add_submenu("&New..."_string);
     new_submenu->add_action(*m_new_project_action);
     new_submenu->add_separator();
     for (auto& new_file_action : m_new_file_actions) {
@@ -1431,17 +1431,17 @@ ErrorOr<void> HackStudioWidget::create_file_menu(GUI::Window& window)
     new_submenu->add_separator();
     new_submenu->add_action(*m_new_directory_action);
 
-    file_menu.add_action(*m_open_action);
-    m_recent_projects_submenu = file_menu.add_submenu("Open &Recent"_string);
+    file_menu->add_action(*m_open_action);
+    m_recent_projects_submenu = file_menu->add_submenu("Open &Recent"_string);
     {
         auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/open-recent.png"sv));
         m_recent_projects_submenu->set_icon(icon);
     }
     update_recent_projects_submenu();
-    file_menu.add_action(*m_save_action);
-    file_menu.add_action(*m_save_as_action);
-    file_menu.add_separator();
-    file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    file_menu->add_action(*m_save_action);
+    file_menu->add_action(*m_save_as_action);
+    file_menu->add_separator();
+    file_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
     return {};
@@ -1449,14 +1449,14 @@ ErrorOr<void> HackStudioWidget::create_file_menu(GUI::Window& window)
 
 ErrorOr<void> HackStudioWidget::create_edit_menu(GUI::Window& window)
 {
-    auto& edit_menu = window.add_menu("&Edit"_string);
+    auto edit_menu = window.add_menu("&Edit"_string);
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv));
-    edit_menu.add_action(GUI::Action::create("&Find in Files...", { Mod_Ctrl | Mod_Shift, Key_F }, icon, [this](auto&) {
+    edit_menu->add_action(GUI::Action::create("&Find in Files...", { Mod_Ctrl | Mod_Shift, Key_F }, icon, [this](auto&) {
         reveal_action_tab(*m_find_in_files_widget);
         m_find_in_files_widget->focus_textbox_and_select_all();
     }));
 
-    edit_menu.add_separator();
+    edit_menu->add_separator();
 
     auto vim_emulation_setting_action = GUI::Action::create_checkable("&Vim Emulation", { Mod_Ctrl | Mod_Shift | Mod_Alt, Key_V }, [this](auto& action) {
         if (action.is_checked()) {
@@ -1468,22 +1468,22 @@ ErrorOr<void> HackStudioWidget::create_edit_menu(GUI::Window& window)
         }
     });
     vim_emulation_setting_action->set_checked(false);
-    edit_menu.add_action(vim_emulation_setting_action);
+    edit_menu->add_action(vim_emulation_setting_action);
 
-    edit_menu.add_separator();
-    edit_menu.add_action(*m_open_project_configuration_action);
+    edit_menu->add_separator();
+    edit_menu->add_action(*m_open_project_configuration_action);
     return {};
 }
 
 void HackStudioWidget::create_build_menu(GUI::Window& window)
 {
-    auto& build_menu = window.add_menu("&Build"_string);
-    build_menu.add_action(*m_build_action);
-    build_menu.add_separator();
-    build_menu.add_action(*m_run_action);
-    build_menu.add_action(*m_stop_action);
-    build_menu.add_separator();
-    build_menu.add_action(*m_debug_action);
+    auto build_menu = window.add_menu("&Build"_string);
+    build_menu->add_action(*m_build_action);
+    build_menu->add_separator();
+    build_menu->add_action(*m_run_action);
+    build_menu->add_action(*m_stop_action);
+    build_menu->add_separator();
+    build_menu->add_action(*m_debug_action);
 }
 
 ErrorOr<void> HackStudioWidget::create_view_menu(GUI::Window& window)
@@ -1500,18 +1500,18 @@ ErrorOr<void> HackStudioWidget::create_view_menu(GUI::Window& window)
     });
     show_dotfiles_action->set_checked(Config::read_bool("HackStudio"sv, "Global"sv, "ShowDotfiles"sv, false));
 
-    auto& view_menu = window.add_menu("&View"_string);
-    view_menu.add_action(hide_action_tabs_action);
-    view_menu.add_action(open_locator_action);
-    view_menu.add_action(show_dotfiles_action);
+    auto view_menu = window.add_menu("&View"_string);
+    view_menu->add_action(hide_action_tabs_action);
+    view_menu->add_action(open_locator_action);
+    view_menu->add_action(show_dotfiles_action);
     m_toggle_semantic_highlighting_action = TRY(create_toggle_syntax_highlighting_mode_action());
-    view_menu.add_action(*m_toggle_semantic_highlighting_action);
+    view_menu->add_action(*m_toggle_semantic_highlighting_action);
     m_toggle_view_file_in_single_click_action = TRY(create_toggle_open_file_in_single_click_action());
-    view_menu.add_action(*m_toggle_view_file_in_single_click_action);
-    view_menu.add_separator();
+    view_menu->add_action(*m_toggle_view_file_in_single_click_action);
+    view_menu->add_separator();
 
     m_wrapping_mode_actions.set_exclusive(true);
-    auto wrapping_mode_menu = view_menu.add_submenu("&Wrapping Mode"_string);
+    auto wrapping_mode_menu = view_menu->add_submenu("&Wrapping Mode"_string);
     m_no_wrapping_action = GUI::Action::create_checkable("&No Wrapping", [&](auto&) {
         m_wrapping_mode = GUI::TextEditor::WrappingMode::NoWrap;
         for (auto& wrapper : m_all_editor_wrappers)
@@ -1556,24 +1556,24 @@ ErrorOr<void> HackStudioWidget::create_view_menu(GUI::Window& window)
                 change_editor_font(picker->font());
             }
         });
-    view_menu.add_action(*m_editor_font_action);
+    view_menu->add_action(*m_editor_font_action);
 
-    view_menu.add_separator();
-    view_menu.add_action(*m_add_editor_tab_widget_action);
-    view_menu.add_action(*m_add_editor_action);
-    view_menu.add_action(*m_remove_current_editor_action);
-    view_menu.add_action(*m_add_terminal_action);
-    view_menu.add_action(*m_remove_current_terminal_action);
+    view_menu->add_separator();
+    view_menu->add_action(*m_add_editor_tab_widget_action);
+    view_menu->add_action(*m_add_editor_action);
+    view_menu->add_action(*m_remove_current_editor_action);
+    view_menu->add_action(*m_add_terminal_action);
+    view_menu->add_action(*m_remove_current_terminal_action);
 
-    view_menu.add_separator();
+    view_menu->add_separator();
 
     TRY(create_location_history_actions());
-    view_menu.add_action(*m_locations_history_back_action);
-    view_menu.add_action(*m_locations_history_forward_action);
+    view_menu->add_action(*m_locations_history_back_action);
+    view_menu->add_action(*m_locations_history_forward_action);
 
-    view_menu.add_separator();
+    view_menu->add_separator();
 
-    view_menu.add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
+    view_menu->add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
         window.set_fullscreen(!window.is_fullscreen());
     }));
     return {};
@@ -1581,9 +1581,9 @@ ErrorOr<void> HackStudioWidget::create_view_menu(GUI::Window& window)
 
 void HackStudioWidget::create_help_menu(GUI::Window& window)
 {
-    auto& help_menu = window.add_menu("&Help"_string);
-    help_menu.add_action(GUI::CommonActions::make_command_palette_action(&window));
-    help_menu.add_action(GUI::CommonActions::make_about_action("Hack Studio", GUI::Icon::default_icon("app-hack-studio"sv), &window));
+    auto help_menu = window.add_menu("&Help"_string);
+    help_menu->add_action(GUI::CommonActions::make_command_palette_action(&window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Hack Studio", GUI::Icon::default_icon("app-hack-studio"sv), &window));
 }
 
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_stop_action()

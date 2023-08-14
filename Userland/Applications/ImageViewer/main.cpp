@@ -306,7 +306,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     (void)TRY(main_toolbar->try_add_action(reset_zoom_action));
     (void)TRY(main_toolbar->try_add_action(zoom_out_action));
 
-    auto file_menu = TRY(window->try_add_menu("&File"_string));
+    auto file_menu = window->add_menu("&File"_string);
     file_menu->add_action(open_action);
     file_menu->add_action(delete_action);
     file_menu->add_separator();
@@ -323,7 +323,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     file_menu->add_action(quit_action);
 
-    auto image_menu = TRY(window->try_add_menu("&Image"_string));
+    auto image_menu = window->add_menu("&Image"_string);
     image_menu->add_action(rotate_counterclockwise_action);
     image_menu->add_action(rotate_clockwise_action);
     image_menu->add_action(vertical_flip_action);
@@ -331,13 +331,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     image_menu->add_separator();
     image_menu->add_action(desktop_wallpaper_action);
 
-    auto navigate_menu = TRY(window->try_add_menu("&Navigate"_string));
+    auto navigate_menu = window->add_menu("&Navigate"_string);
     navigate_menu->add_action(go_first_action);
     navigate_menu->add_action(go_back_action);
     navigate_menu->add_action(go_forward_action);
     navigate_menu->add_action(go_last_action);
 
-    auto view_menu = TRY(window->try_add_menu("&View"_string));
+    auto view_menu = window->add_menu("&View"_string);
     view_menu->add_action(full_screen_action);
     view_menu->add_separator();
     view_menu->add_action(zoom_in_action);
@@ -364,7 +364,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     view_menu->add_separator();
     view_menu->add_action(hide_show_toolbar_action);
 
-    auto help_menu = TRY(window->try_add_menu("&Help"_string));
+    auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/ImageViewer.md"), "/bin/Help");

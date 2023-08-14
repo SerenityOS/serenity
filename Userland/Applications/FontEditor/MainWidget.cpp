@@ -733,7 +733,7 @@ ErrorOr<void> MainWidget::initialize(StringView path, RefPtr<Gfx::BitmapFont>&& 
 
 ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 {
-    auto file_menu = TRY(window.try_add_menu("&File"_string));
+    auto file_menu = window.add_menu("&File"_string);
     file_menu->add_action(*m_new_action);
     file_menu->add_action(*m_open_action);
     file_menu->add_action(*m_save_action);
@@ -755,7 +755,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         GUI::Application::the()->quit();
     }));
 
-    auto edit_menu = TRY(window.try_add_menu("&Edit"_string));
+    auto edit_menu = window.add_menu("&Edit"_string);
     edit_menu->add_action(*m_undo_action);
     edit_menu->add_action(*m_redo_action);
     edit_menu->add_separator();
@@ -770,12 +770,12 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     m_context_menu = edit_menu;
 
-    auto go_menu = TRY(window.try_add_menu("&Go"_string));
+    auto go_menu = window.add_menu("&Go"_string);
     go_menu->add_action(*m_previous_glyph_action);
     go_menu->add_action(*m_next_glyph_action);
     go_menu->add_action(*m_go_to_glyph_action);
 
-    auto view_menu = TRY(window.try_add_menu("&View"_string));
+    auto view_menu = window.add_menu("&View"_string);
     auto layout_menu = view_menu->add_submenu("&Layout"_string);
     layout_menu->add_action(*m_show_toolbar_action);
     layout_menu->add_action(*m_show_statusbar_action);
@@ -793,7 +793,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     scale_menu->add_action(*m_scale_ten_action);
     scale_menu->add_action(*m_scale_fifteen_action);
 
-    auto help_menu = TRY(window.try_add_menu("&Help"_string));
+    auto help_menu = window.add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(&window));
     help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/FontEditor.md"), "/bin/Help");

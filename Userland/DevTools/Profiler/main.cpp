@@ -265,10 +265,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     filesystem_events_tree_view->set_selection_behavior(GUI::TreeView::SelectionBehavior::SelectRows);
     filesystem_events_tree_view->set_model(profile->file_event_model());
 
-    auto file_menu = TRY(window->try_add_menu("&File"_string));
+    auto file_menu = window->add_menu("&File"_string);
     file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
-    auto view_menu = TRY(window->try_add_menu("&View"_string));
+    auto view_menu = window->add_menu("&View"_string);
 
     auto invert_action = GUI::Action::create_checkable("&Invert Tree", { Mod_Ctrl, Key_I }, [&](auto& action) {
         profile->set_inverted(action.is_checked());
@@ -294,7 +294,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     view_menu->add_action(disassembly_action);
     view_menu->add_action(source_action);
 
-    auto help_menu = TRY(window->try_add_menu("&Help"_string));
+    auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/Profiler.md"), "/bin/Help");

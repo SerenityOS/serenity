@@ -245,7 +245,7 @@ MainWidget::MainWidget(NonnullRefPtr<AlignmentModel> alignment_model)
 
 ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 {
-    auto file_menu = TRY(window.try_add_menu("&File"_string));
+    auto file_menu = window.add_menu("&File"_string);
     file_menu->add_action(GUI::CommonActions::make_open_action([&](auto&) {
         if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
             return;
@@ -305,9 +305,9 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             GUI::Application::the()->quit();
     }));
 
-    TRY(window.try_add_menu(GUI::CommonMenus::make_accessibility_menu(*m_preview_widget)));
+    window.add_menu(GUI::CommonMenus::make_accessibility_menu(*m_preview_widget));
 
-    auto help_menu = TRY(window.try_add_menu("&Help"_string));
+    auto help_menu = window.add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(&window));
     help_menu->add_action(GUI::CommonActions::make_about_action("Theme Editor", GUI::Icon::default_icon("app-theme-editor"sv), &window));
 

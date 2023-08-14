@@ -204,17 +204,17 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
     (void)TRY(m_toolbar->try_add_action(*m_go_forward_action));
     (void)TRY(m_toolbar->try_add_action(*m_go_home_action));
 
-    auto file_menu = TRY(window.try_add_menu("&File"_string));
+    auto file_menu = window.add_menu("&File"_string);
     file_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
 
-    auto go_menu = TRY(window.try_add_menu("&Go"_string));
+    auto go_menu = window.add_menu("&Go"_string);
     go_menu->add_action(*m_go_back_action);
     go_menu->add_action(*m_go_forward_action);
     go_menu->add_action(*m_go_home_action);
 
-    auto help_menu = TRY(window.try_add_menu("&Help"_string));
+    auto help_menu = window.add_menu("&Help"_string);
     String help_page_path = TRY(TRY(try_make_ref_counted<Manual::PageNode>(Manual::sections[1 - 1], "Applications/Help"_string))->path());
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(&window));
     help_menu->add_action(GUI::Action::create("&Contents", { Key_F1 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-unknown.png"sv)), [this, help_page_path = move(help_page_path)](auto&) {
