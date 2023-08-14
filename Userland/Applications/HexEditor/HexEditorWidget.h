@@ -46,7 +46,7 @@ private:
     DeprecatedString m_extension;
 
     int m_goto_history { 0 };
-    DeprecatedString m_search_text;
+    String m_search_text;
     ByteBuffer m_search_buffer;
     int last_found_index() const { return m_last_found_index == -1 ? 0 : m_last_found_index; }
     int m_last_found_index { -1 };
