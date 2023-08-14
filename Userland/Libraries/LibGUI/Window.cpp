@@ -1320,7 +1320,7 @@ Gfx::Bitmap* Window::back_bitmap()
 
 ErrorOr<void> Window::try_add_menu(NonnullRefPtr<Menu> menu)
 {
-    TRY(m_menubar->try_add_menu({}, move(menu)));
+    m_menubar->add_menu({}, move(menu));
     if (m_window_id) {
         menu->realize_menu_if_needed();
         ConnectionToWindowServer::the().async_add_menu(m_window_id, menu->menu_id());
@@ -1330,7 +1330,7 @@ ErrorOr<void> Window::try_add_menu(NonnullRefPtr<Menu> menu)
 
 ErrorOr<NonnullRefPtr<Menu>> Window::try_add_menu(String name)
 {
-    auto menu = TRY(m_menubar->try_add_menu({}, move(name)));
+    auto menu = m_menubar->add_menu({}, move(name));
     if (m_window_id) {
         menu->realize_menu_if_needed();
         ConnectionToWindowServer::the().async_add_menu(m_window_id, menu->menu_id());
