@@ -76,30 +76,7 @@ endif()
 include(flac_spec_tests)
 include(lagom_compile_options)
 
-include(GNUInstallDirs) # make sure to include before we mess w/RPATH
-
-# Mirror the structure of the installed tree to ensure that rpaths
-# always remain valid.
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
-
-set(CMAKE_SKIP_BUILD_RPATH FALSE)
-set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-# See slide 100 of the following ppt :^)
-# https://crascit.com/wp-content/uploads/2019/09/Deep-CMake-For-Library-Authors-Craig-Scott-CppCon-2019.pdf
-if (APPLE)
-    set(CMAKE_MACOSX_RPATH TRUE)
-    set(CMAKE_INSTALL_NAME_DIR "@rpath")
-    set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
-else()
-    set(CMAKE_INSTALL_RPATH "$ORIGIN:$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
-endif()
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-set(CMAKE_INSTALL_MESSAGE NEVER)
 
 if (EMSCRIPTEN)
     set(CMAKE_EXECUTABLE_SUFFIX ".js")
