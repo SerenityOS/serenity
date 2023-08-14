@@ -76,10 +76,6 @@ add_compile_options(-Wno-user-defined-literals)
 
 serenity_option(ENABLE_QT ON CACHE BOOL "Build ladybird application using Qt GUI")
 
-if (APPLE AND NOT ENABLE_QT)
-    message(FATAL_ERROR "Non-Qt builds not supported on macOS yet!")
-endif()
-
 if (ENABLE_QT)
     set(CMAKE_AUTOMOC ON)
     set(CMAKE_AUTORCC ON)
@@ -127,17 +123,6 @@ if (ENABLE_QT)
         Qt/main.cpp
     )
     target_link_libraries(ladybird PRIVATE Qt::Core Qt::Gui Qt::Network Qt::Widgets)
-
-    # FIXME: Set these for non-qt executables as well, when those exist
-    set_target_properties(ladybird PROPERTIES
-        MACOSX_BUNDLE_GUI_IDENTIFIER org.SerenityOS.Ladybird
-        MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
-        MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
-        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
-        MACOSX_BUNDLE TRUE
-        WIN32_EXECUTABLE TRUE
-        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER org.SerenityOS.Ladybird
-    )
 else()
     # TODO: Check for other GUI frameworks here when we move them in-tree
     #       For now, we can export a static library of common files for chromes to link to
@@ -190,21 +175,37 @@ add_subdirectory(WebSocket)
 add_subdirectory(RequestServer)
 add_dependencies(ladybird SQLServer WebContent WebDriver WebSocketServer RequestServer headless-browser)
 
-if (APPLE)
-    # FIXME: Create a proper app bundle for each helper process
-    set(app_dir "$<TARGET_FILE_DIR:ladybird>")
-    set(bundle_dir "$<TARGET_BUNDLE_DIR:ladybird>")
-    add_custom_command(TARGET ladybird POST_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:RequestServer>" "${app_dir}"
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:SQLServer>" "${app_dir}"
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:WebContent>" "${app_dir}"
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:WebDriver>" "${app_dir}"
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:WebSocketServer>" "${app_dir}"
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:headless-browser>" "${app_dir}"
-        COMMAND "mkdir" -p "${bundle_dir}/Contents/Resources"
-        COMMAND "iconutil" --convert icns "${CMAKE_CURRENT_SOURCE_DIR}/Icons/macos/app_icon.iconset" --output "${bundle_dir}/Contents/Resources/app_icon.icns"
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${Lagom_BINARY_DIR}/cacert.pem" "${bundle_dir}/Contents"
+function(create_ladybird_bundle target_name)
+    set_target_properties(${target_name} PROPERTIES
+        MACOSX_BUNDLE_GUI_IDENTIFIER org.SerenityOS.Ladybird
+        MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+        MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+        MACOSX_BUNDLE_INFO_PLIST "${SERENITY_SOURCE_DIR}/Ladybird/Info.plist"
+        MACOSX_BUNDLE TRUE
+        WIN32_EXECUTABLE TRUE
+        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER org.SerenityOS.Ladybird
     )
+
+    if (APPLE)
+        # FIXME: Create a proper app bundle for each helper process
+        set(app_dir "$<TARGET_FILE_DIR:${target_name}>")
+        set(bundle_dir "$<TARGET_BUNDLE_DIR:${target_name}>")
+        add_custom_command(TARGET ${target_name} POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:RequestServer>" "${app_dir}"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:SQLServer>" "${app_dir}"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:WebContent>" "${app_dir}"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:WebDriver>" "${app_dir}"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:WebSocketServer>" "${app_dir}"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:headless-browser>" "${app_dir}"
+            COMMAND "mkdir" -p "${bundle_dir}/Contents/Resources"
+            COMMAND "iconutil" --convert icns "${SERENITY_SOURCE_DIR}/Ladybird/Icons/macos/app_icon.iconset" --output "${bundle_dir}/Contents/Resources/app_icon.icns"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${Lagom_BINARY_DIR}/cacert.pem" "${bundle_dir}/Contents"
+        )
+    endif()
+endfunction()
+
+if (ENABLE_QT)
+    create_ladybird_bundle(ladybird)
 endif()
 
 if(NOT CMAKE_SKIP_INSTALL_RULES)
