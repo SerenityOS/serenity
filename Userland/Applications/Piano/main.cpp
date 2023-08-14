@@ -58,7 +58,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }));
     main_widget_updater->start();
 
-    auto file_menu = TRY(window->try_add_menu("&File"_string));
+    auto file_menu = window->add_menu("&File"_string);
     file_menu->add_action(GUI::Action::create("Export...", { Mod_Ctrl, Key_E }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/file-export.png"sv)), [&](const GUI::Action&) {
         save_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "wav");
         if (!save_path.has_value())
@@ -83,10 +83,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return;
     }));
 
-    auto edit_menu = TRY(window->try_add_menu("&Edit"_string));
+    auto edit_menu = window->add_menu("&Edit"_string);
     TRY(main_widget->add_track_actions(edit_menu));
 
-    auto help_menu = TRY(window->try_add_menu("&Help"_string));
+    auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu->add_action(GUI::CommonActions::make_about_action("Piano", app_icon, window));
 

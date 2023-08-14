@@ -55,7 +55,7 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
 {
     auto* window = this->window();
     // Set up the menu bar.
-    auto file_menu = TRY(window->try_add_menu("&File"_string));
+    auto file_menu = window->add_menu("&File"_string);
     auto open_action = GUI::CommonActions::make_open_action([this](auto&) {
         FileSystemAccessClient::OpenFileOptions options {
             .allowed_file_types = { { GUI::FileTypeFilter { "Presentation Files", { { "presenter" } } }, GUI::FileTypeFilter::all_files() } },
@@ -71,7 +71,7 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
         GUI::Application::the()->quit();
     }));
 
-    auto presentation_menu = TRY(window->try_add_menu("&Presentation"_string));
+    auto presentation_menu = window->add_menu("&Presentation"_string);
     m_next_slide_action = GUI::Action::create("&Next", { KeyCode::Key_Right }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)), [this](auto&) {
         if (m_current_presentation) {
             m_current_presentation->next_frame();
@@ -98,7 +98,7 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
     presentation_menu->add_action(*m_previous_slide_action);
     presentation_menu->add_action(*m_present_from_first_slide_action);
 
-    auto view_menu = TRY(window->try_add_menu("&View"_string));
+    auto view_menu = window->add_menu("&View"_string);
     m_full_screen_action = GUI::Action::create("Toggle &Full Screen", { KeyModifier::Mod_Shift, KeyCode::Key_F5 }, { KeyCode::Key_F11 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/fullscreen.png"sv)), [this](auto&) {
         auto* window = this->window();
         window->set_fullscreen(!window->is_fullscreen());
@@ -117,7 +117,7 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
 
     update_slides_actions();
 
-    auto help_menu = TRY(window->try_add_menu("&Help"_string));
+    auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_about_action("Presenter", GUI::Icon::default_icon("app-presenter"sv)));
 
     return {};

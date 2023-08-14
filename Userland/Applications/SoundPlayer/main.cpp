@@ -60,7 +60,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             player->set_loop_mode(Player::LoopMode::Playlist);
     }
 
-    auto file_menu = TRY(window->try_add_menu("&File"_string));
+    auto file_menu = window->add_menu("&File"_string);
     file_menu->add_action(GUI::CommonActions::make_open_action([&](auto&) {
         Optional<DeprecatedString> path = GUI::FilePicker::get_open_filepath(window);
         if (path.has_value()) {
@@ -73,7 +73,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         app->quit();
     }));
 
-    auto playback_menu = TRY(window->try_add_menu("&Playback"_string));
+    auto playback_menu = window->add_menu("&Playback"_string);
     GUI::ActionGroup loop_actions;
     loop_actions.set_exclusive(true);
     auto loop_none = GUI::Action::create_checkable("&No Loop", { Mod_Ctrl, Key_N }, [&](auto&) {
@@ -120,7 +120,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
     playback_menu->add_action(shuffle_mode);
 
-    auto visualization_menu = TRY(window->try_add_menu("&Visualization"_string));
+    auto visualization_menu = window->add_menu("&Visualization"_string);
     GUI::ActionGroup visualization_actions;
     visualization_actions.set_exclusive(true);
 
@@ -163,7 +163,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     selected_visualization_widget->set_checked(true);
 
-    auto help_menu = TRY(window->try_add_menu("&Help"_string));
+    auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu->add_action(GUI::CommonActions::make_about_action("Sound Player", app_icon, window));
 

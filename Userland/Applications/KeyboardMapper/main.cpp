@@ -83,19 +83,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto_modifier_action->set_checkable(true);
     auto_modifier_action->set_checked(false);
 
-    auto& file_menu = window->add_menu("&File"_string);
-    file_menu.add_action(open_action);
-    file_menu.add_action(save_action);
-    file_menu.add_action(save_as_action);
-    file_menu.add_separator();
-    file_menu.add_action(quit_action);
+    auto file_menu = window->add_menu("&File"_string);
+    file_menu->add_action(open_action);
+    file_menu->add_action(save_action);
+    file_menu->add_action(save_as_action);
+    file_menu->add_separator();
+    file_menu->add_action(quit_action);
 
-    auto& settings_menu = window->add_menu("&Settings"_string);
-    settings_menu.add_action(auto_modifier_action);
+    auto settings_menu = window->add_menu("&Settings"_string);
+    settings_menu->add_action(auto_modifier_action);
 
-    auto& help_menu = window->add_menu("&Help"_string);
-    help_menu.add_action(GUI::CommonActions::make_command_palette_action(window));
-    help_menu.add_action(GUI::CommonActions::make_about_action("Keyboard Mapper", app_icon, window));
+    auto help_menu = window->add_menu("&Help"_string);
+    help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Keyboard Mapper", app_icon, window));
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
         if (keyboard_mapper_widget->request_close())

@@ -412,7 +412,7 @@ void HexEditorWidget::update_inspector_values(size_t position)
 
 ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
 {
-    auto file_menu = TRY(window.try_add_menu("&File"_string));
+    auto file_menu = window.add_menu("&File"_string);
     file_menu->add_action(*m_new_action);
     file_menu->add_action(*m_open_action);
     file_menu->add_action(*m_save_action);
@@ -433,7 +433,7 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
         GUI::Application::the()->quit();
     }));
 
-    auto edit_menu = TRY(window.try_add_menu("&Edit"_string));
+    auto edit_menu = window.add_menu("&Edit"_string);
     edit_menu->add_action(*m_undo_action);
     edit_menu->add_action(*m_redo_action);
     edit_menu->add_separator();
@@ -480,7 +480,7 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     edit_menu->add_separator();
     edit_menu->add_action(*m_goto_offset_action);
 
-    auto view_menu = TRY(window.try_add_menu("&View"_string));
+    auto view_menu = window.add_menu("&View"_string);
 
     auto show_toolbar = Config::read_bool("HexEditor"sv, "Layout"sv, "ShowToolbar"sv, true);
     m_layout_toolbar_action->set_checked(show_toolbar);
@@ -541,7 +541,7 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     little_endian_mode->set_checked(use_little_endian);
     big_endian_mode->set_checked(!use_little_endian);
 
-    auto help_menu = TRY(window.try_add_menu("&Help"_string));
+    auto help_menu = window.add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(&window));
     help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/HexEditor.md"), "/bin/Help");

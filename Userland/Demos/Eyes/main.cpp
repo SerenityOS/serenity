@@ -84,12 +84,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     set_window_frame_enabled(!hide_window_frame);
     show_window_frame_action->set_checked(window_frame_enabled);
 
-    auto file_menu = TRY(window->try_add_menu("&File"_string));
+    auto file_menu = window->add_menu("&File"_string);
     file_menu->add_action(move(show_window_frame_action));
     file_menu->add_separator();
     file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
-    auto help_menu = TRY(window->try_add_menu("&Help"_string));
+    auto help_menu = window->add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/Eyes.md"), "/bin/Help");

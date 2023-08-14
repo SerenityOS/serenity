@@ -365,7 +365,7 @@ WebView::OutOfProcessWebView& MainWidget::ensure_web_view()
 
 ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 {
-    auto file_menu = TRY(window.try_add_menu("&File"_string));
+    auto file_menu = window.add_menu("&File"_string);
     file_menu->add_action(*m_new_action);
     file_menu->add_action(*m_open_action);
     file_menu->add_action(*m_save_action);
@@ -396,7 +396,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         GUI::Application::the()->quit();
     }));
 
-    auto edit_menu = TRY(window.try_add_menu("&Edit"_string));
+    auto edit_menu = window.add_menu("&Edit"_string);
     edit_menu->add_action(m_editor->undo_action());
     edit_menu->add_action(m_editor->redo_action());
     edit_menu->add_separator();
@@ -460,7 +460,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_layout_ruler_action->set_checked(show_ruler);
     m_editor->set_ruler_visible(show_ruler);
 
-    auto view_menu = TRY(window.try_add_menu("&View"_string));
+    auto view_menu = window.add_menu("&View"_string);
     auto layout_menu = view_menu->add_submenu("&Layout"_string);
     layout_menu->add_action(*m_layout_toolbar_action);
     layout_menu->add_action(*m_layout_statusbar_action);
@@ -689,7 +689,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     syntax_actions.add_action(*m_sql_highlight);
     syntax_menu->add_action(*m_sql_highlight);
 
-    auto help_menu = TRY(window.try_add_menu("&Help"_string));
+    auto help_menu = window.add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(&window));
     help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/TextEditor.md"), "/bin/Help");

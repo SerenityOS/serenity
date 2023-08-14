@@ -219,9 +219,8 @@ public:
 
     void did_disable_focused_widget(Badge<Widget>);
 
-    Menu& add_menu(String name);
-    ErrorOr<NonnullRefPtr<Menu>> try_add_menu(String name);
-    ErrorOr<void> try_add_menu(NonnullRefPtr<Menu> menu);
+    [[nodiscard]] NonnullRefPtr<Menu> add_menu(String name);
+    void add_menu(NonnullRefPtr<Menu> menu);
     void flash_menubar_menu_for(MenuItem const&);
 
     void flush_pending_paints_immediately();

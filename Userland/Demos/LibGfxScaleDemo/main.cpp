@@ -116,7 +116,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_resizable(false);
     window->resize(WIDTH * 2, HEIGHT * 3);
 
-    auto file_menu = TRY(window->try_add_menu("&File"_string));
+    auto file_menu = window->add_menu("&File"_string);
     file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-libgfx-demo"sv));

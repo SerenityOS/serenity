@@ -372,9 +372,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     time.set_x(widget->width() - time.width() - 6);
     widget->set_stat_label(time);
 
-    auto& file_menu = window->add_menu("&File"_string);
+    auto file_menu = window->add_menu("&File"_string);
 
-    file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
+    file_menu->add_action(GUI::CommonActions::make_open_action([&](auto&) {
         FileSystemAccessClient::OpenFileOptions options {
             .allowed_file_types = { { GUI::FileTypeFilter { "Object Files", { { "obj" } } }, GUI::FileTypeFilter::all_files() } },
         };
@@ -385,17 +385,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto file = response.release_value();
         widget->load_file(file.filename(), file.release_stream());
     }));
-    file_menu.add_separator();
-    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+    file_menu->add_separator();
+    file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit();
     }));
 
-    auto& view_menu = window->add_menu("&View"_string);
-    view_menu.add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
+    auto view_menu = window->add_menu("&View"_string);
+    view_menu->add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
         window->set_fullscreen(!window->is_fullscreen());
     }));
 
-    auto rotation_axis_menu = view_menu.add_submenu("Rotation &Axis"_string);
+    auto rotation_axis_menu = view_menu->add_submenu("Rotation &Axis"_string);
     auto rotation_x_action = GUI::Action::create_checkable("&X", [&widget](auto&) {
         widget->toggle_rotate_x();
     });
@@ -413,7 +413,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     rotation_x_action->set_checked(true);
     rotation_z_action->set_checked(true);
 
-    auto rotation_speed_menu = view_menu.add_submenu("Rotation &Speed"_string);
+    auto rotation_speed_menu = view_menu->add_submenu("Rotation &Speed"_string);
     GUI::ActionGroup rotation_speed_actions;
     rotation_speed_actions.set_exclusive(true);
 
@@ -446,17 +446,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         widget->toggle_show_frame_rate();
     });
 
-    view_menu.add_action(*show_frame_rate_action);
+    view_menu->add_action(*show_frame_rate_action);
 
-    auto& texture_menu = window->add_menu("&Texture"_string);
+    auto texture_menu = window->add_menu("&Texture"_string);
 
     auto texture_enabled_action = GUI::Action::create_checkable("&Enable Texture", [&widget](auto& action) {
         widget->set_texture_enabled(action.is_checked());
     });
     texture_enabled_action->set_checked(true);
-    texture_menu.add_action(texture_enabled_action);
+    texture_menu->add_action(texture_enabled_action);
 
-    auto wrap_u_menu = texture_menu.add_submenu("Wrap &S"_string);
+    auto wrap_u_menu = texture_menu->add_submenu("Wrap &S"_string);
     GUI::ActionGroup wrap_s_actions;
     wrap_s_actions.set_exclusive(true);
 
@@ -480,7 +480,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     wrap_u_repeat_action->set_checked(true);
 
-    auto wrap_t_menu = texture_menu.add_submenu("Wrap &T"_string);
+    auto wrap_t_menu = texture_menu->add_submenu("Wrap &T"_string);
     GUI::ActionGroup wrap_t_actions;
     wrap_t_actions.set_exclusive(true);
 
@@ -504,7 +504,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     wrap_t_repeat_action->set_checked(true);
 
-    auto texture_scale_menu = texture_menu.add_submenu("S&cale"_string);
+    auto texture_scale_menu = texture_menu->add_submenu("S&cale"_string);
     GUI::ActionGroup texture_scale_actions;
     texture_scale_actions.set_exclusive(true);
 
@@ -542,7 +542,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     texture_scale_1_action->set_checked(true);
 
-    auto texture_mag_filter_menu = texture_menu.add_submenu("Mag Filter"_string);
+    auto texture_mag_filter_menu = texture_menu->add_submenu("Mag Filter"_string);
     GUI::ActionGroup texture_mag_filter_actions;
     texture_mag_filter_actions.set_exclusive(true);
 
@@ -562,9 +562,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     texture_mag_filter_nearest_action->set_checked(true);
 
-    auto& help_menu = window->add_menu("&Help"_string);
-    help_menu.add_action(GUI::CommonActions::make_command_palette_action(window));
-    help_menu.add_action(GUI::CommonActions::make_about_action("3D File Viewer", app_icon, window));
+    auto help_menu = window->add_menu("&Help"_string);
+    help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("3D File Viewer", app_icon, window));
 
     window->show();
 
