@@ -65,11 +65,11 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
             return;
         this->set_file(response.value().filename());
     });
-    TRY(file_menu->try_add_action(open_action));
+    file_menu->add_action(open_action);
     file_menu->add_separator();
-    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    file_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
-    })));
+    }));
 
     auto presentation_menu = TRY(window->try_add_menu("&Presentation"_string));
     m_next_slide_action = GUI::Action::create("&Next", { KeyCode::Key_Right }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)), [this](auto&) {
@@ -94,9 +94,9 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
         this->window()->set_fullscreen(true);
     });
 
-    TRY(presentation_menu->try_add_action(*m_next_slide_action));
-    TRY(presentation_menu->try_add_action(*m_previous_slide_action));
-    TRY(presentation_menu->try_add_action(*m_present_from_first_slide_action));
+    presentation_menu->add_action(*m_next_slide_action);
+    presentation_menu->add_action(*m_previous_slide_action);
+    presentation_menu->add_action(*m_present_from_first_slide_action);
 
     auto view_menu = TRY(window->try_add_menu("&View"_string));
     m_full_screen_action = GUI::Action::create("Toggle &Full Screen", { KeyModifier::Mod_Shift, KeyCode::Key_F5 }, { KeyCode::Key_F11 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/fullscreen.png"sv)), [this](auto&) {
@@ -112,13 +112,13 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
         }
     });
 
-    TRY(view_menu->try_add_action(*m_full_screen_action));
-    TRY(view_menu->try_add_action(*m_resize_to_fit_content_action));
+    view_menu->add_action(*m_full_screen_action);
+    view_menu->add_action(*m_resize_to_fit_content_action);
 
     update_slides_actions();
 
     auto help_menu = TRY(window->try_add_menu("&Help"_string));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Presenter", GUI::Icon::default_icon("app-presenter"sv))));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Presenter", GUI::Icon::default_icon("app-presenter"sv)));
 
     return {};
 }

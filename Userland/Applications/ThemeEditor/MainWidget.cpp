@@ -246,7 +246,7 @@ MainWidget::MainWidget(NonnullRefPtr<AlignmentModel> alignment_model)
 ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 {
     auto file_menu = TRY(window.try_add_menu("&File"_string));
-    TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
+    file_menu->add_action(GUI::CommonActions::make_open_action([&](auto&) {
         if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
             return;
         FileSystemAccessClient::OpenFileOptions options {
@@ -262,7 +262,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Can't open file named {}: {}", response.value().filename(), load_from_file_result.error()));
             return;
         }
-    })));
+    }));
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
         if (m_path.has_value()) {
@@ -277,14 +277,14 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             save_to_file(result.value().filename(), result.value().release_stream());
         }
     });
-    TRY(file_menu->try_add_action(*m_save_action));
+    file_menu->add_action(*m_save_action);
 
-    TRY(file_menu->try_add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
+    file_menu->add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
         auto result = FileSystemAccessClient::Client::the().save_file(&window, "Theme", "ini", Core::File::OpenMode::ReadWrite | Core::File::OpenMode::Truncate);
         if (result.is_error())
             return;
         save_to_file(result.value().filename(), result.value().release_stream());
-    })));
+    }));
     file_menu->add_separator();
 
     TRY(file_menu->add_recent_files_list([&](auto& action) {
@@ -300,16 +300,16 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         }
     }));
 
-    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+    file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         if (request_close() == GUI::Window::CloseRequestDecision::Close)
             GUI::Application::the()->quit();
-    })));
+    }));
 
     TRY(window.try_add_menu(TRY(GUI::CommonMenus::make_accessibility_menu(*m_preview_widget))));
 
     auto help_menu = TRY(window.try_add_menu("&Help"_string));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(&window)));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Theme Editor", GUI::Icon::default_icon("app-theme-editor"sv), &window)));
+    help_menu->add_action(GUI::CommonActions::make_command_palette_action(&window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Theme Editor", GUI::Icon::default_icon("app-theme-editor"sv), &window));
 
     return {};
 }

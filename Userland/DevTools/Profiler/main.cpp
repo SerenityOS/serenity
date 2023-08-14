@@ -266,7 +266,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     filesystem_events_tree_view->set_model(profile->file_event_model());
 
     auto file_menu = TRY(window->try_add_menu("&File"_string));
-    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
+    file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
     auto view_menu = TRY(window->try_add_menu("&View"_string));
 
@@ -274,13 +274,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         profile->set_inverted(action.is_checked());
     });
     invert_action->set_checked(false);
-    TRY(view_menu->try_add_action(invert_action));
+    view_menu->add_action(invert_action);
 
     auto top_functions_action = GUI::Action::create_checkable("&Top Functions", { Mod_Ctrl, Key_T }, [&](auto& action) {
         profile->set_show_top_functions(action.is_checked());
     });
     top_functions_action->set_checked(false);
-    TRY(view_menu->try_add_action(top_functions_action));
+    view_menu->add_action(top_functions_action);
 
     auto percent_action = GUI::Action::create_checkable("Show &Percentages", { Mod_Ctrl, Key_P }, [&](auto& action) {
         profile->set_show_percentages(action.is_checked());
@@ -289,17 +289,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         source_view->update();
     });
     percent_action->set_checked(false);
-    TRY(view_menu->try_add_action(percent_action));
+    view_menu->add_action(percent_action);
 
-    TRY(view_menu->try_add_action(disassembly_action));
-    TRY(view_menu->try_add_action(source_action));
+    view_menu->add_action(disassembly_action);
+    view_menu->add_action(source_action);
 
     auto help_menu = TRY(window->try_add_menu("&Help"_string));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
+    help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
+    help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/Profiler.md"), "/bin/Help");
-    })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Profiler", app_icon, window)));
+    }));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Profiler", app_icon, window));
 
     window->show();
     return app->exec();

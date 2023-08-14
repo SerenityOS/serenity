@@ -117,7 +117,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(WIDTH * 2, HEIGHT * 3);
 
     auto file_menu = TRY(window->try_add_menu("&File"_string));
-    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));
+    file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-libgfx-demo"sv));
     window->set_icon(app_icon.bitmap_for_size(16));

@@ -85,10 +85,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
 
     auto entry_context_menu = TRY(GUI::Menu::try_create());
-    TRY(entry_context_menu->try_add_action(delete_action));
-    TRY(entry_context_menu->try_add_action(debug_dump_action));
+    entry_context_menu->add_action(delete_action);
+    entry_context_menu->add_action(debug_dump_action);
     entry_context_menu->add_separator();
-    TRY(entry_context_menu->try_add_action(clear_action));
+    entry_context_menu->add_action(clear_action);
     table_view->on_context_menu_request = [&](GUI::ModelIndex const&, GUI::ContextMenuEvent const& event) {
         delete_action->set_enabled(!table_view->selection().is_empty());
         debug_dump_action->set_enabled(!table_view->selection().is_empty());

@@ -734,10 +734,10 @@ ErrorOr<void> MainWidget::initialize(StringView path, RefPtr<Gfx::BitmapFont>&& 
 ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 {
     auto file_menu = TRY(window.try_add_menu("&File"_string));
-    TRY(file_menu->try_add_action(*m_new_action));
-    TRY(file_menu->try_add_action(*m_open_action));
-    TRY(file_menu->try_add_action(*m_save_action));
-    TRY(file_menu->try_add_action(*m_save_as_action));
+    file_menu->add_action(*m_new_action);
+    file_menu->add_action(*m_open_action);
+    file_menu->add_action(*m_save_action);
+    file_menu->add_action(*m_save_as_action);
     file_menu->add_separator();
     TRY(file_menu->add_recent_files_list([this](auto& action) {
         if (!request_close())
@@ -749,56 +749,56 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         if (auto result = open_file(file.filename(), file.release_stream()); result.is_error())
             show_error(result.release_error(), "Opening"sv, file.filename());
     }));
-    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([this](auto&) {
+    file_menu->add_action(GUI::CommonActions::make_quit_action([this](auto&) {
         if (!request_close())
             return;
         GUI::Application::the()->quit();
-    })));
+    }));
 
     auto edit_menu = TRY(window.try_add_menu("&Edit"_string));
-    TRY(edit_menu->try_add_action(*m_undo_action));
-    TRY(edit_menu->try_add_action(*m_redo_action));
+    edit_menu->add_action(*m_undo_action);
+    edit_menu->add_action(*m_redo_action);
     edit_menu->add_separator();
-    TRY(edit_menu->try_add_action(*m_cut_action));
-    TRY(edit_menu->try_add_action(*m_copy_action));
-    TRY(edit_menu->try_add_action(*m_paste_action));
-    TRY(edit_menu->try_add_action(*m_delete_action));
+    edit_menu->add_action(*m_cut_action);
+    edit_menu->add_action(*m_copy_action);
+    edit_menu->add_action(*m_paste_action);
+    edit_menu->add_action(*m_delete_action);
     edit_menu->add_separator();
-    TRY(edit_menu->try_add_action(*m_select_all_action));
+    edit_menu->add_action(*m_select_all_action);
     edit_menu->add_separator();
-    TRY(edit_menu->try_add_action(*m_copy_text_action));
+    edit_menu->add_action(*m_copy_text_action);
 
     m_context_menu = edit_menu;
 
     auto go_menu = TRY(window.try_add_menu("&Go"_string));
-    TRY(go_menu->try_add_action(*m_previous_glyph_action));
-    TRY(go_menu->try_add_action(*m_next_glyph_action));
-    TRY(go_menu->try_add_action(*m_go_to_glyph_action));
+    go_menu->add_action(*m_previous_glyph_action);
+    go_menu->add_action(*m_next_glyph_action);
+    go_menu->add_action(*m_go_to_glyph_action);
 
     auto view_menu = TRY(window.try_add_menu("&View"_string));
     auto layout_menu = view_menu->add_submenu("&Layout"_string);
-    TRY(layout_menu->try_add_action(*m_show_toolbar_action));
-    TRY(layout_menu->try_add_action(*m_show_statusbar_action));
-    TRY(layout_menu->try_add_action(*m_show_metadata_action));
-    TRY(layout_menu->try_add_action(*m_show_unicode_blocks_action));
+    layout_menu->add_action(*m_show_toolbar_action);
+    layout_menu->add_action(*m_show_statusbar_action);
+    layout_menu->add_action(*m_show_metadata_action);
+    layout_menu->add_action(*m_show_unicode_blocks_action);
     view_menu->add_separator();
-    TRY(view_menu->try_add_action(*m_open_preview_action));
+    view_menu->add_action(*m_open_preview_action);
     view_menu->add_separator();
-    TRY(view_menu->try_add_action(*m_highlight_modifications_action));
-    TRY(view_menu->try_add_action(*m_show_system_emoji_action));
+    view_menu->add_action(*m_highlight_modifications_action);
+    view_menu->add_action(*m_show_system_emoji_action);
     view_menu->add_separator();
     auto scale_menu = view_menu->add_submenu("&Scale"_string);
     scale_menu->set_icon(g_resources.scale_editor);
-    TRY(scale_menu->try_add_action(*m_scale_five_action));
-    TRY(scale_menu->try_add_action(*m_scale_ten_action));
-    TRY(scale_menu->try_add_action(*m_scale_fifteen_action));
+    scale_menu->add_action(*m_scale_five_action);
+    scale_menu->add_action(*m_scale_ten_action);
+    scale_menu->add_action(*m_scale_fifteen_action);
 
     auto help_menu = TRY(window.try_add_menu("&Help"_string));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(&window)));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
+    help_menu->add_action(GUI::CommonActions::make_command_palette_action(&window));
+    help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/FontEditor.md"), "/bin/Help");
-    })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Font Editor", TRY(GUI::Icon::try_create_default_icon("app-font-editor"sv)), &window)));
+    }));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Font Editor", TRY(GUI::Icon::try_create_default_icon("app-font-editor"sv)), &window));
 
     return {};
 }

@@ -187,9 +187,9 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         load_file(response.release_value());
     });
 
-    TRY(file_menu->try_add_action(open_action));
-    TRY(file_menu->try_add_action(*m_save_action));
-    TRY(file_menu->try_add_action(*m_save_as_action));
+    file_menu->add_action(open_action);
+    file_menu->add_action(*m_save_action);
+    file_menu->add_action(*m_save_as_action);
     file_menu->add_separator();
 
     TRY(file_menu->add_recent_files_list([&](auto& action) {
@@ -201,21 +201,21 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         load_file(response.release_value());
     }));
 
-    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+    file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         if (window.on_close_request() == GUI::Window::CloseRequestDecision::Close)
             GUI::Application::the()->quit();
-    })));
+    }));
 
     auto edit_menu = TRY(window.try_add_menu("&Edit"_string));
-    TRY(edit_menu->try_add_action(m_editor->undo_action()));
-    TRY(edit_menu->try_add_action(m_editor->redo_action()));
+    edit_menu->add_action(m_editor->undo_action());
+    edit_menu->add_action(m_editor->redo_action());
     edit_menu->add_separator();
-    TRY(edit_menu->try_add_action(m_editor->cut_action()));
-    TRY(edit_menu->try_add_action(m_editor->copy_action()));
-    TRY(edit_menu->try_add_action(m_editor->paste_action()));
+    edit_menu->add_action(m_editor->cut_action());
+    edit_menu->add_action(m_editor->copy_action());
+    edit_menu->add_action(m_editor->paste_action());
     edit_menu->add_separator();
-    TRY(edit_menu->try_add_action(m_editor->select_all_action()));
-    TRY(edit_menu->try_add_action(m_editor->go_to_line_or_column_action()));
+    edit_menu->add_action(m_editor->select_all_action());
+    edit_menu->add_action(m_editor->go_to_line_or_column_action());
     edit_menu->add_separator();
 
     auto format_gml_action = GUI::Action::create("&Format GML", { Mod_Ctrl | Mod_Shift, Key_I }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reformat.png"sv)), [&](auto&) {
@@ -230,7 +230,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 GUI::MessageBox::Type::Error);
         }
     });
-    TRY(edit_menu->try_add_action(format_gml_action));
+    edit_menu->add_action(format_gml_action);
 
     auto vim_emulation_setting_action = GUI::Action::create_checkable("&Vim Emulation", { Mod_Ctrl | Mod_Shift | Mod_Alt, Key_V }, [&](auto& action) {
         if (action.is_checked())
@@ -239,7 +239,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             m_editor->set_editing_engine(make<GUI::RegularEditingEngine>());
     });
     vim_emulation_setting_action->set_checked(false);
-    TRY(edit_menu->try_add_action(vim_emulation_setting_action));
+    edit_menu->add_action(vim_emulation_setting_action);
 
     auto view_menu = TRY(window.try_add_menu("&View"_string));
     m_views_group.set_exclusive(true);
@@ -273,11 +273,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     };
 
     auto help_menu = TRY(window.try_add_menu("&Help"_string));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(&window)));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
+    help_menu->add_action(GUI::CommonActions::make_command_palette_action(&window));
+    help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/GMLPlayground.md"), "/bin/Help");
-    })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("GML Playground", m_icon, &window)));
+    }));
+    help_menu->add_action(GUI::CommonActions::make_about_action("GML Playground", m_icon, &window));
 
     (void)TRY(m_toolbar->try_add_action(open_action));
     (void)TRY(m_toolbar->try_add_action(*m_save_action));

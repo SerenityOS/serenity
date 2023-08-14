@@ -307,8 +307,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     (void)TRY(main_toolbar->try_add_action(zoom_out_action));
 
     auto file_menu = TRY(window->try_add_menu("&File"_string));
-    TRY(file_menu->try_add_action(open_action));
-    TRY(file_menu->try_add_action(delete_action));
+    file_menu->add_action(open_action);
+    file_menu->add_action(delete_action);
     file_menu->add_separator();
 
     TRY(file_menu->add_recent_files_list([&](auto& action) {
@@ -321,29 +321,29 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         widget->open_file(value.filename(), value.stream());
     }));
 
-    TRY(file_menu->try_add_action(quit_action));
+    file_menu->add_action(quit_action);
 
     auto image_menu = TRY(window->try_add_menu("&Image"_string));
-    TRY(image_menu->try_add_action(rotate_counterclockwise_action));
-    TRY(image_menu->try_add_action(rotate_clockwise_action));
-    TRY(image_menu->try_add_action(vertical_flip_action));
-    TRY(image_menu->try_add_action(horizontal_flip_action));
+    image_menu->add_action(rotate_counterclockwise_action);
+    image_menu->add_action(rotate_clockwise_action);
+    image_menu->add_action(vertical_flip_action);
+    image_menu->add_action(horizontal_flip_action);
     image_menu->add_separator();
-    TRY(image_menu->try_add_action(desktop_wallpaper_action));
+    image_menu->add_action(desktop_wallpaper_action);
 
     auto navigate_menu = TRY(window->try_add_menu("&Navigate"_string));
-    TRY(navigate_menu->try_add_action(go_first_action));
-    TRY(navigate_menu->try_add_action(go_back_action));
-    TRY(navigate_menu->try_add_action(go_forward_action));
-    TRY(navigate_menu->try_add_action(go_last_action));
+    navigate_menu->add_action(go_first_action);
+    navigate_menu->add_action(go_back_action);
+    navigate_menu->add_action(go_forward_action);
+    navigate_menu->add_action(go_last_action);
 
     auto view_menu = TRY(window->try_add_menu("&View"_string));
-    TRY(view_menu->try_add_action(full_screen_action));
+    view_menu->add_action(full_screen_action);
     view_menu->add_separator();
-    TRY(view_menu->try_add_action(zoom_in_action));
-    TRY(view_menu->try_add_action(reset_zoom_action));
-    TRY(view_menu->try_add_action(fit_image_to_view_action));
-    TRY(view_menu->try_add_action(zoom_out_action));
+    view_menu->add_action(zoom_in_action);
+    view_menu->add_action(reset_zoom_action);
+    view_menu->add_action(fit_image_to_view_action);
+    view_menu->add_action(zoom_out_action);
     view_menu->add_separator();
 
     auto scaling_mode_menu = view_menu->add_submenu("&Scaling Mode"_string);
@@ -356,20 +356,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     scaling_mode_group->add_action(*bilinear_action);
     scaling_mode_group->add_action(*box_sampling_action);
 
-    TRY(scaling_mode_menu->try_add_action(nearest_neighbor_action));
-    TRY(scaling_mode_menu->try_add_action(smooth_pixels_action));
-    TRY(scaling_mode_menu->try_add_action(bilinear_action));
-    TRY(scaling_mode_menu->try_add_action(box_sampling_action));
+    scaling_mode_menu->add_action(nearest_neighbor_action);
+    scaling_mode_menu->add_action(smooth_pixels_action);
+    scaling_mode_menu->add_action(bilinear_action);
+    scaling_mode_menu->add_action(box_sampling_action);
 
     view_menu->add_separator();
-    TRY(view_menu->try_add_action(hide_show_toolbar_action));
+    view_menu->add_action(hide_show_toolbar_action);
 
     auto help_menu = TRY(window->try_add_menu("&Help"_string));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
+    help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
+    help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/ImageViewer.md"), "/bin/Help");
-    })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Image Viewer", app_icon, window)));
+    }));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Image Viewer", app_icon, window));
 
     window->show();
 

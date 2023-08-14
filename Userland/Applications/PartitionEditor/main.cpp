@@ -86,8 +86,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }));
 
     auto help_menu = TRY(window->try_add_menu("&Help"_string));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Partition Editor", app_icon, window)));
+    help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Partition Editor", app_icon, window));
 
     window->show();
     return app->exec();

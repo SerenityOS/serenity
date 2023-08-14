@@ -50,9 +50,9 @@ ErrorOr<void> LinkLabel::create_actions()
 ErrorOr<void> LinkLabel::create_menus()
 {
     m_context_menu = TRY(Menu::try_create());
-    TRY(m_context_menu->try_add_action(*m_open_action));
+    m_context_menu->add_action(*m_open_action);
     m_context_menu->add_separator();
-    TRY(m_context_menu->try_add_action(*m_copy_action));
+    m_context_menu->add_action(*m_copy_action);
     return {};
 }
 

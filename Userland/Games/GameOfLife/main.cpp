@@ -134,22 +134,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto game_menu = TRY(window->try_add_menu("&Game"_string));
 
-    TRY(game_menu->try_add_action(clear_board_action));
-    TRY(game_menu->try_add_action(randomize_cells_action));
+    game_menu->add_action(clear_board_action);
+    game_menu->add_action(randomize_cells_action);
     game_menu->add_separator();
-    TRY(game_menu->try_add_action(toggle_running_action));
-    TRY(game_menu->try_add_action(run_one_generation_action));
+    game_menu->add_action(toggle_running_action);
+    game_menu->add_action(run_one_generation_action);
     game_menu->add_separator();
-    TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    game_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
-    })));
+    }));
 
     auto help_menu = TRY(window->try_add_menu("&Help"_string));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
+    help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
+    help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man6/GameOfLife.md"), "/bin/Help");
-    })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Game of Life", app_icon, window)));
+    }));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Game of Life", app_icon, window));
 
     board_widget->on_running_state_change = [&]() {
         if (board_widget->is_running()) {

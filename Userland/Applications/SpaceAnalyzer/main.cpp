@@ -68,20 +68,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     tree_map_widget.set_focus(true);
 
     auto file_menu = TRY(window->try_add_menu("&File"_string));
-    TRY(file_menu->try_add_action(GUI::Action::create("&Analyze", { KeyCode::Key_F5 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
+    file_menu->add_action(GUI::Action::create("&Analyze", { KeyCode::Key_F5 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         // FIXME: Just modify the tree in memory instead of traversing the entire file system
         if (auto result = tree_map_widget.analyze(statusbar); result.is_error()) {
             GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
         }
-    })));
+    }));
     file_menu->add_separator();
-    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+    file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit();
-    })));
+    }));
 
     auto help_menu = TRY(window->try_add_menu("&Help"_string));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(APP_NAME, app_icon, window)));
+    help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
+    help_menu->add_action(GUI::CommonActions::make_about_action(APP_NAME, app_icon, window));
 
     auto open_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"sv));
     // Configure the node's context menu.
@@ -135,9 +135,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
 
     auto context_menu = TRY(GUI::Menu::try_create());
-    TRY(context_menu->try_add_action(open_action));
-    TRY(context_menu->try_add_action(copy_path_action));
-    TRY(context_menu->try_add_action(delete_action));
+    context_menu->add_action(open_action);
+    context_menu->add_action(copy_path_action);
+    context_menu->add_action(delete_action);
 
     // Configure event handlers.
     breadcrumbbar.on_segment_click = [&](size_t index) {

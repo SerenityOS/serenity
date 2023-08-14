@@ -60,9 +60,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto game_menu = TRY(window->try_add_menu("&Game"_string));
 
-    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
+    game_menu->add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         field->reset();
-    })));
+    }));
 
     game_menu->add_separator();
 
@@ -71,12 +71,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
     chord_toggler_action->set_checked(field->is_single_chording());
 
-    TRY(game_menu->try_add_action(*chord_toggler_action));
+    game_menu->add_action(*chord_toggler_action);
     game_menu->add_separator();
 
-    TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    game_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
-    })));
+    }));
 
     auto difficulty_menu = TRY(window->try_add_menu("&Difficulty"_string));
     GUI::ActionGroup difficulty_actions;
@@ -86,28 +86,28 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         field->set_field_difficulty(Field::Difficulty::Beginner);
     });
     action->set_checked(field->difficulty() == Field::Difficulty::Beginner);
-    TRY(difficulty_menu->try_add_action(action));
+    difficulty_menu->add_action(action);
     difficulty_actions.add_action(action);
 
     action = GUI::Action::create_checkable("&Intermediate", { Mod_Ctrl, Key_I }, [&](auto&) {
         field->set_field_difficulty(Field::Difficulty::Intermediate);
     });
     action->set_checked(field->difficulty() == Field::Difficulty::Intermediate);
-    TRY(difficulty_menu->try_add_action(action));
+    difficulty_menu->add_action(action);
     difficulty_actions.add_action(action);
 
     action = GUI::Action::create_checkable("&Expert", { Mod_Ctrl, Key_E }, [&](auto&) {
         field->set_field_difficulty(Field::Difficulty::Expert);
     });
     action->set_checked(field->difficulty() == Field::Difficulty::Expert);
-    TRY(difficulty_menu->try_add_action(action));
+    difficulty_menu->add_action(action);
     difficulty_actions.add_action(action);
 
     action = GUI::Action::create_checkable("&Madwoman", { Mod_Ctrl, Key_M }, [&](auto&) {
         field->set_field_difficulty(Field::Difficulty::Madwoman);
     });
     action->set_checked(field->difficulty() == Field::Difficulty::Madwoman);
-    TRY(difficulty_menu->try_add_action(action));
+    difficulty_menu->add_action(action);
     difficulty_actions.add_action(action);
 
     difficulty_menu->add_separator();
@@ -115,15 +115,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         CustomGameDialog::show(window, field);
     });
     action->set_checked(field->difficulty() == Field::Difficulty::Custom);
-    TRY(difficulty_menu->try_add_action(action));
+    difficulty_menu->add_action(action);
     difficulty_actions.add_action(action);
 
     auto help_menu = TRY(window->try_add_menu("&Help"_string));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
+    help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
+    help_menu->add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man6/Minesweeper.md"), "/bin/Help");
-    })));
-    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Minesweeper", app_icon, window)));
+    }));
+    help_menu->add_action(GUI::CommonActions::make_about_action("Minesweeper", app_icon, window));
 
     window->show();
 
