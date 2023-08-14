@@ -7,6 +7,10 @@ files=(
     "https://github.com/tmewett/BrogueCE/archive/refs/tags/v${version}.tar.gz dc562cf774f88b12b6aeebdac5a00e62e8598b3f84da2130a54a67a60c5debf2"
 )
 makeopts+=("bin/brogue")
+launcher_name='Brogue'
+launcher_category='Games'
+launcher_command='/usr/local/bin/brogue'
+icon_file='bin/assets/icon.png'
 
 install() {
     datadir="${SERENITY_INSTALL_ROOT}/usr/local/share/games/brogue/assets"
