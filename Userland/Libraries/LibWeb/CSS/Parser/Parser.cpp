@@ -635,13 +635,13 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
             return parse_nth_child_selector(pseudo_class, pseudo_function.values(), true);
         case PseudoClassMetadata::ParameterType::CompoundSelector: {
             auto function_token_stream = TokenStream(pseudo_function.values());
-            auto compound_selector = MUST(parse_compound_selector(function_token_stream));
-            if (!compound_selector.has_value()) {
+            auto compound_selector_or_error = parse_compound_selector(function_token_stream);
+            if (compound_selector_or_error.is_error() || !compound_selector_or_error.value().has_value()) {
                 dbgln_if(CSS_PARSER_DEBUG, "Failed to parse :{}() parameter as a compound selector", pseudo_function.name());
                 return ParseError::SyntaxError;
             }
 
-            Vector compound_selectors { compound_selector.release_value() };
+            Vector compound_selectors { compound_selector_or_error.release_value().release_value() };
             auto selector = Selector::create(move(compound_selectors));
 
             return Selector::SimpleSelector {
