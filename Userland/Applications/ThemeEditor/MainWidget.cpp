@@ -287,7 +287,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     }));
     file_menu->add_separator();
 
-    TRY(file_menu->add_recent_files_list([&](auto& action) {
+    file_menu->add_recent_files_list([&](auto& action) {
         if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
             return;
         auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text());
@@ -298,7 +298,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Can't open file named {}: {}", response.value().filename(), load_from_file_result.error()));
             return;
         }
-    }));
+    });
 
     file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         if (request_close() == GUI::Window::CloseRequestDecision::Close)

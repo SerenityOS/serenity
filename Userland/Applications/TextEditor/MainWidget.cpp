@@ -374,7 +374,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     file_menu->add_action(*m_open_folder_action);
     file_menu->add_separator();
 
-    TRY(file_menu->add_recent_files_list([&](auto& action) {
+    file_menu->add_recent_files_list([&](auto& action) {
         if (editor().document().is_modified()) {
             auto save_document_first_result = GUI::MessageBox::ask_about_unsaved_changes(&window, m_path, editor().document().undo_stack().last_unmodified_timestamp());
             if (save_document_first_result == GUI::Dialog::ExecResult::Yes)
@@ -389,7 +389,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
         if (auto result = read_file(response.value().filename(), response.value().stream()); result.is_error())
             GUI::MessageBox::show(&window, "Unable to open file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
-    }));
+    });
     file_menu->add_action(GUI::CommonActions::make_quit_action([this](auto&) {
         if (!request_close())
             return;

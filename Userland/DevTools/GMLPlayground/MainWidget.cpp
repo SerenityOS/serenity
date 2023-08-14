@@ -192,14 +192,14 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     file_menu->add_action(*m_save_as_action);
     file_menu->add_separator();
 
-    TRY(file_menu->add_recent_files_list([&](auto& action) {
+    file_menu->add_recent_files_list([&](auto& action) {
         if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
             return;
         auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text());
         if (response.is_error())
             return;
         load_file(response.release_value());
-    }));
+    });
 
     file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         if (window.on_close_request() == GUI::Window::CloseRequestDecision::Close)

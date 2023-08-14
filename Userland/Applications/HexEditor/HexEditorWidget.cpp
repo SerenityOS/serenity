@@ -418,7 +418,7 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     file_menu->add_action(*m_save_action);
     file_menu->add_action(*m_save_as_action);
     file_menu->add_separator();
-    TRY(file_menu->add_recent_files_list([&](auto& action) {
+    file_menu->add_recent_files_list([&](auto& action) {
         auto path = action.text();
         auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, path);
         if (response.is_error())
@@ -426,7 +426,7 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
 
         auto file = response.release_value();
         open_file(file.filename(), file.release_stream());
-    }));
+    });
     file_menu->add_action(GUI::CommonActions::make_quit_action([this](auto&) {
         if (!request_close())
             return;

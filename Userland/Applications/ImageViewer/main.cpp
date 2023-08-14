@@ -311,7 +311,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     file_menu->add_action(delete_action);
     file_menu->add_separator();
 
-    TRY(file_menu->add_recent_files_list([&](auto& action) {
+    file_menu->add_recent_files_list([&](auto& action) {
         auto path = action.text();
         auto result = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, path);
         if (result.is_error())
@@ -319,7 +319,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto value = result.release_value();
         widget->open_file(value.filename(), value.stream());
-    }));
+    });
 
     file_menu->add_action(quit_action);
 
