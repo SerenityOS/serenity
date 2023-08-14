@@ -45,6 +45,7 @@ void NavigableContainer::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_nested_browsing_context);
+    visitor.visit(m_content_navigable);
 }
 
 JS::GCPtr<NavigableContainer> NavigableContainer::navigable_container_with_content_navigable(JS::NonnullGCPtr<Navigable> navigable)
