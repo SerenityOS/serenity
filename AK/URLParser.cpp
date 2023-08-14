@@ -1635,10 +1635,11 @@ URL URLParser::basic_parse(StringView raw_input, Optional<URL> const& base_url, 
                 if (code_point == '%' && !remaining_starts_with_two_ascii_hex_digits())
                     report_validation_error();
 
-                // FIXME: 3. UTF-8 percent-encode c using the fragment percent-encode set and append the result to url’s fragment.
+                // 3. UTF-8 percent-encode c using the fragment percent-encode set and append the result to url’s fragment.
+                // NOTE: The percent-encode is done on EOF on the entire buffer.
                 buffer.append_code_point(code_point);
             } else {
-                url->m_fragment = buffer.to_string().release_value_but_fixme_should_propagate_errors();
+                url->m_fragment = String::from_deprecated_string(percent_encode_after_encoding(buffer.string_view(), URL::PercentEncodeSet::Fragment)).release_value_but_fixme_should_propagate_errors();
                 buffer.clear();
             }
             break;
