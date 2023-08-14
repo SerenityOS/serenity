@@ -285,10 +285,10 @@ void WebContentView::wheelEvent(QWheelEvent* event)
         auto num_degrees = -event->angleDelta();
         float delta_x = -num_degrees.x() / 120;
         float delta_y = num_degrees.y() / 120;
-        // Note: This does not use the QScrollBar's step size as LibWeb multiples this by a step size internally.
         auto step_x = delta_x * QApplication::wheelScrollLines() * devicePixelRatio();
         auto step_y = delta_y * QApplication::wheelScrollLines() * devicePixelRatio();
-        client().async_mouse_wheel(to_content_position(position), button, buttons, modifiers, step_x, step_y);
+        constexpr int scroll_step_size = 24;
+        client().async_mouse_wheel(to_content_position(position), button, buttons, modifiers, step_x * scroll_step_size, step_y * scroll_step_size);
         event->accept();
         return;
     }
