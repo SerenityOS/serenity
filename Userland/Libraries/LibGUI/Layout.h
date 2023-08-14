@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -38,9 +38,6 @@ public:
     void add_layout(OwnPtr<Layout>&&);
     void add_spacer();
 
-    ErrorOr<void> try_add_widget(Widget&);
-    ErrorOr<void> try_insert_widget_before(Widget& widget, Widget& before_widget);
-
     void remove_widget(Widget&);
 
     virtual void run(Widget&) = 0;
@@ -73,7 +70,6 @@ protected:
         OwnPtr<Layout> layout {};
     };
     void add_entry(Entry&&);
-    ErrorOr<void> try_add_entry(Entry&&);
 
     WeakPtr<Widget> m_owner;
     Vector<Entry> m_entries;
