@@ -6,7 +6,6 @@
 
 #include "FindDialog.h"
 #include <AK/Array.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Hex.h>
 #include <AK/StringView.h>
 #include <Applications/HexEditor/FindDialogGML.h>
@@ -31,14 +30,14 @@ static constexpr Array<Option, 2> options = {
     }
 };
 
-GUI::Dialog::ExecResult FindDialog::show(GUI::Window* parent_window, DeprecatedString& out_text, ByteBuffer& out_buffer, bool& find_all)
+GUI::Dialog::ExecResult FindDialog::show(GUI::Window* parent_window, String& out_text, ByteBuffer& out_buffer, bool& find_all)
 {
     auto dialog = FindDialog::construct();
 
     if (parent_window)
         dialog->set_icon(parent_window->icon());
 
-    if (!out_text.is_empty() && !out_text.is_null())
+    if (!out_text.is_empty())
         dialog->m_text_editor->set_text(out_text);
 
     dialog->m_find_button->set_enabled(!dialog->m_text_editor->text().is_empty());
@@ -63,25 +62,26 @@ GUI::Dialog::ExecResult FindDialog::show(GUI::Window* parent_window, DeprecatedS
 
     find_all = dialog->find_all();
 
-    dbgln("Find: value={} option={} find_all={}", out_text.characters(), (int)selected_option, find_all);
+    dbgln("Find: value={} option={} find_all={}", out_text, (int)selected_option, find_all);
     return result;
 }
 
-Result<ByteBuffer, DeprecatedString> FindDialog::process_input(DeprecatedString text_value, OptionId opt)
+Result<ByteBuffer, String> FindDialog::process_input(String text_value, OptionId opt)
 {
     dbgln("process_input opt={}", (int)opt);
     switch (opt) {
     case OPTION_ASCII_STRING: {
         if (text_value.is_empty())
-            return DeprecatedString("Input is empty");
+            return "Input is empty"_string;
 
-        return text_value.to_byte_buffer();
+        return ByteBuffer::copy(text_value.bytes()).release_value_but_fixme_should_propagate_errors();
     }
 
     case OPTION_HEX_VALUE: {
-        auto decoded = decode_hex(text_value.replace(" "sv, ""sv, ReplaceMode::All));
+        auto text_no_spaces = text_value.replace(" "sv, ""sv, ReplaceMode::All).release_value_but_fixme_should_propagate_errors();
+        ErrorOr<ByteBuffer> decoded = decode_hex(text_no_spaces);
         if (decoded.is_error())
-            return DeprecatedString::formatted("Input is invalid: {}", decoded.error().string_literal());
+            return String::formatted("Input is invalid: {}", decoded.error().string_literal()).release_value_but_fixme_should_propagate_errors();
 
         return decoded.value();
     }
@@ -130,7 +130,7 @@ FindDialog::FindDialog()
     };
 
     m_find_button->on_click = [this](auto) {
-        auto text = m_text_editor->text();
+        auto text = String::from_deprecated_string(m_text_editor->text()).release_value_but_fixme_should_propagate_errors();
         if (!text.is_empty()) {
             m_text_value = text;
             done(ExecResult::OK);
