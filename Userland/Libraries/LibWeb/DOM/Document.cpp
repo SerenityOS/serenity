@@ -2025,11 +2025,9 @@ bool Document::is_fully_active() const
     return false;
 }
 
-// https://html.spec.whatwg.org/multipage/browsers.html#active-document
 bool Document::is_active() const
 {
-    // A browsing context's active document is its active window's associated Document.
-    return browsing_context() && browsing_context()->active_document() == this;
+    return navigable() && navigable()->active_document() == this;
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-document-location
