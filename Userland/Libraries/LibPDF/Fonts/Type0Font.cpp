@@ -155,6 +155,25 @@ void Type0Font::set_font_size(float)
 
 PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter& painter, Gfx::FloatPoint glyph_position, DeprecatedString const& string, Color const& paint_color, float font_size, float character_spacing, float word_spacing, float horizontal_scaling)
 {
+    // Type0 fonts map bytes to character IDs ("CIDs"), and then CIDs to glyphs.
+
+    // ISO 32000 (PDF 2.0) 9.7.6.2 CMap mapping describes how to map bytes to CIDs:
+    // "The Encoding entry of a Type 0 font dictionary specifies a CMap [...]
+    //  A sequence of one or more bytes shall be extracted from the string and matched against
+    //  the codespace ranges in the CMap. That is, the first byte shall be matched against 1-byte codespace ranges;
+    //  if no match is found, a second byte shall be extracted, and the 2-byte code shall be matched against 2-byte
+    //  codespace ranges [...]"
+
+    // 9.7.5.2 Predefined CMaps:
+    // "When the current font is a Type 0 font whose Encoding entry is Identity-H or Identity-V,
+    //  the string to be shown shall contain pairs of bytes representing CIDs, high-order byte first."
+    // Type0Font::initialize() currently rejects everything except Identity-H.
+    // FIXME: Support more.
+    if (string.length() % 2 != 0)
+        return Error::malformed_error("Identity-H but length not multiple of 2");
+
+    // FIXME: Map string data to CIDs, then call m_cid_font_type with CIDs.
+
     return m_cid_font_type->draw_string(painter, glyph_position, string, paint_color, font_size, character_spacing, word_spacing, horizontal_scaling);
 }
 
