@@ -46,7 +46,7 @@ public:
     [[nodiscard]] NonnullRefPtr<Menu> add_submenu(String name);
     void remove_all_actions();
 
-    ErrorOr<void> add_recent_files_list(Function<void(Action&)>);
+    void add_recent_files_list(Function<void(Action&)>);
 
     void popup(Gfx::IntPoint screen_position, RefPtr<Action> const& default_action = nullptr, Gfx::IntRect const& button_rect = {});
     void dismiss();

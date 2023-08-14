@@ -271,13 +271,13 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     file_menu->add_separator();
 
-    TRY(file_menu->add_recent_files_list([&](auto& action) {
+    file_menu->add_recent_files_list([&](auto& action) {
         auto path = action.text();
         auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, path);
         if (response.is_error())
             return;
         open_image(response.release_value());
-    }));
+    });
 
     m_close_image_action = GUI::Action::create("&Close Image", { Mod_Ctrl, Key_W }, g_icon_bag.close_image, [&](auto&) {
         auto* active_widget = m_tab_widget->active_widget();

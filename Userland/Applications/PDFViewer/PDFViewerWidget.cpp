@@ -221,11 +221,11 @@ ErrorOr<void> PDFViewerWidget::initialize_menubar(GUI::Window& window)
             open_file(response.value().filename(), response.value().release_stream());
     }));
     file_menu->add_separator();
-    TRY(file_menu->add_recent_files_list([&](auto& action) {
+    file_menu->add_recent_files_list([&](auto& action) {
         auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text());
         if (!response.is_error())
             open_file(response.value().filename(), response.value().release_stream());
-    }));
+    });
     file_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));

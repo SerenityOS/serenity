@@ -739,7 +739,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     file_menu->add_action(*m_save_action);
     file_menu->add_action(*m_save_as_action);
     file_menu->add_separator();
-    TRY(file_menu->add_recent_files_list([this](auto& action) {
+    file_menu->add_recent_files_list([this](auto& action) {
         if (!request_close())
             return;
         auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(this->window(), action.text());
@@ -748,7 +748,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         auto file = response.release_value();
         if (auto result = open_file(file.filename(), file.release_stream()); result.is_error())
             show_error(result.release_error(), "Opening"sv, file.filename());
-    }));
+    });
     file_menu->add_action(GUI::CommonActions::make_quit_action([this](auto&) {
         if (!request_close())
             return;

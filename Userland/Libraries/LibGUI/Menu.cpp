@@ -224,7 +224,7 @@ void Menu::realize_menu_item(MenuItem& item, int item_id)
     }
 }
 
-ErrorOr<void> Menu::add_recent_files_list(Function<void(Action&)> callback)
+void Menu::add_recent_files_list(Function<void(Action&)> callback)
 {
     m_recent_files_callback = move(callback);
 
@@ -245,7 +245,6 @@ ErrorOr<void> Menu::add_recent_files_list(Function<void(Action&)> callback)
     }
 
     add_separator();
-    return {};
 }
 
 }
