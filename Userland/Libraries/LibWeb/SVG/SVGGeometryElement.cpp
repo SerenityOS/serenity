@@ -34,7 +34,7 @@ float SVGGeometryElement::get_total_length()
 JS::NonnullGCPtr<Geometry::DOMPoint> SVGGeometryElement::get_point_at_length(float distance)
 {
     (void)distance;
-    return Geometry::DOMPoint::construct_impl(realm(), 0, 0, 0, 0).release_value_but_fixme_should_propagate_errors();
+    return Geometry::DOMPoint::construct_impl(realm(), 0, 0, 0, 0);
 }
 
 }
