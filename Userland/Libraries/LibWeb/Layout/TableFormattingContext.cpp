@@ -559,6 +559,11 @@ CSSPixels TableFormattingContext::compute_capmin()
     return capmin;
 }
 
+static bool width_is_auto_relative_to_state(CSS::Size const& width, LayoutState::UsedValues const& state)
+{
+    return width.is_auto() || (width.contains_percentage() && !state.has_definite_width());
+}
+
 void TableFormattingContext::compute_table_width()
 {
     // https://drafts.csswg.org/css-tables-3/#computing-the-table-width
@@ -571,7 +576,8 @@ void TableFormattingContext::compute_table_width()
 
     // Percentages on 'width' and 'height' on the table are relative to the table wrapper box's containing block,
     // not the table wrapper box itself.
-    CSSPixels width_of_table_wrapper_containing_block = m_state.get(*table_wrapper().containing_block()).content_width();
+    auto const& containing_block_state = m_state.get(*table_wrapper().containing_block());
+    CSSPixels width_of_table_wrapper_containing_block = containing_block_state.content_width();
 
     // Compute undistributable space due to border spacing: https://www.w3.org/TR/css-tables-3/#computing-undistributable-space.
     auto undistributable_space = (m_columns.size() + 1) * border_spacing_horizontal();
@@ -599,7 +605,7 @@ void TableFormattingContext::compute_table_width()
     }
 
     CSSPixels used_width;
-    if (computed_values.width().is_auto()) {
+    if (width_is_auto_relative_to_state(computed_values.width(), containing_block_state)) {
         // If the table-root has 'width: auto', the used width is the greater of
         // min(GRIDMAX, the table’s containing block width), the used min-width of the table.
         if (width_of_table_containing_block.is_definite())
