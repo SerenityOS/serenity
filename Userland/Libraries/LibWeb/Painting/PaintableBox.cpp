@@ -115,16 +115,16 @@ void PaintableBox::set_content_size(CSSPixelSize size)
     layout_box().did_set_content_size();
 }
 
-CSSPixelPoint PaintableBox::effective_offset() const
+CSSPixelPoint PaintableBox::offset() const
 {
     return m_offset;
 }
 
 CSSPixelRect PaintableBox::compute_absolute_rect() const
 {
-    CSSPixelRect rect { effective_offset(), content_size() };
+    CSSPixelRect rect { offset(), content_size() };
     for (auto const* block = containing_block(); block && block->paintable(); block = block->paintable()->containing_block())
-        rect.translate_by(block->paintable_box()->effective_offset());
+        rect.translate_by(block->paintable_box()->offset());
     return rect;
 }
 

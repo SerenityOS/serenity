@@ -36,7 +36,9 @@ public:
     };
 
     CSSPixelRect absolute_rect() const;
-    CSSPixelPoint effective_offset() const;
+
+    // Offset from the top left of the containing block's content edge.
+    [[nodiscard]] CSSPixelPoint offset() const;
 
     CSSPixelPoint scroll_offset() const;
     void set_scroll_offset(CSSPixelPoint);
