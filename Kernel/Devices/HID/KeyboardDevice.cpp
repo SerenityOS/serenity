@@ -243,6 +243,7 @@ void KeyboardDevice::handle_scan_code_input_event(ScanCodeEvent event)
         m_right_shift_pressed = event.pressed;
         update_modifier(Mod_Shift, m_left_shift_pressed || m_right_shift_pressed);
         break;
+    case 0x1c:
     case 0x35:
         if (event.e0_prefix)
             update_modifier(Mod_Keypad, event.pressed);
@@ -261,7 +262,6 @@ void KeyboardDevice::handle_scan_code_input_event(ScanCodeEvent event)
     case 0x51:
     case 0x52:
     case 0x53:
-        // FIXME: This should also include the keypad "enter" key, but that has the same scan code as the return key (0x1c).
         if (!event.e0_prefix)
             update_modifier(Mod_Keypad, event.pressed);
         break;
