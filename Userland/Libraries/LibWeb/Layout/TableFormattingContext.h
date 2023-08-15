@@ -70,6 +70,14 @@ private:
     template<class ColumnFilter>
     bool distribute_excess_width_by_intrinsic_percentage(CSSPixels excess_width, ColumnFilter column_filter);
 
+    struct CalculatedBoxSizes {
+        CSSPixels width;
+        Optional<CSSPixels> height;
+    };
+
+    CalculatedBoxSizes calculate_sizes_for_min_content_width_box(Layout::Box const&) const;
+    CalculatedBoxSizes calculate_sizes_for_max_content_width_box(Layout::Box const&) const;
+
     bool use_fixed_mode_layout() const;
 
     CSSPixels m_table_height { 0 };

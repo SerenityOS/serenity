@@ -1286,8 +1286,8 @@ CSSPixels FormattingContext::calculate_min_content_width(Layout::Box const& box)
     auto& root_state = m_state.m_root;
 
     auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new LayoutState::IntrinsicSizes); });
-    if (cache.min_content_width.has_value())
-        return *cache.min_content_width;
+    if (cache.sizes_for_min_content_width.has_value())
+        return cache.sizes_for_min_content_width->width();
 
     LayoutState throwaway_state(&m_state);
 
@@ -1305,15 +1305,15 @@ CSSPixels FormattingContext::calculate_min_content_width(Layout::Box const& box)
     auto available_height = AvailableSize::make_indefinite();
     context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(available_width, available_height));
 
-    cache.min_content_width = context->automatic_content_width();
+    cache.sizes_for_min_content_width = CSSPixelSize { context->automatic_content_width(), {} };
 
-    if (cache.min_content_width->might_be_saturated()) {
+    if (cache.sizes_for_min_content_width->width().might_be_saturated()) {
         // HACK: If layout calculates a non-finite result, something went wrong. Force it to zero and log a little whine.
         dbgln("FIXME: Calculated non-finite min-content width for {}", box.debug_description());
-        cache.min_content_width = 0;
+        cache.sizes_for_min_content_width->set_width(0);
     }
 
-    return *cache.min_content_width;
+    return cache.sizes_for_min_content_width->width();
 }
 
 CSSPixels FormattingContext::calculate_max_content_width(Layout::Box const& box) const
@@ -1324,8 +1324,8 @@ CSSPixels FormattingContext::calculate_max_content_width(Layout::Box const& box)
     auto& root_state = m_state.m_root;
 
     auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new LayoutState::IntrinsicSizes); });
-    if (cache.max_content_width.has_value())
-        return *cache.max_content_width;
+    if (cache.sizes_for_max_content_width.has_value())
+        return cache.sizes_for_max_content_width->width();
 
     LayoutState throwaway_state(&m_state);
 
@@ -1343,15 +1343,15 @@ CSSPixels FormattingContext::calculate_max_content_width(Layout::Box const& box)
     auto available_height = AvailableSize::make_indefinite();
     context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(available_width, available_height));
 
-    cache.max_content_width = context->automatic_content_width();
+    cache.sizes_for_max_content_width = CSSPixelSize { context->automatic_content_width(), {} };
 
-    if (cache.max_content_width->might_be_saturated()) {
+    if (cache.sizes_for_max_content_width->width().might_be_saturated()) {
         // HACK: If layout calculates a non-finite result, something went wrong. Force it to zero and log a little whine.
         dbgln("FIXME: Calculated non-finite max-content width for {}", box.debug_description());
-        cache.max_content_width = 0;
+        cache.sizes_for_max_content_width->set_width(0);
     }
 
-    return *cache.max_content_width;
+    return cache.sizes_for_max_content_width->width();
 }
 
 // https://www.w3.org/TR/css-sizing-3/#min-content-block-size

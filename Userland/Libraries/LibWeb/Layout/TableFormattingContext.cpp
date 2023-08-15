@@ -241,10 +241,19 @@ void TableFormattingContext::compute_cell_measures()
         CSSPixels border_left = use_collapsing_borders_model ? round(cell_state.border_left / 2) : computed_values.border_left().width;
         CSSPixels border_right = use_collapsing_borders_model ? round(cell_state.border_right / 2) : computed_values.border_right().width;
 
-        auto min_content_width = calculate_min_content_width(cell.box);
-        auto max_content_width = calculate_max_content_width(cell.box);
-        auto min_content_height = calculate_min_content_height(cell.box, max_content_width);
-        auto max_content_height = calculate_max_content_height(cell.box, min_content_width);
+        // We use calculate_sizes_for_{min, max}_content_width_box to compute width and height for min-width and max-width boxes in a single layout run.
+        // This is needed because taking the width returned by calculate_{min, max}_content_width and passing it to calculate_{min, max}_content_height
+        // isn't guaranteed to return the same height as the run for computing width, since trailing whitespace counts against available width for line
+        // breaks but is trimmed before returning the width. Doing it in a single run, with calculate_sizes_for_{min, max}_content_width_box, ensures
+        // consistency.
+        auto sizes_for_min_content_width = calculate_sizes_for_min_content_width_box(cell.box);
+        auto min_content_width = sizes_for_min_content_width.width;
+        auto sizes_for_max_content_width = calculate_sizes_for_max_content_width_box(cell.box);
+        auto max_content_width = sizes_for_max_content_width.width;
+        // We still call calculate_{min, max}_content_height when the height isn't determined during the `calculate_sizes_for_{min, max}_content_width_box.
+        // This only happens for SVG boxes which don't have a natural height. Since such boxes don't involve line breaks, doing this is safe.
+        auto min_content_height = sizes_for_max_content_width.height.has_value() ? sizes_for_max_content_width.height.value() : calculate_min_content_height(cell.box, max_content_width);
+        auto max_content_height = sizes_for_min_content_width.height.has_value() ? sizes_for_min_content_width.height.value() : calculate_max_content_height(cell.box, min_content_width);
 
         // The outer min-content height of a table-cell is max(min-height, min-content height) adjusted by the cell intrinsic offsets.
         auto min_height = computed_values.min_height().to_px(cell.box, containing_block.content_height());
@@ -1241,6 +1250,88 @@ void TableFormattingContext::position_cell_boxes()
             cell_state.border_box_left() + m_columns[cell.column_index].left_offset + cell.column_index * border_spacing_horizontal(),
             cell_state.border_box_top());
     }
+}
+
+TableFormattingContext::CalculatedBoxSizes TableFormattingContext::calculate_sizes_for_min_content_width_box(Layout::Box const& box) const
+{
+    if (box.has_natural_width())
+        return { *box.natural_width(), box.natural_height() };
+
+    auto& root_state = m_state.m_root;
+
+    auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new LayoutState::IntrinsicSizes); });
+    if (cache.sizes_for_min_content_width.has_value())
+        return { cache.sizes_for_min_content_width->width(), cache.sizes_for_min_content_width->height() };
+
+    LayoutState throwaway_state(&m_state);
+
+    auto& box_state = throwaway_state.get_mutable(box);
+    box_state.width_constraint = SizeConstraint::MinContent;
+    box_state.set_indefinite_content_width();
+    box_state.set_indefinite_content_height();
+
+    auto context = const_cast<TableFormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
+    if (!context) {
+        context = make<BlockFormattingContext>(throwaway_state, verify_cast<BlockContainer>(box), nullptr);
+    }
+
+    auto available_width = AvailableSize::make_min_content();
+    auto available_height = AvailableSize::make_indefinite();
+    context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(available_width, available_height));
+
+    cache.sizes_for_min_content_width = CSSPixelSize {
+        context->automatic_content_width(),
+        context->automatic_content_height()
+    };
+
+    if (!isfinite(cache.sizes_for_min_content_width->width().to_double())) {
+        // HACK: If layout calculates a non-finite result, something went wrong. Force it to zero and log a little whine.
+        dbgln("FIXME: Calculated non-finite min-content width for {}", box.debug_description());
+        cache.sizes_for_min_content_width->set_width(0);
+    }
+
+    return { cache.sizes_for_min_content_width->width(), cache.sizes_for_min_content_width->height() };
+}
+
+TableFormattingContext::CalculatedBoxSizes TableFormattingContext::calculate_sizes_for_max_content_width_box(Layout::Box const& box) const
+{
+    if (box.has_natural_width())
+        return { *box.natural_width(), box.natural_height() };
+
+    auto& root_state = m_state.m_root;
+
+    auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new LayoutState::IntrinsicSizes); });
+    if (cache.sizes_for_max_content_width.has_value())
+        return { cache.sizes_for_max_content_width->width(), cache.sizes_for_max_content_width->height() };
+
+    LayoutState throwaway_state(&m_state);
+
+    auto& box_state = throwaway_state.get_mutable(box);
+    box_state.width_constraint = SizeConstraint::MaxContent;
+    box_state.set_indefinite_content_width();
+    box_state.set_indefinite_content_height();
+
+    auto context = const_cast<TableFormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
+    if (!context) {
+        context = make<BlockFormattingContext>(throwaway_state, verify_cast<BlockContainer>(box), nullptr);
+    }
+
+    auto available_width = AvailableSize::make_max_content();
+    auto available_height = AvailableSize::make_indefinite();
+    context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(available_width, available_height));
+
+    cache.sizes_for_max_content_width = CSSPixelSize {
+        context->automatic_content_width(),
+        context->automatic_content_height()
+    };
+
+    if (!isfinite(cache.sizes_for_max_content_width->width().to_double())) {
+        // HACK: If layout calculates a non-finite result, something went wrong. Force it to zero and log a little whine.
+        dbgln("FIXME: Calculated non-finite max-content width for {}", box.debug_description());
+        cache.sizes_for_max_content_width->set_width(0);
+    }
+
+    return { cache.sizes_for_max_content_width->width(), cache.sizes_for_max_content_width->height() };
 }
 
 bool TableFormattingContext::use_fixed_mode_layout() const
