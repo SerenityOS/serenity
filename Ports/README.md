@@ -137,8 +137,8 @@ files=(
     "https://example.com/foo-${version}.tar.gz 9acd50f9a2af37e471f761c3fe7b8dea5617e51dac802fe6c177b74abf0abb5a"
 )
 depends=(
-  'bar'
-  'baz'
+    'bar'
+    'baz'
 )
 ```
 
@@ -182,7 +182,10 @@ installed during the `installdepends` step.
 For example:
 
 ```bash
-depends=("ncurses" "gettext")
+depends=(
+    'gettext'
+    'ncurses'
+)
 ```
 
 #### `files`
