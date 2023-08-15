@@ -229,16 +229,14 @@ CSSPixelPoint Node::box_type_agnostic_position() const
         return verify_cast<Box>(*this).paintable_box()->absolute_position();
     VERIFY(is_inline());
     CSSPixelPoint position;
-    if (auto* block = containing_block()) {
-        if (is<Painting::PaintableWithLines>(*block)) {
-            static_cast<Painting::PaintableWithLines const&>(*block->paintable_box()).for_each_fragment([&](auto& fragment) {
-                if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
-                    position = fragment.absolute_rect().location();
-                    return IterationDecision::Break;
-                }
-                return IterationDecision::Continue;
-            });
-        }
+    if (auto* block = containing_block(); block && block->paintable() && is<Painting::PaintableWithLines>(*block->paintable())) {
+        static_cast<Painting::PaintableWithLines const&>(*block->paintable_box()).for_each_fragment([&](auto& fragment) {
+            if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
+                position = fragment.absolute_rect().location();
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
     }
     return position;
 }

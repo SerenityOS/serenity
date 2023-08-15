@@ -1,0 +1,58 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x156.6875 children: not-inline
+      BlockContainer <(anonymous)> at (8,8) content-size 784x17.46875 children: inline
+        line 0 width: 136.609375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+          frag 0 from TextNode start: 0, length: 5, rect: [8,8 36.40625x17.46875]
+            "well "
+          frag 1 from TextNode start: 0, length: 6, rect: [44,33 44.84375x17.46875]
+            "hello "
+          frag 2 from TextNode start: 0, length: 7, rect: [89,58 55.359375x17.46875]
+            "friends"
+        InlineNode <span>
+          TextNode <#text>
+          InlineNode <b>
+            TextNode <#text>
+            InlineNode <i>
+              TextNode <#text>
+        TextNode <#text>
+      BlockContainer <div> at (8,25.46875) content-size 784x139.21875 children: not-inline
+        BlockContainer <(anonymous)> at (8,25.46875) content-size 784x69.875 children: inline
+          line 0 width: 0, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+          line 1 width: 0, height: 17.46875, bottom: 34.9375, baseline: 13.53125
+          line 2 width: 0, height: 17.46875, bottom: 52.40625, baseline: 13.53125
+          line 3 width: 0, height: 17.46875, bottom: 69.875, baseline: 13.53125
+          BreakNode <br>
+          BreakNode <br>
+          BreakNode <br>
+          BreakNode <br>
+        BlockContainer <pre#out> at (8,111.34375) content-size 784x53.34375 children: inline
+          line 0 width: 72.421875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 10, rect: [8,111.34375 72.421875x17.46875]
+              "well: 0, 0"
+          line 1 width: 96.765625, height: 17.9375, bottom: 35.40625, baseline: 13.53125
+            frag 0 from TextNode start: 11, length: 13, rect: [8,128.34375 96.765625x17.46875]
+              "hello: 36, 25"
+          line 2 width: 113.65625, height: 18.40625, bottom: 53.34375, baseline: 13.53125
+            frag 0 from TextNode start: 25, length: 15, rect: [8,145.34375 113.65625x17.46875]
+              "friends: 45, 25"
+          TextNode <#text>
+      BlockContainer <(anonymous)> at (8,180.6875) content-size 784x0 children: inline
+        TextNode <#text>
+        TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x156.6875] overflow: [8,8 784x172.6875]
+      PaintableWithLines (BlockContainer(anonymous)) [8,8 784x17.46875] overflow: [8,8 784x67.46875]
+        InlinePaintable (InlineNode<SPAN>)
+          TextPaintable (TextNode<#text>)
+          InlinePaintable (InlineNode<B>)
+            TextPaintable (TextNode<#text>)
+            InlinePaintable (InlineNode<I>)
+              TextPaintable (TextNode<#text>)
+      PaintableWithLines (BlockContainer<DIV>) [8,25.46875 784x139.21875]
+        PaintableWithLines (BlockContainer(anonymous)) [8,25.46875 784x69.875]
+        PaintableWithLines (BlockContainer<PRE>#out) [8,111.34375 784x53.34375]
+          TextPaintable (TextNode<#text>)
+      PaintableWithLines (BlockContainer(anonymous)) [8,180.6875 784x0]
