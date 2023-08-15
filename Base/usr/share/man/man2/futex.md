@@ -177,7 +177,7 @@ public:
 
 The name "futex" stands for "fast userspace mutex".
 
-The `futex()` system call originally apeared in Linux. Since then, many other
+The `futex()` system call originally appeared in Linux. Since then, many other
 kernels implemented support for futex-like operations, under various names, in
 particular:
 * Darwin (XNU) has private `ulock_wait()` and `ulock_wake()` API;
