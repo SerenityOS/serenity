@@ -16,7 +16,7 @@ class DOMPoint final : public DOMPointReadOnly {
     WEB_PLATFORM_OBJECT(DOMPoint, DOMPointReadOnly);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMPoint>> construct_impl(JS::Realm&, double x = 0, double y = 0, double z = 0, double w = 1);
+    static JS::NonnullGCPtr<DOMPoint> construct_impl(JS::Realm&, double x = 0, double y = 0, double z = 0, double w = 1);
 
     static JS::NonnullGCPtr<DOMPoint> from_point(JS::VM&, DOMPointInit const&);
 
