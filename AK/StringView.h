@@ -330,6 +330,11 @@ public:
         return StringUtils::count(*this, needle);
     }
 
+    [[nodiscard]] size_t count(char needle) const
+    {
+        return StringUtils::count(*this, needle);
+    }
+
     template<typename... Ts>
     [[nodiscard]] ALWAYS_INLINE constexpr bool is_one_of(Ts&&... strings) const
     {
