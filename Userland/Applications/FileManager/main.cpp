@@ -1079,31 +1079,31 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu->add_action(GUI::CommonActions::make_about_action("File Manager"sv, GUI::Icon::default_icon("app-file-manager"sv), window));
 
-    (void)TRY(main_toolbar.try_add_action(go_back_action));
-    (void)TRY(main_toolbar.try_add_action(go_forward_action));
-    (void)TRY(main_toolbar.try_add_action(open_parent_directory_action));
-    (void)TRY(main_toolbar.try_add_action(go_home_action));
+    main_toolbar.add_action(go_back_action);
+    main_toolbar.add_action(go_forward_action);
+    main_toolbar.add_action(open_parent_directory_action);
+    main_toolbar.add_action(go_home_action);
 
-    TRY(main_toolbar.try_add_separator());
-    (void)TRY(main_toolbar.try_add_action(directory_view->open_terminal_action()));
+    main_toolbar.add_separator();
+    main_toolbar.add_action(directory_view->open_terminal_action());
 
-    TRY(main_toolbar.try_add_separator());
-    (void)TRY(main_toolbar.try_add_action(mkdir_action));
-    (void)TRY(main_toolbar.try_add_action(touch_action));
-    TRY(main_toolbar.try_add_separator());
+    main_toolbar.add_separator();
+    main_toolbar.add_action(mkdir_action);
+    main_toolbar.add_action(touch_action);
+    main_toolbar.add_separator();
 
-    (void)TRY(main_toolbar.try_add_action(focus_dependent_delete_action));
-    (void)TRY(main_toolbar.try_add_action(directory_view->rename_action()));
+    main_toolbar.add_action(focus_dependent_delete_action);
+    main_toolbar.add_action(directory_view->rename_action());
 
-    TRY(main_toolbar.try_add_separator());
-    (void)TRY(main_toolbar.try_add_action(cut_action));
-    (void)TRY(main_toolbar.try_add_action(copy_action));
-    (void)TRY(main_toolbar.try_add_action(paste_action));
+    main_toolbar.add_separator();
+    main_toolbar.add_action(cut_action);
+    main_toolbar.add_action(copy_action);
+    main_toolbar.add_action(paste_action);
 
-    TRY(main_toolbar.try_add_separator());
-    (void)TRY(main_toolbar.try_add_action(directory_view->view_as_icons_action()));
-    (void)TRY(main_toolbar.try_add_action(directory_view->view_as_table_action()));
-    (void)TRY(main_toolbar.try_add_action(directory_view->view_as_columns_action()));
+    main_toolbar.add_separator();
+    main_toolbar.add_action(directory_view->view_as_icons_action());
+    main_toolbar.add_action(directory_view->view_as_table_action());
+    main_toolbar.add_action(directory_view->view_as_columns_action());
 
     breadcrumbbar.on_path_change = [&](auto selected_path) {
         if (FileSystem::is_directory(selected_path)) {

@@ -61,15 +61,15 @@ ErrorOr<NonnullRefPtr<CalendarWidget>> CalendarWidget::create(GUI::Window* paren
 
     auto open_settings_action = TRY(widget->create_open_settings_action());
 
-    (void)TRY(toolbar->try_add_action(prev_date_action));
-    (void)TRY(toolbar->try_add_action(next_date_action));
-    TRY(toolbar->try_add_separator());
-    (void)TRY(toolbar->try_add_action(jump_to_action));
-    (void)TRY(toolbar->try_add_action(add_event_action));
-    TRY(toolbar->try_add_separator());
-    (void)TRY(toolbar->try_add_action(view_month_action));
-    (void)TRY(toolbar->try_add_action(view_year_action));
-    (void)TRY(toolbar->try_add_action(open_settings_action));
+    toolbar->add_action(prev_date_action);
+    toolbar->add_action(next_date_action);
+    toolbar->add_separator();
+    toolbar->add_action(jump_to_action);
+    toolbar->add_action(add_event_action);
+    toolbar->add_separator();
+    toolbar->add_action(view_month_action);
+    toolbar->add_action(view_year_action);
+    toolbar->add_action(open_settings_action);
 
     widget->create_on_tile_doubleclick();
 

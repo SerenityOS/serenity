@@ -378,33 +378,33 @@ ErrorOr<void> MainWidget::create_actions()
 ErrorOr<void> MainWidget::create_toolbars()
 {
     auto& toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");
-    (void)TRY(toolbar.try_add_action(*m_new_action));
-    (void)TRY(toolbar.try_add_action(*m_open_action));
-    (void)TRY(toolbar.try_add_action(*m_save_action));
-    TRY(toolbar.try_add_separator());
-    (void)TRY(toolbar.try_add_action(*m_cut_action));
-    (void)TRY(toolbar.try_add_action(*m_copy_action));
-    (void)TRY(toolbar.try_add_action(*m_paste_action));
-    (void)TRY(toolbar.try_add_action(*m_delete_action));
-    TRY(toolbar.try_add_separator());
-    (void)TRY(toolbar.try_add_action(*m_undo_action));
-    (void)TRY(toolbar.try_add_action(*m_redo_action));
-    TRY(toolbar.try_add_separator());
-    (void)TRY(toolbar.try_add_action(*m_open_preview_action));
-    TRY(toolbar.try_add_separator());
-    (void)TRY(toolbar.try_add_action(*m_previous_glyph_action));
-    (void)TRY(toolbar.try_add_action(*m_next_glyph_action));
-    (void)TRY(toolbar.try_add_action(*m_go_to_glyph_action));
+    toolbar.add_action(*m_new_action);
+    toolbar.add_action(*m_open_action);
+    toolbar.add_action(*m_save_action);
+    toolbar.add_separator();
+    toolbar.add_action(*m_cut_action);
+    toolbar.add_action(*m_copy_action);
+    toolbar.add_action(*m_paste_action);
+    toolbar.add_action(*m_delete_action);
+    toolbar.add_separator();
+    toolbar.add_action(*m_undo_action);
+    toolbar.add_action(*m_redo_action);
+    toolbar.add_separator();
+    toolbar.add_action(*m_open_preview_action);
+    toolbar.add_separator();
+    toolbar.add_action(*m_previous_glyph_action);
+    toolbar.add_action(*m_next_glyph_action);
+    toolbar.add_action(*m_go_to_glyph_action);
 
     auto& glyph_transform_toolbar = *find_descendant_of_type_named<GUI::Toolbar>("glyph_transform_toolbar");
-    (void)TRY(glyph_transform_toolbar.try_add_action(*m_flip_horizontal_action));
-    (void)TRY(glyph_transform_toolbar.try_add_action(*m_flip_vertical_action));
-    (void)TRY(glyph_transform_toolbar.try_add_action(*m_rotate_counterclockwise_action));
-    (void)TRY(glyph_transform_toolbar.try_add_action(*m_rotate_clockwise_action));
+    glyph_transform_toolbar.add_action(*m_flip_horizontal_action);
+    glyph_transform_toolbar.add_action(*m_flip_vertical_action);
+    glyph_transform_toolbar.add_action(*m_rotate_counterclockwise_action);
+    glyph_transform_toolbar.add_action(*m_rotate_clockwise_action);
 
     auto& glyph_mode_toolbar = *find_descendant_of_type_named<GUI::Toolbar>("glyph_mode_toolbar");
-    (void)TRY(glyph_mode_toolbar.try_add_action(*m_paint_glyph_action));
-    (void)TRY(glyph_mode_toolbar.try_add_action(*m_move_glyph_action));
+    glyph_mode_toolbar.add_action(*m_paint_glyph_action);
+    glyph_mode_toolbar.add_action(*m_move_glyph_action);
 
     return {};
 }
