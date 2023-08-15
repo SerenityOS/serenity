@@ -66,6 +66,31 @@ consteval static auto set_to_search()
 
 namespace XML {
 
+Offset LineTrackingLexer::offset_for(size_t index) const
+{
+    auto& [cached_index, cached_line, cached_column] = m_cached_offset;
+
+    if (cached_index <= index) {
+        for (size_t i = cached_index; i < index; ++i) {
+            if (m_input[i] == '\n')
+                ++cached_line, cached_column = 0;
+            else
+                ++cached_column;
+        }
+    } else {
+        auto lines_backtracked = m_input.substring_view(index, cached_index - index).count('\n');
+        cached_line -= lines_backtracked;
+        if (lines_backtracked == 0) {
+            cached_column -= cached_index - index;
+        } else {
+            auto current_line_start = m_input.substring_view(0, index).find_last('\n').value_or(0);
+            cached_column = index - current_line_start;
+        }
+    }
+    cached_index = index;
+    return m_cached_offset;
+}
+
 size_t Parser::s_debug_indent_level { 0 };
 
 void Parser::append_node(NonnullOwnPtr<Node> node)
@@ -80,7 +105,7 @@ void Parser::append_node(NonnullOwnPtr<Node> node)
     }
 }
 
-void Parser::append_text(StringView text)
+void Parser::append_text(StringView text, Offset offset)
 {
     if (m_listener) {
         m_listener->text(text);
@@ -90,7 +115,7 @@ void Parser::append_text(StringView text)
     if (!m_entered_node) {
         Node::Text node;
         node.builder.append(text);
-        m_root_node = make<Node>(move(node));
+        m_root_node = make<Node>(offset, move(node));
         return;
     }
 
@@ -105,7 +130,7 @@ void Parser::append_text(StringView text)
             }
             Node::Text text_node;
             text_node.builder.append(text);
-            node.children.append(make<Node>(move(text_node)));
+            node.children.append(make<Node>(offset, move(text_node)));
         },
         [&](auto&) {
             // Can't enter a text or comment node.
@@ -113,7 +138,7 @@ void Parser::append_text(StringView text)
         });
 }
 
-void Parser::append_comment(StringView text)
+void Parser::append_comment(StringView text, Offset offset)
 {
     if (m_listener) {
         m_listener->comment(text);
@@ -127,7 +152,7 @@ void Parser::append_comment(StringView text)
 
     m_entered_node->content.visit(
         [&](Node::Element& node) {
-            node.children.append(make<Node>(Node::Comment { text }));
+            node.children.append(make<Node>(offset, Node::Comment { text }));
         },
         [&](auto&) {
             // Can't enter a text or comment node.
@@ -455,6 +480,7 @@ ErrorOr<void, ParseError> Parser::parse_comment()
     auto rule = enter_rule();
 
     // Comment ::= '<!--' ((Char - '-') | ('-' (Char - '-')))* '-->'
+    auto comment_start = m_lexer.tell();
     TRY(expect("<!--"sv));
     auto accept = accept_rule();
 
@@ -481,7 +507,7 @@ ErrorOr<void, ParseError> Parser::parse_comment()
     TRY(expect("-->"sv));
 
     if (m_options.preserve_comments)
-        append_comment(text);
+        append_comment(text, m_lexer.offset_for(comment_start));
 
     rollback.disarm();
     return {};
@@ -579,7 +605,7 @@ ErrorOr<void, ParseError> Parser::parse_doctype_decl()
                 }
                 StringView resolved_source = resource_result.value();
                 TemporaryChange source { m_source, resolved_source };
-                TemporaryChange lexer { m_lexer, GenericLexer(m_source) };
+                TemporaryChange lexer { m_lexer, LineTrackingLexer(m_source) };
                 auto declarations = TRY(parse_external_subset());
                 if (!m_lexer.is_eof()) {
                     return parse_error(
@@ -650,6 +676,7 @@ ErrorOr<NonnullOwnPtr<Node>, ParseError> Parser::parse_empty_element_tag()
     auto rule = enter_rule();
 
     // EmptyElemTag ::= '<' Name (S Attribute)* S? '/>'
+    auto tag_start = m_lexer.tell();
     TRY(expect("<"sv));
     auto accept = accept_rule();
 
@@ -672,7 +699,7 @@ ErrorOr<NonnullOwnPtr<Node>, ParseError> Parser::parse_empty_element_tag()
     TRY(expect("/>"sv));
 
     rollback.disarm();
-    return make<Node>(Node::Element { move(name), move(attributes), {} });
+    return make<Node>(m_lexer.offset_for(tag_start), Node::Element { move(name), move(attributes), {} });
 }
 
 // 3.1.41. Attribute, https://www.w3.org/TR/2006/REC-xml11-20060816/#NT-Attribute
@@ -801,6 +828,7 @@ ErrorOr<NonnullOwnPtr<Node>, ParseError> Parser::parse_start_tag()
     auto rule = enter_rule();
 
     // STag ::= '<' Name (S Attribute)* S? '>'
+    auto tag_start = m_lexer.tell();
     TRY(expect("<"sv));
     auto accept = accept_rule();
 
@@ -823,7 +851,7 @@ ErrorOr<NonnullOwnPtr<Node>, ParseError> Parser::parse_start_tag()
     TRY(expect(">"sv));
 
     rollback.disarm();
-    return make<Node>(Node::Element { move(name), move(attributes), {} });
+    return make<Node>(m_lexer.offset_for(tag_start), Node::Element { move(name), move(attributes), {} });
 }
 
 // 3.1.42 ETag, https://www.w3.org/TR/2006/REC-xml11-20060816/#NT-ETag
@@ -851,23 +879,27 @@ ErrorOr<void, ParseError> Parser::parse_content()
     auto rule = enter_rule();
 
     // content ::= CharData? ((element | Reference | CDSect | PI | Comment) CharData?)*
+    auto content_start = m_lexer.tell();
     if (auto result = parse_char_data(); !result.is_error())
-        append_text(result.release_value());
+        append_text(result.release_value(), m_lexer.offset_for(content_start));
 
     while (true) {
+        auto node_start = m_lexer.tell();
+
         if (auto result = parse_element(); !result.is_error())
             goto try_char_data;
         if (auto result = parse_reference(); !result.is_error()) {
             auto reference = result.release_value();
+            auto reference_offset = m_lexer.offset_for(node_start);
             if (auto char_reference = reference.get_pointer<DeprecatedString>())
-                append_text(*char_reference);
+                append_text(*char_reference, reference_offset);
             else
-                append_text(TRY(resolve_reference(reference.get<EntityReference>(), ReferencePlacement::Content)));
+                append_text(TRY(resolve_reference(reference.get<EntityReference>(), ReferencePlacement::Content)), reference_offset);
             goto try_char_data;
         }
         if (auto result = parse_cdata_section(); !result.is_error()) {
             if (m_options.preserve_cdata)
-                append_text(result.release_value());
+                append_text(result.release_value(), m_lexer.offset_for(node_start));
             goto try_char_data;
         }
         if (auto result = parse_processing_instruction(); !result.is_error())
@@ -879,7 +911,7 @@ ErrorOr<void, ParseError> Parser::parse_content()
 
     try_char_data:;
         if (auto result = parse_char_data(); !result.is_error())
-            append_text(result.release_value());
+            append_text(result.release_value(), m_lexer.offset_for(node_start));
     }
 
     rollback.disarm();
@@ -946,7 +978,7 @@ ErrorOr<Vector<MarkupDeclaration>, ParseError> Parser::parse_internal_subset()
             auto maybe_replacement_text = result.release_value();
             if (maybe_replacement_text.has_value()) {
                 TemporaryChange<StringView> source { m_source, maybe_replacement_text.value() };
-                TemporaryChange lexer { m_lexer, GenericLexer { m_source } };
+                TemporaryChange lexer { m_lexer, LineTrackingLexer { m_source } };
 
                 auto contained_declarations = TRY(parse_external_subset_declaration());
                 declarations.extend(move(contained_declarations));
@@ -1769,7 +1801,7 @@ ErrorOr<DeprecatedString, ParseError> Parser::resolve_reference(EntityReference 
 
     StringView resolved_source = *resolved;
     TemporaryChange source { m_source, resolved_source };
-    TemporaryChange lexer { m_lexer, GenericLexer(m_source) };
+    TemporaryChange lexer { m_lexer, LineTrackingLexer(m_source) };
     switch (placement) {
     case ReferencePlacement::AttributeValue:
         return TRY(parse_attribute_value_inner(""sv));
