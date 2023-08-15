@@ -200,9 +200,9 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
         open_page(help_index_path);
     });
 
-    (void)TRY(m_toolbar->try_add_action(*m_go_back_action));
-    (void)TRY(m_toolbar->try_add_action(*m_go_forward_action));
-    (void)TRY(m_toolbar->try_add_action(*m_go_home_action));
+    m_toolbar->add_action(*m_go_back_action);
+    m_toolbar->add_action(*m_go_forward_action);
+    m_toolbar->add_action(*m_go_home_action);
 
     auto file_menu = window.add_menu("&File"_string);
     file_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {

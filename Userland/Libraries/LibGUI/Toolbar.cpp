@@ -97,44 +97,25 @@ private:
     }
 };
 
-ErrorOr<NonnullRefPtr<GUI::Button>> Toolbar::try_add_action(Action& action)
+Button& Toolbar::add_action(Action& action)
 {
-    auto item = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Item));
+    auto item = make<Item>();
     item->type = Item::Type::Action;
     item->action = action;
 
-    // NOTE: Grow the m_items capacity before potentially adding a child widget.
-    //       This avoids having to untangle the child widget in case of allocation failure.
-    TRY(m_items.try_ensure_capacity(m_items.size() + 1));
-
-    item->widget = TRY(try_add<ToolbarButton>(action));
+    item->widget = add<ToolbarButton>(action);
     item->widget->set_fixed_size(m_button_size, m_button_size);
 
-    m_items.unchecked_append(move(item));
+    m_items.append(move(item));
     return *static_cast<Button*>(m_items.last()->widget.ptr());
-}
-
-GUI::Button& Toolbar::add_action(Action& action)
-{
-    auto button = MUST(try_add_action(action));
-    return *button;
-}
-
-ErrorOr<void> Toolbar::try_add_separator()
-{
-    // NOTE: Grow the m_items capacity before potentially adding a child widget.
-    TRY(m_items.try_ensure_capacity(m_items.size() + 1));
-
-    auto item = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Item));
-    item->type = Item::Type::Separator;
-    item->widget = TRY(try_add<SeparatorWidget>(m_orientation == Gfx::Orientation::Horizontal ? Gfx::Orientation::Vertical : Gfx::Orientation::Horizontal));
-    m_items.unchecked_append(move(item));
-    return {};
 }
 
 void Toolbar::add_separator()
 {
-    MUST(try_add_separator());
+    auto item = make<Item>();
+    item->type = Item::Type::Separator;
+    item->widget = add<SeparatorWidget>(m_orientation == Gfx::Orientation::Horizontal ? Gfx::Orientation::Vertical : Gfx::Orientation::Horizontal);
+    m_items.append(move(item));
 }
 
 void Toolbar::paint_event(PaintEvent& event)
@@ -176,7 +157,7 @@ ErrorOr<void> Toolbar::create_overflow_objects()
 
     add_spacer();
 
-    m_overflow_button = TRY(try_add_action(*m_overflow_action));
+    m_overflow_button = add_action(*m_overflow_action);
     m_overflow_button->set_visible(false);
 
     return {};

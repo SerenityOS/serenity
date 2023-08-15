@@ -1178,19 +1178,19 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         });
 
     auto& toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");
-    (void)TRY(toolbar.try_add_action(*m_new_image_action));
-    (void)TRY(toolbar.try_add_action(*m_open_image_action));
-    (void)TRY(toolbar.try_add_action(*m_save_image_action));
-    TRY(toolbar.try_add_separator());
-    (void)TRY(toolbar.try_add_action(*m_cut_action));
-    (void)TRY(toolbar.try_add_action(*m_copy_action));
-    (void)TRY(toolbar.try_add_action(*m_paste_action));
-    (void)TRY(toolbar.try_add_action(*m_undo_action));
-    (void)TRY(toolbar.try_add_action(*m_redo_action));
-    TRY(toolbar.try_add_separator());
-    (void)TRY(toolbar.try_add_action(*m_zoom_in_action));
-    (void)TRY(toolbar.try_add_action(*m_zoom_out_action));
-    (void)TRY(toolbar.try_add_action(*m_reset_zoom_action));
+    toolbar.add_action(*m_new_image_action);
+    toolbar.add_action(*m_open_image_action);
+    toolbar.add_action(*m_save_image_action);
+    toolbar.add_separator();
+    toolbar.add_action(*m_cut_action);
+    toolbar.add_action(*m_copy_action);
+    toolbar.add_action(*m_paste_action);
+    toolbar.add_action(*m_undo_action);
+    toolbar.add_action(*m_redo_action);
+    toolbar.add_separator();
+    toolbar.add_action(*m_zoom_in_action);
+    toolbar.add_action(*m_zoom_out_action);
+    toolbar.add_action(*m_reset_zoom_action);
 
     m_zoom_combobox = TRY(toolbar.try_add<GUI::ComboBox>());
     m_zoom_combobox->set_max_width(75);
@@ -1230,8 +1230,8 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         m_zoom_combobox->on_change(m_zoom_combobox->text(), GUI::ModelIndex());
     };
 
-    TRY(toolbar.try_add_separator());
-    (void)TRY(toolbar.try_add_action(*m_levels_dialog_action));
+    toolbar.add_separator();
+    toolbar.add_action(*m_levels_dialog_action);
 
     return {};
 }

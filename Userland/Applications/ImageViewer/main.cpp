@@ -294,17 +294,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     };
 
-    (void)TRY(main_toolbar->try_add_action(open_action));
-    (void)TRY(main_toolbar->try_add_action(delete_action));
-    (void)TRY(main_toolbar->try_add_separator());
-    (void)TRY(main_toolbar->try_add_action(go_first_action));
-    (void)TRY(main_toolbar->try_add_action(go_back_action));
-    (void)TRY(main_toolbar->try_add_action(go_forward_action));
-    (void)TRY(main_toolbar->try_add_action(go_last_action));
-    (void)TRY(main_toolbar->try_add_separator());
-    (void)TRY(main_toolbar->try_add_action(zoom_in_action));
-    (void)TRY(main_toolbar->try_add_action(reset_zoom_action));
-    (void)TRY(main_toolbar->try_add_action(zoom_out_action));
+    main_toolbar->add_action(open_action);
+    main_toolbar->add_action(delete_action);
+    main_toolbar->add_separator();
+    main_toolbar->add_action(go_first_action);
+    main_toolbar->add_action(go_back_action);
+    main_toolbar->add_action(go_forward_action);
+    main_toolbar->add_action(go_last_action);
+    main_toolbar->add_separator();
+    main_toolbar->add_action(zoom_in_action);
+    main_toolbar->add_action(reset_zoom_action);
+    main_toolbar->add_action(zoom_out_action);
 
     auto file_menu = window->add_menu("&File"_string);
     file_menu->add_action(open_action);

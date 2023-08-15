@@ -279,18 +279,18 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     }));
     help_menu->add_action(GUI::CommonActions::make_about_action("GML Playground", m_icon, &window));
 
-    (void)TRY(m_toolbar->try_add_action(open_action));
-    (void)TRY(m_toolbar->try_add_action(*m_save_action));
-    (void)TRY(m_toolbar->try_add_action(*m_save_as_action));
-    TRY(m_toolbar->try_add_separator());
-    (void)TRY(m_toolbar->try_add_action(m_editor->cut_action()));
-    (void)TRY(m_toolbar->try_add_action(m_editor->copy_action()));
-    (void)TRY(m_toolbar->try_add_action(m_editor->paste_action()));
-    TRY(m_toolbar->try_add_separator());
-    (void)TRY(m_toolbar->try_add_action(m_editor->undo_action()));
-    (void)TRY(m_toolbar->try_add_action(m_editor->redo_action()));
-    TRY(m_toolbar->try_add_separator());
-    (void)TRY(m_toolbar->try_add_action(format_gml_action));
+    m_toolbar->add_action(open_action);
+    m_toolbar->add_action(*m_save_action);
+    m_toolbar->add_action(*m_save_as_action);
+    m_toolbar->add_separator();
+    m_toolbar->add_action(m_editor->cut_action());
+    m_toolbar->add_action(m_editor->copy_action());
+    m_toolbar->add_action(m_editor->paste_action());
+    m_toolbar->add_separator();
+    m_toolbar->add_action(m_editor->undo_action());
+    m_toolbar->add_action(m_editor->redo_action());
+    m_toolbar->add_separator();
+    m_toolbar->add_action(format_gml_action);
 
     return {};
 }
