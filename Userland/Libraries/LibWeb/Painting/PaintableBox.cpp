@@ -117,19 +117,7 @@ void PaintableBox::set_content_size(CSSPixelSize size)
 
 CSSPixelPoint PaintableBox::effective_offset() const
 {
-    CSSPixelPoint offset;
-    if (containing_block() && m_containing_line_box_fragment.has_value()) {
-        auto& paintable_with_lines = *verify_cast<PaintableWithLines>(containing_block()->paintable_box());
-        auto const& fragment = paintable_with_lines.line_boxes()[m_containing_line_box_fragment->line_box_index].fragments()[m_containing_line_box_fragment->fragment_index];
-        offset = fragment.offset();
-    } else {
-        offset = m_offset;
-    }
-    if (layout_box().computed_values().position() == CSS::Position::Relative) {
-        auto const& inset = layout_box().box_model().inset;
-        offset.translate_by(inset.left, inset.top);
-    }
-    return offset;
+    return m_offset;
 }
 
 CSSPixelRect PaintableBox::compute_absolute_rect() const
@@ -174,11 +162,6 @@ CSSPixelRect PaintableBox::absolute_paint_rect() const
     if (!m_absolute_paint_rect.has_value())
         m_absolute_paint_rect = compute_absolute_paint_rect();
     return *m_absolute_paint_rect;
-}
-
-void PaintableBox::set_containing_line_box_fragment(Optional<Layout::LineBoxFragmentCoordinate> fragment_coordinate)
-{
-    m_containing_line_box_fragment = move(fragment_coordinate);
 }
 
 StackingContext* PaintableBox::enclosing_stacking_context()

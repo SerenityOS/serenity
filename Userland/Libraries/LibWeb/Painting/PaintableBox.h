@@ -112,7 +112,6 @@ public:
     Optional<CSSPixelRect> calculate_overflow_clipped_rect() const;
 
     void set_overflow_data(OverflowData data) { m_overflow_data = move(data); }
-    void set_containing_line_box_fragment(Optional<Layout::LineBoxFragmentCoordinate>);
 
     StackingContext* stacking_context() { return m_stacking_context; }
     StackingContext const* stacking_context() const { return m_stacking_context; }
@@ -200,9 +199,6 @@ private:
 
     CSSPixelPoint m_offset;
     CSSPixelSize m_content_size;
-
-    // Some boxes hang off of line box fragments. (inline-block, inline-table, replaced, etc)
-    Optional<Layout::LineBoxFragmentCoordinate> m_containing_line_box_fragment;
 
     OwnPtr<StackingContext> m_stacking_context;
 
