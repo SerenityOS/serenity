@@ -15,7 +15,7 @@
 
 struct Match {
     u64 offset;
-    DeprecatedString value;
+    String value;
 };
 
 class SearchResultsModel final : public GUI::Model {

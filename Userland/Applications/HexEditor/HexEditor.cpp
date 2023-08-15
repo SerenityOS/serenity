@@ -660,7 +660,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
                 line_height()
             };
 
-            const u8 cell_value = m_document->get(byte_position).value;
+            u8 const cell_value = m_document->get(byte_position).value;
             auto line = DeprecatedString::formatted("{:02X}", cell_value);
 
             Gfx::Color background_color = palette().color(background_role());
@@ -804,7 +804,7 @@ Vector<Match> HexEditor::find_all(ByteBuffer& needle, size_t start)
                 }
             }
             if (found) {
-                matches.append({ i, DeprecatedString::formatted("{}", StringView { needle }.to_deprecated_string().characters()) });
+                matches.append({ i, String::formatted("{}", StringView { needle }).release_value_but_fixme_should_propagate_errors() });
                 i += needle.size() - 1;
             }
         }
@@ -814,7 +814,7 @@ Vector<Match> HexEditor::find_all(ByteBuffer& needle, size_t start)
         return {};
 
     auto first_match = matches.at(0);
-    highlight(first_match.offset, first_match.offset + first_match.value.length());
+    highlight(first_match.offset, first_match.offset + first_match.value.bytes().size());
 
     return matches;
 }
@@ -839,7 +839,7 @@ Vector<Match> HexEditor::find_all_strings(size_t min_length)
             builder.append(c);
         } else {
             if (builder.length() >= min_length)
-                matches.append({ offset, builder.to_deprecated_string() });
+                matches.append({ offset, builder.to_string().release_value_but_fixme_should_propagate_errors() });
             builder.clear();
             found_string = false;
         }
@@ -849,7 +849,7 @@ Vector<Match> HexEditor::find_all_strings(size_t min_length)
         return {};
 
     auto first_match = matches.at(0);
-    highlight(first_match.offset, first_match.offset + first_match.value.length());
+    highlight(first_match.offset, first_match.offset + first_match.value.bytes().size());
 
     return matches;
 }
