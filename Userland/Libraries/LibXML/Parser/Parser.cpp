@@ -130,7 +130,7 @@ void Parser::append_text(StringView text, Offset offset)
             }
             Node::Text text_node;
             text_node.builder.append(text);
-            node.children.append(make<Node>(offset, move(text_node)));
+            node.children.append(make<Node>(offset, move(text_node), m_entered_node));
         },
         [&](auto&) {
             // Can't enter a text or comment node.
@@ -152,7 +152,7 @@ void Parser::append_comment(StringView text, Offset offset)
 
     m_entered_node->content.visit(
         [&](Node::Element& node) {
-            node.children.append(make<Node>(offset, Node::Comment { text }));
+            node.children.append(make<Node>(offset, Node::Comment { text }, m_entered_node));
         },
         [&](auto&) {
             // Can't enter a text or comment node.
