@@ -593,6 +593,16 @@ size_t count(StringView str, StringView needle)
     return count;
 }
 
+size_t count(StringView str, char needle)
+{
+    size_t count = 0;
+    for (size_t i = 0; i < str.length(); ++i) {
+        if (str[i] == needle)
+            count++;
+    }
+    return count;
+}
+
 }
 
 }

@@ -107,6 +107,7 @@ DeprecatedString replace(StringView, StringView needle, StringView replacement, 
 ErrorOr<String> replace(String const&, StringView needle, StringView replacement, ReplaceMode);
 
 size_t count(StringView, StringView needle);
+size_t count(StringView, char needle);
 
 }
 
