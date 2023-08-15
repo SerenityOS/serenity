@@ -39,6 +39,18 @@ struct Listener {
     virtual void error(ParseError const&) { }
 };
 
+class LineTrackingLexer : public GenericLexer {
+public:
+    using GenericLexer::GenericLexer;
+
+    Offset cached_offset() const { return m_cached_offset; }
+    void restore_cached_offset(Offset cached_offset) { m_cached_offset = cached_offset; }
+    Offset offset_for(size_t) const;
+
+protected:
+    mutable Offset m_cached_offset;
+};
+
 class Parser {
 public:
     struct Options {
@@ -73,8 +85,8 @@ private:
 
     ErrorOr<void, ParseError> parse_internal();
     void append_node(NonnullOwnPtr<Node>);
-    void append_text(StringView);
-    void append_comment(StringView);
+    void append_text(StringView, Offset);
+    void append_comment(StringView, Offset);
     void enter_node(Node&);
     void leave_node();
 
@@ -147,8 +159,9 @@ private:
     [[nodiscard]] auto rollback_point(SourceLocation location = SourceLocation::current())
     {
         return ArmedScopeGuard {
-            [this, position = m_lexer.tell(), location] {
+            [this, position = m_lexer.tell(), cached_offset = m_lexer.cached_offset(), location] {
                 m_lexer.retreat(m_lexer.tell() - position);
+                m_lexer.restore_cached_offset(cached_offset);
                 (void)location;
                 dbgln_if(XML_PARSER_DEBUG, "{:->{}}FAIL @ {} -- \x1b[31m{}\x1b[0m", " ", s_debug_indent_level * 2, location, m_lexer.remaining().substring_view(0, min(16, m_lexer.tell_remaining())).replace("\n"sv, "\\n"sv, ReplaceMode::All));
             }
@@ -192,7 +205,7 @@ private:
     }
 
     StringView m_source;
-    GenericLexer m_lexer;
+    LineTrackingLexer m_lexer;
     Options m_options;
     Listener* m_listener { nullptr };
 
