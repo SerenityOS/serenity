@@ -80,11 +80,11 @@ public:
     [[nodiscard]] CSSPixels box_baseline(Box const&) const;
     [[nodiscard]] CSSPixelRect content_box_rect_in_static_position_ancestor_coordinate_space(Box const&, Box const& ancestor_box) const;
 
-    [[nodiscard]] CSSPixels containing_block_width_for(Box const&) const;
-    [[nodiscard]] CSSPixels containing_block_height_for(Box const&) const;
+    [[nodiscard]] CSSPixels containing_block_width_for(NodeWithStyleAndBoxModelMetrics const&) const;
+    [[nodiscard]] CSSPixels containing_block_height_for(NodeWithStyleAndBoxModelMetrics const&) const;
 
-    [[nodiscard]] AvailableSize containing_block_width_as_available_size(Box const&) const;
-    [[nodiscard]] AvailableSize containing_block_height_as_available_size(Box const&) const;
+    [[nodiscard]] AvailableSize containing_block_width_as_available_size(NodeWithStyleAndBoxModelMetrics const&) const;
+    [[nodiscard]] AvailableSize containing_block_height_as_available_size(NodeWithStyleAndBoxModelMetrics const&) const;
 
     [[nodiscard]] CSSPixels calculate_stretch_fit_width(Box const&, AvailableSize const&) const;
     [[nodiscard]] CSSPixels calculate_stretch_fit_height(Box const&, AvailableSize const&) const;

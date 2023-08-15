@@ -1199,7 +1199,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_replaced_elemen
 }
 
 // https://www.w3.org/TR/css-position-3/#relpos-insets
-void FormattingContext::compute_inset(Box const& box)
+void FormattingContext::compute_inset(NodeWithStyleAndBoxModelMetrics const& box)
 {
     if (box.computed_values().position() != CSS::Position::Relative)
         return;
@@ -1512,12 +1512,12 @@ CSS::Length FormattingContext::calculate_inner_height(Layout::Box const& box, Av
     return height.resolved(box, height_of_containing_block_as_length_for_resolve);
 }
 
-CSSPixels FormattingContext::containing_block_width_for(Box const& box) const
+CSSPixels FormattingContext::containing_block_width_for(NodeWithStyleAndBoxModelMetrics const& node) const
 {
-    auto const& containing_block_state = m_state.get(*box.containing_block());
-    auto const& box_state = m_state.get(box);
+    auto const& containing_block_state = m_state.get(*node.containing_block());
+    auto const& node_state = m_state.get(node);
 
-    switch (box_state.width_constraint) {
+    switch (node_state.width_constraint) {
     case SizeConstraint::MinContent:
         return 0;
     case SizeConstraint::MaxContent:
@@ -1528,12 +1528,12 @@ CSSPixels FormattingContext::containing_block_width_for(Box const& box) const
     VERIFY_NOT_REACHED();
 }
 
-CSSPixels FormattingContext::containing_block_height_for(Box const& box) const
+CSSPixels FormattingContext::containing_block_height_for(NodeWithStyleAndBoxModelMetrics const& node) const
 {
-    auto const& containing_block_state = m_state.get(*box.containing_block());
-    auto const& box_state = m_state.get(box);
+    auto const& containing_block_state = m_state.get(*node.containing_block());
+    auto const& node_state = m_state.get(node);
 
-    switch (box_state.height_constraint) {
+    switch (node_state.height_constraint) {
     case SizeConstraint::MinContent:
         return 0;
     case SizeConstraint::MaxContent:
@@ -1544,12 +1544,12 @@ CSSPixels FormattingContext::containing_block_height_for(Box const& box) const
     VERIFY_NOT_REACHED();
 }
 
-AvailableSize FormattingContext::containing_block_width_as_available_size(Box const& box) const
+AvailableSize FormattingContext::containing_block_width_as_available_size(NodeWithStyleAndBoxModelMetrics const& node) const
 {
-    auto const& containing_block_state = m_state.get(*box.containing_block());
-    auto const& box_state = m_state.get(box);
+    auto const& containing_block_state = m_state.get(*node.containing_block());
+    auto const& node_state = m_state.get(node);
 
-    switch (box_state.width_constraint) {
+    switch (node_state.width_constraint) {
     case SizeConstraint::MinContent:
         return AvailableSize::make_min_content();
     case SizeConstraint::MaxContent:
@@ -1560,12 +1560,12 @@ AvailableSize FormattingContext::containing_block_width_as_available_size(Box co
     VERIFY_NOT_REACHED();
 }
 
-AvailableSize FormattingContext::containing_block_height_as_available_size(Box const& box) const
+AvailableSize FormattingContext::containing_block_height_as_available_size(NodeWithStyleAndBoxModelMetrics const& node) const
 {
-    auto const& containing_block_state = m_state.get(*box.containing_block());
-    auto const& box_state = m_state.get(box);
+    auto const& containing_block_state = m_state.get(*node.containing_block());
+    auto const& node_state = m_state.get(node);
 
-    switch (box_state.height_constraint) {
+    switch (node_state.height_constraint) {
     case SizeConstraint::MinContent:
         return AvailableSize::make_min_content();
     case SizeConstraint::MaxContent:
