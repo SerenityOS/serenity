@@ -1,3 +1,6 @@
+#import <Geometry/DOMMatrixReadOnly.idl>
+#import <Geometry/DOMPoint.idl>
+
 // https://drafts.fxtf.org/geometry/#dompointreadonly
 [Exposed=(Window,Worker), Serializable]
 interface DOMPointReadOnly {
@@ -12,7 +15,7 @@ interface DOMPointReadOnly {
     readonly attribute unrestricted double z;
     readonly attribute unrestricted double w;
 
-    // FIXME: DOMPoint matrixTransform(optional DOMMatrixInit matrix = {});
+    [NewObject] DOMPoint matrixTransform(optional DOMMatrixInit matrix = {});
 
     [Default] object toJSON();
 };

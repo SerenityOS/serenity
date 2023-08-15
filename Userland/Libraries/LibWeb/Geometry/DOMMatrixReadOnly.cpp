@@ -7,6 +7,7 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Geometry/DOMMatrix.h>
 #include <LibWeb/Geometry/DOMMatrixReadOnly.h>
+#include <LibWeb/Geometry/DOMPoint.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::Geometry {
@@ -238,6 +239,39 @@ JS::NonnullGCPtr<DOMMatrix> DOMMatrixReadOnly::inverse() const
     // 3. Return result.
     // The current matrix is not modified.
     return result->invert_self();
+}
+
+// https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-transformpoint
+JS::NonnullGCPtr<DOMPoint> DOMMatrixReadOnly::transform_point(DOMPointInit const& point) const
+{
+    // Let pointObject be the result of invoking create a DOMPoint from the dictionary point.
+    auto point_object = DOMPoint::from_point(realm().vm(), point);
+
+    // Return the result of invoking transform a point with a matrix, given pointObject and the current matrix. The passed argument does not get modified.
+    return transform_point(point_object);
+}
+
+// https://drafts.fxtf.org/geometry/#transform-a-point-with-a-matrix
+JS::NonnullGCPtr<DOMPoint> DOMMatrixReadOnly::transform_point(DOMPointReadOnly const& point) const
+{
+    // 1. Let x be point’s x coordinate.
+    // 2. Let y be point’s y coordinate.
+    // 3. Let z be point’s z coordinate.
+    // 4. Let w be point’s w perspective.
+    // 5. Let pointVector be a new column vector with the elements being x, y, z, and w, respectively.
+    Vector4<double> point_vector { point.x(), point.y(), point.z(), point.w() };
+
+    // 6. Set pointVector to pointVector pre-multiplied by matrix.
+    // This is really a post multiply because of the transposed m_matrix.
+    point_vector = m_matrix.transpose() * point_vector;
+
+    // 7. Let transformedPoint be a new DOMPoint object.
+    // 8. Set transformedPoint’s x coordinate to pointVector’s first element.
+    // 9. Set transformedPoint’s y coordinate to pointVector’s second element.
+    // 10. Set transformedPoint’s z coordinate to pointVector’s third element.
+    // 11. Set transformedPoint’s w perspective to pointVector’s fourth element.
+    // 12. Return transformedPoint.
+    return DOMPoint::construct_impl(realm(), point_vector.x(), point_vector.y(), point_vector.z(), point_vector.w());
 }
 
 // https://drafts.fxtf.org/geometry/#dommatrixreadonly-stringification-behavior

@@ -83,6 +83,10 @@ public:
 
     JS::NonnullGCPtr<DOMMatrix> inverse() const;
 
+    JS::NonnullGCPtr<DOMPoint> transform_point(DOMPointInit const&) const;
+
+    JS::NonnullGCPtr<DOMPoint> transform_point(DOMPointReadOnly const&) const;
+
     WebIDL::ExceptionOr<String> to_string() const;
 
 protected:

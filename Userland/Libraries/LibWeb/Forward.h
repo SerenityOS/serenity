@@ -295,8 +295,11 @@ class File;
 
 namespace Web::Geometry {
 class DOMMatrix;
+struct DOMMatrix2DInit;
+struct DOMMatrixInit;
 class DOMMatrixReadOnly;
 class DOMPoint;
+struct DOMPointInit;
 class DOMPointReadOnly;
 class DOMRect;
 class DOMRectList;

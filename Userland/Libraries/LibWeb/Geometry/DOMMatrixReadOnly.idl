@@ -1,4 +1,5 @@
 #import <Geometry/DOMMatrix.idl>
+#import <Geometry/DOMPoint.idl>
 
 // https://drafts.fxtf.org/geometry/#dommatrixreadonly
 [Exposed=(Window,Worker), Serializable, UseNewAKString]
@@ -52,7 +53,7 @@ interface DOMMatrixReadOnly {
     // FIXME: [NewObject] DOMMatrix flipY();
     [NewObject] DOMMatrix inverse();
 
-    // FIXME: [NewObject] DOMPoint transformPoint(optional DOMPointInit point = {});
+    [NewObject] DOMPoint transformPoint(optional DOMPointInit point = {});
     // FIXME: [NewObject] Float32Array toFloat32Array();
     // FIXME: [NewObject] Float64Array toFloat64Array();
 
