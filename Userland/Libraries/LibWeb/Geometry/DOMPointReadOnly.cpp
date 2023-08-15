@@ -6,6 +6,7 @@
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Geometry/DOMMatrix.h>
 #include <LibWeb/Geometry/DOMPointReadOnly.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
@@ -33,6 +34,19 @@ JS::NonnullGCPtr<DOMPointReadOnly> DOMPointReadOnly::from_point(JS::VM& vm, DOMP
 }
 
 DOMPointReadOnly::~DOMPointReadOnly() = default;
+
+// https://drafts.fxtf.org/geometry/#dom-dompointreadonly-matrixtransform
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMPoint>> DOMPointReadOnly::matrix_transform(DOMMatrixInit& matrix) const
+{
+    // 1. Let matrixObject be the result of invoking create a DOMMatrix from the dictionary matrix.
+    auto maybe_matrix_object = DOMMatrix::create_from_dom_matrix_2d_init(realm(), matrix);
+    if (maybe_matrix_object.is_exception())
+        return maybe_matrix_object.exception();
+    auto matrix_object = maybe_matrix_object.release_value();
+
+    // 2. Return the result of invoking transform a point with a matrix, given the current point and matrixObject. The current point does not get modified.
+    return matrix_object->transform_point(*this);
+}
 
 void DOMPointReadOnly::initialize(JS::Realm& realm)
 {

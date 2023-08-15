@@ -36,6 +36,8 @@ public:
     double z() const { return m_z; }
     double w() const { return m_w; }
 
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMPoint>> matrix_transform(DOMMatrixInit&) const;
+
 protected:
     DOMPointReadOnly(JS::Realm&, double x, double y, double z, double w);
 
