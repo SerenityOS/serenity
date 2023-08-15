@@ -172,6 +172,9 @@ struct LayoutState {
 
     LayoutState const* m_parent { nullptr };
     LayoutState const& m_root;
+
+private:
+    void resolve_relative_positions(Vector<Painting::PaintableWithLines&> const&);
 };
 
 }

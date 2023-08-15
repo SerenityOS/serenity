@@ -131,6 +131,71 @@ static CSSPixelRect measure_scrollable_overflow(Box const& box)
     return scrollable_overflow_rect;
 }
 
+void LayoutState::resolve_relative_positions(Vector<Painting::PaintableWithLines&> const& paintables_with_lines)
+{
+    // This function resolves relative position offsets of all the boxes & fragments in the paint tree.
+    // It runs *after* the paint tree has been constructed, so it modifies paintable node & fragment offsets directly.
+
+    // Regular boxes (not line box fragments):
+    for (auto& it : used_values_per_layout_node) {
+        auto& used_values = *it.value;
+        auto& node = const_cast<NodeWithStyleAndBoxModelMetrics&>(used_values.node());
+
+        if (!node.is_box())
+            continue;
+
+        auto& paintable = static_cast<Painting::PaintableBox&>(*node.paintable());
+        CSSPixelPoint offset;
+
+        if (used_values.containing_line_box_fragment.has_value()) {
+            // Atomic inline case:
+            // We know that `node` is an atomic inline because `containing_line_box_fragments` refers to the
+            // line box fragment in the parent block container that contains it.
+            auto const& containing_line_box_fragment = used_values.containing_line_box_fragment.value();
+            auto const& containing_block = *node.containing_block();
+            auto const& containing_block_paintable = verify_cast<Painting::PaintableWithLines>(*containing_block.paintable_box());
+            auto const& fragment = containing_block_paintable.line_boxes()[containing_line_box_fragment.line_box_index].fragments()[containing_line_box_fragment.fragment_index];
+
+            // The fragment has the final offset for the atomic inline, so we just need to copy it from there.
+            offset = fragment.offset();
+        } else {
+            // Not an atomic inline, much simpler case.
+            offset = used_values.offset;
+        }
+        // Apply relative position inset if appropriate.
+        if (node.computed_values().position() == CSS::Position::Relative) {
+            auto& inset = node.box_model().inset;
+            offset.translate_by(inset.left, inset.top);
+        }
+        paintable.set_offset(offset);
+    }
+
+    // Line box fragments:
+    for (auto const& paintable_with_lines : paintables_with_lines) {
+        for (auto const& line_box : paintable_with_lines.line_boxes()) {
+            for (auto& fragment : line_box.fragments()) {
+                auto const& fragment_node = fragment.layout_node();
+                if (!is<Layout::NodeWithStyleAndBoxModelMetrics>(*fragment_node.parent()))
+                    continue;
+                // Collect effective relative position offset from inline-flow parent chain.
+                CSSPixelPoint offset;
+                for (auto* ancestor = fragment_node.parent(); ancestor; ancestor = ancestor->parent()) {
+                    if (!is<Layout::NodeWithStyleAndBoxModelMetrics>(*ancestor))
+                        break;
+                    if (!ancestor->display().is_inline_outside() || !ancestor->display().is_flow_inside())
+                        break;
+                    if (ancestor->computed_values().position() == CSS::Position::Relative) {
+                        auto const& ancestor_node = static_cast<Layout::NodeWithStyleAndBoxModelMetrics const&>(*ancestor);
+                        auto const& inset = ancestor_node.box_model().inset;
+                        offset.translate_by(inset.left, inset.top);
+                    }
+                }
+                const_cast<LineBoxFragment&>(fragment).set_offset(fragment.offset().translated(offset));
+            }
+        }
+    }
+}
+
 void LayoutState::commit()
 {
     // Only the top-level LayoutState should ever be committed.
@@ -158,7 +223,6 @@ void LayoutState::commit()
             auto& paintable_box = const_cast<Painting::PaintableBox&>(*box.paintable_box());
             paintable_box.set_offset(used_values.offset);
             paintable_box.set_content_size(used_values.content_width(), used_values.content_height());
-            paintable_box.set_containing_line_box_fragment(used_values.containing_line_box_fragment);
             if (used_values.override_borders_data().has_value()) {
                 paintable_box.set_override_borders_data(used_values.override_borders_data().value());
             }
@@ -174,7 +238,11 @@ void LayoutState::commit()
         }
     }
 
-    // Measure absolute rect of each line box. Also collect all text nodes.
+    resolve_relative_positions(paintables_with_lines);
+
+    // Make a pass over all the line boxes to:
+    // - Measure absolute rect of each line box.
+    // - Collect all text nodes, so we can create paintables for them later.
     for (auto& paintable_with_lines : paintables_with_lines) {
         for (auto& line_box : paintable_with_lines.line_boxes()) {
             CSSPixelRect line_box_absolute_rect;
