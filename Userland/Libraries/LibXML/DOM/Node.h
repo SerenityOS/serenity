@@ -36,5 +36,14 @@ struct Node {
 
     Variant<Text, Comment, Element> content;
     Node* parent { nullptr };
+
+    bool is_text() const { return content.has<Text>(); }
+    Text const& as_text() const { return content.get<Text>(); }
+
+    bool is_comment() const { return content.has<Comment>(); }
+    Comment const& as_comment() const { return content.get<Comment>(); }
+
+    bool is_element() const { return content.has<Element>(); }
+    Element const& as_element() const { return content.get<Element>(); }
 };
 }
