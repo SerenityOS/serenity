@@ -93,108 +93,36 @@ static DeprecatedString gethostbyname_name_buffer;
 
 hostent* gethostbyname(char const* name)
 {
-    h_errno = 0;
+    struct hostent ret = {};
+    struct hostent* result = nullptr;
+    size_t buffer_size = 1024;
+    char* buffer = nullptr;
 
-    auto ipv4_address = IPv4Address::from_string({ name, strlen(name) });
-
-    if (ipv4_address.has_value()) {
-        gethostbyname_name_buffer = ipv4_address.value().to_deprecated_string();
-        __gethostbyname_buffer.h_name = const_cast<char*>(gethostbyname_name_buffer.characters());
-        __gethostbyname_alias_list_buffer[0] = nullptr;
-        __gethostbyname_buffer.h_aliases = __gethostbyname_alias_list_buffer;
-        __gethostbyname_buffer.h_addrtype = AF_INET;
-        new (&__gethostbyname_address) IPv4Address(ipv4_address.value());
-        __gethostbyname_address_list_buffer[0] = &__gethostbyname_address;
-        __gethostbyname_address_list_buffer[1] = nullptr;
-        __gethostbyname_buffer.h_addr_list = (char**)__gethostbyname_address_list_buffer;
-        __gethostbyname_buffer.h_length = 4;
-
-        return &__gethostbyname_buffer;
-    }
-
-    int fd = connect_to_lookup_server();
-    if (fd < 0) {
-        h_errno = TRY_AGAIN;
-        return nullptr;
-    }
-
-    auto close_fd_on_exit = ScopeGuard([fd] {
-        close(fd);
+    auto free_buffer_on_exit = ScopeGuard([buffer] {
+        if (buffer != nullptr)
+            free(buffer);
     });
 
-    auto name_length = strlen(name);
-    VERIFY(name_length <= NumericLimits<i32>::max());
+    while (true) {
+        buffer = (char*)realloc(buffer, buffer_size);
+        if (buffer == nullptr) {
+            // NOTE: Since gethostbyname usually can't fail because of memory,
+            //       it has no way of representing OOM or allocation failure.
+            //       NO_RECOVERY is the next best thing.
+            h_errno = NO_RECOVERY;
+            return NULL;
+        }
 
-    struct [[gnu::packed]] {
-        u32 message_size;
-        u32 endpoint_magic;
-        i32 message_id;
-        u32 name_length;
-    } request_header = {
-        (u32)(sizeof(request_header) - sizeof(request_header.message_size) + name_length),
-        lookup_server_endpoint_magic,
-        1,
-        static_cast<u32>(name_length),
-    };
-    if (auto nsent = write(fd, &request_header, sizeof(request_header)); nsent < 0) {
-        h_errno = TRY_AGAIN;
-        return nullptr;
-    } else if (nsent != sizeof(request_header)) {
-        h_errno = NO_RECOVERY;
-        return nullptr;
-    }
+        int rc = gethostbyname_r(name, &ret, buffer, buffer_size, &result, &h_errno);
+        if (rc == ERANGE) {
+            buffer_size *= 2;
+            continue;
+        }
 
-    if (auto nsent = write(fd, name, name_length); nsent < 0) {
-        h_errno = TRY_AGAIN;
-        return nullptr;
-    } else if (static_cast<size_t>(nsent) != name_length) {
-        h_errno = NO_RECOVERY;
-        return nullptr;
-    }
+        if (rc < 0)
+            return nullptr;
 
-    struct [[gnu::packed]] {
-        u32 message_size;
-        u32 endpoint_magic;
-        i32 message_id;
-        i32 code;
-        u32 addresses_count;
-    } response_header;
-
-    if (auto nreceived = read(fd, &response_header, sizeof(response_header)); nreceived < 0) {
-        h_errno = TRY_AGAIN;
-        return nullptr;
-    } else if (nreceived != sizeof(response_header)) {
-        h_errno = NO_RECOVERY;
-        return nullptr;
-    }
-    if (response_header.endpoint_magic != lookup_server_endpoint_magic || response_header.message_id != 2) {
-        h_errno = NO_RECOVERY;
-        return nullptr;
-    }
-    if (response_header.code != 0) {
-        h_errno = NO_RECOVERY;
-        return nullptr;
-    }
-    if (response_header.addresses_count == 0) {
-        h_errno = HOST_NOT_FOUND;
-        return nullptr;
-    }
-    i32 response_length;
-    if (auto nreceived = read(fd, &response_length, sizeof(response_length)); nreceived < 0) {
-        h_errno = TRY_AGAIN;
-        return nullptr;
-    } else if (nreceived != sizeof(response_length)
-        || response_length != sizeof(__gethostbyname_address)) {
-        h_errno = NO_RECOVERY;
-        return nullptr;
-    }
-
-    if (auto nreceived = read(fd, &__gethostbyname_address, response_length); nreceived < 0) {
-        h_errno = TRY_AGAIN;
-        return nullptr;
-    } else if (nreceived != response_length) {
-        h_errno = NO_RECOVERY;
-        return nullptr;
+        break;
     }
 
     gethostbyname_name_buffer = name;
@@ -202,10 +130,11 @@ hostent* gethostbyname(char const* name)
     __gethostbyname_alias_list_buffer[0] = nullptr;
     __gethostbyname_buffer.h_aliases = __gethostbyname_alias_list_buffer;
     __gethostbyname_buffer.h_addrtype = AF_INET;
+    memcpy(&__gethostbyname_address, result->h_addr_list[0], sizeof(in_addr_t));
     __gethostbyname_address_list_buffer[0] = &__gethostbyname_address;
     __gethostbyname_address_list_buffer[1] = nullptr;
     __gethostbyname_buffer.h_addr_list = (char**)__gethostbyname_address_list_buffer;
-    __gethostbyname_buffer.h_length = 4;
+    __gethostbyname_buffer.h_length = result->h_length;
 
     return &__gethostbyname_buffer;
 }
