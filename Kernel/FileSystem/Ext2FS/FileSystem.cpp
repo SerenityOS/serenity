@@ -589,7 +589,6 @@ ErrorOr<void> Ext2FS::prepare_to_clear_last_mount(Inode& mount_guest_inode)
     if (any_inode_busy)
         return EBUSY;
 
-    BlockBasedFileSystem::remove_disk_cache_before_last_unmount();
     m_inode_cache.clear();
     m_root_inode = nullptr;
 
@@ -597,6 +596,7 @@ ErrorOr<void> Ext2FS::prepare_to_clear_last_mount(Inode& mount_guest_inode)
     dmesgln("Ext2FS: Clean unmount, setting superblock to valid state");
     m_super_block.s_state = EXT2_VALID_FS;
     TRY(flush_super_block());
+    BlockBasedFileSystem::remove_disk_cache_before_last_unmount();
 
     return {};
 }
