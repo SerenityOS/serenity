@@ -161,8 +161,8 @@ struct LayoutState {
     // We cache intrinsic sizes once determined, as they will not change over the course of a full layout.
     // This avoids computing them several times while performing flex layout.
     struct IntrinsicSizes {
-        Optional<CSSPixels> min_content_width;
-        Optional<CSSPixels> max_content_width;
+        HashMap<CSSPixels, Optional<CSSPixels>> min_content_width;
+        HashMap<CSSPixels, Optional<CSSPixels>> max_content_width;
 
         HashMap<CSSPixels, Optional<CSSPixels>> min_content_height;
         HashMap<CSSPixels, Optional<CSSPixels>> max_content_height;

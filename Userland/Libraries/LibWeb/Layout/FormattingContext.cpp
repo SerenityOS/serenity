@@ -1283,11 +1283,16 @@ CSSPixels FormattingContext::calculate_min_content_width(Layout::Box const& box)
     if (box.has_natural_width())
         return *box.natural_width();
 
-    auto& root_state = m_state.m_root;
+    auto const& parent_state = m_state.get(*box.containing_block());
 
-    auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new LayoutState::IntrinsicSizes); });
-    if (cache.min_content_width.has_value())
-        return *cache.min_content_width;
+    auto get_cache_slot = [&]() -> Optional<CSSPixels>* {
+        auto& root_state = m_state.m_root;
+        auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new LayoutState::IntrinsicSizes); });
+        return &cache.min_content_width.ensure(parent_state.content_width());
+    };
+
+    if (auto* cache_slot = get_cache_slot(); cache_slot && cache_slot->has_value())
+        return cache_slot->value();
 
     LayoutState throwaway_state(&m_state);
 
@@ -1305,15 +1310,16 @@ CSSPixels FormattingContext::calculate_min_content_width(Layout::Box const& box)
     auto available_height = AvailableSize::make_indefinite();
     context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(available_width, available_height));
 
-    cache.min_content_width = context->automatic_content_width();
-
-    if (!isfinite(cache.min_content_width->to_double())) {
+    auto min_content_width = context->automatic_content_width();
+    if (!isfinite(min_content_width.to_double())) {
         // HACK: If layout calculates a non-finite result, something went wrong. Force it to zero and log a little whine.
         dbgln("FIXME: Calculated non-finite min-content width for {}", box.debug_description());
-        cache.min_content_width = 0;
+        min_content_width = 0;
     }
-
-    return *cache.min_content_width;
+    if (auto* cache_slot = get_cache_slot()) {
+        *cache_slot = min_content_width;
+    }
+    return min_content_width;
 }
 
 CSSPixels FormattingContext::calculate_max_content_width(Layout::Box const& box) const
@@ -1321,11 +1327,16 @@ CSSPixels FormattingContext::calculate_max_content_width(Layout::Box const& box)
     if (box.has_natural_width())
         return *box.natural_width();
 
-    auto& root_state = m_state.m_root;
+    auto const& parent_state = m_state.get(*box.containing_block());
 
-    auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new LayoutState::IntrinsicSizes); });
-    if (cache.max_content_width.has_value())
-        return *cache.max_content_width;
+    auto get_cache_slot = [&]() -> Optional<CSSPixels>* {
+        auto& root_state = m_state.m_root;
+        auto& cache = *root_state.intrinsic_sizes.ensure(&box, [] { return adopt_own(*new LayoutState::IntrinsicSizes); });
+        return &cache.max_content_width.ensure(parent_state.content_width());
+    };
+
+    if (auto* cache_slot = get_cache_slot(); cache_slot && cache_slot->has_value())
+        return cache_slot->value();
 
     LayoutState throwaway_state(&m_state);
 
@@ -1343,15 +1354,16 @@ CSSPixels FormattingContext::calculate_max_content_width(Layout::Box const& box)
     auto available_height = AvailableSize::make_indefinite();
     context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(available_width, available_height));
 
-    cache.max_content_width = context->automatic_content_width();
-
-    if (!isfinite(cache.max_content_width->to_double())) {
+    auto max_content_width = context->automatic_content_width();
+    if (!isfinite(max_content_width.to_double())) {
         // HACK: If layout calculates a non-finite result, something went wrong. Force it to zero and log a little whine.
-        dbgln("FIXME: Calculated non-finite max-content width for {}", box.debug_description());
-        cache.max_content_width = 0;
+        dbgln("FIXME: Calculated non-finite min-content width for {}", box.debug_description());
+        max_content_width = 0;
     }
-
-    return *cache.max_content_width;
+    if (auto* cache_slot = get_cache_slot()) {
+        *cache_slot = max_content_width;
+    }
+    return max_content_width;
 }
 
 // https://www.w3.org/TR/css-sizing-3/#min-content-block-size
