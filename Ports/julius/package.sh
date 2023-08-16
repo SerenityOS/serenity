@@ -13,11 +13,28 @@ depends=(
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
 )
+data_dir='/home/anon/Games/julius'
+launcher_name='Julius'
+launcher_category='Games'
+launcher_workdir="${data_dir}/"
+launcher_command="/usr/local/bin/julius"
+icon_file='res/julius_32.png'
 
 configure() {
     run cmake "${configopts[@]}" .
 }
 
 install() {
-    run make "${installopts[@]}" install
+    run_nocd mkdir -p "${SERENITY_INSTALL_ROOT}/usr/local/bin/"
+    run cp -r julius "${SERENITY_INSTALL_ROOT}/usr/local/bin/"
+}
+
+post_install() {
+    echo
+    echo 'Julius is installed!'
+    echo
+    echo 'Make sure your game files are present in the following directory:'
+    echo "    Inside SerenityOS: ${data_dir}/"
+    echo "    Outside SerenityOS: $(realpath ${SERENITY_INSTALL_ROOT}/${data_dir})/"
+    echo
 }
