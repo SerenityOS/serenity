@@ -998,11 +998,16 @@ void HTMLParser::parse_generic_raw_text_element(HTMLToken& token)
     m_insertion_mode = InsertionMode::Text;
 }
 
+static bool is_empty_text_node(DOM::Node const* node)
+{
+    return node && node->is_text() && static_cast<DOM::Text const*>(node)->data().is_empty();
+}
+
 DOM::Text* HTMLParser::find_character_insertion_node()
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
     if (adjusted_insertion_location.insert_before_sibling) {
-        if (adjusted_insertion_location.insert_before_sibling->previous_sibling() && adjusted_insertion_location.insert_before_sibling->previous_sibling()->is_text())
+        if (is_empty_text_node(adjusted_insertion_location.insert_before_sibling->previous_sibling()))
             return static_cast<DOM::Text*>(adjusted_insertion_location.insert_before_sibling->previous_sibling());
         auto new_text_node = realm().heap().allocate<DOM::Text>(realm(), document(), "");
         adjusted_insertion_location.parent->insert_before(*new_text_node, *adjusted_insertion_location.insert_before_sibling);
@@ -1010,8 +1015,8 @@ DOM::Text* HTMLParser::find_character_insertion_node()
     }
     if (adjusted_insertion_location.parent->is_document())
         return nullptr;
-    if (adjusted_insertion_location.parent->last_child() && adjusted_insertion_location.parent->last_child()->is_text())
-        return verify_cast<DOM::Text>(adjusted_insertion_location.parent->last_child());
+    if (is_empty_text_node(adjusted_insertion_location.parent->last_child()))
+        return static_cast<DOM::Text*>(adjusted_insertion_location.parent->last_child());
     auto new_text_node = realm().heap().allocate<DOM::Text>(realm(), document(), "");
     MUST(adjusted_insertion_location.parent->append_child(*new_text_node));
     return new_text_node;
