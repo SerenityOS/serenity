@@ -37,6 +37,7 @@
 #include <LibWeb/CSS/StyleValues/RectStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
+#include <LibWeb/CSS/StyleValues/TextDecorationStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TimeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TransformationStyleValue.h>
 #include <LibWeb/CSS/StyleValues/URLStyleValue.h>
@@ -481,6 +482,18 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_right().line_style));
     case PropertyID::BorderRightWidth:
         return LengthStyleValue::create(Length::make_px(layout_node.computed_values().border_right().width));
+    case PropertyID::BorderSpacing: {
+        auto horizontal = layout_node.computed_values().border_spacing_horizontal();
+        auto vertical = layout_node.computed_values().border_spacing_vertical();
+        if (horizontal == vertical)
+            return LengthStyleValue::create(horizontal);
+        return StyleValueList::create(
+            {
+                TRY(LengthStyleValue::create(horizontal)),
+                TRY(LengthStyleValue::create(vertical)),
+            },
+            StyleValueList::Separator::Space);
+    }
     case PropertyID::BorderStyle: {
         auto top = TRY(IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_top().line_style)));
         auto right = TRY(IdentifierStyleValue::create(to_value_id(layout_node.computed_values().border_right().line_style)));
@@ -780,6 +793,15 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().table_layout()));
     case PropertyID::TextAlign:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().text_align()));
+    case PropertyID::TextDecoration: {
+        auto line = TRY(style_value_for_property(layout_node, PropertyID::TextDecorationLine));
+        auto thickness = TRY(style_value_for_property(layout_node, PropertyID::TextDecorationThickness));
+        auto style = TRY(style_value_for_property(layout_node, PropertyID::TextDecorationStyle));
+        auto color = TRY(style_value_for_property(layout_node, PropertyID::TextDecorationColor));
+        return TextDecorationStyleValue::create(*line, *thickness, *style, *color);
+    }
+    case PropertyID::TextDecorationColor:
+        return ColorStyleValue::create(layout_node.computed_values().text_decoration_color());
     case PropertyID::TextDecorationLine: {
         auto text_decoration_lines = layout_node.computed_values().text_decoration_line();
         if (text_decoration_lines.is_empty())
@@ -793,6 +815,12 @@ ErrorOr<RefPtr<StyleValue const>> ResolvedCSSStyleDeclaration::style_value_for_p
     }
     case PropertyID::TextDecorationStyle:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().text_decoration_style()));
+    case PropertyID::TextDecorationThickness:
+        return style_value_for_length_percentage(layout_node.computed_values().text_decoration_thickness());
+    case PropertyID::TextIndent:
+        return style_value_for_length_percentage(layout_node.computed_values().text_indent());
+    case PropertyID::TextJustify:
+        return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().text_justify()));
     case PropertyID::TextTransform:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().text_transform()));
     case PropertyID::Top:
