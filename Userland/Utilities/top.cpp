@@ -202,9 +202,12 @@ static bool check_quit()
 }
 
 static struct termios g_previous_tty_settings;
+static int g_old_stdin_status_flags;
 
 static ErrorOr<void> setup_tty()
 {
+    g_old_stdin_status_flags = TRY(Core::System::fcntl(STDIN_FILENO, F_GETFL));
+    TRY(Core::System::fcntl(STDIN_FILENO, F_SETFL, g_old_stdin_status_flags | O_NONBLOCK));
     g_previous_tty_settings = TRY(Core::System::tcgetattr(STDOUT_FILENO));
 
     struct termios raw = g_previous_tty_settings;
@@ -221,6 +224,10 @@ static void restore_tty()
     auto maybe_error = Core::System::tcsetattr(STDOUT_FILENO, TCSAFLUSH, g_previous_tty_settings);
     if (maybe_error.is_error())
         warnln("Failed to reset original terminal state: {}", strerror(maybe_error.error().code()));
+
+    auto maybe_fcntl_error = Core::System::fcntl(STDIN_FILENO, F_SETFL, g_old_stdin_status_flags);
+    if (maybe_fcntl_error.is_error())
+        warnln("Error restoring STDIN status flags: {}", strerror(maybe_error.error().code()));
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -255,7 +262,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<ThreadData*> threads;
     auto prev = TRY(get_snapshot(top_option.pids_to_filter_by));
     usleep(10000);
-    for (;;) {
+    bool should_quit = false;
+    while (!should_quit) {
         if (g_window_size_changed) {
             TRY(Core::System::ioctl(STDOUT_FILENO, TIOCGWINSZ, &g_window_size));
             g_window_size_changed = false;
@@ -339,9 +347,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         prev = move(current);
 
         for (int sleep_slice = 0; sleep_slice < top_option.delay_time * 1000; sleep_slice += 100) {
-            if (check_quit())
-                exit(0);
+            should_quit = check_quit();
+            if (should_quit)
+                break;
             usleep(100 * 1000);
         }
     }
+
+    return 0;
 }
