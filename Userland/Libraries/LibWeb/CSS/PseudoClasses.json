@@ -11,6 +11,9 @@
   "defined": {
     "argument": ""
   },
+  "dir": {
+    "argument": "<ident>"
+  },
   "disabled": {
     "argument": ""
   },
