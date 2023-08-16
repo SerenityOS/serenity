@@ -25,6 +25,11 @@ class WorkQueue {
 public:
     static void initialize();
 
+    bool is_empty()
+    {
+        return m_items.with([](auto& items) -> bool { return items.is_empty(); });
+    }
+
     ErrorOr<void> try_queue(void (*function)(void*), void* data = nullptr, void (*free_data)(void*) = nullptr)
     {
         auto item = new (nothrow) WorkItem; // TODO: use a pool

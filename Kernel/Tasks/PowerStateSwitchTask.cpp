@@ -12,6 +12,7 @@
 #    include <Kernel/Arch/aarch64/RPi/Watchdog.h>
 #endif
 #include <AK/StringView.h>
+#include <Kernel/Arch/Delay.h>
 #include <Kernel/Arch/PowerState.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
@@ -24,6 +25,7 @@
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/ProcessManagement.h>
 #include <Kernel/Tasks/Scheduler.h>
+#include <Kernel/Tasks/WorkQueue.h>
 
 namespace Kernel {
 
@@ -85,18 +87,30 @@ ErrorOr<void> PowerStateSwitchTask::perform_shutdown()
 
     // Make sure to kill all user processes first, otherwise we might get weird hangups.
     TRY(ProcessManagement::the().kill_processes(ProcessManagement::ProcessKind::User));
-    TRY(ProcessManagement::the().kill_processes(ProcessManagement::ProcessKind::Kernel));
-
-    ProcessManagement::the().kill_finalizer_process({});
-    // Don't panic here (since we may panic in a bit anyways) but report the probable cause of an unclean shutdown.
-    if (ProcessManagement::the().alive_processes_count() != 0)
-        dbgln("We're not the last process alive; proper shutdown may fail!");
 
     ConsoleManagement::the().switch_to_debug();
 
-    dbgln("Locking all file systems...");
+    dbgln("Locking & syncing all file systems...");
     FileSystem::lock_all();
+    auto wait_until_work_queue_is_empty_or_timeout = [](WorkQueue& queue) -> bool {
+        size_t milliseconds_waiting = 0;
+        while (!queue.is_empty()) {
+            // Wait at most 10 seconds until failing
+            if (milliseconds_waiting > 10000)
+                return false;
+            microseconds_delay(1000);
+        }
+        return true;
+    };
+    if (!wait_until_work_queue_is_empty_or_timeout(*g_ata_work))
+        dbgln("WARNING! ATA WorkQueue has not been flushed within 10 seconds");
+    if (!wait_until_work_queue_is_empty_or_timeout(*g_io_work))
+        dbgln("WARNING! IO WorkQueue has not been flushed within 10 seconds");
     FileSystem::sync();
+
+    // Don't panic here (since we may panic in a bit anyways) but report the probable cause of an unclean shutdown.
+    if (ProcessManagement::the().alive_processes_count(ProcessManagement::ProcessKind::User) != 0)
+        dbgln("WARNING: Some user processes are still alive; proper shutdown may fail!");
 
     dbgln("Unmounting all file systems...");
 
@@ -130,6 +144,14 @@ ErrorOr<void> PowerStateSwitchTask::perform_shutdown()
             }
         }
     }
+
+    // NOTE: We don't really need to kill kernel processes, because in contrast
+    // to user processes, kernel processes will simply not make syscalls
+    // or do some other unexpected behavior.
+    // Therefore, we kill processes here just for completeness, and only after
+    // it's completely safe as nobody will need the WorkQueues at this point forward.
+    TRY(ProcessManagement::the().kill_processes(ProcessManagement::ProcessKind::Kernel));
+    ProcessManagement::the().kill_finalizer_process({});
 
     dbgln("Attempting system shutdown...");
 

@@ -48,8 +48,7 @@ public:
         Kernel,
     };
     ErrorOr<void> kill_processes(ProcessKind kind);
-
-    size_t alive_processes_count() const;
+    size_t alive_processes_count(ProcessKind kind) const;
 
     RefPtr<Process> from_pid_ignoring_jails(ProcessID pid);
     RefPtr<Process> from_pid_in_same_jail_with_current_process(ProcessID pid);

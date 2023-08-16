@@ -125,11 +125,12 @@ void ProcessManagement::kill_finalizer_process(Badge<PowerStateSwitchTask>)
     m_finalizer_process.clear();
 }
 
-size_t ProcessManagement::alive_processes_count() const
+size_t ProcessManagement::alive_processes_count(ProcessKind kind) const
 {
+    bool is_kernel_process = kind == ProcessKind::Kernel;
     size_t alive_process_count = 0;
     m_all_instances.for_each([&](Process& process) {
-        if (process.pid() != Process::current().pid() && !process.is_dead())
+        if (process.pid() != Process::current().pid() && !process.is_dead() && process.is_kernel_process() == is_kernel_process)
             alive_process_count++;
     });
     return alive_process_count;
