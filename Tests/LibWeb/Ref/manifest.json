@@ -1,5 +1,6 @@
 {
     "square-flex.html": "square-ref.html",
     "separate-borders-inline-table.html": "separate-borders-ref.html",
-    "opacity-stacking.html": "opacity-stacking-ref.html"
+    "opacity-stacking.html": "opacity-stacking-ref.html",
+    "css-gradient-currentcolor.html": "css-gradient-currentcolor-ref.html"
 }

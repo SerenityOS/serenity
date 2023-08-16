@@ -8,6 +8,7 @@
  */
 
 #include "RadialGradientStyleValue.h"
+#include <LibWeb/Layout/Node.h>
 
 namespace Web::CSS {
 
@@ -184,7 +185,7 @@ Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, 
     return resolved_size;
 }
 
-void RadialGradientStyleValue::resolve_for_size(Layout::Node const& node, CSSPixelSize paint_size) const
+void RadialGradientStyleValue::resolve_for_size(Layout::NodeWithStyleAndBoxModelMetrics const& node, CSSPixelSize paint_size) const
 {
     CSSPixelRect gradient_box { { 0, 0 }, paint_size };
     auto center = m_properties.position.resolved(node, gradient_box).to_type<float>();

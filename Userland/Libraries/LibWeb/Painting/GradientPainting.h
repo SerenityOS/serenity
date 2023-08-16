@@ -36,9 +36,9 @@ struct RadialGradientData {
     ColorStopData color_stops;
 };
 
-LinearGradientData resolve_linear_gradient_data(Layout::Node const&, CSSPixelSize, CSS::LinearGradientStyleValue const&);
-ConicGradientData resolve_conic_gradient_data(Layout::Node const&, CSS::ConicGradientStyleValue const&);
-RadialGradientData resolve_radial_gradient_data(Layout::Node const&, CSSPixelSize, CSS::RadialGradientStyleValue const&);
+LinearGradientData resolve_linear_gradient_data(Layout::NodeWithStyleAndBoxModelMetrics const&, CSSPixelSize, CSS::LinearGradientStyleValue const&);
+ConicGradientData resolve_conic_gradient_data(Layout::NodeWithStyleAndBoxModelMetrics const&, CSS::ConicGradientStyleValue const&);
+RadialGradientData resolve_radial_gradient_data(Layout::NodeWithStyleAndBoxModelMetrics const&, CSSPixelSize, CSS::RadialGradientStyleValue const&);
 
 void paint_linear_gradient(PaintContext&, DevicePixelRect const&, LinearGradientData const&);
 void paint_conic_gradient(PaintContext&, DevicePixelRect const&, ConicGradientData const&, DevicePixelPoint position);
