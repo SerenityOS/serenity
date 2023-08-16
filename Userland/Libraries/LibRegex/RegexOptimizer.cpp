@@ -1150,7 +1150,7 @@ void Optimizer::append_alternation(ByteCode& target, Span<ByteCode> alternatives
                     VERIFY(node->has_metadata());
                     QualifiedIP ip = node->metadata_value().first();
                     auto intended_jump_ip = ip.instruction_position + jump_offset + opcode.size();
-                    if (jump_offset < 0 && intended_jump_ip > 0) {
+                    if (jump_offset < 0) {
                         VERIFY(has_any_backwards_jump);
                         // We should've already seen this instruction, so we can just patch it in.
                         auto& ip_mapping = ip_mapping_for_alternative(ip.alternative_index);
