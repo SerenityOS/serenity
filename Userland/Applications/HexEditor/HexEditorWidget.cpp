@@ -316,13 +316,13 @@ void HexEditorWidget::update_inspector_values(size_t position)
         else
             unsigned_byte_value = (unsigned_64_bit_int >> (64 - 8)) & 0xFF;
 
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedByte, DeprecatedString::number(static_cast<i8>(unsigned_byte_value)));
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedByte, DeprecatedString::number(unsigned_byte_value));
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::ASCII, DeprecatedString::formatted("{:c}", static_cast<char>(unsigned_byte_value)));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedByte, String::number(static_cast<i8>(unsigned_byte_value)));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedByte, String::number(unsigned_byte_value));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::ASCII, String::formatted("{:c}", static_cast<char>(unsigned_byte_value)));
     } else {
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedByte, "");
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedByte, "");
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::ASCII, "");
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedByte, ""_string);
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedByte, ""_string);
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::ASCII, ""_string);
     }
 
     if (byte_read_count >= 2) {
@@ -332,11 +332,11 @@ void HexEditorWidget::update_inspector_values(size_t position)
         else
             unsigned_short_value = (unsigned_64_bit_int >> (64 - 16)) & 0xFFFF;
 
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedShort, DeprecatedString::number(static_cast<i16>(unsigned_short_value)));
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedShort, DeprecatedString::number(unsigned_short_value));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedShort, String::number(static_cast<i16>(unsigned_short_value)));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedShort, String::number(unsigned_short_value));
     } else {
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedShort, "");
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedShort, "");
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedShort, ""_string);
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedShort, ""_string);
     }
 
     if (byte_read_count >= 4) {
@@ -346,23 +346,23 @@ void HexEditorWidget::update_inspector_values(size_t position)
         else
             unsigned_int_value = (unsigned_64_bit_int >> 32) & 0xFFFFFFFF;
 
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedInt, DeprecatedString::number(static_cast<i32>(unsigned_int_value)));
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedInt, DeprecatedString::number(unsigned_int_value));
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::Float, DeprecatedString::number(bit_cast<float>(unsigned_int_value)));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedInt, String::number(static_cast<i32>(unsigned_int_value)));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedInt, String::number(unsigned_int_value));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::Float, String::number(bit_cast<float>(unsigned_int_value)));
     } else {
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedInt, "");
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedInt, "");
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::Float, "");
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedInt, ""_string);
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedInt, ""_string);
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::Float, ""_string);
     }
 
     if (byte_read_count >= 8) {
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedLong, DeprecatedString::number(static_cast<i64>(unsigned_64_bit_int)));
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedLong, DeprecatedString::number(unsigned_64_bit_int));
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::Double, DeprecatedString::number(bit_cast<double>(unsigned_64_bit_int)));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedLong, String::number(static_cast<i64>(unsigned_64_bit_int)));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedLong, String::number(unsigned_64_bit_int));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::Double, String::number(bit_cast<double>(unsigned_64_bit_int)));
     } else {
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedLong, "");
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedLong, "");
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::Double, "");
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedLong, ""_string);
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedLong, ""_string);
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::Double, ""_string);
     }
 
     // FIXME: This probably doesn't honour endianness correctly.
@@ -370,41 +370,43 @@ void HexEditorWidget::update_inspector_values(size_t position)
     size_t valid_bytes;
     utf8_view.validate(valid_bytes);
     if (valid_bytes == 0)
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8, "");
-    else
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8, utf8_view.unicode_substring_view(0, 1).as_string());
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8, ""_string);
+    else {
+        auto utf8 = String::from_utf8(utf8_view.unicode_substring_view(0, 1).as_string());
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8, move(utf8));
+    }
 
     if (byte_read_count % 2 == 0) {
         Utf16View utf16_view { ReadonlySpan<u16> { reinterpret_cast<u16 const*>(&unsigned_64_bit_int), 4 } };
         size_t valid_code_units;
         utf16_view.validate(valid_code_units);
         if (valid_code_units == 0)
-            value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16, "");
+            value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16, ""_string);
         else
-            value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16, utf16_view.unicode_substring_view(0, 1).to_deprecated_string().release_value_but_fixme_should_propagate_errors());
+            value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16, utf16_view.unicode_substring_view(0, 1).to_utf8().release_value_but_fixme_should_propagate_errors());
     } else {
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16, "");
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16, ""_string);
     }
 
     auto selected_bytes = m_editor->get_selected_bytes();
 
-    auto ascii_string = DeprecatedString { ReadonlyBytes { selected_bytes } };
-    value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::ASCIIString, ascii_string);
+    auto ascii_string = String::from_utf8(ReadonlyBytes { selected_bytes });
+    value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::ASCIIString, move(ascii_string));
 
     Utf8View utf8_string_view { ReadonlyBytes { selected_bytes } };
     utf8_string_view.validate(valid_bytes);
     if (valid_bytes == 0)
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8String, "");
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8String, ""_string);
     else
         // FIXME: replace control chars with something else - we don't want line breaks here ;)
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8String, utf8_string_view.as_string());
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8String, String::from_utf8(utf8_string_view.as_string()));
 
     // FIXME: Parse as other values like Timestamp etc
 
     auto decoder = TextCodec::decoder_for(m_value_inspector_little_endian ? "utf-16le"sv : "utf-16be"sv);
-    DeprecatedString utf16_string = decoder->to_utf8(StringView(selected_bytes.span())).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+    ErrorOr<String> utf16_string = decoder->to_utf8(StringView(selected_bytes.span()));
 
-    value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16String, utf16_string);
+    value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16String, move(utf16_string));
 
     m_value_inspector->set_model(value_inspector_model);
     m_value_inspector->update();
