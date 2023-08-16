@@ -176,7 +176,6 @@ private:
         auto woff2 = WOFF2::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
         if (!woff2.is_error())
             return woff2.release_value();
-        dbgln("WOFF2 error: {}", woff2.error());
         return woff2.release_error();
     }
 
