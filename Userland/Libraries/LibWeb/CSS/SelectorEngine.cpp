@@ -7,6 +7,7 @@
 
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/SelectorEngine.h>
+#include <LibWeb/CSS/ValueID.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Text.h>
@@ -428,6 +429,19 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
     }
     case CSS::PseudoClass::Target:
         return element.is_target();
+    case CSS::PseudoClass::Dir: {
+        // "Values other than ltr and rtl are not invalid, but do not match anything."
+        // - https://www.w3.org/TR/selectors-4/#the-dir-pseudo
+        if (!first_is_one_of(pseudo_class.identifier, CSS::ValueID::Ltr, CSS::ValueID::Rtl))
+            return false;
+        switch (element.directionality()) {
+        case DOM::Element::Directionality::Ltr:
+            return pseudo_class.identifier == CSS::ValueID::Ltr;
+        case DOM::Element::Directionality::Rtl:
+            return pseudo_class.identifier == CSS::ValueID::Rtl;
+        }
+        VERIFY_NOT_REACHED();
+    }
     }
 
     return false;
