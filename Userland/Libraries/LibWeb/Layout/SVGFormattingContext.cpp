@@ -194,11 +194,46 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
             m_state.get_mutable(svg_text_box);
         } else if (is<SVGGraphicsBox>(descendant)) {
             // Same hack as above.
-            // FIXME: This should be sized based on its children.
             auto const& svg_graphics_box = static_cast<SVGGraphicsBox const&>(descendant);
             m_state.get_mutable(svg_graphics_box);
         }
 
+        return IterationDecision::Continue;
+    });
+
+    // https://svgwg.org/svg2-draft/struct.html#Groups
+    // 5.2. Grouping: the ‘g’ element
+    // The ‘g’ element is a container element for grouping together related graphics elements.
+    box.for_each_in_subtree_of_type<Box>([&](Box const& descendant) {
+        if (is<SVGGraphicsBox>(descendant) && !is<SVGGeometryBox>(descendant) && !is<SVGTextBox>(descendant)) {
+            auto const& svg_graphics_box = static_cast<SVGGraphicsBox const&>(descendant);
+            auto& graphics_box_state = m_state.get_mutable(svg_graphics_box);
+            auto smallest_x_position = CSSPixels(0);
+            auto smallest_y_position = CSSPixels(0);
+            auto greatest_x_position = CSSPixels(0);
+            auto greatest_y_position = CSSPixels(0);
+
+            descendant.for_each_in_subtree_of_type<Box>([&](Box const& child_of_svg_container) {
+                auto& box_state = m_state.get_mutable(child_of_svg_container);
+                smallest_x_position = box_state.offset.x();
+                smallest_y_position = box_state.offset.y();
+                return IterationDecision::Break;
+            });
+
+            descendant.for_each_in_subtree_of_type<Box>([&](Box const& child_of_svg_container) {
+                auto& box_state = m_state.get_mutable(child_of_svg_container);
+                smallest_x_position = min(smallest_x_position, box_state.offset.x());
+                smallest_y_position = min(smallest_y_position, box_state.offset.y());
+                greatest_x_position = max(greatest_x_position, box_state.offset.x() + box_state.content_width());
+                greatest_y_position = max(greatest_y_position, box_state.offset.y() + box_state.content_height());
+                return IterationDecision::Continue;
+            });
+
+            graphics_box_state.set_content_x(smallest_x_position);
+            graphics_box_state.set_content_y(smallest_y_position);
+            graphics_box_state.set_content_width(greatest_x_position - smallest_x_position);
+            graphics_box_state.set_content_height(greatest_y_position - smallest_y_position);
+        }
         return IterationDecision::Continue;
     });
 }
