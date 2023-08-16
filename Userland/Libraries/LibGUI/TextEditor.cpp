@@ -265,19 +265,23 @@ void TextEditor::doubleclick_event(MouseEvent& event)
     m_in_drag_select = false;
 
     auto position = text_position_at(event.position());
+    bool got_selection = false;
 
     if (m_substitution_code_point.has_value()) {
         // NOTE: If we substitute the code points, we don't want double clicking to only select a single word, since
         //       whitespace isn't visible anymore.
         m_selection = document().range_for_entire_line(position.line());
+        got_selection = true;
     } else if (document().has_spans()) {
         for (auto& span : document().spans()) {
             if (span.range.contains(position)) {
                 m_selection = span.range;
+                got_selection = true;
                 break;
             }
         }
-    } else {
+    }
+    if (!got_selection) {
         m_selection.set_start(document().first_word_break_before(position, false));
         m_selection.set_end(document().first_word_break_after(position));
     }
