@@ -41,6 +41,11 @@ static ErrorOr<DeprecatedString> apply_text_transform(DeprecatedString const& st
     return string;
 }
 
+void TextNode::invalidate_text_for_rendering()
+{
+    m_text_for_rendering = {};
+}
+
 DeprecatedString const& TextNode::text_for_rendering() const
 {
     if (m_text_for_rendering.is_null())
