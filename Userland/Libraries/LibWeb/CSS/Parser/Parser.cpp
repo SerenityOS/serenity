@@ -2454,13 +2454,13 @@ static Optional<Vector<TElement>> parse_color_stop_list(auto& tokens, auto is_po
             }
             // <T-percentage> <color>
             auto maybe_color = parse_color(tokens.next_token());
-            if (maybe_color.is_error())
+            if (maybe_color.is_error() || maybe_color.value() == nullptr)
                 return ElementType::Garbage;
             color = maybe_color.release_value();
         } else {
             // [<color> <T-percentage>?]
             auto maybe_color = parse_color(token);
-            if (maybe_color.is_error())
+            if (maybe_color.is_error() || maybe_color.value() == nullptr)
                 return ElementType::Garbage;
             color = maybe_color.release_value();
             tokens.skip_whitespace();
