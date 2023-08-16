@@ -22,6 +22,7 @@ public:
 private:
     HistogramWidget() = default;
 
+    virtual AK::StringView widget_config_name() const override { return "ShowHistogram"sv; }
     virtual void paint_event(GUI::PaintEvent&) override;
 
     ErrorOr<void> rebuild_histogram_data();

@@ -587,18 +587,16 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_view_menu->add_separator();
 
     auto histogram_action = GUI::Action::create_checkable("&Histogram", [&](auto& action) {
-        Config::write_bool("PixelPaint"sv, "Scopes"sv, "ShowHistogram"sv, action.is_checked());
-        m_histogram_widget->parent_widget()->set_visible(action.is_checked());
+        m_histogram_widget->set_scope_visibility(action.is_checked());
     });
-    histogram_action->set_checked(Config::read_bool("PixelPaint"sv, "Scopes"sv, "ShowHistogram"sv, false));
-    m_histogram_widget->parent_widget()->set_visible(histogram_action->is_checked());
+    histogram_action->set_checked(m_histogram_widget->read_visibility_from_configuration());
+    m_histogram_widget->set_scope_visibility(histogram_action->is_checked());
 
     auto vectorscope_action = GUI::Action::create_checkable("&Vectorscope", [&](auto& action) {
-        Config::write_bool("PixelPaint"sv, "Scopes"sv, "ShowVectorscope"sv, action.is_checked());
-        m_vectorscope_widget->parent_widget()->set_visible(action.is_checked());
+        m_vectorscope_widget->set_scope_visibility(action.is_checked());
     });
-    vectorscope_action->set_checked(Config::read_bool("PixelPaint"sv, "Scopes"sv, "ShowVectorscope"sv, false));
-    m_vectorscope_widget->parent_widget()->set_visible(vectorscope_action->is_checked());
+    vectorscope_action->set_checked(m_vectorscope_widget->read_visibility_from_configuration());
+    m_vectorscope_widget->set_scope_visibility(vectorscope_action->is_checked());
 
     auto scopes_menu = m_view_menu->add_submenu("&Scopes"_string);
     scopes_menu->add_action(histogram_action);
