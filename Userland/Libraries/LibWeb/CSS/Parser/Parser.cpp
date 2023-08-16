@@ -664,9 +664,29 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
             };
         }
         case PseudoClassMetadata::ParameterType::LanguageRanges: {
-            // FIXME: Support multiple, comma-separated, language ranges.
             Vector<FlyString> languages;
-            languages.append(pseudo_function.values().first().token().to_string().release_value_but_fixme_should_propagate_errors());
+            auto function_token_stream = TokenStream(pseudo_function.values());
+            auto language_token_lists = parse_a_comma_separated_list_of_component_values(function_token_stream);
+
+            for (auto language_token_list : language_token_lists) {
+                auto language_token_stream = TokenStream(language_token_list);
+                language_token_stream.skip_whitespace();
+                auto language_token = language_token_stream.next_token();
+                if (!(language_token.is(Token::Type::Ident) || language_token.is(Token::Type::String))) {
+                    dbgln_if(CSS_PARSER_DEBUG, "Invalid language range in :{}() - not a string/ident", pseudo_function.name());
+                    return ParseError::SyntaxError;
+                }
+
+                auto language_string = language_token.is(Token::Type::String) ? language_token.token().string() : language_token.token().ident();
+                languages.append(MUST(FlyString::from_utf8(language_string)));
+
+                language_token_stream.skip_whitespace();
+                if (language_token_stream.has_next_token()) {
+                    dbgln_if(CSS_PARSER_DEBUG, "Invalid language range in :{}() - trailing tokens", pseudo_function.name());
+                    return ParseError::SyntaxError;
+                }
+            }
+
             return Selector::SimpleSelector {
                 .type = Selector::SimpleSelector::Type::PseudoClass,
                 .value = Selector::SimpleSelector::PseudoClassSelector {

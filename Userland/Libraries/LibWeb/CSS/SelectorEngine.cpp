@@ -44,13 +44,14 @@ static inline bool matches_lang_pseudo_class(DOM::Element const& element, Vector
     // FIXME: This is ad-hoc. Implement a proper language range matching algorithm as recommended by BCP47.
     for (auto const& language : languages) {
         if (language.is_empty())
-            return false;
+            continue;
         if (language == "*"sv)
             return true;
-        if (!element_language.to_string().contains('-'))
-            return Infra::is_ascii_case_insensitive_match(element_language, language);
+        if (!element_language.to_string().contains('-') && Infra::is_ascii_case_insensitive_match(element_language, language))
+            return true;
         auto parts = element_language.to_string().split_limit('-', 2).release_value_but_fixme_should_propagate_errors();
-        return Infra::is_ascii_case_insensitive_match(parts[0], language);
+        if (Infra::is_ascii_case_insensitive_match(parts[0], language))
+            return true;
     }
     return false;
 }
