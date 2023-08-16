@@ -3,12 +3,16 @@ port=citron
 version=0.0.9.3
 useconfigure=false
 depends=(sparsehash libffi pcre)
-commit_hash=d28b7d62bd61397e46152aa6e4ee59b115c0e2d7
-archive_hash=0e31ab638c4fd1438f68fdf069336e2541eb4cfc5db2f55888f6175e0171a2ef
+commit_hash='c0bafa246bb2282125858da54e084c8085288d5c'
+archive_hash='f4d77cc8f70a59a4d495fbf0cfc8a9654742817f87c50f5b0e46eef54b5413f7'
 files=(
     "https://github.com/alimpfard/citron/archive/$commit_hash.tar.gz $archive_hash"
 )
 workdir="citron-$commit_hash"
+export enable_boehm_gc=false
+export enable_inject=false
+export use_libbsd=false
+export use_openmp=false
 
 pre_install() {
     pushd "$workdir"

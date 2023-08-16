@@ -8,7 +8,7 @@ Subject: [PATCH] Don't mess with libsocket
  1 file changed, 1 insertion(+), 7 deletions(-)
 
 diff --git a/makefile b/makefile
-index ded4d5a..b262cd0 100644
+index 1e87eaea439902476d80fb73cb7fea9a2667d10a..e11b39f04dcf14161927f406c31568d34145b9bf 100644
 --- a/makefile
 +++ b/makefile
 @@ -2,7 +2,6 @@ DEBUG_VERSION := 1603
@@ -19,7 +19,7 @@ index ded4d5a..b262cd0 100644
  BUILDDIR ?= build
  DESTDIR ?= /
  BINDIR ?= $(DESTDIR)/usr/local/bin
-@@ -57,7 +56,7 @@ LEXTRACF += $(LDFLAGS) -flto -lstdc++
+@@ -62,7 +61,7 @@ LEXTRACF += $(LDFLAGS) -flto -lstdc++
  OBJS = siphash.o utf8.o memory.o util.o base.o collections.o file.o system.o \
  	   lexer.o lexer_plug.o parser.o walker.o marshal.o reflect.o fiber.o \
  	   importlib.o coroutine.o symbol.o generator.o base_extensions.o citron.o \
@@ -28,7 +28,7 @@ index ded4d5a..b262cd0 100644
  EXTRAOBJS =
  TCC_STATICS = 
  
-@@ -131,7 +130,6 @@ debug: cxx ctr
+@@ -137,7 +136,6 @@ debug: cxx ctr
  
  clean:
  	rm -rf $(BUILDDIR)
@@ -36,7 +36,7 @@ index ded4d5a..b262cd0 100644
  	$(MAKE) -C src/lib/tcc clean
  
  cxx:
-@@ -146,10 +144,6 @@ build_tcc_statics:
+@@ -152,10 +150,6 @@ build_tcc_statics:
  $(BUILDDIR)/%.a: src/lib/tcc/%.a
  	cp $< $@
  
@@ -45,5 +45,5 @@ index ded4d5a..b262cd0 100644
 -	cp $(LIBSOCKETDIR)/libsocket.so $(BUILDDIR)/libsocket.so
 -
  $(BUILDDIR)/%.o: src/%.c
- 	$(CC) -fopenmp $(CFLAGS) -c $< -o $@
+ 	$(CC) $(CFLAGS) -c $< -o $@
  

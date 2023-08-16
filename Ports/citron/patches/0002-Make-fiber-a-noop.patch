@@ -9,7 +9,7 @@ Serenity doesn't have ucontext.
  1 file changed, 20 insertions(+), 2 deletions(-)
 
 diff --git a/src/fiber.c b/src/fiber.c
-index e8a99f1..23afae6 100644
+index e8a99f15443dbf21c3d2944df2eb99fb18723f3a..23afae64c68105146badce7e65d5802082ed5de8 100644
 --- a/src/fiber.c
 +++ b/src/fiber.c
 @@ -49,6 +49,7 @@ extern int waitForAllFibers();
