@@ -1,0 +1,9 @@
+<input id="foo">
+<script>
+    let foo = document.getElementById("foo");
+    foo.value = "FAIL";
+    document.body.offsetWidth; // Force a layout
+    document.addEventListener("DOMContentLoaded", function() {
+        foo.value = "PASS";
+    });
+</script>

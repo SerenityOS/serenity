@@ -47,6 +47,7 @@ public:
         Utf8View::Iterator m_iterator;
     };
 
+    void invalidate_text_for_rendering();
     void compute_text_for_rendering();
 
     virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;
