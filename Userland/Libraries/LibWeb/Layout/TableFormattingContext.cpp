@@ -638,6 +638,8 @@ void TableFormattingContext::compute_table_width()
     }
 
     table_box_state.set_content_width(used_width);
+    auto& table_wrapper_box_state = m_state.get_mutable(table_wrapper());
+    table_wrapper_box_state.set_content_width(table_box_state.border_box_width());
 }
 
 CSSPixels TableFormattingContext::compute_columns_total_used_width() const
