@@ -118,6 +118,7 @@ public:
     virtual void image_changed() override;
 
 private:
+    virtual AK::StringView widget_config_name() const override { return "ShowVectorscope"sv; }
     virtual void paint_event(GUI::PaintEvent&) override;
 
     ErrorOr<void> rebuild_vectorscope_data();

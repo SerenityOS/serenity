@@ -18,7 +18,7 @@ namespace PixelPaint {
 
 ErrorOr<void> HistogramWidget::rebuild_histogram_data()
 {
-    if (!m_image)
+    if (!should_process_data())
         return {};
 
     auto full_bitmap = TRY(m_image->compose_bitmap(Gfx::BitmapFormat::BGRA8888));
@@ -76,12 +76,11 @@ ErrorOr<void> HistogramWidget::rebuild_histogram_data()
 
 void HistogramWidget::paint_event(GUI::PaintEvent& event)
 {
-    GUI::Painter painter(*this);
-    painter.add_clip_rect(event.rect());
-
-    if (!m_image)
+    if (!should_process_data())
         return;
 
+    GUI::Painter painter(*this);
+    painter.add_clip_rect(event.rect());
     int bottom_line = height() - 1;
     float step_width = static_cast<float>(width()) / 256;
 

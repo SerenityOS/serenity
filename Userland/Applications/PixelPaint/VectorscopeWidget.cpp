@@ -31,7 +31,7 @@ void VectorscopeWidget::image_changed()
 
 ErrorOr<void> VectorscopeWidget::rebuild_vectorscope_data()
 {
-    if (!m_image)
+    if (!should_process_data())
         return {};
 
     m_vectorscope_data.fill({});
