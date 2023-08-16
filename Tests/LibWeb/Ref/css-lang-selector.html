@@ -1,0 +1,18 @@
+<html lang="en">
+<style>
+    div {
+        width: 100px;
+        height: 100px;
+        border: 1px solid black;
+    }
+    div:lang(en) {
+        background-color: red;
+    }
+    div:lang("fr",de) {
+        background-color: blue;
+    }
+</style>
+<div>Red</div>
+<div lang="fr">Blue</div>
+<div lang="de">Blue</div>
+</html>
