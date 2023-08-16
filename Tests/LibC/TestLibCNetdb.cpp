@@ -9,6 +9,23 @@
 #include <errno.h>
 #include <netdb.h>
 
+TEST_CASE(gethostbyname_should_return_host_not_found)
+{
+    auto* res = gethostbyname("unknownhostthatdoesntexistandhopefullyneverwill.com");
+    EXPECT_EQ(res, nullptr);
+    EXPECT_EQ(h_errno, HOST_NOT_FOUND);
+}
+
+TEST_CASE(gethostbyname)
+{
+    auto* result = gethostbyname("google.com");
+    EXPECT_NE(result, nullptr);
+    EXPECT_EQ(h_errno, 0);
+    EXPECT_EQ(result->h_aliases[0], nullptr);
+    EXPECT_EQ(result->h_addr_list[1], nullptr);
+    EXPECT_EQ(result->h_addrtype, AF_INET);
+}
+
 TEST_CASE(gethostbyname_r_should_return_erange_when_buffer_is_to_small)
 {
     constexpr size_t buffer_size = 2;
