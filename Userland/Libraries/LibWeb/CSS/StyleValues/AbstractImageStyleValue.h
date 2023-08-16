@@ -24,7 +24,7 @@ public:
     virtual Optional<CSSPixels> natural_height() const { return {}; }
 
     virtual void load_any_resources(DOM::Document&) {};
-    virtual void resolve_for_size(Layout::Node const&, CSSPixelSize) const {};
+    virtual void resolve_for_size(Layout::NodeWithStyleAndBoxModelMetrics const&, CSSPixelSize) const {};
 
     virtual bool is_paintable() const = 0;
     virtual void paint(PaintContext& context, DevicePixelRect const& dest_rect, ImageRendering) const = 0;
@@ -47,7 +47,7 @@ struct ColorStopListElement {
 
     Optional<ColorHint> transition_hint;
     struct ColorStop {
-        Color color;
+        RefPtr<StyleValue> color;
         Optional<TPosition> position;
         Optional<TPosition> second_position = {};
         inline bool operator==(ColorStop const&) const = default;
@@ -69,7 +69,7 @@ static ErrorOr<void> serialize_color_stop_list(StringBuilder& builder, auto cons
         if (element.transition_hint.has_value())
             TRY(builder.try_appendff("{}, "sv, TRY(element.transition_hint->value.to_string())));
 
-        TRY(serialize_a_srgb_value(builder, element.color_stop.color));
+        TRY(builder.try_append(TRY(element.color_stop.color->to_string())));
         for (auto position : Array { &element.color_stop.position, &element.color_stop.second_position }) {
             if (position->has_value())
                 TRY(builder.try_appendff(" {}"sv, TRY((*position)->to_string())));

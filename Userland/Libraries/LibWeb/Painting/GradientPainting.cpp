@@ -10,11 +10,12 @@
 #include <LibWeb/CSS/StyleValues/ConicGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LinearGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RadialGradientStyleValue.h>
+#include <LibWeb/Layout/Node.h>
 #include <LibWeb/Painting/GradientPainting.h>
 
 namespace Web::Painting {
 
-static ColorStopData resolve_color_stop_positions(auto const& color_stop_list, auto resolve_position_to_float, bool repeating)
+static ColorStopData resolve_color_stop_positions(Layout::NodeWithStyleAndBoxModelMetrics const& node, auto const& color_stop_list, auto resolve_position_to_float, bool repeating)
 {
     VERIFY(color_stop_list.size() >= 2);
     ColorStopList resolved_color_stops;
@@ -29,7 +30,7 @@ static ColorStopData resolve_color_stop_positions(auto const& color_stop_list, a
 
     resolved_color_stops.ensure_capacity(expanded_size);
     for (auto& stop : color_stop_list) {
-        auto resolved_stop = Gfx::ColorStop { .color = stop.color_stop.color };
+        auto resolved_stop = Gfx::ColorStop { .color = stop.color_stop.color->to_color(node) };
         for (int i = 0; i < color_stop_length(stop); i++)
             resolved_color_stops.append(resolved_stop);
     }
@@ -109,13 +110,13 @@ static ColorStopData resolve_color_stop_positions(auto const& color_stop_list, a
     return { resolved_color_stops, repeat_length };
 }
 
-LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, CSSPixelSize gradient_size, CSS::LinearGradientStyleValue const& linear_gradient)
+LinearGradientData resolve_linear_gradient_data(Layout::NodeWithStyleAndBoxModelMetrics const& node, CSSPixelSize gradient_size, CSS::LinearGradientStyleValue const& linear_gradient)
 {
     auto gradient_angle = linear_gradient.angle_degrees(gradient_size);
     auto gradient_length_px = Gfx::calculate_gradient_length(gradient_size.to_type<float>(), gradient_angle);
 
     auto resolved_color_stops = resolve_color_stop_positions(
-        linear_gradient.color_stop_list(), [&](auto const& length_percentage) {
+        node, linear_gradient.color_stop_list(), [&](auto const& length_percentage) {
             return length_percentage.to_px(node, gradient_length_px).to_float() / static_cast<float>(gradient_length_px);
         },
         linear_gradient.is_repeating());
@@ -123,22 +124,22 @@ LinearGradientData resolve_linear_gradient_data(Layout::Node const& node, CSSPix
     return { gradient_angle, resolved_color_stops };
 }
 
-ConicGradientData resolve_conic_gradient_data(Layout::Node const& node, CSS::ConicGradientStyleValue const& conic_gradient)
+ConicGradientData resolve_conic_gradient_data(Layout::NodeWithStyleAndBoxModelMetrics const& node, CSS::ConicGradientStyleValue const& conic_gradient)
 {
     CSS::Angle one_turn(360.0f, CSS::Angle::Type::Deg);
     auto resolved_color_stops = resolve_color_stop_positions(
-        conic_gradient.color_stop_list(), [&](auto const& angle_percentage) {
+        node, conic_gradient.color_stop_list(), [&](auto const& angle_percentage) {
             return angle_percentage.resolved(node, one_turn).to_degrees() / one_turn.to_degrees();
         },
         conic_gradient.is_repeating());
     return { conic_gradient.angle_degrees(), resolved_color_stops };
 }
 
-RadialGradientData resolve_radial_gradient_data(Layout::Node const& node, CSSPixelSize gradient_size, CSS::RadialGradientStyleValue const& radial_gradient)
+RadialGradientData resolve_radial_gradient_data(Layout::NodeWithStyleAndBoxModelMetrics const& node, CSSPixelSize gradient_size, CSS::RadialGradientStyleValue const& radial_gradient)
 {
     // Start center, goes right to ending point, where the gradient line intersects the ending shape
     auto resolved_color_stops = resolve_color_stop_positions(
-        radial_gradient.color_stop_list(), [&](auto const& length_percentage) {
+        node, radial_gradient.color_stop_list(), [&](auto const& length_percentage) {
             return (length_percentage.to_px(node, gradient_size.width()) / gradient_size.width()).to_float();
         },
         radial_gradient.is_repeating());

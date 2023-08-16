@@ -8,6 +8,7 @@
  */
 
 #include "ConicGradientStyleValue.h"
+#include <LibWeb/Layout/Node.h>
 
 namespace Web::CSS {
 
@@ -34,7 +35,7 @@ ErrorOr<String> ConicGradientStyleValue::to_string() const
     return builder.to_string();
 }
 
-void ConicGradientStyleValue::resolve_for_size(Layout::Node const& node, CSSPixelSize size) const
+void ConicGradientStyleValue::resolve_for_size(Layout::NodeWithStyleAndBoxModelMetrics const& node, CSSPixelSize size) const
 {
     if (!m_resolved.has_value())
         m_resolved = ResolvedData { Painting::resolve_conic_gradient_data(node, *this), {} };

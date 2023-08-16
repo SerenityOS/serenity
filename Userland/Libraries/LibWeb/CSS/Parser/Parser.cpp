@@ -2419,7 +2419,7 @@ static Optional<Vector<TElement>> parse_color_stop_list(auto& tokens, auto is_po
             return ElementType::Garbage;
         auto const& token = tokens.next_token();
 
-        Gfx::Color color;
+        RefPtr<StyleValue> color;
         Optional<typename TElement::PositionType> position;
         Optional<typename TElement::PositionType> second_position;
         auto dimension = parse_dimension(token);
@@ -2434,15 +2434,15 @@ static Optional<Vector<TElement>> parse_color_stop_list(auto& tokens, auto is_po
             }
             // <T-percentage> <color>
             auto maybe_color = parse_color(tokens.next_token());
-            if (!maybe_color.has_value())
+            if (maybe_color.is_error())
                 return ElementType::Garbage;
-            color = *maybe_color;
+            color = maybe_color.release_value();
         } else {
             // [<color> <T-percentage>?]
             auto maybe_color = parse_color(token);
-            if (!maybe_color.has_value())
+            if (maybe_color.is_error())
                 return ElementType::Garbage;
-            color = *maybe_color;
+            color = maybe_color.release_value();
             tokens.skip_whitespace();
             // Allow up to [<color> <T-percentage> <T-percentage>] (double-position color stops)
             // Note: Double-position color stops only appear to be valid in this order.
@@ -2503,7 +2503,7 @@ Optional<Vector<LinearColorStopListElement>> Parser::parse_linear_color_stop_lis
         tokens,
         [](Dimension& dimension) { return dimension.is_length_percentage(); },
         [](Dimension& dimension) { return dimension.length_percentage(); },
-        [&](auto& token) { return parse_color(token); },
+        [&](auto& token) { return parse_color_value(token); },
         [&](auto& token) { return parse_dimension(token); });
 }
 
@@ -2515,7 +2515,7 @@ Optional<Vector<AngularColorStopListElement>> Parser::parse_angular_color_stop_l
         tokens,
         [](Dimension& dimension) { return dimension.is_angle_percentage(); },
         [](Dimension& dimension) { return dimension.angle_percentage(); },
-        [&](auto& token) { return parse_color(token); },
+        [&](auto& token) { return parse_color_value(token); },
         [&](auto& token) { return parse_dimension(token); });
 }
 
