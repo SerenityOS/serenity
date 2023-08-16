@@ -22,32 +22,8 @@ Serenity doesn't have ucontext.
 Don't mess with libsocket
 
 
-## `0005-Disable-inject.patch`
-
-Disable inject
-
-tcc requires ucontext.
-
-## `0006-Disable-openmp.patch`
-
-Disable openmp
-
-
-## `0007-Disable-GC-on-serenity.patch`
+## `0005-Disable-GC-on-serenity.patch`
 
 Disable GC on serenity
 
-
-## `0008-Don-t-use-libbsd-on-serenity.patch`
-
-Don't use libbsd on serenity
-
-arc4random exists on serenity, there's no need to pull libbsd in for
-functionality that already exists.
-
-## `0009-Disable-boehm-GC-on-serenity.patch`
-
-Disable boehm GC on serenity
-
-Serenity doesn't have a bdwgc port, so disable it here.
 

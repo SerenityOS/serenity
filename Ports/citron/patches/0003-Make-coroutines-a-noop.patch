@@ -9,7 +9,7 @@ Serenity doesn't have ucontext.
  1 file changed, 39 insertions(+), 2 deletions(-)
 
 diff --git a/src/coroutine.c b/src/coroutine.c
-index 8497869..8215cfa 100644
+index 8497869b07c90888a789b117154c0d559f946b19..8215cfa848c2dd472c5ff5987f7071d7104ba4f0 100644
 --- a/src/coroutine.c
 +++ b/src/coroutine.c
 @@ -8,7 +8,7 @@

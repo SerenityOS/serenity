@@ -8,7 +8,7 @@ Subject: [PATCH] Get rid of wordexp on serenity
  1 file changed, 14 insertions(+), 1 deletion(-)
 
 diff --git a/src/file.c b/src/file.c
-index a3bfd16..720a6e5 100644
+index a3bfd163f832ca52202d5acc47f1d76ba6c1ce8a..720a6e5bfb4e4512f1f6a33467096fc1991dc11b 100644
 --- a/src/file.c
 +++ b/src/file.c
 @@ -18,11 +18,13 @@
