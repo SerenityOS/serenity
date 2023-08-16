@@ -818,12 +818,12 @@ static ErrorOr<GlyfAndLocaTableBuffers> create_glyf_and_loca_tables_from_transfo
                     TRY(append_i16(point.y));
                 }
             }
+        }
 
-            // NOTE: Make sure each glyph starts on a 4-byte boundary.
-            //       I haven't found the spec text for this, but it matches other implementations.
-            while (reconstructed_glyf_table.size() % 4 != 0) {
-                TRY(reconstructed_glyf_table.try_append(0));
-            }
+        // NOTE: Make sure each glyph starts on a 4-byte boundary.
+        //       I haven't found the spec text for this, but it matches other implementations.
+        while (reconstructed_glyf_table.size() % 4 != 0) {
+            TRY(reconstructed_glyf_table.try_append(0));
         }
 
         TRY(loca_indexes.try_append(starting_glyf_table_size));
