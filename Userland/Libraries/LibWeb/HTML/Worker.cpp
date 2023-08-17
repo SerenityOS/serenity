@@ -49,6 +49,10 @@ void Worker::visit_edges(Cell::Visitor& visitor)
 // https://html.spec.whatwg.org/multipage/workers.html#dom-worker
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(String const& script_url, WorkerOptions const options, DOM::Document& document)
 {
+    // NOTE: We don't start a worker because they're not properly implemented yet and would likely crash.
+    dbgln("FIXME: Implement web workers");
+    return WebIDL::NotSupportedError::create(document.realm(), "Web workers not supported yet");
+
     dbgln_if(WEB_WORKER_DEBUG, "WebWorker: Creating worker with script_url = {}", script_url);
 
     // Returns a new Worker object. scriptURL will be fetched and executed in the background,
