@@ -89,7 +89,7 @@ public:
     ErrorOr<RefPtr<StyleValue>> parse_as_css_value(PropertyID);
 
     static ErrorOr<RefPtr<StyleValue>> parse_css_value(Badge<StyleComputer>, ParsingContext const&, PropertyID, Vector<ComponentValue> const&);
-    static ErrorOr<RefPtr<CalculatedStyleValue>> parse_calculated_value(Badge<StyleComputer>, ParsingContext const&, Vector<ComponentValue> const&);
+    static ErrorOr<RefPtr<CalculatedStyleValue>> parse_calculated_value(Badge<StyleComputer>, ParsingContext const&, ComponentValue const&);
 
     [[nodiscard]] LengthOrCalculated parse_as_sizes_attribute();
 
@@ -284,8 +284,7 @@ private:
     };
     ErrorOr<PropertyAndValue> parse_css_value_for_properties(ReadonlySpan<PropertyID>, TokenStream<ComponentValue>&);
     ErrorOr<RefPtr<StyleValue>> parse_builtin_value(ComponentValue const&);
-    ErrorOr<RefPtr<StyleValue>> parse_dynamic_value(ComponentValue const&);
-    ErrorOr<RefPtr<CalculatedStyleValue>> parse_calculated_value(Vector<ComponentValue> const&);
+    ErrorOr<RefPtr<CalculatedStyleValue>> parse_calculated_value(ComponentValue const&);
     // NOTE: Implemented in generated code. (GenerateCSSMathFunctions.cpp)
     ErrorOr<OwnPtr<CalculationNode>> parse_math_function(PropertyID, Function const&);
     ErrorOr<OwnPtr<CalculationNode>> parse_a_calc_function_node(Function const&);
