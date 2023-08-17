@@ -33,6 +33,7 @@
 #include <LibWeb/CSS/StyleValues/FontStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FrequencyStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridAreaShorthandStyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridAutoFlowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTemplateAreaStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
@@ -222,6 +223,12 @@ GridAreaShorthandStyleValue const& StyleValue::as_grid_area_shorthand() const
 {
     VERIFY(is_grid_area_shorthand());
     return static_cast<GridAreaShorthandStyleValue const&>(*this);
+}
+
+GridAutoFlowStyleValue const& StyleValue::as_grid_auto_flow() const
+{
+    VERIFY(is_grid_auto_flow());
+    return static_cast<GridAutoFlowStyleValue const&>(*this);
 }
 
 GridTemplateAreaStyleValue const& StyleValue::as_grid_template_area() const

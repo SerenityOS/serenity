@@ -99,6 +99,7 @@ set(SOURCES
     CSS/StyleValues/FlexStyleValue.cpp
     CSS/StyleValues/FontStyleValue.cpp
     CSS/StyleValues/GridAreaShorthandStyleValue.cpp
+    CSS/StyleValues/GridAutoFlowStyleValue.cpp
     CSS/StyleValues/GridTemplateAreaStyleValue.cpp
     CSS/StyleValues/GridTrackPlacementStyleValue.cpp
     CSS/StyleValues/GridTrackPlacementShorthandStyleValue.cpp

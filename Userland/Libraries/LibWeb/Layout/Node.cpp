@@ -724,6 +724,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     computed_values.set_grid_row_end(computed_style.grid_row_end());
     computed_values.set_grid_row_start(computed_style.grid_row_start());
     computed_values.set_grid_template_areas(computed_style.grid_template_areas());
+    computed_values.set_grid_auto_flow(computed_style.grid_auto_flow());
 
     auto fill = computed_style.property(CSS::PropertyID::Fill);
     if (fill->has_color())

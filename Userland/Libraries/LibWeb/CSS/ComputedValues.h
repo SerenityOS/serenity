@@ -32,6 +32,11 @@ struct AspectRatio {
     Optional<Ratio> preferred_ratio;
 };
 
+struct GridAutoFlow {
+    bool row { true };
+    bool dense { false };
+};
+
 class InitialValues {
 public:
     static AspectRatio aspect_ratio() { return AspectRatio { true, {} }; }
@@ -101,6 +106,7 @@ public:
     static CSS::GridTrackPlacement grid_column_start() { return CSS::GridTrackPlacement::make_auto(); }
     static CSS::GridTrackPlacement grid_row_end() { return CSS::GridTrackPlacement::make_auto(); }
     static CSS::GridTrackPlacement grid_row_start() { return CSS::GridTrackPlacement::make_auto(); }
+    static CSS::GridAutoFlow grid_auto_flow() { return CSS::GridAutoFlow {}; }
     static CSS::Size column_gap() { return CSS::Size::make_auto(); }
     static CSS::Size row_gap() { return CSS::Size::make_auto(); }
     static CSS::BorderCollapse border_collapse() { return CSS::BorderCollapse::Separate; }
@@ -276,6 +282,7 @@ public:
     Variant<CSS::VerticalAlign, CSS::LengthPercentage> const& vertical_align() const { return m_noninherited.vertical_align; }
     CSS::GridTrackSizeList const& grid_auto_columns() const { return m_noninherited.grid_auto_columns; }
     CSS::GridTrackSizeList const& grid_auto_rows() const { return m_noninherited.grid_auto_rows; }
+    CSS::GridAutoFlow const& grid_auto_flow() const { return m_noninherited.grid_auto_flow; }
     CSS::GridTrackSizeList const& grid_template_columns() const { return m_noninherited.grid_template_columns; }
     CSS::GridTrackSizeList const& grid_template_rows() const { return m_noninherited.grid_template_rows; }
     CSS::GridTrackPlacement const& grid_column_end() const { return m_noninherited.grid_column_end; }
@@ -436,6 +443,7 @@ protected:
         CSS::GridTrackSizeList grid_auto_rows;
         CSS::GridTrackSizeList grid_template_columns;
         CSS::GridTrackSizeList grid_template_rows;
+        CSS::GridAutoFlow grid_auto_flow { InitialValues::grid_auto_flow() };
         CSS::GridTrackPlacement grid_column_end { InitialValues::grid_column_end() };
         CSS::GridTrackPlacement grid_column_start { InitialValues::grid_column_start() };
         CSS::GridTrackPlacement grid_row_end { InitialValues::grid_row_end() };
@@ -549,6 +557,7 @@ public:
     void set_row_gap(CSS::Size const& row_gap) { m_noninherited.row_gap = row_gap; }
     void set_border_collapse(CSS::BorderCollapse const& border_collapse) { m_inherited.border_collapse = border_collapse; }
     void set_grid_template_areas(Vector<Vector<String>> const& grid_template_areas) { m_noninherited.grid_template_areas = grid_template_areas; }
+    void set_grid_auto_flow(CSS::GridAutoFlow grid_auto_flow) { m_noninherited.grid_auto_flow = grid_auto_flow; }
     void set_transition_delay(CSS::Time const& transition_delay) { m_noninherited.transition_delay = transition_delay; }
     void set_table_layout(CSS::TableLayout value) { m_noninherited.table_layout = value; }
 

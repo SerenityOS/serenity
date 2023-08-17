@@ -104,6 +104,7 @@ public:
     CSS::GridTrackSizeList grid_auto_rows() const;
     CSS::GridTrackSizeList grid_template_columns() const;
     CSS::GridTrackSizeList grid_template_rows() const;
+    [[nodiscard]] CSS::GridAutoFlow grid_auto_flow() const;
     CSS::GridTrackPlacement grid_column_end() const;
     CSS::GridTrackPlacement grid_column_start() const;
     CSS::GridTrackPlacement grid_row_end() const;
