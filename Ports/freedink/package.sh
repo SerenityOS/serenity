@@ -12,16 +12,13 @@ files=(
 )
 configopts=("--prefix=/usr/local" "--disable-rpath" "--disable-tests" "LDFLAGS=-ldl -lfontconfig -lxml2")
 
-resource_path="/usr/local/share/games/dink"
-
 launcher_name="FreeDink"
 launcher_category=Games
-launcher_command="/usr/local/bin/freedink --software-rendering --truecolor --refdir ${resource_path}"
+launcher_command='/usr/local/bin/freedink --software-rendering --truecolor'
 
 install() {
-    target_dir="${SERENITY_INSTALL_ROOT}${resource_path}"
-    run_nocd mkdir -p ${target_dir}
-    run_nocd cp -R ${freedink_data}/* ${target_dir}
+    run_nocd make DESTDIR="${SERENITY_INSTALL_ROOT}" -C "${freedink_data}" install
+    run make DESTDIR="${SERENITY_INSTALL_ROOT}" "${installopts[@]}" install
 }
 
 export CPPFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/SDL2 -I${SERENITY_INSTALL_ROOT}/usr/local/include/libxml2"
