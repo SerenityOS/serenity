@@ -187,6 +187,19 @@ private:
     HashMap<float, NonnullRefPtr<Gfx::ScaledFont>> mutable m_cached_fonts;
 };
 
+struct StyleComputer::MatchingFontCandidate {
+    FontFaceKey key;
+    Variant<FontLoader*, Gfx::Typeface const*> loader_or_typeface;
+
+    [[nodiscard]] RefPtr<Gfx::Font const> font_with_point_size(float point_size) const
+    {
+        if (auto* loader = loader_or_typeface.get_pointer<FontLoader*>(); loader) {
+            return (*loader)->font_with_point_size(point_size);
+        }
+        return loader_or_typeface.get<Gfx::Typeface const*>()->get_font(point_size);
+    }
+};
+
 static CSSStyleSheet& default_stylesheet(DOM::Document const& document)
 {
     static JS::Handle<CSSStyleSheet> sheet;
@@ -2004,9 +2017,10 @@ RefPtr<Gfx::Font const> StyleComputer::find_matching_font_weight_ascending(Vecto
     auto pred = inclusive ? Fn([&](auto const& matching_font_candidate) { return matching_font_candidate.key.weight >= target_weight; })
                           : Fn([&](auto const& matching_font_candidate) { return matching_font_candidate.key.weight > target_weight; });
     auto it = find_if(candidates.begin(), candidates.end(), pred);
-    for (; it != candidates.end(); ++it)
-        if (auto found_font = it->loader->font_with_point_size(font_size_in_pt))
+    for (; it != candidates.end(); ++it) {
+        if (auto found_font = it->font_with_point_size(font_size_in_pt))
             return found_font;
+    }
     return {};
 }
 
@@ -2016,9 +2030,10 @@ RefPtr<Gfx::Font const> StyleComputer::find_matching_font_weight_descending(Vect
     auto pred = inclusive ? Fn([&](auto const& matching_font_candidate) { return matching_font_candidate.key.weight <= target_weight; })
                           : Fn([&](auto const& matching_font_candidate) { return matching_font_candidate.key.weight < target_weight; });
     auto it = find_if(candidates.rbegin(), candidates.rend(), pred);
-    for (; it != candidates.rend(); ++it)
-        if (auto found_font = it->loader->font_with_point_size(font_size_in_pt))
+    for (; it != candidates.rend(); ++it) {
+        if (auto found_font = it->font_with_point_size(font_size_in_pt))
             return found_font;
+    }
     return {};
 }
 
@@ -2033,6 +2048,20 @@ RefPtr<Gfx::Font const> StyleComputer::font_matching_algorithm(FontFaceKey const
         if (font_key_and_loader.key.family_name.equals_ignoring_ascii_case(key.family_name))
             matching_family_fonts.empend(font_key_and_loader.key, font_key_and_loader.value.ptr());
     }
+    Gfx::FontDatabase::the().for_each_typeface([&](Gfx::Typeface const& typeface) {
+        if (typeface.family().equals_ignoring_ascii_case(key.family_name)) {
+            matching_family_fonts.empend(
+                FontFaceKey {
+                    .family_name = MUST(FlyString::from_deprecated_fly_string(typeface.family())),
+                    .weight = static_cast<int>(typeface.weight()),
+                    .slope = typeface.slope(),
+                },
+                &typeface);
+        }
+    });
+    quick_sort(matching_family_fonts, [](auto const& a, auto const& b) {
+        return a.key.weight < b.key.weight;
+    });
     // FIXME: 1. font-stretch is tried first.
     // FIXME: 2. font-style is tried next.
     // We don't have complete support of italic and oblique fonts, so matching on font-style can be simplified to:
@@ -2052,13 +2081,13 @@ RefPtr<Gfx::Font const> StyleComputer::font_matching_algorithm(FontFaceKey const
         auto it = find_if(matching_family_fonts.begin(), matching_family_fonts.end(),
             [&](auto const& matching_font_candidate) { return matching_font_candidate.key.weight >= key.weight; });
         for (; it != matching_family_fonts.end() && it->key.weight <= 500; ++it) {
-            if (auto found_font = it->loader->font_with_point_size(font_size_in_pt))
+            if (auto found_font = it->font_with_point_size(font_size_in_pt))
                 return found_font;
         }
         if (auto found_font = find_matching_font_weight_descending(matching_family_fonts, key.weight, font_size_in_pt, false))
             return found_font;
         for (; it != matching_family_fonts.end(); ++it) {
-            if (auto found_font = it->loader->font_with_point_size(font_size_in_pt))
+            if (auto found_font = it->font_with_point_size(font_size_in_pt))
                 return found_font;
         }
     }
@@ -2193,10 +2222,10 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
                 return found_font;
         }
 
-        if (auto found_font = font_matching_algorithm(key, font_size_in_pt))
+        if (auto found_font = FontCache::the().get(font_selector))
             return found_font;
 
-        if (auto found_font = FontCache::the().get(font_selector))
+        if (auto found_font = font_matching_algorithm(key, font_size_in_pt))
             return found_font;
 
         if (auto found_font = Gfx::FontDatabase::the().get(family.to_deprecated_string(), font_size_in_pt, weight, width, slope, Gfx::Font::AllowInexactSizeMatch::Yes))
