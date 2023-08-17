@@ -19,6 +19,7 @@
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Heap/CellAllocator.h>
 #include <LibJS/Heap/Handle.h>
+#include <LibJS/Heap/HeapRootTypeOrLocation.h>
 #include <LibJS/Heap/Internals.h>
 #include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/Runtime/Completion.h>
@@ -58,6 +59,7 @@ public:
     };
 
     void collect_garbage(CollectionType = CollectionType::CollectGarbage, bool print_report = false);
+    void dump_graph();
 
     bool should_collect_on_every_allocation() const { return m_should_collect_on_every_allocation; }
     void set_should_collect_on_every_allocation(bool b) { m_should_collect_on_every_allocation = b; }
@@ -83,10 +85,10 @@ private:
 
     Cell* allocate_cell(size_t);
 
-    void gather_roots(HashTable<Cell*>&);
-    void gather_conservative_roots(HashTable<Cell*>&);
-    void gather_asan_fake_stack_roots(HashTable<FlatPtr>&, FlatPtr);
-    void mark_live_cells(HashTable<Cell*> const& live_cells);
+    void gather_roots(HashMap<Cell*, HeapRootTypeOrLocation>&);
+    void gather_conservative_roots(HashMap<Cell*, HeapRootTypeOrLocation>&);
+    void gather_asan_fake_stack_roots(HashMap<FlatPtr, HeapRootTypeOrLocation>&, FlatPtr);
+    void mark_live_cells(HashMap<Cell*, HeapRootTypeOrLocation> const& live_cells);
     void finalize_unmarked_cells();
     void sweep_dead_cells(bool print_report, Core::ElapsedTimer const&);
 

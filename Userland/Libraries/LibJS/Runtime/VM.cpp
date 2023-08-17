@@ -192,29 +192,29 @@ Bytecode::Interpreter& VM::bytecode_interpreter()
     return *m_bytecode_interpreter;
 }
 
-void VM::gather_roots(HashTable<Cell*>& roots)
+void VM::gather_roots(HashMap<Cell*, HeapRootTypeOrLocation>& roots)
 {
-    roots.set(m_empty_string);
+    roots.set(m_empty_string, HeapRootType::VM);
     for (auto string : m_single_ascii_character_strings)
-        roots.set(string);
+        roots.set(string, HeapRootType::VM);
 
     auto gather_roots_from_execution_context_stack = [&roots](Vector<ExecutionContext*> const& stack) {
         for (auto& execution_context : stack) {
             if (execution_context->this_value.is_cell())
-                roots.set(&execution_context->this_value.as_cell());
+                roots.set(&execution_context->this_value.as_cell(), HeapRootType::VM);
             for (auto& argument : execution_context->arguments) {
                 if (argument.is_cell())
-                    roots.set(&argument.as_cell());
+                    roots.set(&argument.as_cell(), HeapRootType::VM);
             }
-            roots.set(execution_context->lexical_environment);
-            roots.set(execution_context->variable_environment);
-            roots.set(execution_context->private_environment);
+            roots.set(execution_context->lexical_environment, HeapRootType::VM);
+            roots.set(execution_context->variable_environment, HeapRootType::VM);
+            roots.set(execution_context->private_environment, HeapRootType::VM);
             if (auto context_owner = execution_context->context_owner)
-                roots.set(context_owner);
+                roots.set(context_owner, HeapRootType::VM);
             execution_context->script_or_module.visit(
                 [](Empty) {},
                 [&](auto& script_or_module) {
-                    roots.set(script_or_module.ptr());
+                    roots.set(script_or_module.ptr(), HeapRootType::VM);
                 });
         }
     };
@@ -224,15 +224,15 @@ void VM::gather_roots(HashTable<Cell*>& roots)
         gather_roots_from_execution_context_stack(saved_stack);
 
 #define __JS_ENUMERATE(SymbolName, snake_name) \
-    roots.set(m_well_known_symbols.snake_name);
+    roots.set(m_well_known_symbols.snake_name, HeapRootType::VM);
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
 
     for (auto& symbol : m_global_symbol_registry)
-        roots.set(symbol.value);
+        roots.set(symbol.value, HeapRootType::VM);
 
     for (auto finalization_registry : m_finalization_registry_cleanup_jobs)
-        roots.set(finalization_registry);
+        roots.set(finalization_registry, HeapRootType::VM);
 }
 
 ThrowCompletionOr<Value> VM::named_evaluation_if_anonymous_function(ASTNode const& expression, DeprecatedFlyString const& name)

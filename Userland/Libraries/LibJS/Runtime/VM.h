@@ -47,7 +47,7 @@ public:
 
     void dump_backtrace() const;
 
-    void gather_roots(HashTable<Cell*>&);
+    void gather_roots(HashMap<Cell*, HeapRootTypeOrLocation>&);
 
 #define __JS_ENUMERATE(SymbolName, snake_name)                  \
     NonnullGCPtr<Symbol> well_known_symbol_##snake_name() const \

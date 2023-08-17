@@ -7,17 +7,18 @@
 
 #pragma once
 
-#include <AK/HashTable.h>
+#include <AK/HashMap.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibJS/Heap/HeapRootTypeOrLocation.h>
 
 namespace JS {
 
 class MarkedVectorBase {
 public:
-    virtual void gather_roots(HashTable<Cell*>&) const = 0;
+    virtual void gather_roots(HashMap<Cell*, JS::HeapRootTypeOrLocation>&) const = 0;
 
 protected:
     explicit MarkedVectorBase(Heap&);
@@ -64,14 +65,14 @@ public:
         return *this;
     }
 
-    virtual void gather_roots(HashTable<Cell*>& roots) const override
+    virtual void gather_roots(HashMap<Cell*, JS::HeapRootTypeOrLocation>& roots) const override
     {
         for (auto& value : *this) {
             if constexpr (IsSame<Value, T>) {
                 if (value.is_cell())
-                    roots.set(&const_cast<T&>(value).as_cell());
+                    roots.set(&const_cast<T&>(value).as_cell(), HeapRootType::MarkedVector);
             } else {
-                roots.set(value);
+                roots.set(value, HeapRootType::MarkedVector);
             }
         }
     }
