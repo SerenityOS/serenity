@@ -136,10 +136,7 @@ private:
     };
 
     class FontLoader;
-    struct MatchingFontCandidate {
-        FontFaceKey key;
-        FontLoader* loader;
-    };
+    struct MatchingFontCandidate;
 
     ErrorOr<RefPtr<StyleProperties>> compute_style_impl(DOM::Element&, Optional<CSS::Selector::PseudoElement>, ComputeStyleMode) const;
     ErrorOr<void> compute_cascaded_values(StyleProperties&, DOM::Element&, Optional<CSS::Selector::PseudoElement>, bool& did_match_any_pseudo_element_rules, ComputeStyleMode) const;
