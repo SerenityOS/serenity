@@ -107,7 +107,7 @@ void Settings::set_new_tab_page(QString const& page)
 
 bool Settings::enable_autocomplete()
 {
-    return m_qsettings->value("enable_autocomplete", true).toBool();
+    return m_qsettings->value("enable_autocomplete", false).toBool();
 }
 
 void Settings::set_enable_autocomplete(bool enable)
@@ -117,7 +117,7 @@ void Settings::set_enable_autocomplete(bool enable)
 
 bool Settings::enable_search()
 {
-    return m_qsettings->value("enable_search", true).toBool();
+    return m_qsettings->value("enable_search", false).toBool();
 }
 
 void Settings::set_enable_search(bool enable)
