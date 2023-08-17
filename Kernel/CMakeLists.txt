@@ -500,6 +500,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
 elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
     set(KERNEL_SOURCES
         ${KERNEL_SOURCES}
+        Arch/riscv64/boot.S
         Arch/Processor.cpp
         kprintf.cpp
     )
