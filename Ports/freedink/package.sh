@@ -15,6 +15,7 @@ configopts=("--prefix=/usr/local" "--disable-rpath" "--disable-tests" "LDFLAGS=-
 launcher_name="FreeDink"
 launcher_category=Games
 launcher_command='/usr/local/bin/freedink --software-rendering --truecolor'
+icon_file='src/media/freedink.ico'
 
 install() {
     run_nocd make DESTDIR="${SERENITY_INSTALL_ROOT}" -C "${freedink_data}" install
