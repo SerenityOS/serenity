@@ -18,6 +18,7 @@
 #include <LibWeb/CSS/Parser/ComponentValue.h>
 #include <LibWeb/CSS/Parser/Declaration.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
+#include <LibWeb/CSS/Parser/Dimension.h>
 #include <LibWeb/CSS/Parser/Function.h>
 #include <LibWeb/CSS/Parser/Rule.h>
 #include <LibWeb/CSS/Parser/TokenStream.h>
@@ -190,70 +191,6 @@ private:
     PropertyOwningCSSStyleDeclaration* convert_to_style_declaration(Vector<DeclarationOrAtRule> const& declarations);
     Optional<StyleProperty> convert_to_style_property(Declaration const&);
 
-    class Dimension {
-    public:
-        Dimension(Angle&& value)
-            : m_value(move(value))
-        {
-        }
-
-        Dimension(Frequency&& value)
-            : m_value(move(value))
-        {
-        }
-
-        Dimension(Length&& value)
-            : m_value(move(value))
-        {
-        }
-        Dimension(Percentage&& value)
-            : m_value(move(value))
-        {
-        }
-
-        Dimension(Resolution&& value)
-            : m_value(move(value))
-        {
-        }
-
-        Dimension(Time&& value)
-            : m_value(move(value))
-        {
-        }
-
-        bool is_angle() const;
-        Angle angle() const;
-
-        bool is_angle_percentage() const;
-        AnglePercentage angle_percentage() const;
-
-        bool is_frequency() const;
-        Frequency frequency() const;
-
-        bool is_frequency_percentage() const;
-        FrequencyPercentage frequency_percentage() const;
-
-        bool is_length() const;
-        Length length() const;
-
-        bool is_length_percentage() const;
-        LengthPercentage length_percentage() const;
-
-        bool is_percentage() const;
-        Percentage percentage() const;
-
-        bool is_resolution() const;
-        Resolution resolution() const;
-
-        bool is_time() const;
-        Time time() const;
-
-        bool is_time_percentage() const;
-        TimePercentage time_percentage() const;
-
-    private:
-        Variant<Angle, Frequency, Length, Percentage, Resolution, Time> m_value;
-    };
     Optional<Dimension> parse_dimension(ComponentValue const&);
     Optional<Color> parse_rgb_or_hsl_color(StringView function_name, Vector<ComponentValue> const&);
     Optional<Color> parse_color(ComponentValue const&);
