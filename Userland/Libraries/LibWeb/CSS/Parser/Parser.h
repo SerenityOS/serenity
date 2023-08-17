@@ -185,6 +185,8 @@ private:
     Vector<FontFace::Source> parse_font_face_src(TokenStream<ComponentValue>&);
 
     CSSRule* convert_to_rule(NonnullRefPtr<Rule>);
+    CSSMediaRule* convert_to_media_rule(NonnullRefPtr<Rule>);
+
     PropertyOwningCSSStyleDeclaration* convert_to_style_declaration(Vector<DeclarationOrAtRule> const& declarations);
     Optional<StyleProperty> convert_to_style_property(Declaration const&);
 
