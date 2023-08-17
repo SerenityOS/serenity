@@ -126,7 +126,7 @@ void MonitorWidget::redraw_desktop_if_needed()
     float sw = (float)m_desktop_bitmap->width() / (float)m_desktop_resolution.width();
     float sh = (float)m_desktop_bitmap->height() / (float)m_desktop_resolution.height();
 
-    auto scaled_size = m_wallpaper_bitmap->size().to_type<float>().scaled_by(sw, sh).to_type<int>();
+    auto scaled_size = m_wallpaper_bitmap->size().to_type<float>().scaled(sw, sh).to_type<int>();
     auto scaled_bitmap_or_error = m_wallpaper_bitmap->scaled(sw, sh);
     if (scaled_bitmap_or_error.is_error()) {
         GUI::MessageBox::show_error(window(), "There was an error updating the desktop preview"sv);

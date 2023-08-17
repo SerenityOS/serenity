@@ -787,10 +787,10 @@ DecoderErrorOr<void> Decoder::prepare_referenced_frame(Gfx::Size<u32> frame_size
     // − FrameHeight <= 16 * RefFrameHeight[ refIdx ]
     if (!reference_frame.is_valid())
         return DecoderError::format(DecoderErrorCategory::Corrupted, "Attempted to use reference frame {} that has not been saved", reference_frame_index);
-    auto double_frame_size = frame_size.scaled_by(2);
+    auto double_frame_size = frame_size.scaled(2);
     if (double_frame_size.width() < reference_frame.size.width() || double_frame_size.height() < reference_frame.size.height())
         return DecoderError::format(DecoderErrorCategory::Corrupted, "Inter frame size is too small relative to reference frame {}", reference_frame_index);
-    if (!reference_frame.size.scaled_by(16).contains(frame_size))
+    if (!reference_frame.size.scaled(16).contains(frame_size))
         return DecoderError::format(DecoderErrorCategory::Corrupted, "Inter frame size is too large relative to reference frame {}", reference_frame_index);
 
     // FIXME: Convert all the operations in this function to vector operations supported by
