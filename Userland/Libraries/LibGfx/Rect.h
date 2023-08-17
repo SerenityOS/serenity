@@ -177,6 +177,13 @@ public:
         return rect;
     }
 
+    [[nodiscard]] Rect<T> scaled(T dboth) const
+    {
+        Rect<T> rect = *this;
+        rect.scale_by(dboth);
+        return rect;
+    }
+
     [[nodiscard]] Rect<T> scaled(T sx, T sy) const
     {
         Rect<T> rect = *this;

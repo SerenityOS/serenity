@@ -91,6 +91,13 @@ public:
         return point;
     }
 
+    [[nodiscard]] Point<T> scaled(T dboth) const
+    {
+        Point<T> point = *this;
+        point.scale_by(dboth);
+        return point;
+    }
+
     [[nodiscard]] Point<T> scaled(Point<T> const& delta) const
     {
         Point<T> point = *this;
