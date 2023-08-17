@@ -410,6 +410,10 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
         Web::Bindings::main_thread_vm().heap().collect_garbage(JS::Heap::CollectionType::CollectGarbage, true);
     }
 
+    if (request == "dump-gc-graph") {
+        Web::Bindings::main_thread_vm().heap().dump_graph();
+    }
+
     if (request == "set-line-box-borders") {
         bool state = argument == "on";
         m_page_host->set_should_show_line_box_borders(state);
