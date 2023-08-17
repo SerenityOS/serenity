@@ -974,7 +974,9 @@ void Document::update_layout()
         m_layout_root = verify_cast<Layout::Viewport>(*tree_builder.build(*this));
     }
 
-    propagate_overflow_to_viewport(*document_element(), *m_layout_root);
+    if (auto* document_element = this->document_element()) {
+        propagate_overflow_to_viewport(*document_element, *m_layout_root);
+    }
 
     Layout::LayoutState layout_state;
 
