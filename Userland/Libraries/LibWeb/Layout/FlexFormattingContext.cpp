@@ -97,7 +97,7 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode, AvailableSpace c
                 if (!flex_item_is_stretched(item))
                     continue;
                 auto item_min_cross_size = has_cross_min_size(item.box) ? specified_cross_min_size(item.box) : 0;
-                auto item_max_cross_size = has_cross_max_size(item.box) ? specified_cross_max_size(item.box) : INFINITY;
+                auto item_max_cross_size = has_cross_max_size(item.box) ? specified_cross_max_size(item.box) : CSSPixels::max();
                 auto item_preferred_outer_cross_size = css_clamp(flex_container_inner_cross_size, item_min_cross_size, item_max_cross_size);
                 auto item_inner_cross_size = item_preferred_outer_cross_size - item.margins.cross_before - item.margins.cross_after - item.padding.cross_before - item.padding.cross_after - item.borders.cross_before - item.borders.cross_after;
                 set_cross_size(item.box, item_inner_cross_size);
@@ -1233,7 +1233,7 @@ void FlexFormattingContext::calculate_cross_size_of_each_flex_line()
         auto const& computed_min_size = this->computed_cross_min_size(flex_container());
         auto const& computed_max_size = this->computed_cross_max_size(flex_container());
         auto cross_min_size = (!computed_min_size.is_auto() && !computed_min_size.contains_percentage()) ? specified_cross_min_size(flex_container()) : 0;
-        auto cross_max_size = (!computed_max_size.is_none() && !computed_max_size.contains_percentage()) ? specified_cross_max_size(flex_container()) : INFINITY;
+        auto cross_max_size = (!computed_max_size.is_none() && !computed_max_size.contains_percentage()) ? specified_cross_max_size(flex_container()) : CSSPixels::max();
         m_flex_lines[0].cross_size = css_clamp(m_flex_lines[0].cross_size, cross_min_size, cross_max_size);
     }
 }
@@ -1258,7 +1258,7 @@ void FlexFormattingContext::determine_used_cross_size_of_each_flex_item()
                 auto const& computed_min_size = computed_cross_min_size(item.box);
                 auto const& computed_max_size = computed_cross_max_size(item.box);
                 auto cross_min_size = (!computed_min_size.is_auto() && !computed_min_size.contains_percentage()) ? specified_cross_min_size(item.box) : 0;
-                auto cross_max_size = (!computed_max_size.is_none() && !computed_max_size.contains_percentage()) ? specified_cross_max_size(item.box) : INFINITY;
+                auto cross_max_size = (!computed_max_size.is_none() && !computed_max_size.contains_percentage()) ? specified_cross_max_size(item.box) : CSSPixels::max();
 
                 item.cross_size = css_clamp(unclamped_cross_size, cross_min_size, cross_max_size);
             } else {
@@ -1551,7 +1551,7 @@ void FlexFormattingContext::determine_flex_container_used_cross_size()
         auto const& computed_min_size = this->computed_cross_min_size(flex_container());
         auto const& computed_max_size = this->computed_cross_max_size(flex_container());
         auto cross_min_size = (!computed_min_size.is_auto() && !computed_min_size.contains_percentage()) ? specified_cross_min_size(flex_container()) : 0;
-        auto cross_max_size = (!computed_max_size.is_none() && !computed_max_size.contains_percentage()) ? specified_cross_max_size(flex_container()) : INFINITY;
+        auto cross_max_size = (!computed_max_size.is_none() && !computed_max_size.contains_percentage()) ? specified_cross_max_size(flex_container()) : CSSPixels::max();
         set_cross_size(flex_container(), css_clamp(cross_size, cross_min_size, cross_max_size));
     } else {
         set_cross_size(flex_container(), cross_size);
@@ -1736,7 +1736,7 @@ CSSPixels FlexFormattingContext::calculate_intrinsic_main_size_of_flex_container
             }
         } else if (result < 0) {
             if (item.scaled_flex_shrink_factor == 0)
-                result = -INFINITY;
+                result = CSSPixels::min();
             else
                 result /= item.scaled_flex_shrink_factor;
         }

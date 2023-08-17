@@ -102,6 +102,16 @@ public:
         return res;
     }
 
+    static constexpr CSSPixels min()
+    {
+        return from_raw(NumericLimits<int>::min());
+    }
+
+    static constexpr CSSPixels max()
+    {
+        return from_raw(NumericLimits<int>::max());
+    }
+
     float to_float() const;
     double to_double() const;
     int to_int() const;

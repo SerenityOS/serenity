@@ -1080,7 +1080,7 @@ void GridFormattingContext::maximize_tracks(AvailableSpace const& available_spac
         // free space is infinite; if sizing under a min-content constraint, the free space is zero.
         auto free_space = get_free_space(available_space, dimension);
         if (free_space.is_max_content() || free_space.is_indefinite()) {
-            return INFINITY;
+            return CSSPixels::max();
         } else if (free_space.is_min_content()) {
             return 0;
         } else {
