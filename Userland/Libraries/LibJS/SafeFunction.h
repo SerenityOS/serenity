@@ -83,25 +83,6 @@ public:
 
     explicit operator bool() const { return !!callable_wrapper(); }
 
-    template<typename CallableType>
-    SafeFunction& operator=(CallableType&& callable)
-    requires((AK::IsFunctionObject<CallableType> && IsCallableWithArguments<CallableType, Out, In...>))
-    {
-        clear();
-        init_with_callable(forward<CallableType>(callable), CallableKind::FunctionObject);
-        return *this;
-    }
-
-    template<typename FunctionType>
-    SafeFunction& operator=(FunctionType f)
-    requires((AK::IsFunctionPointer<FunctionType> && IsCallableWithArguments<RemovePointer<FunctionType>, Out, In...>))
-    {
-        clear();
-        if (f)
-            init_with_callable(move(f), CallableKind::FunctionPointer);
-        return *this;
-    }
-
     SafeFunction& operator=(nullptr_t)
     {
         clear();
