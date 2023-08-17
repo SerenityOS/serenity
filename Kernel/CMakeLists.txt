@@ -9,6 +9,8 @@ if ("${SERENITY_ARCH}" STREQUAL "aarch64")
     set(KERNEL_ARCH aarch64)
 elseif("${SERENITY_ARCH}" STREQUAL "x86_64")
     set(KERNEL_ARCH x86_64)
+elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
+    set(KERNEL_ARCH riscv64)
 endif()
 
 set(KERNEL_HEAP_SOURCES
@@ -495,6 +497,14 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
     # NOTE: These files cannot use a stack protector and sanitizers, as these will cause accesses to global variables to be inserted
     #       by the compiler. The CPU cannot access global variables without the MMU as the kernel is linked for a virtual address in high memory.
     set_source_files_properties(${SOURCES_RUNNING_WITHOUT_MMU} PROPERTIES COMPILE_FLAGS "-fno-stack-protector -fno-sanitize=all")
+elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
+    set(KERNEL_SOURCES
+        ${KERNEL_SOURCES}
+        Arch/Processor.cpp
+        kprintf.cpp
+    )
+
+    add_compile_options(-fno-stack-protector -fno-sanitize=all)
 endif()
 
 set(AK_SOURCES
@@ -767,7 +777,7 @@ endif()
 serenity_install_headers(Kernel)
 serenity_install_sources(Kernel)
 
-# aarch64 does not need a Prekernel
-if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
+# Only x86 needs a Prekernel
+if ("${SERENITY_ARCH}" STREQUAL "x86_64")
     add_subdirectory(Prekernel)
 endif()

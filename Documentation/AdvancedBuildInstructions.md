@@ -65,7 +65,7 @@ There are some optional features that can be enabled during compilation that are
 - `INCLUDE_WASM_SPEC_TESTS`: downloads and includes the WebAssembly spec testsuite tests. In order to use this option, you will need to install `prettier` and `wabt`. wabt version 1.0.23 or higher is required to pre-process the WebAssembly spec testsuite.
 - `INCLUDE_FLAC_SPEC_TESTS`: downloads and includes the xiph.org FLAC test suite.
 - `SERENITY_TOOLCHAIN`: Specifies whether to use the established GNU toolchain, or the experimental Clang-based toolchain for building SerenityOS. See the [Clang-based toolchain](#clang-based-toolchain) section below.
-- `SERENITY_ARCH`: Specifies which architecture to build for. Currently supported options are `x86_64`.
+- `SERENITY_ARCH`: Specifies which architecture to build for. Currently supported options are `x86_64`, `aarch64`, `riscv64`.
 - `BUILD_<component>`: builds the specified component, e.g. `BUILD_HEARTS` (note: must be all caps). Check the components.ini file in your build directory for a list of available components. Make sure to run `ninja clean` and `rm -rf Build/x86_64/Root` after disabling components. These options can be easily configured by using the `ConfigureComponents` utility. See the [Component Configuration](#component-configuration) section below.
 - `BUILD_EVERYTHING`: builds all optional components, overrides other `BUILD_<component>` flags when enabled
 - `SERENITY_CACHE_DIR`: sets the location of a shared cache of downloaded files. Should not need to be set unless managing a distribution package.

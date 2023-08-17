@@ -46,6 +46,7 @@ _serenity() {
     targets=(
         'x86_64:Target x86_64 or $SERENITY_ARCH (default)'
         'aarch64:Target aarch64'
+        'riscv64:Target riscv64'
         'lagom:Target host machine'
     )
 
