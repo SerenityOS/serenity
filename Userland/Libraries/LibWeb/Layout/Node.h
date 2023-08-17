@@ -13,7 +13,9 @@
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibWeb/CSS/ComputedValues.h>
+#include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/CSS/StyleProperties.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/FontCache.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Layout/BoxModelMetrics.h>
@@ -277,7 +279,7 @@ inline Gfx::Font const& Node::scaled_font(PaintContext& context) const
 
 inline Gfx::Font const& Node::scaled_font(float scale_factor) const
 {
-    return *FontCache::the().scaled_font(font(), scale_factor);
+    return document().style_computer().font_cache().scaled_font(font(), scale_factor);
 }
 
 inline const CSS::ImmutableComputedValues& Node::computed_values() const
