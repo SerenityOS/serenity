@@ -1437,21 +1437,24 @@ bool Thread::should_be_stopped() const
     return process().is_stopped();
 }
 
-void Thread::track_lock_acquire(LockRank rank)
+bool Thread::track_lock_acquire(LockRank rank)
 {
     // Nothing to do for locks without a rank.
     if (rank == LockRank::None)
-        return;
+        return false;
 
     if (m_lock_rank_mask != LockRank::None) {
-        // Verify we are only attempting to take a lock of a higher rank.
-        VERIFY(m_lock_rank_mask > rank);
+        if (m_lock_rank_mask > rank)
+            PANIC("Acquiring lock of higher rank than already held, currently held: {:#05b}, to-be-acquired: {:#05b}", (int)m_lock_rank_mask, (int)rank);
+        if ((m_lock_rank_mask & rank) == rank)
+            return false;
     }
 
     m_lock_rank_mask |= rank;
+    return true;
 }
 
-void Thread::track_lock_release(LockRank rank)
+void Thread::track_lock_release(LockRank rank, bool change_state)
 {
     // Nothing to do for locks without a rank.
     if (rank == LockRank::None)
@@ -1478,11 +1481,15 @@ void Thread::track_lock_release(LockRank rank)
         return ((mask & mask_without_least_significant_bit) | rank) == mask;
     };
 
-    VERIFY(has_flag(m_lock_rank_mask, rank));
-    VERIFY(rank_is_a_single_bit(rank));
-    VERIFY(rank_is_in_order(m_lock_rank_mask, rank));
+    if (!has_flag(m_lock_rank_mask, rank))
+        PANIC("Trying to release lock of unheld rank, held: {:#05b}, requested: {:#05b}", (int)m_lock_rank_mask, (int)rank);
+    if (!rank_is_a_single_bit(rank))
+        PANIC("Trying to release multiple ranks at once: {:#05b}", (int)rank);
+    if (!rank_is_in_order(m_lock_rank_mask, rank))
+        PANIC("Trying to release higher order rank than lowest held: held:{:#05b}, requested: {:#05b}", (int)m_lock_rank_mask, (int)rank);
 
-    m_lock_rank_mask ^= rank;
+    if (change_state)
+        m_lock_rank_mask ^= rank;
 }
 
 void Thread::set_name(StringView name)

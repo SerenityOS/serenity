@@ -12,21 +12,22 @@
 
 namespace Kernel {
 
-void track_lock_acquire(LockRank rank)
+bool track_lock_acquire(LockRank rank)
 {
     if constexpr (LOCK_RANK_ENFORCEMENT) {
         auto* thread = Thread::current();
         if (thread && !thread->is_crashing())
-            thread->track_lock_acquire(rank);
+            return thread->track_lock_acquire(rank);
     }
+    return false;
 }
 
-void track_lock_release(LockRank rank)
+void track_lock_release(LockRank rank, bool change_state)
 {
     if constexpr (LOCK_RANK_ENFORCEMENT) {
         auto* thread = Thread::current();
         if (thread && !thread->is_crashing())
-            thread->track_lock_release(rank);
+            thread->track_lock_release(rank, change_state);
     }
 }
 

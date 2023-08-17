@@ -38,6 +38,6 @@ enum class LockRank : int {
 
 AK_ENUM_BITWISE_OPERATORS(LockRank);
 
-void track_lock_acquire(LockRank);
-void track_lock_release(LockRank);
+[[nodiscard]] bool track_lock_acquire(LockRank);
+void track_lock_release(LockRank, bool change_state);
 }

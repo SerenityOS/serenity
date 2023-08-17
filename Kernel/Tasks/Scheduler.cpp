@@ -184,7 +184,10 @@ UNMAP_AFTER_INIT void Scheduler::start()
 
     // We need to acquire our scheduler lock, which will be released
     // by the idle thread once control transferred there
-    g_scheduler_lock.lock();
+    auto key = g_scheduler_lock.lock();
+    // FIXME: InterruptsEnabled check
+    // FIXME: Remove the None check
+    VERIFY(key.affect_lock_rank || g_scheduler_lock.rank() == LockRank::None);
 
     auto& processor = Processor::current();
     VERIFY(processor.is_initialized());
@@ -331,7 +334,7 @@ void Scheduler::leave_on_first_switch(InterruptsState previous_interrupts_state)
     // At this point, enter_current has already be called, but because
     // Scheduler::context_switch is not in the call stack we need to
     // clean up and release locks manually here
-    g_scheduler_lock.unlock(previous_interrupts_state);
+    g_scheduler_lock.unlock({ .interrupts_state = previous_interrupts_state, .affect_lock_rank = true });
 
     VERIFY(Processor::current_in_scheduler());
     Processor::set_current_in_scheduler(false);
@@ -352,7 +355,10 @@ void Scheduler::prepare_for_idle_loop()
     // This is called when the CPU finished setting up the idle loop
     // and is about to run it. We need to acquire the scheduler lock
     VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
-    g_scheduler_lock.lock();
+    auto key = g_scheduler_lock.lock();
+    // FIXME: InterruptsEnabled check
+    // FIXME: Remove the None check
+    VERIFY(key.affect_lock_rank || g_scheduler_lock.rank() == LockRank::None);
 
     VERIFY(!Processor::current_in_scheduler());
     Processor::set_current_in_scheduler(true);
