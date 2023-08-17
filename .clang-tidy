@@ -32,6 +32,7 @@ Checks: >
   -cert-dcl21-cpp,
   -misc-no-recursion,
   -misc-non-private-member-variables-in-classes,
+  -misc-use-anonymous-namespace,
   -performance-noexcept-move-constructor,
   -performance-no-int-to-ptr,
   -readability-braces-around-statements,
