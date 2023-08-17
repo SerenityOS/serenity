@@ -20,6 +20,7 @@
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
 #include <LibWeb/CSS/Parser/Dimension.h>
 #include <LibWeb/CSS/Parser/Function.h>
+#include <LibWeb/CSS/Parser/ParsingContext.h>
 #include <LibWeb/CSS/Parser/Rule.h>
 #include <LibWeb/CSS/Parser/TokenStream.h>
 #include <LibWeb/CSS/Parser/Tokenizer.h>
@@ -35,30 +36,6 @@
 #include <LibWeb/Forward.h>
 
 namespace Web::CSS::Parser {
-
-class ParsingContext {
-public:
-    explicit ParsingContext(JS::Realm&);
-    explicit ParsingContext(DOM::Document const&);
-    explicit ParsingContext(DOM::Document const&, AK::URL);
-    explicit ParsingContext(DOM::ParentNode&);
-
-    bool in_quirks_mode() const;
-    DOM::Document const* document() const { return m_document; }
-    HTML::Window const* window() const;
-    AK::URL complete_url(StringView) const;
-
-    PropertyID current_property_id() const { return m_current_property_id; }
-    void set_current_property_id(PropertyID property_id) { m_current_property_id = property_id; }
-
-    JS::Realm& realm() const { return m_realm; }
-
-private:
-    JS::NonnullGCPtr<JS::Realm> m_realm;
-    JS::GCPtr<DOM::Document const> m_document;
-    PropertyID m_current_property_id { PropertyID::Invalid };
-    AK::URL m_url;
-};
 
 class Parser {
 public:
