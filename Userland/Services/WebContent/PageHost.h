@@ -88,6 +88,8 @@ private:
     virtual void page_did_middle_click_link(const URL&, DeprecatedString const& target, unsigned modifiers) override;
     virtual void page_did_request_context_menu(Web::CSSPixelPoint) override;
     virtual void page_did_request_link_context_menu(Web::CSSPixelPoint, URL const&, DeprecatedString const& target, unsigned modifiers) override;
+    virtual void page_did_request_image_context_menu(Web::CSSPixelPoint, const URL&, DeprecatedString const& target, unsigned modifiers, Gfx::Bitmap const*) override;
+    virtual void page_did_request_media_context_menu(Web::CSSPixelPoint, DeprecatedString const& target, unsigned modifiers, Web::Page::MediaContextMenu) override;
     virtual void page_did_start_loading(const URL&, bool) override;
     virtual void page_did_create_main_document() override;
     virtual void page_did_finish_loading(const URL&) override;
@@ -98,8 +100,6 @@ private:
     virtual void page_did_request_accept_dialog() override;
     virtual void page_did_request_dismiss_dialog() override;
     virtual void page_did_change_favicon(Gfx::Bitmap const&) override;
-    virtual void page_did_request_image_context_menu(Web::CSSPixelPoint, const URL&, DeprecatedString const& target, unsigned modifiers, Gfx::Bitmap const*) override;
-    virtual void page_did_request_media_context_menu(Web::CSSPixelPoint, DeprecatedString const& target, unsigned modifiers, Web::Page::MediaContextMenu) override;
     virtual Vector<Web::Cookie::Cookie> page_did_request_all_cookies(URL const&) override;
     virtual Optional<Web::Cookie::Cookie> page_did_request_named_cookie(URL const&, DeprecatedString const&) override;
     virtual DeprecatedString page_did_request_cookie(const URL&, Web::Cookie::Source) override;

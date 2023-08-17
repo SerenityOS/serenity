@@ -299,6 +299,17 @@ void PageHost::page_did_request_link_context_menu(Web::CSSPixelPoint content_pos
     m_client.async_did_request_link_context_menu(page().css_to_device_point(content_position).to_type<int>(), url, target, modifiers);
 }
 
+void PageHost::page_did_request_image_context_menu(Web::CSSPixelPoint content_position, URL const& url, DeprecatedString const& target, unsigned modifiers, Gfx::Bitmap const* bitmap_pointer)
+{
+    auto bitmap = bitmap_pointer ? bitmap_pointer->to_shareable_bitmap() : Gfx::ShareableBitmap();
+    m_client.async_did_request_image_context_menu({ content_position.x().to_int(), content_position.y().to_int() }, url, target, modifiers, bitmap);
+}
+
+void PageHost::page_did_request_media_context_menu(Web::CSSPixelPoint content_position, DeprecatedString const& target, unsigned modifiers, Web::Page::MediaContextMenu menu)
+{
+    m_client.async_did_request_media_context_menu({ content_position.x().to_int(), content_position.y().to_int() }, target, modifiers, move(menu));
+}
+
 void PageHost::page_did_request_alert(String const& message)
 {
     m_client.async_did_request_alert(message);
@@ -367,17 +378,6 @@ void PageHost::page_did_request_dismiss_dialog()
 void PageHost::page_did_change_favicon(Gfx::Bitmap const& favicon)
 {
     m_client.async_did_change_favicon(favicon.to_shareable_bitmap());
-}
-
-void PageHost::page_did_request_image_context_menu(Web::CSSPixelPoint content_position, URL const& url, DeprecatedString const& target, unsigned modifiers, Gfx::Bitmap const* bitmap_pointer)
-{
-    auto bitmap = bitmap_pointer ? bitmap_pointer->to_shareable_bitmap() : Gfx::ShareableBitmap();
-    m_client.async_did_request_image_context_menu({ content_position.x().to_int(), content_position.y().to_int() }, url, target, modifiers, bitmap);
-}
-
-void PageHost::page_did_request_media_context_menu(Web::CSSPixelPoint content_position, DeprecatedString const& target, unsigned modifiers, Web::Page::MediaContextMenu menu)
-{
-    m_client.async_did_request_media_context_menu({ content_position.x().to_int(), content_position.y().to_int() }, target, modifiers, move(menu));
 }
 
 Vector<Web::Cookie::Cookie> PageHost::page_did_request_all_cookies(URL const& url)
