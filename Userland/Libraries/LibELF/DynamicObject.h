@@ -84,6 +84,12 @@ public:
         }
         DynamicObject const& object() const { return m_dynamic; }
 
+        // This might return false even if the two Symbol objects resolve to the same thing.
+        bool definitely_equals(Symbol const& other) const
+        {
+            return &m_dynamic == &other.m_dynamic && &m_sym == &other.m_sym && m_index == other.m_index;
+        }
+
     private:
         DynamicObject const& m_dynamic;
         const ElfW(Sym) & m_sym;

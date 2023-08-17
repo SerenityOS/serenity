@@ -209,8 +209,9 @@ void DynamicLoader::do_main_relocations()
 {
     do_relr_relocations();
 
+    Optional<DynamicLoader::CachedLookupResult> cached_result;
     m_dynamic_object->relocation_section().for_each_relocation([&](DynamicObject::Relocation const& relocation) {
-        switch (do_direct_relocation(relocation, ShouldInitializeWeak::No, ShouldCallIfuncResolver::No)) {
+        switch (do_direct_relocation(relocation, cached_result, ShouldInitializeWeak::No, ShouldCallIfuncResolver::No)) {
         case RelocationResult::Failed:
             dbgln("Loader.so: {} unresolved symbol '{}'", m_filepath, relocation.symbol().name());
             VERIFY_NOT_REACHED();
@@ -281,8 +282,9 @@ Result<NonnullRefPtr<DynamicObject>, DlErrorMessage> DynamicLoader::load_stage_3
         VERIFY(result == RelocationResult::Success);
     }
 
+    Optional<DynamicLoader::CachedLookupResult> cached_result;
     for (auto const& relocation : m_direct_ifunc_relocations) {
-        auto result = do_direct_relocation(relocation, ShouldInitializeWeak::No, ShouldCallIfuncResolver::Yes);
+        auto result = do_direct_relocation(relocation, cached_result, ShouldInitializeWeak::No, ShouldCallIfuncResolver::Yes);
         VERIFY(result == RelocationResult::Success);
     }
 
@@ -321,8 +323,9 @@ void DynamicLoader::load_stage_4()
 
 void DynamicLoader::do_lazy_relocations()
 {
+    Optional<DynamicLoader::CachedLookupResult> cached_result;
     for (auto const& relocation : m_unresolved_relocations) {
-        if (auto res = do_direct_relocation(relocation, ShouldInitializeWeak::Yes, ShouldCallIfuncResolver::Yes); res != RelocationResult::Success) {
+        if (auto res = do_direct_relocation(relocation, cached_result, ShouldInitializeWeak::Yes, ShouldCallIfuncResolver::Yes); res != RelocationResult::Success) {
             dbgln("Loader.so: {} unresolved symbol '{}'", m_filepath, relocation.symbol().name());
             VERIFY_NOT_REACHED();
         }
@@ -522,7 +525,10 @@ void DynamicLoader::load_program_headers()
     }
 }
 
-DynamicLoader::RelocationResult DynamicLoader::do_direct_relocation(DynamicObject::Relocation const& relocation, ShouldInitializeWeak should_initialize_weak, ShouldCallIfuncResolver should_call_ifunc_resolver)
+DynamicLoader::RelocationResult DynamicLoader::do_direct_relocation(DynamicObject::Relocation const& relocation,
+    Optional<DynamicLoader::CachedLookupResult>& cached_result,
+    ShouldInitializeWeak should_initialize_weak,
+    ShouldCallIfuncResolver should_call_ifunc_resolver)
 {
     FlatPtr* patch_ptr = nullptr;
     if (is_dynamic())
@@ -534,12 +540,21 @@ DynamicLoader::RelocationResult DynamicLoader::do_direct_relocation(DynamicObjec
         return VirtualAddress { reinterpret_cast<DynamicObject::IfuncResolver>(address.get())() };
     };
 
+    auto lookup_symbol = [&](DynamicObject::Symbol const& symbol) {
+        // The static linker sorts relocations by the referenced symbol. Especially when vtables
+        // in large inheritance hierarchies are involved, there might be tens of references to
+        // the same symbol. We can avoid redundant lookups by keeping track of the previous result.
+        if (!cached_result.has_value() || !cached_result.value().symbol.definitely_equals(symbol))
+            cached_result = DynamicLoader::CachedLookupResult { symbol, DynamicLoader::lookup_symbol(symbol) };
+        return cached_result.value().result;
+    };
+
     struct ResolvedTLSSymbol {
         DynamicObject const& dynamic_object;
         FlatPtr value;
     };
 
-    auto resolve_tls_symbol = [](DynamicObject::Relocation const& relocation) -> Optional<ResolvedTLSSymbol> {
+    auto resolve_tls_symbol = [&](DynamicObject::Relocation const& relocation) -> Optional<ResolvedTLSSymbol> {
         if (relocation.symbol_index() == 0)
             return ResolvedTLSSymbol { relocation.dynamic_object(), 0 };
 
