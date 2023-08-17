@@ -346,6 +346,11 @@ bool is_whitespace(StringView str)
     return all_of(str, is_ascii_space);
 }
 
+bool is_alphanumeric(StringView str)
+{
+    return all_of(str, is_ascii_alphanumeric);
+}
+
 StringView trim(StringView str, StringView characters, TrimMode mode)
 {
     size_t substring_start = 0;

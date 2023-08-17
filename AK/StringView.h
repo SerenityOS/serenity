@@ -322,6 +322,11 @@ public:
         return StringUtils::is_whitespace(*this);
     }
 
+    [[nodiscard]] bool is_alphanumeric() const
+    {
+        return StringUtils::is_alphanumeric(*this);
+    }
+
 #ifndef KERNEL
     [[nodiscard]] DeprecatedString replace(StringView needle, StringView replacement, ReplaceMode) const;
 #endif
