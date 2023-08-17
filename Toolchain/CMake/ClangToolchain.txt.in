@@ -40,3 +40,8 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
+
+# Sets a common default architecture for all toolchains. Be sure to update this in GNUToolchain as well!
+if("${SERENITY_ARCH}" STREQUAL "riscv64")
+    add_compile_options(-march=rv64gc)
+endif()
