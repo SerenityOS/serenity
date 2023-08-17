@@ -5,3 +5,8 @@
 Remove android-specific SDL hint
 
 
+## `0002-Add-required-const-to-char-declarations.patch`
+
+Add required const to char* declarations
+
+

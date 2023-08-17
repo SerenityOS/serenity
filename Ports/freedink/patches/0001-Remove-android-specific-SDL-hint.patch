@@ -8,7 +8,7 @@ Subject: [PATCH] Remove android-specific SDL hint
  1 file changed, 4 deletions(-)
 
 diff --git a/src/input.cpp b/src/input.cpp
-index b5ae21e..b6ac494 100644
+index b5ae21e24b802245e4d8a102b2ff820d4ceeea94..b6ac4947cc5f7991b7f8b79da34da24aee5d048d 100644
 --- a/src/input.cpp
 +++ b/src/input.cpp
 @@ -89,10 +89,6 @@ void input_init(void)
