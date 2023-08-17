@@ -534,6 +534,8 @@ void GridFormattingContext::place_item_with_no_declared_position(Box const& chil
         row_span = child_box.computed_values().grid_row_end().raw_value();
     auto found_unoccupied_area = false;
 
+    auto const& auto_flow = grid_container().computed_values().grid_auto_flow();
+
     while (true) {
         while (auto_placement_cursor_x <= m_occupation_grid.max_column_index()) {
             if (auto_placement_cursor_x + static_cast<int>(column_span) <= m_occupation_grid.max_column_index() + 1) {
@@ -562,9 +564,13 @@ void GridFormattingContext::place_item_with_no_declared_position(Box const& chil
         // row position (creating new rows in the implicit grid as necessary), set its column position to the
         // start-most column line in the implicit grid, and return to the previous step.
         if (!found_unoccupied_area) {
-            auto_placement_cursor_x = m_occupation_grid.min_column_index();
-            auto_placement_cursor_y++;
-            row_start = auto_placement_cursor_y;
+            if (auto_flow.row) {
+                auto_placement_cursor_x = m_occupation_grid.min_column_index();
+                auto_placement_cursor_y++;
+            } else {
+                m_occupation_grid.set_max_column_index(auto_placement_cursor_x);
+                auto_placement_cursor_y = m_occupation_grid.min_row_index();
+            }
         }
     }
 
