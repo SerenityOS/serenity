@@ -51,7 +51,7 @@ public:
 
     InlineLevelIterator(Layout::InlineFormattingContext&, LayoutState&, Layout::BlockContainer const&, LayoutMode);
 
-    Optional<Item> next(AvailableSize available_width);
+    Optional<Item> next();
 
 private:
     void skip_to_next();
