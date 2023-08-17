@@ -10,6 +10,7 @@
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/SinglyLinkedList.h>
+#include <AK/Time.h>
 #include <Kernel/Library/LockWeakPtr.h>
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Net/IPv4Socket.h>
@@ -215,11 +216,11 @@ private:
     u32 m_duplicate_acks { 0 };
 
     u32 m_last_ack_number_sent { 0 };
-    UnixDateTime m_last_ack_sent_time;
+    MonotonicTime m_last_ack_sent_time;
 
     // FIXME: Make this configurable (sysctl)
     static constexpr u32 maximum_retransmits = 5;
-    UnixDateTime m_last_retransmit_time;
+    MonotonicTime m_last_retransmit_time;
     u32 m_retransmit_attempts { 0 };
 
     // Default to maximum window size. receive_tcp_packet() will update from the

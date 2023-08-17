@@ -19,6 +19,7 @@
 #include <Kernel/Net/TCPSocket.h>
 #include <Kernel/Security/Random.h>
 #include <Kernel/Tasks/Process.h>
+#include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
 
@@ -165,8 +166,9 @@ void TCPSocket::release_for_accept(NonnullRefPtr<TCPSocket> socket)
 
 TCPSocket::TCPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer, NonnullOwnPtr<KBuffer> scratch_buffer)
     : IPv4Socket(SOCK_STREAM, protocol, move(receive_buffer), move(scratch_buffer))
+    , m_last_ack_sent_time(TimeManagement::the().monotonic_time())
+    , m_last_retransmit_time(TimeManagement::the().monotonic_time())
 {
-    m_last_retransmit_time = kgettimeofday();
 }
 
 TCPSocket::~TCPSocket()
@@ -258,7 +260,7 @@ ErrorOr<void> TCPSocket::send_tcp_packet(u16 flags, UserOrKernelBuffer const* pa
 
     if (flags & TCPFlags::ACK) {
         m_last_ack_number_sent = m_ack_number;
-        m_last_ack_sent_time = kgettimeofday();
+        m_last_ack_sent_time = TimeManagement::the().monotonic_time();
         tcp_packet.set_ack_number(m_ack_number);
     }
 
@@ -358,7 +360,7 @@ bool TCPSocket::should_delay_next_ack() const
         return false;
 
     // RFC 1122 says we should not delay ACKs for more than 500 milliseconds.
-    if (kgettimeofday() >= m_last_ack_sent_time + Duration::from_milliseconds(500))
+    if (TimeManagement::the().monotonic_time(TimePrecision::Precise) >= m_last_ack_sent_time + Duration::from_milliseconds(500))
         return false;
 
     return true;
@@ -585,7 +587,7 @@ void TCPSocket::dequeue_for_retransmit()
 
 void TCPSocket::retransmit_packets()
 {
-    auto now = kgettimeofday();
+    auto now = TimeManagement::the().monotonic_time();
 
     // RFC6298 says we should have at least one second between retransmits. According to
     // RFC1122 we must do exponential backoff - even for SYN packets.
