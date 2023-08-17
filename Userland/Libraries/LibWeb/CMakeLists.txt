@@ -58,6 +58,7 @@ set(SOURCES
     CSS/Parser/Parser.cpp
     CSS/Parser/ParsingContext.cpp
     CSS/Parser/Rule.cpp
+    CSS/Parser/SelectorParsing.cpp
     CSS/Parser/Token.cpp
     CSS/Parser/Tokenizer.cpp
     CSS/PercentageOr.cpp
