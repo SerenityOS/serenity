@@ -61,8 +61,8 @@ Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, 
         auto const distance_from = [&](float v, float a, float b, auto distance_function) {
             return distance_function(fabs(a - v), fabs(b - v));
         };
-        auto x_dist = distance_from(center.x(), size.left(), size.right() - 1, distance_function);
-        auto y_dist = distance_from(center.y(), size.top(), size.bottom() - 1, distance_function);
+        auto x_dist = distance_from(center.x(), size.left(), size.right(), distance_function);
+        auto y_dist = distance_from(center.y(), size.top(), size.bottom(), distance_function);
         if (m_properties.ending_shape == EndingShape::Circle) {
             auto dist = distance_function(x_dist, y_dist);
             return Gfx::FloatSize { dist, dist };
@@ -81,20 +81,20 @@ Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, 
 
     auto const corner_distance = [&](auto distance_compare, Gfx::FloatPoint& corner) {
         auto top_left_distance = size.top_left().distance_from(center);
-        auto top_right_distance = size.top_right().moved_left(1).distance_from(center);
-        auto bottom_right_distance = size.bottom_right().translated(-1).distance_from(center);
-        auto bottom_left_distance = size.bottom_left().moved_up(1).distance_from(center);
+        auto top_right_distance = size.top_right().distance_from(center);
+        auto bottom_right_distance = size.bottom_right().distance_from(center);
+        auto bottom_left_distance = size.bottom_left().distance_from(center);
         auto distance = top_left_distance;
         if (distance_compare(top_right_distance, distance)) {
-            corner = size.top_right().translated(-1, 0);
+            corner = size.top_right();
             distance = top_right_distance;
         }
         if (distance_compare(bottom_right_distance, distance)) {
-            corner = size.top_right().translated(-1, 0);
+            corner = size.top_right();
             distance = bottom_right_distance;
         }
         if (distance_compare(bottom_left_distance, distance)) {
-            corner = size.top_right().translated(-1, 0);
+            corner = size.top_right();
             distance = bottom_left_distance;
         }
         return distance;
