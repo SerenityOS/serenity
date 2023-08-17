@@ -9,11 +9,12 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/SourceLocation.h>
 
 namespace JS {
 
-void register_safe_function_closure(void*, size_t);
-void unregister_safe_function_closure(void*, size_t);
+void register_safe_function_closure(void*, size_t, SourceLocation*);
+void unregister_safe_function_closure(void*, size_t, SourceLocation*);
 
 template<typename>
 class SafeFunction;
@@ -38,7 +39,7 @@ public:
         if (!m_size)
             return;
         if (auto* wrapper = callable_wrapper())
-            register_safe_function_closure(wrapper, m_size);
+            register_safe_function_closure(wrapper, m_size, &m_location);
     }
 
     void unregister_closure()
@@ -46,24 +47,27 @@ public:
         if (!m_size)
             return;
         if (auto* wrapper = callable_wrapper())
-            unregister_safe_function_closure(wrapper, m_size);
+            unregister_safe_function_closure(wrapper, m_size, &m_location);
     }
 
     template<typename CallableType>
-    SafeFunction(CallableType&& callable)
+    SafeFunction(CallableType&& callable, SourceLocation location = SourceLocation::current())
     requires((AK::IsFunctionObject<CallableType> && IsCallableWithArguments<CallableType, Out, In...> && !IsSame<RemoveCVReference<CallableType>, SafeFunction>))
+        : m_location(location)
     {
         init_with_callable(forward<CallableType>(callable), CallableKind::FunctionObject);
     }
 
     template<typename FunctionType>
-    SafeFunction(FunctionType f)
+    SafeFunction(FunctionType f, SourceLocation location = SourceLocation::current())
     requires((AK::IsFunctionPointer<FunctionType> && IsCallableWithArguments<RemovePointer<FunctionType>, Out, In...> && !IsSame<RemoveCVReference<FunctionType>, SafeFunction>))
+        : m_location(location)
     {
         init_with_callable(move(f), CallableKind::FunctionPointer);
     }
 
     SafeFunction(SafeFunction&& other)
+        : m_location(move(other.m_location))
     {
         move_from(move(other));
     }
@@ -215,6 +219,7 @@ private:
         VERIFY(m_kind == FunctionKind::NullPointer);
         auto* other_wrapper = other.callable_wrapper();
         m_size = other.m_size;
+        AK::TypedTransfer<SourceLocation>::move(&m_location, &other.m_location, 1);
         switch (other.m_kind) {
         case FunctionKind::NullPointer:
             break;
@@ -225,8 +230,10 @@ private:
             register_closure();
             break;
         case FunctionKind::Outline:
+            other.unregister_closure();
             *bit_cast<CallableWrapperBase**>(&m_storage) = other_wrapper;
             m_kind = FunctionKind::Outline;
+            register_closure();
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -238,6 +245,7 @@ private:
     bool m_deferred_clear { false };
     mutable Atomic<u16> m_call_nesting_level { 0 };
     size_t m_size { 0 };
+    SourceLocation m_location;
 
     // Empirically determined to fit most lambdas and functions.
     static constexpr size_t inline_capacity = 4 * sizeof(void*);
