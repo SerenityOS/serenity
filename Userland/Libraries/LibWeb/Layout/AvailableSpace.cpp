@@ -17,7 +17,7 @@ AvailableSize AvailableSize::make_definite(CSSPixels value)
 
 AvailableSize AvailableSize::make_indefinite()
 {
-    return AvailableSize { Type::Indefinite, INFINITY };
+    return AvailableSize { Type::Indefinite, CSSPixels::max() };
 }
 
 AvailableSize AvailableSize::make_min_content()
@@ -27,7 +27,7 @@ AvailableSize AvailableSize::make_min_content()
 
 AvailableSize AvailableSize::make_max_content()
 {
-    return AvailableSize { Type::MaxContent, INFINITY };
+    return AvailableSize { Type::MaxContent, CSSPixels::max() };
 }
 
 DeprecatedString AvailableSize::to_deprecated_string() const

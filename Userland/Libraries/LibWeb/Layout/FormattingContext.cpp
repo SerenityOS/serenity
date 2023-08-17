@@ -1521,7 +1521,7 @@ CSSPixels FormattingContext::containing_block_width_for(NodeWithStyleAndBoxModel
     case SizeConstraint::MinContent:
         return 0;
     case SizeConstraint::MaxContent:
-        return INFINITY;
+        return CSSPixels::max();
     case SizeConstraint::None:
         return containing_block_state.content_width();
     }
@@ -1537,7 +1537,7 @@ CSSPixels FormattingContext::containing_block_height_for(NodeWithStyleAndBoxMode
     case SizeConstraint::MinContent:
         return 0;
     case SizeConstraint::MaxContent:
-        return INFINITY;
+        return CSSPixels::max();
     case SizeConstraint::None:
         return containing_block_state.content_height();
     }
