@@ -3467,54 +3467,22 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_builtin_value(ComponentValue const& co
     return nullptr;
 }
 
-ErrorOr<RefPtr<CalculatedStyleValue>> Parser::parse_calculated_value(Vector<ComponentValue> const& component_values)
+ErrorOr<RefPtr<CalculatedStyleValue>> Parser::parse_calculated_value(ComponentValue const& component_value)
 {
-    auto calculation_tree = TRY(parse_a_calculation(component_values));
-
-    if (calculation_tree == nullptr) {
-        dbgln_if(CSS_PARSER_DEBUG, "Failed to parse calculation tree");
+    if (!component_value.is_function())
         return nullptr;
-    } else {
-        if constexpr (CSS_PARSER_DEBUG) {
-            dbgln("Parsed calculation tree:");
-            StringBuilder builder;
-            TRY(calculation_tree->dump(builder, 0));
-            dbgln(builder.string_view());
-        }
-    }
 
-    auto calc_type = calculation_tree->determine_type(m_context.current_property_id());
-    if (!calc_type.has_value()) {
-        dbgln_if(CSS_PARSER_DEBUG, "calc() resolved as invalid!!!");
+    auto const& function = component_value.function();
+
+    auto function_node = TRY(parse_a_calc_function_node(function));
+    if (!function_node)
         return nullptr;
-    }
-    dbgln_if(CSS_PARSER_DEBUG, "Deduced calc() resolved type as: {}", calc_type->dump());
 
-    return CalculatedStyleValue::create(calculation_tree.release_nonnull(), calc_type.release_value());
-}
+    auto function_type = function_node->determine_type(m_context.current_property_id());
+    if (!function_type.has_value())
+        return nullptr;
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_dynamic_value(ComponentValue const& component_value)
-{
-    if (component_value.is_function()) {
-        auto const& function = component_value.function();
-
-        if (function.name().equals_ignoring_ascii_case("var"sv)) {
-            // Declarations using `var()` should already be parsed as an UnresolvedStyleValue before this point.
-            VERIFY_NOT_REACHED();
-        }
-
-        auto function_node = TRY(parse_a_calc_function_node(function));
-        if (!function_node)
-            return nullptr;
-
-        auto function_type = function_node->determine_type(m_context.current_property_id());
-        if (!function_type.has_value())
-            return nullptr;
-
-        return CalculatedStyleValue::create(function_node.release_nonnull(), function_type.release_value());
-    }
-
-    return nullptr;
+    return CalculatedStyleValue::create(function_node.release_nonnull(), function_type.release_value());
 }
 
 ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calc_function_node(Function const& function)
@@ -3575,8 +3543,8 @@ Optional<LengthOrCalculated> Parser::parse_source_size_value(ComponentValue cons
         return LengthOrCalculated { Length::make_auto() };
     }
 
-    if (auto dynamic_value = parse_dynamic_value(component_value); !dynamic_value.is_error() && dynamic_value.value()) {
-        return LengthOrCalculated { dynamic_value.value()->as_calculated().as_calculated() };
+    if (auto calculated_value = parse_calculated_value(component_value); !calculated_value.is_error() && calculated_value.value()) {
+        return LengthOrCalculated { calculated_value.value().release_nonnull() };
     }
 
     if (auto length = parse_length(component_value); length.has_value()) {
@@ -3607,10 +3575,10 @@ Optional<Ratio> Parser::parse_ratio(TokenStream<ComponentValue>& tokens)
         if (component_value.is(Token::Type::Number)) {
             return component_value.token().number_value();
         } else if (component_value.is_function()) {
-            auto maybe_calc = parse_dynamic_value(component_value).release_value_but_fixme_should_propagate_errors();
-            if (!maybe_calc || !maybe_calc->is_calculated() || !maybe_calc->as_calculated().resolves_to_number())
+            auto maybe_calc = parse_calculated_value(component_value).release_value_but_fixme_should_propagate_errors();
+            if (!maybe_calc || !maybe_calc->resolves_to_number())
                 return {};
-            if (auto resolved_number = maybe_calc->as_calculated().resolve_number(); resolved_number.has_value() && resolved_number.value() >= 0) {
+            if (auto resolved_number = maybe_calc->resolve_number(); resolved_number.has_value() && resolved_number.value() >= 0) {
                 return resolved_number.value();
             }
         }
@@ -5212,11 +5180,8 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_shadow_value(TokenStream<Compon
     Optional<ShadowPlacement> placement;
 
     auto possibly_dynamic_length = [&](ComponentValue const& token) -> ErrorOr<RefPtr<StyleValue>> {
-        if (auto maybe_dynamic_value = TRY(parse_dynamic_value(token))) {
-            if (!maybe_dynamic_value->is_calculated())
-                return nullptr;
-            auto const& calculated_value = maybe_dynamic_value->as_calculated();
-            if (!calculated_value.resolves_to_length())
+        if (auto calculated_value = TRY(parse_calculated_value(token))) {
+            if (!calculated_value->resolves_to_length())
                 return nullptr;
             return calculated_value;
         }
@@ -6631,14 +6596,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_value(Vector<ComponentValue>
             }
 
             auto const& value = argument_tokens.next_token();
-            RefPtr<CalculatedStyleValue> maybe_calc_value;
-            if (auto maybe_dynamic_value = TRY(parse_dynamic_value(value))) {
-                // TODO: calc() is the only dynamic value we support for now, but more will come later.
-                // FIXME: Actually, calc() should probably be parsed inside parse_dimension_value() etc,
-                //        so that it affects every use instead of us having to manually implement it.
-                VERIFY(maybe_dynamic_value->is_calculated());
-                maybe_calc_value = maybe_dynamic_value->as_calculated();
-            }
+            RefPtr<CalculatedStyleValue> maybe_calc_value = TRY(parse_calculated_value(value));
 
             switch (function_metadata.parameters[argument_index].type) {
             case TransformFunctionParameterType::Angle: {
@@ -6851,8 +6809,8 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_as_css_value(PropertyID property_id)
 Optional<CSS::GridSize> Parser::parse_grid_size(ComponentValue const& component_value)
 {
     if (component_value.is_function()) {
-        if (auto maybe_dynamic = parse_dynamic_value(component_value); !maybe_dynamic.is_error() && maybe_dynamic.value())
-            return GridSize(LengthPercentage(maybe_dynamic.release_value()->as_calculated()));
+        if (auto maybe_calculated = parse_calculated_value(component_value); !maybe_calculated.is_error() && maybe_calculated.value())
+            return GridSize(LengthPercentage(maybe_calculated.release_value().release_nonnull()));
 
         return {};
     }
@@ -7032,8 +6990,8 @@ Optional<CSS::ExplicitGridTrack> Parser::parse_track_sizing_function(ComponentVa
                 return CSS::ExplicitGridTrack(maybe_min_max_value.value());
             else
                 return {};
-        } else if (auto maybe_dynamic = parse_dynamic_value(token); !maybe_dynamic.is_error() && maybe_dynamic.value()) {
-            return CSS::ExplicitGridTrack(GridSize(LengthPercentage(maybe_dynamic.release_value()->as_calculated())));
+        } else if (auto maybe_calculated = parse_calculated_value(token); !maybe_calculated.is_error() && maybe_calculated.value()) {
+            return CSS::ExplicitGridTrack(GridSize(LengthPercentage(maybe_calculated.release_value().release_nonnull())));
         }
         return {};
     } else if (token.is(Token::Type::Ident) && token.token().ident().equals_ignoring_ascii_case("auto"sv)) {
@@ -7925,9 +7883,9 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
     // In order to not end up parsing `calc()` and other math expressions multiple times,
     // we parse it once, and then see if its resolved type matches what the property accepts.
     if (peek_token.is_function() && (property_accepts_dimension || property_accepts_numeric)) {
-        if (auto maybe_dynamic = TRY(parse_dynamic_value(peek_token)); maybe_dynamic && maybe_dynamic->is_calculated()) {
+        if (auto maybe_calculated = TRY(parse_calculated_value(peek_token)); maybe_calculated) {
             (void)tokens.next_token();
-            auto& calculated = maybe_dynamic->as_calculated();
+            auto& calculated = *maybe_calculated;
             // This is a bit sensitive to ordering: `<foo>` and `<percentage>` have to be checked before `<foo-percentage>`.
             if (calculated.resolves_to_percentage()) {
                 if (auto property = any_property_accepts_type(property_ids, ValueType::Percentage); property.has_value())
@@ -8594,13 +8552,10 @@ bool Parser::is_builtin(StringView name)
         || name.equals_ignoring_ascii_case("unset"sv);
 }
 
-ErrorOr<RefPtr<CalculatedStyleValue>> Parser::parse_calculated_value(Badge<StyleComputer>, ParsingContext const& context, Vector<ComponentValue> const& tokens)
+ErrorOr<RefPtr<CalculatedStyleValue>> Parser::parse_calculated_value(Badge<StyleComputer>, ParsingContext const& context, ComponentValue const& token)
 {
-    if (tokens.is_empty())
-        return nullptr;
-
     auto parser = TRY(Parser::create(context, ""sv));
-    return parser.parse_calculated_value(tokens);
+    return parser.parse_calculated_value(token);
 }
 
 ErrorOr<RefPtr<StyleValue>> Parser::parse_css_value(Badge<StyleComputer>, ParsingContext const& context, PropertyID property_id, Vector<ComponentValue> const& tokens)
