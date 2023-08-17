@@ -1541,7 +1541,7 @@ u8* MemoryManager::quickmap_page(PhysicalAddress const& physical_address)
 {
     VERIFY_INTERRUPTS_DISABLED();
     auto& mm_data = get_data();
-    mm_data.m_quickmap_previous_interrupts_state = mm_data.m_quickmap_in_use.lock();
+    mm_data.m_quickmap_lock_key = mm_data.m_quickmap_in_use.lock();
 
     VirtualAddress vaddr(KERNEL_QUICKMAP_PER_CPU_BASE + Processor::current_id() * PAGE_SIZE);
     u32 pte_idx = (vaddr.get() - KERNEL_PT1024_BASE) / PAGE_SIZE;
@@ -1567,7 +1567,7 @@ void MemoryManager::unquickmap_page()
     auto& pte = g_boot_info.boot_pd_kernel_pt1023[pte_idx];
     pte.clear();
     flush_tlb_local(vaddr);
-    mm_data.m_quickmap_in_use.unlock(mm_data.m_quickmap_previous_interrupts_state);
+    mm_data.m_quickmap_in_use.unlock(mm_data.m_quickmap_lock_key);
 }
 
 bool MemoryManager::validate_user_stack(AddressSpace& space, VirtualAddress vaddr) const

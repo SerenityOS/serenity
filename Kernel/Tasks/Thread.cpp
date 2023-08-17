@@ -18,6 +18,7 @@
 #include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Library/Panic.h>
+#include <Kernel/Locking/LockRank.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
 #include <Kernel/Sections.h>
@@ -1396,21 +1397,27 @@ bool Thread::should_be_stopped() const
     return process().is_stopped();
 }
 
-void Thread::track_lock_acquire(LockRank rank)
+DidAcquireLockRank Thread::track_lock_acquire(LockRank rank)
 {
     // Nothing to do for locks without a rank.
     if (rank == LockRank::None)
-        return;
+        return DidAcquireLockRank::No;
+    if (popcount(to_underlying(rank)) != 1)
+        PANIC("Trying to acquire multiple locks at once: {:#b}", to_underlying(rank));
 
     if (m_lock_rank_mask != LockRank::None) {
-        // Verify we are only attempting to take a lock of a higher rank.
-        VERIFY(m_lock_rank_mask > rank);
+        LockRank lower_ranks { to_underlying(rank) - 1 };
+        if (has_any_flag(m_lock_rank_mask, lower_ranks))
+            PANIC("Acquiring lock of higher rank than already held, currently held: {:#b}, requested: {:#b}", to_underlying(m_lock_rank_mask), to_underlying(rank));
+        if (has_flag(m_lock_rank_mask, rank))
+            return DidAcquireLockRank::No;
     }
 
     m_lock_rank_mask |= rank;
+    return DidAcquireLockRank::Yes;
 }
 
-void Thread::track_lock_release(LockRank rank)
+void Thread::track_lock_release(LockRank rank, DidAcquireLockRank change_state)
 {
     // Nothing to do for locks without a rank.
     if (rank == LockRank::None)
@@ -1437,11 +1444,15 @@ void Thread::track_lock_release(LockRank rank)
         return ((mask & mask_without_least_significant_bit) | rank) == mask;
     };
 
-    VERIFY(has_flag(m_lock_rank_mask, rank));
-    VERIFY(rank_is_a_single_bit(rank));
-    VERIFY(rank_is_in_order(m_lock_rank_mask, rank));
+    if (!has_flag(m_lock_rank_mask, rank))
+        PANIC("Trying to release lock of unheld rank, held: {:#b}, requested: {:#b}", to_underlying(m_lock_rank_mask), to_underlying(rank));
+    if (!rank_is_a_single_bit(rank))
+        PANIC("Trying to release multiple ranks at once: {:#b}", to_underlying(rank));
+    if (!rank_is_in_order(m_lock_rank_mask, rank))
+        PANIC("Trying to release higher order rank than lowest held: held: {:#b}, requested: {:#b}", to_underlying(m_lock_rank_mask), to_underlying(rank));
 
-    m_lock_rank_mask ^= rank;
+    if (change_state == DidAcquireLockRank::Yes)
+        m_lock_rank_mask &= ~rank;
 }
 
 void Thread::set_name(StringView name)

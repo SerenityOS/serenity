@@ -12,6 +12,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Library/Panic.h>
+#include <Kernel/Locking/LockRank.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/PerformanceManager.h>
 #include <Kernel/Tasks/Process.h>
@@ -184,7 +185,12 @@ UNMAP_AFTER_INIT void Scheduler::start()
 
     // We need to acquire our scheduler lock, which will be released
     // by the idle thread once control transferred there
-    g_scheduler_lock.lock();
+    auto key = g_scheduler_lock.lock();
+    // Note: We will synthesize this key in Scheduler::leave_on_first_switch
+    //       so lets make sure it's in the expected state.
+    VERIFY(key.interrupts_state == InterruptsState::Disabled);
+    // FIXME: Remove the None check, once the scheduler lock has a rank
+    VERIFY(key.affect_lock_rank == DidAcquireLockRank::Yes || g_scheduler_lock.rank() == LockRank::None);
 
     auto& processor = Processor::current();
     VERIFY(processor.is_initialized());
@@ -336,7 +342,8 @@ void Scheduler::leave_on_first_switch(InterruptsState previous_interrupts_state)
     // At this point, enter_current has already be called, but because
     // Scheduler::context_switch is not in the call stack we need to
     // clean up and release locks manually here
-    g_scheduler_lock.unlock(previous_interrupts_state);
+    // compare to Scheduler::start, Scheduler::prepare_for_idle_loop, and Process::sys$execve
+    g_scheduler_lock.unlock({ .interrupts_state = previous_interrupts_state, .affect_lock_rank = DidAcquireLockRank::Yes });
 
     VERIFY(Processor::current_in_scheduler());
     Processor::set_current_in_scheduler(false);
@@ -357,7 +364,12 @@ void Scheduler::prepare_for_idle_loop()
     // This is called when the CPU finished setting up the idle loop
     // and is about to run it. We need to acquire the scheduler lock
     VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
-    g_scheduler_lock.lock();
+    auto key = g_scheduler_lock.lock();
+    // Note: We will synthesize this key in Scheduler::leave_on_first_switch
+    //       so lets make sure it's in the expected state.
+    VERIFY(key.interrupts_state == InterruptsState::Disabled);
+    // FIXME: Remove the None check, once the scheduler lock has a rank
+    VERIFY(key.affect_lock_rank == DidAcquireLockRank::Yes || g_scheduler_lock.rank() == LockRank::None);
 
     VERIFY(!Processor::current_in_scheduler());
     Processor::set_current_in_scheduler(true);

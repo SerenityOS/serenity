@@ -997,7 +997,14 @@ ErrorOr<FlatPtr> Process::sys$execve(Userspace<Syscall::SC_execve_params const*>
         // thread. We should also still be in our critical section
         VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
         VERIFY(Processor::in_critical() == 1);
-        g_scheduler_lock.lock();
+
+        auto key = g_scheduler_lock.lock();
+        // Note: We will synthesize this key in Scheduler::leave_on_first_switch
+        //       so lets make sure it's in the expected state.
+        VERIFY(key.interrupts_state == InterruptsState::Disabled);
+        // FIXME: Remove the None check, once the scheduler lock has a rank
+        VERIFY(key.affect_lock_rank == DidAcquireLockRank::Yes || g_scheduler_lock.rank() == LockRank::None);
+
         current_thread->set_state(Thread::State::Running);
         Processor::assume_context(*current_thread, previous_interrupts_state);
         VERIFY_NOT_REACHED();

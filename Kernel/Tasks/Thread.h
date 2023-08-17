@@ -475,7 +475,7 @@ public:
         void begin_requeue()
         {
             // We need to hold the lock until we moved it over
-            m_previous_interrupts_state = m_lock.lock();
+            m_lock_key = m_lock.lock();
         }
         void finish_requeue(FutexQueue&);
 
@@ -485,7 +485,7 @@ public:
     protected:
         FutexQueue& m_futex_queue;
         u32 m_bitset { 0 };
-        InterruptsState m_previous_interrupts_state { InterruptsState::Disabled };
+        SpinlockKey m_lock_key {};
         bool m_did_unblock { false };
     };
 
@@ -944,8 +944,8 @@ public:
     u32 saved_critical() const { return m_saved_critical; }
     void save_critical(u32 critical) { m_saved_critical = critical; }
 
-    void track_lock_acquire(LockRank rank);
-    void track_lock_release(LockRank rank);
+    [[nodiscard]] DidAcquireLockRank track_lock_acquire(LockRank rank);
+    void track_lock_release(LockRank rank, DidAcquireLockRank change_state);
 
     [[nodiscard]] bool is_active() const { return m_is_active; }
 
