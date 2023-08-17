@@ -15,7 +15,7 @@ void VectorGraphic::draw_into(Painter& painter, IntRect const& dest, AffineTrans
     // This allows you to easily rotate or flip the image before painting.
     auto transformed_rect = transform.map(FloatRect { {}, size() });
     auto scale = min(float(dest.width()) / transformed_rect.width(), float(dest.height()) / transformed_rect.height());
-    auto centered = FloatRect { {}, transformed_rect.size().scaled_by(scale) }.centered_within(dest.to_type<float>());
+    auto centered = FloatRect { {}, transformed_rect.size().scaled(scale) }.centered_within(dest.to_type<float>());
     auto view_transform = AffineTransform {}
                               .translate(centered.location())
                               .multiply(AffineTransform {}.scale(scale, scale))
