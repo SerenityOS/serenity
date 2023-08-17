@@ -143,7 +143,11 @@ private:
         ResolveLater = 2,
         CallIfuncResolver = 3,
     };
-    RelocationResult do_direct_relocation(DynamicObject::Relocation const&, ShouldInitializeWeak, ShouldCallIfuncResolver);
+    struct CachedLookupResult {
+        DynamicObject::Symbol symbol;
+        Optional<DynamicObject::SymbolLookupResult> result;
+    };
+    RelocationResult do_direct_relocation(DynamicObject::Relocation const&, Optional<CachedLookupResult>&, ShouldInitializeWeak, ShouldCallIfuncResolver);
     // Will be called from _fixup_plt_entry, as part of the PLT trampoline
     static RelocationResult do_plt_relocation(DynamicObject::Relocation const&, ShouldCallIfuncResolver);
     void do_relr_relocations();
