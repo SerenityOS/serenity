@@ -140,7 +140,7 @@ RadialGradientData resolve_radial_gradient_data(Layout::NodeWithStyleAndBoxModel
     // Start center, goes right to ending point, where the gradient line intersects the ending shape
     auto resolved_color_stops = resolve_color_stop_positions(
         node, radial_gradient.color_stop_list(), [&](auto const& length_percentage) {
-            return (length_percentage.to_px(node, gradient_size.width()) / gradient_size.width()).to_float();
+            return length_percentage.to_px(node, gradient_size.width()).to_float() / gradient_size.width().to_float();
         },
         radial_gradient.is_repeating());
     return { resolved_color_stops };
