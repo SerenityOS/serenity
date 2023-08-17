@@ -2222,7 +2222,7 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
                 return found_font;
         }
 
-        if (auto found_font = FontCache::the().get(font_selector))
+        if (auto found_font = m_font_cache.get(font_selector))
             return found_font;
 
         if (auto found_font = font_matching_algorithm(key, font_size_in_pt))
@@ -2296,7 +2296,7 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
         }
     }
 
-    FontCache::the().set(font_selector, *found_font);
+    m_font_cache.set(font_selector, *found_font);
 
     return found_font;
 }
