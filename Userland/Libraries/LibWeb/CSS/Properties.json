@@ -1129,6 +1129,10 @@
     ],
     "percentages-resolve-to": "length"
   },
+  "grid-auto-flow": {
+    "inherited": false,
+    "initial": "row"
+  },
   "grid-auto-rows": {
     "inherited": false,
     "initial": "auto",

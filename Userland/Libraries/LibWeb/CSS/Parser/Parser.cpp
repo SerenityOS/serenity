@@ -53,6 +53,7 @@
 #include <LibWeb/CSS/StyleValues/FontStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FrequencyStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridAreaShorthandStyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridAutoFlowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTemplateAreaStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
@@ -5308,6 +5309,57 @@ RefPtr<StyleValue> Parser::parse_grid_track_size_list(Vector<ComponentValue> con
     return GridTrackSizeListStyleValue::create(CSS::GridTrackSizeList(track_list, line_names_list));
 }
 
+// https://www.w3.org/TR/css-grid-1/#grid-auto-flow-property
+RefPtr<GridAutoFlowStyleValue> Parser::parse_grid_auto_flow_value(Vector<ComponentValue> const& component_values)
+{
+    // [ row | column ] || dense
+    TokenStream<ComponentValue> tokens { component_values };
+    if (!tokens.has_next_token())
+        return nullptr;
+
+    auto parse_axis = [&]() -> Optional<GridAutoFlowStyleValue::Axis> {
+        auto transaction = tokens.begin_transaction();
+        auto token = tokens.next_token();
+        if (!token.is(Token::Type::Ident))
+            return {};
+        auto const& ident = token.token().ident();
+        if (ident.equals_ignoring_ascii_case("row"sv)) {
+            transaction.commit();
+            return GridAutoFlowStyleValue::Axis::Row;
+        } else if (ident.equals_ignoring_ascii_case("column"sv)) {
+            transaction.commit();
+            return GridAutoFlowStyleValue::Axis::Column;
+        }
+        return {};
+    };
+
+    auto parse_dense = [&]() -> Optional<GridAutoFlowStyleValue::Dense> {
+        auto transaction = tokens.begin_transaction();
+        auto token = tokens.next_token();
+        if (!token.is(Token::Type::Ident))
+            return {};
+        auto const& ident = token.token().ident();
+        if (ident.equals_ignoring_ascii_case("dense"sv)) {
+            transaction.commit();
+            return GridAutoFlowStyleValue::Dense::Yes;
+        }
+        return {};
+    };
+
+    Optional<GridAutoFlowStyleValue::Axis> axis;
+    Optional<GridAutoFlowStyleValue::Dense> dense;
+    if (axis = parse_axis(); axis.has_value()) {
+        dense = parse_dense();
+    } else if (dense = parse_dense(); dense.has_value()) {
+        axis = parse_axis();
+    }
+
+    if (tokens.has_next_token())
+        return nullptr;
+
+    return GridAutoFlowStyleValue::create(axis.value_or(GridAutoFlowStyleValue::Axis::Row), dense.value_or(GridAutoFlowStyleValue::Dense::No));
+}
+
 RefPtr<StyleValue> Parser::parse_grid_auto_track_sizes(Vector<ComponentValue> const& component_values)
 {
     // https://www.w3.org/TR/css-grid-2/#auto-tracks
@@ -5772,6 +5824,10 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         return ParseError::SyntaxError;
     case PropertyID::GridArea:
         if (auto parsed_value = parse_grid_area_shorthand_value(component_values))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
+    case PropertyID::GridAutoFlow:
+        if (auto parsed_value = parse_grid_auto_flow_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridTemplateAreas:

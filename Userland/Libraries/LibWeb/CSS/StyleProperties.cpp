@@ -12,6 +12,7 @@
 #include <LibWeb/CSS/StyleValues/AngleStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ContentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridAutoFlowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTemplateAreaStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
@@ -899,6 +900,15 @@ CSS::GridTrackSizeList StyleProperties::grid_template_rows() const
 {
     auto value = property(CSS::PropertyID::GridTemplateRows);
     return value->as_grid_track_size_list().grid_track_size_list();
+}
+
+CSS::GridAutoFlow StyleProperties::grid_auto_flow() const
+{
+    auto value = property(CSS::PropertyID::GridAutoFlow);
+    if (!value->is_grid_auto_flow())
+        return CSS::GridAutoFlow {};
+    auto& grid_auto_flow_value = value->as_grid_auto_flow();
+    return CSS::GridAutoFlow { .row = grid_auto_flow_value.is_row(), .dense = grid_auto_flow_value.is_dense() };
 }
 
 CSS::GridTrackPlacement StyleProperties::grid_column_end() const
