@@ -2321,7 +2321,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     auto found_font = compute_font_for_style_values(element, pseudo_element, font_family, font_size, font_style, font_weight, font_stretch);
 
     style.set_property(CSS::PropertyID::FontSize, LengthStyleValue::create(CSS::Length::make_px(found_font->pixel_size())).release_value_but_fixme_should_propagate_errors(), nullptr);
-    style.set_property(CSS::PropertyID::FontWeight, NumberStyleValue::create(found_font->weight()).release_value_but_fixme_should_propagate_errors(), nullptr);
+    style.set_property(CSS::PropertyID::FontWeight, NumberStyleValue::create(font_weight->to_font_weight()).release_value_but_fixme_should_propagate_errors());
 
     style.set_computed_font(found_font.release_nonnull());
 
