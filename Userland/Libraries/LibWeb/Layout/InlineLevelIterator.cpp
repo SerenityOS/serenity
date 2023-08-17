@@ -124,7 +124,7 @@ void InlineLevelIterator::skip_to_next()
     compute_next();
 }
 
-Optional<InlineLevelIterator::Item> InlineLevelIterator::next(AvailableSize available_width)
+Optional<InlineLevelIterator::Item> InlineLevelIterator::next()
 {
     if (!m_current_node)
         return {};
@@ -139,7 +139,7 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next(AvailableSize avai
         if (!chunk_opt.has_value()) {
             m_text_node_context = {};
             skip_to_next();
-            return next(available_width);
+            return next();
         }
 
         m_text_node_context->next_chunk = m_text_node_context->chunk_iterator.next();
@@ -200,12 +200,12 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next(AvailableSize avai
 
     if (is<Layout::ListItemMarkerBox>(*m_current_node)) {
         skip_to_next();
-        return next(available_width);
+        return next();
     }
 
     if (!is<Layout::Box>(*m_current_node)) {
         skip_to_next();
-        return next(available_width);
+        return next();
     }
 
     if (is<Layout::ReplacedBox>(*m_current_node)) {

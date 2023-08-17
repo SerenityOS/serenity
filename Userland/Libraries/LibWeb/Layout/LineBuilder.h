@@ -37,8 +37,6 @@ public:
         return false;
     }
 
-    AvailableSize available_width_for_current_line() const { return m_available_width_for_current_line; }
-
     void update_last_line();
 
     void remove_last_line_if_empty();

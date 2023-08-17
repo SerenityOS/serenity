@@ -244,7 +244,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
     LineBuilder line_builder(*this, m_state);
 
     for (;;) {
-        auto item_opt = iterator.next(line_builder.available_width_for_current_line());
+        auto item_opt = iterator.next();
         if (!item_opt.has_value())
             break;
         auto& item = item_opt.value();
