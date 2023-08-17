@@ -210,6 +210,18 @@ ErrorOr<size_t> TCPSocket::protocol_send(UserOrKernelBuffer const& data, size_t 
     if (routing_decision.is_zero())
         return set_so_error(EHOSTUNREACH);
     size_t mss = routing_decision.adapter->mtu() - sizeof(IPv4Packet) - sizeof(TCPPacket);
+
+    // RFC 896 (Nagle’s algorithm): https://www.ietf.org/rfc/rfc0896
+    // "The solution is to inhibit the sending of new TCP  segments when
+    //  new  outgoing  data  arrives  from  the  user  if  any previously
+    //  transmitted data on the connection remains unacknowledged.   This
+    //  inhibition  is  to be unconditional; no timers, tests for size of
+    //  data received, or other conditions are required."
+    // FIXME: Make this configurable via TCP_NODELAY.
+    auto has_unacked_data = m_unacked_packets.with_shared([&](auto const& packets) { return packets.size > 0; });
+    if (has_unacked_data && data_length < mss)
+        return 0;
+
     data_length = min(data_length, mss);
     TRY(send_tcp_packet(TCPFlags::PSH | TCPFlags::ACK, &data, data_length, &routing_decision));
     return data_length;
