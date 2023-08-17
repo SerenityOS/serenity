@@ -11,7 +11,7 @@ namespace Web::Layout {
 
 AvailableSize AvailableSize::make_definite(CSSPixels value)
 {
-    VERIFY(isfinite(value.to_double()));
+    VERIFY(!value.might_be_saturated());
     return AvailableSize { Type::Definite, value };
 }
 
