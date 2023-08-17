@@ -278,6 +278,12 @@ BrowserWindow::BrowserWindow(Optional<URL> const& initial_url, Browser::CookieJa
         debug_request("collect-garbage");
     });
 
+    auto* dump_gc_graph_action = new QAction("Dump GC graph", this);
+    debug_menu->addAction(dump_gc_graph_action);
+    QObject::connect(dump_gc_graph_action, &QAction::triggered, this, [this] {
+        debug_request("dump-gc-graph");
+    });
+
     auto* clear_cache_action = new QAction("Clear &Cache", this);
     clear_cache_action->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_C));
     clear_cache_action->setIcon(QIcon(QString("%1/res/icons/browser/clear-cache.png").arg(s_serenity_resource_root.characters())));
