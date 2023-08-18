@@ -48,16 +48,13 @@ enum class HitTestType {
     TextCursor, // Clicking past the right/bottom edge of text will still hit the text
 };
 
-class Paintable : public JS::Cell {
+class Paintable
+    : public JS::Cell
+    , public TreeNode<Paintable> {
     JS_CELL(Paintable, Cell);
 
 public:
     virtual ~Paintable() = default;
-
-    Paintable const* first_child() const;
-    Paintable const* last_child() const;
-    Paintable const* next_sibling() const;
-    Paintable const* previous_sibling() const;
 
     template<typename U, typename Callback>
     TraversalDecision for_each_in_inclusive_subtree_of_type(Callback callback) const

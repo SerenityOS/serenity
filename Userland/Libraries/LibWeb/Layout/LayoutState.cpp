@@ -196,7 +196,24 @@ void LayoutState::resolve_relative_positions(Vector<Painting::PaintableWithLines
     }
 }
 
-void LayoutState::commit()
+static void build_paint_tree(Node& node, Painting::Paintable* parent_paintable = nullptr)
+{
+    if (!node.paintable())
+        return;
+    auto& paintable = const_cast<Painting::Paintable&>(*node.paintable());
+    if (parent_paintable) {
+        // In case this was a relayout of an existing tree, we need to remove the paintable from its old parent first.
+        if (auto* old_parent = paintable.parent()) {
+            old_parent->remove_child(paintable);
+        }
+        parent_paintable->append_child(paintable);
+    }
+    for (auto* child = node.first_child(); child; child = child->next_sibling()) {
+        build_paint_tree(*child, &paintable);
+    }
+}
+
+void LayoutState::commit(Box& root)
 {
     // Only the top-level LayoutState should ever be committed.
     VERIFY(!m_parent);
@@ -215,12 +232,14 @@ void LayoutState::commit()
         node.box_model().border = { used_values.border_top, used_values.border_right, used_values.border_bottom, used_values.border_left };
         node.box_model().margin = { used_values.margin_top, used_values.margin_right, used_values.margin_bottom, used_values.margin_left };
 
-        node.set_paintable(node.create_paintable());
+        auto paintable = node.create_paintable();
+
+        node.set_paintable(paintable);
 
         // For boxes, transfer all the state needed for painting.
         if (is<Layout::Box>(node)) {
             auto& box = static_cast<Layout::Box const&>(node);
-            auto& paintable_box = const_cast<Painting::PaintableBox&>(*box.paintable_box());
+            auto& paintable_box = static_cast<Painting::PaintableBox&>(*paintable);
             paintable_box.set_offset(used_values.offset);
             paintable_box.set_content_size(used_values.content_width(), used_values.content_height());
             if (used_values.override_borders_data().has_value()) {
@@ -255,6 +274,11 @@ void LayoutState::commit()
         }
     }
 
+    for (auto* text_node : text_nodes)
+        text_node->set_paintable(text_node->create_paintable());
+
+    build_paint_tree(root);
+
     // Measure overflow in scroll containers.
     for (auto& it : used_values_per_layout_node) {
         auto& used_values = *it.value;
@@ -263,9 +287,6 @@ void LayoutState::commit()
         auto const& box = static_cast<Layout::Box const&>(used_values.node());
         measure_scrollable_overflow(box);
     }
-
-    for (auto* text_node : text_nodes)
-        text_node->set_paintable(text_node->create_paintable());
 }
 
 void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, UsedValues const* containing_block_used_values)

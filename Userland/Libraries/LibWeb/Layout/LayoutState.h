@@ -148,7 +148,8 @@ struct LayoutState {
         Optional<Painting::PaintableBox::TableCellCoordinates> m_table_cell_coordinates;
     };
 
-    void commit();
+    // Commits the used values produced by layout and builds a paintable tree.
+    void commit(Box& root);
 
     // NOTE: get_mutable() will CoW the UsedValues if it's inherited from an ancestor state;
     UsedValues& get_mutable(NodeWithStyleAndBoxModelMetrics const&);
