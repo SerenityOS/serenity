@@ -323,7 +323,7 @@ Web::WebDriver::Response Client::switch_to_window(Web::WebDriver::Parameters par
     if (!handle.has_value())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "No property called 'handle' present");
 
-    return session->switch_to_window(handle->as_string());
+    return session->switch_to_window(handle->to_deprecated_string());
 }
 
 // 11.4 Get Window Handles, https://w3c.github.io/webdriver/#dfn-get-window-handles
