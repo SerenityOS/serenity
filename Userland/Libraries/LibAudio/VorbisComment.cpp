@@ -12,6 +12,20 @@
 
 namespace Audio {
 
+static StringView vorbis_field_for_role(Person::Role role)
+{
+    static HashMap<Person::Role, StringView> role_map {
+        { Person::Role::Artist, "ARTIST"sv },
+        { Person::Role::Performer, "PERFORMER"sv },
+        { Person::Role::Lyricist, "LYRICIST"sv },
+        { Person::Role::Conductor, "CONDUCTOR"sv },
+        { Person::Role::Publisher, "PUBLISHER"sv },
+        { Person::Role::Engineer, "ENCODED-BY"sv },
+        { Person::Role::Composer, "COMPOSER"sv },
+    };
+    return role_map.get(role).value();
+}
+
 // "Content vector format"
 static ErrorOr<void> read_vorbis_field(Metadata& metadata_to_write_into, String const& unparsed_user_comment)
 {
@@ -71,21 +85,21 @@ static ErrorOr<void> read_vorbis_field(Metadata& metadata_to_write_into, String 
             TRY(metadata_to_write_into.add_miscellaneous(field_name, contents));
         else
             metadata_to_write_into.unparsed_time = contents;
-    } else if (field_name == "PERFORMER"sv) {
+    } else if (field_name == vorbis_field_for_role(Person::Role::Performer)) {
         TRY(metadata_to_write_into.add_person(Person::Role::Performer, contents));
-    } else if (field_name == "ARTIST"sv) {
+    } else if (field_name == vorbis_field_for_role(Person::Role::Artist)) {
         TRY(metadata_to_write_into.add_person(Person::Role::Artist, contents));
-    } else if (field_name == "COMPOSER"sv) {
+    } else if (field_name == vorbis_field_for_role(Person::Role::Composer)) {
         TRY(metadata_to_write_into.add_person(Person::Role::Composer, contents));
-    } else if (field_name == "CONDUCTOR"sv) {
+    } else if (field_name == vorbis_field_for_role(Person::Role::Conductor)) {
         TRY(metadata_to_write_into.add_person(Person::Role::Conductor, contents));
-    } else if (field_name == "LYRICIST"sv) {
+    } else if (field_name == vorbis_field_for_role(Person::Role::Lyricist)) {
         TRY(metadata_to_write_into.add_person(Person::Role::Lyricist, contents));
     } else if (field_name == "ORGANIZATION"sv) {
         TRY(metadata_to_write_into.add_person(Person::Role::Publisher, contents));
-    } else if (field_name == "PUBLISHER"sv) {
+    } else if (field_name == vorbis_field_for_role(Person::Role::Publisher)) {
         TRY(metadata_to_write_into.add_person(Person::Role::Publisher, contents));
-    } else if (field_name == "ENCODED-BY"sv) {
+    } else if (field_name == vorbis_field_for_role(Person::Role::Engineer)) {
         TRY(metadata_to_write_into.add_person(Person::Role::Engineer, contents));
     } else {
         TRY(metadata_to_write_into.add_miscellaneous(field_name, contents));
@@ -117,6 +131,59 @@ ErrorOr<Metadata, LoaderError> load_vorbis_comment(ByteBuffer const& vorbis_comm
     }
 
     return metadata;
+}
+
+struct VorbisCommentPair {
+    String field_name;
+    String contents;
+};
+
+static ErrorOr<Vector<VorbisCommentPair>> make_vorbis_user_comments(Metadata const& metadata)
+{
+    Vector<VorbisCommentPair> user_comments;
+
+    auto add_if_present = [&](auto field_name, auto const& value) -> ErrorOr<void> {
+        if (value.has_value())
+            TRY(user_comments.try_append(VorbisCommentPair { field_name, TRY(String::formatted("{}", value.value())) }));
+        return {};
+    };
+
+    TRY(add_if_present("TITLE"_string, metadata.title));
+    TRY(add_if_present("VERSION"_string, metadata.subtitle));
+    TRY(add_if_present("ALBUM"_string, metadata.album));
+    TRY(add_if_present("COPYRIGHT"_string, metadata.copyright));
+    TRY(add_if_present("ISRC"_string, metadata.isrc));
+    TRY(add_if_present("GENRE"_string, metadata.genre));
+    TRY(add_if_present("COMMENT"_string, metadata.comment));
+    TRY(add_if_present("TRACKNUMBER"_string, metadata.track_number));
+    TRY(add_if_present("DATE"_string, metadata.unparsed_time));
+
+    for (auto const& person : metadata.people)
+        TRY(user_comments.try_append(VorbisCommentPair { TRY(String::from_utf8(vorbis_field_for_role(person.role))), person.name }));
+
+    for (auto const& field : metadata.miscellaneous) {
+        for (auto const& value : field.value)
+            TRY(user_comments.try_append(VorbisCommentPair { field.key, value }));
+    }
+
+    return user_comments;
+}
+
+ErrorOr<void> write_vorbis_comment(Metadata const& metadata, Stream& target)
+{
+    auto encoder = metadata.encoder.value_or({}).bytes();
+    TRY(target.write_value<LittleEndian<u32>>(encoder.size()));
+    TRY(target.write_until_depleted(encoder));
+
+    auto vorbis_user_comments = TRY(make_vorbis_user_comments(metadata));
+    TRY(target.write_value<LittleEndian<u32>>(vorbis_user_comments.size()));
+    for (auto const& field : vorbis_user_comments) {
+        auto const serialized_field = TRY(String::formatted("{}={}", field.field_name, field.contents)).bytes();
+        TRY(target.write_value<LittleEndian<u32>>(serialized_field.size()));
+        TRY(target.write_until_depleted(serialized_field));
+    }
+
+    return {};
 }
 
 }
