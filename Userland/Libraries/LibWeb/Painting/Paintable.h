@@ -131,8 +131,9 @@ public:
     Layout::Node const& layout_node() const { return m_layout_node; }
     Layout::Node& layout_node() { return const_cast<Layout::Node&>(*m_layout_node); }
 
-    DOM::Node* dom_node() { return layout_node().dom_node(); }
-    DOM::Node const* dom_node() const { return layout_node().dom_node(); }
+    [[nodiscard]] JS::GCPtr<DOM::Node> dom_node();
+    [[nodiscard]] JS::GCPtr<DOM::Node const> dom_node() const;
+    void set_dom_node(JS::GCPtr<DOM::Node>);
 
     auto const& computed_values() const { return m_layout_node->computed_values(); }
 
@@ -164,6 +165,7 @@ protected:
     virtual void visit_edges(Cell::Visitor&) override;
 
 private:
+    JS::GCPtr<DOM::Node> m_dom_node;
     JS::NonnullGCPtr<Layout::Node const> m_layout_node;
     Optional<JS::GCPtr<Layout::Box const>> mutable m_containing_block;
 };
