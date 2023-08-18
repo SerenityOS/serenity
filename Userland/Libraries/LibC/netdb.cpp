@@ -45,7 +45,14 @@ static constexpr u32 lookup_server_endpoint_magic = "LookupServer"sv.hash();
 static FILE* services_file = nullptr;
 static char const* services_path = "/etc/services";
 
-static bool fill_getserv_buffers(char const* line, ssize_t read);
+struct ServiceFileLine {
+    String name;
+    String protocol;
+    int port;
+    Vector<ByteBuffer> aliases;
+};
+
+static ErrorOr<Optional<ServiceFileLine>> parse_service_file_line(char const* line, ssize_t read);
 static servent __getserv_buffer;
 static DeprecatedString __getserv_name_buffer;
 static DeprecatedString __getserv_protocol_buffer;
@@ -438,13 +445,22 @@ struct servent* getservent()
         }
     });
 
+    Optional<ServiceFileLine> service_file_line = {};
+
     // Read lines from services file until an actual service name is found.
     do {
         read = getline(&line, &len, services_file);
         service_file_offset += read;
-        if (read > 0 && (line[0] >= 65 && line[0] <= 122)) {
+
+        auto service_file_line_or_error = parse_service_file_line(line, read);
+        if (service_file_line_or_error.is_error())
+            return nullptr;
+
+        service_file_line = service_file_line_or_error.release_value();
+
+        if (service_file_line.has_value())
             break;
-        }
+
     } while (read != -1);
     if (read == -1) {
         fclose(services_file);
@@ -453,9 +469,15 @@ struct servent* getservent()
         return nullptr;
     }
 
-    servent* service_entry = nullptr;
-    if (!fill_getserv_buffers(line, read))
+    if (!service_file_line.has_value())
         return nullptr;
+
+    servent* service_entry = nullptr;
+
+    __getserv_name_buffer = service_file_line.value().name.to_deprecated_string();
+    __getserv_port_buffer = service_file_line.value().port;
+    __getserv_protocol_buffer = service_file_line.value().protocol.to_deprecated_string();
+    __getserv_alias_list_buffer = service_file_line.value().aliases;
 
     __getserv_buffer.s_name = const_cast<char*>(__getserv_name_buffer.characters());
     __getserv_buffer.s_port = htons(__getserv_port_buffer);
@@ -550,53 +572,53 @@ void endservent()
     services_file = nullptr;
 }
 
-// Fill the service entry buffer with the information contained
-// in the currently read line, returns true if successful,
-// false if failure occurs.
-static bool fill_getserv_buffers(char const* line, ssize_t read)
+static ErrorOr<Optional<ServiceFileLine>> parse_service_file_line(char const* line, ssize_t read)
 {
-    // Splitting the line by tab delimiter and filling the servent buffers name, port, and protocol members.
+    // If the line isn't a service (eg. empty or a comment)
+    if (read <= 0 || line[0] < 65 || line[0] > 122)
+        return { Optional<ServiceFileLine> {} };
+
     auto split_line = StringView(line, read).replace(" "sv, "\t"sv, ReplaceMode::All).split('\t');
 
-    // This indicates an incorrect file format.
-    // Services file entries should always at least contain
-    // name and port/protocol, separated by tabs.
-    if (split_line.size() < 2) {
-        warnln("getservent(): malformed services file");
-        return false;
-    }
-    __getserv_name_buffer = split_line[0];
+    if (split_line.size() < 2)
+        return Error::from_string_view("malformed service file"sv);
 
-    auto port_protocol_split = DeprecatedString(split_line[1]).split('/');
-    if (port_protocol_split.size() < 2) {
-        warnln("getservent(): malformed services file");
-        return false;
-    }
-    auto number = port_protocol_split[0].to_int();
-    if (!number.has_value())
-        return false;
+    auto name = TRY(String::from_deprecated_string(split_line[0]));
 
-    __getserv_port_buffer = number.value();
+    auto port_protocol = TRY(String::from_deprecated_string(split_line[1]));
+    auto port_protocol_split = TRY(port_protocol.split('/'));
 
-    // Remove any annoying whitespace at the end of the protocol.
-    __getserv_protocol_buffer = port_protocol_split[1].replace(" "sv, ""sv, ReplaceMode::All).replace("\t"sv, ""sv, ReplaceMode::All).replace("\n"sv, ""sv, ReplaceMode::All);
-    __getserv_alias_list_buffer.clear();
+    if (port_protocol_split.size() < 2)
+        return Error::from_string_view("malformed service file"sv);
 
-    // If there are aliases for the service, we will fill the alias list buffer.
+    auto port = port_protocol_split[0].to_number<int>();
+    if (!port.has_value())
+        return Error::from_string_view("port isn't a number"sv);
+
+    // Remove whitespace at the end of the protocol
+    auto protocol = TRY(port_protocol_split[1].replace(" "sv, ""sv, ReplaceMode::All));
+    protocol = TRY(protocol.replace("\t"sv, ""sv, ReplaceMode::All));
+    protocol = TRY(protocol.replace("\n"sv, ""sv, ReplaceMode::All));
+
+    Vector<ByteBuffer> aliases;
+
+    // If there are aliases for the service, we will fill the aliases list
     if (split_line.size() > 2 && !split_line[2].starts_with('#')) {
-
         for (size_t i = 2; i < split_line.size(); i++) {
             if (split_line[i].starts_with('#')) {
                 break;
             }
             auto alias = split_line[i].to_byte_buffer();
             if (alias.try_append("\0", sizeof(char)).is_error())
-                return false;
-            __getserv_alias_list_buffer.append(move(alias));
+                return Error::from_string_view("Failed to add null-byte to service alias"sv);
+
+            aliases.append(move(alias));
         }
     }
 
-    return true;
+    return ServiceFileLine {
+        name, protocol, port.value(), aliases
+    };
 }
 
 struct protoent* getprotoent()
@@ -823,11 +845,7 @@ int getaddrinfo(char const* __restrict node, char const* __restrict service, con
     long port;
     int socktype;
 
-    struct ServiceData {
-        String protocol;
-        u32 port;
-    };
-    Optional<ServiceData> service_data = {};
+    Optional<ServiceFileLine> service_file_line = {};
 
     if ((!hints || (hints->ai_flags & AI_NUMERICSERV) == 0) && service) {
         services_file = fopen(services_path, "r");
@@ -835,83 +853,42 @@ int getaddrinfo(char const* __restrict node, char const* __restrict service, con
             return EAI_FAIL;
         }
 
-        while (true) {
-            char* line = nullptr;
-            size_t length = 0;
-            ssize_t read;
+        auto close_services_file_handler = ScopeGuard([&] {
+            fclose(services_file);
+        });
 
-            // Read lines from services file until an actual service name is found.
+        char* line = nullptr;
+        size_t length = 0;
+        ssize_t read;
+
+        while (true) {
             do {
                 read = getline(&line, &length, services_file);
-                if (read > 0 && (line[0] >= 65 && line[0] <= 122)) {
+
+                auto service_file_line_or_error = parse_service_file_line(line, read);
+                if (service_file_line_or_error.is_error())
+                    return EAI_SYSTEM;
+
+                service_file_line = service_file_line_or_error.release_value();
+
+                if (service_file_line.has_value())
                     break;
-                }
             } while (read != -1);
 
-            if (read == -1) {
+            if (read == -1 || !service_file_line.has_value())
                 break;
-            }
 
-            auto split_line = StringView(line, read).replace(" "sv, "\t"sv, ReplaceMode::All).split('\t');
-            if (split_line.size() < 2)
-                return EAI_FAIL;
-
-            auto name_or_error = String::from_deprecated_string(split_line[0]);
-            if (name_or_error.is_error())
-                return EAI_SYSTEM;
-
-            auto name = name_or_error.release_value();
-            if (name != service)
+            if (service_file_line.value().name != service)
                 continue;
 
-            auto port_protocol_or_error = String::from_deprecated_string(split_line[1]);
-            if (port_protocol_or_error.is_error())
-                return EAI_SYSTEM;
-
-            auto port_protocol = port_protocol_or_error.release_value();
-
-            auto port_protocol_split_or_error = port_protocol.split('/');
-            if (port_protocol_split_or_error.is_error())
-                return EAI_SYSTEM;
-
-            auto port_protocol_split = port_protocol_split_or_error.release_value();
-
-            if (port_protocol_split.size() < 2)
-                return EAI_SYSTEM;
-
-            auto number = port_protocol_split[0].to_number<u32>();
-            if (!number.has_value())
-                return EAI_SYSTEM;
-
-            auto port = number.value();
-
-            // Remove any annoying whitespace at the end of the protocol.
-            auto protocol_or_error = port_protocol_split[1].replace(" "sv, ""sv, ReplaceMode::All);
-            if (protocol_or_error.is_error())
-                return EAI_SYSTEM;
-
-            protocol_or_error = protocol_or_error.value().replace("\t"sv, ""sv, ReplaceMode::All);
-            if (protocol_or_error.is_error())
-                return EAI_SYSTEM;
-
-            protocol_or_error = protocol_or_error.value().replace("\n"sv, ""sv, ReplaceMode::All);
-            if (protocol_or_error.is_error())
-                return EAI_SYSTEM;
-
-            auto protocol = protocol_or_error.release_value();
-
-            if (protocol != proto)
+            if (service_file_line.value().protocol != proto)
                 continue;
 
-            service_data = { { protocol,
-                port } };
             break;
         }
-
-        if (fclose(services_file) < 0)
-            return EAI_SYSTEM;
     }
-    if (!service_data.has_value()) {
+
+    if (!service_file_line.has_value()) {
         if (service) {
             char* end;
             port = htons(strtol(service, &end, 10));
@@ -926,8 +903,8 @@ int getaddrinfo(char const* __restrict node, char const* __restrict service, con
         else
             socktype = SOCK_STREAM;
     } else {
-        port = service_data.value().port;
-        socktype = service_data.value().protocol == "tcp" ? SOCK_STREAM : SOCK_DGRAM;
+        port = service_file_line.value().port;
+        socktype = service_file_line.value().protocol == "tcp" ? SOCK_STREAM : SOCK_DGRAM;
     }
 
     addrinfo* first_info = nullptr;
