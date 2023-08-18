@@ -220,7 +220,7 @@ Thread::BlockResult Thread::block_impl(BlockTimeout const& timeout, Blocker& blo
     return result;
 }
 
-void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock<LockRank::None>>& lock_lock, u32 lock_count)
+void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock<Kernel::Mutex::Rank>>& lock_lock, u32 lock_count)
 {
     VERIFY(!Processor::current_in_irq());
     VERIFY(this == Thread::current());
