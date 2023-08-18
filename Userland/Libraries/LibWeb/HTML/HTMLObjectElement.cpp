@@ -39,6 +39,12 @@ void HTMLObjectElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLObjectElementPrototype>(realm, "HTMLObjectElement"));
 }
 
+void HTMLObjectElement::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_image_request);
+}
+
 void HTMLObjectElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     NavigableContainer::attribute_changed(name, value);
@@ -316,7 +322,7 @@ void HTMLObjectElement::load_image()
     // NOTE: This currently reloads the image instead of reusing the resource we've already downloaded.
     auto data = attribute(HTML::AttributeNames::data);
     auto url = document().parse_url(data);
-    m_image_request = HTML::SharedImageRequest::get_or_create(*document().page(), url).release_value_but_fixme_should_propagate_errors();
+    m_image_request = HTML::SharedImageRequest::get_or_create(realm(), *document().page(), url);
     m_image_request->add_callbacks(
         [this] {
             run_object_representation_completed_steps(Representation::Image);

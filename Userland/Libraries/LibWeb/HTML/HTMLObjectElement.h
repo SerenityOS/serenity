@@ -45,6 +45,8 @@ public:
     // https://html.spec.whatwg.org/multipage/forms.html#category-listed
     virtual bool is_listed() const override { return true; }
 
+    virtual void visit_edges(Cell::Visitor&) override;
+
 private:
     HTMLObjectElement(DOM::Document&, DOM::QualifiedName);
 
@@ -80,7 +82,7 @@ private:
 
     RefPtr<DecodedImageData const> image_data() const;
 
-    RefPtr<SharedImageRequest> m_image_request;
+    JS::GCPtr<SharedImageRequest> m_image_request;
 };
 
 }
