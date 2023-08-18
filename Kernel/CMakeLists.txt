@@ -713,7 +713,13 @@ add_dependencies(kernel_heap install_libc_headers)
 add_executable(Kernel ${SOURCES})
 add_dependencies(Kernel generate_EscapeSequenceStateMachine.h generate_version_header install_libc_headers)
 
-if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
+if("${SERENITY_ARCH}" STREQUAL "aarch64")
+    target_link_options(Kernel PRIVATE LINKER:-T ${CMAKE_CURRENT_SOURCE_DIR}/Arch/aarch64/linker.ld -nostdlib LINKER:--no-pie)
+    set_target_properties(Kernel PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/Arch/aarch64/linker.ld)
+elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
+    target_link_options(Kernel PRIVATE LINKER:-T ${CMAKE_CURRENT_SOURCE_DIR}/Arch/riscv64/linker.ld -nostdlib LINKER:--no-pie)
+    set_target_properties(Kernel PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/Arch/riscv64/linker.ld)
+elseif ("${SERENITY_ARCH}" STREQUAL "x86_64")
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/linker.ld
         COMMAND "${CMAKE_CXX_COMPILER}" ${TARGET_STRING} -E -P -x c -I${CMAKE_CURRENT_SOURCE_DIR}/.. "${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/linker.ld" -o "${CMAKE_CURRENT_BINARY_DIR}/linker.ld"
@@ -730,9 +736,6 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
         target_compile_options(Kernel PRIVATE -mstack-alignment=8)
     endif()
-else()
-    target_link_options(Kernel PRIVATE LINKER:-T ${CMAKE_CURRENT_SOURCE_DIR}/Arch/aarch64/linker.ld -nostdlib LINKER:--no-pie)
-    set_target_properties(Kernel PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/Arch/aarch64/linker.ld)
 endif()
 
 if (ENABLE_KERNEL_LTO)
