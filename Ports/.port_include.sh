@@ -224,7 +224,7 @@ install_icon() {
     fi
 
     for icon_size in "16x16" "32x32"; do
-        index=$(run identify "$icon" | grep "$icon_size" | grep -oE "\[[0-9]+\]" | tr -d "[]" | head -n1)
+        index=$(run identify -format '%p;%wx%h\n' "$icon" | grep "$icon_size" | cut -d";" -f1 | head -n1)
         if [ -n "$index" ]; then
             run convert "${icon}[${index}]" "app-${icon_size}.png"
         else
