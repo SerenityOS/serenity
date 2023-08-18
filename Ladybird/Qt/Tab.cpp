@@ -113,14 +113,6 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
         m_hover_label->hide();
     };
 
-    view().on_back_button = [this] {
-        back();
-    };
-
-    view().on_forward_button = [this] {
-        forward();
-    };
-
     view().on_load_start = [this](const URL& url, bool is_redirect) {
         // If we are loading due to a redirect, we replace the current history entry
         // with the loaded URL

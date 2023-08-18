@@ -324,11 +324,11 @@ void WebContentView::mouseReleaseEvent(QMouseEvent* event)
     auto button = get_button_from_qt_event(*event);
 
     if (event->button() & Qt::MouseButton::BackButton) {
-        if (on_back_button)
-            on_back_button();
+        if (on_navigate_back)
+            on_navigate_back();
     } else if (event->button() & Qt::MouseButton::ForwardButton) {
-        if (on_forward_button)
-            on_forward_button();
+        if (on_navigate_forward)
+            on_navigate_forward();
     }
 
     if (button == 0) {

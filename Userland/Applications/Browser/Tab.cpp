@@ -554,16 +554,6 @@ Tab::Tab(BrowserWindow& window)
         update_status();
     };
 
-    view().on_back_button = [this] {
-        if (m_history.can_go_back())
-            go_back();
-    };
-
-    view().on_forward_button = [this] {
-        if (m_history.can_go_forward())
-            go_forward();
-    };
-
     view().on_new_tab = [this](auto activate_tab) {
         auto& tab = this->window().create_new_tab(URL("about:blank"), activate_tab);
         return tab.view().handle();
@@ -689,6 +679,9 @@ void Tab::reload()
 
 void Tab::go_back(int steps)
 {
+    if (!m_history.can_go_back(steps))
+        return;
+
     m_history.go_back(steps);
     update_actions();
     load(m_history.current().url, LoadType::HistoryNavigation);
@@ -696,6 +689,9 @@ void Tab::go_back(int steps)
 
 void Tab::go_forward(int steps)
 {
+    if (!m_history.can_go_forward(steps))
+        return;
+
     m_history.go_forward(steps);
     update_actions();
     load(m_history.current().url, LoadType::HistoryNavigation);
