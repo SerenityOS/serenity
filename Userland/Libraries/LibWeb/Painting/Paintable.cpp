@@ -79,7 +79,7 @@ Optional<HitTestResult> Paintable::hit_test(CSSPixelPoint, HitTestType) const
 
 StackingContext const* Paintable::stacking_context_rooted_here() const
 {
-    if (!layout_node().is_box())
+    if (!is<PaintableBox>(*this))
         return nullptr;
     return static_cast<PaintableBox const&>(*this).stacking_context();
 }
