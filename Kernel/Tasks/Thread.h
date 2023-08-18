@@ -811,7 +811,7 @@ public:
         }
     }
 
-    void block(Kernel::Mutex&, SpinlockLocker<Spinlock<LockRank::None>>&, u32);
+    void block(Kernel::Mutex&, SpinlockLocker<Spinlock<LockRank::Mutex>>&, u32);
 
     template<typename BlockerType, class... Args>
     BlockResult block(BlockTimeout const& timeout, Args&&... args)

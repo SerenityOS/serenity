@@ -221,7 +221,7 @@ Thread::BlockResult Thread::block_impl(BlockTimeout const& timeout, Blocker& blo
     return result;
 }
 
-void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock<LockRank::None>>& lock_lock, u32 lock_count)
+void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock<Kernel::Mutex::Rank>>& lock_lock, u32 lock_count)
 {
     VERIFY(!Processor::current_in_irq());
     VERIFY(this == Thread::current());
@@ -1404,6 +1404,10 @@ DidAcquireLockRank Thread::track_lock_acquire(LockRank rank)
         return DidAcquireLockRank::No;
     if (popcount(to_underlying(rank)) != 1)
         PANIC("Trying to acquire multiple locks at once: {:#b}", to_underlying(rank));
+    if (rank == LockRank::Mutex && m_lock_rank_mask != LockRank::None) {
+        // If we already hold any Spinlock, we can't acquire a mutex.
+        PANIC("Trying to acquire a mutex while holding a lock of higher rank: {:#b}", to_underlying(m_lock_rank_mask));
+    }
 
     if (m_lock_rank_mask != LockRank::None) {
         LockRank lower_ranks { to_underlying(rank) - 1 };
