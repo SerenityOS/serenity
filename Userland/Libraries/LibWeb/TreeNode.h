@@ -109,8 +109,6 @@ public:
     void insert_before(JS::NonnullGCPtr<T> node, JS::GCPtr<T> child);
     void remove_child(JS::NonnullGCPtr<T> node);
 
-    bool is_child_allowed(T const&) const { return true; }
-
     T* next_in_pre_order()
     {
         if (first_child())
@@ -465,9 +463,6 @@ inline void TreeNode<T>::append_child(JS::NonnullGCPtr<T> node)
 {
     VERIFY(!node->m_parent);
 
-    if (!static_cast<T*>(this)->is_child_allowed(*node))
-        return;
-
     if (m_last_child)
         m_last_child->m_next_sibling = node.ptr();
     node->m_previous_sibling = m_last_child;
@@ -504,9 +499,6 @@ template<typename T>
 inline void TreeNode<T>::prepend_child(JS::NonnullGCPtr<T> node)
 {
     VERIFY(!node->m_parent);
-
-    if (!static_cast<T*>(this)->is_child_allowed(*node))
-        return;
 
     if (m_first_child)
         m_first_child->m_previous_sibling = node.ptr();
