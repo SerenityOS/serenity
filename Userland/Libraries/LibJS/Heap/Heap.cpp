@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Aliaksandr Kalenik <kalenik.aliaksandr@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -94,10 +95,49 @@ Cell* Heap::allocate_cell(size_t size)
     return allocator.allocate_cell(*this);
 }
 
+static void add_possible_value(HashMap<FlatPtr, HeapRootTypeOrLocation>& possible_pointers, FlatPtr data, HeapRootTypeOrLocation origin)
+{
+    if constexpr (sizeof(FlatPtr*) == sizeof(Value)) {
+        // Because Value stores pointers in non-canonical form we have to check if the top bytes
+        // match any pointer-backed tag, in that case we have to extract the pointer to its
+        // canonical form and add that as a possible pointer.
+        if ((data & SHIFTED_IS_CELL_PATTERN) == SHIFTED_IS_CELL_PATTERN)
+            possible_pointers.set(Value::extract_pointer_bits(data), move(origin));
+        else
+            possible_pointers.set(data, move(origin));
+    } else {
+        static_assert((sizeof(Value) % sizeof(FlatPtr*)) == 0);
+        // In the 32-bit case we will look at the top and bottom part of Value separately we just
+        // add both the upper and lower bytes as possible pointers.
+        possible_pointers.set(data, move(origin));
+    }
+}
+
+template<typename Callback>
+static void for_each_cell_among_possible_pointers(HashTable<HeapBlock*> all_live_heap_blocks, HashMap<FlatPtr, HeapRootTypeOrLocation>& possible_pointers, Callback callback)
+{
+    for (auto possible_pointer : possible_pointers.keys()) {
+        if (!possible_pointer)
+            continue;
+        auto* possible_heap_block = HeapBlock::from_cell(reinterpret_cast<Cell const*>(possible_pointer));
+        if (!all_live_heap_blocks.contains(possible_heap_block))
+            continue;
+        if (auto* cell = possible_heap_block->cell_from_possible_pointer(possible_pointer)) {
+            callback(cell, possible_pointer);
+        }
+    }
+}
+
 class GraphConstructorVisitor final : public Cell::Visitor {
 public:
-    explicit GraphConstructorVisitor(HashMap<Cell*, HeapRootTypeOrLocation> const& roots)
+    explicit GraphConstructorVisitor(Heap& heap, HashMap<Cell*, HeapRootTypeOrLocation> const& roots)
+        : m_heap(heap)
     {
+        m_heap.for_each_block([&](auto& block) {
+            m_all_live_heap_blocks.set(&block);
+            return IterationDecision::Continue;
+        });
+
         for (auto* root : roots.keys()) {
             visit(root);
             auto& graph_node = m_graph.ensure(reinterpret_cast<FlatPtr>(root));
@@ -115,6 +155,24 @@ public:
             return;
 
         m_work_queue.append(cell);
+    }
+
+    virtual void visit_possible_values(ReadonlyBytes bytes) override
+    {
+        HashMap<FlatPtr, HeapRootTypeOrLocation> possible_pointers;
+
+        auto* raw_pointer_sized_values = reinterpret_cast<FlatPtr const*>(bytes.data());
+        for (size_t i = 0; i < (bytes.size() / sizeof(FlatPtr)); ++i)
+            add_possible_value(possible_pointers, raw_pointer_sized_values[i], HeapRootType::HeapFunctionCapturedPointer);
+
+        for_each_cell_among_possible_pointers(m_all_live_heap_blocks, possible_pointers, [&](Cell* cell, FlatPtr) {
+            if (m_node_being_visited)
+                m_node_being_visited->edges.set(reinterpret_cast<FlatPtr>(&cell));
+
+            if (m_graph.get(reinterpret_cast<FlatPtr>(&cell)).has_value())
+                return;
+            m_work_queue.append(*cell);
+        });
     }
 
     void visit_all_cells()
@@ -183,13 +241,16 @@ private:
     GraphNode* m_node_being_visited { nullptr };
     Vector<Cell&> m_work_queue;
     HashMap<FlatPtr, GraphNode> m_graph;
+
+    Heap& m_heap;
+    HashTable<HeapBlock*> m_all_live_heap_blocks;
 };
 
 void Heap::dump_graph()
 {
     HashMap<Cell*, HeapRootTypeOrLocation> roots;
     gather_roots(roots);
-    GraphConstructorVisitor visitor(roots);
+    GraphConstructorVisitor visitor(*this, roots);
     vm().bytecode_interpreter().visit_edges(visitor);
     visitor.visit_all_cells();
     visitor.dump();
@@ -237,24 +298,6 @@ void Heap::gather_roots(HashMap<Cell*, HeapRootTypeOrLocation>& roots)
         dbgln("gather_roots:");
         for (auto* root : roots.keys())
             dbgln("  + {}", root);
-    }
-}
-
-static void add_possible_value(HashMap<FlatPtr, HeapRootTypeOrLocation>& possible_pointers, FlatPtr data, HeapRootTypeOrLocation origin)
-{
-    if constexpr (sizeof(FlatPtr*) == sizeof(Value)) {
-        // Because Value stores pointers in non-canonical form we have to check if the top bytes
-        // match any pointer-backed tag, in that case we have to extract the pointer to its
-        // canonical form and add that as a possible pointer.
-        if ((data & SHIFTED_IS_CELL_PATTERN) == SHIFTED_IS_CELL_PATTERN)
-            possible_pointers.set(Value::extract_pointer_bits(data), move(origin));
-        else
-            possible_pointers.set(data, move(origin));
-    } else {
-        static_assert((sizeof(Value) % sizeof(FlatPtr*)) == 0);
-        // In the 32-bit case we will look at the top and bottom part of Value separately we just
-        // add both the upper and lower bytes as possible pointers.
-        possible_pointers.set(data, move(origin));
     }
 }
 
@@ -322,28 +365,26 @@ __attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(Has
         return IterationDecision::Continue;
     });
 
-    for (auto possible_pointer : possible_pointers.keys()) {
-        if (!possible_pointer)
-            continue;
-        dbgln_if(HEAP_DEBUG, "  ? {}", (void const*)possible_pointer);
-        auto* possible_heap_block = HeapBlock::from_cell(reinterpret_cast<Cell const*>(possible_pointer));
-        if (all_live_heap_blocks.contains(possible_heap_block)) {
-            if (auto* cell = possible_heap_block->cell_from_possible_pointer(possible_pointer)) {
-                if (cell->state() == Cell::State::Live) {
-                    dbgln_if(HEAP_DEBUG, "  ?-> {}", (void const*)cell);
-                    roots.set(cell, *possible_pointers.get(possible_pointer));
-                } else {
-                    dbgln_if(HEAP_DEBUG, "  #-> {}", (void const*)cell);
-                }
-            }
+    for_each_cell_among_possible_pointers(all_live_heap_blocks, possible_pointers, [&](Cell* cell, FlatPtr possible_pointer) {
+        if (cell->state() == Cell::State::Live) {
+            dbgln_if(HEAP_DEBUG, "  ?-> {}", (void const*)cell);
+            roots.set(cell, *possible_pointers.get(possible_pointer));
+        } else {
+            dbgln_if(HEAP_DEBUG, "  #-> {}", (void const*)cell);
         }
-    }
+    });
 }
 
 class MarkingVisitor final : public Cell::Visitor {
 public:
-    explicit MarkingVisitor(HashMap<Cell*, HeapRootTypeOrLocation> const& roots)
+    explicit MarkingVisitor(Heap& heap, HashMap<Cell*, HeapRootTypeOrLocation> const& roots)
+        : m_heap(heap)
     {
+        m_heap.for_each_block([&](auto& block) {
+            m_all_live_heap_blocks.set(&block);
+            return IterationDecision::Continue;
+        });
+
         for (auto* root : roots.keys()) {
             visit(root);
         }
@@ -359,6 +400,24 @@ public:
         m_work_queue.append(cell);
     }
 
+    virtual void visit_possible_values(ReadonlyBytes bytes) override
+    {
+        HashMap<FlatPtr, HeapRootTypeOrLocation> possible_pointers;
+
+        auto* raw_pointer_sized_values = reinterpret_cast<FlatPtr const*>(bytes.data());
+        for (size_t i = 0; i < (bytes.size() / sizeof(FlatPtr)); ++i)
+            add_possible_value(possible_pointers, raw_pointer_sized_values[i], HeapRootType::HeapFunctionCapturedPointer);
+
+        for_each_cell_among_possible_pointers(m_all_live_heap_blocks, possible_pointers, [&](Cell* cell, FlatPtr) {
+            if (cell->is_marked())
+                return;
+            if (cell->state() != Cell::State::Live)
+                return;
+            cell->set_marked(true);
+            m_work_queue.append(*cell);
+        });
+    }
+
     void mark_all_live_cells()
     {
         while (!m_work_queue.is_empty()) {
@@ -367,14 +426,16 @@ public:
     }
 
 private:
+    Heap& m_heap;
     Vector<Cell&> m_work_queue;
+    HashTable<HeapBlock*> m_all_live_heap_blocks;
 };
 
 void Heap::mark_live_cells(HashMap<Cell*, HeapRootTypeOrLocation> const& roots)
 {
     dbgln_if(HEAP_DEBUG, "mark_live_cells:");
 
-    MarkingVisitor visitor(roots);
+    MarkingVisitor visitor(*this, roots);
 
     vm().bytecode_interpreter().visit_edges(visitor);
 

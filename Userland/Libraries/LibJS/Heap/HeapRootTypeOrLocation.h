@@ -11,6 +11,7 @@
 namespace JS {
 
 enum class HeapRootType {
+    HeapFunctionCapturedPointer,
     Handle,
     MarkedVector,
     RegisterPointer,
