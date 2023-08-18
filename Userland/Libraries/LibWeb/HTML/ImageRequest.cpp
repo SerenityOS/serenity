@@ -19,9 +19,9 @@
 
 namespace Web::HTML {
 
-ErrorOr<NonnullRefPtr<ImageRequest>> ImageRequest::create(Page& page)
+JS::NonnullGCPtr<ImageRequest> ImageRequest::create(JS::Realm& realm, Page& page)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) ImageRequest(page));
+    return realm.heap().allocate<ImageRequest>(realm, page);
 }
 
 ImageRequest::ImageRequest(Page& page)

@@ -17,9 +17,12 @@
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/images.html#image-request
-class ImageRequest : public RefCounted<ImageRequest> {
+class ImageRequest final : public JS::Cell {
+    JS_CELL(ImageRequest, JS::Cell);
+
 public:
-    static ErrorOr<NonnullRefPtr<ImageRequest>> create(Page&);
+    [[nodiscard]] static JS::NonnullGCPtr<ImageRequest> create(JS::Realm&, Page&);
+
     ~ImageRequest();
 
     // https://html.spec.whatwg.org/multipage/images.html#img-req-state

@@ -91,6 +91,8 @@ public:
 
     JS::SafeFunction<void()> take_lazy_load_resumption_steps(Badge<DOM::Document>);
 
+    virtual void visit_edges(Cell::Visitor&) override;
+
 private:
     HTMLImageElement(DOM::Document&, DOM::QualifiedName);
 
@@ -105,7 +107,7 @@ private:
 
     void handle_successful_fetch(AK::URL const&, StringView mime_type, ImageRequest&, ByteBuffer, bool maybe_omit_events, AK::URL const& previous_url);
     void handle_failed_fetch();
-    void add_callbacks_to_image_request(NonnullRefPtr<ImageRequest>, bool maybe_omit_events, AK::URL const& url_string, AK::URL const& previous_url);
+    void add_callbacks_to_image_request(JS::NonnullGCPtr<ImageRequest>, bool maybe_omit_events, AK::URL const& url_string, AK::URL const& previous_url);
 
     void animate();
 
@@ -122,10 +124,10 @@ private:
     Optional<String> m_last_selected_source;
 
     // https://html.spec.whatwg.org/multipage/images.html#current-request
-    RefPtr<ImageRequest> m_current_request;
+    JS::GCPtr<ImageRequest> m_current_request;
 
     // https://html.spec.whatwg.org/multipage/images.html#pending-request
-    RefPtr<ImageRequest> m_pending_request;
+    JS::GCPtr<ImageRequest> m_pending_request;
 
     SourceSet m_source_set;
 
