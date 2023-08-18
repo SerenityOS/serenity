@@ -382,7 +382,7 @@ ParseErrorOr<TextParser::IfConditionParseResult> TextParser::parse_if_beginning(
     auto rollback = rollback_point();
 
     bool is_if_branch = !consume_word("if"sv).is_error();
-    Optional<Tree> condition;
+    NullableTree condition = nullptr;
     if (is_if_branch) {
         condition = TRY(parse_condition());
     } else {
@@ -406,9 +406,8 @@ ParseErrorOr<Tree> TextParser::parse_inline_if_else()
 
     rollback.disarm();
     if (is_if_branch)
-        return make_ref_counted<IfBranch>(*condition, then_branch);
-    else
-        return make_ref_counted<ElseIfBranch>(condition, then_branch);
+        return make_ref_counted<IfBranch>(condition.release_nonnull(), then_branch);
+    return make_ref_counted<ElseIfBranch>(condition, then_branch);
 }
 
 // <if> :== <if_condition> then$ <substeps>
@@ -437,7 +436,7 @@ ParseErrorOr<Tree> TextParser::parse_else(Tree else_branch)
     TRY(expect_eof());
 
     rollback.disarm();
-    return make_ref_counted<ElseIfBranch>(Optional<Tree> {}, else_branch);
+    return make_ref_counted<ElseIfBranch>(nullptr, else_branch);
 }
 
 // <simple_step> | <inline_if>

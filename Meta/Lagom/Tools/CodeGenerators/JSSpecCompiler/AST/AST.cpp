@@ -8,6 +8,29 @@
 
 namespace JSSpecCompiler {
 
+Tree NodeSubtreePointer::get(Badge<RecursiveASTVisitor>)
+{
+    return m_tree_ptr.visit(
+        [&](NullableTree* nullable_tree) -> Tree {
+            NullableTree copy = *nullable_tree;
+            return copy.release_nonnull();
+        },
+        [&](Tree* tree) -> Tree {
+            return *tree;
+        });
+}
+
+void NodeSubtreePointer::replace_subtree(Badge<RecursiveASTVisitor>, NullableTree replacement)
+{
+    m_tree_ptr.visit(
+        [&](NullableTree* nullable_tree) {
+            *nullable_tree = replacement;
+        },
+        [&](Tree* tree) {
+            *tree = replacement.release_nonnull();
+        });
+}
+
 Vector<NodeSubtreePointer> BinaryOperation::subtrees()
 {
     return { { &m_left }, { &m_right } };
@@ -43,8 +66,8 @@ Vector<NodeSubtreePointer> IfBranch::subtrees()
 
 Vector<NodeSubtreePointer> ElseIfBranch::subtrees()
 {
-    if (m_condition.has_value())
-        return { { &m_condition.value() }, { &m_branch } };
+    if (m_condition)
+        return { { &m_condition }, { &m_branch } };
     return { { &m_branch } };
 }
 
