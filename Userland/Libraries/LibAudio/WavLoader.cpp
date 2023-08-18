@@ -324,6 +324,8 @@ MaybeLoaderError WavLoaderPlugin::load_wav_info_block(Vector<RIFF::Chunk> info_c
             m_metadata.genre = TRY(String::from_utf8(metadata_text));
         } else if (metadata_name == "INAM"sv) {
             m_metadata.title = TRY(String::from_utf8(metadata_text));
+        } else if (metadata_name == "IPRD"sv) {
+            m_metadata.album = TRY(String::from_utf8(metadata_text));
         } else if (metadata_name == "ISFT"sv) {
             m_metadata.encoder = TRY(String::from_utf8(metadata_text));
         } else if (metadata_name == "ISRC"sv) {
