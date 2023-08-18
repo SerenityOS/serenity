@@ -66,12 +66,6 @@ void Settings::set_is_maximized(bool is_maximized)
     m_qsettings->setValue("is_maximized", is_maximized);
 }
 
-QString Settings::new_tab_page()
-{
-    static auto const default_new_tab_url = rebase_default_url_on_serenity_resource_root(Browser::default_new_tab_url);
-    return m_qsettings->value("new_tab_page", default_new_tab_url).toString();
-}
-
 Settings::EngineProvider Settings::search_engine()
 {
     EngineProvider engine_provider;
@@ -98,6 +92,12 @@ void Settings::set_autocomplete_engine(EngineProvider const& engine_provider)
 {
     m_qsettings->setValue("autocomplete_engine_name", engine_provider.name);
     m_qsettings->setValue("autocomplete_engine", engine_provider.url);
+}
+
+QString Settings::new_tab_page()
+{
+    static auto const default_new_tab_url = rebase_default_url_on_serenity_resource_root(Browser::default_new_tab_url);
+    return m_qsettings->value("new_tab_page", default_new_tab_url).toString();
 }
 
 void Settings::set_new_tab_page(QString const& page)
