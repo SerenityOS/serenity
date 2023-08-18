@@ -134,11 +134,11 @@ void OutOfProcessWebView::mouseup_event(GUI::MouseEvent& event)
     enqueue_input_event(event);
 
     if (event.button() == GUI::MouseButton::Backward) {
-        if (on_back_button)
-            on_back_button();
+        if (on_navigate_back)
+            on_navigate_back();
     } else if (event.button() == GUI::MouseButton::Forward) {
-        if (on_forward_button)
-            on_forward_button();
+        if (on_navigate_forward)
+            on_navigate_forward();
     }
 }
 
