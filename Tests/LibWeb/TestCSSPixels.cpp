@@ -55,6 +55,13 @@ TEST_CASE(multiplication1)
     b = CSSPixels::from_raw(0b01'100000);
     EXPECT_EQ(a * b, CSSPixels(a.to_double() * b.to_double()));
     EXPECT_EQ(a * -b, CSSPixels(a.to_double() * -b.to_double()));
+
+    EXPECT_EQ(
+        CSSPixels::from_raw(0b01'0000011) * CSSPixels::from_raw(0b00'010000),
+        CSSPixels::from_raw(0b00'0100001));
+    EXPECT_EQ(
+        CSSPixels::from_raw(0b01'0000111) * CSSPixels::from_raw(0b00'010000),
+        CSSPixels::from_raw(0b00'0100010));
 }
 
 TEST_CASE(addition2)

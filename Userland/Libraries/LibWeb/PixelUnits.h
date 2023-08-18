@@ -170,8 +170,8 @@ public:
         // Rounding:
         // If last bit cut off was 1:
         if (value & (1u << (fractional_bits - 1))) {
-            // If the bit after was 1 as well
-            if (value & (radix_mask >> 2u)) {
+            // If any bit after was 1 as well
+            if (value & (radix_mask >> 1u)) {
                 // We need to round away from 0
                 int_value = Checked<int>::saturating_add(int_value, 1);
             } else {
