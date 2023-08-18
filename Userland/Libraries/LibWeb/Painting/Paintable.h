@@ -139,8 +139,8 @@ public:
 
     bool visible_for_hit_testing() const { return computed_values().pointer_events() != CSS::PointerEvents::None; }
 
-    HTML::BrowsingContext const& browsing_context() const { return m_layout_node->browsing_context(); }
-    HTML::BrowsingContext& browsing_context() { return layout_node().browsing_context(); }
+    [[nodiscard]] HTML::BrowsingContext const& browsing_context() const;
+    [[nodiscard]] HTML::BrowsingContext& browsing_context();
 
     void set_needs_display() const { const_cast<Layout::Node&>(*m_layout_node).set_needs_display(); }
 
@@ -157,16 +157,14 @@ public:
     StackingContext const* stacking_context_rooted_here() const;
 
 protected:
-    explicit Paintable(Layout::Node const& layout_node)
-        : m_layout_node(layout_node)
-    {
-    }
+    explicit Paintable(Layout::Node const&);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
 private:
     JS::GCPtr<DOM::Node> m_dom_node;
     JS::NonnullGCPtr<Layout::Node const> m_layout_node;
+    JS::NonnullGCPtr<HTML::BrowsingContext> m_browsing_context;
     Optional<JS::GCPtr<Layout::Box const>> mutable m_containing_block;
 };
 
