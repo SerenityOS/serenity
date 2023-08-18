@@ -1,5 +1,7 @@
 set(SOURCES
+    AST/AST.cpp
     AST/ASTPrinting.cpp
+    Compiler/GenericASTPass.cpp
     Parser/Lexer.cpp
     Parser/ParseError.cpp
     Parser/SpecParser.cpp

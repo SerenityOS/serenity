@@ -20,12 +20,30 @@ RefPtr<T> as(NullableTree const& tree)
     return dynamic_cast<T*>(tree.ptr());
 }
 
+class NodeSubtreePointer {
+public:
+    NodeSubtreePointer(Tree* tree_ptr)
+        : m_tree_ptr(tree_ptr)
+    {
+    }
+
+    Tree& get() { return *m_tree_ptr; }
+
+    void replace_subtree(Tree tree) { *m_tree_ptr = move(tree); }
+
+private:
+    Tree* m_tree_ptr;
+};
+
 // ===== Generic nodes =====
 class Node : public RefCounted<Node> {
 public:
     virtual ~Node() = default;
 
     void format_tree(StringBuilder& builder);
+
+    // For expressions, order must be the same as the evaluation order.
+    virtual Vector<NodeSubtreePointer> subtrees() { return {}; }
 
     virtual bool is_type() { return false; }
 
@@ -128,6 +146,8 @@ public:
     {
     }
 
+    Vector<NodeSubtreePointer> subtrees() override;
+
     BinaryOperator m_operation;
     Tree m_left;
     Tree m_right;
@@ -144,6 +164,8 @@ public:
     {
     }
 
+    Vector<NodeSubtreePointer> subtrees() override;
+
     UnaryOperator m_operation;
     Tree m_operand;
 
@@ -158,6 +180,8 @@ public:
         , m_compare_values(move(compare_values))
     {
     }
+
+    Vector<NodeSubtreePointer> subtrees() override;
 
     Tree m_operand;
     Vector<Tree> m_compare_values;
@@ -186,6 +210,8 @@ public:
     {
     }
 
+    Vector<NodeSubtreePointer> subtrees() override;
+
     Tree m_return_value;
 
 protected:
@@ -198,6 +224,8 @@ public:
         : m_condition(condition)
     {
     }
+
+    Vector<NodeSubtreePointer> subtrees() override;
 
     Tree m_condition;
 
@@ -212,6 +240,8 @@ public:
         , m_branch(branch)
     {
     }
+
+    Vector<NodeSubtreePointer> subtrees() override;
 
     Tree m_condition;
     Tree m_branch;
@@ -228,6 +258,8 @@ public:
     {
     }
 
+    Vector<NodeSubtreePointer> subtrees() override;
+
     Optional<Tree> m_condition;
     Tree m_branch;
 
@@ -241,6 +273,8 @@ public:
         : m_expressions(move(expressions_))
     {
     }
+
+    Vector<NodeSubtreePointer> subtrees() override;
 
     Vector<Tree> m_expressions;
 
@@ -261,6 +295,8 @@ public:
     {
     }
 
+    Vector<NodeSubtreePointer> subtrees() override;
+
     Tree m_type_reference;
     Vector<Argument> m_arguments;
 
@@ -275,6 +311,8 @@ public:
         , m_arguments(move(arguments))
     {
     }
+
+    Vector<NodeSubtreePointer> subtrees() override;
 
     Tree m_name;
     Vector<Tree> m_arguments;
