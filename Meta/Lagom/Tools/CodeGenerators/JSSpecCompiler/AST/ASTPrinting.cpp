@@ -31,7 +31,7 @@ void Node::dump_node(StringBuilder& builder, AK::CheckedFormatString<Parameters.
 
 void ErrorNode::dump_tree(StringBuilder& builder)
 {
-    dump_node(builder, "Error");
+    dump_node(builder, "Error \"{}\"", m_error);
 }
 
 void MathematicalConstant::dump_tree(StringBuilder& builder)
