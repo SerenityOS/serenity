@@ -34,6 +34,12 @@ enum class QueueType {
 class AsyncBlockDeviceRequest;
 
 struct NVMeIO {
+    void clear()
+    {
+        used = false;
+        request = nullptr;
+        end_io_handler = nullptr;
+    }
     RefPtr<AsyncBlockDeviceRequest> request;
     bool used = false;
     Function<void(u16 status)> end_io_handler;
