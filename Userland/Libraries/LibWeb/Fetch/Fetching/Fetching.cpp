@@ -498,7 +498,7 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
                 };
 
                 // 2. If response’s body is null, then run processBodyError and abort these steps.
-                if (!response->body().has_value()) {
+                if (!response->body()) {
                     process_body_error({});
                     return;
                 }
@@ -644,7 +644,7 @@ WebIDL::ExceptionOr<void> fetch_response_handover(JS::Realm& realm, Infrastructu
     auto internal_response = response.is_network_error() ? JS::NonnullGCPtr { response } : response.unsafe_response();
 
     // 6. If internalResponse’s body is null, then run processResponseEndOfBody.
-    if (!internal_response->body().has_value()) {
+    if (!internal_response->body()) {
         process_response_end_of_body();
     }
     // 7. Otherwise:
@@ -672,7 +672,7 @@ WebIDL::ExceptionOr<void> fetch_response_handover(JS::Realm& realm, Infrastructu
 
         // 3. If internalResponse's body is null, then queue a fetch task to run processBody given null, with
         //    fetchParams’s task destination.
-        if (!internal_response->body().has_value()) {
+        if (!internal_response->body()) {
             Infrastructure::queue_fetch_task(task_destination, [process_body = move(process_body)]() {
                 process_body({});
             });
@@ -1118,7 +1118,7 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> http_redirect_f
     //     return a network error.
     if (actual_response->status() != 303
         && !request->body().has<Empty>()
-        && request->body().get<Infrastructure::Body>().source().has<Empty>()) {
+        && request->body().get<JS::NonnullGCPtr<Infrastructure::Body>>()->source().has<Empty>()) {
         return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, "Request has body but no body source"sv));
     }
 
@@ -1160,7 +1160,7 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> http_redirect_f
     //     request’s body’s source.
     // NOTE: request’s body’s source’s nullity has already been checked.
     if (!request->body().has<Empty>()) {
-        auto const& source = request->body().get<Infrastructure::Body>().source();
+        auto const& source = request->body().get<JS::NonnullGCPtr<Infrastructure::Body>>()->source();
         // NOTE: BodyInitOrReadableBytes is a superset of Body::SourceType
         auto converted_source = source.has<ByteBuffer>()
             ? BodyInitOrReadableBytes { source.get<ByteBuffer>() }
@@ -1292,8 +1292,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
             include_credentials = IncludeCredentials::No;
 
         // 5. Let contentLength be httpRequest’s body’s length, if httpRequest’s body is non-null; otherwise null.
-        auto content_length = http_request->body().has<Infrastructure::Body>()
-            ? http_request->body().get<Infrastructure::Body>().length()
+        auto content_length = http_request->body().has<JS::NonnullGCPtr<Infrastructure::Body>>()
+            ? http_request->body().get<JS::NonnullGCPtr<Infrastructure::Body>>()->length()
             : Optional<u64> {};
 
         // 6. Let contentLengthHeaderValue be null.
@@ -1580,13 +1580,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
             // 2. If request’s body is non-null, then:
             if (!request->body().has<Empty>()) {
                 // 1. If request’s body’s source is null, then return a network error.
-                if (request->body().get<Infrastructure::Body>().source().has<Empty>()) {
+                if (request->body().get<JS::NonnullGCPtr<Infrastructure::Body>>()->source().has<Empty>()) {
                     returned_pending_response->resolve(Infrastructure::Response::network_error(vm, "Request has body but no body source"_string));
                     return;
                 }
 
                 // 2. Set request’s body to the body of the result of safely extracting request’s body’s source.
-                auto const& source = request->body().get<Infrastructure::Body>().source();
+                auto const& source = request->body().get<JS::NonnullGCPtr<Infrastructure::Body>>()->source();
                 // NOTE: BodyInitOrReadableBytes is a superset of Body::SourceType
                 auto converted_source = source.has<ByteBuffer>()
                     ? BodyInitOrReadableBytes { source.get<ByteBuffer>() }
@@ -1657,7 +1657,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
                 // - isNewConnectionFetch is false
                 && is_new_connection_fetch == IsNewConnectionFetch::No
                 // - request’s body is null, or request’s body is non-null and request’s body’s source is non-null
-                && (request->body().has<Empty>() || !request->body().get<Infrastructure::Body>().source().has<Empty>())
+                && (request->body().has<Empty>() || !request->body().get<JS::NonnullGCPtr<Infrastructure::Body>>()->source().has<Empty>())
                 // then:
             ) {
                 // 1. If fetchParams is canceled, then return the appropriate network error for fetchParams.
@@ -1738,8 +1738,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> nonstandard_resource_load
     load_request.set_method(DeprecatedString::copy(request->method()));
     for (auto const& header : *request->header_list())
         load_request.set_header(DeprecatedString::copy(header.name), DeprecatedString::copy(header.value));
-    if (auto const* body = request->body().get_pointer<Infrastructure::Body>()) {
-        TRY(body->source().visit(
+    if (auto const* body = request->body().get_pointer<JS::NonnullGCPtr<Infrastructure::Body>>()) {
+        TRY((*body)->source().visit(
             [&](ByteBuffer const& byte_buffer) -> WebIDL::ExceptionOr<void> {
                 load_request.set_body(TRY_OR_THROW_OOM(vm, ByteBuffer::copy(byte_buffer)));
                 return {};

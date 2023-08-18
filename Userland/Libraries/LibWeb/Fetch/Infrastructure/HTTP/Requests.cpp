@@ -23,6 +23,9 @@ void Request::visit_edges(JS::Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_header_list);
     visitor.visit(m_client);
+    m_body.visit(
+        [&](JS::GCPtr<Body>& body) { visitor.visit(body); },
+        [](auto&) {});
     m_reserved_client.visit(
         [&](JS::GCPtr<HTML::EnvironmentSettingsObject> const& value) { visitor.visit(value); },
         [](auto const&) {});
@@ -249,8 +252,8 @@ JS::NonnullGCPtr<Request> Request::clone(JS::Realm& realm) const
     new_request->set_timing_allow_failed(m_timing_allow_failed);
 
     // 2. If request’s body is non-null, set newRequest’s body to the result of cloning request’s body.
-    if (auto const* body = m_body.get_pointer<Body>())
-        new_request->set_body(body->clone(realm));
+    if (auto const* body = m_body.get_pointer<JS::NonnullGCPtr<Body>>())
+        new_request->set_body((*body)->clone(realm));
 
     // 3. Return newRequest.
     return new_request;

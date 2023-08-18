@@ -54,28 +54,28 @@ ErrorOr<Optional<MimeSniff::MimeType>> Request::mime_type_impl() const
 
 // https://fetch.spec.whatwg.org/#concept-body-body
 // https://fetch.spec.whatwg.org/#ref-for-concept-body-body%E2%91%A7
-Optional<Infrastructure::Body const&> Request::body_impl() const
+JS::GCPtr<Infrastructure::Body const> Request::body_impl() const
 {
     // Objects including the Body interface mixin have an associated body (null or a body).
     // A Request object’s body is its request’s body.
     return m_request->body().visit(
-        [](Infrastructure::Body const& b) -> Optional<Infrastructure::Body const&> { return b; },
-        [](Empty) -> Optional<Infrastructure::Body const&> { return {}; },
+        [](JS::NonnullGCPtr<Infrastructure::Body> const& b) -> JS::GCPtr<Infrastructure::Body const> { return b; },
+        [](Empty) -> JS::GCPtr<Infrastructure::Body const> { return nullptr; },
         // A byte sequence will be safely extracted into a body early on in fetch.
-        [](ByteBuffer const&) -> Optional<Infrastructure::Body const&> { VERIFY_NOT_REACHED(); });
+        [](ByteBuffer const&) -> JS::GCPtr<Infrastructure::Body const> { VERIFY_NOT_REACHED(); });
 }
 
 // https://fetch.spec.whatwg.org/#concept-body-body
 // https://fetch.spec.whatwg.org/#ref-for-concept-body-body%E2%91%A7
-Optional<Infrastructure::Body&> Request::body_impl()
+JS::GCPtr<Infrastructure::Body> Request::body_impl()
 {
     // Objects including the Body interface mixin have an associated body (null or a body).
     // A Request object’s body is its request’s body.
     return m_request->body().visit(
-        [](Infrastructure::Body& b) -> Optional<Infrastructure::Body&> { return b; },
-        [](Empty) -> Optional<Infrastructure::Body&> { return {}; },
+        [](JS::NonnullGCPtr<Infrastructure::Body>& b) -> JS::GCPtr<Infrastructure::Body> { return b; },
+        [](Empty) -> JS::GCPtr<Infrastructure::Body> { return {}; },
         // A byte sequence will be safely extracted into a body early on in fetch.
-        [](ByteBuffer&) -> Optional<Infrastructure::Body&> { VERIFY_NOT_REACHED(); });
+        [](ByteBuffer&) -> JS::GCPtr<Infrastructure::Body> { VERIFY_NOT_REACHED(); });
 }
 
 // https://fetch.spec.whatwg.org/#request-create
@@ -440,7 +440,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Method must not be GET or HEAD when body is provided"sv };
 
     // 35. Let initBody be null.
-    Optional<Infrastructure::Body> init_body;
+    JS::GCPtr<Infrastructure::Body> init_body;
 
     // 36. If init["body"] exists and is non-null, then:
     if (init.body.has_value() && (*init.body).has_value()) {
@@ -448,7 +448,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
         auto body_with_type = TRY(extract_body(realm, (*init.body).value(), request->keepalive()));
 
         // 2. Set initBody to bodyWithType’s body.
-        init_body = move(body_with_type.body);
+        init_body = body_with_type.body;
 
         // 3. Let type be bodyWithType’s type.
         auto const& type = body_with_type.type;
@@ -459,15 +459,15 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
     }
 
     // 37. Let inputOrInitBody be initBody if it is non-null; otherwise inputBody.
-    Optional<Infrastructure::Request::BodyType> input_or_init_body = init_body.has_value()
-        ? Infrastructure::Request::BodyType { init_body.value() }
+    Optional<Infrastructure::Request::BodyType> input_or_init_body = init_body
+        ? Infrastructure::Request::BodyType { *init_body }
         : input_body;
 
     // 38. If inputOrInitBody is non-null and inputOrInitBody’s source is null, then:
     // FIXME: The spec doesn't check if inputOrInitBody is a body before accessing source.
-    if (input_or_init_body.has_value() && input_or_init_body->has<Infrastructure::Body>() && input_or_init_body->get<Infrastructure::Body>().source().has<Empty>()) {
+    if (input_or_init_body.has_value() && input_or_init_body->has<JS::NonnullGCPtr<Infrastructure::Body>>() && input_or_init_body->get<JS::NonnullGCPtr<Infrastructure::Body>>()->source().has<Empty>()) {
         // 1. If initBody is non-null and init["duplex"] does not exist, then throw a TypeError.
-        if (init_body.has_value() && !init.duplex.has_value())
+        if (init_body && !init.duplex.has_value())
             return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Body without source requires 'duplex' value to be set"sv };
 
         // 2. If this’s request’s mode is neither "same-origin" nor "cors", then throw a TypeError.
@@ -482,7 +482,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
     auto const& final_body = input_or_init_body;
 
     // 40. If initBody is null and inputBody is non-null, then:
-    if (!init_body.has_value() && input_body.has_value()) {
+    if (!init_body && input_body.has_value()) {
         // 2. If input is unusable, then throw a TypeError.
         if (input.has<JS::Handle<Request>>() && input.get<JS::Handle<Request>>()->is_unusable())
             return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Request is unusable"sv };

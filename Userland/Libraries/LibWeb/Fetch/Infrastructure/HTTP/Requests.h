@@ -153,7 +153,7 @@ public:
     // Members are implementation-defined
     struct Priority { };
 
-    using BodyType = Variant<Empty, ByteBuffer, Body>;
+    using BodyType = Variant<Empty, ByteBuffer, JS::NonnullGCPtr<Body>>;
     using OriginType = Variant<Origin, HTML::Origin>;
     using PolicyContainerType = Variant<PolicyContainer, HTML::PolicyContainer>;
     using ReferrerType = Variant<Referrer, AK::URL>;

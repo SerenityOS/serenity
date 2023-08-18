@@ -31,7 +31,7 @@ bool BodyMixin::is_unusable() const
 {
     // An object including the Body interface mixin is said to be unusable if its body is non-null and its body’s stream is disturbed or locked.
     auto const& body = body_impl();
-    return body.has_value() && (body->stream()->is_disturbed() || body->stream()->is_locked());
+    return body && (body->stream()->is_disturbed() || body->stream()->is_locked());
 }
 
 // https://fetch.spec.whatwg.org/#dom-body-body
@@ -39,7 +39,7 @@ JS::GCPtr<Streams::ReadableStream> BodyMixin::body() const
 {
     // The body getter steps are to return null if this’s body is null; otherwise this’s body’s stream.
     auto const& body = body_impl();
-    return body.has_value() ? body->stream().ptr() : nullptr;
+    return body ? body->stream().ptr() : nullptr;
 }
 
 // https://fetch.spec.whatwg.org/#dom-body-bodyused
@@ -47,7 +47,7 @@ bool BodyMixin::body_used() const
 {
     // The bodyUsed getter steps are to return true if this’s body is non-null and this’s body’s stream is disturbed; otherwise false.
     auto const& body = body_impl();
-    return body.has_value() && body->stream()->is_disturbed();
+    return body && body->stream()->is_disturbed();
 }
 
 // https://fetch.spec.whatwg.org/#dom-body-arraybuffer
@@ -197,7 +197,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> consume_body(JS::Realm& realm
 
     // 5. If object’s body is null, then run successSteps with an empty byte sequence.
     auto const& body = object.body_impl();
-    if (!body.has_value()) {
+    if (!body) {
         success_steps(ByteBuffer {});
     }
     // 6. Otherwise, fully read object’s body given successSteps, errorSteps, and object’s relevant global object.

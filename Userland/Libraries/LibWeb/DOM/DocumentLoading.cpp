@@ -233,7 +233,7 @@ JS::GCPtr<DOM::Document> load_document(Optional<HTML::NavigationParams> navigati
 
     auto& realm = document->realm();
 
-    if (navigation_params->response->body().has_value()) {
+    if (navigation_params->response->body()) {
         auto process_body = [navigation_params, document](ByteBuffer bytes) {
             if (!parse_document(*document, bytes)) {
                 // FIXME: Load html page with an error if parsing failed.

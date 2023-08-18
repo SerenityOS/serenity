@@ -27,8 +27,8 @@ public:
     virtual ~BodyMixin();
 
     virtual ErrorOr<Optional<MimeSniff::MimeType>> mime_type_impl() const = 0;
-    virtual Optional<Infrastructure::Body&> body_impl() = 0;
-    virtual Optional<Infrastructure::Body const&> body_impl() const = 0;
+    virtual JS::GCPtr<Infrastructure::Body> body_impl() = 0;
+    virtual JS::GCPtr<Infrastructure::Body const> body_impl() const = 0;
     virtual Bindings::PlatformObject& as_platform_object() = 0;
     virtual Bindings::PlatformObject const& as_platform_object() const = 0;
 

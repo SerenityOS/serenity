@@ -82,6 +82,7 @@ void XMLHttpRequest::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_upload_object);
     visitor.visit(m_author_request_headers);
+    visitor.visit(m_request_body);
     visitor.visit(m_response);
     visitor.visit(m_fetch_controller);
 
@@ -194,7 +195,7 @@ WebIDL::ExceptionOr<JS::Value> XMLHttpRequest::response()
         // Note: Automatically done by the layers above us.
 
         // 2. If this’s response’s body is null, then return null.
-        if (!m_response->body().has_value())
+        if (!m_response->body())
             return JS::js_null();
 
         // 3. Let jsonObject be the result of running parse JSON from bytes on this’s received bytes. If that threw an exception, then return null.
@@ -214,7 +215,7 @@ WebIDL::ExceptionOr<JS::Value> XMLHttpRequest::response()
 String XMLHttpRequest::get_text_response() const
 {
     // 1. If xhr’s response’s body is null, then return the empty string.
-    if (!m_response->body().has_value())
+    if (!m_response->body())
         return String {};
 
     // 2. Let charset be the result of get a final encoding for xhr.
@@ -559,8 +560,8 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
 
     // body
     //    This’s request body.
-    if (m_request_body.has_value())
-        request->set_body(m_request_body.value());
+    if (m_request_body)
+        request->set_body(JS::NonnullGCPtr { *m_request_body });
 
     // client
     //    This’s relevant settings object.
@@ -594,7 +595,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
 
     // 9. If req’s body is null, then set this’s upload complete flag.
     // NOTE: req's body is always m_request_body here, see step 6.
-    if (!m_request_body.has_value())
+    if (!m_request_body)
         m_upload_complete = true;
 
     // 10. Set this’s send() flag.
@@ -615,11 +616,11 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
         // NOTE: req's body is always m_request_body here, see step 6.
         // 4. Assert: requestBodyLength is an integer.
         // NOTE: This is done to provide a better assertion failure message, whereas below the message would be "m_has_value"
-        if (m_request_body.has_value())
+        if (m_request_body)
             VERIFY(m_request_body->length().has_value());
 
         // NOTE: This is const to allow the callback functions to take a copy of it and know it won't change.
-        auto const request_body_length = m_request_body.has_value() ? m_request_body->length().value() : 0;
+        auto const request_body_length = m_request_body ? m_request_body->length().value() : 0;
 
         // 5. If this’s upload complete flag is unset and this’s upload listener flag is set, then fire a progress event named loadstart at this’s upload object with requestBodyTransmitted and requestBodyLength.
         if (!m_upload_complete && m_upload_listener)
@@ -691,7 +692,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
                 return;
 
             // 7. If this’s response’s body is null, then run handle response end-of-body for this and return.
-            if (!m_response->body().has_value()) {
+            if (!m_response->body()) {
                 // NOTE: This cannot throw, as `handle_response_end_of_body` only throws in a synchronous context.
                 // FIXME: However, we can receive allocation failures, but we can't propagate them anywhere currently.
                 handle_response_end_of_body().release_value_but_fixme_should_propagate_errors();
