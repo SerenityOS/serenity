@@ -36,4 +36,10 @@ class SlotName;
 class Variable;
 class FunctionPointer;
 
+// Parser/SpecParser.h
+class AlgorithmStep;
+class AlgorithmStepList;
+class Algorithm;
+class SpecFunction;
+
 }
