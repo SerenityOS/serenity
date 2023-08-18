@@ -91,9 +91,9 @@ void IfBranch::dump_tree(StringBuilder& builder)
 
 void ElseIfBranch::dump_tree(StringBuilder& builder)
 {
-    dump_node(builder, "ElseIfBranch {}", m_condition.has_value() ? "ElseIf" : "Else");
-    if (m_condition.has_value())
-        (*m_condition)->format_tree(builder);
+    dump_node(builder, "ElseIfBranch {}", m_condition ? "ElseIf" : "Else");
+    if (m_condition)
+        m_condition->format_tree(builder);
     m_branch->format_tree(builder);
 }
 

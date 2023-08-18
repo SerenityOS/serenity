@@ -33,7 +33,7 @@ public:
 private:
     struct IfConditionParseResult {
         bool is_if_branch;
-        Optional<Tree> condition;
+        NullableTree condition;
     };
 
     void retreat();

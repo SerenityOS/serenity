@@ -28,12 +28,16 @@ public:
     {
     }
 
-    Tree& get(Badge<RecursiveASTVisitor>) { return *m_tree_ptr; }
+    NodeSubtreePointer(NullableTree* tree_ptr)
+        : m_tree_ptr(tree_ptr)
+    {
+    }
 
-    void replace_subtree(Badge<RecursiveASTVisitor>, Tree tree) { *m_tree_ptr = move(tree); }
+    Tree get(Badge<RecursiveASTVisitor>);
+    void replace_subtree(Badge<RecursiveASTVisitor>, NullableTree replacement);
 
 private:
-    Tree* m_tree_ptr;
+    Variant<Tree*, NullableTree*> m_tree_ptr;
 };
 
 // ===== Generic nodes =====
@@ -258,7 +262,7 @@ protected:
 
 class ElseIfBranch : public Node {
 public:
-    ElseIfBranch(Optional<Tree> condition, Tree branch)
+    ElseIfBranch(NullableTree condition, Tree branch)
         : m_condition(condition)
         , m_branch(branch)
     {
@@ -266,7 +270,7 @@ public:
 
     Vector<NodeSubtreePointer> subtrees() override;
 
-    Optional<Tree> m_condition;
+    NullableTree m_condition;
     Tree m_branch;
 
 protected:

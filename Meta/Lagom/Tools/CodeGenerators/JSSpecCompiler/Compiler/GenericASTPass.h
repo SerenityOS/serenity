@@ -17,13 +17,14 @@ class RecursiveASTVisitor {
 public:
     virtual ~RecursiveASTVisitor() = default;
 
+    void run_in_const_subtree(NullableTree tree);
     void run_in_subtree(Tree& tree);
 
 protected:
     virtual RecursionDecision on_entry(Tree) { return RecursionDecision::Recurse; }
     virtual void on_leave(Tree) { }
 
-    void replace_current_node_with(Tree tree);
+    void replace_current_node_with(NullableTree tree);
 
 private:
     RecursionDecision recurse(Tree root, NodeSubtreePointer& pointer);
