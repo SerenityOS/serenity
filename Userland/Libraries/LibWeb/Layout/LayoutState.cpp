@@ -82,8 +82,8 @@ static CSSPixelRect measure_scrollable_overflow(Box const& box)
     auto scrollable_overflow_rect = paintable_box.absolute_padding_box_rect();
 
     // - All line boxes directly contained by the scroll container.
-    if (box.is_block_container() && box.children_are_inline()) {
-        auto const& line_boxes = verify_cast<Painting::PaintableWithLines>(*box.paintable_box()).line_boxes();
+    if (is<Painting::PaintableWithLines>(box.paintable())) {
+        auto const& line_boxes = static_cast<Painting::PaintableWithLines const&>(*box.paintable()).line_boxes();
         for (auto const& line_box : line_boxes) {
             scrollable_overflow_rect = scrollable_overflow_rect.united(line_box.absolute_rect());
         }
@@ -238,8 +238,7 @@ void LayoutState::commit(Box& root)
         node.set_paintable(paintable);
 
         // For boxes, transfer all the state needed for painting.
-        if (is<Layout::Box>(node)) {
-            auto& box = static_cast<Layout::Box const&>(node);
+        if (paintable && is<Painting::PaintableBox>(*paintable)) {
             auto& paintable_box = static_cast<Painting::PaintableBox&>(*paintable);
             paintable_box.set_offset(used_values.offset);
             paintable_box.set_content_size(used_values.content_width(), used_values.content_height());
@@ -250,7 +249,7 @@ void LayoutState::commit(Box& root)
                 paintable_box.set_table_cell_coordinates(used_values.table_cell_coordinates().value());
             }
 
-            if (is<Layout::BlockContainer>(box)) {
+            if (is<Painting::PaintableWithLines>(paintable_box)) {
                 auto& paintable_with_lines = static_cast<Painting::PaintableWithLines&>(paintable_box);
                 paintable_with_lines.set_line_boxes(move(used_values.line_boxes));
                 paintables_with_lines.append(paintable_with_lines);

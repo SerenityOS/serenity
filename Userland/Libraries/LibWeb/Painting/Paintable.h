@@ -154,6 +154,9 @@ public:
     template<typename T>
     bool fast_is() const = delete;
 
+    [[nodiscard]] virtual bool is_paintable_box() const { return false; }
+    [[nodiscard]] virtual bool is_paintable_with_lines() const { return false; }
+
     StackingContext const* stacking_context_rooted_here() const;
 
 protected:
@@ -179,6 +182,9 @@ inline DOM::Node const* HitTestResult::dom_node() const
 }
 
 template<>
-inline bool Paintable::fast_is<PaintableBox>() const { return m_layout_node->is_box(); }
+inline bool Paintable::fast_is<PaintableBox>() const { return is_paintable_box(); }
+
+template<>
+inline bool Paintable::fast_is<PaintableWithLines>() const { return is_paintable_with_lines(); }
 
 }

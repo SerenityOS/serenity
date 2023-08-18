@@ -197,6 +197,8 @@ protected:
     Vector<ShadowData> resolve_box_shadow_data() const;
 
 private:
+    [[nodiscard]] virtual bool is_paintable_box() const final { return true; }
+
     Optional<OverflowData> m_overflow_data;
 
     CSSPixelPoint m_offset;
@@ -249,6 +251,8 @@ protected:
     PaintableWithLines(Layout::BlockContainer const&);
 
 private:
+    [[nodiscard]] virtual bool is_paintable_with_lines() const final { return true; }
+
     Vector<Layout::LineBox> m_line_boxes;
 };
 
