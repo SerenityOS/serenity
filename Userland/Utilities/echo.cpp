@@ -112,6 +112,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.set_stop_on_first_non_option(true);
     args_parser.parse(arguments);
 
+    setvbuf(stdout, nullptr, _IONBF, 0);
+
     if (text.is_empty()) {
         if (!no_trailing_newline)
             outln();
@@ -121,8 +123,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto output = DeprecatedString::join(' ', text);
     if (should_interpret_backslash_escapes)
         output = interpret_backslash_escapes(output, no_trailing_newline);
-    out("{}", output);
     if (!no_trailing_newline)
-        outln();
+        outln("{}", output);
+    else
+        out("{}", output);
     return 0;
 }
