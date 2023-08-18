@@ -1,5 +1,8 @@
 add_subdirectory(GMLCompiler)
 add_subdirectory(IPCCompiler)
+if (BUILD_LAGOM)
+    add_subdirectory(JSSpecCompiler)
+endif()
 add_subdirectory(LibEDID)
 add_subdirectory(LibGL)
 add_subdirectory(LibLocale)
