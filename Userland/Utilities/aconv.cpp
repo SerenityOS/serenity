@@ -141,6 +141,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return 1;
         }
 
+        if (writer.has_value())
+            (*writer)->sample_count_hint(input_loader->total_samples());
+
         if (output != "-"sv)
             out("Writing: \033[s");
 
