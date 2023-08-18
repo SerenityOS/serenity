@@ -217,7 +217,7 @@ size_t FILE::write(u8 const* data, size_t size)
     m_flags |= Flags::LastWrite;
 
     while (size > 0) {
-        size_t actual_size;
+        size_t actual_size = 0;
 
         if (m_buffer.may_use()) {
             m_buffer.realize(m_fd);
@@ -239,8 +239,10 @@ size_t FILE::write(u8 const* data, size_t size)
             // See if we have to flush it.
             if (m_buffer.mode() == _IOLBF) {
                 bool includes_newline = memchr(data, '\n', actual_size);
-                if (includes_newline)
-                    flush();
+                if (includes_newline) {
+                    if (!flush())
+                        return total_written;
+                }
             }
         } else {
             // Write directly from the user buffer.
