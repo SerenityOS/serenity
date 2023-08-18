@@ -5,7 +5,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <div.bfc> at (8,78) content-size 784x20 [BFC] children: not-inline
         BlockContainer <div.inner> at (8,78) content-size 20x20 children: not-inline
 
-PaintableWithLines (Viewport<#document>) [0,0 800x600]
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x106]
     PaintableWithLines (BlockContainer<BODY>) [8,8 784x90]
       PaintableWithLines (BlockContainer<DIV>.upper) [8,8 784x20]

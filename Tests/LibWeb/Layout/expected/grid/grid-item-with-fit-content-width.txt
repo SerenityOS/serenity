@@ -7,7 +7,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             "Press and Media"
         TextNode <#text>
 
-PaintableWithLines (Viewport<#document>) [0,0 800x600]
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x39.46875]
     PaintableBox (Box<BODY>) [9,9 782x21.46875]
       PaintableWithLines (BlockContainer<DIV>.inner) [10,10 134.828125x19.46875]

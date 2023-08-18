@@ -8,7 +8,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           BlockContainer <div> at (14,13) content-size 0x21.84375 flex-item [BFC] children: inline
             TextNode <#text>
 
-PaintableWithLines (Viewport<#document>) [0,0 800x600]
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x47.84375]
     PaintableWithLines (BlockContainer<BODY>) [9,9 782x29.84375]
       PaintableWithLines (BlockContainer<INPUT>) [10,10 202x27.84375]

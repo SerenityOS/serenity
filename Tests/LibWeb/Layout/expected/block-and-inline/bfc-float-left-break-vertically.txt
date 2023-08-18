@@ -16,7 +16,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         BlockContainer <div.green> at (3,56) content-size 100x50 floating [BFC] children: not-inline
         TextNode <#text>
 
-PaintableWithLines (Viewport<#document>) [0,0 800x600]
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x108]
     PaintableWithLines (BlockContainer(anonymous)) [1,1 798x0]
     PaintableWithLines (BlockContainer<BODY>) [1,1 402x4]

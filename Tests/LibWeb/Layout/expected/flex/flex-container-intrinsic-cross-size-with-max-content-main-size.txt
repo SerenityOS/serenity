@@ -8,7 +8,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
               "this text should be all on one line"
           TextNode <#text>
 
-PaintableWithLines (Viewport<#document>) [0,0 800x600]
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x53.46875]
     PaintableWithLines (BlockContainer<BODY>.outer) [8,8 300.84375x37.46875]
       PaintableBox (Box<DIV>.inner) [18,18 280.84375x17.46875]

@@ -5,7 +5,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         Box <div.row> at (8,8) content-size 102x100 table-row children: not-inline
           BlockContainer <div.cell> at (9,9) content-size 100x0 table-cell [BFC] children: not-inline
 
-PaintableWithLines (Viewport<#document>) [0,0 800x600]
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
     PaintableWithLines (TableWrapper(anonymous)) [8,8 102x100]
       PaintableBox (Box<BODY>) [8,8 102x100]

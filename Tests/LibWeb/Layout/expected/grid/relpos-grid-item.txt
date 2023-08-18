@@ -12,7 +12,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             "athena"
         TextNode <#text>
 
-PaintableWithLines (Viewport<#document>) [0,0 800x600]
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x66.9375]
     PaintableBox (Box<BODY>) [10,10 604x46.9375]
       PaintableWithLines (BlockContainer<DIV>.exekiller) [12,12 204x21.46875]

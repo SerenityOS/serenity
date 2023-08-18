@@ -218,7 +218,7 @@ private:
     Optional<TableCellCoordinates> m_table_cell_coordinates;
 };
 
-class PaintableWithLines final : public PaintableBox {
+class PaintableWithLines : public PaintableBox {
     JS_CELL(PaintableWithLines, PaintableBox);
 
 public:

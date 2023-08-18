@@ -13,7 +13,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
               "Mac"
           TextNode <#text>
 
-PaintableWithLines (Viewport<#document>) [0,0 800x600]
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x41.46875]
     PaintableWithLines (BlockContainer<BODY>) [8,16 784x17.46875]
       PaintableBox (Box<UL>.globalnav-list) [8,16 784x17.46875]

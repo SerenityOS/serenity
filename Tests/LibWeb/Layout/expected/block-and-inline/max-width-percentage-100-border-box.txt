@@ -7,7 +7,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             "border box"
         TextNode <#text>
 
-PaintableWithLines (Viewport<#document>) [0,0 800x600]
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x2] overflow: [9,9 95.59375x21.46875]
     PaintableWithLines (BlockContainer<BODY>) [9,9 95.59375x21.46875]
       PaintableWithLines (BlockContainer<NAV>) [10,10 93.59375x19.46875]

@@ -4,7 +4,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       SVGSVGBox <svg> at (400,8) content-size 0x0 flex-item [SVG] children: not-inline
         SVGGeometryBox <rect> at (400,8) content-size 0x0 children: not-inline
 
-PaintableWithLines (Viewport<#document>) [0,0 800x600]
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x16]
     PaintableBox (Box<BODY>) [8,8 784x0]
       SVGSVGPaintable (SVGSVGBox<svg>) [400,8 0x0]

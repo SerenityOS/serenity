@@ -9,7 +9,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
                 BlockContainer <(anonymous)> at (16,63) content-size 98x0 children: inline
                   TextNode <#text>
 
-PaintableWithLines (Viewport<#document>) [0,0 800x600]
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x126]
     PaintableWithLines (BlockContainer<BODY>) [9,9 782x108]
       PaintableWithLines (TableWrapper(anonymous)) [10,10 110x106]

@@ -30,7 +30,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <(anonymous)> at (10,276.40625) content-size 780x0 children: inline
         TextNode <#text>
 
-PaintableWithLines (Viewport<#document>) [0,0 800x600]
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x286.40625]
     PaintableWithLines (BlockContainer<BODY>) [9,9 782x268.40625]
       PaintableBox (Box<DIV>.flex.row.align-start) [10,10 502x202]

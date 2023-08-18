@@ -6,7 +6,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       SVGSVGBox <svg> at (9,61) content-size 200x100 [SVG] children: not-inline
         SVGGeometryBox <rect> at (34,86) content-size 150x50 children: not-inline
 
-PaintableWithLines (Viewport<#document>) [0,0 800x600]
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x170]
     PaintableWithLines (BlockContainer<BODY>) [8,8 784x154]
       SVGSVGPaintable (SVGSVGBox<svg>) [8,8 102x52]

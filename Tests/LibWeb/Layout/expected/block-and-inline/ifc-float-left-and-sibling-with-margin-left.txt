@@ -8,7 +8,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             "Chrono Trigger"
         TextNode <#text>
 
-PaintableWithLines (Viewport<#document>) [0,0 800x600]
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x63]
     PaintableWithLines (BlockContainer<BODY>) [9,9 782x21.46875] overflow: [10,10 780x52]
       PaintableWithLines (BlockContainer<DIV>.thumbnail) [10,10 52x52]

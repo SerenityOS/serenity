@@ -5,7 +5,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         BlockContainer <div> at (8,8) content-size 0x0 flex-item [BFC] children: not-inline
           Box <div#box2> at (8,8) content-size 0x0 floating flex-container(row) [FFC] children: not-inline
 
-PaintableWithLines (Viewport<#document>) [0,0 800x600]
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x16]
     PaintableWithLines (BlockContainer<BODY>) [8,8 784x0]
       PaintableBox (Box<DIV>#box1) [8,8 784x0]

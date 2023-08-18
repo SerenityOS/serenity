@@ -8,7 +8,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       ImageBox <img.with-width> at (129,29) content-size 58x58 children: not-inline
       TextNode <#text>
 
-PaintableWithLines (Viewport<#document>) [0,0 800x600]
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x116]
     PaintableWithLines (BlockContainer<BODY>) [8,8 784x100]
       ImagePaintable (ImageBox<IMG>.with-height) [8,8 100x100]

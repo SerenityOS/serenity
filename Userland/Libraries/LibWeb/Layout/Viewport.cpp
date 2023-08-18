@@ -9,6 +9,7 @@
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/StackingContext.h>
+#include <LibWeb/Painting/ViewportPaintable.h>
 
 namespace Web::Layout {
 
@@ -124,6 +125,11 @@ void Viewport::recompute_selection_states()
         if (auto* layout_node = node->layout_node())
             layout_node->set_selection_state(SelectionState::Full);
     }
+}
+
+JS::GCPtr<Painting::Paintable> Viewport::create_paintable() const
+{
+    return Painting::ViewportPaintable::create(*this);
 }
 
 }

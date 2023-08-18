@@ -8,7 +8,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
               "whee"
           TextNode <#text>
 
-PaintableWithLines (Viewport<#document>) [0,0 800x600]
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x41.46875]
     PaintableWithLines (BlockContainer<BODY>) [9,9 43.953125x23.46875]
       PaintableBox (Box<DIV>.grid) [10,10 41.953125x21.46875]
