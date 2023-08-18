@@ -24,6 +24,10 @@ public:
     // This method makes sure that all samples are encoded and written out.
     // This method is called in the destructor, but since this can error, you should call this function yourself before disposing of the decoder.
     virtual ErrorOr<void> finalize() = 0;
+
+    // Provides a hint about the total number of samples to the encoder, improving some encoder's performance in various aspects.
+    // Note that the hint does not have to be fully correct; wrong hints never cause errors, not even indirectly.
+    virtual void sample_count_hint([[maybe_unused]] size_t sample_count) { }
 };
 
 }
