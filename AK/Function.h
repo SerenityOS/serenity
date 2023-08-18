@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2016 Apple Inc. All rights reserved.
  * Copyright (c) 2021, Gunnar Beutner <gbeutner@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,6 +32,7 @@
 #include <AK/BitCast.h>
 #include <AK/Noncopyable.h>
 #include <AK/ScopeGuard.h>
+#include <AK/Span.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 
@@ -51,6 +53,7 @@ class Function<Out(In...)> {
     AK_MAKE_NONCOPYABLE(Function);
 
 public:
+    using FunctionType = Out(In...);
     using ReturnType = Out;
 
     Function() = default;
@@ -63,18 +66,27 @@ public:
         clear(false);
     }
 
+    [[nodiscard]] ReadonlyBytes raw_capture_range() const
+    {
+        if (!m_size)
+            return {};
+        if (auto* wrapper = callable_wrapper())
+            return ReadonlyBytes { wrapper, m_size };
+        return {};
+    }
+
     template<typename CallableType>
     Function(CallableType&& callable)
     requires((IsFunctionObject<CallableType> && IsCallableWithArguments<CallableType, Out, In...> && !IsSame<RemoveCVReference<CallableType>, Function>))
     {
-        init_with_callable(forward<CallableType>(callable));
+        init_with_callable(forward<CallableType>(callable), CallableKind::FunctionObject);
     }
 
     template<typename FunctionType>
     Function(FunctionType f)
     requires((IsFunctionPointer<FunctionType> && IsCallableWithArguments<RemovePointer<FunctionType>, Out, In...> && !IsSame<RemoveCVReference<FunctionType>, Function>))
     {
-        init_with_callable(move(f));
+        init_with_callable(move(f), CallableKind::FunctionPointer);
     }
 
     Function(Function&& other)
@@ -102,7 +114,7 @@ public:
     requires((IsFunctionObject<CallableType> && IsCallableWithArguments<CallableType, Out, In...>))
     {
         clear();
-        init_with_callable(forward<CallableType>(callable));
+        init_with_callable(forward<CallableType>(callable), CallableKind::FunctionObject);
         return *this;
     }
 
@@ -112,7 +124,7 @@ public:
     {
         clear();
         if (f)
-            init_with_callable(move(f));
+            init_with_callable(move(f), CallableKind::FunctionPointer);
         return *this;
     }
 
@@ -132,6 +144,11 @@ public:
     }
 
 private:
+    enum class CallableKind {
+        FunctionPointer,
+        FunctionObject,
+    };
+
     class CallableWrapperBase {
     public:
         virtual ~CallableWrapperBase() = default;
@@ -215,7 +232,7 @@ private:
     }
 
     template<typename Callable>
-    void init_with_callable(Callable&& callable)
+    void init_with_callable(Callable&& callable, CallableKind callable_kind)
     {
         VERIFY(m_call_nesting_level == 0);
         using WrapperType = CallableWrapper<Callable>;
@@ -231,12 +248,17 @@ private:
 #ifndef KERNEL
         }
 #endif
+        if (callable_kind == CallableKind::FunctionObject)
+            m_size = sizeof(WrapperType);
+        else
+            m_size = 0;
     }
 
     void move_from(Function&& other)
     {
         VERIFY(m_call_nesting_level == 0 && other.m_call_nesting_level == 0);
         auto* other_wrapper = other.callable_wrapper();
+        m_size = other.m_size;
         switch (other.m_kind) {
         case FunctionKind::NullPointer:
             break;
@@ -254,9 +276,11 @@ private:
         other.m_kind = FunctionKind::NullPointer;
     }
 
+    size_t m_size { 0 };
     FunctionKind m_kind { FunctionKind::NullPointer };
     bool m_deferred_clear { false };
     mutable Atomic<u16> m_call_nesting_level { 0 };
+
 #ifndef KERNEL
     // Empirically determined to fit most lambdas and functions.
     static constexpr size_t inline_capacity = 4 * sizeof(void*);

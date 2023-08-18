@@ -82,6 +82,8 @@ public:
         {
         }
 
+        virtual void visit_possible_values(ReadonlyBytes) = 0;
+
     protected:
         virtual void visit_impl(Cell&) = 0;
         virtual ~Visitor() = default;

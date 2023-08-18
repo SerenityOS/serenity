@@ -81,6 +81,9 @@ public:
     void uproot_cell(Cell* cell);
 
 private:
+    friend class MarkingVisitor;
+    friend class GraphConstructorVisitor;
+
     static bool cell_must_survive_garbage_collection(Cell const&);
 
     Cell* allocate_cell(size_t);
