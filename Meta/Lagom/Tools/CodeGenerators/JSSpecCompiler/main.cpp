@@ -9,11 +9,15 @@
 #include <LibMain/Main.h>
 #include <LibXML/Parser/Parser.h>
 
+#include "Compiler/FunctionCallCanonicalizationPass.h"
+#include "Function.h"
 #include "Parser/SpecParser.h"
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
     using namespace JSSpecCompiler;
+
+    ExecutionContext context;
 
     auto input = TRY(TRY(Core::File::standard_input())->read_until_eof());
     XML::Parser parser { StringView(input.bytes()) };
@@ -30,8 +34,12 @@ ErrorOr<int> serenity_main(Main::Arguments)
         outln("{}", maybe_function.error()->to_string());
         return 1;
     }
-    auto function = maybe_function.value();
+    auto spec_function = maybe_function.value();
 
-    out("{}", function.m_algorithm.m_tree);
+    auto function = make_ref_counted<JSSpecCompiler::Function>(&context, spec_function.m_name, spec_function.m_algorithm.m_tree);
+
+    FunctionCallCanonicalizationPass(function).run();
+
+    out("{}", function->m_ast);
     return 0;
 }
