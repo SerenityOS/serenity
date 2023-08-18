@@ -574,15 +574,11 @@ void outln(FILE* file, CheckedFormatString<Parameters...>&& fmtstr, Parameters c
     vout(file, fmtstr.view(), variadic_format_params, true);
 }
 
-inline void outln(FILE* file) { fputc('\n', file); }
-
 template<typename... Parameters>
 void out(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters) { out(stdout, move(fmtstr), parameters...); }
 
 template<typename... Parameters>
 void outln(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters) { outln(stdout, move(fmtstr), parameters...); }
-
-inline void outln() { outln(stdout); }
 
 #    define outln_if(flag, fmt, ...)       \
         do {                               \
@@ -598,8 +594,6 @@ void warn(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... para
 
 template<typename... Parameters>
 void warnln(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters) { outln(stderr, move(fmtstr), parameters...); }
-
-inline void warnln() { outln(stderr); }
 
 #    define warnln_if(flag, fmt, ...)       \
         do {                                \
@@ -625,7 +619,27 @@ void dbgln(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... par
     vdbg(fmtstr.view(), variadic_format_params, true);
 }
 
-inline void dbgln() { dbgln(""); }
+#ifndef KERNEL
+
+inline void outln(FILE* file)
+{
+    int rc = fputc('\n', file);
+    if (rc < 0) {
+        auto error = ferror(file);
+        dbgln("vout() failed, error was {} ({})", error, strerror(error));
+    }
+}
+
+inline void outln() { outln(stdout); }
+
+inline void warnln() { outln(stderr); }
+
+#endif
+
+inline void dbgln()
+{
+    dbgln("");
+}
 
 void set_debug_enabled(bool);
 
