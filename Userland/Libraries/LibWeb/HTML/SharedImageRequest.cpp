@@ -82,8 +82,8 @@ void SharedImageRequest::fetch_image(JS::Realm& realm, JS::NonnullGCPtr<Fetch::I
             handle_failed_fetch();
         };
 
-        if (response->body().has_value())
-            response->body().value().fully_read(realm, move(process_body), move(process_body_error), JS::NonnullGCPtr { realm.global_object() }).release_value_but_fixme_should_propagate_errors();
+        if (response->body())
+            response->body()->fully_read(realm, move(process_body), move(process_body_error), JS::NonnullGCPtr { realm.global_object() }).release_value_but_fixme_should_propagate_errors();
     };
 
     m_state = State::Fetching;

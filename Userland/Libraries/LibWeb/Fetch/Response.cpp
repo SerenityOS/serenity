@@ -50,24 +50,20 @@ ErrorOr<Optional<MimeSniff::MimeType>> Response::mime_type_impl() const
 
 // https://fetch.spec.whatwg.org/#concept-body-body
 // https://fetch.spec.whatwg.org/#ref-for-concept-body-body%E2%91%A8
-Optional<Infrastructure::Body const&> Response::body_impl() const
+JS::GCPtr<Infrastructure::Body const> Response::body_impl() const
 {
     // Objects including the Body interface mixin have an associated body (null or a body).
     // A Response object’s body is its response’s body.
-    return m_response->body().has_value()
-        ? m_response->body().value()
-        : Optional<Infrastructure::Body const&> {};
+    return m_response->body() ? m_response->body() : nullptr;
 }
 
 // https://fetch.spec.whatwg.org/#concept-body-body
 // https://fetch.spec.whatwg.org/#ref-for-concept-body-body%E2%91%A8
-Optional<Infrastructure::Body&> Response::body_impl()
+JS::GCPtr<Infrastructure::Body> Response::body_impl()
 {
     // Objects including the Body interface mixin have an associated body (null or a body).
     // A Response object’s body is its response’s body.
-    return m_response->body().has_value()
-        ? m_response->body().value()
-        : Optional<Infrastructure::Body&> {};
+    return m_response->body() ? m_response->body() : nullptr;
 }
 
 // https://fetch.spec.whatwg.org/#response-create

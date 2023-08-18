@@ -75,9 +75,9 @@ public:
     [[nodiscard]] virtual JS::NonnullGCPtr<HeaderList> header_list() const { return m_header_list; }
     void set_header_list(JS::NonnullGCPtr<HeaderList> header_list) { m_header_list = header_list; }
 
-    [[nodiscard]] virtual Optional<Body> const& body() const { return m_body; }
-    [[nodiscard]] virtual Optional<Body>& body() { return m_body; }
-    void set_body(Optional<Body> body) { m_body = move(body); }
+    [[nodiscard]] virtual JS::GCPtr<Body> const& body() const { return m_body; }
+    [[nodiscard]] virtual JS::GCPtr<Body>& body() { return m_body; }
+    void set_body(JS::GCPtr<Body> body) { m_body = move(body); }
 
     [[nodiscard]] virtual Optional<CacheState> const& cache_state() const { return m_cache_state; }
     void set_cache_state(Optional<CacheState> cache_state) { m_cache_state = move(cache_state); }
@@ -147,7 +147,7 @@ private:
 
     // https://fetch.spec.whatwg.org/#concept-response-body
     // A response has an associated body (null or a body). Unless stated otherwise it is null.
-    Optional<Body> m_body;
+    JS::GCPtr<Body> m_body;
 
     // https://fetch.spec.whatwg.org/#concept-response-cache-state
     // A response has an associated cache state (the empty string, "local", or "validated"). Unless stated otherwise, it is the empty string.
@@ -199,8 +199,8 @@ public:
     [[nodiscard]] virtual Status status() const override { return m_internal_response->status(); }
     [[nodiscard]] virtual ReadonlyBytes status_message() const override { return m_internal_response->status_message(); }
     [[nodiscard]] virtual JS::NonnullGCPtr<HeaderList> header_list() const override { return m_internal_response->header_list(); }
-    [[nodiscard]] virtual Optional<Body> const& body() const override { return m_internal_response->body(); }
-    [[nodiscard]] virtual Optional<Body>& body() override { return m_internal_response->body(); }
+    [[nodiscard]] virtual JS::GCPtr<Body> const& body() const override { return m_internal_response->body(); }
+    [[nodiscard]] virtual JS::GCPtr<Body>& body() override { return m_internal_response->body(); }
     [[nodiscard]] virtual Optional<CacheState> const& cache_state() const override { return m_internal_response->cache_state(); }
     [[nodiscard]] virtual Vector<ByteBuffer> const& cors_exposed_header_name_list() const override { return m_internal_response->cors_exposed_header_name_list(); }
     [[nodiscard]] virtual bool range_requested() const override { return m_internal_response->range_requested(); }
@@ -267,8 +267,8 @@ public:
     [[nodiscard]] virtual Status status() const override { return 0; }
     [[nodiscard]] virtual ReadonlyBytes status_message() const override { return {}; }
     [[nodiscard]] virtual JS::NonnullGCPtr<HeaderList> header_list() const override { return m_header_list; }
-    [[nodiscard]] virtual Optional<Body> const& body() const override { return m_body; }
-    [[nodiscard]] virtual Optional<Body>& body() override { return m_body; }
+    [[nodiscard]] virtual JS::GCPtr<Body> const& body() const override { return m_body; }
+    [[nodiscard]] virtual JS::GCPtr<Body>& body() override { return m_body; }
 
 private:
     OpaqueFilteredResponse(JS::NonnullGCPtr<Response>, JS::NonnullGCPtr<HeaderList>);
@@ -277,7 +277,7 @@ private:
 
     Vector<AK::URL> m_url_list;
     JS::NonnullGCPtr<HeaderList> m_header_list;
-    Optional<Body> m_body;
+    JS::GCPtr<Body> m_body;
 };
 
 // https://fetch.spec.whatwg.org/#concept-filtered-response-opaque-redirect
@@ -291,8 +291,8 @@ public:
     [[nodiscard]] virtual Status status() const override { return 0; }
     [[nodiscard]] virtual ReadonlyBytes status_message() const override { return {}; }
     [[nodiscard]] virtual JS::NonnullGCPtr<HeaderList> header_list() const override { return m_header_list; }
-    [[nodiscard]] virtual Optional<Body> const& body() const override { return m_body; }
-    [[nodiscard]] virtual Optional<Body>& body() override { return m_body; }
+    [[nodiscard]] virtual JS::GCPtr<Body> const& body() const override { return m_body; }
+    [[nodiscard]] virtual JS::GCPtr<Body>& body() override { return m_body; }
 
 private:
     OpaqueRedirectFilteredResponse(JS::NonnullGCPtr<Response>, JS::NonnullGCPtr<HeaderList>);
@@ -300,6 +300,6 @@ private:
     virtual void visit_edges(JS::Cell::Visitor&) override;
 
     JS::NonnullGCPtr<HeaderList> m_header_list;
-    Optional<Body> m_body;
+    JS::GCPtr<Body> m_body;
 };
 }

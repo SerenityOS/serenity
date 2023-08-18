@@ -21,7 +21,9 @@
 namespace Web::Fetch::Infrastructure {
 
 // https://fetch.spec.whatwg.org/#concept-body
-class Body final {
+class Body final : public JS::Cell {
+    JS_CELL(Body, JS::Cell);
+
 public:
     using SourceType = Variant<Empty, ByteBuffer, JS::Handle<FileAPI::Blob>>;
     // processBody must be an algorithm accepting a byte sequence.
@@ -29,21 +31,26 @@ public:
     // processBodyError must be an algorithm optionally accepting an exception.
     using ProcessBodyErrorCallback = JS::SafeFunction<void(JS::GCPtr<WebIDL::DOMException>)>;
 
-    explicit Body(JS::Handle<Streams::ReadableStream>);
-    Body(JS::Handle<Streams::ReadableStream>, SourceType, Optional<u64>);
+    [[nodiscard]] static JS::NonnullGCPtr<Body> create(JS::VM&, JS::NonnullGCPtr<Streams::ReadableStream>);
+    [[nodiscard]] static JS::NonnullGCPtr<Body> create(JS::VM&, JS::NonnullGCPtr<Streams::ReadableStream>, SourceType, Optional<u64>);
 
     [[nodiscard]] JS::NonnullGCPtr<Streams::ReadableStream> stream() const { return *m_stream; }
     [[nodiscard]] SourceType const& source() const { return m_source; }
     [[nodiscard]] Optional<u64> const& length() const { return m_length; }
 
-    [[nodiscard]] Body clone(JS::Realm&) const;
+    [[nodiscard]] JS::NonnullGCPtr<Body> clone(JS::Realm&) const;
 
     WebIDL::ExceptionOr<void> fully_read(JS::Realm&, ProcessBodyCallback process_body, ProcessBodyErrorCallback process_body_error, TaskDestination task_destination) const;
 
+    virtual void visit_edges(JS::Cell::Visitor&) override;
+
 private:
+    explicit Body(JS::NonnullGCPtr<Streams::ReadableStream>);
+    Body(JS::NonnullGCPtr<Streams::ReadableStream>, SourceType, Optional<u64>);
+
     // https://fetch.spec.whatwg.org/#concept-body-stream
     // A stream (a ReadableStream object).
-    JS::Handle<Streams::ReadableStream> m_stream;
+    JS::NonnullGCPtr<Streams::ReadableStream> m_stream;
 
     // https://fetch.spec.whatwg.org/#concept-body-source
     // A source (null, a byte sequence, a Blob object, or a FormData object), initially null.
@@ -57,10 +64,10 @@ private:
 // https://fetch.spec.whatwg.org/#body-with-type
 // A body with type is a tuple that consists of a body (a body) and a type (a header value or null).
 struct BodyWithType {
-    Body body;
+    JS::NonnullGCPtr<Body> body;
     Optional<ByteBuffer> type;
 };
 
-WebIDL::ExceptionOr<Body> byte_sequence_as_body(JS::Realm&, ReadonlyBytes);
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Body>> byte_sequence_as_body(JS::Realm&, ReadonlyBytes);
 
 }

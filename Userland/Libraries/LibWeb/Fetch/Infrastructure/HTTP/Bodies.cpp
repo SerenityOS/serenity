@@ -13,20 +13,36 @@
 
 namespace Web::Fetch::Infrastructure {
 
-Body::Body(JS::Handle<Streams::ReadableStream> stream)
+JS::NonnullGCPtr<Body> Body::create(JS::VM& vm, JS::NonnullGCPtr<Streams::ReadableStream> stream)
+{
+    return vm.heap().allocate_without_realm<Body>(stream);
+}
+
+JS::NonnullGCPtr<Body> Body::create(JS::VM& vm, JS::NonnullGCPtr<Streams::ReadableStream> stream, SourceType source, Optional<u64> length)
+{
+    return vm.heap().allocate_without_realm<Body>(stream, source, length);
+}
+
+Body::Body(JS::NonnullGCPtr<Streams::ReadableStream> stream)
     : m_stream(move(stream))
 {
 }
 
-Body::Body(JS::Handle<Streams::ReadableStream> stream, SourceType source, Optional<u64> length)
+Body::Body(JS::NonnullGCPtr<Streams::ReadableStream> stream, SourceType source, Optional<u64> length)
     : m_stream(move(stream))
     , m_source(move(source))
     , m_length(move(length))
 {
 }
 
+void Body::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_stream);
+}
+
 // https://fetch.spec.whatwg.org/#concept-body-clone
-Body Body::clone(JS::Realm& realm) const
+JS::NonnullGCPtr<Body> Body::clone(JS::Realm& realm) const
 {
     // To clone a body body, run these steps:
     // FIXME: 1. Let « out1, out2 » be the result of teeing body’s stream.
@@ -34,7 +50,7 @@ Body Body::clone(JS::Realm& realm) const
     auto out2 = realm.heap().allocate<Streams::ReadableStream>(realm, realm);
 
     // 3. Return a body whose stream is out2 and other members are copied from body.
-    return Body { JS::make_handle(out2), m_source, m_length };
+    return Body::create(realm.vm(), out2, m_source, m_length);
 }
 
 // https://fetch.spec.whatwg.org/#body-fully-read
@@ -80,7 +96,7 @@ WebIDL::ExceptionOr<void> Body::fully_read(JS::Realm& realm, Web::Fetch::Infrast
 }
 
 // https://fetch.spec.whatwg.org/#byte-sequence-as-a-body
-WebIDL::ExceptionOr<Body> byte_sequence_as_body(JS::Realm& realm, ReadonlyBytes bytes)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Body>> byte_sequence_as_body(JS::Realm& realm, ReadonlyBytes bytes)
 {
     // To get a byte sequence bytes as a body, return the body of the result of safely extracting bytes.
     auto [body, _] = TRY(safely_extract_body(realm, bytes));

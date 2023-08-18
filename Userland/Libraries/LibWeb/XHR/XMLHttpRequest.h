@@ -136,7 +136,7 @@ private:
     // https://xhr.spec.whatwg.org/#request-body
     // request body
     //     Initially null.
-    Optional<Fetch::Infrastructure::Body> m_request_body;
+    JS::GCPtr<Fetch::Infrastructure::Body> m_request_body;
 
     // https://xhr.spec.whatwg.org/#synchronous-flag
     // synchronous flag

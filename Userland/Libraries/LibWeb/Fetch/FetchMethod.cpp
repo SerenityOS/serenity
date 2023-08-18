@@ -165,7 +165,7 @@ void abort_fetch(JS::Realm& realm, WebIDL::Promise const& promise, JS::NonnullGC
     WebIDL::reject_promise(realm, promise, error);
 
     // 2. If request’s body is non-null and is readable, then cancel request’s body with error.
-    if (auto* body = request->body().get_pointer<Infrastructure::Body>(); body != nullptr && body->stream()->is_readable()) {
+    if (auto* body = request->body().get_pointer<JS::NonnullGCPtr<Infrastructure::Body>>(); body != nullptr && (*body)->stream()->is_readable()) {
         // TODO: Implement cancelling streams
         (void)error;
     }
@@ -178,7 +178,7 @@ void abort_fetch(JS::Realm& realm, WebIDL::Promise const& promise, JS::NonnullGC
     auto response = response_object->response();
 
     // 5. If response’s body is non-null and is readable, then error response’s body with error.
-    if (response->body().has_value()) {
+    if (response->body()) {
         auto stream = response->body()->stream();
         if (stream->is_readable()) {
             // TODO: Implement erroring streams
