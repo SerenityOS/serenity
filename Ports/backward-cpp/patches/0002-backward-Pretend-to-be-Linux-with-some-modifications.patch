@@ -8,7 +8,7 @@ Subject: [PATCH] backward: Pretend to be Linux, with some modifications
  1 file changed, 10 insertions(+), 3 deletions(-)
 
 diff --git a/backward.hpp b/backward.hpp
-index 670aa45853997c515974bb9411d7a9e72aeeee78..25e70cc6d0d1e508ac42e63ea3fa8b56992cfb27 100644
+index 670aa45853997c515974bb9411d7a9e72aeeee78..ff51271a9490d3f16520ca459849d384b3f2061a 100644
 --- a/backward.hpp
 +++ b/backward.hpp
 @@ -63,7 +63,7 @@
