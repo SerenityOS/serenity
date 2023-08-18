@@ -350,7 +350,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(file_to_source, "File to source", "source", 's', "file");
     args_parser.add_option(suppress_sqlrc, "Don't read ~/.sqlrc", "no-sqlrc", 'n');
 #if !defined(AK_OS_SERENITY)
-    args_parser.add_option(sql_server_path, "Path to SQLServer to launch if needed", "sql-server-path", 's', "path");
+    args_parser.add_option(sql_server_path, "Path to SQLServer to launch if needed", "sql-server-path", 'p', "path");
 #endif
     args_parser.parse(arguments);
 
