@@ -65,7 +65,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Infrastructure::FetchController>> fetch(JS:
     auto& vm = realm.vm();
 
     // 1. Assert: request’s mode is "navigate" or processEarlyHintsResponse is null.
-    VERIFY(request.mode() == Infrastructure::Request::Mode::Navigate || !algorithms.process_early_hints_response().has_value());
+    VERIFY(request.mode() == Infrastructure::Request::Mode::Navigate || !algorithms.process_early_hints_response());
 
     // 2. Let taskDestination be null.
     JS::GCPtr<JS::Object> task_destination;
@@ -608,8 +608,8 @@ WebIDL::ExceptionOr<void> fetch_response_handover(JS::Realm& realm, Infrastructu
 
             // 2. If fetchParams’s process response end-of-body is non-null, then run fetchParams’s process response
             //    end-of-body given response.
-            if (fetch_params.algorithms()->process_response_end_of_body().has_value())
-                (*fetch_params.algorithms()->process_response_end_of_body())(response);
+            if (fetch_params.algorithms()->process_response_end_of_body())
+                (fetch_params.algorithms()->process_response_end_of_body())(response);
 
             // 3. If fetchParams’s request’s initiator type is non-null and fetchParams’s request’s client’s global
             //    object is fetchParams’s task destination, then run fetchParams’s controller’s report timing steps
@@ -634,9 +634,9 @@ WebIDL::ExceptionOr<void> fetch_response_handover(JS::Realm& realm, Infrastructu
 
     // 4. If fetchParams’s process response is non-null, then queue a fetch task to run fetchParams’s process response
     //    given response, with fetchParams’s task destination.
-    if (fetch_params.algorithms()->process_response().has_value()) {
+    if (fetch_params.algorithms()->process_response()) {
         Infrastructure::queue_fetch_task(task_destination, [&fetch_params, &response]() {
-            (*fetch_params.algorithms()->process_response())(response);
+            fetch_params.algorithms()->process_response()(response);
         });
     }
 
@@ -657,17 +657,17 @@ WebIDL::ExceptionOr<void> fetch_response_handover(JS::Realm& realm, Infrastructu
     }
 
     // 8. If fetchParams’s process response consume body is non-null, then:
-    if (fetch_params.algorithms()->process_response_consume_body().has_value()) {
+    if (fetch_params.algorithms()->process_response_consume_body()) {
         // 1. Let processBody given nullOrBytes be this step: run fetchParams’s process response consume body given
         //    response and nullOrBytes.
         auto process_body = [&fetch_params, &response](Variant<ByteBuffer, Empty> const& null_or_bytes) {
-            (*fetch_params.algorithms()->process_response_consume_body())(response, null_or_bytes);
+            (fetch_params.algorithms()->process_response_consume_body())(response, null_or_bytes);
         };
 
         // 2. Let processBodyError be this step: run fetchParams’s process response consume body given response and
         //    failure.
         auto process_body_error = [&fetch_params, &response](auto) {
-            (*fetch_params.algorithms()->process_response_consume_body())(response, Infrastructure::FetchAlgorithms::ConsumeBodyFailureTag {});
+            (fetch_params.algorithms()->process_response_consume_body())(response, Infrastructure::FetchAlgorithms::ConsumeBodyFailureTag {});
         };
 
         // 3. If internalResponse's body is null, then queue a fetch task to run processBody given null, with
