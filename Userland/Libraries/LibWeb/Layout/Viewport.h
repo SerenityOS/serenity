@@ -29,6 +29,8 @@ public:
     void recompute_selection_states();
 
 private:
+    virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;
+
     void build_stacking_context_tree();
     virtual bool is_viewport() const override { return true; }
 };

@@ -10,7 +10,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             "intruding on this div"
         TextNode <#text>
 
-PaintableWithLines (Viewport<#document>) [0,0 800x600]
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x57.40625]
     PaintableWithLines (BlockContainer<BODY>) [109,9 302x39.40625] overflow: [60,10 350x37.40625]
       PaintableWithLines (BlockContainer<DIV>) [60,10 202x37.40625]

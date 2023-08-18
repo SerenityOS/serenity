@@ -26,7 +26,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
               "Pellentesque eget justo nulla. Duis consectetur imperdiet nisi, ac tincidunt urna blandit quis."
           TextNode <#text>
 
-PaintableWithLines (Viewport<#document>) [0,0 800x600]
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x247.09375]
     PaintableWithLines (BlockContainer<BODY>) [9,9 782x229.09375]
       PaintableBox (Box<DIV>.outer.flex.flex-wrap) [10,10 780x227.09375]

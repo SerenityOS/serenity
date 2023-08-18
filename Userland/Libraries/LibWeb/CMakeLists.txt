@@ -493,6 +493,7 @@ set(SOURCES
     Painting/TableBordersPainting.cpp
     Painting/TextPaintable.cpp
     Painting/VideoPaintable.cpp
+    Painting/ViewportPaintable.cpp
     PerformanceTimeline/EntryTypes.cpp
     PerformanceTimeline/PerformanceEntry.cpp
     PermissionsPolicy/AutoplayAllowlist.cpp

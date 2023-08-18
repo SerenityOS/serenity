@@ -9,7 +9,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             "Immobilie inserieren"
         TextNode <#text>
 
-PaintableWithLines (Viewport<#document>) [0,0 800x600]
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 502x39.46875]
     PaintableBox (Box<BODY>) [9,9 164.40625x21.46875]
       PaintableWithLines (BlockContainer<DIV>) [10,10 162.40625x19.46875]

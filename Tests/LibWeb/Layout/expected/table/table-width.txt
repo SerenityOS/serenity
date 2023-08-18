@@ -7,7 +7,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             Box <tr> at (110,110) content-size 580x10 table-row children: not-inline
               BlockContainer <td.cell> at (111,115) content-size 578x0 table-cell [BFC] children: not-inline
 
-PaintableWithLines (Viewport<#document>) [0,0 800x600]
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
     PaintableWithLines (BlockContainer<BODY>) [8,8 784x214]
       PaintableWithLines (TableWrapper(anonymous)) [8,8 784x214]

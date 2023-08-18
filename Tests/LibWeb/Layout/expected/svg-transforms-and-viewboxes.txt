@@ -95,7 +95,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         TextNode <#text>
       TextNode <#text>
 
-PaintableWithLines (Viewport<#document>) [0,0 800x600] overflow: [0,0 800x700]
+ViewportPaintable (Viewport<#document>) [0,0 800x600] overflow: [0,0 800x700]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x700]
     PaintableWithLines (BlockContainer<BODY>) [50,50 700x600]
       SVGSVGPaintable (SVGSVGBox<svg>) [50,150 200x100]

@@ -27,7 +27,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
             "snab"
         TextNode <#text>
 
-PaintableWithLines (Viewport<#document>) [0,0 800x600]
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x163.21875]
     PaintableWithLines (BlockContainer<BODY>) [9,9 782x145.21875]
       PaintableWithLines (BlockContainer<DIV>.px-indent) [10,10 780x70.9375]

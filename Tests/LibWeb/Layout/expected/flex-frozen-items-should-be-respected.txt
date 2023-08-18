@@ -28,7 +28,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
               "LongPieceOfText"
           TextNode <#text>
 
-PaintableWithLines (Viewport<#document>) [0,0 800x600]
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x72]
     PaintableWithLines (BlockContainer<BODY>) [9,9 782x54]
       PaintableBox (Box<DIV>.flexbox) [10,10 780x52]
