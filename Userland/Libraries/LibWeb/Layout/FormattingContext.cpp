@@ -1810,6 +1810,8 @@ bool FormattingContext::should_treat_max_width_as_none(Box const& box, Available
     if (box.is_absolutely_positioned())
         return false;
     if (max_width.contains_percentage()) {
+        if (available_width.is_max_content())
+            return true;
         if (available_width.is_min_content())
             return false;
         if (!m_state.get(*box.non_anonymous_containing_block()).has_definite_width())
