@@ -16,9 +16,12 @@
 
 namespace Web::HTML {
 
-class SharedImageRequest : public RefCounted<SharedImageRequest> {
+class SharedImageRequest : public JS::Cell {
+    JS_CELL(ImageRequest, JS::Cell);
+
 public:
-    static ErrorOr<NonnullRefPtr<SharedImageRequest>> get_or_create(Page&, AK::URL const&);
+    [[nodiscard]] static JS::NonnullGCPtr<SharedImageRequest> get_or_create(JS::Realm&, Page&, AK::URL const&);
+
     ~SharedImageRequest();
 
     AK::URL const& url() const { return m_url; }
@@ -34,6 +37,8 @@ public:
 
     bool is_fetching() const;
     bool needs_fetching() const;
+
+    virtual void visit_edges(JS::Cell::Visitor&) override;
 
 private:
     explicit SharedImageRequest(Page&, AK::URL);
@@ -60,7 +65,7 @@ private:
 
     AK::URL m_url;
     RefPtr<DecodedImageData const> m_image_data;
-    JS::Handle<Fetch::Infrastructure::FetchController> m_fetch_controller;
+    JS::GCPtr<Fetch::Infrastructure::FetchController> m_fetch_controller;
 };
 
 }

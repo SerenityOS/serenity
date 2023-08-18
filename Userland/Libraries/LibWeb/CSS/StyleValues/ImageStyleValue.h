@@ -10,6 +10,7 @@
 #pragma once
 
 #include <AK/URL.h>
+#include <LibJS/Heap/Handle.h>
 #include <LibWeb/CSS/Enums.h>
 #include <LibWeb/CSS/StyleValues/AbstractImageStyleValue.h>
 
@@ -43,7 +44,7 @@ public:
 private:
     ImageStyleValue(AK::URL const&);
 
-    RefPtr<HTML::SharedImageRequest> m_image_request;
+    JS::Handle<HTML::SharedImageRequest> m_image_request;
 
     void animate();
     Gfx::Bitmap const* bitmap(size_t frame_index, Gfx::IntSize = {}) const;

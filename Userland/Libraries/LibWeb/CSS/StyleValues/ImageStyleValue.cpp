@@ -31,7 +31,7 @@ void ImageStyleValue::load_any_resources(DOM::Document& document)
         return;
     m_document = &document;
 
-    m_image_request = HTML::SharedImageRequest::get_or_create(*document.page(), m_url).release_value_but_fixme_should_propagate_errors();
+    m_image_request = HTML::SharedImageRequest::get_or_create(document.realm(), *document.page(), m_url);
     m_image_request->add_callbacks(
         [this, weak_this = make_weak_ptr()] {
             if (!weak_this)
