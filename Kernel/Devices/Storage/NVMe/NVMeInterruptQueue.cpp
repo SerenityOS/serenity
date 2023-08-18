@@ -57,7 +57,7 @@ void NVMeInterruptQueue::complete_current_request(u16 cmdid, u16 status)
                 request_pdu.request->complete(req_result);
             if (request_pdu.end_io_handler)
                 request_pdu.end_io_handler(status);
-            request_pdu.used = false;
+            request_pdu.clear();
         };
 
         // There can be submission without any request associated with it such as with
@@ -87,7 +87,7 @@ void NVMeInterruptQueue::complete_current_request(u16 cmdid, u16 status)
         current_request->complete(AsyncDeviceRequest::OutOfMemory);
         if (request_pdu.end_io_handler)
             request_pdu.end_io_handler(status);
-        request_pdu.used = false;
+        request_pdu.clear();
     }
 }
 }
