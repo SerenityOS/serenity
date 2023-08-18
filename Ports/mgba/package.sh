@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='mgba'
-version='0.9.3'
+version='0.10.2'
 files=(
-    "https://github.com/mgba-emu/mgba/archive/refs/tags/${version}.tar.gz 692ff0ac50e18380df0ff3ee83071f9926715200d0dceedd9d16a028a59537a0"
+    "https://github.com/mgba-emu/mgba/archive/refs/tags/${version}.tar.gz 60afef8fb79ba1f7be565b737bae73c6604a790391c737f291482a7422d675ae"
 )
 configopts=(
     '-DBUILD_QT=OFF'
