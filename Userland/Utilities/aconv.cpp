@@ -134,15 +134,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 static_cast<int>(input_loader->sample_rate()),
                 input_loader->num_channels(),
                 Audio::pcm_bits_per_sample(parsed_output_sample_format)));
-            TRY(flac_writer->finalize_header_format());
             writer.emplace(move(flac_writer));
         } else {
             warnln("Codec {} is not supported for encoding", output_format);
             return 1;
         }
 
-        if (writer.has_value())
+        if (writer.has_value()) {
             (*writer)->sample_count_hint(input_loader->total_samples());
+            TRY((*writer)->set_metadata(input_loader->metadata()));
+        }
+
+        // FIXME: Maybe use a generalized interface for this as well if the need arises.
+        if (output_format == "flac"sv)
+            TRY(static_cast<Audio::FlacWriter*>(writer->ptr())->finalize_header_format());
 
         if (output != "-"sv)
             out("Writing: \033[s");
