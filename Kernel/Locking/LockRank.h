@@ -34,6 +34,9 @@ enum class LockRank : int {
     // Process locks are the highest rank, as they normally are taken
     // first thing when processing syscalls.
     Process = 0x010,
+
+    // Mutexes need to be taken before spinlocks, so they get their own lock-rank
+    Mutex = 0x020,
 };
 
 AK_ENUM_BITWISE_OPERATORS(LockRank);
