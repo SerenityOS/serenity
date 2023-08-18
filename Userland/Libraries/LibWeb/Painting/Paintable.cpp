@@ -14,9 +14,25 @@ namespace Web::Painting {
 void Paintable::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
+    visitor.visit(m_dom_node);
     visitor.visit(m_layout_node);
     if (m_containing_block.has_value())
         visitor.visit(m_containing_block.value());
+}
+
+void Paintable::set_dom_node(JS::GCPtr<DOM::Node> dom_node)
+{
+    m_dom_node = dom_node;
+}
+
+JS::GCPtr<DOM::Node> Paintable::dom_node()
+{
+    return m_dom_node;
+}
+
+JS::GCPtr<DOM::Node const> Paintable::dom_node() const
+{
+    return m_dom_node;
 }
 
 Paintable::DispatchEventOfSameName Paintable::handle_mousedown(Badge<EventHandler>, CSSPixelPoint, unsigned, unsigned)

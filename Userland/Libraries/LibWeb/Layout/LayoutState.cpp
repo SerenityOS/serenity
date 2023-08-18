@@ -208,6 +208,7 @@ static void build_paint_tree(Node& node, Painting::Paintable* parent_paintable =
         }
         parent_paintable->append_child(paintable);
     }
+    paintable.set_dom_node(node.dom_node());
     for (auto* child = node.first_child(); child; child = child->next_sibling()) {
         build_paint_tree(*child, &paintable);
     }
