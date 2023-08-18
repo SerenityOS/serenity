@@ -57,7 +57,12 @@ protected:
 
 class ErrorNode : public Node {
 public:
-    ErrorNode() { }
+    ErrorNode(StringView error = ""sv)
+        : m_error(error)
+    {
+    }
+
+    StringView m_error;
 
 protected:
     void dump_tree(StringBuilder& builder) override;
