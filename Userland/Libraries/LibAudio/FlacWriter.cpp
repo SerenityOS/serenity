@@ -11,6 +11,8 @@
 #include <AK/IntegralMath.h>
 #include <AK/MemoryStream.h>
 #include <AK/Statistics.h>
+#include <LibAudio/Metadata.h>
+#include <LibAudio/VorbisComment.h>
 #include <LibCrypto/Checksum/ChecksummingStream.h>
 
 namespace Audio {
@@ -107,11 +109,23 @@ ErrorOr<void> FlacWriter::set_bits_per_sample(u16 bits_per_sample)
     return {};
 }
 
+ErrorOr<void> FlacWriter::set_metadata(Metadata const& metadata)
+{
+    AllocatingMemoryStream vorbis_stream;
+    TRY(write_vorbis_comment(metadata, vorbis_stream));
+
+    auto vorbis_data = TRY(vorbis_stream.read_until_eof());
+    FlacRawMetadataBlock vorbis_block {
+        .is_last_block = false,
+        .type = FlacMetadataBlockType::VORBIS_COMMENT,
+        .length = static_cast<u32>(vorbis_data.size()),
+        .data = move(vorbis_data),
+    };
+    return add_metadata_block(move(vorbis_block), 0);
+}
+
 ErrorOr<void> FlacWriter::write_header()
 {
-    TRY(m_stream->write_until_depleted(flac_magic.bytes()));
-    m_streaminfo_start_index = TRY(m_stream->tell());
-
     ByteBuffer data;
     // STREAMINFO is always exactly 34 bytes long.
     TRY(data.try_resize(34));
@@ -140,11 +154,42 @@ ErrorOr<void> FlacWriter::write_header()
         .is_last_block = true,
         .type = FlacMetadataBlockType::STREAMINFO,
         .length = static_cast<u32>(data.size()),
-        .data = data,
+        .data = move(data),
     };
+    TRY(add_metadata_block(move(streaminfo_block), 0));
 
-    TRY(m_stream->write_value(streaminfo_block));
+    TRY(m_stream->write_until_depleted(flac_magic.bytes()));
+    m_streaminfo_start_index = TRY(m_stream->tell());
+
+    for (size_t i = 0; i < m_cached_metadata_blocks.size(); ++i) {
+        auto& block = m_cached_metadata_blocks[i];
+        // Correct is_last_block flag here to avoid index shenanigans in add_metadata_block.
+        auto const is_last_block = i == m_cached_metadata_blocks.size() - 1;
+        block.is_last_block = is_last_block;
+
+        TRY(write_metadata_block(block));
+    }
+
+    m_cached_metadata_blocks.clear();
     return {};
+}
+
+ErrorOr<void> FlacWriter::add_metadata_block(FlacRawMetadataBlock block, Optional<size_t> insertion_index)
+{
+    if (m_state != WriteState::HeaderUnwritten)
+        return Error::from_string_view("Metadata blocks can only be added before the header is finalized"sv);
+
+    if (insertion_index.has_value())
+        TRY(m_cached_metadata_blocks.try_insert(insertion_index.value(), move(block)));
+    else
+        TRY(m_cached_metadata_blocks.try_append(move(block)));
+
+    return {};
+}
+
+ErrorOr<void> FlacWriter::write_metadata_block(FlacRawMetadataBlock const& block)
+{
+    return m_stream->write_value(block);
 }
 
 ErrorOr<void> FlacRawMetadataBlock::write_to_stream(Stream& stream) const

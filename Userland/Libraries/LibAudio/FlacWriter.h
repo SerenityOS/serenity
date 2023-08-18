@@ -13,6 +13,8 @@
 #include <AK/StringView.h>
 #include <LibAudio/Encoder.h>
 #include <LibAudio/FlacTypes.h>
+#include <LibAudio/Forward.h>
+#include <LibAudio/GenericTypes.h>
 #include <LibAudio/Sample.h>
 #include <LibAudio/SampleFormats.h>
 #include <LibCore/Forward.h>
@@ -80,6 +82,9 @@ public:
     ErrorOr<void> set_num_channels(u8 num_channels);
     ErrorOr<void> set_sample_rate(u32 sample_rate);
     ErrorOr<void> set_bits_per_sample(u16 bits_per_sample);
+
+    virtual ErrorOr<void> set_metadata(Metadata const& metadata) override;
+
     ErrorOr<void> finalize_header_format();
 
 private:
@@ -98,6 +103,9 @@ private:
     // In this case, an empty Optional is returned.
     ErrorOr<Optional<FlacLPCEncodedSubframe>> encode_fixed_lpc(FlacFixedLPC order, ReadonlySpan<i64> subframe, size_t current_min_cost, u8 bits_per_sample);
 
+    ErrorOr<void> add_metadata_block(FlacRawMetadataBlock block, Optional<size_t> insertion_index = {});
+    ErrorOr<void> write_metadata_block(FlacRawMetadataBlock const& block);
+
     NonnullOwnPtr<SeekableStream> m_stream;
     WriteState m_state { WriteState::HeaderUnwritten };
 
@@ -114,6 +122,9 @@ private:
     size_t m_sample_count { 0 };
     // Remember where the STREAMINFO block was written in the stream.
     size_t m_streaminfo_start_index;
+
+    // Raw metadata blocks that will be written out before header finalization.
+    Vector<FlacRawMetadataBlock> m_cached_metadata_blocks;
 };
 
 }
