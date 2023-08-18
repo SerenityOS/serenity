@@ -15,7 +15,7 @@ or vsync.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/platform/sdl/sw-sdl2.c b/src/platform/sdl/sw-sdl2.c
-index 48afc33..11bd58c 100644
+index 48afc33a60866fb6ddf4fa01ab6343b89171af07..11bd58cb4dc20f0f14a601c3dec62afa5ab25717 100644
 --- a/src/platform/sdl/sw-sdl2.c
 +++ b/src/platform/sdl/sw-sdl2.c
 @@ -25,7 +25,7 @@ bool mSDLSWInit(struct mSDLRenderer* renderer) {
