@@ -1003,7 +1003,7 @@ void Document::update_layout()
                 Layout::AvailableSize::make_definite(viewport_rect.height())));
     }
 
-    layout_state.commit();
+    layout_state.commit(*m_layout_root);
 
     // Broadcast the current viewport rect to any new paintables, so they know whether they're visible or not.
     browsing_context()->inform_all_viewport_clients_about_the_current_viewport_rect();
