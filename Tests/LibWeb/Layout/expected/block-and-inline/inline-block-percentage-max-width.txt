@@ -1,0 +1,16 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x113.46875 [BFC] children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x97.46875 children: inline
+      line 0 width: 134.109375, height: 97.46875, bottom: 97.46875, baseline: 53.53125
+        frag 0 from BlockContainer start: 0, length: 0, rect: [48,48 54.109375x17.46875]
+      BlockContainer <div> at (48,48) content-size 54.109375x17.46875 inline-block [BFC] children: inline
+        line 0 width: 54.109375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+          frag 0 from TextNode start: 0, length: 6, rect: [48,48 54.109375x17.46875]
+            "New UI"
+        TextNode <#text>
+
+PaintableWithLines (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x113.46875]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x97.46875]
+      PaintableWithLines (BlockContainer<DIV>) [8,8 134.109375x97.46875]
+        TextPaintable (TextNode<#text>)
