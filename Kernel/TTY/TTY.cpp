@@ -15,6 +15,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/TTY/TTY.h>
+#include <Kernel/Tasks/ProcessManagement.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {
@@ -358,7 +359,7 @@ void TTY::generate_signal(int signal)
         flush_input();
     dbgln_if(TTY_DEBUG, "Send signal {} to everyone in pgrp {}", signal, pgid().value());
     InterruptDisabler disabler; // FIXME: Iterate over a set of process handles instead?
-    MUST(Process::current().for_each_in_pgrp_in_same_jail(pgid(), [&](auto& process) -> ErrorOr<void> {
+    MUST(ProcessManagement::the().for_each_in_pgrp_in_same_jail_with_current_process(pgid(), [&](auto& process) -> ErrorOr<void> {
         dbgln_if(TTY_DEBUG, "Send signal {} to {}", signal, process);
         // FIXME: Should this error be propagated somehow?
         [[maybe_unused]] auto rc = process.send_signal(signal, nullptr);
@@ -493,7 +494,7 @@ ErrorOr<void> TTY::ioctl(OpenFileDescription&, unsigned request, Userspace<void*
         if (!process_group)
             return EINVAL;
 
-        auto process = Process::from_pid_in_same_jail(ProcessID(pgid.value()));
+        auto process = ProcessManagement::the().from_pid_in_same_jail_with_current_process(ProcessID(pgid.value()));
         SessionID new_sid = process ? process->sid() : Process::get_sid_from_pgid(pgid);
         if (!new_sid || new_sid != current_process.sid())
             return EPERM;
@@ -502,7 +503,7 @@ ErrorOr<void> TTY::ioctl(OpenFileDescription&, unsigned request, Userspace<void*
         m_pg = TRY(process_group->try_make_weak_ptr());
 
         if (process) {
-            if (auto parent = Process::from_pid_ignoring_jails(process->ppid())) {
+            if (auto parent = ProcessManagement::the().from_pid_ignoring_jails(process->ppid())) {
                 m_original_process_parent = *parent;
                 return {};
             }

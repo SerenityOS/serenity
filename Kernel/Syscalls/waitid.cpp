@@ -7,6 +7,7 @@
 #include <AK/Variant.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/ProcessManagement.h>
 
 namespace Kernel {
 
@@ -30,7 +31,7 @@ ErrorOr<FlatPtr> Process::sys$waitid(Userspace<Syscall::SC_waitid_params const*>
     case P_ALL:
         break;
     case P_PID: {
-        auto waitee_process = Process::from_pid_in_same_jail(params.id);
+        auto waitee_process = ProcessManagement::the().from_pid_in_same_jail_with_current_process(params.id);
         if (!waitee_process)
             return ECHILD;
         bool waitee_is_child = waitee_process->ppid() == Process::current().pid();

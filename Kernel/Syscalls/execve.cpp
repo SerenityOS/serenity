@@ -16,9 +16,11 @@
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
+#include <Kernel/Security/Jail.h>
 #include <Kernel/Security/Random.h>
 #include <Kernel/Tasks/PerformanceManager.h>
 #include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/ProcessList.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <LibELF/AuxiliaryVector.h>

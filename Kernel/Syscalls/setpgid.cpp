@@ -6,6 +6,7 @@
 
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/ProcessManagement.h>
 
 namespace Kernel {
 
@@ -15,7 +16,7 @@ ErrorOr<FlatPtr> Process::sys$getsid(pid_t pid)
     TRY(require_promise(Pledge::stdio));
     if (pid == 0 || pid == this->pid())
         return sid().value();
-    auto peer = Process::from_pid_in_same_jail(pid);
+    auto peer = ProcessManagement::the().from_pid_in_same_jail_with_current_process(pid);
     if (!peer)
         return ESRCH;
     auto peer_sid = peer->sid();
@@ -60,7 +61,7 @@ ErrorOr<FlatPtr> Process::sys$getpgid(pid_t pid)
     TRY(require_promise(Pledge::stdio));
     if (pid == 0)
         return pgid().value();
-    auto process = Process::from_pid_in_same_jail(pid);
+    auto process = ProcessManagement::the().from_pid_in_same_jail_with_current_process(pid);
     if (!process)
         return ESRCH;
     return process->pgid().value();
@@ -78,7 +79,7 @@ SessionID Process::get_sid_from_pgid(ProcessGroupID pgid)
     // FIXME: This xor sys$setsid() uses the wrong locking mechanism.
 
     SessionID sid { -1 };
-    MUST(Process::current().for_each_in_pgrp_in_same_jail(pgid, [&](auto& process) -> ErrorOr<void> {
+    MUST(ProcessManagement::the().for_each_in_pgrp_in_same_jail_with_current_process(pgid, [&](auto& process) -> ErrorOr<void> {
         sid = process.sid();
         return {};
     }));
@@ -95,7 +96,7 @@ ErrorOr<FlatPtr> Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
         // The value of the pgid argument is less than 0, or is not a value supported by the implementation.
         return EINVAL;
     }
-    auto process = Process::from_pid_in_same_jail(pid);
+    auto process = ProcessManagement::the().from_pid_in_same_jail_with_current_process(pid);
     if (!process)
         return ESRCH;
     if (process != this && process->ppid() != this->pid()) {
@@ -155,11 +156,11 @@ ErrorOr<FlatPtr> Process::sys$get_root_session_id(pid_t force_sid)
     if (sid == 0)
         return 0;
     while (true) {
-        auto sid_process = Process::from_pid_in_same_jail(sid);
+        auto sid_process = ProcessManagement::the().from_pid_in_same_jail_with_current_process(sid);
         if (!sid_process)
             return ESRCH;
         auto parent_pid = sid_process->ppid().value();
-        auto parent_process = Process::from_pid_in_same_jail(parent_pid);
+        auto parent_process = ProcessManagement::the().from_pid_in_same_jail_with_current_process(parent_pid);
         if (!parent_process)
             return ESRCH;
         pid_t parent_sid = parent_process->sid().value();

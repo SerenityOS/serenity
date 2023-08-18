@@ -10,6 +10,7 @@
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/ProcessManagement.h>
 #include <Kernel/Tasks/Scheduler.h>
 
 namespace Kernel {
@@ -151,7 +152,7 @@ ErrorOr<void> SysFSOverallProcesses::try_generate(KBufferBuilder& builder)
         auto array = TRY(json.add_array("processes"sv));
         // FIXME: Do we actually want to expose the colonel process in a Jail environment?
         TRY(build_process(array, *Scheduler::colonel()));
-        TRY(Process::for_each_in_same_jail([&](Process& process) -> ErrorOr<void> {
+        TRY(ProcessManagement::the().for_each_in_same_jail_with_current_process([&](Process& process) -> ErrorOr<void> {
             TRY(build_process(array, process));
             return {};
         }));

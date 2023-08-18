@@ -32,10 +32,13 @@
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Security/Jail.h>
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/Tasks/PerformanceEventBuffer.h>
 #include <Kernel/Tasks/PerformanceManager.h>
 #include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/ProcessList.h>
+#include <Kernel/Tasks/ProcessManagement.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/Thread.h>
 #include <Kernel/Tasks/ThreadTracer.h>
@@ -51,8 +54,6 @@ extern bool g_in_system_shutdown;
 extern KString* g_version_string;
 
 RecursiveSpinlock<LockRank::None> g_profiling_lock {};
-static Atomic<pid_t> next_pid;
-static Singleton<SpinlockProtected<Process::AllProcessesList, LockRank::None>> s_all_instances;
 READONLY_AFTER_INIT Memory::Region* g_signal_trampoline_region;
 
 static Singleton<MutexProtected<FixedStringBuffer<UTSNAME_ENTRY_LEN - 1>>> s_hostname;
@@ -62,105 +63,8 @@ MutexProtected<FixedStringBuffer<UTSNAME_ENTRY_LEN - 1>>& hostname()
     return *s_hostname;
 }
 
-SpinlockProtected<Process::AllProcessesList, LockRank::None>& Process::all_instances()
-{
-    return *s_all_instances;
-}
-
-ErrorOr<void> Process::for_each_in_same_jail(Function<ErrorOr<void>(Process&)> callback)
-{
-    return Process::current().m_jail_process_list.with([&](auto const& list_ptr) -> ErrorOr<void> {
-        ErrorOr<void> result {};
-        if (list_ptr) {
-            list_ptr->attached_processes().with([&](auto const& list) {
-                for (auto& process : list) {
-                    result = callback(process);
-                    if (result.is_error())
-                        break;
-                }
-            });
-            return result;
-        }
-        all_instances().with([&](auto const& list) {
-            for (auto& process : list) {
-                result = callback(process);
-                if (result.is_error())
-                    break;
-            }
-        });
-        return result;
-    });
-}
-
-ErrorOr<void> Process::for_each_child_in_same_jail(Function<ErrorOr<void>(Process&)> callback)
-{
-    ProcessID my_pid = pid();
-    return m_jail_process_list.with([&](auto const& list_ptr) -> ErrorOr<void> {
-        ErrorOr<void> result {};
-        if (list_ptr) {
-            list_ptr->attached_processes().with([&](auto const& list) {
-                for (auto& process : list) {
-                    if (process.ppid() == my_pid || process.has_tracee_thread(pid()))
-                        result = callback(process);
-                    if (result.is_error())
-                        break;
-                }
-            });
-            return result;
-        }
-        all_instances().with([&](auto const& list) {
-            for (auto& process : list) {
-                if (process.ppid() == my_pid || process.has_tracee_thread(pid()))
-                    result = callback(process);
-                if (result.is_error())
-                    break;
-            }
-        });
-        return result;
-    });
-}
-
-ErrorOr<void> Process::for_each_in_pgrp_in_same_jail(ProcessGroupID pgid, Function<ErrorOr<void>(Process&)> callback)
-{
-    return m_jail_process_list.with([&](auto const& list_ptr) -> ErrorOr<void> {
-        ErrorOr<void> result {};
-        if (list_ptr) {
-            list_ptr->attached_processes().with([&](auto const& list) {
-                for (auto& process : list) {
-                    if (!process.is_dead() && process.pgid() == pgid)
-                        result = callback(process);
-                    if (result.is_error())
-                        break;
-                }
-            });
-            return result;
-        }
-        all_instances().with([&](auto const& list) {
-            for (auto& process : list) {
-                if (!process.is_dead() && process.pgid() == pgid)
-                    result = callback(process);
-                if (result.is_error())
-                    break;
-            }
-        });
-        return result;
-    });
-}
-
-ProcessID Process::allocate_pid()
-{
-    // Overflow is UB, and negative PIDs wreck havoc.
-    // TODO: Handle PID overflow
-    // For example: Use an Atomic<u32>, mask the most significant bit,
-    // retry if PID is already taken as a PID, taken as a TID,
-    // takes as a PGID, taken as a SID, or zero.
-    return next_pid.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel);
-}
-
 UNMAP_AFTER_INIT void Process::initialize()
 {
-    next_pid.store(0, AK::MemoryOrder::memory_order_release);
-
     // Note: This is called before scheduling is initialized, and before APs are booted.
     //       So we can "safely" bypass the lock here.
     reinterpret_cast<FixedStringBuffer<UTSNAME_ENTRY_LEN - 1>&>(hostname()).store_characters("courage"sv);
@@ -206,15 +110,6 @@ void Process::kill_all_threads()
     });
 }
 
-void Process::register_new(Process& process)
-{
-    // Note: this is essentially the same like process->ref()
-    NonnullRefPtr<Process> const new_process = process;
-    all_instances().with([&](auto& list) {
-        list.prepend(process);
-    });
-}
-
 ErrorOr<Process::ProcessAndFirstThread> Process::create_user_process(StringView path, UserID uid, GroupID gid, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, RefPtr<TTY> tty)
 {
     auto parts = path.split_view('/');
@@ -246,10 +141,7 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create_user_process(StringView 
     InterruptsState previous_interrupts_state = InterruptsState::Enabled;
     TRY(process->exec(move(path_string), move(arguments), move(environment), new_main_thread, previous_interrupts_state));
 
-    register_new(*process);
-
-    // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockerSet::finalize().
-    process->ref();
+    ProcessManagement::the().after_creating_process(*process);
 
     {
         SpinlockLocker lock(g_scheduler_lock);
@@ -268,7 +160,7 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create_kernel_process(StringVie
     thread.regs().set_entry_function((FlatPtr)entry, (FlatPtr)entry_data);
 
     if (do_register == RegisterProcess::Yes)
-        register_new(process);
+        ProcessManagement::the().after_creating_process(process);
 
     SpinlockLocker lock(g_scheduler_lock);
     thread.set_affinity(affinity);
@@ -334,7 +226,7 @@ Process::Process(StringView name, NonnullRefPtr<Credentials> credentials, Proces
     set_name(name);
     // Ensure that we protect the process data when exiting the constructor.
     with_mutable_protected_data([&](auto& protected_data) {
-        protected_data.pid = allocate_pid();
+        protected_data.pid = ProcessManagement::the().allocate_pid_for_new_process({});
         protected_data.ppid = ppid;
         protected_data.credentials = move(credentials);
         protected_data.tty = move(tty);
@@ -525,41 +417,6 @@ void Process::crash(int signal, Optional<RegisterState const&> regs, bool out_of
     // to unwind to, so die right away.
     Thread::current()->die_if_needed();
     VERIFY_NOT_REACHED();
-}
-
-RefPtr<Process> Process::from_pid_in_same_jail(ProcessID pid)
-{
-    return Process::current().m_jail_process_list.with([&](auto const& list_ptr) -> RefPtr<Process> {
-        if (list_ptr) {
-            return list_ptr->attached_processes().with([&](auto const& list) -> RefPtr<Process> {
-                for (auto& process : list) {
-                    if (process.pid() == pid) {
-                        return process;
-                    }
-                }
-                return {};
-            });
-        }
-        return all_instances().with([&](auto const& list) -> RefPtr<Process> {
-            for (auto& process : list) {
-                if (process.pid() == pid) {
-                    return process;
-                }
-            }
-            return {};
-        });
-    });
-}
-
-RefPtr<Process> Process::from_pid_ignoring_jails(ProcessID pid)
-{
-    return all_instances().with([&](auto const& list) -> RefPtr<Process> {
-        for (auto const& process : list) {
-            if (process.pid() == pid)
-                return &process;
-        }
-        return {};
-    });
 }
 
 Process::OpenFileDescriptionAndFlags const* Process::OpenFileDescriptions::get_if_valid(size_t i) const
@@ -816,14 +673,14 @@ void Process::finalize()
     m_state.store(State::Dead, AK::MemoryOrder::memory_order_release);
 
     {
-        if (auto parent_process = Process::from_pid_ignoring_jails(ppid())) {
+        if (auto parent_process = ProcessManagement::the().from_pid_ignoring_jails(ppid())) {
             if (parent_process->is_user_process() && (parent_process->m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT) != SA_NOCLDWAIT)
                 (void)parent_process->send_signal(SIGCHLD, this);
         }
     }
 
     if (!!ppid()) {
-        if (auto parent = Process::from_pid_ignoring_jails(ppid())) {
+        if (auto parent = ProcessManagement::the().from_pid_ignoring_jails(ppid())) {
             parent->m_ticks_in_user_for_dead_children += m_ticks_in_user + m_ticks_in_user_for_dead_children;
             parent->m_ticks_in_kernel_for_dead_children += m_ticks_in_kernel + m_ticks_in_kernel_for_dead_children;
         }
@@ -850,23 +707,12 @@ void Process::unblock_waiters(Thread::WaitBlocker::UnblockFlags flags, u8 signal
 {
     RefPtr<Process> waiter_process;
     if (auto* my_tracer = tracer())
-        waiter_process = Process::from_pid_ignoring_jails(my_tracer->tracer_pid());
+        waiter_process = ProcessManagement::the().from_pid_ignoring_jails(my_tracer->tracer_pid());
     else
-        waiter_process = Process::from_pid_ignoring_jails(ppid());
+        waiter_process = ProcessManagement::the().from_pid_ignoring_jails(ppid());
 
     if (waiter_process)
         waiter_process->m_wait_blocker_set.unblock(*this, flags, signal);
-}
-
-void Process::remove_from_secondary_lists()
-{
-    m_jail_process_list.with([this](auto& list_ptr) {
-        if (list_ptr) {
-            list_ptr->attached_processes().with([&](auto& list) {
-                list.remove(*this);
-            });
-        }
-    });
 }
 
 void Process::die()
@@ -893,7 +739,7 @@ void Process::die()
             dbgln("Failed to add thread {} to coredump due to OOM", thread.tid());
     });
 
-    all_instances().with([&](auto const& list) {
+    ProcessManagement::the().all_instances({}).with([&](auto const& list) {
         for (auto it = list.begin(); it != list.end();) {
             auto& process = *it;
             ++it;

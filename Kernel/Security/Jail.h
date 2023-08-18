@@ -18,6 +18,7 @@
 #include <Kernel/Library/KString.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/ProcessList.h>
 
 namespace Kernel {
 

@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/ProcessManagement.h>
 
 namespace Kernel {
 
@@ -12,7 +13,7 @@ ErrorOr<FlatPtr> Process::sys$disown(ProcessID pid)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::proc));
-    auto process = Process::from_pid_in_same_jail(pid);
+    auto process = ProcessManagement::the().from_pid_in_same_jail_with_current_process(pid);
     if (!process)
         return ESRCH;
     TRY(process->with_mutable_protected_data([this](auto& protected_data) -> ErrorOr<void> {

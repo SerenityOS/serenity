@@ -355,6 +355,7 @@ set(KERNEL_SOURCES
     Tasks/Process.cpp
     Tasks/ProcessGroup.cpp
     Tasks/ProcessList.cpp
+    Tasks/ProcessManagement.cpp
     Tasks/Scheduler.cpp
     Tasks/SyncTask.cpp
     Tasks/Thread.cpp

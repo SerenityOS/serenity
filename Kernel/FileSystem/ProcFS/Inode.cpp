@@ -8,6 +8,7 @@
 
 #include <Kernel/FileSystem/ProcFS/Inode.h>
 #include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/ProcessManagement.h>
 #include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
@@ -112,7 +113,7 @@ ErrorOr<void> ProcFSInode::traverse_as_root_directory(Function<ErrorOr<void>(Fil
     TRY(callback({ ".."sv, { fsid(), 0 }, 0 }));
     TRY(callback({ "self"sv, { fsid(), 2 }, 0 }));
 
-    return Process::for_each_in_same_jail([&](Process& process) -> ErrorOr<void> {
+    return ProcessManagement::the().for_each_in_same_jail_with_current_process([&](Process& process) -> ErrorOr<void> {
         VERIFY(!(process.pid() < 0));
         u64 process_id = (u64)process.pid().value();
         InodeIdentifier identifier = { fsid(), static_cast<InodeIndex>(process_id << 36) };
@@ -126,7 +127,7 @@ ErrorOr<void> ProcFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSyst
 {
     if (m_type == Type::ProcessSubdirectory) {
         VERIFY(m_associated_pid.has_value());
-        auto process = Process::from_pid_in_same_jail(m_associated_pid.value());
+        auto process = ProcessManagement::the().from_pid_in_same_jail_with_current_process(m_associated_pid.value());
         if (!process)
             return EINVAL;
         switch (m_subdirectory) {
@@ -148,7 +149,7 @@ ErrorOr<void> ProcFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSyst
 
     VERIFY(m_type == Type::ProcessDirectory);
     VERIFY(m_associated_pid.has_value());
-    auto process = Process::from_pid_in_same_jail(m_associated_pid.value());
+    auto process = ProcessManagement::the().from_pid_in_same_jail_with_current_process(m_associated_pid.value());
     if (!process)
         return EINVAL;
     return process->traverse_as_directory(procfs().fsid(), move(callback));
@@ -164,7 +165,7 @@ ErrorOr<NonnullRefPtr<Inode>> ProcFSInode::lookup_as_root_directory(StringView n
         return ESRCH;
     auto actual_pid = pid.value();
 
-    if (auto maybe_process = Process::from_pid_in_same_jail(actual_pid)) {
+    if (auto maybe_process = ProcessManagement::the().from_pid_in_same_jail_with_current_process(actual_pid)) {
         InodeIndex id = (static_cast<u64>(maybe_process->pid().value()) + 1) << 36;
         return procfs().get_inode({ fsid(), id });
     }
@@ -175,7 +176,7 @@ ErrorOr<NonnullRefPtr<Inode>> ProcFSInode::lookup(StringView name)
 {
     if (m_type == Type::ProcessSubdirectory) {
         VERIFY(m_associated_pid.has_value());
-        auto process = Process::from_pid_in_same_jail(m_associated_pid.value());
+        auto process = ProcessManagement::the().from_pid_in_same_jail_with_current_process(m_associated_pid.value());
         if (!process)
             return ESRCH;
         switch (m_subdirectory) {
@@ -197,7 +198,7 @@ ErrorOr<NonnullRefPtr<Inode>> ProcFSInode::lookup(StringView name)
 
     VERIFY(m_type == Type::ProcessDirectory);
     VERIFY(m_associated_pid.has_value());
-    auto process = Process::from_pid_in_same_jail(m_associated_pid.value());
+    auto process = ProcessManagement::the().from_pid_in_same_jail_with_current_process(m_associated_pid.value());
     if (!process)
         return ESRCH;
     return process->lookup_as_directory(procfs(), name);
@@ -246,7 +247,7 @@ ErrorOr<size_t> ProcFSInode::read_bytes_locked(off_t offset, size_t count, UserO
     if (!description) {
         auto builder = TRY(KBufferBuilder::try_create());
         VERIFY(m_associated_pid.has_value());
-        auto process = Process::from_pid_in_same_jail(m_associated_pid.value());
+        auto process = ProcessManagement::the().from_pid_in_same_jail_with_current_process(m_associated_pid.value());
         if (!process)
             return Error::from_errno(ESRCH);
         TRY(try_fetch_process_property_data(*process, builder));
@@ -338,7 +339,7 @@ ErrorOr<void> ProcFSInode::refresh_process_property_data(OpenFileDescription& de
     // Without this, files opened before a process went non-dumpable could still be used for dumping.
     VERIFY(m_type == Type::ProcessProperty);
     VERIFY(m_associated_pid.has_value());
-    auto process = Process::from_pid_in_same_jail(m_associated_pid.value());
+    auto process = ProcessManagement::the().from_pid_in_same_jail_with_current_process(m_associated_pid.value());
     if (!process)
         return Error::from_errno(ESRCH);
     process->ptrace_lock().lock();
@@ -385,7 +386,7 @@ InodeMetadata ProcFSInode::metadata() const
     }
     case Type::ProcessProperty: {
         VERIFY(m_associated_pid.has_value());
-        auto process = Process::from_pid_in_same_jail(m_associated_pid.value());
+        auto process = ProcessManagement::the().from_pid_in_same_jail_with_current_process(m_associated_pid.value());
         if (!process)
             return {};
         metadata.inode = identifier();
@@ -402,7 +403,7 @@ InodeMetadata ProcFSInode::metadata() const
     }
     case Type::ProcessDirectory: {
         VERIFY(m_associated_pid.has_value());
-        auto process = Process::from_pid_in_same_jail(m_associated_pid.value());
+        auto process = ProcessManagement::the().from_pid_in_same_jail_with_current_process(m_associated_pid.value());
         if (!process)
             return {};
         metadata.inode = identifier();
@@ -419,7 +420,7 @@ InodeMetadata ProcFSInode::metadata() const
     }
     case Type::ProcessSubdirectory: {
         VERIFY(m_associated_pid.has_value());
-        auto process = Process::from_pid_in_same_jail(m_associated_pid.value());
+        auto process = ProcessManagement::the().from_pid_in_same_jail_with_current_process(m_associated_pid.value());
         if (!process)
             return {};
         metadata.inode = identifier();

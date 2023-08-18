@@ -659,7 +659,7 @@ public:
 
     private:
         void do_was_disowned();
-        void do_set_result(siginfo_t const&);
+        void do_set_result(Process&, siginfo_t const&);
 
         int const m_wait_options;
         ErrorOr<siginfo_t>& m_result;

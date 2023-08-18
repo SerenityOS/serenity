@@ -8,9 +8,12 @@
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/Memory/Region.h>
+#include <Kernel/Security/Jail.h>
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/Tasks/PerformanceManager.h>
 #include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/ProcessList.h>
+#include <Kernel/Tasks/ProcessManagement.h>
 #include <Kernel/Tasks/Scheduler.h>
 
 namespace Kernel {
@@ -31,9 +34,6 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
         child_first_thread->set_state(Thread::State::Dying);
     };
 
-    // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockerSet::finalize().
-    child->ref();
-
     TRY(m_unveil_data.with([&](auto& parent_unveil_data) -> ErrorOr<void> {
         return child->m_unveil_data.with([&](auto& child_unveil_data) -> ErrorOr<void> {
             child_unveil_data.state = parent_unveil_data.state;
@@ -50,12 +50,12 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
         });
     }));
 
-    // Note: We take the spinlock of Process::all_instances list because we need
+    // Note: We take the spinlock of ProcessManagement::all_instances list because we need
     // to ensure that when we take the jail spinlock of two processes that we don't
     // run into a deadlock situation because both processes compete over each other Jail's
     // spinlock. Such pattern of taking 3 spinlocks in the same order happens in
-    // Process::for_each* methods.
-    TRY(Process::all_instances().with([&](auto const&) -> ErrorOr<void> {
+    // ProcessManagement::for_each* methods.
+    TRY(ProcessManagement::the().all_instances({}).with([&](auto const&) -> ErrorOr<void> {
         TRY(m_attached_jail.with([&](auto& parent_jail) -> ErrorOr<void> {
             return child->m_attached_jail.with([&](auto& child_jail) -> ErrorOr<void> {
                 child_jail = parent_jail;
@@ -174,7 +174,7 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     thread_finalizer_guard.disarm();
     remove_from_jail_process_list.disarm();
 
-    Process::register_new(*child);
+    ProcessManagement::the().after_creating_process(*child);
 
     PerformanceManager::add_process_created_event(*child);
 

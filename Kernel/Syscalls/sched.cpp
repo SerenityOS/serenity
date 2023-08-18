@@ -7,6 +7,7 @@
 
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/ProcessManagement.h>
 #include <Kernel/Tasks/Scheduler.h>
 
 namespace Kernel {
@@ -38,7 +39,7 @@ ErrorOr<NonnullRefPtr<Thread>> Process::get_thread_from_pid_or_tid(pid_t pid_or_
     case Syscall::SchedulerParametersMode::Process: {
         auto* searched_process = this;
         if (pid_or_tid != 0)
-            searched_process = Process::from_pid_in_same_jail(pid_or_tid);
+            searched_process = ProcessManagement::the().from_pid_in_same_jail_with_current_process(pid_or_tid);
 
         if (searched_process == nullptr)
             return ESRCH;

@@ -15,6 +15,7 @@
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/ProcessManagement.h>
 
 namespace Kernel {
 
@@ -107,7 +108,7 @@ ErrorOr<void> Process::traverse_children_directory(FileSystemID fsid, Function<E
 {
     TRY(callback({ "."sv, { fsid, ProcFSInode::create_index_from_process_directory_entry(pid(), process_children_subdirectory_root_entry) }, DT_DIR }));
     TRY(callback({ ".."sv, { fsid, ProcFSInode::create_index_from_process_directory_entry(pid(), main_process_directory_root_entry) }, main_process_directory_root_entry.file_type }));
-    return Process::for_each_in_same_jail([&](Process& process) -> ErrorOr<void> {
+    return ProcessManagement::the().for_each_in_same_jail_with_current_process([&](Process& process) -> ErrorOr<void> {
         if (process.ppid() == pid()) {
             auto name = TRY(KString::number(process.pid().value()));
             // NOTE: All property numbers should start from 1 as 0 is reserved for the directory itself.
@@ -125,7 +126,7 @@ ErrorOr<NonnullRefPtr<Inode>> Process::lookup_children_directory(ProcFS& procfs,
     if (!maybe_pid.has_value())
         return ENOENT;
 
-    auto child_process = Process::from_pid_in_same_jail(*maybe_pid);
+    auto child_process = ProcessManagement::the().from_pid_in_same_jail_with_current_process(*maybe_pid);
     if (!child_process || child_process->ppid() != pid())
         return ENOENT;
 

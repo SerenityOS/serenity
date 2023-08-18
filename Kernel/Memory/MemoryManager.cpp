@@ -25,6 +25,7 @@
 #include <Kernel/Prekernel/Prekernel.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/ProcessManagement.h>
 
 extern u8 start_of_kernel_image[];
 extern u8 end_of_kernel_image[];
@@ -893,7 +894,7 @@ ErrorOr<CommittedPhysicalPageSet> MemoryManager::commit_physical_pages(size_t pa
         return CommittedPhysicalPageSet { {}, page_count };
     });
     if (result.is_error()) {
-        Process::for_each_ignoring_jails([&](Process const& process) {
+        ProcessManagement::the().for_each_ignoring_jails([&](Process const& process) {
             size_t amount_resident = 0;
             size_t amount_shared = 0;
             size_t amount_virtual = 0;

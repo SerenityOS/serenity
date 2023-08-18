@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/ProcessList.h>
 
 namespace Kernel {
 

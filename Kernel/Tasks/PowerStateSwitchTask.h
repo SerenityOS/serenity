@@ -31,12 +31,6 @@ private:
     static void power_state_switch_task(void* raw_entry_data);
     static ErrorOr<void> perform_reboot();
     static ErrorOr<void> perform_shutdown();
-
-    enum class ProcessKind {
-        User,
-        Kernel,
-    };
-    static ErrorOr<void> kill_processes(ProcessKind, ProcessID finalizer_pid);
 };
 
 }

@@ -25,6 +25,7 @@
 #include <Kernel/Tasks/PerformanceEventBuffer.h>
 #include <Kernel/Tasks/PowerStateSwitchTask.h>
 #include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/ProcessManagement.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/Thread.h>
 #include <Kernel/Tasks/ThreadTracer.h>
@@ -64,7 +65,7 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> ker
         // First thread gets TID == PID
         m_tid = m_process->pid().value();
     } else {
-        m_tid = Process::allocate_pid().value();
+        m_tid = ProcessManagement::the().allocate_pid_for_new_thread({}).value();
     }
 
     // FIXME: Handle KString allocation failure.
@@ -944,7 +945,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 
     auto& action = m_process->m_signal_action_data[signal];
     auto sender_pid = m_signal_senders[signal];
-    auto sender = Process::from_pid_ignoring_jails(sender_pid);
+    auto sender = ProcessManagement::the().from_pid_ignoring_jails(sender_pid);
 
     if (!current_trap() && !action.handler_or_sigaction.is_null()) {
         // We're trying dispatch a handled signal to a user process that was scheduled
@@ -1263,7 +1264,7 @@ void Thread::set_state(State new_state, u8 stop_signal)
             });
             process.unblock_waiters(Thread::WaitBlocker::UnblockFlags::Continued);
             // Tell the parent process (if any) about this change.
-            if (auto parent = Process::from_pid_ignoring_jails(process.ppid())) {
+            if (auto parent = ProcessManagement::the().from_pid_ignoring_jails(process.ppid())) {
                 [[maybe_unused]] auto result = parent->send_signal(SIGCHLD, &process);
             }
         }
@@ -1287,7 +1288,7 @@ void Thread::set_state(State new_state, u8 stop_signal)
             });
             process.unblock_waiters(Thread::WaitBlocker::UnblockFlags::Stopped, stop_signal);
             // Tell the parent process (if any) about this change.
-            if (auto parent = Process::from_pid_ignoring_jails(process.ppid())) {
+            if (auto parent = ProcessManagement::the().from_pid_ignoring_jails(process.ppid())) {
                 [[maybe_unused]] auto result = parent->send_signal(SIGCHLD, &process);
             }
         }
