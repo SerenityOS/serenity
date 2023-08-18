@@ -30,7 +30,6 @@
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Memory/AddressSpace.h>
 #include <Kernel/Security/Credentials.h>
-#include <Kernel/Security/Jail.h>
 #include <Kernel/Tasks/AtomicEdgeAction.h>
 #include <Kernel/Tasks/FutexQueue.h>
 #include <Kernel/Tasks/PerformanceEventBuffer.h>
@@ -116,10 +115,13 @@ static_assert(sizeof(GlobalFutexKey) == (sizeof(FlatPtr) * 2));
 struct LoadResult;
 
 class ProcessList;
+class Jail;
 
 class Process final
-    : public ListedRefCounted<Process, LockType::Spinlock>
+    : public AtomicRefCounted<Process>
     , public LockWeakable<Process> {
+
+    friend class ProcessManagement;
 
     class ProtectedValues {
     public:
@@ -215,8 +217,6 @@ public:
 
     ~Process();
 
-    virtual void remove_from_secondary_lists();
-
     ErrorOr<NonnullRefPtr<Thread>> create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, StringView name, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true);
 
     bool is_profiling() const { return m_profiling; }
@@ -234,7 +234,7 @@ public:
     bool is_kernel_process() const { return m_is_kernel_process; }
     bool is_user_process() const { return !m_is_kernel_process; }
 
-    static RefPtr<Process> from_pid_in_same_jail(ProcessID);
+    static RefPtr<Process> from_pid_in_same_jail_with_current_process(ProcessID);
     static RefPtr<Process> from_pid_ignoring_jails(ProcessID);
     static SessionID get_sid_from_pgid(ProcessGroupID pgid);
 
@@ -277,23 +277,11 @@ public:
         return with_protected_data([](auto& protected_data) { return protected_data.umask; });
     }
 
-    // Breakable iteration functions
-    template<IteratorFunction<Process&> Callback>
-    static void for_each_ignoring_jails(Callback);
-
-    static ErrorOr<void> for_each_in_same_jail(Function<ErrorOr<void>(Process&)>);
-    ErrorOr<void> for_each_in_pgrp_in_same_jail(ProcessGroupID, Function<ErrorOr<void>(Process&)>);
-    ErrorOr<void> for_each_child_in_same_jail(Function<ErrorOr<void>(Process&)>);
-
     template<IteratorFunction<Thread&> Callback>
     IterationDecision for_each_thread(Callback);
     template<IteratorFunction<Thread&> Callback>
     IterationDecision for_each_thread(Callback callback) const;
     ErrorOr<void> try_for_each_thread(Function<ErrorOr<void>(Thread const&)>) const;
-
-    // Non-breakable iteration functions
-    template<VoidFunction<Process&> Callback>
-    static void for_each_ignoring_jails(Callback);
 
     template<VoidFunction<Thread&> Callback>
     IterationDecision for_each_thread(Callback);
@@ -657,7 +645,6 @@ private:
     static ErrorOr<ProcessAndFirstThread> create_with_forked_name(UserID, GroupID, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory = nullptr, RefPtr<Custody> executable = nullptr, RefPtr<TTY> = nullptr, Process* fork_parent = nullptr);
     static ErrorOr<ProcessAndFirstThread> create(StringView name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory = nullptr, RefPtr<Custody> executable = nullptr, RefPtr<TTY> = nullptr, Process* fork_parent = nullptr);
     ErrorOr<NonnullRefPtr<Thread>> attach_resources(NonnullOwnPtr<Memory::AddressSpace>&&, Process* fork_parent);
-    static ProcessID allocate_pid();
 
     void kill_threads_except_self();
     void kill_all_threads();
@@ -923,8 +910,8 @@ private:
 
     LockWeakPtr<Memory::Region> m_master_tls_region;
 
-    IntrusiveListNode<Process> m_jail_process_list_node;
-    IntrusiveListNode<Process> m_all_processes_list_node;
+    IntrusiveListNode<Process, NonnullRefPtr<Process>> m_jail_process_list_node;
+    IntrusiveListNode<Process, NonnullRefPtr<Process>> m_all_processes_list_node;
 
 public:
     using AllProcessesList = IntrusiveListRelaxedConst<&Process::m_all_processes_list_node>;
@@ -932,7 +919,7 @@ public:
 
 private:
     SpinlockProtected<RefPtr<ProcessList>, LockRank::None> m_jail_process_list;
-    SpinlockProtected<RefPtr<Jail>, LockRank::Process> m_attached_jail {};
+    SpinlockProtected<RefPtr<Jail>, LockRank::Process> m_attached_jail;
 
     size_t m_master_tls_size { 0 };
     size_t m_master_tls_alignment { 0 };
@@ -972,20 +959,6 @@ private:
     static_assert(sizeof(ProtectedValues) < (PAGE_SIZE));
     alignas(4096) ProtectedValues m_protected_values_do_not_access_directly;
     u8 m_protected_values_padding[PAGE_SIZE - sizeof(ProtectedValues)];
-
-public:
-    static SpinlockProtected<Process::AllProcessesList, LockRank::None>& all_instances();
-};
-
-class ProcessList : public RefCounted<ProcessList> {
-public:
-    static ErrorOr<NonnullRefPtr<ProcessList>> create();
-    SpinlockProtected<Process::JailProcessList, LockRank::None>& attached_processes() { return m_attached_processes; }
-    SpinlockProtected<Process::JailProcessList, LockRank::None> const& attached_processes() const { return m_attached_processes; }
-
-private:
-    ProcessList() = default;
-    SpinlockProtected<Process::JailProcessList, LockRank::None> m_attached_processes;
 };
 
 // Note: Process object should be 2 pages of 4096 bytes each.
@@ -1006,19 +979,6 @@ inline IterationDecision Process::for_each_thread(Callback callback)
                 return decision;
         }
         return IterationDecision::Continue;
-    });
-}
-
-template<IteratorFunction<Process&> Callback>
-inline void Process::for_each_ignoring_jails(Callback callback)
-{
-    Process::all_instances().with([&](auto const& list) {
-        for (auto it = list.begin(); it != list.end();) {
-            auto& process = *it;
-            ++it;
-            if (callback(process) == IterationDecision::Break)
-                break;
-        }
     });
 }
 

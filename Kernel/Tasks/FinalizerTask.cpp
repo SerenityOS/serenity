@@ -7,6 +7,7 @@
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/FinalizerTask.h>
 #include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/ProcessManagement.h>
 #include <Kernel/Tasks/Scheduler.h>
 
 namespace Kernel {
@@ -30,7 +31,8 @@ static void finalizer_task(void*)
 
 UNMAP_AFTER_INIT void FinalizerTask::spawn()
 {
-    auto [_, finalizer_thread] = MUST(Process::create_kernel_process(finalizer_task_name, finalizer_task, nullptr));
+    auto [finalizer_process, finalizer_thread] = MUST(Process::create_kernel_process(finalizer_task_name, finalizer_task, nullptr));
+    ProcessManagement::the().attach_finalizer_process({}, finalizer_process);
     g_finalizer = move(finalizer_thread);
 }
 

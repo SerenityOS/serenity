@@ -43,6 +43,7 @@ class PerformanceEventBuffer;
 class ProcFS;
 class ProcFSInode;
 class Process;
+class ProcessManagement;
 class ProcessGroup;
 class RAMFS;
 template<LockRank Rank>

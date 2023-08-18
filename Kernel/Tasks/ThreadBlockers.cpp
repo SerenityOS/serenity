@@ -10,6 +10,7 @@
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Net/Socket.h>
 #include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/ProcessManagement.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/Thread.h>
 
@@ -653,14 +654,6 @@ void Thread::WaitBlockerSet::finalize()
 
     // Clear the list of threads here so we can drop the references to them
     m_processes.clear();
-
-    // NOTE: Kernel processes don't have a leaked ref on them.
-    if (!m_process.is_kernel_process()) {
-        // No more waiters, drop the last reference immediately. This may
-        // cause us to be destructed ourselves!
-        VERIFY(m_process.ref_count() > 0);
-        m_process.unref();
-    }
 }
 
 Thread::WaitBlocker::WaitBlocker(int wait_options, Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> waitee, ErrorOr<siginfo_t>& result)
@@ -709,7 +702,7 @@ void Thread::WaitBlocker::do_was_disowned()
     m_result = ECHILD;
 }
 
-void Thread::WaitBlocker::do_set_result(siginfo_t const& result)
+void Thread::WaitBlocker::do_set_result(Process& process, siginfo_t const& result)
 {
     VERIFY(!m_did_unblock);
     m_did_unblock = true;
@@ -724,6 +717,8 @@ void Thread::WaitBlocker::do_set_result(siginfo_t const& result)
         m_got_sigchild = true;
         do_clear_interrupted_by_signal();
     }
+
+    ProcessManagement::the().after_set_wait_result(process);
 }
 
 bool Thread::WaitBlocker::unblock(Process& process, UnblockFlags flags, u8 signal, bool from_add_blocker)
@@ -778,7 +773,7 @@ bool Thread::WaitBlocker::unblock(Process& process, UnblockFlags flags, u8 signa
             return false;
         // Up until this point, this function may have been called
         // more than once!
-        do_set_result(process.wait_info());
+        do_set_result(process, process.wait_info());
     } else {
         siginfo_t siginfo {};
         {
@@ -808,7 +803,7 @@ bool Thread::WaitBlocker::unblock(Process& process, UnblockFlags flags, u8 signa
             return false;
         // Up until this point, this function may have been called
         // more than once!
-        do_set_result(siginfo);
+        do_set_result(process, siginfo);
     }
 
     if (!from_add_blocker) {

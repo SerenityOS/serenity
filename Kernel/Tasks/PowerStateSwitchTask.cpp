@@ -22,6 +22,7 @@
 #include <Kernel/Tasks/FinalizerTask.h>
 #include <Kernel/Tasks/PowerStateSwitchTask.h>
 #include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/ProcessManagement.h>
 #include <Kernel/Tasks/Scheduler.h>
 
 namespace Kernel {
@@ -79,29 +80,16 @@ ErrorOr<void> PowerStateSwitchTask::perform_shutdown()
     // We assume that by this point userland has tried as much as possible to shut down everything in an orderly fashion.
     // Therefore, we force kill remaining processes, including Kernel processes, except the finalizer and ourselves.
     dbgln("Killing remaining processes...");
-    Optional<Process&> finalizer_process;
-    Process::all_instances().for_each([&](Process& process) {
-        if (process.pid() == g_finalizer->process().pid())
-            finalizer_process = process;
-    });
-    VERIFY(finalizer_process.has_value());
-
     // Allow init process and finalizer task to be killed.
     g_in_system_shutdown = true;
 
     // Make sure to kill all user processes first, otherwise we might get weird hangups.
-    TRY(kill_processes(ProcessKind::User, finalizer_process->pid()));
-    TRY(kill_processes(ProcessKind::Kernel, finalizer_process->pid()));
+    TRY(ProcessManagement::the().kill_processes(ProcessManagement::ProcessKind::User));
+    TRY(ProcessManagement::the().kill_processes(ProcessManagement::ProcessKind::Kernel));
 
-    finalizer_process->die();
-    finalizer_process->finalize();
-    size_t alive_process_count = 0;
-    Process::all_instances().for_each([&](Process& process) {
-        if (process.pid() != Process::current().pid() && !process.is_dead())
-            alive_process_count++;
-    });
+    ProcessManagement::the().kill_finalizer_process({});
     // Don't panic here (since we may panic in a bit anyways) but report the probable cause of an unclean shutdown.
-    if (alive_process_count != 0)
+    if (ProcessManagement::the().alive_processes_count() != 0)
         dbgln("We're not the last process alive; proper shutdown may fail!");
 
     ConsoleManagement::the().switch_to_debug();
@@ -151,47 +139,4 @@ ErrorOr<void> PowerStateSwitchTask::perform_shutdown()
     dmesgln("Shutdown can't be completed. It's safe to turn off the computer!");
     Processor::halt();
 }
-
-ErrorOr<void> PowerStateSwitchTask::kill_processes(ProcessKind kind, ProcessID finalizer_pid)
-{
-    bool kill_kernel_processes = kind == ProcessKind::Kernel;
-
-    Process::all_instances().for_each([&](Process& process) {
-        if (process.pid() != Process::current().pid() && process.pid() != finalizer_pid && process.is_kernel_process() == kill_kernel_processes) {
-            process.die();
-        }
-    });
-
-    // Although we *could* finalize processes ourselves (g_in_system_shutdown allows this),
-    // we're nice citizens and let the finalizer task perform final duties before we kill it.
-    Scheduler::notify_finalizer();
-    int alive_process_count = 1;
-    MonotonicTime last_status_time = TimeManagement::the().monotonic_time();
-    while (alive_process_count > 0) {
-        Scheduler::yield();
-        alive_process_count = 0;
-        Process::all_instances().for_each([&](Process& process) {
-            if (process.pid() != Process::current().pid() && !process.is_dead() && process.pid() != finalizer_pid && process.is_kernel_process() == kill_kernel_processes)
-                alive_process_count++;
-        });
-
-        if (TimeManagement::the().monotonic_time() - last_status_time > Duration::from_seconds(2)) {
-            last_status_time = TimeManagement::the().monotonic_time();
-            dmesgln("Waiting on {} processes to exit...", alive_process_count);
-
-            if constexpr (PROCESS_DEBUG) {
-                Process::all_instances().for_each_const([&](Process const& process) {
-                    if (process.pid() != Process::current().pid() && !process.is_dead() && process.pid() != finalizer_pid && process.is_kernel_process() == kill_kernel_processes) {
-                        dbgln("Process {:2} kernel={} dead={} dying={} ({})",
-                            process.pid(), process.is_kernel_process(), process.is_dead(), process.is_dying(),
-                            process.name().with([](auto& name) { return name.representable_view(); }));
-                    }
-                });
-            }
-        }
-    }
-
-    return {};
-}
-
 }

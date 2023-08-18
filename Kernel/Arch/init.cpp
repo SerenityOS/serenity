@@ -50,6 +50,7 @@
 #include <Kernel/TTY/VirtualConsole.h>
 #include <Kernel/Tasks/FinalizerTask.h>
 #include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/ProcessManagement.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/SyncTask.h>
 #include <Kernel/Tasks/WorkQueue.h>
@@ -285,6 +286,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
     __stack_chk_guard = get_fast_random<uintptr_t>();
 
     Process::initialize();
+    ProcessManagement::initialize();
 
     Scheduler::initialize();
 
@@ -340,11 +342,6 @@ extern "C" UNMAP_AFTER_INIT void init_finished(u32 cpu)
 
 void init_stage2(void*)
 {
-    // This is a little bit of a hack. We can't register our process at the time we're
-    // creating it, but we need to be registered otherwise finalization won't be happy.
-    // The colonel process gets away without having to do this because it never exits.
-    Process::register_new(Process::current());
-
     WorkQueue::initialize();
 
 #if ARCH(X86_64)
