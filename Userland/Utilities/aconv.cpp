@@ -142,7 +142,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         if (writer.has_value()) {
             (*writer)->sample_count_hint(input_loader->total_samples());
-            TRY((*writer)->set_metadata(input_loader->metadata()));
+
+            auto metadata = input_loader->metadata();
+            metadata.replace_encoder_with_serenity();
+            TRY((*writer)->set_metadata(metadata));
         }
 
         // FIXME: Maybe use a generalized interface for this as well if the need arises.
