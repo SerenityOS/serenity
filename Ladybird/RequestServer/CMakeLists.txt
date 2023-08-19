@@ -22,3 +22,7 @@ target_link_libraries(RequestServer PRIVATE LibCore LibMain LibCrypto LibFileSys
 if (ANDROID)
     link_android_libs(RequestServer)
 endif()
+if (${CMAKE_SYSTEM_NAME} MATCHES "SunOS")
+    # Solaris has socket and networking related functions in two extra libraries
+    target_link_libraries(RequestServer PRIVATE nsl socket)
+endif()
