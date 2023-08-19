@@ -921,7 +921,7 @@ void StyleComputer::set_all_properties(DOM::Element& element, Optional<CSS::Sele
             if (is_inherited_property(property_id))
                 style.m_property_values[to_underlying(property_id)] = { { get_inherit_value(document.realm(), property_id, &element, pseudo_element), nullptr } };
             else
-                style.m_property_values[to_underlying(property_id)] = { { property_initial_value(document.realm(), property_id).release_value_but_fixme_should_propagate_errors(), nullptr } };
+                style.m_property_values[to_underlying(property_id)] = { { property_initial_value(document.realm(), property_id), nullptr } };
             continue;
         }
 
@@ -1087,7 +1087,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
                 return false;
             }
 
-            if (auto maybe_calc_value = Parser::Parser::parse_calculated_value({}, Parser::ParsingContext { document() }, value).release_value_but_fixme_should_propagate_errors(); maybe_calc_value && maybe_calc_value->is_calculated()) {
+            if (auto maybe_calc_value = Parser::Parser::parse_calculated_value({}, Parser::ParsingContext { document() }, value); maybe_calc_value && maybe_calc_value->is_calculated()) {
                 auto& calc_value = maybe_calc_value->as_calculated();
                 if (calc_value.resolves_to_number()) {
                     auto resolved_value = calc_value.resolve_number();
@@ -1146,7 +1146,7 @@ RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& e
     if (!expand_unresolved_values(element, string_from_property_id(property_id), unresolved_values_with_variables_expanded, expanded_values))
         return {};
 
-    if (auto parsed_value = Parser::Parser::parse_css_value({}, Parser::ParsingContext { document() }, property_id, expanded_values).release_value_but_fixme_should_propagate_errors())
+    if (auto parsed_value = Parser::Parser::parse_css_value({}, Parser::ParsingContext { document() }, property_id, expanded_values))
         return parsed_value.release_nonnull();
 
     return {};
@@ -1939,7 +1939,7 @@ NonnullRefPtr<StyleValue const> get_inherit_value(JS::Realm& initial_value_conte
     auto* parent_element = element_to_inherit_style_from(element, pseudo_element);
 
     if (!parent_element || !parent_element->computed_css_values())
-        return property_initial_value(initial_value_context_realm, property_id).release_value_but_fixme_should_propagate_errors();
+        return property_initial_value(initial_value_context_realm, property_id);
     return parent_element->computed_css_values()->property(property_id);
 }
 
@@ -1952,12 +1952,12 @@ void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM
         if (is_inherited_property(property_id))
             style.m_property_values[to_underlying(property_id)] = { { get_inherit_value(document().realm(), property_id, element, pseudo_element), nullptr } };
         else
-            style.m_property_values[to_underlying(property_id)] = { { property_initial_value(document().realm(), property_id).release_value_but_fixme_should_propagate_errors(), nullptr } };
+            style.m_property_values[to_underlying(property_id)] = { { property_initial_value(document().realm(), property_id), nullptr } };
         return;
     }
 
     if (value_slot->style->is_initial()) {
-        value_slot->style = property_initial_value(document().realm(), property_id).release_value_but_fixme_should_propagate_errors();
+        value_slot->style = property_initial_value(document().realm(), property_id);
         return;
     }
 
@@ -1974,7 +1974,7 @@ void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM
             value_slot->style = get_inherit_value(document().realm(), property_id, element, pseudo_element);
         } else {
             // and if it is not, this is treated as initial.
-            value_slot->style = property_initial_value(document().realm(), property_id).release_value_but_fixme_should_propagate_errors();
+            value_slot->style = property_initial_value(document().realm(), property_id);
         }
     }
 }

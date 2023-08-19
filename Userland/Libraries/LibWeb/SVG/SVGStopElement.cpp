@@ -33,11 +33,11 @@ void SVGStopElement::apply_presentational_hints(CSS::StyleProperties& style) con
     for_each_attribute([&](auto& name, auto& value) {
         CSS::Parser::ParsingContext parsing_context { document() };
         if (name.equals_ignoring_ascii_case("stop-color"sv)) {
-            if (auto stop_color = parse_css_value(parsing_context, value, CSS::PropertyID::StopColor).release_value_but_fixme_should_propagate_errors()) {
+            if (auto stop_color = parse_css_value(parsing_context, value, CSS::PropertyID::StopColor)) {
                 style.set_property(CSS::PropertyID::StopColor, stop_color.release_nonnull());
             }
         } else if (name.equals_ignoring_ascii_case("stop-opacity"sv)) {
-            if (auto stop_opacity = parse_css_value(parsing_context, value, CSS::PropertyID::StopOpacity).release_value_but_fixme_should_propagate_errors()) {
+            if (auto stop_opacity = parse_css_value(parsing_context, value, CSS::PropertyID::StopOpacity)) {
                 style.set_property(CSS::PropertyID::StopOpacity, stop_opacity.release_nonnull());
             }
         }

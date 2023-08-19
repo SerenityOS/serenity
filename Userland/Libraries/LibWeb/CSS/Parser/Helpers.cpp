@@ -34,11 +34,11 @@ CSS::ElementInlineCSSStyleDeclaration* parse_css_style_attribute(CSS::Parser::Pa
     return parser.parse_as_style_attribute(element);
 }
 
-ErrorOr<RefPtr<CSS::StyleValue>> parse_css_value(CSS::Parser::ParsingContext const& context, StringView string, CSS::PropertyID property_id)
+RefPtr<CSS::StyleValue> parse_css_value(CSS::Parser::ParsingContext const& context, StringView string, CSS::PropertyID property_id)
 {
     if (string.is_empty())
         return nullptr;
-    auto parser = TRY(CSS::Parser::Parser::create(context, string));
+    auto parser = MUST(CSS::Parser::Parser::create(context, string));
     return parser.parse_as_css_value(property_id);
 }
 
