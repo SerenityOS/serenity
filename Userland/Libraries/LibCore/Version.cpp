@@ -12,12 +12,16 @@ namespace Core::Version {
 
 ErrorOr<String> read_long_version_string()
 {
+#ifdef AK_OS_SERENITY
     auto uname = TRY(Core::System::uname());
 
     auto const* version = uname.release;
     auto const* git_hash = uname.version;
 
     return String::formatted("Version {} revision {}", version, git_hash);
+#else
+    return String::from_utf8("Version 1.0"sv);
+#endif
 }
 
 }

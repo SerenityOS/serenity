@@ -383,6 +383,8 @@ void ArgsParser::print_usage_markdown(FILE* file, StringView argv0)
 
 void ArgsParser::print_version(FILE* file)
 {
+    // FIXME: Allow applications to override version string for --version.
+    //        Especially useful for Lagom applications
     outln(file, Core::Version::read_long_version_string().release_value_but_fixme_should_propagate_errors());
 }
 
