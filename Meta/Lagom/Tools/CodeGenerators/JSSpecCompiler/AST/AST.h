@@ -80,7 +80,11 @@ protected:
 // ```.
 class Statement : public Node { };
 class Expression : public Node { };
-class ControlFlowOperator : public Statement { };
+
+class ControlFlowOperator : public Statement {
+public:
+    virtual Vector<BasicBlockRef*> references() = 0;
+};
 
 class ErrorNode : public Expression {
 public:
@@ -106,6 +110,8 @@ public:
 
     VariableRef m_return_value;
 
+    Vector<BasicBlockRef*> references() override { return {}; }
+
 protected:
     void dump_tree(StringBuilder& builder) override;
 };
@@ -116,6 +122,8 @@ public:
         : m_block(block)
     {
     }
+
+    Vector<BasicBlockRef*> references() override;
 
     BasicBlockRef m_block;
 
@@ -134,6 +142,8 @@ public:
         , m_else(else_)
     {
     }
+
+    Vector<BasicBlockRef*> references() override;
 
     Tree m_condition;
     BasicBlockRef m_then;

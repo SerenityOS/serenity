@@ -9,6 +9,7 @@
 #include <LibMain/Main.h>
 
 #include "Compiler/Passes/CFGBuildingPass.h"
+#include "Compiler/Passes/CFGSimplificationPass.h"
 #include "Compiler/Passes/FunctionCallCanonicalizationPass.h"
 #include "Compiler/Passes/IfBranchMergingPass.h"
 #include "Compiler/Passes/ReferenceResolvingPass.h"
@@ -106,6 +107,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     pipeline.add_compilation_pass<IfBranchMergingPass>();
     pipeline.add_compilation_pass<ReferenceResolvingPass>();
     pipeline.add_compilation_pass<CFGBuildingPass>();
+    pipeline.add_compilation_pass<CFGSimplificationPass>();
 
     pipeline.for_each_step_in(passes_to_dump_ast, [](CompilationStepWithDumpOptions& step) {
         step.dump_ast = true;

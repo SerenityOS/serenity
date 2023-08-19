@@ -182,3 +182,70 @@ BinaryOperation Assignment
   Error ""
 ControlFlowJump jump=1
 
+===== AST after cfg-simplification =====
+f():
+TreeList
+  IfElseIfChain
+    UnresolvedReference cond1
+    TreeList
+      BinaryOperation Declaration
+        Var a
+        MathematicalConstant 1
+      IfElseIfChain
+        UnresolvedReference cond2
+        TreeList
+          BinaryOperation Declaration
+            Var b
+            Var a
+        TreeList
+          BinaryOperation Declaration
+            Var b
+            MathematicalConstant 3
+    TreeList
+      BinaryOperation Declaration
+        Var b
+        MathematicalConstant 4
+  ReturnNode
+    Var b
+
+===== CFG after cfg-simplification =====
+f():
+0:
+ControlFlowBranch true=3 false=6
+  UnresolvedReference cond1
+
+1:
+ControlFlowFunctionReturn
+  Var $return
+
+2:
+BinaryOperation Assignment
+  Var $return
+  Var b
+ControlFlowJump jump=1
+
+3:
+BinaryOperation Declaration
+  Var a
+  MathematicalConstant 1
+ControlFlowBranch true=4 false=5
+  UnresolvedReference cond2
+
+4:
+BinaryOperation Declaration
+  Var b
+  Var a
+ControlFlowJump jump=2
+
+5:
+BinaryOperation Declaration
+  Var b
+  MathematicalConstant 3
+ControlFlowJump jump=2
+
+6:
+BinaryOperation Declaration
+  Var b
+  MathematicalConstant 4
+ControlFlowJump jump=2
+
