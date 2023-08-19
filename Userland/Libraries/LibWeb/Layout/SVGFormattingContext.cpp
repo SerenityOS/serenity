@@ -15,6 +15,8 @@
 #include <LibWeb/Layout/SVGTextBox.h>
 #include <LibWeb/SVG/SVGForeignObjectElement.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
+#include <LibWeb/SVG/SVGSymbolElement.h>
+#include <LibWeb/SVG/SVGUseElement.h>
 
 namespace Web::Layout {
 
@@ -131,6 +133,21 @@ static ViewBoxTransform scale_and_align_viewbox_content(SVG::PreserveAspectRatio
     return viewbox_transform;
 }
 
+static bool should_ensure_creation_of_paintable(Node const& node)
+{
+    if (is<SVGTextBox>(node))
+        return true;
+    if (is<SVGGraphicsBox>(node))
+        return true;
+    if (node.dom_node()) {
+        if (is<SVG::SVGUseElement>(*node.dom_node()))
+            return true;
+        if (is<SVG::SVGSymbolElement>(*node.dom_node()))
+            return true;
+    }
+    return false;
+}
+
 void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, AvailableSpace const& available_space)
 {
     auto& svg_svg_element = verify_cast<SVG::SVGSVGElement>(*box.dom_node());
@@ -149,7 +166,7 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
         return IterationDecision::Continue;
     });
 
-    box.for_each_in_subtree_of_type<Box>([&](Box const& descendant) {
+    box.for_each_in_subtree([&](Node const& descendant) {
         if (is<SVGGeometryBox>(descendant)) {
             auto const& geometry_box = static_cast<SVGGeometryBox const&>(descendant);
             auto& geometry_box_state = m_state.get_mutable(geometry_box);
@@ -186,16 +203,12 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
             geometry_box_state.set_content_width(path_bounding_box.width());
             geometry_box_state.set_content_height(path_bounding_box.height());
         } else if (is<SVGSVGBox>(descendant)) {
-            SVGFormattingContext nested_context(m_state, descendant, this);
-            nested_context.run(descendant, layout_mode, available_space);
-        } else if (is<SVGTextBox>(descendant)) {
-            auto const& svg_text_box = static_cast<SVGTextBox const&>(descendant);
-            // NOTE: This hack creates a layout state to ensure the existence of a paintable box node in LayoutState::commit(), even when none of the values from UsedValues impact the SVG text.
-            m_state.get_mutable(svg_text_box);
-        } else if (is<SVGGraphicsBox>(descendant)) {
-            // Same hack as above.
-            auto const& svg_graphics_box = static_cast<SVGGraphicsBox const&>(descendant);
-            m_state.get_mutable(svg_graphics_box);
+            SVGFormattingContext nested_context(m_state, static_cast<SVGSVGBox const&>(descendant), this);
+            nested_context.run(static_cast<SVGSVGBox const&>(descendant), layout_mode, available_space);
+        } else if (should_ensure_creation_of_paintable(descendant)) {
+            // NOTE: This hack creates a layout state to ensure the existence of
+            //       a paintable in LayoutState::commit().
+            m_state.get_mutable(static_cast<NodeWithStyleAndBoxModelMetrics const&>(descendant));
         }
 
         return IterationDecision::Continue;

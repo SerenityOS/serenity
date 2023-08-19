@@ -25,6 +25,8 @@ private:
 
     virtual void initialize(JS::Realm&) override;
 
+    virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
+
     bool is_direct_child_of_use_shadow_tree() const;
 
     virtual void attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value) override;

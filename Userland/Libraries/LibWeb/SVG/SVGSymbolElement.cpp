@@ -10,6 +10,7 @@
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/OverflowStyleValue.h>
 #include <LibWeb/DOM/ShadowRoot.h>
+#include <LibWeb/Layout/Box.h>
 #include <LibWeb/SVG/AttributeNames.h>
 #include <LibWeb/SVG/SVGSymbolElement.h>
 #include <LibWeb/SVG/SVGUseElement.h>
@@ -60,6 +61,11 @@ bool SVGSymbolElement::is_direct_child_of_use_shadow_tree() const
 
     auto host = static_cast<const DOM::ShadowRoot&>(*maybe_shadow_root).host();
     return is<SVGUseElement>(host);
+}
+
+JS::GCPtr<Layout::Node> SVGSymbolElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
+{
+    return heap().allocate_without_realm<Layout::Box>(document(), this, move(style));
 }
 
 }
