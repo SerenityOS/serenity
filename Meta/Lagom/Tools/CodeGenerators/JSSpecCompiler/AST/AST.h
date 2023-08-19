@@ -277,6 +277,29 @@ protected:
     void dump_tree(StringBuilder& builder) override;
 };
 
+class IfElseIfChain : public Node {
+public:
+    IfElseIfChain(Vector<Tree>&& conditions, Vector<Tree>&& branches, NullableTree else_branch)
+        : m_conditions(move(conditions))
+        , m_branches(move(branches))
+        , m_else_branch(else_branch)
+    {
+        VERIFY(m_branches.size() == m_conditions.size());
+    }
+
+    Vector<NodeSubtreePointer> subtrees() override;
+
+    // Excluding else branch, if one is present
+    size_t branches_count() { return m_branches.size(); }
+
+    Vector<Tree> m_conditions;
+    Vector<Tree> m_branches;
+    NullableTree m_else_branch;
+
+protected:
+    void dump_tree(StringBuilder& builder) override;
+};
+
 class TreeList : public Node {
 public:
     TreeList(Vector<Tree>&& expressions_)

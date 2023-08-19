@@ -10,6 +10,7 @@
 #include <LibXML/Parser/Parser.h>
 
 #include "Compiler/FunctionCallCanonicalizationPass.h"
+#include "Compiler/IfBranchMergingPass.h"
 #include "Function.h"
 #include "Parser/SpecParser.h"
 
@@ -39,6 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     auto function = make_ref_counted<JSSpecCompiler::Function>(&context, spec_function.m_name, spec_function.m_algorithm.m_tree);
 
     FunctionCallCanonicalizationPass(function).run();
+    IfBranchMergingPass(function).run();
 
     out("{}", function->m_ast);
     return 0;

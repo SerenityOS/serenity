@@ -29,6 +29,7 @@ class ReturnExpression;
 class AssertExpression;
 class IfBranch;
 class ElseIfBranch;
+class IfElseIfChain;
 class TreeList;
 class RecordDirectListInitialization;
 class FunctionCall;
