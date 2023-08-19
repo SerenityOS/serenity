@@ -1187,7 +1187,7 @@ Optional<AK::URL> Parser::parse_url_function(ComponentValue const& component_val
     return {};
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_url_value(ComponentValue const& component_value)
+RefPtr<StyleValue> Parser::parse_url_value(ComponentValue const& component_value)
 {
     auto url = parse_url_function(component_value);
     if (!url.has_value())
@@ -1705,7 +1705,7 @@ Optional<StyleProperty> Parser::convert_to_style_property(Declaration const& dec
     return StyleProperty { declaration.importance(), property_id.value(), value.release_value(), {} };
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_builtin_value(ComponentValue const& component_value)
+RefPtr<StyleValue> Parser::parse_builtin_value(ComponentValue const& component_value)
 {
     if (component_value.is(Token::Type::Ident)) {
         auto ident = component_value.token().ident();
@@ -1723,14 +1723,14 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_builtin_value(ComponentValue const& co
     return nullptr;
 }
 
-ErrorOr<RefPtr<CalculatedStyleValue>> Parser::parse_calculated_value(ComponentValue const& component_value)
+RefPtr<CalculatedStyleValue> Parser::parse_calculated_value(ComponentValue const& component_value)
 {
     if (!component_value.is_function())
         return nullptr;
 
     auto const& function = component_value.function();
 
-    auto function_node = TRY(parse_a_calc_function_node(function));
+    auto function_node = parse_a_calc_function_node(function);
     if (!function_node)
         return nullptr;
 
@@ -1741,12 +1741,12 @@ ErrorOr<RefPtr<CalculatedStyleValue>> Parser::parse_calculated_value(ComponentVa
     return CalculatedStyleValue::create(function_node.release_nonnull(), function_type.release_value());
 }
 
-ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calc_function_node(Function const& function)
+OwnPtr<CalculationNode> Parser::parse_a_calc_function_node(Function const& function)
 {
     if (function.name().equals_ignoring_ascii_case("calc"sv))
-        return TRY(parse_a_calculation(function.values()));
+        return MUST(parse_a_calculation(function.values()));
 
-    if (auto maybe_function = TRY(parse_math_function(m_context.current_property_id(), function)); maybe_function)
+    if (auto maybe_function = MUST(parse_math_function(m_context.current_property_id(), function)); maybe_function)
         return maybe_function;
 
     return nullptr;
@@ -1799,8 +1799,8 @@ Optional<LengthOrCalculated> Parser::parse_source_size_value(ComponentValue cons
         return LengthOrCalculated { Length::make_auto() };
     }
 
-    if (auto calculated_value = parse_calculated_value(component_value); !calculated_value.is_error() && calculated_value.value()) {
-        return LengthOrCalculated { calculated_value.value().release_nonnull() };
+    if (auto calculated_value = parse_calculated_value(component_value)) {
+        return LengthOrCalculated { calculated_value.release_nonnull() };
     }
 
     if (auto length = parse_length(component_value); length.has_value()) {
@@ -1831,7 +1831,7 @@ Optional<Ratio> Parser::parse_ratio(TokenStream<ComponentValue>& tokens)
         if (component_value.is(Token::Type::Number)) {
             return component_value.token().number_value();
         } else if (component_value.is_function()) {
-            auto maybe_calc = parse_calculated_value(component_value).release_value_but_fixme_should_propagate_errors();
+            auto maybe_calc = parse_calculated_value(component_value);
             if (!maybe_calc || !maybe_calc->resolves_to_number())
                 return {};
             if (auto resolved_number = maybe_calc->resolve_number(); resolved_number.has_value() && resolved_number.value() >= 0) {
@@ -2112,7 +2112,7 @@ Optional<UnicodeRange> Parser::parse_unicode_range(StringView text)
     return make_valid_unicode_range(start_value, end_value);
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_dimension_value(ComponentValue const& component_value)
+RefPtr<StyleValue> Parser::parse_dimension_value(ComponentValue const& component_value)
 {
     // Numbers with no units can be lengths, in two situations:
     // 1) We're in quirks mode, and it's an integer.
@@ -2141,7 +2141,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_dimension_value(ComponentValue const& 
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_integer_value(TokenStream<ComponentValue>& tokens)
+RefPtr<StyleValue> Parser::parse_integer_value(TokenStream<ComponentValue>& tokens)
 {
     auto peek_token = tokens.peek_token();
     if (peek_token.is(Token::Type::Number) && peek_token.token().number().is_integer()) {
@@ -2152,7 +2152,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_integer_value(TokenStream<ComponentVal
     return nullptr;
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_number_value(TokenStream<ComponentValue>& tokens)
+RefPtr<StyleValue> Parser::parse_number_value(TokenStream<ComponentValue>& tokens)
 {
     auto peek_token = tokens.peek_token();
     if (peek_token.is(Token::Type::Number)) {
@@ -2163,7 +2163,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_number_value(TokenStream<ComponentValu
     return nullptr;
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_identifier_value(ComponentValue const& component_value)
+RefPtr<StyleValue> Parser::parse_identifier_value(ComponentValue const& component_value)
 {
     if (component_value.is(Token::Type::Ident)) {
         auto value_id = value_id_from_string(component_value.token().ident());
@@ -2308,7 +2308,7 @@ Optional<Color> Parser::parse_rgb_or_hsl_color(StringView function_name, Vector<
 }
 
 // https://www.w3.org/TR/CSS2/visufx.html#value-def-shape
-ErrorOr<RefPtr<StyleValue>> Parser::parse_rect_value(ComponentValue const& component_value)
+RefPtr<StyleValue> Parser::parse_rect_value(ComponentValue const& component_value)
 {
     if (!component_value.is_function())
         return nullptr;
@@ -2470,7 +2470,7 @@ Optional<Color> Parser::parse_color(ComponentValue const& component_value)
     return {};
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_color_value(ComponentValue const& component_value)
+RefPtr<StyleValue> Parser::parse_color_value(ComponentValue const& component_value)
 {
     auto color = parse_color(component_value);
     if (color.has_value())
@@ -2545,42 +2545,42 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_color_value(ComponentValue const& comp
     return nullptr;
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_ratio_value(TokenStream<ComponentValue>& tokens)
+RefPtr<StyleValue> Parser::parse_ratio_value(TokenStream<ComponentValue>& tokens)
 {
     if (auto ratio = parse_ratio(tokens); ratio.has_value())
         return RatioStyleValue::create(ratio.release_value());
     return nullptr;
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_string_value(ComponentValue const& component_value)
+RefPtr<StyleValue> Parser::parse_string_value(ComponentValue const& component_value)
 {
     if (component_value.is(Token::Type::String))
-        return StringStyleValue::create(TRY(String::from_utf8(component_value.token().string())));
+        return StringStyleValue::create(MUST(String::from_utf8(component_value.token().string())));
 
     return nullptr;
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_image_value(ComponentValue const& component_value)
+RefPtr<StyleValue> Parser::parse_image_value(ComponentValue const& component_value)
 {
     auto url = parse_url_function(component_value);
     if (url.has_value())
         return ImageStyleValue::create(url.value());
-    auto linear_gradient = TRY(parse_linear_gradient_function(component_value));
+    auto linear_gradient = parse_linear_gradient_function(component_value);
     if (linear_gradient)
         return linear_gradient;
-    auto conic_gradient = TRY(parse_conic_gradient_function(component_value));
+    auto conic_gradient = parse_conic_gradient_function(component_value);
     if (conic_gradient)
         return conic_gradient;
     return parse_radial_gradient_function(component_value);
 }
 
 // https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
-ErrorOr<RefPtr<StyleValue>> Parser::parse_paint_value(TokenStream<ComponentValue>& tokens)
+RefPtr<StyleValue> Parser::parse_paint_value(TokenStream<ComponentValue>& tokens)
 {
     // `<paint> = none | <color> | <url> [none | <color>]? | context-fill | context-stroke`
 
-    auto parse_color_or_none = [&]() -> ErrorOr<Optional<RefPtr<StyleValue>>> {
-        if (auto color = TRY(parse_color_value(tokens.peek_token()))) {
+    auto parse_color_or_none = [&]() -> Optional<RefPtr<StyleValue>> {
+        if (auto color = parse_color_value(tokens.peek_token())) {
             (void)tokens.next_token();
             return color;
         }
@@ -2604,13 +2604,13 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_paint_value(TokenStream<ComponentValue
     };
 
     // FIMXE: Allow context-fill/context-stroke here
-    if (auto color_or_none = TRY(parse_color_or_none()); color_or_none.has_value())
+    if (auto color_or_none = parse_color_or_none(); color_or_none.has_value())
         return *color_or_none;
 
-    if (auto url = TRY(parse_url_value(tokens.peek_token()))) {
+    if (auto url = parse_url_value(tokens.peek_token())) {
         (void)tokens.next_token();
         tokens.skip_whitespace();
-        if (auto color_or_none = TRY(parse_color_or_none()); color_or_none == nullptr) {
+        if (auto color_or_none = parse_color_or_none(); color_or_none == nullptr) {
             // Fail to parse if the fallback is invalid, but otherwise ignore it.
             // FIXME: Use fallback color
             return nullptr;
@@ -2622,10 +2622,10 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_paint_value(TokenStream<ComponentValue
 }
 
 template<typename ParseFunction>
-ErrorOr<RefPtr<StyleValue>> Parser::parse_comma_separated_value_list(Vector<ComponentValue> const& component_values, ParseFunction parse_one_value)
+RefPtr<StyleValue> Parser::parse_comma_separated_value_list(Vector<ComponentValue> const& component_values, ParseFunction parse_one_value)
 {
     auto tokens = TokenStream { component_values };
-    auto first = TRY(parse_one_value(tokens));
+    auto first = parse_one_value(tokens);
     if (!first || !tokens.has_next_token())
         return first;
 
@@ -2636,7 +2636,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_comma_separated_value_list(Vector<Comp
         if (!tokens.next_token().is(Token::Type::Comma))
             return nullptr;
 
-        if (auto maybe_value = TRY(parse_one_value(tokens))) {
+        if (auto maybe_value = parse_one_value(tokens)) {
             values.append(maybe_value.release_nonnull());
             continue;
         }
@@ -2646,10 +2646,10 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_comma_separated_value_list(Vector<Comp
     return StyleValueList::create(move(values), StyleValueList::Separator::Comma);
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_simple_comma_separated_value_list(PropertyID property_id, Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_simple_comma_separated_value_list(PropertyID property_id, Vector<ComponentValue> const& component_values)
 {
-    return parse_comma_separated_value_list(component_values, [=, this](auto& tokens) -> ErrorOr<RefPtr<StyleValue>> {
-        if (auto value = TRY(parse_css_value_for_property(property_id, tokens)))
+    return parse_comma_separated_value_list(component_values, [=, this](auto& tokens) -> RefPtr<StyleValue> {
+        if (auto value = parse_css_value_for_property(property_id, tokens))
             return value;
         tokens.reconsume_current_input_token();
         return nullptr;
@@ -2662,7 +2662,7 @@ static void remove_property(Vector<PropertyID>& properties, PropertyID property_
 }
 
 // https://www.w3.org/TR/css-sizing-4/#aspect-ratio
-ErrorOr<RefPtr<StyleValue>> Parser::parse_aspect_ratio_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_aspect_ratio_value(Vector<ComponentValue> const& component_values)
 {
     // `auto || <ratio>`
     RefPtr<StyleValue> auto_value;
@@ -2670,7 +2670,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_aspect_ratio_value(Vector<ComponentVal
 
     auto tokens = TokenStream { component_values };
     while (tokens.has_next_token()) {
-        auto maybe_value = TRY(parse_css_value_for_property(PropertyID::AspectRatio, tokens));
+        auto maybe_value = parse_css_value_for_property(PropertyID::AspectRatio, tokens);
         if (!maybe_value)
             return nullptr;
 
@@ -2706,7 +2706,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_aspect_ratio_value(Vector<ComponentVal
     return nullptr;
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_background_value(Vector<ComponentValue> const& component_values)
 {
     StyleValueVector background_images;
     StyleValueVector background_positions;
@@ -2717,14 +2717,14 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
     StyleValueVector background_origins;
     RefPtr<StyleValue> background_color;
 
-    auto initial_background_image = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundImage));
-    auto initial_background_position = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundPosition));
-    auto initial_background_size = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundSize));
-    auto initial_background_repeat = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundRepeat));
-    auto initial_background_attachment = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundAttachment));
-    auto initial_background_clip = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundClip));
-    auto initial_background_origin = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundOrigin));
-    auto initial_background_color = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundColor));
+    auto initial_background_image = MUST(property_initial_value(m_context.realm(), PropertyID::BackgroundImage));
+    auto initial_background_position = MUST(property_initial_value(m_context.realm(), PropertyID::BackgroundPosition));
+    auto initial_background_size = MUST(property_initial_value(m_context.realm(), PropertyID::BackgroundSize));
+    auto initial_background_repeat = MUST(property_initial_value(m_context.realm(), PropertyID::BackgroundRepeat));
+    auto initial_background_attachment = MUST(property_initial_value(m_context.realm(), PropertyID::BackgroundAttachment));
+    auto initial_background_clip = MUST(property_initial_value(m_context.realm(), PropertyID::BackgroundClip));
+    auto initial_background_origin = MUST(property_initial_value(m_context.realm(), PropertyID::BackgroundOrigin));
+    auto initial_background_color = MUST(property_initial_value(m_context.realm(), PropertyID::BackgroundColor));
 
     // Per-layer values
     RefPtr<StyleValue> background_image;
@@ -2758,12 +2758,12 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
         return background_image || background_position || background_size || background_repeat || background_attachment || background_clip || background_origin;
     };
 
-    auto complete_background_layer = [&]() -> ErrorOr<void> {
-        TRY(background_images.try_append(background_image ? background_image.release_nonnull() : initial_background_image));
-        TRY(background_positions.try_append(background_position ? background_position.release_nonnull() : initial_background_position));
-        TRY(background_sizes.try_append(background_size ? background_size.release_nonnull() : initial_background_size));
-        TRY(background_repeats.try_append(background_repeat ? background_repeat.release_nonnull() : initial_background_repeat));
-        TRY(background_attachments.try_append(background_attachment ? background_attachment.release_nonnull() : initial_background_attachment));
+    auto complete_background_layer = [&]() {
+        background_images.append(background_image ? background_image.release_nonnull() : initial_background_image);
+        background_positions.append(background_position ? background_position.release_nonnull() : initial_background_position);
+        background_sizes.append(background_size ? background_size.release_nonnull() : initial_background_size);
+        background_repeats.append(background_repeat ? background_repeat.release_nonnull() : initial_background_repeat);
+        background_attachments.append(background_attachment ? background_attachment.release_nonnull() : initial_background_attachment);
 
         if (!background_origin && !background_clip) {
             background_origin = initial_background_origin;
@@ -2771,8 +2771,8 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
         } else if (!background_clip) {
             background_clip = background_origin;
         }
-        TRY(background_origins.try_append(background_origin.release_nonnull()));
-        TRY(background_clips.try_append(background_clip.release_nonnull()));
+        background_origins.append(background_origin.release_nonnull());
+        background_clips.append(background_clip.release_nonnull());
 
         background_image = nullptr;
         background_position = nullptr;
@@ -2790,8 +2790,6 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
         remaining_layer_properties.unchecked_append(PropertyID::BackgroundOrigin);
         remaining_layer_properties.unchecked_append(PropertyID::BackgroundPosition);
         remaining_layer_properties.unchecked_append(PropertyID::BackgroundRepeat);
-
-        return {};
     };
 
     auto tokens = TokenStream { component_values };
@@ -2800,12 +2798,12 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
             has_multiple_layers = true;
             if (!background_layer_is_valid(false))
                 return nullptr;
-            TRY(complete_background_layer());
+            complete_background_layer();
             (void)tokens.next_token();
             continue;
         }
 
-        auto value_and_property = TRY(parse_css_value_for_properties(remaining_layer_properties, tokens));
+        auto value_and_property = parse_css_value_for_properties(remaining_layer_properties, tokens);
         if (!value_and_property.style_value)
             return nullptr;
         auto& value = value_and_property.style_value;
@@ -2844,14 +2842,14 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
         case PropertyID::BackgroundPosition: {
             VERIFY(!background_position);
             tokens.reconsume_current_input_token();
-            if (auto maybe_background_position = TRY(parse_single_background_position_value(tokens))) {
+            if (auto maybe_background_position = parse_single_background_position_value(tokens)) {
                 background_position = maybe_background_position.release_nonnull();
 
                 // Attempt to parse `/ <background-size>`
                 auto transaction = tokens.begin_transaction();
                 auto& maybe_slash = tokens.next_token();
                 if (maybe_slash.is_delim('/')) {
-                    if (auto maybe_background_size = TRY(parse_single_background_size_value(tokens))) {
+                    if (auto maybe_background_size = parse_single_background_size_value(tokens)) {
                         transaction.commit();
                         background_size = maybe_background_size.release_nonnull();
                         continue;
@@ -2865,7 +2863,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
         case PropertyID::BackgroundRepeat: {
             VERIFY(!background_repeat);
             tokens.reconsume_current_input_token();
-            if (auto maybe_repeat = TRY(parse_single_background_repeat_value(tokens))) {
+            if (auto maybe_repeat = parse_single_background_repeat_value(tokens)) {
                 background_repeat = maybe_repeat.release_nonnull();
                 continue;
             }
@@ -2884,7 +2882,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
     // We only need to create StyleValueLists if there are multiple layers.
     // Otherwise, we can pass the single StyleValues directly.
     if (has_multiple_layers) {
-        TRY(complete_background_layer());
+        complete_background_layer();
 
         if (!background_color)
             background_color = initial_background_color;
@@ -2957,7 +2955,7 @@ static Optional<LengthPercentage> style_value_to_length_percentage(auto value)
     return {};
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_position_value(TokenStream<ComponentValue>& tokens)
+RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<ComponentValue>& tokens)
 {
     // NOTE: This *looks* like it parses a <position>, but it doesn't. From the spec:
     //      "Note: The background-position property also accepts a three-value syntax.
@@ -3007,7 +3005,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_position_value(Token
         if (seen_items == 2)
             break;
 
-        auto maybe_value = TRY(parse_css_value_for_property(PropertyID::BackgroundPosition, tokens));
+        auto maybe_value = parse_css_value_for_property(PropertyID::BackgroundPosition, tokens);
         if (!maybe_value)
             break;
         auto value = maybe_value.release_nonnull();
@@ -3023,10 +3021,10 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_position_value(Token
             continue;
         }
 
-        auto try_parse_offset = [&](bool& offset_provided) -> ErrorOr<LengthPercentage> {
+        auto try_parse_offset = [&](bool& offset_provided) -> LengthPercentage {
             auto transaction = tokens.begin_transaction();
             if (tokens.has_next_token()) {
-                auto maybe_value = TRY(parse_css_value_for_property(PropertyID::BackgroundPosition, tokens));
+                auto maybe_value = parse_css_value_for_property(PropertyID::BackgroundPosition, tokens);
                 if (!maybe_value)
                     return zero_offset;
                 auto offset = style_value_to_length_percentage(maybe_value.release_nonnull());
@@ -3043,11 +3041,11 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_position_value(Token
             auto identifier = value->to_identifier();
             if (is_horizontal(identifier)) {
                 bool offset_provided = false;
-                auto offset = TRY(try_parse_offset(offset_provided));
+                auto offset = try_parse_offset(offset_provided);
                 horizontal = EdgeOffset { *identifier_to_edge(identifier), offset, true, offset_provided };
             } else if (is_vertical(identifier)) {
                 bool offset_provided = false;
-                auto offset = TRY(try_parse_offset(offset_provided));
+                auto offset = try_parse_offset(offset_provided);
                 vertical = EdgeOffset { *identifier_to_edge(identifier), offset, true, offset_provided };
             } else if (identifier == ValueID::Center) {
                 found_center = true;
@@ -3100,7 +3098,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_position_value(Token
         EdgeStyleValue::create(vertical->edge, vertical->offset));
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_position_x_or_y_value(TokenStream<ComponentValue>& tokens, PropertyID property)
+RefPtr<StyleValue> Parser::parse_single_background_position_x_or_y_value(TokenStream<ComponentValue>& tokens, PropertyID property)
 {
     PositionEdge relative_edge {};
     if (property == PropertyID::BackgroundPositionX) {
@@ -3117,7 +3115,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_position_x_or_y_valu
     if (!tokens.has_next_token())
         return nullptr;
 
-    auto value = TRY(parse_css_value_for_property(property, tokens));
+    auto value = parse_css_value_for_property(property, tokens);
     if (!value)
         return nullptr;
 
@@ -3133,7 +3131,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_position_x_or_y_valu
             return nullptr;
         }
         if (tokens.has_next_token()) {
-            value = TRY(parse_css_value_for_property(property, tokens));
+            value = parse_css_value_for_property(property, tokens);
             if (!value) {
                 transaction.commit();
                 return EdgeStyleValue::create(relative_edge, Length::make_px(0));
@@ -3152,7 +3150,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_position_x_or_y_valu
     return EdgeStyleValue::create(relative_edge, Length::make_px(0));
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_repeat_value(TokenStream<ComponentValue>& tokens)
+RefPtr<StyleValue> Parser::parse_single_background_repeat_value(TokenStream<ComponentValue>& tokens)
 {
     auto transaction = tokens.begin_transaction();
 
@@ -3176,7 +3174,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_repeat_value(TokenSt
         }
     };
 
-    auto maybe_x_value = TRY(parse_css_value_for_property(PropertyID::BackgroundRepeat, tokens));
+    auto maybe_x_value = parse_css_value_for_property(PropertyID::BackgroundRepeat, tokens);
     if (!maybe_x_value)
         return nullptr;
     auto x_value = maybe_x_value.release_nonnull();
@@ -3194,7 +3192,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_repeat_value(TokenSt
         return nullptr;
 
     // See if we have a second value for Y
-    auto maybe_y_value = TRY(parse_css_value_for_property(PropertyID::BackgroundRepeat, tokens));
+    auto maybe_y_value = parse_css_value_for_property(PropertyID::BackgroundRepeat, tokens);
     if (!maybe_y_value) {
         // We don't have a second value, so use x for both
         transaction.commit();
@@ -3212,7 +3210,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_repeat_value(TokenSt
     return BackgroundRepeatStyleValue::create(x_repeat.value(), y_repeat.value());
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_size_value(TokenStream<ComponentValue>& tokens)
+RefPtr<StyleValue> Parser::parse_single_background_size_value(TokenStream<ComponentValue>& tokens)
 {
     auto transaction = tokens.begin_transaction();
 
@@ -3226,7 +3224,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_size_value(TokenStre
         return {};
     };
 
-    auto maybe_x_value = TRY(parse_css_value_for_property(PropertyID::BackgroundSize, tokens));
+    auto maybe_x_value = parse_css_value_for_property(PropertyID::BackgroundSize, tokens);
     if (!maybe_x_value)
         return nullptr;
     auto x_value = maybe_x_value.release_nonnull();
@@ -3236,7 +3234,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_size_value(TokenStre
         return x_value;
     }
 
-    auto maybe_y_value = TRY(parse_css_value_for_property(PropertyID::BackgroundSize, tokens));
+    auto maybe_y_value = parse_css_value_for_property(PropertyID::BackgroundSize, tokens);
     if (!maybe_y_value) {
         auto y_value = LengthPercentage { Length::make_auto() };
         auto x_size = get_length_percentage(*x_value);
@@ -3258,7 +3256,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_size_value(TokenStre
     return BackgroundSizeStyleValue::create(x_size.release_value(), y_size.release_value());
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_border_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_border_value(Vector<ComponentValue> const& component_values)
 {
     if (component_values.size() > 3)
         return nullptr;
@@ -3271,7 +3269,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_border_value(Vector<ComponentValue> co
 
     auto tokens = TokenStream { component_values };
     while (tokens.has_next_token()) {
-        auto property_and_value = TRY(parse_css_value_for_properties(remaining_longhands, tokens));
+        auto property_and_value = parse_css_value_for_properties(remaining_longhands, tokens);
         if (!property_and_value.style_value)
             return nullptr;
         auto& value = property_and_value.style_value;
@@ -3299,16 +3297,16 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_border_value(Vector<ComponentValue> co
     }
 
     if (!border_width)
-        border_width = TRY(property_initial_value(m_context.realm(), PropertyID::BorderWidth));
+        border_width = MUST(property_initial_value(m_context.realm(), PropertyID::BorderWidth));
     if (!border_style)
-        border_style = TRY(property_initial_value(m_context.realm(), PropertyID::BorderStyle));
+        border_style = MUST(property_initial_value(m_context.realm(), PropertyID::BorderStyle));
     if (!border_color)
-        border_color = TRY(property_initial_value(m_context.realm(), PropertyID::BorderColor));
+        border_color = MUST(property_initial_value(m_context.realm(), PropertyID::BorderColor));
 
     return BorderStyleValue::create(border_width.release_nonnull(), border_style.release_nonnull(), border_color.release_nonnull());
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_border_radius_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_border_radius_value(Vector<ComponentValue> const& component_values)
 {
     if (component_values.size() == 2) {
         auto horizontal = parse_dimension(component_values[0]);
@@ -3329,7 +3327,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_border_radius_value(Vector<ComponentVa
     return nullptr;
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_border_radius_shorthand_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<ComponentValue> const& component_values)
 {
     auto top_left = [&](Vector<LengthPercentage>& radii) { return radii[0]; };
     auto top_right = [&](Vector<LengthPercentage>& radii) {
@@ -3410,11 +3408,11 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_border_radius_shorthand_value(Vector<C
     return BorderRadiusShorthandStyleValue::create(move(top_left_radius), move(top_right_radius), move(bottom_right_radius), move(bottom_left_radius));
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_shadow_value(Vector<ComponentValue> const& component_values, AllowInsetKeyword allow_inset_keyword)
+RefPtr<StyleValue> Parser::parse_shadow_value(Vector<ComponentValue> const& component_values, AllowInsetKeyword allow_inset_keyword)
 {
     // "none"
     if (component_values.size() == 1 && component_values.first().is(Token::Type::Ident)) {
-        auto ident = TRY(parse_identifier_value(component_values.first()));
+        auto ident = parse_identifier_value(component_values.first());
         if (ident && ident->to_identifier() == ValueID::None)
             return ident;
     }
@@ -3424,7 +3422,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_shadow_value(Vector<ComponentValue> co
     });
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_single_shadow_value(TokenStream<ComponentValue>& tokens, AllowInsetKeyword allow_inset_keyword)
+RefPtr<StyleValue> Parser::parse_single_shadow_value(TokenStream<ComponentValue>& tokens, AllowInsetKeyword allow_inset_keyword)
 {
     auto transaction = tokens.begin_transaction();
 
@@ -3435,8 +3433,8 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_shadow_value(TokenStream<Compon
     RefPtr<StyleValue> spread_distance;
     Optional<ShadowPlacement> placement;
 
-    auto possibly_dynamic_length = [&](ComponentValue const& token) -> ErrorOr<RefPtr<StyleValue>> {
-        if (auto calculated_value = TRY(parse_calculated_value(token))) {
+    auto possibly_dynamic_length = [&](ComponentValue const& token) -> RefPtr<StyleValue> {
+        if (auto calculated_value = parse_calculated_value(token)) {
             if (!calculated_value->resolves_to_length())
                 return nullptr;
             return calculated_value;
@@ -3458,7 +3456,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_shadow_value(TokenStream<Compon
             continue;
         }
 
-        if (auto maybe_offset_x = TRY(possibly_dynamic_length(token)); maybe_offset_x) {
+        if (auto maybe_offset_x = possibly_dynamic_length(token); maybe_offset_x) {
             // horizontal offset
             if (offset_x)
                 return nullptr;
@@ -3468,7 +3466,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_shadow_value(TokenStream<Compon
             // vertical offset
             if (!tokens.has_next_token())
                 return nullptr;
-            auto maybe_offset_y = TRY(possibly_dynamic_length(tokens.peek_token()));
+            auto maybe_offset_y = possibly_dynamic_length(tokens.peek_token());
             if (!maybe_offset_y)
                 return nullptr;
             offset_y = maybe_offset_y;
@@ -3477,7 +3475,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_shadow_value(TokenStream<Compon
             // blur radius (optional)
             if (!tokens.has_next_token())
                 break;
-            auto maybe_blur_radius = TRY(possibly_dynamic_length(tokens.peek_token()));
+            auto maybe_blur_radius = possibly_dynamic_length(tokens.peek_token());
             if (!maybe_blur_radius)
                 continue;
             blur_radius = maybe_blur_radius;
@@ -3486,7 +3484,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_shadow_value(TokenStream<Compon
             // spread distance (optional)
             if (!tokens.has_next_token())
                 break;
-            auto maybe_spread_distance = TRY(possibly_dynamic_length(tokens.peek_token()));
+            auto maybe_spread_distance = possibly_dynamic_length(tokens.peek_token());
             if (!maybe_spread_distance)
                 continue;
             spread_distance = maybe_spread_distance;
@@ -3532,7 +3530,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_shadow_value(TokenStream<Compon
     return ShadowStyleValue::create(color.release_value(), offset_x.release_nonnull(), offset_y.release_nonnull(), blur_radius.release_nonnull(), spread_distance.release_nonnull(), placement.release_value());
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_content_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_content_value(Vector<ComponentValue> const& component_values)
 {
     // FIXME: `content` accepts several kinds of function() type, which we don't handle in property_accepts_value() yet.
 
@@ -3547,7 +3545,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_content_value(Vector<ComponentValue> c
     };
 
     if (component_values.size() == 1) {
-        if (auto identifier = TRY(parse_identifier_value(component_values.first()))) {
+        if (auto identifier = parse_identifier_value(component_values.first())) {
             if (is_single_value_identifier(identifier->to_identifier()))
                 return identifier;
         }
@@ -3568,14 +3566,14 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_content_value(Vector<ComponentValue> c
             continue;
         }
 
-        if (auto style_value = TRY(parse_css_value_for_property(PropertyID::Content, tokens))) {
+        if (auto style_value = parse_css_value_for_property(PropertyID::Content, tokens)) {
             if (is_single_value_identifier(style_value->to_identifier()))
                 return nullptr;
 
             if (in_alt_text) {
-                TRY(alt_text_values.try_append(style_value.release_nonnull()));
+                alt_text_values.append(style_value.release_nonnull());
             } else {
-                TRY(content_values.try_append(style_value.release_nonnull()));
+                content_values.append(style_value.release_nonnull());
             }
             continue;
         }
@@ -3596,7 +3594,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_content_value(Vector<ComponentValue> c
 }
 
 // https://www.w3.org/TR/css-display-3/#the-display-properties
-ErrorOr<RefPtr<StyleValue>> Parser::parse_display_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_display_value(Vector<ComponentValue> const& component_values)
 {
     auto parse_inside = [](ValueID identifier) -> Optional<Display::Inside> {
         switch (identifier) {
@@ -3629,8 +3627,8 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_display_value(Vector<ComponentValue> c
         }
     };
 
-    auto parse_single_component_display = [&](Vector<ComponentValue> const& component_values) -> ErrorOr<Optional<Display>> {
-        if (auto identifier = TRY(parse_identifier_value(component_values.first()))) {
+    auto parse_single_component_display = [&](Vector<ComponentValue> const& component_values) -> Optional<Display> {
+        if (auto identifier = parse_identifier_value(component_values.first())) {
             switch (identifier->to_identifier()) {
 
             // display-outside
@@ -3708,13 +3706,13 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_display_value(Vector<ComponentValue> c
         return OptionalNone {};
     };
 
-    auto parse_multi_component_display = [&](Vector<ComponentValue> const& component_values) -> ErrorOr<Optional<Display>> {
+    auto parse_multi_component_display = [&](Vector<ComponentValue> const& component_values) -> Optional<Display> {
         auto list_item = Display::ListItem::No;
         Display::Inside inside = Display::Inside::Flow;
         Display::Outside outside = Display::Outside::Block;
 
         for (size_t i = 0; i < component_values.size(); ++i) {
-            if (auto value = TRY(parse_identifier_value(component_values[i]))) {
+            if (auto value = parse_identifier_value(component_values[i])) {
                 auto identifier = value->to_identifier();
                 if (ValueID::ListItem == identifier) {
                     list_item = Display::ListItem::Yes;
@@ -3742,9 +3740,9 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_display_value(Vector<ComponentValue> c
 
     Optional<Display> display;
     if (component_values.size() == 1)
-        display = TRY(parse_single_component_display(component_values));
+        display = parse_single_component_display(component_values);
     else
-        display = TRY(parse_multi_component_display(component_values));
+        display = parse_multi_component_display(component_values);
 
     if (display.has_value())
         return DisplayStyleValue::create(display.value());
@@ -3752,10 +3750,10 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_display_value(Vector<ComponentValue> c
     return nullptr;
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_filter_value_list_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_filter_value_list_value(Vector<ComponentValue> const& component_values)
 {
     if (component_values.size() == 1 && component_values.first().is(Token::Type::Ident)) {
-        auto ident = TRY(parse_identifier_value(component_values.first()));
+        auto ident = parse_identifier_value(component_values.first());
         if (ident && ident->to_identifier() == ValueID::None)
             return ident;
     }
@@ -3933,14 +3931,14 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_filter_value_list_value(Vector<Compone
     return FilterValueListStyleValue::create(move(filter_value_list));
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_flex_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_flex_value(Vector<ComponentValue> const& component_values)
 {
     auto tokens = TokenStream { component_values };
 
     if (component_values.size() == 1) {
         // One-value syntax: <flex-grow> | <flex-basis> | none
         auto properties = Array { PropertyID::FlexGrow, PropertyID::FlexBasis, PropertyID::Flex };
-        auto property_and_value = TRY(parse_css_value_for_properties(properties, tokens));
+        auto property_and_value = parse_css_value_for_properties(properties, tokens);
         if (!property_and_value.style_value)
             return nullptr;
 
@@ -3980,7 +3978,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_flex_value(Vector<ComponentValue> cons
     auto remaining_longhands = Vector { PropertyID::FlexGrow, PropertyID::FlexBasis };
 
     while (tokens.has_next_token()) {
-        auto property_and_value = TRY(parse_css_value_for_properties(remaining_longhands, tokens));
+        auto property_and_value = parse_css_value_for_properties(remaining_longhands, tokens);
         if (!property_and_value.style_value)
             return nullptr;
         auto& value = property_and_value.style_value;
@@ -3992,7 +3990,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_flex_value(Vector<ComponentValue> cons
             flex_grow = value.release_nonnull();
 
             // Flex-shrink may optionally follow directly after.
-            auto maybe_flex_shrink = TRY(parse_css_value_for_property(PropertyID::FlexShrink, tokens));
+            auto maybe_flex_shrink = parse_css_value_for_property(PropertyID::FlexShrink, tokens);
             if (maybe_flex_shrink)
                 flex_shrink = maybe_flex_shrink.release_nonnull();
             continue;
@@ -4008,9 +4006,9 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_flex_value(Vector<ComponentValue> cons
     }
 
     if (!flex_grow)
-        flex_grow = TRY(property_initial_value(m_context.realm(), PropertyID::FlexGrow));
+        flex_grow = MUST(property_initial_value(m_context.realm(), PropertyID::FlexGrow));
     if (!flex_shrink)
-        flex_shrink = TRY(property_initial_value(m_context.realm(), PropertyID::FlexShrink));
+        flex_shrink = MUST(property_initial_value(m_context.realm(), PropertyID::FlexShrink));
     if (!flex_basis) {
         // NOTE: The spec says that flex-basis should be 0 here, but other engines currently use 0%.
         // https://github.com/w3c/csswg-drafts/issues/5742
@@ -4020,7 +4018,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_flex_value(Vector<ComponentValue> cons
     return FlexStyleValue::create(flex_grow.release_nonnull(), flex_shrink.release_nonnull(), flex_basis.release_nonnull());
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_flex_flow_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_flex_flow_value(Vector<ComponentValue> const& component_values)
 {
     if (component_values.size() > 2)
         return nullptr;
@@ -4031,7 +4029,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_flex_flow_value(Vector<ComponentValue>
     auto remaining_longhands = Vector { PropertyID::FlexDirection, PropertyID::FlexWrap };
     auto tokens = TokenStream { component_values };
     while (tokens.has_next_token()) {
-        auto property_and_value = TRY(parse_css_value_for_properties(remaining_longhands, tokens));
+        auto property_and_value = parse_css_value_for_properties(remaining_longhands, tokens);
         if (!property_and_value.style_value)
             return nullptr;
         auto& value = property_and_value.style_value;
@@ -4052,9 +4050,9 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_flex_flow_value(Vector<ComponentValue>
     }
 
     if (!flex_direction)
-        flex_direction = TRY(property_initial_value(m_context.realm(), PropertyID::FlexDirection));
+        flex_direction = MUST(property_initial_value(m_context.realm(), PropertyID::FlexDirection));
     if (!flex_wrap)
-        flex_wrap = TRY(property_initial_value(m_context.realm(), PropertyID::FlexWrap));
+        flex_wrap = MUST(property_initial_value(m_context.realm(), PropertyID::FlexWrap));
 
     return FlexFlowStyleValue::create(flex_direction.release_nonnull(), flex_wrap.release_nonnull());
 }
@@ -4077,7 +4075,7 @@ static bool is_generic_font_family(ValueID identifier)
     }
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_font_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_font_value(Vector<ComponentValue> const& component_values)
 {
     RefPtr<StyleValue> font_stretch;
     RefPtr<StyleValue> font_style;
@@ -4104,7 +4102,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_font_value(Vector<ComponentValue> cons
             continue;
         }
 
-        auto property_and_value = TRY(parse_css_value_for_properties(remaining_longhands, tokens));
+        auto property_and_value = parse_css_value_for_properties(remaining_longhands, tokens);
         if (!property_and_value.style_value)
             return nullptr;
         auto& value = property_and_value.style_value;
@@ -4118,14 +4116,14 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_font_value(Vector<ComponentValue> cons
             // Consume `/ line-height` if present
             if (tokens.peek_token().is_delim('/')) {
                 (void)tokens.next_token();
-                auto maybe_line_height = TRY(parse_css_value_for_property(PropertyID::LineHeight, tokens));
+                auto maybe_line_height = parse_css_value_for_property(PropertyID::LineHeight, tokens);
                 if (!maybe_line_height)
                     return nullptr;
                 line_height = maybe_line_height.release_nonnull();
             }
 
             // Consume font-families
-            auto maybe_font_families = TRY(parse_font_family_value(tokens));
+            auto maybe_font_families = parse_font_family_value(tokens);
             // font-family comes last, so we must not have any tokens left over.
             if (!maybe_font_families || tokens.has_next_token())
                 return nullptr;
@@ -4171,18 +4169,18 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_font_value(Vector<ComponentValue> cons
         return nullptr;
 
     if (!font_stretch)
-        font_stretch = TRY(property_initial_value(m_context.realm(), PropertyID::FontStretch));
+        font_stretch = MUST(property_initial_value(m_context.realm(), PropertyID::FontStretch));
     if (!font_style)
-        font_style = TRY(property_initial_value(m_context.realm(), PropertyID::FontStyle));
+        font_style = MUST(property_initial_value(m_context.realm(), PropertyID::FontStyle));
     if (!font_weight)
-        font_weight = TRY(property_initial_value(m_context.realm(), PropertyID::FontWeight));
+        font_weight = MUST(property_initial_value(m_context.realm(), PropertyID::FontWeight));
     if (!line_height)
-        line_height = TRY(property_initial_value(m_context.realm(), PropertyID::LineHeight));
+        line_height = MUST(property_initial_value(m_context.realm(), PropertyID::LineHeight));
 
     return FontStyleValue::create(font_stretch.release_nonnull(), font_style.release_nonnull(), font_weight.release_nonnull(), font_size.release_nonnull(), line_height.release_nonnull(), font_families.release_nonnull());
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_font_family_value(TokenStream<ComponentValue>& tokens)
+RefPtr<StyleValue> Parser::parse_font_family_value(TokenStream<ComponentValue>& tokens)
 {
     auto next_is_comma_or_eof = [&]() -> bool {
         return !tokens.has_next_token() || tokens.peek_token().is(Token::Type::Comma);
@@ -4204,7 +4202,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_font_family_value(TokenStream<Componen
             (void)tokens.next_token(); // String
             if (!next_is_comma_or_eof())
                 return nullptr;
-            TRY(font_families.try_append(StringStyleValue::create(TRY(String::from_utf8(peek.token().string())))));
+            font_families.append(StringStyleValue::create(MUST(String::from_utf8(peek.token().string()))));
             (void)tokens.next_token(); // Comma
             continue;
         }
@@ -4213,7 +4211,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_font_family_value(TokenStream<Componen
             // If this is a valid identifier, it's NOT a custom-ident and can't be part of a larger name.
 
             // CSS-wide keywords are not allowed
-            if (auto builtin = TRY(parse_builtin_value(peek)))
+            if (auto builtin = parse_builtin_value(peek))
                 return nullptr;
 
             auto maybe_ident = value_id_from_string(peek.token().ident());
@@ -4224,11 +4222,11 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_font_family_value(TokenStream<Componen
                 (void)tokens.next_token(); // Ident
                 if (!next_is_comma_or_eof())
                     return nullptr;
-                TRY(font_families.try_append(IdentifierStyleValue::create(maybe_ident.value())));
+                font_families.append(IdentifierStyleValue::create(maybe_ident.value()));
                 (void)tokens.next_token(); // Comma
                 continue;
             }
-            TRY(current_name_parts.try_append(tokens.next_token().token().ident()));
+            current_name_parts.append(tokens.next_token().token().ident());
             continue;
         }
 
@@ -4236,7 +4234,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_font_family_value(TokenStream<Componen
             if (current_name_parts.is_empty())
                 return nullptr;
             (void)tokens.next_token(); // Comma
-            TRY(font_families.try_append(StringStyleValue::create(TRY(String::join(' ', current_name_parts)))));
+            font_families.append(StringStyleValue::create(MUST(String::join(' ', current_name_parts))));
             current_name_parts.clear();
             // Can't have a trailing comma
             if (!tokens.has_next_token())
@@ -4248,7 +4246,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_font_family_value(TokenStream<Componen
     }
 
     if (!current_name_parts.is_empty()) {
-        TRY(font_families.try_append(StringStyleValue::create(TRY(String::join(' ', current_name_parts)))));
+        font_families.append(StringStyleValue::create(MUST(String::join(' ', current_name_parts))));
         current_name_parts.clear();
     }
 
@@ -4462,7 +4460,7 @@ Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>
     return supported_sources;
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_list_style_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_list_style_value(Vector<ComponentValue> const& component_values)
 {
     if (component_values.size() > 3)
         return nullptr;
@@ -4482,7 +4480,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_list_style_value(Vector<ComponentValue
             continue;
         }
 
-        auto property_and_value = TRY(parse_css_value_for_properties(remaining_longhands, tokens));
+        auto property_and_value = parse_css_value_for_properties(remaining_longhands, tokens);
         if (!property_and_value.style_value)
             return nullptr;
         auto& value = property_and_value.style_value;
@@ -4530,28 +4528,28 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_list_style_value(Vector<ComponentValue
     }
 
     if (!list_position)
-        list_position = TRY(property_initial_value(m_context.realm(), PropertyID::ListStylePosition));
+        list_position = MUST(property_initial_value(m_context.realm(), PropertyID::ListStylePosition));
     if (!list_image)
-        list_image = TRY(property_initial_value(m_context.realm(), PropertyID::ListStyleImage));
+        list_image = MUST(property_initial_value(m_context.realm(), PropertyID::ListStyleImage));
     if (!list_type)
-        list_type = TRY(property_initial_value(m_context.realm(), PropertyID::ListStyleType));
+        list_type = MUST(property_initial_value(m_context.realm(), PropertyID::ListStyleType));
 
     return ListStyleStyleValue::create(list_position.release_nonnull(), list_image.release_nonnull(), list_type.release_nonnull());
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_overflow_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_overflow_value(Vector<ComponentValue> const& component_values)
 {
     auto tokens = TokenStream { component_values };
     if (component_values.size() == 1) {
-        auto maybe_value = TRY(parse_css_value_for_property(PropertyID::Overflow, tokens));
+        auto maybe_value = parse_css_value_for_property(PropertyID::Overflow, tokens);
         if (!maybe_value)
             return nullptr;
         return OverflowStyleValue::create(*maybe_value, *maybe_value);
     }
 
     if (component_values.size() == 2) {
-        auto maybe_x_value = TRY(parse_css_value_for_property(PropertyID::OverflowX, tokens));
-        auto maybe_y_value = TRY(parse_css_value_for_property(PropertyID::OverflowY, tokens));
+        auto maybe_x_value = parse_css_value_for_property(PropertyID::OverflowX, tokens);
+        auto maybe_y_value = parse_css_value_for_property(PropertyID::OverflowY, tokens);
         if (!maybe_x_value || !maybe_y_value)
             return nullptr;
         return OverflowStyleValue::create(maybe_x_value.release_nonnull(), maybe_y_value.release_nonnull());
@@ -4560,13 +4558,13 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_overflow_value(Vector<ComponentValue> 
     return nullptr;
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_place_content_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_place_content_value(Vector<ComponentValue> const& component_values)
 {
     if (component_values.size() > 2)
         return nullptr;
 
     auto tokens = TokenStream { component_values };
-    auto maybe_align_content_value = TRY(parse_css_value_for_property(PropertyID::AlignContent, tokens));
+    auto maybe_align_content_value = parse_css_value_for_property(PropertyID::AlignContent, tokens);
     if (!maybe_align_content_value)
         return nullptr;
 
@@ -4576,16 +4574,16 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_place_content_value(Vector<ComponentVa
         return PlaceContentStyleValue::create(*maybe_align_content_value, *maybe_align_content_value);
     }
 
-    auto maybe_justify_content_value = TRY(parse_css_value_for_property(PropertyID::JustifyContent, tokens));
+    auto maybe_justify_content_value = parse_css_value_for_property(PropertyID::JustifyContent, tokens);
     if (!maybe_justify_content_value)
         return nullptr;
     return PlaceContentStyleValue::create(maybe_align_content_value.release_nonnull(), maybe_justify_content_value.release_nonnull());
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_place_items_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_place_items_value(Vector<ComponentValue> const& component_values)
 {
     auto tokens = TokenStream { component_values };
-    auto maybe_align_items_value = TRY(parse_css_value_for_property(PropertyID::AlignItems, tokens));
+    auto maybe_align_items_value = parse_css_value_for_property(PropertyID::AlignItems, tokens);
     if (!maybe_align_items_value)
         return nullptr;
 
@@ -4595,16 +4593,16 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_place_items_value(Vector<ComponentValu
         return PlaceItemsStyleValue::create(*maybe_align_items_value, *maybe_align_items_value);
     }
 
-    auto maybe_justify_items_value = TRY(parse_css_value_for_property(PropertyID::JustifyItems, tokens));
+    auto maybe_justify_items_value = parse_css_value_for_property(PropertyID::JustifyItems, tokens);
     if (!maybe_justify_items_value)
         return nullptr;
     return PlaceItemsStyleValue::create(*maybe_align_items_value, *maybe_justify_items_value);
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_place_self_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_place_self_value(Vector<ComponentValue> const& component_values)
 {
     auto tokens = TokenStream { component_values };
-    auto maybe_align_self_value = TRY(parse_css_value_for_property(PropertyID::AlignSelf, tokens));
+    auto maybe_align_self_value = parse_css_value_for_property(PropertyID::AlignSelf, tokens);
     if (!maybe_align_self_value)
         return nullptr;
 
@@ -4614,13 +4612,13 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_place_self_value(Vector<ComponentValue
         return PlaceSelfStyleValue::create(*maybe_align_self_value, *maybe_align_self_value);
     }
 
-    auto maybe_justify_self_value = TRY(parse_css_value_for_property(PropertyID::JustifySelf, tokens));
+    auto maybe_justify_self_value = parse_css_value_for_property(PropertyID::JustifySelf, tokens);
     if (!maybe_justify_self_value)
         return nullptr;
     return PlaceItemsStyleValue::create(*maybe_align_self_value, *maybe_justify_self_value);
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_text_decoration_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_text_decoration_value(Vector<ComponentValue> const& component_values)
 {
     RefPtr<StyleValue> decoration_line;
     RefPtr<StyleValue> decoration_thickness;
@@ -4631,7 +4629,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_text_decoration_value(Vector<Component
 
     auto tokens = TokenStream { component_values };
     while (tokens.has_next_token()) {
-        auto property_and_value = TRY(parse_css_value_for_properties(remaining_longhands, tokens));
+        auto property_and_value = parse_css_value_for_properties(remaining_longhands, tokens);
         if (!property_and_value.style_value)
             return nullptr;
         auto& value = property_and_value.style_value;
@@ -4646,7 +4644,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_text_decoration_value(Vector<Component
         case PropertyID::TextDecorationLine: {
             VERIFY(!decoration_line);
             tokens.reconsume_current_input_token();
-            auto parsed_decoration_line = TRY(parse_text_decoration_line_value(tokens));
+            auto parsed_decoration_line = parse_text_decoration_line_value(tokens);
             if (!parsed_decoration_line)
                 return nullptr;
             decoration_line = parsed_decoration_line.release_nonnull();
@@ -4668,23 +4666,23 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_text_decoration_value(Vector<Component
     }
 
     if (!decoration_line)
-        decoration_line = TRY(property_initial_value(m_context.realm(), PropertyID::TextDecorationLine));
+        decoration_line = MUST(property_initial_value(m_context.realm(), PropertyID::TextDecorationLine));
     if (!decoration_thickness)
-        decoration_thickness = TRY(property_initial_value(m_context.realm(), PropertyID::TextDecorationThickness));
+        decoration_thickness = MUST(property_initial_value(m_context.realm(), PropertyID::TextDecorationThickness));
     if (!decoration_style)
-        decoration_style = TRY(property_initial_value(m_context.realm(), PropertyID::TextDecorationStyle));
+        decoration_style = MUST(property_initial_value(m_context.realm(), PropertyID::TextDecorationStyle));
     if (!decoration_color)
-        decoration_color = TRY(property_initial_value(m_context.realm(), PropertyID::TextDecorationColor));
+        decoration_color = MUST(property_initial_value(m_context.realm(), PropertyID::TextDecorationColor));
 
     return TextDecorationStyleValue::create(decoration_line.release_nonnull(), decoration_thickness.release_nonnull(), decoration_style.release_nonnull(), decoration_color.release_nonnull());
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_text_decoration_line_value(TokenStream<ComponentValue>& tokens)
+RefPtr<StyleValue> Parser::parse_text_decoration_line_value(TokenStream<ComponentValue>& tokens)
 {
     StyleValueVector style_values;
 
     while (tokens.has_next_token()) {
-        auto maybe_value = TRY(parse_css_value_for_property(PropertyID::TextDecorationLine, tokens));
+        auto maybe_value = parse_css_value_for_property(PropertyID::TextDecorationLine, tokens);
         if (!maybe_value)
             break;
         auto value = maybe_value.release_nonnull();
@@ -4697,7 +4695,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_text_decoration_line_value(TokenStream
             }
             if (style_values.contains_slow(value))
                 break;
-            TRY(style_values.try_append(move(value)));
+            style_values.append(move(value));
             continue;
         }
 
@@ -4709,7 +4707,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_text_decoration_line_value(TokenStream
     return StyleValueList::create(move(style_values), StyleValueList::Separator::Space);
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_easing_value(TokenStream<ComponentValue>& tokens)
+RefPtr<StyleValue> Parser::parse_easing_value(TokenStream<ComponentValue>& tokens)
 {
     auto transaction = tokens.begin_transaction();
 
@@ -4784,7 +4782,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_easing_value(TokenStream<ComponentValu
             case EasingFunctionParameterType::StepPosition: {
                 if (!value.is(Token::Type::Ident))
                     return nullptr;
-                auto ident = TRY(parse_identifier_value(value));
+                auto ident = parse_identifier_value(value);
                 if (!ident)
                     return nullptr;
                 switch (ident->to_identifier()) {
@@ -4793,7 +4791,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_easing_value(TokenStream<ComponentValu
                 case ValueID::JumpNone:
                 case ValueID::Start:
                 case ValueID::End:
-                    TRY(values.try_append(*ident));
+                    values.append(*ident);
                     break;
                 default:
                     return nullptr;
@@ -4814,7 +4812,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_easing_value(TokenStream<ComponentValu
     return EasingStyleValue::create(function, move(values));
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& component_values)
 {
     StyleValueVector transformations;
     auto tokens = TokenStream { component_values };
@@ -4852,7 +4850,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_value(Vector<ComponentValue>
             }
 
             auto const& value = argument_tokens.next_token();
-            RefPtr<CalculatedStyleValue> maybe_calc_value = TRY(parse_calculated_value(value));
+            RefPtr<CalculatedStyleValue> maybe_calc_value = parse_calculated_value(value);
 
             switch (function_metadata.parameters[argument_index].type) {
             case TransformFunctionParameterType::Angle: {
@@ -4862,7 +4860,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_value(Vector<ComponentValue>
                 } else if (value.is(Token::Type::Number) && value.token().number_value() == 0) {
                     values.append(AngleStyleValue::create(Angle::make_degrees(0)));
                 } else {
-                    auto dimension_value = TRY(parse_dimension_value(value));
+                    auto dimension_value = parse_dimension_value(value);
                     if (!dimension_value || !dimension_value->is_angle())
                         return nullptr;
                     values.append(dimension_value.release_nonnull());
@@ -4873,7 +4871,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_value(Vector<ComponentValue>
                 if (maybe_calc_value && maybe_calc_value->resolves_to_length()) {
                     values.append(maybe_calc_value.release_nonnull());
                 } else {
-                    auto dimension_value = TRY(parse_dimension_value(value));
+                    auto dimension_value = parse_dimension_value(value);
                     if (!dimension_value)
                         return nullptr;
 
@@ -4888,7 +4886,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_value(Vector<ComponentValue>
                 if (maybe_calc_value && maybe_calc_value->resolves_to_length()) {
                     values.append(maybe_calc_value.release_nonnull());
                 } else {
-                    auto dimension_value = TRY(parse_dimension_value(value));
+                    auto dimension_value = parse_dimension_value(value);
                     if (!dimension_value)
                         return nullptr;
 
@@ -4905,7 +4903,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_value(Vector<ComponentValue>
                 } else {
                     // FIXME: Remove this reconsume once all parsing functions are TokenStream-based.
                     argument_tokens.reconsume_current_input_token();
-                    auto number = TRY(parse_number_value(argument_tokens));
+                    auto number = parse_number_value(argument_tokens);
                     if (!number)
                         return nullptr;
                     values.append(number.release_nonnull());
@@ -4941,7 +4939,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_value(Vector<ComponentValue>
 
 // https://www.w3.org/TR/css-transforms-1/#propdef-transform-origin
 // FIXME: This only supports a 2D position
-ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_origin_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_transform_origin_value(Vector<ComponentValue> const& component_values)
 {
     enum class Axis {
         None,
@@ -4988,7 +4986,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_origin_value(Vector<Componen
     auto tokens = TokenStream { component_values };
     switch (component_values.size()) {
     case 1: {
-        auto single_value = to_axis_offset(TRY(parse_css_value_for_property(PropertyID::TransformOrigin, tokens)));
+        auto single_value = to_axis_offset(parse_css_value_for_property(PropertyID::TransformOrigin, tokens));
         if (!single_value.has_value())
             return nullptr;
         // If only one value is specified, the second value is assumed to be center.
@@ -5003,8 +5001,8 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_origin_value(Vector<Componen
         VERIFY_NOT_REACHED();
     }
     case 2: {
-        auto first_value = to_axis_offset(TRY(parse_css_value_for_property(PropertyID::TransformOrigin, tokens)));
-        auto second_value = to_axis_offset(TRY(parse_css_value_for_property(PropertyID::TransformOrigin, tokens)));
+        auto first_value = to_axis_offset(parse_css_value_for_property(PropertyID::TransformOrigin, tokens));
+        auto second_value = to_axis_offset(parse_css_value_for_property(PropertyID::TransformOrigin, tokens));
         if (!first_value.has_value() || !second_value.has_value())
             return nullptr;
 
@@ -5052,7 +5050,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_origin_value(Vector<Componen
     return nullptr;
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_as_css_value(PropertyID property_id)
+RefPtr<StyleValue> Parser::parse_as_css_value(PropertyID property_id)
 {
     auto component_values = parse_a_list_of_component_values(m_token_stream);
     auto tokens = TokenStream(component_values);
@@ -5065,8 +5063,8 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_as_css_value(PropertyID property_id)
 Optional<CSS::GridSize> Parser::parse_grid_size(ComponentValue const& component_value)
 {
     if (component_value.is_function()) {
-        if (auto maybe_calculated = parse_calculated_value(component_value); !maybe_calculated.is_error() && maybe_calculated.value())
-            return GridSize(LengthPercentage(maybe_calculated.release_value().release_nonnull()));
+        if (auto maybe_calculated = parse_calculated_value(component_value))
+            return GridSize(LengthPercentage(maybe_calculated.release_nonnull()));
 
         return {};
     }
@@ -5246,8 +5244,8 @@ Optional<CSS::ExplicitGridTrack> Parser::parse_track_sizing_function(ComponentVa
                 return CSS::ExplicitGridTrack(maybe_min_max_value.value());
             else
                 return {};
-        } else if (auto maybe_calculated = parse_calculated_value(token); !maybe_calculated.is_error() && maybe_calculated.value()) {
-            return CSS::ExplicitGridTrack(GridSize(LengthPercentage(maybe_calculated.release_value().release_nonnull())));
+        } else if (auto maybe_calculated = parse_calculated_value(token)) {
+            return CSS::ExplicitGridTrack(GridSize(LengthPercentage(maybe_calculated.release_nonnull())));
         }
         return {};
     } else if (token.is(Token::Type::Ident) && token.token().ident().equals_ignoring_ascii_case("auto"sv)) {
@@ -5262,10 +5260,10 @@ Optional<CSS::ExplicitGridTrack> Parser::parse_track_sizing_function(ComponentVa
     }
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_track_size_list(Vector<ComponentValue> const& component_values, bool allow_separate_line_name_blocks)
+RefPtr<StyleValue> Parser::parse_grid_track_size_list(Vector<ComponentValue> const& component_values, bool allow_separate_line_name_blocks)
 {
     if (component_values.size() == 1 && component_values.first().is(Token::Type::Ident)) {
-        auto ident = TRY(parse_identifier_value(component_values.first()));
+        auto ident = parse_identifier_value(component_values.first());
         if (ident && ident->to_identifier() == ValueID::None) {
             return GridTrackSizeListStyleValue::make_none();
         }
@@ -5310,7 +5308,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_track_size_list(Vector<ComponentV
     return GridTrackSizeListStyleValue::create(CSS::GridTrackSizeList(track_list, line_names_list));
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_auto_track_sizes(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_grid_auto_track_sizes(Vector<ComponentValue> const& component_values)
 {
     // https://www.w3.org/TR/css-grid-2/#auto-tracks
     // <track-size>+
@@ -5328,7 +5326,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_auto_track_sizes(Vector<Component
     return GridTrackSizeListStyleValue::create(CSS::GridTrackSizeList(track_list, {}));
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_track_placement(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> const& component_values)
 {
     // https://www.w3.org/TR/css-grid-2/#line-placement
     // Line-based Placement: the grid-row-start, grid-column-start, grid-row-end, and grid-column-end properties
@@ -5427,7 +5425,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_track_placement(Vector<ComponentV
     return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(span_or_position_value, span_value));
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_track_placement_shorthand_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_grid_track_placement_shorthand_value(Vector<ComponentValue> const& component_values)
 {
     auto tokens = TokenStream { component_values };
     auto current_token = tokens.next_token().token();
@@ -5453,11 +5451,11 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_track_placement_shorthand_value(V
         }
     }
 
-    auto parsed_start_value = TRY(parse_grid_track_placement(track_start_placement_tokens));
+    auto parsed_start_value = parse_grid_track_placement(track_start_placement_tokens);
     if (parsed_start_value && track_end_placement_tokens.is_empty())
         return GridTrackPlacementShorthandStyleValue::create(parsed_start_value.release_nonnull()->as_grid_track_placement().grid_track_placement());
 
-    auto parsed_end_value = TRY(parse_grid_track_placement(track_end_placement_tokens));
+    auto parsed_end_value = parse_grid_track_placement(track_end_placement_tokens);
     if (parsed_start_value && parsed_end_value)
         return GridTrackPlacementShorthandStyleValue::create(parsed_start_value.release_nonnull()->as_grid_track_placement(), parsed_end_value.release_nonnull()->as_grid_track_placement());
 
@@ -5466,7 +5464,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_track_placement_shorthand_value(V
 
 // https://www.w3.org/TR/css-grid-2/#explicit-grid-shorthand
 // 7.4. Explicit Grid Shorthand: the grid-template property
-ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_track_size_list_shorthand_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_grid_track_size_list_shorthand_value(Vector<ComponentValue> const& component_values)
 {
     // The grid-template property is a shorthand for setting grid-template-columns, grid-template-rows,
     // and grid-template-areas in a single declaration. It has several distinct syntax forms:
@@ -5502,16 +5500,16 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_track_size_list_shorthand_value(V
             template_columns_tokens.append(component_values[x]);
     }
 
-    auto parsed_template_areas_values = TRY(parse_grid_template_areas_value(template_area_tokens));
-    auto parsed_template_rows_values = TRY(parse_grid_track_size_list(template_rows_tokens, true));
-    auto parsed_template_columns_values = TRY(parse_grid_track_size_list(template_columns_tokens));
+    auto parsed_template_areas_values = parse_grid_template_areas_value(template_area_tokens);
+    auto parsed_template_rows_values = parse_grid_track_size_list(template_rows_tokens, true);
+    auto parsed_template_columns_values = parse_grid_track_size_list(template_columns_tokens);
     return GridTrackSizeListShorthandStyleValue::create(
         parsed_template_areas_values.release_nonnull()->as_grid_template_area(),
         parsed_template_rows_values.release_nonnull()->as_grid_track_size_list(),
         parsed_template_columns_values.release_nonnull()->as_grid_track_size_list());
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_area_shorthand_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_grid_area_shorthand_value(Vector<ComponentValue> const& component_values)
 {
     auto tokens = TokenStream { component_values };
     Token current_token;
@@ -5547,10 +5545,10 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_area_shorthand_value(Vector<Compo
     // https://www.w3.org/TR/css-grid-2/#placement-shorthands
     // The grid-area property is a shorthand for grid-row-start, grid-column-start, grid-row-end and
     // grid-column-end.
-    auto row_start_style_value = TRY(parse_grid_track_placement(row_start_placement_tokens));
-    auto column_start_style_value = TRY(parse_grid_track_placement(column_start_placement_tokens));
-    auto row_end_style_value = TRY(parse_grid_track_placement(row_end_placement_tokens));
-    auto column_end_style_value = TRY(parse_grid_track_placement(column_end_placement_tokens));
+    auto row_start_style_value = parse_grid_track_placement(row_start_placement_tokens);
+    auto column_start_style_value = parse_grid_track_placement(column_start_placement_tokens);
+    auto row_end_style_value = parse_grid_track_placement(row_end_placement_tokens);
+    auto column_end_style_value = parse_grid_track_placement(column_end_placement_tokens);
 
     // If four <grid-line> values are specified, grid-row-start is set to the first value, grid-column-start
     // is set to the second value, grid-row-end is set to the third value, and grid-column-end is set to the
@@ -5587,7 +5585,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_area_shorthand_value(Vector<Compo
     return GridAreaShorthandStyleValue::create(row_start, column_start, row_end, column_end);
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_shorthand_value(Vector<ComponentValue> const& component_value)
+RefPtr<StyleValue> Parser::parse_grid_shorthand_value(Vector<ComponentValue> const& component_value)
 {
     // <'grid-template'> |
     // FIXME: <'grid-template-rows'> / [ auto-flow && dense? ] <'grid-auto-columns'>? |
@@ -5595,13 +5593,13 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_shorthand_value(Vector<ComponentV
     return parse_grid_track_size_list_shorthand_value(component_value);
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_grid_template_areas_value(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_grid_template_areas_value(Vector<ComponentValue> const& component_values)
 {
     Vector<Vector<String>> grid_area_rows;
     for (auto& component_value : component_values) {
         Vector<String> grid_area_columns;
         if (component_value.is(Token::Type::String)) {
-            auto const parts = TRY(TRY(String::from_utf8(component_value.token().string())).split(' '));
+            auto const parts = MUST(MUST(String::from_utf8(component_value.token().string())).split(' '));
             for (auto& part : parts) {
                 grid_area_columns.append(part);
             }
@@ -5639,20 +5637,6 @@ bool block_contains_var_or_attr(Block const& block)
 
 Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(PropertyID property_id, TokenStream<ComponentValue>& tokens)
 {
-    // FIXME: This is a hack. Until we can reasonably combine the error types, just log the error
-    //        and return ParseError::InternalError if we get an AK::Error result.
-#define FIXME_TRY(expression)                                                                      \
-    ({                                                                                             \
-        /* Ignore -Wshadow to allow nesting the macro. */                                          \
-        AK_IGNORE_DIAGNOSTIC("-Wshadow",                                                           \
-            auto&& _temporary_result = (expression));                                              \
-        if (_temporary_result.is_error()) [[unlikely]] {                                           \
-            dbgln("System error when parsing style value: {}", _temporary_result.release_error()); \
-            return ParseError::InternalError;                                                      \
-        }                                                                                          \
-        _temporary_result.release_value();                                                         \
-    })
-
     m_context.set_current_property_id(property_id);
     Vector<ComponentValue> component_values;
     bool contains_var_or_attr = false;
@@ -5691,46 +5675,46 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         return ParseError::SyntaxError;
 
     if (component_values.size() == 1) {
-        if (auto parsed_value = FIXME_TRY(parse_builtin_value(component_values.first())))
+        if (auto parsed_value = parse_builtin_value(component_values.first()))
             return parsed_value.release_nonnull();
     }
 
     // Special-case property handling
     switch (property_id) {
     case PropertyID::AspectRatio:
-        if (auto parsed_value = FIXME_TRY(parse_aspect_ratio_value(component_values)))
+        if (auto parsed_value = parse_aspect_ratio_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::BackdropFilter:
-        if (auto parsed_value = FIXME_TRY(parse_filter_value_list_value(component_values)))
+        if (auto parsed_value = parse_filter_value_list_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Background:
-        if (auto parsed_value = FIXME_TRY(parse_background_value(component_values)))
+        if (auto parsed_value = parse_background_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::BackgroundAttachment:
     case PropertyID::BackgroundClip:
     case PropertyID::BackgroundImage:
     case PropertyID::BackgroundOrigin:
-        if (auto parsed_value = FIXME_TRY(parse_simple_comma_separated_value_list(property_id, component_values)))
+        if (auto parsed_value = parse_simple_comma_separated_value_list(property_id, component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::BackgroundPosition:
-        if (auto parsed_value = FIXME_TRY(parse_comma_separated_value_list(component_values, [this](auto& tokens) { return parse_single_background_position_value(tokens); })))
+        if (auto parsed_value = parse_comma_separated_value_list(component_values, [this](auto& tokens) { return parse_single_background_position_value(tokens); }))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::BackgroundPositionX:
     case PropertyID::BackgroundPositionY:
-        if (auto parsed_value = FIXME_TRY(parse_comma_separated_value_list(component_values, [this, property_id](auto& tokens) { return parse_single_background_position_x_or_y_value(tokens, property_id); })))
+        if (auto parsed_value = parse_comma_separated_value_list(component_values, [this, property_id](auto& tokens) { return parse_single_background_position_x_or_y_value(tokens, property_id); }))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::BackgroundRepeat:
-        if (auto parsed_value = FIXME_TRY(parse_comma_separated_value_list(component_values, [this](auto& tokens) { return parse_single_background_repeat_value(tokens); })))
+        if (auto parsed_value = parse_comma_separated_value_list(component_values, [this](auto& tokens) { return parse_single_background_repeat_value(tokens); }))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::BackgroundSize:
-        if (auto parsed_value = FIXME_TRY(parse_comma_separated_value_list(component_values, [this](auto& tokens) { return parse_single_background_size_value(tokens); })))
+        if (auto parsed_value = parse_comma_separated_value_list(component_values, [this](auto& tokens) { return parse_single_background_size_value(tokens); }))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Border:
@@ -5738,147 +5722,147 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
     case PropertyID::BorderLeft:
     case PropertyID::BorderRight:
     case PropertyID::BorderTop:
-        if (auto parsed_value = FIXME_TRY(parse_border_value(component_values)))
+        if (auto parsed_value = parse_border_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::BorderTopLeftRadius:
     case PropertyID::BorderTopRightRadius:
     case PropertyID::BorderBottomRightRadius:
     case PropertyID::BorderBottomLeftRadius:
-        if (auto parsed_value = FIXME_TRY(parse_border_radius_value(component_values)))
+        if (auto parsed_value = parse_border_radius_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::BorderRadius:
-        if (auto parsed_value = FIXME_TRY(parse_border_radius_shorthand_value(component_values)))
+        if (auto parsed_value = parse_border_radius_shorthand_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::BoxShadow:
-        if (auto parsed_value = FIXME_TRY(parse_shadow_value(component_values, AllowInsetKeyword::Yes)))
+        if (auto parsed_value = parse_shadow_value(component_values, AllowInsetKeyword::Yes))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Content:
-        if (auto parsed_value = FIXME_TRY(parse_content_value(component_values)))
+        if (auto parsed_value = parse_content_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Display:
-        if (auto parsed_value = FIXME_TRY(parse_display_value(component_values)))
+        if (auto parsed_value = parse_display_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Flex:
-        if (auto parsed_value = FIXME_TRY(parse_flex_value(component_values)))
+        if (auto parsed_value = parse_flex_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::FlexFlow:
-        if (auto parsed_value = FIXME_TRY(parse_flex_flow_value(component_values)))
+        if (auto parsed_value = parse_flex_flow_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Font:
-        if (auto parsed_value = FIXME_TRY(parse_font_value(component_values)))
+        if (auto parsed_value = parse_font_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::FontFamily: {
         auto tokens_without_whitespace = TokenStream { component_values };
-        if (auto parsed_value = FIXME_TRY(parse_font_family_value(tokens_without_whitespace)))
+        if (auto parsed_value = parse_font_family_value(tokens_without_whitespace))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     }
     case PropertyID::GridColumn:
-        if (auto parsed_value = FIXME_TRY(parse_grid_track_placement_shorthand_value(component_values)))
+        if (auto parsed_value = parse_grid_track_placement_shorthand_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridArea:
-        if (auto parsed_value = FIXME_TRY(parse_grid_area_shorthand_value(component_values)))
+        if (auto parsed_value = parse_grid_area_shorthand_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridTemplateAreas:
-        if (auto parsed_value = FIXME_TRY(parse_grid_template_areas_value(component_values)))
+        if (auto parsed_value = parse_grid_template_areas_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridColumnEnd:
-        if (auto parsed_value = FIXME_TRY(parse_grid_track_placement(component_values)))
+        if (auto parsed_value = parse_grid_track_placement(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridColumnStart:
-        if (auto parsed_value = FIXME_TRY(parse_grid_track_placement(component_values)))
+        if (auto parsed_value = parse_grid_track_placement(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridRow:
-        if (auto parsed_value = FIXME_TRY(parse_grid_track_placement_shorthand_value(component_values)))
+        if (auto parsed_value = parse_grid_track_placement_shorthand_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridRowEnd:
-        if (auto parsed_value = FIXME_TRY(parse_grid_track_placement(component_values)))
+        if (auto parsed_value = parse_grid_track_placement(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridRowStart:
-        if (auto parsed_value = FIXME_TRY(parse_grid_track_placement(component_values)))
+        if (auto parsed_value = parse_grid_track_placement(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Grid:
-        if (auto parsed_value = FIXME_TRY(parse_grid_shorthand_value(component_values)))
+        if (auto parsed_value = parse_grid_shorthand_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridTemplate:
-        if (auto parsed_value = FIXME_TRY(parse_grid_track_size_list_shorthand_value(component_values)))
+        if (auto parsed_value = parse_grid_track_size_list_shorthand_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridTemplateColumns:
-        if (auto parsed_value = FIXME_TRY(parse_grid_track_size_list(component_values)))
+        if (auto parsed_value = parse_grid_track_size_list(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridTemplateRows:
-        if (auto parsed_value = FIXME_TRY(parse_grid_track_size_list(component_values)))
+        if (auto parsed_value = parse_grid_track_size_list(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridAutoColumns:
-        if (auto parsed_value = FIXME_TRY(parse_grid_auto_track_sizes(component_values)))
+        if (auto parsed_value = parse_grid_auto_track_sizes(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridAutoRows:
-        if (auto parsed_value = FIXME_TRY(parse_grid_auto_track_sizes(component_values)))
+        if (auto parsed_value = parse_grid_auto_track_sizes(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::ListStyle:
-        if (auto parsed_value = FIXME_TRY(parse_list_style_value(component_values)))
+        if (auto parsed_value = parse_list_style_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Overflow:
-        if (auto parsed_value = FIXME_TRY(parse_overflow_value(component_values)))
+        if (auto parsed_value = parse_overflow_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::PlaceContent:
-        if (auto parsed_value = FIXME_TRY(parse_place_content_value(component_values)))
+        if (auto parsed_value = parse_place_content_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::PlaceItems:
-        if (auto parsed_value = FIXME_TRY(parse_place_items_value(component_values)))
+        if (auto parsed_value = parse_place_items_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::PlaceSelf:
-        if (auto parsed_value = FIXME_TRY(parse_place_self_value(component_values)))
+        if (auto parsed_value = parse_place_self_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::TextDecoration:
-        if (auto parsed_value = FIXME_TRY(parse_text_decoration_value(component_values)))
+        if (auto parsed_value = parse_text_decoration_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::TextDecorationLine: {
         TokenStream value_tokens { component_values };
-        auto parsed_value = FIXME_TRY(parse_text_decoration_line_value(value_tokens));
+        auto parsed_value = parse_text_decoration_line_value(value_tokens);
         if (parsed_value && !value_tokens.has_next_token())
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     }
     case PropertyID::TextShadow:
-        if (auto parsed_value = FIXME_TRY(parse_shadow_value(component_values, AllowInsetKeyword::No)))
+        if (auto parsed_value = parse_shadow_value(component_values, AllowInsetKeyword::No))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Transform:
-        if (auto parsed_value = FIXME_TRY(parse_transform_value(component_values)))
+        if (auto parsed_value = parse_transform_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::TransformOrigin:
-        if (auto parsed_value = FIXME_TRY(parse_transform_origin_value(component_values)))
+        if (auto parsed_value = parse_transform_origin_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError ::SyntaxError;
     default:
@@ -5888,13 +5872,13 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
     // If there's only 1 ComponentValue, we can only produce a single StyleValue.
     if (component_values.size() == 1) {
         auto stream = TokenStream { component_values };
-        if (auto parsed_value = FIXME_TRY(parse_css_value_for_property(property_id, stream)))
+        if (auto parsed_value = parse_css_value_for_property(property_id, stream))
             return parsed_value.release_nonnull();
     } else {
         StyleValueVector parsed_values;
         auto stream = TokenStream { component_values };
-        while (auto parsed_value = FIXME_TRY(parse_css_value_for_property(property_id, stream))) {
-            FIXME_TRY(parsed_values.try_append(parsed_value.release_nonnull()));
+        while (auto parsed_value = parse_css_value_for_property(property_id, stream)) {
+            parsed_values.append(parsed_value.release_nonnull());
             if (!stream.has_next_token())
                 break;
         }
@@ -5918,9 +5902,9 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
 
     while (stream.has_next_token() && !unassigned_properties.is_empty()) {
         auto property_and_value = parse_css_value_for_properties(unassigned_properties, stream);
-        if (!property_and_value.is_error() && property_and_value.value().style_value) {
-            auto property = property_and_value.value().property;
-            auto value = property_and_value.release_value().style_value;
+        if (property_and_value.style_value) {
+            auto property = property_and_value.property;
+            auto value = property_and_value.style_value;
             auto& values = assigned_values.ensure(to_underlying(property));
             if (values.size() + 1 == property_maximum_value_count(property)) {
                 // We're done with this property, move on to the next one.
@@ -5939,7 +5923,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
     }
 
     for (auto& property : unassigned_properties)
-        assigned_values.ensure(to_underlying(property)).append(FIXME_TRY(property_initial_value(m_context.realm(), property)));
+        assigned_values.ensure(to_underlying(property)).append(MUST(property_initial_value(m_context.realm(), property)));
 
     stream.skip_whitespace();
     if (stream.has_next_token())
@@ -5960,18 +5944,14 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
     }
 
     return { CompositeStyleValue::create(move(longhand_properties), move(longhand_values)) };
-#undef FIXME_TRY
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_css_value_for_property(PropertyID property_id, TokenStream<ComponentValue>& tokens)
+RefPtr<StyleValue> Parser::parse_css_value_for_property(PropertyID property_id, TokenStream<ComponentValue>& tokens)
 {
-    auto result = parse_css_value_for_properties({ &property_id, 1 }, tokens);
-    if (result.is_error())
-        return result.release_error();
-    return result.value().style_value;
+    return parse_css_value_for_properties({ &property_id, 1 }, tokens).style_value;
 }
 
-ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(ReadonlySpan<PropertyID> property_ids, TokenStream<ComponentValue>& tokens)
+Parser::PropertyAndValue Parser::parse_css_value_for_properties(ReadonlySpan<PropertyID> property_ids, TokenStream<ComponentValue>& tokens)
 {
     auto any_property_accepts_type = [](ReadonlySpan<PropertyID> property_ids, ValueType value_type) -> Optional<PropertyID> {
         for (auto const& property : property_ids) {
@@ -5998,7 +5978,7 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
     auto& peek_token = tokens.peek_token();
 
     if (auto property = any_property_accepts_type(property_ids, ValueType::EasingFunction); property.has_value()) {
-        if (auto maybe_easing_function = TRY(parse_easing_value(tokens)))
+        if (auto maybe_easing_function = parse_easing_value(tokens))
             return PropertyAndValue { *property, maybe_easing_function };
     }
 
@@ -6016,26 +5996,26 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
         // Custom idents
         if (auto property = any_property_accepts_type(property_ids, ValueType::CustomIdent); property.has_value()) {
             (void)tokens.next_token();
-            return PropertyAndValue { *property, CustomIdentStyleValue::create(TRY(FlyString::from_utf8(peek_token.token().ident()))) };
+            return PropertyAndValue { *property, CustomIdentStyleValue::create(MUST(FlyString::from_utf8(peek_token.token().ident()))) };
         }
     }
 
     if (auto property = any_property_accepts_type(property_ids, ValueType::Color); property.has_value()) {
-        if (auto maybe_color = TRY(parse_color_value(peek_token))) {
+        if (auto maybe_color = parse_color_value(peek_token)) {
             (void)tokens.next_token();
             return PropertyAndValue { *property, maybe_color };
         }
     }
 
     if (auto property = any_property_accepts_type(property_ids, ValueType::Image); property.has_value()) {
-        if (auto maybe_image = TRY(parse_image_value(peek_token))) {
+        if (auto maybe_image = parse_image_value(peek_token)) {
             (void)tokens.next_token();
             return PropertyAndValue { *property, maybe_image };
         }
     }
 
     if (auto property = any_property_accepts_type(property_ids, ValueType::Ratio); property.has_value()) {
-        if (auto maybe_ratio = TRY(parse_ratio_value(tokens)))
+        if (auto maybe_ratio = parse_ratio_value(tokens))
             return PropertyAndValue { *property, maybe_ratio };
     }
 
@@ -6046,14 +6026,14 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
     if (peek_token.is(Token::Type::Number) && property_accepts_numeric) {
         if (property_accepting_integer.has_value()) {
             auto transaction = tokens.begin_transaction();
-            if (auto integer = TRY(parse_integer_value(tokens)); integer && property_accepts_integer(*property_accepting_integer, integer->as_integer().integer())) {
+            if (auto integer = parse_integer_value(tokens); integer && property_accepts_integer(*property_accepting_integer, integer->as_integer().integer())) {
                 transaction.commit();
                 return PropertyAndValue { *property_accepting_integer, integer };
             }
         }
         if (property_accepting_number.has_value()) {
             auto transaction = tokens.begin_transaction();
-            if (auto number = TRY(parse_number_value(tokens)); number && property_accepts_number(*property_accepting_number, number->as_number().number())) {
+            if (auto number = parse_number_value(tokens); number && property_accepts_number(*property_accepting_number, number->as_number().number())) {
                 transaction.commit();
                 return PropertyAndValue { *property_accepting_number, number };
             }
@@ -6069,7 +6049,7 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
     }
 
     if (auto property = any_property_accepts_type(property_ids, ValueType::Rect); property.has_value()) {
-        if (auto maybe_rect = TRY(parse_rect_value(peek_token))) {
+        if (auto maybe_rect = parse_rect_value(peek_token)) {
             (void)tokens.next_token();
             return PropertyAndValue { *property, maybe_rect };
         }
@@ -6077,11 +6057,11 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
 
     if (peek_token.is(Token::Type::String)) {
         if (auto property = any_property_accepts_type(property_ids, ValueType::String); property.has_value())
-            return PropertyAndValue { *property, StringStyleValue::create(TRY(String::from_utf8(tokens.next_token().token().string()))) };
+            return PropertyAndValue { *property, StringStyleValue::create(MUST(String::from_utf8(tokens.next_token().token().string()))) };
     }
 
     if (auto property = any_property_accepts_type(property_ids, ValueType::Url); property.has_value()) {
-        if (auto url = TRY(parse_url_value(peek_token))) {
+        if (auto url = parse_url_value(peek_token)) {
             (void)tokens.next_token();
             return PropertyAndValue { *property, url };
         }
@@ -6139,7 +6119,7 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
     // In order to not end up parsing `calc()` and other math expressions multiple times,
     // we parse it once, and then see if its resolved type matches what the property accepts.
     if (peek_token.is_function() && (property_accepts_dimension || property_accepts_numeric)) {
-        if (auto maybe_calculated = TRY(parse_calculated_value(peek_token)); maybe_calculated) {
+        if (auto maybe_calculated = parse_calculated_value(peek_token); maybe_calculated) {
             (void)tokens.next_token();
             auto& calculated = *maybe_calculated;
             // This is a bit sensitive to ordering: `<foo>` and `<percentage>` have to be checked before `<foo-percentage>`.
@@ -6183,7 +6163,7 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
     }
 
     if (auto property = any_property_accepts_type(property_ids, ValueType::Paint); property.has_value()) {
-        if (auto value = TRY(parse_paint_value(tokens)))
+        if (auto value = parse_paint_value(tokens))
             return PropertyAndValue { *property, value.release_nonnull() };
     }
 
@@ -6464,7 +6444,7 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentVal
         // NOTE: All function tokens at this point should be math functions.
         else if (component_value.is_function()) {
             auto& function = component_value.function();
-            auto leaf_calculation = TRY(parse_a_calc_function_node(function));
+            auto leaf_calculation = parse_a_calc_function_node(function);
             if (!leaf_calculation) {
                 parsing_failed_for_child_node = true;
                 return {};

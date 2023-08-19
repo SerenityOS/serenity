@@ -46,15 +46,15 @@ static Optional<Vector<TElement>> parse_color_stop_list(auto& tokens, auto is_po
             }
             // <T-percentage> <color>
             auto maybe_color = parse_color(tokens.next_token());
-            if (maybe_color.is_error() || maybe_color.value() == nullptr)
+            if (!maybe_color)
                 return ElementType::Garbage;
-            color = maybe_color.release_value();
+            color = maybe_color.release_nonnull();
         } else {
             // [<color> <T-percentage>?]
             auto maybe_color = parse_color(token);
-            if (maybe_color.is_error() || maybe_color.value() == nullptr)
+            if (!maybe_color)
                 return ElementType::Garbage;
-            color = maybe_color.release_value();
+            color = maybe_color.release_nonnull();
             tokens.skip_whitespace();
             // Allow up to [<color> <T-percentage> <T-percentage>] (double-position color stops)
             // Note: Double-position color stops only appear to be valid in this order.
@@ -140,7 +140,7 @@ Optional<Vector<AngularColorStopListElement>> Parser::parse_angular_color_stop_l
         [&](auto& token) { return parse_dimension(token); });
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_linear_gradient_function(ComponentValue const& component_value)
+RefPtr<StyleValue> Parser::parse_linear_gradient_function(ComponentValue const& component_value)
 {
     using GradientType = LinearGradientStyleValue::GradientType;
 
@@ -268,7 +268,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_linear_gradient_function(ComponentValu
     return LinearGradientStyleValue::create(gradient_direction, move(*color_stops), gradient_type, repeating_gradient);
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_conic_gradient_function(ComponentValue const& component_value)
+RefPtr<StyleValue> Parser::parse_conic_gradient_function(ComponentValue const& component_value)
 {
     if (!component_value.is_function())
         return nullptr;
@@ -365,7 +365,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_conic_gradient_function(ComponentValue
     return ConicGradientStyleValue::create(from_angle, at_position, move(*color_stops), repeating_gradient);
 }
 
-ErrorOr<RefPtr<StyleValue>> Parser::parse_radial_gradient_function(ComponentValue const& component_value)
+RefPtr<StyleValue> Parser::parse_radial_gradient_function(ComponentValue const& component_value)
 {
     using EndingShape = RadialGradientStyleValue::EndingShape;
     using Extent = RadialGradientStyleValue::Extent;
