@@ -142,6 +142,11 @@ void EventLoopManagerGLib::register_notifier(Core::Notifier& notifier)
 void EventLoopManagerGLib::unregister_notifier(Core::Notifier& notifier)
 {
     GSource* source = g_main_context_find_source_by_user_data(current_thread_context(), &notifier);
+    if (!source) {
+        // A notifier may be unregistered multiple times, or even when it was never
+        // registered in the first place. Just make it succeed silently.
+        return;
+    }
     g_source_destroy(source);
     g_source_unref(source);
 }
