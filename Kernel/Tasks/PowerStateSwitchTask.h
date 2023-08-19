@@ -32,11 +32,7 @@ private:
     static ErrorOr<void> perform_reboot();
     static ErrorOr<void> perform_shutdown();
 
-    enum class ProcessKind {
-        User,
-        Kernel,
-    };
-    static ErrorOr<void> kill_processes(ProcessKind, ProcessID finalizer_pid);
+    static ErrorOr<void> kill_all_user_processes();
 };
 
 }

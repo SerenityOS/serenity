@@ -90,14 +90,11 @@ ErrorOr<void> PowerStateSwitchTask::perform_shutdown()
     g_in_system_shutdown = true;
 
     // Make sure to kill all user processes first, otherwise we might get weird hangups.
-    TRY(kill_processes(ProcessKind::User, finalizer_process->pid()));
-    TRY(kill_processes(ProcessKind::Kernel, finalizer_process->pid()));
+    TRY(kill_all_user_processes());
 
-    finalizer_process->die();
-    finalizer_process->finalize();
     size_t alive_process_count = 0;
     Process::all_instances().for_each([&](Process& process) {
-        if (process.pid() != Process::current().pid() && !process.is_dead())
+        if (!process.is_kernel_process() && !process.is_dead())
             alive_process_count++;
     });
     // Don't panic here (since we may panic in a bit anyways) but report the probable cause of an unclean shutdown.
@@ -143,6 +140,12 @@ ErrorOr<void> PowerStateSwitchTask::perform_shutdown()
         }
     }
 
+    // NOTE: We don't really need to kill kernel processes, because in contrast
+    // to user processes, kernel processes will simply not make syscalls
+    // or do some other unexpected behavior.
+    // Therefore, we just lock the scheduler big lock to ensure nothing happens
+    // beyond this point forward.
+    SpinlockLocker lock(g_scheduler_lock);
     dbgln("Attempting system shutdown...");
 
     arch_specific_poweroff();
@@ -152,15 +155,15 @@ ErrorOr<void> PowerStateSwitchTask::perform_shutdown()
     Processor::halt();
 }
 
-ErrorOr<void> PowerStateSwitchTask::kill_processes(ProcessKind kind, ProcessID finalizer_pid)
+ErrorOr<void> PowerStateSwitchTask::kill_all_user_processes()
 {
-    bool kill_kernel_processes = kind == ProcessKind::Kernel;
-
-    Process::all_instances().for_each([&](Process& process) {
-        if (process.pid() != Process::current().pid() && process.pid() != finalizer_pid && process.is_kernel_process() == kill_kernel_processes) {
-            process.die();
-        }
-    });
+    {
+        SpinlockLocker lock(g_scheduler_lock);
+        Process::all_instances().for_each([&](Process& process) {
+            if (!process.is_kernel_process())
+                process.die();
+        });
+    }
 
     // Although we *could* finalize processes ourselves (g_in_system_shutdown allows this),
     // we're nice citizens and let the finalizer task perform final duties before we kill it.
@@ -171,7 +174,7 @@ ErrorOr<void> PowerStateSwitchTask::kill_processes(ProcessKind kind, ProcessID f
         Scheduler::yield();
         alive_process_count = 0;
         Process::all_instances().for_each([&](Process& process) {
-            if (process.pid() != Process::current().pid() && !process.is_dead() && process.pid() != finalizer_pid && process.is_kernel_process() == kill_kernel_processes)
+            if (!process.is_kernel_process() && !process.is_dead())
                 alive_process_count++;
         });
 
@@ -181,9 +184,9 @@ ErrorOr<void> PowerStateSwitchTask::kill_processes(ProcessKind kind, ProcessID f
 
             if constexpr (PROCESS_DEBUG) {
                 Process::all_instances().for_each_const([&](Process const& process) {
-                    if (process.pid() != Process::current().pid() && !process.is_dead() && process.pid() != finalizer_pid && process.is_kernel_process() == kill_kernel_processes) {
-                        dbgln("Process {:2} kernel={} dead={} dying={} ({})",
-                            process.pid(), process.is_kernel_process(), process.is_dead(), process.is_dying(),
+                    if (!process.is_kernel_process() && !process.is_dead()) {
+                        dbgln("Process (user) {:2} dead={} dying={} ({})",
+                            process.pid(), process.is_dead(), process.is_dying(),
                             process.name().with([](auto& name) { return name.representable_view(); }));
                     }
                 });
