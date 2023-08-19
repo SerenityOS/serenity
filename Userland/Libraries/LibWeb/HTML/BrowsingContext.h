@@ -321,7 +321,7 @@ private:
     JS::GCPtr<HTML::WindowProxy> m_window_proxy;
 
     DOM::Position m_cursor_position;
-    RefPtr<Platform::Timer> m_cursor_blink_timer;
+    RefPtr<Core::Timer> m_cursor_blink_timer;
     bool m_cursor_blink_state { false };
 
     HashTable<ViewportClient*> m_viewport_clients;
