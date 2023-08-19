@@ -7,6 +7,7 @@ struct _LadybirdWebView {
 
     OwnPtr<LadybirdViewImpl> impl;
     LadybirdBitmapPaintable* bitmap_paintable;
+    LadybirdBitmapPaintable* favicon;
     Browser::CookieJar* cookie_jar;
     GtkScrollablePolicy hscroll_policy;
     GtkAdjustment* hadjustment;
@@ -396,6 +397,12 @@ GdkPaintable* ladybird_web_view_get_bitmap_paintable(LadybirdWebView* self)
 
     return GDK_PAINTABLE(self->bitmap_paintable);
 }
+
+GdkPaintable* ladybird_web_view_get_favicon(LadybirdWebView* self)
+{
+    g_return_val_if_fail(LADYBIRD_IS_WEB_VIEW(self), nullptr);
+
+    return GDK_PAINTABLE(self->favicon);
 }
 
 static void ladybird_web_view_snapshot(GtkWidget* widget, GtkSnapshot* snapshot)
@@ -553,6 +560,7 @@ static void ladybird_web_view_init(LadybirdWebView* self)
 
     self->bitmap_paintable = ladybird_bitmap_paintable_new();
     g_signal_connect_object(self->bitmap_paintable, "invalidate-contents", G_CALLBACK(gtk_widget_queue_draw), self, G_CONNECT_SWAPPED);
+    self->favicon = ladybird_bitmap_paintable_new();
 
     ladybird_web_view_load_url(self, "http://example.com");
 }
@@ -564,6 +572,7 @@ static void ladybird_web_view_dispose(GObject* object)
     self->impl.clear();
 
     g_clear_object(&self->bitmap_paintable);
+    g_clear_object(&self->favicon);
     g_clear_object(&self->hadjustment);
     g_clear_object(&self->vadjustment);
     g_clear_pointer(&self->page_url, g_free);

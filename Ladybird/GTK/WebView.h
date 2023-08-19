@@ -21,6 +21,7 @@ bool ladybird_web_view_get_loading(LadybirdWebView* self);
 void ladybird_web_view_set_loading(LadybirdWebView* self, bool loading);
 
 GdkPaintable* ladybird_web_view_get_bitmap_paintable(LadybirdWebView* self);
+GdkPaintable* ladybird_web_view_get_favicon(LadybirdWebView* self);
 
 void ladybird_web_view_zoom_in(LadybirdWebView* self);
 void ladybird_web_view_zoom_out(LadybirdWebView* self);

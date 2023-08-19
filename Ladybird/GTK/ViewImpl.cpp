@@ -40,6 +40,10 @@ LadybirdViewImpl::LadybirdViewImpl(LadybirdWebView* widget)
     on_update_cookie = [this](Web::Cookie::Cookie const& cookie) {
         cookie_jar().update_cookie(cookie);
     };
+    on_favicon_change = [this](Gfx::Bitmap const& bitmap) {
+        LadybirdBitmapPaintable* favicon_paintable = LADYBIRD_BITMAP_PAINTABLE(ladybird_web_view_get_favicon(m_widget));
+        ladybird_bitmap_paintable_push_bitmap(favicon_paintable, &bitmap, bitmap.width(), bitmap.height(), 1.0, false);
+    };
 
     AdwStyleManager* style_manager
         = adw_style_manager_get_default();

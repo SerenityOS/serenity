@@ -1,5 +1,6 @@
 #include "Window.h"
 #include "Application.h"
+#include "BitmapPaintable.h"
 #include "WebView.h"
 
 struct _LadybirdWindow {
@@ -37,6 +38,13 @@ static void ladybird_window_dispose(GObject* object)
     G_OBJECT_CLASS(ladybird_window_parent_class)->dispose(object);
 }
 
+static void update_favicon(LadybirdBitmapPaintable* favicon_paintable, [[maybe_unused]] GParamSpec* pspec, void* data)
+{
+    AdwTabPage* tab_page = ADW_TAB_PAGE(data);
+    GdkTexture* texture = ladybird_bitmap_paintable_get_texture(favicon_paintable);
+    adw_tab_page_set_icon(tab_page, G_ICON(texture));
+}
+
 static AdwTabPage* open_new_tab(LadybirdWindow* self)
 {
     LadybirdApplication* app = LADYBIRD_APPLICATION(gtk_window_get_application(GTK_WINDOW(self)));
@@ -56,13 +64,17 @@ static AdwTabPage* open_new_tab(LadybirdWindow* self)
     adw_tab_page_set_title(tab_page, "New tab");
     g_object_bind_property(web_view, "page-title", tab_page, "title", G_BINDING_DEFAULT);
     g_object_bind_property(web_view, "loading", tab_page, "loading", G_BINDING_DEFAULT);
+
+    GdkPaintable* favicon_paintable = ladybird_web_view_get_favicon(web_view);
+    g_signal_connect_object(favicon_paintable, "notify::texture", G_CALLBACK(update_favicon), tab_page, G_CONNECT_DEFAULT);
+
     adw_tab_view_set_selected_page(self->tab_view, tab_page);
     // g_object_unref(web_view);
     // g_object_unref(scrolled_window);
     return tab_page;
 }
 
-static void ladybird_window_get_property(GObject* object, guint prop_id, [[maybe_unused]] GValue* value, GParamSpec* pspec)
+static void ladybird_window_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* pspec)
 {
     LadybirdWindow* self = LADYBIRD_WINDOW(object);
 
