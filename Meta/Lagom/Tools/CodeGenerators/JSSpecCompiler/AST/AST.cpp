@@ -31,6 +31,16 @@ void NodeSubtreePointer::replace_subtree(Badge<RecursiveASTVisitor>, NullableTre
         });
 }
 
+Vector<BasicBlockRef*> ControlFlowJump::references()
+{
+    return { &m_block };
+}
+
+Vector<BasicBlockRef*> ControlFlowBranch::references()
+{
+    return { &m_then, &m_else };
+}
+
 Vector<NodeSubtreePointer> BinaryOperation::subtrees()
 {
     return { { &m_left }, { &m_right } };
