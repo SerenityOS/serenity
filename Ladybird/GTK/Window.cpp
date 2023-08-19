@@ -8,8 +8,10 @@ struct _LadybirdWindow {
 
     AdwTabOverview* tab_overview;
     AdwTabView* tab_view;
-    LadybirdWebView* last_selected_web_view;
     GtkEntry* url_entry;
+
+    AdwTabPage* menu_page;
+    LadybirdWebView* last_selected_web_view;
 
     gulong page_url_changed_id;
     bool incognito;
@@ -163,6 +165,15 @@ static void tab_close_action(GtkWidget* widget, [[maybe_unused]] char const* act
         adw_tab_view_close_page(self->tab_view, tab_page);
 }
 
+static void tab_pin_action(GtkWidget* widget, char const* action_name, [[maybe_unused]] GVariant* param)
+{
+    LadybirdWindow* self = LADYBIRD_WINDOW(widget);
+
+    bool pin = !strcmp(action_name, "tab.pin");
+    if (self->menu_page)
+        adw_tab_view_set_page_pinned(self->tab_view, self->menu_page, pin);
+}
+
 static LadybirdWebView* get_web_view_from_tab_page(AdwTabPage* tab_page)
 {
     GtkScrolledWindow* scrolled_window = GTK_SCROLLED_WINDOW(adw_tab_page_get_child(tab_page));
@@ -209,6 +220,20 @@ static void on_page_url_changed(LadybirdWindow* self)
         gtk_entry_buffer_set_text(entry_buffer, url, -1);
     else
         gtk_entry_buffer_delete_text(entry_buffer, 0, -1);
+}
+
+static void on_setup_tab_menu(LadybirdWindow* self, AdwTabPage* tab_page)
+{
+    self->menu_page = tab_page;
+    if (!tab_page) {
+        gtk_widget_action_set_enabled(GTK_WIDGET(self), "tab.pin", false);
+        gtk_widget_action_set_enabled(GTK_WIDGET(self), "tab.unpin", false);
+        return;
+    }
+
+    bool pinned = adw_tab_page_get_pinned(tab_page);
+    gtk_widget_action_set_enabled(GTK_WIDGET(self), "tab.pin", !pinned);
+    gtk_widget_action_set_enabled(GTK_WIDGET(self), "tab.unpin", pinned);
 }
 
 static void on_selected_page_changed(LadybirdWindow* self)
@@ -297,11 +322,14 @@ static void ladybird_window_class_init(LadybirdWindowClass* klass)
     gtk_widget_class_bind_template_callback(widget_class, open_new_tab);
     gtk_widget_class_bind_template_callback(widget_class, on_url_entered);
     gtk_widget_class_bind_template_callback(widget_class, on_create_window);
+    gtk_widget_class_bind_template_callback(widget_class, on_setup_tab_menu);
     gtk_widget_class_bind_template_callback(widget_class, on_selected_page_changed);
 
     gtk_widget_class_install_action(widget_class, "win.new-tab", nullptr, win_new_tab_action);
     gtk_widget_class_install_action(widget_class, "win.open-file", nullptr, win_open_file_action);
     gtk_widget_class_install_action(widget_class, "tab.close", nullptr, tab_close_action);
+    gtk_widget_class_install_action(widget_class, "tab.pin", nullptr, tab_pin_action);
+    gtk_widget_class_install_action(widget_class, "tab.unpin", nullptr, tab_pin_action);
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_t, GDK_CONTROL_MASK, "win.new-tab", nullptr);
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_o, GDK_CONTROL_MASK, "win.open-file", nullptr);
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_w, GDK_CONTROL_MASK, "tab.close", nullptr);
