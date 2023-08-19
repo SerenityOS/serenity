@@ -31,7 +31,7 @@ void ViewportPaintable::build_stacking_context_tree_if_needed()
 
 void ViewportPaintable::build_stacking_context_tree()
 {
-    set_stacking_context(make<StackingContext>(layout_box(), nullptr, 0));
+    set_stacking_context(make<StackingContext>(*this, nullptr, 0));
 
     size_t index_in_tree_order = 1;
     for_each_in_subtree_of_type<PaintableBox>([&](PaintableBox const& paintable) {
@@ -43,7 +43,7 @@ void ViewportPaintable::build_stacking_context_tree()
         }
         auto* parent_context = paintable_box.enclosing_stacking_context();
         VERIFY(parent_context);
-        paintable_box.set_stacking_context(make<Painting::StackingContext>(paintable_box.layout_box(), parent_context, index_in_tree_order++));
+        paintable_box.set_stacking_context(make<Painting::StackingContext>(paintable_box, parent_context, index_in_tree_order++));
         return TraversalDecision::Continue;
     });
 

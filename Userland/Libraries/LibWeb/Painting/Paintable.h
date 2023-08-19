@@ -56,6 +56,13 @@ class Paintable
 public:
     virtual ~Paintable() = default;
 
+    [[nodiscard]] bool is_positioned() const { return layout_node().is_positioned(); }
+    [[nodiscard]] bool is_fixed_position() const { return layout_node().is_fixed_position(); }
+    [[nodiscard]] bool is_absolutely_positioned() const { return layout_node().is_absolutely_positioned(); }
+    [[nodiscard]] bool is_floating() const { return layout_node().is_floating(); }
+    [[nodiscard]] bool is_inline() const { return layout_node().is_inline(); }
+    [[nodiscard]] CSS::Display display() const { return layout_node().display(); }
+
     template<typename U, typename Callback>
     TraversalDecision for_each_in_inclusive_subtree_of_type(Callback callback) const
     {
