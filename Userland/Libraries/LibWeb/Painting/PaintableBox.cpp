@@ -15,6 +15,7 @@
 #include <LibWeb/Painting/FilterPainting.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/StackingContext.h>
+#include <LibWeb/Painting/ViewportPaintable.h>
 #include <LibWeb/Platform/FontPlugin.h>
 
 namespace Web::Painting {
@@ -739,7 +740,7 @@ Optional<HitTestResult> PaintableBox::hit_test(CSSPixelPoint position, HitTestTy
         return {};
 
     if (layout_box().is_viewport()) {
-        const_cast<Layout::Viewport&>(static_cast<Layout::Viewport const&>(layout_box())).build_stacking_context_tree_if_needed();
+        const_cast<ViewportPaintable&>(static_cast<ViewportPaintable const&>(*this)).build_stacking_context_tree_if_needed();
         return stacking_context()->hit_test(position, type);
     }
 

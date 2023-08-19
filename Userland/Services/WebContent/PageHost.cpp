@@ -14,6 +14,7 @@
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/PaintableBox.h>
+#include <LibWeb/Painting/ViewportPaintable.h>
 #include <LibWeb/Platform/Timer.h>
 #include <WebContent/WebContentClientEndpoint.h>
 #include <WebContent/WebDriverConnection.h>
@@ -139,7 +140,7 @@ void PageHost::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& targ
     context.set_should_show_line_box_borders(m_should_show_line_box_borders);
     context.set_device_viewport_rect(content_rect);
     context.set_has_focus(m_has_focus);
-    layout_root->paint_all_phases(context);
+    verify_cast<Web::Painting::ViewportPaintable>(*layout_root->paintable_box()).paint_all_phases(context);
 }
 
 void PageHost::set_viewport_rect(Web::DevicePixelRect const& rect)
