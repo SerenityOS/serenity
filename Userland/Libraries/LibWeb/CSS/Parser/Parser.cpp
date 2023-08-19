@@ -1744,9 +1744,9 @@ RefPtr<CalculatedStyleValue> Parser::parse_calculated_value(ComponentValue const
 OwnPtr<CalculationNode> Parser::parse_a_calc_function_node(Function const& function)
 {
     if (function.name().equals_ignoring_ascii_case("calc"sv))
-        return MUST(parse_a_calculation(function.values()));
+        return parse_a_calculation(function.values());
 
-    if (auto maybe_function = MUST(parse_math_function(m_context.current_property_id(), function)); maybe_function)
+    if (auto maybe_function = parse_math_function(m_context.current_property_id(), function))
         return maybe_function;
 
     return nullptr;
@@ -6172,9 +6172,9 @@ Parser::PropertyAndValue Parser::parse_css_value_for_properties(ReadonlySpan<Pro
 
 class UnparsedCalculationNode final : public CalculationNode {
 public:
-    static ErrorOr<NonnullOwnPtr<UnparsedCalculationNode>> create(ComponentValue component_value)
+    static NonnullOwnPtr<UnparsedCalculationNode> create(ComponentValue component_value)
     {
-        return adopt_nonnull_own_or_enomem(new (nothrow) UnparsedCalculationNode(move(component_value)));
+        return adopt_own(*new (nothrow) UnparsedCalculationNode(move(component_value)));
     }
     virtual ~UnparsedCalculationNode() = default;
 
@@ -6185,6 +6185,7 @@ public:
     virtual Optional<CSSNumericType> determine_type(Web::CSS::PropertyID) const override { VERIFY_NOT_REACHED(); }
     virtual bool contains_percentage() const override { VERIFY_NOT_REACHED(); }
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override { VERIFY_NOT_REACHED(); }
+    virtual void for_each_child_node(AK::Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override { }
 
     virtual ErrorOr<void> dump(StringBuilder& builder, int indent) const override
     {
@@ -6263,7 +6264,7 @@ LengthOrCalculated Parser::Parser::parse_as_sizes_attribute()
 }
 
 // https://www.w3.org/TR/css-values-4/#parse-a-calculation
-ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentValue> const& original_values)
+OwnPtr<CalculationNode> Parser::parse_a_calculation(Vector<ComponentValue> const& original_values)
 {
     // 1. Discard any <whitespace-token>s from values.
     // 2. An item in values is an “operator” if it’s a <delim-token> with the value "+", "-", "*", or "/". Otherwise, it’s a “value”.
@@ -6281,7 +6282,7 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentVal
                 if (!values.is_empty() && values.last().has<Operator>())
                     return nullptr;
 
-                TRY(values.try_append(Operator { static_cast<char>(value.token().delim()) }));
+                values.append(Operator { static_cast<char>(value.token().delim()) });
                 continue;
             }
         }
@@ -6289,34 +6290,34 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentVal
         if (value.is(Token::Type::Ident)) {
             auto maybe_constant = CalculationNode::constant_type_from_string(value.token().ident());
             if (maybe_constant.has_value()) {
-                TRY(values.try_append({ TRY(ConstantCalculationNode::create(maybe_constant.value())) }));
+                values.append({ ConstantCalculationNode::create(maybe_constant.value()) });
                 continue;
             }
         }
 
         if (value.is(Token::Type::Number)) {
-            TRY(values.try_append({ TRY(NumericCalculationNode::create(value.token().number())) }));
+            values.append({ NumericCalculationNode::create(value.token().number()) });
             continue;
         }
 
         if (auto dimension = parse_dimension(value); dimension.has_value()) {
             if (dimension->is_angle())
-                TRY(values.try_append({ TRY(NumericCalculationNode::create(dimension->angle())) }));
+                values.append({ NumericCalculationNode::create(dimension->angle()) });
             else if (dimension->is_frequency())
-                TRY(values.try_append({ TRY(NumericCalculationNode::create(dimension->frequency())) }));
+                values.append({ NumericCalculationNode::create(dimension->frequency()) });
             else if (dimension->is_length())
-                TRY(values.try_append({ TRY(NumericCalculationNode::create(dimension->length())) }));
+                values.append({ NumericCalculationNode::create(dimension->length()) });
             else if (dimension->is_percentage())
-                TRY(values.try_append({ TRY(NumericCalculationNode::create(dimension->percentage())) }));
+                values.append({ NumericCalculationNode::create(dimension->percentage()) });
             // FIXME: Resolutions, once calc() supports them.
             else if (dimension->is_time())
-                TRY(values.try_append({ TRY(NumericCalculationNode::create(dimension->time())) }));
+                values.append({ NumericCalculationNode::create(dimension->time()) });
             else
                 VERIFY_NOT_REACHED();
             continue;
         }
 
-        TRY(values.try_append({ TRY(UnparsedCalculationNode::create(value)) }));
+        values.append({ UnparsedCalculationNode::create(value) });
     }
 
     // If we have no values, the syntax is invalid.
@@ -6356,21 +6357,21 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentVal
 
         // 1. For each "/" operator in the run, replace its right-hand value item rhs with an Invert node containing rhs as its child.
         Vector<NonnullOwnPtr<CalculationNode>> run_values;
-        TRY(run_values.try_append(move(values[start_of_run].get<NonnullOwnPtr<CalculationNode>>())));
+        run_values.append(move(values[start_of_run].get<NonnullOwnPtr<CalculationNode>>()));
         for (auto i = start_of_run + 1; i <= end_of_run; i += 2) {
             auto& operator_ = values[i].get<Operator>().delim;
             auto& rhs = values[i + 1];
             if (operator_ == '/') {
-                TRY(run_values.try_append(TRY(InvertCalculationNode::create(move(rhs.get<NonnullOwnPtr<CalculationNode>>())))));
+                run_values.append(InvertCalculationNode::create(move(rhs.get<NonnullOwnPtr<CalculationNode>>())));
                 continue;
             }
             VERIFY(operator_ == '*');
-            TRY(run_values.try_append(move(rhs.get<NonnullOwnPtr<CalculationNode>>())));
+            run_values.append(move(rhs.get<NonnullOwnPtr<CalculationNode>>()));
         }
         // 2. Replace the entire run with a Product node containing the value items of the run as its children.
-        auto product_node = TRY(ProductCalculationNode::create(move(run_values)));
+        auto product_node = ProductCalculationNode::create(move(run_values));
         values.remove(start_of_run, end_of_run - start_of_run + 1);
-        TRY(values.try_insert(start_of_run, { move(product_node) }));
+        values.insert(start_of_run, { move(product_node) });
     }
 
     // 4. Collect children into Sum and Negate nodes.
@@ -6385,59 +6386,57 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentVal
             auto rhs_index = ++i;
             auto& rhs = values[rhs_index];
 
-            NonnullOwnPtr<CalculationNode> negate_node = TRY(NegateCalculationNode::create(move(rhs.get<NonnullOwnPtr<CalculationNode>>())));
+            NonnullOwnPtr<CalculationNode> negate_node = NegateCalculationNode::create(move(rhs.get<NonnullOwnPtr<CalculationNode>>()));
             values.remove(rhs_index);
             values.insert(rhs_index, move(negate_node));
         }
 
         // 2. If values has only one item, and it is a Product node or a parenthesized simple block, replace values with that item.
         if (values.size() == 1) {
-            TRY(values.first().visit(
-                [&](ComponentValue& component_value) -> ErrorOr<void> {
+            values.first().visit(
+                [&](ComponentValue& component_value) {
                     if (component_value.is_block() && component_value.block().is_paren())
-                        single_value = TRY(UnparsedCalculationNode::create(component_value));
-                    return {};
+                        single_value = UnparsedCalculationNode::create(component_value);
                 },
-                [&](NonnullOwnPtr<CalculationNode>& node) -> ErrorOr<void> {
+                [&](NonnullOwnPtr<CalculationNode>& node) {
                     if (node->type() == CalculationNode::Type::Product)
                         single_value = move(node);
-                    return {};
                 },
-                [](auto&) -> ErrorOr<void> { return {}; }));
+                [](auto&) {});
         }
         //    Otherwise, replace values with a Sum node containing the value items of values as its children.
         if (!single_value.has_value()) {
             values.remove_all_matching([](Value& value) { return value.has<Operator>(); });
             Vector<NonnullOwnPtr<CalculationNode>> value_items;
-            TRY(value_items.try_ensure_capacity(values.size()));
+            value_items.ensure_capacity(values.size());
             for (auto& value : values) {
                 if (value.has<Operator>())
                     continue;
                 value_items.unchecked_append(move(value.get<NonnullOwnPtr<CalculationNode>>()));
             }
-            single_value = TRY(SumCalculationNode::create(move(value_items)));
+            single_value = SumCalculationNode::create(move(value_items));
         }
     }
 
     // 5. At this point values is a tree of Sum, Product, Negate, and Invert nodes, with other types of values at the leaf nodes. Process the leaf nodes.
     //     For every leaf node leaf in values:
     bool parsing_failed_for_child_node = false;
-    TRY(single_value.value()->for_each_child_node([&](NonnullOwnPtr<CalculationNode>& node) -> ErrorOr<void> {
+    single_value.value()->for_each_child_node([&](NonnullOwnPtr<CalculationNode>& node) {
         if (node->type() != CalculationNode::Type::Unparsed)
-            return {};
+            return;
 
         auto& unparsed_node = static_cast<UnparsedCalculationNode&>(*node);
         auto& component_value = unparsed_node.component_value();
 
         // 1. If leaf is a parenthesized simple block, replace leaf with the result of parsing a calculation from leaf’s contents.
         if (component_value.is_block() && component_value.block().is_paren()) {
-            auto leaf_calculation = TRY(parse_a_calculation(component_value.block().values()));
+            auto leaf_calculation = parse_a_calculation(component_value.block().values());
             if (!leaf_calculation) {
                 parsing_failed_for_child_node = true;
-                return {};
+                return;
             }
             node = leaf_calculation.release_nonnull();
-            return {};
+            return;
         }
 
         // 2. If leaf is a math function, replace leaf with the internal representation of that math function.
@@ -6447,19 +6446,19 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_a_calculation(Vector<ComponentVal
             auto leaf_calculation = parse_a_calc_function_node(function);
             if (!leaf_calculation) {
                 parsing_failed_for_child_node = true;
-                return {};
+                return;
             }
 
             node = leaf_calculation.release_nonnull();
-            return {};
+            return;
         }
 
         // NOTE: If we get here, then we have an UnparsedCalculationNode that didn't get replaced with something else.
         //       So, the calc() is invalid.
         dbgln_if(CSS_PARSER_DEBUG, "Leftover UnparsedCalculationNode in calc tree! That probably means the syntax is invalid, but maybe we just didn't implement `{}` yet.", component_value.to_debug_string());
         parsing_failed_for_child_node = true;
-        return {};
-    }));
+        return;
+    });
 
     if (parsing_failed_for_child_node)
         return nullptr;
