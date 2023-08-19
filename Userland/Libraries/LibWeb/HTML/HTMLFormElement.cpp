@@ -11,6 +11,7 @@
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/HTMLFormControlsCollection.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/FormControlInfrastructure.h>
@@ -406,10 +407,10 @@ static bool is_form_control(DOM::Element const& element)
 }
 
 // https://html.spec.whatwg.org/multipage/forms.html#dom-form-elements
-JS::NonnullGCPtr<DOM::HTMLCollection> HTMLFormElement::elements() const
+JS::NonnullGCPtr<DOM::HTMLFormControlsCollection> HTMLFormElement::elements() const
 {
     if (!m_elements) {
-        m_elements = DOM::HTMLCollection::create(const_cast<HTMLFormElement&>(*this), DOM::HTMLCollection::Scope::Descendants, [](Element const& element) {
+        m_elements = DOM::HTMLFormControlsCollection::create(const_cast<HTMLFormElement&>(*this), DOM::HTMLCollection::Scope::Descendants, [](Element const& element) {
             return is_form_control(element);
         });
     }

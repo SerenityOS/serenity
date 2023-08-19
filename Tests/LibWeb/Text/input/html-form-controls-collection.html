@@ -1,0 +1,24 @@
+<form>
+  <input name="one" id="my-form-control" type="button" />
+  <input name="two" id="my-form-control" type="text" />
+</form>
+<script src="include.js"></script>
+<script>
+    test(() => {
+        const formElements = document.forms[0].elements;
+        const radioNodeList = formElements.namedItem("my-form-control");
+
+        println(formElements.constructor.name);
+        println(radioNodeList.constructor.name);
+        println(radioNodeList.length);
+        println(radioNodeList[0].type);
+        println(radioNodeList[1].type);
+
+        const nonMatching = formElements.namedItem("no match");
+        println(nonMatching);
+
+        const singleElement = formElements.namedItem("two");
+        println(singleElement.constructor.name);
+        println(singleElement.type);
+    })
+</script>

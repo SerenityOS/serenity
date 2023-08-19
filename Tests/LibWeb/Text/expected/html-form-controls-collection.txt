@@ -1,0 +1,8 @@
+      HTMLFormControlsCollection
+RadioNodeList
+2
+button
+text
+null
+HTMLInputElement
+text
