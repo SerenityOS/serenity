@@ -460,7 +460,9 @@ LoaderSamples FlacLoaderPlugin::next_frame()
         auto& subframe_samples = m_subframe_buffers[i];
         subframe_samples.clear_with_capacity();
         TRY(parse_subframe(subframe_samples, new_subframe, bit_stream));
-        VERIFY(subframe_samples.size() == m_current_frame->sample_count);
+        // We only verify the sample count for the common case of a constant sample rate.
+        if (m_sample_rate == m_current_frame->sample_rate)
+            VERIFY(subframe_samples.size() == m_current_frame->sample_count);
     }
 
     // 11.2. Overview ("The audio data is composed of...")
