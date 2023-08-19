@@ -53,8 +53,8 @@ enum class UsePremultipliedAlpha {
 class GradientLine {
 public:
     GradientLine(int gradient_length, ReadonlySpan<ColorStop> color_stops, Optional<float> repeat_length, UsePremultipliedAlpha use_premultiplied_alpha = UsePremultipliedAlpha::Yes)
-        : m_repeating(repeat_length.has_value())
-        , m_start_offset(round_to<int>((m_repeating ? color_stops.first().position : 0.0f) * gradient_length))
+        : m_repeat_mode(repeat_length.has_value() ? RepeatMode::Repeat : RepeatMode::None)
+        , m_start_offset(round_to<int>((repeating() ? color_stops.first().position : 0.0f) * gradient_length))
         , m_color_stops(color_stops)
         , m_use_premultiplied_alpha(use_premultiplied_alpha)
     {
@@ -104,8 +104,18 @@ public:
         if (m_sample_scale != 1.0f)
             loc *= m_sample_scale;
         auto repeat_wrap_if_required = [&](i64 loc) {
-            if (m_repeating)
-                return (loc + m_start_offset) % static_cast<i64>(m_gradient_line_colors.size());
+            if (m_repeat_mode != RepeatMode::None) {
+                auto current_loc = loc + m_start_offset;
+                auto gradient_len = static_cast<i64>(m_gradient_line_colors.size());
+                if (m_repeat_mode == RepeatMode::Repeat) {
+                    auto color_loc = current_loc % gradient_len;
+                    return color_loc < 0 ? gradient_len + color_loc : color_loc;
+                } else if (m_repeat_mode == RepeatMode::Reflect) {
+                    auto color_loc = AK::abs(current_loc % gradient_len);
+                    auto repeats = current_loc / gradient_len;
+                    return (repeats & 1) ? gradient_len - color_loc : color_loc;
+                }
+            }
             return loc;
         };
         auto int_loc = static_cast<i64>(floor(loc));
@@ -129,8 +139,26 @@ public:
         }
     }
 
+    bool repeating() const
+    {
+        return m_repeat_mode != RepeatMode::None;
+    }
+
+    enum class RepeatMode {
+        None,
+        Repeat,
+        Reflect
+    };
+
+    void set_repeat_mode(RepeatMode repeat_mode)
+    {
+        // Note: A gradient can be set to repeating without a repeat length.
+        // The repeat length is used for CSS gradients but not for SVG gradients.
+        m_repeat_mode = repeat_mode;
+    }
+
 private:
-    bool m_repeating { false };
+    RepeatMode m_repeat_mode { RepeatMode::None };
     int m_start_offset { 0 };
     float m_sample_scale { 1 };
     ReadonlySpan<ColorStop> m_color_stops {};
@@ -159,6 +187,11 @@ struct Gradient {
         return [this](Point<CoordinateType> point) {
             return m_gradient_line.sample_color(m_transform_function(point.x(), point.y()));
         };
+    }
+
+    GradientLine& gradient_line()
+    {
+        return m_gradient_line;
     }
 
 private:
@@ -340,6 +373,20 @@ void CanvasLinearGradientPaintStyle::paint(IntRect physical_bounding_box, PaintF
     paint(make_sample_non_relative(physical_bounding_box.location(), linear_gradient.sample_function()));
 }
 
+static GradientLine::RepeatMode svg_spread_method_to_repeat_mode(SVGGradientPaintStyle::SpreadMethod spread_method)
+{
+    switch (spread_method) {
+    case SVGGradientPaintStyle::SpreadMethod::Pad:
+        return GradientLine::RepeatMode::None;
+    case SVGGradientPaintStyle::SpreadMethod::Reflect:
+        return GradientLine::RepeatMode::Reflect;
+    case SVGGradientPaintStyle::SpreadMethod::Repeat:
+        return GradientLine::RepeatMode::Repeat;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 void SVGGradientPaintStyle::set_gradient_transform(AffineTransform transform)
 {
     // Note: The scaling is removed so enough points on the gradient line are generated.
@@ -369,6 +416,8 @@ void SVGLinearGradientPaintStyle::paint(IntRect physical_bounding_box, PaintFunc
     auto linear_gradient = make_linear_gradient_between_two_points(
         m_p0.scaled(scale, scale), m_p1.scaled(scale, scale),
         color_stops(), repeat_length());
+    linear_gradient.gradient_line().set_repeat_mode(
+        svg_spread_method_to_repeat_mode(spread_method()));
 
     paint([&, sampler = linear_gradient.sample_function<float>()](IntPoint target_point) {
         auto point = target_point.translated(physical_bounding_box.location()).to_type<float>();
@@ -511,6 +560,8 @@ void SVGRadialGradientPaintStyle::paint(IntRect physical_bounding_box, PaintFunc
     auto radial_gradient = create_radial_gradient_between_two_circles(
         m_start_center.scaled(scale, scale), m_start_radius * scale, m_end_center.scaled(scale, scale), m_end_radius * scale,
         color_stops(), repeat_length());
+    radial_gradient.gradient_line().set_repeat_mode(
+        svg_spread_method_to_repeat_mode(spread_method()));
 
     paint([&, sampler = radial_gradient.sample_function<float>()](IntPoint target_point) {
         auto point = target_point.translated(physical_bounding_box.location()).to_type<float>();
