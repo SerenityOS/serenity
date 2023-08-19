@@ -521,6 +521,7 @@ class PaintableWithLines;
 class StackingContext;
 class TextPaintable;
 class VideoPaintable;
+class ViewportPaintable;
 
 enum class PaintPhase;
 

@@ -210,6 +210,9 @@ public:
     Layout::Viewport const* layout_node() const;
     Layout::Viewport* layout_node();
 
+    Painting::ViewportPaintable const* paintable() const;
+    Painting::ViewportPaintable* paintable();
+
     void schedule_style_update();
     void schedule_layout_update();
 

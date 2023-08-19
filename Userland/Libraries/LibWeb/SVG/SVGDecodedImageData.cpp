@@ -100,7 +100,7 @@ void SVGDecodedImageData::render(Gfx::IntSize size) const
     Gfx::Painter painter(*m_bitmap);
     PaintContext context(painter, m_page_client->palette(), m_page_client->device_pixels_per_css_pixel());
 
-    verify_cast<Painting::ViewportPaintable>(*m_document->paintable_box()).paint_all_phases(context);
+    m_document->paintable()->paint_all_phases(context);
 }
 
 RefPtr<Gfx::Bitmap const> SVGDecodedImageData::bitmap(size_t, Gfx::IntSize size) const
