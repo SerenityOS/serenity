@@ -40,6 +40,7 @@ class Mutex;
 class MasterPTY;
 class Mount;
 class PerformanceEventBuffer;
+class PowerStateSwitchTask;
 class ProcFS;
 class ProcFSInode;
 class Process;

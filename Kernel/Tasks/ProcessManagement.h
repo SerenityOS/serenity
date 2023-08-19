@@ -43,11 +43,11 @@ public:
         });
     }
 
+    ErrorOr<void> kill_all_user_processes(Badge<PowerStateSwitchTask>);
     enum class ProcessKind {
         User,
         Kernel,
     };
-    ErrorOr<void> kill_processes(ProcessKind kind);
     size_t alive_processes_count(ProcessKind kind) const;
 
     RefPtr<Process> from_pid_ignoring_jails(ProcessID pid);
@@ -60,7 +60,6 @@ public:
     ProcessID allocate_pid_for_new_thread(Badge<Thread>);
 
     void attach_finalizer_process(Badge<FinalizerTask>, Process&);
-    void kill_finalizer_process(Badge<PowerStateSwitchTask>);
 
 private:
     ProcessID allocate_pid();

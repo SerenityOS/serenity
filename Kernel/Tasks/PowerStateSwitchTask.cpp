@@ -85,8 +85,9 @@ ErrorOr<void> PowerStateSwitchTask::perform_shutdown()
     // NOTE: Allow init process to be killed. Stop processes and threads from doing syscalls!
     g_in_system_shutdown = true;
 
-    // Make sure to kill all user processes first, otherwise we might get weird hangups.
-    TRY(ProcessManagement::the().kill_processes(ProcessManagement::ProcessKind::User));
+    // NOTE: Make sure to kill all user processes first, otherwise we will not be able to
+    // unmount filesystems afterwards.
+    TRY(ProcessManagement::the().kill_all_user_processes({}));
 
     ConsoleManagement::the().switch_to_debug();
 
@@ -148,11 +149,9 @@ ErrorOr<void> PowerStateSwitchTask::perform_shutdown()
     // NOTE: We don't really need to kill kernel processes, because in contrast
     // to user processes, kernel processes will simply not make syscalls
     // or do some other unexpected behavior.
-    // Therefore, we kill processes here just for completeness, and only after
-    // it's completely safe as nobody will need the WorkQueues at this point forward.
-    TRY(ProcessManagement::the().kill_processes(ProcessManagement::ProcessKind::Kernel));
-    ProcessManagement::the().kill_finalizer_process({});
-
+    // Therefore, we just lock the scheduler big lock to ensure nothing happens
+    // beyond this point forward.
+    SpinlockLocker lock(g_scheduler_lock);
     dbgln("Attempting system shutdown...");
 
     arch_specific_poweroff();

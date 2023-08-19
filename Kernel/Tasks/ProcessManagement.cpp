@@ -118,13 +118,6 @@ ErrorOr<void> ProcessManagement::for_each_child_in_same_jail_with_current_proces
     });
 }
 
-void ProcessManagement::kill_finalizer_process(Badge<PowerStateSwitchTask>)
-{
-    m_finalizer_process->die();
-    m_finalizer_process->finalize();
-    m_finalizer_process.clear();
-}
-
 size_t ProcessManagement::alive_processes_count(ProcessKind kind) const
 {
     bool is_kernel_process = kind == ProcessKind::Kernel;
@@ -141,16 +134,21 @@ void ProcessManagement::attach_finalizer_process(Badge<FinalizerTask>, Process& 
     m_finalizer_process = process;
 }
 
-ErrorOr<void> ProcessManagement::kill_processes(ProcessKind kind)
+ErrorOr<void> ProcessManagement::kill_all_user_processes(Badge<PowerStateSwitchTask>)
 {
-    bool kill_kernel_processes = kind == ProcessKind::Kernel;
+    // NOTE: The FinalizerTask should have not been terminated, because
+    // it is a kernel process and we want to terminate asynchronously.
+    VERIFY(m_finalizer_process);
     auto finalizer_pid = m_finalizer_process->pid();
-
-    m_all_instances.for_each([&](Process& process) {
-        if (process.pid() != Process::current().pid() && process.pid() != finalizer_pid && process.is_kernel_process() == kill_kernel_processes) {
-            process.die();
-        }
-    });
+    {
+        SpinlockLocker lock(g_scheduler_lock);
+        m_all_instances.for_each([&](Process& process) {
+            NonnullRefPtr<Process> old_process = process;
+            if (process.pid() != Process::current().pid() && process.pid() != m_finalizer_process->pid() && !process.is_kernel_process()) {
+                process.die();
+            }
+        });
+    }
 
     // Although we *could* finalize processes ourselves (g_in_system_shutdown allows this),
     // we're nice citizens and let the finalizer task perform final duties before we kill it.
@@ -161,7 +159,7 @@ ErrorOr<void> ProcessManagement::kill_processes(ProcessKind kind)
         Scheduler::yield();
         alive_process_count = 0;
         m_all_instances.for_each([&](Process& process) {
-            if (process.pid() != Process::current().pid() && !process.is_dead() && process.pid() != finalizer_pid && process.is_kernel_process() == kill_kernel_processes)
+            if (process.pid() != Process::current().pid() && !process.is_dead() && process.pid() != finalizer_pid && !process.is_kernel_process())
                 alive_process_count++;
         });
 
@@ -171,9 +169,9 @@ ErrorOr<void> ProcessManagement::kill_processes(ProcessKind kind)
 
             if constexpr (PROCESS_DEBUG) {
                 m_all_instances.for_each_const([&](Process const& process) {
-                    if (process.pid() != Process::current().pid() && !process.is_dead() && process.pid() != finalizer_pid && process.is_kernel_process() == kill_kernel_processes) {
-                        dbgln("Process {:2} kernel={} dead={} dying={} ({})",
-                            process.pid(), process.is_kernel_process(), process.is_dead(), process.is_dying(),
+                    if (process.pid() != Process::current().pid() && !process.is_dead() && process.pid() != finalizer_pid && !process.is_kernel_process()) {
+                        dbgln("Process (user) {:2} dead={} dying={} ({})",
+                            process.pid(), process.is_dead(), process.is_dying(),
                             process.name().with([](auto& name) { return name.representable_view(); }));
                     }
                 });

@@ -580,8 +580,13 @@ void Thread::finalize()
 void Thread::drop_thread_count()
 {
     bool is_last = process().remove_thread(*this);
-    if (is_last)
+    if (is_last) {
         process().finalize();
+        // NOTE: During the shutdown procedure, nobody waits on dead processes
+        // so just allow the FinalizerTask to reap these processes alone.
+        if (g_in_system_shutdown)
+            ProcessManagement::the().after_set_wait_result(process());
+    }
 }
 
 void Thread::finalize_dying_threads()
