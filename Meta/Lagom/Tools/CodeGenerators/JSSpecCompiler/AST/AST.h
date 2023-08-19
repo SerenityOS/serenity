@@ -40,7 +40,6 @@ private:
     Variant<Tree*, NullableTree*> m_tree_ptr;
 };
 
-// ===== Generic nodes =====
 class Node : public RefCounted<Node> {
 public:
     virtual ~Node() = default;
@@ -59,7 +58,20 @@ protected:
     virtual void dump_tree(StringBuilder& builder) = 0;
 };
 
-class ErrorNode : public Node {
+// Although both statements and expressions are allowed to return value, CFG building differentiates
+// between them. Expressions are not allowed to change control flow, while statements are. Special
+// handling required if a statement turns out to be a descendant of an expression. Roughly speaking,
+// from the CFG standpoint, something like `a = ({ b + ({ c }) }) + ({ d })` will look like
+// ```
+//   auto tmp1 = c;
+//   auto tmp2 = b + tmp1;
+//   auto tmp3 = d;
+//   a = tmp1 + tmp2;
+// ```.
+class Statement : public Node { };
+class Expression : public Node { };
+
+class ErrorNode : public Expression {
 public:
     ErrorNode(StringView error = ""sv)
         : m_error(error)
@@ -74,8 +86,7 @@ protected:
 
 inline Tree const error_tree = make_ref_counted<ErrorNode>();
 
-// ===== Concrete evaluatable nodes =====
-class MathematicalConstant : public Node {
+class MathematicalConstant : public Expression {
 public:
     MathematicalConstant(i64 number)
         : m_number(number)
@@ -89,7 +100,7 @@ protected:
     void dump_tree(StringBuilder& builder) override;
 };
 
-class StringLiteral : public Node {
+class StringLiteral : public Expression {
 public:
     StringLiteral(StringView literal)
         : m_literal(literal)
@@ -147,7 +158,7 @@ inline constexpr StringView binary_operator_names[] = {
 #undef NAME
 #undef STRINGIFY
 
-class BinaryOperation : public Node {
+class BinaryOperation : public Expression {
 public:
     BinaryOperation(BinaryOperator operation, Tree left, Tree right)
         : m_operation(operation)
@@ -166,7 +177,7 @@ protected:
     void dump_tree(StringBuilder& builder) override;
 };
 
-class UnaryOperation : public Node {
+class UnaryOperation : public Expression {
 public:
     UnaryOperation(UnaryOperator operation, Tree operand)
         : m_operation(operation)
@@ -183,7 +194,7 @@ protected:
     void dump_tree(StringBuilder& builder) override;
 };
 
-class IsOneOfOperation : public Node {
+class IsOneOfOperation : public Expression {
 public:
     IsOneOfOperation(Tree operand, Vector<Tree>&& compare_values)
         : m_operand(move(operand))
@@ -200,7 +211,7 @@ protected:
     void dump_tree(StringBuilder& builder) override;
 };
 
-class UnresolvedReference : public Node {
+class UnresolvedReference : public Expression {
 public:
     UnresolvedReference(StringView name)
         : m_name(name)
@@ -213,9 +224,9 @@ protected:
     void dump_tree(StringBuilder& builder) override;
 };
 
-class ReturnExpression : public Node {
+class ReturnNode : public Node {
 public:
-    ReturnExpression(Tree return_value)
+    ReturnNode(Tree return_value)
         : m_return_value(move(return_value))
     {
     }
@@ -228,7 +239,7 @@ protected:
     void dump_tree(StringBuilder& builder) override;
 };
 
-class AssertExpression : public Node {
+class AssertExpression : public Expression {
 public:
     AssertExpression(Tree condition)
         : m_condition(move(condition))
@@ -277,7 +288,7 @@ protected:
     void dump_tree(StringBuilder& builder) override;
 };
 
-class IfElseIfChain : public Node {
+class IfElseIfChain : public Statement {
 public:
     IfElseIfChain(Vector<Tree>&& conditions, Vector<Tree>&& branches, NullableTree else_branch)
         : m_conditions(move(conditions))
@@ -300,7 +311,7 @@ protected:
     void dump_tree(StringBuilder& builder) override;
 };
 
-class TreeList : public Node {
+class TreeList : public Statement {
 public:
     TreeList(Vector<Tree>&& expressions_)
         : m_expressions(move(expressions_))
@@ -315,7 +326,7 @@ protected:
     void dump_tree(StringBuilder& builder) override;
 };
 
-class RecordDirectListInitialization : public Node {
+class RecordDirectListInitialization : public Expression {
 public:
     struct Argument {
         Tree name;
@@ -337,7 +348,7 @@ protected:
     void dump_tree(StringBuilder& builder) override;
 };
 
-class FunctionCall : public Node {
+class FunctionCall : public Expression {
 public:
     FunctionCall(Tree name, Vector<Tree>&& arguments)
         : m_name(move(name))
@@ -354,7 +365,7 @@ protected:
     void dump_tree(StringBuilder& builder) override;
 };
 
-class SlotName : public Node {
+class SlotName : public Expression {
 public:
     SlotName(StringView member_name)
         : m_member_name(member_name)
@@ -367,7 +378,7 @@ protected:
     void dump_tree(StringBuilder& builder) override;
 };
 
-class Variable : public Node {
+class Variable : public Expression {
 public:
     Variable(StringView variable_name)
         : m_name(variable_name)
@@ -380,7 +391,7 @@ protected:
     void dump_tree(StringBuilder& builder) override;
 };
 
-class FunctionPointer : public Node {
+class FunctionPointer : public Expression {
 public:
     FunctionPointer(StringView function_name)
         : m_function(function_name)

@@ -70,9 +70,9 @@ void UnresolvedReference::dump_tree(StringBuilder& builder)
     dump_node(builder, "UnresolvedReference {}", m_name);
 }
 
-void ReturnExpression::dump_tree(StringBuilder& builder)
+void ReturnNode::dump_tree(StringBuilder& builder)
 {
-    dump_node(builder, "ReturnExpression");
+    dump_node(builder, "ReturnNode");
     m_return_value->format_tree(builder);
 }
 

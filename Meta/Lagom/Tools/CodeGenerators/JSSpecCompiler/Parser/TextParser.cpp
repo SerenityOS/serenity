@@ -306,7 +306,7 @@ ParseErrorOr<Tree> TextParser::parse_return_statement()
     auto return_value = TRY(parse_expression());
 
     rollback.disarm();
-    return make_ref_counted<ReturnExpression>(return_value);
+    return make_ref_counted<ReturnNode>(return_value);
 }
 
 // assert: <condition>
