@@ -202,7 +202,7 @@ private:
     RefPtr<StyleValue> parse_builtin_value(ComponentValue const&);
     RefPtr<CalculatedStyleValue> parse_calculated_value(ComponentValue const&);
     // NOTE: Implemented in generated code. (GenerateCSSMathFunctions.cpp)
-    ErrorOr<OwnPtr<CalculationNode>> parse_math_function(PropertyID, Function const&);
+    OwnPtr<CalculationNode> parse_math_function(PropertyID, Function const&);
     OwnPtr<CalculationNode> parse_a_calc_function_node(Function const&);
     RefPtr<StyleValue> parse_dimension_value(ComponentValue const&);
     RefPtr<StyleValue> parse_integer_value(TokenStream<ComponentValue>&);
@@ -259,7 +259,7 @@ private:
     RefPtr<StyleValue> parse_grid_area_shorthand_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_grid_shorthand_value(Vector<ComponentValue> const&);
 
-    ErrorOr<OwnPtr<CalculationNode>> parse_a_calculation(Vector<ComponentValue> const&);
+    OwnPtr<CalculationNode> parse_a_calculation(Vector<ComponentValue> const&);
 
     ParseErrorOr<NonnullRefPtr<Selector>> parse_complex_selector(TokenStream<ComponentValue>&, SelectorType);
     ParseErrorOr<Optional<Selector::CompoundSelector>> parse_compound_selector(TokenStream<ComponentValue>&);

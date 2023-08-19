@@ -144,7 +144,7 @@ static Optional<RoundingStrategy> parse_rounding_strategy(Vector<ComponentValue>
     return value_id_to_rounding_strategy(maybe_identifier.value());
 }
 
-ErrorOr<OwnPtr<CalculationNode>> Parser::parse_math_function(PropertyID property_id, Function const& function)
+OwnPtr<CalculationNode> Parser::parse_math_function(PropertyID property_id, Function const& function)
 {
     TokenStream stream { function.values() };
     auto arguments = parse_a_comma_separated_list_of_component_values(stream);
@@ -163,10 +163,10 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_math_function(PropertyID property
             TRY(function_generator.try_append(R"~~~(
         CSSNumericType determined_argument_type;
         Vector<NonnullOwnPtr<CalculationNode>> parsed_arguments;
-        TRY(parsed_arguments.try_ensure_capacity(arguments.size()));
+        parsed_arguments.ensure_capacity(arguments.size());
 
         for (auto& argument : arguments) {
-            auto calculation_node = TRY(parse_a_calculation(argument));
+            auto calculation_node = parse_a_calculation(argument);
             if (!calculation_node) {
                 dbgln_if(CSS_PARSER_DEBUG, "@name:lowercase@() argument #{} is not a valid calculation", parsed_arguments.size());
                 return nullptr;
@@ -200,7 +200,7 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_math_function(PropertyID property
                 }
             }
 
-            TRY(parsed_arguments.try_append(calculation_node.release_nonnull()));
+            parsed_arguments.append(calculation_node.release_nonnull());
         }
 
         return @name:titlecase@CalculationNode::create(move(parsed_arguments));
@@ -255,14 +255,14 @@ ErrorOr<OwnPtr<CalculationNode>> Parser::parse_math_function(PropertyID property
                     // NOTE: This assumes everything not handled above is a calculation node of some kind.
                     parameter_is_calculation = true;
                     TRY(parameter_generator.set("parameter_type", "OwnPtr<CalculationNode>"_string));
-                    TRY(parameter_generator.set("parse_function", "TRY(parse_a_calculation(arguments[argument_index]))"_string));
+                    TRY(parameter_generator.set("parse_function", "parse_a_calculation(arguments[argument_index])"_string));
                     TRY(parameter_generator.set("check_function", " != nullptr"_string));
                     TRY(parameter_generator.set("release_function", ".release_nonnull()"_string));
 
                     // NOTE: We have exactly one default value in the data right now, and it's a `<calc-constant>`,
                     //       so that's all we handle.
                     if (auto default_value = parameter.get_deprecated_string("default"sv); default_value.has_value()) {
-                        TRY(parameter_generator.set("parameter_default", TRY(String::formatted(" = TRY(ConstantCalculationNode::create(CalculationNode::constant_type_from_string(\"{}\"sv).value()))", TRY(String::from_deprecated_string(default_value.value()))))));
+                        TRY(parameter_generator.set("parameter_default", TRY(String::formatted(" = ConstantCalculationNode::create(CalculationNode::constant_type_from_string(\"{}\"sv).value())", TRY(String::from_deprecated_string(default_value.value()))))));
                     } else {
                         TRY(parameter_generator.set("parameter_default", ""_string));
                     }
