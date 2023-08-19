@@ -91,7 +91,6 @@ enum class NeedsBigProcessLock {
     S(get_dir_entries, NeedsBigProcessLock::No)            \
     S(get_root_session_id, NeedsBigProcessLock::No)        \
     S(get_stack_bounds, NeedsBigProcessLock::No)           \
-    S(get_thread_name, NeedsBigProcessLock::No)            \
     S(getcwd, NeedsBigProcessLock::No)                     \
     S(getegid, NeedsBigProcessLock::No)                    \
     S(geteuid, NeedsBigProcessLock::No)                    \
@@ -162,7 +161,6 @@ enum class NeedsBigProcessLock {
     S(sendfd, NeedsBigProcessLock::No)                     \
     S(sendmsg, NeedsBigProcessLock::Yes)                   \
     S(set_mmap_name, NeedsBigProcessLock::No)              \
-    S(set_thread_name, NeedsBigProcessLock::No)            \
     S(setegid, NeedsBigProcessLock::No)                    \
     S(seteuid, NeedsBigProcessLock::No)                    \
     S(setgid, NeedsBigProcessLock::No)                     \

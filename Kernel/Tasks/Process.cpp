@@ -639,6 +639,19 @@ size_t Process::OpenFileDescriptions::open_count() const
     return count;
 }
 
+ErrorOr<NonnullRefPtr<Thread>> Process::get_thread_from_thread_list(pid_t tid)
+{
+    if (tid < 0)
+        return ESRCH;
+    return m_thread_list.with([tid](auto& list) -> ErrorOr<NonnullRefPtr<Thread>> {
+        for (auto& thread : list) {
+            if (thread.tid() == tid)
+                return thread;
+        }
+        return ESRCH;
+    });
+}
+
 ErrorOr<Process::ScopedDescriptionAllocation> Process::OpenFileDescriptions::allocate(int first_candidate_fd)
 {
     for (size_t i = first_candidate_fd; i < max_open(); ++i) {

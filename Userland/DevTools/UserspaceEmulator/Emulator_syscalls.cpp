@@ -214,8 +214,6 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$sendmsg(arg1, arg2, arg3);
     case SC_set_mmap_name:
         return virt$set_mmap_name(arg1);
-    case SC_set_thread_name:
-        return virt$set_thread_name(arg1, arg2, arg3);
     case SC_setgid:
         return virt$setgid(arg2);
     case SC_setgroups:
@@ -1514,13 +1512,6 @@ int Emulator::virt$scheduler_set_parameters(FlatPtr user_addr)
     Syscall::SC_scheduler_parameters_params user_param;
     mmu().copy_from_vm(&user_param, user_addr, sizeof(user_param));
     return syscall(SC_scheduler_set_parameters, &user_param);
-}
-
-int Emulator::virt$set_thread_name(pid_t pid, FlatPtr name_addr, size_t name_length)
-{
-    auto user_name = mmu().copy_buffer_from_vm(name_addr, name_length);
-    auto name = DeprecatedString::formatted("(UE) {}", StringView { user_name.data(), user_name.size() });
-    return syscall(SC_set_thread_name, pid, name.characters(), name.length());
 }
 
 pid_t Emulator::virt$setsid()

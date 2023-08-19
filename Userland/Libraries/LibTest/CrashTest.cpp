@@ -39,7 +39,7 @@ bool Crash::run(RunType run_type)
             VERIFY_NOT_REACHED();
         } else if (pid == 0) {
 #if !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN)
-            if (prctl(PR_SET_DUMPABLE, 0, 0) < 0)
+            if (prctl(PR_SET_DUMPABLE, 0, 0, 0) < 0)
                 perror("prctl(PR_SET_DUMPABLE)");
 #endif
             exit((int)m_crash_function());

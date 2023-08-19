@@ -21,7 +21,7 @@ TEST_CASE(check_root)
     // If running as setuid, the process is automatically marked as non-dumpable, which bars access to /proc/self/.
     // However, that is the easiest guess for a /proc/$PID/ directory, so we'd like to use that.
     // In order to do so, mark this process as dumpable:
-    EXPECT_EQ(prctl(PR_SET_DUMPABLE, 1, 0), 0);
+    EXPECT_EQ(prctl(PR_SET_DUMPABLE, 1, 0, 0), 0);
 }
 
 TEST_CASE(root_writes_to_procfs)

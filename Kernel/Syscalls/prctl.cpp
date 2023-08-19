@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-ErrorOr<FlatPtr> Process::sys$prctl(int option, FlatPtr arg1, FlatPtr arg2)
+ErrorOr<FlatPtr> Process::sys$prctl(int option, FlatPtr arg1, FlatPtr arg2, FlatPtr arg3)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
@@ -68,6 +68,31 @@ ErrorOr<FlatPtr> Process::sys$prctl(int option, FlatPtr arg1, FlatPtr arg2)
             TRY(m_name.with([&buffer, buffer_size](auto& name) -> ErrorOr<void> {
                 VERIFY(!name.representable_view().is_null());
                 return copy_fixed_string_buffer_including_null_char_to_user(buffer, buffer_size, name);
+            }));
+            return 0;
+        }
+        case PR_SET_THREAD_NAME: {
+            TRY(require_promise(Pledge::stdio));
+            int thread_id = static_cast<int>(arg1);
+            Userspace<char const*> buffer = arg2;
+            size_t buffer_size = static_cast<size_t>(arg3);
+
+            Thread::Name thread_name {};
+            TRY(try_copy_name_from_user_into_fixed_string_buffer(buffer, thread_name, buffer_size));
+            auto thread = TRY(get_thread_from_thread_list(thread_id));
+            thread->set_name(thread_name.representable_view());
+            return 0;
+        }
+        case PR_GET_THREAD_NAME: {
+            TRY(require_promise(Pledge::thread));
+            int thread_id = static_cast<int>(arg1);
+            Userspace<char*> buffer = arg2;
+            size_t buffer_size = static_cast<size_t>(arg3);
+            auto thread = TRY(get_thread_from_thread_list(thread_id));
+
+            TRY(thread->name().with([&](auto& thread_name) -> ErrorOr<void> {
+                VERIFY(!thread_name.representable_view().is_null());
+                return copy_fixed_string_buffer_including_null_char_to_user(buffer, buffer_size, thread_name);
             }));
             return 0;
         }
