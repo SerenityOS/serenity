@@ -44,7 +44,7 @@ void NestedBrowsingContextPaintable::paint(PaintContext& context, PaintPhase pha
         auto* hosted_document = layout_box().dom_node().content_document_without_origin_check();
         if (!hosted_document)
             return;
-        auto* hosted_paint_tree = hosted_document->paintable_box();
+        auto* hosted_paint_tree = hosted_document->paintable();
         if (!hosted_paint_tree)
             return;
 
@@ -57,7 +57,7 @@ void NestedBrowsingContextPaintable::paint(PaintContext& context, PaintPhase pha
         context.painter().translate(absolute_device_rect.x().value(), absolute_device_rect.y().value());
 
         context.set_device_viewport_rect({ {}, context.enclosing_device_size(layout_box().dom_node().nested_browsing_context()->size()) });
-        const_cast<ViewportPaintable&>(verify_cast<ViewportPaintable>(*hosted_paint_tree)).paint_all_phases(context);
+        const_cast<ViewportPaintable*>(hosted_paint_tree)->paint_all_phases(context);
 
         context.set_device_viewport_rect(old_viewport_rect);
         context.painter().restore();

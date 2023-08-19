@@ -185,6 +185,7 @@ public:
     Painting::PaintableBox const* paintable_box() const;
     Painting::PaintableBox* paintable_box();
     Painting::Paintable const* paintable() const;
+    Painting::Paintable* paintable();
 
     void set_layout_node(Badge<Layout::Node>, JS::NonnullGCPtr<Layout::Node>);
     void detach_layout_node(Badge<Layout::TreeBuilder>);

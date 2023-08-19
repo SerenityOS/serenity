@@ -122,8 +122,10 @@ void PageHost::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& targ
     Gfx::Painter painter(target);
     Gfx::IntRect bitmap_rect { {}, content_rect.size().to_type<int>() };
 
-    if (auto* document = page().top_level_browsing_context().active_document())
+    auto document = page().top_level_browsing_context().active_document();
+    if (document) {
         document->update_layout();
+    }
 
     auto background_color = this->background_color();
 
@@ -131,16 +133,14 @@ void PageHost::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& targ
         painter.clear_rect(bitmap_rect, palette().base());
     painter.fill_rect(bitmap_rect, background_color);
 
-    auto* layout_root = this->layout_root();
-    if (!layout_root) {
+    if (!document->paintable())
         return;
-    }
 
     Web::PaintContext context(painter, palette(), device_pixels_per_css_pixel());
     context.set_should_show_line_box_borders(m_should_show_line_box_borders);
     context.set_device_viewport_rect(content_rect);
     context.set_has_focus(m_has_focus);
-    verify_cast<Web::Painting::ViewportPaintable>(*layout_root->paintable_box()).paint_all_phases(context);
+    document->paintable()->paint_all_phases(context);
 }
 
 void PageHost::set_viewport_rect(Web::DevicePixelRect const& rect)

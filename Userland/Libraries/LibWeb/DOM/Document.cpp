@@ -87,6 +87,7 @@
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Page/Page.h>
+#include <LibWeb/Painting/ViewportPaintable.h>
 #include <LibWeb/PermissionsPolicy/AutoplayAllowlist.h>
 #include <LibWeb/SVG/SVGElement.h>
 #include <LibWeb/SVG/SVGTitleElement.h>
@@ -3394,6 +3395,16 @@ void Document::shared_declarative_refresh_steps(StringView input, JS::GCPtr<HTML
     if (meta_element && m_completely_loaded_time.has_value()) {
         m_active_refresh_timer->start();
     }
+}
+
+Painting::ViewportPaintable const* Document::paintable() const
+{
+    return static_cast<Painting::ViewportPaintable const*>(Node::paintable());
+}
+
+Painting::ViewportPaintable* Document::paintable()
+{
+    return static_cast<Painting::ViewportPaintable*>(Node::paintable());
 }
 
 }
