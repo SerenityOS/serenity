@@ -34,6 +34,23 @@ void ErrorNode::dump_tree(StringBuilder& builder)
     dump_node(builder, "Error \"{}\"", m_error);
 }
 
+void ControlFlowFunctionReturn::dump_tree(StringBuilder& builder)
+{
+    dump_node(builder, "ControlFlowFunctionReturn");
+    m_return_value->format_tree(builder);
+}
+
+void ControlFlowJump::dump_tree(StringBuilder& builder)
+{
+    dump_node(builder, "ControlFlowJump jump={:p}", m_block);
+}
+
+void ControlFlowBranch::dump_tree(StringBuilder& builder)
+{
+    dump_node(builder, "ControlFlowBranch true={:p} false={:p}", m_then, m_else);
+    m_condition->format_tree(builder);
+}
+
 void MathematicalConstant::dump_tree(StringBuilder& builder)
 {
     dump_node(builder, "MathematicalConstant {}", m_number);
