@@ -16,6 +16,9 @@ public:
     void mouse_move(int x, int y, unsigned buttons, unsigned modifiers);
     void mouse_up(int x, int y, unsigned button, unsigned buttons, unsigned modifiers);
 
+    void key_down(KeyCode, unsigned modifiers, u32 code_point);
+    void key_up(KeyCode, unsigned modifiers, u32 code_point);
+
 private:
     LadybirdViewImpl(LadybirdWebView* widget);
 

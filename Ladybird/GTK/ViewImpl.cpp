@@ -168,6 +168,16 @@ void LadybirdViewImpl::mouse_up(int x, int y, unsigned button, unsigned buttons,
     client().async_mouse_up(point, button, buttons, modifiers);
 }
 
+void LadybirdViewImpl::key_down(KeyCode key_code, unsigned modifiers, u32 code_point)
+{
+    client().async_key_down(key_code, modifiers, code_point);
+}
+
+void LadybirdViewImpl::key_up(KeyCode key_code, unsigned modifiers, u32 code_point)
+{
+    client().async_key_up(key_code, modifiers, code_point);
+}
+
 void LadybirdViewImpl::notify_server_did_layout(Badge<WebView::WebContentClient>, Gfx::IntSize content_size)
 {
     ladybird_web_view_set_page_size(m_widget, content_size.width(), content_size.height());

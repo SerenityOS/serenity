@@ -431,6 +431,197 @@ static void translate_coordinates(LadybirdWebView* self, double widget_x, double
     *page_y = (widget_y + vadj) * scale_factor;
 }
 
+static KeyCode translate_key(unsigned keyval)
+{
+    struct Mapping {
+        unsigned gdk_key;
+        KeyCode serenity_key;
+    };
+    static const Mapping mappings[] = {
+        { GDK_KEY_BackSpace, Key_Backspace },
+        { GDK_KEY_Tab, Key_Tab },
+        { GDK_KEY_Linefeed, Key_Return },
+        { GDK_KEY_Clear, Key_Delete },
+        { GDK_KEY_Return, Key_Return },
+        { GDK_KEY_Scroll_Lock, Key_ScrollLock },
+        { GDK_KEY_Sys_Req, Key_SysRq },
+        { GDK_KEY_Escape, Key_Escape },
+        { GDK_KEY_Delete, Key_Delete },
+        { GDK_KEY_Home, Key_Home },
+        { GDK_KEY_Left, Key_Left },
+        { GDK_KEY_Up, Key_Up },
+        { GDK_KEY_Right, Key_Right },
+        { GDK_KEY_Down, Key_Down },
+        { GDK_KEY_Page_Up, Key_PageUp },
+        { GDK_KEY_Page_Down, Key_PageDown },
+        { GDK_KEY_End, Key_End },
+        { GDK_KEY_Insert, Key_Insert },
+        { GDK_KEY_Cancel, Key_Escape },
+        { GDK_KEY_Num_Lock, Key_NumLock },
+        { GDK_KEY_KP_Space, Key_Space },
+        { GDK_KEY_KP_Tab, Key_Tab },
+        { GDK_KEY_KP_Enter, Key_Return },
+        { GDK_KEY_KP_F1, Key_F1 },
+        { GDK_KEY_KP_F2, Key_F2 },
+        { GDK_KEY_KP_F3, Key_F3 },
+        { GDK_KEY_KP_F4, Key_F4 },
+        { GDK_KEY_KP_Home, Key_Home },
+        { GDK_KEY_KP_Left, Key_Left },
+        { GDK_KEY_KP_Up, Key_Up },
+        { GDK_KEY_KP_Right, Key_Right },
+        { GDK_KEY_KP_Down, Key_Down },
+        { GDK_KEY_KP_Page_Up, Key_PageUp },
+        { GDK_KEY_KP_Page_Down, Key_PageDown },
+        { GDK_KEY_KP_End, Key_End },
+        { GDK_KEY_KP_Insert, Key_Insert },
+        { GDK_KEY_KP_Delete, Key_Delete },
+        { GDK_KEY_KP_Equal, Key_Equal },
+        { GDK_KEY_KP_Multiply, Key_Asterisk },
+        { GDK_KEY_KP_Add, Key_Plus },
+        { GDK_KEY_KP_Subtract, Key_Minus },
+        { GDK_KEY_KP_Decimal, Key_Period },
+        { GDK_KEY_KP_Divide, Key_Slash },
+        { GDK_KEY_KP_0, Key_0 },
+        { GDK_KEY_KP_1, Key_1 },
+        { GDK_KEY_KP_2, Key_2 },
+        { GDK_KEY_KP_3, Key_3 },
+        { GDK_KEY_KP_4, Key_4 },
+        { GDK_KEY_KP_5, Key_5 },
+        { GDK_KEY_KP_6, Key_6 },
+        { GDK_KEY_KP_7, Key_7 },
+        { GDK_KEY_KP_8, Key_8 },
+        { GDK_KEY_KP_9, Key_9 },
+        { GDK_KEY_F1, Key_F1 },
+        { GDK_KEY_F2, Key_F2 },
+        { GDK_KEY_F3, Key_F3 },
+        { GDK_KEY_F4, Key_F4 },
+        { GDK_KEY_F5, Key_F5 },
+        { GDK_KEY_F6, Key_F6 },
+        { GDK_KEY_F7, Key_F7 },
+        { GDK_KEY_F8, Key_F8 },
+        { GDK_KEY_F9, Key_F9 },
+        { GDK_KEY_F10, Key_F10 },
+        { GDK_KEY_F11, Key_F11 },
+        { GDK_KEY_F12, Key_F12 },
+        { GDK_KEY_Shift_L, Key_LeftShift },
+        { GDK_KEY_Shift_R, Key_RightShift },
+        { GDK_KEY_Control_L, Key_Control },
+        { GDK_KEY_Control_R, Key_Control },
+        { GDK_KEY_Caps_Lock, Key_CapsLock },
+        { GDK_KEY_Meta_L, Key_Super },
+        { GDK_KEY_Meta_R, Key_Super },
+        { GDK_KEY_Alt_L, Key_Alt },
+        { GDK_KEY_Alt_R, Key_Alt },
+        { GDK_KEY_Super_L, Key_Super },
+        { GDK_KEY_Super_R, Key_Super },
+        { GDK_KEY_ISO_Enter, Key_Return },
+        { GDK_KEY_3270_PrintScreen, Key_PrintScreen },
+        { GDK_KEY_3270_Enter, Key_Return },
+        { GDK_KEY_space, Key_Space },
+        { GDK_KEY_exclam, Key_ExclamationPoint },
+        { GDK_KEY_quotedbl, Key_DoubleQuote },
+        { GDK_KEY_numbersign, Key_Hashtag },
+        { GDK_KEY_dollar, Key_Dollar },
+        { GDK_KEY_percent, Key_Percent },
+        { GDK_KEY_ampersand, Key_Ampersand },
+        { GDK_KEY_apostrophe, Key_Apostrophe },
+        { GDK_KEY_parenleft, Key_LeftParen },
+        { GDK_KEY_parenright, Key_RightParen },
+        { GDK_KEY_asterisk, Key_Asterisk },
+        { GDK_KEY_plus, Key_Plus },
+        { GDK_KEY_comma, Key_Comma },
+        { GDK_KEY_minus, Key_Minus },
+        { GDK_KEY_period, Key_Period },
+        { GDK_KEY_slash, Key_Slash },
+        { GDK_KEY_0, Key_0 },
+        { GDK_KEY_1, Key_1 },
+        { GDK_KEY_2, Key_2 },
+        { GDK_KEY_3, Key_3 },
+        { GDK_KEY_4, Key_4 },
+        { GDK_KEY_5, Key_5 },
+        { GDK_KEY_6, Key_6 },
+        { GDK_KEY_7, Key_7 },
+        { GDK_KEY_8, Key_8 },
+        { GDK_KEY_9, Key_9 },
+        { GDK_KEY_colon, Key_Colon },
+        { GDK_KEY_semicolon, Key_Semicolon },
+        { GDK_KEY_less, Key_LessThan },
+        { GDK_KEY_equal, Key_Equal },
+        { GDK_KEY_greater, Key_GreaterThan },
+        { GDK_KEY_question, Key_QuestionMark },
+        { GDK_KEY_at, Key_AtSign },
+        { GDK_KEY_A, Key_A },
+        { GDK_KEY_B, Key_B },
+        { GDK_KEY_C, Key_C },
+        { GDK_KEY_D, Key_D },
+        { GDK_KEY_E, Key_E },
+        { GDK_KEY_F, Key_F },
+        { GDK_KEY_G, Key_G },
+        { GDK_KEY_H, Key_H },
+        { GDK_KEY_I, Key_I },
+        { GDK_KEY_J, Key_J },
+        { GDK_KEY_K, Key_K },
+        { GDK_KEY_L, Key_L },
+        { GDK_KEY_M, Key_M },
+        { GDK_KEY_N, Key_N },
+        { GDK_KEY_O, Key_O },
+        { GDK_KEY_P, Key_P },
+        { GDK_KEY_Q, Key_Q },
+        { GDK_KEY_R, Key_R },
+        { GDK_KEY_S, Key_S },
+        { GDK_KEY_T, Key_T },
+        { GDK_KEY_U, Key_U },
+        { GDK_KEY_V, Key_V },
+        { GDK_KEY_W, Key_W },
+        { GDK_KEY_X, Key_X },
+        { GDK_KEY_Y, Key_Y },
+        { GDK_KEY_Z, Key_Z },
+        { GDK_KEY_bracketleft, Key_LeftBracket },
+        { GDK_KEY_backslash, Key_Backslash },
+        { GDK_KEY_bracketright, Key_RightBracket },
+        { GDK_KEY_asciicircum, Key_Circumflex },
+        { GDK_KEY_underscore, Key_Underscore },
+        { GDK_KEY_grave, Key_Backtick },
+        { GDK_KEY_a, Key_A },
+        { GDK_KEY_b, Key_B },
+        { GDK_KEY_c, Key_C },
+        { GDK_KEY_d, Key_D },
+        { GDK_KEY_e, Key_E },
+        { GDK_KEY_f, Key_F },
+        { GDK_KEY_g, Key_G },
+        { GDK_KEY_h, Key_H },
+        { GDK_KEY_i, Key_I },
+        { GDK_KEY_j, Key_J },
+        { GDK_KEY_k, Key_K },
+        { GDK_KEY_l, Key_L },
+        { GDK_KEY_m, Key_M },
+        { GDK_KEY_n, Key_N },
+        { GDK_KEY_o, Key_O },
+        { GDK_KEY_p, Key_P },
+        { GDK_KEY_q, Key_Q },
+        { GDK_KEY_r, Key_R },
+        { GDK_KEY_s, Key_S },
+        { GDK_KEY_t, Key_T },
+        { GDK_KEY_u, Key_U },
+        { GDK_KEY_v, Key_V },
+        { GDK_KEY_w, Key_W },
+        { GDK_KEY_x, Key_X },
+        { GDK_KEY_y, Key_Y },
+        { GDK_KEY_z, Key_Z },
+        { GDK_KEY_braceleft, Key_LeftBrace },
+        { GDK_KEY_bar, Key_Pipe },
+        { GDK_KEY_braceright, Key_RightBrace },
+        { GDK_KEY_asciitilde, Key_Tilde },
+    };
+
+    for (Mapping const& mapping : mappings) {
+        if (mapping.gdk_key == keyval)
+            return mapping.serenity_key;
+    }
+
+    return Key_Invalid;
+}
+
 static unsigned translate_mouse_button(guint button)
 {
     switch (button) {
@@ -535,8 +726,34 @@ static void on_motion(GtkEventControllerMotion* motion, gdouble x, gdouble y, vo
     self->impl->mouse_move(page_x, page_y, buttons, modifiers);
 }
 
+static void on_key_pressed(GtkEventControllerKey* controller_key, guint keyval, [[maybe_unused]] guint keycode, [[maybe_unused]] GdkModifierType state, void* user_data)
+{
+    LadybirdWebView* self = LADYBIRD_WEB_VIEW(user_data);
+
+    KeyCode key = translate_key(keyval);
+    gunichar point = gdk_keyval_to_unicode(keyval);
+    unsigned button, buttons, modifiers;
+    translate_state(GTK_EVENT_CONTROLLER(controller_key), &button, &buttons, &modifiers);
+
+    self->impl->key_down(key, modifiers, point);
+}
+
+static void on_key_released(GtkEventControllerKey* controller_key, guint keyval, [[maybe_unused]] guint keycode, [[maybe_unused]] GdkModifierType state, void* user_data)
+{
+    LadybirdWebView* self = LADYBIRD_WEB_VIEW(user_data);
+
+    KeyCode key = translate_key(keyval);
+    gunichar point = gdk_keyval_to_unicode(keyval);
+    unsigned button, buttons, modifiers;
+    translate_state(GTK_EVENT_CONTROLLER(controller_key), &button, &buttons, &modifiers);
+
+    self->impl->key_up(key, modifiers, point);
+}
+
 static void ladybird_web_view_init(LadybirdWebView* self)
 {
+    gtk_widget_set_focusable(GTK_WIDGET(self), true);
+
     auto impl = LadybirdViewImpl::create(self).release_value_but_fixme_should_propagate_errors();
     // Let's be good boys and properly construct an OwnPtr in place
     // instead of assuming that it can be successfully initialized
@@ -557,6 +774,11 @@ static void ladybird_web_view_init(LadybirdWebView* self)
     g_signal_connect_object(motion, "enter", G_CALLBACK(on_motion), self, G_CONNECT_DEFAULT);
     g_signal_connect_object(motion, "motion", G_CALLBACK(on_motion), self, G_CONNECT_DEFAULT);
     gtk_widget_add_controller(GTK_WIDGET(self), motion);
+
+    GtkEventController* controller_key = gtk_event_controller_key_new();
+    g_signal_connect_object(controller_key, "key-pressed", G_CALLBACK(on_key_pressed), self, G_CONNECT_DEFAULT);
+    g_signal_connect_object(controller_key, "key-released", G_CALLBACK(on_key_released), self, G_CONNECT_DEFAULT);
+    gtk_widget_add_controller(GTK_WIDGET(self), controller_key);
 
     self->bitmap_paintable = ladybird_bitmap_paintable_new();
     g_signal_connect_object(self->bitmap_paintable, "invalidate-contents", G_CALLBACK(gtk_widget_queue_draw), self, G_CONNECT_SWAPPED);
