@@ -80,6 +80,7 @@ protected:
 // ```.
 class Statement : public Node { };
 class Expression : public Node { };
+class ControlFlowOperator : public Statement { };
 
 class ErrorNode : public Expression {
 public:
@@ -95,6 +96,52 @@ protected:
 };
 
 inline Tree const error_tree = make_ref_counted<ErrorNode>();
+
+class ControlFlowFunctionReturn : public ControlFlowOperator {
+public:
+    ControlFlowFunctionReturn(VariableRef return_value)
+        : m_return_value(move(return_value))
+    {
+    }
+
+    VariableRef m_return_value;
+
+protected:
+    void dump_tree(StringBuilder& builder) override;
+};
+
+class ControlFlowJump : public ControlFlowOperator {
+public:
+    ControlFlowJump(BasicBlockRef block)
+        : m_block(block)
+    {
+    }
+
+    BasicBlockRef m_block;
+
+protected:
+    void dump_tree(StringBuilder& builder) override;
+};
+
+// This should be invalid enough to crash program on use.
+inline NonnullRefPtr<ControlFlowOperator> const invalid_continuation = make_ref_counted<ControlFlowJump>(nullptr);
+
+class ControlFlowBranch : public ControlFlowOperator {
+public:
+    ControlFlowBranch(Tree condition, BasicBlockRef then, BasicBlockRef else_)
+        : m_condition(move(condition))
+        , m_then(then)
+        , m_else(else_)
+    {
+    }
+
+    Tree m_condition;
+    BasicBlockRef m_then;
+    BasicBlockRef m_else;
+
+protected:
+    void dump_tree(StringBuilder& builder) override;
+};
 
 class MathematicalConstant : public Expression {
 public:
@@ -249,6 +296,8 @@ protected:
     void dump_tree(StringBuilder& builder) override;
 };
 
+// Although assert might seems a good candidate for ControlFlowOperator, we are not interested in
+// tracking control flow after a failed assertion.
 class AssertExpression : public Expression {
 public:
     AssertExpression(Tree condition)

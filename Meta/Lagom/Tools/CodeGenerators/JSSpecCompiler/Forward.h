@@ -21,7 +21,11 @@ using Tree = NonnullRefPtr<Node>;
 class Statement;
 class Expression;
 class ErrorNode;
+class ControlFlowOperator;
 
+class ControlFlowFunctionReturn;
+class ControlFlowJump;
+class ControlFlowBranch;
 class MathematicalConstant;
 class StringLiteral;
 class BinaryOperation;
@@ -38,8 +42,13 @@ class RecordDirectListInitialization;
 class FunctionCall;
 class SlotName;
 class Variable;
+using VariableRef = NonnullRefPtr<Variable>;
 class FunctionPointer;
 using FunctionPointerRef = NonnullRefPtr<FunctionPointer>;
+
+// Compiler/ControlFlowGraph.h
+class BasicBlock;
+using BasicBlockRef = BasicBlock*;
 
 // Compiler/GenericASTPass.h
 class RecursiveASTVisitor;
