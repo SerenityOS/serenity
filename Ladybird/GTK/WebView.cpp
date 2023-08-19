@@ -1,11 +1,12 @@
 #include "WebView.h"
+#include "BitmapPaintable.h"
 #include "ViewImpl.h"
 
 struct _LadybirdWebView {
     GtkWidget parent_instance;
 
     OwnPtr<LadybirdViewImpl> impl;
-    GdkTexture* texture;
+    LadybirdBitmapPaintable* bitmap_paintable;
     Browser::CookieJar* cookie_jar;
     GtkScrollablePolicy hscroll_policy;
     GtkAdjustment* hadjustment;
@@ -389,49 +390,21 @@ void ladybird_web_view_scroll_into_view(LadybirdWebView* self, int page_x, int p
     }
 }
 
-void ladybird_web_view_push_bitmap(LadybirdWebView* self, Gfx::Bitmap const* bitmap, int width, int height)
+GdkPaintable* ladybird_web_view_get_bitmap_paintable(LadybirdWebView* self)
 {
-    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+    g_return_val_if_fail(LADYBIRD_IS_WEB_VIEW(self), nullptr);
 
-    if (bitmap == nullptr) {
-        g_clear_object(&self->texture);
-        gtk_widget_queue_draw(GTK_WIDGET(self));
-        return;
-    }
-
-    GdkMemoryFormat format;
-    switch (bitmap->format()) {
-    case Gfx::BitmapFormat::BGRA8888:
-        format = GDK_MEMORY_B8G8R8A8;
-        break;
-    case Gfx::BitmapFormat::RGBA8888:
-        format = GDK_MEMORY_R8G8B8A8;
-        break;
-    default:
-        VERIFY_NOT_REACHED();
-    }
-
-    // TODO: Try to avoid excessive copying here?
-    GBytes* bytes = g_bytes_new(bitmap->scanline_u8(0), bitmap->size_in_bytes());
-    GdkTexture* texture = gdk_memory_texture_new(width, height, format, bytes, bitmap->pitch());
-    g_bytes_unref(bytes);
-    g_set_object(&self->texture, texture);
-    g_object_unref(texture);
-
-    gtk_widget_queue_draw(GTK_WIDGET(self));
+    return GDK_PAINTABLE(self->bitmap_paintable);
+}
 }
 
 static void ladybird_web_view_snapshot(GtkWidget* widget, GtkSnapshot* snapshot)
 {
     LadybirdWebView* self = LADYBIRD_WEB_VIEW(widget);
 
-    if (self->texture == nullptr)
-        return;
-
-    int texture_width, texture_height;
-    scale_size_down(self, gdk_texture_get_width(self->texture), gdk_texture_get_height(self->texture), &texture_width, &texture_height);
-    graphene_rect_t bounds = GRAPHENE_RECT_INIT(0, 0, (float)texture_width, (float)texture_height);
-    gtk_snapshot_append_texture(snapshot, self->texture, &bounds);
+    gdk_paintable_snapshot(GDK_PAINTABLE(self->bitmap_paintable), snapshot,
+        gtk_widget_get_width(widget),
+        gtk_widget_get_height(widget));
 }
 
 static void on_scale_factor_change(GObject* object)
@@ -568,8 +541,6 @@ static void ladybird_web_view_init(LadybirdWebView* self)
     g_signal_connect(self, "realize", G_CALLBACK(on_scale_factor_change), nullptr);
     g_signal_connect(self, "notify::scale-factor", G_CALLBACK(on_scale_factor_change), nullptr);
 
-    gtk_widget_set_overflow(GTK_WIDGET(self), GTK_OVERFLOW_HIDDEN);
-
     GtkGesture* gesture_click = gtk_gesture_click_new();
     g_signal_connect_object(gesture_click, "pressed", G_CALLBACK(on_click_pressed), self, G_CONNECT_DEFAULT);
     g_signal_connect_object(gesture_click, "released", G_CALLBACK(on_click_released), self, G_CONNECT_DEFAULT);
@@ -580,6 +551,9 @@ static void ladybird_web_view_init(LadybirdWebView* self)
     g_signal_connect_object(motion, "motion", G_CALLBACK(on_motion), self, G_CONNECT_DEFAULT);
     gtk_widget_add_controller(GTK_WIDGET(self), motion);
 
+    self->bitmap_paintable = ladybird_bitmap_paintable_new();
+    g_signal_connect_object(self->bitmap_paintable, "invalidate-contents", G_CALLBACK(gtk_widget_queue_draw), self, G_CONNECT_SWAPPED);
+
     ladybird_web_view_load_url(self, "http://example.com");
 }
 
@@ -589,7 +563,7 @@ static void ladybird_web_view_dispose(GObject* object)
 
     self->impl.clear();
 
-    g_clear_object(&self->texture);
+    g_clear_object(&self->bitmap_paintable);
     g_clear_object(&self->hadjustment);
     g_clear_object(&self->vadjustment);
     g_clear_pointer(&self->page_url, g_free);

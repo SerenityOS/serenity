@@ -84,6 +84,7 @@ set(SOURCES
     Application.cpp
     Window.cpp
     WebView.cpp
+    BitmapPaintable.cpp
     ViewImpl.cpp
     EventLoopImplementationGLib.cpp
     "${SERENITY_SOURCE_DIR}/Ladybird/Utilities.cpp"

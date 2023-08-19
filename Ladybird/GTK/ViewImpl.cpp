@@ -1,4 +1,5 @@
 #include "ViewImpl.h"
+#include "BitmapPaintable.h"
 #include <Browser/CookieJar.h>
 #include <Ladybird/HelperProcess.h>
 #include <Ladybird/Utilities.h>
@@ -178,7 +179,12 @@ void LadybirdViewImpl::notify_server_did_paint(Badge<WebView::WebContentClient>,
         swap(m_client_state.back_bitmap, m_client_state.front_bitmap);
         m_backup_bitmap = nullptr;
 
-        ladybird_web_view_push_bitmap(m_widget, m_client_state.front_bitmap.bitmap.ptr(), size.width(), size.height());
+        ladybird_bitmap_paintable_push_bitmap(
+            LADYBIRD_BITMAP_PAINTABLE(ladybird_web_view_get_bitmap_paintable(m_widget)),
+            m_client_state.front_bitmap.bitmap.ptr(),
+            size.width(), size.height(),
+            gtk_widget_get_scale_factor(GTK_WIDGET(m_widget)),
+            true);
 
         if (m_client_state.got_repaint_requests_while_painting) {
             m_client_state.got_repaint_requests_while_painting = false;
