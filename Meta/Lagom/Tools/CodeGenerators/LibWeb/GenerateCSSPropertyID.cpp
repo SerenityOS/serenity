@@ -156,7 +156,7 @@ Optional<PropertyID> property_id_from_camel_case_string(StringView);
 Optional<PropertyID> property_id_from_string(StringView);
 StringView string_from_property_id(PropertyID);
 bool is_inherited_property(PropertyID);
-ErrorOr<NonnullRefPtr<StyleValue>> property_initial_value(JS::Realm&, PropertyID);
+NonnullRefPtr<StyleValue> property_initial_value(JS::Realm&, PropertyID);
 
 enum class ValueType {
     Angle,
@@ -496,7 +496,7 @@ bool property_affects_stacking_context(PropertyID property_id)
     }
 }
 
-ErrorOr<NonnullRefPtr<StyleValue>> property_initial_value(JS::Realm& context_realm, PropertyID property_id)
+NonnullRefPtr<StyleValue> property_initial_value(JS::Realm& context_realm, PropertyID property_id)
 {
     static Array<RefPtr<StyleValue>, to_underlying(last_property_id) + 1> initial_values;
     if (auto initial_value = initial_values[to_underlying(property_id)])
@@ -525,7 +525,7 @@ ErrorOr<NonnullRefPtr<StyleValue>> property_initial_value(JS::Realm& context_rea
         TRY(member_generator.try_append(
             R"~~~(        case PropertyID::@name:titlecase@:
         {
-            auto parsed_value = TRY(parse_css_value(parsing_context, "@initial_value_string@"sv, PropertyID::@name:titlecase@));
+            auto parsed_value = parse_css_value(parsing_context, "@initial_value_string@"sv, PropertyID::@name:titlecase@);
             VERIFY(!parsed_value.is_null());
             auto initial_value = parsed_value.release_nonnull();
             initial_values[to_underlying(PropertyID::@name:titlecase@)] = initial_value;

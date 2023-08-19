@@ -40,7 +40,7 @@ void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& styl
             return;
         }
         if (name == HTML::AttributeNames::valign) {
-            if (auto parsed_value = parse_css_value(CSS::Parser::ParsingContext { document() }, value.view(), CSS::PropertyID::VerticalAlign).release_value_but_fixme_should_propagate_errors())
+            if (auto parsed_value = parse_css_value(CSS::Parser::ParsingContext { document() }, value.view(), CSS::PropertyID::VerticalAlign))
                 style.set_property(CSS::PropertyID::VerticalAlign, parsed_value.release_nonnull());
             return;
         }
@@ -48,7 +48,7 @@ void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& styl
             if (value.equals_ignoring_ascii_case("center"sv) || value.equals_ignoring_ascii_case("middle"sv)) {
                 style.set_property(CSS::PropertyID::TextAlign, CSS::IdentifierStyleValue::create(CSS::ValueID::LibwebCenter));
             } else {
-                if (auto parsed_value = parse_css_value(CSS::Parser::ParsingContext { document() }, value.view(), CSS::PropertyID::TextAlign).release_value_but_fixme_should_propagate_errors())
+                if (auto parsed_value = parse_css_value(CSS::Parser::ParsingContext { document() }, value.view(), CSS::PropertyID::TextAlign))
                     style.set_property(CSS::PropertyID::TextAlign, parsed_value.release_nonnull());
             }
             return;

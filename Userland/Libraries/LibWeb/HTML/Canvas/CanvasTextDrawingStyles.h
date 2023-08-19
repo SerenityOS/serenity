@@ -45,10 +45,10 @@ public:
         auto font_style_value_result = parse_css_value(parsing_context, font, CSS::PropertyID::Font);
 
         // If the new value is syntactically incorrect (including using property-independent style sheet syntax like 'inherit' or 'initial'), then it must be ignored, without assigning a new font value.
-        if (font_style_value_result.is_error() || !font_style_value_result.value()) {
+        if (!font_style_value_result) {
             return;
         }
-        my_drawing_state().font_style_value = font_style_value_result.value();
+        my_drawing_state().font_style_value = font_style_value_result.release_nonnull();
 
         // Load font with font style value properties
         auto const& font_style_value = my_drawing_state().font_style_value->as_font();

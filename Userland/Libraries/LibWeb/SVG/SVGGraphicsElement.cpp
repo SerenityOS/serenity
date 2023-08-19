@@ -125,32 +125,32 @@ void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style)
     for_each_attribute([&](auto& name, auto& value) {
         if (name.equals_ignoring_ascii_case("fill"sv)) {
             // FIXME: The `fill` attribute and CSS `fill` property are not the same! But our support is limited enough that they are equivalent for now.
-            if (auto fill_value = parse_css_value(parsing_context, value, CSS::PropertyID::Fill).release_value_but_fixme_should_propagate_errors())
+            if (auto fill_value = parse_css_value(parsing_context, value, CSS::PropertyID::Fill))
                 style.set_property(CSS::PropertyID::Fill, fill_value.release_nonnull());
         } else if (name.equals_ignoring_ascii_case("stroke"sv)) {
             // FIXME: The `stroke` attribute and CSS `stroke` property are not the same! But our support is limited enough that they are equivalent for now.
-            if (auto stroke_value = parse_css_value(parsing_context, value, CSS::PropertyID::Stroke).release_value_but_fixme_should_propagate_errors())
+            if (auto stroke_value = parse_css_value(parsing_context, value, CSS::PropertyID::Stroke))
                 style.set_property(CSS::PropertyID::Stroke, stroke_value.release_nonnull());
         } else if (name.equals_ignoring_ascii_case("stroke-width"sv)) {
-            if (auto stroke_width_value = parse_css_value(parsing_context, value, CSS::PropertyID::StrokeWidth).release_value_but_fixme_should_propagate_errors())
+            if (auto stroke_width_value = parse_css_value(parsing_context, value, CSS::PropertyID::StrokeWidth))
                 style.set_property(CSS::PropertyID::StrokeWidth, stroke_width_value.release_nonnull());
         } else if (name.equals_ignoring_ascii_case("fill-rule"sv)) {
-            if (auto fill_rule_value = parse_css_value(parsing_context, value, CSS::PropertyID::FillRule).release_value_but_fixme_should_propagate_errors())
+            if (auto fill_rule_value = parse_css_value(parsing_context, value, CSS::PropertyID::FillRule))
                 style.set_property(CSS::PropertyID::FillRule, fill_rule_value.release_nonnull());
         } else if (name.equals_ignoring_ascii_case("fill-opacity"sv)) {
-            if (auto fill_opacity_value = parse_css_value(parsing_context, value, CSS::PropertyID::FillOpacity).release_value_but_fixme_should_propagate_errors())
+            if (auto fill_opacity_value = parse_css_value(parsing_context, value, CSS::PropertyID::FillOpacity))
                 style.set_property(CSS::PropertyID::FillOpacity, fill_opacity_value.release_nonnull());
         } else if (name.equals_ignoring_ascii_case("stroke-opacity"sv)) {
-            if (auto stroke_opacity_value = parse_css_value(parsing_context, value, CSS::PropertyID::StrokeOpacity).release_value_but_fixme_should_propagate_errors())
+            if (auto stroke_opacity_value = parse_css_value(parsing_context, value, CSS::PropertyID::StrokeOpacity))
                 style.set_property(CSS::PropertyID::StrokeOpacity, stroke_opacity_value.release_nonnull());
         } else if (name.equals_ignoring_ascii_case(SVG::AttributeNames::opacity)) {
-            if (auto opacity_value = parse_css_value(parsing_context, value, CSS::PropertyID::Opacity).release_value_but_fixme_should_propagate_errors())
+            if (auto opacity_value = parse_css_value(parsing_context, value, CSS::PropertyID::Opacity))
                 style.set_property(CSS::PropertyID::Opacity, opacity_value.release_nonnull());
         } else if (name.equals_ignoring_ascii_case("text-anchor"sv)) {
-            if (auto text_anchor_value = parse_css_value(parsing_context, value, CSS::PropertyID::TextAnchor).release_value_but_fixme_should_propagate_errors())
+            if (auto text_anchor_value = parse_css_value(parsing_context, value, CSS::PropertyID::TextAnchor))
                 style.set_property(CSS::PropertyID::TextAnchor, text_anchor_value.release_nonnull());
         } else if (name.equals_ignoring_ascii_case("font-size"sv)) {
-            if (auto font_size_value = parse_css_value(parsing_context, value, CSS::PropertyID::FontSize).release_value_but_fixme_should_propagate_errors())
+            if (auto font_size_value = parse_css_value(parsing_context, value, CSS::PropertyID::FontSize))
                 style.set_property(CSS::PropertyID::FontSize, font_size_value.release_nonnull());
         }
     });

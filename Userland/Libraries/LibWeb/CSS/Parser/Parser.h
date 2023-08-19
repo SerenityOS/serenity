@@ -66,8 +66,8 @@ public:
 
     RefPtr<StyleValue> parse_as_css_value(PropertyID);
 
-    static ErrorOr<RefPtr<StyleValue>> parse_css_value(Badge<StyleComputer>, ParsingContext const&, PropertyID, Vector<ComponentValue> const&);
-    static ErrorOr<RefPtr<CalculatedStyleValue>> parse_calculated_value(Badge<StyleComputer>, ParsingContext const&, ComponentValue const&);
+    static RefPtr<StyleValue> parse_css_value(Badge<StyleComputer>, ParsingContext const&, PropertyID, Vector<ComponentValue> const&);
+    static RefPtr<CalculatedStyleValue> parse_calculated_value(Badge<StyleComputer>, ParsingContext const&, ComponentValue const&);
 
     [[nodiscard]] LengthOrCalculated parse_as_sizes_attribute();
 
@@ -306,7 +306,7 @@ namespace Web {
 
 CSS::CSSStyleSheet* parse_css_stylesheet(CSS::Parser::ParsingContext const&, StringView, Optional<AK::URL> location = {});
 CSS::ElementInlineCSSStyleDeclaration* parse_css_style_attribute(CSS::Parser::ParsingContext const&, StringView, DOM::Element&);
-ErrorOr<RefPtr<CSS::StyleValue>> parse_css_value(CSS::Parser::ParsingContext const&, StringView, CSS::PropertyID property_id = CSS::PropertyID::Invalid);
+RefPtr<CSS::StyleValue> parse_css_value(CSS::Parser::ParsingContext const&, StringView, CSS::PropertyID property_id = CSS::PropertyID::Invalid);
 Optional<CSS::SelectorList> parse_selector(CSS::Parser::ParsingContext const&, StringView);
 CSS::CSSRule* parse_css_rule(CSS::Parser::ParsingContext const&, StringView);
 RefPtr<CSS::MediaQuery> parse_media_query(CSS::Parser::ParsingContext const&, StringView);

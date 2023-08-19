@@ -28,7 +28,7 @@ bool supports(JS::VM& vm, StringView property, StringView value)
     // 1. If property is an ASCII case-insensitive match for any defined CSS property that the UA supports,
     //    and value successfully parses according to that property’s grammar, return true.
     if (auto property_id = property_id_from_string(property); property_id.has_value()) {
-        if (parse_css_value(Parser::ParsingContext { realm }, value, property_id.value()).release_value_but_fixme_should_propagate_errors())
+        if (parse_css_value(Parser::ParsingContext { realm }, value, property_id.value()))
             return true;
     }
 
