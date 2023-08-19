@@ -40,6 +40,7 @@ public:
     Tree m_ast;
     VariableDeclarationRef m_return_value;
     HashMap<StringView, VariableDeclarationRef> m_local_variables;
+    RefPtr<ControlFlowGraph> m_cfg;
 };
 
 }

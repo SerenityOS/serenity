@@ -49,6 +49,7 @@ using FunctionPointerRef = NonnullRefPtr<FunctionPointer>;
 // Compiler/ControlFlowGraph.h
 class BasicBlock;
 using BasicBlockRef = BasicBlock*;
+class ControlFlowGraph;
 
 // Compiler/GenericASTPass.h
 class RecursiveASTVisitor;

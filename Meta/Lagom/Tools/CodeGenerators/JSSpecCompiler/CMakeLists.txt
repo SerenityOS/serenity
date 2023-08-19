@@ -3,6 +3,7 @@ set(SOURCES
     AST/ASTPrinting.cpp
     Compiler/CompilerPass.cpp
     Compiler/GenericASTPass.cpp
+    Compiler/Passes/CFGBuildingPass.cpp
     Compiler/Passes/FunctionCallCanonicalizationPass.cpp
     Compiler/Passes/IfBranchMergingPass.cpp
     Compiler/Passes/ReferenceResolvingPass.cpp

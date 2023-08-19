@@ -8,6 +8,7 @@
 #include <AK/TemporaryChange.h>
 
 #include "AST/AST.h"
+#include "Compiler/ControlFlowGraph.h"
 #include "Function.h"
 
 namespace JSSpecCompiler {
@@ -41,12 +42,12 @@ void ControlFlowFunctionReturn::dump_tree(StringBuilder& builder)
 
 void ControlFlowJump::dump_tree(StringBuilder& builder)
 {
-    dump_node(builder, "ControlFlowJump jump={:p}", m_block);
+    dump_node(builder, "ControlFlowJump jump={}", m_block->m_index);
 }
 
 void ControlFlowBranch::dump_tree(StringBuilder& builder)
 {
-    dump_node(builder, "ControlFlowBranch true={:p} false={:p}", m_then, m_else);
+    dump_node(builder, "ControlFlowBranch true={} false={}", m_then->m_index, m_else->m_index);
     m_condition->format_tree(builder);
 }
 
