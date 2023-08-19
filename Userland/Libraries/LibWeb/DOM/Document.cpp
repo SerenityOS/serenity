@@ -2561,6 +2561,29 @@ Vector<JS::Handle<HTML::Navigable>> Document::inclusive_descendant_navigables()
     return navigables;
 }
 
+// https://html.spec.whatwg.org/multipage/document-sequences.html#ancestor-navigables
+Vector<JS::Handle<HTML::Navigable>> Document::ancestor_navigables()
+{
+    // 1. Let navigable be document's node navigable's parent.
+    VERIFY(navigable());
+    auto navigable = this->navigable()->parent();
+
+    // 2. Let ancestors be an empty list.
+    Vector<JS::Handle<HTML::Navigable>> ancestors;
+
+    // 3. While navigable is not null:
+    while (navigable) {
+        // 1. Prepend navigable to ancestors.
+        ancestors.prepend(*navigable);
+
+        // 2. Set navigable to navigable's parent.
+        navigable = navigable->parent();
+    }
+
+    // 4. Return ancestors.
+    return ancestors;
+}
+
 // https://html.spec.whatwg.org/multipage/browsers.html#list-of-the-descendant-browsing-contexts
 Vector<JS::Handle<HTML::BrowsingContext>> Document::list_of_descendant_browsing_contexts() const
 {
