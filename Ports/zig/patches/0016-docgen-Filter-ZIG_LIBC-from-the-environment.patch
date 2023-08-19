@@ -6,14 +6,14 @@ Subject: [PATCH] docgen: Filter ZIG_LIBC from the environment
 This environment variable can leak into the doctest builds and cause
 them to look for the host libraries in the target libc locations.
 ---
- zig/doc/docgen.zig | 5 +++++
+ zig/tools/docgen.zig | 5 +++++
  1 file changed, 5 insertions(+)
 
-diff --git a/zig/doc/docgen.zig b/zig/doc/docgen.zig
-index 675dcccf70b599600112fd894e7b4bc3a38ad52f..1b0ba0e2775cb16e3bf324d4045d90ab6b81fee5 100644
---- a/zig/doc/docgen.zig
-+++ b/zig/doc/docgen.zig
-@@ -1307,6 +1307,11 @@ fn genHtml(
+diff --git a/zig/tools/docgen.zig b/zig/tools/docgen.zig
+index e3a6aecabe170605bc5bfb54ff596ce6c8a16145..b23dc47ee5821f6e4a131109330110ecbd1716cd 100644
+--- a/zig/tools/docgen.zig
++++ b/zig/tools/docgen.zig
+@@ -1309,6 +1309,11 @@ fn genHtml(
      var env_map = try process.getEnvMap(allocator);
      try env_map.put("YES_COLOR", "1");
  
