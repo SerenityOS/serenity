@@ -187,6 +187,8 @@ public:
     Painting::Paintable const* paintable() const;
     Painting::Paintable* paintable();
 
+    void set_paintable(JS::GCPtr<Painting::Paintable>);
+
     void set_layout_node(Badge<Layout::Node>, JS::NonnullGCPtr<Layout::Node>);
     void detach_layout_node(Badge<Layout::TreeBuilder>);
 
@@ -671,6 +673,7 @@ protected:
 
     JS::GCPtr<Document> m_document;
     JS::GCPtr<Layout::Node> m_layout_node;
+    JS::GCPtr<Painting::Paintable> m_paintable;
     NodeType m_type { NodeType::INVALID };
     bool m_needs_style_update { false };
     bool m_child_needs_style_update { false };
