@@ -39,7 +39,7 @@ template $LadybirdWindow : Adw.ApplicationWindow {
   Adw.TabOverview tab_overview {
     view: tab_view;
     enable-new-tab: true;
-    create-tab => $open_new_tab(template) swapped;
+    create-tab => $on_create_tab(template) swapped;
 
     child: Adw.ToolbarView {
       top-bar-style: raised_border;

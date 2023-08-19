@@ -40,6 +40,12 @@ static void ladybird_window_dispose(GObject* object)
     G_OBJECT_CLASS(ladybird_window_parent_class)->dispose(object);
 }
 
+static LadybirdWebView* get_web_view_from_tab_page(AdwTabPage* tab_page)
+{
+    GtkScrolledWindow* scrolled_window = GTK_SCROLLED_WINDOW(adw_tab_page_get_child(tab_page));
+    return LADYBIRD_WEB_VIEW(gtk_scrolled_window_get_child(scrolled_window));
+}
+
 static void update_favicon(LadybirdBitmapPaintable* favicon_paintable, [[maybe_unused]] GParamSpec* pspec, void* data)
 {
     AdwTabPage* tab_page = ADW_TAB_PAGE(data);
@@ -47,7 +53,7 @@ static void update_favicon(LadybirdBitmapPaintable* favicon_paintable, [[maybe_u
     adw_tab_page_set_icon(tab_page, G_ICON(texture));
 }
 
-static AdwTabPage* open_new_tab(LadybirdWindow* self)
+static AdwTabPage* open_new_tab(LadybirdWindow* self, AdwTabPage* parent)
 {
     LadybirdApplication* app = LADYBIRD_APPLICATION(gtk_window_get_application(GTK_WINDOW(self)));
     Browser::CookieJar* cookie_jar = self->incognito
@@ -62,7 +68,7 @@ static AdwTabPage* open_new_tab(LadybirdWindow* self)
     GtkWidget* scrolled_window = gtk_scrolled_window_new();
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scrolled_window), GTK_WIDGET(web_view));
 
-    AdwTabPage* tab_page = adw_tab_view_append(self->tab_view, scrolled_window);
+    AdwTabPage* tab_page = adw_tab_view_add_page(self->tab_view, scrolled_window, parent);
     adw_tab_page_set_title(tab_page, "New tab");
     g_object_bind_property(web_view, "page-title", tab_page, "title", G_BINDING_DEFAULT);
     g_object_bind_property(web_view, "loading", tab_page, "loading", G_BINDING_DEFAULT);
@@ -74,6 +80,11 @@ static AdwTabPage* open_new_tab(LadybirdWindow* self)
     // g_object_unref(web_view);
     // g_object_unref(scrolled_window);
     return tab_page;
+}
+
+static AdwTabPage* on_create_tab(LadybirdWindow* self)
+{
+    return open_new_tab(self, nullptr);
 }
 
 static void ladybird_window_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* pspec)
@@ -110,7 +121,7 @@ static void ladybird_window_set_property(GObject* object, guint prop_id, GValue 
 static void win_new_tab_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
 {
     LadybirdWindow* self = LADYBIRD_WINDOW(widget);
-    open_new_tab(self);
+    open_new_tab(self, nullptr);
 }
 
 static void win_open_file_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
@@ -160,7 +171,12 @@ static void tab_close_action(GtkWidget* widget, [[maybe_unused]] char const* act
         return;
     }
 
-    AdwTabPage* tab_page = adw_tab_view_get_selected_page(self->tab_view);
+    AdwTabPage* tab_page;
+    if (self->menu_page)
+        tab_page = self->menu_page;
+    else
+        tab_page = adw_tab_view_get_selected_page(self->tab_view);
+
     if (tab_page)
         adw_tab_view_close_page(self->tab_view, tab_page);
 }
@@ -174,10 +190,39 @@ static void tab_pin_action(GtkWidget* widget, char const* action_name, [[maybe_u
         adw_tab_view_set_page_pinned(self->tab_view, self->menu_page, pin);
 }
 
-static LadybirdWebView* get_web_view_from_tab_page(AdwTabPage* tab_page)
+static void tab_move_to_new_window_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
 {
-    GtkScrolledWindow* scrolled_window = GTK_SCROLLED_WINDOW(adw_tab_page_get_child(tab_page));
-    return LADYBIRD_WEB_VIEW(gtk_scrolled_window_get_child(scrolled_window));
+    LadybirdWindow* self = LADYBIRD_WINDOW(widget);
+
+    if (!self->menu_page)
+        return;
+
+    GtkApplication* app = gtk_window_get_application(GTK_WINDOW(self));
+    LadybirdWindow* new_window = ladybird_window_new(LADYBIRD_APPLICATION(app), false, self->incognito);
+    adw_tab_view_transfer_page(self->tab_view, self->menu_page, new_window->tab_view, 0);
+    self->menu_page = nullptr;
+    gtk_window_present(GTK_WINDOW(new_window));
+}
+
+static void tab_close_others_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
+{
+    LadybirdWindow* self = LADYBIRD_WINDOW(widget);
+
+    if (self->menu_page)
+        adw_tab_view_close_other_pages(self->tab_view, self->menu_page);
+}
+
+static void tab_duplicate_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
+{
+    LadybirdWindow* self = LADYBIRD_WINDOW(widget);
+
+    if (!self->menu_page)
+        return;
+
+    LadybirdWebView* web_view = get_web_view_from_tab_page(self->menu_page);
+    AdwTabPage* new_tab_page = open_new_tab(self, self->menu_page);
+    LadybirdWebView* new_web_view = get_web_view_from_tab_page(new_tab_page);
+    ladybird_web_view_load_url(new_web_view, ladybird_web_view_get_page_url(web_view));
 }
 
 static LadybirdWebView* ladybird_window_get_current_page(LadybirdWindow* self)
@@ -288,9 +333,8 @@ void ladybird_window_open_file(LadybirdWindow* self, GFile* file)
     g_return_if_fail(G_IS_FILE(file));
 
     char* uri = g_file_get_uri(file);
-    AdwTabPage* tab_page = open_new_tab(self);
-    GtkScrolledWindow* scrolled_window = GTK_SCROLLED_WINDOW(adw_tab_page_get_child(tab_page));
-    LadybirdWebView* web_view = LADYBIRD_WEB_VIEW(gtk_scrolled_window_get_child(scrolled_window));
+    AdwTabPage* tab_page = open_new_tab(self, nullptr);
+    LadybirdWebView* web_view = get_web_view_from_tab_page(tab_page);
     ladybird_web_view_load_url(web_view, uri);
     g_free(uri);
 }
@@ -319,7 +363,7 @@ static void ladybird_window_class_init(LadybirdWindowClass* klass)
     gtk_widget_class_bind_template_child(widget_class, LadybirdWindow, tab_overview);
     gtk_widget_class_bind_template_child(widget_class, LadybirdWindow, tab_view);
     gtk_widget_class_bind_template_child(widget_class, LadybirdWindow, url_entry);
-    gtk_widget_class_bind_template_callback(widget_class, open_new_tab);
+    gtk_widget_class_bind_template_callback(widget_class, on_create_tab);
     gtk_widget_class_bind_template_callback(widget_class, on_url_entered);
     gtk_widget_class_bind_template_callback(widget_class, on_create_window);
     gtk_widget_class_bind_template_callback(widget_class, on_setup_tab_menu);
@@ -328,8 +372,11 @@ static void ladybird_window_class_init(LadybirdWindowClass* klass)
     gtk_widget_class_install_action(widget_class, "win.new-tab", nullptr, win_new_tab_action);
     gtk_widget_class_install_action(widget_class, "win.open-file", nullptr, win_open_file_action);
     gtk_widget_class_install_action(widget_class, "tab.close", nullptr, tab_close_action);
+    gtk_widget_class_install_action(widget_class, "tab.duplicate", nullptr, tab_duplicate_action);
     gtk_widget_class_install_action(widget_class, "tab.pin", nullptr, tab_pin_action);
     gtk_widget_class_install_action(widget_class, "tab.unpin", nullptr, tab_pin_action);
+    gtk_widget_class_install_action(widget_class, "tab.move-to-new-window", nullptr, tab_move_to_new_window_action);
+    gtk_widget_class_install_action(widget_class, "tab.close-others", nullptr, tab_close_others_action);
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_t, GDK_CONTROL_MASK, "win.new-tab", nullptr);
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_o, GDK_CONTROL_MASK, "win.open-file", nullptr);
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_w, GDK_CONTROL_MASK, "tab.close", nullptr);
@@ -354,7 +401,7 @@ LadybirdWindow* ladybird_window_new(LadybirdApplication* app, bool add_initial_t
         nullptr));
 
     if (add_initial_tab)
-        open_new_tab(self);
+        open_new_tab(self, nullptr);
 
     return self;
 }
