@@ -323,7 +323,7 @@ public:
     bool has_auto() const;
     virtual bool has_color() const { return false; }
 
-    virtual ErrorOr<ValueComparingNonnullRefPtr<StyleValue const>> absolutized(CSSPixelRect const& viewport_rect, Length::FontMetrics const& font_metrics, Length::FontMetrics const& root_font_metrics) const;
+    virtual ValueComparingNonnullRefPtr<StyleValue const> absolutized(CSSPixelRect const& viewport_rect, Length::FontMetrics const& font_metrics, Length::FontMetrics const& root_font_metrics) const;
 
     virtual Color to_color(Optional<Layout::NodeWithStyle const&>) const { return {}; }
     ValueID to_identifier() const;

@@ -2353,7 +2353,7 @@ CSSPixels StyleComputer::parent_or_root_element_line_height(DOM::Element const* 
     return computed_values->line_height(viewport_rect(), parent_font_metrics, m_root_element_font_metrics);
 }
 
-ErrorOr<void> StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
+void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {
     auto parent_or_root_line_height = parent_or_root_element_line_height(element, pseudo_element);
 
@@ -2385,9 +2385,8 @@ ErrorOr<void> StyleComputer::absolutize_values(StyleProperties& style, DOM::Elem
         auto& value_slot = style.m_property_values[i];
         if (!value_slot.has_value())
             continue;
-        value_slot->style = TRY(value_slot->style->absolutized(viewport_rect(), font_metrics, m_root_element_font_metrics));
+        value_slot->style = value_slot->style->absolutized(viewport_rect(), font_metrics, m_root_element_font_metrics);
     }
-    return {};
 }
 
 enum class BoxTypeTransformation {
@@ -2487,7 +2486,7 @@ NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const
     auto style = StyleProperties::create();
     compute_font(style, nullptr, {});
     compute_defaulted_values(style, nullptr, {});
-    absolutize_values(style, nullptr, {}).release_value_but_fixme_should_propagate_errors();
+    absolutize_values(style, nullptr, {});
     style->set_property(CSS::PropertyID::Width, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect().width())), nullptr);
     style->set_property(CSS::PropertyID::Height, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect().height())), nullptr);
     style->set_property(CSS::PropertyID::Display, CSS::DisplayStyleValue::create(CSS::Display::from_short(CSS::Display::Short::Block)), nullptr);
@@ -2521,7 +2520,7 @@ ErrorOr<RefPtr<StyleProperties>> StyleComputer::compute_style_impl(DOM::Element&
     compute_font(style, &element, pseudo_element);
 
     // 3. Absolutize values, turning font/viewport relative lengths into absolute lengths
-    TRY(absolutize_values(style, &element, pseudo_element));
+    absolutize_values(style, &element, pseudo_element);
 
     // 4. Default the values, applying inheritance and 'initial' as needed
     compute_defaulted_values(style, &element, pseudo_element);

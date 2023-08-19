@@ -410,7 +410,7 @@ StyleValueList const& StyleValue::as_value_list() const
     return static_cast<StyleValueList const&>(*this);
 }
 
-ErrorOr<ValueComparingNonnullRefPtr<StyleValue const>> StyleValue::absolutized(CSSPixelRect const&, Length::FontMetrics const&, Length::FontMetrics const&) const
+ValueComparingNonnullRefPtr<StyleValue const> StyleValue::absolutized(CSSPixelRect const&, Length::FontMetrics const&, Length::FontMetrics const&) const
 {
     return *this;
 }
