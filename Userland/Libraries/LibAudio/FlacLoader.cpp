@@ -797,16 +797,16 @@ ErrorOr<void, LoaderError> FlacLoaderPlugin::decode_custom_lpc(Vector<i64>& deco
     // approximate the waveform with the predictor
     for (size_t i = subframe.order; i < m_current_frame->sample_count; ++i) {
         // (see below)
-        i64 sample = 0;
+        Checked<i64> sample = 0;
         for (size_t t = 0; t < subframe.order; ++t) {
             // It's really important that we compute in 64-bit land here.
             // Even though FLAC operates at a maximum bit depth of 32 bits, modern encoders use super-large coefficients for maximum compression.
             // These will easily overflow 32 bits and cause strange white noise that abruptly stops intermittently (at the end of a frame).
-            // The simple fix of course is to do intermediate computations in 64 bits.
+            // The simple fix of course is to do intermediate computations in 64 bits, but we additionally use saturating arithmetic.
             // These considerations are not in the original FLAC spec, but have been added to the IETF standard: https://datatracker.ietf.org/doc/html/draft-ietf-cellar-flac-03#appendix-A.3
-            sample += static_cast<i64>(coefficients[t]) * static_cast<i64>(decoded[i - t - 1]);
+            sample.saturating_add(Checked<i64>::saturating_mul(static_cast<i64>(coefficients[t]), static_cast<i64>(decoded[i - t - 1])));
         }
-        decoded[i] += sample >> lpc_shift;
+        decoded[i] += sample.value() >> lpc_shift;
     }
 
     return {};
