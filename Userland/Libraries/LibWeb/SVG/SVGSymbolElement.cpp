@@ -31,6 +31,8 @@ void SVGSymbolElement::initialize(JS::Realm& realm)
 // https://svgwg.org/svg2-draft/struct.html#SymbolNotes
 void SVGSymbolElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {
+    Base::apply_presentational_hints(style);
+
     // The user agent style sheet sets the overflow property for ‘symbol’ elements to hidden.
     auto hidden = CSS::IdentifierStyleValue::create(CSS::ValueID::Hidden);
     style.set_property(CSS::PropertyID::Overflow, CSS::OverflowStyleValue::create(hidden, hidden));

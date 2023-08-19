@@ -4,5 +4,6 @@
     "opacity-stacking.html": "opacity-stacking-ref.html",
     "css-gradient-currentcolor.html": "css-gradient-currentcolor-ref.html",
     "css-lang-selector.html": "css-lang-selector-ref.html",
-    "css-gradients.html": "css-gradients-ref.html"
+    "css-gradients.html": "css-gradients-ref.html",
+    "svg-symbol.html": "svg-symbol-ref.html"
 }
