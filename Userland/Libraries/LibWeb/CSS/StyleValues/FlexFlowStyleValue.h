@@ -15,9 +15,9 @@ namespace Web::CSS {
 
 class FlexFlowStyleValue final : public StyleValueWithDefaultOperators<FlexFlowStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<FlexFlowStyleValue>> create(ValueComparingNonnullRefPtr<StyleValue> flex_direction, ValueComparingNonnullRefPtr<StyleValue> flex_wrap)
+    static ValueComparingNonnullRefPtr<FlexFlowStyleValue> create(ValueComparingNonnullRefPtr<StyleValue> flex_direction, ValueComparingNonnullRefPtr<StyleValue> flex_wrap)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) FlexFlowStyleValue(move(flex_direction), move(flex_wrap)));
+        return adopt_ref(*new (nothrow) FlexFlowStyleValue(move(flex_direction), move(flex_wrap)));
     }
     virtual ~FlexFlowStyleValue() override = default;
 

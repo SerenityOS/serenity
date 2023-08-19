@@ -11,20 +11,20 @@
 
 namespace Web::CSS {
 
-ErrorOr<ValueComparingNonnullRefPtr<LengthStyleValue>> LengthStyleValue::create(Length const& length)
+ValueComparingNonnullRefPtr<LengthStyleValue> LengthStyleValue::create(Length const& length)
 {
     VERIFY(!length.is_auto());
     if (length.is_px()) {
         if (length.raw_value() == 0) {
-            static auto value = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) LengthStyleValue(CSS::Length::make_px(0))));
+            static auto value = adopt_ref(*new (nothrow) LengthStyleValue(CSS::Length::make_px(0)));
             return value;
         }
         if (length.raw_value() == 1) {
-            static auto value = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) LengthStyleValue(CSS::Length::make_px(1))));
+            static auto value = adopt_ref(*new (nothrow) LengthStyleValue(CSS::Length::make_px(1)));
             return value;
         }
     }
-    return adopt_nonnull_ref_or_enomem(new (nothrow) LengthStyleValue(length));
+    return adopt_ref(*new (nothrow) LengthStyleValue(length));
 }
 
 ErrorOr<ValueComparingNonnullRefPtr<StyleValue const>> LengthStyleValue::absolutized(CSSPixelRect const& viewport_rect, Length::FontMetrics const& font_metrics, Length::FontMetrics const& root_font_metrics) const

@@ -16,9 +16,9 @@ namespace Web::CSS {
 
 class TransformationStyleValue final : public StyleValueWithDefaultOperators<TransformationStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<TransformationStyleValue>> create(CSS::TransformFunction transform_function, StyleValueVector&& values)
+    static ValueComparingNonnullRefPtr<TransformationStyleValue> create(CSS::TransformFunction transform_function, StyleValueVector&& values)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) TransformationStyleValue(transform_function, move(values)));
+        return adopt_ref(*new (nothrow) TransformationStyleValue(transform_function, move(values)));
     }
     virtual ~TransformationStyleValue() override = default;
 

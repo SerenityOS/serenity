@@ -2692,9 +2692,9 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_aspect_ratio_value(Vector<ComponentVal
     }
 
     if (auto_value && ratio_value) {
-        return TRY(StyleValueList::create(
+        return StyleValueList::create(
             StyleValueVector { auto_value.release_nonnull(), ratio_value.release_nonnull() },
-            StyleValueList::Separator::Space));
+            StyleValueList::Separator::Space);
     }
 
     if (ratio_value)
@@ -2890,13 +2890,13 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
             background_color = initial_background_color;
         return BackgroundStyleValue::create(
             background_color.release_nonnull(),
-            TRY(StyleValueList::create(move(background_images), StyleValueList::Separator::Comma)),
-            TRY(StyleValueList::create(move(background_positions), StyleValueList::Separator::Comma)),
-            TRY(StyleValueList::create(move(background_sizes), StyleValueList::Separator::Comma)),
-            TRY(StyleValueList::create(move(background_repeats), StyleValueList::Separator::Comma)),
-            TRY(StyleValueList::create(move(background_attachments), StyleValueList::Separator::Comma)),
-            TRY(StyleValueList::create(move(background_origins), StyleValueList::Separator::Comma)),
-            TRY(StyleValueList::create(move(background_clips), StyleValueList::Separator::Comma)));
+            StyleValueList::create(move(background_images), StyleValueList::Separator::Comma),
+            StyleValueList::create(move(background_positions), StyleValueList::Separator::Comma),
+            StyleValueList::create(move(background_sizes), StyleValueList::Separator::Comma),
+            StyleValueList::create(move(background_repeats), StyleValueList::Separator::Comma),
+            StyleValueList::create(move(background_attachments), StyleValueList::Separator::Comma),
+            StyleValueList::create(move(background_origins), StyleValueList::Separator::Comma),
+            StyleValueList::create(move(background_clips), StyleValueList::Separator::Comma));
     }
 
     if (!background_color)
@@ -3096,8 +3096,8 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_position_value(Token
 
     transaction.commit();
     return PositionStyleValue::create(
-        TRY(EdgeStyleValue::create(horizontal->edge, horizontal->offset)),
-        TRY(EdgeStyleValue::create(vertical->edge, vertical->offset)));
+        EdgeStyleValue::create(horizontal->edge, horizontal->offset),
+        EdgeStyleValue::create(vertical->edge, vertical->offset));
 }
 
 ErrorOr<RefPtr<StyleValue>> Parser::parse_single_background_position_x_or_y_value(TokenStream<ComponentValue>& tokens, PropertyID property)
@@ -3398,14 +3398,14 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_border_radius_shorthand_value(Vector<C
         || (reading_vertical && vertical_radii.is_empty()))
         return nullptr;
 
-    auto top_left_radius = TRY(BorderRadiusStyleValue::create(top_left(horizontal_radii),
-        vertical_radii.is_empty() ? top_left(horizontal_radii) : top_left(vertical_radii)));
-    auto top_right_radius = TRY(BorderRadiusStyleValue::create(top_right(horizontal_radii),
-        vertical_radii.is_empty() ? top_right(horizontal_radii) : top_right(vertical_radii)));
-    auto bottom_right_radius = TRY(BorderRadiusStyleValue::create(bottom_right(horizontal_radii),
-        vertical_radii.is_empty() ? bottom_right(horizontal_radii) : bottom_right(vertical_radii)));
-    auto bottom_left_radius = TRY(BorderRadiusStyleValue::create(bottom_left(horizontal_radii),
-        vertical_radii.is_empty() ? bottom_left(horizontal_radii) : bottom_left(vertical_radii)));
+    auto top_left_radius = BorderRadiusStyleValue::create(top_left(horizontal_radii),
+        vertical_radii.is_empty() ? top_left(horizontal_radii) : top_left(vertical_radii));
+    auto top_right_radius = BorderRadiusStyleValue::create(top_right(horizontal_radii),
+        vertical_radii.is_empty() ? top_right(horizontal_radii) : top_right(vertical_radii));
+    auto bottom_right_radius = BorderRadiusStyleValue::create(bottom_right(horizontal_radii),
+        vertical_radii.is_empty() ? bottom_right(horizontal_radii) : bottom_right(vertical_radii));
+    auto bottom_left_radius = BorderRadiusStyleValue::create(bottom_left(horizontal_radii),
+        vertical_radii.is_empty() ? bottom_left(horizontal_radii) : bottom_left(vertical_radii));
 
     return BorderRadiusShorthandStyleValue::create(move(top_left_radius), move(top_right_radius), move(bottom_right_radius), move(bottom_left_radius));
 }
@@ -3520,9 +3520,9 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_single_shadow_value(TokenStream<Compon
 
     // Other lengths default to 0
     if (!blur_radius)
-        blur_radius = TRY(LengthStyleValue::create(Length::make_px(0)));
+        blur_radius = LengthStyleValue::create(Length::make_px(0));
     if (!spread_distance)
-        spread_distance = TRY(LengthStyleValue::create(Length::make_px(0)));
+        spread_distance = LengthStyleValue::create(Length::make_px(0));
 
     // Placement is outer by default
     if (!placement.has_value())
@@ -3590,9 +3590,9 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_content_value(Vector<ComponentValue> c
 
     RefPtr<StyleValueList> alt_text;
     if (!alt_text_values.is_empty())
-        alt_text = TRY(StyleValueList::create(move(alt_text_values), StyleValueList::Separator::Space));
+        alt_text = StyleValueList::create(move(alt_text_values), StyleValueList::Separator::Space);
 
-    return ContentStyleValue::create(TRY(StyleValueList::create(move(content_values), StyleValueList::Separator::Space)), move(alt_text));
+    return ContentStyleValue::create(StyleValueList::create(move(content_values), StyleValueList::Separator::Space), move(alt_text));
 }
 
 // https://www.w3.org/TR/css-display-3/#the-display-properties
@@ -3949,18 +3949,18 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_flex_value(Vector<ComponentValue> cons
         case PropertyID::FlexGrow: {
             // NOTE: The spec says that flex-basis should be 0 here, but other engines currently use 0%.
             // https://github.com/w3c/csswg-drafts/issues/5742
-            auto flex_basis = TRY(PercentageStyleValue::create(Percentage(0)));
-            auto one = TRY(NumberStyleValue::create(1));
+            auto flex_basis = PercentageStyleValue::create(Percentage(0));
+            auto one = NumberStyleValue::create(1);
             return FlexStyleValue::create(*value, one, flex_basis);
         }
         case PropertyID::FlexBasis: {
-            auto one = TRY(NumberStyleValue::create(1));
+            auto one = NumberStyleValue::create(1);
             return FlexStyleValue::create(one, one, *value);
         }
         case PropertyID::Flex: {
             if (value->is_identifier() && value->to_identifier() == ValueID::None) {
-                auto zero = TRY(NumberStyleValue::create(0));
-                return FlexStyleValue::create(zero, zero, TRY(IdentifierStyleValue::create(ValueID::Auto)));
+                auto zero = NumberStyleValue::create(0);
+                return FlexStyleValue::create(zero, zero, IdentifierStyleValue::create(ValueID::Auto));
             }
             break;
         }
@@ -4014,7 +4014,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_flex_value(Vector<ComponentValue> cons
     if (!flex_basis) {
         // NOTE: The spec says that flex-basis should be 0 here, but other engines currently use 0%.
         // https://github.com/w3c/csswg-drafts/issues/5742
-        flex_basis = TRY(PercentageStyleValue::create(Percentage(0)));
+        flex_basis = PercentageStyleValue::create(Percentage(0));
     }
 
     return FlexStyleValue::create(flex_grow.release_nonnull(), flex_shrink.release_nonnull(), flex_basis.release_nonnull());
@@ -4204,7 +4204,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_font_family_value(TokenStream<Componen
             (void)tokens.next_token(); // String
             if (!next_is_comma_or_eof())
                 return nullptr;
-            TRY(font_families.try_append(TRY(StringStyleValue::create(TRY(String::from_utf8(peek.token().string()))))));
+            TRY(font_families.try_append(StringStyleValue::create(TRY(String::from_utf8(peek.token().string())))));
             (void)tokens.next_token(); // Comma
             continue;
         }
@@ -4224,7 +4224,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_font_family_value(TokenStream<Componen
                 (void)tokens.next_token(); // Ident
                 if (!next_is_comma_or_eof())
                     return nullptr;
-                TRY(font_families.try_append(TRY(IdentifierStyleValue::create(maybe_ident.value()))));
+                TRY(font_families.try_append(IdentifierStyleValue::create(maybe_ident.value())));
                 (void)tokens.next_token(); // Comma
                 continue;
             }
@@ -4236,7 +4236,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_font_family_value(TokenStream<Componen
             if (current_name_parts.is_empty())
                 return nullptr;
             (void)tokens.next_token(); // Comma
-            TRY(font_families.try_append(TRY(StringStyleValue::create(TRY(String::join(' ', current_name_parts))))));
+            TRY(font_families.try_append(StringStyleValue::create(TRY(String::join(' ', current_name_parts)))));
             current_name_parts.clear();
             // Can't have a trailing comma
             if (!tokens.has_next_token())
@@ -4248,7 +4248,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_font_family_value(TokenStream<Componen
     }
 
     if (!current_name_parts.is_empty()) {
-        TRY(font_families.try_append(TRY(StringStyleValue::create(TRY(String::join(' ', current_name_parts))))));
+        TRY(font_families.try_append(StringStyleValue::create(TRY(String::join(' ', current_name_parts)))));
         current_name_parts.clear();
     }
 
@@ -4515,14 +4515,14 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_list_style_value(Vector<ComponentValue
     if (found_nones == 2) {
         if (list_image || list_type)
             return nullptr;
-        auto none = TRY(IdentifierStyleValue::create(ValueID::None));
+        auto none = IdentifierStyleValue::create(ValueID::None);
         list_image = none;
         list_type = none;
 
     } else if (found_nones == 1) {
         if (list_image && list_type)
             return nullptr;
-        auto none = TRY(IdentifierStyleValue::create(ValueID::None));
+        auto none = IdentifierStyleValue::create(ValueID::None);
         if (!list_image)
             list_image = none;
         if (!list_type)
@@ -4762,21 +4762,21 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_easing_value(TokenStream<ComponentValu
             switch (function_metadata.parameters[argument_index].type) {
             case EasingFunctionParameterType::Number: {
                 if (value.is(Token::Type::Number))
-                    values.append(TRY(NumberStyleValue::create(value.token().number().value())));
+                    values.append(NumberStyleValue::create(value.token().number().value()));
                 else
                     return nullptr;
                 break;
             }
             case EasingFunctionParameterType::NumberZeroToOne: {
                 if (value.is(Token::Type::Number) && value.token().number_value() >= 0 && value.token().number_value() <= 1)
-                    values.append(TRY(NumberStyleValue::create(value.token().number().value())));
+                    values.append(NumberStyleValue::create(value.token().number().value()));
                 else
                     return nullptr;
                 break;
             }
             case EasingFunctionParameterType::Integer: {
                 if (value.is(Token::Type::Number) && value.token().number().is_integer())
-                    values.append(TRY(IntegerStyleValue::create(value.token().number().integer_value())));
+                    values.append(IntegerStyleValue::create(value.token().number().integer_value()));
                 else
                     return nullptr;
                 break;
@@ -4860,7 +4860,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_value(Vector<ComponentValue>
                 if (maybe_calc_value && maybe_calc_value->resolves_to_angle()) {
                     values.append(maybe_calc_value.release_nonnull());
                 } else if (value.is(Token::Type::Number) && value.token().number_value() == 0) {
-                    values.append(TRY(AngleStyleValue::create(Angle::make_degrees(0))));
+                    values.append(AngleStyleValue::create(Angle::make_degrees(0)));
                 } else {
                     auto dimension_value = TRY(parse_dimension_value(value));
                     if (!dimension_value || !dimension_value->is_angle())
@@ -4934,7 +4934,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_value(Vector<ComponentValue>
             return nullptr;
         }
 
-        transformations.append(TRY(TransformationStyleValue::create(function, move(values))));
+        transformations.append(TransformationStyleValue::create(function, move(values)));
     }
     return StyleValueList::create(move(transformations), StyleValueList::Separator::Space);
 }
@@ -4954,7 +4954,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_origin_value(Vector<Componen
         NonnullRefPtr<StyleValue> offset;
     };
 
-    auto to_axis_offset = [](RefPtr<StyleValue> value) -> ErrorOr<Optional<AxisOffset>> {
+    auto to_axis_offset = [](RefPtr<StyleValue> value) -> Optional<AxisOffset> {
         if (value->is_percentage())
             return AxisOffset { Axis::None, value->as_percentage() };
         if (value->is_length())
@@ -4962,15 +4962,15 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_origin_value(Vector<Componen
         if (value->is_identifier()) {
             switch (value->to_identifier()) {
             case ValueID::Top:
-                return AxisOffset { Axis::Y, TRY(PercentageStyleValue::create(Percentage(0))) };
+                return AxisOffset { Axis::Y, PercentageStyleValue::create(Percentage(0)) };
             case ValueID::Left:
-                return AxisOffset { Axis::X, TRY(PercentageStyleValue::create(Percentage(0))) };
+                return AxisOffset { Axis::X, PercentageStyleValue::create(Percentage(0)) };
             case ValueID::Center:
-                return AxisOffset { Axis::None, TRY(PercentageStyleValue::create(Percentage(50))) };
+                return AxisOffset { Axis::None, PercentageStyleValue::create(Percentage(50)) };
             case ValueID::Bottom:
-                return AxisOffset { Axis::Y, TRY(PercentageStyleValue::create(Percentage(100))) };
+                return AxisOffset { Axis::Y, PercentageStyleValue::create(Percentage(100)) };
             case ValueID::Right:
-                return AxisOffset { Axis::X, TRY(PercentageStyleValue::create(Percentage(100))) };
+                return AxisOffset { Axis::X, PercentageStyleValue::create(Percentage(100)) };
             default:
                 return OptionalNone {};
             }
@@ -4978,7 +4978,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_origin_value(Vector<Componen
         return OptionalNone {};
     };
 
-    auto make_list = [](NonnullRefPtr<StyleValue> const& x_value, NonnullRefPtr<StyleValue> const& y_value) -> ErrorOr<NonnullRefPtr<StyleValueList>> {
+    auto make_list = [](NonnullRefPtr<StyleValue> const& x_value, NonnullRefPtr<StyleValue> const& y_value) -> NonnullRefPtr<StyleValueList> {
         StyleValueVector values;
         values.append(x_value);
         values.append(y_value);
@@ -4988,7 +4988,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_origin_value(Vector<Componen
     auto tokens = TokenStream { component_values };
     switch (component_values.size()) {
     case 1: {
-        auto single_value = TRY(to_axis_offset(TRY(parse_css_value_for_property(PropertyID::TransformOrigin, tokens))));
+        auto single_value = to_axis_offset(TRY(parse_css_value_for_property(PropertyID::TransformOrigin, tokens)));
         if (!single_value.has_value())
             return nullptr;
         // If only one value is specified, the second value is assumed to be center.
@@ -4996,15 +4996,15 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_transform_origin_value(Vector<Componen
         switch (single_value->axis) {
         case Axis::None:
         case Axis::X:
-            return make_list(single_value->offset, TRY(PercentageStyleValue::create(Percentage(50))));
+            return make_list(single_value->offset, PercentageStyleValue::create(Percentage(50)));
         case Axis::Y:
-            return make_list(TRY(PercentageStyleValue::create(Percentage(50))), single_value->offset);
+            return make_list(PercentageStyleValue::create(Percentage(50)), single_value->offset);
         }
         VERIFY_NOT_REACHED();
     }
     case 2: {
-        auto first_value = TRY(to_axis_offset(TRY(parse_css_value_for_property(PropertyID::TransformOrigin, tokens))));
-        auto second_value = TRY(to_axis_offset(TRY(parse_css_value_for_property(PropertyID::TransformOrigin, tokens))));
+        auto first_value = to_axis_offset(TRY(parse_css_value_for_property(PropertyID::TransformOrigin, tokens)));
+        auto second_value = to_axis_offset(TRY(parse_css_value_for_property(PropertyID::TransformOrigin, tokens)));
         if (!first_value.has_value() || !second_value.has_value())
             return nullptr;
 
@@ -5685,7 +5685,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
     }
 
     if (property_id == PropertyID::Custom || contains_var_or_attr)
-        return FIXME_TRY(UnresolvedStyleValue::create(move(component_values), contains_var_or_attr));
+        return UnresolvedStyleValue::create(move(component_values), contains_var_or_attr);
 
     if (component_values.is_empty())
         return ParseError::SyntaxError;
@@ -5904,7 +5904,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return *parsed_values.take_first();
 
         if (!parsed_values.is_empty() && parsed_values.size() <= property_maximum_value_count(property_id))
-            return FIXME_TRY(StyleValueList::create(move(parsed_values), StyleValueList::Separator::Space));
+            return StyleValueList::create(move(parsed_values), StyleValueList::Separator::Space);
     }
 
     // We have multiple values, but the property claims to accept only a single one, check if it's a shorthand property.
@@ -5956,10 +5956,10 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         if (it.value.size() == 1)
             longhand_values.unchecked_append(it.value.take_first());
         else
-            longhand_values.unchecked_append(FIXME_TRY(StyleValueList::create(move(it.value), StyleValueList::Separator::Space)));
+            longhand_values.unchecked_append(StyleValueList::create(move(it.value), StyleValueList::Separator::Space));
     }
 
-    return { FIXME_TRY(CompositeStyleValue::create(move(longhand_properties), move(longhand_values))) };
+    return { CompositeStyleValue::create(move(longhand_properties), move(longhand_values)) };
 #undef FIXME_TRY
 }
 
@@ -6009,14 +6009,14 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
         if (ident.has_value()) {
             if (auto property = any_property_accepts_identifier(property_ids, ident.value()); property.has_value()) {
                 (void)tokens.next_token();
-                return PropertyAndValue { *property, TRY(IdentifierStyleValue::create(ident.value())) };
+                return PropertyAndValue { *property, IdentifierStyleValue::create(ident.value()) };
             }
         }
 
         // Custom idents
         if (auto property = any_property_accepts_type(property_ids, ValueType::CustomIdent); property.has_value()) {
             (void)tokens.next_token();
-            return PropertyAndValue { *property, TRY(CustomIdentStyleValue::create(TRY(FlyString::from_utf8(peek_token.token().ident())))) };
+            return PropertyAndValue { *property, CustomIdentStyleValue::create(TRY(FlyString::from_utf8(peek_token.token().ident()))) };
         }
     }
 
@@ -6064,7 +6064,7 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
         auto percentage = Percentage(peek_token.token().percentage());
         if (auto property = any_property_accepts_type(property_ids, ValueType::Percentage); property.has_value() && property_accepts_percentage(*property, percentage)) {
             (void)tokens.next_token();
-            return PropertyAndValue { *property, TRY(PercentageStyleValue::create(percentage)) };
+            return PropertyAndValue { *property, PercentageStyleValue::create(percentage) };
         }
     }
 
@@ -6077,7 +6077,7 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
 
     if (peek_token.is(Token::Type::String)) {
         if (auto property = any_property_accepts_type(property_ids, ValueType::String); property.has_value())
-            return PropertyAndValue { *property, TRY(StringStyleValue::create(TRY(String::from_utf8(tokens.next_token().token().string())))) };
+            return PropertyAndValue { *property, StringStyleValue::create(TRY(String::from_utf8(tokens.next_token().token().string()))) };
     }
 
     if (auto property = any_property_accepts_type(property_ids, ValueType::Url); property.has_value()) {
@@ -6102,35 +6102,35 @@ ErrorOr<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(Readonl
                 auto angle = dimension.angle();
                 if (auto property = any_property_accepts_type(property_ids, ValueType::Angle); property.has_value() && property_accepts_angle(*property, angle)) {
                     transaction.commit();
-                    return PropertyAndValue { *property, TRY(AngleStyleValue::create(angle)) };
+                    return PropertyAndValue { *property, AngleStyleValue::create(angle) };
                 }
             }
             if (dimension.is_frequency()) {
                 auto frequency = dimension.frequency();
                 if (auto property = any_property_accepts_type(property_ids, ValueType::Frequency); property.has_value() && property_accepts_frequency(*property, frequency)) {
                     transaction.commit();
-                    return PropertyAndValue { *property, TRY(FrequencyStyleValue::create(frequency)) };
+                    return PropertyAndValue { *property, FrequencyStyleValue::create(frequency) };
                 }
             }
             if (dimension.is_length()) {
                 auto length = dimension.length();
                 if (auto property = any_property_accepts_type(property_ids, ValueType::Length); property.has_value() && property_accepts_length(*property, length)) {
                     transaction.commit();
-                    return PropertyAndValue { *property, TRY(LengthStyleValue::create(length)) };
+                    return PropertyAndValue { *property, LengthStyleValue::create(length) };
                 }
             }
             if (dimension.is_resolution()) {
                 auto resolution = dimension.resolution();
                 if (auto property = any_property_accepts_type(property_ids, ValueType::Resolution); property.has_value() && property_accepts_resolution(*property, resolution)) {
                     transaction.commit();
-                    return PropertyAndValue { *property, TRY(ResolutionStyleValue::create(resolution)) };
+                    return PropertyAndValue { *property, ResolutionStyleValue::create(resolution) };
                 }
             }
             if (dimension.is_time()) {
                 auto time = dimension.time();
                 if (auto property = any_property_accepts_type(property_ids, ValueType::Time); property.has_value() && property_accepts_time(*property, time)) {
                     transaction.commit();
-                    return PropertyAndValue { *property, TRY(TimeStyleValue::create(time)) };
+                    return PropertyAndValue { *property, TimeStyleValue::create(time) };
                 }
             }
         }

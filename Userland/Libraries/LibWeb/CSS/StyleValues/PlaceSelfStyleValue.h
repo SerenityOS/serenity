@@ -12,9 +12,9 @@ namespace Web::CSS {
 
 class PlaceSelfStyleValue final : public StyleValueWithDefaultOperators<PlaceSelfStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<PlaceSelfStyleValue>> create(ValueComparingNonnullRefPtr<StyleValue> align_self, ValueComparingNonnullRefPtr<StyleValue> justify_self)
+    static ValueComparingNonnullRefPtr<PlaceSelfStyleValue> create(ValueComparingNonnullRefPtr<StyleValue> align_self, ValueComparingNonnullRefPtr<StyleValue> justify_self)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) PlaceSelfStyleValue(move(align_self), move(justify_self)));
+        return adopt_ref(*new (nothrow) PlaceSelfStyleValue(move(align_self), move(justify_self)));
     }
     virtual ~PlaceSelfStyleValue() override = default;
 

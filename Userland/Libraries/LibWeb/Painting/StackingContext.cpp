@@ -396,7 +396,7 @@ Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformati
                 0, 0, 0, 1);
         break;
     default:
-        dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Unhandled transformation function {}", MUST(CSS::TransformationStyleValue::create(transformation.function, {}))->to_string());
+        dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Unhandled transformation function {}", CSS::TransformationStyleValue::create(transformation.function, {})->to_string());
     }
     return Gfx::FloatMatrix4x4::identity();
 }

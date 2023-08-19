@@ -15,9 +15,9 @@ namespace Web::CSS {
 
 class NumberStyleValue : public StyleValueWithDefaultOperators<NumberStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<NumberStyleValue>> create(double value)
+    static ValueComparingNonnullRefPtr<NumberStyleValue> create(double value)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) NumberStyleValue(value));
+        return adopt_ref(*new (nothrow) NumberStyleValue(value));
     }
 
     double number() const { return m_value; }

@@ -16,9 +16,9 @@ namespace Web::CSS {
 
 class AngleStyleValue : public StyleValueWithDefaultOperators<AngleStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<AngleStyleValue>> create(Angle angle)
+    static ValueComparingNonnullRefPtr<AngleStyleValue> create(Angle angle)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) AngleStyleValue(move(angle)));
+        return adopt_ref(*new (nothrow) AngleStyleValue(move(angle)));
     }
     virtual ~AngleStyleValue() override;
 

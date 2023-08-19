@@ -12,9 +12,9 @@ namespace Web::CSS {
 
 class PlaceContentStyleValue final : public StyleValueWithDefaultOperators<PlaceContentStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<PlaceContentStyleValue>> create(ValueComparingNonnullRefPtr<StyleValue> align_content, ValueComparingNonnullRefPtr<StyleValue> justify_content)
+    static ValueComparingNonnullRefPtr<PlaceContentStyleValue> create(ValueComparingNonnullRefPtr<StyleValue> align_content, ValueComparingNonnullRefPtr<StyleValue> justify_content)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) PlaceContentStyleValue(move(align_content), move(justify_content)));
+        return adopt_ref(*new (nothrow) PlaceContentStyleValue(move(align_content), move(justify_content)));
     }
     virtual ~PlaceContentStyleValue() override = default;
 

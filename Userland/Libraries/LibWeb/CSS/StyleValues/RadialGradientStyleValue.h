@@ -44,10 +44,10 @@ public:
 
     using Size = Variant<Extent, CircleSize, EllipseSize>;
 
-    static ErrorOr<ValueComparingNonnullRefPtr<RadialGradientStyleValue>> create(EndingShape ending_shape, Size size, PositionValue position, Vector<LinearColorStopListElement> color_stop_list, GradientRepeating repeating)
+    static ValueComparingNonnullRefPtr<RadialGradientStyleValue> create(EndingShape ending_shape, Size size, PositionValue position, Vector<LinearColorStopListElement> color_stop_list, GradientRepeating repeating)
     {
         VERIFY(color_stop_list.size() >= 2);
-        return adopt_nonnull_ref_or_enomem(new (nothrow) RadialGradientStyleValue(ending_shape, size, position, move(color_stop_list), repeating));
+        return adopt_ref(*new (nothrow) RadialGradientStyleValue(ending_shape, size, position, move(color_stop_list), repeating));
     }
 
     virtual ErrorOr<String> to_string() const override;

@@ -15,7 +15,7 @@ namespace Web::CSS {
 
 class FontStyleValue final : public StyleValueWithDefaultOperators<FontStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<FontStyleValue>> create(
+    static ValueComparingNonnullRefPtr<FontStyleValue> create(
         ValueComparingNonnullRefPtr<StyleValue> font_stretch,
         ValueComparingNonnullRefPtr<StyleValue> font_style,
         ValueComparingNonnullRefPtr<StyleValue> font_weight,
@@ -23,7 +23,7 @@ public:
         ValueComparingNonnullRefPtr<StyleValue> line_height,
         ValueComparingNonnullRefPtr<StyleValue> font_families)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) FontStyleValue(move(font_stretch), move(font_style), move(font_weight), move(font_size), move(line_height), move(font_families)));
+        return adopt_ref(*new (nothrow) FontStyleValue(move(font_stretch), move(font_style), move(font_weight), move(font_size), move(line_height), move(font_families)));
     }
     virtual ~FontStyleValue() override = default;
 

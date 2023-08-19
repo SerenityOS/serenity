@@ -15,12 +15,12 @@ namespace Web::CSS {
 
 class BorderStyleValue final : public StyleValueWithDefaultOperators<BorderStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<BorderStyleValue>> create(
+    static ValueComparingNonnullRefPtr<BorderStyleValue> create(
         ValueComparingNonnullRefPtr<StyleValue> border_width,
         ValueComparingNonnullRefPtr<StyleValue> border_style,
         ValueComparingNonnullRefPtr<StyleValue> border_color)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) BorderStyleValue(move(border_width), move(border_style), move(border_color)));
+        return adopt_ref(*new (nothrow) BorderStyleValue(move(border_width), move(border_style), move(border_color)));
     }
     virtual ~BorderStyleValue() override;
 

@@ -15,12 +15,12 @@ namespace Web::CSS {
 
 class FlexStyleValue final : public StyleValueWithDefaultOperators<FlexStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<FlexStyleValue>> create(
+    static ValueComparingNonnullRefPtr<FlexStyleValue> create(
         ValueComparingNonnullRefPtr<StyleValue> grow,
         ValueComparingNonnullRefPtr<StyleValue> shrink,
         ValueComparingNonnullRefPtr<StyleValue> basis)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) FlexStyleValue(move(grow), move(shrink), move(basis)));
+        return adopt_ref(*new (nothrow) FlexStyleValue(move(grow), move(shrink), move(basis)));
     }
     virtual ~FlexStyleValue() override = default;
 

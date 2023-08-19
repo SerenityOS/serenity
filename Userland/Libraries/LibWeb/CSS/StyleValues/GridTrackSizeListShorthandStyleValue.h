@@ -13,7 +13,7 @@ namespace Web::CSS {
 
 class GridTrackSizeListShorthandStyleValue final : public StyleValueWithDefaultOperators<GridTrackSizeListShorthandStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<GridTrackSizeListShorthandStyleValue>> create(
+    static ValueComparingNonnullRefPtr<GridTrackSizeListShorthandStyleValue> create(
         ValueComparingNonnullRefPtr<GridTemplateAreaStyleValue const> areas,
         ValueComparingNonnullRefPtr<GridTrackSizeListStyleValue const> rows,
         ValueComparingNonnullRefPtr<GridTrackSizeListStyleValue const> columns);

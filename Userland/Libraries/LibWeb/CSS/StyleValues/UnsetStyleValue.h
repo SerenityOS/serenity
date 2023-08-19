@@ -15,9 +15,9 @@ namespace Web::CSS {
 
 class UnsetStyleValue final : public StyleValueWithDefaultOperators<UnsetStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<UnsetStyleValue>> the()
+    static ValueComparingNonnullRefPtr<UnsetStyleValue> the()
     {
-        static ValueComparingNonnullRefPtr<UnsetStyleValue> instance = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) UnsetStyleValue));
+        static ValueComparingNonnullRefPtr<UnsetStyleValue> instance = adopt_ref(*new (nothrow) UnsetStyleValue);
         return instance;
     }
     virtual ~UnsetStyleValue() override = default;

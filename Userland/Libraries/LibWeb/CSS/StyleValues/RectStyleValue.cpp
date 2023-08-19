@@ -11,9 +11,9 @@
 
 namespace Web::CSS {
 
-ErrorOr<ValueComparingNonnullRefPtr<RectStyleValue>> RectStyleValue::create(EdgeRect rect)
+ValueComparingNonnullRefPtr<RectStyleValue> RectStyleValue::create(EdgeRect rect)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) RectStyleValue(move(rect)));
+    return adopt_ref(*new (nothrow) RectStyleValue(move(rect)));
 }
 
 ErrorOr<String> RectStyleValue::to_string() const

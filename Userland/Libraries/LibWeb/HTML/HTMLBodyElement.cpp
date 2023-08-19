@@ -35,12 +35,12 @@ void HTMLBodyElement::apply_presentational_hints(CSS::StyleProperties& style) co
             // https://html.spec.whatwg.org/multipage/rendering.html#the-page:rules-for-parsing-a-legacy-colour-value
             auto color = parse_legacy_color_value(value);
             if (color.has_value())
-                style.set_property(CSS::PropertyID::BackgroundColor, CSS::ColorStyleValue::create(color.value()).release_value_but_fixme_should_propagate_errors(), nullptr);
+                style.set_property(CSS::PropertyID::BackgroundColor, CSS::ColorStyleValue::create(color.value()), nullptr);
         } else if (name.equals_ignoring_ascii_case("text"sv)) {
             // https://html.spec.whatwg.org/multipage/rendering.html#the-page:rules-for-parsing-a-legacy-colour-value-2
             auto color = parse_legacy_color_value(value);
             if (color.has_value())
-                style.set_property(CSS::PropertyID::Color, CSS::ColorStyleValue::create(color.value()).release_value_but_fixme_should_propagate_errors(), nullptr);
+                style.set_property(CSS::PropertyID::Color, CSS::ColorStyleValue::create(color.value()), nullptr);
         } else if (name.equals_ignoring_ascii_case("background"sv)) {
             VERIFY(m_background_style_value);
             style.set_property(CSS::PropertyID::BackgroundImage, *m_background_style_value, nullptr);
@@ -67,7 +67,7 @@ void HTMLBodyElement::attribute_changed(DeprecatedFlyString const& name, Depreca
         if (color.has_value())
             document().set_visited_link_color(color.value());
     } else if (name.equals_ignoring_ascii_case("background"sv)) {
-        m_background_style_value = CSS::ImageStyleValue::create(document().parse_url(value)).release_value_but_fixme_should_propagate_errors();
+        m_background_style_value = CSS::ImageStyleValue::create(document().parse_url(value));
         m_background_style_value->on_animate = [this] {
             if (layout_node()) {
                 layout_node()->set_needs_display();
