@@ -51,7 +51,12 @@ Optional<u64> SeekTable::seek_point_sample_distance_around(u64 sample_index) con
         return {};
     size_t nearby_seek_point_index = 0;
     AK::binary_search(m_seek_points, sample_index, &nearby_seek_point_index, [](auto const& sample_index, auto const& seekpoint_candidate) {
-        return static_cast<i64>(sample_index) - static_cast<i64>(seekpoint_candidate.sample_index);
+        // Subtraction with i64 cast may cause overflow.
+        if (sample_index > seekpoint_candidate.sample_index)
+            return 1;
+        if (sample_index == seekpoint_candidate.sample_index)
+            return 0;
+        return -1;
     });
 
     while (nearby_seek_point_index < m_seek_points.size() && m_seek_points[nearby_seek_point_index].sample_index <= sample_index)
