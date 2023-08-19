@@ -6,6 +6,7 @@ workdir="util-linux-${version}"
 useconfigure='true'
 configopts=(
     '--disable-all-programs'
+    '--disable-nls'
     '--enable-libuuid'
     '--prefix=/usr/local'
 )
