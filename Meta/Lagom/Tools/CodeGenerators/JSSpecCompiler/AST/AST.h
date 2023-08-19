@@ -151,8 +151,8 @@ class BinaryOperation : public Node {
 public:
     BinaryOperation(BinaryOperator operation, Tree left, Tree right)
         : m_operation(operation)
-        , m_left(left)
-        , m_right(right)
+        , m_left(move(left))
+        , m_right(move(right))
     {
     }
 
@@ -170,7 +170,7 @@ class UnaryOperation : public Node {
 public:
     UnaryOperation(UnaryOperator operation, Tree operand)
         : m_operation(operation)
-        , m_operand(operand)
+        , m_operand(move(operand))
     {
     }
 
@@ -186,7 +186,7 @@ protected:
 class IsOneOfOperation : public Node {
 public:
     IsOneOfOperation(Tree operand, Vector<Tree>&& compare_values)
-        : m_operand(operand)
+        : m_operand(move(operand))
         , m_compare_values(move(compare_values))
     {
     }
@@ -216,7 +216,7 @@ protected:
 class ReturnExpression : public Node {
 public:
     ReturnExpression(Tree return_value)
-        : m_return_value(return_value)
+        : m_return_value(move(return_value))
     {
     }
 
@@ -231,7 +231,7 @@ protected:
 class AssertExpression : public Node {
 public:
     AssertExpression(Tree condition)
-        : m_condition(condition)
+        : m_condition(move(condition))
     {
     }
 
@@ -246,8 +246,8 @@ protected:
 class IfBranch : public Node {
 public:
     IfBranch(Tree condition, Tree branch)
-        : m_condition(condition)
-        , m_branch(branch)
+        : m_condition(move(condition))
+        , m_branch(move(branch))
     {
     }
 
@@ -263,8 +263,8 @@ protected:
 class ElseIfBranch : public Node {
 public:
     ElseIfBranch(NullableTree condition, Tree branch)
-        : m_condition(condition)
-        , m_branch(branch)
+        : m_condition(move(condition))
+        , m_branch(move(branch))
     {
     }
 
@@ -282,7 +282,7 @@ public:
     IfElseIfChain(Vector<Tree>&& conditions, Vector<Tree>&& branches, NullableTree else_branch)
         : m_conditions(move(conditions))
         , m_branches(move(branches))
-        , m_else_branch(else_branch)
+        , m_else_branch(move(else_branch))
     {
         VERIFY(m_branches.size() == m_conditions.size());
     }
@@ -290,7 +290,7 @@ public:
     Vector<NodeSubtreePointer> subtrees() override;
 
     // Excluding else branch, if one is present
-    size_t branches_count() { return m_branches.size(); }
+    size_t branches_count() const { return m_branches.size(); }
 
     Vector<Tree> m_conditions;
     Vector<Tree> m_branches;
@@ -323,7 +323,7 @@ public:
     };
 
     RecordDirectListInitialization(Tree type_reference, Vector<Argument>&& arguments)
-        : m_type_reference(type_reference)
+        : m_type_reference(move(type_reference))
         , m_arguments(move(arguments))
     {
     }
@@ -340,7 +340,7 @@ protected:
 class FunctionCall : public Node {
 public:
     FunctionCall(Tree name, Vector<Tree>&& arguments)
-        : m_name(name)
+        : m_name(move(name))
         , m_arguments(move(arguments))
     {
     }
