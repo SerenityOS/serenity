@@ -126,6 +126,37 @@ void InlineLevelIterator::skip_to_next()
 
 Optional<InlineLevelIterator::Item> InlineLevelIterator::next()
 {
+    if (m_lookahead_items.is_empty())
+        return next_without_lookahead();
+    return m_lookahead_items.dequeue();
+}
+
+CSSPixels InlineLevelIterator::next_non_whitespace_sequence_width()
+{
+    CSSPixels next_width = 0;
+    for (;;) {
+        auto next_item_opt = next_without_lookahead();
+        if (!next_item_opt.has_value())
+            break;
+        m_lookahead_items.enqueue(next_item_opt.release_value());
+        auto& next_item = m_lookahead_items.tail();
+        if (next_item.node->computed_values().white_space() != CSS::WhiteSpace::Nowrap) {
+            if (next_item.type != InlineLevelIterator::Item::Type::Text)
+                break;
+            if (next_item.is_collapsible_whitespace)
+                break;
+            auto& next_text_node = verify_cast<Layout::TextNode>(*(next_item.node));
+            auto next_view = next_text_node.text_for_rendering().substring_view(next_item.offset_in_node, next_item.length_in_node);
+            if (next_view.is_whitespace())
+                break;
+        }
+        next_width += next_item.border_box_width();
+    }
+    return next_width;
+}
+
+Optional<InlineLevelIterator::Item> InlineLevelIterator::next_without_lookahead()
+{
     if (!m_current_node)
         return {};
 
@@ -139,7 +170,7 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next()
         if (!chunk_opt.has_value()) {
             m_text_node_context = {};
             skip_to_next();
-            return next();
+            return next_without_lookahead();
         }
 
         m_text_node_context->next_chunk = m_text_node_context->chunk_iterator.next();
@@ -200,12 +231,12 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next()
 
     if (is<Layout::ListItemMarkerBox>(*m_current_node)) {
         skip_to_next();
-        return next();
+        return next_without_lookahead();
     }
 
     if (!is<Layout::Box>(*m_current_node)) {
         skip_to_next();
-        return next();
+        return next_without_lookahead();
     }
 
     if (is<Layout::ReplacedBox>(*m_current_node)) {
