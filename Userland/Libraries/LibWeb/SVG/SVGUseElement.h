@@ -42,6 +42,8 @@ private:
 
     virtual bool is_svg_use_element() const override { return true; }
 
+    virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
+
     Optional<StringView> parse_id_from_href(DeprecatedString const& href);
 
     JS::GCPtr<DOM::Element> referenced_element();
