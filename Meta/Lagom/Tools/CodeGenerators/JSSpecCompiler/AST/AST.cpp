@@ -49,7 +49,7 @@ Vector<NodeSubtreePointer> IsOneOfOperation::subtrees()
     return result;
 }
 
-Vector<NodeSubtreePointer> ReturnExpression::subtrees()
+Vector<NodeSubtreePointer> ReturnNode::subtrees()
 {
     return { { &m_return_value } };
 }
