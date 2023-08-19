@@ -29,10 +29,13 @@ private:
     static void spawn(PowerStateCommand);
 
     static void power_state_switch_task(void* raw_entry_data);
-    static ErrorOr<void> perform_reboot();
-    static ErrorOr<void> perform_shutdown();
 
     static ErrorOr<void> kill_all_user_processes();
+    enum class DoReboot {
+        No,
+        Yes,
+    };
+    static ErrorOr<void> perform_shutdown(DoReboot);
 };
 
 }

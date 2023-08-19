@@ -35,10 +35,10 @@ void PowerStateSwitchTask::power_state_switch_task(void* raw_entry_data)
     auto entry_data = bit_cast<PowerStateCommand>(raw_entry_data);
     switch (entry_data) {
     case PowerStateCommand::Shutdown:
-        MUST(PowerStateSwitchTask::perform_shutdown());
+        MUST(PowerStateSwitchTask::perform_shutdown(DoReboot::No));
         break;
     case PowerStateCommand::Reboot:
-        MUST(PowerStateSwitchTask::perform_reboot());
+        MUST(PowerStateSwitchTask::perform_shutdown(DoReboot::Yes));
         break;
     default:
         PANIC("Unknown power state command: {}", to_underlying(entry_data));
@@ -57,24 +57,7 @@ void PowerStateSwitchTask::spawn(PowerStateCommand command)
     g_power_state_switch_task = move(power_state_switch_task_thread);
 }
 
-ErrorOr<void> PowerStateSwitchTask::perform_reboot()
-{
-    dbgln("acquiring FS locks...");
-    FileSystem::lock_all();
-    dbgln("syncing mounted filesystems...");
-    FileSystem::sync();
-
-    dbgln("attempting reboot via ACPI");
-    if (ACPI::is_enabled())
-        ACPI::Parser::the()->try_acpi_reboot();
-    arch_specific_reboot();
-
-    dbgln("reboot attempts failed, applications will stop responding.");
-    dmesgln("Reboot can't be completed. It's safe to turn off the computer!");
-    Processor::halt();
-}
-
-ErrorOr<void> PowerStateSwitchTask::perform_shutdown()
+ErrorOr<void> PowerStateSwitchTask::perform_shutdown(PowerStateSwitchTask::DoReboot do_reboot)
 {
     // We assume that by this point userland has tried as much as possible to shut down everything in an orderly fashion.
     // Therefore, we force kill remaining processes, including Kernel processes, except the finalizer and ourselves.
@@ -146,13 +129,25 @@ ErrorOr<void> PowerStateSwitchTask::perform_shutdown()
     // Therefore, we just lock the scheduler big lock to ensure nothing happens
     // beyond this point forward.
     SpinlockLocker lock(g_scheduler_lock);
+
+    if (do_reboot == DoReboot::Yes) {
+        dbgln("Attempting system reboot...");
+        dbgln("attempting reboot via ACPI");
+        if (ACPI::is_enabled())
+            ACPI::Parser::the()->try_acpi_reboot();
+        arch_specific_reboot();
+
+        dmesgln("Reboot can't be completed. It's safe to turn off the computer!");
+        Processor::halt();
+        VERIFY_NOT_REACHED();
+    }
+    VERIFY(do_reboot == DoReboot::No);
+
     dbgln("Attempting system shutdown...");
-
     arch_specific_poweroff();
-
-    dbgln("shutdown attempts failed, applications will stop responding.");
     dmesgln("Shutdown can't be completed. It's safe to turn off the computer!");
     Processor::halt();
+    VERIFY_NOT_REACHED();
 }
 
 ErrorOr<void> PowerStateSwitchTask::kill_all_user_processes()
