@@ -1,11 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Aliaksandr Kalenik <kalenik.aliaksandr@gmail.com>
+Date: Sat, 19 Aug 2023 17:06:27 -0600
+Subject: [PATCH] Add Ladybird WebDriver runner
+
+Co-Authored-By: Andrew Kaster <akaster@serenityos.org>
+---
+ tools/wpt/browser.py                          | 21 ++++++++
+ tools/wpt/run.py                              | 12 ++++-
+ .../wptrunner/wptrunner/browsers/__init__.py  |  3 +-
+ .../wptrunner/wptrunner/browsers/ladybird.py  | 49 +++++++++++++++++++
+ 4 files changed, 83 insertions(+), 2 deletions(-)
+ create mode 100644 tools/wptrunner/wptrunner/browsers/ladybird.py
+
 diff --git a/tools/wpt/browser.py b/tools/wpt/browser.py
-index 5e8bfdab1..779b3b427 100644
+index 5e8bfdab160137cab305c8f124195724deddc069..c57f5db26f1275a899413276a9518517d2ee07ff 100644
 --- a/tools/wpt/browser.py
 +++ b/tools/wpt/browser.py
 @@ -1918,6 +1918,27 @@ class WebKit(Browser):
      def version(self, binary=None, webdriver_binary=None):
          return None
-
+ 
 +class Ladybird(Browser):
 +    product = "ladybird"
 +    requirements = None
@@ -17,21 +31,21 @@ index 5e8bfdab1..779b3b427 100644
 +        raise NotImplementedError
 +
 +    def find_binary(self, venv_path=None, channel=None):
-+        return None
++        return which("ladybird")
 +
 +    def find_webdriver(self, venv_path=None, channel=None):
-+        return None
++        return which("WebDriver")
 +
 +    def install_webdriver(self, dest=None, channel=None, browser_binary=None):
 +        raise NotImplementedError
 +
 +    def version(self, binary=None, webdriver_binary=None):
 +        return None
-
+ 
  class WebKitTestRunner(Browser):
      """Interface for WebKitTestRunner.
 diff --git a/tools/wpt/run.py b/tools/wpt/run.py
-index 58e0004f9..8eb5399d3 100644
+index 15be2af2d3d7a969910deb3a83365c733354dd1e..9faed6b737ca26b49d64c7aed517b76a995a1d6c 100644
 --- a/tools/wpt/run.py
 +++ b/tools/wpt/run.py
 @@ -110,7 +110,7 @@ otherwise install OpenSSL and ensure that it's on your $PATH.""")
@@ -43,10 +57,10 @@ index 58e0004f9..8eb5399d3 100644
          config_builder = serve.build_config(os.path.join(wpt_root, "config.json"))
          # Override the ports to avoid looking for free ports
          config_builder.ssl = {"type": "none"}
-@@ -687,6 +687,15 @@ class WebKit(BrowserSetup):
+@@ -692,6 +692,15 @@ class WebKit(BrowserSetup):
      def setup_kwargs(self, kwargs):
          pass
-
+ 
 +class Ladybird(BrowserSetup):
 +    name = "ladybird"
 +    browser_cls = browser.Ladybird
@@ -56,19 +70,19 @@ index 58e0004f9..8eb5399d3 100644
 +
 +    def setup_kwargs(self, kwargs):
 +        pass
-
+ 
  class WebKitTestRunner(BrowserSetup):
      name = "wktr"
-@@ -777,6 +786,7 @@ product_setup = {
+@@ -782,6 +791,7 @@ product_setup = {
      "wktr": WebKitTestRunner,
      "webkitgtk_minibrowser": WebKitGTKMiniBrowser,
      "epiphany": Epiphany,
 +    "ladybird": Ladybird
  }
-
-
+ 
+ 
 diff --git a/tools/wptrunner/wptrunner/browsers/__init__.py b/tools/wptrunner/wptrunner/browsers/__init__.py
-index 9724bb957..4d1045769 100644
+index 9724bb957b5e3c7d1a9e1506c7e710742038c916..4d10457699d5abd9e1cb5e02a2b58e825be1b417 100644
 --- a/tools/wptrunner/wptrunner/browsers/__init__.py
 +++ b/tools/wptrunner/wptrunner/browsers/__init__.py
 @@ -43,4 +43,5 @@ product_list = ["android_weblayer",
@@ -80,10 +94,10 @@ index 9724bb957..4d1045769 100644
 +                "ladybird"]
 diff --git a/tools/wptrunner/wptrunner/browsers/ladybird.py b/tools/wptrunner/wptrunner/browsers/ladybird.py
 new file mode 100644
-index 000000000..cfcf285b4
+index 0000000000000000000000000000000000000000..5c9e68e4719a3b59e14f745c49a64604bee3b940
 --- /dev/null
 +++ b/tools/wptrunner/wptrunner/browsers/ladybird.py
-@@ -0,0 +1,54 @@
+@@ -0,0 +1,49 @@
 +from .base import WebDriverBrowser, require_arg
 +from .base import get_timeout_multiplier
 +from ..executors import executor_kwargs as base_executor_kwargs
@@ -110,10 +124,13 @@ index 000000000..cfcf285b4
 +}
 +
 +def check_args(**kwargs):
-+    pass
++    require_arg(kwargs, "webdriver_binary")
++
 +
 +def browser_kwargs(logger, test_type, run_info_data, config, **kwargs):
-+    return {}
++    return {"binary": kwargs["binary"],
++            "webdriver_binary": kwargs["webdriver_binary"],
++            "webdriver_args": kwargs.get("webdriver_args")}
 +
 +def executor_kwargs(logger, test_type, test_environment, run_info_data,
 +                    **kwargs):
@@ -128,13 +145,5 @@ index 000000000..cfcf285b4
 +    return []
 +
 +class LadybirdBrowser(WebDriverBrowser):
-+    def __init__(self, logger, webdriver_args=None,
-+                 host="localhost", port=None, base_path="/", env=None, **kwargs):
-+        webdriver_bin = "WebDriver"
-+
-+        super().__init__(logger, "binary???", webdriver_bin, webdriver_args=webdriver_args,
-+                         host=host, port=port, base_path=base_path, env=env, **kwargs)
-+        self.host = "localhost"
-+
 +    def make_command(self):
 +        return [self.webdriver_binary, "--port", str(self.port)] + self.webdriver_args
