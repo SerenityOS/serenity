@@ -41,6 +41,7 @@
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Layout/Viewport.h>
+#include <LibWeb/Painting/Paintable.h>
 
 namespace Web::DOM {
 
@@ -103,6 +104,7 @@ void Node::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_child_nodes);
 
     visitor.visit(m_layout_node);
+    visitor.visit(m_paintable);
 
     for (auto& registered_observer : m_registered_observer_list)
         visitor.visit(registered_observer);
@@ -1438,18 +1440,19 @@ size_t Node::length() const
     return child_count();
 }
 
+void Node::set_paintable(JS::GCPtr<Painting::Paintable> paintable)
+{
+    m_paintable = paintable;
+}
+
 Painting::Paintable const* Node::paintable() const
 {
-    if (!layout_node())
-        return nullptr;
-    return layout_node()->paintable();
+    return m_paintable;
 }
 
 Painting::Paintable* Node::paintable()
 {
-    if (!layout_node())
-        return nullptr;
-    return layout_node()->paintable();
+    return m_paintable;
 }
 
 Painting::PaintableBox const* Node::paintable_box() const
