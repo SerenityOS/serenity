@@ -97,6 +97,18 @@ void ElseIfBranch::dump_tree(StringBuilder& builder)
     m_branch->format_tree(builder);
 }
 
+void IfElseIfChain::dump_tree(StringBuilder& builder)
+{
+    dump_node(builder, "IfElseIfChain");
+
+    for (size_t i = 0; i < branches_count(); ++i) {
+        m_conditions[i]->format_tree(builder);
+        m_branches[i]->format_tree(builder);
+    }
+    if (m_else_branch)
+        m_else_branch->format_tree(builder);
+}
+
 void TreeList::dump_tree(StringBuilder& builder)
 {
     dump_node(builder, "TreeList");

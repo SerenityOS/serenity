@@ -71,6 +71,18 @@ Vector<NodeSubtreePointer> ElseIfBranch::subtrees()
     return { { &m_branch } };
 }
 
+Vector<NodeSubtreePointer> IfElseIfChain::subtrees()
+{
+    Vector<NodeSubtreePointer> result;
+    for (size_t i = 0; i < branches_count(); ++i) {
+        result.append({ &m_conditions[i] });
+        result.append({ &m_branches[i] });
+    }
+    if (m_else_branch)
+        result.append({ &m_else_branch });
+    return result;
+}
+
 Vector<NodeSubtreePointer> TreeList::subtrees()
 {
     Vector<NodeSubtreePointer> result;
