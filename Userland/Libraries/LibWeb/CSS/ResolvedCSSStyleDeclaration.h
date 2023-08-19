@@ -32,7 +32,7 @@ private:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
-    ErrorOr<RefPtr<StyleValue const>> style_value_for_property(Layout::NodeWithStyle const&, PropertyID) const;
+    RefPtr<StyleValue const> style_value_for_property(Layout::NodeWithStyle const&, PropertyID) const;
 
     JS::NonnullGCPtr<DOM::Element> m_element;
 };
