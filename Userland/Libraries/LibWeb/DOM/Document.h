@@ -462,6 +462,7 @@ public:
 
     Vector<JS::Handle<HTML::Navigable>> descendant_navigables();
     Vector<JS::Handle<HTML::Navigable>> inclusive_descendant_navigables();
+    Vector<JS::Handle<HTML::Navigable>> ancestor_navigables();
 
     void destroy();
 
