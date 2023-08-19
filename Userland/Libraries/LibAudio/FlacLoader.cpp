@@ -806,7 +806,7 @@ ErrorOr<void, LoaderError> FlacLoaderPlugin::decode_custom_lpc(Vector<i64>& deco
             // These considerations are not in the original FLAC spec, but have been added to the IETF standard: https://datatracker.ietf.org/doc/html/draft-ietf-cellar-flac-03#appendix-A.3
             sample.saturating_add(Checked<i64>::saturating_mul(static_cast<i64>(coefficients[t]), static_cast<i64>(decoded[i - t - 1])));
         }
-        decoded[i] += sample.value() >> lpc_shift;
+        decoded[i] += lpc_shift >= 0 ? (sample.value() >> lpc_shift) : (sample.value() << -lpc_shift);
     }
 
     return {};
@@ -945,8 +945,10 @@ ALWAYS_INLINE ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_rice_pa
     // escape code for unencoded binary partition
     if (k == (1 << partition_type) - 1) {
         u8 unencoded_bps = TRY(bit_input.read_bits<u8>(5));
-        for (size_t r = 0; r < residual_sample_count; ++r) {
-            rice_partition[r] = sign_extend(TRY(bit_input.read_bits<u32>(unencoded_bps)), unencoded_bps);
+        if (unencoded_bps != 0) {
+            for (size_t r = 0; r < residual_sample_count; ++r) {
+                rice_partition[r] = sign_extend(TRY(bit_input.read_bits<u32>(unencoded_bps)), unencoded_bps);
+            }
         }
     } else {
         for (size_t r = 0; r < residual_sample_count; ++r) {
