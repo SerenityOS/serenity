@@ -38,7 +38,7 @@ public:
 
     virtual ~HTMLCollection() override;
 
-    size_t length();
+    size_t length() const;
     Element* item(size_t index) const;
     Element* named_item(DeprecatedFlyString const& name) const;
 
