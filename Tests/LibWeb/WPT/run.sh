@@ -31,9 +31,11 @@ if [ ! -d "${SCRIPT_DIR}/wpt" ]; then
     # Apply WPT patch with Ladybird runner
     (cd wpt; git apply ../ladybird_runner.patch)
 
-    # Update hosts file
-    # FIXME: Only do this if required. Otherwise your /etc/hosts gets crowded quickly
-    python3 "./wpt/wpt" make-hosts-file | sudo tee -a /etc/hosts
+    # Update hosts file if needed
+    if [ "$(comm -13 <(sort -u /etc/hosts) <(python3 ./wpt/wpt make-hosts-file | sort -u) | wc -l)" -gt 0 ]; then
+        echo "Enter superuser password to append wpt hosts to /etc/hosts"
+        python3 "./wpt/wpt" make-hosts-file | sudo tee -a /etc/hosts
+    fi
 fi
 
 # Extract metadata.txt into directory with expectation files expected by WPT runner
