@@ -219,5 +219,14 @@ if (BUILD_TESTING)
         NAME LibWeb
         COMMAND ${CMAKE_CURRENT_BINARY_DIR}/../bin/headless-browser --run-tests ${SERENITY_SOURCE_DIR}/Tests/LibWeb
     )
-    set_tests_properties(LibWeb PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
+    add_test(
+        NAME WPT
+        CONFIGURATIONS Integration
+        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../Tests/LibWeb/WPT/run.sh
+    )
+    set_tests_properties(LibWeb WPT PROPERTIES
+        DEPENDS ladybird
+        ENVIRONMENT QT_QPA_PLATFORM=offscreen
+        ENVIRONMENT "SERENITY_SOURCE_DIR=${SERENITY_SOURCE_DIR}"
+    )
 endif()

@@ -256,12 +256,14 @@ ensure_target() {
 
 run_tests() {
     local TEST_NAME="$1"
-    export CTEST_OUTPUT_ON_FAILURE=1
+    local CTEST_ARGS=("--output-on-failure" "--test-dir" "$BUILD_DIR")
     if [ -n "$TEST_NAME" ]; then
-        ( cd "$BUILD_DIR" && ctest -R "$TEST_NAME" )
-    else
-        ( cd "$BUILD_DIR" && ctest )
+        if [ "$TEST_NAME" = "WPT" ]; then
+            CTEST_ARGS+=("-C" "Integration")
+        fi
+        CTEST_ARGS+=("-R" "$TEST_NAME")
     fi
+    ctest "${CTEST_ARGS[@]}"
 }
 
 build_target() {
