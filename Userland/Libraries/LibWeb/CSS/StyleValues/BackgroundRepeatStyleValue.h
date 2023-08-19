@@ -16,9 +16,9 @@ namespace Web::CSS {
 
 class BackgroundRepeatStyleValue final : public StyleValueWithDefaultOperators<BackgroundRepeatStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<BackgroundRepeatStyleValue>> create(Repeat repeat_x, Repeat repeat_y)
+    static ValueComparingNonnullRefPtr<BackgroundRepeatStyleValue> create(Repeat repeat_x, Repeat repeat_y)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) BackgroundRepeatStyleValue(repeat_x, repeat_y));
+        return adopt_ref(*new (nothrow) BackgroundRepeatStyleValue(repeat_x, repeat_y));
     }
     virtual ~BackgroundRepeatStyleValue() override;
 

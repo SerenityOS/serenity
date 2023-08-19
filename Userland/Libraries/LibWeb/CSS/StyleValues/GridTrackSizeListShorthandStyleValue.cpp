@@ -9,12 +9,12 @@
 
 namespace Web::CSS {
 
-ErrorOr<ValueComparingNonnullRefPtr<GridTrackSizeListShorthandStyleValue>> GridTrackSizeListShorthandStyleValue::create(
+ValueComparingNonnullRefPtr<GridTrackSizeListShorthandStyleValue> GridTrackSizeListShorthandStyleValue::create(
     ValueComparingNonnullRefPtr<GridTemplateAreaStyleValue const> areas,
     ValueComparingNonnullRefPtr<GridTrackSizeListStyleValue const> rows,
     ValueComparingNonnullRefPtr<GridTrackSizeListStyleValue const> columns)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) GridTrackSizeListShorthandStyleValue(move(areas), move(rows), move(columns)));
+    return adopt_ref(*new (nothrow) GridTrackSizeListShorthandStyleValue(move(areas), move(rows), move(columns)));
 }
 
 ErrorOr<String> GridTrackSizeListShorthandStyleValue::to_string() const

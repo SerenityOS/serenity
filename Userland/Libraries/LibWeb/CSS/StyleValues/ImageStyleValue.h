@@ -20,9 +20,9 @@ class ImageStyleValue final
     : public AbstractImageStyleValue
     , public Weakable<ImageStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<ImageStyleValue>> create(AK::URL const& url)
+    static ValueComparingNonnullRefPtr<ImageStyleValue> create(AK::URL const& url)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) ImageStyleValue(url));
+        return adopt_ref(*new (nothrow) ImageStyleValue(url));
     }
     virtual ~ImageStyleValue() override = default;
 

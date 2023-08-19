@@ -12,9 +12,9 @@ namespace Web::CSS {
 
 class InitialStyleValue final : public StyleValueWithDefaultOperators<InitialStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<InitialStyleValue>> the()
+    static ValueComparingNonnullRefPtr<InitialStyleValue> the()
     {
-        static ValueComparingNonnullRefPtr<InitialStyleValue> instance = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) InitialStyleValue));
+        static ValueComparingNonnullRefPtr<InitialStyleValue> instance = adopt_ref(*new (nothrow) InitialStyleValue);
         return instance;
     }
     virtual ~InitialStyleValue() override = default;

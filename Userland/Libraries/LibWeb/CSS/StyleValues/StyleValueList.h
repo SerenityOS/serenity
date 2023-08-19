@@ -19,9 +19,9 @@ public:
         Space,
         Comma,
     };
-    static ErrorOr<ValueComparingNonnullRefPtr<StyleValueList>> create(StyleValueVector&& values, Separator separator)
+    static ValueComparingNonnullRefPtr<StyleValueList> create(StyleValueVector&& values, Separator separator)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) StyleValueList(move(values), separator));
+        return adopt_ref(*new (nothrow) StyleValueList(move(values), separator));
     }
 
     size_t size() const { return m_properties.values.size(); }

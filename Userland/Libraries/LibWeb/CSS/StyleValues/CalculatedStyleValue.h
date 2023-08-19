@@ -66,9 +66,9 @@ public:
         Value m_value;
     };
 
-    static ErrorOr<ValueComparingNonnullRefPtr<CalculatedStyleValue>> create(NonnullOwnPtr<CalculationNode> calculation, CSSNumericType resolved_type)
+    static ValueComparingNonnullRefPtr<CalculatedStyleValue> create(NonnullOwnPtr<CalculationNode> calculation, CSSNumericType resolved_type)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) CalculatedStyleValue(move(calculation), resolved_type));
+        return adopt_ref(*new (nothrow) CalculatedStyleValue(move(calculation), resolved_type));
     }
 
     ErrorOr<String> to_string() const override;

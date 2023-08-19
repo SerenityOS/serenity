@@ -16,9 +16,9 @@ namespace Web::CSS {
 
 class TimeStyleValue : public StyleValueWithDefaultOperators<TimeStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<TimeStyleValue>> create(Time time)
+    static ValueComparingNonnullRefPtr<TimeStyleValue> create(Time time)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) TimeStyleValue(move(time)));
+        return adopt_ref(*new (nothrow) TimeStyleValue(move(time)));
     }
     virtual ~TimeStyleValue() override = default;
 

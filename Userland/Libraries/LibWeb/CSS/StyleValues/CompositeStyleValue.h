@@ -12,9 +12,9 @@ namespace Web::CSS {
 
 class CompositeStyleValue final : public StyleValueWithDefaultOperators<CompositeStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<CompositeStyleValue>> create(Vector<PropertyID> sub_properties, Vector<ValueComparingNonnullRefPtr<StyleValue const>> values)
+    static ValueComparingNonnullRefPtr<CompositeStyleValue> create(Vector<PropertyID> sub_properties, Vector<ValueComparingNonnullRefPtr<StyleValue const>> values)
     {
-        return adopt_nonnull_ref_or_enomem(new CompositeStyleValue(move(sub_properties), move(values)));
+        return adopt_ref(*new CompositeStyleValue(move(sub_properties), move(values)));
     }
     virtual ~CompositeStyleValue() override;
 

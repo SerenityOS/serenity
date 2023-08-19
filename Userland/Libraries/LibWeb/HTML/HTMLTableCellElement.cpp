@@ -36,7 +36,7 @@ void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& styl
             // https://html.spec.whatwg.org/multipage/rendering.html#tables-2:rules-for-parsing-a-legacy-colour-value
             auto color = parse_legacy_color_value(value);
             if (color.has_value())
-                style.set_property(CSS::PropertyID::BackgroundColor, CSS::ColorStyleValue::create(color.value()).release_value_but_fixme_should_propagate_errors());
+                style.set_property(CSS::PropertyID::BackgroundColor, CSS::ColorStyleValue::create(color.value()));
             return;
         }
         if (name == HTML::AttributeNames::valign) {
@@ -46,7 +46,7 @@ void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& styl
         }
         if (name == HTML::AttributeNames::align) {
             if (value.equals_ignoring_ascii_case("center"sv) || value.equals_ignoring_ascii_case("middle"sv)) {
-                style.set_property(CSS::PropertyID::TextAlign, CSS::IdentifierStyleValue::create(CSS::ValueID::LibwebCenter).release_value_but_fixme_should_propagate_errors());
+                style.set_property(CSS::PropertyID::TextAlign, CSS::IdentifierStyleValue::create(CSS::ValueID::LibwebCenter));
             } else {
                 if (auto parsed_value = parse_css_value(CSS::Parser::ParsingContext { document() }, value.view(), CSS::PropertyID::TextAlign).release_value_but_fixme_should_propagate_errors())
                     style.set_property(CSS::PropertyID::TextAlign, parsed_value.release_nonnull());
@@ -63,7 +63,7 @@ void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& styl
             return;
         } else if (name == HTML::AttributeNames::background) {
             if (auto parsed_value = document().parse_url(value); parsed_value.is_valid())
-                style.set_property(CSS::PropertyID::BackgroundImage, CSS::ImageStyleValue::create(parsed_value).release_value_but_fixme_should_propagate_errors());
+                style.set_property(CSS::PropertyID::BackgroundImage, CSS::ImageStyleValue::create(parsed_value));
             return;
         }
     });

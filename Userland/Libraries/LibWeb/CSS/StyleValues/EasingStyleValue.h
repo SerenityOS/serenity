@@ -17,9 +17,9 @@ namespace Web::CSS {
 
 class EasingStyleValue final : public StyleValueWithDefaultOperators<EasingStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<EasingStyleValue>> create(CSS::EasingFunction easing_function, StyleValueVector&& values)
+    static ValueComparingNonnullRefPtr<EasingStyleValue> create(CSS::EasingFunction easing_function, StyleValueVector&& values)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) EasingStyleValue(easing_function, move(values)));
+        return adopt_ref(*new (nothrow) EasingStyleValue(easing_function, move(values)));
     }
     virtual ~EasingStyleValue() override = default;
 

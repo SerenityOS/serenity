@@ -3993,14 +3993,14 @@ static RefPtr<CSS::StyleValue> parse_current_dimension_value(float value, Utf8Vi
 {
     // 1. If position is past the end of input, then return value as a length.
     if (position == input.end())
-        return CSS::LengthStyleValue::create(CSS::Length::make_px(value)).release_value_but_fixme_should_propagate_errors();
+        return CSS::LengthStyleValue::create(CSS::Length::make_px(value));
 
     // 2. If the code point at position within input is U+0025 (%), then return value as a percentage.
     if (*position == '%')
-        return CSS::PercentageStyleValue::create(CSS::Percentage(value)).release_value_but_fixme_should_propagate_errors();
+        return CSS::PercentageStyleValue::create(CSS::Percentage(value));
 
     // 3. Return value as a length.
-    return CSS::LengthStyleValue::create(CSS::Length::make_px(value)).release_value_but_fixme_should_propagate_errors();
+    return CSS::LengthStyleValue::create(CSS::Length::make_px(value));
 }
 
 // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-dimension-values
@@ -4034,7 +4034,7 @@ RefPtr<CSS::StyleValue> parse_dimension_value(StringView string)
 
     // 6. If position is past the end of input, then return value as a length.
     if (position == input.end())
-        return CSS::LengthStyleValue::create(CSS::Length::make_px(*integer_value)).release_value_but_fixme_should_propagate_errors();
+        return CSS::LengthStyleValue::create(CSS::Length::make_px(*integer_value));
 
     float value = *integer_value;
 
@@ -4065,7 +4065,7 @@ RefPtr<CSS::StyleValue> parse_dimension_value(StringView string)
 
             // 4. If position is past the end of input, then return value as a length.
             if (position == input.end())
-                return CSS::LengthStyleValue::create(CSS::Length::make_px(value)).release_value_but_fixme_should_propagate_errors();
+                return CSS::LengthStyleValue::create(CSS::Length::make_px(value));
 
             // 5. If the code point at position within input is not an ASCII digit, then break.
             if (!is_ascii_digit(*position))

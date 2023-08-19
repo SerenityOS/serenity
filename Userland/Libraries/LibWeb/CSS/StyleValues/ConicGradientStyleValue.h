@@ -18,10 +18,10 @@ namespace Web::CSS {
 
 class ConicGradientStyleValue final : public AbstractImageStyleValue {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<ConicGradientStyleValue>> create(Angle from_angle, PositionValue position, Vector<AngularColorStopListElement> color_stop_list, GradientRepeating repeating)
+    static ValueComparingNonnullRefPtr<ConicGradientStyleValue> create(Angle from_angle, PositionValue position, Vector<AngularColorStopListElement> color_stop_list, GradientRepeating repeating)
     {
         VERIFY(color_stop_list.size() >= 2);
-        return adopt_nonnull_ref_or_enomem(new (nothrow) ConicGradientStyleValue(from_angle, position, move(color_stop_list), repeating));
+        return adopt_ref(*new (nothrow) ConicGradientStyleValue(from_angle, position, move(color_stop_list), repeating));
     }
 
     virtual ErrorOr<String> to_string() const override;

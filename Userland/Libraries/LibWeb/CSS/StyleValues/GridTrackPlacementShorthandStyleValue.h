@@ -15,8 +15,8 @@ namespace Web::CSS {
 
 class GridTrackPlacementShorthandStyleValue final : public StyleValueWithDefaultOperators<GridTrackPlacementShorthandStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<GridTrackPlacementShorthandStyleValue>> create(ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue const> start, ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue const> end);
-    static ErrorOr<ValueComparingNonnullRefPtr<GridTrackPlacementShorthandStyleValue>> create(GridTrackPlacement start);
+    static ValueComparingNonnullRefPtr<GridTrackPlacementShorthandStyleValue> create(ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue const> start, ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue const> end);
+    static ValueComparingNonnullRefPtr<GridTrackPlacementShorthandStyleValue> create(GridTrackPlacement start);
     virtual ~GridTrackPlacementShorthandStyleValue() override = default;
 
     auto start() const { return m_properties.start; }

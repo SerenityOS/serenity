@@ -12,9 +12,9 @@ namespace Web::CSS {
 
 class IntegerStyleValue : public StyleValueWithDefaultOperators<IntegerStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<IntegerStyleValue>> create(i64 value)
+    static ValueComparingNonnullRefPtr<IntegerStyleValue> create(i64 value)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) IntegerStyleValue(value));
+        return adopt_ref(*new (nothrow) IntegerStyleValue(value));
     }
 
     i64 integer() const { return m_value; }

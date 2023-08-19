@@ -13,9 +13,9 @@ namespace Web::CSS {
 
 class StringStyleValue : public StyleValueWithDefaultOperators<StringStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<StringStyleValue>> create(String const& string)
+    static ValueComparingNonnullRefPtr<StringStyleValue> create(String const& string)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) StringStyleValue(string));
+        return adopt_ref(*new (nothrow) StringStyleValue(string));
     }
     virtual ~StringStyleValue() override = default;
 

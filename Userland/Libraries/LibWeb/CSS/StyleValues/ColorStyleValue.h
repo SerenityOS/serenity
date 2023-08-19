@@ -16,7 +16,7 @@ namespace Web::CSS {
 
 class ColorStyleValue : public StyleValueWithDefaultOperators<ColorStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<ColorStyleValue>> create(Color color);
+    static ValueComparingNonnullRefPtr<ColorStyleValue> create(Color color);
     virtual ~ColorStyleValue() override = default;
 
     Color color() const { return m_color; }

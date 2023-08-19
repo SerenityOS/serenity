@@ -16,9 +16,9 @@ namespace Web::CSS {
 
 class PercentageStyleValue final : public StyleValueWithDefaultOperators<PercentageStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<PercentageStyleValue>> create(Percentage percentage)
+    static ValueComparingNonnullRefPtr<PercentageStyleValue> create(Percentage percentage)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) PercentageStyleValue(move(percentage)));
+        return adopt_ref(*new (nothrow) PercentageStyleValue(move(percentage)));
     }
     virtual ~PercentageStyleValue() override = default;
 

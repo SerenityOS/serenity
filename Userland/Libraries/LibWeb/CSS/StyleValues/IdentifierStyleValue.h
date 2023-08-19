@@ -16,9 +16,9 @@ namespace Web::CSS {
 
 class IdentifierStyleValue final : public StyleValueWithDefaultOperators<IdentifierStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<IdentifierStyleValue>> create(ValueID id)
+    static ValueComparingNonnullRefPtr<IdentifierStyleValue> create(ValueID id)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) IdentifierStyleValue(id));
+        return adopt_ref(*new (nothrow) IdentifierStyleValue(id));
     }
     virtual ~IdentifierStyleValue() override = default;
 

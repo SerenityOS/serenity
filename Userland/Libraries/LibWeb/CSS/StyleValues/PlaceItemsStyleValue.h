@@ -12,9 +12,9 @@ namespace Web::CSS {
 
 class PlaceItemsStyleValue final : public StyleValueWithDefaultOperators<PlaceItemsStyleValue> {
 public:
-    static ErrorOr<ValueComparingNonnullRefPtr<PlaceItemsStyleValue>> create(ValueComparingNonnullRefPtr<StyleValue> align_items, ValueComparingNonnullRefPtr<StyleValue> justify_items)
+    static ValueComparingNonnullRefPtr<PlaceItemsStyleValue> create(ValueComparingNonnullRefPtr<StyleValue> align_items, ValueComparingNonnullRefPtr<StyleValue> justify_items)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) PlaceItemsStyleValue(move(align_items), move(justify_items)));
+        return adopt_ref(*new (nothrow) PlaceItemsStyleValue(move(align_items), move(justify_items)));
     }
     virtual ~PlaceItemsStyleValue() override = default;
 
