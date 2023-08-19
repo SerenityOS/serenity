@@ -198,7 +198,7 @@ private:
         PropertyID property;
         RefPtr<StyleValue> style_value;
     };
-    PropertyAndValue parse_css_value_for_properties(ReadonlySpan<PropertyID>, TokenStream<ComponentValue>&);
+    Optional<PropertyAndValue> parse_css_value_for_properties(ReadonlySpan<PropertyID>, TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_builtin_value(ComponentValue const&);
     RefPtr<CalculatedStyleValue> parse_calculated_value(ComponentValue const&);
     // NOTE: Implemented in generated code. (GenerateCSSMathFunctions.cpp)

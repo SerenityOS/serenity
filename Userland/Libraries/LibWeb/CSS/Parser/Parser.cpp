@@ -2804,12 +2804,12 @@ RefPtr<StyleValue> Parser::parse_background_value(Vector<ComponentValue> const& 
         }
 
         auto value_and_property = parse_css_value_for_properties(remaining_layer_properties, tokens);
-        if (!value_and_property.style_value)
+        if (!value_and_property.has_value())
             return nullptr;
-        auto& value = value_and_property.style_value;
-        remove_property(remaining_layer_properties, value_and_property.property);
+        auto& value = value_and_property->style_value;
+        remove_property(remaining_layer_properties, value_and_property->property);
 
-        switch (value_and_property.property) {
+        switch (value_and_property->property) {
         case PropertyID::BackgroundAttachment:
             VERIFY(!background_attachment);
             background_attachment = value.release_nonnull();
@@ -3270,12 +3270,12 @@ RefPtr<StyleValue> Parser::parse_border_value(Vector<ComponentValue> const& comp
     auto tokens = TokenStream { component_values };
     while (tokens.has_next_token()) {
         auto property_and_value = parse_css_value_for_properties(remaining_longhands, tokens);
-        if (!property_and_value.style_value)
+        if (!property_and_value.has_value())
             return nullptr;
-        auto& value = property_and_value.style_value;
-        remove_property(remaining_longhands, property_and_value.property);
+        auto& value = property_and_value->style_value;
+        remove_property(remaining_longhands, property_and_value->property);
 
-        switch (property_and_value.property) {
+        switch (property_and_value->property) {
         case PropertyID::BorderWidth: {
             VERIFY(!border_width);
             border_width = value.release_nonnull();
@@ -3939,11 +3939,11 @@ RefPtr<StyleValue> Parser::parse_flex_value(Vector<ComponentValue> const& compon
         // One-value syntax: <flex-grow> | <flex-basis> | none
         auto properties = Array { PropertyID::FlexGrow, PropertyID::FlexBasis, PropertyID::Flex };
         auto property_and_value = parse_css_value_for_properties(properties, tokens);
-        if (!property_and_value.style_value)
+        if (!property_and_value.has_value())
             return nullptr;
 
-        auto& value = property_and_value.style_value;
-        switch (property_and_value.property) {
+        auto& value = property_and_value->style_value;
+        switch (property_and_value->property) {
         case PropertyID::FlexGrow: {
             // NOTE: The spec says that flex-basis should be 0 here, but other engines currently use 0%.
             // https://github.com/w3c/csswg-drafts/issues/5742
@@ -3979,12 +3979,12 @@ RefPtr<StyleValue> Parser::parse_flex_value(Vector<ComponentValue> const& compon
 
     while (tokens.has_next_token()) {
         auto property_and_value = parse_css_value_for_properties(remaining_longhands, tokens);
-        if (!property_and_value.style_value)
+        if (!property_and_value.has_value())
             return nullptr;
-        auto& value = property_and_value.style_value;
-        remove_property(remaining_longhands, property_and_value.property);
+        auto& value = property_and_value->style_value;
+        remove_property(remaining_longhands, property_and_value->property);
 
-        switch (property_and_value.property) {
+        switch (property_and_value->property) {
         case PropertyID::FlexGrow: {
             VERIFY(!flex_grow);
             flex_grow = value.release_nonnull();
@@ -4030,12 +4030,12 @@ RefPtr<StyleValue> Parser::parse_flex_flow_value(Vector<ComponentValue> const& c
     auto tokens = TokenStream { component_values };
     while (tokens.has_next_token()) {
         auto property_and_value = parse_css_value_for_properties(remaining_longhands, tokens);
-        if (!property_and_value.style_value)
+        if (!property_and_value.has_value())
             return nullptr;
-        auto& value = property_and_value.style_value;
-        remove_property(remaining_longhands, property_and_value.property);
+        auto& value = property_and_value->style_value;
+        remove_property(remaining_longhands, property_and_value->property);
 
-        switch (property_and_value.property) {
+        switch (property_and_value->property) {
         case PropertyID::FlexDirection:
             VERIFY(!flex_direction);
             flex_direction = value.release_nonnull();
@@ -4103,12 +4103,12 @@ RefPtr<StyleValue> Parser::parse_font_value(Vector<ComponentValue> const& compon
         }
 
         auto property_and_value = parse_css_value_for_properties(remaining_longhands, tokens);
-        if (!property_and_value.style_value)
+        if (!property_and_value.has_value())
             return nullptr;
-        auto& value = property_and_value.style_value;
-        remove_property(remaining_longhands, property_and_value.property);
+        auto& value = property_and_value->style_value;
+        remove_property(remaining_longhands, property_and_value->property);
 
-        switch (property_and_value.property) {
+        switch (property_and_value->property) {
         case PropertyID::FontSize: {
             VERIFY(!font_size);
             font_size = value.release_nonnull();
@@ -4481,12 +4481,12 @@ RefPtr<StyleValue> Parser::parse_list_style_value(Vector<ComponentValue> const& 
         }
 
         auto property_and_value = parse_css_value_for_properties(remaining_longhands, tokens);
-        if (!property_and_value.style_value)
+        if (!property_and_value.has_value())
             return nullptr;
-        auto& value = property_and_value.style_value;
-        remove_property(remaining_longhands, property_and_value.property);
+        auto& value = property_and_value->style_value;
+        remove_property(remaining_longhands, property_and_value->property);
 
-        switch (property_and_value.property) {
+        switch (property_and_value->property) {
         case PropertyID::ListStylePosition: {
             VERIFY(!list_position);
             list_position = value.release_nonnull();
@@ -4630,12 +4630,12 @@ RefPtr<StyleValue> Parser::parse_text_decoration_value(Vector<ComponentValue> co
     auto tokens = TokenStream { component_values };
     while (tokens.has_next_token()) {
         auto property_and_value = parse_css_value_for_properties(remaining_longhands, tokens);
-        if (!property_and_value.style_value)
+        if (!property_and_value.has_value())
             return nullptr;
-        auto& value = property_and_value.style_value;
-        remove_property(remaining_longhands, property_and_value.property);
+        auto& value = property_and_value->style_value;
+        remove_property(remaining_longhands, property_and_value->property);
 
-        switch (property_and_value.property) {
+        switch (property_and_value->property) {
         case PropertyID::TextDecorationColor: {
             VERIFY(!decoration_color);
             decoration_color = value.release_nonnull();
@@ -5902,9 +5902,9 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
 
     while (stream.has_next_token() && !unassigned_properties.is_empty()) {
         auto property_and_value = parse_css_value_for_properties(unassigned_properties, stream);
-        if (property_and_value.style_value) {
-            auto property = property_and_value.property;
-            auto value = property_and_value.style_value;
+        if (property_and_value.has_value()) {
+            auto property = property_and_value->property;
+            auto value = property_and_value->style_value;
             auto& values = assigned_values.ensure(to_underlying(property));
             if (values.size() + 1 == property_maximum_value_count(property)) {
                 // We're done with this property, move on to the next one.
@@ -5948,10 +5948,12 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
 
 RefPtr<StyleValue> Parser::parse_css_value_for_property(PropertyID property_id, TokenStream<ComponentValue>& tokens)
 {
-    return parse_css_value_for_properties({ &property_id, 1 }, tokens).style_value;
+    return parse_css_value_for_properties({ &property_id, 1 }, tokens)
+        .map([](auto& it) { return it.style_value; })
+        .value_or(nullptr);
 }
 
-Parser::PropertyAndValue Parser::parse_css_value_for_properties(ReadonlySpan<PropertyID> property_ids, TokenStream<ComponentValue>& tokens)
+Optional<Parser::PropertyAndValue> Parser::parse_css_value_for_properties(ReadonlySpan<PropertyID> property_ids, TokenStream<ComponentValue>& tokens)
 {
     auto any_property_accepts_type = [](ReadonlySpan<PropertyID> property_ids, ValueType value_type) -> Optional<PropertyID> {
         for (auto const& property : property_ids) {
@@ -6167,7 +6169,7 @@ Parser::PropertyAndValue Parser::parse_css_value_for_properties(ReadonlySpan<Pro
             return PropertyAndValue { *property, value.release_nonnull() };
     }
 
-    return PropertyAndValue { property_ids.first(), nullptr };
+    return OptionalNone {};
 }
 
 class UnparsedCalculationNode final : public CalculationNode {
