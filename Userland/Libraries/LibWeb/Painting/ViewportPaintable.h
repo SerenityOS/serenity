@@ -17,7 +17,12 @@ public:
     static JS::NonnullGCPtr<ViewportPaintable> create(Layout::Viewport const&);
     virtual ~ViewportPaintable() override;
 
+    void paint_all_phases(PaintContext&);
+    void build_stacking_context_tree_if_needed();
+
 private:
+    void build_stacking_context_tree();
+
     explicit ViewportPaintable(Layout::Viewport const&);
 };
 
