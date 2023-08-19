@@ -30,16 +30,15 @@ struct Traits<CellCoordinates> : public GenericTraits<CellCoordinates> {
 
 namespace Web::Painting {
 
-static void collect_cell_boxes(Vector<PaintableBox const*>& cell_boxes, Layout::Node const& box)
+static void collect_cell_boxes(Vector<PaintableBox const*>& cell_boxes, PaintableBox const& table_paintable)
 {
-    box.for_each_child([&](auto& child) {
+    table_paintable.for_each_child_of_type<PaintableBox>([&](auto& child) {
         if (child.display().is_table_cell()) {
-            VERIFY(is<Layout::Box>(child));
-            if (child.paintable())
-                cell_boxes.append(static_cast<Layout::Box const&>(child).paintable_box());
+            cell_boxes.append(&child);
         } else {
             collect_cell_boxes(cell_boxes, child);
         }
+        return TraversalDecision::Continue;
     });
 }
 
@@ -356,12 +355,12 @@ static void paint_separate_cell_borders(PaintableBox const* cell_box, HashMap<Ce
     paint_all_borders(context, cell_rect, cell_box->normalized_border_radii_data(), borders_data);
 }
 
-void paint_table_borders(PaintContext& context, Layout::Node const& box)
+void paint_table_borders(PaintContext& context, PaintableBox const& table_paintable)
 {
     // Partial implementation of painting according to the collapsing border model:
     // https://www.w3.org/TR/CSS22/tables.html#collapsing-borders
     Vector<PaintableBox const*> cell_boxes;
-    collect_cell_boxes(cell_boxes, box);
+    collect_cell_boxes(cell_boxes, table_paintable);
     Vector<BorderEdgePaintingInfo> border_edge_painting_info_list;
     HashMap<CellCoordinates, PaintableBox const*> cell_coordinates_to_box;
     size_t row_count = 0;
