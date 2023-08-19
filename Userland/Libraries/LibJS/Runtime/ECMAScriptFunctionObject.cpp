@@ -944,7 +944,7 @@ void async_block_start(VM& vm, T const& async_body, PromiseCapability const& pro
         if constexpr (!IsCallableWithArguments<T, Completion>) {
             // a. Let result be the result of evaluating asyncBody.
             // FIXME: Cache this executable somewhere.
-            auto maybe_executable = Bytecode::compile(vm, async_body, FunctionKind::Async, "AsyncBlockStart"sv);
+            auto maybe_executable = Bytecode::compile(vm, async_body, FunctionKind::Async, "AsyncBlockStart"_fly_string);
             if (maybe_executable.is_error())
                 result = maybe_executable.release_error();
             else
@@ -1042,7 +1042,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         for (auto& parameter : m_formal_parameters) {
             if (!parameter.default_value)
                 continue;
-            auto executable = TRY(Bytecode::compile(vm, *parameter.default_value, FunctionKind::Normal, DeprecatedString::formatted("default parameter #{} for {}", default_parameter_index, m_name)));
+            auto executable = TRY(Bytecode::compile(vm, *parameter.default_value, FunctionKind::Normal, String::formatted("default parameter #{} for {}", default_parameter_index, m_name).release_value_but_fixme_should_propagate_errors()));
             m_default_parameter_bytecode_executables.append(move(executable));
         }
     }
@@ -1055,7 +1055,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
     }
 
     if (!m_bytecode_executable)
-        m_bytecode_executable = TRY(Bytecode::compile(vm, *m_ecmascript_code, m_kind, m_name));
+        m_bytecode_executable = TRY(Bytecode::compile(vm, *m_ecmascript_code, m_kind, FlyString::from_deprecated_fly_string(m_name).release_value_but_fixme_should_propagate_errors()));
 
     if (m_kind == FunctionKind::Async) {
         if (declaration_result.is_throw_completion()) {

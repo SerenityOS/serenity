@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
+#include <AK/FlyString.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/WeakPtr.h>
 #include <LibJS/Bytecode/BasicBlock.h>
@@ -27,7 +27,7 @@ struct GlobalVariableCache : public PropertyLookupCache {
 };
 
 struct Executable {
-    DeprecatedFlyString name;
+    FlyString name;
     Vector<PropertyLookupCache> property_lookup_caches;
     Vector<GlobalVariableCache> global_variable_caches;
     Vector<NonnullOwnPtr<BasicBlock>> basic_blocks;
@@ -37,8 +37,8 @@ struct Executable {
     size_t number_of_registers { 0 };
     bool is_strict_mode { false };
 
-    DeprecatedString const& get_string(StringTableIndex index) const { return string_table->get(index); }
-    DeprecatedFlyString const& get_identifier(IdentifierTableIndex index) const { return identifier_table->get(index); }
+    String const& get_string(StringTableIndex index) const { return string_table->get(index); }
+    FlyString const& get_identifier(IdentifierTableIndex index) const { return identifier_table->get(index); }
 
     void dump() const;
 };

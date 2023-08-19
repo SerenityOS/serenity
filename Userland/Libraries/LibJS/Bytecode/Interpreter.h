@@ -88,7 +88,7 @@ public:
     Executable const& current_executable() const { return *m_current_executable; }
     BasicBlock const& current_block() const { return *m_current_block; }
     size_t pc() const;
-    DeprecatedString debug_position() const;
+    String debug_position() const;
 
     Optional<Value>& this_value() { return m_this_value; }
 
@@ -126,6 +126,6 @@ private:
 
 extern bool g_dump_bytecode;
 
-ThrowCompletionOr<NonnullOwnPtr<Bytecode::Executable>> compile(VM&, ASTNode const& no, JS::FunctionKind kind, DeprecatedFlyString const& name);
+ThrowCompletionOr<NonnullOwnPtr<Bytecode::Executable>> compile(VM&, ASTNode const& no, JS::FunctionKind kind, FlyString const& name);
 
 }

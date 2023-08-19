@@ -99,9 +99,9 @@ public:
 
     CodeGenerationErrorOr<void> emit_named_evaluation_if_anonymous_function(Expression const&, Optional<IdentifierTableIndex> lhs_name);
 
-    void begin_continuable_scope(Label continue_target, Vector<DeprecatedFlyString> const& language_label_set);
+    void begin_continuable_scope(Label continue_target, Vector<FlyString> const& language_label_set);
     void end_continuable_scope();
-    void begin_breakable_scope(Label breakable_target, Vector<DeprecatedFlyString> const& language_label_set);
+    void begin_breakable_scope(Label breakable_target, Vector<FlyString> const& language_label_set);
     void end_breakable_scope();
 
     [[nodiscard]] Label nearest_continuable_scope() const;
@@ -114,10 +114,10 @@ public:
 
     [[nodiscard]] BasicBlock& current_block() { return *m_current_basic_block; }
 
-    BasicBlock& make_block(DeprecatedString name = {})
+    BasicBlock& make_block(String name = {})
     {
         if (name.is_empty())
-            name = DeprecatedString::number(m_next_block++);
+            name = String::number(m_next_block++).release_value_but_fixme_should_propagate_errors();
         m_root_basic_blocks.append(BasicBlock::create(name));
         return *m_root_basic_blocks.last();
     }
@@ -127,7 +127,7 @@ public:
         return m_current_basic_block->is_terminated();
     }
 
-    StringTableIndex intern_string(DeprecatedString string)
+    StringTableIndex intern_string(String string)
     {
         return m_string_table->insert(move(string));
     }
@@ -137,7 +137,7 @@ public:
         return m_regex_table->insert(move(regex));
     }
 
-    IdentifierTableIndex intern_identifier(DeprecatedFlyString string)
+    IdentifierTableIndex intern_identifier(FlyString string)
     {
         return m_identifier_table->insert(move(string));
     }
@@ -194,10 +194,10 @@ public:
     }
 
     void generate_break();
-    void generate_break(DeprecatedFlyString const& break_label);
+    void generate_break(FlyString const& break_label);
 
     void generate_continue();
-    void generate_continue(DeprecatedFlyString const& continue_label);
+    void generate_continue(FlyString const& continue_label);
 
     void start_boundary(BlockBoundaryType type) { m_boundaries.append(type); }
     void end_boundary(BlockBoundaryType type)
@@ -217,7 +217,7 @@ private:
         Break,
     };
     void generate_scoped_jump(JumpType);
-    void generate_labelled_jump(JumpType, DeprecatedFlyString const& label);
+    void generate_labelled_jump(JumpType, FlyString const& label);
 
     Generator();
     ~Generator() = default;
@@ -227,7 +227,7 @@ private:
 
     struct LabelableScope {
         Label bytecode_target;
-        Vector<DeprecatedFlyString> language_label_set;
+        Vector<FlyString> language_label_set;
     };
 
     BasicBlock* m_current_basic_block { nullptr };

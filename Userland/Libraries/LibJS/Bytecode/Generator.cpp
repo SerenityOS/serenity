@@ -118,7 +118,7 @@ void Generator::end_variable_scope()
     }
 }
 
-void Generator::begin_continuable_scope(Label continue_target, Vector<DeprecatedFlyString> const& language_label_set)
+void Generator::begin_continuable_scope(Label continue_target, Vector<FlyString> const& language_label_set)
 {
     m_continuable_scopes.append({ continue_target, language_label_set });
     start_boundary(BlockBoundaryType::Continue);
@@ -135,7 +135,7 @@ Label Generator::nearest_breakable_scope() const
     return m_breakable_scopes.last().bytecode_target;
 }
 
-void Generator::begin_breakable_scope(Label breakable_target, Vector<DeprecatedFlyString> const& language_label_set)
+void Generator::begin_breakable_scope(Label breakable_target, Vector<FlyString> const& language_label_set)
 {
     m_breakable_scopes.append({ breakable_target, language_label_set });
     start_boundary(BlockBoundaryType::Break);
@@ -208,7 +208,7 @@ CodeGenerationErrorOr<void> Generator::emit_load_from_reference(JS::ASTNode cons
                 emit<Bytecode::Op::GetByValueWithThis>(super_reference.base, super_reference.this_value);
             } else {
                 // 3. Let propertyKey be StringValue of IdentifierName.
-                auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
+                auto identifier_table_ref = intern_identifier(FlyString::from_deprecated_fly_string(verify_cast<Identifier>(expression.property()).string()).release_value_but_fixme_should_propagate_errors());
                 emit_get_by_id_with_this(identifier_table_ref, super_reference.this_value);
             }
         } else {
@@ -221,10 +221,10 @@ CodeGenerationErrorOr<void> Generator::emit_load_from_reference(JS::ASTNode cons
                 TRY(expression.property().generate_bytecode(*this));
                 emit<Bytecode::Op::GetByValue>(object_reg);
             } else if (expression.property().is_identifier()) {
-                auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
+                auto identifier_table_ref = intern_identifier(FlyString::from_deprecated_fly_string(verify_cast<Identifier>(expression.property()).string()).release_value_but_fixme_should_propagate_errors());
                 emit_get_by_id(identifier_table_ref);
             } else if (expression.property().is_private_identifier()) {
-                auto identifier_table_ref = intern_identifier(verify_cast<PrivateIdentifier>(expression.property()).string());
+                auto identifier_table_ref = intern_identifier(FlyString::from_deprecated_fly_string(verify_cast<PrivateIdentifier>(expression.property()).string()).release_value_but_fixme_should_propagate_errors());
                 emit<Bytecode::Op::GetPrivateById>(identifier_table_ref);
             } else {
                 return CodeGenerationError {
@@ -264,7 +264,7 @@ CodeGenerationErrorOr<void> Generator::emit_store_to_reference(JS::ASTNode const
                 emit<Bytecode::Op::PutByValueWithThis>(super_reference.base, *super_reference.referenced_name, super_reference.this_value);
             } else {
                 // 3. Let propertyKey be StringValue of IdentifierName.
-                auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
+                auto identifier_table_ref = intern_identifier(FlyString::from_deprecated_fly_string(verify_cast<Identifier>(expression.property()).string()).release_value_but_fixme_should_propagate_errors());
                 emit<Bytecode::Op::PutByIdWithThis>(super_reference.base, super_reference.this_value, identifier_table_ref);
             }
         } else {
@@ -281,11 +281,11 @@ CodeGenerationErrorOr<void> Generator::emit_store_to_reference(JS::ASTNode const
                 emit<Bytecode::Op::PutByValue>(object_reg, property_reg);
             } else if (expression.property().is_identifier()) {
                 emit<Bytecode::Op::Load>(value_reg);
-                auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
+                auto identifier_table_ref = intern_identifier(FlyString::from_deprecated_fly_string(verify_cast<Identifier>(expression.property()).string()).release_value_but_fixme_should_propagate_errors());
                 emit<Bytecode::Op::PutById>(object_reg, identifier_table_ref);
             } else if (expression.property().is_private_identifier()) {
                 emit<Bytecode::Op::Load>(value_reg);
-                auto identifier_table_ref = intern_identifier(verify_cast<PrivateIdentifier>(expression.property()).string());
+                auto identifier_table_ref = intern_identifier(FlyString::from_deprecated_fly_string(verify_cast<PrivateIdentifier>(expression.property()).string()).release_value_but_fixme_should_propagate_errors());
                 emit<Bytecode::Op::PutPrivateById>(object_reg, identifier_table_ref);
             } else {
                 return CodeGenerationError {
@@ -311,7 +311,7 @@ CodeGenerationErrorOr<void> Generator::emit_delete_reference(JS::ASTNode const& 
         if (identifier.is_local())
             emit<Bytecode::Op::LoadImmediate>(Value(false));
         else
-            emit<Bytecode::Op::DeleteVariable>(intern_identifier(identifier.string()));
+            emit<Bytecode::Op::DeleteVariable>(intern_identifier(FlyString::from_deprecated_fly_string(identifier.string()).release_value_but_fixme_should_propagate_errors()));
         return {};
     }
 
@@ -325,7 +325,7 @@ CodeGenerationErrorOr<void> Generator::emit_delete_reference(JS::ASTNode const& 
             if (super_reference.referenced_name.has_value()) {
                 emit<Bytecode::Op::DeleteByValueWithThis>(super_reference.this_value, *super_reference.referenced_name);
             } else {
-                auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
+                auto identifier_table_ref = intern_identifier(FlyString::from_deprecated_fly_string(verify_cast<Identifier>(expression.property()).string()).release_value_but_fixme_should_propagate_errors());
                 emit<Bytecode::Op::DeleteByIdWithThis>(super_reference.this_value, identifier_table_ref);
             }
 
@@ -341,7 +341,7 @@ CodeGenerationErrorOr<void> Generator::emit_delete_reference(JS::ASTNode const& 
             TRY(expression.property().generate_bytecode(*this));
             emit<Bytecode::Op::DeleteByValue>(object_reg);
         } else if (expression.property().is_identifier()) {
-            auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
+            auto identifier_table_ref = intern_identifier(FlyString::from_deprecated_fly_string(verify_cast<Identifier>(expression.property()).string()).release_value_but_fixme_should_propagate_errors());
             emit<Bytecode::Op::DeleteById>(identifier_table_ref);
         } else {
             // NOTE: Trying to delete a private field generates a SyntaxError in the parser.
@@ -373,7 +373,7 @@ void Generator::emit_set_variable(JS::Identifier const& identifier, Bytecode::Op
     if (identifier.is_local()) {
         emit<Bytecode::Op::SetLocal>(identifier.local_variable_index());
     } else {
-        emit<Bytecode::Op::SetVariable>(intern_identifier(identifier.string()), initialization_mode, mode);
+        emit<Bytecode::Op::SetVariable>(intern_identifier(FlyString::from_deprecated_fly_string(identifier.string()).release_value_but_fixme_should_propagate_errors()), initialization_mode, mode);
     }
 }
 
@@ -406,7 +406,7 @@ void Generator::generate_scoped_jump(JumpType type)
             break;
         case ReturnToFinally: {
             auto jump_type_name = type == JumpType::Break ? "break"sv : "continue"sv;
-            auto& block = make_block(DeprecatedString::formatted("{}.{}", current_block().name(), jump_type_name));
+            auto& block = make_block(String::formatted("{}.{}", current_block().name(), jump_type_name).release_value_but_fixme_should_propagate_errors());
             emit<Op::ScheduleJump>(Label { block });
             switch_to_basic_block(block);
             last_was_finally = true;
@@ -417,7 +417,7 @@ void Generator::generate_scoped_jump(JumpType type)
     VERIFY_NOT_REACHED();
 }
 
-void Generator::generate_labelled_jump(JumpType type, DeprecatedFlyString const& label)
+void Generator::generate_labelled_jump(JumpType type, FlyString const& label)
 {
     size_t current_boundary = m_boundaries.size();
     bool last_was_finally = false;
@@ -435,7 +435,7 @@ void Generator::generate_labelled_jump(JumpType type, DeprecatedFlyString const&
                 emit<Bytecode::Op::LeaveLexicalEnvironment>();
             } else if (boundary == BlockBoundaryType::ReturnToFinally) {
                 auto jump_type_name = type == JumpType::Break ? "break"sv : "continue"sv;
-                auto& block = make_block(DeprecatedString::formatted("{}.{}", current_block().name(), jump_type_name));
+                auto& block = make_block(String::formatted("{}.{}", current_block().name(), jump_type_name).release_value_but_fixme_should_propagate_errors());
                 emit<Op::ScheduleJump>(Label { block });
                 switch_to_basic_block(block);
                 last_was_finally = true;
@@ -461,7 +461,7 @@ void Generator::generate_break()
     generate_scoped_jump(JumpType::Break);
 }
 
-void Generator::generate_break(DeprecatedFlyString const& break_label)
+void Generator::generate_break(FlyString const& break_label)
 {
     generate_labelled_jump(JumpType::Break, break_label);
 }
@@ -471,7 +471,7 @@ void Generator::generate_continue()
     generate_scoped_jump(JumpType::Continue);
 }
 
-void Generator::generate_continue(DeprecatedFlyString const& continue_label)
+void Generator::generate_continue(FlyString const& continue_label)
 {
     generate_labelled_jump(JumpType::Continue, continue_label);
 }

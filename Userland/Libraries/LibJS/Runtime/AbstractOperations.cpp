@@ -705,7 +705,7 @@ ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller,
         return vm.throw_completion<InternalError>(ErrorType::NotImplemented, TRY_OR_THROW_OOM(vm, executable_result.error().to_string()));
 
     auto executable = executable_result.release_value();
-    executable->name = "eval"sv;
+    executable->name = "eval"_fly_string;
     if (Bytecode::g_dump_bytecode)
         executable->dump();
     auto result_or_error = vm.bytecode_interpreter().run_and_return_frame(eval_realm, *executable, nullptr);

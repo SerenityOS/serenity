@@ -178,8 +178,8 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
     if (vm().execution_context_stack().is_empty() || !vm().running_execution_context().lexical_environment) {
         // The "normal" interpreter pushes an execution context without environment so in that case we also want to push one.
         execution_context.this_value = &realm.global_object();
-        static DeprecatedFlyString global_execution_context_name = "(*BC* global execution context)";
-        execution_context.function_name = global_execution_context_name;
+        static FlyString global_execution_context_name = "(*BC* global execution context)"_fly_string;
+        execution_context.function_name = global_execution_context_name.to_deprecated_fly_string();
         execution_context.lexical_environment = &realm.global_environment();
         execution_context.variable_environment = &realm.global_environment();
         execution_context.realm = realm;
@@ -374,12 +374,12 @@ size_t Interpreter::pc() const
     return m_pc ? m_pc->offset() : 0;
 }
 
-DeprecatedString Interpreter::debug_position() const
+String Interpreter::debug_position() const
 {
-    return DeprecatedString::formatted("{}:{:2}:{:4x}", m_current_executable->name, m_current_block->name(), pc());
+    return String::formatted("{}:{:2}:{:4x}", m_current_executable->name, m_current_block->name(), pc()).release_value_but_fixme_should_propagate_errors();
 }
 
-ThrowCompletionOr<NonnullOwnPtr<Bytecode::Executable>> compile(VM& vm, ASTNode const& node, FunctionKind kind, DeprecatedFlyString const& name)
+ThrowCompletionOr<NonnullOwnPtr<Bytecode::Executable>> compile(VM& vm, ASTNode const& node, FunctionKind kind, FlyString const& name)
 {
     auto executable_result = Bytecode::Generator::generate(node, kind);
     if (executable_result.is_error())

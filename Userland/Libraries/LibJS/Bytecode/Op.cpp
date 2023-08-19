@@ -335,9 +335,9 @@ ThrowCompletionOr<void> NewRegExp::execute_impl(Bytecode::Interpreter& interpret
 
     // 3. Return ! RegExpCreate(pattern, flags).
     auto& parsed_regex = interpreter.current_executable().regex_table->get(m_regex_index);
-    Regex<ECMA262> regex(parsed_regex.regex, parsed_regex.pattern, parsed_regex.flags);
+    Regex<ECMA262> regex(parsed_regex.regex, parsed_regex.pattern.to_deprecated_string(), parsed_regex.flags);
     // NOTE: We bypass RegExpCreate and subsequently RegExpAlloc as an optimization to use the already parsed values.
-    auto regexp_object = RegExpObject::create(realm, move(regex), move(pattern), move(flags));
+    auto regexp_object = RegExpObject::create(realm, move(regex), pattern.to_deprecated_string(), flags.to_deprecated_string());
     // RegExpAlloc has these two steps from the 'Legacy RegExp features' proposal.
     regexp_object->set_realm(*vm.current_realm());
     // We don't need to check 'If SameValue(newTarget, thisRealm.[[Intrinsics]].[[%RegExp%]]) is true'
@@ -347,17 +347,17 @@ ThrowCompletionOr<void> NewRegExp::execute_impl(Bytecode::Interpreter& interpret
     return {};
 }
 
-#define JS_DEFINE_NEW_BUILTIN_ERROR_OP(ErrorName)                                                                                             \
-    ThrowCompletionOr<void> New##ErrorName::execute_impl(Bytecode::Interpreter& interpreter) const                                            \
-    {                                                                                                                                         \
-        auto& vm = interpreter.vm();                                                                                                          \
-        auto& realm = *vm.current_realm();                                                                                                    \
-        interpreter.accumulator() = MUST_OR_THROW_OOM(ErrorName::create(realm, interpreter.current_executable().get_string(m_error_string))); \
-        return {};                                                                                                                            \
-    }                                                                                                                                         \
-    DeprecatedString New##ErrorName::to_deprecated_string_impl(Bytecode::Executable const& executable) const                                  \
-    {                                                                                                                                         \
-        return DeprecatedString::formatted("New" #ErrorName " {} (\"{}\")", m_error_string, executable.string_table->get(m_error_string));    \
+#define JS_DEFINE_NEW_BUILTIN_ERROR_OP(ErrorName)                                                                                                                    \
+    ThrowCompletionOr<void> New##ErrorName::execute_impl(Bytecode::Interpreter& interpreter) const                                                                   \
+    {                                                                                                                                                                \
+        auto& vm = interpreter.vm();                                                                                                                                 \
+        auto& realm = *vm.current_realm();                                                                                                                           \
+        interpreter.accumulator() = MUST_OR_THROW_OOM(ErrorName::create(realm, interpreter.current_executable().get_string(m_error_string).to_deprecated_string())); \
+        return {};                                                                                                                                                   \
+    }                                                                                                                                                                \
+    DeprecatedString New##ErrorName::to_deprecated_string_impl(Bytecode::Executable const& executable) const                                                         \
+    {                                                                                                                                                                \
+        return DeprecatedString::formatted("New" #ErrorName " {} (\"{}\")", m_error_string, executable.string_table->get(m_error_string));                           \
     }
 
 JS_ENUMERATE_NEW_BUILTIN_ERROR_OPS(JS_DEFINE_NEW_BUILTIN_ERROR_OP)
@@ -403,12 +403,12 @@ ThrowCompletionOr<void> GetVariable::execute_impl(Bytecode::Interpreter& interpr
             VERIFY(environment);
             VERIFY(environment->is_declarative_environment());
             if (!environment->is_permanently_screwed_by_eval()) {
-                return Reference { *environment, string, vm.in_strict_mode(), m_cached_environment_coordinate };
+                return Reference { *environment, string.to_deprecated_fly_string(), vm.in_strict_mode(), m_cached_environment_coordinate };
             }
             m_cached_environment_coordinate = {};
         }
 
-        auto reference = TRY(vm.resolve_binding(string));
+        auto reference = TRY(vm.resolve_binding(string.to_deprecated_fly_string()));
         if (reference.environment_coordinate().has_value())
             m_cached_environment_coordinate = reference.environment_coordinate();
         return reference;
@@ -431,12 +431,12 @@ ThrowCompletionOr<void> GetCalleeAndThisFromEnvironment::execute_impl(Bytecode::
             VERIFY(environment);
             VERIFY(environment->is_declarative_environment());
             if (!environment->is_permanently_screwed_by_eval()) {
-                return Reference { *environment, string, vm.in_strict_mode(), m_cached_environment_coordinate };
+                return Reference { *environment, string.to_deprecated_fly_string(), vm.in_strict_mode(), m_cached_environment_coordinate };
             }
             m_cached_environment_coordinate = {};
         }
 
-        auto reference = TRY(vm.resolve_binding(string));
+        auto reference = TRY(vm.resolve_binding(string.to_deprecated_fly_string()));
         if (reference.environment_coordinate().has_value())
             m_cached_environment_coordinate = reference.environment_coordinate();
         return reference;
@@ -485,23 +485,23 @@ ThrowCompletionOr<void> GetGlobal::execute_impl(Bytecode::Interpreter& interpret
         // NOTE: GetGlobal is used to access variables stored in the module environment and global environment.
         //       The module environment is checked first since it precedes the global environment in the environment chain.
         auto& module_environment = *vm.running_execution_context().script_or_module.get<NonnullGCPtr<Module>>()->environment();
-        if (TRY(module_environment.has_binding(name))) {
+        if (TRY(module_environment.has_binding(name.to_deprecated_fly_string()))) {
             // TODO: Cache offset of binding value
-            interpreter.accumulator() = TRY(module_environment.get_binding_value(vm, name, vm.in_strict_mode()));
+            interpreter.accumulator() = TRY(module_environment.get_binding_value(vm, name.to_deprecated_fly_string(), vm.in_strict_mode()));
             return {};
         }
     }
 
-    if (TRY(declarative_record.has_binding(name))) {
+    if (TRY(declarative_record.has_binding(name.to_deprecated_fly_string()))) {
         // TODO: Cache offset of binding value
-        interpreter.accumulator() = TRY(declarative_record.get_binding_value(vm, name, vm.in_strict_mode()));
+        interpreter.accumulator() = TRY(declarative_record.get_binding_value(vm, name.to_deprecated_fly_string(), vm.in_strict_mode()));
         return {};
     }
 
-    if (TRY(binding_object.has_property(name))) {
+    if (TRY(binding_object.has_property(name.to_deprecated_fly_string()))) {
         CacheablePropertyMetadata cacheable_metadata;
         interpreter.accumulator() = js_undefined();
-        interpreter.accumulator() = TRY(binding_object.internal_get(name, interpreter.accumulator(), &cacheable_metadata));
+        interpreter.accumulator() = TRY(binding_object.internal_get(name.to_deprecated_fly_string(), interpreter.accumulator(), &cacheable_metadata));
         if (cacheable_metadata.type == CacheablePropertyMetadata::Type::OwnProperty) {
             cache.shape = shape;
             cache.property_offset = cacheable_metadata.property_offset.value();
@@ -528,7 +528,7 @@ ThrowCompletionOr<void> DeleteVariable::execute_impl(Bytecode::Interpreter& inte
 {
     auto& vm = interpreter.vm();
     auto const& string = interpreter.current_executable().get_identifier(m_identifier);
-    auto reference = TRY(vm.resolve_binding(string));
+    auto reference = TRY(vm.resolve_binding(string.to_deprecated_fly_string()));
     interpreter.accumulator() = Value(TRY(reference.delete_(vm)));
     return {};
 }
@@ -564,23 +564,23 @@ ThrowCompletionOr<void> CreateVariable::execute_impl(Bytecode::Interpreter& inte
 
         // Note: This is papering over an issue where "FunctionDeclarationInstantiation" creates these bindings for us.
         //       Instead of crashing in there, we'll just raise an exception here.
-        if (TRY(vm.lexical_environment()->has_binding(name)))
+        if (TRY(vm.lexical_environment()->has_binding(name.to_deprecated_fly_string())))
             return vm.throw_completion<InternalError>(TRY_OR_THROW_OOM(vm, String::formatted("Lexical environment already has binding '{}'", name)));
 
         if (m_is_immutable)
-            return vm.lexical_environment()->create_immutable_binding(vm, name, vm.in_strict_mode());
+            return vm.lexical_environment()->create_immutable_binding(vm, name.to_deprecated_fly_string(), vm.in_strict_mode());
         else
-            return vm.lexical_environment()->create_mutable_binding(vm, name, vm.in_strict_mode());
+            return vm.lexical_environment()->create_mutable_binding(vm, name.to_deprecated_fly_string(), vm.in_strict_mode());
     } else {
         if (!m_is_global) {
             if (m_is_immutable)
-                return vm.variable_environment()->create_immutable_binding(vm, name, vm.in_strict_mode());
+                return vm.variable_environment()->create_immutable_binding(vm, name.to_deprecated_fly_string(), vm.in_strict_mode());
             else
-                return vm.variable_environment()->create_mutable_binding(vm, name, vm.in_strict_mode());
+                return vm.variable_environment()->create_mutable_binding(vm, name.to_deprecated_fly_string(), vm.in_strict_mode());
         } else {
             // NOTE: CreateVariable with m_is_global set to true is expected to only be used in GlobalDeclarationInstantiation currently, which only uses "false" for "can_be_deleted".
             //       The only area that sets "can_be_deleted" to true is EvalDeclarationInstantiation, which is currently fully implemented in C++ and not in Bytecode.
-            return verify_cast<GlobalEnvironment>(vm.variable_environment())->create_global_var_binding(name, false);
+            return verify_cast<GlobalEnvironment>(vm.variable_environment())->create_global_var_binding(name.to_deprecated_fly_string(), false);
         }
     }
     return {};
@@ -591,7 +591,7 @@ ThrowCompletionOr<void> SetVariable::execute_impl(Bytecode::Interpreter& interpr
     auto& vm = interpreter.vm();
     auto const& name = interpreter.current_executable().get_identifier(m_identifier);
     auto environment = m_mode == EnvironmentMode::Lexical ? vm.running_execution_context().lexical_environment : vm.running_execution_context().variable_environment;
-    auto reference = TRY(vm.resolve_binding(name, environment));
+    auto reference = TRY(vm.resolve_binding(name.to_deprecated_fly_string(), environment));
     switch (m_initialization_mode) {
     case InitializationMode::Initialize:
         TRY(reference.initialize_referenced_binding(vm, interpreter.accumulator()));
@@ -602,7 +602,7 @@ ThrowCompletionOr<void> SetVariable::execute_impl(Bytecode::Interpreter& interpr
     case InitializationMode::InitializeOrSet:
         VERIFY(reference.is_environment_reference());
         VERIFY(reference.base_environment().is_declarative_environment());
-        TRY(static_cast<DeclarativeEnvironment&>(reference.base_environment()).initialize_or_set_mutable_binding(vm, name, interpreter.accumulator()));
+        TRY(static_cast<DeclarativeEnvironment&>(reference.base_environment()).initialize_or_set_mutable_binding(vm, name.to_deprecated_fly_string(), interpreter.accumulator()));
         break;
     }
     return {};
@@ -638,7 +638,7 @@ static ThrowCompletionOr<void> get_by_id(Bytecode::Interpreter& interpreter, Ide
     auto& cache = interpreter.current_executable().property_lookup_caches[cache_index];
 
     if (base_value.is_string()) {
-        auto string_value = TRY(base_value.as_string().get(vm, name));
+        auto string_value = TRY(base_value.as_string().get(vm, name.to_deprecated_fly_string()));
         if (string_value.has_value()) {
             interpreter.accumulator() = *string_value;
             return {};
@@ -657,7 +657,7 @@ static ThrowCompletionOr<void> get_by_id(Bytecode::Interpreter& interpreter, Ide
     }
 
     CacheablePropertyMetadata cacheable_metadata;
-    interpreter.accumulator() = TRY(base_obj->internal_get(name, this_value, &cacheable_metadata));
+    interpreter.accumulator() = TRY(base_obj->internal_get(name.to_deprecated_fly_string(), this_value, &cacheable_metadata));
 
     if (cacheable_metadata.type == CacheablePropertyMetadata::Type::OwnProperty) {
         cache.shape = shape;
@@ -686,7 +686,7 @@ ThrowCompletionOr<void> GetPrivateById::execute_impl(Bytecode::Interpreter& inte
     auto& vm = interpreter.vm();
     auto const& name = interpreter.current_executable().get_identifier(m_property);
     auto base_value = interpreter.accumulator();
-    auto private_reference = make_private_reference(vm, base_value, name);
+    auto private_reference = make_private_reference(vm, base_value, name.to_deprecated_fly_string());
     interpreter.accumulator() = TRY(private_reference.get_value(vm));
     return {};
 }
@@ -700,7 +700,7 @@ ThrowCompletionOr<void> HasPrivateId::execute_impl(Bytecode::Interpreter& interp
 
     auto private_environment = vm.running_execution_context().private_environment;
     VERIFY(private_environment);
-    auto private_name = private_environment->resolve_private_identifier(interpreter.current_executable().get_identifier(m_property));
+    auto private_name = private_environment->resolve_private_identifier(interpreter.current_executable().get_identifier(m_property).to_deprecated_fly_string());
     interpreter.accumulator() = Value(interpreter.accumulator().as_object().private_element_find(private_name) != nullptr);
     return {};
 }
@@ -711,7 +711,7 @@ ThrowCompletionOr<void> PutById::execute_impl(Bytecode::Interpreter& interpreter
     // NOTE: Get the value from the accumulator before side effects have a chance to overwrite it.
     auto value = interpreter.accumulator();
     auto base = interpreter.reg(m_base);
-    PropertyKey name = interpreter.current_executable().get_identifier(m_property);
+    PropertyKey name = interpreter.current_executable().get_identifier(m_property).to_deprecated_fly_string();
     TRY(put_by_property_key(vm, base, base, value, name, m_kind));
     interpreter.accumulator() = value;
     return {};
@@ -723,7 +723,7 @@ ThrowCompletionOr<void> PutByIdWithThis::execute_impl(Bytecode::Interpreter& int
     // NOTE: Get the value from the accumulator before side effects have a chance to overwrite it.
     auto value = interpreter.accumulator();
     auto base = interpreter.reg(m_base);
-    PropertyKey name = interpreter.current_executable().get_identifier(m_property);
+    PropertyKey name = interpreter.current_executable().get_identifier(m_property).to_deprecated_fly_string();
     TRY(put_by_property_key(vm, base, interpreter.reg(m_this_value), value, name, m_kind));
     interpreter.accumulator() = value;
     return {};
@@ -736,7 +736,7 @@ ThrowCompletionOr<void> PutPrivateById::execute_impl(Bytecode::Interpreter& inte
     auto value = interpreter.accumulator();
     auto object = TRY(interpreter.reg(m_base).to_object(vm));
     auto name = interpreter.current_executable().get_identifier(m_property);
-    auto private_reference = make_private_reference(vm, object, name);
+    auto private_reference = make_private_reference(vm, object, name.to_deprecated_fly_string());
     TRY(private_reference.put_value(vm, value));
     interpreter.accumulator() = value;
     return {};
@@ -748,7 +748,7 @@ ThrowCompletionOr<void> DeleteById::execute_impl(Bytecode::Interpreter& interpre
     auto base_value = interpreter.accumulator();
     auto const& identifier = interpreter.current_executable().get_identifier(m_property);
     bool strict = vm.in_strict_mode();
-    auto reference = Reference { base_value, identifier, {}, strict };
+    auto reference = Reference { base_value, identifier.to_deprecated_fly_string(), {}, strict };
     interpreter.accumulator() = Value(TRY(reference.delete_(vm)));
     return {};
 }
@@ -759,7 +759,7 @@ ThrowCompletionOr<void> DeleteByIdWithThis::execute_impl(Bytecode::Interpreter& 
     auto base_value = interpreter.accumulator();
     auto const& identifier = interpreter.current_executable().get_identifier(m_property);
     bool strict = vm.in_strict_mode();
-    auto reference = Reference { base_value, identifier, interpreter.reg(m_this_value), strict };
+    auto reference = Reference { base_value, identifier.to_deprecated_fly_string(), interpreter.reg(m_this_value), strict };
     interpreter.accumulator() = Value(TRY(reference.delete_(vm)));
     return {};
 }
@@ -1002,7 +1002,7 @@ ThrowCompletionOr<void> NewFunction::execute_impl(Bytecode::Interpreter& interpr
     if (!m_function_node.has_name()) {
         DeprecatedFlyString name = {};
         if (m_lhs_name.has_value())
-            name = interpreter.current_executable().get_identifier(m_lhs_name.value());
+            name = interpreter.current_executable().get_identifier(m_lhs_name.value()).to_deprecated_fly_string();
         interpreter.accumulator() = m_function_node.instantiate_ordinary_function_expression(vm, name);
     } else {
         interpreter.accumulator() = ECMAScriptFunctionObject::create(interpreter.realm(), m_function_node.name(), m_function_node.source_text(), m_function_node.body(), m_function_node.parameters(), m_function_node.function_length(), m_function_node.local_variables_names(), vm.lexical_environment(), vm.running_execution_context().private_environment, m_function_node.kind(), m_function_node.is_strict_mode(), m_function_node.might_need_arguments_object(), m_function_node.contains_direct_call_to_eval(), m_function_node.is_arrow_function());
@@ -1246,7 +1246,7 @@ ThrowCompletionOr<void> GetMethod::execute_impl(Bytecode::Interpreter& interpret
 {
     auto& vm = interpreter.vm();
     auto identifier = interpreter.current_executable().get_identifier(m_property);
-    auto method = TRY(interpreter.accumulator().get_method(vm, identifier));
+    auto method = TRY(interpreter.accumulator().get_method(vm, identifier.to_deprecated_fly_string()));
     interpreter.accumulator() = method ?: js_undefined();
     return {};
 }
@@ -1404,7 +1404,7 @@ ThrowCompletionOr<void> NewClass::execute_impl(Bytecode::Interpreter& interprete
     DeprecatedFlyString binding_name;
     DeprecatedFlyString class_name;
     if (!m_class_expression.has_name() && m_lhs_name.has_value()) {
-        class_name = interpreter.current_executable().get_identifier(m_lhs_name.value());
+        class_name = interpreter.current_executable().get_identifier(m_lhs_name.value()).to_deprecated_fly_string();
     } else {
         binding_name = name;
         class_name = name.is_null() ? ""sv : name;
@@ -1422,7 +1422,7 @@ ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& inte
 
     // 1. Let val be the result of evaluating UnaryExpression.
     auto const& string = interpreter.current_executable().get_identifier(m_identifier);
-    auto reference = TRY(vm.resolve_binding(string));
+    auto reference = TRY(vm.resolve_binding(string.to_deprecated_fly_string()));
 
     // 2. If val is a Reference Record, then
     //    a. If IsUnresolvableReference(val) is true, return "undefined".
@@ -1806,7 +1806,7 @@ DeprecatedString PushDeclarativeEnvironment::to_deprecated_string_impl(Bytecode:
         builder.append(" {"sv);
         Vector<DeprecatedString> names;
         for (auto& it : m_variables)
-            names.append(executable.get_string(it.key));
+            names.append(executable.get_string(it.key).to_deprecated_string());
         builder.append('}');
         builder.join(", "sv, names);
     }
