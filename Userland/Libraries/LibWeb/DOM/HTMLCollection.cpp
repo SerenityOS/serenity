@@ -60,7 +60,7 @@ JS::MarkedVector<Element*> HTMLCollection::collect_matching_elements() const
 }
 
 // https://dom.spec.whatwg.org/#dom-htmlcollection-length
-size_t HTMLCollection::length()
+size_t HTMLCollection::length() const
 {
     // The length getter steps are to return the number of nodes represented by the collection.
     return collect_matching_elements().size();
