@@ -6,19 +6,19 @@ Subject: [PATCH] Implement SerenityOS support in std
 ---
  zig/lib/std/Thread.zig               |   2 +-
  zig/lib/std/c.zig                    |   1 +
- zig/lib/std/c/serenity.zig           | 621 +++++++++++++++++++++++++++
+ zig/lib/std/c/serenity.zig           | 709 +++++++++++++++++++++++++++
  zig/lib/std/c/serenity/constants.zig |   6 +
- zig/lib/std/debug.zig                |   3 +-
- zig/lib/std/fs.zig                   |  72 +++-
+ zig/lib/std/debug.zig                |   5 +-
+ zig/lib/std/fs.zig                   |  79 ++-
  zig/lib/std/fs/get_app_data_dir.zig  |   2 +-
- zig/lib/std/os.zig                   |   3 +-
+ zig/lib/std/os.zig                   |   4 +-
  zig/lib/std/target.zig               |   1 +
- 9 files changed, 705 insertions(+), 6 deletions(-)
+ 9 files changed, 801 insertions(+), 8 deletions(-)
  create mode 100644 zig/lib/std/c/serenity.zig
  create mode 100644 zig/lib/std/c/serenity/constants.zig
 
 diff --git a/zig/lib/std/Thread.zig b/zig/lib/std/Thread.zig
-index 99e2feb4cf432d7fb323b62412e810a7b932d9a9..4dcc644b36cf99a7c18084c5ccdaeffa7723e7bd 100644
+index 74f8e98df4bf212830933c150d6d7f0242007bda..fe8fc416fcb0c1ec4ec414c9f01e4d6639c1d87b 100644
 --- a/zig/lib/std/Thread.zig
 +++ b/zig/lib/std/Thread.zig
 @@ -636,7 +636,7 @@ const PosixThreadImpl = struct {
@@ -31,7 +31,7 @@ index 99e2feb4cf432d7fb323b62412e810a7b932d9a9..4dcc644b36cf99a7c18084c5ccdaeffa
                  // /dev/kstat via ioctls, and traverse a linked list for each
                  // cpu.
 diff --git a/zig/lib/std/c.zig b/zig/lib/std/c.zig
-index 149f3ab7e19919ad8d2b57988aa1db61213ea60d..d7720089a346f4c2ea8ef8f9aac15459b3fc2235 100644
+index 66875eadd0347c930632254901d37f1b4f4fabcc..c78c8aa3d0daa67279a17c359870ac3052e43bb9 100644
 --- a/zig/lib/std/c.zig
 +++ b/zig/lib/std/c.zig
 @@ -54,6 +54,7 @@ pub usingnamespace switch (builtin.os.tag) {
@@ -44,12 +44,15 @@ index 149f3ab7e19919ad8d2b57988aa1db61213ea60d..d7720089a346f4c2ea8ef8f9aac15459
  
 diff --git a/zig/lib/std/c/serenity.zig b/zig/lib/std/c/serenity.zig
 new file mode 100644
-index 0000000000000000000000000000000000000000..1c8dc37af9d528338d2c5543b5f3a47894264c0e
+index 0000000000000000000000000000000000000000..d85d44ee1f0c71706f6c17f15183ece261a42e28
 --- /dev/null
 +++ b/zig/lib/std/c/serenity.zig
-@@ -0,0 +1,621 @@
+@@ -0,0 +1,709 @@
++const builtin = @import("builtin");
 +pub const std = @import("std");
 +pub const SerenityConstants = @import("serenity/constants.zig");
++
++const native_arch = builtin.cpu.arch;
 +
 +pub const fd_t = c_int;
 +pub const dev_t = u64;
@@ -199,6 +202,9 @@ index 0000000000000000000000000000000000000000..1c8dc37af9d528338d2c5543b5f3a478
 +    _,
 +};
 +
++// see Kernel/API/POSIX/sys/limits.h
++pub const HOST_NAME_MAX = SerenityConstants.HOST_NAME_MAX;
++pub const NAME_MAX = SerenityConstants.NAME_MAX;
 +pub const PATH_MAX = SerenityConstants.PATH_MAX;
 +
 +pub const time_t = i64;
@@ -295,6 +301,7 @@ index 0000000000000000000000000000000000000000..1c8dc37af9d528338d2c5543b5f3a478
 +    pub const RAW = 255;
 +};
 +
++// see Kernel/API/POSIX/types.h
 +pub const pthread_mutex_t = extern struct {
 +    lock: u32 = 0,
 +    owner: ?std.c.pthread_t = null,
@@ -306,6 +313,10 @@ index 0000000000000000000000000000000000000000..1c8dc37af9d528338d2c5543b5f3a478
 +    mutex: ?*pthread_mutex_t = null,
 +    value: u32 = 0,
 +    clockid: c_int = CLOCK.MONOTONIC_COARSE, // clockid_t
++};
++
++pub const pthread_rwlock_t = extern struct {
++    ptr: u64 = 0
 +};
 +
 +pub const PTHREAD_STACK_MIN = SerenityConstants.PTHREAD_STACK_MIN;
@@ -410,6 +421,7 @@ index 0000000000000000000000000000000000000000..1c8dc37af9d528338d2c5543b5f3a478
 +    pub const END = SerenityConstants.SEEK_END;
 +};
 +
++// see Kernel/API/POSIX/signal_numbers.h
 +pub const SIG = struct {
 +    pub const ABRT = SerenityConstants.SIGABRT;
 +    pub const ALRM = SerenityConstants.SIGALRM;
@@ -444,6 +456,11 @@ index 0000000000000000000000000000000000000000..1c8dc37af9d528338d2c5543b5f3a478
 +    pub const WINCH = SerenityConstants.SIGWINCH;
 +    pub const XCPU = SerenityConstants.SIGXCPU;
 +    pub const XFSZ = SerenityConstants.SIGXFSZ;
++
++    // see Kernel/API/POSIX/signal.h
++    pub const ERR = @as(?Sigaction.handler_fn, @ptrFromInt(-1));
++    pub const DFL = @as(?Sigaction.handler_fn, @ptrFromInt(0));
++    pub const IGN = @as(?Sigaction.handler_fn, @ptrFromInt(1));
 +};
 +
 +pub const sigval = extern union {
@@ -475,7 +492,7 @@ index 0000000000000000000000000000000000000000..1c8dc37af9d528338d2c5543b5f3a478
 +        sigaction: ?sigaction_fn,
 +    },
 +    mask: sigset_t,
-+    flags: c_int,
++    flags: c_uint,
 +};
 +
 +pub const SO = struct {
@@ -507,14 +524,8 @@ index 0000000000000000000000000000000000000000..1c8dc37af9d528338d2c5543b5f3a478
 +// see Kernel/API/POSIX/netinet/in.h
 +pub const in_port_t = u16;
 +
-+pub const in_addr = extern struct {
-+    addr: u32,
-+};
-+
-+pub const in6_addr = extern union {
-+    addr: [16]u8,
-+    addr32: [4]u32,
-+};
++pub const in_addr = u32;
++pub const in6_addr = [16]u8;
 +
 +// see Kernel/API/POSIX/sys/socket.h
 +pub const sockaddr = extern struct {
@@ -562,7 +573,27 @@ index 0000000000000000000000000000000000000000..1c8dc37af9d528338d2c5543b5f3a478
 +    pub const RDHUP = SerenityConstants.POLLRDHUP;
 +};
 +
++// see Kernel/API/POSIX/signal.h
++pub const SA = struct {
++    pub const NOCLDSTOP = SerenityConstants.SA_NOCLDSTOP;
++    pub const NOCLDWAIT = SerenityConstants.SA_NOCLDWAIT;
++    pub const SIGINFO = SerenityConstants.SA_SIGINFO;
++    pub const RESTART = SerenityConstants.SA_RESTART;
++    pub const RESETHAND = SerenityConstants.SA_RESETHAND;
++    pub const ONSTACK = SerenityConstants.SA_ONSTACK;
++    pub const NODEFER = SerenityConstants.SA_NODEFER;
++
++    // see Toolchain/Tarballs/gcc-13.1.0/libsanitizer/sanitizer_common/sanitizer_linux.cpp
++    pub const RESTORER = 0x04000000;
++};
++
 +//see Kernel/API/POSIX/sys/socket.h
++pub const SHUT = struct {
++    pub const RD = SerenityConstants.SHUT_RD;
++    pub const WR = SerenityConstants.SHUT_WR;
++    pub const RDWR = SerenityConstants.SHUT_RDWR;
++};
++
 +pub const SOCK = struct {
 +    pub const TYPE_MASK = 0xff;
 +    pub const STREAM = 1;
@@ -581,6 +612,63 @@ index 0000000000000000000000000000000000000000..1c8dc37af9d528338d2c5543b5f3a478
 +};
 +
 +pub const nfds_t = c_uint;
++
++// see Userland/Libraries/LibC/signal.h
++pub extern "c" fn sigaltstack(ss: ?*stack_t, old_ss: ?*stack_t) c_int;
++
++// see Kernel/API/POSIX/signal.h
++pub const stack_t = struct {
++    sp: *anyopaque,
++    flags: c_int,
++    size: usize
++};
++
++pub const mcontext_t = switch (native_arch) {
++    .x86_64 =>
++        // see Kernel/Arch/x86_64/mcontext.h
++        struct {
++            rax: u64,
++            rcx: u64,
++            rdx: u64,
++            rbx: u64,
++            rsp: u64,
++            rbp: u64,
++            rsi: u64,
++            rdi: u64,
++            rip: u64,
++            r8: u64,
++            r9: u64,
++            r10: u64,
++            r11: u64,
++            r12: u64,
++            r13: u64,
++            r14: u64,
++            r15: u64,
++            rflags: u64,
++            cs: u32,
++            ss: u32,
++            ds: u32,
++            es: u32,
++            fs: u32,
++            gs: u32
++        },
++    .aarch64 =>
++        // see Kernel/Arch/aarch64/mcontext.h
++        struct {
++            x: [31]u64,
++            sp: u64,
++            pc: u64
++        },
++    else => @compileError("Arch {native_arch} not implemented for serenity")
++};
++
++// see Kernel/API/POSIX/ucontext.h
++pub const ucontext_t = struct {
++    uc_link: *ucontext_t,
++    uc_sigmask: sigset_t,
++    uc_stack: stack_t,
++    uc_mcontext: mcontext_t
++};
 +
 +pub const W = struct {
 +    pub const NOHANG = SerenityConstants.WNOHANG;
@@ -682,10 +770,19 @@ index 0000000000000000000000000000000000000000..94d7b1c091f7affb5c968738a8719cbb
 +    );
 +}
 diff --git a/zig/lib/std/debug.zig b/zig/lib/std/debug.zig
-index 44f6ce136759b773e2426656aa9907b5fc51d9fc..9b5f6f993ef870689d31a8ee99bb358b4d25278d 100644
+index 6de21ddd1be833db60a8460cfe15ca6cd36fb90a..ff8465975624ec09453f62824ee5d75bc8d0be4a 100644
 --- a/zig/lib/std/debug.zig
 +++ b/zig/lib/std/debug.zig
-@@ -771,6 +771,7 @@ pub fn openSelfDebugInfo(allocator: mem.Allocator) OpenSelfDebugInfoError!DebugI
+@@ -167,7 +167,7 @@ pub fn relocateContext(context: *ThreadContext) void {
+     };
+ }
+ 
+-pub const have_getcontext = @hasDecl(os.system, "getcontext") and
++pub const have_getcontext = @hasDecl(os.system, "getcontext") and builtin.os.tag != .serenity and
+     builtin.os.tag != .openbsd and
+     (builtin.os.tag != .linux or switch (builtin.cpu.arch) {
+     .x86,
+@@ -984,6 +984,7 @@ pub fn openSelfDebugInfo(allocator: mem.Allocator) OpenSelfDebugInfoError!DebugI
              .dragonfly,
              .openbsd,
              .macos,
@@ -693,7 +790,7 @@ index 44f6ce136759b773e2426656aa9907b5fc51d9fc..9b5f6f993ef870689d31a8ee99bb358b
              .solaris,
              .windows,
              => return try DebugInfo.init(allocator),
-@@ -1748,7 +1749,7 @@ pub const ModuleDebugInfo = switch (native_os) {
+@@ -2223,7 +2224,7 @@ pub const ModuleDebugInfo = switch (native_os) {
              };
          }
      },
@@ -703,19 +800,28 @@ index 44f6ce136759b773e2426656aa9907b5fc51d9fc..9b5f6f993ef870689d31a8ee99bb358b
          dwarf: DW.DwarfInfo,
          mapped_memory: []align(mem.page_size) const u8,
 diff --git a/zig/lib/std/fs.zig b/zig/lib/std/fs.zig
-index cb6ce2032ec7e2f2bc720f354558bb5335ae7d24..3894bc6dfc4bb383f7055dd4a264e9f9e2132d76 100644
+index f01bcb4f22c86a7a237fb43fa219ba6071c646d3..8beea7604a3965e322706e329476609a8ff198ac 100644
 --- a/zig/lib/std/fs.zig
 +++ b/zig/lib/std/fs.zig
 @@ -39,7 +39,7 @@ pub const Watch = @import("fs/watch.zig").Watch;
  /// fit into a UTF-8 encoded array of this length.
  /// The byte count includes room for a null sentinel byte.
  pub const MAX_PATH_BYTES = switch (builtin.os.tag) {
--    .linux, .macos, .ios, .freebsd, .openbsd, .netbsd, .dragonfly, .haiku, .solaris => os.PATH_MAX,
-+    .linux, .macos, .ios, .freebsd, .openbsd, .netbsd, .dragonfly, .haiku, .solaris, .serenity => os.PATH_MAX,
+-    .linux, .macos, .ios, .freebsd, .openbsd, .netbsd, .dragonfly, .haiku, .solaris, .plan9 => os.PATH_MAX,
++    .linux, .macos, .ios, .freebsd, .openbsd, .netbsd, .dragonfly, .haiku, .solaris, .plan9, .serenity => os.PATH_MAX,
      // Each UTF-16LE character may be expanded to 3 UTF-8 bytes.
      // If it would require 4 UTF-8 bytes, then there would be a surrogate
      // pair in the UTF-16LE, and we (over)account 3 bytes for it that way.
-@@ -528,6 +528,69 @@ pub const IterableDir = struct {
+@@ -59,7 +59,7 @@ pub const MAX_PATH_BYTES = switch (builtin.os.tag) {
+ /// (depending on the platform) this assumption may not hold for every configuration.
+ /// The byte count does not include a null sentinel byte.
+ pub const MAX_NAME_BYTES = switch (builtin.os.tag) {
+-    .linux, .macos, .ios, .freebsd, .openbsd, .netbsd, .dragonfly => os.NAME_MAX,
++    .linux, .macos, .ios, .freebsd, .openbsd, .netbsd, .dragonfly, .serenity => os.NAME_MAX,
+     // Haiku's NAME_MAX includes the null terminator, so subtract one.
+     .haiku => os.NAME_MAX - 1,
+     .solaris => os.system.MAXNAMLEN,
+@@ -528,6 +528,74 @@ pub const IterableDir = struct {
                  self.first_iter = true;
              }
          },
@@ -781,11 +887,16 @@ index cb6ce2032ec7e2f2bc720f354558bb5335ae7d24..3894bc6dfc4bb383f7055dd4a264e9f9
 +                    };
 +                }
 +            }
++
++            pub fn reset(self: *Self) void {
++                // FIXME: Very small chance this may fail.
++                self.dir_ptr = os.system.fdopendir(self.dir.fd).?;
++            }
 +        },
          .haiku => struct {
              dir: Dir,
              buf: [1024]u8, // TODO align(@alignOf(os.dirent64)),
-@@ -913,6 +976,11 @@ pub const IterableDir = struct {
+@@ -913,6 +981,11 @@ pub const IterableDir = struct {
                  .buf = undefined,
                  .first_iter = first_iter_start_value,
              },
@@ -797,7 +908,7 @@ index cb6ce2032ec7e2f2bc720f354558bb5335ae7d24..3894bc6dfc4bb383f7055dd4a264e9f9
              .windows => return Iterator{
                  .dir = self.dir,
                  .index = 0,
-@@ -2993,7 +3061,7 @@ pub fn selfExePath(out_buffer: []u8) SelfExePathError![]u8 {
+@@ -3004,7 +3077,7 @@ pub fn selfExePath(out_buffer: []u8) SelfExePathError![]u8 {
          return result;
      }
      switch (builtin.os.tag) {
@@ -820,10 +931,10 @@ index 2f599c32130e2be12f44fa015df91816614d5f5b..896dde5ab8e0e573dc137d9a86be8298
                  return fs.path.join(allocator, &[_][]const u8{ xdg, appname });
              }
 diff --git a/zig/lib/std/os.zig b/zig/lib/std/os.zig
-index cb988ca9a8e67f1c3c383a0b2a74bda7b0e14152..0c740baadaeb045c0c01dc7be92f3472b01afa17 100644
+index e4ac38051e3558ec796f9eefc96c5d8950425e3f..188c0f490bf10d588fbf4c6040bde416b88decf8 100644
 --- a/zig/lib/std/os.zig
 +++ b/zig/lib/std/os.zig
-@@ -35,6 +35,7 @@ pub const freebsd = std.c;
+@@ -32,6 +32,7 @@ pub const freebsd = std.c;
  pub const haiku = std.c;
  pub const netbsd = std.c;
  pub const openbsd = std.c;
@@ -831,7 +942,15 @@ index cb988ca9a8e67f1c3c383a0b2a74bda7b0e14152..0c740baadaeb045c0c01dc7be92f3472
  pub const solaris = std.c;
  pub const linux = @import("os/linux.zig");
  pub const plan9 = @import("os/plan9.zig");
-@@ -5205,7 +5206,7 @@ pub fn getFdPath(fd: fd_t, out_buffer: *[MAX_PATH_BYTES]u8) RealPathError![]u8 {
+@@ -5179,6 +5180,7 @@ pub fn isGetFdPathSupportedOnTarget(os: std.Target.Os) bool {
+         .linux,
+         .solaris,
+         .freebsd,
++        .serenity,
+         => true,
+         // zig fmt: on
+         .dragonfly => os.version_range.semver.max.order(.{ .major = 6, .minor = 0, .patch = 0 }) != .lt,
+@@ -5219,7 +5221,7 @@ pub fn getFdPath(fd: fd_t, out_buffer: *[MAX_PATH_BYTES]u8) RealPathError![]u8 {
              const len = mem.indexOfScalar(u8, out_buffer[0..], @as(u8, 0)) orelse MAX_PATH_BYTES;
              return out_buffer[0..len];
          },
@@ -841,10 +960,10 @@ index cb988ca9a8e67f1c3c383a0b2a74bda7b0e14152..0c740baadaeb045c0c01dc7be92f3472
              const proc_path = std.fmt.bufPrintZ(procfs_buf[0..], "/proc/self/fd/{d}", .{fd}) catch unreachable;
  
 diff --git a/zig/lib/std/target.zig b/zig/lib/std/target.zig
-index b137e48c02d7d7ecc0f5eae61f6225504bf0ba3d..956edd944f587759ae04f69d477447f96441367c 100644
+index 608f0e958144fc53dfb67fa2efa29690a60599ba..08dc72f28c8bd06137b46510dffeae6a8358cce7 100644
 --- a/zig/lib/std/target.zig
 +++ b/zig/lib/std/target.zig
-@@ -2079,6 +2079,7 @@ pub const Target = struct {
+@@ -2121,6 +2121,7 @@ pub const Target = struct {
              .ananas,
              .fuchsia,
              .minix,

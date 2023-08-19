@@ -23,6 +23,8 @@ This makes the compiler look for libraries and headers in the right
 places, and enables some security mitigations like stack-smashing
 protection and position-independent code by default.
 
+Co-authored-by: kleines Filmröllchen <filmroellchen@serenityos.org>
+
 ## `0004-Driver-Default-to-ftls-model-initial-exec-on-Serenit.patch`
 
 Default to -ftls-model=initial-exec on SerenityOS
@@ -120,8 +122,8 @@ docgen: Filter ZIG_LIBC from the environment
 This environment variable can leak into the doctest builds and cause
 them to look for the host libraries in the target libc locations.
 
-## `0017-build-Set-Zig-version-to-0.11.0-dev.4003-c6aa29b6f.patch`
+## `0017-build-Set-Zig-version-to-0.12.0-dev.141-ddf5859c2.patch`
 
-build: Set Zig version to 0.11.0-dev.4003+c6aa29b6f
+build: Set Zig version to 0.12.0-dev.141+ddf5859c2
 
 
