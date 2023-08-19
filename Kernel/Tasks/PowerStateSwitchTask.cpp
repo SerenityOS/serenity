@@ -82,7 +82,7 @@ ErrorOr<void> PowerStateSwitchTask::perform_shutdown()
     // We assume that by this point userland has tried as much as possible to shut down everything in an orderly fashion.
     // Therefore, we force kill remaining processes, including Kernel processes, except the finalizer and ourselves.
     dbgln("Killing remaining processes...");
-    // Allow init process and finalizer task to be killed.
+    // NOTE: Allow init process to be killed. Stop processes and threads from doing syscalls!
     g_in_system_shutdown = true;
 
     // Make sure to kill all user processes first, otherwise we might get weird hangups.

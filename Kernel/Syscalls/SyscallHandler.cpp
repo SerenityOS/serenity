@@ -18,6 +18,8 @@
 
 namespace Kernel {
 
+extern bool g_in_system_shutdown;
+
 namespace Syscall {
 
 using Handler = auto (Process::*)(FlatPtr, FlatPtr, FlatPtr, FlatPtr) -> ErrorOr<FlatPtr>;
@@ -42,6 +44,9 @@ ErrorOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, Fla
     current_thread->did_syscall();
 
     PerformanceManager::add_syscall_event(*current_thread, regs);
+
+    if (g_in_system_shutdown)
+        return ENOSYS;
 
     if (function >= Function::__Count) {
         dbgln("Unknown syscall {} requested ({:p}, {:p}, {:p}, {:p})", function, arg1, arg2, arg3, arg4);
