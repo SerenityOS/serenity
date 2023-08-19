@@ -19,10 +19,11 @@ int prctl(int option, ...)
 
     uintptr_t arg1 = va_arg(args, uintptr_t);
     uintptr_t arg2 = va_arg(args, uintptr_t);
+    uintptr_t arg3 = va_arg(args, uintptr_t);
 
     va_end(args);
 
-    int rc = syscall(SC_prctl, option, arg1, arg2);
+    int rc = syscall(SC_prctl, option, arg1, arg2, arg3);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 }

@@ -434,8 +434,6 @@ public:
     [[noreturn]] void sys$exit_thread(Userspace<void*>, Userspace<void*>, size_t);
     ErrorOr<FlatPtr> sys$join_thread(pid_t tid, Userspace<void**> exit_value);
     ErrorOr<FlatPtr> sys$detach_thread(pid_t tid);
-    ErrorOr<FlatPtr> sys$set_thread_name(pid_t tid, Userspace<char const*> buffer, size_t buffer_size);
-    ErrorOr<FlatPtr> sys$get_thread_name(pid_t tid, Userspace<char*> buffer, size_t buffer_size);
     ErrorOr<FlatPtr> sys$kill_thread(pid_t tid, int signal);
     ErrorOr<FlatPtr> sys$rename(Userspace<Syscall::SC_rename_params const*>);
     ErrorOr<FlatPtr> sys$mknod(Userspace<Syscall::SC_mknod_params const*>);
@@ -459,7 +457,7 @@ public:
     ErrorOr<FlatPtr> sys$sysconf(int name);
     ErrorOr<FlatPtr> sys$disown(ProcessID);
     ErrorOr<FlatPtr> sys$allocate_tls(Userspace<char const*> initial_data, size_t);
-    ErrorOr<FlatPtr> sys$prctl(int option, FlatPtr arg1, FlatPtr arg2);
+    ErrorOr<FlatPtr> sys$prctl(int option, FlatPtr arg1, FlatPtr arg2, FlatPtr arg3);
     ErrorOr<FlatPtr> sys$anon_create(size_t, int options);
     ErrorOr<FlatPtr> sys$statvfs(Userspace<Syscall::SC_statvfs_params const*> user_params);
     ErrorOr<FlatPtr> sys$fstatvfs(int fd, statvfs* buf);
@@ -901,6 +899,7 @@ private:
     SpinlockProtected<Thread::ListInProcess, LockRank::None> const& thread_list() const { return m_thread_list; }
 
     ErrorOr<NonnullRefPtr<Thread>> get_thread_from_pid_or_tid(pid_t pid_or_tid, Syscall::SchedulerParametersMode mode);
+    ErrorOr<NonnullRefPtr<Thread>> get_thread_from_thread_list(pid_t tid);
 
     SpinlockProtected<Thread::ListInProcess, LockRank::None> m_thread_list {};
 

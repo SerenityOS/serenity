@@ -46,7 +46,7 @@ ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<Sys
     auto thread = TRY(Thread::create(*this));
 
     // We know this thread is not the main_thread,
-    // So give it a unique name until the user calls $set_thread_name on it
+    // So give it a unique name until the user calls $prctl with the PR_SET_THREAD_NAME option on it
     auto new_thread_name = TRY(name().with([&](auto& process_name) {
         return KString::formatted("{} [{}]", process_name.representable_view(), thread->tid().value());
     }));
@@ -185,45 +185,6 @@ ErrorOr<FlatPtr> Process::sys$kill_thread(pid_t tid, int signal)
 
     if (signal != 0)
         thread->send_signal(signal, &Process::current());
-
-    return 0;
-}
-
-ErrorOr<FlatPtr> Process::sys$set_thread_name(pid_t tid, Userspace<char const*> user_name, size_t user_name_length)
-{
-    VERIFY_NO_PROCESS_BIG_LOCK(this);
-    TRY(require_promise(Pledge::stdio));
-
-    Thread::Name thread_name {};
-    TRY(try_copy_name_from_user_into_fixed_string_buffer<64>(user_name, thread_name, user_name_length));
-
-    auto thread = Thread::from_tid(tid);
-    if (!thread || thread->pid() != pid())
-        return ESRCH;
-
-    thread->set_name(thread_name.representable_view());
-    return 0;
-}
-
-ErrorOr<FlatPtr> Process::sys$get_thread_name(pid_t tid, Userspace<char*> buffer, size_t buffer_size)
-{
-    VERIFY_NO_PROCESS_BIG_LOCK(this);
-    TRY(require_promise(Pledge::thread));
-    if (buffer_size == 0)
-        return EINVAL;
-
-    auto thread = Thread::from_tid(tid);
-    if (!thread || thread->pid() != pid())
-        return ESRCH;
-
-    TRY(thread->name().with([&](auto& thread_name) -> ErrorOr<void> {
-        VERIFY(!thread_name.representable_view().is_null());
-        auto thread_name_view = thread_name.representable_view();
-        if (thread_name_view.length() + 1 > buffer_size)
-            return ENAMETOOLONG;
-
-        return copy_to_user(buffer, thread_name_view.characters_without_null_termination(), thread_name_view.length() + 1);
-    }));
 
     return 0;
 }

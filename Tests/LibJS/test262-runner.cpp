@@ -574,7 +574,7 @@ int main(int argc, char** argv)
     args_parser.parse(arguments);
 
 #if !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN)
-    if (disable_core_dumping && prctl(PR_SET_DUMPABLE, 0, 0) < 0) {
+    if (disable_core_dumping && prctl(PR_SET_DUMPABLE, 0, 0, 0) < 0) {
         perror("prctl(PR_SET_DUMPABLE)");
         return exit_wrong_arguments;
     }

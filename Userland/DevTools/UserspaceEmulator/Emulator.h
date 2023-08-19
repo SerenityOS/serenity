@@ -229,7 +229,6 @@ private:
     int virt$sendmsg(int sockfd, FlatPtr msg_addr, int flags);
     int virt$set_mmap_name(FlatPtr);
     int virt$set_process_name(FlatPtr buffer, int size);
-    int virt$set_thread_name(pid_t, FlatPtr, size_t);
     int virt$setgid(gid_t);
     int virt$setgroups(ssize_t count, FlatPtr);
     int virt$setpgid(pid_t pid, pid_t pgid);

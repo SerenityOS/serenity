@@ -19,6 +19,7 @@
 
 #if defined(AK_OS_SERENITY)
 #    include <serenity.h>
+#    include <sys/prctl.h>
 #    include <syscall.h>
 #elif defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_SOLARIS)
 #    include <sys/sysctl.h>
@@ -137,7 +138,7 @@ ErrorOr<void> Process::set_name([[maybe_unused]] StringView name, [[maybe_unused
     if (set_thread_name == SetThreadName::No)
         return {};
 
-    rc = syscall(SC_set_thread_name, gettid(), name.characters_without_null_termination(), name.length());
+    rc = prctl(PR_SET_THREAD_NAME, gettid(), name.characters_without_null_termination(), name.length());
     if (rc != 0)
         return Error::from_syscall("set_thread_name"sv, -rc);
     return {};
