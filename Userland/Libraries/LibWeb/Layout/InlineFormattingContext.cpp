@@ -250,8 +250,14 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
         auto& item = item_opt.value();
 
         // Ignore collapsible whitespace chunks at the start of line, and if the last fragment already ends in whitespace.
-        if (item.is_collapsible_whitespace && (line_boxes.is_empty() || line_boxes.last().is_empty_or_ends_in_whitespace()))
+        if (item.is_collapsible_whitespace && (line_boxes.is_empty() || line_boxes.last().is_empty_or_ends_in_whitespace())) {
+            if (item.node->computed_values().white_space() != CSS::WhiteSpace::Nowrap) {
+                auto next_width = iterator.next_non_whitespace_sequence_width();
+                if (next_width > 0)
+                    line_builder.break_if_needed(next_width);
+            }
             continue;
+        }
 
         switch (item.type) {
         case InlineLevelIterator::Item::Type::ForcedBreak: {
@@ -287,17 +293,24 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
         case InlineLevelIterator::Item::Type::Text: {
             auto& text_node = verify_cast<Layout::TextNode>(*item.node);
 
-            if (text_node.computed_values().white_space() != CSS::WhiteSpace::Nowrap && line_builder.break_if_needed(item.border_box_width())) {
+            if (text_node.computed_values().white_space() != CSS::WhiteSpace::Nowrap) {
+                bool is_whitespace = false;
+                CSSPixels next_width = 0;
+                // If we're in a whitespace-collapsing context, we can simply check the flag.
+                if (item.is_collapsible_whitespace) {
+                    is_whitespace = true;
+                    next_width = iterator.next_non_whitespace_sequence_width();
+                } else {
+                    // In whitespace-preserving contexts (white-space: pre*), we have to check manually.
+                    auto view = text_node.text_for_rendering().substring_view(item.offset_in_node, item.length_in_node);
+                    is_whitespace = view.is_whitespace();
+                    if (is_whitespace)
+                        next_width = iterator.next_non_whitespace_sequence_width();
+                }
+
                 // If whitespace caused us to break, we swallow the whitespace instead of
                 // putting it on the next line.
-
-                // If we're in a whitespace-collapsing context, we can simply check the flag.
-                if (item.is_collapsible_whitespace)
-                    break;
-
-                // In whitespace-preserving contexts (white-space: pre*), we have to check manually.
-                auto view = text_node.text_for_rendering().substring_view(item.offset_in_node, item.length_in_node);
-                if (view.is_whitespace())
+                if (is_whitespace && next_width > 0 && line_builder.break_if_needed(item.border_box_width() + next_width))
                     break;
             }
             line_builder.append_text_chunk(

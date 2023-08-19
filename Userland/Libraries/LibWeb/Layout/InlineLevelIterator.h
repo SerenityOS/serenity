@@ -52,8 +52,10 @@ public:
     InlineLevelIterator(Layout::InlineFormattingContext&, LayoutState&, Layout::BlockContainer const&, LayoutMode);
 
     Optional<Item> next();
+    CSSPixels next_non_whitespace_sequence_width();
 
 private:
+    Optional<Item> next_without_lookahead();
     void skip_to_next();
     void compute_next();
 
@@ -96,6 +98,7 @@ private:
     Optional<ExtraBoxMetrics> m_extra_trailing_metrics;
 
     Vector<JS::NonnullGCPtr<NodeWithStyleAndBoxModelMetrics const>> m_box_model_node_stack;
+    Queue<InlineLevelIterator::Item> m_lookahead_items;
 };
 
 }
