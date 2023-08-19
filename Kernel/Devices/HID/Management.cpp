@@ -174,7 +174,7 @@ HIDManagement& HIDManagement::the()
     return *s_the;
 }
 
-u32 HIDManagement::get_char_from_character_map(KeyEvent event) const
+u32 HIDManagement::get_char_from_character_map(KeyEvent event, bool num_lock_on) const
 {
     auto modifiers = event.modifiers();
     auto index = event.scancode & 0xFF; // Index is last byte of scan code.
@@ -207,6 +207,10 @@ u32 HIDManagement::get_char_from_character_map(KeyEvent event) const
     } else if (event.e0_prefix && event.key != Key_Return) {
         // Except for `keypad-/` and 'keypad-return', all e0 scan codes are not actually characters. i.e., `keypad-0` and
         // `Insert` have the same scancode except for the prefix, but insert should not have a code_point.
+        code_point = 0;
+    } else if (!num_lock_on && !event.e0_prefix && event.scancode >= 0x47 && event.scancode <= 0x53 && event.key != Key_Minus && event.key != Key_Plus) {
+        // When Num Lock is off, some numpad keys have the same function as some of the extended keys like Home, End, PgDown, arrows etc.
+        // These keys should have the code_point set to 0.
         code_point = 0;
     }
 
