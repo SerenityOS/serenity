@@ -499,6 +499,12 @@ static auto create_radial_gradient_between_two_circles(Gfx::FloatPoint start_cen
     //      - Start circle larger than end circle (outside end circle)
     //      - Start circle or end circle radius == 0
 
+    // FIXME: This does not render the SVG spreadMethod=repeat/reflect correctly if
+    // focal radius > 0 and the focal point is not centered within the end circle.
+    // It does not render spreadMethod=pad correctly in this case either, but it's really subtle.
+    // It may be worth trying Skia's approach: https://skia.org/docs/dev/design/conical/
+    // (Yes, this gradient actually is a two-point conical gradient)
+
     return Gradient {
         move(gradient_line),
         [=](float x, float y) {
