@@ -6,6 +6,7 @@
 
 #include "Function.h"
 #include "AST/AST.h"
+#include "Compiler/ControlFlowGraph.h"
 
 namespace JSSpecCompiler {
 

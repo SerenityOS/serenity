@@ -106,3 +106,29 @@ TreeList
   ReturnNode
     Var b
 
+===== AST after cfg-building =====
+f():
+TreeList
+  IfElseIfChain
+    UnresolvedReference cond1
+    TreeList
+      BinaryOperation Declaration
+        Var a
+        MathematicalConstant 1
+      IfElseIfChain
+        UnresolvedReference cond2
+        TreeList
+          BinaryOperation Declaration
+            Var b
+            Var a
+        TreeList
+          BinaryOperation Declaration
+            Var b
+            MathematicalConstant 3
+    TreeList
+      BinaryOperation Declaration
+        Var b
+        MathematicalConstant 4
+  ReturnNode
+    Var b
+
