@@ -84,36 +84,48 @@ public:
     template<typename... Args>
     ErrorOr<void> write_to_buffer(UserOrKernelBuffer& buffer, Args... args)
     {
-        if (in_target_context(buffer))
+        auto process = m_process.strong_ref();
+        if (!process)
+            return Error::from_errno(ESRCH);
+        if (in_target_context(*process, buffer))
             return buffer.write(forward<Args>(args)...);
-        ScopedAddressSpaceSwitcher switcher(m_process);
+        ScopedAddressSpaceSwitcher switcher(*process);
         return buffer.write(forward<Args>(args)...);
     }
 
     template<size_t BUFFER_BYTES, typename... Args>
     ErrorOr<size_t> write_to_buffer_buffered(UserOrKernelBuffer& buffer, Args... args)
     {
-        if (in_target_context(buffer))
+        auto process = m_process.strong_ref();
+        if (!process)
+            return Error::from_errno(ESRCH);
+        if (in_target_context(*process, buffer))
             return buffer.write_buffered<BUFFER_BYTES>(forward<Args>(args)...);
-        ScopedAddressSpaceSwitcher switcher(m_process);
+        ScopedAddressSpaceSwitcher switcher(*process);
         return buffer.write_buffered<BUFFER_BYTES>(forward<Args>(args)...);
     }
 
     template<typename... Args>
     ErrorOr<void> read_from_buffer(UserOrKernelBuffer const& buffer, Args... args)
     {
-        if (in_target_context(buffer))
+        auto process = m_process.strong_ref();
+        if (!process)
+            return Error::from_errno(ESRCH);
+        if (in_target_context(*process, buffer))
             return buffer.read(forward<Args>(args)...);
-        ScopedAddressSpaceSwitcher switcher(m_process);
+        ScopedAddressSpaceSwitcher switcher(*process);
         return buffer.read(forward<Args>(args)...);
     }
 
     template<size_t BUFFER_BYTES, typename... Args>
     ErrorOr<size_t> read_from_buffer_buffered(UserOrKernelBuffer const& buffer, Args... args)
     {
-        if (in_target_context(buffer))
+        auto process = m_process.strong_ref();
+        if (!process)
+            return Error::from_errno(ESRCH);
+        if (in_target_context(*process, buffer))
             return buffer.read_buffered<BUFFER_BYTES>(forward<Args>(args)...);
-        ScopedAddressSpaceSwitcher switcher(m_process);
+        ScopedAddressSpaceSwitcher switcher(*process);
         return buffer.read_buffered<BUFFER_BYTES>(forward<Args>(args)...);
     }
 
@@ -126,11 +138,11 @@ private:
     void sub_request_finished(AsyncDeviceRequest&);
     void request_finished();
 
-    [[nodiscard]] bool in_target_context(UserOrKernelBuffer const& buffer) const
+    [[nodiscard]] bool in_target_context(Process& process, UserOrKernelBuffer const& buffer) const
     {
         if (buffer.is_kernel_buffer())
             return true;
-        return m_process == &Process::current();
+        return &process == &Process::current();
     }
 
     [[nodiscard]] static bool is_completed_result(RequestResult result)
@@ -149,7 +161,7 @@ private:
     AsyncDeviceSubRequestList m_sub_requests_pending;
     AsyncDeviceSubRequestList m_sub_requests_complete;
     WaitQueue m_queue;
-    NonnullRefPtr<Process> const m_process;
+    LockWeakPtr<Process> const m_process;
     void* m_private { nullptr };
     mutable Spinlock<LockRank::None> m_lock {};
 };
