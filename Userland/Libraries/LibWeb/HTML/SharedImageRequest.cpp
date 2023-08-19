@@ -160,6 +160,7 @@ void SharedImageRequest::handle_successful_fetch(AK::URL const& url_string, Stri
         if (callback.on_finish)
             callback.on_finish();
     }
+    m_callbacks.clear();
 }
 
 void SharedImageRequest::handle_failed_fetch()
@@ -169,6 +170,7 @@ void SharedImageRequest::handle_failed_fetch()
         if (callback.on_fail)
             callback.on_fail();
     }
+    m_callbacks.clear();
 }
 
 bool SharedImageRequest::needs_fetching() const
