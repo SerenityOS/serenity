@@ -124,6 +124,9 @@ public:
     bool is_flex_item() const { return m_is_flex_item; }
     void set_flex_item(bool b) { m_is_flex_item = b; }
 
+    bool is_grid_item() const { return m_is_grid_item; }
+    void set_grid_item(bool b) { m_is_grid_item = b; }
+
     Box const* containing_block() const;
     Box* containing_block() { return const_cast<Box*>(const_cast<Node const*>(this)->containing_block()); }
 
@@ -194,6 +197,8 @@ private:
     SelectionState m_selection_state { SelectionState::None };
 
     bool m_is_flex_item { false };
+    bool m_is_grid_item { false };
+
     GeneratedFor m_generated_for { GeneratedFor::NotGenerated };
 };
 
