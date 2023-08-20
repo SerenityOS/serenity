@@ -918,6 +918,10 @@ MaybeLoaderError FlacLoaderPlugin::decode_residual(Vector<i64>& decoded, FlacSub
 
     if (partitions > m_current_frame->sample_count)
         return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Too many Rice partitions, each partition must contain at least one sample" };
+    // “The partition order MUST be such that the block size is evenly divisible by the number of partitions.”
+    // FIXME: Check “The partition order also MUST be such that the (block size >> partition order) is larger than the predictor order.”
+    if (m_current_frame->sample_count % partitions != 0)
+        return LoaderError { LoaderError::Category::Format, TRY(m_stream->tell()), "Block size is not evenly divisible by number of partitions" };
 
     if (residual_mode == FlacResidualMode::Rice4Bit) {
         // 11.30.2. RESIDUAL_CODING_METHOD_PARTITIONED_EXP_GOLOMB
