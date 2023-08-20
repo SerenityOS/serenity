@@ -32,7 +32,7 @@ public:
 
 private:
     URLStyleValue(AK::URL const& url)
-        : StyleValueWithDefaultOperators(Type::Url)
+        : StyleValueWithDefaultOperators(Type::URL)
         , m_url(url)
     {
     }
