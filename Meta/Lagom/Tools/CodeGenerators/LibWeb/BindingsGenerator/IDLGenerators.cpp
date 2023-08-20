@@ -783,7 +783,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             for (auto& member : current_dictionary->members) {
                 dictionary_generator.set("member_key", member.name);
                 auto member_js_name = make_input_acceptable_cpp(member.name.to_snakecase());
-                auto member_value_name = DeprecatedString::formatted("{}_value", member_js_name);
+                auto member_value_name = DeprecatedString::formatted("{}_value_{}", member_js_name, i);
                 auto member_property_value_name = DeprecatedString::formatted("{}_property_value_{}", member_js_name, i);
                 dictionary_generator.set("member_name", member_js_name);
                 dictionary_generator.set("member_value_name", member_value_name);
