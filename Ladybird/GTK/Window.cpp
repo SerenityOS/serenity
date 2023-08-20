@@ -1,6 +1,7 @@
 #include "Window.h"
 #include "Application.h"
 #include "BitmapPaintable.h"
+#include "Tab.h"
 #include "WebView.h"
 
 struct _LadybirdWindow {
@@ -42,8 +43,8 @@ static void ladybird_window_dispose(GObject* object)
 
 static LadybirdWebView* get_web_view_from_tab_page(AdwTabPage* tab_page)
 {
-    GtkScrolledWindow* scrolled_window = GTK_SCROLLED_WINDOW(adw_tab_page_get_child(tab_page));
-    return LADYBIRD_WEB_VIEW(gtk_scrolled_window_get_child(scrolled_window));
+    LadybirdTab* tab = LADYBIRD_TAB(adw_tab_page_get_child(tab_page));
+    return ladybird_tab_get_web_view(tab);
 }
 
 static void update_favicon(LadybirdBitmapPaintable* favicon_paintable, [[maybe_unused]] GParamSpec* pspec, void* data)
@@ -60,15 +61,11 @@ static AdwTabPage* open_new_tab(LadybirdWindow* self, AdwTabPage* parent)
         ? ladybird_application_get_incognito_cookie_jar(app)
         : ladybird_application_get_cookie_jar(app);
 
-    LadybirdWebView* web_view = (LadybirdWebView*)g_object_new(LADYBIRD_TYPE_WEB_VIEW,
-        "cookie-jar", cookie_jar,
-        nullptr);
-    gtk_widget_add_css_class(GTK_WIDGET(web_view), "view");
+    LadybirdTab* tab = ladybird_tab_new();
+    LadybirdWebView* web_view = ladybird_tab_get_web_view(tab);
+    ladybird_web_view_set_cookie_jar(web_view, cookie_jar);
 
-    GtkWidget* scrolled_window = gtk_scrolled_window_new();
-    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scrolled_window), GTK_WIDGET(web_view));
-
-    AdwTabPage* tab_page = adw_tab_view_add_page(self->tab_view, scrolled_window, parent);
+    AdwTabPage* tab_page = adw_tab_view_add_page(self->tab_view, GTK_WIDGET(tab), parent);
     adw_tab_page_set_title(tab_page, "New tab");
     g_object_bind_property(web_view, "page-title", tab_page, "title", G_BINDING_DEFAULT);
     g_object_bind_property(web_view, "loading", tab_page, "loading", G_BINDING_DEFAULT);
@@ -350,6 +347,7 @@ void ladybird_window_open_file(LadybirdWindow* self, GFile* file)
 static void ladybird_window_init(LadybirdWindow* self)
 {
     GtkWidget* widget = GTK_WIDGET(self);
+    g_type_ensure(LADYBIRD_TYPE_TAB);
     g_type_ensure(LADYBIRD_TYPE_WEB_VIEW);
     gtk_widget_init_template(widget);
 }

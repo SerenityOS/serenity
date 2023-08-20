@@ -56,6 +56,7 @@ endfunction()
 
 add_blueprint(window.blp window.ui)
 add_blueprint(shortcuts-dialog.blp shortcuts-dialog.ui)
+add_blueprint(tab.blp tab.ui)
 
 set(SOURCE_GRESOURCE_FILE "${CMAKE_CURRENT_SOURCE_DIR}/gresources.xml")
 set(GENERATED_GRESOURCE_FILE "${CMAKE_CURRENT_BINARY_DIR}/ladybird-resources.c")
@@ -84,6 +85,7 @@ set(SOURCES
     Application.cpp
     Window.cpp
     WebView.cpp
+    Tab.cpp
     BitmapPaintable.cpp
     ViewImpl.cpp
     EventLoopImplementationGLib.cpp
