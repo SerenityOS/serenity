@@ -9,12 +9,6 @@
 
 namespace Web::CSS {
 
-Frequency::Frequency(int value, Type type)
-    : m_type(type)
-    , m_value(value)
-{
-}
-
 Frequency::Frequency(double value, Type type)
     : m_type(type)
     , m_value(value)

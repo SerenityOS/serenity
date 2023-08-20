@@ -8,13 +8,7 @@
 
 namespace Web::CSS {
 
-Resolution::Resolution(int value, Type type)
-    : m_type(type)
-    , m_value(value)
-{
-}
-
-Resolution::Resolution(float value, Type type)
+Resolution::Resolution(double value, Type type)
     : m_type(type)
     , m_value(value)
 {
@@ -25,13 +19,13 @@ ErrorOr<String> Resolution::to_string() const
     return String::formatted("{}dppx", to_dots_per_pixel());
 }
 
-float Resolution::to_dots_per_pixel() const
+double Resolution::to_dots_per_pixel() const
 {
     switch (m_type) {
     case Type::Dpi:
         return m_value * 96; // 1in = 2.54cm = 96px
     case Type::Dpcm:
-        return m_value * (96.0f / 2.54f); // 1cm = 96px/2.54
+        return m_value * (96.0 / 2.54); // 1cm = 96px/2.54
     case Type::Dppx:
         return m_value;
     }

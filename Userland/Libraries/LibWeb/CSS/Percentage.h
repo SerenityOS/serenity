@@ -18,11 +18,6 @@ namespace Web::CSS {
 
 class Percentage {
 public:
-    explicit Percentage(int value)
-        : m_value(value)
-    {
-    }
-
     explicit Percentage(double value)
         : m_value(value)
     {

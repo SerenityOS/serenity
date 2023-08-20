@@ -83,7 +83,6 @@ public:
 
     static Optional<Type> unit_from_name(StringView);
 
-    Length(int value, Type type);
     Length(double value, Type type);
     ~Length();
 

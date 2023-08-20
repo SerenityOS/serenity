@@ -200,7 +200,7 @@ RefPtr<StyleValue> Parser::parse_linear_gradient_function(ComponentValue const& 
     if (first_param.is(Token::Type::Dimension)) {
         // <angle>
         tokens.next_token();
-        float angle_value = first_param.token().dimension_value();
+        auto angle_value = first_param.token().dimension_value();
         auto unit_string = first_param.token().dimension_unit();
         auto angle_type = Angle::unit_from_name(unit_string);
 
@@ -320,7 +320,7 @@ RefPtr<StyleValue> Parser::parse_conic_gradient_function(ComponentValue const& c
             auto angle_token = tokens.next_token();
             if (!angle_token.is(Token::Type::Dimension))
                 return nullptr;
-            float angle = angle_token.token().dimension_value();
+            auto angle = angle_token.token().dimension_value();
             auto angle_unit = angle_token.token().dimension_unit();
             auto angle_type = Angle::unit_from_name(angle_unit);
             if (!angle_type.has_value())

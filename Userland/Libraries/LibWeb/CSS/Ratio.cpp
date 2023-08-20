@@ -9,7 +9,7 @@
 
 namespace Web::CSS {
 
-Ratio::Ratio(float first, float second)
+Ratio::Ratio(double first, double second)
     : m_first_value(first)
     , m_second_value(second)
 {

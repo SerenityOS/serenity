@@ -9,12 +9,6 @@
 
 namespace Web::CSS {
 
-Time::Time(int value, Type type)
-    : m_type(type)
-    , m_value(value)
-{
-}
-
 Time::Time(double value, Type type)
     : m_type(type)
     , m_value(value)

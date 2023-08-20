@@ -22,7 +22,6 @@ public:
 
     static Optional<Type> unit_from_name(StringView);
 
-    Angle(int value, Type type);
     Angle(double value, Type type);
     static Angle make_degrees(double);
     Angle percentage_of(Percentage const&) const;
