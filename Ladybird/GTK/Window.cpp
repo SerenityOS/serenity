@@ -77,8 +77,7 @@ static AdwTabPage* open_new_tab(LadybirdWindow* self, AdwTabPage* parent)
     g_signal_connect_object(favicon_paintable, "notify::texture", G_CALLBACK(update_favicon), tab_page, G_CONNECT_DEFAULT);
 
     adw_tab_view_set_selected_page(self->tab_view, tab_page);
-    // g_object_unref(web_view);
-    // g_object_unref(scrolled_window);
+    gtk_widget_grab_focus(GTK_WIDGET(self->url_entry));
     return tab_page;
 }
 
@@ -155,6 +154,14 @@ static void win_open_file_action(GtkWidget* widget, [[maybe_unused]] char const*
         },
         self);
     g_object_unref(dialog);
+}
+
+static void win_focus_location_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
+{
+    LadybirdWindow* self = LADYBIRD_WINDOW(widget);
+
+    gtk_editable_select_region(GTK_EDITABLE(self->url_entry), 0, -1);
+    gtk_widget_grab_focus(GTK_WIDGET(self->url_entry));
 }
 
 static void tab_close_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
@@ -241,6 +248,7 @@ static void on_url_entered(LadybirdWindow* self, GtkEntry* url_entry)
 
     char const* url = gtk_entry_buffer_get_text(gtk_entry_get_buffer(url_entry));
     ladybird_web_view_load_url(web_view, url);
+    gtk_widget_grab_focus(GTK_WIDGET(web_view));
 }
 
 static AdwTabView* on_create_window(LadybirdWindow* self)
@@ -371,6 +379,7 @@ static void ladybird_window_class_init(LadybirdWindowClass* klass)
 
     gtk_widget_class_install_action(widget_class, "win.new-tab", nullptr, win_new_tab_action);
     gtk_widget_class_install_action(widget_class, "win.open-file", nullptr, win_open_file_action);
+    gtk_widget_class_install_action(widget_class, "win.focus-location", nullptr, win_focus_location_action);
     gtk_widget_class_install_action(widget_class, "tab.close", nullptr, tab_close_action);
     gtk_widget_class_install_action(widget_class, "tab.duplicate", nullptr, tab_duplicate_action);
     gtk_widget_class_install_action(widget_class, "tab.pin", nullptr, tab_pin_action);
@@ -379,6 +388,9 @@ static void ladybird_window_class_init(LadybirdWindowClass* klass)
     gtk_widget_class_install_action(widget_class, "tab.close-others", nullptr, tab_close_others_action);
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_t, GDK_CONTROL_MASK, "win.new-tab", nullptr);
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_o, GDK_CONTROL_MASK, "win.open-file", nullptr);
+    gtk_widget_class_add_binding_action(widget_class, GDK_KEY_l, GDK_CONTROL_MASK, "win.focus-location", nullptr);
+    gtk_widget_class_add_binding_action(widget_class, GDK_KEY_d, GDK_ALT_MASK, "win.focus-location", nullptr);
+    gtk_widget_class_add_binding_action(widget_class, GDK_KEY_F6, GdkModifierType(0), "win.focus-location", nullptr);
     gtk_widget_class_add_binding_action(widget_class, GDK_KEY_w, GDK_CONTROL_MASK, "tab.close", nullptr);
 
     gtk_widget_class_install_action(widget_class, "page.zoom-in", nullptr, page_zoom_in_action);

@@ -684,6 +684,8 @@ static void on_click_pressed(GtkGestureClick* gesture_click, gint n_press, gdoub
 {
     LadybirdWebView* self = LADYBIRD_WEB_VIEW(user_data);
 
+    gtk_widget_grab_focus(GTK_WIDGET(self));
+
     unsigned button, buttons, modifiers;
     translate_state(GTK_EVENT_CONTROLLER(gesture_click), &button, &buttons, &modifiers);
     int page_x, page_y;
@@ -726,7 +728,7 @@ static void on_motion(GtkEventControllerMotion* motion, gdouble x, gdouble y, vo
     self->impl->mouse_move(page_x, page_y, buttons, modifiers);
 }
 
-static void on_key_pressed(GtkEventControllerKey* controller_key, guint keyval, [[maybe_unused]] guint keycode, [[maybe_unused]] GdkModifierType state, void* user_data)
+static gboolean on_key_pressed(GtkEventControllerKey* controller_key, guint keyval, [[maybe_unused]] guint keycode, [[maybe_unused]] GdkModifierType state, void* user_data)
 {
     LadybirdWebView* self = LADYBIRD_WEB_VIEW(user_data);
 
@@ -736,9 +738,11 @@ static void on_key_pressed(GtkEventControllerKey* controller_key, guint keyval, 
     translate_state(GTK_EVENT_CONTROLLER(controller_key), &button, &buttons, &modifiers);
 
     self->impl->key_down(key, modifiers, point);
+    // TODO: Propagate whether the web page has handled it.
+    return false;
 }
 
-static void on_key_released(GtkEventControllerKey* controller_key, guint keyval, [[maybe_unused]] guint keycode, [[maybe_unused]] GdkModifierType state, void* user_data)
+static gboolean on_key_released(GtkEventControllerKey* controller_key, guint keyval, [[maybe_unused]] guint keycode, [[maybe_unused]] GdkModifierType state, void* user_data)
 {
     LadybirdWebView* self = LADYBIRD_WEB_VIEW(user_data);
 
@@ -748,6 +752,8 @@ static void on_key_released(GtkEventControllerKey* controller_key, guint keyval,
     translate_state(GTK_EVENT_CONTROLLER(controller_key), &button, &buttons, &modifiers);
 
     self->impl->key_up(key, modifiers, point);
+    // TODO: Propagate whether the web page has handled it.
+    return false;
 }
 
 static void ladybird_web_view_init(LadybirdWebView* self)
