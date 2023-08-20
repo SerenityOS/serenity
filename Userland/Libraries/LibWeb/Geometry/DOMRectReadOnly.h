@@ -45,6 +45,6 @@ protected:
 
     virtual void initialize(JS::Realm&) override;
 
-    Gfx::FloatRect m_rect;
+    Gfx::DoubleRect m_rect;
 };
 }
