@@ -39,7 +39,7 @@ include_directories(
 )
 add_compile_definitions(AK_DONT_REPLACE_STD)
 
-set(RESOURCE_FILES)
+set(RESOURCE_FILES style.css)
 function(add_blueprint source_file ui_file)
     add_custom_command(
         OUTPUT "${ui_file}"

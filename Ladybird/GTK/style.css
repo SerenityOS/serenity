@@ -1,0 +1,21 @@
+label.hovered-link {
+  background: @view_bg_color;
+  padding: 5px;
+  transition: opacity 0.5s;
+}
+
+label.hovered-link.bottom.left {
+  border-top-right-radius: 12px;
+  border-top: 1px solid alpha(@view_fg_color, 0.3);
+  border-right: 1px solid alpha(@view_fg_color, 0.3);
+}
+
+label.hovered-link.bottom.right {
+  border-top-left-radius: 12px;
+  border-top: 1px solid alpha(@view_fg_color, 0.3);
+  border-left: 1px solid alpha(@view_fg_color, 0.3);
+}
+
+label.hovered-link.hidden {
+  opacity: 0;
+}

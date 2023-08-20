@@ -40,9 +40,18 @@ LadybirdViewImpl::LadybirdViewImpl(LadybirdWebView* widget)
     on_update_cookie = [this](Web::Cookie::Cookie const& cookie) {
         cookie_jar().update_cookie(cookie);
     };
+
     on_favicon_change = [this](Gfx::Bitmap const& bitmap) {
         LadybirdBitmapPaintable* favicon_paintable = LADYBIRD_BITMAP_PAINTABLE(ladybird_web_view_get_favicon(m_widget));
         ladybird_bitmap_paintable_push_bitmap(favicon_paintable, &bitmap, bitmap.width(), bitmap.height(), 1.0, false);
+    };
+
+    on_link_hover = [this](AK::URL const& url) {
+        DeprecatedString url_string = url.serialize();
+        ladybird_web_view_set_hovered_link(m_widget, url_string.characters());
+    };
+    on_link_unhover = [this]() {
+        ladybird_web_view_set_hovered_link(m_widget, nullptr);
     };
 
     AdwStyleManager* style_manager

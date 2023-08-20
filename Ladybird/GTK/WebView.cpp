@@ -16,6 +16,7 @@ struct _LadybirdWebView {
 
     char* page_url;
     char* page_title;
+    char* hovered_link;
     // These two are in device pixels (same as texture size).
     int page_width;
     int page_height;
@@ -30,6 +31,7 @@ enum {
     PROP_LOADING,
     PROP_ZOOM_PERCENT,
     PROP_COOKIE_JAR,
+    PROP_HOVERED_LINK,
     NUM_PROPS,
 
     PROP_HADJUSTMENT,
@@ -119,6 +121,21 @@ void ladybird_web_view_set_loading(LadybirdWebView* self, bool loading)
     g_object_notify_by_pspec(G_OBJECT(self), props[PROP_LOADING]);
 }
 
+char const* ladybird_web_view_get_hovered_link(LadybirdWebView* self)
+{
+    g_return_val_if_fail(LADYBIRD_IS_WEB_VIEW(self), nullptr);
+
+    return self->hovered_link;
+}
+
+void ladybird_web_view_set_hovered_link(LadybirdWebView* self, char const* hovered_link)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+
+    if (g_set_str(&self->hovered_link, hovered_link))
+        g_object_notify_by_pspec(G_OBJECT(self), props[PROP_HOVERED_LINK]);
+}
+
 void ladybird_web_view_zoom_in(LadybirdWebView* self)
 {
     g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
@@ -196,6 +213,10 @@ static void ladybird_web_view_get_property(GObject* object, guint prop_id, GValu
         g_value_set_pointer(value, self->cookie_jar);
         break;
 
+    case PROP_HOVERED_LINK:
+        g_value_set_string(value, self->hovered_link);
+        break;
+
     case PROP_HADJUSTMENT:
         g_value_set_object(value, self->hadjustment);
         break;
@@ -262,6 +283,10 @@ static void ladybird_web_view_set_property(GObject* object, guint prop_id, GValu
 
     case PROP_COOKIE_JAR:
         ladybird_web_view_set_cookie_jar(self, reinterpret_cast<Browser::CookieJar*>(g_value_get_pointer(value)));
+        break;
+
+    case PROP_HOVERED_LINK:
+        ladybird_web_view_set_hovered_link(self, g_value_get_string(value));
         break;
 
     case PROP_HADJUSTMENT:
@@ -805,6 +830,7 @@ static void ladybird_web_view_dispose(GObject* object)
     g_clear_object(&self->vadjustment);
     g_clear_pointer(&self->page_url, g_free);
     g_clear_pointer(&self->page_title, g_free);
+    g_clear_pointer(&self->hovered_link, g_free);
 
     G_OBJECT_CLASS(ladybird_web_view_parent_class)->dispose(object);
 }
@@ -831,6 +857,7 @@ static void ladybird_web_view_class_init(LadybirdWebViewClass* klass)
     props[PROP_LOADING] = g_param_spec_boolean("loading", nullptr, nullptr, false, param_flags);
     props[PROP_ZOOM_PERCENT] = g_param_spec_uint("zoom-percent", nullptr, nullptr, 30, 500, 100, ro_param_flags);
     props[PROP_COOKIE_JAR] = g_param_spec_pointer("cookie-jar", nullptr, nullptr, param_flags);
+    props[PROP_HOVERED_LINK] = g_param_spec_string("hovered-link", nullptr, nullptr, nullptr, param_flags);
     g_object_class_install_properties(object_class, NUM_PROPS, props);
 
     widget_class->measure = ladybird_web_view_measure;
