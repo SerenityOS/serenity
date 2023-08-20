@@ -50,6 +50,7 @@ static bool is_platform_object(Type const& type)
         "PerformanceMark"sv,
         "ReadableStreamBYOBReader"sv,
         "ReadableStreamDefaultReader"sv,
+        "RadioNodeList"sv,
         "Range"sv,
         "ReadableStream"sv,
         "Request"sv,

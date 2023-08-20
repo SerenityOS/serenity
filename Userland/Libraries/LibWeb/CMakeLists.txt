@@ -168,6 +168,7 @@ set(SOURCES
     DOM/Position.cpp
     DOM/ProcessingInstruction.cpp
     DOM/QualifiedName.cpp
+    DOM/RadioNodeList.cpp
     DOM/Range.cpp
     DOM/ShadowRoot.cpp
     DOM/StaticNodeList.cpp

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2023, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -238,6 +238,7 @@ class ParentNode;
 class Position;
 class ProcessingInstruction;
 class Range;
+class RadioNodeList;
 class RegisteredObserver;
 class ShadowRoot;
 class StaticNodeList;
