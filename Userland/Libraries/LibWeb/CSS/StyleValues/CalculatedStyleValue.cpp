@@ -1015,9 +1015,9 @@ CalculatedStyleValue::CalculationResult ConstantCalculationNode::resolve([[maybe
         return { Number(Number::Type::Number, M_PI) };
     // FIXME: We need to keep track of Infinity and NaN across all nodes, since they require special handling.
     case CalculationNode::ConstantType::Infinity:
-        return { Number(Number::Type::Number, NumericLimits<float>::max()) };
+        return { Number(Number::Type::Number, NumericLimits<double>::max()) };
     case CalculationNode::ConstantType::MinusInfinity:
-        return { Number(Number::Type::Number, NumericLimits<float>::lowest()) };
+        return { Number(Number::Type::Number, NumericLimits<double>::lowest()) };
     case CalculationNode::ConstantType::NaN:
         return { Number(Number::Type::Number, NAN) };
     }
