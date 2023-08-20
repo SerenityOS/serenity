@@ -1259,4 +1259,61 @@ void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable> navigable,
     traversable->apply_the_history_step(target_step);
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#url-and-history-update-steps
+void perform_url_and_history_update_steps(DOM::Document& document, AK::URL new_url, HistoryHandlingBehavior history_handling)
+{
+    // 1. Let navigable be document's node navigable.
+    auto navigable = document.navigable();
+
+    // 2. Let activeEntry be navigable's active session history entry.
+    auto active_entry = navigable->active_session_history_entry();
+
+    // 3. Let newEntry be a new session history entry, with
+    //      URL: newURL
+    //      serialized state: if serializedData is not null, serializedData; otherwise activeEntry's classic history API state
+    //      document state: activeEntry's document state
+    //      scroll restoration mode: activeEntry's scroll restoration mode
+    //      persisted user state: activeEntry's persisted user state
+    JS::NonnullGCPtr<SessionHistoryEntry> new_entry = document.heap().allocate_without_realm<SessionHistoryEntry>();
+    new_entry->url = new_url;
+    new_entry->document_state = active_entry->document_state;
+    new_entry->scroll_restoration_mode = active_entry->scroll_restoration_mode;
+
+    // 4. If document's is initial about:blank is true, then set historyHandling to "replace".
+    if (document.is_initial_about_blank()) {
+        history_handling = HistoryHandlingBehavior::Replace;
+    }
+
+    // 5. Let entryToReplace be activeEntry if historyHandling is "replace", otherwise null.
+    auto entry_to_replace = history_handling == HistoryHandlingBehavior::Replace ? active_entry : nullptr;
+
+    // 6. If historyHandling is "push", then:
+    if (history_handling == HistoryHandlingBehavior::Push) {
+        // FIXME: 1. Increment document's history object's index.
+        // FIXME: 2. Set document's history object's length to its index + 1.
+        TODO();
+    }
+
+    // FIXME: 7. If serializedData is not null, then restore the history object state given document and newEntry.
+
+    // 8. Set document's URL to newURL.
+    document.set_url(new_url);
+
+    // FIXME: 9. Set document's latest entry to newEntry.
+
+    // 10. Set navigable's active session history entry to newEntry.
+    navigable->set_active_session_history_entry(new_entry);
+
+    // FIXME: 11. Update the navigation API entries for a same-document navigation given document's relevant global object's navigation API, newEntry, and historyHandling.
+
+    // 12. Let traversable be navigable's traversable navigable.
+    auto traversable = navigable->traversable_navigable();
+
+    // 13. Append the following session history synchronous navigation steps involving navigable to traversable:
+    traversable->append_session_history_traversal_steps([traversable, navigable, new_entry, entry_to_replace] {
+        // 1. Finalize a same-document navigation given traversable, navigable, newEntry, and entryToReplace.
+        finalize_a_same_document_navigation(*traversable, *navigable, new_entry, entry_to_replace);
+    });
+}
+
 }
