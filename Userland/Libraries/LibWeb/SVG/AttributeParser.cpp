@@ -509,6 +509,21 @@ Optional<GradientUnits> AttributeParser::parse_gradient_units(StringView input)
     return {};
 }
 
+// https://svgwg.org/svg2-draft/pservers.html#RadialGradientElementSpreadMethodAttribute
+Optional<SpreadMethod> AttributeParser::parse_spread_method(StringView input)
+{
+    GenericLexer lexer { input };
+    lexer.ignore_while(whitespace);
+    auto spread_method_string = lexer.consume_until(whitespace);
+    if (spread_method_string == "pad"sv)
+        return SpreadMethod::Pad;
+    if (spread_method_string == "repeat"sv)
+        return SpreadMethod::Repeat;
+    if (spread_method_string == "reflect"sv)
+        return SpreadMethod::Reflect;
+    return {};
+}
+
 // https://drafts.csswg.org/css-transforms/#svg-syntax
 Optional<Vector<Transform>> AttributeParser::parse_transform()
 {
