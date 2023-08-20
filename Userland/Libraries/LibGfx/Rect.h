@@ -1038,6 +1038,7 @@ private:
 
 using IntRect = Rect<int>;
 using FloatRect = Rect<float>;
+using DoubleRect = Rect<double>;
 
 [[nodiscard]] ALWAYS_INLINE IntRect enclosing_int_rect(FloatRect const& float_rect)
 {
