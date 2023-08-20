@@ -724,6 +724,9 @@ void MP3LoaderPlugin::process_stereo(MP3::MP3Frame& frame, size_t granule_index)
 
     auto process_intensity_stereo = [&](MP3::Tables::ScaleFactorBand const& band, float intensity_stereo_ratio) {
         for (size_t i = band.start; i <= band.end; i++) {
+            // Superflous empty scale factor band.
+            if (i >= MP3::granule_size)
+                continue;
             float const sample_left = granule_left.samples[i];
             float const coeff_l = intensity_stereo_ratio / (1 + intensity_stereo_ratio);
             float const coeff_r = 1 / (1 + intensity_stereo_ratio);
