@@ -1328,6 +1328,8 @@ void GridFormattingContext::place_grid_items(AvailableSpace const& available_spa
         if (child_box.is_out_of_flow(*this))
             return IterationDecision::Continue;
 
+        child_box.set_grid_item(true);
+
         auto& order_bucket = order_item_bucket.ensure(child_box.computed_values().order());
         order_bucket.append(child_box);
 
