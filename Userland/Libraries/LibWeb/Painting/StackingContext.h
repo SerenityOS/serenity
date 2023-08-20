@@ -29,6 +29,7 @@ public:
         FocusAndOverlay,
     };
 
+    void paint_node_as_stacking_context(Paintable const&, PaintContext&) const;
     void paint_descendants(PaintContext&, Paintable const&, StackingContextPaintPhase) const;
     void paint(PaintContext&) const;
     Optional<HitTestResult> hit_test(CSSPixelPoint, HitTestType) const;

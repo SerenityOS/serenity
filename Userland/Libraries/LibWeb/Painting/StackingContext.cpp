@@ -72,6 +72,20 @@ static PaintPhase to_paint_phase(StackingContext::StackingContextPaintPhase phas
     }
 }
 
+void StackingContext::paint_node_as_stacking_context(Paintable const& paintable, PaintContext& context) const
+{
+    paint_node(paintable, context, PaintPhase::Background);
+    paint_node(paintable, context, PaintPhase::Border);
+    paint_descendants(context, paintable, StackingContextPaintPhase::BackgroundAndBorders);
+    paint_descendants(context, paintable, StackingContextPaintPhase::Floats);
+    paint_descendants(context, paintable, StackingContextPaintPhase::BackgroundAndBordersForInlineLevelAndReplaced);
+    paint_node(paintable, context, PaintPhase::Foreground);
+    paint_descendants(context, paintable, StackingContextPaintPhase::Foreground);
+    paint_node(paintable, context, PaintPhase::Outline);
+    paint_node(paintable, context, PaintPhase::Overlay);
+    paint_descendants(context, paintable, StackingContextPaintPhase::FocusAndOverlay);
+}
+
 void StackingContext::paint_descendants(PaintContext& context, Paintable const& paintable, StackingContextPaintPhase phase) const
 {
     paintable.before_children_paint(context, to_paint_phase(phase));
@@ -96,6 +110,19 @@ void StackingContext::paint_descendants(PaintContext& context, Paintable const& 
             if (phase == StackingContextPaintPhase::Foreground)
                 paint_child(context, *stacking_context);
             // Note: Don't further recuse into descendants as paint_child() will do that.
+            return;
+        }
+
+        // NOTE: Grid specification https://www.w3.org/TR/css-grid-2/#z-order says that grid items should be treated
+        //       the same way as CSS2 defines for inline-blocks:
+        //       "For each one of these, treat the element as if it created a new stacking context, but any positioned
+        //       descendants and descendants which actually create a new stacking context should be considered part of
+        //       the parent stacking context, not this new one."
+        auto should_be_treated_as_stacking_context = child.layout_node().is_grid_item();
+        if (should_be_treated_as_stacking_context) {
+            // FIXME: This may not be fully correct with respect to the paint phases.
+            if (phase == StackingContextPaintPhase::Foreground)
+                paint_node_as_stacking_context(child, context);
             return;
         }
 
@@ -214,16 +241,7 @@ void StackingContext::paint_internal(PaintContext& context) const
             paint_child(context, *child);
             return TraversalDecision::SkipChildrenAndContinue;
         } else {
-            paint_node(paintable, context, PaintPhase::Background);
-            paint_node(paintable, context, PaintPhase::Border);
-            paint_descendants(context, paintable, StackingContextPaintPhase::BackgroundAndBorders);
-            paint_descendants(context, paintable, StackingContextPaintPhase::Floats);
-            paint_descendants(context, paintable, StackingContextPaintPhase::BackgroundAndBordersForInlineLevelAndReplaced);
-            paint_node(paintable, context, PaintPhase::Foreground);
-            paint_descendants(context, paintable, StackingContextPaintPhase::Foreground);
-            paint_node(paintable, context, PaintPhase::Outline);
-            paint_node(paintable, context, PaintPhase::Overlay);
-            paint_descendants(context, paintable, StackingContextPaintPhase::FocusAndOverlay);
+            paint_node_as_stacking_context(paintable, context);
         }
         if (parent_paintable)
             parent_paintable->after_children_paint(context, PaintPhase::Foreground);
