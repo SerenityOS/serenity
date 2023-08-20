@@ -1747,12 +1747,12 @@ ErrorOr<String> current_executable_path()
     int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
     size_t len = sizeof(path);
     if (sysctl(mib, 4, path, &len, nullptr, 0) < 0)
-        return Errno::from_syscall("sysctl"sv, -errno);
+        return Error::from_syscall("sysctl"sv, -errno);
 #elif defined(AK_OS_NETBSD)
     int mib[4] = { CTL_KERN, KERN_PROC_ARGS, -1, KERN_PROC_PATHNAME };
     size_t len = sizeof(path);
     if (sysctl(mib, 4, path, &len, nullptr, 0) < 0)
-        return Errno::from_syscall("sysctl"sv, -errno);
+        return Error::from_syscall("sysctl"sv, -errno);
 #elif defined(AK_OS_MACOS)
     u32 size = sizeof(path);
     auto ret = _NSGetExecutablePath(path, &size);
