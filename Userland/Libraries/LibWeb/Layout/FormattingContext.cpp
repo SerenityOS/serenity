@@ -1676,17 +1676,20 @@ CSSPixelRect FormattingContext::absolute_content_rect(Box const& box) const
 
 Box const* FormattingContext::box_child_to_derive_baseline_from(Box const& box) const
 {
+    if (!box.has_children() || box.children_are_inline())
+        return nullptr;
     // To find the baseline of a box, we first look for the last in-flow child with at least one line box.
     auto const* last_box_child = box.last_child_of_type<Box>();
     for (Node const* child = last_box_child; child; child = child->previous_sibling()) {
         if (!child->is_box())
             continue;
         auto& child_box = static_cast<Box const&>(*child);
-        if (child_box.is_out_of_flow(*this))
-            continue;
-        if (m_state.get(child_box).line_boxes.is_empty())
-            continue;
-        return &child_box;
+        if (!child_box.is_out_of_flow(*this) && !m_state.get(child_box).line_boxes.is_empty()) {
+            return &child_box;
+        }
+        auto box_child_to_derive_baseline_from_candidate = box_child_to_derive_baseline_from(child_box);
+        if (box_child_to_derive_baseline_from_candidate)
+            return box_child_to_derive_baseline_from_candidate;
     }
     // None of the children has a line box.
     return nullptr;
@@ -1719,12 +1722,10 @@ CSSPixels FormattingContext::box_baseline(Box const& box) const
 
     if (!box_state.line_boxes.is_empty())
         return box_state.margin_box_top() + box_state.offset.y() + box_state.line_boxes.last().baseline();
-    if (box.has_children() && !box.children_are_inline()) {
-        // If none of the children have a baseline set, the bottom margin edge of the box is used.
-        if (auto const* child_box = box_child_to_derive_baseline_from(box)) {
-            return box_baseline(*child_box);
-        }
+    if (auto const* child_box = box_child_to_derive_baseline_from(box)) {
+        return box_baseline(*child_box);
     }
+    // If none of the children have a baseline set, the bottom margin edge of the box is used.
     return box_state.margin_box_height();
 }
 

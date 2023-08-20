@@ -1,7 +1,7 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x200 children: inline
-      line 0 width: 76.6875, height: 200, bottom: 200, baseline: 200
+      line 0 width: 76.6875, height: 200, bottom: 200, baseline: 71
         frag 0 from BlockContainer start: 0, length: 0, rect: [22,19 48.6875x178]
       TextNode <#text>
       BlockContainer <button.button.border-black> at (22,19) content-size 48.6875x178 inline-block [BFC] children: not-inline
