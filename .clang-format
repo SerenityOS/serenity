@@ -1,5 +1,4 @@
 ---
-Language: Cpp
 AlignEscapedNewlines: Left
 AlignTrailingComments:
     Kind: Always
@@ -20,3 +19,16 @@ RemoveSemicolon: true
 RequiresClausePosition: WithFollowing
 RequiresExpressionIndentation: OuterScope
 SpaceAfterTemplateKeyword: false
+
+---
+Language: ObjC
+BinPackParameters: false
+BraceWrapping:
+    AfterObjCDeclaration: true
+ObjCBinPackProtocolList: Never
+ObjCBlockIndentWidth: 4
+ObjCBreakBeforeNestedBlockParam: true
+ObjCSpaceAfterProperty: true
+ObjCSpaceBeforeProtocolList: true
+
+...
