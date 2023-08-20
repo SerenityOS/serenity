@@ -23,6 +23,12 @@
 #    define AK_IS_ARCH_AARCH64() 0
 #endif
 
+#if defined(__riscv) && __riscv_xlen == 64
+#    define AK_IS_ARCH_RISCV64() 1
+#else
+#    define AK_IS_ARCH_RISCV64() 0
+#endif
+
 #ifdef __wasm32__
 #    define AK_IS_ARCH_WASM32() 1
 #else
@@ -111,6 +117,12 @@
 #    define VALIDATE_IS_AARCH64()
 #else
 #    define VALIDATE_IS_AARCH64() static_assert(false, "Trying to include aarch64 only header on non aarch64 platform");
+#endif
+
+#if ARCH(RISCV64)
+#    define VALIDATE_IS_RISCV64()
+#else
+#    define VALIDATE_IS_RISCV64() static_assert(false, "Trying to include riscv64 only header on non riscv64 platform");
 #endif
 
 #if !defined(AK_COMPILER_CLANG)
