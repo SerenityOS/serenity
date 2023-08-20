@@ -172,6 +172,7 @@ Optional<Gfx::PaintStyle const&> SVGRadialGradientElement::to_gfx_paint_style(SV
         m_paint_style->set_end_radius(end_radius);
     }
     m_paint_style->set_gradient_transform(gradient_paint_transform(paint_context));
+    m_paint_style->set_spread_method(to_gfx_spread_method(spread_method()));
     return *m_paint_style;
 }
 

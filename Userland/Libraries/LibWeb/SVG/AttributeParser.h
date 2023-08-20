@@ -93,6 +93,12 @@ enum class GradientUnits {
     UserSpaceOnUse
 };
 
+enum class SpreadMethod {
+    Pad,
+    Repeat,
+    Reflect
+};
+
 class NumberPercentage {
 public:
     NumberPercentage(float value, bool is_percentage)
@@ -144,6 +150,7 @@ public:
     static Optional<Vector<Transform>> parse_transform(StringView input);
     static Optional<PreserveAspectRatio> parse_preserve_aspect_ratio(StringView input);
     static Optional<GradientUnits> parse_gradient_units(StringView input);
+    static Optional<SpreadMethod> parse_spread_method(StringView input);
 
 private:
     AttributeParser(StringView source);
