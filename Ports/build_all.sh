@@ -61,7 +61,8 @@ do_clean_port() {
 }
 
 ports_dir=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
-while IFS= read -r -d '' port_dir; do
+mapfile -d '' directories < <(find "$ports_dir" -mindepth 1 -maxdepth 1 -type d -print0 | sort -z)
+for port_dir in "${directories[@]}"; do
     port_name="$(basename "$port_dir")"
     if [[ " ${processed_ports[*]} " == *" $port_name "* ]]; then
         log_info "$port_name is already processed"
@@ -105,7 +106,7 @@ while IFS= read -r -d '' port_dir; do
 
     # shellcheck disable=SC2207
     processed_ports+=("$port_name" $(./package.sh showproperty depends))
-done < <(find "$ports_dir" -mindepth 1 -maxdepth 1 -type d -print0 | sort -z)
+done
 
 if $some_failed; then
     exit 1
