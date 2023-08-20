@@ -746,7 +746,13 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_verbatim(FlacSubframe
     Vector<i64> decoded;
     decoded.ensure_capacity(m_current_frame->sample_count);
 
-    VERIFY(subframe.bits_per_sample - subframe.wasted_bits_per_sample != 0);
+    if (subframe.bits_per_sample <= subframe.wasted_bits_per_sample) {
+        return LoaderError {
+            LoaderError::Category::Format,
+            TRY(m_stream->tell()),
+            "Effective verbatim bits per sample are zero"sv,
+        };
+    }
     for (size_t i = 0; i < m_current_frame->sample_count; ++i) {
         decoded.unchecked_append(sign_extend(
             TRY(bit_input.read_bits<u64>(subframe.bits_per_sample - subframe.wasted_bits_per_sample)),
@@ -766,7 +772,13 @@ ErrorOr<void, LoaderError> FlacLoaderPlugin::decode_custom_lpc(Vector<i64>& deco
 
     decoded.ensure_capacity(m_current_frame->sample_count);
 
-    VERIFY(subframe.bits_per_sample - subframe.wasted_bits_per_sample != 0);
+    if (subframe.bits_per_sample <= subframe.wasted_bits_per_sample) {
+        return LoaderError {
+            LoaderError::Category::Format,
+            TRY(m_stream->tell()),
+            "Effective verbatim bits per sample are zero"sv,
+        };
+    }
     // warm-up samples
     for (auto i = 0; i < subframe.order; ++i) {
         decoded.unchecked_append(sign_extend(
@@ -825,7 +837,13 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(FlacSubfram
     Vector<i64> decoded;
     decoded.ensure_capacity(m_current_frame->sample_count);
 
-    VERIFY(subframe.bits_per_sample - subframe.wasted_bits_per_sample != 0);
+    if (subframe.bits_per_sample <= subframe.wasted_bits_per_sample) {
+        return LoaderError {
+            LoaderError::Category::Format,
+            TRY(m_stream->tell()),
+            "Effective verbatim bits per sample are zero"sv,
+        };
+    }
     // warm-up samples
     for (auto i = 0; i < subframe.order; ++i) {
         decoded.unchecked_append(sign_extend(
