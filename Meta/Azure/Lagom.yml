@@ -159,6 +159,23 @@ jobs:
           SERENITY_SOURCE_DIR: '$(Build.SourcesDirectory)'
           QT_QPA_PLATFORM: 'offscreen'
 
+    - ${{ if and(eq(parameters.fuzzer, 'NoFuzz'), eq(parameters.os, 'macOS') ) }}:
+      - script: |
+          set -e
+          cmake -DENABLE_QT=OFF -B Build
+        displayName: 'Enable the Ladybird AppKit chrome'
+        workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom
+        env:
+          CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
+
+      - script: |
+          set -e
+          cmake --build .
+        displayName: 'Build Ladybird AppKit chrome'
+        workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom/Build
+        env:
+          CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
+
     - ${{ if eq(parameters.lagom_lints, true) }}:
       - script: |
           set -e
