@@ -175,6 +175,15 @@ public:
         return token;
     }
 
+    static Token create_dimension(double value, FlyString unit)
+    {
+        Token token;
+        token.m_type = Type::Dimension;
+        token.m_number_value = Number(Number::Type::Number, value);
+        token.m_value = move(unit);
+        return token;
+    }
+
 private:
     Type m_type { Type::Invalid };
 
