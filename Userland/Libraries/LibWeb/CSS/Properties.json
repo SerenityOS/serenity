@@ -18,7 +18,7 @@
   },
   "align-items": {
     "inherited": false,
-    "initial": "stretch",
+    "initial": "normal",
     "valid-types": [
       "align-items"
     ]
