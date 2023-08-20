@@ -139,7 +139,7 @@ void SlotName::dump_tree(StringBuilder& builder)
 
 void Variable::dump_tree(StringBuilder& builder)
 {
-    dump_node(builder, "Var {}", m_name);
+    dump_node(builder, "Var {}", m_variable_declaration->m_name);
 }
 
 void FunctionPointer::dump_tree(StringBuilder& builder)

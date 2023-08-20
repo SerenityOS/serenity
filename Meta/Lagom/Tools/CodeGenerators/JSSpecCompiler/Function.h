@@ -27,6 +27,8 @@ public:
     ExecutionContext* m_context;
     StringView m_name;
     Tree m_ast;
+    VariableDeclarationRef m_return_value;
+    HashMap<StringView, VariableDeclarationRef> m_local_variables;
 };
 
 }

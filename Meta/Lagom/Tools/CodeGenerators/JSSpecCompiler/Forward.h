@@ -12,6 +12,8 @@ namespace JSSpecCompiler {
 
 // AST/AST.h
 class NodeSubtreePointer;
+class VariableDeclaration;
+using VariableDeclarationRef = NonnullRefPtr<VariableDeclaration>;
 
 class Node;
 using NullableTree = RefPtr<Node>;
