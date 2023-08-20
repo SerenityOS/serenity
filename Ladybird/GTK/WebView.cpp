@@ -814,8 +814,6 @@ static void ladybird_web_view_init(LadybirdWebView* self)
     self->bitmap_paintable = ladybird_bitmap_paintable_new();
     g_signal_connect_object(self->bitmap_paintable, "invalidate-contents", G_CALLBACK(gtk_widget_queue_draw), self, G_CONNECT_SWAPPED);
     self->favicon = ladybird_bitmap_paintable_new();
-
-    ladybird_web_view_load_url(self, "http://example.com");
 }
 
 static void ladybird_web_view_dispose(GObject* object)
