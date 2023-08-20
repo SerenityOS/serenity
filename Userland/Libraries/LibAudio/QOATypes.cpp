@@ -38,10 +38,11 @@ LMSState::LMSState(u64 history_packed, u64 weights_packed)
 
 i32 LMSState::predict() const
 {
-    i32 prediction = 0;
+    // The spec specifies that overflows are not allowed, but we do a safe thing anyways.
+    Checked<i32> prediction = 0;
     for (size_t i = 0; i < lms_history; ++i)
-        prediction += history[i] * weights[i];
-    return prediction >> 13;
+        prediction.saturating_add(Checked<i32>::saturating_mul(history[i], weights[i]));
+    return prediction.value() >> 13;
 }
 
 void LMSState::update(i32 sample, i32 residual)
