@@ -75,4 +75,6 @@ private:
     SessionHistoryTraversalQueue m_session_history_traversal_queue;
 };
 
+void finalize_a_same_document_navigation(JS::NonnullGCPtr<TraversableNavigable> traversable, JS::NonnullGCPtr<Navigable> target_navigable, JS::NonnullGCPtr<SessionHistoryEntry> target_entry, JS::GCPtr<SessionHistoryEntry> entry_to_replace);
+
 }
