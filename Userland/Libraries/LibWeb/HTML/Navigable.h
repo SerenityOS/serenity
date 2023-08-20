@@ -60,6 +60,7 @@ public:
     void set_delaying_load_events(bool value) { m_delaying_load_events = value; }
 
     JS::GCPtr<SessionHistoryEntry> active_session_history_entry() const { return m_active_session_history_entry; }
+    void set_active_session_history_entry(JS::GCPtr<SessionHistoryEntry> entry) { m_active_session_history_entry = entry; }
     JS::GCPtr<SessionHistoryEntry> current_session_history_entry() const { return m_current_session_history_entry; }
     void set_current_session_history_entry(JS::GCPtr<SessionHistoryEntry> entry) { m_current_session_history_entry = entry; }
 
@@ -161,5 +162,6 @@ private:
 
 bool navigation_must_be_a_replace(AK::URL const& url, DOM::Document const& document);
 void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable>, HistoryHandlingBehavior, JS::NonnullGCPtr<SessionHistoryEntry>);
+void perform_url_and_history_update_steps(DOM::Document& document, AK::URL new_url, HistoryHandlingBehavior history_handling = HistoryHandlingBehavior::Reload);
 
 }
