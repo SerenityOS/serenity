@@ -85,6 +85,7 @@ standard_idl_files = [
   "//Userland/Libraries/LibWeb/Geometry/DOMMatrixReadOnly.idl",
   "//Userland/Libraries/LibWeb/Geometry/DOMPoint.idl",
   "//Userland/Libraries/LibWeb/Geometry/DOMPointReadOnly.idl",
+  "//Userland/Libraries/LibWeb/Geometry/DOMQuad.idl",
   "//Userland/Libraries/LibWeb/Geometry/DOMRect.idl",
   "//Userland/Libraries/LibWeb/Geometry/DOMRectList.idl",
   "//Userland/Libraries/LibWeb/Geometry/DOMRectReadOnly.idl",
