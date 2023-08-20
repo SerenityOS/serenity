@@ -308,7 +308,7 @@ void TextEditor::doubleclick_event(MouseEvent& event)
 
     auto selection = selected_text();
     if (!selection.is_whitespace())
-        highlight_all_occurances_of(selected_text());
+        highlight_all_occurances_of(selection);
 
     set_cursor(m_selection.end());
     update();

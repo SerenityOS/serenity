@@ -390,7 +390,7 @@ private:
     void on_search_results(GUI::TextRange current, Vector<GUI::TextRange> all_results);
 
     static constexpr auto search_results_span_collection_index = 1;
-    static constexpr auto highlight_selected_text_span_collection_index = 1;
+    static constexpr auto highlight_selected_text_span_collection_index = 2;
 
     Type m_type { MultiLine };
     Mode m_mode { Editable };
