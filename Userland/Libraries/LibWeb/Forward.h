@@ -225,6 +225,7 @@ class Event;
 class EventHandler;
 class EventTarget;
 class HTMLCollection;
+class HTMLFormControlsCollection;
 class IDLEventListener;
 class LiveNodeList;
 class MutationObserver;

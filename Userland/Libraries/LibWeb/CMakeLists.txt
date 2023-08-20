@@ -153,6 +153,7 @@ set(SOURCES
     DOM/EventDispatcher.cpp
     DOM/EventTarget.cpp
     DOM/HTMLCollection.cpp
+    DOM/HTMLFormControlsCollection.cpp
     DOM/IDLEventListener.cpp
     DOM/LiveNodeList.cpp
     DOM/MutationObserver.cpp
