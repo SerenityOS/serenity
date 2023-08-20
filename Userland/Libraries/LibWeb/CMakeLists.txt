@@ -442,6 +442,7 @@ set(SOURCES
     Layout/SVGSVGBox.cpp
     Layout/SVGTextBox.cpp
     Layout/TableFormattingContext.cpp
+    Layout/TableGrid.cpp
     Layout/TableWrapper.cpp
     Layout/TextNode.cpp
     Layout/TreeBuilder.cpp

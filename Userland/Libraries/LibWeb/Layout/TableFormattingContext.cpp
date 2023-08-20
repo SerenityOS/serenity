@@ -6,9 +6,7 @@
 
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/HTML/BrowsingContext.h>
-#include <LibWeb/HTML/HTMLTableCellElement.h>
 #include <LibWeb/HTML/HTMLTableColElement.h>
-#include <LibWeb/HTML/HTMLTableRowElement.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
@@ -43,17 +41,6 @@ TableFormattingContext::TableFormattingContext(LayoutState& state, Box const& ro
 
 TableFormattingContext::~TableFormattingContext() = default;
 
-static inline bool is_table_row_group(Box const& box)
-{
-    auto const& display = box.display();
-    return display.is_table_row_group() || display.is_table_header_group() || display.is_table_footer_group();
-}
-
-static inline bool is_table_row(Box const& box)
-{
-    return box.display().is_table_row();
-}
-
 static inline bool is_table_column_group(Box const& box)
 {
     return box.display().is_table_column_group();
@@ -62,15 +49,6 @@ static inline bool is_table_column_group(Box const& box)
 static inline bool is_table_column(Box const& box)
 {
     return box.display().is_table_column();
-}
-
-template<typename Matcher, typename Callback>
-static void for_each_child_box_matching(Box const& parent, Matcher matcher, Callback callback)
-{
-    parent.for_each_child_of_type<Box>([&](Box const& child_box) {
-        if (matcher(child_box))
-            callback(child_box);
-    });
 }
 
 CSSPixels TableFormattingContext::run_caption_layout(LayoutMode layout_mode, CSS::CaptionSide phase)
@@ -101,95 +79,12 @@ CSSPixels TableFormattingContext::run_caption_layout(LayoutMode layout_mode, CSS
     return caption_height;
 }
 
-void TableFormattingContext::calculate_row_column_grid(Box const& box)
-{
-    // Implements https://html.spec.whatwg.org/multipage/tables.html#forming-a-table
-    HashMap<GridPosition, bool> grid;
-
-    size_t x_width = 0, y_height = 0;
-    size_t x_current = 0, y_current = 0;
-    size_t max_cell_x = 0, max_cell_y = 0;
-
-    // Implements https://html.spec.whatwg.org/multipage/tables.html#algorithm-for-processing-rows
-    auto process_row = [&](auto& row) {
-        if (y_height == y_current)
-            y_height++;
-
-        x_current = 0;
-
-        for (auto* child = row.first_child(); child; child = child->next_sibling()) {
-            if (child->display().is_table_cell()) {
-                // Cells: While x_current is less than x_width and the slot with coordinate (x_current, y_current) already has a cell assigned to it, increase x_current by 1.
-                while (x_current < x_width && grid.contains(GridPosition { x_current, y_current }))
-                    x_current++;
-
-                Box const* box = static_cast<Box const*>(child);
-                if (x_current == x_width)
-                    x_width++;
-
-                size_t colspan = 1, rowspan = 1;
-                if (box->dom_node() && is<HTML::HTMLTableCellElement>(*box->dom_node())) {
-                    auto const& node = static_cast<HTML::HTMLTableCellElement const&>(*box->dom_node());
-                    colspan = node.col_span();
-                    rowspan = node.row_span();
-                }
-
-                if (x_width < x_current + colspan)
-                    x_width = x_current + colspan;
-                if (y_height < y_current + rowspan)
-                    y_height = y_current + rowspan;
-
-                for (size_t y = y_current; y < y_current + rowspan; y++)
-                    for (size_t x = x_current; x < x_current + colspan; x++)
-                        grid.set(GridPosition { x, y }, true);
-                m_cells.append(Cell { *box, x_current, y_current, colspan, rowspan });
-                max_cell_x = max(x_current, max_cell_x);
-                max_cell_y = max(y_current, max_cell_y);
-
-                x_current += colspan;
-            }
-        }
-
-        m_rows.append(Row { row });
-        y_current++;
-    };
-
-    for_each_child_box_matching(box, is_table_row_group, [&](auto& row_group_box) {
-        for_each_child_box_matching(row_group_box, is_table_row, [&](auto& row_box) {
-            process_row(row_box);
-            return IterationDecision::Continue;
-        });
-    });
-
-    for_each_child_box_matching(box, is_table_row, [&](auto& row_box) {
-        process_row(row_box);
-        return IterationDecision::Continue;
-    });
-
-    m_columns.resize(x_width);
-
-    for (auto& cell : m_cells) {
-        // Clip spans to the end of the table.
-        cell.row_span = min(cell.row_span, m_rows.size() - cell.row_index);
-        cell.column_span = min(cell.column_span, m_columns.size() - cell.column_index);
-    }
-
-    m_cells_by_coordinate.resize(max_cell_y + 1);
-    for (auto& position_to_cell_row : m_cells_by_coordinate) {
-        position_to_cell_row.resize(max_cell_x + 1);
-    }
-    for (auto const& cell : m_cells) {
-        m_cells_by_coordinate[cell.row_index][cell.column_index] = cell;
-        m_columns[cell.column_index].has_originating_cells = true;
-    }
-}
-
 void TableFormattingContext::compute_constrainedness()
 {
     // Definition of constrainedness: https://www.w3.org/TR/css-tables-3/#constrainedness
     size_t column_index = 0;
-    for_each_child_box_matching(table_box(), is_table_column_group, [&](auto& column_group_box) {
-        for_each_child_box_matching(column_group_box, is_table_column, [&](auto& column_box) {
+    TableGrid::for_each_child_box_matching(table_box(), is_table_column_group, [&](auto& column_group_box) {
+        TableGrid::for_each_child_box_matching(column_group_box, is_table_column, [&](auto& column_box) {
             auto const& computed_values = column_box.computed_values();
             if (!computed_values.width().is_auto() && !computed_values.width().is_percentage()) {
                 m_columns[column_index].is_constrained = true;
@@ -301,8 +196,8 @@ void TableFormattingContext::compute_outer_content_sizes()
     auto const& containing_block = m_state.get(*table_wrapper().containing_block());
 
     size_t column_index = 0;
-    for_each_child_box_matching(table_box(), is_table_column_group, [&](auto& column_group_box) {
-        for_each_child_box_matching(column_group_box, is_table_column, [&](auto& column_box) {
+    TableGrid::for_each_child_box_matching(table_box(), is_table_column_group, [&](auto& column_group_box) {
+        TableGrid::for_each_child_box_matching(column_group_box, is_table_column, [&](auto& column_box) {
             auto const& computed_values = column_box.computed_values();
             auto min_width = computed_values.min_width().to_px(column_box, containing_block.content_width());
             auto max_width = computed_values.max_width().is_length() ? computed_values.max_width().to_px(column_box, containing_block.content_width()) : CSSPixels::max();
@@ -1166,7 +1061,7 @@ void TableFormattingContext::position_row_boxes()
 
     CSSPixels row_group_top_offset = table_state.border_top + table_state.padding_top;
     CSSPixels row_group_left_offset = table_state.border_left + table_state.padding_left;
-    for_each_child_box_matching(table_box(), is_table_row_group, [&](auto& row_group_box) {
+    TableGrid::for_each_child_box_matching(table_box(), TableGrid::is_table_row_group, [&](auto& row_group_box) {
         CSSPixels row_group_height = 0.0f;
         CSSPixels row_group_width = 0.0f;
 
@@ -1174,7 +1069,7 @@ void TableFormattingContext::position_row_boxes()
         row_group_box_state.set_content_x(row_group_left_offset);
         row_group_box_state.set_content_y(row_group_top_offset);
 
-        for_each_child_box_matching(row_group_box, is_table_row, [&](auto& row) {
+        TableGrid::for_each_child_box_matching(row_group_box, TableGrid::is_table_row, [&](auto& row) {
             auto const& row_state = m_state.get(row);
             row_group_height += row_state.border_box_height();
             row_group_width = max(row_group_width, row_state.border_box_width());
@@ -1500,13 +1395,13 @@ void TableFormattingContext::BorderConflictFinder::collect_conflicting_row_group
 {
     m_row_group_elements_by_index.resize(m_context->m_rows.size());
     size_t current_row_index = 0;
-    for_each_child_box_matching(m_context->table_box(), is_table_row_group, [&](auto& row_group_box) {
+    TableGrid::for_each_child_box_matching(m_context->table_box(), TableGrid::is_table_row_group, [&](auto& row_group_box) {
         auto start_row_index = current_row_index;
         size_t row_count = 0;
-        for_each_child_box_matching(row_group_box, is_table_row, [&](auto&) {
+        TableGrid::for_each_child_box_matching(row_group_box, TableGrid::is_table_row, [&](auto&) {
             ++row_count;
         });
-        for_each_child_box_matching(row_group_box, is_table_row, [&](auto&) {
+        TableGrid::for_each_child_box_matching(row_group_box, TableGrid::is_table_row, [&](auto&) {
             m_row_group_elements_by_index[current_row_index] = RowGroupInfo {
                 .row_group = &row_group_box, .start_index = start_row_index, .row_count = row_count
             };
@@ -1669,6 +1564,19 @@ Vector<TableFormattingContext::ConflictingEdge> TableFormattingContext::BorderCo
     return result;
 }
 
+void TableFormattingContext::finish_grid_initialization(TableGrid const& table_grid)
+{
+    m_columns.resize(table_grid.column_count());
+    m_cells_by_coordinate.resize(m_rows.size());
+    for (auto& position_to_cell_row : m_cells_by_coordinate) {
+        position_to_cell_row.resize(table_grid.column_count());
+    }
+    for (auto const& cell : m_cells) {
+        m_cells_by_coordinate[cell.row_index][cell.column_index] = cell;
+        m_columns[cell.column_index].has_originating_cells = true;
+    }
+}
+
 void TableFormattingContext::run(Box const& box, LayoutMode layout_mode, AvailableSpace const& available_space)
 {
     m_available_space = available_space;
@@ -1676,7 +1584,7 @@ void TableFormattingContext::run(Box const& box, LayoutMode layout_mode, Availab
     auto total_captions_height = run_caption_layout(layout_mode, CSS::CaptionSide::Top);
 
     // Determine the number of rows/columns the table requires.
-    calculate_row_column_grid(box);
+    finish_grid_initialization(TableGrid::calculate_row_column_grid(box, m_cells, m_rows));
 
     border_conflict_resolution();
 
@@ -1829,8 +1737,8 @@ template<>
 void TableFormattingContext::initialize_intrinsic_percentages_from_rows_or_columns<TableFormattingContext::Column>()
 {
     size_t column_index = 0;
-    for_each_child_box_matching(table_box(), is_table_column_group, [&](auto& column_group_box) {
-        for_each_child_box_matching(column_group_box, is_table_column, [&](auto& column_box) {
+    TableGrid::for_each_child_box_matching(table_box(), is_table_column_group, [&](auto& column_group_box) {
+        TableGrid::for_each_child_box_matching(column_group_box, is_table_column, [&](auto& column_box) {
             auto const& computed_values = column_box.computed_values();
             // Definition of percentage contribution: https://www.w3.org/TR/css-tables-3/#percentage-contribution
             auto max_width_percentage = computed_values.max_width().is_percentage() ? computed_values.max_width().percentage().value() : static_cast<double>(INFINITY);

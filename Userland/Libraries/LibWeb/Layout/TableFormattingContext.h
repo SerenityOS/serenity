@@ -8,6 +8,7 @@
 
 #include <AK/Forward.h>
 #include <LibWeb/Layout/FormattingContext.h>
+#include <LibWeb/Layout/TableGrid.h>
 #include <LibWeb/Layout/TableWrapper.h>
 
 namespace Web::Layout {
@@ -58,6 +59,7 @@ private:
     void border_conflict_resolution();
     CSSPixels border_spacing_horizontal() const;
     CSSPixels border_spacing_vertical() const;
+    void finish_grid_initialization(TableGrid const&);
 
     CSSPixels compute_columns_total_used_width() const;
     void commit_candidate_column_widths(Vector<CSSPixels> const& candidate_widths);
@@ -90,32 +92,8 @@ private:
         bool has_originating_cells { false };
     };
 
-    struct Row {
-        JS::NonnullGCPtr<Box const> box;
-        CSSPixels base_height { 0 };
-        CSSPixels reference_height { 0 };
-        CSSPixels final_height { 0 };
-        CSSPixels baseline { 0 };
-        CSSPixels min_size { 0 };
-        CSSPixels max_size { 0 };
-        bool has_intrinsic_percentage { false };
-        double intrinsic_percentage { 0 };
-        // Store whether the row is constrained: https://www.w3.org/TR/css-tables-3/#constrainedness
-        bool is_constrained { false };
-    };
-
-    struct Cell {
-        JS::NonnullGCPtr<Box const> box;
-        size_t column_index;
-        size_t row_index;
-        size_t column_span;
-        size_t row_span;
-        CSSPixels baseline { 0 };
-        CSSPixels outer_min_width { 0 };
-        CSSPixels outer_max_width { 0 };
-        CSSPixels outer_min_height { 0 };
-        CSSPixels outer_max_height { 0 };
-    };
+    using Cell = TableGrid::Cell;
+    using Row = TableGrid::Row;
 
     // Accessors to enable direction-agnostic table measurement.
 
