@@ -103,11 +103,11 @@ ParseErrorOr<Algorithm> Algorithm::create(XML::Node const* node)
     return algorithm;
 }
 
-ParseErrorOr<Function> Function::create(XML::Node const* element)
+ParseErrorOr<SpecFunction> SpecFunction::create(XML::Node const* element)
 {
     VERIFY(element->as_element().name == tag_emu_clause);
 
-    Function result;
+    SpecFunction result;
     result.m_id = TRY(get_attribute_by_name(element, attribute_id));
     result.m_name = TRY(get_attribute_by_name(element, attribute_aoid));
 
@@ -156,7 +156,7 @@ ParseErrorOr<Function> Function::create(XML::Node const* element)
     return result;
 }
 
-ParseErrorOr<void> Function::parse_definition(XML::Node const* element)
+ParseErrorOr<void> SpecFunction::parse_definition(XML::Node const* element)
 {
     auto tokens = TRY(tokenize_tree(element));
     TextParser parser(tokens.tokens, element);
