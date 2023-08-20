@@ -312,11 +312,11 @@ protected:
 class FunctionPointer : public Node {
 public:
     FunctionPointer(StringView function_name)
-        : m_function_name(function_name)
+        : m_function(function_name)
     {
     }
 
-    StringView m_function_name;
+    Variant<StringView, FunctionRef> m_function;
 
 protected:
     void dump_tree(StringBuilder& builder) override;

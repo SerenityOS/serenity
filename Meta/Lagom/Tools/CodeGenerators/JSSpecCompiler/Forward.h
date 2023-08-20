@@ -35,11 +35,17 @@ class FunctionCall;
 class SlotName;
 class Variable;
 class FunctionPointer;
+using FunctionPointerRef = NonnullRefPtr<FunctionPointer>;
 
 // Parser/SpecParser.h
 class AlgorithmStep;
 class AlgorithmStepList;
 class Algorithm;
 class SpecFunction;
+
+// Function.h
+class ExecutionContext;
+class Function;
+using FunctionRef = Function*;
 
 }

@@ -40,13 +40,13 @@ public:
     Tree m_tree = error_tree;
 };
 
-class Function {
+class SpecFunction {
 public:
     struct Argument {
         StringView name;
     };
 
-    static ParseErrorOr<Function> create(XML::Node const* element);
+    static ParseErrorOr<SpecFunction> create(XML::Node const* element);
 
     ParseErrorOr<void> parse_definition(XML::Node const* element);
 

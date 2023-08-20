@@ -25,7 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     }
     auto document = maybe_document.release_value();
 
-    auto maybe_function = JSSpecCompiler::Function::create(&document.root());
+    auto maybe_function = JSSpecCompiler::SpecFunction::create(&document.root());
     if (maybe_function.is_error()) {
         outln("{}", maybe_function.error()->to_string());
         return 1;

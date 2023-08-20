@@ -8,6 +8,7 @@
 #include <AK/TemporaryChange.h>
 
 #include "AST/AST.h"
+#include "Function.h"
 
 namespace JSSpecCompiler {
 
@@ -131,7 +132,13 @@ void Variable::dump_tree(StringBuilder& builder)
 
 void FunctionPointer::dump_tree(StringBuilder& builder)
 {
-    dump_node(builder, "Func {}", m_function_name);
+    m_function.visit(
+        [&](StringView name) {
+            dump_node(builder, "Func external \"{}\"", name);
+        },
+        [&](FunctionRef function) {
+            dump_node(builder, "Func local \"{}\"", function->m_name);
+        });
 }
 
 }
