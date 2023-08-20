@@ -1089,16 +1089,35 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
 
             if (auto maybe_calc_value = Parser::Parser::parse_calculated_value({}, Parser::ParsingContext { document() }, value); maybe_calc_value && maybe_calc_value->is_calculated()) {
                 auto& calc_value = maybe_calc_value->as_calculated();
+                if (calc_value.resolves_to_angle()) {
+                    auto resolved_value = calc_value.resolve_angle();
+                    dest.empend(Parser::Token::create_dimension(resolved_value->to_degrees(), "deg"_fly_string));
+                    continue;
+                }
+                if (calc_value.resolves_to_frequency()) {
+                    auto resolved_value = calc_value.resolve_frequency();
+                    dest.empend(Parser::Token::create_dimension(resolved_value->to_hertz(), "hz"_fly_string));
+                    continue;
+                }
+                if (calc_value.resolves_to_length()) {
+                    // FIXME: In order to resolve lengths, we need to know the font metrics in case a font-relative unit
+                    //  is used. So... we can't do that until style is computed?
+                    //  This might be easier once we have calc-simplification implemented.
+                }
+                if (calc_value.resolves_to_percentage()) {
+                    auto resolved_value = calc_value.resolve_percentage();
+                    dest.empend(Parser::Token::create_percentage(resolved_value.value().value()));
+                    continue;
+                }
+                if (calc_value.resolves_to_time()) {
+                    auto resolved_value = calc_value.resolve_time();
+                    dest.empend(Parser::Token::create_dimension(resolved_value->to_seconds(), "s"_fly_string));
+                    continue;
+                }
                 if (calc_value.resolves_to_number()) {
                     auto resolved_value = calc_value.resolve_number();
                     dest.empend(Parser::Token::create_number(resolved_value.value()));
                     continue;
-                } else if (calc_value.resolves_to_percentage()) {
-                    auto resolved_value = calc_value.resolve_percentage();
-                    dest.empend(Parser::Token::create_percentage(resolved_value.value().value()));
-                    continue;
-                } else {
-                    dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Unimplemented calc() expansion: {}", calc_value.to_string());
                 }
             }
 
