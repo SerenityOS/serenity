@@ -538,4 +538,48 @@ void TraversableNavigable::destroy_top_level_traversable()
     user_agent_top_level_traversable_set().remove(this);
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#finalize-a-same-document-navigation
+void finalize_a_same_document_navigation(JS::NonnullGCPtr<TraversableNavigable> traversable, JS::NonnullGCPtr<Navigable> target_navigable, JS::NonnullGCPtr<SessionHistoryEntry> target_entry, JS::GCPtr<SessionHistoryEntry> entry_to_replace)
+{
+    // FIXME: 1. Assert: this is running on traversable's session history traversal queue.
+
+    // 2. If targetNavigable's active session history entry is not targetEntry, then return.
+    if (target_navigable->active_session_history_entry() != target_entry) {
+        return;
+    }
+
+    // 3. Let targetStep be null.
+    Optional<int> target_step;
+
+    // 4. Let targetEntries be the result of getting session history entries for targetNavigable.
+    auto& target_entries = target_navigable->get_session_history_entries();
+
+    // 5. If entryToReplace is null, then:
+    if (!entry_to_replace) {
+        // 1. Clear the forward session history of traversable.
+        traversable->clear_the_forward_session_history();
+
+        // 2. Set targetStep to traversable's current session history step + 1.
+        target_step = traversable->current_session_history_step() + 1;
+
+        // 3. Set targetEntry's step to targetStep.
+        target_entry->step = *target_step;
+
+        // 4. Append targetEntry to targetEntries.
+        target_entries.append(target_entry);
+    } else {
+        // 1. Replace entryToReplace with targetEntry in targetEntries.
+        *(target_entries.find(*entry_to_replace)) = target_entry;
+
+        // 2. Set targetEntry's step to entryToReplace's step.
+        target_entry->step = entry_to_replace->step;
+
+        // 3. Set targetStep to traversable's current session history step.
+        target_step = traversable->current_session_history_step();
+    }
+
+    // 6. Apply the push/replace history step targetStep to traversable.
+    traversable->apply_the_history_step(*target_step);
+}
+
 }
