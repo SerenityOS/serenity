@@ -1182,7 +1182,10 @@
       "percentage [0,∞]"
     ],
     "valid-identifiers": [
-      "auto"
+      "auto",
+      "fit-content",
+      "max-content",
+      "min-content"
     ],
     "percentages-resolve-to": "length",
     "quirks": [

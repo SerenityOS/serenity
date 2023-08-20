@@ -1627,8 +1627,18 @@ bool FormattingContext::should_treat_width_as_auto(Box const& box, AvailableSpac
 
 bool FormattingContext::should_treat_height_as_auto(Box const& box, AvailableSpace const& available_space)
 {
-    if (box.computed_values().height().is_auto())
+    auto computed_height = box.computed_values().height();
+    if (computed_height.is_auto())
         return true;
+
+    // https://www.w3.org/TR/css-sizing-3/#valdef-width-min-content
+    // https://www.w3.org/TR/css-sizing-3/#valdef-width-max-content
+    // https://www.w3.org/TR/css-sizing-3/#valdef-width-fit-content
+    // For a box’s block size, unless otherwise specified, this is equivalent to its automatic size.
+    // FIXME: If height is not the block axis size, then we should be concerned with the width instead.
+    if (computed_height.is_min_content() || computed_height.is_max_content() || computed_height.is_fit_content())
+        return true;
+
     if (box.computed_values().height().contains_percentage()) {
         if (available_space.height.is_max_content())
             return true;
