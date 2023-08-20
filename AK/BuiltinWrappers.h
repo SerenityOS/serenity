@@ -134,7 +134,7 @@ inline constexpr int count_leading_zeroes_safe(IntType value)
 template<Integral IntType>
 inline constexpr int bit_scan_forward(IntType value)
 {
-#if defined(AK_COMPILER_CLANG) || defined(AK_COMPILER_GCC)
+#if defined(AK_COMPILER_CLANG) || (defined(AK_COMPILER_GCC) && (!ARCH(RISCV64) || defined(__riscv_zbb)))
     static_assert(sizeof(IntType) <= sizeof(unsigned long long));
     if constexpr (sizeof(IntType) <= sizeof(unsigned int))
         return __builtin_ffs(value);
