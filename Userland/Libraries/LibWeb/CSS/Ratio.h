@@ -13,8 +13,8 @@ namespace Web::CSS {
 // https://www.w3.org/TR/css-values-4/#ratios
 class Ratio {
 public:
-    Ratio(float first, float second = 1);
-    float value() const { return m_first_value / m_second_value; }
+    Ratio(double first, double second = 1);
+    double value() const { return m_first_value / m_second_value; }
     bool is_degenerate() const;
 
     ErrorOr<String> to_string() const;
@@ -37,8 +37,8 @@ public:
     }
 
 private:
-    float m_first_value { 0 };
-    float m_second_value { 1 };
+    double m_first_value { 0 };
+    double m_second_value { 1 };
 };
 
 }

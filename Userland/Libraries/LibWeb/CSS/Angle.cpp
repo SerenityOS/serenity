@@ -10,12 +10,6 @@
 
 namespace Web::CSS {
 
-Angle::Angle(int value, Type type)
-    : m_type(type)
-    , m_value(value)
-{
-}
-
 Angle::Angle(double value, Type type)
     : m_type(type)
     , m_value(value)

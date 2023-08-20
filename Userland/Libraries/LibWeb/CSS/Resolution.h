@@ -21,11 +21,10 @@ public:
 
     static Optional<Type> unit_from_name(StringView);
 
-    Resolution(int value, Type type);
-    Resolution(float value, Type type);
+    Resolution(double value, Type type);
 
     ErrorOr<String> to_string() const;
-    float to_dots_per_pixel() const;
+    double to_dots_per_pixel() const;
 
     bool operator==(Resolution const& other) const
     {
@@ -48,6 +47,6 @@ private:
     StringView unit_name() const;
 
     Type m_type;
-    float m_value { 0 };
+    double m_value { 0 };
 };
 }

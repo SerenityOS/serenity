@@ -1755,7 +1755,7 @@ OwnPtr<CalculationNode> Parser::parse_a_calc_function_node(Function const& funct
 Optional<Dimension> Parser::parse_dimension(ComponentValue const& component_value)
 {
     if (component_value.is(Token::Type::Dimension)) {
-        float numeric_value = component_value.token().dimension_value();
+        auto numeric_value = component_value.token().dimension_value();
         auto unit_string = component_value.token().dimension_unit();
 
         if (auto length_type = Length::unit_from_name(unit_string); length_type.has_value())
@@ -1775,10 +1775,10 @@ Optional<Dimension> Parser::parse_dimension(ComponentValue const& component_valu
     }
 
     if (component_value.is(Token::Type::Percentage))
-        return Percentage { static_cast<float>(component_value.token().percentage()) };
+        return Percentage { component_value.token().percentage() };
 
     if (component_value.is(Token::Type::Number)) {
-        float numeric_value = component_value.token().number_value();
+        auto numeric_value = component_value.token().number_value();
         if (numeric_value == 0)
             return Length::make_px(0);
         if (m_context.in_quirks_mode() && property_has_quirk(m_context.current_property_id(), Quirk::UnitlessLength)) {
@@ -1827,7 +1827,7 @@ Optional<Ratio> Parser::parse_ratio(TokenStream<ComponentValue>& tokens)
     auto transaction = tokens.begin_transaction();
     tokens.skip_whitespace();
 
-    auto read_number_value = [this](ComponentValue const& component_value) -> Optional<float> {
+    auto read_number_value = [this](ComponentValue const& component_value) -> Optional<double> {
         if (component_value.is(Token::Type::Number)) {
             return component_value.token().number_value();
         } else if (component_value.is_function()) {
@@ -2236,9 +2236,9 @@ Optional<Color> Parser::parse_rgb_or_hsl_color(StringView function_name, Vector<
 
         u8 a_val = 255;
         if (params[3].is(Token::Type::Number))
-            a_val = clamp(lroundf(params[3].number_value() * 255.0f), 0, 255);
+            a_val = clamp(lround(params[3].number_value() * 255.0), 0, 255);
         else if (params[3].is(Token::Type::Percentage))
-            a_val = clamp(lroundf(params[3].percentage() * 2.55f), 0, 255);
+            a_val = clamp(lround(params[3].percentage() * 2.55), 0, 255);
 
         if (params[0].is(Token::Type::Number)
             && params[1].is(Token::Type::Number)
@@ -2255,9 +2255,9 @@ Optional<Color> Parser::parse_rgb_or_hsl_color(StringView function_name, Vector<
             && params[1].is(Token::Type::Percentage)
             && params[2].is(Token::Type::Percentage)) {
 
-            u8 r_val = lroundf(clamp(params[0].percentage() * 2.55f, 0, 255));
-            u8 g_val = lroundf(clamp(params[1].percentage() * 2.55f, 0, 255));
-            u8 b_val = lroundf(clamp(params[2].percentage() * 2.55f, 0, 255));
+            u8 r_val = lround(clamp(params[0].percentage() * 2.55, 0, 255));
+            u8 g_val = lround(clamp(params[1].percentage() * 2.55, 0, 255));
+            u8 b_val = lround(clamp(params[2].percentage() * 2.55, 0, 255));
 
             return Color(r_val, g_val, b_val, a_val);
         }
@@ -2266,17 +2266,17 @@ Optional<Color> Parser::parse_rgb_or_hsl_color(StringView function_name, Vector<
 
         // https://www.w3.org/TR/css-color-4/#the-hsl-notation
 
-        float a_val = 1.0f;
+        auto a_val = 1.0;
         if (params[3].is(Token::Type::Number))
             a_val = params[3].number_value();
         else if (params[3].is(Token::Type::Percentage))
-            a_val = params[3].percentage() / 100.0f;
+            a_val = params[3].percentage() / 100.0;
 
         if (params[0].is(Token::Type::Dimension)
             && params[1].is(Token::Type::Percentage)
             && params[2].is(Token::Type::Percentage)) {
 
-            float numeric_value = params[0].dimension_value();
+            auto numeric_value = params[0].dimension_value();
             auto unit_string = params[0].dimension_unit();
             auto angle_type = Angle::unit_from_name(unit_string);
 
@@ -2285,9 +2285,9 @@ Optional<Color> Parser::parse_rgb_or_hsl_color(StringView function_name, Vector<
 
             auto angle = Angle { numeric_value, angle_type.release_value() };
 
-            float h_val = fmodf(angle.to_degrees(), 360.0f);
-            float s_val = params[1].percentage() / 100.0f;
-            float l_val = params[2].percentage() / 100.0f;
+            float h_val = fmod(angle.to_degrees(), 360.0);
+            float s_val = params[1].percentage() / 100.0;
+            float l_val = params[2].percentage() / 100.0;
 
             return Color::from_hsla(h_val, s_val, l_val, a_val);
         }
@@ -2296,9 +2296,9 @@ Optional<Color> Parser::parse_rgb_or_hsl_color(StringView function_name, Vector<
             && params[1].is(Token::Type::Percentage)
             && params[2].is(Token::Type::Percentage)) {
 
-            float h_val = fmodf(params[0].number_value(), 360.0f);
-            float s_val = params[1].percentage() / 100.0f;
-            float l_val = params[2].percentage() / 100.0f;
+            float h_val = fmod(params[0].number_value(), 360.0);
+            float s_val = params[1].percentage() / 100.0;
+            float l_val = params[2].percentage() / 100.0;
 
             return Color::from_hsla(h_val, s_val, l_val, a_val);
         }
@@ -3882,7 +3882,7 @@ RefPtr<StyleValue> Parser::parse_filter_value_list_value(Vector<ComponentValue> 
             }
             if (!token.is(Token::Type::Dimension))
                 return {};
-            float angle_value = token.token().dimension_value();
+            auto angle_value = token.token().dimension_value();
             auto angle_unit_name = token.token().dimension_unit();
             auto angle_unit = Angle::unit_from_name(angle_unit_name);
             if (!angle_unit.has_value())
@@ -5070,7 +5070,7 @@ Optional<CSS::GridSize> Parser::parse_grid_size(ComponentValue const& component_
     }
     auto token = component_value.token();
     if (token.is(Token::Type::Dimension) && token.dimension_unit().equals_ignoring_ascii_case("fr"sv)) {
-        float numeric_value = token.dimension_value();
+        auto numeric_value = token.dimension_value();
         if (numeric_value)
             return GridSize(numeric_value);
     }

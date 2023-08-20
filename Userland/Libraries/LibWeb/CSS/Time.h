@@ -20,7 +20,6 @@ public:
 
     static Optional<Type> unit_from_name(StringView);
 
-    Time(int value, Type type);
     Time(double value, Type type);
     static Time make_seconds(double);
     Time percentage_of(Percentage const&) const;

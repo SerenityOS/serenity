@@ -19,7 +19,6 @@ public:
 
     static Optional<Type> unit_from_name(StringView);
 
-    Frequency(int value, Type type);
     Frequency(double value, Type type);
     static Frequency make_hertz(double);
     Frequency percentage_of(Percentage const&) const;

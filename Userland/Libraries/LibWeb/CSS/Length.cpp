@@ -30,11 +30,6 @@ Length::FontMetrics::FontMetrics(CSSPixels font_size, Gfx::FontPixelMetrics cons
 {
 }
 
-Length::Length(int value, Type type)
-    : m_type(type)
-    , m_value(value)
-{
-}
 Length::Length(double value, Type type)
     : m_type(type)
     , m_value(value)
