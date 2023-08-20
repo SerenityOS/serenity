@@ -1246,7 +1246,8 @@ void FlexFormattingContext::determine_used_cross_size_of_each_flex_item()
             //  If a flex item has align-self: stretch, its computed cross size property is auto,
             //  and neither of its cross-axis margins are auto, the used outer cross size is the used cross size of its flex line,
             //  clamped according to the item’s used min and max cross sizes.
-            if (alignment_for_item(item.box) == CSS::AlignItems::Stretch
+            auto flex_item_alignment = alignment_for_item(item.box);
+            if ((flex_item_alignment == CSS::AlignItems::Stretch || flex_item_alignment == CSS::AlignItems::Normal)
                 && is_cross_auto(item.box)
                 && !item.margins.cross_before_is_auto
                 && !item.margins.cross_after_is_auto) {
@@ -1503,6 +1504,7 @@ void FlexFormattingContext::align_all_flex_items_along_the_cross_axis()
             case CSS::AlignItems::Start:
             case CSS::AlignItems::FlexStart:
             case CSS::AlignItems::Stretch:
+            case CSS::AlignItems::Normal:
                 item.cross_offset = -half_line_size + item.margins.cross_before + item.borders.cross_before + item.padding.cross_before;
                 break;
             case CSS::AlignItems::End:
@@ -2069,7 +2071,7 @@ CSSPixels FlexFormattingContext::calculate_max_content_cross_size(FlexItem const
 bool FlexFormattingContext::flex_item_is_stretched(FlexItem const& item) const
 {
     auto alignment = alignment_for_item(item.box);
-    if (alignment != CSS::AlignItems::Stretch)
+    if (alignment != CSS::AlignItems::Stretch && alignment != CSS::AlignItems::Normal)
         return false;
     // If the cross size property of the flex item computes to auto, and neither of the cross-axis margins are auto, the flex item is stretched.
     auto const& computed_cross_size = is_row_layout() ? item.box->computed_values().height() : item.box->computed_values().width();
