@@ -7,10 +7,13 @@ source_set("Parser") {
     "Declaration.cpp",
     "DeclarationOrAtRule.cpp",
     "Function.cpp",
+    "GradientParsing.cpp",
     "Helpers.cpp",
+    "MediaParsing.cpp",
     "Parser.cpp",
     "ParsingContext.cpp",
     "Rule.cpp",
+    "SelectorParsing.cpp",
     "Token.cpp",
     "Tokenizer.cpp",
   ]
