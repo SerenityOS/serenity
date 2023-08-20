@@ -142,7 +142,7 @@ public:
         Transformation,
         Unresolved,
         Unset,
-        Url,
+        URL,
         ValueList
     };
 
@@ -204,7 +204,7 @@ public:
     bool is_transformation() const { return type() == Type::Transformation; }
     bool is_unresolved() const { return type() == Type::Unresolved; }
     bool is_unset() const { return type() == Type::Unset; }
-    bool is_url() const { return type() == Type::Url; }
+    bool is_url() const { return type() == Type::URL; }
     bool is_value_list() const { return type() == Type::ValueList; }
 
     bool is_builtin() const { return is_inherit() || is_initial() || is_unset(); }
