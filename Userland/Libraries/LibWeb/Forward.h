@@ -159,6 +159,7 @@ class RatioStyleValue;
 class RectStyleValue;
 class Resolution;
 class ResolutionStyleValue;
+class RevertStyleValue;
 class Screen;
 class Selector;
 class ShadowStyleValue;
