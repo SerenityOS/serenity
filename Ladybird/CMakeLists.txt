@@ -81,6 +81,8 @@ if (ENABLE_QT)
     set(CMAKE_AUTORCC ON)
     set(CMAKE_AUTOUIC ON)
     find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network Multimedia)
+elseif (APPLE)
+    find_library(COCOA_LIBRARY Cocoa)
 endif()
 
 set(BROWSER_SOURCE_DIR ${SERENITY_SOURCE_DIR}/Userland/Applications/Browser/)
@@ -124,11 +126,33 @@ if (ENABLE_QT)
         Qt/main.cpp
     )
     target_link_libraries(ladybird PRIVATE Qt::Core Qt::Gui Qt::Network Qt::Widgets)
+elseif (APPLE)
+    add_executable(ladybird MACOSX_BUNDLE
+        ${SOURCES}
+        AppKit/main.mm
+        AppKit/Application/Application.mm
+        AppKit/Application/ApplicationDelegate.mm
+        AppKit/Application/EventLoopImplementation.mm
+        AppKit/UI/Event.mm
+        AppKit/UI/LadybirdWebView.mm
+        AppKit/UI/LadybirdWebViewBridge.cpp
+        AppKit/UI/Tab.mm
+        AppKit/UI/TabController.mm
+        AppKit/Utilities/Conversions.mm
+        AppKit/Utilities/URL.mm
+    )
+    target_include_directories(ladybird PRIVATE AppKit)
+    target_link_libraries(ladybird PRIVATE ${COCOA_LIBRARY})
+    target_compile_options(ladybird PRIVATE
+        -fobjc-arc
+        -Wno-deprecated-anon-enum-enum-conversion # Required for CGImageCreate
+    )
 else()
     # TODO: Check for other GUI frameworks here when we move them in-tree
     #       For now, we can export a static library of common files for chromes to link to
     add_library(ladybird STATIC ${SOURCES})
 endif()
+
 target_sources(ladybird PUBLIC FILE_SET browser TYPE HEADERS
     BASE_DIRS ${SERENITY_SOURCE_DIR}/Userland/Applications
     FILES ${BROWSER_HEADERS}
@@ -205,9 +229,7 @@ function(create_ladybird_bundle target_name)
     endif()
 endfunction()
 
-if (ENABLE_QT)
-    create_ladybird_bundle(ladybird)
-endif()
+create_ladybird_bundle(ladybird)
 
 if(NOT CMAKE_SKIP_INSTALL_RULES)
     include(cmake/InstallRules.cmake)
