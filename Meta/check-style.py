@@ -34,6 +34,8 @@ LICENSE_HEADER_CHECK_EXCLUDES = {
 PRAGMA_ONCE_STRING = '#pragma once'
 PRAGMA_ONCE_CHECK_EXCLUDES = {
     'Userland/Libraries/LibC/assert.h',
+    'Ladybird/AppKit/System/Detail/Header.h',
+    'Ladybird/AppKit/System/Detail/Footer.h',
 }
 
 # We make sure that there's a blank line before and after pragma once
