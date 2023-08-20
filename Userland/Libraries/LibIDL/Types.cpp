@@ -277,10 +277,10 @@ bool Type::is_json(Interface const& interface) const
         if (to_json_iterator != current_interface_for_to_json->functions.end())
             return true;
 
-        if (interface.parent_name.is_empty())
+        if (current_interface_for_to_json->parent_name.is_empty())
             break;
 
-        auto imported_interface_iterator = interface.imported_modules.find_if([&current_interface_for_to_json](IDL::Interface const& imported_interface) {
+        auto imported_interface_iterator = current_interface_for_to_json->imported_modules.find_if([&current_interface_for_to_json](IDL::Interface const& imported_interface) {
             return imported_interface.name == current_interface_for_to_json->parent_name;
         });
 
