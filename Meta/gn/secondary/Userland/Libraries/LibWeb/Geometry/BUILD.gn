@@ -6,6 +6,7 @@ source_set("Geometry") {
     "DOMMatrixReadOnly.cpp",
     "DOMPoint.cpp",
     "DOMPointReadOnly.cpp",
+    "DOMQuad.cpp",
     "DOMRect.cpp",
     "DOMRectList.cpp",
     "DOMRectReadOnly.cpp",

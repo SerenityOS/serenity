@@ -302,6 +302,7 @@ class DOMMatrix;
 class DOMMatrixReadOnly;
 class DOMPoint;
 class DOMPointReadOnly;
+class DOMQuad;
 class DOMRect;
 class DOMRectList;
 class DOMRectReadOnly;

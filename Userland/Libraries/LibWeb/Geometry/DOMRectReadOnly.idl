@@ -16,6 +16,8 @@ interface DOMRectReadOnly {
     readonly attribute double bottom;
     readonly attribute double left;
 
+    [Default] object toJSON();
+
 };
 
 dictionary DOMRectInit {
