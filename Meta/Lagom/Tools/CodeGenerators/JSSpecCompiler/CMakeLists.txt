@@ -4,6 +4,7 @@ set(SOURCES
     Compiler/FunctionCallCanonicalizationPass.cpp
     Compiler/GenericASTPass.cpp
     Compiler/IfBranchMergingPass.cpp
+    Compiler/ReferenceResolvingPass.cpp
     Parser/Lexer.cpp
     Parser/ParseError.cpp
     Parser/SpecParser.cpp

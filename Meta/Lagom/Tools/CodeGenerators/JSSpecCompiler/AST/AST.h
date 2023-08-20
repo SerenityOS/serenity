@@ -40,6 +40,16 @@ private:
     Variant<Tree*, NullableTree*> m_tree_ptr;
 };
 
+class VariableDeclaration : public RefCounted<VariableDeclaration> {
+public:
+    VariableDeclaration(StringView name)
+        : m_name(name)
+    {
+    }
+
+    StringView m_name;
+};
+
 class Node : public RefCounted<Node> {
 public:
     virtual ~Node() = default;
@@ -380,12 +390,12 @@ protected:
 
 class Variable : public Expression {
 public:
-    Variable(StringView variable_name)
-        : m_name(variable_name)
+    Variable(VariableDeclarationRef variable_declaration)
+        : m_variable_declaration(move(variable_declaration))
     {
     }
 
-    StringView m_name;
+    VariableDeclarationRef m_variable_declaration;
 
 protected:
     void dump_tree(StringBuilder& builder) override;
