@@ -1,10 +1,10 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x21.46875 children: inline
-      line 0 width: 59.921875, height: 21.46875, bottom: 21.46875, baseline: 19.46875
+      line 0 width: 59.921875, height: 21.46875, bottom: 21.46875, baseline: 15.53125
         frag 0 from BlockContainer start: 0, length: 0, rect: [13,10 49.921875x17.46875]
       BlockContainer <button> at (13,10) content-size 49.921875x17.46875 inline-block [BFC] children: inline
-        line 0 width: 49.921875, height: 17.46875, bottom: 17.46875, baseline: 17.46875
+        line 0 width: 49.921875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
           frag 0 from TableWrapper start: 0, length: 0, rect: [13,10 49.921875x17.46875]
         TableWrapper <(anonymous)> at (13,10) content-size 49.921875x17.46875 [BFC] children: not-inline
           BlockContainer <(anonymous)> at (13,10) content-size 49.921875x17.46875 table-box [TFC] children: not-inline
