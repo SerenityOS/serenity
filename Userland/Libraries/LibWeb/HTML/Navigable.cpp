@@ -1003,10 +1003,68 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
     return {};
 }
 
-WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(AK::URL const&, HistoryHandlingBehavior, String navigation_id)
+WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(AK::URL const& url, HistoryHandlingBehavior history_handling, String navigation_id)
 {
     (void)navigation_id;
-    TODO();
+
+    // FIXME: 1. Let navigation be navigable's active window's navigation API.
+    // FIXME: 2. Let destinationNavigationAPIState be navigable's active session history entry's navigation API state.
+    // FIXME: 3. If navigationAPIState is not null, then set destinationNavigationAPIState to navigationAPIState.
+    // FIXME: 4. Let continue be the result of firing a push/replace/reload navigate event at navigation with navigationType set to historyHandling, isSameDocument set to true,
+    //           userInvolvement set to userInvolvement, and destinationURL set to url, and navigationAPIState set to destinationNavigationAPIState.
+    // FIXME: 5. If continue is false, then return.
+
+    // 6. Let historyEntry be a new session history entry, with
+    //      URL: url
+    //      document state: navigable's active session history entry's document state
+    //      navigation API state: destinationNavigationAPIState
+    //      scroll restoration mode: navigable's active session history entry's scroll restoration mode
+    JS::NonnullGCPtr<SessionHistoryEntry> history_entry = heap().allocate_without_realm<SessionHistoryEntry>();
+    history_entry->url = url;
+    history_entry->document_state = active_session_history_entry()->document_state;
+    history_entry->scroll_restoration_mode = active_session_history_entry()->scroll_restoration_mode;
+
+    // 7. Let entryToReplace be navigable's active session history entry if historyHandling is "replace", otherwise null.
+    auto entry_to_replace = history_handling == HistoryHandlingBehavior::Replace ? active_session_history_entry() : nullptr;
+
+    // FIXME: 8. Let history be navigable's active document's history object.
+
+    // FIXME: 9. Let scriptHistoryIndex be history's index.
+
+    // FIXME: 10. Let scriptHistoryIndex be history's index.
+
+    // 11. If historyHandling is "push", then:
+    if (history_handling == HistoryHandlingBehavior::Push) {
+        // FIXME: 1. Set history's state to null.
+        // FIXME: 2. Increment scriptHistoryIndex.
+        // FIXME: 3. Set scriptHistoryLength to scriptHistoryIndex + 1.
+    }
+
+    // 12. Set navigable's active session history entry to historyEntry.
+    m_active_session_history_entry = history_entry;
+
+    // FIXME: 13. Update document for history step application given navigable's active document, historyEntry, true, scriptHistoryIndex, and scriptHistoryLength.
+
+    // FIXME: 14. Update the navigation API entries for a same-document navigation given navigation, historyEntry, and historyHandling.
+
+    // 15. Scroll to the fragment given navigable's active document.
+    // FIXME: Specification doesn't say when document url needs to update during fragment navigation
+    active_document()->set_url(url);
+    active_document()->scroll_to_the_fragment();
+
+    // 16. Let traversable be navigable's traversable navigable.
+    auto traversable = traversable_navigable();
+
+    // 17. Append the following session history synchronous navigation steps involving navigable to traversable:
+    traversable->append_session_history_traversal_steps([&] {
+        // 1. Finalize a same-document navigation given traversable, navigable, historyEntry, and entryToReplace.
+        finalize_a_same_document_navigation(*traversable, *this, history_entry, entry_to_replace);
+
+        // FIXME: 2. Invoke WebDriver BiDi fragment navigated with navigable's active browsing context and a new WebDriver BiDi
+        //            navigation status whose id is navigationId, url is url, and status is "complete".
+    });
+
+    return {};
 }
 
 WebIDL::ExceptionOr<void> Navigable::navigate_to_a_javascript_url(AK::URL const&, HistoryHandlingBehavior, Origin const& initiator_origin, CSPNavigationType csp_navigation_type)
