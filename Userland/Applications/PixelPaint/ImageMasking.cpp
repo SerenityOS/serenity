@@ -226,39 +226,38 @@ void ImageMasking::generate_new_mask()
         Gfx::HSV content_pixel_hsv;
 
         for (int y = 0; y < m_reference_mask->height(); y++) {
+            auto reference_scanline = m_reference_mask->scanline(y);
+            auto content_scanline = m_editor->active_layer()->content_bitmap().scanline(y);
+            auto mask_scanline = m_editor->active_layer()->mask_bitmap()->scanline(y);
+            fast_u32_fill(mask_scanline, 0, m_reference_mask->physical_width());
+
             for (int x = 0; x < m_reference_mask->width(); x++) {
-                reference_mask_pixel = m_reference_mask->get_pixel(x, y);
+                reference_mask_pixel = Color::from_argb(reference_scanline[x]);
                 if (!reference_mask_pixel.alpha())
                     continue;
 
-                content_pixel_hsv = m_editor->active_layer()->content_bitmap().get_pixel(x, y).to_hsv();
+                content_pixel_hsv = Color::from_argb(content_scanline[x]).to_hsv();
 
                 // check against saturation
-                if (!(lower_saturation <= content_pixel_hsv.saturation && upper_saturation >= content_pixel_hsv.saturation)) {
-                    m_editor->active_layer()->mask_bitmap()->set_pixel(x, y, reference_mask_pixel.with_alpha(0));
+                if (!(lower_saturation <= content_pixel_hsv.saturation && upper_saturation >= content_pixel_hsv.saturation))
                     continue;
-                }
 
                 // check against value
-                if (!(lower_value <= content_pixel_hsv.value && upper_value >= content_pixel_hsv.value)) {
-                    m_editor->active_layer()->mask_bitmap()->set_pixel(x, y, reference_mask_pixel.with_alpha(0));
+                if (!(lower_value <= content_pixel_hsv.value && upper_value >= content_pixel_hsv.value))
                     continue;
-                }
 
                 // check against hue
                 corrected_current_hue = content_pixel_hsv.hue - m_color_wheel_widget->hue();
                 distance_to_selected_color = AK::min(AK::abs(corrected_current_hue), AK::min(AK::abs(corrected_current_hue - 360), AK::abs(corrected_current_hue + 360)));
-                if (distance_to_selected_color > m_color_wheel_widget->color_range()) {
-                    m_editor->active_layer()->mask_bitmap()->set_pixel(x, y, reference_mask_pixel.with_alpha(0));
+                if (distance_to_selected_color > m_color_wheel_widget->color_range())
                     continue;
-                }
 
                 if (distance_to_selected_color < full_masking_edge) {
-                    m_editor->active_layer()->mask_bitmap()->set_pixel(x, y, reference_mask_pixel);
+                    mask_scanline[x] = reference_mask_pixel.value();
                     continue;
                 }
 
-                m_editor->active_layer()->mask_bitmap()->set_pixel(x, y, reference_mask_pixel.with_alpha(reference_mask_pixel.alpha() - (((distance_to_selected_color - full_masking_edge) * reference_mask_pixel.alpha()) / gradient_masking_length)));
+                mask_scanline[x] = reference_mask_pixel.with_alpha(reference_mask_pixel.alpha() - (((distance_to_selected_color - full_masking_edge) * reference_mask_pixel.alpha()) / gradient_masking_length)).value();
             }
         }
     }
