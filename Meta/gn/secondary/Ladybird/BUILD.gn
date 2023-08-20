@@ -12,6 +12,7 @@ group("ladybird") {
 
 moc_qt_objects("generate_moc") {
   sources = [
+    "Qt/AutoComplete.h",
     "Qt/BrowserWindow.h",
     "Qt/ConsoleWidget.h",
     "Qt/EventLoopImplementationQtEventTarget.h",
@@ -71,6 +72,7 @@ executable("ladybird_executable") {
     "//Userland/Libraries/LibJS",
     "//Userland/Libraries/LibMain",
     "//Userland/Libraries/LibProtocol",
+    "//Userland/Libraries/LibPublicSuffix",
     "//Userland/Libraries/LibSQL",
     "//Userland/Libraries/LibWeb",
     "//Userland/Libraries/LibWebView",
@@ -80,6 +82,7 @@ executable("ladybird_executable") {
     "//Userland/Applications/Browser/Database.cpp",
     "//Userland/Applications/Browser/History.cpp",
     "HelperProcess.cpp",
+    "Qt/AutoComplete.cpp",
     "Qt/BrowserWindow.cpp",
     "Qt/ConsoleWidget.cpp",
     "Qt/EventLoopImplementationQt.cpp",
@@ -181,6 +184,7 @@ if (current_os == "mac") {
       "//Userland/Libraries/LibLine",
       "//Userland/Libraries/LibMarkdown",
       "//Userland/Libraries/LibProtocol",
+      "//Userland/Libraries/LibPublicSuffix",
       "//Userland/Libraries/LibRegex",
       "//Userland/Libraries/LibSQL",
       "//Userland/Libraries/LibSoftGPU",
@@ -215,6 +219,7 @@ if (current_os == "mac") {
       "$root_out_dir/lib/liblagom-line.dylib",
       "$root_out_dir/lib/liblagom-markdown.dylib",
       "$root_out_dir/lib/liblagom-protocol.dylib",
+      "$root_out_dir/lib/liblagom-publicsuffix.dylib",
       "$root_out_dir/lib/liblagom-regex.dylib",
       "$root_out_dir/lib/liblagom-softgpu.dylib",
       "$root_out_dir/lib/liblagom-sql.dylib",

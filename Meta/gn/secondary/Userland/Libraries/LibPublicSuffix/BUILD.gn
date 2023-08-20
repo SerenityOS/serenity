@@ -1,0 +1,59 @@
+import("//Meta/gn/build/compiled_action.gni")
+import("//Meta/gn/build/download_cache.gni")
+import("//Meta/gn/build/download_file.gni")
+
+declare_args() {
+  # If true, Download public suffix list from GitHub.
+  # Data will be downloaded to $cache_path/PublicSuffix and used by LibPublicSuffix
+  enable_public_suffix_list_download = true
+}
+
+public_suffix_cache = cache_path + "PublicSuffix/"
+
+if (enable_public_suffix_list_download) {
+  download_file("public_suffix_list_download") {
+    version = "master"
+    url = "https://raw.githubusercontent.com/publicsuffix/list/" + version +
+          "/public_suffix_list.dat"
+    output = "$public_suffix_cache/public_suffix_list.dat"
+    version_file = public_suffix_cache + "version.txt"
+  }
+
+  compiled_action("generate_public_suffix_list_sources") {
+    tool = "//Meta/Lagom/Tools/CodeGenerators/LibPublicSuffix:GeneratePublicSuffixData"
+    deps = [ ":public_suffix_list_download" ]
+    outputs = [
+      "$target_gen_dir/PublicSuffixData.h",
+      "$target_gen_dir/PublicSuffixData.cpp",
+    ]
+    args = [
+      "-h",
+      rebase_path(outputs[0], root_build_dir),
+      "-c",
+      rebase_path(outputs[1], root_build_dir),
+      "-p",
+      rebase_path("$public_suffix_cache/public_suffix_list.dat",
+                  root_build_dir),
+    ]
+  }
+}
+
+shared_library("LibPublicSuffix") {
+  output_name = "publicsuffix"
+  include_dirs = [
+    "//Userland/Libraries",
+    "$target_gen_dir/..",
+  ]
+  sources = [ "URL.cpp" ]
+  deps = [
+    "//AK",
+    "//Userland/Libraries/LibCore",
+  ]
+  if (enable_public_suffix_list_download) {
+    deps += [ ":generate_public_suffix_list_sources" ]
+    sources += get_target_outputs(":generate_public_suffix_list_sources")
+    defines = [ "ENABLE_PUBLIC_SUFFIX_DOWNLOAD=1" ]
+  } else {
+    defines = [ "ENABLE_PUBLIC_SUFFIX_DOWNLOAD=0" ]
+  }
+}
