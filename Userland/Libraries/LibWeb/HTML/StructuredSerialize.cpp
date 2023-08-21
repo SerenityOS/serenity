@@ -76,13 +76,27 @@ enum ValueTag {
 
 class Serializer {
 public:
-    Serializer(JS::VM& vm)
+    Serializer(JS::VM& vm, SerializationMemory& memory)
         : m_vm(vm)
+        , m_memory(memory)
     {
     }
 
-    WebIDL::ExceptionOr<void> serialize(JS::Value value)
+    // https://html.spec.whatwg.org/multipage/structured-data.html#structuredserializeinternal
+    WebIDL::ExceptionOr<SerializationRecord> serialize(JS::Value value)
     {
+        // 2. If memory[value] exists, then return memory[value].
+        // FIXME: Do callers actually need a copy? or can they get away with a range?
+        if (m_memory.contains(value)) {
+            auto range = m_memory.get(value).value();
+            return m_serialized.span().slice(range.start, range.end);
+        }
+
+        // 3. Let deep be false.
+        [[maybe_unused]] bool deep = false;
+
+        bool return_primitive_type = true;
+        // 4. If Type(value) is Undefined, Null, Boolean, Number, BigInt, or String, then return { [[Type]]: "primitive", [[Value]]: value }.
         if (value.is_undefined()) {
             m_serialized.append(ValueTag::UndefinedPrimitive);
         } else if (value.is_null()) {
@@ -101,46 +115,70 @@ public:
         } else if (value.is_string()) {
             m_serialized.append(ValueTag::StringPrimitive);
             TRY(serialize_string(m_serialized, value.as_string()));
-        } else if (value.is_object() && is<JS::BooleanObject>(value.as_object())) {
+        } else {
+            return_primitive_type = false;
+        }
+
+        if (return_primitive_type)
+            return m_serialized;
+
+        // FIXME 5. If Type(value) is Symbol, then throw a "DataCloneError" DOMException.
+
+        // 6. Let serialized be an uninitialized value.
+        //    NOTE: We use the range of the soon-to-be-serialized value in our serialized data buffer
+        //          to be the `serialized` spec value.
+        auto serialized_start = m_serialized.size();
+
+        // 7. If value has a [[BooleanData]] internal slot, then set serialized to { [[Type]]: "Boolean", [[BooleanData]]: value.[[BooleanData]] }.
+        if (value.is_object() && is<JS::BooleanObject>(value.as_object())) {
             m_serialized.append(ValueTag::BooleanObject);
             auto& boolean_object = static_cast<JS::BooleanObject&>(value.as_object());
             m_serialized.append(bit_cast<u32>(static_cast<u32>(boolean_object.boolean())));
-        } else if (value.is_object() && is<JS::NumberObject>(value.as_object())) {
+        }
+
+        // 8. Otherwise, if value has a [[NumberData]] internal slot, then set serialized to { [[Type]]: "Number", [[NumberData]]: value.[[NumberData]] }.
+        else if (value.is_object() && is<JS::NumberObject>(value.as_object())) {
             m_serialized.append(ValueTag::NumberObject);
             auto& number_object = static_cast<JS::NumberObject&>(value.as_object());
             double const number = number_object.number();
             m_serialized.append(bit_cast<u32*>(&number), 2);
-        } else if (value.is_object() && is<JS::StringObject>(value.as_object())) {
+        }
+
+        // FIXME 9. Otherwise, if value has a [[BigIntData]] internal slot, then set serialized to { [[Type]]: "BigInt", [[BigIntData]]: value.[[BigIntData]] }.
+
+        // 10. Otherwise, if value has a [[StringData]] internal slot, then set serialized to { [[Type]]: "String", [[StringData]]: value.[[StringData]] }.
+        else if (value.is_object() && is<JS::StringObject>(value.as_object())) {
             m_serialized.append(ValueTag::StringObject);
             auto& string_object = static_cast<JS::StringObject&>(value.as_object());
             TRY(serialize_string(m_serialized, string_object.primitive_string()));
-        } else if (value.is_object() && is<JS::Date>(value.as_object())) {
+        }
+
+        // 11. Otherwise, if value has a [[DateValue]] internal slot, then set serialized to { [[Type]]: "Date", [[DateValue]]: value.[[DateValue]] }.
+        else if (value.is_object() && is<JS::Date>(value.as_object())) {
             m_serialized.append(ValueTag::DateObject);
             auto& date_object = static_cast<JS::Date&>(value.as_object());
             double const date_value = date_object.date_value();
             m_serialized.append(bit_cast<u32*>(&date_value), 2);
-        } else {
-            // TODO: Define many more types
-            m_error = "Unsupported type"sv;
         }
+
+        // 12 - 24: FIXME: Serialize other data types
+        else {
+            return throw_completion(WebIDL::DataCloneError::create(*m_vm.current_realm(), "Unsupported type"sv));
+        }
+
+        // 25. Set memory[value] to serialized.
+        auto serialized_end = m_serialized.size();
+        m_memory.set(make_handle(value), { serialized_start, serialized_end });
 
         // Second pass: Update the objects to point to other objects in memory
 
-        return {};
-    }
-
-    WebIDL::ExceptionOr<Vector<u32>> result()
-    {
-        if (m_error.is_null())
-            return m_serialized;
-        return throw_completion(WebIDL::DataCloneError::create(*m_vm.current_realm(), m_error));
+        return m_serialized;
     }
 
 private:
-    AK::StringView m_error;
-    SerializationMemory m_memory; // JS value -> index
-    SerializationRecord m_serialized;
     JS::VM& m_vm;
+    SerializationMemory& m_memory; // JS value -> index
+    SerializationRecord m_serialized;
 
     WebIDL::ExceptionOr<void> serialize_string(Vector<u32>& vector, String const& string)
     {
@@ -259,7 +297,7 @@ public:
     {
         if (m_error.is_null())
             return m_memory[0];
-        return throw_completion(WebIDL::DataCloneError::create(*m_vm.current_realm(), m_error));
+        return WebIDL::DataCloneError::create(*m_vm.current_realm(), m_error);
     }
 
 private:
@@ -320,13 +358,14 @@ WebIDL::ExceptionOr<SerializationRecord> structured_serialize_for_storage(JS::VM
 // https://html.spec.whatwg.org/multipage/structured-data.html#structuredserializeinternal
 WebIDL::ExceptionOr<SerializationRecord> structured_serialize_internal(JS::VM& vm, JS::Value value, bool for_storage, Optional<SerializationMemory> memory)
 {
-    // FIXME: Do the spec steps
     (void)for_storage;
-    (void)memory;
 
-    Serializer serializer(vm);
-    TRY(serializer.serialize(value));
-    return serializer.result(); // TODO: Avoid several copies of vector
+    // 1. If memory was not supplied, let memory be an empty map.
+    if (!memory.has_value())
+        memory = SerializationMemory {};
+
+    Serializer serializer(vm, *memory);
+    return serializer.serialize(value);
 }
 
 // https://html.spec.whatwg.org/multipage/structured-data.html#structureddeserialize
