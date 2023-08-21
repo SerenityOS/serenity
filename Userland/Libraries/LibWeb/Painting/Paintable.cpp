@@ -27,6 +27,16 @@ void Paintable::visit_edges(Cell::Visitor& visitor)
         visitor.visit(m_containing_block.value());
 }
 
+bool Paintable::is_positioned() const
+{
+    if (layout_node().is_grid_item() && computed_values().z_index().has_value()) {
+        // https://www.w3.org/TR/css-grid-2/#z-order
+        // grid items with z_index should behave as if position were "relative"
+        return true;
+    }
+    return computed_values().position() != CSS::Position::Static;
+}
+
 void Paintable::set_dom_node(JS::GCPtr<DOM::Node> dom_node)
 {
     m_dom_node = dom_node;

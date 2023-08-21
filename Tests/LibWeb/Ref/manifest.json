@@ -1,4 +1,5 @@
 {
+    "item-with-negative-z-index.html": "item-with-negative-z-index-ref.html",
     "img-srcset-viewport-relative-sizes.html": "img-srcset-viewport-relative-sizes-ref.html",
     "grid-items-painting-order.html": "grid-items-painting-order-ref.html",
     "square-flex.html": "square-ref.html",
