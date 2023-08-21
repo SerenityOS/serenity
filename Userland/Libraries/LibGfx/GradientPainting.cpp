@@ -468,27 +468,20 @@ static auto create_radial_gradient_between_two_circles(Gfx::FloatPoint start_cen
     // radius r(ω) at position (x(ω), y(ω)), with the color at ω, but only painting on the parts of the
     // bitmap that have not yet been painted on by earlier circles in this step for this rendering of the gradient.
 
-    auto center_delta = end_center - start_center;
     auto center_dist = end_center.distance_from(start_center);
     bool inner_contained = ((center_dist + start_radius) < end_radius);
 
     auto start_point = start_center;
-    if (!inner_contained) {
-        // The intersection point of the direct common tangents of the start/end circles.
-        start_point = FloatPoint {
-            (start_radius * end_center.x() - end_radius * start_center.x()) / (start_radius - end_radius),
-            (start_radius * end_center.y() - end_radius * start_center.y()) / (start_radius - end_radius)
-        };
+    if (start_radius != 0) {
+        // Set the start point to the focal point.
+        auto f = end_radius / (end_radius - start_radius);
+        auto one_minus_f = 1 - f;
+        start_point = start_center.scaled(f) + end_center.scaled(one_minus_f);
     }
 
     // This is just an approximate upperbound (the gradient line class will shorten this if necessary).
     int gradient_length = AK::ceil(center_dist + end_radius + start_radius);
     GradientLine gradient_line(gradient_length, color_stops, repeat_length, UsePremultipliedAlpha::No);
-
-    auto radius2 = end_radius * end_radius;
-    center_delta = end_center - start_point;
-    auto dx2_factor = (radius2 - center_delta.y() * center_delta.y());
-    auto dy2_factor = (radius2 - center_delta.x() * center_delta.x());
 
     // If you can simplify this please do, this is "best guess" implementation due to lack of specification.
     // It was implemented to visually match chrome/firefox in all cases:
@@ -499,11 +492,29 @@ static auto create_radial_gradient_between_two_circles(Gfx::FloatPoint start_cen
     //      - Start circle larger than end circle (outside end circle)
     //      - Start circle or end circle radius == 0
 
-    // FIXME: This does not render the SVG spreadMethod=repeat/reflect correctly if
-    // focal radius > 0 and the focal point is not centered within the end circle.
-    // It does not render spreadMethod=pad correctly in this case either, but it's really subtle.
-    // It may be worth trying Skia's approach: https://skia.org/docs/dev/design/conical/
-    // (Yes, this gradient actually is a two-point conical gradient)
+    auto circle_distance_finder = [=](auto radius, auto center) {
+        auto radius2 = radius * radius;
+        auto delta = center - start_point;
+        auto dx2_factor = (radius2 - delta.y() * delta.y());
+        auto dy2_factor = (radius2 - delta.x() * delta.x());
+        return [=](bool postive_root, auto vec) {
+            // This works out the distance to the nearest point on the circle
+            // in the direction of the "vec" vector.
+            auto dx2 = vec.x() * vec.x();
+            auto dy2 = vec.y() * vec.y();
+            auto root = sqrtf(dx2 * dx2_factor + dy2 * dy2_factor
+                + 2 * vec.x() * vec.y() * delta.x() * delta.y());
+            auto dot = vec.x() * delta.x() + vec.y() * delta.y();
+            return (((postive_root ? root : -root) + dot) / (dx2 + dy2));
+        };
+    };
+
+    auto end_circle_dist = circle_distance_finder(end_radius, end_center);
+    auto start_circle_dist = [=, dist = circle_distance_finder(start_radius, start_center)](bool postive_root, auto vec) {
+        if (start_center == start_point)
+            return start_radius;
+        return dist(postive_root, vec);
+    };
 
     return Gradient {
         move(gradient_line),
@@ -513,23 +524,17 @@ static auto create_radial_gradient_between_two_circles(Gfx::FloatPoint start_cen
                 auto dist = point.distance_from(start_point);
                 if (dist == 0)
                     return 0.0f;
+                // The "vec" (unit) vector points from the focal point to the current point.
                 auto vec = (point - start_point) / dist;
-                auto dx2 = vec.x() * vec.x();
-                auto dy2 = vec.y() * vec.y();
-                // This works out the distance to the nearest point on the end circle in the direction of the "vec" vector.
-                // The "vec" vector points from the center of the start circle to the current point.
-                auto root = sqrtf(dx2 * dx2_factor + dy2 * dy2_factor
-                    + 2 * vec.x() * vec.y() * center_delta.x() * center_delta.y());
-                auto dot = vec.x() * center_delta.x() + vec.y() * center_delta.y();
-                // Note: When reversed we always want the farthest point
-                auto edge_dist = (((inner_contained || reverse_gradient ? root : -root) + dot) / (dx2 + dy2));
-                auto start_offset = inner_contained ? start_radius : (edge_dist / end_radius) * start_radius;
+                bool use_postive_root = inner_contained || reverse_gradient;
+                auto dist_end = end_circle_dist(use_postive_root, vec);
+                auto dist_start = start_circle_dist(use_postive_root, vec);
                 // FIXME: Returning nan is a hack for "Don't paint me!"
-                if (edge_dist < 0)
+                if (dist_end < 0)
                     return AK::NaN<float>;
-                if (edge_dist - start_offset < 0)
+                if (dist_end - dist_start < 0)
                     return float(gradient_length);
-                return ((dist - start_offset) / (edge_dist - start_offset));
+                return (dist - dist_start) / (dist_end - dist_start);
             };
             auto loc = get_gradient_location();
             if (reverse_gradient)
