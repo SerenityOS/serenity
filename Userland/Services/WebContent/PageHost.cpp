@@ -366,6 +366,11 @@ Web::WebIDL::ExceptionOr<void> PageHost::toggle_media_controls_state()
     return page().toggle_media_controls_state();
 }
 
+void PageHost::set_user_style(String source)
+{
+    page().set_user_style(source);
+}
+
 void PageHost::page_did_request_accept_dialog()
 {
     m_client.async_did_request_accept_dialog();

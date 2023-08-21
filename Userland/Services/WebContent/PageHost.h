@@ -56,6 +56,8 @@ public:
 
     [[nodiscard]] Gfx::Color background_color() const;
 
+    void set_user_style(String source);
+
 private:
     // ^PageClient
     virtual bool is_connection_open() const override;

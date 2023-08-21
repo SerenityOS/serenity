@@ -102,6 +102,8 @@ private:
     virtual void toggle_media_loop_state() override;
     virtual void toggle_media_controls_state() override;
 
+    virtual void set_user_style(String const&) override;
+
     virtual Messages::WebContentServer::TakeDocumentScreenshotResponse take_document_screenshot() override;
 
     virtual Messages::WebContentServer::GetLocalStorageEntriesResponse get_local_storage_entries() override;
