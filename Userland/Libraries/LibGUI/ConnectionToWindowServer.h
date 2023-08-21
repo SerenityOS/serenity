@@ -48,7 +48,7 @@ private:
     virtual void menu_visibility_did_change(i32, bool) override;
     virtual void screen_rects_changed(Vector<Gfx::IntRect> const&, u32, u32, u32) override;
     virtual void applet_area_rect_changed(Gfx::IntRect const&) override;
-    virtual void drag_dropped(i32, Gfx::IntPoint, DeprecatedString const&, HashMap<DeprecatedString, ByteBuffer> const&) override;
+    virtual void drag_dropped(i32, Gfx::IntPoint, DeprecatedString const&, HashMap<String, ByteBuffer> const&) override;
     virtual void drag_accepted() override;
     virtual void drag_cancelled() override;
     virtual void update_system_theme(Core::AnonymousBuffer const&) override;

@@ -16,13 +16,13 @@ Vector<DeprecatedString> MimeData::formats() const
     Vector<DeprecatedString> mime_types;
     mime_types.ensure_capacity(m_data.size());
     for (auto& it : m_data)
-        mime_types.unchecked_append(it.key);
+        mime_types.unchecked_append(it.key.to_deprecated_string());
     return mime_types;
 }
 
 Vector<URL> MimeData::urls() const
 {
-    auto it = m_data.find("text/uri-list");
+    auto it = m_data.find("text/uri-list"sv);
     if (it == m_data.end())
         return {};
     Vector<URL> urls;
@@ -39,19 +39,19 @@ ErrorOr<void> MimeData::set_urls(Vector<URL> const& urls)
         TRY(builder.try_append(url.to_deprecated_string()));
         TRY(builder.try_append('\n'));
     }
-    set_data("text/uri-list", TRY(builder.to_byte_buffer()));
+    set_data("text/uri-list"_string, TRY(builder.to_byte_buffer()));
 
     return {};
 }
 
 DeprecatedString MimeData::text() const
 {
-    return DeprecatedString::copy(m_data.get("text/plain").value_or({}));
+    return DeprecatedString::copy(m_data.get("text/plain"sv).value_or({}));
 }
 
 void MimeData::set_text(DeprecatedString const& text)
 {
-    set_data("text/plain", text.to_byte_buffer());
+    set_data("text/plain"_string, text.to_byte_buffer());
 }
 
 // FIXME: Share this, TextEditor and HackStudio language detection somehow.
