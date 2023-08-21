@@ -55,7 +55,7 @@ enum class MathFunction {
 
     TRY(functions_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
         auto member_generator = TRY(generator.fork());
-        TRY(member_generator.set("name:titlecase", TRY(title_casify(name))));
+        member_generator.set("name:titlecase", TRY(title_casify(name)));
         TRY(member_generator.try_appendln("    @name:titlecase@,"sv));
         return {};
     }));
@@ -155,8 +155,8 @@ OwnPtr<CalculationNode> Parser::parse_math_function(PropertyID property_id, Func
         auto& parameters = function_data.get_array("parameters"sv).value();
 
         auto function_generator = TRY(generator.fork());
-        TRY(function_generator.set("name:lowercase", TRY(String::from_deprecated_string(name))));
-        TRY(function_generator.set("name:titlecase", TRY(title_casify(name))));
+        function_generator.set("name:lowercase", TRY(String::from_deprecated_string(name)));
+        function_generator.set("name:titlecase", TRY(title_casify(name)));
         TRY(function_generator.try_appendln("    if (function.name().equals_ignoring_ascii_case(\"@name:lowercase@\"sv)) {"));
         if (function_data.get_bool("is-variadic"sv).value_or(false)) {
             // Variadic function
@@ -184,7 +184,7 @@ OwnPtr<CalculationNode> Parser::parse_math_function(PropertyID property_id, Func
             VERIFY(parameters.size() == 1);
             auto& parameter_data = parameters[0].as_object();
             auto parameter_type_string = parameter_data.get_deprecated_string("type"sv).value();
-            TRY(function_generator.set("type_check", TRY(generate_calculation_type_check("argument_type"sv, parameter_type_string))));
+            function_generator.set("type_check", TRY(generate_calculation_type_check("argument_type"sv, parameter_type_string)));
             TRY(function_generator.try_append(R"~~~(
             if (!(@type_check@)) {
                 dbgln_if(CSS_PARSER_DEBUG, "@name:lowercase@() argument #{} type ({}) is not an accepted type", parsed_arguments.size(), MUST(argument_type.dump()));
@@ -216,8 +216,8 @@ OwnPtr<CalculationNode> Parser::parse_math_function(PropertyID property_id, Func
                 if (parameter.get_bool("required"sv) == true)
                     min_argument_count++;
             });
-            TRY(function_generator.set("min_argument_count", TRY(String::number(min_argument_count))));
-            TRY(function_generator.set("max_argument_count", TRY(String::number(max_argument_count))));
+            function_generator.set("min_argument_count", TRY(String::number(min_argument_count)));
+            function_generator.set("max_argument_count", TRY(String::number(max_argument_count)));
 
             TRY(function_generator.try_append(R"~~~(
         if (arguments.size() < @min_argument_count@ || arguments.size() > @max_argument_count@) {
@@ -236,35 +236,35 @@ OwnPtr<CalculationNode> Parser::parse_math_function(PropertyID property_id, Func
                 auto parameter_required = parameter.get_bool("required"sv).value();
 
                 auto parameter_generator = TRY(function_generator.fork());
-                TRY(parameter_generator.set("parameter_name", TRY(String::from_deprecated_string(parameter.get_deprecated_string("name"sv).value()))));
-                TRY(parameter_generator.set("parameter_index", TRY(String::number(parameter_index))));
+                parameter_generator.set("parameter_name", TRY(String::from_deprecated_string(parameter.get_deprecated_string("name"sv).value())));
+                parameter_generator.set("parameter_index", TRY(String::number(parameter_index)));
 
                 bool parameter_is_calculation;
                 if (parameter_type_string == "<rounding-strategy>") {
                     parameter_is_calculation = false;
-                    TRY(parameter_generator.set("parameter_type", "RoundingStrategy"_string));
-                    TRY(parameter_generator.set("parse_function", "parse_rounding_strategy(arguments[argument_index])"_string));
-                    TRY(parameter_generator.set("check_function", ".has_value()"_string));
-                    TRY(parameter_generator.set("release_function", ".release_value()"_string));
+                    parameter_generator.set("parameter_type", "RoundingStrategy"_string);
+                    parameter_generator.set("parse_function", "parse_rounding_strategy(arguments[argument_index])"_string);
+                    parameter_generator.set("check_function", ".has_value()"_string);
+                    parameter_generator.set("release_function", ".release_value()"_string);
                     if (auto default_value = parameter.get_deprecated_string("default"sv); default_value.has_value()) {
-                        TRY(parameter_generator.set("parameter_default", TRY(String::formatted(" = RoundingStrategy::{}", TRY(title_casify(default_value.value()))))));
+                        parameter_generator.set("parameter_default", TRY(String::formatted(" = RoundingStrategy::{}", TRY(title_casify(default_value.value())))));
                     } else {
-                        TRY(parameter_generator.set("parameter_default", ""_string));
+                        parameter_generator.set("parameter_default", ""_string);
                     }
                 } else {
                     // NOTE: This assumes everything not handled above is a calculation node of some kind.
                     parameter_is_calculation = true;
-                    TRY(parameter_generator.set("parameter_type", "OwnPtr<CalculationNode>"_string));
-                    TRY(parameter_generator.set("parse_function", "parse_a_calculation(arguments[argument_index])"_string));
-                    TRY(parameter_generator.set("check_function", " != nullptr"_string));
-                    TRY(parameter_generator.set("release_function", ".release_nonnull()"_string));
+                    parameter_generator.set("parameter_type", "OwnPtr<CalculationNode>"_string);
+                    parameter_generator.set("parse_function", "parse_a_calculation(arguments[argument_index])"_string);
+                    parameter_generator.set("check_function", " != nullptr"_string);
+                    parameter_generator.set("release_function", ".release_nonnull()"_string);
 
                     // NOTE: We have exactly one default value in the data right now, and it's a `<calc-constant>`,
                     //       so that's all we handle.
                     if (auto default_value = parameter.get_deprecated_string("default"sv); default_value.has_value()) {
-                        TRY(parameter_generator.set("parameter_default", TRY(String::formatted(" = ConstantCalculationNode::create(CalculationNode::constant_type_from_string(\"{}\"sv).value())", TRY(String::from_deprecated_string(default_value.value()))))));
+                        parameter_generator.set("parameter_default", TRY(String::formatted(" = ConstantCalculationNode::create(CalculationNode::constant_type_from_string(\"{}\"sv).value())", TRY(String::from_deprecated_string(default_value.value())))));
                     } else {
-                        TRY(parameter_generator.set("parameter_default", ""_string));
+                        parameter_generator.set("parameter_default", ""_string);
                     }
                 }
 
@@ -305,7 +305,7 @@ OwnPtr<CalculationNode> Parser::parse_math_function(PropertyID property_id, Func
 
                 if (parameter_is_calculation) {
                     auto parameter_type_variable = TRY(String::formatted("argument_type_{}", parameter_index));
-                    TRY(parameter_generator.set("type_check", TRY(generate_calculation_type_check(parameter_type_variable, parameter_type_string))));
+                    parameter_generator.set("type_check", TRY(generate_calculation_type_check(parameter_type_variable, parameter_type_string)));
                     TRY(parameter_generator.try_append(R"~~~(
         auto maybe_argument_type_@parameter_index@ = parameter_@parameter_index@->determine_type(property_id);
         if (!maybe_argument_type_@parameter_index@.has_value()) {
@@ -348,13 +348,13 @@ OwnPtr<CalculationNode> Parser::parse_math_function(PropertyID property_id, Func
                 auto parameter_type_string = parameter.get_deprecated_string("type"sv).value();
 
                 auto parameter_generator = TRY(function_generator.fork());
-                TRY(parameter_generator.set("parameter_index"sv, TRY(String::number(parameter_index))));
+                parameter_generator.set("parameter_index"sv, TRY(String::number(parameter_index)));
 
                 if (parameter_type_string == "<rounding-strategy>"sv) {
-                    TRY(parameter_generator.set("release_value"sv, ""_string));
+                    parameter_generator.set("release_value"sv, ""_string);
                 } else {
                     // NOTE: This assumes everything not handled above is a calculation node of some kind.
-                    TRY(parameter_generator.set("release_value"sv, ".release_nonnull()"_string));
+                    parameter_generator.set("release_value"sv, ".release_nonnull()"_string);
                 }
 
                 if (parameter_index == 0) {

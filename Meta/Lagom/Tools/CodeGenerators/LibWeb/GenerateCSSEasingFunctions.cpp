@@ -58,7 +58,7 @@ namespace Web::CSS {
     TRY(generator.try_appendln("enum class EasingFunction {"));
     TRY(easing_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
         auto member_generator = TRY(generator.fork());
-        TRY(member_generator.set("name:titlecase", TRY(title_casify(name))));
+        member_generator.set("name:titlecase", TRY(title_casify(name)));
         TRY(member_generator.try_appendln("    @name:titlecase@,"));
         return {};
     }));
@@ -110,8 +110,8 @@ Optional<EasingFunction> easing_function_from_string(StringView name)
 )~~~"));
     TRY(easing_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
         auto member_generator = TRY(generator.fork());
-        TRY(member_generator.set("name", TRY(String::from_deprecated_string(name))));
-        TRY(member_generator.set("name:titlecase", TRY(title_casify(name))));
+        member_generator.set("name", TRY(String::from_deprecated_string(name)));
+        member_generator.set("name:titlecase", TRY(title_casify(name)));
         TRY(member_generator.try_append(R"~~~(
     if (name.equals_ignoring_ascii_case("@name@"sv))
         return EasingFunction::@name:titlecase@;
@@ -130,8 +130,8 @@ StringView to_string(EasingFunction easing_function)
 )~~~"));
     TRY(easing_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
         auto member_generator = TRY(generator.fork());
-        TRY(member_generator.set("name", TRY(String::from_deprecated_string(name))));
-        TRY(member_generator.set("name:titlecase", TRY(title_casify(name))));
+        member_generator.set("name", TRY(String::from_deprecated_string(name)));
+        member_generator.set("name:titlecase", TRY(title_casify(name)));
         TRY(member_generator.try_append(R"~~~(
     case EasingFunction::@name:titlecase@:
         return "@name@"sv;
@@ -154,7 +154,7 @@ EasingFunctionMetadata easing_function_metadata(EasingFunction easing_function)
         VERIFY(value.is_object());
 
         auto member_generator = TRY(generator.fork());
-        TRY(member_generator.set("name:titlecase", TRY(title_casify(name))));
+        member_generator.set("name:titlecase", TRY(title_casify(name)));
         TRY(member_generator.try_append(R"~~~(
     case EasingFunction::@name:titlecase@:
         return EasingFunctionMetadata {
