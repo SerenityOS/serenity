@@ -53,7 +53,7 @@ ErrorOr<void> generate_header_file(JsonObject& transforms_data, Core::File& file
     StringBuilder builder;
     SourceGenerator generator { builder };
 
-    TRY(generator.try_append(R"~~~(
+    generator.append(R"~~~(
 #pragma once
 
 #include <AK/Optional.h>
@@ -62,7 +62,7 @@ ErrorOr<void> generate_header_file(JsonObject& transforms_data, Core::File& file
 
 namespace Web::CSS {
 
-)~~~"));
+)~~~");
 
     generator.appendln("enum class TransformFunction {");
     TRY(transforms_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
@@ -76,7 +76,7 @@ namespace Web::CSS {
     generator.appendln("Optional<TransformFunction> transform_function_from_string(StringView);");
     generator.appendln("StringView to_string(TransformFunction);");
 
-    TRY(generator.try_append(R"~~~(
+    generator.append(R"~~~(
 enum class TransformFunctionParameterType {
     Angle,
     Length,
@@ -93,7 +93,7 @@ struct TransformFunctionMetadata {
     Vector<TransformFunctionParameter> parameters;
 };
 TransformFunctionMetadata transform_function_metadata(TransformFunction);
-)~~~"));
+)~~~");
 
     generator.appendln("\n}");
 
@@ -106,68 +106,68 @@ ErrorOr<void> generate_implementation_file(JsonObject& transforms_data, Core::Fi
     StringBuilder builder;
     SourceGenerator generator { builder };
 
-    TRY(generator.try_append(R"~~~(
+    generator.append(R"~~~(
 #include <LibWeb/CSS/TransformFunctions.h>
 #include <AK/Assertions.h>
 
 namespace Web::CSS {
-)~~~"));
+)~~~");
 
-    TRY(generator.try_append(R"~~~(
+    generator.append(R"~~~(
 Optional<TransformFunction> transform_function_from_string(StringView name)
 {
-)~~~"));
+)~~~");
     TRY(transforms_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
         auto member_generator = TRY(generator.fork());
         member_generator.set("name", TRY(String::from_deprecated_string(name)));
         member_generator.set("name:titlecase", TRY(title_casify_transform_function(name)));
-        TRY(member_generator.try_append(R"~~~(
+        member_generator.append(R"~~~(
     if (name.equals_ignoring_ascii_case("@name@"sv))
         return TransformFunction::@name:titlecase@;
-)~~~"));
+)~~~");
         return {};
     }));
-    TRY(generator.try_append(R"~~~(
+    generator.append(R"~~~(
     return {};
 }
-)~~~"));
+)~~~");
 
-    TRY(generator.try_append(R"~~~(
+    generator.append(R"~~~(
 StringView to_string(TransformFunction transform_function)
 {
     switch (transform_function) {
-)~~~"));
+)~~~");
     TRY(transforms_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
         auto member_generator = TRY(generator.fork());
         member_generator.set("name", TRY(String::from_deprecated_string(name)));
         member_generator.set("name:titlecase", TRY(title_casify_transform_function(name)));
-        TRY(member_generator.try_append(R"~~~(
+        member_generator.append(R"~~~(
     case TransformFunction::@name:titlecase@:
         return "@name@"sv;
-)~~~"));
+)~~~");
         return {};
     }));
-    TRY(generator.try_append(R"~~~(
+    generator.append(R"~~~(
     default:
         VERIFY_NOT_REACHED();
     }
 }
-)~~~"));
+)~~~");
 
-    TRY(generator.try_append(R"~~~(
+    generator.append(R"~~~(
 TransformFunctionMetadata transform_function_metadata(TransformFunction transform_function)
 {
     switch (transform_function) {
-)~~~"));
+)~~~");
     TRY(transforms_data.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
         VERIFY(value.is_object());
 
         auto member_generator = TRY(generator.fork());
         member_generator.set("name:titlecase", TRY(title_casify_transform_function(name)));
-        TRY(member_generator.try_append(R"~~~(
+        member_generator.append(R"~~~(
     case TransformFunction::@name:titlecase@:
         return TransformFunctionMetadata {
-            .parameters = {)~~~"));
+            .parameters = {)~~~");
 
         JsonArray const& parameters = value.as_object().get_array("parameters"sv).value();
         bool first = true;
@@ -189,24 +189,24 @@ TransformFunctionMetadata transform_function_metadata(TransformFunction transfor
             else
                 VERIFY_NOT_REACHED();
 
-            TRY(member_generator.try_append(first ? " "sv : ", "sv));
+            member_generator.append(first ? " "sv : ", "sv);
             first = false;
 
-            TRY(member_generator.try_append(TRY(String::formatted("{{ TransformFunctionParameterType::{}, {}}}", parameter_type, value.as_object().get("required"sv)->to_deprecated_string()))));
+            member_generator.append(TRY(String::formatted("{{ TransformFunctionParameterType::{}, {}}}", parameter_type, value.as_object().get("required"sv)->to_deprecated_string())));
             return {};
         }));
 
-        TRY(member_generator.try_append(R"~~~( }
+        member_generator.append(R"~~~( }
     };
-)~~~"));
+)~~~");
         return {};
     }));
-    TRY(generator.try_append(R"~~~(
+    generator.append(R"~~~(
     default:
         VERIFY_NOT_REACHED();
     }
 }
-)~~~"));
+)~~~");
 
     generator.appendln("\n}");
 
