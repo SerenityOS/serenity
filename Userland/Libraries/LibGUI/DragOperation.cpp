@@ -84,9 +84,9 @@ void DragOperation::set_bitmap(Gfx::Bitmap const* bitmap)
     if (!m_mime_data)
         m_mime_data = Core::MimeData::construct();
     if (bitmap)
-        m_mime_data->set_data("image/x-raw-bitmap", bitmap->serialize_to_byte_buffer().release_value_but_fixme_should_propagate_errors());
+        m_mime_data->set_data("image/x-raw-bitmap"_string, bitmap->serialize_to_byte_buffer().release_value_but_fixme_should_propagate_errors());
 }
-void DragOperation::set_data(DeprecatedString const& data_type, DeprecatedString const& data)
+void DragOperation::set_data(String const& data_type, DeprecatedString const& data)
 {
     if (!m_mime_data)
         m_mime_data = Core::MimeData::construct();

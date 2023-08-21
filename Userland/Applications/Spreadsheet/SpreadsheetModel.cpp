@@ -157,7 +157,7 @@ RefPtr<Core::MimeData> SheetModel::mime_data(const GUI::ModelSelection& selectio
     auto new_data = DeprecatedString::formatted("{}\n{}",
         cursor_position.to_url(m_sheet).to_deprecated_string(),
         StringView(mime_data_buffer));
-    mime_data->set_data("text/x-spreadsheet-data", new_data.to_byte_buffer());
+    mime_data->set_data("text/x-spreadsheet-data"_string, new_data.to_byte_buffer());
 
     return mime_data;
 }

@@ -128,7 +128,7 @@ endpoint WindowServer
     set_window_cursor(i32 window_id, i32 cursor_type) =|
     set_window_custom_cursor(i32 window_id, Gfx::ShareableBitmap cursor) =|
 
-    start_drag([UTF8] DeprecatedString text, HashMap<DeprecatedString,ByteBuffer> mime_data, Gfx::ShareableBitmap drag_bitmap) => (bool started)
+    start_drag([UTF8] DeprecatedString text, HashMap<String,ByteBuffer> mime_data, Gfx::ShareableBitmap drag_bitmap) => (bool started)
     set_accepts_drag(bool accepts) =|
 
     set_system_theme(DeprecatedString theme_path, [UTF8] DeprecatedString theme_name, bool keep_desktop_background, Optional<DeprecatedString> color_scheme_path) => (bool success)

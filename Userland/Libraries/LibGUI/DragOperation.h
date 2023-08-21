@@ -29,7 +29,7 @@ public:
     void set_mime_data(RefPtr<Core::MimeData> mime_data) { m_mime_data = move(mime_data); }
     void set_text(DeprecatedString const& text);
     void set_bitmap(Gfx::Bitmap const* bitmap);
-    void set_data(DeprecatedString const& data_type, DeprecatedString const& data);
+    void set_data(String const& data_type, DeprecatedString const& data);
 
     Outcome exec();
     Outcome outcome() const { return m_outcome; }

@@ -349,7 +349,7 @@ void ConnectionToWindowServer::applet_area_rect_changed(Gfx::IntRect const& rect
     });
 }
 
-void ConnectionToWindowServer::drag_dropped(i32 window_id, Gfx::IntPoint mouse_position, DeprecatedString const& text, HashMap<DeprecatedString, ByteBuffer> const& mime_data)
+void ConnectionToWindowServer::drag_dropped(i32 window_id, Gfx::IntPoint mouse_position, DeprecatedString const& text, HashMap<String, ByteBuffer> const& mime_data)
 {
     if (auto* window = Window::from_window_id(window_id)) {
         auto mime_data_obj = Core::MimeData::construct(mime_data);

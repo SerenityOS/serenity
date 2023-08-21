@@ -125,10 +125,10 @@ RefPtr<Core::MimeData> Model::mime_data(ModelSelection const& selection) const
         }
     });
 
-    mime_data->set_data(drag_data_type(), data_builder.to_byte_buffer().release_value_but_fixme_should_propagate_errors());
+    mime_data->set_data(MUST(String::from_utf8(drag_data_type())), data_builder.to_byte_buffer().release_value_but_fixme_should_propagate_errors());
     mime_data->set_text(text_builder.to_deprecated_string());
     if (bitmap)
-        mime_data->set_data("image/x-raw-bitmap", bitmap->serialize_to_byte_buffer().release_value_but_fixme_should_propagate_errors());
+        mime_data->set_data("image/x-raw-bitmap"_string, bitmap->serialize_to_byte_buffer().release_value_but_fixme_should_propagate_errors());
 
     return mime_data;
 }

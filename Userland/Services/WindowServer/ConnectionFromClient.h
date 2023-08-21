@@ -144,7 +144,7 @@ private:
     virtual void popup_menu(i32, Gfx::IntPoint, Gfx::IntRect const&) override;
     virtual void dismiss_menu(i32) override;
     virtual void set_window_icon_bitmap(i32, Gfx::ShareableBitmap const&) override;
-    virtual Messages::WindowServer::StartDragResponse start_drag(DeprecatedString const&, HashMap<DeprecatedString, ByteBuffer> const&, Gfx::ShareableBitmap const&) override;
+    virtual Messages::WindowServer::StartDragResponse start_drag(DeprecatedString const&, HashMap<String, ByteBuffer> const&, Gfx::ShareableBitmap const&) override;
     virtual void set_accepts_drag(bool) override;
     virtual Messages::WindowServer::SetSystemThemeResponse set_system_theme(DeprecatedString const&, DeprecatedString const&, bool keep_desktop_background, Optional<DeprecatedString> const& color_scheme_path) override;
     virtual Messages::WindowServer::GetSystemThemeResponse get_system_theme() override;
