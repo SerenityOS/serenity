@@ -9,6 +9,7 @@
 #include <AK/SourceLocation.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Encoder.h>
+#include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
@@ -370,6 +371,14 @@ JS::GCPtr<HTML::HTMLMediaElement> Page::media_context_menu_element()
         return nullptr;
 
     return static_cast<HTML::HTMLMediaElement*>(dom_node);
+}
+
+void Page::set_user_style(String source)
+{
+    m_user_style_sheet_source = source;
+    if (top_level_browsing_context_is_initialized() && top_level_browsing_context().active_document()) {
+        top_level_browsing_context().active_document()->style_computer().invalidate_rule_cache();
+    }
 }
 
 }

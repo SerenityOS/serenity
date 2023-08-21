@@ -168,6 +168,7 @@ private:
 
     struct MatchingRuleSet {
         Vector<MatchingRule> user_agent_rules;
+        Vector<MatchingRule> user_rules;
         Vector<MatchingRule> author_rules;
     };
 
@@ -202,7 +203,9 @@ private:
     void ensure_animation_timer() const;
 
     OwnPtr<RuleCache> m_author_rule_cache;
+    OwnPtr<RuleCache> m_user_rule_cache;
     OwnPtr<RuleCache> m_user_agent_rule_cache;
+    JS::Handle<CSSStyleSheet> m_user_style_sheet;
 
     mutable FontCache m_font_cache;
 

@@ -239,6 +239,10 @@ void StyleComputer::for_each_stylesheet(CascadeOrigin cascade_origin, Callback c
             callback(quirks_mode_stylesheet(document()));
         callback(mathml_stylesheet(document()));
     }
+    if (cascade_origin == CascadeOrigin::User) {
+        if (m_user_style_sheet)
+            callback(*m_user_style_sheet);
+    }
     if (cascade_origin == CascadeOrigin::Author) {
         for (auto const& sheet : document().style_sheets().sheets())
             callback(*sheet);
@@ -250,6 +254,8 @@ StyleComputer::RuleCache const& StyleComputer::rule_cache_for_cascade_origin(Cas
     switch (cascade_origin) {
     case CascadeOrigin::Author:
         return *m_author_rule_cache;
+    case CascadeOrigin::User:
+        return *m_user_rule_cache;
     case CascadeOrigin::UserAgent:
         return *m_user_agent_rule_cache;
     default:
@@ -1720,19 +1726,21 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
     MatchingRuleSet matching_rule_set;
     matching_rule_set.user_agent_rules = collect_matching_rules(element, CascadeOrigin::UserAgent, pseudo_element);
     sort_matching_rules(matching_rule_set.user_agent_rules);
+    matching_rule_set.user_rules = collect_matching_rules(element, CascadeOrigin::User, pseudo_element);
+    sort_matching_rules(matching_rule_set.user_rules);
     matching_rule_set.author_rules = collect_matching_rules(element, CascadeOrigin::Author, pseudo_element);
     sort_matching_rules(matching_rule_set.author_rules);
 
     if (mode == ComputeStyleMode::CreatePseudoElementStyleIfNeeded) {
         VERIFY(pseudo_element.has_value());
-        if (matching_rule_set.author_rules.is_empty() && matching_rule_set.user_agent_rules.is_empty()) {
+        if (matching_rule_set.author_rules.is_empty() && matching_rule_set.user_rules.is_empty() && matching_rule_set.user_agent_rules.is_empty()) {
             did_match_any_pseudo_element_rules = false;
             return {};
         }
         did_match_any_pseudo_element_rules = true;
     }
 
-    // Then we resolve all the CSS custom properties ("variables") for this element:
+    // Then we resolve all the CSS custom pr`operties ("variables") for this element:
     TRY(cascade_custom_properties(element, pseudo_element, matching_rule_set.author_rules));
 
     // Then we apply the declarations from the matched rules in cascade order:
@@ -1740,7 +1748,8 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
     // Normal user agent declarations
     cascade_declarations(style, element, pseudo_element, matching_rule_set.user_agent_rules, CascadeOrigin::UserAgent, Important::No);
 
-    // FIXME: Normal user declarations
+    // Normal user declarations
+    cascade_declarations(style, element, pseudo_element, matching_rule_set.user_rules, CascadeOrigin::User, Important::No);
 
     // Author presentational hints (NOTE: The spec doesn't say exactly how to prioritize these.)
     if (!pseudo_element.has_value()) {
@@ -1931,7 +1940,8 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
     // Important author declarations
     cascade_declarations(style, element, pseudo_element, matching_rule_set.author_rules, CascadeOrigin::Author, Important::Yes);
 
-    // FIXME: Important user declarations
+    // Important user declarations
+    cascade_declarations(style, element, pseudo_element, matching_rule_set.user_rules, CascadeOrigin::User, Important::Yes);
 
     // Important user agent declarations
     cascade_declarations(style, element, pseudo_element, matching_rule_set.user_agent_rules, CascadeOrigin::UserAgent, Important::Yes);
@@ -2582,7 +2592,7 @@ bool PropertyDependencyNode::has_cycles()
 
 void StyleComputer::build_rule_cache_if_needed() const
 {
-    if (m_author_rule_cache && m_user_agent_rule_cache)
+    if (m_author_rule_cache && m_user_rule_cache && m_user_agent_rule_cache)
         return;
     const_cast<StyleComputer&>(*this).build_rule_cache();
 }
@@ -2752,13 +2762,27 @@ NonnullOwnPtr<StyleComputer::RuleCache> StyleComputer::make_rule_cache_for_casca
 
 void StyleComputer::build_rule_cache()
 {
+    // FIXME: How are we sometimes calculating style before the Document has a Page?
+    if (document().page()) {
+        if (auto user_style_source = document().page()->user_style(); user_style_source.has_value()) {
+            m_user_style_sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(document()), user_style_source.value()));
+        }
+    }
+
     m_author_rule_cache = make_rule_cache_for_cascade_origin(CascadeOrigin::Author);
+    m_user_rule_cache = make_rule_cache_for_cascade_origin(CascadeOrigin::User);
     m_user_agent_rule_cache = make_rule_cache_for_cascade_origin(CascadeOrigin::UserAgent);
 }
 
 void StyleComputer::invalidate_rule_cache()
 {
     m_author_rule_cache = nullptr;
+
+    // NOTE: We could be smarter about keeping the user rule cache, and style sheet.
+    //       Currently we are re-parsing the user style sheet every time we build the caches,
+    //       as it may have changed.
+    m_user_rule_cache = nullptr;
+    m_user_style_sheet = nullptr;
 
     // NOTE: It might not be necessary to throw away the UA rule cache.
     //       If we are sure that it's safe, we could keep it as an optimization.
