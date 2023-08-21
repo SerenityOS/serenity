@@ -22,7 +22,7 @@ struct GenericTraits {
     static constexpr bool is_trivially_serializable() { return false; }
     static constexpr bool equals(T const& a, T const& b) { return a == b; }
     template<Concepts::HashCompatible<T> U>
-    static bool equals(U const& a, T const& b) { return a == b; }
+    static bool equals(T const& self, U const& other) { return self == other; }
 };
 
 template<typename T>
