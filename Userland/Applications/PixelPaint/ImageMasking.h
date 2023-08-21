@@ -37,6 +37,7 @@ private:
     ImageEditor* m_editor { nullptr };
     RefPtr<Gfx::Bitmap> m_reference_mask { nullptr };
     bool m_did_change = false;
+    Optional<Gfx::IntRect> m_masked_area;
 
     RefPtr<GUI::RangeSlider> m_full_masking_slider = { nullptr };
     RefPtr<GUI::RangeSlider> m_edge_masking_slider = { nullptr };

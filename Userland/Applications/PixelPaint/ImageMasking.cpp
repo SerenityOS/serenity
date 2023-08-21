@@ -10,6 +10,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/Label.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/RangeSlider.h>
 #include <LibGfx/AntiAliasingPainter.h>
@@ -159,7 +160,7 @@ void ImageMasking::generate_new_mask()
 {
     ensure_reference_mask().release_value_but_fixme_should_propagate_errors();
 
-    if (m_reference_mask.is_null())
+    if (m_reference_mask.is_null() || !m_masked_area.has_value())
         return;
 
     if (m_masking_type == MaskingType::Luminosity) {
@@ -172,8 +173,8 @@ void ImageMasking::generate_new_mask()
         bool has_end_range = max_luminosity_end != max_luminosity_full;
         Gfx::Color reference_mask_pixel, content_pixel;
 
-        for (int y = 0; y < m_reference_mask->height(); y++) {
-            for (int x = 0; x < m_reference_mask->width(); x++) {
+        for (int y = m_masked_area->top(); y < m_masked_area->bottom(); y++) {
+            for (int x = m_masked_area->left(); x < m_masked_area->right(); x++) {
                 reference_mask_pixel = m_reference_mask->get_pixel(x, y);
                 if (!reference_mask_pixel.alpha())
                     continue;
@@ -225,13 +226,13 @@ void ImageMasking::generate_new_mask()
         Gfx::Color reference_mask_pixel;
         Gfx::HSV content_pixel_hsv;
 
-        for (int y = 0; y < m_reference_mask->height(); y++) {
+        for (int y = m_masked_area->top(); y <= m_masked_area->bottom(); y++) {
             auto reference_scanline = m_reference_mask->scanline(y);
             auto content_scanline = m_editor->active_layer()->content_bitmap().scanline(y);
             auto mask_scanline = m_editor->active_layer()->mask_bitmap()->scanline(y);
             fast_u32_fill(mask_scanline, 0, m_reference_mask->physical_width());
 
-            for (int x = 0; x < m_reference_mask->width(); x++) {
+            for (int x = m_masked_area->left(); x < m_masked_area->right(); x++) {
                 reference_mask_pixel = Color::from_argb(reference_scanline[x]);
                 if (!reference_mask_pixel.alpha())
                     continue;
@@ -268,9 +269,12 @@ void ImageMasking::generate_new_mask()
 
 ErrorOr<void> ImageMasking::ensure_reference_mask()
 {
-    if (m_reference_mask.is_null())
+    if (m_reference_mask.is_null()) {
         m_reference_mask = TRY(m_editor->active_layer()->mask_bitmap()->clone());
-
+        m_masked_area = m_editor->active_layer()->editing_mask_bounding_rect();
+        if (!m_masked_area.has_value())
+            GUI::MessageBox::show(this, "You have to draw a mask first before you can refine the mask details."sv, "Missing mask content"sv, GUI::MessageBox::Type::Information);
+    }
     return {};
 }
 

@@ -28,6 +28,7 @@ private:
     RefPtr<GUI::ValueSlider> m_gamma_slider = { nullptr };
     bool m_did_change = false;
     int m_precomputed_color_correction[256];
+    Optional<Gfx::IntRect> m_masked_area;
 
     ErrorOr<void> ensure_reference_bitmap();
     void generate_new_image();
