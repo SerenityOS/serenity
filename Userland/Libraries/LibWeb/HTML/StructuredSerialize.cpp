@@ -11,6 +11,7 @@
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/BigInt.h>
+#include <LibJS/Runtime/BigIntObject.h>
 #include <LibJS/Runtime/BooleanObject.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/NumberObject.h>
@@ -59,6 +60,8 @@ enum ValueTag {
     BooleanObject,
 
     NumberObject,
+
+    BigIntObject,
 
     StringObject,
 
@@ -122,7 +125,9 @@ public:
         if (return_primitive_type)
             return m_serialized;
 
-        // FIXME 5. If Type(value) is Symbol, then throw a "DataCloneError" DOMException.
+        // 5. If Type(value) is Symbol, then throw a "DataCloneError" DOMException.
+        if (value.is_symbol())
+            return WebIDL::DataCloneError::create(*m_vm.current_realm(), "Cannot serialize Symbol"sv);
 
         // 6. Let serialized be an uninitialized value.
         //    NOTE: We use the range of the soon-to-be-serialized value in our serialized data buffer
@@ -144,7 +149,12 @@ public:
             m_serialized.append(bit_cast<u32*>(&number), 2);
         }
 
-        // FIXME 9. Otherwise, if value has a [[BigIntData]] internal slot, then set serialized to { [[Type]]: "BigInt", [[BigIntData]]: value.[[BigIntData]] }.
+        // 9. Otherwise, if value has a [[BigIntData]] internal slot, then set serialized to { [[Type]]: "BigInt", [[BigIntData]]: value.[[BigIntData]] }.
+        else if (value.is_object() && is<JS::BigIntObject>(value.as_object())) {
+            m_serialized.append(ValueTag::BigIntObject);
+            auto& bigint_object = static_cast<JS::BigIntObject&>(value.as_object());
+            TRY(serialize_string(m_serialized, TRY_OR_THROW_OOM(m_vm, bigint_object.bigint().to_string())));
+        }
 
         // 10. Otherwise, if value has a [[StringData]] internal slot, then set serialized to { [[Type]]: "String", [[StringData]]: value.[[StringData]] }.
         else if (value.is_object() && is<JS::StringObject>(value.as_object())) {
@@ -268,6 +278,12 @@ public:
                 bits[1] = m_vector[position++];
                 double const value = *bit_cast<double*>(&bits);
                 m_memory.append(JS::NumberObject::create(*realm, value));
+                break;
+            }
+            case ValueTag::BigIntObject: {
+                auto* realm = m_vm.current_realm();
+                auto big_int = TRY(deserialize_big_int_primitive(m_vm, m_vector, position));
+                m_memory.append(JS::BigIntObject::create(*realm, big_int));
                 break;
             }
             case ValueTag::StringObject: {
