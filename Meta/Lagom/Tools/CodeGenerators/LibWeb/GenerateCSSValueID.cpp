@@ -43,7 +43,7 @@ ErrorOr<void> generate_header_file(JsonArray& identifier_data, Core::File& file)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
-    TRY(generator.try_append(R"~~~(
+    generator.append(R"~~~(
 #pragma once
 
 #include <AK/StringView.h>
@@ -53,19 +53,19 @@ namespace Web::CSS {
 
 enum class ValueID {
     Invalid,
-)~~~"));
+)~~~");
 
     TRY(identifier_data.try_for_each([&](auto& name) -> ErrorOr<void> {
         auto member_generator = TRY(generator.fork());
         member_generator.set("name:titlecase", TRY(title_casify(name.to_deprecated_string())));
 
-        TRY(member_generator.try_append(R"~~~(
+        member_generator.append(R"~~~(
     @name:titlecase@,
-)~~~"));
+)~~~");
         return {};
     }));
 
-    TRY(generator.try_append(R"~~~(
+    generator.append(R"~~~(
 };
 
 Optional<ValueID> value_id_from_string(StringView);
@@ -73,7 +73,7 @@ StringView string_from_value_id(ValueID);
 
 }
 
-)~~~"));
+)~~~");
 
     TRY(file.write_until_depleted(generator.as_string_view().bytes()));
     return {};
@@ -84,7 +84,7 @@ ErrorOr<void> generate_implementation_file(JsonArray& identifier_data, Core::Fil
     StringBuilder builder;
     SourceGenerator generator { builder };
 
-    TRY(generator.try_append(R"~~~(
+    generator.append(R"~~~(
 #include <AK/Assertions.h>
 #include <AK/HashMap.h>
 #include <LibWeb/CSS/ValueID.h>
@@ -92,19 +92,19 @@ ErrorOr<void> generate_implementation_file(JsonArray& identifier_data, Core::Fil
 namespace Web::CSS {
 
 HashMap<StringView, ValueID, AK::CaseInsensitiveASCIIStringViewTraits> g_stringview_to_value_id_map {
-)~~~"));
+)~~~");
 
     TRY(identifier_data.try_for_each([&](auto& name) -> ErrorOr<void> {
         auto member_generator = TRY(generator.fork());
         member_generator.set("name", TRY(String::from_deprecated_string(name.to_deprecated_string())));
         member_generator.set("name:titlecase", TRY(title_casify(name.to_deprecated_string())));
-        TRY(member_generator.try_append(R"~~~(
+        member_generator.append(R"~~~(
     {"@name@"sv, ValueID::@name:titlecase@},
-)~~~"));
+)~~~");
         return {};
     }));
 
-    TRY(generator.try_append(R"~~~(
+    generator.append(R"~~~(
 };
 
 Optional<ValueID> value_id_from_string(StringView string)
@@ -114,27 +114,27 @@ Optional<ValueID> value_id_from_string(StringView string)
 
 StringView string_from_value_id(ValueID value_id) {
     switch (value_id) {
-)~~~"));
+)~~~");
 
     TRY(identifier_data.try_for_each([&](auto& name) -> ErrorOr<void> {
         auto member_generator = TRY(generator.fork());
         member_generator.set("name", TRY(String::from_deprecated_string(name.to_deprecated_string())));
         member_generator.set("name:titlecase", TRY(title_casify(name.to_deprecated_string())));
-        TRY(member_generator.try_append(R"~~~(
+        member_generator.append(R"~~~(
     case ValueID::@name:titlecase@:
         return "@name@"sv;
-        )~~~"));
+        )~~~");
         return {};
     }));
 
-    TRY(generator.try_append(R"~~~(
+    generator.append(R"~~~(
     default:
         return "(invalid CSS::ValueID)"sv;
     }
 }
 
 } // namespace Web::CSS
-)~~~"));
+)~~~");
 
     TRY(file.write_until_depleted(generator.as_string_view().bytes()));
     return {};

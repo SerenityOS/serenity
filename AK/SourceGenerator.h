@@ -65,12 +65,12 @@ public:
 
     StringView as_string_view() const { return m_builder.string_view(); }
 
-    ErrorOr<void> try_append(StringView pattern)
+    void append(StringView pattern)
     {
         GenericLexer lexer { pattern };
 
         while (!lexer.is_eof()) {
-            TRY(m_builder.try_append(lexer.consume_until(m_opening)));
+            m_builder.append(lexer.consume_until(m_opening));
 
             if (lexer.consume_specific(m_opening)) {
                 auto const placeholder = lexer.consume_until(m_closing);
@@ -78,12 +78,11 @@ public:
                 if (!lexer.consume_specific(m_closing))
                     VERIFY_NOT_REACHED();
 
-                TRY(m_builder.try_append(get(placeholder)));
+                m_builder.append(get(placeholder));
             } else {
                 VERIFY(lexer.is_eof());
             }
         }
-        return {};
     }
 
     void appendln(StringView pattern)
@@ -105,9 +104,9 @@ public:
     }
 
     template<size_t N>
-    ErrorOr<void> try_append(char const (&pattern)[N])
+    void append(char const (&pattern)[N])
     {
-        return try_append(StringView { pattern, N - 1 });
+        append(StringView { pattern, N - 1 });
     }
 
     template<size_t N>
@@ -126,9 +125,6 @@ public:
     {
         set(StringView { key, N - 1 }, value);
     }
-    void append(StringView pattern) { MUST(try_append(pattern)); }
-    template<size_t N>
-    void append(char const (&pattern)[N]) { MUST(try_append(pattern)); }
 
 private:
     StringBuilder& m_builder;

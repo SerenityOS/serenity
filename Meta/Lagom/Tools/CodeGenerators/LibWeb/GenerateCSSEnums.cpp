@@ -43,7 +43,7 @@ ErrorOr<void> generate_header_file(JsonObject& enums_data, Core::File& file)
     StringBuilder builder;
     SourceGenerator generator { builder };
 
-    TRY(generator.try_append(R"~~~(
+    generator.append(R"~~~(
 #pragma once
 
 #include <AK/Optional.h>
@@ -52,7 +52,7 @@ namespace Web::CSS {
 
 enum class ValueID;
 
-)~~~"));
+)~~~");
 
     TRY(enums_data.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
         VERIFY(value.is_array());
@@ -90,7 +90,7 @@ enum class ValueID;
         enum_generator.appendln("Optional<@name:titlecase@> value_id_to_@name:snakecase@(ValueID);");
         enum_generator.appendln("ValueID to_value_id(@name:titlecase@);");
         enum_generator.appendln("StringView to_string(@name:titlecase@);");
-        TRY(enum_generator.try_append("\n"));
+        enum_generator.append("\n");
         return {};
     }));
 
@@ -105,12 +105,12 @@ ErrorOr<void> generate_implementation_file(JsonObject& enums_data, Core::File& f
     StringBuilder builder;
     SourceGenerator generator { builder };
 
-    TRY(generator.try_append(R"~~~(
+    generator.append(R"~~~(
 #include <LibWeb/CSS/Enums.h>
 #include <LibWeb/CSS/ValueID.h>
 
 namespace Web::CSS {
-)~~~"));
+)~~~");
 
     TRY(enums_data.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
         VERIFY(value.is_array());
@@ -120,10 +120,10 @@ namespace Web::CSS {
         enum_generator.set("name:titlecase", TRY(title_casify(name)));
         enum_generator.set("name:snakecase", TRY(snake_casify(name)));
 
-        TRY(enum_generator.try_append(R"~~~(
+        enum_generator.append(R"~~~(
 Optional<@name:titlecase@> value_id_to_@name:snakecase@(ValueID value_id)
 {
-    switch (value_id) {)~~~"));
+    switch (value_id) {)~~~");
 
         for (auto& member : members.values()) {
             auto member_generator = TRY(enum_generator.fork());
@@ -136,22 +136,22 @@ Optional<@name:titlecase@> value_id_to_@name:snakecase@(ValueID value_id)
                 member_generator.set("valueid:titlecase", TRY(title_casify(member_name)));
                 member_generator.set("member:titlecase", TRY(title_casify(member_name)));
             }
-            TRY(member_generator.try_append(R"~~~(
+            member_generator.append(R"~~~(
     case ValueID::@valueid:titlecase@:
-        return @name:titlecase@::@member:titlecase@;)~~~"));
+        return @name:titlecase@::@member:titlecase@;)~~~");
         }
 
-        TRY(enum_generator.try_append(R"~~~(
+        enum_generator.append(R"~~~(
     default:
         return {};
     }
 }
-)~~~"));
+)~~~");
 
-        TRY(enum_generator.try_append(R"~~~(
+        enum_generator.append(R"~~~(
 ValueID to_value_id(@name:titlecase@ @name:snakecase@_value)
 {
-    switch (@name:snakecase@_value) {)~~~"));
+    switch (@name:snakecase@_value) {)~~~");
 
         for (auto& member : members.values()) {
             auto member_generator = TRY(enum_generator.fork());
@@ -160,22 +160,22 @@ ValueID to_value_id(@name:titlecase@ @name:snakecase@_value)
                 continue;
             member_generator.set("member:titlecase", TRY(title_casify(member_name)));
 
-            TRY(member_generator.try_append(R"~~~(
+            member_generator.append(R"~~~(
     case @name:titlecase@::@member:titlecase@:
-        return ValueID::@member:titlecase@;)~~~"));
+        return ValueID::@member:titlecase@;)~~~");
         }
 
-        TRY(enum_generator.try_append(R"~~~(
+        enum_generator.append(R"~~~(
     default:
         VERIFY_NOT_REACHED();
     }
 }
-)~~~"));
+)~~~");
 
-        TRY(enum_generator.try_append(R"~~~(
+        enum_generator.append(R"~~~(
 StringView to_string(@name:titlecase@ value)
 {
-    switch (value) {)~~~"));
+    switch (value) {)~~~");
 
         for (auto& member : members.values()) {
             auto member_generator = TRY(enum_generator.fork());
@@ -185,17 +185,17 @@ StringView to_string(@name:titlecase@ value)
             member_generator.set("member:css", TRY(String::from_deprecated_string(member_name)));
             member_generator.set("member:titlecase", TRY(title_casify(member_name)));
 
-            TRY(member_generator.try_append(R"~~~(
+            member_generator.append(R"~~~(
     case @name:titlecase@::@member:titlecase@:
-        return "@member:css@"sv;)~~~"));
+        return "@member:css@"sv;)~~~");
         }
 
-        TRY(enum_generator.try_append(R"~~~(
+        enum_generator.append(R"~~~(
     default:
         VERIFY_NOT_REACHED();
     }
 }
-)~~~"));
+)~~~");
         return {};
     }));
 

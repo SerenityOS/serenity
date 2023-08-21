@@ -42,7 +42,7 @@ ErrorOr<void> generate_header_file(JsonObject& pseudo_classes_data, Core::File& 
     StringBuilder builder;
     SourceGenerator generator { builder };
 
-    TRY(generator.try_append(R"~~~(
+    generator.append(R"~~~(
 #pragma once
 
 #include <AK/Optional.h>
@@ -51,7 +51,7 @@ ErrorOr<void> generate_header_file(JsonObject& pseudo_classes_data, Core::File& 
 namespace Web::CSS {
 
 enum class PseudoClass {
-)~~~"));
+)~~~");
 
     TRY(pseudo_classes_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
         auto member_generator = TRY(generator.fork());
@@ -60,7 +60,7 @@ enum class PseudoClass {
         member_generator.appendln("    @name:titlecase@,");
         return {};
     }));
-    TRY(generator.try_append(R"~~~(
+    generator.append(R"~~~(
 };
 
 Optional<PseudoClass> pseudo_class_from_string(StringView);
@@ -83,7 +83,7 @@ struct PseudoClassMetadata {
 PseudoClassMetadata pseudo_class_metadata(PseudoClass);
 
 }
-)~~~"));
+)~~~");
 
     TRY(file.write_until_depleted(generator.as_string_view().bytes()));
     return {};
@@ -94,28 +94,28 @@ ErrorOr<void> generate_implementation_file(JsonObject& pseudo_classes_data, Core
     StringBuilder builder;
     SourceGenerator generator { builder };
 
-    TRY(generator.try_append(R"~~~(
+    generator.append(R"~~~(
 #include <LibWeb/CSS/PseudoClass.h>
 
 namespace Web::CSS {
 
 Optional<PseudoClass> pseudo_class_from_string(StringView string)
 {
-)~~~"));
+)~~~");
 
     TRY(pseudo_classes_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
         auto member_generator = TRY(generator.fork());
         member_generator.set("name", TRY(String::from_deprecated_string(name)));
         member_generator.set("name:titlecase", TRY(title_casify(name)));
 
-        TRY(member_generator.try_append(R"~~~(
+        member_generator.append(R"~~~(
     if (string.equals_ignoring_ascii_case("@name@"sv))
         return PseudoClass::@name:titlecase@;
-)~~~"));
+)~~~");
         return {};
     }));
 
-    TRY(generator.try_append(R"~~~(
+    generator.append(R"~~~(
 
     return {};
 }
@@ -123,21 +123,21 @@ Optional<PseudoClass> pseudo_class_from_string(StringView string)
 StringView pseudo_class_name(PseudoClass pseudo_class)
 {
     switch (pseudo_class) {
-)~~~"));
+)~~~");
 
     TRY(pseudo_classes_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
         auto member_generator = TRY(generator.fork());
         member_generator.set("name", TRY(String::from_deprecated_string(name)));
         member_generator.set("name:titlecase", TRY(title_casify(name)));
 
-        TRY(member_generator.try_append(R"~~~(
+        member_generator.append(R"~~~(
     case PseudoClass::@name:titlecase@:
         return "@name@"sv;
-)~~~"));
+)~~~");
         return {};
     }));
 
-    TRY(generator.try_append(R"~~~(
+    generator.append(R"~~~(
     }
     VERIFY_NOT_REACHED();
 }
@@ -145,7 +145,7 @@ StringView pseudo_class_name(PseudoClass pseudo_class)
 PseudoClassMetadata pseudo_class_metadata(PseudoClass pseudo_class)
 {
     switch (pseudo_class) {
-)~~~"));
+)~~~");
 
     TRY(pseudo_classes_data.try_for_each_member([&](auto& name, JsonValue const& value) -> ErrorOr<void> {
         auto member_generator = TRY(generator.fork());
@@ -187,24 +187,24 @@ PseudoClassMetadata pseudo_class_metadata(PseudoClass pseudo_class)
         member_generator.set("is_valid_as_function", is_valid_as_function ? "true"_string : "false"_string);
         member_generator.set("is_valid_as_identifier", is_valid_as_identifier ? "true"_string : "false"_string);
 
-        TRY(member_generator.try_append(R"~~~(
+        member_generator.append(R"~~~(
     case PseudoClass::@name:titlecase@:
         return {
             .parameter_type = PseudoClassMetadata::ParameterType::@parameter_type@,
             .is_valid_as_function = @is_valid_as_function@,
             .is_valid_as_identifier = @is_valid_as_identifier@,
         };
-)~~~"));
+)~~~");
         return {};
     }));
 
-    TRY(generator.try_append(R"~~~(
+    generator.append(R"~~~(
     }
     VERIFY_NOT_REACHED();
 }
 
 }
-)~~~"));
+)~~~");
 
     TRY(file.write_until_depleted(generator.as_string_view().bytes()));
     return {};
