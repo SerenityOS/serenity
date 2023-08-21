@@ -133,7 +133,7 @@ ErrorOr<void> generate_hash_table_member(SourceGenerator& generator, StringView 
     member_generator.set("member_name"sv, member_name);
     member_generator.set("hash_table_name"sv, hash_table_name);
     member_generator.set("enum_class"sv, enum_class);
-    TRY(member_generator.set("hash_table_size"sv, TRY(String::number(values.size()))));
+    member_generator.set("hash_table_size"sv, TRY(String::number(values.size())));
 
     if (values.size() == 0) {
         member_generator.append(R"~~~(

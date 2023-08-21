@@ -44,14 +44,13 @@ public:
         return SourceGenerator { m_builder, TRY(m_mapping.clone()), m_opening, m_closing };
     }
 
-    ErrorOr<void> set(StringView key, String value)
+    void set(StringView key, String value)
     {
         if (key.contains(m_opening) || key.contains(m_closing)) {
             warnln("SourceGenerator keys cannot contain the opening/closing delimiters `{}` and `{}`. (Keys are only wrapped in these when using them, not when setting them.)", m_opening, m_closing);
             VERIFY_NOT_REACHED();
         }
-        TRY(m_mapping.try_set(key, move(value)));
-        return {};
+        m_mapping.set(key, move(value));
     }
 
     String get(StringView key) const
@@ -101,9 +100,9 @@ public:
     }
 
     template<size_t N>
-    ErrorOr<void> set(char const (&key)[N], String value)
+    void set(char const (&key)[N], String value)
     {
-        return set(StringView { key, N - 1 }, value);
+        set(StringView { key, N - 1 }, value);
     }
 
     template<size_t N>
@@ -121,7 +120,7 @@ public:
     // FIXME: These are deprecated.
     void set(StringView key, DeprecatedString value)
     {
-        MUST(set(key, MUST(String::from_deprecated_string(value))));
+        set(key, MUST(String::from_deprecated_string(value)));
     }
     template<size_t N>
     void set(char const (&key)[N], DeprecatedString value)

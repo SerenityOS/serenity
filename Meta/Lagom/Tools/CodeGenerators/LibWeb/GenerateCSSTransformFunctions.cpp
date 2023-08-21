@@ -67,7 +67,7 @@ namespace Web::CSS {
     TRY(generator.try_appendln("enum class TransformFunction {"));
     TRY(transforms_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
         auto member_generator = TRY(generator.fork());
-        TRY(member_generator.set("name:titlecase", TRY(title_casify_transform_function(name))));
+        member_generator.set("name:titlecase", TRY(title_casify_transform_function(name)));
         TRY(member_generator.try_appendln("    @name:titlecase@,"));
         return {};
     }));
@@ -119,8 +119,8 @@ Optional<TransformFunction> transform_function_from_string(StringView name)
 )~~~"));
     TRY(transforms_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
         auto member_generator = TRY(generator.fork());
-        TRY(member_generator.set("name", TRY(String::from_deprecated_string(name))));
-        TRY(member_generator.set("name:titlecase", TRY(title_casify_transform_function(name))));
+        member_generator.set("name", TRY(String::from_deprecated_string(name)));
+        member_generator.set("name:titlecase", TRY(title_casify_transform_function(name)));
         TRY(member_generator.try_append(R"~~~(
     if (name.equals_ignoring_ascii_case("@name@"sv))
         return TransformFunction::@name:titlecase@;
@@ -139,8 +139,8 @@ StringView to_string(TransformFunction transform_function)
 )~~~"));
     TRY(transforms_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
         auto member_generator = TRY(generator.fork());
-        TRY(member_generator.set("name", TRY(String::from_deprecated_string(name))));
-        TRY(member_generator.set("name:titlecase", TRY(title_casify_transform_function(name))));
+        member_generator.set("name", TRY(String::from_deprecated_string(name)));
+        member_generator.set("name:titlecase", TRY(title_casify_transform_function(name)));
         TRY(member_generator.try_append(R"~~~(
     case TransformFunction::@name:titlecase@:
         return "@name@"sv;
@@ -163,7 +163,7 @@ TransformFunctionMetadata transform_function_metadata(TransformFunction transfor
         VERIFY(value.is_object());
 
         auto member_generator = TRY(generator.fork());
-        TRY(member_generator.set("name:titlecase", TRY(title_casify_transform_function(name))));
+        member_generator.set("name:titlecase", TRY(title_casify_transform_function(name)));
         TRY(member_generator.try_append(R"~~~(
     case TransformFunction::@name:titlecase@:
         return TransformFunctionMetadata {
