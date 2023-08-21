@@ -270,7 +270,7 @@ bool property_accepts_@css_type_name@(PropertyID property_id, [[maybe_unused]] @
                         max_value_string = {};
 
                     if (min_value_string.is_empty() && max_value_string.is_empty()) {
-                        TRY(property_generator.try_appendln("true;"));
+                        property_generator.appendln("true;");
                         break;
                     }
 
@@ -302,9 +302,9 @@ bool property_accepts_@css_type_name@(PropertyID property_id, [[maybe_unused]] @
                         TRY(property_generator.try_append(" && "));
                     if (!max_value_string.is_empty())
                         TRY(output_check(max_value_string, "<="sv));
-                    TRY(property_generator.try_appendln(";"));
+                    property_generator.appendln(";");
                 } else {
-                    TRY(property_generator.try_appendln("true;"));
+                    property_generator.appendln("true;");
                 }
                 break;
             }
@@ -616,39 +616,39 @@ bool property_accepts_type(PropertyID property_id, ValueType value_type)
                     continue;
 
                 if (type_name == "angle") {
-                    TRY(property_generator.try_appendln("        case ValueType::Angle:"));
+                    property_generator.appendln("        case ValueType::Angle:");
                 } else if (type_name == "color") {
-                    TRY(property_generator.try_appendln("        case ValueType::Color:"));
+                    property_generator.appendln("        case ValueType::Color:");
                 } else if (type_name == "custom-ident") {
-                    TRY(property_generator.try_appendln("        case ValueType::CustomIdent:"));
+                    property_generator.appendln("        case ValueType::CustomIdent:");
                 } else if (type_name == "easing-function") {
-                    TRY(property_generator.try_appendln("        case ValueType::EasingFunction:"));
+                    property_generator.appendln("        case ValueType::EasingFunction:");
                 } else if (type_name == "frequency") {
-                    TRY(property_generator.try_appendln("        case ValueType::Frequency:"));
+                    property_generator.appendln("        case ValueType::Frequency:");
                 } else if (type_name == "image") {
-                    TRY(property_generator.try_appendln("        case ValueType::Image:"));
+                    property_generator.appendln("        case ValueType::Image:");
                 } else if (type_name == "integer") {
-                    TRY(property_generator.try_appendln("        case ValueType::Integer:"));
+                    property_generator.appendln("        case ValueType::Integer:");
                 } else if (type_name == "length") {
-                    TRY(property_generator.try_appendln("        case ValueType::Length:"));
+                    property_generator.appendln("        case ValueType::Length:");
                 } else if (type_name == "number") {
-                    TRY(property_generator.try_appendln("        case ValueType::Number:"));
+                    property_generator.appendln("        case ValueType::Number:");
                 } else if (type_name == "paint") {
-                    TRY(property_generator.try_appendln("        case ValueType::Paint:"));
+                    property_generator.appendln("        case ValueType::Paint:");
                 } else if (type_name == "percentage") {
-                    TRY(property_generator.try_appendln("        case ValueType::Percentage:"));
+                    property_generator.appendln("        case ValueType::Percentage:");
                 } else if (type_name == "ratio") {
-                    TRY(property_generator.try_appendln("        case ValueType::Ratio:"));
+                    property_generator.appendln("        case ValueType::Ratio:");
                 } else if (type_name == "rect") {
-                    TRY(property_generator.try_appendln("        case ValueType::Rect:"));
+                    property_generator.appendln("        case ValueType::Rect:");
                 } else if (type_name == "resolution") {
-                    TRY(property_generator.try_appendln("        case ValueType::Resolution:"));
+                    property_generator.appendln("        case ValueType::Resolution:");
                 } else if (type_name == "string") {
-                    TRY(property_generator.try_appendln("        case ValueType::String:"));
+                    property_generator.appendln("        case ValueType::String:");
                 } else if (type_name == "time") {
-                    TRY(property_generator.try_appendln("        case ValueType::Time:"));
+                    property_generator.appendln("        case ValueType::Time:");
                 } else if (type_name == "url") {
-                    TRY(property_generator.try_appendln("        case ValueType::Url:"));
+                    property_generator.appendln("        case ValueType::Url:");
                 } else {
                     VERIFY_NOT_REACHED();
                 }
@@ -656,7 +656,7 @@ bool property_accepts_type(PropertyID property_id, ValueType value_type)
             }
 
             if (did_output_accepted_type)
-                TRY(property_generator.try_appendln("            return true;"));
+                property_generator.appendln("            return true;");
 
             TRY(property_generator.try_append(R"~~~(
         default:
@@ -683,15 +683,15 @@ bool property_accepts_identifier(PropertyID property_id, ValueID identifier)
 
         auto property_generator = TRY(generator.fork());
         property_generator.set("name:titlecase", TRY(title_casify(name)));
-        TRY(property_generator.try_appendln("    case PropertyID::@name:titlecase@: {"));
+        property_generator.appendln("    case PropertyID::@name:titlecase@: {");
 
         if (auto maybe_valid_identifiers = object.get_array("valid-identifiers"sv); maybe_valid_identifiers.has_value() && !maybe_valid_identifiers->is_empty()) {
-            TRY(property_generator.try_appendln("        switch (identifier) {"));
+            property_generator.appendln("        switch (identifier) {");
             auto& valid_identifiers = maybe_valid_identifiers.value();
             for (auto& identifier : valid_identifiers.values()) {
                 auto identifier_generator = TRY(generator.fork());
                 identifier_generator.set("identifier:titlecase", TRY(title_casify(identifier.as_string())));
-                TRY(identifier_generator.try_appendln("        case ValueID::@identifier:titlecase@:"));
+                identifier_generator.appendln("        case ValueID::@identifier:titlecase@:");
             }
             TRY(property_generator.try_append(R"~~~(
             return true;

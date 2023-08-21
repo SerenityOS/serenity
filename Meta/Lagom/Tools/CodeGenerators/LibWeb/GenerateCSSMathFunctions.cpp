@@ -56,7 +56,7 @@ enum class MathFunction {
     TRY(functions_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
         auto member_generator = TRY(generator.fork());
         member_generator.set("name:titlecase", TRY(title_casify(name)));
-        TRY(member_generator.try_appendln("    @name:titlecase@,"sv));
+        member_generator.appendln("    @name:titlecase@,"sv);
         return {};
     }));
 
@@ -157,7 +157,7 @@ OwnPtr<CalculationNode> Parser::parse_math_function(PropertyID property_id, Func
         auto function_generator = TRY(generator.fork());
         function_generator.set("name:lowercase", TRY(String::from_deprecated_string(name)));
         function_generator.set("name:titlecase", TRY(title_casify(name)));
-        TRY(function_generator.try_appendln("    if (function.name().equals_ignoring_ascii_case(\"@name:lowercase@\"sv)) {"));
+        function_generator.appendln("    if (function.name().equals_ignoring_ascii_case(\"@name:lowercase@\"sv)) {");
         if (function_data.get_bool("is-variadic"sv).value_or(false)) {
             // Variadic function
             TRY(function_generator.try_append(R"~~~(

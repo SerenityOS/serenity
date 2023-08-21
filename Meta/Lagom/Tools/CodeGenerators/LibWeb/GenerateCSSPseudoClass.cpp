@@ -57,7 +57,7 @@ enum class PseudoClass {
         auto member_generator = TRY(generator.fork());
         member_generator.set("name:titlecase", TRY(title_casify(name)));
 
-        TRY(member_generator.try_appendln("    @name:titlecase@,"));
+        member_generator.appendln("    @name:titlecase@,");
         return {};
     }));
     TRY(generator.try_append(R"~~~(
