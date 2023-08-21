@@ -388,8 +388,15 @@ void SourceSet::normalize_source_densities(DOM::Element const& element)
 {
     // 1. Let source size be source set's source size.
     auto source_size = [&] {
-        if (!m_source_size.is_calculated())
+        if (!m_source_size.is_calculated()) {
+            // If the source size is viewport-relative, resolve it against the viewport right now.
+            if (m_source_size.value().is_viewport_relative()) {
+                return CSS::Length::make_px(m_source_size.value().viewport_relative_length_to_px(element.document().viewport_rect()));
+            }
+
+            // FIXME: Resolve font-relative lengths against the relevant font size.
             return m_source_size.value();
+        }
 
         // HACK: Flush any pending layouts here so we get an up-to-date length resolution context.
         // FIXME: We should have a way to build a LengthResolutionContext for any DOM node without going through the layout tree.
