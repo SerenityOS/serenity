@@ -45,6 +45,8 @@ public:
     // https://www.w3.org/TR/html-aria/#el-table
     virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::table; }
 
+    unsigned border() const;
+
 private:
     HTMLTableElement(DOM::Document&, DOM::QualifiedName);
 
