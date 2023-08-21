@@ -10,10 +10,7 @@ files=(
 workdir="prboom-plus-${version}/prboom2"
 depends=("glu" "libmad" "libvorbis" "SDL2" "SDL2_image" "SDL2_mixer" "SDL2_net")
 configopts=(
-    "-DCMAKE_C_FLAGS=-I${SERENITY_INSTALL_ROOT}/usr/include/LibGL"
-    "-DCMAKE_PREFIX_PATH=${SERENITY_INSTALL_ROOT}/usr/local"
-    "-DFORCE_CROSSCOMPILE=ON"
-    "-DOPENGL_gl_LIBRARY=${SERENITY_INSTALL_ROOT}/usr/lib/libgl.so"
+    "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
     "-DWITH_ALSA=OFF"
     "-DWITH_DUMB=OFF"
     "-DWITH_FLUIDSYNTH=OFF"
@@ -36,7 +33,7 @@ build() {
 }
 
 install() {
-    run make DESTDIR="${DESTDIR}" -C build install
+    run make -C build install
 
     wad_directory="${SERENITY_INSTALL_ROOT}/usr/local/share/games/doom"
     mkdir -p "${wad_directory}"
