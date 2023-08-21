@@ -56,7 +56,7 @@ class Paintable
 public:
     virtual ~Paintable() = default;
 
-    [[nodiscard]] bool is_positioned() const { return layout_node().is_positioned(); }
+    [[nodiscard]] bool is_positioned() const;
     [[nodiscard]] bool is_fixed_position() const { return layout_node().is_fixed_position(); }
     [[nodiscard]] bool is_absolutely_positioned() const { return layout_node().is_absolutely_positioned(); }
     [[nodiscard]] bool is_floating() const { return layout_node().is_floating(); }
