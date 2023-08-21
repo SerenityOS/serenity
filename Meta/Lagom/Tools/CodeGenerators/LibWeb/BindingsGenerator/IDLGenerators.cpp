@@ -297,7 +297,7 @@ static void generate_to_deprecated_string(SourceGenerator& scoped_generator, Par
     Vector<DeprecatedString> @cpp_name@;
 
     if (vm.argument_count() > @js_suffix@) {
-        TRY_OR_THROW_OOM(vm, @cpp_name@.try_ensure_capacity(vm.argument_count() - @js_suffix@));
+        @cpp_name@.ensure_capacity(vm.argument_count() - @js_suffix@);
 
         for (size_t i = @js_suffix@; i < vm.argument_count(); ++i) {
             auto to_string_result = TRY(vm.argument(i).to_deprecated_string(vm));
@@ -351,7 +351,7 @@ static void generate_to_new_string(SourceGenerator& scoped_generator, ParameterT
     Vector<String> @cpp_name@;
 
     if (vm.argument_count() > @js_suffix@) {
-        TRY_OR_THROW_OOM(vm, @cpp_name@.try_ensure_capacity(vm.argument_count() - @js_suffix@));
+        @cpp_name@.ensure_capacity(vm.argument_count() - @js_suffix@);
 
         for (size_t i = @js_suffix@; i < vm.argument_count(); ++i) {
             auto to_string_result = TRY(vm.argument(i).to_string(vm));
@@ -383,7 +383,7 @@ static void generate_to_new_string(SourceGenerator& scoped_generator, ParameterT
     })~~~");
         if (optional_default_value.has_value() && (!parameter.type->is_nullable() || optional_default_value.value() != "null")) {
             scoped_generator.append(R"~~~( else {
-        @cpp_name@ = TRY_OR_THROW_OOM(vm, String::from_utf8(@parameter.optional_default_value@sv));
+        @cpp_name@ = MUST(String::from_utf8(@parameter.optional_default_value@sv));
     }
 )~~~");
         } else {
@@ -675,7 +675,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     JS::MarkedVector<JS::Value> @cpp_name@ { vm.heap() };
 
     if (vm.argument_count() > @js_suffix@) {
-        TRY_OR_THROW_OOM(vm, @cpp_name@.try_ensure_capacity(vm.argument_count() - @js_suffix@));
+        @cpp_name@.ensure_capacity(vm.argument_count() - @js_suffix@);
 
         for (size_t i = @js_suffix@; i < vm.argument_count(); ++i)
             @cpp_name@.unchecked_append(vm.argument(i));
@@ -1444,7 +1444,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         Vector<@union_type@> @cpp_name@;
 
         if (vm.argument_count() > @js_suffix@) {
-            TRY_OR_THROW_OOM(vm, @cpp_name@.try_ensure_capacity(vm.argument_count() - @js_suffix@));
+            @cpp_name@.ensure_capacity(vm.argument_count() - @js_suffix@);
 
             for (size_t i = @js_suffix@; i < vm.argument_count(); ++i) {
                 auto result = TRY(@js_name@@js_suffix@_to_variant(vm.argument(i)));
@@ -1770,7 +1770,7 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
 )~~~");
         } else {
             scoped_generator.append(R"~~~(
-    @result_expression@ JS::PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, Bindings::idl_enum_to_string(@value@)));
+    @result_expression@ JS::PrimitiveString::create(vm, Bindings::idl_enum_to_string(@value@));
 )~~~");
         }
     } else if (interface.callback_functions.contains(type.name())) {
@@ -2339,7 +2339,7 @@ inline DeprecatedString idl_enum_to_deprecated_string(@enum.type.name@ value) {
 )~~~");
         } else {
             enum_generator.append(R"~~~(
-inline ErrorOr<String> idl_enum_to_string(@enum.type.name@ value) {
+inline String idl_enum_to_string(@enum.type.name@ value) {
     switch(value) {
 )~~~");
             for (auto& entry : it.value.translated_cpp_names) {
@@ -2463,7 +2463,7 @@ static void collect_attribute_values_of_an_inheritance_stack(SourceGenerator& fu
             generate_wrap_statement(attribute_generator, return_value_name, attribute.type, interface_in_chain, DeprecatedString::formatted("auto {}_wrapped =", return_value_name));
 
             attribute_generator.append(R"~~~(
-    MUST_OR_THROW_OOM(result->create_data_property("@attribute.name@", @attribute.return_value_name@_wrapped));
+    MUST(result->create_data_property("@attribute.name@", @attribute.return_value_name@_wrapped));
 )~~~");
         }
 
@@ -2474,7 +2474,7 @@ static void collect_attribute_values_of_an_inheritance_stack(SourceGenerator& fu
             generate_wrap_statement(constant_generator, constant.value, constant.type, interface_in_chain, DeprecatedString::formatted("auto constant_{}_value =", constant.name));
 
             constant_generator.append(R"~~~(
-    MUST_OR_THROW_OOM(result->create_data_property("@constant.name@", constant_@constant.name@_value));
+    MUST(result->create_data_property("@constant.name@", constant_@constant.name@_value));
 )~~~");
         }
     }
@@ -3457,11 +3457,11 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> @constructor_class@::constru
     // 6. Otherwise (i.e., if definition is for a customized built-in element):
     else {
         // 1. Let valid local names be the list of local names for elements defined in this specification or in other applicable specifications that use the active function object as their element interface.
-        static auto valid_local_names = TRY_OR_THROW_OOM(vm, DOM::valid_local_names_for_given_html_element_interface("@name@"sv));
+        static auto valid_local_names = MUST(DOM::valid_local_names_for_given_html_element_interface("@name@"sv));
 
         // 2. If valid local names does not contain definition's local name, then throw a TypeError.
         if (!valid_local_names.contains_slow(definition->local_name().to_deprecated_string()))
-            return vm.throw_completion<JS::TypeError>(TRY_OR_THROW_OOM(vm, String::formatted("Local name '{}' of customized built-in element is not a valid local name for @name@"sv, definition->local_name())));
+            return vm.throw_completion<JS::TypeError>(MUST(String::formatted("Local name '{}' of customized built-in element is not a valid local name for @name@"sv, definition->local_name())));
 
         // 3. Set is value to definition's name.
         is_value = definition->name();
