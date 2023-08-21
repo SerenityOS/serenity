@@ -224,12 +224,12 @@ public:
 
     ConstIterator find(T const& value) const
     {
-        return find_if([&](auto& other) { return Traits<T>::equals(value, other); });
+        return find_if([&](auto& entry) { return Traits<T>::equals(entry, value); });
     }
 
     Iterator find(T const& value)
     {
-        return find_if([&](auto& other) { return Traits<T>::equals(value, other); });
+        return find_if([&](auto& entry) { return Traits<T>::equals(entry, value); });
     }
 
     template<typename U = T>
