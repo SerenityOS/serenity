@@ -135,6 +135,9 @@ public:
     WebIDL::ExceptionOr<void> toggle_media_loop_state();
     WebIDL::ExceptionOr<void> toggle_media_controls_state();
 
+    Optional<String> const& user_style() const { return m_user_style_sheet_source; }
+    void set_user_style(String source);
+
     bool pdf_viewer_supported() const { return m_pdf_viewer_supported; }
 
 private:
@@ -166,6 +169,8 @@ private:
     Optional<Optional<String>> m_pending_prompt_response;
 
     Optional<int> m_media_context_menu_element_id;
+
+    Optional<String> m_user_style_sheet_source;
 
     // https://html.spec.whatwg.org/multipage/system-state.html#pdf-viewer-supported
     // Each user agent has a PDF viewer supported boolean, whose value is implementation-defined (and might vary according to user preferences).
