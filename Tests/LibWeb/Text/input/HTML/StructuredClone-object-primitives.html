@@ -6,6 +6,15 @@
         println(structuredClone(new Number(123)));
         println(structuredClone(new Number(123.456)));
         println(structuredClone(new String("This is a String object")));
+        println(structuredClone(BigInt("0x1fffffffffffff")));
         println(structuredClone(Date.UTC(2023, 7, 23)));
+
+        try {
+            structuredClone(Symbol("foo"));
+            println("FAILED")
+        }
+        catch(e) {
+            println("ERROR: " + e.name + ": " + e.message)
+        }
     });
 </script>
