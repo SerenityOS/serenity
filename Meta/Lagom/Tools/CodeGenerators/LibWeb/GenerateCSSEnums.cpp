@@ -59,8 +59,8 @@ enum class ValueID;
         auto& members = value.as_array();
 
         auto enum_generator = generator.fork();
-        enum_generator.set("name:titlecase", TRY(title_casify(name)));
-        enum_generator.set("name:snakecase", TRY(snake_casify(name)));
+        enum_generator.set("name:titlecase", title_casify(name));
+        enum_generator.set("name:snakecase", snake_casify(name));
 
         // Find the smallest possible type to use.
         auto member_max_value = members.size() - 1;
@@ -82,7 +82,7 @@ enum class ValueID;
             if (member_name.contains('='))
                 continue;
             auto member_generator = enum_generator.fork();
-            member_generator.set("member:titlecase", TRY(title_casify(member_name)));
+            member_generator.set("member:titlecase", title_casify(member_name));
             member_generator.appendln("    @member:titlecase@,");
         }
 
@@ -117,8 +117,8 @@ namespace Web::CSS {
         auto& members = value.as_array();
 
         auto enum_generator = generator.fork();
-        enum_generator.set("name:titlecase", TRY(title_casify(name)));
-        enum_generator.set("name:snakecase", TRY(snake_casify(name)));
+        enum_generator.set("name:titlecase", title_casify(name));
+        enum_generator.set("name:snakecase", snake_casify(name));
 
         enum_generator.append(R"~~~(
 Optional<@name:titlecase@> value_id_to_@name:snakecase@(ValueID value_id)
@@ -130,11 +130,11 @@ Optional<@name:titlecase@> value_id_to_@name:snakecase@(ValueID value_id)
             auto member_name = member.to_deprecated_string();
             if (member_name.contains('=')) {
                 auto parts = member_name.split_view('=');
-                member_generator.set("valueid:titlecase", TRY(title_casify(parts[0])));
-                member_generator.set("member:titlecase", TRY(title_casify(parts[1])));
+                member_generator.set("valueid:titlecase", title_casify(parts[0]));
+                member_generator.set("member:titlecase", title_casify(parts[1]));
             } else {
-                member_generator.set("valueid:titlecase", TRY(title_casify(member_name)));
-                member_generator.set("member:titlecase", TRY(title_casify(member_name)));
+                member_generator.set("valueid:titlecase", title_casify(member_name));
+                member_generator.set("member:titlecase", title_casify(member_name));
             }
             member_generator.append(R"~~~(
     case ValueID::@valueid:titlecase@:
@@ -158,7 +158,7 @@ ValueID to_value_id(@name:titlecase@ @name:snakecase@_value)
             auto member_name = member.to_deprecated_string();
             if (member_name.contains('='))
                 continue;
-            member_generator.set("member:titlecase", TRY(title_casify(member_name)));
+            member_generator.set("member:titlecase", title_casify(member_name));
 
             member_generator.append(R"~~~(
     case @name:titlecase@::@member:titlecase@:
@@ -183,7 +183,7 @@ StringView to_string(@name:titlecase@ value)
             if (member_name.contains('='))
                 continue;
             member_generator.set("member:css", TRY(String::from_deprecated_string(member_name)));
-            member_generator.set("member:titlecase", TRY(title_casify(member_name)));
+            member_generator.set("member:titlecase", title_casify(member_name));
 
             member_generator.append(R"~~~(
     case @name:titlecase@::@member:titlecase@:

@@ -13,22 +13,22 @@
 #include <LibCore/File.h>
 #include <ctype.h>
 
-ErrorOr<String> title_casify(StringView dashy_name)
+String title_casify(StringView dashy_name)
 {
     auto parts = dashy_name.split_view('-');
     StringBuilder builder;
     for (auto& part : parts) {
         if (part.is_empty())
             continue;
-        TRY(builder.try_append(toupper(part[0])));
+        builder.append(toupper(part[0]));
         if (part.length() == 1)
             continue;
-        TRY(builder.try_append(part.substring_view(1, part.length() - 1)));
+        builder.append(part.substring_view(1, part.length() - 1));
     }
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
-ErrorOr<String> camel_casify(StringView dashy_name)
+String camel_casify(StringView dashy_name)
 {
     auto parts = dashy_name.split_view('-');
     StringBuilder builder;
@@ -41,19 +41,19 @@ ErrorOr<String> camel_casify(StringView dashy_name)
             ch = toupper(ch);
         else
             first = false;
-        TRY(builder.try_append(ch));
+        builder.append(ch);
         if (part.length() == 1)
             continue;
-        TRY(builder.try_append(part.substring_view(1, part.length() - 1)));
+        builder.append(part.substring_view(1, part.length() - 1));
     }
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
-ErrorOr<String> snake_casify(StringView dashy_name)
+String snake_casify(StringView dashy_name)
 {
     // FIXME: We don't really need to convert dashy_name to a String first, but currently
     //        all the `replace` functions that take a StringView return DeprecatedString.
-    return TRY(String::from_utf8(dashy_name)).replace("-"sv, "_"sv, ReplaceMode::All);
+    return MUST(MUST(String::from_utf8(dashy_name)).replace("-"sv, "_"sv, ReplaceMode::All));
 }
 
 ErrorOr<JsonValue> read_entire_file_as_json(StringView filename)
