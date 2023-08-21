@@ -55,7 +55,7 @@ enum class PseudoClass {
 
     TRY(pseudo_classes_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
         auto member_generator = generator.fork();
-        member_generator.set("name:titlecase", TRY(title_casify(name)));
+        member_generator.set("name:titlecase", title_casify(name));
 
         member_generator.appendln("    @name:titlecase@,");
         return {};
@@ -106,7 +106,7 @@ Optional<PseudoClass> pseudo_class_from_string(StringView string)
     TRY(pseudo_classes_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
         auto member_generator = generator.fork();
         member_generator.set("name", TRY(String::from_deprecated_string(name)));
-        member_generator.set("name:titlecase", TRY(title_casify(name)));
+        member_generator.set("name:titlecase", title_casify(name));
 
         member_generator.append(R"~~~(
     if (string.equals_ignoring_ascii_case("@name@"sv))
@@ -128,7 +128,7 @@ StringView pseudo_class_name(PseudoClass pseudo_class)
     TRY(pseudo_classes_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
         auto member_generator = generator.fork();
         member_generator.set("name", TRY(String::from_deprecated_string(name)));
-        member_generator.set("name:titlecase", TRY(title_casify(name)));
+        member_generator.set("name:titlecase", title_casify(name));
 
         member_generator.append(R"~~~(
     case PseudoClass::@name:titlecase@:
@@ -182,7 +182,7 @@ PseudoClassMetadata pseudo_class_metadata(PseudoClass pseudo_class)
             }
         }
 
-        member_generator.set("name:titlecase", TRY(title_casify(name)));
+        member_generator.set("name:titlecase", title_casify(name));
         member_generator.set("parameter_type", parameter_type);
         member_generator.set("is_valid_as_function", is_valid_as_function ? "true"_string : "false"_string);
         member_generator.set("is_valid_as_identifier", is_valid_as_identifier ? "true"_string : "false"_string);

@@ -62,7 +62,7 @@ enum class MediaFeatureID {)~~~");
 
     TRY(media_feature_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
         auto member_generator = generator.fork();
-        member_generator.set("name:titlecase", TRY(title_casify(name)));
+        member_generator.set("name:titlecase", title_casify(name));
         member_generator.append(R"~~~(
     @name:titlecase@,)~~~");
         return {};
@@ -101,7 +101,7 @@ Optional<MediaFeatureID> media_feature_id_from_string(StringView string)
     TRY(media_feature_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
         auto member_generator = generator.fork();
         member_generator.set("name", TRY(String::from_deprecated_string(name)));
-        member_generator.set("name:titlecase", TRY(title_casify(name)));
+        member_generator.set("name:titlecase", title_casify(name));
         member_generator.append(R"~~~(
     if (Infra::is_ascii_case_insensitive_match(string, "@name@"sv))
         return MediaFeatureID::@name:titlecase@;
@@ -120,7 +120,7 @@ StringView string_from_media_feature_id(MediaFeatureID media_feature_id)
     TRY(media_feature_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
         auto member_generator = generator.fork();
         member_generator.set("name", TRY(String::from_deprecated_string(name)));
-        member_generator.set("name:titlecase", TRY(title_casify(name)));
+        member_generator.set("name:titlecase", title_casify(name));
         member_generator.append(R"~~~(
     case MediaFeatureID::@name:titlecase@:
         return "@name@"sv;)~~~");
@@ -141,7 +141,7 @@ bool media_feature_type_is_range(MediaFeatureID media_feature_id)
         auto& feature = value.as_object();
 
         auto member_generator = generator.fork();
-        member_generator.set("name:titlecase", TRY(title_casify(name)));
+        member_generator.set("name:titlecase", title_casify(name));
         VERIFY(feature.has("type"sv));
         auto feature_type = feature.get_deprecated_string("type"sv);
         VERIFY(feature_type.has_value());
@@ -166,7 +166,7 @@ bool media_feature_accepts_type(MediaFeatureID media_feature_id, MediaFeatureVal
         auto& feature = member.as_object();
 
         auto member_generator = generator.fork();
-        member_generator.set("name:titlecase", TRY(title_casify(name)));
+        member_generator.set("name:titlecase", title_casify(name));
         member_generator.append(R"~~~(
     case MediaFeatureID::@name:titlecase@:)~~~");
 
@@ -246,7 +246,7 @@ bool media_feature_accepts_identifier(MediaFeatureID media_feature_id, ValueID i
         auto& feature = member.as_object();
 
         auto member_generator = generator.fork();
-        member_generator.set("name:titlecase", TRY(title_casify(name)));
+        member_generator.set("name:titlecase", title_casify(name));
         member_generator.append(R"~~~(
     case MediaFeatureID::@name:titlecase@:)~~~");
 
@@ -272,7 +272,7 @@ bool media_feature_accepts_identifier(MediaFeatureID media_feature_id, ValueID i
                 TRY(append_identifier_switch_if_needed());
 
                 auto ident_generator = member_generator.fork();
-                ident_generator.set("identifier:titlecase", TRY(title_casify(identifier_name)));
+                ident_generator.set("identifier:titlecase", title_casify(identifier_name));
                 ident_generator.append(R"~~~(
         case ValueID::@identifier:titlecase@:
             return true;)~~~");

@@ -39,13 +39,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return 0;
 }
 
-static ErrorOr<String> title_casify_transform_function(StringView input)
+static String title_casify_transform_function(StringView input)
 {
     // Transform function names look like `fooBar`, so we just have to make the first character uppercase.
     StringBuilder builder;
-    TRY(builder.try_append(toupper(input[0])));
-    TRY(builder.try_append(input.substring_view(1)));
-    return builder.to_string();
+    builder.append(toupper(input[0]));
+    builder.append(input.substring_view(1));
+    return MUST(builder.to_string());
 }
 
 ErrorOr<void> generate_header_file(JsonObject& transforms_data, Core::File& file)
@@ -67,7 +67,7 @@ namespace Web::CSS {
     generator.appendln("enum class TransformFunction {");
     TRY(transforms_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
         auto member_generator = generator.fork();
-        member_generator.set("name:titlecase", TRY(title_casify_transform_function(name)));
+        member_generator.set("name:titlecase", title_casify_transform_function(name));
         member_generator.appendln("    @name:titlecase@,");
         return {};
     }));
@@ -120,7 +120,7 @@ Optional<TransformFunction> transform_function_from_string(StringView name)
     TRY(transforms_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
         auto member_generator = generator.fork();
         member_generator.set("name", TRY(String::from_deprecated_string(name)));
-        member_generator.set("name:titlecase", TRY(title_casify_transform_function(name)));
+        member_generator.set("name:titlecase", title_casify_transform_function(name));
         member_generator.append(R"~~~(
     if (name.equals_ignoring_ascii_case("@name@"sv))
         return TransformFunction::@name:titlecase@;
@@ -140,7 +140,7 @@ StringView to_string(TransformFunction transform_function)
     TRY(transforms_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
         auto member_generator = generator.fork();
         member_generator.set("name", TRY(String::from_deprecated_string(name)));
-        member_generator.set("name:titlecase", TRY(title_casify_transform_function(name)));
+        member_generator.set("name:titlecase", title_casify_transform_function(name));
         member_generator.append(R"~~~(
     case TransformFunction::@name:titlecase@:
         return "@name@"sv;
@@ -163,7 +163,7 @@ TransformFunctionMetadata transform_function_metadata(TransformFunction transfor
         VERIFY(value.is_object());
 
         auto member_generator = generator.fork();
-        member_generator.set("name:titlecase", TRY(title_casify_transform_function(name)));
+        member_generator.set("name:titlecase", title_casify_transform_function(name));
         member_generator.append(R"~~~(
     case TransformFunction::@name:titlecase@:
         return TransformFunctionMetadata {

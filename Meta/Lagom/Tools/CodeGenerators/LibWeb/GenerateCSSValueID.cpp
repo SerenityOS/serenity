@@ -57,7 +57,7 @@ enum class ValueID {
 
     TRY(identifier_data.try_for_each([&](auto& name) -> ErrorOr<void> {
         auto member_generator = generator.fork();
-        member_generator.set("name:titlecase", TRY(title_casify(name.to_deprecated_string())));
+        member_generator.set("name:titlecase", title_casify(name.to_deprecated_string()));
 
         member_generator.append(R"~~~(
     @name:titlecase@,
@@ -97,7 +97,7 @@ HashMap<StringView, ValueID, AK::CaseInsensitiveASCIIStringViewTraits> g_stringv
     TRY(identifier_data.try_for_each([&](auto& name) -> ErrorOr<void> {
         auto member_generator = generator.fork();
         member_generator.set("name", TRY(String::from_deprecated_string(name.to_deprecated_string())));
-        member_generator.set("name:titlecase", TRY(title_casify(name.to_deprecated_string())));
+        member_generator.set("name:titlecase", title_casify(name.to_deprecated_string()));
         member_generator.append(R"~~~(
     {"@name@"sv, ValueID::@name:titlecase@},
 )~~~");
@@ -119,7 +119,7 @@ StringView string_from_value_id(ValueID value_id) {
     TRY(identifier_data.try_for_each([&](auto& name) -> ErrorOr<void> {
         auto member_generator = generator.fork();
         member_generator.set("name", TRY(String::from_deprecated_string(name.to_deprecated_string())));
-        member_generator.set("name:titlecase", TRY(title_casify(name.to_deprecated_string())));
+        member_generator.set("name:titlecase", title_casify(name.to_deprecated_string()));
         member_generator.append(R"~~~(
     case ValueID::@name:titlecase@:
         return "@name@"sv;

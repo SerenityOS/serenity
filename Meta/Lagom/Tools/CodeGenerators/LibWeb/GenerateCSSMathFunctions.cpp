@@ -55,7 +55,7 @@ enum class MathFunction {
 
     TRY(functions_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
         auto member_generator = generator.fork();
-        member_generator.set("name:titlecase", TRY(title_casify(name)));
+        member_generator.set("name:titlecase", title_casify(name));
         member_generator.appendln("    @name:titlecase@,"sv);
         return {};
     }));
@@ -156,7 +156,7 @@ OwnPtr<CalculationNode> Parser::parse_math_function(PropertyID property_id, Func
 
         auto function_generator = generator.fork();
         function_generator.set("name:lowercase", TRY(String::from_deprecated_string(name)));
-        function_generator.set("name:titlecase", TRY(title_casify(name)));
+        function_generator.set("name:titlecase", title_casify(name));
         function_generator.appendln("    if (function.name().equals_ignoring_ascii_case(\"@name:lowercase@\"sv)) {");
         if (function_data.get_bool("is-variadic"sv).value_or(false)) {
             // Variadic function
@@ -247,7 +247,7 @@ OwnPtr<CalculationNode> Parser::parse_math_function(PropertyID property_id, Func
                     parameter_generator.set("check_function", ".has_value()"_string);
                     parameter_generator.set("release_function", ".release_value()"_string);
                     if (auto default_value = parameter.get_deprecated_string("default"sv); default_value.has_value()) {
-                        parameter_generator.set("parameter_default", TRY(String::formatted(" = RoundingStrategy::{}", TRY(title_casify(default_value.value())))));
+                        parameter_generator.set("parameter_default", TRY(String::formatted(" = RoundingStrategy::{}", title_casify(default_value.value()))));
                     } else {
                         parameter_generator.set("parameter_default", ""_string);
                     }
