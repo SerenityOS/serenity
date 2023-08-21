@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='poppler'
-version='23.07.0'
+version='23.08.0'
 version_data='0.4.12'
 files=(
-    "https://poppler.freedesktop.org/poppler-${version}.tar.xz f29b4b4bf47572611176454c8f21506d71d27eca5011a39aa44038b30b957db0"
+    "https://poppler.freedesktop.org/poppler-${version}.tar.xz 4a4bf7fc903b9f1a2ab7d04b7c5d8220db9bc6261cc73fdb9a826dc272f49aa8"
     "https://poppler.freedesktop.org/poppler-data-${version_data}.tar.gz c835b640a40ce357e1b83666aabd95edffa24ddddd49b8daff63adb851cdab74"
 )
 depends=(
