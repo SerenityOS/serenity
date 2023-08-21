@@ -325,6 +325,19 @@ public:
     CSSPixelPoint scroll_offset(ScrollOffsetFor type) const { return m_scroll_offset[to_underlying(type)]; }
     void set_scroll_offset(ScrollOffsetFor type, CSSPixelPoint offset) { m_scroll_offset[to_underlying(type)] = offset; }
 
+    enum class Dir {
+        Ltr,
+        Rtl,
+        Auto,
+    };
+    Optional<Dir> dir() const { return m_dir; }
+
+    enum class Directionality {
+        Ltr,
+        Rtl,
+    };
+    Directionality directionality() const;
+
 protected:
     Element(Document&, DOM::QualifiedName);
     virtual void initialize(JS::Realm&) override;
@@ -358,6 +371,7 @@ private:
     Array<HashMap<DeprecatedFlyString, CSS::StyleProperty>, to_underlying(CSS::Selector::PseudoElement::PseudoElementCount)> m_pseudo_element_custom_properties;
 
     Vector<FlyString> m_classes;
+    Optional<Dir> m_dir;
 
     Array<JS::GCPtr<Layout::Node>, to_underlying(CSS::Selector::PseudoElement::PseudoElementCount)> m_pseudo_element_nodes;
 
