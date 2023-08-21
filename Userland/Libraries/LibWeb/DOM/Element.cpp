@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022-2023, San Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,8 @@
 #include <AK/AnyOf.h>
 #include <AK/Debug.h>
 #include <AK/StringBuilder.h>
+#include <LibUnicode/CharacterTypes.h>
+#include <LibUnicode/UnicodeData.h>
 #include <LibWeb/Bindings/ElementPrototype.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
@@ -42,6 +45,7 @@
 #include <LibWeb/HTML/HTMLOptGroupElement.h>
 #include <LibWeb/HTML/HTMLOptionElement.h>
 #include <LibWeb/HTML/HTMLSelectElement.h>
+#include <LibWeb/HTML/HTMLStyleElement.h>
 #include <LibWeb/HTML/HTMLTextAreaElement.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Window.h>
@@ -391,6 +395,16 @@ void Element::attribute_changed(DeprecatedFlyString const& name, DeprecatedStrin
             m_inline_style = parse_css_style_attribute(CSS::Parser::ParsingContext(document()), value, *this);
             set_needs_style_update(true);
         }
+    } else if (name == HTML::AttributeNames::dir) {
+        // https://html.spec.whatwg.org/multipage/dom.html#attr-dir
+        if (value.equals_ignoring_ascii_case("ltr"sv))
+            m_dir = Dir::Ltr;
+        else if (value.equals_ignoring_ascii_case("rtl"sv))
+            m_dir = Dir::Rtl;
+        else if (value.equals_ignoring_ascii_case("auto"sv))
+            m_dir = Dir::Auto;
+        else
+            m_dir = {};
     }
 }
 
@@ -1831,6 +1845,142 @@ IntersectionObserver::IntersectionObserverRegistration& Element::get_intersectio
     });
     VERIFY(!registration_iterator.is_end());
     return *registration_iterator;
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#the-directionality
+Element::Directionality Element::directionality() const
+{
+    // The directionality of an element (any element, not just an HTML element) is either 'ltr' or 'rtl',
+    // and is determined as per the first appropriate set of steps from the following list:
+
+    auto dir = this->dir();
+
+    // -> If the element's dir attribute is in the ltr state
+    // -> If the element is a document element and the dir attribute is not in a defined state
+    //    (i.e. it is not present or has an invalid value)
+    // -> If the element is an input element whose type attribute is in the Telephone state, and the
+    //    dir attribute is not in a defined state (i.e. it is not present or has an invalid value)
+    if (dir == Dir::Ltr
+        || (is_document_element() && !dir.has_value())
+        || (is<HTML::HTMLInputElement>(this)
+            && static_cast<HTML::HTMLInputElement const&>(*this).type_state() == HTML::HTMLInputElement::TypeAttributeState::Telephone
+            && !dir.has_value())) {
+        // The directionality of the element is 'ltr'.
+        return Directionality::Ltr;
+    }
+
+    // -> If the element's dir attribute is in the rtl state
+    if (dir == Dir::Rtl) {
+        // The directionality of the element is 'rtl'.
+        return Directionality::Rtl;
+    }
+
+    // -> If the element is an input element whose type attribute is in the Text, Search, Telephone,
+    //    URL, or Email state, and the dir attribute is in the auto state
+    // -> If the element is a textarea element and the dir attribute is in the auto state
+    if ((is<HTML::HTMLInputElement>(this)
+            && first_is_one_of(static_cast<HTML::HTMLInputElement const&>(*this).type_state(),
+                HTML::HTMLInputElement::TypeAttributeState::Text, HTML::HTMLInputElement::TypeAttributeState::Search,
+                HTML::HTMLInputElement::TypeAttributeState::Telephone, HTML::HTMLInputElement::TypeAttributeState::URL,
+                HTML::HTMLInputElement::TypeAttributeState::Email)
+            && dir == Dir::Auto)
+        || (is<HTML::HTMLTextAreaElement>(this) && dir == Dir::Auto)) {
+
+        auto value = is<HTML::HTMLInputElement>(this)
+            ? static_cast<HTML::HTMLInputElement const&>(*this).value()
+            : static_cast<HTML::HTMLTextAreaElement const&>(*this).value();
+
+        // If the element's value contains a character of bidirectional character type AL or R, and
+        // there is no character of bidirectional character type L anywhere before it in the element's
+        // value, then the directionality of the element is 'rtl'. [BIDI]
+        for (auto code_point : Utf8View(value)) {
+            auto bidi_class = Unicode::bidirectional_class(code_point);
+            if (bidi_class == Unicode::BidirectionalClass::L)
+                break;
+            if (bidi_class == Unicode::BidirectionalClass::AL || bidi_class == Unicode::BidirectionalClass::R)
+                return Directionality::Rtl;
+        }
+        // Otherwise, if the element's value is not the empty string, or if the element is a document element,
+        // the directionality of the element is 'ltr'.
+        if (!value.is_empty() || is_document_element()) {
+            return Directionality::Ltr;
+        }
+        // Otherwise, the directionality of the element is the same as the element's parent element's directionality.
+        else {
+            return parent_element()->directionality();
+        }
+    }
+
+    // -> If the element's dir attribute is in the auto state
+    // FIXME: -> If the element is a bdi element and the dir attribute is not in a defined state
+    //    (i.e. it is not present or has an invalid value)
+    if (dir == Dir::Auto) {
+        // Find the first character in tree order that matches the following criteria:
+        // - The character is from a Text node that is a descendant of the element whose directionality is being determined.
+        // - The character is of bidirectional character type L, AL, or R. [BIDI]
+        // - The character is not in a Text node that has an ancestor element that is a descendant of
+        //   the element whose directionality is being determined and that is either:
+        //   - FIXME: A bdi element.
+        //   - A script element.
+        //   - A style element.
+        //   - A textarea element.
+        //   - An element with a dir attribute in a defined state.
+        Optional<u32> found_character;
+        Optional<Unicode::BidirectionalClass> found_character_bidi_class;
+        for_each_in_subtree_of_type<Text>([&](Text const& text_node) {
+            // Discard not-allowed ancestors
+            for (auto* ancestor = text_node.parent(); ancestor && ancestor != this; ancestor = ancestor->parent()) {
+                if (is<HTML::HTMLScriptElement>(*ancestor) || is<HTML::HTMLStyleElement>(*ancestor) || is<HTML::HTMLTextAreaElement>(*ancestor))
+                    return IterationDecision::Continue;
+                if (ancestor->is_element()) {
+                    auto ancestor_element = static_cast<Element const*>(ancestor);
+                    if (ancestor_element->dir().has_value())
+                        return IterationDecision::Continue;
+                }
+            }
+
+            // Look for matching characters
+            for (auto code_point : Utf8View(text_node.data())) {
+                auto bidi_class = Unicode::bidirectional_class(code_point);
+                if (first_is_one_of(bidi_class, Unicode::BidirectionalClass::L, Unicode::BidirectionalClass::AL, Unicode::BidirectionalClass::R)) {
+                    found_character = code_point;
+                    found_character_bidi_class = bidi_class;
+                    return IterationDecision::Break;
+                }
+            }
+
+            return IterationDecision::Continue;
+        });
+
+        // If such a character is found and it is of bidirectional character type AL or R,
+        // the directionality of the element is 'rtl'.
+        if (found_character.has_value()
+            && first_is_one_of(found_character_bidi_class.value(), Unicode::BidirectionalClass::AL, Unicode::BidirectionalClass::R)) {
+            return Directionality::Rtl;
+        }
+        // If such a character is found and it is of bidirectional character type L,
+        // the directionality of the element is 'ltr'.
+        if (found_character.has_value() && found_character_bidi_class.value() == Unicode::BidirectionalClass::L) {
+            return Directionality::Ltr;
+        }
+        // Otherwise, if the element is a document element, the directionality of the element is 'ltr'.
+        else if (is_document_element()) {
+            return Directionality::Ltr;
+        }
+        // Otherwise, the directionality of the element is the same as the element's parent element's directionality.
+        else {
+            return parent_element()->directionality();
+        }
+    }
+
+    // If the element has a parent element and the dir attribute is not in a defined state
+    // (i.e. it is not present or has an invalid value)
+    if (parent_element() && !dir.has_value()) {
+        // The directionality of the element is the same as the element's parent element's directionality.
+        return parent_element()->directionality();
+    }
+
+    VERIFY_NOT_REACHED();
 }
 
 }
