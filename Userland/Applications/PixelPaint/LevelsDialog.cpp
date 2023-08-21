@@ -89,9 +89,10 @@ void LevelsDialog::generate_new_image()
     Color new_pixel_color;
     Gfx::StorageFormat storage_format = Gfx::determine_storage_format(m_editor->active_layer()->content_bitmap().format());
     auto apply_only_on_mask = m_editor->active_layer()->mask_type() == Layer::MaskType::EditingMask;
+    auto relevant_area = m_masked_area.value_or({ 0, 0, m_reference_bitmap->width(), m_reference_bitmap->height() });
 
-    for (int x = 0; x < m_reference_bitmap->width(); x++) {
-        for (int y = 0; y < m_reference_bitmap->height(); y++) {
+    for (int y = relevant_area.top(); y < relevant_area.bottom(); y++) {
+        for (int x = relevant_area.left(); x < relevant_area.right(); x++) {
             current_pixel_color = m_reference_bitmap->get_pixel(x, y);
 
             // Check if we can avoid setting pixels as nothing will change when we don't have a mask at x,y.
@@ -123,8 +124,10 @@ void LevelsDialog::generate_new_image()
 
 ErrorOr<void> LevelsDialog::ensure_reference_bitmap()
 {
-    if (m_reference_bitmap.is_null())
+    if (m_reference_bitmap.is_null()) {
         m_reference_bitmap = TRY(m_editor->active_layer()->content_bitmap().clone());
+        m_masked_area = m_editor->active_layer()->editing_mask_bounding_rect();
+    }
 
     return {};
 }

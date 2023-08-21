@@ -82,6 +82,7 @@ public:
     ErrorOr<void> scale(Gfx::IntRect const& new_rect, Gfx::Painter::ScalingMode scaling_mode, NotifyClients notify_clients = NotifyClients::Yes);
 
     Optional<Gfx::IntRect> nonempty_content_bounding_rect() const;
+    Optional<Gfx::IntRect> editing_mask_bounding_rect() const;
 
     ErrorOr<void> set_bitmaps(NonnullRefPtr<Gfx::Bitmap> content, RefPtr<Gfx::Bitmap> mask);
 
@@ -103,7 +104,7 @@ public:
     void erase_selection(Selection const&);
 
     bool is_masked() const { return !m_mask_bitmap.is_null(); }
-    MaskType mask_type();
+    MaskType mask_type() const;
 
     enum class EditMode {
         Content,

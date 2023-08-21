@@ -453,6 +453,39 @@ Optional<Gfx::IntRect> Layer::nonempty_content_bounding_rect() const
     };
 }
 
+Optional<Gfx::IntRect> Layer::editing_mask_bounding_rect() const
+{
+    if (mask_type() != MaskType::EditingMask)
+        return {};
+
+    Optional<int> min_content_y;
+    Optional<int> min_content_x;
+    Optional<int> max_content_y;
+    Optional<int> max_content_x;
+
+    for (int y = 0; y < m_mask_bitmap->height(); ++y) {
+        auto scanline = m_mask_bitmap->scanline(y);
+        for (int x = 0; x < m_mask_bitmap->width(); ++x) {
+            // Do we have any alpha values?
+            if (scanline[x] < 0x01000000)
+                continue;
+            min_content_x = min(min_content_x.value_or(x), x);
+            min_content_y = min(min_content_y.value_or(y), y);
+            max_content_x = max(max_content_x.value_or(x), x);
+            max_content_y = max(max_content_y.value_or(y), y);
+        }
+    }
+
+    if (!min_content_x.has_value())
+        return {};
+
+    return Gfx::IntRect {
+        *min_content_x,
+        *min_content_y,
+        *max_content_x - *min_content_x + 1,
+        *max_content_y - *min_content_y + 1
+    };
+}
 ErrorOr<NonnullRefPtr<Layer>> Layer::duplicate(DeprecatedString name)
 {
     auto duplicated_layer = TRY(Layer::create_snapshot(m_image, *this));
@@ -461,7 +494,7 @@ ErrorOr<NonnullRefPtr<Layer>> Layer::duplicate(DeprecatedString name)
     return duplicated_layer;
 }
 
-Layer::MaskType Layer::mask_type()
+Layer::MaskType Layer::mask_type() const
 {
     if (m_mask_bitmap.is_null())
         return MaskType::None;
