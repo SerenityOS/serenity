@@ -619,6 +619,18 @@ public:
         return *this;
     }
 
+    template<typename O>
+    ALWAYS_INLINE bool operator==(Optional<O> const& other) const
+    {
+        return has_value() == other.has_value() && (!has_value() || value() == other.value());
+    }
+
+    template<typename O>
+    ALWAYS_INLINE bool operator==(O const& other) const
+    {
+        return has_value() && value() == other;
+    }
+
     void clear()
     {
         m_value = {};
@@ -686,6 +698,11 @@ struct Formatter<JS::Value> : Formatter<StringView> {
             return Formatter<StringView>::format(builder, "<empty>"sv);
         return Formatter<StringView>::format(builder, value.to_string_without_side_effects());
     }
+};
+
+template<>
+struct Traits<JS::Value> : GenericTraits<JS::Value> {
+    static unsigned hash(JS::Value value) { return Traits<u64>::hash(value.encoded()); }
 };
 
 }
