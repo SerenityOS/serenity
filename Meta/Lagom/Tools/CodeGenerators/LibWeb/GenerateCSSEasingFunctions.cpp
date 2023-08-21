@@ -57,7 +57,7 @@ namespace Web::CSS {
 
     generator.appendln("enum class EasingFunction {");
     TRY(easing_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
-        auto member_generator = TRY(generator.fork());
+        auto member_generator = generator.fork();
         member_generator.set("name:titlecase", TRY(title_casify(name)));
         member_generator.appendln("    @name:titlecase@,");
         return {};
@@ -109,7 +109,7 @@ Optional<EasingFunction> easing_function_from_string(StringView name)
 {
 )~~~");
     TRY(easing_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
-        auto member_generator = TRY(generator.fork());
+        auto member_generator = generator.fork();
         member_generator.set("name", TRY(String::from_deprecated_string(name)));
         member_generator.set("name:titlecase", TRY(title_casify(name)));
         member_generator.append(R"~~~(
@@ -129,7 +129,7 @@ StringView to_string(EasingFunction easing_function)
     switch (easing_function) {
 )~~~");
     TRY(easing_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
-        auto member_generator = TRY(generator.fork());
+        auto member_generator = generator.fork();
         member_generator.set("name", TRY(String::from_deprecated_string(name)));
         member_generator.set("name:titlecase", TRY(title_casify(name)));
         member_generator.append(R"~~~(
@@ -153,7 +153,7 @@ EasingFunctionMetadata easing_function_metadata(EasingFunction easing_function)
     TRY(easing_data.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
         VERIFY(value.is_object());
 
-        auto member_generator = TRY(generator.fork());
+        auto member_generator = generator.fork();
         member_generator.set("name:titlecase", TRY(title_casify(name)));
         member_generator.append(R"~~~(
     case EasingFunction::@name:titlecase@:

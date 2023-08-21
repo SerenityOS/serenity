@@ -375,7 +375,7 @@ ErrorOr<void> generate_header_file(JsonObject& api_data, Core::File& file)
         auto function_definitions = create_function_definitions(function_name, function);
 
         for (auto const& function_definition : function_definitions) {
-            auto function_generator = generator.fork().release_value_but_fixme_should_propagate_errors();
+            auto function_generator = generator.fork();
 
             function_generator.set("name", function_definition.name);
             function_generator.set("return_type", function_definition.return_type);
@@ -387,7 +387,7 @@ ErrorOr<void> generate_header_file(JsonObject& api_data, Core::File& file)
                 if (!argument_definition.name.has_value() || !argument_definition.cpp_type.has_value())
                     continue;
 
-                auto argument_generator = function_generator.fork().release_value_but_fixme_should_propagate_errors();
+                auto argument_generator = function_generator.fork();
                 argument_generator.set("argument_type", argument_definition.cpp_type.value());
                 argument_generator.set("argument_name", argument_definition.name.value());
 
@@ -426,7 +426,7 @@ ErrorOr<void> generate_implementation_file(JsonObject& api_data, Core::File& fil
         auto function_definitions = create_function_definitions(function_name, function);
 
         for (auto const& function_definition : function_definitions) {
-            auto function_generator = generator.fork().release_value_but_fixme_should_propagate_errors();
+            auto function_generator = generator.fork();
             auto return_type = function_definition.return_type;
 
             function_generator.set("name"sv, function_definition.name);
@@ -441,7 +441,7 @@ ErrorOr<void> generate_implementation_file(JsonObject& api_data, Core::File& fil
                 if (!argument_definition.name.has_value() || !argument_definition.cpp_type.has_value())
                     continue;
 
-                auto argument_generator = function_generator.fork().release_value_but_fixme_should_propagate_errors();
+                auto argument_generator = function_generator.fork();
                 argument_generator.set("argument_type", argument_definition.cpp_type.value());
                 argument_generator.set("argument_name", argument_definition.name.value());
 
@@ -504,7 +504,7 @@ ErrorOr<void> generate_implementation_file(JsonObject& api_data, Core::File& fil
 
                 first = true;
                 for (auto const& argument_definition : function_definition.arguments) {
-                    auto argument_generator = function_generator.fork().release_value_but_fixme_should_propagate_errors();
+                    auto argument_generator = function_generator.fork();
 
                     auto cast_to = argument_definition.cast_to;
                     argument_generator.set("argument_name", argument_definition.name.value_or(""));

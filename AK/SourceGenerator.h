@@ -39,9 +39,9 @@ public:
     // Move-assign is undefinable due to 'StringBuilder& m_builder;'
     SourceGenerator& operator=(SourceGenerator&&) = delete;
 
-    ErrorOr<SourceGenerator> fork()
+    [[nodiscard]] SourceGenerator fork()
     {
-        return SourceGenerator { m_builder, TRY(m_mapping.clone()), m_opening, m_closing };
+        return SourceGenerator { m_builder, MUST(m_mapping.clone()), m_opening, m_closing };
     }
 
     void set(StringView key, String value)

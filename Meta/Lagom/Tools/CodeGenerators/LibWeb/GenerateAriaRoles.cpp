@@ -55,7 +55,7 @@ namespace Web::ARIA {
         VERIFY(value.is_object());
         JsonObject const& value_object = value.as_object();
 
-        auto class_definition_generator = TRY(generator.fork());
+        auto class_definition_generator = generator.fork();
         class_definition_generator.set("spec_link"sv, value_object.get_deprecated_string("specLink"sv).value());
         class_definition_generator.set("description"sv, value_object.get_deprecated_string("description"sv).value());
         class_definition_generator.set("name"sv, name);
@@ -129,7 +129,7 @@ ErrorOr<String> generate_hash_table_population(JsonArray const& values, StringVi
 
 ErrorOr<void> generate_hash_table_member(SourceGenerator& generator, StringView member_name, StringView hash_table_name, StringView enum_class, JsonArray const& values)
 {
-    auto member_generator = TRY(generator.fork());
+    auto member_generator = generator.fork();
     member_generator.set("member_name"sv, member_name);
     member_generator.set("hash_table_name"sv, hash_table_name);
     member_generator.set("enum_class"sv, enum_class);
@@ -292,7 +292,7 @@ namespace Web::ARIA {
     TRY(roles_data.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
         VERIFY(value.is_object());
 
-        auto member_generator = TRY(generator.fork());
+        auto member_generator = generator.fork();
         member_generator.set("name"sv, name);
 
         JsonObject const& value_object = value.as_object();
@@ -359,7 +359,7 @@ DefaultValueType @name@::default_value_for_property_or_state(StateAndProperties 
     switch (state_or_property) {
 )~~~");
             TRY(implicit_value_for_role.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
-                auto case_generator = TRY(member_generator.fork());
+                auto case_generator = member_generator.fork();
                 VERIFY(value.is_string());
                 case_generator.set("state_or_property"sv, aria_name_to_enum_name(name));
                 case_generator.set("implicit_value"sv, value.as_string());

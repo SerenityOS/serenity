@@ -92,7 +92,7 @@ class @legacy_constructor_class@;)~~~");
     };
 
     for (auto& interface : exposed_interfaces) {
-        auto gen = TRY(generator.fork());
+        auto gen = generator.fork();
 
         if (interface.is_namespace)
             add_namespace(gen, interface.namespace_class);
@@ -123,7 +123,7 @@ static ErrorOr<void> generate_intrinsic_definitions(StringView output_path, Vect
 #include <LibWeb/Bindings/Intrinsics.h>)~~~");
 
     for (auto& interface : exposed_interfaces) {
-        auto gen = TRY(generator.fork());
+        auto gen = generator.fork();
         gen.set("namespace_class", interface.namespace_class);
         gen.set("prototype_class", interface.prototype_class);
         gen.set("constructor_class", interface.constructor_class);
@@ -215,7 +215,7 @@ void Intrinsics::create_web_prototype_and_constructor<@prototype_class@>(JS::Rea
     };
 
     for (auto& interface : exposed_interfaces) {
-        auto gen = TRY(generator.fork());
+        auto gen = generator.fork();
 
         if (interface.is_namespace)
             add_namespace(gen, interface.name, interface.namespace_class);
@@ -274,7 +274,7 @@ static ErrorOr<void> generate_exposed_interface_implementation(StringView class_
 #include <LibWeb/Bindings/@global_object_name@ExposedInterfaces.h>
 )~~~");
     for (auto& interface : exposed_interfaces) {
-        auto gen = TRY(generator.fork());
+        auto gen = generator.fork();
         gen.set("namespace_class", interface.namespace_class);
         gen.set("prototype_class", interface.prototype_class);
         gen.set("constructor_class", interface.constructor_class);
@@ -327,7 +327,7 @@ void add_@global_object_snake_name@_exposed_interfaces(JS::Object& global)
     };
 
     for (auto& interface : exposed_interfaces) {
-        auto gen = TRY(generator.fork());
+        auto gen = generator.fork();
 
         if (interface.is_namespace)
             add_namespace(gen, interface.name, interface.namespace_class);

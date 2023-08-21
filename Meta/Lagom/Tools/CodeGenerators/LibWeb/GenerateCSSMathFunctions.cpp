@@ -54,7 +54,7 @@ enum class MathFunction {
 )~~~");
 
     TRY(functions_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
-        auto member_generator = TRY(generator.fork());
+        auto member_generator = generator.fork();
         member_generator.set("name:titlecase", TRY(title_casify(name)));
         member_generator.appendln("    @name:titlecase@,"sv);
         return {};
@@ -154,7 +154,7 @@ OwnPtr<CalculationNode> Parser::parse_math_function(PropertyID property_id, Func
         auto& function_data = value.as_object();
         auto& parameters = function_data.get_array("parameters"sv).value();
 
-        auto function_generator = TRY(generator.fork());
+        auto function_generator = generator.fork();
         function_generator.set("name:lowercase", TRY(String::from_deprecated_string(name)));
         function_generator.set("name:titlecase", TRY(title_casify(name)));
         function_generator.appendln("    if (function.name().equals_ignoring_ascii_case(\"@name:lowercase@\"sv)) {");
@@ -235,7 +235,7 @@ OwnPtr<CalculationNode> Parser::parse_math_function(PropertyID property_id, Func
                 auto parameter_type_string = parameter.get_deprecated_string("type"sv).value();
                 auto parameter_required = parameter.get_bool("required"sv).value();
 
-                auto parameter_generator = TRY(function_generator.fork());
+                auto parameter_generator = function_generator.fork();
                 parameter_generator.set("parameter_name", TRY(String::from_deprecated_string(parameter.get_deprecated_string("name"sv).value())));
                 parameter_generator.set("parameter_index", TRY(String::number(parameter_index)));
 
@@ -347,7 +347,7 @@ OwnPtr<CalculationNode> Parser::parse_math_function(PropertyID property_id, Func
                 auto& parameter = parameter_value.as_object();
                 auto parameter_type_string = parameter.get_deprecated_string("type"sv).value();
 
-                auto parameter_generator = TRY(function_generator.fork());
+                auto parameter_generator = function_generator.fork();
                 parameter_generator.set("parameter_index"sv, TRY(String::number(parameter_index)));
 
                 if (parameter_type_string == "<rounding-strategy>"sv) {
