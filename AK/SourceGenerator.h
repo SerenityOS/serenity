@@ -86,11 +86,10 @@ public:
         return {};
     }
 
-    ErrorOr<void> try_appendln(StringView pattern)
+    void appendln(StringView pattern)
     {
-        TRY(try_append(pattern));
-        TRY(m_builder.try_append('\n'));
-        return {};
+        append(pattern);
+        m_builder.append('\n');
     }
 
     template<size_t N>
@@ -112,9 +111,9 @@ public:
     }
 
     template<size_t N>
-    ErrorOr<void> try_appendln(char const (&pattern)[N])
+    void appendln(char const (&pattern)[N])
     {
-        return try_appendln(StringView { pattern, N - 1 });
+        appendln(StringView { pattern, N - 1 });
     }
 
     // FIXME: These are deprecated.
@@ -128,11 +127,8 @@ public:
         set(StringView { key, N - 1 }, value);
     }
     void append(StringView pattern) { MUST(try_append(pattern)); }
-    void appendln(StringView pattern) { MUST(try_appendln(pattern)); }
     template<size_t N>
     void append(char const (&pattern)[N]) { MUST(try_append(pattern)); }
-    template<size_t N>
-    void appendln(char const (&pattern)[N]) { MUST(try_appendln(pattern)); }
 
 private:
     StringBuilder& m_builder;

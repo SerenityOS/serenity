@@ -74,7 +74,7 @@ enum class ValueID;
             enum_generator.set("enum_type", "u64"_string);
         }
 
-        TRY(enum_generator.try_appendln("enum class @name:titlecase@ : @enum_type@ {"));
+        enum_generator.appendln("enum class @name:titlecase@ : @enum_type@ {");
 
         for (auto& member : members.values()) {
             auto member_name = member.to_deprecated_string();
@@ -83,18 +83,18 @@ enum class ValueID;
                 continue;
             auto member_generator = TRY(enum_generator.fork());
             member_generator.set("member:titlecase", TRY(title_casify(member_name)));
-            TRY(member_generator.try_appendln("    @member:titlecase@,"));
+            member_generator.appendln("    @member:titlecase@,");
         }
 
-        TRY(enum_generator.try_appendln("};"));
-        TRY(enum_generator.try_appendln("Optional<@name:titlecase@> value_id_to_@name:snakecase@(ValueID);"));
-        TRY(enum_generator.try_appendln("ValueID to_value_id(@name:titlecase@);"));
-        TRY(enum_generator.try_appendln("StringView to_string(@name:titlecase@);"));
+        enum_generator.appendln("};");
+        enum_generator.appendln("Optional<@name:titlecase@> value_id_to_@name:snakecase@(ValueID);");
+        enum_generator.appendln("ValueID to_value_id(@name:titlecase@);");
+        enum_generator.appendln("StringView to_string(@name:titlecase@);");
         TRY(enum_generator.try_append("\n"));
         return {};
     }));
 
-    TRY(generator.try_appendln("}"));
+    generator.appendln("}");
 
     TRY(file.write_until_depleted(generator.as_string_view().bytes()));
     return {};
@@ -199,7 +199,7 @@ StringView to_string(@name:titlecase@ value)
         return {};
     }));
 
-    TRY(generator.try_appendln("}"));
+    generator.appendln("}");
 
     TRY(file.write_until_depleted(generator.as_string_view().bytes()));
     return {};

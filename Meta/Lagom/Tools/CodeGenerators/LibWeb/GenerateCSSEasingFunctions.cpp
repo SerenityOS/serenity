@@ -55,17 +55,17 @@ namespace Web::CSS {
 
 )~~~"));
 
-    TRY(generator.try_appendln("enum class EasingFunction {"));
+    generator.appendln("enum class EasingFunction {");
     TRY(easing_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
         auto member_generator = TRY(generator.fork());
         member_generator.set("name:titlecase", TRY(title_casify(name)));
-        TRY(member_generator.try_appendln("    @name:titlecase@,"));
+        member_generator.appendln("    @name:titlecase@,");
         return {};
     }));
-    TRY(generator.try_appendln("};"));
+    generator.appendln("};");
 
-    TRY(generator.try_appendln("Optional<EasingFunction> easing_function_from_string(StringView);"));
-    TRY(generator.try_appendln("StringView to_string(EasingFunction);"));
+    generator.appendln("Optional<EasingFunction> easing_function_from_string(StringView);");
+    generator.appendln("StringView to_string(EasingFunction);");
 
     TRY(generator.try_append(R"~~~(
 enum class EasingFunctionParameterType {
@@ -86,7 +86,7 @@ struct EasingFunctionMetadata {
 EasingFunctionMetadata easing_function_metadata(EasingFunction);
 )~~~"));
 
-    TRY(generator.try_appendln("\n}"));
+    generator.appendln("\n}");
 
     TRY(file.write_until_depleted(generator.as_string_view().bytes()));
     return {};
@@ -212,7 +212,7 @@ EasingFunctionMetadata easing_function_metadata(EasingFunction easing_function)
 }
 )~~~"));
 
-    TRY(generator.try_appendln("\n}"));
+    generator.appendln("\n}");
 
     TRY(file.write_until_depleted(generator.as_string_view().bytes()));
     return {};
