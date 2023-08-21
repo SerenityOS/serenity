@@ -66,7 +66,7 @@ namespace Web::CSS {
 
     generator.appendln("enum class TransformFunction {");
     TRY(transforms_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
-        auto member_generator = TRY(generator.fork());
+        auto member_generator = generator.fork();
         member_generator.set("name:titlecase", TRY(title_casify_transform_function(name)));
         member_generator.appendln("    @name:titlecase@,");
         return {};
@@ -118,7 +118,7 @@ Optional<TransformFunction> transform_function_from_string(StringView name)
 {
 )~~~");
     TRY(transforms_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
-        auto member_generator = TRY(generator.fork());
+        auto member_generator = generator.fork();
         member_generator.set("name", TRY(String::from_deprecated_string(name)));
         member_generator.set("name:titlecase", TRY(title_casify_transform_function(name)));
         member_generator.append(R"~~~(
@@ -138,7 +138,7 @@ StringView to_string(TransformFunction transform_function)
     switch (transform_function) {
 )~~~");
     TRY(transforms_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
-        auto member_generator = TRY(generator.fork());
+        auto member_generator = generator.fork();
         member_generator.set("name", TRY(String::from_deprecated_string(name)));
         member_generator.set("name:titlecase", TRY(title_casify_transform_function(name)));
         member_generator.append(R"~~~(
@@ -162,7 +162,7 @@ TransformFunctionMetadata transform_function_metadata(TransformFunction transfor
     TRY(transforms_data.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
         VERIFY(value.is_object());
 
-        auto member_generator = TRY(generator.fork());
+        auto member_generator = generator.fork();
         member_generator.set("name:titlecase", TRY(title_casify_transform_function(name)));
         member_generator.append(R"~~~(
     case TransformFunction::@name:titlecase@:

@@ -58,7 +58,7 @@ enum class ValueID;
         VERIFY(value.is_array());
         auto& members = value.as_array();
 
-        auto enum_generator = TRY(generator.fork());
+        auto enum_generator = generator.fork();
         enum_generator.set("name:titlecase", TRY(title_casify(name)));
         enum_generator.set("name:snakecase", TRY(snake_casify(name)));
 
@@ -81,7 +81,7 @@ enum class ValueID;
             // Don't include aliases in the enum.
             if (member_name.contains('='))
                 continue;
-            auto member_generator = TRY(enum_generator.fork());
+            auto member_generator = enum_generator.fork();
             member_generator.set("member:titlecase", TRY(title_casify(member_name)));
             member_generator.appendln("    @member:titlecase@,");
         }
@@ -116,7 +116,7 @@ namespace Web::CSS {
         VERIFY(value.is_array());
         auto& members = value.as_array();
 
-        auto enum_generator = TRY(generator.fork());
+        auto enum_generator = generator.fork();
         enum_generator.set("name:titlecase", TRY(title_casify(name)));
         enum_generator.set("name:snakecase", TRY(snake_casify(name)));
 
@@ -126,7 +126,7 @@ Optional<@name:titlecase@> value_id_to_@name:snakecase@(ValueID value_id)
     switch (value_id) {)~~~");
 
         for (auto& member : members.values()) {
-            auto member_generator = TRY(enum_generator.fork());
+            auto member_generator = enum_generator.fork();
             auto member_name = member.to_deprecated_string();
             if (member_name.contains('=')) {
                 auto parts = member_name.split_view('=');
@@ -154,7 +154,7 @@ ValueID to_value_id(@name:titlecase@ @name:snakecase@_value)
     switch (@name:snakecase@_value) {)~~~");
 
         for (auto& member : members.values()) {
-            auto member_generator = TRY(enum_generator.fork());
+            auto member_generator = enum_generator.fork();
             auto member_name = member.to_deprecated_string();
             if (member_name.contains('='))
                 continue;
@@ -178,7 +178,7 @@ StringView to_string(@name:titlecase@ value)
     switch (value) {)~~~");
 
         for (auto& member : members.values()) {
-            auto member_generator = TRY(enum_generator.fork());
+            auto member_generator = enum_generator.fork();
             auto member_name = member.to_deprecated_string();
             if (member_name.contains('='))
                 continue;

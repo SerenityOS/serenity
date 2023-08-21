@@ -41,7 +41,7 @@ TEST_CASE(scoped)
     global_generator.append("@foo@ @bar@\n"); // foo-0 bar-0
 
     {
-        auto scoped_generator_1 = MUST(global_generator.fork());
+        auto scoped_generator_1 = global_generator.fork();
         scoped_generator_1.set("bar", "bar-1");
         global_generator.append("@foo@ @bar@\n"); // foo-0 bar-0
     }
@@ -49,18 +49,18 @@ TEST_CASE(scoped)
     global_generator.append("@foo@ @bar@\n"); // foo-0 bar-0
 
     {
-        auto scoped_generator_2 = MUST(global_generator.fork());
+        auto scoped_generator_2 = global_generator.fork();
         scoped_generator_2.set("foo", "foo-2");
         scoped_generator_2.append("@foo@ @bar@\n"); // foo-2 bar-0
 
         {
-            auto scoped_generator_3 = MUST(scoped_generator_2.fork());
+            auto scoped_generator_3 = scoped_generator_2.fork();
             scoped_generator_3.set("bar", "bar-3");
             scoped_generator_3.append("@foo@ @bar@\n"); // foo-2 bar-3
         }
 
         {
-            auto scoped_generator_4 = MUST(global_generator.fork());
+            auto scoped_generator_4 = global_generator.fork();
             scoped_generator_4.append("@foo@ @bar@\n"); // foo-0 bar-0
         }
 

@@ -277,7 +277,7 @@ static ErrorOr<void> generate_loader_for_object(GUI::GML::Object const& gml_obje
                 value_code = TRY(String::formatted("{} {{ {} }}", type.release_value(), value_code));
         }
 
-        auto property_generator = TRY(generator.fork());
+        auto property_generator = generator.fork();
         property_generator.set("key", key);
         property_generator.set("value", value_code.bytes_as_string_view());
         TRY(append(property_generator, R"~~~(@object_name@->set_@key@(@value@);)~~~"));
@@ -288,7 +288,7 @@ static ErrorOr<void> generate_loader_for_object(GUI::GML::Object const& gml_obje
     // Layout
     if (gml_object.layout_object() != nullptr) {
         TRY(append(generator, "RefPtr<GUI::Layout> layout;"));
-        TRY(generate_loader_for_object(*gml_object.layout_object(), TRY(generator.fork()), TRY(String::from_utf8("layout"sv)), indentation + 1, UseObjectConstructor::Yes));
+        TRY(generate_loader_for_object(*gml_object.layout_object(), generator.fork(), TRY(String::from_utf8("layout"sv)), indentation + 1, UseObjectConstructor::Yes));
         TRY(append(generator, "@object_name@->set_layout(layout.release_nonnull());"));
         generator.appendln("");
     }
@@ -305,12 +305,12 @@ static ErrorOr<void> generate_loader_for_object(GUI::GML::Object const& gml_obje
             return {};
         }
 
-        auto child_generator = TRY(generator.fork());
+        auto child_generator = generator.fork();
         auto child_variable_name = TRY(next_child_name());
         child_generator.set("child_variable_name", child_variable_name.bytes_as_string_view());
         child_generator.set("child_class_name", child.name());
         TRY(append(child_generator, "RefPtr<@child_class_name@> @child_variable_name@;"));
-        TRY(generate_loader_for_object(child, TRY(child_generator.fork()), child_variable_name, indentation + 1, UseObjectConstructor::Yes));
+        TRY(generate_loader_for_object(child, child_generator.fork(), child_variable_name, indentation + 1, UseObjectConstructor::Yes));
 
         // Handle the current two special cases of child adding.
         if (gml_object.name() == "GUI::ScrollableContainerWidget"sv)
@@ -354,7 +354,7 @@ static ErrorOr<String> generate_cpp(NonnullRefPtr<GUI::GML::GMLFile> gml, Lexica
     // FIXME: Use a UTF-8 aware function once possible.
     generator.set("main_class_name", main_class.name());
     generator.append(function_start);
-    TRY(generate_loader_for_object(main_class, TRY(generator.fork()), "main_object"_string, 2, UseObjectConstructor::No));
+    TRY(generate_loader_for_object(main_class, generator.fork(), "main_object"_string, 2, UseObjectConstructor::No));
 
     generator.append(footer);
     return builder.to_string();
