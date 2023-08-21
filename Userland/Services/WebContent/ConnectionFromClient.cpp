@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
@@ -857,6 +857,11 @@ void ConnectionFromClient::toggle_media_loop_state()
 void ConnectionFromClient::toggle_media_controls_state()
 {
     m_page_host->toggle_media_controls_state().release_value_but_fixme_should_propagate_errors();
+}
+
+void ConnectionFromClient::set_user_style(String const& source)
+{
+    m_page_host->set_user_style(source);
 }
 
 void ConnectionFromClient::inspect_accessibility_tree()

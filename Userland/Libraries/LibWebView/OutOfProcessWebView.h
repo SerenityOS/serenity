@@ -54,6 +54,8 @@ public:
     // In practice, this means that OOPWV may render scaled stale versions of the content while resizing.
     void set_content_scales_to_viewport(bool);
 
+    void set_user_style_sheet(String source);
+
 private:
     OutOfProcessWebView();
 
