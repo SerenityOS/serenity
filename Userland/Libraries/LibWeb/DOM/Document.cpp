@@ -968,7 +968,7 @@ void Document::update_layout()
     if (!browsing_context())
         return;
 
-    auto viewport_rect = browsing_context()->viewport_rect();
+    auto viewport_rect = this->viewport_rect();
 
     if (!m_layout_root) {
         Layout::TreeBuilder tree_builder;
@@ -2101,10 +2101,7 @@ void Document::run_the_resize_steps()
     //    or an iframe element’s dimensions are changed) since the last time these steps were run,
     //    fire an event named resize at the Window object associated with doc.
 
-    if (!browsing_context())
-        return;
-
-    auto viewport_size = browsing_context()->viewport_rect().size().to_type<int>();
+    auto viewport_size = viewport_rect().size().to_type<int>();
     if (m_last_viewport_size == viewport_size)
         return;
     m_last_viewport_size = viewport_size;
@@ -2985,6 +2982,13 @@ HTML::ListOfAvailableImages& Document::list_of_available_images()
 HTML::ListOfAvailableImages const& Document::list_of_available_images() const
 {
     return *m_list_of_available_images;
+}
+
+CSSPixelRect Document::viewport_rect() const
+{
+    if (auto* browsing_context = this->browsing_context())
+        return browsing_context->viewport_rect();
+    return CSSPixelRect {};
 }
 
 JS::NonnullGCPtr<CSS::VisualViewport> Document::visual_viewport()

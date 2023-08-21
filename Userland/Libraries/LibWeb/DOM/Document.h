@@ -390,6 +390,7 @@ public:
     void add_media_query_list(JS::NonnullGCPtr<CSS::MediaQueryList>);
 
     JS::NonnullGCPtr<CSS::VisualViewport> visual_viewport();
+    [[nodiscard]] CSSPixelRect viewport_rect() const;
 
     bool has_focus() const;
 
