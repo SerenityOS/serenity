@@ -162,6 +162,9 @@ public:
     auto value() const { return *m_value; }
     bool is_null() const { return m_handle.is_null() && !m_value.has_value(); }
 
+    bool operator==(Value const& value) const { return value == m_value; }
+    bool operator==(Handle<Value> const& other) const { return other.m_value == this->m_value; }
+
 private:
     explicit Handle(Value value)
         : m_value(value)
@@ -183,4 +186,26 @@ inline Handle<Value> make_handle(Value value)
     return Handle<Value>::create(value);
 }
 
+}
+
+namespace AK {
+
+template<typename T>
+struct Traits<JS::Handle<T>> : public GenericTraits<JS::Handle<T>> {
+    static unsigned hash(JS::Handle<T> const& handle) { return Traits<T>::hash(handle); }
+};
+
+template<>
+struct Traits<JS::Handle<JS::Value>> : public GenericTraits<JS::Handle<JS::Value>> {
+    static unsigned hash(JS::Handle<JS::Value> const& handle) { return Traits<JS::Value>::hash(handle.value()); }
+};
+
+namespace Detail {
+template<typename T>
+inline constexpr bool IsHashCompatible<JS::Handle<T>, T> = true;
+
+template<typename T>
+inline constexpr bool IsHashCompatible<T, JS::Handle<T>> = true;
+
+}
 }
