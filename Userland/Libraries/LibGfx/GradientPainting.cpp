@@ -445,15 +445,16 @@ void CanvasConicGradientPaintStyle::paint(IntRect physical_bounding_box, PaintFu
 
 static auto create_radial_gradient_between_two_circles(Gfx::FloatPoint start_center, float start_radius, Gfx::FloatPoint end_center, float end_radius, ReadonlySpan<ColorStop> color_stops, Optional<float> repeat_length)
 {
-    if (fabs(start_radius - end_radius) < 1)
-        start_radius += 1;
-
-    // Needed for the start circle > end circle case, but FIXME, this seems kind of hacky.
     bool reverse_gradient = end_radius < start_radius;
     if (reverse_gradient) {
         swap(end_radius, start_radius);
         swap(end_center, start_center);
     }
+
+    // FIXME: Handle the start_radius == end_radius special case separately.
+    // This hack is not quite correct.
+    if (end_radius - start_radius < 1)
+        end_radius += 1;
 
     // Spec steps: Useless for writing an actual implementation (give it a go :P):
     //
@@ -495,48 +496,49 @@ static auto create_radial_gradient_between_two_circles(Gfx::FloatPoint start_cen
     auto circle_distance_finder = [=](auto radius, auto center) {
         auto radius2 = radius * radius;
         auto delta = center - start_point;
-        auto dx2_factor = (radius2 - delta.y() * delta.y());
-        auto dy2_factor = (radius2 - delta.x() * delta.x());
-        return [=](bool postive_root, auto vec) {
+        auto delta_xy = delta.x() * delta.y();
+        auto dx2_factor = radius2 - delta.y() * delta.y();
+        auto dy2_factor = radius2 - delta.x() * delta.x();
+        return [=](bool positive_root, auto vec) {
             // This works out the distance to the nearest point on the circle
             // in the direction of the "vec" vector.
             auto dx2 = vec.x() * vec.x();
             auto dy2 = vec.y() * vec.y();
             auto root = sqrtf(dx2 * dx2_factor + dy2 * dy2_factor
-                + 2 * vec.x() * vec.y() * delta.x() * delta.y());
+                + 2 * vec.x() * vec.y() * delta_xy);
             auto dot = vec.x() * delta.x() + vec.y() * delta.y();
-            return (((postive_root ? root : -root) + dot) / (dx2 + dy2));
+            return ((positive_root ? root : -root) + dot) / (dx2 + dy2);
         };
     };
 
     auto end_circle_dist = circle_distance_finder(end_radius, end_center);
-    auto start_circle_dist = [=, dist = circle_distance_finder(start_radius, start_center)](bool postive_root, auto vec) {
+    auto start_circle_dist = [=, dist = circle_distance_finder(start_radius, start_center)](bool positive_root, auto vec) {
         if (start_center == start_point)
             return start_radius;
-        return dist(postive_root, vec);
+        return dist(positive_root, vec);
     };
 
     return Gradient {
         move(gradient_line),
         [=](float x, float y) {
-            auto get_gradient_location = [&] {
+            auto loc = [&] {
                 FloatPoint point { x, y };
                 auto dist = point.distance_from(start_point);
                 if (dist == 0)
                     return 0.0f;
                 // The "vec" (unit) vector points from the focal point to the current point.
+                auto dist = point.distance_from(start_point);
                 auto vec = (point - start_point) / dist;
-                bool use_postive_root = inner_contained || reverse_gradient;
-                auto dist_end = end_circle_dist(use_postive_root, vec);
-                auto dist_start = start_circle_dist(use_postive_root, vec);
+                bool use_positive_root = inner_contained || reverse_gradient;
+                auto dist_end = end_circle_dist(use_positive_root, vec);
+                auto dist_start = start_circle_dist(use_positive_root, vec);
                 // FIXME: Returning nan is a hack for "Don't paint me!"
                 if (dist_end < 0)
                     return AK::NaN<float>;
                 if (dist_end - dist_start < 0)
                     return float(gradient_length);
                 return (dist - dist_start) / (dist_end - dist_start);
-            };
-            auto loc = get_gradient_location();
+            }();
             if (reverse_gradient)
                 loc = 1.0f - loc;
             return loc * gradient_length;
