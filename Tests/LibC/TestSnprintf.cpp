@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Ben Wiederhake <BenWiederhake.GitHub@gmx.de>
+ * Copyright (c) 2023, Peter Elliott <pelliott@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -57,7 +58,7 @@ static bool test_single(Testcase<TArg> const& testcase)
         return false;
     }
 
-    // Setup
+    // Sdigitsp
     ByteBuffer actual = ByteBuffer::create_uninitialized(SANDBOX_CANARY_SIZE + testcase.dest_n + SANDBOX_CANARY_SIZE).release_value();
     fill_with_random(actual);
     ByteBuffer expected = actual;
@@ -147,10 +148,22 @@ TEST_CASE(special_cases)
     EXPECT(test_single<char const*>({ LITERAL("xx"), "whf", POISON, 3, LITERAL("w\0") }));
 }
 
+TEST_CASE(n_format)
+{
+    int n;
+    EXPECT(test_single<int*>({ LITERAL("x"), "%n", &n, 0, LITERAL("\0") }));
+    EXPECT_EQ(0, n);
+    EXPECT(test_single<int*>({ LITERAL("xxxx"), "%nabc", &n, 3, LITERAL("abc\0") }));
+    EXPECT_EQ(0, n);
+    EXPECT(test_single<int*>({ LITERAL("xxxxxxx"), "abc%nabc", &n, 6, LITERAL("abcabc\0") }));
+    EXPECT_EQ(3, n);
+}
+
 TEST_CASE(octal_values)
 {
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%#10.5o|", 017, 12, LITERAL("|     00017|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%#10.5o|", 01000, 12, LITERAL("|     01000|\0") }));
+    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|% #10.5o|", 01000, 12, LITERAL("|     01000|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%#10.5o|", 010000, 12, LITERAL("|    010000|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%10.5o|", 017, 12, LITERAL("|     00017|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%-10.5o|", 017, 12, LITERAL("|00017     |\0") }));
@@ -172,33 +185,36 @@ TEST_CASE(octal_values)
 TEST_CASE(decimal_values)
 {
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%10.5d|", 17, 12, LITERAL("|     00017|\0") }));
-    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%+10.5d|", 17, 12, LITERAL("|    +00017|\0") }));
+    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%+10.5i|", 17, 12, LITERAL("|    +00017|\0") }));
+    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|% 10.5i|", 17, 12, LITERAL("|     00017|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%10.5d|", -17, 12, LITERAL("|    -00017|\0") }));
-    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%+10.5d|", -17, 12, LITERAL("|    -00017|\0") }));
+    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%+10.5i|", -17, 12, LITERAL("|    -00017|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%-10.5d|", 17, 12, LITERAL("|00017     |\0") }));
-    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%+-10.5d|", 17, 12, LITERAL("|+00017    |\0") }));
-    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%+-10.5d|", -17, 12, LITERAL("|-00017    |\0") }));
+    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%+-10.5i|", 17, 12, LITERAL("|+00017    |\0") }));
+    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|% -10.5i|", 17, 12, LITERAL("| 00017    |\0") }));
+    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%+-10.5i|", -17, 12, LITERAL("|-00017    |\0") }));
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%-10.5d|", -17, 12, LITERAL("|-00017    |\0") }));
-    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%-010.5d|", 17, 12, LITERAL("|00017     |\0") }));
-    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%010.5d|", 17, 12, LITERAL("|     00017|\0") }));
+    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%-010.5i|", 17, 12, LITERAL("|00017     |\0") }));
+    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%010.5i|", 17, 12, LITERAL("|     00017|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%010d|", 17, 12, LITERAL("|0000000017|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%+010d|", 17, 12, LITERAL("|+000000017|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%010d|", -17, 12, LITERAL("|-000000017|\0") }));
-    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%010d|", 170000000, 12, LITERAL("|0170000000|\0") }));
+    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%010i|", 170000000, 12, LITERAL("|0170000000|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%+010d|", 170000000, 12, LITERAL("|+170000000|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%10d|", -170000000, 12, LITERAL("|-170000000|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%+10d|", -170000000, 12, LITERAL("|-170000000|\0") }));
-    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%010d|", 1700000000, 12, LITERAL("|1700000000|\0") }));
+    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%010i|", 1700000000, 12, LITERAL("|1700000000|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxxx\0"), "|%+010d|", 1700000000, 13, LITERAL("|+1700000000|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxxx\0"), "|%10d|", -1700000000, 13, LITERAL("|-1700000000|\0") }));
-    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxxx\0"), "|%+10d|", -1700000000, 13, LITERAL("|-1700000000|\0") }));
+    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxxx\0"), "|%+10i|", -1700000000, 13, LITERAL("|-1700000000|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%10d|", 17, 12, LITERAL("|        17|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%+10d|", 17, 12, LITERAL("|       +17|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%10d|", -17, 12, LITERAL("|       -17|\0") }));
-    EXPECT(test_single<int>({ LITERAL("xxxxxxx\0"), "|%.5d|", 17, 7, LITERAL("|00017|\0") }));
+    EXPECT(test_single<int>({ LITERAL("xxxxxxx\0"), "|%.5i|", 17, 7, LITERAL("|00017|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxxx\0"), "|%.1d|", 17, 4, LITERAL("|17|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxxx\0"), "|%.0d|", 17, 4, LITERAL("|17|\0") }));
     EXPECT(test_single<int>({ LITERAL("xx\0"), "|%.0d|", 0, 2, LITERAL("||\0") }));
+    EXPECT(test_single<int>({ LITERAL("xx\0"), "|%.d|", 0, 2, LITERAL("||\0") }));
     EXPECT(test_single<int>({ LITERAL("xxx\0"), "|%+.0d|", 0, 3, LITERAL("|+|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxx\0"), "|%#.1d|", 0, 3, LITERAL("|0|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxx\0"), "|%d|", 0, 3, LITERAL("|0|\0") }));
@@ -232,7 +248,7 @@ TEST_CASE(unsigned_decimal_values)
 TEST_CASE(hexadecimal_values)
 {
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%10.5X|", 0xab, 12, LITERAL("|     000AB|\0") }));
-    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%#10.5X|", 0xab, 12, LITERAL("|   0x000AB|\0") }));
+    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%#10.5X|", 0xab, 12, LITERAL("|   0X000AB|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%10.5x|", 0xab, 12, LITERAL("|     000ab|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%#10.5x|", 0xab, 12, LITERAL("|   0x000ab|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxx\0"), "|%10.5x|", 0x1000, 12, LITERAL("|     01000|\0") }));
@@ -267,6 +283,16 @@ TEST_CASE(hexadecimal_values)
     EXPECT(test_single<int>({ LITERAL("xxx\0"), "|%#x|", 0, 3, LITERAL("|0|\0") }));
 }
 
+TEST_CASE(pointers)
+{
+    EXPECT(test_single<void*>({ LITERAL("xxxxxxxxx"), "|%p|", (void*)0, 8, LITERAL("|(null)|\0") }));
+    EXPECT(test_single<void*>({ LITERAL("xxxxxxxxxxxxx"), "|%10p|", (void*)0, 12, LITERAL("|    (null)|\0") }));
+    EXPECT(test_single<void*>({ LITERAL("xxxxxxxxxxxxx"), "|%-10p|", (void*)0, 12, LITERAL("|(null)    |\0") }));
+    EXPECT(test_single<void*>({ LITERAL("xxxxxxx"), "|%p|", (void*)16, 6, LITERAL("|0x10|\0") }));
+    EXPECT(test_single<void*>({ LITERAL("xxxxxxxxxxxxx"), "|%10p|", (void*)16, 12, LITERAL("|      0x10|\0") }));
+    EXPECT(test_single<void*>({ LITERAL("xxxxxxxxxxxxx"), "|%-10p|", (void*)16, 12, LITERAL("|0x10      |\0") }));
+}
+
 TEST_CASE(inttypes_macros)
 {
     EXPECT(test_single<uint8_t>({ LITERAL("xxxxx"), "|%" PRIx8 "|", 0xAB, 4, LITERAL("|ab|\0") }));
@@ -284,11 +310,165 @@ TEST_CASE(float_values)
 
     v.i = 0x7fc00000;
     EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4f|", v.f, 6, LITERAL("| nan|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%04f|", v.f, 6, LITERAL("| nan|\0") }));
     EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4f|", -v.f, 6, LITERAL("|-nan|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4F|", v.f, 6, LITERAL("| NAN|\0") }));
 
     v.i = 0x7f800000;
     EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4f|", v.f, 6, LITERAL("| inf|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%04f|", v.f, 6, LITERAL("| inf|\0") }));
     EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4f|", -v.f, 6, LITERAL("|-inf|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4F|", v.f, 6, LITERAL("| INF|\0") }));
+
+    // Number handling.
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxx"), "|%f|", 1.0, 10, LITERAL("|1.000000|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxx"), "|%f|", -1.0, 11, LITERAL("|-1.000000|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxx"), "|%#.f|", 1.0, 4, LITERAL("|1.|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxx"), "|%.0f|", 1.6, 3, LITERAL("|2|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%.1f|", 9.99, 6, LITERAL("|10.0|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxx"), "|%f|", 1.003, 10, LITERAL("|1.003000|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%.2f|", 1.1005, 6, LITERAL("|1.10|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxxx"), "|%f|", 1000.001, 13, LITERAL("|1000.001000|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"), "|%.32f|", 1.25, 36, LITERAL("|1.25000000000000000000000000000000|\0") }));
+
+    // Formatting.
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%10.4f|", 12.1234, 12, LITERAL("|   12.1234|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%+10.4f|", 12.1234, 12, LITERAL("|  +12.1234|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|% 10.4f|", 12.1234, 12, LITERAL("|   12.1234|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%10.4f|", -12.1234, 12, LITERAL("|  -12.1234|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%+010.4f|", 12.1234, 12, LITERAL("|+0012.1234|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%010.4f|", -12.1234, 12, LITERAL("|-0012.1234|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%10.2f|", 12.1234, 12, LITERAL("|     12.12|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%010.2f|", 12.1234, 12, LITERAL("|0000012.12|\0") }));
+
+    // Left justified.
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%-10.4f|", 12.1234, 12, LITERAL("|12.1234   |\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%-+10.4f|", 12.1234, 12, LITERAL("|+12.1234  |\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%- 10.4f|", 12.1234, 12, LITERAL("| 12.1234  |\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%-10.4f|", -12.1234, 12, LITERAL("|-12.1234  |\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%-+010.4f|", 12.1234, 12, LITERAL("|+12.1234  |\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%-010.4f|", -12.1234, 12, LITERAL("|-12.1234  |\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%-10.2f|", 12.1234, 12, LITERAL("|12.12     |\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%-010.2f|", 12.1234, 12, LITERAL("|12.12     |\0") }));
+}
+
+TEST_CASE(exponentials)
+{
+    union {
+        float f;
+        int i;
+    } v;
+
+    v.i = 0x7fc00000;
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4e|", v.f, 6, LITERAL("| nan|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%04e|", v.f, 6, LITERAL("| nan|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4e|", -v.f, 6, LITERAL("|-nan|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4E|", v.f, 6, LITERAL("| NAN|\0") }));
+
+    v.i = 0x7f800000;
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4e|", v.f, 6, LITERAL("| inf|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%04e|", v.f, 6, LITERAL("| inf|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4e|", -v.f, 6, LITERAL("|-inf|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4E|", v.f, 6, LITERAL("| INF|\0") }));
+
+    // Number handling.
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxxxx"), "|%e|", 1.0, 14, LITERAL("|1.000000e+00|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxxxxx"), "|%e|", -1.0, 15, LITERAL("|-1.000000e+00|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxx"), "|%.0e|", 1.6, 7, LITERAL("|2e+00|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxxxx"), "|%e|", 1.003, 14, LITERAL("|1.003000e+00|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxx"), "|%.2e|", 1.1005, 10, LITERAL("|1.10e+00|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxxxx"), "|%e|", 1000.001, 14, LITERAL("|1.000001e+03|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"), "|%.32e|", 1.25, 40, LITERAL("|1.25000000000000000000000000000000e+00|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxxxx"), "|%e|", 0.1, 14, LITERAL("|1.000000e-01|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxxxx"), "|%e|", 0.01, 14, LITERAL("|1.000000e-02|\0") }));
+}
+
+TEST_CASE(g_format)
+{
+    union {
+        float f;
+        int i;
+    } v;
+
+    v.i = 0x7fc00000;
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4g|", v.f, 6, LITERAL("| nan|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%04g|", v.f, 6, LITERAL("| nan|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4g|", -v.f, 6, LITERAL("|-nan|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4G|", v.f, 6, LITERAL("| NAN|\0") }));
+
+    v.i = 0x7f800000;
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4g|", v.f, 6, LITERAL("| inf|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%04g|", v.f, 6, LITERAL("| inf|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4g|", -v.f, 6, LITERAL("|-inf|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4G|", v.f, 6, LITERAL("| INF|\0") }));
+
+    // f format
+    EXPECT(test_single<double>({ LITERAL("xxxx"), "|%g|", 1.0, 3, LITERAL("|1|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxx"), "|%g|", 1.003, 7, LITERAL("|1.003|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxx"), "|%#g|", 1.003, 9, LITERAL("|1.00300|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxx"), "|%#g|", 125.08, 9, LITERAL("|125.080|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxx"), "|%g|", 125000, 8, LITERAL("|125000|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxx"), "|%.15g|", 0.0001, 8, LITERAL("|0.0001|\0") }));
+
+    // e format
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxx"), "|%g|", 1250000, 10, LITERAL("|1.25e+06|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxxx"), "|%#g|", 1250000, 13, LITERAL("|1.25000e+06|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxx"), "|%g|", 0.00001, 7, LITERAL("|1e-05|\0") }));
+
+    // Formatting.
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%10g|", 12.1234, 12, LITERAL("|   12.1234|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%+10g|", 12.1234, 12, LITERAL("|  +12.1234|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|% 10g|", 12.1234, 12, LITERAL("|   12.1234|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%10g|", -12.1234, 12, LITERAL("|  -12.1234|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%+010g|", 12.1234, 12, LITERAL("|+0012.1234|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%010g|", -12.1234, 12, LITERAL("|-0012.1234|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%10.2g|", 12.1234, 12, LITERAL("|        12|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%010.2g|", 12.1234, 12, LITERAL("|0000000012|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%10g|", 1250000, 12, LITERAL("|  1.25e+06|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%+10g|", 1250000, 12, LITERAL("| +1.25e+06|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|% 010g|", 1250000, 12, LITERAL("| 01.25e+06|\0") }));
+
+    // Left justified.
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%-10g|", 12.1234, 12, LITERAL("|12.1234   |\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%-+10g|", 12.1234, 12, LITERAL("|+12.1234  |\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%- 10g|", 12.1234, 12, LITERAL("| 12.1234  |\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%-10g|", -12.1234, 12, LITERAL("|-12.1234  |\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%-+010g|", 12.1234, 12, LITERAL("|+12.1234  |\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%-010g|", -12.1234, 12, LITERAL("|-12.1234  |\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%-10.2g|", 12.1234, 12, LITERAL("|12        |\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%-010.2g|", 12.1234, 12, LITERAL("|12        |\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%-10g|", 1250000, 12, LITERAL("|1.25e+06  |\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%-+10g|", 1250000, 12, LITERAL("|+1.25e+06 |\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxx"), "|%- 010g|", 1250000, 12, LITERAL("| 1.25e+06 |\0") }));
+}
+
+TEST_CASE(hexponential)
+{
+    union {
+        float f;
+        int i;
+    } v;
+
+    v.i = 0x7fc00000;
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4a|", v.f, 6, LITERAL("| nan|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%04a|", v.f, 6, LITERAL("| nan|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4a|", -v.f, 6, LITERAL("|-nan|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4A|", v.f, 6, LITERAL("| NAN|\0") }));
+
+    v.i = 0x7f800000;
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4a|", v.f, 6, LITERAL("| inf|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%04a|", v.f, 6, LITERAL("| inf|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4a|", -v.f, 6, LITERAL("|-inf|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4A|", v.f, 6, LITERAL("| INF|\0") }));
+
+    // Number handling.
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxx"), "|%a|", 1.0, 8, LITERAL("|0x1p+0|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxx"), "|%a|", -1.0, 9, LITERAL("|-0x1p+0|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxx"), "|%.0a|", 1.6, 8, LITERAL("|0x2p+0|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxxx"), "|%.4a|", 1.003, 13, LITERAL("|0x1.00c5p+0|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"), "|%#.32a|", 1.25, 41, LITERAL("|0x1.40000000000000000000000000000000p+0|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxxx"), "|%.4a|", 0.1, 13, LITERAL("|0x1.999ap-4|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxxx"), "|%.4a|", 0.01, 13, LITERAL("|0x1.47aep-7|\0") }));
 }
 
 TEST_CASE(truncation)
@@ -324,12 +504,4 @@ TEST_CASE(truncation)
     EXPECT(test_single<unsigned long long int>({ LITERAL("xxxxxxxxxxxxxxxxxxxxxxx"), "|%llu|", ULLONG_MAX, 22, LITERAL("|18446744073709551615|\0") }));
     EXPECT(test_single<unsigned long long int>({ LITERAL("xxxxxxxxxxxxxxxxxxx"), "|%llx|", ULLONG_MAX, 18, LITERAL("|ffffffffffffffff|\0") }));
     EXPECT(test_single<unsigned long long int>({ LITERAL("xxxxxxxxxxxxxxxxxxx"), "|%llX|", ULLONG_MAX, 18, LITERAL("|FFFFFFFFFFFFFFFF|\0") }));
-}
-
-TEST_CASE(g_format)
-{
-    EXPECT(test_single<double>({ LITERAL("xxxx"), "|%g|", 0.0, 3, LITERAL("|0|\0") }));
-    EXPECT(test_single<double>({ LITERAL("xxxx"), "|%g|", 1.0, 3, LITERAL("|1|\0") }));
-    EXPECT(test_single<double>({ LITERAL("xxxxxx"), "|%g|", 1.1, 5, LITERAL("|1.1|\0") }));
-    EXPECT(test_single<double>({ LITERAL("xxxxxxxx"), "|%g|", -1.12, 7, LITERAL("|-1.12|\0") }));
 }
