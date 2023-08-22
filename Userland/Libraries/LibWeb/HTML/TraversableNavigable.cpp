@@ -16,7 +16,10 @@
 
 namespace Web::HTML {
 
-TraversableNavigable::TraversableNavigable() = default;
+TraversableNavigable::TraversableNavigable(Page& page)
+    : m_page(page)
+{
+}
 
 TraversableNavigable::~TraversableNavigable() = default;
 
@@ -76,7 +79,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<TraversableNavigable>> TraversableNavigable
     document_state->set_navigable_target_name(target_name);
 
     // 5. Let traversable be a new traversable navigable.
-    auto traversable = vm.heap().allocate_without_realm<TraversableNavigable>();
+    auto traversable = vm.heap().allocate_without_realm<TraversableNavigable>(page);
 
     // 6. Initialize the navigable traversable given documentState.
     TRY_OR_THROW_OOM(vm, traversable->initialize_navigable(document_state, nullptr));

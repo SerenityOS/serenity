@@ -54,8 +54,11 @@ public:
         m_session_history_traversal_queue.append(move(steps));
     }
 
+    Page* page() { return m_page; }
+    Page const* page() const { return m_page; }
+
 private:
-    TraversableNavigable();
+    TraversableNavigable(Page&);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -74,6 +77,8 @@ private:
     VisibilityState m_system_visibility_state { VisibilityState::Visible };
 
     SessionHistoryTraversalQueue m_session_history_traversal_queue;
+
+    WeakPtr<Page> m_page;
 };
 
 void finalize_a_same_document_navigation(JS::NonnullGCPtr<TraversableNavigable> traversable, JS::NonnullGCPtr<Navigable> target_navigable, JS::NonnullGCPtr<SessionHistoryEntry> target_entry, JS::GCPtr<SessionHistoryEntry> entry_to_replace);
