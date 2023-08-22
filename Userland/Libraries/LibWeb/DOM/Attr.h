@@ -29,7 +29,7 @@ public:
     DeprecatedFlyString const& namespace_uri() const { return m_qualified_name.namespace_(); }
     DeprecatedFlyString const& prefix() const { return m_qualified_name.prefix(); }
     DeprecatedFlyString const& local_name() const { return m_qualified_name.local_name(); }
-    DeprecatedString const& name() const { return m_qualified_name.as_string(); }
+    DeprecatedFlyString const& name() const { return m_qualified_name.as_string(); }
 
     DeprecatedString const& value() const { return m_value; }
     void set_value(DeprecatedString value);
