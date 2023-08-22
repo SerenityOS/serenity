@@ -2,6 +2,9 @@
   "active": {
     "argument": ""
   },
+  "any-link": {
+    "argument": ""
+  },
   "buffering": {
     "argument": ""
   },
@@ -60,6 +63,9 @@
     "argument": ""
   },
   "link": {
+    "argument": ""
+  },
+  "local-link": {
     "argument": ""
   },
   "muted": {
