@@ -105,6 +105,7 @@ public:
     };
 
     Variant<Empty, Traversal, String> ongoing_navigation() const { return m_ongoing_navigation; }
+    void set_ongoing_navigation(Variant<Empty, Traversal, String> ongoing_navigation);
 
     WebIDL::ExceptionOr<void> populate_session_history_entry_document(JS::GCPtr<SessionHistoryEntry>, Optional<NavigationParams>, Optional<String> navigation_id, SourceSnapshotParams const&, bool allow_POST, Function<void()>);
 
