@@ -703,6 +703,13 @@ BrowsingContext* Window::browsing_context()
     return m_associated_document->browsing_context();
 }
 
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#window-navigable
+JS::GCPtr<Navigable> Window::navigable() const
+{
+    // A Window's navigable is the navigable whose active document is the Window's associated Document's, or null if there is no such navigable.
+    return Navigable::navigable_with_active_document(*m_associated_document);
+}
+
 // https://html.spec.whatwg.org/multipage/system-state.html#pdf-viewer-plugin-objects
 Vector<JS::NonnullGCPtr<Plugin>> Window::pdf_viewer_plugin_objects()
 {
