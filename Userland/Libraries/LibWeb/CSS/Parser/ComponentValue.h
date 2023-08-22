@@ -35,8 +35,8 @@ public:
     Token const& token() const { return m_value.get<Token>(); }
     operator Token() const { return m_value.get<Token>(); }
 
-    ErrorOr<String> to_string() const;
-    ErrorOr<String> to_debug_string() const;
+    String to_string() const;
+    String to_debug_string() const;
 
 private:
     Variant<Token, NonnullRefPtr<Function>, NonnullRefPtr<Block>> m_value;
@@ -47,6 +47,6 @@ template<>
 struct AK::Formatter<Web::CSS::Parser::ComponentValue> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::Parser::ComponentValue const& component_value)
     {
-        return Formatter<StringView>::format(builder, TRY(component_value.to_string()));
+        return Formatter<StringView>::format(builder, component_value.to_string());
     }
 };

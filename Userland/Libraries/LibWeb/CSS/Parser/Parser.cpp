@@ -301,7 +301,7 @@ Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<Component
         if (auto declaration = consume_a_declaration(block_tokens); declaration.has_value()) {
             transaction.commit();
             return Supports::Feature {
-                Supports::Declaration { declaration->to_string().release_value_but_fixme_should_propagate_errors(), JS::make_handle(m_context.realm()) }
+                Supports::Declaration { declaration->to_string(), JS::make_handle(m_context.realm()) }
             };
         }
     }
@@ -311,7 +311,7 @@ Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<Component
         // FIXME: Parsing and then converting back to a string is weird.
         StringBuilder builder;
         for (auto const& item : first_token.function().values())
-            builder.append(item.to_string().release_value_but_fixme_should_propagate_errors());
+            builder.append(item.to_string());
         transaction.commit();
         return Supports::Feature {
             Supports::Selector { builder.to_string().release_value_but_fixme_should_propagate_errors(), JS::make_handle(m_context.realm()) }
@@ -331,13 +331,13 @@ Optional<GeneralEnclosed> Parser::parse_general_enclosed(TokenStream<ComponentVa
     // `[ <function-token> <any-value>? ) ]`
     if (first_token.is_function()) {
         transaction.commit();
-        return GeneralEnclosed { first_token.to_string().release_value_but_fixme_should_propagate_errors() };
+        return GeneralEnclosed { first_token.to_string() };
     }
 
     // `( <any-value>? )`
     if (first_token.is_block() && first_token.block().is_paren()) {
         transaction.commit();
-        return GeneralEnclosed { first_token.to_string().release_value_but_fixme_should_propagate_errors() };
+        return GeneralEnclosed { first_token.to_string() };
     }
 
     return {};
@@ -1498,7 +1498,7 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
                 return {};
             }
 
-            auto name = name_token.to_string().release_value_but_fixme_should_propagate_errors();
+            auto name = name_token.to_string();
 
             if (!rule->block())
                 return {};
@@ -6247,7 +6247,7 @@ public:
 
     virtual ErrorOr<void> dump(StringBuilder& builder, int indent) const override
     {
-        return builder.try_appendff("{: >{}}UNPARSED({})\n", "", indent, TRY(m_component_value.to_debug_string()));
+        return builder.try_appendff("{: >{}}UNPARSED({})\n", "", indent, m_component_value.to_debug_string());
     }
 
 private:

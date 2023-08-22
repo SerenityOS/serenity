@@ -26,7 +26,7 @@ ComponentValue::ComponentValue(NonnullRefPtr<Block> block)
 
 ComponentValue::~ComponentValue() = default;
 
-ErrorOr<String> ComponentValue::to_string() const
+String ComponentValue::to_string() const
 {
     return m_value.visit(
         [](Token const& token) { return token.to_string(); },
@@ -34,17 +34,17 @@ ErrorOr<String> ComponentValue::to_string() const
         [](NonnullRefPtr<Function> const& function) { return function->to_string(); });
 }
 
-ErrorOr<String> ComponentValue::to_debug_string() const
+String ComponentValue::to_debug_string() const
 {
     return m_value.visit(
-        [](Token const& token) -> ErrorOr<String> {
-            return String::formatted("Token: {}", TRY(token.to_debug_string()));
+        [](Token const& token) {
+            return MUST(String::formatted("Token: {}", token.to_debug_string()));
         },
-        [](NonnullRefPtr<Block> const& block) -> ErrorOr<String> {
-            return String::formatted("Block: {}", TRY(block->to_string()));
+        [](NonnullRefPtr<Block> const& block) {
+            return MUST(String::formatted("Block: {}", block->to_string()));
         },
-        [](NonnullRefPtr<Function> const& function) -> ErrorOr<String> {
-            return String::formatted("Function: {}", TRY(function->to_string()));
+        [](NonnullRefPtr<Function> const& function) {
+            return MUST(String::formatted("Function: {}", function->to_string()));
         });
 }
 

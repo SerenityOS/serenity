@@ -18,16 +18,16 @@ Function::Function(FlyString name, Vector<ComponentValue>&& values)
 
 Function::~Function() = default;
 
-ErrorOr<String> Function::to_string() const
+String Function::to_string() const
 {
     StringBuilder builder;
 
     serialize_an_identifier(builder, m_name);
-    TRY(builder.try_append('('));
-    TRY(builder.try_join(' ', m_values));
-    TRY(builder.try_append(')'));
+    builder.append('(');
+    builder.join(' ', m_values);
+    builder.append(')');
 
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 }

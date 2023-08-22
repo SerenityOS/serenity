@@ -144,8 +144,8 @@ public:
     StringView bracket_string() const;
     StringView bracket_mirror_string() const;
 
-    ErrorOr<String> to_string() const;
-    ErrorOr<String> to_debug_string() const;
+    String to_string() const;
+    String to_debug_string() const;
 
     String const& representation() const { return m_representation; }
     Position const& start_position() const { return m_start_position; }
