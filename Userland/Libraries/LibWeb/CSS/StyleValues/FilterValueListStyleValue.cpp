@@ -65,14 +65,14 @@ ErrorOr<String> FilterValueListStyleValue::to_string() const
             [&](Filter::Blur const& blur) -> ErrorOr<void> {
                 TRY(builder.try_append("blur("sv));
                 if (blur.radius.has_value())
-                    TRY(builder.try_append(TRY(blur.radius->to_string())));
+                    TRY(builder.try_append(blur.radius->to_string()));
                 return {};
             },
             [&](Filter::DropShadow const& drop_shadow) -> ErrorOr<void> {
                 TRY(builder.try_appendff("drop-shadow({} {}"sv,
                     drop_shadow.offset_x, drop_shadow.offset_y));
                 if (drop_shadow.radius.has_value())
-                    TRY(builder.try_appendff(" {}", TRY(drop_shadow.radius->to_string())));
+                    TRY(builder.try_appendff(" {}", drop_shadow.radius->to_string()));
                 if (drop_shadow.color.has_value()) {
                     TRY(builder.try_append(' '));
                     serialize_a_srgb_value(builder, *drop_shadow.color);
@@ -84,7 +84,7 @@ ErrorOr<String> FilterValueListStyleValue::to_string() const
                 if (hue_rotate.angle.has_value()) {
                     TRY(hue_rotate.angle->visit(
                         [&](Angle const& angle) -> ErrorOr<void> {
-                            return builder.try_append(TRY(angle.to_string()));
+                            return builder.try_append(angle.to_string());
                         },
                         [&](auto&) -> ErrorOr<void> {
                             return builder.try_append('0');
@@ -115,7 +115,7 @@ ErrorOr<String> FilterValueListStyleValue::to_string() const
                         }
                     }()));
                 if (color.amount.has_value())
-                    TRY(builder.try_append(TRY(color.amount->to_string())));
+                    TRY(builder.try_append(color.amount->to_string()));
                 return {};
             }));
         TRY(builder.try_append(')'));

@@ -26,9 +26,9 @@ Angle Angle::percentage_of(Percentage const& percentage) const
     return Angle { percentage.as_fraction() * m_value, m_type };
 }
 
-ErrorOr<String> Angle::to_string() const
+String Angle::to_string() const
 {
-    return String::formatted("{}deg", to_degrees());
+    return MUST(String::formatted("{}deg", to_degrees()));
 }
 
 double Angle::to_degrees() const

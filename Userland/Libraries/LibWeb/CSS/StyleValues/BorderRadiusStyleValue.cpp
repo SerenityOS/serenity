@@ -15,7 +15,7 @@ ErrorOr<String> BorderRadiusStyleValue::to_string() const
 {
     if (m_properties.horizontal_radius == m_properties.vertical_radius)
         return m_properties.horizontal_radius.to_string();
-    return String::formatted("{} / {}", TRY(m_properties.horizontal_radius.to_string()), TRY(m_properties.vertical_radius.to_string()));
+    return String::formatted("{} / {}", m_properties.horizontal_radius.to_string(), m_properties.vertical_radius.to_string());
 }
 
 ValueComparingNonnullRefPtr<StyleValue const> BorderRadiusStyleValue::absolutized(CSSPixelRect const& viewport_rect, Length::FontMetrics const& font_metrics, Length::FontMetrics const& root_font_metrics) const

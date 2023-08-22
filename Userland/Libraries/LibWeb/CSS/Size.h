@@ -76,7 +76,7 @@ public:
         return m_length_percentage.length();
     }
 
-    ErrorOr<String> to_string() const;
+    String to_string() const;
 
 private:
     Size(Type type, LengthPercentage);
@@ -91,6 +91,6 @@ template<>
 struct AK::Formatter<Web::CSS::Size> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::Size const& size)
     {
-        return Formatter<StringView>::format(builder, TRY(size.to_string()));
+        return Formatter<StringView>::format(builder, size.to_string());
     }
 };

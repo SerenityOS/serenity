@@ -56,15 +56,15 @@ CSSPixelPoint PositionValue::resolved(Layout::Node const& node, CSSPixelRect con
     return CSSPixelPoint { rect.x() + x, rect.y() + y };
 }
 
-ErrorOr<void> PositionValue::serialize(StringBuilder& builder) const
+void PositionValue::serialize(StringBuilder& builder) const
 {
     // Note: This means our serialization with simplify any with explicit edges that are just `top left`.
     bool has_relative_edges = x_relative_to == HorizontalEdge::Right || y_relative_to == VerticalEdge::Bottom;
     if (has_relative_edges)
-        TRY(builder.try_append(x_relative_to == HorizontalEdge::Left ? "left "sv : "right "sv));
-    TRY(horizontal_position.visit(
-        [&](HorizontalPreset preset) -> ErrorOr<void> {
-            return builder.try_append([&] {
+        builder.append(x_relative_to == HorizontalEdge::Left ? "left "sv : "right "sv);
+    horizontal_position.visit(
+        [&](HorizontalPreset preset) {
+            builder.append([&] {
                 switch (preset) {
                 case HorizontalPreset::Left:
                     return "left"sv;
@@ -77,15 +77,15 @@ ErrorOr<void> PositionValue::serialize(StringBuilder& builder) const
                 }
             }());
         },
-        [&](LengthPercentage length_percentage) -> ErrorOr<void> {
-            return builder.try_appendff(TRY(length_percentage.to_string()));
-        }));
-    TRY(builder.try_append(' '));
+        [&](LengthPercentage length_percentage) {
+            builder.append(length_percentage.to_string());
+        });
+    builder.append(' ');
     if (has_relative_edges)
-        TRY(builder.try_append(y_relative_to == VerticalEdge::Top ? "top "sv : "bottom "sv));
-    TRY(vertical_position.visit(
-        [&](VerticalPreset preset) -> ErrorOr<void> {
-            return builder.try_append([&] {
+        builder.append(y_relative_to == VerticalEdge::Top ? "top "sv : "bottom "sv);
+    vertical_position.visit(
+        [&](VerticalPreset preset) {
+            builder.append([&] {
                 switch (preset) {
                 case VerticalPreset::Top:
                     return "top"sv;
@@ -98,10 +98,9 @@ ErrorOr<void> PositionValue::serialize(StringBuilder& builder) const
                 }
             }());
         },
-        [&](LengthPercentage length_percentage) -> ErrorOr<void> {
-            return builder.try_append(TRY(length_percentage.to_string()));
-        }));
-    return {};
+        [&](LengthPercentage length_percentage) {
+            builder.append(length_percentage.to_string());
+        });
 }
 
 }

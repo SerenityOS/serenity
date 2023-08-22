@@ -88,7 +88,7 @@ bool Size::contains_percentage() const
     }
 }
 
-ErrorOr<String> Size::to_string() const
+String Size::to_string() const
 {
     switch (m_type) {
     case Type::Auto:
@@ -102,7 +102,7 @@ ErrorOr<String> Size::to_string() const
     case Type::MaxContent:
         return "max-content"_string;
     case Type::FitContent:
-        return String::formatted("fit-content({})", TRY(m_length_percentage.to_string()));
+        return MUST(String::formatted("fit-content({})", m_length_percentage.to_string()));
     case Type::None:
         return "none"_string;
     }

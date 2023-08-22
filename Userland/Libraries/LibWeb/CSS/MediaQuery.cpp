@@ -24,11 +24,11 @@ NonnullRefPtr<MediaQuery> MediaQuery::create_not_all()
 ErrorOr<String> MediaFeatureValue::to_string() const
 {
     return m_value.visit(
-        [](ValueID const& ident) { return String::from_utf8(string_from_value_id(ident)); },
+        [](ValueID const& ident) { return MUST(String::from_utf8(string_from_value_id(ident))); },
         [](Length const& length) { return length.to_string(); },
         [](Ratio const& ratio) { return ratio.to_string(); },
         [](Resolution const& resolution) { return resolution.to_string(); },
-        [](float number) { return String::number(number); });
+        [](float number) { return MUST(String::number(number)); });
 }
 
 bool MediaFeatureValue::is_same_type(MediaFeatureValue const& other) const

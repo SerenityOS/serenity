@@ -25,9 +25,9 @@ Frequency Frequency::percentage_of(Percentage const& percentage) const
     return Frequency { percentage.as_fraction() * m_value, m_type };
 }
 
-ErrorOr<String> Frequency::to_string() const
+String Frequency::to_string() const
 {
-    return String::formatted("{}hz", to_hertz());
+    return MUST(String::formatted("{}hz", to_hertz()));
 }
 
 double Frequency::to_hertz() const

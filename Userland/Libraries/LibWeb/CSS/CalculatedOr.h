@@ -58,10 +58,10 @@ public:
             });
     }
 
-    ErrorOr<String> to_string() const
+    String to_string() const
     {
         if (is_calculated())
-            return m_value.template get<NonnullRefPtr<CalculatedStyleValue>>()->to_string();
+            return MUST(m_value.template get<NonnullRefPtr<CalculatedStyleValue>>()->to_string());
 
         return m_value.template get<T>().to_string();
     }
@@ -119,7 +119,7 @@ template<>
 struct AK::Formatter<Web::CSS::AngleOrCalculated> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::AngleOrCalculated const& calculated_or)
     {
-        return Formatter<StringView>::format(builder, TRY(calculated_or.to_string()));
+        return Formatter<StringView>::format(builder, calculated_or.to_string());
     }
 };
 
@@ -127,7 +127,7 @@ template<>
 struct AK::Formatter<Web::CSS::FrequencyOrCalculated> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::FrequencyOrCalculated const& calculated_or)
     {
-        return Formatter<StringView>::format(builder, TRY(calculated_or.to_string()));
+        return Formatter<StringView>::format(builder, calculated_or.to_string());
     }
 };
 
@@ -135,7 +135,7 @@ template<>
 struct AK::Formatter<Web::CSS::LengthOrCalculated> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::LengthOrCalculated const& calculated_or)
     {
-        return Formatter<StringView>::format(builder, TRY(calculated_or.to_string()));
+        return Formatter<StringView>::format(builder, calculated_or.to_string());
     }
 };
 
@@ -143,7 +143,7 @@ template<>
 struct AK::Formatter<Web::CSS::PercentageOrCalculated> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::PercentageOrCalculated const& calculated_or)
     {
-        return Formatter<StringView>::format(builder, TRY(calculated_or.to_string()));
+        return Formatter<StringView>::format(builder, calculated_or.to_string());
     }
 };
 
@@ -151,6 +151,6 @@ template<>
 struct AK::Formatter<Web::CSS::TimeOrCalculated> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::TimeOrCalculated const& calculated_or)
     {
-        return Formatter<StringView>::format(builder, TRY(calculated_or.to_string()));
+        return Formatter<StringView>::format(builder, calculated_or.to_string());
     }
 };

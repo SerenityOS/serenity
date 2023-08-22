@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,9 +14,9 @@ Resolution::Resolution(double value, Type type)
 {
 }
 
-ErrorOr<String> Resolution::to_string() const
+String Resolution::to_string() const
 {
-    return String::formatted("{}dppx", to_dots_per_pixel());
+    return MUST(String::formatted("{}dppx", to_dots_per_pixel()));
 }
 
 double Resolution::to_dots_per_pixel() const

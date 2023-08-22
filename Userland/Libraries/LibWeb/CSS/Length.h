@@ -203,7 +203,7 @@ public:
         }
     }
 
-    ErrorOr<String> to_string() const;
+    String to_string() const;
 
     bool operator==(Length const& other) const
     {
@@ -230,6 +230,6 @@ template<>
 struct AK::Formatter<Web::CSS::Length> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::Length const& length)
     {
-        return Formatter<StringView>::format(builder, TRY(length.to_string()));
+        return Formatter<StringView>::format(builder, length.to_string());
     }
 };

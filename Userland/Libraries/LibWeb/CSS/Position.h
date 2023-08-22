@@ -46,7 +46,7 @@ struct PositionValue {
     VerticalEdge y_relative_to { VerticalEdge::Top };
 
     CSSPixelPoint resolved(Layout::Node const& node, CSSPixelRect const& rect) const;
-    ErrorOr<void> serialize(StringBuilder&) const;
+    void serialize(StringBuilder&) const;
     bool operator==(PositionValue const&) const = default;
 };
 

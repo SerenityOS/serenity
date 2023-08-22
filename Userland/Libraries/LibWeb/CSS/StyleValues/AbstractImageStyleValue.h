@@ -67,12 +67,12 @@ static ErrorOr<void> serialize_color_stop_list(StringBuilder& builder, auto cons
             TRY(builder.try_append(", "sv));
 
         if (element.transition_hint.has_value())
-            TRY(builder.try_appendff("{}, "sv, TRY(element.transition_hint->value.to_string())));
+            TRY(builder.try_appendff("{}, "sv, element.transition_hint->value.to_string()));
 
         TRY(builder.try_append(TRY(element.color_stop.color->to_string())));
         for (auto position : Array { &element.color_stop.position, &element.color_stop.second_position }) {
             if (position->has_value())
-                TRY(builder.try_appendff(" {}"sv, TRY((*position)->to_string())));
+                TRY(builder.try_appendff(" {}"sv, (*position)->to_string()));
         }
         first = false;
     }

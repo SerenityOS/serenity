@@ -38,15 +38,15 @@ ErrorOr<String> RadialGradientStyleValue::to_string() const
             }());
         },
         [&](CircleSize const& circle_size) -> ErrorOr<void> {
-            return builder.try_append(TRY(circle_size.radius.to_string()));
+            return builder.try_append(circle_size.radius.to_string());
         },
         [&](EllipseSize const& ellipse_size) -> ErrorOr<void> {
-            return builder.try_appendff("{} {}", TRY(ellipse_size.radius_a.to_string()), TRY(ellipse_size.radius_b.to_string()));
+            return builder.try_appendff("{} {}", ellipse_size.radius_a.to_string(), ellipse_size.radius_b.to_string());
         }));
 
     if (m_properties.position != PositionValue::center()) {
         TRY(builder.try_appendff(" at "sv));
-        TRY(m_properties.position.serialize(builder));
+        m_properties.position.serialize(builder);
     }
 
     TRY(builder.try_append(", "sv));

@@ -131,7 +131,7 @@ void serialize_a_local(StringBuilder& builder, StringView path)
 void serialize_unicode_ranges(StringBuilder& builder, Vector<UnicodeRange> const& unicode_ranges)
 {
     serialize_a_comma_separated_list(builder, unicode_ranges, [](auto& builder, UnicodeRange unicode_range) -> void {
-        return serialize_a_string(builder, MUST(unicode_range.to_string()));
+        return serialize_a_string(builder, unicode_range.to_string());
     });
 }
 
