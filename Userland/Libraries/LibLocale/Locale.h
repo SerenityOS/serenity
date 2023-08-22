@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/CharacterTypes.h>
-#include <AK/Error.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
@@ -18,7 +17,7 @@
 namespace Locale {
 
 struct LanguageID {
-    ErrorOr<String> to_string() const;
+    String to_string() const;
     bool operator==(LanguageID const&) const = default;
 
     bool is_root { false };
@@ -56,7 +55,7 @@ struct OtherExtension {
 using Extension = AK::Variant<LocaleExtension, TransformedExtension, OtherExtension>;
 
 struct LocaleID {
-    ErrorOr<String> to_string() const;
+    String to_string() const;
 
     template<typename ExtensionType>
     Vector<Extension> remove_extension_type()
@@ -137,11 +136,11 @@ constexpr bool is_unicode_variant_subtag(StringView subtag)
 
 bool is_type_identifier(StringView);
 
-ErrorOr<Optional<LanguageID>> parse_unicode_language_id(StringView);
-ErrorOr<Optional<LocaleID>> parse_unicode_locale_id(StringView);
+Optional<LanguageID> parse_unicode_language_id(StringView);
+Optional<LocaleID> parse_unicode_locale_id(StringView);
 
-ErrorOr<void> canonicalize_unicode_extension_values(StringView key, String& value, bool remove_true);
-ErrorOr<Optional<String>> canonicalize_unicode_locale_id(LocaleID&);
+void canonicalize_unicode_extension_values(StringView key, String& value, bool remove_true);
+Optional<String> canonicalize_unicode_locale_id(LocaleID&);
 
 StringView default_locale();
 bool is_locale_available(StringView locale);
@@ -173,11 +172,11 @@ Optional<KeywordHours> keyword_hc_from_string(StringView hc);
 Optional<KeywordColCaseFirst> keyword_kf_from_string(StringView kf);
 Optional<KeywordColNumeric> keyword_kn_from_string(StringView kn);
 Optional<KeywordNumbers> keyword_nu_from_string(StringView nu);
-ErrorOr<Vector<StringView>> get_keywords_for_locale(StringView locale, StringView key);
-ErrorOr<Optional<StringView>> get_preferred_keyword_value_for_locale(StringView locale, StringView key);
+Vector<StringView> get_keywords_for_locale(StringView locale, StringView key);
+Optional<StringView> get_preferred_keyword_value_for_locale(StringView locale, StringView key);
 
 Optional<DisplayPattern> get_locale_display_patterns(StringView locale);
-ErrorOr<Optional<String>> format_locale_for_display(StringView locale, LocaleID locale_id);
+Optional<String> format_locale_for_display(StringView locale, LocaleID locale_id);
 
 Optional<StringView> get_locale_language_mapping(StringView locale, StringView language);
 Optional<StringView> get_locale_territory_mapping(StringView locale, StringView territory);
@@ -202,12 +201,12 @@ Optional<StringView> resolve_territory_alias(StringView territory);
 Optional<StringView> resolve_script_tag_alias(StringView script_tag);
 Optional<StringView> resolve_variant_alias(StringView variant);
 Optional<StringView> resolve_subdivision_alias(StringView subdivision);
-ErrorOr<void> resolve_complex_language_aliases(LanguageID& language_id);
+void resolve_complex_language_aliases(LanguageID& language_id);
 
-ErrorOr<Optional<LanguageID>> add_likely_subtags(LanguageID const& language_id);
-ErrorOr<Optional<LanguageID>> remove_likely_subtags(LanguageID const& language_id);
+Optional<LanguageID> add_likely_subtags(LanguageID const& language_id);
+Optional<LanguageID> remove_likely_subtags(LanguageID const& language_id);
 
-ErrorOr<Optional<String>> resolve_most_likely_territory(LanguageID const& language_id);
-ErrorOr<String> resolve_most_likely_territory_alias(LanguageID const& language_id, StringView territory_alias);
+Optional<String> resolve_most_likely_territory(LanguageID const& language_id);
+String resolve_most_likely_territory_alias(LanguageID const& language_id, StringView territory_alias);
 
 }

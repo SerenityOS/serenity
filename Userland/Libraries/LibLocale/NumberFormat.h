@@ -61,8 +61,8 @@ enum class NumericSymbol : u8 {
     TimeSeparator,
 };
 
-ErrorOr<Optional<StringView>> get_number_system_symbol(StringView locale, StringView system, NumericSymbol symbol);
-ErrorOr<Optional<NumberGroupings>> get_number_system_groupings(StringView locale, StringView system);
+Optional<StringView> get_number_system_symbol(StringView locale, StringView system, NumericSymbol symbol);
+Optional<NumberGroupings> get_number_system_groupings(StringView locale, StringView system);
 
 Optional<ReadonlySpan<u32>> get_digits_for_number_system(StringView system);
 ErrorOr<String> replace_digits_for_number_system(StringView system, StringView number);

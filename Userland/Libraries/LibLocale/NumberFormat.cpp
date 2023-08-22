@@ -16,8 +16,8 @@
 
 namespace Locale {
 
-ErrorOr<Optional<StringView>> __attribute__((weak)) get_number_system_symbol(StringView, StringView, NumericSymbol) { return OptionalNone {}; }
-ErrorOr<Optional<NumberGroupings>> __attribute__((weak)) get_number_system_groupings(StringView, StringView) { return OptionalNone {}; }
+Optional<StringView> __attribute__((weak)) get_number_system_symbol(StringView, StringView, NumericSymbol) { return {}; }
+Optional<NumberGroupings> __attribute__((weak)) get_number_system_groupings(StringView, StringView) { return {}; }
 ErrorOr<Optional<NumberFormat>> __attribute__((weak)) get_standard_number_system_format(StringView, StringView, StandardNumberFormatType) { return OptionalNone {}; }
 ErrorOr<Vector<NumberFormat>> __attribute__((weak)) get_compact_number_system_formats(StringView, StringView, CompactNumberFormatType) { return Vector<NumberFormat> {}; }
 ErrorOr<Vector<NumberFormat>> __attribute__((weak)) get_unit_formats(StringView, StringView, Style) { return Vector<NumberFormat> {}; }

@@ -14,10 +14,10 @@
 
 namespace JS::Intl {
 
-ThrowCompletionOr<NonnullGCPtr<Locale>> Locale::create(Realm& realm, ::Locale::LocaleID locale_id)
+NonnullGCPtr<Locale> Locale::create(Realm& realm, ::Locale::LocaleID locale_id)
 {
     auto locale = realm.heap().allocate<Locale>(realm, realm.intrinsics().intl_locale_prototype());
-    locale->set_locale(TRY_OR_THROW_OOM(realm.vm(), locale_id.to_string()));
+    locale->set_locale(locale_id.to_string());
 
     for (auto& extension : locale_id.extensions) {
         if (!extension.has<::Locale::LocaleExtension>())
@@ -51,7 +51,7 @@ Locale::Locale(Object& prototype)
 }
 
 // 1.1.1 CreateArrayFromListOrRestricted ( list , restricted )
-static ThrowCompletionOr<NonnullGCPtr<Array>> create_array_from_list_or_restricted(VM& vm, Vector<StringView> list, Optional<String> restricted)
+static NonnullGCPtr<Array> create_array_from_list_or_restricted(VM& vm, Vector<StringView> list, Optional<String> restricted)
 {
     auto& realm = *vm.current_realm();
 
@@ -63,12 +63,12 @@ static ThrowCompletionOr<NonnullGCPtr<Array>> create_array_from_list_or_restrict
 
     // 2. Return ! CreateArrayFromList( list ).
     return Array::create_from<StringView>(realm, list, [&vm](auto value) {
-        return PrimitiveString::create(vm, String::from_utf8(value).release_value());
+        return PrimitiveString::create(vm, MUST(String::from_utf8(value)));
     });
 }
 
 // 1.1.2 CalendarsOfLocale ( loc ), https://tc39.es/proposal-intl-locale-info/#sec-calendars-of-locale
-ThrowCompletionOr<NonnullGCPtr<Array>> calendars_of_locale(VM& vm, Locale const& locale_object)
+NonnullGCPtr<Array> calendars_of_locale(VM& vm, Locale const& locale_object)
 {
     // 1. Let restricted be loc.[[Calendar]].
     Optional<String> restricted = locale_object.has_calendar() ? locale_object.calendar() : Optional<String> {};
@@ -77,17 +77,17 @@ ThrowCompletionOr<NonnullGCPtr<Array>> calendars_of_locale(VM& vm, Locale const&
     auto const& locale = locale_object.locale();
 
     // 3. Assert: locale matches the unicode_locale_id production.
-    VERIFY(TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(locale)).has_value());
+    VERIFY(::Locale::parse_unicode_locale_id(locale).has_value());
 
     // 4. Let list be a List of 1 or more unique canonical calendar identifiers, which must be lower case String values conforming to the type sequence from UTS 35 Unicode Locale Identifier, section 3.2, sorted in descending preference of those in common use for date and time formatting in locale.
-    auto list = TRY_OR_THROW_OOM(vm, ::Locale::get_keywords_for_locale(locale, "ca"sv));
+    auto list = ::Locale::get_keywords_for_locale(locale, "ca"sv);
 
     // 5. Return ! CreateArrayFromListOrRestricted( list, restricted ).
     return create_array_from_list_or_restricted(vm, move(list), move(restricted));
 }
 
 // 1.1.3 CollationsOfLocale ( loc ), https://tc39.es/proposal-intl-locale-info/#sec-collations-of-locale
-ThrowCompletionOr<NonnullGCPtr<Array>> collations_of_locale(VM& vm, Locale const& locale_object)
+NonnullGCPtr<Array> collations_of_locale(VM& vm, Locale const& locale_object)
 {
     // 1. Let restricted be loc.[[Collation]].
     Optional<String> restricted = locale_object.has_collation() ? locale_object.collation() : Optional<String> {};
@@ -96,17 +96,17 @@ ThrowCompletionOr<NonnullGCPtr<Array>> collations_of_locale(VM& vm, Locale const
     auto const& locale = locale_object.locale();
 
     // 3. Assert: locale matches the unicode_locale_id production.
-    VERIFY(TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(locale)).has_value());
+    VERIFY(::Locale::parse_unicode_locale_id(locale).has_value());
 
     // 4. Let list be a List of 1 or more unique canonical collation identifiers, which must be lower case String values conforming to the type sequence from UTS 35 Unicode Locale Identifier, section 3.2, ordered as if an Array of the same values had been sorted, using %Array.prototype.sort% using undefined as comparefn, of those in common use for string comparison in locale. The values "standard" and "search" must be excluded from list.
-    auto list = TRY_OR_THROW_OOM(vm, ::Locale::get_keywords_for_locale(locale, "co"sv));
+    auto list = ::Locale::get_keywords_for_locale(locale, "co"sv);
 
     // 5. Return ! CreateArrayFromListOrRestricted( list, restricted ).
     return create_array_from_list_or_restricted(vm, move(list), move(restricted));
 }
 
 // 1.1.4 HourCyclesOfLocale ( loc ), https://tc39.es/proposal-intl-locale-info/#sec-hour-cycles-of-locale
-ThrowCompletionOr<NonnullGCPtr<Array>> hour_cycles_of_locale(VM& vm, Locale const& locale_object)
+NonnullGCPtr<Array> hour_cycles_of_locale(VM& vm, Locale const& locale_object)
 {
     // 1. Let restricted be loc.[[HourCycle]].
     Optional<String> restricted = locale_object.has_hour_cycle() ? locale_object.hour_cycle() : Optional<String> {};
@@ -115,17 +115,17 @@ ThrowCompletionOr<NonnullGCPtr<Array>> hour_cycles_of_locale(VM& vm, Locale cons
     auto const& locale = locale_object.locale();
 
     // 3. Assert: locale matches the unicode_locale_id production.
-    VERIFY(TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(locale)).has_value());
+    VERIFY(::Locale::parse_unicode_locale_id(locale).has_value());
 
     // 4. Let list be a List of 1 or more unique hour cycle identifiers, which must be lower case String values indicating either the 12-hour format ("h11", "h12") or the 24-hour format ("h23", "h24"), sorted in descending preference of those in common use for date and time formatting in locale.
-    auto list = TRY_OR_THROW_OOM(vm, ::Locale::get_keywords_for_locale(locale, "hc"sv));
+    auto list = ::Locale::get_keywords_for_locale(locale, "hc"sv);
 
     // 5. Return ! CreateArrayFromListOrRestricted( list, restricted ).
     return create_array_from_list_or_restricted(vm, move(list), move(restricted));
 }
 
 // 1.1.5 NumberingSystemsOfLocale ( loc ), https://tc39.es/proposal-intl-locale-info/#sec-numbering-systems-of-locale
-ThrowCompletionOr<NonnullGCPtr<Array>> numbering_systems_of_locale(VM& vm, Locale const& locale_object)
+NonnullGCPtr<Array> numbering_systems_of_locale(VM& vm, Locale const& locale_object)
 {
     // 1. Let restricted be loc.[[NumberingSystem]].
     Optional<String> restricted = locale_object.has_numbering_system() ? locale_object.numbering_system() : Optional<String> {};
@@ -134,10 +134,10 @@ ThrowCompletionOr<NonnullGCPtr<Array>> numbering_systems_of_locale(VM& vm, Local
     auto const& locale = locale_object.locale();
 
     // 3. Assert: locale matches the unicode_locale_id production.
-    VERIFY(TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(locale)).has_value());
+    VERIFY(::Locale::parse_unicode_locale_id(locale).has_value());
 
     // 4. Let list be a List of 1 or more unique canonical numbering system identifiers, which must be lower case String values conforming to the type sequence from UTS 35 Unicode Locale Identifier, section 3.2, sorted in descending preference of those in common use for formatting numeric values in locale.
-    auto list = TRY_OR_THROW_OOM(vm, ::Locale::get_keywords_for_locale(locale, "nu"sv));
+    auto list = ::Locale::get_keywords_for_locale(locale, "nu"sv);
 
     // 5. Return ! CreateArrayFromListOrRestricted( list, restricted ).
     return create_array_from_list_or_restricted(vm, move(list), move(restricted));
@@ -145,7 +145,7 @@ ThrowCompletionOr<NonnullGCPtr<Array>> numbering_systems_of_locale(VM& vm, Local
 
 // 1.1.6 TimeZonesOfLocale ( loc ), https://tc39.es/proposal-intl-locale-info/#sec-time-zones-of-locale
 // NOTE: Our implementation takes a region rather than a Locale object to avoid needlessly parsing the locale twice.
-ThrowCompletionOr<NonnullGCPtr<Array>> time_zones_of_locale(VM& vm, StringView region)
+NonnullGCPtr<Array> time_zones_of_locale(VM& vm, StringView region)
 {
     auto& realm = *vm.current_realm();
 
@@ -164,13 +164,13 @@ ThrowCompletionOr<NonnullGCPtr<Array>> time_zones_of_locale(VM& vm, StringView r
 }
 
 // 1.1.7 CharacterDirectionOfLocale ( loc ), https://tc39.es/proposal-intl-locale-info/#sec-character-direction-of-locale
-ThrowCompletionOr<StringView> character_direction_of_locale(VM& vm, Locale const& locale_object)
+StringView character_direction_of_locale(Locale const& locale_object)
 {
     // 1. Let locale be loc.[[Locale]].
     auto const& locale = locale_object.locale();
 
     // 2. Assert: locale matches the unicode_locale_id production.
-    VERIFY(TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(locale)).has_value());
+    VERIFY(::Locale::parse_unicode_locale_id(locale).has_value());
 
     // 3. If the default general ordering of characters (characterOrder) within a line in locale is right-to-left, return "rtl".
     // NOTE: LibUnicode handles both LTR and RTL character orders in this call, not just RTL. We then fallback to LTR
@@ -231,7 +231,7 @@ ThrowCompletionOr<WeekInfo> week_info_of_locale(VM& vm, Locale const& locale_obj
     auto const& locale = locale_object.locale();
 
     // 2. Assert: locale matches the unicode_locale_id production.
-    VERIFY(TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(locale)).has_value());
+    VERIFY(::Locale::parse_unicode_locale_id(locale).has_value());
 
     // 3. Return a record whose fields are defined by Table 1, with values based on locale.
     WeekInfo week_info {};

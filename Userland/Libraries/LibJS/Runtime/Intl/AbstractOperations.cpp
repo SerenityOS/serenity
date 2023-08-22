@@ -22,7 +22,7 @@ namespace JS::Intl {
 // 6.2.2 IsStructurallyValidLanguageTag ( locale ), https://tc39.es/ecma402/#sec-isstructurallyvalidlanguagetag
 ThrowCompletionOr<Optional<::Locale::LocaleID>> is_structurally_valid_language_tag(VM& vm, StringView locale)
 {
-    auto contains_duplicate_variant = [&](auto& variants) -> ThrowCompletionOr<bool> {
+    auto contains_duplicate_variant = [&](auto& variants) {
         if (variants.is_empty())
             return false;
 
@@ -39,7 +39,7 @@ ThrowCompletionOr<Optional<::Locale::LocaleID>> is_structurally_valid_language_t
     // IsStructurallyValidLanguageTag returns true if all of the following conditions hold, false otherwise:
 
     // locale can be generated from the EBNF grammar for unicode_locale_id in Unicode Technical Standard #35 LDML § 3.2 Unicode Locale Identifier;
-    auto locale_id = TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(locale));
+    auto locale_id = ::Locale::parse_unicode_locale_id(locale);
     if (!locale_id.has_value())
         return OptionalNone {};
 
@@ -49,7 +49,7 @@ ThrowCompletionOr<Optional<::Locale::LocaleID>> is_structurally_valid_language_t
         return OptionalNone {};
 
     // the unicode_language_id within locale contains no duplicate unicode_variant_subtag subtags; and
-    if (TRY(contains_duplicate_variant(locale_id->language_id.variants)))
+    if (contains_duplicate_variant(locale_id->language_id.variants))
         return OptionalNone {};
 
     // if locale contains an extensions* component, that component
@@ -72,7 +72,7 @@ ThrowCompletionOr<Optional<::Locale::LocaleID>> is_structurally_valid_language_t
         // the tlang component contains no duplicate unicode_variant_subtag subtags.
         if (auto* transformed = extension.get_pointer<::Locale::TransformedExtension>()) {
             auto& language = transformed->language;
-            if (language.has_value() && TRY(contains_duplicate_variant(language->variants)))
+            if (language.has_value() && contains_duplicate_variant(language->variants))
                 return Optional<::Locale::LocaleID> {};
         }
     }
@@ -115,7 +115,7 @@ ThrowCompletionOr<String> canonicalize_unicode_locale_id(VM& vm, ::Locale::Local
 
     // 1. Let localeId be the string locale after performing the algorithm to transform it to canonical syntax per Unicode Technical Standard #35 LDML § 3.2.1 Canonical Unicode Locale Identifiers.
     // 2. Let localeId be the string localeId after performing the algorithm to transform it to canonical form.
-    auto locale_id = TRY_OR_THROW_OOM(vm, ::Locale::canonicalize_unicode_locale_id(locale));
+    auto locale_id = ::Locale::canonicalize_unicode_locale_id(locale);
     VERIFY(locale_id.has_value());
 
     // 4. Return localeId.
@@ -302,12 +302,12 @@ static ThrowCompletionOr<MatcherResult> lookup_matcher(VM& vm, Vector<String> co
 
     // 2. For each element locale of requestedLocales, do
     for (auto const& locale : requested_locales) {
-        auto locale_id = TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(locale));
+        auto locale_id = ::Locale::parse_unicode_locale_id(locale);
         VERIFY(locale_id.has_value());
 
         // a. Let noExtensionsLocale be the String value that is locale with any Unicode locale extension sequences removed.
         auto extensions = locale_id->remove_extension_type<::Locale::LocaleExtension>();
-        auto no_extensions_locale = TRY_OR_THROW_OOM(vm, locale_id->to_string());
+        auto no_extensions_locale = locale_id->to_string();
 
         // b. Let availableLocale be ! BestAvailableLocale(availableLocales, noExtensionsLocale).
         auto available_locale = best_available_locale(no_extensions_locale);
@@ -433,7 +433,7 @@ ThrowCompletionOr<LocaleResult> resolve_locale(VM& vm, Vector<String> const& req
         // NOTE: ECMA-402 assumes keyLocaleData is sorted by locale preference. Our list is sorted
         //       alphabetically, so we get the locale's preferred value from LibUnicode.
         Optional<String> value;
-        if (auto preference = TRY_OR_THROW_OOM(vm, ::Locale::get_preferred_keyword_value_for_locale(found_locale, key)); preference.has_value())
+        if (auto preference = ::Locale::get_preferred_keyword_value_for_locale(found_locale, key); preference.has_value())
             value = TRY_OR_THROW_OOM(vm, String::from_utf8(*preference));
 
         // g. Let supportedExtensionAddition be "".
@@ -481,7 +481,7 @@ ThrowCompletionOr<LocaleResult> resolve_locale(VM& vm, Vector<String> const& req
         if (options_value.has_value()) {
             // 1. Let optionsValue be the string optionsValue after performing the algorithm steps to transform Unicode extension values to canonical syntax per Unicode Technical Standard #35 LDML § 3.2.1 Canonical Unicode Locale Identifiers, treating key as ukey and optionsValue as uvalue productions.
             // 2. Let optionsValue be the string optionsValue after performing the algorithm steps to replace Unicode extension values with their canonical form per Unicode Technical Standard #35 LDML § 3.2.1 Canonical Unicode Locale Identifiers, treating key as ukey and optionsValue as uvalue productions.
-            TRY_OR_THROW_OOM(vm, ::Locale::canonicalize_unicode_extension_values(key, *options_value, true));
+            ::Locale::canonicalize_unicode_extension_values(key, *options_value, true);
 
             // 3. If optionsValue is the empty String, then
             if (options_value->is_empty()) {
@@ -509,7 +509,7 @@ ThrowCompletionOr<LocaleResult> resolve_locale(VM& vm, Vector<String> const& req
 
     // 10. If supportedExtension is not "-u", then
     if (!supported_extension.keywords.is_empty()) {
-        auto locale_id = TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(found_locale));
+        auto locale_id = ::Locale::parse_unicode_locale_id(found_locale);
         VERIFY(locale_id.has_value());
 
         // a. Set foundLocale to InsertUnicodeExtensionAndCanonicalize(foundLocale, supportedExtension).
@@ -531,12 +531,12 @@ static ThrowCompletionOr<Vector<String>> lookup_supported_locales(VM& vm, Vector
 
     // 2. For each element locale of requestedLocales, do
     for (auto const& locale : requested_locales) {
-        auto locale_id = TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(locale));
+        auto locale_id = ::Locale::parse_unicode_locale_id(locale);
         VERIFY(locale_id.has_value());
 
         // a. Let noExtensionsLocale be the String value that is locale with any Unicode locale extension sequences removed.
         locale_id->remove_extension_type<::Locale::LocaleExtension>();
-        auto no_extensions_locale = TRY_OR_THROW_OOM(vm, locale_id->to_string());
+        auto no_extensions_locale = locale_id->to_string();
 
         // b. Let availableLocale be ! BestAvailableLocale(availableLocales, noExtensionsLocale).
         auto available_locale = best_available_locale(no_extensions_locale);
