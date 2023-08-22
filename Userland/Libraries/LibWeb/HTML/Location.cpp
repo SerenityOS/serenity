@@ -131,7 +131,7 @@ WebIDL::ExceptionOr<void> Location::set_href(String const& new_href)
         return vm.throw_completion<JS::URIError>(TRY_OR_THROW_OOM(vm, String::formatted("Invalid URL '{}'", new_href)));
 
     // 3. Location-object navigate given the resulting URL record.
-    window.did_set_location_href({}, href_url);
+    TRY(navigate(href_url));
 
     return {};
 }
@@ -350,8 +350,7 @@ WebIDL::ExceptionOr<void> Location::set_hash(String const& value)
         return {};
 
     // 8. Location-object navigate this to copyURL.
-    auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
-    window.did_set_location_href({}, copy_url);
+    TRY(navigate(copy_url));
 
     return {};
 }
@@ -365,7 +364,7 @@ void Location::reload() const
     // 2. If document is null, then return.
     if (!document)
         return;
-    
+
     // FIXME: 3. If document's origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 
     // 4. Reload document's node navigable.
@@ -381,7 +380,7 @@ void Location::replace(String const& url) const
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-location-assign
-WebIDL::ExceptionOr<void> Location::assign(String const& url) const
+WebIDL::ExceptionOr<void> Location::assign(String const& url)
 {
     // 1. If this's relevant Document is null, then return.
     auto const relevant_document = this->relevant_document();
@@ -398,8 +397,8 @@ WebIDL::ExceptionOr<void> Location::assign(String const& url) const
         return WebIDL::SyntaxError::create(realm(), MUST(String::formatted("Invalid URL '{}'", url)));
 
     // 4. Location-object navigate this to the resulting URL record.
-    auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
-    window.did_set_location_href({}, assign_url);
+    TRY(navigate(assign_url));
+
     return {};
 }
 
