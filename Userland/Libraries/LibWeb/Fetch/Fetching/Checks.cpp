@@ -56,7 +56,7 @@ ErrorOr<bool> tao_check(Infrastructure::Request const& request, Infrastructure::
     auto values = TRY(response.header_list()->get_decode_and_split("Timing-Allow-Origin"sv.bytes()));
 
     // 3. If values contains "*", then return success.
-    if (values.has_value() && values->contains_slow("*"_string))
+    if (values.has_value() && values->contains_slow("*"sv))
         return true;
 
     // 4. If values contains the result of serializing a request origin with request, then return success.
