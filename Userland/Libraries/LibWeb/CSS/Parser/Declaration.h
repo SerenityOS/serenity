@@ -23,7 +23,7 @@ public:
     Vector<ComponentValue> const& values() const { return m_values; }
     Important importance() const { return m_important; }
 
-    ErrorOr<String> to_string() const;
+    String to_string() const;
 
 private:
     FlyString m_name;

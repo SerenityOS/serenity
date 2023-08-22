@@ -10,7 +10,7 @@
 
 namespace Web::CSS::Parser {
 
-ErrorOr<String> Token::to_string() const
+String Token::to_string() const
 {
     StringBuilder builder;
 
@@ -20,15 +20,15 @@ ErrorOr<String> Token::to_string() const
     case Type::Ident:
         return serialize_an_identifier(ident());
     case Type::Function:
-        return String::formatted("{}(", serialize_an_identifier(function()));
+        return MUST(String::formatted("{}(", serialize_an_identifier(function())));
     case Type::AtKeyword:
-        return String::formatted("@{}", serialize_an_identifier(at_keyword()));
+        return MUST(String::formatted("@{}", serialize_an_identifier(at_keyword())));
     case Type::Hash: {
         switch (m_hash_type) {
         case HashType::Id:
-            return String::formatted("#{}", serialize_an_identifier(hash_value()));
+            return MUST(String::formatted("#{}", serialize_an_identifier(hash_value())));
         case HashType::Unrestricted:
-            return String::formatted("#{}", hash_value());
+            return MUST(String::formatted("#{}", hash_value()));
         }
         VERIFY_NOT_REACHED();
     }
@@ -43,11 +43,11 @@ ErrorOr<String> Token::to_string() const
     case Type::Delim:
         return String { m_value };
     case Type::Number:
-        return String::number(m_number_value.value());
+        return MUST(String::number(m_number_value.value()));
     case Type::Percentage:
-        return String::formatted("{}%", m_number_value.value());
+        return MUST(String::formatted("{}%", m_number_value.value()));
     case Type::Dimension:
-        return String::formatted("{}{}", m_number_value.value(), dimension_unit());
+        return MUST(String::formatted("{}{}", m_number_value.value(), dimension_unit()));
     case Type::Whitespace:
         return " "_string;
     case Type::CDO:
@@ -78,7 +78,7 @@ ErrorOr<String> Token::to_string() const
     }
 }
 
-ErrorOr<String> Token::to_debug_string() const
+String Token::to_debug_string() const
 {
     switch (m_type) {
     case Type::Invalid:
@@ -87,29 +87,29 @@ ErrorOr<String> Token::to_debug_string() const
     case Type::EndOfFile:
         return "__EOF__"_string;
     case Type::Ident:
-        return String::formatted("Ident: {}", ident());
+        return MUST(String::formatted("Ident: {}", ident()));
     case Type::Function:
-        return String::formatted("Function: {}", function());
+        return MUST(String::formatted("Function: {}", function()));
     case Type::AtKeyword:
-        return String::formatted("AtKeyword: {}", at_keyword());
+        return MUST(String::formatted("AtKeyword: {}", at_keyword()));
     case Type::Hash:
-        return String::formatted("Hash: {} (hash_type: {})", hash_value(), m_hash_type == HashType::Unrestricted ? "Unrestricted" : "Id");
+        return MUST(String::formatted("Hash: {} (hash_type: {})", hash_value(), m_hash_type == HashType::Unrestricted ? "Unrestricted" : "Id"));
     case Type::String:
-        return String::formatted("String: {}", string());
+        return MUST(String::formatted("String: {}", string()));
     case Type::BadString:
         return "BadString"_string;
     case Type::Url:
-        return String::formatted("Url: {}", url());
+        return MUST(String::formatted("Url: {}", url()));
     case Type::BadUrl:
         return "BadUrl"_string;
     case Type::Delim:
-        return String::formatted("Delim: {}", m_value);
+        return MUST(String::formatted("Delim: {}", m_value));
     case Type::Number:
-        return String::formatted("Number: {}{} (number_type: {})", m_number_value.value() > 0 && m_number_value.is_integer_with_explicit_sign() ? "+" : "", m_number_value.value(), m_number_value.is_integer() ? "Integer" : "Number");
+        return MUST(String::formatted("Number: {}{} (number_type: {})", m_number_value.value() > 0 && m_number_value.is_integer_with_explicit_sign() ? "+" : "", m_number_value.value(), m_number_value.is_integer() ? "Integer" : "Number"));
     case Type::Percentage:
-        return String::formatted("Percentage: {}% (number_type: {})", percentage(), m_number_value.is_integer() ? "Integer" : "Number");
+        return MUST(String::formatted("Percentage: {}% (number_type: {})", percentage(), m_number_value.is_integer() ? "Integer" : "Number"));
     case Type::Dimension:
-        return String::formatted("Dimension: {}{} (number_type: {})", dimension_value(), dimension_unit(), m_number_value.is_integer() ? "Integer" : "Number");
+        return MUST(String::formatted("Dimension: {}{} (number_type: {})", dimension_value(), dimension_unit(), m_number_value.is_integer() ? "Integer" : "Number"));
     case Type::Whitespace:
         return "Whitespace"_string;
     case Type::CDO:

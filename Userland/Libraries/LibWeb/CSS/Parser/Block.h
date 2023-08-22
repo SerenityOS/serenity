@@ -32,7 +32,7 @@ public:
 
     Vector<ComponentValue> const& values() const { return m_values; }
 
-    ErrorOr<String> to_string() const;
+    String to_string() const;
 
 private:
     Block(Token, Vector<ComponentValue>&&);

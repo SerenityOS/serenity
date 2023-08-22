@@ -28,7 +28,7 @@ public:
     StringView name() const { return m_name; }
     Vector<ComponentValue> const& values() const { return m_values; }
 
-    ErrorOr<String> to_string() const;
+    String to_string() const;
 
 private:
     Function(FlyString name, Vector<ComponentValue>&& values);

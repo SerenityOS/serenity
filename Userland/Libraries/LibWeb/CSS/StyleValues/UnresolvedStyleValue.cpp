@@ -16,7 +16,7 @@ ErrorOr<String> UnresolvedStyleValue::to_string() const
 {
     StringBuilder builder;
     for (auto& value : m_values)
-        TRY(builder.try_append(TRY(value.to_string())));
+        TRY(builder.try_append(value.to_string()));
     return builder.to_string();
 }
 

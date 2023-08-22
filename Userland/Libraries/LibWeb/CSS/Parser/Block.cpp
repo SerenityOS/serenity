@@ -17,15 +17,15 @@ Block::Block(Token token, Vector<ComponentValue>&& values)
 
 Block::~Block() = default;
 
-ErrorOr<String> Block::to_string() const
+String Block::to_string() const
 {
     StringBuilder builder;
 
-    TRY(builder.try_append(m_token.bracket_string()));
-    TRY(builder.try_join(' ', m_values));
-    TRY(builder.try_append(m_token.bracket_mirror_string()));
+    builder.append(m_token.bracket_string());
+    builder.join(' ', m_values);
+    builder.append(m_token.bracket_mirror_string());
 
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 }
