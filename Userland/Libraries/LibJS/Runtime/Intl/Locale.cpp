@@ -208,8 +208,8 @@ static u8 weekday_to_integer(Optional<::Locale::Weekday> weekday, ::Locale::Week
 
 static ThrowCompletionOr<Vector<u8>> weekend_of_locale(VM& vm, StringView locale)
 {
-    auto weekend_start = weekday_to_integer(TRY_OR_THROW_OOM(vm, ::Locale::get_locale_weekend_start(locale)), ::Locale::Weekday::Saturday);
-    auto weekend_end = weekday_to_integer(TRY_OR_THROW_OOM(vm, ::Locale::get_locale_weekend_end(locale)), ::Locale::Weekday::Sunday);
+    auto weekend_start = weekday_to_integer(::Locale::get_locale_weekend_start(locale), ::Locale::Weekday::Saturday);
+    auto weekend_end = weekday_to_integer(::Locale::get_locale_weekend_end(locale), ::Locale::Weekday::Sunday);
 
     // There currently aren't any regions in the CLDR which wrap around from Sunday (7) to Monday (1).
     // If this changes, this logic will need to be updated to handle that.
@@ -235,8 +235,8 @@ ThrowCompletionOr<WeekInfo> week_info_of_locale(VM& vm, Locale const& locale_obj
 
     // 3. Return a record whose fields are defined by Table 1, with values based on locale.
     WeekInfo week_info {};
-    week_info.minimal_days = TRY_OR_THROW_OOM(vm, ::Locale::get_locale_minimum_days(locale)).value_or(1);
-    week_info.first_day = weekday_to_integer(TRY_OR_THROW_OOM(vm, ::Locale::get_locale_first_day(locale)), ::Locale::Weekday::Monday);
+    week_info.minimal_days = ::Locale::get_locale_minimum_days(locale).value_or(1);
+    week_info.first_day = weekday_to_integer(::Locale::get_locale_first_day(locale), ::Locale::Weekday::Monday);
     week_info.weekend = MUST_OR_THROW_OOM(weekend_of_locale(vm, locale));
 
     return week_info;

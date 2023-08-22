@@ -1793,13 +1793,13 @@ static void convert_calendar_fields(SourceType const& source, TargetType& target
 }
 
 struct CalendarPatternImpl {
-    ErrorOr<CalendarPattern> to_unicode_calendar_pattern() const {
+    CalendarPattern to_unicode_calendar_pattern() const {
         CalendarPattern calendar_pattern {};
 
-        calendar_pattern.skeleton = TRY(String::from_utf8(decode_string(skeleton)));
-        calendar_pattern.pattern = TRY(String::from_utf8(decode_string(pattern)));
+        calendar_pattern.skeleton = MUST(String::from_utf8(decode_string(skeleton)));
+        calendar_pattern.pattern = MUST(String::from_utf8(decode_string(pattern)));
         if (pattern12 != 0)
-            calendar_pattern.pattern12 = TRY(String::from_utf8(decode_string(pattern12)));
+            calendar_pattern.pattern12 = MUST(String::from_utf8(decode_string(pattern12)));
 
         convert_calendar_fields(*this, calendar_pattern);
         return calendar_pattern;
@@ -1823,14 +1823,14 @@ struct CalendarPatternImpl {
 };
 
 struct CalendarRangePatternImpl {
-    ErrorOr<CalendarRangePattern> to_unicode_calendar_range_pattern() const {
+    CalendarRangePattern to_unicode_calendar_range_pattern() const {
         CalendarRangePattern calendar_range_pattern {};
 
         if (field != -1)
             calendar_range_pattern.field = static_cast<CalendarRangePattern::Field>(field);
-        calendar_range_pattern.start_range = TRY(String::from_utf8(decode_string(start_range)));
+        calendar_range_pattern.start_range = MUST(String::from_utf8(decode_string(start_range)));
         calendar_range_pattern.separator = decode_string(separator);
-        calendar_range_pattern.end_range = TRY(String::from_utf8(decode_string(end_range)));
+        calendar_range_pattern.end_range = MUST(String::from_utf8(decode_string(end_range)));
 
         convert_calendar_fields(*this, calendar_range_pattern);
         return calendar_range_pattern;
@@ -1863,13 +1863,13 @@ struct CalendarRangePatternImpl {
 
     generator.append(R"~~~(
 struct CalendarFormatImpl {
-    ErrorOr<CalendarFormat> to_unicode_calendar_format() const {
+    CalendarFormat to_unicode_calendar_format() const {
         CalendarFormat calendar_format {};
 
-        calendar_format.full_format = TRY(s_calendar_patterns[full_format].to_unicode_calendar_pattern());
-        calendar_format.long_format = TRY(s_calendar_patterns[long_format].to_unicode_calendar_pattern());
-        calendar_format.medium_format = TRY(s_calendar_patterns[medium_format].to_unicode_calendar_pattern());
-        calendar_format.short_format = TRY(s_calendar_patterns[short_format].to_unicode_calendar_pattern());
+        calendar_format.full_format = s_calendar_patterns[full_format].to_unicode_calendar_pattern();
+        calendar_format.long_format = s_calendar_patterns[long_format].to_unicode_calendar_pattern();
+        calendar_format.medium_format = s_calendar_patterns[medium_format].to_unicode_calendar_pattern();
+        calendar_format.short_format = s_calendar_patterns[short_format].to_unicode_calendar_pattern();
 
         return calendar_format;
     }
@@ -2045,11 +2045,11 @@ static Optional<Calendar> keyword_to_calendar(KeywordCalendar keyword)
     }
 }
 
-ErrorOr<Vector<HourCycle>> get_regional_hour_cycles(StringView region)
+Vector<HourCycle> get_regional_hour_cycles(StringView region)
 {
     auto region_value = hour_cycle_region_from_string(region);
     if (!region_value.has_value())
-        return Vector<HourCycle> {};
+        return {};
 
     auto region_index = to_underlying(*region_value);
 
@@ -2057,7 +2057,7 @@ ErrorOr<Vector<HourCycle>> get_regional_hour_cycles(StringView region)
     auto const& regional_hour_cycles = s_hour_cycle_lists.at(regional_hour_cycles_index);
 
     Vector<HourCycle> hour_cycles;
-    TRY(hour_cycles.try_ensure_capacity(regional_hour_cycles.size()));
+    hour_cycles.ensure_capacity(regional_hour_cycles.size());
 
     for (auto hour_cycle : regional_hour_cycles)
         hour_cycles.unchecked_append(static_cast<HourCycle>(hour_cycle));
@@ -2125,59 +2125,59 @@ static CalendarData const* find_calendar_data(StringView locale, StringView cale
     return lookup_calendar(*default_calendar);
 }
 
-ErrorOr<Optional<CalendarFormat>> get_calendar_date_format(StringView locale, StringView calendar)
+Optional<CalendarFormat> get_calendar_date_format(StringView locale, StringView calendar)
 {
     if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
         auto const& formats = s_calendar_formats.at(data->date_formats);
-        return TRY(formats.to_unicode_calendar_format());
+        return formats.to_unicode_calendar_format();
     }
-    return OptionalNone {};
+    return {};
 }
 
-ErrorOr<Optional<CalendarFormat>> get_calendar_time_format(StringView locale, StringView calendar)
+Optional<CalendarFormat> get_calendar_time_format(StringView locale, StringView calendar)
 {
     if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
         auto const& formats = s_calendar_formats.at(data->time_formats);
-        return TRY(formats.to_unicode_calendar_format());
+        return formats.to_unicode_calendar_format();
     }
-    return OptionalNone {};
+    return {};
 }
 
-ErrorOr<Optional<CalendarFormat>> get_calendar_date_time_format(StringView locale, StringView calendar)
+Optional<CalendarFormat> get_calendar_date_time_format(StringView locale, StringView calendar)
 {
     if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
         auto const& formats = s_calendar_formats.at(data->date_time_formats);
-        return TRY(formats.to_unicode_calendar_format());
+        return formats.to_unicode_calendar_format();
     }
-    return OptionalNone {};
+    return {};
 }
 
-ErrorOr<Vector<CalendarPattern>> get_calendar_available_formats(StringView locale, StringView calendar)
+Vector<CalendarPattern> get_calendar_available_formats(StringView locale, StringView calendar)
 {
     Vector<CalendarPattern> result {};
 
     if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
         auto const& available_formats = s_calendar_pattern_lists.at(data->available_formats);
-        TRY(result.try_ensure_capacity(available_formats.size()));
+        result.ensure_capacity(available_formats.size());
 
         for (auto const& format : available_formats)
-            result.unchecked_append(TRY(s_calendar_patterns[format].to_unicode_calendar_pattern()));
+            result.unchecked_append(s_calendar_patterns[format].to_unicode_calendar_pattern());
     }
 
     return result;
 }
 
-ErrorOr<Optional<CalendarRangePattern>> get_calendar_default_range_format(StringView locale, StringView calendar)
+Optional<CalendarRangePattern> get_calendar_default_range_format(StringView locale, StringView calendar)
 {
     if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
         auto const& pattern = s_calendar_range_patterns[data->default_range_format];
-        return TRY(pattern.to_unicode_calendar_range_pattern());
+        return pattern.to_unicode_calendar_range_pattern();
     }
 
-    return OptionalNone {};
+    return {};
 }
 
-ErrorOr<Vector<CalendarRangePattern>> get_calendar_range_formats(StringView locale, StringView calendar, StringView skeleton)
+Vector<CalendarRangePattern> get_calendar_range_formats(StringView locale, StringView calendar, StringView skeleton)
 {
     Vector<CalendarRangePattern> result {};
 
@@ -2188,14 +2188,14 @@ ErrorOr<Vector<CalendarRangePattern>> get_calendar_range_formats(StringView loca
             auto const& pattern = s_calendar_range_patterns[format];
 
             if (skeleton == decode_string(pattern.skeleton))
-                TRY(result.try_append(TRY(pattern.to_unicode_calendar_range_pattern())));
+                result.append(pattern.to_unicode_calendar_range_pattern());
         }
     }
 
     return result;
 }
 
-ErrorOr<Vector<CalendarRangePattern>> get_calendar_range12_formats(StringView locale, StringView calendar, StringView skeleton)
+Vector<CalendarRangePattern> get_calendar_range12_formats(StringView locale, StringView calendar, StringView skeleton)
 {
     Vector<CalendarRangePattern> result {};
 
@@ -2206,14 +2206,14 @@ ErrorOr<Vector<CalendarRangePattern>> get_calendar_range12_formats(StringView lo
             auto const& pattern = s_calendar_range_patterns[format];
 
             if (skeleton == decode_string(pattern.skeleton))
-                TRY(result.try_append(TRY(pattern.to_unicode_calendar_range_pattern())));
+                result.append(pattern.to_unicode_calendar_range_pattern());
         }
     }
 
     return result;
 }
 
-static ErrorOr<ReadonlySpan<@string_index_type@>> find_calendar_symbols(StringView locale, StringView calendar, CalendarSymbol symbol, CalendarPatternStyle style)
+static ReadonlySpan<@string_index_type@> find_calendar_symbols(StringView locale, StringView calendar, CalendarSymbol symbol, CalendarPatternStyle style)
 {
     if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
         auto const& symbols_list = s_calendar_symbol_lists[data->symbols];
@@ -2241,62 +2241,62 @@ static ErrorOr<ReadonlySpan<@string_index_type@>> find_calendar_symbols(StringVi
         return s_symbol_lists.at(symbol_list_index);
     }
 
-    return ReadonlySpan<@string_index_type@> {};
+    return {};
 }
 
-ErrorOr<Optional<StringView>> get_calendar_era_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Era value)
+Optional<StringView> get_calendar_era_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Era value)
 {
-    auto symbols = TRY(find_calendar_symbols(locale, calendar, CalendarSymbol::Era, style));
+    auto symbols = find_calendar_symbols(locale, calendar, CalendarSymbol::Era, style);
 
     if (auto value_index = to_underlying(value); value_index < symbols.size()) {
         if (auto symbol_index = symbols.at(value_index); symbol_index != 0)
-            return Optional<StringView> { decode_string(symbol_index) };
+            return decode_string(symbol_index);
     }
 
-    return OptionalNone {};
+    return {};
 }
 
-ErrorOr<Optional<StringView>> get_calendar_month_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Month value)
+Optional<StringView> get_calendar_month_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Month value)
 {
-    auto symbols = TRY(find_calendar_symbols(locale, calendar, CalendarSymbol::Month, style));
+    auto symbols = find_calendar_symbols(locale, calendar, CalendarSymbol::Month, style);
 
     if (auto value_index = to_underlying(value); value_index < symbols.size()) {
         if (auto symbol_index = symbols.at(value_index); symbol_index != 0)
-            return Optional<StringView> { decode_string(symbol_index) };
+            return decode_string(symbol_index);
     }
 
-    return OptionalNone {};
+    return {};
 }
 
-ErrorOr<Optional<StringView>> get_calendar_weekday_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Weekday value)
+Optional<StringView> get_calendar_weekday_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Weekday value)
 {
-    auto symbols = TRY(find_calendar_symbols(locale, calendar, CalendarSymbol::Weekday, style));
+    auto symbols = find_calendar_symbols(locale, calendar, CalendarSymbol::Weekday, style);
 
     if (auto value_index = to_underlying(value); value_index < symbols.size()) {
         if (auto symbol_index = symbols.at(value_index); symbol_index != 0)
-            return Optional<StringView> { decode_string(symbol_index) };
+            return decode_string(symbol_index);
     }
 
-    return OptionalNone {};
+    return {};
 }
 
-ErrorOr<Optional<StringView>> get_calendar_day_period_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, DayPeriod value)
+Optional<StringView> get_calendar_day_period_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, DayPeriod value)
 {
-    auto symbols = TRY(find_calendar_symbols(locale, calendar, CalendarSymbol::DayPeriod, style));
+    auto symbols = find_calendar_symbols(locale, calendar, CalendarSymbol::DayPeriod, style);
 
     if (auto value_index = to_underlying(value); value_index < symbols.size()) {
         if (auto symbol_index = symbols.at(value_index); symbol_index != 0)
-            return Optional<StringView> { decode_string(symbol_index) };
+            return decode_string(symbol_index);
     }
 
-    return OptionalNone {};
+    return {};
 }
 
-ErrorOr<Optional<StringView>> get_calendar_day_period_symbol_for_hour(StringView locale, StringView calendar, CalendarPatternStyle style, u8 hour)
+Optional<StringView> get_calendar_day_period_symbol_for_hour(StringView locale, StringView calendar, CalendarPatternStyle style, u8 hour)
 {
     auto locale_value = locale_from_string(locale);
     if (!locale_value.has_value())
-        return OptionalNone {};
+        return {};
 
     auto locale_index = to_underlying(*locale_value) - 1; // Subtract 1 because 0 == Locale::None.
 
