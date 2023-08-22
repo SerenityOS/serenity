@@ -19,6 +19,6 @@ configopts=(
     '--enable-speex=no'
     "--with-sdl-prefix=${SERENITY_INSTALL_ROOT}/usr/local"
 )
-makeopts=(
+makeopts+=(
     'LDFLAGS=-lm'
 )
