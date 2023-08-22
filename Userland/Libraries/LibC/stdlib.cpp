@@ -903,24 +903,26 @@ int wctomb(char* s, wchar_t wc)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcstombs.html
 size_t wcstombs(char* dest, wchar_t const* src, size_t max)
 {
-    char* original_dest = dest;
-    while ((size_t)(dest - original_dest) < max) {
-        StringView v { (char const*)src, sizeof(wchar_t) };
+    char buff[5];
+    size_t written = 0;
+    for (; *src; ++src) {
+        size_t rc = wcrtomb(buff, *src, nullptr);
+        if (rc == (size_t)-1)
+            return rc;
 
-        // FIXME: dependent on locale, for now utf-8 is supported.
-        Utf8View utf8 { v };
-        if (*utf8.begin() == '\0') {
-            *dest = '\0';
-            return (size_t)(dest - original_dest); // Exclude null character in returned size
-        }
+        if (dest && written + rc + 1 > max)
+            break;
 
-        for (auto byte : utf8) {
-            if (byte != '\0')
-                *dest++ = byte;
-        }
-        ++src;
+        if (dest)
+            memcpy(dest + written, buff, rc);
+
+        written += rc;
     }
-    return max;
+
+    if (dest && max != 0)
+        dest[written] = '\0';
+
+    return written;
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtol.html
