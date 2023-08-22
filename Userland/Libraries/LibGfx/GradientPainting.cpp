@@ -523,9 +523,9 @@ static auto create_radial_gradient_between_two_circles(Gfx::FloatPoint start_cen
         [=](float x, float y) {
             auto loc = [&] {
                 FloatPoint point { x, y };
-                auto dist = point.distance_from(start_point);
-                if (dist == 0)
-                    return 0.0f;
+                // Add a little to avoid division by zero at the focal point.
+                if (point == start_point)
+                    point += FloatPoint { 0.001f, 0.001f };
                 // The "vec" (unit) vector points from the focal point to the current point.
                 auto dist = point.distance_from(start_point);
                 auto vec = (point - start_point) / dist;
