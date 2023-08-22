@@ -542,7 +542,7 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     auto transformed_position = affine_transform_matrix().inverse().value_or({}).map(offset_position).to_type<CSSPixels>() + transform_origin;
 
     if (paintable_box().is_fixed_position()) {
-        auto scroll_offset = paintable_box().document().browsing_context()->viewport_scroll_offset();
+        auto scroll_offset = paintable_box().document().navigable()->viewport_scroll_offset();
         transformed_position.translate_by(-scroll_offset);
     }
 

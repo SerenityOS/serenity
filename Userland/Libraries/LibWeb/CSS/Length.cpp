@@ -137,7 +137,7 @@ Length::ResolutionContext Length::ResolutionContext::for_layout_node(Layout::Nod
     VERIFY(root_element);
     VERIFY(root_element->layout_node());
     return Length::ResolutionContext {
-        .viewport_rect = node.browsing_context().viewport_rect(),
+        .viewport_rect = node.navigable()->viewport_rect(),
         .font_metrics = { node.computed_values().font_size(), node.font().pixel_metrics(), node.line_height() },
         .root_font_metrics = { root_element->layout_node()->computed_values().font_size(), root_element->layout_node()->font().pixel_metrics(), root_element->layout_node()->line_height() },
     };
@@ -182,7 +182,7 @@ CSSPixels Length::to_px(Layout::Node const& layout_node) const
     }
 
     VERIFY(is_viewport_relative());
-    auto const& viewport_rect = layout_node.document().browsing_context()->viewport_rect();
+    auto const& viewport_rect = layout_node.document().viewport_rect();
     return viewport_relative_length_to_px(viewport_rect);
 }
 

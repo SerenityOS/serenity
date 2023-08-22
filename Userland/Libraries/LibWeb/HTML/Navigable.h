@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/HashTable.h>
 #include <AK/String.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibWeb/Bindings/NavigationPrototype.h>
@@ -19,6 +20,7 @@
 #include <LibWeb/HTML/SourceSnapshotParams.h>
 #include <LibWeb/HTML/StructuredSerialize.h>
 #include <LibWeb/HTML/TokenizedFeatures.h>
+#include <LibWeb/PixelUnits.h>
 #include <LibWeb/XHR/FormDataEntry.h>
 
 namespace Web::HTML {
@@ -134,6 +136,19 @@ public:
     [[nodiscard]] bool has_been_destroyed() const { return m_has_been_destroyed; }
     void set_has_been_destroyed() { m_has_been_destroyed = true; }
 
+    CSSPixelPoint to_top_level_position(CSSPixelPoint);
+    CSSPixelRect to_top_level_rect(CSSPixelRect const&);
+
+    CSSPixelSize size() const { return m_size; }
+    void set_size(CSSPixelSize);
+
+    CSSPixelPoint viewport_scroll_offset() const { return m_viewport_scroll_offset; }
+    CSSPixelRect viewport_rect() const { return { m_viewport_scroll_offset, m_size }; }
+    void set_viewport_rect(CSSPixelRect const&);
+
+    void set_needs_display();
+    void set_needs_display(CSSPixelRect const&);
+
 protected:
     Navigable();
 
@@ -145,6 +160,8 @@ protected:
 private:
     bool allowed_by_sandboxing_to_navigate(Navigable const& target, SourceSnapshotParams const&);
     TargetSnapshotParams snapshot_target_snapshot_params();
+
+    void scroll_offset_did_change();
 
     // https://html.spec.whatwg.org/multipage/document-sequences.html#nav-id
     String m_id;
@@ -168,6 +185,9 @@ private:
     JS::GCPtr<NavigableContainer> m_container;
 
     bool m_has_been_destroyed { false };
+
+    CSSPixelSize m_size;
+    CSSPixelPoint m_viewport_scroll_offset;
 };
 
 HashTable<Navigable*>& all_navigables();

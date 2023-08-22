@@ -41,8 +41,8 @@ void ImageStyleValue::load_any_resources(DOM::Document& document)
                 return;
 
             // FIXME: Do less than a full repaint if possible?
-            if (auto* browsing_context = m_document->browsing_context())
-                browsing_context->set_needs_display();
+            if (auto navigable = m_document->navigable())
+                navigable->set_needs_display();
 
             auto image_data = m_image_request->image_data();
             if (image_data->is_animated() && image_data->frame_count() > 1) {

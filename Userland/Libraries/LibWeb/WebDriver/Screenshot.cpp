@@ -13,6 +13,7 @@
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
 #include <LibWeb/HTML/TagNames.h>
+#include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Page/Page.h>
@@ -54,7 +55,7 @@ Response capture_element_screenshot(Painter const& painter, Page& page, DOM::Ele
     Optional<Response> encoded_string_or_error;
 
     element.document().window().animation_frame_callback_driver().add([&](auto) {
-        auto viewport_rect = page.top_level_browsing_context().viewport_rect();
+        auto viewport_rect = page.top_level_traversable()->viewport_rect();
         rect.intersect(page.enclosing_device_rect(viewport_rect).to_type<int>());
 
         auto canvas_element = DOM::create_element(element.document(), HTML::TagNames::canvas, Namespace::HTML).release_value_but_fixme_should_propagate_errors();

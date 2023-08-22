@@ -46,8 +46,8 @@ double VisualViewport::offset_left() const
         return 0;
 
     // 2. Otherwise, return the offset of the left edge of the visual viewport from the left edge of the layout viewport.
-    VERIFY(m_document->browsing_context());
-    return m_document->browsing_context()->viewport_rect().left().to_double();
+    VERIFY(m_document->navigable());
+    return m_document->viewport_rect().left().to_double();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-visualviewport-offsettop
@@ -58,8 +58,8 @@ double VisualViewport::offset_top() const
         return 0;
 
     // 2. Otherwise, return the offset of the top edge of the visual viewport from the top edge of the layout viewport.
-    VERIFY(m_document->browsing_context());
-    return m_document->browsing_context()->viewport_rect().top().to_double();
+    VERIFY(m_document->navigable());
+    return m_document->viewport_rect().top().to_double();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-visualviewport-pageleft
@@ -95,8 +95,8 @@ double VisualViewport::width() const
 
     // 2. Otherwise, return the width of the visual viewport
     //    FIXME: excluding the width of any rendered vertical classic scrollbar that is fixed to the visual viewport.
-    VERIFY(m_document->browsing_context());
-    return m_document->browsing_context()->viewport_rect().width().to_double();
+    VERIFY(m_document->navigable());
+    return m_document->viewport_rect().width().to_double();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-visualviewport-height
@@ -108,8 +108,8 @@ double VisualViewport::height() const
 
     // 2. Otherwise, return the height of the visual viewport
     //    FIXME: excluding the height of any rendered vertical classic scrollbar that is fixed to the visual viewport.
-    VERIFY(m_document->browsing_context());
-    return m_document->browsing_context()->viewport_rect().height().to_double();
+    VERIFY(m_document->navigable());
+    return m_document->viewport_rect().height().to_double();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-visualviewport-scale

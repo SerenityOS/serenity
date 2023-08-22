@@ -173,12 +173,12 @@ CSSPixelRect IntersectionObserver::root_intersection_rectangle() const
     if (intersection_root.has<JS::Handle<DOM::Document>>()) {
         auto document = intersection_root.get<JS::Handle<DOM::Document>>();
 
-        // Since the spec says that this is only reach if the document is fully active, that means it must have a browsing context.
-        VERIFY(document->browsing_context());
+        // Since the spec says that this is only reach if the document is fully active, that means it must have a navigable.
+        VERIFY(document->navigable());
 
         // NOTE: This rect is the *size* of the viewport. The viewport *offset* is not relevant,
         //       as intersections are computed using viewport-relative element rects.
-        rect = CSSPixelRect { CSSPixelPoint { 0, 0 }, document->browsing_context()->viewport_rect().size() };
+        rect = CSSPixelRect { CSSPixelPoint { 0, 0 }, document->viewport_rect().size() };
     } else {
         VERIFY(intersection_root.has<JS::Handle<DOM::Element>>());
         auto element = intersection_root.get<JS::Handle<DOM::Element>>();

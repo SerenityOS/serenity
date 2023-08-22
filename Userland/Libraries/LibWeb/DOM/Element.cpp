@@ -833,8 +833,8 @@ JS::NonnullGCPtr<Geometry::DOMRect> Element::get_bounding_client_rect() const
     if (!paintable_box)
         return Geometry::DOMRect::construct_impl(realm(), 0, 0, 0, 0).release_value_but_fixme_should_propagate_errors();
 
-    VERIFY(document().browsing_context());
-    auto viewport_offset = document().browsing_context()->viewport_scroll_offset();
+    VERIFY(document().navigable());
+    auto viewport_offset = document().navigable()->viewport_scroll_offset();
 
     return Geometry::DOMRect::create(realm(), paintable_box->absolute_rect().translated(-viewport_offset.x(), -viewport_offset.y()).to_type<float>());
 }
@@ -907,7 +907,7 @@ int Element::client_width() const
     //    return the viewport width excluding the size of a rendered scroll bar (if any).
     if ((is<HTML::HTMLHtmlElement>(*this) && !document().in_quirks_mode())
         || (is<HTML::HTMLBodyElement>(*this) && document().in_quirks_mode())) {
-        return document().browsing_context()->viewport_rect().width().to_int();
+        return document().viewport_rect().width().to_int();
     }
 
     // NOTE: Ensure that layout is up-to-date before looking at metrics.
@@ -932,7 +932,7 @@ int Element::client_height() const
     //    return the viewport height excluding the size of a rendered scroll bar (if any).
     if ((is<HTML::HTMLHtmlElement>(*this) && !document().in_quirks_mode())
         || (is<HTML::HTMLBodyElement>(*this) && document().in_quirks_mode())) {
-        return document().browsing_context()->viewport_rect().height().to_int();
+        return document().viewport_rect().height().to_int();
     }
 
     // NOTE: Ensure that layout is up-to-date before looking at metrics.
@@ -1262,8 +1262,8 @@ int Element::scroll_width() const
 
     // 3. Let viewport width be the width of the viewport excluding the width of the scroll bar, if any,
     //    or zero if there is no viewport.
-    auto viewport_width = document.browsing_context()->viewport_rect().width().to_int();
-    auto viewport_scroll_width = document.browsing_context()->size().width().to_int();
+    auto viewport_width = document.viewport_rect().width().to_int();
+    auto viewport_scroll_width = document.navigable()->size().width().to_int();
 
     // 4. If the element is the root element and document is not in quirks mode
     //    return max(viewport scrolling area width, viewport width).
@@ -1295,8 +1295,8 @@ int Element::scroll_height() const
 
     // 3. Let viewport height be the height of the viewport excluding the height of the scroll bar, if any,
     //    or zero if there is no viewport.
-    auto viewport_height = document.browsing_context()->viewport_rect().height().to_int();
-    auto viewport_scroll_height = document.browsing_context()->size().height().to_int();
+    auto viewport_height = document.viewport_rect().height().to_int();
+    auto viewport_scroll_height = document.navigable()->size().height().to_int();
 
     // 4. If the element is the root element and document is not in quirks mode
     //    return max(viewport scrolling area height, viewport height).

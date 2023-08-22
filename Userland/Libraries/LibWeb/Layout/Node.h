@@ -77,6 +77,8 @@ public:
     HTML::BrowsingContext const& browsing_context() const;
     HTML::BrowsingContext& browsing_context();
 
+    JS::GCPtr<HTML::Navigable> navigable() const;
+
     Viewport const& root() const;
     Viewport& root();
 

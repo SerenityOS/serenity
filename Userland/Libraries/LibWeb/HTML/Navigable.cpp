@@ -25,6 +25,7 @@
 #include <LibWeb/HTML/StructuredSerialize.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/Infra/Strings.h>
+#include <LibWeb/Layout/Node.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/XHR/FormData.h>
 
@@ -1546,6 +1547,113 @@ void perform_url_and_history_update_steps(DOM::Document& document, AK::URL new_u
         // 1. Finalize a same-document navigation given traversable, navigable, newEntry, and entryToReplace.
         finalize_a_same_document_navigation(*traversable, *navigable, new_entry, entry_to_replace);
     });
+}
+
+void Navigable::scroll_offset_did_change()
+{
+    // https://w3c.github.io/csswg-drafts/cssom-view-1/#scrolling-events
+    // Whenever a viewport gets scrolled (whether in response to user interaction or by an API), the user agent must run these steps:
+
+    // 1. Let doc be the viewport’s associated Document.
+    auto doc = active_document();
+    VERIFY(doc);
+
+    // 2. If doc is already in doc’s pending scroll event targets, abort these steps.
+    for (auto& target : doc->pending_scroll_event_targets()) {
+        if (target.ptr() == doc)
+            return;
+    }
+
+    // 3. Append doc to doc’s pending scroll event targets.
+    doc->pending_scroll_event_targets().append(*doc);
+}
+
+CSSPixelRect Navigable::to_top_level_rect(CSSPixelRect const& a_rect)
+{
+    auto rect = a_rect;
+    rect.set_location(to_top_level_position(a_rect.location()));
+    return rect;
+}
+
+CSSPixelPoint Navigable::to_top_level_position(CSSPixelPoint a_position)
+{
+    auto position = a_position;
+    for (auto ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
+        if (is<TraversableNavigable>(*ancestor))
+            break;
+        if (!ancestor->container())
+            return {};
+        if (!ancestor->container()->layout_node())
+            return {};
+        position.translate_by(ancestor->container()->layout_node()->box_type_agnostic_position());
+    }
+    return position;
+}
+
+void Navigable::set_viewport_rect(CSSPixelRect const& rect)
+{
+    bool did_change = false;
+
+    if (m_size != rect.size()) {
+        m_size = rect.size();
+        if (auto document = active_document()) {
+            // NOTE: Resizing the viewport changes the reference value for viewport-relative CSS lengths.
+            document->invalidate_style();
+            document->set_needs_layout();
+        }
+        did_change = true;
+    }
+
+    if (m_viewport_scroll_offset != rect.location()) {
+        m_viewport_scroll_offset = rect.location();
+        scroll_offset_did_change();
+        did_change = true;
+    }
+
+    if (did_change && active_document()) {
+        active_document()->inform_all_viewport_clients_about_the_current_viewport_rect();
+    }
+
+    // Schedule the HTML event loop to ensure that a `resize` event gets fired.
+    HTML::main_thread_event_loop().schedule();
+}
+
+void Navigable::set_size(CSSPixelSize size)
+{
+    if (m_size == size)
+        return;
+    m_size = size;
+
+    if (auto document = active_document()) {
+        document->invalidate_style();
+        document->set_needs_layout();
+    }
+
+    if (auto document = active_document()) {
+        document->inform_all_viewport_clients_about_the_current_viewport_rect();
+    }
+
+    // Schedule the HTML event loop to ensure that a `resize` event gets fired.
+    HTML::main_thread_event_loop().schedule();
+}
+
+void Navigable::set_needs_display()
+{
+    set_needs_display(viewport_rect());
+}
+
+void Navigable::set_needs_display(CSSPixelRect const& rect)
+{
+    if (!viewport_rect().intersects(rect))
+        return;
+
+    if (is<TraversableNavigable>(*this)) {
+        static_cast<TraversableNavigable*>(this)->page()->client().page_did_invalidate(to_top_level_rect(rect));
+        return;
+    }
+
+    if (container() && container()->layout_node())
+        container()->layout_node()->set_needs_display();
 }
 
 }
