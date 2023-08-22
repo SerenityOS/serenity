@@ -53,6 +53,6 @@ StringView time_unit_to_string(TimeUnit time_unit)
     }
 }
 
-ErrorOr<Vector<RelativeTimeFormat>> __attribute__((weak)) get_relative_time_format_patterns(StringView, TimeUnit, StringView, Style) { return Vector<RelativeTimeFormat> {}; }
+Vector<RelativeTimeFormat> __attribute__((weak)) get_relative_time_format_patterns(StringView, TimeUnit, StringView, Style) { return {}; }
 
 }
