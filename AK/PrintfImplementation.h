@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include <AK/ByteBuffer.h>
 #include <AK/Format.h>
 #include <AK/Types.h>
 #include <stdarg.h>
@@ -306,30 +307,52 @@ ALWAYS_INLINE int do_format(PutChFunc putch, CharType*& bufptr, FormatSpecifier 
 
     // Formatting.
     if (fmt.conversion_specifier == 's') {
-        // FIXME: Narrow characters should be converted to wide characters on the fly and vice versa.
-        // FIXME: NULL values
-
 #ifndef KERNEL
         if (fmt.length_modifier == LengthModifier::Long) {
             // C11 7.21.6.1p8: "If an l length modifier is present, the argument shall be a pointer to the initial element of an array of wchar_t type."
-            wchar_t const* str = NextArgument<wchar_t const*>()(ap);
+            wchar_t const* wstr = NextArgument<wchar_t const*>()(ap);
+            if (wstr == nullptr)
+                wstr = L"(null)";
 
-            int slen = wcslen(str);
-            // C11 7.21.6.1p8: "If the precision is specified, no more than that many bytes are written"
-            int maxlen = (fmt.precision.has_value()) ? min(slen, fmt.precision.value()) : slen;
-            expect_chars(maxlen);
+            if constexpr (IsSame<wchar_t, CharType>) {
+                int slen = wcslen(wstr);
+                // C11 7.21.6.1p8: "If the precision is specified, no more than that many bytes are written"
+                int maxlen = (fmt.precision.has_value()) ? min(slen, fmt.precision.value()) : slen;
+                expect_chars(maxlen);
 
-            if (fmt.flags.left_justify) {
-                emit_str(str, maxlen);
-                emit_pad(' ');
+                if (fmt.flags.left_justify) {
+                    emit_str(wstr, maxlen);
+                    emit_pad(' ');
+                } else {
+                    emit_pad(' ');
+                    emit_str(wstr, maxlen);
+                }
             } else {
-                emit_pad(' ');
-                emit_str(str, maxlen);
+                size_t bytes = wcstombs(nullptr, wstr, 0);
+                if (bytes != (size_t)-1) {
+                    // C11 7.21.6.1p8: "If the precision is specified, no more than that many bytes are written"
+                    int maxlen = (fmt.precision.has_value()) ? min(bytes, fmt.precision.value()) : bytes;
+                    size_t width = wcswidth(wstr, maxlen);
+                    expect_chars(width);
+
+                    auto cstr = MUST(ByteBuffer::create_uninitialized(maxlen + 1));
+                    wcstombs((char*)cstr.data(), wstr, maxlen + 1);
+
+                    if (fmt.flags.left_justify) {
+                        emit_str(cstr.data(), maxlen);
+                        emit_pad(' ');
+                    } else {
+                        emit_pad(' ');
+                        emit_str(cstr.data(), maxlen);
+                    }
+                }
             }
         } else
 #endif
         {
             char const* str = NextArgument<char const*>()(ap);
+            if (str == nullptr)
+                str = "(null)";
 
             int slen = strlen(str);
             // C11 7.21.6.1p8: "If the precision is specified, no more than that many bytes are written"
@@ -345,17 +368,51 @@ ALWAYS_INLINE int do_format(PutChFunc putch, CharType*& bufptr, FormatSpecifier 
             }
         }
     } else if (fmt.conversion_specifier == 'c') {
-        // FIXME: wide character support
-        // C11 7.21.6.1p8: "If no l length modifier is present, the int argument is converted to an unsigned char"
-        unsigned char c = NextArgument<int>()(ap);
-        expect_chars(1);
+#ifndef KERNEL
+        if (fmt.length_modifier == LengthModifier::Long) {
+            // C11 7.21.6.1p8: "If an l length modifier is present, the argument shall be a pointer to the initial element of an array of wchar_t type."
+            wint_t wc = NextArgument<wint_t>()(ap);
+            if constexpr (IsSame<wchar_t, CharType>) {
+                expect_chars(wcwidth(wc));
 
-        if (fmt.flags.left_justify) {
-            emit_char(c);
-            emit_pad(' ');
-        } else {
-            emit_pad(' ');
-            emit_char(c);
+                if (fmt.flags.left_justify) {
+                    emit_char(wc);
+                    emit_pad(' ');
+                } else {
+                    emit_pad(' ');
+                    emit_char(wc);
+                }
+            } else {
+                unsigned char cstr[5] = { 0xef, 0xbf, 0xbd, 0x00 }; // Fits any unicode codepoint in utf8 + null terminator. default is unicode replacement character.
+                int ret = wctomb((char*)cstr, wc);
+                int width = wcwidth(wc);
+                if (ret == -1) {
+                    width = 1;
+                }
+                expect_chars(width);
+
+                if (fmt.flags.left_justify) {
+                    emit_str(cstr);
+                    emit_pad(' ');
+                } else {
+                    emit_pad(' ');
+                    emit_str(cstr);
+                }
+            }
+        } else
+#endif
+        {
+            // C11 7.21.6.1p8: "If no l length modifier is present, the int argument is converted to an unsigned char"
+            unsigned char c = NextArgument<int>()(ap);
+            expect_chars(1);
+
+            if (fmt.flags.left_justify) {
+                emit_char(c);
+                emit_pad(' ');
+            } else {
+                emit_pad(' ');
+                emit_char(c);
+            }
         }
     } else
 #ifndef KERNEL
@@ -879,6 +936,7 @@ ALWAYS_INLINE int printf_internal(PutChFunc putch, IdentityType<CharType>* buffe
     }
 
 #undef NEXT
+    // C11 7.21.6.1: "The fprintf function returns the number of characters transmitted, or a negative value if an output or encoding error occurred."
     return ret;
 }
 

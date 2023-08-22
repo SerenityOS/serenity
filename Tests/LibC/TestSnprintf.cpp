@@ -471,6 +471,36 @@ TEST_CASE(hexponential)
     EXPECT(test_single<double>({ LITERAL("xxxxxxxxxxxxxx"), "|%.4a|", 0.01, 13, LITERAL("|0x1.47aep-7|\0") }));
 }
 
+TEST_CASE(char_values)
+{
+    // Regular chars.
+    EXPECT(test_single<char>({ LITERAL("xxxx"), "|%c|", 'a', 3, LITERAL("|a|\0") }));
+    EXPECT(test_single<char>({ LITERAL("xxxxxxx"), "|%4c|", 'a', 6, LITERAL("|   a|\0") }));
+    EXPECT(test_single<char>({ LITERAL("xxxxxxx"), "|%-4c|", 'a', 6, LITERAL("|a   |\0") }));
+
+    // Wide chars. (on serenity emoji are one character wide)
+    EXPECT(test_single<wchar_t>({ LITERAL("xxxxxxx"), "|%lc|", L'😀', 6, LITERAL("|😀|\0") }));
+    EXPECT(test_single<wchar_t>({ LITERAL("xxxxxxxxxx"), "|%4lc|", L'😀', 9, LITERAL("|   😀|\0") }));
+    EXPECT(test_single<wchar_t>({ LITERAL("xxxxxxxxxx"), "|%-4lc|", L'😀', 9, LITERAL("|😀   |\0") }));
+}
+
+TEST_CASE(strings)
+{
+    // Regular strings.
+    EXPECT(test_single<char const*>({ LITERAL("xxxxxx"), "|%s|", "abc", 5, LITERAL("|abc|\0") }));
+    EXPECT(test_single<char const*>({ LITERAL("xxxxx"), "|%.2s|", "abc", 4, LITERAL("|ab|\0") }));
+    EXPECT(test_single<char const*>({ LITERAL("xxxxxxxxx"), "|%6s|", "abc", 8, LITERAL("|   abc|\0") }));
+    EXPECT(test_single<char const*>({ LITERAL("xxxxxxxxx"), "|%-6s|", "abc", 8, LITERAL("|abc   |\0") }));
+
+    // Wide chars. (on serenity emoji are one character wide)
+    EXPECT(test_single<wchar_t const*>({ LITERAL("xxxxxxxxxx"), "|%ls|", L"😀abc", 9, LITERAL("|😀abc|\0") }));
+    EXPECT(test_single<wchar_t const*>({ LITERAL("xxx"), "|%.2ls|", L"😀abc", 2, LITERAL("||\0") }));
+    EXPECT(test_single<wchar_t const*>({ LITERAL("xxxxxxx"), "|%.4ls|", L"😀abc", 6, LITERAL("|😀|\0") }));
+    EXPECT(test_single<wchar_t const*>({ LITERAL("xxxxxxxxx"), "|%.6ls|", L"😀abc", 8, LITERAL("|😀ab|\0") }));
+    EXPECT(test_single<wchar_t const*>({ LITERAL("xxxxxxxxxxxxx"), "|%7ls|", L"😀abc", 12, LITERAL("|   😀abc|\0") }));
+    EXPECT(test_single<wchar_t const*>({ LITERAL("xxxxxxxxxxxxx"), "|%-7ls|", L"😀abc", 12, LITERAL("|😀abc   |\0") }));
+}
+
 TEST_CASE(truncation)
 {
     EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxxx"), "|%d|", INT_MAX, 12, LITERAL("|2147483647|\0") }));
