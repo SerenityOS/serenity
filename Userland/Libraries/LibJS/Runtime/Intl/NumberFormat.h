@@ -296,9 +296,9 @@ ThrowCompletionOr<Array*> format_numeric_to_parts(VM&, NumberFormat&, Mathematic
 ThrowCompletionOr<RawFormatResult> to_raw_precision(VM&, MathematicalValue const& number, int min_precision, int max_precision, NumberFormat::UnsignedRoundingMode unsigned_rounding_mode);
 ThrowCompletionOr<RawFormatResult> to_raw_fixed(VM&, MathematicalValue const& number, int min_fraction, int max_fraction, int rounding_increment, NumberFormat::UnsignedRoundingMode unsigned_rounding_mode);
 ThrowCompletionOr<Optional<Variant<StringView, String>>> get_number_format_pattern(VM&, NumberFormat&, MathematicalValue const& number, ::Locale::NumberFormat& found_pattern);
-ThrowCompletionOr<Optional<StringView>> get_notation_sub_pattern(VM&, NumberFormat&, int exponent);
+Optional<StringView> get_notation_sub_pattern(NumberFormat&, int exponent);
 ThrowCompletionOr<int> compute_exponent(VM&, NumberFormat&, MathematicalValue number);
-ThrowCompletionOr<int> compute_exponent_for_magnitude(VM&, NumberFormat&, int magnitude);
+int compute_exponent_for_magnitude(NumberFormat&, int magnitude);
 ThrowCompletionOr<MathematicalValue> to_intl_mathematical_value(VM&, Value value);
 NumberFormat::UnsignedRoundingMode get_unsigned_rounding_mode(NumberFormat::RoundingMode, bool is_negative);
 RoundingDecision apply_unsigned_rounding_mode(MathematicalValue const& x, MathematicalValue const& r1, MathematicalValue const& r2, NumberFormat::UnsignedRoundingMode unsigned_rounding_mode);

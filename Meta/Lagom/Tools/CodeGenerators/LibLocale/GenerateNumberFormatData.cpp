@@ -796,7 +796,7 @@ namespace Locale {
 
     generator.append(R"~~~(
 struct NumberFormatImpl {
-    ErrorOr<NumberFormat> to_unicode_number_format() const {
+    NumberFormat to_unicode_number_format() const {
         NumberFormat number_format {};
 
         number_format.magnitude = magnitude;
@@ -806,7 +806,7 @@ struct NumberFormatImpl {
         number_format.positive_format = decode_string(positive_format);
         number_format.negative_format = decode_string(negative_format);
 
-        TRY(number_format.identifiers.try_ensure_capacity(identifiers.size()));
+        number_format.identifiers.ensure_capacity(identifiers.size());
         for (@string_index_type@ identifier : identifiers)
             number_format.identifiers.unchecked_append(decode_string(identifier));
 
@@ -992,7 +992,7 @@ Optional<NumberGroupings> get_number_system_groupings(StringView locale, StringV
     return {};
 }
 
-ErrorOr<Optional<NumberFormat>> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type)
+Optional<NumberFormat> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type)
 {
     if (auto const* number_system = find_number_system(locale, system); number_system != nullptr) {
         @number_format_index_type@ format_index = 0;
@@ -1015,13 +1015,13 @@ ErrorOr<Optional<NumberFormat>> get_standard_number_system_format(StringView loc
             break;
         }
 
-        return TRY(s_number_formats[format_index].to_unicode_number_format());
+        return s_number_formats[format_index].to_unicode_number_format();
     }
 
-    return OptionalNone {};
+    return {};
 }
 
-ErrorOr<Vector<NumberFormat>> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type)
+Vector<NumberFormat> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type)
 {
     Vector<NumberFormat> formats;
 
@@ -1044,10 +1044,10 @@ ErrorOr<Vector<NumberFormat>> get_compact_number_system_formats(StringView local
         }
 
         auto number_formats = s_number_format_lists.at(number_format_list_index);
-        TRY(formats.try_ensure_capacity(number_formats.size()));
+        formats.ensure_capacity(number_formats.size());
 
         for (auto number_format : number_formats)
-            formats.unchecked_append(TRY(s_number_formats[number_format].to_unicode_number_format()));
+            formats.unchecked_append(s_number_formats[number_format].to_unicode_number_format());
     }
 
     return formats;
@@ -1072,7 +1072,7 @@ static Unit const* find_units(StringView locale, StringView unit)
     return nullptr;
 }
 
-ErrorOr<Vector<NumberFormat>> get_unit_formats(StringView locale, StringView unit, Style style)
+Vector<NumberFormat> get_unit_formats(StringView locale, StringView unit, Style style)
 {
     Vector<NumberFormat> formats;
 
@@ -1094,10 +1094,10 @@ ErrorOr<Vector<NumberFormat>> get_unit_formats(StringView locale, StringView uni
         }
 
         auto number_formats = s_number_format_lists.at(number_format_list_index);
-        TRY(formats.try_ensure_capacity(number_formats.size()));
+        formats.ensure_capacity(number_formats.size());
 
         for (auto number_format : number_formats)
-            formats.unchecked_append(TRY(s_number_formats[number_format].to_unicode_number_format()));
+            formats.unchecked_append(s_number_formats[number_format].to_unicode_number_format());
     }
 
     return formats;
