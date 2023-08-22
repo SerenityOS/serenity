@@ -95,8 +95,6 @@ public:
     WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> open_impl(StringView url, StringView target, StringView features);
     bool has_animation_frame_callbacks() const { return m_animation_frame_callback_driver.has_callbacks(); }
 
-    void did_call_location_replace(Badge<Location>, DeprecatedString url);
-
     DOM::Event* current_event() { return m_current_event.ptr(); }
     DOM::Event const* current_event() const { return m_current_event.ptr(); }
     void set_current_event(DOM::Event* event);

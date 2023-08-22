@@ -372,11 +372,21 @@ void Location::reload() const
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-replace
-void Location::replace(String const& url) const
+WebIDL::ExceptionOr<void> Location::replace(String const& url)
 {
-    auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
-    // FIXME: This needs spec compliance work.
-    window.did_call_location_replace({}, url.to_deprecated_string());
+    // 1. If this's relevant Document is null, then return.
+    if (!relevant_document())
+        return {};
+
+    // 2. Parse url relative to the entry settings object. If that failed, throw a "SyntaxError" DOMException.
+    auto replace_url = entry_settings_object().parse_url(url);
+    if (!replace_url.is_valid())
+        return WebIDL::SyntaxError::create(realm(), MUST(String::formatted("Invalid URL '{}'", url)));
+
+    // 3. Location-object navigate this to the resulting URL record given "replace".
+    TRY(navigate(replace_url, HistoryHandlingBehavior::Replace));
+
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-location-assign
