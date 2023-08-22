@@ -117,20 +117,20 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_patt
     //       then filtering the large set of locale data down to the pattern we are looking for. Instead,
     //       LibUnicode expects the individual options as enumeration values, and returns the couple of
     //       patterns that match those options.
-    auto find_patterns_for_tense_or_number = [&](StringView tense_or_number) -> ThrowCompletionOr<Vector<::Locale::RelativeTimeFormat>> {
+    auto find_patterns_for_tense_or_number = [&](StringView tense_or_number) {
         // 10. If style is equal to "short", then
         //     a. Let entry be the string-concatenation of unit and "-short".
         // 11. Else if style is equal to "narrow", then
         //     a. Let entry be the string-concatenation of unit and "-narrow".
         // 12. Else,
         //     a. Let entry be unit.
-        auto patterns = TRY_OR_THROW_OOM(vm, ::Locale::get_relative_time_format_patterns(data_locale, time_unit, tense_or_number, style));
+        auto patterns = ::Locale::get_relative_time_format_patterns(data_locale, time_unit, tense_or_number, style);
 
         // 13. If fields doesn't have a field [[<entry>]], then
         if (patterns.is_empty()) {
             // a. Let entry be unit.
             // NOTE: In the CLDR, the lack of "short" or "narrow" in the key implies "long".
-            patterns = TRY_OR_THROW_OOM(vm, ::Locale::get_relative_time_format_patterns(data_locale, time_unit, tense_or_number, ::Locale::Style::Long));
+            patterns = ::Locale::get_relative_time_format_patterns(data_locale, time_unit, tense_or_number, ::Locale::Style::Long);
         }
 
         // 14. Let patterns be fields.[[<entry>]].
@@ -144,7 +144,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_patt
         auto value_string = MUST(Value(value).to_string(vm));
 
         // b. If patterns has a field [[<valueString>]], then
-        if (auto patterns = MUST_OR_THROW_OOM(find_patterns_for_tense_or_number(value_string)); !patterns.is_empty()) {
+        if (auto patterns = find_patterns_for_tense_or_number(value_string); !patterns.is_empty()) {
             VERIFY(patterns.size() == 1);
 
             // i. Let result be patterns.[[<valueString>]].
@@ -173,7 +173,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_patt
     }
 
     // 19. Let po be patterns.[[<tl>]].
-    auto patterns = MUST_OR_THROW_OOM(find_patterns_for_tense_or_number(tense));
+    auto patterns = find_patterns_for_tense_or_number(tense);
 
     // 20. Let fv be ! PartitionNumberPattern(relativeTimeFormat.[[NumberFormat]], value).
     auto value_partitions = MUST_OR_THROW_OOM(partition_number_pattern(vm, relative_time_format.number_format(), Value(value)));

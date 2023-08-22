@@ -245,7 +245,7 @@ static constexpr Array<@relative_time_format_index_type@, @size@> @name@ { {)~~~
     generate_mapping(generator, cldr.locales, cldr.unique_formats.type_that_fits(), "s_locale_relative_time_formats"sv, "s_number_systems_digits_{}"sv, nullptr, [&](auto const& name, auto const& value) { append_list(name, value.time_units); });
 
     generator.append(R"~~~(
-ErrorOr<Vector<RelativeTimeFormat>> get_relative_time_format_patterns(StringView locale, TimeUnit time_unit, StringView tense_or_number, Style style)
+Vector<RelativeTimeFormat> get_relative_time_format_patterns(StringView locale, TimeUnit time_unit, StringView tense_or_number, Style style)
 {
     Vector<RelativeTimeFormat> formats;
 
@@ -266,7 +266,7 @@ ErrorOr<Vector<RelativeTimeFormat>> get_relative_time_format_patterns(StringView
         if (decode_string(locale_format.tense_or_number) != tense_or_number)
             continue;
 
-        TRY(formats.try_append(locale_format.to_relative_time_format()));
+        formats.append(locale_format.to_relative_time_format());
     }
 
     return formats;

@@ -34,6 +34,6 @@ struct RelativeTimeFormat {
 Optional<TimeUnit> time_unit_from_string(StringView time_unit);
 StringView time_unit_to_string(TimeUnit time_unit);
 
-ErrorOr<Vector<RelativeTimeFormat>> get_relative_time_format_patterns(StringView locale, TimeUnit time_unit, StringView tense_or_number, Style style);
+Vector<RelativeTimeFormat> get_relative_time_format_patterns(StringView locale, TimeUnit time_unit, StringView tense_or_number, Style style);
 
 }
