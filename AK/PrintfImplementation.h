@@ -1,15 +1,19 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Peter Elliott <pelliott@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+// Referencs to the C11 spec in this file are based on draft N1548
+// https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1548.pdf
+
 #pragma once
 
 #include <AK/Format.h>
-#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <stdarg.h>
+#include <stdint.h>
 
 #ifndef KERNEL
 #    include <math.h>
@@ -22,451 +26,160 @@ extern "C" size_t strlen(char const*);
 #    include <string.h>
 #endif
 
+#ifdef KERNEL
+ALWAYS_INLINE int tolower(int c)
+{
+    if (c >= 'A' && c <= 'Z')
+        return c | 0x20;
+    return c;
+}
+
+ALWAYS_INLINE int isupper(int c)
+{
+    return (c >= 'A' && c <= 'Z');
+}
+
+ALWAYS_INLINE int isdigit(int c)
+{
+    return (c >= '0' && c <= '9');
+}
+#else
+#    include <ctype.h>
+#endif
+
 namespace PrintfImplementation {
 
-template<typename PutChFunc, typename T, typename CharType>
-ALWAYS_INLINE int print_hex(PutChFunc putch, CharType*& bufptr, T number, bool upper_case, bool alternate_form, bool left_pad, bool zero_pad, u32 field_width, bool has_precision, u32 precision)
+#ifdef AK_HAS_FLOAT_128
+using fraction_t = unsigned __int128;
+#else
+using fraction_t = uint64_t;
+#endif
+
+ALWAYS_INLINE int number_length(fraction_t number, int base)
+{
+    int digits = 0;
+    for (size_t n = number; n != 0; n /= base)
+        ++digits;
+
+    return digits;
+}
+
+ALWAYS_INLINE fraction_t number_divisor(fraction_t number, int base)
+{
+    fraction_t divisor = 1;
+    for (size_t n = number / base; n != 0; n /= base)
+        divisor *= base;
+
+    return divisor;
+}
+
+#ifndef KERNEL
+ALWAYS_INLINE void get_fraction(fraction_t& integral, fraction_t& fraction, long double absnumber, int base, int precision)
+{
+    integral = (fraction_t)absnumber;
+    long double f = absnumber - integral;
+
+    fraction_t carry = 1;
+    for (int i = 0; i < precision; ++i) {
+        f *= base;
+        carry *= base;
+    }
+    // FIXME: Use roundl when it works.
+    fraction = ((fraction_t)f) + ((f - (fraction_t)f) >= 0.5);
+    // carry == 0 when we are using max_precision, where we wouldn't round anyway.
+    if (fraction == carry && carry != 0) {
+        fraction = 0;
+        integral++;
+    }
+}
+
+ALWAYS_INLINE fraction_t normalize_fraction(fraction_t fraction, int base)
+{
+    if (fraction == 0)
+        return 0;
+
+    while (fraction % base == 0) {
+        fraction /= base;
+    }
+
+    return fraction;
+}
+#endif
+
+template<typename PutChFunc, typename CharType>
+ALWAYS_INLINE int print_digits(PutChFunc putch, CharType*& bufptr, fraction_t number, int base, bool uppercase = false, bool trailing_zeros = true)
 {
     constexpr char const* printf_hex_digits_lower = "0123456789abcdef";
     constexpr char const* printf_hex_digits_upper = "0123456789ABCDEF";
 
-    u32 digits = 0;
-    for (T n = number; n > 0; n >>= 4)
-        ++digits;
-    if (digits == 0)
-        digits = 1;
+    if (number == 0)
+        return 0;
 
-    bool not_zero = number != 0;
+    int n = 0;
+    for (fraction_t d = number_divisor(number, base); d > 0; d /= base) {
 
-    char buf[16];
-    char* p = buf;
+        putch(bufptr, (uppercase ? printf_hex_digits_upper : printf_hex_digits_lower)[(number / d) % base]);
+        ++n;
 
-    if (!(has_precision && precision == 0 && !not_zero)) {
-        if (number == 0) {
-            (*p++) = '0';
-            if (precision > 0)
-                precision--;
-        } else {
-            u8 shift_count = digits * 4;
-            while (shift_count) {
-                shift_count -= 4;
-                (*p++) = upper_case
-                    ? printf_hex_digits_upper[(number >> shift_count) & 0x0f]
-                    : printf_hex_digits_lower[(number >> shift_count) & 0x0f];
-                if (precision > 0)
-                    precision--;
-            }
-        }
+        if (!trailing_zeros && number % d == 0)
+            break;
     }
-
-    size_t numlen = p - buf;
-
-    if (!field_width || field_width < (numlen + has_precision * precision + (alternate_form * 2 * not_zero)))
-        field_width = numlen + has_precision * precision + alternate_form * 2 * not_zero;
-
-    if ((zero_pad && !has_precision) && (alternate_form && not_zero)) {
-        putch(bufptr, '0');
-        putch(bufptr, 'x');
-    }
-
-    if (!left_pad) {
-        for (unsigned i = 0; i < field_width - numlen - has_precision * precision - alternate_form * 2 * not_zero; ++i) {
-            putch(bufptr, (zero_pad && !has_precision) ? '0' : ' ');
-        }
-    }
-
-    if (!(zero_pad && !has_precision) && (alternate_form && not_zero)) {
-        putch(bufptr, '0');
-        putch(bufptr, 'x');
-    }
-
-    if (has_precision) {
-        for (u32 i = 0; i < precision; ++i) {
-            putch(bufptr, '0');
-        }
-    }
-
-    for (unsigned i = 0; i < numlen; ++i) {
-        putch(bufptr, buf[i]);
-    }
-
-    if (left_pad) {
-        for (unsigned i = 0; i < field_width - numlen - has_precision * precision - alternate_form * 2 * not_zero; ++i) {
-            putch(bufptr, ' ');
-        }
-    }
-
-    return field_width;
+    return n;
 }
 
-template<typename PutChFunc, typename CharType>
-ALWAYS_INLINE int print_decimal(PutChFunc putch, CharType*& bufptr, u64 number, bool sign, bool always_sign, bool left_pad, bool zero_pad, u32 field_width, bool has_precision, u32 precision)
-{
-    u64 divisor = 10000000000000000000LLU;
-    char ch;
-    char padding = 1;
-    char buf[21];
-    char* p = buf;
-
-    if (!(has_precision && precision == 0 && number == 0)) {
-        for (;;) {
-            ch = '0' + (number / divisor);
-            number %= divisor;
-            if (ch != '0')
-                padding = 0;
-            if (!padding || divisor == 1) {
-                *(p++) = ch;
-                if (precision > 0)
-                    precision--;
-            }
-            if (divisor == 1)
-                break;
-            divisor /= 10;
-        }
-    }
-
-    size_t numlen = p - buf;
-
-    if (!field_width || field_width < (numlen + has_precision * precision + (sign || always_sign)))
-        field_width = numlen + has_precision * precision + (sign || always_sign);
-
-    if ((zero_pad && !has_precision) && (sign || always_sign)) {
-        putch(bufptr, sign ? '-' : '+');
-    }
-
-    if (!left_pad) {
-        for (unsigned i = 0; i < field_width - numlen - has_precision * precision - (sign || always_sign); ++i) {
-            putch(bufptr, (zero_pad && !has_precision) ? '0' : ' ');
-        }
-    }
-
-    if (!(zero_pad && !has_precision) && (sign || always_sign)) {
-        putch(bufptr, sign ? '-' : '+');
-    }
-
-    if (has_precision) {
-        for (u32 i = 0; i < precision; ++i) {
-            putch(bufptr, '0');
-        }
-    }
-
-    for (unsigned i = 0; i < numlen; ++i) {
-        putch(bufptr, buf[i]);
-    }
-
-    if (left_pad) {
-        for (unsigned i = 0; i < field_width - numlen - has_precision * precision - (sign || always_sign); ++i) {
-            putch(bufptr, ' ');
-        }
-    }
-
-    return field_width;
-}
-#ifndef KERNEL
-template<typename PutChFunc, typename CharType>
-ALWAYS_INLINE int print_double(PutChFunc putch, CharType*& bufptr, double number, bool always_sign, bool left_pad, bool zero_pad, u32 field_width, u32 precision, bool trailing_zeros)
-{
-    int length = 0;
-
-    u32 whole_width = (field_width >= precision + 1) ? field_width - precision - 1 : 0;
-
-    bool sign = signbit(number);
-    bool nan = isnan(number);
-    bool inf = isinf(number);
-
-    if (nan || inf) {
-        for (unsigned i = 0; i < field_width - 3 - sign; i++) {
-            putch(bufptr, ' ');
-            length++;
-        }
-        if (sign) {
-            putch(bufptr, '-');
-            length++;
-        }
-        if (nan) {
-            putch(bufptr, 'n');
-            putch(bufptr, 'a');
-            putch(bufptr, 'n');
-        } else {
-            putch(bufptr, 'i');
-            putch(bufptr, 'n');
-            putch(bufptr, 'f');
-        }
-        return length + 3;
-    }
-
-    if (sign)
-        number = -number;
-
-    length = print_decimal(putch, bufptr, (i64)number, sign, always_sign, left_pad, zero_pad, whole_width, false, 1);
-    if (precision > 0) {
-        double fraction = number - (i64)number;
-
-        for (u32 i = 0; i < precision; ++i)
-            fraction = fraction * 10;
-        if (trailing_zeros || fraction) {
-            length++;
-            putch(bufptr, '.');
-
-            i64 ifraction = fraction;
-            while (!trailing_zeros && ifraction % 10 == 0) {
-                ifraction /= 10;
-                precision--;
-            }
-
-            return length + print_decimal(putch, bufptr, ifraction, false, false, false, true, precision, false, 1);
-        }
-    }
-
-    return length;
-}
-#endif
-template<typename PutChFunc, typename CharType>
-ALWAYS_INLINE int print_octal_number(PutChFunc putch, CharType*& bufptr, u64 number, bool alternate_form, bool left_pad, bool zero_pad, u32 field_width, bool has_precision, u32 precision)
-{
-    u32 divisor = 134217728;
-    char ch;
-    char padding = 1;
-    char buf[32];
-    char* p = buf;
-
-    if (alternate_form) {
-        (*p++) = '0';
-        if (precision > 0)
-            precision--;
-    }
-
-    if (!(has_precision && precision == 0 && number == 0)) {
-        for (;;) {
-            ch = '0' + (number / divisor);
-            number %= divisor;
-            if (ch != '0')
-                padding = 0;
-            if (!padding || divisor == 1) {
-                *(p++) = ch;
-                if (precision > 0)
-                    precision--;
-            }
-            if (divisor == 1)
-                break;
-            divisor /= 8;
-        }
-    }
-
-    size_t numlen = p - buf;
-
-    if (!field_width || field_width < (numlen + has_precision * precision))
-        field_width = numlen + has_precision * precision;
-
-    if (!left_pad) {
-        for (unsigned i = 0; i < field_width - numlen - has_precision * precision; ++i) {
-            putch(bufptr, (zero_pad && !has_precision) ? '0' : ' ');
-        }
-    }
-
-    if (has_precision) {
-        for (u32 i = 0; i < precision; ++i) {
-            putch(bufptr, '0');
-        }
-    }
-
-    for (unsigned i = 0; i < numlen; ++i) {
-        putch(bufptr, buf[i]);
-    }
-
-    if (left_pad) {
-        for (unsigned i = 0; i < field_width - numlen - has_precision * precision; ++i) {
-            putch(bufptr, ' ');
-        }
-    }
-
-    return field_width;
-}
-
-template<typename PutChFunc, typename T, typename CharType>
-ALWAYS_INLINE int print_string(PutChFunc putch, CharType*& bufptr, T str, size_t len, bool left_pad, size_t field_width, bool dot, size_t precision, bool has_fraction)
-{
-    if (has_fraction)
-        len = min(len, precision);
-
-    if (!dot && (!field_width || field_width < len))
-        field_width = len;
-
-    if (has_fraction && !field_width)
-        field_width = len;
-
-    size_t pad_amount = field_width > len ? field_width - len : 0;
-
-    if (!left_pad) {
-        for (size_t i = 0; i < pad_amount; ++i)
-            putch(bufptr, ' ');
-    }
-    for (size_t i = 0; i < min(len, field_width); ++i) {
-        putch(bufptr, str[i]);
-    }
-    if (left_pad) {
-        for (size_t i = 0; i < pad_amount; ++i)
-            putch(bufptr, ' ');
-    }
-    return field_width;
-}
-
-template<typename PutChFunc, typename CharType>
-ALWAYS_INLINE int print_signed_number(PutChFunc putch, CharType*& bufptr, i64 number, bool always_sign, bool left_pad, bool zero_pad, u32 field_width, bool has_precision, u32 precision)
-{
-    // FIXME: `0 - number` overflows if we are trying to negate the smallest possible value.
-    return print_decimal(putch, bufptr, (number < 0) ? 0 - number : number, number < 0, always_sign, left_pad, zero_pad, field_width, has_precision, precision);
-}
-
-struct ModifierState {
-    bool left_pad { false };
-    bool zero_pad { false };
-    bool dot { false };
-    unsigned field_width { 0 };
-    bool has_precision { false };
-    unsigned precision { 6 };
-    unsigned short_qualifiers { 0 }; // TODO: Unimplemented.
-    unsigned long_qualifiers { 0 };
-    bool intmax_qualifier { false };      // TODO: Unimplemented.
-    bool ptrdiff_qualifier { false };     // TODO: Unimplemented.
-    bool long_double_qualifier { false }; // TODO: Unimplemented.
-    bool size_qualifier { false };        // TODO: Unimplemented.
-    bool alternate_form { 0 };
-    bool always_sign { false };
+enum class LengthModifier {
+    Default,
+    Char,
+    Short,
+    Long,
+    LongLong,
+    IntMax,
+    Size,
+    PtrDiff,
+    LongDouble,
 };
 
-template<typename PutChFunc, typename ArgumentListRefT, template<typename T, typename U = ArgumentListRefT> typename NextArgument, typename CharType = char>
-struct PrintfImpl {
-    ALWAYS_INLINE PrintfImpl(PutChFunc& putch, CharType*& bufptr, int const& nwritten)
-        : m_bufptr(bufptr)
-        , m_nwritten(nwritten)
-        , m_putch(putch)
-    {
-    }
+constexpr int asterix_field = -1;
 
-    ALWAYS_INLINE int format_s(ModifierState const& state, ArgumentListRefT ap) const
-    {
-        // FIXME: Narrow characters should be converted to wide characters on the fly and vice versa.
-        // https://pubs.opengroup.org/onlinepubs/9699919799/functions/printf.html
-        // https://pubs.opengroup.org/onlinepubs/9699919799/functions/wprintf.html
-#ifndef KERNEL
-        if (state.long_qualifiers) {
-            wchar_t const* sp = NextArgument<wchar_t const*>()(ap);
-            if (!sp)
-                sp = L"(null)";
-            return print_string(m_putch, m_bufptr, sp, wcslen(sp), state.left_pad, state.field_width, state.dot, state.precision, state.has_precision);
-        }
-#endif
-        char const* sp = NextArgument<char const*>()(ap);
-        if (!sp)
-            sp = "(null)";
-        return print_string(m_putch, m_bufptr, sp, strlen(sp), state.left_pad, state.field_width, state.dot, state.precision, state.has_precision);
-    }
-    ALWAYS_INLINE int format_d(ModifierState const& state, ArgumentListRefT ap) const
-    {
-        i64 number = [&]() -> i64 {
-            if (state.long_qualifiers >= 2)
-                return NextArgument<long long int>()(ap);
-            if (state.long_qualifiers == 1)
-                return NextArgument<long int>()(ap);
-            return NextArgument<int>()(ap);
-        }();
-
-        return print_signed_number(m_putch, m_bufptr, number, state.always_sign, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
-    }
-    ALWAYS_INLINE int format_i(ModifierState const& state, ArgumentListRefT ap) const
-    {
-        return format_d(state, ap);
-    }
-    ALWAYS_INLINE int format_u(ModifierState const& state, ArgumentListRefT ap) const
-    {
-        u64 number = [&]() -> u64 {
-            if (state.long_qualifiers >= 2)
-                return NextArgument<unsigned long long int>()(ap);
-            if (state.long_qualifiers == 1)
-                return NextArgument<unsigned long int>()(ap);
-            return NextArgument<unsigned int>()(ap);
-        }();
-
-        return print_decimal(m_putch, m_bufptr, number, false, false, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
-    }
-    ALWAYS_INLINE int format_Q(ModifierState const& state, ArgumentListRefT ap) const
-    {
-        return print_decimal(m_putch, m_bufptr, NextArgument<u64>()(ap), false, false, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
-    }
-    ALWAYS_INLINE int format_q(ModifierState const& state, ArgumentListRefT ap) const
-    {
-        return print_hex(m_putch, m_bufptr, NextArgument<u64>()(ap), false, false, state.left_pad, state.zero_pad, 16, false, 1);
-    }
-#ifndef KERNEL
-    ALWAYS_INLINE int format_g(ModifierState const& state, ArgumentListRefT ap) const
-    {
-        // FIXME: Exponent notation
-        return print_double(m_putch, m_bufptr, NextArgument<double>()(ap), state.always_sign, state.left_pad, state.zero_pad, state.field_width, state.precision, false);
-    }
-    ALWAYS_INLINE int format_f(ModifierState const& state, ArgumentListRefT ap) const
-    {
-        return print_double(m_putch, m_bufptr, NextArgument<double>()(ap), state.always_sign, state.left_pad, state.zero_pad, state.field_width, state.precision, true);
-    }
-#endif
-    ALWAYS_INLINE int format_o(ModifierState const& state, ArgumentListRefT ap) const
-    {
-        return print_octal_number(m_putch, m_bufptr, NextArgument<u32>()(ap), state.alternate_form, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
-    }
-    ALWAYS_INLINE int format_unsigned_hex(ModifierState const& state, ArgumentListRefT ap, bool uppercase) const
-    {
-        u64 number = [&]() -> u64 {
-            if (state.long_qualifiers >= 2)
-                return NextArgument<unsigned long long int>()(ap);
-            if (state.long_qualifiers == 1)
-                return NextArgument<unsigned long int>()(ap);
-            return NextArgument<unsigned int>()(ap);
-        }();
-
-        return print_hex(m_putch, m_bufptr, number, uppercase, state.alternate_form, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
-    }
-    ALWAYS_INLINE int format_x(ModifierState const& state, ArgumentListRefT ap) const
-    {
-        return format_unsigned_hex(state, ap, false);
-    }
-    ALWAYS_INLINE int format_X(ModifierState const& state, ArgumentListRefT ap) const
-    {
-        return format_unsigned_hex(state, ap, true);
-    }
-    ALWAYS_INLINE int format_n(ModifierState const&, ArgumentListRefT ap) const
-    {
-        *NextArgument<int*>()(ap) = m_nwritten;
-        return 0;
-    }
-    ALWAYS_INLINE int format_p(ModifierState const&, ArgumentListRefT ap) const
-    {
-        return print_hex(m_putch, m_bufptr, NextArgument<FlatPtr>()(ap), false, true, false, true, 8, false, 1);
-    }
-    ALWAYS_INLINE int format_P(ModifierState const&, ArgumentListRefT ap) const
-    {
-        return print_hex(m_putch, m_bufptr, NextArgument<FlatPtr>()(ap), true, true, false, true, 8, false, 1);
-    }
-    ALWAYS_INLINE int format_percent(ModifierState const&, ArgumentListRefT) const
-    {
-        m_putch(m_bufptr, '%');
-        return 1;
-    }
-    ALWAYS_INLINE int format_c(ModifierState const& state, ArgumentListRefT ap) const
-    {
-        char c = NextArgument<int>()(ap);
-        return print_string(m_putch, m_bufptr, &c, 1, state.left_pad, state.field_width, state.dot, state.precision, state.has_precision);
-    }
-    ALWAYS_INLINE int format_unrecognized(CharType format_op, CharType const* fmt, ModifierState const&, ArgumentListRefT) const
-    {
-        dbgln("printf_internal: Unimplemented format specifier {} (fmt: {})", format_op, fmt);
-        return 0;
-    }
-
-protected:
-    CharType*& m_bufptr;
-    int const& m_nwritten;
-    PutChFunc& m_putch;
+// C11 7.21.6.1p4
+struct FormatSpecifier {
+    // C11 7.21.6.1p6
+    struct {
+        bool left_justify { false };
+        bool always_sign { false };
+        bool space_no_sign { false };
+        bool alternate_form { false };
+        bool zero_pad { false };
+        bool uppercase { false }; // Not a true flag, calculated from case of conversion specifier.
+    } flags;
+    int field_width { 0 };
+    Optional<int> precision {};
+    char conversion_specifier { 0 };
+    LengthModifier length_modifier { LengthModifier::Default };
 };
+
+ALWAYS_INLINE bool is_float_specifier(char c)
+{
+    c = tolower(c);
+    return c == 'e' || c == 'f' || c == 'g' || c == 'a';
+}
+
+ALWAYS_INLINE bool is_signed_specifier(char c)
+{
+    c = tolower(c);
+    return c == 'd' || c == 'i';
+}
+
+ALWAYS_INLINE bool is_unsigned_specifier(char c)
+{
+    c = tolower(c);
+    return c == 'o' || c == 'u' || c == 'x' || c == 'p';
+}
+
+ALWAYS_INLINE bool is_integer_specifier(char c)
+{
+    return is_unsigned_specifier(c) || is_signed_specifier(c);
+}
 
 template<typename T, typename V>
 struct VaArgNextArgument {
@@ -483,9 +196,529 @@ struct VaArgNextArgument {
     }
 };
 
-#define PRINTF_IMPL_DELEGATE_TO_IMPL(c)    \
-    case *#c:                              \
-        ret += impl.format_##c(state, ap); \
+template<typename ArgumentListRefT, template<typename T, typename V = ArgumentListRefT> typename NextArgument>
+ALWAYS_INLINE void normalize_format_specifier(FormatSpecifier& fmt, ArgumentListRefT ap)
+{
+    if (isupper(fmt.conversion_specifier)) {
+        fmt.flags.uppercase = true;
+        fmt.conversion_specifier = tolower(fmt.conversion_specifier);
+    }
+
+    // C11 7.21.6.1p6: "If the space and + flags both appear, the space flag is ignored."
+    if (fmt.flags.always_sign) {
+        fmt.flags.space_no_sign = false;
+    }
+
+    // C11 7.21.6.1p5: "The arguments specifying field width, or precision, or both, shall appear (in that order) before the argument (if any) to be converted"
+    if (fmt.field_width == asterix_field) {
+        fmt.field_width = NextArgument<int>()(ap);
+    }
+
+    // C11 7.21.6.1p5: "The arguments specifying field width, or precision, or both, shall appear (in that order) before the argument (if any) to be converted"
+    if (fmt.precision == asterix_field) {
+        fmt.precision = NextArgument<int>()(ap);
+    }
+
+    // C11 7.21.6.1p6: "For d, i, o, u, x, and X conversions, if a precision is specified, the 0 flag is ignored."
+    if (fmt.precision.has_value() && is_integer_specifier(fmt.conversion_specifier)) {
+        fmt.flags.zero_pad = false;
+    }
+
+    if (is_unsigned_specifier(fmt.conversion_specifier)) {
+        // C11 7.21.6.1p6: "The result of a *signed* conversion always begins with a plus or minus sign."
+        fmt.flags.always_sign = false;
+        // C11 7.21.6.1p6: "If the first character of a *signed* conversion is not a sign, or if a *signed* conversion results in no characters, a space is prefixed to the result"
+        fmt.flags.space_no_sign = false;
+    }
+}
+
+template<typename PutChFunc, typename CharType, typename ArgumentListRefT, template<typename T, typename V = ArgumentListRefT> typename NextArgument>
+ALWAYS_INLINE int do_format(PutChFunc putch, CharType*& bufptr, FormatSpecifier const& fmt, ArgumentListRefT ap)
+{
+    int n_emitted = 0;
+    int expected_len = 0;
+    int base = 0;
+
+    // Helper functions.
+    auto expect_chars = [&](int nchars) {
+        expected_len += nchars;
+    };
+
+    auto expect_chars_if = [&](bool pred, int nchars) {
+        if (pred)
+            expect_chars(nchars);
+    };
+
+    auto emit_char = [&](char ch) {
+        putch(bufptr, ch);
+        ++n_emitted;
+    };
+
+    auto emit_sign = [&](bool neg) {
+        if (neg) {
+            emit_char('-');
+            return 1;
+        } else if (fmt.flags.always_sign) {
+            emit_char('+');
+            return 1;
+        } else if (fmt.flags.space_no_sign) {
+            emit_char(' ');
+            return 1;
+        }
+
+        return 0;
+    };
+
+    auto emit_pad = [&](char pad) {
+        if (expected_len >= fmt.field_width)
+            return 0;
+
+        int n = fmt.field_width - expected_len;
+        for (int i = 0; i < n; ++i) {
+            emit_char(pad);
+        }
+        return n;
+    };
+
+    auto emit_precision_pad = [&](int n) {
+        for (int i = 0; i < n; ++i) {
+            emit_char('0');
+        }
+        return n;
+    };
+
+    auto emit_digits = [&](fraction_t number, int min_digits = 0, bool trailing_zeros = true) {
+        int digits = number_length(number, base);
+        if ((number != 0 || trailing_zeros) && digits < min_digits)
+            emit_precision_pad(min_digits - digits);
+        n_emitted += print_digits(putch, bufptr, number, base, fmt.flags.uppercase, trailing_zeros);
+    };
+
+    auto emit_str = [&](auto str, int maxlen = -1) {
+        for (; *str != 0; ++str) {
+            if (maxlen == 0)
+                break;
+
+            emit_char(*str);
+            --maxlen;
+        }
+    };
+
+    // Formatting.
+    if (fmt.conversion_specifier == 's') {
+        // FIXME: Narrow characters should be converted to wide characters on the fly and vice versa.
+        // FIXME: NULL values
+
+#ifndef KERNEL
+        if (fmt.length_modifier == LengthModifier::Long) {
+            // C11 7.21.6.1p8: "If an l length modifier is present, the argument shall be a pointer to the initial element of an array of wchar_t type."
+            wchar_t const* str = NextArgument<wchar_t const*>()(ap);
+
+            int slen = wcslen(str);
+            // C11 7.21.6.1p8: "If the precision is specified, no more than that many bytes are written"
+            int maxlen = (fmt.precision.has_value()) ? min(slen, fmt.precision.value()) : slen;
+            expect_chars(maxlen);
+
+            if (fmt.flags.left_justify) {
+                emit_str(str, maxlen);
+                emit_pad(' ');
+            } else {
+                emit_pad(' ');
+                emit_str(str, maxlen);
+            }
+        } else
+#endif
+        {
+            char const* str = NextArgument<char const*>()(ap);
+
+            int slen = strlen(str);
+            // C11 7.21.6.1p8: "If the precision is specified, no more than that many bytes are written"
+            int maxlen = (fmt.precision.has_value()) ? min(slen, fmt.precision.value()) : slen;
+            expect_chars(maxlen);
+
+            if (fmt.flags.left_justify) {
+                emit_str(str, maxlen);
+                emit_pad(' ');
+            } else {
+                emit_pad(' ');
+                emit_str(str, maxlen);
+            }
+        }
+    } else if (fmt.conversion_specifier == 'c') {
+        // FIXME: wide character support
+        // C11 7.21.6.1p8: "If no l length modifier is present, the int argument is converted to an unsigned char"
+        unsigned char c = NextArgument<int>()(ap);
+        expect_chars(1);
+
+        if (fmt.flags.left_justify) {
+            emit_char(c);
+            emit_pad(' ');
+        } else {
+            emit_pad(' ');
+            emit_char(c);
+        }
+    } else
+#ifndef KERNEL
+        if (is_float_specifier(fmt.conversion_specifier)) {
+
+        long double value;
+        if (fmt.length_modifier == LengthModifier::LongDouble) {
+            // C11 7.21.6.1p7: "Specifies that a following a, A, e, E, f, F, g, or G conversion specifier applies to a long double argument."
+            value = NextArgument<long double>()(ap);
+        } else {
+            value = NextArgument<double>()(ap);
+        }
+
+        bool neg = signbit(value);
+        value = (neg) ? -value : value;
+
+        bool nan = isnan(value);
+        bool inf = isinf(value);
+
+        base = 10;
+        // C11 7.21.6.1p8: "A double argument representing a floating-point number is converted in the style [−]0xh.hhhhp±d"
+        if (fmt.conversion_specifier == 'a')
+            base = 16;
+
+#    ifdef AK_HAS_FLOAT_128
+        // max_precision = ceil(mantissa_bits / log_2(base))
+        int max_precision = (base == 10) ? 34 : 28; // space for 112 bits of mantissa
+#    else
+        int max_precision = (base == 10) ? 19 : 16; // Space for 63 bits of mantissa.
+#    endif
+
+        // C11 7.21.6.1p8: "If the precision is missing, it is taken as 6"
+        int precision = 6;
+        // C11 7.21.6.1p8: "if the precision is missing and FLT_RADIX is a power of 2, then the precision is sufficient for an exact representation of the value;"
+        if (fmt.conversion_specifier == 'a')
+            precision = max_precision;
+
+        if (fmt.precision.has_value())
+            precision = fmt.precision.value();
+
+        bool exponential = fmt.conversion_specifier == 'e' || fmt.conversion_specifier == 'g' || fmt.conversion_specifier == 'a';
+
+        // C11 7.21.6.1p8: "The exponent always contains at least one digit, and only as many more digits as necessary to represent the decimal exponent of 2"
+        int exponent_base = (fmt.conversion_specifier == 'a') ? 2 : 10;
+        long double saved_value = value;
+        int exponent = 0;
+        if (exponential && !inf) {
+            while (value >= base) {
+                value /= exponent_base;
+                ++exponent;
+            }
+            while (value < 1 && value != 0) {
+                value *= exponent_base;
+                --exponent;
+            }
+        }
+
+        if (fmt.conversion_specifier == 'g') {
+            // C11 7.21.6.1p8: "if P > X ≥ −4, the conversion is with style f (or F) and precision P − (X + 1)."
+            if (exponent >= -4 && max(precision, 1) > exponent) {
+                exponential = false;
+                value = saved_value;
+                precision -= exponent + 1;
+            } else {
+                // C11 7.21.6.1p8: "otherwise, the conversion is with style e (or E) and precision P − 1."
+                precision -= 1;
+            }
+        }
+
+        // If the precision is higher than is representable, pad with trailing zeros.
+        int unused_precision = 0;
+        if (precision > max_precision) {
+            unused_precision = precision - max_precision;
+            precision = max_precision;
+        }
+
+        fraction_t integral, fraction;
+        get_fraction(integral, fraction, value, base, precision);
+
+        // C11 7.21.6.1p8: "unless the # flag is used, any trailing zeros are removed from the fractional portion of the result and the decimal-point character is removed if there is no fractional portion remaining."
+        // C11 7.21.6.1p8: "except that trailing zeros may be omitted"
+        bool full_precision = !((fmt.conversion_specifier == 'g' || fmt.conversion_specifier == 'a') && !fmt.flags.alternate_form);
+
+        // Calculate length.
+        expect_chars_if(neg || fmt.flags.always_sign || fmt.flags.space_no_sign, 1);
+        if (nan || inf) {
+            expect_chars(3);
+        } else {
+            int digits = number_length(integral, base);
+            expect_chars(max(digits, 1));
+            expect_chars_if((full_precision && precision != 0) || fmt.flags.alternate_form || fraction != 0, 1);
+            expect_chars((full_precision) ? precision : number_length(normalize_fraction(fraction, base), base));
+            expect_chars_if(full_precision, unused_precision);
+            if (exponential) {
+                expect_chars(2);                                                     // e+
+                expect_chars_if(fmt.conversion_specifier == 'a' && !nan && !inf, 2); // 0x
+                expect_chars(max((fmt.conversion_specifier == 'a') ? 1 : 2, number_length(exponent, base)));
+            }
+        }
+
+        // Output Characters.
+        auto emit_digits_or_nan = [&](fraction_t integral, fraction_t fraction) {
+            if (nan) {
+                // C11 7.21.6.1p8: "A double argument representing a NaN is converted in one of the styles [-]nan or [-]nan(n-char-sequence)"
+                emit_str((fmt.flags.uppercase) ? "NAN" : "nan");
+            } else if (inf) {
+                // C11 7.21.6.1p8: "A double argument representing an infinity is converted in one of the styles [-]inf or [-]infinity"
+                emit_str((fmt.flags.uppercase) ? "INF" : "inf");
+            } else {
+                emit_digits(integral, 1);
+                // C11 7.21.6.1p8: "if the precision is zero and the # flag is not specified, no decimal-point character appears."
+                if ((full_precision && precision != 0) || fmt.flags.alternate_form || fraction != 0) {
+                    emit_char('.');
+                    emit_digits(fraction, precision, full_precision);
+                    if (full_precision)
+                        emit_precision_pad(unused_precision);
+                }
+
+                if (exponential) {
+                    if (fmt.conversion_specifier == 'a') {
+                        emit_char((fmt.flags.uppercase) ? 'P' : 'p');
+                        base = 10;
+                    } else {
+                        emit_char((fmt.flags.uppercase) ? 'E' : 'e');
+                    }
+
+                    if (exponent < 0) {
+                        emit_char('-');
+                        exponent = -exponent;
+                    } else {
+                        emit_char('+');
+                    }
+
+                    emit_digits(exponent, (fmt.conversion_specifier == 'a') ? 1 : 2);
+                }
+            }
+        };
+
+        if (fmt.flags.left_justify) {
+            emit_sign(neg);
+            if (fmt.conversion_specifier == 'a' && !nan && !inf)
+                emit_str((fmt.flags.uppercase) ? "0X" : "0x");
+            emit_digits_or_nan(integral, fraction);
+            emit_pad(' ');
+        } else if (fmt.flags.zero_pad && !(nan || inf)) {
+            emit_sign(neg);
+            if (fmt.conversion_specifier == 'a' && !nan && !inf)
+                emit_str((fmt.flags.uppercase) ? "0X" : "0x");
+            emit_pad('0');
+            emit_digits_or_nan(integral, fraction);
+        } else {
+            emit_pad(' ');
+            emit_sign(neg);
+            if (fmt.conversion_specifier == 'a' && !nan && !inf)
+                emit_str((fmt.flags.uppercase) ? "0X" : "0x");
+            emit_digits_or_nan(integral, fraction);
+        }
+    } else
+#endif
+        if (is_integer_specifier(fmt.conversion_specifier)) {
+        fraction_t value;
+        bool neg = false;
+        if (is_signed_specifier(fmt.conversion_specifier)) {
+            intmax_t svalue;
+            switch (fmt.length_modifier) {
+            case LengthModifier::Char:
+                // C11 7.21.6.1p7: "the argument will have been promoted according to the integer promotions, but its value shall be converted to signed char or unsigned char before printing"
+                svalue = (signed char)NextArgument<int>()(ap);
+                break;
+            case LengthModifier::Short:
+                // C11 7.21.6.1p7: "the argument will have been promoted according to the integer promotions, but its value shall be converted to signed short int or unsigned short int before printing"
+                svalue = (short)NextArgument<int>()(ap);
+                break;
+            case LengthModifier::Long:
+                svalue = NextArgument<long>()(ap);
+                break;
+            case LengthModifier::LongLong:
+                svalue = NextArgument<long long>()(ap);
+                break;
+            case LengthModifier::IntMax:
+                svalue = NextArgument<intmax_t>()(ap);
+                break;
+            case LengthModifier::Size:
+                svalue = NextArgument<ssize_t>()(ap);
+                break;
+            case LengthModifier::PtrDiff:
+                svalue = NextArgument<AK::Detail::MakeSigned<ptrdiff_t>>()(ap);
+                break;
+            default:
+                svalue = NextArgument<int>()(ap);
+            }
+
+            neg = svalue < 0;
+            // FIXME: `- number` overflows if we are trying to negate the smallest possible value.
+            value = (neg) ? -svalue : svalue;
+        } else {
+            if (fmt.conversion_specifier == 'p') {
+                value = NextArgument<uintptr_t>()(ap);
+            } else
+                switch (fmt.length_modifier) {
+                case LengthModifier::Char:
+                    // C11: 7.21.6.1p7: "the argument will have been promoted according to the integer promotions, but its value shall be converted to signed char or unsigned char before printing"
+                    value = (unsigned char)NextArgument<unsigned int>()(ap);
+                    break;
+                case LengthModifier::Short:
+                    // C11: 7.21.6.1p7: "the argument will have been promoted according to the integer promotions, but its value shall be converted to signed short int or unsigned short int before printing"
+                    value = (unsigned short)NextArgument<unsigned int>()(ap);
+                    break;
+                case LengthModifier::Long:
+                    value = NextArgument<unsigned long>()(ap);
+                    break;
+                case LengthModifier::LongLong:
+                    value = NextArgument<unsigned long long>()(ap);
+                    break;
+                case LengthModifier::IntMax:
+                    value = NextArgument<uintmax_t>()(ap);
+                    break;
+                case LengthModifier::Size:
+                    value = NextArgument<size_t>()(ap);
+                    break;
+                case LengthModifier::PtrDiff:
+                    value = NextArgument<ptrdiff_t>()(ap);
+                    break;
+                default:
+                    value = NextArgument<unsigned int>()(ap);
+                }
+        }
+
+        switch (fmt.conversion_specifier) {
+        case 'd':
+        case 'i':
+        case 'u':
+            base = 10;
+            break;
+        case 'o':
+            base = 8;
+            break;
+        case 'x':
+        case 'p':
+            base = 16;
+            break;
+        }
+
+        // C11 7.21.6.1p8: "The default precision is 1."
+        int precision = 1;
+        if (fmt.precision.has_value())
+            precision = fmt.precision.value();
+
+        if (fmt.conversion_specifier == 'p')
+            precision = max(1, precision);
+
+        // Calculate length.
+        expect_chars_if(neg || fmt.flags.always_sign || fmt.flags.space_no_sign, 1);
+
+        int digits = number_length(value, base);
+        if (fmt.conversion_specifier == 'p' && !value) {
+            // (null)
+            expect_chars(6);
+        } else {
+            expect_chars(max(digits, precision));
+        }
+
+        expect_chars_if(fmt.conversion_specifier == 'o' && fmt.flags.alternate_form && digits >= precision, 1);
+        expect_chars_if(fmt.conversion_specifier == 'x' && digits && fmt.flags.alternate_form, 2);
+        expect_chars_if(fmt.conversion_specifier == 'p' && value, 2);
+
+        // Output characters.
+        auto alternate_forms = [&]() {
+            // C11 7.21.6.1p6: "For x (or X) conversion, a nonzero result has 0x (or 0X) prefixed to it"
+            if (digits && ((fmt.conversion_specifier == 'x' && fmt.flags.alternate_form) || (fmt.conversion_specifier == 'p' && value)))
+                emit_str((fmt.flags.uppercase) ? "0X" : "0x");
+
+            // C11 7.21.6.1p6: "For o conversion, it increases the precision, if and only if necessary, to force the first digit of the result to be a zero (if the value and precision are both 0, a single 0 is printed)"
+            if (fmt.conversion_specifier == 'o' && fmt.flags.alternate_form && digits >= precision)
+                emit_str((fmt.flags.uppercase) ? "0" : "0");
+        };
+
+        auto emit_digits_or_null = [&](uintmax_t value) {
+            if (fmt.conversion_specifier == 'p' && !value) {
+                emit_str("(null)");
+            } else {
+                emit_digits(value, precision);
+            }
+        };
+
+        if (fmt.flags.left_justify) {
+            emit_sign(neg);
+            alternate_forms();
+            emit_digits_or_null(value);
+            emit_pad(' ');
+        } else if (fmt.flags.zero_pad) {
+            emit_sign(neg);
+            alternate_forms();
+            emit_pad('0');
+            emit_digits_or_null(value);
+        } else {
+            emit_pad(' ');
+            emit_sign(neg);
+            alternate_forms();
+            emit_digits_or_null(value);
+        }
+    } else {
+        dbgln("printf_internal: Unimplemented conversion specifier {}", fmt.conversion_specifier);
+        return 0;
+    }
+
+    return n_emitted;
+}
+
+template<typename PutChFunc, typename ArgumentListRefT, template<typename T, typename U = ArgumentListRefT> typename NextArgument, typename CharType = char>
+struct PrintfImpl {
+    ALWAYS_INLINE PrintfImpl(PutChFunc& putch, CharType*& bufptr, int const& nwritten)
+        : m_bufptr(bufptr)
+        , m_nwritten(nwritten)
+        , m_putch(putch)
+    {
+    }
+
+    ALWAYS_INLINE int format_n(FormatSpecifier const&, ArgumentListRefT ap) const
+    {
+        // C11 7.21.6.1p8: "The argument shall be a pointer to signed integer into which is written the number of characters written to the output stream so far"
+        *NextArgument<int*>()(ap) = m_nwritten;
+        return 0;
+    }
+
+#define DEFINE_FORMAT(letter)                                                                              \
+    ALWAYS_INLINE int format_##letter(FormatSpecifier const& fmt, ArgumentListRefT ap) const               \
+    {                                                                                                      \
+        return do_format<PutChFunc, CharType, ArgumentListRefT, NextArgument>(m_putch, m_bufptr, fmt, ap); \
+    }
+
+    DEFINE_FORMAT(s);
+    DEFINE_FORMAT(c);
+    DEFINE_FORMAT(d);
+    DEFINE_FORMAT(i);
+    DEFINE_FORMAT(u);
+#ifndef KERNEL
+    DEFINE_FORMAT(g);
+    DEFINE_FORMAT(f);
+    DEFINE_FORMAT(e);
+    DEFINE_FORMAT(a);
+#endif
+    DEFINE_FORMAT(o);
+    DEFINE_FORMAT(x);
+    DEFINE_FORMAT(p);
+
+#undef DEFINE_FORMAT_NUMBER
+
+    ALWAYS_INLINE int format_unrecognized(FormatSpecifier const& fmt, ArgumentListRefT) const
+    {
+        dbgln("printf_internal: Unimplemented conversion specifier {}", fmt.conversion_specifier);
+        return 0;
+    }
+
+protected:
+    CharType*& m_bufptr;
+    int const& m_nwritten;
+    PutChFunc& m_putch;
+};
+
+#define PRINTF_IMPL_DELEGATE_TO_IMPL(c)        \
+    case *#c:                                  \
+        ret += impl.format_##c(specifier, ap); \
         break;
 
 template<typename PutChFunc, template<typename T, typename U, template<typename X, typename Y> typename V, typename C = char> typename Impl = PrintfImpl, typename ArgumentListT = va_list, template<typename T, typename V = decltype(declval<ArgumentListT&>())> typename NextArgument = VaArgNextArgument, typename CharType = char>
@@ -496,126 +729,156 @@ ALWAYS_INLINE int printf_internal(PutChFunc putch, IdentityType<CharType>* buffe
 
     Impl<PutChFunc, ArgumentListT&, NextArgument, CharType> impl { putch, bufptr, ret };
 
+    FormatSpecifier specifier;
+
+#define NEXT() ({ ++p; if (!*p) goto handle_format; *p; })
+
     for (CharType const* p = fmt; *p; ++p) {
-        ModifierState state;
-        if (*p == '%' && *(p + 1)) {
-        one_more:
-            ++p;
-            if (*p == '.') {
-                state.dot = true;
-                if (*(p + 1))
-                    goto one_more;
+        // Clear format specifier.
+        specifier = FormatSpecifier();
+
+        // C11 7.21.6.1p4: "Each conversion specification is introduced by the character %"
+        if (*p == '%') {
+            bool brk = false;
+
+            NEXT();
+            if (*p == '%') {
+                // C11 7.21.6.1: "%: A % character is written. No argument is converted. The complete conversion specification shall be %%."
+                putch(bufptr, '%');
+                ++ret;
+                continue;
             }
-            if (*p == '-') {
-                state.left_pad = true;
-                if (*(p + 1))
-                    goto one_more;
-            }
-            if (*p == '+') {
-                state.always_sign = true;
-                if (*(p + 1))
-                    goto one_more;
-            }
-            if (!state.zero_pad && !state.field_width && !state.dot && *p == '0') {
-                state.zero_pad = true;
-                if (*(p + 1))
-                    goto one_more;
-            }
-            if (*p >= '0' && *p <= '9') {
-                if (!state.dot) {
-                    state.field_width *= 10;
-                    state.field_width += *p - '0';
-                    if (*(p + 1))
-                        goto one_more;
-                } else {
-                    if (!state.has_precision) {
-                        state.has_precision = true;
-                        state.precision = 0;
-                    }
-                    state.precision *= 10;
-                    state.precision += *p - '0';
-                    if (*(p + 1))
-                        goto one_more;
+
+            // C11 7.21.6.1p4: "Zero or more flags (in any order) that modify the meaning of the conversion specification."
+            for (;;) {
+                switch (*p) {
+                case '-':
+                    specifier.flags.left_justify = true;
+                    break;
+                case '+':
+                    specifier.flags.always_sign = true;
+                    break;
+                case ' ':
+                    specifier.flags.space_no_sign = true;
+                    break;
+                case '#':
+                    specifier.flags.alternate_form = true;
+                    break;
+                case '0':
+                    specifier.flags.zero_pad = true;
+                    break;
+                default:
+                    brk = true;
                 }
+                if (brk)
+                    break;
+                NEXT();
             }
+
+            // C11 7.21.6.1p4: "an optional minimum field width. [...] The field width takes the form of an asterisk * (described later) or a nonnegative decimal integer."
             if (*p == '*') {
-                if (state.dot) {
-                    state.has_precision = true;
-                    state.zero_pad = true;
-                    state.precision = NextArgument<int>()(ap);
-                } else {
-                    state.field_width = NextArgument<int>()(ap);
+                specifier.field_width = asterix_field;
+                NEXT();
+            } else {
+                for (; isdigit(*p); NEXT()) {
+                    specifier.field_width *= 10;
+                    specifier.field_width += *p - '0';
                 }
+            }
 
-                if (*(p + 1))
-                    goto one_more;
+            // C11 7.21.6.1p4: "an optional precision [...] The precision takes the form of a period (.) followed either by an asterisk * (described later) or by an optional decimal integer"
+            if (*p == '.') {
+                specifier.precision = 0;
+                NEXT();
+                if (*p == '*') {
+                    specifier.precision = asterix_field;
+                    NEXT();
+                } else {
+                    for (; isdigit(*p); NEXT()) {
+                        specifier.precision = specifier.precision.value() * 10;
+                        specifier.precision = specifier.precision.value() + (*p - '0');
+                    }
+                }
             }
-            if (*p == 'h') {
-                ++state.short_qualifiers;
-                if (*(p + 1))
-                    goto one_more;
-            }
-            if (*p == 'l') {
-                ++state.long_qualifiers;
-                if (*(p + 1))
-                    goto one_more;
-            }
-            if (*p == 'j') {
-                state.intmax_qualifier = true;
-                if (*(p + 1))
-                    goto one_more;
-            }
-            if (*p == 't') {
-                state.ptrdiff_qualifier = true;
-                if (*(p + 1))
-                    goto one_more;
-            }
-            if (*p == 'L') {
-                state.long_double_qualifier = true;
-                if (*(p + 1))
-                    goto one_more;
-            }
-            if (*p == 'z') {
-                state.size_qualifier = true;
-                if (*(p + 1))
-                    goto one_more;
-            }
-            if (*p == '#') {
-                state.alternate_form = true;
-                if (*(p + 1))
-                    goto one_more;
-            }
+
+            // C11 7.21.6.1p4: "an optional length modifier that specifies the size of the argument."
             switch (*p) {
-            case '%':
-                ret += impl.format_percent(state, ap);
+            case 'h':
+                // C11 7.21.6.1p7: "Specifies that a following d, i, o, u, x, or X conversion specifier applies to a short int or unsigned short int argument"
+                specifier.length_modifier = LengthModifier::Short;
+                NEXT();
                 break;
+            case 'l':
+                // C11 7.21.6.1p7: "Specifies that a following d, i, o, u, x, or X conversion specifier applies to a long int or unsigned long int argument;"
+                specifier.length_modifier = LengthModifier::Long;
+                NEXT();
+                break;
+            case 'j':
+                // C11 7.21.6.1p7: "Specifies that a following d, i, o, u, x, or X conversion specifier applies to an intmax_t or uintmax_t argument;"
+                specifier.length_modifier = LengthModifier::IntMax;
+                NEXT();
+                break;
+            case 'z':
+                // C11 7.21.6.1p7: "Specifies that a following d, i, o, u, x, or X conversion specifier applies to a size_t or the corresponding signed integer type argument;"
+                specifier.length_modifier = LengthModifier::Size;
+                NEXT();
+                break;
+            case 't':
+                // C11 7.21.6.1p7: "Specifies that a following d, i, o, u, x, or X conversion specifier applies to a ptrdiff_t or the corresponding unsigned integer type argument;"
+                specifier.length_modifier = LengthModifier::PtrDiff;
+                NEXT();
+                break;
+            case 'L':
+                // C11 7.21.6.1p7: "Specifies that a following a, A, e, E, f, F, g, or G conversion specifier applies to a long double argument."
+                specifier.length_modifier = LengthModifier::LongDouble;
+                NEXT();
+                break;
+            }
 
-                PRINTF_IMPL_DELEGATE_TO_IMPL(P);
-                PRINTF_IMPL_DELEGATE_TO_IMPL(Q);
-                PRINTF_IMPL_DELEGATE_TO_IMPL(X);
-                PRINTF_IMPL_DELEGATE_TO_IMPL(c);
-                PRINTF_IMPL_DELEGATE_TO_IMPL(d);
+            if (specifier.length_modifier == LengthModifier::Short && *p == 'h') {
+                // C11 7.21.6.1p7: "Specifies that a following d, i, o, u, x, or X conversion specifier applies to a signed char or unsigned char argument"
+                specifier.length_modifier = LengthModifier::Char;
+                NEXT();
+            } else if (specifier.length_modifier == LengthModifier::Long && *p == 'l') {
+                // C11 7.21.6.1p7: "Specifies that a following d, i, o, u, x, or X conversion specifier applies to a long long int or unsigned long long int argument;"
+                specifier.length_modifier = LengthModifier::LongLong;
+                NEXT();
+            }
+
+            // C11 7.21.6.1p4: "A conversion specifier character that specifies the type of conversion to be applied."
+            specifier.conversion_specifier = *p;
+
+        handle_format:
+            if (specifier.conversion_specifier) {
+                normalize_format_specifier<ArgumentListT&, NextArgument>(specifier, ap);
+                switch (specifier.conversion_specifier) {
+                    PRINTF_IMPL_DELEGATE_TO_IMPL(c);
+                    PRINTF_IMPL_DELEGATE_TO_IMPL(d);
 #ifndef KERNEL
-                PRINTF_IMPL_DELEGATE_TO_IMPL(f);
-                PRINTF_IMPL_DELEGATE_TO_IMPL(g);
+                    PRINTF_IMPL_DELEGATE_TO_IMPL(f);
+                    PRINTF_IMPL_DELEGATE_TO_IMPL(g);
+                    PRINTF_IMPL_DELEGATE_TO_IMPL(e);
+                    PRINTF_IMPL_DELEGATE_TO_IMPL(a);
 #endif
-                PRINTF_IMPL_DELEGATE_TO_IMPL(i);
-                PRINTF_IMPL_DELEGATE_TO_IMPL(n);
-                PRINTF_IMPL_DELEGATE_TO_IMPL(o);
-                PRINTF_IMPL_DELEGATE_TO_IMPL(p);
-                PRINTF_IMPL_DELEGATE_TO_IMPL(q);
-                PRINTF_IMPL_DELEGATE_TO_IMPL(s);
-                PRINTF_IMPL_DELEGATE_TO_IMPL(u);
-                PRINTF_IMPL_DELEGATE_TO_IMPL(x);
-            default:
-                ret += impl.format_unrecognized(*p, fmt, state, ap);
-                break;
+                    PRINTF_IMPL_DELEGATE_TO_IMPL(i);
+                    PRINTF_IMPL_DELEGATE_TO_IMPL(n);
+                    PRINTF_IMPL_DELEGATE_TO_IMPL(o);
+                    PRINTF_IMPL_DELEGATE_TO_IMPL(p);
+                    PRINTF_IMPL_DELEGATE_TO_IMPL(s);
+                    PRINTF_IMPL_DELEGATE_TO_IMPL(u);
+                    PRINTF_IMPL_DELEGATE_TO_IMPL(x);
+                default:
+                    ret += impl.format_unrecognized(specifier, ap);
+                    break;
+                }
             }
         } else {
             putch(bufptr, *p);
             ++ret;
         }
     }
+
+#undef NEXT
     return ret;
 }
 

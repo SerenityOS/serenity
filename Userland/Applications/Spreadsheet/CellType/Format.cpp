@@ -11,8 +11,17 @@
 
 namespace Spreadsheet {
 
+// This needs to exist but will never be called.
 template<typename T, typename V>
 struct SingleEntryListNext {
+    ALWAYS_INLINE T operator()(V) const
+    {
+        VERIFY_NOT_REACHED();
+    }
+};
+
+template<Arithmetic T, typename V>
+struct SingleEntryListNext<T, V> {
     ALWAYS_INLINE T operator()(V value) const
     {
         return (T)value;
@@ -27,13 +36,14 @@ struct PrintfImpl : public PrintfImplementation::PrintfImpl<PutChFunc, ArgumentL
     }
 
     // Disallow pointer formats.
-    ALWAYS_INLINE int format_n(PrintfImplementation::ModifierState const&, ArgumentListRefT&) const
+    ALWAYS_INLINE int format_n(PrintfImplementation::FormatSpecifier const& fmt, ArgumentListRefT& ap) const
     {
-        return 0;
+        return PrintfImplementation::PrintfImpl<PutChFunc, ArgumentListRefT, NextArgument>::format_unrecognized(fmt, ap);
     }
-    ALWAYS_INLINE int format_s(PrintfImplementation::ModifierState const&, ArgumentListRefT&) const
+
+    ALWAYS_INLINE int format_s(PrintfImplementation::FormatSpecifier const& fmt, ArgumentListRefT& ap) const
     {
-        return 0;
+        return PrintfImplementation::PrintfImpl<PutChFunc, ArgumentListRefT, NextArgument>::format_unrecognized(fmt, ap);
     }
 };
 

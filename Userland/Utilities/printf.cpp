@@ -28,9 +28,16 @@ requires(IsSame<CharType, char>) struct PrintfImpl : public PrintfImplementation
     {
     }
 
-    ALWAYS_INLINE int format_q(PrintfImplementation::ModifierState const& state, ArgumentListRefT& ap) const
+    ALWAYS_INLINE int format_n(PrintfImplementation::FormatSpecifier const& fmt, ArgumentListRefT& ap) const
     {
-        auto state_copy = state;
+        return PrintfImplementation::PrintfImpl<PutChFunc, ArgumentListRefT, NextArgument>::format_unrecognized(fmt, ap);
+    }
+
+    ALWAYS_INLINE int format_unrecognized(PrintfImplementation::FormatSpecifier const& fmt, ArgumentListRefT& ap) const
+    {
+        if (fmt.conversion_specifier != 'q')
+            return PrintfImplementation::PrintfImpl<PutChFunc, ArgumentListRefT, NextArgument>::format_unrecognized(fmt, ap);
+
         auto str = NextArgument<char const*>()(ap);
         if (!str)
             str = "(null)";
@@ -61,25 +68,26 @@ requires(IsSame<CharType, char>) struct PrintfImpl : public PrintfImplementation
             return len;
         };
 
-        auto len = make_len_or_escape(str, true, state_copy.field_width, [&](auto c) { this->m_putch(this->m_bufptr, c); });
+        auto len = make_len_or_escape(str, true, fmt.field_width, [&](auto c) { this->m_putch(this->m_bufptr, c); });
 
-        if (!state_copy.dot && (!state_copy.field_width || state_copy.field_width < len))
-            state_copy.field_width = len;
-        size_t pad_amount = state_copy.field_width > len ? state_copy.field_width - len : 0;
+        unsigned field_width = fmt.field_width;
+        if (!fmt.precision.has_value() && field_width < len)
+            field_width = len;
+        size_t pad_amount = field_width > len ? field_width - len : 0;
 
-        if (!state_copy.left_pad) {
+        if (!fmt.flags.left_justify) {
             for (size_t i = 0; i < pad_amount; ++i)
                 this->m_putch(this->m_bufptr, ' ');
         }
 
-        make_len_or_escape(str, false, state_copy.field_width, [&](auto c) { this->m_putch(this->m_bufptr, c); });
+        make_len_or_escape(str, false, field_width, [&](auto c) { this->m_putch(this->m_bufptr, c); });
 
-        if (state_copy.left_pad) {
+        if (fmt.flags.left_justify) {
             for (size_t i = 0; i < pad_amount; ++i)
                 this->m_putch(this->m_bufptr, ' ');
         }
 
-        return state_copy.field_width;
+        return field_width;
     }
 };
 
@@ -216,6 +224,20 @@ struct ArgvNextArgument<double, V> {
 
         auto result = *arg.argv++;
         --arg.argc;
+        return strtod(result, nullptr);
+    }
+};
+
+template<typename V>
+struct ArgvNextArgument<long double, V> {
+    ALWAYS_INLINE long double operator()(V arg) const
+    {
+        if (arg.argc == 0)
+            return 0;
+
+        auto result = *arg.argv++;
+        --arg.argc;
+        // FIXME: Use strotold, when it works.
         return strtod(result, nullptr);
     }
 };
