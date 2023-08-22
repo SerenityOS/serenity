@@ -52,11 +52,11 @@ public:
             int offset = { 0 };  // "B"
 
             // https://www.w3.org/TR/css-syntax-3/#serializing-anb
-            ErrorOr<String> serialize() const
+            String serialize() const
             {
                 // 1. If A is zero, return the serialization of B.
                 if (step_size == 0) {
-                    return String::formatted("{}", offset);
+                    return MUST(String::number(offset));
                 }
 
                 // 2. Otherwise, let result initially be an empty string.
@@ -65,24 +65,24 @@ public:
                 // 3.
                 // - A is 1: Append "n" to result.
                 if (step_size == 1)
-                    TRY(result.try_append('n'));
+                    result.append('n');
                 // - A is -1: Append "-n" to result.
                 else if (step_size == -1)
-                    TRY(result.try_append("-n"sv));
+                    result.append("-n"sv);
                 // - A is non-zero: Serialize A and append it to result, then append "n" to result.
                 else if (step_size != 0)
-                    TRY(result.try_appendff("{}n", step_size));
+                    result.appendff("{}n", step_size);
 
                 // 4.
                 // - B is greater than zero: Append "+" to result, then append the serialization of B to result.
                 if (offset > 0)
-                    TRY(result.try_appendff("+{}", offset));
+                    result.appendff("+{}", offset);
                 // - B is less than zero: Append the serialization of B to result.
                 if (offset < 0)
-                    TRY(result.try_appendff("{}", offset));
+                    result.appendff("{}", offset);
 
                 // 5. Return result.
-                return result.to_string();
+                return MUST(result.to_string());
             }
         };
 
@@ -165,7 +165,7 @@ public:
         QualifiedName const& qualified_name() const { return value.get<QualifiedName>(); }
         QualifiedName& qualified_name() { return value.get<QualifiedName>(); }
 
-        ErrorOr<String> serialize() const;
+        String serialize() const;
     };
 
     enum class Combinator {
@@ -194,7 +194,7 @@ public:
     Vector<CompoundSelector> const& compound_selectors() const { return m_compound_selectors; }
     Optional<PseudoElement> pseudo_element() const { return m_pseudo_element; }
     u32 specificity() const;
-    ErrorOr<String> serialize() const;
+    String serialize() const;
 
 private:
     explicit Selector(Vector<CompoundSelector>&&);
@@ -233,7 +233,7 @@ constexpr StringView pseudo_element_name(Selector::PseudoElement pseudo_element)
 
 Optional<Selector::PseudoElement> pseudo_element_from_string(StringView);
 
-ErrorOr<String> serialize_a_group_of_selectors(Vector<NonnullRefPtr<Selector>> const& selectors);
+String serialize_a_group_of_selectors(Vector<NonnullRefPtr<Selector>> const& selectors);
 
 }
 
@@ -243,7 +243,7 @@ template<>
 struct Formatter<Web::CSS::Selector> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::Selector const& selector)
     {
-        return Formatter<StringView>::format(builder, TRY(selector.serialize()));
+        return Formatter<StringView>::format(builder, selector.serialize());
     }
 };
 

@@ -49,7 +49,7 @@ DeprecatedString CSSStyleRule::serialized() const
 
     // 1. Let s initially be the result of performing serialize a group of selectors on the rule’s associated selectors,
     //    followed by the string " {", i.e., a single SPACE (U+0020), followed by LEFT CURLY BRACKET (U+007B).
-    builder.append(serialize_a_group_of_selectors(selectors()).release_value_but_fixme_should_propagate_errors());
+    builder.append(serialize_a_group_of_selectors(selectors()));
     builder.append(" {"sv);
 
     // 2. Let decls be the result of performing serialize a CSS declaration block on the rule’s associated declarations, or null if there are no such declarations.
@@ -90,7 +90,7 @@ DeprecatedString CSSStyleRule::serialized() const
 DeprecatedString CSSStyleRule::selector_text() const
 {
     // The selectorText attribute, on getting, must return the result of serializing the associated group of selectors.
-    return serialize_a_group_of_selectors(selectors()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+    return serialize_a_group_of_selectors(selectors()).to_deprecated_string();
 }
 
 // https://www.w3.org/TR/cssom/#dom-cssstylerule-selectortext
