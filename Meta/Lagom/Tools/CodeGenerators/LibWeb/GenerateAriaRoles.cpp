@@ -51,7 +51,7 @@ ErrorOr<void> generate_header_file(JsonObject& roles_data, Core::File& file)
 namespace Web::ARIA {
 )~~~");
 
-    TRY(roles_data.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
+    roles_data.for_each_member([&](auto& name, auto& value) -> void {
         VERIFY(value.is_object());
         JsonObject const& value_object = value.as_object();
 
@@ -67,14 +67,13 @@ class @name@ :
 
         JsonArray const& super_classes = value_object.get_array("superClassRoles"sv).value();
         bool first = true;
-        TRY(super_classes.try_for_each([&](JsonValue const& value) -> ErrorOr<void> {
+        super_classes.for_each([&](JsonValue const& value) {
             VERIFY(value.is_string());
 
             class_definition_generator.append(first ? " "sv : ", "sv);
-            class_definition_generator.append(TRY(String::formatted("public {}", value.as_string())));
+            class_definition_generator.append(MUST(String::formatted("public {}", value.as_string())));
             first = false;
-            return {};
-        }));
+        });
 
         class_definition_generator.append(R"~~~(
 {
@@ -106,8 +105,7 @@ public:
     virtual NameFromSource name_from_source() const override;
 )~~~");
         class_definition_generator.appendln("};");
-        return {};
-    }));
+    });
 
     generator.appendln("}");
 
@@ -115,25 +113,24 @@ public:
     return {};
 }
 
-ErrorOr<String> generate_hash_table_population(JsonArray const& values, StringView hash_table_name, StringView enum_class)
+String generate_hash_table_population(JsonArray const& values, StringView hash_table_name, StringView enum_class)
 {
     StringBuilder builder;
-    TRY(values.try_for_each([&](auto& value) -> ErrorOr<void> {
+    values.for_each([&](auto& value) {
         VERIFY(value.is_string());
-        TRY(builder.try_appendff("        {}.set({}::{});\n", hash_table_name, enum_class, value.as_string()));
-        return {};
-    }));
+        builder.appendff("        {}.set({}::{});\n", hash_table_name, enum_class, value.as_string());
+    });
 
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
-ErrorOr<void> generate_hash_table_member(SourceGenerator& generator, StringView member_name, StringView hash_table_name, StringView enum_class, JsonArray const& values)
+void generate_hash_table_member(SourceGenerator& generator, StringView member_name, StringView hash_table_name, StringView enum_class, JsonArray const& values)
 {
     auto member_generator = generator.fork();
     member_generator.set("member_name"sv, member_name);
     member_generator.set("hash_table_name"sv, hash_table_name);
     member_generator.set("enum_class"sv, enum_class);
-    member_generator.set("hash_table_size"sv, TRY(String::number(values.size())));
+    member_generator.set("hash_table_size"sv, MUST(String::number(values.size())));
 
     if (values.size() == 0) {
         member_generator.append(R"~~~(
@@ -143,7 +140,7 @@ HashTable<@enum_class@> const& @name@::@member_name@() const
     return @hash_table_name@;
 }
 )~~~");
-        return {};
+        return;
     }
 
     member_generator.append(R"~~~(
@@ -153,14 +150,12 @@ HashTable<@enum_class@> const& @name@::@member_name@() const
     if (@hash_table_name@.is_empty()) {
         @hash_table_name@.ensure_capacity(@hash_table_size@);
 )~~~");
-    member_generator.append(TRY(generate_hash_table_population(values, hash_table_name, enum_class)));
+    member_generator.append(generate_hash_table_population(values, hash_table_name, enum_class));
     member_generator.append(R"~~~(
     }
     return @hash_table_name@;
 }
 )~~~");
-
-    return {};
 }
 
 StringView aria_name_to_enum_name(StringView name)
@@ -266,15 +261,14 @@ StringView aria_name_to_enum_name(StringView name)
     }
 }
 
-ErrorOr<JsonArray> translate_aria_names_to_enum(JsonArray const& names)
+JsonArray translate_aria_names_to_enum(JsonArray const& names)
 {
     JsonArray translated_names;
-    TRY(names.try_for_each([&](JsonValue const& value) -> ErrorOr<void> {
+    names.for_each([&](JsonValue const& value) {
         VERIFY(value.is_string());
         auto name = value.as_string();
-        TRY(translated_names.append(aria_name_to_enum_name(name)));
-        return {};
-    }));
+        MUST(translated_names.append(aria_name_to_enum_name(name)));
+    });
     return translated_names;
 }
 
@@ -289,7 +283,7 @@ ErrorOr<void> generate_implementation_file(JsonObject& roles_data, Core::File& f
 namespace Web::ARIA {
 )~~~");
 
-    TRY(roles_data.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
+    roles_data.for_each_member([&](auto& name, auto& value) -> void {
         VERIFY(value.is_object());
 
         auto member_generator = generator.fork();
@@ -297,25 +291,25 @@ namespace Web::ARIA {
 
         JsonObject const& value_object = value.as_object();
 
-        JsonArray const& supported_states = TRY(translate_aria_names_to_enum(value_object.get_array("supportedStates"sv).value()));
-        TRY(generate_hash_table_member(member_generator, "supported_states"sv, "states"sv, "StateAndProperties"sv, supported_states));
-        JsonArray const& supported_properties = TRY(translate_aria_names_to_enum(value_object.get_array("supportedProperties"sv).value()));
-        TRY(generate_hash_table_member(member_generator, "supported_properties"sv, "properties"sv, "StateAndProperties"sv, supported_properties));
+        JsonArray const& supported_states = translate_aria_names_to_enum(value_object.get_array("supportedStates"sv).value());
+        generate_hash_table_member(member_generator, "supported_states"sv, "states"sv, "StateAndProperties"sv, supported_states);
+        JsonArray const& supported_properties = translate_aria_names_to_enum(value_object.get_array("supportedProperties"sv).value());
+        generate_hash_table_member(member_generator, "supported_properties"sv, "properties"sv, "StateAndProperties"sv, supported_properties);
 
-        JsonArray const& required_states = TRY(translate_aria_names_to_enum(value_object.get_array("requiredStates"sv).value()));
-        TRY(generate_hash_table_member(member_generator, "required_states"sv, "states"sv, "StateAndProperties"sv, required_states));
-        JsonArray const& required_properties = TRY(translate_aria_names_to_enum(value_object.get_array("requiredProperties"sv).value()));
-        TRY(generate_hash_table_member(member_generator, "required_properties"sv, "properties"sv, "StateAndProperties"sv, required_properties));
+        JsonArray const& required_states = translate_aria_names_to_enum(value_object.get_array("requiredStates"sv).value());
+        generate_hash_table_member(member_generator, "required_states"sv, "states"sv, "StateAndProperties"sv, required_states);
+        JsonArray const& required_properties = translate_aria_names_to_enum(value_object.get_array("requiredProperties"sv).value());
+        generate_hash_table_member(member_generator, "required_properties"sv, "properties"sv, "StateAndProperties"sv, required_properties);
 
-        JsonArray const& prohibited_states = TRY(translate_aria_names_to_enum(value_object.get_array("prohibitedStates"sv).value()));
-        TRY(generate_hash_table_member(member_generator, "prohibited_states"sv, "states"sv, "StateAndProperties"sv, prohibited_states));
-        JsonArray const& prohibited_properties = TRY(translate_aria_names_to_enum(value_object.get_array("prohibitedProperties"sv).value()));
-        TRY(generate_hash_table_member(member_generator, "prohibited_properties"sv, "properties"sv, "StateAndProperties"sv, prohibited_properties));
+        JsonArray const& prohibited_states = translate_aria_names_to_enum(value_object.get_array("prohibitedStates"sv).value());
+        generate_hash_table_member(member_generator, "prohibited_states"sv, "states"sv, "StateAndProperties"sv, prohibited_states);
+        JsonArray const& prohibited_properties = translate_aria_names_to_enum(value_object.get_array("prohibitedProperties"sv).value());
+        generate_hash_table_member(member_generator, "prohibited_properties"sv, "properties"sv, "StateAndProperties"sv, prohibited_properties);
 
         JsonArray const& required_context_roles = value_object.get_array("requiredContextRoles"sv).value();
-        TRY(generate_hash_table_member(member_generator, "required_context_roles"sv, "roles"sv, "Role"sv, required_context_roles));
+        generate_hash_table_member(member_generator, "required_context_roles"sv, "roles"sv, "Role"sv, required_context_roles);
         JsonArray const& required_owned_elements = value_object.get_array("requiredOwnedElements"sv).value();
-        TRY(generate_hash_table_member(member_generator, "required_owned_elements"sv, "roles"sv, "Role"sv, required_owned_elements));
+        generate_hash_table_member(member_generator, "required_owned_elements"sv, "roles"sv, "Role"sv, required_owned_elements);
 
         bool accessible_name_required = value_object.get_bool("accessibleNameRequired"sv).value();
         member_generator.set("accessible_name_required"sv, accessible_name_required ? "true"sv : "false"sv);
@@ -358,7 +352,7 @@ DefaultValueType @name@::default_value_for_property_or_state(StateAndProperties 
 {
     switch (state_or_property) {
 )~~~");
-            TRY(implicit_value_for_role.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
+            implicit_value_for_role.for_each_member([&](auto& name, auto& value) {
                 auto case_generator = member_generator.fork();
                 VERIFY(value.is_string());
                 case_generator.set("state_or_property"sv, aria_name_to_enum_name(name));
@@ -367,8 +361,7 @@ DefaultValueType @name@::default_value_for_property_or_state(StateAndProperties 
     case StateAndProperties::@state_or_property@:
         return @implicit_value@;
 )~~~");
-                return {};
-            }));
+            });
             member_generator.append(R"~~~(
     default:
         return {};
@@ -387,9 +380,7 @@ NameFromSource @name@::name_from_source() const
 }
 )~~~");
         }
-
-        return {};
-    }));
+    });
 
     generator.append("}");
 

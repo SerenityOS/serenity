@@ -53,13 +53,12 @@ namespace Web::CSS {
 enum class PseudoClass {
 )~~~");
 
-    TRY(pseudo_classes_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
+    pseudo_classes_data.for_each_member([&](auto& name, auto&) {
         auto member_generator = generator.fork();
         member_generator.set("name:titlecase", title_casify(name));
 
         member_generator.appendln("    @name:titlecase@,");
-        return {};
-    }));
+    });
     generator.append(R"~~~(
 };
 
@@ -103,17 +102,16 @@ Optional<PseudoClass> pseudo_class_from_string(StringView string)
 {
 )~~~");
 
-    TRY(pseudo_classes_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
+    pseudo_classes_data.for_each_member([&](auto& name, auto&) {
         auto member_generator = generator.fork();
-        member_generator.set("name", TRY(String::from_deprecated_string(name)));
+        member_generator.set("name", name);
         member_generator.set("name:titlecase", title_casify(name));
 
         member_generator.append(R"~~~(
     if (string.equals_ignoring_ascii_case("@name@"sv))
         return PseudoClass::@name:titlecase@;
 )~~~");
-        return {};
-    }));
+    });
 
     generator.append(R"~~~(
 
@@ -125,17 +123,16 @@ StringView pseudo_class_name(PseudoClass pseudo_class)
     switch (pseudo_class) {
 )~~~");
 
-    TRY(pseudo_classes_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
+    pseudo_classes_data.for_each_member([&](auto& name, auto&) {
         auto member_generator = generator.fork();
-        member_generator.set("name", TRY(String::from_deprecated_string(name)));
+        member_generator.set("name", name);
         member_generator.set("name:titlecase", title_casify(name));
 
         member_generator.append(R"~~~(
     case PseudoClass::@name:titlecase@:
         return "@name@"sv;
 )~~~");
-        return {};
-    }));
+    });
 
     generator.append(R"~~~(
     }
@@ -147,7 +144,7 @@ PseudoClassMetadata pseudo_class_metadata(PseudoClass pseudo_class)
     switch (pseudo_class) {
 )~~~");
 
-    TRY(pseudo_classes_data.try_for_each_member([&](auto& name, JsonValue const& value) -> ErrorOr<void> {
+    pseudo_classes_data.for_each_member([&](auto& name, JsonValue const& value) {
         auto member_generator = generator.fork();
         auto& pseudo_class = value.as_object();
         auto argument_string = pseudo_class.get_deprecated_string("argument"sv).value();
@@ -195,8 +192,7 @@ PseudoClassMetadata pseudo_class_metadata(PseudoClass pseudo_class)
             .is_valid_as_identifier = @is_valid_as_identifier@,
         };
 )~~~");
-        return {};
-    }));
+    });
 
     generator.append(R"~~~(
     }

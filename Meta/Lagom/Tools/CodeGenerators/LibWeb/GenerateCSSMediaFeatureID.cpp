@@ -60,13 +60,12 @@ enum class MediaFeatureValueType {
 
 enum class MediaFeatureID {)~~~");
 
-    TRY(media_feature_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
+    media_feature_data.for_each_member([&](auto& name, auto&) {
         auto member_generator = generator.fork();
         member_generator.set("name:titlecase", title_casify(name));
         member_generator.append(R"~~~(
     @name:titlecase@,)~~~");
-        return {};
-    }));
+    });
 
     generator.append(R"~~~(
 };
@@ -98,16 +97,15 @@ namespace Web::CSS {
 Optional<MediaFeatureID> media_feature_id_from_string(StringView string)
 {)~~~");
 
-    TRY(media_feature_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
+    media_feature_data.for_each_member([&](auto& name, auto&) {
         auto member_generator = generator.fork();
-        member_generator.set("name", TRY(String::from_deprecated_string(name)));
+        member_generator.set("name", name);
         member_generator.set("name:titlecase", title_casify(name));
         member_generator.append(R"~~~(
     if (Infra::is_ascii_case_insensitive_match(string, "@name@"sv))
         return MediaFeatureID::@name:titlecase@;
 )~~~");
-        return {};
-    }));
+    });
 
     generator.append(R"~~~(
     return {};
@@ -117,15 +115,14 @@ StringView string_from_media_feature_id(MediaFeatureID media_feature_id)
 {
     switch (media_feature_id) {)~~~");
 
-    TRY(media_feature_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
+    media_feature_data.for_each_member([&](auto& name, auto&) {
         auto member_generator = generator.fork();
-        member_generator.set("name", TRY(String::from_deprecated_string(name)));
+        member_generator.set("name", name);
         member_generator.set("name:titlecase", title_casify(name));
         member_generator.append(R"~~~(
     case MediaFeatureID::@name:titlecase@:
         return "@name@"sv;)~~~");
-        return {};
-    }));
+    });
 
     generator.append(R"~~~(
     }
@@ -136,7 +133,7 @@ bool media_feature_type_is_range(MediaFeatureID media_feature_id)
 {
     switch (media_feature_id) {)~~~");
 
-    TRY(media_feature_data.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
+    media_feature_data.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
         auto& feature = value.as_object();
 
@@ -149,8 +146,7 @@ bool media_feature_type_is_range(MediaFeatureID media_feature_id)
         member_generator.append(R"~~~(
     case MediaFeatureID::@name:titlecase@:
         return @is_range@;)~~~");
-        return {};
-    }));
+    });
 
     generator.append(R"~~~(
     }
@@ -161,7 +157,7 @@ bool media_feature_accepts_type(MediaFeatureID media_feature_id, MediaFeatureVal
 {
     switch (media_feature_id) {)~~~");
 
-    TRY(media_feature_data.try_for_each_member([&](auto& name, auto& member) -> ErrorOr<void> {
+    media_feature_data.for_each_member([&](auto& name, auto& member) {
         VERIFY(member.is_object());
         auto& feature = member.as_object();
 
@@ -172,13 +168,12 @@ bool media_feature_accepts_type(MediaFeatureID media_feature_id, MediaFeatureVal
 
         bool have_output_value_type_switch = false;
         if (feature.has("values"sv)) {
-            auto append_value_type_switch_if_needed = [&]() -> ErrorOr<void> {
+            auto append_value_type_switch_if_needed = [&] {
                 if (!have_output_value_type_switch) {
                     member_generator.append(R"~~~(
         switch (value_type) {)~~~");
                 }
                 have_output_value_type_switch = true;
-                return {};
             };
             auto values = feature.get_array("values"sv);
             VERIFY(values.has_value());
@@ -190,27 +185,27 @@ bool media_feature_accepts_type(MediaFeatureID media_feature_id, MediaFeatureVal
                 if (type_name[0] != '<')
                     continue;
                 if (type_name == "<mq-boolean>") {
-                    TRY(append_value_type_switch_if_needed());
+                    append_value_type_switch_if_needed();
                     member_generator.append(R"~~~(
         case MediaFeatureValueType::Boolean:
             return true;)~~~");
                 } else if (type_name == "<integer>") {
-                    TRY(append_value_type_switch_if_needed());
+                    append_value_type_switch_if_needed();
                     member_generator.append(R"~~~(
         case MediaFeatureValueType::Integer:
             return true;)~~~");
                 } else if (type_name == "<length>") {
-                    TRY(append_value_type_switch_if_needed());
+                    append_value_type_switch_if_needed();
                     member_generator.append(R"~~~(
         case MediaFeatureValueType::Length:
             return true;)~~~");
                 } else if (type_name == "<ratio>") {
-                    TRY(append_value_type_switch_if_needed());
+                    append_value_type_switch_if_needed();
                     member_generator.append(R"~~~(
         case MediaFeatureValueType::Ratio:
             return true;)~~~");
                 } else if (type_name == "<resolution>") {
-                    TRY(append_value_type_switch_if_needed());
+                    append_value_type_switch_if_needed();
                     member_generator.append(R"~~~(
         case MediaFeatureValueType::Resolution:
             return true;)~~~");
@@ -229,8 +224,7 @@ bool media_feature_accepts_type(MediaFeatureID media_feature_id, MediaFeatureVal
             member_generator.append(R"~~~(
         return false;)~~~");
         }
-        return {};
-    }));
+    });
 
     generator.append(R"~~~(
     }
@@ -241,7 +235,7 @@ bool media_feature_accepts_identifier(MediaFeatureID media_feature_id, ValueID i
 {
     switch (media_feature_id) {)~~~");
 
-    TRY(media_feature_data.try_for_each_member([&](auto& name, auto& member) -> ErrorOr<void> {
+    media_feature_data.for_each_member([&](auto& name, auto& member) {
         VERIFY(member.is_object());
         auto& feature = member.as_object();
 
@@ -252,13 +246,12 @@ bool media_feature_accepts_identifier(MediaFeatureID media_feature_id, ValueID i
 
         bool have_output_identifier_switch = false;
         if (feature.has("values"sv)) {
-            auto append_identifier_switch_if_needed = [&]() -> ErrorOr<void> {
+            auto append_identifier_switch_if_needed = [&] {
                 if (!have_output_identifier_switch) {
                     member_generator.append(R"~~~(
         switch (identifier) {)~~~");
                 }
                 have_output_identifier_switch = true;
-                return {};
             };
             auto values = feature.get_array("values"sv);
             VERIFY(values.has_value());
@@ -269,7 +262,7 @@ bool media_feature_accepts_identifier(MediaFeatureID media_feature_id, ValueID i
                 // Skip types.
                 if (identifier_name[0] == '<')
                     continue;
-                TRY(append_identifier_switch_if_needed());
+                append_identifier_switch_if_needed();
 
                 auto ident_generator = member_generator.fork();
                 ident_generator.set("identifier:titlecase", title_casify(identifier_name));
@@ -287,8 +280,7 @@ bool media_feature_accepts_identifier(MediaFeatureID media_feature_id, ValueID i
             member_generator.append(R"~~~(
         return false;)~~~");
         }
-        return {};
-    }));
+    });
 
     generator.append(R"~~~(
     }
