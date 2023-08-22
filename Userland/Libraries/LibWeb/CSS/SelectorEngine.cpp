@@ -213,7 +213,24 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
 {
     switch (pseudo_class.type) {
     case CSS::PseudoClass::Link:
+    case CSS::PseudoClass::AnyLink:
+        // NOTE: AnyLink should match whether the link is visited or not, so if we ever start matching
+        //       :visited, we'll need to handle these differently.
         return matches_link_pseudo_class(element);
+    case CSS::PseudoClass::LocalLink: {
+        // The :local-link pseudo-class allows authors to style hyperlinks based on the users current location
+        // within a site. It represents an element that is the source anchor of a hyperlink whose target’s
+        // absolute URL matches the element’s own document URL. If the hyperlink’s target includes a fragment
+        // URL, then the fragment URL of the current URL must also match; if it does not, then the fragment
+        // URL portion of the current URL is not taken into account in the comparison.
+        if (!matches_link_pseudo_class(element))
+            return false;
+        auto document_url = element.document().url();
+        AK::URL target_url = element.document().parse_url(element.attribute(HTML::AttributeNames::href));
+        if (target_url.fragment().has_value())
+            return document_url.equals(target_url, AK::URL::ExcludeFragment::No);
+        return document_url.equals(target_url, AK::URL::ExcludeFragment::Yes);
+    }
     case CSS::PseudoClass::Visited:
         // FIXME: Maybe match this selector sometimes?
         return false;
