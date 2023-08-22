@@ -240,7 +240,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const = 0;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) = 0;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const = 0;
+    virtual void dump(StringBuilder&, int indent) const = 0;
 
 protected:
     explicit CalculationNode(Type);
@@ -261,7 +261,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override { }
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     explicit NumericCalculationNode(NumericValue);
@@ -280,7 +280,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     explicit SumCalculationNode(Vector<NonnullOwnPtr<CalculationNode>>);
@@ -299,7 +299,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     explicit ProductCalculationNode(Vector<NonnullOwnPtr<CalculationNode>>);
@@ -318,7 +318,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     explicit NegateCalculationNode(NonnullOwnPtr<CalculationNode>);
@@ -337,7 +337,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     explicit InvertCalculationNode(NonnullOwnPtr<CalculationNode>);
@@ -356,7 +356,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     explicit MinCalculationNode(Vector<NonnullOwnPtr<CalculationNode>>);
@@ -375,7 +375,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     explicit MaxCalculationNode(Vector<NonnullOwnPtr<CalculationNode>>);
@@ -394,7 +394,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     explicit ClampCalculationNode(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
@@ -415,7 +415,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     AbsCalculationNode(NonnullOwnPtr<CalculationNode>);
@@ -434,7 +434,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     SignCalculationNode(NonnullOwnPtr<CalculationNode>);
@@ -453,7 +453,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&> context, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override { }
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     ConstantCalculationNode(ConstantType);
@@ -472,7 +472,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     SinCalculationNode(NonnullOwnPtr<CalculationNode>);
@@ -491,7 +491,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     CosCalculationNode(NonnullOwnPtr<CalculationNode>);
@@ -510,7 +510,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     TanCalculationNode(NonnullOwnPtr<CalculationNode>);
@@ -529,7 +529,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     AsinCalculationNode(NonnullOwnPtr<CalculationNode>);
@@ -548,7 +548,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     AcosCalculationNode(NonnullOwnPtr<CalculationNode>);
@@ -567,7 +567,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     AtanCalculationNode(NonnullOwnPtr<CalculationNode>);
@@ -586,7 +586,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     Atan2CalculationNode(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
@@ -606,7 +606,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     explicit PowCalculationNode(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
@@ -626,7 +626,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     SqrtCalculationNode(NonnullOwnPtr<CalculationNode>);
@@ -645,7 +645,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     explicit HypotCalculationNode(Vector<NonnullOwnPtr<CalculationNode>>);
@@ -664,7 +664,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     LogCalculationNode(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
@@ -684,7 +684,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     ExpCalculationNode(NonnullOwnPtr<CalculationNode>);
@@ -703,7 +703,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     RoundCalculationNode(RoundingStrategy, NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
@@ -724,7 +724,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     ModCalculationNode(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
@@ -744,7 +744,7 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override;
     virtual void for_each_child_node(Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override;
 
-    virtual ErrorOr<void> dump(StringBuilder&, int indent) const override;
+    virtual void dump(StringBuilder&, int indent) const override;
 
 private:
     RemCalculationNode(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);

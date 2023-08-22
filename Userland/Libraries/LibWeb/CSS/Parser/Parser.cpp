@@ -6245,9 +6245,9 @@ public:
     virtual CalculatedStyleValue::CalculationResult resolve(Optional<Length::ResolutionContext const&>, CalculatedStyleValue::PercentageBasis const&) const override { VERIFY_NOT_REACHED(); }
     virtual void for_each_child_node(AK::Function<void(NonnullOwnPtr<CalculationNode>&)> const&) override { }
 
-    virtual ErrorOr<void> dump(StringBuilder& builder, int indent) const override
+    virtual void dump(StringBuilder& builder, int indent) const override
     {
-        return builder.try_appendff("{: >{}}UNPARSED({})\n", "", indent, m_component_value.to_debug_string());
+        builder.appendff("{: >{}}UNPARSED({})\n", "", indent, m_component_value.to_debug_string());
     }
 
 private:
