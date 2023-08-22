@@ -36,7 +36,7 @@ public:
     Type type() const { return m_type; }
     String line_name() const { return m_line_name; }
 
-    ErrorOr<String> to_string() const;
+    String to_string() const;
     bool operator==(GridTrackPlacement const& other) const
     {
         return m_type == other.type() && m_span_count_or_position == other.raw_value();

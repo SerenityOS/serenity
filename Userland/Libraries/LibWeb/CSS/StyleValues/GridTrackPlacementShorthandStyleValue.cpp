@@ -27,8 +27,8 @@ ValueComparingNonnullRefPtr<GridTrackPlacementShorthandStyleValue> GridTrackPlac
 ErrorOr<String> GridTrackPlacementShorthandStyleValue::to_string() const
 {
     if (m_properties.end->grid_track_placement().is_auto())
-        return String::formatted("{}", TRY(m_properties.start->grid_track_placement().to_string()));
-    return String::formatted("{} / {}", TRY(m_properties.start->grid_track_placement().to_string()), TRY(m_properties.end->grid_track_placement().to_string()));
+        return String::formatted("{}", m_properties.start->grid_track_placement().to_string());
+    return String::formatted("{} / {}", m_properties.start->grid_track_placement().to_string(), m_properties.end->grid_track_placement().to_string());
 }
 
 }

@@ -81,13 +81,13 @@ Size GridSize::css_size() const
     return CSS::Size::make_percentage(m_length_percentage.percentage());
 }
 
-ErrorOr<String> GridSize::to_string() const
+String GridSize::to_string() const
 {
     switch (m_type) {
     case Type::LengthPercentage:
         return m_length_percentage.to_string();
     case Type::FlexibleLength:
-        return String::formatted("{}fr", m_flex_factor);
+        return MUST(String::formatted("{}fr", m_flex_factor));
     case Type::MaxContent:
         return "max-content"_string;
     case Type::MinContent:
@@ -102,15 +102,15 @@ GridMinMax::GridMinMax(GridSize min_grid_size, GridSize max_grid_size)
 {
 }
 
-ErrorOr<String> GridMinMax::to_string() const
+String GridMinMax::to_string() const
 {
     StringBuilder builder;
     builder.append("minmax("sv);
-    builder.appendff("{}", TRY(m_min_grid_size.to_string()));
+    builder.appendff("{}", m_min_grid_size.to_string());
     builder.append(", "sv);
-    builder.appendff("{}", TRY(m_max_grid_size.to_string()));
+    builder.appendff("{}", m_max_grid_size.to_string());
     builder.append(")"sv);
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 GridRepeat::GridRepeat(GridTrackSizeList grid_track_size_list, int repeat_count)
@@ -130,7 +130,7 @@ GridRepeat::GridRepeat()
 {
 }
 
-ErrorOr<String> GridRepeat::to_string() const
+String GridRepeat::to_string() const
 {
     StringBuilder builder;
     builder.append("repeat("sv);
@@ -148,9 +148,9 @@ ErrorOr<String> GridRepeat::to_string() const
         VERIFY_NOT_REACHED();
     }
     builder.append(", "sv);
-    builder.appendff("{}", TRY(m_grid_track_size_list.to_string()));
+    builder.appendff("{}", m_grid_track_size_list.to_string());
     builder.append(")"sv);
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 ExplicitGridTrack::ExplicitGridTrack(CSS::GridMinMax grid_minmax)
@@ -171,7 +171,7 @@ ExplicitGridTrack::ExplicitGridTrack(CSS::GridSize grid_size)
 {
 }
 
-ErrorOr<String> ExplicitGridTrack::to_string() const
+String ExplicitGridTrack::to_string() const
 {
     switch (m_type) {
     case Type::MinMax:
@@ -202,7 +202,7 @@ GridTrackSizeList GridTrackSizeList::make_none()
     return GridTrackSizeList();
 }
 
-ErrorOr<String> GridTrackSizeList::to_string() const
+String GridTrackSizeList::to_string() const
 {
     StringBuilder builder;
     auto print_line_names = [&](size_t index) -> void {
@@ -220,7 +220,7 @@ ErrorOr<String> GridTrackSizeList::to_string() const
             print_line_names(i);
             builder.append(" "sv);
         }
-        builder.append(TRY(m_track_list[i].to_string()));
+        builder.append(m_track_list[i].to_string());
         if (i < m_track_list.size() - 1)
             builder.append(" "sv);
     }
@@ -228,7 +228,7 @@ ErrorOr<String> GridTrackSizeList::to_string() const
         builder.append(" "sv);
         print_line_names(m_track_list.size());
     }
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 }

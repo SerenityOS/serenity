@@ -32,7 +32,7 @@ ErrorOr<String> GridTrackSizeListShorthandStyleValue::to_string() const
                 }
                 TRY(builder.try_append("\" "sv));
             }
-            TRY(builder.try_append(TRY(row.to_string())));
+            TRY(builder.try_append(row.to_string()));
             if (idx < m_properties.rows->grid_track_size_list().track_list().size() - 1)
                 TRY(builder.try_append(' '));
             idx++;
@@ -42,7 +42,7 @@ ErrorOr<String> GridTrackSizeListShorthandStyleValue::to_string() const
 
     if (m_properties.columns->grid_track_size_list().track_list().size() == 0)
         return String::formatted("{}", TRY(construct_rows_string()));
-    return String::formatted("{} / {}", TRY(construct_rows_string()), TRY(m_properties.columns->grid_track_size_list().to_string()));
+    return String::formatted("{} / {}", TRY(construct_rows_string()), m_properties.columns->grid_track_size_list().to_string());
 }
 
 }
