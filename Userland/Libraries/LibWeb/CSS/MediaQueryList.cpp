@@ -43,7 +43,7 @@ void MediaQueryList::visit_edges(Cell::Visitor& visitor)
 // https://drafts.csswg.org/cssom-view/#dom-mediaquerylist-media
 DeprecatedString MediaQueryList::media() const
 {
-    return serialize_a_media_query_list(m_media).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+    return serialize_a_media_query_list(m_media).to_deprecated_string();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-mediaquerylist-matches
