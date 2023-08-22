@@ -96,7 +96,6 @@ public:
     bool has_animation_frame_callbacks() const { return m_animation_frame_callback_driver.has_callbacks(); }
 
     void did_set_location_href(Badge<Location>, AK::URL const& new_href);
-    void did_call_location_reload(Badge<Location>);
     void did_call_location_replace(Badge<Location>, DeprecatedString url);
 
     DOM::Event* current_event() { return m_current_event.ptr(); }

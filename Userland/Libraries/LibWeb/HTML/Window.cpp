@@ -429,14 +429,6 @@ void Window::did_set_location_href(Badge<Location>, AK::URL const& new_href)
     browsing_context->loader().load(new_href, FrameLoader::Type::Navigation);
 }
 
-void Window::did_call_location_reload(Badge<Location>)
-{
-    auto* browsing_context = associated_document().browsing_context();
-    if (!browsing_context)
-        return;
-    browsing_context->loader().load(associated_document().url(), FrameLoader::Type::Reload);
-}
-
 void Window::did_call_location_replace(Badge<Location>, DeprecatedString url)
 {
     auto* browsing_context = associated_document().browsing_context();
