@@ -65,12 +65,11 @@ namespace Web::CSS {
 )~~~");
 
     generator.appendln("enum class TransformFunction {");
-    TRY(transforms_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
+    transforms_data.for_each_member([&](auto& name, auto&) {
         auto member_generator = generator.fork();
         member_generator.set("name:titlecase", title_casify_transform_function(name));
         member_generator.appendln("    @name:titlecase@,");
-        return {};
-    }));
+    });
     generator.appendln("};");
 
     generator.appendln("Optional<TransformFunction> transform_function_from_string(StringView);");
@@ -117,16 +116,15 @@ namespace Web::CSS {
 Optional<TransformFunction> transform_function_from_string(StringView name)
 {
 )~~~");
-    TRY(transforms_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
+    transforms_data.for_each_member([&](auto& name, auto&) {
         auto member_generator = generator.fork();
-        member_generator.set("name", TRY(String::from_deprecated_string(name)));
+        member_generator.set("name", name);
         member_generator.set("name:titlecase", title_casify_transform_function(name));
         member_generator.append(R"~~~(
     if (name.equals_ignoring_ascii_case("@name@"sv))
         return TransformFunction::@name:titlecase@;
 )~~~");
-        return {};
-    }));
+    });
     generator.append(R"~~~(
     return {};
 }
@@ -137,16 +135,15 @@ StringView to_string(TransformFunction transform_function)
 {
     switch (transform_function) {
 )~~~");
-    TRY(transforms_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
+    transforms_data.for_each_member([&](auto& name, auto&) {
         auto member_generator = generator.fork();
-        member_generator.set("name", TRY(String::from_deprecated_string(name)));
+        member_generator.set("name", name);
         member_generator.set("name:titlecase", title_casify_transform_function(name));
         member_generator.append(R"~~~(
     case TransformFunction::@name:titlecase@:
         return "@name@"sv;
 )~~~");
-        return {};
-    }));
+    });
     generator.append(R"~~~(
     default:
         VERIFY_NOT_REACHED();
@@ -159,7 +156,7 @@ TransformFunctionMetadata transform_function_metadata(TransformFunction transfor
 {
     switch (transform_function) {
 )~~~");
-    TRY(transforms_data.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
+    transforms_data.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
 
         auto member_generator = generator.fork();
@@ -171,7 +168,7 @@ TransformFunctionMetadata transform_function_metadata(TransformFunction transfor
 
         JsonArray const& parameters = value.as_object().get_array("parameters"sv).value();
         bool first = true;
-        TRY(parameters.try_for_each([&](JsonValue const& value) -> ErrorOr<void> {
+        parameters.for_each([&](JsonValue const& value) {
             GenericLexer lexer { value.as_object().get_deprecated_string("type"sv).value() };
             VERIFY(lexer.consume_specific('<'));
             auto parameter_type_name = lexer.consume_until('>');
@@ -192,15 +189,13 @@ TransformFunctionMetadata transform_function_metadata(TransformFunction transfor
             member_generator.append(first ? " "sv : ", "sv);
             first = false;
 
-            member_generator.append(TRY(String::formatted("{{ TransformFunctionParameterType::{}, {}}}", parameter_type, value.as_object().get("required"sv)->to_deprecated_string())));
-            return {};
-        }));
+            member_generator.append(MUST(String::formatted("{{ TransformFunctionParameterType::{}, {}}}", parameter_type, value.as_object().get("required"sv)->to_deprecated_string())));
+        });
 
         member_generator.append(R"~~~( }
     };
 )~~~");
-        return {};
-    }));
+    });
     generator.append(R"~~~(
     default:
         VERIFY_NOT_REACHED();

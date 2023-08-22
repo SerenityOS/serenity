@@ -54,7 +54,7 @@ enum class ValueID;
 
 )~~~");
 
-    TRY(enums_data.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
+    enums_data.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_array());
         auto& members = value.as_array();
 
@@ -91,8 +91,7 @@ enum class ValueID;
         enum_generator.appendln("ValueID to_value_id(@name:titlecase@);");
         enum_generator.appendln("StringView to_string(@name:titlecase@);");
         enum_generator.append("\n");
-        return {};
-    }));
+    });
 
     generator.appendln("}");
 
@@ -112,7 +111,7 @@ ErrorOr<void> generate_implementation_file(JsonObject& enums_data, Core::File& f
 namespace Web::CSS {
 )~~~");
 
-    TRY(enums_data.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
+    enums_data.for_each_member([&](auto& name, auto& value) -> void {
         VERIFY(value.is_array());
         auto& members = value.as_array();
 
@@ -182,7 +181,7 @@ StringView to_string(@name:titlecase@ value)
             auto member_name = member.to_deprecated_string();
             if (member_name.contains('='))
                 continue;
-            member_generator.set("member:css", TRY(String::from_deprecated_string(member_name)));
+            member_generator.set("member:css", member_name);
             member_generator.set("member:titlecase", title_casify(member_name));
 
             member_generator.append(R"~~~(
@@ -196,8 +195,7 @@ StringView to_string(@name:titlecase@ value)
     }
 }
 )~~~");
-        return {};
-    }));
+    });
 
     generator.appendln("}");
 

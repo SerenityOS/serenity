@@ -53,12 +53,11 @@ namespace Web::CSS {
 enum class MathFunction {
 )~~~");
 
-    TRY(functions_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
+    functions_data.for_each_member([&](auto& name, auto&) {
         auto member_generator = generator.fork();
         member_generator.set("name:titlecase", title_casify(name));
         member_generator.appendln("    @name:titlecase@,"sv);
-        return {};
-    }));
+    });
 
     generator.append(R"~~~(
 };
@@ -70,7 +69,7 @@ enum class MathFunction {
     return {};
 }
 
-ErrorOr<String> generate_calculation_type_check(StringView calculation_variable_name, StringView parameter_types)
+String generate_calculation_type_check(StringView calculation_variable_name, StringView parameter_types)
 {
     StringBuilder builder;
     auto allowed_types = parameter_types.split_view('|');
@@ -81,29 +80,29 @@ ErrorOr<String> generate_calculation_type_check(StringView calculation_variable_
         first_type_check = false;
 
         if (allowed_type_name == "<angle>"sv) {
-            TRY(builder.try_appendff("{}.{}", calculation_variable_name, "matches_angle()"sv));
+            builder.appendff("{}.{}", calculation_variable_name, "matches_angle()"sv);
         } else if (allowed_type_name == "<dimension>"sv) {
-            TRY(builder.try_appendff("{}.{}", calculation_variable_name, "matches_dimension()"sv));
+            builder.appendff("{}.{}", calculation_variable_name, "matches_dimension()"sv);
         } else if (allowed_type_name == "<flex>"sv) {
-            TRY(builder.try_appendff("{}.{}", calculation_variable_name, "matches_flex()"sv));
+            builder.appendff("{}.{}", calculation_variable_name, "matches_flex()"sv);
         } else if (allowed_type_name == "<frequency>"sv) {
-            TRY(builder.try_appendff("{}.{}", calculation_variable_name, "matches_frequency()"sv));
+            builder.appendff("{}.{}", calculation_variable_name, "matches_frequency()"sv);
         } else if (allowed_type_name == "<length>"sv) {
-            TRY(builder.try_appendff("{}.{}", calculation_variable_name, "matches_length()"sv));
+            builder.appendff("{}.{}", calculation_variable_name, "matches_length()"sv);
         } else if (allowed_type_name == "<number>"sv) {
-            TRY(builder.try_appendff("{}.{}", calculation_variable_name, "matches_number()"sv));
+            builder.appendff("{}.{}", calculation_variable_name, "matches_number()"sv);
         } else if (allowed_type_name == "<percentage>"sv) {
-            TRY(builder.try_appendff("{}.{}", calculation_variable_name, "matches_percentage()"sv));
+            builder.appendff("{}.{}", calculation_variable_name, "matches_percentage()"sv);
         } else if (allowed_type_name == "<resolution>"sv) {
-            TRY(builder.try_appendff("{}.{}", calculation_variable_name, "matches_resolution()"sv));
+            builder.appendff("{}.{}", calculation_variable_name, "matches_resolution()"sv);
         } else if (allowed_type_name == "<time>"sv) {
-            TRY(builder.try_appendff("{}.{}", calculation_variable_name, "matches_time()"sv));
+            builder.appendff("{}.{}", calculation_variable_name, "matches_time()"sv);
         } else {
             dbgln("I don't know what '{}' is!", allowed_type_name);
             VERIFY_NOT_REACHED();
         }
     }
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 ErrorOr<void> generate_implementation_file(JsonObject& functions_data, Core::File& file)
@@ -150,12 +149,12 @@ OwnPtr<CalculationNode> Parser::parse_math_function(PropertyID property_id, Func
     auto arguments = parse_a_comma_separated_list_of_component_values(stream);
 )~~~");
 
-    TRY(functions_data.try_for_each_member([&](auto& name, JsonValue const& value) -> ErrorOr<void> {
+    functions_data.for_each_member([&](auto& name, JsonValue const& value) -> void {
         auto& function_data = value.as_object();
         auto& parameters = function_data.get_array("parameters"sv).value();
 
         auto function_generator = generator.fork();
-        function_generator.set("name:lowercase", TRY(String::from_deprecated_string(name)));
+        function_generator.set("name:lowercase", name);
         function_generator.set("name:titlecase", title_casify(name));
         function_generator.appendln("    if (function.name().equals_ignoring_ascii_case(\"@name:lowercase@\"sv)) {");
         if (function_data.get_bool("is-variadic"sv).value_or(false)) {
@@ -184,7 +183,7 @@ OwnPtr<CalculationNode> Parser::parse_math_function(PropertyID property_id, Func
             VERIFY(parameters.size() == 1);
             auto& parameter_data = parameters[0].as_object();
             auto parameter_type_string = parameter_data.get_deprecated_string("type"sv).value();
-            function_generator.set("type_check", TRY(generate_calculation_type_check("argument_type"sv, parameter_type_string)));
+            function_generator.set("type_check", generate_calculation_type_check("argument_type"sv, parameter_type_string));
             function_generator.append(R"~~~(
             if (!(@type_check@)) {
                 dbgln_if(CSS_PARSER_DEBUG, "@name:lowercase@() argument #{} type ({}) is not an accepted type", parsed_arguments.size(), MUST(argument_type.dump()));
@@ -216,8 +215,8 @@ OwnPtr<CalculationNode> Parser::parse_math_function(PropertyID property_id, Func
                 if (parameter.get_bool("required"sv) == true)
                     min_argument_count++;
             });
-            function_generator.set("min_argument_count", TRY(String::number(min_argument_count)));
-            function_generator.set("max_argument_count", TRY(String::number(max_argument_count)));
+            function_generator.set("min_argument_count", MUST(String::number(min_argument_count)));
+            function_generator.set("max_argument_count", MUST(String::number(max_argument_count)));
 
             function_generator.append(R"~~~(
         if (arguments.size() < @min_argument_count@ || arguments.size() > @max_argument_count@) {
@@ -230,14 +229,14 @@ OwnPtr<CalculationNode> Parser::parse_math_function(PropertyID property_id, Func
 
             size_t parameter_index = 0;
             StringView previous_parameter_type_string;
-            TRY(parameters.try_for_each([&](JsonValue const& parameter_value) -> ErrorOr<void> {
+            parameters.for_each([&](JsonValue const& parameter_value) {
                 auto& parameter = parameter_value.as_object();
                 auto parameter_type_string = parameter.get_deprecated_string("type"sv).value();
                 auto parameter_required = parameter.get_bool("required"sv).value();
 
                 auto parameter_generator = function_generator.fork();
-                parameter_generator.set("parameter_name", TRY(String::from_deprecated_string(parameter.get_deprecated_string("name"sv).value())));
-                parameter_generator.set("parameter_index", TRY(String::number(parameter_index)));
+                parameter_generator.set("parameter_name", parameter.get_deprecated_string("name"sv).value());
+                parameter_generator.set("parameter_index", MUST(String::number(parameter_index)));
 
                 bool parameter_is_calculation;
                 if (parameter_type_string == "<rounding-strategy>") {
@@ -247,7 +246,7 @@ OwnPtr<CalculationNode> Parser::parse_math_function(PropertyID property_id, Func
                     parameter_generator.set("check_function", ".has_value()"_string);
                     parameter_generator.set("release_function", ".release_value()"_string);
                     if (auto default_value = parameter.get_deprecated_string("default"sv); default_value.has_value()) {
-                        parameter_generator.set("parameter_default", TRY(String::formatted(" = RoundingStrategy::{}", title_casify(default_value.value()))));
+                        parameter_generator.set("parameter_default", MUST(String::formatted(" = RoundingStrategy::{}", title_casify(default_value.value()))));
                     } else {
                         parameter_generator.set("parameter_default", ""_string);
                     }
@@ -262,7 +261,7 @@ OwnPtr<CalculationNode> Parser::parse_math_function(PropertyID property_id, Func
                     // NOTE: We have exactly one default value in the data right now, and it's a `<calc-constant>`,
                     //       so that's all we handle.
                     if (auto default_value = parameter.get_deprecated_string("default"sv); default_value.has_value()) {
-                        parameter_generator.set("parameter_default", TRY(String::formatted(" = ConstantCalculationNode::create(CalculationNode::constant_type_from_string(\"{}\"sv).value())", TRY(String::from_deprecated_string(default_value.value())))));
+                        parameter_generator.set("parameter_default", MUST(String::formatted(" = ConstantCalculationNode::create(CalculationNode::constant_type_from_string(\"{}\"sv).value())", default_value.value())));
                     } else {
                         parameter_generator.set("parameter_default", ""_string);
                     }
@@ -304,8 +303,8 @@ OwnPtr<CalculationNode> Parser::parse_math_function(PropertyID property_id, Func
 )~~~");
 
                 if (parameter_is_calculation) {
-                    auto parameter_type_variable = TRY(String::formatted("argument_type_{}", parameter_index));
-                    parameter_generator.set("type_check", TRY(generate_calculation_type_check(parameter_type_variable, parameter_type_string)));
+                    auto parameter_type_variable = MUST(String::formatted("argument_type_{}", parameter_index));
+                    parameter_generator.set("type_check", generate_calculation_type_check(parameter_type_variable, parameter_type_string));
                     parameter_generator.append(R"~~~(
         auto maybe_argument_type_@parameter_index@ = parameter_@parameter_index@->determine_type(property_id);
         if (!maybe_argument_type_@parameter_index@.has_value()) {
@@ -337,18 +336,17 @@ OwnPtr<CalculationNode> Parser::parse_math_function(PropertyID property_id, Func
 
                 parameter_index++;
                 previous_parameter_type_string = parameter_type_string;
-                return {};
-            }));
+            });
 
             // Generate the call to the constructor
             function_generator.append("        return @name:titlecase@CalculationNode::create("sv);
             parameter_index = 0;
-            TRY(parameters.try_for_each([&](JsonValue const& parameter_value) -> ErrorOr<void> {
+            parameters.for_each([&](JsonValue const& parameter_value) {
                 auto& parameter = parameter_value.as_object();
                 auto parameter_type_string = parameter.get_deprecated_string("type"sv).value();
 
                 auto parameter_generator = function_generator.fork();
-                parameter_generator.set("parameter_index"sv, TRY(String::number(parameter_index)));
+                parameter_generator.set("parameter_index"sv, MUST(String::number(parameter_index)));
 
                 if (parameter_type_string == "<rounding-strategy>"sv) {
                     parameter_generator.set("release_value"sv, ""_string);
@@ -363,14 +361,12 @@ OwnPtr<CalculationNode> Parser::parse_math_function(PropertyID property_id, Func
                     parameter_generator.append(", parameter_@parameter_index@@release_value@"sv);
                 }
                 parameter_index++;
-                return {};
-            }));
+            });
             function_generator.append(R"~~~();
     }
 )~~~");
         }
-        return {};
-    }));
+    });
 
     generator.append(R"~~~(
     return nullptr;

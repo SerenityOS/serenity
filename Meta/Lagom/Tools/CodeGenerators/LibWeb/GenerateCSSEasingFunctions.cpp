@@ -56,12 +56,11 @@ namespace Web::CSS {
 )~~~");
 
     generator.appendln("enum class EasingFunction {");
-    TRY(easing_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
+    easing_data.for_each_member([&](auto& name, auto&) {
         auto member_generator = generator.fork();
         member_generator.set("name:titlecase", title_casify(name));
         member_generator.appendln("    @name:titlecase@,");
-        return {};
-    }));
+    });
     generator.appendln("};");
 
     generator.appendln("Optional<EasingFunction> easing_function_from_string(StringView);");
@@ -108,16 +107,15 @@ namespace Web::CSS {
 Optional<EasingFunction> easing_function_from_string(StringView name)
 {
 )~~~");
-    TRY(easing_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
+    easing_data.for_each_member([&](auto& name, auto&) {
         auto member_generator = generator.fork();
-        member_generator.set("name", TRY(String::from_deprecated_string(name)));
+        member_generator.set("name", name);
         member_generator.set("name:titlecase", title_casify(name));
         member_generator.append(R"~~~(
     if (name.equals_ignoring_ascii_case("@name@"sv))
         return EasingFunction::@name:titlecase@;
 )~~~");
-        return {};
-    }));
+    });
     generator.append(R"~~~(
     return {};
 }
@@ -128,16 +126,15 @@ StringView to_string(EasingFunction easing_function)
 {
     switch (easing_function) {
 )~~~");
-    TRY(easing_data.try_for_each_member([&](auto& name, auto&) -> ErrorOr<void> {
+    easing_data.for_each_member([&](auto& name, auto&) {
         auto member_generator = generator.fork();
-        member_generator.set("name", TRY(String::from_deprecated_string(name)));
+        member_generator.set("name", name);
         member_generator.set("name:titlecase", title_casify(name));
         member_generator.append(R"~~~(
     case EasingFunction::@name:titlecase@:
         return "@name@"sv;
 )~~~");
-        return {};
-    }));
+    });
     generator.append(R"~~~(
     default:
         VERIFY_NOT_REACHED();
@@ -150,7 +147,7 @@ EasingFunctionMetadata easing_function_metadata(EasingFunction easing_function)
 {
     switch (easing_function) {
 )~~~");
-    TRY(easing_data.try_for_each_member([&](auto& name, auto& value) -> ErrorOr<void> {
+    easing_data.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
 
         auto member_generator = generator.fork();
@@ -163,7 +160,7 @@ EasingFunctionMetadata easing_function_metadata(EasingFunction easing_function)
         if (auto parameters = value.as_object().get_array("parameters"sv); parameters.has_value()) {
             bool first = true;
             // parameters: [ "<foo>", "<foo [0, 1]>" ]
-            TRY(parameters.value().try_for_each([&](JsonValue const& value) -> ErrorOr<void> {
+            parameters.value().for_each([&](JsonValue const& value) {
                 GenericLexer lexer { value.as_string() };
                 VERIFY(lexer.consume_specific('<'));
                 auto parameter_type_name = lexer.consume_until([](char ch) { return ch == ' ' || ch == '>'; });
@@ -192,19 +189,17 @@ EasingFunctionMetadata easing_function_metadata(EasingFunction easing_function)
                 member_generator.append(first ? " "sv : ", "sv);
                 first = false;
 
-                member_generator.append(TRY(String::formatted(
+                member_generator.append(MUST(String::formatted(
                     "{{ EasingFunctionParameterType::{}, {} }}",
                     parameter_type,
                     is_optional ? "true"sv : "false"sv)));
-                return {};
-            }));
+            });
         }
 
         member_generator.append(R"~~~( }
     };
 )~~~");
-        return {};
-    }));
+    });
     generator.append(R"~~~(
     default:
         VERIFY_NOT_REACHED();
