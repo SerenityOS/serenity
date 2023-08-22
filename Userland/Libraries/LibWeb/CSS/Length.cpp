@@ -186,11 +186,11 @@ CSSPixels Length::to_px(Layout::Node const& layout_node) const
     return viewport_relative_length_to_px(viewport_rect);
 }
 
-ErrorOr<String> Length::to_string() const
+String Length::to_string() const
 {
     if (is_auto())
         return "auto"_string;
-    return String::formatted("{}{}", m_value, unit_name());
+    return MUST(String::formatted("{}{}", m_value, unit_name()));
 }
 
 char const* Length::unit_name() const

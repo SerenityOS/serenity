@@ -47,7 +47,7 @@ ErrorOr<String> LinearGradientStyleValue::to_string() const
             return builder.try_appendff("{}{}, "sv, m_properties.gradient_type == GradientType::Standard ? "to "sv : ""sv, side_or_corner_to_string(side_or_corner));
         },
         [&](Angle const& angle) -> ErrorOr<void> {
-            return builder.try_appendff("{}, "sv, TRY(angle.to_string()));
+            return builder.try_appendff("{}, "sv, angle.to_string());
         }));
 
     TRY(serialize_color_stop_list(builder, m_properties.color_stop_list));

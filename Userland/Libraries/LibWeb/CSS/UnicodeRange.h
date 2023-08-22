@@ -29,11 +29,11 @@ public:
         return m_min_code_point <= code_point && code_point <= m_max_code_point;
     }
 
-    ErrorOr<String> to_string() const
+    String to_string() const
     {
         if (m_min_code_point == m_max_code_point)
-            return String::formatted("U+{:x}", m_min_code_point);
-        return String::formatted("U+{:x}-{:x}", m_min_code_point, m_max_code_point);
+            return MUST(String::formatted("U+{:x}", m_min_code_point));
+        return MUST(String::formatted("U+{:x}-{:x}", m_min_code_point, m_max_code_point));
     }
 
 private:

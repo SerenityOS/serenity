@@ -112,10 +112,10 @@ public:
             });
     }
 
-    ErrorOr<String> to_string() const
+    String to_string() const
     {
         if (is_calculated())
-            return m_value.template get<NonnullRefPtr<CalculatedStyleValue>>()->to_string();
+            return MUST(m_value.template get<NonnullRefPtr<CalculatedStyleValue>>()->to_string());
         if (is_percentage())
             return m_value.template get<Percentage>().to_string();
         return m_value.template get<T>().to_string();
@@ -218,7 +218,7 @@ template<>
 struct AK::Formatter<Web::CSS::Percentage> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::Percentage const& percentage)
     {
-        return Formatter<StringView>::format(builder, TRY(percentage.to_string()));
+        return Formatter<StringView>::format(builder, percentage.to_string());
     }
 };
 
@@ -226,7 +226,7 @@ template<>
 struct AK::Formatter<Web::CSS::AnglePercentage> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::AnglePercentage const& angle_percentage)
     {
-        return Formatter<StringView>::format(builder, TRY(angle_percentage.to_string()));
+        return Formatter<StringView>::format(builder, angle_percentage.to_string());
     }
 };
 
@@ -234,7 +234,7 @@ template<>
 struct AK::Formatter<Web::CSS::FrequencyPercentage> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::FrequencyPercentage const& frequency_percentage)
     {
-        return Formatter<StringView>::format(builder, TRY(frequency_percentage.to_string()));
+        return Formatter<StringView>::format(builder, frequency_percentage.to_string());
     }
 };
 
@@ -242,7 +242,7 @@ template<>
 struct AK::Formatter<Web::CSS::LengthPercentage> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::LengthPercentage const& length_percentage)
     {
-        return Formatter<StringView>::format(builder, TRY(length_percentage.to_string()));
+        return Formatter<StringView>::format(builder, length_percentage.to_string());
     }
 };
 
@@ -250,6 +250,6 @@ template<>
 struct AK::Formatter<Web::CSS::TimePercentage> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::TimePercentage const& time_percentage)
     {
-        return Formatter<StringView>::format(builder, TRY(time_percentage.to_string()));
+        return Formatter<StringView>::format(builder, time_percentage.to_string());
     }
 };

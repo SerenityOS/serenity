@@ -31,7 +31,7 @@ public:
 
     DeprecatedString key_text() const
     {
-        return m_key.to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+        return m_key.to_string().to_deprecated_string();
     }
 
     void set_key_text(DeprecatedString const& key_text)

@@ -16,7 +16,7 @@ public:
     Display() = default;
     ~Display() = default;
 
-    ErrorOr<String> to_string() const;
+    String to_string() const;
 
     bool operator==(Display const& other) const
     {

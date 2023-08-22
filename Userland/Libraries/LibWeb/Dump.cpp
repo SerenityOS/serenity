@@ -661,7 +661,7 @@ void dump_font_face_rule(StringBuilder& builder, CSS::CSSFontFaceRule const& rul
     builder.append("unicode-ranges:\n"sv);
     for (auto const& unicode_range : font_face.unicode_ranges()) {
         indent(builder, indent_levels + 2);
-        builder.appendff("{}\n", unicode_range.to_string().release_value_but_fixme_should_propagate_errors());
+        builder.appendff("{}\n", unicode_range.to_string());
     }
 }
 

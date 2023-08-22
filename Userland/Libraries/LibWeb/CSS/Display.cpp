@@ -8,98 +8,98 @@
 
 namespace Web::CSS {
 
-ErrorOr<String> Display::to_string() const
+String Display::to_string() const
 {
     StringBuilder builder;
     switch (m_type) {
     case Type::OutsideAndInside:
         switch (m_value.outside_inside.outside) {
         case Outside::Block:
-            TRY(builder.try_append("block"sv));
+            builder.append("block"sv);
             break;
         case Outside::Inline:
-            TRY(builder.try_append("inline"sv));
+            builder.append("inline"sv);
             break;
         case Outside::RunIn:
-            TRY(builder.try_append("run-in"sv));
+            builder.append("run-in"sv);
             break;
         }
-        TRY(builder.try_append(' '));
+        builder.append(' ');
         switch (m_value.outside_inside.inside) {
         case Inside::Flow:
-            TRY(builder.try_append("flow"sv));
+            builder.append("flow"sv);
             break;
         case Inside::FlowRoot:
-            TRY(builder.try_append("flow-root"sv));
+            builder.append("flow-root"sv);
             break;
         case Inside::Table:
-            TRY(builder.try_append("table"sv));
+            builder.append("table"sv);
             break;
         case Inside::Flex:
-            TRY(builder.try_append("flex"sv));
+            builder.append("flex"sv);
             break;
         case Inside::Grid:
-            TRY(builder.try_append("grid"sv));
+            builder.append("grid"sv);
             break;
         case Inside::Ruby:
-            TRY(builder.try_append("ruby"sv));
+            builder.append("ruby"sv);
             break;
         }
         if (m_value.outside_inside.list_item == ListItem::Yes)
-            TRY(builder.try_append(" list-item"sv));
+            builder.append(" list-item"sv);
         break;
     case Type::Internal:
         switch (m_value.internal) {
         case Internal::TableRowGroup:
-            TRY(builder.try_append("table-row-group"sv));
+            builder.append("table-row-group"sv);
             break;
         case Internal::TableHeaderGroup:
-            TRY(builder.try_append("table-header-group"sv));
+            builder.append("table-header-group"sv);
             break;
         case Internal::TableFooterGroup:
-            TRY(builder.try_append("table-footer-group"sv));
+            builder.append("table-footer-group"sv);
             break;
         case Internal::TableRow:
-            TRY(builder.try_append("table-row"sv));
+            builder.append("table-row"sv);
             break;
         case Internal::TableCell:
-            TRY(builder.try_append("table-cell"sv));
+            builder.append("table-cell"sv);
             break;
         case Internal::TableColumnGroup:
-            TRY(builder.try_append("table-column-group"sv));
+            builder.append("table-column-group"sv);
             break;
         case Internal::TableColumn:
-            TRY(builder.try_append("table-column"sv));
+            builder.append("table-column"sv);
             break;
         case Internal::TableCaption:
-            TRY(builder.try_append("table-caption"sv));
+            builder.append("table-caption"sv);
             break;
         case Internal::RubyBase:
-            TRY(builder.try_append("ruby-base"sv));
+            builder.append("ruby-base"sv);
             break;
         case Internal::RubyText:
-            TRY(builder.try_append("ruby-text"sv));
+            builder.append("ruby-text"sv);
             break;
         case Internal::RubyBaseContainer:
-            TRY(builder.try_append("ruby-base-container"sv));
+            builder.append("ruby-base-container"sv);
             break;
         case Internal::RubyTextContainer:
-            TRY(builder.try_append("ruby-text-container"sv));
+            builder.append("ruby-text-container"sv);
             break;
         }
         break;
     case Type::Box:
         switch (m_value.box) {
         case Box::Contents:
-            TRY(builder.try_append("contents"sv));
+            builder.append("contents"sv);
             break;
         case Box::None:
-            TRY(builder.try_append("none"sv));
+            builder.append("none"sv);
             break;
         }
         break;
     };
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 }

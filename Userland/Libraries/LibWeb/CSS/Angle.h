@@ -26,7 +26,7 @@ public:
     static Angle make_degrees(double);
     Angle percentage_of(Percentage const&) const;
 
-    ErrorOr<String> to_string() const;
+    String to_string() const;
 
     double to_degrees() const;
     double to_radians() const;
@@ -64,6 +64,6 @@ template<>
 struct AK::Formatter<Web::CSS::Angle> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::Angle const& angle)
     {
-        return Formatter<StringView>::format(builder, TRY(angle.to_string()));
+        return Formatter<StringView>::format(builder, angle.to_string());
     }
 };

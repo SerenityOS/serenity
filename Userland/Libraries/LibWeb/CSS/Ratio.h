@@ -17,7 +17,7 @@ public:
     double value() const { return m_first_value / m_second_value; }
     bool is_degenerate() const;
 
-    ErrorOr<String> to_string() const;
+    String to_string() const;
 
     bool operator==(Ratio const& other) const
     {

@@ -208,7 +208,7 @@ CalculatedStyleValue::CalculationResult NumericCalculationNode::resolve(Optional
 
 ErrorOr<void> NumericCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    return builder.try_appendff("{: >{}}NUMERIC({})\n", "", indent, TRY(m_value.visit([](auto& it) { return it.to_string(); })));
+    return builder.try_appendff("{: >{}}NUMERIC({})\n", "", indent, m_value.visit([](auto& it) { return it.to_string(); }));
 }
 
 NonnullOwnPtr<SumCalculationNode> SumCalculationNode::create(Vector<NonnullOwnPtr<CalculationNode>> values)

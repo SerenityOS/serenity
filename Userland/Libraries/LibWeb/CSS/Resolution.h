@@ -23,7 +23,7 @@ public:
 
     Resolution(double value, Type type);
 
-    ErrorOr<String> to_string() const;
+    String to_string() const;
     double to_dots_per_pixel() const;
 
     bool operator==(Resolution const& other) const

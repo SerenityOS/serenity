@@ -70,11 +70,11 @@ public:
         return { Type::Number, m_value / other.m_value };
     }
 
-    ErrorOr<String> to_string() const
+    String to_string() const
     {
         if (m_type == Type::IntegerWithExplicitSign)
-            return String::formatted("{:+}", m_value);
-        return String::number(m_value);
+            return MUST(String::formatted("{:+}", m_value));
+        return MUST(String::number(m_value));
     }
 
     bool operator==(Number const& other) const
@@ -101,6 +101,6 @@ template<>
 struct AK::Formatter<Web::CSS::Number> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::Number const& number)
     {
-        return Formatter<StringView>::format(builder, TRY(number.to_string()));
+        return Formatter<StringView>::format(builder, number.to_string());
     }
 };

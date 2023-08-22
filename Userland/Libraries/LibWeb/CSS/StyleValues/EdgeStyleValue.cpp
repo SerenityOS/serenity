@@ -24,7 +24,7 @@ ErrorOr<String> EdgeStyleValue::to_string() const
         VERIFY_NOT_REACHED();
     };
 
-    return String::formatted("{} {}", to_string(m_properties.edge), TRY(m_properties.offset.to_string()));
+    return String::formatted("{} {}", to_string(m_properties.edge), m_properties.offset.to_string());
 }
 
 }

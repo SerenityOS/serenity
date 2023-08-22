@@ -26,9 +26,9 @@ public:
     double value() const { return m_value; }
     double as_fraction() const { return m_value * 0.01; }
 
-    ErrorOr<String> to_string() const
+    String to_string() const
     {
-        return String::formatted("{}%", m_value);
+        return MUST(String::formatted("{}%", m_value));
     }
 
     bool operator==(Percentage const& other) const { return m_value == other.m_value; }

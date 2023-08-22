@@ -20,7 +20,7 @@ BackgroundSizeStyleValue::~BackgroundSizeStyleValue() = default;
 
 ErrorOr<String> BackgroundSizeStyleValue::to_string() const
 {
-    return String::formatted("{} {}", TRY(m_properties.size_x.to_string()), TRY(m_properties.size_y.to_string()));
+    return String::formatted("{} {}", m_properties.size_x.to_string(), m_properties.size_y.to_string());
 }
 
 }

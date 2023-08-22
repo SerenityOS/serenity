@@ -23,7 +23,7 @@ public:
     static Frequency make_hertz(double);
     Frequency percentage_of(Percentage const&) const;
 
-    ErrorOr<String> to_string() const;
+    String to_string() const;
     double to_hertz() const;
 
     Type type() const { return m_type; }
@@ -59,6 +59,6 @@ template<>
 struct AK::Formatter<Web::CSS::Frequency> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::Frequency const& frequency)
     {
-        return Formatter<StringView>::format(builder, TRY(frequency.to_string()));
+        return Formatter<StringView>::format(builder, frequency.to_string());
     }
 };

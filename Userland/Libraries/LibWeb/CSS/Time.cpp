@@ -25,9 +25,9 @@ Time Time::percentage_of(Percentage const& percentage) const
     return Time { percentage.as_fraction() * m_value, m_type };
 }
 
-ErrorOr<String> Time::to_string() const
+String Time::to_string() const
 {
-    return String::formatted("{}s", to_seconds());
+    return MUST(String::formatted("{}s", to_seconds()));
 }
 
 double Time::to_seconds() const

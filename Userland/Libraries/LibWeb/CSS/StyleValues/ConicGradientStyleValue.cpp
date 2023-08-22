@@ -21,12 +21,12 @@ ErrorOr<String> ConicGradientStyleValue::to_string() const
     bool has_from_angle = false;
     bool has_at_position = false;
     if ((has_from_angle = m_properties.from_angle.to_degrees() != 0))
-        TRY(builder.try_appendff("from {}", TRY(m_properties.from_angle.to_string())));
+        TRY(builder.try_appendff("from {}", m_properties.from_angle.to_string()));
     if ((has_at_position = m_properties.position != PositionValue::center())) {
         if (has_from_angle)
             TRY(builder.try_append(' '));
         TRY(builder.try_appendff("at "sv));
-        TRY(m_properties.position.serialize(builder));
+        m_properties.position.serialize(builder);
     }
     if (has_from_angle || has_at_position)
         TRY(builder.try_append(", "sv));
