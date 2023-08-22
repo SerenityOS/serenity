@@ -421,15 +421,6 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, St
     return target_browsing_context->window_proxy();
 }
 
-void Window::did_call_location_replace(Badge<Location>, DeprecatedString url)
-{
-    auto* browsing_context = associated_document().browsing_context();
-    if (!browsing_context)
-        return;
-    auto new_url = associated_document().parse_url(url);
-    browsing_context->loader().load(move(new_url), FrameLoader::Type::Navigation);
-}
-
 bool Window::dispatch_event(DOM::Event& event)
 {
     return DOM::EventDispatcher::dispatch(*this, event, true);

@@ -49,7 +49,7 @@ public:
     WebIDL::ExceptionOr<String> hash() const;
     WebIDL::ExceptionOr<void> set_hash(String const&);
 
-    void replace(String const& url) const;
+    WebIDL::ExceptionOr<void> replace(String const& url);
     void reload() const;
     WebIDL::ExceptionOr<void> assign(String const& url);
 
