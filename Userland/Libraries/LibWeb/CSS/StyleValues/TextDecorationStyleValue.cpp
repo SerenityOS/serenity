@@ -11,9 +11,9 @@
 
 namespace Web::CSS {
 
-ErrorOr<String> TextDecorationStyleValue::to_string() const
+String TextDecorationStyleValue::to_string() const
 {
-    return String::formatted("{} {} {} {}", TRY(m_properties.line->to_string()), TRY(m_properties.thickness->to_string()), TRY(m_properties.style->to_string()), TRY(m_properties.color->to_string()));
+    return MUST(String::formatted("{} {} {} {}", m_properties.line->to_string(), m_properties.thickness->to_string(), m_properties.style->to_string(), m_properties.color->to_string()));
 }
 
 }

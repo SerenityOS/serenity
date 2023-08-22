@@ -28,7 +28,7 @@ public:
     ValueComparingNonnullRefPtr<StyleValue> image() const { return m_properties.image; }
     ValueComparingNonnullRefPtr<StyleValue> style_type() const { return m_properties.style_type; }
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
 
     bool properties_equal(ListStyleStyleValue const& other) const { return m_properties == other.m_properties; }
 

@@ -11,9 +11,9 @@
 
 namespace Web::CSS {
 
-ErrorOr<String> OverflowStyleValue::to_string() const
+String OverflowStyleValue::to_string() const
 {
-    return String::formatted("{} {}", TRY(m_properties.overflow_x->to_string()), TRY(m_properties.overflow_y->to_string()));
+    return MUST(String::formatted("{} {}", m_properties.overflow_x->to_string(), m_properties.overflow_y->to_string()));
 }
 
 }

@@ -44,7 +44,7 @@ public:
         return adopt_ref(*new (nothrow) LinearGradientStyleValue(direction, move(color_stop_list), type, repeating));
     }
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual ~LinearGradientStyleValue() override = default;
     virtual bool equals(StyleValue const& other) const override;
 

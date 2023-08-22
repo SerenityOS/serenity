@@ -16,19 +16,19 @@ ValueComparingNonnullRefPtr<GridTemplateAreaStyleValue> GridTemplateAreaStyleVal
     return adopt_ref(*new (nothrow) GridTemplateAreaStyleValue(grid_template_area));
 }
 
-ErrorOr<String> GridTemplateAreaStyleValue::to_string() const
+String GridTemplateAreaStyleValue::to_string() const
 {
     StringBuilder builder;
     for (size_t y = 0; y < m_grid_template_area.size(); ++y) {
         for (size_t x = 0; x < m_grid_template_area[y].size(); ++x) {
-            TRY(builder.try_appendff("{}", m_grid_template_area[y][x]));
+            builder.appendff("{}", m_grid_template_area[y][x]);
             if (x < m_grid_template_area[y].size() - 1)
-                TRY(builder.try_append(" "sv));
+                builder.append(" "sv);
         }
         if (y < m_grid_template_area.size() - 1)
-            TRY(builder.try_append(", "sv));
+            builder.append(", "sv);
     }
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 }

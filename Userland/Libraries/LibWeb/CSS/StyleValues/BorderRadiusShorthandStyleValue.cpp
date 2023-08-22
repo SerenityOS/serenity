@@ -11,9 +11,9 @@
 
 namespace Web::CSS {
 
-ErrorOr<String> BorderRadiusShorthandStyleValue::to_string() const
+String BorderRadiusShorthandStyleValue::to_string() const
 {
-    return String::formatted("{} {} {} {} / {} {} {} {}",
+    return MUST(String::formatted("{} {} {} {} / {} {} {} {}",
         m_properties.top_left->horizontal_radius().to_string(),
         m_properties.top_right->horizontal_radius().to_string(),
         m_properties.bottom_right->horizontal_radius().to_string(),
@@ -21,7 +21,7 @@ ErrorOr<String> BorderRadiusShorthandStyleValue::to_string() const
         m_properties.top_left->vertical_radius().to_string(),
         m_properties.top_right->vertical_radius().to_string(),
         m_properties.bottom_right->vertical_radius().to_string(),
-        m_properties.bottom_left->vertical_radius().to_string());
+        m_properties.bottom_left->vertical_radius().to_string()));
 }
 
 }

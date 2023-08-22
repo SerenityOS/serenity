@@ -16,7 +16,7 @@ ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> GridTrackPlacementStyl
     return adopt_ref(*new (nothrow) GridTrackPlacementStyleValue(grid_track_placement));
 }
 
-ErrorOr<String> GridTrackPlacementStyleValue::to_string() const
+String GridTrackPlacementStyleValue::to_string() const
 {
     return m_grid_track_placement.to_string();
 }

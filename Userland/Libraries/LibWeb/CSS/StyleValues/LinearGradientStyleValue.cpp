@@ -11,7 +11,7 @@
 
 namespace Web::CSS {
 
-ErrorOr<String> LinearGradientStyleValue::to_string() const
+String LinearGradientStyleValue::to_string() const
 {
     StringBuilder builder;
     auto side_or_corner_to_string = [](SideOrCorner value) {
@@ -38,21 +38,21 @@ ErrorOr<String> LinearGradientStyleValue::to_string() const
     };
 
     if (m_properties.gradient_type == GradientType::WebKit)
-        TRY(builder.try_append("-webkit-"sv));
+        builder.append("-webkit-"sv);
     if (is_repeating())
-        TRY(builder.try_append("repeating-"sv));
-    TRY(builder.try_append("linear-gradient("sv));
-    TRY(m_properties.direction.visit(
-        [&](SideOrCorner side_or_corner) -> ErrorOr<void> {
-            return builder.try_appendff("{}{}, "sv, m_properties.gradient_type == GradientType::Standard ? "to "sv : ""sv, side_or_corner_to_string(side_or_corner));
+        builder.append("repeating-"sv);
+    builder.append("linear-gradient("sv);
+    m_properties.direction.visit(
+        [&](SideOrCorner side_or_corner) {
+            return builder.appendff("{}{}, "sv, m_properties.gradient_type == GradientType::Standard ? "to "sv : ""sv, side_or_corner_to_string(side_or_corner));
         },
-        [&](Angle const& angle) -> ErrorOr<void> {
-            return builder.try_appendff("{}, "sv, angle.to_string());
-        }));
+        [&](Angle const& angle) {
+            return builder.appendff("{}, "sv, angle.to_string());
+        });
 
-    TRY(serialize_color_stop_list(builder, m_properties.color_stop_list));
-    TRY(builder.try_append(")"sv));
-    return builder.to_string();
+    serialize_color_stop_list(builder, m_properties.color_stop_list);
+    builder.append(")"sv);
+    return MUST(builder.to_string());
 }
 
 bool LinearGradientStyleValue::equals(StyleValue const& other_) const

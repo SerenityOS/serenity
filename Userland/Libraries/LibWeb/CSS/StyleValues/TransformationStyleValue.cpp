@@ -12,19 +12,19 @@
 
 namespace Web::CSS {
 
-ErrorOr<String> TransformationStyleValue::to_string() const
+String TransformationStyleValue::to_string() const
 {
     StringBuilder builder;
-    TRY(builder.try_append(CSS::to_string(m_properties.transform_function)));
-    TRY(builder.try_append('('));
+    builder.append(CSS::to_string(m_properties.transform_function));
+    builder.append('(');
     for (size_t i = 0; i < m_properties.values.size(); ++i) {
-        TRY(builder.try_append(TRY(m_properties.values[i]->to_string())));
+        builder.append(m_properties.values[i]->to_string());
         if (i != m_properties.values.size() - 1)
-            TRY(builder.try_append(", "sv));
+            builder.append(", "sv);
     }
-    TRY(builder.try_append(')'));
+    builder.append(')');
 
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 bool TransformationStyleValue::Properties::operator==(Properties const& other) const

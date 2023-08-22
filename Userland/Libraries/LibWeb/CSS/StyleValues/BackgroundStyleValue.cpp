@@ -53,10 +53,10 @@ BackgroundStyleValue::BackgroundStyleValue(
 
 BackgroundStyleValue::~BackgroundStyleValue() = default;
 
-ErrorOr<String> BackgroundStyleValue::to_string() const
+String BackgroundStyleValue::to_string() const
 {
     if (m_properties.layer_count == 1) {
-        return String::formatted("{} {} {} {} {} {} {} {}", TRY(m_properties.color->to_string()), TRY(m_properties.image->to_string()), TRY(m_properties.position->to_string()), TRY(m_properties.size->to_string()), TRY(m_properties.repeat->to_string()), TRY(m_properties.attachment->to_string()), TRY(m_properties.origin->to_string()), TRY(m_properties.clip->to_string()));
+        return MUST(String::formatted("{} {} {} {} {} {} {} {}", m_properties.color->to_string(), m_properties.image->to_string(), m_properties.position->to_string(), m_properties.size->to_string(), m_properties.repeat->to_string(), m_properties.attachment->to_string(), m_properties.origin->to_string(), m_properties.clip->to_string()));
     }
 
     auto get_layer_value_string = [](ValueComparingNonnullRefPtr<StyleValue const> const& style_value, size_t index) {
@@ -68,13 +68,13 @@ ErrorOr<String> BackgroundStyleValue::to_string() const
     StringBuilder builder;
     for (size_t i = 0; i < m_properties.layer_count; i++) {
         if (i)
-            TRY(builder.try_append(", "sv));
+            builder.append(", "sv);
         if (i == m_properties.layer_count - 1)
-            TRY(builder.try_appendff("{} ", TRY(m_properties.color->to_string())));
-        TRY(builder.try_appendff("{} {} {} {} {} {} {}", TRY(get_layer_value_string(m_properties.image, i)), TRY(get_layer_value_string(m_properties.position, i)), TRY(get_layer_value_string(m_properties.size, i)), TRY(get_layer_value_string(m_properties.repeat, i)), TRY(get_layer_value_string(m_properties.attachment, i)), TRY(get_layer_value_string(m_properties.origin, i)), TRY(get_layer_value_string(m_properties.clip, i))));
+            builder.appendff("{} ", m_properties.color->to_string());
+        builder.appendff("{} {} {} {} {} {} {}", get_layer_value_string(m_properties.image, i), get_layer_value_string(m_properties.position, i), get_layer_value_string(m_properties.size, i), get_layer_value_string(m_properties.repeat, i), get_layer_value_string(m_properties.attachment, i), get_layer_value_string(m_properties.origin, i), get_layer_value_string(m_properties.clip, i));
     }
 
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 }

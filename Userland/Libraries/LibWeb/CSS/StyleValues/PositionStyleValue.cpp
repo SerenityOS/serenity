@@ -11,9 +11,9 @@
 
 namespace Web::CSS {
 
-ErrorOr<String> PositionStyleValue::to_string() const
+String PositionStyleValue::to_string() const
 {
-    return String::formatted("{} {}", TRY(m_properties.edge_x->to_string()), TRY(m_properties.edge_y->to_string()));
+    return MUST(String::formatted("{} {}", m_properties.edge_x->to_string(), m_properties.edge_y->to_string()));
 }
 
 }

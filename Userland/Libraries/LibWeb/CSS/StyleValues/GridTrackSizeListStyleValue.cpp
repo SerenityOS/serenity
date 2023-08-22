@@ -11,7 +11,7 @@
 
 namespace Web::CSS {
 
-ErrorOr<String> GridTrackSizeListStyleValue::to_string() const
+String GridTrackSizeListStyleValue::to_string() const
 {
     return m_grid_track_size_list.to_string();
 }

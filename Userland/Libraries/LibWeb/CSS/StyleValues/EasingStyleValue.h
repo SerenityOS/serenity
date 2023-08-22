@@ -26,7 +26,7 @@ public:
     CSS::EasingFunction easing_function() const { return m_properties.easing_function; }
     StyleValueVector values() const { return m_properties.values; }
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
 
     bool properties_equal(EasingStyleValue const& other) const { return m_properties == other.m_properties; }
 

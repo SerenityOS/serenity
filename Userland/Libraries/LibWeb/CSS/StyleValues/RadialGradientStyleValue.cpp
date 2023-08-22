@@ -12,17 +12,17 @@
 
 namespace Web::CSS {
 
-ErrorOr<String> RadialGradientStyleValue::to_string() const
+String RadialGradientStyleValue::to_string() const
 {
     StringBuilder builder;
     if (is_repeating())
-        TRY(builder.try_append("repeating-"sv));
-    TRY(builder.try_appendff("radial-gradient({} "sv,
-        m_properties.ending_shape == EndingShape::Circle ? "circle"sv : "ellipse"sv));
+        builder.append("repeating-"sv);
+    builder.appendff("radial-gradient({} "sv,
+        m_properties.ending_shape == EndingShape::Circle ? "circle"sv : "ellipse"sv);
 
-    TRY(m_properties.size.visit(
-        [&](Extent extent) -> ErrorOr<void> {
-            return builder.try_append([&] {
+    m_properties.size.visit(
+        [&](Extent extent) {
+            builder.append([&] {
                 switch (extent) {
                 case Extent::ClosestCorner:
                     return "closest-corner"sv;
@@ -37,22 +37,22 @@ ErrorOr<String> RadialGradientStyleValue::to_string() const
                 }
             }());
         },
-        [&](CircleSize const& circle_size) -> ErrorOr<void> {
-            return builder.try_append(circle_size.radius.to_string());
+        [&](CircleSize const& circle_size) {
+            builder.append(circle_size.radius.to_string());
         },
-        [&](EllipseSize const& ellipse_size) -> ErrorOr<void> {
-            return builder.try_appendff("{} {}", ellipse_size.radius_a.to_string(), ellipse_size.radius_b.to_string());
-        }));
+        [&](EllipseSize const& ellipse_size) {
+            builder.appendff("{} {}", ellipse_size.radius_a.to_string(), ellipse_size.radius_b.to_string());
+        });
 
     if (m_properties.position != PositionValue::center()) {
-        TRY(builder.try_appendff(" at "sv));
+        builder.appendff(" at "sv);
         m_properties.position.serialize(builder);
     }
 
-    TRY(builder.try_append(", "sv));
-    TRY(serialize_color_stop_list(builder, m_properties.color_stop_list));
-    TRY(builder.try_append(')'));
-    return builder.to_string();
+    builder.append(", "sv);
+    serialize_color_stop_list(builder, m_properties.color_stop_list);
+    builder.append(')');
+    return MUST(builder.to_string());
 }
 
 Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, Gfx::FloatPoint center, Gfx::FloatRect const& size) const

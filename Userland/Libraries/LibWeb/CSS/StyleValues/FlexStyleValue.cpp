@@ -11,9 +11,9 @@
 
 namespace Web::CSS {
 
-ErrorOr<String> FlexStyleValue::to_string() const
+String FlexStyleValue::to_string() const
 {
-    return String::formatted("{} {} {}", TRY(m_properties.grow->to_string()), TRY(m_properties.shrink->to_string()), TRY(m_properties.basis->to_string()));
+    return MUST(String::formatted("{} {} {}", m_properties.grow->to_string(), m_properties.shrink->to_string(), m_properties.basis->to_string()));
 }
 
 }

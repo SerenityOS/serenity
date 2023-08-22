@@ -23,7 +23,7 @@ public:
     PositionEdge edge() const { return m_properties.edge; }
     LengthPercentage const& offset() const { return m_properties.offset; }
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
 
     bool properties_equal(EdgeStyleValue const& other) const { return m_properties == other.m_properties; }
 

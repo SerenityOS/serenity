@@ -225,7 +225,7 @@ CSSPixels StyleProperties::line_height(Layout::Node const& layout_node) const
         if (line_height->as_calculated().resolves_to_number()) {
             auto resolved = line_height->as_calculated().resolve_number();
             if (!resolved.has_value()) {
-                dbgln("FIXME: Failed to resolve calc() line-height (number): {}", line_height->as_calculated().to_string().release_value_but_fixme_should_propagate_errors());
+                dbgln("FIXME: Failed to resolve calc() line-height (number): {}", line_height->as_calculated().to_string());
                 return layout_node.font().pixel_metrics().line_spacing();
             }
             return Length(resolved.value(), Length::Type::Em).to_px(layout_node);
@@ -233,7 +233,7 @@ CSSPixels StyleProperties::line_height(Layout::Node const& layout_node) const
 
         auto resolved = line_height->as_calculated().resolve_length(layout_node);
         if (!resolved.has_value()) {
-            dbgln("FIXME: Failed to resolve calc() line-height: {}", line_height->as_calculated().to_string().release_value_but_fixme_should_propagate_errors());
+            dbgln("FIXME: Failed to resolve calc() line-height: {}", line_height->as_calculated().to_string());
             return layout_node.font().pixel_metrics().line_spacing();
         }
         return resolved->to_px(layout_node);
@@ -659,7 +659,7 @@ CSS::ContentData StyleProperties::content() const
         StringBuilder builder;
         for (auto const& item : content_style_value.content().values()) {
             if (item->is_string()) {
-                builder.append(item->to_string().release_value_but_fixme_should_propagate_errors());
+                builder.append(item->to_string());
             } else {
                 // TODO: Implement quotes, counters, images, and other things.
             }
@@ -671,7 +671,7 @@ CSS::ContentData StyleProperties::content() const
             StringBuilder alt_text_builder;
             for (auto const& item : content_style_value.alt_text()->values()) {
                 if (item->is_string()) {
-                    alt_text_builder.append(item->to_string().release_value_but_fixme_should_propagate_errors());
+                    alt_text_builder.append(item->to_string());
                 } else {
                     // TODO: Implement counters
                 }
@@ -950,7 +950,7 @@ Vector<Vector<String>> StyleProperties::grid_template_areas() const
 String StyleProperties::grid_area() const
 {
     auto value = property(CSS::PropertyID::GridArea);
-    return value->as_string().to_string().release_value_but_fixme_should_propagate_errors();
+    return value->as_string().to_string();
 }
 
 Optional<CSS::ObjectFit> StyleProperties::object_fit() const

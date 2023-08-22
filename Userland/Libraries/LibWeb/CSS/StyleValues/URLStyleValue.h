@@ -25,7 +25,7 @@ public:
 
     bool properties_equal(URLStyleValue const& other) const { return m_url == other.m_url; }
 
-    virtual ErrorOr<String> to_string() const override
+    virtual String to_string() const override
     {
         return serialize_a_url(m_url.to_deprecated_string());
     }

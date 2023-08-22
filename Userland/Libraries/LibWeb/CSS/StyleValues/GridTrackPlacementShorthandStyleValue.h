@@ -22,7 +22,7 @@ public:
     auto start() const { return m_properties.start; }
     auto end() const { return m_properties.end; }
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
 
     bool properties_equal(GridTrackPlacementShorthandStyleValue const& other) const { return m_properties == other.m_properties; }
 

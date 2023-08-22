@@ -40,7 +40,7 @@ public:
     auto repeat() const { return m_properties.repeat; }
     auto size() const { return m_properties.size; }
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
 
     bool properties_equal(BackgroundStyleValue const& other) const { return m_properties == other.m_properties; }
 

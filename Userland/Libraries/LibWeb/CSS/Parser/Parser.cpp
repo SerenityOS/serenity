@@ -6238,7 +6238,7 @@ public:
 
     ComponentValue& component_value() { return m_component_value; }
 
-    virtual ErrorOr<String> to_string() const override { VERIFY_NOT_REACHED(); }
+    virtual String to_string() const override { VERIFY_NOT_REACHED(); }
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override { VERIFY_NOT_REACHED(); }
     virtual Optional<CSSNumericType> determine_type(Web::CSS::PropertyID) const override { VERIFY_NOT_REACHED(); }
     virtual bool contains_percentage() const override { VERIFY_NOT_REACHED(); }

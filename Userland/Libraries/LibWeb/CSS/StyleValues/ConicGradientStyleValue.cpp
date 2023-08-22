@@ -12,27 +12,27 @@
 
 namespace Web::CSS {
 
-ErrorOr<String> ConicGradientStyleValue::to_string() const
+String ConicGradientStyleValue::to_string() const
 {
     StringBuilder builder;
     if (is_repeating())
-        TRY(builder.try_append("repeating-"sv));
-    TRY(builder.try_append("conic-gradient("sv));
+        builder.append("repeating-"sv);
+    builder.append("conic-gradient("sv);
     bool has_from_angle = false;
     bool has_at_position = false;
     if ((has_from_angle = m_properties.from_angle.to_degrees() != 0))
-        TRY(builder.try_appendff("from {}", m_properties.from_angle.to_string()));
+        builder.appendff("from {}", m_properties.from_angle.to_string());
     if ((has_at_position = m_properties.position != PositionValue::center())) {
         if (has_from_angle)
-            TRY(builder.try_append(' '));
-        TRY(builder.try_appendff("at "sv));
+            builder.append(' ');
+        builder.appendff("at "sv);
         m_properties.position.serialize(builder);
     }
     if (has_from_angle || has_at_position)
-        TRY(builder.try_append(", "sv));
-    TRY(serialize_color_stop_list(builder, m_properties.color_stop_list));
-    TRY(builder.try_append(')'));
-    return builder.to_string();
+        builder.append(", "sv);
+    serialize_color_stop_list(builder, m_properties.color_stop_list);
+    builder.append(')');
+    return MUST(builder.to_string());
 }
 
 void ConicGradientStyleValue::resolve_for_size(Layout::NodeWithStyleAndBoxModelMetrics const& node, CSSPixelSize size) const

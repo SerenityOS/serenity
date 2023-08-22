@@ -21,7 +21,7 @@ public:
     Vector<PropertyID> const& sub_properties() const { return m_properties.sub_properties; }
     Vector<ValueComparingNonnullRefPtr<StyleValue const>> const& values() const { return m_properties.values; }
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
 
     bool properties_equal(CompositeStyleValue const& other) const { return m_properties == other.m_properties; }
 

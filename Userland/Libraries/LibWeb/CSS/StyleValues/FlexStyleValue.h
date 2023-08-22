@@ -28,7 +28,7 @@ public:
     ValueComparingNonnullRefPtr<StyleValue> shrink() const { return m_properties.shrink; }
     ValueComparingNonnullRefPtr<StyleValue> basis() const { return m_properties.basis; }
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
 
     bool properties_equal(FlexStyleValue const& other) const { return m_properties == other.m_properties; }
 

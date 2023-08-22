@@ -30,7 +30,7 @@ public:
     ValueComparingNonnullRefPtr<StyleValue> style() const { return m_properties.style; }
     ValueComparingNonnullRefPtr<StyleValue> color() const { return m_properties.color; }
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
 
     bool properties_equal(TextDecorationStyleValue const& other) const { return m_properties == other.m_properties; }
 

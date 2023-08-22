@@ -22,7 +22,7 @@ public:
 
     double number() const { return m_value; }
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
 
     bool properties_equal(NumberStyleValue const& other) const { return m_value == other.m_value; }
 

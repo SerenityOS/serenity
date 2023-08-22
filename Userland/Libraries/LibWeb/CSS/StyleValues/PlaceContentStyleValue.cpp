@@ -8,13 +8,13 @@
 
 namespace Web::CSS {
 
-ErrorOr<String> PlaceContentStyleValue::to_string() const
+String PlaceContentStyleValue::to_string() const
 {
-    auto align_content = TRY(m_properties.align_content->to_string());
-    auto justify_content = TRY(m_properties.justify_content->to_string());
+    auto align_content = m_properties.align_content->to_string();
+    auto justify_content = m_properties.justify_content->to_string();
     if (align_content == justify_content)
-        return String::formatted("{}", align_content);
-    return String::formatted("{} {}", align_content, justify_content);
+        return MUST(String::formatted("{}", align_content));
+    return MUST(String::formatted("{} {}", align_content, justify_content));
 }
 
 }

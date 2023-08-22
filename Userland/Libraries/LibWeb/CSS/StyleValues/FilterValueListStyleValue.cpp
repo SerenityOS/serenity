@@ -54,46 +54,43 @@ float Filter::Color::resolved_amount() const
     return 1.0f;
 }
 
-ErrorOr<String> FilterValueListStyleValue::to_string() const
+String FilterValueListStyleValue::to_string() const
 {
     StringBuilder builder {};
     bool first = true;
     for (auto& filter_function : filter_value_list()) {
         if (!first)
-            TRY(builder.try_append(' '));
-        TRY(filter_function.visit(
-            [&](Filter::Blur const& blur) -> ErrorOr<void> {
-                TRY(builder.try_append("blur("sv));
+            builder.append(' ');
+        filter_function.visit(
+            [&](Filter::Blur const& blur) {
+                builder.append("blur("sv);
                 if (blur.radius.has_value())
-                    TRY(builder.try_append(blur.radius->to_string()));
-                return {};
+                    builder.append(blur.radius->to_string());
             },
-            [&](Filter::DropShadow const& drop_shadow) -> ErrorOr<void> {
-                TRY(builder.try_appendff("drop-shadow({} {}"sv,
-                    drop_shadow.offset_x, drop_shadow.offset_y));
+            [&](Filter::DropShadow const& drop_shadow) {
+                builder.appendff("drop-shadow({} {}"sv,
+                    drop_shadow.offset_x, drop_shadow.offset_y);
                 if (drop_shadow.radius.has_value())
-                    TRY(builder.try_appendff(" {}", drop_shadow.radius->to_string()));
+                    builder.appendff(" {}", drop_shadow.radius->to_string());
                 if (drop_shadow.color.has_value()) {
-                    TRY(builder.try_append(' '));
+                    builder.append(' ');
                     serialize_a_srgb_value(builder, *drop_shadow.color);
                 }
-                return {};
             },
-            [&](Filter::HueRotate const& hue_rotate) -> ErrorOr<void> {
-                TRY(builder.try_append("hue-rotate("sv));
+            [&](Filter::HueRotate const& hue_rotate) {
+                builder.append("hue-rotate("sv);
                 if (hue_rotate.angle.has_value()) {
-                    TRY(hue_rotate.angle->visit(
-                        [&](Angle const& angle) -> ErrorOr<void> {
-                            return builder.try_append(angle.to_string());
+                    hue_rotate.angle->visit(
+                        [&](Angle const& angle) {
+                            return builder.append(angle.to_string());
                         },
-                        [&](auto&) -> ErrorOr<void> {
-                            return builder.try_append('0');
-                        }));
+                        [&](auto&) {
+                            return builder.append('0');
+                        });
                 }
-                return {};
             },
-            [&](Filter::Color const& color) -> ErrorOr<void> {
-                TRY(builder.try_appendff("{}(",
+            [&](Filter::Color const& color) {
+                builder.appendff("{}(",
                     [&] {
                         switch (color.operation) {
                         case Filter::Color::Operation::Brightness:
@@ -113,15 +110,14 @@ ErrorOr<String> FilterValueListStyleValue::to_string() const
                         default:
                             VERIFY_NOT_REACHED();
                         }
-                    }()));
+                    }());
                 if (color.amount.has_value())
-                    TRY(builder.try_append(color.amount->to_string()));
-                return {};
-            }));
-        TRY(builder.try_append(')'));
+                    builder.append(color.amount->to_string());
+            });
+        builder.append(')');
         first = false;
     }
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 }

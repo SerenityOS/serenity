@@ -28,7 +28,7 @@ public:
     ValueComparingNonnullRefPtr<StyleValue> border_style() const { return m_properties.border_style; }
     ValueComparingNonnullRefPtr<StyleValue> border_color() const { return m_properties.border_color; }
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
 
     bool properties_equal(BorderStyleValue const& other) const { return m_properties == other.m_properties; }
 

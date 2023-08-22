@@ -27,7 +27,7 @@ public:
     LengthPercentage const& vertical_radius() const { return m_properties.vertical_radius; }
     bool is_elliptical() const { return m_properties.is_elliptical; }
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
 
     bool properties_equal(BorderRadiusStyleValue const& other) const { return m_properties == other.m_properties; }
 

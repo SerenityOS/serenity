@@ -26,7 +26,7 @@ public:
     }
     virtual ~ImageStyleValue() override = default;
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
     virtual void load_any_resources(DOM::Document&) override;

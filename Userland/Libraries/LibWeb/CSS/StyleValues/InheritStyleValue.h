@@ -19,7 +19,7 @@ public:
     }
     virtual ~InheritStyleValue() override = default;
 
-    ErrorOr<String> to_string() const override { return "inherit"_string; }
+    String to_string() const override { return "inherit"_string; }
 
     bool properties_equal(InheritStyleValue const&) const { return true; }
 

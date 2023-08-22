@@ -11,9 +11,9 @@
 
 namespace Web::CSS {
 
-ErrorOr<String> FontStyleValue::to_string() const
+String FontStyleValue::to_string() const
 {
-    return String::formatted("{} {} {} / {} {}", TRY(m_properties.font_style->to_string()), TRY(m_properties.font_weight->to_string()), TRY(m_properties.font_size->to_string()), TRY(m_properties.line_height->to_string()), TRY(m_properties.font_families->to_string()));
+    return MUST(String::formatted("{} {} {} / {} {}", m_properties.font_style->to_string(), m_properties.font_weight->to_string(), m_properties.font_size->to_string(), m_properties.line_height->to_string(), m_properties.font_families->to_string()));
 }
 
 }

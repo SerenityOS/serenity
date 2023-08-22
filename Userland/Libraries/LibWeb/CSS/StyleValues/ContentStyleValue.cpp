@@ -12,10 +12,10 @@
 
 namespace Web::CSS {
 
-ErrorOr<String> ContentStyleValue::to_string() const
+String ContentStyleValue::to_string() const
 {
     if (has_alt_text())
-        return String::formatted("{} / {}", TRY(m_properties.content->to_string()), TRY(m_properties.alt_text->to_string()));
+        return MUST(String::formatted("{} / {}", m_properties.content->to_string(), m_properties.alt_text->to_string()));
     return m_properties.content->to_string();
 }
 

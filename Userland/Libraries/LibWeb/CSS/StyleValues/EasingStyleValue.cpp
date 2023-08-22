@@ -13,7 +13,7 @@
 
 namespace Web::CSS {
 
-ErrorOr<String> EasingStyleValue::to_string() const
+String EasingStyleValue::to_string() const
 {
     if (m_properties.easing_function == EasingFunction::StepStart)
         return "steps(1, start)"_string;
@@ -21,20 +21,20 @@ ErrorOr<String> EasingStyleValue::to_string() const
         return "steps(1, end)"_string;
 
     StringBuilder builder;
-    TRY(builder.try_append(CSS::to_string(m_properties.easing_function)));
+    builder.append(CSS::to_string(m_properties.easing_function));
 
     if (m_properties.values.is_empty())
-        return builder.to_string();
+        return MUST(builder.to_string());
 
-    TRY(builder.try_append('('));
+    builder.append('(');
     for (size_t i = 0; i < m_properties.values.size(); ++i) {
-        TRY(builder.try_append(TRY(m_properties.values[i]->to_string())));
+        builder.append(m_properties.values[i]->to_string());
         if (i != m_properties.values.size() - 1)
-            TRY(builder.try_append(", "sv));
+            builder.append(", "sv);
     }
-    TRY(builder.try_append(')'));
+    builder.append(')');
 
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 bool EasingStyleValue::Properties::operator==(Properties const& other) const
