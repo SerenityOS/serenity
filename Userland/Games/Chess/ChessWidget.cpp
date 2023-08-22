@@ -23,7 +23,7 @@
 ErrorOr<NonnullRefPtr<ChessWidget>> ChessWidget::try_create()
 {
     auto widget = TRY(AK::adopt_nonnull_ref_or_enomem(new (nothrow) ChessWidget));
-    widget->set_piece_set("stelar7"sv);
+    widget->set_piece_set("Classic"sv);
 
     return widget;
 }

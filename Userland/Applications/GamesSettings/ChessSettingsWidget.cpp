@@ -239,7 +239,7 @@ ErrorOr<void> ChessSettingsWidget::initialize()
 {
     TRY(load_from_gml(chess_settings_widget_gml));
 
-    auto piece_set_name = Config::read_string("Games"sv, "Chess"sv, "PieceSet"sv, "stelar7"sv);
+    auto piece_set_name = Config::read_string("Games"sv, "Chess"sv, "PieceSet"sv, "Classic"sv);
     auto board_theme = get_board_theme(Config::read_string("Games"sv, "Chess"sv, "BoardTheme"sv, "Beige"sv));
     auto show_coordinates = Config::read_bool("Games"sv, "Chess"sv, "ShowCoordinates"sv, true);
 
@@ -302,8 +302,8 @@ void ChessSettingsWidget::reset_default_values()
 {
     // FIXME: `set_text()` on a combobox doesn't trigger the `on_change` callback, but it probably should!
     //        Until then, we have to manually tell the preview to update.
-    m_piece_set_combobox->set_text("stelar7");
-    (void)m_preview->set_piece_set_name("stelar7");
+    m_piece_set_combobox->set_text("Classic");
+    (void)m_preview->set_piece_set_name("Classic");
     auto& board_theme = get_board_theme("Beige"sv);
     m_board_theme_combobox->set_text(board_theme.name);
     m_preview->set_dark_square_color(board_theme.dark_square_color);
