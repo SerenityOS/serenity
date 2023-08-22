@@ -260,6 +260,19 @@ JS::GCPtr<TraversableNavigable> Navigable::top_level_traversable()
     return verify_cast<TraversableNavigable>(navigable);
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#set-the-ongoing-navigation
+void Navigable::set_ongoing_navigation(Variant<Empty, Traversal, String> ongoing_navigation)
+{
+    // 1. If navigable's ongoing navigation is equal to newValue, then return.
+    if (m_ongoing_navigation == ongoing_navigation)
+        return;
+
+    // FIXME: 2. Inform the navigation API about aborting navigation given navigable.
+
+    // 3. Set navigable's ongoing navigation to newValue.
+    m_ongoing_navigation = ongoing_navigation;
+}
+
 Navigable::ChosenNavigable Navigable::choose_a_navigable(StringView name, TokenizedFeature::NoOpener, ActivateTab)
 {
     // 1. Let chosen be null.
@@ -919,7 +932,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
     }
 
     // 17. Set navigable's ongoing navigation to navigationId.
-    m_ongoing_navigation = navigation_id;
+    set_ongoing_navigation(navigation_id);
 
     // 18. If url's scheme is "javascript", then:
     if (url.scheme() == "javascript"sv) {

@@ -256,7 +256,7 @@ void TraversableNavigable::apply_the_history_step(int step, Optional<SourceSnaps
         navigable->set_current_session_history_entry(target_entry);
 
         // 3. Set navigable's ongoing navigation to "traversal".
-        m_ongoing_navigation = Traversal::Tag;
+        set_ongoing_navigation(Traversal::Tag);
     }
 
     // 9. Let totalChangeJobs be the size of changingNavigables.
@@ -390,7 +390,7 @@ void TraversableNavigable::apply_the_history_step(int step, Optional<SourceSnaps
         auto navigable = changing_navigable_continuation.navigable;
 
         // 7. Set navigable's ongoing navigation to null.
-        m_ongoing_navigation = {};
+        set_ongoing_navigation({});
 
         // 8. Let (scriptHistoryLength, scriptHistoryIndex) be the result of getting the history object length and index given traversable and targetStep.
         auto [script_history_length, script_history_index] = get_the_history_object_length_and_index(target_step);
