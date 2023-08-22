@@ -75,7 +75,7 @@ ErrorOr<String> FilterValueListStyleValue::to_string() const
                     TRY(builder.try_appendff(" {}", TRY(drop_shadow.radius->to_string())));
                 if (drop_shadow.color.has_value()) {
                     TRY(builder.try_append(' '));
-                    TRY(serialize_a_srgb_value(builder, *drop_shadow.color));
+                    serialize_a_srgb_value(builder, *drop_shadow.color);
                 }
                 return {};
             },

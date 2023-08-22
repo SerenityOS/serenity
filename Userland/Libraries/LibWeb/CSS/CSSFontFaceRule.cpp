@@ -50,7 +50,7 @@ DeprecatedString CSSFontFaceRule::serialized() const
     builder.append("font-family: "sv);
 
     // 3. The result of performing serialize a string on the rule’s font family name.
-    serialize_a_string(builder, m_font_face.font_family()).release_value_but_fixme_should_propagate_errors();
+    serialize_a_string(builder, m_font_face.font_family());
 
     // 4. The string ";", i.e., SEMICOLON (U+003B).
     builder.append(';');
@@ -61,18 +61,17 @@ DeprecatedString CSSFontFaceRule::serialized() const
         builder.append(" src: "sv);
 
         // 2. The result of invoking serialize a comma-separated list on performing serialize a URL or serialize a LOCAL for each source on the source list.
-        serialize_a_comma_separated_list(builder, m_font_face.sources(), [&](StringBuilder& builder, FontFace::Source source) -> ErrorOr<void> {
+        serialize_a_comma_separated_list(builder, m_font_face.sources(), [&](StringBuilder& builder, FontFace::Source source) -> void {
             // FIXME: Serialize locals once we support those
-            TRY(serialize_a_url(builder, source.url.to_deprecated_string()));
+            serialize_a_url(builder, source.url.to_deprecated_string());
 
             // NOTE: No spec currently exists for format()
             if (source.format.has_value()) {
-                TRY(builder.try_append(" format("sv));
-                TRY(serialize_a_string(builder, source.format.value()));
-                TRY(builder.try_append(")"sv));
+                builder.append(" format("sv);
+                serialize_a_string(builder, source.format.value());
+                builder.append(")"sv);
             }
-            return {};
-        }).release_value_but_fixme_should_propagate_errors();
+        });
 
         // 3. The string ";", i.e., SEMICOLON (U+003B).
         builder.append(';');
@@ -80,7 +79,7 @@ DeprecatedString CSSFontFaceRule::serialized() const
 
     // 6. If rule’s associated unicode-range descriptor is present, a single SPACE (U+0020), followed by the string "unicode-range:", followed by a single SPACE (U+0020), followed by the result of performing serialize a <'unicode-range'>, followed by the string ";", i.e., SEMICOLON (U+003B).
     builder.append(" unicode-range: "sv);
-    serialize_unicode_ranges(builder, m_font_face.unicode_ranges()).release_value_but_fixme_should_propagate_errors();
+    serialize_unicode_ranges(builder, m_font_face.unicode_ranges());
     builder.append(';');
 
     // FIXME: 7. If rule’s associated font-variant descriptor is present, a single SPACE (U+0020),
