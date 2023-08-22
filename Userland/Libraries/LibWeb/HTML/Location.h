@@ -51,7 +51,7 @@ public:
 
     void replace(String const& url) const;
     void reload() const;
-    WebIDL::ExceptionOr<void> assign(String const& url) const;
+    WebIDL::ExceptionOr<void> assign(String const& url);
 
     virtual JS::ThrowCompletionOr<JS::Object*> internal_get_prototype_of() const override;
     virtual JS::ThrowCompletionOr<bool> internal_set_prototype_of(Object* prototype) override;
