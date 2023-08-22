@@ -75,7 +75,7 @@ TEST_CASE(time_zone_name)
     constexpr auto jan_1_2022 = AK::UnixDateTime::from_seconds_since_epoch(1640995200); // Saturday, January 1, 2022 12:00:00 AM
 
     for (auto const& test : test_data) {
-        auto time_zone = MUST(Locale::format_time_zone(test.locale, test.time_zone, test.style, jan_1_2022));
+        auto time_zone = Locale::format_time_zone(test.locale, test.time_zone, test.style, jan_1_2022);
         EXPECT_EQ(time_zone, test.expected_result);
     }
 }
@@ -125,7 +125,7 @@ TEST_CASE(time_zone_name_dst)
     constexpr auto sep_19_2022 = AK::UnixDateTime::from_seconds_since_epoch(1663553728); // Monday, September 19, 2022 2:15:28 AM
 
     for (auto const& test : test_data) {
-        auto time_zone = MUST(Locale::format_time_zone(test.locale, test.time_zone, test.style, sep_19_2022));
+        auto time_zone = Locale::format_time_zone(test.locale, test.time_zone, test.style, sep_19_2022);
         EXPECT_EQ(time_zone, test.expected_result);
     }
 }
@@ -182,7 +182,7 @@ TEST_CASE(format_time_zone_offset)
     };
 
     for (auto const& test : test_data) {
-        auto time_zone = MUST(Locale::format_time_zone(test.locale, test.time_zone, test.style, test.time));
+        auto time_zone = Locale::format_time_zone(test.locale, test.time_zone, test.style, test.time);
         EXPECT_EQ(time_zone, test.expected_result);
     }
 }

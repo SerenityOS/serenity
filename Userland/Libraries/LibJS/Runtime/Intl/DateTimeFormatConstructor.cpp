@@ -166,7 +166,7 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
 
     // 24. Let dataLocaleData be localeData.[[<dataLocale>]].
     // 25. Let hcDefault be dataLocaleData.[[hourCycle]].
-    auto default_hour_cycle = TRY_OR_THROW_OOM(vm, ::Locale::get_default_regional_hour_cycle(data_locale));
+    auto default_hour_cycle = ::Locale::get_default_regional_hour_cycle(data_locale);
 
     // Non-standard, default_hour_cycle will be empty if Unicode data generation is disabled.
     if (!default_hour_cycle.has_value()) {
@@ -394,7 +394,7 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
         }
 
         // f. Let formats be dataLocaleData.[[formats]].[[<resolvedCalendar>]].
-        auto formats = TRY_OR_THROW_OOM(vm, ::Locale::get_calendar_available_formats(data_locale, date_time_format->calendar()));
+        auto formats = ::Locale::get_calendar_available_formats(data_locale, date_time_format->calendar());
 
         // g. If matcher is "basic", then
         if (matcher.as_string().utf8_string_view() == "basic"sv) {
@@ -440,7 +440,7 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
         }
 
         // b. Let rangePatterns be bestFormat.[[rangePatterns12]].
-        range_patterns = TRY_OR_THROW_OOM(vm, ::Locale::get_calendar_range12_formats(data_locale, date_time_format->calendar(), best_format->skeleton));
+        range_patterns = ::Locale::get_calendar_range12_formats(data_locale, date_time_format->calendar(), best_format->skeleton);
     }
     // 48. Else,
     else {
@@ -448,7 +448,7 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
         pattern = move(best_format->pattern);
 
         // b. Let rangePatterns be bestFormat.[[rangePatterns]].
-        range_patterns = TRY_OR_THROW_OOM(vm, ::Locale::get_calendar_range_formats(data_locale, date_time_format->calendar(), best_format->skeleton));
+        range_patterns = ::Locale::get_calendar_range_formats(data_locale, date_time_format->calendar(), best_format->skeleton);
     }
 
     // 49. Set dateTimeFormat.[[Pattern]] to pattern.
