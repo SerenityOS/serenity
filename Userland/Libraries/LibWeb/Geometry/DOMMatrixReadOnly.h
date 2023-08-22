@@ -55,20 +55,20 @@ public:
 
     // https://drafts.fxtf.org/geometry/#dommatrix-attributes
     double m11() const { return m_matrix.elements()[0][0]; }
-    double m12() const { return m_matrix.elements()[0][1]; }
-    double m13() const { return m_matrix.elements()[0][2]; }
-    double m14() const { return m_matrix.elements()[0][3]; }
-    double m21() const { return m_matrix.elements()[1][0]; }
+    double m12() const { return m_matrix.elements()[1][0]; }
+    double m13() const { return m_matrix.elements()[2][0]; }
+    double m14() const { return m_matrix.elements()[3][0]; }
+    double m21() const { return m_matrix.elements()[0][1]; }
     double m22() const { return m_matrix.elements()[1][1]; }
-    double m23() const { return m_matrix.elements()[1][2]; }
-    double m24() const { return m_matrix.elements()[1][3]; }
-    double m31() const { return m_matrix.elements()[2][0]; }
-    double m32() const { return m_matrix.elements()[2][1]; }
+    double m23() const { return m_matrix.elements()[2][1]; }
+    double m24() const { return m_matrix.elements()[3][1]; }
+    double m31() const { return m_matrix.elements()[0][2]; }
+    double m32() const { return m_matrix.elements()[1][2]; }
     double m33() const { return m_matrix.elements()[2][2]; }
-    double m34() const { return m_matrix.elements()[2][3]; }
-    double m41() const { return m_matrix.elements()[3][0]; }
-    double m42() const { return m_matrix.elements()[3][1]; }
-    double m43() const { return m_matrix.elements()[3][2]; }
+    double m34() const { return m_matrix.elements()[3][2]; }
+    double m41() const { return m_matrix.elements()[0][3]; }
+    double m42() const { return m_matrix.elements()[1][3]; }
+    double m43() const { return m_matrix.elements()[2][3]; }
     double m44() const { return m_matrix.elements()[3][3]; }
 
     double a() const { return m11(); }
@@ -95,7 +95,9 @@ protected:
     DOMMatrixReadOnly(JS::Realm&, Optional<Variant<String, Vector<double>>> const& init);
     DOMMatrixReadOnly(JS::Realm&, DOMMatrixReadOnly const& other);
 
+    // NOTE: The matrix used in the spec is column-major (https://drafts.fxtf.org/geometry/#4x4-abstract-matrix) but Gfx::Matrix4x4 is row-major so we need to transpose the values.
     Gfx::DoubleMatrix4x4 m_matrix { Gfx::DoubleMatrix4x4::identity() };
+
     bool m_is_2d { true };
 
 private:

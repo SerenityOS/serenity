@@ -117,25 +117,27 @@ void DOMMatrixReadOnly::initialize(JS::Realm& realm)
 // https://drafts.fxtf.org/geometry/#create-a-2d-matrix
 void DOMMatrixReadOnly::initialize_from_create_2d_matrix(double m11, double m12, double m21, double m22, double m41, double m42)
 {
+    // NOTE: The matrix used in the spec is column-major (https://drafts.fxtf.org/geometry/#4x4-abstract-matrix) but Gfx::Matrix4x4 is row-major so we need to transpose the values.
+
     // 1. Let matrix be a new instance of type.
     // 2. Set m11 element, m12 element, m21 element, m22 element, m41 element and m42 element to the values of init in order starting with the first value.
     auto* elements = m_matrix.elements();
     elements[0][0] = m11;
-    elements[0][1] = m12;
-    elements[1][0] = m21;
+    elements[1][0] = m12;
+    elements[0][1] = m21;
     elements[1][1] = m22;
-    elements[3][0] = m41;
-    elements[3][1] = m42;
+    elements[0][3] = m41;
+    elements[1][3] = m42;
 
     // 3. Set m13 element, m14 element, m23 element, m24 element, m31 element, m32 element, m34 element, and m43 element to 0.
-    elements[0][2] = 0.0;
-    elements[0][3] = 0.0;
-    elements[1][2] = 0.0;
-    elements[1][3] = 0.0;
     elements[2][0] = 0.0;
+    elements[3][0] = 0.0;
     elements[2][1] = 0.0;
-    elements[2][3] = 0.0;
+    elements[3][1] = 0.0;
+    elements[0][2] = 0.0;
+    elements[1][2] = 0.0;
     elements[3][2] = 0.0;
+    elements[2][3] = 0.0;
 
     // 4. Set m33 element and m44 element to 1.
     elements[2][2] = 1.0;
@@ -150,24 +152,26 @@ void DOMMatrixReadOnly::initialize_from_create_2d_matrix(double m11, double m12,
 // https://drafts.fxtf.org/geometry/#create-a-3d-matrix
 void DOMMatrixReadOnly::initialize_from_create_3d_matrix(double m11, double m12, double m13, double m14, double m21, double m22, double m23, double m24, double m31, double m32, double m33, double m34, double m41, double m42, double m43, double m44)
 {
+    // NOTE: The matrix used in the spec is column-major (https://drafts.fxtf.org/geometry/#4x4-abstract-matrix) but Gfx::Matrix4x4 is row-major so we need to transpose the values.
+
     // 1. Let matrix be a new instance of type.
     // 2. Set m11 element to m44 element to the values of init in column-major order.
     auto* elements = m_matrix.elements();
     elements[0][0] = m11;
-    elements[0][1] = m12;
-    elements[0][2] = m13;
-    elements[0][3] = m14;
-    elements[1][0] = m21;
+    elements[1][0] = m12;
+    elements[2][0] = m13;
+    elements[3][0] = m14;
+    elements[0][1] = m21;
     elements[1][1] = m22;
-    elements[1][2] = m23;
-    elements[1][3] = m24;
-    elements[2][0] = m31;
-    elements[2][1] = m32;
+    elements[2][1] = m23;
+    elements[3][1] = m24;
+    elements[0][2] = m31;
+    elements[1][2] = m32;
     elements[2][2] = m33;
-    elements[2][3] = m34;
-    elements[3][0] = m41;
-    elements[3][1] = m42;
-    elements[3][2] = m43;
+    elements[3][2] = m34;
+    elements[0][3] = m41;
+    elements[1][3] = m42;
+    elements[2][3] = m43;
     elements[3][3] = m44;
 
     // 3. Set is 2D to false.
@@ -263,7 +267,7 @@ JS::NonnullGCPtr<DOMPoint> DOMMatrixReadOnly::transform_point(DOMPointReadOnly c
 
     // 6. Set pointVector to pointVector pre-multiplied by matrix.
     // This is really a post multiply because of the transposed m_matrix.
-    point_vector = m_matrix.transpose() * point_vector;
+    point_vector = m_matrix * point_vector;
 
     // 7. Let transformedPoint be a new DOMPoint object.
     // 8. Set transformedPoint’s x coordinate to pointVector’s first element.
