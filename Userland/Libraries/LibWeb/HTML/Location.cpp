@@ -58,6 +58,26 @@ JS::GCPtr<DOM::Document> Location::relevant_document() const
     return browsing_context ? browsing_context->active_document() : nullptr;
 }
 
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#location-object-navigate
+WebIDL::ExceptionOr<void> Location::navigate(AK::URL url, HistoryHandlingBehavior history_handling)
+{
+    // 1. Let navigable be location's relevant global object's navigable.
+    auto navigable = verify_cast<HTML::Window>(HTML::relevant_global_object(*this)).navigable();
+
+    // 2. Let sourceDocument be the incumbent global object's associated Document.
+    auto& source_document = verify_cast<HTML::Window>(incumbent_global_object()).associated_document();
+
+    // 3. If location's relevant Document is not yet completely loaded, and the incumbent global object does not have transient activation, then set historyHandling to "replace".
+    if (!relevant_document()->is_completely_loaded() && !verify_cast<HTML::Window>(incumbent_global_object()).has_transient_activation()) {
+        history_handling = HistoryHandlingBehavior::Replace;
+    }
+
+    // 4. Navigate navigable to url using sourceDocument, with exceptionsEnabled set to true and historyHandling set to historyHandling.
+    TRY(navigable->navigate(url, source_document, {}, nullptr, true, history_handling));
+
+    return {};
+}
+
 // https://html.spec.whatwg.org/multipage/history.html#concept-location-url
 AK::URL Location::url() const
 {
