@@ -74,43 +74,43 @@ bool Supports::Feature::evaluate() const
         });
 }
 
-ErrorOr<String> Supports::Declaration::to_string() const
+String Supports::Declaration::to_string() const
 {
-    return String::formatted("({})", declaration);
+    return MUST(String::formatted("({})", declaration));
 }
 
-ErrorOr<String> Supports::Selector::to_string() const
+String Supports::Selector::to_string() const
 {
-    return String::formatted("selector({})", selector);
+    return MUST(String::formatted("selector({})", selector));
 }
 
-ErrorOr<String> Supports::Feature::to_string() const
+String Supports::Feature::to_string() const
 {
     return value.visit([](auto& it) { return it.to_string(); });
 }
 
-ErrorOr<String> Supports::InParens::to_string() const
+String Supports::InParens::to_string() const
 {
     return value.visit(
-        [](NonnullOwnPtr<Condition> const& condition) -> ErrorOr<String> { return String::formatted("({})", TRY(condition->to_string())); },
-        [](Supports::Feature const& it) -> ErrorOr<String> { return it.to_string(); },
-        [](GeneralEnclosed const& it) -> ErrorOr<String> { return it.to_string(); });
+        [](NonnullOwnPtr<Condition> const& condition) { return MUST(String::formatted("({})", condition->to_string())); },
+        [](Supports::Feature const& it) { return it.to_string(); },
+        [](GeneralEnclosed const& it) { return it.to_string(); });
 }
 
-ErrorOr<String> Supports::Condition::to_string() const
+String Supports::Condition::to_string() const
 {
     switch (type) {
     case Type::Not:
-        return String::formatted("not {}", TRY(children.first().to_string()));
+        return MUST(String::formatted("not {}", children.first().to_string()));
     case Type::And:
-        return String::join(" and "sv, children);
+        return MUST(String::join(" and "sv, children));
     case Type::Or:
-        return String::join(" or "sv, children);
+        return MUST(String::join(" or "sv, children));
     }
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<String> Supports::to_string() const
+String Supports::to_string() const
 {
     return m_condition->to_string();
 }
