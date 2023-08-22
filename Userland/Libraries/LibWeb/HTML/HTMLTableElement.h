@@ -48,6 +48,8 @@ public:
 private:
     HTMLTableElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual bool is_html_table_element() const override { return true; }
+
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -57,4 +59,9 @@ private:
     JS::GCPtr<DOM::HTMLCollection> mutable m_t_bodies;
 };
 
+}
+
+namespace Web::DOM {
+template<>
+inline bool Node::fast_is<HTML::HTMLTableElement>() const { return is_html_table_element(); }
 }

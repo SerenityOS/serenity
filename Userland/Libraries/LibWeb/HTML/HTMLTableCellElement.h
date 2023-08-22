@@ -27,8 +27,15 @@ public:
 private:
     HTMLTableCellElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual bool is_html_table_cell_element() const override { return true; }
+
     virtual void initialize(JS::Realm&) override;
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 };
 
+}
+
+namespace Web::DOM {
+template<>
+inline bool Node::fast_is<HTML::HTMLTableCellElement>() const { return is_html_table_cell_element(); }
 }
