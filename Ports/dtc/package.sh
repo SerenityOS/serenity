@@ -12,5 +12,5 @@ build() {
 }
 
 install() {
-    run make PREFIX="${DESTDIR}" BINDIR="${DESTDIR}/usr/bin" install
+    run make NO_PYTHON=1 PREFIX="${DESTDIR}" BINDIR="${DESTDIR}/usr/bin" install
 }
