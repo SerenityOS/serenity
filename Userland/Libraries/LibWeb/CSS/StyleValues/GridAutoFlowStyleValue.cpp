@@ -13,7 +13,7 @@ ValueComparingNonnullRefPtr<GridAutoFlowStyleValue> GridAutoFlowStyleValue::crea
     return adopt_ref(*new GridAutoFlowStyleValue(axis, dense));
 }
 
-ErrorOr<String> GridAutoFlowStyleValue::to_string() const
+String GridAutoFlowStyleValue::to_string() const
 {
     StringBuilder builder;
     if (m_row)
@@ -22,7 +22,7 @@ ErrorOr<String> GridAutoFlowStyleValue::to_string() const
         builder.append("column"sv);
     if (m_dense)
         builder.append(" dense"sv);
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 }

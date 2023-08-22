@@ -210,7 +210,7 @@ DeprecatedString CSSStyleDeclaration::get_property_value(StringView property_nam
     auto maybe_property = property(property_id.value());
     if (!maybe_property.has_value())
         return {};
-    return maybe_property->value->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+    return maybe_property->value->to_string().to_deprecated_string();
 }
 
 // https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-getpropertypriority
@@ -303,7 +303,7 @@ DeprecatedString PropertyOwningCSSStyleDeclaration::serialized() const
         // NOTE: There are no shorthands for custom properties.
 
         // 5. Let value be the result of invoking serialize a CSS value of declaration.
-        auto value = declaration.value.value->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+        auto value = declaration.value.value->to_string().to_deprecated_string();
 
         // 6. Let serialized declaration be the result of invoking serialize a CSS declaration with property name property, value value,
         //    and the important flag set if declaration has its important flag set.
@@ -354,7 +354,7 @@ DeprecatedString PropertyOwningCSSStyleDeclaration::serialized() const
         // FIXME: 4. Shorthand loop: For each shorthand in shorthands, follow these substeps: ...
 
         // 5. Let value be the result of invoking serialize a CSS value of declaration.
-        auto value = declaration.value->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+        auto value = declaration.value->to_string().to_deprecated_string();
 
         // 6. Let serialized declaration be the result of invoking serialize a CSS declaration with property name property, value value,
         //    and the important flag set if declaration has its important flag set.
@@ -403,7 +403,7 @@ JS::ThrowCompletionOr<JS::Value> CSSStyleDeclaration::internal_get(JS::PropertyK
     if (property_id == CSS::PropertyID::Invalid)
         return Base::internal_get(name, receiver, cacheable_metadata);
     if (auto maybe_property = property(property_id); maybe_property.has_value())
-        return { JS::PrimitiveString::create(vm(), maybe_property->value->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string()) };
+        return { JS::PrimitiveString::create(vm(), maybe_property->value->to_string().to_deprecated_string()) };
     return { JS::PrimitiveString::create(vm(), String {}) };
 }
 

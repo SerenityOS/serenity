@@ -24,7 +24,7 @@ public:
     ValueComparingNonnullRefPtr<StyleValue> flex_direction() const { return m_properties.flex_direction; }
     ValueComparingNonnullRefPtr<StyleValue> flex_wrap() const { return m_properties.flex_wrap; }
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
 
     bool properties_equal(FlexFlowStyleValue const& other) const { return m_properties == other.m_properties; }
 

@@ -61,7 +61,7 @@ public:
     String to_string() const
     {
         if (is_calculated())
-            return MUST(m_value.template get<NonnullRefPtr<CalculatedStyleValue>>()->to_string());
+            return m_value.template get<NonnullRefPtr<CalculatedStyleValue>>()->to_string();
 
         return m_value.template get<T>().to_string();
     }

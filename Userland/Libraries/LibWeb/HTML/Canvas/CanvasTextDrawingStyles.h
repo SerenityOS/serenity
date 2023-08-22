@@ -30,10 +30,10 @@ public:
         // On getting, the font attribute must return the serialized form of the current font of the context (with no 'line-height' component).
         auto const& font_style_value = my_drawing_state().font_style_value->as_font();
         return DeprecatedString::formatted("{} {} {} {}",
-            font_style_value.font_style()->to_string().release_value_but_fixme_should_propagate_errors(),
-            font_style_value.font_weight()->to_string().release_value_but_fixme_should_propagate_errors(),
-            font_style_value.font_size()->to_string().release_value_but_fixme_should_propagate_errors(),
-            font_style_value.font_families()->to_string().release_value_but_fixme_should_propagate_errors());
+            font_style_value.font_style()->to_string(),
+            font_style_value.font_weight()->to_string(),
+            font_style_value.font_size()->to_string(),
+            font_style_value.font_families()->to_string());
     }
 
     void set_font(DeprecatedString const& font)

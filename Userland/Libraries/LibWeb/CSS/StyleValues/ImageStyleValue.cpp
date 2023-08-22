@@ -97,7 +97,7 @@ Gfx::Bitmap const* ImageStyleValue::bitmap(size_t frame_index, Gfx::IntSize size
     return nullptr;
 }
 
-ErrorOr<String> ImageStyleValue::to_string() const
+String ImageStyleValue::to_string() const
 {
     return serialize_a_url(m_url.to_deprecated_string());
 }

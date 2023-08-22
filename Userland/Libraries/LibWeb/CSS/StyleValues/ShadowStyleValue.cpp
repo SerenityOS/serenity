@@ -11,13 +11,13 @@
 
 namespace Web::CSS {
 
-ErrorOr<String> ShadowStyleValue::to_string() const
+String ShadowStyleValue::to_string() const
 {
     StringBuilder builder;
-    TRY(builder.try_appendff("{} {} {} {} {}", m_properties.color.to_deprecated_string(), TRY(m_properties.offset_x->to_string()), TRY(m_properties.offset_y->to_string()), TRY(m_properties.blur_radius->to_string()), TRY(m_properties.spread_distance->to_string())));
+    builder.appendff("{} {} {} {} {}", m_properties.color.to_deprecated_string(), m_properties.offset_x->to_string(), m_properties.offset_y->to_string(), m_properties.blur_radius->to_string(), m_properties.spread_distance->to_string());
     if (m_properties.placement == ShadowPlacement::Inner)
-        TRY(builder.try_append(" inset"sv));
-    return builder.to_string();
+        builder.append(" inset"sv);
+    return MUST(builder.to_string());
 }
 
 ValueComparingNonnullRefPtr<StyleValue const> ShadowStyleValue::absolutized(CSSPixelRect const& viewport_rect, Length::FontMetrics const& font_metrics, Length::FontMetrics const& root_font_metrics) const

@@ -19,7 +19,7 @@ public:
     }
     virtual ~InitialStyleValue() override = default;
 
-    ErrorOr<String> to_string() const override { return "initial"_string; }
+    String to_string() const override { return "initial"_string; }
 
     bool properties_equal(InitialStyleValue const&) const { return true; }
 

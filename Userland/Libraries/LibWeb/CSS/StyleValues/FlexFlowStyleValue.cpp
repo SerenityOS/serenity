@@ -11,9 +11,9 @@
 
 namespace Web::CSS {
 
-ErrorOr<String> FlexFlowStyleValue::to_string() const
+String FlexFlowStyleValue::to_string() const
 {
-    return String::formatted("{} {}", TRY(m_properties.flex_direction->to_string()), TRY(m_properties.flex_wrap->to_string()));
+    return MUST(String::formatted("{} {}", m_properties.flex_direction->to_string(), m_properties.flex_wrap->to_string()));
 }
 
 }

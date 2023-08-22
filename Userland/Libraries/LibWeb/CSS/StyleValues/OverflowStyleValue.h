@@ -24,7 +24,7 @@ public:
     ValueComparingNonnullRefPtr<StyleValue> overflow_x() const { return m_properties.overflow_x; }
     ValueComparingNonnullRefPtr<StyleValue> overflow_y() const { return m_properties.overflow_y; }
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
 
     bool properties_equal(OverflowStyleValue const& other) const { return m_properties == other.m_properties; }
 

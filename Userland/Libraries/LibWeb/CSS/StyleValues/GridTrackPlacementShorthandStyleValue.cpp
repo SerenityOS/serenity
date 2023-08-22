@@ -24,11 +24,11 @@ ValueComparingNonnullRefPtr<GridTrackPlacementShorthandStyleValue> GridTrackPlac
         GridTrackPlacementStyleValue::create(GridTrackPlacement::make_auto())));
 }
 
-ErrorOr<String> GridTrackPlacementShorthandStyleValue::to_string() const
+String GridTrackPlacementShorthandStyleValue::to_string() const
 {
     if (m_properties.end->grid_track_placement().is_auto())
-        return String::formatted("{}", m_properties.start->grid_track_placement().to_string());
-    return String::formatted("{} / {}", m_properties.start->grid_track_placement().to_string(), m_properties.end->grid_track_placement().to_string());
+        return MUST(String::formatted("{}", m_properties.start->grid_track_placement().to_string()));
+    return MUST(String::formatted("{} / {}", m_properties.start->grid_track_placement().to_string(), m_properties.end->grid_track_placement().to_string()));
 }
 
 }

@@ -19,7 +19,7 @@ public:
     }
     virtual ~StringStyleValue() override = default;
 
-    ErrorOr<String> to_string() const override { return m_string; }
+    String to_string() const override { return m_string; }
 
     bool properties_equal(StringStyleValue const& other) const { return m_string == other.m_string; }
 

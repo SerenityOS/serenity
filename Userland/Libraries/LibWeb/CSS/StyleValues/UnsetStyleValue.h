@@ -22,7 +22,7 @@ public:
     }
     virtual ~UnsetStyleValue() override = default;
 
-    ErrorOr<String> to_string() const override { return "unset"_string; }
+    String to_string() const override { return "unset"_string; }
 
     bool properties_equal(UnsetStyleValue const&) const { return true; }
 

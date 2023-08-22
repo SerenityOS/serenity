@@ -127,7 +127,7 @@ NumericCalculationNode::NumericCalculationNode(NumericValue value)
 
 NumericCalculationNode::~NumericCalculationNode() = default;
 
-ErrorOr<String> NumericCalculationNode::to_string() const
+String NumericCalculationNode::to_string() const
 {
     return m_value.visit([](auto& value) { return value.to_string(); });
 }
@@ -225,17 +225,17 @@ SumCalculationNode::SumCalculationNode(Vector<NonnullOwnPtr<CalculationNode>> va
 
 SumCalculationNode::~SumCalculationNode() = default;
 
-ErrorOr<String> SumCalculationNode::to_string() const
+String SumCalculationNode::to_string() const
 {
     bool first = true;
     StringBuilder builder;
     for (auto& value : m_values) {
         if (!first)
-            TRY(builder.try_append(" + "sv));
-        TRY(builder.try_append(TRY(value->to_string())));
+            builder.append(" + "sv);
+        builder.append(value->to_string());
         first = false;
     }
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 Optional<CalculatedStyleValue::ResolvedType> SumCalculationNode::resolved_type() const
@@ -324,7 +324,7 @@ void SumCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
 
 ErrorOr<void> SumCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}SUM:\n", "", indent));
+    builder.appendff("{: >{}}SUM:\n", "", indent);
     for (auto const& item : m_values)
         TRY(item->dump(builder, indent + 2));
     return {};
@@ -344,17 +344,17 @@ ProductCalculationNode::ProductCalculationNode(Vector<NonnullOwnPtr<CalculationN
 
 ProductCalculationNode::~ProductCalculationNode() = default;
 
-ErrorOr<String> ProductCalculationNode::to_string() const
+String ProductCalculationNode::to_string() const
 {
     bool first = true;
     StringBuilder builder;
     for (auto& value : m_values) {
         if (!first)
-            TRY(builder.try_append(" * "sv));
-        TRY(builder.try_append(TRY(value->to_string())));
+            builder.append(" * "sv);
+        builder.append(value->to_string());
         first = false;
     }
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 Optional<CalculatedStyleValue::ResolvedType> ProductCalculationNode::resolved_type() const
@@ -448,7 +448,7 @@ void ProductCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Cal
 
 ErrorOr<void> ProductCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}PRODUCT:\n", "", indent));
+    builder.appendff("{: >{}}PRODUCT:\n", "", indent);
     for (auto const& item : m_values)
         TRY(item->dump(builder, indent + 2));
     return {};
@@ -467,9 +467,9 @@ NegateCalculationNode::NegateCalculationNode(NonnullOwnPtr<CalculationNode> valu
 
 NegateCalculationNode::~NegateCalculationNode() = default;
 
-ErrorOr<String> NegateCalculationNode::to_string() const
+String NegateCalculationNode::to_string() const
 {
-    return String::formatted("(0 - {})", TRY(m_value->to_string()));
+    return MUST(String::formatted("(0 - {})", m_value->to_string()));
 }
 
 Optional<CalculatedStyleValue::ResolvedType> NegateCalculationNode::resolved_type() const
@@ -504,7 +504,7 @@ void NegateCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calc
 
 ErrorOr<void> NegateCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}NEGATE:\n", "", indent));
+    builder.appendff("{: >{}}NEGATE:\n", "", indent);
     TRY(m_value->dump(builder, indent + 2));
     return {};
 }
@@ -522,9 +522,9 @@ InvertCalculationNode::InvertCalculationNode(NonnullOwnPtr<CalculationNode> valu
 
 InvertCalculationNode::~InvertCalculationNode() = default;
 
-ErrorOr<String> InvertCalculationNode::to_string() const
+String InvertCalculationNode::to_string() const
 {
-    return String::formatted("(1 / {})", TRY(m_value->to_string()));
+    return MUST(String::formatted("(1 / {})", m_value->to_string()));
 }
 
 Optional<CalculatedStyleValue::ResolvedType> InvertCalculationNode::resolved_type() const
@@ -566,7 +566,7 @@ void InvertCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calc
 
 ErrorOr<void> InvertCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}INVERT:\n", "", indent));
+    builder.appendff("{: >{}}INVERT:\n", "", indent);
     TRY(m_value->dump(builder, indent + 2));
     return {};
 }
@@ -584,17 +584,17 @@ MinCalculationNode::MinCalculationNode(Vector<NonnullOwnPtr<CalculationNode>> va
 
 MinCalculationNode::~MinCalculationNode() = default;
 
-ErrorOr<String> MinCalculationNode::to_string() const
+String MinCalculationNode::to_string() const
 {
     StringBuilder builder;
-    TRY(builder.try_append("min("sv));
+    builder.append("min("sv);
     for (size_t i = 0; i < m_values.size(); ++i) {
         if (i != 0)
-            TRY(builder.try_append(", "sv));
-        TRY(builder.try_append(TRY(m_values[i]->to_string())));
+            builder.append(", "sv);
+        builder.append(m_values[i]->to_string());
     }
-    TRY(builder.try_append(")"sv));
-    return builder.to_string();
+    builder.append(")"sv);
+    return MUST(builder.to_string());
 }
 
 Optional<CalculatedStyleValue::ResolvedType> MinCalculationNode::resolved_type() const
@@ -648,7 +648,7 @@ void MinCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
 
 ErrorOr<void> MinCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}MIN:\n", "", indent));
+    builder.appendff("{: >{}}MIN:\n", "", indent);
     for (auto const& value : m_values)
         TRY(value->dump(builder, indent + 2));
     return {};
@@ -667,17 +667,17 @@ MaxCalculationNode::MaxCalculationNode(Vector<NonnullOwnPtr<CalculationNode>> va
 
 MaxCalculationNode::~MaxCalculationNode() = default;
 
-ErrorOr<String> MaxCalculationNode::to_string() const
+String MaxCalculationNode::to_string() const
 {
     StringBuilder builder;
-    TRY(builder.try_append("max("sv));
+    builder.append("max("sv);
     for (size_t i = 0; i < m_values.size(); ++i) {
         if (i != 0)
-            TRY(builder.try_append(", "sv));
-        TRY(builder.try_append(TRY(m_values[i]->to_string())));
+            builder.append(", "sv);
+        builder.append(m_values[i]->to_string());
     }
-    TRY(builder.try_append(")"sv));
-    return builder.to_string();
+    builder.append(")"sv);
+    return MUST(builder.to_string());
 }
 
 Optional<CalculatedStyleValue::ResolvedType> MaxCalculationNode::resolved_type() const
@@ -731,7 +731,7 @@ void MaxCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
 
 ErrorOr<void> MaxCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}MAX:\n", "", indent));
+    builder.appendff("{: >{}}MAX:\n", "", indent);
     for (auto const& value : m_values)
         TRY(value->dump(builder, indent + 2));
     return {};
@@ -752,17 +752,17 @@ ClampCalculationNode::ClampCalculationNode(NonnullOwnPtr<CalculationNode> min, N
 
 ClampCalculationNode::~ClampCalculationNode() = default;
 
-ErrorOr<String> ClampCalculationNode::to_string() const
+String ClampCalculationNode::to_string() const
 {
     StringBuilder builder;
-    TRY(builder.try_append("clamp("sv));
-    TRY(builder.try_append(TRY(m_min_value->to_string())));
-    TRY(builder.try_append(", "sv));
-    TRY(builder.try_append(TRY(m_center_value->to_string())));
-    TRY(builder.try_append(", "sv));
-    TRY(builder.try_append(TRY(m_max_value->to_string())));
-    TRY(builder.try_append(")"sv));
-    return builder.to_string();
+    builder.append("clamp("sv);
+    builder.append(m_min_value->to_string());
+    builder.append(", "sv);
+    builder.append(m_center_value->to_string());
+    builder.append(", "sv);
+    builder.append(m_max_value->to_string());
+    builder.append(")"sv);
+    return MUST(builder.to_string());
 }
 
 Optional<CalculatedStyleValue::ResolvedType> ClampCalculationNode::resolved_type() const
@@ -827,7 +827,7 @@ void ClampCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcu
 
 ErrorOr<void> ClampCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}CLAMP:\n", "", indent));
+    builder.appendff("{: >{}}CLAMP:\n", "", indent);
     TRY(m_min_value->dump(builder, indent + 2));
     TRY(m_center_value->dump(builder, indent + 2));
     TRY(m_max_value->dump(builder, indent + 2));
@@ -847,13 +847,13 @@ AbsCalculationNode::AbsCalculationNode(NonnullOwnPtr<CalculationNode> value)
 
 AbsCalculationNode::~AbsCalculationNode() = default;
 
-ErrorOr<String> AbsCalculationNode::to_string() const
+String AbsCalculationNode::to_string() const
 {
     StringBuilder builder;
     builder.append("abs("sv);
-    builder.append(TRY(m_value->to_string()));
+    builder.append(m_value->to_string());
     builder.append(")"sv);
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 Optional<CalculatedStyleValue::ResolvedType> AbsCalculationNode::resolved_type() const
@@ -893,7 +893,7 @@ void AbsCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
 
 ErrorOr<void> AbsCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}ABS: {}\n", "", indent, TRY(to_string())));
+    builder.appendff("{: >{}}ABS: {}\n", "", indent, to_string());
     return {};
 }
 
@@ -910,13 +910,13 @@ SignCalculationNode::SignCalculationNode(NonnullOwnPtr<CalculationNode> value)
 
 SignCalculationNode::~SignCalculationNode() = default;
 
-ErrorOr<String> SignCalculationNode::to_string() const
+String SignCalculationNode::to_string() const
 {
     StringBuilder builder;
     builder.append("sign("sv);
-    builder.append(TRY(m_value->to_string()));
+    builder.append(m_value->to_string());
     builder.append(")"sv);
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 Optional<CalculatedStyleValue::ResolvedType> SignCalculationNode::resolved_type() const
@@ -958,7 +958,7 @@ void SignCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcul
 
 ErrorOr<void> SignCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}SIGN: {}\n", "", indent, TRY(to_string())));
+    builder.appendff("{: >{}}SIGN: {}\n", "", indent, to_string());
     return {};
 }
 
@@ -975,7 +975,7 @@ ConstantCalculationNode::ConstantCalculationNode(ConstantType constant)
 
 ConstantCalculationNode::~ConstantCalculationNode() = default;
 
-ErrorOr<String> ConstantCalculationNode::to_string() const
+String ConstantCalculationNode::to_string() const
 {
     switch (m_constant) {
     case CalculationNode::ConstantType::E:
@@ -1027,7 +1027,7 @@ CalculatedStyleValue::CalculationResult ConstantCalculationNode::resolve([[maybe
 
 ErrorOr<void> ConstantCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}CONSTANT: {}\n", "", indent, TRY(to_string())));
+    builder.appendff("{: >{}}CONSTANT: {}\n", "", indent, to_string());
     return {};
 }
 
@@ -1044,13 +1044,13 @@ SinCalculationNode::SinCalculationNode(NonnullOwnPtr<CalculationNode> value)
 
 SinCalculationNode::~SinCalculationNode() = default;
 
-ErrorOr<String> SinCalculationNode::to_string() const
+String SinCalculationNode::to_string() const
 {
     StringBuilder builder;
     builder.append("sin("sv);
-    builder.append(TRY(m_value->to_string()));
+    builder.append(m_value->to_string());
     builder.append(")"sv);
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 Optional<CalculatedStyleValue::ResolvedType> SinCalculationNode::resolved_type() const
@@ -1087,7 +1087,7 @@ void SinCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
 
 ErrorOr<void> SinCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}SIN: {}\n", "", indent, TRY(to_string())));
+    builder.appendff("{: >{}}SIN: {}\n", "", indent, to_string());
     return {};
 }
 
@@ -1104,13 +1104,13 @@ CosCalculationNode::CosCalculationNode(NonnullOwnPtr<CalculationNode> value)
 
 CosCalculationNode::~CosCalculationNode() = default;
 
-ErrorOr<String> CosCalculationNode::to_string() const
+String CosCalculationNode::to_string() const
 {
     StringBuilder builder;
     builder.append("cos("sv);
-    builder.append(TRY(m_value->to_string()));
+    builder.append(m_value->to_string());
     builder.append(")"sv);
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 Optional<CalculatedStyleValue::ResolvedType> CosCalculationNode::resolved_type() const
@@ -1147,7 +1147,7 @@ void CosCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
 
 ErrorOr<void> CosCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}COS: {}\n", "", indent, TRY(to_string())));
+    builder.appendff("{: >{}}COS: {}\n", "", indent, to_string());
     return {};
 }
 
@@ -1164,13 +1164,13 @@ TanCalculationNode::TanCalculationNode(NonnullOwnPtr<CalculationNode> value)
 
 TanCalculationNode::~TanCalculationNode() = default;
 
-ErrorOr<String> TanCalculationNode::to_string() const
+String TanCalculationNode::to_string() const
 {
     StringBuilder builder;
     builder.append("tan("sv);
-    builder.append(TRY(m_value->to_string()));
+    builder.append(m_value->to_string());
     builder.append(")"sv);
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 Optional<CalculatedStyleValue::ResolvedType> TanCalculationNode::resolved_type() const
@@ -1207,7 +1207,7 @@ void TanCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
 
 ErrorOr<void> TanCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}TAN: {}\n", "", indent, TRY(to_string())));
+    builder.appendff("{: >{}}TAN: {}\n", "", indent, to_string());
     return {};
 }
 
@@ -1224,13 +1224,13 @@ AsinCalculationNode::AsinCalculationNode(NonnullOwnPtr<CalculationNode> value)
 
 AsinCalculationNode::~AsinCalculationNode() = default;
 
-ErrorOr<String> AsinCalculationNode::to_string() const
+String AsinCalculationNode::to_string() const
 {
     StringBuilder builder;
     builder.append("asin("sv);
-    builder.append(TRY(m_value->to_string()));
+    builder.append(m_value->to_string());
     builder.append(")"sv);
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 Optional<CalculatedStyleValue::ResolvedType> AsinCalculationNode::resolved_type() const
@@ -1267,7 +1267,7 @@ void AsinCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcul
 
 ErrorOr<void> AsinCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}ASIN: {}\n", "", indent, TRY(to_string())));
+    builder.appendff("{: >{}}ASIN: {}\n", "", indent, to_string());
     return {};
 }
 
@@ -1284,13 +1284,13 @@ AcosCalculationNode::AcosCalculationNode(NonnullOwnPtr<CalculationNode> value)
 
 AcosCalculationNode::~AcosCalculationNode() = default;
 
-ErrorOr<String> AcosCalculationNode::to_string() const
+String AcosCalculationNode::to_string() const
 {
     StringBuilder builder;
     builder.append("acos("sv);
-    builder.append(TRY(m_value->to_string()));
+    builder.append(m_value->to_string());
     builder.append(")"sv);
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 Optional<CalculatedStyleValue::ResolvedType> AcosCalculationNode::resolved_type() const
@@ -1327,7 +1327,7 @@ void AcosCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcul
 
 ErrorOr<void> AcosCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}ACOS: {}\n", "", indent, TRY(to_string())));
+    builder.appendff("{: >{}}ACOS: {}\n", "", indent, to_string());
     return {};
 }
 
@@ -1344,13 +1344,13 @@ AtanCalculationNode::AtanCalculationNode(NonnullOwnPtr<CalculationNode> value)
 
 AtanCalculationNode::~AtanCalculationNode() = default;
 
-ErrorOr<String> AtanCalculationNode::to_string() const
+String AtanCalculationNode::to_string() const
 {
     StringBuilder builder;
     builder.append("atan("sv);
-    builder.append(TRY(m_value->to_string()));
+    builder.append(m_value->to_string());
     builder.append(")"sv);
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 Optional<CalculatedStyleValue::ResolvedType> AtanCalculationNode::resolved_type() const
@@ -1387,7 +1387,7 @@ void AtanCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcul
 
 ErrorOr<void> AtanCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}ATAN: {}\n", "", indent, TRY(to_string())));
+    builder.appendff("{: >{}}ATAN: {}\n", "", indent, to_string());
     return {};
 }
 
@@ -1405,15 +1405,15 @@ Atan2CalculationNode::Atan2CalculationNode(NonnullOwnPtr<CalculationNode> y, Non
 
 Atan2CalculationNode::~Atan2CalculationNode() = default;
 
-ErrorOr<String> Atan2CalculationNode::to_string() const
+String Atan2CalculationNode::to_string() const
 {
     StringBuilder builder;
     builder.append("atan2("sv);
-    builder.append(TRY(m_y->to_string()));
+    builder.append(m_y->to_string());
     builder.append(", "sv);
-    builder.append(TRY(m_x->to_string()));
+    builder.append(m_x->to_string());
     builder.append(")"sv);
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 Optional<CalculatedStyleValue::ResolvedType> Atan2CalculationNode::resolved_type() const
@@ -1456,7 +1456,7 @@ void Atan2CalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcu
 
 ErrorOr<void> Atan2CalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}ATAN2: {}\n", "", indent, TRY(to_string())));
+    builder.appendff("{: >{}}ATAN2: {}\n", "", indent, to_string());
     return {};
 }
 
@@ -1474,15 +1474,15 @@ PowCalculationNode::PowCalculationNode(NonnullOwnPtr<CalculationNode> x, Nonnull
 
 PowCalculationNode::~PowCalculationNode() = default;
 
-ErrorOr<String> PowCalculationNode::to_string() const
+String PowCalculationNode::to_string() const
 {
     StringBuilder builder;
     builder.append("pow("sv);
-    builder.append(TRY(m_x->to_string()));
+    builder.append(m_x->to_string());
     builder.append(", "sv);
-    builder.append(TRY(m_y->to_string()));
+    builder.append(m_y->to_string());
     builder.append(")"sv);
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 Optional<CalculatedStyleValue::ResolvedType> PowCalculationNode::resolved_type() const
@@ -1520,7 +1520,7 @@ void PowCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
 
 ErrorOr<void> PowCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}POW: {}\n", "", indent, TRY(to_string())));
+    builder.appendff("{: >{}}POW: {}\n", "", indent, to_string());
     return {};
 }
 
@@ -1537,13 +1537,13 @@ SqrtCalculationNode::SqrtCalculationNode(NonnullOwnPtr<CalculationNode> value)
 
 SqrtCalculationNode::~SqrtCalculationNode() = default;
 
-ErrorOr<String> SqrtCalculationNode::to_string() const
+String SqrtCalculationNode::to_string() const
 {
     StringBuilder builder;
     builder.append("sqrt("sv);
-    builder.append(TRY(m_value->to_string()));
+    builder.append(m_value->to_string());
     builder.append(")"sv);
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 Optional<CalculatedStyleValue::ResolvedType> SqrtCalculationNode::resolved_type() const
@@ -1575,7 +1575,7 @@ void SqrtCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcul
 
 ErrorOr<void> SqrtCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}SQRT: {}\n", "", indent, TRY(to_string())));
+    builder.appendff("{: >{}}SQRT: {}\n", "", indent, to_string());
     return {};
 }
 
@@ -1592,17 +1592,17 @@ HypotCalculationNode::HypotCalculationNode(Vector<NonnullOwnPtr<CalculationNode>
 
 HypotCalculationNode::~HypotCalculationNode() = default;
 
-ErrorOr<String> HypotCalculationNode::to_string() const
+String HypotCalculationNode::to_string() const
 {
     StringBuilder builder;
-    TRY(builder.try_append("hypot("sv));
+    builder.append("hypot("sv);
     for (size_t i = 0; i < m_values.size(); ++i) {
         if (i != 0)
-            TRY(builder.try_append(", "sv));
-        TRY(builder.try_append(TRY(m_values[i]->to_string())));
+            builder.append(", "sv);
+        builder.append(m_values[i]->to_string());
     }
-    TRY(builder.try_append(")"sv));
-    return builder.to_string();
+    builder.append(")"sv);
+    return MUST(builder.to_string());
 }
 
 Optional<CalculatedStyleValue::ResolvedType> HypotCalculationNode::resolved_type() const
@@ -1654,7 +1654,7 @@ void HypotCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcu
 
 ErrorOr<void> HypotCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}HYPOT:\n", "", indent));
+    builder.appendff("{: >{}}HYPOT:\n", "", indent);
     for (auto const& value : m_values)
         TRY(value->dump(builder, indent + 2));
     return {};
@@ -1674,15 +1674,15 @@ LogCalculationNode::LogCalculationNode(NonnullOwnPtr<CalculationNode> x, Nonnull
 
 LogCalculationNode::~LogCalculationNode() = default;
 
-ErrorOr<String> LogCalculationNode::to_string() const
+String LogCalculationNode::to_string() const
 {
     StringBuilder builder;
     builder.append("log("sv);
-    builder.append(TRY(m_x->to_string()));
+    builder.append(m_x->to_string());
     builder.append(", "sv);
-    builder.append(TRY(m_y->to_string()));
+    builder.append(m_y->to_string());
     builder.append(")"sv);
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 Optional<CalculatedStyleValue::ResolvedType> LogCalculationNode::resolved_type() const
@@ -1720,7 +1720,7 @@ void LogCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
 
 ErrorOr<void> LogCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}LOG: {}\n", "", indent, TRY(to_string())));
+    builder.appendff("{: >{}}LOG: {}\n", "", indent, to_string());
     return {};
 }
 
@@ -1737,13 +1737,13 @@ ExpCalculationNode::ExpCalculationNode(NonnullOwnPtr<CalculationNode> value)
 
 ExpCalculationNode::~ExpCalculationNode() = default;
 
-ErrorOr<String> ExpCalculationNode::to_string() const
+String ExpCalculationNode::to_string() const
 {
     StringBuilder builder;
     builder.append("exp("sv);
-    builder.append(TRY(m_value->to_string()));
+    builder.append(m_value->to_string());
     builder.append(")"sv);
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 Optional<CalculatedStyleValue::ResolvedType> ExpCalculationNode::resolved_type() const
@@ -1775,7 +1775,7 @@ void ExpCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
 
 ErrorOr<void> ExpCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}EXP: {}\n", "", indent, TRY(to_string())));
+    builder.appendff("{: >{}}EXP: {}\n", "", indent, to_string());
     return {};
 }
 
@@ -1794,17 +1794,17 @@ RoundCalculationNode::RoundCalculationNode(RoundingStrategy mode, NonnullOwnPtr<
 
 RoundCalculationNode::~RoundCalculationNode() = default;
 
-ErrorOr<String> RoundCalculationNode::to_string() const
+String RoundCalculationNode::to_string() const
 {
     StringBuilder builder;
     builder.append("round("sv);
     builder.append(CSS::to_string(m_strategy));
     builder.append(", "sv);
-    builder.append(TRY(m_x->to_string()));
+    builder.append(m_x->to_string());
     builder.append(", "sv);
-    builder.append(TRY(m_y->to_string()));
+    builder.append(m_y->to_string());
     builder.append(")"sv);
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 Optional<CalculatedStyleValue::ResolvedType> RoundCalculationNode::resolved_type() const
@@ -1878,7 +1878,7 @@ void RoundCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcu
 
 ErrorOr<void> RoundCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}ROUND: {}\n", "", indent, TRY(to_string())));
+    builder.appendff("{: >{}}ROUND: {}\n", "", indent, to_string());
     return {};
 }
 
@@ -1896,15 +1896,15 @@ ModCalculationNode::ModCalculationNode(NonnullOwnPtr<CalculationNode> x, Nonnull
 
 ModCalculationNode::~ModCalculationNode() = default;
 
-ErrorOr<String> ModCalculationNode::to_string() const
+String ModCalculationNode::to_string() const
 {
     StringBuilder builder;
     builder.append("mod("sv);
-    builder.append(TRY(m_x->to_string()));
+    builder.append(m_x->to_string());
     builder.append(", "sv);
-    builder.append(TRY(m_y->to_string()));
+    builder.append(m_y->to_string());
     builder.append(")"sv);
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 Optional<CalculatedStyleValue::ResolvedType> ModCalculationNode::resolved_type() const
@@ -1955,7 +1955,7 @@ void ModCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
 
 ErrorOr<void> ModCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}MOD: {}\n", "", indent, TRY(to_string())));
+    builder.appendff("{: >{}}MOD: {}\n", "", indent, to_string());
     return {};
 }
 
@@ -1973,15 +1973,15 @@ RemCalculationNode::RemCalculationNode(NonnullOwnPtr<CalculationNode> x, Nonnull
 
 RemCalculationNode::~RemCalculationNode() = default;
 
-ErrorOr<String> RemCalculationNode::to_string() const
+String RemCalculationNode::to_string() const
 {
     StringBuilder builder;
     builder.append("rem("sv);
-    builder.append(TRY(m_x->to_string()));
+    builder.append(m_x->to_string());
     builder.append(", "sv);
-    builder.append(TRY(m_y->to_string()));
+    builder.append(m_y->to_string());
     builder.append(")"sv);
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 Optional<CalculatedStyleValue::ResolvedType> RemCalculationNode::resolved_type() const
@@ -2031,7 +2031,7 @@ void RemCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
 
 ErrorOr<void> RemCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    TRY(builder.try_appendff("{: >{}}REM: {}\n", "", indent, TRY(to_string())));
+    builder.appendff("{: >{}}REM: {}\n", "", indent, to_string());
     return {};
 }
 
@@ -2269,10 +2269,10 @@ void CalculatedStyleValue::CalculationResult::invert()
         });
 }
 
-ErrorOr<String> CalculatedStyleValue::to_string() const
+String CalculatedStyleValue::to_string() const
 {
     // FIXME: Implement this according to https://www.w3.org/TR/css-values-4/#calc-serialize once that stabilizes.
-    return String::formatted("calc({})", TRY(m_calculation->to_string()));
+    return MUST(String::formatted("calc({})", m_calculation->to_string()));
 }
 
 bool CalculatedStyleValue::equals(StyleValue const& other) const
@@ -2280,7 +2280,7 @@ bool CalculatedStyleValue::equals(StyleValue const& other) const
     if (type() != other.type())
         return false;
     // This is a case where comparing the strings actually makes sense.
-    return to_string().release_value_but_fixme_should_propagate_errors() == other.to_string().release_value_but_fixme_should_propagate_errors();
+    return to_string() == other.to_string();
 }
 
 Optional<Angle> CalculatedStyleValue::resolve_angle() const

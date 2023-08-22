@@ -28,7 +28,7 @@ public:
     auto row_end() const { return m_properties.row_end; }
     auto column_end() const { return m_properties.column_end; }
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
 
     bool properties_equal(GridAreaShorthandStyleValue const& other) const { return m_properties == other.m_properties; }
 

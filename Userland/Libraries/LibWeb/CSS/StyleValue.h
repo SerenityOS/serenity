@@ -180,7 +180,7 @@ public:
 
     virtual Color to_color(Optional<Layout::NodeWithStyle const&>) const { return {}; }
     ValueID to_identifier() const;
-    virtual ErrorOr<String> to_string() const = 0;
+    virtual String to_string() const = 0;
 
     [[nodiscard]] int to_font_weight() const;
     [[nodiscard]] int to_font_slope() const;
@@ -219,6 +219,6 @@ template<>
 struct AK::Formatter<Web::CSS::StyleValue> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::StyleValue const& style_value)
     {
-        return Formatter<StringView>::format(builder, TRY(style_value.to_string()));
+        return Formatter<StringView>::format(builder, style_value.to_string());
     }
 };

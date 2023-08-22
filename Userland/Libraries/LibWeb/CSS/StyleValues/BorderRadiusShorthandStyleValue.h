@@ -31,7 +31,7 @@ public:
     auto bottom_right() const { return m_properties.bottom_right; }
     auto bottom_left() const { return m_properties.bottom_left; }
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
 
     bool properties_equal(BorderRadiusShorthandStyleValue const& other) const { return m_properties == other.m_properties; }
 

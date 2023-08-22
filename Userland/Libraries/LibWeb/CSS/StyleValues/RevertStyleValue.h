@@ -19,7 +19,7 @@ public:
     }
     virtual ~RevertStyleValue() override = default;
 
-    ErrorOr<String> to_string() const override { return "revert"_string; }
+    String to_string() const override { return "revert"_string; }
 
     bool properties_equal(RevertStyleValue const&) const { return true; }
 

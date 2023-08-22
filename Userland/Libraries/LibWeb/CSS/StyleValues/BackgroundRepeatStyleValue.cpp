@@ -20,9 +20,9 @@ BackgroundRepeatStyleValue::BackgroundRepeatStyleValue(Repeat repeat_x, Repeat r
 
 BackgroundRepeatStyleValue::~BackgroundRepeatStyleValue() = default;
 
-ErrorOr<String> BackgroundRepeatStyleValue::to_string() const
+String BackgroundRepeatStyleValue::to_string() const
 {
-    return String::formatted("{} {}", CSS::to_string(m_properties.repeat_x), CSS::to_string(m_properties.repeat_y));
+    return MUST(String::formatted("{} {}", CSS::to_string(m_properties.repeat_x), CSS::to_string(m_properties.repeat_y)));
 }
 
 }

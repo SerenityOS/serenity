@@ -14,9 +14,9 @@
 
 namespace Web::CSS {
 
-ErrorOr<String> IdentifierStyleValue::to_string() const
+String IdentifierStyleValue::to_string() const
 {
-    return String::from_utf8(CSS::string_from_value_id(m_id));
+    return MUST(String::from_utf8(CSS::string_from_value_id(m_id)));
 }
 
 bool IdentifierStyleValue::has_color() const

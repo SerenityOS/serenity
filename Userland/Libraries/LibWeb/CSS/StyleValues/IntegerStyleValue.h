@@ -19,7 +19,7 @@ public:
 
     i64 integer() const { return m_value; }
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
 
     bool properties_equal(IntegerStyleValue const& other) const { return m_value == other.m_value; }
 

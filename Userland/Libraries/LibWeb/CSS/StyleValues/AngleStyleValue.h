@@ -24,7 +24,7 @@ public:
 
     Angle const& angle() const { return m_angle; }
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
 
     bool properties_equal(AngleStyleValue const& other) const;
 

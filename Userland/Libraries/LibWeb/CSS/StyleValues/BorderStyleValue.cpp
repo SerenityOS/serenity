@@ -22,9 +22,9 @@ BorderStyleValue::BorderStyleValue(
 
 BorderStyleValue::~BorderStyleValue() = default;
 
-ErrorOr<String> BorderStyleValue::to_string() const
+String BorderStyleValue::to_string() const
 {
-    return String::formatted("{} {} {}", TRY(m_properties.border_width->to_string()), TRY(m_properties.border_style->to_string()), TRY(m_properties.border_color->to_string()));
+    return MUST(String::formatted("{} {} {}", m_properties.border_width->to_string(), m_properties.border_style->to_string(), m_properties.border_color->to_string()));
 }
 
 }

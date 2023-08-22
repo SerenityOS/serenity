@@ -362,7 +362,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
         };
         Vector<NameAndValue> properties;
         verify_cast<DOM::Element>(*layout_node.dom_node()).computed_css_values()->for_each_property([&](auto property_id, auto& value) {
-            properties.append({ CSS::string_from_property_id(property_id), value.to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string() });
+            properties.append({ CSS::string_from_property_id(property_id), value.to_string().to_deprecated_string() });
         });
         quick_sort(properties, [](auto& a, auto& b) { return a.name < b.name; });
 
@@ -701,14 +701,14 @@ ErrorOr<void> dump_style_rule(StringBuilder& builder, CSS::CSSStyleRule const& r
     auto& style_declaration = verify_cast<CSS::PropertyOwningCSSStyleDeclaration>(rule.declaration());
     for (auto& property : style_declaration.properties()) {
         indent(builder, indent_levels);
-        builder.appendff("    {}: '{}'", CSS::string_from_property_id(property.property_id), TRY(property.value->to_string()));
+        builder.appendff("    {}: '{}'", CSS::string_from_property_id(property.property_id), property.value->to_string());
         if (property.important == CSS::Important::Yes)
             builder.append(" \033[31;1m!important\033[0m"sv);
         builder.append('\n');
     }
     for (auto& property : style_declaration.custom_properties()) {
         indent(builder, indent_levels);
-        builder.appendff("    {}: '{}'", property.key, TRY(property.value.value->to_string()));
+        builder.appendff("    {}: '{}'", property.key, property.value.value->to_string());
         if (property.value.important == CSS::Important::Yes)
             builder.append(" \033[31;1m!important\033[0m"sv);
         builder.append('\n');

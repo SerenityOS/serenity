@@ -8,7 +8,7 @@
 
 namespace Web::CSS {
 
-ErrorOr<String> EdgeStyleValue::to_string() const
+String EdgeStyleValue::to_string() const
 {
     auto to_string = [](PositionEdge edge) {
         switch (edge) {
@@ -24,7 +24,7 @@ ErrorOr<String> EdgeStyleValue::to_string() const
         VERIFY_NOT_REACHED();
     };
 
-    return String::formatted("{} {}", to_string(m_properties.edge), m_properties.offset.to_string());
+    return MUST(String::formatted("{} {}", to_string(m_properties.edge), m_properties.offset.to_string()));
 }
 
 }

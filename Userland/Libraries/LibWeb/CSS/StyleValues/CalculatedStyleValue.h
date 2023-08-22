@@ -71,7 +71,7 @@ public:
         return adopt_ref(*new (nothrow) CalculatedStyleValue(move(calculation), resolved_type));
     }
 
-    ErrorOr<String> to_string() const override;
+    String to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
     bool resolves_to_angle() const { return m_resolved_type.matches_angle(); }
@@ -233,7 +233,7 @@ public:
         return first_is_one_of(m_type, Type::Sum, Type::Product, Type::Negate, Type::Invert);
     }
 
-    virtual ErrorOr<String> to_string() const = 0;
+    virtual String to_string() const = 0;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const = 0;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const = 0;
     virtual bool contains_percentage() const = 0;
@@ -254,7 +254,7 @@ public:
     static NonnullOwnPtr<NumericCalculationNode> create(NumericValue);
     ~NumericCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
@@ -273,7 +273,7 @@ public:
     static NonnullOwnPtr<SumCalculationNode> create(Vector<NonnullOwnPtr<CalculationNode>>);
     ~SumCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
@@ -292,7 +292,7 @@ public:
     static NonnullOwnPtr<ProductCalculationNode> create(Vector<NonnullOwnPtr<CalculationNode>>);
     ~ProductCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
@@ -311,7 +311,7 @@ public:
     static NonnullOwnPtr<NegateCalculationNode> create(NonnullOwnPtr<CalculationNode>);
     ~NegateCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
@@ -330,7 +330,7 @@ public:
     static NonnullOwnPtr<InvertCalculationNode> create(NonnullOwnPtr<CalculationNode>);
     ~InvertCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
@@ -349,7 +349,7 @@ public:
     static NonnullOwnPtr<MinCalculationNode> create(Vector<NonnullOwnPtr<CalculationNode>>);
     ~MinCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
@@ -368,7 +368,7 @@ public:
     static NonnullOwnPtr<MaxCalculationNode> create(Vector<NonnullOwnPtr<CalculationNode>>);
     ~MaxCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
@@ -387,7 +387,7 @@ public:
     static NonnullOwnPtr<ClampCalculationNode> create(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
     ~ClampCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
@@ -408,7 +408,7 @@ public:
     static NonnullOwnPtr<AbsCalculationNode> create(NonnullOwnPtr<CalculationNode>);
     ~AbsCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
@@ -427,7 +427,7 @@ public:
     static NonnullOwnPtr<SignCalculationNode> create(NonnullOwnPtr<CalculationNode>);
     ~SignCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
@@ -446,7 +446,7 @@ public:
     static NonnullOwnPtr<ConstantCalculationNode> create(CalculationNode::ConstantType);
     ~ConstantCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override { return false; }
@@ -465,7 +465,7 @@ public:
     static NonnullOwnPtr<SinCalculationNode> create(NonnullOwnPtr<CalculationNode>);
     ~SinCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
@@ -484,7 +484,7 @@ public:
     static NonnullOwnPtr<CosCalculationNode> create(NonnullOwnPtr<CalculationNode>);
     ~CosCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
@@ -503,7 +503,7 @@ public:
     static NonnullOwnPtr<TanCalculationNode> create(NonnullOwnPtr<CalculationNode>);
     ~TanCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
@@ -522,7 +522,7 @@ public:
     static NonnullOwnPtr<AsinCalculationNode> create(NonnullOwnPtr<CalculationNode>);
     ~AsinCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
@@ -541,7 +541,7 @@ public:
     static NonnullOwnPtr<AcosCalculationNode> create(NonnullOwnPtr<CalculationNode>);
     ~AcosCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
@@ -560,7 +560,7 @@ public:
     static NonnullOwnPtr<AtanCalculationNode> create(NonnullOwnPtr<CalculationNode>);
     ~AtanCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
@@ -579,7 +579,7 @@ public:
     static NonnullOwnPtr<Atan2CalculationNode> create(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
     ~Atan2CalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
@@ -599,7 +599,7 @@ public:
     static NonnullOwnPtr<PowCalculationNode> create(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
     ~PowCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override { return false; }
@@ -619,7 +619,7 @@ public:
     static NonnullOwnPtr<SqrtCalculationNode> create(NonnullOwnPtr<CalculationNode>);
     ~SqrtCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override { return false; }
@@ -638,7 +638,7 @@ public:
     static NonnullOwnPtr<HypotCalculationNode> create(Vector<NonnullOwnPtr<CalculationNode>>);
     ~HypotCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
@@ -657,7 +657,7 @@ public:
     static NonnullOwnPtr<LogCalculationNode> create(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
     ~LogCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override { return false; }
@@ -677,7 +677,7 @@ public:
     static NonnullOwnPtr<ExpCalculationNode> create(NonnullOwnPtr<CalculationNode>);
     ~ExpCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override { return false; }
@@ -696,7 +696,7 @@ public:
     static NonnullOwnPtr<RoundCalculationNode> create(RoundingStrategy, NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
     ~RoundCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
@@ -717,7 +717,7 @@ public:
     static NonnullOwnPtr<ModCalculationNode> create(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
     ~ModCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;
@@ -737,7 +737,7 @@ public:
     static NonnullOwnPtr<RemCalculationNode> create(NonnullOwnPtr<CalculationNode>, NonnullOwnPtr<CalculationNode>);
     ~RemCalculationNode();
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
     virtual Optional<CalculatedStyleValue::ResolvedType> resolved_type() const override;
     virtual Optional<CSSNumericType> determine_type(PropertyID) const override;
     virtual bool contains_percentage() const override;

@@ -11,9 +11,9 @@
 
 namespace Web::CSS {
 
-ErrorOr<String> ListStyleStyleValue::to_string() const
+String ListStyleStyleValue::to_string() const
 {
-    return String::formatted("{} {} {}", TRY(m_properties.position->to_string()), TRY(m_properties.image->to_string()), TRY(m_properties.style_type->to_string()));
+    return MUST(String::formatted("{} {} {}", m_properties.position->to_string(), m_properties.image->to_string(), m_properties.style_type->to_string()));
 }
 
 }

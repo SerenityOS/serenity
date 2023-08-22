@@ -20,7 +20,7 @@ public:
 
     Length const& length() const { return m_length; }
 
-    virtual ErrorOr<String> to_string() const override { return m_length.to_string(); }
+    virtual String to_string() const override { return m_length.to_string(); }
     virtual ValueComparingNonnullRefPtr<StyleValue const> absolutized(CSSPixelRect const& viewport_rect, Length::FontMetrics const& font_metrics, Length::FontMetrics const& root_font_metrics) const override;
 
     bool properties_equal(LengthStyleValue const& other) const { return m_length == other.m_length; }

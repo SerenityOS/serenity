@@ -79,7 +79,7 @@ public:
 
     Vector<FilterFunction> const& filter_value_list() const { return m_filter_value_list; }
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
 
     virtual ~FilterValueListStyleValue() override = default;
 

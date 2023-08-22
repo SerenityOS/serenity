@@ -8,13 +8,13 @@
 
 namespace Web::CSS {
 
-ErrorOr<String> PlaceSelfStyleValue::to_string() const
+String PlaceSelfStyleValue::to_string() const
 {
-    auto align_self = TRY(m_properties.align_self->to_string());
-    auto justify_self = TRY(m_properties.justify_self->to_string());
+    auto align_self = m_properties.align_self->to_string();
+    auto justify_self = m_properties.justify_self->to_string();
     if (align_self == justify_self)
-        return String::formatted("{}", align_self);
-    return String::formatted("{} {}", align_self, justify_self);
+        return MUST(String::formatted("{}", align_self));
+    return MUST(String::formatted("{} {}", align_self, justify_self));
 }
 
 }

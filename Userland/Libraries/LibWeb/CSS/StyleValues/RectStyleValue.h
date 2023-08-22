@@ -20,7 +20,7 @@ public:
     virtual ~RectStyleValue() override = default;
 
     EdgeRect rect() const { return m_rect; }
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
 
     bool properties_equal(RectStyleValue const& other) const { return m_rect == other.m_rect; }
 

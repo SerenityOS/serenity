@@ -1782,7 +1782,7 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
                             style.set_property(static_cast<PropertyID>(property_id_value), *property_value);
                     }
                 }
-            } else if (auto name = TRY(animation_name->to_string()); !name.is_empty()) {
+            } else if (auto name = animation_name->to_string(); !name.is_empty()) {
                 auto active_animation = m_active_animations.get(animation_key);
                 if (!active_animation.has_value()) {
                     // New animation!
@@ -2296,7 +2296,7 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
             if (family->is_identifier()) {
                 found_font = find_generic_font(family->to_identifier());
             } else if (family->is_string()) {
-                found_font = find_font(family->to_string().release_value_but_fixme_should_propagate_errors());
+                found_font = find_font(family->to_string());
             }
             if (found_font)
                 break;
@@ -2304,7 +2304,7 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
     } else if (font_family.is_identifier()) {
         found_font = find_generic_font(font_family.to_identifier());
     } else if (font_family.is_string()) {
-        found_font = find_font(font_family.to_string().release_value_but_fixme_should_propagate_errors());
+        found_font = find_font(font_family.to_string());
     }
 
     if (!found_font) {

@@ -21,7 +21,7 @@ public:
     ValueComparingNonnullRefPtr<StyleValue> align_items() const { return m_properties.align_items; }
     ValueComparingNonnullRefPtr<StyleValue> justify_items() const { return m_properties.justify_items; }
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
 
     bool properties_equal(PlaceItemsStyleValue const& other) const { return m_properties == other.m_properties; }
 

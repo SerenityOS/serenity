@@ -21,7 +21,7 @@ CompositeStyleValue::CompositeStyleValue(Vector<PropertyID> sub_properties, Vect
 
 CompositeStyleValue::~CompositeStyleValue() = default;
 
-ErrorOr<String> CompositeStyleValue::to_string() const
+String CompositeStyleValue::to_string() const
 {
     StringBuilder builder;
     auto first = true;
@@ -30,9 +30,9 @@ ErrorOr<String> CompositeStyleValue::to_string() const
             first = false;
         else
             builder.append(' ');
-        builder.append(TRY(value->to_string()));
+        builder.append(value->to_string());
     }
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 }

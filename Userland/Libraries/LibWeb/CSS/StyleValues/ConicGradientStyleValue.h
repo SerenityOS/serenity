@@ -24,7 +24,7 @@ public:
         return adopt_ref(*new (nothrow) ConicGradientStyleValue(from_angle, position, move(color_stop_list), repeating));
     }
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
 
     void paint(PaintContext&, DevicePixelRect const& dest_rect, CSS::ImageRendering) const override;
 

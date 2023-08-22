@@ -26,7 +26,7 @@ public:
     ValueComparingNonnullRefPtr<StyleValue> edge_x() const { return m_properties.edge_x; }
     ValueComparingNonnullRefPtr<StyleValue> edge_y() const { return m_properties.edge_y; }
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
 
     bool properties_equal(PositionStyleValue const& other) const { return m_properties == other.m_properties; }
 

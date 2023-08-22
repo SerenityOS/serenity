@@ -16,7 +16,7 @@ bool StyleValueList::Properties::operator==(Properties const& other) const
     return separator == other.separator && values.span() == other.values.span();
 }
 
-ErrorOr<String> StyleValueList::to_string() const
+String StyleValueList::to_string() const
 {
     auto separator = ""sv;
     switch (m_properties.separator) {
@@ -32,11 +32,11 @@ ErrorOr<String> StyleValueList::to_string() const
 
     StringBuilder builder;
     for (size_t i = 0; i < m_properties.values.size(); ++i) {
-        TRY(builder.try_append(TRY(m_properties.values[i]->to_string())));
+        builder.append(m_properties.values[i]->to_string());
         if (i != m_properties.values.size() - 1)
-            TRY(builder.try_append(separator));
+            builder.append(separator);
     }
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 }

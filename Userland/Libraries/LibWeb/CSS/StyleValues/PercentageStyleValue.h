@@ -25,7 +25,7 @@ public:
     Percentage const& percentage() const { return m_percentage; }
     Percentage& percentage() { return m_percentage; }
 
-    virtual ErrorOr<String> to_string() const override { return m_percentage.to_string(); }
+    virtual String to_string() const override { return m_percentage.to_string(); }
 
     bool properties_equal(PercentageStyleValue const& other) const { return m_percentage == other.m_percentage; }
 

@@ -11,9 +11,9 @@
 
 namespace Web::CSS {
 
-ErrorOr<String> NumberStyleValue::to_string() const
+String NumberStyleValue::to_string() const
 {
-    return String::number(m_value);
+    return MUST(String::number(m_value));
 }
 
 }

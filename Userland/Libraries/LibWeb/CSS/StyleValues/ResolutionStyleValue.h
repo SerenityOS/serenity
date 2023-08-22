@@ -21,7 +21,7 @@ public:
 
     Resolution const& resolution() const { return m_resolution; }
 
-    virtual ErrorOr<String> to_string() const override { return m_resolution.to_string(); }
+    virtual String to_string() const override { return m_resolution.to_string(); }
 
     bool properties_equal(ResolutionStyleValue const& other) const { return m_resolution == other.m_resolution; }
 

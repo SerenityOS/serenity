@@ -32,7 +32,7 @@ ValueComparingNonnullRefPtr<ColorStyleValue> ColorStyleValue::create(Color color
     return adopt_ref(*new (nothrow) ColorStyleValue(color));
 }
 
-ErrorOr<String> ColorStyleValue::to_string() const
+String ColorStyleValue::to_string() const
 {
     return serialize_a_srgb_value(m_color);
 }

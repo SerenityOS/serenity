@@ -30,18 +30,18 @@ ValueComparingNonnullRefPtr<GridAreaShorthandStyleValue> GridAreaShorthandStyleV
         GridTrackPlacementStyleValue::create(column_end)));
 }
 
-ErrorOr<String> GridAreaShorthandStyleValue::to_string() const
+String GridAreaShorthandStyleValue::to_string() const
 {
     StringBuilder builder;
     if (!m_properties.row_start->as_grid_track_placement().grid_track_placement().is_auto())
-        TRY(builder.try_appendff("{}", m_properties.row_start->as_grid_track_placement().grid_track_placement().to_string()));
+        builder.appendff("{}", m_properties.row_start->as_grid_track_placement().grid_track_placement().to_string());
     if (!m_properties.column_start->as_grid_track_placement().grid_track_placement().is_auto())
-        TRY(builder.try_appendff(" / {}", m_properties.column_start->as_grid_track_placement().grid_track_placement().to_string()));
+        builder.appendff(" / {}", m_properties.column_start->as_grid_track_placement().grid_track_placement().to_string());
     if (!m_properties.row_end->as_grid_track_placement().grid_track_placement().is_auto())
-        TRY(builder.try_appendff(" / {}", m_properties.row_end->as_grid_track_placement().grid_track_placement().to_string()));
+        builder.appendff(" / {}", m_properties.row_end->as_grid_track_placement().grid_track_placement().to_string());
     if (!m_properties.column_end->as_grid_track_placement().grid_track_placement().is_auto())
-        TRY(builder.try_appendff(" / {}", m_properties.column_end->as_grid_track_placement().grid_track_placement().to_string()));
-    return builder.to_string();
+        builder.appendff(" / {}", m_properties.column_end->as_grid_track_placement().grid_track_placement().to_string());
+    return MUST(builder.to_string());
 }
 
 }

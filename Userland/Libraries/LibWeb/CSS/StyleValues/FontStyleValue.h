@@ -34,7 +34,7 @@ public:
     ValueComparingNonnullRefPtr<StyleValue> line_height() const { return m_properties.line_height; }
     ValueComparingNonnullRefPtr<StyleValue> font_families() const { return m_properties.font_families; }
 
-    virtual ErrorOr<String> to_string() const override;
+    virtual String to_string() const override;
 
     bool properties_equal(FontStyleValue const& other) const { return m_properties == other.m_properties; }
 
