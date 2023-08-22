@@ -209,6 +209,34 @@ static inline DOM::Element const* next_sibling_with_same_tag_name(DOM::Element c
     return nullptr;
 }
 
+// https://html.spec.whatwg.org/multipage/semantics-other.html#selector-read-write
+static bool matches_read_write_pseudo_class(DOM::Element const& element)
+{
+    // The :read-write pseudo-class must match any element falling into one of the following categories,
+    // which for the purposes of Selectors are thus considered user-alterable: [SELECTORS]
+    // - input elements to which the readonly attribute applies, and that are mutable
+    //   (i.e. that do not have the readonly attribute specified and that are not disabled)
+    if (is<HTML::HTMLInputElement>(element)) {
+        auto& input_element = static_cast<HTML::HTMLInputElement const&>(element);
+        if (input_element.has_attribute(HTML::AttributeNames::readonly))
+            return false;
+        if (!input_element.enabled())
+            return false;
+        return true;
+    }
+    // - textarea elements that do not have a readonly attribute, and that are not disabled
+    if (is<HTML::HTMLTextAreaElement>(element)) {
+        auto& input_element = static_cast<HTML::HTMLTextAreaElement const&>(element);
+        if (input_element.has_attribute(HTML::AttributeNames::readonly))
+            return false;
+        if (!input_element.enabled())
+            return false;
+        return true;
+    }
+    // - elements that are editing hosts or editable and are neither input elements nor textarea elements
+    return element.is_editable();
+}
+
 static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoClassSelector const& pseudo_class, Optional<CSS::CSSStyleSheet const&> style_sheet_for_rule, DOM::Element const& element, JS::GCPtr<DOM::ParentNode const> scope)
 {
     switch (pseudo_class.type) {
@@ -465,6 +493,10 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
         }
         VERIFY_NOT_REACHED();
     }
+    case CSS::PseudoClass::ReadOnly:
+        return !matches_read_write_pseudo_class(element);
+    case CSS::PseudoClass::ReadWrite:
+        return matches_read_write_pseudo_class(element);
     }
 
     return false;
