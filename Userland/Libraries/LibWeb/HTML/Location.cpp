@@ -359,8 +359,17 @@ WebIDL::ExceptionOr<void> Location::set_hash(String const& value)
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-reload
 void Location::reload() const
 {
-    auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
-    window.did_call_location_reload({});
+    // 1. Let document be this's relevant Document.
+    auto document = relevant_document();
+
+    // 2. If document is null, then return.
+    if (!document)
+        return;
+    
+    // FIXME: 3. If document's origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
+
+    // 4. Reload document's node navigable.
+    document->navigable()->reload();
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-replace
