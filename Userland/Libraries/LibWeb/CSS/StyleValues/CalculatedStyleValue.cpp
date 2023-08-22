@@ -206,9 +206,9 @@ CalculatedStyleValue::CalculationResult NumericCalculationNode::resolve(Optional
     return m_value;
 }
 
-ErrorOr<void> NumericCalculationNode::dump(StringBuilder& builder, int indent) const
+void NumericCalculationNode::dump(StringBuilder& builder, int indent) const
 {
-    return builder.try_appendff("{: >{}}NUMERIC({})\n", "", indent, m_value.visit([](auto& it) { return it.to_string(); }));
+    builder.appendff("{: >{}}NUMERIC({})\n", "", indent, m_value.visit([](auto& it) { return it.to_string(); }));
 }
 
 NonnullOwnPtr<SumCalculationNode> SumCalculationNode::create(Vector<NonnullOwnPtr<CalculationNode>> values)
@@ -322,12 +322,11 @@ void SumCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
     }
 }
 
-ErrorOr<void> SumCalculationNode::dump(StringBuilder& builder, int indent) const
+void SumCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}SUM:\n", "", indent);
     for (auto const& item : m_values)
-        TRY(item->dump(builder, indent + 2));
-    return {};
+        item->dump(builder, indent + 2);
 }
 
 NonnullOwnPtr<ProductCalculationNode> ProductCalculationNode::create(Vector<NonnullOwnPtr<CalculationNode>> values)
@@ -446,12 +445,11 @@ void ProductCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Cal
     }
 }
 
-ErrorOr<void> ProductCalculationNode::dump(StringBuilder& builder, int indent) const
+void ProductCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}PRODUCT:\n", "", indent);
     for (auto const& item : m_values)
-        TRY(item->dump(builder, indent + 2));
-    return {};
+        item->dump(builder, indent + 2);
 }
 
 NonnullOwnPtr<NegateCalculationNode> NegateCalculationNode::create(NonnullOwnPtr<Web::CSS::CalculationNode> value)
@@ -502,11 +500,10 @@ void NegateCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calc
     callback(m_value);
 }
 
-ErrorOr<void> NegateCalculationNode::dump(StringBuilder& builder, int indent) const
+void NegateCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}NEGATE:\n", "", indent);
-    TRY(m_value->dump(builder, indent + 2));
-    return {};
+    m_value->dump(builder, indent + 2);
 }
 
 NonnullOwnPtr<InvertCalculationNode> InvertCalculationNode::create(NonnullOwnPtr<Web::CSS::CalculationNode> value)
@@ -564,11 +561,10 @@ void InvertCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calc
     callback(m_value);
 }
 
-ErrorOr<void> InvertCalculationNode::dump(StringBuilder& builder, int indent) const
+void InvertCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}INVERT:\n", "", indent);
-    TRY(m_value->dump(builder, indent + 2));
-    return {};
+    m_value->dump(builder, indent + 2);
 }
 
 NonnullOwnPtr<MinCalculationNode> MinCalculationNode::create(Vector<NonnullOwnPtr<Web::CSS::CalculationNode>> values)
@@ -646,12 +642,11 @@ void MinCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
     }
 }
 
-ErrorOr<void> MinCalculationNode::dump(StringBuilder& builder, int indent) const
+void MinCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}MIN:\n", "", indent);
     for (auto const& value : m_values)
-        TRY(value->dump(builder, indent + 2));
-    return {};
+        value->dump(builder, indent + 2);
 }
 
 NonnullOwnPtr<MaxCalculationNode> MaxCalculationNode::create(Vector<NonnullOwnPtr<Web::CSS::CalculationNode>> values)
@@ -729,12 +724,11 @@ void MaxCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
     }
 }
 
-ErrorOr<void> MaxCalculationNode::dump(StringBuilder& builder, int indent) const
+void MaxCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}MAX:\n", "", indent);
     for (auto const& value : m_values)
-        TRY(value->dump(builder, indent + 2));
-    return {};
+        value->dump(builder, indent + 2);
 }
 
 NonnullOwnPtr<ClampCalculationNode> ClampCalculationNode::create(NonnullOwnPtr<CalculationNode> min, NonnullOwnPtr<CalculationNode> center, NonnullOwnPtr<CalculationNode> max)
@@ -825,13 +819,12 @@ void ClampCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcu
     callback(m_max_value);
 }
 
-ErrorOr<void> ClampCalculationNode::dump(StringBuilder& builder, int indent) const
+void ClampCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}CLAMP:\n", "", indent);
-    TRY(m_min_value->dump(builder, indent + 2));
-    TRY(m_center_value->dump(builder, indent + 2));
-    TRY(m_max_value->dump(builder, indent + 2));
-    return {};
+    m_min_value->dump(builder, indent + 2);
+    m_center_value->dump(builder, indent + 2);
+    m_max_value->dump(builder, indent + 2);
 }
 
 NonnullOwnPtr<AbsCalculationNode> AbsCalculationNode::create(NonnullOwnPtr<CalculationNode> value)
@@ -891,10 +884,9 @@ void AbsCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
     callback(m_value);
 }
 
-ErrorOr<void> AbsCalculationNode::dump(StringBuilder& builder, int indent) const
+void AbsCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}ABS: {}\n", "", indent, to_string());
-    return {};
 }
 
 NonnullOwnPtr<SignCalculationNode> SignCalculationNode::create(NonnullOwnPtr<CalculationNode> value)
@@ -956,10 +948,9 @@ void SignCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcul
     callback(m_value);
 }
 
-ErrorOr<void> SignCalculationNode::dump(StringBuilder& builder, int indent) const
+void SignCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}SIGN: {}\n", "", indent, to_string());
-    return {};
 }
 
 NonnullOwnPtr<ConstantCalculationNode> ConstantCalculationNode::create(ConstantType constant)
@@ -1025,10 +1016,9 @@ CalculatedStyleValue::CalculationResult ConstantCalculationNode::resolve([[maybe
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<void> ConstantCalculationNode::dump(StringBuilder& builder, int indent) const
+void ConstantCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}CONSTANT: {}\n", "", indent, to_string());
-    return {};
 }
 
 NonnullOwnPtr<SinCalculationNode> SinCalculationNode::create(NonnullOwnPtr<CalculationNode> value)
@@ -1085,10 +1075,9 @@ void SinCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
     callback(m_value);
 }
 
-ErrorOr<void> SinCalculationNode::dump(StringBuilder& builder, int indent) const
+void SinCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}SIN: {}\n", "", indent, to_string());
-    return {};
 }
 
 NonnullOwnPtr<CosCalculationNode> CosCalculationNode::create(NonnullOwnPtr<CalculationNode> value)
@@ -1145,10 +1134,9 @@ void CosCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
     callback(m_value);
 }
 
-ErrorOr<void> CosCalculationNode::dump(StringBuilder& builder, int indent) const
+void CosCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}COS: {}\n", "", indent, to_string());
-    return {};
 }
 
 NonnullOwnPtr<TanCalculationNode> TanCalculationNode::create(NonnullOwnPtr<CalculationNode> value)
@@ -1205,10 +1193,9 @@ void TanCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
     callback(m_value);
 }
 
-ErrorOr<void> TanCalculationNode::dump(StringBuilder& builder, int indent) const
+void TanCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}TAN: {}\n", "", indent, to_string());
-    return {};
 }
 
 NonnullOwnPtr<AsinCalculationNode> AsinCalculationNode::create(NonnullOwnPtr<CalculationNode> value)
@@ -1265,10 +1252,9 @@ void AsinCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcul
     callback(m_value);
 }
 
-ErrorOr<void> AsinCalculationNode::dump(StringBuilder& builder, int indent) const
+void AsinCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}ASIN: {}\n", "", indent, to_string());
-    return {};
 }
 
 NonnullOwnPtr<AcosCalculationNode> AcosCalculationNode::create(NonnullOwnPtr<CalculationNode> value)
@@ -1325,10 +1311,9 @@ void AcosCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcul
     callback(m_value);
 }
 
-ErrorOr<void> AcosCalculationNode::dump(StringBuilder& builder, int indent) const
+void AcosCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}ACOS: {}\n", "", indent, to_string());
-    return {};
 }
 
 NonnullOwnPtr<AtanCalculationNode> AtanCalculationNode::create(NonnullOwnPtr<CalculationNode> value)
@@ -1385,10 +1370,9 @@ void AtanCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcul
     callback(m_value);
 }
 
-ErrorOr<void> AtanCalculationNode::dump(StringBuilder& builder, int indent) const
+void AtanCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}ATAN: {}\n", "", indent, to_string());
-    return {};
 }
 
 NonnullOwnPtr<Atan2CalculationNode> Atan2CalculationNode::create(NonnullOwnPtr<CalculationNode> y, NonnullOwnPtr<CalculationNode> x)
@@ -1454,10 +1438,9 @@ void Atan2CalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcu
     callback(m_x);
 }
 
-ErrorOr<void> Atan2CalculationNode::dump(StringBuilder& builder, int indent) const
+void Atan2CalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}ATAN2: {}\n", "", indent, to_string());
-    return {};
 }
 
 NonnullOwnPtr<PowCalculationNode> PowCalculationNode::create(NonnullOwnPtr<CalculationNode> x, NonnullOwnPtr<CalculationNode> y)
@@ -1518,10 +1501,9 @@ void PowCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
     callback(m_y);
 }
 
-ErrorOr<void> PowCalculationNode::dump(StringBuilder& builder, int indent) const
+void PowCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}POW: {}\n", "", indent, to_string());
-    return {};
 }
 
 NonnullOwnPtr<SqrtCalculationNode> SqrtCalculationNode::create(NonnullOwnPtr<CalculationNode> value)
@@ -1573,10 +1555,9 @@ void SqrtCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcul
     callback(m_value);
 }
 
-ErrorOr<void> SqrtCalculationNode::dump(StringBuilder& builder, int indent) const
+void SqrtCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}SQRT: {}\n", "", indent, to_string());
-    return {};
 }
 
 NonnullOwnPtr<HypotCalculationNode> HypotCalculationNode::create(Vector<NonnullOwnPtr<Web::CSS::CalculationNode>> values)
@@ -1652,12 +1633,11 @@ void HypotCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcu
     }
 }
 
-ErrorOr<void> HypotCalculationNode::dump(StringBuilder& builder, int indent) const
+void HypotCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}HYPOT:\n", "", indent);
     for (auto const& value : m_values)
-        TRY(value->dump(builder, indent + 2));
-    return {};
+        value->dump(builder, indent + 2);
 }
 
 NonnullOwnPtr<LogCalculationNode> LogCalculationNode::create(NonnullOwnPtr<CalculationNode> x, NonnullOwnPtr<CalculationNode> y)
@@ -1718,10 +1698,9 @@ void LogCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
     callback(m_y);
 }
 
-ErrorOr<void> LogCalculationNode::dump(StringBuilder& builder, int indent) const
+void LogCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}LOG: {}\n", "", indent, to_string());
-    return {};
 }
 
 NonnullOwnPtr<ExpCalculationNode> ExpCalculationNode::create(NonnullOwnPtr<CalculationNode> value)
@@ -1773,10 +1752,9 @@ void ExpCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
     callback(m_value);
 }
 
-ErrorOr<void> ExpCalculationNode::dump(StringBuilder& builder, int indent) const
+void ExpCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}EXP: {}\n", "", indent, to_string());
-    return {};
 }
 
 NonnullOwnPtr<RoundCalculationNode> RoundCalculationNode::create(RoundingStrategy strategy, NonnullOwnPtr<CalculationNode> x, NonnullOwnPtr<CalculationNode> y)
@@ -1876,10 +1854,9 @@ void RoundCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcu
     callback(m_y);
 }
 
-ErrorOr<void> RoundCalculationNode::dump(StringBuilder& builder, int indent) const
+void RoundCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}ROUND: {}\n", "", indent, to_string());
-    return {};
 }
 
 NonnullOwnPtr<ModCalculationNode> ModCalculationNode::create(NonnullOwnPtr<CalculationNode> x, NonnullOwnPtr<CalculationNode> y)
@@ -1953,10 +1930,9 @@ void ModCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
     callback(m_y);
 }
 
-ErrorOr<void> ModCalculationNode::dump(StringBuilder& builder, int indent) const
+void ModCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}MOD: {}\n", "", indent, to_string());
-    return {};
 }
 
 NonnullOwnPtr<RemCalculationNode> RemCalculationNode::create(NonnullOwnPtr<CalculationNode> x, NonnullOwnPtr<CalculationNode> y)
@@ -2029,10 +2005,9 @@ void RemCalculationNode::for_each_child_node(Function<void(NonnullOwnPtr<Calcula
     callback(m_y);
 }
 
-ErrorOr<void> RemCalculationNode::dump(StringBuilder& builder, int indent) const
+void RemCalculationNode::dump(StringBuilder& builder, int indent) const
 {
     builder.appendff("{: >{}}REM: {}\n", "", indent, to_string());
-    return {};
 }
 
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Optional<Length::ResolutionContext const&> context, PercentageBasis const& percentage_basis)
