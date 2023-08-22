@@ -14,10 +14,10 @@
 namespace Web::CSS {
 
 // https://www.w3.org/TR/cssom-1/#dom-css-escape
-WebIDL::ExceptionOr<String> escape(JS::VM& vm, StringView identifier)
+WebIDL::ExceptionOr<String> escape(JS::VM&, StringView identifier)
 {
     // The escape(ident) operation must return the result of invoking serialize an identifier of ident.
-    return TRY_OR_THROW_OOM(vm, serialize_an_identifier(identifier));
+    return serialize_an_identifier(identifier);
 }
 
 // https://www.w3.org/TR/css-conditional-3/#dom-css-supports

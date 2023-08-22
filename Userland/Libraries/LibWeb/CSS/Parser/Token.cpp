@@ -20,13 +20,13 @@ ErrorOr<String> Token::to_string() const
     case Type::Ident:
         return serialize_an_identifier(ident());
     case Type::Function:
-        return String::formatted("{}(", TRY(serialize_an_identifier(function())));
+        return String::formatted("{}(", serialize_an_identifier(function()));
     case Type::AtKeyword:
-        return String::formatted("@{}", TRY(serialize_an_identifier(at_keyword())));
+        return String::formatted("@{}", serialize_an_identifier(at_keyword()));
     case Type::Hash: {
         switch (m_hash_type) {
         case HashType::Id:
-            return String::formatted("#{}", TRY(serialize_an_identifier(hash_value())));
+            return String::formatted("#{}", serialize_an_identifier(hash_value()));
         case HashType::Unrestricted:
             return String::formatted("#{}", hash_value());
         }
