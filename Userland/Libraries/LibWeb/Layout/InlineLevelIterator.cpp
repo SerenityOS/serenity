@@ -140,6 +140,8 @@ CSSPixels InlineLevelIterator::next_non_whitespace_sequence_width()
             break;
         m_lookahead_items.enqueue(next_item_opt.release_value());
         auto& next_item = m_lookahead_items.tail();
+        if (next_item.type == InlineLevelIterator::Item::Type::ForcedBreak)
+            break;
         if (next_item.node->computed_values().white_space() != CSS::WhiteSpace::Nowrap) {
             if (next_item.type != InlineLevelIterator::Item::Type::Text)
                 break;
