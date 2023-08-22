@@ -296,7 +296,7 @@ static ErrorOr<Optional<String>> format_time_zone_offset(StringView locale, Cale
     }
 
     // The digits used for hours, minutes and seconds fields in this format are the locale's default decimal digits.
-    auto result = TRY(replace_digits_for_number_system(*number_system, TRY(builder.to_string())));
+    auto result = replace_digits_for_number_system(*number_system, TRY(builder.to_string()));
     return TRY(String::from_utf8(formats->gmt_format)).replace("{0}"sv, result, ReplaceMode::FirstOnly);
 }
 
