@@ -1351,18 +1351,18 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
 
 struct CanonicalLanguageID
 {
-    ErrorOr<LanguageID> to_unicode_language_id() const
+    LanguageID to_unicode_language_id() const
     {
         LanguageID language_id {};
-        TRY(language_id.variants.try_ensure_capacity(variants_size));
+        language_id.variants.ensure_capacity(variants_size);
 
-        language_id.language = TRY(String::from_utf8(decode_string(language)));
+        language_id.language = MUST(String::from_utf8(decode_string(language)));
         if (script != 0)
-            language_id.script = TRY(String::from_utf8(decode_string(script)));
+            language_id.script = MUST(String::from_utf8(decode_string(script)));
         if (region != 0)
-            language_id.region = TRY(String::from_utf8(decode_string(region)));
+            language_id.region = MUST(String::from_utf8(decode_string(region)));
         for (size_t i = 0; i < variants_size; ++i)
-            language_id.variants.append(TRY(String::from_utf8(decode_string(variants[i]))));
+            language_id.variants.append(MUST(String::from_utf8(decode_string(variants[i]))));
 
         return language_id;
     }
@@ -1674,13 +1674,13 @@ static ReadonlySpan<@string_index_type@> find_keyword_indices(StringView locale,
     return s_keyword_lists.at(keywords_index);
 }
 
-ErrorOr<Optional<StringView>> get_preferred_keyword_value_for_locale(StringView locale, StringView key)
+Optional<StringView> get_preferred_keyword_value_for_locale(StringView locale, StringView key)
 {
     // Hour cycle keywords are region-based rather than locale-based, so they need to be handled specially.
     // FIXME: Calendar keywords are also region-based, and will need to be handled here when we support non-Gregorian calendars:
     //        https://github.com/unicode-org/cldr-json/blob/main/cldr-json/cldr-core/supplemental/calendarPreferenceData.json
     if (key == "hc"sv) {
-        auto hour_cycles = TRY(get_locale_hour_cycles(locale));
+        auto hour_cycles = MUST(get_locale_hour_cycles(locale));
         if (hour_cycles.is_empty())
             return OptionalNone {};
 
@@ -1703,16 +1703,16 @@ ErrorOr<Optional<StringView>> get_preferred_keyword_value_for_locale(StringView 
     return Optional<StringView> { decode_string(keyword_indices[0]) };
 }
 
-ErrorOr<Vector<StringView>> get_keywords_for_locale(StringView locale, StringView key)
+Vector<StringView> get_keywords_for_locale(StringView locale, StringView key)
 {
     // Hour cycle keywords are region-based rather than locale-based, so they need to be handled specially.
     // FIXME: Calendar keywords are also region-based, and will need to be handled here when we support non-Gregorian calendars:
     //        https://github.com/unicode-org/cldr-json/blob/main/cldr-json/cldr-core/supplemental/calendarPreferenceData.json
     if (key == "hc"sv) {
-        auto hour_cycles = TRY(get_locale_hour_cycles(locale));
+        auto hour_cycles = MUST(get_locale_hour_cycles(locale));
 
         Vector<StringView> values;
-        TRY(values.try_ensure_capacity(hour_cycles.size()));
+        values.ensure_capacity(hour_cycles.size());
 
         for (auto hour_cycle : hour_cycles)
             values.unchecked_append(hour_cycle_to_string(hour_cycle));
@@ -1727,7 +1727,7 @@ ErrorOr<Vector<StringView>> get_keywords_for_locale(StringView locale, StringVie
     auto keyword_indices = find_keyword_indices(locale, key);
 
     Vector<StringView> keywords;
-    TRY(keywords.try_ensure_capacity(keyword_indices.size()));
+    keywords.ensure_capacity(keyword_indices.size());
 
     for (auto keyword : keyword_indices)
         keywords.unchecked_append(decode_string(keyword));
@@ -1798,7 +1798,7 @@ Optional<CharacterOrder> character_order_for_locale(StringView locale)
     return {};
 }
 
-ErrorOr<void> resolve_complex_language_aliases(LanguageID& language_id)
+void resolve_complex_language_aliases(LanguageID& language_id)
 {
     for (auto const& map : s_complex_alias) {
         auto key_language = decode_string(map.key.language);
@@ -1814,7 +1814,7 @@ ErrorOr<void> resolve_complex_language_aliases(LanguageID& language_id)
         if (!map.key.matches_variants(language_id.variants))
             continue;
 
-        auto alias = TRY(map.alias.to_unicode_language_id());
+        auto alias = map.alias.to_unicode_language_id();
 
         if (alias.language == "und"sv)
             alias.language = move(language_id.language);
@@ -1828,11 +1828,9 @@ ErrorOr<void> resolve_complex_language_aliases(LanguageID& language_id)
         language_id = move(alias);
         break;
     }
-
-    return {};
 }
 
-ErrorOr<Optional<LanguageID>> add_likely_subtags(LanguageID const& language_id)
+Optional<LanguageID> add_likely_subtags(LanguageID const& language_id)
 {
     // https://www.unicode.org/reports/tr35/#Likely_Subtags
     auto const* likely_subtag = resolve_likely_subtag(language_id);
@@ -1849,19 +1847,19 @@ ErrorOr<Optional<LanguageID>> add_likely_subtags(LanguageID const& language_id)
     auto alias_region = decode_string(likely_subtag->alias.region);
 
     if (maximized.language == "und"sv)
-        maximized.language = TRY(String::from_utf8(alias_language));
+        maximized.language = MUST(String::from_utf8(alias_language));
     if (!maximized.script.has_value() || (!key_script.is_empty() && !alias_script.is_empty()))
-        maximized.script = TRY(String::from_utf8(alias_script));
+        maximized.script = MUST(String::from_utf8(alias_script));
     if (!maximized.region.has_value() || (!key_region.is_empty() && !alias_region.is_empty()))
-        maximized.region = TRY(String::from_utf8(alias_region));
+        maximized.region = MUST(String::from_utf8(alias_region));
 
     return maximized;
 }
 
-ErrorOr<Optional<String>> resolve_most_likely_territory(LanguageID const& language_id)
+Optional<String> resolve_most_likely_territory(LanguageID const& language_id)
 {
     if (auto const* likely_subtag = resolve_likely_subtag(language_id); likely_subtag != nullptr)
-        return String::from_utf8(decode_string(likely_subtag->alias.region));
+        return MUST(String::from_utf8(decode_string(likely_subtag->alias.region)));
     return OptionalNone {};
 }
 

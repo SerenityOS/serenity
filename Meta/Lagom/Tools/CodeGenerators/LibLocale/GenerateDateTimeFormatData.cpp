@@ -2091,7 +2091,7 @@ Optional<@return_type@> get_regional_@lookup_type@(StringView region)
     append_regional_lookup("Weekday"sv, "weekend_end"sv);
 
     generator.append(R"~~~(
-static ErrorOr<CalendarData const*> find_calendar_data(StringView locale, StringView calendar)
+static CalendarData const* find_calendar_data(StringView locale, StringView calendar)
 {
     auto locale_value = locale_from_string(locale);
     if (!locale_value.has_value())
@@ -2118,7 +2118,7 @@ static ErrorOr<CalendarData const*> find_calendar_data(StringView locale, String
     if (auto const* calendar_data = lookup_calendar(calendar))
         return calendar_data;
 
-    auto default_calendar = TRY(get_preferred_keyword_value_for_locale(locale, "ca"sv));
+    auto default_calendar = get_preferred_keyword_value_for_locale(locale, "ca"sv);
     if (!default_calendar.has_value())
         return nullptr;
 
@@ -2127,7 +2127,7 @@ static ErrorOr<CalendarData const*> find_calendar_data(StringView locale, String
 
 ErrorOr<Optional<CalendarFormat>> get_calendar_date_format(StringView locale, StringView calendar)
 {
-    if (auto const* data = TRY(find_calendar_data(locale, calendar)); data != nullptr) {
+    if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
         auto const& formats = s_calendar_formats.at(data->date_formats);
         return TRY(formats.to_unicode_calendar_format());
     }
@@ -2136,7 +2136,7 @@ ErrorOr<Optional<CalendarFormat>> get_calendar_date_format(StringView locale, St
 
 ErrorOr<Optional<CalendarFormat>> get_calendar_time_format(StringView locale, StringView calendar)
 {
-    if (auto const* data = TRY(find_calendar_data(locale, calendar)); data != nullptr) {
+    if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
         auto const& formats = s_calendar_formats.at(data->time_formats);
         return TRY(formats.to_unicode_calendar_format());
     }
@@ -2145,7 +2145,7 @@ ErrorOr<Optional<CalendarFormat>> get_calendar_time_format(StringView locale, St
 
 ErrorOr<Optional<CalendarFormat>> get_calendar_date_time_format(StringView locale, StringView calendar)
 {
-    if (auto const* data = TRY(find_calendar_data(locale, calendar)); data != nullptr) {
+    if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
         auto const& formats = s_calendar_formats.at(data->date_time_formats);
         return TRY(formats.to_unicode_calendar_format());
     }
@@ -2156,7 +2156,7 @@ ErrorOr<Vector<CalendarPattern>> get_calendar_available_formats(StringView local
 {
     Vector<CalendarPattern> result {};
 
-    if (auto const* data = TRY(find_calendar_data(locale, calendar)); data != nullptr) {
+    if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
         auto const& available_formats = s_calendar_pattern_lists.at(data->available_formats);
         TRY(result.try_ensure_capacity(available_formats.size()));
 
@@ -2169,7 +2169,7 @@ ErrorOr<Vector<CalendarPattern>> get_calendar_available_formats(StringView local
 
 ErrorOr<Optional<CalendarRangePattern>> get_calendar_default_range_format(StringView locale, StringView calendar)
 {
-    if (auto const* data = TRY(find_calendar_data(locale, calendar)); data != nullptr) {
+    if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
         auto const& pattern = s_calendar_range_patterns[data->default_range_format];
         return TRY(pattern.to_unicode_calendar_range_pattern());
     }
@@ -2181,7 +2181,7 @@ ErrorOr<Vector<CalendarRangePattern>> get_calendar_range_formats(StringView loca
 {
     Vector<CalendarRangePattern> result {};
 
-    if (auto const* data = TRY(find_calendar_data(locale, calendar)); data != nullptr) {
+    if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
         auto const& range_formats = s_calendar_range_pattern_lists.at(data->range_formats);
 
         for (auto format : range_formats) {
@@ -2199,7 +2199,7 @@ ErrorOr<Vector<CalendarRangePattern>> get_calendar_range12_formats(StringView lo
 {
     Vector<CalendarRangePattern> result {};
 
-    if (auto const* data = TRY(find_calendar_data(locale, calendar)); data != nullptr) {
+    if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
         auto const& range12_formats = s_calendar_range_pattern_lists.at(data->range12_formats);
 
         for (auto format : range12_formats) {
@@ -2215,7 +2215,7 @@ ErrorOr<Vector<CalendarRangePattern>> get_calendar_range12_formats(StringView lo
 
 static ErrorOr<ReadonlySpan<@string_index_type@>> find_calendar_symbols(StringView locale, StringView calendar, CalendarSymbol symbol, CalendarPatternStyle style)
 {
-    if (auto const* data = TRY(find_calendar_data(locale, calendar)); data != nullptr) {
+    if (auto const* data = find_calendar_data(locale, calendar); data != nullptr) {
         auto const& symbols_list = s_calendar_symbol_lists[data->symbols];
         auto symbol_index = to_underlying(symbol);
 

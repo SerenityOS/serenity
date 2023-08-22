@@ -927,7 +927,7 @@ Optional<ReadonlySpan<u32>> get_digits_for_number_system(StringView system)
     return s_number_systems_digits[number_system_index];
 }
 
-static ErrorOr<NumberSystemData const*> find_number_system(StringView locale, StringView system)
+static NumberSystemData const* find_number_system(StringView locale, StringView system)
 {
     auto locale_value = locale_from_string(locale);
     if (!locale_value.has_value())
@@ -957,44 +957,44 @@ static ErrorOr<NumberSystemData const*> find_number_system(StringView locale, St
     if (auto const* number_system = lookup_number_system(system))
         return number_system;
 
-    auto default_number_system = TRY(get_preferred_keyword_value_for_locale(locale, "nu"sv));
+    auto default_number_system = get_preferred_keyword_value_for_locale(locale, "nu"sv);
     if (!default_number_system.has_value())
         return nullptr;
 
     return lookup_number_system(*default_number_system);
 }
 
-ErrorOr<Optional<StringView>> get_number_system_symbol(StringView locale, StringView system, NumericSymbol symbol)
+Optional<StringView> get_number_system_symbol(StringView locale, StringView system, NumericSymbol symbol)
 {
-    if (auto const* number_system = TRY(find_number_system(locale, system)); number_system != nullptr) {
+    if (auto const* number_system = find_number_system(locale, system); number_system != nullptr) {
         auto symbols = s_numeric_symbol_lists.at(number_system->symbols);
 
         auto symbol_index = to_underlying(symbol);
         if (symbol_index >= symbols.size())
-            return OptionalNone {};
+            return {};
 
-        return Optional<StringView> { decode_string(symbols[symbol_index]) };
+        return decode_string(symbols[symbol_index]);
     }
 
-    return OptionalNone {};
+    return {};
 }
 
-ErrorOr<Optional<NumberGroupings>> get_number_system_groupings(StringView locale, StringView system)
+Optional<NumberGroupings> get_number_system_groupings(StringView locale, StringView system)
 {
     auto locale_value = locale_from_string(locale);
     if (!locale_value.has_value())
-        return OptionalNone {};
+        return {};
 
     u8 minimum_grouping_digits = s_minimum_grouping_digits[to_underlying(*locale_value) - 1];
 
-    if (auto const* number_system = TRY(find_number_system(locale, system)); number_system != nullptr)
+    if (auto const* number_system = find_number_system(locale, system); number_system != nullptr)
         return NumberGroupings { minimum_grouping_digits, number_system->primary_grouping_size, number_system->secondary_grouping_size };
-    return OptionalNone {};
+    return {};
 }
 
 ErrorOr<Optional<NumberFormat>> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type)
 {
-    if (auto const* number_system = TRY(find_number_system(locale, system)); number_system != nullptr) {
+    if (auto const* number_system = find_number_system(locale, system); number_system != nullptr) {
         @number_format_index_type@ format_index = 0;
 
         switch (type) {
@@ -1025,7 +1025,7 @@ ErrorOr<Vector<NumberFormat>> get_compact_number_system_formats(StringView local
 {
     Vector<NumberFormat> formats;
 
-    if (auto const* number_system = TRY(find_number_system(locale, system)); number_system != nullptr) {
+    if (auto const* number_system = find_number_system(locale, system); number_system != nullptr) {
         @number_format_list_index_type@ number_format_list_index { 0 };
 
         switch (type) {

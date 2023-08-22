@@ -22,7 +22,7 @@ class Locale final : public Object {
     JS_OBJECT(Locale, Object);
 
 public:
-    static ThrowCompletionOr<NonnullGCPtr<Locale>> create(Realm&, ::Locale::LocaleID);
+    static NonnullGCPtr<Locale> create(Realm&, ::Locale::LocaleID);
 
     static constexpr auto relevant_extension_keys()
     {
@@ -82,12 +82,12 @@ struct WeekInfo {
     Vector<u8> weekend;    // [[Weekend]]
 };
 
-ThrowCompletionOr<NonnullGCPtr<Array>> calendars_of_locale(VM&, Locale const&);
-ThrowCompletionOr<NonnullGCPtr<Array>> collations_of_locale(VM&, Locale const& locale);
-ThrowCompletionOr<NonnullGCPtr<Array>> hour_cycles_of_locale(VM&, Locale const& locale);
-ThrowCompletionOr<NonnullGCPtr<Array>> numbering_systems_of_locale(VM&, Locale const&);
-ThrowCompletionOr<NonnullGCPtr<Array>> time_zones_of_locale(VM&, StringView region);
-ThrowCompletionOr<StringView> character_direction_of_locale(VM&, Locale const&);
+NonnullGCPtr<Array> calendars_of_locale(VM&, Locale const&);
+NonnullGCPtr<Array> collations_of_locale(VM&, Locale const& locale);
+NonnullGCPtr<Array> hour_cycles_of_locale(VM&, Locale const& locale);
+NonnullGCPtr<Array> numbering_systems_of_locale(VM&, Locale const&);
+NonnullGCPtr<Array> time_zones_of_locale(VM&, StringView region);
+StringView character_direction_of_locale(Locale const&);
 ThrowCompletionOr<WeekInfo> week_info_of_locale(VM&, Locale const&);
 
 }

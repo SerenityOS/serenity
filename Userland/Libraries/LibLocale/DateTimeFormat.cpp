@@ -109,12 +109,12 @@ static ErrorOr<T> find_regional_values_for_locale(StringView locale, GetRegional
 
     auto return_default_values = [&]() { return get_regional_values("001"sv); };
 
-    auto language = TRY(parse_unicode_language_id(locale));
+    auto language = parse_unicode_language_id(locale);
     if (!language.has_value())
         return return_default_values();
 
     if (!language->region.has_value())
-        language = TRY(add_likely_subtags(*language));
+        language = add_likely_subtags(*language);
     if (!language.has_value() || !language->region.has_value())
         return return_default_values();
 
@@ -253,7 +253,7 @@ static ErrorOr<Optional<String>> format_time_zone_offset(StringView locale, Cale
     if (!formats.has_value())
         return OptionalNone {};
 
-    auto number_system = TRY(get_preferred_keyword_value_for_locale(locale, "nu"sv));
+    auto number_system = get_preferred_keyword_value_for_locale(locale, "nu"sv);
     if (!number_system.has_value())
         return OptionalNone {};
 
