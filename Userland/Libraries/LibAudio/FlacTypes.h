@@ -106,7 +106,7 @@ enum class BlockSizeCategory : u8 {
     S4608 = 0b0101,
     // Actual size is stored later on.
     Uncommon8Bits = 0b0110,
-    Uncommon16Bits = 0b1111,
+    Uncommon16Bits = 0b0111,
     // Formula 2^x.
     S256 = 0b1000,
     S512 = 0b1001,
