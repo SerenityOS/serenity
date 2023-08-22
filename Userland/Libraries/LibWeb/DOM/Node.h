@@ -95,6 +95,10 @@ public:
     virtual bool is_html_progress_element() const { return false; }
     virtual bool is_html_script_element() const { return false; }
     virtual bool is_html_template_element() const { return false; }
+    virtual bool is_html_table_element() const { return false; }
+    virtual bool is_html_table_section_element() const { return false; }
+    virtual bool is_html_table_row_element() const { return false; }
+    virtual bool is_html_table_cell_element() const { return false; }
     virtual bool is_navigable_container() const { return false; }
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> pre_insert(JS::NonnullGCPtr<Node>, JS::GCPtr<Node>);

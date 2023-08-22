@@ -30,10 +30,17 @@ public:
 private:
     HTMLTableSectionElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual bool is_html_table_section_element() const override { return true; }
+
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::GCPtr<DOM::HTMLCollection> mutable m_rows;
 };
 
+}
+
+namespace Web::DOM {
+template<>
+inline bool Node::fast_is<HTML::HTMLTableSectionElement>() const { return is_html_table_section_element(); }
 }
