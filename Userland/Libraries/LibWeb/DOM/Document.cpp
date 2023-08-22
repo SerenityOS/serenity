@@ -961,7 +961,7 @@ void Document::update_layout()
     if (m_created_for_appropriate_template_contents)
         return;
 
-    if (!browsing_context())
+    if (!navigable())
         return;
 
     auto viewport_rect = this->viewport_rect();
@@ -1004,7 +1004,8 @@ void Document::update_layout()
     // Broadcast the current viewport rect to any new paintables, so they know whether they're visible or not.
     inform_all_viewport_clients_about_the_current_viewport_rect();
 
-    browsing_context()->set_needs_display();
+    if (navigable())
+        navigable()->set_needs_display();
 
     if (navigable()->is_traversable()) {
         if (auto* page = this->page())
@@ -3033,8 +3034,8 @@ HTML::ListOfAvailableImages const& Document::list_of_available_images() const
 
 CSSPixelRect Document::viewport_rect() const
 {
-    if (auto* browsing_context = this->browsing_context())
-        return browsing_context->viewport_rect();
+    if (auto const navigable = this->navigable())
+        return navigable->viewport_rect();
     return CSSPixelRect {};
 }
 

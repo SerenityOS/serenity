@@ -441,7 +441,7 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
     if (request == "set-line-box-borders") {
         bool state = argument == "on";
         m_page_host->set_should_show_line_box_borders(state);
-        page().top_level_browsing_context().set_needs_display(page().top_level_browsing_context().viewport_rect());
+        page().top_level_traversable()->set_needs_display(page().top_level_traversable()->viewport_rect());
         return;
     }
 

@@ -32,8 +32,8 @@ void FrameBox::did_set_content_size()
 {
     ReplacedBox::did_set_content_size();
 
-    VERIFY(dom_node().nested_browsing_context());
-    dom_node().nested_browsing_context()->set_size(paintable_box()->content_size());
+    VERIFY(dom_node().content_navigable());
+    dom_node().content_navigable()->set_size(paintable_box()->content_size());
 }
 
 JS::GCPtr<Painting::Paintable> FrameBox::create_paintable() const

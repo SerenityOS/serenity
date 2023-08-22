@@ -2617,8 +2617,8 @@ void StyleComputer::invalidate_rule_cache()
 
 CSSPixelRect StyleComputer::viewport_rect() const
 {
-    if (auto const* browsing_context = document().browsing_context())
-        return browsing_context->viewport_rect();
+    if (auto const navigable = document().navigable())
+        return navigable->viewport_rect();
     return {};
 }
 

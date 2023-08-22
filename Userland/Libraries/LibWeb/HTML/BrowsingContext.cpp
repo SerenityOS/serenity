@@ -540,73 +540,6 @@ void BrowsingContext::set_active_document(JS::NonnullGCPtr<DOM::Document> docume
         previously_active_document->did_stop_being_active_document_in_browsing_context({});
 }
 
-void BrowsingContext::set_viewport_rect(CSSPixelRect const& rect)
-{
-    bool did_change = false;
-
-    if (m_size != rect.size()) {
-        m_size = rect.size();
-        if (auto* document = active_document()) {
-            // NOTE: Resizing the viewport changes the reference value for viewport-relative CSS lengths.
-            document->invalidate_style();
-            document->set_needs_layout();
-        }
-        did_change = true;
-    }
-
-    if (m_viewport_scroll_offset != rect.location()) {
-        m_viewport_scroll_offset = rect.location();
-        scroll_offset_did_change();
-        did_change = true;
-    }
-
-    if (did_change && active_document()) {
-        active_document()->inform_all_viewport_clients_about_the_current_viewport_rect();
-    }
-
-    // Schedule the HTML event loop to ensure that a `resize` event gets fired.
-    HTML::main_thread_event_loop().schedule();
-}
-
-void BrowsingContext::set_size(CSSPixelSize size)
-{
-    if (m_size == size)
-        return;
-    m_size = size;
-
-    if (auto* document = active_document()) {
-        document->invalidate_style();
-        document->set_needs_layout();
-    }
-
-    if (auto* document = active_document()) {
-        document->inform_all_viewport_clients_about_the_current_viewport_rect();
-    }
-
-    // Schedule the HTML event loop to ensure that a `resize` event gets fired.
-    HTML::main_thread_event_loop().schedule();
-}
-
-void BrowsingContext::set_needs_display()
-{
-    set_needs_display(viewport_rect());
-}
-
-void BrowsingContext::set_needs_display(CSSPixelRect const& rect)
-{
-    if (!viewport_rect().intersects(rect))
-        return;
-
-    if (is_top_level()) {
-        if (m_page)
-            m_page->client().page_did_invalidate(to_top_level_rect(rect));
-        return;
-    }
-
-    if (container() && container()->layout_node())
-        container()->layout_node()->set_needs_display();
-}
-
 void BrowsingContext::scroll_to(CSSPixelPoint position)
 {
     // NOTE: Scrolling to a position requires up-to-date layout *unless* we're scrolling to (0, 0)
@@ -647,7 +580,8 @@ void BrowsingContext::scroll_to_anchor(DeprecatedString const& fragment)
 
     auto& layout_node = *element->layout_node();
 
-    CSSPixelRect target_rect { layout_node.box_type_agnostic_position(), { viewport_rect().width(), viewport_rect().height() } };
+    auto const viewport_rect = document->viewport_rect();
+    CSSPixelRect target_rect { layout_node.box_type_agnostic_position(), { viewport_rect.width(), viewport_rect.height() } };
     if (is<Layout::Box>(layout_node)) {
         auto& layout_box = verify_cast<Layout::Box>(layout_node);
         auto padding_box = layout_box.box_model().padding_box();

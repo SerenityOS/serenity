@@ -63,8 +63,11 @@ bool Box::is_user_scrollable() const
 
 void Box::set_needs_display()
 {
+    if (!navigable())
+        return;
+
     if (paintable_box())
-        browsing_context().set_needs_display(paintable_box()->absolute_rect());
+        navigable()->set_needs_display(paintable_box()->absolute_rect());
 }
 
 bool Box::is_body() const

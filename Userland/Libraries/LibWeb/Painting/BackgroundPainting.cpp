@@ -129,7 +129,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         // Attachment and Origin
         switch (layer.attachment) {
         case CSS::BackgroundAttachment::Fixed:
-            background_positioning_area = layout_node.root().browsing_context().viewport_rect();
+            background_positioning_area = layout_node.root().navigable()->viewport_rect();
             break;
         case CSS::BackgroundAttachment::Local:
             background_positioning_area = get_box(layer.origin).rect;

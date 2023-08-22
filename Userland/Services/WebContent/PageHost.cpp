@@ -13,6 +13,7 @@
 #include <LibWeb/CSS/SystemColor.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/HTML/BrowsingContext.h>
+#include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/ViewportPaintable.h>
@@ -146,7 +147,7 @@ void PageHost::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& targ
 
 void PageHost::set_viewport_rect(Web::DevicePixelRect const& rect)
 {
-    page().top_level_browsing_context().set_viewport_rect(page().device_to_css_rect(rect));
+    page().top_level_traversable()->set_viewport_rect(page().device_to_css_rect(rect));
 }
 
 void PageHost::page_did_invalidate(Web::CSSPixelRect const& content_rect)

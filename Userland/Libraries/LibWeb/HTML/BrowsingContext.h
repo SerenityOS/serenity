@@ -138,16 +138,6 @@ public:
     Page* page() { return m_page; }
     Page const* page() const { return m_page; }
 
-    CSSPixelSize size() const { return m_size; }
-    void set_size(CSSPixelSize);
-
-    void set_needs_display();
-    void set_needs_display(CSSPixelRect const&);
-
-    CSSPixelPoint viewport_scroll_offset() const { return m_viewport_scroll_offset; }
-    CSSPixelRect viewport_rect() const { return { m_viewport_scroll_offset, m_size }; }
-    void set_viewport_rect(CSSPixelRect const&);
-
     FrameLoader& loader() { return m_loader; }
     FrameLoader const& loader() const { return m_loader; }
 

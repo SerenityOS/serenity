@@ -46,6 +46,7 @@
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Storage.h>
 #include <LibWeb/HTML/TokenizedFeatures.h>
+#include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/HighResolutionTime/Performance.h>
@@ -1101,8 +1102,8 @@ i32 Window::inner_width() const
 {
     // The innerWidth attribute must return the viewport width including the size of a rendered scroll bar (if any),
     // or zero if there is no viewport.
-    if (auto const* browsing_context = associated_document().browsing_context())
-        return browsing_context->viewport_rect().width().to_int();
+    if (auto const navigable = associated_document().navigable())
+        return navigable->viewport_rect().width().to_int();
     return 0;
 }
 
@@ -1111,8 +1112,8 @@ i32 Window::inner_height() const
 {
     // The innerHeight attribute must return the viewport height including the size of a rendered scroll bar (if any),
     // or zero if there is no viewport.
-    if (auto const* browsing_context = associated_document().browsing_context())
-        return browsing_context->viewport_rect().height().to_int();
+    if (auto const navigable = associated_document().navigable())
+        return navigable->viewport_rect().height().to_int();
     return 0;
 }
 
@@ -1122,7 +1123,7 @@ double Window::scroll_x() const
     // The scrollX attribute must return the x-coordinate, relative to the initial containing block origin,
     // of the left of the viewport, or zero if there is no viewport.
     if (auto* page = this->page())
-        return page->top_level_browsing_context().viewport_scroll_offset().x().to_double();
+        return page->top_level_traversable()->viewport_scroll_offset().x().to_double();
     return 0;
 }
 
@@ -1132,7 +1133,7 @@ double Window::scroll_y() const
     // The scrollY attribute must return the y-coordinate, relative to the initial containing block origin,
     // of the top of the viewport, or zero if there is no viewport.
     if (auto* page = this->page())
-        return page->top_level_browsing_context().viewport_scroll_offset().y().to_double();
+        return page->top_level_traversable()->viewport_scroll_offset().y().to_double();
     return 0;
 }
 
@@ -1158,12 +1159,12 @@ void Window::scroll(ScrollToOptions const& options)
     auto* page = this->page();
     if (!page)
         return;
-    auto const& top_level_browsing_context = page->top_level_browsing_context();
+    auto top_level_traversable = page->top_level_traversable();
 
     // 1. If invoked with one argument, follow these substeps:
 
     // 1. Let options be the argument.
-    auto viewport_rect = top_level_browsing_context.viewport_rect().to_type<float>();
+    auto viewport_rect = top_level_traversable->viewport_rect().to_type<float>();
 
     // 2. Let x be the value of the left dictionary member of options, if present, or the viewport’s current scroll
     //    position on the x axis otherwise.
@@ -1206,7 +1207,7 @@ void Window::scroll(ScrollToOptions const& options)
     //            smooth scroll, abort these steps.
 
     // 11. Let document be the viewport’s associated Document.
-    auto const* document = top_level_browsing_context.active_document();
+    auto const document = top_level_traversable->active_document();
 
     // 12. Perform a scroll of the viewport to position, document’s root element as the associated element, if there is
     //     one, or null otherwise, and the scroll behavior being the value of the behavior dictionary member of options.
