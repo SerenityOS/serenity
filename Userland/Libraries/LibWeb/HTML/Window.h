@@ -20,6 +20,7 @@
 #include <LibWeb/HTML/CrossOrigin/CrossOriginPropertyDescriptorMap.h>
 #include <LibWeb/HTML/GlobalEventHandlers.h>
 #include <LibWeb/HTML/MimeType.h>
+#include <LibWeb/HTML/Navigable.h>
 #include <LibWeb/HTML/Plugin.h>
 #include <LibWeb/HTML/Scripting/ImportMap.h>
 #include <LibWeb/HTML/ScrollOptions.h>
@@ -81,6 +82,8 @@ public:
     // https://html.spec.whatwg.org/multipage/window-object.html#window-bc
     BrowsingContext const* browsing_context() const;
     BrowsingContext* browsing_context();
+
+    JS::GCPtr<Navigable> navigable() const;
 
     size_t document_tree_child_browsing_context_count() const;
 
