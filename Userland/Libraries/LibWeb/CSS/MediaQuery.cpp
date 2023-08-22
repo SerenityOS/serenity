@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,7 +21,7 @@ NonnullRefPtr<MediaQuery> MediaQuery::create_not_all()
     return adopt_ref(*media_query);
 }
 
-ErrorOr<String> MediaFeatureValue::to_string() const
+String MediaFeatureValue::to_string() const
 {
     return m_value.visit(
         [](ValueID const& ident) { return MUST(String::from_utf8(string_from_value_id(ident))); },
@@ -41,7 +41,7 @@ bool MediaFeatureValue::is_same_type(MediaFeatureValue const& other) const
         [&](float) { return other.is_number(); });
 }
 
-ErrorOr<String> MediaFeature::to_string() const
+String MediaFeature::to_string() const
 {
     auto comparison_string = [](Comparison comparison) -> StringView {
         switch (comparison) {
@@ -61,18 +61,18 @@ ErrorOr<String> MediaFeature::to_string() const
 
     switch (m_type) {
     case Type::IsTrue:
-        return String::from_utf8(string_from_media_feature_id(m_id));
+        return MUST(String::from_utf8(string_from_media_feature_id(m_id)));
     case Type::ExactValue:
-        return String::formatted("{}:{}", string_from_media_feature_id(m_id), TRY(m_value->to_string()));
+        return MUST(String::formatted("{}:{}", string_from_media_feature_id(m_id), m_value->to_string()));
     case Type::MinValue:
-        return String::formatted("min-{}:{}", string_from_media_feature_id(m_id), TRY(m_value->to_string()));
+        return MUST(String::formatted("min-{}:{}", string_from_media_feature_id(m_id), m_value->to_string()));
     case Type::MaxValue:
-        return String::formatted("max-{}:{}", string_from_media_feature_id(m_id), TRY(m_value->to_string()));
+        return MUST(String::formatted("max-{}:{}", string_from_media_feature_id(m_id), m_value->to_string()));
     case Type::Range:
         if (!m_range->right_comparison.has_value())
-            return String::formatted("{} {} {}", TRY(m_range->left_value.to_string()), comparison_string(m_range->left_comparison), string_from_media_feature_id(m_id));
+            return MUST(String::formatted("{} {} {}", m_range->left_value.to_string(), comparison_string(m_range->left_comparison), string_from_media_feature_id(m_id)));
 
-        return String::formatted("{} {} {} {} {}", TRY(m_range->left_value.to_string()), comparison_string(m_range->left_comparison), string_from_media_feature_id(m_id), comparison_string(*m_range->right_comparison), TRY(m_range->right_value->to_string()));
+        return MUST(String::formatted("{} {} {} {} {}", m_range->left_value.to_string(), comparison_string(m_range->left_comparison), string_from_media_feature_id(m_id), comparison_string(*m_range->right_comparison), m_range->right_value->to_string()));
     }
 
     VERIFY_NOT_REACHED();
@@ -276,17 +276,17 @@ NonnullOwnPtr<MediaCondition> MediaCondition::from_or_list(Vector<NonnullOwnPtr<
     return adopt_own(*result);
 }
 
-ErrorOr<String> MediaCondition::to_string() const
+String MediaCondition::to_string() const
 {
     StringBuilder builder;
     builder.append('(');
     switch (type) {
     case Type::Single:
-        builder.append(TRY(feature->to_string()));
+        builder.append(feature->to_string());
         break;
     case Type::Not:
         builder.append("not "sv);
-        builder.append(TRY(conditions.first()->to_string()));
+        builder.append(conditions.first()->to_string());
         break;
     case Type::And:
         builder.join(" and "sv, conditions);
@@ -299,7 +299,7 @@ ErrorOr<String> MediaCondition::to_string() const
         break;
     }
     builder.append(')');
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 MatchResult MediaCondition::evaluate(HTML::Window const& window) const
@@ -319,7 +319,7 @@ MatchResult MediaCondition::evaluate(HTML::Window const& window) const
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<String> MediaQuery::to_string() const
+String MediaQuery::to_string() const
 {
     StringBuilder builder;
 
@@ -333,10 +333,10 @@ ErrorOr<String> MediaQuery::to_string() const
     }
 
     if (m_media_condition) {
-        builder.append(TRY(m_media_condition->to_string()));
+        builder.append(m_media_condition->to_string());
     }
 
-    return builder.to_string();
+    return MUST(builder.to_string());
 }
 
 bool MediaQuery::evaluate(HTML::Window const& window)
@@ -380,7 +380,7 @@ bool MediaQuery::evaluate(HTML::Window const& window)
 }
 
 // https://www.w3.org/TR/cssom-1/#serialize-a-media-query-list
-ErrorOr<String> serialize_a_media_query_list(Vector<NonnullRefPtr<MediaQuery>> const& media_queries)
+String serialize_a_media_query_list(Vector<NonnullRefPtr<MediaQuery>> const& media_queries)
 {
     // 1. If the media query list is empty, then return the empty string.
     if (media_queries.is_empty())
@@ -388,7 +388,7 @@ ErrorOr<String> serialize_a_media_query_list(Vector<NonnullRefPtr<MediaQuery>> c
 
     // 2. Serialize each media query in the list of media queries, in the same order as they
     // appear in the media query list, and then serialize the list.
-    return String::join(", "sv, media_queries);
+    return MUST(String::join(", "sv, media_queries));
 }
 
 bool is_media_feature_name(StringView name)

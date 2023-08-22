@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -33,7 +33,7 @@ void MediaList::initialize(JS::Realm& realm)
 // https://www.w3.org/TR/cssom-1/#dom-medialist-mediatext
 DeprecatedString MediaList::media_text() const
 {
-    return serialize_a_media_query_list(m_media).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+    return serialize_a_media_query_list(m_media).to_deprecated_string();
 }
 
 // https://www.w3.org/TR/cssom-1/#dom-medialist-mediatext
@@ -56,7 +56,7 @@ DeprecatedString MediaList::item(u32 index) const
     if (!is_supported_property_index(index))
         return {};
 
-    return m_media[index]->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+    return m_media[index]->to_string().to_deprecated_string();
 }
 
 // https://www.w3.org/TR/cssom-1/#dom-medialist-appendmedium
@@ -70,9 +70,9 @@ void MediaList::append_medium(DeprecatedString medium)
         return;
 
     // 3. If comparing m with any of the media queries in the collection of media queries returns true, then return.
-    auto serialized = m->to_string().release_value_but_fixme_should_propagate_errors();
+    auto serialized = m->to_string();
     for (auto& existing_medium : m_media) {
-        if (existing_medium->to_string().release_value_but_fixme_should_propagate_errors() == serialized)
+        if (existing_medium->to_string() == serialized)
             return;
     }
 
@@ -87,7 +87,7 @@ void MediaList::delete_medium(DeprecatedString medium)
     if (!m)
         return;
     m_media.remove_all_matching([&](auto& existing) -> bool {
-        return m->to_string().release_value_but_fixme_should_propagate_errors() == existing->to_string().release_value_but_fixme_should_propagate_errors();
+        return m->to_string() == existing->to_string();
     });
     // FIXME: If nothing was removed, then throw a NotFoundError exception.
 }
@@ -117,7 +117,7 @@ WebIDL::ExceptionOr<JS::Value> MediaList::item_value(size_t index) const
 {
     if (index >= m_media.size())
         return JS::js_undefined();
-    return JS::PrimitiveString::create(vm(), m_media[index]->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string());
+    return JS::PrimitiveString::create(vm(), m_media[index]->to_string().to_deprecated_string());
 }
 
 }
