@@ -83,7 +83,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    widget->set_piece_set(Config::read_string("Games"sv, "Chess"sv, "PieceSet"sv, "stelar7"sv));
+    widget->set_piece_set(Config::read_string("Games"sv, "Chess"sv, "PieceSet"sv, "Classic"sv));
     widget->set_board_theme(Config::read_string("Games"sv, "Chess"sv, "BoardTheme"sv, "Beige"sv));
     widget->set_coordinates(Config::read_bool("Games"sv, "Chess"sv, "ShowCoordinates"sv, true));
     widget->set_show_available_moves(Config::read_bool("Games"sv, "Chess"sv, "ShowAvailableMoves"sv, true));
