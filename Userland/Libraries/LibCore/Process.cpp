@@ -28,6 +28,9 @@ extern "C" {
 #    include <hurd.h>
 }
 #endif
+#if defined(AK_OS_FREEBSD)
+#    include <sys/user.h>
+#endif
 
 namespace Core {
 
@@ -208,7 +211,7 @@ ErrorOr<bool> Process::is_being_debugged()
         (void)System::munmap(waits, waits_len);
 
     return traced;
-#elif defined(AK_OS_MACOS)
+#elif defined(AK_OS_MACOS) || defined(AK_OS_FREEBSD)
     // https://developer.apple.com/library/archive/qa/qa1361/_index.html
     int mib[4] = {};
     struct kinfo_proc info = {};
@@ -224,8 +227,12 @@ ErrorOr<bool> Process::is_being_debugged()
     if (sysctl(mib, sizeof(mib) / sizeof(*mib), &info, &size, NULL, 0) < 0)
         return Error::from_syscall("sysctl"sv, -errno);
 
-    // We're being debugged if the P_TRACED flag is set.
+        // We're being debugged if the P_TRACED flag is set.
+#    if defined(AK_OS_MACOS)
     return ((info.kp_proc.p_flag & P_TRACED) != 0);
+#    elif defined(AK_OS_FREEBSD)
+    return ((info.ki_flag & P_TRACED) != 0);
+#    endif
 #endif
     // FIXME: Implement this for more platforms.
     return Error::from_string_view("Platform does not support checking for debugger"sv);
