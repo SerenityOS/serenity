@@ -25,20 +25,20 @@ public:
         String declaration;
         JS::Handle<JS::Realm> realm;
         bool evaluate() const;
-        ErrorOr<String> to_string() const;
+        String to_string() const;
     };
 
     struct Selector {
         String selector;
         JS::Handle<JS::Realm> realm;
         bool evaluate() const;
-        ErrorOr<String> to_string() const;
+        String to_string() const;
     };
 
     struct Feature {
         Variant<Declaration, Selector> value;
         bool evaluate() const;
-        ErrorOr<String> to_string() const;
+        String to_string() const;
     };
 
     struct Condition;
@@ -46,7 +46,7 @@ public:
         Variant<NonnullOwnPtr<Condition>, Feature, GeneralEnclosed> value;
 
         bool evaluate() const;
-        ErrorOr<String> to_string() const;
+        String to_string() const;
     };
 
     struct Condition {
@@ -59,7 +59,7 @@ public:
         Vector<InParens> children;
 
         bool evaluate() const;
-        ErrorOr<String> to_string() const;
+        String to_string() const;
     };
 
     static NonnullRefPtr<Supports> create(NonnullOwnPtr<Condition>&& condition)
@@ -68,7 +68,7 @@ public:
     }
 
     bool matches() const { return m_matches; }
-    ErrorOr<String> to_string() const;
+    String to_string() const;
 
 private:
     Supports(NonnullOwnPtr<Condition>&&);
@@ -83,6 +83,6 @@ template<>
 struct AK::Formatter<Web::CSS::Supports::InParens> : AK::Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::Supports::InParens const& in_parens)
     {
-        return Formatter<StringView>::format(builder, TRY(in_parens.to_string()));
+        return Formatter<StringView>::format(builder, in_parens.to_string());
     }
 };

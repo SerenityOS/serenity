@@ -30,7 +30,7 @@ void CSSSupportsRule::initialize(JS::Realm& realm)
 
 DeprecatedString CSSSupportsRule::condition_text() const
 {
-    return m_supports->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+    return m_supports->to_string().to_deprecated_string();
 }
 
 void CSSSupportsRule::set_condition_text(DeprecatedString text)
