@@ -34,13 +34,13 @@ ErrorOr<String> GridAreaShorthandStyleValue::to_string() const
 {
     StringBuilder builder;
     if (!m_properties.row_start->as_grid_track_placement().grid_track_placement().is_auto())
-        TRY(builder.try_appendff("{}", TRY(m_properties.row_start->as_grid_track_placement().grid_track_placement().to_string())));
+        TRY(builder.try_appendff("{}", m_properties.row_start->as_grid_track_placement().grid_track_placement().to_string()));
     if (!m_properties.column_start->as_grid_track_placement().grid_track_placement().is_auto())
-        TRY(builder.try_appendff(" / {}", TRY(m_properties.column_start->as_grid_track_placement().grid_track_placement().to_string())));
+        TRY(builder.try_appendff(" / {}", m_properties.column_start->as_grid_track_placement().grid_track_placement().to_string()));
     if (!m_properties.row_end->as_grid_track_placement().grid_track_placement().is_auto())
-        TRY(builder.try_appendff(" / {}", TRY(m_properties.row_end->as_grid_track_placement().grid_track_placement().to_string())));
+        TRY(builder.try_appendff(" / {}", m_properties.row_end->as_grid_track_placement().grid_track_placement().to_string()));
     if (!m_properties.column_end->as_grid_track_placement().grid_track_placement().is_auto())
-        TRY(builder.try_appendff(" / {}", TRY(m_properties.column_end->as_grid_track_placement().grid_track_placement().to_string())));
+        TRY(builder.try_appendff(" / {}", m_properties.column_end->as_grid_track_placement().grid_track_placement().to_string()));
     return builder.to_string();
 }
 
