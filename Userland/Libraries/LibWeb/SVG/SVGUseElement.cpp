@@ -57,6 +57,8 @@ void SVGUseElement::attribute_changed(DeprecatedFlyString const& name, Deprecate
     } else if (name == SVG::AttributeNames::href) {
         // FIXME: Support the xlink:href attribute as a fallback
         m_referenced_id = parse_id_from_href(value);
+
+        clone_element_tree_as_our_shadow_tree(referenced_element());
     }
 }
 
