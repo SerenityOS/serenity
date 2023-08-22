@@ -23,6 +23,27 @@
 
 namespace Web::HTML {
 
+class ResponseHolder : public JS::Cell {
+    JS_CELL(ResponseHolder, JS::Cell);
+
+public:
+    [[nodiscard]] static JS::NonnullGCPtr<ResponseHolder> create(JS::VM& vm)
+    {
+        return vm.heap().allocate_without_realm<ResponseHolder>();
+    }
+
+    [[nodiscard]] JS::GCPtr<Fetch::Infrastructure::Response> response() const { return m_response; }
+    void set_response(JS::GCPtr<Fetch::Infrastructure::Response> response) { m_response = response; }
+
+    virtual void visit_edges(Cell::Visitor& visitor) override
+    {
+        visitor.visit(m_response);
+    }
+
+private:
+    JS::GCPtr<Fetch::Infrastructure::Response> m_response;
+};
+
 static HashTable<Navigable*>& all_navigables()
 {
     static HashTable<Navigable*> set;
@@ -458,7 +479,9 @@ static WebIDL::ExceptionOr<Optional<NavigationParams>> create_navigation_params_
         request->set_history_navigation(true);
 
     // 9. Let response be null.
-    JS::GCPtr<Fetch::Infrastructure::Response> response = nullptr;
+    // NOTE: We use a heap-allocated cell to hold the response pointer because the processResponse callback below
+    //       might use it after this stack is freed.
+    auto response_holder = ResponseHolder::create(vm);
 
     // 10. Let responseOrigin be null.
     Optional<HTML::Origin> response_origin;
@@ -484,7 +507,7 @@ static WebIDL::ExceptionOr<Optional<NavigationParams>> create_navigation_params_
         // FIXME: 3. If the result of should navigation request of type be blocked by Content Security Policy? given request and cspNavigationType is "Blocked", then set response to a network error and break. [CSP]
 
         // 4. Set response to null.
-        response = nullptr;
+        response_holder->set_response(nullptr);
 
         // 5. If fetchController is null, then set fetchController to the result of fetching request,
         //    with processEarlyHintsResponse set to processEarlyHintsResponseas defined below, processResponse
@@ -493,9 +516,9 @@ static WebIDL::ExceptionOr<Optional<NavigationParams>> create_navigation_params_
             // FIXME: Let processEarlyHintsResponse be the following algorithm given a response earlyResponse:
 
             // Let processResponse be the following algorithm given a response fetchedResponse:
-            auto process_response = [&response](JS::NonnullGCPtr<Fetch::Infrastructure::Response> fetch_response) {
+            auto process_response = [response_holder](JS::NonnullGCPtr<Fetch::Infrastructure::Response> fetch_response) {
                 // 1. Set response to fetchedResponse.
-                response = fetch_response;
+                response_holder->set_response(fetch_response);
             };
 
             fetch_controller = TRY(Fetch::Fetching::fetch(
@@ -519,7 +542,7 @@ static WebIDL::ExceptionOr<Optional<NavigationParams>> create_navigation_params_
 
         // 7. Wait until either response is non-null, or navigable's ongoing navigation changes to no longer equal navigationId.
         Platform::EventLoopPlugin::the().spin_until([&]() {
-            if (response != nullptr)
+            if (response_holder->response() != nullptr)
                 return true;
 
             if (navigation_id.has_value() && (!navigable->ongoing_navigation().has<String>() || navigable->ongoing_navigation().get<String>() != *navigation_id))
@@ -540,10 +563,10 @@ static WebIDL::ExceptionOr<Optional<NavigationParams>> create_navigation_params_
 
         // 11. Set responseOrigin to the result of determining the origin given response's URL, finalSandboxFlags,
         //     entry's document state's initiator origin, and null.
-        response_origin = determine_the_origin(*response->url(), final_sandbox_flags, entry->document_state->initiator_origin(), {});
+        response_origin = determine_the_origin(*response_holder->response()->url(), final_sandbox_flags, entry->document_state->initiator_origin(), {});
 
         // 14. Set locationURL to response's location URL given currentURL's fragment.
-        auto location_url = response->location_url(current_url.fragment());
+        auto location_url = response_holder->response()->location_url(current_url.fragment());
 
         VERIFY(!location_url.is_error());
 
@@ -604,13 +627,13 @@ static WebIDL::ExceptionOr<Optional<NavigationParams>> create_navigation_params_
     //       - locationURL is failure; or
     //       - locationURL is a URL whose scheme is a fetch scheme
     //     then return null.
-    if (response->is_network_error() || location_url.is_error() || (location_url.value().has_value() && Fetch::Infrastructure::is_fetch_scheme(location_url.value().value().scheme()))) {
+    if (response_holder->response()->is_network_error() || location_url.is_error() || (location_url.value().has_value() && Fetch::Infrastructure::is_fetch_scheme(location_url.value().value().scheme()))) {
         return OptionalNone {};
     }
 
     // 22. Assert: locationURL is null and response is not a network error.
     VERIFY(!location_url.value().has_value());
-    VERIFY(!response->is_network_error());
+    VERIFY(!response_holder->response()->is_network_error());
 
     // FIXME: 23. Let resultPolicyContainer be the result of determining navigation params policy container given response's
     //        URL, entry's document state's history policy container, sourceSnapshotParams's source policy container,
@@ -633,7 +656,7 @@ static WebIDL::ExceptionOr<Optional<NavigationParams>> create_navigation_params_
     HTML::NavigationParams navigation_params {
         .id = navigation_id,
         .request = request,
-        .response = *response,
+        .response = *response_holder->response(),
         .origin = *response_origin,
         .policy_container = PolicyContainer {},
         .final_sandboxing_flag_set = SandboxingFlagSet {},
