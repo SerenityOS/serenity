@@ -115,6 +115,9 @@ public:
     Function<void()> on_navigate_forward;
     Function<void()> on_refresh;
     Function<void(Gfx::Bitmap const&)> on_favicon_change;
+    Function<void(i32, i32)> on_scroll_by_delta;
+    Function<void(Gfx::IntPoint)> on_scroll_to_point;
+    Function<void(Gfx::IntRect)> on_scroll_into_view;
     Function<void(Gfx::StandardCursor)> on_cursor_change;
     Function<void(String const& message)> on_request_alert;
     Function<void(String const& message)> on_request_confirm;
@@ -141,9 +144,6 @@ public:
     Function<Gfx::IntRect()> on_minimize_window;
     Function<Gfx::IntRect()> on_fullscreen_window;
 
-    virtual void notify_server_did_request_scroll(Badge<WebContentClient>, i32, i32) = 0;
-    virtual void notify_server_did_request_scroll_to(Badge<WebContentClient>, Gfx::IntPoint) = 0;
-    virtual void notify_server_did_request_scroll_into_view(Badge<WebContentClient>, Gfx::IntRect const&) = 0;
     virtual void notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint, DeprecatedString const&) = 0;
     virtual void notify_server_did_leave_tooltip_area(Badge<WebContentClient>) = 0;
     virtual void notify_server_did_finish_handling_input_event(bool event_was_accepted) = 0;

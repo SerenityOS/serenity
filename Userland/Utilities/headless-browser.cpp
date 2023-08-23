@@ -102,9 +102,6 @@ public:
 private:
     HeadlessWebContentView() = default;
 
-    void notify_server_did_request_scroll(Badge<WebView::WebContentClient>, i32, i32) override { }
-    void notify_server_did_request_scroll_to(Badge<WebView::WebContentClient>, Gfx::IntPoint) override { }
-    void notify_server_did_request_scroll_into_view(Badge<WebView::WebContentClient>, Gfx::IntRect const&) override { }
     void notify_server_did_enter_tooltip_area(Badge<WebView::WebContentClient>, Gfx::IntPoint, DeprecatedString const&) override { }
     void notify_server_did_leave_tooltip_area(Badge<WebView::WebContentClient>) override { }
     void notify_server_did_finish_handling_input_event(bool) override { }
