@@ -8,6 +8,7 @@
 #import <HighResolutionTime/Performance.idl>
 #import <HTML/AnimationFrameProvider.idl>
 #import <HTML/CustomElements/CustomElementRegistry.idl>
+#import <HTML/Navigation.idl>
 #import <HTML/Navigator.idl>
 #import <HTML/WindowLocalStorage.idl>
 #import <HTML/WindowOrWorkerGlobalScope.idl>
@@ -24,6 +25,7 @@ interface Window : EventTarget {
     attribute DOMString name;
     [PutForwards=href, LegacyUnforgeable] readonly attribute Location location;
     readonly attribute History history;
+    readonly attribute Navigation navigation;
     readonly attribute CustomElementRegistry customElements;
     undefined focus();
 

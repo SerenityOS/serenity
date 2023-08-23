@@ -38,6 +38,7 @@
 #include <LibWeb/HTML/Focus.h>
 #include <LibWeb/HTML/Location.h>
 #include <LibWeb/HTML/MessageEvent.h>
+#include <LibWeb/HTML/Navigation.h>
 #include <LibWeb/HTML/Navigator.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/PageTransitionEvent.h>
@@ -106,6 +107,7 @@ void Window::visit_edges(JS::Cell::Visitor& visitor)
     visitor.visit(m_location);
     visitor.visit(m_crypto);
     visitor.visit(m_navigator);
+    visitor.visit(m_navigation);
     visitor.visit(m_custom_element_registry);
     for (auto& plugin_object : m_pdf_viewer_plugin_objects)
         visitor.visit(plugin_object);
@@ -1408,6 +1410,20 @@ JS::NonnullGCPtr<Crypto::Crypto> Window::crypto()
     if (!m_crypto)
         m_crypto = heap().allocate<Crypto::Crypto>(realm, realm);
     return JS::NonnullGCPtr { *m_crypto };
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-navigation
+JS::NonnullGCPtr<Navigation> Window::navigation()
+{
+    // Upon creation of the Window object, its navigation API must be set
+    // to a new Navigation object created in the Window object's relevant realm.
+    if (!m_navigation) {
+        auto& realm = relevant_realm(*this);
+        m_navigation = heap().allocate<Navigation>(realm, realm);
+    }
+
+    // The navigation getter steps are to return this's navigation API.
+    return *m_navigation;
 }
 
 // https://html.spec.whatwg.org/multipage/custom-elements.html#dom-window-customelements
