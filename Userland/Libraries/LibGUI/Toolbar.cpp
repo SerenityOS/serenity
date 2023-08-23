@@ -49,7 +49,7 @@ private:
         if (action.group() && action.group()->is_exclusive())
             set_exclusive(true);
         set_action(action);
-        set_tooltip_deprecated(tooltip(action));
+        set_tooltip(tooltip(action));
         set_focus_policy(FocusPolicy::NoFocus);
         if (action.icon())
             set_icon(action.icon());
@@ -63,12 +63,12 @@ private:
         auto const* action = this->action();
         VERIFY(action);
 
-        set_tooltip_deprecated(tooltip(*action));
+        set_tooltip(tooltip(*action));
         if (!action->icon())
             Button::set_text(move(text));
     }
 
-    DeprecatedString tooltip(Action const& action) const
+    String tooltip(Action const& action) const
     {
         StringBuilder builder;
         builder.append(action.tooltip());
@@ -77,7 +77,7 @@ private:
             builder.append(action.shortcut().to_deprecated_string());
             builder.append(')');
         }
-        return builder.to_deprecated_string();
+        return MUST(builder.to_string());
     }
 
     virtual void enter_event(Core::Event& event) override

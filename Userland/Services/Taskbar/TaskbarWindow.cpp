@@ -89,7 +89,7 @@ ErrorOr<void> TaskbarWindow::populate_taskbar()
     m_clock_widget = main_widget->add<Taskbar::ClockWidget>();
 
     m_show_desktop_button = main_widget->add<GUI::Button>();
-    m_show_desktop_button->set_tooltip_deprecated("Show Desktop");
+    m_show_desktop_button->set_tooltip("Show Desktop"_string);
     m_show_desktop_button->set_icon(TRY(GUI::Icon::try_create_default_icon("desktop"sv)).bitmap_for_size(16));
     m_show_desktop_button->set_button_style(Gfx::ButtonStyle::Coolbar);
     m_show_desktop_button->set_fixed_size(24, 24);

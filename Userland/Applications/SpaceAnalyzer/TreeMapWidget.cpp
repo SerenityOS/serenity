@@ -280,7 +280,7 @@ void TreeMapWidget::mousemove_event(GUI::MouseEvent& event)
 {
     auto* node = path_node(m_viewpoint);
     if (!node) {
-        set_tooltip_deprecated({});
+        set_tooltip({});
         return;
     }
 
@@ -291,7 +291,7 @@ void TreeMapWidget::mousemove_event(GUI::MouseEvent& event)
         }
     });
 
-    set_tooltip_deprecated(DeprecatedString::formatted("{}\n{}", hovered_node->name(), human_readable_size(hovered_node->area())));
+    set_tooltip(MUST(String::formatted("{}\n{}", hovered_node->name(), human_readable_size(hovered_node->area()))));
 }
 
 void TreeMapWidget::mousedown_event(GUI::MouseEvent& event)

@@ -205,7 +205,7 @@ Tab::Tab(BrowserWindow& window)
         this);
 
     m_reset_zoom_button = toolbar.add<GUI::Button>();
-    m_reset_zoom_button->set_tooltip_deprecated("Reset zoom level");
+    m_reset_zoom_button->set_tooltip("Reset zoom level"_string);
     m_reset_zoom_button->on_click = [&](auto) {
         view().reset_zoom();
         update_reset_zoom_button();
@@ -801,10 +801,10 @@ void Tab::update_bookmark_button(StringView url)
 {
     if (BookmarksBarWidget::the().contains_bookmark(url)) {
         m_bookmark_button->set_icon(g_icon_bag.bookmark_filled);
-        m_bookmark_button->set_tooltip_deprecated("Remove Bookmark");
+        m_bookmark_button->set_tooltip("Remove Bookmark"_string);
     } else {
         m_bookmark_button->set_icon(g_icon_bag.bookmark_contour);
-        m_bookmark_button->set_tooltip_deprecated("Add Bookmark");
+        m_bookmark_button->set_tooltip("Add Bookmark"_string);
     }
 }
 
