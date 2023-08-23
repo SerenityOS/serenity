@@ -82,7 +82,9 @@ void WebContentClient::did_request_cursor_change(i32 cursor_type)
         dbgln("DidRequestCursorChange: Bad cursor type");
         return;
     }
-    m_view.notify_server_did_request_cursor_change({}, (Gfx::StandardCursor)cursor_type);
+
+    if (m_view.on_cursor_change)
+        m_view.on_cursor_change(static_cast<Gfx::StandardCursor>(cursor_type));
 }
 
 void WebContentClient::did_layout(Gfx::IntSize content_size)

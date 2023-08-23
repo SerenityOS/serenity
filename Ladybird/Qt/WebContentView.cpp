@@ -88,6 +88,10 @@ WebContentView::WebContentView(StringView webdriver_content_ipc_path, WebView::E
     on_ready_to_paint = [this]() {
         viewport()->update();
     };
+
+    on_cursor_change = [this](auto cursor) {
+        update_cursor(cursor);
+    };
 }
 
 WebContentView::~WebContentView() = default;
@@ -600,7 +604,7 @@ void WebContentView::create_client(WebView::EnableCallgrindProfiling enable_call
         client().async_connect_to_webdriver(m_webdriver_content_ipc_path);
 }
 
-void WebContentView::notify_server_did_request_cursor_change(Badge<WebContentClient>, Gfx::StandardCursor cursor)
+void WebContentView::update_cursor(Gfx::StandardCursor cursor)
 {
     switch (cursor) {
     case Gfx::StandardCursor::Hidden:
