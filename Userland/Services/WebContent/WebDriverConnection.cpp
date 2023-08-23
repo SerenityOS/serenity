@@ -35,6 +35,7 @@
 #include <LibWeb/HTML/HTMLOptGroupElement.h>
 #include <LibWeb/HTML/HTMLOptionElement.h>
 #include <LibWeb/HTML/HTMLSelectElement.h>
+#include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/Platform/Timer.h>
@@ -1911,7 +1912,7 @@ ErrorOr<void, Web::WebDriver::Error> WebDriverConnection::wait_for_navigation_to
 
     // 4. If there is an ongoing attempt to navigate the current browsing context that has not yet matured, wait for navigation to mature.
     Web::Platform::EventLoopPlugin::the().spin_until([&] {
-        return !m_page_client.page().has_ongoing_navigation();
+        return m_page_client.page().top_level_traversable()->ongoing_navigation() == Empty {};
     });
 
     // 5. Let readiness target be the document readiness state associated with the current session’s page loading strategy, which can be found in the table of page load strategies.
