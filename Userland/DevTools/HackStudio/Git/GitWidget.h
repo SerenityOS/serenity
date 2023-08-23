@@ -7,6 +7,7 @@
 #pragma once
 
 #include "GitFilesView.h"
+#include "GitLogView.h"
 #include "GitRepo.h"
 #include <AK/Function.h>
 #include <LibGUI/Forward.h>
@@ -33,12 +34,14 @@ private:
     bool initialize_if_needed();
     void stage_file(DeprecatedString const&);
     void unstage_file(DeprecatedString const&);
+    void git_log();
     void commit();
     void show_diff(DeprecatedString const&);
 
     DeprecatedString m_repo_root;
     RefPtr<GitFilesView> m_unstaged_files;
     RefPtr<GitFilesView> m_staged_files;
+    RefPtr<GitLogView> m_git_logs;
     RefPtr<GitRepo> m_git_repo;
     ViewDiffCallback m_view_diff_callback;
 };

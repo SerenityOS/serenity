@@ -47,6 +47,14 @@ Vector<DeprecatedString> GitRepo::staged_files() const
     return parse_files_list(raw_result);
 }
 
+Vector<DeprecatedString> GitRepo::git_logs() const
+{
+    auto logs = command({ "log", "--pretty=format:%h %s by <%cn>", "--abbrev-commit" });
+    if (logs.is_null())
+        return {};
+    return parse_files_list(logs);
+}
+
 Vector<DeprecatedString> GitRepo::modified_files() const
 {
     auto raw_result = command({ "ls-files", "--modified", "--exclude-standard" });
@@ -106,6 +114,11 @@ bool GitRepo::unstage(DeprecatedString const& file)
     return !command({ "reset", "HEAD", "--", file }).is_null();
 }
 
+bool GitRepo::git_log()
+{
+    return !command({ "log", "--abbrev-commit" }).is_null();
+}
+
 bool GitRepo::commit(DeprecatedString const& message)
 {
     return !command({ "commit", "-m", message }).is_null();
@@ -129,5 +142,4 @@ bool GitRepo::is_tracked(DeprecatedString const& file) const
 
     return !res.is_empty();
 }
-
 }

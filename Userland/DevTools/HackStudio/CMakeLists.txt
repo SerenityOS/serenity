@@ -28,6 +28,8 @@ set(SOURCES
     EditorWrapper.cpp
     FindInFilesWidget.cpp
     Git/DiffViewer.cpp
+    Git/GitLogModel.cpp
+    Git/GitLogView.cpp
     Git/GitFilesModel.cpp
     Git/GitFilesView.cpp
     Git/GitRepo.cpp

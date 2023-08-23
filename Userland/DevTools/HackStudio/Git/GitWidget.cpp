@@ -7,6 +7,7 @@
 #include "GitWidget.h"
 #include "../Dialogs/Git/GitCommitDialog.h"
 #include "GitFilesModel.h"
+#include "GitLogModel.h"
 #include <LibDiff/Format.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -73,6 +74,12 @@ GitWidget::GitWidget()
         [this](auto const& file) { unstage_file(file); },
         Gfx::Bitmap::load_from_file("/res/icons/16x16/minus.png"sv).release_value_but_fixme_should_propagate_errors());
     m_staged_files->set_foreground_role(Gfx::ColorRole::Green);
+
+    auto& git_logs = add<GUI::Widget>();
+    git_logs.set_layout<GUI::VerticalBoxLayout>();
+    auto& git_log_label = git_logs.add<GUI::Label>();
+    git_log_label.set_text("Git Log"_string);
+    m_git_logs = git_logs.add<GitLogView>([this]() { git_log(); });
 }
 
 bool GitWidget::initialize()
@@ -116,6 +123,7 @@ void GitWidget::refresh()
 
     m_unstaged_files->set_model(GitFilesModel::create(m_git_repo->unstaged_files()));
     m_staged_files->set_model(GitFilesModel::create(m_git_repo->staged_files()));
+    m_git_logs->set_model(GitLogModel::create(m_git_repo->git_logs()));
 }
 
 void GitWidget::stage_file(DeprecatedString const& file)
@@ -130,6 +138,14 @@ void GitWidget::unstage_file(DeprecatedString const& file)
 {
     dbgln("unstaging: {}", file);
     bool rc = m_git_repo->unstage(file);
+    VERIFY(rc);
+    refresh();
+}
+
+void GitWidget::git_log()
+{
+    dbgln("Git logs : ");
+    bool rc = m_git_repo->git_log();
     VERIFY(rc);
     refresh();
 }

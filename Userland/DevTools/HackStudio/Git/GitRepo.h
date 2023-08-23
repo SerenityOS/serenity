@@ -33,11 +33,13 @@ public:
 
     bool stage(DeprecatedString const& file);
     bool unstage(DeprecatedString const& file);
+    bool git_log();
     bool commit(DeprecatedString const& message);
     bool is_tracked(DeprecatedString const& file) const;
 
     Vector<DeprecatedString> unstaged_files() const;
     Vector<DeprecatedString> staged_files() const;
+    Vector<DeprecatedString> git_logs() const;
     Optional<DeprecatedString> original_file_content(DeprecatedString const& file) const;
     Optional<DeprecatedString> unstaged_diff(DeprecatedString const& file) const;
 
