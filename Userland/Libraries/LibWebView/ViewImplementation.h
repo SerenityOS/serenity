@@ -94,6 +94,7 @@ public:
     };
     ErrorOr<void> take_screenshot(ScreenshotType);
 
+    Function<void(Gfx::IntSize)> on_did_layout;
     Function<void()> on_ready_to_paint;
     Function<String(Web::HTML::ActivateTab)> on_new_tab;
     Function<void()> on_activate_tab;
@@ -139,7 +140,6 @@ public:
     Function<Gfx::IntRect()> on_minimize_window;
     Function<Gfx::IntRect()> on_fullscreen_window;
 
-    virtual void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size) = 0;
     virtual void notify_server_did_request_cursor_change(Badge<WebContentClient>, Gfx::StandardCursor cursor) = 0;
     virtual void notify_server_did_request_scroll(Badge<WebContentClient>, i32, i32) = 0;
     virtual void notify_server_did_request_scroll_to(Badge<WebContentClient>, Gfx::IntPoint) = 0;

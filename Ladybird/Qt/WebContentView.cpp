@@ -76,6 +76,15 @@ WebContentView::WebContentView(StringView webdriver_content_ipc_path, WebView::E
 
     create_client(enable_callgrind_profiling);
 
+    on_did_layout = [this](auto content_size) {
+        verticalScrollBar()->setMinimum(0);
+        verticalScrollBar()->setMaximum(content_size.height() - m_viewport_rect.height());
+        verticalScrollBar()->setPageStep(m_viewport_rect.height());
+        horizontalScrollBar()->setMinimum(0);
+        horizontalScrollBar()->setMaximum(content_size.width() - m_viewport_rect.width());
+        horizontalScrollBar()->setPageStep(m_viewport_rect.width());
+    };
+
     on_ready_to_paint = [this]() {
         viewport()->update();
     };
@@ -652,16 +661,6 @@ void WebContentView::notify_server_did_request_cursor_change(Badge<WebContentCli
         setCursor(Qt::ArrowCursor);
         break;
     }
-}
-
-void WebContentView::notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size)
-{
-    verticalScrollBar()->setMinimum(0);
-    verticalScrollBar()->setMaximum(content_size.height() - m_viewport_rect.height());
-    verticalScrollBar()->setPageStep(m_viewport_rect.height());
-    horizontalScrollBar()->setMinimum(0);
-    horizontalScrollBar()->setMaximum(content_size.width() - m_viewport_rect.width());
-    horizontalScrollBar()->setPageStep(m_viewport_rect.width());
 }
 
 void WebContentView::notify_server_did_request_scroll(Badge<WebContentClient>, i32 x_delta, i32 y_delta)

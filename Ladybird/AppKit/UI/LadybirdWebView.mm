@@ -164,9 +164,9 @@ struct HideCursor {
 
 - (void)setWebViewCallbacks
 {
-    m_web_view_bridge->on_layout = [self](auto content_size) {
-        auto ns_content_size = Ladybird::gfx_size_to_ns_size(content_size);
-        [[self documentView] setFrameSize:ns_content_size];
+    m_web_view_bridge->on_did_layout = [self](auto content_size) {
+        auto inverse_device_pixel_ratio = m_web_view_bridge->inverse_device_pixel_ratio();
+        [[self documentView] setFrameSize:NSMakeSize(content_size.width() * inverse_device_pixel_ratio, content_size.height() * inverse_device_pixel_ratio)];
     };
 
     m_web_view_bridge->on_ready_to_paint = [self]() {

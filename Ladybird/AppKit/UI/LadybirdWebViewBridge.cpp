@@ -104,14 +104,6 @@ Optional<WebViewBridge::Paintable> WebViewBridge::paintable()
     return Paintable { *bitmap, bitmap_size };
 }
 
-void WebViewBridge::notify_server_did_layout(Badge<WebView::WebContentClient>, Gfx::IntSize content_size)
-{
-    if (on_layout) {
-        content_size = scale_for_device(content_size, m_inverse_device_pixel_ratio);
-        on_layout(content_size);
-    }
-}
-
 void WebViewBridge::notify_server_did_request_cursor_change(Badge<WebView::WebContentClient>, Gfx::StandardCursor cursor)
 {
     if (on_cursor_change)

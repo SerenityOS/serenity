@@ -49,8 +49,6 @@ public:
     };
     Optional<Paintable> paintable();
 
-    Function<void(Gfx::IntSize)> on_layout;
-
     Function<void(Gfx::IntPoint)> on_scroll;
 
     Function<void(Gfx::StandardCursor)> on_cursor_change;
@@ -61,7 +59,6 @@ public:
 private:
     WebViewBridge(Vector<Gfx::IntRect> screen_rects, float device_pixel_ratio, Optional<StringView> webdriver_content_ipc_path);
 
-    virtual void notify_server_did_layout(Badge<WebView::WebContentClient>, Gfx::IntSize content_size) override;
     virtual void notify_server_did_request_cursor_change(Badge<WebView::WebContentClient>, Gfx::StandardCursor cursor) override;
     virtual void notify_server_did_request_scroll(Badge<WebView::WebContentClient>, i32, i32) override;
     virtual void notify_server_did_request_scroll_to(Badge<WebView::WebContentClient>, Gfx::IntPoint) override;
