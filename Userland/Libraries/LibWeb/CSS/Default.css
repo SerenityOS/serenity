@@ -5,7 +5,7 @@
 
 html {
     font-family: sans-serif;
-    color: -libweb-palette-base-text;
+    color: CanvasText;
 }
 
 body {
@@ -27,7 +27,7 @@ label {
 
 /* FIXME: This is a temporary hack until we can render a native-looking frame for these. */
 input, textarea {
-    border: 1px solid -libweb-palette-threed-shadow1;
+    border: 1px solid ButtonBorder;
     min-width: 80px;
     min-height: 16px;
     width: 120px;
@@ -50,18 +50,22 @@ input[type=submit], input[type=button], input[type=reset], input[type=checkbox],
 }
 
 input::placeholder {
-    color: rgb(117, 117, 117);
+    color: GrayText;
 }
 
 button, input[type=submit], input[type=button], input[type=reset] {
     padding: 1px 4px;
-    background-color: -libweb-palette-button;
-    border: 1px solid -libweb-palette-threed-shadow1;
-    color: -libweb-palette-button-text;
+    background-color: ButtonFace;
+    border: 1px solid ButtonBorder;
+    color: ButtonText;
 }
 
 button:hover, input[type=submit]:hover, input[type=button]:hover, input[type=reset]:hover {
-    background-color: -libweb-palette-hover-highlight;
+    /* FIXME: There isn't a <system-color> keyword for this, so this is a slightly lightened
+     *        version of our light ButtonFace color. Once we support `color-scheme: dark`
+     *        we'll need to use a different color for that.
+     */
+    background-color: #e5e0d7;
 }
 
 option {
@@ -243,15 +247,15 @@ rt {
 }
 
 :link {
-    color: -libweb-link;
+    color: LinkText;
 }
 
 :visited {
-    color: -libweb-palette-visited-link;
+    color: VisitedText;
 }
 
 :link:active, :visited:active {
-    color: -libweb-palette-active-link;
+    color: ActiveText;
 }
 
 :link, :visited {
@@ -264,11 +268,9 @@ rt {
 }
 
 mark {
-    background: yellow;
-    color: black;
+    background: Mark;
+    color: MarkText;
 }
-
-/* this color is just a suggestion and can be changed based on implementation feedback */
 
 abbr[title], acronym[title] {
     text-decoration: dotted underline;
