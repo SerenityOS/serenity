@@ -119,6 +119,8 @@ public:
     Function<void(Gfx::IntPoint)> on_scroll_to_point;
     Function<void(Gfx::IntRect)> on_scroll_into_view;
     Function<void(Gfx::StandardCursor)> on_cursor_change;
+    Function<void(Gfx::IntPoint, DeprecatedString const&)> on_enter_tooltip_area;
+    Function<void()> on_leave_tooltip_area;
     Function<void(String const& message)> on_request_alert;
     Function<void(String const& message)> on_request_confirm;
     Function<void(String const& message, String const& default_)> on_request_prompt;
@@ -144,8 +146,6 @@ public:
     Function<Gfx::IntRect()> on_minimize_window;
     Function<Gfx::IntRect()> on_fullscreen_window;
 
-    virtual void notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint, DeprecatedString const&) = 0;
-    virtual void notify_server_did_leave_tooltip_area(Badge<WebContentClient>) = 0;
     virtual void notify_server_did_finish_handling_input_event(bool event_was_accepted) = 0;
 
     virtual Gfx::IntRect viewport_rect() const = 0;

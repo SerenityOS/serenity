@@ -128,12 +128,14 @@ void WebContentClient::did_request_scroll_into_view(Gfx::IntRect const& rect)
 
 void WebContentClient::did_enter_tooltip_area(Gfx::IntPoint content_position, DeprecatedString const& title)
 {
-    m_view.notify_server_did_enter_tooltip_area({}, content_position, title);
+    if (m_view.on_enter_tooltip_area)
+        m_view.on_enter_tooltip_area(m_view.to_widget_position(content_position), title);
 }
 
 void WebContentClient::did_leave_tooltip_area()
 {
-    m_view.notify_server_did_leave_tooltip_area({});
+    if (m_view.on_leave_tooltip_area)
+        m_view.on_leave_tooltip_area();
 }
 
 void WebContentClient::did_hover_link(AK::URL const& url)

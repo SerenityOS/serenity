@@ -102,8 +102,6 @@ public:
 private:
     HeadlessWebContentView() = default;
 
-    void notify_server_did_enter_tooltip_area(Badge<WebView::WebContentClient>, Gfx::IntPoint, DeprecatedString const&) override { }
-    void notify_server_did_leave_tooltip_area(Badge<WebView::WebContentClient>) override { }
     void notify_server_did_finish_handling_input_event(bool) override { }
     void update_zoom() override { }
     void create_client(WebView::EnableCallgrindProfiling) override { }

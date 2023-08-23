@@ -82,8 +82,6 @@ private:
     // ^WebView::ViewImplementation
     virtual void create_client(EnableCallgrindProfiling = EnableCallgrindProfiling::No) override;
     virtual void update_zoom() override;
-    virtual void notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint, DeprecatedString const&) override;
-    virtual void notify_server_did_leave_tooltip_area(Badge<WebContentClient>) override;
     virtual void notify_server_did_finish_handling_input_event(bool event_was_accepted) override;
 
     virtual Gfx::IntRect viewport_rect() const override;
