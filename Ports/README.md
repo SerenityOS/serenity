@@ -194,12 +194,11 @@ An array of external files required by the port, one per line. The format of eac
 entry is as follows:
 
 ```text
-URL NAME HASH
+URL HASH
 ```
 
-Where `URL` is the URL from where the file will be downloaded (using `curl`),
-`NAME` is the output name of the downloaded file, and `HASH` is an SHA256 hash
-that will be used for verification.
+Where `URL` is the URL from where the file will be downloaded (using `curl`)
+and `HASH` is the SHA256 hash that will be used for verification.
 
 For example:
 
