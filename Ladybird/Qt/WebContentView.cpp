@@ -89,6 +89,26 @@ WebContentView::WebContentView(StringView webdriver_content_ipc_path, WebView::E
         viewport()->update();
     };
 
+    on_scroll_by_delta = [this](auto x_delta, auto y_delta) {
+        horizontalScrollBar()->setValue(max(0, horizontalScrollBar()->value() + x_delta));
+        verticalScrollBar()->setValue(max(0, verticalScrollBar()->value() + y_delta));
+    };
+
+    on_scroll_to_point = [this](auto position) {
+        horizontalScrollBar()->setValue(position.x());
+        verticalScrollBar()->setValue(position.y());
+    };
+
+    on_scroll_into_view = [this](auto rect) {
+        if (m_viewport_rect.contains(rect))
+            return;
+
+        if (rect.top() < m_viewport_rect.top())
+            verticalScrollBar()->setValue(rect.top());
+        else if (rect.top() > m_viewport_rect.top() && rect.bottom() > m_viewport_rect.bottom())
+            verticalScrollBar()->setValue(rect.bottom() - m_viewport_rect.height());
+    };
+
     on_cursor_change = [this](auto cursor) {
         update_cursor(cursor);
     };
@@ -665,29 +685,6 @@ void WebContentView::update_cursor(Gfx::StandardCursor cursor)
         setCursor(Qt::ArrowCursor);
         break;
     }
-}
-
-void WebContentView::notify_server_did_request_scroll(Badge<WebContentClient>, i32 x_delta, i32 y_delta)
-{
-    horizontalScrollBar()->setValue(max(0, horizontalScrollBar()->value() + x_delta));
-    verticalScrollBar()->setValue(max(0, verticalScrollBar()->value() + y_delta));
-}
-
-void WebContentView::notify_server_did_request_scroll_to(Badge<WebContentClient>, Gfx::IntPoint scroll_position)
-{
-    horizontalScrollBar()->setValue(scroll_position.x());
-    verticalScrollBar()->setValue(scroll_position.y());
-}
-
-void WebContentView::notify_server_did_request_scroll_into_view(Badge<WebContentClient>, Gfx::IntRect const& rect)
-{
-    if (m_viewport_rect.contains(rect))
-        return;
-
-    if (rect.top() < m_viewport_rect.top())
-        verticalScrollBar()->setValue(rect.top());
-    else if (rect.top() > m_viewport_rect.top() && rect.bottom() > m_viewport_rect.bottom())
-        verticalScrollBar()->setValue(rect.bottom() - m_viewport_rect.height());
 }
 
 void WebContentView::notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint content_position, DeprecatedString const& tooltip)

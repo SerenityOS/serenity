@@ -46,6 +46,20 @@ OutOfProcessWebView::OutOfProcessWebView()
             client().async_handle_file_return(0, IPC::File(file.value().stream()), request_id);
     };
 
+    on_scroll_by_delta = [this](auto x_delta, auto y_delta) {
+        horizontal_scrollbar().increase_slider_by(x_delta);
+        vertical_scrollbar().increase_slider_by(y_delta);
+    };
+
+    on_scroll_to_point = [this](auto position) {
+        horizontal_scrollbar().set_value(position.x());
+        vertical_scrollbar().set_value(position.y());
+    };
+
+    on_scroll_into_view = [this](auto rect) {
+        scroll_into_view(rect, true, true);
+    };
+
     on_cursor_change = [this](auto cursor) {
         set_override_cursor(cursor);
     };
@@ -185,23 +199,6 @@ void OutOfProcessWebView::theme_change_event(GUI::ThemeChangeEvent& event)
 void OutOfProcessWebView::screen_rects_change_event(GUI::ScreenRectsChangeEvent& event)
 {
     client().async_update_screen_rects(event.rects(), event.main_screen_index());
-}
-
-void OutOfProcessWebView::notify_server_did_request_scroll(Badge<WebContentClient>, i32 x_delta, i32 y_delta)
-{
-    horizontal_scrollbar().increase_slider_by(x_delta);
-    vertical_scrollbar().increase_slider_by(y_delta);
-}
-
-void OutOfProcessWebView::notify_server_did_request_scroll_to(Badge<WebContentClient>, Gfx::IntPoint scroll_position)
-{
-    horizontal_scrollbar().set_value(scroll_position.x());
-    vertical_scrollbar().set_value(scroll_position.y());
-}
-
-void OutOfProcessWebView::notify_server_did_request_scroll_into_view(Badge<WebContentClient>, Gfx::IntRect const& rect)
-{
-    scroll_into_view(rect, true, true);
 }
 
 void OutOfProcessWebView::notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint, DeprecatedString const& title)

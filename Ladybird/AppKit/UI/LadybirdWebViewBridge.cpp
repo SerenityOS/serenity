@@ -34,6 +34,35 @@ WebViewBridge::WebViewBridge(Vector<Gfx::IntRect> screen_rects, float device_pix
     m_inverse_device_pixel_ratio = 1.0 / device_pixel_ratio;
 
     create_client(WebView::EnableCallgrindProfiling::No);
+
+    on_scroll_by_delta = [this](auto x_delta, auto y_delta) {
+        // FIXME: This currently isn't reached because we do not yet propagate mouse wheel events to WebContent.
+        //        When that is implemented, make sure our mutations to the viewport position here are correct.
+        auto position = m_viewport_rect.location();
+        position.set_x(position.x() + x_delta);
+        position.set_y(position.y() + y_delta);
+
+        if (on_scroll_to_point)
+            on_scroll_to_point(position);
+    };
+
+    on_scroll_into_view = [this](auto rect) {
+        if (m_viewport_rect.contains(rect))
+            return;
+
+        auto position = m_viewport_rect.location();
+
+        if (rect.top() < m_viewport_rect.top()) {
+            position.set_y(rect.top());
+        } else if (rect.top() > m_viewport_rect.top() && rect.bottom() > m_viewport_rect.bottom()) {
+            position.set_y(rect.bottom() - m_viewport_rect.height());
+        } else {
+            return;
+        }
+
+        if (on_scroll_to_point)
+            on_scroll_to_point(position);
+    };
 }
 
 WebViewBridge::~WebViewBridge() = default;
@@ -102,43 +131,6 @@ Optional<WebViewBridge::Paintable> WebViewBridge::paintable()
     if (!bitmap)
         return {};
     return Paintable { *bitmap, bitmap_size };
-}
-
-void WebViewBridge::notify_server_did_request_scroll(Badge<WebView::WebContentClient>, i32 x_delta, i32 y_delta)
-{
-    // FIXME: This currently isn't reached because we do not yet propagate mouse wheel events to WebContent.
-    //        When that is implemented, make sure our mutations to the viewport position here are correct.
-    auto position = m_viewport_rect.location();
-    position.set_x(position.x() + x_delta);
-    position.set_y(position.y() + y_delta);
-
-    if (on_scroll)
-        on_scroll(position);
-}
-
-void WebViewBridge::notify_server_did_request_scroll_to(Badge<WebView::WebContentClient>, Gfx::IntPoint position)
-{
-    if (on_scroll)
-        on_scroll(position);
-}
-
-void WebViewBridge::notify_server_did_request_scroll_into_view(Badge<WebView::WebContentClient>, Gfx::IntRect const& rect)
-{
-    if (m_viewport_rect.contains(rect))
-        return;
-
-    auto position = m_viewport_rect.location();
-
-    if (rect.top() < m_viewport_rect.top()) {
-        position.set_y(rect.top());
-    } else if (rect.top() > m_viewport_rect.top() && rect.bottom() > m_viewport_rect.bottom()) {
-        position.set_y(rect.bottom() - m_viewport_rect.height());
-    } else {
-        return;
-    }
-
-    if (on_scroll)
-        on_scroll(position);
 }
 
 void WebViewBridge::notify_server_did_enter_tooltip_area(Badge<WebView::WebContentClient>, Gfx::IntPoint, DeprecatedString const& tooltip)
