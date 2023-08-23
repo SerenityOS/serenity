@@ -183,15 +183,7 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
     if (!is_visible())
         return;
 
-    auto clip_rect = computed_values().clip();
-    auto should_clip_rect = clip_rect.is_rect() && layout_box().is_absolutely_positioned();
-
     if (phase == PaintPhase::Background) {
-        if (should_clip_rect) {
-            context.painter().save();
-            auto border_box = absolute_border_box_rect();
-            context.painter().add_clip_rect(context.rounded_device_rect(clip_rect.to_rect().resolved(Paintable::layout_node(), border_box.to_type<double>()).to_type<CSSPixels>()).to_type<int>());
-        }
         paint_backdrop_filter(context);
         paint_background(context);
         paint_box_shadow(context);
@@ -228,9 +220,6 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
             paint_all_borders(context, context.rounded_device_rect(borders_rect), border_radius_data, borders_data.value());
         }
     }
-
-    if (phase == PaintPhase::Overlay && should_clip_rect)
-        context.painter().restore();
 
     if (phase == PaintPhase::Overlay && layout_box().document().inspected_layout_node() == &layout_box()) {
         auto content_rect = absolute_rect();
@@ -436,6 +425,17 @@ void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase ph
     auto clip_rect = this->calculate_overflow_clipped_rect();
     auto overflow_x = computed_values().overflow_x();
     auto overflow_y = computed_values().overflow_y();
+
+    auto clip = computed_values().clip();
+    if (clip.is_rect() && layout_box().is_absolutely_positioned()) {
+        auto border_box = absolute_border_box_rect();
+        auto resolved_clip_rect = clip.to_rect().resolved(layout_node(), border_box.to_type<double>()).to_type<CSSPixels>();
+        if (clip_rect.has_value()) {
+            clip_rect->intersect(resolved_clip_rect);
+        } else {
+            clip_rect = resolved_clip_rect;
+        }
+    }
 
     if (!clip_rect.has_value())
         return;
