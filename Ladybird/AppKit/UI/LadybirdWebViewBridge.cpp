@@ -133,18 +133,6 @@ Optional<WebViewBridge::Paintable> WebViewBridge::paintable()
     return Paintable { *bitmap, bitmap_size };
 }
 
-void WebViewBridge::notify_server_did_enter_tooltip_area(Badge<WebView::WebContentClient>, Gfx::IntPoint, DeprecatedString const& tooltip)
-{
-    if (on_tooltip_entered)
-        on_tooltip_entered(tooltip);
-}
-
-void WebViewBridge::notify_server_did_leave_tooltip_area(Badge<WebView::WebContentClient>)
-{
-    if (on_tooltip_left)
-        on_tooltip_left();
-}
-
 void WebViewBridge::notify_server_did_finish_handling_input_event(bool)
 {
 }

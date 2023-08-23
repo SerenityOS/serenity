@@ -323,11 +323,11 @@ struct HideCursor {
         [[self tabController] reload:nil];
     };
 
-    m_web_view_bridge->on_tooltip_entered = [self](auto const& tooltip) {
+    m_web_view_bridge->on_enter_tooltip_area = [self](auto, auto const& tooltip) {
         self.toolTip = Ladybird::string_to_ns_string(tooltip);
     };
 
-    m_web_view_bridge->on_tooltip_left = [self]() {
+    m_web_view_bridge->on_leave_tooltip_area = [self]() {
         self.toolTip = nil;
     };
 

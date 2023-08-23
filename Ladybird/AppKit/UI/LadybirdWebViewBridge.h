@@ -49,14 +49,9 @@ public:
     };
     Optional<Paintable> paintable();
 
-    Function<void(DeprecatedString const&)> on_tooltip_entered;
-    Function<void()> on_tooltip_left;
-
 private:
     WebViewBridge(Vector<Gfx::IntRect> screen_rects, float device_pixel_ratio, Optional<StringView> webdriver_content_ipc_path);
 
-    virtual void notify_server_did_enter_tooltip_area(Badge<WebView::WebContentClient>, Gfx::IntPoint, DeprecatedString const&) override;
-    virtual void notify_server_did_leave_tooltip_area(Badge<WebView::WebContentClient>) override;
     virtual void notify_server_did_finish_handling_input_event(bool event_was_accepted) override;
 
     virtual void update_zoom() override;

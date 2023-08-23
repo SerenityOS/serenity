@@ -63,6 +63,14 @@ OutOfProcessWebView::OutOfProcessWebView()
     on_cursor_change = [this](auto cursor) {
         set_override_cursor(cursor);
     };
+
+    on_enter_tooltip_area = [](auto, auto tooltip) {
+        GUI::Application::the()->show_tooltip(tooltip, nullptr);
+    };
+
+    on_leave_tooltip_area = []() {
+        GUI::Application::the()->hide_tooltip();
+    };
 }
 
 OutOfProcessWebView::~OutOfProcessWebView() = default;
@@ -199,16 +207,6 @@ void OutOfProcessWebView::theme_change_event(GUI::ThemeChangeEvent& event)
 void OutOfProcessWebView::screen_rects_change_event(GUI::ScreenRectsChangeEvent& event)
 {
     client().async_update_screen_rects(event.rects(), event.main_screen_index());
-}
-
-void OutOfProcessWebView::notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint, DeprecatedString const& title)
-{
-    GUI::Application::the()->show_tooltip(title, nullptr);
-}
-
-void OutOfProcessWebView::notify_server_did_leave_tooltip_area(Badge<WebContentClient>)
-{
-    GUI::Application::the()->hide_tooltip();
 }
 
 void OutOfProcessWebView::did_scroll()

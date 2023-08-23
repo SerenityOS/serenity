@@ -112,6 +112,17 @@ WebContentView::WebContentView(StringView webdriver_content_ipc_path, WebView::E
     on_cursor_change = [this](auto cursor) {
         update_cursor(cursor);
     };
+
+    on_enter_tooltip_area = [this](auto position, auto tooltip) {
+        QToolTip::showText(
+            mapToGlobal(QPoint(position.x(), position.y())),
+            qstring_from_ak_deprecated_string(tooltip),
+            this);
+    };
+
+    on_leave_tooltip_area = []() {
+        QToolTip::hideText();
+    };
 }
 
 WebContentView::~WebContentView() = default;
@@ -685,20 +696,6 @@ void WebContentView::update_cursor(Gfx::StandardCursor cursor)
         setCursor(Qt::ArrowCursor);
         break;
     }
-}
-
-void WebContentView::notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint content_position, DeprecatedString const& tooltip)
-{
-    auto widget_position = to_widget_position(content_position);
-    QToolTip::showText(
-        mapToGlobal(QPoint(widget_position.x(), widget_position.y())),
-        qstring_from_ak_deprecated_string(tooltip),
-        this);
-}
-
-void WebContentView::notify_server_did_leave_tooltip_area(Badge<WebContentClient>)
-{
-    QToolTip::hideText();
 }
 
 Gfx::IntRect WebContentView::viewport_rect() const
