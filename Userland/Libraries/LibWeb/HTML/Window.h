@@ -136,6 +136,7 @@ public:
     void set_name(String const&);
     [[nodiscard]] JS::NonnullGCPtr<Location> location();
     JS::NonnullGCPtr<History> history() const;
+    JS::NonnullGCPtr<Navigation> navigation();
     void focus();
 
     JS::NonnullGCPtr<WindowProxy> frames() const;
@@ -225,6 +226,9 @@ private:
     JS::GCPtr<CSS::Screen> m_screen;
     JS::GCPtr<Navigator> m_navigator;
     JS::GCPtr<Location> m_location;
+
+    // https://html.spec.whatwg.org/multipage/nav-history-apis.html#window-navigation-api
+    JS::GCPtr<Navigation> m_navigation;
 
     // https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-api
     // Each Window object is associated with a unique instance of a CustomElementRegistry object, allocated when the Window object is created.
