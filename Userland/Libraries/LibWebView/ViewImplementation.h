@@ -145,8 +145,7 @@ public:
     Function<Gfx::IntRect()> on_maximize_window;
     Function<Gfx::IntRect()> on_minimize_window;
     Function<Gfx::IntRect()> on_fullscreen_window;
-
-    virtual void notify_server_did_finish_handling_input_event(bool event_was_accepted) = 0;
+    Function<void(bool)> on_finish_handling_input_event;
 
     virtual Gfx::IntRect viewport_rect() const = 0;
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const = 0;

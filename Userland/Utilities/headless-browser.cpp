@@ -102,7 +102,6 @@ public:
 private:
     HeadlessWebContentView() = default;
 
-    void notify_server_did_finish_handling_input_event(bool) override { }
     void update_zoom() override { }
     void create_client(WebView::EnableCallgrindProfiling) override { }
 

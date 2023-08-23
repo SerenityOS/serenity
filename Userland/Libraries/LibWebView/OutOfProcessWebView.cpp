@@ -71,6 +71,10 @@ OutOfProcessWebView::OutOfProcessWebView()
     on_leave_tooltip_area = []() {
         GUI::Application::the()->hide_tooltip();
     };
+
+    on_finish_handling_input_event = [this](auto event_was_accepted) {
+        did_finish_handling_input_event(event_was_accepted);
+    };
 }
 
 OutOfProcessWebView::~OutOfProcessWebView() = default;
@@ -350,7 +354,7 @@ void OutOfProcessWebView::process_next_input_event()
         });
 }
 
-void OutOfProcessWebView::notify_server_did_finish_handling_input_event(bool event_was_accepted)
+void OutOfProcessWebView::did_finish_handling_input_event(bool event_was_accepted)
 {
     VERIFY(m_is_awaiting_response_for_input_event);
 
