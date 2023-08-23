@@ -112,17 +112,6 @@ private:
     void notify_server_did_request_scroll_into_view(Badge<WebView::WebContentClient>, Gfx::IntRect const&) override { }
     void notify_server_did_enter_tooltip_area(Badge<WebView::WebContentClient>, Gfx::IntPoint, DeprecatedString const&) override { }
     void notify_server_did_leave_tooltip_area(Badge<WebView::WebContentClient>) override { }
-
-    void notify_server_did_request_file(Badge<WebView::WebContentClient>, DeprecatedString const& path, i32 request_id) override
-    {
-        auto file = Core::File::open(path, Core::File::OpenMode::Read);
-
-        if (file.is_error())
-            client().async_handle_file_return(file.error().code(), {}, request_id);
-        else
-            client().async_handle_file_return(0, IPC::File(*file.value()), request_id);
-    }
-
     void notify_server_did_finish_handling_input_event(bool) override { }
     void update_zoom() override { }
     void create_client(WebView::EnableCallgrindProfiling) override { }

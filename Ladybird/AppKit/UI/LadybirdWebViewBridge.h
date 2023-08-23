@@ -72,7 +72,6 @@ private:
     virtual void notify_server_did_request_scroll_into_view(Badge<WebView::WebContentClient>, Gfx::IntRect const&) override;
     virtual void notify_server_did_enter_tooltip_area(Badge<WebView::WebContentClient>, Gfx::IntPoint, DeprecatedString const&) override;
     virtual void notify_server_did_leave_tooltip_area(Badge<WebView::WebContentClient>) override;
-    virtual void notify_server_did_request_file(Badge<WebView::WebContentClient>, DeprecatedString const& path, i32) override;
     virtual void notify_server_did_finish_handling_input_event(bool event_was_accepted) override;
 
     virtual void update_zoom() override;

@@ -7,7 +7,6 @@
 #include <Ladybird/HelperProcess.h>
 #include <Ladybird/Types.h>
 #include <Ladybird/Utilities.h>
-#include <LibCore/File.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Rect.h>
 #include <LibIPC/File.h>
@@ -196,15 +195,6 @@ void WebViewBridge::notify_server_did_leave_tooltip_area(Badge<WebView::WebConte
 {
     if (on_tooltip_left)
         on_tooltip_left();
-}
-void WebViewBridge::notify_server_did_request_file(Badge<WebView::WebContentClient>, DeprecatedString const& path, i32 request_id)
-{
-    auto file = Core::File::open(path, Core::File::OpenMode::Read);
-
-    if (file.is_error())
-        client().async_handle_file_return(file.error().code(), {}, request_id);
-    else
-        client().async_handle_file_return(0, IPC::File(*file.value()), request_id);
 }
 
 void WebViewBridge::notify_server_did_finish_handling_input_event(bool)

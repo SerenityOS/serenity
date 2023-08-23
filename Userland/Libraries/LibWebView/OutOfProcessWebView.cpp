@@ -28,6 +28,15 @@ OutOfProcessWebView::OutOfProcessWebView()
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
 
     create_client();
+
+    on_request_file = [this](auto const& path, auto request_id) {
+        auto file = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), path);
+
+        if (file.is_error())
+            client().async_handle_file_return(file.error().code(), {}, request_id);
+        else
+            client().async_handle_file_return(0, IPC::File(file.value().stream()), request_id);
+    };
 }
 
 OutOfProcessWebView::~OutOfProcessWebView() = default;
@@ -229,15 +238,6 @@ void OutOfProcessWebView::notify_server_did_enter_tooltip_area(Badge<WebContentC
 void OutOfProcessWebView::notify_server_did_leave_tooltip_area(Badge<WebContentClient>)
 {
     GUI::Application::the()->hide_tooltip();
-}
-
-void OutOfProcessWebView::notify_server_did_request_file(Badge<WebContentClient>, DeprecatedString const& path, i32 request_id)
-{
-    auto file = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), path);
-    if (file.is_error())
-        client().async_handle_file_return(file.error().code(), {}, request_id);
-    else
-        client().async_handle_file_return(0, IPC::File(file.value().stream()), request_id);
 }
 
 void OutOfProcessWebView::did_scroll()
