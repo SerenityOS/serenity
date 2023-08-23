@@ -283,7 +283,7 @@ void Application::set_pending_drop_widget(Widget* widget)
         m_pending_drop_widget->update();
 }
 
-void Application::set_drag_hovered_widget_impl(Widget* widget, Gfx::IntPoint position, Vector<DeprecatedString> mime_types)
+void Application::set_drag_hovered_widget_impl(Widget* widget, Gfx::IntPoint position, Vector<String> mime_types)
 {
     if (widget == m_drag_hovered_widget)
         return;

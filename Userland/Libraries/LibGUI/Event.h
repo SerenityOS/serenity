@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <Kernel/API/KeyCode.h>
@@ -460,7 +461,7 @@ private:
 
 class DragEvent final : public Event {
 public:
-    DragEvent(Type type, Gfx::IntPoint position, Vector<DeprecatedString> mime_types)
+    DragEvent(Type type, Gfx::IntPoint position, Vector<String> mime_types)
         : Event(type)
         , m_position(position)
         , m_mime_types(move(mime_types))
@@ -468,11 +469,11 @@ public:
     }
 
     Gfx::IntPoint position() const { return m_position; }
-    Vector<DeprecatedString> const& mime_types() const { return m_mime_types; }
+    Vector<String> const& mime_types() const { return m_mime_types; }
 
 private:
     Gfx::IntPoint m_position;
-    Vector<DeprecatedString> m_mime_types;
+    Vector<String> m_mime_types;
 };
 
 class DropEvent final : public Event {

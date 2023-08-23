@@ -49,7 +49,7 @@ void SortingProxyModel::model_did_update(unsigned flags)
     update_sort(flags);
 }
 
-bool SortingProxyModel::accepts_drag(ModelIndex const& proxy_index, Vector<DeprecatedString> const& mime_types) const
+bool SortingProxyModel::accepts_drag(ModelIndex const& proxy_index, Vector<String> const& mime_types) const
 {
     return source().accepts_drag(map_to_source(proxy_index), mime_types);
 }

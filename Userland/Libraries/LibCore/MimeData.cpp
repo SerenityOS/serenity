@@ -11,15 +11,6 @@
 
 namespace Core {
 
-Vector<DeprecatedString> MimeData::formats() const
-{
-    Vector<DeprecatedString> mime_types;
-    mime_types.ensure_capacity(m_data.size());
-    for (auto& it : m_data)
-        mime_types.unchecked_append(it.key.to_deprecated_string());
-    return mime_types;
-}
-
 Vector<URL> MimeData::urls() const
 {
     auto it = m_data.find("text/uri-list"sv);

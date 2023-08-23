@@ -24,7 +24,7 @@ public:
     void set_data(String const& mime_type, ByteBuffer&& data) { m_data.set(mime_type, move(data)); }
 
     bool has_format(StringView mime_type) const { return m_data.contains(mime_type); }
-    Vector<DeprecatedString> formats() const;
+    Vector<String> formats() const { return m_data.keys(); }
 
     // Convenience helpers for "text/plain"
     bool has_text() const { return has_format("text/plain"sv); }

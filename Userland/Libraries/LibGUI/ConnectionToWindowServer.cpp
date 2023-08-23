@@ -259,7 +259,7 @@ void ConnectionToWindowServer::mouse_up(i32 window_id, Gfx::IntPoint mouse_posit
         Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseUp, mouse_position, buttons, to_mouse_button(button), modifiers, wheel_delta_x, wheel_delta_y, wheel_raw_delta_x, wheel_raw_delta_y));
 }
 
-void ConnectionToWindowServer::mouse_move(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y, i32 wheel_raw_delta_x, i32 wheel_raw_delta_y, bool is_drag, Vector<DeprecatedString> const& mime_types)
+void ConnectionToWindowServer::mouse_move(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y, i32 wheel_raw_delta_x, i32 wheel_raw_delta_y, bool is_drag, Vector<String> const& mime_types)
 {
     if (auto* window = Window::from_window_id(window_id)) {
         if (is_drag)
