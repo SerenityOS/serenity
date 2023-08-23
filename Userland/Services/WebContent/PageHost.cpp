@@ -10,6 +10,7 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <LibGfx/SystemTheme.h>
+#include <LibWeb/CSS/SystemColor.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/Viewport.h>
@@ -130,7 +131,7 @@ void PageHost::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& targ
     auto background_color = this->background_color();
 
     if (background_color.alpha() < 255)
-        painter.clear_rect(bitmap_rect, palette().base());
+        painter.clear_rect(bitmap_rect, Web::CSS::SystemColor::canvas());
     painter.fill_rect(bitmap_rect, background_color);
 
     if (!document->paintable())
