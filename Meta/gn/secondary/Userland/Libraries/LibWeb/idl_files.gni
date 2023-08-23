@@ -184,6 +184,7 @@ standard_idl_files = [
   "//Userland/Libraries/LibWeb/HTML/MimeTypeArray.idl",
   "//Userland/Libraries/LibWeb/HTML/Navigation.idl",
   "//Userland/Libraries/LibWeb/HTML/NavigationCurrentEntryChangeEvent.idl",
+  "//Userland/Libraries/LibWeb/HTML/NavigationDestination.idl",
   "//Userland/Libraries/LibWeb/HTML/NavigationHistoryEntry.idl",
   "//Userland/Libraries/LibWeb/HTML/Navigator.idl",
   "//Userland/Libraries/LibWeb/HTML/PageTransitionEvent.idl",
