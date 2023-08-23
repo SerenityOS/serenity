@@ -1621,7 +1621,7 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
         @result_expression@ JS::js_null();
     } else {
 )~~~");
-        } else if (type.is_primitive()) {
+        } else if (type.is_primitive() || interface.enumerations.contains(type.name())) {
             scoped_generator.append(R"~~~(
     if (!@value@.has_value()) {
         @result_expression@ JS::js_null();
@@ -1764,6 +1764,9 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
     );
 )~~~");
     } else if (interface.enumerations.contains(type.name())) {
+        // Handle Enum? values, which were null-checked above
+        if (type.is_nullable())
+            scoped_generator.set("value", DeprecatedString::formatted("{}.value()", value));
         if (!interface.extended_attributes.contains("UseNewAKString")) {
             scoped_generator.append(R"~~~(
     @result_expression@ JS::PrimitiveString::create(vm, Bindings::idl_enum_to_deprecated_string(@value@));
