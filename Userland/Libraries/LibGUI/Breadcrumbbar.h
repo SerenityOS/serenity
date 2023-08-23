@@ -19,7 +19,7 @@ public:
     virtual ~Breadcrumbbar() override = default;
 
     void clear_segments();
-    void append_segment(DeprecatedString text, Gfx::Bitmap const* icon = nullptr, DeprecatedString data = {}, DeprecatedString tooltip = {});
+    void append_segment(DeprecatedString text, Gfx::Bitmap const* icon = nullptr, DeprecatedString data = {}, String tooltip = {});
     void remove_end_segments(size_t segment_index);
     void relayout();
 
