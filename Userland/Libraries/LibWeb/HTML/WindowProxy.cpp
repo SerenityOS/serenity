@@ -72,20 +72,19 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> WindowProxy::internal_ge
         // 1. Let index be ! ToUint32(P).
         auto index = property_key.as_number();
 
-        // 2. Let maxProperties be the number of document-tree child browsing contexts of W.
-        auto max_properties = m_window->document_tree_child_browsing_context_count();
+        // 2. Let children be the document-tree child navigables of W's associated Document.
+        auto children = m_window->associated_document().document_tree_child_navigables();
 
         // 3. Let value be undefined.
         Optional<JS::Value> value;
 
-        // 4. If maxProperties is greater than 0 and index is less than maxProperties, then set value to the WindowProxy object of the indexth document-tree child browsing context of W's browsing context, sorted in the order that their browsing context container elements were most recently inserted into W's associated Document, the WindowProxy object of the most recently inserted browsing context container's nested browsing context being last.
-        if (max_properties > 0 && index < max_properties) {
-            JS::MarkedVector<BrowsingContext*> browsing_contexts { vm.heap() };
-            m_window->browsing_context()->for_each_child([&](BrowsingContext& child) {
-                if (child.container() && child.container()->in_a_document_tree())
-                    browsing_contexts.append(&child);
-            });
-            value = JS::Value(browsing_contexts[index]->window_proxy());
+        // 4. If index is less than children's size, then:
+        if (index < children.size()) {
+            // 1. Sort children in ascending order, with navigableA being less than navigableB if navigableA's container was inserted into W's associated Document earlier than navigableB's container was.
+            // NOTE: children are coming sorted in required order from document_tree_child_navigables()
+
+            // 2. Set value to children[index]'s active WindowProxy.
+            value = children[index]->active_window_proxy();
         }
 
         // 5. If value is undefined, then:
