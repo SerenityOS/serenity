@@ -29,6 +29,10 @@ OutOfProcessWebView::OutOfProcessWebView()
 
     create_client();
 
+    on_did_layout = [this](auto content_size) {
+        set_content_size(content_size);
+    };
+
     on_ready_to_paint = [this]() {
         update();
     };
@@ -182,11 +186,6 @@ void OutOfProcessWebView::screen_rects_change_event(GUI::ScreenRectsChangeEvent&
 void OutOfProcessWebView::notify_server_did_request_cursor_change(Badge<WebContentClient>, Gfx::StandardCursor cursor)
 {
     set_override_cursor(cursor);
-}
-
-void OutOfProcessWebView::notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size)
-{
-    set_content_size(content_size);
 }
 
 void OutOfProcessWebView::notify_server_did_request_scroll(Badge<WebContentClient>, i32 x_delta, i32 y_delta)

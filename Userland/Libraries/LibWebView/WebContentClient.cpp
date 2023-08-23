@@ -88,7 +88,8 @@ void WebContentClient::did_request_cursor_change(i32 cursor_type)
 void WebContentClient::did_layout(Gfx::IntSize content_size)
 {
     dbgln_if(SPAM_DEBUG, "handle: WebContentClient::DidLayout! content_size={}", content_size);
-    m_view.notify_server_did_layout({}, content_size);
+    if (m_view.on_did_layout)
+        m_view.on_did_layout(content_size);
 }
 
 void WebContentClient::did_change_title(DeprecatedString const& title)
