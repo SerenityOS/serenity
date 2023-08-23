@@ -52,8 +52,6 @@ public:
 private:
     WebViewBridge(Vector<Gfx::IntRect> screen_rects, float device_pixel_ratio, Optional<StringView> webdriver_content_ipc_path);
 
-    virtual void notify_server_did_finish_handling_input_event(bool event_was_accepted) override;
-
     virtual void update_zoom() override;
     virtual Gfx::IntRect viewport_rect() const override;
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const override;

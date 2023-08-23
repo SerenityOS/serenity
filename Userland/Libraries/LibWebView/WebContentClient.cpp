@@ -380,7 +380,8 @@ void WebContentClient::did_request_file(DeprecatedString const& path, i32 reques
 
 void WebContentClient::did_finish_handling_input_event(bool event_was_accepted)
 {
-    m_view.notify_server_did_finish_handling_input_event(event_was_accepted);
+    if (m_view.on_finish_handling_input_event)
+        m_view.on_finish_handling_input_event(event_was_accepted);
 }
 
 }

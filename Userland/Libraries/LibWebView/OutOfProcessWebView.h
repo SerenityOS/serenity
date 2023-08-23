@@ -82,7 +82,6 @@ private:
     // ^WebView::ViewImplementation
     virtual void create_client(EnableCallgrindProfiling = EnableCallgrindProfiling::No) override;
     virtual void update_zoom() override;
-    virtual void notify_server_did_finish_handling_input_event(bool event_was_accepted) override;
 
     virtual Gfx::IntRect viewport_rect() const override;
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const override;
@@ -91,6 +90,7 @@ private:
     using InputEvent = Variant<GUI::KeyEvent, GUI::MouseEvent>;
     void enqueue_input_event(InputEvent const&);
     void process_next_input_event();
+    void did_finish_handling_input_event(bool event_was_accepted);
 
     bool m_is_awaiting_response_for_input_event { false };
     Queue<InputEvent> m_pending_input_events;

@@ -76,8 +76,6 @@ public:
     };
     void update_palette(PaletteMode = PaletteMode::Default);
 
-    virtual void notify_server_did_finish_handling_input_event(bool event_was_accepted) override;
-
 signals:
     void urls_dropped(QList<QUrl> const&);
 

@@ -133,10 +133,6 @@ Optional<WebViewBridge::Paintable> WebViewBridge::paintable()
     return Paintable { *bitmap, bitmap_size };
 }
 
-void WebViewBridge::notify_server_did_finish_handling_input_event(bool)
-{
-}
-
 void WebViewBridge::update_zoom()
 {
 }
