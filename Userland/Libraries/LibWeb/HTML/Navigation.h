@@ -53,6 +53,9 @@ public:
     bool can_go_back() const;
     bool can_go_forward() const;
 
+    // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-navigation-transition
+    JS::GCPtr<NavigationTransition> transition() const { return m_transition; }
+
     // Event Handlers
     void set_onnavigate(WebIDL::CallbackType*);
     WebIDL::CallbackType* onnavigate();
@@ -85,6 +88,10 @@ private:
     // https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigation-current-entry-index
     // Each Navigation has an associated current entry index, an integer, initially −1.
     i64 m_current_entry_index { -1 };
+
+    // https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-navigation-transition
+    // Each Navigation has a transition, which is a NavigationTransition or null, initially null.
+    JS::GCPtr<NavigationTransition> m_transition { nullptr };
 };
 
 }
