@@ -104,6 +104,7 @@ public:
     Function<void(DeprecatedString const&)> on_title_change;
     Function<void(const AK::URL&, bool)> on_load_start;
     Function<void(const AK::URL&)> on_load_finish;
+    Function<void(DeprecatedString const& path, i32)> on_request_file;
     Function<void()> on_navigate_back;
     Function<void()> on_navigate_forward;
     Function<void()> on_refresh;
@@ -143,7 +144,6 @@ public:
     virtual void notify_server_did_request_scroll_into_view(Badge<WebContentClient>, Gfx::IntRect const&) = 0;
     virtual void notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint, DeprecatedString const&) = 0;
     virtual void notify_server_did_leave_tooltip_area(Badge<WebContentClient>) = 0;
-    virtual void notify_server_did_request_file(Badge<WebContentClient>, DeprecatedString const& path, i32) = 0;
     virtual void notify_server_did_finish_handling_input_event(bool event_was_accepted) = 0;
 
     virtual Gfx::IntRect viewport_rect() const = 0;

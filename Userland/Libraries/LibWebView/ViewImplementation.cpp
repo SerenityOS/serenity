@@ -25,6 +25,15 @@ ViewImplementation::ViewImplementation()
         // happen to be visiting crashy websites a lot.
         this->m_crash_count = 0;
     }).release_value_but_fixme_should_propagate_errors();
+
+    on_request_file = [this](auto const& path, auto request_id) {
+        auto file = Core::File::open(path, Core::File::OpenMode::Read);
+
+        if (file.is_error())
+            client().async_handle_file_return(file.error().code(), {}, request_id);
+        else
+            client().async_handle_file_return(0, IPC::File(*file.value()), request_id);
+    };
 }
 
 WebContentClient& ViewImplementation::client()
