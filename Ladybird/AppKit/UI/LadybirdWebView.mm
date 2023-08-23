@@ -860,6 +860,7 @@ static void copy_text_to_clipboard(StringView text)
     [image drawInRect:image_rect];
 
     CGContextRestoreGState(context);
+    CGDataProviderRelease(provider);
     CGImageRelease(bitmap_image);
 
     [super drawRect:rect];

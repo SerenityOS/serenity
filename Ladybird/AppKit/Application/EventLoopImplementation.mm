@@ -89,6 +89,7 @@ bool CFEventLoopManager::unregister_timer(int timer_id)
 
     if (auto timer = thread_data.timers.take(timer_id); timer.has_value()) {
         CFRunLoopTimerInvalidate(*timer);
+        CFRelease(*timer);
         return true;
     }
 
@@ -139,6 +140,8 @@ void CFEventLoopManager::register_notifier(Core::Notifier& notifier)
 
     auto* source = CFSocketCreateRunLoopSource(kCFAllocatorDefault, socket, 0);
     CFRunLoopAddSource(CFRunLoopGetCurrent(), source, kCFRunLoopDefaultMode);
+
+    CFRelease(socket);
 
     ThreadData::the().notifiers.set(&notifier, source);
 }
