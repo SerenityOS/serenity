@@ -39,8 +39,7 @@ HTMLImageElement::HTMLImageElement(DOM::Document& document, DOM::QualifiedName q
     m_animation_timer = Core::Timer::try_create().release_value_but_fixme_should_propagate_errors();
     m_animation_timer->on_timeout = [this] { animate(); };
 
-    if (auto* browsing_context = document.browsing_context())
-        browsing_context->register_viewport_client(*this);
+    document.register_viewport_client(*this);
 }
 
 HTMLImageElement::~HTMLImageElement() = default;
@@ -48,8 +47,7 @@ HTMLImageElement::~HTMLImageElement() = default;
 void HTMLImageElement::finalize()
 {
     Base::finalize();
-    if (auto* browsing_context = document().browsing_context())
-        browsing_context->unregister_viewport_client(*this);
+    document().unregister_viewport_client(*this);
 }
 
 void HTMLImageElement::initialize(JS::Realm& realm)
@@ -58,6 +56,12 @@ void HTMLImageElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLImageElementPrototype>(realm, "HTMLImageElement"));
 
     m_current_request = ImageRequest::create(realm, *document().page());
+}
+
+void HTMLImageElement::adopted_from(DOM::Document& old_document)
+{
+    old_document.unregister_viewport_client(*this);
+    document().register_viewport_client(*this);
 }
 
 void HTMLImageElement::visit_edges(Cell::Visitor& visitor)
@@ -630,7 +634,7 @@ void HTMLImageElement::add_callbacks_to_image_request(JS::NonnullGCPtr<ImageRequ
         });
 }
 
-void HTMLImageElement::browsing_context_did_set_viewport_rect(CSSPixelRect const& viewport_rect)
+void HTMLImageElement::did_set_viewport_rect(CSSPixelRect const& viewport_rect)
 {
     if (viewport_rect.size() == m_last_seen_viewport_size)
         return;

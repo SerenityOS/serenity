@@ -1007,7 +1007,7 @@ void Document::update_layout()
     layout_state.commit(*m_layout_root);
 
     // Broadcast the current viewport rect to any new paintables, so they know whether they're visible or not.
-    browsing_context()->inform_all_viewport_clients_about_the_current_viewport_rect();
+    inform_all_viewport_clients_about_the_current_viewport_rect();
 
     browsing_context()->set_needs_display();
 
@@ -3021,6 +3021,24 @@ JS::NonnullGCPtr<CSS::VisualViewport> Document::visual_viewport()
     if (!m_visual_viewport)
         m_visual_viewport = CSS::VisualViewport::create(*this);
     return *m_visual_viewport;
+}
+
+void Document::register_viewport_client(ViewportClient& client)
+{
+    auto result = m_viewport_clients.set(&client);
+    VERIFY(result == AK::HashSetResult::InsertedNewEntry);
+}
+
+void Document::unregister_viewport_client(ViewportClient& client)
+{
+    bool was_removed = m_viewport_clients.remove(&client);
+    VERIFY(was_removed);
+}
+
+void Document::inform_all_viewport_clients_about_the_current_viewport_rect()
+{
+    for (auto* client : m_viewport_clients)
+        client->did_set_viewport_rect(viewport_rect());
 }
 
 void Document::register_intersection_observer(Badge<IntersectionObserver::IntersectionObserver>, IntersectionObserver::IntersectionObserver& observer)

@@ -6,15 +6,15 @@
 
 #pragma once
 
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/Forward.h>
-#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/ReplacedBox.h>
 
 namespace Web::Layout {
 
 class VideoBox final
     : public ReplacedBox
-    , public HTML::BrowsingContext::ViewportClient {
+    , public DOM::Document::ViewportClient {
     JS_CELL(VideoBox, ReplacedBox);
 
 public:
@@ -28,8 +28,8 @@ public:
 private:
     VideoBox(DOM::Document&, DOM::Element&, NonnullRefPtr<CSS::StyleProperties>);
 
-    // ^BrowsingContext::ViewportClient
-    virtual void browsing_context_did_set_viewport_rect(CSSPixelRect const&) final;
+    // ^Document::ViewportClient
+    virtual void did_set_viewport_rect(CSSPixelRect const&) final;
 
     // ^JS::Cell
     virtual void finalize() override;

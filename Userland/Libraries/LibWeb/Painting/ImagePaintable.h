@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Painting/PaintableBox.h>
 
@@ -14,7 +13,7 @@ namespace Web::Painting {
 
 class ImagePaintable final
     : public PaintableBox
-    , public HTML::BrowsingContext::ViewportClient {
+    , public DOM::Document::ViewportClient {
     JS_CELL(ImagePaintable, PaintableBox);
 
 public:
@@ -28,8 +27,8 @@ private:
     // ^JS::Cell
     virtual void finalize() override;
 
-    // ^BrowsingContext::ViewportClient
-    virtual void browsing_context_did_set_viewport_rect(CSSPixelRect const&) final;
+    // ^Document::ViewportClient
+    virtual void did_set_viewport_rect(CSSPixelRect const&) final;
 
     ImagePaintable(Layout::ImageBox const&);
 };

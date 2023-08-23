@@ -392,6 +392,15 @@ public:
     JS::NonnullGCPtr<CSS::VisualViewport> visual_viewport();
     [[nodiscard]] CSSPixelRect viewport_rect() const;
 
+    class ViewportClient {
+    public:
+        virtual ~ViewportClient() = default;
+        virtual void did_set_viewport_rect(CSSPixelRect const&) = 0;
+    };
+    void register_viewport_client(ViewportClient&);
+    void unregister_viewport_client(ViewportClient&);
+    void inform_all_viewport_clients_about_the_current_viewport_rect();
+
     bool has_focus() const;
 
     void set_parser(Badge<HTML::HTMLParser>, HTML::HTMLParser&);
@@ -623,6 +632,8 @@ private:
 
     // Used by run_the_resize_steps().
     Gfx::IntSize m_last_viewport_size;
+
+    HashTable<ViewportClient*> m_viewport_clients;
 
     // https://w3c.github.io/csswg-drafts/cssom-view-1/#document-pending-scroll-event-targets
     Vector<JS::NonnullGCPtr<EventTarget>> m_pending_scroll_event_targets;
