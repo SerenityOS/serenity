@@ -125,6 +125,7 @@ source_set("HTML") {
     "NavigableContainer.cpp",
     "Navigation.cpp",
     "NavigationCurrentEntryChangeEvent.cpp",
+    "NavigationDestination.cpp",
     "NavigationHistoryEntry.cpp",
     "Navigator.cpp",
     "NavigatorID.cpp",

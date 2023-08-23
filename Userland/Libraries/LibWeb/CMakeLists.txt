@@ -351,6 +351,7 @@ set(SOURCES
     HTML/Navigable.cpp
     HTML/NavigableContainer.cpp
     HTML/Navigation.cpp
+    HTML/NavigationDestination.cpp
     HTML/NavigationCurrentEntryChangeEvent.cpp
     HTML/NavigationHistoryEntry.cpp
     HTML/Navigator.cpp
