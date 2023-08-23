@@ -127,12 +127,12 @@ public:
     Function<void(String const& message)> on_request_set_prompt_text;
     Function<void()> on_request_accept_dialog;
     Function<void()> on_request_dismiss_dialog;
-    Function<void(const AK::URL&, DeprecatedString const&)> on_get_source;
-    Function<void(DeprecatedString const&)> on_get_dom_tree;
-    Function<void(i32 node_id, DeprecatedString const& computed_style, DeprecatedString const& resolved_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing, DeprecatedString const& aria_properties_state)> on_get_dom_node_properties;
-    Function<void(DeprecatedString const&)> on_get_accessibility_tree;
-    Function<void(i32 message_id)> on_js_console_new_message;
-    Function<void(i32 start_index, Vector<DeprecatedString> const& message_types, Vector<DeprecatedString> const& messages)> on_get_js_console_messages;
+    Function<void(const AK::URL&, DeprecatedString const&)> on_received_source;
+    Function<void(DeprecatedString const&)> on_received_dom_tree;
+    Function<void(i32 node_id, DeprecatedString const& computed_style, DeprecatedString const& resolved_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing, DeprecatedString const& aria_properties_state)> on_received_dom_node_properties;
+    Function<void(DeprecatedString const&)> on_received_accessibility_tree;
+    Function<void(i32 message_id)> on_received_console_message;
+    Function<void(i32 start_index, Vector<DeprecatedString> const& message_types, Vector<DeprecatedString> const& messages)> on_received_console_messages;
     Function<Vector<Web::Cookie::Cookie>(AK::URL const& url)> on_get_all_cookies;
     Function<Optional<Web::Cookie::Cookie>(AK::URL const& url, DeprecatedString const& name)> on_get_named_cookie;
     Function<DeprecatedString(const AK::URL& url, Web::Cookie::Source source)> on_get_cookie;
