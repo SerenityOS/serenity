@@ -18,4 +18,5 @@ configopts+=(
     "--with-libuv"
     "--with-sysroot=${SERENITY_INSTALL_ROOT}"
     '--without-libcares'
+    '--without-sqlite3'
 )
