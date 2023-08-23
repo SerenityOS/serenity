@@ -23,16 +23,16 @@ JS::NonnullGCPtr<ImagePaintable> ImagePaintable::create(Layout::ImageBox const& 
 ImagePaintable::ImagePaintable(Layout::ImageBox const& layout_box)
     : PaintableBox(layout_box)
 {
-    browsing_context().register_viewport_client(*this);
+    const_cast<DOM::Document&>(layout_box.document()).register_viewport_client(*this);
 }
 
 void ImagePaintable::finalize()
 {
     Base::finalize();
 
-    // NOTE: We unregister from the browsing context in finalize() to avoid trouble
-    //       in the scenario where our BrowsingContext has already been swept by GC.
-    browsing_context().unregister_viewport_client(*this);
+    // NOTE: We unregister from the document in finalize() to avoid trouble
+    //       in the scenario where our Document has already been swept by GC.
+    document().unregister_viewport_client(*this);
 }
 
 Layout::ImageBox const& ImagePaintable::layout_box() const
@@ -133,7 +133,7 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
     }
 }
 
-void ImagePaintable::browsing_context_did_set_viewport_rect(CSSPixelRect const& viewport_rect)
+void ImagePaintable::did_set_viewport_rect(CSSPixelRect const& viewport_rect)
 {
     const_cast<Layout::ImageProvider&>(layout_box().image_provider()).set_visible_in_viewport(viewport_rect.intersects(absolute_rect()));
 }

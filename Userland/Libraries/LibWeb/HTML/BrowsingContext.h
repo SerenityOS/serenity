@@ -118,14 +118,6 @@ public:
         return IterationDecision::Continue;
     }
 
-    class ViewportClient {
-    public:
-        virtual ~ViewportClient() = default;
-        virtual void browsing_context_did_set_viewport_rect(CSSPixelRect const&) = 0;
-    };
-    void register_viewport_client(ViewportClient&);
-    void unregister_viewport_client(ViewportClient&);
-
     bool is_top_level() const;
     bool is_focused_context() const;
 
@@ -277,8 +269,6 @@ public:
     virtual String const& window_handle() const override { return m_window_handle; }
     virtual void set_window_handle(String handle) override { m_window_handle = move(handle); }
 
-    void inform_all_viewport_clients_about_the_current_viewport_rect();
-
 private:
     explicit BrowsingContext(Page&, HTML::NavigableContainer*);
 
@@ -323,8 +313,6 @@ private:
     DOM::Position m_cursor_position;
     RefPtr<Core::Timer> m_cursor_blink_timer;
     bool m_cursor_blink_state { false };
-
-    HashTable<ViewportClient*> m_viewport_clients;
 
     HashMap<AK::URL, size_t> m_frame_nesting_levels;
     DeprecatedString m_name;

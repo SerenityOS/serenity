@@ -13,16 +13,16 @@ namespace Web::Layout {
 VideoBox::VideoBox(DOM::Document& document, DOM::Element& element, NonnullRefPtr<CSS::StyleProperties> style)
     : ReplacedBox(document, element, move(style))
 {
-    browsing_context().register_viewport_client(*this);
+    document.register_viewport_client(*this);
 }
 
 void VideoBox::finalize()
 {
     Base::finalize();
 
-    // NOTE: We unregister from the browsing context in finalize() to avoid trouble
-    //       in the scenario where our BrowsingContext has already been swept by GC.
-    browsing_context().unregister_viewport_client(*this);
+    // NOTE: We unregister from the document in finalize() to avoid trouble
+    //       in the scenario where our Document has already been swept by GC.
+    document().unregister_viewport_client(*this);
 }
 
 HTML::HTMLVideoElement& VideoBox::dom_node()
@@ -49,7 +49,7 @@ void VideoBox::prepare_for_replaced_layout()
         set_natural_aspect_ratio({});
 }
 
-void VideoBox::browsing_context_did_set_viewport_rect(CSSPixelRect const&)
+void VideoBox::did_set_viewport_rect(CSSPixelRect const&)
 {
     // FIXME: Several steps in HTMLMediaElement indicate we may optionally handle whether the media object
     //        is in view. Implement those steps.

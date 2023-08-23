@@ -539,12 +539,6 @@ void BrowsingContext::set_active_document(JS::NonnullGCPtr<DOM::Document> docume
         previously_active_document->did_stop_being_active_document_in_browsing_context({});
 }
 
-void BrowsingContext::inform_all_viewport_clients_about_the_current_viewport_rect()
-{
-    for (auto* client : m_viewport_clients)
-        client->browsing_context_did_set_viewport_rect(viewport_rect());
-}
-
 void BrowsingContext::set_viewport_rect(CSSPixelRect const& rect)
 {
     bool did_change = false;
@@ -565,9 +559,8 @@ void BrowsingContext::set_viewport_rect(CSSPixelRect const& rect)
         did_change = true;
     }
 
-    if (did_change) {
-        for (auto* client : m_viewport_clients)
-            client->browsing_context_did_set_viewport_rect(rect);
+    if (did_change && active_document()) {
+        active_document()->inform_all_viewport_clients_about_the_current_viewport_rect();
     }
 
     // Schedule the HTML event loop to ensure that a `resize` event gets fired.
@@ -585,8 +578,9 @@ void BrowsingContext::set_size(CSSPixelSize size)
         document->set_needs_layout();
     }
 
-    for (auto* client : m_viewport_clients)
-        client->browsing_context_did_set_viewport_rect(viewport_rect());
+    if (auto* document = active_document()) {
+        document->inform_all_viewport_clients_about_the_current_viewport_rect();
+    }
 
     // Schedule the HTML event loop to ensure that a `resize` event gets fired.
     HTML::main_thread_event_loop().schedule();
@@ -750,18 +744,6 @@ void BrowsingContext::select_all()
     if (!selection)
         return;
     (void)selection->select_all_children(*document->body());
-}
-
-void BrowsingContext::register_viewport_client(ViewportClient& client)
-{
-    auto result = m_viewport_clients.set(&client);
-    VERIFY(result == AK::HashSetResult::InsertedNewEntry);
-}
-
-void BrowsingContext::unregister_viewport_client(ViewportClient& client)
-{
-    bool was_removed = m_viewport_clients.remove(&client);
-    VERIFY(was_removed);
 }
 
 void BrowsingContext::register_frame_nesting(AK::URL const& url)
