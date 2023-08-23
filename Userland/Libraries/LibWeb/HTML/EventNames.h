@@ -34,6 +34,7 @@ namespace Web::HTML::EventNames {
     __ENUMERATE_HTML_EVENT(contextmenu)              \
     __ENUMERATE_HTML_EVENT(copy)                     \
     __ENUMERATE_HTML_EVENT(cuechange)                \
+    __ENUMERATE_HTML_EVENT(dispose)                  \
     __ENUMERATE_HTML_EVENT(cut)                      \
     __ENUMERATE_HTML_EVENT(DOMContentLoaded)         \
     __ENUMERATE_HTML_EVENT(drag)                     \
