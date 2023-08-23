@@ -76,7 +76,6 @@ public:
     };
     void update_palette(PaletteMode = PaletteMode::Default);
 
-    virtual void notify_server_did_request_cursor_change(Badge<WebContentClient>, Gfx::StandardCursor cursor) override;
     virtual void notify_server_did_request_scroll(Badge<WebContentClient>, i32, i32) override;
     virtual void notify_server_did_request_scroll_to(Badge<WebContentClient>, Gfx::IntPoint) override;
     virtual void notify_server_did_request_scroll_into_view(Badge<WebContentClient>, Gfx::IntRect const&) override;
@@ -96,6 +95,7 @@ private:
     virtual Gfx::IntPoint to_widget_position(Gfx::IntPoint content_position) const override;
 
     void update_viewport_rect();
+    void update_cursor(Gfx::StandardCursor cursor);
 
     qreal m_inverse_pixel_scaling_ratio { 1.0 };
     bool m_should_show_line_box_borders { false };

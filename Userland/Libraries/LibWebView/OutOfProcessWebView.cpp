@@ -45,6 +45,10 @@ OutOfProcessWebView::OutOfProcessWebView()
         else
             client().async_handle_file_return(0, IPC::File(file.value().stream()), request_id);
     };
+
+    on_cursor_change = [this](auto cursor) {
+        set_override_cursor(cursor);
+    };
 }
 
 OutOfProcessWebView::~OutOfProcessWebView() = default;
@@ -181,11 +185,6 @@ void OutOfProcessWebView::theme_change_event(GUI::ThemeChangeEvent& event)
 void OutOfProcessWebView::screen_rects_change_event(GUI::ScreenRectsChangeEvent& event)
 {
     client().async_update_screen_rects(event.rects(), event.main_screen_index());
-}
-
-void OutOfProcessWebView::notify_server_did_request_cursor_change(Badge<WebContentClient>, Gfx::StandardCursor cursor)
-{
-    set_override_cursor(cursor);
 }
 
 void OutOfProcessWebView::notify_server_did_request_scroll(Badge<WebContentClient>, i32 x_delta, i32 y_delta)

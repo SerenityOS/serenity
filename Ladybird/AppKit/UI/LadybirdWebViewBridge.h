@@ -51,15 +51,12 @@ public:
 
     Function<void(Gfx::IntPoint)> on_scroll;
 
-    Function<void(Gfx::StandardCursor)> on_cursor_change;
-
     Function<void(DeprecatedString const&)> on_tooltip_entered;
     Function<void()> on_tooltip_left;
 
 private:
     WebViewBridge(Vector<Gfx::IntRect> screen_rects, float device_pixel_ratio, Optional<StringView> webdriver_content_ipc_path);
 
-    virtual void notify_server_did_request_cursor_change(Badge<WebView::WebContentClient>, Gfx::StandardCursor cursor) override;
     virtual void notify_server_did_request_scroll(Badge<WebView::WebContentClient>, i32, i32) override;
     virtual void notify_server_did_request_scroll_to(Badge<WebView::WebContentClient>, Gfx::IntPoint) override;
     virtual void notify_server_did_request_scroll_into_view(Badge<WebView::WebContentClient>, Gfx::IntRect const&) override;

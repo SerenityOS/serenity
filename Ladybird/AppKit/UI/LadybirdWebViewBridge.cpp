@@ -104,12 +104,6 @@ Optional<WebViewBridge::Paintable> WebViewBridge::paintable()
     return Paintable { *bitmap, bitmap_size };
 }
 
-void WebViewBridge::notify_server_did_request_cursor_change(Badge<WebView::WebContentClient>, Gfx::StandardCursor cursor)
-{
-    if (on_cursor_change)
-        on_cursor_change(cursor);
-}
-
 void WebViewBridge::notify_server_did_request_scroll(Badge<WebView::WebContentClient>, i32 x_delta, i32 y_delta)
 {
     // FIXME: This currently isn't reached because we do not yet propagate mouse wheel events to WebContent.

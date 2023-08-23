@@ -115,6 +115,7 @@ public:
     Function<void()> on_navigate_forward;
     Function<void()> on_refresh;
     Function<void(Gfx::Bitmap const&)> on_favicon_change;
+    Function<void(Gfx::StandardCursor)> on_cursor_change;
     Function<void(String const& message)> on_request_alert;
     Function<void(String const& message)> on_request_confirm;
     Function<void(String const& message, String const& default_)> on_request_prompt;
@@ -140,7 +141,6 @@ public:
     Function<Gfx::IntRect()> on_minimize_window;
     Function<Gfx::IntRect()> on_fullscreen_window;
 
-    virtual void notify_server_did_request_cursor_change(Badge<WebContentClient>, Gfx::StandardCursor cursor) = 0;
     virtual void notify_server_did_request_scroll(Badge<WebContentClient>, i32, i32) = 0;
     virtual void notify_server_did_request_scroll_to(Badge<WebContentClient>, Gfx::IntPoint) = 0;
     virtual void notify_server_did_request_scroll_into_view(Badge<WebContentClient>, Gfx::IntRect const&) = 0;
