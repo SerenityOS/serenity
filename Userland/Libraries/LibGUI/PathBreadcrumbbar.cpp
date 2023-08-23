@@ -110,7 +110,7 @@ void PathBreadcrumbbar::set_current_path(DeprecatedString const& new_path)
     } else {
         m_breadcrumbbar->clear_segments();
 
-        m_breadcrumbbar->append_segment("/", GUI::FileIconProvider::icon_for_path("/"sv).bitmap_for_size(16), "/", "/");
+        m_breadcrumbbar->append_segment("/", GUI::FileIconProvider::icon_for_path("/"sv).bitmap_for_size(16), "/", "/"_string);
         StringBuilder builder;
 
         for (auto& part : lexical_path.parts()) {
@@ -118,7 +118,7 @@ void PathBreadcrumbbar::set_current_path(DeprecatedString const& new_path)
             builder.append('/');
             builder.append(part);
 
-            m_breadcrumbbar->append_segment(part, GUI::FileIconProvider::icon_for_path(builder.string_view()).bitmap_for_size(16), builder.string_view(), builder.string_view());
+            m_breadcrumbbar->append_segment(part, GUI::FileIconProvider::icon_for_path(builder.string_view()).bitmap_for_size(16), builder.string_view(), MUST(builder.to_string()));
         }
 
         m_breadcrumbbar->set_selected_segment(m_breadcrumbbar->segment_count() - 1);

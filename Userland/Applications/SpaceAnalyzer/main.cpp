@@ -154,7 +154,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 if (tree_map_widget.viewpoint() == 0)
                     window->set_title("/ - SpaceAnalyzer");
 
-                breadcrumbbar.append_segment("/", GUI::FileIconProvider::icon_for_path("/"sv).bitmap_for_size(16), "/", "/");
+                breadcrumbbar.append_segment("/", GUI::FileIconProvider::icon_for_path("/"sv).bitmap_for_size(16), "/", "/"_string);
                 continue;
             }
 
@@ -167,7 +167,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (k == tree_map_widget.viewpoint())
                 window->set_title(DeprecatedString::formatted("{} - SpaceAnalyzer", builder.string_view()));
 
-            breadcrumbbar.append_segment(node->name(), GUI::FileIconProvider::icon_for_path(builder.string_view()).bitmap_for_size(16), builder.string_view(), builder.string_view());
+            breadcrumbbar.append_segment(node->name(), GUI::FileIconProvider::icon_for_path(builder.string_view()).bitmap_for_size(16), builder.string_view(), MUST(builder.to_string()));
         }
         breadcrumbbar.set_selected_segment(tree_map_widget.viewpoint());
     };
