@@ -24,6 +24,7 @@ public:
 
     ValueID id() const { return m_id; }
 
+    static bool is_color(ValueID);
     virtual bool has_color() const override;
     virtual Color to_color(Optional<Layout::NodeWithStyle const&> node) const override;
     virtual String to_string() const override;

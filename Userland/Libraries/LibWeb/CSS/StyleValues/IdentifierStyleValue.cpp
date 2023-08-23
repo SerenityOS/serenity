@@ -19,9 +19,9 @@ String IdentifierStyleValue::to_string() const
     return MUST(String::from_utf8(CSS::string_from_value_id(m_id)));
 }
 
-bool IdentifierStyleValue::has_color() const
+bool IdentifierStyleValue::is_color(ValueID value_id)
 {
-    switch (m_id) {
+    switch (value_id) {
     case ValueID::Currentcolor:
     case ValueID::LibwebLink:
     case ValueID::LibwebPaletteActiveLink:
@@ -82,6 +82,11 @@ bool IdentifierStyleValue::has_color() const
     default:
         return false;
     }
+}
+
+bool IdentifierStyleValue::has_color() const
+{
+    return is_color(m_id);
 }
 
 Color IdentifierStyleValue::to_color(Optional<Layout::NodeWithStyle const&> node) const
