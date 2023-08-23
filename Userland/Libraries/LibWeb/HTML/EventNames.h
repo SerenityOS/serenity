@@ -62,6 +62,9 @@ namespace Web::HTML::EventNames {
     __ENUMERATE_HTML_EVENT(loadstart)                \
     __ENUMERATE_HTML_EVENT(message)                  \
     __ENUMERATE_HTML_EVENT(messageerror)             \
+    __ENUMERATE_HTML_EVENT(navigate)                 \
+    __ENUMERATE_HTML_EVENT(navigatesuccess)          \
+    __ENUMERATE_HTML_EVENT(navigateerror)            \
     __ENUMERATE_HTML_EVENT(offline)                  \
     __ENUMERATE_HTML_EVENT(online)                   \
     __ENUMERATE_HTML_EVENT(open)                     \

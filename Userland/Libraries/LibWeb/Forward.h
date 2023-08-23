@@ -414,6 +414,7 @@ class MimeType;
 class MimeTypeArray;
 class Navigable;
 class NavigableContainer;
+class Navigation;
 class NavigationCurrentEntryChangeEvent;
 class NavigationHistoryEntry;
 class Navigator;
