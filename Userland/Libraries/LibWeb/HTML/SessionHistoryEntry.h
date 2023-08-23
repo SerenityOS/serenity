@@ -50,10 +50,6 @@ struct SessionHistoryEntry final : public JS::Cell {
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#she-document-state
     JS::GCPtr<HTML::DocumentState> document_state;
 
-    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#she-serialized-state
-    // serialized state, which is serialized state, initially StructuredSerializeForStorage(null).
-    Optional<DeprecatedString> serialized_state;
-
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#she-scroll-restoration-mode
     // scroll restoration mode, a scroll restoration mode, initially "auto"
     ScrollRestorationMode scroll_restoration_mode { ScrollRestorationMode::Auto };
