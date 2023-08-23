@@ -417,6 +417,7 @@ class NavigableContainer;
 class Navigation;
 class NavigationCurrentEntryChangeEvent;
 class NavigationHistoryEntry;
+class NavigationTransition;
 class Navigator;
 struct NavigationParams;
 class Origin;

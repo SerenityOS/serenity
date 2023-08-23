@@ -12,6 +12,7 @@
 #include <LibWeb/HTML/Navigation.h>
 #include <LibWeb/HTML/NavigationCurrentEntryChangeEvent.h>
 #include <LibWeb/HTML/NavigationHistoryEntry.h>
+#include <LibWeb/HTML/NavigationTransition.h>
 #include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
@@ -39,6 +40,7 @@ void Navigation::visit_edges(JS::Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     for (auto& entry : m_entry_list)
         visitor.visit(entry);
+    visitor.visit(m_transition);
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-navigation-entries

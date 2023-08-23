@@ -354,6 +354,7 @@ set(SOURCES
     HTML/NavigationDestination.cpp
     HTML/NavigationCurrentEntryChangeEvent.cpp
     HTML/NavigationHistoryEntry.cpp
+    HTML/NavigationTransition.cpp
     HTML/Navigator.cpp
     HTML/NavigatorID.cpp
     HTML/PageTransitionEvent.cpp

@@ -186,6 +186,7 @@ standard_idl_files = [
   "//Userland/Libraries/LibWeb/HTML/NavigationCurrentEntryChangeEvent.idl",
   "//Userland/Libraries/LibWeb/HTML/NavigationDestination.idl",
   "//Userland/Libraries/LibWeb/HTML/NavigationHistoryEntry.idl",
+  "//Userland/Libraries/LibWeb/HTML/NavigationTransition.idl",
   "//Userland/Libraries/LibWeb/HTML/Navigator.idl",
   "//Userland/Libraries/LibWeb/HTML/PageTransitionEvent.idl",
   "//Userland/Libraries/LibWeb/HTML/Path2D.idl",
