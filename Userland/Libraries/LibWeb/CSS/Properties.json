@@ -652,7 +652,7 @@
     ]
   },
   "clip": {
-    "inherited": true,
+    "inherited": false,
     "initial": "auto",
     "valid-identifiers": [
       "auto"
