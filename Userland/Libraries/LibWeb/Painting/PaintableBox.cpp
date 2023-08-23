@@ -1,12 +1,13 @@
 /*
  * Copyright (c) 2022-2023, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/GenericShorthands.h>
 #include <LibUnicode/CharacterTypes.h>
+#include <LibWeb/CSS/SystemColor.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/Layout/BlockContainer.h>
@@ -616,10 +617,10 @@ static void paint_text_fragment(PaintContext& context, Layout::TextNode const& t
 
         auto selection_rect = context.enclosing_device_rect(fragment.selection_rect(text_node.font())).to_type<int>();
         if (!selection_rect.is_empty()) {
-            painter.fill_rect(selection_rect, context.palette().selection());
+            painter.fill_rect(selection_rect, CSS::SystemColor::highlight());
             Gfx::PainterStateSaver saver(painter);
             painter.add_clip_rect(selection_rect);
-            painter.draw_text_run(baseline_start.to_type<int>(), view, scaled_font, context.palette().selection_text());
+            painter.draw_text_run(baseline_start.to_type<int>(), view, scaled_font, CSS::SystemColor::highlight_text());
         }
 
         paint_text_decoration(context, painter, text_node, fragment);

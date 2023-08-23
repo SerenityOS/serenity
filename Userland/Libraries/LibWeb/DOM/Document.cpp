@@ -20,6 +20,7 @@
 #include <LibWeb/CSS/MediaQueryList.h>
 #include <LibWeb/CSS/MediaQueryListEvent.h>
 #include <LibWeb/CSS/StyleComputer.h>
+#include <LibWeb/CSS/SystemColor.h>
 #include <LibWeb/CSS/VisualViewport.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Attr.h>
@@ -1296,27 +1297,21 @@ Color Document::link_color() const
 {
     if (m_link_color.has_value())
         return m_link_color.value();
-    if (!page())
-        return Color::Blue;
-    return page()->palette().link();
+    return CSS::SystemColor::link_text();
 }
 
 Color Document::active_link_color() const
 {
     if (m_active_link_color.has_value())
         return m_active_link_color.value();
-    if (!page())
-        return Color::Red;
-    return page()->palette().active_link();
+    return CSS::SystemColor::active_text();
 }
 
 Color Document::visited_link_color() const
 {
     if (m_visited_link_color.has_value())
         return m_visited_link_color.value();
-    if (!page())
-        return Color::Magenta;
-    return page()->palette().visited_link();
+    return CSS::SystemColor::visited_text();
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#relevant-settings-object
