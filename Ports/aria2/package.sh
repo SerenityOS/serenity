@@ -17,4 +17,5 @@ config_sub_paths+=("deps/wslay/config.sub")
 configopts+=(
     "--with-libuv"
     "--with-sysroot=${SERENITY_INSTALL_ROOT}"
+    '--without-libcares'
 )
