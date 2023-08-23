@@ -72,44 +72,29 @@ function (generate_css_implementation)
         arguments -j "${LIBWEB_INPUT_FOLDER}/CSS/Identifiers.json"
     )
 
-    add_custom_command(
-        OUTPUT CSS/DefaultStyleSheetSource.cpp
-        COMMAND "${CMAKE_COMMAND}" -E make_directory CSS
-        COMMAND "${LIBWEB_INPUT_FOLDER}/Scripts/GenerateStyleSheetSource.sh" default_stylesheet_source "${LIBWEB_INPUT_FOLDER}/CSS/Default.css" > CSS/DefaultStyleSheetSource.cpp.tmp
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different CSS/DefaultStyleSheetSource.cpp.tmp CSS/DefaultStyleSheetSource.cpp
-        COMMAND "${CMAKE_COMMAND}" -E remove CSS/DefaultStyleSheetSource.cpp.tmp
-        VERBATIM
-        DEPENDS "${LIBWEB_INPUT_FOLDER}/Scripts/GenerateStyleSheetSource.sh"
-        MAIN_DEPENDENCY "${LIBWEB_INPUT_FOLDER}/CSS/Default.css"
+    embed_as_string_view(
+        "DefaultStyleSheetSource.cpp"
+        "${LIBWEB_INPUT_FOLDER}/CSS/Default.css"
+        "CSS/DefaultStyleSheetSource.cpp"
+        "default_stylesheet_source"
+        NAMESPACE "Web::CSS"
     )
-    add_custom_target(generate_DefaultStyleSheetSource.cpp DEPENDS CSS/DefaultStyleSheetSource.cpp)
-    add_dependencies(all_generated generate_DefaultStyleSheetSource.cpp)
 
-    add_custom_command(
-        OUTPUT CSS/QuirksModeStyleSheetSource.cpp
-        COMMAND "${CMAKE_COMMAND}" -E make_directory CSS
-        COMMAND "${LIBWEB_INPUT_FOLDER}/Scripts/GenerateStyleSheetSource.sh" quirks_mode_stylesheet_source "${LIBWEB_INPUT_FOLDER}/CSS/QuirksMode.css" > CSS/QuirksModeStyleSheetSource.cpp.tmp
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different CSS/QuirksModeStyleSheetSource.cpp.tmp CSS/QuirksModeStyleSheetSource.cpp
-        COMMAND "${CMAKE_COMMAND}" -E remove CSS/QuirksModeStyleSheetSource.cpp.tmp
-        VERBATIM
-        DEPENDS "${LIBWEB_INPUT_FOLDER}/Scripts/GenerateStyleSheetSource.sh"
-        MAIN_DEPENDENCY "${LIBWEB_INPUT_FOLDER}/CSS/Default.css"
+    embed_as_string_view(
+        "QuirksModeStyleSheetSource.cpp"
+        "${LIBWEB_INPUT_FOLDER}/CSS/QuirksMode.css"
+        "CSS/QuirksModeStyleSheetSource.cpp"
+        "quirks_mode_stylesheet_source"
+        NAMESPACE "Web::CSS"
     )
-    add_custom_target(generate_QuirksModeStyleSheetSource.cpp DEPENDS CSS/QuirksModeStyleSheetSource.cpp)
-    add_dependencies(all_generated generate_QuirksModeStyleSheetSource.cpp)
 
-    add_custom_command(
-            OUTPUT MathML/MathMLStyleSheetSource.cpp
-            COMMAND "${CMAKE_COMMAND}" -E make_directory CSS
-            COMMAND "${LIBWEB_INPUT_FOLDER}/Scripts/GenerateStyleSheetSource.sh" mathml_stylesheet_source "${LIBWEB_INPUT_FOLDER}/MathML/Default.css" > MathML/MathMLStyleSheetSource.cpp.tmp
-            COMMAND "${CMAKE_COMMAND}" -E copy_if_different MathML/MathMLStyleSheetSource.cpp.tmp MathML/MathMLStyleSheetSource.cpp
-            COMMAND "${CMAKE_COMMAND}" -E remove MathML/MathMLStyleSheetSource.cpp.tmp
-            VERBATIM
-            DEPENDS "${LIBWEB_INPUT_FOLDER}/Scripts/GenerateStyleSheetSource.sh"
-            MAIN_DEPENDENCY "${LIBWEB_INPUT_FOLDER}/MathML/Default.css"
+    embed_as_string_view(
+        "MathMLStyleSheetSource.cpp"
+        "${LIBWEB_INPUT_FOLDER}/MathML/Default.css"
+        "MathML/MathMLStyleSheetSource.cpp"
+        "mathml_stylesheet_source"
+        NAMESPACE "Web::CSS"
     )
-    add_custom_target(generate_MathMLStyleSheetSource.cpp DEPENDS MathML/MathMLStyleSheetSource.cpp)
-    add_dependencies(all_generated generate_MathMLStyleSheetSource.cpp)
 
     set(CSS_GENERATED_TO_INSTALL
         "CSS/EasingFunctions.h"
