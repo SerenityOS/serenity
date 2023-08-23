@@ -66,10 +66,8 @@ ErrorOr<FlatPtr> Process::sys$prctl(int option, FlatPtr arg1, FlatPtr arg2)
             Userspace<char*> buffer = arg1;
             size_t buffer_size = static_cast<size_t>(arg2);
             TRY(m_name.with([&buffer, buffer_size](auto& name) -> ErrorOr<void> {
-                auto view = name.representable_view();
-                if (view.length() + 1 > buffer_size)
-                    return ENAMETOOLONG;
-                return copy_to_user(buffer, view.characters_without_null_termination(), view.length() + 1);
+                VERIFY(!name.representable_view().is_null());
+                return copy_fixed_string_buffer_including_null_char_to_user(buffer, buffer_size, name);
             }));
             return 0;
         }
