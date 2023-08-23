@@ -242,7 +242,6 @@ JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context
     auto new_entry = browsing_context->heap().allocate_without_realm<SessionHistoryEntry>();
     new_entry->url = AK::URL("about:blank");
     new_entry->document = document.ptr();
-    new_entry->serialized_state = {};
     new_entry->policy_container = {};
     new_entry->scroll_restoration_mode = {};
     new_entry->browsing_context_name = {};
@@ -1244,7 +1243,6 @@ WebIDL::ExceptionOr<void> BrowsingContext::navigate_to_a_fragment(AK::URL const&
     auto new_entry = heap().allocate_without_realm<SessionHistoryEntry>();
     new_entry->url = url;
     new_entry->document = current_entry().document;
-    new_entry->serialized_state = {};
     new_entry->policy_container = current_entry().policy_container;
     new_entry->scroll_restoration_mode = current_entry().scroll_restoration_mode;
     new_entry->browsing_context_name = {};
