@@ -201,3 +201,14 @@ inline ErrorOr<T> copy_typed_from_user(Userspace<T*> user_data)
     TRY(copy_from_user(&data, user_data));
     return data;
 }
+
+template<size_t Size>
+ErrorOr<void> copy_fixed_string_buffer_including_null_char_to_user(Userspace<char*> dest, size_t buffer_size, FixedStringBuffer<Size> const& buffer)
+{
+    FixedStringBuffer<Size + 1> name_with_null_char {};
+    name_with_null_char.store_characters(buffer.representable_view());
+    if (name_with_null_char.stored_length() + 1 > buffer_size)
+        return ENAMETOOLONG;
+    auto name_with_null_char_view = name_with_null_char.span_view_ensuring_ending_null_char();
+    return copy_to_user(dest, name_with_null_char_view.data(), name_with_null_char_view.size());
+}

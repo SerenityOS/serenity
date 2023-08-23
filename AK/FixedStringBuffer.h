@@ -95,8 +95,13 @@ public:
         return m_storage.span();
     }
     StringView representable_view() const { return StringView(m_storage.data(), m_stored_length); }
+    Span<u8 const> span_view_ensuring_ending_null_char()
+    {
+        VERIFY(m_stored_length + 1 <= Size);
+        m_storage[m_stored_length] = '\0';
+        return Span<u8 const>(m_storage.data(), m_stored_length + 1);
+    }
 
-    size_t fixed_length() const { return Size; }
     size_t stored_length() const { return m_stored_length; }
 
     FixedStringBuffer()
