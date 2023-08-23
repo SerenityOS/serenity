@@ -230,6 +230,7 @@ void StackingContext::paint_internal(PaintContext& context) const
 
         // At this point, `paintable_box` is a positioned descendant with z-index: auto.
         // FIXME: This is basically duplicating logic found elsewhere in this same function. Find a way to make this more elegant.
+        auto exit_decision = TraversalDecision::Continue;
         auto* parent_paintable = paintable.parent();
         if (parent_paintable)
             parent_paintable->before_children_paint(context, PaintPhase::Foreground);
@@ -239,7 +240,7 @@ void StackingContext::paint_internal(PaintContext& context) const
             containing_block_paintable->apply_clip_overflow_rect(context, PaintPhase::Foreground);
         if (auto* child = paintable.stacking_context_rooted_here()) {
             paint_child(context, *child);
-            return TraversalDecision::SkipChildrenAndContinue;
+            exit_decision = TraversalDecision::SkipChildrenAndContinue;
         } else {
             paint_node_as_stacking_context(paintable, context);
         }
@@ -248,7 +249,7 @@ void StackingContext::paint_internal(PaintContext& context) const
         if (containing_block_paintable)
             containing_block_paintable->clear_clip_overflow_rect(context, PaintPhase::Foreground);
 
-        return TraversalDecision::Continue;
+        return exit_decision;
     });
 
     // Stacking contexts formed by positioned descendants with z-indices greater than or equal to 1 in z-index order
