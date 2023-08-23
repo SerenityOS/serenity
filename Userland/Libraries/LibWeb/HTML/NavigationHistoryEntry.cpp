@@ -10,6 +10,7 @@
 #include <LibWeb/Bindings/NavigationHistoryEntryPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/DocumentState.h>
+#include <LibWeb/HTML/Navigation.h>
 #include <LibWeb/HTML/NavigationHistoryEntry.h>
 #include <LibWeb/HTML/Window.h>
 
@@ -100,9 +101,9 @@ i64 NavigationHistoryEntry::index() const
     if (!this_relevant_global_object.associated_document().is_fully_active())
         return -1;
 
-    // FIXME 2. Return the result of getting the navigation API entry index of this's session history entry
+    // 2. Return the result of getting the navigation API entry index of this's session history entry
     // within this's relevant global object's navigation API.
-    return -1;
+    return this_relevant_global_object.navigation()->get_the_navigation_api_entry_index(*m_session_history_entry);
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-navigationhistoryentry-samedocument
