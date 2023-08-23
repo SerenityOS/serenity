@@ -9,6 +9,7 @@
 
 #include "IdentifierStyleValue.h"
 #include <LibGfx/Palette.h>
+#include <LibWeb/CSS/SystemColor.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Layout/Node.h>
 
@@ -22,7 +23,32 @@ String IdentifierStyleValue::to_string() const
 bool IdentifierStyleValue::is_color(ValueID value_id)
 {
     switch (value_id) {
+    case ValueID::Accentcolor:
+    case ValueID::Accentcolortext:
+    case ValueID::Activeborder:
+    case ValueID::Activecaption:
+    case ValueID::Activetext:
+    case ValueID::Appworkspace:
+    case ValueID::Background:
+    case ValueID::Buttonborder:
+    case ValueID::Buttonface:
+    case ValueID::Buttonhighlight:
+    case ValueID::Buttonshadow:
+    case ValueID::Buttontext:
+    case ValueID::Canvas:
+    case ValueID::Canvastext:
+    case ValueID::Captiontext:
     case ValueID::Currentcolor:
+    case ValueID::Field:
+    case ValueID::Fieldtext:
+    case ValueID::Graytext:
+    case ValueID::Highlight:
+    case ValueID::Highlighttext:
+    case ValueID::Inactiveborder:
+    case ValueID::Inactivecaption:
+    case ValueID::Inactivecaptiontext:
+    case ValueID::Infobackground:
+    case ValueID::Infotext:
     case ValueID::LibwebLink:
     case ValueID::LibwebPaletteActiveLink:
     case ValueID::LibwebPaletteActiveWindowBorder1:
@@ -78,6 +104,23 @@ bool IdentifierStyleValue::is_color(ValueID value_id)
     case ValueID::LibwebPaletteVisitedLink:
     case ValueID::LibwebPaletteWindow:
     case ValueID::LibwebPaletteWindowText:
+    case ValueID::Linktext:
+    case ValueID::Mark:
+    case ValueID::Marktext:
+    case ValueID::Menu:
+    case ValueID::Menutext:
+    case ValueID::Scrollbar:
+    case ValueID::Selecteditem:
+    case ValueID::Selecteditemtext:
+    case ValueID::Threeddarkshadow:
+    case ValueID::Threedface:
+    case ValueID::Threedhighlight:
+    case ValueID::Threedlightshadow:
+    case ValueID::Threedshadow:
+    case ValueID::Visitedtext:
+    case ValueID::Window:
+    case ValueID::Windowframe:
+    case ValueID::Windowtext:
         return true;
     default:
         return false;
@@ -95,6 +138,75 @@ Color IdentifierStyleValue::to_color(Optional<Layout::NodeWithStyle const&> node
         if (!node.has_value() || !node->has_style())
             return Color::Black;
         return node->computed_values().color();
+    }
+
+    // First, handle <system-color>s, since they don't require a node.
+    // https://www.w3.org/TR/css-color-4/#css-system-colors
+    // https://www.w3.org/TR/css-color-4/#deprecated-system-colors
+    switch (id()) {
+    case ValueID::Accentcolor:
+        return SystemColor::accent_color();
+    case ValueID::Accentcolortext:
+        return SystemColor::accent_color_text();
+    case ValueID::Activetext:
+        return SystemColor::active_text();
+    case ValueID::Buttonborder:
+    case ValueID::Activeborder:
+    case ValueID::Inactiveborder:
+    case ValueID::Threeddarkshadow:
+    case ValueID::Threedhighlight:
+    case ValueID::Threedlightshadow:
+    case ValueID::Threedshadow:
+    case ValueID::Windowframe:
+        return SystemColor::button_border();
+    case ValueID::Buttonface:
+    case ValueID::Buttonhighlight:
+    case ValueID::Buttonshadow:
+    case ValueID::Threedface:
+        return SystemColor::button_face();
+    case ValueID::Buttontext:
+        return SystemColor::button_face();
+    case ValueID::Canvas:
+    case ValueID::Appworkspace:
+    case ValueID::Background:
+    case ValueID::Inactivecaption:
+    case ValueID::Infobackground:
+    case ValueID::Menu:
+    case ValueID::Scrollbar:
+    case ValueID::Window:
+        return SystemColor::canvas();
+    case ValueID::Canvastext:
+    case ValueID::Activecaption:
+    case ValueID::Captiontext:
+    case ValueID::Infotext:
+    case ValueID::Menutext:
+    case ValueID::Windowtext:
+        return SystemColor::canvas_text();
+    case ValueID::Field:
+        return SystemColor::field();
+    case ValueID::Fieldtext:
+        return SystemColor::field_text();
+    case ValueID::Graytext:
+    case ValueID::Inactivecaptiontext:
+        return SystemColor::gray_text();
+    case ValueID::Highlight:
+        return SystemColor::highlight();
+    case ValueID::Highlighttext:
+        return SystemColor::highlight_text();
+    case ValueID::Linktext:
+        return SystemColor::link_text();
+    case ValueID::Mark:
+        return SystemColor::mark();
+    case ValueID::Marktext:
+        return SystemColor::mark_text();
+    case ValueID::Selecteditem:
+        return SystemColor::selected_item();
+    case ValueID::Selecteditemtext:
+        return SystemColor::selected_item_text();
+    case ValueID::Visitedtext:
+        return SystemColor::visited_text();
+    default:
+        break;
     }
 
     if (!node.has_value()) {

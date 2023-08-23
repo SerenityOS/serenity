@@ -126,6 +126,7 @@ set(SOURCES
     CSS/StyleValues/UnresolvedStyleValue.cpp
     CSS/Supports.cpp
     CSS/SyntaxHighlighter/SyntaxHighlighter.cpp
+    CSS/SystemColor.cpp
     CSS/Time.cpp
     CSS/VisualViewport.cpp
     Cookie/Cookie.cpp
