@@ -63,7 +63,7 @@ ModelIndex Model::index(int row, int column, ModelIndex const&) const
     return create_index(row, column);
 }
 
-bool Model::accepts_drag(ModelIndex const&, Vector<DeprecatedString> const&) const
+bool Model::accepts_drag(ModelIndex const&, Vector<String> const&) const
 {
     return false;
 }

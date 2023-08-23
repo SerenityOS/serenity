@@ -81,7 +81,7 @@ public:
     virtual bool is_searchable() const { return false; }
     virtual void set_data(ModelIndex const&, Variant const&) { }
     virtual int tree_column() const { return 0; }
-    virtual bool accepts_drag(ModelIndex const&, Vector<DeprecatedString> const& mime_types) const;
+    virtual bool accepts_drag(ModelIndex const&, Vector<String> const& mime_types) const;
     virtual Vector<ModelIndex> matches(StringView, unsigned = MatchesFlag::AllMatching, ModelIndex const& = ModelIndex()) { return {}; }
 
     virtual bool is_column_sortable([[maybe_unused]] int column_index) const { return true; }
