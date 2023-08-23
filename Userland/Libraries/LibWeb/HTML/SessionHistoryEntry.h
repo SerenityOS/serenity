@@ -12,6 +12,7 @@
 #include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/PolicyContainers.h>
+#include <LibWeb/HTML/StructuredSerialize.h>
 
 namespace Web::HTML {
 
@@ -29,6 +30,8 @@ enum class ScrollRestorationMode {
 // https://html.spec.whatwg.org/multipage/history.html#session-history-entry
 struct SessionHistoryEntry final : public JS::Cell {
     JS_CELL(SessionHistoryEntry, JS::Cell);
+
+    SessionHistoryEntry();
 
     void visit_edges(Cell::Visitor&) override;
 
@@ -49,6 +52,22 @@ struct SessionHistoryEntry final : public JS::Cell {
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#she-document-state
     JS::GCPtr<HTML::DocumentState> document_state;
+
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#she-classic-history-api-state
+    // classic history API state, which is serialized state, initially StructuredSerializeForStorage(null).
+    SerializationRecord classic_history_api_state;
+
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#she-navigation-api-state
+    // navigation API state, which is a serialized state, initially StructuredSerializeForStorage(undefined).
+    SerializationRecord navigation_api_state;
+
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#she-navigation-api-key
+    // navigation API key, which is a string, initially set to the result of generating a random UUID.
+    String navigation_api_key;
+
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#she-navigation-api-id
+    // navigation API ID, which is a string, initially set to the result of generating a random UUID.
+    String navigation_api_id;
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#she-scroll-restoration-mode
     // scroll restoration mode, a scroll restoration mode, initially "auto"
