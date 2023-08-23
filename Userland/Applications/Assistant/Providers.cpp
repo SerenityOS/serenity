@@ -85,7 +85,7 @@ void AppProvider::query(DeprecatedString const& query, Function<void(Vector<Nonn
             continue;
 
         auto icon = GUI::FileIconProvider::icon_for_executable(app_file->executable());
-        results.append(make_ref_counted<AppResult>(icon.bitmap_for_size(16), app_file->name(), DeprecatedString::empty(), app_file, arguments, match_result.score));
+        results.append(make_ref_counted<AppResult>(icon.bitmap_for_size(16), app_file->name(), String(), app_file, arguments, match_result.score));
     };
 
     on_complete(move(results));

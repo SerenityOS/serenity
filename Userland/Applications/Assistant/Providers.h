@@ -28,7 +28,7 @@ public:
     virtual Gfx::Bitmap const* bitmap() const = 0;
 
     DeprecatedString const& title() const { return m_title; }
-    DeprecatedString const& tooltip() const { return m_tooltip; }
+    String const& tooltip() const { return m_tooltip; }
     int score() const { return m_score; }
     bool equals(Result const& other) const
     {
@@ -38,7 +38,7 @@ public:
     }
 
 protected:
-    Result(DeprecatedString title, DeprecatedString tooltip, int score = 0)
+    Result(DeprecatedString title, String tooltip, int score = 0)
         : m_title(move(title))
         , m_tooltip(move(tooltip))
         , m_score(score)
@@ -47,13 +47,13 @@ protected:
 
 private:
     DeprecatedString m_title;
-    DeprecatedString m_tooltip;
+    String m_tooltip;
     int m_score { 0 };
 };
 
 class AppResult final : public Result {
 public:
-    AppResult(RefPtr<Gfx::Bitmap const> bitmap, DeprecatedString title, DeprecatedString tooltip, NonnullRefPtr<Desktop::AppFile> af, DeprecatedString arguments, int score)
+    AppResult(RefPtr<Gfx::Bitmap const> bitmap, DeprecatedString title, String tooltip, NonnullRefPtr<Desktop::AppFile> af, DeprecatedString arguments, int score)
         : Result(move(title), move(tooltip), score)
         , m_app_file(move(af))
         , m_arguments(move(arguments))
@@ -74,7 +74,7 @@ private:
 class CalculatorResult final : public Result {
 public:
     explicit CalculatorResult(DeprecatedString title)
-        : Result(move(title), "Copy to Clipboard"sv, 100)
+        : Result(move(title), "Copy to Clipboard"_string, 100)
         , m_bitmap(GUI::Icon::default_icon("app-calculator"sv).bitmap_for_size(16))
     {
     }
@@ -90,7 +90,7 @@ private:
 class FileResult final : public Result {
 public:
     explicit FileResult(DeprecatedString title, int score)
-        : Result(move(title), "", score)
+        : Result(move(title), String(), score)
     {
     }
     ~FileResult() override = default;
@@ -102,7 +102,7 @@ public:
 class TerminalResult final : public Result {
 public:
     explicit TerminalResult(DeprecatedString command)
-        : Result(move(command), "Run command in Terminal"sv, 100)
+        : Result(move(command), "Run command in Terminal"_string, 100)
         , m_bitmap(GUI::Icon::default_icon("app-terminal"sv).bitmap_for_size(16))
     {
     }
@@ -118,7 +118,7 @@ private:
 class URLResult final : public Result {
 public:
     explicit URLResult(const URL& url)
-        : Result(url.to_deprecated_string(), "Open URL in Browser"sv, 50)
+        : Result(url.to_deprecated_string(), "Open URL in Browser"_string, 50)
         , m_bitmap(GUI::Icon::default_icon("app-browser"sv).bitmap_for_size(16))
     {
     }
