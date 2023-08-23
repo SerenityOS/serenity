@@ -11,6 +11,21 @@ LadybirdViewImpl::LadybirdViewImpl(LadybirdWebView* widget)
     : WebView::ViewImplementation::ViewImplementation()
     , m_widget(widget)
 {
+    on_did_layout = [this](auto content_size) {
+        ladybird_web_view_set_page_size(m_widget, content_size.width(), content_size.height());
+    };
+
+    on_ready_to_paint = [this]() {
+        auto size = m_client_state.front_bitmap.last_painted_size;
+
+        ladybird_bitmap_paintable_push_bitmap(
+            LADYBIRD_BITMAP_PAINTABLE(ladybird_web_view_get_bitmap_paintable(m_widget)),
+            m_client_state.front_bitmap.bitmap.ptr(),
+            size.width(), size.height(),
+            gtk_widget_get_scale_factor(GTK_WIDGET(m_widget)),
+            true);
+    };
+
     on_title_change = [this](DeprecatedString const& title) {
         ladybird_web_view_set_page_title(m_widget, title.characters());
     };
@@ -46,6 +61,22 @@ LadybirdViewImpl::LadybirdViewImpl(LadybirdWebView* widget)
         ladybird_bitmap_paintable_push_bitmap(favicon_paintable, &bitmap, bitmap.width(), bitmap.height(), 1.0, false);
     };
 
+    on_scroll_by_delta = [this](auto x_delta, auto y_delta) {
+        ladybird_web_view_scroll_by(m_widget, x_delta, y_delta);
+    };
+
+    on_scroll_to_point = [this](auto position) {
+        ladybird_web_view_scroll_to(m_widget, position.x(), position.y());
+    };
+
+    on_scroll_into_view = [this](auto rect) {
+        ladybird_web_view_scroll_into_view(m_widget, rect.left(), rect.top(), rect.width(), rect.height());
+    };
+
+    on_cursor_change = [this](auto cursor) {
+        update_cursor(cursor);
+    };
+
     on_link_hover = [this](AK::URL const& url) {
         DeprecatedString url_string = url.serialize();
         ladybird_web_view_set_hovered_link(m_widget, url_string.characters());
@@ -54,8 +85,8 @@ LadybirdViewImpl::LadybirdViewImpl(LadybirdWebView* widget)
         ladybird_web_view_set_hovered_link(m_widget, nullptr);
     };
 
-    AdwStyleManager* style_manager
-        = adw_style_manager_get_default();
+    AdwStyleManager* style_manager = adw_style_manager_get_default();
+
     m_update_style_id = g_signal_connect_swapped(style_manager, "notify::dark", G_CALLBACK(+[](void* user_data) {
         LadybirdViewImpl* self = reinterpret_cast<LadybirdViewImpl*>(user_data);
         self->update_theme();
@@ -187,47 +218,7 @@ void LadybirdViewImpl::key_up(KeyCode key_code, unsigned modifiers, u32 code_poi
     client().async_key_up(key_code, modifiers, code_point);
 }
 
-void LadybirdViewImpl::notify_server_did_layout(Badge<WebView::WebContentClient>, Gfx::IntSize content_size)
-{
-    ladybird_web_view_set_page_size(m_widget, content_size.width(), content_size.height());
-}
-
-void LadybirdViewImpl::notify_server_did_paint(Badge<WebView::WebContentClient>, i32 bitmap_id, Gfx::IntSize size)
-{
-    // TODO: Can this not be true? Can WebContent paint into the front bitmap?
-    if (m_client_state.back_bitmap.id == bitmap_id) {
-        m_client_state.has_usable_bitmap = true;
-        m_client_state.back_bitmap.pending_paints--;
-        m_client_state.back_bitmap.last_painted_size = size;
-        swap(m_client_state.back_bitmap, m_client_state.front_bitmap);
-        m_backup_bitmap = nullptr;
-
-        ladybird_bitmap_paintable_push_bitmap(
-            LADYBIRD_BITMAP_PAINTABLE(ladybird_web_view_get_bitmap_paintable(m_widget)),
-            m_client_state.front_bitmap.bitmap.ptr(),
-            size.width(), size.height(),
-            gtk_widget_get_scale_factor(GTK_WIDGET(m_widget)),
-            true);
-
-        if (m_client_state.got_repaint_requests_while_painting) {
-            m_client_state.got_repaint_requests_while_painting = false;
-            request_repaint();
-        }
-    }
-}
-
-void LadybirdViewImpl::notify_server_did_invalidate_content_rect(Badge<WebView::WebContentClient>, [[maybe_unused]] Gfx::IntRect const& rect)
-{
-    request_repaint();
-}
-
-void LadybirdViewImpl::notify_server_did_change_selection(Badge<WebView::WebContentClient>)
-{
-    dbgln("LadybirdViewImpl::notify_server_did_change_selection");
-    request_repaint();
-}
-
-void LadybirdViewImpl::notify_server_did_request_cursor_change(Badge<WebView::WebContentClient>, Gfx::StandardCursor cursor)
+void LadybirdViewImpl::update_cursor(Gfx::StandardCursor cursor)
 {
     char const* name;
 
@@ -287,75 +278,6 @@ void LadybirdViewImpl::notify_server_did_request_cursor_change(Badge<WebView::We
     }
 
     gtk_widget_set_cursor_from_name(GTK_WIDGET(m_widget), name);
-}
-
-void LadybirdViewImpl::notify_server_did_request_scroll(Badge<WebView::WebContentClient>, i32 x_delta, i32 y_delta)
-{
-    ladybird_web_view_scroll_by(m_widget, x_delta, y_delta);
-}
-
-void LadybirdViewImpl::notify_server_did_request_scroll_to(Badge<WebView::WebContentClient>, Gfx::IntPoint point)
-{
-    ladybird_web_view_scroll_to(m_widget, point.x(), point.y());
-}
-
-void LadybirdViewImpl::notify_server_did_request_scroll_into_view(Badge<WebView::WebContentClient>, Gfx::IntRect const& rect)
-{
-    ladybird_web_view_scroll_into_view(m_widget, rect.left(), rect.top(), rect.width(), rect.height());
-}
-
-void LadybirdViewImpl::notify_server_did_enter_tooltip_area(Badge<WebView::WebContentClient>, Gfx::IntPoint, DeprecatedString const&)
-{
-    dbgln("LadybirdViewImpl::notify_server_did_enter_tooltip_area");
-}
-
-void LadybirdViewImpl::notify_server_did_leave_tooltip_area(Badge<WebView::WebContentClient>)
-{
-    // dbgln("LadybirdViewImpl::notify_server_did_leave_tooltip_area");
-}
-
-void LadybirdViewImpl::notify_server_did_request_alert(Badge<WebView::WebContentClient>, String const& message)
-{
-    dbgln("LadybirdViewImpl::notify_server_did_request_alert {}", message);
-}
-
-void LadybirdViewImpl::notify_server_did_request_confirm(Badge<WebView::WebContentClient>, String const& message)
-{
-    dbgln("LadybirdViewImpl::notify_server_did_request_confirm {}", message);
-}
-
-void LadybirdViewImpl::notify_server_did_request_prompt(Badge<WebView::WebContentClient>, String const& message, String const& default_)
-{
-    dbgln("LadybirdViewImpl::notify_server_did_request_prompt {} {}", message, default_);
-}
-
-void LadybirdViewImpl::notify_server_did_request_set_prompt_text(Badge<WebView::WebContentClient>, String const& message)
-{
-    dbgln("LadybirdViewImpl::notify_server_did_request_set_prompt_text {}", message);
-}
-
-void LadybirdViewImpl::notify_server_did_request_accept_dialog(Badge<WebView::WebContentClient>)
-{
-    dbgln("LadybirdViewImpl::notify_server_did_request_accept_dialog");
-}
-
-void LadybirdViewImpl::notify_server_did_request_dismiss_dialog(Badge<WebView::WebContentClient>)
-{
-    dbgln("LadybirdViewImpl::notify_server_did_request_dismiss_dialog");
-}
-
-void LadybirdViewImpl::notify_server_did_request_file(Badge<WebView::WebContentClient>, DeprecatedString const& path, i32 request_id)
-{
-    auto file = Core::File::open(path, Core::File::OpenMode::Read);
-    if (file.is_error())
-        client().async_handle_file_return(file.error().code(), {}, request_id);
-    else
-        client().async_handle_file_return(0, IPC::File(*file.value()), request_id);
-}
-
-void LadybirdViewImpl::notify_server_did_finish_handling_input_event([[maybe_unused]] bool event_was_accepted)
-{
-    // dbgln("LadybirdViewImpl::notify_server_did_finish_handling_input_event {}", event_was_accepted);
 }
 
 void LadybirdViewImpl::update_zoom()
