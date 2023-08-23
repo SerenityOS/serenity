@@ -215,7 +215,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
 
     QObject::connect(focus_location_editor_action, &QAction::triggered, this, &Tab::focus_location_editor);
 
-    view().on_get_source = [this](auto const& url, auto const& source) {
+    view().on_received_source = [this](auto const& url, auto const& source) {
         auto* text_edit = new QPlainTextEdit(this);
         text_edit->setWindowFlags(Qt::Window);
         text_edit->setFont(QFontDatabase::systemFont(QFontDatabase::SystemFont::FixedFont));
@@ -266,22 +266,22 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
         return Gfx::IntRect { m_window->x(), m_window->y(), m_window->width(), m_window->height() };
     };
 
-    view().on_get_dom_tree = [this](auto& dom_tree) {
+    view().on_received_dom_tree = [this](auto& dom_tree) {
         if (m_inspector_widget)
             m_inspector_widget->set_dom_json(dom_tree);
     };
 
-    view().on_get_accessibility_tree = [this](auto& accessibility_tree) {
+    view().on_received_accessibility_tree = [this](auto& accessibility_tree) {
         if (m_inspector_widget)
             m_inspector_widget->set_accessibility_json(accessibility_tree);
     };
 
-    view().on_js_console_new_message = [this](auto message_index) {
+    view().on_received_console_message = [this](auto message_index) {
         if (m_console_widget)
             m_console_widget->notify_about_new_console_message(message_index);
     };
 
-    view().on_get_js_console_messages = [this](auto start_index, auto& message_types, auto& messages) {
+    view().on_received_console_messages = [this](auto start_index, auto& message_types, auto& messages) {
         if (m_console_widget)
             m_console_widget->handle_console_messages(start_index, message_types, messages);
     };

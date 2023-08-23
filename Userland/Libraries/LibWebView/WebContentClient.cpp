@@ -192,38 +192,38 @@ void WebContentClient::did_request_media_context_menu(Gfx::IntPoint content_posi
 
 void WebContentClient::did_get_source(AK::URL const& url, DeprecatedString const& source)
 {
-    if (m_view.on_get_source)
-        m_view.on_get_source(url, source);
+    if (m_view.on_received_source)
+        m_view.on_received_source(url, source);
 }
 
 void WebContentClient::did_get_dom_tree(DeprecatedString const& dom_tree)
 {
-    if (m_view.on_get_dom_tree)
-        m_view.on_get_dom_tree(dom_tree);
+    if (m_view.on_received_dom_tree)
+        m_view.on_received_dom_tree(dom_tree);
 }
 
 void WebContentClient::did_get_dom_node_properties(i32 node_id, DeprecatedString const& computed_style, DeprecatedString const& resolved_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing, DeprecatedString const& aria_properties_state)
 {
-    if (m_view.on_get_dom_node_properties)
-        m_view.on_get_dom_node_properties(node_id, computed_style, resolved_style, custom_properties, node_box_sizing, aria_properties_state);
+    if (m_view.on_received_dom_node_properties)
+        m_view.on_received_dom_node_properties(node_id, computed_style, resolved_style, custom_properties, node_box_sizing, aria_properties_state);
 }
 
 void WebContentClient::did_get_accessibility_tree(DeprecatedString const& accessibility_tree)
 {
-    if (m_view.on_get_accessibility_tree)
-        m_view.on_get_accessibility_tree(accessibility_tree);
+    if (m_view.on_received_accessibility_tree)
+        m_view.on_received_accessibility_tree(accessibility_tree);
 }
 
 void WebContentClient::did_output_js_console_message(i32 message_index)
 {
-    if (m_view.on_js_console_new_message)
-        m_view.on_js_console_new_message(message_index);
+    if (m_view.on_received_console_message)
+        m_view.on_received_console_message(message_index);
 }
 
 void WebContentClient::did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> const& message_types, Vector<DeprecatedString> const& messages)
 {
-    if (m_view.on_get_js_console_messages)
-        m_view.on_get_js_console_messages(start_index, message_types, messages);
+    if (m_view.on_received_console_messages)
+        m_view.on_received_console_messages(start_index, message_types, messages);
 }
 
 void WebContentClient::did_request_alert(String const& message)

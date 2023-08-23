@@ -565,30 +565,30 @@ Tab::Tab(BrowserWindow& window)
             m_dialog->done(GUI::Dialog::ExecResult::Cancel);
     };
 
-    view().on_get_source = [this](auto& url, auto& source) {
+    view().on_received_source = [this](auto& url, auto& source) {
         view_source(url, source);
     };
 
-    view().on_get_dom_tree = [this](auto& dom_tree) {
+    view().on_received_dom_tree = [this](auto& dom_tree) {
         if (m_dom_inspector_widget)
             m_dom_inspector_widget->set_dom_json(dom_tree);
     };
 
-    view().on_get_dom_node_properties = [this](auto node_id, auto& specified, auto& computed, auto& custom_properties, auto& node_box_sizing, auto& aria_properties_state) {
+    view().on_received_dom_node_properties = [this](auto node_id, auto& specified, auto& computed, auto& custom_properties, auto& node_box_sizing, auto& aria_properties_state) {
         m_dom_inspector_widget->set_dom_node_properties_json({ node_id }, specified, computed, custom_properties, node_box_sizing, aria_properties_state);
     };
 
-    view().on_get_accessibility_tree = [this](auto& accessibility_tree) {
+    view().on_received_accessibility_tree = [this](auto& accessibility_tree) {
         if (m_dom_inspector_widget)
             m_dom_inspector_widget->set_accessibility_json(accessibility_tree);
     };
 
-    view().on_js_console_new_message = [this](auto message_index) {
+    view().on_received_console_message = [this](auto message_index) {
         if (m_console_widget)
             m_console_widget->notify_about_new_console_message(message_index);
     };
 
-    view().on_get_js_console_messages = [this](auto start_index, auto& message_types, auto& messages) {
+    view().on_received_console_messages = [this](auto start_index, auto& message_types, auto& messages) {
         if (m_console_widget)
             m_console_widget->handle_console_messages(start_index, message_types, messages);
     };
