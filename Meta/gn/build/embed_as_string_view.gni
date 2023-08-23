@@ -33,7 +33,7 @@ template("embed_as_string_view") {
          "must set 'variable_name' in $target_name")
 
   action(target_name) {
-    script = "//Meta/gn/build/embed_as_string_view.py"
+    script = "//Meta/embed_as_string_view.py"
 
     sources = [ invoker.input ]
     outputs = [ invoker.output ]
