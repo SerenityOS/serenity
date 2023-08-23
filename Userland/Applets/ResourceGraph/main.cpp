@@ -53,10 +53,10 @@ private:
                 m_last_idle = idle;
                 float cpu = total_diff > 0 ? (float)(total_diff - idle_diff) / (float)total_diff : 0;
                 m_history.enqueue(cpu);
-                m_tooltip = DeprecatedString::formatted("CPU usage: {:.1}%", 100 * cpu);
+                m_tooltip = MUST(String::formatted("CPU usage: {:.1}%", 100 * cpu));
             } else {
                 m_history.enqueue(-1);
-                m_tooltip = "Unable to determine CPU usage"sv;
+                m_tooltip = "Unable to determine CPU usage"_string;
             }
             break;
         }
@@ -66,10 +66,10 @@ private:
                 double total_memory = allocated + available;
                 double memory = (double)allocated / total_memory;
                 m_history.enqueue(memory);
-                m_tooltip = DeprecatedString::formatted("Memory: {} MiB of {:.1} MiB in use", allocated / MiB, total_memory / MiB);
+                m_tooltip = MUST(String::formatted("Memory: {} MiB of {:.1} MiB in use", allocated / MiB, total_memory / MiB));
             } else {
                 m_history.enqueue(-1);
-                m_tooltip = "Unable to determine memory usage"sv;
+                m_tooltip = "Unable to determine memory usage"_string;
             }
             break;
         }
@@ -97,17 +97,17 @@ private:
                     }
                 }
                 m_history.enqueue(static_cast<float>(recent_tx) / static_cast<float>(m_current_scale));
-                m_tooltip = DeprecatedString::formatted("Network: TX {} / RX {} ({:.1} kbit/s)", tx, rx, static_cast<double>(recent_tx) * 8.0 / 1000.0);
+                m_tooltip = MUST(String::formatted("Network: TX {} / RX {} ({:.1} kbit/s)", tx, rx, static_cast<double>(recent_tx) * 8.0 / 1000.0));
             } else {
                 m_history.enqueue(-1);
-                m_tooltip = "Unable to determine network usage"sv;
+                m_tooltip = "Unable to determine network usage"_string;
             }
             break;
         }
         default:
             VERIFY_NOT_REACHED();
         }
-        set_tooltip_deprecated(m_tooltip);
+        set_tooltip(m_tooltip);
         update();
     }
 
@@ -229,7 +229,7 @@ private:
     u64 m_last_total { 0 };
     static constexpr u64 const scale_unit = 8000;
     u64 m_current_scale { scale_unit };
-    DeprecatedString m_tooltip;
+    String m_tooltip;
     OwnPtr<Core::File> m_proc_stat;
     OwnPtr<Core::File> m_proc_mem;
     OwnPtr<Core::File> m_proc_net;

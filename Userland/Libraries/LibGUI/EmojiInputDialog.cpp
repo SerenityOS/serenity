@@ -144,7 +144,7 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
         };
 
         if (!emoji->name.is_empty())
-            button->set_tooltip_deprecated(emoji->name);
+            button->set_tooltip(MUST(String::from_utf8(emoji->name)));
 
         emojis.empend(move(button), emoji.release_value(), move(text));
     }
