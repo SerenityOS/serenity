@@ -260,4 +260,13 @@ void FontDatabase::for_each_typeface(Function<void(Typeface const&)> callback)
     }
 }
 
+void FontDatabase::for_each_typeface_with_family_name(String const& family_name, Function<void(Typeface const&)> callback)
+{
+    auto it = m_private->typefaces.find(family_name.bytes_as_string_view());
+    if (it == m_private->typefaces.end())
+        return;
+    for (auto const& typeface : it->value)
+        callback(*typeface);
+}
+
 }
