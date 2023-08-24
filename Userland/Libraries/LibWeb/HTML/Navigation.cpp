@@ -6,9 +6,12 @@
 
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/Realm.h>
+#include <LibJS/Runtime/VM.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/NavigationPrototype.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/HTML/NavigateEvent.h>
 #include <LibWeb/HTML/Navigation.h>
 #include <LibWeb/HTML/NavigationCurrentEntryChangeEvent.h>
 #include <LibWeb/HTML/NavigationHistoryEntry.h>
@@ -16,6 +19,35 @@
 #include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
+
+static NavigationResult navigation_api_method_tracker_derived_result(JS::NonnullGCPtr<NavigationAPIMethodTracker> api_method_tracker);
+
+NavigationAPIMethodTracker::NavigationAPIMethodTracker(JS::NonnullGCPtr<Navigation> navigation,
+    Optional<String> key,
+    JS::Value info,
+    Optional<SerializationRecord> serialized_state,
+    JS::GCPtr<NavigationHistoryEntry> commited_to_entry,
+    JS::NonnullGCPtr<WebIDL::Promise> committed_promise,
+    JS::NonnullGCPtr<WebIDL::Promise> finished_promise)
+    : navigation(navigation)
+    , key(move(key))
+    , info(info)
+    , serialized_state(move(serialized_state))
+    , commited_to_entry(commited_to_entry)
+    , committed_promise(committed_promise)
+    , finished_promise(finished_promise)
+{
+}
+
+void NavigationAPIMethodTracker::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(navigation);
+    visitor.visit(info);
+    visitor.visit(commited_to_entry);
+    visitor.visit(committed_promise);
+    visitor.visit(finished_promise);
+}
 
 JS::NonnullGCPtr<Navigation> Navigation::create(JS::Realm& realm)
 {
@@ -41,6 +73,11 @@ void Navigation::visit_edges(JS::Cell::Visitor& visitor)
     for (auto& entry : m_entry_list)
         visitor.visit(entry);
     visitor.visit(m_transition);
+    visitor.visit(m_ongoing_navigate_event);
+    visitor.visit(m_ongoing_api_method_tracker);
+    visitor.visit(m_upcoming_non_traverse_api_method_tracker);
+    for (auto& key_and_tracker : m_upcoming_traverse_api_method_trackers)
+        visitor.visit(key_and_tracker.value);
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-navigation-entries
@@ -137,6 +174,98 @@ bool Navigation::can_go_forward() const
     return (m_current_entry_index != static_cast<i64>(m_entry_list.size()));
 }
 
+static HistoryHandlingBehavior to_history_handling_behavior(Bindings::NavigationHistoryBehavior b)
+{
+    switch (b) {
+    case Bindings::NavigationHistoryBehavior::Auto:
+        return HistoryHandlingBehavior::Default;
+    case Bindings::NavigationHistoryBehavior::Push:
+        return HistoryHandlingBehavior::Push;
+    case Bindings::NavigationHistoryBehavior::Replace:
+        return HistoryHandlingBehavior::Replace;
+    };
+    VERIFY_NOT_REACHED();
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-navigation-navigate
+WebIDL::ExceptionOr<NavigationResult> Navigation::navigate(String url, NavigationNavigateOptions const& options)
+{
+    auto& realm = this->realm();
+    auto& vm = this->vm();
+    // The navigate(options) method steps are:
+
+    // 1. Parse url relative to this's relevant settings object.
+    //    If that returns failure, then return an early error result for a "SyntaxError" DOMException.
+    //    Otherwise, let urlRecord be the resulting URL record.
+    auto url_record = relevant_settings_object(*this).parse_url(url);
+    if (!url_record.is_valid())
+        return early_error_result(WebIDL::SyntaxError::create(realm, "Cannot navigate to Invalid URL"));
+
+    // 2. Let document be this's relevant global object's associated Document.
+    auto& document = verify_cast<HTML::Window>(relevant_global_object(*this)).associated_document();
+
+    // 3. If options["history"] is "push", and the navigation must be a replace given urlRecord and document,
+    //    then return an early error result for a "NotSupportedError" DOMException.
+    if (options.history == Bindings::NavigationHistoryBehavior::Push && navigation_must_be_a_replace(url_record, document))
+        return early_error_result(WebIDL::NotSupportedError::create(realm, "Navigation must be a replace, but push was requested"));
+
+    // 4. Let state be options["state"], if it exists; otherwise, undefined.
+    auto state = options.state.value_or(JS::js_undefined());
+
+    // 5. Let serializedState be StructuredSerializeForStorage(state).
+    //    If this throws an exception, then return an early error result for that exception.
+    // FIXME: Fix this spec grammaro in the note
+    // NOTE: It is importantly to perform this step early, since serialization can invoke web developer code,
+    //       which in turn might change various things we check in later steps.
+    auto serialized_state_or_error = structured_serialize_for_storage(vm, state);
+    if (serialized_state_or_error.is_error()) {
+        return early_error_result(serialized_state_or_error.release_error());
+    }
+
+    auto serialized_state = serialized_state_or_error.release_value();
+
+    // 6. If document is not fully active, then return an early error result for an "InvalidStateError" DOMException.
+    if (!document.is_fully_active())
+        return early_error_result(WebIDL::InvalidStateError::create(realm, "Document is not fully active"));
+
+    // 7. If document's unload counter is greater than 0, then return an early error result for an "InvalidStateError" DOMException.
+    if (document.unload_counter() > 0)
+        return early_error_result(WebIDL::InvalidStateError::create(realm, "Document already unloaded"));
+
+    // 8. Let info be options["info"], if it exists; otherwise, undefined.
+    auto info = options.info.value_or(JS::js_undefined());
+
+    // 9. Let apiMethodTracker be the result of maybe setting the upcoming non-traverse API method tracker for this
+    //    given info and serializedState.
+    auto api_method_tracker = maybe_set_the_upcoming_non_traverse_api_method_tracker(info, serialized_state);
+
+    // 10. Navigate document's node navigable to urlRecord using document,
+    //     with historyHandling set to options["history"] and navigationAPIState set to serializedState.
+    // FIXME: Fix spec typo here
+    // NOTE: Unlike location.assign() and friends, which are exposed across origin-domain boundaries,
+    //       navigation.navigate() can only be accessed by code with direct synchronous access to the
+    ///      window.navigation property. Thus, we avoid the complications about attributing the source document
+    //       of the navigation, and we don't need to deal with the allowed by sandboxing to navigate check and its
+    //       acccompanying exceptionsEnabled flag. We just treat all navigations as if they come from the Document
+    //       corresponding to this Navigation object itself (i.e., document).
+    [[maybe_unused]] auto history_handling_behavior = to_history_handling_behavior(options.history);
+    // FIXME: Actually call navigate once Navigables are implemented enough to guarantee a node navigable on
+    //        an active document that's not being unloaded.
+    //        document.navigable().navigate(url, document, history behavior, state)
+
+    // 11. If this's upcoming non-traverse API method tracker is apiMethodTracker, then:
+    // NOTE: If the upcoming non-traverse API method tracker is still apiMethodTracker, this means that the navigate
+    //       algorithm bailed out before ever getting to the inner navigate event firing algorithm which would promote
+    //       that upcoming API method tracker to ongoing.
+    if (m_upcoming_non_traverse_api_method_tracker == api_method_tracker) {
+        m_upcoming_non_traverse_api_method_tracker = nullptr;
+        return early_error_result(WebIDL::AbortError::create(realm, "Navigation aborted"));
+    }
+
+    // 12. Return a navigation API method tracker-derived result for apiMethodTracker.
+    return navigation_api_method_tracker_derived_result(api_method_tracker);
+}
+
 void Navigation::set_onnavigate(WebIDL::CallbackType* event_handler)
 {
     set_event_handler_attribute(HTML::EventNames::navigate, event_handler);
@@ -221,6 +350,88 @@ i64 Navigation::get_the_navigation_api_entry_index(SessionHistoryEntry const& sh
 
     // 3. Return −1.
     return -1;
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigation-api-early-error-result
+NavigationResult Navigation::early_error_result(AnyException e)
+{
+    auto& vm = this->vm();
+
+    // An early error result for an exception e is a NavigationResult dictionary instance given by
+    // «[ "committed" → a promise rejected with e, "finished" → a promise rejected with e ]».
+    auto throw_completion = Bindings::dom_exception_to_throw_completion(vm, e);
+    return {
+        .committed = WebIDL::create_rejected_promise(realm(), *throw_completion.value())->promise(),
+        .finished = WebIDL::create_rejected_promise(realm(), *throw_completion.value())->promise(),
+    };
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigation-api-method-tracker-derived-result
+NavigationResult navigation_api_method_tracker_derived_result(JS::NonnullGCPtr<NavigationAPIMethodTracker> api_method_tracker)
+{
+    // A navigation API method tracker-derived result for a navigation API method tracker is a NavigationResult
+    /// dictionary instance given by «[ "committed" apiMethodTracker's committed promise, "finished" → apiMethodTracker's finished promise ]».
+    return {
+        api_method_tracker->committed_promise->promise(),
+        api_method_tracker->finished_promise->promise(),
+    };
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#upcoming-non-traverse-api-method-tracker
+JS::NonnullGCPtr<NavigationAPIMethodTracker> Navigation::maybe_set_the_upcoming_non_traverse_api_method_tracker(JS::Value info, Optional<SerializationRecord> serialized_state)
+{
+    auto& realm = relevant_realm(*this);
+    auto& vm = this->vm();
+    // To maybe set the upcoming non-traverse API method tracker given a Navigation navigation,
+    // a JavaScript value info, and a serialized state-or-null serializedState:
+
+    // 1. Let committedPromise and finishedPromise be new promises created in navigation's relevant realm.
+    auto committed_promise = WebIDL::create_promise(realm);
+    auto finished_promise = WebIDL::create_promise(realm);
+
+    // 2. Mark as handled finishedPromise.
+    // NOTE: The web developer doesn’t necessarily care about finishedPromise being rejected:
+    //       - They might only care about committedPromise.
+    //       - They could be doing multiple synchronous navigations within the same task,
+    //         in which case all but the last will be aborted (causing their finishedPromise to reject).
+    //         This could be an application bug, but also could just be an emergent feature of disparate
+    //         parts of the application overriding each others' actions.
+    //       - They might prefer to listen to other transition-failure signals instead of finishedPromise, e.g.,
+    //         the navigateerror event, or the navigation.transition.finished promise.
+    //       As such, we mark it as handled to ensure that it never triggers unhandledrejection events.
+    WebIDL::mark_promise_as_handled(finished_promise);
+
+    // 3. Let apiMethodTracker be a new navigation API method tracker with:
+    //     navigation object: navigation
+    //     key:               null
+    //     info:              info
+    //     serialized state:  serializedState
+    //     comitted-to entry: null
+    //     comitted promise:  committedPromise
+    //     finished promise:  finishedPromise
+    auto api_method_tracker = vm.heap().allocate_without_realm<NavigationAPIMethodTracker>(
+        /* .navigation = */ *this,
+        /* .key = */ OptionalNone {},
+        /* .info = */ info,
+        /* .serialized_state = */ move(serialized_state),
+        /* .commited_to_entry = */ nullptr,
+        /* .committed_promise = */ committed_promise,
+        /* .finished_promise = */ finished_promise);
+
+    // 4. Assert: navigation's upcoming non-traverse API method tracker is null.
+    VERIFY(m_upcoming_non_traverse_api_method_tracker == nullptr);
+
+    // 5. If navigation does not have entries and events disabled,
+    //    then set navigation's upcoming non-traverse API method tracker to apiMethodTracker.
+    // NOTE: If navigation has entries and events disabled, then committedPromise and finishedPromise will never fulfill
+    //      (since we never create a NavigationHistoryEntry object for such Documents, and so we have nothing to resolve them with);
+    //      there is no NavigationHistoryEntry to apply serializedState to; and there is no navigate event to include info with.
+    //      So, we don't need to track this API method call after all.
+    if (!has_entries_and_events_disabled())
+        m_upcoming_non_traverse_api_method_tracker = api_method_tracker;
+
+    // 6. Return apiMethodTracker.
+    return api_method_tracker;
 }
 
 }

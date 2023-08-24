@@ -4,7 +4,7 @@
 #import <HTML/NavigationTransition.idl>
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigation-interface
-[Exposed=Window]
+[Exposed=Window, UseNewAKString]
 interface Navigation : EventTarget {
   sequence<NavigationHistoryEntry> entries();
   readonly attribute NavigationHistoryEntry? currentEntry;
@@ -15,7 +15,7 @@ interface Navigation : EventTarget {
   readonly attribute boolean canGoForward;
 
   // TODO: Actually implement navigation algorithms
-  // NavigationResult navigate(USVString url, optional NavigationNavigateOptions options = {});
+  NavigationResult navigate(USVString url, optional NavigationNavigateOptions options = {});
   // NavigationResult reload(optional NavigationReloadOptions options = {});
 
   // NavigationResult traverseTo(DOMString key, optional NavigationOptions options = {});
