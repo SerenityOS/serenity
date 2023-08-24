@@ -44,6 +44,7 @@ PasswordInputDialog::PasswordInputDialog(Window* parent_window, DeprecatedString
         m_password = password_box.text();
         done(ExecResult::OK);
     };
+    ok_button.set_default(true);
 
     auto& cancel_button = *widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
     cancel_button.on_click = [this](auto) {
@@ -51,9 +52,6 @@ PasswordInputDialog::PasswordInputDialog(Window* parent_window, DeprecatedString
         done(ExecResult::Cancel);
     };
 
-    password_box.on_return_pressed = [&] {
-        ok_button.click();
-    };
     password_box.on_escape_pressed = [&] {
         cancel_button.click();
     };
