@@ -247,6 +247,13 @@ public:
 
     StringView attribute(DeprecatedFlyString const& attribute_name) const
     {
+        if (auto result = raw_attribute(attribute_name); result.has_value())
+            return result->value;
+        return {};
+    }
+
+    Optional<Attribute const&> raw_attribute(DeprecatedFlyString const& attribute_name) const
+    {
         VERIFY(is_start_tag() || is_end_tag());
 
         auto* ptr = tag_attributes();
@@ -254,7 +261,7 @@ public:
             return {};
         for (auto& attribute : *ptr) {
             if (attribute_name == attribute.local_name)
-                return attribute.value;
+                return attribute;
         }
         return {};
     }

@@ -59,9 +59,15 @@ using Token = Web::HTML::HTMLToken;
     EXPECT_EQ(current_token->type(), Token::Type::DOCTYPE); \
     NEXT_TOKEN();
 
-#define EXPECT_TAG_TOKEN_ATTRIBUTE(name, value) \
-    VERIFY(last_token);                         \
-    EXPECT_EQ(last_token->attribute(#name), value);
+#define EXPECT_TAG_TOKEN_ATTRIBUTE(name, attribute_value, name_start_column, name_end_column, value_start_column, value_end_column) \
+    VERIFY(last_token);                                                                                                             \
+    auto name##_attr = last_token->raw_attribute(#name);                                                                            \
+    VERIFY(name##_attr.has_value());                                                                                                \
+    EXPECT_EQ(name##_attr->value, attribute_value);                                                                                 \
+    EXPECT_EQ(name##_attr->name_start_position.column, name_start_column);                                                          \
+    EXPECT_EQ(name##_attr->name_end_position.column, name_end_column);                                                              \
+    EXPECT_EQ(name##_attr->value_start_position.column, value_start_column);                                                        \
+    EXPECT_EQ(name##_attr->value_end_position.column, value_end_column);
 
 #define EXPECT_TAG_TOKEN_ATTRIBUTE_COUNT(count) \
     VERIFY(last_token);                         \
@@ -128,7 +134,7 @@ TEST_CASE(unquoted_attributes)
     BEGIN_ENUMERATION(tokens);
     EXPECT_START_TAG_TOKEN(p, 1u, 10u);
     EXPECT_TAG_TOKEN_ATTRIBUTE_COUNT(1);
-    EXPECT_TAG_TOKEN_ATTRIBUTE(foo, "bar");
+    EXPECT_TAG_TOKEN_ATTRIBUTE(foo, "bar", 3u, 6u, 7u, 10u);
     EXPECT_END_OF_FILE_TOKEN();
     END_ENUMERATION();
 }
@@ -139,7 +145,7 @@ TEST_CASE(single_quoted_attributes)
     BEGIN_ENUMERATION(tokens);
     EXPECT_START_TAG_TOKEN(p, 1u, 12u);
     EXPECT_TAG_TOKEN_ATTRIBUTE_COUNT(1);
-    EXPECT_TAG_TOKEN_ATTRIBUTE(foo, "bar");
+    EXPECT_TAG_TOKEN_ATTRIBUTE(foo, "bar", 3u, 6u, 7u, 12u);
     EXPECT_END_OF_FILE_TOKEN();
     END_ENUMERATION();
 }
@@ -150,20 +156,32 @@ TEST_CASE(double_quoted_attributes)
     BEGIN_ENUMERATION(tokens);
     EXPECT_START_TAG_TOKEN(p, 1u, 12u);
     EXPECT_TAG_TOKEN_ATTRIBUTE_COUNT(1);
-    EXPECT_TAG_TOKEN_ATTRIBUTE(foo, "bar");
+    EXPECT_TAG_TOKEN_ATTRIBUTE(foo, "bar", 3u, 6u, 7u, 12u);
+    EXPECT_END_OF_FILE_TOKEN();
+    END_ENUMERATION();
+}
+
+TEST_CASE(valueless_attribute)
+{
+    auto tokens = run_tokenizer("<p foo>"sv);
+    BEGIN_ENUMERATION(tokens);
+    EXPECT_START_TAG_TOKEN(p, 1u, 6u);
+    EXPECT_TAG_TOKEN_ATTRIBUTE_COUNT(1);
+    EXPECT_TAG_TOKEN_ATTRIBUTE(foo, "", 3u, 6u, 0u, 0u);
     EXPECT_END_OF_FILE_TOKEN();
     END_ENUMERATION();
 }
 
 TEST_CASE(multiple_attributes)
 {
-    auto tokens = run_tokenizer("<p foo=\"bar\" baz=foobar foo2=\"bar2\">"sv);
+    auto tokens = run_tokenizer("<p foo=\"bar\" baz=foobar biz foo2=\"bar2\">"sv);
     BEGIN_ENUMERATION(tokens);
-    EXPECT_START_TAG_TOKEN(p, 1u, 35u);
-    EXPECT_TAG_TOKEN_ATTRIBUTE_COUNT(3);
-    EXPECT_TAG_TOKEN_ATTRIBUTE(foo, "bar");
-    EXPECT_TAG_TOKEN_ATTRIBUTE(baz, "foobar");
-    EXPECT_TAG_TOKEN_ATTRIBUTE(foo2, "bar2");
+    EXPECT_START_TAG_TOKEN(p, 1u, 39u);
+    EXPECT_TAG_TOKEN_ATTRIBUTE_COUNT(4);
+    EXPECT_TAG_TOKEN_ATTRIBUTE(foo, "bar", 3u, 6u, 7u, 12u);
+    EXPECT_TAG_TOKEN_ATTRIBUTE(baz, "foobar", 13u, 16u, 17u, 23u);
+    EXPECT_TAG_TOKEN_ATTRIBUTE(biz, "", 24u, 27u, 0u, 0u);
+    EXPECT_TAG_TOKEN_ATTRIBUTE(foo2, "bar2", 28u, 32u, 33u, 39u);
     EXPECT_END_OF_FILE_TOKEN();
     END_ENUMERATION();
 }
@@ -174,9 +192,9 @@ TEST_CASE(character_reference_in_attribute)
     BEGIN_ENUMERATION(tokens);
     EXPECT_START_TAG_TOKEN(p, 1u, 43u);
     EXPECT_TAG_TOKEN_ATTRIBUTE_COUNT(3);
-    EXPECT_TAG_TOKEN_ATTRIBUTE(foo, "a&b");
-    EXPECT_TAG_TOKEN_ATTRIBUTE(bar, "a&b");
-    EXPECT_TAG_TOKEN_ATTRIBUTE(baz, "a&b");
+    EXPECT_TAG_TOKEN_ATTRIBUTE(foo, "a&b", 3u, 6u, 7u, 14u);
+    EXPECT_TAG_TOKEN_ATTRIBUTE(bar, "a&b", 15u, 18u, 19u, 28u);
+    EXPECT_TAG_TOKEN_ATTRIBUTE(baz, "a&b", 29u, 32u, 33u, 43u);
     EXPECT_END_OF_FILE_TOKEN();
     END_ENUMERATION();
 }
