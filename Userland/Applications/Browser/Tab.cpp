@@ -83,6 +83,7 @@ void Tab::view_source(const URL& url, DeprecatedString const& source)
     editor->set_mode(GUI::TextEditor::ReadOnly);
     editor->set_syntax_highlighter(make<Web::HTML::SyntaxHighlighter>());
     editor->set_ruler_visible(true);
+    editor->set_visualize_trailing_whitespace(false);
     window->resize(640, 480);
     window->set_title(url.to_deprecated_string());
     window->set_icon(g_icon_bag.filetype_text);
