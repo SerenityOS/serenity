@@ -248,17 +248,17 @@ void HTMLObjectElement::run_object_representation_handler_steps(Optional<Depreca
 
     // * If the resource type is an XML MIME type, or if the resource type does not start with "image/"
     if (resource_type.has_value() && (is_xml_mime_type(*resource_type) || !resource_type->starts_with("image/"sv))) {
-        // If the object element's nested browsing context is null, then create a new nested browsing context for the element.
-        if (!m_nested_browsing_context)
-            create_new_nested_browsing_context();
+        // If the object element's content navigable is null, then create a new child navigable for the element.
+        if (!m_content_navigable)
+            MUST(create_new_child_navigable());
 
         // NOTE: Creating a new nested browsing context can fail if the document is not attached to a browsing context
-        if (!m_nested_browsing_context)
+        if (!m_content_navigable)
             return;
 
         // If the URL of the given resource does not match about:blank, then navigate the element's nested browsing context to that resource, with historyHandling set to "replace" and the source browsing context set to the object element's node document's browsing context. (The data attribute of the object element doesn't get updated if the browsing context gets further navigated to other locations.)
         if (auto const& url = resource()->url(); url != "about:blank"sv)
-            m_nested_browsing_context->loader().load(url, FrameLoader::Type::IFrame);
+            MUST(m_content_navigable->navigate(url, document(), Empty {}, nullptr, false, Bindings::NavigationHistoryBehavior::Replace));
 
         // The object element represents its nested browsing context.
         run_object_representation_completed_steps(Representation::NestedBrowsingContext);
@@ -267,11 +267,8 @@ void HTMLObjectElement::run_object_representation_handler_steps(Optional<Depreca
     // * If the resource type starts with "image/", and support for images has not been disabled
     // FIXME: Handle disabling image support.
     else if (resource_type.has_value() && resource_type->starts_with("image/"sv)) {
-        // If the object element's nested browsing context is non-null, then it must be discarded and then set to null.
-        if (m_nested_browsing_context) {
-            m_nested_browsing_context->discard();
-            m_nested_browsing_context = nullptr;
-        }
+        // Destroy the child navigable of the object element.
+        destroy_the_child_navigable();
 
         // Apply the image sniffing rules to determine the type of the image.
         // The object element represents the specified image.
@@ -308,11 +305,8 @@ void HTMLObjectElement::run_object_representation_completed_steps(Representation
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element:the-object-element-23
 void HTMLObjectElement::run_object_representation_fallback_steps()
 {
-    // 6. Fallback: The object element represents the element's children, ignoring any leading param element children. This is the element's fallback content. If the element has an instantiated plugin, then unload it. If the element's nested browsing context is non-null, then it must be discarded and then set to null.
-    if (m_nested_browsing_context) {
-        m_nested_browsing_context->discard();
-        m_nested_browsing_context = nullptr;
-    }
+    // 4. Fallback: The object element represents the element's children. This is the element's fallback content. Destroy the child navigable for the element.
+    destroy_the_child_navigable();
 
     update_layout_and_child_objects(Representation::Children);
 }
