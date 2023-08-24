@@ -20,7 +20,7 @@
 #if defined(AK_OS_SERENITY)
 #    include <serenity.h>
 #    include <syscall.h>
-#elif defined(AK_OS_BSD_GENERIC)
+#elif defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_SOLARIS)
 #    include <sys/sysctl.h>
 #endif
 

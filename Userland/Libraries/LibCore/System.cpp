@@ -50,7 +50,7 @@ static int memfd_create(char const* name, unsigned int flags)
 extern char** environ;
 #endif
 
-#if defined(AK_OS_BSD_GENERIC)
+#if defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_SOLARIS)
 #    include <sys/sysctl.h>
 #endif
 
