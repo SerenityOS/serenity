@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/String.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/ActivateTab.h>
@@ -134,5 +135,7 @@ private:
     // Implied link between navigable and its container.
     JS::GCPtr<NavigableContainer> m_container;
 };
+
+bool navigation_must_be_a_replace(AK::URL const& url, DOM::Document const& document);
 
 }
