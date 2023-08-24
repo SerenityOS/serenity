@@ -248,6 +248,86 @@ constexpr CSSPixels operator/(CSSPixels left, unsigned long right) { return left
 inline float operator/(CSSPixels left, float right) { return left.to_float() / right; }
 inline double operator/(CSSPixels left, double right) { return left.to_double() / right; }
 
+inline CSSPixels& operator*=(CSSPixels& left, float right)
+{
+    left = left.to_float() * right;
+    return left;
+}
+inline CSSPixels& operator*=(CSSPixels& left, double right)
+{
+    left = left.to_double() * right;
+    return left;
+}
+
+inline CSSPixels& operator/=(CSSPixels& left, float right)
+{
+    left = left.to_float() / right;
+    return left;
+}
+inline CSSPixels& operator/=(CSSPixels& left, double right)
+{
+    left = left.to_double() / right;
+    return left;
+}
+
+inline CSSPixels& operator+=(CSSPixels& left, float right)
+{
+    left = left.to_float() + right;
+    return left;
+}
+inline CSSPixels& operator+=(CSSPixels& left, double right)
+{
+    left = left.to_double() + right;
+    return left;
+}
+
+inline CSSPixels& operator-=(CSSPixels& left, float right)
+{
+    left = left.to_float() - right;
+    return left;
+}
+inline CSSPixels& operator-=(CSSPixels& left, double right)
+{
+    left = left.to_double() - right;
+    return left;
+}
+
+constexpr CSSPixels& operator*=(CSSPixels& left, int right)
+{
+    return left *= CSSPixels(right);
+}
+constexpr CSSPixels& operator*=(CSSPixels& left, unsigned long right)
+{
+    return left *= CSSPixels(right);
+}
+
+constexpr CSSPixels& operator/=(CSSPixels& left, int right)
+{
+    return left /= CSSPixels(right);
+}
+constexpr CSSPixels& operator/=(CSSPixels& left, unsigned long right)
+{
+    return left /= CSSPixels(right);
+}
+
+constexpr CSSPixels& operator+=(CSSPixels& left, int right)
+{
+    return left += CSSPixels(right);
+}
+constexpr CSSPixels& operator+=(CSSPixels& left, unsigned long right)
+{
+    return left += CSSPixels(right);
+}
+
+constexpr CSSPixels& operator-=(CSSPixels& left, int right)
+{
+    return left -= CSSPixels(right);
+}
+constexpr CSSPixels& operator-=(CSSPixels& left, unsigned long right)
+{
+    return left -= CSSPixels(right);
+}
+
 using CSSPixelLine = Gfx::Line<CSSPixels>;
 using CSSPixelPoint = Gfx::Point<CSSPixels>;
 using CSSPixelRect = Gfx::Rect<CSSPixels>;
