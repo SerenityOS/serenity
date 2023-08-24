@@ -1051,8 +1051,6 @@ _StartOfFunction:
                 }
                 ON('/')
                 {
-                    if (m_current_token.has_attributes())
-                        m_current_token.last_attribute().name_end_position = nth_last_position(1);
                     RECONSUME_IN(AfterAttributeName);
                 }
                 ON('>')
@@ -1108,21 +1106,25 @@ _StartOfFunction:
             {
                 ON_WHITESPACE
                 {
+                    m_current_token.last_attribute().name_end_position = nth_last_position(1);
                     m_current_token.last_attribute().local_name = consume_current_builder();
                     RECONSUME_IN(AfterAttributeName);
                 }
                 ON('/')
                 {
+                    m_current_token.last_attribute().name_end_position = nth_last_position(1);
                     m_current_token.last_attribute().local_name = consume_current_builder();
                     RECONSUME_IN(AfterAttributeName);
                 }
                 ON('>')
                 {
+                    m_current_token.last_attribute().name_end_position = nth_last_position(1);
                     m_current_token.last_attribute().local_name = consume_current_builder();
                     RECONSUME_IN(AfterAttributeName);
                 }
                 ON_EOF
                 {
+                    m_current_token.last_attribute().name_end_position = nth_last_position(1);
                     m_current_token.last_attribute().local_name = consume_current_builder();
                     RECONSUME_IN(AfterAttributeName);
                 }
@@ -1196,7 +1198,7 @@ _StartOfFunction:
                 {
                     m_current_token.add_attribute({});
                     if (!m_source_positions.is_empty())
-                        m_current_token.last_attribute().name_start_position = m_source_positions.last();
+                        m_current_token.last_attribute().name_start_position = nth_last_position(1);
                     RECONSUME_IN(AttributeName);
                 }
             }
