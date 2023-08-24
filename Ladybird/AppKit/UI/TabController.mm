@@ -166,7 +166,10 @@ enum class IsHistoryNavigation {
 - (void)createNewTab:(id)sender
 {
     auto* delegate = (ApplicationDelegate*)[NSApp delegate];
-    [delegate createNewTab:OptionalNone {}];
+
+    [delegate createNewTab:OptionalNone {}
+                   fromTab:[self tab]
+               activateTab:Web::HTML::ActivateTab::Yes];
 }
 
 - (void)updateNavigationButtonStates

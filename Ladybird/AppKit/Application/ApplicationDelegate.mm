@@ -83,25 +83,18 @@
 #pragma mark - Public methods
 
 - (TabController*)createNewTab:(Optional<URL> const&)url
-{
-    return [self createNewTab:url activateTab:Web::HTML::ActivateTab::Yes];
-}
-
-- (TabController*)createNewTab:(Optional<URL> const&)url
+                       fromTab:(Tab*)tab
                    activateTab:(Web::HTML::ActivateTab)activate_tab
 {
-    // This handle must be acquired before creating the new tab.
-    auto* current_tab = (Tab*)[NSApp keyWindow];
-
     auto* controller = [[TabController alloc] init:url.value_or(m_new_tab_page_url)];
     [controller showWindow:nil];
 
-    if (current_tab) {
-        [[current_tab tabGroup] addWindow:controller.window];
+    if (tab) {
+        [[tab tabGroup] addWindow:controller.window];
 
         // FIXME: Can we create the tabbed window above without it becoming active in the first place?
         if (activate_tab == Web::HTML::ActivateTab::No) {
-            [current_tab orderFront:nil];
+            [tab orderFront:nil];
         }
     }
 
@@ -133,13 +126,18 @@
 
 - (void)closeCurrentTab:(id)sender
 {
-    auto* current_tab = (Tab*)[NSApp keyWindow];
-    [current_tab close];
+    auto* current_window = [NSApp keyWindow];
+    [current_window close];
 }
 
 - (void)openLocation:(id)sender
 {
-    auto* current_tab = (Tab*)[NSApp keyWindow];
+    auto* current_tab = [NSApp keyWindow];
+
+    if (![current_tab isKindOfClass:[Tab class]]) {
+        return;
+    }
+
     auto* controller = (TabController*)[current_tab windowController];
     [controller focusLocationToolbarItem];
 }
@@ -353,7 +351,9 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification*)notification
 {
-    [self createNewTab:m_initial_url];
+    [self createNewTab:m_initial_url
+               fromTab:nil
+           activateTab:Web::HTML::ActivateTab::Yes];
 }
 
 - (void)applicationWillTerminate:(NSNotification*)notification
