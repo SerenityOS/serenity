@@ -299,6 +299,10 @@
 #cmakedefine01 TCP_SOCKET_DEBUG
 #endif
 
+#ifndef TDFX_DEBUG
+#cmakedefine01 TDFX_DEBUG
+#endif
+
 #ifndef THREAD_DEBUG
 #cmakedefine01 THREAD_DEBUG
 #endif
