@@ -286,11 +286,7 @@ void MailWidget::selected_mailbox(GUI::ModelIndex const& index)
         .sequence_set = { { 1, (int)response.data().exists() } },
         .data_items = {
             IMAP::FetchCommand::DataItem {
-                .type = IMAP::FetchCommand::DataItemType::PeekBody,
-                .section = IMAP::FetchCommand::DataItem::Section {
-                    .type = IMAP::FetchCommand::DataItem::SectionType::HeaderFields,
-                    .headers = { { "Subject", "From" } },
-                },
+                .type = IMAP::FetchCommand::DataItemType::Envelope,
             },
             IMAP::FetchCommand::DataItem {
                 .type = IMAP::FetchCommand::DataItemType::InternalDate,
@@ -315,98 +311,43 @@ void MailWidget::selected_mailbox(GUI::ModelIndex const& index)
     for (auto& fetch_data : fetch_response.data().fetch_data()) {
         auto sequence_number = fetch_data.get<unsigned>();
         auto& response_data = fetch_data.get<IMAP::FetchResponseData>();
-        auto& body_data = response_data.body_data();
-        auto& internal_date = response_data.internal_date();
+        auto const& envelope = response_data.envelope();
+        auto const& internal_date = response_data.internal_date();
 
         auto seen = !response_data.flags().find_if([](StringView value) { return value.equals_ignoring_ascii_case("\\Seen"sv); }).is_end();
 
-        auto data_item_has_header = [](IMAP::FetchCommand::DataItem const& data_item, DeprecatedString const& search_header) {
-            if (!data_item.section.has_value())
-                return false;
-            if (data_item.section->type != IMAP::FetchCommand::DataItem::SectionType::HeaderFields)
-                return false;
-            if (!data_item.section->headers.has_value())
-                return false;
-            auto header_iterator = data_item.section->headers->find_if([&search_header](auto& header) {
-                return header.equals_ignoring_ascii_case(search_header);
-            });
-            return header_iterator != data_item.section->headers->end();
-        };
-
-        auto subject_iterator = body_data.find_if([&data_item_has_header](Tuple<IMAP::FetchCommand::DataItem, Optional<DeprecatedString>>& data) {
-            auto const data_item = data.get<0>();
-            return data_item_has_header(data_item, "Subject");
-        });
-
-        VERIFY(subject_iterator != body_data.end());
-
-        auto from_iterator = body_data.find_if([&data_item_has_header](Tuple<IMAP::FetchCommand::DataItem, Optional<DeprecatedString>>& data) {
-            auto const data_item = data.get<0>();
-            return data_item_has_header(data_item, "From");
-        });
-
-        VERIFY(from_iterator != body_data.end());
-
-        // FIXME: All of the following doesn't really follow RFC 2822: https://datatracker.ietf.org/doc/html/rfc2822
-
-        auto parse_and_unfold = [](DeprecatedString const& value) {
-            GenericLexer lexer(value);
-            StringBuilder builder;
-
-            // There will be a space at the start of the value, which should be ignored.
-            VERIFY(lexer.consume_specific(' '));
-
-            while (!lexer.is_eof()) {
-                auto current_line = lexer.consume_while([](char c) {
-                    return c != '\r';
-                });
-
-                builder.append(current_line);
-
-                bool consumed_end_of_line = lexer.consume_specific("\r\n");
-                VERIFY(consumed_end_of_line);
-
-                // If CRLF are immediately followed by WSP (which is either ' ' or '\t'), then it is not the end of the header and is instead just a wrap.
-                // If it's not followed by WSP, then it is the end of the header.
-                // https://datatracker.ietf.org/doc/html/rfc2822#section-2.2.3
-                if (lexer.is_eof() || (lexer.peek() != ' ' && lexer.peek() != '\t'))
-                    break;
-            }
-
-            return builder.to_deprecated_string();
-        };
-
         DeprecatedString date = internal_date.to_deprecated_string();
-
-        auto& subject_iterator_value = subject_iterator->get<1>().value();
-        auto subject_index = subject_iterator_value.find("Subject:"sv);
-        DeprecatedString subject;
-        if (subject_index.has_value()) {
-            auto potential_subject = subject_iterator_value.substring(subject_index.value());
-            auto subject_parts = potential_subject.split_limit(':', 2);
-            subject = parse_and_unfold(subject_parts.last());
-        }
-
-        if (subject.is_empty())
-            subject = "(No subject)";
-
+        DeprecatedString subject = envelope.subject.value_or("(No subject)");
         if (subject.contains("=?"sv) && subject.contains("?="sv)) {
             subject = MUST(IMAP::decode_rfc2047_encoded_words(subject));
         }
 
-        auto& from_iterator_value = from_iterator->get<1>().value();
-        auto from_index = from_iterator_value.find("From:"sv);
-        if (!from_index.has_value())
-            from_index = from_iterator_value.find("from:"sv);
-        DeprecatedString from;
-        if (from_index.has_value()) {
-            auto potential_from = from_iterator_value.substring(from_index.value());
-            auto from_parts = potential_from.split_limit(':', 2);
-            from = parse_and_unfold(from_parts.last());
-        }
+        StringBuilder sender_builder;
+        if (envelope.from.has_value()) {
+            bool first { true };
+            for (auto const& address : *envelope.from) {
+                if (!first)
+                    sender_builder.append(", "sv);
 
-        if (from.is_empty())
-            from = "(Unknown sender)";
+                if (address.name.has_value()) {
+                    if (address.name->contains("=?"sv) && address.name->contains("?="sv))
+                        sender_builder.append(MUST(IMAP::decode_rfc2047_encoded_words(*address.name)));
+                    else
+                        sender_builder.append(*address.name);
+
+                    sender_builder.append(" <"sv);
+                    sender_builder.append(address.mailbox.value_or({}));
+                    sender_builder.append('@');
+                    sender_builder.append(address.host.value_or({}));
+                    sender_builder.append('>');
+                } else {
+                    sender_builder.append(address.mailbox.value_or({}));
+                    sender_builder.append('@');
+                    sender_builder.append(address.host.value_or({}));
+                }
+            }
+        }
+        DeprecatedString from = sender_builder.to_deprecated_string();
 
         InboxEntry inbox_entry { sequence_number, date, from, subject, seen };
         m_statusbar->set_text(String::formatted("[{}]: Loading entry {}", mailbox.name, ++i).release_value_but_fixme_should_propagate_errors());
