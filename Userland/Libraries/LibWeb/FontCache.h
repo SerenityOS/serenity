@@ -10,6 +10,9 @@
 #include <AK/HashMap.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Forward.h>
+#include <LibWeb/Forward.h>
+
+namespace Web {
 
 struct FontSelector {
     FlyString family;
@@ -24,13 +27,6 @@ struct FontSelector {
     }
 };
 
-namespace AK {
-template<>
-struct Traits<FontSelector> : public GenericTraits<FontSelector> {
-    static unsigned hash(FontSelector const& key) { return pair_int_hash(pair_int_hash(key.family.hash(), key.weight), key.point_size); }
-};
-}
-
 class FontCache {
 public:
     FontCache() = default;
@@ -42,3 +38,12 @@ public:
 private:
     mutable HashMap<FontSelector, NonnullRefPtr<Gfx::Font const>> m_fonts;
 };
+
+}
+
+namespace AK {
+template<>
+struct Traits<Web::FontSelector> : public GenericTraits<Web::FontSelector> {
+    static unsigned hash(Web::FontSelector const& key) { return pair_int_hash(pair_int_hash(key.family.hash(), key.weight), key.point_size); }
+};
+}
