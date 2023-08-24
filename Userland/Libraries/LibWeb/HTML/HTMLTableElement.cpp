@@ -75,15 +75,16 @@ void HTMLTableElement::apply_presentational_hints(CSS::StyleProperties& style) c
             auto border = parse_border(value);
             if (!border)
                 return;
-            auto apply_border_style = [&](CSS::PropertyID style_property, CSS::PropertyID width_property) {
+            auto apply_border_style = [&](CSS::PropertyID style_property, CSS::PropertyID width_property, CSS::PropertyID color_property) {
                 auto legacy_line_style = CSS::IdentifierStyleValue::create(CSS::ValueID::Outset);
                 style.set_property(style_property, legacy_line_style);
                 style.set_property(width_property, CSS::LengthStyleValue::create(CSS::Length::make_px(border)));
+                style.set_property(color_property, CSS::ColorStyleValue::create(Color(128, 128, 128)));
             };
-            apply_border_style(CSS::PropertyID::BorderLeftStyle, CSS::PropertyID::BorderLeftWidth);
-            apply_border_style(CSS::PropertyID::BorderTopStyle, CSS::PropertyID::BorderTopWidth);
-            apply_border_style(CSS::PropertyID::BorderRightStyle, CSS::PropertyID::BorderRightWidth);
-            apply_border_style(CSS::PropertyID::BorderBottomStyle, CSS::PropertyID::BorderBottomWidth);
+            apply_border_style(CSS::PropertyID::BorderLeftStyle, CSS::PropertyID::BorderLeftWidth, CSS::PropertyID::BorderLeftColor);
+            apply_border_style(CSS::PropertyID::BorderTopStyle, CSS::PropertyID::BorderTopWidth, CSS::PropertyID::BorderTopColor);
+            apply_border_style(CSS::PropertyID::BorderRightStyle, CSS::PropertyID::BorderRightWidth, CSS::PropertyID::BorderRightColor);
+            apply_border_style(CSS::PropertyID::BorderBottomStyle, CSS::PropertyID::BorderBottomWidth, CSS::PropertyID::BorderBottomColor);
         }
     });
 }
