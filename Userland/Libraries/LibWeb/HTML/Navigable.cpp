@@ -1095,7 +1095,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(AK::URL const& url, 
     auto traversable = traversable_navigable();
 
     // 17. Append the following session history synchronous navigation steps involving navigable to traversable:
-    traversable->append_session_history_traversal_steps([&] {
+    traversable->append_session_history_traversal_steps([this, traversable, history_entry, entry_to_replace] {
         // 1. Finalize a same-document navigation given traversable, navigable, historyEntry, and entryToReplace.
         finalize_a_same_document_navigation(*traversable, *this, history_entry, entry_to_replace);
 
