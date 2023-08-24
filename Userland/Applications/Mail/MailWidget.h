@@ -41,7 +41,8 @@ private:
     OwnPtr<IMAP::Client> m_imap_client;
 
     RefPtr<GUI::TreeView> m_mailbox_list;
-    RefPtr<InboxModel> m_individual_mailbox_model;
+    RefPtr<InboxModel> m_mailbox_model;
+    RefPtr<GUI::SortingProxyModel> m_mailbox_sorting_model;
     RefPtr<GUI::TableView> m_individual_mailbox_view;
     RefPtr<WebView::OutOfProcessWebView> m_web_view;
     RefPtr<GUI::Statusbar> m_statusbar;
