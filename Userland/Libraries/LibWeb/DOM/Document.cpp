@@ -3479,11 +3479,8 @@ void Document::shared_declarative_refresh_steps(StringView input, JS::GCPtr<HTML
         if (has_meta_element && has_flag(active_sandboxing_flag_set(), HTML::SandboxingFlagSet::SandboxedAutomaticFeatures))
             return;
 
-        // FIXME: Use navigables when they're used for all navigation (otherwise, navigable() would be null in some cases)
-        VERIFY(browsing_context());
-        auto request = Fetch::Infrastructure::Request::create(vm());
-        request->set_url(url_record);
-        MUST(browsing_context()->navigate(request, *browsing_context(), false, HTML::HistoryHandlingBehavior::Replace));
+        VERIFY(navigable());
+        MUST(navigable()->navigate(url_record, *this));
     }).release_value_but_fixme_should_propagate_errors();
 
     // For the purposes of the previous paragraph, a refresh is said to have come due as soon as the later of the
