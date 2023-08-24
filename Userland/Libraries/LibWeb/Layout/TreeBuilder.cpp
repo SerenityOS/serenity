@@ -389,12 +389,17 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
         static_cast<CSS::MutableComputedValues&>(cell_computed_values).set_display(CSS::Display { CSS::Display::Internal::TableCell });
         static_cast<CSS::MutableComputedValues&>(cell_computed_values).set_vertical_align(CSS::VerticalAlign::Middle);
 
+        auto row_computed_values = parent.computed_values().clone_inherited_values();
+        static_cast<CSS::MutableComputedValues&>(row_computed_values).set_display(CSS::Display { CSS::Display::Internal::TableRow });
+
         auto table_wrapper = parent.heap().template allocate_without_realm<BlockContainer>(parent.document(), nullptr, move(table_computed_values));
         auto cell_wrapper = parent.heap().template allocate_without_realm<BlockContainer>(parent.document(), nullptr, move(cell_computed_values));
+        auto row_wrapper = parent.heap().template allocate_without_realm<Box>(parent.document(), nullptr, move(row_computed_values));
 
         cell_wrapper->set_line_height(parent.line_height());
         cell_wrapper->set_font(parent.font());
         cell_wrapper->set_children_are_inline(parent.children_are_inline());
+        row_wrapper->set_children_are_inline(false);
 
         Vector<JS::Handle<Node>> sequence;
         for (auto child = parent.first_child(); child; child = child->next_sibling()) {
@@ -406,7 +411,8 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
             cell_wrapper->append_child(*node);
         }
 
-        table_wrapper->append_child(*cell_wrapper);
+        row_wrapper->append_child(*cell_wrapper);
+        table_wrapper->append_child(*row_wrapper);
         parent.append_child(*table_wrapper);
     }
 
