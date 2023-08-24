@@ -17,6 +17,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/PasswordInputDialog.h>
+#include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TreeView.h>
@@ -39,7 +40,7 @@ MailWidget::MailWidget()
 
     m_individual_mailbox_view->set_activates_on_selection(true);
     m_individual_mailbox_view->on_activation = [this](auto& index) {
-        selected_email_to_load(index);
+        selected_email_to_load(m_mailbox_sorting_model->map_to_source(index));
     };
 
     m_web_view->on_link_click = [this](auto& url, auto&, unsigned) {
@@ -245,8 +246,8 @@ bool MailWidget::is_supported_alternative(Alternative const& alternative) const
 
 void MailWidget::selected_mailbox(GUI::ModelIndex const& index)
 {
-    m_individual_mailbox_model = InboxModel::create({});
-    m_individual_mailbox_view->set_model(m_individual_mailbox_model);
+    m_mailbox_model = InboxModel::create({});
+    m_individual_mailbox_view->set_model(m_mailbox_model);
 
     if (!index.is_valid())
         return;
@@ -414,8 +415,11 @@ void MailWidget::selected_mailbox(GUI::ModelIndex const& index)
     }
 
     m_statusbar->set_text(String::formatted("[{}]: Loaded {} entries", mailbox.name, i).release_value_but_fixme_should_propagate_errors());
-    m_individual_mailbox_model = InboxModel::create(move(active_inbox_entries));
-    m_individual_mailbox_view->set_model(m_individual_mailbox_model);
+    m_mailbox_model = InboxModel::create(move(active_inbox_entries));
+    m_mailbox_sorting_model = MUST(GUI::SortingProxyModel::create(*m_mailbox_model));
+    m_mailbox_sorting_model->set_sort_role(GUI::ModelRole::Display);
+    m_individual_mailbox_view->set_model(m_mailbox_sorting_model);
+    m_individual_mailbox_view->set_key_column_and_sort_order(InboxModel::Date, GUI::SortOrder::Descending);
 }
 
 void MailWidget::selected_email_to_load(GUI::ModelIndex const& index)
@@ -521,7 +525,7 @@ void MailWidget::selected_email_to_load(GUI::ModelIndex const& index)
     auto& fetch_response_data = fetch_data.last().get<IMAP::FetchResponseData>();
 
     auto seen = !fetch_response_data.flags().find_if([](StringView value) { return value.equals_ignoring_ascii_case("\\Seen"sv); }).is_end();
-    m_individual_mailbox_model->set_seen(index.row(), seen);
+    m_mailbox_model->set_seen(index.row(), seen);
 
     if (!fetch_response_data.contains_response_type(IMAP::FetchResponseType::Body)) {
         GUI::MessageBox::show_error(window(), "The server sent no body."sv);
