@@ -528,6 +528,8 @@ public:
     using IndicatedPart = Variant<Element*, TopOfTheDocument>;
     IndicatedPart determine_the_indicated_part() const;
 
+    u32 unload_counter() const { return m_unload_counter; }
+
 protected:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
