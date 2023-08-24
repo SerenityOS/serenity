@@ -54,7 +54,7 @@ ErrorOr<FlatPtr> Process::sys$prctl(int option, FlatPtr arg1, FlatPtr arg2)
             Userspace<char const*> buffer = arg1;
             size_t buffer_size = static_cast<size_t>(arg2);
             Process::Name process_name {};
-            TRY(try_copy_name_from_user_into_fixed_string_buffer<32>(buffer, process_name, buffer_size));
+            TRY(try_copy_name_from_user_into_fixed_string_buffer(buffer, process_name, buffer_size));
             // NOTE: Reject empty and whitespace-only names, as they only confuse users.
             if (process_name.representable_view().is_whitespace())
                 return EINVAL;
