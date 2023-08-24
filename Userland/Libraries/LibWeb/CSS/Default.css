@@ -290,18 +290,24 @@ q::after {
     content: close-quote;
 }
 
+/*
+NOTE: This isn't a real property and value. See https://github.com/whatwg/html/issues/2291
 br {
     display-outside: newline;
 }
+*/
 
 /* this also has bidi implications */
 nobr {
     white-space: nowrap;
 }
 
+/*
+NOTE: This isn't a real property and value. See https://github.com/whatwg/html/issues/2291
 wbr {
     display-outside: break-opportunity;
 }
+*/
 
 /* this also has bidi implications */
 nobr wbr {
