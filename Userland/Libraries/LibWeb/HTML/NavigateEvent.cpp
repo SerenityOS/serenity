@@ -35,7 +35,7 @@ NavigateEvent::NavigateEvent(JS::Realm& realm, FlyString const& event_name, Navi
     , m_signal(*event_init.signal)
     , m_form_data(event_init.form_data)
     , m_download_request(event_init.download_request)
-    , m_info(event_init.info)
+    , m_info(event_init.info.value_or(JS::js_undefined()))
     , m_has_ua_visual_transition(event_init.has_ua_visual_transition)
 {
 }
@@ -61,7 +61,7 @@ void NavigateEvent::visit_edges(JS::Cell::Visitor& visitor)
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-navigateevent-intercept
-WebIDL::ExceptionOr<void> NavigateEvent::intercept(Optional<NavigationInterceptOptions> const& options)
+WebIDL::ExceptionOr<void> NavigateEvent::intercept(NavigationInterceptOptions const& options)
 {
     auto& realm = this->realm();
     auto& vm = this->vm();
@@ -84,38 +84,40 @@ WebIDL::ExceptionOr<void> NavigateEvent::intercept(Optional<NavigationInterceptO
     // 5. Set this's interception state to "intercepted".
     m_interception_state = InterceptionState::Intercepted;
 
-    if (options.has_value()) {
-        // 6. If options["handler"] exists, then append it to this's navigation handler list.
-        TRY_OR_THROW_OOM(vm, m_navigation_handler_list.try_append(*(options->handler)));
+    // 6. If options["handler"] exists, then append it to this's navigation handler list.
+    if (options.handler != nullptr)
+        TRY_OR_THROW_OOM(vm, m_navigation_handler_list.try_append(*options.handler));
 
-        // 7. If options["focusReset"] exists, then:
-        //     1.  If this's focus reset behavior is not null, and it is not equal to options["focusReset"],
-        //         then the user agent may report a warning to the console indicating that the focusReset option
-        //         for a previous call to intercept() was overridden by this new value, and the previous value
-        //         will be ignored.
-        if (m_focus_reset_behavior.has_value() && m_focus_reset_behavior.value() != options->focus_reset) {
+    // 7. If options["focusReset"] exists, then:
+    if (options.focus_reset.has_value()) {
+        // 1.  If this's focus reset behavior is not null, and it is not equal to options["focusReset"],
+        //     then the user agent may report a warning to the console indicating that the focusReset option
+        //     for a previous call to intercept() was overridden by this new value, and the previous value
+        //     will be ignored.
+        if (m_focus_reset_behavior.has_value() && *m_focus_reset_behavior != *options.focus_reset) {
             auto& console = realm.intrinsics().console_object()->console();
             console.output_debug_message(JS::Console::LogLevel::Warn,
-                TRY_OR_THROW_OOM(vm, String::formatted("focusReset behavior on NavigationEvent overriden (was: {}, now: {})", *m_focus_reset_behavior, options->focus_reset)));
+                TRY_OR_THROW_OOM(vm, String::formatted("focusReset behavior on NavigationEvent overriden (was: {}, now: {})", *m_focus_reset_behavior, *options.focus_reset)));
         }
 
-        //     2. Set this's focus reset behavior to options["focusReset"].
-        m_focus_reset_behavior = options->focus_reset;
-
-        // 8. If options["scroll"] exists, then:
-        //     1. If this's scroll behavior is not null, and it is not equal to options["scroll"], then the user
-        //        agent may report a warning to the console indicating that the scroll option for a previous call
-        //        to intercept() was overridden by this new value, and the previous value will be ignored.
-        if (m_scroll_behavior.has_value() && m_scroll_behavior.value() != options->scroll) {
-            auto& console = realm.intrinsics().console_object()->console();
-            console.output_debug_message(JS::Console::LogLevel::Warn,
-                TRY_OR_THROW_OOM(vm, String::formatted("scroll option on NavigationEvent overriden (was: {}, now: {})", *m_scroll_behavior, options->scroll)));
-        }
-
-        //     2. Set this's scroll behavior to options["scroll"].
-        m_scroll_behavior = options->scroll;
+        // 2. Set this's focus reset behavior to options["focusReset"].
+        m_focus_reset_behavior = options.focus_reset;
     }
 
+    // 8. If options["scroll"] exists, then:
+    if (options.scroll.has_value()) {
+        // 1. If this's scroll behavior is not null, and it is not equal to options["scroll"], then the user
+        //    agent may report a warning to the console indicating that the scroll option for a previous call
+        //    to intercept() was overridden by this new value, and the previous value will be ignored.
+        if (m_scroll_behavior.has_value() && *m_scroll_behavior != *options.scroll) {
+            auto& console = realm.intrinsics().console_object()->console();
+            console.output_debug_message(JS::Console::LogLevel::Warn,
+                TRY_OR_THROW_OOM(vm, String::formatted("scroll option on NavigationEvent overriden (was: {}, now: {})", *m_scroll_behavior, *options.scroll)));
+        }
+
+        // 2. Set this's scroll behavior to options["scroll"].
+        m_scroll_behavior = options.scroll;
+    }
     return {};
 }
 
