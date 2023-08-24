@@ -100,6 +100,7 @@ template $LadybirdWindow : Adw.ApplicationWindow {
           MenuButton {
             icon-name: "user-bookmarks-symbolic";
             tooltip-text: _("Bookmarks");
+            focus-on-click: false;
             popover: Popover {
               Adw.StatusPage {
                 title: "Bookmarks & History";
@@ -115,10 +116,13 @@ template $LadybirdWindow : Adw.ApplicationWindow {
             icon-name: "view-grid-symbolic";
             action-name: "overview.open";
             tooltip-text: _("Tab Overview");
+            focus-on-click: false;
           }
           MenuButton {
             icon-name: "open-menu-symbolic";
             tooltip-text: _("Main Menu");
+            primary: true;
+            focus-on-click: false;
             popover: PopoverMenu popover_menu {
               menu-model: main_menu;
 
