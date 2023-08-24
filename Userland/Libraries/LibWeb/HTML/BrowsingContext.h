@@ -219,28 +219,8 @@ public:
     // https://html.spec.whatwg.org/multipage/browsers.html#bcg-remove
     void remove();
 
-    // https://html.spec.whatwg.org/multipage/browsers.html#allowed-to-navigate
-    bool is_allowed_to_navigate(BrowsingContext const&) const;
-
-    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate
-    virtual WebIDL::ExceptionOr<void> navigate(
-        JS::NonnullGCPtr<Fetch::Infrastructure::Request> resource,
-        BrowsingContext& source_browsing_context,
-        bool exceptions_enabled = false,
-        HistoryHandlingBehavior history_handling = HistoryHandlingBehavior::Default,
-        Optional<PolicyContainer> history_policy_container = {},
-        DeprecatedString navigation_type = "other",
-        Optional<String> navigation_id = {},
-        Function<void(JS::NonnullGCPtr<Fetch::Infrastructure::Response>)> process_response_end_of_body = {}) override;
-
-    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate-fragid
-    WebIDL::ExceptionOr<void> navigate_to_a_fragment(AK::URL const&, HistoryHandlingBehavior, String navigation_id);
-
     // https://html.spec.whatwg.org/multipage/origin.html#one-permitted-sandboxed-navigator
     BrowsingContext const* the_one_permitted_sandboxed_navigator() const;
-
-    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#traverse-the-history
-    WebIDL::ExceptionOr<void> traverse_the_history(size_t entry_index, HistoryHandlingBehavior = HistoryHandlingBehavior::Default, bool explicit_history_navigation = false);
 
     Vector<JS::Handle<DOM::Document>> document_family() const;
     bool document_family_contains(DOM::Document const&) const;
