@@ -132,8 +132,6 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
             continue;
         }
 
-        size_t token_start_offset = token->is_end_tag() ? 1 : 0;
-
         if (token->is_comment()) {
             highlight(
                 token->start_position().line,
@@ -150,25 +148,25 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
         } else if (token->is_start_tag() || token->is_end_tag()) {
             highlight(
                 token->start_position().line,
-                token->start_position().column + token_start_offset,
+                token->start_position().column,
                 token->start_position().line,
-                token->start_position().column + token_start_offset + token->tag_name().length(),
+                token->start_position().column + token->tag_name().length(),
                 { palette.syntax_keyword(), {}, true },
                 token->is_start_tag() ? AugmentedTokenKind::OpenTag : AugmentedTokenKind::CloseTag);
 
             token->for_each_attribute([&](auto& attribute) {
                 highlight(
                     attribute.name_start_position.line,
-                    attribute.name_start_position.column + token_start_offset,
+                    attribute.name_start_position.column,
                     attribute.name_end_position.line,
-                    attribute.name_end_position.column + token_start_offset,
+                    attribute.name_end_position.column,
                     { palette.syntax_identifier(), {} },
                     AugmentedTokenKind::AttributeName);
                 highlight(
                     attribute.value_start_position.line,
-                    attribute.value_start_position.column + token_start_offset,
+                    attribute.value_start_position.column,
                     attribute.value_end_position.line,
-                    attribute.value_end_position.column + token_start_offset,
+                    attribute.value_end_position.column,
                     { palette.syntax_string(), {} },
                     AugmentedTokenKind::AttributeValue);
                 return IterationDecision::Continue;
