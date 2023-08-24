@@ -2077,16 +2077,14 @@ RefPtr<Gfx::Font const> StyleComputer::font_matching_algorithm(FontFaceKey const
         if (font_key_and_loader.key.family_name.equals_ignoring_ascii_case(key.family_name))
             matching_family_fonts.empend(font_key_and_loader.key, font_key_and_loader.value.ptr());
     }
-    Gfx::FontDatabase::the().for_each_typeface([&](Gfx::Typeface const& typeface) {
-        if (typeface.family().equals_ignoring_ascii_case(key.family_name)) {
-            matching_family_fonts.empend(
-                FontFaceKey {
-                    .family_name = MUST(FlyString::from_deprecated_fly_string(typeface.family())),
-                    .weight = static_cast<int>(typeface.weight()),
-                    .slope = typeface.slope(),
-                },
-                &typeface);
-        }
+    Gfx::FontDatabase::the().for_each_typeface_with_family_name(key.family_name.to_string(), [&](Gfx::Typeface const& typeface) {
+        matching_family_fonts.empend(
+            FontFaceKey {
+                .family_name = MUST(FlyString::from_deprecated_fly_string(typeface.family())),
+                .weight = static_cast<int>(typeface.weight()),
+                .slope = typeface.slope(),
+            },
+            &typeface);
     });
     quick_sort(matching_family_fonts, [](auto const& a, auto const& b) {
         return a.key.weight < b.key.weight;
