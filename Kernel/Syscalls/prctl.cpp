@@ -52,10 +52,7 @@ ErrorOr<FlatPtr> Process::sys$prctl(int option, FlatPtr arg1, FlatPtr arg2)
         case PR_SET_PROCESS_NAME: {
             TRY(require_promise(Pledge::proc));
             Userspace<char const*> buffer = arg1;
-            int user_buffer_size = static_cast<int>(arg2);
-            if (user_buffer_size < 0)
-                return EINVAL;
-            size_t buffer_size = static_cast<size_t>(user_buffer_size);
+            size_t buffer_size = static_cast<size_t>(arg2);
             Process::Name process_name {};
             TRY(try_copy_name_from_user_into_fixed_string_buffer<32>(buffer, process_name, buffer_size));
             // NOTE: Reject empty and whitespace-only names, as they only confuse users.
@@ -67,9 +64,6 @@ ErrorOr<FlatPtr> Process::sys$prctl(int option, FlatPtr arg1, FlatPtr arg2)
         case PR_GET_PROCESS_NAME: {
             TRY(require_promise(Pledge::stdio));
             Userspace<char*> buffer = arg1;
-            int user_buffer_size = arg2;
-            if (user_buffer_size < 0)
-                return EINVAL;
             size_t buffer_size = static_cast<size_t>(arg2);
             TRY(m_name.with([&buffer, buffer_size](auto& name) -> ErrorOr<void> {
                 auto view = name.representable_view();
