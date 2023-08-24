@@ -82,6 +82,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
     m_listview->set_model(HelpListModel::create());
 
     m_webview = splitter.add<WebView::OutOfProcessWebView>();
+    m_webview->use_native_user_style_sheet();
     m_webview->on_link_click = [this](auto& url, auto&, auto&&) {
         VERIFY(url.scheme() == "spreadsheet");
         if (url.host().template has<String>() && url.host().template get<String>() == "example"sv) {

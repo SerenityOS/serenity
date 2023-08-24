@@ -117,6 +117,7 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
     };
 
     m_web_view = find_descendant_of_type_named<WebView::OutOfProcessWebView>("web_view");
+    m_web_view->use_native_user_style_sheet();
     m_web_view->on_link_click = [this](auto& url, auto&, unsigned) {
         if (url.scheme() == "file") {
             auto path = LexicalPath { url.serialize_path() };

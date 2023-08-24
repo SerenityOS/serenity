@@ -35,6 +35,7 @@ ErrorOr<void> WelcomeWidget::create_widgets()
     m_banner_font = TRY(Gfx::BitmapFont::try_load_from_file("/res/fonts/MarietaRegular24.font"sv));
 
     m_web_view = find_descendant_of_type_named<WebView::OutOfProcessWebView>("web_view");
+    m_web_view->use_native_user_style_sheet();
     auto path = TRY(String::formatted("{}/README.md", Core::StandardPaths::home_directory()));
     m_web_view->load(URL::create_with_file_scheme(path.to_deprecated_string()));
 
