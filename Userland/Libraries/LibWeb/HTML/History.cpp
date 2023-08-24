@@ -8,6 +8,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/History.h>
 #include <LibWeb/HTML/StructuredSerialize.h>
+#include <LibWeb/HTML/TraversableNavigable.h>
 
 namespace Web::HTML {
 
@@ -74,16 +75,14 @@ WebIDL::ExceptionOr<void> History::go(long delta = 0)
     if (!m_associated_document->is_fully_active())
         return WebIDL::SecurityError::create(realm(), "Cannot perform go on a document that isn't fully active."_fly_string);
 
-    // 3. If delta is 0, then act as if the location.reload() method was called, and return.
-    auto* browsing_context = m_associated_document->browsing_context();
-    auto current_entry_index = browsing_context->session_history_index();
-    auto next_entry_index = current_entry_index + delta;
-    auto const& sessions = browsing_context->session_history();
-    if (next_entry_index < sessions.size()) {
-        auto const& next_entry = sessions.at(next_entry_index);
-        // FIXME: 4. Traverse the history by a delta with delta and document's browsing context.
-        browsing_context->loader().load(next_entry->url, FrameLoader::Type::Reload);
-    }
+    VERIFY(m_associated_document->navigable());
+
+    // 3. If delta is 0, then reload document's node navigable.
+    m_associated_document->navigable()->reload();
+
+    // 4. Traverse the history by a delta given document's node navigable's traversable navigable, delta, and with sourceDocument set to document.
+    auto traversable = m_associated_document->navigable()->traversable_navigable();
+    traversable->traverse_the_history_by_delta(delta);
 
     return {};
 }
