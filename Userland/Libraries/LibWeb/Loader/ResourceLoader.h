@@ -49,7 +49,7 @@ namespace Web {
 #define BROWSER_NAME "Ladybird"
 #define BROWSER_VERSION "1.0"
 
-constexpr auto default_user_agent = "Mozilla/5.0 (" OS_STRING "; " CPU_STRING ") LibWeb+LibJS/1.0 " BROWSER_NAME "/" BROWSER_VERSION ""sv;
+constexpr auto default_user_agent = "Mozilla/5.0 (" OS_STRING "; " CPU_STRING ") " BROWSER_NAME "/" BROWSER_VERSION ""sv;
 constexpr auto default_platform = OS_STRING " " CPU_STRING ""sv;
 
 class ResourceLoaderConnectorRequest : public RefCounted<ResourceLoaderConnectorRequest> {
