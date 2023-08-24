@@ -347,7 +347,6 @@ _StartOfFunction:
                 ON('>')
                 {
                     m_current_token.set_tag_name(consume_current_builder());
-                    m_current_token.set_end_position({}, nth_last_position(1));
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_ASCII_UPPER_ALPHA
@@ -366,7 +365,6 @@ _StartOfFunction:
                 ON_EOF
                 {
                     log_parse_error();
-                    m_current_token.set_end_position({}, nth_last_position(0));
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -2773,19 +2771,9 @@ bool HTMLTokenizer::consume_next_if_match(StringView string, CaseSensitivity cas
 void HTMLTokenizer::create_new_token(HTMLToken::Type type)
 {
     m_current_token = { type };
-    size_t offset = 0;
-    switch (type) {
-    case HTMLToken::Type::StartTag:
-        offset = 1;
-        break;
-    case HTMLToken::Type::EndTag:
-        offset = 2;
-        break;
-    default:
-        break;
-    }
 
-    m_current_token.set_start_position({}, nth_last_position(offset));
+    auto is_start_or_end_tag = type == HTMLToken::Type::StartTag || type == HTMLToken::Type::EndTag;
+    m_current_token.set_start_position({}, nth_last_position(is_start_or_end_tag ? 1 : 0));
 }
 
 HTMLTokenizer::HTMLTokenizer()
@@ -2855,7 +2843,9 @@ void HTMLTokenizer::will_emit(HTMLToken& token)
 {
     if (token.is_start_tag())
         m_last_emitted_start_tag_name = token.tag_name();
-    token.set_end_position({}, nth_last_position(0));
+
+    auto is_start_or_end_tag = token.type() == HTMLToken::Type::StartTag || token.type() == HTMLToken::Type::EndTag;
+    token.set_end_position({}, nth_last_position(is_start_or_end_tag ? 1 : 0));
 }
 
 bool HTMLTokenizer::current_end_tag_token_is_appropriate() const

@@ -23,14 +23,18 @@ using Token = Web::HTML::HTMLToken;
     last_token = &*current_token; \
     ++current_token;
 
-#define EXPECT_START_TAG_TOKEN(_tag_name)                    \
-    EXPECT_EQ(current_token->type(), Token::Type::StartTag); \
-    EXPECT_EQ(current_token->tag_name(), #_tag_name);        \
+#define EXPECT_START_TAG_TOKEN(_tag_name, start_column, end_column)  \
+    EXPECT_EQ(current_token->type(), Token::Type::StartTag);         \
+    EXPECT_EQ(current_token->tag_name(), #_tag_name);                \
+    EXPECT_EQ(current_token->start_position().column, start_column); \
+    EXPECT_EQ(current_token->end_position().column, end_column);     \
     NEXT_TOKEN();
 
-#define EXPECT_END_TAG_TOKEN(_tag_name)                    \
-    EXPECT_EQ(current_token->type(), Token::Type::EndTag); \
-    EXPECT_EQ(current_token->tag_name(), #_tag_name);      \
+#define EXPECT_END_TAG_TOKEN(_tag_name, start_column, end_column)    \
+    EXPECT_EQ(current_token->type(), Token::Type::EndTag);           \
+    EXPECT_EQ(current_token->tag_name(), #_tag_name);                \
+    EXPECT_EQ(current_token->start_position().column, start_column); \
+    EXPECT_EQ(current_token->end_position().column, end_column);     \
     NEXT_TOKEN();
 
 #define EXPECT_END_OF_FILE_TOKEN()                            \
@@ -97,12 +101,12 @@ TEST_CASE(basic)
 {
     auto tokens = run_tokenizer("<html><head></head><body></body></html>"sv);
     BEGIN_ENUMERATION(tokens);
-    EXPECT_START_TAG_TOKEN(html);
-    EXPECT_START_TAG_TOKEN(head);
-    EXPECT_END_TAG_TOKEN(head);
-    EXPECT_START_TAG_TOKEN(body);
-    EXPECT_END_TAG_TOKEN(body);
-    EXPECT_END_TAG_TOKEN(html);
+    EXPECT_START_TAG_TOKEN(html, 1u, 5u);
+    EXPECT_START_TAG_TOKEN(head, 7u, 11u);
+    EXPECT_END_TAG_TOKEN(head, 14u, 18u);
+    EXPECT_START_TAG_TOKEN(body, 20u, 24u);
+    EXPECT_END_TAG_TOKEN(body, 27u, 31u);
+    EXPECT_END_TAG_TOKEN(html, 34u, 38u);
     EXPECT_END_OF_FILE_TOKEN();
     END_ENUMERATION();
 }
@@ -111,9 +115,9 @@ TEST_CASE(basic_with_text)
 {
     auto tokens = run_tokenizer("<p>This is some text.</p>"sv);
     BEGIN_ENUMERATION(tokens);
-    EXPECT_START_TAG_TOKEN(p);
+    EXPECT_START_TAG_TOKEN(p, 1u, 2u);
     EXPECT_CHARACTER_TOKENS(This is some text.);
-    EXPECT_END_TAG_TOKEN(p);
+    EXPECT_END_TAG_TOKEN(p, 23u, 24u);
     EXPECT_END_OF_FILE_TOKEN();
     END_ENUMERATION();
 }
@@ -122,7 +126,7 @@ TEST_CASE(unquoted_attributes)
 {
     auto tokens = run_tokenizer("<p foo=bar>"sv);
     BEGIN_ENUMERATION(tokens);
-    EXPECT_START_TAG_TOKEN(p);
+    EXPECT_START_TAG_TOKEN(p, 1u, 10u);
     EXPECT_TAG_TOKEN_ATTRIBUTE_COUNT(1);
     EXPECT_TAG_TOKEN_ATTRIBUTE(foo, "bar");
     EXPECT_END_OF_FILE_TOKEN();
@@ -133,7 +137,7 @@ TEST_CASE(single_quoted_attributes)
 {
     auto tokens = run_tokenizer("<p foo='bar'>"sv);
     BEGIN_ENUMERATION(tokens);
-    EXPECT_START_TAG_TOKEN(p);
+    EXPECT_START_TAG_TOKEN(p, 1u, 12u);
     EXPECT_TAG_TOKEN_ATTRIBUTE_COUNT(1);
     EXPECT_TAG_TOKEN_ATTRIBUTE(foo, "bar");
     EXPECT_END_OF_FILE_TOKEN();
@@ -144,7 +148,7 @@ TEST_CASE(double_quoted_attributes)
 {
     auto tokens = run_tokenizer("<p foo=\"bar\">"sv);
     BEGIN_ENUMERATION(tokens);
-    EXPECT_START_TAG_TOKEN(p);
+    EXPECT_START_TAG_TOKEN(p, 1u, 12u);
     EXPECT_TAG_TOKEN_ATTRIBUTE_COUNT(1);
     EXPECT_TAG_TOKEN_ATTRIBUTE(foo, "bar");
     EXPECT_END_OF_FILE_TOKEN();
@@ -155,7 +159,7 @@ TEST_CASE(multiple_attributes)
 {
     auto tokens = run_tokenizer("<p foo=\"bar\" baz=foobar foo2=\"bar2\">"sv);
     BEGIN_ENUMERATION(tokens);
-    EXPECT_START_TAG_TOKEN(p);
+    EXPECT_START_TAG_TOKEN(p, 1u, 35u);
     EXPECT_TAG_TOKEN_ATTRIBUTE_COUNT(3);
     EXPECT_TAG_TOKEN_ATTRIBUTE(foo, "bar");
     EXPECT_TAG_TOKEN_ATTRIBUTE(baz, "foobar");
@@ -168,7 +172,7 @@ TEST_CASE(character_reference_in_attribute)
 {
     auto tokens = run_tokenizer("<p foo=a&amp;b bar='a&#38;b' baz=\"a&#x26;b\">"sv);
     BEGIN_ENUMERATION(tokens);
-    EXPECT_START_TAG_TOKEN(p);
+    EXPECT_START_TAG_TOKEN(p, 1u, 43u);
     EXPECT_TAG_TOKEN_ATTRIBUTE_COUNT(3);
     EXPECT_TAG_TOKEN_ATTRIBUTE(foo, "a&b");
     EXPECT_TAG_TOKEN_ATTRIBUTE(bar, "a&b");
@@ -181,9 +185,9 @@ TEST_CASE(comment)
 {
     auto tokens = run_tokenizer("<p><!-- This is a comment --></p>"sv);
     BEGIN_ENUMERATION(tokens);
-    EXPECT_START_TAG_TOKEN(p);
+    EXPECT_START_TAG_TOKEN(p, 1u, 2u);
     EXPECT_COMMENT_TOKEN();
-    EXPECT_END_TAG_TOKEN(p);
+    EXPECT_END_TAG_TOKEN(p, 31u, 32u);
     EXPECT_END_OF_FILE_TOKEN();
     END_ENUMERATION();
 }
@@ -193,8 +197,8 @@ TEST_CASE(doctype)
     auto tokens = run_tokenizer("<!DOCTYPE html><html></html>"sv);
     BEGIN_ENUMERATION(tokens);
     EXPECT_DOCTYPE_TOKEN();
-    EXPECT_START_TAG_TOKEN(html);
-    EXPECT_END_TAG_TOKEN(html);
+    EXPECT_START_TAG_TOKEN(html, 16u, 20u);
+    EXPECT_END_TAG_TOKEN(html, 23u, 27u);
 }
 
 // NOTE: This relies on the format of HTMLToken::to_string() staying the same.
@@ -215,5 +219,5 @@ TEST_CASE(regression)
     DeprecatedString file_contents { content.bytes() };
     auto tokens = run_tokenizer(file_contents);
     u32 hash = hash_tokens(tokens);
-    EXPECT_EQ(hash, 710375345u);
+    EXPECT_EQ(hash, 3657343287u);
 }
