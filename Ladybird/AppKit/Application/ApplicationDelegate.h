@@ -24,8 +24,8 @@
                 withCookieJar:(Browser::CookieJar)cookie_jar
       webdriverContentIPCPath:(StringView)webdriver_content_ipc_path;
 
-- (nonnull TabController*)createNewTab:(Optional<URL> const&)url;
 - (nonnull TabController*)createNewTab:(Optional<URL> const&)url
+                               fromTab:(nullable Tab*)tab
                            activateTab:(Web::HTML::ActivateTab)activate_tab;
 
 - (void)removeTab:(nonnull TabController*)controller;

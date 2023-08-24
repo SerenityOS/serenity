@@ -178,9 +178,12 @@ struct HideCursor {
         [self setNeedsDisplay:YES];
     };
 
-    m_web_view_bridge->on_new_tab = [](auto activate_tab) {
+    m_web_view_bridge->on_new_tab = [self](auto activate_tab) {
         auto* delegate = (ApplicationDelegate*)[NSApp delegate];
-        auto* controller = [delegate createNewTab:"about:blank"sv activateTab:activate_tab];
+
+        auto* controller = [delegate createNewTab:"about:blank"sv
+                                          fromTab:[self tab]
+                                      activateTab:activate_tab];
 
         auto* tab = (Tab*)[controller window];
         auto* web_view = [tab web_view];
@@ -353,17 +356,24 @@ struct HideCursor {
         auto* delegate = (ApplicationDelegate*)[NSApp delegate];
 
         if (modifiers == Mod_Super) {
-            [delegate createNewTab:url activateTab:Web::HTML::ActivateTab::No];
+            [delegate createNewTab:url
+                           fromTab:[self tab]
+                       activateTab:Web::HTML::ActivateTab::No];
         } else if (target == "_blank"sv) {
-            [delegate createNewTab:url activateTab:Web::HTML::ActivateTab::Yes];
+            [delegate createNewTab:url
+                           fromTab:[self tab]
+                       activateTab:Web::HTML::ActivateTab::Yes];
         } else {
             [[self tabController] load:url];
         }
     };
 
-    m_web_view_bridge->on_link_middle_click = [](auto url, auto, unsigned) {
+    m_web_view_bridge->on_link_middle_click = [self](auto url, auto, unsigned) {
         auto* delegate = (ApplicationDelegate*)[NSApp delegate];
-        [delegate createNewTab:url activateTab:Web::HTML::ActivateTab::No];
+
+        [delegate createNewTab:url
+                       fromTab:[self tab]
+                   activateTab:Web::HTML::ActivateTab::No];
     };
 
     m_web_view_bridge->on_context_menu_request = [self](auto position) {
