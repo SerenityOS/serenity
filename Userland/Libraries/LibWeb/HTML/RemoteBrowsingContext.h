@@ -22,19 +22,6 @@ public:
     virtual HTML::WindowProxy* window_proxy() override;
     virtual HTML::WindowProxy const* window_proxy() const override;
 
-    virtual WebIDL::ExceptionOr<void> navigate(
-        JS::NonnullGCPtr<Fetch::Infrastructure::Request>,
-        BrowsingContext&,
-        bool,
-        HistoryHandlingBehavior,
-        Optional<PolicyContainer>,
-        DeprecatedString,
-        Optional<String>,
-        Function<void(JS::NonnullGCPtr<Fetch::Infrastructure::Response>)>) override
-    {
-        return {};
-    }
-
     virtual String const& window_handle() const override { return m_window_handle; }
     virtual void set_window_handle(String handle) override { m_window_handle = handle; }
 

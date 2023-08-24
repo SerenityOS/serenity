@@ -28,17 +28,6 @@ public:
     JS::GCPtr<BrowsingContext> opener_browsing_context() const { return m_opener_browsing_context; }
     void set_opener_browsing_context(JS::GCPtr<BrowsingContext> browsing_context) { m_opener_browsing_context = browsing_context; }
 
-    virtual WebIDL::ExceptionOr<void> navigate(
-        JS::NonnullGCPtr<Fetch::Infrastructure::Request> resource,
-        BrowsingContext& source_browsing_context,
-        bool exceptions_enabled = false,
-        HistoryHandlingBehavior history_handling = HistoryHandlingBehavior::Default,
-        Optional<PolicyContainer> history_policy_container = {},
-        DeprecatedString navigation_type = "other",
-        Optional<String> navigation_id = {},
-        Function<void(JS::NonnullGCPtr<Fetch::Infrastructure::Response>)> process_response_end_of_body = {})
-        = 0;
-
     void set_is_popup(TokenizedFeature::Popup is_popup) { m_is_popup = is_popup; }
 
     virtual String const& window_handle() const = 0;
