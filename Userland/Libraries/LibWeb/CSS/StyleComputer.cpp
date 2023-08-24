@@ -2794,8 +2794,9 @@ CSSPixelRect StyleComputer::viewport_rect() const
     return {};
 }
 
-void StyleComputer::did_load_font([[maybe_unused]] FlyString const& family_name)
+void StyleComputer::did_load_font(FlyString const& family_name)
 {
+    m_font_cache.did_load_font({}, family_name);
     document().invalidate_style();
 }
 
