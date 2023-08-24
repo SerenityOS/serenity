@@ -1,0 +1,28 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x419.203125 children: inline
+      line 0 width: 430, height: 419.203125, bottom: 419.203125, baseline: 422
+        frag 0 from BlockContainer start: 0, length: 0, rect: [13,10 420x415.203125]
+      BlockContainer <button> at (13,10) content-size 420x415.203125 inline-block [BFC] children: inline
+        line 0 width: 420, height: 415.203125, bottom: 415.203125, baseline: 420
+          frag 0 from TableWrapper start: 0, length: 0, rect: [13,10 420x420]
+        TableWrapper <(anonymous)> at (13,10) content-size 420x420 [BFC] children: not-inline
+          BlockContainer <(anonymous)> at (13,10) content-size 420x420 table-box [TFC] children: not-inline
+            Box <(anonymous)> at (13,10) content-size 420x420 table-row children: not-inline
+              BlockContainer <(anonymous)> at (13,10) content-size 420x420 table-cell [BFC] children: inline
+                line 0 width: 420, height: 420, bottom: 420, baseline: 420
+                  frag 0 from ImageBox start: 0, length: 0, rect: [13,10 420x420]
+                TextNode <#text>
+                ImageBox <img> at (13,10) content-size 420x420 children: not-inline
+                TextNode <#text>
+                TextNode <#text>
+
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x419.203125]
+      PaintableWithLines (BlockContainer<BUTTON>) [8,8 430x419.203125] overflow: [9,9 428x421]
+        PaintableWithLines (TableWrapper(anonymous)) [13,10 420x420]
+          PaintableWithLines (BlockContainer(anonymous)) [13,10 420x420]
+            PaintableBox (Box(anonymous)) [13,10 420x420]
+              PaintableWithLines (BlockContainer(anonymous)) [13,10 420x420]
+                ImagePaintable (ImageBox<IMG>) [13,10 420x420]
