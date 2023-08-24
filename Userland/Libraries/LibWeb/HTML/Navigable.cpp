@@ -1113,4 +1113,10 @@ void Navigable::reload()
     });
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#the-navigation-must-be-a-replace
+bool navigation_must_be_a_replace(AK::URL const& url, DOM::Document const& document)
+{
+    return url.scheme() == "javascript"sv || document.is_initial_about_blank();
+}
+
 }
