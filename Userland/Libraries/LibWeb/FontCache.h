@@ -35,6 +35,8 @@ public:
 
     NonnullRefPtr<Gfx::Font const> scaled_font(Gfx::Font const&, float scale_factor);
 
+    void did_load_font(Badge<CSS::StyleComputer>, FlyString const& family_name);
+
 private:
     mutable HashMap<FontSelector, NonnullRefPtr<Gfx::Font const>> m_fonts;
 };

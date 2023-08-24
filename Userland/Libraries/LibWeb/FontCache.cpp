@@ -39,4 +39,11 @@ void FontCache::set(FontSelector const& font_selector, NonnullRefPtr<Gfx::Font c
     m_fonts.set(font_selector, move(font));
 }
 
+void FontCache::did_load_font(Badge<CSS::StyleComputer>, FlyString const& family_name)
+{
+    m_fonts.remove_all_matching([&family_name](auto& key, auto&) -> bool {
+        return key.family == family_name;
+    });
+}
+
 }
