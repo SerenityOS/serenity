@@ -33,8 +33,10 @@ struct BorderRadiusData {
 
     inline void shrink(CSSPixels horizontal, CSSPixels vertical)
     {
-        horizontal_radius = max(CSSPixels(0), horizontal_radius - horizontal);
-        vertical_radius = max(CSSPixels(0), vertical_radius - vertical);
+        if (horizontal_radius != 0)
+            horizontal_radius = max(CSSPixels(0), horizontal_radius - horizontal);
+        if (vertical_radius != 0)
+            vertical_radius = max(CSSPixels(0), vertical_radius - vertical);
     }
 };
 
