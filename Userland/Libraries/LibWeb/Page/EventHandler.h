@@ -44,6 +44,7 @@ private:
     bool fire_keyboard_event(FlyString const& event_name, HTML::BrowsingContext& browsing_context, KeyCode key, unsigned modifiers, u32 code_point);
     CSSPixelPoint compute_mouse_event_client_offset(CSSPixelPoint event_page_position) const;
     CSSPixelPoint compute_mouse_event_page_offset(CSSPixelPoint event_client_offset) const;
+    CSSPixelPoint compute_mouse_event_movement(CSSPixelPoint event_client_offset) const;
 
     struct Target {
         JS::GCPtr<Painting::Paintable> paintable;
@@ -63,6 +64,8 @@ private:
     NonnullOwnPtr<EditEventHandler> m_edit_event_handler;
 
     WeakPtr<DOM::EventTarget> m_mousedown_target;
+
+    Optional<CSSPixelPoint> m_mousemove_previous_client_offset;
 };
 
 }
