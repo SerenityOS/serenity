@@ -20,6 +20,8 @@ struct MouseEventInit : public EventModifierInit {
     double client_y = 0;
     double page_x = 0;
     double page_y = 0;
+    double movement_x = 0;
+    double movement_y = 0;
 
     i16 button = 0;
     u16 buttons = 0;
@@ -30,7 +32,7 @@ class MouseEvent : public UIEvent {
 
 public:
     [[nodiscard]] static JS::NonnullGCPtr<MouseEvent> create(JS::Realm&, FlyString const& event_name, MouseEventInit const& = {});
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> create_from_platform_event(JS::Realm&, FlyString const& event_name, CSSPixelPoint offset, CSSPixelPoint client_offset, CSSPixelPoint page_offset, unsigned buttons, unsigned mouse_button = 1);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> create_from_platform_event(JS::Realm&, FlyString const& event_name, CSSPixelPoint offset, CSSPixelPoint client_offset, CSSPixelPoint page_offset, Optional<CSSPixelPoint> movement, unsigned buttons, unsigned mouse_button = 1);
 
     virtual ~MouseEvent() override;
 
@@ -49,6 +51,9 @@ public:
 
     double x() const { return client_x(); }
     double y() const { return client_y(); }
+
+    double movement_x() const { return m_movement_x; }
+    double movement_y() const { return m_movement_y; }
 
     i16 button() const { return m_button; }
     u16 buttons() const { return m_buttons; }
@@ -69,6 +74,8 @@ private:
     double m_client_y { 0 };
     double m_page_x { 0 };
     double m_page_y { 0 };
+    double m_movement_x { 0 };
+    double m_movement_y { 0 };
     i16 m_button { 0 };
     u16 m_buttons { 0 };
 };

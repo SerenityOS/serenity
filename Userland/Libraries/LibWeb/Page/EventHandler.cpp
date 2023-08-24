@@ -248,15 +248,15 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, unsigned button, unsig
             auto offset = compute_mouse_event_offset(position, *layout_node);
             auto client_offset = compute_mouse_event_client_offset(position);
             auto page_offset = compute_mouse_event_page_offset(client_offset);
-            node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mouseup, offset, client_offset, page_offset, buttons, button).release_value_but_fixme_should_propagate_errors());
+            node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mouseup, offset, client_offset, page_offset, {}, buttons, button).release_value_but_fixme_should_propagate_errors());
             handled_event = true;
 
             bool run_activation_behavior = false;
             if (node.ptr() == m_mousedown_target) {
                 if (button == GUI::MouseButton::Primary)
-                    run_activation_behavior = node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::click, offset, client_offset, page_offset, button).release_value_but_fixme_should_propagate_errors());
+                    run_activation_behavior = node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::click, offset, client_offset, page_offset, {}, button).release_value_but_fixme_should_propagate_errors());
                 else if (button == GUI::MouseButton::Secondary && !(modifiers & Mod_Shift)) // Allow the user to bypass custom context menus by holding shift, like Firefox.
-                    run_activation_behavior = node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::contextmenu, offset, client_offset, page_offset, button).release_value_but_fixme_should_propagate_errors());
+                    run_activation_behavior = node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::contextmenu, offset, client_offset, page_offset, {}, button).release_value_but_fixme_should_propagate_errors());
             }
 
             if (run_activation_behavior) {
@@ -384,7 +384,7 @@ bool EventHandler::handle_mousedown(CSSPixelPoint position, unsigned button, uns
         auto offset = compute_mouse_event_offset(position, *layout_node);
         auto client_offset = compute_mouse_event_client_offset(position);
         auto page_offset = compute_mouse_event_page_offset(client_offset);
-        node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousedown, offset, client_offset, page_offset, buttons, button).release_value_but_fixme_should_propagate_errors());
+        node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousedown, offset, client_offset, page_offset, {}, buttons, button).release_value_but_fixme_should_propagate_errors());
     }
 
     // NOTE: Dispatching an event may have disturbed the world.
@@ -497,7 +497,9 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, unsigned buttons, un
             auto offset = compute_mouse_event_offset(position, *layout_node);
             auto client_offset = compute_mouse_event_client_offset(position);
             auto page_offset = compute_mouse_event_page_offset(client_offset);
-            node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousemove, offset, client_offset, page_offset, buttons).release_value_but_fixme_should_propagate_errors());
+            auto movement = compute_mouse_event_movement(client_offset);
+            node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousemove, offset, client_offset, page_offset, movement, buttons).release_value_but_fixme_should_propagate_errors());
+            m_mousemove_previous_client_offset = client_offset;
             // NOTE: Dispatching an event may have disturbed the world.
             if (!paint_root() || paint_root() != node->document().paintable_box())
                 return true;
@@ -582,7 +584,7 @@ bool EventHandler::handle_doubleclick(CSSPixelPoint position, unsigned button, u
     auto offset = compute_mouse_event_offset(position, *layout_node);
     auto client_offset = compute_mouse_event_client_offset(position);
     auto page_offset = compute_mouse_event_page_offset(client_offset);
-    node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::dblclick, offset, client_offset, page_offset, buttons, button).release_value_but_fixme_should_propagate_errors());
+    node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::dblclick, offset, client_offset, page_offset, {}, buttons, button).release_value_but_fixme_should_propagate_errors());
 
     // NOTE: Dispatching an event may have disturbed the world.
     if (!paint_root() || paint_root() != node->document().paintable_box())
@@ -832,6 +834,23 @@ CSSPixelPoint EventHandler::compute_mouse_event_page_offset(CSSPixelPoint event_
 
     // 3. Return the sum of offset and the value of the event’s clientX attribute.
     return event_client_offset.translated(scroll_offset);
+}
+
+CSSPixelPoint EventHandler::compute_mouse_event_movement(CSSPixelPoint event_client_offset) const
+{
+    // https://w3c.github.io/pointerlock/#dom-mouseevent-movementx
+    // The attributes movementX movementY must provide the change in position of the pointer,
+    // as if the values of screenX, screenY, were stored between two subsequent mousemove events eNow and ePrevious and the difference taken movementX = eNow.screenX-ePrevious.screenX.
+    // FIXME: Using client_offset as screenX and screenY is currently equal to clientX and clientY
+
+    if (!m_mousemove_previous_client_offset.has_value())
+        // When unlocked, the system cursor can exit and re-enter the user agent window.
+        // If it does so and the user agent was not the target of operating system mouse move events
+        // then the most recent pointer position will be unknown to the user agent and movementX/movementY can not be computed and must be set to zero.
+        // FIXME: For this to actually work, m_mousemove_previous_client_offset needs to be cleared when the mouse leaves the window
+        return { 0, 0 };
+
+    return { event_client_offset.x() - m_mousemove_previous_client_offset.value().x(), event_client_offset.y() - m_mousemove_previous_client_offset.value().y() };
 }
 
 Optional<EventHandler::Target> EventHandler::target_for_mouse_position(CSSPixelPoint position)
