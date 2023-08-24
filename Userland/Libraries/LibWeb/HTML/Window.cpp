@@ -30,7 +30,6 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
-#include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/CustomElements/CustomElementRegistry.h>
 #include <LibWeb/HTML/EventHandler.h>
@@ -296,18 +295,15 @@ static TokenizedFeature::Popup check_if_a_popup_window_is_requested(OrderedHashM
     return TokenizedFeature::Popup::No;
 }
 
-// FIXME: This is based on the old 'browsing context' concept, which was replaced with 'navigable'
 // https://html.spec.whatwg.org/multipage/window-object.html#window-open-steps
 WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, StringView target, StringView features)
 {
-    auto& vm = this->vm();
-
     // 1. If the event loop's termination nesting level is nonzero, return null.
     if (main_thread_event_loop().termination_nesting_level() != 0)
         return nullptr;
 
-    // 2. Let source browsing context be the entry global object's browsing context.
-    auto* source_browsing_context = verify_cast<Window>(entry_global_object()).browsing_context();
+    // 2. Let sourceDocument be the entry global object's associated Document.
+    auto& source_document = verify_cast<Window>(entry_global_object()).associated_document();
 
     // 3. If target is the empty string, then set target to "_blank".
     if (target.is_empty())
@@ -338,21 +334,24 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, St
         tokenized_features.remove("noreferrer"sv);
     }
 
-    // 8. If noreferrer is true, then set noopener to true.
+    // FIXME: 8. Let referrerPolicy be the empty string.
+
+    // 9. If noreferrer is true, then set noopener to true.
     if (no_referrer == TokenizedFeature::NoReferrer::Yes)
         no_opener = TokenizedFeature::NoOpener::Yes;
 
-    // 9. Let target browsing context and windowType be the result of applying the rules for choosing a browsing context given target, source browsing context, and noopener.
-    auto [target_browsing_context, window_type] = source_browsing_context->choose_a_browsing_context(target, no_opener);
+    // 10. Let targetNavigable and windowType be the result of applying the rules for choosing a navigable given target, sourceDocument's node navigable, and noopener.
+    VERIFY(source_document.navigable());
+    auto [target_navigable, window_type] = source_document.navigable()->choose_a_navigable(target, no_opener);
 
-    // 10. If target browsing context is null, then return null.
-    if (target_browsing_context == nullptr)
+    // 11. If targetNavigable is null, then return null.
+    if (target_navigable == nullptr)
         return nullptr;
 
-    // 11. If windowType is either "new and unrestricted" or "new with no opener", then:
-    if (window_type == BrowsingContext::WindowType::NewAndUnrestricted || window_type == BrowsingContext::WindowType::NewWithNoOpener) {
+    // 12. If windowType is either "new and unrestricted" or "new with no opener", then:
+    if (window_type == Navigable::WindowType::NewAndUnrestricted || window_type == Navigable::WindowType::NewWithNoOpener) {
         // 1. Set the target browsing context's is popup to the result of checking if a popup window is requested, given tokenizedFeatures.
-        target_browsing_context->set_is_popup(check_if_a_popup_window_is_requested(tokenized_features));
+        target_navigable->set_is_popup(check_if_a_popup_window_is_requested(tokenized_features));
 
         // FIXME: 2. Set up browsing context features for target browsing context given tokenizedFeatures. [CSSOMVIEW]
         // NOTE: While this is not implemented yet, all of observable actions taken by this operation are optional (implementation-defined).
@@ -369,22 +368,11 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, St
 
         // FIXME: 5. If urlRecord matches about:blank, then perform the URL and history update steps given target browsing context's active document and urlRecord.
 
-        // 6. Otherwise:
-        else {
-            // 1. Let request be a new request whose URL is urlRecord.
-            auto request = Fetch::Infrastructure::Request::create(vm);
-            request->set_url(url_record);
-
-            // 2. If noreferrer is true, then set request's referrer to "no-referrer".
-            if (no_referrer == TokenizedFeature::NoReferrer::Yes)
-                request->set_referrer(Fetch::Infrastructure::Request::Referrer::NoReferrer);
-
-            // 3. Navigate target browsing context to request, with exceptionsEnabled set to true and the source browsing context set to source browsing context.
-            TRY(target_browsing_context->navigate(request, *source_browsing_context, true));
-        }
+        // 6. Otherwise, navigate targetNavigable to urlRecord using sourceDocument, with referrerPolicy set to referrerPolicy and exceptionsEnabled set to true.
+        TRY(target_navigable->navigate(url_record, source_document));
     }
 
-    // 12. Otherwise:
+    // 13. Otherwise:
     else {
         // 1. If url is not the empty string, then:
         if (!url.is_empty()) {
@@ -396,29 +384,21 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, St
             if (!url_record.is_valid())
                 return WebIDL::SyntaxError::create(realm(), "URL is not valid"_fly_string);
 
-            // 3. Let request be a new request whose URL is urlRecord.
-            auto request = Fetch::Infrastructure::Request::create(vm);
-            request->set_url(url_record);
-
-            // 4. If noreferrer is true, then set request's referrer to "noreferrer".
-            if (no_referrer == TokenizedFeature::NoReferrer::Yes)
-                request->set_referrer(Fetch::Infrastructure::Request::Referrer::NoReferrer);
-
-            // 5. Navigate target browsing context to request, with exceptionsEnabled set to true and the source browsing context set to source browsing context.
-            TRY(target_browsing_context->navigate(request, *source_browsing_context, true));
+            // 3. Navigate targetNavigable to urlRecord using sourceDocument, with referrerPolicy set to referrerPolicy and exceptionsEnabled set to true.
+            TRY(target_navigable->navigate(url_record, source_document));
         }
 
         // 2. If noopener is false, then set target browsing context's opener browsing context to source browsing context.
         if (no_opener == TokenizedFeature::NoOpener::No)
-            target_browsing_context->set_opener_browsing_context(source_browsing_context);
+            target_navigable->active_browsing_context()->set_opener_browsing_context(source_document.browsing_context());
     }
 
     // 13. If noopener is true or windowType is "new with no opener", then return null.
-    if (no_opener == TokenizedFeature::NoOpener::Yes || window_type == BrowsingContext::WindowType::NewWithNoOpener)
+    if (no_opener == TokenizedFeature::NoOpener::Yes || window_type == Navigable::WindowType::NewWithNoOpener)
         return nullptr;
 
-    // 14. Return target browsing context's WindowProxy object.
-    return target_browsing_context->window_proxy();
+    // 14. Return targetNavigable's active WindowProxy.s
+    return target_navigable->active_window_proxy();
 }
 
 bool Window::dispatch_event(DOM::Event& event)

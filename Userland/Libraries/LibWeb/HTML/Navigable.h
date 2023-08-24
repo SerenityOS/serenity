@@ -149,6 +149,8 @@ public:
     void set_needs_display();
     void set_needs_display(CSSPixelRect const&);
 
+    void set_is_popup(TokenizedFeature::Popup is_popup) { m_is_popup = is_popup; }
+
 protected:
     Navigable();
 
@@ -156,6 +158,9 @@ protected:
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#ongoing-navigation
     Variant<Empty, Traversal, String> m_ongoing_navigation;
+
+    // https://html.spec.whatwg.org/multipage/browsers.html#is-popup
+    TokenizedFeature::Popup m_is_popup { TokenizedFeature::Popup::No };
 
 private:
     bool allowed_by_sandboxing_to_navigate(Navigable const& target, SourceSnapshotParams const&);
