@@ -44,6 +44,7 @@ static bool is_platform_object(Type const& type)
         "Module"sv,
         "MutationRecord"sv,
         "NamedNodeMap"sv,
+        "NavigationDestination"sv,
         "NavigationHistoryEntry"sv,
         "Node"sv,
         "Path2D"sv,

@@ -123,6 +123,7 @@ source_set("HTML") {
     "MimeTypeArray.cpp",
     "Navigable.cpp",
     "NavigableContainer.cpp",
+    "NavigateEvent.cpp",
     "Navigation.cpp",
     "NavigationCurrentEntryChangeEvent.cpp",
     "NavigationDestination.cpp",
