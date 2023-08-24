@@ -23,7 +23,7 @@ struct NavigateEventInit : public DOM::EventInit {
     JS::GCPtr<DOM::AbortSignal> signal;
     JS::GCPtr<XHR::FormData> form_data = nullptr;
     Optional<String> download_request = {};
-    JS::Value info;
+    Optional<JS::Value> info;
     bool has_ua_visual_transition = false;
 };
 
@@ -33,8 +33,8 @@ using NavigationInterceptHandler = JS::NonnullGCPtr<WebIDL::CallbackType>;
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigationinterceptoptions
 struct NavigationInterceptOptions {
     JS::GCPtr<WebIDL::CallbackType> handler;
-    Bindings::NavigationFocusReset focus_reset;
-    Bindings::NavigationScrollBehavior scroll;
+    Optional<Bindings::NavigationFocusReset> focus_reset;
+    Optional<Bindings::NavigationScrollBehavior> scroll;
 };
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigateevent
@@ -57,7 +57,7 @@ public:
     JS::Value info() const { return m_info; }
     bool has_ua_visual_transition() const { return m_has_ua_visual_transition; }
 
-    WebIDL::ExceptionOr<void> intercept(Optional<NavigationInterceptOptions> const& = {});
+    WebIDL::ExceptionOr<void> intercept(NavigationInterceptOptions const&);
     WebIDL::ExceptionOr<void> scroll();
 
     virtual ~NavigateEvent() override;
