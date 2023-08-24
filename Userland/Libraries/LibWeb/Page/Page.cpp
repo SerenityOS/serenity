@@ -47,10 +47,6 @@ void Page::load(const AK::URL& url)
     (void)top_level_traversable()->navigate(url, *top_level_traversable()->active_document());
 }
 
-void Page::load(LoadRequest&)
-{
-}
-
 void Page::load_html(StringView html, const AK::URL& url)
 {
     (void)top_level_traversable()->navigate(url, *top_level_traversable()->active_document(), String::from_utf8(html).release_value_but_fixme_should_propagate_errors());
