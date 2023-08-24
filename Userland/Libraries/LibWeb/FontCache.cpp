@@ -8,6 +8,8 @@
 #include <LibGfx/Font/Font.h>
 #include <LibWeb/FontCache.h>
 
+namespace Web {
+
 RefPtr<Gfx::Font const> FontCache::get(FontSelector const& font_selector) const
 {
     auto cached_font = m_fonts.get(font_selector);
@@ -35,4 +37,6 @@ NonnullRefPtr<Gfx::Font const> FontCache::scaled_font(Gfx::Font const& font, flo
 void FontCache::set(FontSelector const& font_selector, NonnullRefPtr<Gfx::Font const> font)
 {
     m_fonts.set(font_selector, move(font));
+}
+
 }
