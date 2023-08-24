@@ -288,8 +288,11 @@ void MailWidget::selected_mailbox()
                 .type = IMAP::FetchCommand::DataItemType::PeekBody,
                 .section = IMAP::FetchCommand::DataItem::Section {
                     .type = IMAP::FetchCommand::DataItem::SectionType::HeaderFields,
-                    .headers = { { "Date", "Subject", "From" } },
+                    .headers = { { "Subject", "From" } },
                 },
+            },
+            IMAP::FetchCommand::DataItem {
+                .type = IMAP::FetchCommand::DataItemType::InternalDate,
             },
             IMAP::FetchCommand::DataItem {
                 .type = IMAP::FetchCommand::DataItemType::Flags,
@@ -312,6 +315,7 @@ void MailWidget::selected_mailbox()
         auto sequence_number = fetch_data.get<unsigned>();
         auto& response_data = fetch_data.get<IMAP::FetchResponseData>();
         auto& body_data = response_data.body_data();
+        auto& internal_date = response_data.internal_date();
 
         auto seen = !response_data.flags().find_if([](StringView value) { return value.equals_ignoring_ascii_case("\\Seen"sv); }).is_end();
 
@@ -327,13 +331,6 @@ void MailWidget::selected_mailbox()
             });
             return header_iterator != data_item.section->headers->end();
         };
-
-        auto date_iterator = body_data.find_if([&data_item_has_header](Tuple<IMAP::FetchCommand::DataItem, Optional<DeprecatedString>>& data) {
-            auto const data_item = data.get<0>();
-            return data_item_has_header(data_item, "Date");
-        });
-
-        VERIFY(date_iterator != body_data.end());
 
         auto subject_iterator = body_data.find_if([&data_item_has_header](Tuple<IMAP::FetchCommand::DataItem, Optional<DeprecatedString>>& data) {
             auto const data_item = data.get<0>();
@@ -378,18 +375,7 @@ void MailWidget::selected_mailbox()
             return builder.to_deprecated_string();
         };
 
-        auto& date_iterator_value = date_iterator->get<1>().value();
-        auto date_index = date_iterator_value.find("Date:"sv);
-        DeprecatedString date;
-        if (date_index.has_value()) {
-            auto potential_date = date_iterator_value.substring(date_index.value());
-            auto date_parts = potential_date.split_limit(':', 2);
-            date = parse_and_unfold(date_parts.last());
-        }
-
-        if (date.is_empty()) {
-            date = "(Unknown date)";
-        }
+        DeprecatedString date = internal_date.to_deprecated_string();
 
         auto& subject_iterator_value = subject_iterator->get<1>().value();
         auto subject_index = subject_iterator_value.find("Subject:"sv);
