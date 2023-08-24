@@ -182,6 +182,7 @@ standard_idl_files = [
   "//Userland/Libraries/LibWeb/HTML/MessagePort.idl",
   "//Userland/Libraries/LibWeb/HTML/MimeType.idl",
   "//Userland/Libraries/LibWeb/HTML/MimeTypeArray.idl",
+  "//Userland/Libraries/LibWeb/HTML/NavigateEvent.idl",
   "//Userland/Libraries/LibWeb/HTML/Navigation.idl",
   "//Userland/Libraries/LibWeb/HTML/NavigationCurrentEntryChangeEvent.idl",
   "//Userland/Libraries/LibWeb/HTML/NavigationDestination.idl",

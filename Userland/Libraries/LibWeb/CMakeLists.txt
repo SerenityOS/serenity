@@ -350,6 +350,7 @@ set(SOURCES
     HTML/MimeTypeArray.cpp
     HTML/Navigable.cpp
     HTML/NavigableContainer.cpp
+    HTML/NavigateEvent.cpp
     HTML/Navigation.cpp
     HTML/NavigationDestination.cpp
     HTML/NavigationCurrentEntryChangeEvent.cpp
