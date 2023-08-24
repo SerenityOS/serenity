@@ -35,24 +35,34 @@ BorderRadiiData normalized_border_radii_data(Layout::Node const& node, CSSPixelR
     top_right_radius_px.vertical_radius = top_right_radius.vertical_radius.to_px(node, rect.height());
 
     // Scale overlapping curves according to https://www.w3.org/TR/css-backgrounds-3/#corner-overlap
-    CSSPixels f = 1;
-    if (rect.width() > 0) {
-        f = max(f, (top_left_radius_px.horizontal_radius + top_right_radius_px.horizontal_radius) / rect.width());
-        f = max(f, (bottom_left_radius_px.horizontal_radius + bottom_right_radius_px.horizontal_radius) / rect.width());
-    }
-    if (rect.height() > 0) {
-        f = max(f, (top_right_radius_px.vertical_radius + bottom_right_radius_px.vertical_radius) / rect.height());
-        f = max(f, (top_left_radius_px.vertical_radius + bottom_left_radius_px.vertical_radius) / rect.height());
-    }
+    // Let f = min(Li/Si), where i ∈ {top, right, bottom, left},
+    // Si is the sum of the two corresponding radii of the corners on side i,
+    // and Ltop = Lbottom = the width of the box, and Lleft = Lright = the height of the box.
+    auto l_top = rect.width();
+    auto l_bottom = l_top;
+    auto l_left = rect.height();
+    auto l_right = l_left;
+    auto s_top = (top_left_radius_px.horizontal_radius + top_right_radius_px.horizontal_radius);
+    auto s_right = (top_right_radius_px.vertical_radius + bottom_right_radius_px.vertical_radius);
+    auto s_bottom = (bottom_left_radius_px.horizontal_radius + bottom_right_radius_px.horizontal_radius);
+    auto s_left = (top_left_radius_px.vertical_radius + bottom_left_radius_px.vertical_radius);
+    CSSPixelFraction f = 1;
+    f = min(f, l_top / s_top);
+    f = min(f, l_right / s_right);
+    f = min(f, l_bottom / s_bottom);
+    f = min(f, l_left / s_left);
 
-    top_left_radius_px.horizontal_radius /= f;
-    top_left_radius_px.vertical_radius /= f;
-    top_right_radius_px.horizontal_radius /= f;
-    top_right_radius_px.vertical_radius /= f;
-    bottom_right_radius_px.horizontal_radius /= f;
-    bottom_right_radius_px.vertical_radius /= f;
-    bottom_left_radius_px.horizontal_radius /= f;
-    bottom_left_radius_px.vertical_radius /= f;
+    // If f < 1, then all corner radii are reduced by multiplying them by f.
+    if (f < 1) {
+        top_left_radius_px.horizontal_radius *= f;
+        top_left_radius_px.vertical_radius *= f;
+        top_right_radius_px.horizontal_radius *= f;
+        top_right_radius_px.vertical_radius *= f;
+        bottom_right_radius_px.horizontal_radius *= f;
+        bottom_right_radius_px.vertical_radius *= f;
+        bottom_left_radius_px.horizontal_radius *= f;
+        bottom_left_radius_px.vertical_radius *= f;
+    }
 
     return BorderRadiiData { top_left_radius_px, top_right_radius_px, bottom_right_radius_px, bottom_left_radius_px };
 }
