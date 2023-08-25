@@ -7,14 +7,13 @@ files=(
 )
 depends=("gettext" "glib" "libtool" "ncurses" "vim")
 configopts=(
+    "--with-sysroot=${SERENITY_INSTALL_ROOT}"
     "--disable-largefile"
     "--disable-vfs"
     "--without-edit"
     "--without-x"
     "--with-homedir"
     "--with-screen=ncurses"
-    "--with-ncurses-includes=$SERENITY_BUILD_DIR/Root/usr/local/include/ncurses"
-    "--with-ncurses-libs=$SERENITY_BUILD_DIR/Root/usr/local/lib"
 )
 use_fresh_config_sub=true
 config_sub_paths=("config/config.sub")
