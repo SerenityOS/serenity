@@ -10,4 +10,5 @@
 
 struct BeepInstruction {
     u16 tone;
+    u16 milliseconds_duration;
 };

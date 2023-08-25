@@ -11,9 +11,11 @@
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Optional<size_t> tone;
+    Optional<size_t> milliseconds_duration;
     Core::ArgsParser args_parser;
     args_parser.add_option(tone, "Beep tone", "beep-tone", 'f', "Beep tone (frequency in Hz)");
+    args_parser.add_option(milliseconds_duration, "Duration", "duration", 'n', "Duration (in milliseconds)");
     args_parser.parse(arguments);
-    TRY(Core::System::beep(tone.value_or(440)));
+    TRY(Core::System::beep(tone.value_or(440), milliseconds_duration.value_or(200)));
     return 0;
 }
