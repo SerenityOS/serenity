@@ -37,6 +37,7 @@ public:
     struct Position {
         size_t line { 0 };
         size_t column { 0 };
+        size_t byte_offset { 0 };
     };
 
     struct Attribute {
