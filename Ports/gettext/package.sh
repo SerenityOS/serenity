@@ -8,3 +8,6 @@ files=(
 depends=("libiconv")
 use_fresh_config_sub='true'
 config_sub_paths=("build-aux/config.sub" "libtextstyle/build-aux/config.sub")
+configopts=(
+    '--disable-curses'    
+)
