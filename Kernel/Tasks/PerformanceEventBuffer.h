@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Jakub Berkop <jakub.berkop@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -145,7 +146,7 @@ private:
     size_t m_count { 0 };
     NonnullOwnPtr<KBuffer> m_buffer;
 
-    HashMap<NonnullOwnPtr<KString>, size_t> m_strings;
+    SpinlockProtected<HashMap<NonnullOwnPtr<KString>, size_t>, LockRank::None> m_strings;
 };
 
 extern bool g_profiling_all_threads;
