@@ -364,12 +364,12 @@ bool Request::cross_origin_embedder_policy_allows_credentials() const
     // FIXME: 3. If request’s client’s policy container’s embedder policy’s value is not "credentialless", then return true.
 
     // 4. If request’s origin is same origin with request’s current URL’s origin and request does not have a redirect-tainted origin, then return true.
-    // FIXME: Actually use the given origins once we have https://url.spec.whatwg.org/#concept-url-origin.
-    if (HTML::Origin().is_same_origin(HTML::Origin()) && !has_redirect_tainted_origin())
-        return true;
-
     // 5. Return false.
-    return false;
+    auto const* request_origin = m_origin.get_pointer<HTML::Origin>();
+    if (request_origin == nullptr)
+        return false;
+
+    return request_origin->is_same_origin(URL::url_origin(current_url())) && !has_redirect_tainted_origin();
 }
 
 }
