@@ -196,7 +196,16 @@ inline void swap(NonnullOwnPtr<T>& a, NonnullOwnPtr<U>& b)
     a.swap(b);
 }
 
+template<Formattable T>
+struct Formatter<NonnullOwnPtr<T>> : Formatter<T> {
+    ErrorOr<void> format(FormatBuilder& builder, NonnullOwnPtr<T> const& value)
+    {
+        return Formatter<T>::format(builder, *value);
+    }
+};
+
 template<typename T>
+requires(!HasFormatter<T>)
 struct Formatter<NonnullOwnPtr<T>> : Formatter<T const*> {
     ErrorOr<void> format(FormatBuilder& builder, NonnullOwnPtr<T> const& value)
     {
