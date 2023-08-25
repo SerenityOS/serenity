@@ -25,7 +25,7 @@ public:
     virtual ErrorOr<size_t> write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t) override;
     virtual bool can_read(OpenFileDescription const&, u64) const override;
     virtual bool can_write(OpenFileDescription const&, u64) const override;
-    virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override final;
+    virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
 
     unsigned short rows() const { return m_rows; }
     unsigned short columns() const { return m_columns; }
@@ -47,9 +47,6 @@ public:
     void hang_up();
 
     virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_name() const = 0;
-
-    virtual bool is_graphical() const { return false; }
-    virtual void set_graphical(bool) { }
 
 protected:
     virtual ErrorOr<size_t> on_tty_write(UserOrKernelBuffer const&, size_t) = 0;

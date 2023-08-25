@@ -77,9 +77,8 @@ public:
 
     void refresh_after_resolution_change();
 
-    // ^TTY
-    virtual bool is_graphical() const override { return m_graphical; }
-    virtual void set_graphical(bool graphical) override;
+    bool is_graphical() const { return m_graphical; }
+    void set_graphical(bool graphical);
 
     void emit_char(char);
 
@@ -91,6 +90,7 @@ private:
     // ^TTY
     virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_name() const override;
     virtual ErrorOr<size_t> on_tty_write(UserOrKernelBuffer const&, size_t) override;
+    virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
     virtual void echo(u8) override;
 
     // ^TerminalClient
