@@ -34,6 +34,8 @@ public:
 protected:
     LiveNodeList(JS::Realm&, Node& root, Scope, Function<bool(Node const&)> filter);
 
+    Node* first_matching(Function<bool(Node const&)> const& filter) const;
+
 private:
     virtual void visit_edges(Cell::Visitor&) override;
 

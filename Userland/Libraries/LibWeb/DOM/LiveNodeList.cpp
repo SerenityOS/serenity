@@ -52,6 +52,29 @@ JS::MarkedVector<Node*> LiveNodeList::collection() const
     return nodes;
 }
 
+Node* LiveNodeList::first_matching(Function<bool(Node const&)> const& filter) const
+{
+    Node* matched_node = nullptr;
+    if (m_scope == Scope::Descendants) {
+        m_root->for_each_in_subtree([&](auto& node) {
+            if (m_filter(node) && filter(node)) {
+                matched_node = const_cast<Node*>(&node);
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
+    } else {
+        m_root->for_each_child([&](auto& node) {
+            if (m_filter(node) && filter(node)) {
+                matched_node = const_cast<Node*>(&node);
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
+    }
+    return matched_node;
+}
+
 // https://dom.spec.whatwg.org/#dom-nodelist-length
 u32 LiveNodeList::length() const
 {
