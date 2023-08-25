@@ -657,6 +657,7 @@ int ptsname_r(int fd, char* buffer, size_t size)
 }
 
 static unsigned long s_next_rand = 1;
+static long s_next_rand48 = 0;
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/rand.html
 int rand()
@@ -669,6 +670,23 @@ int rand()
 void srand(unsigned seed)
 {
     s_next_rand = seed;
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/drand48.html
+double drand48()
+{
+    constexpr u64 a = 0x5DEECE66DULL;
+    constexpr u64 c = 0xBULL;
+    constexpr u64 m = 1ULL << 48;
+
+    s_next_rand48 = (a * s_next_rand48 + c) & (m - 1);
+    return static_cast<double>(s_next_rand48) / m;
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/srand48.html
+void srand48(long seed)
+{
+    s_next_rand48 = (seed & 0xFFFFFFFF) << 16 | 0x330E;
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/abs.html
