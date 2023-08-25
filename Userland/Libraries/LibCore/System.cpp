@@ -149,12 +149,12 @@ namespace Core::System {
 
 #ifdef AK_OS_SERENITY
 
-ErrorOr<void> beep(u16 tone)
+ErrorOr<void> beep(u16 tone, u16 milliseconds_duration)
 {
     static Optional<int> beep_fd;
     if (!beep_fd.has_value())
         beep_fd = TRY(Core::System::open("/dev/beep"sv, O_RDWR));
-    BeepInstruction instruction { tone };
+    BeepInstruction instruction { tone, milliseconds_duration };
     TRY(Core::System::write(beep_fd.value(), Span<u8 const>(&instruction, sizeof(BeepInstruction))));
     return {};
 }
