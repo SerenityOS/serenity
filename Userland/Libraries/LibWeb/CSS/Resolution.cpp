@@ -23,9 +23,9 @@ double Resolution::to_dots_per_pixel() const
 {
     switch (m_type) {
     case Type::Dpi:
-        return m_value * 96; // 1in = 2.54cm = 96px
+        return m_value / 96; // 1in = 2.54cm = 96px
     case Type::Dpcm:
-        return m_value * (96.0 / 2.54); // 1cm = 96px/2.54
+        return m_value / (96.0 / 2.54); // 1cm = 96px/2.54
     case Type::Dppx:
         return m_value;
     }
