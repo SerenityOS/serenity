@@ -194,6 +194,27 @@ UNMAP_AFTER_INIT VirtualConsole::~VirtualConsole()
     VERIFY_NOT_REACHED();
 }
 
+ErrorOr<void> VirtualConsole::ioctl(OpenFileDescription& description, unsigned request, Userspace<void*> arg)
+{
+    TRY(Process::current().require_promise(Pledge::tty));
+    switch (request) {
+    case KDSETMODE: {
+        auto mode = static_cast<unsigned int>(arg.ptr());
+        if (mode != KD_TEXT && mode != KD_GRAPHICS)
+            return EINVAL;
+
+        set_graphical(mode == KD_GRAPHICS);
+        return {};
+    }
+    case KDGETMODE: {
+        auto mode_ptr = static_ptr_cast<int*>(arg);
+        int mode = (is_graphical()) ? KD_GRAPHICS : KD_TEXT;
+        return copy_to_user(mode_ptr, &mode);
+    }
+    }
+    return TTY::ioctl(description, request, arg);
+}
+
 static inline Graphics::Console::Color ansi_color_to_standard_vga_color(VT::Color::ANSIColor color)
 {
     switch (color) {

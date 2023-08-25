@@ -562,19 +562,6 @@ ErrorOr<void> TTY::ioctl(OpenFileDescription&, unsigned request, Userspace<void*
     case TIOCNOTTY:
         current_process.set_tty(nullptr);
         return {};
-    case KDSETMODE: {
-        auto mode = static_cast<unsigned int>(arg.ptr());
-        if (mode != KD_TEXT && mode != KD_GRAPHICS)
-            return EINVAL;
-
-        set_graphical(mode == KD_GRAPHICS);
-        return {};
-    }
-    case KDGETMODE: {
-        auto mode_ptr = static_ptr_cast<int*>(arg);
-        int mode = (is_graphical()) ? KD_GRAPHICS : KD_TEXT;
-        return copy_to_user(mode_ptr, &mode);
-    }
     }
     return EINVAL;
 }
