@@ -212,6 +212,8 @@ standard_idl_files = [
   "//Userland/Libraries/LibWeb/MathML/MathMLElement.idl",
   "//Userland/Libraries/LibWeb/NavigationTiming/PerformanceTiming.idl",
   "//Userland/Libraries/LibWeb/PerformanceTimeline/PerformanceEntry.idl",
+  "//Userland/Libraries/LibWeb/PerformanceTimeline/PerformanceObserver.idl",
+  "//Userland/Libraries/LibWeb/PerformanceTimeline/PerformanceObserverEntryList.idl",
   "//Userland/Libraries/LibWeb/RequestIdleCallback/IdleDeadline.idl",
   "//Userland/Libraries/LibWeb/ResizeObserver/ResizeObserver.idl",
   "//Userland/Libraries/LibWeb/Streams/ByteLengthQueuingStrategy.idl",

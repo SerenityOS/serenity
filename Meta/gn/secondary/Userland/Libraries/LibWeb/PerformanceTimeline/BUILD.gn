@@ -4,5 +4,7 @@ source_set("PerformanceTimeline") {
   sources = [
     "EntryTypes.cpp",
     "PerformanceEntry.cpp",
+    "PerformanceObserver.cpp",
+    "PerformanceObserverEntryList.cpp",
   ]
 }

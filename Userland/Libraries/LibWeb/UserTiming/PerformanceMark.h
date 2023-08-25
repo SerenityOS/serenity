@@ -36,7 +36,7 @@ public:
     static Optional<u64> max_buffer_size() { return OptionalNone {}; }
 
     // https://w3c.github.io/timing-entrytypes-registry/#dfn-should-add-entry
-    virtual PerformanceTimeline::ShouldAddEntry should_add_entry() const override { return PerformanceTimeline::ShouldAddEntry::Yes; }
+    virtual PerformanceTimeline::ShouldAddEntry should_add_entry(Optional<PerformanceTimeline::PerformanceObserverInit const&> = {}) const override { return PerformanceTimeline::ShouldAddEntry::Yes; }
 
     virtual FlyString const& entry_type() const override;
 

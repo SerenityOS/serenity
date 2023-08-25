@@ -41,6 +41,9 @@ public:
         // https://www.w3.org/TR/intersection-observer/#intersectionobserver-task-source
         IntersectionObserver,
 
+        // https://w3c.github.io/performance-timeline/#dfn-performance-timeline-task-source
+        PerformanceTimeline,
+
         // Some elements, such as the HTMLMediaElement, must have a unique task source per instance.
         // Keep this field last, to serve as the base value of all unique task sources.
         UniqueTaskSourceStart,

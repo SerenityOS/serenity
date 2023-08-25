@@ -48,11 +48,17 @@ public:
     void clear_interval(i32);
 
     PerformanceTimeline::PerformanceEntryTuple& relevant_performance_entry_tuple(FlyString const& entry_type);
-    WebIDL::ExceptionOr<void> queue_performance_entry(JS::NonnullGCPtr<PerformanceTimeline::PerformanceEntry> new_entry);
+    void queue_performance_entry(JS::NonnullGCPtr<PerformanceTimeline::PerformanceEntry> new_entry);
     void clear_performance_entry_buffer(Badge<HighResolutionTime::Performance>, FlyString const& entry_type);
     void remove_entries_from_performance_entry_buffer(Badge<HighResolutionTime::Performance>, FlyString const& entry_type, String entry_name);
 
     ErrorOr<Vector<JS::Handle<PerformanceTimeline::PerformanceEntry>>> filter_buffer_map_by_name_and_type(Optional<String> name, Optional<String> type) const;
+
+    void register_performance_observer(Badge<PerformanceTimeline::PerformanceObserver>, JS::NonnullGCPtr<PerformanceTimeline::PerformanceObserver>);
+    void unregister_performance_observer(Badge<PerformanceTimeline::PerformanceObserver>, JS::NonnullGCPtr<PerformanceTimeline::PerformanceObserver>);
+    bool has_registered_performance_observer(JS::NonnullGCPtr<PerformanceTimeline::PerformanceObserver>);
+
+    void queue_the_performance_observer_task();
 
 protected:
     void initialize(JS::Realm&);
@@ -70,8 +76,11 @@ private:
 
     // https://www.w3.org/TR/performance-timeline/#performance-timeline
     // Each global object has:
-    // FIXME: - a performance observer task queued flag
-    // FIXME: - a list of registered performance observer objects that is initially empty
+    // - a performance observer task queued flag
+    bool m_performance_observer_task_queued { false };
+
+    // - a list of registered performance observer objects that is initially empty
+    OrderedHashTable<JS::NonnullGCPtr<PerformanceTimeline::PerformanceObserver>> m_registered_performance_observer_objects;
 
     // https://www.w3.org/TR/performance-timeline/#dfn-performance-entry-buffer-map
     // a performance entry buffer map map, keyed on a DOMString, representing the entry type to which the buffer belongs. The map's value is the following tuple:

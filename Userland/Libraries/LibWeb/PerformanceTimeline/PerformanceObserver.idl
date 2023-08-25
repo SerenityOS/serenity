@@ -1,0 +1,25 @@
+#import <PerformanceTimeline/PerformanceObserverEntryList.idl>
+
+// https://w3c.github.io/performance-timeline/#dom-performanceobservercallbackoptions
+dictionary PerformanceObserverCallbackOptions {
+    unsigned long long droppedEntriesCount;
+};
+
+callback PerformanceObserverCallback = undefined (PerformanceObserverEntryList entries, PerformanceObserver observer, optional PerformanceObserverCallbackOptions options = {});
+
+// https://w3c.github.io/performance-timeline/#dom-performanceobserverinit
+dictionary PerformanceObserverInit {
+    sequence<DOMString> entryTypes;
+    DOMString type;
+    boolean buffered;
+};
+
+// https://w3c.github.io/performance-timeline/#dom-performanceobserver
+[Exposed=(Window,Worker), UseNewAKString]
+interface PerformanceObserver {
+    constructor(PerformanceObserverCallback callback);
+    undefined observe(optional PerformanceObserverInit options = {});
+    undefined disconnect();
+    PerformanceEntryList takeRecords();
+    //[SameObject] static readonly attribute sequence<DOMString> supportedEntryTypes;
+};
