@@ -71,6 +71,7 @@
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Platform/FontPlugin.h>
+#include <LibWeb/ReferrerPolicy/AbstractOperations.h>
 #include <stdio.h>
 
 namespace AK {
@@ -148,6 +149,13 @@ private:
             return;
         LoadRequest request;
         request.set_url(m_urls.take_first());
+
+        // HACK: We're crudely computing the referer value and shoving it into the
+        //       request until fetch infrastructure is used here.
+        auto referrer_url = ReferrerPolicy::strip_url_for_use_as_referrer(m_style_computer.document().url());
+        if (referrer_url.has_value() && !request.headers().contains("Referer"))
+            request.set_header("Referer", referrer_url->serialize());
+
         set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
     }
 
