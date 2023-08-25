@@ -35,8 +35,8 @@ JS::GCPtr<Layout::Node> HTMLIFrameElement::create_layout_node(NonnullRefPtr<CSS:
 void HTMLIFrameElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::attribute_changed(name, value);
-    if (name == HTML::AttributeNames::src)
-        load_src(value);
+    if (m_nested_browsing_context)
+        process_the_iframe_attributes();
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-element:the-iframe-element-6
@@ -107,28 +107,6 @@ void HTMLIFrameElement::removed_from(DOM::Node* node)
         m_nested_browsing_context->discard();
         m_nested_browsing_context = nullptr;
     }
-}
-
-void HTMLIFrameElement::load_src(DeprecatedString const& value)
-{
-    if (!m_nested_browsing_context)
-        return;
-
-    if (value.is_null())
-        return;
-
-    auto url = document().parse_url(value);
-    if (!url.is_valid()) {
-        dbgln("iframe failed to load URL: Invalid URL: {}", value);
-        return;
-    }
-    if (url.scheme() == "file" && document().origin().scheme() != "file") {
-        dbgln("iframe failed to load URL: Security violation: {} may not load {}", document().url(), url);
-        return;
-    }
-
-    dbgln("Loading iframe document from {}", value);
-    m_nested_browsing_context->loader().load(url, FrameLoader::Type::IFrame);
 }
 
 // https://html.spec.whatwg.org/multipage/rendering.html#attributes-for-embedded-content-and-images

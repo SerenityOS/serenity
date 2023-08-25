@@ -39,8 +39,6 @@ private:
     // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#process-the-iframe-attributes
     void process_the_iframe_attributes(bool initial_insertion = false);
 
-    void load_src(DeprecatedString const&);
-
     // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#current-navigation-was-lazy-loaded
     bool m_current_navigation_was_lazy_loaded { false };
 };
