@@ -75,6 +75,7 @@ set(KERNEL_SOURCES
     Devices/Generic/FullDevice.cpp
     Devices/Generic/MemoryDevice.cpp
     Devices/Generic/NullDevice.cpp
+    Devices/Generic/PCSpeakerDevice.cpp
     Devices/Generic/RandomDevice.cpp
     Devices/Generic/SelfTTYDevice.cpp
     Devices/Generic/ZeroDevice.cpp
@@ -273,7 +274,6 @@ set(KERNEL_SOURCES
     Security/UBSanitizer.cpp
     Syscalls/anon_create.cpp
     Syscalls/alarm.cpp
-    Syscalls/beep.cpp
     Syscalls/chdir.cpp
     Syscalls/chmod.cpp
     Syscalls/chown.cpp

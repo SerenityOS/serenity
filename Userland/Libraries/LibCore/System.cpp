@@ -9,10 +9,12 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/FixedArray.h>
+#include <AK/ScopeGuard.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <Kernel/API/BeepInstruction.h>
 #include <LibCore/SessionManagement.h>
 #include <LibCore/System.h>
 #include <limits.h>
@@ -147,11 +149,13 @@ namespace Core::System {
 
 #ifdef AK_OS_SERENITY
 
-ErrorOr<void> beep(Optional<size_t> tone)
+ErrorOr<void> beep(u16 tone)
 {
-    auto rc = ::sysbeep(tone.value_or(440));
-    if (rc < 0)
-        return Error::from_syscall("beep"sv, -errno);
+    static Optional<int> beep_fd;
+    if (!beep_fd.has_value())
+        beep_fd = TRY(Core::System::open("/dev/beep"sv, O_RDWR));
+    BeepInstruction instruction { tone };
+    TRY(Core::System::write(beep_fd.value(), Span<u8 const>(&instruction, sizeof(BeepInstruction))));
     return {};
 }
 
