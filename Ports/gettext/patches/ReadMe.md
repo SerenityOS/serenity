@@ -1,11 +1,6 @@
 # Patches for gettext on SerenityOS
 
-## `0001-Stub-out-some-wctype-functions.patch`
-
-Stub out some wctype functions
-
-
-## `0002-libtool-Enable-shared-library-support-for-SerenityOS.patch`
+## `0001-libtool-Enable-shared-library-support-for-SerenityOS.patch`
 
 libtool: Enable shared library support for SerenityOS
 
