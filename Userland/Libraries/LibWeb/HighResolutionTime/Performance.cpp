@@ -63,7 +63,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<UserTiming::PerformanceMark>> Performance::
     // 2. Queue entry.
     auto* window_or_worker = dynamic_cast<HTML::WindowOrWorkerGlobalScopeMixin*>(&realm.global_object());
     VERIFY(window_or_worker);
-    TRY(window_or_worker->queue_performance_entry(entry));
+    window_or_worker->queue_performance_entry(entry);
 
     // 3. Add entry to the performance entry buffer.
     // FIXME: This seems to be a holdover from moving to the `queue` structure for PerformanceObserver, as this would cause a double append.
@@ -293,7 +293,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<UserTiming::PerformanceMeasure>> Performanc
     auto entry = realm.heap().allocate<UserTiming::PerformanceMeasure>(realm, realm, measure_name, start_time, duration, detail);
 
     // 10. Queue entry.
-    TRY(window_or_worker->queue_performance_entry(entry));
+    window_or_worker->queue_performance_entry(entry);
 
     // 11. Add entry to the performance entry buffer.
     // FIXME: This seems to be a holdover from moving to the `queue` structure for PerformanceObserver, as this would cause a double append.

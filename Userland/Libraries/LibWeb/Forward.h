@@ -543,6 +543,9 @@ struct LinearGradientData;
 
 namespace Web::PerformanceTimeline {
 class PerformanceEntry;
+class PerformanceObserver;
+class PerformanceObserverEntryList;
+struct PerformanceObserverInit;
 }
 
 namespace Web::PermissionsPolicy {

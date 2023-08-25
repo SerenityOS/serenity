@@ -14,7 +14,7 @@ namespace Web::PerformanceTimeline {
 struct PerformanceEntryTuple {
     // https://www.w3.org/TR/performance-timeline/#dfn-performance-entry-buffer
     // A performance entry buffer to store PerformanceEntry objects, that is initially empty.
-    Vector<JS::Handle<PerformanceEntry>> performance_entry_buffer;
+    Vector<JS::NonnullGCPtr<PerformanceEntry>> performance_entry_buffer;
 
     // https://www.w3.org/TR/performance-timeline/#dfn-maxbuffersize
     // An integer maxBufferSize, initialized to the registry value for this entry type.
@@ -44,6 +44,12 @@ struct PerformanceEntryTuple {
 
         // 4. Return true.
         return true;
+    }
+
+    void visit_edges(JS::Cell::Visitor& visitor)
+    {
+        for (auto& entry : performance_entry_buffer)
+            visitor.visit(entry);
     }
 };
 

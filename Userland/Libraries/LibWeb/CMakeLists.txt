@@ -509,6 +509,8 @@ set(SOURCES
     Painting/ViewportPaintable.cpp
     PerformanceTimeline/EntryTypes.cpp
     PerformanceTimeline/PerformanceEntry.cpp
+    PerformanceTimeline/PerformanceObserver.cpp
+    PerformanceTimeline/PerformanceObserverEntryList.cpp
     PermissionsPolicy/AutoplayAllowlist.cpp
     PixelUnits.cpp
     Platform/AudioCodecPlugin.cpp
