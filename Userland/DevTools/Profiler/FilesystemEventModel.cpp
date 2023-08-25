@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Jakub Berkop <jakub.berkop@gmail.com>
+ * Copyright (c) 2022-2023, Jakub Berkop <jakub.berkop@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,11 +22,20 @@ FileEventModel::~FileEventModel()
 {
 }
 
+u64 FileEventNode::total_count() const
+{
+    return m_open.count + m_close.count + m_readv.count + m_read.count + m_pread.count;
+}
+
+Duration FileEventNode::total_duration() const
+{
+    return m_open.duration + m_close.duration + m_readv.duration + m_read.duration + m_pread.duration;
+}
+
 FileEventNode& FileEventNode::find_or_create_node(DeprecatedString const& searched_path)
 {
     // TODO: Optimize this function.
-
-    if (searched_path == ""sv) {
+    if (searched_path == ""sv || searched_path == "/"sv) {
         return *this;
     }
 
@@ -67,7 +76,7 @@ FileEventNode& FileEventNode::create_recursively(DeprecatedString new_path)
     auto parts = lex_path.parts();
 
     if (parts.size() == 1) {
-        auto new_node = FileEventNode::create(new_path, this);
+        auto new_node = FileEventNode::create(parts.take_first(), this);
         m_children.append(new_node);
         return *new_node.ptr();
     } else {
@@ -147,10 +156,30 @@ ErrorOr<String> FileEventModel::column_name(int column) const
     switch (column) {
     case Column::Path:
         return "Path"_string;
-    case Column::Count:
-        return "Event Count"_string;
-    case Column::Duration:
-        return "Duration [ms]"_string;
+    case Column::TotalCount:
+        return "Total Count"_string;
+    case Column::TotalDuration:
+        return "Total Duration [ms]"_string;
+    case Column::OpenCount:
+        return "Open Count"_string;
+    case Column::OpenDuration:
+        return "Open Duration [ms]"_string;
+    case Column::CloseCount:
+        return "Close Count"_string;
+    case Column::CloseDuration:
+        return "Close Duration [ms]"_string;
+    case Column::ReadvCount:
+        return "Readv Count"_string;
+    case Column::ReadvDuration:
+        return "Readv Duration [ms]"_string;
+    case Column::ReadCount:
+        return "Read Count"_string;
+    case Column::ReadDuration:
+        return "Read Duration [ms]"_string;
+    case Column::PreadCount:
+        return "Pread Count"_string;
+    case Column::PreadDuration:
+        return "Pread Duration [ms]"_string;
     default:
         VERIFY_NOT_REACHED();
     }
@@ -167,19 +196,36 @@ GUI::Variant FileEventModel::data(GUI::ModelIndex const& index, GUI::ModelRole r
     auto* node = static_cast<FileEventNode*>(index.internal_data());
 
     if (role == GUI::ModelRole::Display) {
-        if (index.column() == Column::Count) {
-            return node->count();
-        }
-
-        if (index.column() == Column::Path) {
+        switch (index.column()) {
+        case Column::Path:
             return node->path();
+        case Column::TotalCount:
+            return node->total_count();
+        case Column::TotalDuration:
+            return static_cast<f32>(node->total_duration().to_nanoseconds()) / 1'000'000;
+        case Column::OpenCount:
+            return node->open().count;
+        case Column::OpenDuration:
+            return static_cast<f32>(node->open().duration.to_nanoseconds()) / 1'000'000;
+        case Column::CloseCount:
+            return node->close().count;
+        case Column::CloseDuration:
+            return static_cast<f32>(node->close().duration.to_nanoseconds()) / 1'000'000;
+        case Column::ReadvCount:
+            return node->readv().count;
+        case Column::ReadvDuration:
+            return static_cast<f32>(node->readv().duration.to_nanoseconds()) / 1'000'000;
+        case Column::ReadCount:
+            return node->read().count;
+        case Column::ReadDuration:
+            return static_cast<f32>(node->read().duration.to_nanoseconds()) / 1'000'000;
+        case Column::PreadCount:
+            return node->pread().count;
+        case Column::PreadDuration:
+            return static_cast<f32>(node->pread().duration.to_nanoseconds()) / 1'000'000;
+        default:
+            return {};
         }
-
-        if (index.column() == Column::Duration) {
-            return node->duration();
-        }
-
-        return {};
     }
 
     return {};
