@@ -194,6 +194,7 @@ struct PluggableOnceCharacterDeviceNodeMatch {
 };
 
 static constexpr PluggableOnceCharacterDeviceNodeMatch s_simple_matchers[] = {
+    { "/dev/beep"sv, 0666, 1, 10 },
     { "/dev/kcov"sv, 0666, 30, 0 },
 };
 

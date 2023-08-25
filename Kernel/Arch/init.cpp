@@ -25,6 +25,7 @@
 #include <Kernel/Devices/Generic/FullDevice.h>
 #include <Kernel/Devices/Generic/MemoryDevice.h>
 #include <Kernel/Devices/Generic/NullDevice.h>
+#include <Kernel/Devices/Generic/PCSpeakerDevice.h>
 #include <Kernel/Devices/Generic/RandomDevice.h>
 #include <Kernel/Devices/Generic/SelfTTYDevice.h>
 #include <Kernel/Devices/Generic/ZeroDevice.h>
@@ -379,6 +380,8 @@ void init_stage2(void*)
 #elif ARCH(AARCH64)
     (void)MUST(RPi::MiniUART::create()).leak_ref();
 #endif
+
+    (void)PCSpeakerDevice::must_create().leak_ref();
 
 #if ARCH(X86_64)
     VMWareBackdoor::the(); // don't wait until first mouse packet
