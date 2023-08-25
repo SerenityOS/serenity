@@ -1,0 +1,15 @@
+@media screen {
+
+}
+@media screen and ((min-width:20px) and (max-width:40px)) {
+
+}
+@media screen and (min-resolution:1dppx) {
+
+}
+@media screen and (min-resolution:2dppx) {
+
+}
+@media screen and (min-resolution:2.54dppx) {
+
+}
