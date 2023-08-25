@@ -8,6 +8,7 @@
 
 #import <Application/ApplicationDelegate.h>
 #import <UI/LadybirdWebView.h>
+#import <UI/SourceViewController.h>
 #import <UI/Tab.h>
 #import <UI/TabController.h>
 #import <Utilities/Conversions.h>
@@ -50,6 +51,8 @@ enum class IsHistoryNavigation {
 @property (nonatomic, strong) NSToolbarItem* tab_overview_toolbar_item;
 
 @property (nonatomic, assign) NSLayoutConstraint* location_toolbar_item_width;
+
+@property (nonatomic, strong) SourceViewController* source_view_controller;
 
 @end
 
@@ -149,6 +152,30 @@ enum class IsHistoryNavigation {
 {
     m_history.clear();
     [self updateNavigationButtonStates];
+}
+
+- (void)viewSource:(id)sender
+{
+    if (self.source_view_controller != nil) {
+        [self.source_view_controller.window makeKeyAndOrderFront:sender];
+        return;
+    }
+
+    [[[self tab] web_view] viewSource];
+}
+
+- (void)onReceivedSource:(URL const&)url
+                  source:(DeprecatedString const&)source
+{
+    self.source_view_controller = [[SourceViewController alloc] init:self
+                                                                 url:url
+                                                              source:source];
+    [self.source_view_controller showWindow:nil];
+}
+
+- (void)onSourceViewClosed
+{
+    self.source_view_controller = nil;
 }
 
 - (void)focusLocationToolbarItem
@@ -320,6 +347,10 @@ enum class IsHistoryNavigation {
 
 - (void)windowWillClose:(NSNotification*)notification
 {
+    if (self.source_view_controller != nil) {
+        [self.source_view_controller.window close];
+    }
+
     auto* delegate = (ApplicationDelegate*)[NSApp delegate];
     [delegate removeTab:self];
 }

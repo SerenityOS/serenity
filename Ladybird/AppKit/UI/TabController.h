@@ -25,6 +25,10 @@
 - (void)reload:(id)sender;
 - (void)clearHistory;
 
+- (void)viewSource:(id)sender;
+- (void)onReceivedSource:(URL const&)url source:(DeprecatedString const&)source;
+- (void)onSourceViewClosed;
+
 - (void)focusLocationToolbarItem;
 
 @end

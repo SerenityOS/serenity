@@ -127,6 +127,11 @@ struct HideCursor {
     m_web_view_bridge->set_preferred_color_scheme(color_scheme);
 }
 
+- (void)viewSource
+{
+    m_web_view_bridge->get_source();
+}
+
 #pragma mark - Private methods
 
 - (void)updateViewportRect:(Ladybird::WebViewBridge::ForResize)for_resize
@@ -582,6 +587,10 @@ struct HideCursor {
 
         return Ladybird::ns_rect_to_gfx_rect([[self window] frame]);
     };
+
+    m_web_view_bridge->on_received_source = [self](auto const& url, auto const& source) {
+        [[self tabController] onReceivedSource:url source:source];
+    };
 }
 
 - (Tab*)tab
@@ -715,6 +724,11 @@ static void copy_text_to_clipboard(StringView text)
                                                         keyEquivalent:@""]];
         [_page_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Take Full Screenshot"
                                                                action:@selector(takeFullScreenshot:)
+                                                        keyEquivalent:@""]];
+        [_page_context_menu addItem:[NSMenuItem separatorItem]];
+
+        [_page_context_menu addItem:[[NSMenuItem alloc] initWithTitle:@"View Source"
+                                                               action:@selector(viewSource:)
                                                         keyEquivalent:@""]];
     }
 

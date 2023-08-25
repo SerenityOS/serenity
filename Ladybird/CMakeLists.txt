@@ -137,6 +137,8 @@ elseif (APPLE)
         AppKit/UI/LadybirdWebView.mm
         AppKit/UI/LadybirdWebViewBridge.cpp
         AppKit/UI/Palette.mm
+        AppKit/UI/SourceView.mm
+        AppKit/UI/SourceViewController.mm
         AppKit/UI/Tab.mm
         AppKit/UI/TabController.mm
         AppKit/Utilities/Conversions.mm
