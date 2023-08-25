@@ -19,6 +19,9 @@ public:
 
     virtual ~RadioNodeList() override;
 
+    FlyString value() const;
+    void set_value(FlyString const&);
+
 protected:
     virtual void initialize(JS::Realm&) override;
 

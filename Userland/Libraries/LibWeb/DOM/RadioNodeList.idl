@@ -3,5 +3,5 @@
 // https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#radionodelist
 [Exposed=Window, UseNewAKString]
 interface RadioNodeList : NodeList {
-    // FIXME: attribute DOMString value;
+    attribute DOMString value;
 };
