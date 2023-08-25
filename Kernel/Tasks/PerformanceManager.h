@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Brian Gianforcaro <bgianf@serenityos.org>
+ * Copyright (c) 2023, Jakub Berkop <jakub.berkop@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -126,40 +127,6 @@ public:
             [[maybe_unused]] auto rc = event_buffer->append_with_ip_and_bp(
                 thread.pid(), thread.tid(), regs, PERF_EVENT_SYSCALL, 0, 0, 0, {});
         }
-    }
-
-    static void add_read_event(Thread& thread, int fd, size_t size, OpenFileDescription const& file_description, u64 start_timestamp, ErrorOr<FlatPtr> const& result)
-    {
-        if (thread.is_profiling_suppressed())
-            return;
-
-        auto* event_buffer = thread.process().current_perf_events_buffer();
-        if (event_buffer == nullptr)
-            return;
-
-        size_t filepath_string_index;
-
-        if (auto path = file_description.original_absolute_path(); !path.is_error()) {
-            auto registered_result = event_buffer->register_string(move(path.value()));
-            if (registered_result.is_error())
-                return;
-            filepath_string_index = registered_result.value();
-        } else if (auto pseudo_path = file_description.pseudo_path(); !pseudo_path.is_error()) {
-            auto registered_result = event_buffer->register_string(move(pseudo_path.value()));
-            if (registered_result.is_error())
-                return;
-            filepath_string_index = registered_result.value();
-        } else {
-            auto invalid_path_string = KString::try_create("<INVALID_FILE_PATH>"sv); // TODO: Performance, unnecessary allocations.
-            if (invalid_path_string.is_error())
-                return;
-            auto registered_result = event_buffer->register_string(move(invalid_path_string.value()));
-            if (registered_result.is_error())
-                return;
-            filepath_string_index = registered_result.value();
-        }
-
-        [[maybe_unused]] auto rc = event_buffer->append(PERF_EVENT_READ, fd, size, {}, &thread, filepath_string_index, start_timestamp, result); // wrong arguments
     }
 
     static void timer_tick(RegisterState const& regs)

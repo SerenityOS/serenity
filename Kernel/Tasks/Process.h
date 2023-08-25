@@ -690,7 +690,11 @@ private:
 
     ErrorOr<void> remap_range_as_stack(FlatPtr address, size_t size);
 
+    ErrorOr<FlatPtr> open_impl(Userspace<Syscall::SC_open_params const*>);
+    ErrorOr<FlatPtr> close_impl(int fd);
     ErrorOr<FlatPtr> read_impl(int fd, Userspace<u8*> buffer, size_t size);
+    ErrorOr<FlatPtr> pread_impl(int fd, Userspace<u8*>, size_t, off_t);
+    ErrorOr<FlatPtr> readv_impl(int fd, Userspace<const struct iovec*> iov, int iov_count);
 
 public:
     ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const;

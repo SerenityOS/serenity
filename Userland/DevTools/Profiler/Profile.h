@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Jakub Berkop <jakub.berkop@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,6 +21,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/OwnPtr.h>
+#include <AK/Time.h>
 #include <AK/Variant.h>
 #include <LibCore/MappedFile.h>
 #include <LibELF/Image.h>
@@ -222,15 +224,45 @@ public:
             pid_t parent_tid {};
         };
 
-        struct ReadData {
-            int fd;
-            size_t size;
+        // Based on Syscall::SC_open_params
+        struct OpenEventData {
+            int dirfd;
             DeprecatedString path;
-            size_t start_timestamp;
-            bool success;
+            int options;
+            u64 mode;
         };
 
-        Variant<nullptr_t, SampleData, MallocData, FreeData, SignpostData, MmapData, MunmapData, ProcessCreateData, ProcessExecData, ThreadCreateData, ReadData> data { nullptr };
+        struct CloseEventData {
+            int fd;
+            DeprecatedString path;
+        };
+
+        struct ReadvEventData {
+            int fd;
+            DeprecatedString path;
+            // struct iovec* iov; // TODO: Implement
+            // int iov_count; // TODO: Implement
+        };
+
+        struct ReadEventData {
+            int fd;
+            DeprecatedString path;
+        };
+
+        struct PreadEventData {
+            int fd;
+            DeprecatedString path;
+            FlatPtr buffer_ptr;
+            size_t size;
+            off_t offset;
+        };
+
+        struct FilesystemEventData {
+            Duration duration;
+            Variant<OpenEventData, CloseEventData, ReadvEventData, ReadEventData, PreadEventData> data;
+        };
+
+        Variant<nullptr_t, SampleData, MallocData, FreeData, SignpostData, MmapData, MunmapData, ProcessCreateData, ProcessExecData, ThreadCreateData, FilesystemEventData> data { nullptr };
     };
 
     Vector<Event> const& events() const { return m_events; }

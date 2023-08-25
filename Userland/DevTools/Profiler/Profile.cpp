@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Jakub Berkop <jakub.berkop@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -206,19 +207,51 @@ void Profile::rebuild_tree()
                 }
             }
         }
+        if (event.data.has<Event::FilesystemEventData>()) {
+            auto const& filesystem_event = event.data.get<Event::FilesystemEventData>();
+            auto const& path = filesystem_event.data.visit(
+                [&](Event::OpenEventData const& data) {
+                    return data.path;
+                },
+                [&](Event::CloseEventData const& data) {
+                    return data.path;
+                },
+                [&](Event::ReadvEventData const& data) {
+                    return data.path;
+                },
+                [&](Event::ReadEventData const& data) {
+                    return data.path;
+                },
+                [&](Event::PreadEventData const& data) {
+                    return data.path;
+                });
 
-        if (event.data.has<Event::ReadData>()) {
-            auto const& read_event = event.data.get<Event::ReadData>();
-            auto& event_node = m_file_event_nodes->find_or_create_node(read_event.path);
+            auto& event_node = m_file_event_nodes->find_or_create_node(path);
 
             event_node.for_each_parent_node([&](FileEventNode& node) {
-                node.increment_count();
+                auto const duration = filesystem_event.duration;
 
-                // Fixme: Currently events record 'timestamp' and 'start_timestamp' in ms resolution,
-                //        which results in most durations equal to zero. Increasing the resolution should
-                //        make the information more accurate.
-                auto const duration = event.timestamp - read_event.start_timestamp;
-                node.add_to_duration(duration);
+                filesystem_event.data.visit(
+                    [&](Event::OpenEventData const&) {
+                        node.open().duration += duration;
+                        node.open().count++;
+                    },
+                    [&](Event::CloseEventData const&) {
+                        node.close().duration += duration;
+                        node.close().count++;
+                    },
+                    [&](Event::ReadvEventData const&) {
+                        node.readv().duration += duration;
+                        node.readv().count++;
+                    },
+                    [&](Event::ReadEventData const&) {
+                        node.read().duration += duration;
+                        node.read().count++;
+                    },
+                    [&](Event::PreadEventData const&) {
+                        node.pread().duration += duration;
+                        node.pread().count++;
+                    });
             });
         }
     }
@@ -385,15 +418,55 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
             if (it != current_processes.end())
                 it->value->handle_thread_exit(event.tid, event.serial);
             continue;
-        } else if (type_string == "read"sv) {
-            auto const string_index = perf_event.get_addr("filename_index"sv).value_or(0);
-            event.data = Event::ReadData {
-                .fd = perf_event.get_integer<int>("fd"sv).value_or(0),
-                .size = perf_event.get_integer<size_t>("size"sv).value_or(0),
-                .path = profile_strings.get(string_index).value(),
-                .start_timestamp = perf_event.get_integer<size_t>("start_timestamp"sv).value_or(0),
-                .success = perf_event.get_bool("success"sv).value_or(false)
+        } else if (type_string == "filesystem"sv) {
+            Event::FilesystemEventData fsdata {
+                .duration = Duration::from_nanoseconds(perf_event.get_integer<u64>("durationNs"sv).value_or(0)),
+                .data = Event::OpenEventData {},
             };
+            auto const filesystem_event_type = perf_event.get("fs_event_type"sv).value_or("").as_string();
+            if (filesystem_event_type == "open"sv) {
+                auto const string_index = perf_event.get_addr("filename_index"sv).value_or(0);
+                auto const filename = profile_strings.get(string_index).value_or("").view();
+                fsdata.data = Event::OpenEventData {
+                    .dirfd = perf_event.get_integer<int>("dirfd"sv).value_or(0),
+                    .path = filename,
+                    .options = perf_event.get_integer<int>("options"sv).value_or(0),
+                    .mode = perf_event.get_integer<u64>("mode"sv).value_or(0),
+                };
+            } else if (filesystem_event_type == "close"sv) {
+                auto const string_index = perf_event.get_addr("filename_index"sv).value_or(0);
+                auto const filename = profile_strings.get(string_index).value_or("").view();
+                fsdata.data = Event::CloseEventData {
+                    .fd = perf_event.get_integer<int>("fd"sv).value_or(0),
+                    .path = filename,
+                };
+            } else if (filesystem_event_type == "readv"sv) {
+                auto const string_index = perf_event.get_addr("filename_index"sv).value_or(0);
+                auto const filename = profile_strings.get(string_index).value().view();
+                fsdata.data = Event::ReadvEventData {
+                    .fd = perf_event.get_integer<int>("fd"sv).value_or(0),
+                    .path = filename,
+                };
+            } else if (filesystem_event_type == "read"sv) {
+                auto const string_index = perf_event.get_addr("filename_index"sv).value_or(0);
+                auto const filename = profile_strings.get(string_index).value().view();
+                fsdata.data = Event::ReadEventData {
+                    .fd = perf_event.get_integer<int>("fd"sv).value_or(0),
+                    .path = filename,
+                };
+            } else if (filesystem_event_type == "pread"sv) {
+                auto const string_index = perf_event.get_addr("filename_index"sv).value_or(0);
+                auto const filename = profile_strings.get(string_index).value().view();
+                fsdata.data = Event::PreadEventData {
+                    .fd = perf_event.get_integer<int>("fd"sv).value_or(0),
+                    .path = filename,
+                    .buffer_ptr = perf_event.get_integer<FlatPtr>("buffer_ptr"sv).value_or(0),
+                    .size = perf_event.get_integer<size_t>("size"sv).value_or(0),
+                    .offset = perf_event.get_integer<off_t>("offset"sv).value_or(0),
+                };
+            }
+
+            event.data = fsdata;
         } else {
             dbgln("Unknown event type '{}'", type_string);
             VERIFY_NOT_REACHED();

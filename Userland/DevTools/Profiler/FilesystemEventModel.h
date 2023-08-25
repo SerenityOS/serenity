@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Jakub Berkop <jakub.berkop@gmail.com>
+ * Copyright (c) 2022-2023, Jakub Berkop <jakub.berkop@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +9,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/LexicalPath.h>
+#include <AK/Time.h>
 #include <LibGUI/Model.h>
 
 namespace Profiler {
@@ -35,22 +36,32 @@ public:
 
     DeprecatedString const& path() const { return m_path; }
 
-    void increment_count() { m_count++; }
-    u64 count() const { return m_count; }
+    u64 total_count() const;
+    Duration total_duration() const;
 
-    void add_to_duration(u64 duration) { duration += duration; }
-    u64 duration() const { return m_duration; }
+    struct FileEventType {
+        u64 count = 0;
+        Duration duration = {};
+    };
+
+    FileEventType& open() { return m_open; }
+    FileEventType& close() { return m_close; }
+    FileEventType& readv() { return m_readv; }
+    FileEventType& read() { return m_read; }
+    FileEventType& pread() { return m_pread; }
 
 private:
     FileEventNode(DeprecatedString const& path, FileEventNode* parent = nullptr)
         : m_path(path)
-        , m_count(0)
-        , m_duration(0)
         , m_parent(parent) {};
 
     DeprecatedString m_path;
-    u64 m_count;
-    u64 m_duration;
+
+    FileEventType m_open;
+    FileEventType m_close;
+    FileEventType m_readv;
+    FileEventType m_read;
+    FileEventType m_pread;
 
     Vector<NonnullRefPtr<FileEventNode>> m_children;
     FileEventNode* m_parent = nullptr;
@@ -65,8 +76,18 @@ public:
 
     enum Column {
         Path,
-        Count,
-        Duration,
+        TotalCount,
+        TotalDuration,
+        OpenCount,
+        OpenDuration,
+        CloseCount,
+        CloseDuration,
+        ReadvCount,
+        ReadvDuration,
+        ReadCount,
+        ReadDuration,
+        PreadCount,
+        PreadDuration,
         __Count
     };
 

@@ -309,6 +309,7 @@ set(KERNEL_SOURCES
     Syscalls/prctl.cpp
     Syscalls/process.cpp
     Syscalls/profiling.cpp
+    Syscalls/profiled_syscalls.cpp
     Syscalls/ptrace.cpp
     Syscalls/purge.cpp
     Syscalls/read.cpp
