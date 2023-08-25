@@ -2827,7 +2827,9 @@ void StyleComputer::load_fonts_from_sheet(CSSStyleSheet const& sheet)
         Vector<AK::URL> urls;
         for (auto& source : font_face.sources()) {
             // FIXME: These should be loaded relative to the stylesheet URL instead of the document URL.
-            urls.append(m_document->parse_url(source.url.to_deprecated_string()));
+            if (source.local_or_url.has<AK::URL>())
+                urls.append(m_document->parse_url(source.local_or_url.get<AK::URL>().to_deprecated_string()));
+            // FIXME: Handle local()
         }
 
         if (urls.is_empty())

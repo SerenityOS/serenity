@@ -62,8 +62,11 @@ DeprecatedString CSSFontFaceRule::serialized() const
 
         // 2. The result of invoking serialize a comma-separated list on performing serialize a URL or serialize a LOCAL for each source on the source list.
         serialize_a_comma_separated_list(builder, m_font_face.sources(), [&](StringBuilder& builder, FontFace::Source source) -> void {
-            // FIXME: Serialize locals once we support those
-            serialize_a_url(builder, source.url.to_deprecated_string());
+            if (source.local_or_url.has<AK::URL>()) {
+                serialize_a_url(builder, source.local_or_url.get<AK::URL>().to_deprecated_string());
+            } else {
+                builder.appendff("local({})", source.local_or_url.get<String>());
+            }
 
             // NOTE: No spec currently exists for format()
             if (source.format.has_value()) {

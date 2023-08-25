@@ -4453,7 +4453,14 @@ Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>
             continue;
         }
 
-        // FIXME: Implement `local()`.
+        if (first.is_function() && first.function().name().equals_ignoring_ascii_case("local"sv)) {
+            if (first.function().values().is_empty()) {
+                continue;
+            }
+            supported_sources.empend(first.function().values().first().to_string(), Optional<FlyString> {});
+            continue;
+        }
+
         dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @font-face src invalid (failed to parse url from: {}); discarding.", first.to_debug_string());
         return {};
     }
