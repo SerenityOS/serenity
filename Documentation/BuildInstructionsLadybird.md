@@ -65,11 +65,26 @@ MinGW/MSYS2 are not supported, but may work with sufficient elbow grease. Native
 
 The simplest way to build and run ladybird is via the serenity.sh script:
 
-```
+```bash
 # From /path/to/serenity
 ./Meta/serenity.sh run lagom ladybird
 ./Meta/serenity.sh gdb lagom ladybird
 ```
+
+By default, the above commands will build Ladybird using Qt for the browser chrome. We also support
+the following platform-specific browser chromes:
+
+* [AppKit](https://developer.apple.com/documentation/appkit?language=objc) - The native chrome on macOS.
+
+To build Ladybird using one of these chromes on the appropriate platform, use the following serenity.sh
+commands:
+
+```bash
+# From /path/to/serenity
+./Meta/serenity.sh run lagom ladybird-appkit # Use the AppKit chrome on macOS.
+```
+
+### Disabling Ladybird
 
 Note that running ladybird from the script will change the CMake cache in your Build/lagom build
 directory to always build LibWeb and Ladybird for Lagom when rebuilding SerenityOS using the
@@ -78,7 +93,7 @@ serenity.sh script to run a qemu instance.
 To restore the previous behavior that only builds code generators and tools from Lagom when
 rebuilding serenity, you must modify the CMake cache back to the default.
 
-```
+```bash
 cmake -S Meta/Lagom -B Build/lagom -DENABLE_LAGOM_LADYBIRD=OFF -DENABLE_LAGOM_LIBWEB=OFF -DBUILD_LAGOM=OFF
 ```
 
