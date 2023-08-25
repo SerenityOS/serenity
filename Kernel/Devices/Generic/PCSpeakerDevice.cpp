@@ -48,9 +48,11 @@ ErrorOr<size_t> PCSpeakerDevice::write(OpenFileDescription&, u64, UserOrKernelBu
     TRY(buffer.read(&instruction, sizeof(BeepInstruction)));
     if (instruction.tone < 20 || instruction.tone > 20000)
         return Error::from_errno(EINVAL);
+    if (instruction.milliseconds_duration == 0)
+        return Error::from_errno(EINVAL);
 #if ARCH(X86_64)
     PCSpeaker::tone_on(instruction.tone);
-    auto result = Thread::current()->sleep(Duration::from_nanoseconds(200'000'000));
+    auto result = Thread::current()->sleep(Duration::from_milliseconds(instruction.milliseconds_duration));
     PCSpeaker::tone_off();
     if (result.was_interrupted())
         return Error::from_errno(EINTR);
