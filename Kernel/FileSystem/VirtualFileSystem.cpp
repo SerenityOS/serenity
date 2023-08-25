@@ -262,7 +262,7 @@ void VirtualFileSystem::sync_filesystems()
     for (auto& fs : file_systems) {
         auto result = fs->flush_writes();
         if (result.is_error()) {
-            //TODO: Figure out how to propagate error to a higher function.
+            // TODO: Figure out how to propagate error to a higher function.
         }
     }
 }
