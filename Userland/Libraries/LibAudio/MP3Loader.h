@@ -41,6 +41,7 @@ public:
 
 private:
     MaybeLoaderError initialize();
+    static MaybeLoaderError skip_id3(SeekableStream& stream);
     static MaybeLoaderError synchronize(BigEndianInputBitStream& stream, size_t sample_index);
     MaybeLoaderError synchronize();
     MaybeLoaderError build_seek_table();

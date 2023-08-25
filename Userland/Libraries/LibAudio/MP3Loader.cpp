@@ -22,8 +22,36 @@ MP3LoaderPlugin::MP3LoaderPlugin(NonnullOwnPtr<SeekableStream> stream)
 {
 }
 
+MaybeLoaderError MP3LoaderPlugin::skip_id3(SeekableStream& stream)
+{
+    // FIXME: This is a bit of a hack until we have a proper ID3 reader and MP3 demuxer.
+    // Based on https://mutagen-specs.readthedocs.io/en/latest/id3/id3v2.2.html
+    char identifier_buffer[3] = { 0, 0, 0 };
+    auto read_identifier = StringView(TRY(stream.read_some({ &identifier_buffer[0], sizeof(identifier_buffer) })));
+    if (read_identifier == "ID3"sv) {
+        [[maybe_unused]] auto version = TRY(stream.read_value<u8>());
+        [[maybe_unused]] auto revision = TRY(stream.read_value<u8>());
+        [[maybe_unused]] auto flags = TRY(stream.read_value<u8>());
+        auto size = 0;
+        for (auto i = 0; i < 4; i++) {
+            // Each byte has a zeroed most significant bit to prevent it from looking like a sync code.
+            auto byte = TRY(stream.read_value<u8>());
+            size <<= 7;
+            size |= byte & 0x7F;
+        }
+        TRY(stream.seek(size, SeekMode::FromCurrentPosition));
+    } else if (read_identifier != "TAG"sv) {
+        MUST(stream.seek(-static_cast<int>(read_identifier.length()), SeekMode::FromCurrentPosition));
+    }
+    return {};
+}
+
 bool MP3LoaderPlugin::sniff(SeekableStream& stream)
 {
+    auto skip_id3_result = skip_id3(stream);
+    if (skip_id3_result.is_error())
+        return false;
+
     auto maybe_bit_stream = try_make<BigEndianInputBitStream>(MaybeOwned<Stream>(stream));
     if (maybe_bit_stream.is_error())
         return false;
@@ -55,8 +83,8 @@ ErrorOr<NonnullOwnPtr<LoaderPlugin>, LoaderError> MP3LoaderPlugin::create(Nonnul
 
 MaybeLoaderError MP3LoaderPlugin::initialize()
 {
+    TRY(skip_id3(*m_stream));
     m_bitstream = TRY(try_make<BigEndianInputBitStream>(MaybeOwned<Stream>(*m_stream)));
-
     TRY(synchronize());
 
     auto header = TRY(read_header());
@@ -68,8 +96,7 @@ MaybeLoaderError MP3LoaderPlugin::initialize()
     m_loaded_samples = 0;
 
     TRY(build_seek_table());
-
-    TRY(m_stream->seek(0, SeekMode::SetPosition));
+    TRY(seek(0));
 
     return {};
 }
