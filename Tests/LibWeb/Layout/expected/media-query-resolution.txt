@@ -1,0 +1,31 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
+    BlockContainer <body> at (8,16) content-size 784x68.875 children: not-inline
+      BlockContainer <p> at (8,16) content-size 784x35.40625 children: inline
+        line 0 width: 746.890625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+          frag 0 from TextNode start: 0, length: 88, rect: [8,16 746.890625x17.46875]
+            "NOTE: This test assumes that you're running with 1x pixels (which our test runner always"
+        line 1 width: 40.625, height: 17.9375, bottom: 35.40625, baseline: 13.53125
+          frag 0 from TextNode start: 89, length: 5, rect: [8,33 40.625x17.46875]
+            "does."
+        TextNode <#text>
+      BlockContainer <(anonymous)> at (8,67.40625) content-size 784x0 children: inline
+        TextNode <#text>
+      BlockContainer <div.pass> at (8,67.40625) content-size 784x17.46875 children: inline
+        line 0 width: 49.734375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+          frag 0 from TextNode start: 0, length: 4, rect: [8,67.40625 49.734375x17.46875]
+            "PASS"
+        TextNode <#text>
+      BlockContainer <(anonymous)> at (8,84.875) content-size 784x0 children: inline
+        TextNode <#text>
+        TextNode <#text>
+
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
+    PaintableWithLines (BlockContainer<BODY>) [8,16 784x68.875]
+      PaintableWithLines (BlockContainer<P>) [8,16 784x35.40625]
+        TextPaintable (TextNode<#text>)
+      PaintableWithLines (BlockContainer(anonymous)) [8,67.40625 784x0]
+      PaintableWithLines (BlockContainer<DIV>.pass) [8,67.40625 784x17.46875]
+        TextPaintable (TextNode<#text>)
+      PaintableWithLines (BlockContainer(anonymous)) [8,84.875 784x0]
