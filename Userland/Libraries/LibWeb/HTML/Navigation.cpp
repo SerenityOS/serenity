@@ -272,6 +272,62 @@ WebIDL::ExceptionOr<NavigationResult> Navigation::navigate(String url, Navigatio
     return navigation_api_method_tracker_derived_result(api_method_tracker);
 }
 
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-navigation-reload
+WebIDL::ExceptionOr<NavigationResult> Navigation::reload(NavigationReloadOptions const& options)
+{
+    auto& realm = this->realm();
+    auto& vm = this->vm();
+    // The reload(options) method steps are:
+
+    // 1. Let document be this's relevant global object's associated Document.
+    auto& document = verify_cast<HTML::Window>(relevant_global_object(*this)).associated_document();
+
+    // 2. Let serializedState be StructuredSerializeForStorage(undefined).
+    auto serialized_state = MUST(structured_serialize_for_storage(vm, JS::js_undefined()));
+
+    // 3. If options["state"] exists, then set serializedState to StructuredSerializeForStorage(options["state"]).
+    //    If this throws an exception, then return an early error result for that exception.
+    // NOTE: It is importantly to perform this step early, since serialization can invoke web developer
+    //       code, which in turn might change various things we check in later steps.
+    if (options.state.has_value()) {
+        auto serialized_state_or_error = structured_serialize_for_storage(vm, options.state.value());
+        if (serialized_state_or_error.is_error())
+            return early_error_result(serialized_state_or_error.release_error());
+        serialized_state = serialized_state_or_error.release_value();
+    }
+
+    // 4. Otherwise:
+    else {
+        // 1. Let current be the current entry of this.
+        auto current = current_entry();
+
+        // 2. If current is not null, then set serializedState to current's session history entry's navigation API state.
+        if (current != nullptr)
+            serialized_state = current->session_history_entry().navigation_api_state;
+    }
+
+    // 5. If document is not fully active, then return an early error result for an "InvalidStateError" DOMException.
+    if (!document.is_fully_active())
+        return early_error_result(WebIDL::InvalidStateError::create(realm, "Document is not fully active"));
+
+    // 6. If document's unload counter is greater than 0, then return an early error result for an "InvalidStateError" DOMException.
+    if (document.unload_counter() > 0)
+        return early_error_result(WebIDL::InvalidStateError::create(realm, "Document already unloaded"));
+
+    // 7. Let info be options["info"], if it exists; otherwise, undefined.
+    auto info = options.info.value_or(JS::js_undefined());
+
+    // 8. Let apiMethodTracker be the result of maybe setting the upcoming non-traverse API method tracker for this given info and serializedState.
+    auto api_method_tracker = maybe_set_the_upcoming_non_traverse_api_method_tracker(info, serialized_state);
+
+    // 9. Reload document's node navigable with navigationAPIState set to serializedState.
+    // FIXME: Actually call reload once Navigables are implemented enough to guarantee a node navigable on
+    //        an active document that's not being unloaded.
+    //        document.navigable().reload(state)
+
+    return navigation_api_method_tracker_derived_result(api_method_tracker);
+}
+
 void Navigation::set_onnavigate(WebIDL::CallbackType* event_handler)
 {
     set_event_handler_attribute(HTML::EventNames::navigate, event_handler);

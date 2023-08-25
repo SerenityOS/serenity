@@ -75,13 +75,15 @@ public:
     Vector<JS::NonnullGCPtr<NavigationHistoryEntry>> entries() const;
     JS::GCPtr<NavigationHistoryEntry> current_entry() const;
     WebIDL::ExceptionOr<void> update_current_entry(NavigationUpdateCurrentEntryOptions);
+
+    // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-navigation-transition
+    JS::GCPtr<NavigationTransition> transition() const { return m_transition; }
+
     bool can_go_back() const;
     bool can_go_forward() const;
 
     WebIDL::ExceptionOr<NavigationResult> navigate(String url, NavigationNavigateOptions const&);
-
-    // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-navigation-transition
-    JS::GCPtr<NavigationTransition> transition() const { return m_transition; }
+    WebIDL::ExceptionOr<NavigationResult> reload(NavigationReloadOptions const&);
 
     // Event Handlers
     void set_onnavigate(WebIDL::CallbackType*);
