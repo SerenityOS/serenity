@@ -51,7 +51,6 @@ enum class NeedsBigProcessLock {
     S(allocate_tls, NeedsBigProcessLock::Yes)              \
     S(anon_create, NeedsBigProcessLock::No)                \
     S(annotate_mapping, NeedsBigProcessLock::No)           \
-    S(beep, NeedsBigProcessLock::No)                       \
     S(bind, NeedsBigProcessLock::No)                       \
     S(bindmount, NeedsBigProcessLock::No)                  \
     S(chdir, NeedsBigProcessLock::No)                      \

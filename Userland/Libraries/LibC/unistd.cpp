@@ -925,12 +925,6 @@ int gettid()
     return cached_tid;
 }
 
-int sysbeep(int tone)
-{
-    int rc = syscall(SC_beep, tone);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/fsync.html
 int fsync(int fd)
 {
