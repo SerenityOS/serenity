@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2023, Aliaksandr Kalenik <kalenik.aliaksandr@gmail.com>
  * Copyright (c) 2022-2023, Martin Falisse <mfalisse@outlook.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause

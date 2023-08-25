@@ -5350,7 +5350,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
             return true;
         return false;
     };
-    auto is_line_name = [](Token token) -> bool {
+    auto is_identifier = [](Token token) -> bool {
         // The <custom-ident> additionally excludes the keywords span and auto.
         if (token.is(Token::Type::Ident) && !token.ident().equals_ignoring_ascii_case("span"sv) && !token.ident().equals_ignoring_ascii_case("auto"sv))
             return true;
@@ -5363,22 +5363,22 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
 
     if (!tokens.has_next_token()) {
         if (is_auto(current_token))
-            return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement());
+            return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_auto());
         if (is_span(current_token))
-            return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(1, true));
+            return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_span(1));
         if (is_valid_integer(current_token))
-            return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(static_cast<int>(current_token.number_value())));
-        if (is_line_name(current_token)) {
+            return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_line(static_cast<int>(current_token.number_value()), {}));
+        if (is_identifier(current_token)) {
             auto maybe_string = String::from_utf8(current_token.ident());
             if (!maybe_string.is_error())
-                return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(maybe_string.value()));
+                return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_area(maybe_string.value()));
         }
         return nullptr;
     }
 
     auto span_value = false;
     auto span_or_position_value = 0;
-    String line_name_value;
+    String identifier_value;
     while (true) {
         if (is_auto(current_token))
             return nullptr;
@@ -5394,12 +5394,12 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
             else
                 return nullptr;
         }
-        if (is_line_name(current_token)) {
-            if (line_name_value.is_empty()) {
+        if (is_identifier(current_token)) {
+            if (identifier_value.is_empty()) {
                 auto maybe_string = String::from_utf8(current_token.ident());
                 if (maybe_string.is_error())
                     return nullptr;
-                line_name_value = maybe_string.release_value();
+                identifier_value = maybe_string.release_value();
             } else {
                 return nullptr;
             }
@@ -5419,9 +5419,9 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
     if (span_or_position_value == 0)
         span_or_position_value = 1;
 
-    if (!line_name_value.is_empty())
-        return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(line_name_value, span_or_position_value, span_value));
-    return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(span_or_position_value, span_value));
+    if (!identifier_value.is_empty())
+        return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_line(span_or_position_value, identifier_value));
+    return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_span(span_or_position_value));
 }
 
 RefPtr<StyleValue> Parser::parse_grid_track_placement_shorthand_value(Vector<ComponentValue> const& component_values)
