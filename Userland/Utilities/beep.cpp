@@ -10,6 +10,9 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    TRY(Core::System::pledge("stdio rpath wpath"));
+    TRY(Core::System::unveil("/dev/beep", "rw"));
+    TRY(Core::System::unveil(nullptr, nullptr));
     Optional<size_t> tone;
     Optional<size_t> milliseconds_duration;
     Core::ArgsParser args_parser;
