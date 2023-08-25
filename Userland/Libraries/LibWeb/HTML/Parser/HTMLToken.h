@@ -35,6 +35,8 @@ public:
     };
 
     struct Position {
+        constexpr bool operator==(Position const&) const = default;
+
         size_t line { 0 };
         size_t column { 0 };
     };
