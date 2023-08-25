@@ -12,7 +12,7 @@ depends=(
     'gettext'
     'libffi'
     'libiconv'
-    'pcre'
+    'pcre2'
     'zlib'
 )
 
