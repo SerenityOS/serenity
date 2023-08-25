@@ -9,6 +9,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
+#include <AK/String.h>
 
 TEST_CASE(destroy_self_owning_object)
 {
@@ -31,4 +32,20 @@ TEST_CASE(destroy_self_owning_object)
     auto* object_ptr = object.ptr();
     object_ptr->inner = make<SelfOwning::Inner>(object.release_nonnull());
     object_ptr->inner = nullptr;
+}
+
+struct Foo { };
+
+template<>
+struct AK::Formatter<Foo> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Foo const&)
+    {
+        return Formatter<StringView>::format(builder, ":^)"sv);
+    }
+};
+
+TEST_CASE(formatter)
+{
+    auto foo = make<Foo>();
+    EXPECT_EQ(MUST(String::formatted("{}", foo)), ":^)"sv);
 }
