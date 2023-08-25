@@ -52,7 +52,6 @@ void Inode::sync()
     if (result.is_error()) {
         // TODO: Figure out how to propagate error to a higher function.
     }
-
 }
 
 ErrorOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(Credentials const& credentials, Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const
