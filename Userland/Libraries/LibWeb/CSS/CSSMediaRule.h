@@ -24,8 +24,8 @@ public:
 
     virtual Type type() const override { return Type::Media; }
 
-    virtual DeprecatedString condition_text() const override;
-    virtual void set_condition_text(DeprecatedString) override;
+    virtual String condition_text() const override;
+    virtual void set_condition_text(String const&) override;
     virtual bool condition_matches() const override { return m_media->matches(); }
 
     MediaList* media() const { return m_media; }

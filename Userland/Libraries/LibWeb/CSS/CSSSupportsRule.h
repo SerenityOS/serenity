@@ -25,8 +25,8 @@ public:
 
     virtual Type type() const override { return Type::Supports; }
 
-    DeprecatedString condition_text() const override;
-    void set_condition_text(DeprecatedString) override;
+    String condition_text() const override;
+    void set_condition_text(String const&) override;
     virtual bool condition_matches() const override { return m_supports->matches(); }
 
 private:

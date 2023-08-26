@@ -28,12 +28,12 @@ void CSSSupportsRule::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSSupportsRulePrototype>(realm, "CSSSupportsRule"));
 }
 
-DeprecatedString CSSSupportsRule::condition_text() const
+String CSSSupportsRule::condition_text() const
 {
-    return m_supports->to_string().to_deprecated_string();
+    return m_supports->to_string();
 }
 
-void CSSSupportsRule::set_condition_text(DeprecatedString text)
+void CSSSupportsRule::set_condition_text(String const& text)
 {
     if (auto new_supports = parse_css_supports(Parser::ParsingContext { realm() }, text))
         m_supports = new_supports.release_nonnull();

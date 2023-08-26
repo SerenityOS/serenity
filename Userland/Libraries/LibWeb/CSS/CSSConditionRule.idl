@@ -1,6 +1,6 @@
 #import <CSS/CSSGroupingRule.idl>
 
-[Exposed=Window]
+[Exposed=Window, UseNewAKString]
 interface CSSConditionRule : CSSGroupingRule {
     attribute CSSOMString conditionText;
 };
