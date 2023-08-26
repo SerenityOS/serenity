@@ -1,0 +1,38 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Liav A <liavalb@gmail.com>
+Date: Sat, 26 Aug 2023 19:54:41 +0300
+Subject: [PATCH] Don't replace timeval or gettimeofday
+
+---
+ gl/sys_time.in.h     | 2 +-
+ src/gl/sys_time.in.h | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/gl/sys_time.in.h b/gl/sys_time.in.h
+index 084f22f2c6c91f4f5380c77a986846cad6bad487..5b79b8dabd81390de9a8047d72c74fae9dd8b749 100644
+--- a/gl/sys_time.in.h
++++ b/gl/sys_time.in.h
+@@ -65,7 +65,7 @@
+ extern "C" {
+ #endif
+ 
+-#if !@HAVE_STRUCT_TIMEVAL@ || @REPLACE_STRUCT_TIMEVAL@
++#if 0
+ 
+ # if @REPLACE_STRUCT_TIMEVAL@
+ #  define timeval rpl_timeval
+diff --git a/src/gl/sys_time.in.h b/src/gl/sys_time.in.h
+index d30b26719b269b1119f27f9dea2fe9c184cb6da2..ce59e4b6a4ef630da041037a80dd0a956877210f 100644
+--- a/src/gl/sys_time.in.h
++++ b/src/gl/sys_time.in.h
+@@ -86,8 +86,8 @@ struct timeval
+ }
+ #endif
+ 
+-#if @GNULIB_GETTIMEOFDAY@
+-# if @REPLACE_GETTIMEOFDAY@
++#if 0
++# if 0
+ #  if !(defined __cplusplus && defined GNULIB_NAMESPACE)
+ #   undef gettimeofday
+ #   define gettimeofday rpl_gettimeofday
