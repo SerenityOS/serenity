@@ -10,6 +10,7 @@
 #include <AK/String.h>
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DateTime.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -23,6 +24,7 @@
     COLUMN(ProcessGroupId, "pgid", "PGID", Alignment::Right)  \
     COLUMN(SessionId, "sid", "SID", Alignment::Right)         \
     COLUMN(State, "state", "STATE", Alignment::Left)          \
+    COLUMN(StartTime, "stime", "STIME", Alignment::Left)      \
     COLUMN(TTY, "tty", "TTY", Alignment::Left)                \
     COLUMN(Command, "cmd", "CMD", Alignment::Left)
 
@@ -98,6 +100,15 @@ static ErrorOr<String> column_to_string(ColumnId column_id, Core::ProcessStatist
         return process.threads.is_empty()
             ? "Zombie"_string
             : String::from_deprecated_string(process.threads.first().state);
+    case ColumnId::StartTime: {
+        auto now = Core::DateTime::now();
+        auto today_start = Core::DateTime::now();
+        today_start.set_time(now.year(), now.month(), now.day(), 0, 0, 0);
+        auto process_creation_time = Core::DateTime::from_timestamp(process.creation_time.seconds_since_epoch());
+        if (today_start < process_creation_time || today_start == process_creation_time)
+            return process_creation_time.to_string("%H:%M"sv);
+        return process_creation_time.to_string("%b%d"sv);
+    }
     case ColumnId::Command:
         return String::from_deprecated_string(process.name);
     default:
@@ -205,6 +216,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio rpath"));
     TRY(Core::System::unveil("/sys/kernel/processes", "r"));
+    TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil("/etc/group", "r"));
     TRY(Core::System::unveil("/dev/", "r"));
@@ -292,13 +304,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         };
 
         if (full_format_flag) {
-            TRY(columns.try_ensure_capacity(8));
+            TRY(columns.try_ensure_capacity(9));
             TRY(add_default_column(ColumnId::UserId));
             TRY(add_default_column(ColumnId::ProcessId));
             TRY(add_default_column(ColumnId::ParentProcessId));
             TRY(add_default_column(ColumnId::ProcessGroupId));
             TRY(add_default_column(ColumnId::SessionId));
             TRY(add_default_column(ColumnId::State));
+            TRY(add_default_column(ColumnId::StartTime));
             TRY(add_default_column(ColumnId::TTY));
             TRY(add_default_column(ColumnId::Command));
         } else {
