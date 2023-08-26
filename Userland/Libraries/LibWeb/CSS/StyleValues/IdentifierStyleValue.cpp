@@ -165,7 +165,7 @@ Color IdentifierStyleValue::to_color(Optional<Layout::NodeWithStyle const&> node
     case ValueID::Threedface:
         return SystemColor::button_face();
     case ValueID::Buttontext:
-        return SystemColor::button_face();
+        return SystemColor::button_text();
     case ValueID::Canvas:
     case ValueID::Appworkspace:
     case ValueID::Background:
