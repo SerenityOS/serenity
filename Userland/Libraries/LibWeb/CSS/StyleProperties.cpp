@@ -204,7 +204,7 @@ CSSPixels StyleProperties::line_height(Layout::Node const& layout_node) const
     auto line_height = property(CSS::PropertyID::LineHeight);
 
     if (line_height->is_identifier() && line_height->to_identifier() == ValueID::Normal)
-        return layout_node.font().pixel_metrics().line_spacing();
+        return CSSPixels(layout_node.font().pixel_metrics().line_spacing());
 
     if (line_height->is_length()) {
         auto line_height_length = line_height->as_length().length();
@@ -226,7 +226,7 @@ CSSPixels StyleProperties::line_height(Layout::Node const& layout_node) const
             auto resolved = line_height->as_calculated().resolve_number();
             if (!resolved.has_value()) {
                 dbgln("FIXME: Failed to resolve calc() line-height (number): {}", line_height->as_calculated().to_string());
-                return layout_node.font().pixel_metrics().line_spacing();
+                return CSSPixels(layout_node.font().pixel_metrics().line_spacing());
             }
             return Length(resolved.value(), Length::Type::Em).to_px(layout_node);
         }
@@ -234,12 +234,12 @@ CSSPixels StyleProperties::line_height(Layout::Node const& layout_node) const
         auto resolved = line_height->as_calculated().resolve_length(layout_node);
         if (!resolved.has_value()) {
             dbgln("FIXME: Failed to resolve calc() line-height: {}", line_height->as_calculated().to_string());
-            return layout_node.font().pixel_metrics().line_spacing();
+            return CSSPixels(layout_node.font().pixel_metrics().line_spacing());
         }
         return resolved->to_px(layout_node);
     }
 
-    return layout_node.font().pixel_metrics().line_spacing();
+    return CSSPixels(layout_node.font().pixel_metrics().line_spacing());
 }
 
 Optional<int> StyleProperties::z_index() const

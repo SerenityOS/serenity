@@ -25,7 +25,7 @@ void ButtonBox::prepare_for_replaced_layout()
     // value attribute. This is not the case with <button />, which contains
     // its contents normally.
     if (is<HTML::HTMLInputElement>(dom_node())) {
-        set_natural_width(font().width(static_cast<HTML::HTMLInputElement&>(dom_node()).value()));
+        set_natural_width(CSSPixels(font().width(static_cast<HTML::HTMLInputElement&>(dom_node()).value())));
         set_natural_height(font().pixel_size_rounded_up());
     }
 }

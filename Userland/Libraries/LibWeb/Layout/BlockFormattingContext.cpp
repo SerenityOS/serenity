@@ -1069,7 +1069,7 @@ void BlockFormattingContext::layout_list_item_marker(ListItemBox const& list_ite
         marker_state.set_content_width(image_width + default_marker_width);
     } else {
         auto text_width = marker.font().width(marker.text());
-        marker_state.set_content_width(image_width + text_width);
+        marker_state.set_content_width(image_width + CSSPixels(text_width));
     }
 
     marker_state.set_content_height(max(image_height, marker.font().pixel_size_rounded_up() + 1));

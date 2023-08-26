@@ -540,15 +540,15 @@ CSS::FlexBasis FlexFormattingContext::used_flex_basis_for_item(FlexItem const& i
 CSSPixels FlexFormattingContext::calculate_main_size_from_cross_size_and_aspect_ratio(CSSPixels cross_size, double aspect_ratio) const
 {
     if (is_row_layout())
-        return cross_size * aspect_ratio;
-    return cross_size / aspect_ratio;
+        return CSSPixels(cross_size * aspect_ratio);
+    return CSSPixels(cross_size / aspect_ratio);
 }
 
 CSSPixels FlexFormattingContext::calculate_cross_size_from_main_size_and_aspect_ratio(CSSPixels main_size, double aspect_ratio) const
 {
     if (is_row_layout())
-        return main_size / aspect_ratio;
-    return main_size * aspect_ratio;
+        return CSSPixels(main_size / aspect_ratio);
+    return CSSPixels(main_size * aspect_ratio);
 }
 
 // This function takes a size in the main axis and adjusts it according to the aspect ratio of the box
@@ -687,7 +687,7 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
 
     // The hypothetical main size is the item’s flex base size clamped according to its used min and max main sizes (and flooring the content box size at zero).
     auto clamp_min = has_main_min_size(child_box) ? specified_main_min_size(child_box) : automatic_minimum_size(item);
-    auto clamp_max = has_main_max_size(child_box) ? specified_main_max_size(child_box) : NumericLimits<float>::max();
+    auto clamp_max = has_main_max_size(child_box) ? specified_main_max_size(child_box) : CSSPixels::max();
     item.hypothetical_main_size = max(CSSPixels(0), css_clamp(item.flex_base_size, clamp_min, clamp_max));
 
     // NOTE: At this point, we set the hypothetical main size as the flex item's *temporary* main size.
@@ -982,7 +982,7 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
 
         // If the sum of the unfrozen flex items’ flex factors is less than one, multiply the initial free space by this sum.
         if (auto sum_of_flex_factor_of_unfrozen_items = line.sum_of_flex_factor_of_unfrozen_items(); sum_of_flex_factor_of_unfrozen_items < 1 && initial_free_space.has_value()) {
-            auto value = initial_free_space.value() * sum_of_flex_factor_of_unfrozen_items;
+            auto value = CSSPixels(initial_free_space.value() * sum_of_flex_factor_of_unfrozen_items);
             // If the magnitude of this value is less than the magnitude of the remaining free space, use this as the remaining free space.
             if (abs(value) < abs(line.remaining_free_space.value()))
                 line.remaining_free_space = value;
@@ -1004,7 +1004,7 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
                         continue;
                     double ratio = item.flex_factor.value() / sum_of_flex_factor_of_unfrozen_items;
                     // Set the item’s target main size to its flex base size plus a fraction of the remaining free space proportional to the ratio.
-                    item.target_main_size = item.flex_base_size + (remaining_free_space_or_zero_if_infinite * ratio);
+                    item.target_main_size = item.flex_base_size + remaining_free_space_or_zero_if_infinite.scaled(ratio);
                 }
             }
             // If using the flex shrink factor
@@ -1026,7 +1026,7 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
 
                     // Set the item’s target main size to its flex base size minus a fraction of the absolute value of the remaining free space proportional to the ratio.
                     // (Note this may result in a negative inner main size; it will be corrected in the next step.)
-                    item.target_main_size = item.flex_base_size - (abs(remaining_free_space_or_zero_if_infinite) * ratio);
+                    item.target_main_size = item.flex_base_size - abs(remaining_free_space_or_zero_if_infinite).scaled(ratio);
                 }
             }
         }
@@ -1044,7 +1044,7 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
 
             auto used_max_main_size = has_main_max_size(item.box)
                 ? specified_main_max_size(item.box)
-                : NumericLimits<float>::max();
+                : CSSPixels::max();
 
             auto original_target_main_size = item.target_main_size;
             item.target_main_size = css_clamp(item.target_main_size, used_min_main_size, used_max_main_size);
@@ -1123,7 +1123,7 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
     auto const& computed_max_size = this->computed_cross_max_size(item.box);
 
     auto clamp_min = (!computed_min_size.is_auto() && (resolve_percentage_min_max_sizes || !computed_min_size.contains_percentage())) ? specified_cross_min_size(item.box) : 0;
-    auto clamp_max = (!computed_max_size.is_none() && (resolve_percentage_min_max_sizes || !computed_max_size.contains_percentage())) ? specified_cross_max_size(item.box) : NumericLimits<float>::max();
+    auto clamp_max = (!computed_max_size.is_none() && (resolve_percentage_min_max_sizes || !computed_max_size.contains_percentage())) ? specified_cross_max_size(item.box) : CSSPixels::max();
 
     // If we have a definite cross size, this is easy! No need to perform layout, we can just use it as-is.
     if (has_definite_cross_size(item.box)) {
@@ -1339,7 +1339,7 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
                 }
                 break;
             case CSS::JustifyContent::Center:
-                initial_offset = (inner_main_size(flex_container()) - used_main_space) / 2.0;
+                initial_offset = (inner_main_size(flex_container()) - used_main_space) / 2;
                 if (is_direction_reverse()) {
                     initial_offset = inner_main_size(flex_container()) - initial_offset;
                 }
@@ -1357,9 +1357,9 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
                 if (flex_line.remaining_free_space.has_value())
                     space_between_items = flex_line.remaining_free_space.value() / number_of_items;
                 if (is_direction_reverse()) {
-                    initial_offset = inner_main_size(flex_container()) - space_between_items / 2.0;
+                    initial_offset = inner_main_size(flex_container()) - space_between_items / 2;
                 } else {
-                    initial_offset = space_between_items / 2.0;
+                    initial_offset = space_between_items / 2;
                 }
                 break;
             case CSS::JustifyContent::SpaceEvenly:
@@ -1496,7 +1496,7 @@ void FlexFormattingContext::align_all_flex_items_along_the_cross_axis()
     // FIXME: Take better care of margins
     for (auto& flex_line : m_flex_lines) {
         for (auto& item : flex_line.items) {
-            CSSPixels half_line_size = flex_line.cross_size / 2.0;
+            CSSPixels half_line_size = flex_line.cross_size / 2;
             switch (alignment_for_item(item.box)) {
             case CSS::AlignItems::Baseline:
                 // FIXME: Implement this
@@ -1512,7 +1512,7 @@ void FlexFormattingContext::align_all_flex_items_along_the_cross_axis()
                 item.cross_offset = half_line_size - item.cross_size.value() - item.margins.cross_after - item.borders.cross_after - item.padding.cross_after;
                 break;
             case CSS::AlignItems::Center:
-                item.cross_offset = -(item.cross_size.value() / 2.0);
+                item.cross_offset = -(item.cross_size.value() / 2);
                 break;
             default:
                 break;
@@ -1573,7 +1573,7 @@ void FlexFormattingContext::align_all_flex_lines()
     if (is_single_line()) {
         // For single-line flex containers, we only need to center the line along the cross axis.
         auto& flex_line = m_flex_lines[0];
-        CSSPixels center_of_line = cross_size_of_flex_container / 2.0;
+        CSSPixels center_of_line = cross_size_of_flex_container / 2;
         for (auto& item : flex_line.items) {
             item.cross_offset += center_of_line;
         }
@@ -1732,15 +1732,15 @@ CSSPixels FlexFormattingContext::calculate_intrinsic_main_size_of_flex_container
         CSSPixels result = contribution - outer_flex_base_size;
         if (result > 0) {
             if (item.box->computed_values().flex_grow() >= 1) {
-                result /= item.box->computed_values().flex_grow();
+                result.scale_by(1 / item.box->computed_values().flex_grow());
             } else {
-                result *= item.box->computed_values().flex_grow();
+                result.scale_by(item.box->computed_values().flex_grow());
             }
         } else if (result < 0) {
             if (item.scaled_flex_shrink_factor == 0)
                 result = CSSPixels::min();
             else
-                result /= item.scaled_flex_shrink_factor;
+                result.scale_by(1 / item.scaled_flex_shrink_factor);
         }
 
         item.desired_flex_fraction = result.to_double();
@@ -1793,13 +1793,13 @@ CSSPixels FlexFormattingContext::calculate_intrinsic_main_size_of_flex_container
                     product = flex_line.chosen_flex_fraction * static_cast<double>(item.box->computed_values().flex_grow());
                 else if (item.desired_flex_fraction < 0)
                     product = flex_line.chosen_flex_fraction * item.scaled_flex_shrink_factor;
-                auto result = item.flex_base_size + product;
+                auto result = item.flex_base_size + CSSPixels(product);
 
                 auto const& computed_min_size = this->computed_main_min_size(item.box);
                 auto const& computed_max_size = this->computed_main_max_size(item.box);
 
                 auto clamp_min = (!computed_min_size.is_auto() && !computed_min_size.contains_percentage()) ? specified_main_min_size(item.box) : automatic_minimum_size(item);
-                auto clamp_max = (!computed_max_size.is_none() && !computed_max_size.contains_percentage()) ? specified_main_max_size(item.box) : NumericLimits<float>::max();
+                auto clamp_max = (!computed_max_size.is_none() && !computed_max_size.contains_percentage()) ? specified_main_max_size(item.box) : CSSPixels::max();
 
                 result = css_clamp(result, clamp_min, clamp_max);
 
@@ -1906,7 +1906,7 @@ CSSPixels FlexFormattingContext::calculate_main_min_content_contribution(FlexIte
     }();
 
     auto clamp_min = has_main_min_size(item.box) ? specified_main_min_size(item.box) : automatic_minimum_size(item);
-    auto clamp_max = has_main_max_size(item.box) ? specified_main_max_size(item.box) : NumericLimits<float>::max();
+    auto clamp_max = has_main_max_size(item.box) ? specified_main_max_size(item.box) : CSSPixels::max();
     auto clamped_inner_size = css_clamp(larger_size, clamp_min, clamp_max);
 
     return item.add_main_margin_box_sizes(clamped_inner_size);
@@ -1927,7 +1927,7 @@ CSSPixels FlexFormattingContext::calculate_main_max_content_contribution(FlexIte
     }();
 
     auto clamp_min = has_main_min_size(item.box) ? specified_main_min_size(item.box) : automatic_minimum_size(item);
-    auto clamp_max = has_main_max_size(item.box) ? specified_main_max_size(item.box) : NumericLimits<float>::max();
+    auto clamp_max = has_main_max_size(item.box) ? specified_main_max_size(item.box) : CSSPixels::max();
     auto clamped_inner_size = css_clamp(larger_size, clamp_min, clamp_max);
 
     return item.add_main_margin_box_sizes(clamped_inner_size);
@@ -1959,7 +1959,7 @@ CSSPixels FlexFormattingContext::calculate_cross_min_content_contribution(FlexIt
     auto const& computed_max_size = this->computed_cross_max_size(item.box);
 
     auto clamp_min = (!computed_min_size.is_auto() && (resolve_percentage_min_max_sizes || !computed_min_size.contains_percentage())) ? specified_cross_min_size(item.box) : 0;
-    auto clamp_max = (!computed_max_size.is_none() && (resolve_percentage_min_max_sizes || !computed_max_size.contains_percentage())) ? specified_cross_max_size(item.box) : NumericLimits<float>::max();
+    auto clamp_max = (!computed_max_size.is_none() && (resolve_percentage_min_max_sizes || !computed_max_size.contains_percentage())) ? specified_cross_max_size(item.box) : CSSPixels::max();
 
     auto clamped_inner_size = css_clamp(size, clamp_min, clamp_max);
 
@@ -1978,7 +1978,7 @@ CSSPixels FlexFormattingContext::calculate_cross_max_content_contribution(FlexIt
     auto const& computed_max_size = this->computed_cross_max_size(item.box);
 
     auto clamp_min = (!computed_min_size.is_auto() && (resolve_percentage_min_max_sizes || !computed_min_size.contains_percentage())) ? specified_cross_min_size(item.box) : 0;
-    auto clamp_max = (!computed_max_size.is_none() && (resolve_percentage_min_max_sizes || !computed_max_size.contains_percentage())) ? specified_cross_max_size(item.box) : NumericLimits<float>::max();
+    auto clamp_max = (!computed_max_size.is_none() && (resolve_percentage_min_max_sizes || !computed_max_size.contains_percentage())) ? specified_cross_max_size(item.box) : CSSPixels::max();
 
     auto clamped_inner_size = css_clamp(size, clamp_min, clamp_max);
 
@@ -1992,7 +1992,7 @@ CSSPixels FlexFormattingContext::calculate_width_to_use_when_determining_intrins
     auto const& computed_min_width = box.computed_values().min_width();
     auto const& computed_max_width = box.computed_values().max_width();
     auto clamp_min = (!computed_min_width.is_auto() && (!computed_min_width.contains_percentage())) ? specified_cross_min_size(box) : 0;
-    auto clamp_max = (!computed_max_width.is_none() && (!computed_max_width.contains_percentage())) ? specified_cross_max_size(box) : NumericLimits<float>::max();
+    auto clamp_max = (!computed_max_width.is_none() && (!computed_max_width.contains_percentage())) ? specified_cross_max_size(box) : CSSPixels::max();
 
     CSSPixels width;
     if (should_treat_width_as_auto(box, m_available_space_for_items->space) || computed_width.is_fit_content())
@@ -2123,8 +2123,8 @@ void FlexFormattingContext::resolve_cross_axis_auto_margins()
             if (outer_cross_size < line.cross_size) {
                 CSSPixels remainder = line.cross_size - outer_cross_size;
                 if (item.margins.cross_before_is_auto && item.margins.cross_after_is_auto) {
-                    item.margins.cross_before = remainder / 2.0;
-                    item.margins.cross_after = remainder / 2.0;
+                    item.margins.cross_before = remainder / 2;
+                    item.margins.cross_after = remainder / 2;
                 } else if (item.margins.cross_before_is_auto) {
                     item.margins.cross_before = remainder;
                 } else {
@@ -2203,13 +2203,13 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
         cross_offset = half_line_size - inner_cross_size(box) - cross_margin_after - cross_border_after - cross_padding_after;
         break;
     case CSS::AlignItems::Center:
-        cross_offset = -((inner_cross_size(box) + cross_border_before + cross_border_after) / 2.0);
+        cross_offset = -((inner_cross_size(box) + cross_border_before + cross_border_after) / 2);
         break;
     default:
         break;
     }
 
-    cross_offset += inner_cross_size(flex_container()) / 2.0;
+    cross_offset += inner_cross_size(flex_container()) / 2;
 
     // The main-axis edges of the static-position rectangle are where the margin edges of the child
     // would be positioned if it were the sole flex item in the flex container,
@@ -2236,7 +2236,7 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
     case CSS::JustifyContent::SpaceAround:
     case CSS::JustifyContent::SpaceEvenly:
         pack_from_end = false;
-        main_offset = (inner_main_size(flex_container()) - inner_main_size(box) - main_border_before - main_border_after) / 2.0;
+        main_offset = (inner_main_size(flex_container()) - inner_main_size(box) - main_border_before - main_border_after) / 2;
         break;
     }
 

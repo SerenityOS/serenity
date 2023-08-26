@@ -265,11 +265,11 @@ void TableFormattingContext::compute_intrinsic_percentage(size_t max_cell_span)
             auto cell_start_rc_index = cell_index<RowOrColumn>(cell);
             auto cell_end_rc_index = cell_start_rc_index + cell_span_value;
             // 1. Start with the percentage contribution of the cell.
-            CSSPixels cell_contribution = cell_percentage_contribution<RowOrColumn>(cell);
+            CSSPixels cell_contribution = CSSPixels(cell_percentage_contribution<RowOrColumn>(cell));
             // 2. Subtract the intrinsic percentage width of the column based on cells of span up to N-1 of all columns
             //    that the cell spans. If this gives a negative result, change it to 0%.
             for (auto rc_index = cell_start_rc_index; rc_index < cell_end_rc_index; rc_index++) {
-                cell_contribution -= rows_or_columns[rc_index].intrinsic_percentage;
+                cell_contribution -= CSSPixels(rows_or_columns[rc_index].intrinsic_percentage);
                 cell_contribution = max(cell_contribution, 0);
             }
             // Compute the sum of the non-spanning max-content sizes of all rows / columns spanned by the cell that have an intrinsic percentage
@@ -297,7 +297,7 @@ void TableFormattingContext::compute_intrinsic_percentage(size_t max_cell_span)
                 //    columns spanned by the cell that have an intrinsic percentage width of the column based on cells of span up to N-1 equal to 0%.
                 CSSPixels ajusted_cell_contribution;
                 if (width_sum_of_columns_with_zero_intrinsic_percentage != 0) {
-                    ajusted_cell_contribution = cell_contribution * rows_or_columns[rc_index].max_size / static_cast<double>(width_sum_of_columns_with_zero_intrinsic_percentage);
+                    ajusted_cell_contribution = cell_contribution.scaled(rows_or_columns[rc_index].max_size / static_cast<double>(width_sum_of_columns_with_zero_intrinsic_percentage));
                 } else {
                     // However, if this ratio is undefined because the denominator is zero, instead use the 1 divided by the number of columns
                     // spanned by the cell that have an intrinsic percentage width of the column based on cells of span up to N-1 equal to zero.
@@ -380,12 +380,12 @@ void TableFormattingContext::compute_table_measures()
                     auto clamped_diff_to_baseline_min = min(
                         max(cell_min_size<RowOrColumn>(cell) - baseline_min_content_size - baseline_border_spacing, 0),
                         baseline_max_content_size - baseline_min_content_size);
-                    cell_min_contribution += normalized_max_min_diff * clamped_diff_to_baseline_min;
+                    cell_min_contribution += CSSPixels(normalized_max_min_diff * clamped_diff_to_baseline_min);
                     // the product of:
                     // - the ratio of the max-content size based on cells of span up to N-1 of the column to the baseline max-content size
                     // - the outer min-content size of the cell minus the baseline max-content size and baseline border spacing, or 0 if this is negative
                     if (baseline_max_content_size != 0) {
-                        cell_min_contribution += (rows_or_columns[rc_index].max_size / static_cast<double>(baseline_max_content_size))
+                        cell_min_contribution += CSSPixels(rows_or_columns[rc_index].max_size / static_cast<double>(baseline_max_content_size))
                             * max(CSSPixels(0), cell_min_size<RowOrColumn>(cell) - baseline_max_content_size - baseline_border_spacing);
                     }
 
@@ -396,7 +396,7 @@ void TableFormattingContext::compute_table_measures()
                     // - the ratio of the max-content size based on cells of span up to N-1 of the column to the baseline max-content size
                     // - the outer max-content size of the cell minus the baseline max-content size and the baseline border spacing, or 0 if this is negative
                     if (baseline_max_content_size != 0) {
-                        cell_max_contribution += (rows_or_columns[rc_index].max_size / static_cast<double>(baseline_max_content_size))
+                        cell_max_contribution += CSSPixels(rows_or_columns[rc_index].max_size / static_cast<double>(baseline_max_content_size))
                             * max(CSSPixels(0), cell_max_size<RowOrColumn>(cell) - baseline_max_content_size - baseline_border_spacing);
                     }
                     cell_min_contributions_by_rc_index[rc_index].append(cell_min_contribution);
@@ -461,7 +461,7 @@ void TableFormattingContext::compute_table_width()
 
     // The row/column-grid width minimum (GRIDMIN) width is the sum of the min-content width
     // of all the columns plus cell spacing or borders.
-    CSSPixels grid_min = 0.0f;
+    CSSPixels grid_min = 0;
     for (auto& column : m_columns) {
         grid_min += column.min_size;
     }
@@ -469,7 +469,7 @@ void TableFormattingContext::compute_table_width()
 
     // The row/column-grid width maximum (GRIDMAX) width is the sum of the max-content width
     // of all the columns plus cell spacing or borders.
-    CSSPixels grid_max = 0.0f;
+    CSSPixels grid_max = 0;
     for (auto& column : m_columns) {
         grid_max += column.max_size;
     }
@@ -496,7 +496,7 @@ void TableFormattingContext::compute_table_width()
         for (auto& cell : m_cells) {
             auto const& cell_width = cell.box->computed_values().width();
             if (cell_width.is_percentage()) {
-                adjusted_used_width = ceil(100 / cell_width.percentage().value() * cell.outer_max_width.to_double());
+                adjusted_used_width = CSSPixels(ceil(100 / cell_width.percentage().value() * cell.outer_max_width.to_double()));
                 if (width_of_table_containing_block.is_definite())
                     used_width = min(max(used_width, adjusted_used_width), width_of_table_containing_block.to_px_or_zero());
                 else
@@ -555,7 +555,7 @@ void TableFormattingContext::assign_columns_width_linear_combination(Vector<CSSP
     auto candidate_weight = (available_width - columns_total_used_width) / static_cast<double>(columns_total_candidate_width - columns_total_used_width);
     for (size_t i = 0; i < m_columns.size(); ++i) {
         auto& column = m_columns[i];
-        column.used_width = candidate_weight * candidate_widths[i] + (1 - candidate_weight) * column.used_width;
+        column.used_width = CSSPixels(candidate_weight * candidate_widths[i] + (1 - candidate_weight) * column.used_width);
     }
 }
 
@@ -576,7 +576,7 @@ bool TableFormattingContext::distribute_excess_width_proportionally_to_base_widt
     VERIFY(total_base_width > 0);
     for (auto& column : m_columns) {
         if (column_filter(column)) {
-            column.used_width += excess_width * base_width_getter(column) / static_cast<double>(total_base_width);
+            column.used_width += CSSPixels(excess_width * base_width_getter(column) / static_cast<double>(total_base_width));
         }
     }
     return true;
@@ -618,7 +618,7 @@ bool TableFormattingContext::distribute_excess_width_by_intrinsic_percentage(CSS
     }
     for (auto& column : m_columns) {
         if (column_filter(column)) {
-            column.used_width += excess_width * column.intrinsic_percentage / total_percentage_width;
+            column.used_width += CSSPixels(excess_width * column.intrinsic_percentage / total_percentage_width);
         }
     }
     return true;
@@ -660,7 +660,7 @@ void TableFormattingContext::distribute_width_to_columns()
     for (size_t i = 0; i < m_columns.size(); ++i) {
         auto& column = m_columns[i];
         if (column.has_intrinsic_percentage) {
-            candidate_widths[i] = max(column.min_size, column.intrinsic_percentage / 100 * available_width);
+            candidate_widths[i] = max(column.min_size, CSSPixels(column.intrinsic_percentage / 100 * available_width));
         }
     }
 
@@ -990,7 +990,7 @@ void TableFormattingContext::distribute_height_to_rows()
         for (auto& row : m_rows) {
             auto weight = row.reference_height / static_cast<double>(sum_reference_height);
             auto final_height = m_table_height * weight;
-            row.final_height = final_height;
+            row.final_height = CSSPixels(final_height);
         }
     } else if (rows_with_auto_height.size() > 0) {
         // Else, if the table owns any “auto-height” row (a row whose size is only determined by its content size and
@@ -1029,7 +1029,7 @@ void TableFormattingContext::position_row_boxes()
     for (size_t y = 0; y < m_rows.size(); y++) {
         auto& row = m_rows[y];
         auto& row_state = m_state.get_mutable(row.box);
-        CSSPixels row_width = 0.0f;
+        CSSPixels row_width = 0;
         for (auto& column : m_columns) {
             row_width += column.used_width;
         }
@@ -1044,8 +1044,8 @@ void TableFormattingContext::position_row_boxes()
     CSSPixels row_group_top_offset = table_state.border_top + table_state.padding_top;
     CSSPixels row_group_left_offset = table_state.border_left + table_state.padding_left;
     TableGrid::for_each_child_box_matching(table_box(), TableGrid::is_table_row_group, [&](auto& row_group_box) {
-        CSSPixels row_group_height = 0.0f;
-        CSSPixels row_group_width = 0.0f;
+        CSSPixels row_group_height = 0;
+        CSSPixels row_group_width = 0;
 
         auto& row_group_box_state = m_state.get_mutable(row_group_box);
         row_group_box_state.set_content_x(row_group_left_offset);

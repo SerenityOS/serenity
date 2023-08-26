@@ -9,6 +9,7 @@
 #pragma once
 
 #include <AK/Concepts.h>
+#include <AK/Debug.h>
 #include <AK/DistinctNumeric.h>
 #include <AK/Math.h>
 #include <AK/Traits.h>
@@ -74,16 +75,16 @@ public:
             m_value = static_cast<int>(value) << fractional_bits;
     }
 
-    CSSPixels(float value)
+    template<FloatingPoint F>
+    explicit CSSPixels(F value)
     {
         if (!isnan(value))
             m_value = AK::clamp_to_int(value * fixed_point_denominator);
-    }
-
-    CSSPixels(double value)
-    {
-        if (!isnan(value))
-            m_value = AK::clamp_to_int(value * fixed_point_denominator);
+        // Note: The resolution of CSSPixels is 0.015625, so care must be taken when converting
+        // floats/doubles to CSSPixels as small values (such as scale factors) can underflow to zero,
+        // or otherwise produce inaccurate results (when scaled back up).
+        if (m_value == 0 && value != 0)
+            dbgln_if(LIBWEB_CSS_DEBUG, "CSSPixels: Conversion from float or double underflowed to zero");
     }
 
     template<Unsigned U>
@@ -216,6 +217,32 @@ public:
     }
 
     constexpr CSSPixels abs() const { return from_raw(::abs(m_value)); }
+
+    CSSPixels& scale_by(float value)
+    {
+        *this = CSSPixels(to_float() * value);
+        return *this;
+    }
+
+    CSSPixels& scale_by(double value)
+    {
+        *this = CSSPixels(to_double() * value);
+        return *this;
+    }
+
+    CSSPixels scaled(float value) const
+    {
+        auto result = *this;
+        result.scale_by(value);
+        return result;
+    }
+
+    CSSPixels scaled(double value) const
+    {
+        auto result = *this;
+        result.scale_by(value);
+        return result;
+    }
 
 private:
     i32 m_value { 0 };

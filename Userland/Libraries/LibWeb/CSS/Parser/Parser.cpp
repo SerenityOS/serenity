@@ -1787,7 +1787,7 @@ Optional<Dimension> Parser::parse_dimension(ComponentValue const& component_valu
             // FIXME: Disallow quirk when inside a CSS sub-expression (like `calc()`)
             // "The <quirky-length> value must not be supported in arguments to CSS expressions other than the rect()
             // expression, and must not be supported in the supports() static method of the CSS interface."
-            return Length::make_px(numeric_value);
+            return Length::make_px(CSSPixels(numeric_value));
         }
     }
 

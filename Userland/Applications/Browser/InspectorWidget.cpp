@@ -185,18 +185,18 @@ void InspectorWidget::update_node_box_model(StringView node_box_sizing_json)
     auto json_value = json_or_error.release_value();
     auto const& json_object = json_value.as_object();
 
-    m_node_box_sizing.margin.top = json_object.get_float("margin_top"sv).value_or(0);
-    m_node_box_sizing.margin.right = json_object.get_float("margin_right"sv).value_or(0);
-    m_node_box_sizing.margin.bottom = json_object.get_float("margin_bottom"sv).value_or(0);
-    m_node_box_sizing.margin.left = json_object.get_float("margin_left"sv).value_or(0);
-    m_node_box_sizing.padding.top = json_object.get_float("padding_top"sv).value_or(0);
-    m_node_box_sizing.padding.right = json_object.get_float("padding_right"sv).value_or(0);
-    m_node_box_sizing.padding.bottom = json_object.get_float("padding_bottom"sv).value_or(0);
-    m_node_box_sizing.padding.left = json_object.get_float("padding_left"sv).value_or(0);
-    m_node_box_sizing.border.top = json_object.get_float("border_top"sv).value_or(0);
-    m_node_box_sizing.border.right = json_object.get_float("border_right"sv).value_or(0);
-    m_node_box_sizing.border.bottom = json_object.get_float("border_bottom"sv).value_or(0);
-    m_node_box_sizing.border.left = json_object.get_float("border_left"sv).value_or(0);
+    m_node_box_sizing.margin.top = Web::CSSPixels(json_object.get_float("margin_top"sv).value_or(0));
+    m_node_box_sizing.margin.right = Web::CSSPixels(json_object.get_float("margin_right"sv).value_or(0));
+    m_node_box_sizing.margin.bottom = Web::CSSPixels(json_object.get_float("margin_bottom"sv).value_or(0));
+    m_node_box_sizing.margin.left = Web::CSSPixels(json_object.get_float("margin_left"sv).value_or(0));
+    m_node_box_sizing.padding.top = Web::CSSPixels(json_object.get_float("padding_top"sv).value_or(0));
+    m_node_box_sizing.padding.right = Web::CSSPixels(json_object.get_float("padding_right"sv).value_or(0));
+    m_node_box_sizing.padding.bottom = Web::CSSPixels(json_object.get_float("padding_bottom"sv).value_or(0));
+    m_node_box_sizing.padding.left = Web::CSSPixels(json_object.get_float("padding_left"sv).value_or(0));
+    m_node_box_sizing.border.top = Web::CSSPixels(json_object.get_float("border_top"sv).value_or(0));
+    m_node_box_sizing.border.right = Web::CSSPixels(json_object.get_float("border_right"sv).value_or(0));
+    m_node_box_sizing.border.bottom = Web::CSSPixels(json_object.get_float("border_bottom"sv).value_or(0));
+    m_node_box_sizing.border.left = Web::CSSPixels(json_object.get_float("border_left"sv).value_or(0));
 
     m_element_size_view->set_node_content_width(json_object.get_float("content_width"sv).value_or(0));
     m_element_size_view->set_node_content_height(json_object.get_float("content_height"sv).value_or(0));
