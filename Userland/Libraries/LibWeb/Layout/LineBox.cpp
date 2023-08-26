@@ -25,7 +25,7 @@ void LineBox::add_fragment(Node const& layout_node, int start, int length, CSSPi
         m_fragments.last().set_width(m_fragments.last().width() + content_width);
     } else {
         CSSPixels x_offset = leading_margin + leading_size + m_width;
-        CSSPixels y_offset = 0.0f;
+        CSSPixels y_offset = 0;
         m_fragments.append(LineBoxFragment { layout_node, start, length, CSSPixelPoint(x_offset, y_offset), CSSPixelSize(content_width, content_height), border_box_top, border_box_bottom });
     }
     m_width += leading_margin + leading_size + content_width + trailing_size + trailing_margin;

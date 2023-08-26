@@ -405,7 +405,7 @@ CSSPixels FormattingContext::tentative_width_for_replaced_element(Box const& box
     //     (used height) * (intrinsic ratio)
     if ((computed_height.is_auto() && computed_width.is_auto() && !box.has_natural_width() && box.has_natural_height() && box.has_preferred_aspect_ratio())
         || (computed_width.is_auto() && !computed_height.is_auto() && box.has_preferred_aspect_ratio())) {
-        return compute_height_for_replaced_element(box, available_space) * static_cast<double>(box.preferred_aspect_ratio().value());
+        return compute_height_for_replaced_element(box, available_space).scaled(static_cast<double>(box.preferred_aspect_ratio().value()));
     }
 
     // If 'height' and 'width' both have computed values of 'auto' and the element has an intrinsic ratio but no intrinsic height or width,
@@ -500,7 +500,7 @@ CSSPixels FormattingContext::tentative_height_for_replaced_element(Box const& bo
     //
     //     (used width) / (intrinsic ratio)
     if (computed_height.is_auto() && box.has_preferred_aspect_ratio())
-        return m_state.get(box).content_width() / static_cast<double>(box.preferred_aspect_ratio().value());
+        return CSSPixels(m_state.get(box).content_width() / static_cast<double>(box.preferred_aspect_ratio().value()));
 
     // Otherwise, if 'height' has a computed value of 'auto', and the element has an intrinsic height, then that intrinsic height is the used value of 'height'.
     if (computed_height.is_auto() && box.has_natural_height())
@@ -1051,8 +1051,8 @@ CSSPixelPoint FormattingContext::calculate_static_position(Box const& box) const
     // The purpose of this function is to calculate the approximate position that `box`
     // would have had if it were position:static.
 
-    CSSPixels x = 0.0f;
-    CSSPixels y = 0.0f;
+    CSSPixels x = 0;
+    CSSPixels y = 0;
 
     VERIFY(box.parent());
     if (box.parent()->children_are_inline()) {
@@ -1403,7 +1403,7 @@ CSSPixels FormattingContext::calculate_min_content_height(Layout::Box const& box
 CSSPixels FormattingContext::calculate_max_content_height(Layout::Box const& box, CSSPixels width) const
 {
     if (box.has_preferred_aspect_ratio())
-        return width / static_cast<double>(*box.preferred_aspect_ratio());
+        return CSSPixels(width / static_cast<double>(*box.preferred_aspect_ratio()));
 
     if (box.has_natural_height())
         return *box.natural_height();
@@ -1711,10 +1711,10 @@ CSSPixels FormattingContext::box_baseline(Box const& box) const
             return box_state.content_height() + box_state.margin_box_top();
         case CSS::VerticalAlign::TextTop:
             // TextTop: Align the top of the box with the top of the parent's content area (see 10.6.1).
-            return box.computed_values().font_size();
+            return CSSPixels(box.computed_values().font_size());
         case CSS::VerticalAlign::TextBottom:
             // TextTop: Align the bottom of the box with the bottom of the parent's content area (see 10.6.1).
-            return box_state.content_height() - (box.containing_block()->font().pixel_metrics().descent * 2);
+            return box_state.content_height() - CSSPixels(box.containing_block()->font().pixel_metrics().descent * 2);
         default:
             break;
         }

@@ -300,11 +300,11 @@ static CSSPixels snap_a_length_as_a_border_width(double device_pixels_per_css_pi
 
     // 3. If len is greater than zero, but less than 1 device pixel, round len up to 1 device pixel.
     if (device_pixels > 0 && device_pixels < 1)
-        return 1 / device_pixels_per_css_pixel;
+        return CSSPixels(1 / device_pixels_per_css_pixel);
 
     // 4. If len is greater than 1 device pixel, round it down to the nearest integer number of device pixels.
     if (device_pixels > 1)
-        return floor(device_pixels) / device_pixels_per_css_pixel;
+        return CSSPixels(floor(device_pixels) / device_pixels_per_css_pixel);
 
     return length;
 }
@@ -684,11 +684,11 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
                     // https://www.w3.org/TR/css-backgrounds-3/#valdef-line-width-thin
                     switch (value->to_identifier()) {
                     case CSS::ValueID::Thin:
-                        return 1.0;
+                        return 1;
                     case CSS::ValueID::Medium:
-                        return 3.0;
+                        return 3;
                     case CSS::ValueID::Thick:
-                        return 5.0;
+                        return 5;
                     default:
                         VERIFY_NOT_REACHED();
                     }
@@ -742,7 +742,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     // FIXME: Converting to pixels isn't really correct - values should be in "user units"
     //        https://svgwg.org/svg2-draft/coords.html#TermUserUnits
     if (stroke_width->is_number())
-        computed_values.set_stroke_width(CSS::Length::make_px(stroke_width->as_number().number()));
+        computed_values.set_stroke_width(CSS::Length::make_px(CSSPixels(stroke_width->as_number().number())));
     else if (stroke_width->is_length())
         computed_values.set_stroke_width(stroke_width->as_length().length());
     else if (stroke_width->is_percentage())

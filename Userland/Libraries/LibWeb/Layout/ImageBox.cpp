@@ -34,11 +34,11 @@ void ImageBox::prepare_for_replaced_layout()
 
         CSSPixels alt_text_width = 0;
         if (!m_cached_alt_text_width.has_value())
-            m_cached_alt_text_width = font.width(alt);
+            m_cached_alt_text_width = CSSPixels(font.width(alt));
         alt_text_width = m_cached_alt_text_width.value();
 
         set_natural_width(alt_text_width + 16);
-        set_natural_height(font.pixel_size() + 16);
+        set_natural_height(CSSPixels(font.pixel_size()) + 16);
     }
 
     if (!has_natural_width() && !has_natural_height()) {

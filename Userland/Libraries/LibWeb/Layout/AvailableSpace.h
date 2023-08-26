@@ -36,7 +36,7 @@ public:
     CSSPixels to_px_or_zero() const
     {
         if (!is_definite())
-            return 0.0f;
+            return 0;
         return m_value;
     }
 

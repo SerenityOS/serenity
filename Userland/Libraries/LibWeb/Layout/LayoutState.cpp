@@ -386,7 +386,7 @@ void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, Us
         if (size.is_percentage()) {
             if (containing_block_has_definite_size) {
                 auto containing_block_size = width ? containing_block_used_values->content_width() : containing_block_used_values->content_height();
-                resolved_definite_size = adjust_for_box_sizing(containing_block_size * static_cast<double>(size.percentage().as_fraction()), size, width);
+                resolved_definite_size = adjust_for_box_sizing(containing_block_size.scaled(size.percentage().as_fraction()), size, width);
                 return true;
             }
             return false;

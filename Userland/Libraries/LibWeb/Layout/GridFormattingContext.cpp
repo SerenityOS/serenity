@@ -1245,7 +1245,7 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& availab
             for (auto& track : tracks) {
                 if (track.max_track_sizing_function.is_flexible_length()) {
                     if (track.max_track_sizing_function.flex_factor() > 1) {
-                        result = max(result, track.base_size / track.max_track_sizing_function.flex_factor());
+                        result = max(result, CSSPixels(track.base_size / track.max_track_sizing_function.flex_factor()));
                     } else {
                         result = max(result, track.base_size);
                     }
@@ -1273,8 +1273,8 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& availab
     // For each flexible track, if the product of the used flex fraction and the track’s flex factor is greater than
     // the track’s base size, set its base size to that product.
     for (auto& track : tracks_and_gaps) {
-        if (track.max_track_sizing_function.flex_factor() * flex_fraction > track.base_size) {
-            track.base_size = track.max_track_sizing_function.flex_factor() * flex_fraction;
+        if (flex_fraction.scaled(track.max_track_sizing_function.flex_factor()) > track.base_size) {
+            track.base_size = flex_fraction.scaled(track.max_track_sizing_function.flex_factor());
         }
     }
 }

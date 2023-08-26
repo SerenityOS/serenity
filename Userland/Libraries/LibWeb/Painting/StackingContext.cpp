@@ -448,12 +448,12 @@ void StackingContext::paint(PaintContext& context) const
         // to the size of the source (which could add some artefacts, though just scaling the bitmap already does that).
         // We need to copy the background at the destination because a bunch of our rendering effects now rely on
         // being able to sample the painter (see border radii, shadows, filters, etc).
-        CSSPixelPoint destination_clipped_fixup {};
+        Gfx::FloatPoint destination_clipped_fixup {};
         auto try_get_scaled_destination_bitmap = [&]() -> ErrorOr<NonnullRefPtr<Gfx::Bitmap>> {
             Gfx::IntRect actual_destination_rect;
             auto bitmap = TRY(context.painter().get_region_bitmap(destination_rect, Gfx::BitmapFormat::BGRA8888, actual_destination_rect));
             // get_region_bitmap() may clip to a smaller region if the requested rect goes outside the painter, so we need to account for that.
-            destination_clipped_fixup = CSSPixelPoint { destination_rect.location() - actual_destination_rect.location() };
+            destination_clipped_fixup = Gfx::FloatPoint { destination_rect.location() - actual_destination_rect.location() };
             destination_rect = actual_destination_rect;
             if (source_rect.size() != transformed_destination_rect.size()) {
                 auto sx = static_cast<float>(source_rect.width()) / transformed_destination_rect.width();
@@ -469,7 +469,7 @@ void StackingContext::paint(PaintContext& context) const
             return;
         auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
         Gfx::Painter painter(bitmap);
-        painter.translate(context.rounded_device_point(-paintable_box().absolute_paint_rect().location() + destination_clipped_fixup).to_type<int>());
+        painter.translate(context.rounded_device_point(-paintable_box().absolute_paint_rect().location() + destination_clipped_fixup.to_type<CSSPixels>()).to_type<int>());
         auto paint_context = context.clone(painter);
         paint_internal(paint_context);
 

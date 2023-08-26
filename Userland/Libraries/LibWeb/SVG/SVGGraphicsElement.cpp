@@ -227,7 +227,7 @@ Optional<float> SVGGraphicsElement::stroke_width() const
             viewport_height = svg_svg_layout_node->computed_values().height().to_px(*svg_svg_layout_node, 0);
         }
     }
-    auto scaled_viewport_size = (viewport_width + viewport_height) * 0.5;
+    auto scaled_viewport_size = (viewport_width + viewport_height) * CSSPixels(0.5);
     return width.to_px(*layout_node(), scaled_viewport_size).to_double();
 }
 

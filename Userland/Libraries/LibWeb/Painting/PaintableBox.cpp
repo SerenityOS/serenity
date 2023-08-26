@@ -258,8 +258,8 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
         auto size_text_rect = border_rect;
         size_text_rect.set_y(border_rect.y() + border_rect.height());
         size_text_rect.set_top(size_text_rect.top());
-        size_text_rect.set_width((float)font.width(size_text) + 4);
-        size_text_rect.set_height(font.pixel_size() + 4);
+        size_text_rect.set_width(CSSPixels(font.width(size_text)) + 4);
+        size_text_rect.set_height(CSSPixels(font.pixel_size()) + 4);
         auto size_text_device_rect = context.enclosing_device_rect(size_text_rect).to_type<int>();
         context.painter().fill_rect(size_text_device_rect, context.palette().color(Gfx::ColorRole::Tooltip));
         context.painter().draw_rect(size_text_device_rect, context.palette().threed_shadow1());
@@ -503,7 +503,7 @@ static void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const
     auto fragment_rect = fragment.absolute_rect();
 
     CSSPixelRect cursor_rect {
-        fragment_rect.x() + text_node.font().width(fragment.text().substring_view(0, text_node.browsing_context().cursor_position().offset() - fragment.start())),
+        fragment_rect.x() + CSSPixels(text_node.font().width(fragment.text().substring_view(0, text_node.browsing_context().cursor_position().offset() - fragment.start()))),
         fragment_rect.top(),
         1,
         fragment_rect.height()
@@ -518,7 +518,7 @@ static void paint_text_decoration(PaintContext& context, Gfx::Painter& painter, 
 {
     auto& font = fragment.layout_node().font();
     auto fragment_box = fragment.absolute_rect();
-    CSSPixels glyph_height = font.pixel_size();
+    CSSPixels glyph_height = CSSPixels(font.pixel_size());
     auto baseline = fragment_box.height() / 2 - (glyph_height + 4) / 2 + glyph_height;
 
     auto line_color = text_node.computed_values().text_decoration_color();
@@ -526,9 +526,9 @@ static void paint_text_decoration(PaintContext& context, Gfx::Painter& painter, 
     CSSPixels css_line_thickness = [&] {
         CSS::Length computed_thickness = text_node.computed_values().text_decoration_thickness().resolved(text_node, CSS::Length(1, CSS::Length::Type::Em));
         if (computed_thickness.is_auto())
-            return max(glyph_height * 0.1, 1.);
+            return max(glyph_height.scaled(0.1), 1);
 
-        return computed_thickness.to_px(text_node).to_double();
+        return computed_thickness.to_px(text_node);
     }();
     auto device_line_thickness = context.rounded_device_pixels(css_line_thickness);
 
@@ -550,8 +550,8 @@ static void paint_text_decoration(PaintContext& context, Gfx::Painter& painter, 
             break;
         case CSS::TextDecorationLine::LineThrough: {
             auto x_height = font.x_height();
-            line_start_point = context.rounded_device_point(fragment_box.top_left().translated(0, baseline - x_height * 0.5f));
-            line_end_point = context.rounded_device_point(fragment_box.top_right().translated(-1, baseline - x_height * 0.5f));
+            line_start_point = context.rounded_device_point(fragment_box.top_left().translated(0, baseline - x_height * CSSPixels(0.5f)));
+            line_end_point = context.rounded_device_point(fragment_box.top_right().translated(-1, baseline - x_height * CSSPixels(0.5f)));
             break;
         }
         case CSS::TextDecorationLine::Blink:

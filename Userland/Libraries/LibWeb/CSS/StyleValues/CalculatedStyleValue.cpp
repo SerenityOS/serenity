@@ -77,7 +77,7 @@ static CalculatedStyleValue::CalculationResult to_resolved_type(CalculatedStyleV
     case CalculatedStyleValue::ResolvedType::Frequency:
         return { Frequency::make_hertz(value) };
     case CalculatedStyleValue::ResolvedType::Length:
-        return { Length::make_px(value) };
+        return { Length::make_px(CSSPixels(value)) };
     case CalculatedStyleValue::ResolvedType::Percentage:
         return { Percentage(value) };
     case CalculatedStyleValue::ResolvedType::Time:
@@ -2155,7 +2155,7 @@ void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult cons
             m_value = Frequency::make_hertz(frequency.to_hertz() * other.m_value.get<Number>().value());
         },
         [&](Length const& length) {
-            m_value = Length::make_px(length.to_px(*context) * static_cast<double>(other.m_value.get<Number>().value()));
+            m_value = Length::make_px(CSSPixels(length.to_px(*context) * static_cast<double>(other.m_value.get<Number>().value())));
         },
         [&](Time const& time) {
             m_value = Time::make_seconds(time.to_seconds() * other.m_value.get<Number>().value());
@@ -2187,7 +2187,7 @@ void CalculatedStyleValue::CalculationResult::divide_by(CalculationResult const&
             m_value = Frequency::make_hertz(frequency.to_hertz() / denominator);
         },
         [&](Length const& length) {
-            m_value = Length::make_px(length.to_px(*context) / static_cast<double>(denominator));
+            m_value = Length::make_px(CSSPixels(length.to_px(*context) / static_cast<double>(denominator)));
         },
         [&](Time const& time) {
             m_value = Time::make_seconds(time.to_seconds() / denominator);
