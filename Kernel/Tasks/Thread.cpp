@@ -23,7 +23,7 @@
 #include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/PerformanceEventBuffer.h>
-#include <Kernel/Tasks/PowerStateSwitchTask.h>
+#include <Kernel/Tasks/PowerManagementTask.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/Thread.h>

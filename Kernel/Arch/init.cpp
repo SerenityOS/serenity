@@ -51,6 +51,7 @@
 #include <Kernel/Sections.h>
 #include <Kernel/Security/Random.h>
 #include <Kernel/Tasks/FinalizerTask.h>
+#include <Kernel/Tasks/PowerManagementTask.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/SyncTask.h>
@@ -390,6 +391,7 @@ void init_stage2(void*)
 
     SyncTask::spawn();
     FinalizerTask::spawn();
+    PowerManagementTask::spawn();
 
     auto boot_profiling = kernel_command_line().is_boot_profiling_enabled();
 
