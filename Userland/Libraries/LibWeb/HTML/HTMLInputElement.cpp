@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Adam Hodgen <ant1441@gmail.com>
  * Copyright (c) 2022, Andrew Kaster <akaster@serenityos.org>
+ * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -308,6 +309,12 @@ DeprecatedString HTMLInputElement::value() const
         if (m_selected_files && m_selected_files->item(0))
             return DeprecatedString::formatted("C:\\fakepath\\{}", m_selected_files->item(0)->name());
         return DeprecatedString::empty();
+    }
+
+    // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-default-on
+    if (type_state() == TypeAttributeState::Checkbox || type_state() == TypeAttributeState::RadioButton) {
+        // On getting, if the element has a value content attribute, return that attribute's value; otherwise, return the string "on".
+        return has_attribute(AttributeNames::value) ? get_attribute(AttributeNames::value) : "on";
     }
 
     // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-value
