@@ -58,6 +58,7 @@ struct Header {
     bool original_bit { false };
     Emphasis emphasis { Emphasis::None };
     u16 crc16 { 0 };
+    size_t header_size { 0 };
     size_t frame_size { 0 };
     size_t slot_count { 0 };
 
