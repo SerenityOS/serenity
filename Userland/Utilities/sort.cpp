@@ -57,7 +57,7 @@ struct Options {
     bool numeric { false };
     bool reverse { false };
     bool zero_terminated { false };
-    StringView separator { "\0", 1 };
+    StringView separator {};
     Vector<DeprecatedString> files;
 };
 
@@ -72,9 +72,9 @@ static ErrorOr<void> load_file(Options const& options, StringView filename, Stri
         DeprecatedString line { TRY(file->read_until(buffer, line_delimiter)) };
         StringView key = line;
         if (options.key_field != 0) {
-            auto split = (options.separator[0])
-                ? line.split_view(options.separator[0])
-                : line.split_view(is_ascii_space);
+            auto split = (!options.separator.is_empty())
+                ? key.split_view(options.separator)
+                : key.split_view_if(is_ascii_space);
             if (options.key_field - 1 >= split.size()) {
                 key = ""sv;
             } else {
