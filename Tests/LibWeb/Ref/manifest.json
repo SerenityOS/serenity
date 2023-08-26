@@ -1,19 +1,19 @@
 {
     "clip-abspos-children.html": "clip-abspos-children-ref.html",
-    "item-with-negative-z-index.html": "item-with-negative-z-index-ref.html",
-    "img-srcset-viewport-relative-sizes.html": "img-srcset-viewport-relative-sizes-ref.html",
-    "grid-items-painting-order.html": "grid-items-painting-order-ref.html",
-    "square-flex.html": "square-ref.html",
-    "separate-borders-inline-table.html": "separate-borders-ref.html",
-    "opacity-stacking.html": "opacity-stacking-ref.html",
     "css-any-link-selector.html": "css-any-link-selector-ref.html",
     "css-gradient-currentcolor.html": "css-gradient-currentcolor-ref.html",
+    "css-gradients.html": "css-gradients-ref.html",
     "css-lang-selector.html": "css-lang-selector-ref.html",
     "css-local-link-selector.html": "css-local-link-selector-ref.html",
     "css-placeholder-shown-selector.html": "css-placeholder-shown-selector-ref.html",
-    "css-gradients.html": "css-gradients-ref.html",
     "css-read-only-read-write-selectors.html": "css-read-only-read-write-selectors-ref.html",
-    "svg-symbol.html": "svg-symbol-ref.html",
+    "grid-items-painting-order.html": "grid-items-painting-order-ref.html",
+    "img-srcset-viewport-relative-sizes.html": "img-srcset-viewport-relative-sizes-ref.html",
+    "item-with-negative-z-index.html": "item-with-negative-z-index-ref.html",
+    "opacity-stacking.html": "opacity-stacking-ref.html",
+    "separate-borders-inline-table.html": "separate-borders-ref.html",
+    "square-flex.html": "square-ref.html",
     "svg-gradient-spreadMethod.html": "svg-gradient-spreadMethod-ref.html",
-    "svg-radialGradient.html": "svg-radialGradient-ref.html"
+    "svg-radialGradient.html": "svg-radialGradient-ref.html",
+    "svg-symbol.html": "svg-symbol-ref.html"
 }
