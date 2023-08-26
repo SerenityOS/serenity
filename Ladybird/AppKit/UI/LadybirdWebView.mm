@@ -15,8 +15,6 @@
 #import <Application/ApplicationDelegate.h>
 #import <UI/Event.h>
 #import <UI/LadybirdWebView.h>
-#import <UI/Tab.h>
-#import <UI/TabController.h>
 #import <Utilities/Conversions.h>
 
 #if !__has_feature(objc_arc)
@@ -53,6 +51,7 @@ struct HideCursor {
     Optional<HideCursor> m_hidden_cursor;
 }
 
+@property (nonatomic, weak) id<LadybirdWebViewObserver> observer;
 @property (nonatomic, strong) NSMenu* page_context_menu;
 @property (nonatomic, strong) NSMenu* link_context_menu;
 @property (nonatomic, strong) NSMenu* image_context_menu;
@@ -70,9 +69,11 @@ struct HideCursor {
 @synthesize video_context_menu = _video_context_menu;
 @synthesize status_label = _status_label;
 
-- (instancetype)init
+- (instancetype)init:(id<LadybirdWebViewObserver>)observer
 {
     if (self = [super init]) {
+        self.observer = observer;
+
         auto* delegate = (ApplicationDelegate*)[NSApp delegate];
         auto* screens = [NSScreen screens];
 
@@ -109,6 +110,11 @@ struct HideCursor {
 - (void)loadHTML:(StringView)html url:(URL const&)url
 {
     m_web_view_bridge->load_html(html, url);
+}
+
+- (String const&)handle
+{
+    return m_web_view_bridge->handle();
 }
 
 - (void)handleResize
@@ -190,29 +196,19 @@ struct HideCursor {
     };
 
     m_web_view_bridge->on_new_tab = [self](auto activate_tab) {
-        auto* delegate = (ApplicationDelegate*)[NSApp delegate];
-
-        auto* controller = [delegate createNewTab:"about:blank"sv
-                                          fromTab:[self tab]
-                                      activateTab:activate_tab];
-
-        auto* tab = (Tab*)[controller window];
-        auto* web_view = [tab web_view];
-
-        return web_view->m_web_view_bridge->handle();
+        return [self.observer onCreateNewTab:"about:blank"sv activateTab:activate_tab];
     };
 
     m_web_view_bridge->on_activate_tab = [self]() {
-        [[self tab] orderFront:nil];
+        [[self window] orderFront:nil];
     };
 
     m_web_view_bridge->on_close = [self]() {
-        [[self tab] close];
+        [[self window] close];
     };
 
     m_web_view_bridge->on_load_start = [self](auto const& url, bool is_redirect) {
-        [[self tabController] onLoadStart:url isRedirect:is_redirect];
-        [[self tab] onLoadStart:url];
+        [self.observer onLoadStart:url isRedirect:is_redirect];
 
         if (_status_label != nil) {
             [self.status_label setHidden:YES];
@@ -220,27 +216,11 @@ struct HideCursor {
     };
 
     m_web_view_bridge->on_title_change = [self](auto const& title) {
-        [[self tabController] onTitleChange:title];
-
-        auto* ns_title = Ladybird::string_to_ns_string(title);
-        [[self tab] onTitleChange:ns_title];
+        [self.observer onTitleChange:title];
     };
 
     m_web_view_bridge->on_favicon_change = [self](auto const& bitmap) {
-        static constexpr size_t FAVICON_SIZE = 16;
-
-        auto png = Gfx::PNGWriter::encode(bitmap);
-        if (png.is_error()) {
-            return;
-        }
-
-        auto* data = [NSData dataWithBytes:png.value().data() length:png.value().size()];
-
-        auto* favicon = [[NSImage alloc] initWithData:data];
-        [favicon setResizingMode:NSImageResizingModeStretch];
-        [favicon setSize:NSMakeSize(FAVICON_SIZE, FAVICON_SIZE)];
-
-        [[self tab] onFaviconChange:favicon];
+        [self.observer onFaviconChange:bitmap];
     };
 
     m_web_view_bridge->on_scroll_to_point = [self](auto position) {
@@ -341,15 +321,15 @@ struct HideCursor {
     };
 
     m_web_view_bridge->on_navigate_back = [self]() {
-        [[self tabController] navigateBack:nil];
+        [self.observer onNavigateBack];
     };
 
     m_web_view_bridge->on_navigate_forward = [self]() {
-        [[self tabController] navigateForward:nil];
+        [self.observer onNavigateForward];
     };
 
     m_web_view_bridge->on_refresh = [self]() {
-        [[self tabController] reload:nil];
+        [self.observer onReload];
     };
 
     m_web_view_bridge->on_enter_tooltip_area = [self](auto, auto const& tooltip) {
@@ -374,27 +354,17 @@ struct HideCursor {
     };
 
     m_web_view_bridge->on_link_click = [self](auto const& url, auto const& target, unsigned modifiers) {
-        auto* delegate = (ApplicationDelegate*)[NSApp delegate];
-
         if (modifiers == Mod_Super) {
-            [delegate createNewTab:url
-                           fromTab:[self tab]
-                       activateTab:Web::HTML::ActivateTab::No];
+            [self.observer onCreateNewTab:url activateTab:Web::HTML::ActivateTab::No];
         } else if (target == "_blank"sv) {
-            [delegate createNewTab:url
-                           fromTab:[self tab]
-                       activateTab:Web::HTML::ActivateTab::Yes];
+            [self.observer onCreateNewTab:url activateTab:Web::HTML::ActivateTab::Yes];
         } else {
-            [[self tabController] loadURL:url];
+            [self.observer loadURL:url];
         }
     };
 
     m_web_view_bridge->on_link_middle_click = [self](auto url, auto, unsigned) {
-        auto* delegate = (ApplicationDelegate*)[NSApp delegate];
-
-        [delegate createNewTab:url
-                       fromTab:[self tab]
-                   activateTab:Web::HTML::ActivateTab::No];
+        [self.observer onCreateNewTab:url activateTab:Web::HTML::ActivateTab::No];
     };
 
     m_web_view_bridge->on_context_menu_request = [self](auto position) {
@@ -605,24 +575,12 @@ struct HideCursor {
     };
 
     m_web_view_bridge->on_received_source = [self](auto const& url, auto const& source) {
-        auto* delegate = (ApplicationDelegate*)[NSApp delegate];
         auto html = WebView::highlight_source(url, source);
 
-        [delegate createNewTab:html
-                           url:url
-                       fromTab:[self tab]
-                   activateTab:Web::HTML::ActivateTab::Yes];
+        [self.observer onCreateNewTab:html
+                                  url:url
+                          activateTab:Web::HTML::ActivateTab::Yes];
     };
-}
-
-- (Tab*)tab
-{
-    return (Tab*)[self window];
-}
-
-- (TabController*)tabController
-{
-    return (TabController*)[[self tab] windowController];
 }
 
 - (NSScrollView*)scrollView
