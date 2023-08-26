@@ -23,12 +23,12 @@ public:
     [[nodiscard]] static JS::NonnullGCPtr<MediaList> create(JS::Realm&, Vector<NonnullRefPtr<MediaQuery>>&&);
     ~MediaList() = default;
 
-    DeprecatedString media_text() const;
-    void set_media_text(DeprecatedString const&);
+    String media_text() const;
+    void set_media_text(StringView);
     size_t length() const { return m_media.size(); }
-    DeprecatedString item(u32 index) const;
-    void append_medium(DeprecatedString);
-    void delete_medium(DeprecatedString);
+    Optional<String> item(u32 index) const;
+    void append_medium(StringView);
+    void delete_medium(StringView);
 
     virtual bool is_supported_property_index(u32 index) const override;
     virtual WebIDL::ExceptionOr<JS::Value> item_value(size_t index) const override;
