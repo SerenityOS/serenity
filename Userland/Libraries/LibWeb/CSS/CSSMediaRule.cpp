@@ -35,12 +35,12 @@ void CSSMediaRule::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_media);
 }
 
-DeprecatedString CSSMediaRule::condition_text() const
+String CSSMediaRule::condition_text() const
 {
-    return m_media->media_text().to_deprecated_string();
+    return String::from_deprecated_string(m_media->media_text().to_deprecated_string()).release_value();
 }
 
-void CSSMediaRule::set_condition_text(DeprecatedString text)
+void CSSMediaRule::set_condition_text(String const& text)
 {
     m_media->set_media_text(text);
 }
