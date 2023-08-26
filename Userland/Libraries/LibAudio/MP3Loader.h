@@ -43,9 +43,9 @@ private:
     MaybeLoaderError initialize();
     static MaybeLoaderError skip_id3(SeekableStream& stream);
     static MaybeLoaderError synchronize(BigEndianInputBitStream& stream, size_t sample_index);
+    static ErrorOr<MP3::Header, LoaderError> read_header(BigEndianInputBitStream& stream, size_t sample_index);
     MaybeLoaderError synchronize();
     MaybeLoaderError build_seek_table();
-    ErrorOr<MP3::Header, LoaderError> read_header();
     ErrorOr<MP3::MP3Frame, LoaderError> read_next_frame();
     ErrorOr<MP3::MP3Frame, LoaderError> read_frame_data(MP3::Header const&);
     MaybeLoaderError read_side_information(MP3::MP3Frame&);
