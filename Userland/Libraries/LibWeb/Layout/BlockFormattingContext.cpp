@@ -1084,7 +1084,9 @@ void BlockFormattingContext::layout_list_item_marker(ListItemBox const& list_ite
         list_item_state.set_content_width(list_item_state.content_width() - final_marker_width);
     }
 
-    marker_state.set_content_offset({ -final_marker_width, max(CSSPixels(0), (CSSPixels(marker.line_height()) - marker_state.content_height()) / 2) });
+    auto offset_y = max(CSSPixels(0), (CSSPixels(marker.line_height()) - marker_state.content_height()) / 2);
+    auto space_and_containing_margin = intrusion_by_floats_into_box(list_item_box, offset_y);
+    marker_state.set_content_offset({ space_and_containing_margin.left - final_marker_width, offset_y });
 
     if (marker_state.content_height() > list_item_state.content_height())
         list_item_state.set_content_height(marker_state.content_height());

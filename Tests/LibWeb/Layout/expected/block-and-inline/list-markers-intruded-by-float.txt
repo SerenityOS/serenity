@@ -1,0 +1,65 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x128.8125 [BFC] children: not-inline
+    BlockContainer <body> at (8,16) content-size 784x104.8125 children: not-inline
+      BlockContainer <div.box> at (18,26) content-size 200x100 floating [BFC] children: not-inline
+      BlockContainer <ul> at (48,16) content-size 744x104.8125 children: not-inline
+        ListItemBox <li> at (48,16) content-size 744x17.46875 children: inline
+          line 0 width: 9.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [328,16 9.34375x17.46875]
+              "a"
+          TextNode <#text>
+          ListItemMarkerBox <(anonymous)> at (304,16.234375) content-size 12x17 children: not-inline
+        ListItemBox <li> at (48,33.46875) content-size 744x17.46875 children: inline
+          line 0 width: 9.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [328,33.46875 9.34375x17.46875]
+              "a"
+          TextNode <#text>
+          ListItemMarkerBox <(anonymous)> at (304,33.703125) content-size 12x17 children: not-inline
+        ListItemBox <li> at (48,50.9375) content-size 744x17.46875 children: inline
+          line 0 width: 9.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [328,50.9375 9.34375x17.46875]
+              "a"
+          TextNode <#text>
+          ListItemMarkerBox <(anonymous)> at (304,51.171875) content-size 12x17 children: not-inline
+        ListItemBox <li> at (48,68.40625) content-size 744x17.46875 children: inline
+          line 0 width: 9.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [328,68.40625 9.34375x17.46875]
+              "a"
+          TextNode <#text>
+          ListItemMarkerBox <(anonymous)> at (304,68.640625) content-size 12x17 children: not-inline
+        ListItemBox <li> at (48,85.875) content-size 744x17.46875 children: inline
+          line 0 width: 9.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [328,85.875 9.34375x17.46875]
+              "a"
+          TextNode <#text>
+          ListItemMarkerBox <(anonymous)> at (304,86.109375) content-size 12x17 children: not-inline
+        ListItemBox <li> at (48,103.34375) content-size 744x17.46875 children: inline
+          line 0 width: 9.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [328,103.34375 9.34375x17.46875]
+              "a"
+          TextNode <#text>
+          ListItemMarkerBox <(anonymous)> at (304,103.578125) content-size 12x17 children: not-inline
+
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x128.8125] overflow: [0,0 800x136]
+    PaintableWithLines (BlockContainer<BODY>) [8,16 784x104.8125] overflow: [8,16 784x120]
+      PaintableWithLines (BlockContainer<DIV>.box) [8,16 220x120]
+      PaintableWithLines (BlockContainer<UL>) [8,16 784x104.8125]
+        PaintableWithLines (ListItemBox<LI>) [48,16 744x17.46875]
+          TextPaintable (TextNode<#text>)
+          MarkerPaintable (ListItemMarkerBox(anonymous)) [304,16.234375 12x17]
+        PaintableWithLines (ListItemBox<LI>) [48,33.46875 744x17.46875]
+          TextPaintable (TextNode<#text>)
+          MarkerPaintable (ListItemMarkerBox(anonymous)) [304,33.703125 12x17]
+        PaintableWithLines (ListItemBox<LI>) [48,50.9375 744x17.46875]
+          TextPaintable (TextNode<#text>)
+          MarkerPaintable (ListItemMarkerBox(anonymous)) [304,51.171875 12x17]
+        PaintableWithLines (ListItemBox<LI>) [48,68.40625 744x17.46875]
+          TextPaintable (TextNode<#text>)
+          MarkerPaintable (ListItemMarkerBox(anonymous)) [304,68.640625 12x17]
+        PaintableWithLines (ListItemBox<LI>) [48,85.875 744x17.46875]
+          TextPaintable (TextNode<#text>)
+          MarkerPaintable (ListItemMarkerBox(anonymous)) [304,86.109375 12x17]
+        PaintableWithLines (ListItemBox<LI>) [48,103.34375 744x17.46875]
+          TextPaintable (TextNode<#text>)
+          MarkerPaintable (ListItemMarkerBox(anonymous)) [304,103.578125 12x17]
