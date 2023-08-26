@@ -146,7 +146,6 @@ MaybeLoaderError MP3LoaderPlugin::build_seek_table()
     int sample_count = 0;
     size_t frame_count = 0;
     m_seek_table = {};
-    TRY(m_seek_table.insert_seek_point({ 0, 0 }));
 
     m_bitstream->align_to_byte_boundary();
 
@@ -157,11 +156,12 @@ MaybeLoaderError MP3LoaderPlugin::build_seek_table()
         if (error_or_header.is_error() || error_or_header.value().id != 1 || error_or_header.value().layer != 3) {
             continue;
         }
-        frame_count++;
-        sample_count += MP3::frame_size;
 
         if (frame_count % 10 == 0)
             TRY(m_seek_table.insert_seek_point({ static_cast<u64>(sample_count), frame_pos }));
+
+        frame_count++;
+        sample_count += MP3::frame_size;
 
         TRY(m_stream->seek(error_or_header.value().frame_size - 6, SeekMode::FromCurrentPosition));
 
