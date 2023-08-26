@@ -153,7 +153,7 @@ private:
 
     void compute_defaulted_property_value(StyleProperties&, DOM::Element const*, CSS::PropertyID, Optional<CSS::Selector::PseudoElement>) const;
 
-    RefPtr<StyleValue> resolve_unresolved_style_value(DOM::Element&, Optional<CSS::Selector::PseudoElement>, PropertyID, UnresolvedStyleValue const&) const;
+    NonnullRefPtr<StyleValue> resolve_unresolved_style_value(DOM::Element&, Optional<CSS::Selector::PseudoElement>, PropertyID, UnresolvedStyleValue const&) const;
     bool expand_variables(DOM::Element&, Optional<CSS::Selector::PseudoElement>, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Parser::TokenStream<Parser::ComponentValue>& source, Vector<Parser::ComponentValue>& dest) const;
     bool expand_unresolved_values(DOM::Element&, StringView property_name, Parser::TokenStream<Parser::ComponentValue>& source, Vector<Parser::ComponentValue>& dest) const;
 
