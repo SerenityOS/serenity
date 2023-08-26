@@ -37,14 +37,14 @@ void History::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-history-pushstate
-WebIDL::ExceptionOr<void> History::push_state(JS::Value data, DeprecatedString const&, DeprecatedString const& url)
+WebIDL::ExceptionOr<void> History::push_state(JS::Value data, String const&, Optional<String> const& url)
 {
     // NOTE: The second parameter of this function is intentionally unused.
     return shared_history_push_replace_state(data, url, IsPush::Yes);
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-history-replacestate
-WebIDL::ExceptionOr<void> History::replace_state(JS::Value data, DeprecatedString const&, DeprecatedString const& url)
+WebIDL::ExceptionOr<void> History::replace_state(JS::Value data, String const&, Optional<String> const& url)
 {
     // NOTE: The second parameter of this function is intentionally unused.
     return shared_history_push_replace_state(data, url, IsPush::No);
@@ -150,7 +150,7 @@ static bool can_have_its_url_rewritten(DOM::Document const& document, AK::URL co
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#shared-history-push/replace-state-steps
-WebIDL::ExceptionOr<void> History::shared_history_push_replace_state(JS::Value value, DeprecatedString const& url, IsPush)
+WebIDL::ExceptionOr<void> History::shared_history_push_replace_state(JS::Value value, Optional<String> const& url, IsPush)
 {
     // 1. Let document be history's associated Document.
     auto& document = m_associated_document;
@@ -171,10 +171,10 @@ WebIDL::ExceptionOr<void> History::shared_history_push_replace_state(JS::Value v
     auto new_url = document->url();
 
     // 6. If url is not null or the empty string, then:
-    if (!url.is_empty() && !url.is_null()) {
+    if (url.has_value() && !url->is_empty()) {
 
         // 1. Parse url, relative to the relevant settings object of history.
-        auto parsed_url = relevant_settings_object(*this).parse_url(url);
+        auto parsed_url = relevant_settings_object(*this).parse_url(url->to_deprecated_string());
 
         // 2. If that fails, then throw a "SecurityError" DOMException.
         if (!parsed_url.is_valid())

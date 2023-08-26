@@ -1,5 +1,5 @@
 // https://html.spec.whatwg.org/multipage/history.html#the-history-interface
-[Exposed=Window]
+[Exposed=Window, UseNewAKString]
 interface History {
     readonly attribute unsigned long length;
     // FIXME: attribute ScrollRestoration scrollRestoration;
