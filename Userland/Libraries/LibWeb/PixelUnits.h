@@ -51,6 +51,8 @@ constexpr DevicePixels operator/(DevicePixels left, T right) { return left.value
 template<Integral T>
 constexpr DevicePixels operator%(DevicePixels left, T right) { return left.value() % right; }
 
+class CSSPixelFraction;
+
 /// CSSPixels: A position or length in CSS "reference pixels", independent of zoom or screen DPI.
 /// See https://www.w3.org/TR/css-values-3/#reference-pixel
 class CSSPixels {
@@ -192,16 +194,10 @@ public:
 
         return from_raw(int_value);
     }
+    constexpr CSSPixels operator*(CSSPixelFraction const& other) const;
 
-    constexpr CSSPixels operator/(CSSPixels const& other) const
-    {
-        i64 mult = raw_value();
-        mult <<= fractional_bits;
-        mult /= other.raw_value();
-
-        int int_value = AK::clamp_to_int(mult);
-        return from_raw(int_value);
-    }
+    constexpr CSSPixelFraction operator/(CSSPixels const& other) const;
+    constexpr CSSPixels operator/(CSSPixelFraction const& other) const;
 
     constexpr CSSPixels& operator+=(CSSPixels const& other)
     {
@@ -218,9 +214,14 @@ public:
         *this = *this * other;
         return *this;
     }
+    constexpr CSSPixels& operator*=(CSSPixelFraction const& other)
+    {
+        *this = *this * other;
+        return *this;
+    }
     constexpr CSSPixels& operator/=(CSSPixels const& other)
     {
-        *this = *this / other;
+        *this = *this * other;
         return *this;
     }
 
@@ -277,6 +278,85 @@ constexpr CSSPixels operator*(int left, CSSPixels right) { return right * CSSPix
 constexpr CSSPixels operator*(unsigned long left, CSSPixels right) { return right * CSSPixels(left); }
 inline float operator*(float left, CSSPixels right) { return right.to_float() * left; }
 inline double operator*(double left, CSSPixels right) { return right.to_double() * left; }
+
+class CSSPixelFraction {
+public:
+    constexpr CSSPixelFraction(CSSPixels numerator, CSSPixels denominator)
+        : m_numerator(numerator)
+        , m_denominator(denominator)
+    {
+    }
+
+    constexpr CSSPixelFraction(CSSPixels value)
+        : m_numerator(value)
+        , m_denominator(1)
+    {
+    }
+
+    template<Signed I>
+    constexpr CSSPixelFraction(I numerator, I denominator = 1)
+        : m_numerator(numerator)
+        , m_denominator(denominator)
+    {
+    }
+
+    constexpr operator CSSPixels() const
+    {
+        i64 wide_value = m_numerator.raw_value();
+        wide_value <<= CSSPixels::fractional_bits;
+        wide_value /= m_denominator.raw_value();
+        return CSSPixels::from_raw(AK::clamp_to_int(wide_value));
+    }
+
+    constexpr int operator<=>(CSSPixelFraction const& other) const
+    {
+        auto left = static_cast<i64>(m_numerator.raw_value()) * other.m_denominator.raw_value();
+        auto right = static_cast<i64>(other.m_numerator.raw_value()) * m_denominator.raw_value();
+        if (left > right)
+            return 1;
+        if (left < right)
+            return -1;
+        return 0;
+    }
+
+    template<Signed I>
+    constexpr int operator<=>(I const& other) const
+    {
+        return *this <=> CSSPixelFraction(other);
+    }
+
+    constexpr CSSPixels numerator() const { return m_numerator; }
+    constexpr CSSPixels denominator() const { return m_denominator; }
+
+    float to_float() const { return CSSPixels(*this).to_float(); }
+    double to_double() const { return CSSPixels(*this).to_double(); }
+    int to_int() const { return CSSPixels(*this).to_int(); }
+    bool might_be_saturated() const { return CSSPixels(*this).might_be_saturated(); }
+
+private:
+    CSSPixels m_numerator;
+    CSSPixels m_denominator;
+};
+
+constexpr CSSPixels CSSPixels::operator*(CSSPixelFraction const& other) const
+{
+    i64 wide_value = raw_value();
+    wide_value *= other.numerator().raw_value();
+    wide_value /= other.denominator().raw_value();
+    return CSSPixels::from_raw(AK::clamp_to_int(wide_value));
+}
+
+constexpr CSSPixelFraction CSSPixels::operator/(CSSPixels const& other) const
+{
+    return CSSPixelFraction(*this, other);
+}
+constexpr CSSPixels CSSPixels::operator/(CSSPixelFraction const& other) const
+{
+    i64 wide_value = raw_value();
+    wide_value *= other.denominator().raw_value();
+    wide_value /= other.numerator().raw_value();
+    return CSSPixels::from_raw(AK::clamp_to_int(wide_value));
+}
 
 constexpr CSSPixels operator/(CSSPixels left, int right) { return left / CSSPixels(right); }
 constexpr CSSPixels operator/(CSSPixels left, unsigned long right) { return left / CSSPixels(right); }
