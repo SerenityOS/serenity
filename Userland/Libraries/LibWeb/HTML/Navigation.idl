@@ -17,9 +17,9 @@ interface Navigation : EventTarget {
   NavigationResult navigate(USVString url, optional NavigationNavigateOptions options = {});
   NavigationResult reload(optional NavigationReloadOptions options = {});
 
-  // NavigationResult traverseTo(DOMString key, optional NavigationOptions options = {});
-  // NavigationResult back(optional NavigationOptions options = {});
-  // NavigationResult forward(optional NavigationOptions options = {});
+  NavigationResult traverseTo(DOMString key, optional NavigationOptions options = {});
+  NavigationResult back(optional NavigationOptions options = {});
+  NavigationResult forward(optional NavigationOptions options = {});
 
   attribute EventHandler onnavigate;
   attribute EventHandler onnavigatesuccess;
