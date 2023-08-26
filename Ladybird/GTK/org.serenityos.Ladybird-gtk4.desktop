@@ -1,0 +1,19 @@
+[Desktop Entry]
+Name=Ladybird
+GenericName=Web Browser
+Exec=ladybird %U
+Icon=org.serenityos.Ladybird-gtk4
+DBusActivatable=true
+Type=Application
+Categories=Network;WebBrowser;GTK;GNOME;
+StartupNotify=true
+MimeType=text/html;application/xhtml+xml;text/markdown;text/gemini;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/gemini;
+Actions=new-window;new-incognito-window;
+
+[Desktop Action new-window]
+Name=New Window
+Exec=ladybird --no-such-option
+
+[Desktop Action new-incognito-window]
+Name=New Incognito Window
+Exec=ladybird --no-such-option

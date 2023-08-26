@@ -12,6 +12,14 @@ install(FILES
     org.serenityos.Ladybird-gtk4.svg
   DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps"
 )
+install(FILES
+    org.serenityos.Ladybird-gtk4.desktop
+  DESTINATION "${CMAKE_INSTALL_DATADIR}/applications"
+)
+install(FILES
+    org.serenityos.Ladybird-gtk4.service
+  DESTINATION "${CMAKE_INSTALL_DATADIR}/dbus-1/services"
+)
 
 install(DIRECTORY
     "${SERENITY_SOURCE_DIR}/Base/res/html"
