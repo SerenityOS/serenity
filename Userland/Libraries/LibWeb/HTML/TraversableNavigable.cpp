@@ -330,15 +330,9 @@ void TraversableNavigable::apply_the_history_step(int step, Optional<SourceSnaps
                 // 3. Let potentiallyTargetSpecificSourceSnapshotParams be sourceSnapshotParams.
                 Optional<SourceSnapshotParams> potentially_target_specific_source_snapshot_params = source_snapshot_params;
 
-                // FIXME: 4. If potentiallyTargetSpecificSourceSnapshotParams is null, then set it to the result of snapshotting source snapshot params given navigable's active document.
+                // 4. If potentiallyTargetSpecificSourceSnapshotParams is null, then set it to the result of snapshotting source snapshot params given navigable's active document.
                 if (!potentially_target_specific_source_snapshot_params.has_value()) {
-                    potentially_target_specific_source_snapshot_params = SourceSnapshotParams {
-                        .has_transient_activation = false,
-                        .sandboxing_flags = navigable->active_document()->active_sandboxing_flag_set(),
-                        .allows_downloading = true,
-                        .fetch_client = navigable->active_document()->relevant_settings_object(),
-                        .source_policy_container = navigable->active_document()->policy_container()
-                    };
+                    potentially_target_specific_source_snapshot_params = navigable->active_document()->snapshot_source_snapshot_params();
                 }
 
                 // 5. Set targetEntry's document state's reload pending to false.

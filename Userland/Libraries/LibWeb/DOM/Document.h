@@ -232,7 +232,7 @@ public:
     DeprecatedString const& source() const { return m_source; }
     void set_source(DeprecatedString source) { m_source = move(source); }
 
-    HTML::EnvironmentSettingsObject& relevant_settings_object();
+    HTML::EnvironmentSettingsObject& relevant_settings_object() const;
 
     void navigate_to_javascript_url(StringView url);
     void evaluate_javascript_url(StringView url);
@@ -529,6 +529,8 @@ public:
     IndicatedPart determine_the_indicated_part() const;
 
     u32 unload_counter() const { return m_unload_counter; }
+
+    HTML::SourceSnapshotParams snapshot_source_snapshot_params() const;
 
 protected:
     virtual void initialize(JS::Realm&) override;
