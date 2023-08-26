@@ -65,7 +65,6 @@ MaybeLoaderError MP3LoaderPlugin::initialize()
 {
     TRY(build_seek_table());
 
-    m_bitstream = TRY(try_make<BigEndianInputBitStream>(MaybeOwned<Stream>(*m_stream)));
     TRY(seek(0));
     auto header = TRY(synchronize_and_read_header());
 
@@ -84,7 +83,6 @@ MaybeLoaderError MP3LoaderPlugin::reset()
     m_synthesis_buffer = {};
     m_loaded_samples = 0;
     TRY(m_bit_reservoir.discard(m_bit_reservoir.used_buffer_size()));
-    m_bitstream->align_to_byte_boundary();
     return {};
 }
 
@@ -97,7 +95,6 @@ MaybeLoaderError MP3LoaderPlugin::seek(int const position)
     }
     m_synthesis_buffer = {};
     TRY(m_bit_reservoir.discard(m_bit_reservoir.used_buffer_size()));
-    m_bitstream->align_to_byte_boundary();
     return {};
 }
 
@@ -229,10 +226,7 @@ ErrorOr<MP3::Header, LoaderError> MP3LoaderPlugin::synchronize_and_read_header(S
 
 ErrorOr<MP3::Header, LoaderError> MP3LoaderPlugin::synchronize_and_read_header()
 {
-    auto header = TRY(MP3LoaderPlugin::synchronize_and_read_header(*m_stream, m_loaded_samples));
-    if (m_bitstream)
-        m_bitstream->align_to_byte_boundary();
-    return header;
+    return MP3LoaderPlugin::synchronize_and_read_header(*m_stream, m_loaded_samples);
 }
 
 ErrorOr<MP3::MP3Frame, LoaderError> MP3LoaderPlugin::read_next_frame()
@@ -252,7 +246,7 @@ ErrorOr<MP3::MP3Frame, LoaderError> MP3LoaderPlugin::read_frame_data(MP3::Header
     auto& buffer = maybe_buffer.value();
 
     size_t old_reservoir_size = m_bit_reservoir.used_buffer_size();
-    TRY(m_bitstream->read_until_filled(buffer));
+    TRY(m_stream->read_until_filled(buffer));
     TRY(m_bit_reservoir.write_until_depleted(buffer));
 
     // If we don't have enough data in the reservoir to process this frame, skip it (but keep the data).
@@ -331,46 +325,48 @@ ErrorOr<MP3::MP3Frame, LoaderError> MP3LoaderPlugin::read_frame_data(MP3::Header
 
 MaybeLoaderError MP3LoaderPlugin::read_side_information(MP3::MP3Frame& frame)
 {
-    frame.main_data_begin = TRY(m_bitstream->read_bits(9));
+    auto bitstream = BigEndianInputBitStream(MaybeOwned<Stream>(*m_stream));
+
+    frame.main_data_begin = TRY(bitstream.read_bits(9));
 
     if (frame.header.channel_count() == 1) {
-        frame.private_bits = TRY(m_bitstream->read_bits(5));
+        frame.private_bits = TRY(bitstream.read_bits(5));
     } else {
-        frame.private_bits = TRY(m_bitstream->read_bits(3));
+        frame.private_bits = TRY(bitstream.read_bits(3));
     }
 
     for (size_t channel_index = 0; channel_index < frame.header.channel_count(); channel_index++) {
         for (size_t scale_factor_selection_info_band = 0; scale_factor_selection_info_band < 4; scale_factor_selection_info_band++) {
-            frame.channels[channel_index].scale_factor_selection_info[scale_factor_selection_info_band] = TRY(m_bitstream->read_bit());
+            frame.channels[channel_index].scale_factor_selection_info[scale_factor_selection_info_band] = TRY(bitstream.read_bit());
         }
     }
 
     for (size_t granule_index = 0; granule_index < 2; granule_index++) {
         for (size_t channel_index = 0; channel_index < frame.header.channel_count(); channel_index++) {
             auto& granule = frame.channels[channel_index].granules[granule_index];
-            granule.part_2_3_length = TRY(m_bitstream->read_bits(12));
-            granule.big_values = TRY(m_bitstream->read_bits(9));
-            granule.global_gain = TRY(m_bitstream->read_bits(8));
-            granule.scalefac_compress = TRY(m_bitstream->read_bits(4));
-            granule.window_switching_flag = TRY(m_bitstream->read_bit());
+            granule.part_2_3_length = TRY(bitstream.read_bits(12));
+            granule.big_values = TRY(bitstream.read_bits(9));
+            granule.global_gain = TRY(bitstream.read_bits(8));
+            granule.scalefac_compress = TRY(bitstream.read_bits(4));
+            granule.window_switching_flag = TRY(bitstream.read_bit());
             if (granule.window_switching_flag) {
-                granule.block_type = static_cast<MP3::BlockType>(TRY(m_bitstream->read_bits(2)));
-                granule.mixed_block_flag = TRY(m_bitstream->read_bit());
+                granule.block_type = static_cast<MP3::BlockType>(TRY(bitstream.read_bits(2)));
+                granule.mixed_block_flag = TRY(bitstream.read_bit());
                 for (size_t region = 0; region < 2; region++)
-                    granule.table_select[region] = TRY(m_bitstream->read_bits(5));
+                    granule.table_select[region] = TRY(bitstream.read_bits(5));
                 for (size_t window = 0; window < 3; window++)
-                    granule.sub_block_gain[window] = TRY(m_bitstream->read_bits(3));
+                    granule.sub_block_gain[window] = TRY(bitstream.read_bits(3));
                 granule.region0_count = (granule.block_type == MP3::BlockType::Short && !granule.mixed_block_flag) ? 8 : 7;
                 granule.region1_count = 36;
             } else {
                 for (size_t region = 0; region < 3; region++)
-                    granule.table_select[region] = TRY(m_bitstream->read_bits(5));
-                granule.region0_count = TRY(m_bitstream->read_bits(4));
-                granule.region1_count = TRY(m_bitstream->read_bits(3));
+                    granule.table_select[region] = TRY(bitstream.read_bits(5));
+                granule.region0_count = TRY(bitstream.read_bits(4));
+                granule.region1_count = TRY(bitstream.read_bits(3));
             }
-            granule.preflag = TRY(m_bitstream->read_bit());
-            granule.scalefac_scale = TRY(m_bitstream->read_bit());
-            granule.count1table_select = TRY(m_bitstream->read_bit());
+            granule.preflag = TRY(bitstream.read_bit());
+            granule.scalefac_scale = TRY(bitstream.read_bit());
+            granule.count1table_select = TRY(bitstream.read_bit());
         }
     }
     return {};

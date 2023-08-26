@@ -72,7 +72,6 @@ private:
     int m_total_samples { 0 };
     size_t m_loaded_samples { 0 };
 
-    OwnPtr<BigEndianInputBitStream> m_bitstream;
     AllocatingMemoryStream m_bit_reservoir;
 };
 
