@@ -359,4 +359,15 @@ ErrorOr<void> ViewImplementation::take_screenshot(ScreenshotType type)
     return {};
 }
 
+void ViewImplementation::set_user_style_sheet(String source)
+{
+    client().async_set_user_style(move(source));
+}
+
+void ViewImplementation::use_native_user_style_sheet()
+{
+    extern StringView native_stylesheet_source;
+    set_user_style_sheet(MUST(String::from_utf8(native_stylesheet_source)));
+}
+
 }

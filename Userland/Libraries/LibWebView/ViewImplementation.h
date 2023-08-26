@@ -94,6 +94,11 @@ public:
     };
     ErrorOr<void> take_screenshot(ScreenshotType);
 
+    void set_user_style_sheet(String source);
+    // Load Native.css as the User style sheet, which attempts to make WebView content look as close to
+    // native GUI widgets as possible.
+    void use_native_user_style_sheet();
+
     Function<void(Gfx::IntSize)> on_did_layout;
     Function<void()> on_ready_to_paint;
     Function<String(Web::HTML::ActivateTab)> on_new_tab;
