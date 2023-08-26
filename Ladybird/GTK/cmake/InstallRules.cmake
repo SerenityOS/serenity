@@ -8,6 +8,11 @@ install(TARGETS ladybird WebContent
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
+install(FILES
+    org.serenityos.Ladybird-gtk4.svg
+  DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps"
+)
+
 install(DIRECTORY
     "${SERENITY_SOURCE_DIR}/Base/res/html"
     "${SERENITY_SOURCE_DIR}/Base/res/fonts"
