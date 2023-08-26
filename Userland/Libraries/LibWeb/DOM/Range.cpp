@@ -551,7 +551,7 @@ WebIDL::ExceptionOr<i16> Range::compare_point(Node const& node, u32 offset) cons
 }
 
 // https://dom.spec.whatwg.org/#dom-range-stringifier
-DeprecatedString Range::to_deprecated_string() const
+String Range::to_string() const
 {
     // 1. Let s be the empty string.
     StringBuilder builder;
@@ -559,7 +559,7 @@ DeprecatedString Range::to_deprecated_string() const
     // 2. If this’s start node is this’s end node and it is a Text node,
     //    then return the substring of that Text node’s data beginning at this’s start offset and ending at this’s end offset.
     if (start_container() == end_container() && is<Text>(*start_container()))
-        return static_cast<Text const&>(*start_container()).data().substring(start_offset(), end_offset() - start_offset());
+        return String::from_deprecated_string(static_cast<Text const&>(*start_container()).data().substring(start_offset(), end_offset() - start_offset())).release_value();
 
     // 3. If this’s start node is a Text node, then append the substring of that node’s data from this’s start offset until the end to s.
     if (is<Text>(*start_container()))
@@ -576,7 +576,7 @@ DeprecatedString Range::to_deprecated_string() const
         builder.append(static_cast<Text const&>(*end_container()).data().substring_view(0, end_offset()));
 
     // 6. Return s.
-    return builder.to_deprecated_string();
+    return MUST(builder.to_string());
 }
 
 // https://dom.spec.whatwg.org/#dom-range-extractcontents
@@ -1145,7 +1145,7 @@ JS::NonnullGCPtr<Geometry::DOMRect> Range::get_bounding_client_rect() const
 }
 
 // https://w3c.github.io/DOM-Parsing/#dom-range-createcontextualfragment
-WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::create_contextual_fragment(DeprecatedString const& fragment)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::create_contextual_fragment(String const& fragment)
 {
     // 1. Let node be the context object's start node.
     JS::NonnullGCPtr<Node> node = *start_container();
@@ -1185,7 +1185,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::create_contextual
     }
 
     // 3. Let fragment node be the result of invoking the fragment parsing algorithm with fragment as markup, and element as the context element.
-    auto fragment_node = TRY(DOMParsing::parse_fragment(fragment, *element));
+    auto fragment_node = TRY(DOMParsing::parse_fragment(fragment.to_deprecated_string(), *element));
 
     // 4. Unmark all scripts in fragment node as "already started" and as "parser-inserted".
     fragment_node->for_each_in_subtree_of_type<HTML::HTMLScriptElement>([&](HTML::HTMLScriptElement& script_element) {

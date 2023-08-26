@@ -79,7 +79,7 @@ public:
     WebIDL::ExceptionOr<void> insert_node(JS::NonnullGCPtr<Node>);
     WebIDL::ExceptionOr<void> surround_contents(JS::NonnullGCPtr<Node> new_parent);
 
-    DeprecatedString to_deprecated_string() const;
+    String to_string() const;
 
     static HashTable<Range*>& live_ranges();
 
@@ -89,7 +89,7 @@ public:
 
     void set_associated_selection(Badge<Selection::Selection>, JS::GCPtr<Selection::Selection>);
 
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> create_contextual_fragment(DeprecatedString const& fragment);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> create_contextual_fragment(String const& fragment);
 
 private:
     explicit Range(Document&);
