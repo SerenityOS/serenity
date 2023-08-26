@@ -64,6 +64,7 @@
 #include <LibWeb/CSS/StyleValues/TimeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TransformationStyleValue.h>
 #include <LibWeb/CSS/StyleValues/UnresolvedStyleValue.h>
+#include <LibWeb/CSS/StyleValues/UnsetStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/FontCache.h>
@@ -940,10 +941,8 @@ void StyleComputer::set_all_properties(DOM::Element& element, Optional<CSS::Sele
         }
 
         NonnullRefPtr<StyleValue> property_value = value;
-        if (property_value->is_unresolved()) {
-            if (auto resolved = resolve_unresolved_style_value(element, pseudo_element, property_id, property_value->as_unresolved()))
-                property_value = resolved.release_nonnull();
-        }
+        if (property_value->is_unresolved())
+            property_value = resolve_unresolved_style_value(element, pseudo_element, property_id, property_value->as_unresolved());
         if (!property_value->is_unresolved())
             set_property_expanding_shorthands(style, property_id, property_value, document, declaration, properties_for_revert);
 
@@ -1161,28 +1160,30 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
     return true;
 }
 
-RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element, PropertyID property_id, UnresolvedStyleValue const& unresolved) const
+NonnullRefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element, PropertyID property_id, UnresolvedStyleValue const& unresolved) const
 {
     // Unresolved always contains a var() or attr(), unless it is a custom property's value, in which case we shouldn't be trying
     // to produce a different StyleValue from it.
     VERIFY(unresolved.contains_var_or_attr());
+
+    // If the value is invalid, we fall back to `unset`: https://www.w3.org/TR/css-variables-1/#invalid-at-computed-value-time
 
     Parser::TokenStream unresolved_values_without_variables_expanded { unresolved.values() };
     Vector<Parser::ComponentValue> values_with_variables_expanded;
 
     HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>> dependencies;
     if (!expand_variables(element, pseudo_element, string_from_property_id(property_id), dependencies, unresolved_values_without_variables_expanded, values_with_variables_expanded))
-        return {};
+        return UnsetStyleValue::the();
 
     Parser::TokenStream unresolved_values_with_variables_expanded { values_with_variables_expanded };
     Vector<Parser::ComponentValue> expanded_values;
     if (!expand_unresolved_values(element, string_from_property_id(property_id), unresolved_values_with_variables_expanded, expanded_values))
-        return {};
+        return UnsetStyleValue::the();
 
     if (auto parsed_value = Parser::Parser::parse_css_value({}, Parser::ParsingContext { document() }, property_id, expanded_values))
         return parsed_value.release_nonnull();
 
-    return {};
+    return UnsetStyleValue::the();
 }
 
 void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element, Vector<MatchingRule> const& matching_rules, CascadeOrigin cascade_origin, Important important) const
@@ -1200,10 +1201,8 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
             }
 
             auto property_value = property.value;
-            if (property.value->is_unresolved()) {
-                if (auto resolved = resolve_unresolved_style_value(element, pseudo_element, property.property_id, property.value->as_unresolved()))
-                    property_value = resolved.release_nonnull();
-            }
+            if (property.value->is_unresolved())
+                property_value = resolve_unresolved_style_value(element, pseudo_element, property.property_id, property.value->as_unresolved());
             if (!property_value->is_unresolved())
                 set_property_expanding_shorthands(style, property.property_id, property_value, m_document, &match.rule->declaration(), properties_for_revert);
         }
@@ -1221,10 +1220,8 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
                 }
 
                 auto property_value = property.value;
-                if (property.value->is_unresolved()) {
-                    if (auto resolved = resolve_unresolved_style_value(element, pseudo_element, property.property_id, property.value->as_unresolved()))
-                        property_value = resolved.release_nonnull();
-                }
+                if (property.value->is_unresolved())
+                    property_value = resolve_unresolved_style_value(element, pseudo_element, property.property_id, property.value->as_unresolved());
                 if (!property_value->is_unresolved())
                     set_property_expanding_shorthands(style, property.property_id, property_value, m_document, inline_style, properties_for_revert);
             }
@@ -1769,10 +1766,8 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
             for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {
                 auto property_id = (CSS::PropertyID)i;
                 auto& property = style.m_property_values[i];
-                if (property.has_value() && property->style->is_unresolved()) {
-                    if (auto resolved = resolve_unresolved_style_value(element, pseudo_element, property_id, property->style->as_unresolved()))
-                        property->style = resolved.release_nonnull();
-                }
+                if (property.has_value() && property->style->is_unresolved())
+                    property->style = resolve_unresolved_style_value(element, pseudo_element, property_id, property->style->as_unresolved());
             }
         }
     }
