@@ -128,7 +128,7 @@ static void ladybird_tab_class_init(LadybirdTabClass* klass)
     props[PROP_WEB_VIEW] = g_param_spec_object("web-view", nullptr, nullptr, LADYBIRD_TYPE_WEB_VIEW, GParamFlags(G_PARAM_READABLE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY));
     g_object_class_install_properties(object_class, NUM_PROPS, props);
 
-    gtk_widget_class_set_template_from_resource(widget_class, "/org/serenityos/ladybird-gtk4/tab.ui");
+    gtk_widget_class_set_template_from_resource(widget_class, "/org/serenityos/Ladybird-gtk4/tab.ui");
     gtk_widget_class_bind_template_child(widget_class, LadybirdTab, overlay);
     gtk_widget_class_bind_template_child(widget_class, LadybirdTab, web_view);
     gtk_widget_class_bind_template_child(widget_class, LadybirdTab, hovered_link_label);

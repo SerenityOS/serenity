@@ -365,7 +365,7 @@ static void ladybird_window_class_init(LadybirdWindowClass* klass)
         GParamFlags(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT_ONLY));
     g_object_class_install_properties(object_class, NUM_PROPS, props);
 
-    gtk_widget_class_set_template_from_resource(widget_class, "/org/serenityos/ladybird-gtk4/window.ui");
+    gtk_widget_class_set_template_from_resource(widget_class, "/org/serenityos/Ladybird-gtk4/window.ui");
     gtk_widget_class_bind_template_child(widget_class, LadybirdWindow, tab_overview);
     gtk_widget_class_bind_template_child(widget_class, LadybirdWindow, tab_view);
     gtk_widget_class_bind_template_child(widget_class, LadybirdWindow, url_entry);

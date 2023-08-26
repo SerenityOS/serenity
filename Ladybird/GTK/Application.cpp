@@ -26,7 +26,7 @@ static void open_new_window(GSimpleAction* action, [[maybe_unused]] GVariant* st
 static void show_shortcuts([[maybe_unused]] GSimpleAction* action, [[maybe_unused]] GVariant* state, void* user_data)
 {
     GtkApplication* app = GTK_APPLICATION(user_data);
-    GtkBuilder* builder = gtk_builder_new_from_resource("/org/serenityos/ladybird-gtk4/shortcuts-dialog.ui");
+    GtkBuilder* builder = gtk_builder_new_from_resource("/org/serenityos/Ladybird-gtk4/shortcuts-dialog.ui");
     GtkWindow* dialog = GTK_WINDOW(gtk_builder_get_object(builder, "shortcuts_dialog"));
     gtk_window_set_transient_for(dialog, gtk_application_get_active_window(app));
     gtk_window_present(GTK_WINDOW(dialog));
@@ -171,7 +171,7 @@ static void ladybird_application_class_init(LadybirdApplicationClass* klass)
 LadybirdApplication* ladybird_application_new(void)
 {
     return LADYBIRD_APPLICATION(g_object_new(LADYBIRD_TYPE_APPLICATION,
-        "application-id", "org.serenityos.ladybird-gtk4",
+        "application-id", "org.serenityos.Ladybird-gtk4",
         "flags", G_APPLICATION_HANDLES_OPEN,
         nullptr));
 }
