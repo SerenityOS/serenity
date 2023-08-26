@@ -54,11 +54,6 @@ public:
     // In practice, this means that OOPWV may render scaled stale versions of the content while resizing.
     void set_content_scales_to_viewport(bool);
 
-    void set_user_style_sheet(String source);
-    // Load Native.css as the User style sheet, which attempts to make WebView content look as close to
-    // native GUI::Widgets as possible.
-    void use_native_user_style_sheet();
-
 private:
     OutOfProcessWebView();
 

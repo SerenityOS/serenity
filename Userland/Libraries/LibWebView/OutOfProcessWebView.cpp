@@ -431,15 +431,4 @@ void OutOfProcessWebView::set_content_scales_to_viewport(bool b)
     m_content_scales_to_viewport = b;
 }
 
-void OutOfProcessWebView::set_user_style_sheet(String source)
-{
-    client().async_set_user_style(source);
-}
-
-void OutOfProcessWebView::use_native_user_style_sheet()
-{
-    extern StringView native_stylesheet_source;
-    set_user_style_sheet(MUST(String::from_utf8(native_stylesheet_source)));
-}
-
 }

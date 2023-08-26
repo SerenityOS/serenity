@@ -442,6 +442,15 @@ if (BUILD_LAGOM)
         compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebContent/WebDriverClient.ipc WebContent/WebDriverClientEndpoint.h)
         compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebContent/WebDriverServer.ipc WebContent/WebDriverServerEndpoint.h)
 
+        embed_as_string_view(
+            "NativeStyleSheetSource"
+            "${SERENITY_PROJECT_ROOT}/Userland/Libraries/LibWebView/Native.css"
+            "LibWebView/NativeStyleSheetSource.cpp"
+            "native_stylesheet_source"
+            NAMESPACE "WebView"
+        )
+
+        list(APPEND LIBWEBVIEW_GENERATED_SOURCES LibWebView/NativeStyleSheetSource.cpp)
         list(APPEND LIBWEBVIEW_GENERATED_SOURCES WebContent/WebContentClientEndpoint.h)
         list(APPEND LIBWEBVIEW_GENERATED_SOURCES WebContent/WebContentServerEndpoint.h)
         list(APPEND LIBWEBVIEW_GENERATED_SOURCES WebContent/WebDriverClientEndpoint.h)
