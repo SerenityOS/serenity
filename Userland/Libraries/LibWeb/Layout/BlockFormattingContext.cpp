@@ -1069,7 +1069,7 @@ void BlockFormattingContext::layout_list_item_marker(ListItemBox const& list_ite
         marker_state.set_content_width(image_width + default_marker_width);
     } else {
         auto text_width = marker.font().width(marker.text());
-        marker_state.set_content_width(image_width + CSSPixels(text_width));
+        marker_state.set_content_width(image_width + CSSPixels::nearest_value_for(text_width));
     }
 
     marker_state.set_content_height(max(image_height, marker.font().pixel_size_rounded_up() + 1));
@@ -1084,7 +1084,7 @@ void BlockFormattingContext::layout_list_item_marker(ListItemBox const& list_ite
         list_item_state.set_content_width(list_item_state.content_width() - final_marker_width);
     }
 
-    auto offset_y = max(CSSPixels(0), (CSSPixels(marker.line_height()) - marker_state.content_height()) / 2);
+    auto offset_y = max(CSSPixels(0), (marker.line_height() - marker_state.content_height()) / 2);
     auto space_and_containing_margin = intrusion_by_floats_into_box(list_item_box, offset_y);
     marker_state.set_content_offset({ space_and_containing_margin.left - final_marker_width, offset_y });
 

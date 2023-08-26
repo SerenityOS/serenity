@@ -78,13 +78,21 @@ public:
     template<FloatingPoint F>
     explicit CSSPixels(F value)
     {
+        *this = nearest_value_for(value);
+    }
+
+    template<FloatingPoint F>
+    static CSSPixels nearest_value_for(F value)
+    {
+        i32 raw_value = 0;
         if (!isnan(value))
-            m_value = AK::clamp_to_int(value * fixed_point_denominator);
+            raw_value = AK::clamp_to_int(value * fixed_point_denominator);
         // Note: The resolution of CSSPixels is 0.015625, so care must be taken when converting
         // floats/doubles to CSSPixels as small values (such as scale factors) can underflow to zero,
         // or otherwise produce inaccurate results (when scaled back up).
-        if (m_value == 0 && value != 0)
+        if (raw_value == 0 && value != 0)
             dbgln_if(LIBWEB_CSS_DEBUG, "CSSPixels: Conversion from float or double underflowed to zero");
+        return from_raw(raw_value);
     }
 
     template<Unsigned U>

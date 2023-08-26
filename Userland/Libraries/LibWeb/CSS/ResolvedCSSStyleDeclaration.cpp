@@ -596,7 +596,7 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
     case PropertyID::Float:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().float_()));
     case PropertyID::FontSize:
-        return LengthStyleValue::create(Length::make_px(CSSPixels(layout_node.computed_values().font_size())));
+        return LengthStyleValue::create(Length::make_px(CSSPixels::nearest_value_for(layout_node.computed_values().font_size())));
     case PropertyID::FontVariant: {
         auto font_variant = layout_node.computed_values().font_variant();
         switch (font_variant) {

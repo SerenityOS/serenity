@@ -258,8 +258,8 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
         auto size_text_rect = border_rect;
         size_text_rect.set_y(border_rect.y() + border_rect.height());
         size_text_rect.set_top(size_text_rect.top());
-        size_text_rect.set_width(CSSPixels(font.width(size_text)) + 4);
-        size_text_rect.set_height(CSSPixels(font.pixel_size()) + 4);
+        size_text_rect.set_width(CSSPixels::nearest_value_for(font.width(size_text)) + 4);
+        size_text_rect.set_height(CSSPixels::nearest_value_for(font.pixel_size()) + 4);
         auto size_text_device_rect = context.enclosing_device_rect(size_text_rect).to_type<int>();
         context.painter().fill_rect(size_text_device_rect, context.palette().color(Gfx::ColorRole::Tooltip));
         context.painter().draw_rect(size_text_device_rect, context.palette().threed_shadow1());
@@ -503,7 +503,7 @@ static void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const
     auto fragment_rect = fragment.absolute_rect();
 
     CSSPixelRect cursor_rect {
-        fragment_rect.x() + CSSPixels(text_node.font().width(fragment.text().substring_view(0, text_node.browsing_context().cursor_position().offset() - fragment.start()))),
+        fragment_rect.x() + CSSPixels::nearest_value_for(text_node.font().width(fragment.text().substring_view(0, text_node.browsing_context().cursor_position().offset() - fragment.start()))),
         fragment_rect.top(),
         1,
         fragment_rect.height()
@@ -518,7 +518,7 @@ static void paint_text_decoration(PaintContext& context, Gfx::Painter& painter, 
 {
     auto& font = fragment.layout_node().font();
     auto fragment_box = fragment.absolute_rect();
-    CSSPixels glyph_height = CSSPixels(font.pixel_size());
+    CSSPixels glyph_height = CSSPixels::nearest_value_for(font.pixel_size());
     auto baseline = fragment_box.height() / 2 - (glyph_height + 4) / 2 + glyph_height;
 
     auto line_color = text_node.computed_values().text_decoration_color();
