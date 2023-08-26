@@ -1,0 +1,15 @@
+<script src="../include.js"></script>
+<script>
+    test(() => {
+        let n = window.navigation;
+
+        // FIXME: Once we set up the interaction between Navigables and Navigation,
+        //        These two should become 1 and [object NavigationHistoryEntry], respectively
+        println(`entries is empty: ${n.entries().length == 0}`);
+        println(`currentEntry is null: ${n.currentEntry == null}`);
+
+        println(`transition is null: ${n.transition == null}`);
+        println(`canGoBack: ${n.canGoBack}`);
+        println(`canGoForward: ${n.canGoForward}`);       
+    });
+</script>
