@@ -814,13 +814,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
     ReferrerPolicy::ReferrerPolicy referrer_policy)
 {
     // 1. Let sourceSnapshotParams be the result of snapshotting source snapshot params given sourceDocument.
-    auto source_snapshot_params = SourceSnapshotParams {
-        .has_transient_activation = false,
-        .sandboxing_flags = source_document->active_sandboxing_flag_set(),
-        .allows_downloading = true,
-        .fetch_client = source_document->relevant_settings_object(),
-        .source_policy_container = source_document->policy_container()
-    };
+    auto source_snapshot_params = source_document->snapshot_source_snapshot_params();
 
     // 2. Let initiatorOriginSnapshot be sourceDocument's origin.
     auto initiator_origin_snapshot = source_document->origin();

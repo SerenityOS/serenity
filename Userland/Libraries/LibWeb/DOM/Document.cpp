@@ -1315,7 +1315,7 @@ Color Document::visited_link_color() const
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#relevant-settings-object
-HTML::EnvironmentSettingsObject& Document::relevant_settings_object()
+HTML::EnvironmentSettingsObject& Document::relevant_settings_object() const
 {
     // Then, the relevant settings object for a platform object o is the environment settings object of the relevant Realm for o.
     return Bindings::host_defined_environment_settings_object(realm());
@@ -2512,6 +2512,31 @@ HTML::SandboxingFlagSet Document::active_sandboxing_flag_set() const
 HTML::PolicyContainer Document::policy_container() const
 {
     return m_policy_container;
+}
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#snapshotting-source-snapshot-params
+HTML::SourceSnapshotParams Document::snapshot_source_snapshot_params() const
+{
+    // To snapshot source snapshot params given a Document sourceDocument, return a new source snapshot params with
+
+    // has transient activation
+    //    true if sourceDocument's relevant global object has transient activation; otherwise false
+    // sandboxing flags
+    //     sourceDocument's active sandboxing flag set
+    // allows downloading
+    //     false if sourceDocument's active sandboxing flag set has the sandboxed downloads browsing context flag set; otherwise true
+    // fetch client
+    //     sourceDocument's relevant settings object
+    // source policy container
+    //     sourceDocument's policy container
+
+    return HTML::SourceSnapshotParams {
+        .has_transient_activation = verify_cast<HTML::Window>(HTML::relevant_global_object(*this)).has_transient_activation(),
+        .sandboxing_flags = m_active_sandboxing_flag_set,
+        .allows_downloading = (m_active_sandboxing_flag_set.flags & HTML::SandboxingFlagSet::SandboxedDownloads) != HTML::SandboxingFlagSet::SandboxedDownloads,
+        .fetch_client = relevant_settings_object(),
+        .source_policy_container = m_policy_container
+    };
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#descendant-navigables
