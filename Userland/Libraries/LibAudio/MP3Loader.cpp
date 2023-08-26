@@ -81,7 +81,6 @@ MaybeLoaderError MP3LoaderPlugin::initialize()
 MaybeLoaderError MP3LoaderPlugin::reset()
 {
     TRY(seek(0));
-    m_current_frame = {};
     m_synthesis_buffer = {};
     m_loaded_samples = 0;
     TRY(m_bit_reservoir.discard(m_bit_reservoir.used_buffer_size()));
@@ -96,7 +95,6 @@ MaybeLoaderError MP3LoaderPlugin::seek(int const position)
         TRY(m_stream->seek(seek_entry->byte_offset, SeekMode::SetPosition));
         m_loaded_samples = seek_entry->sample_index;
     }
-    m_current_frame = {};
     m_synthesis_buffer = {};
     TRY(m_bit_reservoir.discard(m_bit_reservoir.used_buffer_size()));
     m_bitstream->align_to_byte_boundary();
@@ -110,36 +108,30 @@ ErrorOr<Vector<FixedArray<Sample>>, LoaderError> MP3LoaderPlugin::load_chunks(si
     while (samples_to_read > 0) {
         FixedArray<Sample> samples = TRY(FixedArray<Sample>::create(MP3::frame_size));
 
-        if (!m_current_frame.has_value()) {
-            auto maybe_frame = read_next_frame();
-            if (maybe_frame.is_error()) {
-                if (m_stream->is_eof()) {
-                    return Vector<FixedArray<Sample>> {};
-                }
-                return maybe_frame.release_error();
-            }
-            m_current_frame = maybe_frame.release_value();
-            if (!m_current_frame.has_value())
-                break;
+        auto maybe_frame = read_next_frame();
+        if (maybe_frame.is_error()) {
+            if (m_stream->is_eof())
+                return Vector<FixedArray<Sample>> {};
+            return maybe_frame.release_error();
         }
+        auto frame = maybe_frame.release_value();
 
-        bool const is_stereo = m_current_frame->header.channel_count() == 2;
+        bool const is_stereo = frame.header.channel_count() == 2;
         size_t current_frame_read = 0;
         for (; current_frame_read < MP3::granule_size; current_frame_read++) {
-            auto const left_sample = m_current_frame->channels[0].granules[0].pcm[current_frame_read / 32][current_frame_read % 32];
-            auto const right_sample = is_stereo ? m_current_frame->channels[1].granules[0].pcm[current_frame_read / 32][current_frame_read % 32] : left_sample;
+            auto const left_sample = frame.channels[0].granules[0].pcm[current_frame_read / 32][current_frame_read % 32];
+            auto const right_sample = is_stereo ? frame.channels[1].granules[0].pcm[current_frame_read / 32][current_frame_read % 32] : left_sample;
             samples[current_frame_read] = Sample { left_sample, right_sample };
             samples_to_read--;
         }
         for (; current_frame_read < MP3::frame_size; current_frame_read++) {
-            auto const left_sample = m_current_frame->channels[0].granules[1].pcm[(current_frame_read - MP3::granule_size) / 32][(current_frame_read - MP3::granule_size) % 32];
-            auto const right_sample = is_stereo ? m_current_frame->channels[1].granules[1].pcm[(current_frame_read - MP3::granule_size) / 32][(current_frame_read - MP3::granule_size) % 32] : left_sample;
+            auto const left_sample = frame.channels[0].granules[1].pcm[(current_frame_read - MP3::granule_size) / 32][(current_frame_read - MP3::granule_size) % 32];
+            auto const right_sample = is_stereo ? frame.channels[1].granules[1].pcm[(current_frame_read - MP3::granule_size) / 32][(current_frame_read - MP3::granule_size) % 32] : left_sample;
             samples[current_frame_read] = Sample { left_sample, right_sample };
             samples_to_read--;
         }
         m_loaded_samples += samples.size();
         TRY(frames.try_append(move(samples)));
-        m_current_frame = {};
     }
 
     return frames;
