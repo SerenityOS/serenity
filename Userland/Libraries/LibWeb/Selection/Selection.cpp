@@ -427,7 +427,7 @@ String Selection::to_string() const
     //        See https://www.w3.org/Bugs/Public/show_bug.cgi?id=10583
     if (!m_range)
         return String {};
-    return String::from_deprecated_string(m_range->to_deprecated_string()).release_value();
+    return m_range->to_string();
 }
 
 JS::NonnullGCPtr<DOM::Document> Selection::document() const
