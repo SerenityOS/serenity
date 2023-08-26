@@ -31,7 +31,7 @@ public:
     unsigned focus_offset() const;
     bool is_collapsed() const;
     unsigned range_count() const;
-    DeprecatedString type() const;
+    String type() const;
     WebIDL::ExceptionOr<JS::GCPtr<DOM::Range>> get_range_at(unsigned index);
     void add_range(JS::NonnullGCPtr<DOM::Range>);
     WebIDL::ExceptionOr<void> remove_range(JS::NonnullGCPtr<DOM::Range>);
@@ -48,7 +48,7 @@ public:
     delete_from_document();
     bool contains_node(JS::NonnullGCPtr<DOM::Node>, bool allow_partial_containment) const;
 
-    DeprecatedString to_deprecated_string() const;
+    String to_string() const;
 
     // Non-standard convenience accessor for the selection's range.
     JS::GCPtr<DOM::Range> range() const;
