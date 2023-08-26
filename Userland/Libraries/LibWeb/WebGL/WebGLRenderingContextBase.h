@@ -29,8 +29,8 @@ public:
 
     bool is_context_lost() const;
 
-    Optional<Vector<DeprecatedString>> get_supported_extensions() const;
-    JS::Object* get_extension(DeprecatedString const& name) const;
+    Optional<Vector<String>> get_supported_extensions() const;
+    JS::Object* get_extension(String const& name) const;
 
     void active_texture(GLenum texture);
 
