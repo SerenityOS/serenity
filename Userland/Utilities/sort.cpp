@@ -56,11 +56,12 @@ struct Options {
     bool unique { false };
     bool numeric { false };
     bool reverse { false };
+    bool zero_terminated { false };
     StringView separator { "\0", 1 };
     Vector<DeprecatedString> files;
 };
 
-static ErrorOr<void> load_file(Options options, StringView filename, Vector<Line>& lines, HashTable<Line>& seen)
+static ErrorOr<void> load_file(Options const& options, StringView filename, StringView line_delimiter, Vector<Line>& lines, HashTable<Line>& seen)
 {
     auto file = TRY(Core::InputBufferedFile::create(
         TRY(Core::File::open_file_or_standard_stream(filename, Core::File::OpenMode::Read))));
@@ -68,8 +69,7 @@ static ErrorOr<void> load_file(Options options, StringView filename, Vector<Line
     // FIXME: Unlimited line length
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (TRY(file->can_read_line())) {
-        DeprecatedString line = TRY(file->read_line(buffer));
-
+        DeprecatedString line { TRY(file->read_until(buffer, line_delimiter)) };
         StringView key = line;
         if (options.key_field != 0) {
             auto split = (options.separator[0])
@@ -106,25 +106,27 @@ ErrorOr<int> serenity_main([[maybe_unused]] Main::Arguments arguments)
     args_parser.add_option(options.numeric, "treat the key field as a number", "numeric", 'n');
     args_parser.add_option(options.separator, "The separator to split fields by", "sep", 't', "char");
     args_parser.add_option(options.reverse, "Sort in reverse order", "reverse", 'r');
+    args_parser.add_option(options.zero_terminated, "Use '\\0' as the line delimiter instead of a newline", "zero-terminated", 'z');
     args_parser.add_positional_argument(options.files, "Files to sort", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
+    auto line_delimiter = options.zero_terminated ? "\0"sv : "\n"sv;
     Vector<Line> lines;
     HashTable<Line> seen;
 
     if (options.files.size() == 0) {
-        TRY(load_file(options, "-"sv, lines, seen));
+        TRY(load_file(options, "-"sv, line_delimiter, lines, seen));
     } else {
         for (auto& file : options.files) {
-            TRY(load_file(options, file, lines, seen));
+            TRY(load_file(options, file, line_delimiter, lines, seen));
         }
     }
 
     quick_sort(lines);
 
-    auto print_lines = [](auto const& lines) {
+    auto print_lines = [line_delimiter](auto const& lines) {
         for (auto& line : lines)
-            outln("{}", line.line);
+            out("{}{}", line.line, line_delimiter);
     };
 
     if (options.reverse)
