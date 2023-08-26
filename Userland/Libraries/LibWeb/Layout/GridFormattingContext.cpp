@@ -1245,7 +1245,7 @@ void GridFormattingContext::expand_flexible_tracks(AvailableSpace const& availab
             for (auto& track : tracks) {
                 if (track.max_track_sizing_function.is_flexible_length()) {
                     if (track.max_track_sizing_function.flex_factor() > 1) {
-                        result = max(result, CSSPixels(track.base_size / track.max_track_sizing_function.flex_factor()));
+                        result = max(result, CSSPixels::nearest_value_for(track.base_size / track.max_track_sizing_function.flex_factor()));
                     } else {
                         result = max(result, track.base_size);
                     }

@@ -185,19 +185,19 @@ public:
         constexpr double centimeter_pixels = (inch_pixels / 2.54);
         switch (m_type) {
         case Type::Cm:
-            return CSSPixels(m_value * centimeter_pixels); // 1cm = 96px/2.54
+            return CSSPixels::nearest_value_for(m_value * centimeter_pixels); // 1cm = 96px/2.54
         case Type::In:
-            return CSSPixels(m_value * inch_pixels); // 1in = 2.54 cm = 96px
+            return CSSPixels::nearest_value_for(m_value * inch_pixels); // 1in = 2.54 cm = 96px
         case Type::Px:
-            return CSSPixels(m_value); // 1px = 1/96th of 1in
+            return CSSPixels::nearest_value_for(m_value); // 1px = 1/96th of 1in
         case Type::Pt:
-            return CSSPixels(m_value * ((1.0 / 72.0) * inch_pixels)); // 1pt = 1/72th of 1in
+            return CSSPixels::nearest_value_for(m_value * ((1.0 / 72.0) * inch_pixels)); // 1pt = 1/72th of 1in
         case Type::Pc:
-            return CSSPixels(m_value * ((1.0 / 6.0) * inch_pixels)); // 1pc = 1/6th of 1in
+            return CSSPixels::nearest_value_for(m_value * ((1.0 / 6.0) * inch_pixels)); // 1pc = 1/6th of 1in
         case Type::Mm:
-            return CSSPixels(m_value * ((1.0 / 10.0) * centimeter_pixels)); // 1mm = 1/10th of 1cm
+            return CSSPixels::nearest_value_for(m_value * ((1.0 / 10.0) * centimeter_pixels)); // 1mm = 1/10th of 1cm
         case Type::Q:
-            return CSSPixels(m_value * ((1.0 / 40.0) * centimeter_pixels)); // 1Q = 1/40th of 1cm
+            return CSSPixels::nearest_value_for(m_value * ((1.0 / 40.0) * centimeter_pixels)); // 1Q = 1/40th of 1cm
         default:
             VERIFY_NOT_REACHED();
         }

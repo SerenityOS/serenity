@@ -263,7 +263,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
                 repeat_x = false;
             } else {
                 auto space = fmod(background_positioning_area.width().to_double(), image_rect.width().to_double());
-                x_step = image_rect.width() + CSSPixels(space / static_cast<double>(whole_images - 1));
+                x_step = image_rect.width() + CSSPixels::nearest_value_for(space / static_cast<double>(whole_images - 1));
                 repeat_x = true;
             }
             break;
@@ -294,7 +294,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
                 repeat_y = false;
             } else {
                 auto space = fmod(background_positioning_area.height().to_float(), image_rect.height().to_float());
-                y_step = image_rect.height() + CSSPixels(static_cast<double>(space) / static_cast<double>(whole_images - 1));
+                y_step = image_rect.height() + CSSPixels::nearest_value_for(static_cast<double>(space) / static_cast<double>(whole_images - 1));
                 repeat_y = true;
             }
             break;

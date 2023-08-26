@@ -1085,7 +1085,7 @@ void Element::set_scroll_left(double x)
     // 11. Scroll the element to x,scrollTop, with the scroll behavior being "auto".
     // FIXME: Implement this in terms of calling "scroll the element".
     auto scroll_offset = paintable_box()->scroll_offset();
-    scroll_offset.set_x(CSSPixels(x));
+    scroll_offset.set_x(CSSPixels::nearest_value_for(x));
     paintable_box()->set_scroll_offset(scroll_offset);
 }
 
@@ -1153,7 +1153,7 @@ void Element::set_scroll_top(double y)
     // 11. Scroll the element to scrollLeft,y, with the scroll behavior being "auto".
     // FIXME: Implement this in terms of calling "scroll the element".
     auto scroll_offset = paintable_box()->scroll_offset();
-    scroll_offset.set_y(CSSPixels(y));
+    scroll_offset.set_y(CSSPixels::nearest_value_for(y));
     paintable_box()->set_scroll_offset(scroll_offset);
 }
 

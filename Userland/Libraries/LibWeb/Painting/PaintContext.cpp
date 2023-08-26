@@ -96,7 +96,7 @@ DevicePixelSize PaintContext::rounded_device_size(CSSPixelSize size) const
 
 CSSPixels PaintContext::scale_to_css_pixels(DevicePixels device_pixels) const
 {
-    return CSSPixels(device_pixels.value() / m_device_pixels_per_css_pixel);
+    return CSSPixels::nearest_value_for(device_pixels.value() / m_device_pixels_per_css_pixel);
 }
 
 CSSPixelPoint PaintContext::scale_to_css_point(DevicePixelPoint point) const

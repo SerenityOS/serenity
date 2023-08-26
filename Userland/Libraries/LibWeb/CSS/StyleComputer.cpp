@@ -2036,7 +2036,7 @@ Length::FontMetrics StyleComputer::calculate_root_element_font_metrics(StyleProp
     auto root_value = style.property(CSS::PropertyID::FontSize);
 
     auto font_pixel_metrics = style.computed_font().pixel_metrics();
-    Length::FontMetrics font_metrics { m_default_font_metrics.font_size, font_pixel_metrics, CSSPixels(font_pixel_metrics.line_spacing()) };
+    Length::FontMetrics font_metrics { m_default_font_metrics.font_size, font_pixel_metrics, CSSPixels::nearest_value_for(font_pixel_metrics.line_spacing()) };
     font_metrics.font_size = root_value->as_length().length().to_px(viewport_rect(), font_metrics, font_metrics);
     font_metrics.line_height = style.line_height(viewport_rect(), font_metrics, font_metrics);
 
@@ -2197,7 +2197,7 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
         //       and smaller may compute the font size to the previous entry in the table.
         if (identifier == CSS::ValueID::Smaller || identifier == CSS::ValueID::Larger) {
             if (parent_element && parent_element->computed_css_values()) {
-                font_size_in_px = CSSPixels(parent_element->computed_css_values()->computed_font().pixel_metrics().size);
+                font_size_in_px = CSSPixels::nearest_value_for(parent_element->computed_css_values()->computed_font().pixel_metrics().size);
             }
         }
         auto const multiplier = absolute_size_mapping.get(identifier).value_or(1.0);
@@ -2213,7 +2213,7 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
         Optional<Length> maybe_length;
         if (font_size.is_percentage()) {
             // Percentages refer to parent element's font size
-            maybe_length = Length::make_px(CSSPixels(font_size.as_percentage().percentage().as_fraction() * parent_font_size().to_double()));
+            maybe_length = Length::make_px(CSSPixels::nearest_value_for(font_size.as_percentage().percentage().as_fraction() * parent_font_size().to_double()));
 
         } else if (font_size.is_length()) {
             maybe_length = font_size.as_length().length();
@@ -2350,7 +2350,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
 
     auto found_font = compute_font_for_style_values(element, pseudo_element, font_family, font_size, font_style, font_weight, font_stretch);
 
-    style.set_property(CSS::PropertyID::FontSize, LengthStyleValue::create(CSS::Length::make_px(CSSPixels(found_font->pixel_size()))), nullptr);
+    style.set_property(CSS::PropertyID::FontSize, LengthStyleValue::create(CSS::Length::make_px(CSSPixels::nearest_value_for(found_font->pixel_size()))), nullptr);
     style.set_property(CSS::PropertyID::FontWeight, NumberStyleValue::create(font_weight->to_font_weight()));
 
     style.set_computed_font(found_font.release_nonnull());
@@ -2401,7 +2401,7 @@ void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const
     auto line_height_value_slot = style.m_property_values[to_underlying(CSS::PropertyID::LineHeight)].map([](auto& x) -> auto& { return x.style; });
     if (line_height_value_slot.has_value() && (*line_height_value_slot)->is_percentage()) {
         *line_height_value_slot = LengthStyleValue::create(
-            Length::make_px(CSSPixels(font_size * static_cast<double>((*line_height_value_slot)->as_percentage().percentage().as_fraction()))));
+            Length::make_px(CSSPixels::nearest_value_for(font_size * static_cast<double>((*line_height_value_slot)->as_percentage().percentage().as_fraction()))));
     }
 
     auto line_height = style.line_height(viewport_rect(), font_metrics, m_root_element_font_metrics);

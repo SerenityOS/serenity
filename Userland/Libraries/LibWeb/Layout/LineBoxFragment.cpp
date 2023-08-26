@@ -51,7 +51,7 @@ int LineBoxFragment::text_index_at(CSSPixels x) const
     Utf8View view(text());
 
     CSSPixels relative_x = x - absolute_x();
-    CSSPixels glyph_spacing = CSSPixels(font.glyph_spacing());
+    CSSPixels glyph_spacing = font.glyph_spacing();
 
     if (relative_x < 0)
         return 0;
@@ -59,7 +59,7 @@ int LineBoxFragment::text_index_at(CSSPixels x) const
     CSSPixels width_so_far = 0;
     for (auto it = view.begin(); it != view.end(); ++it) {
         auto previous_it = it;
-        CSSPixels glyph_width = CSSPixels(font.glyph_or_emoji_width(it));
+        CSSPixels glyph_width = CSSPixels::nearest_value_for(font.glyph_or_emoji_width(it));
 
         if ((width_so_far + glyph_width + glyph_spacing / 2) > relative_x)
             return m_start + view.byte_offset_of(previous_it);
@@ -105,8 +105,8 @@ CSSPixelRect LineBoxFragment::selection_rect(Gfx::Font const& font) const
 
         auto selection_start_in_this_fragment = max(0, range->start_offset() - m_start);
         auto selection_end_in_this_fragment = min(m_length, range->end_offset() - m_start);
-        auto pixel_distance_to_first_selected_character = CSSPixels(font.width(text.substring_view(0, selection_start_in_this_fragment)));
-        auto pixel_width_of_selection = CSSPixels(font.width(text.substring_view(selection_start_in_this_fragment, selection_end_in_this_fragment - selection_start_in_this_fragment))) + 1;
+        auto pixel_distance_to_first_selected_character = CSSPixels::nearest_value_for(font.width(text.substring_view(0, selection_start_in_this_fragment)));
+        auto pixel_width_of_selection = CSSPixels::nearest_value_for(font.width(text.substring_view(selection_start_in_this_fragment, selection_end_in_this_fragment - selection_start_in_this_fragment))) + 1;
 
         auto rect = absolute_rect();
         rect.set_x(rect.x() + pixel_distance_to_first_selected_character);
@@ -121,8 +121,8 @@ CSSPixelRect LineBoxFragment::selection_rect(Gfx::Font const& font) const
 
         auto selection_start_in_this_fragment = max(0, range->start_offset() - m_start);
         auto selection_end_in_this_fragment = m_length;
-        auto pixel_distance_to_first_selected_character = CSSPixels(font.width(text.substring_view(0, selection_start_in_this_fragment)));
-        auto pixel_width_of_selection = CSSPixels(font.width(text.substring_view(selection_start_in_this_fragment, selection_end_in_this_fragment - selection_start_in_this_fragment))) + 1;
+        auto pixel_distance_to_first_selected_character = CSSPixels::nearest_value_for(font.width(text.substring_view(0, selection_start_in_this_fragment)));
+        auto pixel_width_of_selection = CSSPixels::nearest_value_for(font.width(text.substring_view(selection_start_in_this_fragment, selection_end_in_this_fragment - selection_start_in_this_fragment))) + 1;
 
         auto rect = absolute_rect();
         rect.set_x(rect.x() + pixel_distance_to_first_selected_character);
@@ -137,8 +137,8 @@ CSSPixelRect LineBoxFragment::selection_rect(Gfx::Font const& font) const
 
         auto selection_start_in_this_fragment = 0;
         auto selection_end_in_this_fragment = min(range->end_offset() - m_start, m_length);
-        auto pixel_distance_to_first_selected_character = CSSPixels(font.width(text.substring_view(0, selection_start_in_this_fragment)));
-        auto pixel_width_of_selection = CSSPixels(font.width(text.substring_view(selection_start_in_this_fragment, selection_end_in_this_fragment - selection_start_in_this_fragment))) + 1;
+        auto pixel_distance_to_first_selected_character = CSSPixels::nearest_value_for(font.width(text.substring_view(0, selection_start_in_this_fragment)));
+        auto pixel_width_of_selection = CSSPixels::nearest_value_for(font.width(text.substring_view(selection_start_in_this_fragment, selection_end_in_this_fragment - selection_start_in_this_fragment))) + 1;
 
         auto rect = absolute_rect();
         rect.set_x(rect.x() + pixel_distance_to_first_selected_character);

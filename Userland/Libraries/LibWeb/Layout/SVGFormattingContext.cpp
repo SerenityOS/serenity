@@ -86,13 +86,13 @@ static ViewBoxTransform scale_and_align_viewbox_content(SVG::PreserveAspectRatio
         case SVG::PreserveAspectRatio::Align::xMidYMid:
         case SVG::PreserveAspectRatio::Align::xMidYMax:
             // Align the midpoint X value of the element's ‘viewBox’ with the midpoint X value of the SVG viewport.
-            viewbox_transform.offset.translate_by((svg_box_state.content_width() - CSSPixels(view_box.width * viewbox_transform.scale_factor)) / 2, 0);
+            viewbox_transform.offset.translate_by((svg_box_state.content_width() - CSSPixels::nearest_value_for(view_box.width * viewbox_transform.scale_factor)) / 2, 0);
             break;
         case SVG::PreserveAspectRatio::Align::xMaxYMin:
         case SVG::PreserveAspectRatio::Align::xMaxYMid:
         case SVG::PreserveAspectRatio::Align::xMaxYMax:
             // Align the <min-x>+<width> of the element's ‘viewBox’ with the maximum X value of the SVG viewport.
-            viewbox_transform.offset.translate_by((svg_box_state.content_width() - CSSPixels(view_box.width * viewbox_transform.scale_factor)), 0);
+            viewbox_transform.offset.translate_by((svg_box_state.content_width() - CSSPixels::nearest_value_for(view_box.width * viewbox_transform.scale_factor)), 0);
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -117,13 +117,13 @@ static ViewBoxTransform scale_and_align_viewbox_content(SVG::PreserveAspectRatio
         case SVG::PreserveAspectRatio::Align::xMidYMid:
         case SVG::PreserveAspectRatio::Align::xMaxYMid:
             // Align the midpoint Y value of the element's ‘viewBox’ with the midpoint Y value of the SVG viewport.
-            viewbox_transform.offset.translate_by(0, (svg_box_state.content_height() - CSSPixels(view_box.height * viewbox_transform.scale_factor)) / 2);
+            viewbox_transform.offset.translate_by(0, (svg_box_state.content_height() - CSSPixels::nearest_value_for(view_box.height * viewbox_transform.scale_factor)) / 2);
             break;
         case SVG::PreserveAspectRatio::Align::xMinYMax:
         case SVG::PreserveAspectRatio::Align::xMidYMax:
         case SVG::PreserveAspectRatio::Align::xMaxYMax:
             // Align the <min-y>+<height> of the element's ‘viewBox’ with the maximum Y value of the SVG viewport.
-            viewbox_transform.offset.translate_by(0, (svg_box_state.content_height() - CSSPixels(view_box.height * viewbox_transform.scale_factor)));
+            viewbox_transform.offset.translate_by(0, (svg_box_state.content_height() - CSSPixels::nearest_value_for(view_box.height * viewbox_transform.scale_factor)));
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -197,7 +197,7 @@ void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, Available
 
             // Stroke increases the path's size by stroke_width/2 per side.
             auto path_bounding_box = path_transform.map(path.bounding_box()).to_type<CSSPixels>();
-            CSSPixels stroke_width = CSSPixels(static_cast<double>(geometry_box.dom_node().visible_stroke_width()) * viewbox_scale);
+            CSSPixels stroke_width = CSSPixels::nearest_value_for(static_cast<double>(geometry_box.dom_node().visible_stroke_width()) * viewbox_scale);
             path_bounding_box.inflate(stroke_width, stroke_width);
             geometry_box_state.set_content_offset(path_bounding_box.top_left());
             geometry_box_state.set_content_width(path_bounding_box.width());

@@ -540,15 +540,15 @@ CSS::FlexBasis FlexFormattingContext::used_flex_basis_for_item(FlexItem const& i
 CSSPixels FlexFormattingContext::calculate_main_size_from_cross_size_and_aspect_ratio(CSSPixels cross_size, double aspect_ratio) const
 {
     if (is_row_layout())
-        return CSSPixels(cross_size * aspect_ratio);
-    return CSSPixels(cross_size / aspect_ratio);
+        return CSSPixels::nearest_value_for(cross_size * aspect_ratio);
+    return CSSPixels::nearest_value_for(cross_size / aspect_ratio);
 }
 
 CSSPixels FlexFormattingContext::calculate_cross_size_from_main_size_and_aspect_ratio(CSSPixels main_size, double aspect_ratio) const
 {
     if (is_row_layout())
-        return CSSPixels(main_size / aspect_ratio);
-    return CSSPixels(main_size * aspect_ratio);
+        return CSSPixels::nearest_value_for(main_size / aspect_ratio);
+    return CSSPixels::nearest_value_for(main_size * aspect_ratio);
 }
 
 // This function takes a size in the main axis and adjusts it according to the aspect ratio of the box
@@ -982,7 +982,7 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
 
         // If the sum of the unfrozen flex items’ flex factors is less than one, multiply the initial free space by this sum.
         if (auto sum_of_flex_factor_of_unfrozen_items = line.sum_of_flex_factor_of_unfrozen_items(); sum_of_flex_factor_of_unfrozen_items < 1 && initial_free_space.has_value()) {
-            auto value = CSSPixels(initial_free_space.value() * sum_of_flex_factor_of_unfrozen_items);
+            auto value = CSSPixels::nearest_value_for(initial_free_space.value() * sum_of_flex_factor_of_unfrozen_items);
             // If the magnitude of this value is less than the magnitude of the remaining free space, use this as the remaining free space.
             if (abs(value) < abs(line.remaining_free_space.value()))
                 line.remaining_free_space = value;
@@ -1793,7 +1793,7 @@ CSSPixels FlexFormattingContext::calculate_intrinsic_main_size_of_flex_container
                     product = flex_line.chosen_flex_fraction * static_cast<double>(item.box->computed_values().flex_grow());
                 else if (item.desired_flex_fraction < 0)
                     product = flex_line.chosen_flex_fraction * item.scaled_flex_shrink_factor;
-                auto result = item.flex_base_size + CSSPixels(product);
+                auto result = item.flex_base_size + CSSPixels::nearest_value_for(product);
 
                 auto const& computed_min_size = this->computed_main_min_size(item.box);
                 auto const& computed_max_size = this->computed_main_max_size(item.box);

@@ -195,10 +195,10 @@ void LineBuilder::update_last_line()
         auto& font = m_context.containing_block().font();
         auto const line_height = m_context.containing_block().line_height();
         auto const font_metrics = font.pixel_metrics();
-        auto const typographic_height = CSSPixels(font_metrics.ascent + font_metrics.descent);
+        auto const typographic_height = CSSPixels::nearest_value_for(font_metrics.ascent + font_metrics.descent);
         auto const leading = line_height - typographic_height;
         auto const half_leading = leading / 2;
-        return CSSPixels(font_metrics.ascent) + half_leading;
+        return CSSPixels::nearest_value_for(font_metrics.ascent) + half_leading;
     }();
 
     auto line_box_baseline = [&] {
@@ -207,7 +207,7 @@ void LineBuilder::update_last_line()
             auto const& font = fragment.layout_node().font();
             auto const line_height = fragment.layout_node().line_height();
             auto const font_metrics = font.pixel_metrics();
-            auto const typographic_height = CSSPixels(font_metrics.ascent + font_metrics.descent);
+            auto const typographic_height = CSSPixels::nearest_value_for(font_metrics.ascent + font_metrics.descent);
             auto const leading = line_height - typographic_height;
             auto const half_leading = leading / 2;
 
@@ -215,7 +215,7 @@ void LineBuilder::update_last_line()
 
             CSSPixels fragment_baseline = 0;
             if (fragment.layout_node().is_text_node()) {
-                fragment_baseline = CSSPixels(font_metrics.ascent) + half_leading;
+                fragment_baseline = CSSPixels::nearest_value_for(font_metrics.ascent) + half_leading;
             } else {
                 auto const& box = verify_cast<Layout::Box>(fragment.layout_node());
                 fragment_baseline = m_context.box_baseline(box);
@@ -302,11 +302,11 @@ void LineBuilder::update_last_line()
                 bottom_of_inline_box = (fragment.offset().y() + fragment_box_state.content_height() + fragment_box_state.margin_box_bottom());
             } else {
                 auto font_metrics = fragment.layout_node().font().pixel_metrics();
-                auto typographic_height = CSSPixels(font_metrics.ascent + font_metrics.descent);
+                auto typographic_height = CSSPixels::nearest_value_for(font_metrics.ascent + font_metrics.descent);
                 auto leading = fragment.layout_node().line_height() - typographic_height;
                 auto half_leading = leading / 2;
-                top_of_inline_box = (fragment.offset().y() + fragment.baseline() - CSSPixels(font_metrics.ascent) - half_leading);
-                bottom_of_inline_box = (fragment.offset().y() + fragment.baseline() + CSSPixels(font_metrics.descent) + half_leading);
+                top_of_inline_box = (fragment.offset().y() + fragment.baseline() - CSSPixels::nearest_value_for(font_metrics.ascent) - half_leading);
+                bottom_of_inline_box = (fragment.offset().y() + fragment.baseline() + CSSPixels::nearest_value_for(font_metrics.descent) + half_leading);
             }
             if (auto const* length_percentage = fragment.layout_node().computed_values().vertical_align().get_pointer<CSS::LengthPercentage>()) {
                 if (length_percentage->is_length())
