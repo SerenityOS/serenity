@@ -104,13 +104,13 @@ unsigned Selection::range_count() const
     return 0;
 }
 
-DeprecatedString Selection::type() const
+String Selection::type() const
 {
     if (!m_range)
-        return "None";
+        return "None"_string;
     if (m_range->collapsed())
-        return "Caret";
-    return "Range";
+        return "Caret"_string;
+    return "Range"_string;
 }
 
 // https://w3c.github.io/selection-api/#dom-selection-getrangeat
@@ -421,13 +421,13 @@ bool Selection::contains_node(JS::NonnullGCPtr<DOM::Node> node, bool allow_parti
         && (end_relative_position == DOM::RelativeBoundaryPointPosition::Equal || end_relative_position == DOM::RelativeBoundaryPointPosition::After);
 }
 
-DeprecatedString Selection::to_deprecated_string() const
+String Selection::to_string() const
 {
     // FIXME: This needs more work to be compatible with other engines.
     //        See https://www.w3.org/Bugs/Public/show_bug.cgi?id=10583
     if (!m_range)
-        return DeprecatedString::empty();
-    return m_range->to_deprecated_string();
+        return String {};
+    return String::from_deprecated_string(m_range->to_deprecated_string()).release_value();
 }
 
 JS::NonnullGCPtr<DOM::Document> Selection::document() const

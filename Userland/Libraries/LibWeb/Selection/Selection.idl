@@ -1,7 +1,7 @@
 #import <DOM/Node.idl>
 #import <DOM/Range.idl>
 
-[Exposed=Window]
+[Exposed=Window, UseNewAKString]
 interface Selection {
 
     readonly attribute Node? anchorNode;
