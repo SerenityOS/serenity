@@ -32,9 +32,32 @@ menu tab_menu {
   item (_("_Close"), "tab.close")
 }
 
+Popover bookmarks_popover {
+  Adw.StatusPage {
+    title: "Bookmarks & History";
+    description: "...will appear here, once we implement them :^)";
+    icon-name: "applications-engineering-symbolic";
+    width-request: 300;
+    height-request: 350;
+    styles ["compact"]
+  }
+}
+
 template $LadybirdWindow : Adw.ApplicationWindow {
   title: "Ladybird";
   default-height: 560;
+  width-request: 300;
+  height-request: 300;
+
+  Adw.Breakpoint {
+    condition("max-width: 600px")
+    setters {
+      header_bar_start_box.visible: false;
+      header_bar_end_box.visible: false;
+      tab_bar.visible: false;
+      action_bar.revealed: true;
+    }
+  }
 
   Adw.TabOverview tab_overview {
     view: tab_view;
@@ -47,30 +70,30 @@ template $LadybirdWindow : Adw.ApplicationWindow {
       [top]
       Adw.HeaderBar {
         [start]
-        Box {
+        Box header_bar_start_box {
           orientation: horizontal;
           spacing: 6;
           margin-end: 6;
 
-          Button back_button {
+          Button {
             icon-name: "go-previous-symbolic";
             action-name: "page.navigate-back";
             tooltip-text: _("Navigate Back");
             focus-on-click: false;
           }
-          Button forward_button {
+          Button {
             icon-name: "go-next-symbolic";
             action-name: "page.navigate-forward";
             tooltip-text: _("Navigate Forward");
             focus-on-click: false;
           }
-          Button refresh_button {
+          Button {
             icon-name: "view-refresh-symbolic";
             action-name: "page.reload-page";
             tooltip-text: _("Reload Page");
             focus-on-click: false;
           }
-          Button new_tab_button {
+          Button {
             icon-name: "tab-new-symbolic";
             action-name: "win.new-tab";
             tooltip-text: _("New Tab");
@@ -97,26 +120,22 @@ template $LadybirdWindow : Adw.ApplicationWindow {
           spacing: 6;
           margin-start: 6;
 
-          MenuButton {
-            icon-name: "user-bookmarks-symbolic";
-            tooltip-text: _("Bookmarks");
-            focus-on-click: false;
-            popover: Popover {
-              Adw.StatusPage {
-                title: "Bookmarks & History";
-                description: "...will appear here, once we implement them :^)";
-                icon-name: "applications-engineering-symbolic";
-                width-request: 300;
-                height-request: 350;
-                styles ["compact"]
-              }
-            };
-          }
-          Button overview_button {
-            icon-name: "view-grid-symbolic";
-            action-name: "overview.open";
-            tooltip-text: _("Tab Overview");
-            focus-on-click: false;
+          Box header_bar_end_box {
+            orientation: horizontal;
+            spacing: 6;
+
+            MenuButton {
+              icon-name: "user-bookmarks-symbolic";
+              tooltip-text: _("Bookmarks");
+              focus-on-click: false;
+              popover: bookmarks_popover;
+            }
+            Button {
+              icon-name: "view-grid-symbolic";
+              action-name: "overview.open";
+              tooltip-text: _("Tab Overview");
+              focus-on-click: false;
+            }
           }
           MenuButton {
             icon-name: "open-menu-symbolic";
@@ -157,7 +176,7 @@ template $LadybirdWindow : Adw.ApplicationWindow {
       }
 
       [top]
-      Adw.TabBar {
+      Adw.TabBar tab_bar {
         view: tab_view;
       }
 
@@ -167,6 +186,53 @@ template $LadybirdWindow : Adw.ApplicationWindow {
         setup-menu => $on_setup_tab_menu(template) swapped;
         notify::selected-page => $on_selected_page_changed(template) swapped;
       };
+
+      [bottom]
+      ActionBar action_bar {
+        revealed: false;
+
+        [start]
+        Box {
+          orientation: horizontal;
+          spacing: 6;
+
+          Button {
+            icon-name: "go-previous-symbolic";
+            action-name: "page.navigate-back";
+            tooltip-text: _("Navigate Back");
+            focus-on-click: false;
+          }
+          Button {
+            icon-name: "go-next-symbolic";
+            action-name: "page.navigate-forward";
+            tooltip-text: _("Navigate Forward");
+            focus-on-click: false;
+          }
+          Button {
+            icon-name: "view-refresh-symbolic";
+            action-name: "page.reload-page";
+            tooltip-text: _("Reload Page");
+            focus-on-click: false;
+          }
+        }
+
+        [end]
+        Box {
+          orientation: horizontal;
+          spacing: 6;
+
+          MenuButton {
+            icon-name: "user-bookmarks-symbolic";
+            tooltip-text: _("Bookmarks");
+            focus-on-click: false;
+          }
+          Adw.TabButton {
+            view: tab_view;
+            action-name: "overview.open";
+            focus-on-click: false;
+          }
+        }
+      }
     };
   }
 }

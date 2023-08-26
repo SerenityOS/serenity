@@ -9,6 +9,7 @@ Categories=Network;WebBrowser;GTK;GNOME;
 StartupNotify=true
 MimeType=text/html;application/xhtml+xml;text/markdown;text/gemini;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/gemini;
 Actions=new-window;new-incognito-window;
+X-Purism-FormFactor=Workstation;Mobile;
 
 [Desktop Action new-window]
 Name=New Window
