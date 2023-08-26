@@ -11,6 +11,7 @@
 #include <AK/Badge.h>
 #include <AK/Checked.h>
 #include <AK/Platform.h>
+#include <AK/StringView.h>
 #include <AK/Types.h>
 
 #if defined(AK_OS_SERENITY) && defined(KERNEL)
@@ -40,6 +41,12 @@ constexpr bool is_leap_year(int year)
 {
     return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
 }
+
+#ifndef KERNEL
+Optional<struct tm> convert_formatted_string_to_timespec(StringView input, StringView format, size_t&, size_t&);
+Optional<struct tm> convert_formatted_string_to_timespec(StringView input, StringView format, size_t&);
+Optional<struct tm> convert_formatted_string_to_timespec_restrictively(StringView input, StringView format);
+#endif
 
 // Month and day start at 1. Month must be >= 1 and <= 12.
 // The return value is 0-indexed, that is 0 is Sunday, 1 is Monday, etc.

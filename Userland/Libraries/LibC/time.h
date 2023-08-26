@@ -55,5 +55,6 @@ struct tm* localtime_r(time_t const* timep, struct tm* result);
 
 double difftime(time_t, time_t);
 size_t strftime(char* s, size_t max, char const* format, const struct tm*) __attribute__((format(strftime, 3, 0)));
+char* strptime(char const* s, char const* format, struct tm*) __attribute__((format(strptime, 2, 0)));
 
 __END_DECLS

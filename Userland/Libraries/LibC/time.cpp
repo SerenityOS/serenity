@@ -5,6 +5,7 @@
  */
 
 #include <AK/Atomic.h>
+#include <AK/CharacterTypes.h>
 #include <AK/DateConstants.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
@@ -273,6 +274,19 @@ char* asctime_r(const struct tm* tm, char* buffer)
     }
 
     return buffer;
+}
+
+char* strptime(char const* input, char const* format, struct tm* tm)
+{
+    size_t format_length = strlen(format);
+    size_t input_length = strlen(format);
+    size_t string_pos = 0;
+    auto tm_or_void = AK::convert_formatted_string_to_timespec(StringView(input, input_length), StringView(format, format_length), string_pos);
+    if (!tm_or_void.has_value())
+        return nullptr;
+    auto filled_tm = tm_or_void.release_value();
+    AK::TypedTransfer<struct tm>::copy(tm, &filled_tm, 1);
+    return const_cast<char*>(input + string_pos);
 }
 
 // FIXME: Some formats are not supported.
