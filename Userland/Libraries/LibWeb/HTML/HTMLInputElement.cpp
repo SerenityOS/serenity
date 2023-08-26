@@ -304,9 +304,10 @@ DeprecatedString HTMLInputElement::value() const
     if (type_state() == TypeAttributeState::FileUpload) {
         // NOTE: This "fakepath" requirement is a sad accident of history. See the example in the File Upload state section for more information.
         // NOTE: Since path components are not permitted in filenames in the list of selected files, the "\fakepath\" cannot be mistaken for a path component.
+        // On getting, return the string "C:\fakepath\" followed by the name of the first file in the list of selected files, if any, or the empty string if the list is empty.
         if (m_selected_files && m_selected_files->item(0))
             return DeprecatedString::formatted("C:\\fakepath\\{}", m_selected_files->item(0)->name());
-        return "C:\\fakepath\\"sv;
+        return DeprecatedString::empty();
     }
 
     // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-value
