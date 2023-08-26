@@ -2,6 +2,7 @@
 #include "Window.h"
 #include <AK/OwnPtr.h>
 #include <Browser/CookieJar.h>
+#include <glib/gi18n.h>
 
 struct _LadybirdApplication {
     AdwApplication parent_instance;
@@ -38,12 +39,13 @@ static void show_about([[maybe_unused]] GSimpleAction* action, [[maybe_unused]] 
     GtkApplication* app = GTK_APPLICATION(user_data);
 
     char const* developers[] = {
-        "Sergey Bugaev",
+        /* Translators: Сергей Бугаев in Cyrillic */
+        _("Sergey Bugaev"),
         nullptr
     };
 
     char const* artists[] = {
-        "Sam Atkins",
+        _("Sam Atkins"),
         nullptr
     };
 
@@ -51,18 +53,20 @@ static void show_about([[maybe_unused]] GSimpleAction* action, [[maybe_unused]] 
         "application-name", "Ladybird",
         "version", "WIP",
         "application-icon", "org.serenityos.Ladybird-gtk4",
-        "developer-name", "SerenityOS developers",
+        "developer-name", _("SerenityOS developers"),
         "website", "https://ladybird.dev",
         "issue-url", "https://github.com/SerenityOS/serenity/issues",
-        "copyright", "© 2023 SerenityOS developers",
+        "copyright", _("© 2023 SerenityOS developers"),
         "license-type", GTK_LICENSE_BSD,
         "developers", developers,
         "artists", artists,
-        "comments", "Ladybird is a browser based on LibWeb web engine and LibJS JavaScript engine,"
-                    " developed by a large team of contributors as a part of the SerenityOS project.",
+        // Translators: credit yourself here :^)
+        "translator-credits", _("translator_credits"),
+        "comments", _("Ladybird is a browser based on LibWeb web engine and LibJS JavaScript engine,"
+                      " developed by a large team of contributors as a part of the SerenityOS project."),
         nullptr));
 
-    adw_about_window_add_link(about_window, "SerenityOS website", "https://serenityos.org");
+    adw_about_window_add_link(about_window, _("SerenityOS website"), "https://serenityos.org");
 
     GtkWindow* active_window = gtk_application_get_active_window(app);
     if (active_window)

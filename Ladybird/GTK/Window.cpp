@@ -3,6 +3,7 @@
 #include "BitmapPaintable.h"
 #include "Tab.h"
 #include "WebView.h"
+#include <glib/gi18n.h>
 
 struct _LadybirdWindow {
     AdwApplicationWindow parent_instance;
@@ -66,7 +67,7 @@ static AdwTabPage* open_new_tab(LadybirdWindow* self, AdwTabPage* parent)
     ladybird_web_view_set_cookie_jar(web_view, cookie_jar);
 
     AdwTabPage* tab_page = adw_tab_view_add_page(self->tab_view, GTK_WIDGET(tab), parent);
-    adw_tab_page_set_title(tab_page, "New tab");
+    adw_tab_page_set_title(tab_page, _("New tab"));
     g_object_bind_property(web_view, "page-title", tab_page, "title", G_BINDING_DEFAULT);
     g_object_bind_property(web_view, "loading", tab_page, "loading", G_BINDING_DEFAULT);
 
@@ -136,9 +137,9 @@ static void win_open_file_action(GtkWidget* widget, [[maybe_unused]] char const*
                 g_error_free(error);
                 return;
             } else if (error) {
-                GtkWidget* message_dialog = adw_message_dialog_new(GTK_WINDOW(self), "Failed to pick file", error->message);
+                GtkWidget* message_dialog = adw_message_dialog_new(GTK_WINDOW(self), _("Failed to pick file"), error->message);
                 g_error_free(error);
-                adw_message_dialog_add_response(ADW_MESSAGE_DIALOG(message_dialog), "ok", "OK");
+                adw_message_dialog_add_response(ADW_MESSAGE_DIALOG(message_dialog), "ok", _("OK"));
                 gtk_window_present(GTK_WINDOW(message_dialog));
                 return;
             }

@@ -39,6 +39,9 @@ include_directories(
 )
 add_compile_definitions(AK_DONT_REPLACE_STD)
 
+include(GNUInstallDirs)
+add_compile_definitions("LOCALEDIR=\"${CMAKE_INSTALL_FULL_LOCALEDIR}\"")
+
 set(RESOURCE_FILES style.css)
 function(add_blueprint source_file ui_file)
     add_custom_command(
@@ -95,6 +98,8 @@ set(SOURCES
     "${SERENITY_SOURCE_DIR}/Userland/Applications/Browser/Database.cpp"
     $<TARGET_OBJECTS:resources>
 )
+
+add_subdirectory(po)
 
 add_executable(ladybird ${SOURCES})
 target_link_libraries(ladybird PRIVATE PkgConfig::gtk4 PkgConfig::libadwaita Lagom::Core Lagom::WebView Lagom::Gfx Lagom::Web Lagom::IPC Lagom::FileSystem Lagom::SQL Lagom::Protocol)

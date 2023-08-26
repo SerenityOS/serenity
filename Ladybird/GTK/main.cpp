@@ -2,9 +2,16 @@
 #include "EventLoopImplementationGLib.h"
 #include <LibCore/EventLoop.h>
 #include <adwaita.h>
+#include <glib/gi18n.h>
+
+#define GETTEXT_PACKAGE "ladybird-gtk4"
 
 int main(int argc, char* argv[])
 {
+    bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
+    bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
+    textdomain(GETTEXT_PACKAGE);
+
     Core::EventLoopManager::install(*new EventLoopManagerGLib);
     [[maybe_unused]] Core::EventLoop serenity_event_loop;
 
