@@ -1,6 +1,7 @@
 [Desktop Entry]
 Name=Ladybird
 GenericName=Web Browser
+GenericName[ru]=Веб-браузер
 Exec=ladybird %U
 Icon=org.serenityos.Ladybird-gtk4
 DBusActivatable=true
@@ -13,8 +14,10 @@ X-Purism-FormFactor=Workstation;Mobile;
 
 [Desktop Action new-window]
 Name=New Window
+Name[ru]=Новое окно
 Exec=ladybird --no-such-option
 
 [Desktop Action new-incognito-window]
 Name=New Incognito Window
+Name[ru]=Новое окно инкогнито
 Exec=ladybird --no-such-option
