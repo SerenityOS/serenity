@@ -83,10 +83,11 @@ ErrorOr<NonnullOwnPtr<LoaderPlugin>, LoaderError> MP3LoaderPlugin::create(Nonnul
 
 MaybeLoaderError MP3LoaderPlugin::initialize()
 {
-    TRY(skip_id3(*m_stream));
     m_bitstream = TRY(try_make<BigEndianInputBitStream>(MaybeOwned<Stream>(*m_stream)));
-    TRY(synchronize());
+    TRY(build_seek_table());
 
+    TRY(seek(0));
+    TRY(synchronize());
     auto header = TRY(read_header());
     if (header.id != 1 || header.layer != 3)
         return LoaderError { LoaderError::Category::Format, "Only MPEG-1 layer 3 supported." };
@@ -95,7 +96,6 @@ MaybeLoaderError MP3LoaderPlugin::initialize()
     m_num_channels = header.channel_count();
     m_loaded_samples = 0;
 
-    TRY(build_seek_table());
     TRY(seek(0));
 
     return {};
@@ -170,11 +170,13 @@ ErrorOr<Vector<FixedArray<Sample>>, LoaderError> MP3LoaderPlugin::load_chunks(si
 
 MaybeLoaderError MP3LoaderPlugin::build_seek_table()
 {
+    VERIFY(MUST(m_stream->tell()) == 0);
+    TRY(skip_id3(*m_stream));
+    m_bitstream->align_to_byte_boundary();
+
     int sample_count = 0;
     size_t frame_count = 0;
     m_seek_table = {};
-
-    m_bitstream->align_to_byte_boundary();
 
     while (!synchronize().is_error()) {
         auto const frame_pos = -2 + TRY(m_stream->seek(0, SeekMode::FromCurrentPosition));
