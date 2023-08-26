@@ -286,6 +286,76 @@ ErrorOr<void> VirtualFileSystem::unmount(Custody& mountpoint_custody)
     return unmount(guest_inode, custody_path->view());
 }
 
+Stack<Mount*, 16> VirtualFileSystem::get_mounts_stack()
+{
+    Stack<Mount*, 16> stack;
+    m_mounts.with([&](auto& mounts) -> void {
+        for (auto& mount : mounts) {
+            if (!stack.push(&mount))
+                break;
+        }
+    });
+    return stack;
+}
+
+ErrorOr<void> VirtualFileSystem::unmount_all(Badge<PowerManagementTask>)
+{
+    while (true) {
+        auto mounts = get_mounts_stack();
+        if (mounts.is_empty())
+            break;
+
+        while (!mounts.is_empty()) {
+            auto* mount = mounts.top();
+            VERIFY(mount);
+            mounts.pop();
+            TRY(mount->guest_fs().flush_writes());
+            if constexpr (VFS_DEBUG) {
+                if (auto result = mount->absolute_path(); !result.is_error()) {
+                    auto path = result.release_value();
+                    dbgln("VirtualFileSystem: Unmounting {}", path->view());
+                }
+            }
+            // FIXME: Consider re-trying unmounting of filesystems multiple times
+            // to ensure we are not failing on random disk access failure?
+            TRY(unmount(*mount));
+        }
+    }
+    return {};
+}
+
+ErrorOr<void> VirtualFileSystem::unmount(Mount& mount)
+{
+    return m_file_backed_file_systems_list.with_exclusive([&](auto& file_backed_fs_list) -> ErrorOr<void> {
+        TRY(m_mounts.with([&](auto&) -> ErrorOr<void> {
+            NonnullRefPtr<FileSystem> fs = mount.guest_fs();
+            TRY(fs->prepare_to_unmount(mount.guest()));
+            fs->mounted_count({}).with([&](auto& mounted_count) {
+                VERIFY(mounted_count > 0);
+                if (mounted_count == 1) {
+                    dbgln("VirtualFileSystem: Unmounting file system {} for the last time...", fs->fsid());
+                    m_file_systems_list.with([&](auto& list) {
+                        list.remove(*fs);
+                    });
+                    if (fs->is_file_backed()) {
+                        dbgln("VirtualFileSystem: Unmounting file backed file system {} for the last time...", fs->fsid());
+                        auto& file_backed_fs = static_cast<FileBackedFileSystem&>(*fs);
+                        file_backed_fs_list.remove(file_backed_fs);
+                    }
+                } else {
+                    mounted_count--;
+                }
+            });
+            dbgln("VirtualFileSystem: Unmounting file system {}...", fs->fsid());
+            mount.m_vfs_list_node.remove();
+            // NOTE: This is balanced by a `new` statement that is happening in various places before inserting the Mount object to the list.
+            delete &mount;
+            return {};
+        }));
+        return {};
+    });
+}
+
 ErrorOr<void> VirtualFileSystem::unmount(Inode& guest_inode, StringView custody_path)
 {
     return m_file_backed_file_systems_list.with_exclusive([&](auto& file_backed_fs_list) -> ErrorOr<void> {

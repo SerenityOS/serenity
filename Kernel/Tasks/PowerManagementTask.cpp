@@ -170,36 +170,8 @@ void PowerManagementTask::perform_shutdown(DoReboot do_reboot)
 
     dbgln("Unmounting all file systems...");
 
-    auto unmount_was_successful = true;
-    while (unmount_was_successful) {
-        unmount_was_successful = false;
-        Vector<Mount&, 16> mounts;
-        MUST(VirtualFileSystem::the().for_each_mount([&](auto const& mount) -> ErrorOr<void> {
-            MUST(mounts.try_append(const_cast<Mount&>(mount)));
-            return {};
-        }));
-        if (mounts.is_empty())
-            break;
-        auto const remaining_mounts = mounts.size();
-
-        while (!mounts.is_empty()) {
-            auto& mount = mounts.take_last();
-            MUST(mount.guest_fs().flush_writes());
-
-            auto mount_path = MUST(mount.absolute_path());
-            auto& mount_inode = mount.guest();
-            auto const result = VirtualFileSystem::the().unmount(mount_inode, mount_path->view());
-            if (result.is_error()) {
-                dbgln("Error during unmount of {}: {}", mount_path, result.error());
-                // FIXME: For unknown reasons the root FS stays busy even after everything else has shut down and was unmounted.
-                //        Until we find the underlying issue, allow an unclean shutdown here.
-                if (remaining_mounts <= 1)
-                    dbgln("BUG! One mount remaining; the root file system may not be unmountable at all. Shutting down anyways.");
-            } else {
-                unmount_was_successful = true;
-            }
-        }
-    }
+    if (auto result = VirtualFileSystem::the().unmount_all({}); result.is_error())
+        dmesgln("Unmounting all file systems failed due to {}", result.release_error());
 
     // NOTE: We don't really need to kill kernel processes, because in contrast
     // to user processes, kernel processes will simply not make syscalls
