@@ -1,0 +1,5 @@
+entries is empty: true
+currentEntry is null: true
+transition is null: true
+canGoBack: false
+canGoForward: false
