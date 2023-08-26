@@ -45,21 +45,21 @@ enum class BlockType {
 };
 
 struct Header {
-    i32 id;
-    i32 layer;
-    bool protection_bit;
-    i32 bitrate;
-    i32 samplerate;
-    bool padding_bit;
-    bool private_bit;
-    Mode mode;
-    ModeExtension mode_extension;
-    bool copyright_bit;
-    bool original_bit;
-    Emphasis emphasis;
-    u16 crc16;
-    size_t frame_size;
-    size_t slot_count;
+    i32 id { 0 };
+    i32 layer { 0 };
+    bool protection_bit { false };
+    i32 bitrate { 0 };
+    i32 samplerate { 0 };
+    bool padding_bit { false };
+    bool private_bit { false };
+    Mode mode { Mode::Stereo };
+    ModeExtension mode_extension { ModeExtension::Stereo };
+    bool copyright_bit { false };
+    bool original_bit { false };
+    Emphasis emphasis { Emphasis::None };
+    u16 crc16 { 0 };
+    size_t frame_size { 0 };
+    size_t slot_count { 0 };
 
     size_t channel_count() const { return mode == Mode::SingleChannel ? 1 : 2; }
 };
@@ -68,20 +68,20 @@ struct Granule {
     Array<float, MP3::granule_size> samples;
     Array<Array<float, 18>, 32> filter_bank_input;
     Array<Array<float, 32>, 18> pcm;
-    u32 part_2_3_length;
-    u32 big_values;
-    u32 global_gain;
-    u32 scalefac_compress;
-    bool window_switching_flag;
-    BlockType block_type;
-    bool mixed_block_flag;
+    u32 part_2_3_length { 0 };
+    u32 big_values { 0 };
+    u32 global_gain { 0 };
+    u32 scalefac_compress { 0 };
+    bool window_switching_flag { false };
+    BlockType block_type { BlockType::Normal };
+    bool mixed_block_flag { false };
     Array<int, 3> table_select;
     Array<int, 3> sub_block_gain;
-    u32 region0_count;
-    u32 region1_count;
-    bool preflag;
-    bool scalefac_scale;
-    bool count1table_select;
+    u32 region0_count { 0 };
+    u32 region1_count { 0 };
+    bool preflag { false };
+    bool scalefac_scale { false };
+    bool count1table_select { false };
 };
 
 struct Channel {
@@ -93,8 +93,8 @@ struct Channel {
 struct MP3Frame {
     Header header;
     FixedArray<Channel> channels;
-    off_t main_data_begin;
-    u32 private_bits;
+    off_t main_data_begin { 0 };
+    u32 private_bits { 0 };
 
     MP3Frame(Header header)
         : header(header)
