@@ -1,4 +1,4 @@
-[Exposed=Window]
+[Exposed=Window, UseNewAKString]
 interface Storage {
 
     readonly attribute unsigned long length;

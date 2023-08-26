@@ -18,7 +18,7 @@ public:
         __Count,
     };
 
-    void set_items(OrderedHashMap<DeprecatedString, DeprecatedString> map);
+    void set_items(OrderedHashMap<String, String> map);
     void clear_items();
     virtual int row_count(GUI::ModelIndex const&) const override;
     virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return Column::__Count; }
@@ -28,7 +28,7 @@ public:
     virtual GUI::Model::MatchResult data_matches(GUI::ModelIndex const& index, GUI::Variant const& term) const override;
 
 private:
-    OrderedHashMap<DeprecatedString, DeprecatedString> m_local_storage_entries;
+    OrderedHashMap<String, String> m_local_storage_entries;
 };
 
 }

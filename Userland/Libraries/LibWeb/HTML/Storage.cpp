@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/Storage.h>
 
@@ -37,7 +37,7 @@ size_t Storage::length() const
 }
 
 // https://html.spec.whatwg.org/multipage/webstorage.html#dom-storage-key
-DeprecatedString Storage::key(size_t index)
+Optional<String> Storage::key(size_t index)
 {
     // 1. If index is greater than or equal to this's map's size, then return null.
     if (index >= m_map.size())
@@ -51,7 +51,7 @@ DeprecatedString Storage::key(size_t index)
 }
 
 // https://html.spec.whatwg.org/multipage/webstorage.html#dom-storage-getitem
-DeprecatedString Storage::get_item(DeprecatedString const& key) const
+Optional<String> Storage::get_item(StringView key) const
 {
     // 1. If this's map[key] does not exist, then return null.
     auto it = m_map.find(key);
@@ -63,10 +63,10 @@ DeprecatedString Storage::get_item(DeprecatedString const& key) const
 }
 
 // https://html.spec.whatwg.org/multipage/webstorage.html#dom-storage-setitem
-WebIDL::ExceptionOr<void> Storage::set_item(DeprecatedString const& key, DeprecatedString const& value)
+WebIDL::ExceptionOr<void> Storage::set_item(String const& key, String const& value)
 {
     // 1. Let oldValue be null.
-    DeprecatedString old_value;
+    String old_value;
 
     // 2. Let reorder be true.
     bool reorder = true;
@@ -100,7 +100,7 @@ WebIDL::ExceptionOr<void> Storage::set_item(DeprecatedString const& key, Depreca
 }
 
 // https://html.spec.whatwg.org/multipage/webstorage.html#dom-storage-removeitem
-void Storage::remove_item(DeprecatedString const& key)
+void Storage::remove_item(StringView key)
 {
     // 1. If this's map[key] does not exist, then return null.
     // FIXME: Return null?
@@ -139,7 +139,7 @@ void Storage::reorder()
 }
 
 // https://html.spec.whatwg.org/multipage/webstorage.html#concept-storage-broadcast
-void Storage::broadcast(DeprecatedString const& key, DeprecatedString const& old_value, DeprecatedString const& new_value)
+void Storage::broadcast(StringView key, StringView old_value, StringView new_value)
 {
     (void)key;
     (void)old_value;
@@ -150,15 +150,19 @@ void Storage::broadcast(DeprecatedString const& key, DeprecatedString const& old
 Vector<DeprecatedString> Storage::supported_property_names() const
 {
     // The supported property names on a Storage object storage are the result of running get the keys on storage's map.
-    return m_map.keys();
+    Vector<DeprecatedString> names;
+    names.ensure_capacity(m_map.size());
+    for (auto const& key : m_map.keys())
+        names.unchecked_append(key.to_deprecated_string());
+    return names;
 }
 
 WebIDL::ExceptionOr<JS::Value> Storage::named_item_value(DeprecatedFlyString const& name) const
 {
     auto value = get_item(name);
-    if (value.is_null())
+    if (!value.has_value())
         return JS::js_null();
-    return JS::PrimitiveString::create(vm(), value);
+    return JS::PrimitiveString::create(vm(), value.release_value());
 }
 
 WebIDL::ExceptionOr<Bindings::LegacyPlatformObject::DidDeletionFail> Storage::delete_value(DeprecatedString const& name)
@@ -171,8 +175,8 @@ WebIDL::ExceptionOr<void> Storage::set_value_of_named_property(DeprecatedString 
 {
     // NOTE: Since LegacyPlatformObject does not know the type of value, we must convert it ourselves.
     //       The type of `value` is `DOMString`.
-    auto value = TRY(unconverted_value.to_deprecated_string(vm()));
-    return set_item(key, value);
+    auto value = TRY(unconverted_value.to_string(vm()));
+    return set_item(String::from_deprecated_string(key).release_value(), value);
 }
 
 void Storage::dump() const

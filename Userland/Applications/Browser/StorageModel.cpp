@@ -10,10 +10,10 @@
 
 namespace Browser {
 
-void StorageModel::set_items(OrderedHashMap<DeprecatedString, DeprecatedString> map)
+void StorageModel::set_items(OrderedHashMap<String, String> map)
 {
     begin_insert_rows({}, m_local_storage_entries.size(), m_local_storage_entries.size());
-    m_local_storage_entries = map;
+    m_local_storage_entries = move(map);
     end_insert_rows();
 
     did_update(DontInvalidateIndices);

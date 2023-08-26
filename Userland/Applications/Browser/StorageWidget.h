@@ -26,10 +26,10 @@ public:
 
     Function<void(Web::Cookie::Cookie)> on_update_cookie;
 
-    void set_local_storage_entries(OrderedHashMap<DeprecatedString, DeprecatedString> entries);
+    void set_local_storage_entries(OrderedHashMap<String, String> entries);
     void clear_local_storage_entries();
 
-    void set_session_storage_entries(OrderedHashMap<DeprecatedString, DeprecatedString> entries);
+    void set_session_storage_entries(OrderedHashMap<String, String> entries);
     void clear_session_storage_entries();
 
 private:

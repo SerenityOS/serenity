@@ -224,12 +224,12 @@ DeprecatedString OutOfProcessWebView::dump_layout_tree()
     return client().dump_layout_tree();
 }
 
-OrderedHashMap<DeprecatedString, DeprecatedString> OutOfProcessWebView::get_local_storage_entries()
+OrderedHashMap<String, String> OutOfProcessWebView::get_local_storage_entries()
 {
     return client().get_local_storage_entries();
 }
 
-OrderedHashMap<DeprecatedString, DeprecatedString> OutOfProcessWebView::get_session_storage_entries()
+OrderedHashMap<String, String> OutOfProcessWebView::get_session_storage_entries()
 {
     return client().get_session_storage_entries();
 }
