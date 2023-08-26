@@ -88,7 +88,7 @@ MaybeLoaderError MP3LoaderPlugin::initialize()
 
     TRY(seek(0));
     TRY(synchronize());
-    auto header = TRY(read_header());
+    auto header = TRY(read_header(*m_bitstream, 0));
     if (header.id != 1 || header.layer != 3)
         return LoaderError { LoaderError::Category::Format, "Only MPEG-1 layer 3 supported." };
 
@@ -181,7 +181,7 @@ MaybeLoaderError MP3LoaderPlugin::build_seek_table()
     while (!synchronize().is_error()) {
         auto const frame_pos = -2 + TRY(m_stream->seek(0, SeekMode::FromCurrentPosition));
 
-        auto error_or_header = read_header();
+        auto error_or_header = read_header(*m_bitstream, m_loaded_samples);
         if (error_or_header.is_error() || error_or_header.value().id != 1 || error_or_header.value().layer != 3) {
             continue;
         }
@@ -202,30 +202,30 @@ MaybeLoaderError MP3LoaderPlugin::build_seek_table()
     return {};
 }
 
-ErrorOr<MP3::Header, LoaderError> MP3LoaderPlugin::read_header()
+ErrorOr<MP3::Header, LoaderError> MP3LoaderPlugin::read_header(BigEndianInputBitStream& stream, size_t sample_index)
 {
     MP3::Header header;
-    header.id = TRY(m_bitstream->read_bit());
-    header.layer = MP3::Tables::LayerNumberLookup[TRY(m_bitstream->read_bits(2))];
+    header.id = TRY(stream.read_bit());
+    header.layer = MP3::Tables::LayerNumberLookup[TRY(stream.read_bits(2))];
     if (header.layer <= 0)
-        return LoaderError { LoaderError::Category::Format, m_loaded_samples, "Frame header contains invalid layer number." };
-    header.protection_bit = TRY(m_bitstream->read_bit());
-    header.bitrate = MP3::Tables::BitratesPerLayerLookup[header.layer - 1][TRY(m_bitstream->read_bits(4))];
+        return LoaderError { LoaderError::Category::Format, sample_index, "Frame header contains invalid layer number." };
+    header.protection_bit = TRY(stream.read_bit());
+    header.bitrate = MP3::Tables::BitratesPerLayerLookup[header.layer - 1][TRY(stream.read_bits(4))];
     if (header.bitrate <= 0)
-        return LoaderError { LoaderError::Category::Format, m_loaded_samples, "Frame header contains invalid bitrate." };
-    header.samplerate = MP3::Tables::SampleratesLookup[TRY(m_bitstream->read_bits(2))];
+        return LoaderError { LoaderError::Category::Format, sample_index, "Frame header contains invalid bitrate." };
+    header.samplerate = MP3::Tables::SampleratesLookup[TRY(stream.read_bits(2))];
     if (header.samplerate <= 0)
-        return LoaderError { LoaderError::Category::Format, m_loaded_samples, "Frame header contains invalid samplerate." };
-    header.padding_bit = TRY(m_bitstream->read_bit());
-    header.private_bit = TRY(m_bitstream->read_bit());
-    header.mode = static_cast<MP3::Mode>(TRY(m_bitstream->read_bits(2)));
-    header.mode_extension = static_cast<MP3::ModeExtension>(TRY(m_bitstream->read_bits(2)));
-    header.copyright_bit = TRY(m_bitstream->read_bit());
-    header.original_bit = TRY(m_bitstream->read_bit());
-    header.emphasis = static_cast<MP3::Emphasis>(TRY(m_bitstream->read_bits(2)));
+        return LoaderError { LoaderError::Category::Format, sample_index, "Frame header contains invalid samplerate." };
+    header.padding_bit = TRY(stream.read_bit());
+    header.private_bit = TRY(stream.read_bit());
+    header.mode = static_cast<MP3::Mode>(TRY(stream.read_bits(2)));
+    header.mode_extension = static_cast<MP3::ModeExtension>(TRY(stream.read_bits(2)));
+    header.copyright_bit = TRY(stream.read_bit());
+    header.original_bit = TRY(stream.read_bit());
+    header.emphasis = static_cast<MP3::Emphasis>(TRY(stream.read_bits(2)));
     header.header_size = 4;
     if (!header.protection_bit) {
-        header.crc16 = TRY(m_bitstream->read_bits<u16>(16));
+        header.crc16 = TRY(stream.read_bits<u16>(16));
         header.header_size += 2;
     }
     header.frame_size = 144 * header.bitrate * 1000 / header.samplerate + header.padding_bit;
@@ -259,7 +259,7 @@ ErrorOr<MP3::MP3Frame, LoaderError> MP3LoaderPlugin::read_next_frame()
     //       In the second case, the error will bubble up from read_frame_data().
     while (true) {
         TRY(synchronize());
-        MP3::Header header = TRY(read_header());
+        MP3::Header header = TRY(read_header(*m_bitstream, m_loaded_samples));
         if (header.id != 1 || header.layer != 3) {
             continue;
         }
