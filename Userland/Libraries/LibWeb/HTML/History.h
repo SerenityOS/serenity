@@ -20,8 +20,8 @@ public:
 
     virtual ~History() override;
 
-    WebIDL::ExceptionOr<void> push_state(JS::Value data, DeprecatedString const& unused, DeprecatedString const& url);
-    WebIDL::ExceptionOr<void> replace_state(JS::Value data, DeprecatedString const& unused, DeprecatedString const& url);
+    WebIDL::ExceptionOr<void> push_state(JS::Value data, String const& unused, Optional<String> const& url = {});
+    WebIDL::ExceptionOr<void> replace_state(JS::Value data, String const& unused, Optional<String> const& url = {});
     WebIDL::ExceptionOr<void> go(long delta);
     WebIDL::ExceptionOr<void> back();
     WebIDL::ExceptionOr<void> forward();
@@ -37,7 +37,7 @@ private:
         No,
         Yes,
     };
-    WebIDL::ExceptionOr<void> shared_history_push_replace_state(JS::Value data, DeprecatedString const& url, IsPush is_push);
+    WebIDL::ExceptionOr<void> shared_history_push_replace_state(JS::Value data, Optional<String> const& url, IsPush is_push);
 
     JS::NonnullGCPtr<DOM::Document> m_associated_document;
 };

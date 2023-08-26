@@ -2,7 +2,7 @@
 #import <DOM/AbstractRange.idl>
 #import <Geometry/DOMRect.idl>
 
-[Exposed=Window]
+[Exposed=Window, UseNewAKString]
 interface Range : AbstractRange {
 
     constructor();
