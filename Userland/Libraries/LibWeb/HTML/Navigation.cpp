@@ -16,6 +16,7 @@
 #include <LibWeb/HTML/NavigationCurrentEntryChangeEvent.h>
 #include <LibWeb/HTML/NavigationHistoryEntry.h>
 #include <LibWeb/HTML/NavigationTransition.h>
+#include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
@@ -328,6 +329,63 @@ WebIDL::ExceptionOr<NavigationResult> Navigation::reload(NavigationReloadOptions
     return navigation_api_method_tracker_derived_result(api_method_tracker);
 }
 
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-navigation-traverseto
+WebIDL::ExceptionOr<NavigationResult> Navigation::traverse_to(String key, NavigationOptions const& options)
+{
+    auto& realm = this->realm();
+    // The traverseTo(key, options) method steps are:
+
+    // 1. If this's current entry index is −1, then return an early error result for an "InvalidStateError" DOMException.
+    if (m_current_entry_index == -1)
+        return early_error_result(WebIDL::InvalidStateError::create(realm, "Cannot traverseTo: no current session history entry"));
+
+    // 2. If this's entry list does not contain a NavigationHistoryEntry whose session history entry's navigation API key equals key,
+    //    then return an early error result for an "InvalidStateError" DOMException.
+    auto it = m_entry_list.find_if([&key](auto const& entry) {
+        return entry->session_history_entry().navigation_api_key == key;
+    });
+    if (it == m_entry_list.end())
+        return early_error_result(WebIDL::InvalidStateError::create(realm, "Cannot traverseTo: key not found in session history list"));
+
+    // 3. Return the result of performing a navigation API traversal given this, key, and options.
+    return perform_a_navigation_api_traversal(key, options);
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#performing-a-navigation-api-traversal
+WebIDL::ExceptionOr<NavigationResult> Navigation::back(NavigationOptions const& options)
+{
+    auto& realm = this->realm();
+    // The back(options) method steps are:
+
+    // 1. If this's current entry index is −1 or 0, then return an early error result for an "InvalidStateError" DOMException.
+    if (m_current_entry_index == -1 || m_current_entry_index == 0)
+        return early_error_result(WebIDL::InvalidStateError::create(realm, "Cannot navigate back: no previous session history entry"));
+
+    // 2. Let key be this's entry list[this's current entry index − 1]'s session history entry's navigation API key.
+    auto key = m_entry_list[m_current_entry_index - 1]->session_history_entry().navigation_api_key;
+
+    // 3. Return the result of performing a navigation API traversal given this, key, and options.
+    return perform_a_navigation_api_traversal(key, options);
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-navigation-forward
+WebIDL::ExceptionOr<NavigationResult> Navigation::forward(NavigationOptions const& options)
+{
+    auto& realm = this->realm();
+    // The forward(options) method steps are:
+
+    // 1. If this's current entry index is −1 or is equal to this's entry list's size − 1,
+    //    then return an early error result for an "InvalidStateError" DOMException.
+    if (m_current_entry_index == -1 || m_current_entry_index == static_cast<i64>(m_entry_list.size() - 1))
+        return early_error_result(WebIDL::InvalidStateError::create(realm, "Cannot navigate forward: no next session history entry"));
+
+    // 2. Let key be this's entry list[this's current entry index + 1]'s session history entry's navigation API key.
+    auto key = m_entry_list[m_current_entry_index + 1]->session_history_entry().navigation_api_key;
+
+    // 3. Return the result of performing a navigation API traversal given this, key, and options.
+    return perform_a_navigation_api_traversal(key, options);
+}
+
 void Navigation::set_onnavigate(WebIDL::CallbackType* event_handler)
 {
     set_event_handler_attribute(HTML::EventNames::navigate, event_handler);
@@ -494,6 +552,150 @@ JS::NonnullGCPtr<NavigationAPIMethodTracker> Navigation::maybe_set_the_upcoming_
 
     // 6. Return apiMethodTracker.
     return api_method_tracker;
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#add-an-upcoming-traverse-api-method-tracker
+JS::NonnullGCPtr<NavigationAPIMethodTracker> Navigation::add_an_upcoming_traverse_api_method_tracker(String destination_key, JS::Value info)
+{
+    auto& vm = this->vm();
+    auto& realm = relevant_realm(*this);
+    // To add an upcoming traverse API method tracker given a Navigation navigation, a string destinationKey, and a JavaScript value info:
+
+    // 1. Let committedPromise and finishedPromise be new promises created in navigation's relevant realm.
+    auto committed_promise = WebIDL::create_promise(realm);
+    auto finished_promise = WebIDL::create_promise(realm);
+
+    // 2. Mark as handled finishedPromise.
+    // NOTE: See the previous discussion about why this is done
+    //       https://html.spec.whatwg.org/multipage/nav-history-apis.html#note-mark-as-handled-navigation-api-finished
+    WebIDL::mark_promise_as_handled(*finished_promise);
+
+    // 3. Let apiMethodTracker be a new navigation API method tracker with:
+    //     navigation object: navigation
+    //     key:               destinationKey
+    //     info:              info
+    //     serialized state:  null
+    //     comitted-to entry: null
+    //     comitted promise:  committedPromise
+    //     finished promise:  finishedPromise
+    auto api_method_tracker = vm.heap().allocate_without_realm<NavigationAPIMethodTracker>(
+        /* .navigation = */ *this,
+        /* .key = */ destination_key,
+        /* .info = */ info,
+        /* .serialized_state = */ OptionalNone {},
+        /* .commited_to_entry = */ nullptr,
+        /* .committed_promise = */ committed_promise,
+        /* .finished_promise = */ finished_promise);
+
+    // 4. Set navigation's upcoming traverse API method trackers[key] to apiMethodTracker.
+    // FIXME: Fix spec typo key --> destinationKey
+    m_upcoming_traverse_api_method_trackers.set(destination_key, api_method_tracker);
+
+    // 5. Return apiMethodTracker.
+    return api_method_tracker;
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#performing-a-navigation-api-traversal
+WebIDL::ExceptionOr<NavigationResult> Navigation::perform_a_navigation_api_traversal(String key, NavigationOptions const& options)
+{
+    auto& realm = this->realm();
+    // To perform a navigation API traversal given a Navigation navigation, a string key, and a NavigationOptions options:
+
+    // 1. Let document be this's relevant global object's associated Document.
+    auto& document = verify_cast<HTML::Window>(relevant_global_object(*this)).associated_document();
+
+    // 2. If document is not fully active, then return an early error result for an "InvalidStateError" DOMException.
+    if (!document.is_fully_active())
+        return early_error_result(WebIDL::InvalidStateError::create(realm, "Document is not fully active"));
+
+    // 3. If document's unload counter is greater than 0, then return an early error result for an "InvalidStateError" DOMException.
+    if (document.unload_counter() > 0)
+        return early_error_result(WebIDL::InvalidStateError::create(realm, "Document already unloaded"));
+
+    // 4. Let current be the current entry of navigation.
+    auto current = current_entry();
+
+    // 5. If key equals current's session history entry's navigation API key, then return
+    //    «[ "committed" → a promise resolved with current, "finished" → a promise resolved with current ]».
+    if (key == current->session_history_entry().navigation_api_key) {
+        return NavigationResult {
+            .committed = WebIDL::create_resolved_promise(realm, current)->promise(),
+            .finished = WebIDL::create_resolved_promise(realm, current)->promise()
+        };
+    }
+
+    // 6. If navigation's upcoming traverse API method trackers[key] exists,
+    //    then return a navigation API method tracker-derived result for navigation's upcoming traverse API method trackers[key].
+    if (auto maybe_tracker = m_upcoming_traverse_api_method_trackers.get(key); maybe_tracker.has_value())
+        return navigation_api_method_tracker_derived_result(maybe_tracker.value());
+
+    // 7. Let info be options["info"], if it exists; otherwise, undefined.
+    auto info = options.info.value_or(JS::js_undefined());
+
+    // 8. Let apiMethodTracker be the result of adding an upcoming traverse API method tracker for navigation given key and info.
+    auto api_method_tracker = add_an_upcoming_traverse_api_method_tracker(key, info);
+
+    // 9. Let navigable be document's node navigable.
+    auto navigable = document.navigable();
+
+    // 10. Let traversable be navigable's traversable navigable.
+    auto traversable = navigable->traversable_navigable();
+
+    // 11. Let sourceSnapshotParams be the result of snapshotting source snapshot params given document.
+    auto source_snapshot_params = document.snapshot_source_snapshot_params();
+
+    // 12. Append the following session history traversal steps to traversable:
+    traversable->append_session_history_traversal_steps([key, api_method_tracker, navigable, source_snapshot_params, this] {
+        // 1. Let navigableSHEs be the result of getting session history entries given navigable.
+        auto navigable_shes = navigable->get_session_history_entries();
+
+        // 2. Let targetSHE be the session history entry in navigableSHEs whose navigation API key is key. If no such entry exists, then:
+        auto it = navigable_shes.find_if([&key](auto const& entry) {
+            return entry->navigation_api_key == key;
+        });
+        if (it == navigable_shes.end()) {
+            // NOTE: This path is taken if navigation's entry list was outdated compared to navigableSHEs,
+            //       which can occur for brief periods while all the relevant threads and processes are being synchronized in reaction to a history change.
+
+            // 1. Queue a global task on the navigation and traversal task source given navigation's relevant global object
+            //    to reject the finished promise for apiMethodTracker with an "InvalidStateError" DOMException.
+            queue_global_task(HTML::Task::Source::NavigationAndTraversal, relevant_global_object(*this), [this, api_method_tracker] {
+                auto& reject_realm = relevant_realm(*this);
+                WebIDL::reject_promise(reject_realm, api_method_tracker->finished_promise,
+                    WebIDL::InvalidStateError::create(reject_realm, "Cannot traverse with stale session history entry"));
+            });
+
+            // 2. Abort these steps.
+            return;
+        }
+        auto target_she = *it;
+
+        // 3. If targetSHE is navigable's active session history entry, then abort these steps.
+        // NOTE: This can occur if a previously queued traversal already took us to this session history entry.
+        //       In that case the previous traversal will have dealt with apiMethodTracker already.
+        if (target_she == navigable->active_session_history_entry())
+            return;
+
+        // FIXME: 4. Let result be the result of applying the traverse history step given by targetSHE's step to traversable,
+        //    given sourceSnapshotParams, navigable, and "none".
+        (void)source_snapshot_params;
+
+        // NOTE: When result is "canceled-by-beforeunload" or "initiator-disallowed", the navigate event was never fired,
+        //       aborting the ongoing navigation would not be correct; it would result in a navigateerror event without a
+        //       preceding navigate event. In the "canceled-by-navigate" case, navigate is fired, but the inner navigate event
+        //       firing algorithm will take care of aborting the ongoing navigation.
+
+        // FIXME: 5. If result is "canceled-by-beforeunload", then queue a global task on the navigation and traversal task source
+        //           given navigation's relevant global object to reject the finished promise for apiMethodTracker with a
+        //           new "AbortError"DOMException created in navigation's relevant realm.
+
+        // FIXME: 6. If result is "initiator-disallowed", then queue a global task on the navigation and traversal task source
+        //           given navigation's relevant global object to reject the finished promise for apiMethodTracker with a
+        //           new "SecurityError" DOMException created in navigation's relevant realm.
+    });
+
+    // 13. Return a navigation API method tracker-derived result for apiMethodTracker.
+    return navigation_api_method_tracker_derived_result(api_method_tracker);
 }
 
 }

@@ -85,6 +85,10 @@ public:
     WebIDL::ExceptionOr<NavigationResult> navigate(String url, NavigationNavigateOptions const&);
     WebIDL::ExceptionOr<NavigationResult> reload(NavigationReloadOptions const&);
 
+    WebIDL::ExceptionOr<NavigationResult> traverse_to(String key, NavigationOptions const&);
+    WebIDL::ExceptionOr<NavigationResult> back(NavigationOptions const&);
+    WebIDL::ExceptionOr<NavigationResult> forward(NavigationOptions const&);
+
     // Event Handlers
     void set_onnavigate(WebIDL::CallbackType*);
     WebIDL::CallbackType* onnavigate();
@@ -114,6 +118,8 @@ private:
     NavigationResult early_error_result(AnyException);
 
     JS::NonnullGCPtr<NavigationAPIMethodTracker> maybe_set_the_upcoming_non_traverse_api_method_tracker(JS::Value info, Optional<SerializationRecord>);
+    JS::NonnullGCPtr<NavigationAPIMethodTracker> add_an_upcoming_traverse_api_method_tracker(String destination_key, JS::Value info);
+    WebIDL::ExceptionOr<NavigationResult> perform_a_navigation_api_traversal(String key, NavigationOptions const&);
 
     // https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigation-entry-list
     // Each Navigation has an associated entry list, a list of NavigationHistoryEntry objects, initially empty.
