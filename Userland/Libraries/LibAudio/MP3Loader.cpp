@@ -51,18 +51,7 @@ bool MP3LoaderPlugin::sniff(SeekableStream& stream)
     auto skip_id3_result = skip_id3(stream);
     if (skip_id3_result.is_error())
         return false;
-
-    auto synchronization_result = synchronize(stream, 0);
-    if (synchronization_result.is_error())
-        return false;
-    auto identifiers_result = stream.read_value<u8>();
-    if (identifiers_result.is_error())
-        return false;
-    // Ensure that it is MPEG version 1.
-    if ((identifiers_result.value() & 0b1000) == 0)
-        return false;
-    // Ensure that it is Layer III.
-    return MP3::Tables::LayerNumberLookup[(identifiers_result.value() & 0b110) >> 1] == 3;
+    return !synchronize_and_read_header(stream, 0).is_error();
 }
 
 ErrorOr<NonnullOwnPtr<LoaderPlugin>, LoaderError> MP3LoaderPlugin::create(NonnullOwnPtr<SeekableStream> stream)
@@ -78,10 +67,7 @@ MaybeLoaderError MP3LoaderPlugin::initialize()
 
     m_bitstream = TRY(try_make<BigEndianInputBitStream>(MaybeOwned<Stream>(*m_stream)));
     TRY(seek(0));
-    TRY(synchronize());
-    auto header = TRY(read_header(*m_stream, 0));
-    if (header.id != 1 || header.layer != 3)
-        return LoaderError { LoaderError::Category::Format, "Only MPEG-1 layer 3 supported." };
+    auto header = TRY(synchronize_and_read_header());
 
     m_sample_rate = header.samplerate;
     m_num_channels = header.channel_count();
@@ -168,16 +154,15 @@ MaybeLoaderError MP3LoaderPlugin::build_seek_table()
     size_t frame_count = 0;
     m_seek_table = {};
 
-    while (!synchronize().is_error()) {
-        auto const frame_pos = -2 + TRY(m_stream->seek(0, SeekMode::FromCurrentPosition));
+    while (true) {
+        auto error_or_header = synchronize_and_read_header();
+        if (error_or_header.is_error())
+            break;
 
-        auto error_or_header = read_header(*m_stream, m_loaded_samples);
-        if (error_or_header.is_error() || error_or_header.value().id != 1 || error_or_header.value().layer != 3) {
-            continue;
-        }
-
-        if (frame_count % 10 == 0)
+        if (frame_count % 10 == 0) {
+            auto frame_pos = TRY(m_stream->tell()) - error_or_header.value().header_size;
             TRY(m_seek_table.insert_seek_point({ static_cast<u64>(sample_count), frame_pos }));
+        }
 
         frame_count++;
         sample_count += MP3::frame_size;
@@ -222,45 +207,45 @@ ErrorOr<MP3::Header, LoaderError> MP3LoaderPlugin::read_header(SeekableStream& s
     return header;
 }
 
-MaybeLoaderError MP3LoaderPlugin::synchronize(SeekableStream& stream, size_t sample_index)
+ErrorOr<MP3::Header, LoaderError> MP3LoaderPlugin::synchronize_and_read_header(SeekableStream& stream, size_t sample_index)
 {
-    bool last_was_all_set = false;
-
     while (!stream.is_eof()) {
-        u8 byte = TRY(stream.read_value<u8>());
-        if (last_was_all_set && (byte & 0xF0) == 0xF0) {
-            // Seek back, since there is still data we have not consumed within the current byte.
-            // read_header() will consume and check these 4 bits itself and then continue reading
-            // the rest of the data from there.
-            TRY(stream.seek(-1, SeekMode::FromCurrentPosition));
-            return {};
+        bool last_was_all_set = false;
+
+        while (!stream.is_eof()) {
+            u8 byte = TRY(stream.read_value<u8>());
+            if (last_was_all_set && (byte & 0xF0) == 0xF0) {
+                // Seek back, since there is still data we have not consumed within the current byte.
+                // read_header() will consume and check these 4 bits itself and then continue reading
+                // the rest of the data from there.
+                TRY(stream.seek(-1, SeekMode::FromCurrentPosition));
+                break;
+            }
+            last_was_all_set = byte == 0xFF;
         }
-        last_was_all_set = byte == 0xFF;
+
+        auto header_start = TRY(stream.tell());
+        auto header_result = read_header(stream, sample_index);
+        if (header_result.is_error() || header_result.value().id != 1 || header_result.value().layer != 3) {
+            TRY(stream.seek(header_start, SeekMode::SetPosition));
+            continue;
+        }
+        return header_result.value();
     }
     return LoaderError { LoaderError::Category::Format, sample_index, "Failed to synchronize." };
 }
 
-MaybeLoaderError MP3LoaderPlugin::synchronize()
+ErrorOr<MP3::Header, LoaderError> MP3LoaderPlugin::synchronize_and_read_header()
 {
-    TRY(MP3LoaderPlugin::synchronize(*m_stream, m_loaded_samples));
+    auto header = TRY(MP3LoaderPlugin::synchronize_and_read_header(*m_stream, m_loaded_samples));
     if (m_bitstream)
         m_bitstream->align_to_byte_boundary();
-    return {};
+    return header;
 }
 
 ErrorOr<MP3::MP3Frame, LoaderError> MP3LoaderPlugin::read_next_frame()
 {
-    // Note: This will spin until we find a correct frame, or we reach eof.
-    //       In the second case, the error will bubble up from read_frame_data().
-    while (true) {
-        TRY(synchronize());
-        MP3::Header header = TRY(read_header(*m_stream, m_loaded_samples));
-        if (header.id != 1 || header.layer != 3) {
-            continue;
-        }
-
-        return read_frame_data(header);
-    }
+    return read_frame_data(TRY(synchronize_and_read_header()));
 }
 
 ErrorOr<MP3::MP3Frame, LoaderError> MP3LoaderPlugin::read_frame_data(MP3::Header const& header)
