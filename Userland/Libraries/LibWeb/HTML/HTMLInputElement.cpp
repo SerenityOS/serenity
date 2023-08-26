@@ -317,6 +317,16 @@ DeprecatedString HTMLInputElement::value() const
         return has_attribute(AttributeNames::value) ? get_attribute(AttributeNames::value) : "on";
     }
 
+    // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-default
+    if (type_state() == TypeAttributeState::Hidden
+        || type_state() == TypeAttributeState::SubmitButton
+        || type_state() == TypeAttributeState::ImageButton
+        || type_state() == TypeAttributeState::ResetButton
+        || type_state() == TypeAttributeState::Button) {
+        // On getting, if the element has a value content attribute, return that attribute's value; otherwise, return the empty string.
+        return has_attribute(AttributeNames::value) ? get_attribute(AttributeNames::value) : DeprecatedString::empty();
+    }
+
     // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-value
     // Return the current value of the element.
     return m_value;
