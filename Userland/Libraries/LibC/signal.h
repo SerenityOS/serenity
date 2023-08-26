@@ -35,6 +35,7 @@ int sigsuspend(sigset_t const*);
 int sigtimedwait(sigset_t const*, siginfo_t*, struct timespec const*);
 int sigwait(sigset_t const*, int*);
 int sigwaitinfo(sigset_t const*, siginfo_t*);
+int siginterrupt(int sig, int flag);
 int raise(int sig);
 int getsignalbyname(char const*);
 char const* getsignalname(int);

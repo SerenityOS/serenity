@@ -17,6 +17,21 @@
 
 extern "C" {
 
+// https://pubs.opengroup.org/onlinepubs/009695399/functions/siginterrupt.html
+int siginterrupt(int sig, int flag)
+{
+    int ret;
+    struct sigaction act;
+
+    (void)sigaction(sig, NULL, &act);
+    if (flag)
+        act.sa_flags &= ~SA_RESTART;
+    else
+        act.sa_flags |= SA_RESTART;
+    ret = sigaction(sig, &act, NULL);
+    return ret;
+}
+
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/kill.html
 int kill(pid_t pid, int sig)
 {
