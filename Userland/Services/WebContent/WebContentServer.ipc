@@ -68,8 +68,8 @@ endpoint WebContentServer
     set_window_position(Gfx::IntPoint position) =|
     set_window_size(Gfx::IntSize size) =|
 
-    get_local_storage_entries() => (OrderedHashMap<DeprecatedString,DeprecatedString> entries)
-    get_session_storage_entries() => (OrderedHashMap<DeprecatedString,DeprecatedString> entries)
+    get_local_storage_entries() => (OrderedHashMap<String,String> entries)
+    get_session_storage_entries() => (OrderedHashMap<String,String> entries)
 
     handle_file_return(i32 error, Optional<IPC::File> file, i32 request_id) =|
 

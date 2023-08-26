@@ -21,10 +21,10 @@ public:
     ~Storage();
 
     size_t length() const;
-    DeprecatedString key(size_t index);
-    DeprecatedString get_item(DeprecatedString const& key) const;
-    WebIDL::ExceptionOr<void> set_item(DeprecatedString const& key, DeprecatedString const& value);
-    void remove_item(DeprecatedString const& key);
+    Optional<String> key(size_t index);
+    Optional<String> get_item(StringView key) const;
+    WebIDL::ExceptionOr<void> set_item(String const& key, String const& value);
+    void remove_item(StringView key);
     void clear();
 
     auto const& map() const { return m_map; }
@@ -55,9 +55,9 @@ private:
     virtual bool named_property_deleter_has_identifier() const override { return true; }
 
     void reorder();
-    void broadcast(DeprecatedString const& key, DeprecatedString const& old_value, DeprecatedString const& new_value);
+    void broadcast(StringView key, StringView old_value, StringView new_value);
 
-    OrderedHashMap<DeprecatedString, DeprecatedString> m_map;
+    OrderedHashMap<String, String> m_map;
 };
 
 }

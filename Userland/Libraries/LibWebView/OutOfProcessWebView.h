@@ -36,8 +36,8 @@ public:
 
     DeprecatedString dump_layout_tree();
 
-    OrderedHashMap<DeprecatedString, DeprecatedString> get_local_storage_entries();
-    OrderedHashMap<DeprecatedString, DeprecatedString> get_session_storage_entries();
+    OrderedHashMap<String, String> get_local_storage_entries();
+    OrderedHashMap<String, String> get_session_storage_entries();
 
     void set_content_filters(Vector<String>);
     void set_autoplay_allowed_on_all_websites();
