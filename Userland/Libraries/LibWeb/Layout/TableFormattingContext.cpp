@@ -62,11 +62,13 @@ CSSPixels TableFormattingContext::run_caption_layout(LayoutMode layout_mode, CSS
 void TableFormattingContext::compute_constrainedness()
 {
     // Definition of constrainedness: https://www.w3.org/TR/css-tables-3/#constrainedness
+    // NB: The definition uses https://www.w3.org/TR/CSS21/visudet.html#propdef-width for width, which doesn't include
+    //     keyword values. The remaining checks can be simplified to checking whether the size is a length.
     size_t column_index = 0;
     TableGrid::for_each_child_box_matching(table_box(), is_table_column_group, [&](auto& column_group_box) {
         TableGrid::for_each_child_box_matching(column_group_box, is_table_column, [&](auto& column_box) {
             auto const& computed_values = column_box.computed_values();
-            if (!computed_values.width().is_auto() && !computed_values.width().is_percentage()) {
+            if (computed_values.width().is_length()) {
                 m_columns[column_index].is_constrained = true;
             }
             auto const& col_node = static_cast<HTML::HTMLTableColElement const&>(*column_box.dom_node());
@@ -77,18 +79,18 @@ void TableFormattingContext::compute_constrainedness()
 
     for (auto& row : m_rows) {
         auto const& computed_values = row.box->computed_values();
-        if (!computed_values.height().is_auto() && !computed_values.height().is_percentage()) {
+        if (computed_values.height().is_length()) {
             row.is_constrained = true;
         }
     }
 
     for (auto& cell : m_cells) {
         auto const& computed_values = cell.box->computed_values();
-        if (!computed_values.width().is_auto() && !computed_values.width().is_percentage()) {
+        if (computed_values.width().is_length()) {
             m_columns[cell.column_index].is_constrained = true;
         }
 
-        if (!computed_values.height().is_auto() && !computed_values.height().is_percentage()) {
+        if (computed_values.height().is_length()) {
             m_rows[cell.row_index].is_constrained = true;
         }
     }
