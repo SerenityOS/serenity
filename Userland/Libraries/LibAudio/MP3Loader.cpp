@@ -192,7 +192,7 @@ MaybeLoaderError MP3LoaderPlugin::build_seek_table()
         frame_count++;
         sample_count += MP3::frame_size;
 
-        TRY(m_stream->seek(error_or_header.value().frame_size - 6, SeekMode::FromCurrentPosition));
+        TRY(m_stream->seek(error_or_header.value().frame_size - error_or_header.value().header_size, SeekMode::FromCurrentPosition));
 
         // TODO: This is just here to clear the bitstream buffer.
         // Bitstream should have a method to sync its state to the underlying stream.
@@ -223,10 +223,13 @@ ErrorOr<MP3::Header, LoaderError> MP3LoaderPlugin::read_header()
     header.copyright_bit = TRY(m_bitstream->read_bit());
     header.original_bit = TRY(m_bitstream->read_bit());
     header.emphasis = static_cast<MP3::Emphasis>(TRY(m_bitstream->read_bits(2)));
-    if (!header.protection_bit)
+    header.header_size = 4;
+    if (!header.protection_bit) {
         header.crc16 = TRY(m_bitstream->read_bits<u16>(16));
+        header.header_size += 2;
+    }
     header.frame_size = 144 * header.bitrate * 1000 / header.samplerate + header.padding_bit;
-    header.slot_count = header.frame_size - ((header.channel_count() == 2 ? 32 : 17) + (header.protection_bit ? 0 : 2) + 4);
+    header.slot_count = header.frame_size - ((header.channel_count() == 2 ? 32 : 17) + header.header_size);
     return header;
 }
 
