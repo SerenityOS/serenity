@@ -54,6 +54,7 @@ void readable_stream_byob_reader_error_read_into_requests(ReadableStreamBYOBRead
 
 WebIDL::ExceptionOr<void> readable_stream_default_reader_read(ReadableStreamDefaultReader&, ReadRequest&);
 WebIDL::ExceptionOr<void> readable_stream_default_reader_release(ReadableStreamDefaultReader&);
+void readable_stream_byob_reader_release(ReadableStreamBYOBReader&);
 WebIDL::ExceptionOr<void> set_up_readable_stream_default_reader(ReadableStreamDefaultReader&, ReadableStream&);
 WebIDL::ExceptionOr<void> set_up_readable_stream_byob_reader(ReadableStreamBYOBReader&, ReadableStream&);
 void readable_stream_default_controller_close(ReadableStreamDefaultController&);
