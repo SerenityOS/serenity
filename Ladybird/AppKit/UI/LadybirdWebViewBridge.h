@@ -35,6 +35,8 @@ public:
     };
     void set_viewport_rect(Gfx::IntRect, ForResize = ForResize::No);
 
+    void update_palette();
+
     void mouse_down_event(Gfx::IntPoint, GUI::MouseButton, KeyModifier);
     void mouse_up_event(Gfx::IntPoint, GUI::MouseButton, KeyModifier);
     void mouse_move_event(Gfx::IntPoint, GUI::MouseButton, KeyModifier);
@@ -58,8 +60,6 @@ private:
     virtual Gfx::IntPoint to_widget_position(Gfx::IntPoint content_position) const override;
 
     virtual void create_client(WebView::EnableCallgrindProfiling) override;
-
-    void update_palette();
 
     Vector<Gfx::IntRect> m_screen_rects;
     Gfx::IntRect m_viewport_rect;

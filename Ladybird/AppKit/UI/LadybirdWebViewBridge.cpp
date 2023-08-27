@@ -13,6 +13,8 @@
 #include <LibWeb/Crypto/Crypto.h>
 #include <UI/LadybirdWebViewBridge.h>
 
+#import <UI/Palette.h>
+
 namespace Ladybird {
 
 template<typename T>
@@ -83,6 +85,12 @@ void WebViewBridge::set_viewport_rect(Gfx::IntRect viewport_rect, ForResize for_
     if (for_resize == ForResize::Yes) {
         handle_resize();
     }
+}
+
+void WebViewBridge::update_palette()
+{
+    auto theme = create_system_palette();
+    client().async_update_system_theme(move(theme));
 }
 
 void WebViewBridge::mouse_down_event(Gfx::IntPoint position, GUI::MouseButton button, KeyModifier modifiers)
@@ -181,15 +189,6 @@ void WebViewBridge::create_client(WebView::EnableCallgrindProfiling enable_callg
     if (m_webdriver_content_ipc_path.has_value()) {
         client().async_connect_to_webdriver(*m_webdriver_content_ipc_path);
     }
-}
-
-void WebViewBridge::update_palette()
-{
-    auto theme = MUST(Gfx::load_system_theme(DeprecatedString::formatted("{}/res/themes/Default.ini", s_serenity_resource_root)));
-    auto palette_impl = Gfx::PaletteImpl::create_with_anonymous_buffer(theme);
-    auto palette = Gfx::Palette(move(palette_impl));
-
-    client().async_update_system_theme(move(theme));
 }
 
 }
