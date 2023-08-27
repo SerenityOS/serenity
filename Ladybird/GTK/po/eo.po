@@ -10,6 +10,9 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+#. Translators: this is a placeholder content for the Bookmarks & History
+#. popover; it will go away once we implement it, so you can skip translating
+#. it. But it also doesn't hurt to translate it either, if you want to.
 #: window.blp:43
 msgid "...will appear here, once we implement them :^)"
 msgstr "...aperos ĉi tie, post kiam ni realigos ilin :^)"
@@ -30,6 +33,7 @@ msgstr "Fermi _aliajn langetojn"
 msgid "Close current tab"
 msgstr "Fermi aktualan langeton"
 
+#. Translators: this is the placeholder text for the main location entry.
 #: window.blp:118
 msgid "Enter a URL to open..."
 msgstr "Entajpi URL..."
@@ -112,6 +116,7 @@ msgstr "Bone"
 msgid "Open file"
 msgstr "Malfermi dosieron"
 
+#. Translators: this is a menu item for pinning a tab.
 #: window.blp:22
 msgid "P_in"
 msgstr "Al_pingli"
@@ -169,6 +174,7 @@ msgstr "Langeta superrigardo"
 msgid "Tabs"
 msgstr "Langetoj"
 
+#. Translators: this is a menu item for unpinning a tab.
 #: window.blp:28
 msgid "Unp_in"
 msgstr "De_pingli"

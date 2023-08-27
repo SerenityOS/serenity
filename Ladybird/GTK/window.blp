@@ -18,11 +18,13 @@ menu tab_menu {
   item (_("_Reload"), "page.reload-page")
   item (_("_Duplicate"), "tab.duplicate")
   item {
+    // Translators: this is a menu item for pinning a tab.
     label: _("P_in");
     action: "tab.pin";
     hidden-when: "action-disabled";
   }
   item {
+    // Translators: this is a menu item for unpinning a tab.
     label: _("Unp_in");
     action: "tab.unpin";
     hidden-when: "action-disabled";
@@ -35,6 +37,9 @@ menu tab_menu {
 Popover bookmarks_popover {
   Adw.StatusPage {
     title: _("Bookmarks & History");
+    /* Translators: this is a placeholder content for the Bookmarks & History
+       popover; it will go away once we implement it, so you can skip translating
+       it. But it also doesn't hurt to translate it either, if you want to. */
     description: _("...will appear here, once we implement them :^)");
     icon-name: "applications-engineering-symbolic";
     width-request: 300;
@@ -109,6 +114,7 @@ template $LadybirdWindow : Adw.ApplicationWindow {
 
           Entry url_entry {
             input-purpose: url;
+            // Translators: this is the placeholder text for the main location entry.
             placeholder-text: _("Enter a URL to open...");
             activate => $on_url_entered(template) swapped;
           }
