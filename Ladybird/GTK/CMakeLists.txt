@@ -106,6 +106,13 @@ add_subdirectory(po)
 add_executable(ladybird ${SOURCES})
 target_link_libraries(ladybird PRIVATE PkgConfig::gtk4 PkgConfig::libadwaita Lagom::Core Lagom::WebView Lagom::Gfx Lagom::Web Lagom::IPC Lagom::FileSystem Lagom::SQL Lagom::Protocol)
 
+if (libsoup_FOUND)
+    target_link_libraries(ladybird PRIVATE PkgConfig::libsoup)
+elseif(ENABLE_PUBLIC_SUFFIX_DOWNLOAD)
+    target_compile_definitions(ladybird PRIVATE ENABLE_PUBLIC_SUFFIX_DOWNLOAD)
+    target_link_libraries(ladybird PRIVATE Lagom::PublicSuffix)
+endif()
+
 set(WEBCONTENT_SOURCE_DIR "${SERENITY_SOURCE_DIR}/Userland/Services/WebContent")
 set(WEBCONTENT_SOURCES
     "${WEBCONTENT_SOURCE_DIR}/ConnectionFromClient.cpp"

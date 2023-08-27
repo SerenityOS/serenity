@@ -2,4 +2,5 @@ using Gtk 4.0;
 
 template $LadybirdLocationEntry : Entry {
   input-purpose: url;
+  notify::text => $on_notify_text(template) swapped;
 }
