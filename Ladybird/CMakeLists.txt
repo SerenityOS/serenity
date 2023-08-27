@@ -45,6 +45,13 @@ if (ENABLE_UNDEFINED_SANITIZER)
     add_link_options(-fsanitize=undefined)
 endif()
 
+if (HAIKU)
+    # Haiku needs some extra compile definitions to make important stuff in its headers available.
+    add_compile_definitions(_DEFAULT_SOURCE)
+    add_compile_definitions(_GNU_SOURCE)
+    add_compile_definitions(__USE_GNU)
+endif()
+
 # Lagom
 # FIXME: PROJECT_IS_TOP_LEVEL with CMake 3.21+
 set(LADYBIRD_IS_TOP_LEVEL FALSE)

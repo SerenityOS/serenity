@@ -112,6 +112,13 @@ if (ENABLE_COMPILETIME_FORMAT_CHECK)
     add_compile_definitions(ENABLE_COMPILETIME_FORMAT_CHECK)
 endif()
 
+if (HAIKU)
+    # Haiku needs some extra compile definitions to make important stuff in its headers available.
+    add_compile_definitions(_DEFAULT_SOURCE)
+    add_compile_definitions(_GNU_SOURCE)
+    add_compile_definitions(__USE_GNU)
+endif()
+
 if (ENABLE_FUZZERS)
     add_compile_options(-fno-omit-frame-pointer)
 endif()
