@@ -16,6 +16,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#if defined(AK_OS_HAIKU)
+#    include <FindDirectory.h>
+#endif
+
 namespace Core {
 
 DeprecatedString StandardPaths::home_directory()
@@ -62,6 +66,8 @@ DeprecatedString StandardPaths::config_directory()
     builder.append(home_directory());
 #if defined(AK_OS_MACOS)
     builder.append("/Library/Preferences"sv);
+#elif defined(AK_OS_HAIKU)
+    builder.append("/config/settings"sv);
 #else
     builder.append("/.config"sv);
 #endif
@@ -79,6 +85,8 @@ DeprecatedString StandardPaths::data_directory()
     builder.append("/.data"sv);
 #elif defined(AK_OS_MACOS)
     builder.append("/Library/Application Support"sv);
+#elif defined(AK_OS_HAIKU)
+    builder.append("/config/non-packaged/data"sv);
 #else
     builder.append("/.local/share"sv);
 #endif
@@ -99,6 +107,8 @@ ErrorOr<DeprecatedString> StandardPaths::runtime_directory()
 #elif defined(AK_OS_MACOS)
     builder.append(home_directory());
     builder.append("/Library/Application Support"sv);
+#elif defined(AK_OS_HAIKU)
+    builder.append("/boot/system/var/shared_memory"sv);
 #else
     auto uid = getuid();
     builder.appendff("/run/user/{}", uid);
@@ -114,19 +124,33 @@ DeprecatedString StandardPaths::tempfile_directory()
 
 ErrorOr<Vector<String>> StandardPaths::font_directories()
 {
+#if defined(AK_OS_HAIKU)
+    Vector<String> paths_vector;
+    char** paths;
+    size_t paths_count;
+    if (find_paths(B_FIND_PATH_FONTS_DIRECTORY, NULL, &paths, &paths_count) == B_OK) {
+        for (size_t i = 0; i < paths_count; ++i) {
+            StringBuilder builder;
+            builder.append(paths[i], strlen(paths[i]));
+            paths_vector.append(TRY(builder.to_string()));
+        }
+    }
+    return paths_vector;
+#else
     return Vector { {
-#if defined(AK_OS_SERENITY)
+#    if defined(AK_OS_SERENITY)
         "/res/fonts"_string,
-#elif defined(AK_OS_MACOS)
+#    elif defined(AK_OS_MACOS)
         "/System/Library/Fonts"_string,
         "/Library/Fonts"_string,
         TRY(String::formatted("{}/Library/Fonts"sv, home_directory())),
-#else
+#    else
         "/usr/share/fonts"_string,
         "/usr/local/share/fonts"_string,
         TRY(String::formatted("{}/.local/share/fonts"sv, home_directory())),
-#endif
+#    endif
     } };
+#endif
 }
 
 }
