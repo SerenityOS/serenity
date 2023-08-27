@@ -23,14 +23,15 @@ static T scale_for_device(T size, float device_pixel_ratio)
     return size.template to_type<float>().scaled(device_pixel_ratio).template to_type<int>();
 }
 
-ErrorOr<NonnullOwnPtr<WebViewBridge>> WebViewBridge::create(Vector<Gfx::IntRect> screen_rects, float device_pixel_ratio, Optional<StringView> webdriver_content_ipc_path)
+ErrorOr<NonnullOwnPtr<WebViewBridge>> WebViewBridge::create(Vector<Gfx::IntRect> screen_rects, float device_pixel_ratio, Optional<StringView> webdriver_content_ipc_path, Web::CSS::PreferredColorScheme preferred_color_scheme)
 {
-    return adopt_nonnull_own_or_enomem(new (nothrow) WebViewBridge(move(screen_rects), device_pixel_ratio, move(webdriver_content_ipc_path)));
+    return adopt_nonnull_own_or_enomem(new (nothrow) WebViewBridge(move(screen_rects), device_pixel_ratio, move(webdriver_content_ipc_path), preferred_color_scheme));
 }
 
-WebViewBridge::WebViewBridge(Vector<Gfx::IntRect> screen_rects, float device_pixel_ratio, Optional<StringView> webdriver_content_ipc_path)
+WebViewBridge::WebViewBridge(Vector<Gfx::IntRect> screen_rects, float device_pixel_ratio, Optional<StringView> webdriver_content_ipc_path, Web::CSS::PreferredColorScheme preferred_color_scheme)
     : m_screen_rects(move(screen_rects))
     , m_webdriver_content_ipc_path(move(webdriver_content_ipc_path))
+    , m_preferred_color_scheme(preferred_color_scheme)
 {
     m_device_pixel_ratio = device_pixel_ratio;
     m_inverse_device_pixel_ratio = 1.0 / device_pixel_ratio;
@@ -91,6 +92,12 @@ void WebViewBridge::update_palette()
 {
     auto theme = create_system_palette();
     client().async_update_system_theme(move(theme));
+}
+
+void WebViewBridge::set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_scheme)
+{
+    m_preferred_color_scheme = color_scheme;
+    client().async_set_preferred_color_scheme(color_scheme);
 }
 
 void WebViewBridge::mouse_down_event(Gfx::IntPoint position, GUI::MouseButton button, KeyModifier modifiers)
@@ -179,6 +186,7 @@ void WebViewBridge::create_client(WebView::EnableCallgrindProfiling enable_callg
 
     client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio);
     client().async_update_system_fonts(Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), Gfx::FontDatabase::window_title_font_query());
+    client().async_set_preferred_color_scheme(m_preferred_color_scheme);
     update_palette();
 
     if (!m_screen_rects.is_empty()) {

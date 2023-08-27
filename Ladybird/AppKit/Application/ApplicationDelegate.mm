@@ -7,6 +7,7 @@
 #include <BrowserSettings/Defaults.h>
 
 #import <Application/ApplicationDelegate.h>
+#import <UI/LadybirdWebView.h>
 #import <UI/Tab.h>
 #import <UI/TabController.h>
 #import <Utilities/URL.h>
@@ -24,6 +25,8 @@
     Optional<Browser::CookieJar> m_cookie_jar;
 
     Optional<StringView> m_webdriver_content_ipc_path;
+
+    Web::CSS::PreferredColorScheme m_preferred_color_scheme;
 }
 
 @property (nonatomic, strong) NSMutableArray<TabController*>* managed_tabs;
@@ -67,6 +70,8 @@
         if (!webdriver_content_ipc_path.is_empty()) {
             m_webdriver_content_ipc_path = webdriver_content_ipc_path;
         }
+
+        m_preferred_color_scheme = Web::CSS::PreferredColorScheme::Auto;
 
         // Reduce the tooltip delay, as the default delay feels quite long.
         [[NSUserDefaults standardUserDefaults] setObject:@100 forKey:@"NSInitialToolTipDelay"];
@@ -119,6 +124,11 @@
     return m_webdriver_content_ipc_path;
 }
 
+- (Web::CSS::PreferredColorScheme)preferredColorScheme
+{
+    return m_preferred_color_scheme;
+}
+
 #pragma mark - Private methods
 
 - (void)closeCurrentTab:(id)sender
@@ -132,6 +142,32 @@
     auto* current_tab = (Tab*)[NSApp keyWindow];
     auto* controller = (TabController*)[current_tab windowController];
     [controller focusLocationToolbarItem];
+}
+
+- (void)setAutoPreferredColorScheme:(id)sender
+{
+    m_preferred_color_scheme = Web::CSS::PreferredColorScheme::Auto;
+    [self broadcastPreferredColorSchemeUpdate];
+}
+
+- (void)setDarkPreferredColorScheme:(id)sender
+{
+    m_preferred_color_scheme = Web::CSS::PreferredColorScheme::Dark;
+    [self broadcastPreferredColorSchemeUpdate];
+}
+
+- (void)setLightPreferredColorScheme:(id)sender
+{
+    m_preferred_color_scheme = Web::CSS::PreferredColorScheme::Light;
+    [self broadcastPreferredColorSchemeUpdate];
+}
+
+- (void)broadcastPreferredColorSchemeUpdate
+{
+    for (TabController* controller in self.managed_tabs) {
+        auto* tab = (Tab*)[controller window];
+        [[tab web_view] setPreferredColorScheme:m_preferred_color_scheme];
+    }
 }
 
 - (void)clearHistory:(id)sender
@@ -229,6 +265,25 @@
     auto* menu = [[NSMenuItem alloc] init];
     auto* submenu = [[NSMenu alloc] initWithTitle:@"View"];
 
+    auto* color_scheme_menu = [[NSMenu alloc] init];
+    [color_scheme_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Auto"
+                                                          action:@selector(setAutoPreferredColorScheme:)
+                                                   keyEquivalent:@""]];
+    [color_scheme_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Dark"
+                                                          action:@selector(setDarkPreferredColorScheme:)
+                                                   keyEquivalent:@""]];
+    [color_scheme_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Light"
+                                                          action:@selector(setLightPreferredColorScheme:)
+                                                   keyEquivalent:@""]];
+
+    auto* color_scheme_menu_item = [[NSMenuItem alloc] initWithTitle:@"Color Scheme"
+                                                              action:nil
+                                                       keyEquivalent:@""];
+    [color_scheme_menu_item setSubmenu:color_scheme_menu];
+
+    [submenu addItem:color_scheme_menu_item];
+    [submenu addItem:[NSMenuItem separatorItem]];
+
     [menu setSubmenu:submenu];
     return menu;
 }
@@ -307,6 +362,23 @@
 
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)sender
 {
+    return YES;
+}
+
+- (BOOL)validateMenuItem:(NSMenuItem*)item
+{
+    using enum Web::CSS::PreferredColorScheme;
+
+    if ([item action] == @selector(setAutoPreferredColorScheme:)) {
+        [item setState:(m_preferred_color_scheme == Auto) ? NSControlStateValueOn : NSControlStateValueOff];
+    }
+    if ([item action] == @selector(setDarkPreferredColorScheme:)) {
+        [item setState:(m_preferred_color_scheme == Dark) ? NSControlStateValueOn : NSControlStateValueOff];
+    }
+    if ([item action] == @selector(setLightPreferredColorScheme:)) {
+        [item setState:(m_preferred_color_scheme == Light) ? NSControlStateValueOn : NSControlStateValueOff];
+    }
+
     return YES;
 }
 

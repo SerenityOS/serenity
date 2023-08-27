@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <LibWeb/CSS/PreferredColorScheme.h>
 
 #import <System/Cocoa.h>
 
@@ -17,5 +18,7 @@
 - (void)handleResize;
 - (void)handleScroll;
 - (void)handleVisibility:(BOOL)is_visible;
+
+- (void)setPreferredColorScheme:(Web::CSS::PreferredColorScheme)color_scheme;
 
 @end
