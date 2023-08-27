@@ -307,8 +307,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
             // - parsedReferrer’s scheme is "about" and path is the string "client"
             // - parsedReferrer’s origin is not same origin with origin
             // then set request’s referrer to "client".
-            // FIXME: Actually use the given origin once we have https://url.spec.whatwg.org/#concept-url-origin.
-            if ((parsed_referrer.scheme() == "about"sv && parsed_referrer.serialize_path() == "client"sv) || !HTML::Origin().is_same_origin(origin)) {
+            auto parsed_referrer_origin = URL::url_origin(parsed_referrer);
+            if ((parsed_referrer.scheme() == "about"sv && parsed_referrer.serialize_path() == "client"sv) || !parsed_referrer_origin.is_same_origin(origin)) {
                 request->set_referrer(Infrastructure::Request::Referrer::Client);
             }
             // 4. Otherwise, set request’s referrer to parsedReferrer.
