@@ -10,7 +10,7 @@ struct _LadybirdWindow {
 
     AdwTabOverview* tab_overview;
     AdwTabView* tab_view;
-    GtkEntry* url_entry;
+    GtkEntry* location_entry;
 
     AdwTabPage* menu_page;
     LadybirdWebView* last_selected_web_view;
@@ -75,7 +75,7 @@ static AdwTabPage* open_new_tab(LadybirdWindow* self, AdwTabPage* parent)
     g_signal_connect_object(favicon_paintable, "notify::texture", G_CALLBACK(update_favicon), tab_page, G_CONNECT_DEFAULT);
 
     adw_tab_view_set_selected_page(self->tab_view, tab_page);
-    gtk_widget_grab_focus(GTK_WIDGET(self->url_entry));
+    gtk_widget_grab_focus(GTK_WIDGET(self->location_entry));
     return tab_page;
 }
 
@@ -158,8 +158,8 @@ static void win_focus_location_action(GtkWidget* widget, [[maybe_unused]] char c
 {
     LadybirdWindow* self = LADYBIRD_WINDOW(widget);
 
-    gtk_editable_select_region(GTK_EDITABLE(self->url_entry), 0, -1);
-    gtk_widget_grab_focus(GTK_WIDGET(self->url_entry));
+    gtk_editable_select_region(GTK_EDITABLE(self->location_entry), 0, -1);
+    gtk_widget_grab_focus(GTK_WIDGET(self->location_entry));
 }
 
 static void tab_close_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
@@ -238,13 +238,13 @@ static LadybirdWebView* ladybird_window_get_current_page(LadybirdWindow* self)
     return get_web_view_from_tab_page(tab_page);
 }
 
-static void on_url_entered(LadybirdWindow* self, GtkEntry* url_entry)
+static void on_url_entered(LadybirdWindow* self, GtkEntry* location_entry)
 {
     LadybirdWebView* web_view = ladybird_window_get_current_page(self);
     if (!web_view)
         return;
 
-    char const* url = gtk_entry_buffer_get_text(gtk_entry_get_buffer(url_entry));
+    char const* url = gtk_entry_buffer_get_text(gtk_entry_get_buffer(location_entry));
     ladybird_web_view_load_url(web_view, url);
     gtk_widget_grab_focus(GTK_WIDGET(web_view));
 }
@@ -259,7 +259,7 @@ static AdwTabView* on_create_window(LadybirdWindow* self)
 
 static void on_page_url_changed(LadybirdWindow* self)
 {
-    GtkEntryBuffer* entry_buffer = gtk_entry_get_buffer(self->url_entry);
+    GtkEntryBuffer* entry_buffer = gtk_entry_get_buffer(self->location_entry);
     LadybirdWebView* web_view = ladybird_window_get_current_page(self);
     if (!web_view) {
         gtk_entry_buffer_delete_text(entry_buffer, 0, -1);
@@ -376,7 +376,7 @@ static void ladybird_window_class_init(LadybirdWindowClass* klass)
     gtk_widget_class_set_template_from_resource(widget_class, "/org/serenityos/Ladybird-gtk4/window.ui");
     gtk_widget_class_bind_template_child(widget_class, LadybirdWindow, tab_overview);
     gtk_widget_class_bind_template_child(widget_class, LadybirdWindow, tab_view);
-    gtk_widget_class_bind_template_child(widget_class, LadybirdWindow, url_entry);
+    gtk_widget_class_bind_template_child(widget_class, LadybirdWindow, location_entry);
     gtk_widget_class_bind_template_callback(widget_class, on_create_tab);
     gtk_widget_class_bind_template_callback(widget_class, on_url_entered);
     gtk_widget_class_bind_template_callback(widget_class, on_create_window);
