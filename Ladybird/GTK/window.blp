@@ -167,7 +167,9 @@ template $LadybirdWindow : Adw.ApplicationWindow {
                   action-name: "page.zoom-reset";
                   Label {
                     width-chars: 5;
-                    label: bind ((tab_view.selected-page.child as <$LadybirdTab>).web_view as <$LadybirdWebView>).zoom-percent;
+                    label: bind $format_zoom_percent_label(
+                      ((tab_view.selected-page.child as <$LadybirdTab>).web_view as <$LadybirdWebView>).zoom-percent
+                    ) as <string>;
                   }
                 }
                 Button {

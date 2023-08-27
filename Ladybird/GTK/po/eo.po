@@ -3,12 +3,19 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ladybird wip\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-08-27 13:45+0300\n"
+"POT-Creation-Date: 2023-08-27 13:54+0300\n"
 "Language: eo\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. Translators: this is a format string for the zoom-percent label in the main menu.
+#. For most languages, it doesn't need translating.
+#: Window.cpp:352
+#, c-format
+msgid "%d%%"
+msgstr ""
 
 #. Translators: this is a placeholder content for the Bookmarks & History
 #. popover; it will go away once we implement it, so you can skip translating

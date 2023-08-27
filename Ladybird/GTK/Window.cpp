@@ -345,6 +345,13 @@ void ladybird_window_open_file(LadybirdWindow* self, GFile* file)
     g_free(uri);
 }
 
+static char* format_zoom_percent_label([[maybe_unused]] void* instance, int zoom_percent)
+{
+    // Translators: this is a format string for the zoom-percent label in the main menu.
+    // For most languages, it doesn't need translating.
+    return g_strdup_printf(_("%d%%"), zoom_percent);
+}
+
 static void ladybird_window_init(LadybirdWindow* self)
 {
     GtkWidget* widget = GTK_WIDGET(self);
@@ -375,6 +382,7 @@ static void ladybird_window_class_init(LadybirdWindowClass* klass)
     gtk_widget_class_bind_template_callback(widget_class, on_create_window);
     gtk_widget_class_bind_template_callback(widget_class, on_setup_tab_menu);
     gtk_widget_class_bind_template_callback(widget_class, on_selected_page_changed);
+    gtk_widget_class_bind_template_callback(widget_class, format_zoom_percent_label);
 
     gtk_widget_class_install_action(widget_class, "win.new-tab", nullptr, win_new_tab_action);
     gtk_widget_class_install_action(widget_class, "win.open-file", nullptr, win_open_file_action);
