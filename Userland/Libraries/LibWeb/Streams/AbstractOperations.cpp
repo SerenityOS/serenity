@@ -437,6 +437,23 @@ void readable_stream_default_reader_error_read_requests(ReadableStreamDefaultRea
     }
 }
 
+// https://streams.spec.whatwg.org/#abstract-opdef-readablestreambyobreadererrorreadintorequests
+void readable_stream_byob_reader_error_read_into_requests(ReadableStreamBYOBReader& reader, JS::Value error)
+{
+    // 1. Let readIntoRequests be reader.[[readIntoRequests]].
+    auto read_into_requests = move(reader.read_into_requests());
+
+    // 2. Set reader.[[readIntoRequests]] to a new empty list.
+    reader.read_into_requests().clear();
+
+    // 3. For each readIntoRequest of readIntoRequests,
+    for (auto& read_into_request : read_into_requests) {
+
+        // 1. Perform readIntoRequest’s error steps, given e.
+        read_into_request->on_error(error);
+    }
+}
+
 // https://streams.spec.whatwg.org/#readable-stream-default-reader-read
 WebIDL::ExceptionOr<void> readable_stream_default_reader_read(ReadableStreamDefaultReader& reader, ReadRequest& read_request)
 {
