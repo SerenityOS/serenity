@@ -56,7 +56,7 @@ bool DirIterator::advance_next()
             return false;
         }
 
-#ifdef AK_OS_SOLARIS
+#if defined(AK_OS_SOLARIS) || defined(AK_OS_HAIKU)
         m_next = DirectoryEntry::from_stat(m_dir, *de);
 #else
         m_next = DirectoryEntry::from_dirent(*de);

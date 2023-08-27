@@ -32,7 +32,7 @@ static DirectoryEntry::Type directory_entry_type_from_stat(mode_t st_mode)
     VERIFY_NOT_REACHED();
 }
 
-#ifndef AK_OS_SOLARIS
+#if !defined(AK_OS_SOLARIS) && !defined(AK_OS_HAIKU)
 static DirectoryEntry::Type directory_entry_type_from_posix(unsigned char dt_constant)
 {
     switch (dt_constant) {
@@ -72,7 +72,7 @@ DirectoryEntry DirectoryEntry::from_stat(DIR* d, dirent const& de)
     };
 }
 
-#ifndef AK_OS_SOLARIS
+#if !defined(AK_OS_SOLARIS) && !defined(AK_OS_HAIKU)
 DirectoryEntry DirectoryEntry::from_dirent(dirent const& de)
 {
     return DirectoryEntry {
