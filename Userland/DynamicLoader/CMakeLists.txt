@@ -30,7 +30,7 @@ add_definitions(-D_DYNAMIC_LOADER)
 
 set(SOURCES ${LOADER_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${LIBC_SOURCES1} ${LIBC_SOURCES2} ${LIBC_SOURCES3} ${LIBSYSTEM_SOURCES})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -nostdlib -pie -fpic -DNO_TLS")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -nostdlib -pie -fpie -DNO_TLS")
 
 if ("${SERENITY_ARCH}" STREQUAL "aarch64")
     # On aarch64 the stack protector would be accessed before the Loader can relocate itself.

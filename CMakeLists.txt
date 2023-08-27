@@ -167,8 +167,6 @@ add_link_options(LINKER:-z,text)
 add_link_options(LINKER:--no-allow-shlib-undefined)
 
 add_compile_definitions(SANITIZE_PTRS)
-set(CMAKE_CXX_FLAGS_STATIC "${CMAKE_CXX_FLAGS} -static")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pie -fpic")
 
 if (ENABLE_COMPILETIME_FORMAT_CHECK)
     add_compile_definitions(ENABLE_COMPILETIME_FORMAT_CHECK)
