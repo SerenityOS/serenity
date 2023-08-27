@@ -380,7 +380,7 @@ ErrorOr<Optional<struct spwd>> getspnam(StringView name)
 }
 #endif
 
-#ifndef AK_OS_MACOS
+#if !defined(AK_OS_MACOS) && !defined(AK_OS_HAIKU)
 ErrorOr<int> accept4(int sockfd, sockaddr* address, socklen_t* address_length, int flags)
 {
     auto fd = ::accept4(sockfd, address, address_length, flags);
