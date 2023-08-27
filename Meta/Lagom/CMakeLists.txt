@@ -344,6 +344,10 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "BSD$")
     # BSD Platforms have backtrace(3) in a separate library
     target_link_libraries(LibCore PRIVATE execinfo)
 endif()
+if (HAIKU)
+    # Haiku has networking related functions in the network library
+    target_link_libraries(LibCore PRIVATE network)
+endif()
 target_sources(LibCore PRIVATE ${AK_SOURCES})
 
 # LibMain
