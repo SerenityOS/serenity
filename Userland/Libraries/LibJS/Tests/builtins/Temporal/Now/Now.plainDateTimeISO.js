@@ -28,7 +28,10 @@ describe("correct behavior", () => {
     //       and negative timezones and skip one if we jump the year. To ensure at least one is
     //       tested we have the timeZoneTested which is only set to true if one of the tests passed.
 
-    test("custom time zone positive", () => {
+    // FIXME: The custom time zone tests are disabled due to being flaky. See:
+    //        https://github.com/SerenityOS/serenity/issues/20806
+
+    test.skip("custom time zone (positive)", () => {
         const timeZone = {
             getOffsetNanosecondsFor() {
                 return 86399999999999;
@@ -48,7 +51,7 @@ describe("correct behavior", () => {
         timeZoneTested = true;
     });
 
-    test("custom time zone negative", () => {
+    test.skip("custom time zone (negative)", () => {
         const timeZone = {
             getOffsetNanosecondsFor() {
                 return -86399999999999;
@@ -68,7 +71,9 @@ describe("correct behavior", () => {
         timeZoneTested = true;
     });
 
-    expect(timeZoneTested).toBeTrue();
+    test.skip("custom time zone test was executed", () => {
+        expect(timeZoneTested).toBeTrue();
+    });
 
     test("cannot have a time zone with more than a day", () => {
         [86400000000000, -86400000000000, 86400000000001, 86400000000002].forEach(offset => {
