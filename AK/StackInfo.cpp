@@ -12,7 +12,7 @@
 
 #ifdef AK_OS_SERENITY
 #    include <serenity.h>
-#elif defined(AK_OS_LINUX) or defined(AK_LIBC_GLIBC) or defined(AK_OS_MACOS) or defined(AK_OS_NETBSD) or defined(AK_OS_SOLARIS)
+#elif defined(AK_OS_LINUX) or defined(AK_LIBC_GLIBC) or defined(AK_OS_MACOS) or defined(AK_OS_NETBSD) or defined(AK_OS_SOLARIS) or defined(AK_OS_HAIKU)
 #    include <pthread.h>
 #elif defined(AK_OS_FREEBSD) or defined(AK_OS_OPENBSD)
 #    include <pthread.h>
@@ -32,12 +32,12 @@ StackInfo::StackInfo()
         perror("get_stack_bounds");
         VERIFY_NOT_REACHED();
     }
-#elif defined(AK_OS_LINUX) or defined(AK_LIBC_GLIBC) or defined(AK_OS_FREEBSD) or defined(AK_OS_NETBSD) or defined(AK_OS_SOLARIS)
+#elif defined(AK_OS_LINUX) or defined(AK_LIBC_GLIBC) or defined(AK_OS_FREEBSD) or defined(AK_OS_NETBSD) or defined(AK_OS_SOLARIS) or defined(AK_OS_HAIKU)
     int rc;
     pthread_attr_t attr;
     pthread_attr_init(&attr);
 
-#    if defined(AK_OS_LINUX) or defined(AK_LIBC_GLIBC)
+#    if defined(AK_OS_LINUX) or defined(AK_LIBC_GLIBC) or defined(AK_OS_HAIKU)
     if ((rc = pthread_getattr_np(pthread_self(), &attr)) != 0) {
         fprintf(stderr, "pthread_getattr_np: %s\n", strerror(rc));
         VERIFY_NOT_REACHED();
