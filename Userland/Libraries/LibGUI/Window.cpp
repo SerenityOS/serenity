@@ -10,6 +10,7 @@
 #include <AK/JsonObject.h>
 #include <AK/NeverDestroyed.h>
 #include <AK/ScopeGuard.h>
+#include <LibConfig/Client.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/MimeData.h>
 #include <LibGUI/Action.h>
@@ -111,6 +112,8 @@ Window::~Window()
 void Window::close()
 {
     hide();
+    if (m_save_size_and_position_on_close)
+        save_size_and_position(m_save_domain, m_save_group);
     if (on_close)
         on_close();
 }
@@ -520,6 +523,43 @@ void Window::propagate_shortcuts(KeyEvent& event, Widget* widget, ShortcutPropag
     }
 
     event.ignore();
+}
+
+void Window::restore_size_and_position(StringView domain, StringView group, Optional<Gfx::IntSize> fallback_size, Optional<Gfx::IntPoint> fallback_position)
+{
+    int x = Config::read_i32(domain, group, "X"sv, INT_MIN);
+    int y = Config::read_i32(domain, group, "Y"sv, INT_MIN);
+    if (x != INT_MIN && y != INT_MIN) {
+        move_to(x, y);
+    } else if (fallback_position.has_value()) {
+        move_to(fallback_position.release_value());
+    }
+
+    int width = Config::read_i32(domain, group, "Width"sv, INT_MIN);
+    int height = Config::read_i32(domain, group, "Height"sv, INT_MIN);
+    if (width != INT_MIN && height != INT_MIN) {
+        resize(width, height);
+    } else if (fallback_size.has_value()) {
+        resize(fallback_size.release_value());
+    }
+
+    set_maximized(Config::read_bool(domain, group, "Maximized"sv, false));
+}
+
+void Window::save_size_and_position(StringView domain, StringView group) const
+{
+    Config::write_i32(domain, group, "X"sv, x());
+    Config::write_i32(domain, group, "Y"sv, y());
+    Config::write_i32(domain, group, "Width"sv, width());
+    Config::write_i32(domain, group, "Height"sv, height());
+    Config::write_bool(domain, group, "Maximized"sv, is_maximized());
+}
+
+void Window::save_size_and_position_on_close(StringView domain, StringView group)
+{
+    m_save_size_and_position_on_close = true;
+    m_save_domain = domain;
+    m_save_group = group;
 }
 
 void Window::handle_key_event(KeyEvent& event)
