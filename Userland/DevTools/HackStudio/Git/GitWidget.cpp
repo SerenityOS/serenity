@@ -51,6 +51,8 @@ GitWidget::GitWidget()
         show_diff(selected);
     };
 
+    m_unstaged_files->set_foreground_role(Gfx::ColorRole::Red);
+
     auto& staged = add<GUI::Widget>();
     staged.set_layout<GUI::VerticalBoxLayout>();
 
@@ -70,6 +72,7 @@ GitWidget::GitWidget()
     m_staged_files = staged.add<GitFilesView>(
         [this](auto const& file) { unstage_file(file); },
         Gfx::Bitmap::load_from_file("/res/icons/16x16/minus.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_staged_files->set_foreground_role(Gfx::ColorRole::Green);
 }
 
 bool GitWidget::initialize()
