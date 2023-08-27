@@ -267,6 +267,23 @@ private:
     CaseSensitivity m_case_sensitivity { CaseSensitivity::CaseSensitive };
 };
 
+class AccessCommand final : public Command {
+public:
+    AccessCommand(mode_t mode)
+        : m_mode(mode)
+    {
+    }
+
+private:
+    virtual bool evaluate(FileData& file_data) const override
+    {
+        auto maybe_error = Core::System::access(file_data.full_path.string(), m_mode);
+        return !maybe_error.is_error();
+    }
+
+    mode_t m_mode { 0 };
+};
+
 class PrintCommand final : public Command {
 public:
     PrintCommand(char terminator = '\n')
@@ -409,6 +426,12 @@ static OwnPtr<Command> parse_simple_command(Vector<char*>& args)
         if (args.is_empty())
             fatal_error("-iname: requires additional arguments");
         return make<NameCommand>(args.take_first(), CaseSensitivity::CaseInsensitive);
+    } else if (arg == "-readable") {
+        return make<AccessCommand>(R_OK);
+    } else if (arg == "-writable") {
+        return make<AccessCommand>(W_OK);
+    } else if (arg == "-executable") {
+        return make<AccessCommand>(X_OK);
     } else if (arg == "-print") {
         g_have_seen_action_command = true;
         return make<PrintCommand>();
