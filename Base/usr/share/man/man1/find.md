@@ -39,6 +39,10 @@ specified commands, a `-print` command is implicitly appended.
   pattern (case sensitive).
 * `-iname pattern`: Checks if the file name matches the given global-style
   pattern (case insensitive).
+* `-readable`: Checks if the file is readable by the current user.
+* `-writable`: Checks if the file is writable by the current user.
+* `-executable`: Checks if the file is executable, or directory is searchable,
+by the current user.
 * `-print`: Outputs the file path, followed by a newline. Always evaluates to
   true.
 * `-print0`: Outputs the file path, followed by a zero byte. Always evaluates to
