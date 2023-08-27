@@ -98,6 +98,10 @@
 #    define AK_OS_SOLARIS
 #endif
 
+#if defined(__HAIKU__)
+#    define AK_OS_HAIKU
+#endif
+
 #if defined(__gnu_hurd__)
 #    define AK_OS_GNU_HURD
 #endif
