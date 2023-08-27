@@ -21,6 +21,7 @@ if (GETTEXT_FOUND AND XGETTEXT)
     )
 
     set(linguas
+        eo.po
         ru.po
     )
     GETTEXT_CREATE_TRANSLATIONS("${pot_file}" ALL "${linguas}")

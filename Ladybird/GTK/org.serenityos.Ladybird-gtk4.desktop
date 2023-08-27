@@ -1,6 +1,7 @@
 [Desktop Entry]
 Name=Ladybird
 GenericName=Web Browser
+GenericName[eo]=Retumilo
 GenericName[ru]=Веб-браузер
 Exec=ladybird %U
 Icon=org.serenityos.Ladybird-gtk4
@@ -14,10 +15,12 @@ X-Purism-FormFactor=Workstation;Mobile;
 
 [Desktop Action new-window]
 Name=New Window
+Name[eo]=Nova fenestro
 Name[ru]=Новое окно
 Exec=ladybird --no-such-option
 
 [Desktop Action new-incognito-window]
 Name=New Incognito Window
+Name[eo]=Nova inkognita fenestro
 Name[ru]=Новое окно инкогнито
 Exec=ladybird --no-such-option

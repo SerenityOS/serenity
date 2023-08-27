@@ -1,0 +1,235 @@
+# Esperanto translation for Ladybird.
+msgid ""
+msgstr ""
+"Project-Id-Version: ladybird wip\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-08-27 00:38+0300\n"
+"Language: eo\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: window.ui:67
+msgid "...will appear here, once we implement them :^)"
+msgstr "...aperos ĉi tie, post kiam ni realigos ilin :^)"
+
+#: window.ui:166 window.ui:296
+msgid "Bookmarks"
+msgstr "Legosignoj"
+
+#: window.ui:66
+msgid "Bookmarks & History"
+msgstr "Legosignoj kaj Historio"
+
+#: window.ui:55
+msgid "Close _Other Tabs"
+msgstr "Fermi _aliajn langetojn"
+
+#: shortcuts-dialog.ui:83
+msgid "Close current tab"
+msgstr "Fermi aktualan langeton"
+
+#: window.ui:148
+msgid "Enter a URL to open..."
+msgstr "Entajpi URL..."
+
+#: Window.cpp:140
+msgid "Failed to pick file"
+msgstr "Malsukcesis elekti dosieron"
+
+#: shortcuts-dialog.ui:66
+msgid "Focus location entry"
+msgstr "Enfokusigi lokan enskribigon"
+
+#: shortcuts-dialog.ui:10
+msgid "General"
+msgstr "Ĝenerala"
+
+#: Application.cpp:65
+msgid ""
+"Ladybird is a browser based on LibWeb web engine and LibJS JavaScript "
+"engine, developed by a large team of contributors as a part of the "
+"SerenityOS project."
+msgstr ""
+"Ladybird estas retumilo surbaze de la LibWeb retmotoro kaj la LibJS "
+"Ĝavoskripto-motoro, estigita de granda teamo kontribuantoj kiel parto "
+"de la SerenityOS-projekto."
+
+#: window.ui:184
+msgid "Main Menu"
+msgstr "Ĉefa menuo"
+
+#: window.ui:110 window.ui:267
+msgid "Navigate Back"
+msgstr "Navigi malantaŭ"
+
+#: window.ui:118 window.ui:275
+msgid "Navigate Forward"
+msgstr "Navigi antaŭ"
+
+#: shortcuts-dialog.ui:48
+msgid "Navigate back"
+msgstr "Navigi malantaŭ"
+
+#: shortcuts-dialog.ui:54
+msgid "Navigate forward"
+msgstr "Navigi antaŭ"
+
+#: shortcuts-dialog.ui:45
+msgid "Navigation"
+msgstr "Navigado"
+
+#: window.ui:134
+msgid "New Tab"
+msgstr "Nova langeto"
+
+#: window.ui:15
+msgid "New _Incognito Window"
+msgstr "Nova _inkognita fenestro"
+
+#: shortcuts-dialog.ui:19
+msgid "New incognito window"
+msgstr "Nova inkognita fenestro"
+
+#: Window.cpp:70 shortcuts-dialog.ui:77
+msgid "New tab"
+msgstr "Nova langeto"
+
+#: shortcuts-dialog.ui:13
+msgid "New window"
+msgstr "Nova fenestro"
+
+#: shortcuts-dialog.ui:89
+msgid "Next tab"
+msgstr "Sekva langeto"
+
+#: Window.cpp:142
+msgid "OK"
+msgstr "Bone"
+
+#: shortcuts-dialog.ui:25
+msgid "Open file"
+msgstr "Malfermi dosieron"
+
+#: window.ui:41
+msgid "P_in"
+msgstr "Al_pingli"
+
+#: shortcuts-dialog.ui:95
+msgid "Previous tab"
+msgstr "Antaŭa langeto"
+
+#: shortcuts-dialog.ui:37
+msgid "Quit"
+msgstr "Ĉesi"
+
+#: window.ui:126 window.ui:283
+msgid "Reload Page"
+msgstr "Reŝargi paĝon"
+
+#: shortcuts-dialog.ui:60
+msgid "Reload current page"
+msgstr "Reŝargi aktualan paĝon"
+
+#: shortcuts-dialog.ui:118
+msgid "Reset zoom"
+msgstr "Reagordi zomon"
+
+#: window.ui:206
+msgid "Restore Zoom"
+msgstr "Restaŭri zomon"
+
+#: Application.cpp:48
+msgid "Sam Atkins"
+msgstr "Sam Atkins"
+
+#: Application.cpp:56
+msgid "SerenityOS developers"
+msgstr "La programistoj de SerenityOS"
+
+#: Application.cpp:69
+msgid "SerenityOS website"
+msgstr "La retejo de SerenityOS"
+
+#. Translators: Сергей Бугаев in Cyrillic
+#: Application.cpp:43
+msgid "Sergey Bugaev"
+msgstr "Sergey Bugaev"
+
+#: shortcuts-dialog.ui:31
+msgid "Show shortcuts"
+msgstr "Montri klavkombinoj"
+
+#: window.ui:175
+msgid "Tab Overview"
+msgstr "Langeta superrigardo"
+
+#: shortcuts-dialog.ui:74
+msgid "Tabs"
+msgstr "Langetoj"
+
+#: window.ui:46
+msgid "Unp_in"
+msgstr "De_pingli"
+
+#: shortcuts-dialog.ui:103
+msgid "Zoom"
+msgstr "Zomi"
+
+#: window.ui:228
+msgid "Zoom In"
+msgstr "Zomi"
+
+#: window.ui:199
+msgid "Zoom Out"
+msgstr "Malzomi"
+
+#: shortcuts-dialog.ui:106
+msgid "Zoom in"
+msgstr "Zomi"
+
+#: shortcuts-dialog.ui:112
+msgid "Zoom out"
+msgstr "Malzomi"
+
+#: window.ui:27
+msgid "_About Ladybird"
+msgstr "_Pri Ladybird"
+
+#: window.ui:59
+msgid "_Close"
+msgstr "_Fermi"
+
+#: window.ui:37
+msgid "_Duplicate"
+msgstr "_Duobligi"
+
+#: window.ui:23
+msgid "_Keyboard Shortcuts"
+msgstr "_Klavkombinoj"
+
+#: window.ui:51
+msgid "_Move to New Window"
+msgstr "_Movi al nova fenestro"
+
+#: window.ui:11
+msgid "_New Window"
+msgstr "_Nova fenestro"
+
+#: window.ui:19
+msgid "_Open File"
+msgstr "_Malfermi dosieron"
+
+#: window.ui:33
+msgid "_Reload"
+msgstr "_Reŝargi"
+
+#. Translators: credit yourself here :^)
+#: Application.cpp:64
+msgid "translator_credits"
+msgstr "Beckett Normington"
+
+#: Application.cpp:59
+msgid "© 2023 SerenityOS developers"
+msgstr "© 2023 La programistoj de SerenityOS"
