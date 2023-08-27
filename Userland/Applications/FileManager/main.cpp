@@ -609,12 +609,6 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     auto window = TRY(GUI::Window::try_create());
     window->set_title("File Manager");
 
-    auto left = Config::read_i32("FileManager"sv, "Window"sv, "Left"sv, 150);
-    auto top = Config::read_i32("FileManager"sv, "Window"sv, "Top"sv, 75);
-    auto width = Config::read_i32("FileManager"sv, "Window"sv, "Width"sv, 640);
-    auto height = Config::read_i32("FileManager"sv, "Window"sv, "Height"sv, 480);
-    auto was_maximized = Config::read_bool("FileManager"sv, "Window"sv, "Maximized"sv, false);
-
     auto widget = TRY(window->set_main_widget<GUI::Widget>());
     TRY(widget->load_from_gml(file_manager_window_gml));
 
@@ -1313,9 +1307,8 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
 
     paste_action->set_enabled(GUI::Clipboard::the().fetch_mime_type() == "text/uri-list" && access(initial_location.characters(), W_OK) == 0);
 
-    window->set_rect({ left, top, width, height });
-    if (was_maximized)
-        window->set_maximized(true);
+    window->restore_size_and_position("FileManager"sv, "Window"sv, { { 640, 480 } });
+    window->save_size_and_position_on_close("FileManager"sv, "Window"sv);
 
     window->show();
 
@@ -1326,18 +1319,6 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         if (!matches.is_empty())
             directory_view->current_view().set_cursor(matches.first(), GUI::AbstractView::SelectionUpdate::Set);
     }
-
-    // Write window position to config file on close request.
-    window->on_close_request = [&] {
-        Config::write_bool("FileManager"sv, "Window"sv, "Maximized"sv, window->is_maximized());
-        if (!window->is_maximized()) {
-            Config::write_i32("FileManager"sv, "Window"sv, "Left"sv, window->x());
-            Config::write_i32("FileManager"sv, "Window"sv, "Top"sv, window->y());
-            Config::write_i32("FileManager"sv, "Window"sv, "Width"sv, window->width());
-            Config::write_i32("FileManager"sv, "Window"sv, "Height"sv, window->height());
-        }
-        return GUI::Window::CloseRequestDecision::Close;
-    };
 
     return GUI::Application::the()->exec();
 }
