@@ -16,6 +16,7 @@
 #include <LibWeb/HTML/HTMLMediaElement.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
+#include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
 
@@ -24,7 +25,7 @@ namespace Web {
 Page::Page(PageClient& client)
     : m_client(client)
 {
-    m_top_level_browsing_context = JS::make_handle(*HTML::BrowsingContext::create_a_new_top_level_browsing_context(*this));
+    m_top_level_traversable = JS::make_handle(HTML::TraversableNavigable::create_a_fresh_top_level_traversable(*this, AK::URL("about:blank")).release_value_but_fixme_should_propagate_errors());
 }
 
 Page::~Page() = default;
@@ -43,17 +44,16 @@ void Page::set_focused_browsing_context(Badge<EventHandler>, HTML::BrowsingConte
 
 void Page::load(const AK::URL& url)
 {
-    top_level_browsing_context().loader().load(url, FrameLoader::Type::Navigation);
+    (void)top_level_traversable()->navigate(url, *top_level_traversable()->active_document());
 }
 
-void Page::load(LoadRequest& request)
+void Page::load(LoadRequest&)
 {
-    top_level_browsing_context().loader().load(request, FrameLoader::Type::Navigation);
 }
 
 void Page::load_html(StringView html, const AK::URL& url)
 {
-    top_level_browsing_context().loader().load_html(html, url);
+    (void)top_level_traversable()->navigate(url, *top_level_traversable()->active_document(), String::from_utf8(html).release_value_but_fixme_should_propagate_errors());
 }
 
 bool Page::has_ongoing_navigation() const
@@ -167,19 +167,24 @@ bool Page::handle_keyup(KeyCode key, unsigned modifiers, u32 code_point)
     return focused_context().event_handler().handle_keyup(key, modifiers, code_point);
 }
 
-bool Page::top_level_browsing_context_is_initialized() const
+bool Page::top_level_traversable_is_initialized() const
 {
-    return m_top_level_browsing_context;
+    return m_top_level_traversable;
 }
 
 HTML::BrowsingContext& Page::top_level_browsing_context()
 {
-    return *m_top_level_browsing_context;
+    return *m_top_level_traversable->active_browsing_context();
 }
 
 HTML::BrowsingContext const& Page::top_level_browsing_context() const
 {
-    return *m_top_level_browsing_context;
+    return *m_top_level_traversable->active_browsing_context();
+}
+
+JS::NonnullGCPtr<HTML::TraversableNavigable> Page::top_level_traversable() const
+{
+    return *m_top_level_traversable;
 }
 
 template<typename ResponseType>
@@ -376,8 +381,8 @@ JS::GCPtr<HTML::HTMLMediaElement> Page::media_context_menu_element()
 void Page::set_user_style(String source)
 {
     m_user_style_sheet_source = source;
-    if (top_level_browsing_context_is_initialized() && top_level_browsing_context().active_document()) {
-        top_level_browsing_context().active_document()->style_computer().invalidate_rule_cache();
+    if (top_level_traversable_is_initialized() && top_level_traversable()->active_document()) {
+        top_level_traversable()->active_document()->style_computer().invalidate_rule_cache();
     }
 }
 

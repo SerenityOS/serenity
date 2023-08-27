@@ -49,6 +49,7 @@
 #include <LibWeb/HTML/HTMLTextAreaElement.h>
 #include <LibWeb/HTML/Numbers.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
+#include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Infra/Strings.h>
@@ -1514,8 +1515,9 @@ static ErrorOr<void> scroll_an_element_into_view(DOM::Element& element, Bindings
     if (!layout_node)
         return Error::from_string_view("Element has no parent layout node that is a box."sv);
 
-    if (element.document().browsing_context() == &page->top_level_browsing_context())
-        page->client().page_did_request_scroll_into_view(verify_cast<Layout::Box>(*layout_node).paintable_box()->absolute_padding_box_rect());
+    if (auto navigable = element.document().navigable()) {
+        element.document().navigable()->traversable_navigable()->page()->client().page_did_request_scroll_into_view(verify_cast<Layout::Box>(*layout_node).paintable_box()->absolute_padding_box_rect());
+    }
 
     return {};
 }
