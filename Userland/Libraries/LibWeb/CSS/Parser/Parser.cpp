@@ -5371,7 +5371,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
         if (is_identifier(current_token)) {
             auto maybe_string = String::from_utf8(current_token.ident());
             if (!maybe_string.is_error())
-                return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_area(maybe_string.value()));
+                return GridTrackPlacementStyleValue::create(GridTrackPlacement::make_line({}, maybe_string.value()));
         }
         return nullptr;
     }
