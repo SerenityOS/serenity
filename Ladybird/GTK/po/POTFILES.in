@@ -1,6 +1,6 @@
 # List of source files containing translatable strings.
 Application.cpp
 Window.cpp
-shortcuts-dialog.ui
-tab.ui
-window.ui
+shortcuts-dialog.blp
+tab.blp
+window.blp

@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ladybird wip\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-08-27 00:38+0300\n"
+"POT-Creation-Date: 2023-08-27 13:45+0300\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -11,28 +11,28 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: window.ui:67
+#: window.blp:43
 msgid "...will appear here, once we implement them :^)"
 msgstr "...будут здесь, когда мы их реализуем :^)"
 
-#: window.ui:166 window.ui:296
+#: window.blp:135 window.blp:234
 msgid "Bookmarks"
 msgstr "Закладки"
 
-#: window.ui:66
+#: window.blp:39
 #, fuzzy
 msgid "Bookmarks & History"
 msgstr "Закладки и история"
 
-#: window.ui:55
+#: window.blp:33
 msgid "Close _Other Tabs"
 msgstr "Закрыть _остальные вкладки"
 
-#: shortcuts-dialog.ui:83
+#: shortcuts-dialog.blp:61
 msgid "Close current tab"
 msgstr "Закрыть текущую вкладку"
 
-#: window.ui:148
+#: window.blp:118
 msgid "Enter a URL to open..."
 msgstr "Введите URL..."
 
@@ -40,11 +40,11 @@ msgstr "Введите URL..."
 msgid "Failed to pick file"
 msgstr "Не удалось выбрать файл"
 
-#: shortcuts-dialog.ui:66
+#: shortcuts-dialog.blp:48
 msgid "Focus location entry"
 msgstr "Сфокусировать поле ввода адреса"
 
-#: shortcuts-dialog.ui:10
+#: shortcuts-dialog.blp:8
 msgid "General"
 msgstr "Общие"
 
@@ -57,51 +57,51 @@ msgstr ""
 "Ladybird — это браузер, основанный на веб-движке LibWeb и JavaScript-движке "
 "LibJS, развиваемый большой командой участников как часть проекта SerenityOS."
 
-#: window.ui:184
+#: window.blp:148
 msgid "Main Menu"
 msgstr "Главное меню"
 
-#: window.ui:110 window.ui:267
+#: window.blp:86 window.blp:210
 msgid "Navigate Back"
 msgstr "Назад"
 
-#: window.ui:118 window.ui:275
+#: window.blp:92 window.blp:216
 msgid "Navigate Forward"
 msgstr "Вперёд"
 
-#: shortcuts-dialog.ui:48
+#: shortcuts-dialog.blp:36
 msgid "Navigate back"
 msgstr "Назад"
 
-#: shortcuts-dialog.ui:54
+#: shortcuts-dialog.blp:40
 msgid "Navigate forward"
 msgstr "Вперёд"
 
-#: shortcuts-dialog.ui:45
+#: shortcuts-dialog.blp:33
 msgid "Navigation"
 msgstr "Навигация"
 
-#: window.ui:134
+#: window.blp:104
 msgid "New Tab"
 msgstr "Новая вкладка"
 
-#: window.ui:15
+#: window.blp:11
 msgid "New _Incognito Window"
 msgstr "Новое окно _инкогнито"
 
-#: shortcuts-dialog.ui:19
+#: shortcuts-dialog.blp:15
 msgid "New incognito window"
 msgstr "Новое окно инкогнито"
 
-#: Window.cpp:70 shortcuts-dialog.ui:77
+#: Window.cpp:70 shortcuts-dialog.blp:57
 msgid "New tab"
 msgstr "Новая вкладка"
 
-#: shortcuts-dialog.ui:13
+#: shortcuts-dialog.blp:11
 msgid "New window"
 msgstr "Новое окно"
 
-#: shortcuts-dialog.ui:89
+#: shortcuts-dialog.blp:65
 msgid "Next tab"
 msgstr "Следующая вкладка"
 
@@ -109,35 +109,35 @@ msgstr "Следующая вкладка"
 msgid "OK"
 msgstr "ОК"
 
-#: shortcuts-dialog.ui:25
+#: shortcuts-dialog.blp:19
 msgid "Open file"
 msgstr "Открыть файл"
 
-#: window.ui:41
+#: window.blp:22
 msgid "P_in"
 msgstr "_Закрепить"
 
-#: shortcuts-dialog.ui:95
+#: shortcuts-dialog.blp:69
 msgid "Previous tab"
 msgstr "Предыдущая вкладка"
 
-#: shortcuts-dialog.ui:37
+#: shortcuts-dialog.blp:27
 msgid "Quit"
 msgstr "Выйти"
 
-#: window.ui:126 window.ui:283
+#: window.blp:98 window.blp:222
 msgid "Reload Page"
 msgstr "Перезагрузить страницу"
 
-#: shortcuts-dialog.ui:60
+#: shortcuts-dialog.blp:44
 msgid "Reload current page"
 msgstr "Перезагрузить текущую страницу"
 
-#: shortcuts-dialog.ui:118
+#: shortcuts-dialog.blp:87
 msgid "Reset zoom"
 msgstr "Восстановить масштаб"
 
-#: window.ui:206
+#: window.blp:166
 msgid "Restore Zoom"
 msgstr "Восстановить масштаб"
 
@@ -158,71 +158,71 @@ msgstr "Веб-сайт SerenityOS"
 msgid "Sergey Bugaev"
 msgstr "Сергей Бугаев"
 
-#: shortcuts-dialog.ui:31
+#: shortcuts-dialog.blp:23
 msgid "Show shortcuts"
 msgstr "Комбинации клавиш"
 
-#: window.ui:175
+#: window.blp:142
 msgid "Tab Overview"
 msgstr "Обзор вкладок"
 
-#: shortcuts-dialog.ui:74
+#: shortcuts-dialog.blp:54
 msgid "Tabs"
 msgstr "Вкладки"
 
-#: window.ui:46
+#: window.blp:28
 msgid "Unp_in"
 msgstr "_Открепить"
 
-#: shortcuts-dialog.ui:103
+#: shortcuts-dialog.blp:75
 msgid "Zoom"
 msgstr "Масштаб"
 
-#: window.ui:228
+#: window.blp:176
 msgid "Zoom In"
 msgstr "Увеличить масштаб"
 
-#: window.ui:199
+#: window.blp:161
 msgid "Zoom Out"
 msgstr "Уменьшить масштаб"
 
-#: shortcuts-dialog.ui:106
+#: shortcuts-dialog.blp:78
 msgid "Zoom in"
 msgstr "Увеличить масштаб"
 
-#: shortcuts-dialog.ui:112
+#: shortcuts-dialog.blp:83
 msgid "Zoom out"
 msgstr "Уменьшить масштаб"
 
-#: window.ui:27
+#: window.blp:14
 msgid "_About Ladybird"
 msgstr "О Ladybird"
 
-#: window.ui:59
+#: window.blp:34
 msgid "_Close"
 msgstr "_Закрыть"
 
-#: window.ui:37
+#: window.blp:19
 msgid "_Duplicate"
 msgstr "_Дублировать"
 
-#: window.ui:23
+#: window.blp:13
 msgid "_Keyboard Shortcuts"
 msgstr "_Комбинации клавиш"
 
-#: window.ui:51
+#: window.blp:32
 msgid "_Move to New Window"
 msgstr "Переместить в _другое окно"
 
-#: window.ui:11
+#: window.blp:10
 msgid "_New Window"
 msgstr "_Новое окно"
 
-#: window.ui:19
+#: window.blp:12
 msgid "_Open File"
 msgstr "_Открыть файл"
 
-#: window.ui:33
+#: window.blp:18
 msgid "_Reload"
 msgstr "_Перезагрузить"
 

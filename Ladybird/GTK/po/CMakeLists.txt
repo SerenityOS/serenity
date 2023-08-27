@@ -9,7 +9,7 @@ if (GETTEXT_FOUND AND XGETTEXT)
         ARGS
             --files-from "${CMAKE_CURRENT_SOURCE_DIR}/POTFILES.in"
             --directory "${CMAKE_CURRENT_SOURCE_DIR}/.."
-            --directory "${CMAKE_CURRENT_BINARY_DIR}/.."
+            --language C++
             --output "${pot_file}"
             --from-code=UTF-8
             --add-comments="Translators"
@@ -17,7 +17,7 @@ if (GETTEXT_FOUND AND XGETTEXT)
             --keyword="N_"
             --keyword="C_:1c,2"
             --keyword="NC_:1c,2"
-        DEPENDS POTFILES.in
+        DEPENDS POTFILES.in ladybird
     )
 
     set(linguas
