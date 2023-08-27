@@ -23,3 +23,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "SunOS")
     # Solaris has socket and networking related functions in two extra libraries
     target_link_libraries(RequestServer PRIVATE nsl socket)
 endif()
+if (HAIKU)
+    # Haiku has networking related functions in the network library
+    target_link_libraries(RequestServer PRIVATE network)
+endif()
