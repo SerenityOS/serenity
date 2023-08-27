@@ -1636,10 +1636,11 @@ void GridFormattingContext::resolve_grid_item_widths()
         };
 
         CSSPixels used_width;
+        AvailableSpace available_space { AvailableSize::make_definite(containing_block_width), AvailableSize::make_indefinite() };
         if (computed_width.is_auto()) {
-            used_width = try_compute_width(calculate_fit_content_width(item.box, get_available_space_for_item(item)));
+            used_width = try_compute_width(calculate_fit_content_width(item.box, available_space));
         } else if (computed_width.is_fit_content()) {
-            used_width = try_compute_width(calculate_fit_content_width(item.box, get_available_space_for_item(item)));
+            used_width = try_compute_width(calculate_fit_content_width(item.box, available_space));
         } else {
             used_width = try_compute_width(computed_width.to_px(grid_container(), containing_block_width));
         }
