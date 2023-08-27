@@ -97,15 +97,39 @@ static void update_text_attrs(LadybirdLocationEntry* self)
     pango_attr_list_unref(attrs);
 }
 
+static void update_primary_icon(LadybirdLocationEntry* self)
+{
+    char const* text = gtk_editable_get_text(GTK_EDITABLE(self));
+    char const* icon_name;
+    bool sensitive = true;
+
+    if (g_str_has_prefix(text, "https:") || g_str_has_prefix(text, "gemini:")) {
+        icon_name = "channel-secure-symbolic";
+    } else if (g_str_has_prefix(text, "http:")) {
+        icon_name = "channel-insecure-symbolic";
+    } else if (g_str_has_prefix(text, "file:")) {
+        icon_name = "folder-symbolic";
+    } else if (g_str_has_prefix(text, "data:")) {
+        icon_name = "mail-attachment-symbolic";
+    } else {
+        icon_name = "system-search-symbolic";
+        sensitive = text && *text;
+    }
+    gtk_entry_set_icon_from_icon_name(GTK_ENTRY(self), GTK_ENTRY_ICON_PRIMARY, icon_name);
+    gtk_entry_set_icon_sensitive(GTK_ENTRY(self), GTK_ENTRY_ICON_PRIMARY, sensitive);
+}
+
 static void on_notify_text(LadybirdLocationEntry* self)
 {
     update_text_attrs(self);
+    update_primary_icon(self);
 }
 
 static void ladybird_location_entry_init(LadybirdLocationEntry* self)
 {
     GtkWidget* widget = GTK_WIDGET(self);
     gtk_widget_init_template(widget);
+    update_primary_icon(self);
 }
 
 static void ladybird_location_entry_dispose(GObject* object)
