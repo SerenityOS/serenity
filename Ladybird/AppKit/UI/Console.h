@@ -9,13 +9,13 @@
 #import <System/Cocoa.h>
 
 @class LadybirdWebView;
+@class Tab;
 
-@interface Tab : NSWindow
+@interface Console : NSWindow
 
-- (void)tabWillClose;
+- (instancetype)init:(Tab*)tab;
 
-- (void)openConsole:(id)sender;
-- (void)onConsoleClosed;
+- (void)reset;
 
 @property (nonatomic, strong) LadybirdWebView* web_view;
 

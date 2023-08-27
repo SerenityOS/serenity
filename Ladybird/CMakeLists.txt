@@ -133,6 +133,8 @@ elseif (APPLE)
         AppKit/Application/Application.mm
         AppKit/Application/ApplicationDelegate.mm
         AppKit/Application/EventLoopImplementation.mm
+        AppKit/UI/Console.mm
+        AppKit/UI/ConsoleController.mm
         AppKit/UI/Event.mm
         AppKit/UI/LadybirdWebView.mm
         AppKit/UI/LadybirdWebViewBridge.cpp

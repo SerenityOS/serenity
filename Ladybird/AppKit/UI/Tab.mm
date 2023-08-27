@@ -12,6 +12,8 @@
 #include <LibGfx/ShareableBitmap.h>
 
 #import <Application/ApplicationDelegate.h>
+#import <UI/Console.h>
+#import <UI/ConsoleController.h>
 #import <UI/LadybirdWebView.h>
 #import <UI/Tab.h>
 #import <UI/TabController.h>
@@ -28,6 +30,8 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
 
 @property (nonatomic, strong) NSString* title;
 @property (nonatomic, strong) NSImage* favicon;
+
+@property (nonatomic, strong) ConsoleController* console_controller;
 
 @end
 
@@ -93,6 +97,31 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
     }
 
     return self;
+}
+
+#pragma mark - Public methods
+
+- (void)tabWillClose
+{
+    if (self.console_controller != nil) {
+        [self.console_controller.window close];
+    }
+}
+
+- (void)openConsole:(id)sender
+{
+    if (self.console_controller != nil) {
+        [self.console_controller.window makeKeyAndOrderFront:sender];
+        return;
+    }
+
+    self.console_controller = [[ConsoleController alloc] init:self];
+    [self.console_controller showWindow:nil];
+}
+
+- (void)onConsoleClosed
+{
+    self.console_controller = nil;
 }
 
 #pragma mark - Private methods
@@ -185,6 +214,11 @@ static constexpr CGFloat const WINDOW_HEIGHT = 800;
     self.title = Ladybird::string_to_ns_string(url.serialize());
     self.favicon = [Tab defaultFavicon];
     [self updateTabTitleAndFavicon];
+
+    if (self.console_controller != nil) {
+        auto* console = (Console*)[self.console_controller window];
+        [console reset];
+    }
 }
 
 - (void)onTitleChange:(DeprecatedString const&)title

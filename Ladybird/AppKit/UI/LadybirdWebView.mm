@@ -112,6 +112,11 @@ struct HideCursor {
     m_web_view_bridge->load_html(html, url);
 }
 
+- (WebView::ViewImplementation&)view
+{
+    return *m_web_view_bridge;
+}
+
 - (String const&)handle
 {
     return m_web_view_bridge->handle();

@@ -10,6 +10,7 @@
 #include <LibGfx/Forward.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/HTML/ActivateTab.h>
+#include <LibWebView/Forward.h>
 
 #import <System/Cocoa.h>
 
@@ -41,6 +42,7 @@
 - (void)loadURL:(URL const&)url;
 - (void)loadHTML:(StringView)html url:(URL const&)url;
 
+- (WebView::ViewImplementation&)view;
 - (String const&)handle;
 
 - (void)handleResize;

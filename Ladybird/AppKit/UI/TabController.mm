@@ -334,6 +334,8 @@ enum class IsHistoryNavigation {
 
 - (void)windowWillClose:(NSNotification*)notification
 {
+    [[self tab] tabWillClose];
+
     auto* delegate = (ApplicationDelegate*)[NSApp delegate];
     [delegate removeTab:self];
 }
