@@ -10,12 +10,14 @@
 #include <LibWeb/CSS/SystemColor.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
+#include <LibWeb/HTML/HTMLTableElement.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/BackgroundPainting.h>
 #include <LibWeb/Painting/FilterPainting.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/StackingContext.h>
+#include <LibWeb/Painting/TableBordersPainting.h>
 #include <LibWeb/Painting/ViewportPaintable.h>
 #include <LibWeb/Platform/FontPlugin.h>
 
@@ -276,6 +278,10 @@ BordersData PaintableBox::remove_element_kind_from_borders_data(PaintableBox::Bo
 
 void PaintableBox::paint_border(PaintContext& context) const
 {
+    if (dom_node() && is<HTML::HTMLTableElement>(*dom_node()) && computed_values().border_collapse() == CSS::BorderCollapse::Collapse) {
+        paint_table_box_border(context, *this);
+        return;
+    }
     auto borders_data = m_override_borders_data.has_value() ? remove_element_kind_from_borders_data(m_override_borders_data.value()) : BordersData {
         .top = box_model().border.top == 0 ? CSS::BorderData() : computed_values().border_top(),
         .right = box_model().border.right == 0 ? CSS::BorderData() : computed_values().border_right(),

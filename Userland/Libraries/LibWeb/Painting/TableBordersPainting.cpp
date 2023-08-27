@@ -343,14 +343,19 @@ static DeviceBorderDataWithElementKind device_border_data_from_css_border_data(P
     };
 }
 
+static BordersData borders_data_of_box(PaintableBox const& box)
+{
+    return box.override_borders_data().has_value() ? PaintableBox::remove_element_kind_from_borders_data(box.override_borders_data().value()) : BordersData {
+        .top = box.box_model().border.top == 0 ? CSS::BorderData() : box.computed_values().border_top(),
+        .right = box.box_model().border.right == 0 ? CSS::BorderData() : box.computed_values().border_right(),
+        .bottom = box.box_model().border.bottom == 0 ? CSS::BorderData() : box.computed_values().border_bottom(),
+        .left = box.box_model().border.left == 0 ? CSS::BorderData() : box.computed_values().border_left(),
+    };
+}
+
 static void paint_separate_cell_borders(PaintableBox const& cell_box, HashMap<CellCoordinates, DevicePixelRect> const& cell_coordinates_to_device_rect, PaintContext& context)
 {
-    auto borders_data = cell_box.override_borders_data().has_value() ? PaintableBox::remove_element_kind_from_borders_data(cell_box.override_borders_data().value()) : BordersData {
-        .top = cell_box.box_model().border.top == 0 ? CSS::BorderData() : cell_box.computed_values().border_top(),
-        .right = cell_box.box_model().border.right == 0 ? CSS::BorderData() : cell_box.computed_values().border_right(),
-        .bottom = cell_box.box_model().border.bottom == 0 ? CSS::BorderData() : cell_box.computed_values().border_bottom(),
-        .left = cell_box.box_model().border.left == 0 ? CSS::BorderData() : cell_box.computed_values().border_left(),
-    };
+    auto borders_data = borders_data_of_box(cell_box);
     auto cell_rect = cell_coordinates_to_device_rect.get({ cell_box.table_cell_coordinates()->row_index, cell_box.table_cell_coordinates()->column_index }).value();
     paint_all_borders(context, cell_rect, cell_box.normalized_border_radii_data(), borders_data);
 }
@@ -440,5 +445,52 @@ void paint_table_borders(PaintContext& context, PaintableBox const& table_painta
             paint_all_borders(context, context.rounded_device_rect(cell_box.absolute_border_box_rect()), cell_box.normalized_border_radii_data(), borders_data);
         }
     }
+}
+
+void paint_table_box_border(PaintContext& context, PaintableBox const& box)
+{
+    Vector<PaintableBox const&> cell_boxes;
+    collect_cell_boxes(cell_boxes, box);
+    DevicePixels cell_grid_start_x { 0 };
+    DevicePixels cell_grid_start_y { 0 };
+    DevicePixels cell_grid_end_x { 0 };
+    DevicePixels cell_grid_end_y { 0 };
+    CSSPixels cell_grid_left_border_width { 0 };
+    CSSPixels cell_grid_top_border_width { 0 };
+    CSSPixels cell_grid_right_border_width { 0 };
+    CSSPixels cell_grid_bottom_border_width { 0 };
+    size_t row_count = 0;
+    size_t column_count = 0;
+    for (auto const& cell_box : cell_boxes) {
+        row_count = max(row_count, cell_box.table_cell_coordinates()->row_index + cell_box.table_cell_coordinates()->row_span);
+        column_count = max(column_count, cell_box.table_cell_coordinates()->column_index + cell_box.table_cell_coordinates()->column_span);
+    }
+    for (auto const& cell_box : cell_boxes) {
+        auto cell_rect = cell_box.absolute_border_box_rect();
+        auto row_index = cell_box.table_cell_coordinates()->row_index;
+        auto column_index = cell_box.table_cell_coordinates()->column_index;
+        auto cell_borders_data = borders_data_of_box(cell_box);
+        if (row_index == 0)
+            cell_grid_top_border_width = max(cell_borders_data.top.width, cell_grid_top_border_width);
+        if (column_index == 0)
+            cell_grid_left_border_width = max(cell_borders_data.left.width, cell_grid_left_border_width);
+        if (row_index + cell_box.table_cell_coordinates()->row_span == row_count)
+            cell_grid_bottom_border_width = max(cell_borders_data.bottom.width, cell_grid_bottom_border_width);
+        if (column_index + cell_box.table_cell_coordinates()->column_span == column_count)
+            cell_grid_right_border_width = max(cell_borders_data.right.width, cell_grid_right_border_width);
+        if (row_index == 0 && column_index == 0) {
+            cell_grid_start_x = context.rounded_device_pixels(cell_rect.x());
+            cell_grid_start_y = context.rounded_device_pixels(cell_rect.y());
+        }
+        cell_grid_end_x = max(cell_grid_end_x, context.rounded_device_pixels(cell_rect.x() + cell_rect.width()));
+        cell_grid_end_y = max(cell_grid_end_y, context.rounded_device_pixels(cell_rect.y() + cell_rect.height()));
+    }
+    auto table_borders_data = borders_data_of_box(box);
+    auto x_start = cell_grid_start_x - half_ceil(context.rounded_device_pixels(cell_grid_left_border_width)) - context.enclosing_device_pixels(table_borders_data.left.width);
+    auto y_start = cell_grid_start_y - half_ceil(context.rounded_device_pixels(cell_grid_top_border_width)) - context.enclosing_device_pixels(table_borders_data.top.width);
+    auto x_end = cell_grid_end_x + half_floor(context.rounded_device_pixels(cell_grid_right_border_width)) + context.enclosing_device_pixels(table_borders_data.right.width);
+    auto y_end = cell_grid_end_y + half_floor(context.rounded_device_pixels(cell_grid_bottom_border_width)) + context.enclosing_device_pixels(table_borders_data.bottom.width);
+    DevicePixelRect rect { x_start, y_start, x_end - x_start, y_end - y_start };
+    paint_all_borders(context, rect, box.normalized_border_radii_data(), table_borders_data);
 }
 }

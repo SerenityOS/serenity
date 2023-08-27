@@ -10,6 +10,7 @@
 
 namespace Web::Painting {
 
-void paint_table_borders(PaintContext&, PaintableBox const& table_paintable);
+void paint_table_borders(PaintContext&, PaintableBox const&);
+void paint_table_box_border(PaintContext&, PaintableBox const&);
 
 }
