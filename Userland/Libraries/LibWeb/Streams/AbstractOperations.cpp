@@ -505,6 +505,21 @@ WebIDL::ExceptionOr<void> readable_stream_default_reader_release(ReadableStreamD
     return {};
 }
 
+// https://streams.spec.whatwg.org/#abstract-opdef-readablestreambyobreaderrelease
+void readable_stream_byob_reader_release(ReadableStreamBYOBReader& reader)
+{
+    auto& realm = reader.realm();
+
+    // 1. Perform ! ReadableStreamReaderGenericRelease(reader).
+    MUST(readable_stream_reader_generic_release(reader));
+
+    // 2. Let e be a new TypeError exception.
+    auto exception = MUST(JS::TypeError::create(realm, "Reader has been released"sv));
+
+    // 3. Perform ! ReadableStreamBYOBReaderErrorReadIntoRequests(reader, e).
+    readable_stream_byob_reader_error_read_into_requests(reader, exception);
+}
+
 // https://streams.spec.whatwg.org/#set-up-readable-stream-default-reader
 WebIDL::ExceptionOr<void> set_up_readable_stream_default_reader(ReadableStreamDefaultReader& reader, ReadableStream& stream)
 {
