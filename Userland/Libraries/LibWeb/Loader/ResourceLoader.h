@@ -46,6 +46,8 @@ namespace Web {
 #    define OS_STRING "DragonFly"
 #elif defined(AK_OS_SOLARIS)
 #    define OS_STRING "SunOS"
+#elif defined(AK_OS_HAIKU)
+#    define OS_STRING "Haiku"
 #elif defined(AK_OS_GNU_HURD)
 #    define OS_STRING "GNU/Hurd"
 #else
