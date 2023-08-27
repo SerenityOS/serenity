@@ -63,6 +63,10 @@ extern "C" {
 #    include <LibCore/File.h>
 #endif
 
+#if defined(AK_OS_HAIKU)
+#    include <image.h>
+#endif
+
 #define HANDLE_SYSCALL_RETURN_VALUE(syscall_name, rc, success_value) \
     if ((rc) < 0) {                                                  \
         return Error::from_syscall(syscall_name##sv, rc);            \
@@ -1809,6 +1813,15 @@ ErrorOr<String> current_executable_path()
     auto ret = _NSGetExecutablePath(path, &size);
     if (ret != 0)
         return Error::from_errno(ENAMETOOLONG);
+#elif defined(AK_OS_HAIKU)
+    image_info info = {};
+    for (int32 cookie { 0 }; get_next_image_info(B_CURRENT_TEAM, &cookie, &info) == B_OK && info.type != B_APP_IMAGE;)
+        ;
+    if (info.type != B_APP_IMAGE)
+        return Error::from_string_view("current_executable_path() failed"sv);
+    if (sizeof(info.name) > sizeof(path))
+        return Error::from_errno(ENAMETOOLONG);
+    strlcpy(path, info.name, sizeof(path) - 1);
 #elif defined(AK_OS_EMSCRIPTEN)
     return Error::from_string_view("current_executable_path() unknown on this platform"sv);
 #else
