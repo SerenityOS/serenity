@@ -188,7 +188,7 @@ ErrorOr<void> utime(StringView path, Optional<struct utimbuf>);
 ErrorOr<void> utimensat(int fd, StringView path, struct timespec const times[2], int flag);
 ErrorOr<struct utsname> uname();
 ErrorOr<Array<int, 2>> pipe2(int flags);
-#ifndef AK_OS_ANDROID
+#if !defined(AK_OS_ANDROID) && !defined(AK_OS_HAIKU)
 ErrorOr<void> adjtime(const struct timeval* delta, struct timeval* old_delta);
 #endif
 enum class SearchInPath {

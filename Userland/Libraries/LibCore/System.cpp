@@ -1240,7 +1240,7 @@ ErrorOr<struct utsname> uname()
     return uts;
 }
 
-#ifndef AK_OS_ANDROID
+#if !defined(AK_OS_ANDROID) && !defined(AK_OS_HAIKU)
 ErrorOr<void> adjtime(const struct timeval* delta, struct timeval* old_delta)
 {
 #    ifdef AK_OS_SERENITY
