@@ -1012,7 +1012,7 @@ void Document::update_layout()
 
     browsing_context()->set_needs_display();
 
-    if (browsing_context()->is_top_level() && browsing_context()->active_document() == this) {
+    if (navigable()->is_traversable()) {
         if (auto* page = this->page())
             page->client().page_did_layout();
     }

@@ -6,6 +6,7 @@
 
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLTitleElement.h>
+#include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/Page/Page.h>
 
 namespace Web::HTML {
@@ -26,9 +27,8 @@ void HTMLTitleElement::initialize(JS::Realm& realm)
 void HTMLTitleElement::children_changed()
 {
     HTMLElement::children_changed();
-    if (auto* page = document().page()) {
-        if (document().browsing_context() == &page->top_level_browsing_context())
-            page->client().page_did_change_title(document().title());
+    if (navigable() && navigable()->is_traversable()) {
+        navigable()->traversable_navigable()->page()->client().page_did_change_title(document().title());
     }
 }
 

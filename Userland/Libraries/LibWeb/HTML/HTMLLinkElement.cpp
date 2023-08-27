@@ -21,6 +21,7 @@
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLLinkElement.h>
 #include <LibWeb/HTML/PotentialCORSRequest.h>
+#include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page/Page.h>
@@ -458,11 +459,9 @@ bool HTMLLinkElement::load_favicon_and_use_if_window_is_active()
     if (!page)
         return favicon_bitmap;
 
-    if (document().browsing_context() == &page->top_level_browsing_context())
-        if (favicon_bitmap) {
-            page->client().page_did_change_favicon(*favicon_bitmap);
-            return true;
-        }
+    if (navigable() && navigable()->is_traversable()) {
+        navigable()->traversable_navigable()->page()->client().page_did_change_favicon(*favicon_bitmap);
+    }
 
     return false;
 }

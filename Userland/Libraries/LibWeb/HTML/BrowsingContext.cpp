@@ -531,7 +531,7 @@ void BrowsingContext::set_active_document(JS::NonnullGCPtr<DOM::Document> docume
     // AD-HOC:
     document->set_browsing_context(this);
 
-    if (m_page && m_page->top_level_browsing_context_is_initialized() && this == &m_page->top_level_browsing_context())
+    if (m_page && m_page->top_level_traversable_is_initialized() && this == &m_page->top_level_browsing_context())
         m_page->client().page_did_change_title(document->title());
 
     if (previously_active_document && previously_active_document != document.ptr())
