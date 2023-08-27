@@ -709,7 +709,11 @@ ErrorOr<void> ioctl(int fd, unsigned request, ...)
 {
     va_list ap;
     va_start(ap, request);
+#ifdef AK_OS_HAIKU
+    void* arg = va_arg(ap, void*);
+#else
     FlatPtr arg = va_arg(ap, FlatPtr);
+#endif
     va_end(ap);
     if (::ioctl(fd, request, arg) < 0)
         return Error::from_syscall("ioctl"sv, -errno);
