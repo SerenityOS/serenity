@@ -31,10 +31,7 @@ public:
     FlyString const& name() const { return m_name; }
     size_t length() { return m_keyframes.size(); }
 
-    void set_name(DeprecatedString const& name)
-    {
-        m_name = FlyString::from_utf8(name.view()).release_value_but_fixme_should_propagate_errors();
-    }
+    void set_name(String const& name) { m_name = name; }
 
 private:
     CSSKeyframesRule(JS::Realm& realm, FlyString name, Vector<JS::NonnullGCPtr<CSSKeyframeRule>> keyframes)
