@@ -112,8 +112,7 @@ template $LadybirdWindow : Adw.ApplicationWindow {
           maximum-size: 860;
           tightening-threshold: 560;
 
-          Entry location_entry {
-            input-purpose: url;
+          $LadybirdLocationEntry location_entry {
             // Translators: this is the placeholder text for the main location entry.
             placeholder-text: _("Search or enter a URL to open...");
             activate => $on_url_entered(template) swapped;
