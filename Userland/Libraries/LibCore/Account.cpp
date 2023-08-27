@@ -16,7 +16,7 @@
 #include <errno.h>
 #include <grp.h>
 #include <pwd.h>
-#ifndef AK_OS_BSD_GENERIC
+#if !defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_HAIKU)
 #    include <crypt.h>
 #    include <shadow.h>
 #endif
