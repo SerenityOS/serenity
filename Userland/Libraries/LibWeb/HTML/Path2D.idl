@@ -2,7 +2,7 @@
 #import <HTML/Canvas/CanvasPath.idl>
 
 // https://html.spec.whatwg.org/multipage/canvas.html#path2d
-[Exposed=(Window,Worker)]
+[Exposed=(Window,Worker), UseNewAKString]
 interface Path2D {
     constructor(optional (Path2D or DOMString) path);
 

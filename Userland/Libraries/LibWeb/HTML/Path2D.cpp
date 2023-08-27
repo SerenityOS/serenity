@@ -14,13 +14,13 @@
 
 namespace Web::HTML {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Path2D>> Path2D::construct_impl(JS::Realm& realm, Optional<Variant<JS::Handle<Path2D>, DeprecatedString>> const& path)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Path2D>> Path2D::construct_impl(JS::Realm& realm, Optional<Variant<JS::Handle<Path2D>, String>> const& path)
 {
     return realm.heap().allocate<Path2D>(realm, realm, path);
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-path2d
-Path2D::Path2D(JS::Realm& realm, Optional<Variant<JS::Handle<Path2D>, DeprecatedString>> const& path)
+Path2D::Path2D(JS::Realm& realm, Optional<Variant<JS::Handle<Path2D>, String>> const& path)
     : PlatformObject(realm)
     , CanvasPath(static_cast<Bindings::PlatformObject&>(*this))
 {
@@ -37,7 +37,7 @@ Path2D::Path2D(JS::Realm& realm, Optional<Variant<JS::Handle<Path2D>, Deprecated
     }
 
     // 4. Let svgPath be the result of parsing and interpreting path according to SVG 2's rules for path data. [SVG]
-    auto path_instructions = SVG::AttributeParser::parse_path_data(path->get<DeprecatedString>());
+    auto path_instructions = SVG::AttributeParser::parse_path_data(path->get<String>());
     auto svg_path = SVG::path_from_path_instructions(path_instructions);
 
     if (!svg_path.segments().is_empty()) {
