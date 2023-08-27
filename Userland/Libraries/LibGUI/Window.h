@@ -240,6 +240,10 @@ public:
 
     void propagate_shortcuts(KeyEvent& event, Widget* widget, ShortcutPropagationBoundary = ShortcutPropagationBoundary::Application);
 
+    void restore_size_and_position(StringView domain, StringView group = "Window"sv, Optional<Gfx::IntSize> fallback_size = {}, Optional<Gfx::IntPoint> fallback_position = {});
+    void save_size_and_position(StringView domain, StringView group = "Window"sv) const;
+    void save_size_and_position_on_close(StringView domain, StringView group = "Window"sv);
+
 protected:
     Window(Core::EventReceiver* parent = nullptr);
     virtual void wm_event(WMEvent&);
@@ -323,6 +327,9 @@ private:
     bool m_blocks_emoji_input { false };
     bool m_resizing { false };
     bool m_auto_shrink { false };
+    bool m_save_size_and_position_on_close { false };
+    StringView m_save_domain;
+    StringView m_save_group;
 };
 
 }
