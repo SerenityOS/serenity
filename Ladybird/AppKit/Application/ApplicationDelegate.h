@@ -10,6 +10,7 @@
 #include <AK/StringView.h>
 #include <AK/URL.h>
 #include <Browser/CookieJar.h>
+#include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/HTML/ActivateTab.h>
 
 #import <System/Cocoa.h>
@@ -31,5 +32,6 @@
 
 - (Browser::CookieJar&)cookieJar;
 - (Optional<StringView> const&)webdriverContentIPCPath;
+- (Web::CSS::PreferredColorScheme)preferredColorScheme;
 
 @end

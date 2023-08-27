@@ -11,6 +11,7 @@
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
 #include <LibGfx/StandardCursor.h>
+#include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWebView/ViewImplementation.h>
 
 // FIXME: These should not be included outside of Serenity.
@@ -21,7 +22,7 @@ namespace Ladybird {
 
 class WebViewBridge final : public WebView::ViewImplementation {
 public:
-    static ErrorOr<NonnullOwnPtr<WebViewBridge>> create(Vector<Gfx::IntRect> screen_rects, float device_pixel_ratio, Optional<StringView> webdriver_content_ipc_path);
+    static ErrorOr<NonnullOwnPtr<WebViewBridge>> create(Vector<Gfx::IntRect> screen_rects, float device_pixel_ratio, Optional<StringView> webdriver_content_ipc_path, Web::CSS::PreferredColorScheme);
     virtual ~WebViewBridge() override;
 
     float device_pixel_ratio() const { return m_device_pixel_ratio; }
@@ -36,6 +37,7 @@ public:
     void set_viewport_rect(Gfx::IntRect, ForResize = ForResize::No);
 
     void update_palette();
+    void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
 
     void mouse_down_event(Gfx::IntPoint, GUI::MouseButton, KeyModifier);
     void mouse_up_event(Gfx::IntPoint, GUI::MouseButton, KeyModifier);
@@ -52,7 +54,7 @@ public:
     Optional<Paintable> paintable();
 
 private:
-    WebViewBridge(Vector<Gfx::IntRect> screen_rects, float device_pixel_ratio, Optional<StringView> webdriver_content_ipc_path);
+    WebViewBridge(Vector<Gfx::IntRect> screen_rects, float device_pixel_ratio, Optional<StringView> webdriver_content_ipc_path, Web::CSS::PreferredColorScheme);
 
     virtual void update_zoom() override;
     virtual Gfx::IntRect viewport_rect() const override;
@@ -67,6 +69,7 @@ private:
     float m_inverse_device_pixel_ratio { 1.0 };
 
     Optional<StringView> m_webdriver_content_ipc_path;
+    Web::CSS::PreferredColorScheme m_preferred_color_scheme { Web::CSS::PreferredColorScheme::Auto };
 };
 
 }

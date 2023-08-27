@@ -85,7 +85,7 @@ struct HideCursor {
 
         auto device_pixel_ratio = [[NSScreen mainScreen] backingScaleFactor];
 
-        m_web_view_bridge = MUST(Ladybird::WebViewBridge::create(move(screen_rects), device_pixel_ratio, [delegate webdriverContentIPCPath]));
+        m_web_view_bridge = MUST(Ladybird::WebViewBridge::create(move(screen_rects), device_pixel_ratio, [delegate webdriverContentIPCPath], [delegate preferredColorScheme]));
         [self setWebViewCallbacks];
 
         auto* area = [[NSTrackingArea alloc] initWithRect:[self bounds]
@@ -120,6 +120,11 @@ struct HideCursor {
 - (void)handleVisibility:(BOOL)is_visible
 {
     m_web_view_bridge->set_system_visibility_state(is_visible);
+}
+
+- (void)setPreferredColorScheme:(Web::CSS::PreferredColorScheme)color_scheme
+{
+    m_web_view_bridge->set_preferred_color_scheme(color_scheme);
 }
 
 #pragma mark - Private methods
