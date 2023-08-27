@@ -118,7 +118,7 @@ ErrorOr<NonnullOwnPtr<LocalSocket>> LocalServer::accept()
     VERIFY(m_listening);
     sockaddr_un un;
     socklen_t un_size = sizeof(un);
-#ifndef AK_OS_MACOS
+#if !defined(AK_OS_MACOS) && !defined(AK_OS_HAIKU)
     int accepted_fd = ::accept4(m_fd, (sockaddr*)&un, &un_size, SOCK_NONBLOCK | SOCK_CLOEXEC);
 #else
     int accepted_fd = ::accept(m_fd, (sockaddr*)&un, &un_size);
@@ -127,7 +127,7 @@ ErrorOr<NonnullOwnPtr<LocalSocket>> LocalServer::accept()
         return Error::from_syscall("accept"sv, -errno);
     }
 
-#ifdef AK_OS_MACOS
+#if defined(AK_OS_MACOS) || defined(AK_OS_HAIKU)
     int option = 1;
     ioctl(m_fd, FIONBIO, &option);
     (void)fcntl(accepted_fd, F_SETFD, FD_CLOEXEC);
