@@ -127,7 +127,7 @@ ErrorOr<String> Process::get_name()
     return String::from_utf8(StringView { buffer, strlen(buffer) });
 #elif defined(AK_LIBC_GLIBC) || (defined(AK_OS_LINUX) && !defined(AK_OS_ANDROID))
     return String::from_utf8(StringView { program_invocation_name, strlen(program_invocation_name) });
-#elif defined(AK_OS_BSD_GENERIC)
+#elif defined(AK_OS_BSD_GENERIC) || defined(AK_OS_HAIKU)
     auto const* progname = getprogname();
     return String::from_utf8(StringView { progname, strlen(progname) });
 #else
