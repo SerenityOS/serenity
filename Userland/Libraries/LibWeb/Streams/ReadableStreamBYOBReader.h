@@ -41,6 +41,8 @@ public:
 
     virtual ~ReadableStreamBYOBReader() override = default;
 
+    void release_lock();
+
     Vector<NonnullRefPtr<ReadIntoRequest>>& read_into_requests() { return m_read_into_requests; }
 
 private:

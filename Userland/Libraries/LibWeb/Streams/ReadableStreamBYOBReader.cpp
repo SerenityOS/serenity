@@ -30,6 +30,17 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStreamBYOBReader>> ReadableStreamBY
     return reader;
 }
 
+// https://streams.spec.whatwg.org/#byob-reader-release-lock
+void ReadableStreamBYOBReader::release_lock()
+{
+    // 1. If this.[[stream]] is undefined, return.
+    if (!m_stream)
+        return;
+
+    // 2. Perform ! ReadableStreamBYOBReaderRelease(this).
+    readable_stream_byob_reader_release(*this);
+}
+
 void ReadableStreamBYOBReader::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
