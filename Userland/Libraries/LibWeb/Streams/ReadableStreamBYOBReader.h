@@ -37,6 +37,8 @@ class ReadableStreamBYOBReader final
     WEB_PLATFORM_OBJECT(ReadableStreamBYOBReader, Bindings::PlatformObject);
 
 public:
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStreamBYOBReader>> construct_impl(JS::Realm&, JS::NonnullGCPtr<ReadableStream>);
+
     virtual ~ReadableStreamBYOBReader() override = default;
 
     Vector<NonnullRefPtr<ReadIntoRequest>>& read_into_requests() { return m_read_into_requests; }

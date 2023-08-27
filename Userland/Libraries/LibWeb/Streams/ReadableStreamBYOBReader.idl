@@ -1,10 +1,12 @@
+#import <Streams/ReadableStream.idl>
 #import <Streams/ReadableStreamGenericReader.idl>
 
+// https://streams.spec.whatwg.org/#readablestreambyobreader
 [Exposed=*]
 interface ReadableStreamBYOBReader {
-    // FIXME: Implement
-    // constructor(ReadableStream stream);
+    constructor(ReadableStream stream);
 
+    // FIXME: Implement
     // Promise<ReadableStreamReadResult> read(ArrayBufferView view);
     // undefined releaseLock();
 };
