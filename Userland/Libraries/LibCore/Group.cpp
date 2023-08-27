@@ -67,7 +67,7 @@ ErrorOr<void> Group::sync()
     return {};
 }
 
-#if !defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_ANDROID)
+#if !defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_ANDROID) && !defined(AK_OS_HAIKU)
 ErrorOr<void> Group::add_group(Group& group)
 {
     if (group.name().is_empty())
