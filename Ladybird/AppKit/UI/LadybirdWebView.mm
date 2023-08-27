@@ -872,6 +872,11 @@ static void copy_text_to_clipboard(StringView text)
     [self handleResize];
 }
 
+- (void)viewDidChangeEffectiveAppearance
+{
+    m_web_view_bridge->update_palette();
+}
+
 - (BOOL)isFlipped
 {
     // The origin of a NSScrollView is the lower-left corner, with the y-axis extending upwards. Instead,
