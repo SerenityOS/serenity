@@ -30,7 +30,7 @@ Core::AnonymousBuffer create_system_palette()
 {
     auto is_dark = is_using_dark_system_theme();
 
-    auto theme_file = is_dark ? "Default"sv : "Dark"sv;
+    auto theme_file = is_dark ? "Dark"sv : "Default"sv;
     auto theme_path = DeprecatedString::formatted("{}/res/themes/{}.ini", s_serenity_resource_root, theme_file);
 
     auto theme = MUST(Gfx::load_system_theme(theme_path));
