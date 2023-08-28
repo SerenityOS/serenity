@@ -11,16 +11,9 @@
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
+#include <LibWeb/XHR/FormDataEntry.h>
 
 namespace Web::XHR {
-
-// https://xhr.spec.whatwg.org/#formdataentryvalue
-using FormDataEntryValue = Variant<JS::Handle<FileAPI::File>, String>;
-
-struct FormDataEntry {
-    String name;
-    FormDataEntryValue value;
-};
 
 // https://xhr.spec.whatwg.org/#interface-formdata
 class FormData : public Bindings::PlatformObject {
