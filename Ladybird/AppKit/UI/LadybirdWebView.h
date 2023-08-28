@@ -22,4 +22,6 @@
 
 - (void)setPreferredColorScheme:(Web::CSS::PreferredColorScheme)color_scheme;
 
+- (void)viewSource;
+
 @end
