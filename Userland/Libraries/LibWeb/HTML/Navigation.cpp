@@ -181,15 +181,19 @@ bool Navigation::can_go_forward() const
     return (m_current_entry_index != static_cast<i64>(m_entry_list.size()));
 }
 
-static HistoryHandlingBehavior to_history_handling_behavior(Bindings::NavigationHistoryBehavior b)
+HistoryHandlingBehavior to_history_handling_behavior(Bindings::NavigationHistoryBehavior b)
 {
+    // A history handling behavior is a NavigationHistoryBehavior that is either "push" or "replace",
+    // i.e., that has been resolved away from any initial "auto" value.
+    VERIFY(b != Bindings::NavigationHistoryBehavior::Auto);
+
     switch (b) {
-    case Bindings::NavigationHistoryBehavior::Auto:
-        return HistoryHandlingBehavior::Default;
     case Bindings::NavigationHistoryBehavior::Push:
         return HistoryHandlingBehavior::Push;
     case Bindings::NavigationHistoryBehavior::Replace:
         return HistoryHandlingBehavior::Replace;
+    case Bindings::NavigationHistoryBehavior::Auto:
+        VERIFY_NOT_REACHED();
     };
     VERIFY_NOT_REACHED();
 }

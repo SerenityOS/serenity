@@ -9,6 +9,7 @@
 #include <LibJS/Runtime/Promise.h>
 #include <LibWeb/Bindings/NavigationPrototype.h>
 #include <LibWeb/DOM/EventTarget.h>
+#include <LibWeb/HTML/HistoryHandlingBehavior.h>
 #include <LibWeb/HTML/StructuredSerialize.h>
 
 namespace Web::HTML {
@@ -151,5 +152,7 @@ private:
     // https://html.spec.whatwg.org/multipage/nav-history-apis.html#upcoming-non-traverse-api-method-tracker
     HashMap<String, JS::NonnullGCPtr<NavigationAPIMethodTracker>> m_upcoming_traverse_api_method_trackers;
 };
+
+HistoryHandlingBehavior to_history_handling_behavior(Bindings::NavigationHistoryBehavior);
 
 }
