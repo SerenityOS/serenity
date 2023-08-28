@@ -1269,6 +1269,15 @@ ThrowCompletionOr<String> get_substitution(VM& vm, Utf16View const& matched, Utf
             auto capture_position_string = TRY_OR_THROW_OOM(vm, replace_view.substring_view(i + 1, is_two_digits ? 2 : 1).to_utf8());
             auto capture_position = capture_position_string.to_number<u32>();
 
+            // NOTE: All major engines treat $10 as $1 followed by a literal '0' character
+            //       if there are fewer than 10 capture groups. The spec disagrees.
+            // Spec bug: https://github.com/tc39/ecma262/issues/1426
+            if (is_two_digits && capture_position.has_value() && (*capture_position > 0) && (*capture_position > captures.size())) {
+                is_two_digits = false;
+                capture_position_string = MUST(capture_position_string.substring_from_byte_offset(0, 1));
+                capture_position = capture_position_string.to_number<u32>();
+            }
+
             if (capture_position.has_value() && (*capture_position > 0) && (*capture_position <= captures.size())) {
                 auto& value = captures[*capture_position - 1];
 
