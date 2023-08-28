@@ -52,7 +52,7 @@ static bool url_matches_about_blank(AK::URL const& url)
 HTML::Origin determine_the_origin(BrowsingContext const& browsing_context, Optional<AK::URL> url, SandboxingFlagSet sandbox_flags, Optional<HTML::Origin> invocation_origin)
 {
     // 1. If sandboxFlags has its sandboxed origin browsing context flag set, then return a new opaque origin.
-    if (sandbox_flags.flags & SandboxingFlagSet::SandboxedOrigin) {
+    if (has_flag(sandbox_flags, SandboxingFlagSet::SandboxedOrigin)) {
         return HTML::Origin {};
     }
 
@@ -80,7 +80,7 @@ HTML::Origin determine_the_origin(BrowsingContext const& browsing_context, Optio
 HTML::Origin determine_the_origin(AK::URL const& url, SandboxingFlagSet sandbox_flags, Optional<HTML::Origin> source_origin, Optional<HTML::Origin> container_origin)
 {
     // 1. If sandboxFlags has its sandboxed origin browsing context flag set, then return a new opaque origin.
-    if (sandbox_flags.flags & SandboxingFlagSet::SandboxedOrigin) {
+    if (has_flag(sandbox_flags, SandboxingFlagSet::SandboxedOrigin)) {
         return HTML::Origin {};
     }
 
@@ -135,7 +135,7 @@ JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context
     }
 
     // FIXME: 4. Let sandboxFlags be the result of determining the creation sandboxing flags given browsingContext and embedded.
-    SandboxingFlagSet sandbox_flags;
+    SandboxingFlagSet sandbox_flags = {};
 
     // 5. Let origin be the result of determining the origin given browsingContext, about:blank, sandboxFlags, and browsingContext's creator origin.
     auto origin = determine_the_origin(*browsing_context, AK::URL("about:blank"), sandbox_flags, browsing_context->m_creator_origin);
@@ -311,7 +311,7 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
     }
 
     // FIXME: 5. Let sandboxFlags be the result of determining the creation sandboxing flags given browsingContext and embedder.
-    SandboxingFlagSet sandbox_flags;
+    SandboxingFlagSet sandbox_flags = {};
 
     // 6. Let origin be the result of determining the origin given about:blank, sandboxFlags, creatorOrigin, and null.
     auto origin = determine_the_origin(AK::URL("about:blank"sv), sandbox_flags, creator_origin, {});
@@ -890,7 +890,7 @@ BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_contex
         }
 
         // --> If sandboxingFlagSet has the sandboxed auxiliary navigation browsing context flag set
-        else if (sandboxing_flag_set.flags & SandboxingFlagSet::SandboxedAuxiliaryNavigation) {
+        else if (has_flag(sandboxing_flag_set, SandboxingFlagSet::SandboxedAuxiliaryNavigation)) {
             // FIXME: The user agent may report to a developer console that a popup has been blocked.
             dbgln("Pop-up blocked!");
         }
@@ -1445,7 +1445,7 @@ bool BrowsingContext::is_allowed_to_navigate(BrowsingContext const& other) const
         //    and A's active document's active sandboxing flag set has its sandboxed top-level navigation with user activation browsing context flag set,
         //    then return false.
         if (active_window()->has_transient_activation()
-            && active_document()->active_sandboxing_flag_set().flags & SandboxingFlagSet::SandboxedTopLevelNavigationWithUserActivation) {
+            && has_flag(active_document()->active_sandboxing_flag_set(), SandboxingFlagSet::SandboxedTopLevelNavigationWithUserActivation)) {
             return false;
         }
 
@@ -1453,7 +1453,7 @@ bool BrowsingContext::is_allowed_to_navigate(BrowsingContext const& other) const
         //    and A's active document's active sandboxing flag set has its sandboxed top-level navigation without user activation browsing context flag set,
         //    then return false.
         if (!active_window()->has_transient_activation()
-            && active_document()->active_sandboxing_flag_set().flags & SandboxingFlagSet::SandboxedTopLevelNavigationWithoutUserActivation) {
+            && has_flag(active_document()->active_sandboxing_flag_set(), SandboxingFlagSet::SandboxedTopLevelNavigationWithoutUserActivation)) {
             return false;
         }
     }
@@ -1466,7 +1466,7 @@ bool BrowsingContext::is_allowed_to_navigate(BrowsingContext const& other) const
     if (other.is_top_level()
         && &other != this
         && !other.is_ancestor_of(*this)
-        && active_document()->active_sandboxing_flag_set().flags & SandboxingFlagSet::SandboxedNavigation
+        && has_flag(active_document()->active_sandboxing_flag_set(), SandboxingFlagSet::SandboxedNavigation)
         && this != other.the_one_permitted_sandboxed_navigator()) {
         return false;
     }

@@ -17,7 +17,7 @@ struct SourceSnapshotParams {
     bool has_transient_activation;
 
     // a sandboxing flag set
-    SandboxingFlagSet sandboxing_flags;
+    SandboxingFlagSet sandboxing_flags = {};
 
     // a boolean
     bool allows_downloading;

@@ -74,7 +74,7 @@ WebIDL::ExceptionOr<void> HTMLFormElement::submit_form(JS::NonnullGCPtr<HTMLElem
     auto* form_browsing_context = form_document->browsing_context();
 
     // 4. If form document's active sandboxing flag set has its sandboxed forms browsing context flag set, then return.
-    if (form_document->active_sandboxing_flag_set().flags & HTML::SandboxingFlagSet::Flag::SandboxedForms)
+    if (has_flag(form_document->active_sandboxing_flag_set(), HTML::SandboxingFlagSet::SandboxedForms))
         return {};
 
     // 5. If the submitted from submit() method flag is not set, then:

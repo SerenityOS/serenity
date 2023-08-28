@@ -36,7 +36,7 @@ struct NavigationParams {
     PolicyContainer policy_container;
 
     // a sandboxing flag set to impose on the new Document
-    SandboxingFlagSet final_sandboxing_flag_set;
+    SandboxingFlagSet final_sandboxing_flag_set = {};
 
     // a cross-origin opener policy to use for the new Document
     CrossOriginOpenerPolicy cross_origin_opener_policy;

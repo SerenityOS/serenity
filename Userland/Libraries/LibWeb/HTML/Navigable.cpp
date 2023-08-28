@@ -490,7 +490,7 @@ static WebIDL::ExceptionOr<Optional<NavigationParams>> create_navigation_params_
     JS::GCPtr<Fetch::Infrastructure::FetchController> fetch_controller = nullptr;
 
     // 13. Let finalSandboxFlags be an empty sandboxing flag set.
-    SandboxingFlagSet final_sandbox_flags;
+    SandboxingFlagSet final_sandbox_flags = {};
 
     // 16. Let locationURL be null.
     ErrorOr<Optional<AK::URL>> location_url { OptionalNone {} };
