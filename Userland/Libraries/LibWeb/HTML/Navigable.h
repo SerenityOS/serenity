@@ -66,6 +66,8 @@ public:
     JS::GCPtr<TraversableNavigable> traversable_navigable() const;
     JS::GCPtr<TraversableNavigable> top_level_traversable();
 
+    virtual bool is_top_level_traversable() const { return false; }
+
     enum class WindowType {
         ExistingOrNone,
         NewAndUnrestricted,
