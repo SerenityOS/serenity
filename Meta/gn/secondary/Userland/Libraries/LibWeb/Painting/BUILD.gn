@@ -35,5 +35,6 @@ source_set("Painting") {
     "TableBordersPainting.cpp",
     "TextPaintable.cpp",
     "VideoPaintable.cpp",
+    "ViewportPaintable.cpp",
   ]
 }

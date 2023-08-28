@@ -42,6 +42,7 @@ source_set("Layout") {
     "SVGSVGBox.cpp",
     "SVGTextBox.cpp",
     "TableFormattingContext.cpp",
+    "TableGrid.cpp",
     "TableWrapper.cpp",
     "TextNode.cpp",
     "TreeBuilder.cpp",

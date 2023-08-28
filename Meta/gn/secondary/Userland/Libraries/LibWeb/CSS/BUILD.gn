@@ -56,6 +56,7 @@ source_set("CSS") {
     "StyleSheetList.cpp",
     "StyleValue.cpp",
     "Supports.cpp",
+    "SystemColor.cpp",
     "Time.cpp",
     "VisualViewport.cpp",
   ]
