@@ -131,6 +131,7 @@ source_set("HTML") {
     "NavigationTransition.cpp",
     "Navigator.cpp",
     "NavigatorID.cpp",
+    "Numbers.cpp",
     "PageTransitionEvent.cpp",
     "Path2D.cpp",
     "Plugin.cpp",

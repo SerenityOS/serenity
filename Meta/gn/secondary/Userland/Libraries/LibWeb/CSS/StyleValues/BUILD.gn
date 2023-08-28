@@ -22,6 +22,7 @@ source_set("StyleValues") {
     "FlexStyleValue.cpp",
     "FontStyleValue.cpp",
     "GridAreaShorthandStyleValue.cpp",
+    "GridAutoFlowStyleValue.cpp",
     "GridTemplateAreaStyleValue.cpp",
     "GridTrackPlacementShorthandStyleValue.cpp",
     "GridTrackPlacementStyleValue.cpp",

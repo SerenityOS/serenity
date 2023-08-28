@@ -1,4 +1,5 @@
 import("//Meta/gn/build/compiled_action.gni")
+import("//Meta/gn/build/embed_as_string_view.gni")
 
 compiled_action("WebContentClientEndpoint") {
   tool = "//Meta/Lagom/Tools/CodeGenerators/IPCCompiler"
@@ -44,6 +45,13 @@ compiled_action("WebDriverServerEndpoint") {
   ]
 }
 
+embed_as_string_view("generate_native_stylesheet_source") {
+  input = "Native.css"
+  output = "$target_gen_dir/NativeStyleSheetSource.cpp"
+  variable_name = "native_stylesheet_source"
+  namespace = "WebView"
+}
+
 shared_library("LibWebView") {
   output_name = "webview"
   include_dirs = [
@@ -56,6 +64,7 @@ shared_library("LibWebView") {
     ":WebContentServerEndpoint",
     ":WebDriverClientEndpoint",
     ":WebDriverServerEndpoint",
+    ":generate_native_stylesheet_source",
     "//AK",
     "//Userland/Libraries/LibCore",
     "//Userland/Libraries/LibGUI",
@@ -76,5 +85,6 @@ shared_library("LibWebView") {
   sources += get_target_outputs(":WebContentClientEndpoint") +
              get_target_outputs(":WebContentServerEndpoint") +
              get_target_outputs(":WebDriverClientEndpoint") +
-             get_target_outputs(":WebDriverServerEndpoint")
+             get_target_outputs(":WebDriverServerEndpoint") +
+             get_target_outputs(":generate_native_stylesheet_source")
 }
