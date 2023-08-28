@@ -270,7 +270,7 @@ private:
 
 class RegexCommand : public Command {
 public:
-    RegexCommand(Regex<PosixBasic>&& regex)
+    RegexCommand(Regex<PosixExtended>&& regex)
         : m_regex(move(regex))
     {
     }
@@ -283,7 +283,7 @@ private:
         return match_result.success;
     }
 
-    Regex<PosixBasic> m_regex;
+    Regex<PosixExtended> m_regex;
 };
 
 class AccessCommand final : public Command {
@@ -448,14 +448,14 @@ static OwnPtr<Command> parse_simple_command(Vector<char*>& args)
     } else if (arg == "-regex") {
         if (args.is_empty())
             fatal_error("-regex: requires additional arguments");
-        Regex<PosixBasic> regex { args.take_first(), PosixFlags::Default };
+        Regex<PosixExtended> regex { args.take_first(), PosixFlags::Default };
         if (regex.parser_result.error != regex::Error::NoError)
             fatal_error("{}", regex.error_string());
         return make<RegexCommand>(move(regex));
     } else if (arg == "-iregex") {
         if (args.is_empty())
             fatal_error("-iregex: requires additional arguments");
-        Regex<PosixBasic> regex { args.take_first(), PosixFlags::Insensitive };
+        Regex<PosixExtended> regex { args.take_first(), PosixFlags::Insensitive };
         if (regex.parser_result.error != regex::Error::NoError)
             fatal_error("{}", regex.error_string());
         return make<RegexCommand>(move(regex));
