@@ -192,7 +192,7 @@ void XMLDocumentBuilder::document_end()
         (void)m_document->scripts_to_execute_when_parsing_has_finished().take_first();
     }
     // Queue a global task on the DOM manipulation task source given the Document's relevant global object to run the following substeps:
-    old_queue_global_task_with_document(HTML::Task::Source::DOMManipulation, m_document, [document = m_document] {
+    queue_global_task(HTML::Task::Source::DOMManipulation, m_document, [document = m_document] {
         // Set the Document's load timing info's DOM content loaded event start time to the current high resolution time given the Document's relevant global object.
         document->load_timing_info().dom_content_loaded_event_start_time = HighResolutionTime::unsafe_shared_current_time();
 
@@ -220,7 +220,7 @@ void XMLDocumentBuilder::document_end()
     });
 
     // Queue a global task on the DOM manipulation task source given the Document's relevant global object to run the following steps:
-    old_queue_global_task_with_document(HTML::Task::Source::DOMManipulation, m_document, [document = m_document] {
+    queue_global_task(HTML::Task::Source::DOMManipulation, m_document, [document = m_document] {
         // Update the current document readiness to "complete".
         document->update_readiness(HTML::DocumentReadyState::Complete);
 

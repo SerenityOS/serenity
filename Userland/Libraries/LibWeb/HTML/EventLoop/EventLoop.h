@@ -113,7 +113,6 @@ private:
 };
 
 EventLoop& main_thread_event_loop();
-void old_queue_global_task_with_document(HTML::Task::Source, DOM::Document&, JS::SafeFunction<void()> steps);
 void queue_global_task(HTML::Task::Source, JS::Object&, JS::SafeFunction<void()> steps);
 void queue_a_microtask(DOM::Document const*, JS::SafeFunction<void()> steps);
 void perform_a_microtask_checkpoint();
