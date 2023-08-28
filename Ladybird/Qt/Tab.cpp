@@ -14,6 +14,7 @@
 #include <Browser/History.h>
 #include <LibGfx/ImageFormats/BMPWriter.h>
 #include <LibGfx/Painter.h>
+#include <LibWebView/SourceHighlighter.h>
 #include <QClipboard>
 #include <QCoreApplication>
 #include <QCursor>
@@ -26,7 +27,6 @@
 #include <QMenu>
 #include <QMessageBox>
 #include <QPainter>
-#include <QPlainTextEdit>
 #include <QPoint>
 #include <QResizeEvent>
 
@@ -217,13 +217,8 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     QObject::connect(focus_location_editor_action, &QAction::triggered, this, &Tab::focus_location_editor);
 
     view().on_received_source = [this](auto const& url, auto const& source) {
-        auto* text_edit = new QPlainTextEdit(this);
-        text_edit->setWindowFlags(Qt::Window);
-        text_edit->setFont(QFontDatabase::systemFont(QFontDatabase::SystemFont::FixedFont));
-        text_edit->resize(800, 600);
-        text_edit->setWindowTitle(qstring_from_ak_deprecated_string(url.to_deprecated_string()));
-        text_edit->setPlainText(qstring_from_ak_deprecated_string(source));
-        text_edit->show();
+        auto html = WebView::highlight_source(url, source);
+        m_window->new_tab(html, url, Web::HTML::ActivateTab::Yes);
     };
 
     view().on_navigate_back = [this]() {
