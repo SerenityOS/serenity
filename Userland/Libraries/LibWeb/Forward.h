@@ -457,7 +457,7 @@ struct EnvironmentSettingsObject;
 struct NavigationParams;
 struct POSTResource;
 struct PolicyContainer;
-struct SandboxingFlagSet;
+enum class SandboxingFlagSet;
 struct SerializedFormData;
 struct SessionHistoryEntry;
 }

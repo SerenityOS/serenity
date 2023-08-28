@@ -1655,7 +1655,7 @@ bool HTMLMediaElement::is_eligible_for_autoplay() const
         has_attribute(HTML::AttributeNames::autoplay) &&
 
         // Its node document's active sandboxing flag set does not have the sandboxed automatic features browsing context flag set.
-        (document().active_sandboxing_flag_set().flags & SandboxingFlagSet::SandboxedAutomaticFeatures) == 0 &&
+        !has_flag(document().active_sandboxing_flag_set(), SandboxingFlagSet::SandboxedAutomaticFeatures) &&
 
         // Its node document is allowed to use the "autoplay" feature.
         document().is_allowed_to_use_feature(DOM::PolicyControlledFeature::Autoplay));

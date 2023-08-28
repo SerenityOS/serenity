@@ -133,7 +133,7 @@ static JS::NonnullGCPtr<HTML::BrowsingContext> obtain_a_browsing_context_to_use_
     //           cross-origin isolation mode to either "logical" or "concrete". The choice of which is implementation-defined.
 
     // 5. If sandboxFlags is not empty, then:
-    if (!sandbox_flags.is_empty()) {
+    if (!is_empty(sandbox_flags)) {
         // 1. Assert navigationCOOP's value is "unsafe-none".
         VERIFY(navigation_coop.value == HTML::CrossOriginOpenerPolicyValue::UnsafeNone);
 
@@ -2535,7 +2535,7 @@ HTML::SourceSnapshotParams Document::snapshot_source_snapshot_params() const
     return HTML::SourceSnapshotParams {
         .has_transient_activation = verify_cast<HTML::Window>(HTML::relevant_global_object(*this)).has_transient_activation(),
         .sandboxing_flags = m_active_sandboxing_flag_set,
-        .allows_downloading = (m_active_sandboxing_flag_set.flags & HTML::SandboxingFlagSet::SandboxedDownloads) != HTML::SandboxingFlagSet::SandboxedDownloads,
+        .allows_downloading = !has_flag(m_active_sandboxing_flag_set, HTML::SandboxingFlagSet::SandboxedDownloads),
         .fetch_client = relevant_settings_object(),
         .source_policy_container = m_policy_container
     };
@@ -3475,7 +3475,7 @@ void Document::shared_declarative_refresh_steps(StringView input, JS::GCPtr<HTML
     //   flag set, then navigate document's node navigable to urlRecord using document, with historyHandling set to
     //   "replace".
     m_active_refresh_timer = Core::Timer::create_single_shot(time * 1000, [this, has_meta_element = !!meta_element, url_record = move(url_record)]() {
-        if (has_meta_element && active_sandboxing_flag_set().flags & HTML::SandboxingFlagSet::SandboxedAutomaticFeatures)
+        if (has_meta_element && has_flag(active_sandboxing_flag_set(), HTML::SandboxingFlagSet::SandboxedAutomaticFeatures))
             return;
 
         // FIXME: Use navigables when they're used for all navigation (otherwise, navigable() would be null in some cases)
