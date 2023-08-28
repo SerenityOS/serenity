@@ -16,3 +16,11 @@ We use the netbsd "acnetbsd.h" file here as a template.
 Disable warnings for Werror=bad-function-cast
 
 
+## `0004-Remove-unsupported-warning-flags-for-cross-compile.patch`
+
+Remove unsupported warning flags for cross-compile
+
+* -Wlogical-op
+* -Wmissing-parameter-type
+* -Wold-style-declaration
+

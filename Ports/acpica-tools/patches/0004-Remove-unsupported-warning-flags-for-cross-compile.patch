@@ -1,0 +1,59 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gurkirat Singh <tbhaxor@gmail.com>
+Date: Mon, 28 Aug 2023 21:21:37 +0530
+Subject: [PATCH] Remove unsupported warning flags for cross-compile
+
+* -Wlogical-op
+* -Wmissing-parameter-type
+* -Wold-style-declaration
+---
+ generate/efi/Makefile.config  | 5 +----
+ generate/unix/Makefile.config | 5 +----
+ 2 files changed, 2 insertions(+), 8 deletions(-)
+
+diff --git a/generate/efi/Makefile.config b/generate/efi/Makefile.config
+index da49657bd1779cf1b45f019c05d98d4214d05487..57b04d8e0268aff6a172abbd2dfe833874c1df5b 100644
+--- a/generate/efi/Makefile.config
++++ b/generate/efi/Makefile.config
+@@ -146,7 +146,7 @@ endif
+ # Common compiler warning flags. The warning flags in addition
+ # to -Wall are not automatically included in -Wall.
+ #
+-CWARNINGFLAGS = \
++override CWARNINGFLAGS += \
+ 	-Wall\
+ 	-Wbad-function-cast\
+ 	-Wdeclaration-after-statement\
+@@ -157,9 +157,6 @@ CWARNINGFLAGS = \
+ 	-Wswitch-default\
+ 	-Wpointer-arith\
+ 	-Wempty-body\
+-	-Wlogical-op\
+-	-Wmissing-parameter-type\
+-	-Wold-style-declaration\
+ 	-Wtype-limits
+ 
+ ifneq ($(NOWERROR),TRUE)
+diff --git a/generate/unix/Makefile.config b/generate/unix/Makefile.config
+index 0374e09d880f0ecec165acc32e7b30a4dbb0c8cc..89d0d2d0a3f4c5c4032363a8afb58c9ba350ef65 100644
+--- a/generate/unix/Makefile.config
++++ b/generate/unix/Makefile.config
+@@ -198,7 +198,7 @@ endif
+ # Common compiler warning flags. The warning flags in addition
+ # to -Wall are not automatically included in -Wall.
+ #
+-CWARNINGFLAGS = \
++override CWARNINGFLAGS += \
+     -std=c99\
+     -Wall\
+     -Wbad-function-cast\
+@@ -241,9 +241,6 @@ ifneq ($(ACPI_HOST), _FreeBSD)
+     ifneq ($(ACPI_HOST), _APPLE)
+         CWARNINGFLAGS += \
+             -Woverride-init\
+-            -Wlogical-op\
+-            -Wmissing-parameter-type\
+-            -Wold-style-declaration\
+             -Wtype-limits
+     endif
+ endif
