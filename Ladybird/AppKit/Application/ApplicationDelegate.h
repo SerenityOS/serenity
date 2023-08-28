@@ -28,6 +28,11 @@
                                fromTab:(nullable Tab*)tab
                            activateTab:(Web::HTML::ActivateTab)activate_tab;
 
+- (nonnull TabController*)createNewTab:(StringView)html
+                                   url:(URL const&)url
+                               fromTab:(nullable Tab*)tab
+                           activateTab:(Web::HTML::ActivateTab)activate_tab;
+
 - (void)removeTab:(nonnull TabController*)controller;
 
 - (Browser::CookieJar&)cookieJar;

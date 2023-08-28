@@ -73,6 +73,7 @@ public slots:
     void tab_title_changed(int index, QString const&);
     void tab_favicon_changed(int index, QIcon const& icon);
     Tab& new_tab(QString const&, Web::HTML::ActivateTab);
+    Tab& new_tab(StringView html, URL const& url, Web::HTML::ActivateTab);
     void activate_tab(int index);
     void close_tab(int index);
     void close_current_tab();
@@ -97,6 +98,8 @@ private:
     virtual void moveEvent(QMoveEvent*) override;
     virtual void wheelEvent(QWheelEvent*) override;
     virtual void closeEvent(QCloseEvent*) override;
+
+    Tab& create_new_tab(Web::HTML::ActivateTab activate_tab);
 
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument = "");
 
