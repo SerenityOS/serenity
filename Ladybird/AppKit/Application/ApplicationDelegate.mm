@@ -36,6 +36,7 @@
 - (NSMenuItem*)createEditMenu;
 - (NSMenuItem*)createViewMenu;
 - (NSMenuItem*)createHistoryMenu;
+- (NSMenuItem*)createInspectMenu;
 - (NSMenuItem*)createDebugMenu;
 - (NSMenuItem*)createWindowsMenu;
 - (NSMenuItem*)createHelpMenu;
@@ -56,6 +57,7 @@
         [[NSApp mainMenu] addItem:[self createEditMenu]];
         [[NSApp mainMenu] addItem:[self createViewMenu]];
         [[NSApp mainMenu] addItem:[self createHistoryMenu]];
+        [[NSApp mainMenu] addItem:[self createInspectMenu]];
         [[NSApp mainMenu] addItem:[self createDebugMenu]];
         [[NSApp mainMenu] addItem:[self createWindowsMenu]];
         [[NSApp mainMenu] addItem:[self createHelpMenu]];
@@ -326,6 +328,19 @@
 
     [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"Clear History"
                                                 action:@selector(clearHistory:)
+                                         keyEquivalent:@""]];
+
+    [menu setSubmenu:submenu];
+    return menu;
+}
+
+- (NSMenuItem*)createInspectMenu
+{
+    auto* menu = [[NSMenuItem alloc] init];
+    auto* submenu = [[NSMenu alloc] initWithTitle:@"Inspect"];
+
+    [submenu addItem:[[NSMenuItem alloc] initWithTitle:@"View Source"
+                                                action:@selector(viewSource:)
                                          keyEquivalent:@""]];
 
     [menu setSubmenu:submenu];

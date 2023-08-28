@@ -158,6 +158,11 @@ enum class IsHistoryNavigation {
     [self updateNavigationButtonStates];
 }
 
+- (void)viewSource:(id)sender
+{
+    [[[self tab] web_view] viewSource];
+}
+
 - (void)focusLocationToolbarItem
 {
     [self.window makeFirstResponder:self.location_toolbar_item.view];
