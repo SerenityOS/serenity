@@ -4,6 +4,7 @@ set(SOURCES
     DOMTreeModel.cpp
     OutOfProcessWebView.cpp
     RequestServerAdapter.cpp
+    SourceHighlighter.cpp
     StylePropertiesModel.cpp
     ViewImplementation.cpp
     WebContentClient.cpp
