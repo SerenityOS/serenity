@@ -202,10 +202,7 @@ static void build_paint_tree(Node& node, Painting::Paintable* parent_paintable =
         return;
     auto& paintable = const_cast<Painting::Paintable&>(*node.paintable());
     if (parent_paintable) {
-        // In case this was a relayout of an existing tree, we need to remove the paintable from its old parent first.
-        if (auto* old_parent = paintable.parent()) {
-            old_parent->remove_child(paintable);
-        }
+        VERIFY(!paintable.parent());
         parent_paintable->append_child(paintable);
     }
     paintable.set_dom_node(node.dom_node());
