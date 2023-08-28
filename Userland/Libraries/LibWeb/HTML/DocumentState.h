@@ -52,6 +52,9 @@ public:
     [[nodiscard]] Optional<HTML::Origin> origin() const { return m_origin; }
     void set_origin(Optional<HTML::Origin> origin) { m_origin = move(origin); }
 
+    [[nodiscard]] Optional<AK::URL> const& about_base_url() const { return m_about_base_url; }
+    void set_about_base_url(Optional<AK::URL> url) { m_about_base_url = move(url); }
+
     [[nodiscard]] Vector<NestedHistory> const& nested_histories() const { return m_nested_histories; }
     [[nodiscard]] Vector<NestedHistory>& nested_histories() { return m_nested_histories; }
 
@@ -89,6 +92,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#document-state-origin
     Optional<HTML::Origin> m_origin;
+
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#document-state-about-base-url
+    Optional<AK::URL> m_about_base_url = {};
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#document-state-nested-histories
     Vector<NestedHistory> m_nested_histories;
