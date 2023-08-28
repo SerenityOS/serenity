@@ -182,11 +182,9 @@ void Navigable::activate_history_entry(JS::GCPtr<SessionHistoryEntry> entry)
     new_document->make_active();
 
     // Not in the spec:
-    if (is<TraversableNavigable>(*this) && parent() == nullptr) {
-        if (auto* page = active_browsing_context()->page()) {
-            page->client().page_did_start_loading(entry->url, false);
-        }
-    }
+    VERIFY(active_browsing_context());
+    VERIFY(active_browsing_context()->page());
+    active_browsing_context()->page()->client().page_did_create_new_document(*new_document);
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#nav-document
