@@ -810,6 +810,8 @@ void Document::tear_down_layout_tree()
     }
 
     m_layout_root = nullptr;
+
+    m_paintable = nullptr;
 }
 
 Color Document::background_color() const
