@@ -23,7 +23,7 @@ public:
 
     virtual ~TraversableNavigable() override;
 
-    bool is_top_level_traversable() const;
+    virtual bool is_top_level_traversable() const override;
 
     int current_session_history_step() const { return m_current_session_history_step; }
     Vector<JS::NonnullGCPtr<SessionHistoryEntry>>& session_history_entries() { return m_session_history_entries; }
