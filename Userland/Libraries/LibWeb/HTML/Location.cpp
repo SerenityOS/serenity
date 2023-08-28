@@ -16,6 +16,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/CrossOrigin/AbstractOperations.h>
 #include <LibWeb/HTML/Location.h>
+#include <LibWeb/HTML/Navigation.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/WebIDL/DOMException.h>
 
@@ -58,6 +59,18 @@ JS::GCPtr<DOM::Document> Location::relevant_document() const
     return browsing_context ? browsing_context->active_document() : nullptr;
 }
 
+static Bindings::NavigationHistoryBehavior to_navigation_history_behavior(HistoryHandlingBehavior b)
+{
+    switch (b) {
+    case HistoryHandlingBehavior::Push:
+        return Bindings::NavigationHistoryBehavior::Push;
+    case HistoryHandlingBehavior::Replace:
+        return Bindings::NavigationHistoryBehavior::Replace;
+    default:
+        return Bindings::NavigationHistoryBehavior::Auto;
+    }
+}
+
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#location-object-navigate
 WebIDL::ExceptionOr<void> Location::navigate(AK::URL url, HistoryHandlingBehavior history_handling)
 {
@@ -73,7 +86,7 @@ WebIDL::ExceptionOr<void> Location::navigate(AK::URL url, HistoryHandlingBehavio
     }
 
     // 4. Navigate navigable to url using sourceDocument, with exceptionsEnabled set to true and historyHandling set to historyHandling.
-    TRY(navigable->navigate(url, source_document, {}, nullptr, true, history_handling));
+    TRY(navigable->navigate(url, source_document, {}, nullptr, true, to_navigation_history_behavior(history_handling)));
 
     return {};
 }
