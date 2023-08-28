@@ -401,6 +401,7 @@ BrowserWindow::BrowserWindow(Optional<URL> const& initial_url, Browser::CookieJa
     m_reload_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Refresh));
     m_go_back_action->setEnabled(false);
     m_go_forward_action->setEnabled(false);
+    m_reload_action->setEnabled(false);
 
     if (initial_url.has_value()) {
         auto initial_url_string = qstring_from_ak_deprecated_string(initial_url->serialize());

@@ -139,6 +139,10 @@ enum class IsHistoryNavigation {
 
 - (void)reload:(id)sender
 {
+    if (m_history.is_empty()) {
+        return;
+    }
+
     m_is_history_navigation = IsHistoryNavigation::Yes;
 
     auto url = m_history.current().url;
@@ -179,6 +183,9 @@ enum class IsHistoryNavigation {
 
     auto* navigate_forward_button = (NSButton*)[[self navigate_forward_toolbar_item] view];
     [navigate_forward_button setEnabled:m_history.can_go_forward()];
+
+    auto* reload_button = (NSButton*)[[self reload_toolbar_item] view];
+    [reload_button setEnabled:!m_history.is_empty()];
 }
 
 - (void)showTabOverview:(id)sender
@@ -232,6 +239,7 @@ enum class IsHistoryNavigation {
     if (!_reload_toolbar_item) {
         auto* button = [self create_button:NSImageNameRefreshTemplate
                                with_action:@selector(reload:)];
+        [button setEnabled:NO];
 
         _reload_toolbar_item = [[NSToolbarItem alloc] initWithItemIdentifier:TOOLBAR_RELOAD_IDENTIFIER];
         [_reload_toolbar_item setView:button];

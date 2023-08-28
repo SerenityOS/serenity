@@ -732,6 +732,9 @@ URL Tab::url() const
 
 void Tab::reload()
 {
+    if (m_history.is_empty())
+        return;
+
     load(url());
 }
 
@@ -762,6 +765,7 @@ void Tab::update_actions()
         return;
     window.go_back_action().set_enabled(m_history.can_go_back());
     window.go_forward_action().set_enabled(m_history.can_go_forward());
+    window.reload_action().set_enabled(!m_history.is_empty());
 }
 
 ErrorOr<void> Tab::bookmark_current_url()
