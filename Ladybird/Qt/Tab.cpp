@@ -132,6 +132,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
 
         m_window->go_back_action().setEnabled(m_history.can_go_back());
         m_window->go_forward_action().setEnabled(m_history.can_go_forward());
+        m_window->reload_action().setEnabled(!m_history.is_empty());
 
         if (m_inspector_widget)
             m_inspector_widget->clear_dom_json();
@@ -587,6 +588,9 @@ void Tab::forward()
 
 void Tab::reload()
 {
+    if (m_history.is_empty())
+        return;
+
     m_is_history_navigation = true;
     view().load(m_history.current().url.to_deprecated_string());
 }

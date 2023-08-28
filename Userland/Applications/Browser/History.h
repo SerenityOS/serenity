@@ -35,6 +35,8 @@ public:
     bool can_go_forward(int steps = 1) { return (m_current + steps) < static_cast<int>(m_items.size()); }
     void clear();
 
+    bool is_empty() const { return m_items.is_empty(); }
+
 private:
     Vector<URLTitlePair> m_items;
     int m_current { -1 };
