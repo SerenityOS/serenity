@@ -238,13 +238,6 @@ void EventLoop::process()
         schedule();
 }
 
-// FIXME: This is here to paper over an issue in the HTML parser where it'll create new interpreters (and thus ESOs) on temporary documents created for innerHTML if it uses Document::realm() to get the global object.
-//        Use queue_global_task instead.
-void old_queue_global_task_with_document(HTML::Task::Source source, DOM::Document& document, JS::SafeFunction<void()> steps)
-{
-    main_thread_event_loop().task_queue().add(HTML::Task::create(source, &document, move(steps)));
-}
-
 // https://html.spec.whatwg.org/multipage/webappapis.html#queue-a-global-task
 void queue_global_task(HTML::Task::Source source, JS::Object& global_object, JS::SafeFunction<void()> steps)
 {
