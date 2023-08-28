@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='dosbox-staging'
-version='0.77.1'
+version='0.80.1'
 useconfigure='true'
 configopts=(
     "--cross-file" "${SERENITY_BUILD_DIR}/meson-cross-file.txt"
@@ -13,13 +13,14 @@ configopts=(
     '-Duse_png=false'
 )
 files=(
-    "https://github.com/dosbox-staging/dosbox-staging/archive/refs/tags/v${version}.tar.gz 85359efb7cd5c5c0336d88bdf023b7b462a8233490e00274fef0b85cca2f5f3c"
+    "https://github.com/dosbox-staging/dosbox-staging/archive/refs/tags/v${version}.tar.gz 2ca69e65e6c181197b63388c60487a3bcea804232a28c44c37704e70d49a0392"
 )
 depends=(
     'libslirp'
     'libpng'
     'opusfile'
     'SDL2'
+    'SDL2_image'
     'SDL2_net'
 )
 launcher_name='DOSBox'
