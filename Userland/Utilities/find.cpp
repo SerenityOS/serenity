@@ -226,28 +226,51 @@ public:
     SizeCommand(char const* arg)
     {
         StringView view { arg, strlen(arg) };
-        if (view.ends_with('c')) {
-            m_is_bytes = true;
+        auto suffix = view[view.length() - 1];
+        if (!is_ascii_digit(suffix)) {
+            switch (suffix) {
+            case 'c':
+                m_unit_size = 1;
+                break;
+            case 'w':
+                m_unit_size = 2;
+                break;
+            case 'k':
+                m_unit_size = KiB;
+                break;
+            case 'M':
+                m_unit_size = MiB;
+                break;
+            case 'G':
+                m_unit_size = GiB;
+                break;
+            case 'b':
+                // The behavior of this suffix is the same as no suffix.
+                break;
+            default:
+                fatal_error("Invalid -size type '{}'", suffix);
+            }
+
             view = view.substring_view(0, view.length() - 1);
         }
-        auto number = view.to_uint();
-        if (!number.has_value())
+        auto number = view.to_uint<u64>();
+        if (!number.has_value() || number.value() > AK::NumericLimits<off_t>::max())
             fatal_error("Invalid size: \033[1m{}", arg);
-        m_size = number.value();
+        m_number_of_units = number.value();
     }
 
 private:
     virtual bool evaluate(const struct stat& stat) const override
     {
-        if (m_is_bytes)
-            return stat.st_size == m_size;
+        if (m_unit_size == 1)
+            return stat.st_size == m_number_of_units;
 
-        auto size_divided_by_512_rounded_up = (stat.st_size + 511) / 512;
-        return size_divided_by_512_rounded_up == m_size;
+        auto size_divided_by_unit_rounded_up = (stat.st_size + m_unit_size - 1) / m_unit_size;
+        return size_divided_by_unit_rounded_up == m_number_of_units;
     }
 
-    off_t m_size { 0 };
-    bool m_is_bytes { false };
+    off_t m_number_of_units { 0 };
+    off_t m_unit_size { 512 };
 };
 
 class NameCommand : public Command {
