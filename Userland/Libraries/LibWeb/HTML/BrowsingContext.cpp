@@ -1635,4 +1635,11 @@ bool BrowsingContext::is_ancestor_of(BrowsingContext const& other) const
     return false;
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#snapshotting-target-snapshot-params
+SandboxingFlagSet determine_the_creation_sandboxing_flags(BrowsingContext const&, JS::GCPtr<DOM::Element>)
+{
+    // FIXME: Populate this once we have the proper flag sets on BrowsingContext
+    return {};
+}
+
 }
