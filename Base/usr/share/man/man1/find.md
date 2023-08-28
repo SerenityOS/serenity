@@ -32,9 +32,18 @@ specified commands, a `-print` command is implicitly appended.
   name, a numerical UID may be specified.
 * `-group name`: Checks if the file is owned by the given group. Instead of a
   group name, a numerical GID may be specified.
-* `-size number[c]`: Checks if the file has the given size in 512-byte blocks,
-  rounded up. If the size is followed by the `c` character, checks if the file
-  has the given size in bytes.
+* `-size number[bcwkMG]`: Checks if the file uses the specified `n` units of
+space rounded up to the nearest whole unit.
+  
+  The unit of space may be specified by any of these suffixes:
+
+  * `b`: 512-byte blocks. This is the default unit if no suffix is used.
+  * `c`: bytes
+  * `w`: two-byte words
+  * `k`: kibibytes (1024 bytes)
+  * `M`: mebibytes (1024 kibibytes)
+  * `G`: gibibytes (1024 mebibytes)
+
 * `-name pattern`: Checks if the file name matches the given global-style
   pattern (case sensitive).
 * `-iname pattern`: Checks if the file name matches the given global-style
