@@ -168,14 +168,11 @@ CSSPixelRect PaintableBox::absolute_paint_rect() const
 
 StackingContext* PaintableBox::enclosing_stacking_context()
 {
-    for (auto* ancestor = layout_box().parent(); ancestor; ancestor = ancestor->parent()) {
-        if (!is<Layout::Box>(ancestor))
-            continue;
-        auto& ancestor_box = static_cast<Layout::Box&>(const_cast<Layout::NodeWithStyle&>(*ancestor));
-        if (auto* ancestor_paintable_box = ancestor_box.paintable_box(); ancestor_paintable_box && ancestor_paintable_box->stacking_context())
-            return const_cast<StackingContext*>(ancestor_paintable_box->stacking_context());
+    for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
+        if (auto* stacking_context = ancestor->stacking_context_rooted_here())
+            return const_cast<StackingContext*>(stacking_context);
     }
-    // We should always reach the Layout::Viewport stacking context.
+    // We should always reach the viewport's stacking context.
     VERIFY_NOT_REACHED();
 }
 
