@@ -9,18 +9,34 @@
 
 #include <AK/String.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibWeb/Bindings/NavigationPrototype.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/ActivateTab.h>
 #include <LibWeb/HTML/HistoryHandlingBehavior.h>
 #include <LibWeb/HTML/POSTResource.h>
+#include <LibWeb/HTML/SandboxingFlagSet.h>
 #include <LibWeb/HTML/SourceSnapshotParams.h>
+#include <LibWeb/HTML/StructuredSerialize.h>
 #include <LibWeb/HTML/TokenizedFeatures.h>
+#include <LibWeb/XHR/FormDataEntry.h>
 
 namespace Web::HTML {
 
 enum class CSPNavigationType {
     Other,
     FormSubmission,
+};
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#user-navigation-involvement
+enum class UserNaviagationInvolvement {
+    BrowserUI,
+    Activation,
+    None,
+};
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#target-snapshot-params
+struct TargetSnapshotParams {
+    SandboxingFlagSet sandboxing_flags {};
 };
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#navigable
@@ -97,9 +113,11 @@ public:
         Variant<Empty, String, POSTResource> document_resource = Empty {},
         JS::GCPtr<Fetch::Infrastructure::Response> = nullptr,
         bool exceptions_enabled = false,
-        HistoryHandlingBehavior = HistoryHandlingBehavior::Push,
-        CSPNavigationType csp_navigation_type = CSPNavigationType::Other,
-        ReferrerPolicy::ReferrerPolicy = ReferrerPolicy::ReferrerPolicy::EmptyString);
+        Bindings::NavigationHistoryBehavior = Bindings::NavigationHistoryBehavior::Auto,
+        Optional<SerializationRecord> navigation_api_state = {},
+        Optional<Vector<XHR::FormDataEntry>&> form_data_entry_list = {},
+        ReferrerPolicy::ReferrerPolicy = ReferrerPolicy::ReferrerPolicy::EmptyString,
+        UserNaviagationInvolvement = UserNaviagationInvolvement::None);
 
     WebIDL::ExceptionOr<void> navigate_to_a_fragment(AK::URL const&, HistoryHandlingBehavior, String navigation_id);
 
@@ -116,6 +134,9 @@ protected:
     Variant<Empty, Traversal, String> m_ongoing_navigation;
 
 private:
+    bool allowed_by_sandboxing_to_navigate(Navigable const& target, SourceSnapshotParams const&);
+    TargetSnapshotParams snapshot_target_snapshot_params();
+
     // https://html.spec.whatwg.org/multipage/document-sequences.html#nav-id
     String m_id;
 
@@ -139,5 +160,6 @@ private:
 };
 
 bool navigation_must_be_a_replace(AK::URL const& url, DOM::Document const& document);
+void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable>, HistoryHandlingBehavior, JS::NonnullGCPtr<SessionHistoryEntry>);
 
 }
