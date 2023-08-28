@@ -85,10 +85,6 @@ Node::~Node() = default;
 void Node::finalize()
 {
     Base::finalize();
-
-    if (layout_node() && layout_node()->parent())
-        layout_node()->parent()->remove_child(*layout_node());
-
     deallocate_node_id(m_id);
 }
 
