@@ -30,11 +30,11 @@ struct Traits<CellCoordinates> : public GenericTraits<CellCoordinates> {
 
 namespace Web::Painting {
 
-static void collect_cell_boxes(Vector<PaintableBox const*>& cell_boxes, PaintableBox const& table_paintable)
+static void collect_cell_boxes(Vector<PaintableBox const&>& cell_boxes, PaintableBox const& table_paintable)
 {
     table_paintable.for_each_child_of_type<PaintableBox>([&](auto& child) {
         if (child.display().is_table_cell()) {
-            cell_boxes.append(&child);
+            cell_boxes.append(child);
         } else {
             collect_cell_boxes(cell_boxes, child);
         }
@@ -343,47 +343,47 @@ static DeviceBorderDataWithElementKind device_border_data_from_css_border_data(P
     };
 }
 
-static void paint_separate_cell_borders(PaintableBox const* cell_box, HashMap<CellCoordinates, DevicePixelRect> const& cell_coordinates_to_device_rect, PaintContext& context)
+static void paint_separate_cell_borders(PaintableBox const& cell_box, HashMap<CellCoordinates, DevicePixelRect> const& cell_coordinates_to_device_rect, PaintContext& context)
 {
-    auto borders_data = cell_box->override_borders_data().has_value() ? PaintableBox::remove_element_kind_from_borders_data(cell_box->override_borders_data().value()) : BordersData {
-        .top = cell_box->box_model().border.top == 0 ? CSS::BorderData() : cell_box->computed_values().border_top(),
-        .right = cell_box->box_model().border.right == 0 ? CSS::BorderData() : cell_box->computed_values().border_right(),
-        .bottom = cell_box->box_model().border.bottom == 0 ? CSS::BorderData() : cell_box->computed_values().border_bottom(),
-        .left = cell_box->box_model().border.left == 0 ? CSS::BorderData() : cell_box->computed_values().border_left(),
+    auto borders_data = cell_box.override_borders_data().has_value() ? PaintableBox::remove_element_kind_from_borders_data(cell_box.override_borders_data().value()) : BordersData {
+        .top = cell_box.box_model().border.top == 0 ? CSS::BorderData() : cell_box.computed_values().border_top(),
+        .right = cell_box.box_model().border.right == 0 ? CSS::BorderData() : cell_box.computed_values().border_right(),
+        .bottom = cell_box.box_model().border.bottom == 0 ? CSS::BorderData() : cell_box.computed_values().border_bottom(),
+        .left = cell_box.box_model().border.left == 0 ? CSS::BorderData() : cell_box.computed_values().border_left(),
     };
-    auto cell_rect = cell_coordinates_to_device_rect.get({ cell_box->table_cell_coordinates()->row_index, cell_box->table_cell_coordinates()->column_index }).value();
-    paint_all_borders(context, cell_rect, cell_box->normalized_border_radii_data(), borders_data);
+    auto cell_rect = cell_coordinates_to_device_rect.get({ cell_box.table_cell_coordinates()->row_index, cell_box.table_cell_coordinates()->column_index }).value();
+    paint_all_borders(context, cell_rect, cell_box.normalized_border_radii_data(), borders_data);
 }
 
 void paint_table_borders(PaintContext& context, PaintableBox const& table_paintable)
 {
     // Partial implementation of painting according to the collapsing border model:
     // https://www.w3.org/TR/CSS22/tables.html#collapsing-borders
-    Vector<PaintableBox const*> cell_boxes;
+    Vector<PaintableBox const&> cell_boxes;
     collect_cell_boxes(cell_boxes, table_paintable);
     Vector<BorderEdgePaintingInfo> border_edge_painting_info_list;
     HashMap<CellCoordinates, PaintableBox const*> cell_coordinates_to_box;
     size_t row_count = 0;
     size_t column_count = 0;
-    for (auto const cell_box : cell_boxes) {
+    for (auto const& cell_box : cell_boxes) {
         cell_coordinates_to_box.set(CellCoordinates {
-                                        .row_index = cell_box->table_cell_coordinates()->row_index,
-                                        .column_index = cell_box->table_cell_coordinates()->column_index },
-            cell_box);
-        row_count = max(row_count, cell_box->table_cell_coordinates()->row_index + cell_box->table_cell_coordinates()->row_span);
-        column_count = max(column_count, cell_box->table_cell_coordinates()->column_index + cell_box->table_cell_coordinates()->column_span);
+                                        .row_index = cell_box.table_cell_coordinates()->row_index,
+                                        .column_index = cell_box.table_cell_coordinates()->column_index },
+            &cell_box);
+        row_count = max(row_count, cell_box.table_cell_coordinates()->row_index + cell_box.table_cell_coordinates()->row_span);
+        column_count = max(column_count, cell_box.table_cell_coordinates()->column_index + cell_box.table_cell_coordinates()->column_span);
     }
     auto cell_coordinates_to_device_rect = snap_cells_to_device_coordinates(cell_coordinates_to_box, row_count, column_count, context);
-    for (auto const cell_box : cell_boxes) {
-        if (cell_box->computed_values().border_collapse() == CSS::BorderCollapse::Separate) {
+    for (auto const& cell_box : cell_boxes) {
+        if (cell_box.computed_values().border_collapse() == CSS::BorderCollapse::Separate) {
             paint_separate_cell_borders(cell_box, cell_coordinates_to_device_rect, context);
             continue;
         }
-        auto css_borders_data = cell_box->override_borders_data().has_value() ? cell_box->override_borders_data().value() : PaintableBox::BordersDataWithElementKind {
-            .top = { .border_data = cell_box->box_model().border.top == 0 ? CSS::BorderData() : cell_box->computed_values().border_top(), .element_kind = PaintableBox::ConflictingElementKind::Cell },
-            .right = { .border_data = cell_box->box_model().border.right == 0 ? CSS::BorderData() : cell_box->computed_values().border_right(), .element_kind = PaintableBox::ConflictingElementKind::Cell },
-            .bottom = { .border_data = cell_box->box_model().border.bottom == 0 ? CSS::BorderData() : cell_box->computed_values().border_bottom(), .element_kind = PaintableBox::ConflictingElementKind::Cell },
-            .left = { .border_data = cell_box->box_model().border.left == 0 ? CSS::BorderData() : cell_box->computed_values().border_left(), .element_kind = PaintableBox::ConflictingElementKind::Cell },
+        auto css_borders_data = cell_box.override_borders_data().has_value() ? cell_box.override_borders_data().value() : PaintableBox::BordersDataWithElementKind {
+            .top = { .border_data = cell_box.box_model().border.top == 0 ? CSS::BorderData() : cell_box.computed_values().border_top(), .element_kind = PaintableBox::ConflictingElementKind::Cell },
+            .right = { .border_data = cell_box.box_model().border.right == 0 ? CSS::BorderData() : cell_box.computed_values().border_right(), .element_kind = PaintableBox::ConflictingElementKind::Cell },
+            .bottom = { .border_data = cell_box.box_model().border.bottom == 0 ? CSS::BorderData() : cell_box.computed_values().border_bottom(), .element_kind = PaintableBox::ConflictingElementKind::Cell },
+            .left = { .border_data = cell_box.box_model().border.left == 0 ? CSS::BorderData() : cell_box.computed_values().border_left(), .element_kind = PaintableBox::ConflictingElementKind::Cell },
         };
         DeviceBordersDataWithElementKind borders_data = {
             .top = device_border_data_from_css_border_data(css_borders_data.top, context),
@@ -391,39 +391,39 @@ void paint_table_borders(PaintContext& context, PaintableBox const& table_painta
             .bottom = device_border_data_from_css_border_data(css_borders_data.bottom, context),
             .left = device_border_data_from_css_border_data(css_borders_data.left, context),
         };
-        auto cell_rect = cell_coordinates_to_device_rect.get({ cell_box->table_cell_coordinates()->row_index, cell_box->table_cell_coordinates()->column_index }).value();
+        auto cell_rect = cell_coordinates_to_device_rect.get({ cell_box.table_cell_coordinates()->row_index, cell_box.table_cell_coordinates()->column_index }).value();
         CellCoordinates right_cell_coordinates {
-            .row_index = cell_box->table_cell_coordinates()->row_index,
-            .column_index = cell_box->table_cell_coordinates()->column_index + cell_box->table_cell_coordinates()->column_span
+            .row_index = cell_box.table_cell_coordinates()->row_index,
+            .column_index = cell_box.table_cell_coordinates()->column_index + cell_box.table_cell_coordinates()->column_span
         };
         auto maybe_right_cell = cell_coordinates_to_device_rect.get(right_cell_coordinates);
         CellCoordinates down_cell_coordinates {
-            .row_index = cell_box->table_cell_coordinates()->row_index + cell_box->table_cell_coordinates()->row_span,
-            .column_index = cell_box->table_cell_coordinates()->column_index
+            .row_index = cell_box.table_cell_coordinates()->row_index + cell_box.table_cell_coordinates()->row_span,
+            .column_index = cell_box.table_cell_coordinates()->column_index
         };
         auto maybe_down_cell = cell_coordinates_to_device_rect.get(down_cell_coordinates);
         if (maybe_right_cell.has_value())
             border_edge_painting_info_list.append(make_right_cell_edge(maybe_right_cell.value(), cell_rect, borders_data, right_cell_coordinates));
         if (maybe_down_cell.has_value())
             border_edge_painting_info_list.append(make_down_cell_edge(maybe_down_cell.value(), cell_rect, borders_data, down_cell_coordinates));
-        if (cell_box->table_cell_coordinates()->row_index == 0)
+        if (cell_box.table_cell_coordinates()->row_index == 0)
             border_edge_painting_info_list.append(make_first_row_top_cell_edge(cell_rect, borders_data,
-                { .row_index = 0, .column_index = cell_box->table_cell_coordinates()->column_index }));
-        if (cell_box->table_cell_coordinates()->row_index + cell_box->table_cell_coordinates()->row_span == row_count)
+                { .row_index = 0, .column_index = cell_box.table_cell_coordinates()->column_index }));
+        if (cell_box.table_cell_coordinates()->row_index + cell_box.table_cell_coordinates()->row_span == row_count)
             border_edge_painting_info_list.append(make_last_row_bottom_cell_edge(cell_rect, borders_data,
-                { .row_index = row_count - 1, .column_index = cell_box->table_cell_coordinates()->column_index }));
-        if (cell_box->table_cell_coordinates()->column_index == 0)
+                { .row_index = row_count - 1, .column_index = cell_box.table_cell_coordinates()->column_index }));
+        if (cell_box.table_cell_coordinates()->column_index == 0)
             border_edge_painting_info_list.append(make_first_column_left_cell_edge(cell_rect, borders_data,
-                { .row_index = cell_box->table_cell_coordinates()->row_index, .column_index = 0 }));
-        if (cell_box->table_cell_coordinates()->column_index + cell_box->table_cell_coordinates()->column_span == column_count)
+                { .row_index = cell_box.table_cell_coordinates()->row_index, .column_index = 0 }));
+        if (cell_box.table_cell_coordinates()->column_index + cell_box.table_cell_coordinates()->column_span == column_count)
             border_edge_painting_info_list.append(make_last_column_right_cell_edge(cell_rect, borders_data,
-                { .row_index = cell_box->table_cell_coordinates()->row_index, .column_index = column_count - 1 }));
+                { .row_index = cell_box.table_cell_coordinates()->row_index, .column_index = column_count - 1 }));
     }
 
     paint_collected_edges(context, border_edge_painting_info_list);
 
-    for (auto const cell_box : cell_boxes) {
-        auto const& border_radii_data = cell_box->normalized_border_radii_data();
+    for (auto const& cell_box : cell_boxes) {
+        auto const& border_radii_data = cell_box.normalized_border_radii_data();
         auto top_left = border_radii_data.top_left.as_corner(context);
         auto top_right = border_radii_data.top_right.as_corner(context);
         auto bottom_right = border_radii_data.bottom_right.as_corner(context);
@@ -431,13 +431,13 @@ void paint_table_borders(PaintContext& context, PaintableBox const& table_painta
         if (!top_left && !top_right && !bottom_left && !bottom_right) {
             continue;
         } else {
-            auto borders_data = cell_box->override_borders_data().has_value() ? PaintableBox::remove_element_kind_from_borders_data(cell_box->override_borders_data().value()) : BordersData {
-                .top = cell_box->box_model().border.top == 0 ? CSS::BorderData() : cell_box->computed_values().border_top(),
-                .right = cell_box->box_model().border.right == 0 ? CSS::BorderData() : cell_box->computed_values().border_right(),
-                .bottom = cell_box->box_model().border.bottom == 0 ? CSS::BorderData() : cell_box->computed_values().border_bottom(),
-                .left = cell_box->box_model().border.left == 0 ? CSS::BorderData() : cell_box->computed_values().border_left(),
+            auto borders_data = cell_box.override_borders_data().has_value() ? PaintableBox::remove_element_kind_from_borders_data(cell_box.override_borders_data().value()) : BordersData {
+                .top = cell_box.box_model().border.top == 0 ? CSS::BorderData() : cell_box.computed_values().border_top(),
+                .right = cell_box.box_model().border.right == 0 ? CSS::BorderData() : cell_box.computed_values().border_right(),
+                .bottom = cell_box.box_model().border.bottom == 0 ? CSS::BorderData() : cell_box.computed_values().border_bottom(),
+                .left = cell_box.box_model().border.left == 0 ? CSS::BorderData() : cell_box.computed_values().border_left(),
             };
-            paint_all_borders(context, context.rounded_device_rect(cell_box->absolute_border_box_rect()), cell_box->normalized_border_radii_data(), borders_data);
+            paint_all_borders(context, context.rounded_device_rect(cell_box.absolute_border_box_rect()), cell_box.normalized_border_radii_data(), borders_data);
         }
     }
 }
