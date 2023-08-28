@@ -86,19 +86,20 @@
                        fromTab:(Tab*)tab
                    activateTab:(Web::HTML::ActivateTab)activate_tab
 {
-    auto* controller = [[TabController alloc] init:url.value_or(m_new_tab_page_url)];
-    [controller showWindow:nil];
+    auto* controller = [self createNewTab:activate_tab fromTab:tab];
+    [controller loadURL:url.value_or(m_new_tab_page_url)];
 
-    if (tab) {
-        [[tab tabGroup] addWindow:controller.window];
+    return controller;
+}
 
-        // FIXME: Can we create the tabbed window above without it becoming active in the first place?
-        if (activate_tab == Web::HTML::ActivateTab::No) {
-            [tab orderFront:nil];
-        }
-    }
+- (nonnull TabController*)createNewTab:(StringView)html
+                                   url:(URL const&)url
+                               fromTab:(nullable Tab*)tab
+                           activateTab:(Web::HTML::ActivateTab)activate_tab
+{
+    auto* controller = [self createNewTab:activate_tab fromTab:tab];
+    [controller loadHTML:html url:url];
 
-    [self.managed_tabs addObject:controller];
     return controller;
 }
 
@@ -123,6 +124,25 @@
 }
 
 #pragma mark - Private methods
+
+- (nonnull TabController*)createNewTab:(Web::HTML::ActivateTab)activate_tab
+                               fromTab:(nullable Tab*)tab
+{
+    auto* controller = [[TabController alloc] init];
+    [controller showWindow:nil];
+
+    if (tab) {
+        [[tab tabGroup] addWindow:controller.window];
+
+        // FIXME: Can we create the tabbed window above without it becoming active in the first place?
+        if (activate_tab == Web::HTML::ActivateTab::No) {
+            [tab orderFront:nil];
+        }
+    }
+
+    [self.managed_tabs addObject:controller];
+    return controller;
+}
 
 - (void)closeCurrentTab:(id)sender
 {

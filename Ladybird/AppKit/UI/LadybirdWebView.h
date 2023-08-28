@@ -13,7 +13,8 @@
 
 @interface LadybirdWebView : NSClipView
 
-- (void)load:(URL const&)url;
+- (void)loadURL:(URL const&)url;
+- (void)loadHTML:(StringView)html url:(URL const&)url;
 
 - (void)handleResize;
 - (void)handleScroll;

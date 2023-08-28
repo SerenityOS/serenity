@@ -32,7 +32,6 @@ enum class IsHistoryNavigation {
 
 @interface TabController () <NSToolbarDelegate, NSSearchFieldDelegate>
 {
-    URL m_url;
     DeprecatedString m_title;
 
     Browser::History m_history;
@@ -63,7 +62,7 @@ enum class IsHistoryNavigation {
 @synthesize new_tab_toolbar_item = _new_tab_toolbar_item;
 @synthesize tab_overview_toolbar_item = _tab_overview_toolbar_item;
 
-- (instancetype)init:(URL)url
+- (instancetype)init
 {
     if (self = [super init]) {
         self.toolbar = [[NSToolbar alloc] initWithIdentifier:TOOLBAR_IDENTIFIER];
@@ -72,7 +71,6 @@ enum class IsHistoryNavigation {
         [self.toolbar setAllowsUserCustomization:NO];
         [self.toolbar setSizeMode:NSToolbarSizeModeRegular];
 
-        m_url = move(url);
         m_is_history_navigation = IsHistoryNavigation::No;
     }
 
@@ -81,9 +79,14 @@ enum class IsHistoryNavigation {
 
 #pragma mark - Public methods
 
-- (void)load:(URL const&)url
+- (void)loadURL:(URL const&)url
 {
-    [[self tab].web_view load:url];
+    [[self tab].web_view loadURL:url];
+}
+
+- (void)loadHTML:(StringView)html url:(URL const&)url
+{
+    [[self tab].web_view loadHTML:html url:url];
 }
 
 - (void)onLoadStart:(URL const&)url isRedirect:(BOOL)isRedirect
@@ -121,7 +124,7 @@ enum class IsHistoryNavigation {
     m_history.go_back();
 
     auto url = m_history.current().url;
-    [self load:url];
+    [self loadURL:url];
 }
 
 - (void)navigateForward:(id)sender
@@ -134,7 +137,7 @@ enum class IsHistoryNavigation {
     m_history.go_forward();
 
     auto url = m_history.current().url;
-    [self load:url];
+    [self loadURL:url];
 }
 
 - (void)reload:(id)sender
@@ -146,7 +149,7 @@ enum class IsHistoryNavigation {
     m_is_history_navigation = IsHistoryNavigation::Yes;
 
     auto url = m_history.current().url;
-    [self load:url];
+    [self loadURL:url];
 }
 
 - (void)clearHistory
@@ -312,8 +315,6 @@ enum class IsHistoryNavigation {
 - (IBAction)showWindow:(id)sender
 {
     self.window = [[Tab alloc] init];
-    [self load:m_url];
-
     [self.window setDelegate:self];
 
     [self.window setToolbar:self.toolbar];
@@ -397,7 +398,7 @@ enum class IsHistoryNavigation {
 
     auto* url_string = [[text_view textStorage] string];
     auto url = Ladybird::sanitize_url(url_string);
-    [self load:url];
+    [self loadURL:url];
 
     [self.window makeFirstResponder:nil];
     return YES;

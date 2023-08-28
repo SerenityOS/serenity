@@ -566,6 +566,11 @@ void Tab::navigate(QString url_qstring)
     view().load(url_string);
 }
 
+void Tab::load_html(StringView html, URL const& url)
+{
+    view().load_html(html, url);
+}
+
 void Tab::back()
 {
     if (!m_history.can_go_back())

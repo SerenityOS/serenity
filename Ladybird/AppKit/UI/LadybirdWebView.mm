@@ -100,9 +100,14 @@ struct HideCursor {
 
 #pragma mark - Public methods
 
-- (void)load:(URL const&)url
+- (void)loadURL:(URL const&)url
 {
     m_web_view_bridge->load(url);
+}
+
+- (void)loadHTML:(StringView)html url:(URL const&)url
+{
+    m_web_view_bridge->load_html(html, url);
 }
 
 - (void)handleResize
@@ -364,7 +369,7 @@ struct HideCursor {
                            fromTab:[self tab]
                        activateTab:Web::HTML::ActivateTab::Yes];
         } else {
-            [[self tabController] load:url];
+            [[self tabController] loadURL:url];
         }
     };
 

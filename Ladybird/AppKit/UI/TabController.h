@@ -13,9 +13,10 @@
 
 @interface TabController : NSWindowController <NSWindowDelegate>
 
-- (instancetype)init:(URL)url;
+- (instancetype)init;
 
-- (void)load:(URL const&)url;
+- (void)loadURL:(URL const&)url;
+- (void)loadHTML:(StringView)html url:(URL const&)url;
 
 - (void)onLoadStart:(URL const&)url isRedirect:(BOOL)isRedirect;
 - (void)onTitleChange:(DeprecatedString const&)title;
