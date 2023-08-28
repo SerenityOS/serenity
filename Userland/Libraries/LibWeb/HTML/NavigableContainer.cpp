@@ -211,17 +211,6 @@ HTML::WindowProxy* NavigableContainer::content_window()
     return m_nested_browsing_context->window_proxy();
 }
 
-// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#matches-about:blank
-static bool url_matches_about_blank(AK::URL const& url)
-{
-    // A URL matches about:blank if its scheme is "about", its path contains a single string "blank", its username and password are the empty string, and its host is null.
-    return url.scheme() == "about"sv
-        && url.serialize_path() == "blank"sv
-        && url.raw_username().is_empty()
-        && url.raw_password().is_empty()
-        && url.host().has<Empty>();
-}
-
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#shared-attribute-processing-steps-for-iframe-and-frame-elements
 void NavigableContainer::shared_attribute_processing_steps_for_iframe_and_frame(bool initial_insertion)
 {
