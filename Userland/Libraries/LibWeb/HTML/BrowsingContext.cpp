@@ -37,7 +37,7 @@
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#matches-about:blank
-static bool url_matches_about_blank(AK::URL const& url)
+bool url_matches_about_blank(AK::URL const& url)
 {
     // A URL matches about:blank if its scheme is "about", its path contains a single string "blank", its username and password are the empty string, and its host is null.
     return url.scheme() == "about"sv

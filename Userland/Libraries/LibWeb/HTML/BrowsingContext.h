@@ -21,6 +21,7 @@
 #include <LibWeb/HTML/HistoryHandlingBehavior.h>
 #include <LibWeb/HTML/NavigableContainer.h>
 #include <LibWeb/HTML/Origin.h>
+#include <LibWeb/HTML/SandboxingFlagSet.h>
 #include <LibWeb/HTML/SessionHistoryEntry.h>
 #include <LibWeb/HTML/TokenizedFeatures.h>
 #include <LibWeb/HTML/VisibilityState.h>
@@ -336,5 +337,8 @@ private:
 HTML::Origin determine_the_origin(BrowsingContext const& browsing_context, Optional<AK::URL> url, SandboxingFlagSet sandbox_flags, Optional<HTML::Origin> invocation_origin);
 
 HTML::Origin determine_the_origin(AK::URL const& url, SandboxingFlagSet sandbox_flags, Optional<HTML::Origin> source_origin, Optional<HTML::Origin> container_origin);
+
+// FIXME: Find a better home for this
+bool url_matches_about_blank(AK::URL const& url);
 
 }
