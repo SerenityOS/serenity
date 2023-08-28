@@ -248,3 +248,9 @@ test("UTF-16", () => {
 
     expect("".replace("", "😀")).toBe("😀");
 });
+
+test("substitution with capture group", () => {
+    expect("A".replace(/(A)/, "$1")).toBe("A");
+    expect("A".replace(/(A)/, "$10")).toBe("A0");
+    expect("A".replace(/(A)/, "$2")).toBe("$2");
+});
