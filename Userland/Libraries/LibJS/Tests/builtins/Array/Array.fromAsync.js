@@ -3,13 +3,13 @@ test("length is 1", () => {
 });
 
 describe("normal behavior", () => {
-    function checkResult(promise) {
+    function checkResult(promise, type = Array) {
         expect(promise).toBeInstanceOf(Promise);
         let error = null;
         let passed = false;
         promise
             .then(value => {
-                expect(value instanceof Array).toBeTrue();
+                expect(value instanceof type).toBeTrue();
                 expect(value[0]).toBe(0);
                 expect(value[1]).toBe(2);
                 expect(value[2]).toBe(4);
@@ -56,5 +56,25 @@ describe("normal behavior", () => {
             async element => element * 2
         );
         checkResult(promise);
+    });
+
+    test("does not double construct from array like object", () => {
+        let callCount = 0;
+
+        class TestArray {
+            constructor() {
+                callCount += 1;
+            }
+        }
+
+        let promise = Array.fromAsync.call(TestArray, {
+            length: 3,
+            0: Promise.resolve(0),
+            1: Promise.resolve(2),
+            2: Promise.resolve(4),
+        });
+
+        checkResult(promise, TestArray);
+        expect(callCount).toBe(1);
     });
 });

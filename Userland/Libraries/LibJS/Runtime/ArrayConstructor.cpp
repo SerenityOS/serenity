@@ -335,39 +335,39 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from_async)
             using_sync_iterator = TRY(async_items.get_method(vm, vm.well_known_symbol_iterator()));
         }
 
-        GCPtr<Object> array;
-
-        // e. If IsConstructor(C) is true, then
-        if (constructor.is_constructor()) {
-            // i. Let A be ? Construct(C).
-            array = TRY(JS::construct(vm, constructor.as_function()));
-        }
-        // f. Else,
-        else {
-            // i. Let A be ! ArrayCreate(0).
-            array = MUST(Array::create(realm, 0));
-        }
-
-        // g. Let iteratorRecord be undefined.
+        // e. Let iteratorRecord be undefined.
         Optional<IteratorRecord> iterator_record;
 
-        // h. If usingAsyncIterator is not undefined, then
+        // f. If usingAsyncIterator is not undefined, then
         if (using_async_iterator) {
             // i. Set iteratorRecord to ? GetIterator(asyncItems, async, usingAsyncIterator).
             // FIXME: The Array.from proposal is out of date - it should be using GetIteratorFromMethod.
             iterator_record = TRY(get_iterator_from_method(vm, async_items, *using_async_iterator));
         }
-        // i. Else if usingSyncIterator is not undefined, then
+        // g. Else if usingSyncIterator is not undefined, then
         else if (using_sync_iterator) {
             // i. Set iteratorRecord to ? CreateAsyncFromSyncIterator(GetIterator(asyncItems, sync, usingSyncIterator)).
             // FIXME: The Array.from proposal is out of date - it should be using GetIteratorFromMethod.
             iterator_record = create_async_from_sync_iterator(vm, TRY(get_iterator_from_method(vm, async_items, *using_sync_iterator)));
         }
 
-        // j. If iteratorRecord is not undefined, then
+        // h. If iteratorRecord is not undefined, then
         if (iterator_record.has_value()) {
-            // i. Let k be 0.
-            // ii. Repeat,
+            GCPtr<Object> array;
+
+            // i. If IsConstructor(C) is true, then
+            if (constructor.is_constructor()) {
+                // 1. Let A be ? Construct(C).
+                array = TRY(JS::construct(vm, constructor.as_function()));
+            }
+            // ii. Else,
+            else {
+                // i. Let A be ! ArrayCreate(0).
+                array = MUST(Array::create(realm, 0));
+            }
+
+            // iii. Let k be 0.
+            // iv. Repeat,
             for (size_t k = 0;; ++k) {
                 // 1. If k ≥ 2^53 - 1, then
                 if (k >= MAX_ARRAY_LIKE_INDEX) {
@@ -470,6 +470,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from_async)
 
             // iii. Let len be ? LengthOfArrayLike(arrayLike).
             auto length = TRY(length_of_array_like(vm, array_like));
+
+            GCPtr<Object> array;
 
             // iv. If IsConstructor(C) is true, then
             if (constructor.is_constructor()) {
