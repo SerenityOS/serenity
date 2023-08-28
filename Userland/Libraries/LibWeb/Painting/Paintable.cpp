@@ -20,6 +20,7 @@ Paintable::Paintable(Layout::Node const& layout_node)
 void Paintable::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
+    TreeNode::visit_edges(visitor);
     visitor.visit(m_dom_node);
     visitor.visit(m_layout_node);
     visitor.visit(m_browsing_context);
