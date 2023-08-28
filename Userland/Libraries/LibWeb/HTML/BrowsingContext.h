@@ -338,6 +338,8 @@ HTML::Origin determine_the_origin(BrowsingContext const& browsing_context, Optio
 
 HTML::Origin determine_the_origin(AK::URL const& url, SandboxingFlagSet sandbox_flags, Optional<HTML::Origin> source_origin, Optional<HTML::Origin> container_origin);
 
+SandboxingFlagSet determine_the_creation_sandboxing_flags(BrowsingContext const&, JS::GCPtr<DOM::Element> embedder);
+
 // FIXME: Find a better home for this
 bool url_matches_about_blank(AK::URL const& url);
 
