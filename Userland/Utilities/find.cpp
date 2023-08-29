@@ -181,7 +181,7 @@ public:
             m_uid = passwd->pw_uid;
         } else {
             // Attempt to parse it as decimal UID.
-            auto number = StringView { arg, strlen(arg) }.to_uint();
+            auto number = StringView { arg, strlen(arg) }.to_uint<uid_t>();
             if (!number.has_value())
                 fatal_error("Invalid user: \033[1m{}", arg);
             m_uid = number.value();
