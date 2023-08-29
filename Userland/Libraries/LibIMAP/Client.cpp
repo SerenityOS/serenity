@@ -171,7 +171,7 @@ ErrorOr<void> Client::send_raw(StringView data)
     return {};
 }
 
-ErrorOr<RefPtr<Promise<Optional<Response>>>> Client::send_command(Command&& command)
+NonnullRefPtr<Promise<Optional<Response>>> Client::send_command(Command&& command)
 {
     m_command_queue.append(move(command));
     m_current_command++;
@@ -189,7 +189,7 @@ ErrorOr<RefPtr<Promise<Optional<Response>>>> Client::send_command(Command&& comm
 }
 
 template<typename T>
-RefPtr<Promise<Optional<T>>> cast_promise(RefPtr<Promise<Optional<Response>>> promise_variant)
+NonnullRefPtr<Promise<Optional<T>>> cast_promise(NonnullRefPtr<Promise<Optional<Response>>> promise_variant)
 {
     auto new_promise = promise_variant->map<Optional<T>>(
         [](Optional<Response>& variant) {
@@ -198,44 +198,44 @@ RefPtr<Promise<Optional<T>>> cast_promise(RefPtr<Promise<Optional<Response>>> pr
     return new_promise;
 }
 
-ErrorOr<RefPtr<Promise<Optional<SolidResponse>>>> Client::login(StringView username, StringView password)
+NonnullRefPtr<Promise<Optional<SolidResponse>>> Client::login(StringView username, StringView password)
 {
     auto command = Command { CommandType::Login, m_current_command, { serialize_astring(username), serialize_astring(password) } };
-    return cast_promise<SolidResponse>(TRY(send_command(move(command))));
+    return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
-ErrorOr<RefPtr<Promise<Optional<SolidResponse>>>> Client::list(StringView reference_name, StringView mailbox)
+NonnullRefPtr<Promise<Optional<SolidResponse>>> Client::list(StringView reference_name, StringView mailbox)
 {
     auto command = Command { CommandType::List, m_current_command,
         { DeprecatedString::formatted("\"{}\"", reference_name),
             DeprecatedString::formatted("\"{}\"", mailbox) } };
-    return cast_promise<SolidResponse>(TRY(send_command(move(command))));
+    return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
-ErrorOr<RefPtr<Promise<Optional<SolidResponse>>>> Client::lsub(StringView reference_name, StringView mailbox)
+NonnullRefPtr<Promise<Optional<SolidResponse>>> Client::lsub(StringView reference_name, StringView mailbox)
 {
     auto command = Command { CommandType::ListSub, m_current_command,
         { DeprecatedString::formatted("\"{}\"", reference_name),
             DeprecatedString::formatted("\"{}\"", mailbox) } };
-    return cast_promise<SolidResponse>(TRY(send_command(move(command))));
+    return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
-ErrorOr<RefPtr<Promise<Optional<SolidResponse>>>> Client::fetch(FetchCommand request, bool uid)
+NonnullRefPtr<Promise<Optional<SolidResponse>>> Client::fetch(FetchCommand request, bool uid)
 {
     auto command = Command { uid ? CommandType::UIDFetch : CommandType::Fetch, m_current_command, { request.serialize() } };
-    return cast_promise<SolidResponse>(TRY(send_command(move(command))));
+    return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
-ErrorOr<RefPtr<Promise<Optional<Response>>>> Client::send_simple_command(CommandType type)
+NonnullRefPtr<Promise<Optional<Response>>> Client::send_simple_command(CommandType type)
 {
     auto command = Command { type, m_current_command, {} };
-    return TRY(send_command(move(command)));
+    return send_command(move(command));
 }
 
-ErrorOr<RefPtr<Promise<Optional<SolidResponse>>>> Client::select(StringView string)
+NonnullRefPtr<Promise<Optional<SolidResponse>>> Client::select(StringView string)
 {
     auto command = Command { CommandType::Select, m_current_command, { serialize_astring(string) } };
-    return cast_promise<SolidResponse>(TRY(send_command(move(command))));
+    return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
 ErrorOr<void> Client::handle_parsed_response(ParseStatus&& parse_status)
@@ -287,25 +287,25 @@ ErrorOr<void> Client::send_next_command()
     return {};
 }
 
-ErrorOr<RefPtr<Promise<Optional<SolidResponse>>>> Client::examine(StringView string)
+NonnullRefPtr<Promise<Optional<SolidResponse>>> Client::examine(StringView string)
 {
     auto command = Command { CommandType::Examine, m_current_command, { serialize_astring(string) } };
-    return cast_promise<SolidResponse>(TRY(send_command(move(command))));
+    return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
-ErrorOr<RefPtr<Promise<Optional<SolidResponse>>>> Client::create_mailbox(StringView name)
+NonnullRefPtr<Promise<Optional<SolidResponse>>> Client::create_mailbox(StringView name)
 {
     auto command = Command { CommandType::Create, m_current_command, { serialize_astring(name) } };
-    return cast_promise<SolidResponse>(TRY(send_command(move(command))));
+    return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
-ErrorOr<RefPtr<Promise<Optional<SolidResponse>>>> Client::delete_mailbox(StringView name)
+NonnullRefPtr<Promise<Optional<SolidResponse>>> Client::delete_mailbox(StringView name)
 {
     auto command = Command { CommandType::Delete, m_current_command, { serialize_astring(name) } };
-    return cast_promise<SolidResponse>(TRY(send_command(move(command))));
+    return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
-ErrorOr<RefPtr<Promise<Optional<SolidResponse>>>> Client::store(StoreMethod method, Sequence sequence_set, bool silent, Vector<DeprecatedString> const& flags, bool uid)
+NonnullRefPtr<Promise<Optional<SolidResponse>>> Client::store(StoreMethod method, Sequence sequence_set, bool silent, Vector<DeprecatedString> const& flags, bool uid)
 {
     StringBuilder data_item_name;
     switch (method) {
@@ -329,9 +329,9 @@ ErrorOr<RefPtr<Promise<Optional<SolidResponse>>>> Client::store(StoreMethod meth
     flags_builder.append(')');
 
     auto command = Command { uid ? CommandType::UIDStore : CommandType::Store, m_current_command, { sequence_set.serialize(), data_item_name.to_deprecated_string(), flags_builder.to_deprecated_string() } };
-    return cast_promise<SolidResponse>(TRY(send_command(move(command))));
+    return cast_promise<SolidResponse>(send_command(move(command)));
 }
-ErrorOr<RefPtr<Promise<Optional<SolidResponse>>>> Client::search(Optional<DeprecatedString> charset, Vector<SearchKey>&& keys, bool uid)
+NonnullRefPtr<Promise<Optional<SolidResponse>>> Client::search(Optional<DeprecatedString> charset, Vector<SearchKey>&& keys, bool uid)
 {
     Vector<DeprecatedString> args;
     if (charset.has_value()) {
@@ -342,15 +342,15 @@ ErrorOr<RefPtr<Promise<Optional<SolidResponse>>>> Client::search(Optional<Deprec
         args.append(item.serialize());
     }
     auto command = Command { uid ? CommandType::UIDSearch : CommandType::Search, m_current_command, args };
-    return cast_promise<SolidResponse>(TRY(send_command(move(command))));
+    return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
-ErrorOr<RefPtr<Promise<Optional<ContinueRequest>>>> Client::idle()
+NonnullRefPtr<Promise<Optional<ContinueRequest>>> Client::idle()
 {
-    auto promise = TRY(send_simple_command(CommandType::Idle));
+    auto promise = send_simple_command(CommandType::Idle);
     return cast_promise<ContinueRequest>(promise);
 }
-ErrorOr<RefPtr<Promise<Optional<SolidResponse>>>> Client::finish_idle()
+NonnullRefPtr<Promise<Optional<SolidResponse>>> Client::finish_idle()
 {
     auto promise = Promise<Optional<Response>>::construct();
     m_pending_promises.append(promise);
@@ -359,7 +359,7 @@ ErrorOr<RefPtr<Promise<Optional<SolidResponse>>>> Client::finish_idle()
     return cast_promise<SolidResponse>(promise);
 }
 
-ErrorOr<RefPtr<Promise<Optional<SolidResponse>>>> Client::status(StringView mailbox, Vector<StatusItemType> const& types)
+NonnullRefPtr<Promise<Optional<SolidResponse>>> Client::status(StringView mailbox, Vector<StatusItemType> const& types)
 {
     Vector<DeprecatedString> args;
     for (auto type : types) {
@@ -386,10 +386,10 @@ ErrorOr<RefPtr<Promise<Optional<SolidResponse>>>> Client::status(StringView mail
     types_list.join(' ', args);
     types_list.append(')');
     auto command = Command { CommandType::Status, m_current_command, { mailbox, types_list.to_deprecated_string() } };
-    return cast_promise<SolidResponse>(TRY(send_command(move(command))));
+    return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
-ErrorOr<RefPtr<Promise<Optional<SolidResponse>>>> Client::append(StringView mailbox, Message&& message, Optional<Vector<DeprecatedString>> flags, Optional<Core::DateTime> date_time)
+NonnullRefPtr<Promise<Optional<SolidResponse>>> Client::append(StringView mailbox, Message&& message, Optional<Vector<DeprecatedString>> flags, Optional<Core::DateTime> date_time)
 {
     Vector<DeprecatedString> args = { mailbox };
     if (flags.has_value()) {
@@ -404,7 +404,7 @@ ErrorOr<RefPtr<Promise<Optional<SolidResponse>>>> Client::append(StringView mail
 
     args.append(DeprecatedString::formatted("{{{}}}", message.data.length()));
 
-    auto continue_req = TRY(send_command(Command { CommandType::Append, m_current_command, args }));
+    auto continue_req = send_command(Command { CommandType::Append, m_current_command, args });
 
     auto response_promise = Promise<Optional<Response>>::construct();
     m_pending_promises.append(response_promise);
@@ -421,33 +421,33 @@ ErrorOr<RefPtr<Promise<Optional<SolidResponse>>>> Client::append(StringView mail
 
     return cast_promise<SolidResponse>(response_promise);
 }
-ErrorOr<RefPtr<Promise<Optional<SolidResponse>>>> Client::subscribe(StringView mailbox)
+NonnullRefPtr<Promise<Optional<SolidResponse>>> Client::subscribe(StringView mailbox)
 {
     auto command = Command { CommandType::Subscribe, m_current_command, { serialize_astring(mailbox) } };
-    return cast_promise<SolidResponse>(TRY(send_command(move(command))));
+    return cast_promise<SolidResponse>(send_command(move(command)));
 }
-ErrorOr<RefPtr<Promise<Optional<SolidResponse>>>> Client::unsubscribe(StringView mailbox)
+NonnullRefPtr<Promise<Optional<SolidResponse>>> Client::unsubscribe(StringView mailbox)
 {
     auto command = Command { CommandType::Unsubscribe, m_current_command, { serialize_astring(mailbox) } };
-    return cast_promise<SolidResponse>(TRY(send_command(move(command))));
+    return cast_promise<SolidResponse>(send_command(move(command)));
 }
-ErrorOr<RefPtr<Promise<Optional<Response>>>> Client::authenticate(StringView method)
+NonnullRefPtr<Promise<Optional<Response>>> Client::authenticate(StringView method)
 {
     auto command = Command { CommandType::Authenticate, m_current_command, { method } };
-    return TRY(send_command(move(command)));
+    return send_command(move(command));
 }
-ErrorOr<RefPtr<Promise<Optional<SolidResponse>>>> Client::rename(StringView from, StringView to)
+NonnullRefPtr<Promise<Optional<SolidResponse>>> Client::rename(StringView from, StringView to)
 {
     auto command = Command { CommandType::Rename, m_current_command, { serialize_astring(from), serialize_astring(to) } };
-    return cast_promise<SolidResponse>(TRY(send_command(move(command))));
+    return cast_promise<SolidResponse>(send_command(move(command)));
 }
-ErrorOr<RefPtr<Promise<Optional<SolidResponse>>>> Client::copy(Sequence sequence_set, StringView name, bool uid)
+NonnullRefPtr<Promise<Optional<SolidResponse>>> Client::copy(Sequence sequence_set, StringView name, bool uid)
 {
     auto command = Command {
         uid ? CommandType::UIDCopy : CommandType::Copy, m_current_command, { sequence_set.serialize(), serialize_astring(name) }
     };
 
-    return cast_promise<SolidResponse>(TRY(send_command(move(command))));
+    return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
 void Client::close()
