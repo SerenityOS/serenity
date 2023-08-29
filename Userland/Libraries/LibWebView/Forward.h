@@ -8,6 +8,7 @@
 
 namespace WebView {
 
+class ConsoleClient;
 class OutOfProcessWebView;
 class ViewImplementation;
 class WebContentClient;

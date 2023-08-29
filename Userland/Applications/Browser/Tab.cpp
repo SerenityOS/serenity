@@ -584,16 +584,6 @@ Tab::Tab(BrowserWindow& window)
             m_dom_inspector_widget->set_accessibility_json(accessibility_tree);
     };
 
-    view().on_received_console_message = [this](auto message_index) {
-        if (m_console_widget)
-            m_console_widget->notify_about_new_console_message(message_index);
-    };
-
-    view().on_received_console_messages = [this](auto start_index, auto& message_types, auto& messages) {
-        if (m_console_widget)
-            m_console_widget->handle_console_messages(start_index, message_types, messages);
-    };
-
     auto focus_location_box_action = GUI::Action::create(
         "Focus location box", { Mod_Ctrl, Key_L }, Key_F6, [this](auto&) {
             m_location_box->set_focus(true);
@@ -927,13 +917,8 @@ void Tab::show_console_window()
         console_window->resize(500, 300);
         console_window->set_title("JS Console");
         console_window->set_icon(g_icon_bag.filetype_javascript);
-        m_console_widget = console_window->set_main_widget<ConsoleWidget>().release_value_but_fixme_should_propagate_errors();
-        m_console_widget->on_js_input = [this](DeprecatedString const& js_source) {
-            m_web_content_view->js_console_input(js_source);
-        };
-        m_console_widget->on_request_messages = [this](i32 start_index) {
-            m_web_content_view->js_console_request_messages(start_index);
-        };
+
+        m_console_widget = MUST(console_window->set_main_widget<ConsoleWidget>(view()));
     }
 
     auto* window = m_console_widget->window();
