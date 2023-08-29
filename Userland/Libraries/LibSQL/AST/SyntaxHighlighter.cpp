@@ -46,12 +46,12 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
 
     Lexer lexer(text);
 
-    Vector<GUI::TextDocumentSpan> spans;
+    Vector<Syntax::TextDocumentSpan> spans;
 
     auto append_token = [&](Token const& token) {
         if (token.value().is_empty())
             return;
-        GUI::TextDocumentSpan span;
+        Syntax::TextDocumentSpan span;
         span.range.set_start({ token.start_position().line - 1, token.start_position().column - 1 });
         span.range.set_end({ token.end_position().line - 1, token.end_position().column - 1 });
         span.attributes = style_for_token_type(palette, token.type());

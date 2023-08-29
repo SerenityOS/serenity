@@ -7,9 +7,9 @@
 #include <AK/QuickSort.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/TemporaryChange.h>
-#include <LibGUI/TextEditor.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Palette.h>
+#include <LibSyntax/Document.h>
 #include <Shell/NodeVisitor.h>
 #include <Shell/Parser.h>
 #include <Shell/SyntaxHighlighter.h>
@@ -24,7 +24,7 @@ enum class AugmentedTokenKind : u32 {
 
 class HighlightVisitor : public AST::NodeVisitor {
 public:
-    HighlightVisitor(Vector<GUI::TextDocumentSpan>& spans, Gfx::Palette const& palette, const GUI::TextDocument& document)
+    HighlightVisitor(Vector<Syntax::TextDocumentSpan>& spans, Gfx::Palette const& palette, Syntax::Document const& document)
         : m_spans(spans)
         , m_palette(palette)
         , m_document(document)
@@ -32,7 +32,7 @@ public:
     }
 
 private:
-    AST::Position::Line offset_line(const AST::Position::Line& line, size_t offset)
+    AST::Position::Line offset_line(AST::Position::Line const& line, size_t offset)
     {
         // We need to look at the line(s) above.
         AST::Position::Line new_line { line };
@@ -52,20 +52,20 @@ private:
 
         return new_line;
     }
-    void set_offset_range_end(GUI::TextRange& range, const AST::Position::Line& line, size_t offset = 0)
+    void set_offset_range_end(Syntax::TextRange& range, AST::Position::Line const& line, size_t offset = 0)
     {
         auto new_line = offset_line(line, offset);
         range.set_end({ new_line.line_number, new_line.line_column });
     }
-    void set_offset_range_start(GUI::TextRange& range, const AST::Position::Line& line, size_t offset = 0)
+    void set_offset_range_start(Syntax::TextRange& range, AST::Position::Line const& line, size_t offset = 0)
     {
         auto new_line = offset_line(line, offset);
         range.set_start({ new_line.line_number, new_line.line_column });
     }
 
-    GUI::TextDocumentSpan& span_for_node(const AST::Node* node)
+    Syntax::TextDocumentSpan& span_for_node(AST::Node const* node)
     {
-        GUI::TextDocumentSpan span;
+        Syntax::TextDocumentSpan span;
         set_offset_range_start(span.range, node->position().start_line);
         set_offset_range_end(span.range, node->position().end_line);
         span.data = static_cast<u64>(node->kind());
@@ -75,7 +75,7 @@ private:
         return m_spans.last();
     }
 
-    virtual void visit(const AST::PathRedirectionNode* node) override
+    virtual void visit(AST::PathRedirectionNode const* node) override
     {
         if (node->path()->is_bareword()) {
             auto& span = span_for_node(node->path());
@@ -85,7 +85,7 @@ private:
             NodeVisitor::visit(node);
         }
     }
-    virtual void visit(const AST::And* node) override
+    virtual void visit(AST::And const* node) override
     {
         {
             ScopedValueRollback first_in_command { m_is_first_in_command };
@@ -102,11 +102,11 @@ private:
         span.attributes.color = m_palette.syntax_punctuation();
         span.attributes.bold = true;
     }
-    virtual void visit(const AST::ListConcatenate* node) override
+    virtual void visit(AST::ListConcatenate const* node) override
     {
         NodeVisitor::visit(node);
     }
-    virtual void visit(const AST::Background* node) override
+    virtual void visit(AST::Background const* node) override
     {
         NodeVisitor::visit(node);
 
@@ -115,11 +115,11 @@ private:
         span.attributes.color = m_palette.syntax_punctuation();
         span.attributes.bold = true;
     }
-    virtual void visit(const AST::BraceExpansion* node) override
+    virtual void visit(AST::BraceExpansion const* node) override
     {
         NodeVisitor::visit(node);
     }
-    virtual void visit(const AST::BarewordLiteral* node) override
+    virtual void visit(AST::BarewordLiteral const* node) override
     {
         NodeVisitor::visit(node);
 
@@ -134,11 +134,11 @@ private:
             span.attributes.color = m_palette.base_text();
         }
     }
-    virtual void visit(const AST::CastToCommand* node) override
+    virtual void visit(AST::CastToCommand const* node) override
     {
         NodeVisitor::visit(node);
     }
-    virtual void visit(const AST::CastToList* node) override
+    virtual void visit(AST::CastToList const* node) override
     {
         NodeVisitor::visit(node);
 
@@ -152,29 +152,29 @@ private:
         set_offset_range_start(end_span.range, node->position().end_line, 1);
         end_span.data = static_cast<u64>(AugmentedTokenKind::CloseParen);
     }
-    virtual void visit(const AST::CloseFdRedirection* node) override
+    virtual void visit(AST::CloseFdRedirection const* node) override
     {
         NodeVisitor::visit(node);
     }
-    virtual void visit(const AST::CommandLiteral* node) override
+    virtual void visit(AST::CommandLiteral const* node) override
     {
         NodeVisitor::visit(node);
     }
-    virtual void visit(const AST::Comment* node) override
+    virtual void visit(AST::Comment const* node) override
     {
         NodeVisitor::visit(node);
 
         auto& span = span_for_node(node);
         span.attributes.color = m_palette.syntax_comment();
     }
-    virtual void visit(const AST::ContinuationControl* node) override
+    virtual void visit(AST::ContinuationControl const* node) override
     {
         NodeVisitor::visit(node);
 
         auto& span = span_for_node(node);
         span.attributes.color = m_palette.syntax_control_keyword();
     }
-    virtual void visit(const AST::DynamicEvaluate* node) override
+    virtual void visit(AST::DynamicEvaluate const* node) override
     {
         NodeVisitor::visit(node);
 
@@ -182,7 +182,7 @@ private:
         start_span.attributes.color = m_palette.syntax_punctuation();
         start_span.range.set_end({ node->position().start_line.line_number, node->position().start_line.line_column + 1 });
     }
-    virtual void visit(const AST::DoubleQuotedString* node) override
+    virtual void visit(AST::DoubleQuotedString const* node) override
     {
         NodeVisitor::visit(node);
 
@@ -202,11 +202,11 @@ private:
         }
         m_is_first_in_command = false;
     }
-    virtual void visit(const AST::Fd2FdRedirection* node) override
+    virtual void visit(AST::Fd2FdRedirection const* node) override
     {
         NodeVisitor::visit(node);
     }
-    virtual void visit(const AST::FunctionDeclaration* node) override
+    virtual void visit(AST::FunctionDeclaration const* node) override
     {
         NodeVisitor::visit(node);
 
@@ -224,7 +224,7 @@ private:
             name_span.attributes.color = m_palette.syntax_identifier();
         }
     }
-    virtual void visit(const AST::ForLoop* node) override
+    virtual void visit(AST::ForLoop const* node) override
     {
         // The iterated expression is an expression, not a command.
         m_is_first_in_command = false;
@@ -275,14 +275,14 @@ private:
             variable_span.attributes.color = m_palette.syntax_identifier();
         }
     }
-    virtual void visit(const AST::Glob* node) override
+    virtual void visit(AST::Glob const* node) override
     {
         NodeVisitor::visit(node);
 
         auto& span = span_for_node(node);
         span.attributes.color = m_palette.syntax_preprocessor_value();
     }
-    virtual void visit(const AST::Execute* node) override
+    virtual void visit(AST::Execute const* node) override
     {
         TemporaryChange first { m_is_first_in_command, true };
         NodeVisitor::visit(node);
@@ -299,7 +299,7 @@ private:
             end_span.data = static_cast<u64>(AugmentedTokenKind::CloseParen);
         }
     }
-    virtual void visit(const AST::IfCond* node) override
+    virtual void visit(AST::IfCond const* node) override
     {
         m_is_first_in_command = false;
         NodeVisitor::visit(node);
@@ -321,7 +321,7 @@ private:
         }
     }
 
-    virtual void visit(const AST::ImmediateExpression* node) override
+    virtual void visit(AST::ImmediateExpression const* node) override
     {
         TemporaryChange first { m_is_first_in_command, false };
         NodeVisitor::visit(node);
@@ -345,11 +345,11 @@ private:
         end_span.data = static_cast<u64>(AugmentedTokenKind::CloseParen);
     }
 
-    virtual void visit(const AST::Join* node) override
+    virtual void visit(AST::Join const* node) override
     {
         NodeVisitor::visit(node);
     }
-    virtual void visit(const AST::MatchExpr* node) override
+    virtual void visit(AST::MatchExpr const* node) override
     {
         // The matched expression is an expression, not a command.
         m_is_first_in_command = false;
@@ -371,7 +371,7 @@ private:
             as_span.attributes.color = m_palette.syntax_keyword();
         }
     }
-    virtual void visit(const AST::Or* node) override
+    virtual void visit(AST::Or const* node) override
     {
         {
             ScopedValueRollback first_in_command { m_is_first_in_command };
@@ -388,11 +388,11 @@ private:
         span.attributes.color = m_palette.syntax_punctuation();
         span.attributes.bold = true;
     }
-    virtual void visit(const AST::Pipe* node) override
+    virtual void visit(AST::Pipe const* node) override
     {
         NodeVisitor::visit(node);
     }
-    virtual void visit(const AST::Range* node) override
+    virtual void visit(AST::Range const* node) override
     {
         NodeVisitor::visit(node);
 
@@ -409,15 +409,15 @@ private:
 
         end_span.attributes.color = m_palette.syntax_punctuation();
     }
-    virtual void visit(const AST::ReadRedirection* node) override
+    virtual void visit(AST::ReadRedirection const* node) override
     {
         NodeVisitor::visit(node);
     }
-    virtual void visit(const AST::ReadWriteRedirection* node) override
+    virtual void visit(AST::ReadWriteRedirection const* node) override
     {
         NodeVisitor::visit(node);
     }
-    virtual void visit(const AST::Sequence* node) override
+    virtual void visit(AST::Sequence const* node) override
     {
         for (auto& entry : node->entries()) {
             ScopedValueRollback first_in_command { m_is_first_in_command };
@@ -435,29 +435,29 @@ private:
             span.is_skippable = true;
         }
     }
-    virtual void visit(const AST::Subshell* node) override
+    virtual void visit(AST::Subshell const* node) override
     {
         NodeVisitor::visit(node);
     }
-    virtual void visit(const AST::SimpleVariable* node) override
-    {
-        NodeVisitor::visit(node);
-
-        auto& span = span_for_node(node);
-        span.attributes.color = m_palette.syntax_identifier();
-    }
-    virtual void visit(const AST::SpecialVariable* node) override
+    virtual void visit(AST::SimpleVariable const* node) override
     {
         NodeVisitor::visit(node);
 
         auto& span = span_for_node(node);
         span.attributes.color = m_palette.syntax_identifier();
     }
-    virtual void visit(const AST::Juxtaposition* node) override
+    virtual void visit(AST::SpecialVariable const* node) override
+    {
+        NodeVisitor::visit(node);
+
+        auto& span = span_for_node(node);
+        span.attributes.color = m_palette.syntax_identifier();
+    }
+    virtual void visit(AST::Juxtaposition const* node) override
     {
         NodeVisitor::visit(node);
     }
-    virtual void visit(const AST::StringLiteral* node) override
+    virtual void visit(AST::StringLiteral const* node) override
     {
         NodeVisitor::visit(node);
 
@@ -470,11 +470,11 @@ private:
             span.attributes.bold = true;
         m_is_first_in_command = false;
     }
-    virtual void visit(const AST::StringPartCompose* node) override
+    virtual void visit(AST::StringPartCompose const* node) override
     {
         NodeVisitor::visit(node);
     }
-    virtual void visit(const AST::SyntaxError* node) override
+    virtual void visit(AST::SyntaxError const* node) override
     {
         NodeVisitor::visit(node);
 
@@ -483,14 +483,14 @@ private:
         span.attributes.background_color = Color(Color::NamedColor::MidRed).lightened(1.3f).with_alpha(128);
         span.attributes.color = m_palette.base_text();
     }
-    virtual void visit(const AST::Tilde* node) override
+    virtual void visit(AST::Tilde const* node) override
     {
         NodeVisitor::visit(node);
 
         auto& span = span_for_node(node);
         span.attributes.color = m_palette.link();
     }
-    virtual void visit(const AST::VariableDeclarations* node) override
+    virtual void visit(AST::VariableDeclarations const* node) override
     {
         TemporaryChange first_in_command { m_is_first_in_command, false };
         for (auto& decl : node->variables()) {
@@ -506,18 +506,18 @@ private:
             start_span.data = static_cast<u64>(AugmentedTokenKind::OpenParen);
         }
     }
-    virtual void visit(const AST::WriteAppendRedirection* node) override
+    virtual void visit(AST::WriteAppendRedirection const* node) override
     {
         NodeVisitor::visit(node);
     }
-    virtual void visit(const AST::WriteRedirection* node) override
+    virtual void visit(AST::WriteRedirection const* node) override
     {
         NodeVisitor::visit(node);
     }
 
-    Vector<GUI::TextDocumentSpan>& m_spans;
+    Vector<Syntax::TextDocumentSpan>& m_spans;
     Gfx::Palette const& m_palette;
-    const GUI::TextDocument& m_document;
+    Syntax::Document const& m_document;
     bool m_is_first_in_command { false };
 };
 
@@ -544,7 +544,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
     Parser parser(text);
     auto ast = parser.parse();
 
-    Vector<GUI::TextDocumentSpan> spans;
+    Vector<Syntax::TextDocumentSpan> spans;
     HighlightVisitor visitor { spans, palette, m_client->get_document() };
 
     if (ast)

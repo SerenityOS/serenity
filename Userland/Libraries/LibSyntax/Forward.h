@@ -8,7 +8,10 @@
 
 namespace Syntax {
 
+class Document;
 class Highlighter;
 class HighlighterClient;
+class TextPosition;
+class TextRange;
 
 }

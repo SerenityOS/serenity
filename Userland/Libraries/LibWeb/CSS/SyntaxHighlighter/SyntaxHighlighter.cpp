@@ -26,8 +26,8 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
     auto text = m_client->get_text();
 
     Vector<Parser::Token> folding_region_start_tokens;
-    Vector<GUI::TextDocumentFoldingRegion> folding_regions;
-    Vector<GUI::TextDocumentSpan> spans;
+    Vector<Syntax::TextDocumentFoldingRegion> folding_regions;
+    Vector<Syntax::TextDocumentSpan> spans;
 
     auto highlight = [&](auto start_line, auto start_column, auto end_line, auto end_column, Gfx::TextAttributes attributes, CSS::Parser::Token::Type type) {
         if (start_line > end_line || (start_line == end_line && start_column >= end_column)) {
@@ -36,7 +36,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
         }
         dbgln_if(SYNTAX_HIGHLIGHTING_DEBUG, "(CSS::SyntaxHighlighter) highlighting ({}-{}) to ({}-{}) with color {}", start_line, start_column, end_line, end_column, attributes.color);
         spans.empend(
-            GUI::TextRange {
+            Syntax::TextRange {
                 { start_line, start_column },
                 { end_line, end_column },
             },
@@ -55,7 +55,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
         } else if (token.is(Parser::Token::Type::CloseCurly)) {
             if (!folding_region_start_tokens.is_empty()) {
                 auto start_token = folding_region_start_tokens.take_last();
-                GUI::TextDocumentFoldingRegion folding_region;
+                Syntax::TextDocumentFoldingRegion folding_region;
                 folding_region.range.set_start({ start_token.end_position().line, start_token.end_position().column });
                 folding_region.range.set_end({ token.start_position().line, token.start_position().column });
                 folding_regions.append(move(folding_region));

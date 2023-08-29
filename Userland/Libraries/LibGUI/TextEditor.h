@@ -17,10 +17,10 @@
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/TextDocument.h>
-#include <LibGUI/TextRange.h>
 #include <LibGfx/TextAlignment.h>
 #include <LibSyntax/Forward.h>
 #include <LibSyntax/HighlighterClient.h>
+#include <LibSyntax/TextRange.h>
 
 namespace GUI {
 
@@ -93,7 +93,7 @@ public:
     bool is_editable() const { return m_mode == Editable; }
     bool is_readonly() const { return m_mode == ReadOnly; }
     bool is_displayonly() const { return m_mode == DisplayOnly; }
-    void set_mode(const Mode);
+    void set_mode(Mode const);
 
     void set_editing_cursor();
 
@@ -294,7 +294,7 @@ protected:
     virtual void highlighter_did_set_folding_regions(Vector<TextDocumentFoldingRegion> folding_regions) final;
 
 private:
-    friend class TextDocumentLine;
+    friend TextDocumentLine;
 
     // ^TextDocument::Client
     virtual void document_did_append_line() override;

@@ -33,13 +33,13 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
 {
     auto text = m_client->get_text();
 
-    Vector<GUI::TextDocumentSpan> spans;
+    Vector<Syntax::TextDocumentSpan> spans;
 
-    auto append_header = [&](GUI::TextRange const& range) {
+    auto append_header = [&](Syntax::TextRange const& range) {
         Gfx::TextAttributes attributes;
         attributes.color = palette.base_text();
         attributes.bold = true;
-        GUI::TextDocumentSpan span {
+        Syntax::TextDocumentSpan span {
             .range = range,
             .attributes = attributes,
             .data = static_cast<u32>(Token::Header),
@@ -48,10 +48,10 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
         spans.append(span);
     };
 
-    auto append_code_block = [&](GUI::TextRange const& range) {
+    auto append_code_block = [&](Syntax::TextRange const& range) {
         Gfx::TextAttributes attributes;
         attributes.color = palette.syntax_string();
-        GUI::TextDocumentSpan span {
+        Syntax::TextDocumentSpan span {
             .range = range,
             .attributes = attributes,
             .data = static_cast<u32>(Token::Code),

@@ -17,32 +17,24 @@
 #include <LibCore/Forward.h>
 #include <LibGUI/Command.h>
 #include <LibGUI/Forward.h>
+#include <LibGUI/TextPosition.h>
 #include <LibGUI/TextRange.h>
 #include <LibGUI/UndoStack.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/TextAttributes.h>
 #include <LibRegex/Regex.h>
+#include <LibSyntax/Document.h>
 
 namespace GUI {
 
+using TextDocumentSpan = Syntax::TextDocumentSpan;
+using TextDocumentFoldingRegion = Syntax::TextDocumentFoldingRegion;
+using TextDocumentLine = Syntax::TextDocumentLine;
+
 constexpr Duration COMMAND_COMMIT_TIME = Duration::from_milliseconds(400);
 
-struct TextDocumentSpan {
-    TextRange range;
-    Gfx::TextAttributes attributes;
-    u64 data { 0 };
-    bool is_skippable { false };
-};
-
-struct TextDocumentFoldingRegion {
-    TextRange range;
-    bool is_folded { false };
-    // This pointer is only used to identify that two TDFRs are the same.
-    RawPtr<class TextDocumentLine> line_ptr;
-};
-
-class TextDocument : public RefCounted<TextDocument> {
+class TextDocument : public Syntax::Document {
 public:
     enum class SearchShouldWrap {
         No = 0,
@@ -69,10 +61,8 @@ public:
     virtual ~TextDocument() = default;
 
     size_t line_count() const { return m_lines.size(); }
-    TextDocumentLine const& line(size_t line_index) const { return *m_lines[line_index]; }
-    TextDocumentLine& line(size_t line_index) { return *m_lines[line_index]; }
-
-    void set_spans(u32 span_collection_index, Vector<TextDocumentSpan> spans);
+    virtual TextDocumentLine const& line(size_t line_index) const override { return *m_lines[line_index]; }
+    virtual TextDocumentLine& line(size_t line_index) override { return *m_lines[line_index]; }
 
     enum class IsNewDocument {
         No,
@@ -83,23 +73,6 @@ public:
     Vector<NonnullOwnPtr<TextDocumentLine>> const& lines() const { return m_lines; }
     Vector<NonnullOwnPtr<TextDocumentLine>>& lines() { return m_lines; }
 
-    bool has_spans() const { return !m_spans.is_empty(); }
-    Vector<TextDocumentSpan>& spans() { return m_spans; }
-    Vector<TextDocumentSpan> const& spans() const { return m_spans; }
-    void set_span_at_index(size_t index, TextDocumentSpan span) { m_spans[index] = move(span); }
-
-    TextDocumentSpan const* span_at(TextPosition const&) const;
-
-    void set_folding_regions(Vector<TextDocumentFoldingRegion>);
-    bool has_folding_regions() const { return !m_folding_regions.is_empty(); }
-    Vector<TextDocumentFoldingRegion>& folding_regions() { return m_folding_regions; }
-    Vector<TextDocumentFoldingRegion> const& folding_regions() const { return m_folding_regions; }
-    Optional<TextDocumentFoldingRegion&> folding_region_starting_on_line(size_t line);
-    // Returns all folded FoldingRegions that are not contained inside another folded region.
-    Vector<TextDocumentFoldingRegion const&> currently_folded_regions() const;
-    // Returns true if any part of the line is currently visible. (Not inside a folded FoldingRegion.)
-    bool line_is_visible(size_t line) const;
-
     void append_line(NonnullOwnPtr<TextDocumentLine>);
     NonnullOwnPtr<TextDocumentLine> take_line(size_t line_index);
     void remove_line(size_t line_index);
@@ -109,7 +82,7 @@ public:
     void register_client(Client&);
     void unregister_client(Client&);
 
-    void update_views(Badge<TextDocumentLine>);
+    virtual void update_views(Badge<TextDocumentLine>) override;
 
     DeprecatedString text() const;
     DeprecatedString text_in_range(TextRange const&) const;
@@ -162,12 +135,7 @@ protected:
     explicit TextDocument(Client* client);
 
 private:
-    void merge_span_collections();
-
     Vector<NonnullOwnPtr<TextDocumentLine>> m_lines;
-    HashMap<u32, Vector<TextDocumentSpan>> m_span_collections;
-    Vector<TextDocumentSpan> m_spans;
-    Vector<TextDocumentFoldingRegion> m_folding_regions;
 
     HashTable<Client*> m_clients;
     bool m_client_notifications_enabled { true };
@@ -180,40 +148,6 @@ private:
 
     bool m_regex_needs_update { true };
     DeprecatedString m_regex_needle;
-};
-
-class TextDocumentLine {
-public:
-    explicit TextDocumentLine(TextDocument&);
-    explicit TextDocumentLine(TextDocument&, StringView);
-
-    DeprecatedString to_utf8() const;
-
-    Utf32View view() const { return { code_points(), length() }; }
-    u32 const* code_points() const { return m_text.data(); }
-    size_t length() const { return m_text.size(); }
-    bool set_text(TextDocument&, StringView);
-    void set_text(TextDocument&, Vector<u32>);
-    void append(TextDocument&, u32);
-    void prepend(TextDocument&, u32);
-    void insert(TextDocument&, size_t index, u32);
-    void remove(TextDocument&, size_t index);
-    void append(TextDocument&, u32 const*, size_t);
-    void truncate(TextDocument&, size_t length);
-    void clear(TextDocument&);
-    void remove_range(TextDocument&, size_t start, size_t length);
-    void keep_range(TextDocument&, size_t start_index, size_t end_index);
-
-    size_t first_non_whitespace_column() const;
-    Optional<size_t> last_non_whitespace_column() const;
-    bool ends_in_whitespace() const;
-    bool can_select() const;
-    bool is_empty() const { return length() == 0; }
-    size_t leading_spaces() const;
-
-private:
-    // NOTE: This vector is null terminated.
-    Vector<u32> m_text;
 };
 
 class TextDocumentUndoCommand : public Command {

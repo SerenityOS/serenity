@@ -57,10 +57,10 @@ void SyntaxHighlighter::rehighlight(Gfx::Palette const& palette)
         Optional<Token> ending_paren {};
     };
     Vector<OpenBlock> open_blocks;
-    Vector<GUI::TextDocumentFoldingRegion> folding_regions;
-    Vector<GUI::TextDocumentSpan> spans;
+    Vector<Syntax::TextDocumentFoldingRegion> folding_regions;
+    Vector<Syntax::TextDocumentSpan> spans;
     auto highlight_span = [&](Token::Type type, Position const& start, Position const& end) {
-        GUI::TextDocumentSpan span;
+        Syntax::TextDocumentSpan span;
         span.range.set_start({ start.line, start.column });
         span.range.set_end({ end.line, end.column });
         if (!span.range.is_valid())
@@ -96,7 +96,7 @@ void SyntaxHighlighter::rehighlight(Gfx::Palette const& palette)
             open_blocks.shrink(found_index.value());
 
             // Create a region.
-            GUI::TextDocumentFoldingRegion region;
+            Syntax::TextDocumentFoldingRegion region;
             if (open_block.ending_paren.has_value()) {
                 region.range.set_start({ open_block.ending_paren->end.line, open_block.ending_paren->end.column });
             } else {

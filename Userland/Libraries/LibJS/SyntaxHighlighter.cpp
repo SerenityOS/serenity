@@ -54,10 +54,10 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
 
     Lexer lexer(text);
 
-    Vector<GUI::TextDocumentSpan> spans;
-    Vector<GUI::TextDocumentFoldingRegion> folding_regions;
-    GUI::TextPosition position { 0, 0 };
-    GUI::TextPosition start { 0, 0 };
+    Vector<Syntax::TextDocumentSpan> spans;
+    Vector<Syntax::TextDocumentFoldingRegion> folding_regions;
+    Syntax::TextPosition position { 0, 0 };
+    Syntax::TextPosition start { 0, 0 };
 
     auto advance_position = [&position](char ch) {
         if (ch == '\n') {
@@ -75,7 +75,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
         for (size_t i = 0; i < str.length(); ++i)
             advance_position(str[i]);
 
-        GUI::TextDocumentSpan span;
+        Syntax::TextDocumentSpan span;
         span.range.set_start(start);
         span.range.set_end({ position.line(), position.column() });
         auto type = is_trivia ? TokenType::Invalid : token.type();
@@ -94,7 +94,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
 
     struct TokenData {
         Token token;
-        GUI::TextRange range;
+        Syntax::TextRange range;
     };
     Vector<TokenData> folding_region_start_tokens;
 
@@ -115,7 +115,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
         } else if (token.type() == TokenType::CurlyClose) {
             if (!folding_region_start_tokens.is_empty()) {
                 auto curly_open = folding_region_start_tokens.take_last();
-                GUI::TextDocumentFoldingRegion region;
+                Syntax::TextDocumentFoldingRegion region;
                 region.range.set_start(curly_open.range.end());
                 region.range.set_end(token_start_position);
                 folding_regions.append(region);
