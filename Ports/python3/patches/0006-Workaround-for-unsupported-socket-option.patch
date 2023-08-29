@@ -12,10 +12,10 @@ For now, it can be safely ignored until it's supported in the kernel.
  1 file changed, 2 insertions(+)
 
 diff --git a/Modules/socketmodule.c b/Modules/socketmodule.c
-index 9dcad434af405f0a6f6233f36ef1e1062086050e..a53a510b0c779dfbba7428229b34e8a23c69ee9e 100644
+index e29c4b432aed97a99311fe37d8c4b16be3eb4962..bcd6233ad6a5f11a34b515630dbadf14ab43854d 100644
 --- a/Modules/socketmodule.c
 +++ b/Modules/socketmodule.c
-@@ -3043,6 +3043,8 @@ sock_setsockopt(PySocketSockObject *s, PyObject *args)
+@@ -3045,6 +3045,8 @@ sock_setsockopt(PySocketSockObject *s, PyObject *args)
      PyBuffer_Release(&optval);
  
  done:

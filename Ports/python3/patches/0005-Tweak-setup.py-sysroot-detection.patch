@@ -15,7 +15,7 @@ in the detection code.
  1 file changed, 2 insertions(+)
 
 diff --git a/setup.py b/setup.py
-index e651ac7627e8b796f8b9b4d60f592bc9261b6540..c4c4e92309a952a88d9de1b853a9535cb86913cc 100644
+index 382950a814c06bda1b9a2dc4bb7ade39f16823ca..ceac9cbdad9f9a7bc1fd1ee5d4626e3ff0728c3d 100644
 --- a/setup.py
 +++ b/setup.py
 @@ -166,6 +166,8 @@ def sysroot_paths(make_vars, subdirs):
