@@ -61,6 +61,40 @@ TEST_CASE(promise_chain_handlers)
     EXPECT(!rejected);
 }
 
+TEST_CASE(promise_map)
+{
+    Core::EventLoop loop;
+
+    auto promise = MUST(Core::Promise<int>::try_create());
+    auto mapped_promise = promise->map<int>([](int result) {
+        return result * 2;
+    });
+
+    loop.deferred_invoke([=] {
+        promise->resolve(21);
+    });
+
+    auto result = mapped_promise->await();
+    EXPECT(!result.is_error());
+    EXPECT_EQ(result.value(), 42);
+}
+
+TEST_CASE(promise_map_already_resolved)
+{
+    Core::EventLoop loop;
+
+    auto promise = MUST(Core::Promise<int>::try_create());
+    promise->resolve(21);
+
+    auto mapped_promise = promise->map<int>([](int result) {
+        return result * 2;
+    });
+
+    auto result = mapped_promise->await();
+    EXPECT(!result.is_error());
+    EXPECT_EQ(result.value(), 42);
+}
+
 TEST_CASE(threaded_promise_instantly_resolved)
 {
     Core::EventLoop loop;

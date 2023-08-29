@@ -60,9 +60,15 @@ public:
 
     // Converts a Promise<A> to a Promise<B> using a function func: A -> B
     template<typename T>
-    RefPtr<Promise<T>> map(Function<T(Result&)> func)
+    NonnullRefPtr<Promise<T>> map(Function<T(Result&)> func)
     {
-        RefPtr<Promise<T>> new_promise = Promise<T>::construct();
+        NonnullRefPtr<Promise<T>> new_promise = Promise<T>::construct();
+
+        if (is_resolved())
+            new_promise->resolve(func(m_result_or_rejection->value()));
+        if (is_rejected())
+            new_promise->reject(m_result_or_rejection->release_error());
+
         on_resolution = [new_promise, func = move(func)](Result& result) -> ErrorOr<void> {
             new_promise->resolve(func(result));
             return {};
