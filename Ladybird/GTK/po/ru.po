@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ladybird wip\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-08-27 15:21+0300\n"
+"POT-Creation-Date: 2023-08-29 11:05+0300\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -21,15 +21,15 @@ msgstr ""
 #. Translators: this is a placeholder content for the Bookmarks & History
 #. popover; it will go away once we implement it, so you can skip translating
 #. it. But it also doesn't hurt to translate it either, if you want to.
-#: window.blp:43
+#: window.blp:51
 msgid "...will appear here, once we implement them :^)"
 msgstr "...будут здесь, когда мы их реализуем :^)"
 
-#: window.blp:134 window.blp:233
+#: window.blp:143 window.blp:242
 msgid "Bookmarks"
 msgstr "Закладки"
 
-#: window.blp:39
+#: window.blp:47
 #, fuzzy
 msgid "Bookmarks & History"
 msgstr "Закладки и история"
@@ -63,15 +63,15 @@ msgstr ""
 "Ladybird — это браузер, основанный на веб-движке LibWeb и JavaScript-движке "
 "LibJS, развиваемый большой командой участников как часть проекта SerenityOS."
 
-#: window.blp:147
+#: window.blp:156
 msgid "Main Menu"
 msgstr "Главное меню"
 
-#: window.blp:86 window.blp:209
+#: window.blp:95 window.blp:218
 msgid "Navigate Back"
 msgstr "Назад"
 
-#: window.blp:92 window.blp:215
+#: window.blp:101 window.blp:224
 msgid "Navigate Forward"
 msgstr "Вперёд"
 
@@ -87,11 +87,11 @@ msgstr "Вперёд"
 msgid "Navigation"
 msgstr "Навигация"
 
-#: window.blp:104
+#: window.blp:113
 msgid "New Tab"
 msgstr "Новая вкладка"
 
-#: window.blp:11
+#: window.blp:11 window.blp:39
 msgid "New _Incognito Window"
 msgstr "Новое окно _инкогнито"
 
@@ -132,7 +132,7 @@ msgstr "Предыдущая вкладка"
 msgid "Quit"
 msgstr "Выйти"
 
-#: window.blp:98 window.blp:221
+#: window.blp:107 window.blp:230
 msgid "Reload Page"
 msgstr "Перезагрузить страницу"
 
@@ -144,7 +144,7 @@ msgstr "Перезагрузить текущую страницу"
 msgid "Reset zoom"
 msgstr "Восстановить масштаб"
 
-#: window.blp:165
+#: window.blp:174
 msgid "Restore Zoom"
 msgstr "Восстановить масштаб"
 
@@ -153,7 +153,7 @@ msgid "Sam Atkins"
 msgstr "Сэм Эткинс"
 
 #. Translators: this is the placeholder text for the main location entry.
-#: window.blp:117
+#: window.blp:126
 #, fuzzy
 msgid "Search or enter a URL to open..."
 msgstr "Введите URL или поисковый запрос..."
@@ -175,7 +175,7 @@ msgstr "Сергей Бугаев"
 msgid "Show shortcuts"
 msgstr "Комбинации клавиш"
 
-#: window.blp:141
+#: window.blp:150
 msgid "Tab Overview"
 msgstr "Обзор вкладок"
 
@@ -192,11 +192,11 @@ msgstr "_Открепить"
 msgid "Zoom"
 msgstr "Масштаб"
 
-#: window.blp:175
+#: window.blp:184
 msgid "Zoom In"
 msgstr "Увеличить масштаб"
 
-#: window.blp:160
+#: window.blp:169
 msgid "Zoom Out"
 msgstr "Уменьшить масштаб"
 
@@ -208,7 +208,7 @@ msgstr "Увеличить масштаб"
 msgid "Zoom out"
 msgstr "Уменьшить масштаб"
 
-#: window.blp:14
+#: window.blp:14 window.blp:42
 msgid "_About Ladybird"
 msgstr "О Ladybird"
 
@@ -220,7 +220,7 @@ msgstr "_Закрыть"
 msgid "_Duplicate"
 msgstr "_Дублировать"
 
-#: window.blp:13
+#: window.blp:13 window.blp:41
 msgid "_Keyboard Shortcuts"
 msgstr "_Комбинации клавиш"
 
@@ -228,11 +228,11 @@ msgstr "_Комбинации клавиш"
 msgid "_Move to New Window"
 msgstr "Переместить в _другое окно"
 
-#: window.blp:10
+#: window.blp:10 window.blp:38
 msgid "_New Window"
 msgstr "_Новое окно"
 
-#: window.blp:12
+#: window.blp:12 window.blp:40
 msgid "_Open File"
 msgstr "_Открыть файл"
 

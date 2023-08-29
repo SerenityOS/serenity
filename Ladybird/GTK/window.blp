@@ -34,6 +34,14 @@ menu tab_menu {
   item (_("_Close"), "tab.close")
 }
 
+menu tab_overview_menu {
+  item (_("_New Window"), "app.new-window")
+  item (_("New _Incognito Window"), "app.new-incognito-window")
+  item (_("_Open File"), "win.open-file")
+  item (_("_Keyboard Shortcuts"), "app.shortcuts")
+  item (_("_About Ladybird"), "app.about")
+}
+
 Popover bookmarks_popover {
   Adw.StatusPage {
     title: _("Bookmarks & History");
@@ -66,6 +74,7 @@ template $LadybirdWindow : Adw.ApplicationWindow {
 
   Adw.TabOverview tab_overview {
     view: tab_view;
+    secondary-menu: tab_overview_menu;
     enable-new-tab: true;
     create-tab => $on_create_tab(template) swapped;
 
