@@ -179,8 +179,11 @@ ErrorOr<RefPtr<Promise<Optional<Response>>>> Client::send_command(Command&& comm
     auto promise = Promise<Optional<Response>>::construct();
     m_pending_promises.append(promise);
 
-    if (m_pending_promises.size() == 1)
-        TRY(send_next_command());
+    if (m_pending_promises.size() == 1) {
+        auto maybe_error = send_next_command();
+        if (maybe_error.is_error())
+            promise->reject(maybe_error.release_error());
+    }
 
     return promise;
 }
