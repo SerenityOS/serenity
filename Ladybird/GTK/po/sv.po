@@ -1,0 +1,249 @@
+# Swedish translation for Ladybird.
+msgid ""
+msgstr ""
+"Project-Id-Version: ladybird wip\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-08-29 11:05+0300\n"
+"Language: sv\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+
+#. Translators: this is a format string for the zoom-percent label in the main menu.
+#. For most languages, it doesn't need translating.
+#: Window.cpp:353
+#, c-format
+msgid "%d%%"
+msgstr ""
+
+#. Translators: this is a placeholder content for the Bookmarks & History
+#. popover; it will go away once we implement it, so you can skip translating
+#. it. But it also doesn't hurt to translate it either, if you want to.
+#: window.blp:51
+msgid "...will appear here, once we implement them :^)"
+msgstr "...kommer visas här, när de är implementerade :^)"
+
+#: window.blp:143 window.blp:242
+msgid "Bookmarks"
+msgstr "Bokmärken"
+
+#: window.blp:47
+#, fuzzy
+msgid "Bookmarks & History"
+msgstr "Bokmärken och historik"
+
+#: window.blp:33
+msgid "Close _Other Tabs"
+msgstr "Stäng _övriga flikar"
+
+#: shortcuts-dialog.blp:61
+msgid "Close current tab"
+msgstr "Stäng flik"
+
+#: Window.cpp:141
+msgid "Failed to pick file"
+msgstr "Misslyckades med att öppna filen"
+
+#: shortcuts-dialog.blp:48
+msgid "Focus location entry"
+msgstr "Fokusera adressfältet"
+
+#: shortcuts-dialog.blp:8
+msgid "General"
+msgstr "Allmänt"
+
+#: Application.cpp:65
+msgid ""
+"Ladybird is a browser based on LibWeb web engine and LibJS JavaScript "
+"engine, developed by a large team of contributors as a part of the "
+"SerenityOS project."
+msgstr ""
+"Ladybird är en webbläsare baserat på LibWeb och LibJS, "
+"utvecklat inom projektet SerenityOS."
+
+#: window.blp:156
+msgid "Main Menu"
+msgstr "Huvudmeny"
+
+#: window.blp:95 window.blp:218
+msgid "Navigate Back"
+msgstr "Navigera bakåt"
+
+#: window.blp:101 window.blp:224
+msgid "Navigate Forward"
+msgstr "Navigera framåt"
+
+#: shortcuts-dialog.blp:36
+msgid "Navigate back"
+msgstr "Navigera bakåt"
+
+#: shortcuts-dialog.blp:40
+msgid "Navigate forward"
+msgstr "Navigera framåt"
+
+#: shortcuts-dialog.blp:33
+msgid "Navigation"
+msgstr "Navigation"
+
+#: window.blp:113
+msgid "New Tab"
+msgstr "Ny flik"
+
+#: window.blp:11 window.blp:39
+msgid "New _Incognito Window"
+msgstr "Nytt _privat fönster"
+
+#: shortcuts-dialog.blp:15
+msgid "New incognito window"
+msgstr "Nytt privat fönster"
+
+#: Window.cpp:71 shortcuts-dialog.blp:57
+msgid "New tab"
+msgstr "Ny flik"
+
+#: shortcuts-dialog.blp:11
+msgid "New window"
+msgstr "Nytt fönster"
+
+#: shortcuts-dialog.blp:65
+msgid "Next tab"
+msgstr "Nästa flik"
+
+#: Window.cpp:143
+msgid "OK"
+msgstr "Ok"
+
+#: shortcuts-dialog.blp:19
+msgid "Open file"
+msgstr "Öppna fil"
+
+#. Translators: this is a menu item for pinning a tab.
+#: window.blp:22
+msgid "P_in"
+msgstr "_Nåla"
+
+#: shortcuts-dialog.blp:69
+msgid "Previous tab"
+msgstr "Föregående flik"
+
+#: shortcuts-dialog.blp:27
+msgid "Quit"
+msgstr "Avsluta"
+
+#: window.blp:107 window.blp:230
+msgid "Reload Page"
+msgstr "Ladda om sidan"
+
+#: shortcuts-dialog.blp:44
+msgid "Reload current page"
+msgstr "Ladda om aktuell sida"
+
+#: shortcuts-dialog.blp:87
+msgid "Reset zoom"
+msgstr "Återställ zoom"
+
+#: window.blp:174
+msgid "Restore Zoom"
+msgstr "Återställ zoom"
+
+#: Application.cpp:48
+msgid "Sam Atkins"
+msgstr "Sam Atkins"
+
+#. Translators: this is the placeholder text for the main location entry.
+#: window.blp:126
+#, fuzzy
+msgid "Search or enter a URL to open..."
+msgstr "Sök eller ange en URL..."
+
+#: Application.cpp:56
+msgid "SerenityOS developers"
+msgstr "SerenityOS utvecklarna"
+
+#: Application.cpp:69
+msgid "SerenityOS website"
+msgstr "SerenityOS webbsida"
+
+#. Translators: Сергей Бугаев in Cyrillic
+#: Application.cpp:43
+msgid "Sergey Bugaev"
+msgstr "Sergey Bugaev"
+
+#: shortcuts-dialog.blp:23
+msgid "Show shortcuts"
+msgstr "Visa genvägar"
+
+#: window.blp:150
+msgid "Tab Overview"
+msgstr "Flikar översikt"
+
+#: shortcuts-dialog.blp:54
+msgid "Tabs"
+msgstr "Flikar"
+
+#. Translators: this is a menu item for unpinning a tab.
+#: window.blp:28
+msgid "Unp_in"
+msgstr "Lösgör _nål"
+
+#: shortcuts-dialog.blp:75
+msgid "Zoom"
+msgstr "Zoom"
+
+#: window.blp:184
+msgid "Zoom In"
+msgstr "Zooma in"
+
+#: window.blp:169
+msgid "Zoom Out"
+msgstr "Zooma ut"
+
+#: shortcuts-dialog.blp:78
+msgid "Zoom in"
+msgstr "Zooma in"
+
+#: shortcuts-dialog.blp:83
+msgid "Zoom out"
+msgstr "Zooma ut"
+
+#: window.blp:14 window.blp:42
+msgid "_About Ladybird"
+msgstr "_Om Ladybird"
+
+#: window.blp:34
+msgid "_Close"
+msgstr "_Stäng"
+
+#: window.blp:19
+msgid "_Duplicate"
+msgstr "_Duplicera"
+
+#: window.blp:13 window.blp:41
+msgid "_Keyboard Shortcuts"
+msgstr "_Tangentbordsgenvägar"
+
+#: window.blp:32
+msgid "_Move to New Window"
+msgstr "_Flytta till nytt fönster"
+
+#: window.blp:10 window.blp:38
+msgid "_New Window"
+msgstr "_Nytt fönster"
+
+#: window.blp:12 window.blp:40
+msgid "_Open File"
+msgstr "_Öppna fil"
+
+#: window.blp:18
+msgid "_Reload"
+msgstr "_Ladda om"
+
+#. Translators: credit yourself here :^)
+#: Application.cpp:64
+msgid "translator_credits"
+msgstr "Xexxa"
+
+#: Application.cpp:59
+msgid "© 2023 SerenityOS developers"
+msgstr "© 2023 SerenityOS utvecklarna"
