@@ -12,10 +12,10 @@ As usual, make the `configure` script recognize Serenity. Also set
  2 files changed, 16 insertions(+), 2 deletions(-)
 
 diff --git a/configure b/configure
-index 784f8d306092afb980dc7730eccaac1b134c52df..143ff27f07a8605510bca258bee3e621c95d34b8 100755
+index af4a5bbfdfa1a4cc8069f67f4e4fe20a35fd27ee..c358ca4e8ba46155550c4ce8a25c8486dc45e2aa 100755
 --- a/configure
 +++ b/configure
-@@ -3811,6 +3811,9 @@ then
+@@ -3814,6 +3814,9 @@ then
         # a lot of different things including 'define_xopen_source'
         # in the case statement below.
  	case "$host" in
@@ -25,7 +25,7 @@ index 784f8d306092afb980dc7730eccaac1b134c52df..143ff27f07a8605510bca258bee3e621
  	*-*-linux-android*)
  		ac_sys_system=Linux-android
  		;;
-@@ -3855,6 +3858,7 @@ then
+@@ -3858,6 +3861,7 @@ then
  	linux*) MACHDEP="linux";;
  	cygwin*) MACHDEP="cygwin";;
  	darwin*) MACHDEP="darwin";;
@@ -33,7 +33,7 @@ index 784f8d306092afb980dc7730eccaac1b134c52df..143ff27f07a8605510bca258bee3e621
  	'')	MACHDEP="unknown";;
      esac
  fi
-@@ -3864,6 +3868,9 @@ $as_echo "\"$MACHDEP\"" >&6; }
+@@ -3867,6 +3871,9 @@ $as_echo "\"$MACHDEP\"" >&6; }
  
  if test "$cross_compiling" = yes; then
  	case "$host" in
@@ -43,7 +43,7 @@ index 784f8d306092afb980dc7730eccaac1b134c52df..143ff27f07a8605510bca258bee3e621
  	*-*-linux*)
  		case "$host_cpu" in
  		arm*)
-@@ -10834,7 +10841,7 @@ then
+@@ -11065,7 +11072,7 @@ then
  	    LINKFORSHARED="-Wl,-E -Wl,+s";;
  #	    LINKFORSHARED="-Wl,-E -Wl,+s -Wl,+b\$(BINLIBDEST)/lib-dynload";;
  	Linux-android*) LINKFORSHARED="-pie -Xlinker -export-dynamic";;
@@ -53,7 +53,7 @@ index 784f8d306092afb980dc7730eccaac1b134c52df..143ff27f07a8605510bca258bee3e621
  	Darwin/*)
  		LINKFORSHARED="$extra_undefs -framework CoreFoundation"
 diff --git a/configure.ac b/configure.ac
-index ab5e1de6fabd38ad468ad57392b232de2101011d..17f93fdf69007f322c29b4fbdb4fe16e75ca2520 100644
+index e1cbb7c7fbe9d94d72ac9ce001f284ba5d0a7dcd..818044ad846dd47cd7d425e8870dc446971cb77a 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -536,6 +536,9 @@ then
@@ -84,7 +84,7 @@ index ab5e1de6fabd38ad468ad57392b232de2101011d..17f93fdf69007f322c29b4fbdb4fe16e
  	*-*-linux*)
  		case "$host_cpu" in
  		arm*)
-@@ -3247,7 +3254,7 @@ then
+@@ -3289,7 +3296,7 @@ then
  	    LINKFORSHARED="-Wl,-E -Wl,+s";;
  #	    LINKFORSHARED="-Wl,-E -Wl,+s -Wl,+b\$(BINLIBDEST)/lib-dynload";;
  	Linux-android*) LINKFORSHARED="-pie -Xlinker -export-dynamic";;

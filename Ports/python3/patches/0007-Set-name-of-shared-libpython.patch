@@ -8,10 +8,10 @@ Subject: [PATCH] Set name of shared libpython
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/configure b/configure
-index 143ff27f07a8605510bca258bee3e621c95d34b8..1d30d0acfacfeeb31b4953e6512c51741cf9554c 100755
+index c358ca4e8ba46155550c4ce8a25c8486dc45e2aa..db10d497b4719543be8ffc65b16f3931c229dad9 100755
 --- a/configure
 +++ b/configure
-@@ -6737,7 +6737,7 @@ $as_echo "#define Py_ENABLE_SHARED 1" >>confdefs.h
+@@ -6750,7 +6750,7 @@ $as_echo "#define Py_ENABLE_SHARED 1" >>confdefs.h
  	      PY3LIBRARY=libpython3.so
  	  fi
            ;;

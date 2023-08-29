@@ -17,7 +17,7 @@ Make some tweaks to Python's `setup.py`:
  1 file changed, 8 insertions(+), 3 deletions(-)
 
 diff --git a/setup.py b/setup.py
-index 15d0d4576a4772e9920ac2d7c1a9dee75c29b341..e651ac7627e8b796f8b9b4d60f592bc9261b6540 100644
+index 4f122b62e0e708fa4feff0ae94cf9949805b35d2..382950a814c06bda1b9a2dc4bb7ade39f16823ca 100644
 --- a/setup.py
 +++ b/setup.py
 @@ -868,8 +868,8 @@ class PyBuildExt(build_ext):
@@ -31,7 +31,7 @@ index 15d0d4576a4772e9920ac2d7c1a9dee75c29b341..e651ac7627e8b796f8b9b4d60f592bc9
          # lib_dirs and inc_dirs are used to search for files;
          # if a file is found in one of those directories, it can
          # be assumed that no additional -I,-L directives are needed.
-@@ -1117,7 +1117,12 @@ class PyBuildExt(build_ext):
+@@ -1120,7 +1120,12 @@ class PyBuildExt(build_ext):
          # Curses support, requiring the System V version of curses, often
          # provided by the ncurses library.
          curses_defines = []
