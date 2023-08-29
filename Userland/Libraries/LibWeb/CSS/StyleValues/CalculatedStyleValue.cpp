@@ -2338,6 +2338,22 @@ Optional<Length> CalculatedStyleValue::resolve_length_percentage(Layout::Node co
         });
 }
 
+Optional<Length> CalculatedStyleValue::resolve_length_percentage(Layout::Node const& layout_node, CSSPixels percentage_basis) const
+{
+    auto result = m_calculation->resolve(Length::ResolutionContext::for_layout_node(layout_node), Length::make_px(percentage_basis));
+
+    return result.value().visit(
+        [&](Length const& length) -> Optional<Length> {
+            return length;
+        },
+        [&](Percentage const& percentage) -> Optional<Length> {
+            return Length::make_px(CSSPixels(percentage.value() * percentage_basis) / 100);
+        },
+        [&](auto const&) -> Optional<Length> {
+            return {};
+        });
+}
+
 Optional<Percentage> CalculatedStyleValue::resolve_percentage() const
 {
     auto result = m_calculation->resolve({}, {});

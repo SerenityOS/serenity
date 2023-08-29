@@ -83,8 +83,15 @@ public:
         return m_value.template get<NonnullRefPtr<CalculatedStyleValue>>();
     }
 
-    virtual T resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, [[maybe_unused]] Layout::Node const&, [[maybe_unused]] T const& reference_value) const
+    virtual T resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&, T const& reference_value) const
     {
+        (void)reference_value;
+        VERIFY_NOT_REACHED();
+    }
+
+    virtual T resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&, CSSPixels reference_value) const
+    {
+        (void)reference_value;
         VERIFY_NOT_REACHED();
     }
 
@@ -106,6 +113,25 @@ public:
             },
             [&](Percentage const& percentage) {
                 return reference_value.percentage_of(percentage);
+            },
+            [&](NonnullRefPtr<CalculatedStyleValue> const& calculated) {
+                return resolve_calculated(calculated, layout_node, reference_value);
+            });
+    }
+
+    T resolved(Layout::Node const& layout_node, CSSPixels reference_value) const
+    {
+        return m_value.visit(
+            [&](T const& t) {
+                if constexpr (requires { t.is_calculated(); }) {
+                    if (t.is_calculated())
+                        return resolve_calculated(t.calculated_style_value(), layout_node, reference_value);
+                }
+
+                return t;
+            },
+            [&](Percentage const& percentage) {
+                return Length::make_px(CSSPixels(percentage.value() * reference_value) / 100);
             },
             [&](NonnullRefPtr<CalculatedStyleValue> const& calculated) {
                 return resolve_calculated(calculated, layout_node, reference_value);
@@ -193,6 +219,7 @@ public:
     bool is_length() const { return is_t(); }
     Length const& length() const { return get_t(); }
     virtual Length resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&, Length const& reference_value) const override;
+    virtual Length resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&, CSSPixels reference_value) const override;
 };
 
 class TimePercentage : public PercentageOr<Time> {
