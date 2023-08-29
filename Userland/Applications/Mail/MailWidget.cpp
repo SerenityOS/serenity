@@ -407,7 +407,7 @@ void MailWidget::selected_mailbox()
         if (from.is_empty())
             from = "(Unknown sender)";
 
-        InboxEntry inbox_entry { sequence_number, from, subject, date, seen };
+        InboxEntry inbox_entry { sequence_number, date, from, subject, seen };
         m_statusbar->set_text(String::formatted("[{}]: Loading entry {}", mailbox.name, ++i).release_value_but_fixme_should_propagate_errors());
 
         active_inbox_entries.append(inbox_entry);
