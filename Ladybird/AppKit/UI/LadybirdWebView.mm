@@ -244,7 +244,17 @@ struct HideCursor {
     };
 
     m_web_view_bridge->on_scroll_to_point = [self](auto position) {
-        [self scrollToPoint:Ladybird::gfx_point_to_ns_point(position)];
+        auto content_rect = [self frame];
+        auto document_rect = [[self documentView] frame];
+        auto ns_position = Ladybird::gfx_point_to_ns_point(position);
+
+        ns_position.x = max(ns_position.x, document_rect.origin.x);
+        ns_position.x = min(ns_position.x, document_rect.size.width - content_rect.size.width);
+
+        ns_position.y = max(ns_position.y, document_rect.origin.y);
+        ns_position.y = min(ns_position.y, document_rect.size.height - content_rect.size.height);
+
+        [self scrollToPoint:ns_position];
         [[self scrollView] reflectScrolledClipView:self];
         [self updateViewportRect:Ladybird::WebViewBridge::ForResize::No];
     };
