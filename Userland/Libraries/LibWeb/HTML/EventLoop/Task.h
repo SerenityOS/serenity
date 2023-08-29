@@ -44,12 +44,13 @@ public:
         // https://w3c.github.io/performance-timeline/#dfn-performance-timeline-task-source
         PerformanceTimeline,
 
-        // Some elements, such as the HTMLMediaElement, must have a unique task source per instance.
-        // Keep this field last, to serve as the base value of all unique task sources.
-        UniqueTaskSourceStart,
-
         // https://html.spec.whatwg.org/multipage/canvas.html#canvas-blob-serialisation-task-source
         CanvasBlobSerializationTask,
+
+        // !!! IMPORTANT: Keep this field last!
+        // This serves as the base value of all unique task sources.
+        // Some elements, such as the HTMLMediaElement, must have a unique task source per instance.
+        UniqueTaskSourceStart
     };
 
     static NonnullOwnPtr<Task> create(Source source, DOM::Document const* document, JS::SafeFunction<void()> steps)
