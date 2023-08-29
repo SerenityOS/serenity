@@ -30,28 +30,28 @@ public:
         return m_connect_pending;
     }
 
-    NonnullRefPtr<Promise<Optional<Response>>> send_command(Command&&);
-    NonnullRefPtr<Promise<Optional<Response>>> send_simple_command(CommandType);
+    NonnullRefPtr<Promise<Response>> send_command(Command&&);
+    NonnullRefPtr<Promise<Response>> send_simple_command(CommandType);
     ErrorOr<void> send_raw(StringView data);
-    NonnullRefPtr<Promise<Optional<SolidResponse>>> login(StringView username, StringView password);
-    NonnullRefPtr<Promise<Optional<SolidResponse>>> list(StringView reference_name, StringView mailbox_name);
-    NonnullRefPtr<Promise<Optional<SolidResponse>>> lsub(StringView reference_name, StringView mailbox_name);
-    NonnullRefPtr<Promise<Optional<SolidResponse>>> select(StringView string);
-    NonnullRefPtr<Promise<Optional<SolidResponse>>> examine(StringView string);
-    NonnullRefPtr<Promise<Optional<SolidResponse>>> search(Optional<DeprecatedString> charset, Vector<SearchKey>&& search_keys, bool uid);
-    NonnullRefPtr<Promise<Optional<SolidResponse>>> fetch(FetchCommand request, bool uid);
-    NonnullRefPtr<Promise<Optional<SolidResponse>>> store(StoreMethod, Sequence, bool silent, Vector<DeprecatedString> const& flags, bool uid);
-    NonnullRefPtr<Promise<Optional<SolidResponse>>> copy(Sequence sequence_set, StringView name, bool uid);
-    NonnullRefPtr<Promise<Optional<SolidResponse>>> create_mailbox(StringView name);
-    NonnullRefPtr<Promise<Optional<SolidResponse>>> delete_mailbox(StringView name);
-    NonnullRefPtr<Promise<Optional<SolidResponse>>> subscribe(StringView mailbox);
-    NonnullRefPtr<Promise<Optional<SolidResponse>>> unsubscribe(StringView mailbox);
-    NonnullRefPtr<Promise<Optional<SolidResponse>>> rename(StringView from, StringView to);
-    NonnullRefPtr<Promise<Optional<Response>>> authenticate(StringView method);
-    NonnullRefPtr<Promise<Optional<ContinueRequest>>> idle();
-    NonnullRefPtr<Promise<Optional<SolidResponse>>> finish_idle();
-    NonnullRefPtr<Promise<Optional<SolidResponse>>> status(StringView mailbox, Vector<StatusItemType> const& types);
-    NonnullRefPtr<Promise<Optional<SolidResponse>>> append(StringView mailbox, Message&& message, Optional<Vector<DeprecatedString>> flags = {}, Optional<Core::DateTime> date_time = {});
+    NonnullRefPtr<Promise<SolidResponse>> login(StringView username, StringView password);
+    NonnullRefPtr<Promise<SolidResponse>> list(StringView reference_name, StringView mailbox_name);
+    NonnullRefPtr<Promise<SolidResponse>> lsub(StringView reference_name, StringView mailbox_name);
+    NonnullRefPtr<Promise<SolidResponse>> select(StringView string);
+    NonnullRefPtr<Promise<SolidResponse>> examine(StringView string);
+    NonnullRefPtr<Promise<SolidResponse>> search(Optional<DeprecatedString> charset, Vector<SearchKey>&& search_keys, bool uid);
+    NonnullRefPtr<Promise<SolidResponse>> fetch(FetchCommand request, bool uid);
+    NonnullRefPtr<Promise<SolidResponse>> store(StoreMethod, Sequence, bool silent, Vector<DeprecatedString> const& flags, bool uid);
+    NonnullRefPtr<Promise<SolidResponse>> copy(Sequence sequence_set, StringView name, bool uid);
+    NonnullRefPtr<Promise<SolidResponse>> create_mailbox(StringView name);
+    NonnullRefPtr<Promise<SolidResponse>> delete_mailbox(StringView name);
+    NonnullRefPtr<Promise<SolidResponse>> subscribe(StringView mailbox);
+    NonnullRefPtr<Promise<SolidResponse>> unsubscribe(StringView mailbox);
+    NonnullRefPtr<Promise<SolidResponse>> rename(StringView from, StringView to);
+    NonnullRefPtr<Promise<Response>> authenticate(StringView method);
+    NonnullRefPtr<Promise<ContinueRequest>> idle();
+    NonnullRefPtr<Promise<SolidResponse>> finish_idle();
+    NonnullRefPtr<Promise<SolidResponse>> status(StringView mailbox, Vector<StatusItemType> const& types);
+    NonnullRefPtr<Promise<SolidResponse>> append(StringView mailbox, Message&& message, Optional<Vector<DeprecatedString>> flags = {}, Optional<Core::DateTime> date_time = {});
 
     bool is_open();
     void close();
@@ -77,7 +77,7 @@ private:
     int m_current_command = 1;
 
     // Sent but response not received
-    Vector<RefPtr<Promise<Optional<Response>>>> m_pending_promises;
+    Vector<NonnullRefPtr<Promise<Response>>> m_pending_promises;
     // Not yet sent
     Vector<Command> m_command_queue {};
 
