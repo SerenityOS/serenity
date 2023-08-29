@@ -6,6 +6,7 @@ set(SOURCES
     Compiler/GenericASTPass.cpp
     Compiler/Passes/CFGBuildingPass.cpp
     Compiler/Passes/CFGSimplificationPass.cpp
+    Compiler/Passes/DeadCodeEliminationPass.cpp
     Compiler/Passes/FunctionCallCanonicalizationPass.cpp
     Compiler/Passes/IfBranchMergingPass.cpp
     Compiler/Passes/ReferenceResolvingPass.cpp
