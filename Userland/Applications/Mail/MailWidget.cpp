@@ -309,6 +309,7 @@ void MailWidget::selected_mailbox()
 
     int i = 0;
     for (auto& fetch_data : fetch_response.data().fetch_data()) {
+        auto sequence_number = fetch_data.get<unsigned>();
         auto& response_data = fetch_data.get<IMAP::FetchResponseData>();
         auto& body_data = response_data.body_data();
 
@@ -420,7 +421,7 @@ void MailWidget::selected_mailbox()
         if (from.is_empty())
             from = "(Unknown sender)";
 
-        InboxEntry inbox_entry { from, subject, date, seen };
+        InboxEntry inbox_entry { sequence_number, from, subject, date, seen };
         m_statusbar->set_text(String::formatted("[{}]: Loading entry {}", mailbox.name, ++i).release_value_but_fixme_should_propagate_errors());
 
         active_inbox_entries.append(inbox_entry);
@@ -438,8 +439,7 @@ void MailWidget::selected_email_to_load()
     if (!index.is_valid())
         return;
 
-    // IMAP is 1-based.
-    int id_of_email_to_load = index.row() + 1;
+    int id_of_email_to_load = index.data(static_cast<GUI::ModelRole>(InboxModelCustomRole::Sequence)).as_u32();
 
     m_statusbar->set_text("Fetching message..."_string);
 

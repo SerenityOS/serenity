@@ -11,10 +11,16 @@
 #include <LibIMAP/Objects.h>
 
 struct InboxEntry {
+    u32 sequence_number;
     DeprecatedString from;
     DeprecatedString subject;
     DeprecatedString date;
     bool seen;
+};
+
+enum class InboxModelCustomRole {
+    __DONOTUSE = (int)GUI::ModelRole::Custom,
+    Sequence,
 };
 
 class InboxModel final : public GUI::Model {
