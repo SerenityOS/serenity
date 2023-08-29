@@ -193,7 +193,7 @@ NonnullRefPtr<Promise<Optional<T>>> cast_promise(NonnullRefPtr<Promise<Optional<
 {
     auto new_promise = promise_variant->map<Optional<T>>(
         [](Optional<Response>& variant) {
-            return variant.has_value() ? move(variant->get<T>()) : Optional<T>();
+            return move(variant->get<T>());
         });
     return new_promise;
 }
@@ -250,8 +250,7 @@ ErrorOr<void> Client::handle_parsed_response(ParseStatus&& parse_status)
         bool should_send_next = false;
         if (!parse_status.successful) {
             m_expecting_response = false;
-            m_pending_promises.first()->resolve({});
-            m_pending_promises.remove(0);
+            m_pending_promises.take_first()->reject(Error::from_string_literal("Failed to parse message"));
         }
         if (parse_status.response.has_value()) {
             m_expecting_response = false;
@@ -409,14 +408,14 @@ NonnullRefPtr<Promise<Optional<SolidResponse>>> Client::append(StringView mailbo
     auto response_promise = Promise<Optional<Response>>::construct();
     m_pending_promises.append(response_promise);
 
-    continue_req->on_resolution = [this, message2 { move(message) }](auto& data) -> ErrorOr<void> {
-        if (!data.has_value()) {
-            TRY(handle_parsed_response({ .successful = false, .response = {} }));
-        } else {
-            TRY(send_raw(message2.data));
-            m_expecting_response = true;
-        }
+    continue_req->on_resolution = [this, message2 { move(message) }](auto&) -> ErrorOr<void> {
+        TRY(send_raw(message2.data));
+        m_expecting_response = true;
         return {};
+    };
+    continue_req->on_rejection = [this](Error&) {
+        // NOTE: This never fails.
+        MUST(handle_parsed_response({ .successful = false, .response = {} }));
     };
 
     return cast_promise<SolidResponse>(response_promise);
