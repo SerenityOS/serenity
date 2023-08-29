@@ -373,9 +373,7 @@ void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, Us
             if (size.calculated().contains_percentage()) {
                 if (!containing_block_has_definite_size)
                     return false;
-                auto containing_block_size_as_length = width
-                    ? CSS::Length::make_px(containing_block_used_values->content_width())
-                    : CSS::Length::make_px(containing_block_used_values->content_height());
+                auto containing_block_size_as_length = width ? containing_block_used_values->content_width() : containing_block_used_values->content_height();
                 resolved_definite_size = adjust_for_box_sizing(size.calculated().resolve_length_percentage(node, containing_block_size_as_length).value_or(CSS::Length::make_auto()).to_px(node), size, width);
                 return true;
             }

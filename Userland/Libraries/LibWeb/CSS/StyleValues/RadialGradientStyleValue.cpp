@@ -150,8 +150,8 @@ Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, 
             return Gfx::FloatSize { radius.to_float(), radius.to_float() };
         },
         [&](EllipseSize const& ellipse_size) {
-            auto radius_a = ellipse_size.radius_a.resolved(node, CSS::Length::make_px(CSSPixels::nearest_value_for(size.width()))).to_px(node);
-            auto radius_b = ellipse_size.radius_b.resolved(node, CSS::Length::make_px(CSSPixels::nearest_value_for(size.height()))).to_px(node);
+            auto radius_a = ellipse_size.radius_a.resolved(node, CSSPixels::nearest_value_for(size.width())).to_px(node);
+            auto radius_b = ellipse_size.radius_b.resolved(node, CSSPixels::nearest_value_for(size.height())).to_px(node);
             return Gfx::FloatSize { radius_a.to_float(), radius_b.to_float() };
         });
 

@@ -47,6 +47,7 @@ public:
 
     // FIXME: This is a stopgap API that will go away once all layout code is aware of CSS::Size.
     CSS::Length resolved(Layout::Node const&, Length const& reference_value) const;
+    CSS::Length resolved(Layout::Node const&, CSSPixels reference_value) const;
 
     [[nodiscard]] CSSPixels to_px(Layout::Node const&, CSSPixels reference_value) const;
 

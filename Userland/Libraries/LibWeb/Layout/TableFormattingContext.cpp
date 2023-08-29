@@ -842,9 +842,7 @@ void TableFormattingContext::compute_table_height(LayoutMode layout_mode)
             span_width += m_columns[cell.column_index + i].used_width;
 
         auto width_of_containing_block = m_state.get(*cell.box->containing_block()).content_width();
-        auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
         auto height_of_containing_block = m_state.get(*cell.box->containing_block()).content_height();
-        auto height_of_containing_block_as_length = CSS::Length::make_px(height_of_containing_block);
 
         cell_state.padding_top = cell.box->computed_values().padding().top().to_px(cell.box, width_of_containing_block);
         cell_state.padding_bottom = cell.box->computed_values().padding().bottom().to_px(cell.box, width_of_containing_block);

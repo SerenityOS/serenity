@@ -89,6 +89,7 @@ public:
     [[nodiscard]] Optional<Length> resolve_length(Length::ResolutionContext const&) const;
     Optional<Length> resolve_length(Layout::Node const& layout_node) const;
     Optional<Length> resolve_length_percentage(Layout::Node const&, Length const& percentage_basis) const;
+    Optional<Length> resolve_length_percentage(Layout::Node const&, CSSPixels percentage_basis) const;
 
     bool resolves_to_percentage() const { return m_resolved_type.matches_percentage(); }
     Optional<Percentage> resolve_percentage() const;

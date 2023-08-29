@@ -23,6 +23,11 @@ Length LengthPercentage::resolve_calculated(NonnullRefPtr<CalculatedStyleValue> 
     return calculated->resolve_length_percentage(layout_node, reference_value).value();
 }
 
+Length LengthPercentage::resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const& calculated, Layout::Node const& layout_node, CSSPixels reference_value) const
+{
+    return calculated->resolve_length_percentage(layout_node, reference_value).value();
+}
+
 Time TimePercentage::resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const& calculated, Layout::Node const&, Time const& reference_value) const
 {
     return calculated->resolve_time_percentage(reference_value).value();
