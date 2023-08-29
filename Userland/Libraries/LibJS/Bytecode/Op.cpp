@@ -1593,36 +1593,40 @@ DeprecatedString SetLocal::to_deprecated_string_impl(Bytecode::Executable const&
     return DeprecatedString::formatted("SetLocal {}", m_index);
 }
 
+static StringView property_kind_to_string(PropertyKind kind)
+{
+    switch (kind) {
+    case PropertyKind::Getter:
+        return "getter"sv;
+    case PropertyKind::Setter:
+        return "setter"sv;
+    case PropertyKind::KeyValue:
+        return "key-value"sv;
+    case PropertyKind::DirectKeyValue:
+        return "direct-key-value"sv;
+    case PropertyKind::Spread:
+        return "spread"sv;
+    case PropertyKind::ProtoSetter:
+        return "proto-setter"sv;
+    }
+    VERIFY_NOT_REACHED();
+}
+
 DeprecatedString PutById::to_deprecated_string_impl(Bytecode::Executable const& executable) const
 {
-    auto kind = m_kind == PropertyKind::Getter
-        ? "getter"
-        : m_kind == PropertyKind::Setter
-        ? "setter"
-        : "property";
-
+    auto kind = property_kind_to_string(m_kind);
     return DeprecatedString::formatted("PutById kind:{} base:{}, property:{} ({})", kind, m_base, m_property, executable.identifier_table->get(m_property));
 }
 
 DeprecatedString PutByIdWithThis::to_deprecated_string_impl(Bytecode::Executable const& executable) const
 {
-    auto kind = m_kind == PropertyKind::Getter
-        ? "getter"
-        : m_kind == PropertyKind::Setter
-        ? "setter"
-        : "property";
-
+    auto kind = property_kind_to_string(m_kind);
     return DeprecatedString::formatted("PutByIdWithThis kind:{} base:{}, property:{} ({}) this_value:{}", kind, m_base, m_property, executable.identifier_table->get(m_property), m_this_value);
 }
 
 DeprecatedString PutPrivateById::to_deprecated_string_impl(Bytecode::Executable const& executable) const
 {
-    auto kind = m_kind == PropertyKind::Getter
-        ? "getter"
-        : m_kind == PropertyKind::Setter
-        ? "setter"
-        : "property";
-
+    auto kind = property_kind_to_string(m_kind);
     return DeprecatedString::formatted("PutPrivateById kind:{} base:{}, property:{} ({})", kind, m_base, m_property, executable.identifier_table->get(m_property));
 }
 
@@ -1837,23 +1841,13 @@ DeprecatedString GetByValueWithThis::to_deprecated_string_impl(Bytecode::Executa
 
 DeprecatedString PutByValue::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
-    auto kind = m_kind == PropertyKind::Getter
-        ? "getter"
-        : m_kind == PropertyKind::Setter
-        ? "setter"
-        : "property";
-
+    auto kind = property_kind_to_string(m_kind);
     return DeprecatedString::formatted("PutByValue kind:{} base:{}, property:{}", kind, m_base, m_property);
 }
 
 DeprecatedString PutByValueWithThis::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
-    auto kind = m_kind == PropertyKind::Getter
-        ? "getter"
-        : m_kind == PropertyKind::Setter
-        ? "setter"
-        : "property";
-
+    auto kind = property_kind_to_string(m_kind);
     return DeprecatedString::formatted("PutByValueWithThis kind:{} base:{}, property:{} this_value:{}", kind, m_base, m_property, m_this_value);
 }
 
