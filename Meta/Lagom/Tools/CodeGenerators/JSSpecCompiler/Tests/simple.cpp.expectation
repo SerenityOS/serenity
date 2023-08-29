@@ -318,3 +318,71 @@ BinaryOperation Assignment
   MathematicalConstant 4
 ControlFlowJump jump=3
 
+===== AST after dce =====
+f():
+TreeList
+  IfElseIfChain
+    UnresolvedReference cond1
+    TreeList
+      BinaryOperation Assignment
+        Var a@1
+        MathematicalConstant 1
+      IfElseIfChain
+        UnresolvedReference cond2
+        TreeList
+          BinaryOperation Assignment
+            Var b@1
+            Var a@1
+        TreeList
+          BinaryOperation Assignment
+            Var b@3
+            MathematicalConstant 3
+    TreeList
+      BinaryOperation Assignment
+        Var b@4
+        MathematicalConstant 4
+  ReturnNode
+    Var b@2
+
+===== CFG after dce =====
+f():
+0:
+ControlFlowBranch true=1 false=6
+  UnresolvedReference cond1
+
+1:
+BinaryOperation Assignment
+  Var a@1
+  MathematicalConstant 1
+ControlFlowBranch true=2 false=5
+  UnresolvedReference cond2
+
+2:
+BinaryOperation Assignment
+  Var b@1
+  Var a@1
+ControlFlowJump jump=3
+
+3:
+b@2 = phi(2: b@1, 5: b@3, 6: b@4)
+BinaryOperation Assignment
+  Var $return@1
+  Var b@2
+ControlFlowJump jump=4
+
+4:
+ControlFlowFunctionReturn
+  Var $return@1
+
+5:
+BinaryOperation Assignment
+  Var b@3
+  MathematicalConstant 3
+ControlFlowJump jump=3
+
+6:
+BinaryOperation Assignment
+  Var b@4
+  MathematicalConstant 4
+ControlFlowJump jump=3
+
