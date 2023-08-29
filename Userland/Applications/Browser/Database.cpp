@@ -34,39 +34,32 @@ Database::Database(NonnullRefPtr<SQL::SQLClient> sql_client, SQL::ConnectionID c
         if (result.has_results)
             return;
 
-        if (auto it = find_pending_execution(result); it != m_pending_executions.end()) {
-            auto in_progress_statement = move(it->value);
-            m_pending_executions.remove(it);
-
-            if (in_progress_statement.on_complete)
-                in_progress_statement.on_complete();
+        if (auto in_progress_statement = take_pending_execution(result); in_progress_statement.has_value()) {
+            if (in_progress_statement->on_complete)
+                in_progress_statement->on_complete();
         }
     };
 
     m_sql_client->on_next_result = [this](auto result) {
-        if (auto it = find_pending_execution(result); it != m_pending_executions.end()) {
-            if (it->value.on_result)
-                it->value.on_result(result.values);
+        if (auto in_progress_statement = take_pending_execution(result); in_progress_statement.has_value()) {
+            if (in_progress_statement->on_result)
+                in_progress_statement->on_result(result.values);
+
+            m_pending_executions.set({ result.statement_id, result.execution_id }, in_progress_statement.release_value());
         }
     };
 
     m_sql_client->on_results_exhausted = [this](auto result) {
-        if (auto it = find_pending_execution(result); it != m_pending_executions.end()) {
-            auto in_progress_statement = move(it->value);
-            m_pending_executions.remove(it);
-
-            if (in_progress_statement.on_complete)
-                in_progress_statement.on_complete();
+        if (auto in_progress_statement = take_pending_execution(result); in_progress_statement.has_value()) {
+            if (in_progress_statement->on_complete)
+                in_progress_statement->on_complete();
         }
     };
 
     m_sql_client->on_execution_error = [this](auto result) {
-        if (auto it = find_pending_execution(result); it != m_pending_executions.end()) {
-            auto in_progress_statement = move(it->value);
-            m_pending_executions.remove(it);
-
-            if (in_progress_statement.on_error)
-                in_progress_statement.on_error(result.error_message);
+        if (auto in_progress_statement = take_pending_execution(result); in_progress_statement.has_value()) {
+            if (in_progress_statement->on_error)
+                in_progress_statement->on_error(result.error_message);
         }
     };
 }

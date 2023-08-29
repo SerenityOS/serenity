@@ -81,9 +81,9 @@ private:
     void execute_statement(SQL::StatementID statement_id, Vector<SQL::Value> placeholder_values, PendingExecution pending_execution);
 
     template<typename ResultData>
-    auto find_pending_execution(ResultData const& result_data)
+    auto take_pending_execution(ResultData const& result_data)
     {
-        return m_pending_executions.find({ result_data.statement_id, result_data.execution_id });
+        return m_pending_executions.take({ result_data.statement_id, result_data.execution_id });
     }
 
     NonnullRefPtr<SQL::SQLClient> m_sql_client;
