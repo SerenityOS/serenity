@@ -57,5 +57,7 @@ GUI::Variant InboxModel::data(GUI::ModelIndex const& index, GUI::ModelRole role)
         if (!value.seen)
             return Gfx::FontDatabase::default_font().bold_variant();
     }
+    if (role == static_cast<GUI::ModelRole>(InboxModelCustomRole::Sequence))
+        return value.sequence_number;
     return {};
 }
