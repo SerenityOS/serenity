@@ -30,6 +30,8 @@ public:
 
 private:
     PDFViewerWidget();
+    virtual void drag_enter_event(GUI::DragEvent&) override;
+    virtual void drop_event(GUI::DropEvent&) override;
 
     void initialize_toolbar(GUI::Toolbar&);
     PDF::PDFErrorOr<void> try_open_file(StringView path, NonnullOwnPtr<Core::File> file);
