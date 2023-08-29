@@ -1183,7 +1183,7 @@ ThrowCompletionOr<void> PutByValue::execute_impl(Bytecode::Interpreter& interpre
 
     auto base = interpreter.reg(m_base);
 
-    auto property_key = TRY(interpreter.reg(m_property).to_property_key(vm));
+    auto property_key = m_kind != PropertyKind::Spread ? TRY(interpreter.reg(m_property).to_property_key(vm)) : PropertyKey {};
     TRY(put_by_property_key(vm, base, base, value, property_key, m_kind));
     interpreter.accumulator() = value;
     return {};
@@ -1198,7 +1198,7 @@ ThrowCompletionOr<void> PutByValueWithThis::execute_impl(Bytecode::Interpreter& 
 
     auto base = interpreter.reg(m_base);
 
-    auto property_key = TRY(interpreter.reg(m_property).to_property_key(vm));
+    auto property_key = m_kind != PropertyKind::Spread ? TRY(interpreter.reg(m_property).to_property_key(vm)) : PropertyKey {};
     TRY(put_by_property_key(vm, base, interpreter.reg(m_this_value), value, property_key, m_kind));
     interpreter.accumulator() = value;
     return {};

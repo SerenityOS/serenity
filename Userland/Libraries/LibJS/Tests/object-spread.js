@@ -144,7 +144,7 @@ describe("modification of spreadable objects during spread", () => {
         expect(Object.getOwnPropertyNames(result)).toContain("bar");
     });
 
-    test.xfail("spreading array", () => {
+    test("spreading array", () => {
         const array = [0];
         array[2] = 2;
         array[999] = 999;
@@ -191,4 +191,24 @@ test("allows assignment expressions", () => {
     expect("({ ...a ||= 'hello' })").toEval();
     expect("({ ...a ??= 'hello' })").toEval();
     expect("function* test() { return ({ ...yield a }); }").toEval();
+});
+
+test("spreading null-proto objects", () => {
+    const obj = {
+        __proto__: null,
+        hello: "world",
+        friends: "well hello",
+        toString() {
+            expect().fail("called toString()");
+        },
+        valueOf() {
+            expect().fail("called valueOf()");
+        },
+    };
+    let res;
+    expect(() => {
+        res = { ...obj };
+    }).not.toThrow();
+    expect(res).toHaveProperty("hello", "world");
+    expect(res).toHaveProperty("friends", "well hello");
 });
