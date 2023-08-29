@@ -27,12 +27,12 @@ int InboxModel::row_count(GUI::ModelIndex const&) const
 ErrorOr<String> InboxModel::column_name(int column_index) const
 {
     switch (column_index) {
+    case Date:
+        return "Date"_string;
     case Column::From:
         return "From"_string;
     case Subject:
         return "Subject"_string;
-    case Date:
-        return "Date"_string;
     default:
         VERIFY_NOT_REACHED();
     }
@@ -42,12 +42,12 @@ GUI::Variant InboxModel::data(GUI::ModelIndex const& index, GUI::ModelRole role)
 {
     auto& value = m_entries[index.row()];
     if (role == GUI::ModelRole::Display) {
+        if (index.column() == Column::Date)
+            return value.date;
         if (index.column() == Column::From)
             return value.from;
         if (index.column() == Column::Subject)
             return value.subject;
-        if (index.column() == Column::Date)
-            return value.date;
     }
     if (role == GUI::ModelRole::TextAlignment) {
         if (index.column() == Column::Date)

@@ -12,9 +12,9 @@
 
 struct InboxEntry {
     u32 sequence_number;
+    DeprecatedString date;
     DeprecatedString from;
     DeprecatedString subject;
-    DeprecatedString date;
     bool seen;
 };
 
@@ -26,9 +26,9 @@ enum class InboxModelCustomRole {
 class InboxModel final : public GUI::Model {
 public:
     enum Column {
+        Date,
         From,
         Subject,
-        Date,
         __Count
     };
 
