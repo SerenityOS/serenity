@@ -430,6 +430,7 @@ if (BUILD_LAGOM)
 
         # WebView
         list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/AccessibilityTreeModel.cpp")
+        list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/ConsoleClient.cpp")
         list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/DOMTreeModel.cpp")
         list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/RequestServerAdapter.cpp")
         list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/SourceHighlighter.cpp")
@@ -463,7 +464,7 @@ if (BUILD_LAGOM)
 
         lagom_lib(LibWebView webview
             SOURCES ${LIBWEBVIEW_SOURCES} ${LIBWEBVIEW_GENERATED_SOURCES}
-            LIBS LibGfx LibGUI LibIPC LibWeb LibProtocol)
+            LIBS LibGfx LibGUI LibIPC LibJS LibWeb LibProtocol)
         foreach(header ${LIBWEBVIEW_GENERATED_SOURCES})
             get_filename_component(subdirectory ${header} DIRECTORY)
             install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${header}" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${subdirectory}")

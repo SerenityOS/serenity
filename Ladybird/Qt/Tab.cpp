@@ -272,16 +272,6 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
             m_inspector_widget->set_accessibility_json(accessibility_tree);
     };
 
-    view().on_received_console_message = [this](auto message_index) {
-        if (m_console_widget)
-            m_console_widget->notify_about_new_console_message(message_index);
-    };
-
-    view().on_received_console_messages = [this](auto start_index, auto& message_types, auto& messages) {
-        if (m_console_widget)
-            m_console_widget->handle_console_messages(start_index, message_types, messages);
-    };
-
     auto* take_visible_screenshot_action = new QAction("Take &Visible Screenshot", this);
     take_visible_screenshot_action->setIcon(QIcon(QString("%1/res/icons/16x16/filetype-image.png").arg(s_serenity_resource_root.characters())));
     QObject::connect(take_visible_screenshot_action, &QAction::triggered, this, [this]() {
@@ -702,7 +692,7 @@ void Tab::show_inspector_window(InspectorTarget inspector_target)
 void Tab::show_console_window()
 {
     if (!m_console_widget) {
-        m_console_widget = new Ladybird::ConsoleWidget;
+        m_console_widget = new Ladybird::ConsoleWidget(view());
         m_console_widget->setWindowTitle("JS Console");
         m_console_widget->resize(640, 480);
 
@@ -718,12 +708,6 @@ void Tab::show_console_window()
         m_console_widget->view().on_context_menu_request = [this](Gfx::IntPoint) {
             auto screen_position = QCursor::pos();
             m_console_context_menu->exec(screen_position);
-        };
-        m_console_widget->on_js_input = [this](auto js_source) {
-            view().js_console_input(js_source);
-        };
-        m_console_widget->on_request_messages = [this](i32 start_index) {
-            view().js_console_request_messages(start_index);
         };
     }
 
