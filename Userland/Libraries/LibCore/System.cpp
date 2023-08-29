@@ -513,7 +513,7 @@ ErrorOr<int> anon_create([[maybe_unused]] size_t size, [[maybe_unused]] int opti
         TRY(close(fd));
         return Error::from_errno(saved_errno);
     }
-#elif defined(AK_OS_BSD_GENERIC) || defined(AK_OS_EMSCRIPTEN)
+#elif defined(AK_OS_BSD_GENERIC) || defined(AK_OS_EMSCRIPTEN) || defined(AK_OS_HAIKU)
     struct timespec time;
     clock_gettime(CLOCK_REALTIME, &time);
     auto name = DeprecatedString::formatted("/shm-{}{}", (unsigned long)time.tv_sec, (unsigned long)time.tv_nsec);
