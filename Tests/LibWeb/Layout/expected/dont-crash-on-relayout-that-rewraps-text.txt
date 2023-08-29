@@ -1,0 +1,27 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (1,1) content-size 798x56.9375 [BFC] children: not-inline
+    BlockContainer <body> at (10,10) content-size 200x38.9375 children: inline
+      line 0 width: 196.0625, height: 19.46875, bottom: 19.46875, baseline: 14.53125
+        frag 0 from BlockContainer start: 0, length: 0, rect: [11,11 194.0625x17.46875]
+      line 1 width: 138.265625, height: 19.46875, bottom: 38.9375, baseline: 14.53125
+        frag 0 from BlockContainer start: 0, length: 0, rect: [11,30 136.265625x17.46875]
+      BlockContainer <div> at (11,11) content-size 194.0625x17.46875 inline-block [BFC] children: inline
+        line 0 width: 194.0625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+          frag 0 from TextNode start: 0, length: 20, rect: [11,11 194.0625x17.46875]
+            "xxxxxxxxxxxxxxxxxxxx"
+        TextNode <#text>
+      TextNode <#text>
+      BlockContainer <div> at (11,30) content-size 136.265625x17.46875 inline-block [BFC] children: inline
+        line 0 width: 136.265625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+          frag 0 from TextNode start: 0, length: 19, rect: [11,30 136.265625x17.46875]
+            "yyyyyyyyyyyyyyyyyyy"
+        TextNode <#text>
+      TextNode <#text>
+
+ViewportPaintable (Viewport<#document>) [0,0 800x600]
+  PaintableWithLines (BlockContainer<HTML>) [0,0 800x58.9375]
+    PaintableWithLines (BlockContainer<BODY>) [9,9 202x40.9375]
+      PaintableWithLines (BlockContainer<DIV>) [10,10 196.0625x19.46875]
+        TextPaintable (TextNode<#text>)
+      PaintableWithLines (BlockContainer<DIV>) [10,29 138.265625x19.46875]
+        TextPaintable (TextNode<#text>)
