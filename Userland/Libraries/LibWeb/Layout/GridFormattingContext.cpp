@@ -606,6 +606,7 @@ void GridFormattingContext::place_item_with_no_declared_position(Box const& chil
                 auto_placement_cursor_y++;
             } else {
                 m_occupation_grid.set_max_column_index(auto_placement_cursor_x);
+                auto_placement_cursor_x = 0;
                 auto_placement_cursor_y = m_occupation_grid.min_row_index();
             }
         }
