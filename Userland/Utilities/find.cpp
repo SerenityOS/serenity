@@ -205,7 +205,7 @@ public:
             m_gid = gr->gr_gid;
         } else {
             // Attempt to parse it as decimal GID.
-            auto number = StringView { arg, strlen(arg) }.to_int();
+            auto number = StringView { arg, strlen(arg) }.to_uint<gid_t>();
             if (!number.has_value())
                 fatal_error("Invalid group: \033[1m{}", arg);
             m_gid = number.value();
