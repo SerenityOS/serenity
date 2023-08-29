@@ -907,6 +907,12 @@ static void copy_text_to_clipboard(StringView text)
     [super drawRect:rect];
 }
 
+- (void)viewDidMoveToWindow
+{
+    [super viewDidMoveToWindow];
+    [self handleResize];
+}
+
 - (void)viewDidEndLiveResize
 {
     [super viewDidEndLiveResize];
