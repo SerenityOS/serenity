@@ -58,6 +58,11 @@ Note that OpenIndiana's latest GCC port (GCC 11) is too old to build Ladybird, s
 pfexec pkg install cmake ninja clang-15 libglvnd qt6
 ```
 
+On Haiku:
+```
+pkgman install cmake ninja cmd:python3 qt6_base_devel qt6_multimedia_devel qt6_tools_devel openal_devel
+```
+
 On Windows:
 
 WSL2/WSLg are preferred, as they provide a linux environment that matches one of the above distributions.
@@ -195,4 +200,15 @@ doesn't find a writable directory for its sockets.
 CMAKE_PREFIX_PATH=/usr/lib/qt/6.2/lib/amd64/cmake cmake -GNinja -S Ladybird -B Build/ladybird -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++
 cmake --build Build/ladybird
 XDG_RUNTIME_DIR=/var/tmp ninja -C Build/ladybird run
+```
+
+### Building on Haiku
+
+Haiku is supported by Ladybird out of the box. The steps are the same as on OpenIndiana, but no
+additional environment variables are required.
+
+```
+cmake -GNinja -S Ladybird -B Build/ladybird
+cmake --build Build/ladybird
+ninja -C Build/ladybird run
 ```
