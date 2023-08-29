@@ -26,8 +26,8 @@ public:
 private:
     MailWidget();
 
-    void selected_mailbox();
-    void selected_email_to_load();
+    void selected_mailbox(GUI::ModelIndex const&);
+    void selected_email_to_load(GUI::ModelIndex const&);
 
     struct Alternative {
         IMAP::BodyStructureData const& body_structure;

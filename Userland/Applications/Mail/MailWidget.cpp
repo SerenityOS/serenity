@@ -32,12 +32,14 @@ MailWidget::MailWidget()
     m_web_view = *find_descendant_of_type_named<WebView::OutOfProcessWebView>("web_view");
     m_statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
-    m_mailbox_list->on_selection_change = [this] {
-        selected_mailbox();
+    m_mailbox_list->set_activates_on_selection(true);
+    m_mailbox_list->on_activation = [this](auto& index) {
+        selected_mailbox(index);
     };
 
-    m_individual_mailbox_view->on_selection_change = [this] {
-        selected_email_to_load();
+    m_individual_mailbox_view->set_activates_on_selection(true);
+    m_individual_mailbox_view->on_activation = [this](auto& index) {
+        selected_email_to_load(index);
     };
 
     m_web_view->on_link_click = [this](auto& url, auto&, unsigned) {
@@ -241,12 +243,10 @@ bool MailWidget::is_supported_alternative(Alternative const& alternative) const
     return alternative.body_structure.type.equals_ignoring_ascii_case("text"sv) && (alternative.body_structure.subtype.equals_ignoring_ascii_case("plain"sv) || alternative.body_structure.subtype.equals_ignoring_ascii_case("html"sv));
 }
 
-void MailWidget::selected_mailbox()
+void MailWidget::selected_mailbox(GUI::ModelIndex const& index)
 {
     m_individual_mailbox_model = InboxModel::create({});
     m_individual_mailbox_view->set_model(m_individual_mailbox_model);
-
-    auto const& index = m_mailbox_list->selection().first();
 
     if (!index.is_valid())
         return;
@@ -418,10 +418,8 @@ void MailWidget::selected_mailbox()
     m_individual_mailbox_view->set_model(m_individual_mailbox_model);
 }
 
-void MailWidget::selected_email_to_load()
+void MailWidget::selected_email_to_load(GUI::ModelIndex const& index)
 {
-    auto const& index = m_individual_mailbox_view->selection().first();
-
     if (!index.is_valid())
         return;
 
