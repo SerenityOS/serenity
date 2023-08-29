@@ -1926,7 +1926,7 @@ NonnullRefPtr<ObjectExpression const> Parser::parse_object_expression()
 
         if (match(TokenType::TripleDot)) {
             consume();
-            property_key = parse_expression(4);
+            property_key = parse_expression(2);
             properties.append(create_ast_node<ObjectProperty>({ m_source_code, rule_start.position(), position() }, *property_key, nullptr, ObjectProperty::Type::Spread, false));
             if (!match(TokenType::Comma))
                 break;

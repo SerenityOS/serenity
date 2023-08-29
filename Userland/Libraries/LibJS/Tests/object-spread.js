@@ -172,3 +172,23 @@ describe("modification of spreadable objects during spread", () => {
         expect(arrayResult).toHaveProperty("1000", 1000);
     });
 });
+
+test("allows assignment expressions", () => {
+    expect("({ ...a = { hello: 'world' } })").toEval();
+    expect("({ ...a += 'hello' })").toEval();
+    expect("({ ...a -= 'hello' })").toEval();
+    expect("({ ...a **= 'hello' })").toEval();
+    expect("({ ...a *= 'hello' })").toEval();
+    expect("({ ...a /= 'hello' })").toEval();
+    expect("({ ...a %= 'hello' })").toEval();
+    expect("({ ...a <<= 'hello' })").toEval();
+    expect("({ ...a >>= 'hello' })").toEval();
+    expect("({ ...a >>>= 'hello' })").toEval();
+    expect("({ ...a &= 'hello' })").toEval();
+    expect("({ ...a ^= 'hello' })").toEval();
+    expect("({ ...a |= 'hello' })").toEval();
+    expect("({ ...a &&= 'hello' })").toEval();
+    expect("({ ...a ||= 'hello' })").toEval();
+    expect("({ ...a ??= 'hello' })").toEval();
+    expect("function* test() { return ({ ...yield a }); }").toEval();
+});

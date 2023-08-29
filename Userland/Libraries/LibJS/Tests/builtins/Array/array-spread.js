@@ -23,3 +23,23 @@ test("basic functionality", () => {
 
     expect([...[], ...[...[1, 2, 3]], 4]).toEqual([1, 2, 3, 4]);
 });
+
+test("allows assignment expressions", () => {
+    expect("([ ...a = { hello: 'world' } ])").toEval();
+    expect("([ ...a += 'hello' ])").toEval();
+    expect("([ ...a -= 'hello' ])").toEval();
+    expect("([ ...a **= 'hello' ])").toEval();
+    expect("([ ...a *= 'hello' ])").toEval();
+    expect("([ ...a /= 'hello' ])").toEval();
+    expect("([ ...a %= 'hello' ])").toEval();
+    expect("([ ...a <<= 'hello' ])").toEval();
+    expect("([ ...a >>= 'hello' ])").toEval();
+    expect("([ ...a >>>= 'hello' ])").toEval();
+    expect("([ ...a &= 'hello' ])").toEval();
+    expect("([ ...a ^= 'hello' ])").toEval();
+    expect("([ ...a |= 'hello' ])").toEval();
+    expect("([ ...a &&= 'hello' ])").toEval();
+    expect("([ ...a ||= 'hello' ])").toEval();
+    expect("([ ...a ??= 'hello' ])").toEval();
+    expect("function* test() { return ([ ...yield a ]); }").toEval();
+});
