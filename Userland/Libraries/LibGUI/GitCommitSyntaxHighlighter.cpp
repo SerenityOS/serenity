@@ -26,9 +26,9 @@ void GitCommitSyntaxHighlighter::rehighlight(Palette const& palette)
     GitCommitLexer lexer(text);
     auto tokens = lexer.lex();
 
-    Vector<GUI::TextDocumentSpan> spans;
+    Vector<Syntax::TextDocumentSpan> spans;
     for (auto& token : tokens) {
-        GUI::TextDocumentSpan span;
+        Syntax::TextDocumentSpan span;
         span.range.set_start({ token.m_start.line, token.m_start.column });
         span.range.set_end({ token.m_end.line, token.m_end.column });
         span.attributes = style_for_token_type(palette, token.m_type);

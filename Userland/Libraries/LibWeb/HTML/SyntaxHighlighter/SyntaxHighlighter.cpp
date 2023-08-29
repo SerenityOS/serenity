@@ -42,8 +42,8 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
     clear_nested_token_pairs();
 
     // FIXME: Add folding regions for start and end tags.
-    Vector<GUI::TextDocumentFoldingRegion> folding_regions;
-    Vector<GUI::TextDocumentSpan> spans;
+    Vector<Syntax::TextDocumentFoldingRegion> folding_regions;
+    Vector<Syntax::TextDocumentSpan> spans;
     auto highlight = [&](auto start_line, auto start_column, auto end_line, auto end_column, Gfx::TextAttributes attributes, AugmentedTokenKind kind) {
         if (start_line > end_line || (start_line == end_line && start_column >= end_column)) {
             dbgln_if(SYNTAX_HIGHLIGHTING_DEBUG, "(HTML::SyntaxHighlighter) discarding ({}-{}) to ({}-{}) because it has zero or negative length", start_line, start_column, end_line, end_column);
@@ -51,7 +51,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
         }
         dbgln_if(SYNTAX_HIGHLIGHTING_DEBUG, "(HTML::SyntaxHighlighter) highlighting ({}-{}) to ({}-{}) with color {}", start_line, start_column, end_line, end_column, attributes.color);
         spans.empend(
-            GUI::TextRange {
+            Syntax::TextRange {
                 { start_line, start_column },
                 { end_line, end_column },
             },
@@ -67,7 +67,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
         CSS,
     } state { State::HTML };
     StringBuilder substring_builder;
-    GUI::TextPosition substring_start_position;
+    Syntax::TextPosition substring_start_position;
 
     for (;;) {
         auto token = tokenizer.next_token();
@@ -141,7 +141,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
                 { palette.syntax_comment(), {} },
                 AugmentedTokenKind::Comment);
 
-            GUI::TextDocumentFoldingRegion region;
+            Syntax::TextDocumentFoldingRegion region;
             region.range.set_start({ token->start_position().line, token->start_position().column + comment_prefix()->length() });
             region.range.set_end({ token->end_position().line, token->end_position().column - comment_suffix()->length() });
             folding_regions.append(move(region));

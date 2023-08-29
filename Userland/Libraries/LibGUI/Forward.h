@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <LibSyntax/Forward.h>
+
 namespace GUI {
 
 class AbstractButton;
@@ -77,11 +79,8 @@ class Statusbar;
 class TabWidget;
 class TableView;
 class TextBox;
-class TextPosition;
 class UrlBox;
 class TextDocument;
-class TextDocumentLine;
-struct TextDocumentSpan;
 class TextDocumentUndoCommand;
 class TextEditor;
 class ThemeChangeEvent;

@@ -42,9 +42,9 @@ void SyntaxHighlighter::rehighlight(Gfx::Palette const& palette)
     auto text = m_client->get_text();
     auto tokens = Lexer::lex(text).release_value_but_fixme_should_propagate_errors();
 
-    Vector<GUI::TextDocumentSpan> spans;
+    Vector<Syntax::TextDocumentSpan> spans;
     auto highlight_span = [&](Token::Type type, Position const& start, Position const& end) {
-        GUI::TextDocumentSpan span;
+        Syntax::TextDocumentSpan span;
         span.range.set_start({ start.line, start.column });
         span.range.set_end({ end.line, end.column });
         if (!span.range.is_valid())
