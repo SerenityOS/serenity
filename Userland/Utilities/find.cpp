@@ -9,6 +9,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
+#include <AK/Time.h>
 #include <AK/Vector.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -326,6 +327,52 @@ private:
     mode_t m_mode { 0 };
 };
 
+class NewerCommand final : public StatCommand {
+public:
+    enum class TimestampType {
+        LastAccess,
+        Creation,
+        LastModification
+    };
+
+    NewerCommand(char const* arg, TimestampType timestamp_type)
+    {
+        auto stat_function = g_follow_symlinks ? Core::System::stat : Core::System::lstat;
+        auto stat_or_error = stat_function({ arg, strlen(arg) });
+        if (stat_or_error.is_error())
+            fatal_error("find: '{}': {}", arg, strerror(stat_or_error.error().code()));
+
+        m_reference_file_stat = stat_or_error.release_value();
+        m_timestamp_type = timestamp_type;
+    }
+
+private:
+    virtual bool evaluate(struct stat const& stat) const override
+    {
+        struct timespec current_file_timestamp;
+        struct timespec reference_file_timestamp;
+        switch (m_timestamp_type) {
+        case TimestampType::LastAccess:
+            current_file_timestamp = stat.st_atim;
+            reference_file_timestamp = m_reference_file_stat.st_atim;
+            break;
+        case TimestampType::Creation:
+            current_file_timestamp = stat.st_ctim;
+            reference_file_timestamp = m_reference_file_stat.st_ctim;
+            break;
+        case TimestampType::LastModification:
+            current_file_timestamp = stat.st_mtim;
+            reference_file_timestamp = m_reference_file_stat.st_mtim;
+            break;
+        }
+
+        return Duration::from_timespec(current_file_timestamp) > Duration::from_timespec(reference_file_timestamp);
+    }
+
+    struct stat m_reference_file_stat;
+    TimestampType m_timestamp_type { TimestampType::LastModification };
+};
+
 class PrintCommand final : public Command {
 public:
     PrintCommand(char terminator = '\n')
@@ -488,6 +535,18 @@ static OwnPtr<Command> parse_simple_command(Vector<char*>& args)
         return make<AccessCommand>(W_OK);
     } else if (arg == "-executable") {
         return make<AccessCommand>(X_OK);
+    } else if (arg == "-newer") {
+        if (args.is_empty())
+            fatal_error("-newer: requires additional arguments");
+        return make<NewerCommand>(args.take_first(), NewerCommand::TimestampType::LastModification);
+    } else if (arg == "-anewer") {
+        if (args.is_empty())
+            fatal_error("-anewer: requires additional arguments");
+        return make<NewerCommand>(args.take_first(), NewerCommand::TimestampType::LastAccess);
+    } else if (arg == "-cnewer") {
+        if (args.is_empty())
+            fatal_error("-cnewer: requires additional arguments");
+        return make<NewerCommand>(args.take_first(), NewerCommand::TimestampType::Creation);
     } else if (arg == "-print") {
         g_have_seen_action_command = true;
         return make<PrintCommand>();
