@@ -34,6 +34,8 @@ private:
     virtual void hide_cursor() override;
     virtual void show_cursor() override;
 
+    virtual void scroll_up() override;
+
     void clear_vga_row(u16 row);
 
     explicit VGATextModeConsole(NonnullOwnPtr<Memory::Region>);

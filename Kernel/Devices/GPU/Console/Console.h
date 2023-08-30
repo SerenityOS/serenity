@@ -63,6 +63,8 @@ protected:
     virtual void hide_cursor() = 0;
     virtual void show_cursor() = 0;
 
+    virtual void scroll_up() = 0;
+
     Console(size_t width, size_t height)
         : m_width(width)
         , m_height(height)
