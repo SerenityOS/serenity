@@ -141,7 +141,7 @@ static constexpr CGFloat const WINDOW_HEIGHT = 600;
     auto script = Ladybird::ns_string_to_string(ns_script);
 
     if (!script.bytes_as_string_view().is_whitespace()) {
-        m_console_client->execute(script);
+        m_console_client->execute(move(script));
         [text_view setString:@""];
     }
 
