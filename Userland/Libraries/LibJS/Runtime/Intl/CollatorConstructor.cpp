@@ -15,7 +15,7 @@
 namespace JS::Intl {
 
 // 10.1.2 InitializeCollator ( collator, locales, options ), https://tc39.es/ecma402/#sec-initializecollator
-static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collator, Value locales_value, Value options_value)
+static ThrowCompletionOr<NonnullGCPtr<Collator>> initialize_collator(VM& vm, Collator& collator, Value locales_value, Value options_value)
 {
     // 1. Let requestedLocales be ? CanonicalizeLocaleList(locales).
     auto requested_locales = TRY(canonicalize_locale_list(vm, locales_value));
@@ -63,7 +63,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collat
     //     a. Let numeric be ! ToString(numeric).
     // 15. Set opt.[[kn]] to numeric.
     if (!numeric.is_undefined())
-        opt.kn = MUST_OR_THROW_OOM(numeric.to_string(vm));
+        opt.kn = MUST(numeric.to_string(vm));
 
     // 16. Let caseFirst be ? GetOption(options, "caseFirst", string, « "upper", "lower", "false" », undefined).
     // 17. Set opt.[[kf]] to caseFirst.
@@ -126,7 +126,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collat
     collator.set_ignore_punctuation(ignore_punctuation.as_bool());
 
     // 31. Return collator.
-    return &collator;
+    return collator;
 }
 
 // 10.1 The Intl.Collator Constructor, https://tc39.es/ecma402/#sec-the-intl-collator-constructor
@@ -174,7 +174,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> CollatorConstructor::construct(FunctionO
     auto collator = TRY(ordinary_create_from_constructor<Collator>(vm, new_target, &Intrinsics::intl_collator_prototype));
 
     // 6. Return ? InitializeCollator(collator, locales, options).
-    return *TRY(initialize_collator(vm, collator, locales, options));
+    return TRY(initialize_collator(vm, collator, locales, options));
 }
 
 // 10.2.2 Intl.Collator.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-intl.collator.supportedlocalesof
