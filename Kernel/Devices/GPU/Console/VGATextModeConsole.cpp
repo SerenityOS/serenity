@@ -115,6 +115,15 @@ void VGATextModeConsole::clear(size_t x, size_t y, size_t length)
 
 void VGATextModeConsole::scroll_up()
 {
+    auto* start_of_buffer = m_current_vga_window.as_ptr();
+    auto* start_of_second_line = m_current_vga_window.offset(max_column() * 2).as_ptr();
+    auto size_to_move = (max_row() - 1) * max_column() * 2;
+    memmove(start_of_buffer, start_of_second_line, size_to_move);
+
+    // Clear the last row with a memset, we're called from `write` here which already
+    // grabs `m_vga_lock` so we will get a deadlock trying to call `clear_vga_row`
+    auto* last_line = m_current_vga_window.offset((max_row() - 1) * width() * 2).as_ptr();
+    memset(last_line, 0, width() * 2);
 }
 
 void VGATextModeConsole::write(size_t x, size_t y, char ch, bool critical)
@@ -133,8 +142,10 @@ void VGATextModeConsole::write(size_t x, size_t y, char ch, Color background, Co
 
         m_x = 0;
         m_y += 1;
-        if (m_y >= max_row())
-            m_y = 0;
+        if (m_y >= max_row()) {
+            m_y = max_row() - 1;
+            scroll_up();
+        }
         return;
     }
 
@@ -145,8 +156,14 @@ void VGATextModeConsole::write(size_t x, size_t y, char ch, Color background, Co
     if (m_x >= max_column()) {
         m_x = 0;
         m_y = y + 1;
-        if (m_y >= max_row())
-            m_y = 0;
+        if (m_y >= max_row()) {
+            if (critical) {
+                m_y = max_row() - 1;
+                scroll_up();
+            } else {
+                m_y = 0;
+            }
+        }
     }
 }
 
