@@ -33,7 +33,6 @@ private:
     void print_html(StringView);
 
     void request_console_messages();
-    void request_console_messages(i32 start_index);
 
     void begin_group(StringView label, bool start_expanded);
     void end_group();
