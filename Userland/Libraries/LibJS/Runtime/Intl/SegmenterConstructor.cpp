@@ -72,7 +72,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> SegmenterConstructor::construct(Function
     // 9. Let localeData be %Segmenter%.[[LocaleData]].
 
     // 10. Let r be ResolveLocale(%Segmenter%.[[AvailableLocales]], requestedLocales, opt, %Segmenter%.[[RelevantExtensionKeys]], localeData).
-    auto result = TRY(resolve_locale(vm, requested_locales, opt, {}));
+    auto result = resolve_locale(requested_locales, opt, {});
 
     // 11. Set segmenter.[[Locale]] to r.[[locale]].
     segmenter->set_locale(move(result.locale));

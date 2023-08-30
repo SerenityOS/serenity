@@ -741,7 +741,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
 ThrowCompletionOr<Vector<PatternPartition>> partition_date_time_pattern(VM& vm, DateTimeFormat& date_time_format, double time)
 {
     // 1. Let patternParts be PartitionPattern(dateTimeFormat.[[Pattern]]).
-    auto pattern_parts = MUST_OR_THROW_OOM(partition_pattern(vm, date_time_format.pattern()));
+    auto pattern_parts = partition_pattern(date_time_format.pattern());
 
     // 2. Let result be ? FormatDateTimePattern(dateTimeFormat, patternParts, x, undefined).
     auto result = TRY(format_date_time_pattern(vm, date_time_format, move(pattern_parts), time, nullptr));
@@ -988,11 +988,11 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
         auto const& pattern = date_time_format.pattern();
 
         // b. Let patternParts be PartitionPattern(pattern).
-        auto pattern_parts = MUST_OR_THROW_OOM(partition_pattern(vm, pattern));
+        auto pattern_parts = partition_pattern(pattern);
 
         // c. Let result be ? FormatDateTimePattern(dateTimeFormat, patternParts, x, undefined).
         auto raw_result = TRY(format_date_time_pattern(vm, date_time_format, move(pattern_parts), start, nullptr));
-        auto result = MUST_OR_THROW_OOM(PatternPartitionWithSource::create_from_parent_list(vm, move(raw_result)));
+        auto result = PatternPartitionWithSource::create_from_parent_list(move(raw_result));
 
         // d. For each Record { [[Type]], [[Value]] } r in result, do
         for (auto& part : result) {
@@ -1045,11 +1045,11 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
         auto time = ((source == "startRange") || (source == "shared")) ? start : end;
 
         // e. Let patternParts be PartitionPattern(pattern).
-        auto pattern_parts = MUST_OR_THROW_OOM(partition_pattern(vm, pattern));
+        auto pattern_parts = partition_pattern(pattern);
 
         // f. Let partResult be ? FormatDateTimePattern(dateTimeFormat, patternParts, z, rangePattern).
         auto raw_part_result = TRY(format_date_time_pattern(vm, date_time_format, move(pattern_parts), time, &range_pattern.value()));
-        auto part_result = MUST_OR_THROW_OOM(PatternPartitionWithSource::create_from_parent_list(vm, move(raw_part_result)));
+        auto part_result = PatternPartitionWithSource::create_from_parent_list(move(raw_part_result));
 
         // g. For each Record { [[Type]], [[Value]] } r in partResult, do
         for (auto& part : part_result) {

@@ -75,7 +75,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collat
     auto relevant_extension_keys = Collator::relevant_extension_keys();
 
     // 19. Let r be ResolveLocale(%Collator%.[[AvailableLocales]], requestedLocales, opt, relevantExtensionKeys, localeData).
-    auto result = MUST_OR_THROW_OOM(resolve_locale(vm, requested_locales, opt, relevant_extension_keys));
+    auto result = resolve_locale(requested_locales, opt, relevant_extension_keys);
 
     // 20. Set collator.[[Locale]] to r.[[locale]].
     collator.set_locale(move(result.locale));

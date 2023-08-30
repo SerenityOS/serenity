@@ -71,7 +71,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ListFormatConstructor::construct(Functio
     // 8. Let localeData be %ListFormat%.[[LocaleData]].
 
     // 9. Let r be ResolveLocale(%ListFormat%.[[AvailableLocales]], requestedLocales, opt, %ListFormat%.[[RelevantExtensionKeys]], localeData).
-    auto result = TRY(resolve_locale(vm, requested_locales, opt, {}));
+    auto result = resolve_locale(requested_locales, opt, {});
 
     // 10. Set listFormat.[[Locale]] to r.[[locale]].
     list_format->set_locale(move(result.locale));

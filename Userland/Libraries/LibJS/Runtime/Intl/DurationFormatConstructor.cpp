@@ -77,7 +77,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> DurationFormatConstructor::construct(Fun
     opt.nu = numbering_system.is_undefined() ? Optional<String>() : numbering_system.as_string().utf8_string();
 
     // 9. Let r be ResolveLocale(%DurationFormat%.[[AvailableLocales]], requestedLocales, opt, %DurationFormat%.[[RelevantExtensionKeys]], %DurationFormat%.[[LocaleData]]).
-    auto result = MUST_OR_THROW_OOM(resolve_locale(vm, requested_locales, opt, DurationFormat::relevant_extension_keys()));
+    auto result = resolve_locale(requested_locales, opt, DurationFormat::relevant_extension_keys());
 
     // 10. Let locale be r.[[locale]].
     auto locale = move(result.locale);

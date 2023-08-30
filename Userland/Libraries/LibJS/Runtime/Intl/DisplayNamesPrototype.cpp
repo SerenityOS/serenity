@@ -62,7 +62,7 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
                 break;
         }
 
-        if (auto locale = MUST_OR_THROW_OOM(is_structurally_valid_language_tag(vm, code_string)); locale.has_value())
+        if (auto locale = is_structurally_valid_language_tag(code_string); locale.has_value())
             formatted_result = ::Locale::format_locale_for_display(display_names->locale(), locale.release_value());
         break;
     case DisplayNames::Type::Region:

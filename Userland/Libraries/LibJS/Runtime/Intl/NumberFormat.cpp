@@ -593,7 +593,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM& vm, Num
     Vector<PatternPartition> result;
 
     // 8. Let patternParts be PartitionPattern(pattern).
-    auto pattern_parts = MUST_OR_THROW_OOM(pattern->visit([&](auto const& p) { return partition_pattern(vm, p); }));
+    auto pattern_parts = pattern->visit([](auto const& p) { return partition_pattern(p); });
 
     // 9. For each Record { [[Type]], [[Value]] } patternPart of patternParts, do
     for (auto& pattern_part : pattern_parts) {
@@ -766,7 +766,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
             return Vector<PatternPartition> {};
 
         // b. Let patternParts be PartitionPattern(notationSubPattern).
-        auto pattern_parts = MUST_OR_THROW_OOM(partition_pattern(vm, *notation_sub_pattern));
+        auto pattern_parts = partition_pattern(*notation_sub_pattern);
 
         // c. For each Record { [[Type]], [[Value]] } patternPart of patternParts, do
         for (auto& pattern_part : pattern_parts) {
@@ -1812,11 +1812,11 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pat
 
     // 3. Let xResult be ? PartitionNumberPattern(numberFormat, x).
     auto raw_start_result = TRY(partition_number_pattern(vm, number_format, move(start)));
-    auto start_result = MUST_OR_THROW_OOM(PatternPartitionWithSource::create_from_parent_list(vm, move(raw_start_result)));
+    auto start_result = PatternPartitionWithSource::create_from_parent_list(move(raw_start_result));
 
     // 4. Let yResult be ? PartitionNumberPattern(numberFormat, y).
     auto raw_end_result = TRY(partition_number_pattern(vm, number_format, move(end)));
-    auto end_result = MUST_OR_THROW_OOM(PatternPartitionWithSource::create_from_parent_list(vm, move(raw_end_result)));
+    auto end_result = PatternPartitionWithSource::create_from_parent_list(move(raw_end_result));
 
     // 5. If ! FormatNumeric(numberFormat, x) is equal to ! FormatNumeric(numberFormat, y), then
     auto formatted_start = MUST_OR_THROW_OOM(format_numeric(vm, number_format, start));

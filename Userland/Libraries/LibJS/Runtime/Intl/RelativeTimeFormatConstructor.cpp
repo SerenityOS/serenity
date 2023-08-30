@@ -110,7 +110,7 @@ ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(VM& vm, R
 
     // 9. Let localeData be %RelativeTimeFormat%.[[LocaleData]].
     // 10. Let r be ResolveLocale(%RelativeTimeFormat%.[[AvailableLocales]], requestedLocales, opt, %RelativeTimeFormat%.[[RelevantExtensionKeys]], localeData).
-    auto result = MUST_OR_THROW_OOM(resolve_locale(vm, requested_locales, opt, RelativeTimeFormat::relevant_extension_keys()));
+    auto result = resolve_locale(requested_locales, opt, RelativeTimeFormat::relevant_extension_keys());
 
     // 11. Let locale be r.[[locale]].
     auto locale = move(result.locale);

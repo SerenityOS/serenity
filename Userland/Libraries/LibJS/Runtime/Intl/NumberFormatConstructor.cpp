@@ -111,7 +111,7 @@ ThrowCompletionOr<NumberFormat*> initialize_number_format(VM& vm, NumberFormat& 
 
     // 9. Let localeData be %NumberFormat%.[[LocaleData]].
     // 10. Let r be ResolveLocale(%NumberFormat%.[[AvailableLocales]], requestedLocales, opt, %NumberFormat%.[[RelevantExtensionKeys]], localeData).
-    auto result = MUST_OR_THROW_OOM(resolve_locale(vm, requested_locales, opt, NumberFormat::relevant_extension_keys()));
+    auto result = resolve_locale(requested_locales, opt, NumberFormat::relevant_extension_keys());
 
     // 11. Set numberFormat.[[Locale]] to r.[[locale]].
     number_format.set_locale(move(result.locale));

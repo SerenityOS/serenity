@@ -76,7 +76,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> DisplayNamesConstructor::construct(Funct
     opt.locale_matcher = matcher;
 
     // 10. Let r be ResolveLocale(%DisplayNames%.[[AvailableLocales]], requestedLocales, opt, %DisplayNames%.[[RelevantExtensionKeys]]).
-    auto result = TRY(resolve_locale(vm, requested_locales, opt, {}));
+    auto result = resolve_locale(requested_locales, opt, {});
 
     // 11. Let style be ? GetOption(options, "style", string, « "narrow", "short", "long" », "long").
     auto style = TRY(get_option(vm, *options, vm.names.style, OptionType::String, { "narrow"sv, "short"sv, "long"sv }, "long"sv));
