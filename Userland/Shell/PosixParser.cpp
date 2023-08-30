@@ -2103,7 +2103,14 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_io_file(AST::Position start_position, O
         auto is_less = io_operator == Token::Type::LessAnd;
         auto source_fd = fd.value_or(is_less ? 0 : 1);
         if (word->is_bareword()) {
-            auto maybe_target_fd = static_ptr_cast<AST::BarewordLiteral>(word)->text().bytes_as_string_view().to_int();
+            auto text = static_ptr_cast<AST::BarewordLiteral>(word)->text();
+            if (!is_less && text == "-"sv) {
+                return make_ref_counted<AST::CloseFdRedirection>(
+                    position,
+                    source_fd);
+            }
+
+            auto maybe_target_fd = text.bytes_as_string_view().to_int();
             if (maybe_target_fd.has_value()) {
                 auto target_fd = maybe_target_fd.release_value();
                 if (is_less)
