@@ -88,6 +88,6 @@ NonnullGCPtr<Array> hour_cycles_of_locale(VM&, Locale const& locale);
 NonnullGCPtr<Array> numbering_systems_of_locale(VM&, Locale const&);
 NonnullGCPtr<Array> time_zones_of_locale(VM&, StringView region);
 StringView character_direction_of_locale(Locale const&);
-ThrowCompletionOr<WeekInfo> week_info_of_locale(VM&, Locale const&);
+WeekInfo week_info_of_locale(Locale const&);
 
 }

@@ -105,7 +105,7 @@ static ThrowCompletionOr<String> apply_options_to_tag(VM& vm, StringView tag, Ob
 }
 
 // 14.1.3 ApplyUnicodeExtensionToTag ( tag, options, relevantExtensionKeys ), https://tc39.es/ecma402/#sec-apply-unicode-extension-to-tag
-static ThrowCompletionOr<LocaleAndKeys> apply_unicode_extension_to_tag(VM& vm, StringView tag, LocaleAndKeys options, ReadonlySpan<StringView> relevant_extension_keys)
+static LocaleAndKeys apply_unicode_extension_to_tag(StringView tag, LocaleAndKeys options, ReadonlySpan<StringView> relevant_extension_keys)
 {
     // 1. Assert: Type(tag) is String.
     // 2. Assert: tag matches the unicode_locale_id production.
@@ -188,7 +188,7 @@ static ThrowCompletionOr<LocaleAndKeys> apply_unicode_extension_to_tag(VM& vm, S
             // iv. Else,
             else {
                 // 1. Append the Record { [[Key]]: key, [[Value]]: value } to keywords.
-                TRY_OR_THROW_OOM(vm, keywords.try_append({ TRY_OR_THROW_OOM(vm, String::from_utf8(key)), *value }));
+                keywords.append({ MUST(String::from_utf8(key)), *value });
             }
         }
 
@@ -322,7 +322,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> LocaleConstructor::construct(FunctionObj
     opt.nu = TRY(get_string_option(vm, *options, vm.names.numberingSystem, ::Locale::is_type_identifier));
 
     // 29. Let r be ! ApplyUnicodeExtensionToTag(tag, opt, relevantExtensionKeys).
-    auto result = MUST_OR_THROW_OOM(apply_unicode_extension_to_tag(vm, tag, move(opt), relevant_extension_keys));
+    auto result = apply_unicode_extension_to_tag(tag, move(opt), relevant_extension_keys);
 
     // 30. Set locale.[[Locale]] to r.[[locale]].
     locale->set_locale(move(result.locale));
