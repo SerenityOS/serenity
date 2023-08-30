@@ -41,6 +41,7 @@ private:
     void generate_missing_child_wrappers(NodeWithStyle& root);
     Vector<JS::Handle<Box>> generate_missing_parents(NodeWithStyle& root);
     void missing_cells_fixup(Vector<JS::Handle<Box>> const&);
+    void reorder_row_groups(NodeWithStyle& root);
 
     enum class AppendOrPrepend {
         Append,

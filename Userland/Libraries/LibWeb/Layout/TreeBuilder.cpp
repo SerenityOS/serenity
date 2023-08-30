@@ -460,6 +460,7 @@ void TreeBuilder::fixup_tables(NodeWithStyle& root)
     generate_missing_child_wrappers(root);
     auto table_root_boxes = generate_missing_parents(root);
     missing_cells_fixup(table_root_boxes);
+    reorder_row_groups(root);
 }
 
 void TreeBuilder::remove_irrelevant_boxes(NodeWithStyle& root)
@@ -732,5 +733,51 @@ void TreeBuilder::missing_cells_fixup(Vector<JS::Handle<Box>> const& table_root_
             return IterationDecision::Continue;
         });
     }
+}
+
+static bool is_row_group(Node const& node)
+{
+    // NB: For the purpose of reordering row groups, rows can be treated as a group with one element.
+    return node.display().is_table_header_group() || node.display().is_table_row_group() || node.display().is_table_footer_group() || node.display().is_table_row();
+}
+
+void TreeBuilder::reorder_row_groups(NodeWithStyle& root)
+{
+    for_each_in_tree_with_inside_display<CSS::Display::Inside::Table>(root, [&](auto& parent) {
+        Vector<JS::Handle<Node>> row_groups;
+        // Per https://www.w3.org/TR/css-tables-3/#table-header-group:
+        // Like table-row-group but, for layout purposes, the first such row group is always displayed before all other rows and row groups.
+        const Node* header_group { nullptr };
+        for (auto child = parent.first_child(); child; child = child->next_sibling())
+            if (child->display().is_table_header_group()) {
+                row_groups.append(child);
+                header_group = child;
+                break;
+            }
+        JS::Handle<Node> footer_group;
+        for (auto child = parent.first_child(); child; child = child->next_sibling()) {
+            if (!is_row_group(*child))
+                continue;
+            if (child->display().is_table_footer_group() && !footer_group)
+                footer_group = child;
+            // Accumulate table row groups and header / footer groups which aren't the first and behave like regular row groups.
+            else if (child != header_group)
+                row_groups.append(child);
+        }
+        // Per https://www.w3.org/TR/css-tables-3/#table-footer-group:
+        // Like table-row-group but, for layout purposes, the first such row group is always displayed after all other rows and row groups.
+        if (footer_group)
+            row_groups.append(footer_group);
+        Vector<JS::Handle<Node>> sequence;
+        for (auto child = parent.first_child(); child; child = child->next_sibling())
+            if (is_row_group(*child))
+                sequence.append(*row_groups.take_first());
+            else
+                sequence.append(*child);
+        for (auto& child : sequence)
+            parent.remove_child(*child);
+        for (auto& child : sequence)
+            parent.append_child(*child);
+    });
 }
 }
