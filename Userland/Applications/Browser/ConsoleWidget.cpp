@@ -48,7 +48,7 @@ ConsoleWidget::ConsoleWidget(WebView::OutOfProcessWebView& content_view)
         m_input->add_current_text_to_history();
         m_input->clear();
 
-        m_console_client->execute(js_source);
+        m_console_client->execute(MUST(String::from_deprecated_string(js_source)));
     };
 
     set_focus_proxy(m_input);

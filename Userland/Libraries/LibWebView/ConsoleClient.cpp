@@ -47,10 +47,44 @@ ConsoleClient::~ConsoleClient()
     m_content_web_view.on_received_console_messages = nullptr;
 }
 
-void ConsoleClient::execute(StringView script)
+void ConsoleClient::execute(String script)
 {
     print_source(script);
-    m_content_web_view.js_console_input(script);
+    m_content_web_view.js_console_input(script.to_deprecated_string());
+
+    if (m_history.is_empty() || m_history.last() != script) {
+        m_history.append(move(script));
+        m_history_index = m_history.size();
+    }
+}
+
+Optional<String> ConsoleClient::previous_history_item()
+{
+    if (m_history_index == 0)
+        return {};
+
+    --m_history_index;
+    return m_history.at(m_history_index);
+}
+
+Optional<String> ConsoleClient::next_history_item()
+{
+    if (m_history.is_empty())
+        return {};
+
+    auto last_index = m_history.size() - 1;
+
+    if (m_history_index < last_index) {
+        ++m_history_index;
+        return m_history.at(m_history_index);
+    }
+
+    if (m_history_index == last_index) {
+        ++m_history_index;
+        return String {};
+    }
+
+    return {};
 }
 
 void ConsoleClient::clear()

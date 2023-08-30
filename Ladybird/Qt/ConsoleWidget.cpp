@@ -58,6 +58,16 @@ ConsoleWidget::ConsoleWidget(WebContentView& content_view)
 
 ConsoleWidget::~ConsoleWidget() = default;
 
+Optional<String> ConsoleWidget::previous_history_item()
+{
+    return m_console_client->previous_history_item();
+}
+
+Optional<String> ConsoleWidget::next_history_item()
+{
+    return m_console_client->next_history_item();
+}
+
 void ConsoleWidget::reset()
 {
     m_console_client->reset();
@@ -66,38 +76,22 @@ void ConsoleWidget::reset()
 void ConsoleInputEdit::keyPressEvent(QKeyEvent* event)
 {
     switch (event->key()) {
-    case Qt::Key_Down: {
-        if (m_history.is_empty())
-            break;
-        auto last_index = m_history.size() - 1;
-        if (m_history_index < last_index) {
-            m_history_index++;
-            setText(qstring_from_ak_deprecated_string(m_history.at(m_history_index)));
-        } else if (m_history_index == last_index) {
-            m_history_index++;
-            clear();
-        }
-        break;
-    }
-
     case Qt::Key_Up:
-        if (m_history_index > 0) {
-            m_history_index--;
-            setText(qstring_from_ak_deprecated_string(m_history.at(m_history_index)));
-        }
+        if (auto script = m_console_widget.previous_history_item(); script.has_value())
+            setText(qstring_from_ak_string(*script));
+        break;
+
+    case Qt::Key_Down:
+        if (auto script = m_console_widget.next_history_item(); script.has_value())
+            setText(qstring_from_ak_string(*script));
         break;
 
     case Qt::Key_Return: {
-        auto js_source = ak_deprecated_string_from_qstring(text());
-        if (js_source.is_whitespace())
+        auto js_source = MUST(ak_string_from_qstring(text()));
+        if (js_source.bytes_as_string_view().is_whitespace())
             return;
 
-        if (m_history.is_empty() || m_history.last() != js_source) {
-            m_history.append(js_source);
-            m_history_index = m_history.size();
-        }
-
-        m_console_widget.client().execute(js_source);
+        m_console_widget.client().execute(std::move(js_source));
         clear();
 
         break;

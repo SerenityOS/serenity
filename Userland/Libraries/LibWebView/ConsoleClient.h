@@ -9,6 +9,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/Span.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibWebView/Forward.h>
@@ -20,7 +21,10 @@ public:
     explicit ConsoleClient(ViewImplementation& content_web_view, ViewImplementation& console_web_view);
     ~ConsoleClient();
 
-    void execute(StringView);
+    void execute(String);
+
+    Optional<String> previous_history_item();
+    Optional<String> next_history_item();
 
     void clear();
     void reset();
@@ -50,6 +54,9 @@ private:
     };
     Vector<Group> m_group_stack;
     int m_next_group_id { 1 };
+
+    Vector<String> m_history;
+    size_t m_history_index { 0 };
 };
 
 }

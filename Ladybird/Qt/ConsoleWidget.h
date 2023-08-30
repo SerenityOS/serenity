@@ -11,7 +11,6 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/OwnPtr.h>
-#include <AK/Vector.h>
 #include <LibWebView/Forward.h>
 #include <QLineEdit>
 #include <QWidget>
@@ -25,6 +24,9 @@ class ConsoleWidget final : public QWidget {
 public:
     explicit ConsoleWidget(WebContentView& content_view);
     virtual ~ConsoleWidget();
+
+    Optional<String> previous_history_item();
+    Optional<String> next_history_item();
 
     WebView::ConsoleClient& client() { return *m_console_client; }
     WebContentView& view() { return *m_output_view; }
@@ -51,8 +53,6 @@ private:
     virtual void keyPressEvent(QKeyEvent* event) override;
 
     ConsoleWidget& m_console_widget;
-    Vector<DeprecatedString> m_history;
-    size_t m_history_index { 0 };
 };
 
 }
