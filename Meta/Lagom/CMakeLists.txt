@@ -420,56 +420,18 @@ if (BUILD_LAGOM)
     )
 
     # These are needed for both LibWeb and LibProtocol.
-    compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/RequestServer/RequestClient.ipc RequestServer/RequestClientEndpoint.h)
-    compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/RequestServer/RequestServer.ipc RequestServer/RequestServerEndpoint.h)
-    compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebSocket/WebSocketClient.ipc WebSocket/WebSocketClientEndpoint.h)
-    compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebSocket/WebSocketServer.ipc WebSocket/WebSocketServerEndpoint.h)
+    compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/RequestServer/RequestClient.ipc Userland/Services/RequestServer/RequestClientEndpoint.h)
+    compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/RequestServer/RequestServer.ipc Userland/Services/RequestServer/RequestServerEndpoint.h)
+    compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebSocket/WebSocketClient.ipc Userland/Services/WebSocket/WebSocketClientEndpoint.h)
+    compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebSocket/WebSocketServer.ipc Userland/Services/WebSocket/WebSocketServerEndpoint.h)
 
     if (ENABLE_LAGOM_LIBWEB)
-        list(APPEND lagom_standard_libraries Web)
+        list(APPEND lagom_standard_libraries Web WebView)
 
-        # WebView
-        list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/AccessibilityTreeModel.cpp")
-        list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/ConsoleClient.cpp")
-        list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/DOMTreeModel.cpp")
-        list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/RequestServerAdapter.cpp")
-        list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/SourceHighlighter.cpp")
-        list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/StylePropertiesModel.cpp")
-        list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/ViewImplementation.cpp")
-        list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/WebContentClient.cpp")
-        list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/WebSocketClientAdapter.cpp")
-
-        compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebContent/WebContentServer.ipc WebContent/WebContentServerEndpoint.h)
-        compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebContent/WebContentClient.ipc WebContent/WebContentClientEndpoint.h)
-        compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebContent/WebDriverClient.ipc WebContent/WebDriverClientEndpoint.h)
-        compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebContent/WebDriverServer.ipc WebContent/WebDriverServerEndpoint.h)
-
-        embed_as_string_view(
-            "NativeStyleSheetSource"
-            "${SERENITY_PROJECT_ROOT}/Userland/Libraries/LibWebView/Native.css"
-            "LibWebView/NativeStyleSheetSource.cpp"
-            "native_stylesheet_source"
-            NAMESPACE "WebView"
-        )
-
-        list(APPEND LIBWEBVIEW_GENERATED_SOURCES LibWebView/NativeStyleSheetSource.cpp)
-        list(APPEND LIBWEBVIEW_GENERATED_SOURCES WebContent/WebContentClientEndpoint.h)
-        list(APPEND LIBWEBVIEW_GENERATED_SOURCES WebContent/WebContentServerEndpoint.h)
-        list(APPEND LIBWEBVIEW_GENERATED_SOURCES WebContent/WebDriverClientEndpoint.h)
-        list(APPEND LIBWEBVIEW_GENERATED_SOURCES WebContent/WebDriverServerEndpoint.h)
-        list(APPEND LIBWEBVIEW_GENERATED_SOURCES RequestServer/RequestClientEndpoint.h)
-        list(APPEND LIBWEBVIEW_GENERATED_SOURCES RequestServer/RequestServerEndpoint.h)
-        list(APPEND LIBWEBVIEW_GENERATED_SOURCES WebSocket/WebSocketClientEndpoint.h)
-        list(APPEND LIBWEBVIEW_GENERATED_SOURCES WebSocket/WebSocketServerEndpoint.h)
-
-        lagom_lib(LibWebView webview
-            SOURCES ${LIBWEBVIEW_SOURCES} ${LIBWEBVIEW_GENERATED_SOURCES}
-            LIBS LibGfx LibGUI LibIPC LibJS LibWeb LibProtocol)
-        foreach(header ${LIBWEBVIEW_GENERATED_SOURCES})
-            get_filename_component(subdirectory ${header} DIRECTORY)
-            install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${header}" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${subdirectory}")
-        endforeach()
-        install(FILES "${SERENITY_PROJECT_ROOT}/Userland/Services/RequestServer/ConnectionCache.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/RequestServer")
+        compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebContent/WebContentServer.ipc Userland/Services/WebContent/WebContentServerEndpoint.h)
+        compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebContent/WebContentClient.ipc Userland/Services/WebContent/WebContentClientEndpoint.h)
+        compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebContent/WebDriverClient.ipc Userland/Services/WebContent/WebDriverClientEndpoint.h)
+        compile_ipc(${SERENITY_PROJECT_ROOT}/Userland/Services/WebContent/WebDriverServer.ipc Userland/Services/WebContent/WebDriverServerEndpoint.h)
     endif()
 
     if (NOT EMSCRIPTEN)
