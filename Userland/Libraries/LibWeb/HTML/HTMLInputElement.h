@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <LibWeb/DOM/Text.h>
 #include <LibWeb/FileAPI/FileList.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
@@ -41,7 +42,8 @@ namespace Web::HTML {
 
 class HTMLInputElement final
     : public HTMLElement
-    , public FormAssociatedElement {
+    , public FormAssociatedElement
+    , public DOM::EditableTextNodeOwner {
     WEB_PLATFORM_OBJECT(HTMLInputElement, HTMLElement);
     FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLInputElement)
 
@@ -83,8 +85,6 @@ public:
 
     bool is_mutable() const { return m_is_mutable; }
 
-    void did_edit_text_node(Badge<BrowsingContext>);
-
     JS::GCPtr<FileAPI::FileList> files();
     void set_files(JS::GCPtr<FileAPI::FileList>);
 
@@ -100,6 +100,9 @@ public:
     WebIDL::ExceptionOr<void> set_selection_range(u32 start, u32 end, Optional<String> const& direction = {});
 
     WebIDL::ExceptionOr<void> show_picker();
+
+    // ^DOM::EditableTextNodeOwner
+    virtual void did_edit_text_node(Badge<BrowsingContext>) override;
 
     // ^EventTarget
     // https://html.spec.whatwg.org/multipage/interaction.html#the-tabindex-attribute:the-input-element

@@ -483,8 +483,8 @@ void BrowsingContext::did_edit(Badge<EditEventHandler>)
 
     if (m_cursor_position.node() && is<DOM::Text>(*m_cursor_position.node())) {
         auto& text_node = static_cast<DOM::Text&>(*m_cursor_position.node());
-        if (auto* input_element = text_node.owner_input_element())
-            input_element->did_edit_text_node({});
+        if (auto* text_node_owner = text_node.editable_text_node_owner())
+            text_node_owner->did_edit_text_node({});
     }
 }
 

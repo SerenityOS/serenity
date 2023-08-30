@@ -13,7 +13,6 @@
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/ShadowRoot.h>
-#include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLDivElement.h>
@@ -504,7 +503,7 @@ void HTMLInputElement::create_shadow_tree_if_needed()
 
     m_placeholder_text_node = heap().allocate<DOM::Text>(realm(), document(), MUST(String::from_deprecated_string(initial_value)));
     m_placeholder_text_node->set_data(deprecated_attribute(HTML::AttributeNames::placeholder));
-    m_placeholder_text_node->set_owner_input_element({}, *this);
+    m_placeholder_text_node->set_editable_text_node_owner(Badge<HTMLInputElement> {}, *this);
     MUST(m_placeholder_element->append_child(*m_placeholder_text_node));
     MUST(element->append_child(*m_placeholder_element));
 
@@ -519,7 +518,7 @@ void HTMLInputElement::create_shadow_tree_if_needed()
         handle_readonly_attribute(deprecated_attribute(HTML::AttributeNames::readonly));
     }
 
-    m_text_node->set_owner_input_element({}, *this);
+    m_text_node->set_editable_text_node_owner(Badge<HTMLInputElement> {}, *this);
 
     if (m_type == TypeAttributeState::Password)
         m_text_node->set_is_password_input({}, true);
