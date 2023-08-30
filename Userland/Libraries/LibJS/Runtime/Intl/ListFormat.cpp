@@ -49,7 +49,7 @@ StringView ListFormat::type_string() const
 ThrowCompletionOr<Vector<PatternPartition>> deconstruct_pattern(VM& vm, StringView pattern, Placeables placeables)
 {
     // 1. Let patternParts be ! PartitionPattern(pattern).
-    auto pattern_parts = MUST_OR_THROW_OOM(partition_pattern(vm, pattern));
+    auto pattern_parts = partition_pattern(pattern);
 
     // 2. Let result be a new empty List.
     Vector<PatternPartition> result {};

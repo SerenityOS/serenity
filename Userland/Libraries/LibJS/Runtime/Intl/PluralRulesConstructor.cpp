@@ -101,7 +101,7 @@ ThrowCompletionOr<PluralRules*> initialize_plural_rules(VM& vm, PluralRules& plu
 
     // 9. Let localeData be %PluralRules%.[[LocaleData]].
     // 10. Let r be ResolveLocale(%PluralRules%.[[AvailableLocales]], requestedLocales, opt, %PluralRules%.[[RelevantExtensionKeys]], localeData).
-    auto result = TRY(resolve_locale(vm, requested_locales, opt, {}));
+    auto result = resolve_locale(requested_locales, opt, {});
 
     // 11. Set pluralRules.[[Locale]] to r.[[locale]].
     plural_rules.set_locale(move(result.locale));

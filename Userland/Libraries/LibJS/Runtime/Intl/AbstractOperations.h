@@ -56,10 +56,10 @@ struct PatternPartition {
 };
 
 struct PatternPartitionWithSource : public PatternPartition {
-    static ThrowCompletionOr<Vector<PatternPartitionWithSource>> create_from_parent_list(VM& vm, Vector<PatternPartition> partitions)
+    static Vector<PatternPartitionWithSource> create_from_parent_list(Vector<PatternPartition> partitions)
     {
         Vector<PatternPartitionWithSource> result;
-        TRY_OR_THROW_OOM(vm, result.try_ensure_capacity(partitions.size()));
+        result.ensure_capacity(partitions.size());
 
         for (auto& partition : partitions) {
             PatternPartitionWithSource partition_with_source {};
@@ -81,20 +81,20 @@ struct PatternPartitionWithSource : public PatternPartition {
 
 using StringOrBoolean = Variant<StringView, bool>;
 
-ThrowCompletionOr<Optional<::Locale::LocaleID>> is_structurally_valid_language_tag(VM&, StringView locale);
-ThrowCompletionOr<String> canonicalize_unicode_locale_id(VM&, ::Locale::LocaleID& locale);
+Optional<::Locale::LocaleID> is_structurally_valid_language_tag(StringView locale);
+String canonicalize_unicode_locale_id(::Locale::LocaleID& locale);
 bool is_well_formed_currency_code(StringView currency);
 bool is_well_formed_unit_identifier(StringView unit_identifier);
 ThrowCompletionOr<Vector<String>> canonicalize_locale_list(VM&, Value locales);
 Optional<StringView> best_available_locale(StringView locale);
-ThrowCompletionOr<String> insert_unicode_extension_and_canonicalize(VM&, ::Locale::LocaleID locale_id, ::Locale::LocaleExtension extension);
-ThrowCompletionOr<LocaleResult> resolve_locale(VM&, Vector<String> const& requested_locales, LocaleOptions const& options, ReadonlySpan<StringView> relevant_extension_keys);
+String insert_unicode_extension_and_canonicalize(::Locale::LocaleID locale_id, ::Locale::LocaleExtension extension);
+LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptions const& options, ReadonlySpan<StringView> relevant_extension_keys);
 ThrowCompletionOr<Array*> supported_locales(VM&, Vector<String> const& requested_locales, Value options);
 ThrowCompletionOr<Object*> coerce_options_to_object(VM&, Value options);
 ThrowCompletionOr<StringOrBoolean> get_boolean_or_string_number_format_option(VM& vm, Object const& options, PropertyKey const& property, ReadonlySpan<StringView> string_values, StringOrBoolean fallback);
 ThrowCompletionOr<Optional<int>> default_number_option(VM&, Value value, int minimum, int maximum, Optional<int> fallback);
 ThrowCompletionOr<Optional<int>> get_number_option(VM&, Object const& options, PropertyKey const& property, int minimum, int maximum, Optional<int> fallback);
-ThrowCompletionOr<Vector<PatternPartition>> partition_pattern(VM&, StringView pattern);
+Vector<PatternPartition> partition_pattern(StringView pattern);
 
 template<size_t Size>
 ThrowCompletionOr<StringOrBoolean> get_boolean_or_string_number_format_option(VM& vm, Object const& options, PropertyKey const& property, StringView const (&string_values)[Size], StringOrBoolean fallback)

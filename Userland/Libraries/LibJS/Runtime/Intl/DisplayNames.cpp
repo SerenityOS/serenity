@@ -110,12 +110,12 @@ ThrowCompletionOr<Value> canonical_code_for_display_names(VM& vm, DisplayNames::
             return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, code, "language"sv);
 
         // b. If IsStructurallyValidLanguageTag(code) is false, throw a RangeError exception.
-        auto locale_id = MUST_OR_THROW_OOM(is_structurally_valid_language_tag(vm, code));
+        auto locale_id = is_structurally_valid_language_tag(code);
         if (!locale_id.has_value())
             return vm.throw_completion<RangeError>(ErrorType::IntlInvalidLanguageTag, code);
 
         // c. Return ! CanonicalizeUnicodeLocaleId(code).
-        auto canonicalized_tag = MUST_OR_THROW_OOM(canonicalize_unicode_locale_id(vm, *locale_id));
+        auto canonicalized_tag = JS::Intl::canonicalize_unicode_locale_id(*locale_id);
         return PrimitiveString::create(vm, move(canonicalized_tag));
     }
 

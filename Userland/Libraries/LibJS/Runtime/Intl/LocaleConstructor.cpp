@@ -46,7 +46,7 @@ static ThrowCompletionOr<String> apply_options_to_tag(VM& vm, StringView tag, Ob
     // 2. Assert: Type(options) is Object.
 
     // 3. If ! IsStructurallyValidLanguageTag(tag) is false, throw a RangeError exception.
-    auto locale_id = MUST_OR_THROW_OOM(is_structurally_valid_language_tag(vm, tag));
+    auto locale_id = is_structurally_valid_language_tag(tag);
     if (!locale_id.has_value())
         return vm.throw_completion<RangeError>(ErrorType::IntlInvalidLanguageTag, tag);
 
@@ -66,7 +66,7 @@ static ThrowCompletionOr<String> apply_options_to_tag(VM& vm, StringView tag, Ob
     auto region = TRY(get_string_option(vm, options, vm.names.region, ::Locale::is_unicode_region_subtag));
 
     // 10. Set tag to ! CanonicalizeUnicodeLocaleId(tag).
-    auto canonicalized_tag = MUST_OR_THROW_OOM(canonicalize_unicode_locale_id(vm, *locale_id));
+    auto canonicalized_tag = JS::Intl::canonicalize_unicode_locale_id(*locale_id);
 
     // 11. Assert: tag matches the unicode_locale_id production.
     locale_id = ::Locale::parse_unicode_locale_id(canonicalized_tag);
@@ -101,7 +101,7 @@ static ThrowCompletionOr<String> apply_options_to_tag(VM& vm, StringView tag, Ob
 
     // 16. Set tag to tag with the substring corresponding to the unicode_language_id production replaced by the string languageId.
     // 17. Return ! CanonicalizeUnicodeLocaleId(tag).
-    return MUST_OR_THROW_OOM(canonicalize_unicode_locale_id(vm, *locale_id));
+    return JS::Intl::canonicalize_unicode_locale_id(*locale_id);
 }
 
 // 14.1.3 ApplyUnicodeExtensionToTag ( tag, options, relevantExtensionKeys ), https://tc39.es/ecma402/#sec-apply-unicode-extension-to-tag
@@ -206,7 +206,7 @@ static ThrowCompletionOr<LocaleAndKeys> apply_unicode_extension_to_tag(VM& vm, S
     // 9. If newExtension is not the empty String, then
     if (!new_extension.attributes.is_empty() || !new_extension.keywords.is_empty()) {
         // a. Let locale be ! InsertUnicodeExtensionAndCanonicalize(locale, newExtension).
-        locale = MUST_OR_THROW_OOM(insert_unicode_extension_and_canonicalize(vm, locale_id.release_value(), move(new_extension)));
+        locale = insert_unicode_extension_and_canonicalize(locale_id.release_value(), move(new_extension));
     }
 
     // 10. Set result.[[locale]] to locale.

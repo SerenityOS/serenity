@@ -194,7 +194,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_patt
 ThrowCompletionOr<Vector<PatternPartitionWithUnit>> make_parts_list(VM& vm, StringView pattern, StringView unit, Vector<PatternPartition> parts)
 {
     // 1. Let patternParts be PartitionPattern(pattern).
-    auto pattern_parts = MUST_OR_THROW_OOM(partition_pattern(vm, pattern));
+    auto pattern_parts = partition_pattern(pattern);
 
     // 2. Let result be a new empty List.
     Vector<PatternPartitionWithUnit> result;
