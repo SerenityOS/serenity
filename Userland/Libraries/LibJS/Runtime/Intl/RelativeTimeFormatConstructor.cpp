@@ -57,7 +57,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> RelativeTimeFormatConstructor::construct
     auto relative_time_format = TRY(ordinary_create_from_constructor<RelativeTimeFormat>(vm, new_target, &Intrinsics::intl_relative_time_format_prototype));
 
     // 3. Return ? InitializeRelativeTimeFormat(relativeTimeFormat, locales, options).
-    return *TRY(initialize_relative_time_format(vm, relative_time_format, locales, options));
+    return TRY(initialize_relative_time_format(vm, relative_time_format, locales, options));
 }
 
 // 17.2.2 Intl.RelativeTimeFormat.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat.supportedLocalesOf
@@ -76,7 +76,7 @@ JS_DEFINE_NATIVE_FUNCTION(RelativeTimeFormatConstructor::supported_locales_of)
 }
 
 // 17.1.2 InitializeRelativeTimeFormat ( relativeTimeFormat, locales, options ), https://tc39.es/ecma402/#sec-InitializeRelativeTimeFormat
-ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(VM& vm, RelativeTimeFormat& relative_time_format, Value locales_value, Value options_value)
+ThrowCompletionOr<NonnullGCPtr<RelativeTimeFormat>> initialize_relative_time_format(VM& vm, RelativeTimeFormat& relative_time_format, Value locales_value, Value options_value)
 {
     auto& realm = *vm.current_realm();
 
@@ -146,7 +146,7 @@ ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(VM& vm, R
     relative_time_format.set_plural_rules(static_cast<PluralRules*>(plural_rules.ptr()));
 
     // 21. Return relativeTimeFormat.
-    return &relative_time_format;
+    return relative_time_format;
 }
 
 }

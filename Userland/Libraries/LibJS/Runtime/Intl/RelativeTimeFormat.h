@@ -84,8 +84,8 @@ struct PatternPartitionWithUnit : public PatternPartition {
 
 ThrowCompletionOr<::Locale::TimeUnit> singular_relative_time_unit(VM&, StringView unit);
 ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_pattern(VM&, RelativeTimeFormat&, double value, StringView unit);
-ThrowCompletionOr<Vector<PatternPartitionWithUnit>> make_parts_list(VM&, StringView pattern, StringView unit, Vector<PatternPartition> parts);
+Vector<PatternPartitionWithUnit> make_parts_list(StringView pattern, StringView unit, Vector<PatternPartition> parts);
 ThrowCompletionOr<String> format_relative_time(VM&, RelativeTimeFormat&, double value, StringView unit);
-ThrowCompletionOr<Array*> format_relative_time_to_parts(VM&, RelativeTimeFormat&, double value, StringView unit);
+ThrowCompletionOr<NonnullGCPtr<Array>> format_relative_time_to_parts(VM&, RelativeTimeFormat&, double value, StringView unit);
 
 }
