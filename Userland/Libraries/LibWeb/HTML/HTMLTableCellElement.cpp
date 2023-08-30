@@ -32,14 +32,12 @@ void HTMLTableCellElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTableCellElementPrototype>(realm, "HTMLTableCellElement"));
 }
 
-static const HTML::HTMLTableElement* table_containing_cell(const DOM::Node* node)
+static const HTML::HTMLTableElement& table_containing_cell(const HTML::HTMLTableCellElement& node)
 {
-    if (!is<const HTML::HTMLTableCellElement>(node))
-        return nullptr;
-    auto parent_node = node->parent();
+    auto parent_node = node.parent();
     while (!is<HTML::HTMLTableElement>(parent_node))
         parent_node = parent_node->parent();
-    return static_cast<const HTML::HTMLTableElement*>(parent_node);
+    return static_cast<const HTML::HTMLTableElement&>(*parent_node);
 }
 
 void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& style) const
@@ -80,14 +78,14 @@ void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& styl
             return;
         }
     });
-    auto table_element = table_containing_cell(this);
-    auto border = table_element->border();
+    auto const& table_element = table_containing_cell(*this);
+    auto border = table_element.border();
     if (!border)
         return;
     auto apply_border_style = [&](CSS::PropertyID style_property, CSS::PropertyID width_property, CSS::PropertyID color_property) {
         style.set_property(style_property, CSS::IdentifierStyleValue::create(CSS::ValueID::Inset));
         style.set_property(width_property, CSS::LengthStyleValue::create(CSS::Length::make_px(1)));
-        style.set_property(color_property, table_element->computed_css_values()->property(color_property));
+        style.set_property(color_property, table_element.computed_css_values()->property(color_property));
     };
     apply_border_style(CSS::PropertyID::BorderLeftStyle, CSS::PropertyID::BorderLeftWidth, CSS::PropertyID::BorderLeftColor);
     apply_border_style(CSS::PropertyID::BorderTopStyle, CSS::PropertyID::BorderTopWidth, CSS::PropertyID::BorderTopColor);
