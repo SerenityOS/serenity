@@ -79,7 +79,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatConstructor::supported_locales_of)
 }
 
 // 15.1.2 InitializeNumberFormat ( numberFormat, locales, options ), https://tc39.es/ecma402/#sec-initializenumberformat
-ThrowCompletionOr<NumberFormat*> initialize_number_format(VM& vm, NumberFormat& number_format, Value locales_value, Value options_value)
+ThrowCompletionOr<NonnullGCPtr<NumberFormat>> initialize_number_format(VM& vm, NumberFormat& number_format, Value locales_value, Value options_value)
 {
     // 1. Let requestedLocales be ? CanonicalizeLocaleList(locales).
     auto requested_locales = TRY(canonicalize_locale_list(vm, locales_value));
@@ -208,7 +208,7 @@ ThrowCompletionOr<NumberFormat*> initialize_number_format(VM& vm, NumberFormat& 
     number_format.set_sign_display(sign_display.as_string().utf8_string_view());
 
     // 31. Return numberFormat.
-    return &number_format;
+    return number_format;
 }
 
 // 15.1.3 SetNumberFormatDigitOptions ( intlObj, options, mnfdDefault, mxfdDefault, notation ), https://tc39.es/ecma402/#sec-setnfdigitoptions
@@ -473,7 +473,7 @@ ThrowCompletionOr<void> set_number_format_unit_options(VM& vm, NumberFormat& int
     // 14. If style is "currency", then
     if (intl_object.style() == NumberFormat::Style::Currency) {
         // a. Set intlObj.[[Currency]] to the ASCII-uppercase of currency.
-        intl_object.set_currency(TRY_OR_THROW_OOM(vm, currency.as_string().utf8_string().to_uppercase()));
+        intl_object.set_currency(MUST(currency.as_string().utf8_string().to_uppercase()));
 
         // c. Set intlObj.[[CurrencyDisplay]] to currencyDisplay.
         intl_object.set_currency_display(currency_display.as_string().utf8_string_view());

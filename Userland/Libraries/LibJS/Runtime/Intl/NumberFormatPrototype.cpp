@@ -75,7 +75,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_to_parts)
     auto mathematical_value = TRY(to_intl_mathematical_value(vm, value));
 
     // 4. Return ? FormatNumericToParts(nf, x).
-    return TRY(format_numeric_to_parts(vm, number_format, move(mathematical_value)));
+    return format_numeric_to_parts(vm, number_format, move(mathematical_value));
 }
 
 // 15.3.5 Intl.NumberFormat.prototype.formatRange ( start, end ), https://tc39.es/ecma402/#sec-intl.numberformat.prototype.formatrange
@@ -172,7 +172,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::resolved_options)
         MUST(options->create_data_property_or_throw(vm.names.minimumSignificantDigits, Value(number_format->min_significant_digits())));
     if (number_format->has_max_significant_digits())
         MUST(options->create_data_property_or_throw(vm.names.maximumSignificantDigits, Value(number_format->max_significant_digits())));
-    MUST(options->create_data_property_or_throw(vm.names.useGrouping, MUST_OR_THROW_OOM(number_format->use_grouping_to_value(vm))));
+    MUST(options->create_data_property_or_throw(vm.names.useGrouping, number_format->use_grouping_to_value(vm)));
     MUST(options->create_data_property_or_throw(vm.names.notation, PrimitiveString::create(vm, number_format->notation_string())));
     if (number_format->has_compact_display())
         MUST(options->create_data_property_or_throw(vm.names.compactDisplay, PrimitiveString::create(vm, number_format->compact_display_string())));
