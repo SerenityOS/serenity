@@ -1011,10 +1011,10 @@ struct RawPrecisionResult {
 };
 
 // ToRawPrecisionFn, https://tc39.es/ecma402/#eqn-ToRawPrecisionFn
-static ThrowCompletionOr<RawPrecisionResult> to_raw_precision_function(VM& vm, MathematicalValue const& number, int precision, PreferredResult mode)
+static RawPrecisionResult to_raw_precision_function(MathematicalValue const& number, int precision, PreferredResult mode)
 {
     RawPrecisionResult result {};
-    result.exponent = MUST_OR_THROW_OOM(number.logarithmic_floor(vm));
+    result.exponent = number.logarithmic_floor();
 
     if (number.is_number()) {
         result.number = number.divided_by_power(result.exponent - precision + 1);
@@ -1033,7 +1033,7 @@ static ThrowCompletionOr<RawPrecisionResult> to_raw_precision_function(VM& vm, M
         result.number = number.divided_by_power(result.exponent - precision);
 
         // FIXME: Can we do this without string conversion?
-        auto digits = MUST_OR_THROW_OOM(result.number.to_string(vm));
+        auto digits = result.number.to_string();
         auto digit = digits.bytes_as_string_view().substring_view(digits.bytes_as_string_view().length() - 1);
 
         result.number = result.number.divided_by(10);
@@ -1069,10 +1069,10 @@ ThrowCompletionOr<RawFormatResult> to_raw_precision(VM& vm, MathematicalValue co
     // 3. Else,
     else {
         // a. Let n1 and e1 each be an integer and r1 a mathematical value, with r1 = ToRawPrecisionFn(n1, e1, p), such that r1 ≤ x and r1 is maximized.
-        auto [number1, exponent1, rounded1] = MUST_OR_THROW_OOM(to_raw_precision_function(vm, number, precision, PreferredResult::LessThanNumber));
+        auto [number1, exponent1, rounded1] = to_raw_precision_function(number, precision, PreferredResult::LessThanNumber);
 
         // b. Let n2 and e2 each be an integer and r2 a mathematical value, with r2 = ToRawPrecisionFn(n2, e2, p), such that r2 ≥ x and r2 is minimized.
-        auto [number2, exponent2, rounded2] = MUST_OR_THROW_OOM(to_raw_precision_function(vm, number, precision, PreferredResult::GreaterThanNumber));
+        auto [number2, exponent2, rounded2] = to_raw_precision_function(number, precision, PreferredResult::GreaterThanNumber);
 
         // c. Let r be ApplyUnsignedRoundingMode(x, r1, r2, unsignedRoundingMode).
         auto rounded = apply_unsigned_rounding_mode(number, rounded1, rounded2, unsigned_rounding_mode);
@@ -1103,7 +1103,7 @@ ThrowCompletionOr<RawFormatResult> to_raw_precision(VM& vm, MathematicalValue co
         }
 
         // f. Let m be the String consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
-        result.formatted_string = MUST_OR_THROW_OOM(n.to_string(vm));
+        result.formatted_string = n.to_string();
     }
 
     // 4. If e ≥ (p – 1), then
@@ -1164,7 +1164,7 @@ struct RawFixedResult {
 };
 
 // ToRawFixedFn, https://tc39.es/ecma402/#eqn-ToRawFixedFn
-static ThrowCompletionOr<RawFixedResult> to_raw_fixed_function(VM& vm, MathematicalValue const& number, int fraction, int rounding_increment, PreferredResult mode)
+static RawFixedResult to_raw_fixed_function(MathematicalValue const& number, int fraction, int rounding_increment, PreferredResult mode)
 {
     RawFixedResult result {};
 
@@ -1185,7 +1185,7 @@ static ThrowCompletionOr<RawFixedResult> to_raw_fixed_function(VM& vm, Mathemati
         result.number = number.multiplied_by_power(fraction - 1);
 
         // FIXME: Can we do this without string conversion?
-        auto digits = MUST_OR_THROW_OOM(result.number.to_string(vm));
+        auto digits = result.number.to_string();
         auto digit = digits.bytes_as_string_view().substring_view(digits.bytes_as_string_view().length() - 1);
 
         result.number = result.number.multiplied_by(10);
@@ -1218,10 +1218,10 @@ ThrowCompletionOr<RawFormatResult> to_raw_fixed(VM& vm, MathematicalValue const&
     int fraction = max_fraction;
 
     // 2. Let n1 be an integer and r1 a mathematical value, with r1 = ToRawFixedFn(n1, f), such that n1 modulo roundingIncrement = 0, r1 ≤ x, and r1 is maximized.
-    auto [number1, rounded1] = MUST_OR_THROW_OOM(to_raw_fixed_function(vm, number, fraction, rounding_increment, PreferredResult::LessThanNumber));
+    auto [number1, rounded1] = to_raw_fixed_function(number, fraction, rounding_increment, PreferredResult::LessThanNumber);
 
     // 3. Let n2 be an integer and r2 a mathematical value, with r2 = ToRawFixedFn(n2, f), such that n2 modulo roundingIncrement = 0, r2 ≥ x, and r2 is minimized.
-    auto [number2, rounded2] = MUST_OR_THROW_OOM(to_raw_fixed_function(vm, number, fraction, rounding_increment, PreferredResult::GreaterThanNumber));
+    auto [number2, rounded2] = to_raw_fixed_function(number, fraction, rounding_increment, PreferredResult::GreaterThanNumber);
 
     // 4. Let r be ApplyUnsignedRoundingMode(x, r1, r2, unsignedRoundingMode).
     auto rounded = apply_unsigned_rounding_mode(number, rounded1, rounded2, unsigned_rounding_mode);
@@ -1246,9 +1246,7 @@ ThrowCompletionOr<RawFormatResult> to_raw_fixed(VM& vm, MathematicalValue const&
     }
 
     // 7. If n = 0, let m be "0". Otherwise, let m be the String consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
-    result.formatted_string = n.is_zero()
-        ? "0"_string
-        : MUST_OR_THROW_OOM(n.to_string(vm));
+    result.formatted_string = n.is_zero() ? "0"_string : n.to_string();
 
     // 8. If f ≠ 0, then
     if (fraction != 0) {
@@ -1573,7 +1571,7 @@ ThrowCompletionOr<int> compute_exponent(VM& vm, NumberFormat& number_format, Mat
     }
 
     // 3. Let magnitude be the base 10 logarithm of x rounded down to the nearest integer.
-    int magnitude = MUST_OR_THROW_OOM(number.logarithmic_floor(vm));
+    int magnitude = number.logarithmic_floor();
 
     // 4. Let exponent be ComputeExponentForMagnitude(numberFormat, magnitude).
     int exponent = compute_exponent_for_magnitude(number_format, magnitude);
@@ -1591,7 +1589,7 @@ ThrowCompletionOr<int> compute_exponent(VM& vm, NumberFormat& number_format, Mat
     }
 
     // 8. Let newMagnitude be the base 10 logarithm of formatNumberResult.[[RoundedNumber]] rounded down to the nearest integer.
-    int new_magnitude = MUST_OR_THROW_OOM(format_number_result.rounded_number.logarithmic_floor(vm));
+    int new_magnitude = format_number_result.rounded_number.logarithmic_floor();
 
     // 9. If newMagnitude is magnitude - exponent, then
     if (new_magnitude == magnitude - exponent) {
