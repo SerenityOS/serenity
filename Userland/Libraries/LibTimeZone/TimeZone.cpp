@@ -13,7 +13,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <unistd.h>
+
+#if !defined(AK_OS_WINDOWS)
+#    include <unistd.h>
+#else
+#    include <io.h>
+#endif
 
 namespace TimeZone {
 
@@ -28,6 +33,7 @@ enum class TimeZone : u16 {
 };
 #endif
 
+#if !defined(AK_OS_WINDOWS)
 class TimeZoneFile {
 public:
     TimeZoneFile(char const* mode)
@@ -74,9 +80,33 @@ public:
 private:
     FILE* m_file { nullptr };
 };
+#else
+StringView get_windows_time_zone()
+{
+    char const* subkey = "SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation";
+    constexpr size_t keysize { 128 };
+    HKEY key;
+    char key_name[keysize] {};
+    unsigned long tz_keysize = keysize;
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, subkey, 0, KEY_QUERY_VALUE, &key) == ERROR_SUCCESS) {
+        if (RegQueryValueExA(key, "TimeZoneKeyName", nullptr, nullptr, (LPBYTE)key_name, &tz_keysize) != ERROR_SUCCESS) {
+            memset(key_name, 0, tz_keysize);
+        }
+        RegCloseKey(key);
+    }
+
+    // FIXME: Use cldr to map Windows time zone names to standard time zone names.
+    DeprecatedString tz_name(key_name);
+    dbgln_if(TIME_ZONE_DEBUG, "Windows time zone: {}", key_name);
+    return "UTC"sv;
+}
+#endif
 
 StringView system_time_zone()
 {
+#ifdef AK_OS_WINDOWS
+    return get_windows_time_zone();
+#else
     TimeZoneFile time_zone_file("r");
     auto time_zone = time_zone_file.read_time_zone();
 
@@ -87,6 +117,7 @@ StringView system_time_zone()
     }
 
     return canonicalize_time_zone(time_zone.value()).value_or("UTC"sv);
+#endif
 }
 
 StringView current_time_zone()
@@ -103,7 +134,7 @@ StringView current_time_zone()
         return "UTC"sv;
     }
 
-#ifdef AK_OS_SERENITY
+#if defined(AK_OS_SERENITY) || defined(AK_OS_WINDOWS)
     return system_time_zone();
 #else
     static constexpr auto zoneinfo = "/zoneinfo/"sv;
