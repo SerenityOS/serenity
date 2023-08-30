@@ -331,6 +331,10 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "SunOS")
     # Solaris has socket and networking related functions in two extra libraries
     target_link_libraries(LibCore PRIVATE nsl socket)
 endif()
+if (${CMAKE_SYSTEM_NAME} MATCHES "BSD$")
+    # BSD Platforms have backtrace(3) in a separate library
+    target_link_libraries(LibCore PRIVATE execinfo)
+endif()
 target_sources(LibCore PRIVATE ${AK_SOURCES})
 
 # LibMain
