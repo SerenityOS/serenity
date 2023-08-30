@@ -168,16 +168,16 @@ struct LocalTime {
     u16 millisecond { 0 }; // [[Millisecond]]
 };
 
-ThrowCompletionOr<Optional<::Locale::CalendarPattern>> date_time_style_format(VM&, StringView data_locale, DateTimeFormat& date_time_format);
+Optional<::Locale::CalendarPattern> date_time_style_format(StringView data_locale, DateTimeFormat& date_time_format);
 Optional<::Locale::CalendarPattern> basic_format_matcher(::Locale::CalendarPattern const& options, Vector<::Locale::CalendarPattern> formats);
 Optional<::Locale::CalendarPattern> best_fit_format_matcher(::Locale::CalendarPattern const& options, Vector<::Locale::CalendarPattern> formats);
 ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM&, DateTimeFormat&, Vector<PatternPartition> pattern_parts, double time, ::Locale::CalendarPattern const* range_format_options);
 ThrowCompletionOr<Vector<PatternPartition>> partition_date_time_pattern(VM&, DateTimeFormat&, double time);
 ThrowCompletionOr<String> format_date_time(VM&, DateTimeFormat&, double time);
-ThrowCompletionOr<Array*> format_date_time_to_parts(VM&, DateTimeFormat&, double time);
+ThrowCompletionOr<NonnullGCPtr<Array>> format_date_time_to_parts(VM&, DateTimeFormat&, double time);
 ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_pattern(VM&, DateTimeFormat&, double start, double end);
 ThrowCompletionOr<String> format_date_time_range(VM&, DateTimeFormat&, double start, double end);
-ThrowCompletionOr<Array*> format_date_time_range_to_parts(VM&, DateTimeFormat&, double start, double end);
+ThrowCompletionOr<NonnullGCPtr<Array>> format_date_time_range_to_parts(VM&, DateTimeFormat&, double start, double end);
 ThrowCompletionOr<LocalTime> to_local_time(VM&, Crypto::SignedBigInteger const& epoch_ns, StringView calendar, StringView time_zone);
 
 template<typename Callback>

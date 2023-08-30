@@ -170,7 +170,7 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
 
     // Non-standard, default_hour_cycle will be empty if Unicode data generation is disabled.
     if (!default_hour_cycle.has_value()) {
-        date_time_format->set_time_zone(TRY_OR_THROW_OOM(vm, String::from_utf8(default_time_zone())));
+        date_time_format->set_time_zone(MUST(String::from_utf8(default_time_zone())));
         return date_time_format;
     }
 
@@ -217,7 +217,7 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
     // 31. If timeZone is undefined, then
     if (time_zone_value.is_undefined()) {
         // a. Set timeZone to DefaultTimeZone().
-        time_zone = TRY_OR_THROW_OOM(vm, String::from_utf8(default_time_zone()));
+        time_zone = MUST(String::from_utf8(default_time_zone()));
     }
     // 32. Else,
     else {
@@ -231,7 +231,7 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
         }
 
         // c. Set timeZone to CanonicalizeTimeZoneName(timeZone).
-        time_zone = MUST_OR_THROW_OOM(Temporal::canonicalize_time_zone_name(vm, time_zone));
+        time_zone = MUST(Temporal::canonicalize_time_zone_name(vm, time_zone));
     }
 
     // 33. Set dateTimeFormat.[[TimeZone]] to timeZone.
@@ -327,7 +327,7 @@ ThrowCompletionOr<NonnullGCPtr<DateTimeFormat>> create_date_time_format(VM& vm, 
 
         // d. Let styles be dataLocaleData.[[styles]].[[<resolvedCalendar>]].
         // e. Let bestFormat be DateTimeStyleFormat(dateStyle, timeStyle, styles).
-        best_format = MUST_OR_THROW_OOM(date_time_style_format(vm, data_locale, date_time_format));
+        best_format = date_time_style_format(data_locale, date_time_format);
     }
     // 44. Else,
     else {
