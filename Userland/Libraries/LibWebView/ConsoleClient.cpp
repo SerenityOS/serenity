@@ -34,7 +34,7 @@ ConsoleClient::ConsoleClient(ViewImplementation& content_web_view, ViewImplement
 
     // Wait until our output WebView is loaded, and then request any messages that occurred before we existed.
     m_console_web_view.on_load_finish = [this](auto const&) {
-        request_console_messages(0);
+        m_content_web_view.js_console_request_messages(0);
     };
 
     m_console_web_view.use_native_user_style_sheet();
@@ -55,7 +55,7 @@ void ConsoleClient::execute(StringView script)
 
 void ConsoleClient::clear()
 {
-    m_console_web_view.js_console_input("document.body.innerHTML = \"\";"sv);
+    m_console_web_view.run_javascript("document.body.innerHTML = \"\";"sv);
     m_group_stack.clear();
 }
 
@@ -152,14 +152,9 @@ void ConsoleClient::print_html(StringView html)
 
 void ConsoleClient::request_console_messages()
 {
-    request_console_messages(m_highest_received_message_index + 1);
-}
-
-void ConsoleClient::request_console_messages(i32 start_index)
-{
     VERIFY(!m_waiting_for_messages);
 
-    m_content_web_view.js_console_request_messages(start_index);
+    m_content_web_view.js_console_request_messages(m_highest_received_message_index + 1);
     m_waiting_for_messages = true;
 }
 
