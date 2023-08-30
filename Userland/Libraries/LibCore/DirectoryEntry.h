@@ -7,7 +7,11 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
-#include <dirent.h>
+#if defined(AK_OS_WINDOWS)
+#    include <windows.h>
+#else
+#    include <dirent.h>
+#endif
 
 namespace Core {
 
@@ -26,10 +30,14 @@ struct DirectoryEntry {
     Type type;
     // FIXME: Once we have a special Path string class, use that.
     DeprecatedString name;
+#if !defined(AK_OS_WINDOWS)
     ino_t inode_number;
 
     static DirectoryEntry from_dirent(dirent const&);
     static DirectoryEntry from_stat(DIR*, dirent const&);
+#else
+    static DirectoryEntry from_find_data(WIN32_FIND_DATA const&);
+#endif
 };
 
 }
