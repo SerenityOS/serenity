@@ -474,6 +474,10 @@ static ErrorOr<void> generate_time_zone_data_header(Core::InputBufferedFile& fil
 
 #include <AK/Types.h>
 
+#if defined(AK_OS_WINDOWS)
+#    undef IN
+#endif
+
 namespace TimeZone {
 )~~~");
 

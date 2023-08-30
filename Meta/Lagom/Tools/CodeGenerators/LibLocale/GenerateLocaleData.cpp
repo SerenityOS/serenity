@@ -1137,6 +1137,10 @@ static ErrorOr<void> generate_unicode_locale_header(Core::InputBufferedFile& fil
 
 #include <AK/Types.h>
 
+#if defined(AK_OS_WINDOWS)
+#   undef IN
+#endif
+
 namespace Locale {
 )~~~");
 
