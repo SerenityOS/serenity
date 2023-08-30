@@ -68,7 +68,7 @@ JS_DEFINE_NATIVE_FUNCTION(Intl::get_canonical_locales)
     auto locale_list = TRY(canonicalize_locale_list(vm, locales));
 
     MarkedVector<Value> marked_locale_list { vm.heap() };
-    TRY_OR_THROW_OOM(vm, marked_locale_list.try_ensure_capacity(locale_list.size()));
+    marked_locale_list.ensure_capacity(locale_list.size());
 
     for (auto& locale : locale_list)
         marked_locale_list.unchecked_append(PrimitiveString::create(vm, move(locale)));
@@ -78,7 +78,7 @@ JS_DEFINE_NATIVE_FUNCTION(Intl::get_canonical_locales)
 }
 
 // 6.5.4 AvailableCanonicalTimeZones ( ), https://tc39.es/ecma402/#sec-availablecanonicaltimezones
-static ThrowCompletionOr<Vector<StringView>> available_canonical_time_zones(VM& vm)
+static Vector<StringView> available_canonical_time_zones()
 {
     // 1. Let names be a List of all supported Zone and Link names in the IANA Time Zone Database.
     auto names = TimeZone::all_time_zones();
@@ -95,7 +95,7 @@ static ThrowCompletionOr<Vector<StringView>> available_canonical_time_zones(VM& 
         // c. If result does not contain an element equal to canonical, then
         if (!result.contains_slow(canonical)) {
             // i. Append canonical to the end of result.
-            TRY_OR_THROW_OOM(vm, result.try_append(canonical));
+            result.append(canonical);
         }
     }
 
@@ -139,7 +139,7 @@ JS_DEFINE_NATIVE_FUNCTION(Intl::supported_values_of)
     // 6. Else if key is "timeZone", then
     else if (key == "timeZone"sv) {
         // a. Let list be ! AvailableCanonicalTimeZones( ).
-        static auto time_zones = MUST_OR_THROW_OOM(available_canonical_time_zones(vm));
+        static auto time_zones = available_canonical_time_zones();
         list = time_zones.span();
     }
     // 7. Else if key is "unit", then
