@@ -288,6 +288,22 @@ void GenericFramebufferConsoleImpl::disable()
     m_enabled.store(false);
 }
 
+void GenericFramebufferConsoleImpl::scroll_up()
+{
+    for (size_t row = 1; row < max_row(); row++) {
+        auto prev_line = framebuffer_offset(0, row - 1);
+        auto line = framebuffer_offset(0, row);
+        for (size_t glyph_row = 0; glyph_row < m_glyph_rows; glyph_row++) {
+            memmove(prev_line.pixels, line.pixels, width() * sizeof(*line.pixels));
+            prev_line.bytes += framebuffer_pitch();
+            line.bytes += framebuffer_pitch();
+        }
+    }
+
+    for (size_t column = 0; column < max_column(); column++)
+        clear_glyph(column, m_y);
+}
+
 void GenericFramebufferConsoleImpl::write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical)
 {
     if (!m_enabled.load())
@@ -298,15 +314,19 @@ void GenericFramebufferConsoleImpl::write(size_t x, size_t y, char ch, Color bac
     if (critical && (ch == '\r' || ch == '\n')) {
         m_x = 0;
         m_y += 1;
-        if (m_y >= max_row())
-            m_y = 0;
+        if (m_y >= max_row()) {
+            m_y = max_row() - 1;
+            scroll_up();
+        }
         return;
     }
+
     if ((int)ch < 0x20 || (int)ch == 0x7f) {
         // FIXME: There's no point in printing empty glyphs...
         // Maybe try to add these special glyphs and print them.
         return;
     }
+
     clear_glyph(x, y);
     auto bitmap = font_cathode_8x16[(int)ch];
     auto offset_in_framebuffer = framebuffer_offset(x, y);
@@ -322,12 +342,19 @@ void GenericFramebufferConsoleImpl::write(size_t x, size_t y, char ch, Color bac
         offset_in_framebuffer.bytes += framebuffer_pitch();
     }
     flush_glyph(x, y);
+
     m_x = x + 1;
     if (m_x >= max_column()) {
         m_x = 0;
         m_y = y + 1;
-        if (m_y >= max_row())
-            m_y = 0;
+        if (m_y >= max_row()) {
+            if (critical) {
+                m_y = max_row() - 1;
+                scroll_up();
+            } else {
+                m_y = 0;
+            }
+        }
     }
 }
 

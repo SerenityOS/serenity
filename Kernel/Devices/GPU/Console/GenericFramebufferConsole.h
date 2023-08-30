@@ -39,6 +39,8 @@ protected:
     virtual void hide_cursor() override;
     virtual void show_cursor() override;
 
+    virtual void scroll_up() override;
+
     GenericFramebufferConsoleImpl(size_t width, size_t height, size_t pitch)
         : Console(width, height)
         , m_pitch(pitch)

@@ -112,6 +112,11 @@ void VGATextModeConsole::clear(size_t x, size_t y, size_t length)
         buf[index] = 0x0720;
     }
 }
+
+void VGATextModeConsole::scroll_up()
+{
+}
+
 void VGATextModeConsole::write(size_t x, size_t y, char ch, bool critical)
 {
     write(x, y, ch, m_default_background_color, m_default_foreground_color, critical);
