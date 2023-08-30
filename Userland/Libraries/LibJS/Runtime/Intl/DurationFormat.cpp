@@ -565,7 +565,7 @@ Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationForma
     }
 
     // 10. Set result to ! CreatePartsFromList(lf, result).
-    auto final_result = MUST(create_parts_from_list(vm, *list_format, string_result));
+    auto final_result = create_parts_from_list(*list_format, string_result);
 
     // 11. Return result.
     return final_result;
