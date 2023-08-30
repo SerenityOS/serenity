@@ -18,7 +18,6 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/ValueInlines.h>
-#include <sys/time.h>
 #include <time.h>
 
 namespace JS {
@@ -309,7 +308,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> DateConstructor::construct(FunctionObjec
 JS_DEFINE_NATIVE_FUNCTION(DateConstructor::now)
 {
     struct timeval tv;
-    gettimeofday(&tv, nullptr);
+    AK::get_time_of_day(&tv);
     return Value(floor(tv.tv_sec * 1000.0 + tv.tv_usec / 1000.0));
 }
 

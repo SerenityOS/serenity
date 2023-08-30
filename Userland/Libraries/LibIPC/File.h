@@ -10,7 +10,12 @@
 #include <AK/Noncopyable.h>
 #include <AK/StdLibExtras.h>
 #include <LibCore/File.h>
-#include <unistd.h>
+
+#if !defined(AK_OS_WINDOWS)
+#    include <unistd.h>
+#else
+#    include <io.h>
+#endif
 
 namespace IPC {
 
