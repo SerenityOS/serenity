@@ -30,9 +30,14 @@
 #include <LibLine/SuggestionDisplay.h>
 #include <LibLine/SuggestionManager.h>
 #include <LibLine/VT.h>
-#include <sys/ioctl.h>
 #include <sys/stat.h>
-#include <termios.h>
+
+#if !defined(AK_OS_WINDOWS)
+#    include <sys/ioctl.h>
+#    include <termios.h>
+#else
+#    include <minwindef.h>
+#endif
 
 namespace Line {
 
@@ -225,13 +230,34 @@ public:
     //
     void transform_suggestion_offsets(size_t& invariant_offset, size_t& static_offset, Span::Mode offset_mode = Span::ByteOriented) const;
 
-    const struct termios& termios() const { return m_termios; }
+#if !defined(AK_OS_WINDOWS)
+    const struct termios& termios() const
+    {
+        return m_termios;
+    }
     const struct termios& default_termios() const { return m_default_termios; }
     struct winsize terminal_size() const
     {
         winsize ws { (u16)m_num_lines, (u16)m_num_columns, 0, 0 };
         return ws;
     }
+#else
+    struct winsize {
+        u16 ws_row;
+        u16 ws_col;
+        u16 ws_xpixel;
+        u16 ws_ypixel;
+    };
+
+    DWORD console_mode() const { return m_console_mode; }
+    DWORD default_console_mode() const { return m_default_console_mode; }
+
+    winsize terminal_size() const
+    {
+        winsize ws { (u16)m_num_lines, (u16)m_num_columns, 0, 0 };
+        return ws;
+    }
+#endif
 
     void finish()
     {
@@ -330,7 +356,11 @@ private:
     void restore()
     {
         VERIFY(m_initialized);
+#if defined(AK_OS_WINDOWS)
+        SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE), m_console_mode);
+#else
         tcsetattr(0, TCSANOW, &m_default_termios);
+#endif
         m_initialized = false;
         if (m_configuration.enable_bracketed_paste)
             warn("\x1b[?2004l");
@@ -458,10 +488,15 @@ private:
 
     KeyCallbackMachine m_callback_machine;
 
+#if defined(AK_OS_WINDOWS)
+    DWORD m_console_mode { 0 };
+    DWORD m_default_console_mode { 0 };
+#else
     struct termios m_termios {
     };
     struct termios m_default_termios {
     };
+#endif
     bool m_was_interrupted { false };
     bool m_previous_interrupt_was_handled_as_interrupt { true };
     bool m_was_resized { false };

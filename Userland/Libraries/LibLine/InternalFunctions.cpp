@@ -12,8 +12,11 @@
 #include <LibCore/File.h>
 #include <LibLine/Editor.h>
 #include <stdio.h>
-#include <sys/wait.h>
-#include <unistd.h>
+
+#if !defined(AK_OS_WINDOWS)
+#    include <sys/wait.h>
+#    include <unistd.h>
+#endif
 
 namespace {
 constexpr u32 ctrl(char c) { return c & 0x3f; }
@@ -269,6 +272,7 @@ void Editor::enter_search()
             return false;
         });
 
+#if !defined(AK_OS_WINDOWS)
         // Whenever the search editor gets a backspace, cycle back between history entries
         // unless we're at the zeroth entry, in which case, allow the deletion.
         m_search_editor->register_key_input_callback(m_termios.c_cc[VERASE], [this](Editor& search_editor) {
@@ -281,6 +285,7 @@ void Editor::enter_search()
             search_editor.erase_character_backwards();
             return false;
         });
+#endif
 
         // ^L - This is a source of issues, as the search editor refreshes first,
         // and we end up with the wrong order of prompts, so we will first refresh
@@ -517,6 +522,10 @@ void Editor::uppercase_word()
 
 void Editor::edit_in_external_editor()
 {
+#if defined(AK_OS_WINDOWS)
+    dbgln("Editing in external editor");
+    VERIFY_NOT_REACHED();
+#else
     auto const* editor_command = getenv("EDITOR");
     if (!editor_command)
         editor_command = m_configuration.m_default_text_editor.characters();
@@ -592,5 +601,6 @@ void Editor::edit_in_external_editor()
                 insert(ch);
         }
     }
+#endif
 }
 }
