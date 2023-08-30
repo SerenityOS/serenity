@@ -20,7 +20,8 @@ ErrorOr<NonnullLockRefPtr<MasterPTY>> MasterPTY::try_create(unsigned int index)
 {
     auto buffer = TRY(DoubleBuffer::try_create("MasterPTY: Buffer"sv));
     auto master_pty = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) MasterPTY(index, move(buffer))));
-    auto slave_pty = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) SlavePTY(*master_pty, index)));
+    auto credentials = Process::current().credentials();
+    auto slave_pty = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) SlavePTY(*master_pty, credentials->uid(), credentials->gid(), index)));
     master_pty->m_slave = slave_pty;
     TRY(master_pty->after_inserting());
     TRY(slave_pty->after_inserting());
@@ -32,11 +33,6 @@ MasterPTY::MasterPTY(unsigned index, NonnullOwnPtr<DoubleBuffer> buffer)
     , m_index(index)
     , m_buffer(move(buffer))
 {
-    auto& process = Process::current();
-    auto credentials = process.credentials();
-    set_uid(credentials->uid());
-    set_gid(credentials->gid());
-
     m_buffer->set_unblock_callback([this]() {
         if (m_slave)
             evaluate_block_conditions();
