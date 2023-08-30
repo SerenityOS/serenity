@@ -25,6 +25,9 @@ public:
 
     virtual FileBlockerSet& blocker_set() override;
 
+    UserID uid() const { return m_uid; }
+    GroupID gid() const { return m_gid; }
+
 private:
     // ^Device
     virtual bool is_openable_by_jailed_processes() const override { return true; }
@@ -42,11 +45,14 @@ private:
     virtual ErrorOr<void> close() override;
 
     friend class MasterPTY;
-    SlavePTY(NonnullRefPtr<MasterPTY>, unsigned index);
+    SlavePTY(NonnullRefPtr<MasterPTY>, UserID, GroupID, unsigned index);
 
     NonnullRefPtr<MasterPTY> const m_master;
     UnixDateTime m_time_of_last_write {};
     unsigned m_index { 0 };
+
+    UserID const m_uid { 0 };
+    GroupID const m_gid { 0 };
 
     mutable IntrusiveListNode<SlavePTY> m_list_node;
 

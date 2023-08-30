@@ -35,17 +35,14 @@ bool SlavePTY::unref() const
     return did_hit_zero;
 }
 
-SlavePTY::SlavePTY(NonnullRefPtr<MasterPTY> master, unsigned index)
+SlavePTY::SlavePTY(NonnullRefPtr<MasterPTY> master, UserID uid, GroupID gid, unsigned index)
     : TTY(201, index)
     , m_master(move(master))
     , m_index(index)
+    , m_uid(uid)
+    , m_gid(gid)
 {
-    auto& process = Process::current();
-    auto credentials = process.credentials();
-    set_uid(credentials->uid());
-    set_gid(credentials->gid());
     set_size(80, 25);
-
     SlavePTY::all_instances().with([&](auto& list) { list.append(*this); });
 }
 

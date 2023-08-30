@@ -45,9 +45,6 @@ public:
     virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(OpenFileDescription const&) const override;
     virtual ErrorOr<NonnullRefPtr<OpenFileDescription>> open(int options) override;
 
-    UserID uid() const { return m_uid; }
-    GroupID gid() const { return m_gid; }
-
     virtual bool is_device() const override { return true; }
     virtual void will_be_destroyed() override;
     virtual ErrorOr<void> after_inserting();
@@ -68,8 +65,6 @@ public:
 
 protected:
     Device(MajorNumber major, MinorNumber minor);
-    void set_uid(UserID uid) { m_uid = uid; }
-    void set_gid(GroupID gid) { m_gid = gid; }
 
     void after_inserting_add_to_device_management();
     void before_will_be_destroyed_remove_from_device_management();
@@ -85,8 +80,6 @@ protected:
 private:
     MajorNumber const m_major { 0 };
     MinorNumber const m_minor { 0 };
-    UserID m_uid { 0 };
-    GroupID m_gid { 0 };
 
     State m_state { State::Normal };
 

@@ -53,11 +53,12 @@ ErrorOr<NonnullRefPtr<Inode>> DevPtsFS::get_inode(InodeIdentifier inode_id) cons
     auto* device = DeviceManagement::the().get_device(201, pty_index);
     VERIFY(device);
 
-    auto inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevPtsFSInode(const_cast<DevPtsFS&>(*this), inode_id.index(), static_cast<SlavePTY*>(device))));
+    auto* pts_device = static_cast<SlavePTY*>(device);
+    auto inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevPtsFSInode(const_cast<DevPtsFS&>(*this), inode_id.index(), pts_device)));
     inode->m_metadata.inode = inode_id;
     inode->m_metadata.size = 0;
-    inode->m_metadata.uid = device->uid();
-    inode->m_metadata.gid = device->gid();
+    inode->m_metadata.uid = pts_device->uid();
+    inode->m_metadata.gid = pts_device->gid();
     inode->m_metadata.mode = 0020600;
     inode->m_metadata.major_device = device->major();
     inode->m_metadata.minor_device = device->minor();
