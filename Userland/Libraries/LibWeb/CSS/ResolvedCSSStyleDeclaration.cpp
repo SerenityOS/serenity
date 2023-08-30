@@ -230,6 +230,8 @@ static NonnullRefPtr<StyleValue const> style_value_for_size(Size const& size)
     if (size.is_max_content())
         return IdentifierStyleValue::create(ValueID::MaxContent);
     // FIXME: Support fit-content(<length>)
+    if (size.is_fit_content())
+        return IdentifierStyleValue::create(ValueID::FitContent);
     TODO();
 }
 
