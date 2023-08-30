@@ -133,6 +133,18 @@ static constexpr CGFloat const WINDOW_HEIGHT = 600;
                textView:(NSTextView*)text_view
     doCommandBySelector:(SEL)selector
 {
+    if (selector == @selector(moveUp:)) {
+        if (auto script = m_console_client->previous_history_item(); script.has_value())
+            [text_view setString:Ladybird::string_to_ns_string(*script)];
+        return YES;
+    }
+
+    if (selector == @selector(moveDown:)) {
+        if (auto script = m_console_client->next_history_item(); script.has_value())
+            [text_view setString:Ladybird::string_to_ns_string(*script)];
+        return YES;
+    }
+
     if (selector != @selector(insertNewline:)) {
         return NO;
     }
