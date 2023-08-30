@@ -283,7 +283,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::week_info)
     auto info = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 4. Let wi be ! WeekInfoOfLocale(loc).
-    auto week_info = MUST_OR_THROW_OOM(week_info_of_locale(vm, locale_object));
+    auto week_info = week_info_of_locale(locale_object);
 
     // 5. Let we be ! CreateArrayFromList( wi.[[Weekend]] ).
     auto weekend = Array::create_from<u8>(realm, week_info.weekend, [](auto day) { return Value(day); });

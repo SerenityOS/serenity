@@ -206,7 +206,7 @@ static u8 weekday_to_integer(Optional<::Locale::Weekday> weekday, ::Locale::Week
     VERIFY_NOT_REACHED();
 }
 
-static ThrowCompletionOr<Vector<u8>> weekend_of_locale(VM& vm, StringView locale)
+static Vector<u8> weekend_of_locale(StringView locale)
 {
     auto weekend_start = weekday_to_integer(::Locale::get_locale_weekend_start(locale), ::Locale::Weekday::Saturday);
     auto weekend_end = weekday_to_integer(::Locale::get_locale_weekend_end(locale), ::Locale::Weekday::Sunday);
@@ -216,7 +216,7 @@ static ThrowCompletionOr<Vector<u8>> weekend_of_locale(VM& vm, StringView locale
     VERIFY(weekend_start <= weekend_end);
 
     Vector<u8> weekend;
-    TRY_OR_THROW_OOM(vm, weekend.try_ensure_capacity(weekend_end - weekend_start + 1));
+    weekend.ensure_capacity(weekend_end - weekend_start + 1);
 
     for (auto day = weekend_start; day <= weekend_end; ++day)
         weekend.unchecked_append(day);
@@ -225,7 +225,7 @@ static ThrowCompletionOr<Vector<u8>> weekend_of_locale(VM& vm, StringView locale
 }
 
 // 1.1.8 WeekInfoOfLocale ( loc ), https://tc39.es/proposal-intl-locale-info/#sec-week-info-of-locale
-ThrowCompletionOr<WeekInfo> week_info_of_locale(VM& vm, Locale const& locale_object)
+WeekInfo week_info_of_locale(Locale const& locale_object)
 {
     // 1. Let locale be loc.[[Locale]].
     auto const& locale = locale_object.locale();
@@ -237,7 +237,7 @@ ThrowCompletionOr<WeekInfo> week_info_of_locale(VM& vm, Locale const& locale_obj
     WeekInfo week_info {};
     week_info.minimal_days = ::Locale::get_locale_minimum_days(locale).value_or(1);
     week_info.first_day = weekday_to_integer(::Locale::get_locale_first_day(locale), ::Locale::Weekday::Monday);
-    week_info.weekend = MUST_OR_THROW_OOM(weekend_of_locale(vm, locale));
+    week_info.weekend = weekend_of_locale(locale);
 
     return week_info;
 }
