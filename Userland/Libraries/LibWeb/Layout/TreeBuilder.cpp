@@ -587,6 +587,7 @@ static void wrap_in_anonymous(Vector<JS::Handle<Node>>& sequence, Node* nearest_
         wrapper->append_child(*child);
     }
     wrapper->set_children_are_inline(parent.children_are_inline());
+    wrapper->set_line_height(parent.line_height());
     if (nearest_sibling)
         parent.insert_before(*wrapper, *nearest_sibling);
     else
