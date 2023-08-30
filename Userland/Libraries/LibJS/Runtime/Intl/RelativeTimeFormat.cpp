@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/StringBuilder.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -11,7 +12,6 @@
 #include <LibJS/Runtime/Intl/NumberFormatConstructor.h>
 #include <LibJS/Runtime/Intl/PluralRules.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormat.h>
-#include <LibJS/Runtime/ThrowableStringBuilder.h>
 
 namespace JS::Intl {
 
@@ -148,12 +148,10 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_patt
             VERIFY(patterns.size() == 1);
 
             // i. Let result be patterns.[[<valueString>]].
-            auto result = TRY_OR_THROW_OOM(vm, String::from_utf8(patterns[0].pattern));
+            auto result = MUST(String::from_utf8(patterns[0].pattern));
 
             // ii. Return a List containing the Record { [[Type]]: "literal", [[Value]]: result }.
-            Vector<PatternPartitionWithUnit> result_list;
-            TRY_OR_THROW_OOM(vm, result_list.try_empend("literal"sv, move(result)));
-            return result_list;
+            return Vector<PatternPartitionWithUnit> { { "literal"sv, move(result) } };
         }
     }
 
@@ -187,11 +185,11 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_patt
         return Vector<PatternPartitionWithUnit> {};
 
     // 23. Return ! MakePartsList(pattern, unit, fv).
-    return MUST_OR_THROW_OOM(make_parts_list(vm, pattern->pattern, ::Locale::time_unit_to_string(time_unit), move(value_partitions)));
+    return make_parts_list(pattern->pattern, ::Locale::time_unit_to_string(time_unit), move(value_partitions));
 }
 
 // 17.5.3 MakePartsList ( pattern, unit, parts ), https://tc39.es/ecma402/#sec-makepartslist
-ThrowCompletionOr<Vector<PatternPartitionWithUnit>> make_parts_list(VM& vm, StringView pattern, StringView unit, Vector<PatternPartition> parts)
+Vector<PatternPartitionWithUnit> make_parts_list(StringView pattern, StringView unit, Vector<PatternPartition> parts)
 {
     // 1. Let patternParts be PartitionPattern(pattern).
     auto pattern_parts = partition_pattern(pattern);
@@ -204,7 +202,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> make_parts_list(VM& vm, Stri
         // a. If patternPart.[[Type]] is "literal", then
         if (pattern_part.type == "literal"sv) {
             // i. Append Record { [[Type]]: "literal", [[Value]]: patternPart.[[Value]], [[Unit]]: empty } to result.
-            TRY_OR_THROW_OOM(vm, result.try_empend("literal"sv, move(pattern_part.value)));
+            result.empend("literal"sv, move(pattern_part.value));
         }
         // b. Else,
         else {
@@ -214,7 +212,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> make_parts_list(VM& vm, Stri
             // ii. For each Record { [[Type]], [[Value]] } part in parts, do
             for (auto& part : parts) {
                 // 1. Append Record { [[Type]]: part.[[Type]], [[Value]]: part.[[Value]], [[Unit]]: unit } to result.
-                TRY_OR_THROW_OOM(vm, result.try_empend(part.type, move(part.value), unit));
+                result.empend(part.type, move(part.value), unit);
             }
         }
     }
@@ -230,20 +228,20 @@ ThrowCompletionOr<String> format_relative_time(VM& vm, RelativeTimeFormat& relat
     auto parts = TRY(partition_relative_time_pattern(vm, relative_time_format, value, unit));
 
     // 2. Let result be an empty String.
-    ThrowableStringBuilder result(vm);
+    StringBuilder result;
 
     // 3. For each Record { [[Type]], [[Value]], [[Unit]] } part in parts, do
     for (auto& part : parts) {
         // a. Set result to the string-concatenation of result and part.[[Value]].
-        MUST_OR_THROW_OOM(result.append(part.value));
+        result.append(part.value);
     }
 
     // 4. Return result.
-    return result.to_string();
+    return MUST(result.to_string());
 }
 
 // 17.5.5 FormatRelativeTimeToParts ( relativeTimeFormat, value, unit ), https://tc39.es/ecma402/#sec-FormatRelativeTimeToParts
-ThrowCompletionOr<Array*> format_relative_time_to_parts(VM& vm, RelativeTimeFormat& relative_time_format, double value, StringView unit)
+ThrowCompletionOr<NonnullGCPtr<Array>> format_relative_time_to_parts(VM& vm, RelativeTimeFormat& relative_time_format, double value, StringView unit)
 {
     auto& realm = *vm.current_realm();
 
@@ -281,7 +279,7 @@ ThrowCompletionOr<Array*> format_relative_time_to_parts(VM& vm, RelativeTimeForm
     }
 
     // 5. Return result.
-    return result.ptr();
+    return result;
 }
 
 }
