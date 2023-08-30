@@ -15,6 +15,13 @@
 #include <errno.h>
 #include <time.h>
 
+#if defined(AK_OS_WINDOWS)
+#    define gmtime_r(src, dest) gmtime_s(dest, src)
+#    define localtime_r(src, dest) localtime_s(dest, src)
+#    define timegm _mkgmtime
+#    define tzname _tzname
+#endif
+
 namespace Core {
 
 Optional<StringView> __attribute__((weak)) parse_time_zone_name(GenericLexer&) { return {}; }
@@ -560,6 +567,7 @@ Optional<DateTime> DateTime::parse(StringView format, StringView string)
         localtime_r(&utc_time_t, &tm);
     }
 
+    // FIXME: On Windows the years cannot be greater than 3000
     return DateTime::from_timestamp(mktime(&tm));
 }
 
