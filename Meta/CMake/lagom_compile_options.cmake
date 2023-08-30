@@ -19,8 +19,10 @@ function(add_linker_flag_if_supported flag)
     endif()
 endfunction()
 
-add_linker_flag_if_supported(LINKER:--gdb-index)
+if (NOT WIN32)
+    add_linker_flag_if_supported(LINKER:--gdb-index)
 
-if (NOT ENABLE_FUZZERS)
-    add_linker_flag_if_supported(LINKER:-Bsymbolic-non-weak-functions)
+    if (NOT ENABLE_FUZZERS)
+        add_linker_flag_if_supported(LINKER:-Bsymbolic-non-weak-functions)
+    endif()
 endif()
