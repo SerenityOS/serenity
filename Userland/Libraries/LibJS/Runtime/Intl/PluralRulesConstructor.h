@@ -28,6 +28,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(supported_locales_of);
 };
 
-ThrowCompletionOr<PluralRules*> initialize_plural_rules(VM&, PluralRules&, Value locales_value, Value options_value);
+ThrowCompletionOr<NonnullGCPtr<PluralRules>> initialize_plural_rules(VM&, PluralRules&, Value locales_value, Value options_value);
 
 }

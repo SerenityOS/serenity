@@ -54,7 +54,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> PluralRulesConstructor::construct(Functi
     auto plural_rules = TRY(ordinary_create_from_constructor<PluralRules>(vm, new_target, &Intrinsics::intl_plural_rules_prototype));
 
     // 3. Return ? InitializePluralRules(pluralRules, locales, options).
-    return *TRY(initialize_plural_rules(vm, plural_rules, locales, options));
+    return TRY(initialize_plural_rules(vm, plural_rules, locales, options));
 }
 
 // 16.2.2 Intl.PluralRules.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-intl.pluralrules.supportedlocalesof
@@ -73,7 +73,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesConstructor::supported_locales_of)
 }
 
 // 16.1.2 InitializePluralRules ( pluralRules, locales, options ), https://tc39.es/ecma402/#sec-initializepluralrules
-ThrowCompletionOr<PluralRules*> initialize_plural_rules(VM& vm, PluralRules& plural_rules, Value locales_value, Value options_value)
+ThrowCompletionOr<NonnullGCPtr<PluralRules>> initialize_plural_rules(VM& vm, PluralRules& plural_rules, Value locales_value, Value options_value)
 {
     // 1. Let requestedLocales be ? CanonicalizeLocaleList(locales).
     auto requested_locales = TRY(canonicalize_locale_list(vm, locales_value));
@@ -110,7 +110,7 @@ ThrowCompletionOr<PluralRules*> initialize_plural_rules(VM& vm, PluralRules& plu
     plural_rules.set_data_locale(move(result.data_locale));
 
     // 12. Return pluralRules.
-    return &plural_rules;
+    return plural_rules;
 }
 
 }

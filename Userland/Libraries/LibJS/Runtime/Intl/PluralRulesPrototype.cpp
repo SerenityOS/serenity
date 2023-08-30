@@ -44,7 +44,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select)
     auto number = TRY(vm.argument(0).to_number(vm));
 
     // 4. Return ! ResolvePlural(pr, n).[[PluralCategory]].
-    auto plurality = MUST_OR_THROW_OOM(resolve_plural(vm, plural_rules, number));
+    auto plurality = resolve_plural(plural_rules, number);
     return PrimitiveString::create(vm, ::Locale::plural_category_to_string(plurality.plural_category));
 }
 

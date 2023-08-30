@@ -176,10 +176,10 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_patt
     auto patterns = find_patterns_for_tense_or_number(tense);
 
     // 20. Let fv be ! PartitionNumberPattern(relativeTimeFormat.[[NumberFormat]], value).
-    auto value_partitions = MUST_OR_THROW_OOM(partition_number_pattern(vm, relative_time_format.number_format(), Value(value)));
+    auto value_partitions = partition_number_pattern(vm, relative_time_format.number_format(), Value(value));
 
     // 21. Let pr be ! ResolvePlural(relativeTimeFormat.[[PluralRules]], value).[[PluralCategory]].
-    auto plurality = MUST_OR_THROW_OOM(resolve_plural(vm, relative_time_format.plural_rules(), Value(value)));
+    auto plurality = resolve_plural(relative_time_format.plural_rules(), Value(value));
 
     // 22. Let pattern be po.[[<pr>]].
     auto pattern = patterns.find_if([&](auto& p) { return p.plurality == plurality.plural_category; });
