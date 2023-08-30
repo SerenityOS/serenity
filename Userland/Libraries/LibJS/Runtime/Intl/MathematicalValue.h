@@ -80,7 +80,7 @@ public:
 
     bool modulo_is_zero(Checked<i32> mod) const;
 
-    ThrowCompletionOr<int> logarithmic_floor(VM&) const;
+    int logarithmic_floor() const;
 
     bool is_equal_to(MathematicalValue const&) const;
     bool is_less_than(MathematicalValue const&) const;
@@ -89,7 +89,7 @@ public:
     bool is_positive() const;
     bool is_zero() const;
 
-    ThrowCompletionOr<String> to_string(VM&) const;
+    String to_string() const;
     Value to_value(VM&) const;
 
 private:
