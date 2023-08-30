@@ -47,6 +47,7 @@
 #include <LibWeb/HTML/HTMLSelectElement.h>
 #include <LibWeb/HTML/HTMLStyleElement.h>
 #include <LibWeb/HTML/HTMLTextAreaElement.h>
+#include <LibWeb/HTML/Numbers.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Infra/CharacterTypes.h>
@@ -903,8 +904,8 @@ i32 Element::default_tab_index_value() const
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-tabindex
 i32 Element::tab_index() const
 {
-    // FIXME: I'm not sure if "to_int" exactly matches the specs "rules for parsing integers"
-    auto maybe_table_index = attribute(HTML::AttributeNames::tabindex).to_int<i32>();
+    auto maybe_table_index = Web::HTML::parse_integer(attribute(HTML::AttributeNames::tabindex));
+
     if (!maybe_table_index.has_value())
         return default_tab_index_value();
     return maybe_table_index.value();
