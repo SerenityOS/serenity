@@ -38,7 +38,10 @@ input, textarea {
 textarea {
     padding: 2px;
     display: inline-block;
-    overflow: scroll;
+    overflow: auto;
+    font-family: monospace;
+    width: attr(cols ch, 20ch);
+    height: attr(rows lh, 2lh);
 }
 
 input[type=submit], input[type=button], input[type=reset], input[type=checkbox], input[type=radio] {
