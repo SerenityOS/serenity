@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,6 +12,12 @@
 #include <LibWeb/DOM/CharacterData.h>
 
 namespace Web::DOM {
+
+class EditableTextNodeOwner {
+public:
+    virtual ~EditableTextNodeOwner() = default;
+    virtual void did_edit_text_node(Badge<HTML::BrowsingContext>) = 0;
+};
 
 class Text : public CharacterData {
     WEB_PLATFORM_OBJECT(Text, CharacterData);
@@ -26,8 +33,9 @@ public:
 
     void set_always_editable(bool b) { m_always_editable = b; }
 
-    void set_owner_input_element(Badge<HTML::HTMLInputElement>, HTML::HTMLInputElement&);
-    HTML::HTMLInputElement* owner_input_element() { return m_owner_input_element.ptr(); }
+    template<DerivedFrom<EditableTextNodeOwner> T>
+    void set_editable_text_node_owner(Badge<T>, EditableTextNodeOwner& owner_element) { m_owner = &owner_element; }
+    EditableTextNodeOwner* editable_text_node_owner() { return m_owner.ptr(); }
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Text>> split_text(size_t offset);
 
@@ -42,7 +50,7 @@ protected:
     virtual void visit_edges(Cell::Visitor&) override;
 
 private:
-    JS::GCPtr<HTML::HTMLInputElement> m_owner_input_element;
+    JS::GCPtr<EditableTextNodeOwner> m_owner;
 
     bool m_always_editable { false };
     bool m_is_password_input { false };
