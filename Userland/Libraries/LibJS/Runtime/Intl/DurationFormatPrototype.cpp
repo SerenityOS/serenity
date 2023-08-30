@@ -5,10 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/StringBuilder.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/DurationFormatPrototype.h>
-#include <LibJS/Runtime/ThrowableStringBuilder.h>
 
 namespace JS::Intl {
 
@@ -44,19 +44,19 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format)
     auto record = TRY(to_duration_record(vm, vm.argument(0)));
 
     // 4. Let parts be PartitionDurationFormatPattern(df, record).
-    auto parts = MUST_OR_THROW_OOM(partition_duration_format_pattern(vm, duration_format, record));
+    auto parts = partition_duration_format_pattern(vm, duration_format, record);
 
     // 5. Let result be a new empty String.
-    ThrowableStringBuilder result(vm);
+    StringBuilder result;
 
     // 6. For each Record { [[Type]], [[Value]] } part in parts, do
     for (auto const& part : parts) {
         // a. Set result to the string-concatenation of result and part.[[Value]].
-        MUST_OR_THROW_OOM(result.append(part.value));
+        result.append(part.value);
     }
 
     // 7. Return result.
-    return PrimitiveString::create(vm, MUST_OR_THROW_OOM(result.to_string()));
+    return PrimitiveString::create(vm, MUST(result.to_string()));
 }
 
 // 1.4.4 Intl.DurationFormat.prototype.formatToParts ( duration ), https://tc39.es/proposal-intl-duration-format/#sec-Intl.DurationFormat.prototype.formatToParts
@@ -72,7 +72,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format_to_parts)
     auto record = TRY(to_duration_record(vm, vm.argument(0)));
 
     // 4. Let parts be PartitionDurationFormatPattern(df, record).
-    auto parts = MUST_OR_THROW_OOM(partition_duration_format_pattern(vm, duration_format, record));
+    auto parts = partition_duration_format_pattern(vm, duration_format, record);
 
     // 5. Let result be ! ArrayCreate(0).
     auto result = MUST(Array::create(realm, 0));

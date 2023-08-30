@@ -110,7 +110,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> DurationFormatConstructor::construct(Fun
         auto display_slot = duration_instances_component.set_display_slot;
 
         // c. Let unit be the Unit value.
-        auto unit = TRY_OR_THROW_OOM(vm, String::from_utf8(duration_instances_component.unit));
+        auto unit = MUST(String::from_utf8(duration_instances_component.unit));
 
         // d. Let valueList be the Values value.
         auto value_list = duration_instances_component.values;
