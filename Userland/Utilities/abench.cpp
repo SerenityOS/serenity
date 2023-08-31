@@ -65,7 +65,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     auto time_per_sample = static_cast<double>(total_loader_time) / static_cast<double>(total_loaded_samples) * 1000.;
     auto playback_time_per_sample = (1. / static_cast<double>(loader->sample_rate())) * 1000'000.;
 
-    outln("Loaded {:10d} samples in {:06.3f} s, {:9.3f} µs/sample, {:6.1f}% speed (realtime {:9.3f} µs/sample)", total_loaded_samples, static_cast<double>(total_loader_time) / 1000., time_per_sample, playback_time_per_sample / time_per_sample * 100., playback_time_per_sample);
+    outln("Loaded {:10d} samples in {:>6.3f} s, {:>9.3f} µs/sample, {:>8.3f}x speed (realtime {:>9.3f} µs/sample)",
+        total_loaded_samples, static_cast<double>(total_loader_time) / 1000., time_per_sample, playback_time_per_sample / time_per_sample, playback_time_per_sample);
 
     return 0;
 }
