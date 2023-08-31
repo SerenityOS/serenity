@@ -35,11 +35,11 @@ void ladybird_web_view_scroll_by(LadybirdWebView* self, int page_x_delta, int pa
 void ladybird_web_view_scroll_to(LadybirdWebView* self, int page_x, int page_y);
 void ladybird_web_view_scroll_into_view(LadybirdWebView* self, int page_x, int page_y, int page_width, int page_height);
 
-namespace Browser {
+namespace WebView {
 class CookieJar;
-};
+}
 
-Browser::CookieJar* ladybird_web_view_get_cookie_jar(LadybirdWebView* self);
-void ladybird_web_view_set_cookie_jar(LadybirdWebView* self, Browser::CookieJar* cookie_jar);
+WebView::CookieJar* ladybird_web_view_get_cookie_jar(LadybirdWebView* self);
+void ladybird_web_view_set_cookie_jar(LadybirdWebView* self, WebView::CookieJar* cookie_jar);
 
 G_END_DECLS

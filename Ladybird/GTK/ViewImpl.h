@@ -31,7 +31,7 @@ private:
 
     void update_cursor(Gfx::StandardCursor);
     void update_theme();
-    Browser::CookieJar& cookie_jar();
+    WebView::CookieJar& cookie_jar();
 
     Gfx::IntRect m_viewport_rect;
     LadybirdWebView* m_widget { nullptr };

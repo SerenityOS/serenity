@@ -10,11 +10,11 @@ G_DECLARE_FINAL_TYPE(LadybirdApplication, ladybird_application, LADYBIRD, APPLIC
 
 LadybirdApplication* ladybird_application_new(void);
 
-namespace Browser {
+namespace WebView {
 class CookieJar;
 }
 
-Browser::CookieJar* ladybird_application_get_cookie_jar(LadybirdApplication* self);
-Browser::CookieJar* ladybird_application_get_incognito_cookie_jar(LadybirdApplication* self);
+WebView::CookieJar* ladybird_application_get_cookie_jar(LadybirdApplication* self);
+WebView::CookieJar* ladybird_application_get_incognito_cookie_jar(LadybirdApplication* self);
 
 G_END_DECLS

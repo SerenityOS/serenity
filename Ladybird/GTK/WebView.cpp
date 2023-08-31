@@ -8,7 +8,7 @@ struct _LadybirdWebView {
     OwnPtr<LadybirdViewImpl> impl;
     LadybirdBitmapPaintable* bitmap_paintable;
     LadybirdBitmapPaintable* favicon;
-    Browser::CookieJar* cookie_jar;
+    WebView::CookieJar* cookie_jar;
     GtkScrollablePolicy hscroll_policy;
     GtkAdjustment* hadjustment;
     GtkScrollablePolicy vscroll_policy;
@@ -170,14 +170,14 @@ guint ladybird_web_view_get_zoom_percent(LadybirdWebView* self)
     return round(self->impl->zoom_level() * 100.0);
 }
 
-Browser::CookieJar* ladybird_web_view_get_cookie_jar(LadybirdWebView* self)
+WebView::CookieJar* ladybird_web_view_get_cookie_jar(LadybirdWebView* self)
 {
     g_return_val_if_fail(LADYBIRD_IS_WEB_VIEW(self), nullptr);
 
     return self->cookie_jar;
 }
 
-void ladybird_web_view_set_cookie_jar(LadybirdWebView* self, Browser::CookieJar* cookie_jar)
+void ladybird_web_view_set_cookie_jar(LadybirdWebView* self, WebView::CookieJar* cookie_jar)
 {
     g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
 
@@ -282,7 +282,7 @@ static void ladybird_web_view_set_property(GObject* object, guint prop_id, GValu
         break;
 
     case PROP_COOKIE_JAR:
-        ladybird_web_view_set_cookie_jar(self, reinterpret_cast<Browser::CookieJar*>(g_value_get_pointer(value)));
+        ladybird_web_view_set_cookie_jar(self, reinterpret_cast<WebView::CookieJar*>(g_value_get_pointer(value)));
         break;
 
     case PROP_HOVERED_LINK:

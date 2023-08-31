@@ -59,7 +59,7 @@ static void update_favicon(LadybirdBitmapPaintable* favicon_paintable, [[maybe_u
 static AdwTabPage* open_new_tab(LadybirdWindow* self, AdwTabPage* parent)
 {
     LadybirdApplication* app = LADYBIRD_APPLICATION(gtk_window_get_application(GTK_WINDOW(self)));
-    Browser::CookieJar* cookie_jar = self->incognito
+    WebView::CookieJar* cookie_jar = self->incognito
         ? ladybird_application_get_incognito_cookie_jar(app)
         : ladybird_application_get_cookie_jar(app);
 

@@ -96,15 +96,13 @@ set(SOURCES
     EventLoopImplementationGLib.cpp
     "${SERENITY_SOURCE_DIR}/Ladybird/Utilities.cpp"
     "${SERENITY_SOURCE_DIR}/Ladybird/HelperProcess.cpp"
-    "${SERENITY_SOURCE_DIR}/Userland/Applications/Browser/CookieJar.cpp"
-    "${SERENITY_SOURCE_DIR}/Userland/Applications/Browser/Database.cpp"
     $<TARGET_OBJECTS:resources>
 )
 
 add_subdirectory(po)
 
 add_executable(ladybird ${SOURCES})
-target_link_libraries(ladybird PRIVATE PkgConfig::gtk4 PkgConfig::libadwaita Lagom::Core Lagom::WebView Lagom::Gfx Lagom::Web Lagom::IPC Lagom::FileSystem Lagom::SQL Lagom::Protocol)
+target_link_libraries(ladybird PRIVATE PkgConfig::gtk4 PkgConfig::libadwaita Lagom::Core Lagom::WebView Lagom::Gfx Lagom::Web Lagom::IPC Lagom::FileSystem Lagom::Protocol)
 
 if (libsoup_FOUND)
     target_link_libraries(ladybird PRIVATE PkgConfig::libsoup)

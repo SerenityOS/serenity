@@ -1,10 +1,10 @@
 #include "ViewImpl.h"
 #include "BitmapPaintable.h"
-#include <Browser/CookieJar.h>
 #include <Ladybird/HelperProcess.h>
 #include <Ladybird/Utilities.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibWeb/Crypto/Crypto.h>
+#include <LibWebView/CookieJar.h>
 #include <adwaita.h>
 
 LadybirdViewImpl::LadybirdViewImpl(LadybirdWebView* widget)
@@ -108,9 +108,9 @@ ErrorOr<NonnullOwnPtr<LadybirdViewImpl>> LadybirdViewImpl::create(LadybirdWebVie
     return impl;
 }
 
-Browser::CookieJar& LadybirdViewImpl::cookie_jar()
+WebView::CookieJar& LadybirdViewImpl::cookie_jar()
 {
-    Browser::CookieJar* jar = ladybird_web_view_get_cookie_jar(m_widget);
+    WebView::CookieJar* jar = ladybird_web_view_get_cookie_jar(m_widget);
     VERIFY(jar);
     return *jar;
 }

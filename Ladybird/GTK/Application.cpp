@@ -1,14 +1,14 @@
 #include "Application.h"
 #include "Window.h"
 #include <AK/OwnPtr.h>
-#include <Browser/CookieJar.h>
+#include <LibWebView/CookieJar.h>
 #include <glib/gi18n.h>
 
 struct _LadybirdApplication {
     AdwApplication parent_instance;
 
-    OwnPtr<Browser::CookieJar> cookie_jar;
-    OwnPtr<Browser::CookieJar> incognito_cookie_jar;
+    OwnPtr<WebView::CookieJar> cookie_jar;
+    OwnPtr<WebView::CookieJar> incognito_cookie_jar;
 };
 
 G_BEGIN_DECLS
@@ -118,26 +118,26 @@ static void ladybird_application_open(GApplication* app, GFile** files, int num_
     gtk_window_present(GTK_WINDOW(window));
 }
 
-Browser::CookieJar* ladybird_application_get_cookie_jar(LadybirdApplication* self)
+WebView::CookieJar* ladybird_application_get_cookie_jar(LadybirdApplication* self)
 {
     g_return_val_if_fail(LADYBIRD_IS_APPLICATION(self), nullptr);
 
     if (!self->cookie_jar) {
         // TODO: This should attempt creating the jar from a database.
-        auto jar = Browser::CookieJar::create();
-        self->cookie_jar = make<Browser::CookieJar>(move(jar));
+        auto jar = WebView::CookieJar::create();
+        self->cookie_jar = make<WebView::CookieJar>(move(jar));
     }
 
     return self->cookie_jar;
 }
 
-Browser::CookieJar* ladybird_application_get_incognito_cookie_jar(LadybirdApplication* self)
+WebView::CookieJar* ladybird_application_get_incognito_cookie_jar(LadybirdApplication* self)
 {
     g_return_val_if_fail(LADYBIRD_IS_APPLICATION(self), nullptr);
 
     if (!self->incognito_cookie_jar) {
-        auto jar = Browser::CookieJar::create();
-        self->incognito_cookie_jar = make<Browser::CookieJar>(move(jar));
+        auto jar = WebView::CookieJar::create();
+        self->incognito_cookie_jar = make<WebView::CookieJar>(move(jar));
     }
 
     return self->incognito_cookie_jar;
@@ -155,8 +155,8 @@ static void ladybird_application_dispose(GObject* object)
 
 static void ladybird_application_init([[maybe_unused]] LadybirdApplication* self)
 {
-    new (&self->cookie_jar) OwnPtr<Browser::CookieJar>;
-    new (&self->incognito_cookie_jar) OwnPtr<Browser::CookieJar>;
+    new (&self->cookie_jar) OwnPtr<WebView::CookieJar>;
+    new (&self->incognito_cookie_jar) OwnPtr<WebView::CookieJar>;
 
     GtkApplication* gtk_app = GTK_APPLICATION(self);
 
