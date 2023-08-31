@@ -113,8 +113,8 @@ static ErrorOr<void> notify_make_not_available()
     auto notification = GUI::Notification::construct();
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/32x32/app-hack-studio.png"sv));
     notification->set_icon(icon);
-    notification->set_title("'make' Not Available");
-    notification->set_text("You probably want to install the binutils, gcc, and make ports from the root of the Serenity repository");
+    notification->set_title("'make' Not Available"_string);
+    notification->set_text("You probably want to install the binutils, gcc, and make ports from the root of the Serenity repository"_string);
     notification->show();
     return {};
 }

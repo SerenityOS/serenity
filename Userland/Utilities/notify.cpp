@@ -15,8 +15,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::create(arguments));
 
     Core::ArgsParser args_parser;
-    StringView title {};
-    StringView message {};
+    String title {};
+    String message {};
     StringView icon_path {};
     args_parser.add_positional_argument(title, "Title of the notification", "title");
     args_parser.add_positional_argument(message, "Message to display in the notification", "message");

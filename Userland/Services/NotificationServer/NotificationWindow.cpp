@@ -38,7 +38,7 @@ static void update_notification_window_locations(Gfx::IntRect const& screen_rect
     }
 }
 
-NotificationWindow::NotificationWindow(i32 client_id, DeprecatedString const& text, DeprecatedString const& title, Gfx::ShareableBitmap const& icon)
+NotificationWindow::NotificationWindow(i32 client_id, String const& text, String const& title, Gfx::ShareableBitmap const& icon)
 {
     m_id = client_id;
 
@@ -82,10 +82,10 @@ NotificationWindow::NotificationWindow(i32 client_id, DeprecatedString const& te
     auto& left_container = widget->add<GUI::Widget>();
     left_container.set_layout<GUI::VerticalBoxLayout>();
 
-    m_title_label = &left_container.add<GUI::Label>(String::from_deprecated_string(title).release_value_but_fixme_should_propagate_errors());
+    m_title_label = &left_container.add<GUI::Label>(title);
     m_title_label->set_font(Gfx::FontDatabase::default_font().bold_variant());
     m_title_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    m_text_label = &left_container.add<GUI::Label>(String::from_deprecated_string(text).release_value_but_fixme_should_propagate_errors());
+    m_text_label = &left_container.add<GUI::Label>(text);
     m_text_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     // FIXME: There used to be code for setting the tooltip here, but since we
@@ -130,16 +130,16 @@ void NotificationWindow::leave_event(Core::Event&)
     update_notification_window_locations(GUI::Desktop::the().rect());
 }
 
-void NotificationWindow::set_text(DeprecatedString const& value)
+void NotificationWindow::set_text(String const& value)
 {
-    m_text_label->set_text(String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors());
+    m_text_label->set_text(value);
     if (m_hovering)
         resize_to_fit_text();
 }
 
-void NotificationWindow::set_title(DeprecatedString const& value)
+void NotificationWindow::set_title(String const& value)
 {
-    m_title_label->set_text(String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors());
+    m_title_label->set_text(value);
 }
 
 void NotificationWindow::set_image(Gfx::ShareableBitmap const& image)
