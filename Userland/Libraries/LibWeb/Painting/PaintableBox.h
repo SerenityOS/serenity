@@ -20,6 +20,9 @@ public:
     static JS::NonnullGCPtr<PaintableBox> create(Layout::Box const&);
     virtual ~PaintableBox();
 
+    virtual void before_paint(PaintContext&, PaintPhase) const override;
+    virtual void after_paint(PaintContext&, PaintPhase) const override;
+
     virtual void paint(PaintContext&, PaintPhase) const override;
 
     bool is_visible() const { return layout_box().is_visible(); }
@@ -185,6 +188,8 @@ public:
 
 protected:
     explicit PaintableBox(Layout::Box const&);
+
+    Optional<CSSPixelRect> get_clip_rect() const;
 
     virtual void paint_border(PaintContext&) const;
     virtual void paint_backdrop_filter(PaintContext&) const;

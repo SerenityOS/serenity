@@ -176,6 +176,37 @@ StackingContext* PaintableBox::enclosing_stacking_context()
     VERIFY_NOT_REACHED();
 }
 
+Optional<CSSPixelRect> PaintableBox::get_clip_rect() const
+{
+    auto clip = computed_values().clip();
+    if (clip.is_rect() && layout_box().is_absolutely_positioned()) {
+        auto border_box = absolute_border_box_rect();
+        return clip.to_rect().resolved(layout_node(), border_box.to_type<double>()).to_type<CSSPixels>();
+    }
+    return {};
+}
+
+void PaintableBox::before_paint(PaintContext& context, [[maybe_unused]] PaintPhase phase) const
+{
+    if (!is_visible())
+        return;
+
+    auto clip_rect = get_clip_rect();
+    if (clip_rect.has_value()) {
+        context.painter().save();
+        context.painter().add_clip_rect(clip_rect->to_type<int>());
+    }
+}
+
+void PaintableBox::after_paint(PaintContext& context, [[maybe_unused]] PaintPhase phase) const
+{
+    if (!is_visible())
+        return;
+
+    if (get_clip_rect().has_value())
+        context.painter().restore();
+}
+
 void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
 {
     if (!is_visible())
@@ -424,15 +455,12 @@ void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase ph
     auto overflow_x = computed_values().overflow_x();
     auto overflow_y = computed_values().overflow_y();
 
-    auto clip = computed_values().clip();
-    if (clip.is_rect() && layout_box().is_absolutely_positioned()) {
-        auto border_box = absolute_border_box_rect();
-        auto resolved_clip_rect = clip.to_rect().resolved(layout_node(), border_box.to_type<double>()).to_type<CSSPixels>();
-        if (clip_rect.has_value()) {
-            clip_rect->intersect(resolved_clip_rect);
-        } else {
-            clip_rect = resolved_clip_rect;
-        }
+    auto css_clip_property = get_clip_rect();
+    if (css_clip_property.has_value()) {
+        if (clip_rect.has_value())
+            clip_rect->intersect(css_clip_property.value());
+        else
+            clip_rect = css_clip_property.value();
     }
 
     if (!clip_rect.has_value())
