@@ -109,6 +109,9 @@ public:
         return TraversalDecision::Continue;
     }
 
+    virtual void before_paint(PaintContext&, PaintPhase) const { }
+    virtual void after_paint(PaintContext&, PaintPhase) const { }
+
     virtual void paint(PaintContext&, PaintPhase) const { }
 
     virtual void before_children_paint(PaintContext&, PaintPhase) const { }

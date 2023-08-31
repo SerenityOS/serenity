@@ -26,7 +26,9 @@ namespace Web::Painting {
 
 static void paint_node(Paintable const& paintable, PaintContext& context, PaintPhase phase)
 {
+    paintable.before_paint(context, phase);
     paintable.paint(context, phase);
+    paintable.after_paint(context, phase);
 }
 
 StackingContext::StackingContext(PaintableBox& paintable_box, StackingContext* parent, size_t index_in_tree_order)
