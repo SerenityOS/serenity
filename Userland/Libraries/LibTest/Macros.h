@@ -18,8 +18,10 @@ void warnln(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&...);
 }
 
 namespace Test {
-// Declare a helper so that we can call it from VERIFY in included headers
+// Declare helpers so that we can call them from VERIFY in included headers
+bool did_current_test_case_pass();
 void current_test_case_did_fail();
+void current_test_case_did_pass();
 }
 
 #undef VERIFY

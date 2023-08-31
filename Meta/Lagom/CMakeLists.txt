@@ -623,6 +623,7 @@ if (BUILD_LAGOM)
             LibMarkdown
             LibPDF
             LibSQL
+            LibTest
             LibTextCodec
             LibTTF
             LibTimeZone

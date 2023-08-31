@@ -40,9 +40,21 @@ private:
 };
 
 // Declared in Macros.h
+bool did_current_test_case_pass()
+{
+    return TestSuite::the().m_current_test_case_passed;
+}
+
+// Declared in Macros.h
 void current_test_case_did_fail()
 {
-    TestSuite::the().current_test_case_did_fail();
+    TestSuite::the().m_current_test_case_passed = false;
+}
+
+// Declared in Macros.h
+void current_test_case_did_pass()
+{
+    TestSuite::the().m_current_test_case_passed = true;
 }
 
 // Declared in TestCase.h

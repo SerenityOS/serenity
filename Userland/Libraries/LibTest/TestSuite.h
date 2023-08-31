@@ -40,9 +40,9 @@ public:
         m_cases.append(test_case);
     }
 
-    void current_test_case_did_fail() { m_current_test_case_passed = false; }
-
     void set_suite_setup(Function<void()> setup) { m_setup = move(setup); }
+
+    bool m_current_test_case_passed = true;
 
 private:
     static TestSuite* s_global;
@@ -51,7 +51,6 @@ private:
     u64 m_benchtime = 0;
     DeprecatedString m_suite_name;
     u64 m_benchmark_repetitions = 1;
-    bool m_current_test_case_passed = true;
     Function<void()> m_setup;
 };
 
