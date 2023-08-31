@@ -465,6 +465,7 @@ struct PolicyContainer;
 struct POSTResource;
 struct SerializedFormData;
 struct SessionHistoryEntry;
+struct ToggleTaskTracker;
 }
 
 namespace Web::HighResolutionTime {

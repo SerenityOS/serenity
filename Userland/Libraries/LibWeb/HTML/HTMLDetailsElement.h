@@ -6,8 +6,10 @@
 
 #pragma once
 
+#include <AK/Optional.h>
 #include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/HTML/ToggleTaskTracker.h>
 
 namespace Web::HTML {
 
@@ -20,16 +22,17 @@ public:
     // https://www.w3.org/TR/html-aria/#el-details
     virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::group; }
 
-    // ^Element
-    WebIDL::ExceptionOr<void> set_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
-    void remove_attribute(DeprecatedFlyString const& name) override;
-
-    void run_details_notification_task_steps();
-
 private:
     HTMLDetailsElement(DOM::Document&, DOM::QualifiedName);
 
     virtual void initialize(JS::Realm&) override;
+
+    virtual void attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value) override;
+
+    void queue_a_details_toggle_event_task(String old_state, String new_state);
+
+    // https://html.spec.whatwg.org/multipage/interactive-elements.html#details-toggle-task-tracker
+    Optional<ToggleTaskTracker> m_details_toggle_task_tracker;
 };
 
 }
