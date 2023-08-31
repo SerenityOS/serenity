@@ -94,6 +94,22 @@ ErrorOr<size_t> BulkInPipe::submit_bulk_in_transfer(size_t length, void* data)
     return transfer_length;
 }
 
+ErrorOr<size_t> BulkInPipe::submit_bulk_in_transfer(size_t length, UserOrKernelBuffer data)
+{
+    VERIFY(length <= m_dma_buffer->size());
+
+    MutexLocker lock(m_dma_buffer_lock);
+
+    auto transfer = TRY(Transfer::create(*this, length, *m_dma_buffer));
+
+    dbgln_if(USB_DEBUG, "Pipe: Bulk in transfer allocated @ {}", transfer->buffer_physical());
+    size_t transfer_length = TRY(m_controller->submit_bulk_transfer(*transfer));
+    TRY(data.write(transfer->buffer().as_ptr(), min(length, transfer_length)));
+    dbgln_if(USB_DEBUG, "Pipe: Bulk in transfer complete!");
+
+    return transfer_length;
+}
+
 ErrorOr<NonnullOwnPtr<BulkOutPipe>> BulkOutPipe::create(USBController const& controller, u8 endpoint_address, u16 max_packet_size, i8 device_address, size_t buffer_size)
 {
     VERIFY(buffer_size >= max_packet_size);
@@ -119,6 +135,22 @@ ErrorOr<size_t> BulkOutPipe::submit_bulk_out_transfer(size_t length, void* data)
     TRY(transfer->write_buffer(length, data));
     dbgln_if(USB_DEBUG, "Pipe: Bulk out transfer allocated @ {}", transfer->buffer_physical());
     transfer_length = TRY(m_controller->submit_bulk_transfer(*transfer));
+    dbgln_if(USB_DEBUG, "Pipe: Bulk out transfer complete!");
+
+    return transfer_length;
+}
+
+ErrorOr<size_t> BulkOutPipe::submit_bulk_out_transfer(size_t length, UserOrKernelBuffer data)
+{
+    VERIFY(length <= m_dma_buffer->size());
+
+    MutexLocker lock(m_dma_buffer_lock);
+
+    auto transfer = TRY(Transfer::create(*this, length, *m_dma_buffer));
+
+    TRY(transfer->write_buffer(length, data));
+    dbgln_if(USB_DEBUG, "Pipe: Bulk out transfer allocated @ {}", transfer->buffer_physical());
+    size_t transfer_length = TRY(m_controller->submit_bulk_transfer(*transfer));
     dbgln_if(USB_DEBUG, "Pipe: Bulk out transfer complete!");
 
     return transfer_length;
