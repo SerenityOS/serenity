@@ -177,8 +177,16 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
         // FIXME: (10.6.6) If 'height' is 'auto', the height depends on the element's descendants per 10.6.7.
         parent().compute_height(box, AvailableSpace(AvailableSize::make_indefinite(), AvailableSize::make_indefinite()));
     } else {
-        auto inner_height = calculate_inner_height(box, AvailableSize::make_definite(m_containing_block_state.content_height()), height_value);
-        box_state.set_content_height(inner_height.to_px(box));
+        auto available_height = AvailableSize::make_definite(m_containing_block_state.content_height());
+        auto inner_height = calculate_inner_height(box, available_height, height_value).to_px(box);
+        if (!should_treat_max_height_as_none(box, available_height)) {
+            auto max_height = calculate_inner_height(box, available_height, computed_values.max_height());
+            if (!max_height.is_auto())
+                inner_height = min(inner_height, max_height.to_px(box));
+        }
+        if (!computed_values.min_height().is_auto())
+            inner_height = max(inner_height, calculate_inner_height(box, available_height, computed_values.min_height()).to_px(box));
+        box_state.set_content_height(inner_height);
     }
 
     if (independent_formatting_context)
