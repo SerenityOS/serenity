@@ -33,6 +33,12 @@ You can use the `nix-shell` script [`Toolchain/serenity.nix`](../Toolchain/seren
 nix-shell Toolchain/serenity.nix
 ```
 
+or you can use the nix flake [`Toolchain/flake.nix`](../Toolchain/serenity.nix) instead:
+
+```console
+nix develop Toolchain
+```
+
 ## Alpine Linux
 
 First, make sure you have enabled the `community` repository in `/etc/apk/repositories` and run `apk update`. It has been tested on `edge`, YMMV on `stable`.
