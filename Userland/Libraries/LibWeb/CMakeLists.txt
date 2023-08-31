@@ -395,6 +395,7 @@ set(SOURCES
     HTML/TextMetrics.cpp
     HTML/Timer.cpp
     HTML/TimeRanges.cpp
+    HTML/ToggleEvent.cpp
     HTML/TrackEvent.cpp
     HTML/TraversableNavigable.cpp
     HTML/VideoTrack.cpp
