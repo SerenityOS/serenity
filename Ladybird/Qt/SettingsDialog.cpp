@@ -9,7 +9,6 @@
 #include "Settings.h"
 #include "StringUtils.h"
 #include <AK/URL.h>
-#include <QCloseEvent>
 #include <QLabel>
 #include <QMenu>
 
@@ -19,7 +18,6 @@ SettingsDialog::SettingsDialog(QMainWindow* window)
     : m_window(window)
 {
     m_layout = new QFormLayout(this);
-    m_ok_button = new QPushButton("&Save", this);
 
     m_enable_search = make<QCheckBox>(this);
     m_enable_search->setChecked(Settings::the()->enable_search());
@@ -35,6 +33,18 @@ SettingsDialog::SettingsDialog(QMainWindow* window)
 
     m_new_tab_page = make<QLineEdit>(this);
     m_new_tab_page->setText(Settings::the()->new_tab_page());
+    QObject::connect(m_new_tab_page, &QLineEdit::textChanged, this, [this] {
+        auto url_string = MUST(ak_string_from_qstring(m_new_tab_page->text()));
+        m_new_tab_page->setStyleSheet(URL(url_string).is_valid() ? "" : "border: 1px solid red;");
+    });
+    QObject::connect(m_new_tab_page, &QLineEdit::editingFinished, this, [this] {
+        auto url_string = MUST(ak_string_from_qstring(m_new_tab_page->text()));
+        if (URL(url_string).is_valid())
+            Settings::the()->set_new_tab_page(m_new_tab_page->text());
+    });
+    QObject::connect(m_new_tab_page, &QLineEdit::returnPressed, this, [this] {
+        close();
+    });
 
     setup_search_engines();
 
@@ -43,11 +53,6 @@ SettingsDialog::SettingsDialog(QMainWindow* window)
     m_layout->addRow(new QLabel("Search Engine", this), m_search_engine_dropdown);
     m_layout->addRow(new QLabel("Enable Autocomplete", this), m_enable_autocomplete);
     m_layout->addRow(new QLabel("Autocomplete Engine", this), m_autocomplete_engine_dropdown);
-    m_layout->addRow(m_ok_button);
-
-    QObject::connect(m_ok_button, &QPushButton::released, this, [this] {
-        close();
-    });
 
     setWindowTitle("Settings");
     setFixedWidth(300);
@@ -112,20 +117,6 @@ void SettingsDialog::setup_search_engines()
         Settings::the()->set_enable_autocomplete(state == Qt::Checked);
         m_autocomplete_engine_dropdown->setEnabled(state == Qt::Checked);
     });
-}
-
-void SettingsDialog::closeEvent(QCloseEvent* event)
-{
-    save();
-    event->accept();
-}
-
-void SettingsDialog::save()
-{
-    auto url_string = MUST(ak_string_from_qstring(m_new_tab_page->text()));
-    if (!URL(url_string).is_valid())
-        return;
-    Settings::the()->set_new_tab_page(m_new_tab_page->text());
 }
 
 }
