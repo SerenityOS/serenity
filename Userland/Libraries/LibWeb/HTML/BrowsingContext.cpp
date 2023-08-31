@@ -207,7 +207,6 @@ JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context
     auto document = HTML::HTMLDocument::create(window->realm());
 
     // Non-standard
-    document->set_window(*window);
     window->set_associated_document(*document);
 
     document->set_quirks_mode(DOM::QuirksMode::Yes);
@@ -365,7 +364,6 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
     auto document = HTML::HTMLDocument::create(window->realm());
 
     // Non-standard
-    document->set_window(*window);
     window->set_associated_document(*document);
 
     // type: "html"
