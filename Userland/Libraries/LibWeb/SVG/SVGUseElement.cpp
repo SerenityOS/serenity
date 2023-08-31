@@ -72,13 +72,16 @@ Optional<StringView> SVGUseElement::parse_id_from_href(DeprecatedString const& h
     return href.substring_view(id_seperator.value() + 1);
 }
 
+Gfx::AffineTransform SVGUseElement::element_transform() const
+{
+    // The x and y properties define an additional transformation (translate(x,y), where x and y represent the computed value of the corresponding property)
+    // to be applied to the ‘use’ element, after any transformations specified with other properties
+    return Base::element_transform().translate(m_x.value_or(0), m_y.value_or(0));
+}
+
 void SVGUseElement::inserted()
 {
     Base::inserted();
-
-    // The x and y properties define an additional transformation (translate(x,y), where x and y represent the computed value of the corresponding property)
-    // to be applied to the ‘use’ element, after any transformations specified with other properties
-    m_transform.translate(m_x.value_or(0), m_y.value_or(0));
 }
 
 void SVGUseElement::svg_element_changed(SVGElement& svg_element)

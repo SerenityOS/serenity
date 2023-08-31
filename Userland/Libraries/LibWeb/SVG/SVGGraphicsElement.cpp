@@ -111,7 +111,7 @@ Gfx::AffineTransform SVGGraphicsElement::get_transform() const
 {
     Gfx::AffineTransform transform = m_transform;
     for (auto* svg_ancestor = shadow_including_first_ancestor_of_type<SVGGraphicsElement>(); svg_ancestor; svg_ancestor = svg_ancestor->shadow_including_first_ancestor_of_type<SVGGraphicsElement>()) {
-        transform = Gfx::AffineTransform { svg_ancestor->m_transform }.multiply(transform);
+        transform = Gfx::AffineTransform { svg_ancestor->element_transform() }.multiply(transform);
     }
     return transform;
 }

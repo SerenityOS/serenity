@@ -17,5 +17,6 @@
     "svg-gradient-spreadMethod.html": "svg-gradient-spreadMethod-ref.html",
     "svg-radialGradient.html": "svg-radialGradient-ref.html",
     "svg-symbol.html": "svg-symbol-ref.html",
-    "border-radius-shrink-zero-sized-box.html": "border-radius-shrink-zero-sized-box-ref.html"
+    "border-radius-shrink-zero-sized-box.html": "border-radius-shrink-zero-sized-box-ref.html",
+    "svg-file-matches-html-file.svg": "svg-file-matches-html-file.html"
 }
