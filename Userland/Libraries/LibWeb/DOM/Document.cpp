@@ -3011,6 +3011,8 @@ void Document::make_active()
     // 1. Let window be document's relevant global object.
     auto& window = verify_cast<HTML::Window>(HTML::relevant_global_object(*this));
 
+    set_window(window);
+
     // 2. Set document's browsing context's WindowProxy's [[Window]] internal slot value to window.
     m_browsing_context->window_proxy()->set_window(window);
 
