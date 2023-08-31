@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ladybird wip\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-08-29 11:05+0300\n"
+"POT-Creation-Date: 2023-08-31 18:50+0300\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -25,7 +25,7 @@ msgstr ""
 msgid "...will appear here, once we implement them :^)"
 msgstr "...будут здесь, когда мы их реализуем :^)"
 
-#: window.blp:143 window.blp:242
+#: window.blp:144 window.blp:243
 msgid "Bookmarks"
 msgstr "Закладки"
 
@@ -63,15 +63,15 @@ msgstr ""
 "Ladybird — это браузер, основанный на веб-движке LibWeb и JavaScript-движке "
 "LibJS, развиваемый большой командой участников как часть проекта SerenityOS."
 
-#: window.blp:156
+#: window.blp:157
 msgid "Main Menu"
 msgstr "Главное меню"
 
-#: window.blp:95 window.blp:218
+#: window.blp:96 window.blp:219
 msgid "Navigate Back"
 msgstr "Назад"
 
-#: window.blp:101 window.blp:224
+#: window.blp:102 window.blp:225
 msgid "Navigate Forward"
 msgstr "Вперёд"
 
@@ -87,7 +87,7 @@ msgstr "Вперёд"
 msgid "Navigation"
 msgstr "Навигация"
 
-#: window.blp:113
+#: window.blp:114
 msgid "New Tab"
 msgstr "Новая вкладка"
 
@@ -132,7 +132,7 @@ msgstr "Предыдущая вкладка"
 msgid "Quit"
 msgstr "Выйти"
 
-#: window.blp:107 window.blp:230
+#: window.blp:108 window.blp:231
 msgid "Reload Page"
 msgstr "Перезагрузить страницу"
 
@@ -144,7 +144,7 @@ msgstr "Перезагрузить текущую страницу"
 msgid "Reset zoom"
 msgstr "Восстановить масштаб"
 
-#: window.blp:174
+#: window.blp:175
 msgid "Restore Zoom"
 msgstr "Восстановить масштаб"
 
@@ -153,7 +153,7 @@ msgid "Sam Atkins"
 msgstr "Сэм Эткинс"
 
 #. Translators: this is the placeholder text for the main location entry.
-#: window.blp:126
+#: window.blp:127
 #, fuzzy
 msgid "Search or enter a URL to open..."
 msgstr "Введите URL или поисковый запрос..."
@@ -175,7 +175,7 @@ msgstr "Сергей Бугаев"
 msgid "Show shortcuts"
 msgstr "Комбинации клавиш"
 
-#: window.blp:150
+#: window.blp:151
 msgid "Tab Overview"
 msgstr "Обзор вкладок"
 
@@ -192,11 +192,11 @@ msgstr "_Открепить"
 msgid "Zoom"
 msgstr "Масштаб"
 
-#: window.blp:184
+#: window.blp:185
 msgid "Zoom In"
 msgstr "Увеличить масштаб"
 
-#: window.blp:169
+#: window.blp:170
 msgid "Zoom Out"
 msgstr "Уменьшить масштаб"
 
