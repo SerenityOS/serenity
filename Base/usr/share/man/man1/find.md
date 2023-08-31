@@ -78,6 +78,7 @@ by the current user.
 The commands can be combined to form complex expressions using the following
 operators:
 
+* `! command`: Logical NOT.
 * `command1 -o command2`: Logical OR.
 * `command1 -a command2`, `command1 command2`: Logical AND.
 * `( command )`: Groups commands together for operator priority purposes.
