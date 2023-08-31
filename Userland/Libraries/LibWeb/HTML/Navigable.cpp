@@ -999,6 +999,11 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
         // FIXME: 5. If continue is false, then return.
     }
 
+    if (is_top_level_traversable()) {
+        if (auto* page = active_browsing_context()->page())
+            page->client().page_did_start_loading(url, false);
+    }
+
     // 20. In parallel, run these steps:
     Platform::EventLoopPlugin::the().deferred_invoke([this, source_snapshot_params = move(source_snapshot_params), document_resource, url, navigation_id, referrer_policy, initiator_origin_snapshot, response, history_handling, initiator_base_url_snapshot] {
         // NOTE: Not in the spec but subsequent steps will fail because destroyed navigable does not have active document.
