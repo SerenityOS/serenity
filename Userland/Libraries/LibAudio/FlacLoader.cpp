@@ -386,56 +386,59 @@ LoaderSamples FlacLoaderPlugin::next_frame()
 
     auto frame_checksum_stream = TRY(try_make<Crypto::Checksum::ChecksummingStream<IBMCRC>>(MaybeOwned<Stream>(*m_stream)));
     auto header_checksum_stream = TRY(try_make<Crypto::Checksum::ChecksummingStream<FlacFrameHeaderCRC>>(MaybeOwned<Stream>(*frame_checksum_stream)));
-    BigEndianInputBitStream bit_stream { MaybeOwned<Stream> { *header_checksum_stream } };
+    BigEndianInputBitStream header_bit_stream { MaybeOwned<Stream> { *header_checksum_stream } };
 
     // 11.22. FRAME_HEADER
-    u16 sync_code = TRY(bit_stream.read_bits<u16>(14));
+    u16 sync_code = TRY(header_bit_stream.read_bits<u16>(14));
     FLAC_VERIFY(sync_code == 0b11111111111110, LoaderError::Category::Format, "Sync code");
-    bool reserved_bit = TRY(bit_stream.read_bit());
+    bool reserved_bit = TRY(header_bit_stream.read_bit());
     FLAC_VERIFY(reserved_bit == 0, LoaderError::Category::Format, "Reserved frame header bit");
     // 11.22.2. BLOCKING STRATEGY
-    [[maybe_unused]] bool blocking_strategy = TRY(bit_stream.read_bit());
+    [[maybe_unused]] bool blocking_strategy = TRY(header_bit_stream.read_bit());
 
-    u32 sample_count = TRY(convert_sample_count_code(TRY(bit_stream.read_bits<u8>(4))));
+    u32 sample_count = TRY(convert_sample_count_code(TRY(header_bit_stream.read_bits<u8>(4))));
 
-    u32 frame_sample_rate = TRY(convert_sample_rate_code(TRY(bit_stream.read_bits<u8>(4))));
+    u32 frame_sample_rate = TRY(convert_sample_rate_code(TRY(header_bit_stream.read_bits<u8>(4))));
 
-    u8 channel_type_num = TRY(bit_stream.read_bits<u8>(4));
+    u8 channel_type_num = TRY(header_bit_stream.read_bits<u8>(4));
     FLAC_VERIFY(channel_type_num < 0b1011, LoaderError::Category::Format, "Channel assignment");
     FlacFrameChannelType channel_type = (FlacFrameChannelType)channel_type_num;
 
-    u8 bit_depth = TRY(convert_bit_depth_code(TRY(bit_stream.read_bits<u8>(3))));
+    u8 bit_depth = TRY(convert_bit_depth_code(TRY(header_bit_stream.read_bits<u8>(3))));
 
-    reserved_bit = TRY(bit_stream.read_bit());
+    reserved_bit = TRY(header_bit_stream.read_bit());
     FLAC_VERIFY(reserved_bit == 0, LoaderError::Category::Format, "Reserved frame header end bit");
 
     // 11.22.8. CODED NUMBER
-    m_current_sample_or_frame = TRY(read_utf8_char(bit_stream));
+    m_current_sample_or_frame = TRY(read_utf8_char(header_bit_stream));
 
     // Conditional header variables
     // 11.22.9. BLOCK SIZE INT
     if (sample_count == FLAC_BLOCKSIZE_AT_END_OF_HEADER_8) {
-        sample_count = TRY(bit_stream.read_bits<u32>(8)) + 1;
+        sample_count = TRY(header_bit_stream.read_bits<u32>(8)) + 1;
     } else if (sample_count == FLAC_BLOCKSIZE_AT_END_OF_HEADER_16) {
-        sample_count = TRY(bit_stream.read_bits<u32>(16)) + 1;
+        sample_count = TRY(header_bit_stream.read_bits<u32>(16)) + 1;
     }
 
     // 11.22.10. SAMPLE RATE INT
     if (frame_sample_rate == FLAC_SAMPLERATE_AT_END_OF_HEADER_8) {
-        frame_sample_rate = TRY(bit_stream.read_bits<u32>(8)) * 1000;
+        frame_sample_rate = TRY(header_bit_stream.read_bits<u32>(8)) * 1000;
     } else if (frame_sample_rate == FLAC_SAMPLERATE_AT_END_OF_HEADER_16) {
-        frame_sample_rate = TRY(bit_stream.read_bits<u32>(16));
+        frame_sample_rate = TRY(header_bit_stream.read_bits<u32>(16));
     } else if (frame_sample_rate == FLAC_SAMPLERATE_AT_END_OF_HEADER_16X10) {
-        frame_sample_rate = TRY(bit_stream.read_bits<u32>(16)) * 10;
+        frame_sample_rate = TRY(header_bit_stream.read_bits<u32>(16)) * 10;
     }
 
     // It does not matter whether we extract the checksum from the digest here, or extract the digest 0x00 after processing the checksum.
     auto const calculated_header_checksum = header_checksum_stream->digest();
     // 11.22.11. FRAME CRC
-    u8 specified_header_checksum = TRY(bit_stream.read_bits<u8>(8));
-    VERIFY(bit_stream.is_aligned_to_byte_boundary());
+    u8 specified_header_checksum = TRY(header_bit_stream.read_bits<u8>(8));
+    VERIFY(header_bit_stream.is_aligned_to_byte_boundary());
     if (specified_header_checksum != calculated_header_checksum)
         dbgln("FLAC frame {}: Calculated header checksum {:02x} is different from specified checksum {:02x}", m_current_sample_or_frame, calculated_header_checksum, specified_header_checksum);
+
+    // Discard the header checksum intermediate stream, it only slows us down here.
+    BigEndianInputBitStream bit_stream { MaybeOwned<Stream> { *frame_checksum_stream } };
 
     dbgln_if(AFLACLOADER_DEBUG, "Frame: {} samples, {}bit {}Hz, channeltype {:x}, {} number {}, header checksum {:02x}{}", sample_count, bit_depth, frame_sample_rate, channel_type_num, blocking_strategy ? "sample" : "frame", m_current_sample_or_frame, specified_header_checksum, specified_header_checksum != calculated_header_checksum ? " (checksum error)"sv : ""sv);
 
