@@ -77,9 +77,9 @@ private:
         if (!m_notifications)
             return;
         auto notification = GUI::Notification::construct();
-        notification->set_title("Network");
+        notification->set_title("Network"_string);
         notification->set_icon(m_connected_icon);
-        notification->set_text("Network connected");
+        notification->set_text("Network connected"_string);
         notification->show();
     }
 
@@ -88,9 +88,9 @@ private:
         if (!m_notifications)
             return;
         auto notification = GUI::Notification::construct();
-        notification->set_title("Network");
+        notification->set_title("Network"_string);
         notification->set_icon(m_disconnected_icon);
-        notification->set_text("Network disconnected");
+        notification->set_text("Network disconnected"_string);
         notification->show();
     }
 

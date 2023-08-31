@@ -2,9 +2,9 @@
 
 endpoint NotificationServer
 {
-    show_notification([UTF8] DeprecatedString text, [UTF8] DeprecatedString title, Gfx::ShareableBitmap icon) => ()
+    show_notification(String text, String title, Gfx::ShareableBitmap icon) => ()
 
-    update_notification_text([UTF8] DeprecatedString text, [UTF8] DeprecatedString title) => (bool still_showing)
+    update_notification_text(String text, String title) => (bool still_showing)
 
     update_notification_icon(Gfx::ShareableBitmap icon) => (bool still_showing)
 

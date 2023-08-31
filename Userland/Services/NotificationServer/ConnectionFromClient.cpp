@@ -24,7 +24,7 @@ void ConnectionFromClient::die()
     s_connections.remove(client_id());
 }
 
-void ConnectionFromClient::show_notification(DeprecatedString const& text, DeprecatedString const& title, Gfx::ShareableBitmap const& icon)
+void ConnectionFromClient::show_notification(String const& text, String const& title, Gfx::ShareableBitmap const& icon)
 {
     auto window = NotificationWindow::construct(client_id(), text, title, icon);
     window->show();
@@ -47,7 +47,7 @@ Messages::NotificationServer::UpdateNotificationIconResponse ConnectionFromClien
     return !!window;
 }
 
-Messages::NotificationServer::UpdateNotificationTextResponse ConnectionFromClient::update_notification_text(DeprecatedString const& text, DeprecatedString const& title)
+Messages::NotificationServer::UpdateNotificationTextResponse ConnectionFromClient::update_notification_text(String const& text, String const& title)
 {
     auto window = NotificationWindow::get_window_by_id(client_id());
     if (window) {
