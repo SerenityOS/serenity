@@ -15,6 +15,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/CanvasRenderingContext2D.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
+#include <LibWeb/HTML/Numbers.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/Layout/CanvasBox.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
@@ -53,12 +54,20 @@ void HTMLCanvasElement::visit_edges(Cell::Visitor& visitor)
 
 unsigned HTMLCanvasElement::width() const
 {
-    return attribute(HTML::AttributeNames::width).to_uint().value_or(300);
+    // https://html.spec.whatwg.org/multipage/canvas.html#obtain-numeric-values
+    // The rules for parsing non-negative integers must be used to obtain their numeric values.
+    // If an attribute is missing, or if parsing its value returns an error, then the default value must be used instead.
+    // The width attribute defaults to 300
+    return parse_non_negative_integer(attribute(HTML::AttributeNames::width)).value_or(300);
 }
 
 unsigned HTMLCanvasElement::height() const
 {
-    return attribute(HTML::AttributeNames::height).to_uint().value_or(150);
+    // https://html.spec.whatwg.org/multipage/canvas.html#obtain-numeric-values
+    // The rules for parsing non-negative integers must be used to obtain their numeric values.
+    // If an attribute is missing, or if parsing its value returns an error, then the default value must be used instead.
+    // the height attribute defaults to 150
+    return parse_non_negative_integer(attribute(HTML::AttributeNames::height)).value_or(150);
 }
 
 void HTMLCanvasElement::reset_context_to_default_state()
