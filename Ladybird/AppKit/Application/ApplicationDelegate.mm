@@ -22,7 +22,7 @@
     URL m_new_tab_page_url;
 
     // This will always be populated, but we cannot have a non-default constructible instance variable.
-    Optional<Browser::CookieJar> m_cookie_jar;
+    Optional<WebView::CookieJar> m_cookie_jar;
 
     Optional<StringView> m_webdriver_content_ipc_path;
 
@@ -46,7 +46,7 @@
 @implementation ApplicationDelegate
 
 - (instancetype)init:(Optional<URL>)initial_url
-              withCookieJar:(Browser::CookieJar)cookie_jar
+              withCookieJar:(WebView::CookieJar)cookie_jar
     webdriverContentIPCPath:(StringView)webdriver_content_ipc_path
 {
     if (self = [super init]) {
@@ -110,7 +110,7 @@
     [self.managed_tabs removeObject:controller];
 }
 
-- (Browser::CookieJar&)cookieJar
+- (WebView::CookieJar&)cookieJar
 {
     return *m_cookie_jar;
 }

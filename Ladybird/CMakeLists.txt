@@ -85,19 +85,9 @@ elseif (APPLE)
     find_library(COCOA_LIBRARY Cocoa)
 endif()
 
-set(BROWSER_SOURCE_DIR ${SERENITY_SOURCE_DIR}/Userland/Applications/Browser/)
-
 set(SOURCES
-    ${BROWSER_SOURCE_DIR}/CookieJar.cpp
-    ${BROWSER_SOURCE_DIR}/Database.cpp
-    ${BROWSER_SOURCE_DIR}/History.cpp
     HelperProcess.cpp
     Utilities.cpp
-)
-set(BROWSER_HEADERS
-    ${BROWSER_SOURCE_DIR}/CookieJar.h
-    ${BROWSER_SOURCE_DIR}/Database.h
-    ${BROWSER_SOURCE_DIR}/History.h
 )
 set(LADYBIRD_HEADERS
     HelperProcess.h
@@ -156,10 +146,6 @@ else()
     add_library(ladybird STATIC ${SOURCES})
 endif()
 
-target_sources(ladybird PUBLIC FILE_SET browser TYPE HEADERS
-    BASE_DIRS ${SERENITY_SOURCE_DIR}/Userland/Applications
-    FILES ${BROWSER_HEADERS}
-)
 target_sources(ladybird PUBLIC FILE_SET ladybird TYPE HEADERS
     BASE_DIRS ${SERENITY_SOURCE_DIR}
     FILES ${LADYBIRD_HEADERS}

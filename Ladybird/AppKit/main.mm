@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Browser/CookieJar.h>
-#include <Browser/Database.h>
 #include <Ladybird/Utilities.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibMain/Main.h>
+#include <LibWebView/CookieJar.h>
+#include <LibWebView/Database.h>
 
 #import <Application/Application.h>
 #import <Application/ApplicationDelegate.h>
@@ -48,8 +48,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto sql_server_paths = TRY(get_paths_for_helper_process("SQLServer"sv));
     auto sql_client = TRY(SQL::SQLClient::launch_server_and_create_client(move(sql_server_paths)));
 
-    auto database = TRY(Browser::Database::create(move(sql_client)));
-    auto cookie_jar = TRY(Browser::CookieJar::create(*database));
+    auto database = TRY(WebView::Database::create(move(sql_client)));
+    auto cookie_jar = TRY(WebView::CookieJar::create(*database));
 
     Optional<URL> initial_url;
     if (auto parsed_url = Ladybird::sanitize_url(url); parsed_url.is_valid()) {

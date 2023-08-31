@@ -11,7 +11,6 @@
 #include "Settings.h"
 #include "StringUtils.h"
 #include "TVGIconEngine.h"
-#include <Browser/History.h>
 #include <LibGfx/ImageFormats/BMPWriter.h>
 #include <LibGfx/Painter.h>
 #include <LibWebView/SourceHighlighter.h>

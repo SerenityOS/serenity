@@ -9,9 +9,9 @@
 #include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <AK/URL.h>
-#include <Browser/CookieJar.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/HTML/ActivateTab.h>
+#include <LibWebView/CookieJar.h>
 
 #import <System/Cocoa.h>
 
@@ -21,7 +21,7 @@
 @interface ApplicationDelegate : NSObject <NSApplicationDelegate>
 
 - (nullable instancetype)init:(Optional<URL>)initial_url
-                withCookieJar:(Browser::CookieJar)cookie_jar
+                withCookieJar:(WebView::CookieJar)cookie_jar
       webdriverContentIPCPath:(StringView)webdriver_content_ipc_path;
 
 - (nonnull TabController*)createNewTab:(Optional<URL> const&)url
@@ -35,7 +35,7 @@
 
 - (void)removeTab:(nonnull TabController*)controller;
 
-- (Browser::CookieJar&)cookieJar;
+- (WebView::CookieJar&)cookieJar;
 - (Optional<StringView> const&)webdriverContentIPCPath;
 - (Web::CSS::PreferredColorScheme)preferredColorScheme;
 

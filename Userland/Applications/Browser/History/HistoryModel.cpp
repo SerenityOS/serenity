@@ -9,7 +9,7 @@
 
 namespace Browser {
 
-void HistoryModel::set_items(AK::Vector<History::URLTitlePair> items)
+void HistoryModel::set_items(AK::Vector<WebView::History::URLTitlePair> items)
 {
     begin_insert_rows({}, m_entries.size(), m_entries.size());
     m_entries = items;

@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "Forward.h"
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
@@ -16,10 +15,9 @@
 #include <LibSQL/Type.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Forward.h>
+#include <LibWebView/Forward.h>
 
-namespace Browser {
-
-class Database;
+namespace WebView {
 
 struct CookieStorageKey {
     bool operator==(CookieStorageKey const&) const = default;
@@ -93,8 +91,8 @@ private:
 }
 
 template<>
-struct AK::Traits<Browser::CookieStorageKey> : public AK::GenericTraits<Browser::CookieStorageKey> {
-    static unsigned hash(Browser::CookieStorageKey const& key)
+struct AK::Traits<WebView::CookieStorageKey> : public AK::GenericTraits<WebView::CookieStorageKey> {
+    static unsigned hash(WebView::CookieStorageKey const& key)
     {
         unsigned hash = 0;
         hash = pair_int_hash(hash, string_hash(key.name.characters(), key.name.length()));

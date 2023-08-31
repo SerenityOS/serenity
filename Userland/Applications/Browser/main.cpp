@@ -8,8 +8,6 @@
 
 #include <Applications/Browser/Browser.h>
 #include <Applications/Browser/BrowserWindow.h>
-#include <Applications/Browser/CookieJar.h>
-#include <Applications/Browser/Database.h>
 #include <Applications/Browser/Tab.h>
 #include <Applications/Browser/WindowActions.h>
 #include <Applications/BrowserSettings/Defaults.h>
@@ -26,6 +24,8 @@
 #include <LibGUI/TabWidget.h>
 #include <LibMain/Main.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWebView/CookieJar.h>
+#include <LibWebView/Database.h>
 #include <LibWebView/OutOfProcessWebView.h>
 #include <LibWebView/RequestServerAdapter.h>
 #include <unistd.h>
@@ -140,7 +140,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Browser::g_icon_bag = TRY(Browser::IconBag::try_create());
 
-    auto database = TRY(Browser::Database::create());
+    auto database = TRY(WebView::Database::create());
     TRY(load_content_filters());
     TRY(load_autoplay_allowlist());
 
@@ -169,7 +169,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!specified_urls.is_empty())
         first_url = TRY(url_from_argument_string(specified_urls.first()));
 
-    auto cookie_jar = TRY(Browser::CookieJar::create(*database));
+    auto cookie_jar = TRY(WebView::CookieJar::create(*database));
     auto window = Browser::BrowserWindow::construct(cookie_jar, first_url);
 
     auto content_filters_watcher = TRY(Core::FileWatcher::create());

@@ -14,10 +14,10 @@
 #include "StringUtils.h"
 #include "WebContentView.h"
 #include <AK/TypeCasts.h>
-#include <Browser/CookieJar.h>
 #include <Ladybird/Utilities.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWebView/CookieJar.h>
 #include <QAction>
 #include <QActionGroup>
 #include <QClipboard>
@@ -39,7 +39,7 @@ static QIcon const& app_icon()
     return icon;
 }
 
-BrowserWindow::BrowserWindow(Optional<URL> const& initial_url, Browser::CookieJar& cookie_jar, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling, UseLagomNetworking use_lagom_networking)
+BrowserWindow::BrowserWindow(Optional<URL> const& initial_url, WebView::CookieJar& cookie_jar, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling, UseLagomNetworking use_lagom_networking)
     : m_cookie_jar(cookie_jar)
     , m_webdriver_content_ipc_path(webdriver_content_ipc_path)
     , m_enable_callgrind_profiling(enable_callgrind_profiling)

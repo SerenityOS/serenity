@@ -9,7 +9,7 @@
 #include <AK/URL.h>
 #include <AK/Vector.h>
 
-namespace Browser {
+namespace WebView {
 
 class History {
 public:

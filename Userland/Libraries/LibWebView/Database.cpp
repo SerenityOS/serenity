@@ -1,13 +1,13 @@
 /*
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "Database.h"
 #include <AK/StringView.h>
+#include <LibWebView/Database.h>
 
-namespace Browser {
+namespace WebView {
 
 static constexpr auto database_name = "Browser"sv;
 

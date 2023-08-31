@@ -14,10 +14,10 @@
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Window.h>
 #include <LibWeb/HTML/ActivateTab.h>
+#include <LibWebView/Forward.h>
 
 namespace Browser {
 
-class CookieJar;
 class Tab;
 
 class BrowserWindow final : public GUI::Window
@@ -51,7 +51,7 @@ public:
     void broadcast_window_size(Gfx::IntSize);
 
 private:
-    BrowserWindow(CookieJar&, URL);
+    BrowserWindow(WebView::CookieJar&, URL);
 
     void build_menus();
     ErrorOr<void> load_search_engines(GUI::Menu& settings_menu);
@@ -76,7 +76,7 @@ private:
 
     RefPtr<GUI::Menu> m_zoom_menu;
 
-    CookieJar& m_cookie_jar;
+    WebView::CookieJar& m_cookie_jar;
     WindowActions m_window_actions;
     RefPtr<GUI::TabWidget> m_tab_widget;
     RefPtr<BookmarksBarWidget> m_bookmarks_bar;

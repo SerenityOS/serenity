@@ -7,8 +7,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "CookieJar.h"
-#include "Database.h"
 #include <AK/IPv4Address.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
@@ -19,8 +17,10 @@
 #include <LibSQL/TupleDescriptor.h>
 #include <LibSQL/Value.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
+#include <LibWebView/CookieJar.h>
+#include <LibWebView/Database.h>
 
-namespace Browser {
+namespace WebView {
 
 ErrorOr<CookieJar> CookieJar::create(Database& database)
 {

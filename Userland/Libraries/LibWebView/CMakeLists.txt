@@ -2,7 +2,10 @@ set(SOURCES
     AccessibilityTreeModel.cpp
     AriaPropertiesStateModel.cpp
     ConsoleClient.cpp
+    CookieJar.cpp
+    Database.cpp
     DOMTreeModel.cpp
+    History.cpp
     RequestServerAdapter.cpp
     SourceHighlighter.cpp
     StylePropertiesModel.cpp
@@ -36,7 +39,7 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibWebView webview)
-target_link_libraries(LibWebView PRIVATE LibCore LibGfx LibGUI LibIPC LibProtocol LibJS LibWeb)
+target_link_libraries(LibWebView PRIVATE LibCore LibGfx LibGUI LibIPC LibProtocol LibJS LibWeb LibSQL)
 
 if (SERENITYOS)
     target_link_libraries(LibWebView PRIVATE LibFileSystemAccessClient)
