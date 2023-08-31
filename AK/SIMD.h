@@ -35,6 +35,7 @@ using i32x8 = i32 __attribute__((vector_size(32)));
 
 using i64x2 = i64 __attribute__((vector_size(16)));
 using i64x4 = i64 __attribute__((vector_size(32)));
+using i64x8 = i64 __attribute__((vector_size(64)));
 
 using u8x2 = u8 __attribute__((vector_size(2)));
 using u8x4 = u8 __attribute__((vector_size(4)));

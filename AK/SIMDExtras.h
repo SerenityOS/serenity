@@ -35,6 +35,12 @@ ALWAYS_INLINE static constexpr u32x4 expand4(u32 u)
     return u32x4 { u, u, u, u };
 }
 
+template<typename VectorType, typename UnderlyingType = decltype(declval<VectorType>()[0])>
+ALWAYS_INLINE static constexpr VectorType expand8(UnderlyingType v)
+{
+    return VectorType { v, v, v, v, v, v, v, v };
+}
+
 // Casting
 
 template<typename TSrc>

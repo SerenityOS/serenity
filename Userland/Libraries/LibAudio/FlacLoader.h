@@ -73,7 +73,7 @@ private:
     // Subframe-internal data decoders (heavy lifting)
     MaybeLoaderError decode_fixed_lpc(Vector<i64>& decoded, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
     MaybeLoaderError decode_custom_lpc(Vector<i64>& decoded, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
-    MaybeLoaderError decode_lpc(Vector<i64>& decoded, i64 lpc_shift, ReadonlySpan<i64> coefficients, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
+    MaybeLoaderError decode_lpc(Vector<i64>& decoded, i64 lpc_shift, Array<i64, 32> const& coefficients, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
     ErrorOr<Vector<i64>, LoaderError> decode_verbatim(FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
     MaybeLoaderError decode_residual(Vector<i64>& decoded, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
     // decode a single rice partition that has its own rice parameter

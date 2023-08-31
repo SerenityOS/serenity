@@ -13,6 +13,8 @@
 #include <AK/Math.h>
 #include <AK/MemoryStream.h>
 #include <AK/NonnullOwnPtr.h>
+#include <AK/SIMD.h>
+#include <AK/SIMDExtras.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Try.h>
@@ -785,13 +787,13 @@ ErrorOr<void, LoaderError> FlacLoaderPlugin::decode_custom_lpc(Vector<i64>& deco
     // shift needed on the data (signed!)
     i8 lpc_shift = static_cast<i8>(sign_extend(TRY(bit_input.read_bits<u8>(5)), 5));
 
-    Vector<i64, 32> coefficients;
-    coefficients.ensure_capacity(subframe.order);
+    Array<i64, 32> coefficients;
+    coefficients.fill(0);
     // read coefficients
     for (auto i = 0; i < subframe.order; ++i) {
         u64 raw_coefficient = TRY(bit_input.read_bits<u64>(lpc_precision));
         i64 coefficient = sign_extend(raw_coefficient, lpc_precision);
-        coefficients.unchecked_append(coefficient);
+        coefficients[i] = coefficient;
     }
 
     dbgln_if(AFLACLOADER_DEBUG, "    {}-bit {} shift coefficients: {}", lpc_precision, lpc_shift, coefficients);
@@ -830,7 +832,7 @@ ErrorOr<void, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(Vector<i64>& decod
     // http://mi.eng.cam.ac.uk/reports/svr-ftp/auto-pdf/robinson_tr156.pdf page 4
     // The coefficients for order 4 are undocumented in the original FLAC specification(s), but can now be found in
     // https://datatracker.ietf.org/doc/html/draft-ietf-cellar-flac-03#section-10.2.5
-    constexpr Array<Array<i64, 4>, 5> fixed_coefficients = { {
+    constexpr Array<Array<i64, 32>, 5> fixed_coefficients = { {
         // s_0(t) = 0
         {},
         // s_1(t) = s(t-1)
@@ -842,13 +844,13 @@ ErrorOr<void, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(Vector<i64>& decod
         // s_4(t) = 4s(t-1) - 6s(t-2) + 4s(t-3) - s(t-4)
         { 4, -6, 4, -1 },
     } };
-    ReadonlySpan<i64> coefficients = fixed_coefficients[subframe.order].span();
+    auto const& coefficients = fixed_coefficients[subframe.order];
 
     return decode_lpc(decoded, 0, coefficients, subframe, bit_input);
 }
 
 // Common decoder for both LPC types.
-MaybeLoaderError FlacLoaderPlugin::decode_lpc(Vector<i64>& decoded, i64 lpc_shift, ReadonlySpan<i64> coefficients, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
+MaybeLoaderError FlacLoaderPlugin::decode_lpc(Vector<i64>& decoded, i64 lpc_shift, Array<i64, 32> const& coefficients, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
 {
     VERIFY(coefficients.size() <= 32);
 
@@ -868,8 +870,16 @@ MaybeLoaderError FlacLoaderPlugin::decode_lpc(Vector<i64>& decoded, i64 lpc_shif
 
     dbgln_if(AFLACLOADER_DEBUG, "    decoded length {}, {} order predictor, now at file offset {:x}", decoded.size(), subframe.order, TRY(m_stream->tell()));
 
-    // approximate the waveform with the predictor
-    for (size_t i = subframe.order; i < m_current_frame->sample_count; ++i) {
+    size_t i;
+    // Approximate the waveform with the predictor.
+    size_t unvectorized_loop_end = min(m_current_frame->sample_count, 32);
+    // Multiplications need 2*bitdepth bits, each addition per order can carry at most once.
+    size_t required_bit_depth = 2 * subframe.bits_per_sample + AK::log2(subframe.order);
+    // dbgln("requires bit depth {}", required_bit_depth);
+    if (required_bit_depth > 64)
+        unvectorized_loop_end = m_current_frame->sample_count;
+    // This is the simple but slower implementation, used for the first 32 predictions. See below for a manually vectorized one.
+    for (i = subframe.order; i < unvectorized_loop_end; ++i) {
         // (see below)
         Checked<i64> sample = 0;
         for (size_t t = 0; t < subframe.order; ++t) {
@@ -878,6 +888,30 @@ MaybeLoaderError FlacLoaderPlugin::decode_lpc(Vector<i64>& decoded, i64 lpc_shif
             // These will easily overflow 32 bits and cause strange white noise that abruptly stops intermittently (at the end of a frame).
             // The simple fix of course is to do intermediate computations in 64 bits, but we additionally use saturating arithmetic.
             // These considerations are not in the original FLAC spec, but have been added to the IETF standard: https://datatracker.ietf.org/doc/html/draft-ietf-cellar-flac-03#appendix-A.3
+            sample.saturating_add(Checked<i64>::saturating_mul(static_cast<i64>(coefficients[t]), static_cast<i64>(decoded[i - t - 1])));
+        }
+        decoded[i] += lpc_shift >= 0 ? (sample.value() >> lpc_shift) : (sample.value() << -lpc_shift);
+    }
+
+    size_t rounded_up_order = ceil_div(subframe.order, static_cast<u8>(8)) * 8;
+    size_t vectorized_loop_end = m_current_frame->sample_count - (m_current_frame->sample_count % 8) - 8;
+    // Vectorized loop; only executed for bit depths 26 and below.
+    for (; i < vectorized_loop_end; ++i) {
+        auto sample_slice = AK::SIMD::expand8<AK::SIMD::i64x8>(0);
+        // Use 64x8 vector which will fit in one register in AVX512.
+        for (size_t t = 0; t < rounded_up_order; t += 8) {
+            AK::SIMD::i64x8 coefficient_slice { coefficients.at(t), coefficients.at(t + 1), coefficients.at(t + 2), coefficients.at(t + 3), coefficients.at(t + 4), coefficients.at(t + 5), coefficients.at(t + 6), coefficients.at(t + 7) };
+            AK::SIMD::i64x8 decoded_slice { decoded[i - t - 1], decoded[i - t - 1 + 1], decoded[i - t - 1 + 2], decoded[i - t - 1 + 3], decoded[i - t - 1 + 4], decoded[i - t - 1 + 5], decoded[i - t - 1 + 6], decoded[i - t - 1 + 7] };
+            auto multiplied_slice = coefficient_slice * decoded_slice;
+            sample_slice += multiplied_slice;
+        }
+        auto sample = sample_slice[0] + sample_slice[1] + sample_slice[2] + sample_slice[3] + sample_slice[4] + sample_slice[5] + sample_slice[6] + sample_slice[7];
+        decoded[i] += lpc_shift >= 0 ? (sample >> lpc_shift) : (sample << -lpc_shift);
+    }
+
+    for (; i < m_current_frame->sample_count; ++i) {
+        Checked<i64> sample = 0;
+        for (size_t t = 0; t < subframe.order; ++t) {
             sample.saturating_add(Checked<i64>::saturating_mul(static_cast<i64>(coefficients[t]), static_cast<i64>(decoded[i - t - 1])));
         }
         decoded[i] += lpc_shift >= 0 ? (sample.value() >> lpc_shift) : (sample.value() << -lpc_shift);

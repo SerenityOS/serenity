@@ -11,6 +11,9 @@ add_compile_options(-Wno-unused-command-line-argument)
 
 add_compile_options(-fdiagnostics-color=always)
 add_compile_options(-fno-exceptions)
+# Even though the compiler sometimes believes this, we don't ever leak vector registers across ABI boundaries.
+# This warning is particularly common once the register size makes the compiler use AVX512.
+add_compile_options(-Wno-psabi)
 
 if (NOT CMAKE_HOST_SYSTEM_NAME MATCHES SerenityOS)
     # FIXME: Something makes this go crazy and flag unused variables that aren't flagged as such when building with the toolchain.
