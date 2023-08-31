@@ -425,7 +425,6 @@ class NavigationDestination;
 class NavigationHistoryEntry;
 class NavigationTransition;
 class Navigator;
-struct NavigationParams;
 class Origin;
 class PageTransitionEvent;
 class Path2D;
@@ -438,6 +437,7 @@ class SubmitEvent;
 class TextMetrics;
 class Timer;
 class TimeRanges;
+class ToggleEvent;
 class TrackEvent;
 class TraversableNavigable;
 class VideoTrack;
@@ -453,15 +453,16 @@ class WorkerLocation;
 class WorkerNavigator;
 
 enum class MediaSeekMode;
+enum class SandboxingFlagSet;
 
 struct CrossOriginOpenerPolicy;
 struct CrossOriginOpenerPolicyEnforcementResult;
 struct Environment;
 struct EnvironmentSettingsObject;
 struct NavigationParams;
-struct POSTResource;
+struct NavigationParams;
 struct PolicyContainer;
-enum class SandboxingFlagSet;
+struct POSTResource;
 struct SerializedFormData;
 struct SessionHistoryEntry;
 }
