@@ -11,15 +11,20 @@
 namespace Web::HTML {
 
 static IDAllocator s_unique_task_source_allocator { static_cast<int>(Task::Source::UniqueTaskSourceStart) };
+static IDAllocator s_task_id_allocator;
 
 Task::Task(Source source, DOM::Document const* document, JS::SafeFunction<void()> steps)
-    : m_source(source)
+    : m_id(s_task_id_allocator.allocate())
+    , m_source(source)
     , m_steps(move(steps))
     , m_document(JS::make_handle(document))
 {
 }
 
-Task::~Task() = default;
+Task::~Task()
+{
+    s_unique_task_source_allocator.deallocate(m_id);
+}
 
 void Task::execute()
 {

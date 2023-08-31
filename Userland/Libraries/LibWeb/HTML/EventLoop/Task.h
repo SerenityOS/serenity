@@ -59,6 +59,7 @@ public:
     }
     ~Task();
 
+    int id() const { return m_id; }
     Source source() const { return m_source; }
     void execute();
 
@@ -69,6 +70,7 @@ public:
 private:
     Task(Source, DOM::Document const*, JS::SafeFunction<void()> steps);
 
+    int m_id { 0 };
     Source m_source { Source::Unspecified };
     JS::SafeFunction<void()> m_steps;
     JS::Handle<DOM::Document const> m_document;
