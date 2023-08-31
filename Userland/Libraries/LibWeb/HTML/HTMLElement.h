@@ -80,9 +80,11 @@ private:
     // ^HTML::GlobalEventHandlers
     virtual DOM::EventTarget& global_event_handlers_to_event_target(FlyString const&) override { return *this; }
 
+    // https://html.spec.whatwg.org/multipage/interaction.html#attr-contenteditable
     enum class ContentEditableState {
         True,
         False,
+        PlaintextOnly,
         Inherit,
     };
     ContentEditableState m_content_editable_state { ContentEditableState::Inherit };

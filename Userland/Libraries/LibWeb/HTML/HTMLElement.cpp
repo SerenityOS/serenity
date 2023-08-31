@@ -75,22 +75,32 @@ void HTMLElement::set_dir(DeprecatedString const& dir)
     MUST(set_attribute(HTML::AttributeNames::dir, dir));
 }
 
+// https://w3c.github.io/editing/docs/execCommand/#editable
 bool HTMLElement::is_editable() const
 {
+    // Something is editable if it is a node; it is not an editing host; it does not have a
+    // contenteditable attribute set to the false state; its parent is an editing host or editable;
+    // and either it is an HTML element, or it is an svg or math element, or it is not an Element
+    // and its parent is an HTML element.
     switch (m_content_editable_state) {
     case ContentEditableState::True:
+    case ContentEditableState::PlaintextOnly:
         return true;
     case ContentEditableState::False:
         return false;
     case ContentEditableState::Inherit:
         return parent() && parent()->is_editable();
-    default:
-        VERIFY_NOT_REACHED();
     }
+    VERIFY_NOT_REACHED();
 }
 
+// https://html.spec.whatwg.org/multipage/interaction.html#dom-contenteditable
 DeprecatedString HTMLElement::content_editable() const
 {
+    // The contentEditable IDL attribute, on getting, must return the string "true" if the content
+    // attribute is set to the true state, "plaintext-only" if the content attribute is set to the
+    // plaintext-only state, "false" if the content attribute is set to the false state, and
+    // "inherit" otherwise.
     switch (m_content_editable_state) {
     case ContentEditableState::True:
         return "true";
@@ -98,14 +108,23 @@ DeprecatedString HTMLElement::content_editable() const
         return "false";
     case ContentEditableState::Inherit:
         return "inherit";
-    default:
-        VERIFY_NOT_REACHED();
+    case ContentEditableState::PlaintextOnly:
+        return "plaintext-only";
     }
+    VERIFY_NOT_REACHED();
 }
 
-// https://html.spec.whatwg.org/multipage/interaction.html#contenteditable
+// https://html.spec.whatwg.org/multipage/interaction.html#dom-contenteditable
 WebIDL::ExceptionOr<void> HTMLElement::set_content_editable(DeprecatedString const& content_editable)
 {
+    // On setting, if the new value is an ASCII case-insensitive match for the string "inherit" then
+    // the content attribute must be removed, if the new value is an ASCII case-insensitive match for
+    // the string "true" then the content attribute must be set to the string "true", if the new value
+    // is an ASCII case-insensitive match for the string "plaintext-only" then the content attribute
+    // must be set to the string "plaintext-only", if the new value is an ASCII case-insensitive match
+    // for the string "false" then the content attribute must be set to the string "false", and otherwise
+    // the attribute setter must throw a "SyntaxError" DOMException.
+
     if (content_editable.equals_ignoring_ascii_case("inherit"sv)) {
         remove_attribute(HTML::AttributeNames::contenteditable);
         return {};
@@ -118,7 +137,11 @@ WebIDL::ExceptionOr<void> HTMLElement::set_content_editable(DeprecatedString con
         MUST(set_attribute(HTML::AttributeNames::contenteditable, "false"));
         return {};
     }
-    return WebIDL::SyntaxError::create(realm(), "Invalid contentEditable value, must be 'true', 'false', or 'inherit'");
+    if (content_editable.equals_ignoring_ascii_case("plaintext-only"sv)) {
+        MUST(set_attribute(HTML::AttributeNames::contenteditable, "plaintext-only"));
+        return {};
+    }
+    return WebIDL::SyntaxError::create(realm(), "Invalid contentEditable value, must be 'true', 'false', 'inherit', or 'plaintext-only'");
 }
 
 void HTMLElement::set_inner_text(StringView text)
@@ -227,6 +250,7 @@ void HTMLElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedS
 {
     Element::attribute_changed(name, value);
 
+    // https://html.spec.whatwg.org/multipage/interaction.html#attr-contenteditable
     if (name == HTML::AttributeNames::contenteditable) {
         if (value.is_null()) {
             m_content_editable_state = ContentEditableState::Inherit;
@@ -237,6 +261,9 @@ void HTMLElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedS
             } else if (value.equals_ignoring_ascii_case("false"sv)) {
                 // "false" maps to the "false" state.
                 m_content_editable_state = ContentEditableState::False;
+            } else if (value.equals_ignoring_ascii_case("plaintext-only"sv)) {
+                // "plaintext-only" maps to the plaintext-only state.
+                m_content_editable_state = ContentEditableState::PlaintextOnly;
             } else {
                 // Having no such attribute or an invalid value maps to the "inherit" state.
                 m_content_editable_state = ContentEditableState::Inherit;
