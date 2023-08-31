@@ -2436,7 +2436,7 @@ JS::GCPtr<HTML::CustomElementDefinition> Document::lookup_custom_element_definit
         return nullptr;
 
     // 3. Let registry be document's relevant global object's CustomElementRegistry object.
-    auto registry = window().custom_elements();
+    auto registry = verify_cast<HTML::Window>(relevant_global_object(*this)).custom_elements();
 
     // 4. If there is custom element definition in registry with name and local name both equal to localName, return that custom element definition.
     auto converted_local_name = String::from_deprecated_string(local_name).release_value_but_fixme_should_propagate_errors();
