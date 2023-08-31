@@ -1293,6 +1293,8 @@ CSSPixels FormattingContext::calculate_min_content_width(Layout::Box const& box)
 
     auto available_width = AvailableSize::make_min_content();
     auto available_height = AvailableSize::make_indefinite();
+    if (box.computed_values().height().is_length())
+        available_height = AvailableSize::make_definite(box.computed_values().height().length().to_px(box));
     context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(available_width, available_height));
 
     cache.min_content_width = context->automatic_content_width();
@@ -1331,6 +1333,9 @@ CSSPixels FormattingContext::calculate_max_content_width(Layout::Box const& box)
 
     auto available_width = AvailableSize::make_max_content();
     auto available_height = AvailableSize::make_indefinite();
+    if (box.computed_values().height().is_length())
+        available_height = AvailableSize::make_definite(box.computed_values().height().length().to_px(box));
+
     context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(available_width, available_height));
 
     cache.max_content_width = context->automatic_content_width();
