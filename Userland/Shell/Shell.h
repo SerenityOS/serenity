@@ -60,7 +60,8 @@
     __ENUMERATE_SHELL_BUILTIN(continue, OnlyInPOSIXMode)     \
     __ENUMERATE_SHELL_BUILTIN(read, OnlyInPOSIXMode)         \
     __ENUMERATE_SHELL_BUILTIN(run_with_env, OnlyInPOSIXMode) \
-    __ENUMERATE_SHELL_BUILTIN(argsparser_parse, InAllModes)
+    __ENUMERATE_SHELL_BUILTIN(argsparser_parse, InAllModes)  \
+    __ENUMERATE_SHELL_BUILTIN(shell_set_active_prompt, InAllModes)
 
 #define ENUMERATE_SHELL_OPTIONS()                                                                                    \
     __ENUMERATE_SHELL_OPTION(inline_exec_keep_empty_segments, false, "Keep empty segments in inline execute $(...)") \
@@ -422,6 +423,8 @@ private:
 
     void timer_event(Core::TimerEvent&) override;
 
+    void set_user_prompt();
+
     bool is_allowed_to_modify_termios(const AST::Command&) const;
 
     void bring_cursor_to_beginning_of_a_line() const;
@@ -510,6 +513,9 @@ private:
     Optional<size_t> m_history_autosave_time;
 
     StackInfo m_completion_stack_info;
+
+    RefPtr<AST::Node> m_prompt_command_node;
+    mutable Optional<DeprecatedString> m_next_scheduled_prompt_text;
 };
 
 [[maybe_unused]] static constexpr bool is_word_character(char c)

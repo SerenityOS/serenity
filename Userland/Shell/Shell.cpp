@@ -79,6 +79,9 @@ void Shell::print_path(StringView path)
 
 DeprecatedString Shell::prompt() const
 {
+    if (m_next_scheduled_prompt_text.has_value())
+        return m_next_scheduled_prompt_text.release_value();
+
     auto build_prompt = [&]() -> DeprecatedString {
         auto* ps1 = getenv("PROMPT");
         if (!ps1) {
@@ -2086,9 +2089,22 @@ void Shell::setup_keybinds()
     });
 }
 
+void Shell::set_user_prompt()
+{
+    if (!has_function("PROMPT"sv))
+        return;
+
+    if (!m_prompt_command_node)
+        m_prompt_command_node = Parser { "shell_set_active_prompt -- ${join \"\\n\" $(PROMPT)}"sv }.parse();
+
+    (void)m_prompt_command_node->run(this);
+}
+
 bool Shell::read_single_line()
 {
     while (true) {
+        set_user_prompt();
+
         restore_ios();
         bring_cursor_to_beginning_of_a_line();
         m_editor->initialize();
