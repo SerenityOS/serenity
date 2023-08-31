@@ -425,8 +425,10 @@ WebIDL::ExceptionOr<void> readable_stream_reader_generic_release(ReadableStreamG
 void readable_stream_default_reader_error_read_requests(ReadableStreamDefaultReader& reader, JS::Value error)
 {
     // 1. Let readRequests be reader.[[readRequests]].
-    // 2. Set reader.[[readRequests]] to a new empty list.
     auto read_requests = move(reader.read_requests());
+
+    // 2. Set reader.[[readRequests]] to a new empty list.
+    reader.read_requests().clear();
 
     // 3. For each readRequest of readRequests,
     for (auto& read_request : read_requests) {
