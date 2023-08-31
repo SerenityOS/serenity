@@ -32,7 +32,7 @@ stdenv.mkDerivation {
     openssl
     parted
     qemu
-    xlibsWrapper
+    python3
   ];
 
   hardeningDisable = [ "format" "fortify" ];
