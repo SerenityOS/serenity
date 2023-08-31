@@ -151,7 +151,7 @@ public:
     Position const& start_position() const { return m_start_position; }
     Position const& end_position() const { return m_end_position; }
 
-    static Token of_string(FlyString str)
+    static Token create_string(FlyString str)
     {
         Token token;
         token.m_type = Type::String;
@@ -181,6 +181,22 @@ public:
         token.m_type = Type::Dimension;
         token.m_number_value = Number(Number::Type::Number, value);
         token.m_value = move(unit);
+        return token;
+    }
+
+    static Token create_ident(FlyString ident)
+    {
+        Token token;
+        token.m_type = Type::Ident;
+        token.m_value = move(ident);
+        return token;
+    }
+
+    static Token create_url(FlyString url)
+    {
+        Token token;
+        token.m_type = Type::Url;
+        token.m_value = move(url);
         return token;
     }
 
