@@ -34,6 +34,8 @@ public:
     JS::GCPtr<SVGElement> instance_root() const;
     JS::GCPtr<SVGElement> animated_instance_root() const;
 
+    virtual Gfx::AffineTransform element_transform() const override;
+
 private:
     SVGUseElement(DOM::Document&, DOM::QualifiedName);
 

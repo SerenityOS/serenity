@@ -53,6 +53,11 @@ protected:
 
     virtual void initialize(JS::Realm&) override;
 
+    virtual Gfx::AffineTransform element_transform() const
+    {
+        return m_transform;
+    }
+
     Optional<Gfx::PaintStyle const&> svg_paint_computed_value_to_gfx_paint_style(SVGPaintContext const& paint_context, Optional<CSS::SVGPaint> const& paint_value) const;
 
     Gfx::AffineTransform m_transform = {};
