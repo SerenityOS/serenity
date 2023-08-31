@@ -46,9 +46,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     auto sql_server_paths = TRY(get_paths_for_helper_process("SQLServer"sv));
-    auto sql_client = TRY(SQL::SQLClient::launch_server_and_create_client(move(sql_server_paths)));
-
-    auto database = TRY(WebView::Database::create(move(sql_client)));
+    auto database = TRY(WebView::Database::create(move(sql_server_paths)));
     auto cookie_jar = TRY(WebView::CookieJar::create(*database));
 
     Optional<URL> initial_url;

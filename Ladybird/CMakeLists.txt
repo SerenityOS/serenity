@@ -150,7 +150,7 @@ target_sources(ladybird PUBLIC FILE_SET ladybird TYPE HEADERS
     BASE_DIRS ${SERENITY_SOURCE_DIR}
     FILES ${LADYBIRD_HEADERS}
 )
-target_link_libraries(ladybird PRIVATE LibCore LibFileSystem LibGfx LibGUI LibIPC LibJS LibMain LibPublicSuffix LibWeb LibWebView LibSQL LibProtocol)
+target_link_libraries(ladybird PRIVATE LibCore LibFileSystem LibGfx LibGUI LibIPC LibJS LibMain LibPublicSuffix LibWeb LibWebView LibProtocol)
 
 target_include_directories(ladybird PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/)

@@ -18,7 +18,6 @@
 #include <LibFileSystem/FileSystem.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibMain/Main.h>
-#include <LibSQL/SQLClient.h>
 #include <LibWebView/CookieJar.h>
 #include <LibWebView/Database.h>
 #include <QApplication>
@@ -99,8 +98,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (enable_sql_database) {
         auto sql_server_paths = TRY(get_paths_for_helper_process("SQLServer"sv));
-        auto sql_client = TRY(SQL::SQLClient::launch_server_and_create_client(move(sql_server_paths)));
-        database = TRY(WebView::Database::create(move(sql_client)));
+        database = TRY(WebView::Database::create(move(sql_server_paths)));
     }
 
     auto cookie_jar = database ? TRY(WebView::CookieJar::create(*database)) : WebView::CookieJar::create();
