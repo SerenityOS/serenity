@@ -12,6 +12,9 @@
 #include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/CSS/StyleComputer.h>
+#include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
+#include <LibWeb/CSS/StyleValues/RatioStyleValue.h>
+#include <LibWeb/CSS/StyleValues/StyleValueList.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/CanvasRenderingContext2D.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
@@ -50,6 +53,28 @@ void HTMLCanvasElement::visit_edges(Cell::Visitor& visitor)
         },
         [](Empty) {
         });
+}
+
+void HTMLCanvasElement::apply_presentational_hints(CSS::StyleProperties& style) const
+{
+    // https://html.spec.whatwg.org/multipage/rendering.html#attributes-for-embedded-content-and-images
+    // The width and height attributes map to the aspect-ratio property on canvas elements.
+
+    // FIXME: Multiple elements have aspect-ratio presentational hints, make this into a helper function
+
+    // https://html.spec.whatwg.org/multipage/rendering.html#map-to-the-aspect-ratio-property
+    // if element has both attributes w and h, and parsing those attributes' values using the rules for parsing non-negative integers doesn't generate an error for either
+    auto w = parse_non_negative_integer(attribute(HTML::AttributeNames::width));
+    auto h = parse_non_negative_integer(attribute(HTML::AttributeNames::height));
+
+    if (w.has_value() && h.has_value())
+        // then the user agent is expected to use the parsed integers as a presentational hint for the 'aspect-ratio' property of the form auto w / h.
+        style.set_property(CSS::PropertyID::AspectRatio,
+            CSS::StyleValueList::create(CSS::StyleValueVector {
+                                            CSS::IdentifierStyleValue::create(CSS::ValueID::Auto),
+                                            CSS::RatioStyleValue::create(CSS::Ratio { static_cast<double>(w.value()), static_cast<double>(h.value()) }) },
+
+                CSS::StyleValueList::Separator::Space));
 }
 
 unsigned HTMLCanvasElement::width() const
