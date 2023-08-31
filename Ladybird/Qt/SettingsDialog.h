@@ -23,15 +23,10 @@ class SettingsDialog : public QDialog {
 public:
     explicit SettingsDialog(QMainWindow* window);
 
-    void save();
-
-    virtual void closeEvent(QCloseEvent*) override;
-
 private:
     void setup_search_engines();
 
     QFormLayout* m_layout;
-    QPushButton* m_ok_button { nullptr };
     QMainWindow* m_window { nullptr };
     OwnPtr<QLineEdit> m_new_tab_page;
     OwnPtr<QCheckBox> m_enable_search;
