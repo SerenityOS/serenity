@@ -711,7 +711,7 @@ ErrorOr<void, LoaderError> FlacLoaderPlugin::parse_subframe(Vector<i64>& samples
     }
     case FlacSubframeType::Fixed: {
         dbgln_if(AFLACLOADER_DEBUG, "  Fixed LPC subframe order {}", subframe_header.order);
-        samples = TRY(decode_fixed_lpc(subframe_header, bit_input));
+        TRY(decode_fixed_lpc(samples, subframe_header, bit_input));
         break;
     }
     case FlacSubframeType::Verbatim: {
@@ -769,19 +769,6 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_verbatim(FlacSubframe
 // Decode a subframe encoded with a custom linear predictor coding, i.e. the subframe provides the polynomial order and coefficients
 ErrorOr<void, LoaderError> FlacLoaderPlugin::decode_custom_lpc(Vector<i64>& decoded, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
 {
-    // LPC must provide at least as many samples as its order.
-    if (subframe.order > m_current_frame->sample_count)
-        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Too small frame for LPC order" };
-
-    decoded.ensure_capacity(m_current_frame->sample_count);
-
-    if (subframe.bits_per_sample <= subframe.wasted_bits_per_sample) {
-        return LoaderError {
-            LoaderError::Category::Format,
-            TRY(m_stream->tell()),
-            "Effective verbatim bits per sample are zero"sv,
-        };
-    }
     // warm-up samples
     for (auto i = 0; i < subframe.order; ++i) {
         decoded.unchecked_append(sign_extend(
@@ -809,54 +796,22 @@ ErrorOr<void, LoaderError> FlacLoaderPlugin::decode_custom_lpc(Vector<i64>& deco
 
     dbgln_if(AFLACLOADER_DEBUG, "    {}-bit {} shift coefficients: {}", lpc_precision, lpc_shift, coefficients);
 
-    TRY(decode_residual(decoded, subframe, bit_input));
-
-    // approximate the waveform with the predictor
-    for (size_t i = subframe.order; i < m_current_frame->sample_count; ++i) {
-        // (see below)
-        Checked<i64> sample = 0;
-        for (size_t t = 0; t < subframe.order; ++t) {
-            // It's really important that we compute in 64-bit land here.
-            // Even though FLAC operates at a maximum bit depth of 32 bits, modern encoders use super-large coefficients for maximum compression.
-            // These will easily overflow 32 bits and cause strange white noise that abruptly stops intermittently (at the end of a frame).
-            // The simple fix of course is to do intermediate computations in 64 bits, but we additionally use saturating arithmetic.
-            // These considerations are not in the original FLAC spec, but have been added to the IETF standard: https://datatracker.ietf.org/doc/html/draft-ietf-cellar-flac-03#appendix-A.3
-            sample.saturating_add(Checked<i64>::saturating_mul(static_cast<i64>(coefficients[t]), static_cast<i64>(decoded[i - t - 1])));
-        }
-        decoded[i] += lpc_shift >= 0 ? (sample.value() >> lpc_shift) : (sample.value() << -lpc_shift);
-    }
-
-    return {};
+    return decode_lpc(decoded, lpc_shift, coefficients, subframe, bit_input);
 }
 
 // 11.27. SUBFRAME_FIXED
 // Decode a subframe encoded with one of the fixed linear predictor codings
-ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
+ErrorOr<void, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(Vector<i64>& decoded, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
 {
-    // LPC must provide at least as many samples as its order.
-    if (subframe.order > m_current_frame->sample_count)
-        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Too small frame for LPC order" };
+    if (subframe.order > 4)
+        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), DeprecatedString::formatted("Unrecognized predictor order {}", subframe.order) };
 
-    Vector<i64> decoded;
-    decoded.ensure_capacity(m_current_frame->sample_count);
-
-    if (subframe.bits_per_sample <= subframe.wasted_bits_per_sample) {
-        return LoaderError {
-            LoaderError::Category::Format,
-            TRY(m_stream->tell()),
-            "Effective verbatim bits per sample are zero"sv,
-        };
-    }
     // warm-up samples
     for (auto i = 0; i < subframe.order; ++i) {
         decoded.unchecked_append(sign_extend(
             TRY(bit_input.read_bits<u64>(subframe.bits_per_sample - subframe.wasted_bits_per_sample)),
             subframe.bits_per_sample - subframe.wasted_bits_per_sample));
     }
-
-    TRY(decode_residual(decoded, subframe, bit_input));
-
-    dbgln_if(AFLACLOADER_DEBUG, "    decoded length {}, {} order predictor, now at file offset {:x}", decoded.size(), subframe.order, TRY(m_stream->tell()));
 
     // Skip these comments if you don't care about the neat math behind fixed LPC :^)
     // These coefficients for the recursive prediction formula are the only ones that can be resolved to polynomial predictor functions.
@@ -875,37 +830,60 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(FlacSubfram
     // http://mi.eng.cam.ac.uk/reports/svr-ftp/auto-pdf/robinson_tr156.pdf page 4
     // The coefficients for order 4 are undocumented in the original FLAC specification(s), but can now be found in
     // https://datatracker.ietf.org/doc/html/draft-ietf-cellar-flac-03#section-10.2.5
-    // FIXME: Share this code with predict_fixed_lpc().
-    switch (subframe.order) {
-    case 0:
+    constexpr Array<Array<i64, 4>, 5> fixed_coefficients = { {
         // s_0(t) = 0
-        for (u32 i = subframe.order; i < m_current_frame->sample_count; ++i)
-            decoded[i] += 0;
-        break;
-    case 1:
+        {},
         // s_1(t) = s(t-1)
-        for (u32 i = subframe.order; i < m_current_frame->sample_count; ++i)
-            decoded[i] += decoded[i - 1];
-        break;
-    case 2:
+        { 1 },
         // s_2(t) = 2s(t-1) - s(t-2)
-        for (u32 i = subframe.order; i < m_current_frame->sample_count; ++i)
-            decoded[i] += 2 * decoded[i - 1] - decoded[i - 2];
-        break;
-    case 3:
+        { 2, -1 },
         // s_3(t) = 3s(t-1) - 3s(t-2) + s(t-3)
-        for (u32 i = subframe.order; i < m_current_frame->sample_count; ++i)
-            decoded[i] += 3 * decoded[i - 1] - 3 * decoded[i - 2] + decoded[i - 3];
-        break;
-    case 4:
+        { 3, -3, 1 },
         // s_4(t) = 4s(t-1) - 6s(t-2) + 4s(t-3) - s(t-4)
-        for (u32 i = subframe.order; i < m_current_frame->sample_count; ++i)
-            decoded[i] += 4 * decoded[i - 1] - 6 * decoded[i - 2] + 4 * decoded[i - 3] - decoded[i - 4];
-        break;
-    default:
-        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), DeprecatedString::formatted("Unrecognized predictor order {}", subframe.order) };
+        { 4, -6, 4, -1 },
+    } };
+    ReadonlySpan<i64> coefficients = fixed_coefficients[subframe.order].span();
+
+    return decode_lpc(decoded, 0, coefficients, subframe, bit_input);
+}
+
+// Common decoder for both LPC types.
+MaybeLoaderError FlacLoaderPlugin::decode_lpc(Vector<i64>& decoded, i64 lpc_shift, ReadonlySpan<i64> coefficients, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
+{
+    VERIFY(coefficients.size() <= 32);
+
+    // LPC must provide at least as many samples as its order.
+    if (subframe.order > m_current_frame->sample_count)
+        return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Too small frame for LPC order" };
+
+    if (subframe.bits_per_sample <= subframe.wasted_bits_per_sample) {
+        return LoaderError {
+            LoaderError::Category::Format,
+            TRY(m_stream->tell()),
+            "Effective verbatim bits per sample are zero"sv,
+        };
     }
-    return decoded;
+
+    TRY(decode_residual(decoded, subframe, bit_input));
+
+    dbgln_if(AFLACLOADER_DEBUG, "    decoded length {}, {} order predictor, now at file offset {:x}", decoded.size(), subframe.order, TRY(m_stream->tell()));
+
+    // approximate the waveform with the predictor
+    for (size_t i = subframe.order; i < m_current_frame->sample_count; ++i) {
+        // (see below)
+        Checked<i64> sample = 0;
+        for (size_t t = 0; t < subframe.order; ++t) {
+            // It's really important that we compute in 64-bit land here.
+            // Even though FLAC operates at a maximum bit depth of 32 bits, modern encoders use super-large coefficients for maximum compression.
+            // These will easily overflow 32 bits and cause strange white noise that abruptly stops intermittently (at the end of a frame).
+            // The simple fix of course is to do intermediate computations in 64 bits, but we additionally use saturating arithmetic.
+            // These considerations are not in the original FLAC spec, but have been added to the IETF standard: https://datatracker.ietf.org/doc/html/draft-ietf-cellar-flac-03#appendix-A.3
+            sample.saturating_add(Checked<i64>::saturating_mul(static_cast<i64>(coefficients[t]), static_cast<i64>(decoded[i - t - 1])));
+        }
+        decoded[i] += lpc_shift >= 0 ? (sample.value() >> lpc_shift) : (sample.value() << -lpc_shift);
+    }
+
+    return {};
 }
 
 // 11.30. RESIDUAL
