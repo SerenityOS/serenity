@@ -512,6 +512,22 @@ private:
     NonnullOwnPtr<Command> m_rhs;
 };
 
+class NotCommand final : public Command {
+public:
+    NotCommand(NonnullOwnPtr<Command>&& operand)
+        : m_operand(move(operand))
+    {
+    }
+
+private:
+    virtual bool evaluate(FileData& file_data) const override
+    {
+        return !m_operand->evaluate(file_data);
+    }
+
+    NonnullOwnPtr<Command> m_operand;
+};
+
 static OwnPtr<Command> parse_complex_command(Vector<char*>& args);
 
 // Parse a simple command starting at optind; leave optind at its the last
@@ -529,6 +545,12 @@ static OwnPtr<Command> parse_simple_command(Vector<char*>& args)
         if (command && !args.is_empty() && StringView { args.first(), strlen(args.first()) } == ")")
             return command;
         fatal_error("Unmatched \033[1m(");
+    } else if (arg == "!") {
+        if (args.is_empty())
+            fatal_error("Expected an expression after '!'");
+
+        auto command = parse_simple_command(args).release_nonnull();
+        return make<NotCommand>(move(command));
     } else if (arg == "-type") {
         if (args.is_empty())
             fatal_error("-type: requires additional arguments");
@@ -746,12 +768,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         StringView arg { raw_arg, strlen(raw_arg) };
         if (arg == "-L") {
             g_follow_symlinks = true;
-        } else if (!arg.starts_with('-')) {
-            paths.append(LexicalPath(arg));
-        } else {
-            // No special case, so add back the argument and try to parse a command.
+        } else if (arg.starts_with('-') || arg == "!"sv) {
             args.prepend(raw_arg);
             command = parse_all_commands(args);
+        } else {
+            paths.append(LexicalPath(arg));
         }
     }
 
