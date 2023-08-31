@@ -94,6 +94,7 @@ public:
     static ErrorOr<NonnullOwnPtr<BulkInPipe>> create(USBController const& controller, u8 endpoint_address, u16 max_packet_size, i8 device_address, size_t buffer_size = PAGE_SIZE);
 
     ErrorOr<size_t> submit_bulk_in_transfer(size_t length, void* data);
+    ErrorOr<size_t> submit_bulk_in_transfer(size_t length, UserOrKernelBuffer data);
 
 private:
     BulkInPipe(USBController const& controller, u8 endpoint_address, u16 max_packet_size, i8 device_address, NonnullOwnPtr<Memory::Region> dma_buffer);
@@ -104,6 +105,7 @@ public:
     static ErrorOr<NonnullOwnPtr<BulkOutPipe>> create(USBController const& controller, u8 endpoint_address, u16 max_packet_size, i8 device_address, size_t buffer_size = PAGE_SIZE);
 
     ErrorOr<size_t> submit_bulk_out_transfer(size_t length, void* data);
+    ErrorOr<size_t> submit_bulk_out_transfer(size_t length, UserOrKernelBuffer data);
 
 private:
     BulkOutPipe(USBController const& controller, u8 endpoint_address, u16 max_packet_size, i8 device_address, NonnullOwnPtr<Memory::Region> dma_buffer);
