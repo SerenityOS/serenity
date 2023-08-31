@@ -948,6 +948,9 @@ static void propagate_overflow_to_viewport(Element& root_element, Layout::Viewpo
 
 void Document::update_layout()
 {
+    if (!is_active())
+        return;
+
     // NOTE: If our parent document needs a relayout, we must do that *first*.
     //       This is necessary as the parent layout may cause our viewport to change.
     if (browsing_context() && browsing_context()->container())
