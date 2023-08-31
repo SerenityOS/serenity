@@ -17,6 +17,16 @@ ErrorOr<NonnullRefPtr<Database>> Database::create()
     return create(move(sql_client));
 }
 
+#if !defined(AK_OS_SERENITY)
+
+ErrorOr<NonnullRefPtr<Database>> Database::create(Vector<String> candidate_sql_server_paths)
+{
+    auto sql_client = TRY(SQL::SQLClient::launch_server_and_create_client(move(candidate_sql_server_paths)));
+    return create(move(sql_client));
+}
+
+#endif
+
 ErrorOr<NonnullRefPtr<Database>> Database::create(NonnullRefPtr<SQL::SQLClient> sql_client)
 {
     auto connection_id = sql_client->connect(database_name);
