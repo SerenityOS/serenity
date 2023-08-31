@@ -69,6 +69,7 @@ Device::Device(Device const& device, NonnullOwnPtr<ControlPipe> default_pipe)
     , m_device_speed(device.speed())
     , m_address(device.address())
     , m_device_descriptor(device.device_descriptor())
+    , m_configurations(device.configurations())
     , m_controller(device.controller())
     , m_default_pipe(move(default_pipe))
 {
