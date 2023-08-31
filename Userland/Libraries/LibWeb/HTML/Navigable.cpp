@@ -208,9 +208,8 @@ JS::GCPtr<HTML::Window> Navigable::active_window()
 // https://html.spec.whatwg.org/multipage/document-sequences.html#nav-target
 String Navigable::target_name() const
 {
-    // FIXME: A navigable's target name is its active session history entry's document state's navigable target name.
-    dbgln("FIXME: Implement Navigable::target_name()");
-    return {};
+    // A navigable's target name is its active session history entry's document state's navigable target name.
+    return active_session_history_entry()->document_state->navigable_target_name();
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#nav-container
