@@ -23,7 +23,7 @@ set(SOURCES
 )
 
 serenity_lib(LibLocale locale)
-target_link_libraries(LibLocale PRIVATE LibCore LibUnicode)
+target_link_libraries(LibLocale PRIVATE LibCore LibUnicode AllowInterposition)
 target_compile_definitions(LibLocale PRIVATE ENABLE_UNICODE_DATA=$<BOOL:${ENABLE_UNICODE_DATABASE_DOWNLOAD}>)
 
 if (DEFINED LOCALE_DATA_SOURCES)

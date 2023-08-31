@@ -16,6 +16,9 @@ if (ENABLE_USERSPACE_COVERAGE_COLLECTION)
     endif()
 endif()
 
+add_library(AllowInterposition INTERFACE)
+target_link_options(AllowInterposition INTERFACE LINKER:-Bno-symbolic)
+
 add_subdirectory(Applications)
 add_subdirectory(Demos)
 add_subdirectory(DevTools)

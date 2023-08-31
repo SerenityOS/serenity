@@ -13,6 +13,7 @@ target_compile_definitions(LibTimeZone PRIVATE ENABLE_TIME_ZONE_DATA=$<BOOL:${EN
 # NOTE: These objects are used by the DynamicLoader, which is always built without coverage instrumentation.
 #       We could allow them to be instrumented for coverage if DynamicLoader built its own copy
 target_link_libraries(LibTimeZone PRIVATE NoCoverage)
+target_link_libraries(LibTimeZone PRIVATE AllowInterposition)
 if (SERENITYOS)
     add_dependencies(LibTimeZone install_libc_headers)
 endif()

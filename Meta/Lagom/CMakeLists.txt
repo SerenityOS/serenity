@@ -315,8 +315,10 @@ if (SERENITYOS)
     target_link_libraries(LibSystem INTERFACE system)
 endif()
 add_library(NoCoverage INTERFACE)
+# FIXME: Set -Bno-symbolic if ELF
+add_library(AllowInterposition INTERFACE)
 # "install" these special targets to placate CMake
-install(TARGETS LibC LibCrypt LibSystem NoCoverage EXPORT LagomTargets)
+install(TARGETS LibC LibCrypt LibSystem NoCoverage AllowInterposition EXPORT LagomTargets)
 
 # AK/LibCore
 # Note: AK is included in LibCore for the host build instead of LibC per the target build
