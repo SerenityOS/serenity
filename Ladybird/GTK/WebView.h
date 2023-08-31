@@ -42,4 +42,7 @@ class CookieJar;
 WebView::CookieJar* ladybird_web_view_get_cookie_jar(LadybirdWebView* self);
 void ladybird_web_view_set_cookie_jar(LadybirdWebView* self, WebView::CookieJar* cookie_jar);
 
+class LadybirdViewImpl;
+LadybirdViewImpl* ladybird_web_view_get_impl(LadybirdWebView* self);
+
 G_END_DECLS

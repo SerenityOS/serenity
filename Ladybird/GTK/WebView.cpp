@@ -188,6 +188,13 @@ void ladybird_web_view_set_cookie_jar(LadybirdWebView* self, WebView::CookieJar*
     g_object_notify_by_pspec(G_OBJECT(self), props[PROP_COOKIE_JAR]);
 }
 
+LadybirdViewImpl* ladybird_web_view_get_impl(LadybirdWebView* self)
+{
+    g_return_val_if_fail(LADYBIRD_IS_WEB_VIEW(self), nullptr);
+
+    return self->impl.ptr();
+}
+
 static void ladybird_web_view_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* pspec)
 {
     LadybirdWebView* self = LADYBIRD_WEB_VIEW(object);

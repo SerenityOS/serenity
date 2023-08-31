@@ -61,6 +61,7 @@ add_blueprint(window.blp window.ui)
 add_blueprint(shortcuts-dialog.blp shortcuts-dialog.ui)
 add_blueprint(tab.blp tab.ui)
 add_blueprint(location-entry.blp location-entry.ui)
+add_blueprint(js-console.blp js-console.ui)
 
 set(SOURCE_GRESOURCE_FILE "${CMAKE_CURRENT_SOURCE_DIR}/gresources.xml")
 set(GENERATED_GRESOURCE_FILE "${CMAKE_CURRENT_BINARY_DIR}/ladybird-resources.c")
@@ -92,6 +93,7 @@ set(SOURCES
     Tab.cpp
     BitmapPaintable.cpp
     LocationEntry.cpp
+    JSConsole.cpp
     ViewImpl.cpp
     EventLoopImplementationGLib.cpp
     "${SERENITY_SOURCE_DIR}/Ladybird/Utilities.cpp"

@@ -19,3 +19,12 @@ label.hovered-link.bottom.right {
 label.hovered-link.hidden {
   opacity: 0;
 }
+
+js-console > entry {
+  font-family: monospace;
+  margin: 8px;
+}
+
+js-console > entry placeholder {
+  font-family: initial;
+}

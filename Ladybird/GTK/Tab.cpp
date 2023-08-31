@@ -1,5 +1,7 @@
 #include "Tab.h"
+#include "JSConsole.h"
 #include "WebView.h"
+#include <glib/gi18n.h>
 
 struct _LadybirdTab {
     GtkWidget parent_instance;
@@ -7,6 +9,8 @@ struct _LadybirdTab {
     GtkOverlay* overlay;
     LadybirdWebView* web_view;
     GtkLabel* hovered_link_label;
+
+    LadybirdJSConsole* js_console;
 };
 
 enum {
@@ -26,6 +30,23 @@ LadybirdWebView* ladybird_tab_get_web_view(LadybirdTab* self)
     g_return_val_if_fail(LADYBIRD_IS_TAB(self), nullptr);
 
     return self->web_view;
+}
+
+void ladybird_tab_open_js_console(LadybirdTab* self)
+{
+    g_return_if_fail(LADYBIRD_IS_TAB(self));
+    if (self->js_console == nullptr)
+        self->js_console = g_object_ref_sink(ladybird_js_console_new(self->web_view));
+
+    // TODO: There must be a much better way to do this, perhaps via another tempalte.
+    GtkWindow* window = GTK_WINDOW(gtk_window_new());
+    gtk_window_set_title(window, _("JavaScript Console"));
+    gtk_window_set_child(window, GTK_WIDGET(self->js_console));
+    gtk_window_set_default_size(window, 500, 400);
+    GtkRoot* root = gtk_widget_get_root(GTK_WIDGET(self));
+    if (GTK_IS_WINDOW(root))
+        gtk_window_set_transient_for(window, GTK_WINDOW(root));
+    gtk_window_present(window);
 }
 
 static void ladybird_tab_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* pspec)
@@ -50,7 +71,10 @@ static void ladybird_tab_set_property(GObject* object, guint prop_id, [[maybe_un
 
 static void ladybird_tab_dispose(GObject* object)
 {
+    LadybirdTab* self = LADYBIRD_TAB(object);
+
     gtk_widget_dispose_template(GTK_WIDGET(object), LADYBIRD_TYPE_TAB);
+    g_clear_object(&self->js_console);
 
     G_OBJECT_CLASS(ladybird_tab_parent_class)->dispose(object);
 }
