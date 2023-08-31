@@ -478,7 +478,7 @@ void BlockFormattingContext::compute_height(Box const& box, AvailableSpace const
         auto margins = box_state.margin_top + box_state.margin_bottom;
 
         // 2. Let size be the size of the initial containing block in the block flow direction minus margins.
-        auto size = box_state.content_height() - margins;
+        auto size = m_state.get(*box.containing_block()).content_height() - margins;
 
         // 3. Return the bigger value of size and the normal border box size the element would have
         //    according to the CSS specification.
@@ -630,7 +630,13 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
 
     auto const y = m_y_offset_of_current_block_container.value();
 
-    if (box_state.has_definite_height()) {
+    auto box_is_html_element_in_quirks_mode = box.document().in_quirks_mode()
+        && box.dom_node()
+        && box.dom_node()->is_html_html_element()
+        && box.computed_values().height().is_auto();
+
+    // NOTE: In quirks mode, the html element's height matches the viewport so it can be treated as definite
+    if (box_state.has_definite_height() || box_is_html_element_in_quirks_mode) {
         compute_height(box, available_space);
     }
 
@@ -881,6 +887,8 @@ void BlockFormattingContext::layout_viewport(LayoutMode layout_mode, AvailableSp
     //       and we call directly into the SVG layout code from here.
     if (root().first_child() && root().first_child()->is_svg_svg_box()) {
         auto const& svg_root = verify_cast<SVGSVGBox>(*root().first_child());
+        auto content_height = m_state.get(*svg_root.containing_block()).content_height();
+        m_state.get_mutable(svg_root).set_content_height(content_height);
         auto svg_formatting_context = create_independent_formatting_context_if_needed(m_state, svg_root);
         svg_formatting_context->run(svg_root, layout_mode, available_space);
     } else {
