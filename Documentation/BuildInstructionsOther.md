@@ -39,6 +39,18 @@ or you can use the nix flake [`Toolchain/flake.nix`](../Toolchain/serenity.nix) 
 nix develop Toolchain
 ```
 
+You can also save this environment to a profile:
+
+```
+nix develop Toolchain --profile Toolchain/nix-profiles/dev 
+```
+
+and resume later with:
+
+```
+nix develop Toolchain/nix-profiles/dev
+```
+
 ## Alpine Linux
 
 First, make sure you have enabled the `community` repository in `/etc/apk/repositories` and run `apk update`. It has been tested on `edge`, YMMV on `stable`.
