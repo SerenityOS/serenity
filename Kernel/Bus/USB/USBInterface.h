@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Vector.h>
+#include <Kernel/Bus/USB/USBDescriptors.h>
 
 namespace Kernel::USB {
 
