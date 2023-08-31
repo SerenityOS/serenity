@@ -1967,6 +1967,28 @@ ErrorOr<int> Shell::builtin_run_with_env(Main::Arguments arguments)
     return exit_code;
 }
 
+ErrorOr<int> Shell::builtin_shell_set_active_prompt(Main::Arguments arguments)
+{
+    StringView new_prompt;
+
+    Core::ArgsParser parser;
+    parser.add_positional_argument(new_prompt, "New prompt text", "prompt", Core::ArgsParser::Required::Yes);
+
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::Ignore))
+        return 1;
+
+    if (!m_editor) {
+        warnln("shell_set_active_prompt: No active prompt");
+        return 1;
+    }
+
+    if (m_editor->is_editing())
+        m_editor->set_prompt(new_prompt);
+    else
+        m_next_scheduled_prompt_text = new_prompt;
+    return 0;
+}
+
 bool Shell::has_builtin(StringView name) const
 {
     if (name == ":"sv || (m_in_posix_mode && name == "."sv))
