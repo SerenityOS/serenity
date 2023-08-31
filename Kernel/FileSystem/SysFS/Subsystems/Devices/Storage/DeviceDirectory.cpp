@@ -18,7 +18,7 @@ StorageDevice const& StorageDeviceSysFSDirectory::device(Badge<StorageDeviceAttr
     return *m_device;
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<StorageDeviceSysFSDirectory> StorageDeviceSysFSDirectory::create(SysFSDirectory const& parent_directory, StorageDevice const& device)
+NonnullRefPtr<StorageDeviceSysFSDirectory> StorageDeviceSysFSDirectory::create(SysFSDirectory const& parent_directory, StorageDevice const& device)
 {
     // FIXME: Handle allocation failure gracefully
     auto lun_address = device.logical_unit_number_address();
@@ -33,7 +33,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<StorageDeviceSysFSDirectory> StorageDeviceSysFSDi
     return directory;
 }
 
-UNMAP_AFTER_INIT StorageDeviceSysFSDirectory::StorageDeviceSysFSDirectory(NonnullOwnPtr<KString> device_directory_name, SysFSDirectory const& parent_directory, StorageDevice const& device)
+StorageDeviceSysFSDirectory::StorageDeviceSysFSDirectory(NonnullOwnPtr<KString> device_directory_name, SysFSDirectory const& parent_directory, StorageDevice const& device)
     : SysFSDirectory(parent_directory)
     , m_device(device)
     , m_device_directory_name(move(device_directory_name))
