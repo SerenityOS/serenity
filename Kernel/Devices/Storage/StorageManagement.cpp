@@ -81,6 +81,13 @@ u32 StorageManagement::generate_relative_sd_controller_id(Badge<SDHostController
     return controller_id;
 }
 
+void StorageManagement::add_device(StorageDevice& device)
+{
+    m_storage_devices.append(device);
+    // FIXME: Maybe handle this error in some way shape or form
+    (void)enumerate_device_partitions(device);
+}
+
 void StorageManagement::remove_device(StorageDevice& device)
 {
     m_storage_devices.remove(device);
@@ -193,7 +200,7 @@ UNMAP_AFTER_INIT void StorageManagement::dump_storage_devices_and_partitions() c
     }
 }
 
-UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<Partition::PartitionTable>> StorageManagement::try_to_initialize_partition_table(StorageDevice& device) const
+ErrorOr<NonnullOwnPtr<Partition::PartitionTable>> StorageManagement::try_to_initialize_partition_table(StorageDevice& device) const
 {
     auto mbr_table_or_error = Partition::MBRPartitionTable::try_to_initialize(device);
     if (!mbr_table_or_error.is_error())
@@ -205,21 +212,23 @@ UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<Partition::PartitionTable>> StorageManage
     return TRY(Partition::GUIDPartitionTable::try_to_initialize(device));
 }
 
+ErrorOr<void> StorageManagement::enumerate_device_partitions(StorageDevice& device)
+{
+    auto partition_table = TRY(try_to_initialize_partition_table(device));
+    for (auto partition_metadata : partition_table->partitions()) {
+        auto disk_partition = DiskPartition::create(device, generate_partition_minor_number(), partition_metadata);
+        device.add_partition(disk_partition);
+    }
+
+    return {};
+}
+
 UNMAP_AFTER_INIT void StorageManagement::enumerate_disk_partitions()
 {
     VERIFY(!m_storage_devices.is_empty());
     for (auto& device : m_storage_devices) {
-        auto partition_table_or_error = try_to_initialize_partition_table(device);
-        if (partition_table_or_error.is_error())
-            continue;
-        auto partition_table = partition_table_or_error.release_value();
-        for (size_t partition_index = 0; partition_index < partition_table->partitions_count(); partition_index++) {
-            auto partition_metadata = partition_table->partition(partition_index);
-            if (!partition_metadata.has_value())
-                continue;
-            auto disk_partition = DiskPartition::create(device, generate_partition_minor_number(), partition_metadata.value());
-            device.add_partition(disk_partition);
-        }
+        // FIXME: Maybe handle this error in some way shape or form
+        (void)enumerate_device_partitions(device);
     }
 }
 

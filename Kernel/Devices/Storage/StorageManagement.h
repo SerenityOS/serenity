@@ -40,11 +40,13 @@ public:
     static u32 generate_relative_ata_controller_id(Badge<ATAController>);
     static u32 generate_relative_sd_controller_id(Badge<SDHostController>);
 
+    void add_device(StorageDevice&);
     void remove_device(StorageDevice&);
 
 private:
     void enumerate_pci_controllers(bool force_pio, bool nvme_poll);
     void enumerate_storage_devices();
+    ErrorOr<void> enumerate_device_partitions(StorageDevice&);
     void enumerate_disk_partitions();
 
     void determine_boot_device();
