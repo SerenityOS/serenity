@@ -15,12 +15,9 @@ set(SOURCES
     BookmarksBarWidget.cpp
     BrowserWindow.cpp
     ConsoleWidget.cpp
-    CookieJar.cpp
     CookiesModel.cpp
-    Database.cpp
     DownloadWidget.cpp
     ElementSizePreviewWidget.cpp
-    History.cpp
     History/HistoryModel.cpp
     History/HistoryWidget.cpp
     IconBag.cpp
@@ -41,5 +38,5 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(Browser ICON app-browser)
-target_link_libraries(Browser PRIVATE LibCore LibFileSystem LibWebView LibWeb LibProtocol LibPublicSuffix LibGUI LibDesktop LibConfig LibGfx LibIPC LibJS LibLocale LibMain LibSyntax LibSQL)
+target_link_libraries(Browser PRIVATE LibCore LibFileSystem LibWebView LibWeb LibProtocol LibPublicSuffix LibGUI LibDesktop LibConfig LibGfx LibIPC LibJS LibLocale LibMain LibSyntax)
 link_with_locale_data(Browser)

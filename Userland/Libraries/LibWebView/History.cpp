@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "History.h"
+#include <LibWebView/History.h>
 
-namespace Browser {
+namespace WebView {
 
 void History::dump() const
 {

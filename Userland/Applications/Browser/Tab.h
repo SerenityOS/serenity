@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "History.h"
 #include <AK/Optional.h>
 #include <AK/URL.h>
 #include <LibGUI/ActionGroup.h>
@@ -15,6 +14,7 @@
 #include <LibGfx/ShareableBitmap.h>
 #include <LibHTTP/Job.h>
 #include <LibWeb/Forward.h>
+#include <LibWebView/History.h>
 #include <LibWebView/ViewImplementation.h>
 
 namespace WebView {
@@ -122,7 +122,7 @@ private:
 
     Optional<URL> url_from_location_bar(MayAppendTLD = MayAppendTLD::No);
 
-    History m_history;
+    WebView::History m_history;
 
     RefPtr<WebView::OutOfProcessWebView> m_web_content_view;
 

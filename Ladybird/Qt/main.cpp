@@ -9,8 +9,6 @@
 #include "Settings.h"
 #include "WebContentView.h"
 #include <AK/OwnPtr.h>
-#include <Browser/CookieJar.h>
-#include <Browser/Database.h>
 #include <Ladybird/HelperProcess.h>
 #include <Ladybird/Utilities.h>
 #include <LibCore/ArgsParser.h>
@@ -21,6 +19,8 @@
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibMain/Main.h>
 #include <LibSQL/SQLClient.h>
+#include <LibWebView/CookieJar.h>
+#include <LibWebView/Database.h>
 #include <QApplication>
 
 namespace Ladybird {
@@ -95,15 +95,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return url;
     };
 
-    RefPtr<Browser::Database> database;
+    RefPtr<WebView::Database> database;
 
     if (enable_sql_database) {
         auto sql_server_paths = TRY(get_paths_for_helper_process("SQLServer"sv));
         auto sql_client = TRY(SQL::SQLClient::launch_server_and_create_client(move(sql_server_paths)));
-        database = TRY(Browser::Database::create(move(sql_client)));
+        database = TRY(WebView::Database::create(move(sql_client)));
     }
 
-    auto cookie_jar = database ? TRY(Browser::CookieJar::create(*database)) : Browser::CookieJar::create();
+    auto cookie_jar = database ? TRY(WebView::CookieJar::create(*database)) : WebView::CookieJar::create();
 
     Optional<URL> initial_url;
     if (auto url = TRY(get_formatted_url(raw_url)); url.is_valid())

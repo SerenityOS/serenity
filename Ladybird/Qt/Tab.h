@@ -9,7 +9,7 @@
 
 #include "LocationEdit.h"
 #include "WebContentView.h"
-#include <Browser/History.h>
+#include <LibWebView/History.h>
 #include <QBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
@@ -82,7 +82,7 @@ private:
     LocationEdit* m_location_edit { nullptr };
     WebContentView* m_view { nullptr };
     BrowserWindow* m_window { nullptr };
-    Browser::History m_history;
+    WebView::History m_history;
     QString m_title;
     QLabel* m_hover_label { nullptr };
 

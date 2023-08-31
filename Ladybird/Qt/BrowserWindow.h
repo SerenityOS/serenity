@@ -10,16 +10,13 @@
 #include "Tab.h"
 #include <LibCore/Forward.h>
 #include <LibWeb/HTML/ActivateTab.h>
+#include <LibWebView/Forward.h>
 #include <QIcon>
 #include <QLineEdit>
 #include <QMainWindow>
 #include <QMenuBar>
 #include <QTabWidget>
 #include <QToolBar>
-
-namespace Browser {
-class CookieJar;
-}
 
 namespace Ladybird {
 
@@ -28,7 +25,7 @@ class WebContentView;
 class BrowserWindow : public QMainWindow {
     Q_OBJECT
 public:
-    explicit BrowserWindow(Optional<URL> const& initial_url, Browser::CookieJar&, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling, UseLagomNetworking);
+    explicit BrowserWindow(Optional<URL> const& initial_url, WebView::CookieJar&, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling, UseLagomNetworking);
 
     WebContentView& view() const { return m_current_tab->view(); }
 
@@ -119,7 +116,7 @@ private:
     OwnPtr<QAction> m_view_source_action {};
     OwnPtr<QAction> m_inspect_dom_node_action {};
 
-    Browser::CookieJar& m_cookie_jar;
+    WebView::CookieJar& m_cookie_jar;
 
     StringView m_webdriver_content_ipc_path;
     WebView::EnableCallgrindProfiling m_enable_callgrind_profiling;

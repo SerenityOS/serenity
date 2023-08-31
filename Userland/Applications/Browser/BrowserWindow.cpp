@@ -11,7 +11,6 @@
 #include "BookmarksBarWidget.h"
 #include "Browser.h"
 #include "ConsoleWidget.h"
-#include "CookieJar.h"
 #include "InspectorWidget.h"
 #include "Tab.h"
 #include <Applications/Browser/BrowserWindowGML.h>
@@ -35,6 +34,7 @@
 #include <LibWeb/Dump.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWebView/CookieJar.h>
 #include <LibWebView/OutOfProcessWebView.h>
 #include <LibWebView/WebContentClient.h>
 
@@ -56,7 +56,7 @@ static DeprecatedString search_engines_file_path()
     return builder.to_deprecated_string();
 }
 
-BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
+BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, URL url)
     : m_cookie_jar(cookie_jar)
     , m_window_actions(*this)
 {

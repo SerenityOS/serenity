@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
  * Copyright (c) 2023, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -20,7 +20,7 @@
 #include <LibSQL/Type.h>
 #include <LibSQL/Value.h>
 
-namespace Browser {
+namespace WebView {
 
 class Database : public RefCounted<Database> {
     using OnResult = Function<void(ReadonlySpan<SQL::Value>)>;

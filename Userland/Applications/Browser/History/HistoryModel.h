@@ -7,9 +7,9 @@
 #pragma once
 
 #include <AK/Vector.h>
-#include <Applications/Browser/History.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Widget.h>
+#include <LibWebView/History.h>
 
 namespace Browser {
 
@@ -21,7 +21,7 @@ public:
         __Count,
     };
 
-    void set_items(AK::Vector<History::URLTitlePair> items);
+    void set_items(AK::Vector<WebView::History::URLTitlePair> items);
     void clear_items();
     virtual int row_count(GUI::ModelIndex const&) const override;
     virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return Column::__Count; }
@@ -31,7 +31,7 @@ public:
     virtual GUI::Model::MatchResult data_matches(GUI::ModelIndex const& index, GUI::Variant const& term) const override;
 
 private:
-    AK::Vector<History::URLTitlePair> m_entries;
+    AK::Vector<WebView::History::URLTitlePair> m_entries;
 };
 
 }
