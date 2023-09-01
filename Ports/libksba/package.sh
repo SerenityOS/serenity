@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libksba'
-version='1.5.1'
+version='1.6.4'
 useconfigure='true'
 use_fresh_config_sub='true'
 config_sub_paths=(
@@ -10,7 +10,7 @@ depends=(
     'libgpg-error'
 )
 files=(
-    "https://gnupg.org/ftp/gcrypt/libksba/libksba-${version}.tar.bz2#b0f4c65e4e447d9a2349f6b8c0e77a28be9531e4548ba02c545d1f46dc7bf921"
+    "https://gnupg.org/ftp/gcrypt/libksba/libksba-${version}.tar.bz2#bbb43f032b9164d86c781ffe42213a83bf4f2fee91455edfa4654521b8b03b6b"
 )
 
 pre_configure() {
@@ -21,5 +21,6 @@ configure() {
     run ./configure \
         --host="${SERENITY_ARCH}-pc-serenity" \
         --build="$("${workdir}/build-aux/config.guess")" \
-        --with-libgpg-error-prefix="${SERENITY_INSTALL_ROOT}/usr/local"
+        --with-libgpg-error-prefix="${SERENITY_INSTALL_ROOT}/usr/local" \
+        --with-sysroot="${SERENITY_INSTALL_ROOT}"
 }
