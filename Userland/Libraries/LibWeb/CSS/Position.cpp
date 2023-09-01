@@ -15,36 +15,32 @@ CSSPixelPoint PositionValue::resolved(Layout::Node const& node, CSSPixelRect con
     // Note: A preset + a none default x/y_relative_to is impossible in the syntax (and makes little sense)
     CSSPixels x = horizontal_position.visit(
         [&](HorizontalPreset preset) -> CSSPixels {
-            return rect.width() * [&] {
-                switch (preset) {
-                case HorizontalPreset::Left:
-                    return CSSPixels(0.0);
-                case HorizontalPreset::Center:
-                    return CSSPixels(0.5);
-                case HorizontalPreset::Right:
-                    return CSSPixels(1.0);
-                default:
-                    VERIFY_NOT_REACHED();
-                }
-            }();
+            switch (preset) {
+            case HorizontalPreset::Left:
+                return 0;
+            case HorizontalPreset::Center:
+                return rect.width() / 2;
+            case HorizontalPreset::Right:
+                return rect.width();
+            default:
+                VERIFY_NOT_REACHED();
+            }
         },
         [&](LengthPercentage length_percentage) -> CSSPixels {
             return length_percentage.to_px(node, rect.width());
         });
     CSSPixels y = vertical_position.visit(
         [&](VerticalPreset preset) -> CSSPixels {
-            return rect.height() * [&] {
-                switch (preset) {
-                case VerticalPreset::Top:
-                    return CSSPixels(0.0);
-                case VerticalPreset::Center:
-                    return CSSPixels(0.5);
-                case VerticalPreset::Bottom:
-                    return CSSPixels(1.0);
-                default:
-                    VERIFY_NOT_REACHED();
-                }
-            }();
+            switch (preset) {
+            case VerticalPreset::Top:
+                return 0;
+            case VerticalPreset::Center:
+                return rect.height() / 2;
+            case VerticalPreset::Bottom:
+                return rect.height();
+            default:
+                VERIFY_NOT_REACHED();
+            }
         },
         [&](LengthPercentage length_percentage) -> CSSPixels {
             return length_percentage.to_px(node, rect.height());
