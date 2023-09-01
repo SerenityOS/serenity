@@ -264,6 +264,19 @@ ErrorOr<ByteBuffer> GzipCompressor::compress_all(ReadonlyBytes bytes)
 
 ErrorOr<void> GzipCompressor::compress_file(StringView input_filename, NonnullOwnPtr<Stream> output_stream)
 {
+    if (!Core::File::valid_regular_filename_for_opening(input_filename)) {
+        auto input_file = TRY(Core::File::open_file_or_standard_stream(input_filename, Core::File::OpenMode::Read));
+        auto input_stream = TRY(Core::InputBufferedFile::create(move(input_file), 1 * MiB));
+
+        auto gzip_stream = GzipCompressor { move(output_stream) };
+        auto buffer = TRY(ByteBuffer::create_uninitialized(1 * MiB));
+
+        while (!input_stream->is_eof()) {
+            auto span = TRY(input_stream->read_some(buffer));
+            TRY(gzip_stream.write_until_depleted(span));
+        }
+        return {};
+    }
     // We map the whole file instead of streaming to reduce size overhead (gzip header) and increase the deflate block size (better compression)
     // TODO: automatically fallback to buffered streaming for very large files
     RefPtr<Core::MappedFile> file;
