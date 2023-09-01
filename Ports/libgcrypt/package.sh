@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libgcrypt'
-version='1.10.1'
+version='1.10.2'
 useconfigure='true'
 use_fresh_config_sub='true'
 config_sub_paths=(
@@ -10,7 +10,7 @@ depends=(
     'libgpg-error'
 )
 files=(
-    "https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${version}.tar.bz2#ef14ae546b0084cd84259f61a55e07a38c3b53afc0f546bffcef2f01baffe9de"
+    "https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${version}.tar.bz2#3b9c02a004b68c256add99701de00b383accccf37177e0d6c58289664cce0c03"
 )
 
 pre_configure() {
@@ -21,5 +21,6 @@ configure() {
     run ./configure \
         --host="${SERENITY_ARCH}-pc-serenity" \
         --build="$("${workdir}/build-aux/config.guess")" \
-        --with-libgpg-error-prefix="${SERENITY_INSTALL_ROOT}/usr/local"
+        --with-libgpg-error-prefix="${SERENITY_INSTALL_ROOT}/usr/local" \
+        --with-sysroot="${SERENITY_INSTALL_ROOT}"
 }
