@@ -10,11 +10,11 @@ Co-Authored-By: Panagiotis Vasilopoulos <hello@alwayslivid.com>
  1 file changed, 18 insertions(+), 14 deletions(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 93b46a6..6b8d4ed 100644
+index b2e77241a2fbbb91c9057af038a3dea280b4ae7a..3e8899da4ed9871f0a1bc097e96925a9ad2e0766 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -9,20 +9,24 @@ project(libzip
-   VERSION 1.8.0
+@@ -9,22 +9,26 @@ project(libzip
+   VERSION 1.10.1
    LANGUAGES C)
  
 -option(ENABLE_COMMONCRYPTO "Enable use of CommonCrypto" ON)
@@ -34,15 +34,17 @@ index 93b46a6..6b8d4ed 100644
 +option(ENABLE_MBEDTLS "Enable use of mbed TLS" OFF)
 +option(ENABLE_OPENSSL "Enable use of OpenSSL" OFF)
 +option(ENABLE_WINDOWS_CRYPTO "Enable use of Windows cryptography libraries" OFF)
++
++option(ENABLE_BZIP2 "Enable use of BZip2" OFF)
++option(ENABLE_LZMA "Enable use of LZMA" OFF)
++option(ENABLE_ZSTD "Enable use of Zstandard" OFF)
+ 
+ option(ENABLE_FDOPEN "Enable zip_fdopen, which is not allowed in Microsoft CRT secure libraries" ON)
  
 -option(BUILD_TOOLS "Build tools in the src directory (zipcmp, zipmerge, ziptool)" ON)
 -option(BUILD_REGRESS "Build regression tests" ON)
 -option(BUILD_EXAMPLES "Build examples" ON)
 -option(BUILD_DOC "Build documentation" ON)
-+option(ENABLE_BZIP2 "Enable use of BZip2" OFF)
-+option(ENABLE_LZMA "Enable use of LZMA" OFF)
-+option(ENABLE_ZSTD "Enable use of Zstandard" OFF)
-+
 +option(BUILD_TOOLS "Build tools in the src directory (zipcmp, zipmerge, ziptool)" OFF)
 +option(BUILD_REGRESS "Build regression tests" OFF)
 +option(BUILD_EXAMPLES "Build examples" OFF)
@@ -50,7 +52,7 @@ index 93b46a6..6b8d4ed 100644
  
  include(CheckFunctionExists)
  include(CheckIncludeFiles)
-@@ -54,10 +58,10 @@ if(WIN32)
+@@ -56,10 +60,10 @@ if(WIN32)
    endif()
  endif()
  
