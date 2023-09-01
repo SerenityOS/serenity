@@ -8,10 +8,10 @@ Subject: [PATCH] Use /proc/self/exe on SerenityOS
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/file.cc b/src/file.cc
-index d38c956..9c74364 100644
+index 58eb92844051059e66a7f0cc47f70091b821f81f..0531938bf0dd7bf1a8ac3d7be7bec8b629aaabd1 100644
 --- a/src/file.cc
 +++ b/src/file.cc
-@@ -603,7 +603,7 @@ FsStatus get_fs_status(StringView filename)
+@@ -621,7 +621,7 @@ FsStatus get_fs_status(StringView filename)
  String get_kak_binary_path()
  {
      char buffer[2048];
@@ -20,6 +20,3 @@ index d38c956..9c74364 100644
      ssize_t res = readlink("/proc/self/exe", buffer, 2048);
      kak_assert(res != -1);
      buffer[res] = '\0';
--- 
-2.37.3
-
