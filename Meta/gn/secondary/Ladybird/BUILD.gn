@@ -78,9 +78,6 @@ executable("ladybird_executable") {
     "//Userland/Libraries/LibWebView",
   ]
   sources = [
-    "//Userland/Applications/Browser/CookieJar.cpp",
-    "//Userland/Applications/Browser/Database.cpp",
-    "//Userland/Applications/Browser/History.cpp",
     "HelperProcess.cpp",
     "Qt/AutoComplete.cpp",
     "Qt/BrowserWindow.cpp",
