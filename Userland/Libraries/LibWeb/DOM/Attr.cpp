@@ -71,16 +71,24 @@ void Attr::set_value(DeprecatedString value)
     // 1. If attribute’s element is null, then set attribute’s value to value.
     if (!owner_element()) {
         m_value = move(value);
-        return;
     }
-
     // 2. Otherwise, change attribute to value.
-    // https://dom.spec.whatwg.org/#concept-element-attributes-change
-    // 1. Handle attribute changes for attribute with attribute’s element, attribute’s value, and value.
-    handle_attribute_changes(*owner_element(), m_value, value);
+    else {
+        change_attribute(move(value));
+    }
+}
+
+// https://dom.spec.whatwg.org/#concept-element-attributes-change
+void Attr::change_attribute(DeprecatedString value)
+{
+    // 1. Let oldValue be attribute’s value.
+    auto old_value = move(m_value);
 
     // 2. Set attribute’s value to value.
     m_value = move(value);
+
+    // 3. Handle attribute changes for attribute with attribute’s element, oldValue, and value.
+    handle_attribute_changes(*owner_element(), old_value, m_value);
 }
 
 // https://dom.spec.whatwg.org/#handle-attribute-changes
