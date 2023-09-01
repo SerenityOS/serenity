@@ -35,7 +35,6 @@
 /Userland/Services/SQLServer @trflynn89
 /Userland/Services/WebDriver @trflynn89
 /Userland/Shell @alimpfard
-/Userland/Utilities/gunzip.cpp @timschumi
 /Userland/Utilities/gzip.cpp @timschumi
 /Userland/Utilities/lzcat.cpp @timschumi
 /Userland/Utilities/readelf.cpp @BertalanD

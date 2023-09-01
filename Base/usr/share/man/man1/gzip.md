@@ -1,11 +1,13 @@
 ## Name
 
-gzip
+gzip, gunzip, zcat
 
 ## Synopsis
 
 ```sh
 $ gzip [--keep] [--stdout] [--decompress] <FILES...>
+$ gunzip [--keep] [--stdout] <FILES...>
+$ zcat <FILES...>
 ```
 
 ## Options
@@ -19,5 +21,4 @@ $ gzip [--keep] [--stdout] [--decompress] <FILES...>
 * `FILES`: Files
 
 ## See also
-* [`gunzip`(1)](help://man/1/gunzip)
 * [`tar`(1)](help://man/1/tar)
