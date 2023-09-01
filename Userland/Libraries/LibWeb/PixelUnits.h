@@ -324,6 +324,20 @@ public:
         return CSSPixels::from_raw(AK::clamp_to_int(wide_value));
     }
 
+    constexpr CSSPixels operator-(CSSPixels const& other) const
+    {
+        return CSSPixels(*this) - other;
+    }
+    constexpr CSSPixels operator+(CSSPixels const& other) const
+    {
+        return CSSPixels(*this) + other;
+    }
+
+    constexpr CSSPixelFraction operator-() const
+    {
+        return CSSPixelFraction(-numerator(), denominator());
+    }
+
     constexpr int operator<=>(CSSPixelFraction const& other) const
     {
         auto left = static_cast<i64>(m_numerator.raw_value()) * other.m_denominator.raw_value();
@@ -375,7 +389,7 @@ constexpr CSSPixels CSSPixels::operator/(CSSPixelFraction const& other) const
 }
 
 template<Integral T>
-constexpr CSSPixels operator/(CSSPixels left, T right) { return left / CSSPixels(right); }
+constexpr CSSPixelFraction operator/(CSSPixels left, T right) { return left / CSSPixels(right); }
 inline float operator/(CSSPixels left, float right) { return left.to_float() / right; }
 inline double operator/(CSSPixels left, double right) { return left.to_double() / right; }
 
