@@ -1941,30 +1941,30 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
 
     if (font_size.is_identifier()) {
         // https://w3c.github.io/csswg-drafts/css-fonts/#absolute-size-mapping
-        constexpr auto get_absolute_size_mapping = [](Web::CSS::ValueID identifier) {
+        auto get_absolute_size_mapping = [](Web::CSS::ValueID identifier) -> CSSPixelFraction {
             switch (identifier) {
             case CSS::ValueID::XxSmall:
-                return 0.6f;
+                return CSSPixels(3) / 5;
             case CSS::ValueID::XSmall:
-                return 0.75f;
+                return CSSPixels(3) / 4;
             case CSS::ValueID::Small:
-                return 8.0f / 9.0f;
+                return CSSPixels(8) / 9;
             case CSS::ValueID::Medium:
-                return 1.0f;
+                return 1;
             case CSS::ValueID::Large:
-                return 1.2f;
+                return CSSPixels(6) / 5;
             case CSS::ValueID::XLarge:
-                return 1.5f;
+                return CSSPixels(3) / 2;
             case CSS::ValueID::XxLarge:
-                return 2.0f;
+                return 2;
             case CSS::ValueID::XxxLarge:
-                return 3.0f;
+                return 3;
             case CSS::ValueID::Smaller:
-                return 0.8f;
+                return CSSPixels(4) / 5;
             case CSS::ValueID::Larger:
-                return 1.25f;
+                return CSSPixels(5) / 4;
             default:
-                return 1.0f;
+                return 1;
             }
         };
 
@@ -1979,8 +1979,7 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
                 font_size_in_px = CSSPixels::nearest_value_for(parent_element->computed_css_values()->computed_font().pixel_metrics().size);
             }
         }
-        font_size_in_px.scale_by(get_absolute_size_mapping(identifier));
-
+        font_size_in_px *= get_absolute_size_mapping(identifier);
     } else {
         Length::ResolutionContext const length_resolution_context {
             .viewport_rect = viewport_rect(),
