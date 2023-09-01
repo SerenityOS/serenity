@@ -1,12 +1,12 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libexpat'
-version='2.4.8'
+version='2.5.0'
 useconfigure='true'
 use_fresh_config_sub='true'
 config_sub_paths=(
     'conftools/config.sub'
 )
 files=(
-    "https://github.com/libexpat/libexpat/releases/download/R_${version//./_}/expat-${version}.tar.xz#f79b8f904b749e3e0d20afeadecf8249c55b2e32d4ebb089ae378df479dcaf25"
+    "https://github.com/libexpat/libexpat/releases/download/R_${version//./_}/expat-${version}.tar.xz#ef2420f0232c087801abf705e89ae65f6257df6b7931d37846a193ef2e8cdcbe"
 )
 workdir="expat-${version}"
