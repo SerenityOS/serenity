@@ -98,34 +98,34 @@ CSSPixels Length::viewport_relative_length_to_px(CSSPixelRect const& viewport_re
     case Type::Svw:
     case Type::Lvw:
     case Type::Dvw:
-        return CSSPixels::nearest_value_for(viewport_rect.width() * (m_value / 100));
+        return viewport_rect.width() * (CSSPixels::nearest_value_for(m_value) / 100);
     case Type::Vh:
     case Type::Svh:
     case Type::Lvh:
     case Type::Dvh:
-        return CSSPixels::nearest_value_for(viewport_rect.height() * (m_value / 100));
+        return viewport_rect.height() * (CSSPixels::nearest_value_for(m_value) / 100);
     case Type::Vi:
     case Type::Svi:
     case Type::Lvi:
     case Type::Dvi:
         // FIXME: Select the width or height based on which is the inline axis.
-        return CSSPixels::nearest_value_for(viewport_rect.width() * (m_value / 100));
+        return viewport_rect.width() * (CSSPixels::nearest_value_for(m_value) / 100);
     case Type::Vb:
     case Type::Svb:
     case Type::Lvb:
     case Type::Dvb:
         // FIXME: Select the width or height based on which is the block axis.
-        return CSSPixels::nearest_value_for(viewport_rect.height() * (m_value / 100));
+        return viewport_rect.height() * (CSSPixels::nearest_value_for(m_value) / 100);
     case Type::Vmin:
     case Type::Svmin:
     case Type::Lvmin:
     case Type::Dvmin:
-        return CSSPixels::nearest_value_for(min(viewport_rect.width(), viewport_rect.height()) * (m_value / 100));
+        return min(viewport_rect.width(), viewport_rect.height()) * (CSSPixels::nearest_value_for(m_value) / 100);
     case Type::Vmax:
     case Type::Svmax:
     case Type::Lvmax:
     case Type::Dvmax:
-        return CSSPixels::nearest_value_for(max(viewport_rect.width(), viewport_rect.height()) * (m_value / 100));
+        return max(viewport_rect.width(), viewport_rect.height()) * (CSSPixels::nearest_value_for(m_value) / 100);
     default:
         VERIFY_NOT_REACHED();
     }
