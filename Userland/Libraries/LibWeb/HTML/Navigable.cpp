@@ -62,6 +62,8 @@ Vector<JS::Handle<Navigable>> Navigable::child_navigables() const
 {
     Vector<JS::Handle<Navigable>> results;
     for (auto& entry : all_navigables()) {
+        if (entry->current_session_history_entry()->step == SessionHistoryEntry::Pending::Tag)
+            continue;
         if (entry->parent() == this)
             results.append(entry);
     }
