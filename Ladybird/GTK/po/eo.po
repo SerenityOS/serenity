@@ -54,7 +54,7 @@ msgstr ""
 
 #: js-console.blp:12
 msgid "Enter a JavaScript expression to evaluate"
-msgstr ""
+msgstr "Entajpi Ĝavoskriptan esprimon por plenumi"
 
 #: Window.cpp:141
 msgid "Failed to pick file"
@@ -70,7 +70,7 @@ msgstr "Ĝenerala"
 
 #: Tab.cpp:48
 msgid "JavaScript Console"
-msgstr ""
+msgstr "Ĝavoskripta konzolo"
 
 #: Application.cpp:65
 msgid ""
@@ -173,9 +173,8 @@ msgstr "Sam Atkins"
 
 #. Translators: this is the placeholder text for the main location entry.
 #: window.blp:127
-#, fuzzy
 msgid "Search or enter a URL to open..."
-msgstr "Entajpi URL..."
+msgstr "Serĉi aŭ entajpi URL-on..."
 
 #: Application.cpp:56
 msgid "SerenityOS developers"
