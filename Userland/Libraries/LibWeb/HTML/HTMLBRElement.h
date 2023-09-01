@@ -19,9 +19,16 @@ public:
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
 private:
+    virtual bool is_html_br_element() const override { return true; }
+
     HTMLBRElement(DOM::Document&, DOM::QualifiedName);
 
     virtual void initialize(JS::Realm&) override;
 };
 
+}
+
+namespace Web::DOM {
+template<>
+inline bool Node::fast_is<HTML::HTMLBRElement>() const { return is_html_br_element(); }
 }
