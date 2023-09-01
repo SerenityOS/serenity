@@ -90,7 +90,7 @@ index ced1fc1ff803383138e755efebef95983b85e0bd..5e0fc3998b86313a873a0549c95394e7
  Specifies the operating system for which the code is to be generated. The
  compiler you used should be the compiler for that operating system. This option
 diff --git a/tools/build/src/tools/gcc.jam b/tools/build/src/tools/gcc.jam
-index 7265553692172482a77407c715c905d4b880a1ca..58feebab4f78153095bdc097918c60a3a0655c01 100644
+index 834f5e1bf6ddb080127a9e17e566571a39b8fef3..9e18425d018866a0590e5205258ba4b2b099f6ec 100644
 --- a/tools/build/src/tools/gcc.jam
 +++ b/tools/build/src/tools/gcc.jam
 @@ -203,6 +203,7 @@ rule init ( version ? : command * : options * : requirement * )
@@ -101,15 +101,15 @@ index 7265553692172482a77407c715c905d4b880a1ca..58feebab4f78153095bdc097918c60a3
              # TODO: finish this list.
          }
      }
-@@ -389,6 +390,7 @@ local rule compile-link-flags ( * )
-     threading-flags <target-os>cygwin  : -mthreads ;
+@@ -391,6 +392,7 @@ local rule compile-link-flags ( * )
+     threading-flags <target-os>cygwin/<threadapi>pthread : -pthread ;
      threading-flags <target-os>solaris  : -pthreads : rt ;
      threading-flags <target-os>qnx : -pthread ;
 +    threading-flags <target-os>serenity ;
  
      local bsd = [ MATCH ^(.*bsd)$ : $(all-os) ] ;
      threading-flags <target-os>$(bsd) : -pthread ;
-@@ -396,7 +398,7 @@ local rule compile-link-flags ( * )
+@@ -398,7 +400,7 @@ local rule compile-link-flags ( * )
      # iOS doesn't need pthread flag according to the https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man3/pthread.3.html
      # The default system libraries include pthread functions.  No additional libraries or CFLAGS are necessary to use this API.
      local no-threading = android beos haiku sgi darwin vxworks iphone appletv ;

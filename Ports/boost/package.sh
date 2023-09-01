@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='boost'
-version='1.80.0'
+version='1.83.0'
 useconfigure='true'
 workdir="boost_${version//./_}"
 depends=(
@@ -11,7 +11,7 @@ depends=(
     'libicu'
 )
 files=(
-    "https://boostorg.jfrog.io/artifactory/main/release/${version}/source/boost_${version//./_}.tar.bz2#1e19565d82e43bc59209a168f5ac899d3ba471d55c7610c677d4ccf2c9c500c0"
+    "https://boostorg.jfrog.io/artifactory/main/release/${version}/source/boost_${version//./_}.tar.bz2#6478edfe2f3305127cffe8caf73ea0176c53769f4bf1585be237eb30798c3b8e"
 )
 bjamopts=(
     '--user-config=user-config.jam'
