@@ -55,72 +55,72 @@ String RadialGradientStyleValue::to_string() const
     return MUST(builder.to_string());
 }
 
-Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, Gfx::FloatPoint center, Gfx::FloatRect const& size) const
+CSSPixelSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, CSSPixelPoint center, CSSPixelRect const& size) const
 {
     auto const side_shape = [&](auto distance_function) {
-        auto const distance_from = [&](float v, float a, float b, auto distance_function) {
-            return distance_function(fabs(a - v), fabs(b - v));
+        auto const distance_from = [&](CSSPixels v, CSSPixels a, CSSPixels b, auto distance_function) {
+            return distance_function(abs(a - v), abs(b - v));
         };
         auto x_dist = distance_from(center.x(), size.left(), size.right(), distance_function);
         auto y_dist = distance_from(center.y(), size.top(), size.bottom(), distance_function);
         if (m_properties.ending_shape == EndingShape::Circle) {
             auto dist = distance_function(x_dist, y_dist);
-            return Gfx::FloatSize { dist, dist };
+            return CSSPixelSize { dist, dist };
         } else {
-            return Gfx::FloatSize { x_dist, y_dist };
+            return CSSPixelSize { x_dist, y_dist };
         }
     };
 
     auto const closest_side_shape = [&] {
-        return side_shape(AK::min<float>);
+        return side_shape(AK::min<CSSPixels>);
     };
 
     auto const farthest_side_shape = [&] {
-        return side_shape(AK::max<float>);
+        return side_shape(AK::max<CSSPixels>);
     };
 
-    auto const corner_distance = [&](auto distance_compare, Gfx::FloatPoint& corner) {
-        auto top_left_distance = size.top_left().distance_from(center);
-        auto top_right_distance = size.top_right().distance_from(center);
-        auto bottom_right_distance = size.bottom_right().distance_from(center);
-        auto bottom_left_distance = size.bottom_left().distance_from(center);
-        auto distance = top_left_distance;
+    auto const corner_distance = [&](auto distance_compare, CSSPixelPoint& corner) {
+        auto top_left_distance_squared = square_distance_between(size.top_left(), center);
+        auto top_right_distance_squared = square_distance_between(size.top_right(), center);
+        auto bottom_right_distance_squared = square_distance_between(size.bottom_right(), center);
+        auto bottom_left_distance_squared = square_distance_between(size.bottom_left(), center);
+        auto distance_squared = top_left_distance_squared;
         corner = size.top_left();
-        if (distance_compare(top_right_distance, distance)) {
+        if (distance_compare(top_right_distance_squared, distance_squared)) {
             corner = size.top_right();
-            distance = top_right_distance;
+            distance_squared = top_right_distance_squared;
         }
-        if (distance_compare(bottom_right_distance, distance)) {
+        if (distance_compare(bottom_right_distance_squared, distance_squared)) {
             corner = size.bottom_right();
-            distance = bottom_right_distance;
+            distance_squared = bottom_right_distance_squared;
         }
-        if (distance_compare(bottom_left_distance, distance)) {
+        if (distance_compare(bottom_left_distance_squared, distance_squared)) {
             corner = size.bottom_left();
-            distance = bottom_left_distance;
+            distance_squared = bottom_left_distance_squared;
         }
-        return distance;
+        return sqrt(distance_squared);
     };
 
-    auto const closest_corner_distance = [&](Gfx::FloatPoint& corner) {
-        return corner_distance([](float a, float b) { return a < b; }, corner);
+    auto const closest_corner_distance = [&](CSSPixelPoint& corner) {
+        return corner_distance([](CSSPixels a, CSSPixels b) { return a < b; }, corner);
     };
 
-    auto const farthest_corner_distance = [&](Gfx::FloatPoint& corner) {
-        return corner_distance([](float a, float b) { return a > b; }, corner);
+    auto const farthest_corner_distance = [&](CSSPixelPoint& corner) {
+        return corner_distance([](CSSPixels a, CSSPixels b) { return a > b; }, corner);
     };
 
     auto const corner_shape = [&](auto corner_distance, auto get_shape) {
-        Gfx::FloatPoint corner {};
+        CSSPixelPoint corner {};
         auto distance = corner_distance(corner);
         if (m_properties.ending_shape == EndingShape::Ellipse) {
             auto shape = get_shape();
             auto aspect_ratio = shape.width() / shape.height();
             auto p = corner - center;
-            auto radius_a = AK::sqrt(p.y() * p.y() * aspect_ratio * aspect_ratio + p.x() * p.x());
+            auto radius_a = sqrt(p.y() * p.y() * aspect_ratio * aspect_ratio + p.x() * p.x());
             auto radius_b = radius_a / aspect_ratio;
-            return Gfx::FloatSize { radius_a, radius_b };
+            return CSSPixelSize { radius_a, radius_b };
         }
-        return Gfx::FloatSize { distance, distance };
+        return CSSPixelSize { distance, distance };
     };
 
     // https://w3c.github.io/csswg-drafts/css-images/#radial-gradient-syntax
@@ -148,25 +148,25 @@ Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, 
         },
         [&](CircleSize const& circle_size) {
             auto radius = circle_size.radius.to_px(node);
-            return Gfx::FloatSize { radius.to_float(), radius.to_float() };
+            return CSSPixelSize { radius, radius };
         },
         [&](EllipseSize const& ellipse_size) {
-            auto radius_a = ellipse_size.radius_a.resolved(node, CSSPixels::nearest_value_for(size.width())).to_px(node);
-            auto radius_b = ellipse_size.radius_b.resolved(node, CSSPixels::nearest_value_for(size.height())).to_px(node);
-            return Gfx::FloatSize { radius_a.to_float(), radius_b.to_float() };
+            auto radius_a = ellipse_size.radius_a.resolved(node, size.width()).to_px(node);
+            auto radius_b = ellipse_size.radius_b.resolved(node, size.height()).to_px(node);
+            return CSSPixelSize { radius_a, radius_b };
         });
 
     // Handle degenerate cases
     // https://w3c.github.io/csswg-drafts/css-images/#degenerate-radials
 
-    constexpr auto arbitrary_small_number = 1e-10;
-    constexpr auto arbitrary_large_number = 1e10;
+    constexpr auto arbitrary_small_number = CSSPixels::smallest_positive_value();
+    constexpr auto arbitrary_large_number = CSSPixels::max();
 
     // If the ending shape is a circle with zero radius:
     if (m_properties.ending_shape == EndingShape::Circle && resolved_size.is_empty()) {
         // Render as if the ending shape was a circle whose radius was an arbitrary very small number greater than zero.
         // This will make the gradient continue to look like a circle.
-        return Gfx::FloatSize { arbitrary_small_number, arbitrary_small_number };
+        return CSSPixelSize { arbitrary_small_number, arbitrary_small_number };
     }
     // If the ending shape has zero width (regardless of the height):
     if (resolved_size.width() <= 0) {
@@ -174,14 +174,14 @@ Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, 
         // and whose width was an arbitrary very small number greater than zero.
         // This will make the gradient look similar to a horizontal linear gradient that is mirrored across the center of the ellipse.
         // It also means that all color-stop positions specified with a percentage resolve to 0px.
-        return Gfx::FloatSize { arbitrary_small_number, arbitrary_large_number };
+        return CSSPixelSize { arbitrary_small_number, arbitrary_large_number };
     }
     // Otherwise, if the ending shape has zero height:
     if (resolved_size.height() <= 0) {
         // Render as if the ending shape was an ellipse whose width was an arbitrary very large number and whose height
         // was an arbitrary very small number greater than zero. This will make the gradient look like a solid-color image equal
         // to the color of the last color-stop, or equal to the average color of the gradient if it’s repeating.
-        return Gfx::FloatSize { arbitrary_large_number, arbitrary_small_number };
+        return CSSPixelSize { arbitrary_large_number, arbitrary_small_number };
     }
     return resolved_size;
 }
@@ -189,12 +189,12 @@ Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, 
 void RadialGradientStyleValue::resolve_for_size(Layout::NodeWithStyleAndBoxModelMetrics const& node, CSSPixelSize paint_size) const
 {
     CSSPixelRect gradient_box { { 0, 0 }, paint_size };
-    auto center = m_properties.position.resolved(node, gradient_box).to_type<float>();
-    auto gradient_size = resolve_size(node, center, gradient_box.to_type<float>());
+    auto center = m_properties.position.resolved(node, gradient_box);
+    auto gradient_size = resolve_size(node, center, gradient_box);
     if (m_resolved.has_value() && m_resolved->gradient_size == gradient_size)
         return;
     m_resolved = ResolvedData {
-        Painting::resolve_radial_gradient_data(node, gradient_size.to_type<CSSPixels>(), *this),
+        Painting::resolve_radial_gradient_data(node, gradient_size, *this),
         gradient_size,
         center,
     };
@@ -212,8 +212,8 @@ void RadialGradientStyleValue::paint(PaintContext& context, DevicePixelRect cons
 {
     VERIFY(m_resolved.has_value());
     Painting::paint_radial_gradient(context, dest_rect, m_resolved->data,
-        context.rounded_device_point(m_resolved->center.to_type<CSSPixels>()),
-        context.rounded_device_size(m_resolved->gradient_size.to_type<CSSPixels>()));
+        context.rounded_device_point(m_resolved->center),
+        context.rounded_device_size(m_resolved->gradient_size));
 }
 
 }

@@ -405,7 +405,7 @@ using DevicePixelSize = Gfx::Size<DevicePixels>;
 
 }
 
-inline Web::CSSPixels abs(Web::CSSPixels const& value)
+constexpr Web::CSSPixels abs(Web::CSSPixels const& value)
 {
     return value.abs();
 }
@@ -430,9 +430,21 @@ constexpr Web::CSSPixels round(Web::CSSPixels const& value)
     return ceil(value - Web::CSSPixels::from_raw(Web::CSSPixels::fixed_point_denominator >> 1 /* 0.5 */));
 }
 
+inline Web::CSSPixels sqrt(Web::CSSPixels const& value)
+{
+    return Web::CSSPixels::nearest_value_for(AK::sqrt(value.to_float()));
+}
+
 constexpr Web::DevicePixels abs(Web::DevicePixels const& value)
 {
     return AK::abs(value.value());
+}
+
+constexpr Web::CSSPixels square_distance_between(Web::CSSPixelPoint const& a, Web::CSSPixelPoint const& b)
+{
+    auto delta_x = abs(a.x() - b.x());
+    auto delta_y = abs(a.y() - b.y());
+    return delta_x * delta_x + delta_y * delta_y;
 }
 
 template<>

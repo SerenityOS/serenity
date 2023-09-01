@@ -42,8 +42,8 @@ public:
     {
     }
 
-    [[nodiscard]] ALWAYS_INLINE T x() const { return m_x; }
-    [[nodiscard]] ALWAYS_INLINE T y() const { return m_y; }
+    [[nodiscard]] constexpr ALWAYS_INLINE T x() const { return m_x; }
+    [[nodiscard]] constexpr ALWAYS_INLINE T y() const { return m_y; }
 
     ALWAYS_INLINE void set_x(T x) { m_x = x; }
     ALWAYS_INLINE void set_y(T y) { m_y = y; }
