@@ -17,6 +17,9 @@ class ShadowRoot final : public DocumentFragment {
 public:
     Bindings::ShadowRootMode mode() const { return m_mode; }
 
+    Bindings::SlotAssignmentMode slot_assignment() const { return m_slot_assignment; }
+    void set_slot_assignment(Bindings::SlotAssignmentMode slot_assignment) { m_slot_assignment = slot_assignment; }
+
     bool delegates_focus() const { return m_delegates_focus; }
     void set_delegates_focus(bool delegates_focus) { m_delegates_focus = delegates_focus; }
 
@@ -37,8 +40,9 @@ private:
     virtual DeprecatedFlyString node_name() const override { return "#shadow-root"; }
     virtual bool is_shadow_root() const final { return true; }
 
-    // NOTE: The specification doesn't seem to specify a default value for closed. Assuming closed for now.
+    // NOTE: The specification doesn't seem to specify a default value for mode. Assuming closed for now.
     Bindings::ShadowRootMode m_mode { Bindings::ShadowRootMode::Closed };
+    Bindings::SlotAssignmentMode m_slot_assignment { Bindings::SlotAssignmentMode::Named };
     bool m_delegates_focus { false };
     bool m_available_to_element_internals { false };
 };

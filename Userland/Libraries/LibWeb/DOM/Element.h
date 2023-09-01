@@ -30,6 +30,7 @@ namespace Web::DOM {
 struct ShadowRootInit {
     Bindings::ShadowRootMode mode;
     bool delegates_focus = false;
+    Bindings::SlotAssignmentMode slot_assignment { Bindings::SlotAssignmentMode::Named };
 };
 
 // https://w3c.github.io/csswg-drafts/cssom-view-1/#dictdef-scrollintoviewoptions
