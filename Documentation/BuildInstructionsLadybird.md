@@ -36,6 +36,10 @@ On Nix/NixOS:
 ```
 nix-shell ladybird.nix
 ```
+You can also use the nix flake in `Toolchain`:
+```
+nix develop Toolchain/#ladybird
+```
 
 On macOS:
 
