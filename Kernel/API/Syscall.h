@@ -73,7 +73,7 @@ enum class NeedsBigProcessLock {
     S(emuctl, NeedsBigProcessLock::No)                     \
     S(execve, NeedsBigProcessLock::Yes)                    \
     S(exit, NeedsBigProcessLock::No)                       \
-    S(exit_thread, NeedsBigProcessLock::Yes)               \
+    S(exit_thread, NeedsBigProcessLock::No)                \
     S(faccessat, NeedsBigProcessLock::No)                  \
     S(fchdir, NeedsBigProcessLock::No)                     \
     S(fchmod, NeedsBigProcessLock::No)                     \

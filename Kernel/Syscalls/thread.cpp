@@ -92,7 +92,7 @@ ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<Sys
 
 void Process::sys$exit_thread(Userspace<void*> exit_value, Userspace<void*> stack_location, size_t stack_size)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
 
     auto result = require_promise(Pledge::thread);
     if (result.is_error()) {
