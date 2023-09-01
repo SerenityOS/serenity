@@ -46,6 +46,8 @@ space rounded up to the nearest whole unit.
 
 * `-name pattern`: Checks if the file name matches the given global-style
   pattern (case sensitive).
+* `-empty`: File is either an empty regular file or a directory containing no
+  files.
 * `-iname pattern`: Checks if the file name matches the given global-style
   pattern (case insensitive).
 * `-readable`: Checks if the file is readable by the current user.

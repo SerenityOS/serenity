@@ -11,6 +11,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/Time.h>
 #include <AK/Vector.h>
+#include <LibCore/DirIterator.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <LibRegex/Regex.h>
@@ -274,6 +275,31 @@ private:
     off_t m_unit_size { 512 };
 };
 
+class EmptyCommand final : public Command {
+public:
+    EmptyCommand()
+    {
+    }
+
+private:
+    virtual bool evaluate(FileData& file_data) const override
+    {
+        struct stat const* stat = file_data.ensure_stat();
+        if (!stat)
+            return false;
+
+        if (S_ISREG(stat->st_mode))
+            return stat->st_size == 0;
+
+        if (S_ISDIR(stat->st_mode)) {
+            auto dir_iterator = Core::DirIterator(file_data.full_path.string(), Core::DirIterator::SkipDots);
+            return !dir_iterator.has_next();
+        }
+
+        return false;
+    }
+};
+
 class NameCommand : public Command {
 public:
     NameCommand(char const* pattern, CaseSensitivity case_sensitivity)
@@ -507,6 +533,8 @@ static OwnPtr<Command> parse_simple_command(Vector<char*>& args)
         if (args.is_empty())
             fatal_error("-size: requires additional arguments");
         return make<SizeCommand>(args.take_first());
+    } else if (arg == "-empty") {
+        return make<EmptyCommand>();
     } else if (arg == "-name") {
         if (args.is_empty())
             fatal_error("-name: requires additional arguments");
