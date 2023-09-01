@@ -1,9 +1,11 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=libopenal
-useconfigure=true
-version=1.21.1
+port='libopenal'
+version='1.21.1'
 workdir="openal-soft-${version}"
-depends=('SDL2')
+depends=(
+    'SDL2'
+)
+useconfigure='true'
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
     '-DALSOFT_NO_CONFIG_UTIL=ON'

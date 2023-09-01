@@ -6,12 +6,14 @@ files=(
 )
 useconfigure='true'
 use_fresh_config_sub='true'
-config_sub_paths=("builds/unix/config.sub")
+config_sub_paths=(
+    'builds/unix/config.sub'
+)
 configopts=(
     "--with-sysroot=${SERENITY_INSTALL_ROOT}"
-    "--with-brotli=no"
-    "--with-bzip2=no"
-    "--with-zlib=no"
-    "--with-harfbuzz=no"
-    "--with-png=no"
+    '--with-brotli=no'
+    '--with-bzip2=no'
+    '--with-zlib=no'
+    '--with-harfbuzz=no'
+    '--with-png=no'
 )

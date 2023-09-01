@@ -6,7 +6,8 @@ files=(
 )
 useconfigure='true'
 configopts=(
-    '--cross-file' "${SERENITY_BUILD_DIR}/meson-cross-file.txt"
+    '--cross-file'
+    "${SERENITY_BUILD_DIR}/meson-cross-file.txt"
 )
 depends=(
     'gettext'
@@ -18,8 +19,8 @@ depends=(
 
 configure() {
     # TODO: Figure out why GCC doesn't autodetect that libgcc_s is needed.
-    if [ "${SERENITY_TOOLCHAIN}" = "GNU" ]; then
-        export LDFLAGS="-lgcc_s"
+    if [ "${SERENITY_TOOLCHAIN}" = 'GNU' ]; then
+        export LDFLAGS='-lgcc_s'
     fi
 
     run meson _build "${configopts[@]}"

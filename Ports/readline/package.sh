@@ -1,16 +1,17 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-
-port=readline
-version=8.1.2
-useconfigure=true
-config_sub_paths=("support/config.sub")
-use_fresh_config_sub=true
+port='readline'
+version='8.1.2'
+useconfigure='true'
+use_fresh_config_sub='true'
+config_sub_paths=(
+    'support/config.sub'
+)
 files=(
     "https://ftpmirror.gnu.org/gnu/readline/readline-${version}.tar.gz#7589a2381a8419e68654a47623ce7dfcb756815c8fee726b98f90bf668af7bc6"
 )
 configopts=(
-    "--disable-static"
-    "--enable-shared"
+    '--disable-static'
+    '--enable-shared'
 )
 
 post_install() {

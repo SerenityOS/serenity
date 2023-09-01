@@ -6,10 +6,17 @@ files=(
 )
 useconfigure='true'
 use_fresh_config_sub='true'
-config_sub_paths=("build-aux/config.sub")
-depends=("gettext")
-configopts=("--disable-tests" "--disable-threads")
+config_sub_paths=(
+    'build-aux/config.sub'
+)
+depends=(
+    'gettext'
+)
 
 configure() {
-    run ./configure --host="${SERENITY_ARCH}-pc-serenity" --build="$(${workdir}/build-aux/config.guess)" "${configopts[@]}"
+    run ./configure \
+        --host="${SERENITY_ARCH}-pc-serenity" \
+        --build="$("${workdir}/build-aux/config.guess")" \
+        --disable-tests \
+        --disable-threads
 }

@@ -22,11 +22,11 @@ configopts=(
 
 configure() {
     export LDFLAGS="-L${SERENITY_INSTALL_ROOT}/usr/local/lib"
-    run ./"$configscript" "${configopts[@]}"
+    run ./"${configscript}" "${configopts[@]}"
 }
 
 install() {
     # The default "install" also installs docs, which we don't want.
-    run make DESTDIR=$DESTDIR install_sw "${installopts[@]}"
-    run make DESTDIR=$DESTDIR install_ssldirs "${installopts[@]}"
+    run make DESTDIR="${DESTDIR}" install_sw "${installopts[@]}"
+    run make DESTDIR="${DESTDIR}" install_ssldirs "${installopts[@]}"
 }
