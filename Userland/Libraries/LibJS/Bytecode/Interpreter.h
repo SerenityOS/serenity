@@ -87,7 +87,7 @@ public:
     Executable& current_executable() { return *m_current_executable; }
     Executable const& current_executable() const { return *m_current_executable; }
     BasicBlock const& current_block() const { return *m_current_block; }
-    size_t pc() const;
+    auto& instruction_stream_iterator() const { return m_pc; }
     DeprecatedString debug_position() const;
 
     Optional<Value>& this_value() { return m_this_value; }
@@ -121,7 +121,7 @@ private:
     Optional<Value> m_saved_exception;
     Executable* m_current_executable { nullptr };
     BasicBlock const* m_current_block { nullptr };
-    InstructionStreamIterator* m_pc { nullptr };
+    Optional<InstructionStreamIterator&> m_pc {};
 };
 
 extern bool g_dump_bytecode;

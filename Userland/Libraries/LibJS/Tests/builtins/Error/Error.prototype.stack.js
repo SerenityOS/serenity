@@ -3,15 +3,14 @@ const stackGetter = stackDescriptor.get;
 const stackSetter = stackDescriptor.set;
 
 describe("getter - normal behavior", () => {
-    test.xfail("basic functionality", () => {
+    test("basic functionality", () => {
         const stackFrames = [
             /^    at .*Error \(.*\/Error\.prototype\.stack\.js:\d+:\d+\)$/,
             /^    at .+\/Error\/Error\.prototype\.stack\.js:\d+:\d+$/,
             /^    at test \(.+\/test-common.js:\d+:\d+\)$/,
-            /^    at (.+\/test-common.js:\d+:\d+)/,
-            /^    at .+\/Error\/Error\.prototype\.stack\.js:6:73$/,
+            /^    at .+\/Error\/Error\.prototype\.stack\.js:6:9$/,
             /^    at describe \(.+\/test-common\.js:\d+:\d+\)$/,
-            /^    at .+\/Error\/Error\.prototype\.stack\.js:5:38$/,
+            /^    at .+\/Error\/Error\.prototype\.stack\.js:5:9$/,
         ];
         const values = [
             {

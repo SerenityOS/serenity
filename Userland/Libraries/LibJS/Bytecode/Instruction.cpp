@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Bytecode/Executable.h>
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Op.h>
 
@@ -23,6 +24,22 @@ void Instruction::destroy(Instruction& instruction)
     }
 
 #undef __BYTECODE_OP
+}
+
+UnrealizedSourceRange InstructionStreamIterator::source_range() const
+{
+    VERIFY(m_executable);
+    auto record = dereference().source_record();
+    return {
+        .source_code = m_executable->source_code,
+        .start_offset = record.source_start_offset,
+        .end_offset = record.source_end_offset,
+    };
+}
+
+RefPtr<SourceCode> InstructionStreamIterator::source_code() const
+{
+    return m_executable ? m_executable->source_code.ptr() : nullptr;
 }
 
 }

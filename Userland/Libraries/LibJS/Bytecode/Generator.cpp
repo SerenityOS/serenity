@@ -24,6 +24,7 @@ CodeGenerationErrorOr<NonnullOwnPtr<Executable>> Generator::generate(ASTNode con
 {
     Generator generator;
     generator.switch_to_basic_block(generator.make_block());
+    SourceLocationScope scope(generator, node);
     generator.m_enclosing_function_kind = enclosing_function_kind;
     if (generator.is_in_generator_or_async_function()) {
         // Immediately yield with no value.
@@ -69,6 +70,7 @@ CodeGenerationErrorOr<NonnullOwnPtr<Executable>> Generator::generate(ASTNode con
         .string_table = move(generator.m_string_table),
         .identifier_table = move(generator.m_identifier_table),
         .regex_table = move(generator.m_regex_table),
+        .source_code = node.source_code(),
         .number_of_registers = generator.m_next_register,
         .is_strict_mode = is_strict_mode,
     });
@@ -90,6 +92,18 @@ Register Generator::allocate_register()
 {
     VERIFY(m_next_register != NumericLimits<u32>::max());
     return Register { m_next_register++ };
+}
+
+Generator::SourceLocationScope::SourceLocationScope(Generator& generator, ASTNode const& node)
+    : m_generator(generator)
+    , m_previous_node(m_generator.m_current_ast_node)
+{
+    m_generator.m_current_ast_node = &node;
+}
+
+Generator::SourceLocationScope::~SourceLocationScope()
+{
+    m_generator.m_current_ast_node = m_previous_node;
 }
 
 Label Generator::nearest_continuable_scope() const

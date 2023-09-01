@@ -268,8 +268,13 @@ static ErrorOr<bool> parse_and_run(JS::Realm& realm, StringView source, StringVi
                     warnln(" -> {}", traceback_frame.function_name);
                     warnln(" {} more calls", repetitions);
                 } else {
-                    for (size_t j = 0; j < repetitions + 1; ++j)
-                        warnln(" -> {}", traceback_frame.function_name);
+                    for (size_t j = 0; j < repetitions + 1; ++j) {
+                        warnln(" -> {} ({}:{},{})",
+                            traceback_frame.function_name,
+                            traceback_frame.source_range().code->filename(),
+                            traceback_frame.source_range().start.line,
+                            traceback_frame.source_range().start.column);
+                    }
                 }
                 repetitions = 0;
             }

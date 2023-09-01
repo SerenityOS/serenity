@@ -8,6 +8,7 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/SinglyLinkedList.h>
+#include <LibJS/AST.h>
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/CodeGenerationError.h>
 #include <LibJS/Bytecode/Executable.h>
@@ -45,6 +46,16 @@ public:
         }
     }
 
+    class SourceLocationScope {
+    public:
+        SourceLocationScope(Generator&, ASTNode const& node);
+        ~SourceLocationScope();
+
+    private:
+        Generator& m_generator;
+        ASTNode const* m_previous_node { nullptr };
+    };
+
     template<typename OpType, typename... Args>
     OpType& emit(Args&&... args)
     {
@@ -58,7 +69,9 @@ public:
         new (slot) OpType(forward<Args>(args)...);
         if constexpr (OpType::IsTerminator)
             m_current_basic_block->terminate({}, static_cast<Instruction const*>(slot));
-        return *static_cast<OpType*>(slot);
+        auto* op = static_cast<OpType*>(slot);
+        op->set_source_record({ m_current_ast_node->start_offset(), m_current_ast_node->end_offset() });
+        return *op;
     }
 
     template<typename OpType, typename... Args>
@@ -77,7 +90,9 @@ public:
         new (slot) OpType(forward<Args>(args)...);
         if constexpr (OpType::IsTerminator)
             m_current_basic_block->terminate({}, static_cast<Instruction const*>(slot));
-        return *static_cast<OpType*>(slot);
+        auto* op = static_cast<OpType*>(slot);
+        op->set_source_record({ m_current_ast_node->start_offset(), m_current_ast_node->end_offset() });
+        return *op;
     }
 
     CodeGenerationErrorOr<void> emit_load_from_reference(JS::ASTNode const&);
@@ -231,6 +246,7 @@ private:
     };
 
     BasicBlock* m_current_basic_block { nullptr };
+    ASTNode const* m_current_ast_node { nullptr };
     Vector<NonnullOwnPtr<BasicBlock>> m_root_basic_blocks;
     NonnullOwnPtr<StringTable> m_string_table;
     NonnullOwnPtr<IdentifierTable> m_identifier_table;

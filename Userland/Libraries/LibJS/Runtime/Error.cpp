@@ -83,9 +83,12 @@ void Error::populate_stack()
         if (function_name.is_empty())
             function_name = "<unknown>"sv;
 
+        UnrealizedSourceRange range = {};
+        if (context->instruction_stream_iterator.has_value())
+            range = context->instruction_stream_iterator->source_range();
         TracebackFrame frame {
             .function_name = move(function_name),
-            .source_range_storage = context->source_range,
+            .source_range_storage = range,
         };
 
         m_traceback.append(move(frame));

@@ -10,6 +10,7 @@
 
 #include <AK/DeprecatedFlyString.h>
 #include <AK/WeakPtr.h>
+#include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/Module.h>
@@ -43,7 +44,7 @@ public:
     // Non-standard: This points at something that owns this ExecutionContext, in case it needs to be protected from GC.
     GCPtr<Cell> context_owner;
 
-    UnrealizedSourceRange source_range;
+    Optional<Bytecode::InstructionStreamIterator&> instruction_stream_iterator;
     DeprecatedFlyString function_name;
     Value this_value;
     MarkedVector<Value> arguments;
