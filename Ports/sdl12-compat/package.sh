@@ -1,10 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='sdl12-compat'
-version='1.2.56'
+version='1.2.64'
 workdir="sdl12-compat-release-${version}"
 useconfigure='true'
 files=(
-    "https://github.com/libsdl-org/sdl12-compat/archive/refs/tags/release-${version}.tar.gz#f62f3e15f95aade366ee6c03f291e8825c4689390a6be681535259a877259c58"
+    "https://github.com/libsdl-org/sdl12-compat/archive/refs/tags/release-${version}.tar.gz#3e308e817c7f0c6383225485e9a67bf1119ad684b8cc519038671cc1b5d29861"
 )
 depends=(
     'SDL2'
