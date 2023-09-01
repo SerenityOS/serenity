@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='double-conversion'
-version='3.2.1'
+version='3.3.0'
 files=(
-    "https://github.com/google/double-conversion/archive/refs/tags/v${version}.tar.gz#e40d236343cad807e83d192265f139481c51fc83a1c49e406ac6ce0a0ba7cd35"
+    "https://github.com/google/double-conversion/archive/refs/tags/v${version}.tar.gz#04ec44461850abbf33824da84978043b22554896b552c5fd11a9c5ae4b4d296e"
 )
 useconfigure='true'
 configopts=(
