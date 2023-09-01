@@ -134,16 +134,16 @@ enum class NeedsBigProcessLock {
     S(msync, NeedsBigProcessLock::No)                      \
     S(munmap, NeedsBigProcessLock::No)                     \
     S(open, NeedsBigProcessLock::No)                       \
-    S(perf_event, NeedsBigProcessLock::Yes)                \
-    S(perf_register_string, NeedsBigProcessLock::Yes)      \
+    S(perf_event, NeedsBigProcessLock::No)                 \
+    S(perf_register_string, NeedsBigProcessLock::No)       \
     S(pipe, NeedsBigProcessLock::No)                       \
     S(pledge, NeedsBigProcessLock::No)                     \
     S(poll, NeedsBigProcessLock::No)                       \
     S(posix_fallocate, NeedsBigProcessLock::No)            \
     S(prctl, NeedsBigProcessLock::No)                      \
-    S(profiling_disable, NeedsBigProcessLock::Yes)         \
-    S(profiling_enable, NeedsBigProcessLock::Yes)          \
-    S(profiling_free_buffer, NeedsBigProcessLock::Yes)     \
+    S(profiling_disable, NeedsBigProcessLock::No)          \
+    S(profiling_enable, NeedsBigProcessLock::No)           \
+    S(profiling_free_buffer, NeedsBigProcessLock::No)      \
     S(ptrace, NeedsBigProcessLock::Yes)                    \
     S(purge, NeedsBigProcessLock::Yes)                     \
     S(read, NeedsBigProcessLock::Yes)                      \

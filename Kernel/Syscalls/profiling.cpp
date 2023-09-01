@@ -18,7 +18,7 @@ u64 g_profiling_event_mask;
 
 ErrorOr<FlatPtr> Process::sys$profiling_enable(pid_t pid, u64 event_mask)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_no_promises());
 
     return profiling_enable(pid, event_mask);
@@ -27,7 +27,7 @@ ErrorOr<FlatPtr> Process::sys$profiling_enable(pid_t pid, u64 event_mask)
 // NOTE: This second entrypoint exists to allow the kernel to invoke the syscall to enable boot profiling.
 ErrorOr<FlatPtr> Process::profiling_enable(pid_t pid, u64 event_mask)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
 
     if (pid == -1) {
         auto credentials = this->credentials();
@@ -82,7 +82,7 @@ ErrorOr<FlatPtr> Process::profiling_enable(pid_t pid, u64 event_mask)
 
 ErrorOr<FlatPtr> Process::sys$profiling_disable(pid_t pid)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_no_promises());
 
     if (pid == -1) {
@@ -117,7 +117,7 @@ ErrorOr<FlatPtr> Process::sys$profiling_disable(pid_t pid)
 
 ErrorOr<FlatPtr> Process::sys$profiling_free_buffer(pid_t pid)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_no_promises());
 
     if (pid == -1) {

@@ -11,7 +11,7 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     return profiling_data().with([&](auto& data) -> ErrorOr<FlatPtr> {
         auto* events_buffer = data.current_perf_events_buffer();
         if (!events_buffer)
@@ -23,7 +23,7 @@ ErrorOr<FlatPtr> Process::sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2)
 
 ErrorOr<FlatPtr> Process::sys$perf_register_string(Userspace<char const*> user_string, size_t user_string_length)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     return profiling_data().with([&](auto& data) -> ErrorOr<FlatPtr> {
         auto* events_buffer = data.current_perf_events_buffer();
         if (!events_buffer)
