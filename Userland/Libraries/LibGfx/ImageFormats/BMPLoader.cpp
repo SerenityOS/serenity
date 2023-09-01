@@ -550,11 +550,6 @@ static bool decode_bmp_core_dib(BMPLoadingContext& context, InputStreamer& strea
         return false;
     }
 
-    if (static_cast<size_t>(core.width) > maximum_width_for_decoded_images || static_cast<size_t>(abs(core.height)) > maximum_height_for_decoded_images) {
-        dbgln("This BMP is too large for comfort: {}x{}", core.width, abs(core.height));
-        return false;
-    }
-
     auto color_planes = streamer.read_u16();
     if (color_planes != 1) {
         dbgln("BMP has an invalid number of color planes: {}", color_planes);

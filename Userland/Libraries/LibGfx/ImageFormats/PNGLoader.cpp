@@ -933,11 +933,6 @@ static ErrorOr<void> process_IHDR(ReadonlyBytes data, PNGLoadingContext& context
 
     auto const& ihdr = *(const PNG_IHDR*)data.data();
 
-    if (ihdr.width > maximum_width_for_decoded_images || ihdr.height > maximum_height_for_decoded_images) {
-        dbgln("This PNG is too large for comfort: {}x{}", (u32)ihdr.width, (u32)ihdr.height);
-        return Error::from_string_literal("This PNG is too large for comfort");
-    }
-
     if (!is_valid_compression_method(ihdr.compression_method)) {
         dbgln("PNG has invalid compression method {}", ihdr.compression_method);
         return Error::from_string_literal("Unsupported compression method");

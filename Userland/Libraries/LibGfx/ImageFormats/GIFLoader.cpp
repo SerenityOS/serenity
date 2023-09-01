@@ -391,11 +391,6 @@ static ErrorOr<void> load_header_and_logical_screen(GIFLoadingContext& context)
     context.logical_screen.width = TRY(context.stream.read_value<LittleEndian<u16>>());
     context.logical_screen.height = TRY(context.stream.read_value<LittleEndian<u16>>());
 
-    if (context.logical_screen.width > maximum_width_for_decoded_images || context.logical_screen.height > maximum_height_for_decoded_images) {
-        dbgln("This GIF is too large for comfort: {}x{}", context.logical_screen.width, context.logical_screen.height);
-        return Error::from_string_literal("This GIF is too large for comfort");
-    }
-
     auto gcm_info = TRY(context.stream.read_value<u8>());
     context.background_color_index = TRY(context.stream.read_value<u8>());
     [[maybe_unused]] auto pixel_aspect_ratio = TRY(context.stream.read_value<u8>());
