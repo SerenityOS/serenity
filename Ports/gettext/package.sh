@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='gettext'
-version='0.21.1'
+version='0.22'
 useconfigure='true'
 files=(
-    "https://ftpmirror.gnu.org/gettext/gettext-${version}.tar.gz#e8c3650e1d8cee875c4f355642382c1df83058bd5a11ee8555c0cf276d646d45"
+    "https://ftpmirror.gnu.org/gettext/gettext-${version}.tar.gz#49f089be11b490170bbf09ed2f51e5f5177f55be4cc66504a5861820e0fb06ab"
 )
 depends=(
     'libiconv'
@@ -14,5 +14,6 @@ config_sub_paths=(
     'libtextstyle/build-aux/config.sub'
 )
 configopts=(
-    '--disable-curses'    
+    '--disable-curses'
+    "--with-sysroot=${SERENITY_INSTALL_ROOT}"
 )
