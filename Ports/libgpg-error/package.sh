@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libgpg-error'
-version='1.45'
+version='1.47'
 files=(
-    "https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${version}.tar.bz2#570f8ee4fb4bff7b7495cff920c275002aea2147e9a1d220c068213267f80a26"
+    "https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${version}.tar.bz2#9e3c670966b96ecc746c28c2c419541e3bcb787d1a73930f5e5f5e1bcbbb9bdb"
 )
 useconfigure='true'
 use_fresh_config_sub='true'
@@ -17,6 +17,8 @@ configure() {
     run ./configure \
         --host="${SERENITY_ARCH}-pc-serenity" \
         --build="$("${workdir}/build-aux/config.guess")" \
+        --with-sysroot="${SERENITY_INSTALL_ROOT}" \
         --disable-tests \
-        --disable-threads
+        --disable-threads \
+        --enable-install-gpg-error-config
 }
