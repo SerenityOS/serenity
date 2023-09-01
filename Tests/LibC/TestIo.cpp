@@ -136,7 +136,7 @@ TEST_CASE(mmap_directory)
 {
     int fd = open("/tmp", O_RDONLY | O_DIRECTORY);
     VERIFY(fd >= 0);
-    auto* ptr = mmap(nullptr, 4096, PROT_READ, MAP_FILE | MAP_SHARED, fd, 0);
+    auto* ptr = mmap(nullptr, 4096, PROT_READ, MAP_SHARED, fd, 0);
     EXPECT_EQ(ptr, MAP_FAILED);
     if (ptr != MAP_FAILED) {
         warnln("Boo! mmap() of a directory succeeded!");

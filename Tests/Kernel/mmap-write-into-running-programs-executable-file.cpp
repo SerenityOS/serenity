@@ -18,7 +18,7 @@ int main()
         perror("open");
         return 1;
     }
-    u8* ptr = (u8*)mmap(nullptr, 16384, PROT_READ, MAP_FILE | MAP_SHARED, fd, 0);
+    u8* ptr = (u8*)mmap(nullptr, 16384, PROT_READ, MAP_SHARED, fd, 0);
     if (ptr == MAP_FAILED) {
         perror("mmap");
         return 1;

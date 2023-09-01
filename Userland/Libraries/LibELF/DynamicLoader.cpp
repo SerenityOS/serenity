@@ -465,7 +465,7 @@ void DynamicLoader::load_program_headers()
             (u8*)reservation + ph_base - ph_load_base,
             ph_desired_base - ph_base + region.size_in_image(),
             PROT_READ,
-            MAP_FILE | MAP_SHARED | MAP_FIXED,
+            MAP_SHARED | MAP_FIXED,
             m_image_fd,
             VirtualAddress { region.offset() }.page_base().get(),
             builder.to_deprecated_string().characters());
