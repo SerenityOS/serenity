@@ -40,7 +40,7 @@ TEST_CASE(shared_non_empty_inode_vmobject_sync)
     VERIFY(fd >= 0);
     auto rc = write(fd, buf, sizeof(buf));
     VERIFY(rc == sizeof(buf));
-    shared_ptr = (u8*)mmap(nullptr, 0x2000, PROT_READ | PROT_WRITE, MAP_FILE | MAP_SHARED, fd, 0);
+    shared_ptr = (u8*)mmap(nullptr, 0x2000, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     EXPECT(shared_ptr != MAP_FAILED);
     rc = msync(shared_ptr, 0x2000, MS_ASYNC);
     EXPECT(rc == 0);

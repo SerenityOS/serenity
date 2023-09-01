@@ -40,7 +40,7 @@ TEST_CASE(private_non_empty_inode_vmobject_sync)
     VERIFY(fd >= 0);
     auto rc = write(fd, buf, sizeof(buf));
     VERIFY(rc == sizeof(buf));
-    private_ptr = (u8*)mmap(nullptr, 0x2000, PROT_READ | PROT_WRITE, MAP_FILE | MAP_PRIVATE, fd, 0);
+    private_ptr = (u8*)mmap(nullptr, 0x2000, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
     EXPECT(private_ptr != MAP_FAILED);
     rc = msync(private_ptr, 0x2000, MS_ASYNC);
     EXPECT(rc == 0);
