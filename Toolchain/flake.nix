@@ -13,6 +13,7 @@
         {
           formatter = pkgs.nixpkgs-fmt;
           devShells.default = import ./serenity.nix { inherit pkgs; };
+          devShells.ladybird = import ../Ladybird/ladybird.nix { inherit pkgs; };
         }
       );
 
