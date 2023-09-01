@@ -8,7 +8,7 @@ Subject: [PATCH] Use bash instead of /bin/sh
  1 file changed, 5 insertions(+), 38 deletions(-)
 
 diff --git a/src/shell_manager.cc b/src/shell_manager.cc
-index 96cfb06..4eb71db 100644
+index 62a60dc299a2696e6562d85077d7b3fab99fe5d8..6b6f48d932f5031670efff8e4ed67e2e78e25c26 100644
 --- a/src/shell_manager.cc
 +++ b/src/shell_manager.cc
 @@ -34,44 +34,11 @@ namespace Kakoune
@@ -61,6 +61,3 @@ index 96cfb06..4eb71db 100644
  
      // Add Kakoune binary location to the path to guarantee that %sh{ ... }
      // have access to the kak command regardless of if the user installed it
--- 
-2.37.3
-
