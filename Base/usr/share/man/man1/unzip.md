@@ -40,5 +40,4 @@ Archive: archive.unzip
 
 ## See also
 * [`zip`(1)](help://man/1/zip)
-* [`gunzip`(1)](help://man/1/gunzip)
 * [`tar`(1)](help://man/1/tar)

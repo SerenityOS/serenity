@@ -20,9 +20,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool decompress { false };
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(keep_input_files, "Keep (don't delete) input files", "keep", 'k');
-    args_parser.add_option(write_to_stdout, "Write to stdout, keep original files unchanged", "stdout", 'c');
-    args_parser.add_option(decompress, "Decompress", "decompress", 'd');
+    // NOTE: If the user run this program via the /bin/zcat or /bin/gunzip symlink,
+    // then emulate gzip decompression to stdout.
+    if (arguments.argc > 0 && (arguments.strings[0] == "zcat"sv || arguments.strings[0] == "gunzip"sv)) {
+        write_to_stdout = true;
+        decompress = true;
+    } else {
+        args_parser.add_option(keep_input_files, "Keep (don't delete) input files", "keep", 'k');
+        args_parser.add_option(write_to_stdout, "Write to stdout, keep original files unchanged", "stdout", 'c');
+        args_parser.add_option(decompress, "Decompress", "decompress", 'd');
+    }
     args_parser.add_positional_argument(filenames, "Files", "FILES", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
