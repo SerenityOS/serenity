@@ -1,7 +1,14 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='gawk'
-version='5.2.1'
+version='5.2.2'
 useconfigure='true'
 files=(
-    "https://ftpmirror.gnu.org/gnu/gawk/gawk-${version}.tar.gz#529e7c8c6acf21ff3a6183f4d763c632810908989c24675c77995d51ac37b79c"
+    "https://ftpmirror.gnu.org/gnu/gawk/gawk-${version}.tar.gz#945aef7ccff101f20b22a10802bc005e994ab2b8ea3e724cc1a197c62f41f650"
+)
+depends=(
+    'gmp'
+    'mpfr'
+)
+configopts=(
+    "--with-sysroot=${SERENITY_INSTALL_ROOT}"
 )
