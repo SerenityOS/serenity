@@ -139,6 +139,10 @@ public:
 
     virtual void apply_presentational_hints(CSS::StyleProperties&) const { }
 
+    // https://dom.spec.whatwg.org/#concept-element-attributes-change-ext
+    using AttributeChangeSteps = Function<void(DeprecatedFlyString const& /*local_name*/, DeprecatedString const& /*old_value*/, DeprecatedString const& /*value*/, DeprecatedFlyString const& /*namespace_*/)>;
+
+    void add_attribute_change_steps(AttributeChangeSteps steps);
     void run_attribute_change_steps(DeprecatedFlyString const& local_name, DeprecatedString const& old_value, DeprecatedString const& value, DeprecatedFlyString const& namespace_);
     virtual void attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value);
 
@@ -379,6 +383,7 @@ private:
     DeprecatedString m_html_uppercased_qualified_name;
 
     JS::GCPtr<NamedNodeMap> m_attributes;
+    Vector<AttributeChangeSteps> m_attribute_change_steps;
     JS::GCPtr<CSS::ElementInlineCSSStyleDeclaration> m_inline_style;
     JS::GCPtr<DOMTokenList> m_class_list;
     JS::GCPtr<ShadowRoot> m_shadow_root;
