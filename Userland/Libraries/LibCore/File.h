@@ -39,6 +39,7 @@ public:
         No,
     };
 
+    static bool valid_regular_filename_for_opening(StringView filename);
     static ErrorOr<NonnullOwnPtr<File>> open(StringView filename, OpenMode, mode_t = 0644);
     static ErrorOr<NonnullOwnPtr<File>> adopt_fd(int fd, OpenMode, ShouldCloseFileDescriptor = ShouldCloseFileDescriptor::Yes);
 

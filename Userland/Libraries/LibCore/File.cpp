@@ -12,6 +12,11 @@
 
 namespace Core {
 
+bool File::valid_regular_filename_for_opening(StringView filename)
+{
+    return !filename.is_empty() && filename != "-"sv;
+}
+
 ErrorOr<NonnullOwnPtr<File>> File::open(StringView filename, OpenMode mode, mode_t permissions)
 {
     auto file = TRY(adopt_nonnull_own_or_enomem(new (nothrow) File(mode)));
@@ -50,7 +55,7 @@ ErrorOr<NonnullOwnPtr<File>> File::standard_error()
 
 ErrorOr<NonnullOwnPtr<File>> File::open_file_or_standard_stream(StringView filename, OpenMode mode)
 {
-    if (!filename.is_empty() && filename != "-"sv)
+    if (valid_regular_filename_for_opening(filename))
         return File::open(filename, mode);
 
     switch (mode) {
