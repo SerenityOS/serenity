@@ -23,8 +23,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(keep_input_files, "Keep (don't delete) input files", "keep", 'k');
     args_parser.add_option(write_to_stdout, "Write to stdout, keep original files unchanged", "stdout", 'c');
     args_parser.add_option(decompress, "Decompress", "decompress", 'd');
-    args_parser.add_positional_argument(filenames, "Files", "FILES");
+    args_parser.add_positional_argument(filenames, "Files", "FILES", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
+
+    if (filenames.is_empty()) {
+        auto output_stream = TRY(Core::File::standard_output());
+        if (decompress)
+            TRY(Compress::GzipDecompressor::decompress_file("-"sv, move(output_stream)));
+        else
+            TRY(Compress::GzipCompressor::compress_file("-"sv, move(output_stream)));
+        return 0;
+    }
 
     if (write_to_stdout)
         keep_input_files = true;
