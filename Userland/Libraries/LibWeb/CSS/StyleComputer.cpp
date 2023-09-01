@@ -1941,17 +1941,31 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
 
     if (font_size.is_identifier()) {
         // https://w3c.github.io/csswg-drafts/css-fonts/#absolute-size-mapping
-        AK::HashMap<Web::CSS::ValueID, float> absolute_size_mapping = {
-            { CSS::ValueID::XxSmall, 0.6 },
-            { CSS::ValueID::XSmall, 0.75 },
-            { CSS::ValueID::Small, 8.0 / 9.0 },
-            { CSS::ValueID::Medium, 1.0 },
-            { CSS::ValueID::Large, 1.2 },
-            { CSS::ValueID::XLarge, 1.5 },
-            { CSS::ValueID::XxLarge, 2.0 },
-            { CSS::ValueID::XxxLarge, 3.0 },
-            { CSS::ValueID::Smaller, 0.8 },
-            { CSS::ValueID::Larger, 1.25 },
+        constexpr auto get_absolute_size_mapping = [](Web::CSS::ValueID identifier) {
+            switch (identifier) {
+            case CSS::ValueID::XxSmall:
+                return 0.6f;
+            case CSS::ValueID::XSmall:
+                return 0.75f;
+            case CSS::ValueID::Small:
+                return 8.0f / 9.0f;
+            case CSS::ValueID::Medium:
+                return 1.0f;
+            case CSS::ValueID::Large:
+                return 1.2f;
+            case CSS::ValueID::XLarge:
+                return 1.5f;
+            case CSS::ValueID::XxLarge:
+                return 2.0f;
+            case CSS::ValueID::XxxLarge:
+                return 3.0f;
+            case CSS::ValueID::Smaller:
+                return 0.8f;
+            case CSS::ValueID::Larger:
+                return 1.25f;
+            default:
+                return 1.0f;
+            }
         };
 
         auto const identifier = static_cast<IdentifierStyleValue const&>(font_size).id();
@@ -1965,8 +1979,7 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
                 font_size_in_px = CSSPixels::nearest_value_for(parent_element->computed_css_values()->computed_font().pixel_metrics().size);
             }
         }
-        auto const multiplier = absolute_size_mapping.get(identifier).value_or(1.0);
-        font_size_in_px.scale_by(multiplier);
+        font_size_in_px.scale_by(get_absolute_size_mapping(identifier));
 
     } else {
         Length::ResolutionContext const length_resolution_context {
