@@ -8,10 +8,10 @@ Subject: [PATCH] Disable vfs locking
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/sqlite3.c b/sqlite3.c
-index 0b227f0..90c38bd 100644
+index 310583f996c07c065f1ba658cad94e8f07b67aa5..5ab33091ab074c2b934cf1d872b93d73c077c88e 100644
 --- a/sqlite3.c
 +++ b/sqlite3.c
-@@ -42840,6 +42840,7 @@ SQLITE_API int sqlite3_os_init(void){
+@@ -45706,6 +45706,7 @@ SQLITE_API int sqlite3_os_init(void){
    ** array cannot be const.
    */
    static sqlite3_vfs aVfs[] = {
@@ -19,7 +19,7 @@ index 0b227f0..90c38bd 100644
  #if SQLITE_ENABLE_LOCKING_STYLE && defined(__APPLE__)
      UNIXVFS("unix",          autolockIoFinder ),
  #elif OS_VXWORKS
-@@ -42847,7 +42848,6 @@ SQLITE_API int sqlite3_os_init(void){
+@@ -45713,7 +45714,6 @@ SQLITE_API int sqlite3_os_init(void){
  #else
      UNIXVFS("unix",          posixIoFinder ),
  #endif
