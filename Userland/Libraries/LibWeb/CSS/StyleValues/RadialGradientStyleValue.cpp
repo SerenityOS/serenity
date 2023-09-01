@@ -85,16 +85,17 @@ Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, 
         auto bottom_right_distance = size.bottom_right().distance_from(center);
         auto bottom_left_distance = size.bottom_left().distance_from(center);
         auto distance = top_left_distance;
+        corner = size.top_left();
         if (distance_compare(top_right_distance, distance)) {
             corner = size.top_right();
             distance = top_right_distance;
         }
         if (distance_compare(bottom_right_distance, distance)) {
-            corner = size.top_right();
+            corner = size.bottom_right();
             distance = bottom_right_distance;
         }
         if (distance_compare(bottom_left_distance, distance)) {
-            corner = size.top_right();
+            corner = size.bottom_left();
             distance = bottom_left_distance;
         }
         return distance;
