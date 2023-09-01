@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='links'
-version='2.26'
+version='2.29'
 useconfigure='true'
 files=(
-    "http://links.twibright.com/download/links-${version}.tar.bz2#f05b3577f25dbe63e491c424f0ecb31f7bfadce9b2bc2f111dfed049c004c9cb"
+    "http://links.twibright.com/download/links-${version}.tar.bz2#22aa96c0b38e1a6f8f7ed9d7a4167a47fc37246097759ef6059ecf8f9ead7998"
 )
