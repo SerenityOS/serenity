@@ -9,10 +9,10 @@ Normally, the build system uses one of the compiled binaries to pack assets into
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 687b2361b02ae1c82fc4de8320bdb28487872eec..bb2cf3395d40c773dbb432ac81473358a3bb71cb 100644
+index 7c0e068143deae77fbaa818169b5cec7585a921e..2c781b26bad33730157ecfc3a5775d2ffdc4109f 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -386,7 +386,7 @@ endif ()
+@@ -394,7 +394,7 @@ endif ()
  
  
  # g2

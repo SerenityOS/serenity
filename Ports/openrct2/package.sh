@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='openrct2'
-version='0.4.4'
+version='0.4.5'
 depends=(
     'curl'
     'flac'
@@ -18,8 +18,8 @@ depends=(
     'zlib'
 )
 files=(
-    "https://github.com/OpenRCT2/OpenRCT2/archive/refs/tags/v${version}.tar.gz#18970bfffe49c77fa81ea6c295119b173a613c7310d7762963458e3e77c24913"
-    "https://github.com/OpenRCT2/OpenRCT2/releases/download/v${version}/OpenRCT2-${version}-linux-jammy-x86_64.tar.gz#e4263121ec51a1340d269e07b366f7ec306013e292babfea9fd768c03e19b5b7"
+    "https://github.com/OpenRCT2/OpenRCT2/archive/refs/tags/v${version}.tar.gz#eb9e20dc0dcbf10b02b5f334a029983a0a2b43d931f95a2088a64e8b2657bab1"
+    "https://github.com/OpenRCT2/OpenRCT2/releases/download/v${version}/OpenRCT2-${version}-linux-jammy-x86_64.tar.gz#c0652ace6fd2302e77cd25b85bb973e3c0d2c8be1d20cfdcb7a2a9b15630d112"
 )
 useconfigure='true'
 workdir="OpenRCT2-${version}"
@@ -45,7 +45,7 @@ configure() {
 
 build() {
     cd "${PORT_BUILD_DIR}/OpenRCT2-${version}-build"
-    mv "${PORT_BUILD_DIR}/OpenRCT2/data/g2.dat" .
+    [ -f 'g2.dat' ] || mv "${PORT_BUILD_DIR}/OpenRCT2/data/g2.dat" '.'
     ninja
 }
 
