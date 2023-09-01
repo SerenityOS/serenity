@@ -849,7 +849,7 @@ void GridFormattingContext::distribute_extra_space_across_spanned_tracks_base_si
         // Find the item-incurred increase for each spanned track with an affected size by: distributing the space
         // equally among such tracks, freezing a track’s item-incurred increase as its affected size + item-incurred
         // increase reaches its limit
-        CSSPixels increase_per_track = max(extra_space / affected_tracks.size(), CSSPixels::smallest_positive_value());
+        CSSPixels increase_per_track = max(CSSPixels::smallest_positive_value(), extra_space / affected_tracks.size());
         for (auto& track : affected_tracks) {
             if (track.base_size_frozen)
                 continue;
