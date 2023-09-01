@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='bzip3'
-version='1.2.2'
+version='1.3.2'
 files=(
-    "https://github.com/kspalaiologos/bzip3/releases/download/${version}/bzip3-${version}.tar.gz#19e8d379f48610f945a04a988fd0c330ff6613b3df96405d56bed35a7d216dee"
+    "https://github.com/kspalaiologos/bzip3/releases/download/${version}/bzip3-${version}.tar.gz#152cf2134fc27b68fef37d72b8c1f9f327ac611f6101d5a01287cdba24bc58c3"
 )
 useconfigure='true'
 installopts=(
