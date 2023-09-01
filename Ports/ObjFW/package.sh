@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='ObjFW'
-version='2903ecda7767a9563b6d3c74581b3920d32e6576'
+version='8d19ba9c8f1955673569e10919025624975e896f'
 useconfigure='true'
 files=(
-    "https://github.com/ObjFW/ObjFW/archive/${version}.tar.gz#ef5e3158e898415a9458f2c9a620b47f111b9a2af0bc8c48bcde4e13ae2b7727"
+    "https://github.com/ObjFW/ObjFW/archive/${version}.tar.gz#4fbdeba8f2792f5fcdb75d3f0da12f927ea3b0ec0c0f16bef9a743b476f84724"
 )
 use_fresh_config_sub='true'
 config_sub_paths=(
