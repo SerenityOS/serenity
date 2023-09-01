@@ -29,6 +29,7 @@ Bytecode::CodeGenerationErrorOr<void> ASTNode::generate_bytecode(Bytecode::Gener
 
 Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     bool did_create_lexical_environment = false;
 
     if (is<BlockStatement>(*this)) {
@@ -61,11 +62,13 @@ Bytecode::CodeGenerationErrorOr<void> EmptyStatement::generate_bytecode(Bytecode
 
 Bytecode::CodeGenerationErrorOr<void> ExpressionStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     return m_expression->generate_bytecode(generator);
 }
 
 Bytecode::CodeGenerationErrorOr<void> BinaryExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     if (m_op == BinaryOp::In && is<PrivateIdentifier>(*m_lhs)) {
         auto const& private_identifier = static_cast<PrivateIdentifier const&>(*m_lhs).string();
         TRY(m_rhs->generate_bytecode(generator));
@@ -154,6 +157,7 @@ Bytecode::CodeGenerationErrorOr<void> BinaryExpression::generate_bytecode(Byteco
 
 Bytecode::CodeGenerationErrorOr<void> LogicalExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     TRY(m_lhs->generate_bytecode(generator));
 
     // lhs
@@ -198,6 +202,7 @@ Bytecode::CodeGenerationErrorOr<void> LogicalExpression::generate_bytecode(Bytec
 
 Bytecode::CodeGenerationErrorOr<void> UnaryExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     if (m_op == UnaryOp::Delete)
         return generator.emit_delete_reference(m_lhs);
 
@@ -245,24 +250,28 @@ Bytecode::CodeGenerationErrorOr<void> UnaryExpression::generate_bytecode(Bytecod
 
 Bytecode::CodeGenerationErrorOr<void> NumericLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     generator.emit<Bytecode::Op::LoadImmediate>(m_value);
     return {};
 }
 
 Bytecode::CodeGenerationErrorOr<void> BooleanLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     generator.emit<Bytecode::Op::LoadImmediate>(Value(m_value));
     return {};
 }
 
 Bytecode::CodeGenerationErrorOr<void> NullLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     generator.emit<Bytecode::Op::LoadImmediate>(js_null());
     return {};
 }
 
 Bytecode::CodeGenerationErrorOr<void> BigIntLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     // 1. Return the NumericValue of NumericLiteral as defined in 12.8.3.
     auto integer = [&] {
         if (m_value[0] == '0' && m_value.length() >= 3)
@@ -281,12 +290,14 @@ Bytecode::CodeGenerationErrorOr<void> BigIntLiteral::generate_bytecode(Bytecode:
 
 Bytecode::CodeGenerationErrorOr<void> StringLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     generator.emit<Bytecode::Op::NewString>(generator.intern_string(m_value));
     return {};
 }
 
 Bytecode::CodeGenerationErrorOr<void> RegExpLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     auto source_index = generator.intern_string(m_pattern);
     auto flags_index = generator.intern_string(m_flags);
     auto regex_index = generator.intern_regex(Bytecode::ParsedRegex {
@@ -300,6 +311,7 @@ Bytecode::CodeGenerationErrorOr<void> RegExpLiteral::generate_bytecode(Bytecode:
 
 Bytecode::CodeGenerationErrorOr<void> Identifier::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     if (is_global()) {
         generator.emit<Bytecode::Op::GetGlobal>(generator.intern_identifier(m_string), generator.next_global_variable_cache());
     } else if (is_local()) {
@@ -354,6 +366,7 @@ static Bytecode::CodeGenerationErrorOr<void> arguments_to_array_for_call(Bytecod
 
 Bytecode::CodeGenerationErrorOr<void> SuperCall::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     if (m_is_synthetic == IsPartOfSyntheticConstructor::Yes) {
         // NOTE: This is the case where we have a fake constructor(...args) { super(...args); } which
         //       shouldn't call @@iterator of %Array.prototype%.
@@ -375,6 +388,7 @@ static Bytecode::CodeGenerationErrorOr<void> generate_binding_pattern_bytecode(B
 
 Bytecode::CodeGenerationErrorOr<void> AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     if (m_op == AssignmentOp::Assignment) {
         // AssignmentExpression : LeftHandSideExpression = AssignmentExpression
         return m_lhs.visit(
@@ -621,6 +635,7 @@ Bytecode::CodeGenerationErrorOr<void> AssignmentExpression::generate_bytecode(By
 //  LabelledStatement : LabelIdentifier : LabelledItem
 Bytecode::CodeGenerationErrorOr<void> LabelledStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     // Return ? LabelledEvaluation of this LabelledStatement with argument « ».
     return generate_labelled_evaluation(generator, {});
 }
@@ -629,6 +644,7 @@ Bytecode::CodeGenerationErrorOr<void> LabelledStatement::generate_bytecode(Bytec
 // LabelledStatement : LabelIdentifier : LabelledItem
 Bytecode::CodeGenerationErrorOr<void> LabelledStatement::generate_labelled_evaluation(Bytecode::Generator& generator, Vector<DeprecatedFlyString> const& label_set) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     // Convert the m_labelled_item NNRP to a reference early so we don't have to do it every single time we want to use it.
     auto const& labelled_item = *m_labelled_item;
 
@@ -687,11 +703,13 @@ Bytecode::CodeGenerationErrorOr<void> IterationStatement::generate_labelled_eval
 
 Bytecode::CodeGenerationErrorOr<void> WhileStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     return generate_labelled_evaluation(generator, {});
 }
 
 Bytecode::CodeGenerationErrorOr<void> WhileStatement::generate_labelled_evaluation(Bytecode::Generator& generator, Vector<DeprecatedFlyString> const& label_set) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     // test
     // jump if_false (true) end (false) body
     // body
@@ -742,11 +760,13 @@ Bytecode::CodeGenerationErrorOr<void> WhileStatement::generate_labelled_evaluati
 
 Bytecode::CodeGenerationErrorOr<void> DoWhileStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     return generate_labelled_evaluation(generator, {});
 }
 
 Bytecode::CodeGenerationErrorOr<void> DoWhileStatement::generate_labelled_evaluation(Bytecode::Generator& generator, Vector<DeprecatedFlyString> const& label_set) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     // jump always (true) body
     // test
     // jump if_false (true) end (false) body
@@ -798,11 +818,13 @@ Bytecode::CodeGenerationErrorOr<void> DoWhileStatement::generate_labelled_evalua
 
 Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     return generate_labelled_evaluation(generator, {});
 }
 
 Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_labelled_evaluation(Bytecode::Generator& generator, Vector<DeprecatedFlyString> const& label_set) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     // init
     // jump always (true) test
     // test
@@ -938,6 +960,7 @@ Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_labelled_evaluation
 
 Bytecode::CodeGenerationErrorOr<void> ObjectExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     generator.emit<Bytecode::Op::NewObject>();
     if (m_properties.is_empty())
         return {};
@@ -999,6 +1022,7 @@ Bytecode::CodeGenerationErrorOr<void> ObjectExpression::generate_bytecode(Byteco
 
 Bytecode::CodeGenerationErrorOr<void> ArrayExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     if (m_elements.is_empty()) {
         generator.emit<Bytecode::Op::NewArray>();
         return {};
@@ -1048,12 +1072,14 @@ Bytecode::CodeGenerationErrorOr<void> ArrayExpression::generate_bytecode(Bytecod
 
 Bytecode::CodeGenerationErrorOr<void> MemberExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     return generator.emit_load_from_reference(*this);
 }
 
 Bytecode::CodeGenerationErrorOr<void> FunctionDeclaration::generate_bytecode(Bytecode::Generator& generator) const
 {
     if (m_is_hoisted) {
+        Bytecode::Generator::SourceLocationScope scope(generator, *this);
         auto index = generator.intern_identifier(name());
         generator.emit<Bytecode::Op::GetVariable>(index);
         generator.emit<Bytecode::Op::SetVariable>(index, Bytecode::Op::SetVariable::InitializationMode::Set, Bytecode::Op::EnvironmentMode::Var);
@@ -1063,6 +1089,7 @@ Bytecode::CodeGenerationErrorOr<void> FunctionDeclaration::generate_bytecode(Byt
 
 Bytecode::CodeGenerationErrorOr<void> FunctionExpression::generate_bytecode_with_lhs_name(Bytecode::Generator& generator, Optional<Bytecode::IdentifierTableIndex> lhs_name) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     bool has_name = !name().is_empty();
     Optional<Bytecode::IdentifierTableIndex> name_identifier;
 
@@ -1085,6 +1112,7 @@ Bytecode::CodeGenerationErrorOr<void> FunctionExpression::generate_bytecode_with
 
 Bytecode::CodeGenerationErrorOr<void> FunctionExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     return generate_bytecode_with_lhs_name(generator, {});
 }
 
@@ -1427,6 +1455,7 @@ static Bytecode::CodeGenerationErrorOr<void> assign_accumulator_to_variable_decl
 
 Bytecode::CodeGenerationErrorOr<void> VariableDeclaration::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     // The completion value of a VariableDeclaration is empty, but there might already be a non-empty
     // completion value in the accumulator. We need to save it and restore it after the declaration executed.
     auto saved_accumulator = generator.allocate_register();
@@ -1511,6 +1540,7 @@ static Bytecode::CodeGenerationErrorOr<void> generate_optional_chain(Bytecode::G
 
 Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     auto callee_reg = generator.allocate_register();
     auto this_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
@@ -1587,6 +1617,7 @@ static void generate_await(Bytecode::Generator& generator, Bytecode::Register re
 // https://tc39.es/ecma262/#sec-return-statement-runtime-semantics-evaluation
 Bytecode::CodeGenerationErrorOr<void> ReturnStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     if (m_argument) {
         //  ReturnStatement : return Expression ;
         //     1. Let exprRef be ? Evaluation of Expression.
@@ -1699,6 +1730,7 @@ static void generate_yield(Bytecode::Generator& generator, Bytecode::Label conti
 
 Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     VERIFY(generator.is_in_generator_function());
 
     auto received_completion_register = generator.allocate_register();
@@ -2039,6 +2071,7 @@ Bytecode::CodeGenerationErrorOr<void> YieldExpression::generate_bytecode(Bytecod
 
 Bytecode::CodeGenerationErrorOr<void> IfStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     // test
     // jump if_true (true) true (false) false
     // true
@@ -2081,6 +2114,7 @@ Bytecode::CodeGenerationErrorOr<void> IfStatement::generate_bytecode(Bytecode::G
 
 Bytecode::CodeGenerationErrorOr<void> ContinueStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     // FIXME: Handle finally blocks in a graceful manner
     //        We need to execute the finally block, but tell it to resume
     //        execution at the designated block
@@ -2100,6 +2134,7 @@ Bytecode::CodeGenerationErrorOr<void> DebuggerStatement::generate_bytecode(Bytec
 
 Bytecode::CodeGenerationErrorOr<void> ConditionalExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     // test
     // jump if_true (true) true (false) false
     // true
@@ -2135,6 +2170,7 @@ Bytecode::CodeGenerationErrorOr<void> ConditionalExpression::generate_bytecode(B
 
 Bytecode::CodeGenerationErrorOr<void> SequenceExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     for (auto& expression : m_expressions)
         TRY(expression->generate_bytecode(generator));
 
@@ -2143,6 +2179,7 @@ Bytecode::CodeGenerationErrorOr<void> SequenceExpression::generate_bytecode(Byte
 
 Bytecode::CodeGenerationErrorOr<void> TemplateLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     auto string_reg = generator.allocate_register();
 
     for (size_t i = 0; i < m_expressions.size(); i++) {
@@ -2160,6 +2197,7 @@ Bytecode::CodeGenerationErrorOr<void> TemplateLiteral::generate_bytecode(Bytecod
 
 Bytecode::CodeGenerationErrorOr<void> TaggedTemplateLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     TRY(m_tag->generate_bytecode(generator));
     auto tag_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(tag_reg);
@@ -2252,6 +2290,7 @@ Bytecode::CodeGenerationErrorOr<void> TaggedTemplateLiteral::generate_bytecode(B
 
 Bytecode::CodeGenerationErrorOr<void> UpdateExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     TRY(generator.emit_load_from_reference(*m_argument));
 
     Optional<Bytecode::Register> previous_value_for_postfix_reg;
@@ -2275,6 +2314,7 @@ Bytecode::CodeGenerationErrorOr<void> UpdateExpression::generate_bytecode(Byteco
 
 Bytecode::CodeGenerationErrorOr<void> ThrowStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     TRY(m_argument->generate_bytecode(generator));
     generator.perform_needed_unwinds<Bytecode::Op::Throw>();
     generator.emit<Bytecode::Op::Throw>();
@@ -2283,6 +2323,7 @@ Bytecode::CodeGenerationErrorOr<void> ThrowStatement::generate_bytecode(Bytecode
 
 Bytecode::CodeGenerationErrorOr<void> BreakStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     // FIXME: Handle finally blocks in a graceful manner
     //        We need to execute the finally block, but tell it to resume
     //        execution at the designated block
@@ -2297,6 +2338,7 @@ Bytecode::CodeGenerationErrorOr<void> BreakStatement::generate_bytecode(Bytecode
 
 Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     auto& saved_block = generator.current_block();
 
     Optional<Bytecode::Label> handler_target;
@@ -2397,11 +2439,13 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
 
 Bytecode::CodeGenerationErrorOr<void> SwitchStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     return generate_labelled_evaluation(generator, {});
 }
 
 Bytecode::CodeGenerationErrorOr<void> SwitchStatement::generate_labelled_evaluation(Bytecode::Generator& generator, Vector<DeprecatedFlyString> const& label_set) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     auto discriminant_reg = generator.allocate_register();
     TRY(m_discriminant->generate_bytecode(generator));
     generator.emit<Bytecode::Op::Store>(discriminant_reg);
@@ -2484,6 +2528,7 @@ Bytecode::CodeGenerationErrorOr<void> SuperExpression::generate_bytecode(Bytecod
 
 Bytecode::CodeGenerationErrorOr<void> ClassDeclaration::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     auto accumulator_backup_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(accumulator_backup_reg);
 
@@ -2516,6 +2561,7 @@ Bytecode::CodeGenerationErrorOr<void> ClassExpression::generate_bytecode_with_lh
 
 Bytecode::CodeGenerationErrorOr<void> ClassExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     return generate_bytecode_with_lhs_name(generator, {});
 }
 
@@ -2528,6 +2574,7 @@ Bytecode::CodeGenerationErrorOr<void> SpreadExpression::generate_bytecode(Byteco
 
 Bytecode::CodeGenerationErrorOr<void> ThisExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     generator.emit<Bytecode::Op::ResolveThisBinding>();
     return {};
 }
@@ -2564,6 +2611,7 @@ static void generate_await(Bytecode::Generator& generator, Bytecode::Register re
 
 Bytecode::CodeGenerationErrorOr<void> AwaitExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     TRY(m_argument->generate_bytecode(generator));
 
     auto received_completion_register = generator.allocate_register();
@@ -2579,6 +2627,7 @@ Bytecode::CodeGenerationErrorOr<void> AwaitExpression::generate_bytecode(Bytecod
 
 Bytecode::CodeGenerationErrorOr<void> WithStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     TRY(m_object->generate_bytecode(generator));
     generator.emit<Bytecode::Op::EnterObjectEnvironment>();
 
@@ -2934,6 +2983,7 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
 
 Bytecode::CodeGenerationErrorOr<void> ForInStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     return generate_labelled_evaluation(generator, {});
 }
 
@@ -2952,6 +3002,7 @@ Bytecode::CodeGenerationErrorOr<void> ForInStatement::generate_labelled_evaluati
 
 Bytecode::CodeGenerationErrorOr<void> ForOfStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     return generate_labelled_evaluation(generator, {});
 }
 
@@ -2969,6 +3020,7 @@ Bytecode::CodeGenerationErrorOr<void> ForOfStatement::generate_labelled_evaluati
 
 Bytecode::CodeGenerationErrorOr<void> ForAwaitOfStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     return generate_labelled_evaluation(generator, {});
 }
 
@@ -2987,6 +3039,7 @@ Bytecode::CodeGenerationErrorOr<void> ForAwaitOfStatement::generate_labelled_eva
 // 13.3.12.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-meta-properties-runtime-semantics-evaluation
 Bytecode::CodeGenerationErrorOr<void> MetaProperty::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     // NewTarget : new . target
     if (m_type == MetaProperty::Type::NewTarget) {
         // 1. Return GetNewTarget().
@@ -3005,6 +3058,7 @@ Bytecode::CodeGenerationErrorOr<void> MetaProperty::generate_bytecode(Bytecode::
 
 Bytecode::CodeGenerationErrorOr<void> ClassFieldInitializerStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     TRY(generator.emit_named_evaluation_if_anonymous_function(*m_expression, generator.intern_identifier(m_class_field_identifier_name)));
     generator.perform_needed_unwinds<Bytecode::Op::Return>();
     generator.emit<Bytecode::Op::Return>();
@@ -3084,6 +3138,7 @@ static Bytecode::CodeGenerationErrorOr<void> generate_optional_chain(Bytecode::G
 
 Bytecode::CodeGenerationErrorOr<void> OptionalChain::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     auto current_base_register = generator.allocate_register();
     auto current_value_register = generator.allocate_register();
     generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
@@ -3093,6 +3148,7 @@ Bytecode::CodeGenerationErrorOr<void> OptionalChain::generate_bytecode(Bytecode:
 
 Bytecode::CodeGenerationErrorOr<void> ImportCall::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     TRY(m_specifier->generate_bytecode(generator));
     auto specifier_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(specifier_reg);
@@ -3111,6 +3167,7 @@ Bytecode::CodeGenerationErrorOr<void> ImportCall::generate_bytecode(Bytecode::Ge
 
 Bytecode::CodeGenerationErrorOr<void> ExportStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    Bytecode::Generator::SourceLocationScope scope(generator, *this);
     if (!is_default_export()) {
         if (m_statement) {
             return m_statement->generate_bytecode(generator);

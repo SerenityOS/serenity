@@ -26,6 +26,11 @@ struct GlobalVariableCache : public PropertyLookupCache {
     u64 environment_serial_number { 0 };
 };
 
+struct SourceRecord {
+    u32 source_start_offset {};
+    u32 source_end_offset {};
+};
+
 struct Executable {
     DeprecatedFlyString name;
     Vector<PropertyLookupCache> property_lookup_caches;
@@ -34,6 +39,7 @@ struct Executable {
     NonnullOwnPtr<StringTable> string_table;
     NonnullOwnPtr<IdentifierTable> identifier_table;
     NonnullOwnPtr<RegexTable> regex_table;
+    NonnullRefPtr<SourceCode const> source_code;
     size_t number_of_registers { 0 };
     bool is_strict_mode { false };
 

@@ -6,6 +6,7 @@
  */
 
 #include <LibJS/AST.h>
+#include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Runtime/FunctionEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
@@ -128,9 +129,9 @@ ThrowCompletionOr<Value> NativeFunction::internal_call(Value this_argument, Mark
     // Note: This is already the default value.
 
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
-
     callee_context.this_value = this_argument;
     callee_context.arguments.extend(move(arguments_list));
+    callee_context.instruction_stream_iterator = vm.bytecode_interpreter().instruction_stream_iterator();
 
     callee_context.lexical_environment = caller_context.lexical_environment;
     callee_context.variable_environment = caller_context.variable_environment;
@@ -192,8 +193,8 @@ ThrowCompletionOr<NonnullGCPtr<Object>> NativeFunction::internal_construct(Marke
     // Note: This is already the default value.
 
     // 8. Perform any necessary implementation-defined initialization of calleeContext.
-
     callee_context.arguments.extend(move(arguments_list));
+    callee_context.instruction_stream_iterator = vm.bytecode_interpreter().instruction_stream_iterator();
 
     callee_context.lexical_environment = caller_context.lexical_environment;
     callee_context.variable_environment = caller_context.variable_environment;

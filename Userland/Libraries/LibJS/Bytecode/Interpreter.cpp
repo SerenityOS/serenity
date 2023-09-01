@@ -173,6 +173,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
     TemporaryChange restore_saved_jump { m_scheduled_jump, static_cast<BasicBlock const*>(nullptr) };
     TemporaryChange restore_saved_exception { m_saved_exception, {} };
 
+    VERIFY(!vm().execution_context_stack().is_empty());
     bool pushed_execution_context = false;
     ExecutionContext execution_context(vm().heap());
     if (vm().execution_context_stack().is_empty() || !vm().running_execution_context().lexical_environment) {
@@ -198,8 +199,9 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
     TemporaryChange restore_this_value { m_this_value, {} };
 
     for (;;) {
-        Bytecode::InstructionStreamIterator pc(m_current_block->instruction_stream());
-        TemporaryChange temp_change { m_pc, &pc };
+        auto pc = InstructionStreamIterator { m_current_block->instruction_stream(), m_current_executable };
+        TemporaryChange temp_change { m_pc, Optional<InstructionStreamIterator&>(pc) };
+        TemporaryChange context_change { vm().running_execution_context().instruction_stream_iterator, Optional<InstructionStreamIterator&>(pc) };
 
         // FIXME: This is getting kinda spaghetti-y
         bool will_jump = false;
@@ -369,14 +371,10 @@ ThrowCompletionOr<void> Interpreter::continue_pending_unwind(Label const& resume
     return {};
 }
 
-size_t Interpreter::pc() const
-{
-    return m_pc ? m_pc->offset() : 0;
-}
-
 DeprecatedString Interpreter::debug_position() const
 {
-    return DeprecatedString::formatted("{}:{:2}:{:4x}", m_current_executable->name, m_current_block->name(), pc());
+    auto offset = m_pc.has_value() ? m_pc->offset() : 0;
+    return DeprecatedString::formatted("{}:{:2}:{:4x}", m_current_executable->name, m_current_block->name(), offset);
 }
 
 ThrowCompletionOr<NonnullOwnPtr<Bytecode::Executable>> compile(VM& vm, ASTNode const& node, FunctionKind kind, DeprecatedFlyString const& name)

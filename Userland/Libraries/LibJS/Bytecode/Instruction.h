@@ -8,7 +8,9 @@
 
 #include <AK/Forward.h>
 #include <AK/Span.h>
+#include <LibJS/Bytecode/Executable.h>
 #include <LibJS/Forward.h>
+#include <LibJS/SourceRange.h>
 
 #define ENUMERATE_BYTECODE_OPS(O)      \
     O(Add)                             \
@@ -137,6 +139,10 @@ public:
     ThrowCompletionOr<void> execute(Bytecode::Interpreter&) const;
     static void destroy(Instruction&);
 
+    // FIXME: Find a better way to organize this information
+    void set_source_record(SourceRecord rec) { m_source_record = rec; }
+    SourceRecord source_record() const { return m_source_record; }
+
 protected:
     explicit Instruction(Type type)
         : m_type(type)
@@ -144,13 +150,15 @@ protected:
     }
 
 private:
+    SourceRecord m_source_record {};
     Type m_type {};
 };
 
 class InstructionStreamIterator {
 public:
-    explicit InstructionStreamIterator(ReadonlyBytes bytes)
+    InstructionStreamIterator(ReadonlyBytes bytes, Executable const* executable = nullptr)
         : m_bytes(bytes)
+        , m_executable(executable)
     {
     }
 
@@ -170,11 +178,15 @@ public:
         m_offset += dereference().length();
     }
 
+    UnrealizedSourceRange source_range() const;
+    RefPtr<SourceCode> source_code() const;
+
 private:
     Instruction const& dereference() const { return *reinterpret_cast<Instruction const*>(m_bytes.data() + offset()); }
 
     ReadonlyBytes m_bytes;
     size_t m_offset { 0 };
+    Executable const* m_executable { nullptr };
 };
 
 }
