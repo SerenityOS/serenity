@@ -68,6 +68,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/FontCache.h>
+#include <LibWeb/HTML/HTMLBRElement.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -2427,6 +2428,12 @@ enum class BoxTypeTransformation {
 
 static BoxTypeTransformation required_box_type_transformation(StyleProperties const& style, DOM::Element const& element, Optional<CSS::Selector::PseudoElement> const& pseudo_element)
 {
+    // NOTE: We never blockify <br> elements. They are always inline.
+    //       There is currently no way to express in CSS how a <br> element really behaves.
+    //       Spec issue: https://github.com/whatwg/html/issues/2291
+    if (is<HTML::HTMLBRElement>(element))
+        return BoxTypeTransformation::None;
+
     // Absolute positioning or floating an element blockifies the box’s display type. [CSS2]
     if (style.position() == CSS::Position::Absolute || style.position() == CSS::Position::Fixed || style.float_() != CSS::Float::None)
         return BoxTypeTransformation::Blockify;
