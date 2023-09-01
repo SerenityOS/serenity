@@ -277,24 +277,8 @@ static void ladybird_web_view_set_property(GObject* object, guint prop_id, GValu
     LadybirdWebView* self = LADYBIRD_WEB_VIEW(object);
 
     switch (prop_id) {
-    case PROP_PAGE_TITLE:
-        ladybird_web_view_set_page_title(self, g_value_get_string(value));
-        break;
-
-    case PROP_PAGE_URL:
-        ladybird_web_view_set_page_url(self, g_value_get_string(value));
-        break;
-
-    case PROP_LOADING:
-        ladybird_web_view_set_loading(self, g_value_get_boolean(value));
-        break;
-
     case PROP_COOKIE_JAR:
         ladybird_web_view_set_cookie_jar(self, reinterpret_cast<WebView::CookieJar*>(g_value_get_pointer(value)));
-        break;
-
-    case PROP_HOVERED_LINK:
-        ladybird_web_view_set_hovered_link(self, g_value_get_string(value));
         break;
 
     case PROP_HADJUSTMENT:
@@ -858,12 +842,12 @@ static void ladybird_web_view_class_init(LadybirdWebViewClass* klass)
     constexpr GParamFlags param_flags = GParamFlags(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
     constexpr GParamFlags ro_param_flags = GParamFlags(G_PARAM_READABLE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY);
 
-    props[PROP_PAGE_TITLE] = g_param_spec_string("page-title", nullptr, nullptr, nullptr, param_flags);
-    props[PROP_PAGE_URL] = g_param_spec_string("page-url", nullptr, nullptr, nullptr, param_flags);
-    props[PROP_LOADING] = g_param_spec_boolean("loading", nullptr, nullptr, false, param_flags);
+    props[PROP_PAGE_TITLE] = g_param_spec_string("page-title", nullptr, nullptr, nullptr, ro_param_flags);
+    props[PROP_PAGE_URL] = g_param_spec_string("page-url", nullptr, nullptr, nullptr, ro_param_flags);
+    props[PROP_LOADING] = g_param_spec_boolean("loading", nullptr, nullptr, false, ro_param_flags);
     props[PROP_ZOOM_PERCENT] = g_param_spec_uint("zoom-percent", nullptr, nullptr, 30, 500, 100, ro_param_flags);
     props[PROP_COOKIE_JAR] = g_param_spec_pointer("cookie-jar", nullptr, nullptr, param_flags);
-    props[PROP_HOVERED_LINK] = g_param_spec_string("hovered-link", nullptr, nullptr, nullptr, param_flags);
+    props[PROP_HOVERED_LINK] = g_param_spec_string("hovered-link", nullptr, nullptr, nullptr, ro_param_flags);
     g_object_class_install_properties(object_class, NUM_PROPS, props);
 
     widget_class->measure = ladybird_web_view_measure;
