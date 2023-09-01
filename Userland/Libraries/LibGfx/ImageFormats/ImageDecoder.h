@@ -18,9 +18,6 @@ namespace Gfx {
 
 class Bitmap;
 
-static constexpr size_t maximum_width_for_decoded_images = 16384;
-static constexpr size_t maximum_height_for_decoded_images = 16384;
-
 struct ImageFrameDescriptor {
     RefPtr<Bitmap> image;
     int duration { 0 };

@@ -175,11 +175,6 @@ static ErrorOr<void> read_header(Context& context)
     TRY(read_whitespace(context));
     TRY(read_height(context));
 
-    if (context.width > maximum_width_for_decoded_images || context.height > maximum_height_for_decoded_images) {
-        dbgln("This portable network image is too large for comfort: {}x{}", context.width, context.height);
-        return Error::from_string_literal("This portable network image is too large.");
-    }
-
     TRY(read_whitespace(context));
 
     if constexpr (requires { context.format_details.max_val; }) {

@@ -1245,11 +1245,6 @@ static ErrorOr<void> read_start_of_frame(JPEGStream& stream, JPEGLoadingContext&
         return Error::from_string_literal("Image frame height of width null");
     }
 
-    if (context.frame.width > maximum_width_for_decoded_images || context.frame.height > maximum_height_for_decoded_images) {
-        dbgln("This JPEG is too large for comfort: {}x{}", context.frame.width, context.frame.height);
-        return Error::from_string_literal("JPEG too large for comfort");
-    }
-
     set_macroblock_metadata(context);
 
     auto component_count = TRY(stream.read_u8());
