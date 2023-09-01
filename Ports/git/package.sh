@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='git'
-version='2.40.0'
+version='2.42.0'
 files=(
-    "https://mirrors.edge.kernel.org/pub/software/scm/git/git-${version}.tar.xz#b17a598fbf58729ef13b577465eb93b2d484df1201518b708b5044ff623bf46d"
+    "https://mirrors.edge.kernel.org/pub/software/scm/git/git-${version}.tar.xz#3278210e9fd2994b8484dd7e3ddd9ea8b940ef52170cdb606daa94d887c93b0d"
 )
 useconfigure='true'
 configopts=(

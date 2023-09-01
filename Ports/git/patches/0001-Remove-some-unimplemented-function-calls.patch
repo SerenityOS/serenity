@@ -5,16 +5,15 @@ Subject: [PATCH] Remove some unimplemented function calls
 
 i.e. f(un)lockfile stubs and setitimer.
 ---
- builtin/log.c     |  6 ------
- git-compat-util.h |  8 --------
- progress.c        | 14 --------------
- 3 files changed, 28 deletions(-)
+ builtin/log.c |  6 ------
+ progress.c    | 14 --------------
+ 2 files changed, 20 deletions(-)
 
 diff --git a/builtin/log.c b/builtin/log.c
-index 89447a50838562795bb80172db8102ff7a42e91b..3552e1807860b30eb18366487e5476346290bcea 100644
+index db3a88bfe96058679dff1059a6f4769599ee1801..a06d2824bc776e039b90e0bdfeb081835bc7b835 100644
 --- a/builtin/log.c
 +++ b/builtin/log.c
-@@ -430,9 +430,6 @@ static void log_show_early(struct rev_info *revs, struct commit_list *list)
+@@ -442,9 +442,6 @@ static void log_show_early(struct rev_info *revs, struct commit_list *list)
  	 * trigger every second even if we're blocked on a
  	 * reader!
  	 */
@@ -23,8 +22,8 @@ index 89447a50838562795bb80172db8102ff7a42e91b..3552e1807860b30eb18366487e547634
 -	setitimer(ITIMER_REAL, &early_output_timer, NULL);
  }
  
- static void early_output(int signal)
-@@ -464,9 +461,6 @@ static void setup_early_output(void)
+ static void early_output(int signal UNUSED)
+@@ -476,9 +473,6 @@ static void setup_early_output(void)
  	 *
  	 * This is a one-time-only trigger.
  	 */
@@ -35,10 +34,10 @@ index 89447a50838562795bb80172db8102ff7a42e91b..3552e1807860b30eb18366487e547634
  
  static void finish_early_output(struct rev_info *rev)
 diff --git a/progress.c b/progress.c
-index 0cdd875d37f166bedbbeb5f0e889046674ed58be..4b7f5b0b5a48b1b895befef12217e5822d118563 100644
+index f695798acac72bd703dfacc59f83054fd761b619..9e9369eb34dc169d2bcdc2a38285765547a8e3fa 100644
 --- a/progress.c
 +++ b/progress.c
-@@ -67,7 +67,6 @@ static void progress_interval(int signum)
+@@ -69,7 +69,6 @@ static void progress_interval(int signum UNUSED)
  static void set_progress_signal(void)
  {
  	struct sigaction sa;
@@ -46,7 +45,7 @@ index 0cdd875d37f166bedbbeb5f0e889046674ed58be..4b7f5b0b5a48b1b895befef12217e582
  
  	if (progress_testing)
  		return;
-@@ -79,23 +78,10 @@ static void set_progress_signal(void)
+@@ -81,23 +80,10 @@ static void set_progress_signal(void)
  	sigemptyset(&sa.sa_mask);
  	sa.sa_flags = SA_RESTART;
  	sigaction(SIGALRM, &sa, NULL);
