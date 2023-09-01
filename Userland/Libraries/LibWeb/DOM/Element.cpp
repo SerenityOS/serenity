@@ -409,10 +409,15 @@ CSS::CSSStyleDeclaration const* Element::inline_style() const
     return m_inline_style.ptr();
 }
 
-void Element::run_attribute_change_steps(DeprecatedFlyString const& local_name, DeprecatedString const&, DeprecatedString const& value, DeprecatedFlyString const&)
+void Element::add_attribute_change_steps(AttributeChangeSteps steps)
 {
-    // FIXME: Implement the element's attribute change steps:
-    //        https://dom.spec.whatwg.org/#concept-element-attributes-change-ext
+    m_attribute_change_steps.append(move(steps));
+}
+
+void Element::run_attribute_change_steps(DeprecatedFlyString const& local_name, DeprecatedString const& old_value, DeprecatedString const& value, DeprecatedFlyString const& namespace_)
+{
+    for (auto const& attribute_change_steps : m_attribute_change_steps)
+        attribute_change_steps(local_name, old_value, value, namespace_);
 
     // AD-HOC: Run our own internal attribute change handler.
     attribute_changed(local_name, value);
