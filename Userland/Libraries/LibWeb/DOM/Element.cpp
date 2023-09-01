@@ -109,6 +109,20 @@ DeprecatedString Element::get_attribute(DeprecatedFlyString const& name) const
     return attribute->value();
 }
 
+// https://dom.spec.whatwg.org/#concept-element-attributes-get-value
+DeprecatedString Element::get_attribute_value(DeprecatedFlyString const& local_name, DeprecatedFlyString const& namespace_) const
+{
+    // 1. Let attr be the result of getting an attribute given namespace, localName, and element.
+    auto const* attribute = m_attributes->get_attribute_ns(namespace_, local_name);
+
+    // 2. If attr is null, then return the empty string.
+    if (!attribute)
+        return DeprecatedString::empty();
+
+    // 3. Return attr’s value.
+    return attribute->value();
+}
+
 // https://dom.spec.whatwg.org/#dom-element-getattributenode
 JS::GCPtr<Attr> Element::get_attribute_node(DeprecatedFlyString const& name) const
 {
@@ -209,6 +223,28 @@ WebIDL::ExceptionOr<void> Element::set_attribute_ns(DeprecatedFlyString const& n
 
     // FIXME: Don't just call through to setAttribute() here.
     return set_attribute(extracted_qualified_name.local_name(), value);
+}
+
+// https://dom.spec.whatwg.org/#concept-element-attributes-set-value
+void Element::set_attribute_value(DeprecatedFlyString const& local_name, DeprecatedString const& value, DeprecatedFlyString const& prefix, DeprecatedFlyString const& namespace_)
+{
+    // 1. Let attribute be the result of getting an attribute given namespace, localName, and element.
+    auto* attribute = m_attributes->get_attribute_ns(namespace_, local_name);
+
+    // 2. If attribute is null, create an attribute whose namespace is namespace, namespace prefix is prefix, local name
+    //    is localName, value is value, and node document is element’s node document, then append this attribute to element,
+    //    and then return.
+    if (!attribute) {
+        QualifiedName name { local_name, prefix, namespace_ };
+
+        auto new_attribute = Attr::create(document(), move(name), value);
+        m_attributes->append_attribute(new_attribute);
+
+        return;
+    }
+
+    // 3. Change attribute to value.
+    attribute->change_attribute(value);
 }
 
 // https://dom.spec.whatwg.org/#dom-element-setattributenode
