@@ -487,7 +487,6 @@ ErrorOr<void> TTY::ioctl(OpenFileDescription&, unsigned request, Userspace<void*
         ProcessGroupID pgid = static_cast<pid_t>(arg.ptr());
         if (pgid <= 0)
             return EINVAL;
-        InterruptDisabler disabler;
         auto process_group = ProcessGroup::from_pgid(pgid);
         // Disallow setting a nonexistent PGID.
         if (!process_group)
