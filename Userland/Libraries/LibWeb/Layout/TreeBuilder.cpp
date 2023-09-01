@@ -69,6 +69,8 @@ static Layout::Node& insertion_parent_for_inline_node(Layout::NodeWithStyle& lay
         return layout_parent;
 
     if (layout_parent.display().is_flex_inside() || layout_parent.display().is_grid_inside()) {
+        if (layout_parent.last_child() && layout_parent.last_child()->is_anonymous() && layout_parent.last_child()->children_are_inline())
+            return *layout_parent.last_child();
         layout_parent.append_child(layout_parent.create_anonymous_wrapper());
         return *layout_parent.last_child();
     }
