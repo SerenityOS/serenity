@@ -17,10 +17,10 @@ static library into a shared library.
  1 file changed, 23 insertions(+)
 
 diff --git a/configure b/configure
-index f103a6b..099c1e4 100755
+index c32e4e3d6aa79c0f4f636494463794b118b45fe3..cf9b980d8008019d77c768395e1191aa8e985927 100755
 --- a/configure
 +++ b/configure
-@@ -8734,6 +8734,10 @@ tpf*)
+@@ -9644,6 +9644,10 @@ tpf*)
  os2*)
    lt_cv_deplibs_check_method=pass_all
    ;;
@@ -31,7 +31,7 @@ index f103a6b..099c1e4 100755
  esac
  
  fi
-@@ -12063,6 +12067,10 @@ lt_prog_compiler_static=
+@@ -13121,6 +13125,10 @@ lt_prog_compiler_static=
        lt_prog_compiler_static='-Bstatic'
        ;;
  
@@ -42,7 +42,7 @@ index f103a6b..099c1e4 100755
      *)
        lt_prog_compiler_can_build_shared=no
        ;;
-@@ -13583,6 +13591,10 @@ $as_echo "$lt_cv_irix_exported_symbol" >&6; }
+@@ -14653,6 +14661,10 @@ printf "%s\n" "$lt_cv_irix_exported_symbol" >&6; }
        hardcode_shlibpath_var=no
        ;;
  
@@ -53,7 +53,7 @@ index f103a6b..099c1e4 100755
      *)
        ld_shlibs=no
        ;;
-@@ -14651,6 +14663,17 @@ uts4*)
+@@ -15725,6 +15737,17 @@ uts4*)
    shlibpath_var=LD_LIBRARY_PATH
    ;;
  
