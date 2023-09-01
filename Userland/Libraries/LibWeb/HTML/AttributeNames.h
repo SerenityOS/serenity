@@ -214,6 +214,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(shape)                      \
     __ENUMERATE_HTML_ATTRIBUTE(size)                       \
     __ENUMERATE_HTML_ATTRIBUTE(sizes)                      \
+    __ENUMERATE_HTML_ATTRIBUTE(slot)                       \
     __ENUMERATE_HTML_ATTRIBUTE(span)                       \
     __ENUMERATE_HTML_ATTRIBUTE(src)                        \
     __ENUMERATE_HTML_ATTRIBUTE(srcdoc)                     \

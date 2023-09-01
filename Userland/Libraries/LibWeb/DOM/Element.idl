@@ -49,6 +49,7 @@ interface Element : Node {
     [Reflect, CEReactions] attribute DOMString id;
     [Reflect=class, CEReactions] attribute DOMString className;
     [SameObject, PutForwards=value] readonly attribute DOMTokenList classList;
+    [Reflect, CEReactions, Unscopable] attribute DOMString slot;
 
     ShadowRoot attachShadow(ShadowRootInit init);
     readonly attribute ShadowRoot? shadowRoot;
@@ -90,7 +91,7 @@ interface Element : Node {
 dictionary ShadowRootInit {
     required ShadowRootMode mode;
     boolean delegatesFocus = false;
-    // FIXME: SlotAssignmentMode slotAssignment = "named";
+    SlotAssignmentMode slotAssignment = "named";
 };
 
 Element includes ParentNode;

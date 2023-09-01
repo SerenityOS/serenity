@@ -599,7 +599,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ShadowRoot>> Element::attach_shadow(ShadowR
     if (m_custom_element_state == CustomElementState::Precustomized || m_custom_element_state == CustomElementState::Custom)
         shadow->set_available_to_element_internals(true);
 
-    // FIXME: 8. Set shadow’s slot assignment to init["slotAssignment"].
+    // 8. Set shadow’s slot assignment to init["slotAssignment"].
+    shadow->set_slot_assignment(init.slot_assignment);
 
     // 9. Set this’s shadow root to shadow.
     set_shadow_root(shadow);
