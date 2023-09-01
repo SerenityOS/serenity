@@ -14,7 +14,7 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<Syscall::SC_create_thread_params const*> user_params)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::thread));
     auto params = TRY(copy_typed_from_user(user_params));
 
