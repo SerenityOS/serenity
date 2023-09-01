@@ -524,7 +524,7 @@ ErrorOr<FlatPtr> Process::sys$mremap(Userspace<Syscall::SC_mremap_params const*>
 
 ErrorOr<FlatPtr> Process::sys$allocate_tls(Userspace<char const*> initial_data, size_t size)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
 
     if (!size || size % PAGE_SIZE != 0)
