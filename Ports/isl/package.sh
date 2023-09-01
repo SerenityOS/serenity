@@ -1,10 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='isl'
-version='0.24'
+version='0.26'
 useconfigure='true'
 use_fresh_config_sub='true'
 files=(
-    "https://libisl.sourceforge.io/isl-${version}.tar.xz#043105cc544f416b48736fff8caf077fb0663a717d06b1113f16e391ac99ebad"
+    "https://libisl.sourceforge.io/isl-${version}.tar.xz#a0b5cb06d24f9fa9e77b55fabbe9a3c94a336190345c2555f9915bb38e976504"
 )
 depends=(
     'gmp'
