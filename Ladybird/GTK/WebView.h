@@ -7,23 +7,11 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE(LadybirdWebView, ladybird_web_view, LADYBIRD, WEB_VIEW, GtkWidget)
 #define LADYBIRD_TYPE_WEB_VIEW ladybird_web_view_get_type()
 
-void ladybird_web_view_set_page_size(LadybirdWebView* self, int width, int height);
-
 char const* ladybird_web_view_get_page_title(LadybirdWebView* self);
-void ladybird_web_view_set_page_title(LadybirdWebView* self, char const* title);
-
 char const* ladybird_web_view_get_page_url(LadybirdWebView* self);
-void ladybird_web_view_set_page_url(LadybirdWebView* self, char const* url);
-
 void ladybird_web_view_load_url(LadybirdWebView* self, char const* url);
-
 char const* ladybird_web_view_get_hovered_link(LadybirdWebView* self);
-void ladybird_web_view_set_hovered_link(LadybirdWebView* self, char const* hovered_link);
-
 bool ladybird_web_view_get_loading(LadybirdWebView* self);
-void ladybird_web_view_set_loading(LadybirdWebView* self, bool loading);
-
-GdkPaintable* ladybird_web_view_get_bitmap_paintable(LadybirdWebView* self);
 GdkPaintable* ladybird_web_view_get_favicon(LadybirdWebView* self);
 
 void ladybird_web_view_zoom_in(LadybirdWebView* self);
@@ -41,8 +29,5 @@ class CookieJar;
 
 WebView::CookieJar* ladybird_web_view_get_cookie_jar(LadybirdWebView* self);
 void ladybird_web_view_set_cookie_jar(LadybirdWebView* self, WebView::CookieJar* cookie_jar);
-
-class LadybirdViewImpl;
-LadybirdViewImpl* ladybird_web_view_get_impl(LadybirdWebView* self);
 
 G_END_DECLS

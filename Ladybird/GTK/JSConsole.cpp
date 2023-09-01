@@ -1,6 +1,7 @@
 #include "JSConsole.h"
 #include "ViewImpl.h"
 #include "WebView.h"
+#include "WebViewPrivate.h"
 #include <AK/OwnPtr.h>
 #include <LibWebView/ConsoleClient.h>
 

@@ -1,5 +1,6 @@
 #include "ViewImpl.h"
 #include "BitmapPaintable.h"
+#include "WebViewPrivate.h"
 #include <Ladybird/HelperProcess.h>
 #include <Ladybird/Utilities.h>
 #include <LibGfx/Font/FontDatabase.h>

@@ -1,6 +1,7 @@
 #include "WebView.h"
 #include "BitmapPaintable.h"
 #include "ViewImpl.h"
+#include "WebViewPrivate.h"
 
 struct _LadybirdWebView {
     GtkWidget parent_instance;
