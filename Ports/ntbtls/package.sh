@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='ntbtls'
-version='0.2.0'
+version='0.3.1'
 useconfigure='true'
 use_fresh_config_sub='true'
 config_sub_paths=(
@@ -13,7 +13,7 @@ depends=(
     'zlib'
 )
 files=(
-    "https://gnupg.org/ftp/gcrypt/ntbtls/ntbtls-${version}.tar.bz2#649fe74a311d13e43b16b26ebaa91665ddb632925b73902592eac3ed30519e17"
+    "https://gnupg.org/ftp/gcrypt/ntbtls/ntbtls-${version}.tar.bz2#8922181fef523b77b71625e562e4d69532278eabbd18bc74579dbe14135729ba"
 )
 
 pre_configure() {
@@ -26,6 +26,7 @@ configure() {
         --build="$("${workdir}/build-aux/config.guess")" \
         --with-libgcrypt-prefix="${SERENITY_INSTALL_ROOT}/usr/local" \
         --with-libgpg-error-prefix="${SERENITY_INSTALL_ROOT}/usr/local" \
+        --with-sysroot="${SERENITY_INSTALL_ROOT}" \
         --with-ksba-prefix="${SERENITY_INSTALL_ROOT}/usr/local"
         # It's documented as "--with-libksba-prefix" (note the "lib"), but if it is set it is
         # immediately overwritten by whatever is given through "--with-ksba-prefix",
