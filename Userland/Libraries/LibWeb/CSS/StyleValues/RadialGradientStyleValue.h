@@ -65,7 +65,7 @@ public:
 
     void resolve_for_size(Layout::NodeWithStyleAndBoxModelMetrics const&, CSSPixelSize) const override;
 
-    Gfx::FloatSize resolve_size(Layout::Node const&, Gfx::FloatPoint, Gfx::FloatRect const&) const;
+    CSSPixelSize resolve_size(Layout::Node const&, CSSPixelPoint, CSSPixelRect const&) const;
 
     bool is_repeating() const { return m_properties.repeating == GradientRepeating::Yes; }
 
@@ -89,8 +89,8 @@ private:
 
     struct ResolvedData {
         Painting::RadialGradientData data;
-        Gfx::FloatSize gradient_size;
-        Gfx::FloatPoint center;
+        CSSPixelSize gradient_size;
+        CSSPixelPoint center;
     };
 
     mutable Optional<ResolvedData> m_resolved;
