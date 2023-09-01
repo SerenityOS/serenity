@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='ed'
-version='1.18'
+version='1.19'
 files=(
-    "https://ftpmirror.gnu.org/gnu/ed/ed-${version}.tar.lz#aca8efad9800c587724a20b97aa8fc47e6b5a47df81606feaba831b074462b4f"
+    "https://ftpmirror.gnu.org/gnu/ed/ed-${version}.tar.lz#ce2f2e5c424790aa96d09dacb93d9bbfdc0b7eb6249c9cb7538452e8ec77cd48"
 )
 useconfigure='true'
 depends=(
