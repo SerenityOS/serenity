@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='ncurses'
-version='6.3'
+version='6.4'
 useconfigure='true'
 configopts=(
     '--enable-pc-files'
@@ -13,7 +13,7 @@ configopts=(
     '--enable-widec'
 )
 files=(
-    "https://invisible-mirror.net/archives/ncurses/ncurses-${version}.tar.gz#97fc51ac2b085d4cde31ef4d2c3122c21abc217e9090a43a30fc5ec21684e059"
+    "https://invisible-mirror.net/archives/ncurses/ncurses-${version}.tar.gz#6931283d9ac87c5073f30b6290c4c75f21632bb4fc3603ac8100812bed248159"
 )
 
 check_tic_version() {
