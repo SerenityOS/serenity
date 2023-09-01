@@ -1,5 +1,4 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-
 port='libuuid'
 version='2.38'
 workdir="util-linux-${version}"

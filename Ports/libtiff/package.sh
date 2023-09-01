@@ -7,9 +7,13 @@ files=(
 useconfigure='true'
 configopts=(
     "--with-sysroot=${SERENITY_INSTALL_ROOT}"
-    "--prefix=/usr/local"
-    "--disable-static"
-    "--enable-shared"
+    '--prefix=/usr/local'
+    '--disable-static'
+    '--enable-shared'
 )
 workdir="tiff-${version}"
-depends=("libjpeg" "zstd" "xz")
+depends=(
+    'libjpeg'
+    'xz'
+    'zstd'
+)

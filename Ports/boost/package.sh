@@ -20,8 +20,11 @@ bjamopts=(
 )
 
 configure() {
-    run ./bootstrap.sh --with-icu=${DESTDIR}/usr/local --prefix=${DESTDIR}/usr/local --without-libraries=python
-    echo "using gcc : : $CXX ;" >$workdir/user-config.jam
+    run ./bootstrap.sh \
+        --with-icu="${DESTDIR}/usr/local" \
+        --prefix="${DESTDIR}/usr/local" \
+        --without-libraries='python'
+    echo "using gcc : : ${CXX} ;" > "${workdir}/user-config.jam"
 }
 
 build() {

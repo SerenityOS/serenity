@@ -6,5 +6,14 @@ files=(
 )
 useconfigure='true'
 use_fresh_config_sub='true'
-configopts=("--with-sysroot=${SERENITY_INSTALL_ROOT}" "--prefix=/usr/local" "--without-python" "--disable-static" "--enable-shared")
-depends=("libiconv" "xz")
+configopts=(
+    "--with-sysroot=${SERENITY_INSTALL_ROOT}"
+    '--prefix=/usr/local'
+    '--without-python'
+    '--disable-static'
+    '--enable-shared'
+)
+depends=(
+    'libiconv'
+    'xz'
+)

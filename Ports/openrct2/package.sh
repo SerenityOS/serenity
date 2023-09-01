@@ -23,14 +23,6 @@ files=(
 )
 useconfigure='true'
 workdir="OpenRCT2-${version}"
-configopts=(
-    "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
-    "-DCMAKE_INSTALL_PREFIX=${DESTDIR}/usr/local/"
-    "-DCMAKE_BUILD_TYPE=Release"
-    "-DDISABLE_DISCORD_RPC=ON"
-    "-DDISABLE_GOOGLE_BENCHMARK=ON"
-    "-DWITH_TESTS=OFF"
-    "-DDISABLE_OPENGL=ON")
 icon_file='resources/logo/icon_x16.png'
 launcher_name='OpenRCT2'
 launcher_category='Games'
@@ -39,7 +31,16 @@ launcher_command='/usr/local/bin/openrct2'
 configure() {
     mkdir -p "${PORT_BUILD_DIR}/OpenRCT2-${version}-build"
     cd "${PORT_BUILD_DIR}/OpenRCT2-${version}-build"
-    cmake -G Ninja "${configopts[@]}" "${PORT_BUILD_DIR}/OpenRCT2-${version}"
+    cmake \
+        -G Ninja \
+        -DCMAKE_TOOLCHAIN_FILE="${SERENITY_BUILD_DIR}/CMakeToolchain.txt" \
+        -DCMAKE_INSTALL_PREFIX="${DESTDIR}/usr/local/" \
+        -DCMAKE_BUILD_TYPE='Release' \
+        -DDISABLE_DISCORD_RPC='ON' \
+        -DDISABLE_GOOGLE_BENCHMARK='ON' \
+        -DWITH_TESTS='OFF' \
+        -DDISABLE_OPENGL='ON' \
+        "${PORT_BUILD_DIR}/OpenRCT2-${version}"
 }
 
 build() {

@@ -1,5 +1,4 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-
 port='x264'
 version='baee400fa9ced6f5481a728138fed6e867b0ff7f'
 files=(
@@ -7,4 +6,6 @@ files=(
 )
 useconfigure='true'
 use_fresh_config_sub='true'
-configopts=("--enable-shared")
+configopts=(
+    '--enable-shared'
+)
