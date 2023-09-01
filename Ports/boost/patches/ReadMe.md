@@ -15,8 +15,3 @@ Fix building Boost.Interprocess
 Fix building Boost.Python
 
 
-## `0004-Fix-building-Boost.System.patch`
-
-Fix building Boost.System
-
-
