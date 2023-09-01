@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libtiff'
-version='4.5.0'
+version='4.5.1'
 files=(
-    "http://download.osgeo.org/libtiff/tiff-${version}.tar.xz#dafac979c5e7b6c650025569c5a4e720995ba5f17bc17e6276d1f12427be267c"
+    "http://download.osgeo.org/libtiff/tiff-${version}.tar.xz#3c080867114c26edab3129644a63b708028a90514b7fe3126e38e11d24f9f88a"
 )
 useconfigure='true'
 configopts=(
