@@ -100,24 +100,27 @@ void Process::sys$exit_thread(Userspace<void*> exit_value, Userspace<void*> stac
         crash(SIGABRT, {});
     }
 
-    if (this->thread_count() == 1) {
-        // If this is the last thread, instead kill the process.
-        this->sys$exit(0);
-    }
+    m_thread_count.with([&](auto& count) {
+        if (count == 1) {
+            // If this is the last thread, instead kill the process.
+            this->sys$exit(0);
+        }
 
-    auto* current_thread = Thread::current();
-    current_thread->set_profiling_suppressed();
-    PerformanceManager::add_thread_exit_event(*current_thread);
+        auto* current_thread = Thread::current();
+        current_thread->set_profiling_suppressed();
+        PerformanceManager::add_thread_exit_event(*current_thread);
 
-    if (stack_location) {
-        auto unmap_result = address_space().with([&](auto& space) {
-            return space->unmap_mmap_range(stack_location.vaddr(), stack_size);
-        });
-        if (unmap_result.is_error())
-            dbgln("Failed to unmap thread stack, terminating thread anyway. Error code: {}", unmap_result.error());
-    }
+        if (stack_location) {
+            auto unmap_result = address_space().with([&](auto& space) {
+                return space->unmap_mmap_range(stack_location.vaddr(), stack_size);
+            });
+            if (unmap_result.is_error())
+                dbgln("Failed to unmap thread stack, terminating thread anyway. Error code: {}", unmap_result.error());
+        }
 
-    current_thread->exit(reinterpret_cast<void*>(exit_value.ptr()));
+        current_thread->exit(reinterpret_cast<void*>(exit_value.ptr()));
+        VERIFY_NOT_REACHED();
+    });
     VERIFY_NOT_REACHED();
 }
 

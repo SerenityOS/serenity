@@ -137,7 +137,6 @@ class Process final
         u32 execpromises { 0 };
         mode_t umask { 022 };
         VirtualAddress signal_trampoline;
-        Atomic<u32> thread_count { 0 };
         u8 termination_status { 0 };
         u8 termination_signal { 0 };
     };
@@ -516,12 +515,7 @@ public:
         return with_protected_data([](auto& protected_data) { return protected_data.termination_status; });
     }
 
-    u16 thread_count() const
-    {
-        return with_protected_data([](auto& protected_data) {
-            return protected_data.thread_count.load(AK::MemoryOrder::memory_order_relaxed);
-        });
-    }
+    SpinlockProtected<u32, LockRank::None>& thread_count() { return m_thread_count; }
 
     Mutex& big_lock() { return m_big_lock; }
     Mutex& ptrace_lock() { return m_ptrace_lock; }
@@ -934,6 +928,8 @@ private:
     SpinlockProtected<RefPtr<Custody>, LockRank::None> m_executable;
 
     SpinlockProtected<RefPtr<Custody>, LockRank::None> m_current_directory;
+
+    SpinlockProtected<u32, LockRank::None> m_thread_count { 0 };
 
     UnixDateTime const m_creation_time;
 

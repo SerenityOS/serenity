@@ -533,41 +533,36 @@ ErrorOr<FlatPtr> Process::sys$allocate_tls(Userspace<char const*> initial_data, 
     if (!m_master_tls_region.is_null())
         return EEXIST;
 
-    if (thread_count() != 1)
-        return EFAULT;
+    return m_thread_count.with([&](auto& count) -> ErrorOr<FlatPtr> {
+        if (count != 1)
+            return EFAULT;
 
-    Thread* main_thread = nullptr;
-    bool multiple_threads = false;
-    for_each_thread([&main_thread, &multiple_threads](auto& thread) {
-        if (main_thread)
-            multiple_threads = true;
-        main_thread = &thread;
-        return IterationDecision::Break;
-    });
-    VERIFY(main_thread);
+        Thread* main_thread = nullptr;
+        main_thread = thread_list().with([&](auto& thread_list) {
+            return thread_list.first();
+        });
+        VERIFY(main_thread);
 
-    if (multiple_threads)
-        return EINVAL;
+        return address_space().with([&](auto& space) -> ErrorOr<FlatPtr> {
+            auto* region = TRY(space->allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, size, PAGE_SIZE, "Master TLS"sv, PROT_READ | PROT_WRITE));
 
-    return address_space().with([&](auto& space) -> ErrorOr<FlatPtr> {
-        auto* region = TRY(space->allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, size, PAGE_SIZE, "Master TLS"sv, PROT_READ | PROT_WRITE));
+            m_master_tls_region = TRY(region->try_make_weak_ptr());
+            m_master_tls_size = size;
+            m_master_tls_alignment = PAGE_SIZE;
 
-        m_master_tls_region = TRY(region->try_make_weak_ptr());
-        m_master_tls_size = size;
-        m_master_tls_alignment = PAGE_SIZE;
+            {
+                Kernel::SmapDisabler disabler;
+                void* fault_at;
+                if (!Kernel::safe_memcpy((char*)m_master_tls_region.unsafe_ptr()->vaddr().as_ptr(), (char*)initial_data.ptr(), size, fault_at))
+                    return EFAULT;
+            }
 
-        {
-            Kernel::SmapDisabler disabler;
-            void* fault_at;
-            if (!Kernel::safe_memcpy((char*)m_master_tls_region.unsafe_ptr()->vaddr().as_ptr(), (char*)initial_data.ptr(), size, fault_at))
-                return EFAULT;
-        }
+            TRY(main_thread->make_thread_specific_region({}));
 
-        TRY(main_thread->make_thread_specific_region({}));
+            Processor::set_thread_specific_data(main_thread->thread_specific_data());
 
-        Processor::set_thread_specific_data(main_thread->thread_specific_data());
-
-        return m_master_tls_region.unsafe_ptr()->vaddr().get();
+            return m_master_tls_region.unsafe_ptr()->vaddr().get();
+        });
     });
 }
 

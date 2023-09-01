@@ -971,10 +971,19 @@ void ProcessorBase<T>::flush_entire_tlb_local()
 template<typename T>
 void ProcessorBase<T>::flush_tlb(Memory::PageDirectory const* page_directory, VirtualAddress vaddr, size_t page_count)
 {
-    if (s_smp_enabled && (!Memory::is_user_address(vaddr) || Process::current().thread_count() > 1))
-        Processor::smp_broadcast_flush_tlb(page_directory, vaddr, page_count);
-    else
-        flush_tlb_local(vaddr, page_count);
+    if (!Process::has_current()) {
+        if (s_smp_enabled && !Memory::is_user_address(vaddr))
+            Processor::smp_broadcast_flush_tlb(page_directory, vaddr, page_count);
+        else
+            flush_tlb_local(vaddr, page_count);
+        return;
+    }
+    Process::current().thread_count().with([&](auto& count) {
+        if (s_smp_enabled && (!Memory::is_user_address(vaddr) || count > 1))
+            Processor::smp_broadcast_flush_tlb(page_directory, vaddr, page_count);
+        else
+            flush_tlb_local(vaddr, page_count);
+    });
 }
 
 void Processor::smp_return_to_pool(ProcessorMessage& msg)

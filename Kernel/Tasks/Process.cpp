@@ -173,28 +173,27 @@ UNMAP_AFTER_INIT void Process::initialize()
 
 void Process::kill_threads_except_self()
 {
-    InterruptDisabler disabler;
-
-    if (thread_count() <= 1)
-        return;
-
-    auto* current_thread = Thread::current();
-    for_each_thread([&](Thread& thread) {
-        if (&thread == current_thread)
+    m_thread_count.with([this](auto& count) {
+        if (count <= 1)
             return;
+        auto* current_thread = Thread::current();
+        for_each_thread([&](Thread& thread) {
+            if (&thread == current_thread)
+                return;
 
-        if (auto state = thread.state(); state == Thread::State::Dead
-            || state == Thread::State::Dying)
-            return;
+            if (auto state = thread.state(); state == Thread::State::Dead
+                || state == Thread::State::Dying)
+                return;
 
-        // We need to detach this thread in case it hasn't been joined
-        thread.detach();
-        thread.set_should_die();
+            // We need to detach this thread in case it hasn't been joined
+            thread.detach();
+            thread.set_should_die();
+        });
+
+        u32 dropped_lock_count = 0;
+        if (big_lock().force_unlock_exclusive_if_locked(dropped_lock_count) != LockMode::Unlocked)
+            dbgln("Process {} big lock had {} locks", *this, dropped_lock_count);
     });
-
-    u32 dropped_lock_count = 0;
-    if (big_lock().force_unlock_exclusive_if_locked(dropped_lock_count) != LockMode::Unlocked)
-        dbgln("Process {} big lock had {} locks", *this, dropped_lock_count);
 }
 
 void Process::kill_all_threads()
@@ -382,7 +381,9 @@ Process::~Process()
 {
     unprotect_data();
 
-    VERIFY(thread_count() == 0); // all threads should have been finalized
+    m_thread_count.with([](auto& count) {
+        VERIFY(count == 0); // all threads should have been finalized
+    });
 
     PerformanceManager::add_process_exit_event(*this);
 }
@@ -1071,12 +1072,13 @@ void Process::PerformanceEventData::delete_events_buffer()
 bool Process::remove_thread(Thread& thread)
 {
     u32 thread_count_before = 0;
-    thread_list().with([&](auto& thread_list) {
-        thread_list.remove(thread);
-        with_mutable_protected_data([&](auto& protected_data) {
-            thread_count_before = protected_data.thread_count.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
-            VERIFY(thread_count_before != 0);
+    m_thread_count.with([&](auto& count) {
+        thread_list().with([&](auto& thread_list) {
+            thread_list.remove(thread);
         });
+        thread_count_before = count;
+        VERIFY(thread_count_before != 0);
+        count--;
     });
     return thread_count_before == 1;
 }
@@ -1084,10 +1086,11 @@ bool Process::remove_thread(Thread& thread)
 bool Process::add_thread(Thread& thread)
 {
     bool is_first = false;
-    thread_list().with([&](auto& thread_list) {
-        thread_list.append(thread);
-        with_mutable_protected_data([&](auto& protected_data) {
-            is_first = protected_data.thread_count.fetch_add(1, AK::MemoryOrder::memory_order_relaxed) == 0;
+    m_thread_count.with([&](auto& count) {
+        is_first = (count == 0);
+        count++;
+        thread_list().with([&](auto& thread_list) {
+            thread_list.append(thread);
         });
     });
     return is_first;
