@@ -1,12 +1,12 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='fontconfig'
-version='2.14.0'
+version='2.14.2'
 depends=(
     'freetype'
     'libxml2'
 )
 files=(
-    "https://www.freedesktop.org/software/fontconfig/release/fontconfig-${version}.tar.xz#dcbeb84c9c74bbfdb133d535fe1c7bedc9f2221a8daf3914b984c44c520e9bac"
+    "https://www.freedesktop.org/software/fontconfig/release/fontconfig-${version}.tar.xz#dba695b57bce15023d2ceedef82062c2b925e51f5d4cc4aef736cf13f60a468b"
 )
 useconfigure='true'
 use_fresh_config_sub='true'
