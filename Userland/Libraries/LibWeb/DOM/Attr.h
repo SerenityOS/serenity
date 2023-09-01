@@ -33,6 +33,7 @@ public:
 
     DeprecatedString const& value() const { return m_value; }
     void set_value(DeprecatedString value);
+    void change_attribute(DeprecatedString value);
 
     Element* owner_element();
     Element const* owner_element() const;
