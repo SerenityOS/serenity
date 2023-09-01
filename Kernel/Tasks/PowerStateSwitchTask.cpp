@@ -156,7 +156,7 @@ ErrorOr<void> PowerStateSwitchTask::kill_all_user_processes()
         SpinlockLocker lock(g_scheduler_lock);
         Process::all_instances().for_each([&](Process& process) {
             if (!process.is_kernel_process())
-                process.die();
+                process.die(0, {});
         });
     }
 

@@ -297,7 +297,7 @@ public:
     template<VoidFunction<Thread&> Callback>
     IterationDecision for_each_thread(Callback callback) const;
 
-    void die();
+    void die(int status, Optional<int> signal);
     void finalize();
 
     ThreadTracer* tracer() { return m_tracer.ptr(); }

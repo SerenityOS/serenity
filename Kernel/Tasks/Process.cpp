@@ -513,15 +513,12 @@ void Process::crash(int signal, Optional<RegisterState const&> regs, bool out_of
         dbgln("Kernel backtrace:");
         dump_backtrace();
     }
-    with_mutable_protected_data([&](auto& protected_data) {
-        protected_data.termination_signal = signal;
-    });
     set_should_generate_coredump(!out_of_memory);
     if constexpr (DUMP_REGIONS_ON_CRASH) {
         address_space().with([](auto& space) { space->dump_regions(); });
     }
     VERIFY(is_user_process());
-    die();
+    die(0, signal);
     // We can not return from here, as there is nowhere
     // to unwind to, so die right away.
     Thread::current()->die_if_needed();
@@ -892,7 +889,7 @@ void Process::remove_from_secondary_lists()
     });
 }
 
-void Process::die()
+void Process::die(int status, Optional<int> signal)
 {
     auto expected = State::Running;
     if (!m_state.compare_exchange_strong(expected, State::Dying, AK::memory_order_acquire)) {
@@ -907,7 +904,18 @@ void Process::die()
     // getting an EOF when the last process using the slave PTY dies.
     // If the master PTY owner relies on an EOF to know when to wait() on a
     // slave owner, we have to allow the PTY pair to be torn down.
-    with_mutable_protected_data([&](auto& protected_data) { protected_data.tty = nullptr; });
+    //
+    // Also, set the exit status and signal according to the requested parameters,
+    // and do it now because only at this point it's safe to assume no other
+    // thread will change these parameters to something else.
+    with_mutable_protected_data([status, signal](auto& protected_data) {
+        protected_data.tty = nullptr;
+        protected_data.termination_status = status;
+        if (!signal.has_value())
+            protected_data.termination_signal = 0;
+        else
+            protected_data.termination_signal = signal.value();
+    });
 
     VERIFY(m_threads_for_coredump.is_empty());
     for_each_thread([&](auto& thread) {
@@ -951,11 +959,7 @@ void Process::terminate_due_to_signal(u8 signal)
     VERIFY(signal < NSIG);
     VERIFY(&Process::current() == this);
     dbgln("Terminating {} due to signal {}", *this, signal);
-    with_mutable_protected_data([&](auto& protected_data) {
-        protected_data.termination_status = 0;
-        protected_data.termination_signal = signal;
-    });
-    die();
+    die(0, signal);
 }
 
 ErrorOr<void> Process::send_signal(u8 signal, Process* sender)
