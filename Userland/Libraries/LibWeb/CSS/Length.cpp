@@ -138,8 +138,8 @@ Length::ResolutionContext Length::ResolutionContext::for_layout_node(Layout::Nod
     VERIFY(root_element->layout_node());
     return Length::ResolutionContext {
         .viewport_rect = node.browsing_context().viewport_rect(),
-        .font_metrics = { CSSPixels::nearest_value_for(node.computed_values().font_size()), node.font().pixel_metrics(), node.line_height() },
-        .root_font_metrics = { CSSPixels::nearest_value_for(root_element->layout_node()->computed_values().font_size()), root_element->layout_node()->font().pixel_metrics(), root_element->layout_node()->line_height() },
+        .font_metrics = { node.computed_values().font_size(), node.font().pixel_metrics(), node.line_height() },
+        .root_font_metrics = { root_element->layout_node()->computed_values().font_size(), root_element->layout_node()->font().pixel_metrics(), root_element->layout_node()->line_height() },
     };
 }
 
@@ -168,12 +168,12 @@ CSSPixels Length::to_px(Layout::Node const& layout_node) const
             return 0;
 
         FontMetrics font_metrics {
-            CSSPixels::nearest_value_for(layout_node.computed_values().font_size()),
+            layout_node.computed_values().font_size(),
             layout_node.font().pixel_metrics(),
             layout_node.line_height()
         };
         FontMetrics root_font_metrics {
-            CSSPixels::nearest_value_for(root_element->layout_node()->computed_values().font_size()),
+            root_element->layout_node()->computed_values().font_size(),
             root_element->layout_node()->font().pixel_metrics(),
             root_element->layout_node()->line_height()
         };

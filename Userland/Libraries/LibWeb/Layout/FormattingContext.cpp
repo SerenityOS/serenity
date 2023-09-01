@@ -1712,7 +1712,7 @@ CSSPixels FormattingContext::box_baseline(Box const& box) const
             return box_state.content_height() + box_state.margin_box_top();
         case CSS::VerticalAlign::TextTop:
             // TextTop: Align the top of the box with the top of the parent's content area (see 10.6.1).
-            return CSSPixels::nearest_value_for(box.computed_values().font_size());
+            return box.computed_values().font_size();
         case CSS::VerticalAlign::TextBottom:
             // TextTop: Align the bottom of the box with the bottom of the parent's content area (see 10.6.1).
             return box_state.content_height() - CSSPixels::nearest_value_for(box.containing_block()->font().pixel_metrics().descent * 2);

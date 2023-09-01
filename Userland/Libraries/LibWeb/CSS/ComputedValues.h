@@ -41,7 +41,7 @@ struct GridAutoFlow {
 class InitialValues {
 public:
     static AspectRatio aspect_ratio() { return AspectRatio { true, {} }; }
-    static float font_size() { return 16; }
+    static CSSPixels font_size() { return 16; }
     static int font_weight() { return 400; }
     static CSS::FontVariant font_variant() { return CSS::FontVariant::Normal; }
     static CSS::Float float_() { return CSS::Float::None; }
@@ -334,7 +334,7 @@ public:
     Vector<CSS::Transformation> const& transformations() const { return m_noninherited.transformations; }
     CSS::TransformOrigin const& transform_origin() const { return m_noninherited.transform_origin; }
 
-    float font_size() const { return m_inherited.font_size; }
+    CSSPixels font_size() const { return m_inherited.font_size; }
     int font_weight() const { return m_inherited.font_weight; }
     CSS::FontVariant font_variant() const { return m_inherited.font_variant; }
     CSS::Time transition_delay() const { return m_noninherited.transition_delay; }
@@ -355,7 +355,7 @@ public:
 
 protected:
     struct {
-        float font_size { InitialValues::font_size() };
+        CSSPixels font_size { InitialValues::font_size() };
         int font_weight { InitialValues::font_weight() };
         CSS::FontVariant font_variant { InitialValues::font_variant() };
         CSS::BorderCollapse border_collapse { InitialValues::border_collapse() };
@@ -477,7 +477,7 @@ public:
     }
 
     void set_aspect_ratio(AspectRatio aspect_ratio) { m_noninherited.aspect_ratio = aspect_ratio; }
-    void set_font_size(float font_size) { m_inherited.font_size = font_size; }
+    void set_font_size(CSSPixels font_size) { m_inherited.font_size = font_size; }
     void set_font_weight(int font_weight) { m_inherited.font_weight = font_weight; }
     void set_font_variant(CSS::FontVariant font_variant) { m_inherited.font_variant = font_variant; }
     void set_border_spacing_horizontal(CSS::Length border_spacing_horizontal) { m_inherited.border_spacing_horizontal = border_spacing_horizontal; }
