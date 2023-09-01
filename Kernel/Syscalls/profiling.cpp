@@ -69,17 +69,15 @@ ErrorOr<FlatPtr> Process::profiling_enable(pid_t pid, u64 event_mask)
         return EPERM;
     SpinlockLocker lock(g_profiling_lock);
     g_profiling_event_mask = PERF_EVENT_PROCESS_CREATE | PERF_EVENT_THREAD_CREATE | PERF_EVENT_MMAP;
-    process->set_profiling(true);
-    if (!process->create_perf_events_buffer_if_needed()) {
-        process->set_profiling(false);
-        return ENOMEM;
-    }
-    g_profiling_event_mask = event_mask;
-    if (!TimeManagement::the().enable_profile_timer()) {
-        process->set_profiling(false);
-        return ENOTSUP;
-    }
-    return 0;
+    return process->profiling_data().with([&](auto& data) -> ErrorOr<FlatPtr> {
+        TRY(data.enable());
+        g_profiling_event_mask = event_mask;
+        if (!TimeManagement::the().enable_profile_timer()) {
+            data.disable();
+            return Error::from_errno(ENOTSUP);
+        }
+        return 0;
+    });
 }
 
 ErrorOr<FlatPtr> Process::sys$profiling_disable(pid_t pid)
@@ -106,13 +104,15 @@ ErrorOr<FlatPtr> Process::sys$profiling_disable(pid_t pid)
     if (!credentials->is_superuser() && profile_process_credentials->uid() != credentials->euid())
         return EPERM;
     SpinlockLocker lock(g_profiling_lock);
-    if (!process->is_profiling())
-        return EINVAL;
-    // FIXME: If we enabled the profile timer and it's not supported, how do we disable it now?
-    if (!TimeManagement::the().disable_profile_timer())
-        return ENOTSUP;
-    process->set_profiling(false);
-    return 0;
+    return process->profiling_data().with([](auto& data) -> ErrorOr<FlatPtr> {
+        if (!data.is_profiling())
+            return Error::from_errno(EINVAL);
+        // FIXME: If we enabled the profile timer and it's not supported, how do we disable it now?
+        if (!TimeManagement::the().disable_profile_timer())
+            return Error::from_errno(ENOTSUP);
+        data.disable();
+        return 0;
+    });
 }
 
 ErrorOr<FlatPtr> Process::sys$profiling_free_buffer(pid_t pid)
@@ -145,9 +145,11 @@ ErrorOr<FlatPtr> Process::sys$profiling_free_buffer(pid_t pid)
     if (!credentials->is_superuser() && profile_process_credentials->uid() != credentials->euid())
         return EPERM;
     SpinlockLocker lock(g_profiling_lock);
-    if (process->is_profiling())
-        return EINVAL;
-    process->delete_perf_events_buffer();
-    return 0;
+    return process->profiling_data().with([](auto& data) -> ErrorOr<FlatPtr> {
+        if (!data.is_profiling())
+            return Error::from_errno(EINVAL);
+        data.delete_events_buffer();
+        return 0;
+    });
 }
 }

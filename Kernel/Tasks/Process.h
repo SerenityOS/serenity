@@ -219,9 +219,6 @@ public:
 
     ErrorOr<NonnullRefPtr<Thread>> create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, StringView name, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true);
 
-    bool is_profiling() const { return m_profiling; }
-    void set_profiling(bool profiling) { m_profiling = profiling; }
-
     bool should_generate_coredump() const { return m_should_generate_coredump; }
     void set_should_generate_coredump(bool b) { m_should_generate_coredump = b; }
 
@@ -595,9 +592,6 @@ public:
 
     Vector<NonnullRefPtr<Thread>> const& threads_for_coredump(Badge<Coredump>) const { return m_threads_for_coredump; }
 
-    PerformanceEventBuffer* perf_events() { return m_perf_event_buffer; }
-    PerformanceEventBuffer const* perf_events() const { return m_perf_event_buffer; }
-
     SpinlockProtected<OwnPtr<Memory::AddressSpace>, LockRank::None>& address_space() { return m_space; }
     SpinlockProtected<OwnPtr<Memory::AddressSpace>, LockRank::None> const& address_space() const { return m_space; }
 
@@ -661,8 +655,6 @@ private:
     void kill_all_threads();
     ErrorOr<void> dump_core();
     ErrorOr<void> dump_perfcore();
-    bool create_perf_events_buffer_if_needed();
-    void delete_perf_events_buffer();
 
     ErrorOr<void> do_exec(NonnullRefPtr<OpenFileDescription> main_program_description, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, RefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, const ElfW(Ehdr) & main_program_header, Optional<size_t> minimum_stack_size = {});
     ErrorOr<FlatPtr> do_write(OpenFileDescription&, UserOrKernelBuffer const&, size_t, Optional<off_t> = {});
@@ -719,15 +711,6 @@ public:
     ErrorOr<size_t> procfs_get_child_process_link(ProcessID child_pid, KBufferBuilder& builder) const;
 
 private:
-    inline PerformanceEventBuffer* current_perf_events_buffer()
-    {
-        if (g_profiling_all_threads)
-            return g_global_perf_events;
-        if (m_profiling)
-            return m_perf_event_buffer.ptr();
-        return nullptr;
-    }
-
     SpinlockProtected<Name, LockRank::None> m_name;
 
     SpinlockProtected<OwnPtr<Memory::AddressSpace>, LockRank::None> m_space;
@@ -896,6 +879,40 @@ public:
         return m_fds.with_exclusive([](auto& fds) { return fds.allocate(); });
     }
 
+    class PerformanceEventData {
+    public:
+        PerformanceEventData(Process& process)
+            : m_process(process)
+        {
+        }
+
+        void delete_events_buffer();
+        ErrorOr<void> enable();
+        void enable_without_creating_new_buffer() { m_profiling = true; }
+        void disable() { m_profiling = false; }
+        bool is_profiling() const { return m_profiling; }
+
+        PerformanceEventBuffer* current_perf_events_buffer()
+        {
+            if (g_profiling_all_threads)
+                return g_global_perf_events;
+            if (m_profiling)
+                return m_perf_event_buffer.ptr();
+            return nullptr;
+        }
+
+        PerformanceEventBuffer* perf_event_buffer() { return m_perf_event_buffer.ptr(); }
+        PerformanceEventBuffer const* perf_event_buffer() const { return m_perf_event_buffer.ptr(); }
+
+    private:
+        Process& m_process;
+        OwnPtr<PerformanceEventBuffer> m_perf_event_buffer;
+        bool m_profiling { false };
+    };
+
+    SpinlockProtected<PerformanceEventData, LockRank::None>& profiling_data() { return m_profiling_data; }
+    SpinlockProtected<PerformanceEventData, LockRank::None> const& profiling_data() const { return m_profiling_data; }
+
 private:
     ErrorOr<NonnullRefPtr<Custody>> custody_for_dirfd(int dirfd);
 
@@ -911,7 +928,6 @@ private:
 
     bool const m_is_kernel_process;
     Atomic<State> m_state { State::Running };
-    bool m_profiling { false };
     Atomic<bool, AK::MemoryOrder::memory_order_relaxed> m_is_stopped { false };
     bool m_should_generate_coredump { false };
 
@@ -948,7 +964,7 @@ private:
     SpinlockProtected<UnveilData, LockRank::None> m_unveil_data;
     SpinlockProtected<UnveilData, LockRank::None> m_exec_unveil_data;
 
-    OwnPtr<PerformanceEventBuffer> m_perf_event_buffer;
+    SpinlockProtected<PerformanceEventData, LockRank::None> m_profiling_data;
 
     // This member is used in the implementation of ptrace's PT_TRACEME flag.
     // If it is set to true, the process will stop at the next execve syscall

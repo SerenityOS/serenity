@@ -237,12 +237,14 @@ ErrorOr<void> Process::procfs_get_unveil_stats(KBufferBuilder& builder) const
 
 ErrorOr<void> Process::procfs_get_perf_events(KBufferBuilder& builder) const
 {
-    InterruptDisabler disabler;
-    if (!perf_events()) {
-        dbgln("ProcFS: No perf events for {}", pid());
-        return Error::from_errno(ENOBUFS);
-    }
-    return perf_events()->to_json(builder);
+    return profiling_data().with([&](auto& data) -> ErrorOr<void> {
+        auto* buffer = data.perf_event_buffer();
+        if (!buffer) {
+            dbgln("ProcFS: No perf events for {}", pid());
+            return Error::from_errno(ENOBUFS);
+        }
+        return buffer->to_json(builder);
+    });
 }
 
 ErrorOr<void> Process::procfs_get_fds_stats(KBufferBuilder& builder) const

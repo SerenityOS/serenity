@@ -566,8 +566,17 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     MutexLocker ptrace_locker(ptrace_lock());
 
     // Disable profiling temporarily in case it's running on this process.
-    auto was_profiling = m_profiling;
-    TemporaryChange profiling_disabler(m_profiling, false);
+    bool was_profiling { false };
+    profiling_data().with([&was_profiling](auto& data) {
+        was_profiling = data.is_profiling();
+        data.disable();
+    });
+    ScopeGuard enable_profiling_if_was_enabled([this, was_profiling] {
+        profiling_data().with([&was_profiling](auto& data) {
+            if (was_profiling)
+                data.enable_without_creating_new_buffer();
+        });
+    });
 
     kill_threads_except_self();
 
@@ -704,10 +713,15 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
         regs.set_exec_state(load_result.entry_eip, new_userspace_sp, *space);
     });
 
-    {
-        TemporaryChange profiling_disabler(m_profiling, was_profiling);
-        PerformanceManager::add_process_exec_event(*this);
-    }
+    // NOTE: Temporarily enable the profiling feature if it was enabled
+    // and add process exec event.
+    profiling_data().with([this, &was_profiling](auto& data) {
+        if (was_profiling) {
+            data.enable_without_creating_new_buffer();
+            PerformanceManager::add_process_exec_event(*this);
+            data.disable();
+        }
+    });
 
     u32 lock_count_to_restore;
     [[maybe_unused]] auto rc = big_lock().force_unlock_exclusive_if_locked(lock_count_to_restore);

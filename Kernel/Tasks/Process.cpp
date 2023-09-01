@@ -329,6 +329,7 @@ Process::Process(StringView name, NonnullRefPtr<Credentials> credentials, Proces
     , m_creation_time(creation_time)
     , m_unveil_data(move(unveil_tree))
     , m_exec_unveil_data(move(exec_unveil_tree))
+    , m_profiling_data(*this)
     , m_wait_blocker_set(*this)
 {
     set_name(name);
@@ -736,7 +737,6 @@ ErrorOr<void> Process::dump_core()
 ErrorOr<void> Process::dump_perfcore()
 {
     VERIFY(is_dumpable());
-    VERIFY(m_perf_event_buffer);
     dbgln("Generating perfcore for pid: {}", pid().value());
 
     // Try to generate a filename which isn't already used.
@@ -760,8 +760,11 @@ ErrorOr<void> Process::dump_perfcore()
     }
 
     auto builder = TRY(KBufferBuilder::try_create());
-    TRY(m_perf_event_buffer->to_json(builder));
-
+    TRY(profiling_data().with([&](auto& data) -> ErrorOr<void> {
+        VERIFY(data.perf_event_buffer());
+        TRY(data.perf_event_buffer()->to_json(builder));
+        return {};
+    }));
     auto json = builder.build();
     if (!json) {
         dbgln("Failed to generate perfcore for pid {}: Could not allocate buffer.", pid().value());
@@ -801,7 +804,14 @@ void Process::finalize()
                 dmesgln("Failed to write coredump for pid {}: {}", pid(), result.error());
             }
         }
-        if (m_perf_event_buffer) {
+
+        // NOTE: Technically we check that the perf events buffer exists
+        // before calling this method, so normally it could be considered a TOCTOU bug,
+        // but due to the fact that when doing this perfcore dumping the Process is always
+        // finalized, then also technically nothing can delete this buffer afterwards so
+        // this is safe to do.
+        auto* perf_events_buffer = profiling_data().with([](auto& data) -> PerformanceEventBuffer* { return data.perf_event_buffer(); });
+        if (perf_events_buffer) {
             auto result = dump_perfcore();
             if (result.is_error())
                 dmesgln("Failed to write perfcore for pid {}: {}", pid(), result.error());
@@ -1036,17 +1046,19 @@ void Process::tracer_trap(Thread& thread, RegisterState const& regs)
     thread.send_urgent_signal_to_self(SIGTRAP);
 }
 
-bool Process::create_perf_events_buffer_if_needed()
+ErrorOr<void> Process::PerformanceEventData::enable()
 {
-    if (m_perf_event_buffer)
-        return true;
-    m_perf_event_buffer = PerformanceEventBuffer::try_create_with_size(4 * MiB);
-    if (!m_perf_event_buffer)
-        return false;
-    return !m_perf_event_buffer->add_process(*this, ProcessEventType::Create).is_error();
+    if (!m_perf_event_buffer) {
+        m_perf_event_buffer = PerformanceEventBuffer::try_create_with_size(4 * MiB);
+        if (!m_perf_event_buffer)
+            return ENOMEM;
+    }
+    TRY(m_perf_event_buffer->add_process(m_process, ProcessEventType::Create));
+    m_profiling = true;
+    return {};
 }
 
-void Process::delete_perf_events_buffer()
+void Process::PerformanceEventData::delete_events_buffer()
 {
     if (m_perf_event_buffer)
         m_perf_event_buffer = nullptr;

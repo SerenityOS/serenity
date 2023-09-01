@@ -49,37 +49,39 @@ ErrorOr<FlatPtr> Process::sys$open(Userspace<Syscall::SC_open_params const*> use
     if (!profiling_enabled_at_entry || Thread::current()->is_profiling_suppressed())
         return result;
 
-    auto* event_buffer = current_perf_events_buffer();
-    if (event_buffer == nullptr)
-        return result;
+    TRY(profiling_data().with([&](auto& data) -> ErrorOr<void> {
+        auto* event_buffer = data.current_perf_events_buffer();
+        if (event_buffer == nullptr)
+            return {};
 
-    auto const end_timestamp = TimeManagement::the().monotonic_time(TimePrecision::Precise);
-    auto const duration = end_timestamp - start_timestamp.value();
+        auto const end_timestamp = TimeManagement::the().monotonic_time(TimePrecision::Precise);
+        auto const duration = end_timestamp - start_timestamp.value();
 
-    FilesystemEvent data;
-    data.type = FilesystemEventType::Open;
-    data.durationNs = static_cast<u64>(duration.to_nanoseconds());
+        FilesystemEvent event_data;
+        event_data.type = FilesystemEventType::Open;
+        event_data.durationNs = static_cast<u64>(duration.to_nanoseconds());
 
-    if (result.is_error()) {
-        data.result.is_error = true;
-        data.result.value = result.error().code();
-    } else {
-        data.result.is_error = false;
-        data.result.value = 0;
-    }
+        if (result.is_error()) {
+            event_data.result.is_error = true;
+            event_data.result.value = result.error().code();
+        } else {
+            event_data.result.is_error = false;
+            event_data.result.value = 0;
+        }
 
-    auto path = get_syscall_path_argument(params.path);
-    if (!path.is_error()) {
-        auto value = event_buffer->register_string(move(path.value()));
-        data.data.open.filename_index = value.value();
-    }
+        auto path = get_syscall_path_argument(params.path);
+        if (!path.is_error()) {
+            auto value = event_buffer->register_string(move(path.value()));
+            event_data.data.open.filename_index = value.value();
+        }
 
-    data.data.open.dirfd = params.dirfd;
-    data.data.open.options = params.options;
-    data.data.open.mode = params.mode;
+        event_data.data.open.dirfd = params.dirfd;
+        event_data.data.open.options = params.options;
+        event_data.data.open.mode = params.mode;
 
-    (void)event_buffer->append(PERF_EVENT_FILESYSTEM, 0, 0, {}, Thread::current(), data);
-
+        (void)event_buffer->append(PERF_EVENT_FILESYSTEM, 0, 0, {}, Thread::current(), event_data);
+        return {};
+    }));
     return result;
 }
 
@@ -99,34 +101,37 @@ ErrorOr<FlatPtr> Process::sys$close(int fd)
     if (!profiling_enabled_at_entry || Thread::current()->is_profiling_suppressed())
         return result;
 
-    auto* event_buffer = current_perf_events_buffer();
-    if (event_buffer == nullptr)
-        return result;
+    TRY(profiling_data().with([&](auto& data) -> ErrorOr<void> {
+        auto* event_buffer = data.current_perf_events_buffer();
+        if (event_buffer == nullptr)
+            return {};
 
-    auto const end_timestamp = TimeManagement::the().monotonic_time(TimePrecision::Precise);
-    auto const duration = end_timestamp - start_timestamp.value();
+        auto const end_timestamp = TimeManagement::the().monotonic_time(TimePrecision::Precise);
+        auto const duration = end_timestamp - start_timestamp.value();
 
-    FilesystemEvent data;
-    data.type = FilesystemEventType::Close;
-    data.durationNs = static_cast<u64>(duration.to_nanoseconds());
-    data.data.close.fd = fd;
+        FilesystemEvent event_data;
+        event_data.type = FilesystemEventType::Close;
+        event_data.durationNs = static_cast<u64>(duration.to_nanoseconds());
+        event_data.data.close.fd = fd;
 
-    if (result.is_error()) {
-        data.result.is_error = true;
-        data.result.value = result.error().code();
-    } else {
-        data.result.is_error = false;
-        data.result.value = 0;
-    }
+        if (result.is_error()) {
+            event_data.result.is_error = true;
+            event_data.result.value = result.error().code();
+        } else {
+            event_data.result.is_error = false;
+            event_data.result.value = 0;
+        }
 
-    auto maybe_path_index = get_path_index(fds(), fd, event_buffer);
-    if (maybe_path_index.is_error())
-        return result;
+        auto maybe_path_index = get_path_index(fds(), fd, event_buffer);
+        if (maybe_path_index.is_error())
+            return {};
 
-    data.data.close.filename_index = maybe_path_index.value();
+        event_data.data.close.filename_index = maybe_path_index.value();
 
-    (void)event_buffer->append(PERF_EVENT_FILESYSTEM, 0, 0, {}, Thread::current(), data);
+        (void)event_buffer->append(PERF_EVENT_FILESYSTEM, 0, 0, {}, Thread::current(), event_data);
 
+        return {};
+    }));
     return result;
 }
 
@@ -147,34 +152,36 @@ ErrorOr<FlatPtr> Process::sys$readv(int fd, Userspace<const struct iovec*> iov, 
     if (Thread::current()->is_profiling_suppressed())
         return result;
 
-    auto* event_buffer = current_perf_events_buffer();
-    if (event_buffer == nullptr)
-        return result;
+    TRY(profiling_data().with([&](auto& data) -> ErrorOr<void> {
+        auto* event_buffer = data.current_perf_events_buffer();
+        if (event_buffer == nullptr)
+            return {};
 
-    auto const end_timestamp = TimeManagement::the().monotonic_time(TimePrecision::Precise);
-    auto const duration = end_timestamp - start_timestamp.value();
+        auto const end_timestamp = TimeManagement::the().monotonic_time(TimePrecision::Precise);
+        auto const duration = end_timestamp - start_timestamp.value();
 
-    FilesystemEvent data;
-    data.type = FilesystemEventType::Readv;
-    data.durationNs = static_cast<u64>(duration.to_nanoseconds());
-    data.data.readv.fd = fd;
+        FilesystemEvent event_data;
+        event_data.type = FilesystemEventType::Readv;
+        event_data.durationNs = static_cast<u64>(duration.to_nanoseconds());
+        event_data.data.readv.fd = fd;
 
-    if (result.is_error()) {
-        data.result.is_error = true;
-        data.result.value = result.error().code();
-    } else {
-        data.result.is_error = false;
-        data.result.value = 0;
-    }
+        if (result.is_error()) {
+            event_data.result.is_error = true;
+            event_data.result.value = result.error().code();
+        } else {
+            event_data.result.is_error = false;
+            event_data.result.value = 0;
+        }
 
-    auto maybe_path_index = get_path_index(fds(), fd, event_buffer);
-    if (maybe_path_index.is_error())
-        return result;
+        auto maybe_path_index = get_path_index(fds(), fd, event_buffer);
+        if (maybe_path_index.is_error())
+            return {};
 
-    data.data.readv.filename_index = maybe_path_index.value();
+        event_data.data.readv.filename_index = maybe_path_index.value();
 
-    (void)event_buffer->append(PERF_EVENT_FILESYSTEM, 0, 0, {}, Thread::current(), data);
-
+        (void)event_buffer->append(PERF_EVENT_FILESYSTEM, 0, 0, {}, Thread::current(), event_data);
+        return {};
+    }));
     return result;
 }
 
@@ -192,34 +199,36 @@ ErrorOr<FlatPtr> Process::sys$read(int fd, Userspace<u8*> buffer, size_t size)
     if (!profiling_enabled_at_entry || Thread::current()->is_profiling_suppressed())
         return result;
 
-    auto* event_buffer = current_perf_events_buffer();
-    if (event_buffer == nullptr)
-        return result;
+    TRY(profiling_data().with([&](auto& data) -> ErrorOr<void> {
+        auto* event_buffer = data.current_perf_events_buffer();
+        if (event_buffer == nullptr)
+            return {};
 
-    auto const end_timestamp = TimeManagement::the().monotonic_time(TimePrecision::Precise);
-    auto const duration = end_timestamp - start_timestamp.value();
+        auto const end_timestamp = TimeManagement::the().monotonic_time(TimePrecision::Precise);
+        auto const duration = end_timestamp - start_timestamp.value();
 
-    FilesystemEvent data;
-    data.type = FilesystemEventType::Read;
-    data.durationNs = static_cast<u64>(duration.to_nanoseconds());
-    data.data.read.fd = fd;
+        FilesystemEvent event_data;
+        event_data.type = FilesystemEventType::Read;
+        event_data.durationNs = static_cast<u64>(duration.to_nanoseconds());
+        event_data.data.read.fd = fd;
 
-    if (result.is_error()) {
-        data.result.is_error = true;
-        data.result.value = result.error().code();
-    } else {
-        data.result.is_error = false;
-        data.result.value = 0;
-    }
+        if (result.is_error()) {
+            event_data.result.is_error = true;
+            event_data.result.value = result.error().code();
+        } else {
+            event_data.result.is_error = false;
+            event_data.result.value = 0;
+        }
 
-    auto maybe_path_index = get_path_index(fds(), fd, event_buffer);
-    if (maybe_path_index.is_error())
-        return result;
+        auto maybe_path_index = get_path_index(fds(), fd, event_buffer);
+        if (maybe_path_index.is_error())
+            return {};
 
-    data.data.read.filename_index = maybe_path_index.value();
+        event_data.data.read.filename_index = maybe_path_index.value();
 
-    (void)event_buffer->append(PERF_EVENT_FILESYSTEM, 0, 0, {}, Thread::current(), data);
-
+        (void)event_buffer->append(PERF_EVENT_FILESYSTEM, 0, 0, {}, Thread::current(), event_data);
+        return {};
+    }));
     return result;
 }
 
@@ -237,37 +246,39 @@ ErrorOr<FlatPtr> Process::sys$pread(int fd, Userspace<u8*> buffer, size_t size, 
     if (!profiling_enabled_at_entry || Thread::current()->is_profiling_suppressed())
         return result;
 
-    auto* event_buffer = current_perf_events_buffer();
-    if (event_buffer == nullptr)
-        return result;
+    TRY(profiling_data().with([&](auto& data) -> ErrorOr<void> {
+        auto* event_buffer = data.current_perf_events_buffer();
+        if (event_buffer == nullptr)
+            return {};
 
-    auto const end_timestamp = TimeManagement::the().monotonic_time(TimePrecision::Precise);
-    auto const duration = end_timestamp - start_timestamp.value();
+        auto const end_timestamp = TimeManagement::the().monotonic_time(TimePrecision::Precise);
+        auto const duration = end_timestamp - start_timestamp.value();
 
-    FilesystemEvent data;
-    data.type = FilesystemEventType::Pread;
-    data.durationNs = static_cast<u64>(duration.to_nanoseconds());
-    data.data.pread.fd = fd;
-    data.data.pread.buffer_ptr = buffer.ptr();
-    data.data.pread.size = size;
-    data.data.pread.offset = userspace_offset;
+        FilesystemEvent event_data;
+        event_data.type = FilesystemEventType::Pread;
+        event_data.durationNs = static_cast<u64>(duration.to_nanoseconds());
+        event_data.data.pread.fd = fd;
+        event_data.data.pread.buffer_ptr = buffer.ptr();
+        event_data.data.pread.size = size;
+        event_data.data.pread.offset = userspace_offset;
 
-    if (result.is_error()) {
-        data.result.is_error = true;
-        data.result.value = result.error().code();
-    } else {
-        data.result.is_error = false;
-        data.result.value = 0;
-    }
+        if (result.is_error()) {
+            event_data.result.is_error = true;
+            event_data.result.value = result.error().code();
+        } else {
+            event_data.result.is_error = false;
+            event_data.result.value = 0;
+        }
 
-    auto maybe_path_index = get_path_index(fds(), fd, event_buffer);
-    if (maybe_path_index.is_error())
-        return result;
+        auto maybe_path_index = get_path_index(fds(), fd, event_buffer);
+        if (maybe_path_index.is_error())
+            return {};
 
-    data.data.pread.filename_index = maybe_path_index.value();
+        event_data.data.pread.filename_index = maybe_path_index.value();
 
-    (void)event_buffer->append(PERF_EVENT_FILESYSTEM, 0, 0, {}, Thread::current(), data);
-
+        (void)event_buffer->append(PERF_EVENT_FILESYSTEM, 0, 0, {}, Thread::current(), event_data);
+        return {};
+    }));
     return result;
 }
 
