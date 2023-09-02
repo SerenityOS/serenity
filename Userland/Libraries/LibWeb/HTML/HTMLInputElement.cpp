@@ -379,6 +379,38 @@ void HTMLInputElement::update_placeholder_visibility()
     }
 }
 
+// https://html.spec.whatwg.org/multipage/input.html#the-input-element:attr-input-readonly-3
+static bool is_allowed_to_be_readonly(HTML::HTMLInputElement::TypeAttributeState state)
+{
+    switch (state) {
+    case HTML::HTMLInputElement::TypeAttributeState::Text:
+    case HTML::HTMLInputElement::TypeAttributeState::Search:
+    case HTML::HTMLInputElement::TypeAttributeState::Telephone:
+    case HTML::HTMLInputElement::TypeAttributeState::URL:
+    case HTML::HTMLInputElement::TypeAttributeState::Email:
+    case HTML::HTMLInputElement::TypeAttributeState::Password:
+    case HTML::HTMLInputElement::TypeAttributeState::Date:
+    case HTML::HTMLInputElement::TypeAttributeState::Month:
+    case HTML::HTMLInputElement::TypeAttributeState::Week:
+    case HTML::HTMLInputElement::TypeAttributeState::Time:
+    case HTML::HTMLInputElement::TypeAttributeState::LocalDateAndTime:
+    case HTML::HTMLInputElement::TypeAttributeState::Number:
+        return true;
+    default:
+        return false;
+    }
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#attr-input-readonly
+void HTMLInputElement::handle_readonly_attribute(DeprecatedFlyString const& value)
+{
+    // The readonly attribute is a boolean attribute that controls whether or not the user can edit the form control. When specified, the element is not mutable.
+    m_is_mutable = !(!value.is_null() && is_allowed_to_be_readonly(m_type));
+
+    if (m_text_node)
+        m_text_node->set_always_editable(m_is_mutable);
+}
+
 // https://html.spec.whatwg.org/multipage/input.html#the-input-element:attr-input-placeholder-3
 static bool is_allowed_to_have_placeholder(HTML::HTMLInputElement::TypeAttributeState state)
 {
@@ -476,7 +508,13 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     MUST(m_inner_text_element->style_for_bindings()->set_property(CSS::PropertyID::Height, "1lh"sv));
 
     m_text_node = heap().allocate<DOM::Text>(realm(), document(), initial_value);
-    m_text_node->set_always_editable(m_type != TypeAttributeState::FileUpload);
+    if (m_type == TypeAttributeState::FileUpload) {
+        // NOTE: file upload state is mutable, but we don't allow the text node to be modifed
+        m_text_node->set_always_editable(false);
+    } else {
+        handle_readonly_attribute(attribute(HTML::AttributeNames::readonly));
+    }
+
     m_text_node->set_owner_input_element({}, *this);
 
     if (m_type == TypeAttributeState::Password)
@@ -541,6 +579,8 @@ void HTMLInputElement::attribute_changed(DeprecatedFlyString const& name, Deprec
     } else if (name == HTML::AttributeNames::placeholder) {
         if (m_placeholder_text_node)
             m_placeholder_text_node->set_data(value);
+    } else if (name == HTML::AttributeNames::readonly) {
+        handle_readonly_attribute(value);
     }
 }
 
