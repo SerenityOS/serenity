@@ -213,7 +213,7 @@ struct BodyStructureData {
     HashMap<DeprecatedString, DeprecatedString> fields;
     unsigned bytes { 0 };
     unsigned lines { 0 };
-    Optional<Envelope> envelope;
+    Optional<Tuple<Envelope, NonnullOwnPtr<BodyStructure>>> contanied_message;
 
     Optional<DeprecatedString> md5 {};
     Optional<Tuple<DeprecatedString, HashMap<DeprecatedString, DeprecatedString>>> disposition {};
