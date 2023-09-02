@@ -402,8 +402,7 @@ fetch_git() {
     fi
 }
 
-# FIXME: Don't allow overriding fetch, support multiple protocols instead. See #20004
-func_defined fetch || fetch() {
+fetch() {
     pre_fetch
 
     for f in "${files[@]}"; do
@@ -436,7 +435,7 @@ func_defined pre_patch || pre_patch() {
     :
 }
 
-func_defined patch_internal || patch_internal() {
+patch_internal() {
     if [ -n "${IN_SERENITY_PORT_DEV:-}" ]; then
         return
     fi
