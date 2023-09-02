@@ -1,7 +1,7 @@
 #import <HTML/HTMLElement.idl>
 
 // https://html.spec.whatwg.org/multipage/obsolete.html#htmlmarqueeelement
-[Exposed=Window, UseDeprecatedAKString]
+[Exposed=Window]
 interface HTMLMarqueeElement : HTMLElement {
 
     [HTMLConstructor] constructor();

@@ -160,6 +160,14 @@ WebIDL::ExceptionOr<void> Element::set_attribute(DeprecatedFlyString const& name
     return {};
 }
 
+WebIDL::ExceptionOr<void> Element::set_attribute(DeprecatedFlyString const& name, Optional<String> const& value)
+{
+    if (!value.has_value())
+        return set_attribute(name, DeprecatedString {});
+
+    return set_attribute(name, value->to_deprecated_string());
+}
+
 // https://dom.spec.whatwg.org/#validate-and-extract
 WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, DeprecatedFlyString namespace_, DeprecatedFlyString qualified_name)
 {
