@@ -1,7 +1,7 @@
 #import <HighResolutionTime/DOMHighResTimeStamp.idl>
 
 // https://www.w3.org/TR/performance-timeline/#dom-performanceentry
-[Exposed=(Window,Worker), UseNewAKString]
+[Exposed=(Window,Worker)]
 interface PerformanceEntry {
     readonly attribute DOMString name;
     readonly attribute DOMString entryType;

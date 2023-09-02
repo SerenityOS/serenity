@@ -2,7 +2,7 @@
 #import <DOM/EventTarget.idl>
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigationtype
-[Exposed=Window, UseNewAKString]
+[Exposed=Window]
 interface NavigationHistoryEntry : EventTarget {
   readonly attribute USVString? url;
   readonly attribute DOMString key;

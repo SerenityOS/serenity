@@ -1,6 +1,6 @@
 #import <PerformanceTimeline/PerformanceEntry.idl>
 
-[Exposed=(Window,Worker), UseNewAKString]
+[Exposed=(Window,Worker)]
 interface PerformanceMeasure : PerformanceEntry {
     readonly attribute any detail;
 };

@@ -1,7 +1,7 @@
 #import <DOM/CharacterData.idl>
 
 // https://dom.spec.whatwg.org/#text
-[Exposed=Window]
+[Exposed=Window, UseDeprecatedAKString]
 interface Text : CharacterData {
     constructor(optional DOMString data = "");
 

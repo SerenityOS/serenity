@@ -1,4 +1,4 @@
-[Exposed=(Window,Worker)]
+[Exposed=(Window,Worker), UseDeprecatedAKString]
 interface TextDecoder {
     // FIXME: 'optional TextDecoderOptions options = {}'
     constructor(optional DOMString label = "utf-8");

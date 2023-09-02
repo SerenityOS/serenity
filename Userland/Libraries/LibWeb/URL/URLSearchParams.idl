@@ -1,5 +1,5 @@
 // https://url.spec.whatwg.org/#urlsearchparams
-[Exposed=*, UseNewAKString]
+[Exposed=*]
 interface URLSearchParams {
 
   constructor(optional (sequence<sequence<USVString>> or record<USVString, USVString> or USVString) init = "");

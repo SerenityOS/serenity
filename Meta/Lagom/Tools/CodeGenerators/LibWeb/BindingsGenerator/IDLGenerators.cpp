@@ -135,10 +135,10 @@ CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
         return { .name = "JS::Handle<WebIDL::CallbackType>", .sequence_storage_type = SequenceStorageType::MarkedVector };
 
     if (type.is_string()) {
-        if (interface.extended_attributes.contains("UseNewAKString"))
-            return { .name = "String", .sequence_storage_type = SequenceStorageType::Vector };
+        if (interface.extended_attributes.contains("UseDeprecatedAKString"))
+            return { .name = "DeprecatedString", .sequence_storage_type = SequenceStorageType::Vector };
 
-        return { .name = "DeprecatedString", .sequence_storage_type = SequenceStorageType::Vector };
+        return { .name = "String", .sequence_storage_type = SequenceStorageType::Vector };
     }
 
     if (type.name() == "double" && !type.is_nullable())
@@ -411,8 +411,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
     // FIXME: Add support for optional, variadic, nullable and default values to all types
     if (parameter.type->is_string()) {
-        bool use_new_ak_string = interface.extended_attributes.contains("UseNewAKString");
-        if (!use_new_ak_string)
+        if (interface.extended_attributes.contains("UseDeprecatedAKString"))
             generate_to_deprecated_string(scoped_generator, parameter, variadic, optional, optional_default_value);
         else
             generate_to_new_string(scoped_generator, parameter, variadic, optional, optional_default_value);
@@ -811,7 +810,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
                 }
 
                 generate_to_cpp(dictionary_generator, member, member_property_value_name, "", member_value_name, interface, member.extended_attributes.contains("LegacyNullToEmptyString"), !member.required, member.default_value);
-                if (member.type->is_string() && optional && interface.extended_attributes.contains("UseNewAKString")) {
+                if (member.type->is_string() && optional && !interface.extended_attributes.contains("UseDeprecatedAKString")) {
                     dictionary_generator.append(R"~~~(
     if (@member_value_name@.has_value())
         @cpp_name@.@member_name@ = @member_value_name@.release_value();
@@ -1330,7 +1329,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (includes_string) {
             // 14. If types includes a string type, then return the result of converting V to that type.
             // NOTE: Currently all string types are converted to String.
-            if (interface.extended_attributes.contains("UseNewAKString")) {
+            if (!interface.extended_attributes.contains("UseDeprecatedAKString")) {
                 union_generator.append(R"~~~(
         return TRY(@js_name@@js_suffix@.to_string(vm));
 )~~~");
@@ -1418,7 +1417,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
                 } else {
                     if (optional_default_value == "\"\"") {
-                        if (!interface.extended_attributes.contains("UseNewAKString")) {
+                        if (interface.extended_attributes.contains("UseDeprecatedAKString")) {
                             union_generator.append(R"~~~(
     @union_type@ @cpp_name@ = @js_name@@js_suffix@.is_undefined() ? DeprecatedString::empty() : TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
 )~~~");
@@ -1604,7 +1603,7 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
 
     if (type.is_nullable() && !is<UnionType>(type)) {
         if (type.is_string()) {
-            if (!interface.extended_attributes.contains("UseNewAKString")) {
+            if (interface.extended_attributes.contains("UseDeprecatedAKString")) {
                 scoped_generator.append(R"~~~(
     if (@value@.is_null()) {
         @result_expression@ JS::js_null();
@@ -1639,7 +1638,7 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
     }
 
     if (type.is_string()) {
-        if (type.is_nullable() && interface.extended_attributes.contains("UseNewAKString")) {
+        if (type.is_nullable() && !interface.extended_attributes.contains("UseDeprecatedAKString")) {
             scoped_generator.append(R"~~~(
     @result_expression@ JS::PrimitiveString::create(vm, @value@.release_value());
 )~~~");
@@ -1769,7 +1768,7 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
         // Handle Enum? values, which were null-checked above
         if (type.is_nullable())
             scoped_generator.set("value", DeprecatedString::formatted("{}.value()", value));
-        if (!interface.extended_attributes.contains("UseNewAKString")) {
+        if (interface.extended_attributes.contains("UseDeprecatedAKString")) {
             scoped_generator.append(R"~~~(
     @result_expression@ JS::PrimitiveString::create(vm, Bindings::idl_enum_to_deprecated_string(@value@));
 )~~~");
@@ -2325,7 +2324,7 @@ enum class @enum.type.name@ {
 };
 )~~~");
 
-        if (!interface.extended_attributes.contains("UseNewAKString")) {
+        if (interface.extended_attributes.contains("UseDeprecatedAKString")) {
             enum_generator.append(R"~~~(
 inline DeprecatedString idl_enum_to_deprecated_string(@enum.type.name@ value) {
     switch(value) {
@@ -2972,7 +2971,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_string)
     auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->@attribute.cpp_getter_name@(); }));
 )~~~");
         } else {
-            if (!interface.extended_attributes.contains("UseNewAKString")) {
+            if (interface.extended_attributes.contains("UseDeprecatedAKString")) {
                 stringifier_generator.append(R"~~~(
     auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->to_deprecated_string(); }));
 )~~~");

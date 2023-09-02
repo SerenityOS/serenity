@@ -9,7 +9,7 @@
 typedef sequence<PerformanceEntry> PerformanceEntryList;
 
 // https://w3c.github.io/hr-time/#sec-performance
-[Exposed=(Window, Worker), UseNewAKString]
+[Exposed=(Window, Worker)]
 interface Performance : EventTarget {
     DOMHighResTimeStamp now();
     readonly attribute DOMHighResTimeStamp timeOrigin;

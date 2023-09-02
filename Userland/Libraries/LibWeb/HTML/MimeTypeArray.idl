@@ -1,6 +1,6 @@
 #import <HTML/MimeType.idl>
 
-[Exposed=Window, LegacyUnenumerableNamedProperties, UseNewAKString]
+[Exposed=Window, LegacyUnenumerableNamedProperties]
 interface MimeTypeArray {
     readonly attribute unsigned long length;
     getter MimeType? item(unsigned long index);

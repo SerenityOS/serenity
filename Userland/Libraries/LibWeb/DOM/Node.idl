@@ -3,7 +3,7 @@
 #import <DOM/EventTarget.idl>
 
 // https://dom.spec.whatwg.org/#node
-[Exposed=Window]
+[Exposed=Window, UseDeprecatedAKString]
 interface Node : EventTarget {
 
     readonly attribute unsigned short nodeType;

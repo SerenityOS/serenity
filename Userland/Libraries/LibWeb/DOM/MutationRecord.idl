@@ -1,7 +1,7 @@
 #import <DOM/Node.idl>
 #import <DOM/NodeList.idl>
 
-[Exposed=Window]
+[Exposed=Window, UseDeprecatedAKString]
 interface MutationRecord {
 
     readonly attribute DOMString type;

@@ -5,7 +5,7 @@
 #import <DOM/ParentNode.idl>
 
 // https://dom.spec.whatwg.org/#documentfragment
-[Exposed=Window]
+[Exposed=Window, UseDeprecatedAKString]
 interface DocumentFragment : Node {
     constructor();
 

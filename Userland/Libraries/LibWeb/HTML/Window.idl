@@ -16,7 +16,7 @@
 #import <RequestIdleCallback/IdleRequest.idl>
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#window
-[Global=Window, Exposed=Window, LegacyUnenumerableNamedProperties, UseNewAKString]
+[Global=Window, Exposed=Window, LegacyUnenumerableNamedProperties]
 interface Window : EventTarget {
     // the current browsing context
     [LegacyUnforgeable] readonly attribute WindowProxy window;

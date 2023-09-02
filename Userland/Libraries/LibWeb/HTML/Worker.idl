@@ -1,7 +1,7 @@
 #import <DOM/EventTarget.idl>
 #import <DOM/EventHandler.idl>
 
-[Exposed=(Window), UseNewAKString]
+[Exposed=(Window)]
 interface Worker : EventTarget {
     constructor(DOMString scriptURL, optional WorkerOptions options = {});
 

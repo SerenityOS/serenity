@@ -2,7 +2,7 @@
 #import <DOM/InnerHTML.idl>
 
 // https://dom.spec.whatwg.org/#shadowroot
-[Exposed=Window]
+[Exposed=Window, UseDeprecatedAKString]
 interface ShadowRoot : DocumentFragment {
     readonly attribute ShadowRootMode mode;
     // FIXME: readonly attribute boolean delegatesFocus;

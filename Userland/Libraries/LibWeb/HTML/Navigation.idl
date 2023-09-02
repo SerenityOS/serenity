@@ -4,7 +4,7 @@
 #import <HTML/NavigationTransition.idl>
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigation-interface
-[Exposed=Window, UseNewAKString]
+[Exposed=Window]
 interface Navigation : EventTarget {
   sequence<NavigationHistoryEntry> entries();
   readonly attribute NavigationHistoryEntry? currentEntry;

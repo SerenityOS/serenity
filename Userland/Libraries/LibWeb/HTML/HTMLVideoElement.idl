@@ -1,7 +1,7 @@
 #import <HTML/HTMLMediaElement.idl>
 
 // https://html.spec.whatwg.org/multipage/media.html#htmlvideoelement
-[Exposed=Window]
+[Exposed=Window, UseDeprecatedAKString]
 interface HTMLVideoElement : HTMLMediaElement {
 
     [HTMLConstructor] constructor();

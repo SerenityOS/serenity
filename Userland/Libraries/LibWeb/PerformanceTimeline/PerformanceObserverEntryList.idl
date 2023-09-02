@@ -1,7 +1,7 @@
 #import <HighResolutionTime/Performance.idl>
 
 // https://w3c.github.io/performance-timeline/#performanceobserverentrylist-interface
-[Exposed=(Window,Worker), UseNewAKString]
+[Exposed=(Window,Worker)]
 interface PerformanceObserverEntryList {
     PerformanceEntryList getEntries();
     PerformanceEntryList getEntriesByType(DOMString type);

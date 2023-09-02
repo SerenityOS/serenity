@@ -1,5 +1,5 @@
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#the-navigationdestination-interface
-[Exposed=Window, UseNewAKString]
+[Exposed=Window]
 interface NavigationDestination {
   readonly attribute USVString url;
   readonly attribute DOMString key;

@@ -19,7 +19,7 @@ dictionary ScrollIntoViewOptions : ScrollOptions {
 };
 
 // https://dom.spec.whatwg.org/#element
-[Exposed=Window]
+[Exposed=Window, UseDeprecatedAKString]
 interface Element : Node {
     readonly attribute DOMString? namespaceURI;
     readonly attribute DOMString? prefix;

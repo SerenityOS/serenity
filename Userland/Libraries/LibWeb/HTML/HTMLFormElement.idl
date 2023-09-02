@@ -2,7 +2,7 @@
 #import <HTML/HTMLElement.idl>
 
 // https://html.spec.whatwg.org/multipage/semantics.html#htmlformelement
-[Exposed=Window]
+[Exposed=Window, UseDeprecatedAKString]
 interface HTMLFormElement : HTMLElement {
 
     [HTMLConstructor] constructor();

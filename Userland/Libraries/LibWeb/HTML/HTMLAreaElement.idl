@@ -2,7 +2,7 @@
 #import <HTML/HTMLHyperlinkElementUtils.idl>
 
 // https://html.spec.whatwg.org/multipage/image-maps.html#htmlareaelement
-[Exposed=Window]
+[Exposed=Window, UseDeprecatedAKString]
 interface HTMLAreaElement : HTMLElement {
 
     [HTMLConstructor] constructor();

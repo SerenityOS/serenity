@@ -5,7 +5,7 @@
 #import <XHR/FormData.idl>
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#the-navigateevent-interface
-[Exposed=Window, UseNewAKString]
+[Exposed=Window]
 interface NavigateEvent : Event {
   constructor(DOMString type, NavigateEventInit eventInitDict);
 

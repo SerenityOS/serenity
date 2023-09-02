@@ -2,7 +2,7 @@
 #import <Geometry/DOMPoint.idl>
 
 // https://drafts.fxtf.org/geometry/#dommatrixreadonly
-[Exposed=(Window,Worker), Serializable, UseNewAKString]
+[Exposed=(Window,Worker), Serializable]
 interface DOMMatrixReadOnly {
     constructor(optional (DOMString or sequence<unrestricted double>) init);
 

@@ -1,6 +1,6 @@
 #import <HTML/Plugin.idl>
 
-[Exposed=Window, UseNewAKString]
+[Exposed=Window]
 interface MimeType {
     readonly attribute DOMString type;
     readonly attribute DOMString description;

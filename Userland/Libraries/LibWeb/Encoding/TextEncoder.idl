@@ -1,4 +1,4 @@
-[Exposed=(Window,Worker)]
+[Exposed=(Window,Worker), UseDeprecatedAKString]
 interface TextEncoder {
     constructor();
 
