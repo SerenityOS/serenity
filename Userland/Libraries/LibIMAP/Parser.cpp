@@ -299,6 +299,7 @@ FetchResponseData Parser::parse_fetch_response()
             break;
         }
         case FetchCommand::DataItemType::Envelope: {
+            consume(" "sv);
             fetch_response.set_envelope(parse_envelope());
             break;
         }
@@ -339,7 +340,7 @@ FetchResponseData Parser::parse_fetch_response()
 }
 Envelope Parser::parse_envelope()
 {
-    consume(" ("sv);
+    consume("("sv);
     auto date = parse_nstring();
     consume(" "sv);
     auto subject = parse_nstring();
