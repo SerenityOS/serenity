@@ -198,7 +198,7 @@ struct MultiPartBodyStructureData {
     Optional<Tuple<DeprecatedString, HashMap<DeprecatedString, DeprecatedString>>> disposition;
     Vector<OwnPtr<BodyStructure>> bodies;
     Vector<DeprecatedString> langs;
-    DeprecatedString media_type;
+    DeprecatedString multipart_subtype;
     Optional<HashMap<DeprecatedString, DeprecatedString>> params;
     Optional<DeprecatedString> location;
     Optional<Vector<BodyExtension>> extensions;
