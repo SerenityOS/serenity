@@ -81,6 +81,8 @@ public:
     bool indeterminate() const { return m_indeterminate; }
     void set_indeterminate(bool);
 
+    bool is_mutable() const { return m_is_mutable; }
+
     void did_edit_text_node(Badge<BrowsingContext>);
 
     JS::GCPtr<FileAPI::FileList> files();
