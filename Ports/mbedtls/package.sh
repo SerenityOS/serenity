@@ -1,10 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='mbedtls'
-version='3.1.0'
+version='3.4.1'
 files=(
-    "https://github.com/Mbed-TLS/mbedtls/archive/refs/tags/v${version}.tar.gz#b02df6f68dd1537e115a8497d5c173dc71edc55ad084756e57a30f951b725acd"
+    "https://github.com/Mbed-TLS/mbedtls/archive/refs/tags/v${version}.tar.gz#a420fcf7103e54e775c383e3751729b8fb2dcd087f6165befd13f28315f754f5"
 )
-makeopts=(
+makeopts+=(
     'SHARED=1'
 )
 
