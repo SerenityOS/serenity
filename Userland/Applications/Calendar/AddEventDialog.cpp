@@ -31,6 +31,8 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
     set_resizable(false);
     set_icon(parent_window->icon());
 
+    m_date_time = Core::DateTime::create(m_date_time.year(), m_date_time.month(), m_date_time.day(), 12, 0);
+
     auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
     widget->set_fill_with_background_color(true);
     widget->set_layout<GUI::VerticalBoxLayout>();
@@ -75,12 +77,12 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
     auto& starting_hour_combo = time_container.add<GUI::SpinBox>();
     starting_hour_combo.set_fixed_size(50, 20);
     starting_hour_combo.set_range(1, 12);
-    starting_hour_combo.set_value(12);
+    starting_hour_combo.set_value(m_date_time.hour());
 
     auto& starting_minute_combo = time_container.add<GUI::SpinBox>();
     starting_minute_combo.set_fixed_size(40, 20);
     starting_minute_combo.set_range(0, 59);
-    starting_minute_combo.set_value(0);
+    starting_minute_combo.set_value(m_date_time.minute());
 
     auto& starting_meridiem_combo = time_container.add<GUI::ComboBox>();
     starting_meridiem_combo.set_only_allow_values_from_model(true);
@@ -112,6 +114,22 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, EventManager& event_man
     starting_year_combo.on_change = [update_starting_day_range](auto) { update_starting_day_range(); };
     starting_month_combo.on_change = [update_starting_day_range](auto, auto) { update_starting_day_range(); };
 
+    auto update_combo_values = [&]() {
+        auto year = starting_year_combo.value();
+        auto month = starting_month_combo.selected_index() + 1;
+        auto day = starting_day_combo.value();
+        auto hour = starting_hour_combo.value();
+        auto minute = starting_minute_combo.value();
+
+        m_date_time = Core::DateTime::create(year, month, day, hour, minute);
+    };
+
+    starting_year_combo.on_change = [update_combo_values](auto) { update_combo_values(); };
+    starting_month_combo.on_change = [update_combo_values](auto, auto) { update_combo_values(); };
+    starting_day_combo.on_change = [update_combo_values](auto) { update_combo_values(); };
+    starting_hour_combo.on_change = [update_combo_values](auto) { update_combo_values(); };
+    starting_minute_combo.on_change = [update_combo_values](auto) { update_combo_values(); };
+
     event_title_textbox.set_focus(true);
 }
 
@@ -119,8 +137,10 @@ ErrorOr<void> AddEventDialog::add_event_to_calendar()
 {
     JsonObject event;
     auto start_date = TRY(String::formatted("{}-{:0>2d}-{:0>2d}", m_date_time.year(), m_date_time.month(), m_date_time.day()));
+    auto start_time = TRY(String::formatted("{}:{:0>2d}", m_date_time.hour(), m_date_time.minute()));
     auto summary = find_descendant_of_type_named<GUI::TextBox>("event_title_textbox")->get_text();
     event.set("start_date", JsonValue(start_date));
+    event.set("start_time", JsonValue(start_time));
     event.set("summary", JsonValue(summary));
     TRY(m_event_manager.add_event(event));
     m_event_manager.set_dirty(true);
