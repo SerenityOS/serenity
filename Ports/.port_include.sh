@@ -119,6 +119,10 @@ cd "${PORT_BUILD_DIR}"
 # 2 = sha256sum
 FILES_SIMPLE_PATTERN='^(https?:\/\/.+)#([0-9a-f]{64})$'
 
+# 1 = repository
+# 2 = revision
+FILES_GIT_PATTERN='^git\+(.+)#(.+)$'
+
 cleanup_git() {
     echo "WARNING: Reverting changes to $workdir as we are in dev mode!"
     run git clean -xffd >/dev/null 2>&1
@@ -366,6 +370,38 @@ fetch_simple() {
     fi
 }
 
+fetch_git() {
+    repository="${1}"
+    revision="${2}"
+
+    directory="$(basename "${repository}")"
+    backing_copy="${PORT_META_DIR}/${directory}"
+    working_copy="${PORT_BUILD_DIR}/${directory}"
+
+    run_nocd git init --bare "${backing_copy}"
+    run_nocd git -C "${backing_copy}" config core.autocrlf false
+    run_nocd git -C "${backing_copy}" worktree prune
+    run_nocd git -C "${backing_copy}" fetch --tags "${repository}" "${revision}"
+
+    revision="$(git -C "${backing_copy}" rev-parse FETCH_HEAD)"
+
+    if [ ! -e "${working_copy}/.git" ]; then
+        run_nocd git -C "${backing_copy}" worktree add "${working_copy}" "${revision}"
+    fi
+
+    old_revision=""
+    if [ -e "${backing_copy}/refs/tags/source" ]; then
+        old_revision="$(git -C "${working_copy}" rev-parse refs/tags/source)"
+    fi
+
+    if ! [ "${old_revision}" = "${revision}" ]; then
+        run_nocd git -C "${working_copy}" clean -ffdx
+        run_nocd git -C "${working_copy}" reset --hard
+        run_nocd git -C "${working_copy}" tag --no-sign -f source "${revision}"
+        run_nocd git -C "${working_copy}" checkout "${revision}"
+    fi
+}
+
 # FIXME: Don't allow overriding fetch, support multiple protocols instead. See #20004
 func_defined fetch || fetch() {
     pre_fetch
@@ -375,6 +411,13 @@ func_defined fetch || fetch() {
             url="${BASH_REMATCH[1]}"
             sha256sum="${BASH_REMATCH[2]}"
             fetch_simple "${url}" "${sha256sum}"
+            continue
+        fi
+
+        if [[ "${f}" =~ ${FILES_GIT_PATTERN} ]]; then
+            repository="${BASH_REMATCH[1]}"
+            revision="${BASH_REMATCH[2]}"
+            fetch_git "${repository}" "${revision}"
             continue
         fi
 
@@ -394,15 +437,29 @@ func_defined pre_patch || pre_patch() {
 }
 
 func_defined patch_internal || patch_internal() {
+    if [ -n "${IN_SERENITY_PORT_DEV:-}" ]; then
+        return
+    fi
+
     # patch if it was not yet patched (applying patches multiple times doesn't work!)
-    if [ -z "${IN_SERENITY_PORT_DEV:-}" ] && [ -d "${PORT_META_DIR}/patches" ]; then
+    if [ -d "${PORT_META_DIR}/patches" ]; then
         for filepath in "${PORT_META_DIR}"/patches/*.patch; do
             filename=$(basename $filepath)
-            if [ ! -f "$workdir"/.${filename}_applied ]; then
+            if [ -f "$workdir"/.${filename}_applied ]; then
+                continue
+            fi
+
+            if [ -e "${workdir}/.git" ]; then
+                run git am --keep-cr --keep-non-patch "${filepath}"
+            else
                 run patch -p"$patchlevel" < "$filepath"
                 run touch .${filename}_applied
             fi
         done
+    fi
+
+    if [ -e "${workdir}/.git" ]; then
+        run git tag --no-sign -f patched
     fi
 }
 func_defined pre_configure || pre_configure() {
@@ -437,6 +494,13 @@ clean_dist() {
             url="${BASH_REMATCH[1]}"
             filename=$(basename "$url")
             rm -f "${PORT_META_DIR}/${filename}"
+            continue
+        fi
+
+        if [[ "${f}" =~ ${FILES_GIT_PATTERN} ]]; then
+            repository="${BASH_REMATCH[1]}"
+            directory=$(basename "$repository")
+            rm -rf "${PORT_META_DIR}/${directory}"
             continue
         fi
 
@@ -728,7 +792,7 @@ do_dev() {
     if [ "${1:-}" != "--no-depends" ]; then
         do_installdepends
     fi
-    if [ -d "$workdir" ] && [ ! -d "$workdir/.git" ]; then
+    if [ -d "$workdir" ] && [ ! -e "$workdir/.git" ]; then
         if prompt_yes_no "- Would you like to clean the working directory (i.e. ./package.sh clean)?"; then
             do_clean
         fi
@@ -739,7 +803,7 @@ do_dev() {
     [ -d "$workdir" ] || {
         do_fetch
         pushd "$workdir"
-        if [ ! -d ".git" ]; then
+        if [ ! -e ".git" ]; then
             git init .
             git config core.autocrlf false
             git add --all --force
@@ -770,12 +834,12 @@ do_dev() {
             done
         fi
 
-        git tag --no-sign patched
+        git tag --no-sign -f patched
 
         popd
     }
 
-    [ -d "$workdir/.git" ] || {
+    [ -e "$workdir/.git" ] || {
         >&2 echo "$workdir does not appear to be a git repository."
         >&2 echo "If you want to use './package.sh dev', please run './package.sh clean' first."
         exit 1
