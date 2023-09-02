@@ -93,11 +93,6 @@ public:
         return m_stack_info.size_free() < 32 * KiB;
     }
 
-    void push_execution_context(ExecutionContext& context)
-    {
-        m_execution_context_stack.append(&context);
-    }
-
     // TODO: Rename this function instead of providing a second argument, now that the global object is no longer passed in.
     struct CheckStackSpaceLimitTag { };
 
@@ -106,16 +101,12 @@ public:
         // Ensure we got some stack space left, so the next function call doesn't kill us.
         if (did_reach_stack_space_limit())
             return throw_completion<InternalError>(ErrorType::CallStackSizeExceeded);
-        m_execution_context_stack.append(&context);
+        push_execution_context(context);
         return {};
     }
 
-    void pop_execution_context()
-    {
-        m_execution_context_stack.take_last();
-        if (m_execution_context_stack.is_empty() && on_call_stack_emptied)
-            on_call_stack_emptied();
-    }
+    void push_execution_context(ExecutionContext&);
+    void pop_execution_context();
 
     // https://tc39.es/ecma262/#running-execution-context
     // At any point in time, there is at most one execution context per agent that is actually executing code.
