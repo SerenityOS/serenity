@@ -453,11 +453,18 @@ BodyStructure Parser::parse_one_part_body()
         // NOTE: "media-text SP body-fields" part is already parsed.
         consume(" "sv);
         data.lines = MUST(parse_number());
-    } else if (data.type.equals_ignoring_ascii_case("MESSAGE"sv) && data.subtype.equals_ignoring_ascii_case("RFC822"sv)) {
+    } else if (data.type.equals_ignoring_ascii_case("MESSAGE"sv) && data.subtype.is_one_of_ignoring_ascii_case("RFC822"sv, "GLOBAL"sv)) {
         // body-type-msg
         // NOTE: "media-message SP body-fields" part is already parsed.
         consume(" "sv);
-        data.envelope = parse_envelope();
+        auto envelope = parse_envelope();
+
+        consume(" ("sv);
+        auto body = parse_body_structure();
+        data.contanied_message = Tuple { move(envelope), make<BodyStructure>(move(body)) };
+
+        consume(" "sv);
+        data.lines = MUST(parse_number());
     } else {
         // body-type-basic
         // NOTE: "media-basic SP body-fields" is already parsed.
