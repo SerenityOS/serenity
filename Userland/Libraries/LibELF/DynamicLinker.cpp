@@ -677,7 +677,7 @@ void ELF::DynamicLinker::linker_main(DeprecatedString&& main_program_path, int m
 
     s_loaders.clear();
 
-    int rc = syscall(SC_prctl, PR_SET_NO_NEW_SYSCALL_REGION_ANNOTATIONS, 1, 0);
+    int rc = syscall(SC_prctl, PR_SET_NO_NEW_SYSCALL_REGION_ANNOTATIONS, 1, 0, nullptr);
     if (rc < 0) {
         VERIFY_NOT_REACHED();
     }
