@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Paul Irwin <paulirwin@gmail.com>
+Date: Sun, 3 Sep 2023 09:25:19 -0600
+Subject: [PATCH] Use CHIBI path in install
+
+---
+ Makefile | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 81460195cc7035b1f18f13114d2736f87fe9bd9f..bf635e070cfade08fc3330e4fef86dcd4c6b57dc 100644
+--- a/Makefile
++++ b/Makefile
+@@ -396,9 +396,9 @@ install-base: all
+ install: install-base
+ ifneq "$(IMAGE_FILES)" ""
+ 	echo "Generating images"
+-	-LD_LIBRARY_PATH="$(DESTDIR)$(SOLIBDIR):$(LD_LIBRARY_PATH)" DYLD_LIBRARY_PATH="$(DESTDIR)$(SOLIBDIR):$(DYLD_LIBRARY_PATH)" CHIBI_MODULE_PATH="$(DESTDIR)$(MODDIR):$(DESTDIR)$(BINMODDIR)" $(DESTDIR)$(BINDIR)/chibi-scheme$(EXE) -mchibi.repl -d $(DESTDIR)$(MODDIR)/chibi.img
+-	-LD_LIBRARY_PATH="$(DESTDIR)$(SOLIBDIR):$(LD_LIBRARY_PATH)" DYLD_LIBRARY_PATH="$(DESTDIR)$(SOLIBDIR):$(DYLD_LIBRARY_PATH)" CHIBI_MODULE_PATH="$(DESTDIR)$(MODDIR):$(DESTDIR)$(BINMODDIR)" $(DESTDIR)$(BINDIR)/chibi-scheme$(EXE) -xscheme.red -mchibi.repl -d $(DESTDIR)$(MODDIR)/red.img
+-	-LD_LIBRARY_PATH="$(DESTDIR)$(SOLIBDIR):$(LD_LIBRARY_PATH)" DYLD_LIBRARY_PATH="$(DESTDIR)$(SOLIBDIR):$(DYLD_LIBRARY_PATH)" CHIBI_MODULE_PATH="$(DESTDIR)$(MODDIR):$(DESTDIR)$(BINMODDIR)" $(DESTDIR)$(BINDIR)/chibi-scheme$(EXE) -mchibi.snow.commands -mchibi.snow.interface -mchibi.snow.package -mchibi.snow.utils -d $(DESTDIR)$(MODDIR)/snow.img
++	-LD_LIBRARY_PATH="$(LD_LIBRARY_PATH)" DYLD_LIBRARY_PATH="$(DYLD_LIBRARY_PATH)" CHIBI_MODULE_PATH="$(CHIBI_MODULE_PATH)" $(CHIBI) -mchibi.repl -d $(DESTDIR)$(MODDIR)/chibi.img
++	-LD_LIBRARY_PATH="$(LD_LIBRARY_PATH)" DYLD_LIBRARY_PATH="$(DYLD_LIBRARY_PATH)" CHIBI_MODULE_PATH="$(CHIBI_MODULE_PATH)" $(CHIBI) -xscheme.red -mchibi.repl -d $(DESTDIR)$(MODDIR)/red.img
++	-LD_LIBRARY_PATH="$(LD_LIBRARY_PATH)" DYLD_LIBRARY_PATH="$(DYLD_LIBRARY_PATH)" CHIBI_MODULE_PATH="$(CHIBI_MODULE_PATH)" $(CHIBI) -mchibi.snow.commands -mchibi.snow.interface -mchibi.snow.package -mchibi.snow.utils -d $(DESTDIR)$(MODDIR)/snow.img
+ endif
+ 
+ uninstall:

@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Paul Irwin <paulirwin@gmail.com>
+Date: Fri, 1 Sep 2023 18:10:21 -0600
+Subject: [PATCH] Set STATIC_LDFLAGS for serenity
+
+---
+ Makefile.detect | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/Makefile.detect b/Makefile.detect
+index 73d8cd7c31ebde3111e6fd3064a8ba6c44f89069..b08907df36ba8534b2ab09f05e80d3b7dae0c6a0 100644
+--- a/Makefile.detect
++++ b/Makefile.detect
+@@ -135,6 +135,10 @@ ifeq ($(PLATFORM),emscripten)
+ STATIC_LDFLAGS = -lm -ldl
+ endif
+ 
++ifeq ($(PLATFORM),serenity)
++STATIC_LDFLAGS = 
++endif
++
+ ifeq ($(PLATFORM),unix)
+ #RLDFLAGS=-rpath $(LIBDIR)
+ RLDFLAGS=-Wl,-R$(LIBDIR)

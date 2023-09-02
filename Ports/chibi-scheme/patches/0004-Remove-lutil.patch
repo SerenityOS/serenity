@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Paul Irwin <paulirwin@gmail.com>
+Date: Fri, 1 Sep 2023 18:14:50 -0600
+Subject: [PATCH] Remove -lutil
+
+---
+ Makefile.libs | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile.libs b/Makefile.libs
+index db6c0c6b8b6f2c3b389c99cd989e5af4f1a8ed79..70a2b1490d31bddf43999200bb7b319f69ae07aa 100644
+--- a/Makefile.libs
++++ b/Makefile.libs
+@@ -73,7 +73,7 @@ lib/%.c: lib/%.stub $(CHIBI_FFI_DEPENDENCIES)
+ 	$(CHIBI_FFI) $<
+ 
+ lib/chibi/pty$(SO): lib/chibi/pty.c $(INCLUDES) libchibi-scheme$(SO)
+-	$(CC) $(CLIBFLAGS) $(CLINKFLAGS) $(XCPPFLAGS) $(XCFLAGS) $(LDFLAGS) -o $@ $< -L. $(RLDFLAGS) $(XLIBS) -lchibi-scheme -lutil
++	$(CC) $(CLIBFLAGS) $(CLINKFLAGS) $(XCPPFLAGS) $(XCFLAGS) $(LDFLAGS) -o $@ $< -L. $(RLDFLAGS) $(XLIBS) -lchibi-scheme
+ 
+ lib/%$(SO): lib/%.c $(INCLUDES) libchibi-scheme$(SO)
+ 	$(CC) $(CLIBFLAGS) $(CLINKFLAGS) $(XCPPFLAGS) $(XCFLAGS) $(LDFLAGS) -o $@ $< -L. $(RLDFLAGS) $(XLIBS) -lchibi-scheme

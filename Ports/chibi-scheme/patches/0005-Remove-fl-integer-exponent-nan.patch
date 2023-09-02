@@ -1,0 +1,36 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Paul Irwin <paulirwin@gmail.com>
+Date: Fri, 1 Sep 2023 18:18:37 -0600
+Subject: [PATCH] Remove fl-integer-exponent-nan
+
+---
+ lib/srfi/144.sld       | 2 +-
+ lib/srfi/144/math.stub | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/lib/srfi/144.sld b/lib/srfi/144.sld
+index 2323045e6cafc81a3377246a3e44d4cd17a1740c..2bd94e8f963cf480da5c15743a8ff766717f6c61 100644
+--- a/lib/srfi/144.sld
++++ b/lib/srfi/144.sld
+@@ -25,7 +25,7 @@
+    fl-sqrt-2 fl-sqrt-3 fl-sqrt-5 fl-sqrt-10 fl-1/sqrt-2
+    fl-cbrt-2 fl-cbrt-3 fl-4thrt-2 fl-phi fl-log-phi fl-1/log-phi
+    fl-euler fl-e-euler fl-sin-1 fl-cos-1 fl-greatest fl-least
+-   fl-epsilon fl-integer-exponent-zero fl-integer-exponent-nan 
++   fl-epsilon fl-integer-exponent-zero ;; fl-integer-exponent-nan 
+    fl-fast-+*
+ 
+    flonum flonum? fl=? fl<? fl>? fl<=? fl>=? flodd? fleven?
+diff --git a/lib/srfi/144/math.stub b/lib/srfi/144/math.stub
+index b6ebf5d5445e7fa82c96a78858edf181385ecad2..e8a204865ba84d4cc4a7be3ceb9e1b8f97b9f872 100644
+--- a/lib/srfi/144/math.stub
++++ b/lib/srfi/144/math.stub
+@@ -33,7 +33,7 @@
+   (fl-greatest "DBL_MAX")
+   (fl-least "-DBL_MAX")
+   (fl-integer-exponent-zero "FP_ILOGB0")
+-  (fl-integer-exponent-nan "FP_ILOGBNAN")
++  ;; (fl-integer-exponent-nan "FP_ILOGBNAN")
+   (fl-epsilon "DBL_EPSILON"))
+ 
+ (define-c-const int

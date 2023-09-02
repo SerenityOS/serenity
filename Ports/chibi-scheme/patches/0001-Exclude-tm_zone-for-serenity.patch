@@ -1,0 +1,36 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Paul Irwin <paulirwin@gmail.com>
+Date: Fri, 1 Sep 2023 17:00:45 -0600
+Subject: [PATCH] Exclude tm_zone for serenity
+
+---
+ lib/chibi/time.sld  | 2 +-
+ lib/chibi/time.stub | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/lib/chibi/time.sld b/lib/chibi/time.sld
+index 1fba628ecf3e0971c59b45f31d1892e4e485074c..0091eab16d3e8775600f5f14e01bd9ed3f406c9b 100644
+--- a/lib/chibi/time.sld
++++ b/lib/chibi/time.sld
+@@ -8,7 +8,7 @@
+           time-day-of-week time-day-of-year time-dst?
+           tm? timeval? timezone?)
+   (cond-expand
+-   (solaris)
++   ((or solaris serenity))
+    (else
+     (export time-offset time-timezone-name)))
+   (cond-expand
+diff --git a/lib/chibi/time.stub b/lib/chibi/time.stub
+index 1e42b78a8360d6c523b5f1440421ac28fd74b477..405c2cbb80697f248f182636638f11b667f47396 100644
+--- a/lib/chibi/time.stub
++++ b/lib/chibi/time.stub
+@@ -8,7 +8,7 @@
+   (c-system-include "sys/time.h")))
+ 
+ (cond-expand
+- (solaris
++ ((or solaris serenity)
+     (define-c-struct tm
+     predicate: tm?
+     constructor: (make-tm tm_sec tm_min tm_hour

@@ -1,0 +1,61 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Paul Irwin <paulirwin@gmail.com>
+Date: Fri, 1 Sep 2023 18:38:01 -0600
+Subject: [PATCH] Remove use of removed constants
+
+---
+ lib/chibi/stty.scm | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/lib/chibi/stty.scm b/lib/chibi/stty.scm
+index 66758496c8c9e4683cff88fec10b83b8369ebcea..17791da38febc22f57db4006646085c8f44bcf61 100644
+--- a/lib/chibi/stty.scm
++++ b/lib/chibi/stty.scm
+@@ -45,7 +45,7 @@
+    ;; control settings
+    (clocal   control  ,CLOCAL)  ; disable modem control signals
+    (cread    control  ,CREAD)   ; allow input to be received
+-   (crtscts  control  ,CRTSCTS) ; enable RTS/CTS handshaking
++   ;;(crtscts  control  ,CRTSCTS) ; enable RTS/CTS handshaking
+    (cs5      control  ,CS5)     ; set character size to 5 bits
+    (cs6      control  ,CS6)     ; set character size to 6 bits
+    (cs7      control  ,CS7)     ; set character size to 7 bits
+@@ -103,14 +103,14 @@
+ 
+    ;; local settings
+    (crterase local    ,ECHOE)   ; echo erase characters as backspace-space-backspace
+-   (crtkill  local    ,ECHOKE)  ; kill all line by obeying the echoprt and echoe settings
++   ;;(crtkill  local    ,ECHOKE)  ; kill all line by obeying the echoprt and echoe settings
+    ;;(-crtkill local    #f) ; kill all line by obeying the echoctl and echok settings
+-   (ctlecho  local    ,ECHOCTL) ; echo control characters in hat notation (`^c')
++   ;;(ctlecho  local    ,ECHOCTL) ; echo control characters in hat notation (`^c')
+    (echo     local    ,ECHO)    ; echo input characters
+-   (echoctl  local    ,ECHOCTL) ; same as [-]ctlecho
++   ;;(echoctl  local    ,ECHOCTL) ; same as [-]ctlecho
+    (echoe    local    ,ECHOE)   ; same as [-]crterase
+    ;;(echok    local    ,ECHOK)   ; echo a newline after a kill character
+-   (echoke   local    ,ECHOKE)  ; same as [-]crtkill
++   ;;(echoke   local    ,ECHOKE)  ; same as [-]crtkill
+    (echonl   local    ,ECHONL)  ; echo newline even if not echoing other characters
+    ;;(echoprt  local    ,ECHOPRT) ; echo erased characters backward, between `\' and '/'
+    (icanon   local    ,ICANON)  ; enable erase, kill, werase, and rprnt special characters
+@@ -127,8 +127,8 @@
+    (cooked   combine  (brkint ignpar istrip icrnl ixon opost isig icanon))
+                                         ; also eof and eol characters
+                                         ; to their default values
+-   (crt      combine  (echoe echoctl echoke))
+-   (dec      combine  (echoe echoctl echoke (not ixany)))
++   ;;(crt      combine  (echoe echoctl echoke))
++   ;;(dec      combine  (echoe echoctl echoke (not ixany)))
+                                         ; also intr ^c erase 0177 kill ^u
+    (decctlq  combine  (ixany))
+    (ek       combine  ()) ; erase and kill characters to their default values
+@@ -150,7 +150,7 @@
+    ;;(-raw     combine  #f) ; same as cooked
+    (sane     combine  (cread brkint icrnl imaxbel opost onlcr
+                        isig icanon ;; nl0 cr0 bs0 vt0 ff0 ; tab0
+-                       echo echoe echoctl echoke ;; iexten echok
++                       echo echoe ;; echoctl echoke ;; iexten echok
+                        (not ignbrk igncr ixoff ixany inlcr ;; iuclc
+                             ocrnl onocr onlret ;; olcuc ofill ofdel
+                             echonl noflsh tostop echoprt))) ;; xcase

@@ -1,0 +1,41 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Paul Irwin <paulirwin@gmail.com>
+Date: Fri, 1 Sep 2023 18:08:01 -0600
+Subject: [PATCH] Remove undefined constants
+
+---
+ lib/chibi/stty.stub | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/lib/chibi/stty.stub b/lib/chibi/stty.stub
+index 9973f02804b74a850bb9e6968d3e34746a355918..930d7e37c6a7fa18e0b1d5ae0bf32fa108887026 100644
+--- a/lib/chibi/stty.stub
++++ b/lib/chibi/stty.stub
+@@ -72,23 +72,23 @@
+ (define-c-const unsigned-long HUPCL)
+ (define-c-const unsigned-long CLOCAL)
+ ;; (define-c-const unsigned-long CCTS_OFLOW)
+-(define-c-const unsigned-long CRTSCTS)
++;; (define-c-const unsigned-long CRTSCTS)
+ ;; (define-c-const unsigned-long CRTS_IFLOW)
+ ;; (define-c-const unsigned-long MDMBUF)
+ 
+-(define-c-const unsigned-long ECHOKE)
++;; (define-c-const unsigned-long ECHOKE)
+ (define-c-const unsigned-long ECHOE)
+ (define-c-const unsigned-long ECHO)
+ (define-c-const unsigned-long ECHONL)
+ ;; (define-c-const unsigned-long ECHOPRT)
+-(define-c-const unsigned-long ECHOCTL)
++;; (define-c-const unsigned-long ECHOCTL)
+ (define-c-const unsigned-long ISIG)
+ (define-c-const unsigned-long ICANON)
+ ;; (define-c-const unsigned-long ALTWERASE)
+ (define-c-const unsigned-long IEXTEN)
+ ;; (define-c-const unsigned-long EXTPROC)
+ (define-c-const unsigned-long TOSTOP)
+-(define-c-const unsigned-long FLUSHO)
++;; (define-c-const unsigned-long FLUSHO)
+ ;; (define-c-const unsigned-long NOKERNINFO)
+ ;; (define-c-const unsigned-long PENDIN)
+ (define-c-const unsigned-long NOFLSH)
