@@ -1,6 +1,6 @@
 #import <HTML/Plugin.idl>
 
-[Exposed=Window, LegacyUnenumerableNamedProperties, UseNewAKString]
+[Exposed=Window, LegacyUnenumerableNamedProperties]
 interface PluginArray {
     undefined refresh();
     readonly attribute unsigned long length;

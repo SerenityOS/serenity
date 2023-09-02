@@ -1,7 +1,7 @@
 #import <DOM/Event.idl>
 
 // https://html.spec.whatwg.org/multipage/comms.html#messageevent
-[Exposed=(Window,Worker), UseNewAKString]
+[Exposed=(Window,Worker)]
 interface MessageEvent : Event {
     constructor(DOMString type, optional MessageEventInit eventInitDict = {});
 

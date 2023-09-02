@@ -1,7 +1,7 @@
 #import <HTML/HTMLElement.idl>
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#htmltextareaelement
-[Exposed=Window]
+[Exposed=Window, UseDeprecatedAKString]
 interface HTMLTextAreaElement : HTMLElement {
 
     [HTMLConstructor] constructor();

@@ -1,7 +1,7 @@
 #import <DOM/Event.idl>
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#pagetransitionevent
-[Exposed=Window, UseNewAKString]
+[Exposed=Window]
 interface PageTransitionEvent : Event {
     constructor(DOMString type, optional PageTransitionEventInit eventInitDict = {});
 

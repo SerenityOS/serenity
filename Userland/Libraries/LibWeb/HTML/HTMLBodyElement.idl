@@ -2,7 +2,7 @@
 #import <HTML/HTMLElement.idl>
 
 // https://html.spec.whatwg.org/multipage/sections.html#htmlbodyelement
-[Exposed=Window]
+[Exposed=Window, UseDeprecatedAKString]
 interface HTMLBodyElement : HTMLElement {
 
     [HTMLConstructor] constructor();

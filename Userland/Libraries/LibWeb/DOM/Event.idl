@@ -1,7 +1,7 @@
 #import <DOM/EventTarget.idl>
 
 // https://dom.spec.whatwg.org/#event
-[Exposed=*, UseNewAKString]
+[Exposed=*]
 interface Event {
 
     constructor(DOMString type, optional EventInit eventInitDict = {});

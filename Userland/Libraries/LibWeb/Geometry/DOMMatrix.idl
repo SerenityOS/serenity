@@ -2,7 +2,7 @@
 
 // https://drafts.fxtf.org/geometry/#dommatrix
 // FIXME: LegacyWindowAlias currently doesn't do anything.
-[Exposed=(Window,Worker), Serializable, LegacyWindowAlias=(SVGMatrix, WebKitCSSMatrix), UseNewAKString]
+[Exposed=(Window,Worker), Serializable, LegacyWindowAlias=(SVGMatrix, WebKitCSSMatrix)]
 interface DOMMatrix : DOMMatrixReadOnly {
     constructor(optional (DOMString or sequence<unrestricted double>) init);
 

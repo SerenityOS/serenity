@@ -3,7 +3,7 @@
 #import <DOM/EventHandler.idl>
 
 // https://html.spec.whatwg.org/multipage/semantics.html#htmlelement
-[Exposed=Window]
+[Exposed=Window, UseDeprecatedAKString]
 interface HTMLElement : Element {
 
     [HTMLConstructor] constructor();

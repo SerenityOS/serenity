@@ -1,7 +1,7 @@
 #import <DOM/Event.idl>
 
 // https://w3c.github.io/uievents/#uievent
-[Exposed=Window, UseNewAKString]
+[Exposed=Window]
 interface UIEvent : Event {
     constructor(DOMString type, optional UIEventInit eventInitDict = {});
     readonly attribute Window? view;

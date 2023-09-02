@@ -1,6 +1,6 @@
 #import <CSS/CSSRule.idl>
 
-[Exposed=Window, UseNewAKString]
+[Exposed=Window]
 interface CSSKeyframeRule : CSSRule {
     attribute CSSOMString keyText;
     [SameObject, PutForwards=cssText] readonly attribute CSSStyleDeclaration style;

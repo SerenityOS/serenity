@@ -1,6 +1,6 @@
 typedef (sequence<sequence<ByteString>> or record<ByteString, ByteString>) HeadersInit;
 
-[Exposed=(Window,Worker), UseNewAKString]
+[Exposed=(Window,Worker)]
 interface Headers {
     constructor(optional HeadersInit init);
 

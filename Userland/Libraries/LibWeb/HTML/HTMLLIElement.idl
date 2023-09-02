@@ -1,7 +1,7 @@
 #import <HTML/HTMLElement.idl>
 
 // https://html.spec.whatwg.org/multipage/grouping-content.html#htmllielement
-[Exposed=Window]
+[Exposed=Window, UseDeprecatedAKString]
 interface HTMLLIElement : HTMLElement {
 
     [HTMLConstructor] constructor();

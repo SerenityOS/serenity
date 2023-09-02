@@ -9,7 +9,7 @@ enum DOMParserSupportedType {
 };
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#domparser
-[Exposed=Window]
+[Exposed=Window, UseDeprecatedAKString]
 interface DOMParser {
     constructor();
 

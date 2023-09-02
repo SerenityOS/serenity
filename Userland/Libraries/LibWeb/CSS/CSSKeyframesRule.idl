@@ -1,6 +1,6 @@
 #import <CSS/CSSRule.idl>
 
-[Exposed=Window, UseNewAKString]
+[Exposed=Window]
 interface CSSKeyframesRule : CSSRule {
     attribute CSSOMString name;
     readonly attribute unsigned long length;

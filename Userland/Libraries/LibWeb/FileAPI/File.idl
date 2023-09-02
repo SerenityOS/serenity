@@ -1,6 +1,6 @@
 #import <FileAPI/Blob.idl>
 
-[Exposed=(Window,Worker), Serializable, UseNewAKString]
+[Exposed=(Window,Worker), Serializable]
 interface File : Blob {
     constructor(sequence<BlobPart> fileBits, USVString fileName, optional FilePropertyBag options = {});
 

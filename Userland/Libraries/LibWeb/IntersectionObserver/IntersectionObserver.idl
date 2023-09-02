@@ -5,7 +5,7 @@
 
 callback IntersectionObserverCallback = undefined (sequence<IntersectionObserverEntry> entries, IntersectionObserver observer);
 
-[Exposed=(Window), UseNewAKString]
+[Exposed=(Window)]
 interface IntersectionObserver {
     constructor(IntersectionObserverCallback callback, optional IntersectionObserverInit options = {});
     readonly attribute (Element or Document)? root;

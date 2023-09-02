@@ -2,7 +2,7 @@
 #import <URL/URLSearchParams.idl>
 
 // https://url.spec.whatwg.org/#url
-[Exposed=*, LegacyWindowAlias=webkitURL, UseNewAKString]
+[Exposed=*, LegacyWindowAlias=webkitURL]
 interface URL {
     constructor(USVString url, optional USVString base);
 

@@ -1,6 +1,6 @@
 #import <DOM/Node.idl>
 
-[Exposed=Window, UseNewAKString]
+[Exposed=Window]
 interface CustomElementRegistry {
     [CEReactions] undefined define(DOMString name, CustomElementConstructor constructor, optional ElementDefinitionOptions options = {});
     (CustomElementConstructor or undefined) get(DOMString name);

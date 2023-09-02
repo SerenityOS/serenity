@@ -1,7 +1,7 @@
 #import <DOM/AbortSignal.idl>
 
 // https://dom.spec.whatwg.org/#eventtarget
-[Exposed=*, UseNewAKString]
+[Exposed=*]
 interface EventTarget {
 
     constructor();

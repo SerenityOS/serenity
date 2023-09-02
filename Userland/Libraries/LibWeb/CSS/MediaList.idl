@@ -1,4 +1,4 @@
-[Exposed=Window, UseNewAKString]
+[Exposed=Window]
 interface MediaList {
     [LegacyNullToEmptyString] stringifier attribute CSSOMString mediaText;
     readonly attribute unsigned long length;

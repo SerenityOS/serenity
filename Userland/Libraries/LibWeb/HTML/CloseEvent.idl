@@ -1,6 +1,6 @@
 #import <DOM/Event.idl>
 
-[Exposed=*, UseNewAKString]
+[Exposed=*]
 interface CloseEvent : Event {
     constructor(DOMString type, optional CloseEventInit eventInitDict = {});
 

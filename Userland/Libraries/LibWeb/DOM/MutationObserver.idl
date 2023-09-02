@@ -1,7 +1,7 @@
 #import <DOM/MutationRecord.idl>
 #import <DOM/Node.idl>
 
-[Exposed=Window]
+[Exposed=Window, UseDeprecatedAKString]
 interface MutationObserver {
 
     constructor(MutationCallback callback);

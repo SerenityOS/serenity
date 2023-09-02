@@ -1,6 +1,6 @@
 #import <HTML/MimeType.idl>
 
-[Exposed=Window, LegacyUnenumerableNamedProperties, UseNewAKString]
+[Exposed=Window, LegacyUnenumerableNamedProperties]
 interface Plugin {
     readonly attribute DOMString name;
     readonly attribute DOMString description;

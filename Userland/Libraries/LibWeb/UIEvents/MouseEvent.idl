@@ -1,5 +1,5 @@
 // https://w3c.github.io/uievents/#mouseevent
-[Exposed=Window, UseNewAKString]
+[Exposed=Window]
 interface MouseEvent : UIEvent {
 
     readonly attribute double offsetX;

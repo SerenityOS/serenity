@@ -1,7 +1,7 @@
 #import <DOM/Node.idl>
 #import <DOM/Element.idl>
 
-[Exposed=Window]
+[Exposed=Window, UseDeprecatedAKString]
 interface Attr : Node {
     readonly attribute DOMString? namespaceURI;
     readonly attribute DOMString? prefix;

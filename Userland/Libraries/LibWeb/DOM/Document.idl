@@ -23,7 +23,7 @@
 #import <Selection/Selection.idl>
 
 // https://dom.spec.whatwg.org/#document
-[Exposed=Window]
+[Exposed=Window, UseDeprecatedAKString]
 interface Document : Node {
     constructor();
 

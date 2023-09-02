@@ -1,4 +1,4 @@
-[Exposed=Worker, UseNewAKString]
+[Exposed=Worker]
 interface WorkerLocation {
     stringifier readonly attribute USVString href;
     readonly attribute USVString origin;

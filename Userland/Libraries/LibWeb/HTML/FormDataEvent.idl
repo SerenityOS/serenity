@@ -2,7 +2,7 @@
 #import <XHR/FormData.idl>
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#the-formdataevent-interface
-[Exposed=Window, UseNewAKString]
+[Exposed=Window]
 interface FormDataEvent : Event {
     constructor(DOMString type, FormDataEventInit eventInitDict);
 

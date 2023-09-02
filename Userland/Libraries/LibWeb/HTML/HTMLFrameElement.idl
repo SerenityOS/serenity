@@ -1,7 +1,7 @@
 #import <HTML/HTMLElement.idl>
 
 // https://html.spec.whatwg.org/multipage/semantics.html#htmlframeelement
-[Exposed=Window]
+[Exposed=Window, UseDeprecatedAKString]
 interface HTMLFrameElement : HTMLElement {
 
     [HTMLConstructor] constructor();

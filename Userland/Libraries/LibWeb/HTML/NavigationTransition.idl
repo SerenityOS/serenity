@@ -1,7 +1,7 @@
 #import <HTML/NavigationType.idl>
 #import <HTML/NavigationHistoryEntry.idl>
 
-[Exposed=Window, UseNewAKString]
+[Exposed=Window]
 interface NavigationTransition {
   readonly attribute NavigationType navigationType;
   readonly attribute NavigationHistoryEntry from;

@@ -1,6 +1,6 @@
 #import <WebGL/WebGLRenderingContextBase.idl>
 
-[Exposed=(Window,Worker), UseNewAKString]
+[Exposed=(Window,Worker)]
 interface WebGLRenderingContext {
 };
 

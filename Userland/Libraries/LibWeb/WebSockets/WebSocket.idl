@@ -2,7 +2,7 @@
 #import <DOM/EventHandler.idl>
 
 // https://websockets.spec.whatwg.org/#websocket
-[Exposed=(Window,Worker), UseNewAKString]
+[Exposed=(Window,Worker)]
 interface WebSocket : EventTarget {
 
     constructor(USVString url, optional (DOMString or sequence<DOMString>) protocols);
