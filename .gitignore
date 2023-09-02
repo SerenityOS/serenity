@@ -30,6 +30,13 @@ sync-local.sh
 .exrc
 .helix/
 
+# Gradle/AndroidStudio
+.gradle/
+.cxx/
+local.properties
+# We can't build from cmd.exe anyway
+gradlew.bat
+
 Userland/Libraries/LibWasm/Tests/Fixtures/SpecTests
 Userland/Libraries/LibWasm/Tests/Spec
 

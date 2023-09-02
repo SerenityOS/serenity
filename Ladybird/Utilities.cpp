@@ -22,10 +22,6 @@ ErrorOr<String> application_directory()
 
 void platform_init()
 {
-#ifdef AK_OS_ANDROID
-    extern void android_platform_init();
-    android_platform_init();
-#else
     s_serenity_resource_root = [] {
         auto const* source_dir = getenv("SERENITY_SOURCE_DIR");
         if (source_dir) {
@@ -37,13 +33,12 @@ void platform_init()
         if (FileSystem::is_directory(home_lagom))
             return home_lagom;
         auto app_dir = application_directory().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
-#    ifdef AK_OS_MACOS
+#ifdef AK_OS_MACOS
         return LexicalPath(app_dir).parent().append("Resources"sv).string();
-#    else
+#else
         return LexicalPath(app_dir).parent().append("share"sv).string();
-#    endif
-    }();
 #endif
+    }();
 }
 
 ErrorOr<Vector<String>> get_paths_for_helper_process(StringView process_name)

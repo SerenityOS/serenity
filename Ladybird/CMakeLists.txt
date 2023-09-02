@@ -75,6 +75,10 @@ add_compile_options(-Wno-expansion-to-defined)
 add_compile_options(-Wno-user-defined-literals)
 
 serenity_option(ENABLE_QT ON CACHE BOOL "Build ladybird application using Qt GUI")
+if (ANDROID AND ENABLE_QT)
+    message(STATUS "Disabling Qt for Android")
+    set(ENABLE_QT OFF CACHE BOOL "" FORCE)
+endif()
 
 if (ENABLE_QT)
     set(CMAKE_AUTOMOC ON)
@@ -140,6 +144,13 @@ elseif (APPLE)
         -fobjc-arc
         -Wno-deprecated-anon-enum-enum-conversion # Required for CGImageCreate
     )
+elseif(ANDROID)
+    add_library(ladybird SHARED
+        ${SOURCES}
+        Android/src/main/cpp/LadybirdActivity.cpp
+        Android/src/main/cpp/WebViewImplementationNative.cpp
+    )
+    target_link_libraries(ladybird PRIVATE log)
 else()
     # TODO: Check for other GUI frameworks here when we move them in-tree
     #       For now, we can export a static library of common files for chromes to link to
@@ -168,7 +179,6 @@ target_link_libraries(headless-browser PRIVATE LibWeb LibWebView LibWebSocket Li
 
 if (ANDROID)
     include(cmake/AndroidExtras.cmake)
-    link_android_libs(headless-browser)
 endif()
 
 add_custom_target(run${LADYBIRD_CUSTOM_TARGET_SUFFIX}
