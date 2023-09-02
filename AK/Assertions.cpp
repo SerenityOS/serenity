@@ -38,8 +38,9 @@ ALWAYS_INLINE void dump_backtrace()
             syms[i][idx.value() - 1] = '\0';
             (void)fprintf(stderr, "%s ", syms[i]);
 
-            auto end_of_sym = sym.find(' ', idx.value()).value_or(sym.length() - 1);
-            syms[i][end_of_sym] = '\0';
+            auto sym_substring = sym.substring_view(idx.value());
+            auto end_of_sym = sym_substring.find_any_of("+ "sv).value_or(sym_substring.length() - 1);
+            syms[i][idx.value() + end_of_sym] = '\0';
 
             size_t buf_size = 128u;
             char* buf = static_cast<char*>(malloc(buf_size));
@@ -49,7 +50,7 @@ ALWAYS_INLINE void dump_backtrace()
             (void)fputs(buf ? buf : raw_str, stderr);
             free(buf);
 
-            (void)fprintf(stderr, " %s", &syms[i][end_of_sym + 1]);
+            (void)fprintf(stderr, " %s", &syms[i][idx.value() + end_of_sym + 1]);
         } else {
             (void)fputs(sym.characters_without_null_termination(), stderr);
         }
