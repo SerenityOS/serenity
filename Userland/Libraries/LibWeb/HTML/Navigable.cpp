@@ -886,7 +886,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
         // 1. If url equals navigable's active document's URL,
         //     and initiatorOriginSnapshot is same origin with targetNavigable's active document's origin,
         //     then set historyHandling to "replace".
-        if (url == active_document.url() && initiator_origin_snapshot.is_same_origin(active_document.origin()))
+        if (url.equals(active_document.url(), AK::URL::ExcludeFragment::Yes) && initiator_origin_snapshot.is_same_origin(active_document.origin()))
             history_handling = Bindings::NavigationHistoryBehavior::Replace;
 
         // 2. Otherwise, set historyHandling to "push".
