@@ -423,37 +423,35 @@ BodyStructure Parser::parse_body_structure()
         return parse_one_part_body();
     }
 }
+
+// body-type-1part
 BodyStructure Parser::parse_one_part_body()
 {
-    auto type = parse_string();
-    consume(" "sv);
-    auto subtype = parse_string();
-    consume(" "sv);
-    if (type.equals_ignoring_ascii_case("TEXT"sv)) {
-        // body-type-text
-        auto params = parse_body_fields_params();
-        consume(" "sv);
-        auto id = parse_nstring();
-        consume(" "sv);
-        auto description = parse_nstring();
-        consume(" "sv);
-        auto encoding = parse_string();
-        consume(" "sv);
-        auto num_octets = MUST(parse_number());
-        consume(" "sv);
-        auto num_lines = MUST(parse_number());
+    // NOTE: We share common parts between body-type-basic, body-type-msg and body-type-text types for readability.
+    BodyStructureData data;
 
-        auto data = BodyStructureData {
-            type,
-            subtype,
-            Optional<DeprecatedString>(move(id)),
-            Optional<DeprecatedString>(move(description)),
-            encoding,
-            params,
-            num_octets,
-            num_lines,
-            {}
-        };
+    // media-basic / media-message / media-text
+    data.type = parse_string();
+    consume(" "sv);
+    data.subtype = parse_string();
+    consume(" "sv);
+
+    // body-fields
+    data.fields = parse_body_fields_params();
+    consume(" "sv);
+    data.id = Optional<DeprecatedString>(parse_nstring());
+    consume(" "sv);
+    data.desc = Optional<DeprecatedString>(parse_nstring());
+    consume(" "sv);
+    data.encoding = parse_string();
+    consume(" "sv);
+    data.bytes = MUST(parse_number());
+
+    if (data.type.equals_ignoring_ascii_case("TEXT"sv)) {
+        // body-type-text
+        // NOTE: "media-text SP body-fields" part is already parsed.
+        consume(" "sv);
+        data.lines = MUST(parse_number());
 
         if (!try_consume(")"sv)) {
             consume(" "sv);
@@ -489,62 +487,17 @@ BodyStructure Parser::parse_one_part_body()
                 }
             }
         }
-
-        return BodyStructure(move(data));
-    } else if (type.equals_ignoring_ascii_case("MESSAGE"sv) && subtype.equals_ignoring_ascii_case("RFC822"sv)) {
-        // body-type-message
-        auto params = parse_body_fields_params();
+    } else if (data.type.equals_ignoring_ascii_case("MESSAGE"sv) && data.subtype.equals_ignoring_ascii_case("RFC822"sv)) {
+        // body-type-msg
+        // NOTE: "media-message SP body-fields" part is already parsed.
         consume(" "sv);
-        auto id = parse_nstring();
-        consume(" "sv);
-        auto description = parse_nstring();
-        consume(" "sv);
-        auto encoding = parse_string();
-        consume(" "sv);
-        auto num_octets = MUST(parse_number());
-        consume(" "sv);
-        auto envelope = parse_envelope();
-
-        BodyStructureData data {
-            type,
-            subtype,
-            Optional<DeprecatedString>(move(id)),
-            Optional<DeprecatedString>(move(description)),
-            encoding,
-            params,
-            num_octets,
-            0,
-            envelope
-        };
-
-        return BodyStructure(move(data));
+        data.envelope = parse_envelope();
     } else {
         // body-type-basic
-        auto params = parse_body_fields_params();
-        consume(" "sv);
-        auto id = parse_nstring();
-        consume(" "sv);
-        auto description = parse_nstring();
-        consume(" "sv);
-        auto encoding = parse_string();
-        consume(" "sv);
-        auto num_octets = MUST(parse_number());
-        consume(" "sv);
-
-        BodyStructureData data {
-            type,
-            subtype,
-            Optional<DeprecatedString>(move(id)),
-            Optional<DeprecatedString>(move(description)),
-            encoding,
-            params,
-            num_octets,
-            0,
-            {}
-        };
-
-        return BodyStructure(move(data));
+        // NOTE: "media-basic SP body-fields" is already parsed.
     }
+
+    return BodyStructure(move(data));
 }
 Vector<DeprecatedString> Parser::parse_langs()
 {
