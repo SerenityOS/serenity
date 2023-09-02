@@ -384,7 +384,7 @@ BodyStructure Parser::parse_body_structure()
             data.bodies.append(make<BodyStructure>(move(child)));
         }
         consume(" "sv);
-        data.media_type = parse_string();
+        data.multipart_subtype = parse_string();
 
         if (!try_consume(")"sv)) {
             consume(" "sv);

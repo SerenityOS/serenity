@@ -185,7 +185,7 @@ void MailWidget::on_window_close()
 
 IMAP::MultiPartBodyStructureData const* MailWidget::look_for_alternative_body_structure(IMAP::MultiPartBodyStructureData const& current_body_structure, Vector<u32>& position_stack) const
 {
-    if (current_body_structure.media_type.equals_ignoring_ascii_case("ALTERNATIVE"sv))
+    if (current_body_structure.multipart_subtype.equals_ignoring_ascii_case("ALTERNATIVE"sv))
         return &current_body_structure;
 
     u32 structure_index = 1;
