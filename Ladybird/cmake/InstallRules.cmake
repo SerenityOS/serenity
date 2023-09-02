@@ -7,10 +7,6 @@ set(package ladybird)
 set(ladybird_applications ladybird SQLServer WebContent WebDriver WebSocketServer RequestServer headless-browser)
 
 set(app_install_targets ${ladybird_applications})
-if (ANDROID)
-    # androiddeployqt will get confused with duplicate resources if we install every app
-    set(app_install_targets ladybird)
-endif()
 
 install(TARGETS ${app_install_targets}
   EXPORT ladybirdTargets
@@ -36,6 +32,9 @@ foreach (application IN LISTS ladybird_applications)
   list(APPEND all_required_lagom_libraries "${${application}_lagom_libraries}")
 endforeach()
 list(REMOVE_DUPLICATES all_required_lagom_libraries)
+
+# Remove ladybird shlib if it exists
+list(REMOVE_ITEM all_required_lagom_libraries ladybird)
 
 # Install webcontent impl library if it exists
 if (TARGET webcontent)

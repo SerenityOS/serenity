@@ -1,12 +1,8 @@
 .qmake.stash
 Makefile
-ladybird
 *.o
 moc_*
 Build
 build
 CMakeLists.txt.user
-android/gradle
-android/gradlew*
-android/assets/
-
+Android/src/main/assets/
