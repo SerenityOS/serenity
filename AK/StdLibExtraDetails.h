@@ -618,6 +618,24 @@ inline constexpr bool IsSameIgnoringCV = IsSame<RemoveCV<T>, RemoveCV<U>>;
 template<typename T, typename... Ts>
 inline constexpr bool IsOneOfIgnoringCV = (IsSameIgnoringCV<T, Ts> || ...);
 
+template<typename...>
+struct __InvokeResult { };
+
+template<typename MethodDefBaseType, typename MethodType, typename InstanceType, typename... Args>
+struct __InvokeResult<MethodType MethodDefBaseType::*, InstanceType, Args...> {
+    using type = decltype((
+        declval<InstanceType>()
+        .*declval<MethodType MethodDefBaseType::*>())(declval<Args>()...));
+};
+
+template<typename F, typename... Args>
+struct __InvokeResult<F, Args...> {
+    using type = decltype((declval<F>())(declval<Args>()...));
+};
+
+template<typename F, typename... Args>
+using InvokeResult = typename __InvokeResult<F, Args...>::type;
+
 }
 
 #if !USING_AK_GLOBALLY
@@ -637,6 +655,7 @@ using AK::Detail::FalseType;
 using AK::Detail::IdentityType;
 using AK::Detail::IndexSequence;
 using AK::Detail::IntegerSequence;
+using AK::Detail::InvokeResult;
 using AK::Detail::IsArithmetic;
 using AK::Detail::IsAssignable;
 using AK::Detail::IsBaseOf;
