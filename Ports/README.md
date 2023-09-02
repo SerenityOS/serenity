@@ -190,8 +190,11 @@ depends=(
 
 #### `files`
 
-An array of external files required by the port, one per line. The format of each
-entry is as follows:
+An array of external files required by the port, one per line.
+
+##### Simple downloads
+
+The format of each entry is as follows:
 
 ```text
 URL#HASH
@@ -210,6 +213,25 @@ files=(
 
 If a file is a compressed tar archive, a gzip compressed file or a zip
 compressed file, it will be extracted.
+
+##### Git repositories
+
+The format of each entry is as follows:
+
+```text
+git+URL#REVISION
+```
+
+Where `URL` is the URL where the repository is located
+and `REVISION` can be any revision qualifier that is accepted by `git fetch`.
+
+For example:
+
+```bash
+files=(
+    'git+https://gn.googlesource.com/gn#fae280eabe5d31accc53100137459ece19a7a295'
+)
+```
 
 #### `icon_file`
 
