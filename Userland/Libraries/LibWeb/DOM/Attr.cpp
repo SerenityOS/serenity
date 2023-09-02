@@ -110,7 +110,8 @@ void Attr::handle_attribute_changes(Element& element, DeprecatedString const& ol
         element.enqueue_a_custom_element_callback_reaction(HTML::CustomElementReactionNames::attributeChangedCallback, move(arguments));
     }
 
-    // FIXME: 3. Run the attribute change steps with element, attribute’s local name, oldValue, newValue, and attribute’s namespace.
+    // 3. Run the attribute change steps with element, attribute’s local name, oldValue, newValue, and attribute’s namespace.
+    element.run_attribute_change_steps(local_name(), old_value, new_value, namespace_uri());
 }
 
 }
