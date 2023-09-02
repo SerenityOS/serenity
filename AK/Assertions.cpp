@@ -9,7 +9,7 @@
 #include <AK/Platform.h>
 #include <AK/StringView.h>
 
-#if defined(AK_OS_LINUX) || defined(AK_OS_BSD_GENERIC) || defined(AK_OS_SOLARIS)
+#if (defined(AK_OS_LINUX) && !defined(AK_OS_ANDROID)) || defined(AK_OS_BSD_GENERIC) || defined(AK_OS_SOLARIS)
 #    define EXECINFO_BACKTRACE
 #endif
 
