@@ -105,6 +105,22 @@ LadybirdViewImpl::LadybirdViewImpl(LadybirdWebView* widget)
         ladybird_web_view_request_dismiss_dialog(m_widget);
     };
 
+    on_link_click = [this](AK::URL const& url, DeprecatedString const& target, unsigned modifiers) {
+        bool switch_to_new_tab = false;
+        if (modifiers & Mod_Ctrl) {
+            // switch_to_new_tab = very false;
+        } else if (target == "_blank") {
+            switch_to_new_tab = true;
+        } else {
+            // load(url);
+            return;
+        }
+        ladybird_web_view_activate_url(m_widget, url.serialize().characters(), switch_to_new_tab);
+    };
+    on_link_middle_click = [this](AK::URL const& url, [[maybe_unused]] DeprecatedString const& target, [[maybe_unused]] unsigned modifiers) {
+        ladybird_web_view_activate_url(m_widget, url.serialize().characters(), true);
+    };
+
     AdwStyleManager* style_manager = adw_style_manager_get_default();
 
     m_update_style_id = g_signal_connect_swapped(style_manager, "notify::dark", G_CALLBACK(+[](void* user_data) {

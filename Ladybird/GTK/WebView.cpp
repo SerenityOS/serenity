@@ -51,6 +51,7 @@ enum {
     SIGNAL_REQUEST_PROMPT,
     SIGNAL_REQUEST_DISMISS_DIALOG,
     SIGNAL_REQUEST_ACCEPT_DIALOG,
+    SIGNAL_ACTIVATE_URL,
     NUM_SIGNALS
 };
 
@@ -295,6 +296,13 @@ void ladybird_web_view_prompt_closed(LadybirdWebView* self, char const* input)
         self->impl->prompt_closed({});
     }
     unset_prompt_text(self);
+}
+
+void ladybird_web_view_activate_url(LadybirdWebView* self, char const* url, bool switch_to_new_tab)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+
+    g_signal_emit(self, signals[SIGNAL_ACTIVATE_URL], 0, url, static_cast<gboolean>(switch_to_new_tab));
 }
 
 static void ladybird_web_view_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* pspec)
@@ -962,6 +970,7 @@ static void ladybird_web_view_class_init(LadybirdWebViewClass* klass)
     signals[SIGNAL_REQUEST_PROMPT] = g_signal_new("request-prompt", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST, 0, nullptr, nullptr, nullptr, G_TYPE_NONE, 1, G_TYPE_STRING);
     signals[SIGNAL_REQUEST_DISMISS_DIALOG] = g_signal_new("request-dismiss-dialog", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST, 0, nullptr, nullptr, nullptr, G_TYPE_NONE, 0);
     signals[SIGNAL_REQUEST_ACCEPT_DIALOG] = g_signal_new("request-accept-dialog", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST, 0, nullptr, nullptr, nullptr, G_TYPE_NONE, 0);
+    signals[SIGNAL_ACTIVATE_URL] = g_signal_new("activate-url", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST, 0, nullptr, nullptr, nullptr, G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_BOOLEAN);
 
     widget_class->measure = ladybird_web_view_measure;
     widget_class->size_allocate = ladybird_web_view_size_allocate;

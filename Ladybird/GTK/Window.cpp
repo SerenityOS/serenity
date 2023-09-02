@@ -17,6 +17,7 @@ struct _LadybirdWindow {
     LadybirdWebView* last_selected_web_view;
 
     gulong page_url_changed_id;
+    gulong activate_url_id;
     bool incognito;
 };
 
@@ -36,8 +37,16 @@ static void ladybird_window_dispose(GObject* object)
 {
     LadybirdWindow* self = LADYBIRD_WINDOW(object);
 
-    if (self->last_selected_web_view && self->page_url_changed_id)
-        g_signal_handler_disconnect(self->last_selected_web_view, self->page_url_changed_id);
+    if (self->last_selected_web_view) {
+        if (self->page_url_changed_id)
+            g_signal_handler_disconnect(self->last_selected_web_view, self->page_url_changed_id);
+        if (self->activate_url_id)
+            g_signal_handler_disconnect(self->last_selected_web_view, self->activate_url_id);
+    }
+    self->page_url_changed_id = 0;
+    self->activate_url_id = 0;
+    self->last_selected_web_view = nullptr;
+
     gtk_widget_dispose_template(GTK_WIDGET(self), LADYBIRD_TYPE_WINDOW);
 
     G_OBJECT_CLASS(ladybird_window_parent_class)->dispose(object);
@@ -75,14 +84,14 @@ static AdwTabPage* open_new_tab(LadybirdWindow* self, AdwTabPage* parent)
     GdkPaintable* favicon_paintable = ladybird_web_view_get_favicon(web_view);
     g_signal_connect_object(favicon_paintable, "notify::texture", G_CALLBACK(update_favicon), tab_page, G_CONNECT_DEFAULT);
 
-    adw_tab_view_set_selected_page(self->tab_view, tab_page);
-    gtk_widget_grab_focus(GTK_WIDGET(self->location_entry));
     return tab_page;
 }
 
 static AdwTabPage* on_create_tab(LadybirdWindow* self)
 {
-    return open_new_tab(self, nullptr);
+    AdwTabPage* tab_page = open_new_tab(self, nullptr);
+    gtk_widget_grab_focus(GTK_WIDGET(self->location_entry));
+    return tab_page;
 }
 
 static void ladybird_window_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* pspec)
@@ -119,7 +128,10 @@ static void ladybird_window_set_property(GObject* object, guint prop_id, GValue 
 static void win_new_tab_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
 {
     LadybirdWindow* self = LADYBIRD_WINDOW(widget);
-    open_new_tab(self, nullptr);
+
+    AdwTabPage* tab_page = open_new_tab(self, nullptr);
+    adw_tab_view_set_selected_page(self->tab_view, tab_page);
+    gtk_widget_grab_focus(GTK_WIDGET(self->location_entry));
 }
 
 static void win_open_file_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
@@ -288,17 +300,49 @@ static void on_setup_tab_menu(LadybirdWindow* self, AdwTabPage* tab_page)
     gtk_widget_action_set_enabled(GTK_WIDGET(self), "tab.unpin", pinned);
 }
 
+static void on_activate_url(LadybirdWindow* self, char const* url, gboolean switch_to_new_tab)
+{
+    g_return_if_fail(LADYBIRD_IS_WINDOW(self));
+
+    // Does this look like a URL that we can handle?
+    char* scheme = g_uri_parse_scheme(url);
+    char const* supported_schemes[] {
+        "https", "http", "gemini", "file", "data",
+        nullptr
+    };
+    bool open_internally = scheme && g_strv_contains(supported_schemes, scheme);
+    g_free(scheme);
+    if (open_internally) {
+        AdwTabPage* tab_page = open_new_tab(self, adw_tab_view_get_selected_page(self->tab_view));
+        LadybirdWebView* web_view = get_web_view_from_tab_page(tab_page);
+        ladybird_web_view_load_url(web_view, url);
+        if (switch_to_new_tab)
+            adw_tab_view_set_selected_page(self->tab_view, tab_page);
+    } else {
+        // Invoke an external program to open it.
+        // TODO: It would be cool to respect switch_to_new_tab for this.
+        g_app_info_launch_default_for_uri(url, nullptr, nullptr);
+    }
+}
+
 static void on_selected_page_changed(LadybirdWindow* self)
 {
-    if (self->last_selected_web_view && self->page_url_changed_id)
-        g_signal_handler_disconnect(self->last_selected_web_view, self->page_url_changed_id);
+    if (self->last_selected_web_view) {
+        if (self->page_url_changed_id)
+            g_signal_handler_disconnect(self->last_selected_web_view, self->page_url_changed_id);
+        if (self->activate_url_id)
+            g_signal_handler_disconnect(self->last_selected_web_view, self->activate_url_id);
+    }
     self->page_url_changed_id = 0;
+    self->activate_url_id = 0;
+
     LadybirdWebView* web_view = self->last_selected_web_view = ladybird_window_get_current_page(self);
     if (!web_view)
         return;
 
     self->page_url_changed_id = g_signal_connect_object(web_view, "notify::page-url", G_CALLBACK(on_page_url_changed), self, G_CONNECT_SWAPPED);
     on_page_url_changed(self);
+    self->activate_url_id = g_signal_connect_object(web_view, "activate-url", G_CALLBACK(on_activate_url), self, G_CONNECT_SWAPPED);
 }
 
 static void page_zoom_in_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
@@ -355,6 +399,7 @@ void ladybird_window_open_file(LadybirdWindow* self, GFile* file)
     LadybirdWebView* web_view = get_web_view_from_tab_page(tab_page);
     ladybird_web_view_load_url(web_view, uri);
     g_free(uri);
+    adw_tab_view_set_selected_page(self->tab_view, tab_page);
 }
 
 static char* format_zoom_percent_label([[maybe_unused]] void* instance, int zoom_percent)
@@ -435,8 +480,10 @@ LadybirdWindow* ladybird_window_new(LadybirdApplication* app, bool add_initial_t
         "incognito", (gboolean)incognito,
         nullptr));
 
-    if (add_initial_tab)
+    if (add_initial_tab) {
         open_new_tab(self, nullptr);
+        gtk_widget_grab_focus(GTK_WIDGET(self->location_entry));
+    }
 
     return self;
 }

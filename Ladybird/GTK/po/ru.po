@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ladybird wip\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-02 16:19+0300\n"
+"POT-Creation-Date: 2023-09-03 00:08+0300\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -13,7 +13,7 @@ msgstr ""
 
 #. Translators: this is a format string for the zoom-percent label in the main menu.
 #. For most languages, it doesn't need translating.
-#: Window.cpp:364
+#: Window.cpp:409
 #, c-format
 msgid "%d%%"
 msgstr ""
@@ -51,7 +51,7 @@ msgstr "Ввести"
 msgid "Enter a JavaScript expression to evaluate"
 msgstr "Введите JavaScript-выражение для вычисления"
 
-#: Window.cpp:141
+#: Window.cpp:153
 msgid "Failed to pick file"
 msgstr "Не удалось выбрать файл"
 
@@ -112,7 +112,7 @@ msgstr "Новое окно _инкогнито"
 msgid "New incognito window"
 msgstr "Новое окно инкогнито"
 
-#: Window.cpp:71 shortcuts-dialog.blp:57
+#: Window.cpp:80 shortcuts-dialog.blp:57
 msgid "New tab"
 msgstr "Новая вкладка"
 
@@ -124,7 +124,7 @@ msgstr "Новое окно"
 msgid "Next tab"
 msgstr "Следующая вкладка"
 
-#: Window.cpp:143 Tab.cpp:194
+#: Window.cpp:155 Tab.cpp:194
 msgid "OK"
 msgstr "ОК"
 

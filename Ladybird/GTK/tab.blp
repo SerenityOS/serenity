@@ -7,11 +7,13 @@ template $LadybirdTab : Widget {
       $LadybirdWebView web_view {
         notify::hovered-link => $on_hovered_link_change(template) swapped;
         notify::prompt-text => $on_prompt_text_changed(template) swapped;
+
         request-alert => $on_request_alert(template) swapped;
         request-confirm => $on_request_confirm(template) swapped;
         request-prompt => $on_request_prompt(template) swapped;
         request-dismiss-dialog => $on_request_dismiss_dialog(template) swapped;
         request-accept-dialog => $on_request_accept_dialog(template) swapped;
+
         styles ["view"]
       }
     }

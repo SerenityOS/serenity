@@ -20,6 +20,8 @@ void ladybird_web_view_request_prompt(LadybirdWebView* self, char const* message
 void ladybird_web_view_request_dismiss_dialog(LadybirdWebView* self);
 void ladybird_web_view_request_accept_dialog(LadybirdWebView* self);
 
+void ladybird_web_view_activate_url(LadybirdWebView* self, char const* url, bool switch_to_new_tab);
+
 class LadybirdViewImpl;
 LadybirdViewImpl* ladybird_web_view_get_impl(LadybirdWebView* self);
 
