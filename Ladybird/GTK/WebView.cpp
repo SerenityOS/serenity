@@ -18,6 +18,7 @@ struct _LadybirdWebView {
     char* page_url;
     char* page_title;
     char* hovered_link;
+    char* prompt_text;
     // These two are in device pixels (same as texture size).
     int page_width;
     int page_height;
@@ -33,6 +34,7 @@ enum {
     PROP_ZOOM_PERCENT,
     PROP_COOKIE_JAR,
     PROP_HOVERED_LINK,
+    PROP_PROMPT_TEXT,
     NUM_PROPS,
 
     PROP_HADJUSTMENT,
@@ -42,6 +44,17 @@ enum {
 };
 
 static GParamSpec* props[NUM_PROPS];
+
+enum {
+    SIGNAL_REQUEST_ALERT,
+    SIGNAL_REQUEST_CONFIRM,
+    SIGNAL_REQUEST_PROMPT,
+    SIGNAL_REQUEST_DISMISS_DIALOG,
+    SIGNAL_REQUEST_ACCEPT_DIALOG,
+    NUM_SIGNALS
+};
+
+static guint signals[NUM_SIGNALS];
 
 G_BEGIN_DECLS
 
@@ -196,6 +209,94 @@ LadybirdViewImpl* ladybird_web_view_get_impl(LadybirdWebView* self)
     return self->impl.ptr();
 }
 
+char const* ladybird_web_view_get_prompt_text(LadybirdWebView* self)
+{
+    g_return_val_if_fail(LADYBIRD_IS_WEB_VIEW(self), nullptr);
+
+    return self->prompt_text;
+}
+
+void ladybird_web_view_set_prompt_text(LadybirdWebView* self, char const* text)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+
+    if (g_set_str(&self->prompt_text, text))
+        g_object_notify_by_pspec(G_OBJECT(self), props[PROP_PROMPT_TEXT]);
+}
+
+static void unset_prompt_text(LadybirdWebView* self)
+{
+    if (g_set_str(&self->prompt_text, nullptr))
+        g_object_notify_by_pspec(G_OBJECT(self), props[PROP_PROMPT_TEXT]);
+}
+
+void ladybird_web_view_request_alert(LadybirdWebView* self, char const* message)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+
+    unset_prompt_text(self);
+    g_signal_emit(self, signals[SIGNAL_REQUEST_ALERT], 0, message);
+}
+
+void ladybird_web_view_request_confirm(LadybirdWebView* self, char const* message)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+
+    unset_prompt_text(self);
+    g_signal_emit(self, signals[SIGNAL_REQUEST_CONFIRM], 0, message);
+}
+
+void ladybird_web_view_request_prompt(LadybirdWebView* self, char const* message, char const* text)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+
+    ladybird_web_view_set_prompt_text(self, text);
+    g_signal_emit(self, signals[SIGNAL_REQUEST_PROMPT], 0, message);
+}
+
+void ladybird_web_view_request_dismiss_dialog(LadybirdWebView* self)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+
+    g_signal_emit(self, signals[SIGNAL_REQUEST_DISMISS_DIALOG], 0);
+}
+
+void ladybird_web_view_request_accept_dialog(LadybirdWebView* self)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+
+    g_signal_emit(self, signals[SIGNAL_REQUEST_ACCEPT_DIALOG], 0);
+}
+
+void ladybird_web_view_alert_closed(LadybirdWebView* self)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+
+    self->impl->alert_closed();
+    unset_prompt_text(self);
+}
+
+void ladybird_web_view_confirm_closed(LadybirdWebView* self, bool confirmed)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+
+    self->impl->confirm_closed(confirmed);
+    unset_prompt_text(self);
+}
+
+void ladybird_web_view_prompt_closed(LadybirdWebView* self, char const* input)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+
+    if (input) {
+        String ak_input = MUST(String::from_utf8(AK::StringView(input, strlen(input))));
+        self->impl->prompt_closed(move(ak_input));
+    } else {
+        self->impl->prompt_closed({});
+    }
+    unset_prompt_text(self);
+}
+
 static void ladybird_web_view_get_property(GObject* object, guint prop_id, GValue* value, GParamSpec* pspec)
 {
     LadybirdWebView* self = LADYBIRD_WEB_VIEW(object);
@@ -223,6 +324,10 @@ static void ladybird_web_view_get_property(GObject* object, guint prop_id, GValu
 
     case PROP_HOVERED_LINK:
         g_value_set_string(value, self->hovered_link);
+        break;
+
+    case PROP_PROMPT_TEXT:
+        g_value_set_string(value, self->prompt_text);
         break;
 
     case PROP_HADJUSTMENT:
@@ -821,6 +926,7 @@ static void ladybird_web_view_dispose(GObject* object)
     g_clear_pointer(&self->page_url, g_free);
     g_clear_pointer(&self->page_title, g_free);
     g_clear_pointer(&self->hovered_link, g_free);
+    g_clear_pointer(&self->prompt_text, g_free);
 
     G_OBJECT_CLASS(ladybird_web_view_parent_class)->dispose(object);
 }
@@ -848,7 +954,14 @@ static void ladybird_web_view_class_init(LadybirdWebViewClass* klass)
     props[PROP_ZOOM_PERCENT] = g_param_spec_uint("zoom-percent", nullptr, nullptr, 30, 500, 100, ro_param_flags);
     props[PROP_COOKIE_JAR] = g_param_spec_pointer("cookie-jar", nullptr, nullptr, param_flags);
     props[PROP_HOVERED_LINK] = g_param_spec_string("hovered-link", nullptr, nullptr, nullptr, ro_param_flags);
+    props[PROP_PROMPT_TEXT] = g_param_spec_string("prompt-text", nullptr, nullptr, nullptr, ro_param_flags);
     g_object_class_install_properties(object_class, NUM_PROPS, props);
+
+    signals[SIGNAL_REQUEST_ALERT] = g_signal_new("request-alert", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST, 0, nullptr, nullptr, nullptr, G_TYPE_NONE, 1, G_TYPE_STRING);
+    signals[SIGNAL_REQUEST_CONFIRM] = g_signal_new("request-confirm", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST, 0, nullptr, nullptr, nullptr, G_TYPE_NONE, 1, G_TYPE_STRING);
+    signals[SIGNAL_REQUEST_PROMPT] = g_signal_new("request-prompt", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST, 0, nullptr, nullptr, nullptr, G_TYPE_NONE, 1, G_TYPE_STRING);
+    signals[SIGNAL_REQUEST_DISMISS_DIALOG] = g_signal_new("request-dismiss-dialog", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST, 0, nullptr, nullptr, nullptr, G_TYPE_NONE, 0);
+    signals[SIGNAL_REQUEST_ACCEPT_DIALOG] = g_signal_new("request-accept-dialog", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST, 0, nullptr, nullptr, nullptr, G_TYPE_NONE, 0);
 
     widget_class->measure = ladybird_web_view_measure;
     widget_class->size_allocate = ladybird_web_view_size_allocate;

@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ladybird wip\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-08-31 20:13+0300\n"
+"POT-Creation-Date: 2023-09-02 13:45+0300\n"
 "Language: eo\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -32,6 +32,10 @@ msgstr "Legosignoj"
 msgid "Bookmarks & History"
 msgstr "Legosignoj kaj Historio"
 
+#: Tab.cpp:215 Tab.cpp:239
+msgid "Cancel"
+msgstr ""
+
 #: window.blp:33
 msgid "Close _Other Tabs"
 msgstr "Fermi _aliajn langetojn"
@@ -39,6 +43,14 @@ msgstr "Fermi _aliajn langetojn"
 #: shortcuts-dialog.blp:61
 msgid "Close current tab"
 msgstr "Fermi aktualan langeton"
+
+#: Tab.cpp:216
+msgid "Confirm"
+msgstr ""
+
+#: Tab.cpp:240
+msgid "Enter"
+msgstr ""
 
 #: js-console.blp:12
 msgid "Enter a JavaScript expression to evaluate"
@@ -56,7 +68,7 @@ msgstr "Enfokusigi lokan enskribigon"
 msgid "General"
 msgstr "Ĝenerala"
 
-#: Tab.cpp:43
+#: Tab.cpp:48
 msgid "JavaScript Console"
 msgstr ""
 
@@ -118,7 +130,7 @@ msgstr "Nova fenestro"
 msgid "Next tab"
 msgstr "Sekva langeto"
 
-#: Window.cpp:143
+#: Window.cpp:143 Tab.cpp:194
 msgid "OK"
 msgstr "Bone"
 
@@ -194,6 +206,18 @@ msgstr "Langetoj"
 #: window.blp:28
 msgid "Unp_in"
 msgstr "De_pingli"
+
+#: Tab.cpp:192
+msgid "Web page alerts:"
+msgstr ""
+
+#: Tab.cpp:237
+msgid "Web page asks for input:"
+msgstr ""
+
+#: Tab.cpp:213
+msgid "Web page asks you to confirm:"
+msgstr ""
 
 #: shortcuts-dialog.blp:75
 msgid "Zoom"

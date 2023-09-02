@@ -1,6 +1,7 @@
 #include "Tab.h"
 #include "JSConsole.h"
 #include "WebView.h"
+#include <adwaita.h>
 #include <glib/gi18n.h>
 
 struct _LadybirdTab {
@@ -11,6 +12,10 @@ struct _LadybirdTab {
     GtkLabel* hovered_link_label;
 
     LadybirdJSConsole* js_console;
+
+    AdwMessageDialog* dialog;
+    GtkEntry* dialog_entry;
+    guint dialog_destroy_id;
 };
 
 enum {
@@ -38,7 +43,7 @@ void ladybird_tab_open_js_console(LadybirdTab* self)
     if (self->js_console == nullptr)
         self->js_console = g_object_ref_sink(ladybird_js_console_new(self->web_view));
 
-    // TODO: There must be a much better way to do this, perhaps via another tempalte.
+    // TODO: There must be a much better way to do this, perhaps via another template.
     GtkWindow* window = GTK_WINDOW(gtk_window_new());
     gtk_window_set_title(window, _("JavaScript Console"));
     gtk_window_set_child(window, GTK_WIDGET(self->js_console));
@@ -140,6 +145,146 @@ static void on_leave(LadybirdTab* self)
     set_label_halign(self, GTK_ALIGN_START);
 }
 
+static void dialog_destroy_callback(LadybirdTab* self)
+{
+    g_signal_handler_disconnect(self->dialog, self->dialog_destroy_id);
+    self->dialog = nullptr;
+    self->dialog_entry = nullptr;
+}
+
+static void on_prompt_text_changed(LadybirdTab* self)
+{
+    g_return_if_fail(LADYBIRD_IS_TAB(self));
+
+    if (!self->dialog_entry)
+        return;
+
+    GtkEntryBuffer* entry_buffer = gtk_entry_get_buffer(self->dialog_entry);
+    char const* text = ladybird_web_view_get_prompt_text(self->web_view);
+    if (text) {
+        gtk_entry_buffer_set_text(entry_buffer, text, -1);
+    } else {
+        gtk_entry_buffer_delete_text(entry_buffer, 0, -1);
+    }
+}
+
+static bool open_dialog(LadybirdTab* self)
+{
+    // TODO: Maybe we want to dismiss the previous dialog in that case?
+    // Need to think of whether we communicate its result to WebView.
+    if (self->dialog)
+        return false;
+
+    GtkRoot* root = gtk_widget_get_root(GTK_WIDGET(self));
+    GtkWindow* window = GTK_IS_WINDOW(root) ? GTK_WINDOW(root) : nullptr;
+    self->dialog = ADW_MESSAGE_DIALOG(adw_message_dialog_new(window, nullptr, nullptr));
+    self->dialog_destroy_id = g_signal_connect_object(self->dialog, "destroy", G_CALLBACK(dialog_destroy_callback), self, G_CONNECT_SWAPPED);
+    return true;
+}
+
+static void on_request_alert(LadybirdTab* self, char const* message)
+{
+    g_return_if_fail(LADYBIRD_IS_TAB(self));
+
+    if (!open_dialog(self))
+        return;
+
+    adw_message_dialog_set_heading(self->dialog, _("Web page alerts:"));
+    adw_message_dialog_set_body(self->dialog, message);
+    adw_message_dialog_add_response(self->dialog, "ok", _("OK"));
+    adw_message_dialog_set_default_response(self->dialog, "ok");
+
+    g_signal_connect_object(self->dialog, "response", G_CALLBACK(+[](void* user_data) {
+        LadybirdTab* self = LADYBIRD_TAB(user_data);
+        ladybird_web_view_alert_closed(self->web_view);
+    }),
+        self, G_CONNECT_SWAPPED);
+
+    gtk_window_present(GTK_WINDOW(self->dialog));
+}
+
+static void on_request_confirm(LadybirdTab* self, char const* message)
+{
+    g_return_if_fail(LADYBIRD_IS_TAB(self));
+
+    if (!open_dialog(self))
+        return;
+
+    adw_message_dialog_set_heading(self->dialog, _("Web page asks you to confirm:"));
+    adw_message_dialog_set_body(self->dialog, message);
+    adw_message_dialog_add_response(self->dialog, "cancel", _("Cancel"));
+    adw_message_dialog_add_response(self->dialog, "confirm", _("Confirm"));
+    adw_message_dialog_set_response_appearance(self->dialog, "confirm", ADW_RESPONSE_SUGGESTED);
+    adw_message_dialog_set_default_response(self->dialog, "confirm");
+
+    g_signal_connect_object(self->dialog, "response", G_CALLBACK(+[](void* user_data, char const* response) {
+        LadybirdTab* self = LADYBIRD_TAB(user_data);
+        bool confirmed = !strcmp(response, "confirm");
+        ladybird_web_view_confirm_closed(self->web_view, confirmed);
+    }),
+        self, G_CONNECT_SWAPPED);
+
+    gtk_window_present(GTK_WINDOW(self->dialog));
+}
+
+static void on_request_prompt(LadybirdTab* self, char const* message)
+{
+    g_return_if_fail(LADYBIRD_IS_TAB(self));
+
+    if (!open_dialog(self))
+        return;
+
+    adw_message_dialog_set_heading(self->dialog, _("Web page asks for input:"));
+    adw_message_dialog_set_body(self->dialog, message);
+    adw_message_dialog_add_response(self->dialog, "cancel", _("Cancel"));
+    adw_message_dialog_add_response(self->dialog, "enter", _("Enter"));
+    adw_message_dialog_set_response_appearance(self->dialog, "enter", ADW_RESPONSE_SUGGESTED);
+    adw_message_dialog_set_default_response(self->dialog, "enter");
+
+    self->dialog_entry = GTK_ENTRY(gtk_entry_new());
+    on_prompt_text_changed(self);
+    g_signal_connect_object(self->dialog_entry, "activate", G_CALLBACK(+[](void* user_data) {
+        LadybirdTab* self = LADYBIRD_TAB(user_data);
+        adw_message_dialog_response(self->dialog, "enter");
+        gtk_window_destroy(GTK_WINDOW(self->dialog));
+    }),
+        self, G_CONNECT_SWAPPED);
+    adw_message_dialog_set_extra_child(self->dialog, GTK_WIDGET(self->dialog_entry));
+
+    g_signal_connect_object(self->dialog, "response", G_CALLBACK(+[](void* user_data, char const* response) {
+        LadybirdTab* self = LADYBIRD_TAB(user_data);
+        char const* text = nullptr;
+        if (!strcmp(response, "enter")) {
+            GtkEntryBuffer* entry_buffer = gtk_entry_get_buffer(self->dialog_entry);
+            text = gtk_entry_buffer_get_text(entry_buffer);
+        }
+        ladybird_web_view_prompt_closed(self->web_view, text);
+    }),
+        self, G_CONNECT_SWAPPED);
+
+    gtk_window_present(GTK_WINDOW(self->dialog));
+}
+
+static void on_request_dismiss_dialog(LadybirdTab* self)
+{
+    g_return_if_fail(LADYBIRD_IS_TAB(self));
+
+    if (!self->dialog)
+        return;
+    gtk_window_close(GTK_WINDOW(self->dialog));
+}
+
+static void on_request_accept_dialog(LadybirdTab* self)
+{
+    g_return_if_fail(LADYBIRD_IS_TAB(self));
+
+    if (!self->dialog)
+        return;
+    char const* default_response = adw_message_dialog_get_default_response(self->dialog);
+    adw_message_dialog_response(self->dialog, default_response);
+    gtk_window_destroy(GTK_WINDOW(self->dialog));
+}
+
 static void ladybird_tab_class_init(LadybirdTabClass* klass)
 {
     GtkWidgetClass* widget_class = GTK_WIDGET_CLASS(klass);
@@ -159,6 +304,12 @@ static void ladybird_tab_class_init(LadybirdTabClass* klass)
     gtk_widget_class_bind_template_callback(widget_class, on_hovered_link_change);
     gtk_widget_class_bind_template_callback(widget_class, on_motion);
     gtk_widget_class_bind_template_callback(widget_class, on_leave);
+    gtk_widget_class_bind_template_callback(widget_class, on_request_alert);
+    gtk_widget_class_bind_template_callback(widget_class, on_request_confirm);
+    gtk_widget_class_bind_template_callback(widget_class, on_request_prompt);
+    gtk_widget_class_bind_template_callback(widget_class, on_request_dismiss_dialog);
+    gtk_widget_class_bind_template_callback(widget_class, on_request_accept_dialog);
+    gtk_widget_class_bind_template_callback(widget_class, on_prompt_text_changed);
 
     gtk_widget_class_set_layout_manager_type(widget_class, GTK_TYPE_BIN_LAYOUT);
 }

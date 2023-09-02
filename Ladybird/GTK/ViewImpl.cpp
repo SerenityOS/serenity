@@ -86,6 +86,25 @@ LadybirdViewImpl::LadybirdViewImpl(LadybirdWebView* widget)
         ladybird_web_view_set_hovered_link(m_widget, nullptr);
     };
 
+    on_request_alert = [this](AK::String const& message) {
+        ladybird_web_view_request_alert(m_widget, message.to_deprecated_string().characters());
+    };
+    on_request_confirm = [this](AK::String const& message) {
+        ladybird_web_view_request_confirm(m_widget, message.to_deprecated_string().characters());
+    };
+    on_request_prompt = [this](AK::String const& message, AK::String const& text) {
+        ladybird_web_view_request_prompt(m_widget, message.to_deprecated_string().characters(), text.to_deprecated_string().characters());
+    };
+    on_request_set_prompt_text = [this](AK::String const& text) {
+        ladybird_web_view_set_prompt_text(m_widget, text.to_deprecated_string().characters());
+    };
+    on_request_accept_dialog = [this]() {
+        ladybird_web_view_request_accept_dialog(m_widget);
+    };
+    on_request_dismiss_dialog = [this]() {
+        ladybird_web_view_request_dismiss_dialog(m_widget);
+    };
+
     AdwStyleManager* style_manager = adw_style_manager_get_default();
 
     m_update_style_id = g_signal_connect_swapped(style_manager, "notify::dark", G_CALLBACK(+[](void* user_data) {

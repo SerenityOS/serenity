@@ -13,6 +13,13 @@ void ladybird_web_view_set_hovered_link(LadybirdWebView* self, char const* hover
 void ladybird_web_view_set_loading(LadybirdWebView* self, bool loading);
 GdkPaintable* ladybird_web_view_get_bitmap_paintable(LadybirdWebView* self);
 
+void ladybird_web_view_set_prompt_text(LadybirdWebView* self, char const* text);
+void ladybird_web_view_request_alert(LadybirdWebView* self, char const* message);
+void ladybird_web_view_request_confirm(LadybirdWebView* self, char const* message);
+void ladybird_web_view_request_prompt(LadybirdWebView* self, char const* message, char const* text);
+void ladybird_web_view_request_dismiss_dialog(LadybirdWebView* self);
+void ladybird_web_view_request_accept_dialog(LadybirdWebView* self);
+
 class LadybirdViewImpl;
 LadybirdViewImpl* ladybird_web_view_get_impl(LadybirdWebView* self);
 
