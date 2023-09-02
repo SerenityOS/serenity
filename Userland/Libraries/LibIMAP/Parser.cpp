@@ -452,41 +452,6 @@ BodyStructure Parser::parse_one_part_body()
         // NOTE: "media-text SP body-fields" part is already parsed.
         consume(" "sv);
         data.lines = MUST(parse_number());
-
-        if (!try_consume(")"sv)) {
-            consume(" "sv);
-            auto md5 = parse_nstring();
-            if (md5.has_value())
-                data.md5 = { md5.value() };
-            if (!try_consume(")"sv)) {
-                consume(" "sv);
-                if (!try_consume("NIL"sv)) {
-                    auto disposition = parse_disposition();
-                    data.disposition = { disposition };
-                }
-
-                if (!try_consume(")"sv)) {
-                    consume(" "sv);
-                    if (!try_consume("NIL"sv)) {
-                        data.langs = { parse_langs() };
-                    }
-
-                    if (!try_consume(")"sv)) {
-                        consume(" "sv);
-                        auto location = parse_nstring();
-                        if (location.has_value())
-                            data.location = { location.value() };
-
-                        Vector<BodyExtension> extensions;
-                        while (!try_consume(")"sv)) {
-                            extensions.append(parse_body_extension());
-                            try_consume(" "sv);
-                        }
-                        data.extensions = { move(extensions) };
-                    }
-                }
-            }
-        }
     } else if (data.type.equals_ignoring_ascii_case("MESSAGE"sv) && data.subtype.equals_ignoring_ascii_case("RFC822"sv)) {
         // body-type-msg
         // NOTE: "media-message SP body-fields" part is already parsed.
@@ -495,6 +460,42 @@ BodyStructure Parser::parse_one_part_body()
     } else {
         // body-type-basic
         // NOTE: "media-basic SP body-fields" is already parsed.
+    }
+
+    if (!try_consume(")"sv)) {
+        consume(" "sv);
+
+        // body-ext-1part
+        [&]() {
+            data.md5 = Optional<DeprecatedString>(parse_nstring());
+
+            if (try_consume(")"sv))
+                return;
+            consume(" "sv);
+            if (!try_consume("NIL"sv)) {
+                auto disposition = parse_disposition();
+                data.disposition = { disposition };
+            }
+
+            if (try_consume(")"sv))
+                return;
+            consume(" "sv);
+            if (!try_consume("NIL"sv)) {
+                data.langs = { parse_langs() };
+            }
+
+            if (try_consume(")"sv))
+                return;
+            consume(" "sv);
+            data.location = Optional<DeprecatedString>(parse_nstring());
+
+            Vector<BodyExtension> extensions;
+            while (!try_consume(")"sv)) {
+                extensions.append(parse_body_extension());
+                try_consume(" "sv);
+            }
+            data.extensions = { move(extensions) };
+        }();
     }
 
     return BodyStructure(move(data));
