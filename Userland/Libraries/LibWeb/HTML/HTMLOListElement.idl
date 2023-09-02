@@ -1,7 +1,7 @@
 #import <HTML/HTMLElement.idl>
 
 // https://html.spec.whatwg.org/multipage/grouping-content.html#htmlolistelement
-[Exposed=Window, UseDeprecatedAKString]
+[Exposed=Window]
 interface HTMLOListElement : HTMLElement {
 
     [HTMLConstructor] constructor();

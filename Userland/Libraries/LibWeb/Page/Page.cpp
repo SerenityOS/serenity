@@ -337,7 +337,7 @@ WebIDL::ExceptionOr<void> Page::toggle_media_loop_state()
     if (media_element->has_attribute(HTML::AttributeNames::loop))
         media_element->remove_attribute(HTML::AttributeNames::loop);
     else
-        TRY(media_element->set_attribute(HTML::AttributeNames::loop, {}));
+        TRY(media_element->set_attribute(HTML::AttributeNames::loop, OptionalNone {}));
 
     return {};
 }
@@ -353,7 +353,7 @@ WebIDL::ExceptionOr<void> Page::toggle_media_controls_state()
     if (media_element->has_attribute(HTML::AttributeNames::controls))
         media_element->remove_attribute(HTML::AttributeNames::controls);
     else
-        TRY(media_element->set_attribute(HTML::AttributeNames::controls, {}));
+        TRY(media_element->set_attribute(HTML::AttributeNames::controls, OptionalNone {}));
 
     return {};
 }

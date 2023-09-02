@@ -1,7 +1,7 @@
 #import <CSS/LinkStyle.idl>
 #import <SVG/SVGElement.idl>
 
-[Exposed=Window, UseDeprecatedAKString]
+[Exposed=Window]
 interface SVGStyleElement : SVGElement {
   [Reflect] attribute DOMString type;
   [Reflect] attribute DOMString media;

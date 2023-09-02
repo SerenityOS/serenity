@@ -96,6 +96,7 @@ public:
     DeprecatedString get_attribute_value(DeprecatedFlyString const& local_name, DeprecatedFlyString const& namespace_ = {}) const;
 
     virtual WebIDL::ExceptionOr<void> set_attribute(DeprecatedFlyString const& name, DeprecatedString const& value);
+    WebIDL::ExceptionOr<void> set_attribute(DeprecatedFlyString const& name, Optional<String> const& value);
     WebIDL::ExceptionOr<void> set_attribute_ns(DeprecatedFlyString const& namespace_, DeprecatedFlyString const& qualified_name, DeprecatedString const& value);
     void set_attribute_value(DeprecatedFlyString const& local_name, DeprecatedString const& value, DeprecatedFlyString const& prefix = {}, DeprecatedFlyString const& namespace_ = {});
     WebIDL::ExceptionOr<JS::GCPtr<Attr>> set_attribute_node(Attr&);

@@ -3,7 +3,7 @@
 #import <HTML/HTMLTableRowElement.idl>
 
 // https://html.spec.whatwg.org/multipage/tables.html#htmltablesectionelement
-[Exposed=Window, UseDeprecatedAKString]
+[Exposed=Window]
 interface HTMLTableSectionElement : HTMLElement {
 
     [HTMLConstructor] constructor();

@@ -1,7 +1,7 @@
 #import <HTML/HTMLElement.idl>
 
 // https://html.spec.whatwg.org/multipage/tables.html#htmltablecolelement
-[Exposed=Window, UseDeprecatedAKString]
+[Exposed=Window]
 interface HTMLTableColElement : HTMLElement {
 
     [HTMLConstructor] constructor();

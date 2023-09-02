@@ -2,7 +2,7 @@
 #import <DOM/Document.idl>
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#htmliframeelement
-[Exposed=Window, UseDeprecatedAKString]
+[Exposed=Window]
 interface HTMLIFrameElement : HTMLElement {
 
     [HTMLConstructor] constructor();
