@@ -324,6 +324,8 @@ WebIDL::ExceptionOr<bool> Element::toggle_attribute(DeprecatedFlyString const& n
         m_attributes->remove_attribute(name);
         attribute_changed(name, {});
         invalidate_style_after_attribute_change(name);
+
+        return false;
     }
 
     // 6. Return true.
