@@ -14,5 +14,5 @@ execute_process(COMMAND "git diff-index --quiet HEAD -- && echo tracked || echo 
 
 add_definitions(-DGIT_COMMIT="${GIT_COMMIT}" -DGIT_BRANCH="${GIT_BRANCH}" -DGIT_CHANGES="${GIT_CHANGES}")
 
-serenity_bin(About)
+serenity_app(About ICON ladyball)
 target_link_libraries(About PRIVATE LibCore LibGfx LibGUI LibMain)
