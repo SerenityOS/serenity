@@ -670,7 +670,14 @@ NonnullOwnPtr<Text::Node> Text::parse_link(Vector<Token>::ConstIterator& tokens)
 
         if (*iterator == ")"sv) {
             tokens = iterator;
-            return make<LinkNode>(is_image, move(link_text), address.to_deprecated_string().trim_whitespace(), image_width, image_height);
+
+            DeprecatedString href = address.to_deprecated_string().trim_whitespace();
+
+            // Add file:// if the link is an absolute path otherwise it will be assumed relative.
+            if (AK::StringUtils::starts_with(href, "/"sv, CaseSensitivity::CaseSensitive))
+                href = DeprecatedString::formatted("file://{}", href);
+
+            return make<LinkNode>(is_image, move(link_text), move(href), image_width, image_height);
         }
 
         address.append(iterator->data);
