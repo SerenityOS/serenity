@@ -24,7 +24,7 @@ depends=(
   'SDL2'
 )
 files=(
-    "${QEMU_ARCHIVE_URL} ${QEMU_ARCHIVE_SHA256SUM}"
+    "${QEMU_ARCHIVE_URL}#${QEMU_ARCHIVE_SHA256SUM}"
 )
 
 pre_patch() {

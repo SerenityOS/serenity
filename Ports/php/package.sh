@@ -3,7 +3,7 @@ port='php'
 useconfigure='true'
 version='8.2.8'
 files=(
-    "https://www.php.net/distributions/php-${version}.tar.xz cfe1055fbcd486de7d3312da6146949aae577365808790af6018205567609801"
+    "https://www.php.net/distributions/php-${version}.tar.xz#cfe1055fbcd486de7d3312da6146949aae577365808790af6018205567609801"
 )
 depends=(
     'libiconv'

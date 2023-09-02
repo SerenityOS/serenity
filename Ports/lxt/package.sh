@@ -2,7 +2,7 @@
 port='lxt'
 version='1.3b'
 files=(
-    "http://stahlke.org/dan/lxt/lxt-${version}.tar.gz 7a3ab299a6d61a71b271fd13b847b5a1c22a5f95df78561a325c78d50b6a6bc7"
+    "http://stahlke.org/dan/lxt/lxt-${version}.tar.gz#7a3ab299a6d61a71b271fd13b847b5a1c22a5f95df78561a325c78d50b6a6bc7"
 )
 useconfigure='true'
 depends=(

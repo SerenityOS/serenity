@@ -4,7 +4,7 @@ version='6.4.0'
 workdir="qtbase-everywhere-src-${version}"
 useconfigure='true'
 files=(
-    "https://download.qt.io/official_releases/qt/$(cut -d. -f1,2 <<< ${version})/${version}/submodules/qtbase-everywhere-src-${version}.tar.xz cb6475a0bd8567c49f7ffbb072a05516ee6671171bed55db75b22b94ead9b37d"
+    "https://download.qt.io/official_releases/qt/$(cut -d. -f1,2 <<< ${version})/${version}/submodules/qtbase-everywhere-src-${version}.tar.xz#cb6475a0bd8567c49f7ffbb072a05516ee6671171bed55db75b22b94ead9b37d"
 )
 configopts=(
     '-GNinja'

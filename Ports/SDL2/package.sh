@@ -3,7 +3,7 @@ port='SDL2'
 version='2.28.2'
 useconfigure='true'
 files=(
-    "https://github.com/libsdl-org/SDL/releases/download/release-${version}/SDL2-${version}.tar.gz 64b1102fa22093515b02ef33dd8739dee1ba57e9dbba6a092942b8bbed1a1c5e"
+    "https://github.com/libsdl-org/SDL/releases/download/release-${version}/SDL2-${version}.tar.gz#64b1102fa22093515b02ef33dd8739dee1ba57e9dbba6a092942b8bbed1a1c5e"
 )
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"

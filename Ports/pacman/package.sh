@@ -2,7 +2,7 @@
 port='pacman'
 version='b6241a373cc09f021c2ab29714eca5f9e33463f8'
 files=(
-    "https://github.com/ebuc99/pacman/archive/${version}.zip d688f75d33c7bf4f217bfcaf0d5ee507fd73bb233d77303927d15b54988f0231"
+    "https://github.com/ebuc99/pacman/archive/${version}.zip#d688f75d33c7bf4f217bfcaf0d5ee507fd73bb233d77303927d15b54988f0231"
 )
 useconfigure='true'
 depends=(

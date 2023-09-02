@@ -2,7 +2,7 @@
 port='ssmtp'
 version='2.64-11'
 files=(
-    "https://salsa.debian.org/debian/ssmtp/-/archive/debian/${version}/ssmtp-debian-${version}.tar.gz 82abe0fb54e2ee209e9f8745498ce5f4e35f2f2b1bf95bd5e6dfbcfc61a8ebe2"
+    "https://salsa.debian.org/debian/ssmtp/-/archive/debian/${version}/ssmtp-debian-${version}.tar.gz#82abe0fb54e2ee209e9f8745498ce5f4e35f2f2b1bf95bd5e6dfbcfc61a8ebe2"
 )
 useconfigure='true'
 workdir="ssmtp-debian-${version}"

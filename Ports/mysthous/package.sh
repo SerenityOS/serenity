@@ -2,7 +2,7 @@
 port=mysthous
 version="1.0"
 files=(
-    "https://downloads.scummvm.org/frs/extras/Mystery%20House/MYSTHOUS.zip ada412228a149394489b28c6c7f9ebab0722b52e04732fd0aa22949673cfa3a0"
+    "https://downloads.scummvm.org/frs/extras/Mystery%20House/MYSTHOUS.zip#ada412228a149394489b28c6c7f9ebab0722b52e04732fd0aa22949673cfa3a0"
 )
 depends=("scummvm")
 

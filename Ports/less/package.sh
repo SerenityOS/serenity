@@ -3,7 +3,7 @@ port=less
 version=590
 useconfigure="true"
 files=(
-    "https://ftpmirror.gnu.org/gnu/less/less-${version}.tar.gz 6aadf54be8bf57d0e2999a3c5d67b1de63808bb90deb8f77b028eafae3a08e10"
+    "https://ftpmirror.gnu.org/gnu/less/less-${version}.tar.gz#6aadf54be8bf57d0e2999a3c5d67b1de63808bb90deb8f77b028eafae3a08e10"
 )
 depends=("ncurses")
 

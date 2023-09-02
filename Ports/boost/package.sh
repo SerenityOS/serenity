@@ -11,7 +11,7 @@ depends=(
     'libicu'
 )
 files=(
-    "https://boostorg.jfrog.io/artifactory/main/release/${version}/source/boost_${version//./_}.tar.bz2 1e19565d82e43bc59209a168f5ac899d3ba471d55c7610c677d4ccf2c9c500c0"
+    "https://boostorg.jfrog.io/artifactory/main/release/${version}/source/boost_${version//./_}.tar.bz2#1e19565d82e43bc59209a168f5ac899d3ba471d55c7610c677d4ccf2c9c500c0"
 )
 bjamopts=(
     '--user-config=user-config.jam'

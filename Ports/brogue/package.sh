@@ -7,7 +7,7 @@ depends=(
 version='1.12'
 workdir="BrogueCE-${version}"
 files=(
-    "https://github.com/tmewett/BrogueCE/archive/refs/tags/v${version}.tar.gz aeed3f6ca0f4e352137b0196e9dddbdce542a9e99dda9effd915e018923cd428"
+    "https://github.com/tmewett/BrogueCE/archive/refs/tags/v${version}.tar.gz#aeed3f6ca0f4e352137b0196e9dddbdce542a9e99dda9effd915e018923cd428"
 )
 makeopts+=(
     'bin/brogue'

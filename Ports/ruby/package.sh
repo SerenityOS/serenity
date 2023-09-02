@@ -10,8 +10,8 @@ useconfigure="true"
 use_fresh_config_sub=true
 config_sub_paths=("tool/config.sub")
 files=(
-    "${RUBY_ARCHIVE_URL} ${RUBY_ARCHIVE_SHA256SUM}"
-    "https://cache.ruby-lang.org/pub/misc/logo/ruby-logo-kit.zip 7f0a980e09874d35d80b958949dc2460e683957de3d2494a1499aea9d9989055"
+    "${RUBY_ARCHIVE_URL}#${RUBY_ARCHIVE_SHA256SUM}"
+    "https://cache.ruby-lang.org/pub/misc/logo/ruby-logo-kit.zip#7f0a980e09874d35d80b958949dc2460e683957de3d2494a1499aea9d9989055"
 )
 launcher_name="Ruby IRB"
 launcher_category="Development"

@@ -3,7 +3,7 @@ port='scummvm'
 useconfigure='true'
 version='2.7.1'
 files=(
-    "https://downloads.scummvm.org/frs/scummvm/${version}/scummvm-${version}.tar.xz d6bbf62e33154759a609d59f3034d71652ecdb64ed5c800156718ab1f1d5d063"
+    "https://downloads.scummvm.org/frs/scummvm/${version}/scummvm-${version}.tar.xz#d6bbf62e33154759a609d59f3034d71652ecdb64ed5c800156718ab1f1d5d063"
 )
 depends=(
     'freetype'
