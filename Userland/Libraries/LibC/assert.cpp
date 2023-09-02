@@ -30,7 +30,7 @@ void __assertion_failed(char const* msg)
         { "assertion", strlen("assertion") },
         { msg, strlen(msg) },
     };
-    syscall(SC_prctl, PR_SET_COREDUMP_METADATA_VALUE, &params, nullptr);
+    syscall(SC_prctl, PR_SET_COREDUMP_METADATA_VALUE, &params, nullptr, nullptr);
     abort();
 }
 }
