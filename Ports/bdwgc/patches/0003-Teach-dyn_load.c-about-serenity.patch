@@ -8,7 +8,7 @@ Subject: [PATCH] Teach dyn_load.c about serenity
  1 file changed, 20 insertions(+), 3 deletions(-)
 
 diff --git a/dyn_load.c b/dyn_load.c
-index 46c53af..9026932 100644
+index bee040c39925679ae159a644ec9b72d1fa794d25..db57ded046676d96f24ff948f0a8df2db4b4c847 100644
 --- a/dyn_load.c
 +++ b/dyn_load.c
 @@ -63,7 +63,7 @@ STATIC GC_has_static_roots_func GC_has_static_roots = 0;
@@ -54,7 +54,7 @@ index 46c53af..9026932 100644
      /* If you don't need the "dynamic loading" feature, you may build   */
      /* the collector with -D IGNORE_DYNAMIC_LOADING.                    */
 @@ -261,7 +278,7 @@ GC_INNER void GC_register_dynamic_libraries(void)
- # endif /* !USE_PROC ... */
+ # endif /* !USE_PROC_FOR_LIBRARIES */
  # endif /* SOLARISDL */
  
 -#if defined(SCO_ELF) || defined(DGUX) || defined(HURD) || defined(NACL) \

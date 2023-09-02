@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='bdwgc'
-version='8.2.2'
+version='8.2.4'
 use_fresh_config_sub='true'
 files=(
-    "https://github.com/ivmai/bdwgc/releases/download/v${version}/gc-${version}.tar.gz#f30107bcb062e0920a790ffffa56d9512348546859364c23a14be264b38836a0"
+    "https://github.com/ivmai/bdwgc/releases/download/v${version}/gc-${version}.tar.gz#3d0d3cdbe077403d3106bb40f0cbb563413d6efdbb2a7e1cd6886595dec48fc2"
 )
 depends=(
     'libatomic_ops'
