@@ -747,64 +747,13 @@ do_dev() {
             git tag import
         fi
 
-        # Import patches as commits, or ask the user to commit them
-        # if they're not git patches already.
         if [ -d "${PORT_META_DIR}/patches" ] && [ -n "$(find -L "${PORT_META_DIR}/patches" -maxdepth 1 -name '*.patch' -print -quit)" ]; then
             for patch in "${PORT_META_DIR}"/patches/*.patch; do
-                if [ -f "$workdir/.$(basename $patch).applied" ]; then
-                    continue
-                fi
-
-                echo "Importing patch $(basename "${patch}")..."
-                git am --keep-cr --keep-non-patch "$patch" >/dev/null 2>&1 || {
-                    git am --abort >/dev/null 2>&1 || true
-                    if git apply < $patch; then
-                        git add -A
-                        if prompt_yes_no "- This patch does not appear to be a git patch, would you like to modify its changes before continuing?"; then
-                            >&2 echo "Apply any changes you want, commit them into the current repo and quit this shell to continue."
-
-                            launch_user_shell
-                        fi
-                        main_author=''
-                        co_authors=()
-                        while read -r line; do
-                            author="$(echo "$line" | cut -f2 -d'	')"
-                            if [[ -z "$main_author" ]]; then
-                                main_author="$author"
-                            else
-                                co_authors+=("$author")
-                            fi
-                        done < <(git -C "${PORT_META_DIR}" shortlog -esn -- "patches/$(basename "$patch")")
-
-                        if [[ -n "$main_author" ]]; then
-                            date="$(git -C "${PORT_META_DIR}" log --format=%ad -n1 -- "patches/$(basename "$patch")")"
-                            >&2 echo -n "- This patch was authored by $main_author"
-                            if [[ ${#co_authors[@]} -ne 0 ]]; then
-                                >&2 echo -n " (and ${co_authors[*]})"
-                            fi
-                            >&2 echo " at $date"
-                            if prompt_yes_no_default_yes "- Would you like to preserve that information?"; then
-                                trailers=()
-                                for a in "${co_authors[@]}"; do
-                                    trailers+=("--trailer" "Co-Authored-By: $a")
-                                done
-                                git commit --verbose --author "$main_author" --date "$date" "${trailers[@]}"
-                            else
-                                >&2 echo " Okay, using your current git identity as the author."
-                                git commit --verbose
-                            fi
-                        else
-                            git commit --verbose
-                        fi
-                    else
-                        # The patch didn't apply, oh no!
-                        # Ask the user to figure it out :shrug:
-                        git am --keep-cr --keep-non-patch --3way "$patch" || true
-                        >&2 echo "- This patch does not apply, you'll be dropped into a shell to investigate and fix this, quit the shell when the problem is resolved."
-                        >&2 echo "Note that the patch needs to be committed into the current repository!"
-                        launch_user_shell
-                        force_patch_regeneration='true'
-                    fi
+                if ! git am --keep-cr --keep-non-patch --3way "$patch"; then
+                    # The patch didn't apply, oh no!
+                    # `git am` already printed instructions, so drop into a shell for the user to follow them.
+                    launch_user_shell
+                    force_patch_regeneration='true'
 
                     if ! git diff --quiet >/dev/null 2>&1; then
                         >&2 echo "- It appears that there are uncommitted changes from applying the previous patch:"
@@ -817,7 +766,7 @@ do_dev() {
                             >&2 echo "- The uncommitted changes will be committed with the next patch or left in the tree."
                         fi
                     fi
-                }
+                fi
             done
         fi
 
