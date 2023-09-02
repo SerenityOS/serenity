@@ -15,3 +15,7 @@ build() {
     run make acpisrc
     run make acpibin
 }
+
+# acpica contains unknown warning flags (on Clang) and is generally littered with warnings,
+# some of them intentional. Make sure that we at least don't error on them.
+export NOWERROR='TRUE'
