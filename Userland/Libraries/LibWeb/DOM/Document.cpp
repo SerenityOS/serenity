@@ -2707,12 +2707,6 @@ void Document::destroy()
     // 4. Abort document.
     abort();
 
-    // 1. Destroy the active documents of each of document's descendant navigables.
-    for (auto navigable : descendant_navigables()) {
-        if (auto document = navigable->active_document())
-            document->destroy();
-    }
-
     // 2. Set document's salvageable state to false.
     m_salvageable = false;
 
@@ -2725,6 +2719,15 @@ void Document::destroy()
 
     // 6. Set document's browsing context to null.
     m_browsing_context = nullptr;
+
+    // When a frame element stops being an active frame element, the user agent must destroy a child navigable given the element.
+    // A frame element is said to be an active frame element when it is in a document tree and its node document's browsing context is non-null.
+    for_each_shadow_including_descendant([&](DOM::Node& node) {
+        if (is<HTML::NavigableContainer>(node)) {
+            verify_cast<HTML::NavigableContainer>(node).destroy_the_child_navigable();
+        }
+        return IterationDecision::Continue;
+    });
 
     // 7. Set document's node navigable's active session history entry's document state's document to null.
     if (navigable()) {
