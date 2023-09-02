@@ -3,7 +3,7 @@ port='julius'
 version='1.7.0'
 useconfigure='true'
 files=(
-    "https://github.com/bvschaik/julius/archive/refs/tags/v${version}.tar.gz 3ee62699bcbf6c74fe5a9c940c62187141422a9bd98e01747a554fd77483431f"
+    "https://github.com/bvschaik/julius/archive/refs/tags/v${version}.tar.gz#3ee62699bcbf6c74fe5a9c940c62187141422a9bd98e01747a554fd77483431f"
 )
 depends=(
     'libpng'

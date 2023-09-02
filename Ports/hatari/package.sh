@@ -10,7 +10,7 @@ configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
 )
 files=(
-    "https://github.com/hatari/hatari/archive/refs/tags/v${version}.tar.gz 68c5edbe60db7a83e6e9b427eaac1136b62653846d64e415850e88d9a6a2cbc2"
+    "https://github.com/hatari/hatari/archive/refs/tags/v${version}.tar.gz#68c5edbe60db7a83e6e9b427eaac1136b62653846d64e415850e88d9a6a2cbc2"
 )
 launcher_name='Hatari'
 launcher_category='Games'

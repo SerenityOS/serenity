@@ -9,7 +9,7 @@ depends=(
     'SDL2_ttf'
 )
 files=(
-    "https://github.com/flareteam/flare-engine/archive/refs/tags/v${version}.tar.gz 2c1bafeaa5ac26c10449bfcb7151b06e8a22547aa7364d2a39bbcb135aa50a09"
+    "https://github.com/flareteam/flare-engine/archive/refs/tags/v${version}.tar.gz#2c1bafeaa5ac26c10449bfcb7151b06e8a22547aa7364d2a39bbcb135aa50a09"
 )
 
 configopts=(

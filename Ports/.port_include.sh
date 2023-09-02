@@ -115,6 +115,10 @@ fi
 mkdir -p "${PORT_BUILD_DIR}"
 cd "${PORT_BUILD_DIR}"
 
+# 1 = url
+# 2 = sha256sum
+FILES_SIMPLE_PATTERN='^(https?:\/\/.+)#([0-9a-f]{64})$'
+
 cleanup_git() {
     echo "WARNING: Reverting changes to $workdir as we are in dev mode!"
     run git clean -xffd >/dev/null 2>&1
@@ -367,8 +371,15 @@ func_defined fetch || fetch() {
     pre_fetch
 
     for f in "${files[@]}"; do
-        read url auth_sum <<< $(echo "${f}")
-        fetch_simple "${url}" "${auth_sum}"
+        if [[ "${f}" =~ ${FILES_SIMPLE_PATTERN} ]]; then
+            url="${BASH_REMATCH[1]}"
+            sha256sum="${BASH_REMATCH[2]}"
+            fetch_simple "${url}" "${sha256sum}"
+            continue
+        fi
+
+        echo "error: Unknown syntax for files entry '${f}'"
+        exit 1
     done
 
     post_fetch
@@ -422,9 +433,15 @@ clean() {
 }
 clean_dist() {
     for f in "${files[@]}"; do
-        read url hash <<< "$f"
-        filename=$(basename "$url")
-        rm -f "${PORT_META_DIR}/${filename}"
+        if [[ "${f}" =~ ${FILES_SIMPLE_PATTERN} ]]; then
+            url="${BASH_REMATCH[1]}"
+            filename=$(basename "$url")
+            rm -f "${PORT_META_DIR}/${filename}"
+            continue
+        fi
+
+        echo "error: Unknown syntax for files entry '${f}'"
+        exit 1
     done
 }
 clean_all() {

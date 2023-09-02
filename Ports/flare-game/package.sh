@@ -6,7 +6,7 @@ depends=(
     'flare-engine'
 )
 files=(
-    "https://github.com/flareteam/flare-game/archive/refs/tags/v${version}.tar.gz 65758462070aa88842084f8ee69083d8226e93cfbf83481663276d8307494b8e"
+    "https://github.com/flareteam/flare-game/archive/refs/tags/v${version}.tar.gz#65758462070aa88842084f8ee69083d8226e93cfbf83481663276d8307494b8e"
 )
 
 configopts=(

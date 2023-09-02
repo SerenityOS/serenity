@@ -3,7 +3,7 @@ port='devilutionX'
 version='1.5.1'
 useconfigure='true'
 files=(
-    "https://github.com/diasurgical/devilutionX/archive/refs/tags/${version}.tar.gz 9d88dec4df58e391940b77edb86f356b34e2c085c5e3191262fa6276d745d1cb"
+    "https://github.com/diasurgical/devilutionX/archive/refs/tags/${version}.tar.gz#9d88dec4df58e391940b77edb86f356b34e2c085c5e3191262fa6276d745d1cb"
 )
 depends=(
     'bzip2'

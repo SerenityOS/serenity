@@ -3,7 +3,7 @@ port=serenity-theming
 version=7ef303d19c5db6a5d5f44d8d74f52ac26d42797f
 workdir="theming-${version}"
 files=(
-    "https://github.com/SerenityOS/theming/archive/${version}.zip 16beaca84ca0c4bcc9691129767805e6ba0f631ce1ed54f9362f0195d96d8e1b"
+    "https://github.com/SerenityOS/theming/archive/${version}.zip#16beaca84ca0c4bcc9691129767805e6ba0f631ce1ed54f9362f0195d96d8e1b"
 )
 
 build() {

@@ -6,7 +6,7 @@ depends=(
 )
 workdir="ja2-stracciatella-${version}"
 files=(
-    "https://github.com/ja2-stracciatella/ja2-stracciatella/archive/refs/heads/${version}.zip 178375de4859d16a76276c781455bf48d3fa862841387c8aa6cfa4162f4f0ca4"
+    "https://github.com/ja2-stracciatella/ja2-stracciatella/archive/refs/heads/${version}.zip#178375de4859d16a76276c781455bf48d3fa862841387c8aa6cfa4162f4f0ca4"
 )
 makeopts+=(
     'SERENITY=1'

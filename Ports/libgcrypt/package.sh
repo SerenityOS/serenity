@@ -7,7 +7,7 @@ config_sub_paths=("build-aux/config.sub")
 configopts=("--with-libgpg-error-prefix=${SERENITY_INSTALL_ROOT}/usr/local")
 depends=("libgpg-error")
 files=(
-    "https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${version}.tar.bz2 ef14ae546b0084cd84259f61a55e07a38c3b53afc0f546bffcef2f01baffe9de"
+    "https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${version}.tar.bz2#ef14ae546b0084cd84259f61a55e07a38c3b53afc0f546bffcef2f01baffe9de"
 )
 
 pre_configure() {

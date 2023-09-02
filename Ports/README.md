@@ -134,7 +134,7 @@ port='foo'
 version='1.2.3'
 useconfigure='true'
 files=(
-    "https://example.com/foo-${version}.tar.gz 9acd50f9a2af37e471f761c3fe7b8dea5617e51dac802fe6c177b74abf0abb5a"
+    "https://example.com/foo-${version}.tar.gz#9acd50f9a2af37e471f761c3fe7b8dea5617e51dac802fe6c177b74abf0abb5a"
 )
 depends=(
     'bar'
@@ -194,7 +194,7 @@ An array of external files required by the port, one per line. The format of eac
 entry is as follows:
 
 ```text
-URL HASH
+URL#HASH
 ```
 
 Where `URL` is the URL from where the file will be downloaded (using `curl`)
@@ -204,7 +204,7 @@ For example:
 
 ```bash
 files=(
-    "https://example.com/foo-${version}.tar.xz 9acd50f9a2af37e471f761c3fe7b8dea5617e51dac802fe6c177b74abf0abb5a"
+    "https://example.com/foo-${version}.tar.xz#9acd50f9a2af37e471f761c3fe7b8dea5617e51dac802fe6c177b74abf0abb5a"
 )
 ```
 

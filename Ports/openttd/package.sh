@@ -12,7 +12,7 @@ depends=(
     'zlib'
 )
 files=(
-    "https://cdn.openttd.org/openttd-releases/${version}/openttd-${version}-source.tar.xz 2a1deba01bfe58e2188879f450c3fa4f3819271ab49bf348dd66545f040d146f"
+    "https://cdn.openttd.org/openttd-releases/${version}/openttd-${version}-source.tar.xz#2a1deba01bfe58e2188879f450c3fa4f3819271ab49bf348dd66545f040d146f"
 )
 useconfigure='true'
 configopts=(

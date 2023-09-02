@@ -2,7 +2,7 @@
 port=griffon
 version="1.0"
 files=(
-    "https://downloads.scummvm.org/frs/extras/Griffon%20Legend/${port}-${version}.zip 0aad5fb10f51afb5c121cf04cc86539a6f0d89db85809f9e1767dfdc8d3191a4"
+    "https://downloads.scummvm.org/frs/extras/Griffon%20Legend/${port}-${version}.zip#0aad5fb10f51afb5c121cf04cc86539a6f0d89db85809f9e1767dfdc8d3191a4"
 )
 depends=("scummvm")
 

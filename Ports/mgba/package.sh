@@ -2,7 +2,7 @@
 port='mgba'
 version='0.10.2'
 files=(
-    "https://github.com/mgba-emu/mgba/archive/refs/tags/${version}.tar.gz 60afef8fb79ba1f7be565b737bae73c6604a790391c737f291482a7422d675ae"
+    "https://github.com/mgba-emu/mgba/archive/refs/tags/${version}.tar.gz#60afef8fb79ba1f7be565b737bae73c6604a790391c737f291482a7422d675ae"
 )
 configopts=(
     '-DBUILD_QT=OFF'

@@ -3,7 +3,7 @@ port='SDL2_mixer'
 version='2.6.2'
 useconfigure='true'
 files=(
-    "https://github.com/libsdl-org/SDL_mixer/releases/download/release-${version}/SDL2_mixer-${version}.tar.gz 8cdea810366decba3c33d32b8071bccd1c309b2499a54946d92b48e6922aa371"
+    "https://github.com/libsdl-org/SDL_mixer/releases/download/release-${version}/SDL2_mixer-${version}.tar.gz#8cdea810366decba3c33d32b8071bccd1c309b2499a54946d92b48e6922aa371"
 )
 depends=("libmodplug" "libmpg123" "libvorbis" "SDL2" "timidity")
 

@@ -2,7 +2,7 @@
 port=nippon
 version="1.0"
 files=(
-    "https://downloads.scummvm.org/frs/extras/Nippon%20Safes/nippon-1.0.zip 53e7e2c60065e4aed193169bbcdcfd1113fa68d3efe1c8240ba073c0e20d613f"
+    "https://downloads.scummvm.org/frs/extras/Nippon%20Safes/nippon-1.0.zip#53e7e2c60065e4aed193169bbcdcfd1113fa68d3efe1c8240ba073c0e20d613f"
 )
 depends=("scummvm")
 
