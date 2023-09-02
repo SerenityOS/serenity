@@ -179,7 +179,9 @@ static void show_the_picker_if_applicable(HTMLInputElement& element)
     if (!is<HTML::Window>(global_object) || !static_cast<HTML::Window&>(global_object).has_transient_activation())
         return;
 
-    // FIXME: 2. If element is not mutable, then return.
+    // 2. If element is not mutable, then return.
+    if (!element.is_mutable())
+        return;
 
     // 3. If element's type attribute is in the File Upload state, then run these steps in parallel:
     if (element.type_state() == HTMLInputElement::TypeAttributeState::FileUpload) {
@@ -219,7 +221,9 @@ WebIDL::ExceptionOr<void> HTMLInputElement::show_picker()
 {
     // The showPicker() method steps are:
 
-    // FIXME: 1. If this is not mutable, then throw an "InvalidStateError" DOMException.
+    // 1. If this is not mutable, then throw an "InvalidStateError" DOMException.
+    if (!m_is_mutable)
+        return WebIDL::InvalidStateError::create(realm(), "Element is not mutable"sv);
 
     // 2. If this's relevant settings object's origin is not same origin with this's relevant settings object's top-level origin,
     // and this's type attribute is not in the File Upload state or Color state, then throw a "SecurityError" DOMException.
