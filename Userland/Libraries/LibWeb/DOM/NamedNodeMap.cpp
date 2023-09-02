@@ -223,32 +223,33 @@ WebIDL::ExceptionOr<JS::GCPtr<Attr>> NamedNodeMap::set_attribute(Attr& attribute
 // https://dom.spec.whatwg.org/#concept-element-attributes-replace
 void NamedNodeMap::replace_attribute(Attr& old_attribute, Attr& new_attribute, size_t old_attribute_index)
 {
-    // 1. Handle attribute changes for oldAttr with oldAttr’s element, oldAttr’s value, and newAttr’s value.
     VERIFY(old_attribute.owner_element());
-    old_attribute.handle_attribute_changes(*old_attribute.owner_element(), old_attribute.value(), new_attribute.value());
 
-    // 2. Replace oldAttr by newAttr in oldAttr’s element’s attribute list.
+    // 1. Replace oldAttr by newAttr in oldAttr’s element’s attribute list.
     m_attributes.remove(old_attribute_index);
     m_attributes.insert(old_attribute_index, new_attribute);
 
-    // 3. Set newAttr’s element to oldAttr’s element.
+    // 2. Set newAttr’s element to oldAttr’s element.
     new_attribute.set_owner_element(old_attribute.owner_element());
 
-    // 4 .Set oldAttr’s element to null.
+    // 3. Set oldAttr’s element to null.
     old_attribute.set_owner_element(nullptr);
+
+    // 4. Handle attribute changes for oldAttr with newAttr’s element, oldAttr’s value, and newAttr’s value.
+    old_attribute.handle_attribute_changes(*new_attribute.owner_element(), old_attribute.value(), new_attribute.value());
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-append
 void NamedNodeMap::append_attribute(Attr& attribute)
 {
-    // 1. Handle attribute changes for attribute with element, null, and attribute’s value.
-    attribute.handle_attribute_changes(associated_element(), {}, attribute.value());
-
-    // 2. Append attribute to element’s attribute list.
+    // 1. Append attribute to element’s attribute list.
     m_attributes.append(attribute);
 
-    // 3. Set attribute’s element to element.
+    // 2. Set attribute’s element to element.
     attribute.set_owner_element(&associated_element());
+
+    // 3. Handle attribute changes for attribute with element, null, and attribute’s value.
+    attribute.handle_attribute_changes(associated_element(), {}, attribute.value());
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-remove
@@ -256,15 +257,18 @@ void NamedNodeMap::remove_attribute_at_index(size_t attribute_index)
 {
     JS::NonnullGCPtr<Attr> attribute = m_attributes.at(attribute_index);
 
-    // 1. Handle attribute changes for attribute with attribute’s element, attribute’s value, and null.
-    VERIFY(attribute->owner_element());
-    attribute->handle_attribute_changes(*attribute->owner_element(), attribute->value(), {});
+    // 1. Let element be attribute’s element.
+    auto* element = attribute->owner_element();
+    VERIFY(element);
 
-    // 2. Remove attribute from attribute’s element’s attribute list.
+    // 2. Remove attribute from element’s attribute list.
     m_attributes.remove(attribute_index);
 
     // 3. Set attribute’s element to null.
     attribute->set_owner_element(nullptr);
+
+    // 4. Handle attribute changes for attribute with element, attribute’s value, and null.
+    attribute->handle_attribute_changes(*element, attribute->value(), {});
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-remove-by-name
