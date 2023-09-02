@@ -746,7 +746,7 @@ void VM::dump_backtrace() const
 {
     for (ssize_t i = m_execution_context_stack.size() - 1; i >= 0; --i) {
         auto& frame = m_execution_context_stack[i];
-        if (frame->instruction_stream_iterator->source_code()) {
+        if (frame->instruction_stream_iterator.has_value() && frame->instruction_stream_iterator->source_code()) {
             auto source_range = frame->instruction_stream_iterator->source_range().realize();
             dbgln("-> {} @ {}:{},{}", frame->function_name, source_range.filename(), source_range.start.line, source_range.start.column);
         } else {
@@ -1119,6 +1119,20 @@ void VM::finish_dynamic_import(ScriptOrModule referencing_script_or_module, Modu
     inner_promise->perform_then(on_fulfilled, on_rejected, {});
 
     // 6. Return unused.
+}
+
+void VM::push_execution_context(ExecutionContext& context)
+{
+    if (!m_execution_context_stack.is_empty())
+        m_execution_context_stack.last()->instruction_stream_iterator = bytecode_interpreter().instruction_stream_iterator();
+    m_execution_context_stack.append(&context);
+}
+
+void VM::pop_execution_context()
+{
+    m_execution_context_stack.take_last();
+    if (m_execution_context_stack.is_empty() && on_call_stack_emptied)
+        on_call_stack_emptied();
 }
 
 }

@@ -44,7 +44,7 @@ public:
     // Non-standard: This points at something that owns this ExecutionContext, in case it needs to be protected from GC.
     GCPtr<Cell> context_owner;
 
-    Optional<Bytecode::InstructionStreamIterator&> instruction_stream_iterator;
+    Optional<Bytecode::InstructionStreamIterator> instruction_stream_iterator;
     DeprecatedFlyString function_name;
     Value this_value;
     MarkedVector<Value> arguments;

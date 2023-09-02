@@ -201,7 +201,6 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Realm& realm, Execu
     for (;;) {
         auto pc = InstructionStreamIterator { m_current_block->instruction_stream(), m_current_executable };
         TemporaryChange temp_change { m_pc, Optional<InstructionStreamIterator&>(pc) };
-        TemporaryChange context_change { vm().running_execution_context().instruction_stream_iterator, Optional<InstructionStreamIterator&>(pc) };
 
         // FIXME: This is getting kinda spaghetti-y
         bool will_jump = false;
