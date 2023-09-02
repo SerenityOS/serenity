@@ -78,7 +78,6 @@ AudioCodecPluginAgnostic::AudioCodecPluginAgnostic(NonnullRefPtr<Audio::Loader> 
     m_update_timer->on_timeout = [this]() {
         update_timestamp();
     };
-    m_update_timer->start();
 }
 
 void AudioCodecPluginAgnostic::resume_playback()
