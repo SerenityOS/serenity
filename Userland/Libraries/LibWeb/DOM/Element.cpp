@@ -209,10 +209,10 @@ WebIDL::ExceptionOr<void> Element::set_attribute_ns(DeprecatedFlyString const& n
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
     auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_, qualified_name));
 
-    // FIXME: 2. Set an attribute value for this using localName, value, and also prefix and namespace.
+    // 2. Set an attribute value for this using localName, value, and also prefix and namespace.
+    set_attribute_value(extracted_qualified_name.local_name(), value, extracted_qualified_name.prefix(), extracted_qualified_name.namespace_());
 
-    // FIXME: Don't just call through to setAttribute() here.
-    return set_attribute(extracted_qualified_name.local_name(), value);
+    return {};
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-set-value
