@@ -128,6 +128,8 @@ public:
     Vector<FlyString> const& class_names() const { return m_classes; }
 
     virtual void apply_presentational_hints(CSS::StyleProperties&) const { }
+
+    void run_attribute_change_steps(DeprecatedFlyString const& local_name, DeprecatedString const& old_value, DeprecatedString const& value, DeprecatedFlyString const& namespace_);
     virtual void attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value);
 
     struct [[nodiscard]] RequiredInvalidationAfterStyleChange {

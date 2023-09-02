@@ -145,27 +145,17 @@ WebIDL::ExceptionOr<void> Element::set_attribute(DeprecatedFlyString const& name
     // 3. Let attribute be the first attribute in this’s attribute list whose qualified name is qualifiedName, and null otherwise.
     auto* attribute = m_attributes->get_attribute(name);
 
-    DeprecatedString old_value;
-
-    // 4. If attribute is null, create an attribute whose local name is qualifiedName, value is value, and node document is this’s node document, then append this attribute to this, and then return.
+    // 4. If attribute is null, create an attribute whose local name is qualifiedName, value is value, and node document
+    //    is this’s node document, then append this attribute to this, and then return.
     if (!attribute) {
         auto new_attribute = Attr::create(document(), insert_as_lowercase ? name.to_lowercase() : name, value);
         m_attributes->append_attribute(new_attribute);
 
-        attribute = new_attribute.ptr();
+        return {};
     }
 
     // 5. Change attribute to value.
-    else {
-        old_value = attribute->value();
-        attribute->change_attribute(value);
-    }
-
-    attribute_changed(attribute->local_name(), value);
-
-    if (value != old_value) {
-        invalidate_style_after_attribute_change(name);
-    }
+    attribute->change_attribute(value);
 
     return {};
 }
@@ -264,9 +254,8 @@ WebIDL::ExceptionOr<JS::GCPtr<Attr>> Element::set_attribute_node_ns(Attr& attr)
 // https://dom.spec.whatwg.org/#dom-element-removeattribute
 void Element::remove_attribute(DeprecatedFlyString const& name)
 {
+    // The removeAttribute(qualifiedName) method steps are to remove an attribute given qualifiedName and this, and then return undefined.
     m_attributes->remove_attribute(name);
-    attribute_changed(name, {});
-    invalidate_style_after_attribute_change(name);
 }
 
 // https://dom.spec.whatwg.org/#dom-element-hasattribute
@@ -303,14 +292,11 @@ WebIDL::ExceptionOr<bool> Element::toggle_attribute(DeprecatedFlyString const& n
 
     // 4. If attribute is null, then:
     if (!attribute) {
-        // 1. If force is not given or is true, create an attribute whose local name is qualifiedName, value is the empty string, and node document is this’s node document, then append this attribute to this, and then return true.
+        // 1. If force is not given or is true, create an attribute whose local name is qualifiedName, value is the empty
+        //    string, and node document is this’s node document, then append this attribute to this, and then return true.
         if (!force.has_value() || force.value()) {
             auto new_attribute = Attr::create(document(), insert_as_lowercase ? name.to_lowercase() : name, "");
             m_attributes->append_attribute(new_attribute);
-
-            attribute_changed(new_attribute->local_name(), "");
-
-            invalidate_style_after_attribute_change(name);
 
             return true;
         }
@@ -322,9 +308,6 @@ WebIDL::ExceptionOr<bool> Element::toggle_attribute(DeprecatedFlyString const& n
     // 5. Otherwise, if force is not given or is false, remove an attribute given qualifiedName and this, and then return false.
     if (!force.has_value() || !force.value()) {
         m_attributes->remove_attribute(name);
-        attribute_changed(name, {});
-        invalidate_style_after_attribute_change(name);
-
         return false;
     }
 
@@ -408,6 +391,16 @@ JS::GCPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Docume
 CSS::CSSStyleDeclaration const* Element::inline_style() const
 {
     return m_inline_style.ptr();
+}
+
+void Element::run_attribute_change_steps(DeprecatedFlyString const& local_name, DeprecatedString const&, DeprecatedString const& value, DeprecatedFlyString const&)
+{
+    // FIXME: Implement the element's attribute change steps:
+    //        https://dom.spec.whatwg.org/#concept-element-attributes-change-ext
+
+    // AD-HOC: Run our own internal attribute change handler.
+    attribute_changed(local_name, value);
+    invalidate_style_after_attribute_change(local_name);
 }
 
 void Element::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
