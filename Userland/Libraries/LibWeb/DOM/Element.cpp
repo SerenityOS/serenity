@@ -158,7 +158,7 @@ WebIDL::ExceptionOr<void> Element::set_attribute(DeprecatedFlyString const& name
     // 5. Change attribute to value.
     else {
         old_value = attribute->value();
-        attribute->set_value(value);
+        attribute->change_attribute(value);
     }
 
     attribute_changed(attribute->local_name(), value);
