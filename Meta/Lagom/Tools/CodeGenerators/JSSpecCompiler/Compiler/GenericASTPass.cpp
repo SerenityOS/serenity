@@ -18,7 +18,7 @@ void RecursiveASTVisitor::run_in_subtree(Tree& tree)
 
 void RecursiveASTVisitor::replace_current_node_with(Tree tree)
 {
-    m_current_subtree_pointer->replace_subtree(move(tree));
+    m_current_subtree_pointer->replace_subtree({}, move(tree));
 }
 
 RecursionDecision RecursiveASTVisitor::recurse(Tree root, NodeSubtreePointer& pointer)
@@ -30,7 +30,7 @@ RecursionDecision RecursiveASTVisitor::recurse(Tree root, NodeSubtreePointer& po
 
     if (decision == RecursionDecision::Recurse) {
         for (auto& child : root->subtrees()) {
-            if (recurse(child.get(), child) == RecursionDecision::Break)
+            if (recurse(child.get({}), child) == RecursionDecision::Break)
                 return RecursionDecision::Break;
         }
     }

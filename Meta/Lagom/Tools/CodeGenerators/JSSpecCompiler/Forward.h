@@ -37,6 +37,9 @@ class Variable;
 class FunctionPointer;
 using FunctionPointerRef = NonnullRefPtr<FunctionPointer>;
 
+// Compiler/GenericASTPass.h
+class RecursiveASTVisitor;
+
 // Parser/SpecParser.h
 class AlgorithmStep;
 class AlgorithmStepList;

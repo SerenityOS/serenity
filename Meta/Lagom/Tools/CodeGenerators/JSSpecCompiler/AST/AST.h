@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Badge.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/Vector.h>
@@ -27,9 +28,9 @@ public:
     {
     }
 
-    Tree& get() { return *m_tree_ptr; }
+    Tree& get(Badge<RecursiveASTVisitor>) { return *m_tree_ptr; }
 
-    void replace_subtree(Tree tree) { *m_tree_ptr = move(tree); }
+    void replace_subtree(Badge<RecursiveASTVisitor>, Tree tree) { *m_tree_ptr = move(tree); }
 
 private:
     Tree* m_tree_ptr;
