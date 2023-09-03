@@ -42,7 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
     args_parser.set_general_help("The Ladybird web browser");
     args_parser.add_positional_argument(url, "URL to open", "url", Core::ArgsParser::Required::No);
-    args_parser.add_option(webdriver_content_ipc_path, "Path to WebDriver IPC for WebContent", "webdriver-content-path", 0, "path");
+    args_parser.add_option(webdriver_content_ipc_path, "Path to WebDriver IPC for WebContent", "webdriver-content-path", 0, "path", Core::ArgsParser::OptionHideMode::CommandLineAndMarkdown);
     args_parser.parse(arguments);
 
     auto sql_server_paths = TRY(get_paths_for_helper_process("SQLServer"sv));
