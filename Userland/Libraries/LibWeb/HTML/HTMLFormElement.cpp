@@ -465,9 +465,10 @@ ErrorOr<void> HTMLFormElement::populate_vector_with_submittable_elements_in_tree
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#dom-fs-method
-DeprecatedString HTMLFormElement::method() const
+StringView HTMLFormElement::method() const
 {
     // The method and enctype IDL attributes must reflect the respective content attributes of the same name, limited to only known values.
+    // FIXME: This should probably be `Reflect` in the IDL.
     auto method_state = method_state_from_form_element(*this);
     switch (method_state) {
     case MethodAttributeState::GET:
@@ -476,36 +477,35 @@ DeprecatedString HTMLFormElement::method() const
         return "post"sv;
     case MethodAttributeState::Dialog:
         return "dialog"sv;
-    default:
-        VERIFY_NOT_REACHED();
     }
+    VERIFY_NOT_REACHED();
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#dom-fs-method
-WebIDL::ExceptionOr<void> HTMLFormElement::set_method(DeprecatedString const& method)
+WebIDL::ExceptionOr<void> HTMLFormElement::set_method(String const& method)
 {
     // The method and enctype IDL attributes must reflect the respective content attributes of the same name, limited to only known values.
     return set_attribute(AttributeNames::method, method);
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#dom-fs-action
-DeprecatedString HTMLFormElement::action() const
+String HTMLFormElement::action() const
 {
     // The action IDL attribute must reflect the content attribute of the same name, except that on getting, when the
     // content attribute is missing or its value is the empty string, the element's node document's URL must be returned
     // instead.
     if (!has_attribute(AttributeNames::action))
-        return document().url_string();
+        return MUST(document().url().to_string());
 
-    auto action_attribute = deprecated_attribute(AttributeNames::action);
-    if (action_attribute.is_empty())
-        return document().url_string();
+    auto action_attribute = attribute(AttributeNames::action);
+    if (!action_attribute.has_value() || action_attribute->is_empty())
+        return MUST(document().url().to_string());
 
-    return action_attribute;
+    return action_attribute.value();
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#dom-fs-action
-WebIDL::ExceptionOr<void> HTMLFormElement::set_action(DeprecatedString const& value)
+WebIDL::ExceptionOr<void> HTMLFormElement::set_action(String const& value)
 {
     return set_attribute(AttributeNames::action, value);
 }

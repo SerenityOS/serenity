@@ -80,11 +80,11 @@ public:
     bool constructing_entry_list() const { return m_constructing_entry_list; }
     void set_constructing_entry_list(bool value) { m_constructing_entry_list = value; }
 
-    DeprecatedString method() const;
-    WebIDL::ExceptionOr<void> set_method(DeprecatedString const&);
+    StringView method() const;
+    WebIDL::ExceptionOr<void> set_method(String const&);
 
-    DeprecatedString action() const;
-    WebIDL::ExceptionOr<void> set_action(DeprecatedString const&);
+    String action() const;
+    WebIDL::ExceptionOr<void> set_action(String const&);
 
 private:
     HTMLFormElement(DOM::Document&, DOM::QualifiedName);
