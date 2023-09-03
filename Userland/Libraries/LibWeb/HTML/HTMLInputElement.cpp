@@ -336,12 +336,12 @@ DeprecatedString HTMLInputElement::value() const
     return m_value;
 }
 
-WebIDL::ExceptionOr<void> HTMLInputElement::set_value(DeprecatedString value)
+WebIDL::ExceptionOr<void> HTMLInputElement::set_value(String const& value)
 {
     // https://html.spec.whatwg.org/multipage/input.html#dom-input-value-filename
     if (type_state() == TypeAttributeState::FileUpload) {
         // On setting, if the new value is the empty string, empty the list of selected files; otherwise, throw an "InvalidStateError" DOMException.
-        if (value != DeprecatedString::empty())
+        if (!value.is_empty())
             return WebIDL::InvalidStateError::create(realm(), "Setting value of input type file to non-empty string"sv);
         m_selected_files = nullptr;
         return {};
@@ -358,7 +358,7 @@ WebIDL::ExceptionOr<void> HTMLInputElement::set_value(DeprecatedString value)
     m_dirty_value = true;
 
     // 4. Invoke the value sanitization algorithm, if the element's type attribute's current state defines one.
-    m_value = value_sanitization_algorithm(move(value));
+    m_value = value_sanitization_algorithm(value.to_deprecated_string());
 
     // 5. If the element's value (after applying the value sanitization algorithm) is different from oldValue,
     //    and the element has a text entry cursor position, move the text entry cursor position to the end of the
@@ -602,8 +602,9 @@ HTMLInputElement::TypeAttributeState HTMLInputElement::parse_type_attribute(Stri
     return HTMLInputElement::TypeAttributeState::Text;
 }
 
-DeprecatedString HTMLInputElement::type() const
+StringView HTMLInputElement::type() const
 {
+    // FIXME: This should probably be `Reflect` in the IDL.
     switch (m_type) {
 #define __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE(keyword, state) \
     case TypeAttributeState::state:                           \
@@ -615,7 +616,7 @@ DeprecatedString HTMLInputElement::type() const
     VERIFY_NOT_REACHED();
 }
 
-WebIDL::ExceptionOr<void> HTMLInputElement::set_type(DeprecatedString const& type)
+WebIDL::ExceptionOr<void> HTMLInputElement::set_type(String const& type)
 {
     return set_attribute(HTML::AttributeNames::type, type);
 }
@@ -1058,7 +1059,7 @@ WebIDL::ExceptionOr<bool> HTMLInputElement::report_validity()
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#dom-cva-setcustomvalidity
-void HTMLInputElement::set_custom_validity(DeprecatedString const& error)
+void HTMLInputElement::set_custom_validity(String const& error)
 {
     dbgln("(STUBBED) HTMLInputElement::set_custom_validity(error={}). Called on: {}", error, debug_description());
     return;
@@ -1072,7 +1073,7 @@ WebIDL::ExceptionOr<void> HTMLInputElement::select()
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#dom-textarea/input-setselectionrange
-WebIDL::ExceptionOr<void> HTMLInputElement::set_selection_range(u32 start, u32 end, DeprecatedString const& direction)
+WebIDL::ExceptionOr<void> HTMLInputElement::set_selection_range(u32 start, u32 end, Optional<String> const& direction)
 {
     dbgln("(STUBBED) HTMLInputElement::set_selection_range(start={}, end={}, direction='{}'). Called on: {}", start, end, direction, debug_description());
     return {};
