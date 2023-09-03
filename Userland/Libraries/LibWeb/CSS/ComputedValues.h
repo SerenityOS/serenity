@@ -163,6 +163,21 @@ private:
     Variant<AK::URL, Color> m_value;
 };
 
+// https://drafts.fxtf.org/css-masking-1/#typedef-mask-reference
+class MaskReference {
+public:
+    // TODO: Support other mask types.
+    MaskReference(AK::URL const& url)
+        : m_url(url)
+    {
+    }
+
+    AK::URL const& url() const { return m_url; }
+
+private:
+    AK::URL m_url;
+};
+
 struct BackgroundLayerData {
     RefPtr<CSS::AbstractImageStyleValue const> background_image { nullptr };
     CSS::BackgroundAttachment attachment { CSS::BackgroundAttachment::Scroll };
@@ -344,6 +359,7 @@ public:
     Color stop_color() const { return m_noninherited.stop_color; }
     float stop_opacity() const { return m_noninherited.stop_opacity; }
     CSS::TextAnchor text_anchor() const { return m_inherited.text_anchor; }
+    Optional<MaskReference> const& mask() const { return m_noninherited.mask; }
 
     Vector<CSS::Transformation> const& transformations() const { return m_noninherited.transformations; }
     CSS::TransformOrigin const& transform_origin() const { return m_noninherited.transform_origin; }
@@ -488,6 +504,8 @@ protected:
         CSS::OutlineStyle outline_style { InitialValues::outline_style() };
         CSS::Length outline_width { InitialValues::outline_width() };
         CSS::TableLayout table_layout { InitialValues::table_layout() };
+
+        Optional<MaskReference> mask;
     } m_noninherited;
 };
 
@@ -605,6 +623,7 @@ public:
     void set_outline_offset(CSS::Length value) { m_noninherited.outline_offset = value; }
     void set_outline_style(CSS::OutlineStyle value) { m_noninherited.outline_style = value; }
     void set_outline_width(CSS::Length value) { m_noninherited.outline_width = value; }
+    void set_mask(MaskReference value) { m_noninherited.mask = value; }
 
     void set_math_shift(CSS::MathShift value) { m_inherited.math_shift = value; }
     void set_math_style(CSS::MathStyle value) { m_inherited.math_style = value; }

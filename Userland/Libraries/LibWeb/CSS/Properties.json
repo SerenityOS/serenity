@@ -1484,6 +1484,19 @@
       "unitless-length"
     ]
   },
+  "mask": {
+    "affects-layout": false,
+    "affects-stacking-context": true,
+    "inherited": false,
+    "valid-identifiers": [
+      "none"
+    ],
+    "__comment": "FIXME: This should be a <mask-reference> and/or <mask-layer>#",
+    "valid-types": [
+      "url"
+    ],
+    "initial": "none"
+  },
   "math-depth": {
     "inherited": true,
     "initial": "0",
