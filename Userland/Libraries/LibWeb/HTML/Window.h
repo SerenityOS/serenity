@@ -136,7 +136,7 @@ public:
     void focus();
 
     JS::NonnullGCPtr<WindowProxy> frames() const;
-    u32 length() const;
+    u32 length();
     JS::GCPtr<WindowProxy const> top() const;
     JS::GCPtr<WindowProxy const> parent() const;
     JS::GCPtr<DOM::Element const> frame_element() const;

@@ -880,10 +880,10 @@ JS::NonnullGCPtr<WindowProxy> Window::frames() const
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#dom-length
-u32 Window::length() const
+u32 Window::length()
 {
     // The length getter steps are to return this's associated Document's document-tree child navigables's size.
-    return static_cast<u32>(document_tree_child_browsing_context_count());
+    return associated_document().document_tree_child_navigables().size();
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-top
