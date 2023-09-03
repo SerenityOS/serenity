@@ -140,7 +140,7 @@ Optional<CSSPixels> HTMLImageElement::intrinsic_height() const
     return {};
 }
 
-Optional<float> HTMLImageElement::intrinsic_aspect_ratio() const
+Optional<CSSPixelFraction> HTMLImageElement::intrinsic_aspect_ratio() const
 {
     if (auto image_data = m_current_request->image_data())
         return image_data->intrinsic_aspect_ratio();

@@ -27,7 +27,7 @@ public:
 
     virtual Optional<CSSPixels> intrinsic_width() const = 0;
     virtual Optional<CSSPixels> intrinsic_height() const = 0;
-    virtual Optional<float> intrinsic_aspect_ratio() const = 0;
+    virtual Optional<CSSPixelFraction> intrinsic_aspect_ratio() const = 0;
 
 protected:
     DecodedImageData();

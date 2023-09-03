@@ -87,12 +87,12 @@ Painting::PaintableBox const* Box::paintable_box() const
     return static_cast<Painting::PaintableBox const*>(Node::paintable());
 }
 
-Optional<float> Box::preferred_aspect_ratio() const
+Optional<CSSPixelFraction> Box::preferred_aspect_ratio() const
 {
     auto computed_aspect_ratio = computed_values().aspect_ratio();
     if (computed_aspect_ratio.use_natural_aspect_ratio_if_available && natural_aspect_ratio().has_value())
         return natural_aspect_ratio();
-    return computed_aspect_ratio.preferred_ratio.map([](CSS::Ratio const& ratio) { return static_cast<float>(ratio.value()); });
+    return computed_aspect_ratio.preferred_ratio.map([](CSS::Ratio const& ratio) { return CSSPixelFraction(CSSPixels(ratio.numerator()), CSSPixels(ratio.denominator())); });
 }
 
 }

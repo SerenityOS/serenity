@@ -537,18 +537,18 @@ CSS::FlexBasis FlexFormattingContext::used_flex_basis_for_item(FlexItem const& i
     return flex_basis;
 }
 
-CSSPixels FlexFormattingContext::calculate_main_size_from_cross_size_and_aspect_ratio(CSSPixels cross_size, double aspect_ratio) const
+CSSPixels FlexFormattingContext::calculate_main_size_from_cross_size_and_aspect_ratio(CSSPixels cross_size, CSSPixelFraction aspect_ratio) const
 {
     if (is_row_layout())
-        return CSSPixels::nearest_value_for(cross_size * aspect_ratio);
-    return CSSPixels::nearest_value_for(cross_size / aspect_ratio);
+        return cross_size * aspect_ratio;
+    return cross_size / aspect_ratio;
 }
 
-CSSPixels FlexFormattingContext::calculate_cross_size_from_main_size_and_aspect_ratio(CSSPixels main_size, double aspect_ratio) const
+CSSPixels FlexFormattingContext::calculate_cross_size_from_main_size_and_aspect_ratio(CSSPixels main_size, CSSPixelFraction aspect_ratio) const
 {
     if (is_row_layout())
-        return CSSPixels::nearest_value_for(main_size / aspect_ratio);
-    return CSSPixels::nearest_value_for(main_size * aspect_ratio);
+        return main_size / aspect_ratio;
+    return main_size * aspect_ratio;
 }
 
 // This function takes a size in the main axis and adjusts it according to the aspect ratio of the box

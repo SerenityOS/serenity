@@ -32,7 +32,7 @@ public:
     // https://www.w3.org/TR/css-images-3/#natural-dimensions
     Optional<CSSPixels> natural_width() const { return m_natural_width; }
     Optional<CSSPixels> natural_height() const { return m_natural_height; }
-    Optional<float> natural_aspect_ratio() const { return m_natural_aspect_ratio; }
+    Optional<CSSPixelFraction> natural_aspect_ratio() const { return m_natural_aspect_ratio; }
 
     bool has_natural_width() const { return natural_width().has_value(); }
     bool has_natural_height() const { return natural_height().has_value(); }
@@ -40,10 +40,10 @@ public:
 
     void set_natural_width(Optional<CSSPixels> width) { m_natural_width = width; }
     void set_natural_height(Optional<CSSPixels> height) { m_natural_height = height; }
-    void set_natural_aspect_ratio(Optional<float> ratio) { m_natural_aspect_ratio = ratio; }
+    void set_natural_aspect_ratio(Optional<CSSPixelFraction> ratio) { m_natural_aspect_ratio = ratio; }
 
     // https://www.w3.org/TR/css-sizing-4/#preferred-aspect-ratio
-    Optional<float> preferred_aspect_ratio() const;
+    Optional<CSSPixelFraction> preferred_aspect_ratio() const;
     bool has_preferred_aspect_ratio() const { return preferred_aspect_ratio().has_value(); }
 
     virtual ~Box() override;
@@ -65,7 +65,7 @@ private:
 
     Optional<CSSPixels> m_natural_width;
     Optional<CSSPixels> m_natural_height;
-    Optional<float> m_natural_aspect_ratio;
+    Optional<CSSPixelFraction> m_natural_aspect_ratio;
 };
 
 template<>

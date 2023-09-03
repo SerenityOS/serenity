@@ -37,11 +37,11 @@ HTML::HTMLVideoElement const& VideoBox::dom_node() const
 
 void VideoBox::prepare_for_replaced_layout()
 {
-    auto width = static_cast<float>(dom_node().video_width());
-    set_natural_width(CSSPixels(width));
+    CSSPixels width = dom_node().video_width();
+    set_natural_width(width);
 
-    auto height = static_cast<float>(dom_node().video_height());
-    set_natural_height(CSSPixels(height));
+    CSSPixels height = dom_node().video_height();
+    set_natural_height(height);
 
     if (width != 0 && height != 0)
         set_natural_aspect_ratio(width / height);

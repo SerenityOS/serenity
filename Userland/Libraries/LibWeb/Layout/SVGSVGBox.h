@@ -30,7 +30,7 @@ public:
 private:
     virtual bool is_svg_svg_box() const final { return true; }
 
-    [[nodiscard]] Optional<float> calculate_intrinsic_aspect_ratio() const;
+    [[nodiscard]] Optional<CSSPixelFraction> calculate_intrinsic_aspect_ratio() const;
 };
 
 template<>

@@ -14,6 +14,8 @@ namespace Web::CSS {
 class Ratio {
 public:
     Ratio(double first, double second = 1);
+    double numerator() const { return m_first_value; }
+    double denominator() const { return m_second_value; }
     double value() const { return m_first_value / m_second_value; }
     bool is_degenerate() const;
 

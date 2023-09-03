@@ -42,7 +42,7 @@ void SVGSVGBox::prepare_for_replaced_layout()
     set_natural_aspect_ratio(calculate_intrinsic_aspect_ratio());
 }
 
-Optional<float> SVGSVGBox::calculate_intrinsic_aspect_ratio() const
+Optional<CSSPixelFraction> SVGSVGBox::calculate_intrinsic_aspect_ratio() const
 {
     // https://www.w3.org/TR/SVG2/coords.html#SizingSVGInCSS
     // The intrinsic aspect ratio must be calculated using the following algorithm. If the algorithm returns null, then there is no intrinsic aspect ratio.
@@ -57,7 +57,7 @@ Optional<float> SVGSVGBox::calculate_intrinsic_aspect_ratio() const
 
         if (width != 0 && height != 0) {
             // 1. return width / height
-            return width.to_double() / height.to_double();
+            return width / height;
         }
 
         return {};
@@ -73,7 +73,7 @@ Optional<float> SVGSVGBox::calculate_intrinsic_aspect_ratio() const
         auto const& viewbox = dom_node().view_box().value();
 
         // 2. return viewbox.width / viewbox.height
-        return viewbox.width / viewbox.height;
+        return CSSPixels::nearest_value_for(viewbox.width) / CSSPixels::nearest_value_for(viewbox.height);
     }
 
     // 4. return null
