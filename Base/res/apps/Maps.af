@@ -1,0 +1,5 @@
+[App]
+Name=Maps
+Executable=/bin/Maps
+Category=Internet
+Description=Explore the world
