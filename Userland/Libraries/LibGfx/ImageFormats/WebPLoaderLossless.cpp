@@ -454,7 +454,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(ImageKind ima
                 return Error::from_string_literal("WebPImageDecoderPlugin: Backward reference distance out of bounds");
             }
 
-            if (end - pixel < length) {
+            if (end - pixel < static_cast<ptrdiff_t>(length)) {
                 dbgln_if(WEBP_DEBUG, "invalid length, {} < {}", end - pixel, length);
                 return Error::from_string_literal("WebPImageDecoderPlugin: Backward reference length out of bounds");
             }

@@ -1333,7 +1333,7 @@ private:
 
         auto const result = ((token << n | TRY(stream.read_bits(n))) << config.lsb_in_token) | low_bits;
 
-        VERIFY(result < (1ul << 32));
+        VERIFY(result < (1ull << 32));
 
         return result;
     }
