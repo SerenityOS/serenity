@@ -16,8 +16,8 @@ class HTMLBaseElement final : public HTMLElement {
 public:
     virtual ~HTMLBaseElement() override;
 
-    DeprecatedString href() const;
-    WebIDL::ExceptionOr<void> set_href(DeprecatedString const& href);
+    String href() const;
+    WebIDL::ExceptionOr<void> set_href(String const& href);
 
     AK::URL const& frozen_base_url() const { return m_frozen_base_url; }
 

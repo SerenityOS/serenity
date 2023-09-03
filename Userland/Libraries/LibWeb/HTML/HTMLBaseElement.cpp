@@ -80,15 +80,13 @@ void HTMLBaseElement::set_the_frozen_base_url()
 }
 
 // https://html.spec.whatwg.org/multipage/semantics.html#dom-base-href
-DeprecatedString HTMLBaseElement::href() const
+String HTMLBaseElement::href() const
 {
     // 1. Let document be element's node document.
-    auto& document = this->document();
+    auto const& document = this->document();
 
     // 2. Let url be the value of the href attribute of this element, if it has one, and the empty string otherwise.
-    auto url = DeprecatedString::empty();
-    if (has_attribute(AttributeNames::href))
-        url = deprecated_attribute(AttributeNames::href);
+    auto url = attribute(AttributeNames::href).value_or(String {});
 
     // 3. Let urlRecord be the result of parsing url with document's fallback base URL, and document's character encoding. (Thus, the base element isn't affected by other base elements or itself.)
     // FIXME: Pass in document's character encoding.
@@ -99,11 +97,11 @@ DeprecatedString HTMLBaseElement::href() const
         return url;
 
     // 5. Return the serialization of urlRecord.
-    return url_record.to_deprecated_string();
+    return MUST(url_record.to_string());
 }
 
 // https://html.spec.whatwg.org/multipage/semantics.html#dom-base-href
-WebIDL::ExceptionOr<void> HTMLBaseElement::set_href(DeprecatedString const& href)
+WebIDL::ExceptionOr<void> HTMLBaseElement::set_href(String const& href)
 {
     // The href IDL attribute, on setting, must set the href content attribute to the given new value.
     return set_attribute(AttributeNames::href, href);
