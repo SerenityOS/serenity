@@ -383,25 +383,20 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
         auto& parent = *dom_node.layout_node();
 
         // If the box does not overflow in the vertical axis, then it is centered vertically.
-        auto table_computed_values = parent.computed_values().clone_inherited_values();
-        static_cast<CSS::MutableComputedValues&>(table_computed_values).set_display(CSS::Display::from_short(CSS::Display::Short::Table));
-        static_cast<CSS::MutableComputedValues&>(table_computed_values).set_height(CSS::Size::make_percentage(CSS::Percentage(100)));
+        // FIXME: Only apply alignment when box overflows
+        auto flex_computed_values = parent.computed_values().clone_inherited_values();
+        auto& mutable_flex_computed_values = static_cast<CSS::MutableComputedValues&>(flex_computed_values);
+        mutable_flex_computed_values.set_display(CSS::Display { CSS::Display::Outside::Block, CSS::Display::Inside::Flex });
+        mutable_flex_computed_values.set_justify_content(CSS::JustifyContent::Center);
+        mutable_flex_computed_values.set_flex_direction(CSS::FlexDirection::Column);
+        mutable_flex_computed_values.set_height(CSS::Size::make_percentage(CSS::Percentage(100)));
+        auto flex_wrapper = parent.heap().template allocate_without_realm<BlockContainer>(parent.document(), nullptr, move(flex_computed_values));
 
-        auto cell_computed_values = parent.computed_values().clone_inherited_values();
-        static_cast<CSS::MutableComputedValues&>(cell_computed_values).set_display(CSS::Display { CSS::Display::Internal::TableCell });
-        static_cast<CSS::MutableComputedValues&>(cell_computed_values).set_vertical_align(CSS::VerticalAlign::Middle);
-
-        auto row_computed_values = parent.computed_values().clone_inherited_values();
-        static_cast<CSS::MutableComputedValues&>(row_computed_values).set_display(CSS::Display { CSS::Display::Internal::TableRow });
-
-        auto table_wrapper = parent.heap().template allocate_without_realm<BlockContainer>(parent.document(), nullptr, move(table_computed_values));
-        auto cell_wrapper = parent.heap().template allocate_without_realm<BlockContainer>(parent.document(), nullptr, move(cell_computed_values));
-        auto row_wrapper = parent.heap().template allocate_without_realm<Box>(parent.document(), nullptr, move(row_computed_values));
-
-        cell_wrapper->set_line_height(parent.line_height());
-        cell_wrapper->set_font(parent.font());
-        cell_wrapper->set_children_are_inline(parent.children_are_inline());
-        row_wrapper->set_children_are_inline(false);
+        auto content_box_computed_values = parent.computed_values().clone_inherited_values();
+        auto content_box_wrapper = parent.heap().template allocate_without_realm<BlockContainer>(parent.document(), nullptr, move(content_box_computed_values));
+        content_box_wrapper->set_font(parent.font());
+        content_box_wrapper->set_line_height(parent.line_height());
+        content_box_wrapper->set_children_are_inline(parent.children_are_inline());
 
         Vector<JS::Handle<Node>> sequence;
         for (auto child = parent.first_child(); child; child = child->next_sibling()) {
@@ -410,12 +405,12 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
 
         for (auto& node : sequence) {
             parent.remove_child(*node);
-            cell_wrapper->append_child(*node);
+            content_box_wrapper->append_child(*node);
         }
 
-        row_wrapper->append_child(*cell_wrapper);
-        table_wrapper->append_child(*row_wrapper);
-        parent.append_child(*table_wrapper);
+        flex_wrapper->append_child(*content_box_wrapper);
+
+        parent.append_child(*flex_wrapper);
     }
 
     return {};
