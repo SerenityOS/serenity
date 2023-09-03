@@ -58,7 +58,7 @@ public:
 
     [[nodiscard]] JS::NonnullGCPtr<TimeRanges> buffered() const;
 
-    WebIDL::ExceptionOr<Bindings::CanPlayTypeResult> can_play_type(DeprecatedString const& type) const;
+    WebIDL::ExceptionOr<Bindings::CanPlayTypeResult> can_play_type(StringView type) const;
 
     enum class ReadyState : u16 {
         HaveNothing,

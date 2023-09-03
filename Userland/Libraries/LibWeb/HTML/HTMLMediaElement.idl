@@ -11,7 +11,7 @@ enum CanPlayTypeResult {
 };
 
 // https://html.spec.whatwg.org/multipage/media.html#htmlmediaelement
-[Exposed=Window, UseDeprecatedAKString]
+[Exposed=Window]
 interface HTMLMediaElement : HTMLElement {
 
     // error state
