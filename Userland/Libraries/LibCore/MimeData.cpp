@@ -141,7 +141,7 @@ static Array const s_registered_mime_type = {
 
     MimeType { .name = "text/css"sv, .common_extensions = { ".css"sv }, .description = "Cascading Style Sheet"sv },
     MimeType { .name = "text/csv"sv, .common_extensions = { ".csv"sv }, .description = "CSV text"sv },
-    MimeType { .name = "text/html"sv, .common_extensions = { ".html"sv, ".htm"sv, "/"sv }, .description = "HTML document"sv }, // FIXME: The "/" seems dubious
+    MimeType { .name = "text/html"sv, .common_extensions = { ".html"sv, ".htm"sv, ".xht"sv, "/"sv }, .description = "HTML document"sv }, // FIXME: The "/" seems dubious
     MimeType { .name = "text/markdown"sv, .common_extensions = { ".md"sv }, .description = "Markdown document"sv },
     MimeType { .name = "text/plain"sv, .common_extensions = Vector(s_plaintext_suffixes.span()), .description = "plain text"sv },
     MimeType { .name = "text/x-shellscript"sv, .common_extensions = { ".sh"sv }, .description = "POSIX shell script text executable"sv, .magic_bytes = Vector<u8> { '#', '!', '/', 'b', 'i', 'n', '/', 's', 'h', '\n' } },
