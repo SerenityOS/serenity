@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ladybird wip\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-03 00:08+0300\n"
+"POT-Creation-Date: 2023-09-03 12:13+0200\n"
 "Language: eo\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -17,11 +17,11 @@ msgstr ""
 msgid "%d%%"
 msgstr ""
 
-#: window.blp:144 window.blp:243
+#: window.blp:148 window.blp:247
 msgid "Bookmarks"
 msgstr "Legosignoj"
 
-#: window.blp:47
+#: window.blp:51
 msgid "Bookmarks & History"
 msgstr "Legosignoj kaj Historio"
 
@@ -29,7 +29,7 @@ msgstr "Legosignoj kaj Historio"
 msgid "Cancel"
 msgstr ""
 
-#: window.blp:33
+#: window.blp:37
 msgid "Close _Other Tabs"
 msgstr "Fermi _aliajn langetojn"
 
@@ -61,7 +61,7 @@ msgstr "Enfokusigi lokan enskribigon"
 msgid "General"
 msgstr "Ĝenerala"
 
-#: Tab.cpp:48
+#: Tab.cpp:48 window.blp:16
 msgid "JavaScript Console"
 msgstr "Ĝavoskripta konzolo"
 
@@ -75,15 +75,15 @@ msgstr ""
 "Ĝavoskripto-motoro, estigita de granda teamo kontribuantoj kiel parto de la "
 "SerenityOS-projekto."
 
-#: window.blp:157
+#: window.blp:161
 msgid "Main Menu"
 msgstr "Ĉefa menuo"
 
-#: window.blp:96 window.blp:219
+#: window.blp:100 window.blp:223
 msgid "Navigate Back"
 msgstr "Navigi malantaŭ"
 
-#: window.blp:102 window.blp:225
+#: window.blp:106 window.blp:229
 msgid "Navigate Forward"
 msgstr "Navigi antaŭ"
 
@@ -99,11 +99,11 @@ msgstr "Navigi antaŭ"
 msgid "Navigation"
 msgstr "Navigado"
 
-#: window.blp:114
+#: window.blp:118
 msgid "New Tab"
 msgstr "Nova langeto"
 
-#: window.blp:11 window.blp:39
+#: window.blp:11 window.blp:43
 msgid "New _Incognito Window"
 msgstr "Nova _inkognita fenestro"
 
@@ -132,7 +132,7 @@ msgid "Open file"
 msgstr "Malfermi dosieron"
 
 #. Translators: this is a menu item for pinning a tab.
-#: window.blp:22
+#: window.blp:26
 msgid "P_in"
 msgstr "Al_pingli"
 
@@ -144,7 +144,7 @@ msgstr "Antaŭa langeto"
 msgid "Quit"
 msgstr "Ĉesi"
 
-#: window.blp:108 window.blp:231
+#: window.blp:112 window.blp:235
 msgid "Reload Page"
 msgstr "Reŝargi paĝon"
 
@@ -156,7 +156,7 @@ msgstr "Reŝargi aktualan paĝon"
 msgid "Reset zoom"
 msgstr "Reagordi zomon"
 
-#: window.blp:175
+#: window.blp:179
 msgid "Restore Zoom"
 msgstr "Restaŭri zomon"
 
@@ -165,7 +165,7 @@ msgid "Sam Atkins"
 msgstr "Sam Atkins"
 
 #. Translators: this is the placeholder text for the main location entry.
-#: window.blp:127
+#: window.blp:131
 msgid "Search or enter a URL to open…"
 msgstr "Serĉi aŭ entajpi URL-on…"
 
@@ -186,7 +186,7 @@ msgstr "Sergey Bugaev"
 msgid "Show shortcuts"
 msgstr "Montri klavkombinoj"
 
-#: window.blp:151
+#: window.blp:155
 msgid "Tab Overview"
 msgstr "Langeta superrigardo"
 
@@ -195,7 +195,7 @@ msgid "Tabs"
 msgstr "Langetoj"
 
 #. Translators: this is a menu item for unpinning a tab.
-#: window.blp:28
+#: window.blp:32
 msgid "Unp_in"
 msgstr "De_pingli"
 
@@ -215,11 +215,11 @@ msgstr ""
 msgid "Zoom"
 msgstr "Zomi"
 
-#: window.blp:185
+#: window.blp:189
 msgid "Zoom In"
 msgstr "Zomi"
 
-#: window.blp:170
+#: window.blp:174
 msgid "Zoom Out"
 msgstr "Malzomi"
 
@@ -231,37 +231,41 @@ msgstr "Zomi"
 msgid "Zoom out"
 msgstr "Malzomi"
 
-#: window.blp:14 window.blp:42
+#: window.blp:18 window.blp:46
 msgid "_About Ladybird"
 msgstr "_Pri Ladybird"
 
-#: window.blp:34
+#: window.blp:38
 msgid "_Close"
 msgstr "_Fermi"
 
-#: window.blp:19
+#: window.blp:23
 msgid "_Duplicate"
 msgstr "_Duobligi"
 
-#: window.blp:13 window.blp:41
+#: window.blp:13 window.blp:45
 msgid "_Keyboard Shortcuts"
 msgstr "_Klavkombinoj"
 
-#: window.blp:32
+#: window.blp:36
 msgid "_Move to New Window"
 msgstr "_Movi al nova fenestro"
 
-#: window.blp:10 window.blp:38
+#: window.blp:10 window.blp:42
 msgid "_New Window"
 msgstr "_Nova fenestro"
 
-#: window.blp:12 window.blp:40
+#: window.blp:12 window.blp:44
 msgid "_Open File"
 msgstr "_Malfermi dosieron"
 
-#: window.blp:18
+#: window.blp:22
 msgid "_Reload"
 msgstr "_Reŝargi"
+
+#: window.blp:15
+msgid "_Tools"
+msgstr ""
 
 #. Translators: credit yourself here :^)
 #: Application.cpp:64
@@ -275,6 +279,6 @@ msgstr "© 2023 La programistoj de SerenityOS"
 #. Translators: this is a placeholder content for the Bookmarks & History
 #. popover; it will go away once we implement it, so you can skip translating
 #. it. But it also doesn't hurt to translate it either, if you want to.
-#: window.blp:51
+#: window.blp:55
 msgid "…will appear here, once we implement them :^)"
 msgstr "…aperos ĉi tie, post kiam ni realigos ilin :^)"

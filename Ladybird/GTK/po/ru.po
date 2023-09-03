@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ladybird wip\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-03 00:08+0300\n"
+"POT-Creation-Date: 2023-09-03 12:13+0200\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -18,11 +18,11 @@ msgstr ""
 msgid "%d%%"
 msgstr ""
 
-#: window.blp:144 window.blp:243
+#: window.blp:148 window.blp:247
 msgid "Bookmarks"
 msgstr "Закладки"
 
-#: window.blp:47
+#: window.blp:51
 #, fuzzy
 msgid "Bookmarks & History"
 msgstr "Закладки и история"
@@ -31,7 +31,7 @@ msgstr "Закладки и история"
 msgid "Cancel"
 msgstr "Отменить"
 
-#: window.blp:33
+#: window.blp:37
 msgid "Close _Other Tabs"
 msgstr "Закрыть _остальные вкладки"
 
@@ -63,7 +63,7 @@ msgstr "Сфокусировать поле ввода адреса"
 msgid "General"
 msgstr "Общие"
 
-#: Tab.cpp:48
+#: Tab.cpp:48 window.blp:16
 msgid "JavaScript Console"
 msgstr "Консоль JavaScript"
 
@@ -76,15 +76,15 @@ msgstr ""
 "Ladybird — это браузер, основанный на веб-движке LibWeb и JavaScript-движке "
 "LibJS, развиваемый большой командой участников как часть проекта SerenityOS."
 
-#: window.blp:157
+#: window.blp:161
 msgid "Main Menu"
 msgstr "Главное меню"
 
-#: window.blp:96 window.blp:219
+#: window.blp:100 window.blp:223
 msgid "Navigate Back"
 msgstr "Назад"
 
-#: window.blp:102 window.blp:225
+#: window.blp:106 window.blp:229
 msgid "Navigate Forward"
 msgstr "Вперёд"
 
@@ -100,11 +100,11 @@ msgstr "Вперёд"
 msgid "Navigation"
 msgstr "Навигация"
 
-#: window.blp:114
+#: window.blp:118
 msgid "New Tab"
 msgstr "Новая вкладка"
 
-#: window.blp:11 window.blp:39
+#: window.blp:11 window.blp:43
 msgid "New _Incognito Window"
 msgstr "Новое окно _инкогнито"
 
@@ -133,7 +133,7 @@ msgid "Open file"
 msgstr "Открыть файл"
 
 #. Translators: this is a menu item for pinning a tab.
-#: window.blp:22
+#: window.blp:26
 msgid "P_in"
 msgstr "_Закрепить"
 
@@ -145,7 +145,7 @@ msgstr "Предыдущая вкладка"
 msgid "Quit"
 msgstr "Выйти"
 
-#: window.blp:108 window.blp:231
+#: window.blp:112 window.blp:235
 msgid "Reload Page"
 msgstr "Перезагрузить страницу"
 
@@ -157,7 +157,7 @@ msgstr "Перезагрузить текущую страницу"
 msgid "Reset zoom"
 msgstr "Восстановить масштаб"
 
-#: window.blp:175
+#: window.blp:179
 msgid "Restore Zoom"
 msgstr "Восстановить масштаб"
 
@@ -166,7 +166,7 @@ msgid "Sam Atkins"
 msgstr "Сэм Эткинс"
 
 #. Translators: this is the placeholder text for the main location entry.
-#: window.blp:127
+#: window.blp:131
 msgid "Search or enter a URL to open…"
 msgstr "Введите URL или поисковый запрос…"
 
@@ -187,7 +187,7 @@ msgstr "Сергей Бугаев"
 msgid "Show shortcuts"
 msgstr "Комбинации клавиш"
 
-#: window.blp:151
+#: window.blp:155
 msgid "Tab Overview"
 msgstr "Обзор вкладок"
 
@@ -196,7 +196,7 @@ msgid "Tabs"
 msgstr "Вкладки"
 
 #. Translators: this is a menu item for unpinning a tab.
-#: window.blp:28
+#: window.blp:32
 msgid "Unp_in"
 msgstr "_Открепить"
 
@@ -216,11 +216,11 @@ msgstr "Веб-страница запрашивает подтверждени�
 msgid "Zoom"
 msgstr "Масштаб"
 
-#: window.blp:185
+#: window.blp:189
 msgid "Zoom In"
 msgstr "Увеличить масштаб"
 
-#: window.blp:170
+#: window.blp:174
 msgid "Zoom Out"
 msgstr "Уменьшить масштаб"
 
@@ -232,37 +232,41 @@ msgstr "Увеличить масштаб"
 msgid "Zoom out"
 msgstr "Уменьшить масштаб"
 
-#: window.blp:14 window.blp:42
+#: window.blp:18 window.blp:46
 msgid "_About Ladybird"
 msgstr "О Ladybird"
 
-#: window.blp:34
+#: window.blp:38
 msgid "_Close"
 msgstr "_Закрыть"
 
-#: window.blp:19
+#: window.blp:23
 msgid "_Duplicate"
 msgstr "_Дублировать"
 
-#: window.blp:13 window.blp:41
+#: window.blp:13 window.blp:45
 msgid "_Keyboard Shortcuts"
 msgstr "_Комбинации клавиш"
 
-#: window.blp:32
+#: window.blp:36
 msgid "_Move to New Window"
 msgstr "Переместить в _другое окно"
 
-#: window.blp:10 window.blp:38
+#: window.blp:10 window.blp:42
 msgid "_New Window"
 msgstr "_Новое окно"
 
-#: window.blp:12 window.blp:40
+#: window.blp:12 window.blp:44
 msgid "_Open File"
 msgstr "_Открыть файл"
 
-#: window.blp:18
+#: window.blp:22
 msgid "_Reload"
 msgstr "_Перезагрузить"
+
+#: window.blp:15
+msgid "_Tools"
+msgstr ""
 
 #. Translators: credit yourself here :^)
 #: Application.cpp:64
@@ -276,6 +280,6 @@ msgstr "© 2023 Разработчики SerenityOS"
 #. Translators: this is a placeholder content for the Bookmarks & History
 #. popover; it will go away once we implement it, so you can skip translating
 #. it. But it also doesn't hurt to translate it either, if you want to.
-#: window.blp:51
+#: window.blp:55
 msgid "…will appear here, once we implement them :^)"
 msgstr "…будут здесь, когда мы их реализуем :^)"
