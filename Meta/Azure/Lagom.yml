@@ -12,9 +12,9 @@ jobs:
       value: $(Build.SourcesDirectory)/.ccache
 
     - name: job_pool
-      ${{ if or(eq(parameters.os, 'Linux'), eq(parameters.os, 'Android')) }}:
+      ${{ if eq(parameters.os, 'Linux') }}:
         value: ubuntu-22.04
-      ${{ if eq(parameters.os, 'macOS') }}:
+      ${{ if or(eq(parameters.os, 'macOS'), eq(parameters.os, 'Android')) }}:
         value: macos-12
 
     - name: toolchain
@@ -64,29 +64,37 @@ jobs:
         displayName: "Install NDK $(ndk_version)"
 
       - script: |
-          set -e
-          cmake -GNinja -B tools-build \
-            -DBUILD_LAGOM=OFF \
-            -DENABLE_LAGOM_CCACHE=ON \
-            -DCMAKE_C_COMPILER=$(host-cc) \
-            -DCMAKE_CXX_COMPILER=$(host-cxx) \
-            -DCMAKE_INSTALL_PREFIX=tool-install \
-            -Dpackage=LagomTools
-          ninja -C tools-build install
-          cmake -GNinja -B Build \
-            -DBUILD_LAGOM=ON \
-            -DENABLE_LAGOM_CCACHE=ON \
-            -DBUILD_SHARED_LIBS=OFF \
-            -DANDROID_ABI=arm64-v8a \
-            -DANDROID_NATIVE_API_LEVEL=30 \
-            -DANDROID_NDK=$ANDROID_SDK_ROOT/ndk/$(ndk_version) \
-            -DANDROID_STL=c++_shared \
-            -DCMAKE_TOOLCHAIN_FILE=$ANDROID_SDK_ROOT/ndk/$(ndk_version)/build/cmake/android.toolchain.cmake \
-            -DLagomTools_DIR=$(Build.SourcesDirectory)/Meta/Lagom/tool-install/share/LagomTools
-        displayName: 'Create Build Environment'
-        workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom
+          # Install AVD files
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install 'system-images;android-30;google_apis;x86_64'
+
+          # Create emulator
+          echo "no" | $ANDROID_HOME/tools/bin/avdmanager create avd -n xamarin_android_emulator -k 'system-images;android-30;google_apis;x86_64' --force
+
+          $ANDROID_HOME/emulator/emulator -list-avds
+
+          echo "Starting emulator"
+
+          # Start emulator in background
+          nohup $ANDROID_HOME/emulator/emulator -avd xamarin_android_emulator -no-snapshot > /dev/null 2>&1 &
+          $ANDROID_HOME/platform-tools/adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed | tr -d '\r') ]]; do sleep 1; done; input keyevent 82'
+          $ANDROID_HOME/platform-tools/adb devices
+          echo "Emulator started"
+        displayName: "Start Android Emulator"
+
+      - task: Gradle@2
+        inputs:
+          workingDirectory: ''
+          gradleWrapperFile: 'gradlew'
+          gradleOptions: '-Xmx3072m'
+          jdkVersionOption: '17'
+          jdkArchitectureOption: 'x64'
+          publishJUnitResults: true
+          testResultsFiles: '**/TEST-*.xml'
+          tasks: 'connectedAndroidTest'
         env:
           CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
+          SERENITY_CACHE_DIR: "$(Build.SourcesDirectory)/Meta/Lagom/caches"
+        displayName: "Build and Test in Android Emulator"
 
     - ${{ elseif eq(parameters.fuzzer, 'Fuzz') }}:
       - script: |
@@ -128,14 +136,15 @@ jobs:
           PATH: '$(PATH):$(Build.SourcesDirectory)/wabt-1.0.23/bin'
           CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
 
-    - script: |
-        set -e
-        cmake --build .
-        cmake --install . --prefix $(Build.SourcesDirectory)/Meta/Lagom/Install
-      displayName: 'Build'
-      workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom/Build
-      env:
-        CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
+    - ${{ if not(eq(parameters.os, 'Android')) }}:
+        - script: |
+            set -e
+            cmake --build .
+            cmake --install . --prefix $(Build.SourcesDirectory)/Meta/Lagom/Install
+          displayName: 'Build'
+          workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom/Build
+          env:
+            CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
 
     - ${{ if and(eq(parameters.fuzzer, 'NoFuzz'), not(eq(parameters.os, 'Android')) ) }}:
       - script: |

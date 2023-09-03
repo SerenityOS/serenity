@@ -5,11 +5,13 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+var cacheDir = System.getenv("SERENITY_CACHE_DIR") ?: "$buildDir/caches"
+
 // FIXME: Move this somewhere nicer, with better behavior (like controlling host compiler)
 task<Exec>("buildLagomTools") {
     commandLine = listOf("sh", "-c", "cmake -S ../../Meta/Lagom -B $buildDir/lagom-tools " +
         " -Dpackage=LagomTools -DCMAKE_INSTALL_PREFIX=$buildDir/lagom-tools-install -GNinja" +
-        " -DSERENITY_CACHE_DIR=$buildDir/caches;" +
+        " -DSERENITY_CACHE_DIR=$cacheDir;" +
         " ninja -C $buildDir/lagom-tools install")
 }
 tasks.named("preBuild").dependsOn("buildLagomTools")
@@ -31,7 +33,7 @@ android {
                 cppFlags += "-std=c++20"
                 arguments += listOf(
                     "-DLagomTools_DIR=$buildDir/lagom-tools-install/share/LagomTools",
-                    "-DSERENITY_CACHE_DIR=$buildDir/caches"
+                    "-DSERENITY_CACHE_DIR=$cacheDir"
                 )
             }
         }
