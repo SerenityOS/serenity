@@ -6,12 +6,12 @@
 
 #pragma once
 
+#include <LibGUI/Frame.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Widget.h>
 #include <LibProtocol/Request.h>
 #include <LibProtocol/RequestClient.h>
 
-class MapWidget final : public GUI::Widget {
+class MapWidget final : public GUI::Frame {
     C_OBJECT(MapWidget);
 
 public:

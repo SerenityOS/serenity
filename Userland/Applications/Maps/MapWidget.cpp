@@ -283,9 +283,14 @@ void MapWidget::paint_attribution(GUI::Painter& painter)
     painter.draw_text(attribution_text_rect, m_attribution_text, Gfx::TextAlignment::BottomRight, panel_foreground_color);
 }
 
-void MapWidget::paint_event(GUI::PaintEvent&)
+void MapWidget::paint_event(GUI::PaintEvent& event)
 {
+    GUI::Frame::paint_event(event);
+
     GUI::Painter painter(*this);
+    painter.add_clip_rect(frame_inner_rect());
+    painter.add_clip_rect(event.rect());
+
     painter.fill_rect(rect(), map_background_color);
 
     if (m_connection_failed) {
