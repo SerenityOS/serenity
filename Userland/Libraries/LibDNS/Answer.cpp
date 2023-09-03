@@ -24,7 +24,7 @@ Answer::Answer(Name const& name, RecordType type, RecordClass class_code, u32 tt
 
 bool Answer::has_expired() const
 {
-    return time(nullptr) >= m_received_time + m_ttl;
+    return time(nullptr) >= static_cast<time_t>(m_received_time + m_ttl);
 }
 
 unsigned Answer::hash() const
