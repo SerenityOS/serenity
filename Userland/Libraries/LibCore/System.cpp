@@ -479,6 +479,15 @@ ErrorOr<int> anon_create([[maybe_unused]] size_t size, [[maybe_unused]] int opti
         TRY(close(fd));
         return Error::from_errno(saved_errno);
     }
+#elif defined(SHM_ANON)
+    fd = shm_open(SHM_ANON, O_RDWR | O_CREAT | options, 0600);
+    if (fd < 0)
+        return Error::from_errno(errno);
+    if (::ftruncate(fd, size) < 0) {
+        auto saved_errno = errno;
+        TRY(close(fd));
+        return Error::from_errno(saved_errno);
+    }
 #elif defined(AK_OS_BSD_GENERIC) || defined(AK_OS_EMSCRIPTEN)
     struct timespec time;
     clock_gettime(CLOCK_REALTIME, &time);
