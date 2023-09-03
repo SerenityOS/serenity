@@ -20,34 +20,34 @@ public:
     DeprecatedString origin() const;
 
     DeprecatedString href() const;
-    WebIDL::ExceptionOr<void> set_href(DeprecatedString);
+    WebIDL::ExceptionOr<void> set_href(StringView);
 
     DeprecatedString protocol() const;
-    void set_protocol(DeprecatedString);
+    void set_protocol(StringView);
 
     DeprecatedString username() const;
-    void set_username(DeprecatedString);
+    void set_username(StringView);
 
     DeprecatedString password() const;
-    void set_password(DeprecatedString);
+    void set_password(StringView);
 
     DeprecatedString host() const;
-    void set_host(DeprecatedString);
+    void set_host(StringView);
 
     DeprecatedString hostname() const;
-    void set_hostname(DeprecatedString);
+    void set_hostname(StringView);
 
     DeprecatedString port() const;
-    void set_port(DeprecatedString);
+    void set_port(StringView);
 
     DeprecatedString pathname() const;
-    void set_pathname(DeprecatedString);
+    void set_pathname(StringView);
 
     DeprecatedString search() const;
-    void set_search(DeprecatedString);
+    void set_search(StringView);
 
     DeprecatedString hash() const;
-    void set_hash(DeprecatedString);
+    void set_hash(StringView);
 
 protected:
     virtual DOM::Document& hyperlink_element_utils_document() = 0;
