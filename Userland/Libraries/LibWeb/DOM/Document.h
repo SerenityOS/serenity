@@ -503,6 +503,7 @@ public:
     bool is_allowed_to_use_feature(PolicyControlledFeature) const;
 
     void did_stop_being_active_document_in_browsing_context(Badge<HTML::BrowsingContext>);
+    void did_stop_being_active_document_in_navigable();
 
     bool query_command_supported(String const&) const;
 
