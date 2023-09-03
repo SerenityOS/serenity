@@ -9,6 +9,9 @@
 #include <AK/SIMD.h>
 #include <AK/SIMDMath.h>
 
+// See the comment in <AK/SIMDMath.h>
+#pragma GCC diagnostic ignored "-Wpsabi"
+
 TEST_CASE(exp)
 {
     AK::SIMD::f32x4 v = { .2f, .4f, .6f, .8f };
