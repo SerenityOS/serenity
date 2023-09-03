@@ -239,6 +239,17 @@ bool DOMMatrixReadOnly::is_identity() const
     return true;
 }
 
+// https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-multiply
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> DOMMatrixReadOnly::multiply(DOMMatrixInit other)
+{
+    // 1. Let result be the resulting matrix initialized to the values of the current matrix.
+    auto result = DOMMatrix::create_from_dom_matrix_read_only(realm(), *this);
+
+    // 2. Perform a multiplySelf() transformation on result with the argument other.
+    // 3. Return result.
+    return result->multiply_self(other);
+}
+
 // https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-inverse
 JS::NonnullGCPtr<DOMMatrix> DOMMatrixReadOnly::inverse() const
 {

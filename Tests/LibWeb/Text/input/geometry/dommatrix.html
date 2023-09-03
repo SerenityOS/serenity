@@ -11,5 +11,8 @@
 
         // 2. Creating a DOMMatrix with fromMatrix
         testPart(() => DOMMatrix.fromMatrix({ a: 10, b: 20, c: 30, d: 40, e: 50, f: 60 }));
+
+        // 3. Multiply DOMMatrix by DOMMatrix
+        testPart(() => new DOMMatrix([10, 20, 30, 40, 50, 60]).multiply(new DOMMatrix([10, 20, 30, 40, 50, 60])));
     });
 </script>

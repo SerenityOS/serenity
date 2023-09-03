@@ -253,6 +253,46 @@ void DOMMatrix::set_f(double value)
     set_m42(value);
 }
 
+// https://drafts.fxtf.org/geometry/#dom-dommatrix-multiplyself
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> DOMMatrix::multiply_self(DOMMatrixInit other)
+{
+    // 1. Let otherObject be the result of invoking create a DOMMatrix from the dictionary other.
+    auto maybe_other_object = DOMMatrix::create_from_dom_matrix_2d_init(realm(), other);
+    if (maybe_other_object.is_exception())
+        return maybe_other_object.exception();
+    auto other_object = maybe_other_object.release_value();
+
+    // 2. The otherObject matrix gets post-multiplied to the current matrix.
+    m_matrix = m_matrix * other_object->m_matrix;
+
+    // 3. If is 2D of otherObject is false, set is 2D of the current matrix to false.
+    if (!other_object->m_is_2d)
+        m_is_2d = false;
+
+    // 4. Return the current matrix.
+    return JS::NonnullGCPtr<DOMMatrix>(*this);
+}
+
+// https://drafts.fxtf.org/geometry/#dom-dommatrix-premultiplyself
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> DOMMatrix::pre_multiply_self(DOMMatrixInit other)
+{
+    // 1. Let otherObject be the result of invoking create a DOMMatrix from the dictionary other.
+    auto maybe_other_object = DOMMatrix::create_from_dom_matrix_2d_init(realm(), other);
+    if (maybe_other_object.is_exception())
+        return maybe_other_object.exception();
+    auto other_object = maybe_other_object.release_value();
+
+    // 2. The otherObject matrix gets pre-multiplied to the current matrix.
+    m_matrix = other_object->m_matrix * m_matrix;
+
+    // 3. If is 2D of otherObject is false, set is 2D of the current matrix to false.
+    if (!other_object->m_is_2d)
+        m_is_2d = false;
+
+    // 4. Return the current matrix.
+    return JS::NonnullGCPtr<DOMMatrix>(*this);
+}
+
 // https://drafts.fxtf.org/geometry/#dom-dommatrix-invertself
 JS::NonnullGCPtr<DOMMatrix> DOMMatrix::invert_self()
 {
