@@ -55,29 +55,30 @@ double Token::double_value() const
 {
     VERIFY(type() == TokenType::NumericLiteral);
 
-    StringBuilder builder;
+    Vector<char, 32> buffer;
 
     for (auto ch : value()) {
         if (ch == '_')
             continue;
-        builder.append(ch);
+        buffer.append(ch);
     }
+    buffer.append('\0');
 
-    auto value_string = builder.to_deprecated_string();
+    auto value_string = StringView { buffer.data(), buffer.size() - 1 };
     if (value_string[0] == '0' && value_string.length() >= 2) {
         if (value_string[1] == 'x' || value_string[1] == 'X') {
             // hexadecimal
-            return static_cast<double>(strtoul(value_string.characters() + 2, nullptr, 16));
+            return static_cast<double>(strtoul(value_string.characters_without_null_termination() + 2, nullptr, 16));
         } else if (value_string[1] == 'o' || value_string[1] == 'O') {
             // octal
-            return static_cast<double>(strtoul(value_string.characters() + 2, nullptr, 8));
+            return static_cast<double>(strtoul(value_string.characters_without_null_termination() + 2, nullptr, 8));
         } else if (value_string[1] == 'b' || value_string[1] == 'B') {
             // binary
-            return static_cast<double>(strtoul(value_string.characters() + 2, nullptr, 2));
+            return static_cast<double>(strtoul(value_string.characters_without_null_termination() + 2, nullptr, 2));
         } else if (is_ascii_digit(value_string[1])) {
             // also octal, but syntax error in strict mode
             if (!value().contains('8') && !value().contains('9'))
-                return static_cast<double>(strtoul(value_string.characters() + 1, nullptr, 8));
+                return static_cast<double>(strtoul(value_string.characters_without_null_termination() + 1, nullptr, 8));
         }
     }
     // This should always be a valid double
