@@ -6,6 +6,7 @@
 
 #include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
+#include <AK/ScopeGuard.h>
 #include <LibTimeZone/TimeZone.h>
 #include <limits.h>
 #include <stdio.h>
@@ -106,10 +107,11 @@ StringView current_time_zone()
     return system_time_zone();
 #else
     static constexpr auto zoneinfo = "/zoneinfo/"sv;
-    char buffer[PATH_MAX];
+    char* real_path = realpath("/etc/localtime", nullptr);
+    ScopeGuard free_path = [real_path]() { free(real_path); };
 
-    if (realpath("/etc/localtime", buffer)) {
-        auto time_zone = StringView { buffer, strlen(buffer) };
+    if (real_path) {
+        auto time_zone = StringView { real_path, strlen(real_path) };
 
         if (auto index = time_zone.find(zoneinfo); index.has_value())
             time_zone = time_zone.substring_view(*index + zoneinfo.length());
