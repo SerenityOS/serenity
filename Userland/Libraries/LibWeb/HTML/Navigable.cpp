@@ -1293,8 +1293,8 @@ void Navigable::reload()
 
     // 3. Append the following session history traversal steps to traversable:
     traversable->append_session_history_traversal_steps([traversable] {
-        // 1. Apply pending history changes to traversable with true.
-        traversable->apply_pending_history_changes();
+        // 1. Apply the reload history step to traversable.
+        traversable->apply_the_reload_history_step();
     });
 }
 
@@ -1438,8 +1438,8 @@ void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable> navigable,
         target_step = traversable->current_session_history_step();
     }
 
-    // FIXME: 10. Apply the push/replace history step targetStep to traversable.
-    traversable->apply_the_history_step(target_step);
+    // 10. Apply the push/replace history step targetStep to traversable.
+    traversable->apply_the_push_or_replace_history_step(target_step);
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#url-and-history-update-steps

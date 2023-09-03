@@ -37,8 +37,9 @@ public:
     };
     HistoryObjectLengthAndIndex get_the_history_object_length_and_index(int) const;
 
-    void apply_the_history_step(int step, Optional<SourceSnapshotParams> = {});
-    void apply_pending_history_changes();
+    void apply_the_reload_history_step();
+    void apply_the_push_or_replace_history_step(int step);
+    void update_for_navigable_creation_or_destruction();
 
     int get_the_used_step(int step) const;
     Vector<JS::Handle<Navigable>> get_all_navigables_whose_current_session_history_entry_will_change_or_reload(int) const;
@@ -61,6 +62,8 @@ private:
     TraversableNavigable(Page&);
 
     virtual void visit_edges(Cell::Visitor&) override;
+
+    void apply_the_history_step(int step, Optional<SourceSnapshotParams> = {});
 
     // https://html.spec.whatwg.org/multipage/document-sequences.html#tn-current-session-history-step
     int m_current_session_history_step { 0 };

@@ -498,14 +498,34 @@ void TraversableNavigable::traverse_the_history_by_delta(int delta)
     });
 }
 
-// https://html.spec.whatwg.org/multipage/browsing-the-web.html#apply-pending-history-changes
-void TraversableNavigable::apply_pending_history_changes()
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#update-for-navigable-creation/destruction
+void TraversableNavigable::update_for_navigable_creation_or_destruction()
 {
-    // 1. Let targetStep be traversable's current session history step.
-    auto target_step = current_session_history_step();
+    // 1. Let step be traversable's current session history step.
+    auto step = current_session_history_step();
 
-    // 2. Apply the history step targetStep to traversable with checkForUserCancelation set to checkForUserCancelation.
-    apply_the_history_step(target_step);
+    // 2. Return the result of applying the history step step to traversable given false, false, null, null, and null.
+    // FIXME: Pass false, false, null, null, and null as arguments.
+    apply_the_history_step(step);
+}
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#apply-the-reload-history-step
+void TraversableNavigable::apply_the_reload_history_step()
+{
+    // 1. Let step be traversable's current session history step.
+    auto step = current_session_history_step();
+
+    // 2. Return the result of applying the history step step to traversable given true, false, null, null, and null.
+    // FIXME: Pass true, false, null, null, and null as arguments.
+    apply_the_history_step(step);
+}
+
+void TraversableNavigable::apply_the_push_or_replace_history_step(int step)
+{
+    // 1. Return the result of applying the history step step to traversable given false, false, null, null, and null.
+    // FIXME: Pass false, false, null, null, and null as arguments.
+    // FIXME: Return result of history application.
+    apply_the_history_step(step);
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#close-a-top-level-traversable
@@ -595,7 +615,7 @@ void finalize_a_same_document_navigation(JS::NonnullGCPtr<TraversableNavigable> 
     }
 
     // 6. Apply the push/replace history step targetStep to traversable.
-    traversable->apply_the_history_step(*target_step);
+    traversable->apply_the_push_or_replace_history_step(*target_step);
 }
 
 }
