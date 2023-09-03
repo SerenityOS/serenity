@@ -114,7 +114,7 @@ WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(J
             for (auto const& option_element : select_element->list_of_options()) {
                 if (option_element->selected() && !option_element->disabled()) {
                     auto option_name = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(option_element->name()));
-                    auto option_value = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(option_element->value()));
+                    auto option_value = option_element->value();
                     TRY_OR_THROW_OOM(vm, entry_list.try_append(XHR::FormDataEntry { .name = move(option_name), .value = move(option_value) }));
                 }
             }

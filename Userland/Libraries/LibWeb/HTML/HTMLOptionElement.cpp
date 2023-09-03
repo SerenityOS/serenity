@@ -60,18 +60,15 @@ void HTMLOptionElement::set_selected(bool selected)
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-option-value
-DeprecatedString HTMLOptionElement::value() const
+String HTMLOptionElement::value() const
 {
     // The value of an option element is the value of the value content attribute, if there is one.
-    if (auto value_attr = get_attribute(HTML::AttributeNames::value); !value_attr.is_null())
-        return value_attr;
-
     // ...or, if there is not, the value of the element's text IDL attribute.
-    return text();
+    return attribute(HTML::AttributeNames::value).value_or(text());
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-option-value
-WebIDL::ExceptionOr<void> HTMLOptionElement::set_value(DeprecatedString value)
+WebIDL::ExceptionOr<void> HTMLOptionElement::set_value(String const& value)
 {
     return set_attribute(HTML::AttributeNames::value, value);
 }
@@ -89,7 +86,7 @@ static void concatenate_descendants_text_content(DOM::Node const* node, StringBu
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-option-text
-DeprecatedString HTMLOptionElement::text() const
+String HTMLOptionElement::text() const
 {
     StringBuilder builder;
 
@@ -101,13 +98,13 @@ DeprecatedString HTMLOptionElement::text() const
     });
 
     // Return the result of stripping and collapsing ASCII whitespace from the above concatenation.
-    return Infra::strip_and_collapse_whitespace(builder.string_view()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+    return MUST(Infra::strip_and_collapse_whitespace(builder.string_view()));
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-option-text
-void HTMLOptionElement::set_text(DeprecatedString text)
+void HTMLOptionElement::set_text(String const& text)
 {
-    string_replace_all(text);
+    string_replace_all(text.to_deprecated_string());
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#concept-option-index
