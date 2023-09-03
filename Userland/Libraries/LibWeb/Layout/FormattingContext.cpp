@@ -880,7 +880,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     };
 
     // If all three of top, height, and bottom are auto:
-    if (top.is_auto() && height.is_auto() && bottom.is_auto()) {
+    if (top.is_auto() && should_treat_height_as_auto(box, available_space) && bottom.is_auto()) {
         // First set any auto values for margin-top and margin-bottom to 0,
         if (margin_top.is_auto())
             margin_top = CSS::Length::make_px(0);
@@ -900,7 +900,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     }
 
     // If none of the three are auto:
-    else if (!top.is_auto() && !height.is_auto() && !bottom.is_auto()) {
+    else if (!top.is_auto() && !should_treat_height_as_auto(box, available_space) && !bottom.is_auto()) {
         // If both margin-top and margin-bottom are auto,
         if (margin_top.is_auto() && margin_bottom.is_auto()) {
             // solve the equation under the extra constraint that the two margins get equal values.
@@ -934,7 +934,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
         // and pick one of the following six rules that apply.
 
         // 1. If top and height are auto and bottom is not auto,
-        if (top.is_auto() && height.is_auto() && !bottom.is_auto()) {
+        if (top.is_auto() && should_treat_height_as_auto(box, available_space) && !bottom.is_auto()) {
             // then the height is based on the Auto heights for block formatting context roots,
             auto maybe_height = compute_auto_height_for_absolutely_positioned_element(box, available_space, before_or_after_inside_layout);
             if (!maybe_height.has_value())
@@ -946,7 +946,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
         }
 
         // 2. If top and bottom are auto and height is not auto,
-        else if (top.is_auto() && bottom.is_auto() && !height.is_auto()) {
+        else if (top.is_auto() && bottom.is_auto() && !should_treat_height_as_auto(box, available_space)) {
             // then set top to the static position,
             top = CSS::Length::make_px(calculate_static_position(box).y());
 
@@ -955,7 +955,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
         }
 
         // 3. If height and bottom are auto and top is not auto,
-        else if (height.is_auto() && bottom.is_auto() && !top.is_auto()) {
+        else if (should_treat_height_as_auto(box, available_space) && bottom.is_auto() && !top.is_auto()) {
             // then the height is based on the Auto heights for block formatting context roots,
             auto maybe_height = compute_auto_height_for_absolutely_positioned_element(box, available_space, before_or_after_inside_layout);
             if (!maybe_height.has_value())
@@ -967,19 +967,19 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
         }
 
         // 4. If top is auto, height and bottom are not auto,
-        else if (top.is_auto() && !height.is_auto() && !bottom.is_auto()) {
+        else if (top.is_auto() && !should_treat_height_as_auto(box, available_space) && !bottom.is_auto()) {
             // then solve for top.
             solve_for_top();
         }
 
         // 5. If height is auto, top and bottom are not auto,
-        else if (height.is_auto() && !top.is_auto() && !bottom.is_auto()) {
+        else if (should_treat_height_as_auto(box, available_space) && !top.is_auto() && !bottom.is_auto()) {
             // then solve for height.
             solve_for_height();
         }
 
         // 6. If bottom is auto, top and height are not auto,
-        else if (bottom.is_auto() && !top.is_auto() && !height.is_auto()) {
+        else if (bottom.is_auto() && !top.is_auto() && !should_treat_height_as_auto(box, available_space)) {
             // then solve for bottom.
             solve_for_bottom();
         }
