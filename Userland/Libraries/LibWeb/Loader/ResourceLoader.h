@@ -22,6 +22,8 @@ namespace Web {
 #    define CPU_STRING "x86_64"
 #elif ARCH(AARCH64)
 #    define CPU_STRING "AArch64"
+#elif ARCH(I386)
+#    define CPU_STRING "x86"
 #endif
 
 #if defined(AK_OS_SERENITY)
