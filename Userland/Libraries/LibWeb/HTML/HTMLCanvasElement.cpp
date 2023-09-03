@@ -153,7 +153,7 @@ JS::ThrowCompletionOr<HTMLCanvasElement::HasOrCreatedContext> HTMLCanvasElement:
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-canvas-getcontext
-JS::ThrowCompletionOr<HTMLCanvasElement::RenderingContext> HTMLCanvasElement::get_context(DeprecatedString const& type, JS::Value options)
+JS::ThrowCompletionOr<HTMLCanvasElement::RenderingContext> HTMLCanvasElement::get_context(String const& type, JS::Value options)
 {
     // 1. If options is not an object, then set options to null.
     if (!options.is_object())
@@ -246,14 +246,14 @@ static ErrorOr<SerializeBitmapResult> serialize_bitmap(Gfx::Bitmap const& bitmap
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-canvas-todataurl
-DeprecatedString HTMLCanvasElement::to_data_url(DeprecatedString const& type, Optional<double> quality) const
+String HTMLCanvasElement::to_data_url(StringView type, Optional<double> quality) const
 {
     // FIXME: 1. If this canvas element's bitmap's origin-clean flag is set to false, then throw a "SecurityError" DOMException.
 
     // 2. If this canvas element's bitmap has no pixels (i.e. either its horizontal dimension or its vertical dimension is zero)
     //    then return the string "data:,". (This is the shortest data: URL; it represents the empty string in a text/plain resource.)
     if (!m_bitmap)
-        return "data:,";
+        return "data:,"_string;
 
     // 3. Let file be a serialization of this canvas element's bitmap as a file, passing type and quality if given.
     auto file = serialize_bitmap(*m_bitmap, type, move(quality));
@@ -261,19 +261,19 @@ DeprecatedString HTMLCanvasElement::to_data_url(DeprecatedString const& type, Op
     // 4. If file is null then return "data:,".
     if (file.is_error()) {
         dbgln("HTMLCanvasElement: Failed to encode canvas bitmap to {}: {}", type, file.error());
-        return "data:,";
+        return "data:,"_string;
     }
 
     // 5. Return a data: URL representing file. [RFC2397]
     auto base64_encoded_or_error = encode_base64(file.value().buffer);
     if (base64_encoded_or_error.is_error()) {
-        return "data:,";
+        return "data:,"_string;
     }
-    return AK::URL::create_with_data(file.value().mime_type, base64_encoded_or_error.release_value(), true).to_deprecated_string();
+    return MUST(AK::URL::create_with_data(file.value().mime_type, base64_encoded_or_error.release_value(), true).to_string());
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-canvas-toblob
-WebIDL::ExceptionOr<void> HTMLCanvasElement::to_blob(JS::NonnullGCPtr<WebIDL::CallbackType> callback, DeprecatedString const& type, Optional<double> quality)
+WebIDL::ExceptionOr<void> HTMLCanvasElement::to_blob(JS::NonnullGCPtr<WebIDL::CallbackType> callback, StringView type, Optional<double> quality)
 {
     // FIXME: 1. If this canvas element's bitmap's origin-clean flag is set to false, then throw a "SecurityError" DOMException.
 
