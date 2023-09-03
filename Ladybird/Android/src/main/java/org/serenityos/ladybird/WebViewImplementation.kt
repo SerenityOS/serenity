@@ -6,19 +6,20 @@
 
 package org.serenityos.ladybird
 
+import android.graphics.Bitmap
 import android.util.Log
 
 /**
  * Wrapper around WebView::ViewImplementation for use by Kotlin
  */
-class WebViewImplementationNative {
+class WebViewImplementation {
     // Instance Pointer to native object, very unsafe :)
     private var nativeInstance = nativeObjectInit()
 
     init {
         Log.d(
             "Ladybird",
-            "New WebViewImplementationNative (Kotlin) with nativeInstance ${this.nativeInstance}"
+            "New WebViewImplementation (Kotlin) with nativeInstance ${this.nativeInstance}"
         )
     }
 
@@ -27,8 +28,19 @@ class WebViewImplementationNative {
         nativeInstance = 0
     }
 
+    fun drawIntoBitmap(bitmap: Bitmap) {
+        nativeDrawIntoBitmap(nativeInstance, bitmap)
+    }
+
+    fun setViewportGeometry(w: Int, h: Int) {
+        nativeSetViewportGeometry(nativeInstance, w, h)
+    }
+
     private external fun nativeObjectInit(): Long
     private external fun nativeObjectDispose(instance: Long)
+
+    private external fun nativeDrawIntoBitmap(instance: Long, bitmap: Bitmap)
+    private external fun nativeSetViewportGeometry(instance: Long, w: Int, h: Int)
 
     companion object {
         /*
