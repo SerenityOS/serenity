@@ -218,6 +218,7 @@ add_dependencies(ladybird SQLServer WebContent WebDriver WebSocketServer Request
 
 function(create_ladybird_bundle target_name)
     set_target_properties(${target_name} PROPERTIES
+        OUTPUT_NAME "Ladybird"
         MACOSX_BUNDLE_GUI_IDENTIFIER org.SerenityOS.Ladybird
         MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
         MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}

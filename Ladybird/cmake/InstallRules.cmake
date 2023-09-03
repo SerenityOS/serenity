@@ -116,8 +116,8 @@ install(FILES
 
 if (APPLE)
   # Fixup the app bundle and copy:
-  #   - Libraries from lib/ to ladybird.app/Contents/lib
-  #   - Resources from share/res/ to ladybird.app/Contents/Resources/res
+  #   - Libraries from lib/ to Ladybird.app/Contents/lib
+  #   - Resources from share/res/ to Ladybird.app/Contents/Resources/res
   install(CODE "
     set(res_dir \${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/res)
     if (IS_ABSOLUTE ${CMAKE_INSTALL_DATADIR})
@@ -128,7 +128,7 @@ if (APPLE)
       set(lib_dir ${CMAKE_INSTALL_LIBDIR})
     endif()
 
-    set(contents_dir \${CMAKE_INSTALL_PREFIX}/bundle/ladybird.app/Contents)
+    set(contents_dir \${CMAKE_INSTALL_PREFIX}/bundle/Ladybird.app/Contents)
     file(COPY \${res_dir} DESTINATION \${contents_dir}/Resources)
     file(COPY \${lib_dir} DESTINATION \${contents_dir})
   "
