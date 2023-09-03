@@ -47,6 +47,13 @@
 #    define AK_COMPILER_GCC
 #endif
 
+#if defined(__GLIBC__)
+#    define AK_LIBC_GLIBC
+#    define AK_LIBC_GLIBC_PREREQ(maj, min) __GLIBC_PREREQ((maj), (min))
+#else
+#    define AK_LIBC_GLIBC_PREREQ(maj, min) 0
+#endif
+
 #if defined(__serenity__)
 #    define AK_OS_SERENITY
 #endif
