@@ -10,6 +10,7 @@
 
 #include "SnakeSkin.h"
 #include <AK/NonnullRefPtr.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Point.h>
@@ -29,7 +30,7 @@ public:
 private:
     ImageSkin(StringView skin_name, Vector<NonnullRefPtr<Gfx::Bitmap>> head_bitmaps, Vector<NonnullRefPtr<Gfx::Bitmap>> body_bitmaps);
 
-    DeprecatedString m_skin_name;
+    String m_skin_name;
 
     Vector<NonnullRefPtr<Gfx::Bitmap>> m_head_bitmaps;
     Vector<NonnullRefPtr<Gfx::Bitmap>> m_body_bitmaps;

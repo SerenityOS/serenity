@@ -88,18 +88,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     game_menu->add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         game.reset();
     }));
-    static DeprecatedString const pause_text = "&Pause Game"sv;
+    static String const pause_text = "&Pause Game"_string;
     auto const pause_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/pause.png"sv));
-    static DeprecatedString const continue_text = "&Continue Game"sv;
+    static String const continue_text = "&Continue Game"_string;
     auto const continue_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv));
-    game_menu->add_action(GUI::Action::create(pause_text, { Mod_None, Key_Space }, pause_icon, [&](auto& action) {
+    game_menu->add_action(GUI::Action::create(pause_text.to_deprecated_string(), { Mod_None, Key_Space }, pause_icon, [&](auto& action) {
         if (game.has_timer()) {
             game.pause();
-            action.set_text(continue_text);
+            action.set_text(continue_text.to_deprecated_string());
             action.set_icon(continue_icon);
         } else {
             game.start();
-            action.set_text(pause_text);
+            action.set_text(pause_text.to_deprecated_string());
             action.set_icon(pause_icon);
         }
     }));
@@ -129,7 +129,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto add_skin_action = [&](StringView name, bool enable_color) -> ErrorOr<void> {
         auto action = TRY(GUI::Action::try_create_checkable(name, {}, [&, enable_color](auto& action) {
             Config::write_string("Snake"sv, "Snake"sv, "SnakeSkin"sv, action.text());
-            game.set_skin_name(action.text());
+            game.set_skin_name(String::from_deprecated_string(action.text()).release_value_but_fixme_should_propagate_errors());
             change_snake_color->set_enabled(enable_color);
         }));
 

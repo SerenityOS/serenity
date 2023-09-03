@@ -61,10 +61,10 @@ ErrorOr<NonnullOwnPtr<ImageSkin>> ImageSkin::create(StringView skin_name)
 }
 
 ImageSkin::ImageSkin(StringView skin_name, Vector<NonnullRefPtr<Gfx::Bitmap>> head_bitmaps, Vector<NonnullRefPtr<Gfx::Bitmap>> body_bitmaps)
-    : m_skin_name(skin_name)
-    , m_head_bitmaps(move(head_bitmaps))
+    : m_head_bitmaps(move(head_bitmaps))
     , m_body_bitmaps(move(body_bitmaps))
 {
+    m_skin_name = String::from_utf8(skin_name).release_value_but_fixme_should_propagate_errors();
 }
 
 static int image_index_from_directions(Direction from, Direction to)
