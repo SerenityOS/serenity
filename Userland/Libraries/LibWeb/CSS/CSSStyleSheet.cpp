@@ -25,7 +25,7 @@ CSSStyleSheet::CSSStyleSheet(JS::Realm& realm, CSSRuleList& rules, MediaList& me
     , m_rules(&rules)
 {
     if (location.has_value())
-        set_location(location->to_deprecated_string());
+        set_location(MUST(location->to_string()));
 
     for (auto& rule : *m_rules)
         rule->set_parent_style_sheet(this);
