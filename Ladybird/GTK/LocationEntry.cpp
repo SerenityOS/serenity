@@ -125,6 +125,16 @@ static void on_notify_text(LadybirdLocationEntry* self)
     update_primary_icon(self);
 }
 
+static void ladybird_location_entry_measure(GtkWidget* widget, GtkOrientation orientation, [[maybe_unused]] int for_size, int* minimum, int* natural, int* minimum_baseline, int* natural_baseline)
+{
+    // Workaround a GTK bug, which your version of GTK may or may not have.
+    // GtkEntry, which we inherit from, can report its baseline wrongly in
+    // presence of icons, which causes it to be taller than it should be. We
+    // just unset the baseline to work around that.
+    GTK_WIDGET_CLASS(ladybird_location_entry_parent_class)->measure(widget, orientation, for_size, minimum, natural, minimum_baseline, natural_baseline);
+    *minimum_baseline = *natural_baseline = -1;
+}
+
 static void ladybird_location_entry_init(LadybirdLocationEntry* self)
 {
     GtkWidget* widget = GTK_WIDGET(self);
@@ -145,6 +155,8 @@ static void ladybird_location_entry_class_init(LadybirdLocationEntryClass* klass
     GObjectClass* object_class = G_OBJECT_CLASS(klass);
 
     object_class->dispose = ladybird_location_entry_dispose;
+
+    widget_class->measure = ladybird_location_entry_measure;
 
     gtk_widget_class_set_template_from_resource(widget_class, "/org/serenityos/Ladybird-gtk4/location-entry.ui");
     gtk_widget_class_bind_template_callback(widget_class, on_notify_text);
