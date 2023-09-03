@@ -1,7 +1,7 @@
 #import <HTML/HTMLElement.idl>
 
 // https://html.spec.whatwg.org/multipage/scripting.html#htmlscriptelement
-[Exposed=Window, UseDeprecatedAKString]
+[Exposed=Window]
 interface HTMLScriptElement : HTMLElement {
 
     [HTMLConstructor] constructor();
