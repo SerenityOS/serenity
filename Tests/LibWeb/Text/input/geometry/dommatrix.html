@@ -1,0 +1,15 @@
+<script src="../include.js"></script>
+<script>
+    test(() => {
+        let testCounter = 1;
+        function testPart(part) {
+            println(`${testCounter++}. ${JSON.stringify(part())}`);
+        }
+
+        // 1. Creating a DOMMatrix
+        testPart(() => new DOMMatrix([10, 20, 30, 40, 50, 60]));
+
+        // 2. Creating a DOMMatrix with fromMatrix
+        testPart(() => DOMMatrix.fromMatrix({ a: 10, b: 20, c: 30, d: 40, e: 50, f: 60 }));
+    });
+</script>

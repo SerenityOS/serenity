@@ -73,6 +73,12 @@ void DOMMatrix::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMMatrixPrototype>(realm, "DOMMatrix"));
 }
 
+// https://drafts.fxtf.org/geometry/#dom-dommatrix-frommatrix
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> DOMMatrix::from_matrix(JS::VM& vm, DOMMatrixInit other)
+{
+    return create_from_dom_matrix_2d_init(*vm.current_realm(), other);
+}
+
 // https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-m11
 void DOMMatrix::set_m11(double value)
 {

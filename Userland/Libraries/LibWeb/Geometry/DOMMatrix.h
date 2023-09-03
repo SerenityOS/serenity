@@ -21,6 +21,8 @@ public:
 
     virtual ~DOMMatrix() override;
 
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> from_matrix(JS::VM&, DOMMatrixInit other = {});
+
     void set_m11(double value);
     void set_m12(double value);
     void set_m13(double value);

@@ -53,6 +53,8 @@ public:
 
     virtual ~DOMMatrixReadOnly() override;
 
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrixReadOnly>> from_matrix(JS::VM&, DOMMatrixInit& other);
+
     // https://drafts.fxtf.org/geometry/#dommatrix-attributes
     double m11() const { return m_matrix.elements()[0][0]; }
     double m12() const { return m_matrix.elements()[1][0]; }
