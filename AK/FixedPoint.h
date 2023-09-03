@@ -15,6 +15,10 @@
 #ifndef KERNEL
 #    include <AK/Math.h>
 #endif
+#ifndef __SIZEOF_INT128__
+#    include <AK/UFixedBigInt.h>
+#    include <AK/UFixedBigIntDivision.h>
+#endif
 
 // Solaris' definition of signbit in math_c99.h conflicts with our implementation.
 #ifdef AK_OS_SOLARIS
@@ -208,13 +212,22 @@ public:
     }
     constexpr This operator*(This const& other) const
     {
-        // FIXME: Figure out a way to use more narrow types and avoid __int128
+#ifdef __SIZEOF_INT128__
+        // FIXME: Figure out a nicer way to use more narrow types and avoid __int128
         using MulRes = Conditional<sizeof(Underlying) < sizeof(i64), i64, __int128>;
-
         MulRes value = raw();
         value *= other.raw();
 
         This ret = create_raw(value >> precision);
+#else
+        // Note: We sign extend the raw value to a u128 to emulate the signed multiplication
+        //       done in the version above
+        // FIXME: Provide narrower intermediate results types
+        u128 value = { (u64)(i64)raw(), ~0ull * (raw() < 0) };
+        value *= (u64)(i64)other.raw();
+
+        This ret = create_raw((value >> precision).low());
+#endif
         // Rounding:
         // If last bit cut off is 1:
         if (value & (static_cast<Underlying>(1) << (precision - 1))) {
@@ -232,7 +245,8 @@ public:
     }
     constexpr This operator/(This const& other) const
     {
-        // FIXME: Figure out a way to use more narrow types and avoid __int128
+#ifdef __SIZEOF_INT128__
+        // FIXME: Figure out a nicer way to use more narrow types and avoid __int128
         using DivRes = Conditional<sizeof(Underlying) < sizeof(i64), i64, __int128>;
 
         DivRes value = raw();
@@ -240,6 +254,25 @@ public:
         value /= other.raw();
 
         return create_raw(value);
+#else
+        // Note: We sign extend the raw value to a u128 to emulate the wide division
+        //       done in the version above
+        if constexpr (sizeof(Underlying) > sizeof(u32)) {
+            u128 value = { (u64)(i64)raw(), ~0ull * (raw() < 0) };
+
+            value <<= precision;
+            value /= (u64)(i64)other.raw();
+
+            return create_raw(value.low());
+        }
+        // FIXME: Maybe allow going even narrower
+        using DivRes = Conditional<sizeof(Underlying) < sizeof(i32), i32, i64>;
+        DivRes value = raw();
+        value <<= precision;
+        value /= other.raw();
+
+        return create_raw(value);
+#endif
     }
 
     template<Integral I>
