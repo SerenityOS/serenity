@@ -6,6 +6,7 @@
  */
 
 #include <AK/LexicalPath.h>
+#include <AK/ScopeGuard.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
@@ -47,9 +48,9 @@ ErrorOr<String> real_path(StringView path)
     if (path.is_null())
         return Error::from_errno(ENOENT);
 
-    char buffer[PATH_MAX];
     DeprecatedString dep_path = path;
-    auto* real_path = realpath(dep_path.characters(), buffer);
+    char* real_path = realpath(dep_path.characters(), nullptr);
+    ScopeGuard free_path = [real_path]() { free(real_path); };
 
     if (!real_path)
         return Error::from_syscall("realpath"sv, -errno);
