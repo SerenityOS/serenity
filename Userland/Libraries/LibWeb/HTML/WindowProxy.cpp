@@ -231,8 +231,8 @@ JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> WindowProxy::internal_own_pro
     // 2. Let keys be a new empty List.
     auto keys = JS::MarkedVector<JS::Value> { vm.heap() };
 
-    // 3. Let maxProperties be the number of document-tree child browsing contexts of W.
-    auto max_properties = m_window->document_tree_child_browsing_context_count();
+    // 3. Let maxProperties be W's associated Document's document-tree child navigables's size.
+    auto max_properties = m_window->associated_document().document_tree_child_navigables().size();
 
     // 4. Let index be 0.
     // 5. Repeat while index < maxProperties,
