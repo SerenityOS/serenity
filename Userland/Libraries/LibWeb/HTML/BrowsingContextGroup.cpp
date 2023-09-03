@@ -52,23 +52,6 @@ auto BrowsingContextGroup::create_a_new_browsing_context_group_and_document(Page
     return BrowsingContextGroupAndDocument { group, document };
 }
 
-// https://html.spec.whatwg.org/multipage/browsers.html#creating-a-new-browsing-context-group
-JS::NonnullGCPtr<BrowsingContextGroup> BrowsingContextGroup::create_a_new_browsing_context_group(Web::Page& page)
-{
-    // 1. Let group be a new browsing context group.
-    // 2. Append group to the user agent's browsing context group set.
-    auto group = Bindings::main_thread_vm().heap().allocate_without_realm<BrowsingContextGroup>(page);
-
-    // 3. Let browsingContext be the result of creating a new browsing context with null, null, and group.
-    auto browsing_context = BrowsingContext::create_a_new_browsing_context(page, nullptr, nullptr, *group);
-
-    // 4. Append browsingContext to group.
-    group->append(move(browsing_context));
-
-    // 5. Return group.
-    return *group;
-}
-
 // https://html.spec.whatwg.org/multipage/browsers.html#bcg-append
 void BrowsingContextGroup::append(BrowsingContext& browsing_context)
 {
