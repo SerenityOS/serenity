@@ -34,9 +34,9 @@ public:
 #undef __ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTE
     };
 
-    DeprecatedString type() const;
+    StringView type() const;
     TypeAttributeState type_state() const;
-    WebIDL::ExceptionOr<void> set_type(DeprecatedString const&);
+    WebIDL::ExceptionOr<void> set_type(String const&);
 
     // ^EventTarget
     // https://html.spec.whatwg.org/multipage/interaction.html#the-tabindex-attribute:the-button-element
