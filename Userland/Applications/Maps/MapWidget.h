@@ -8,12 +8,12 @@
 #pragma once
 
 #include <AK/Queue.h>
+#include <LibGUI/Frame.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Widget.h>
 #include <LibProtocol/Request.h>
 #include <LibProtocol/RequestClient.h>
 
-class MapWidget final : public GUI::Widget {
+class MapWidget : public GUI::Frame {
     C_OBJECT(MapWidget);
 
 public:

@@ -80,9 +80,8 @@ void MapWidget::mousedown_event(GUI::MouseEvent& event)
 
     if (event.button() == GUI::MouseButton::Primary) {
         // Ignore attribution click
-        if (m_attribution_enabled && static_cast<float>(event.x()) > width() - m_attribution_width && static_cast<float>(event.y()) > height() - m_attribution_height) {
+        if (m_attribution_enabled && static_cast<float>(event.x()) > frame_inner_rect().right() - m_attribution_width && static_cast<float>(event.y()) > frame_inner_rect().bottom() - m_attribution_height)
             return;
-        }
 
         // Start map tiles dragging
         m_dragging = true;
@@ -110,7 +109,7 @@ void MapWidget::mousemove_event(GUI::MouseEvent& event)
 
     // Handle attribution hover
     if (m_attribution_enabled) {
-        if (static_cast<float>(event.x()) > width() - m_attribution_width && static_cast<float>(event.y()) > height() - m_attribution_height) {
+        if (static_cast<float>(event.x()) > frame_inner_rect().right() - m_attribution_width && static_cast<float>(event.y()) > frame_inner_rect().bottom() - m_attribution_height) {
             set_override_cursor(Gfx::StandardCursor::Hand);
         } else {
             set_override_cursor(Gfx::StandardCursor::Arrow);
@@ -132,7 +131,7 @@ void MapWidget::mouseup_event(GUI::MouseEvent& event)
 
     if (event.button() == GUI::MouseButton::Primary) {
         // Handle attribution click
-        if (m_attribution_enabled && static_cast<float>(event.x()) > width() - m_attribution_width && static_cast<float>(event.y()) > height() - m_attribution_height) {
+        if (m_attribution_enabled && static_cast<float>(event.x()) > frame_inner_rect().right() - m_attribution_width && static_cast<float>(event.y()) > frame_inner_rect().bottom() - m_attribution_height) {
             Desktop::Launcher::open(m_attribution_url);
             return;
         }
@@ -344,7 +343,7 @@ void MapWidget::paint_scale(GUI::Painter& painter)
     // Metric line
     double meters = nice_round_number(max_meters);
     float metric_width = m_scale_max_width * (meters / max_meters);
-    Gfx::IntRect metric_rect = { margin_x, height() - margin_y - line_height * 2, metric_width, line_height };
+    Gfx::IntRect metric_rect = { frame_inner_rect().x() + margin_x, frame_inner_rect().bottom() - margin_y - line_height * 2, metric_width, line_height };
     if (meters < 1000) {
         paint_scale_line(painter, MUST(String::formatted("{} m", meters)), metric_rect);
     } else {
@@ -357,7 +356,7 @@ void MapWidget::paint_scale(GUI::Painter& painter)
     double max_miles = max_feet / 5280;
     double miles = nice_round_number(max_miles);
     float imperial_width = m_scale_max_width * (feet < 5280 ? feet / max_feet : miles / max_miles);
-    Gfx::IntRect imperial_rect = { margin_x, height() - margin_y - line_height, imperial_width, line_height };
+    Gfx::IntRect imperial_rect = { frame_inner_rect().x() + margin_x, frame_inner_rect().bottom() - margin_y - line_height, imperial_width, line_height };
     if (feet < 5280) {
         paint_scale_line(painter, MUST(String::formatted("{} ft", feet)), imperial_rect);
     } else {
@@ -365,27 +364,29 @@ void MapWidget::paint_scale(GUI::Painter& painter)
     }
 
     // Border between
-    painter.fill_rect({ margin_x, height() - margin_y - line_height, max(metric_width, imperial_width), 1.0f }, panel_foreground_color);
+    painter.fill_rect({ frame_inner_rect().x() + margin_x, frame_inner_rect().bottom() - margin_y - line_height, max(metric_width, imperial_width), 1.0f }, panel_foreground_color);
 }
 
 void MapWidget::paint_attribution(GUI::Painter& painter)
 {
     m_attribution_width = PANEL_PADDING_X + painter.font().width(m_attribution_text) + PANEL_PADDING_X;
     m_attribution_height = PANEL_PADDING_Y + painter.font().pixel_size() + PANEL_PADDING_Y;
-    painter.fill_rect({ width() - m_attribution_width, height() - m_attribution_height, m_attribution_width, m_attribution_height }, panel_background_color);
-    Gfx::FloatRect attribution_text_rect { 0.0f, 0.0f, width() - PANEL_PADDING_X, height() - PANEL_PADDING_Y };
+    painter.fill_rect({ frame_inner_rect().right() - m_attribution_width, frame_inner_rect().bottom() - m_attribution_height, m_attribution_width, m_attribution_height }, panel_background_color);
+    Gfx::FloatRect attribution_text_rect { 0.0f, 0.0f, frame_inner_rect().right() - PANEL_PADDING_X, frame_inner_rect().bottom() - PANEL_PADDING_Y };
     painter.draw_text(attribution_text_rect, m_attribution_text, Gfx::TextAlignment::BottomRight, panel_foreground_color);
 }
 
-void MapWidget::paint_event(GUI::PaintEvent&)
+void MapWidget::paint_event(GUI::PaintEvent& event)
 {
-    GUI::Painter painter(*this);
-    painter.fill_rect(rect(), map_background_color);
+    Frame::paint_event(event);
 
-    if (m_connection_failed) {
-        painter.draw_text(rect(), "Failed to fetch map tiles :^("sv, Gfx::TextAlignment::Center, panel_foreground_color);
-        return;
-    }
+    GUI::Painter painter(*this);
+    painter.add_clip_rect(event.rect());
+    painter.add_clip_rect(frame_inner_rect());
+    painter.fill_rect(frame_inner_rect(), map_background_color);
+
+    if (m_connection_failed)
+        return painter.draw_text(frame_inner_rect(), "Failed to fetch map tiles :^("sv, Gfx::TextAlignment::Center, panel_foreground_color);
 
     paint_tiles(painter);
     if (m_scale_enabled)
