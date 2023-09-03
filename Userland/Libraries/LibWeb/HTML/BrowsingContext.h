@@ -122,8 +122,6 @@ public:
     DOM::Document const* active_document() const;
     DOM::Document* active_document();
 
-    void set_active_document(JS::NonnullGCPtr<DOM::Document>);
-
     virtual HTML::WindowProxy* window_proxy() override;
     virtual HTML::WindowProxy const* window_proxy() const override;
 

@@ -166,7 +166,7 @@ void FrameLoader::load_html(StringView html, const AK::URL& url)
         .navigable = nullptr,
     };
     auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html", navigation_params).release_value_but_fixme_should_propagate_errors();
-    browsing_context().set_active_document(document);
+    // browsing_context().set_active_document(document);
 
     auto parser = HTML::HTMLParser::create(document, html, "utf-8");
     parser->run(url);
@@ -334,7 +334,7 @@ void FrameLoader::resource_did_load()
 
     document->set_content_type(MUST(String::from_deprecated_string(resource()->mime_type())));
 
-    browsing_context().set_active_document(document);
+    // browsing_context().set_active_document(document);
     if (auto* page = browsing_context().page())
         page->client().page_did_create_new_document(*document);
 
