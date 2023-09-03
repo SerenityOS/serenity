@@ -23,7 +23,6 @@ msgid "Bookmarks"
 msgstr "Закладки"
 
 #: window.blp:51
-#, fuzzy
 msgid "Bookmarks & History"
 msgstr "Закладки и история"
 
@@ -266,7 +265,7 @@ msgstr "_Перезагрузить"
 
 #: window.blp:15
 msgid "_Tools"
-msgstr ""
+msgstr "_Инструменты"
 
 #. Translators: credit yourself here :^)
 #: Application.cpp:64
