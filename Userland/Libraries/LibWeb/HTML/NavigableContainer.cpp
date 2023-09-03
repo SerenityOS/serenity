@@ -126,7 +126,8 @@ WebIDL::ExceptionOr<void> NavigableContainer::create_new_child_navigable()
         // 5. Append nestedHistory to parentDocState's nested histories.
         parent_doc_state->nested_histories().append(move(nested_history));
 
-        // FIXME: 6. Update for navigable creation/destruction given traversable
+        // 6. Update for navigable creation/destruction given traversable
+        traversable->update_for_navigable_creation_or_destruction();
     });
 
     return {};
@@ -336,7 +337,7 @@ void NavigableContainer::destroy_the_child_navigable()
     // 8. Append the following session history traversal steps to traversable:
     traversable->append_session_history_traversal_steps([traversable] {
         // 1. Apply pending history changes to traversable.
-        traversable->apply_pending_history_changes();
+        traversable->update_for_navigable_creation_or_destruction();
     });
 }
 
