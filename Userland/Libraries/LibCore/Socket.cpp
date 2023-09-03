@@ -282,7 +282,7 @@ ErrorOr<int> LocalSocket::receive_fd(int flags)
 {
 #if defined(AK_OS_SERENITY)
     return Core::System::recvfd(m_helper.fd(), flags);
-#elif defined(AK_OS_LINUX) || defined(AK_OS_BSD_GENERIC)
+#elif defined(AK_OS_LINUX) || defined(AK_OS_GNU_HURD) || defined(AK_OS_BSD_GENERIC)
     union {
         struct cmsghdr cmsghdr;
         char control[CMSG_SPACE(sizeof(int))];
@@ -323,7 +323,7 @@ ErrorOr<void> LocalSocket::send_fd(int fd)
 {
 #if defined(AK_OS_SERENITY)
     return Core::System::sendfd(m_helper.fd(), fd);
-#elif defined(AK_OS_LINUX) || defined(AK_OS_BSD_GENERIC)
+#elif defined(AK_OS_LINUX) || defined(AK_OS_GNU_HURD) || defined(AK_OS_BSD_GENERIC)
     char c = 'F';
     struct iovec iov {
         .iov_base = &c,
@@ -373,6 +373,8 @@ ErrorOr<pid_t> LocalSocket::peer_pid() const
 #elif defined(AK_OS_SOLARIS)
     ucred_t* creds = NULL;
     socklen_t creds_size = sizeof(creds);
+#elif defined(AK_OS_GNU_HURD)
+    return Error::from_errno(ENOTSUP);
 #else
     struct ucred creds = {};
     socklen_t creds_size = sizeof(creds);
@@ -390,7 +392,7 @@ ErrorOr<pid_t> LocalSocket::peer_pid() const
 #elif defined(AK_OS_SOLARIS)
     TRY(System::getsockopt(m_helper.fd(), SOL_SOCKET, SO_RECVUCRED, &creds, &creds_size));
     return ucred_getpid(creds);
-#else
+#elif !defined(AK_OS_GNU_HURD)
     TRY(System::getsockopt(m_helper.fd(), SOL_SOCKET, SO_PEERCRED, &creds, &creds_size));
     return creds.pid;
 #endif
