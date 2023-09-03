@@ -17,6 +17,12 @@
 #    define AK_IS_ARCH_X86_64() 0
 #endif
 
+#if defined(__i386__) && !defined(__x86_64__)
+#    define AK_IS_ARCH_I386() 1
+#else
+#    define AK_IS_ARCH_I386() 0
+#endif
+
 #ifdef __aarch64__
 #    define AK_IS_ARCH_AARCH64() 1
 #else
@@ -114,7 +120,7 @@
 
 #define ARCH(arch) (AK_IS_ARCH_##arch())
 
-#if ARCH(X86_64)
+#if ARCH(X86_64) || ARCH(I386)
 #    define VALIDATE_IS_X86()
 #else
 #    define VALIDATE_IS_X86() static_assert(false, "Trying to include x86 only header on non x86 platform");
