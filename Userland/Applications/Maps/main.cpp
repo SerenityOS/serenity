@@ -28,7 +28,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::Window::try_create());
     window->set_title("Maps");
     window->set_icon(app_icon.bitmap_for_size(16));
-    window->resize(640, 480);
+    window->restore_size_and_position("Maps"sv, "Window"sv, { { 640, 480 } });
+    window->save_size_and_position_on_close("Maps"sv, "Window"sv);
 
     // Map widget
     MapWidget::Options options {};
