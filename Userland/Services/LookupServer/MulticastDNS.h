@@ -36,8 +36,11 @@ private:
 
     Name m_hostname;
 
+    // https://github.com/llvm/llvm-project/issues/56685
+    // https://github.com/llvm/llvm-project/pull/65409
+    // clang-format off
     static constexpr sockaddr_in mdns_addr {
-#ifdef AK_OS_BSD_GENERIC
+#if defined(AK_OS_BSD_GENERIC) || defined(AK_OS_GNU_HURD)
         .sin_len = sizeof(struct sockaddr_in),
 #endif
         .sin_family = AF_INET,
@@ -47,6 +50,7 @@ private:
         .sin_addr = { 0xfb0000e0 },
         .sin_zero = { 0 }
     };
+    // clang-format on
 };
 
 }
