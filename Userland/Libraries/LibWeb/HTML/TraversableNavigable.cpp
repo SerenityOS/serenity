@@ -406,8 +406,13 @@ void TraversableNavigable::apply_the_history_step(int step, Optional<SourceSnaps
                 // 1. Unload displayedDocument given targetEntry's document.
                 displayed_document->unload(target_entry->document_state->document());
 
-                // FIXME: 2. For each childNavigable of displayedDocument's descendant navigables, queue a global task on the navigation and traversal task source given
-                //           childNavigable's active window to unload childNavigable's active document.
+                // 2. For each childNavigable of displayedDocument's descendant navigables, queue a global task on the navigation and traversal task source given
+                //    childNavigable's active window to unload childNavigable's active document.
+                for (auto child_navigable : displayed_document->descendant_navigables()) {
+                    queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), [child_navigable] {
+                        child_navigable->active_document()->unload();
+                    });
+                }
 
                 // 3. Activate history entry targetEntry for navigable.
                 navigable->activate_history_entry(*target_entry);
