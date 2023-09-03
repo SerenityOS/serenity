@@ -112,6 +112,8 @@ private:
     RefPtr<WebSocketImpl> m_impl;
 
     Vector<u8> m_buffered_data;
+    ByteBuffer m_fragmented_data_buffer;
+    WebSocket::OpCode m_initial_fragment_opcode;
 };
 
 }

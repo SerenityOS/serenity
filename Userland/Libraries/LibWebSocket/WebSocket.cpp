@@ -406,13 +406,8 @@ void WebSocket::read_frame()
         return;
     }
 
-    bool is_final_frame = head_bytes[0] & 0x80;
-    if (!is_final_frame) {
-        // FIXME: Support fragmented frames
-        TODO();
-    }
-
     auto op_code = (WebSocket::OpCode)(head_bytes[0] & 0x0f);
+    bool is_final_frame = head_bytes[0] & 0x80;
     bool is_masked = head_bytes[1] & 0x80;
 
     // Parse the payload length.
@@ -504,9 +499,22 @@ void WebSocket::read_frame()
         // We can safely ignore the pong
         return;
     }
-    if (op_code == WebSocket::OpCode::Continuation) {
-        // FIXME: Support fragmented frames
-        TODO();
+    if (!is_final_frame) {
+        if (op_code != WebSocket::OpCode::Continuation) {
+            // First fragmented message
+            m_initial_fragment_opcode = op_code;
+        }
+        // First and next fragmented message
+        m_fragmented_data_buffer.append(payload.data(), payload_length);
+        return;
+    }
+    if (is_final_frame && op_code == WebSocket::OpCode::Continuation) {
+        // Last fragmented message
+        m_fragmented_data_buffer.append(payload.data(), payload_length);
+        op_code = m_initial_fragment_opcode;
+        payload.clear();
+        payload.append(m_fragmented_data_buffer.data(), m_fragmented_data_buffer.size());
+        m_fragmented_data_buffer.clear();
     }
     if (op_code == WebSocket::OpCode::Text) {
         notify_message(Message(payload, true));
