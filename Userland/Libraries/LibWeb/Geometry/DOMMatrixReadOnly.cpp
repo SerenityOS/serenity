@@ -239,6 +239,17 @@ bool DOMMatrixReadOnly::is_identity() const
     return true;
 }
 
+// https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-translate
+JS::NonnullGCPtr<DOMMatrix> DOMMatrixReadOnly::translate(Optional<double> const& tx, Optional<double> const& ty, Optional<double> const& tz) const
+{
+    // 1. Let result be the resulting matrix initialized to the values of the current matrix.
+    auto result = DOMMatrix::create_from_dom_matrix_read_only(realm(), *this);
+
+    // 2. Perform a translateSelf() transformation on result with the arguments tx, ty, tz.
+    // 3. Return result.
+    return result->translate_self(tx, ty, tz);
+}
+
 // https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-multiply
 WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> DOMMatrixReadOnly::multiply(DOMMatrixInit other)
 {

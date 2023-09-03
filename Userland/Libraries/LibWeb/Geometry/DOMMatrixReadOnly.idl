@@ -39,7 +39,7 @@ interface DOMMatrixReadOnly {
     readonly attribute boolean isIdentity;
 
     // Immutable transform methods
-    // FIXME: [NewObject] DOMMatrix translate(optional unrestricted double tx = 0, optional unrestricted double ty = 0, optional unrestricted double tz = 0);
+    [NewObject] DOMMatrix translate(optional unrestricted double tx = 0, optional unrestricted double ty = 0, optional unrestricted double tz = 0);
     // FIXME: [NewObject] DOMMatrix scale(optional unrestricted double scaleX = 1, optional unrestricted double scaleY, optional unrestricted double scaleZ = 1, optional unrestricted double originX = 0, optional unrestricted double originY = 0, optional unrestricted double originZ = 0);
     // FIXME: [NewObject] DOMMatrix scaleNonUniform(optional unrestricted double scaleX = 1, optional unrestricted double scaleY = 1);
     // FIXME: [NewObject] DOMMatrix scale3d(optional unrestricted double scale = 1, optional unrestricted double originX = 0, optional unrestricted double originY = 0, optional unrestricted double originZ = 0);
