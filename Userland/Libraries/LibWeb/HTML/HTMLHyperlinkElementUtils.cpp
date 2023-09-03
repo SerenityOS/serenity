@@ -68,7 +68,7 @@ DeprecatedString HTMLHyperlinkElementUtils::protocol() const
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-protocol
-void HTMLHyperlinkElementUtils::set_protocol(DeprecatedString protocol)
+void HTMLHyperlinkElementUtils::set_protocol(StringView protocol)
 {
     // 1. Reinitialize url.
     reinitialize_url();
@@ -101,7 +101,7 @@ DeprecatedString HTMLHyperlinkElementUtils::username() const
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-username
-void HTMLHyperlinkElementUtils::set_username(DeprecatedString username)
+void HTMLHyperlinkElementUtils::set_username(StringView username)
 {
     // 1. Reinitialize url.
     reinitialize_url();
@@ -138,7 +138,7 @@ DeprecatedString HTMLHyperlinkElementUtils::password() const
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-password
-void HTMLHyperlinkElementUtils::set_password(DeprecatedString password)
+void HTMLHyperlinkElementUtils::set_password(StringView password)
 {
     // 1. Reinitialize url.
     reinitialize_url();
@@ -179,7 +179,7 @@ DeprecatedString HTMLHyperlinkElementUtils::host() const
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-host
-void HTMLHyperlinkElementUtils::set_host(DeprecatedString host)
+void HTMLHyperlinkElementUtils::set_host(StringView host)
 {
     // 1. Reinitialize url.
     reinitialize_url();
@@ -215,7 +215,7 @@ DeprecatedString HTMLHyperlinkElementUtils::hostname() const
     return url.serialized_host().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 }
 
-void HTMLHyperlinkElementUtils::set_hostname(DeprecatedString hostname)
+void HTMLHyperlinkElementUtils::set_hostname(StringView hostname)
 {
     // 1. Reinitialize url.
     reinitialize_url();
@@ -254,7 +254,7 @@ DeprecatedString HTMLHyperlinkElementUtils::port() const
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-port
-void HTMLHyperlinkElementUtils::set_port(DeprecatedString port)
+void HTMLHyperlinkElementUtils::set_port(StringView port)
 {
     // 1. Reinitialize url.
     reinitialize_url();
@@ -298,7 +298,7 @@ DeprecatedString HTMLHyperlinkElementUtils::pathname() const
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-pathname
-void HTMLHyperlinkElementUtils::set_pathname(DeprecatedString pathname)
+void HTMLHyperlinkElementUtils::set_pathname(StringView pathname)
 {
     // 1. Reinitialize url.
     reinitialize_url();
@@ -337,7 +337,7 @@ DeprecatedString HTMLHyperlinkElementUtils::search() const
     return DeprecatedString::formatted("?{}", m_url->query());
 }
 
-void HTMLHyperlinkElementUtils::set_search(DeprecatedString search)
+void HTMLHyperlinkElementUtils::set_search(StringView search)
 {
     // 1. Reinitialize url.
     reinitialize_url();
@@ -385,7 +385,7 @@ DeprecatedString HTMLHyperlinkElementUtils::hash() const
     return DeprecatedString::formatted("#{}", *m_url->fragment());
 }
 
-void HTMLHyperlinkElementUtils::set_hash(DeprecatedString hash)
+void HTMLHyperlinkElementUtils::set_hash(StringView hash)
 {
     // 1. Reinitialize url.
     reinitialize_url();
@@ -441,10 +441,10 @@ DeprecatedString HTMLHyperlinkElementUtils::href() const
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-href
-WebIDL::ExceptionOr<void> HTMLHyperlinkElementUtils::set_href(DeprecatedString href)
+WebIDL::ExceptionOr<void> HTMLHyperlinkElementUtils::set_href(StringView href)
 {
     // The href attribute's setter must set this element's href content attribute's value to the given value.
-    return set_hyperlink_element_utils_href(move(href));
+    return set_hyperlink_element_utils_href(href);
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#update-href
