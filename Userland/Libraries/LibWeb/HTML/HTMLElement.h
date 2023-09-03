@@ -29,14 +29,14 @@ public:
 
     DeprecatedString title() const { return deprecated_attribute(HTML::AttributeNames::title); }
 
-    DeprecatedString dir() const;
-    void set_dir(DeprecatedString const&);
+    StringView dir() const;
+    void set_dir(String const&);
 
     virtual bool is_editable() const final;
-    DeprecatedString content_editable() const;
-    WebIDL::ExceptionOr<void> set_content_editable(DeprecatedString const&);
+    StringView content_editable() const;
+    WebIDL::ExceptionOr<void> set_content_editable(StringView);
 
-    DeprecatedString inner_text();
+    String inner_text();
     void set_inner_text(StringView);
 
     int offset_top() const;

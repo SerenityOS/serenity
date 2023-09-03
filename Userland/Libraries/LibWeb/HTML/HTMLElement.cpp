@@ -58,8 +58,10 @@ void HTMLElement::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-dir
-DeprecatedString HTMLElement::dir() const
+StringView HTMLElement::dir() const
 {
+    // FIXME: This should probably be `Reflect` in the IDL.
+    // The dir IDL attribute on an element must reflect the dir content attribute of that element, limited to only known values.
     auto dir = deprecated_attribute(HTML::AttributeNames::dir);
 #define __ENUMERATE_HTML_ELEMENT_DIR_ATTRIBUTE(keyword) \
     if (dir.equals_ignoring_ascii_case(#keyword##sv))   \
@@ -70,7 +72,7 @@ DeprecatedString HTMLElement::dir() const
     return {};
 }
 
-void HTMLElement::set_dir(DeprecatedString const& dir)
+void HTMLElement::set_dir(String const& dir)
 {
     MUST(set_attribute(HTML::AttributeNames::dir, dir));
 }
@@ -89,22 +91,21 @@ bool HTMLElement::is_editable() const
     }
 }
 
-DeprecatedString HTMLElement::content_editable() const
+StringView HTMLElement::content_editable() const
 {
     switch (m_content_editable_state) {
     case ContentEditableState::True:
-        return "true";
+        return "true"sv;
     case ContentEditableState::False:
-        return "false";
+        return "false"sv;
     case ContentEditableState::Inherit:
-        return "inherit";
-    default:
-        VERIFY_NOT_REACHED();
+        return "inherit"sv;
     }
+    VERIFY_NOT_REACHED();
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#contenteditable
-WebIDL::ExceptionOr<void> HTMLElement::set_content_editable(DeprecatedString const& content_editable)
+WebIDL::ExceptionOr<void> HTMLElement::set_content_editable(StringView content_editable)
 {
     if (content_editable.equals_ignoring_ascii_case("inherit"sv)) {
         remove_attribute(HTML::AttributeNames::contenteditable);
@@ -129,14 +130,14 @@ void HTMLElement::set_inner_text(StringView text)
     set_needs_style_update(true);
 }
 
-DeprecatedString HTMLElement::inner_text()
+String HTMLElement::inner_text()
 {
     StringBuilder builder;
 
     // innerText for element being rendered takes visibility into account, so force a layout and then walk the layout tree.
     document().update_layout();
     if (!layout_node())
-        return text_content();
+        return MUST(String::from_deprecated_string(text_content()));
 
     Function<void(Layout::Node const&)> recurse = [&](auto& node) {
         for (auto* child = node.first_child(); child; child = child->next_sibling()) {
@@ -149,7 +150,7 @@ DeprecatedString HTMLElement::inner_text()
     };
     recurse(*layout_node());
 
-    return builder.to_deprecated_string();
+    return MUST(builder.to_string());
 }
 
 // // https://drafts.csswg.org/cssom-view/#dom-htmlelement-offsettop
