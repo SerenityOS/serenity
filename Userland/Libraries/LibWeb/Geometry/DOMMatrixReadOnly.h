@@ -83,6 +83,7 @@ public:
     bool is2d() const { return m_is_2d; }
     bool is_identity() const;
 
+    JS::NonnullGCPtr<DOMMatrix> translate(Optional<double> const& tx, Optional<double> const& ty, Optional<double> const& tz) const;
     WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> multiply(DOMMatrixInit other = {});
     JS::NonnullGCPtr<DOMMatrix> inverse() const;
 

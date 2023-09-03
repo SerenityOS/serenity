@@ -49,6 +49,7 @@ public:
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> multiply_self(DOMMatrixInit other = {});
     WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> pre_multiply_self(DOMMatrixInit other = {});
+    JS::NonnullGCPtr<DOMMatrix> translate_self(Optional<double> tx, Optional<double> ty, Optional<double> tz);
     JS::NonnullGCPtr<DOMMatrix> invert_self();
 
 private:

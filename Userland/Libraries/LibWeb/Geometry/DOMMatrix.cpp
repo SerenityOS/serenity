@@ -293,6 +293,20 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> DOMMatrix::pre_multiply_self(DO
     return JS::NonnullGCPtr<DOMMatrix>(*this);
 }
 
+// https://drafts.fxtf.org/geometry/#dom-dommatrix-translateself
+JS::NonnullGCPtr<DOMMatrix> DOMMatrix::translate_self(Optional<double> tx, Optional<double> ty, Optional<double> tz)
+{
+    // 1. Post-multiply a translation transformation on the current matrix. The 3D translation matrix is described in CSS Transforms.
+    m_matrix = m_matrix * Gfx::translation_matrix(Vector3<double> { tx.value_or(0), ty.value_or(0), tz.value_or(0) });
+
+    // 2. If tz is specified and not 0 or -0, set is 2D of the current matrix to false.
+    if (tz.has_value() && (tz != 0 || tz != -0))
+        m_is_2d = false;
+
+    // 3. Return the current matrix.
+    return *this;
+}
+
 // https://drafts.fxtf.org/geometry/#dom-dommatrix-invertself
 JS::NonnullGCPtr<DOMMatrix> DOMMatrix::invert_self()
 {
