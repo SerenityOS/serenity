@@ -5,39 +5,35 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         frag 0 from BlockContainer start: 0, length: 0, rect: [22,19 48.6875x178]
       TextNode <#text>
       BlockContainer <button.button.border-black> at (22,19) content-size 48.6875x178 inline-block [BFC] children: not-inline
-        TableWrapper <(anonymous)> at (22,19) content-size 48.6875x178 [BFC] children: not-inline
-          BlockContainer <(anonymous)> at (22,19) content-size 48.6875x178 table-box [TFC] children: not-inline
-            Box <(anonymous)> at (22,19) content-size 48.6875x178 table-row children: not-inline
-              BlockContainer <(anonymous)> at (22,29.265625) content-size 48.6875x157.46875 table-cell [BFC] children: not-inline
-                BlockContainer <(anonymous)> at (22,29.265625) content-size 48.6875x0 children: inline
-                  TextNode <#text>
-                BlockContainer <div.border-black> at (32,39.265625) content-size 28.6875x17.46875 children: inline
-                  line 0 width: 28.6875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-                    frag 0 from TextNode start: 1, length: 3, rect: [32,39.265625 28.6875x17.46875]
-                      "one"
-                  TextNode <#text>
-                BlockContainer <(anonymous)> at (22,66.734375) content-size 48.6875x0 children: inline
-                  TextNode <#text>
-                BlockContainer <div.border-black> at (32,76.734375) content-size 28.6875x100 children: inline
-                  line 0 width: 28.4375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-                    frag 0 from TextNode start: 1, length: 3, rect: [32,76.734375 28.4375x17.46875]
-                      "two"
-                  TextNode <#text>
-                BlockContainer <(anonymous)> at (22,186.734375) content-size 48.6875x0 children: inline
-                  TextNode <#text>
+        BlockContainer <(anonymous)> at (22,19) content-size 48.6875x178 flex-container(column) [FFC] children: not-inline
+          BlockContainer <(anonymous)> at (22,29.265625) content-size 48.6875x157.46875 flex-item [BFC] children: not-inline
+            BlockContainer <(anonymous)> at (22,29.265625) content-size 48.6875x0 children: inline
+              TextNode <#text>
+            BlockContainer <div.border-black> at (32,39.265625) content-size 28.6875x17.46875 children: inline
+              line 0 width: 28.6875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+                frag 0 from TextNode start: 1, length: 3, rect: [32,39.265625 28.6875x17.46875]
+                  "one"
+              TextNode <#text>
+            BlockContainer <(anonymous)> at (22,66.734375) content-size 48.6875x0 children: inline
+              TextNode <#text>
+            BlockContainer <div.border-black> at (32,76.734375) content-size 28.6875x100 children: inline
+              line 0 width: 28.4375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+                frag 0 from TextNode start: 1, length: 3, rect: [32,76.734375 28.4375x17.46875]
+                  "two"
+              TextNode <#text>
+            BlockContainer <(anonymous)> at (22,186.734375) content-size 48.6875x0 children: inline
+              TextNode <#text>
 
 ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
     PaintableWithLines (BlockContainer<BODY>) [8,8 784x200]
       PaintableWithLines (BlockContainer<BUTTON>.button.border-black) [8,8 76.6875x200]
-        PaintableWithLines (TableWrapper(anonymous)) [22,19 48.6875x178]
-          PaintableWithLines (BlockContainer(anonymous)) [22,19 48.6875x178]
-            PaintableBox (Box(anonymous)) [22,19 48.6875x178]
-              PaintableWithLines (BlockContainer(anonymous)) [22,19 48.6875x178]
-                PaintableWithLines (BlockContainer(anonymous)) [22,29.265625 48.6875x0]
-                PaintableWithLines (BlockContainer<DIV>.border-black) [22,29.265625 48.6875x37.46875]
-                  TextPaintable (TextNode<#text>)
-                PaintableWithLines (BlockContainer(anonymous)) [22,66.734375 48.6875x0]
-                PaintableWithLines (BlockContainer<DIV>.border-black) [22,66.734375 48.6875x120]
-                  TextPaintable (TextNode<#text>)
-                PaintableWithLines (BlockContainer(anonymous)) [22,186.734375 48.6875x0]
+        PaintableWithLines (BlockContainer(anonymous)) [22,19 48.6875x178]
+          PaintableWithLines (BlockContainer(anonymous)) [22,29.265625 48.6875x157.46875]
+            PaintableWithLines (BlockContainer(anonymous)) [22,29.265625 48.6875x0]
+            PaintableWithLines (BlockContainer<DIV>.border-black) [22,29.265625 48.6875x37.46875]
+              TextPaintable (TextNode<#text>)
+            PaintableWithLines (BlockContainer(anonymous)) [22,66.734375 48.6875x0]
+            PaintableWithLines (BlockContainer<DIV>.border-black) [22,66.734375 48.6875x120]
+              TextPaintable (TextNode<#text>)
+            PaintableWithLines (BlockContainer(anonymous)) [22,186.734375 48.6875x0]

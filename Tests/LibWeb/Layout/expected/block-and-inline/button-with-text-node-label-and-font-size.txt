@@ -5,22 +5,18 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         frag 0 from BlockContainer start: 0, length: 0, rect: [13,10 111.65625x52.40625]
       BlockContainer <button> at (13,10) content-size 111.65625x52.40625 inline-block [BFC] children: inline
         line 0 width: 111.65625, height: 52.40625, bottom: 52.40625, baseline: 40.59375
-          frag 0 from TableWrapper start: 0, length: 0, rect: [13,10 111.65625x52.40625]
-        TableWrapper <(anonymous)> at (13,10) content-size 111.65625x52.40625 [BFC] children: not-inline
-          BlockContainer <(anonymous)> at (13,10) content-size 111.65625x52.40625 table-box [TFC] children: not-inline
-            Box <(anonymous)> at (13,10) content-size 111.65625x52.40625 table-row children: not-inline
-              BlockContainer <(anonymous)> at (13,10) content-size 111.65625x52.40625 table-cell [BFC] children: inline
-                line 0 width: 111.65625, height: 52.40625, bottom: 52.40625, baseline: 40.59375
-                  frag 0 from TextNode start: 0, length: 4, rect: [13,10 111.65625x52.40625]
-                    "Test"
-                TextNode <#text>
+          frag 0 from BlockContainer start: 0, length: 0, rect: [13,10 111.65625x52.40625]
+        BlockContainer <(anonymous)> at (13,10) content-size 111.65625x52.40625 flex-container(column) [FFC] children: not-inline
+          BlockContainer <(anonymous)> at (13,10) content-size 111.65625x52.40625 flex-item [BFC] children: inline
+            line 0 width: 111.65625, height: 52.40625, bottom: 52.40625, baseline: 40.59375
+              frag 0 from TextNode start: 0, length: 4, rect: [13,10 111.65625x52.40625]
+                "Test"
+            TextNode <#text>
 
 ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
     PaintableWithLines (BlockContainer<BODY>) [8,8 784x56.40625]
       PaintableWithLines (BlockContainer<BUTTON>) [8,8 121.65625x56.40625]
-        PaintableWithLines (TableWrapper(anonymous)) [13,10 111.65625x52.40625]
+        PaintableWithLines (BlockContainer(anonymous)) [13,10 111.65625x52.40625]
           PaintableWithLines (BlockContainer(anonymous)) [13,10 111.65625x52.40625]
-            PaintableBox (Box(anonymous)) [13,10 111.65625x52.40625]
-              PaintableWithLines (BlockContainer(anonymous)) [13,10 111.65625x52.40625]
-                TextPaintable (TextNode<#text>)
+            TextPaintable (TextNode<#text>)
