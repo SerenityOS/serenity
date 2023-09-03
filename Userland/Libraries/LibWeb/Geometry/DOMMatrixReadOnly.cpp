@@ -180,6 +180,12 @@ void DOMMatrixReadOnly::initialize_from_create_3d_matrix(double m11, double m12,
     // 4. Return matrix
 }
 
+// https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-frommatrix
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrixReadOnly>> DOMMatrixReadOnly::from_matrix(JS::VM& vm, DOMMatrixInit& other)
+{
+    return create_from_dom_matrix_2d_init(*vm.current_realm(), other);
+}
+
 // https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-isidentity
 bool DOMMatrixReadOnly::is_identity() const
 {

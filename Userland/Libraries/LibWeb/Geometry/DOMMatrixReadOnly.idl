@@ -6,7 +6,7 @@
 interface DOMMatrixReadOnly {
     constructor(optional (DOMString or sequence<unrestricted double>) init);
 
-    // FIXME: [NewObject] static DOMMatrixReadOnly fromMatrix(optional DOMMatrixInit other = {});
+    [NewObject] static DOMMatrixReadOnly fromMatrix(optional DOMMatrixInit other = {});
     // FIXME: [NewObject] static DOMMatrixReadOnly fromFloat32Array(Float32Array array32);
     // FIXME: [NewObject] static DOMMatrixReadOnly fromFloat64Array(Float64Array array64);
 
