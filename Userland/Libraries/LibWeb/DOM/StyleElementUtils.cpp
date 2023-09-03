@@ -94,12 +94,18 @@ void StyleElementUtils::create_a_css_style_sheet(DOM::Document& document, Deprec
     sheet.set_parent_css_style_sheet(parent_style_sheet);
     sheet.set_owner_css_rule(owner_rule);
     sheet.set_owner_node(owner_node);
-    sheet.set_type(move(type));
+    sheet.set_type(MUST(String::from_deprecated_string(type)));
     sheet.set_media(move(media));
-    sheet.set_title(move(title));
+    if (title.is_null())
+        sheet.set_title({});
+    else
+        sheet.set_title(MUST(String::from_deprecated_string(title)));
     sheet.set_alternate(alternate);
     sheet.set_origin_clean(origin_clean);
-    sheet.set_location(move(location));
+    if (location.is_null())
+        sheet.set_location({});
+    else
+        sheet.set_location(MUST(String::from_deprecated_string(location)));
 
     // 2. Then run the add a CSS style sheet steps for the newly created CSS style sheet.
     add_a_css_style_sheet(document, sheet);
