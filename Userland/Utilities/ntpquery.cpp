@@ -146,15 +146,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         5, 0
     };
     if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
-        perror("setsockopt");
-        return 1;
+        perror("setsockopt(SO_RCVTIMEO)");
+        warnln("Continuing without a timeout");
     }
 
+#ifdef SO_TIMESTAMP
     int enable = 1;
     if (setsockopt(fd, SOL_SOCKET, SO_TIMESTAMP, &enable, sizeof(enable)) < 0) {
         perror("setsockopt");
         return 1;
     }
+#endif
 
     sockaddr_in peer_address;
     memset(&peer_address, 0, sizeof(peer_address));
@@ -208,12 +210,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
+#ifdef SO_TIMESTAMP
     cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
     VERIFY(cmsg->cmsg_level == SOL_SOCKET);
     VERIFY(cmsg->cmsg_type == SCM_TIMESTAMP);
     VERIFY(!CMSG_NXTHDR(&msg, cmsg));
     timeval kernel_receive_time;
     memcpy(&kernel_receive_time, CMSG_DATA(cmsg), sizeof(kernel_receive_time));
+#endif
 
     // Checks 3 and 4 from end of section 5 of rfc4330.
     if (packet.version_number() != 3 && packet.version_number() != 4) {
@@ -240,10 +244,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     NtpTimestamp origin_timestamp = ntp_timestamp_from_timeval(local_transmit_time);
     NtpTimestamp receive_timestamp = be64toh(packet.receive_timestamp);
     NtpTimestamp transmit_timestamp = be64toh(packet.transmit_timestamp);
+#ifdef SO_TIMESTAMP
     NtpTimestamp destination_timestamp = ntp_timestamp_from_timeval(kernel_receive_time);
 
     timeval kernel_to_userspace_latency;
     timersub(&userspace_receive_time, &kernel_receive_time, &kernel_to_userspace_latency);
+#else
+    NtpTimestamp destination_timestamp = ntp_timestamp_from_timeval(userspace_receive_time);
+#endif
 
     if (set_time) {
         // FIXME: Do all the time filtering described in 5905, or at least correct for time of flight.
@@ -278,9 +286,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         outln("Transmit timestamp:    {:#016x} ({})", transmit_timestamp, format_ntp_timestamp(transmit_timestamp).characters());
         outln("Destination timestamp: {:#016x} ({})", destination_timestamp, format_ntp_timestamp(destination_timestamp).characters());
 
+#ifdef SO_TIMESTAMP
         // When the system isn't under load, user-space t and packet_t are identical. If a shell with `yes` is running, it can be as high as 30ms in this program,
         // which gets user-space time immediately after the recvmsg() call. In programs that have an event loop reading from multiple sockets, it could be higher.
         outln("Receive latency: {}.{:06} s", (i64)kernel_to_userspace_latency.tv_sec, (int)kernel_to_userspace_latency.tv_usec);
+#endif
     }
 
     // Parts of the "Clock Filter" computations, https://tools.ietf.org/html/rfc5905#section-10
