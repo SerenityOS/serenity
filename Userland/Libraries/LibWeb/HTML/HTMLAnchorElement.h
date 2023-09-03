@@ -23,11 +23,11 @@ public:
     DeprecatedString target() const { return deprecated_attribute(HTML::AttributeNames::target); }
     DeprecatedString download() const { return deprecated_attribute(HTML::AttributeNames::download); }
 
-    DeprecatedString text() const;
-    void set_text(DeprecatedString const&);
+    String text() const;
+    void set_text(String const&);
 
-    DeprecatedString referrer_policy() const;
-    WebIDL::ExceptionOr<void> set_referrer_policy(DeprecatedString const&);
+    StringView referrer_policy() const;
+    WebIDL::ExceptionOr<void> set_referrer_policy(String const&);
 
     // ^EventTarget
     // https://html.spec.whatwg.org/multipage/interaction.html#the-tabindex-attribute:the-a-element

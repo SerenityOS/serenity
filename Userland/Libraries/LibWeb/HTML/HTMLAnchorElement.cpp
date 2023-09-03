@@ -105,32 +105,37 @@ Optional<ARIA::Role> HTMLAnchorElement::default_role() const
 }
 
 // https://html.spec.whatwg.org/multipage/text-level-semantics.html#dom-a-text
-DeprecatedString HTMLAnchorElement::text() const
+String HTMLAnchorElement::text() const
 {
     // The text attribute's getter must return this element's descendant text content.
-    return descendant_text_content();
+    return MUST(String::from_deprecated_string(descendant_text_content()));
 }
 
 // https://html.spec.whatwg.org/multipage/text-level-semantics.html#dom-a-text
-void HTMLAnchorElement::set_text(DeprecatedString const& text)
+void HTMLAnchorElement::set_text(String const& text)
 {
     // The text attribute's setter must string replace all with the given value within this element.
-    string_replace_all(text);
+    string_replace_all(text.to_deprecated_string());
 }
 
 // https://html.spec.whatwg.org/multipage/text-level-semantics.html#dom-a-referrerpolicy
-DeprecatedString HTMLAnchorElement::referrer_policy() const
+StringView HTMLAnchorElement::referrer_policy() const
 {
+    // FIXME: This should probably be `Reflect` in the IDL.
     // The IDL attribute referrerPolicy must reflect the referrerpolicy content attribute, limited to only known values.
-    auto policy_string = deprecated_attribute(HTML::AttributeNames::referrerpolicy);
-    auto maybe_policy = ReferrerPolicy::from_string(policy_string);
-    if (maybe_policy.has_value())
-        return ReferrerPolicy::to_string(maybe_policy.value());
-    return "";
+    auto maybe_policy_string = attribute(HTML::AttributeNames::referrerpolicy);
+    if (!maybe_policy_string.has_value())
+        return ""sv;
+
+    auto maybe_policy = ReferrerPolicy::from_string(maybe_policy_string.value());
+    if (!maybe_policy.has_value())
+        return ""sv;
+
+    return ReferrerPolicy::to_string(maybe_policy.value());
 }
 
 // https://html.spec.whatwg.org/multipage/text-level-semantics.html#dom-a-referrerpolicy
-WebIDL::ExceptionOr<void> HTMLAnchorElement::set_referrer_policy(DeprecatedString const& referrer_policy)
+WebIDL::ExceptionOr<void> HTMLAnchorElement::set_referrer_policy(String const& referrer_policy)
 {
     // The IDL attribute referrerPolicy must reflect the referrerpolicy content attribute, limited to only known values.
     return set_attribute(HTML::AttributeNames::referrerpolicy, referrer_policy);

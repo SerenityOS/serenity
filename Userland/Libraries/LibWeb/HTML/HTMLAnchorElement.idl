@@ -2,7 +2,7 @@
 #import <HTML/HTMLHyperlinkElementUtils.idl>
 
 // https://html.spec.whatwg.org/multipage/text-level-semantics.html#htmlanchorelement
-[Exposed=Window, UseDeprecatedAKString]
+[Exposed=Window]
 interface HTMLAnchorElement : HTMLElement {
 
     [HTMLConstructor] constructor();
