@@ -11,6 +11,7 @@
 #include "Geometry.h"
 #include "Skins/SnakeSkin.h"
 #include <AK/CircularQueue.h>
+#include <AK/String.h>
 #include <LibConfig/Listener.h>
 #include <LibGUI/Frame.h>
 
@@ -35,11 +36,11 @@ public:
 
     void set_skin_color(Color);
     Gfx::Color get_skin_color() const { return m_snake_color; }
-    void set_skin_name(DeprecatedString);
+    void set_skin_name(String);
     void set_skin(NonnullOwnPtr<SnakeSkin> skin);
 
 private:
-    explicit Game(Vector<NonnullRefPtr<Gfx::Bitmap>> food_bitmaps, Color snake_color, DeprecatedString snake_skin_name, NonnullOwnPtr<SnakeSkin> skin);
+    explicit Game(Vector<NonnullRefPtr<Gfx::Bitmap>> food_bitmaps, Color snake_color, String snake_skin_name, NonnullOwnPtr<SnakeSkin> skin);
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
@@ -77,7 +78,7 @@ private:
     Vector<NonnullRefPtr<Gfx::Bitmap>> m_food_bitmaps;
 
     Color m_snake_color;
-    DeprecatedString m_snake_skin_name;
+    String m_snake_skin_name;
     NonnullOwnPtr<SnakeSkin> m_snake_skin;
 };
 

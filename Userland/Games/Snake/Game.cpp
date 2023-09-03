@@ -68,13 +68,13 @@ ErrorOr<NonnullRefPtr<Game>> Game::try_create()
     }
 
     auto color = Color::from_argb(Config::read_u32("Snake"sv, "Snake"sv, "BaseColor"sv, Color(Color::Green).value()));
-    auto skin_name = Config::read_string("Snake"sv, "Snake"sv, "SnakeSkin"sv, "Classic"sv);
+    auto skin_name = TRY(String::from_deprecated_string(Config::read_string("Snake"sv, "Snake"sv, "SnakeSkin"sv, "Classic"sv)));
     auto skin = TRY(SnakeSkin::create(skin_name, color));
 
     return adopt_nonnull_ref_or_enomem(new (nothrow) Game(move(food_bitmaps), color, skin_name, move(skin)));
 }
 
-Game::Game(Vector<NonnullRefPtr<Gfx::Bitmap>> food_bitmaps, Color snake_color, DeprecatedString snake_skin_name, NonnullOwnPtr<SnakeSkin> skin)
+Game::Game(Vector<NonnullRefPtr<Gfx::Bitmap>> food_bitmaps, Color snake_color, String snake_skin_name, NonnullOwnPtr<SnakeSkin> skin)
     : m_food_bitmaps(move(food_bitmaps))
     , m_snake_color(move(snake_color))
     , m_snake_skin_name(move(snake_skin_name))
@@ -328,7 +328,7 @@ Direction Game::direction_to_position(Snake::Coordinate const& from, Snake::Coor
 void Game::config_string_did_change(StringView domain, StringView group, StringView key, StringView value)
 {
     if (domain == "Snake"sv && group == "Snake"sv && key == "SnakeSkin"sv) {
-        set_skin_name(value);
+        set_skin_name(String::from_utf8(value).release_value_but_fixme_should_propagate_errors());
         return;
     }
 }
@@ -349,7 +349,7 @@ void Game::set_skin_color(Gfx::Color color)
     }
 }
 
-void Game::set_skin_name(DeprecatedString name)
+void Game::set_skin_name(String name)
 {
     if (m_snake_skin_name != name) {
         m_snake_skin_name = name;
