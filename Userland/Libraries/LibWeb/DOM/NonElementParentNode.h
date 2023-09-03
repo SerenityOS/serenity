@@ -21,7 +21,7 @@ public:
     {
         JS::GCPtr<Element const> found_element;
         static_cast<NodeType const*>(this)->template for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
-            if (element.attribute(HTML::AttributeNames::id) == id) {
+            if (element.deprecated_attribute(HTML::AttributeNames::id) == id) {
                 found_element = &element;
                 return IterationDecision::Break;
             }
@@ -34,7 +34,7 @@ public:
     {
         JS::GCPtr<Element> found_element;
         static_cast<NodeType*>(this)->template for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
-            if (element.attribute(HTML::AttributeNames::id) == id) {
+            if (element.deprecated_attribute(HTML::AttributeNames::id) == id) {
                 found_element = &element;
                 return IterationDecision::Break;
             }

@@ -60,7 +60,7 @@ void HTMLElement::visit_edges(Cell::Visitor& visitor)
 // https://html.spec.whatwg.org/multipage/dom.html#dom-dir
 DeprecatedString HTMLElement::dir() const
 {
-    auto dir = attribute(HTML::AttributeNames::dir);
+    auto dir = deprecated_attribute(HTML::AttributeNames::dir);
 #define __ENUMERATE_HTML_ELEMENT_DIR_ATTRIBUTE(keyword) \
     if (dir.equals_ignoring_ascii_case(#keyword##sv))   \
         return #keyword##sv;
@@ -427,7 +427,7 @@ DeprecatedString HTMLElement::get_an_elements_target() const
 
     // 1. If element has a target attribute, then return that attribute's value.
     if (has_attribute(AttributeNames::target))
-        return attribute(AttributeNames::target);
+        return deprecated_attribute(AttributeNames::target);
 
     // FIXME: 2. If element's node document contains a base element with a
     // target attribute, then return the value of the target attribute of the
@@ -441,7 +441,7 @@ DeprecatedString HTMLElement::get_an_elements_target() const
 TokenizedFeature::NoOpener HTMLElement::get_an_elements_noopener(StringView target) const
 {
     // To get an element's noopener, given an a, area, or form element element and a string target:
-    auto rel = attribute(HTML::AttributeNames::rel).to_lowercase();
+    auto rel = deprecated_attribute(HTML::AttributeNames::rel).to_lowercase();
     auto link_types = rel.view().split_view_if(Infra::is_ascii_whitespace);
 
     // 1. If element's link types include the noopener or noreferrer keyword, then return true.

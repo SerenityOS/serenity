@@ -109,7 +109,7 @@ void HTMLScriptElement::execute_script()
             document->set_current_script({}, nullptr);
 
         if (m_from_an_external_file)
-            dbgln_if(HTML_SCRIPT_DEBUG, "HTMLScriptElement: Running script {}", attribute(HTML::AttributeNames::src));
+            dbgln_if(HTML_SCRIPT_DEBUG, "HTMLScriptElement: Running script {}", deprecated_attribute(HTML::AttributeNames::src));
         else
             dbgln_if(HTML_SCRIPT_DEBUG, "HTMLScriptElement: Running inline script");
 
@@ -181,8 +181,8 @@ void HTMLScriptElement::prepare_script()
     DeprecatedString script_block_type;
     bool has_type_attribute = has_attribute(HTML::AttributeNames::type);
     bool has_language_attribute = has_attribute(HTML::AttributeNames::language);
-    if ((has_type_attribute && attribute(HTML::AttributeNames::type).is_empty())
-        || (!has_type_attribute && has_language_attribute && attribute(HTML::AttributeNames::language).is_empty())
+    if ((has_type_attribute && deprecated_attribute(HTML::AttributeNames::type).is_empty())
+        || (!has_type_attribute && has_language_attribute && deprecated_attribute(HTML::AttributeNames::language).is_empty())
         || (!has_type_attribute && !has_language_attribute)) {
         // then let the script block's type string for this script element be "text/javascript".
         script_block_type = "text/javascript";
@@ -190,12 +190,12 @@ void HTMLScriptElement::prepare_script()
     // Otherwise, if el has a type attribute,
     else if (has_type_attribute) {
         // then let the script block's type string be the value of that attribute with leading and trailing ASCII whitespace stripped.
-        script_block_type = attribute(HTML::AttributeNames::type).trim(Infra::ASCII_WHITESPACE);
+        script_block_type = deprecated_attribute(HTML::AttributeNames::type).trim(Infra::ASCII_WHITESPACE);
     }
     // Otherwise, el has a non-empty language attribute;
-    else if (!attribute(HTML::AttributeNames::language).is_empty()) {
+    else if (!deprecated_attribute(HTML::AttributeNames::language).is_empty()) {
         // let the script block's type string be the concatenation of "text/" and the value of el's language attribute.
-        script_block_type = DeprecatedString::formatted("text/{}", attribute(HTML::AttributeNames::language));
+        script_block_type = DeprecatedString::formatted("text/{}", deprecated_attribute(HTML::AttributeNames::language));
     }
 
     // 9. If the script block's type string is a JavaScript MIME type essence match,
@@ -256,10 +256,10 @@ void HTMLScriptElement::prepare_script()
     // 20. If el has an event attribute and a for attribute, and el's type is "classic", then:
     if (m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::event) && has_attribute(HTML::AttributeNames::for_)) {
         // 1. Let for be the value of el's' for attribute.
-        auto for_ = attribute(HTML::AttributeNames::for_);
+        auto for_ = deprecated_attribute(HTML::AttributeNames::for_);
 
         // 2. Let event be the value of el's event attribute.
-        auto event = attribute(HTML::AttributeNames::event);
+        auto event = deprecated_attribute(HTML::AttributeNames::event);
 
         // 3. Strip leading and trailing ASCII whitespace from event and for.
         for_ = for_.trim(Infra::ASCII_WHITESPACE);
@@ -284,7 +284,7 @@ void HTMLScriptElement::prepare_script()
     Optional<String> encoding;
 
     if (has_attribute(HTML::AttributeNames::charset)) {
-        auto charset = TextCodec::get_standardized_encoding(attribute(HTML::AttributeNames::charset));
+        auto charset = TextCodec::get_standardized_encoding(deprecated_attribute(HTML::AttributeNames::charset));
         if (charset.has_value())
             encoding = String::from_utf8(*charset).release_value_but_fixme_should_propagate_errors();
     }
@@ -308,7 +308,7 @@ void HTMLScriptElement::prepare_script()
     //     Otherwise, let integrity metadata be the empty string.
     String integrity_metadata;
     if (has_attribute(HTML::AttributeNames::integrity)) {
-        auto integrity = attribute(HTML::AttributeNames::integrity);
+        auto integrity = deprecated_attribute(HTML::AttributeNames::integrity);
         integrity_metadata = String::from_deprecated_string(integrity).release_value_but_fixme_should_propagate_errors();
     }
 
@@ -346,7 +346,7 @@ void HTMLScriptElement::prepare_script()
         }
 
         // 2. Let src be the value of el's src attribute.
-        auto src = attribute(HTML::AttributeNames::src);
+        auto src = deprecated_attribute(HTML::AttributeNames::src);
 
         // 3. If src is the empty string, then queue an element task on the DOM manipulation task source given el to fire an event named error at el, and return.
         if (src.is_empty()) {

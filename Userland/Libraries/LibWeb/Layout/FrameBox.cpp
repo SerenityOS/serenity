@@ -24,8 +24,8 @@ void FrameBox::prepare_for_replaced_layout()
     VERIFY(dom_node().nested_browsing_context());
 
     // FIXME: Do proper error checking, etc.
-    set_natural_width(dom_node().attribute(HTML::AttributeNames::width).to_int().value_or(300));
-    set_natural_height(dom_node().attribute(HTML::AttributeNames::height).to_int().value_or(150));
+    set_natural_width(dom_node().deprecated_attribute(HTML::AttributeNames::width).to_int().value_or(300));
+    set_natural_height(dom_node().deprecated_attribute(HTML::AttributeNames::height).to_int().value_or(150));
 }
 
 void FrameBox::did_set_content_size()

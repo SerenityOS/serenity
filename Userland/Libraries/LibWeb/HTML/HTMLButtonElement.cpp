@@ -59,7 +59,7 @@ void HTMLButtonElement::initialize(JS::Realm& realm)
 
 DeprecatedString HTMLButtonElement::type() const
 {
-    auto value = attribute(HTML::AttributeNames::type);
+    auto value = deprecated_attribute(HTML::AttributeNames::type);
 
 #define __ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTE(keyword, _) \
     if (value.equals_ignoring_ascii_case(#keyword##sv))    \
@@ -73,7 +73,7 @@ DeprecatedString HTMLButtonElement::type() const
 
 HTMLButtonElement::TypeAttributeState HTMLButtonElement::type_state() const
 {
-    auto value = attribute(HTML::AttributeNames::type);
+    auto value = deprecated_attribute(HTML::AttributeNames::type);
 
 #define __ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTE(keyword, state) \
     if (value.equals_ignoring_ascii_case(#keyword##sv))        \
@@ -110,7 +110,7 @@ DeprecatedString HTMLButtonElement::value() const
 {
     if (!has_attribute(AttributeNames::value))
         return DeprecatedString::empty();
-    return attribute(AttributeNames::value);
+    return deprecated_attribute(AttributeNames::value);
 }
 
 }

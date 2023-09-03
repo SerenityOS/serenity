@@ -410,7 +410,7 @@ WebIDL::ExceptionOr<void> HTMLTableElement::delete_row(long index)
 
 unsigned int HTMLTableElement::border() const
 {
-    return parse_border(attribute(HTML::AttributeNames::border));
+    return parse_border(deprecated_attribute(HTML::AttributeNames::border));
 }
 
 }

@@ -87,7 +87,7 @@ Element* HTMLCollection::named_item(FlyString const& name_) const
     auto elements = collect_matching_elements();
     // 2. Return the first element in the collection for which at least one of the following is true:
     //      - it has an ID which is key;
-    if (auto it = elements.find_if([&](auto& entry) { return entry->attribute(HTML::AttributeNames::id) == name; }); it != elements.end())
+    if (auto it = elements.find_if([&](auto& entry) { return entry->deprecated_attribute(HTML::AttributeNames::id) == name; }); it != elements.end())
         return *it;
     //      - it is in the HTML namespace and has a name attribute whose value is key;
     if (auto it = elements.find_if([&](auto& entry) { return entry->namespace_() == Namespace::HTML && entry->name() == name; }); it != elements.end())
@@ -108,7 +108,7 @@ Vector<DeprecatedString> HTMLCollection::supported_property_names() const
     for (auto& element : elements) {
         // 1. If element has an ID which is not in result, append element’s ID to result.
         if (element->has_attribute(HTML::AttributeNames::id)) {
-            auto id = element->attribute(HTML::AttributeNames::id);
+            auto id = element->deprecated_attribute(HTML::AttributeNames::id);
 
             if (!result.contains_slow(id))
                 result.append(id);
@@ -116,7 +116,7 @@ Vector<DeprecatedString> HTMLCollection::supported_property_names() const
 
         // 2. If element is in the HTML namespace and has a name attribute whose value is neither the empty string nor is in result, append element’s name attribute value to result.
         if (element->namespace_() == Namespace::HTML && element->has_attribute(HTML::AttributeNames::name)) {
-            auto name = element->attribute(HTML::AttributeNames::name);
+            auto name = element->deprecated_attribute(HTML::AttributeNames::name);
 
             if (!name.is_empty() && !result.contains_slow(name))
                 result.append(name);

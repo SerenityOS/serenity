@@ -185,7 +185,7 @@ WebIDL::ExceptionOr<void> HTMLFormElement::submit_form(JS::NonnullGCPtr<HTMLElem
     //     owner.
     DeprecatedString target;
     if (submitter->has_attribute(AttributeNames::formtarget))
-        target = submitter->attribute(AttributeNames::formtarget);
+        target = submitter->deprecated_attribute(AttributeNames::formtarget);
     else
         target = get_an_elements_target();
 
@@ -316,10 +316,10 @@ DeprecatedString HTMLFormElement::action_from_form_element(JS::NonnullGCPtr<HTML
     // string.
     if (auto const* form_associated_element = dynamic_cast<FormAssociatedElement const*>(element.ptr());
         form_associated_element && form_associated_element->is_submit_button() && element->has_attribute(AttributeNames::formaction))
-        return attribute(AttributeNames::formaction);
+        return deprecated_attribute(AttributeNames::formaction);
 
     if (this->has_attribute(AttributeNames::action))
-        return attribute(AttributeNames::action);
+        return deprecated_attribute(AttributeNames::action);
 
     return DeprecatedString::empty();
 }
@@ -346,13 +346,13 @@ HTMLFormElement::MethodAttributeState HTMLFormElement::method_state_from_form_el
         form_associated_element && form_associated_element->is_submit_button() && element->has_attribute(AttributeNames::formmethod)) {
         // NOTE: `formmethod` is the same as `method`, except that it has no missing value default.
         //       This is handled by not calling `method_attribute_to_method_state` in the first place if there is no `formmethod` attribute.
-        return method_attribute_to_method_state(element->attribute(AttributeNames::formmethod));
+        return method_attribute_to_method_state(element->deprecated_attribute(AttributeNames::formmethod));
     }
 
     if (!this->has_attribute(AttributeNames::method))
         return MethodAttributeState::GET;
 
-    return method_attribute_to_method_state(this->attribute(AttributeNames::method));
+    return method_attribute_to_method_state(this->deprecated_attribute(AttributeNames::method));
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#form-submission-attributes:attr-fs-enctype-2
@@ -378,13 +378,13 @@ HTMLFormElement::EncodingTypeAttributeState HTMLFormElement::encoding_type_state
         // NOTE: `formenctype` is the same as `enctype`, except that it has no missing value default.
         //       This is handled by not calling `encoding_type_attribute_to_encoding_type_state` in the first place if there is no
         //       `formenctype` attribute.
-        return encoding_type_attribute_to_encoding_type_state(element->attribute(AttributeNames::formenctype));
+        return encoding_type_attribute_to_encoding_type_state(element->deprecated_attribute(AttributeNames::formenctype));
     }
 
     if (!this->has_attribute(AttributeNames::enctype))
         return EncodingTypeAttributeState::FormUrlEncoded;
 
-    return encoding_type_attribute_to_encoding_type_state(this->attribute(AttributeNames::enctype));
+    return encoding_type_attribute_to_encoding_type_state(this->deprecated_attribute(AttributeNames::enctype));
 }
 
 static bool is_form_control(DOM::Element const& element)
@@ -497,7 +497,7 @@ DeprecatedString HTMLFormElement::action() const
     if (!has_attribute(AttributeNames::action))
         return document().url_string();
 
-    auto action_attribute = attribute(AttributeNames::action);
+    auto action_attribute = deprecated_attribute(AttributeNames::action);
     if (action_attribute.is_empty())
         return document().url_string();
 
@@ -519,7 +519,7 @@ ErrorOr<String> HTMLFormElement::pick_an_encoding() const
     // 2. If the form element has an accept-charset attribute, set encoding to the return value of running these substeps:
     if (has_attribute(AttributeNames::accept_charset)) {
         // 1. Let input be the value of the form element's accept-charset attribute.
-        auto input = attribute(AttributeNames::accept_charset);
+        auto input = deprecated_attribute(AttributeNames::accept_charset);
 
         // 2. Let candidate encoding labels be the result of splitting input on ASCII whitespace.
         auto candidate_encoding_labels = input.split_view(Infra::is_ascii_whitespace);
@@ -785,7 +785,7 @@ void HTMLFormElement::plan_to_navigate_to(Variant<AK::URL, JS::NonnullGCPtr<Fetc
     Optional<ReferrerPolicy::ReferrerPolicy> referrer_policy;
 
     // 2. If the form element's link types include the noreferrer keyword, then set referrerPolicy to "no-referrer".
-    auto rel = attribute(HTML::AttributeNames::rel).to_lowercase();
+    auto rel = deprecated_attribute(HTML::AttributeNames::rel).to_lowercase();
     auto link_types = rel.view().split_view_if(Infra::is_ascii_whitespace);
     if (link_types.contains_slow("noreferrer"sv))
         referrer_policy = ReferrerPolicy::ReferrerPolicy::NoReferrer;

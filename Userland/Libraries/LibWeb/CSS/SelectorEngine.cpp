@@ -34,7 +34,7 @@ static inline bool matches_lang_pseudo_class(DOM::Element const& element, Vector
 {
     FlyString element_language;
     for (auto const* e = &element; e; e = e->parent_element()) {
-        auto lang = e->attribute(HTML::AttributeNames::lang);
+        auto lang = e->deprecated_attribute(HTML::AttributeNames::lang);
         if (!lang.is_null()) {
             element_language = FlyString::from_deprecated_fly_string(lang).release_value_but_fixme_should_propagate_errors();
             break;
@@ -142,14 +142,14 @@ static inline bool matches_attribute(CSS::Selector::SimpleSelector::Attribute co
     switch (attribute.match_type) {
     case CSS::Selector::SimpleSelector::Attribute::MatchType::ExactValueMatch:
         return case_insensitive_match
-            ? Infra::is_ascii_case_insensitive_match(element.attribute(attribute_name), attribute.value)
-            : element.attribute(attribute_name) == attribute.value.to_deprecated_string();
+            ? Infra::is_ascii_case_insensitive_match(element.deprecated_attribute(attribute_name), attribute.value)
+            : element.deprecated_attribute(attribute_name) == attribute.value.to_deprecated_string();
     case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsWord: {
         if (attribute.value.is_empty()) {
             // This selector is always false is match value is empty.
             return false;
         }
-        auto const view = element.attribute(attribute_name).split_view(' ');
+        auto const view = element.deprecated_attribute(attribute_name).split_view(' ');
         auto const size = view.size();
         for (size_t i = 0; i < size; ++i) {
             auto const value = view.at(i);
@@ -163,9 +163,9 @@ static inline bool matches_attribute(CSS::Selector::SimpleSelector::Attribute co
     }
     case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsString:
         return !attribute.value.is_empty()
-            && element.attribute(attribute_name).contains(attribute.value, case_sensitivity);
+            && element.deprecated_attribute(attribute_name).contains(attribute.value, case_sensitivity);
     case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithSegment: {
-        auto const element_attr_value = element.attribute(attribute_name);
+        auto const element_attr_value = element.deprecated_attribute(attribute_name);
         if (element_attr_value.is_empty()) {
             // If the attribute value on element is empty, the selector is true
             // if the match value is also empty and false otherwise.
@@ -181,10 +181,10 @@ static inline bool matches_attribute(CSS::Selector::SimpleSelector::Attribute co
     }
     case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithString:
         return !attribute.value.is_empty()
-            && element.attribute(attribute_name).starts_with(attribute.value, case_sensitivity);
+            && element.deprecated_attribute(attribute_name).starts_with(attribute.value, case_sensitivity);
     case CSS::Selector::SimpleSelector::Attribute::MatchType::EndsWithString:
         return !attribute.value.is_empty()
-            && element.attribute(attribute_name).ends_with(attribute.value, case_sensitivity);
+            && element.deprecated_attribute(attribute_name).ends_with(attribute.value, case_sensitivity);
     default:
         break;
     }
@@ -255,7 +255,7 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
         if (!matches_link_pseudo_class(element))
             return false;
         auto document_url = element.document().url();
-        AK::URL target_url = element.document().parse_url(element.attribute(HTML::AttributeNames::href));
+        AK::URL target_url = element.document().parse_url(element.deprecated_attribute(HTML::AttributeNames::href));
         if (target_url.fragment().has_value())
             return document_url.equals(target_url, AK::URL::ExcludeFragment::No);
         return document_url.equals(target_url, AK::URL::ExcludeFragment::Yes);
@@ -560,7 +560,7 @@ static inline bool matches(CSS::Selector::SimpleSelector const& component, Optio
         VERIFY_NOT_REACHED();
     }
     case CSS::Selector::SimpleSelector::Type::Id:
-        return component.name() == element.attribute(HTML::AttributeNames::id).view();
+        return component.name() == element.deprecated_attribute(HTML::AttributeNames::id).view();
     case CSS::Selector::SimpleSelector::Type::Class:
         return element.has_class(component.name());
     case CSS::Selector::SimpleSelector::Type::Attribute:

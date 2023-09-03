@@ -33,7 +33,7 @@ void HTMLAreaElement::attribute_changed(DeprecatedFlyString const& name, Depreca
 
 DeprecatedString HTMLAreaElement::hyperlink_element_utils_href() const
 {
-    return attribute(HTML::AttributeNames::href);
+    return deprecated_attribute(HTML::AttributeNames::href);
 }
 
 WebIDL::ExceptionOr<void> HTMLAreaElement::set_hyperlink_element_utils_href(DeprecatedString href)

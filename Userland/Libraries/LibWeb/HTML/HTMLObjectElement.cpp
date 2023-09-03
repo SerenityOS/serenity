@@ -69,7 +69,7 @@ void HTMLObjectElement::attribute_changed(DeprecatedFlyString const& name, Depre
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#attr-object-data
 DeprecatedString HTMLObjectElement::data() const
 {
-    auto data = attribute(HTML::AttributeNames::data);
+    auto data = deprecated_attribute(HTML::AttributeNames::data);
     return document().parse_url(data).to_deprecated_string();
 }
 
@@ -123,7 +123,7 @@ void HTMLObjectElement::queue_element_task_to_run_object_representation_steps()
         // FIXME: 3. If the classid attribute is present, and has a value that isn't the empty string, then: if the user agent can find a plugin suitable according to the value of the classid attribute, and plugins aren't being sandboxed, then that plugin should be used, and the value of the data attribute, if any, should be passed to the plugin. If no suitable plugin can be found, or if the plugin reports an error, jump to the step below labeled fallback.
 
         // 4. If the data attribute is present and its value is not the empty string, then:
-        if (auto data = attribute(HTML::AttributeNames::data); !data.is_empty()) {
+        if (auto data = deprecated_attribute(HTML::AttributeNames::data); !data.is_empty()) {
             // 1. If the type attribute is present and its value is not a type that the user agent supports, and is not a type that the user agent can find a plugin for, then the user agent may jump to the step below labeled fallback without fetching the content to examine its real type.
 
             // 2. Parse a URL given the data attribute, relative to the element's node document.
@@ -320,7 +320,7 @@ void HTMLObjectElement::run_object_representation_fallback_steps()
 void HTMLObjectElement::load_image()
 {
     // NOTE: This currently reloads the image instead of reusing the resource we've already downloaded.
-    auto data = attribute(HTML::AttributeNames::data);
+    auto data = deprecated_attribute(HTML::AttributeNames::data);
     auto url = document().parse_url(data);
     m_image_request = HTML::SharedImageRequest::get_or_create(realm(), *document().page(), url);
     m_image_request->add_callbacks(
