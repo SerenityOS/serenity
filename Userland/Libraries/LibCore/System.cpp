@@ -54,6 +54,13 @@ extern char** environ;
 #    include <sys/sysctl.h>
 #endif
 
+#if defined(AK_OS_GNU_HURD)
+extern "C" {
+#    include <hurd.h>
+}
+#    include <LibCore/File.h>
+#endif
+
 #define HANDLE_SYSCALL_RETURN_VALUE(syscall_name, rc, success_value) \
     if ((rc) < 0) {                                                  \
         return Error::from_syscall(syscall_name##sv, rc);            \
@@ -1659,8 +1666,8 @@ ErrorOr<void> access(StringView pathname, int mode, int flags)
 ErrorOr<DeprecatedString> readlink(StringView pathname)
 {
     // FIXME: Try again with a larger buffer.
-    char data[PATH_MAX];
 #ifdef AK_OS_SERENITY
+    char data[PATH_MAX];
     Syscall::SC_readlink_params small_params {
         .path = { pathname.characters_without_null_termination(), pathname.length() },
         .buffer = { data, sizeof(data) },
@@ -1668,7 +1675,16 @@ ErrorOr<DeprecatedString> readlink(StringView pathname)
     };
     int rc = syscall(SC_readlink, &small_params);
     HANDLE_SYSCALL_RETURN_VALUE("readlink", rc, DeprecatedString(data, rc));
+#elif defined(AK_OS_GNU_HURD)
+    // PATH_MAX is not defined, nor is there an upper limit on path lengths.
+    // Let's do this the right way.
+    int fd = TRY(open(pathname, O_READ | O_NOLINK));
+    auto file = TRY(File::adopt_fd(fd, File::OpenMode::Read));
+    auto buffer = TRY(file->read_until_eof());
+    // TODO: Get rid of this copy here.
+    return DeprecatedString::copy(buffer);
 #else
+    char data[PATH_MAX];
     DeprecatedString path_string = pathname;
     int rc = ::readlink(path_string.characters(), data, sizeof(data));
     if (rc == -1)
@@ -1748,6 +1764,18 @@ ErrorOr<String> current_executable_path()
     // Ignore error if it wasn't a symlink
     if (ret == -1 && errno != EINVAL)
         return Error::from_syscall("readlink"sv, -errno);
+#elif defined(AK_OS_GNU_HURD)
+    // We could read /proc/self/exe, but why rely on procfs being mounted
+    // if we can do the same thing procfs does and ask the proc server directly?
+    process_t proc = getproc();
+    if (!MACH_PORT_VALID(proc))
+        return Error::from_syscall("getproc"sv, -errno);
+    kern_return_t err = proc_get_exe(proc, getpid(), path);
+    mach_port_deallocate(mach_task_self(), proc);
+    if (err) {
+        __hurd_fail(static_cast<error_t>(err));
+        return Error::from_syscall("proc_get_exe"sv, -errno);
+    }
 #elif defined(AK_OS_DRAGONFLY)
     return String::from_deprecated_string(TRY(readlink("/proc/curproc/file"sv)));
 #elif defined(AK_OS_SOLARIS)
