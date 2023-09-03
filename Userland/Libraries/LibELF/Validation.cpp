@@ -264,7 +264,7 @@ ErrorOr<bool> validate_program_headers(ElfW(Ehdr) const& elf_header, size_t file
                 return false;
             }
             if (interpreter_path_builder)
-                TRY(interpreter_path_builder->try_append({ buffer.offset(program_header.p_offset), program_header.p_filesz - 1 }));
+                TRY(interpreter_path_builder->try_append({ buffer.offset(program_header.p_offset), static_cast<size_t>(program_header.p_filesz) - 1 }));
             break;
         case PT_LOAD:
         case PT_DYNAMIC:
@@ -295,7 +295,11 @@ ErrorOr<bool> validate_program_headers(ElfW(Ehdr) const& elf_header, size_t file
             }
 
             if (program_header.p_memsz != 0) {
-                if (program_header.p_memsz < static_cast<unsigned>(PTHREAD_STACK_MIN) || program_header.p_memsz > static_cast<unsigned>(PTHREAD_STACK_MAX)) {
+                if (
+#ifdef PTHREAD_STACK_MIN
+                    program_header.p_memsz < static_cast<unsigned>(PTHREAD_STACK_MIN) ||
+#endif
+                    program_header.p_memsz > static_cast<unsigned>(PTHREAD_STACK_MAX)) {
                     if (verbose)
                         dbgln("PT_GNU_STACK defines an unacceptable stack size.");
                     return false;
