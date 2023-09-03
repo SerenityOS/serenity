@@ -3,7 +3,7 @@
 #import <FileAPI/FileList.idl>
 
 // https://html.spec.whatwg.org/multipage/input.html#htmlinputelement
-[Exposed=Window, UseDeprecatedAKString]
+[Exposed=Window]
 interface HTMLInputElement : HTMLElement {
 
     [HTMLConstructor] constructor();

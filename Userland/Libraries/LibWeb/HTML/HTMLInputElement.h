@@ -56,15 +56,15 @@ public:
 #undef __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE
     };
 
-    DeprecatedString type() const;
+    StringView type() const;
     TypeAttributeState type_state() const { return m_type; }
-    WebIDL::ExceptionOr<void> set_type(DeprecatedString const&);
+    WebIDL::ExceptionOr<void> set_type(String const&);
 
     DeprecatedString default_value() const { return deprecated_attribute(HTML::AttributeNames::value); }
     DeprecatedString name() const { return deprecated_attribute(HTML::AttributeNames::name); }
 
     virtual DeprecatedString value() const override;
-    WebIDL::ExceptionOr<void> set_value(DeprecatedString);
+    WebIDL::ExceptionOr<void> set_value(String const&);
 
     Optional<DeprecatedString> placeholder_value() const;
 
@@ -94,10 +94,10 @@ public:
 
     WebIDL::ExceptionOr<bool> check_validity();
     WebIDL::ExceptionOr<bool> report_validity();
-    void set_custom_validity(DeprecatedString const&);
+    void set_custom_validity(String const&);
 
     WebIDL::ExceptionOr<void> select();
-    WebIDL::ExceptionOr<void> set_selection_range(u32 start, u32 end, DeprecatedString const& direction);
+    WebIDL::ExceptionOr<void> set_selection_range(u32 start, u32 end, Optional<String> const& direction = {});
 
     WebIDL::ExceptionOr<void> show_picker();
 
