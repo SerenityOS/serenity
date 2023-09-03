@@ -166,7 +166,7 @@ JS::NonnullGCPtr<TimeRanges> HTMLMediaElement::buffered() const
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#dom-navigator-canplaytype
-WebIDL::ExceptionOr<Bindings::CanPlayTypeResult> HTMLMediaElement::can_play_type(DeprecatedString const& type) const
+WebIDL::ExceptionOr<Bindings::CanPlayTypeResult> HTMLMediaElement::can_play_type(StringView type) const
 {
     auto& vm = this->vm();
 
