@@ -25,7 +25,7 @@
 #include <signal.h>
 #include <unistd.h>
 
-#if !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN)
+#if !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN) && !defined(AK_OS_GNU_HURD)
 // Only used to disable core dumps
 #    include <sys/prctl.h>
 #endif
@@ -573,7 +573,10 @@ int main(int argc, char** argv)
     args_parser.add_option(disable_core_dumping, "Disable core dumping", "disable-core-dump", 0);
     args_parser.parse(arguments);
 
-#if !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN)
+#ifdef AK_OS_GNU_HURD
+    if (disable_core_dumping)
+        setenv("CRASHSERVER", "/servers/crash-kill", true);
+#elif !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN)
     if (disable_core_dumping && prctl(PR_SET_DUMPABLE, 0, 0, 0) < 0) {
         perror("prctl(PR_SET_DUMPABLE)");
         return exit_wrong_arguments;

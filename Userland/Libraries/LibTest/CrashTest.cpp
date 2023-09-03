@@ -12,7 +12,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#if !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN)
+#if !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN) && !defined(AK_OS_GNU_HURD)
 #    include <sys/prctl.h>
 #endif
 
@@ -38,7 +38,10 @@ bool Crash::run(RunType run_type)
             perror("fork");
             VERIFY_NOT_REACHED();
         } else if (pid == 0) {
-#if !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN)
+#if defined(AK_OS_GNU_HURD)
+            // When we crash, just kill the program, don't dump core.
+            setenv("CRASHSERVER", "/servers/crash-kill", true);
+#elif !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN)
             if (prctl(PR_SET_DUMPABLE, 0, 0, 0) < 0)
                 perror("prctl(PR_SET_DUMPABLE)");
 #endif
