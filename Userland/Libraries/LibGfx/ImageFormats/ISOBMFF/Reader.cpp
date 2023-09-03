@@ -19,7 +19,7 @@ ErrorOr<BoxList> Reader::read_entire_file()
 
     while (!m_stream->is_eof()) {
         auto box_header = TRY(read_box_header(*m_stream));
-        BoxStream box_stream { *m_stream, box_header.contents_size };
+        BoxStream box_stream { *m_stream, static_cast<size_t>(box_header.contents_size) };
 
         switch (box_header.type) {
         case BoxType::FileTypeBox:
