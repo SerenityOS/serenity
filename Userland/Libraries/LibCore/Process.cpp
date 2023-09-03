@@ -23,6 +23,10 @@
 #    include <syscall.h>
 #elif defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_SOLARIS)
 #    include <sys/sysctl.h>
+#elif defined(AK_OS_GNU_HURD)
+extern "C" {
+#    include <hurd.h>
+}
 #endif
 
 namespace Core {
@@ -163,6 +167,47 @@ ErrorOr<bool> Process::is_being_debugged()
         return (tracer_pid != 0UL);
     }
     return false;
+#elif defined(AK_OS_GNU_HURD)
+    process_t proc = getproc();
+    if (!MACH_PORT_VALID(proc))
+        return Error::from_syscall("getproc"sv, -errno);
+
+    int flags = PI_FETCH_TASKINFO;
+    // We're going to ask the proc server for the info about our process,
+    // and it is going to reply, placing the info into a buffer. It can
+    // either fill in (overwrite) the buffer we provide to it (called pi_buffer
+    // below), or allocate (as if with mmap or vm_allocate) a new buffer.
+    // The buffer is really of type struct procinfo[], but it's transferred
+    // over IPC as int[]. We pass in a double pointer (int** pi_array) that
+    // initially points to our pi_buffer, but the call will update it to
+    // point to the newly allocated buffer if it ends up making one.
+    struct procinfo pi_buffer = {};
+    int* pi_array = reinterpret_cast<int*>(&pi_buffer);
+    mach_msg_type_number_t pi_array_len = sizeof(pi_buffer) / sizeof(int);
+    data_t waits = nullptr;
+    mach_msg_type_number_t waits_len = 0;
+
+    kern_return_t err = proc_getprocinfo(proc, getpid(), &flags, &pi_array, &pi_array_len, &waits, &waits_len);
+    mach_port_deallocate(mach_task_self(), proc);
+    if (err) {
+        __hurd_fail(static_cast<error_t>(err));
+        return Error::from_syscall("proc_getprocinfo"sv, -errno);
+    }
+
+    // Now cast the returned buffer pointer back to struct procinfo, and
+    // read the info we're interested in (the PI_TRACED flag) from there.
+    VERIFY(pi_array_len >= sizeof(struct procinfo));
+    struct procinfo* procinfo = reinterpret_cast<struct procinfo*>(pi_array);
+    bool traced = procinfo->state & PI_TRACED;
+
+    // If the returned buffer is not the one we allocated on the stack,
+    // we should unmap it.
+    if (procinfo != &pi_buffer)
+        (void)System::munmap(pi_array, pi_array_len * sizeof(int));
+    if (waits)
+        (void)System::munmap(waits, waits_len);
+
+    return traced;
 #elif defined(AK_OS_MACOS)
     // https://developer.apple.com/library/archive/qa/qa1361/_index.html
     int mib[4] = {};
