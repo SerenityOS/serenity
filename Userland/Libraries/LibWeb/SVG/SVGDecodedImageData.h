@@ -20,7 +20,7 @@ public:
 
     virtual Optional<CSSPixels> intrinsic_width() const override;
     virtual Optional<CSSPixels> intrinsic_height() const override;
-    virtual Optional<float> intrinsic_aspect_ratio() const override;
+    virtual Optional<CSSPixelFraction> intrinsic_aspect_ratio() const override;
 
     // FIXME: Support SVG animations. :^)
     virtual int frame_duration(size_t) const override { return 0; }

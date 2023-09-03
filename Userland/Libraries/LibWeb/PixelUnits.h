@@ -287,7 +287,7 @@ public:
     {
     }
 
-    constexpr CSSPixelFraction(CSSPixels value)
+    explicit constexpr CSSPixelFraction(CSSPixels value)
         : m_numerator(value)
         , m_denominator(1)
     {

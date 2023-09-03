@@ -47,9 +47,9 @@ Optional<CSSPixels> AnimatedBitmapDecodedImageData::intrinsic_height() const
     return m_frames.first().bitmap->height();
 }
 
-Optional<float> AnimatedBitmapDecodedImageData::intrinsic_aspect_ratio() const
+Optional<CSSPixelFraction> AnimatedBitmapDecodedImageData::intrinsic_aspect_ratio() const
 {
-    return static_cast<float>(m_frames.first().bitmap->width()) / static_cast<float>(m_frames.first().bitmap->height());
+    return CSSPixels(m_frames.first().bitmap->width()) / CSSPixels(m_frames.first().bitmap->height());
 }
 
 }

@@ -381,7 +381,7 @@ Optional<CSSPixels> HTMLObjectElement::intrinsic_height() const
     return {};
 }
 
-Optional<float> HTMLObjectElement::intrinsic_aspect_ratio() const
+Optional<CSSPixelFraction> HTMLObjectElement::intrinsic_aspect_ratio() const
 {
     if (auto image_data = this->image_data())
         return image_data->intrinsic_aspect_ratio();

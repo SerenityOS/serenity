@@ -35,8 +35,8 @@ private:
     [[nodiscard]] bool should_treat_cross_size_as_auto(Box const&) const;
 
     [[nodiscard]] CSSPixels adjust_main_size_through_aspect_ratio_for_cross_size_min_max_constraints(Box const&, CSSPixels main_size, CSS::Size const& min_cross_size, CSS::Size const& max_cross_size) const;
-    [[nodiscard]] CSSPixels calculate_main_size_from_cross_size_and_aspect_ratio(CSSPixels cross_size, double aspect_ratio) const;
-    [[nodiscard]] CSSPixels calculate_cross_size_from_main_size_and_aspect_ratio(CSSPixels main_size, double aspect_ratio) const;
+    [[nodiscard]] CSSPixels calculate_main_size_from_cross_size_and_aspect_ratio(CSSPixels cross_size, CSSPixelFraction aspect_ratio) const;
+    [[nodiscard]] CSSPixels calculate_cross_size_from_main_size_and_aspect_ratio(CSSPixels main_size, CSSPixelFraction aspect_ratio) const;
 
     void dump_items() const;
 
