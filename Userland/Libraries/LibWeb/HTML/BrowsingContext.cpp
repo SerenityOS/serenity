@@ -881,20 +881,6 @@ BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_contex
     return { chosen.ptr(), window_type };
 }
 
-// https://html.spec.whatwg.org/multipage/browsers.html#document-tree-child-browsing-context
-size_t BrowsingContext::document_tree_child_browsing_context_count() const
-{
-    size_t count = 0;
-
-    // A browsing context child is a document-tree child browsing context of parent if child is a child browsing context and child's container is in a document tree.
-    for_each_child([this, &count](BrowsingContext const& child) {
-        if (child.is_child_of(*this) && child.container()->in_a_document_tree())
-            ++count;
-    });
-
-    return count;
-}
-
 // https://html.spec.whatwg.org/multipage/browsers.html#child-browsing-context
 bool BrowsingContext::is_child_of(BrowsingContext const& parent) const
 {
