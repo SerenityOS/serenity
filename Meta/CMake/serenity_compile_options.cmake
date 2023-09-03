@@ -1,6 +1,7 @@
 include(${CMAKE_CURRENT_LIST_DIR}/common_compile_options.cmake)
 
-# The following warnings are sorted by the "base" name (the part excluding the initial Wno or W).
+# The following options are sorted by the "base" name (the part excluding the initial Wno/fno or W/f).
+
 add_compile_options(-Wno-address-of-packed-member)
 add_compile_options(-Wcast-qual)
 add_compile_options(-Wdeprecated-copy)
@@ -18,6 +19,7 @@ add_compile_options(-Wwrite-strings)
 
 add_compile_options(-fno-delete-null-pointer-checks)
 add_compile_options(-ffile-prefix-map=${SerenityOS_SOURCE_DIR}=.)
+add_compile_options(-fno-omit-frame-pointer)
 add_compile_options(-fsized-deallocation)
 add_compile_options(-fstack-clash-protection)
 add_compile_options(-fstack-protector-strong)
