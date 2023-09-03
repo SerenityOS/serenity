@@ -133,6 +133,13 @@ public:
 
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> inverted() const;
 
+    enum class MaskKind {
+        Alpha,
+        Luminance
+    };
+
+    void apply_mask(Gfx::Bitmap const& mask, MaskKind);
+
     ~Bitmap();
 
     [[nodiscard]] u8* scanline_u8(int physical_y);
