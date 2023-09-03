@@ -33,17 +33,9 @@ steps:
         rm ./wabt-1.0.23-ubuntu.tar.gz
       displayName: 'Install Dependencies'
 
-  - ${{ if eq(parameters.os, 'macOS') }}:
+  - ${{ if or(eq(parameters.os, 'macOS'), eq(parameters.os, 'Android') ) }}:
     # macOS ships an ancient Bash 3.x by default
     - script: |
         set -e
         brew install coreutils bash ninja wabt ccache unzip qt llvm@15
-      displayName: 'Install Dependencies'
-
-  - ${{ if eq(parameters.os, 'Android') }}:
-    - script: |
-        set -e
-        sudo apt-get install ccache gcc-12 g++-12 libstdc++-12-dev ninja-build unzip
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100
-        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 100
       displayName: 'Install Dependencies'
