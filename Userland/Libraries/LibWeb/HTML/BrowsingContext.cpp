@@ -357,36 +357,6 @@ bool BrowsingContext::is_focused_context() const
     return m_page && &m_page->focused_context() == this;
 }
 
-// https://html.spec.whatwg.org/multipage/browsers.html#set-the-active-document
-void BrowsingContext::set_active_document(JS::NonnullGCPtr<DOM::Document> document)
-{
-    auto previously_active_document = active_document();
-
-    // 1. Let window be document's relevant global object.
-    auto& window = verify_cast<HTML::Window>(relevant_global_object(document));
-
-    // 2. Set document's visibility state to browsingContext's top-level browsing context's system visibility state.
-    document->set_visibility_state({}, top_level_browsing_context().system_visibility_state());
-
-    // 3. Set browsingContext's active window to window.
-    m_window_proxy->set_window(window);
-
-    // 4. Set window's associated Document to document.
-    window.set_associated_document(document);
-
-    // 5. Set window's relevant settings object's execution ready flag.
-    relevant_settings_object(window).execution_ready = true;
-
-    // AD-HOC:
-    document->set_browsing_context(this);
-
-    if (m_page && m_page->top_level_traversable_is_initialized() && this == &m_page->top_level_browsing_context())
-        m_page->client().page_did_change_title(document->title());
-
-    if (previously_active_document && previously_active_document != document.ptr())
-        previously_active_document->did_stop_being_active_document_in_browsing_context({});
-}
-
 void BrowsingContext::scroll_to(CSSPixelPoint position)
 {
     // NOTE: Scrolling to a position requires up-to-date layout *unless* we're scrolling to (0, 0)
