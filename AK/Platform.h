@@ -98,6 +98,10 @@
 #    define AK_OS_SOLARIS
 #endif
 
+#if defined(__gnu_hurd__)
+#    define AK_OS_GNU_HURD
+#endif
+
 #if defined(_WIN32) || defined(_WIN64)
 #    define AK_OS_WINDOWS
 #endif
