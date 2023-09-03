@@ -67,10 +67,10 @@ void HTMLObjectElement::attribute_changed(DeprecatedFlyString const& name, Depre
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#attr-object-data
-DeprecatedString HTMLObjectElement::data() const
+String HTMLObjectElement::data() const
 {
     auto data = deprecated_attribute(HTML::AttributeNames::data);
-    return document().parse_url(data).to_deprecated_string();
+    return MUST(document().parse_url(data).to_string());
 }
 
 JS::GCPtr<Layout::Node> HTMLObjectElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)

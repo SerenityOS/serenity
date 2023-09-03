@@ -36,8 +36,8 @@ public:
 
     virtual void attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value) override;
 
-    DeprecatedString data() const;
-    void set_data(DeprecatedString const& data) { MUST(set_attribute(HTML::AttributeNames::data, data)); }
+    String data() const;
+    void set_data(String const& data) { MUST(set_attribute(HTML::AttributeNames::data, data)); }
 
     DeprecatedString type() const { return deprecated_attribute(HTML::AttributeNames::type); }
 
