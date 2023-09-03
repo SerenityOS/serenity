@@ -2450,9 +2450,22 @@ static void collect_attribute_values_of_an_inheritance_stack(SourceGenerator& fu
 
             if (attribute.extended_attributes.contains("Reflect")) {
                 if (attribute.type->name() != "boolean") {
-                    attribute_generator.append(R"~~~(
+                    if (interface_in_chain.extended_attributes.contains("UseDeprecatedAKString")) {
+                        attribute_generator.append(R"~~~(
     auto @attribute.return_value_name@ = impl->deprecated_attribute(HTML::AttributeNames::@attribute.reflect_name@);
 )~~~");
+                    } else {
+                        // FIXME: This should be calling Element::get_attribute_value: https://dom.spec.whatwg.org/#concept-element-attributes-get-value
+                        if (attribute.type->is_nullable()) {
+                            attribute_generator.append(R"~~~(
+    auto @attribute.return_value_name@ = impl->attribute(HTML::AttributeNames::@attribute.reflect_name@);
+)~~~");
+                        } else {
+                            attribute_generator.append(R"~~~(
+    auto @attribute.return_value_name@ = impl->attribute(HTML::AttributeNames::@attribute.reflect_name@).value_or(String {});
+)~~~");
+                        }
+                    }
                 } else {
                     attribute_generator.append(R"~~~(
     auto @attribute.return_value_name@ = impl->has_attribute(HTML::AttributeNames::@attribute.reflect_name@);
@@ -2776,9 +2789,22 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.getter_callback@)
 
         if (attribute.extended_attributes.contains("Reflect")) {
             if (attribute.type->name() != "boolean") {
-                attribute_generator.append(R"~~~(
+                if (interface.extended_attributes.contains("UseDeprecatedAKString")) {
+                    attribute_generator.append(R"~~~(
     auto retval = impl->deprecated_attribute(HTML::AttributeNames::@attribute.reflect_name@);
 )~~~");
+                } else {
+                    // FIXME: This should be calling Element::get_attribute_value: https://dom.spec.whatwg.org/#concept-element-attributes-get-value
+                    if (attribute.type->is_nullable()) {
+                        attribute_generator.append(R"~~~(
+    auto retval = impl->attribute(HTML::AttributeNames::@attribute.reflect_name@);
+)~~~");
+                    } else {
+                        attribute_generator.append(R"~~~(
+    auto retval = impl->attribute(HTML::AttributeNames::@attribute.reflect_name@).value_or(String {});
+)~~~");
+                    }
+                }
             } else {
                 attribute_generator.append(R"~~~(
     auto retval = impl->has_attribute(HTML::AttributeNames::@attribute.reflect_name@);
