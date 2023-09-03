@@ -47,6 +47,8 @@ public:
     void set_e(double value);
     void set_f(double value);
 
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> multiply_self(DOMMatrixInit other = {});
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> pre_multiply_self(DOMMatrixInit other = {});
     JS::NonnullGCPtr<DOMMatrix> invert_self();
 
 private:

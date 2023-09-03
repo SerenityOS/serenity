@@ -36,8 +36,8 @@ interface DOMMatrix : DOMMatrixReadOnly {
     inherit attribute unrestricted double m44;
 
     // Mutable transform methods
-    // FIXME: DOMMatrix multiplySelf(optional DOMMatrixInit other = {});
-    // FIXME: DOMMatrix preMultiplySelf(optional DOMMatrixInit other = {});
+    DOMMatrix multiplySelf(optional DOMMatrixInit other = {});
+    DOMMatrix preMultiplySelf(optional DOMMatrixInit other = {});
     // FIXME: DOMMatrix translateSelf(optional unrestricted double tx = 0, optional unrestricted double ty = 0, optional unrestricted double tz = 0);
     // FIXME: DOMMatrix scaleSelf(optional unrestricted double scaleX = 1, optional unrestricted double scaleY, optional unrestricted double scaleZ = 1, optional unrestricted double originX = 0, optional unrestricted double originY = 0, optional unrestricted double originZ = 0);
     // FIXME: DOMMatrix scale3dSelf(optional unrestricted double scale = 1, optional unrestricted double originX = 0, optional unrestricted double originY = 0, optional unrestricted double originZ = 0);
