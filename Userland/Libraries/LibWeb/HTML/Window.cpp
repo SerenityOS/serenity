@@ -1394,16 +1394,4 @@ JS::NonnullGCPtr<CustomElementRegistry> Window::custom_elements()
     return JS::NonnullGCPtr { *m_custom_element_registry };
 }
 
-// https://html.spec.whatwg.org/multipage/window-object.html#number-of-document-tree-child-browsing-contexts
-size_t Window::document_tree_child_browsing_context_count() const
-{
-    // 1. If W's browsing context is null, then return 0.
-    auto* this_browsing_context = associated_document().browsing_context();
-    if (!this_browsing_context)
-        return 0;
-
-    // 2. Return the number of document-tree child browsing contexts of W's browsing context.
-    return this_browsing_context->document_tree_child_browsing_context_count();
-}
-
 }

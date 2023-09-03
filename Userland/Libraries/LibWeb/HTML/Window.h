@@ -85,8 +85,6 @@ public:
 
     JS::GCPtr<Navigable> navigable() const;
 
-    size_t document_tree_child_browsing_context_count() const;
-
     ImportMap const& import_map() const { return m_import_map; }
 
     bool import_maps_allowed() const { return m_import_maps_allowed; }
