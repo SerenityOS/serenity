@@ -126,9 +126,9 @@ static JS::NonnullGCPtr<HTML::BrowsingContext> obtain_a_browsing_context_to_use_
         return browsing_context;
     }
 
-    // 3. Let newBrowsingContext be the result of creating a new top-level browsing context.
+    // 3. Let newBrowsingContext be the first return value of creating a new top-level browsing context and document
     VERIFY(browsing_context.page());
-    auto new_browsing_context = HTML::BrowsingContext::create_a_new_top_level_browsing_context(*browsing_context.page());
+    auto new_browsing_context = HTML::create_a_new_top_level_browsing_context_and_document(*browsing_context.page()).release_value_but_fixme_should_propagate_errors().browsing_context;
 
     // FIXME: 4. If navigationCOOP's value is "same-origin-plurs-COEP", then set newBrowsingContext's group's
     //           cross-origin isolation mode to either "logical" or "concrete". The choice of which is implementation-defined.

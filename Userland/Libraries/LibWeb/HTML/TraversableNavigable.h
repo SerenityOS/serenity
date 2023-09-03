@@ -84,6 +84,12 @@ private:
     WeakPtr<Page> m_page;
 };
 
+struct BrowsingContextAndDocument {
+    JS::NonnullGCPtr<HTML::BrowsingContext> browsing_context;
+    JS::NonnullGCPtr<DOM::Document> document;
+};
+
+WebIDL::ExceptionOr<BrowsingContextAndDocument> create_a_new_top_level_browsing_context_and_document(Page& page);
 void finalize_a_same_document_navigation(JS::NonnullGCPtr<TraversableNavigable> traversable, JS::NonnullGCPtr<Navigable> target_navigable, JS::NonnullGCPtr<SessionHistoryEntry> target_entry, JS::GCPtr<SessionHistoryEntry> entry_to_replace);
 
 }

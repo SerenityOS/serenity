@@ -39,7 +39,6 @@ class BrowsingContext final
 
 public:
     static JS::NonnullGCPtr<BrowsingContext> create_a_new_browsing_context(Page&, JS::GCPtr<DOM::Document> creator, JS::GCPtr<DOM::Element> embedder, BrowsingContextGroup&);
-    static JS::NonnullGCPtr<BrowsingContext> create_a_new_top_level_browsing_context(Page&);
 
     struct BrowsingContextAndDocument {
         JS::NonnullGCPtr<BrowsingContext> browsing_context;
