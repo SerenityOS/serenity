@@ -105,16 +105,6 @@ HTML::Origin determine_the_origin(AK::URL const& url, SandboxingFlagSet sandbox_
     return URL::url_origin(url);
 }
 
-// https://html.spec.whatwg.org/multipage/browsers.html#creating-a-new-top-level-browsing-context
-JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_top_level_browsing_context(Web::Page& page)
-{
-    // 1. Let group be the result of creating a new browsing context group.
-    auto group = BrowsingContextGroup::create_a_new_browsing_context_group(page);
-
-    // 2. Return group's browsing context set[0].
-    return *group->browsing_context_set().begin();
-}
-
 // https://html.spec.whatwg.org/multipage/browsers.html#creating-a-new-browsing-context
 JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context(Page& page, JS::GCPtr<DOM::Document> creator, JS::GCPtr<DOM::Element> embedder, BrowsingContextGroup&)
 {
@@ -859,7 +849,7 @@ BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_contex
             else {
                 // 1. Set chosen to the result of creating a new auxiliary browsing context with current.
                 // FIXME: We have no concept of auxiliary browsing context
-                chosen = HTML::BrowsingContext::create_a_new_top_level_browsing_context(*m_page);
+                chosen = HTML::create_a_new_top_level_browsing_context_and_document(*m_page).release_value_but_fixme_should_propagate_errors().browsing_context;
 
                 // 2. If sandboxingFlagSet's sandboxed navigation browsing context flag is set, then current must be
                 //    set as chosen's one permitted sandboxed navigator.

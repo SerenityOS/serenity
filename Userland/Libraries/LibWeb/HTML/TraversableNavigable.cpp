@@ -36,13 +36,8 @@ static OrderedHashTable<TraversableNavigable*>& user_agent_top_level_traversable
     return set;
 }
 
-struct BrowsingContextAndDocument {
-    JS::NonnullGCPtr<HTML::BrowsingContext> browsing_context;
-    JS::NonnullGCPtr<DOM::Document> document;
-};
-
 // https://html.spec.whatwg.org/multipage/document-sequences.html#creating-a-new-top-level-browsing-context
-static WebIDL::ExceptionOr<BrowsingContextAndDocument> create_a_new_top_level_browsing_context_and_document(Page& page)
+WebIDL::ExceptionOr<BrowsingContextAndDocument> create_a_new_top_level_browsing_context_and_document(Page& page)
 {
     // 1. Let group and document be the result of creating a new browsing context group and document.
     auto [group, document] = TRY(BrowsingContextGroup::create_a_new_browsing_context_group_and_document(page));
