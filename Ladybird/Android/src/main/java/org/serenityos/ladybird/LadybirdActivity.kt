@@ -8,9 +8,8 @@ package org.serenityos.ladybird
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.TextView
+import android.util.AttributeSet
 import org.serenityos.ladybird.databinding.ActivityMainBinding
-import org.serenityos.ladybird.TransferAssets
 
 class LadybirdActivity : AppCompatActivity() {
 
@@ -20,11 +19,13 @@ class LadybirdActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
         resourceDir = TransferAssets.transferAssets(this)
         initNativeCode(resourceDir)
-        view = WebViewImplementationNative()
+
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        setSupportActionBar(binding.toolbar)
+        view = binding.webView
     }
 
     override fun onDestroy() {
@@ -32,7 +33,7 @@ class LadybirdActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    private lateinit var view: WebViewImplementationNative
+    private lateinit var view: WebView
 
     /**
      * A native method that is implemented by the 'ladybird' native library,

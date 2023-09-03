@@ -20,7 +20,7 @@ import java.lang.String;
 
 public class TransferAssets {
     /**
-     @return new ladybird resource root
+     * @return new ladybird resource root
      */
     static public String transferAssets(Context context) {
         Log.d("Ladybird", "Hello from java");
