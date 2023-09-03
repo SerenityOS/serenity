@@ -19,6 +19,8 @@ public:
     void key_down(KeyCode, unsigned modifiers, u32 code_point);
     void key_up(KeyCode, unsigned modifiers, u32 code_point);
 
+    void connect_to_webdriver(char const* path);
+
 private:
     LadybirdViewImpl(LadybirdWebView* widget);
 

@@ -9,6 +9,7 @@ struct _LadybirdApplication {
 
     OwnPtr<WebView::CookieJar> cookie_jar;
     OwnPtr<WebView::CookieJar> incognito_cookie_jar;
+    GFile* webdriver_content_ipc_path;
 };
 
 G_BEGIN_DECLS
@@ -118,6 +119,19 @@ static void ladybird_application_open(GApplication* app, GFile** files, int num_
     gtk_window_present(GTK_WINDOW(window));
 }
 
+static gint ladybird_application_handle_local_options(GApplication* app, GVariantDict* options)
+{
+    LadybirdApplication* self = LADYBIRD_APPLICATION(app);
+
+    char const* webdriver_content_ipc_path = nullptr;
+    if (g_variant_dict_lookup(options, "webdriver-content-path", "ay", &webdriver_content_ipc_path)) {
+        g_assert(self->webdriver_content_ipc_path == nullptr);
+        self->webdriver_content_ipc_path = g_file_new_for_commandline_arg(webdriver_content_ipc_path);
+    }
+
+    return G_APPLICATION_CLASS(ladybird_application_parent_class)->handle_local_options(app, options);
+}
+
 WebView::CookieJar* ladybird_application_get_cookie_jar(LadybirdApplication* self)
 {
     g_return_val_if_fail(LADYBIRD_IS_APPLICATION(self), nullptr);
@@ -143,22 +157,35 @@ WebView::CookieJar* ladybird_application_get_incognito_cookie_jar(LadybirdApplic
     return self->incognito_cookie_jar;
 }
 
+GFile* ladybird_application_get_webdriver_content_ipc_path(LadybirdApplication* self)
+{
+    g_return_val_if_fail(LADYBIRD_IS_APPLICATION(self), nullptr);
+
+    return self->webdriver_content_ipc_path;
+}
+
 static void ladybird_application_dispose(GObject* object)
 {
     LadybirdApplication* self = LADYBIRD_APPLICATION(object);
 
     self->cookie_jar.clear();
     self->incognito_cookie_jar.clear();
+    g_clear_object(&self->webdriver_content_ipc_path);
 
     G_OBJECT_CLASS(ladybird_application_parent_class)->dispose(object);
 }
 
 static void ladybird_application_init([[maybe_unused]] LadybirdApplication* self)
 {
+    GApplication* g_app = G_APPLICATION(self);
+    GtkApplication* gtk_app = GTK_APPLICATION(self);
+
     new (&self->cookie_jar) OwnPtr<WebView::CookieJar>;
     new (&self->incognito_cookie_jar) OwnPtr<WebView::CookieJar>;
 
-    GtkApplication* gtk_app = GTK_APPLICATION(self);
+    g_application_add_main_option(g_app, "webdriver-content-path", 0,
+        G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME,
+        _("Path to WebDriver IPC for WebContent"), "path");
 
     g_action_map_add_action_entries(G_ACTION_MAP(self), app_entries, G_N_ELEMENTS(app_entries), self);
     gtk_application_set_accels_for_action(gtk_app, "app.new-window", new_window_accels);
@@ -176,6 +203,7 @@ static void ladybird_application_class_init(LadybirdApplicationClass* klass)
 
     g_application_class->activate = ladybird_application_activate;
     g_application_class->open = ladybird_application_open;
+    g_application_class->handle_local_options = ladybird_application_handle_local_options;
 }
 
 LadybirdApplication* ladybird_application_new(void)

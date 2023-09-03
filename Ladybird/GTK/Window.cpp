@@ -75,6 +75,7 @@ static AdwTabPage* open_new_tab(LadybirdWindow* self, AdwTabPage* parent)
     LadybirdTab* tab = ladybird_tab_new();
     LadybirdWebView* web_view = ladybird_tab_get_web_view(tab);
     ladybird_web_view_set_cookie_jar(web_view, cookie_jar);
+    ladybird_web_view_set_webdriver_content_ipc_path(web_view, ladybird_application_get_webdriver_content_ipc_path(app));
 
     AdwTabPage* tab_page = adw_tab_view_add_page(self->tab_view, GTK_WIDGET(tab), parent);
     adw_tab_page_set_title(tab_page, _("New tab"));

@@ -10,6 +10,8 @@ G_DECLARE_FINAL_TYPE(LadybirdApplication, ladybird_application, LADYBIRD, APPLIC
 
 LadybirdApplication* ladybird_application_new(void);
 
+GFile* ladybird_application_get_webdriver_content_ipc_path(LadybirdApplication* self);
+
 namespace WebView {
 class CookieJar;
 }

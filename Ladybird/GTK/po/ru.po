@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ladybird wip\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-03 12:13+0200\n"
+"POT-Creation-Date: 2023-09-03 14:55+0300\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -13,7 +13,7 @@ msgstr ""
 
 #. Translators: this is a format string for the zoom-percent label in the main menu.
 #. For most languages, it doesn't need translating.
-#: Window.cpp:409
+#: Window.cpp:410
 #, c-format
 msgid "%d%%"
 msgstr ""
@@ -50,7 +50,7 @@ msgstr "Ввести"
 msgid "Enter a JavaScript expression to evaluate"
 msgstr "Введите JavaScript-выражение для вычисления"
 
-#: Window.cpp:153
+#: Window.cpp:154
 msgid "Failed to pick file"
 msgstr "Не удалось выбрать файл"
 
@@ -66,7 +66,7 @@ msgstr "Общие"
 msgid "JavaScript Console"
 msgstr "Консоль JavaScript"
 
-#: Application.cpp:65
+#: Application.cpp:66
 msgid ""
 "Ladybird is a browser based on LibWeb web engine and LibJS JavaScript "
 "engine, developed by a large team of contributors as a part of the "
@@ -111,7 +111,7 @@ msgstr "Новое окно _инкогнито"
 msgid "New incognito window"
 msgstr "Новое окно инкогнито"
 
-#: Window.cpp:80 shortcuts-dialog.blp:57
+#: Window.cpp:81 shortcuts-dialog.blp:57
 msgid "New tab"
 msgstr "Новая вкладка"
 
@@ -123,7 +123,7 @@ msgstr "Новое окно"
 msgid "Next tab"
 msgstr "Следующая вкладка"
 
-#: Window.cpp:155 Tab.cpp:194
+#: Window.cpp:156 Tab.cpp:194
 msgid "OK"
 msgstr "ОК"
 
@@ -135,6 +135,10 @@ msgstr "Открыть файл"
 #: window.blp:26
 msgid "P_in"
 msgstr "_Закрепить"
+
+#: Application.cpp:188
+msgid "Path to WebDriver IPC for WebContent"
+msgstr "Путь к WebDriver IPC для WebContent"
 
 #: shortcuts-dialog.blp:69
 msgid "Previous tab"
@@ -160,7 +164,7 @@ msgstr "Восстановить масштаб"
 msgid "Restore Zoom"
 msgstr "Восстановить масштаб"
 
-#: Application.cpp:48
+#: Application.cpp:49
 msgid "Sam Atkins"
 msgstr "Сэм Эткинс"
 
@@ -169,16 +173,16 @@ msgstr "Сэм Эткинс"
 msgid "Search or enter a URL to open…"
 msgstr "Введите URL или поисковый запрос…"
 
-#: Application.cpp:56
+#: Application.cpp:57
 msgid "SerenityOS developers"
 msgstr "Разрабочики SerenityOS"
 
-#: Application.cpp:69
+#: Application.cpp:70
 msgid "SerenityOS website"
 msgstr "Веб-сайт SerenityOS"
 
 #. Translators: Сергей Бугаев in Cyrillic
-#: Application.cpp:43
+#: Application.cpp:44
 msgid "Sergey Bugaev"
 msgstr "Сергей Бугаев"
 
@@ -268,11 +272,11 @@ msgid "_Tools"
 msgstr "_Инструменты"
 
 #. Translators: credit yourself here :^)
-#: Application.cpp:64
+#: Application.cpp:65
 msgid "translator_credits"
 msgstr "Сергей Бугаев"
 
-#: Application.cpp:59
+#: Application.cpp:60
 msgid "© 2023 SerenityOS developers"
 msgstr "© 2023 Разработчики SerenityOS"
 

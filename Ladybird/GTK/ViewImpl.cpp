@@ -254,6 +254,11 @@ void LadybirdViewImpl::key_up(KeyCode key_code, unsigned modifiers, u32 code_poi
     client().async_key_up(key_code, modifiers, code_point);
 }
 
+void LadybirdViewImpl::connect_to_webdriver(char const* path)
+{
+    client().async_connect_to_webdriver(path);
+}
+
 void LadybirdViewImpl::update_cursor(Gfx::StandardCursor cursor)
 {
     char const* name;

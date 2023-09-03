@@ -10,6 +10,8 @@ struct _LadybirdWebView {
     LadybirdBitmapPaintable* bitmap_paintable;
     LadybirdBitmapPaintable* favicon;
     WebView::CookieJar* cookie_jar;
+    GFile* webdriver_content_ipc_path;
+
     GtkScrollablePolicy hscroll_policy;
     GtkAdjustment* hadjustment;
     GtkScrollablePolicy vscroll_policy;
@@ -35,6 +37,7 @@ enum {
     PROP_COOKIE_JAR,
     PROP_HOVERED_LINK,
     PROP_PROMPT_TEXT,
+    PROP_WEBDRIVER_CONTENT_IPC_PATH,
     NUM_PROPS,
 
     PROP_HADJUSTMENT,
@@ -203,6 +206,33 @@ void ladybird_web_view_set_cookie_jar(LadybirdWebView* self, WebView::CookieJar*
     g_object_notify_by_pspec(G_OBJECT(self), props[PROP_COOKIE_JAR]);
 }
 
+GFile* ladybird_web_view_get_webdriver_content_ipc_path(LadybirdWebView* self)
+{
+    g_return_val_if_fail(LADYBIRD_IS_WEB_VIEW(self), nullptr);
+
+    return self->webdriver_content_ipc_path;
+}
+
+void ladybird_web_view_set_webdriver_content_ipc_path(LadybirdWebView* self, GFile* webdriver_content_ipc_path)
+{
+    g_return_if_fail(LADYBIRD_IS_WEB_VIEW(self));
+    g_return_if_fail(webdriver_content_ipc_path == nullptr || G_IS_FILE(webdriver_content_ipc_path));
+
+    if (!g_set_object(&self->webdriver_content_ipc_path, webdriver_content_ipc_path))
+        return;
+
+    g_object_notify_by_pspec(G_OBJECT(self), props[PROP_COOKIE_JAR]);
+
+    // TODO: What do we do with empty paths?
+    if (webdriver_content_ipc_path == nullptr)
+        return;
+
+    char* path = g_file_get_path(webdriver_content_ipc_path);
+    g_return_if_fail(path != nullptr);
+    self->impl->connect_to_webdriver(path);
+    g_free(path);
+}
+
 LadybirdViewImpl* ladybird_web_view_get_impl(LadybirdWebView* self)
 {
     g_return_val_if_fail(LADYBIRD_IS_WEB_VIEW(self), nullptr);
@@ -338,6 +368,10 @@ static void ladybird_web_view_get_property(GObject* object, guint prop_id, GValu
         g_value_set_string(value, self->prompt_text);
         break;
 
+    case PROP_WEBDRIVER_CONTENT_IPC_PATH:
+        g_value_set_object(value, self->webdriver_content_ipc_path);
+        break;
+
     case PROP_HADJUSTMENT:
         g_value_set_object(value, self->hadjustment);
         break;
@@ -392,6 +426,10 @@ static void ladybird_web_view_set_property(GObject* object, guint prop_id, GValu
     switch (prop_id) {
     case PROP_COOKIE_JAR:
         ladybird_web_view_set_cookie_jar(self, reinterpret_cast<WebView::CookieJar*>(g_value_get_pointer(value)));
+        break;
+
+    case PROP_WEBDRIVER_CONTENT_IPC_PATH:
+        ladybird_web_view_set_webdriver_content_ipc_path(self, G_FILE(g_value_get_object(value)));
         break;
 
     case PROP_HADJUSTMENT:
@@ -931,6 +969,7 @@ static void ladybird_web_view_dispose(GObject* object)
     g_clear_object(&self->favicon);
     g_clear_object(&self->hadjustment);
     g_clear_object(&self->vadjustment);
+    g_clear_object(&self->webdriver_content_ipc_path);
     g_clear_pointer(&self->page_url, g_free);
     g_clear_pointer(&self->page_title, g_free);
     g_clear_pointer(&self->hovered_link, g_free);
@@ -963,6 +1002,7 @@ static void ladybird_web_view_class_init(LadybirdWebViewClass* klass)
     props[PROP_COOKIE_JAR] = g_param_spec_pointer("cookie-jar", nullptr, nullptr, param_flags);
     props[PROP_HOVERED_LINK] = g_param_spec_string("hovered-link", nullptr, nullptr, nullptr, ro_param_flags);
     props[PROP_PROMPT_TEXT] = g_param_spec_string("prompt-text", nullptr, nullptr, nullptr, ro_param_flags);
+    props[PROP_WEBDRIVER_CONTENT_IPC_PATH] = g_param_spec_object("webdriver-content-ipc-path", nullptr, nullptr, G_TYPE_FILE, param_flags);
     g_object_class_install_properties(object_class, NUM_PROPS, props);
 
     signals[SIGNAL_REQUEST_ALERT] = g_signal_new("request-alert", G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST, 0, nullptr, nullptr, nullptr, G_TYPE_NONE, 1, G_TYPE_STRING);
