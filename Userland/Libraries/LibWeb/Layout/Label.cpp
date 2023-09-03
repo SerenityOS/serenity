@@ -93,7 +93,7 @@ Label const* Label::label_for_control_node(LabelableNode const& control)
     // same tree as the label element. If the attribute is specified and there is an element in the tree
     // whose ID is equal to the value of the for attribute, and the first such element in tree order is
     // a labelable element, then that element is the label element's labeled control.
-    if (auto id = control.dom_node().attribute(HTML::AttributeNames::id); !id.is_empty()) {
+    if (auto id = control.dom_node().deprecated_attribute(HTML::AttributeNames::id); !id.is_empty()) {
         Label const* label = nullptr;
 
         control.document().layout_node()->for_each_in_inclusive_subtree_of_type<Label>([&](auto& node) {
@@ -128,7 +128,7 @@ LabelableNode* Label::labeled_control()
     // a labelable element, then that element is the label element's labeled control.
     if (auto for_ = dom_node().for_(); !for_.is_null()) {
         document().layout_node()->for_each_in_inclusive_subtree_of_type<LabelableNode>([&](auto& node) {
-            if (node.dom_node().attribute(HTML::AttributeNames::id) == for_) {
+            if (node.dom_node().deprecated_attribute(HTML::AttributeNames::id) == for_) {
                 control = &node;
                 return IterationDecision::Break;
             }

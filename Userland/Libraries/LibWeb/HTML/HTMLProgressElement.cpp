@@ -51,7 +51,7 @@ void HTMLProgressElement::progress_position_updated()
 
 double HTMLProgressElement::value() const
 {
-    auto const& value_characters = attribute(HTML::AttributeNames::value);
+    auto const& value_characters = deprecated_attribute(HTML::AttributeNames::value);
     if (value_characters == nullptr)
         return 0;
 
@@ -78,7 +78,7 @@ WebIDL::ExceptionOr<void> HTMLProgressElement::set_value(double value)
 
 double HTMLProgressElement::max() const
 {
-    auto const& max_characters = attribute(HTML::AttributeNames::max);
+    auto const& max_characters = deprecated_attribute(HTML::AttributeNames::max);
     if (max_characters == nullptr)
         return 1;
 

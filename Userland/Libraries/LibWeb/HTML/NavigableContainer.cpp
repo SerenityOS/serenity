@@ -77,7 +77,7 @@ WebIDL::ExceptionOr<void> NavigableContainer::create_new_child_navigable()
     Optional<String> target_name;
 
     // 5. If element has a name content attribute, then set targetName to the value of that attribute.
-    if (auto value = attribute(HTML::AttributeNames::name); !value.is_null())
+    if (auto value = deprecated_attribute(HTML::AttributeNames::name); !value.is_null())
         target_name = String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors();
 
     // 6. Let documentState be a new document state, with
@@ -152,7 +152,7 @@ void NavigableContainer::create_new_nested_browsing_context()
     m_nested_browsing_context->register_frame_nesting(document().url());
 
     // 4. If element has a name attribute, then set browsingContext's name to the value of this attribute.
-    if (auto name = attribute(HTML::AttributeNames::name); !name.is_empty())
+    if (auto name = deprecated_attribute(HTML::AttributeNames::name); !name.is_empty())
         m_nested_browsing_context->set_name(String::from_deprecated_string(name).release_value_but_fixme_should_propagate_errors());
 }
 
@@ -220,7 +220,7 @@ void NavigableContainer::shared_attribute_processing_steps_for_iframe_and_frame(
     // 2. If element has a src attribute specified, and its value is not the empty string,
     //    then parse the value of that attribute relative to element's node document.
     //    If this is successful, then set url to the resulting URL record.
-    auto src_attribute_value = attribute(HTML::AttributeNames::src);
+    auto src_attribute_value = deprecated_attribute(HTML::AttributeNames::src);
     if (!src_attribute_value.is_null() && !src_attribute_value.is_empty()) {
         auto parsed_src = document().parse_url(src_attribute_value);
         if (parsed_src.is_valid())

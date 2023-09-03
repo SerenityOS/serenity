@@ -60,8 +60,8 @@ public:
     TypeAttributeState type_state() const { return m_type; }
     WebIDL::ExceptionOr<void> set_type(DeprecatedString const&);
 
-    DeprecatedString default_value() const { return attribute(HTML::AttributeNames::value); }
-    DeprecatedString name() const { return attribute(HTML::AttributeNames::name); }
+    DeprecatedString default_value() const { return deprecated_attribute(HTML::AttributeNames::value); }
+    DeprecatedString name() const { return deprecated_attribute(HTML::AttributeNames::name); }
 
     virtual DeprecatedString value() const override;
     WebIDL::ExceptionOr<void> set_value(DeprecatedString);

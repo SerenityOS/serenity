@@ -103,7 +103,7 @@ void SVGUseElement::svg_element_removed(SVGElement& svg_element)
         return;
     }
 
-    if (svg_element.attribute("id"sv).matches(m_referenced_id.value())) {
+    if (svg_element.deprecated_attribute("id"sv).matches(m_referenced_id.value())) {
         shadow_root()->remove_all_children();
     }
 }

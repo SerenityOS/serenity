@@ -37,7 +37,7 @@ void HTMLAnchorElement::attribute_changed(DeprecatedFlyString const& name, Depre
 
 DeprecatedString HTMLAnchorElement::hyperlink_element_utils_href() const
 {
-    return attribute(HTML::AttributeNames::href);
+    return deprecated_attribute(HTML::AttributeNames::href);
 }
 
 WebIDL::ExceptionOr<void> HTMLAnchorElement::set_hyperlink_element_utils_href(DeprecatedString href)
@@ -122,7 +122,7 @@ void HTMLAnchorElement::set_text(DeprecatedString const& text)
 DeprecatedString HTMLAnchorElement::referrer_policy() const
 {
     // The IDL attribute referrerPolicy must reflect the referrerpolicy content attribute, limited to only known values.
-    auto policy_string = attribute(HTML::AttributeNames::referrerpolicy);
+    auto policy_string = deprecated_attribute(HTML::AttributeNames::referrerpolicy);
     auto maybe_policy = ReferrerPolicy::from_string(policy_string);
     if (maybe_policy.has_value())
         return ReferrerPolicy::to_string(maybe_policy.value());

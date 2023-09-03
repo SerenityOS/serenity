@@ -91,7 +91,7 @@ public:
     bool has_attribute_ns(DeprecatedFlyString namespace_, DeprecatedFlyString const& name) const;
     bool has_attributes() const;
 
-    DeprecatedString attribute(DeprecatedFlyString const& name) const { return get_attribute(name); }
+    DeprecatedString deprecated_attribute(DeprecatedFlyString const& name) const { return get_attribute(name); }
     DeprecatedString get_attribute(DeprecatedFlyString const& name) const;
     DeprecatedString get_attribute_value(DeprecatedFlyString const& local_name, DeprecatedFlyString const& namespace_ = {}) const;
 
@@ -158,7 +158,7 @@ public:
     Layout::NodeWithStyle* layout_node();
     Layout::NodeWithStyle const* layout_node() const;
 
-    DeprecatedString name() const { return attribute(HTML::AttributeNames::name); }
+    DeprecatedString name() const { return deprecated_attribute(HTML::AttributeNames::name); }
 
     CSS::StyleProperties* computed_css_values() { return m_computed_css_values.ptr(); }
     CSS::StyleProperties const* computed_css_values() const { return m_computed_css_values.ptr(); }

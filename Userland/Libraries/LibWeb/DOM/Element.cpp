@@ -943,7 +943,7 @@ i32 Element::default_tab_index_value() const
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-tabindex
 i32 Element::tab_index() const
 {
-    auto maybe_table_index = Web::HTML::parse_integer(attribute(HTML::AttributeNames::tabindex));
+    auto maybe_table_index = Web::HTML::parse_integer(deprecated_attribute(HTML::AttributeNames::tabindex));
 
     if (!maybe_table_index.has_value())
         return default_tab_index_value();

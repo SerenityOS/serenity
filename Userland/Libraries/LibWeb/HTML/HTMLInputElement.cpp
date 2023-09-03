@@ -442,7 +442,7 @@ Optional<DeprecatedString> HTMLInputElement::placeholder_value() const
     if (!has_attribute(HTML::AttributeNames::placeholder))
         return {};
 
-    auto placeholder = attribute(HTML::AttributeNames::placeholder);
+    auto placeholder = deprecated_attribute(HTML::AttributeNames::placeholder);
 
     if (placeholder.contains('\r') || placeholder.contains('\n')) {
         StringBuilder builder;
@@ -503,7 +503,7 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     MUST(m_placeholder_element->style_for_bindings()->set_property(CSS::PropertyID::Height, "1lh"sv));
 
     m_placeholder_text_node = heap().allocate<DOM::Text>(realm(), document(), initial_value);
-    m_placeholder_text_node->set_data(attribute(HTML::AttributeNames::placeholder));
+    m_placeholder_text_node->set_data(deprecated_attribute(HTML::AttributeNames::placeholder));
     m_placeholder_text_node->set_owner_input_element({}, *this);
     MUST(m_placeholder_element->append_child(*m_placeholder_text_node));
     MUST(element->append_child(*m_placeholder_element));
@@ -516,7 +516,7 @@ void HTMLInputElement::create_shadow_tree_if_needed()
         // NOTE: file upload state is mutable, but we don't allow the text node to be modifed
         m_text_node->set_always_editable(false);
     } else {
-        handle_readonly_attribute(attribute(HTML::AttributeNames::readonly));
+        handle_readonly_attribute(deprecated_attribute(HTML::AttributeNames::readonly));
     }
 
     m_text_node->set_owner_input_element({}, *this);
@@ -1087,7 +1087,7 @@ Optional<ARIA::Role> HTMLInputElement::default_role() const
     if (type_state() == TypeAttributeState::Checkbox)
         return ARIA::Role::checkbox;
     // https://www.w3.org/TR/html-aria/#el-input-email
-    if (type_state() == TypeAttributeState::Email && attribute("list").is_null())
+    if (type_state() == TypeAttributeState::Email && deprecated_attribute("list").is_null())
         return ARIA::Role::textbox;
     // https://www.w3.org/TR/html-aria/#el-input-image
     if (type_state() == TypeAttributeState::ImageButton)
@@ -1110,10 +1110,10 @@ Optional<ARIA::Role> HTMLInputElement::default_role() const
             || type_state() == TypeAttributeState::Telephone
             || type_state() == TypeAttributeState::URL
             || type_state() == TypeAttributeState::Email)
-        && !attribute("list").is_null())
+        && !deprecated_attribute("list").is_null())
         return ARIA::Role::combobox;
     // https://www.w3.org/TR/html-aria/#el-input-search
-    if (type_state() == TypeAttributeState::Search && attribute("list").is_null())
+    if (type_state() == TypeAttributeState::Search && deprecated_attribute("list").is_null())
         return ARIA::Role::textbox;
     // https://www.w3.org/TR/html-aria/#el-input-submit
     if (type_state() == TypeAttributeState::SubmitButton)
@@ -1122,10 +1122,10 @@ Optional<ARIA::Role> HTMLInputElement::default_role() const
     if (type_state() == TypeAttributeState::Telephone)
         return ARIA::Role::textbox;
     // https://www.w3.org/TR/html-aria/#el-input-text
-    if (type_state() == TypeAttributeState::Text && attribute("list").is_null())
+    if (type_state() == TypeAttributeState::Text && deprecated_attribute("list").is_null())
         return ARIA::Role::textbox;
     // https://www.w3.org/TR/html-aria/#el-input-url
-    if (type_state() == TypeAttributeState::URL && attribute("list").is_null())
+    if (type_state() == TypeAttributeState::URL && deprecated_attribute("list").is_null())
         return ARIA::Role::textbox;
 
     // https://www.w3.org/TR/html-aria/#el-input-color

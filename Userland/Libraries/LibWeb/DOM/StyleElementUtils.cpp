@@ -43,7 +43,7 @@ void StyleElementUtils::update_a_style_block(DOM::Element& style_element)
         return;
 
     // 4. If element's type attribute is present and its value is neither the empty string nor an ASCII case-insensitive match for "text/css", then return.
-    auto type_attribute = style_element.attribute(HTML::AttributeNames::type);
+    auto type_attribute = style_element.deprecated_attribute(HTML::AttributeNames::type);
     if (!type_attribute.is_null() && !type_attribute.is_empty() && !Infra::is_ascii_case_insensitive_match(type_attribute, "text/css"sv))
         return;
 
@@ -63,8 +63,8 @@ void StyleElementUtils::update_a_style_block(DOM::Element& style_element)
         style_element.document(),
         "text/css"sv,
         &style_element,
-        style_element.attribute(HTML::AttributeNames::media),
-        style_element.in_a_document_tree() ? style_element.attribute(HTML::AttributeNames::title) : DeprecatedString::empty(),
+        style_element.deprecated_attribute(HTML::AttributeNames::media),
+        style_element.in_a_document_tree() ? style_element.deprecated_attribute(HTML::AttributeNames::title) : DeprecatedString::empty(),
         false,
         true,
         {},

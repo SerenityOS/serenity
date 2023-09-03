@@ -46,7 +46,7 @@ Variant<Empty, Element*, JS::Handle<RadioNodeList>> HTMLFormControlsCollection::
 
     auto collection = collect_matching_elements();
     for (auto const& element : collection) {
-        if (element->attribute(HTML::AttributeNames::id) != deprecated_name && element->name() != deprecated_name)
+        if (element->deprecated_attribute(HTML::AttributeNames::id) != deprecated_name && element->name() != deprecated_name)
             continue;
 
         if (matching_element) {
@@ -71,7 +71,7 @@ Variant<Empty, Element*, JS::Handle<RadioNodeList>> HTMLFormControlsCollection::
             return false;
 
         auto const& element = verify_cast<Element>(node);
-        return element.attribute(HTML::AttributeNames::id) == deprecated_name || element.name() == deprecated_name;
+        return element.deprecated_attribute(HTML::AttributeNames::id) == deprecated_name || element.name() == deprecated_name;
     }));
 }
 

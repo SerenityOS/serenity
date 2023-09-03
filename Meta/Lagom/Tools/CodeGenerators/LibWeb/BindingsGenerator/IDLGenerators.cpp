@@ -2451,7 +2451,7 @@ static void collect_attribute_values_of_an_inheritance_stack(SourceGenerator& fu
             if (attribute.extended_attributes.contains("Reflect")) {
                 if (attribute.type->name() != "boolean") {
                     attribute_generator.append(R"~~~(
-    auto @attribute.return_value_name@ = impl->attribute(HTML::AttributeNames::@attribute.reflect_name@);
+    auto @attribute.return_value_name@ = impl->deprecated_attribute(HTML::AttributeNames::@attribute.reflect_name@);
 )~~~");
                 } else {
                     attribute_generator.append(R"~~~(
@@ -2777,7 +2777,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.getter_callback@)
         if (attribute.extended_attributes.contains("Reflect")) {
             if (attribute.type->name() != "boolean") {
                 attribute_generator.append(R"~~~(
-    auto retval = impl->attribute(HTML::AttributeNames::@attribute.reflect_name@);
+    auto retval = impl->deprecated_attribute(HTML::AttributeNames::@attribute.reflect_name@);
 )~~~");
             } else {
                 attribute_generator.append(R"~~~(

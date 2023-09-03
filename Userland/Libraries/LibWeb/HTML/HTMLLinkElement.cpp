@@ -58,12 +58,12 @@ void HTMLLinkElement::inserted()
     if (m_relationship & Relationship::Preload) {
         // FIXME: Respect the "as" attribute.
         LoadRequest request;
-        request.set_url(document().parse_url(attribute(HTML::AttributeNames::href)));
+        request.set_url(document().parse_url(deprecated_attribute(HTML::AttributeNames::href)));
         set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
     } else if (m_relationship & Relationship::DNSPrefetch) {
-        ResourceLoader::the().prefetch_dns(document().parse_url(attribute(HTML::AttributeNames::href)));
+        ResourceLoader::the().prefetch_dns(document().parse_url(deprecated_attribute(HTML::AttributeNames::href)));
     } else if (m_relationship & Relationship::Preconnect) {
-        ResourceLoader::the().preconnect(document().parse_url(attribute(HTML::AttributeNames::href)));
+        ResourceLoader::the().preconnect(document().parse_url(deprecated_attribute(HTML::AttributeNames::href)));
     } else if (m_relationship & Relationship::Icon) {
         auto favicon_url = document().parse_url(href());
         auto favicon_request = LoadRequest::create_for_url_on_page(favicon_url, document().page());
@@ -343,7 +343,7 @@ void HTMLLinkElement::process_stylesheet_resource(bool success, Fetch::Infrastru
         //     2. Otherwise, return the document's character encoding. [DOM]
 
         DeprecatedString encoding;
-        if (auto charset = attribute(HTML::AttributeNames::charset); !charset.is_null())
+        if (auto charset = deprecated_attribute(HTML::AttributeNames::charset); !charset.is_null())
             encoding = charset;
         else
             encoding = document().encoding_or_default();
@@ -366,7 +366,7 @@ void HTMLLinkElement::process_stylesheet_resource(bool success, Fetch::Infrastru
 
                 if (m_loaded_style_sheet) {
                     m_loaded_style_sheet->set_owner_node(this);
-                    m_loaded_style_sheet->set_media(attribute(HTML::AttributeNames::media));
+                    m_loaded_style_sheet->set_media(deprecated_attribute(HTML::AttributeNames::media));
                     document().style_sheets().add_sheet(*m_loaded_style_sheet);
                 } else {
                     dbgln_if(CSS_LOADER_DEBUG, "HTMLLinkElement: Failed to parse stylesheet: {}", resource()->url());

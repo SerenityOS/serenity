@@ -52,10 +52,10 @@ void SVGForeignObjectElement::apply_presentational_hints(CSS::StyleProperties& s
 {
     Base::apply_presentational_hints(style);
     auto parsing_context = CSS::Parser::ParsingContext { document() };
-    if (auto width_value = parse_css_value(parsing_context, attribute(Web::HTML::AttributeNames::width), CSS::PropertyID::Width))
+    if (auto width_value = parse_css_value(parsing_context, deprecated_attribute(Web::HTML::AttributeNames::width), CSS::PropertyID::Width))
         style.set_property(CSS::PropertyID::Width, width_value.release_nonnull());
 
-    if (auto height_value = parse_css_value(parsing_context, attribute(Web::HTML::AttributeNames::height), CSS::PropertyID::Height))
+    if (auto height_value = parse_css_value(parsing_context, deprecated_attribute(Web::HTML::AttributeNames::height), CSS::PropertyID::Height))
         style.set_property(CSS::PropertyID::Height, height_value.release_nonnull());
 }
 

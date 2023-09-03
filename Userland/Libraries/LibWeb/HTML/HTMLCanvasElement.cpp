@@ -64,8 +64,8 @@ void HTMLCanvasElement::apply_presentational_hints(CSS::StyleProperties& style) 
 
     // https://html.spec.whatwg.org/multipage/rendering.html#map-to-the-aspect-ratio-property
     // if element has both attributes w and h, and parsing those attributes' values using the rules for parsing non-negative integers doesn't generate an error for either
-    auto w = parse_non_negative_integer(attribute(HTML::AttributeNames::width));
-    auto h = parse_non_negative_integer(attribute(HTML::AttributeNames::height));
+    auto w = parse_non_negative_integer(deprecated_attribute(HTML::AttributeNames::width));
+    auto h = parse_non_negative_integer(deprecated_attribute(HTML::AttributeNames::height));
 
     if (w.has_value() && h.has_value())
         // then the user agent is expected to use the parsed integers as a presentational hint for the 'aspect-ratio' property of the form auto w / h.
@@ -83,7 +83,7 @@ unsigned HTMLCanvasElement::width() const
     // The rules for parsing non-negative integers must be used to obtain their numeric values.
     // If an attribute is missing, or if parsing its value returns an error, then the default value must be used instead.
     // The width attribute defaults to 300
-    return parse_non_negative_integer(attribute(HTML::AttributeNames::width)).value_or(300);
+    return parse_non_negative_integer(deprecated_attribute(HTML::AttributeNames::width)).value_or(300);
 }
 
 unsigned HTMLCanvasElement::height() const
@@ -92,7 +92,7 @@ unsigned HTMLCanvasElement::height() const
     // The rules for parsing non-negative integers must be used to obtain their numeric values.
     // If an attribute is missing, or if parsing its value returns an error, then the default value must be used instead.
     // the height attribute defaults to 150
-    return parse_non_negative_integer(attribute(HTML::AttributeNames::height)).value_or(150);
+    return parse_non_negative_integer(deprecated_attribute(HTML::AttributeNames::height)).value_or(150);
 }
 
 void HTMLCanvasElement::reset_context_to_default_state()

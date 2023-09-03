@@ -97,7 +97,7 @@ void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& styl
 // https://html.spec.whatwg.org/multipage/tables.html#algorithm-for-processing-rows
 unsigned int HTMLTableCellElement::col_span() const
 {
-    auto optional_value = Web::HTML::parse_non_negative_integer(attribute(HTML::AttributeNames::colspan));
+    auto optional_value = Web::HTML::parse_non_negative_integer(deprecated_attribute(HTML::AttributeNames::colspan));
 
     // If parsing that value failed, or returned zero, or if the attribute is absent, then let colspan be 1, instead.
     if (!optional_value.has_value() || optional_value.value() == 0) {
@@ -124,7 +124,7 @@ WebIDL::ExceptionOr<void> HTMLTableCellElement::set_col_span(unsigned int value)
 unsigned int HTMLTableCellElement::row_span() const
 {
     // If parsing that value failed or if the attribute is absent, then let rowspan be 1, instead.
-    auto value = Web::HTML::parse_non_negative_integer(attribute(HTML::AttributeNames::rowspan)).value_or(1);
+    auto value = Web::HTML::parse_non_negative_integer(deprecated_attribute(HTML::AttributeNames::rowspan)).value_or(1);
 
     // If rowspan is greater than 65534, let it be 65534 instead.
     if (value > 65534) {

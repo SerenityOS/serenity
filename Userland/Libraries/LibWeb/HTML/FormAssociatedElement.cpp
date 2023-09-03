@@ -102,9 +102,9 @@ void FormAssociatedElement::reset_form_owner()
     // 4. If element is listed, has a form content attribute, and is connected, then:
     if (is_listed() && html_element.has_attribute(HTML::AttributeNames::form) && html_element.is_connected()) {
         // 1. If the first element in element's tree, in tree order, to have an ID that is identical to element's form content attribute's value, is a form element, then associate the element with that form element.
-        auto form_value = html_element.attribute(HTML::AttributeNames::form);
+        auto form_value = html_element.deprecated_attribute(HTML::AttributeNames::form);
         html_element.root().for_each_in_inclusive_subtree_of_type<HTMLFormElement>([this, &form_value](HTMLFormElement& form_element) {
-            if (form_element.attribute(HTML::AttributeNames::id) == form_value) {
+            if (form_element.deprecated_attribute(HTML::AttributeNames::id) == form_value) {
                 set_form(&form_element);
                 return IterationDecision::Break;
             }
