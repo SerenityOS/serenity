@@ -587,6 +587,10 @@ ThrowCompletionOr<NonnullGCPtr<Object>> Value::to_object(VM& vm) const
 // 7.1.3 ToNumeric ( value ), https://tc39.es/ecma262/#sec-tonumeric
 FLATTEN ThrowCompletionOr<Value> Value::to_numeric(VM& vm) const
 {
+    // OPTIMIZATION: Fast path for when this value is already a number.
+    if (is_number())
+        return *this;
+
     // 1. Let primValue be ? ToPrimitive(value, number).
     auto primitive_value = TRY(to_primitive(vm, Value::PreferredType::Number));
 
