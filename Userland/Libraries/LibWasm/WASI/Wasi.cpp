@@ -169,8 +169,8 @@ void FDStat::serialize_into(Array<Bytes, 1> bytes) const
 void PreStat::serialize_into(Array<Bytes, 1> bytes) const
 {
     auto data = bytes[0];
-    ABI::serialize(tag, Array { data.slice(0, sizeof(tag)) });
-    if (tag == 0)
+    ABI::serialize(type, Array { data.slice(0, sizeof(type)) });
+    if (type == PreOpenType::Dir)
         ABI::serialize(dir, Array { data.slice(offsetof(PreStat, dir), sizeof(dir)) });
     else
         VERIFY_NOT_REACHED();
@@ -477,7 +477,7 @@ ErrorOr<Result<PreStat>> Implementation::impl$fd_prestat_get(Configuration&, FD 
             auto index = m_first_unmapped_preopened_directory_index++;
             m_fd_map.insert(unmapped_fd.value(), PreopenedDirectoryDescriptor(index));
             return PreStat {
-                .tag = 0,
+                .type = PreOpenType::Dir,
                 .dir = PreStatDir {
                     .pr_name_len = paths[index].mapped_path.string().bytes().size(),
                 },
@@ -488,7 +488,7 @@ ErrorOr<Result<PreStat>> Implementation::impl$fd_prestat_get(Configuration&, FD 
         },
         [&](PreopenedDirectoryDescriptor fd) -> Result<PreStat> {
             return PreStat {
-                .tag = 0,
+                .type = PreOpenType::Dir,
                 .dir = PreStatDir {
                     .pr_name_len = paths[fd.value()].mapped_path.string().bytes().size(),
                 },

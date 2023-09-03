@@ -347,7 +347,9 @@ struct FDFlags {
 // https://github.com/WebAssembly/wasi-libc/blob/2c2fc9a2fddd0927a66f1c142e65c8dab6f5c5d7/libc-bottom-half/headers/public/wasi/api.h#L924
 struct FDStat {
     FileType fs_filetype;
+    u8 _padding1 { 0 }; // Not part of the API.
     FDFlags fs_flags;
+    u8 _padding2[4] { 0 }; // Not part of the API.
     Rights fs_rights_base;
     Rights fs_rights_inheriting;
 
@@ -435,6 +437,7 @@ struct FileStat {
     Device dev;
     INode ino;
     FileType filetype;
+    u8 _padding1[7] { 0 }; // Not part of the API.
     LinkCount nlink;
     FileSize size;
     Timestamp atim;
@@ -479,22 +482,26 @@ struct EventRWFlags {
 // https://github.com/WebAssembly/wasi-libc/blob/2c2fc9a2fddd0927a66f1c142e65c8dab6f5c5d7/libc-bottom-half/headers/public/wasi/api.h#L1151
 struct EventFDReadWrite {
     FileSize nbytes;
+    u8 _padding[4] { 0 }; // Not part of the API.
     EventRWFlags flags;
 
     void serialize_into(Array<Bytes, 1> bytes) const;
     static EventFDReadWrite read_from(Array<ReadonlyBytes, 1> const& bytes);
 };
+static_assert(sizeof(EventFDReadWrite) == 16);
 
 // https://github.com/WebAssembly/wasi-libc/blob/2c2fc9a2fddd0927a66f1c142e65c8dab6f5c5d7/libc-bottom-half/headers/public/wasi/api.h#L1186
 struct Event {
     UserData userdata;
     Errno errno_;
     EventType type;
+    u8 _padding[5] { 0 }; // Not part of the API.
     EventFDReadWrite fd_readwrite;
 
     void serialize_into(Array<Bytes, 1> bytes) const;
     static Event read_from(Array<ReadonlyBytes, 1> const& bytes);
 };
+static_assert(sizeof(Event) == 32);
 
 // https://github.com/WebAssembly/wasi-libc/blob/2c2fc9a2fddd0927a66f1c142e65c8dab6f5c5d7/libc-bottom-half/headers/public/wasi/api.h#L1220
 struct SubClockFlags {
@@ -519,13 +526,16 @@ struct SubClockFlags {
 // https://github.com/WebAssembly/wasi-libc/blob/2c2fc9a2fddd0927a66f1c142e65c8dab6f5c5d7/libc-bottom-half/headers/public/wasi/api.h#L1237
 struct SubscriptionClock {
     ClockID id;
+    u8 _padding1[4] { 0 }; // Not part of the API.
     Timestamp timeout;
     Timestamp precision;
     SubClockFlags flags;
+    u8 _padding2[4] { 0 }; // Not part of the API.
 
     void serialize_into(Array<Bytes, 1> bytes) const;
     static SubscriptionClock read_from(Array<ReadonlyBytes, 1> const& bytes);
 };
+static_assert(sizeof(SubscriptionClock) == 32);
 
 // https://github.com/WebAssembly/wasi-libc/blob/2c2fc9a2fddd0927a66f1c142e65c8dab6f5c5d7/libc-bottom-half/headers/public/wasi/api.h#L1272
 struct SubscriptionFDReadWrite {
@@ -536,28 +546,23 @@ struct SubscriptionFDReadWrite {
 };
 
 // https://github.com/WebAssembly/wasi-libc/blob/2c2fc9a2fddd0927a66f1c142e65c8dab6f5c5d7/libc-bottom-half/headers/public/wasi/api.h#L1287
-struct SubscriptionU {
-    u8 tag;
-    union {
-        SubscriptionClock clock;
-        SubscriptionFDReadWrite fd_read;
-        SubscriptionFDReadWrite fd_write;
-    };
-
-    void serialize_into(Array<Bytes, 1> bytes) const;
-    static SubscriptionU read_from(Array<ReadonlyBytes, 1> const& bytes);
+union SubscriptionU {
+    SubscriptionClock clock;
+    SubscriptionFDReadWrite fd_read;
+    SubscriptionFDReadWrite fd_write;
 };
 
 // https://github.com/WebAssembly/wasi-libc/blob/2c2fc9a2fddd0927a66f1c142e65c8dab6f5c5d7/libc-bottom-half/headers/public/wasi/api.h#L1306
 struct Subscription {
     UserData userdata;
+    EventType type;
+    u8 _padding[7] { 0 }; // Not part of the API.
     SubscriptionU u;
 
     void serialize_into(Array<Bytes, 1> bytes) const;
     static Subscription read_from(Array<ReadonlyBytes, 1> const& bytes);
 };
 static_assert(sizeof(Subscription) == 48);
-static_assert(alignof(Subscription) == 8);
 
 // https://github.com/WebAssembly/wasi-libc/blob/2c2fc9a2fddd0927a66f1c142e65c8dab6f5c5d7/libc-bottom-half/headers/public/wasi/api.h#L1334
 using ExitCode = LittleEndian<u32>;
@@ -675,13 +680,15 @@ struct PreStatDir {
 
 // https://github.com/WebAssembly/wasi-libc/blob/2c2fc9a2fddd0927a66f1c142e65c8dab6f5c5d7/libc-bottom-half/headers/public/wasi/api.h#L1636
 struct PreStat {
-    u8 tag;
+    PreOpenType type;
+    u8 _padding[3] { 0 }; // Not part of the API.
     union {
         PreStatDir dir;
     };
 
     void serialize_into(Array<Bytes, 1> bytes) const;
 };
+static_assert(sizeof(PreStat) == 8);
 
 // https://github.com/WebAssembly/wasi-libc/blob/2c2fc9a2fddd0927a66f1c142e65c8dab6f5c5d7/libc-bottom-half/headers/public/wasi/api.h#L1676
 struct ArgsSizes {
@@ -707,11 +714,13 @@ struct EnvironSizes {
 struct SockRecvResult {
     Size size;
     ROFlags roflags;
+    u8 _padding[2] { 0 }; // Not part of the API.
 
     using SerializationComponents = TypeList<Size, ROFlags>;
 
     void serialize_into(Array<Bytes, 2> bytes) const;
 };
+static_assert(sizeof(SockRecvResult) == 8);
 
 template<typename TResult, typename Tag = u32>
 struct Result {
