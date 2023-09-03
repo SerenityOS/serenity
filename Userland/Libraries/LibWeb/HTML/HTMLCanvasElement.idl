@@ -5,7 +5,7 @@
 typedef (CanvasRenderingContext2D or WebGLRenderingContext) RenderingContext;
 
 // https://html.spec.whatwg.org/multipage/semantics.html#htmlcanvaselement
-[Exposed=Window, UseDeprecatedAKString]
+[Exposed=Window]
 interface HTMLCanvasElement : HTMLElement {
 
     [HTMLConstructor] constructor();
