@@ -20,11 +20,11 @@ public:
     bool selected() const { return m_selected; }
     void set_selected(bool);
 
-    DeprecatedString value() const;
-    WebIDL::ExceptionOr<void> set_value(DeprecatedString);
+    String value() const;
+    WebIDL::ExceptionOr<void> set_value(String const&);
 
-    DeprecatedString text() const;
-    void set_text(DeprecatedString);
+    String text() const;
+    void set_text(String const&);
 
     int index() const;
 
