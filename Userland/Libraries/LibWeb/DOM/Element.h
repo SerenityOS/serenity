@@ -92,6 +92,14 @@ public:
     bool has_attributes() const;
 
     DeprecatedString deprecated_attribute(DeprecatedFlyString const& name) const { return get_attribute(name); }
+    Optional<String> attribute(DeprecatedFlyString const& name) const
+    {
+        auto ret = deprecated_attribute(name);
+        if (ret.is_null())
+            return {};
+        return String::from_deprecated_string(ret).release_value();
+    }
+
     DeprecatedString get_attribute(DeprecatedFlyString const& name) const;
     DeprecatedString get_attribute_value(DeprecatedFlyString const& local_name, DeprecatedFlyString const& namespace_ = {}) const;
 
