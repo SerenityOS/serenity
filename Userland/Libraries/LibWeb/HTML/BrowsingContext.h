@@ -38,8 +38,6 @@ class BrowsingContext final
     JS_CELL(BrowsingContext, AbstractBrowsingContext);
 
 public:
-    static JS::NonnullGCPtr<BrowsingContext> create_a_new_browsing_context(Page&, JS::GCPtr<DOM::Document> creator, JS::GCPtr<DOM::Element> embedder, BrowsingContextGroup&);
-
     struct BrowsingContextAndDocument {
         JS::NonnullGCPtr<BrowsingContext> browsing_context;
         JS::NonnullGCPtr<DOM::Document> document;
