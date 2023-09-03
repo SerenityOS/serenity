@@ -28,7 +28,7 @@ msgstr "Bokmärken och historik"
 
 #: Tab.cpp:215 Tab.cpp:239
 msgid "Cancel"
-msgstr ""
+msgstr "Avbryt"
 
 #: window.blp:33
 msgid "Close _Other Tabs"
@@ -40,15 +40,15 @@ msgstr "Stäng flik"
 
 #: Tab.cpp:216
 msgid "Confirm"
-msgstr ""
+msgstr "Bekräfta"
 
 #: Tab.cpp:240
 msgid "Enter"
-msgstr ""
+msgstr "Ok"
 
 #: js-console.blp:12
 msgid "Enter a JavaScript expression to evaluate"
-msgstr ""
+msgstr "Ange ett JavaScript-uttryck att utvärdera"
 
 #: Window.cpp:153
 msgid "Failed to pick file"
@@ -64,7 +64,7 @@ msgstr "Allmänt"
 
 #: Tab.cpp:48
 msgid "JavaScript Console"
-msgstr ""
+msgstr "JavaScript-konsol"
 
 #: Application.cpp:65
 msgid ""
@@ -202,15 +202,15 @@ msgstr "Lösgör _nål"
 
 #: Tab.cpp:192
 msgid "Web page alerts:"
-msgstr ""
+msgstr "Webbsidan meddelar:"
 
 #: Tab.cpp:237
 msgid "Web page asks for input:"
-msgstr ""
+msgstr "Webbsidan frågar om indata:"
 
 #: Tab.cpp:213
 msgid "Web page asks you to confirm:"
-msgstr ""
+msgstr "Webbsidan ber dig bekräfta:"
 
 #: shortcuts-dialog.blp:75
 msgid "Zoom"
