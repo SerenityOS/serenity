@@ -823,6 +823,21 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     //       In the before pass, if it turns out we need the automatic height of the box, we abort these steps.
     //       This allows the box to retain an indefinite height from the perspective of inside layout.
 
+    auto apply_min_max_height_constraints = [this, &box, &available_space](CSSPixels unconstrained_height) -> CSSPixels {
+        auto const& computed_min_height = box.computed_values().min_height();
+        auto const& computed_max_height = box.computed_values().max_height();
+        auto constrained_height = unconstrained_height;
+        if (!computed_max_height.is_none()) {
+            auto inner_max_height = calculate_inner_height(box, available_space.height, computed_max_height);
+            constrained_height = min(constrained_height, inner_max_height.to_px(box));
+        }
+        if (!computed_min_height.is_auto()) {
+            auto inner_min_height = calculate_inner_height(box, available_space.height, computed_min_height);
+            constrained_height = max(constrained_height, inner_min_height.to_px(box));
+        }
+        return constrained_height;
+    };
+
     auto margin_top = box.computed_values().margin().top();
     auto margin_bottom = box.computed_values().margin().bottom();
     auto top = box.computed_values().inset().top();
@@ -888,14 +903,22 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
             margin_bottom = CSS::Length::make_px(0);
 
         // then set top to the static position,
-        auto static_position = calculate_static_position(box);
-        top = CSS::Length::make_px(static_position.y());
-
         // and finally apply rule number three below.
+
+        // NOTE: We actually perform these two steps in the opposite order,
+        //       because the static position may depend on the height of the box (due to alignment properties).
+
         auto maybe_height = compute_auto_height_for_absolutely_positioned_element(box, available_space, before_or_after_inside_layout);
         if (!maybe_height.has_value())
             return;
         height = CSS::Size::make_px(maybe_height.value());
+
+        auto constrained_height = apply_min_max_height_constraints(maybe_height.value());
+        m_state.get_mutable(box).set_content_height(constrained_height);
+
+        auto static_position = calculate_static_position(box);
+        top = CSS::Length::make_px(static_position.y());
+
         solve_for_bottom();
     }
 
@@ -993,17 +1016,8 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     } else {
         used_height = calculate_inner_height(box, available_space.height, height).to_px(box);
     }
-    auto const& computed_min_height = box.computed_values().min_height();
-    auto const& computed_max_height = box.computed_values().max_height();
 
-    if (!computed_max_height.is_none()) {
-        auto inner_max_height = calculate_inner_height(box, available_space.height, computed_max_height);
-        used_height = min(used_height, inner_max_height.to_px(box));
-    }
-    if (!computed_min_height.is_auto()) {
-        auto inner_min_height = calculate_inner_height(box, available_space.height, computed_min_height);
-        used_height = max(used_height, inner_min_height.to_px(box));
-    }
+    used_height = apply_min_max_height_constraints(used_height);
 
     // NOTE: The following is not directly part of any spec, but this is where we resolve
     //       the final used values for vertical margin/border/padding.
