@@ -9,6 +9,10 @@
 #include <AK/Time.h>
 #include <sys/time.h>
 
+#if defined(__TIMESIZE) && __TIMESIZE < 64
+#    define TIME_T_IS_32BIT
+#endif
+
 #define EXPECT_DURATION(t, s, ns)    \
     do {                             \
         auto ts = (t).to_timespec(); \
@@ -74,6 +78,7 @@ TEST_CASE(timespec_parsing)
     EXPECT_DURATION(Duration::from_timespec(timespec { -2, 2'000'000'003 }), 0, 3);
     EXPECT_DURATION(Duration::from_timespec(timespec { -2, 1'999'999'999 }), -1, 999'999'999);
 
+#ifndef TIME_T_IS_32BIT
     EXPECT_DURATION(Duration::from_timespec(timespec { 0x7fff'ffff'ffff'fffe, 999'999'998 }), 0x7fff'ffff'ffff'fffe, 999'999'998);
     EXPECT_DURATION(Duration::from_timespec(timespec { 0x7fff'ffff'ffff'fffe, 1'999'999'998 }), 0x7fff'ffff'ffff'ffff, 999'999'998);
     EXPECT_DURATION(Duration::from_timespec(timespec { 0x7fff'ffff'ffff'fffe, 1'999'999'999 }), 0x7fff'ffff'ffff'ffff, 999'999'999);
@@ -84,6 +89,7 @@ TEST_CASE(timespec_parsing)
     EXPECT_DURATION(Duration::from_timespec(timespec { -0x7fff'ffff'ffff'fffe, -1'999'999'999 }), (i64)-0x8000'0000'0000'0000, 1);
     EXPECT_DURATION(Duration::from_timespec(timespec { -0x7fff'ffff'ffff'fffe, -2'000'000'000 }), (i64)-0x8000'0000'0000'0000, 0);
     EXPECT_DURATION(Duration::from_timespec(timespec { -0x7fff'ffff'ffff'fffe, -2'000'000'001 }), (i64)-0x8000'0000'0000'0000, 0);
+#endif
 }
 
 TEST_CASE(timeval_parsing)
@@ -104,6 +110,7 @@ TEST_CASE(timeval_parsing)
     EXPECT_DURATION(Duration::from_timeval(timeval { -2, 2'000'003 }), 0, 3'000);
     EXPECT_DURATION(Duration::from_timeval(timeval { -2, 1'999'999 }), -1, 999'999'000);
 
+#ifndef TIME_T_IS_32BIT
     EXPECT_DURATION(Duration::from_timeval(timeval { 0x7fff'ffff'ffff'fffe, 999'998 }), 0x7fff'ffff'ffff'fffe, 999'998'000);
     EXPECT_DURATION(Duration::from_timeval(timeval { 0x7fff'ffff'ffff'fffe, 1'999'998 }), 0x7fff'ffff'ffff'ffff, 999'998'000);
     EXPECT_DURATION(Duration::from_timeval(timeval { 0x7fff'ffff'ffff'fffe, 1'999'999 }), 0x7fff'ffff'ffff'ffff, 999'999'000);
@@ -114,6 +121,7 @@ TEST_CASE(timeval_parsing)
     EXPECT_DURATION(Duration::from_timeval(timeval { -0x7fff'ffff'ffff'fffe, -1'999'999 }), (i64)-0x8000'0000'0000'0000, 1'000);
     EXPECT_DURATION(Duration::from_timeval(timeval { -0x7fff'ffff'ffff'fffe, -2'000'000 }), (i64)-0x8000'0000'0000'0000, 0);
     EXPECT_DURATION(Duration::from_timeval(timeval { -0x7fff'ffff'ffff'fffe, -2'000'001 }), (i64)-0x8000'0000'0000'0000, 0);
+#endif
 }
 
 #define DURATION(s, ns) \
@@ -132,6 +140,7 @@ TEST_CASE(addition)
 
     EXPECT_ADDITION(11, 123'456'789, 22, 900'000'000, 34, 23'456'789);
 
+#ifndef TIME_T_IS_32BIT
     EXPECT_ADDITION(0, 0, 9223372036854775807LL, 999'999'998, 0x7fff'ffff'ffff'ffff, 999'999'998);
     EXPECT_ADDITION(0, 1, 9223372036854775807LL, 999'999'998, 0x7fff'ffff'ffff'ffff, 999'999'999);
     EXPECT_ADDITION(0, 2, 9223372036854775807LL, 999'999'998, 0x7fff'ffff'ffff'ffff, 999'999'999);
@@ -139,10 +148,12 @@ TEST_CASE(addition)
     EXPECT_ADDITION(0x80, 40, 0x7fff'ffff'ffff'ff7f, 999'999'958, 0x7fff'ffff'ffff'ffff, 999'999'998);
     EXPECT_ADDITION(0x80, 41, 0x7fff'ffff'ffff'ff7f, 999'999'958, 0x7fff'ffff'ffff'ffff, 999'999'999);
     EXPECT_ADDITION(0x80, 42, 0x7fff'ffff'ffff'ff7f, 999'999'958, 0x7fff'ffff'ffff'ffff, 999'999'999);
+#endif
 
     EXPECT_ADDITION(-2, 5, -3, 7, -5, 12);
     EXPECT_ADDITION(-2, 999'999'995, -3, 999'999'997, -4, 999'999'992);
 
+#ifndef TIME_T_IS_32BIT
     EXPECT_ADDITION(-0x7fff'ffff'ffff'ffff, 999'999'995, -1, 6, -0x7fff'ffff'ffff'ffff, 1);
     EXPECT_ADDITION(-0x7fff'ffff'ffff'ffff, 999'999'995, -2, 6, (i64)-0x8000'0000'0000'0000, 1);
     EXPECT_ADDITION(-0x7fff'ffff'ffff'ffff, 999'999'995, -2, 5, (i64)-0x8000'0000'0000'0000, 0);
@@ -151,6 +162,8 @@ TEST_CASE(addition)
     EXPECT_ADDITION((i64)-0x8000'0000'0000'0000, 999'999'995, 0x7fff'ffff'ffff'ffff, 4, -1, 999'999'999);
     EXPECT_ADDITION((i64)-0x8000'0000'0000'0000, 999'999'995, 0x7fff'ffff'ffff'ffff, 5, 0, 0);
     EXPECT_ADDITION((i64)-0x8000'0000'0000'0000, 999'999'995, 0x7fff'ffff'ffff'ffff, 6, 0, 1);
+#endif
+
 #undef EXPECT_ADDITION
 }
 
@@ -167,17 +180,23 @@ TEST_CASE(subtraction)
     EXPECT_SUBTRACTION(5, 0, 3, 0, 2, 0);
     EXPECT_SUBTRACTION(0, 0, 0, 0, 0, 0);
     EXPECT_SUBTRACTION(0, 5, 0, 3, 0, 2);
+#ifndef TIME_T_IS_32BIT
     EXPECT_SUBTRACTION(0x7fff'ffff'ffff'ffff, 999'999'999, 8, 123, 0x7fff'ffff'ffff'fff7, 999'999'876);
+#endif
 
     EXPECT_SUBTRACTION(1, 0, 0, 999'999'999, 0, 1);
+#ifndef TIME_T_IS_32BIT
     EXPECT_SUBTRACTION(0x7fff'ffff'ffff'ffff, 0, 1, 999'999'999, 0x7fff'ffff'ffff'fffd, 1);
+#endif
 
     EXPECT_SUBTRACTION(3, 0, 5, 0, -2, 0);
     EXPECT_SUBTRACTION(0, 3, 0, 5, -1, 999'999'998);
+#ifndef TIME_T_IS_32BIT
     EXPECT_SUBTRACTION(0, 0, 0x7fff'ffff'ffff'ffff, 999'999'999, (i64)-0x8000'0000'0000'0000, 1);
     EXPECT_SUBTRACTION(0, 0, (i64)-0x8000'0000'0000'0000, 0, 0x7fff'ffff'ffff'ffff, 999'999'999);
     EXPECT_SUBTRACTION(-1, 999'999'999, (i64)-0x8000'0000'0000'0000, 0, 0x7fff'ffff'ffff'ffff, 999'999'999);
     EXPECT_SUBTRACTION(-1, 999'999'998, (i64)-0x8000'0000'0000'0000, 0, 0x7fff'ffff'ffff'ffff, 999'999'998);
+#endif
 
     EXPECT_SUBTRACTION(123, 456, 123, 455, 0, 1);
     EXPECT_SUBTRACTION(123, 456, 123, 456, 0, 0);
@@ -187,9 +206,11 @@ TEST_CASE(subtraction)
     EXPECT_SUBTRACTION(124, 456, 123, 456, 1, 0);
     EXPECT_SUBTRACTION(124, 456, 123, 457, 0, 999'999'999);
 
+#ifndef TIME_T_IS_32BIT
     EXPECT_SUBTRACTION(-0x7fff'ffff'ffff'ffff, 999'999'995, 1, 999'999'994, (i64)-0x8000'0000'0000'0000, 1);
     EXPECT_SUBTRACTION(-0x7fff'ffff'ffff'ffff, 999'999'995, 1, 999'999'995, (i64)-0x8000'0000'0000'0000, 0);
     EXPECT_SUBTRACTION(-0x7fff'ffff'ffff'ffff, 999'999'995, 1, 999'999'996, (i64)-0x8000'0000'0000'0000, 0);
+#endif
 }
 
 TEST_CASE(rounding)
@@ -217,12 +238,14 @@ TEST_CASE(rounding)
     EXPECT_EQ(DURATION(0, -1).to_microseconds(), -1);
     EXPECT_EQ(DURATION(0, -1).to_nanoseconds(), -1);
 
+#ifndef TIME_T_IS_32BIT
     EXPECT_EQ(DURATION(-9223372037, 145'224'191).to_nanoseconds(), (i64)-0x8000'0000'0000'0000);
     EXPECT_EQ(DURATION(-9223372037, 145'224'192).to_nanoseconds(), (i64)-0x8000'0000'0000'0000);
     EXPECT_EQ(DURATION(-9223372037, 145'224'193).to_nanoseconds(), -0x7fff'ffff'ffff'ffff);
     EXPECT_EQ(DURATION(9223372036, 854'775'806).to_nanoseconds(), 0x7fff'ffff'ffff'fffe);
     EXPECT_EQ(DURATION(9223372036, 854'775'807).to_nanoseconds(), 0x7fff'ffff'ffff'ffff);
     EXPECT_EQ(DURATION(9223372036, 854'775'808).to_nanoseconds(), 0x7fff'ffff'ffff'ffff);
+#endif
 }
 
 TEST_CASE(truncation)
@@ -241,6 +264,7 @@ TEST_CASE(truncation)
     EXPECT_EQ(Duration::min().to_truncated_seconds(), (i64)-0x8000'0000'0000'0000);
     EXPECT_EQ(Duration::max().to_truncated_seconds(), 0x7fff'ffff'ffff'ffff);
 
+#ifndef TIME_T_IS_32BIT
     // Overflow, milliseconds
     EXPECT_EQ(DURATION(-9223372036854776, 191'000'000).to_truncated_milliseconds(), (i64)-0x8000'0000'0000'0000);
     EXPECT_EQ(DURATION(-9223372036854776, 192'000'000).to_truncated_milliseconds(), (i64)-0x8000'0000'0000'0000);
@@ -260,6 +284,7 @@ TEST_CASE(truncation)
     EXPECT_EQ(DURATION(9223372036854, 775'806'999).to_truncated_microseconds(), 0x7fff'ffff'ffff'fffe);
     EXPECT_EQ(DURATION(9223372036854, 775'807'000).to_truncated_microseconds(), 0x7fff'ffff'ffff'ffff);
     EXPECT_EQ(DURATION(9223372036854, 775'808'000).to_truncated_microseconds(), 0x7fff'ffff'ffff'ffff);
+#endif
 }
 
 TEST_CASE(is_negative)
