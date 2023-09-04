@@ -1,4 +1,4 @@
-[Exposed=(Window,Worker), UseDeprecatedAKString]
+[Exposed=(Window,Worker)]
 interface CanvasGradient {
     // opaque object
     undefined addColorStop(double offset, DOMString color);
