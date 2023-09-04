@@ -28,6 +28,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Clipboard.h>
+#include <LibGUI/ColorPicker.h>
 #include <LibGUI/Dialog.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Menu.h>
@@ -564,6 +565,23 @@ Tab::Tab(BrowserWindow& window)
     view().on_request_dismiss_dialog = [this]() {
         if (m_dialog)
             m_dialog->done(GUI::Dialog::ExecResult::Cancel);
+    };
+
+    view().on_request_color_picker = [this](Color current_color) {
+        auto& window = this->window();
+
+        m_dialog = GUI::ColorPicker::construct(current_color, &window);
+        auto& dialog = static_cast<GUI::ColorPicker&>(*m_dialog);
+
+        dialog.set_icon(window.icon());
+        dialog.set_color_has_alpha_channel(false);
+
+        if (dialog.exec() == GUI::ColorPicker::ExecResult::OK)
+            view().color_picker_closed(dialog.color());
+        else
+            view().color_picker_closed({});
+
+        m_dialog = nullptr;
     };
 
     view().on_received_source = [this](auto& url, auto& source) {
