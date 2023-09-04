@@ -1634,15 +1634,11 @@ int compute_exponent_for_magnitude(NumberFormat& number_format, int magnitude)
 
         // b. Let exponent be an implementation- and locale-dependent (ILD) integer by which to scale a number of the given magnitude in compact notation for the current locale.
         // c. Return exponent.
-        Vector<::Locale::NumberFormat> format_rules;
+        auto compact_format_type = number_format.compact_display() == NumberFormat::CompactDisplay::Short || number_format.style() == NumberFormat::Style::Currency
+            ? ::Locale::CompactNumberFormatType::DecimalShort
+            : ::Locale::CompactNumberFormatType::DecimalLong;
 
-        if (number_format.style() == NumberFormat::Style::Currency)
-            format_rules = ::Locale::get_compact_number_system_formats(number_format.data_locale(), number_format.numbering_system(), ::Locale::CompactNumberFormatType::CurrencyShort);
-        else if (number_format.compact_display() == NumberFormat::CompactDisplay::Long)
-            format_rules = ::Locale::get_compact_number_system_formats(number_format.data_locale(), number_format.numbering_system(), ::Locale::CompactNumberFormatType::DecimalLong);
-        else
-            format_rules = ::Locale::get_compact_number_system_formats(number_format.data_locale(), number_format.numbering_system(), ::Locale::CompactNumberFormatType::DecimalShort);
-
+        auto format_rules = ::Locale::get_compact_number_system_formats(number_format.data_locale(), number_format.numbering_system(), compact_format_type);
         ::Locale::NumberFormat const* best_number_format = nullptr;
 
         for (auto const& format_rule : format_rules) {
