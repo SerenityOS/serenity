@@ -542,7 +542,8 @@ Messages::WebDriverClient::CloseWindowResponse WebDriverConnection::close_window
     TRY(handle_any_user_prompts());
 
     // 3. Close the current top-level browsing context.
-    m_page_client.page().top_level_browsing_context().close();
+    m_page_client.page().top_level_browsing_context().active_document()->navigable()->traversable_navigable()->close_top_level_traversable();
+
     return JsonValue {};
 }
 
