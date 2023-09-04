@@ -181,9 +181,6 @@ public:
     void set_frame_nesting_levels(HashMap<AK::URL, size_t> frame_nesting_levels) { m_frame_nesting_levels = move(frame_nesting_levels); }
     HashMap<AK::URL, size_t> const& frame_nesting_levels() const { return m_frame_nesting_levels; }
 
-    DOM::Document* container_document();
-    DOM::Document const* container_document() const;
-
     bool has_a_rendering_opportunity() const;
 
     JS::GCPtr<DOM::Node> currently_focused_area();
