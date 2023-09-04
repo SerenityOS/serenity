@@ -42,7 +42,7 @@ void Internals::gc()
 
 JS::Object* Internals::hit_test(double x, double y)
 {
-    auto* active_document = global_object().browsing_context()->top_level_browsing_context().active_document();
+    auto* active_document = global_object().browsing_context()->top_level_browsing_context()->active_document();
     // NOTE: Force a layout update just before hit testing. This is because the current layout tree, which is required
     //       for stacking context traversal, might not exist if this call occurs between the tear_down_layout_tree()
     //       and update_layout() calls

@@ -64,7 +64,7 @@ WebIDL::ExceptionOr<void> NavigableContainer::create_new_child_navigable()
 
     // 2. Let group be element's node document's browsing context's top-level browsing context's group.
     VERIFY(document().browsing_context());
-    auto group = document().browsing_context()->top_level_browsing_context().group();
+    auto group = document().browsing_context()->top_level_browsing_context()->group();
     VERIFY(group);
 
     // 3. Let browsingContext and document be the result of creating a new browsing context and document given element's node document, element, and group.

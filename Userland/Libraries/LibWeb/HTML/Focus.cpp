@@ -187,13 +187,13 @@ void run_focusing_steps(DOM::Node* new_focus_target, DOM::Node* fallback_target,
     // 5. If new focus target is the currently focused area of a top-level browsing context, then return.
     if (!new_focus_target->document().browsing_context())
         return;
-    auto& top_level_browsing_context = new_focus_target->document().browsing_context()->top_level_browsing_context();
-    if (new_focus_target == top_level_browsing_context.currently_focused_area().ptr())
+    auto top_level_browsing_context = new_focus_target->document().browsing_context()->top_level_browsing_context();
+    if (new_focus_target == top_level_browsing_context->currently_focused_area().ptr())
         return;
 
     // 6. Let old chain be the current focus chain of the top-level browsing context in which
     //    new focus target finds itself.
-    auto old_chain = focus_chain(top_level_browsing_context.currently_focused_area());
+    auto old_chain = focus_chain(top_level_browsing_context->currently_focused_area());
 
     // 7. Let new chain be the focus chain of new focus target.
     auto new_chain = focus_chain(new_focus_target);
@@ -220,8 +220,8 @@ void run_unfocusing_steps(DOM::Node* old_focus_target)
     if (is_shadow_host(old_focus_target)) {
         auto* shadow_root = static_cast<DOM::Element*>(old_focus_target)->shadow_root_internal();
         if (shadow_root->delegates_focus()) {
-            auto& top_level_browsing_context = old_focus_target->document().browsing_context()->top_level_browsing_context();
-            if (auto currently_focused_area = top_level_browsing_context.currently_focused_area()) {
+            auto top_level_browsing_context = old_focus_target->document().browsing_context()->top_level_browsing_context();
+            if (auto currently_focused_area = top_level_browsing_context->currently_focused_area()) {
                 if (shadow_root->is_shadow_including_ancestor_of(*currently_focused_area)) {
                     old_focus_target = currently_focused_area;
                 }
@@ -238,10 +238,10 @@ void run_unfocusing_steps(DOM::Node* old_focus_target)
 
     // NOTE: HTMLAreaElement is currently missing the shapes property
 
-    auto& top_level_browsing_context = old_focus_target->document().browsing_context()->top_level_browsing_context();
+    auto top_level_browsing_context = old_focus_target->document().browsing_context()->top_level_browsing_context();
 
     // 4. Let old chain be the current focus chain of the top-level browsing context in which old focus target finds itself.
-    auto old_chain = focus_chain(top_level_browsing_context.currently_focused_area());
+    auto old_chain = focus_chain(top_level_browsing_context->currently_focused_area());
 
     // 5. If old focus target is not one of the entries in old chain, then return.
     for (auto& node : old_chain) {
