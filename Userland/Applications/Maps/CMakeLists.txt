@@ -9,5 +9,5 @@ set(SOURCES
     MapWidget.cpp
 )
 
-serenity_app(Maps ICON app-hello-world) # FIXME: Create Maps icon
+serenity_app(Maps ICON app-maps)
 target_link_libraries(Maps PRIVATE LibConfig LibCore LibDesktop LibGfx LibGUI LibMain LibProtocol)
