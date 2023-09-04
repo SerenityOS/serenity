@@ -1488,7 +1488,7 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
                 return {};
             }
 
-            if (name_token.is(Token::Type::Ident) && (is_builtin(name_token.ident()) || name_token.ident().equals_ignoring_ascii_case("none"sv))) {
+            if (name_token.is(Token::Type::Ident) && (is_css_wide_keyword(name_token.ident()) || name_token.ident().equals_ignoring_ascii_case("none"sv))) {
                 dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @keyframes rule name is invalid: {}; discarding.", name_token.ident());
                 return {};
             }
@@ -4246,7 +4246,7 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
                     continue;
                 }
                 if (part.is(Token::Type::Ident)) {
-                    if (is_builtin(part.token().ident())) {
+                    if (is_css_wide_keyword(part.token().ident())) {
                         dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @font-face font-family format invalid; discarding.");
                         had_syntax_error = true;
                         break;
@@ -6481,13 +6481,6 @@ bool Parser::has_ignored_vendor_prefix(StringView string)
     if (string.starts_with("-libweb-"sv))
         return false;
     return true;
-}
-
-bool Parser::is_builtin(StringView name)
-{
-    return name.equals_ignoring_ascii_case("inherit"sv)
-        || name.equals_ignoring_ascii_case("initial"sv)
-        || name.equals_ignoring_ascii_case("unset"sv);
 }
 
 RefPtr<CalculatedStyleValue> Parser::parse_calculated_value(Badge<StyleComputer>, ParsingContext const& context, ComponentValue const& token)

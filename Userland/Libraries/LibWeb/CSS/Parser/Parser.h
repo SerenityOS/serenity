@@ -286,7 +286,6 @@ private:
     Optional<Supports::Feature> parse_supports_feature(TokenStream<ComponentValue>&);
 
     static bool has_ignored_vendor_prefix(StringView);
-    static bool is_builtin(StringView);
 
     struct PropertiesAndCustomProperties {
         Vector<StyleProperty> properties;
