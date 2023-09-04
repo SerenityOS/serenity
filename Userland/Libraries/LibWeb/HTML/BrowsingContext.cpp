@@ -48,35 +48,6 @@ bool url_matches_about_blank(AK::URL const& url)
         && url.host().has<Empty>();
 }
 
-// FIXME: This is an outdated older version of "determining the origin" and should be removed.
-// https://html.spec.whatwg.org/multipage/browsers.html#determining-the-origin
-HTML::Origin determine_the_origin(BrowsingContext const& browsing_context, Optional<AK::URL> url, SandboxingFlagSet sandbox_flags, Optional<HTML::Origin> invocation_origin)
-{
-    // 1. If sandboxFlags has its sandboxed origin browsing context flag set, then return a new opaque origin.
-    if (has_flag(sandbox_flags, SandboxingFlagSet::SandboxedOrigin)) {
-        return HTML::Origin {};
-    }
-
-    // 2. If url is null, then return a new opaque origin.
-    if (!url.has_value()) {
-        return HTML::Origin {};
-    }
-
-    // 3. If invocationOrigin is non-null and url matches about:blank, then return invocationOrigin.
-    if (invocation_origin.has_value() && url_matches_about_blank(*url)) {
-        return invocation_origin.value();
-    }
-
-    // 4. If url is about:srcdoc, then return the origin of browsingContext's container document.
-    if (url == AK::URL("about:srcdoc")) {
-        VERIFY(browsing_context.container_document());
-        return browsing_context.container_document()->origin();
-    }
-
-    // 5. Return url's origin.
-    return URL::url_origin(*url);
-}
-
 // https://html.spec.whatwg.org/multipage/document-sequences.html#determining-the-origin
 HTML::Origin determine_the_origin(AK::URL const& url, SandboxingFlagSet sandbox_flags, Optional<HTML::Origin> source_origin, Optional<HTML::Origin> container_origin)
 {

@@ -306,7 +306,7 @@ void FrameLoader::resource_did_load()
     // (Part of https://html.spec.whatwg.org/#navigating-across-documents)
     // 3. Let responseOrigin be the result of determining the origin given browsingContext, resource's url, finalSandboxFlags, and incumbentNavigationOrigin.
     // FIXME: Pass incumbentNavigationOrigin
-    auto response_origin = HTML::determine_the_origin(browsing_context(), url, final_sandboxing_flag_set, {});
+    // auto response_origin = HTML::determine_the_origin(browsing_context(), url, final_sandboxing_flag_set, {});
 
     auto& vm = Bindings::main_thread_vm();
     auto response = Fetch::Infrastructure::Response::create(vm);
@@ -315,7 +315,8 @@ void FrameLoader::resource_did_load()
         .id = {},
         .request = nullptr,
         .response = response,
-        .origin = move(response_origin),
+        .origin = {},
+        // .origin = move(response_origin),
         .policy_container = HTML::PolicyContainer {},
         .final_sandboxing_flag_set = final_sandboxing_flag_set,
         .cross_origin_opener_policy = HTML::CrossOriginOpenerPolicy {},
