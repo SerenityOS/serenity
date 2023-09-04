@@ -880,24 +880,6 @@ void BrowsingContext::discard()
         parent()->remove_child(*this);
 }
 
-// https://html.spec.whatwg.org/multipage/window-object.html#close-a-browsing-context
-void BrowsingContext::close()
-{
-    VERIFY(active_document());
-
-    // FIXME: 1. If the result of calling prompt to unload with browsingContext's active document is "refuse", then return.
-
-    // 2. Unload browsingContext's active document.
-    active_document()->unload();
-
-    // 3. Remove browsingContext from the user interface (e.g., close or hide its tab in a tabbed browser).
-    if (m_page)
-        m_page->client().page_did_close_browsing_context(*this);
-
-    // 4. Discard browsingContext.
-    discard();
-}
-
 void BrowsingContext::append_child(JS::NonnullGCPtr<BrowsingContext> child)
 {
     VERIFY(!child->m_parent);
