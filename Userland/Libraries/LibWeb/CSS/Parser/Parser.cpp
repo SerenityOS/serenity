@@ -1056,6 +1056,11 @@ Vector<DeclarationOrAtRule> Parser::parse_a_list_of_declarations(TokenStream<T>&
     return consume_a_list_of_declarations(tokens);
 }
 
+Optional<ComponentValue> Parser::parse_as_component_value()
+{
+    return parse_a_component_value(m_token_stream);
+}
+
 // 5.3.9. Parse a component value
 // https://www.w3.org/TR/css-syntax-3/#parse-component-value
 template<typename T>
@@ -6737,36 +6742,177 @@ bool Parser::expand_unresolved_values(DOM::Element& element, StringView property
 // https://drafts.csswg.org/css-values-5/#attr-substitution
 bool Parser::substitute_attr_function(DOM::Element& element, StringView property_name, Function const& attr_function, Vector<ComponentValue>& dest)
 {
+    // First, parse the arguments to attr():
+    // attr() = attr( <q-name> <attr-type>? , <declaration-value>?)
+    // <attr-type> = string | url | ident | color | number | percentage | length | angle | time | frequency | flex | <dimension-unit>
     TokenStream attr_contents { attr_function.values() };
     attr_contents.skip_whitespace();
     if (!attr_contents.has_next_token())
         return false;
 
-    auto const& attr_name_token = attr_contents.next_token();
-    if (!attr_name_token.is(Token::Type::Ident))
+    // - Attribute name
+    // FIXME: Support optional attribute namespace
+    if (!attr_contents.peek_token().is(Token::Type::Ident))
         return false;
-    auto attr_name = attr_name_token.token().ident();
+    auto attribute_name = attr_contents.next_token().token().ident();
+    attr_contents.skip_whitespace();
 
-    auto attr_value = element.get_attribute(attr_name);
+    // - Attribute type (optional)
+    auto attribute_type = "string"_fly_string;
+    if (attr_contents.peek_token().is(Token::Type::Ident)) {
+        attribute_type = MUST(FlyString::from_utf8(attr_contents.next_token().token().ident()));
+        attr_contents.skip_whitespace();
+    }
+
+    // - Comma, then fallback values (optional)
+    bool has_fallback_values = false;
+    if (attr_contents.has_next_token()) {
+        if (!attr_contents.peek_token().is(Token::Type::Comma))
+            return false;
+        (void)attr_contents.next_token(); // Comma
+        has_fallback_values = true;
+    }
+
+    // Then, run the substitution algorithm:
+
     // 1. If the attr() function has a substitution value, replace the attr() function by the substitution value.
-    if (!attr_value.is_null()) {
-        // FIXME: attr() should also accept an optional type argument, not just strings.
-        dest.empend(Token::of_string(FlyString::from_deprecated_fly_string(attr_value).release_value_but_fixme_should_propagate_errors()));
-        return true;
+    // https://drafts.csswg.org/css-values-5/#attr-types
+    if (element.has_attribute(attribute_name)) {
+        auto attribute_value = element.get_attribute_value(attribute_name);
+        if (attribute_type.equals_ignoring_ascii_case("angle"_fly_string)) {
+            // Parse a component value from the attribute’s value.
+            auto component_value = MUST(Parser::Parser::create(m_context, attribute_value)).parse_as_component_value();
+            // If the result is a <dimension-token> whose unit matches the given type, the result is the substitution value.
+            // Otherwise, there is no substitution value.
+            if (component_value.has_value() && component_value->is(Token::Type::Dimension)) {
+                if (Angle::unit_from_name(component_value->token().dimension_unit()).has_value()) {
+                    dest.append(component_value.release_value());
+                    return true;
+                }
+            }
+        } else if (attribute_type.equals_ignoring_ascii_case("color"_fly_string)) {
+            // Parse a component value from the attribute’s value.
+            // If the result is a <hex-color> or a named color ident, the substitution value is that result as a <color>.
+            // Otherwise there is no substitution value.
+            auto component_value = MUST(Parser::Parser::create(m_context, attribute_value)).parse_as_component_value();
+            if (component_value.has_value()) {
+                if ((component_value->is(Token::Type::Hash)
+                        && Color::from_string(MUST(String::formatted("#{}", component_value->token().hash_value()))).has_value())
+                    || (component_value->is(Token::Type::Ident)
+                        && Color::from_string(component_value->token().ident()).has_value())) {
+                    dest.append(component_value.release_value());
+                    return true;
+                }
+            }
+        } else if (attribute_type.equals_ignoring_ascii_case("frequency"_fly_string)) {
+            // Parse a component value from the attribute’s value.
+            auto component_value = MUST(Parser::Parser::create(m_context, attribute_value)).parse_as_component_value();
+            // If the result is a <dimension-token> whose unit matches the given type, the result is the substitution value.
+            // Otherwise, there is no substitution value.
+            if (component_value.has_value() && component_value->is(Token::Type::Dimension)) {
+                if (Frequency::unit_from_name(component_value->token().dimension_unit()).has_value()) {
+                    dest.append(component_value.release_value());
+                    return true;
+                }
+            }
+        } else if (attribute_type.equals_ignoring_ascii_case("ident"_fly_string)) {
+            // The substitution value is a CSS <custom-ident>, whose value is the literal value of the attribute,
+            // with leading and trailing ASCII whitespace stripped. (No CSS parsing of the value is performed.)
+            // If the attribute value, after trimming, is the empty string, there is instead no substitution value.
+            // If the <custom-ident>’s value is a CSS-wide keyword or `default`, there is instead no substitution value.
+            auto substitution_value = attribute_value.trim_whitespace();
+            if (!substitution_value.is_empty()
+                && !substitution_value.equals_ignoring_ascii_case("default"sv)
+                && !is_css_wide_keyword(substitution_value)) {
+                dest.empend(Token::create_ident(MUST(FlyString::from_deprecated_fly_string(substitution_value))));
+                return true;
+            }
+        } else if (attribute_type.equals_ignoring_ascii_case("length"_fly_string)) {
+            // Parse a component value from the attribute’s value.
+            auto component_value = MUST(Parser::Parser::create(m_context, attribute_value)).parse_as_component_value();
+            // If the result is a <dimension-token> whose unit matches the given type, the result is the substitution value.
+            // Otherwise, there is no substitution value.
+            if (component_value.has_value() && component_value->is(Token::Type::Dimension)) {
+                if (Length::unit_from_name(component_value->token().dimension_unit()).has_value()) {
+                    dest.append(component_value.release_value());
+                    return true;
+                }
+            }
+        } else if (attribute_type.equals_ignoring_ascii_case("number"_fly_string)) {
+            // Parse a component value from the attribute’s value.
+            // If the result is a <number-token>, the result is the substitution value.
+            // Otherwise, there is no substitution value.
+            auto component_value = MUST(Parser::Parser::create(m_context, attribute_value)).parse_as_component_value();
+            if (component_value.has_value() && component_value->is(Token::Type::Number)) {
+                dest.append(component_value.release_value());
+                return true;
+            }
+        } else if (attribute_type.equals_ignoring_ascii_case("percentage"_fly_string)) {
+            // Parse a component value from the attribute’s value.
+            auto component_value = MUST(Parser::Parser::create(m_context, attribute_value)).parse_as_component_value();
+            // If the result is a <percentage-token>, the result is the substitution value.
+            // Otherwise, there is no substitution value.
+            if (component_value.has_value() && component_value->is(Token::Type::Percentage)) {
+                dest.append(component_value.release_value());
+                return true;
+            }
+        } else if (attribute_type.equals_ignoring_ascii_case("string"_fly_string)) {
+            // The substitution value is a CSS string, whose value is the literal value of the attribute.
+            // (No CSS parsing or "cleanup" of the value is performed.)
+            // No value triggers fallback.
+            dest.empend(Token::create_string(MUST(FlyString::from_deprecated_fly_string(attribute_value))));
+            return true;
+        } else if (attribute_type.equals_ignoring_ascii_case("time"_fly_string)) {
+            // Parse a component value from the attribute’s value.
+            auto component_value = MUST(Parser::Parser::create(m_context, attribute_value)).parse_as_component_value();
+            // If the result is a <dimension-token> whose unit matches the given type, the result is the substitution value.
+            // Otherwise, there is no substitution value.
+            if (component_value.has_value() && component_value->is(Token::Type::Dimension)) {
+                if (Time::unit_from_name(component_value->token().dimension_unit()).has_value()) {
+                    dest.append(component_value.release_value());
+                    return true;
+                }
+            }
+        } else if (attribute_type.equals_ignoring_ascii_case("url"_fly_string)) {
+            // The substitution value is a CSS <url> value, whose url is the literal value of the attribute.
+            // (No CSS parsing or "cleanup" of the value is performed.)
+            // No value triggers fallback.
+            dest.empend(Token::create_url(MUST(FlyString::from_deprecated_fly_string(attribute_value))));
+            return true;
+        } else {
+            // Dimension units
+            // Parse a component value from the attribute’s value.
+            // If the result is a <number-token>, the substitution value is a dimension with the result’s value, and the given unit.
+            // Otherwise, there is no substitution value.
+            auto component_value = MUST(Parser::Parser::create(m_context, attribute_value)).parse_as_component_value();
+            if (component_value.has_value() && component_value->is(Token::Type::Number)) {
+                if (attribute_value == "%"sv) {
+                    dest.empend(Token::create_dimension(component_value->token().number_value(), attribute_type));
+                    return true;
+                } else if (auto angle_unit = Angle::unit_from_name(attribute_type); angle_unit.has_value()) {
+                    dest.empend(Token::create_dimension(component_value->token().number_value(), attribute_type));
+                    return true;
+                } else if (auto frequency_unit = Frequency::unit_from_name(attribute_type); frequency_unit.has_value()) {
+                    dest.empend(Token::create_dimension(component_value->token().number_value(), attribute_type));
+                    return true;
+                } else if (auto length_unit = Length::unit_from_name(attribute_type); length_unit.has_value()) {
+                    dest.empend(Token::create_dimension(component_value->token().number_value(), attribute_type));
+                    return true;
+                } else if (auto time_unit = Time::unit_from_name(attribute_type); time_unit.has_value()) {
+                    dest.empend(Token::create_dimension(component_value->token().number_value(), attribute_type));
+                    return true;
+                } else {
+                    // Not a dimension unit.
+                    return false;
+                }
+            }
+        }
     }
 
     // 2. Otherwise, if the attr() function has a fallback value as its last argument, replace the attr() function by the fallback value.
     //    If there are any var() or attr() references in the fallback, substitute them as well.
-    attr_contents.skip_whitespace();
-    if (attr_contents.has_next_token()) {
-        auto const& comma_token = attr_contents.next_token();
-        if (!comma_token.is(Token::Type::Comma))
-            return false;
-        attr_contents.skip_whitespace();
-        if (!expand_unresolved_values(element, property_name, attr_contents, dest))
-            return false;
-        return true;
-    }
+    if (has_fallback_values)
+        return expand_unresolved_values(element, property_name, attr_contents, dest);
 
     // 3. Otherwise, the property containing the attr() function is invalid at computed-value time.
     return false;
