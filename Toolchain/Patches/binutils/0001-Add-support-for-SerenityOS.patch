@@ -32,10 +32,10 @@ On AArch64, we set `COMMONPAGESIZE` to enable RELRO support.
  create mode 100644 ld/emulparams/elf_x86_64_serenity.sh
 
 diff --git a/bfd/config.bfd b/bfd/config.bfd
-index 1b0111fd410dcef529bc4d94e2c314678cdd4a2b..e488c40982f8ddb62861aa333dffeb06341f56f8 100644
+index bdee53957c0ca034161715f86e84fcc950d7b625..dc97a5e4a57709736c62f4f4555dd92c0cabd507 100644
 --- a/bfd/config.bfd
 +++ b/bfd/config.bfd
-@@ -285,6 +285,11 @@ case "${targ}" in
+@@ -283,6 +283,11 @@ case "${targ}" in
      targ_selvecs="aarch64_elf64_be_vec aarch64_elf32_le_vec aarch64_elf32_be_vec arm_elf32_le_vec arm_elf32_be_vec"
      want64=true
      ;;
@@ -44,10 +44,10 @@ index 1b0111fd410dcef529bc4d94e2c314678cdd4a2b..e488c40982f8ddb62861aa333dffeb06
 +    targ_selvecs=
 +    want64=true
 +    ;;
-   aarch64-*-linux* | aarch64-*-netbsd*)
+   aarch64-*-linux* | aarch64-*-netbsd* | aarch64-*-nto*)
      targ_defvec=aarch64_elf64_le_vec
      targ_selvecs="aarch64_elf64_be_vec aarch64_elf32_le_vec aarch64_elf32_be_vec arm_elf32_le_vec arm_elf32_be_vec aarch64_pei_le_vec aarch64_pe_le_vec"
-@@ -736,6 +741,11 @@ case "${targ}" in
+@@ -734,6 +739,11 @@ case "${targ}" in
      targ_selvecs="i386_elf32_vec iamcu_elf32_vec x86_64_elf32_vec"
      want64=true
      ;;
@@ -60,10 +60,10 @@ index 1b0111fd410dcef529bc4d94e2c314678cdd4a2b..e488c40982f8ddb62861aa333dffeb06
    i[3-7]86-*-lynxos*)
      targ_defvec=i386_elf32_vec
 diff --git a/gas/config/tc-i386.c b/gas/config/tc-i386.c
-index 66d5ea5a99da47a61bf18623f6bd09b10c5f124d..5bc391ab7c3ee5028b91e5652e978daef0bc33d1 100644
+index de35ee2a2c6952e596e2f5092a22dee5cc54d92c..7f9c91019432a86d4eb1e94bfe7b9ffd6976057a 100644
 --- a/gas/config/tc-i386.c
 +++ b/gas/config/tc-i386.c
-@@ -492,7 +492,8 @@ const char extra_symbol_chars[] = "*%-([{}"
+@@ -501,7 +501,8 @@ const char extra_symbol_chars[] = "*%-([{}"
       && !defined (TE_Haiku)				\
       && !defined (TE_FreeBSD)				\
       && !defined (TE_DragonFly)				\
@@ -83,18 +83,18 @@ index 0000000000000000000000000000000000000000..f38faf598cba7f561ed9528ee3732822
 +
 +#define TE_SerenityOS 1
 diff --git a/gas/configure.tgt b/gas/configure.tgt
-index 765ba73633df54b51eec560002cc234ce98205c3..67bc105e8c8b2a64afad2ae6d7a360f423cb65ab 100644
+index 3429f850d05a23783d6736d875c649f5acf48afa..cc83c4d94da21fa278f7f2bdd32b436bd4b540a3 100644
 --- a/gas/configure.tgt
 +++ b/gas/configure.tgt
-@@ -134,6 +134,7 @@ case ${generic_target} in
-       aarch64*-linux-gnu_ilp32)		arch=aarch64:32 ;;
-     esac ;;
-   aarch64*-*-netbsd*)			fmt=elf em=nbsd;;
-+  aarch64*-*-serenity*)			fmt=elf em=serenity ;;
+@@ -137,6 +137,7 @@ case ${generic_target} in
+   aarch64*-*-nto*)			fmt=elf;;
    aarch64*-*-openbsd*)			fmt=elf;;
-   aarch64*-*-pe*)			fmt=coff em=pepaarch64 ;;
+   aarch64*-*-pe* | aarch64*-*-mingw*)	fmt=coff em=pepaarch64 ;;
++  aarch64*-*-serenity*)     fmt=elf em=serenity ;;
    alpha-*-*vms*)			fmt=evax ;;
-@@ -264,6 +265,7 @@ case ${generic_target} in
+   alpha-*-osf*)				fmt=ecoff ;;
+   alpha-*-linux*ecoff*)			fmt=ecoff ;;
+@@ -265,6 +266,7 @@ case ${generic_target} in
    i386-*-*nt*)				fmt=coff em=pe ;;
    i386-*-rdos*)				fmt=elf ;;
    i386-*-darwin*)			fmt=macho ;;
@@ -111,18 +111,18 @@ index 765ba73633df54b51eec560002cc234ce98205c3..67bc105e8c8b2a64afad2ae6d7a360f4
    riscv*-*-*)				fmt=elf ;;
  
 diff --git a/ld/Makefile.am b/ld/Makefile.am
-index 12b2c3c453fdbdb1fcac74bf5047bc4d0001483f..476c508b114ee81e0aebe25682635807bb7d84ec 100644
+index c3adbb0ccadacb5060988fe0aa24700b7cb489b4..5bbb3a61738a4cce09ba9b8b58d329c3bd5a36ec 100644
 --- a/ld/Makefile.am
 +++ b/ld/Makefile.am
-@@ -389,6 +389,7 @@ ALL_64_EMULATION_SOURCES = \
- 	eaarch64linux32b.c \
+@@ -390,6 +390,7 @@ ALL_64_EMULATION_SOURCES = \
  	eaarch64linuxb.c \
+ 	eaarch64nto.c \
  	eaarch64pe.c \
 +	eaarch64serenity.c \
+ 	earm64pe.c \
  	eelf32_x86_64.c \
  	eelf32b4300.c \
- 	eelf32bmip.c \
-@@ -442,6 +443,7 @@ ALL_64_EMULATION_SOURCES = \
+@@ -444,6 +445,7 @@ ALL_64_EMULATION_SOURCES = \
  	eelf64lppc.c \
  	eelf64lppc_fbsd.c \
  	eelf64lriscv.c \
@@ -130,7 +130,7 @@ index 12b2c3c453fdbdb1fcac74bf5047bc4d0001483f..476c508b114ee81e0aebe25682635807
  	eelf64lriscv_lp64.c \
  	eelf64lriscv_lp64f.c \
  	eelf64ltsmip.c \
-@@ -457,6 +459,7 @@ ALL_64_EMULATION_SOURCES = \
+@@ -459,6 +461,7 @@ ALL_64_EMULATION_SOURCES = \
  	eelf_x86_64_cloudabi.c \
  	eelf_x86_64_fbsd.c \
  	eelf_x86_64_haiku.c \
@@ -138,15 +138,15 @@ index 12b2c3c453fdbdb1fcac74bf5047bc4d0001483f..476c508b114ee81e0aebe25682635807
  	eelf_x86_64_sol2.c \
  	ehppa64linux.c \
  	ei386pep.c \
-@@ -881,6 +884,7 @@ $(ALL_EMULATION_SOURCES) $(ALL_64_EMULATION_SOURCES): $(GEN_DEPENDS)
- @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64linux32b.Pc@am__quote@
+@@ -885,6 +888,7 @@ $(ALL_EMULATION_SOURCES) $(ALL_64_EMULATION_SOURCES): $(GEN_DEPENDS)
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64linuxb.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64nto.Pc@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64pe.Pc@am__quote@
 +@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64serenity.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/earm64pe.Pc@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf32_x86_64.Pc@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf32b4300.Pc@am__quote@
- @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf32bmip.Pc@am__quote@
-@@ -934,6 +938,7 @@ $(ALL_EMULATION_SOURCES) $(ALL_64_EMULATION_SOURCES): $(GEN_DEPENDS)
+@@ -939,6 +943,7 @@ $(ALL_EMULATION_SOURCES) $(ALL_64_EMULATION_SOURCES): $(GEN_DEPENDS)
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf64lppc_fbsd.Pc@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf64loongarch.Pc@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf64lriscv.Pc@am__quote@
@@ -154,7 +154,7 @@ index 12b2c3c453fdbdb1fcac74bf5047bc4d0001483f..476c508b114ee81e0aebe25682635807
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf64lriscv_lp64.Pc@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf64lriscv_lp64f.Pc@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf64ltsmip.Pc@am__quote@
-@@ -949,6 +954,7 @@ $(ALL_EMULATION_SOURCES) $(ALL_64_EMULATION_SOURCES): $(GEN_DEPENDS)
+@@ -954,6 +959,7 @@ $(ALL_EMULATION_SOURCES) $(ALL_64_EMULATION_SOURCES): $(GEN_DEPENDS)
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_cloudabi.Pc@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_fbsd.Pc@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_haiku.Pc@am__quote@
@@ -163,18 +163,18 @@ index 12b2c3c453fdbdb1fcac74bf5047bc4d0001483f..476c508b114ee81e0aebe25682635807
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ehppa64linux.Pc@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ei386pep.Pc@am__quote@
 diff --git a/ld/Makefile.in b/ld/Makefile.in
-index 3d5685d6bae1ce6258f053190da8d84f9eaba463..cefb4b831053e24322081900d8f3293ad9d4e2fb 100644
+index d1a5602643787c240b5323c6c09b9d2bbc813e79..b18a0ed9cede77b1665bb0716176091ac02f5fe9 100644
 --- a/ld/Makefile.in
 +++ b/ld/Makefile.in
-@@ -889,6 +889,7 @@ ALL_64_EMULATION_SOURCES = \
- 	eaarch64linux32b.c \
+@@ -890,6 +890,7 @@ ALL_64_EMULATION_SOURCES = \
  	eaarch64linuxb.c \
+ 	eaarch64nto.c \
  	eaarch64pe.c \
 +	eaarch64serenity.c \
+ 	earm64pe.c \
  	eelf32_x86_64.c \
  	eelf32b4300.c \
- 	eelf32bmip.c \
-@@ -942,6 +943,7 @@ ALL_64_EMULATION_SOURCES = \
+@@ -944,6 +945,7 @@ ALL_64_EMULATION_SOURCES = \
  	eelf64lppc.c \
  	eelf64lppc_fbsd.c \
  	eelf64lriscv.c \
@@ -182,7 +182,7 @@ index 3d5685d6bae1ce6258f053190da8d84f9eaba463..cefb4b831053e24322081900d8f3293a
  	eelf64lriscv_lp64.c \
  	eelf64lriscv_lp64f.c \
  	eelf64ltsmip.c \
-@@ -957,6 +959,7 @@ ALL_64_EMULATION_SOURCES = \
+@@ -959,6 +961,7 @@ ALL_64_EMULATION_SOURCES = \
  	eelf_x86_64_cloudabi.c \
  	eelf_x86_64_fbsd.c \
  	eelf_x86_64_haiku.c \
@@ -190,15 +190,15 @@ index 3d5685d6bae1ce6258f053190da8d84f9eaba463..cefb4b831053e24322081900d8f3293a
  	eelf_x86_64_sol2.c \
  	ehppa64linux.c \
  	ei386pep.c \
-@@ -1266,6 +1269,7 @@ distclean-compile:
- @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64linux32b.Po@am__quote@
+@@ -1271,6 +1274,7 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64linuxb.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64nto.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64pe.Po@am__quote@
 +@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64serenity.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaix5ppc.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaix5rs6.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaixppc.Po@am__quote@
-@@ -1441,6 +1445,7 @@ distclean-compile:
+@@ -1447,6 +1451,7 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf64lppc.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf64lppc_fbsd.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf64lriscv.Po@am__quote@
@@ -206,7 +206,7 @@ index 3d5685d6bae1ce6258f053190da8d84f9eaba463..cefb4b831053e24322081900d8f3293a
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf64lriscv_lp64.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf64lriscv_lp64f.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf64ltsmip.Po@am__quote@
-@@ -1465,6 +1470,7 @@ distclean-compile:
+@@ -1471,6 +1476,7 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_cloudabi.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_fbsd.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_haiku.Po@am__quote@
@@ -214,15 +214,15 @@ index 3d5685d6bae1ce6258f053190da8d84f9eaba463..cefb4b831053e24322081900d8f3293a
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_sol2.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eh8300elf.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eh8300elf_linux.Po@am__quote@
-@@ -2555,6 +2561,7 @@ $(ALL_EMULATION_SOURCES) $(ALL_64_EMULATION_SOURCES): $(GEN_DEPENDS)
- @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64linux32b.Pc@am__quote@
+@@ -2602,6 +2608,7 @@ $(ALL_EMULATION_SOURCES) $(ALL_64_EMULATION_SOURCES): $(GEN_DEPENDS)
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64linuxb.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64nto.Pc@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64pe.Pc@am__quote@
 +@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eaarch64serenity.Pc@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/earm64pe.Pc@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf32_x86_64.Pc@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf32b4300.Pc@am__quote@
- @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf32bmip.Pc@am__quote@
-@@ -2608,6 +2615,7 @@ $(ALL_EMULATION_SOURCES) $(ALL_64_EMULATION_SOURCES): $(GEN_DEPENDS)
+@@ -2656,6 +2663,7 @@ $(ALL_EMULATION_SOURCES) $(ALL_64_EMULATION_SOURCES): $(GEN_DEPENDS)
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf64lppc_fbsd.Pc@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf64loongarch.Pc@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf64lriscv.Pc@am__quote@
@@ -230,7 +230,7 @@ index 3d5685d6bae1ce6258f053190da8d84f9eaba463..cefb4b831053e24322081900d8f3293a
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf64lriscv_lp64.Pc@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf64lriscv_lp64f.Pc@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf64ltsmip.Pc@am__quote@
-@@ -2623,6 +2631,7 @@ $(ALL_EMULATION_SOURCES) $(ALL_64_EMULATION_SOURCES): $(GEN_DEPENDS)
+@@ -2671,6 +2679,7 @@ $(ALL_EMULATION_SOURCES) $(ALL_64_EMULATION_SOURCES): $(GEN_DEPENDS)
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_cloudabi.Pc@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_fbsd.Pc@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eelf_x86_64_haiku.Pc@am__quote@
@@ -239,7 +239,7 @@ index 3d5685d6bae1ce6258f053190da8d84f9eaba463..cefb4b831053e24322081900d8f3293a
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ehppa64linux.Pc@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ei386pep.Pc@am__quote@
 diff --git a/ld/configure.tgt b/ld/configure.tgt
-index de04a44b8125f08095b792285be5ddbaf41e95f2..69d017f96fa5cb908a9119973374b1752e1b9563 100644
+index c62b9581d9b8bb0bb000ff83247baa6144b9921b..6d0d7b2e0dee06be5c808aa933643e4c9eff0a7a 100644
 --- a/ld/configure.tgt
 +++ b/ld/configure.tgt
 @@ -97,6 +97,9 @@ aarch64-*-freebsd*)	targ_emul=aarch64fbsd
@@ -252,7 +252,7 @@ index de04a44b8125f08095b792285be5ddbaf41e95f2..69d017f96fa5cb908a9119973374b175
  aarch64_be-*-linux-gnu_ilp32)
  			targ_emul=aarch64linux32b
  			targ_extra_libpath="aarch64linuxb aarch64linux aarch64linux32 armelfb_linux_eabi armelf_linux_eabi"
-@@ -820,6 +823,9 @@ riscv64*-*-linux*)	targ_emul=elf64lriscv
+@@ -825,6 +828,9 @@ riscv64*-*-linux*)	targ_emul=elf64lriscv
  			targ_extra_emuls="elf64lriscv_lp64f elf64lriscv_lp64 elf32lriscv elf32lriscv_ilp32f elf32lriscv_ilp32 elf64briscv elf64briscv_lp64f elf64briscv_lp64 elf32briscv elf32briscv_ilp32f elf32briscv_ilp32"
  			targ_extra_libpath=$targ_extra_emuls
  			;;
@@ -262,7 +262,7 @@ index de04a44b8125f08095b792285be5ddbaf41e95f2..69d017f96fa5cb908a9119973374b175
  riscv64be*-*-*)		targ_emul=elf64briscv
  			targ_extra_emuls="elf32briscv elf64lriscv elf32lriscv"
  			targ_extra_libpath=$targ_extra_emuls
-@@ -1012,6 +1018,9 @@ x86_64-*-linux-*)	targ_emul=elf_x86_64
+@@ -1011,6 +1017,9 @@ x86_64-*-linux-*)	targ_emul=elf_x86_64
  x86_64-*-redox*)	targ_emul=elf_x86_64
  			targ_extra_emuls=elf_i386
  			;;
