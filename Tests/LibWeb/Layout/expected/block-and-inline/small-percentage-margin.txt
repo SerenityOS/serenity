@@ -1,35 +1,35 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x208 [BFC] children: not-inline
     BlockContainer <body> at (8,8) content-size 784x0 children: not-inline
-      BlockContainer <div> at (15.828125,8) content-size 376.3125x100 floating [BFC] children: inline
+      BlockContainer <div> at (15.84375,8) content-size 376.3125x100 floating [BFC] children: inline
         line 0 width: 27.703125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-          frag 0 from TextNode start: 0, length: 3, rect: [15.828125,8 27.703125x17.46875]
+          frag 0 from TextNode start: 0, length: 3, rect: [15.84375,8 27.703125x17.46875]
             "abc"
         TextNode <#text>
-      BlockContainer <div> at (407.796875,8) content-size 376.3125x100 floating [BFC] children: inline
+      BlockContainer <div> at (407.84375,8) content-size 376.3125x100 floating [BFC] children: inline
         line 0 width: 23.015625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-          frag 0 from TextNode start: 0, length: 3, rect: [407.796875,8 23.015625x17.46875]
+          frag 0 from TextNode start: 0, length: 3, rect: [407.84375,8 23.015625x17.46875]
             "def"
         TextNode <#text>
-      BlockContainer <div> at (15.828125,108) content-size 376.3125x100 floating [BFC] children: inline
+      BlockContainer <div> at (15.84375,108) content-size 376.3125x100 floating [BFC] children: inline
         line 0 width: 21.421875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-          frag 0 from TextNode start: 0, length: 3, rect: [15.828125,108 21.421875x17.46875]
+          frag 0 from TextNode start: 0, length: 3, rect: [15.84375,108 21.421875x17.46875]
             "ghi"
         TextNode <#text>
-      BlockContainer <div> at (407.796875,108) content-size 376.3125x100 floating [BFC] children: inline
+      BlockContainer <div> at (407.84375,108) content-size 376.3125x100 floating [BFC] children: inline
         line 0 width: 18.40625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-          frag 0 from TextNode start: 0, length: 3, rect: [407.796875,108 18.40625x17.46875]
+          frag 0 from TextNode start: 0, length: 3, rect: [407.84375,108 18.40625x17.46875]
             "jkl"
         TextNode <#text>
 
 ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x208]
-    PaintableWithLines (BlockContainer<BODY>) [8,8 784x0] overflow: [15.828125,8 768.28125x200]
-      PaintableWithLines (BlockContainer<DIV>) [15.828125,8 376.3125x100]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x0] overflow: [15.84375,8 768.3125x200]
+      PaintableWithLines (BlockContainer<DIV>) [15.84375,8 376.3125x100]
         TextPaintable (TextNode<#text>)
-      PaintableWithLines (BlockContainer<DIV>) [407.796875,8 376.3125x100]
+      PaintableWithLines (BlockContainer<DIV>) [407.84375,8 376.3125x100]
         TextPaintable (TextNode<#text>)
-      PaintableWithLines (BlockContainer<DIV>) [15.828125,108 376.3125x100]
+      PaintableWithLines (BlockContainer<DIV>) [15.84375,108 376.3125x100]
         TextPaintable (TextNode<#text>)
-      PaintableWithLines (BlockContainer<DIV>) [407.796875,108 376.3125x100]
+      PaintableWithLines (BlockContainer<DIV>) [407.84375,108 376.3125x100]
         TextPaintable (TextNode<#text>)

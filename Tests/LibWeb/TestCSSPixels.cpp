@@ -36,6 +36,15 @@ TEST_CASE(division1)
     b = CSSPixels(0.25);
     EXPECT(!a.might_be_saturated());
     EXPECT((a / b).might_be_saturated());
+
+    // Results should be rounded:
+    a = CSSPixels::smallest_positive_value() * 3;
+    b = 2;
+    EXPECT((a / b) == CSSPixels::smallest_positive_value() * 2);
+
+    a = CSSPixels::smallest_positive_value() * -5;
+    b = 3;
+    EXPECT((a / b) == CSSPixels::smallest_positive_value() * -2);
 }
 
 TEST_CASE(multiplication1)

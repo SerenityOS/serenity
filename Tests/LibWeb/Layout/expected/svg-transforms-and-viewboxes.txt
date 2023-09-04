@@ -48,13 +48,13 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       TextNode <#text>
       SVGSVGBox <svg> at (50,250) content-size 200x200 [SVG] children: inline
         TextNode <#text>
-        SVGGeometryBox <rect> at (120.59375,320.578125) content-size 58.828125x58.828125 children: not-inline
+        SVGGeometryBox <rect> at (120.59375,320.59375) content-size 58.828125x58.828125 children: not-inline
         TextNode <#text>
         TextNode <#text>
-        SVGGeometryBox <rect> at (52.4375,310.359375) content-size 68.140625x68.140625 children: not-inline
+        SVGGeometryBox <rect> at (52.4375,310.375) content-size 68.140625x68.140625 children: not-inline
         TextNode <#text>
         TextNode <#text>
-        SVGGeometryBox <rect> at (179.40625,321.46875) content-size 68.140625x68.140625 children: not-inline
+        SVGGeometryBox <rect> at (179.40625,321.484375) content-size 68.140625x68.140625 children: not-inline
         TextNode <#text>
       TextNode <#text>
       SVGSVGBox <svg> at (258,250) content-size 200x200 [SVG] children: inline
@@ -112,9 +112,9 @@ ViewportPaintable (Viewport<#document>) [0,0 800x600] overflow: [0,0 800x700]
         SVGGeometryPaintable (SVGGeometryBox<rect>) [506,90 120x120]
         SVGGeometryPaintable (SVGGeometryBox<rect>) [471.359375,90 189.28125x120]
       SVGSVGPaintable (SVGSVGBox<svg>) [50,250 200x200]
-        SVGGeometryPaintable (SVGGeometryBox<rect>) [120.59375,320.578125 58.828125x58.828125]
-        SVGGeometryPaintable (SVGGeometryBox<rect>) [52.4375,310.359375 68.140625x68.140625]
-        SVGGeometryPaintable (SVGGeometryBox<rect>) [179.40625,321.46875 68.140625x68.140625]
+        SVGGeometryPaintable (SVGGeometryBox<rect>) [120.59375,320.59375 58.828125x58.828125]
+        SVGGeometryPaintable (SVGGeometryBox<rect>) [52.4375,310.375 68.140625x68.140625]
+        SVGGeometryPaintable (SVGGeometryBox<rect>) [179.40625,321.484375 68.140625x68.140625]
       TextPaintable (TextNode<#text>)
       SVGSVGPaintable (SVGSVGBox<svg>) [258,250 200x200]
         SVGGeometryPaintable (SVGGeometryBox<circle>) [278,270 160x160]

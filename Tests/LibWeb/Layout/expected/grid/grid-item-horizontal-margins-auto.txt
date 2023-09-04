@@ -25,9 +25,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.left-margin-auto.right-margin-auto.fit-content-width> at (75.25,70.40625) content-size 371.484375x17.46875 [BFC] children: inline
+        BlockContainer <div.left-margin-auto.right-margin-auto.fit-content-width> at (75.265625,70.40625) content-size 371.484375x17.46875 [BFC] children: inline
           line 0 width: 371.484375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 45, rect: [75.25,70.40625 371.484375x17.46875]
+            frag 0 from TextNode start: 0, length: 45, rect: [75.265625,70.40625 371.484375x17.46875]
               "auto horizontal margins and fit-content width"
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
@@ -125,7 +125,7 @@ ViewportPaintable (Viewport<#document>) [0,0 800x600]
           TextPaintable (TextNode<#text>)
         PaintableWithLines (BlockContainer<DIV>.right-margin-auto) [11,49.9375 270.484375x19.46875]
           TextPaintable (TextNode<#text>)
-        PaintableWithLines (BlockContainer<DIV>.left-margin-auto.right-margin-auto.fit-content-width) [74.25,69.40625 373.484375x19.46875]
+        PaintableWithLines (BlockContainer<DIV>.left-margin-auto.right-margin-auto.fit-content-width) [74.265625,69.40625 373.484375x19.46875]
           TextPaintable (TextNode<#text>)
         PaintableWithLines (BlockContainer<DIV>.left-margin-auto.fit-content-width) [202.453125,88.875 308.546875x19.46875]
           TextPaintable (TextNode<#text>)

@@ -1,6 +1,6 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
-    BlockContainer <body> at (8,8) content-size 784x299.65625 children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x299.6875 children: not-inline
       BlockContainer <(anonymous)> at (8,8) content-size 784x152 children: inline
         line 0 width: 302, height: 152, bottom: 152, baseline: 152
           frag 0 from SVGSVGBox start: 0, length: 0, rect: [9,9 300x150]
@@ -11,31 +11,31 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         TextNode <#text>
         InlineNode <math>
       BlockContainer <a> at (9,161) content-size 100x100 children: inline
-        line 0 width: 99.453125, height: 43.671875, bottom: 43.671875, baseline: 33.828125
+        line 0 width: 99.453125, height: 43.6875, bottom: 43.6875, baseline: 33.84375
           frag 0 from TextNode start: 0, length: 5, rect: [9,161 99.453125x43.671875]
             "Hello"
         TextNode <#text>
       BlockContainer <(anonymous)> at (8,262) content-size 784x0 children: inline
         TextNode <#text>
-      BlockContainer <div> at (9,263) content-size 782x43.65625 children: inline
-        line 0 width: 101.453125, height: 43.65625, bottom: 43.65625, baseline: 33.828125
+      BlockContainer <div> at (9,263) content-size 782x43.6875 children: inline
+        line 0 width: 101.453125, height: 43.6875, bottom: 43.6875, baseline: 33.84375
           frag 0 from TextNode start: 0, length: 5, rect: [10,263 99.453125x43.671875]
             "Hello"
         InlineNode <a>
           TextNode <#text>
-      BlockContainer <(anonymous)> at (8,307.65625) content-size 784x0 children: inline
+      BlockContainer <(anonymous)> at (8,307.6875) content-size 784x0 children: inline
         TextNode <#text>
 
 ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
-    PaintableWithLines (BlockContainer<BODY>) [8,8 784x299.65625]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x299.6875]
       PaintableWithLines (BlockContainer(anonymous)) [8,8 784x152]
         SVGSVGPaintable (SVGSVGBox<svg>) [8,8 302x152]
         InlinePaintable (InlineNode<math>)
       PaintableWithLines (BlockContainer<a>) [8,160 102x102]
         TextPaintable (TextNode<#text>)
       PaintableWithLines (BlockContainer(anonymous)) [8,262 784x0]
-      PaintableWithLines (BlockContainer<DIV>) [8,262 784x45.65625] overflow: [9,263 782x43.671875]
+      PaintableWithLines (BlockContainer<DIV>) [8,262 784x45.6875]
         InlinePaintable (InlineNode<A>)
           TextPaintable (TextNode<#text>)
-      PaintableWithLines (BlockContainer(anonymous)) [8,307.65625 784x0]
+      PaintableWithLines (BlockContainer(anonymous)) [8,307.6875 784x0]
