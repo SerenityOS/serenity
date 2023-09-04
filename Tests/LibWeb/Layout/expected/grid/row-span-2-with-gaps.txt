@@ -1,10 +1,10 @@
 Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x600 [BFC] children: not-inline
-    BlockContainer <body> at (8,8) content-size 784x352.34375 children: not-inline
-      Box <div.grid-container> at (8,8) content-size 784x352.34375 [GFC] children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x332.34375 children: not-inline
+      Box <div.grid-container> at (8,8) content-size 784x332.34375 [GFC] children: not-inline
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.grid-item.item-span-one-one> at (411.46875,8) content-size 382x139.765625 [BFC] children: inline
+        BlockContainer <div.grid-item.item-span-one-one> at (411.46875,8) content-size 382x129.765625 [BFC] children: inline
           line 0 width: 319.171875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
             frag 0 from TextNode start: 1, length: 40, rect: [411.46875,8 319.171875x17.46875]
               "In a sollicitudin augue. Sed ante augue,"
@@ -20,32 +20,32 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.grid-item.item-span-one-two> at (411.46875,167.765625) content-size 382x192.578125 [BFC] children: inline
+        BlockContainer <div.grid-item.item-span-one-two> at (411.46875,157.765625) content-size 382x182.578125 [BFC] children: inline
           line 0 width: 359.15625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 1, length: 43, rect: [411.46875,167.765625 359.15625x17.46875]
+            frag 0 from TextNode start: 1, length: 43, rect: [411.46875,157.765625 359.15625x17.46875]
               "Suspendisse potenti. Pellentesque at varius"
           line 1 width: 318.5625, height: 17.9375, bottom: 35.40625, baseline: 13.53125
-            frag 0 from TextNode start: 45, length: 41, rect: [411.46875,184.765625 318.5625x17.46875]
+            frag 0 from TextNode start: 45, length: 41, rect: [411.46875,174.765625 318.5625x17.46875]
               "lacus, sed sollicitudin leo. Pellentesque"
           line 2 width: 377.640625, height: 18.40625, bottom: 53.34375, baseline: 13.53125
-            frag 0 from TextNode start: 87, length: 44, rect: [411.46875,201.765625 377.640625x17.46875]
+            frag 0 from TextNode start: 87, length: 44, rect: [411.46875,191.765625 377.640625x17.46875]
               "malesuada mi eget pellentesque tempor. Donec"
           line 3 width: 378.03125, height: 17.875, bottom: 70.28125, baseline: 13.53125
-            frag 0 from TextNode start: 132, length: 47, rect: [411.46875,219.765625 378.03125x17.46875]
+            frag 0 from TextNode start: 132, length: 47, rect: [411.46875,209.765625 378.03125x17.46875]
               "egestas mauris est, ut lobortis nisi luctus at."
           line 4 width: 345.953125, height: 18.34375, bottom: 88.21875, baseline: 13.53125
-            frag 0 from TextNode start: 180, length: 41, rect: [411.46875,236.765625 345.953125x17.46875]
+            frag 0 from TextNode start: 180, length: 41, rect: [411.46875,226.765625 345.953125x17.46875]
               "Vivamus eleifend, lorem vulputate maximus"
           line 5 width: 312.765625, height: 17.8125, bottom: 105.15625, baseline: 13.53125
-            frag 0 from TextNode start: 222, length: 37, rect: [411.46875,254.765625 312.765625x17.46875]
+            frag 0 from TextNode start: 222, length: 37, rect: [411.46875,244.765625 312.765625x17.46875]
               "porta, nunc metus porttitor nibh, nec"
           line 6 width: 242.921875, height: 18.28125, bottom: 123.09375, baseline: 13.53125
-            frag 0 from TextNode start: 260, length: 31, rect: [411.46875,271.765625 242.921875x17.46875]
+            frag 0 from TextNode start: 260, length: 31, rect: [411.46875,261.765625 242.921875x17.46875]
               "bibendum nulla lectus ut felis."
           TextNode <#text>
         BlockContainer <(anonymous)> (not painted) [BFC] children: inline
           TextNode <#text>
-        BlockContainer <div.grid-item.item-span-two> at (8,8) content-size 383.46875x352.34375 [BFC] children: inline
+        BlockContainer <div.grid-item.item-span-two> at (8,8) content-size 383.46875x332.34375 [BFC] children: inline
           line 0 width: 337.6875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
             frag 0 from TextNode start: 1, length: 39, rect: [8,8 337.6875x17.46875]
               "Lorem ipsum dolor sit amet, consectetur"
@@ -109,11 +109,11 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
 
 ViewportPaintable (Viewport<#document>) [0,0 800x600]
   PaintableWithLines (BlockContainer<HTML>) [0,0 800x600]
-    PaintableWithLines (BlockContainer<BODY>) [8,8 784x352.34375] overflow: [8,8 785.46875x352.34375]
-      PaintableBox (Box<DIV>.grid-container) [8,8 784x352.34375] overflow: [8,8 785.46875x352.34375]
-        PaintableWithLines (BlockContainer<DIV>.grid-item.item-span-one-one) [411.46875,8 382x139.765625]
+    PaintableWithLines (BlockContainer<BODY>) [8,8 784x332.34375] overflow: [8,8 785.46875x332.34375]
+      PaintableBox (Box<DIV>.grid-container) [8,8 784x332.34375] overflow: [8,8 785.46875x332.34375]
+        PaintableWithLines (BlockContainer<DIV>.grid-item.item-span-one-one) [411.46875,8 382x129.765625]
           TextPaintable (TextNode<#text>)
-        PaintableWithLines (BlockContainer<DIV>.grid-item.item-span-one-two) [411.46875,167.765625 382x192.578125]
+        PaintableWithLines (BlockContainer<DIV>.grid-item.item-span-one-two) [411.46875,157.765625 382x182.578125]
           TextPaintable (TextNode<#text>)
-        PaintableWithLines (BlockContainer<DIV>.grid-item.item-span-two) [8,8 383.46875x352.34375]
+        PaintableWithLines (BlockContainer<DIV>.grid-item.item-span-two) [8,8 383.46875x332.34375]
           TextPaintable (TextNode<#text>)

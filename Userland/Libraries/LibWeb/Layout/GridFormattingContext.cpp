@@ -856,14 +856,17 @@ void GridFormattingContext::distribute_extra_space_across_spanned_tracks_base_si
             if (track.base_size_frozen)
                 continue;
 
-            if (track.growth_limit.has_value() && increase_per_track >= track.growth_limit.value()) {
-                track.base_size_frozen = true;
-                track.item_incurred_increase = track.growth_limit.value();
-                extra_space -= track.growth_limit.value();
-            } else {
-                track.item_incurred_increase += increase_per_track;
-                extra_space -= increase_per_track;
+            if (track.growth_limit.has_value()) {
+                auto maximum_increase = track.growth_limit.value() - track.base_size;
+                if (track.item_incurred_increase + increase_per_track >= maximum_increase) {
+                    track.base_size_frozen = true;
+                    track.item_incurred_increase = maximum_increase;
+                    extra_space -= maximum_increase - track.item_incurred_increase;
+                    continue;
+                }
             }
+            track.item_incurred_increase += increase_per_track;
+            extra_space -= increase_per_track;
         }
     }
 
