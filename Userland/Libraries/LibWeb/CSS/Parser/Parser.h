@@ -289,6 +289,7 @@ private:
     NonnullRefPtr<StyleValue> resolve_unresolved_style_value(DOM::Element&, Optional<Selector::PseudoElement>, PropertyID, UnresolvedStyleValue const&);
     bool expand_variables(DOM::Element&, Optional<Selector::PseudoElement>, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, TokenStream<ComponentValue>& source, Vector<ComponentValue>& dest);
     bool expand_unresolved_values(DOM::Element&, StringView property_name, TokenStream<ComponentValue>& source, Vector<ComponentValue>& dest);
+    bool substitute_attr_function(DOM::Element& element, StringView property_name, Function const& attr_function, Vector<ComponentValue>& dest);
 
     static bool has_ignored_vendor_prefix(StringView);
 
