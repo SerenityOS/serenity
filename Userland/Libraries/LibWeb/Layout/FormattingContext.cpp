@@ -1045,7 +1045,7 @@ CSSPixelRect FormattingContext::content_box_rect_in_static_position_ancestor_coo
     for (auto const* current = box.parent(); current; current = current->parent()) {
         if (current == &ancestor_box)
             return rect;
-        auto const& current_state = m_state.get(static_cast<Box const&>(*current));
+        auto const& current_state = m_state.get(*current);
         rect.translate_by(current_state.offset);
     }
     // If we get here, ancestor_box was not an ancestor of `box`!
@@ -1762,7 +1762,7 @@ CSSPixelRect FormattingContext::border_box_rect_in_ancestor_coordinate_space(Box
     for (auto const* current = box.containing_block(); current; current = current->containing_block()) {
         if (current == &ancestor_box)
             return rect;
-        auto const& current_state = m_state.get(static_cast<Box const&>(*current));
+        auto const& current_state = m_state.get(*current);
         rect.translate_by(current_state.offset);
     }
     // If we get here, ancestor_box was not a containing block ancestor of `box`!
@@ -1783,7 +1783,7 @@ CSSPixelRect FormattingContext::content_box_rect_in_ancestor_coordinate_space(Bo
     for (auto const* current = box.containing_block(); current; current = current->containing_block()) {
         if (current == &ancestor_box)
             return rect;
-        auto const& current_state = m_state.get(static_cast<Box const&>(*current));
+        auto const& current_state = m_state.get(*current);
         rect.translate_by(current_state.offset);
     }
     // If we get here, ancestor_box was not a containing block ancestor of `box`!
@@ -1798,7 +1798,7 @@ CSSPixelRect FormattingContext::margin_box_rect_in_ancestor_coordinate_space(Box
     for (auto const* current = box.containing_block(); current; current = current->containing_block()) {
         if (current == &ancestor_box)
             return rect;
-        auto const& current_state = m_state.get(static_cast<Box const&>(*current));
+        auto const& current_state = m_state.get(*current);
         rect.translate_by(current_state.offset);
     }
     // If we get here, ancestor_box was not a containing block ancestor of `box`!
