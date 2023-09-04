@@ -812,7 +812,7 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
         auto comment = verify_cast<Comment>(this);
 
         // Set copy’s data to that of node.
-        auto comment_copy = heap().allocate<Comment>(realm(), *document, comment->data());
+        auto comment_copy = heap().allocate<Comment>(realm(), *document, MUST(String::from_deprecated_string(comment->data())));
         copy = move(comment_copy);
     } else if (is<ProcessingInstruction>(this)) {
         // ProcessingInstruction

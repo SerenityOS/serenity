@@ -15,13 +15,13 @@ class Comment final : public CharacterData {
     WEB_PLATFORM_OBJECT(Comment, CharacterData);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Comment>> construct_impl(JS::Realm&, DeprecatedString const& data);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Comment>> construct_impl(JS::Realm&, String const& data);
     virtual ~Comment() override = default;
 
     virtual DeprecatedFlyString node_name() const override { return "#comment"; }
 
 private:
-    Comment(Document&, DeprecatedString const&);
+    Comment(Document&, String const&);
 
     virtual void initialize(JS::Realm&) override;
 };
