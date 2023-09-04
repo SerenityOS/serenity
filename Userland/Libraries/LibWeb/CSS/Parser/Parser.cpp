@@ -3655,34 +3655,43 @@ RefPtr<StyleValue> Parser::parse_display_value(Vector<ComponentValue> const& com
 
     auto parse_multi_component_display = [&](Vector<ComponentValue> const& component_values) -> Optional<Display> {
         auto list_item = Display::ListItem::No;
-        Display::Inside inside = Display::Inside::Flow;
-        Display::Outside outside = Display::Outside::Block;
+        Optional<Display::Inside> inside;
+        Optional<Display::Outside> outside;
 
         for (size_t i = 0; i < component_values.size(); ++i) {
             if (auto value = parse_identifier_value(component_values[i])) {
                 auto identifier = value->to_identifier();
-                if (ValueID::ListItem == identifier) {
+                if (identifier == ValueID::ListItem) {
+                    if (list_item == Display::ListItem::Yes)
+                        return {};
                     list_item = Display::ListItem::Yes;
                     continue;
                 }
-                auto inside_value = parse_inside(identifier);
-                if (inside_value.has_value()) {
+                if (auto inside_value = parse_inside(identifier); inside_value.has_value()) {
+                    if (inside.has_value())
+                        return {};
                     inside = inside_value.value();
                     continue;
                 }
-                auto outside_value = parse_outside(identifier);
-                if (outside_value.has_value()) {
+                if (auto outside_value = parse_outside(identifier); outside_value.has_value()) {
+                    if (outside.has_value())
+                        return {};
                     outside = outside_value.value();
+                    continue;
                 }
             }
+
+            // Not a display value, abort.
+            dbgln_if(CSS_PARSER_DEBUG, "Unrecognized display value: `{}`", component_values[i].to_string());
+            return {};
         }
 
         // The spec does not allow any other inside values to be combined with list-item
         // <display-outside>? && [ flow | flow-root ]? && list-item
-        if (list_item == Display::ListItem::Yes && inside != Display::Inside::Flow && inside != Display::Inside::FlowRoot)
-            return OptionalNone {};
+        if (list_item == Display::ListItem::Yes && inside.has_value() && inside != Display::Inside::Flow && inside != Display::Inside::FlowRoot)
+            return {};
 
-        return Display { outside, inside, list_item };
+        return Display { outside.value_or(Display::Outside::Block), inside.value_or(Display::Inside::Flow), list_item };
     };
 
     Optional<Display> display;
