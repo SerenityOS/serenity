@@ -2674,40 +2674,6 @@ Vector<JS::Handle<HTML::BrowsingContext>> Document::list_of_descendant_browsing_
     return list;
 }
 
-// https://html.spec.whatwg.org/multipage/window-object.html#discard-a-document
-void Document::discard()
-{
-    // 1. Set document's salvageable state to false.
-    m_salvageable = false;
-
-    // FIXME: 2. Run any unloading document cleanup steps for document that are defined by this specification and other applicable specifications.
-
-    // 3. Abort document.
-    abort();
-
-    // 4. Remove any tasks associated with document in any task source, without running those tasks.
-    HTML::main_thread_event_loop().task_queue().remove_tasks_matching([this](auto& task) {
-        return task.document() == this;
-    });
-
-    // 5. Discard all the child browsing contexts of document.
-    if (browsing_context()) {
-        browsing_context()->for_each_child([](HTML::BrowsingContext& child_browsing_context) {
-            child_browsing_context.discard();
-        });
-    }
-
-    // FIXME: 6. For each session history entry entry whose document is equal to document, set entry's document to null.
-
-    // 7. Set document's browsing context to null.
-    tear_down_layout_tree();
-    m_browsing_context = nullptr;
-
-    // FIXME: 8. Remove document from the owner set of each WorkerGlobalScope object whose set contains document.
-
-    // FIXME: 9. For each workletGlobalScope in document's worklet global scopes, terminate workletGlobalScope.
-}
-
 // https://html.spec.whatwg.org/multipage/document-lifecycle.html#destroy-a-document
 void Document::destroy()
 {
