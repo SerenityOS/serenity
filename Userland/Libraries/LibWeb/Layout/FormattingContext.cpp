@@ -259,50 +259,49 @@ FormattingContext::ShrinkToFitResult FormattingContext::calculate_shrink_to_fit_
 CSSPixelSize FormattingContext::solve_replaced_size_constraint(CSSPixels input_width, CSSPixels input_height, Box const& box, AvailableSpace const& available_space) const
 {
     // 10.4 Minimum and maximum widths: 'min-width' and 'max-width'
+    // https://www.w3.org/TR/CSS22/visudet.html#min-max-widths
 
     auto const& containing_block = *box.non_anonymous_containing_block();
     auto const& containing_block_state = m_state.get(containing_block);
     auto width_of_containing_block = containing_block_state.content_width();
     auto height_of_containing_block = containing_block_state.content_height();
 
-    CSSPixels specified_min_width = box.computed_values().min_width().is_auto() ? 0 : box.computed_values().min_width().to_px(box, width_of_containing_block);
-    CSSPixels specified_max_width = should_treat_max_width_as_none(box, available_space.width) ? input_width : box.computed_values().max_width().to_px(box, width_of_containing_block);
-    CSSPixels specified_min_height = box.computed_values().min_height().is_auto() ? 0 : box.computed_values().min_height().to_px(box, height_of_containing_block);
-    CSSPixels specified_max_height = should_treat_max_height_as_none(box, available_space.height) ? input_height : box.computed_values().max_height().to_px(box, height_of_containing_block);
+    auto min_width = box.computed_values().min_width().is_auto() ? 0 : box.computed_values().min_width().to_px(box, width_of_containing_block);
+    auto specified_max_width = should_treat_max_width_as_none(box, available_space.width) ? input_width : box.computed_values().max_width().to_px(box, width_of_containing_block);
+    auto max_width = max(min_width, specified_max_width);
 
-    auto min_width = min(specified_min_width, specified_max_width);
-    auto max_width = max(specified_min_width, specified_max_width);
-    auto min_height = min(specified_min_height, specified_max_height);
-    auto max_height = max(specified_min_height, specified_max_height);
+    auto min_height = box.computed_values().min_height().is_auto() ? 0 : box.computed_values().min_height().to_px(box, height_of_containing_block);
+    auto specified_max_height = should_treat_max_height_as_none(box, available_space.height) ? input_height : box.computed_values().max_height().to_px(box, height_of_containing_block);
+    auto max_height = max(min_height, specified_max_height);
 
-    struct Size {
-        CSSPixels width;
-        CSSPixels height;
-    } size = { input_width, input_height };
-    auto& w = size.width;
-    auto& h = size.height;
+    auto aspect_ratio = input_width / input_height;
 
-    if (w > max_width)
-        size = { max_width, max(max_width * (h / w), min_height) };
-    if (w < min_width)
-        size = { min_width, min(min_width * (h / w), max_height) };
-    if (h > max_height)
-        size = { max(max_height * (w / h), min_width), max_height };
-    if (h < min_height)
-        size = { min(min_height * (w / h), max_width), min_height };
-    if ((w > max_width && h > max_height) && (max_width / w <= max_height / h))
-        size = { max_width, max(min_height, max_width * (h / w)) };
-    if ((w > max_width && h > max_height) && (max_width / w > max_height / h))
-        size = { max(min_width, max_height * (w / h)), max_height };
-    if ((w < min_width && h < min_height) && (min_width / w <= min_height / h))
-        size = { min(max_width, min_height * (w / h)), min_height };
-    if ((w < min_width && h < min_height) && (min_width / w > min_height / h))
-        size = { min_width, min(max_height, min_width * (h / w)) };
-    if (w < min_width && h > max_height)
-        size = { min_width, max_height };
-    if (w > max_width && h < min_height)
-        size = { max_width, min_height };
-    return { w, h };
+    // These are from the "Constraint Violation" table in spec, but reordered so that each condition is
+    // interpreted as mutually exclusive to any other.
+    if (input_width < min_width && input_height > max_height)
+        return { min_width, max_height };
+    if (input_width > max_width && input_height < min_height)
+        return { max_width, min_height };
+
+    if (input_width > max_width && input_height > max_height && max_width / input_width <= max_height / input_height)
+        return { max_width, max(min_height, max_width / aspect_ratio) };
+    if (input_width > max_width && input_height > max_height && max_width / input_width > max_height / input_height)
+        return { max(min_width, max_height * aspect_ratio), max_height };
+    if (input_width < min_width && input_height < min_height && min_width / input_width <= min_height / input_height)
+        return { min(max_width, min_height * aspect_ratio), min_height };
+    if (input_width < min_width && input_height < min_height && min_width / input_width > min_height / input_height)
+        return { min_width, min(max_height, min_width / aspect_ratio) };
+
+    if (input_width > max_width)
+        return { max_width, max(max_width / aspect_ratio, min_height) };
+    if (input_width < min_width)
+        return { min_width, min(min_width / aspect_ratio, max_height) };
+    if (input_height > max_height)
+        return { max(max_height * aspect_ratio, min_width), max_height };
+    if (input_height < min_height)
+        return { min(min_height * aspect_ratio, max_width), min_height };
+
+    return { input_width, input_height };
 }
 
 Optional<CSSPixels> FormattingContext::compute_auto_height_for_absolutely_positioned_element(Box const& box, AvailableSpace const& available_space, BeforeOrAfterInsideLayout before_or_after_inside_layout) const
