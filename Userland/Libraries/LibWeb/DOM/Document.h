@@ -478,9 +478,6 @@ public:
 
     void destroy();
 
-    // https://html.spec.whatwg.org/multipage/window-object.html#discard-a-document
-    void discard();
-
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#abort-a-document
     void abort();
 

@@ -208,8 +208,6 @@ public:
     VisibilityState system_visibility_state() const;
     void set_system_visibility_state(VisibilityState);
 
-    // https://html.spec.whatwg.org/multipage/window-object.html#a-browsing-context-is-discarded
-    void discard();
     bool has_been_discarded() const { return m_has_been_discarded; }
 
     Optional<AK::URL> const& creator_url() const { return m_creator_url; }

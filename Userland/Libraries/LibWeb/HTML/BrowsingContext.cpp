@@ -855,31 +855,6 @@ void BrowsingContext::set_system_visibility_state(VisibilityState visibility_sta
     });
 }
 
-// https://html.spec.whatwg.org/multipage/window-object.html#a-browsing-context-is-discarded
-void BrowsingContext::discard()
-{
-    m_has_been_discarded = true;
-
-    // 1. Discard all Document objects for all the entries in browsingContext's session history.
-    for (auto& entry : m_session_history) {
-        if (entry->document_state->document())
-            entry->document_state->document()->discard();
-    }
-
-    // AD-HOC:
-    // FIXME: This should be in the session history!
-    if (auto* document = active_document())
-        document->discard();
-
-    // 2. If browsingContext is a top-level browsing context, then remove browsingContext.
-    if (is_top_level())
-        remove();
-
-    // AD-HOC:
-    if (parent())
-        parent()->remove_child(*this);
-}
-
 void BrowsingContext::append_child(JS::NonnullGCPtr<BrowsingContext> child)
 {
     VERIFY(!child->m_parent);
