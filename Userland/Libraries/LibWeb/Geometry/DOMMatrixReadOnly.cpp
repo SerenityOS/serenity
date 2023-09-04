@@ -284,6 +284,44 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> DOMMatrixReadOnly::multiply(DOM
     return result->multiply_self(other);
 }
 
+// https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-flipx
+JS::NonnullGCPtr<DOMMatrix> DOMMatrixReadOnly::flip_x()
+{
+    // 1. Let result be the resulting matrix initialized to the values of the current matrix.
+    auto result = DOMMatrix::create_from_dom_matrix_read_only(realm(), *this);
+
+    // 2. Post-multiply result with new DOMMatrix([-1, 0, 0, 1, 0, 0]).
+    // clang-format off
+    Gfx::DoubleMatrix4x4 flip_matrix = { -1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1 };
+    // clang-format on
+    result->m_matrix = result->m_matrix * flip_matrix;
+
+    // 3. Return result.
+    return result;
+}
+
+// https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-flipy
+JS::NonnullGCPtr<DOMMatrix> DOMMatrixReadOnly::flip_y()
+{
+    // 1. Let result be the resulting matrix initialized to the values of the current matrix.
+    auto result = DOMMatrix::create_from_dom_matrix_read_only(realm(), *this);
+
+    // 2. Post-multiply result with new DOMMatrix([1, 0, 0, -1, 0, 0]).
+    // clang-format off
+    Gfx::DoubleMatrix4x4 flip_matrix = { 1, 0, 0, 0,
+        0, -1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1 };
+    // clang-format on
+    result->m_matrix = result->m_matrix * flip_matrix;
+
+    // 3. Return result.
+    return result;
+}
+
 // https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-inverse
 JS::NonnullGCPtr<DOMMatrix> DOMMatrixReadOnly::inverse() const
 {
