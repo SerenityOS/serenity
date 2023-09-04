@@ -7,7 +7,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
         TextNode <#text>
       BlockContainer <dl> at (25,25) content-size 470x0 children: inline
         TextNode <#text>
-        BlockContainer <dt> at (40,40) content-size 49.984375x280 floating [BFC] children: inline
+        BlockContainer <dt> at (40,40) content-size 50x280 floating [BFC] children: inline
           line 0 width: 28.3125, height: 10, bottom: 10, baseline: 8
             frag 0 from TextNode start: 0, length: 6, rect: [40,40 28.3125x10]
               "toggle"
@@ -24,21 +24,21 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
                   "the way"
               TextNode <#text>
             TextNode <#text>
-            BlockContainer <li#bar> at (235,55) content-size 139.96875x90 floating [BFC] children: not-inline
-              BlockContainer <(anonymous)> at (235,55) content-size 139.96875x0 children: inline
+            BlockContainer <li#bar> at (235,55) content-size 139.984375x90 floating [BFC] children: not-inline
+              BlockContainer <(anonymous)> at (235,55) content-size 139.984375x0 children: inline
                 TextNode <#text>
-              BlockContainer <p> at (235,55) content-size 139.96875x10 children: inline
+              BlockContainer <p> at (235,55) content-size 139.984375x10 children: inline
                 line 0 width: 74.3125, height: 10, bottom: 10, baseline: 8
                   frag 0 from TextNode start: 0, length: 14, rect: [235,55 74.3125x10]
                     "the world ends"
                 TextNode <#text>
-              BlockContainer <(anonymous)> at (235,65) content-size 139.96875x0 children: inline
+              BlockContainer <(anonymous)> at (235,65) content-size 139.984375x0 children: inline
                 TextNode <#text>
                 InlineNode <form>
                   TextNode <#text>
                   TextNode <#text>
                   TextNode <#text>
-              BlockContainer <p> at (235,65) content-size 139.96875x19 children: inline
+              BlockContainer <p> at (235,65) content-size 139.984375x19 children: inline
                 line 0 width: 39.484375, height: 19, bottom: 19, baseline: 12.5
                   frag 0 from TextNode start: 1, length: 5, rect: [235,65 27.484375x19]
                     "bang "
@@ -46,7 +46,7 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
                 TextNode <#text>
                 RadioButton <input> at (262,65) content-size 12x12 inline-block children: not-inline
                 TextNode <#text>
-              BlockContainer <p> at (235,84) content-size 139.96875x19 children: inline
+              BlockContainer <p> at (235,84) content-size 139.984375x19 children: inline
                 line 0 width: 57.15625, height: 19, bottom: 19, baseline: 12.5
                   frag 0 from TextNode start: 1, length: 8, rect: [235,84 45.15625x19]
                     "whimper "
@@ -54,15 +54,15 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
                 TextNode <#text>
                 RadioButton <input> at (280,84) content-size 12x12 inline-block children: not-inline
                 TextNode <#text>
-              BlockContainer <(anonymous)> at (235,103) content-size 139.96875x0 children: inline
+              BlockContainer <(anonymous)> at (235,103) content-size 139.984375x0 children: inline
                 TextNode <#text>
             TextNode <#text>
-            BlockContainer <li> at (409.96875,60) content-size 50x90 floating [BFC] children: inline
+            BlockContainer <li> at (409.984375,60) content-size 50x90 floating [BFC] children: inline
               line 0 width: 31.578125, height: 10, bottom: 10, baseline: 8
-                frag 0 from TextNode start: 0, length: 6, rect: [409.96875,60 31.578125x10]
+                frag 0 from TextNode start: 0, length: 6, rect: [409.984375,60 31.578125x10]
                   "i grow"
               line 1 width: 14.03125, height: 10, bottom: 20, baseline: 8
-                frag 0 from TextNode start: 7, length: 3, rect: [409.96875,70 14.03125x10]
+                frag 0 from TextNode start: 7, length: 3, rect: [409.984375,70 14.03125x10]
                   "old"
               TextNode <#text>
             TextNode <#text>
@@ -140,27 +140,27 @@ ViewportPaintable (Viewport<#document>) [0,0 800x600]
     PaintableWithLines (BlockContainer<BODY>) [15,15 490x390]
       PaintableWithLines (BlockContainer(anonymous)) [20,20 480x0]
       PaintableWithLines (BlockContainer<DL>) [20,20 480x10]
-        PaintableWithLines (BlockContainer<DT>) [25,25 79.984375x310]
+        PaintableWithLines (BlockContainer<DT>) [25,25 80x310]
           TextPaintable (TextNode<#text>)
         PaintableWithLines (BlockContainer<DD>) [115,25 380x310]
           PaintableWithLines (BlockContainer(anonymous)) [135,45 340x0]
           PaintableWithLines (BlockContainer<UL>) [135,45 340x0]
             PaintableWithLines (BlockContainer<LI>) [135,45 80x120]
               TextPaintable (TextNode<#text>)
-            PaintableWithLines (BlockContainer<LI>#bar) [225,45 159.96875x110]
-              PaintableWithLines (BlockContainer(anonymous)) [235,55 139.96875x0]
-              PaintableWithLines (BlockContainer<P>) [235,55 139.96875x10]
+            PaintableWithLines (BlockContainer<LI>#bar) [225,45 159.984375x110]
+              PaintableWithLines (BlockContainer(anonymous)) [235,55 139.984375x0]
+              PaintableWithLines (BlockContainer<P>) [235,55 139.984375x10]
                 TextPaintable (TextNode<#text>)
-              PaintableWithLines (BlockContainer(anonymous)) [235,65 139.96875x0]
+              PaintableWithLines (BlockContainer(anonymous)) [235,65 139.984375x0]
                 InlinePaintable (InlineNode<FORM>)
-              PaintableWithLines (BlockContainer<P>) [235,65 139.96875x19]
+              PaintableWithLines (BlockContainer<P>) [235,65 139.984375x19]
                 TextPaintable (TextNode<#text>)
                 RadioButtonPaintable (RadioButton<INPUT>) [262,65 12x12]
-              PaintableWithLines (BlockContainer<P>) [235,84 139.96875x19]
+              PaintableWithLines (BlockContainer<P>) [235,84 139.984375x19]
                 TextPaintable (TextNode<#text>)
                 RadioButtonPaintable (RadioButton<INPUT>) [280,84 12x12]
-              PaintableWithLines (BlockContainer(anonymous)) [235,103 139.96875x0]
-            PaintableWithLines (BlockContainer<LI>) [394.96875,45 80x120]
+              PaintableWithLines (BlockContainer(anonymous)) [235,103 139.984375x0]
+            PaintableWithLines (BlockContainer<LI>) [394.984375,45 80x120]
               TextPaintable (TextNode<#text>)
             PaintableWithLines (BlockContainer<LI>#baz) [135,175 120x120]
               TextPaintable (TextNode<#text>)

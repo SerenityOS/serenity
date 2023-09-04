@@ -15,9 +15,9 @@ Viewport <#document> at (0,0) content-size 800x600 children: not-inline
       BlockContainer <(anonymous)> at (10,91.46875) content-size 780x0 children: inline
         TextNode <#text>
       Box <div.grid> at (31,112.46875) content-size 738x39.46875 [GFC] children: not-inline
-        BlockContainer <div.center> at (185.796875,123.46875) content-size 59.390625x17.46875 [BFC] children: inline
+        BlockContainer <div.center> at (185.8125,123.46875) content-size 59.390625x17.46875 [BFC] children: inline
           line 0 width: 59.390625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
-            frag 0 from TextNode start: 0, length: 7, rect: [185.796875,123.46875 59.390625x17.46875]
+            frag 0 from TextNode start: 0, length: 7, rect: [185.8125,123.46875 59.390625x17.46875]
               "Center1"
           TextNode <#text>
         BlockContainer <div.item-padding> at (411,123.46875) content-size 347x17.46875 [BFC] children: inline
@@ -49,7 +49,7 @@ ViewportPaintable (Viewport<#document>) [0,0 800x600]
           TextPaintable (TextNode<#text>)
       PaintableWithLines (BlockContainer(anonymous)) [10,91.46875 780x0]
       PaintableBox (Box<DIV>.grid) [10,91.46875 780x81.46875]
-        PaintableWithLines (BlockContainer<DIV>.center) [184.796875,122.46875 61.390625x19.46875]
+        PaintableWithLines (BlockContainer<DIV>.center) [184.8125,122.46875 61.390625x19.46875]
           TextPaintable (TextNode<#text>)
         PaintableWithLines (BlockContainer<DIV>.item-padding) [400,112.46875 369x39.46875]
           TextPaintable (TextNode<#text>)
