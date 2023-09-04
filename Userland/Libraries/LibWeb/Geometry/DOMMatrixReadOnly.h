@@ -88,6 +88,8 @@ public:
     JS::NonnullGCPtr<DOMMatrix> skew_x(double sx = 0) const;
     JS::NonnullGCPtr<DOMMatrix> skew_y(double sy = 0) const;
     WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> multiply(DOMMatrixInit other = {});
+    JS::NonnullGCPtr<DOMMatrix> flip_x();
+    JS::NonnullGCPtr<DOMMatrix> flip_y();
     JS::NonnullGCPtr<DOMMatrix> inverse() const;
 
     JS::NonnullGCPtr<DOMPoint> transform_point(DOMPointInit const&) const;

@@ -41,5 +41,11 @@
 
         // 12. Skew Y DOMMatrix with multiply
         testPart(() => new DOMMatrix([10, 20, 30, 40, 50, 60]).multiply(new DOMMatrix().skewY(10)));
+
+        // 13. Flip X DOMMatrix
+        testPart(() => new DOMMatrix([10, 20, 30, 40, 50, 60]).flipX());
+
+        // 14. Flip Y DOMMatrix
+        testPart(() => new DOMMatrix([10, 20, 30, 40, 50, 60]).flipY());
     });
 </script>
