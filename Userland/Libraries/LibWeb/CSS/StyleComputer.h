@@ -14,8 +14,6 @@
 #include <LibWeb/CSS/CSSFontFaceRule.h>
 #include <LibWeb/CSS/CSSKeyframesRule.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
-#include <LibWeb/CSS/Parser/ComponentValue.h>
-#include <LibWeb/CSS/Parser/TokenStream.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/FontCache.h>
@@ -31,24 +29,6 @@ struct MatchingRule {
     size_t selector_index { 0 };
     u32 specificity { 0 };
     bool contains_pseudo_element { false };
-};
-
-class PropertyDependencyNode : public RefCounted<PropertyDependencyNode> {
-public:
-    static NonnullRefPtr<PropertyDependencyNode> create(String name)
-    {
-        return adopt_ref(*new PropertyDependencyNode(move(name)));
-    }
-
-    void add_child(NonnullRefPtr<PropertyDependencyNode>);
-    bool has_cycles();
-
-private:
-    explicit PropertyDependencyNode(String name);
-
-    String m_name;
-    Vector<NonnullRefPtr<PropertyDependencyNode>> m_children;
-    bool m_marked { false };
 };
 
 struct FontFaceKey {
@@ -152,10 +132,6 @@ private:
     void transform_box_type_if_needed(StyleProperties&, DOM::Element const&, Optional<CSS::Selector::PseudoElement>) const;
 
     void compute_defaulted_property_value(StyleProperties&, DOM::Element const*, CSS::PropertyID, Optional<CSS::Selector::PseudoElement>) const;
-
-    NonnullRefPtr<StyleValue> resolve_unresolved_style_value(DOM::Element&, Optional<CSS::Selector::PseudoElement>, PropertyID, UnresolvedStyleValue const&) const;
-    bool expand_variables(DOM::Element&, Optional<CSS::Selector::PseudoElement>, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Parser::TokenStream<Parser::ComponentValue>& source, Vector<Parser::ComponentValue>& dest) const;
-    bool expand_unresolved_values(DOM::Element&, StringView property_name, Parser::TokenStream<Parser::ComponentValue>& source, Vector<Parser::ComponentValue>& dest) const;
 
     void set_all_properties(DOM::Element&, Optional<CSS::Selector::PseudoElement>, StyleProperties&, StyleValue const&, DOM::Document&, CSS::CSSStyleDeclaration const*, StyleProperties::PropertyValues const& properties_for_revert) const;
 

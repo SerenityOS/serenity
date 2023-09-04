@@ -37,6 +37,8 @@
 
 namespace Web::CSS::Parser {
 
+class PropertyDependencyNode;
+
 class Parser {
 public:
     static ErrorOr<Parser> create(ParsingContext const&, StringView input, StringView encoding = "utf-8"sv);
@@ -66,8 +68,7 @@ public:
 
     RefPtr<StyleValue> parse_as_css_value(PropertyID);
 
-    static RefPtr<StyleValue> parse_css_value(Badge<StyleComputer>, ParsingContext const&, PropertyID, Vector<ComponentValue> const&);
-    static RefPtr<CalculatedStyleValue> parse_calculated_value(Badge<StyleComputer>, ParsingContext const&, ComponentValue const&);
+    static NonnullRefPtr<StyleValue> resolve_unresolved_style_value(Badge<StyleComputer>, ParsingContext const&, DOM::Element&, Optional<CSS::Selector::PseudoElement>, PropertyID, UnresolvedStyleValue const&);
 
     [[nodiscard]] LengthOrCalculated parse_as_sizes_attribute();
 
@@ -284,6 +285,10 @@ private:
     OwnPtr<Supports::Condition> parse_supports_condition(TokenStream<ComponentValue>&);
     Optional<Supports::InParens> parse_supports_in_parens(TokenStream<ComponentValue>&);
     Optional<Supports::Feature> parse_supports_feature(TokenStream<ComponentValue>&);
+
+    NonnullRefPtr<StyleValue> resolve_unresolved_style_value(DOM::Element&, Optional<Selector::PseudoElement>, PropertyID, UnresolvedStyleValue const&);
+    bool expand_variables(DOM::Element&, Optional<Selector::PseudoElement>, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, TokenStream<ComponentValue>& source, Vector<ComponentValue>& dest);
+    bool expand_unresolved_values(DOM::Element&, StringView property_name, TokenStream<ComponentValue>& source, Vector<ComponentValue>& dest);
 
     static bool has_ignored_vendor_prefix(StringView);
 
