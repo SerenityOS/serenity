@@ -4,6 +4,8 @@
     "css-any-link-selector.html": "css-any-link-selector-ref.html",
     "css-attr-basic.html": "css-attr-ref.html",
     "css-attr-fallback.html": "css-attr-ref.html",
+    "css-attr-typed.html": "css-attr-typed-ref.html",
+    "css-attr-typed-fallback.html": "css-attr-typed-ref.html",
     "css-gradient-currentcolor.html": "css-gradient-currentcolor-ref.html",
     "css-gradients.html": "css-gradients-ref.html",
     "css-invalid-var.html": "css-invalid-var-ref.html",

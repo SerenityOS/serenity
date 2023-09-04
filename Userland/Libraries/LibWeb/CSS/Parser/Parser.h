@@ -68,6 +68,8 @@ public:
 
     RefPtr<StyleValue> parse_as_css_value(PropertyID);
 
+    Optional<ComponentValue> parse_as_component_value();
+
     static NonnullRefPtr<StyleValue> resolve_unresolved_style_value(Badge<StyleComputer>, ParsingContext const&, DOM::Element&, Optional<CSS::Selector::PseudoElement>, PropertyID, UnresolvedStyleValue const&);
 
     [[nodiscard]] LengthOrCalculated parse_as_sizes_attribute();
