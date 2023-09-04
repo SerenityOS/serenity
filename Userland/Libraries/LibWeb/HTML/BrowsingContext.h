@@ -157,8 +157,6 @@ public:
 
     ChosenBrowsingContext choose_a_browsing_context(StringView name, TokenizedFeature::NoOpener no_opener, ActivateTab = ActivateTab::Yes);
 
-    bool is_child_of(BrowsingContext const&) const;
-
     HTML::NavigableContainer* container() { return m_container; }
     HTML::NavigableContainer const* container() const { return m_container; }
 

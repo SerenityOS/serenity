@@ -731,14 +731,6 @@ BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_contex
     return { chosen.ptr(), window_type };
 }
 
-// https://html.spec.whatwg.org/multipage/browsers.html#child-browsing-context
-bool BrowsingContext::is_child_of(BrowsingContext const& parent) const
-{
-    // A browsing context child is said to be a child browsing context of another browsing context parent,
-    // if child's container document is non-null and child's container document's browsing context is parent.
-    return container_document() && container_document()->browsing_context() == &parent;
-}
-
 // https://html.spec.whatwg.org/multipage/dom.html#still-on-its-initial-about:blank-document
 bool BrowsingContext::still_on_its_initial_about_blank_document() const
 {
