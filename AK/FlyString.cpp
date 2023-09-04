@@ -190,4 +190,9 @@ bool FlyString::equals_ignoring_ascii_case(FlyString const& other) const
     return StringUtils::equals_ignoring_ascii_case(bytes_as_string_view(), other.bytes_as_string_view());
 }
 
+bool FlyString::equals_ignoring_ascii_case(StringView other) const
+{
+    return StringUtils::equals_ignoring_ascii_case(bytes_as_string_view(), other);
+}
+
 }

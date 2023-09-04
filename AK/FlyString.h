@@ -64,6 +64,7 @@ public:
 
     // Compare this FlyString against another string with ASCII caseless matching.
     [[nodiscard]] bool equals_ignoring_ascii_case(FlyString const&) const;
+    [[nodiscard]] bool equals_ignoring_ascii_case(StringView) const;
 
     template<typename... Ts>
     [[nodiscard]] ALWAYS_INLINE constexpr bool is_one_of(Ts... strings) const
