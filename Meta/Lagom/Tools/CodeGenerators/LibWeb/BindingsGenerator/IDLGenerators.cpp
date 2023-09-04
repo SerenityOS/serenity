@@ -377,13 +377,23 @@ static void generate_to_new_string(SourceGenerator& scoped_generator, ParameterT
 )~~~");
         }
     } else {
-        scoped_generator.append(R"~~~(
+        bool may_be_null = !optional_default_value.has_value() || parameter.type->is_nullable() || optional_default_value.value() == "null";
+        if (may_be_null) {
+            scoped_generator.append(R"~~~(
     Optional<String> @cpp_name@;
+)~~~");
+        } else {
+            scoped_generator.append(R"~~~(
+    String @cpp_name@;
+)~~~");
+        }
+
+        scoped_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_undefined()) {
         if (!@legacy_null_to_empty_string@ || !@js_name@@js_suffix@.is_null())
             @cpp_name@ = TRY(@js_name@@js_suffix@.to_string(vm));
     })~~~");
-        if (optional_default_value.has_value() && (!parameter.type->is_nullable() || optional_default_value.value() != "null")) {
+        if (!may_be_null) {
             scoped_generator.append(R"~~~( else {
         @cpp_name@ = MUST(String::from_utf8(@parameter.optional_default_value@sv));
     }
@@ -810,7 +820,10 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
                 }
 
                 generate_to_cpp(dictionary_generator, member, member_property_value_name, "", member_value_name, interface, member.extended_attributes.contains("LegacyNullToEmptyString"), !member.required, member.default_value);
-                if (member.type->is_string() && optional && !interface.extended_attributes.contains("UseDeprecatedAKString")) {
+
+                bool may_be_null = !optional_default_value.has_value() || parameter.type->is_nullable() || optional_default_value.value() == "null";
+
+                if (member.type->is_string() && optional && !interface.extended_attributes.contains("UseDeprecatedAKString") && may_be_null) {
                     dictionary_generator.append(R"~~~(
     if (@member_value_name@.has_value())
         @cpp_name@.@member_name@ = @member_value_name@.release_value();
