@@ -724,29 +724,14 @@
     "initial": "inline",
     "max-values": 3,
     "valid-identifiers": [
-      "block",
-      "contents",
-      "flex",
-      "flow-root",
-      "grid",
-      "inline",
-      "inline-block",
-      "inline-flex",
-      "inline-grid",
-      "inline-table",
-      "list-item",
-      "none",
-      "ruby",
-      "run-in",
-      "table",
-      "table-caption",
-      "table-cell",
-      "table-column",
-      "table-column-group",
-      "table-footer-group",
-      "table-header-group",
-      "table-row",
-      "table-row-group"
+      "list-item"
+    ],
+    "valid-types": [
+      "display-outside",
+      "display-inside",
+      "display-internal",
+      "display-box",
+      "display-legacy"
     ]
   },
   "fill": {

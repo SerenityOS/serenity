@@ -30,10 +30,10 @@ private:
     void push_parent(Layout::NodeWithStyle& node) { m_ancestor_stack.append(node); }
     void pop_parent() { m_ancestor_stack.take_last(); }
 
-    template<CSS::Display::Internal, typename Callback>
+    template<CSS::DisplayInternal, typename Callback>
     void for_each_in_tree_with_internal_display(NodeWithStyle& root, Callback);
 
-    template<CSS::Display::Inside, typename Callback>
+    template<CSS::DisplayInside, typename Callback>
     void for_each_in_tree_with_inside_display(NodeWithStyle& root, Callback);
 
     void fixup_tables(NodeWithStyle& root);

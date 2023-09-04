@@ -830,7 +830,7 @@ CSS::Display Node::display() const
 {
     if (!has_style()) {
         // NOTE: No style means this is dumb text content.
-        return CSS::Display(CSS::Display::Outside::Inline, CSS::Display::Inside::Flow);
+        return CSS::Display(CSS::DisplayOutside::Inline, CSS::DisplayInside::Flow);
     }
 
     return computed_values().display();
@@ -856,7 +856,7 @@ bool Node::is_inline_table() const
 JS::NonnullGCPtr<NodeWithStyle> NodeWithStyle::create_anonymous_wrapper() const
 {
     auto wrapper = heap().allocate_without_realm<BlockContainer>(const_cast<DOM::Document&>(document()), nullptr, m_computed_values.clone_inherited_values());
-    static_cast<CSS::MutableComputedValues&>(wrapper->m_computed_values).set_display(CSS::Display(CSS::Display::Outside::Block, CSS::Display::Inside::Flow));
+    static_cast<CSS::MutableComputedValues&>(wrapper->m_computed_values).set_display(CSS::Display(CSS::DisplayOutside::Block, CSS::DisplayInside::Flow));
     wrapper->m_font = m_font;
     wrapper->m_line_height = m_line_height;
     return *wrapper;

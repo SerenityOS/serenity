@@ -302,7 +302,7 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
         layout_node = document.heap().allocate_without_realm<Layout::Viewport>(static_cast<DOM::Document&>(dom_node), *style);
     } else if (is<DOM::Text>(dom_node)) {
         layout_node = document.heap().allocate_without_realm<Layout::TextNode>(document, static_cast<DOM::Text&>(dom_node));
-        display = CSS::Display(CSS::Display::Outside::Inline, CSS::Display::Inside::Flow);
+        display = CSS::Display(CSS::DisplayOutside::Inline, CSS::DisplayInside::Flow);
     }
 
     if (!layout_node)
@@ -377,7 +377,7 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
         // FIXME: Only apply alignment when box overflows
         auto flex_computed_values = parent.computed_values().clone_inherited_values();
         auto& mutable_flex_computed_values = static_cast<CSS::MutableComputedValues&>(flex_computed_values);
-        mutable_flex_computed_values.set_display(CSS::Display { CSS::Display::Outside::Block, CSS::Display::Inside::Flex });
+        mutable_flex_computed_values.set_display(CSS::Display { CSS::DisplayOutside::Block, CSS::DisplayInside::Flex });
         mutable_flex_computed_values.set_justify_content(CSS::JustifyContent::Center);
         mutable_flex_computed_values.set_flex_direction(CSS::FlexDirection::Column);
         mutable_flex_computed_values.set_height(CSS::Size::make_percentage(CSS::Percentage(100)));
@@ -430,7 +430,7 @@ JS::GCPtr<Layout::Node> TreeBuilder::build(DOM::Node& dom_node)
     return move(m_layout_root);
 }
 
-template<CSS::Display::Internal internal, typename Callback>
+template<CSS::DisplayInternal internal, typename Callback>
 void TreeBuilder::for_each_in_tree_with_internal_display(NodeWithStyle& root, Callback callback)
 {
     root.for_each_in_inclusive_subtree_of_type<Box>([&](auto& box) {
@@ -441,7 +441,7 @@ void TreeBuilder::for_each_in_tree_with_internal_display(NodeWithStyle& root, Ca
     });
 }
 
-template<CSS::Display::Inside inside, typename Callback>
+template<CSS::DisplayInside inside, typename Callback>
 void TreeBuilder::for_each_in_tree_with_inside_display(NodeWithStyle& root, Callback callback)
 {
     root.for_each_in_inclusive_subtree_of_type<Box>([&](auto& box) {
@@ -467,14 +467,14 @@ void TreeBuilder::remove_irrelevant_boxes(NodeWithStyle& root)
     Vector<JS::Handle<Node>> to_remove;
 
     // Children of a table-column.
-    for_each_in_tree_with_internal_display<CSS::Display::Internal::TableColumn>(root, [&](Box& table_column) {
+    for_each_in_tree_with_internal_display<CSS::DisplayInternal::TableColumn>(root, [&](Box& table_column) {
         table_column.for_each_child([&](auto& child) {
             to_remove.append(child);
         });
     });
 
     // Children of a table-column-group which are not a table-column.
-    for_each_in_tree_with_internal_display<CSS::Display::Internal::TableColumnGroup>(root, [&](Box& table_column_group) {
+    for_each_in_tree_with_internal_display<CSS::DisplayInternal::TableColumnGroup>(root, [&](Box& table_column_group) {
         table_column_group.for_each_child([&](auto& child) {
             if (!child.display().is_table_column())
                 to_remove.append(child);
@@ -596,35 +596,35 @@ static void wrap_in_anonymous(Vector<JS::Handle<Node>>& sequence, Node* nearest_
 void TreeBuilder::generate_missing_child_wrappers(NodeWithStyle& root)
 {
     // An anonymous table-row box must be generated around each sequence of consecutive children of a table-root box which are not proper table child boxes.
-    for_each_in_tree_with_inside_display<CSS::Display::Inside::Table>(root, [&](auto& parent) {
+    for_each_in_tree_with_inside_display<CSS::DisplayInside::Table>(root, [&](auto& parent) {
         for_each_sequence_of_consecutive_children_matching(parent, is_not_proper_table_child, [&](auto sequence, auto nearest_sibling) {
-            wrap_in_anonymous<Box>(sequence, nearest_sibling, CSS::Display { CSS::Display::Internal::TableRow });
+            wrap_in_anonymous<Box>(sequence, nearest_sibling, CSS::Display { CSS::DisplayInternal::TableRow });
         });
     });
 
     // An anonymous table-row box must be generated around each sequence of consecutive children of a table-row-group box which are not table-row boxes.
-    for_each_in_tree_with_internal_display<CSS::Display::Internal::TableRowGroup>(root, [&](auto& parent) {
+    for_each_in_tree_with_internal_display<CSS::DisplayInternal::TableRowGroup>(root, [&](auto& parent) {
         for_each_sequence_of_consecutive_children_matching(parent, is_not_table_row, [&](auto& sequence, auto nearest_sibling) {
-            wrap_in_anonymous<Box>(sequence, nearest_sibling, CSS::Display { CSS::Display::Internal::TableRow });
+            wrap_in_anonymous<Box>(sequence, nearest_sibling, CSS::Display { CSS::DisplayInternal::TableRow });
         });
     });
     // Unless explicitly mentioned otherwise, mentions of table-row-groups in this spec also encompass the specialized
     // table-header-groups and table-footer-groups.
-    for_each_in_tree_with_internal_display<CSS::Display::Internal::TableHeaderGroup>(root, [&](auto& parent) {
+    for_each_in_tree_with_internal_display<CSS::DisplayInternal::TableHeaderGroup>(root, [&](auto& parent) {
         for_each_sequence_of_consecutive_children_matching(parent, is_not_table_row, [&](auto& sequence, auto nearest_sibling) {
-            wrap_in_anonymous<Box>(sequence, nearest_sibling, CSS::Display { CSS::Display::Internal::TableRow });
+            wrap_in_anonymous<Box>(sequence, nearest_sibling, CSS::Display { CSS::DisplayInternal::TableRow });
         });
     });
-    for_each_in_tree_with_internal_display<CSS::Display::Internal::TableFooterGroup>(root, [&](auto& parent) {
+    for_each_in_tree_with_internal_display<CSS::DisplayInternal::TableFooterGroup>(root, [&](auto& parent) {
         for_each_sequence_of_consecutive_children_matching(parent, is_not_table_row, [&](auto& sequence, auto nearest_sibling) {
-            wrap_in_anonymous<Box>(sequence, nearest_sibling, CSS::Display { CSS::Display::Internal::TableRow });
+            wrap_in_anonymous<Box>(sequence, nearest_sibling, CSS::Display { CSS::DisplayInternal::TableRow });
         });
     });
 
     // An anonymous table-cell box must be generated around each sequence of consecutive children of a table-row box which are not table-cell boxes. !Testcase
-    for_each_in_tree_with_internal_display<CSS::Display::Internal::TableRow>(root, [&](auto& parent) {
+    for_each_in_tree_with_internal_display<CSS::DisplayInternal::TableRow>(root, [&](auto& parent) {
         for_each_sequence_of_consecutive_children_matching(parent, is_not_table_cell, [&](auto& sequence, auto nearest_sibling) {
-            wrap_in_anonymous<BlockContainer>(sequence, nearest_sibling, CSS::Display { CSS::Display::Internal::TableCell });
+            wrap_in_anonymous<BlockContainer>(sequence, nearest_sibling, CSS::Display { CSS::DisplayInternal::TableCell });
         });
     });
 }
@@ -636,7 +636,7 @@ Vector<JS::Handle<Box>> TreeBuilder::generate_missing_parents(NodeWithStyle& roo
         // An anonymous table-row box must be generated around each sequence of consecutive table-cell boxes whose parent is not a table-row.
         if (is_not_table_row(parent)) {
             for_each_sequence_of_consecutive_children_matching(parent, is_table_cell, [&](auto& sequence, auto nearest_sibling) {
-                wrap_in_anonymous<Box>(sequence, nearest_sibling, CSS::Display { CSS::Display::Internal::TableRow });
+                wrap_in_anonymous<Box>(sequence, nearest_sibling, CSS::Display { CSS::DisplayInternal::TableRow });
             });
         }
 
@@ -705,7 +705,7 @@ static void fixup_row(Box& row_box, TableGrid const& table_grid, size_t row_inde
         missing_cells_run_has_started = true;
         auto row_computed_values = row_box.computed_values().clone_inherited_values();
         auto& cell_computed_values = static_cast<CSS::MutableComputedValues&>(row_computed_values);
-        cell_computed_values.set_display(Web::CSS::Display { CSS::Display::Internal::TableCell });
+        cell_computed_values.set_display(Web::CSS::Display { CSS::DisplayInternal::TableCell });
         // Ensure that the cell (with zero content height) will have the same height as the row by setting vertical-align to middle.
         cell_computed_values.set_vertical_align(CSS::VerticalAlign::Middle);
         auto cell_box = row_box.heap().template allocate_without_realm<BlockContainer>(row_box.document(), nullptr, cell_computed_values);
