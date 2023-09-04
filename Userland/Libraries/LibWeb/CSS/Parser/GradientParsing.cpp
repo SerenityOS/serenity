@@ -150,7 +150,7 @@ RefPtr<StyleValue> Parser::parse_linear_gradient_function(ComponentValue const& 
     GradientRepeating repeating_gradient = GradientRepeating::No;
     GradientType gradient_type { GradientType::Standard };
 
-    auto function_name = component_value.function().name();
+    auto function_name = component_value.function().name().bytes_as_string_view();
 
     function_name = consume_if_starts_with(function_name, "-webkit-"sv, [&] {
         gradient_type = GradientType::WebKit;
@@ -275,7 +275,7 @@ RefPtr<StyleValue> Parser::parse_conic_gradient_function(ComponentValue const& c
 
     GradientRepeating repeating_gradient = GradientRepeating::No;
 
-    auto function_name = component_value.function().name();
+    auto function_name = component_value.function().name().bytes_as_string_view();
 
     function_name = consume_if_starts_with(function_name, "repeating-"sv, [&] {
         repeating_gradient = GradientRepeating::Yes;
@@ -378,7 +378,7 @@ RefPtr<StyleValue> Parser::parse_radial_gradient_function(ComponentValue const& 
 
     auto repeating_gradient = GradientRepeating::No;
 
-    auto function_name = component_value.function().name();
+    auto function_name = component_value.function().name().bytes_as_string_view();
 
     function_name = consume_if_starts_with(function_name, "repeating-"sv, [&] {
         repeating_gradient = GradientRepeating::Yes;

@@ -25,7 +25,7 @@ public:
 
     ~Function();
 
-    StringView name() const { return m_name; }
+    FlyString const& name() const { return m_name; }
     Vector<ComponentValue> const& values() const { return m_values; }
 
     String to_string() const;
