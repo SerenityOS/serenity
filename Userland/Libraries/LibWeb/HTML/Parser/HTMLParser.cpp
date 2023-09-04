@@ -490,7 +490,7 @@ void HTMLParser::handle_initial(HTMLToken& token)
     }
 
     if (token.is_comment()) {
-        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment());
+        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), MUST(String::from_deprecated_string(token.comment())));
         MUST(document().append_child(*comment));
         return;
     }
@@ -525,7 +525,7 @@ void HTMLParser::handle_before_html(HTMLToken& token)
     // -> A comment token
     if (token.is_comment()) {
         // Insert a comment as the last child of the Document object.
-        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment());
+        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), MUST(String::from_deprecated_string(token.comment())));
         MUST(document().append_child(*comment));
         return;
     }
@@ -822,7 +822,7 @@ AnythingElse:
 void HTMLParser::insert_comment(HTMLToken& token)
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
-    adjusted_insertion_location.parent->insert_before(realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment()), adjusted_insertion_location.insert_before_sibling);
+    adjusted_insertion_location.parent->insert_before(realm().heap().allocate<DOM::Comment>(realm(), document(), MUST(String::from_deprecated_string(token.comment()))), adjusted_insertion_location.insert_before_sibling);
 }
 
 void HTMLParser::handle_in_head(HTMLToken& token)
@@ -1142,7 +1142,7 @@ void HTMLParser::handle_after_body(HTMLToken& token)
 
     if (token.is_comment()) {
         auto& insertion_location = m_stack_of_open_elements.first();
-        MUST(insertion_location.append_child(realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment())));
+        MUST(insertion_location.append_child(realm().heap().allocate<DOM::Comment>(realm(), document(), MUST(String::from_deprecated_string(token.comment())))));
         return;
     }
 
@@ -1178,7 +1178,7 @@ void HTMLParser::handle_after_body(HTMLToken& token)
 void HTMLParser::handle_after_after_body(HTMLToken& token)
 {
     if (token.is_comment()) {
-        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment());
+        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), MUST(String::from_deprecated_string(token.comment())));
         MUST(document().append_child(*comment));
         return;
     }
@@ -3407,7 +3407,7 @@ void HTMLParser::handle_after_frameset(HTMLToken& token)
 void HTMLParser::handle_after_after_frameset(HTMLToken& token)
 {
     if (token.is_comment()) {
-        auto comment = document().heap().allocate<DOM::Comment>(document().realm(), document(), token.comment());
+        auto comment = document().heap().allocate<DOM::Comment>(document().realm(), document(), MUST(String::from_deprecated_string(token.comment())));
         MUST(document().append_child(comment));
         return;
     }

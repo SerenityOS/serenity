@@ -1427,7 +1427,7 @@ JS::NonnullGCPtr<Text> Document::create_text_node(DeprecatedString const& data)
 
 JS::NonnullGCPtr<Comment> Document::create_comment(DeprecatedString const& data)
 {
-    return heap().allocate<Comment>(realm(), *this, data);
+    return heap().allocate<Comment>(realm(), *this, MUST(String::from_deprecated_string(data)));
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createprocessinginstruction
