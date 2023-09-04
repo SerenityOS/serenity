@@ -516,20 +516,6 @@ bool BrowsingContext::decrement_cursor_position_offset()
     return true;
 }
 
-DOM::Document* BrowsingContext::container_document()
-{
-    if (auto* container = this->container())
-        return &container->document();
-    return nullptr;
-}
-
-DOM::Document const* BrowsingContext::container_document() const
-{
-    if (auto* container = this->container())
-        return &container->document();
-    return nullptr;
-}
-
 // https://html.spec.whatwg.org/#rendering-opportunity
 bool BrowsingContext::has_a_rendering_opportunity() const
 {
