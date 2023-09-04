@@ -274,7 +274,7 @@ CSSPixelSize FormattingContext::solve_replaced_size_constraint(CSSPixels input_w
     auto specified_max_height = should_treat_max_height_as_none(box, available_space.height) ? input_height : box.computed_values().max_height().to_px(box, height_of_containing_block);
     auto max_height = max(min_height, specified_max_height);
 
-    auto aspect_ratio = input_width / input_height;
+    CSSPixelFraction aspect_ratio = *box.preferred_aspect_ratio();
 
     // These are from the "Constraint Violation" table in spec, but reordered so that each condition is
     // interpreted as mutually exclusive to any other.
