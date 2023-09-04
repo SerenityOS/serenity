@@ -85,6 +85,8 @@ public:
 
     bool is_mutable() const { return m_is_mutable; }
 
+    void did_pick_color(Optional<Color> picked_color);
+
     JS::GCPtr<FileAPI::FileList> files();
     void set_files(JS::GCPtr<FileAPI::FileList>);
 

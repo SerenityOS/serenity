@@ -358,6 +358,11 @@ void PageHost::prompt_closed(Optional<String> response)
     page().prompt_closed(move(response));
 }
 
+void PageHost::color_picker_closed(Optional<Color> picked_color)
+{
+    page().color_picker_closed(picked_color);
+}
+
 Web::WebIDL::ExceptionOr<void> PageHost::toggle_media_play_state()
 {
     return page().toggle_media_play_state();
@@ -451,6 +456,11 @@ void PageHost::page_did_close_browsing_context(Web::HTML::BrowsingContext const&
 void PageHost::request_file(Web::FileRequest file_request)
 {
     m_client.request_file(move(file_request));
+}
+
+void PageHost::page_did_request_color_picker(Color current_color)
+{
+    m_client.async_did_request_color_picker(current_color);
 }
 
 }

@@ -892,6 +892,11 @@ void ConnectionFromClient::prompt_closed(Optional<String> const& response)
     m_page_host->prompt_closed(response);
 }
 
+void ConnectionFromClient::color_picker_closed(Optional<Color> const& picked_color)
+{
+    m_page_host->color_picker_closed(picked_color);
+}
+
 void ConnectionFromClient::toggle_media_play_state()
 {
     m_page_host->toggle_media_play_state().release_value_but_fixme_should_propagate_errors();

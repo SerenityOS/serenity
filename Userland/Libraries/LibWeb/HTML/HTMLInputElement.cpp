@@ -69,7 +69,7 @@ JS::GCPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::
     if (type_state() == TypeAttributeState::Hidden)
         return nullptr;
 
-    if (type_state() == TypeAttributeState::SubmitButton || type_state() == TypeAttributeState::Button || type_state() == TypeAttributeState::ResetButton || type_state() == TypeAttributeState::FileUpload)
+    if (type_state() == TypeAttributeState::SubmitButton || type_state() == TypeAttributeState::Button || type_state() == TypeAttributeState::ResetButton || type_state() == TypeAttributeState::FileUpload || type_state() == TypeAttributeState::Color)
         return heap().allocate_without_realm<Layout::ButtonBox>(document(), *this, move(style));
 
     if (type_state() == TypeAttributeState::Checkbox)
@@ -206,14 +206,16 @@ static void show_the_picker_if_applicable(HTMLInputElement& element)
         return;
     }
 
-    // FIXME: show "any relevant user interface" for other type attribute states "in the way [the user agent] normally would"
-
     // 4. Otherwise, the user agent should show any relevant user interface for selecting a value for element,
     //    in the way it normally would when the user interacts with the control. (If no such UI applies to element, then this step does nothing.)
     //    If such a user interface is shown, it must respect the requirements stated in the relevant parts of the specification for how element
     //    behaves given its type attribute state. (For example, various sections describe restrictions on the resulting value string.)
     //    This step can have side effects, such as closing other pickers that were previously shown by this algorithm.
     //    (If this closes a file selection picker, then per the above that will lead to firing either input and change events, or a cancel event.)
+    if (element.type_state() == HTMLInputElement::TypeAttributeState::Color) {
+        auto weak_element = element.make_weak_ptr<HTMLInputElement>();
+        element.document().browsing_context()->top_level_browsing_context()->page()->did_request_color_picker(weak_element, Color::from_string(MUST(String::from_deprecated_string(element.value()))).value_or(Color(0, 0, 0)));
+    }
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#dom-input-showpicker
@@ -276,7 +278,7 @@ WebIDL::ExceptionOr<void> HTMLInputElement::run_input_activation_behavior()
 
         // 3. Submit the form owner from the element.
         TRY(form->submit_form(*this));
-    } else if (type_state() == TypeAttributeState::FileUpload) {
+    } else if (type_state() == TypeAttributeState::FileUpload || type_state() == TypeAttributeState::Color) {
         show_the_picker_if_applicable(*this);
     } else {
         dispatch_event(DOM::Event::create(realm(), EventNames::change));
@@ -301,6 +303,38 @@ void HTMLInputElement::did_edit_text_node(Badge<BrowsingContext>)
         input_event->set_composed(true);
         dispatch_event(*input_event);
     });
+}
+
+void HTMLInputElement::did_pick_color(Optional<Color> picked_color)
+{
+    // https://html.spec.whatwg.org/multipage/input.html#common-input-element-events
+    // For input elements without a defined input activation behavior, but to which these events apply
+    // and for which the user interface involves both interactive manipulation and an explicit commit action
+
+    if (type_state() == TypeAttributeState::Color && picked_color.has_value()) {
+        // then when the user changes the element's value
+        m_value = value_sanitization_algorithm(picked_color.value().to_deprecated_string_without_alpha());
+        m_dirty_value = true;
+
+        // the user agent must queue an element task on the user interaction task source
+        queue_an_element_task(HTML::Task::Source::UserInteraction, [this] {
+            // given the input element to fire an event named input at the input element, with the bubbles and composed attributes initialized to true
+            auto input_event = DOM::Event::create(realm(), HTML::EventNames::input);
+            input_event->set_bubbles(true);
+            input_event->set_composed(true);
+            dispatch_event(*input_event);
+        });
+
+        // and any time the user commits the change, the user agent must queue an element task on the user interaction task source
+        queue_an_element_task(HTML::Task::Source::UserInteraction, [this] {
+            // given the input element
+            // FIXME: to set its user interacted to true
+            // and fire an event named change at the input element, with the bubbles attribute initialized to true.
+            auto change_event = DOM::Event::create(realm(), HTML::EventNames::change);
+            change_event->set_bubbles(true);
+            dispatch_event(*change_event);
+        });
+    }
 }
 
 DeprecatedString HTMLInputElement::value() const
@@ -480,6 +514,7 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     case TypeAttributeState::SubmitButton:
     case TypeAttributeState::ResetButton:
     case TypeAttributeState::ImageButton:
+    case TypeAttributeState::Color:
         return;
     default:
         break;
