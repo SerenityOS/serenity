@@ -895,7 +895,7 @@ JS::GCPtr<WindowProxy const> Window::top() const
         return {};
 
     // 2. Return this's navigable's top-level traversable's active WindowProxy.
-    return browsing_context->top_level_browsing_context().window_proxy();
+    return browsing_context->top_level_browsing_context()->window_proxy();
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-parent

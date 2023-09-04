@@ -142,15 +142,7 @@ public:
     void scroll_to(CSSPixelPoint);
     void scroll_to_anchor(DeprecatedString const&);
 
-    BrowsingContext& top_level_browsing_context()
-    {
-        BrowsingContext* context = this;
-        while (context->parent())
-            context = context->parent();
-        return *context;
-    }
-
-    BrowsingContext const& top_level_browsing_context() const { return const_cast<BrowsingContext*>(this)->top_level_browsing_context(); }
+    JS::GCPtr<BrowsingContext> top_level_browsing_context() const;
 
     enum class WindowType {
         ExistingOrNone,

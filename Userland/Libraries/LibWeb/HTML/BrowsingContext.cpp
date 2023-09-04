@@ -251,8 +251,8 @@ WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext
         if (creator->origin().is_same_origin(creator->relevant_settings_object().top_level_origin)) {
             // then set document's cross-origin opener policy to creator's browsing context's top-level browsing context's active document's cross-origin opener policy.
             VERIFY(creator->browsing_context());
-            VERIFY(creator->browsing_context()->top_level_browsing_context().active_document());
-            document->set_cross_origin_opener_policy(creator->browsing_context()->top_level_browsing_context().active_document()->cross_origin_opener_policy());
+            VERIFY(creator->browsing_context()->top_level_browsing_context()->active_document());
+            document->set_cross_origin_opener_policy(creator->browsing_context()->top_level_browsing_context()->active_document()->cross_origin_opener_policy());
         }
     }
 
@@ -407,6 +407,27 @@ void BrowsingContext::scroll_to_anchor(DeprecatedString const& fragment)
 
     if (m_page && this == &m_page->top_level_browsing_context())
         m_page->client().page_did_request_scroll_into_view(target_rect);
+}
+
+JS::GCPtr<BrowsingContext> BrowsingContext::top_level_browsing_context() const
+{
+    auto const* start = this;
+
+    // 1. If start's active document is not fully active, then return null.
+    if (!start->active_document()->is_fully_active()) {
+        return nullptr;
+    }
+
+    // 2. Let navigable be start's active document's node navigable.
+    auto navigable = start->active_document()->navigable();
+
+    // 3. While navigable's parent is not null, set navigable to navigable's parent.
+    while (navigable->parent()) {
+        navigable = navigable->parent();
+    }
+
+    // 4. Return navigable's active browsing context.
+    return navigable->active_browsing_context();
 }
 
 CSSPixelRect BrowsingContext::to_top_level_rect(CSSPixelRect const& a_rect)
@@ -583,7 +604,7 @@ BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_contex
     // The rules for choosing a browsing context, given a browsing context name name, a browsing context current, and
     // a boolean noopener are as follows:
     JS::GCPtr<AbstractBrowsingContext> matching_name_in_tree = nullptr;
-    top_level_browsing_context().for_each_in_subtree([&](auto& context) {
+    top_level_browsing_context()->for_each_in_subtree([&](auto& context) {
         if (context.name() == name) {
             matching_name_in_tree = &context;
             return IterationDecision::Break;
@@ -618,7 +639,7 @@ BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_contex
     // 6. Otherwise, if name is an ASCII case-insensitive match for "_top", set chosen to current's top-level browsing
     //    context, if any, and current otherwise.
     else if (Infra::is_ascii_case_insensitive_match(name, "_top"sv)) {
-        chosen = &top_level_browsing_context();
+        chosen = top_level_browsing_context();
     }
 
     // 7. Otherwise, if name is not an ASCII case-insensitive match for "_blank", there exists a browsing context
@@ -655,9 +676,9 @@ BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_contex
 
             // 2. If current's top-level browsing context's active document's cross-origin opener policy's value is
             //    "same-origin" or "same-origin-plus-COEP", then:
-            if (top_level_browsing_context().active_document()->cross_origin_opener_policy().value == CrossOriginOpenerPolicyValue::SameOrigin || top_level_browsing_context().active_document()->cross_origin_opener_policy().value == CrossOriginOpenerPolicyValue::SameOriginPlusCOEP) {
+            if (top_level_browsing_context()->active_document()->cross_origin_opener_policy().value == CrossOriginOpenerPolicyValue::SameOrigin || top_level_browsing_context()->active_document()->cross_origin_opener_policy().value == CrossOriginOpenerPolicyValue::SameOriginPlusCOEP) {
                 // 1. Let currentDocument be current's active document.
-                auto* current_document = top_level_browsing_context().active_document();
+                auto* current_document = top_level_browsing_context()->active_document();
 
                 // 2. If currentDocument's origin is not same origin with currentDocument's relevant settings object's
                 //    top-level origin, then set noopener to true, name to "_blank", and windowType to "new with no opener".
@@ -871,7 +892,7 @@ void BrowsingContext::set_system_visibility_state(VisibilityState visibility_sta
     // When a user-agent determines that the system visibility state for top-level browsing context context
     // has changed to newState, it must queue a task on the user interaction task source to update
     // the visibility state of all the Document objects in the top-level browsing context's document family with newState.
-    auto document_family = top_level_browsing_context().document_family();
+    auto document_family = top_level_browsing_context()->document_family();
 
     // From the new navigable version, where it tells us what global object to use here:
     // 1. Let document be navigable's active document.

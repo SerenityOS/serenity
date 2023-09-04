@@ -155,7 +155,7 @@ Variant<JS::Handle<DOM::Element>, JS::Handle<DOM::Document>, Empty> Intersection
 Variant<JS::Handle<DOM::Element>, JS::Handle<DOM::Document>> IntersectionObserver::intersection_root() const
 {
     if (!m_root.has_value())
-        return JS::make_handle(global_object().browsing_context()->top_level_browsing_context().active_document());
+        return JS::make_handle(global_object().browsing_context()->top_level_browsing_context()->active_document());
     return m_root.value();
 }
 

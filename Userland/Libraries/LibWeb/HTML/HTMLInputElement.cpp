@@ -201,7 +201,7 @@ static void show_the_picker_if_applicable(HTMLInputElement& element)
 
         // FIXME: Pass along accept attribute information https://html.spec.whatwg.org/multipage/input.html#attr-input-accept
         //    The accept attribute may be specified to provide user agents with a hint of what file types will be accepted.
-        element.document().browsing_context()->top_level_browsing_context().page()->client().page_did_request_file_picker(weak_element, multiple);
+        element.document().browsing_context()->top_level_browsing_context()->page()->client().page_did_request_file_picker(weak_element, multiple);
         return;
     }
 
