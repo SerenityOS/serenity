@@ -212,9 +212,6 @@ public:
     void discard();
     bool has_been_discarded() const { return m_has_been_discarded; }
 
-    // https://html.spec.whatwg.org/multipage/window-object.html#close-a-browsing-context
-    void close();
-
     Optional<AK::URL> const& creator_url() const { return m_creator_url; }
 
     virtual String const& window_handle() const override { return m_window_handle; }
