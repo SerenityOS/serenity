@@ -1298,6 +1298,146 @@ describe("style=currency", () => {
         expect(ar2.format(1.23)).toBe("1.23 دولار أمريكي");
     });
 
+    test("notation=compact, compactDisplay=long", () => {
+        const en = new Intl.NumberFormat("en", {
+            style: "currency",
+            currency: "USD",
+            notation: "compact",
+            compactDisplay: "long",
+        });
+        expect(en.format(1)).toBe("$1");
+        expect(en.format(1200)).toBe("$1.2K");
+        expect(en.format(1290)).toBe("$1.3K");
+        expect(en.format(12000)).toBe("$12K");
+        expect(en.format(12900)).toBe("$13K");
+        expect(en.format(1200000)).toBe("$1.2M");
+        expect(en.format(1290000)).toBe("$1.3M");
+        expect(en.format(12000000)).toBe("$12M");
+        expect(en.format(12900000)).toBe("$13M");
+
+        const ar = new Intl.NumberFormat("ar", {
+            style: "currency",
+            currency: "USD",
+            notation: "compact",
+            compactDisplay: "long",
+        });
+        expect(ar.format(1)).toBe("‏١ US$");
+        expect(ar.format(1200)).toBe("‏١٫٢ ألف US$");
+        expect(ar.format(1290)).toBe("‏١٫٣ ألف US$");
+        expect(ar.format(12000)).toBe("‏١٢ ألف US$");
+        expect(ar.format(12900)).toBe("‏١٣ ألف US$");
+        expect(ar.format(1200000)).toBe("‏١٫٢ مليون US$");
+        expect(ar.format(1290000)).toBe("‏١٫٣ مليون US$");
+        expect(ar.format(12000000)).toBe("‏١٢ مليون US$");
+        expect(ar.format(12900000)).toBe("‏١٣ مليون US$");
+
+        const ja = new Intl.NumberFormat("ja", {
+            style: "currency",
+            currency: "JPY",
+            notation: "compact",
+            compactDisplay: "long",
+        });
+        expect(ja.format(1)).toBe("￥1");
+        expect(ja.format(1200)).toBe("￥1200");
+        expect(ja.format(1290)).toBe("￥1290");
+        expect(ja.format(12000)).toBe("￥1.2万");
+        expect(ja.format(12900)).toBe("￥1.3万");
+        expect(ja.format(1200000)).toBe("￥120万");
+        expect(ja.format(1290000)).toBe("￥129万");
+        expect(ja.format(12000000)).toBe("￥1200万");
+        expect(ja.format(12900000)).toBe("￥1290万");
+        expect(ja.format(120000000)).toBe("￥1.2億");
+        expect(ja.format(129000000)).toBe("￥1.3億");
+        expect(ja.format(12000000000)).toBe("￥120億");
+        expect(ja.format(12900000000)).toBe("￥129億");
+
+        const de = new Intl.NumberFormat("de", {
+            style: "currency",
+            currency: "EUR",
+            notation: "compact",
+            compactDisplay: "long",
+        });
+        expect(de.format(1)).toBe("1 €");
+        expect(de.format(1200)).toBe("1200 €");
+        expect(de.format(1290)).toBe("1290 €");
+        expect(de.format(12000)).toBe("12.000 €");
+        expect(de.format(12900)).toBe("12.900 €");
+        expect(de.format(1200000)).toBe("1,2 Mio. €");
+        expect(de.format(1290000)).toBe("1,3 Mio. €");
+        expect(de.format(12000000)).toBe("12 Mio. €");
+        expect(de.format(12900000)).toBe("13 Mio. €");
+    });
+
+    test("notation=compact, compactDisplay=short", () => {
+        const en = new Intl.NumberFormat("en", {
+            style: "currency",
+            currency: "USD",
+            notation: "compact",
+            compactDisplay: "short",
+        });
+        expect(en.format(1)).toBe("$1");
+        expect(en.format(1200)).toBe("$1.2K");
+        expect(en.format(1290)).toBe("$1.3K");
+        expect(en.format(12000)).toBe("$12K");
+        expect(en.format(12900)).toBe("$13K");
+        expect(en.format(1200000)).toBe("$1.2M");
+        expect(en.format(1290000)).toBe("$1.3M");
+        expect(en.format(12000000)).toBe("$12M");
+        expect(en.format(12900000)).toBe("$13M");
+
+        const ar = new Intl.NumberFormat("ar", {
+            style: "currency",
+            currency: "USD",
+            notation: "compact",
+            compactDisplay: "short",
+        });
+        expect(ar.format(1)).toBe("‏١ US$");
+        expect(ar.format(1200)).toBe("‏١٫٢ ألف US$");
+        expect(ar.format(1290)).toBe("‏١٫٣ ألف US$");
+        expect(ar.format(12000)).toBe("‏١٢ ألف US$");
+        expect(ar.format(12900)).toBe("‏١٣ ألف US$");
+        expect(ar.format(1200000)).toBe("‏١٫٢ مليون US$");
+        expect(ar.format(1290000)).toBe("‏١٫٣ مليون US$");
+        expect(ar.format(12000000)).toBe("‏١٢ مليون US$");
+        expect(ar.format(12900000)).toBe("‏١٣ مليون US$");
+
+        const ja = new Intl.NumberFormat("ja", {
+            style: "currency",
+            currency: "JPY",
+            notation: "compact",
+            compactDisplay: "short",
+        });
+        expect(ja.format(1)).toBe("￥1");
+        expect(ja.format(1200)).toBe("￥1200");
+        expect(ja.format(1290)).toBe("￥1290");
+        expect(ja.format(12000)).toBe("￥1.2万");
+        expect(ja.format(12900)).toBe("￥1.3万");
+        expect(ja.format(1200000)).toBe("￥120万");
+        expect(ja.format(1290000)).toBe("￥129万");
+        expect(ja.format(12000000)).toBe("￥1200万");
+        expect(ja.format(12900000)).toBe("￥1290万");
+        expect(ja.format(120000000)).toBe("￥1.2億");
+        expect(ja.format(129000000)).toBe("￥1.3億");
+        expect(ja.format(12000000000)).toBe("￥120億");
+        expect(ja.format(12900000000)).toBe("￥129億");
+
+        const de = new Intl.NumberFormat("de", {
+            style: "currency",
+            currency: "EUR",
+            notation: "compact",
+            compactDisplay: "short",
+        });
+        expect(de.format(1)).toBe("1 €");
+        expect(de.format(1200)).toBe("1200 €");
+        expect(de.format(1290)).toBe("1290 €");
+        expect(de.format(12000)).toBe("12.000 €");
+        expect(de.format(12900)).toBe("12.900 €");
+        expect(de.format(1200000)).toBe("1,2 Mio. €");
+        expect(de.format(1290000)).toBe("1,3 Mio. €");
+        expect(de.format(12000000)).toBe("12 Mio. €");
+        expect(de.format(12900000)).toBe("13 Mio. €");
+    });
+
     test("signDisplay=never", () => {
         const en1 = new Intl.NumberFormat("en", {
             style: "currency",
