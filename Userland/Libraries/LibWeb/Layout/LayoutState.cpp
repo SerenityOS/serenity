@@ -23,45 +23,45 @@ LayoutState::~LayoutState()
 {
 }
 
-LayoutState::UsedValues& LayoutState::get_mutable(NodeWithStyleAndBoxModelMetrics const& box)
+LayoutState::UsedValues& LayoutState::get_mutable(NodeWithStyle const& node)
 {
-    if (auto* used_values = used_values_per_layout_node.get(&box).value_or(nullptr))
+    if (auto* used_values = used_values_per_layout_node.get(&node).value_or(nullptr))
         return *used_values;
 
     for (auto const* ancestor = m_parent; ancestor; ancestor = ancestor->m_parent) {
-        if (auto* ancestor_used_values = ancestor->used_values_per_layout_node.get(&box).value_or(nullptr)) {
+        if (auto* ancestor_used_values = ancestor->used_values_per_layout_node.get(&node).value_or(nullptr)) {
             auto cow_used_values = adopt_own(*new UsedValues(*ancestor_used_values));
             auto* cow_used_values_ptr = cow_used_values.ptr();
-            used_values_per_layout_node.set(&box, move(cow_used_values));
+            used_values_per_layout_node.set(&node, move(cow_used_values));
             return *cow_used_values_ptr;
         }
     }
 
-    auto const* containing_block_used_values = box.is_viewport() ? nullptr : &get(*box.containing_block());
+    auto const* containing_block_used_values = node.is_viewport() ? nullptr : &get(*node.containing_block());
 
     auto new_used_values = adopt_own(*new UsedValues);
     auto* new_used_values_ptr = new_used_values.ptr();
-    new_used_values->set_node(const_cast<NodeWithStyleAndBoxModelMetrics&>(box), containing_block_used_values);
-    used_values_per_layout_node.set(&box, move(new_used_values));
+    new_used_values->set_node(const_cast<NodeWithStyle&>(node), containing_block_used_values);
+    used_values_per_layout_node.set(&node, move(new_used_values));
     return *new_used_values_ptr;
 }
 
-LayoutState::UsedValues const& LayoutState::get(NodeWithStyleAndBoxModelMetrics const& box) const
+LayoutState::UsedValues const& LayoutState::get(NodeWithStyle const& node) const
 {
-    if (auto const* used_values = used_values_per_layout_node.get(&box).value_or(nullptr))
+    if (auto const* used_values = used_values_per_layout_node.get(&node).value_or(nullptr))
         return *used_values;
 
     for (auto const* ancestor = m_parent; ancestor; ancestor = ancestor->m_parent) {
-        if (auto const* ancestor_used_values = ancestor->used_values_per_layout_node.get(&box).value_or(nullptr))
+        if (auto const* ancestor_used_values = ancestor->used_values_per_layout_node.get(&node).value_or(nullptr))
             return *ancestor_used_values;
     }
 
-    auto const* containing_block_used_values = box.is_viewport() ? nullptr : &get(*box.containing_block());
+    auto const* containing_block_used_values = node.is_viewport() ? nullptr : &get(*node.containing_block());
 
     auto new_used_values = adopt_own(*new UsedValues);
     auto* new_used_values_ptr = new_used_values.ptr();
-    new_used_values->set_node(const_cast<NodeWithStyleAndBoxModelMetrics&>(box), containing_block_used_values);
-    const_cast<LayoutState*>(this)->used_values_per_layout_node.set(&box, move(new_used_values));
+    new_used_values->set_node(const_cast<NodeWithStyle&>(node), containing_block_used_values);
+    const_cast<LayoutState*>(this)->used_values_per_layout_node.set(&node, move(new_used_values));
     return *new_used_values_ptr;
 }
 
@@ -139,7 +139,7 @@ void LayoutState::resolve_relative_positions(Vector<Painting::PaintableWithLines
     // Regular boxes (not line box fragments):
     for (auto& it : used_values_per_layout_node) {
         auto& used_values = *it.value;
-        auto& node = const_cast<NodeWithStyleAndBoxModelMetrics&>(used_values.node());
+        auto& node = const_cast<NodeWithStyle&>(used_values.node());
 
         if (!node.is_box())
             continue;
@@ -163,8 +163,8 @@ void LayoutState::resolve_relative_positions(Vector<Painting::PaintableWithLines
             offset = used_values.offset;
         }
         // Apply relative position inset if appropriate.
-        if (node.computed_values().position() == CSS::Position::Relative) {
-            auto& inset = node.box_model().inset;
+        if (node.computed_values().position() == CSS::Position::Relative && is<NodeWithStyleAndBoxModelMetrics>(node)) {
+            auto& inset = static_cast<NodeWithStyleAndBoxModelMetrics const&>(node).box_model().inset;
             offset.translate_by(inset.left, inset.top);
         }
         paintable.set_offset(offset);
@@ -232,13 +232,16 @@ void LayoutState::commit(Box& root)
 
     for (auto& it : used_values_per_layout_node) {
         auto& used_values = *it.value;
-        auto& node = const_cast<NodeWithStyleAndBoxModelMetrics&>(used_values.node());
+        auto& node = const_cast<NodeWithStyle&>(used_values.node());
 
-        // Transfer box model metrics.
-        node.box_model().inset = { used_values.inset_top, used_values.inset_right, used_values.inset_bottom, used_values.inset_left };
-        node.box_model().padding = { used_values.padding_top, used_values.padding_right, used_values.padding_bottom, used_values.padding_left };
-        node.box_model().border = { used_values.border_top, used_values.border_right, used_values.border_bottom, used_values.border_left };
-        node.box_model().margin = { used_values.margin_top, used_values.margin_right, used_values.margin_bottom, used_values.margin_left };
+        if (is<NodeWithStyleAndBoxModelMetrics>(node)) {
+            // Transfer box model metrics.
+            auto& box_model = static_cast<NodeWithStyleAndBoxModelMetrics&>(node).box_model();
+            box_model.inset = { used_values.inset_top, used_values.inset_right, used_values.inset_bottom, used_values.inset_left };
+            box_model.padding = { used_values.padding_top, used_values.padding_right, used_values.padding_bottom, used_values.padding_left };
+            box_model.border = { used_values.border_top, used_values.border_right, used_values.border_bottom, used_values.border_left };
+            box_model.margin = { used_values.margin_top, used_values.margin_right, used_values.margin_bottom, used_values.margin_left };
+        }
 
         auto paintable = node.create_paintable();
 
@@ -296,7 +299,7 @@ void LayoutState::commit(Box& root)
     }
 }
 
-void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, UsedValues const* containing_block_used_values)
+void LayoutState::UsedValues::set_node(NodeWithStyle& node, UsedValues const* containing_block_used_values)
 {
     m_node = &node;
 
