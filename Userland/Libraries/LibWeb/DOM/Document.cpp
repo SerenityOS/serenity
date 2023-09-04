@@ -1995,15 +1995,23 @@ DeprecatedString Document::dump_dom_tree_as_json() const
 // https://html.spec.whatwg.org/multipage/semantics.html#has-a-style-sheet-that-is-blocking-scripts
 bool Document::has_a_style_sheet_that_is_blocking_scripts() const
 {
-    // A Document has a style sheet that is blocking scripts if its script-blocking style sheet counter is greater than 0,
+    // FIXME: 1. If document's script-blocking style sheet set is not empty, then return true.
     if (m_script_blocking_style_sheet_counter > 0)
         return true;
 
-    // ...or if that Document has a non-null browsing context whose container document is non-null and has a script-blocking style sheet counter greater than 0.
-    if (!browsing_context() || !browsing_context()->container_document())
+    // 2. If document's node navigable is null, then return false.
+    if (!navigable())
         return false;
 
-    return browsing_context()->container_document()->m_script_blocking_style_sheet_counter > 0;
+    // 3. Let containerDocument be document's node navigable's container document.
+    auto container_document = navigable()->container_document();
+
+    // FIXME: 4. If containerDocument is non-null and containerDocument's script-blocking style sheet set is not empty, then return true.
+    if (container_document && container_document->m_script_blocking_style_sheet_counter > 0)
+        return true;
+
+    // 5. Return false
+    return false;
 }
 
 DeprecatedString Document::referrer() const
