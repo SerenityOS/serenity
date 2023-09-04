@@ -109,7 +109,6 @@ struct NumberSystem {
         hash = pair_int_hash(hash, currency_format);
         hash = pair_int_hash(hash, accounting_format);
         hash = pair_int_hash(hash, currency_unit_formats);
-        hash = pair_int_hash(hash, currency_short_formats);
         hash = pair_int_hash(hash, percent_format);
         hash = pair_int_hash(hash, scientific_format);
         return hash;
@@ -126,7 +125,6 @@ struct NumberSystem {
             && (currency_format == other.currency_format)
             && (accounting_format == other.accounting_format)
             && (currency_unit_formats == other.currency_unit_formats)
-            && (currency_short_formats == other.currency_short_formats)
             && (percent_format == other.percent_format)
             && (scientific_format == other.scientific_format);
     }
@@ -143,7 +141,6 @@ struct NumberSystem {
     size_t currency_format { 0 };
     size_t accounting_format { 0 };
     size_t currency_unit_formats { 0 };
-    size_t currency_short_formats { 0 };
 
     size_t percent_format { 0 };
     size_t scientific_format { 0 };
@@ -154,7 +151,7 @@ struct AK::Formatter<NumberSystem> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, NumberSystem const& system)
     {
         return Formatter<FormatString>::format(builder,
-            "{{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }}"sv,
+            "{{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }}"sv,
             system.symbols,
             system.primary_grouping_size,
             system.secondary_grouping_size,
@@ -164,7 +161,6 @@ struct AK::Formatter<NumberSystem> : Formatter<FormatString> {
             system.currency_format,
             system.accounting_format,
             system.currency_unit_formats,
-            system.currency_short_formats,
             system.percent_format,
             system.scientific_format);
     }
@@ -559,11 +555,6 @@ static ErrorOr<void> parse_number_systems(DeprecatedString locale_numbers_path, 
             parse_number_pattern(format_object.split(';'), cldr, NumberFormatType::Standard, number_system.accounting_format);
 
             number_system.currency_unit_formats = parse_number_format(value.as_object());
-
-            if (value.as_object().has_object("short"sv)) {
-                auto const& short_format = value.as_object().get_object("short"sv)->get_object("standard"sv).value();
-                number_system.currency_short_formats = parse_number_format(short_format);
-            }
         } else if (key.starts_with(percent_formats_prefix)) {
             auto system = key.substring(percent_formats_prefix.length());
             auto& number_system = ensure_number_system(system);
@@ -835,7 +826,6 @@ struct NumberSystemData {
     @number_format_index_type@ currency_format { 0 };
     @number_format_index_type@ accounting_format { 0 };
     @number_format_list_index_type@ currency_unit_formats { 0 };
-    @number_format_list_index_type@ currency_short_formats { 0 };
 
     @number_format_index_type@ percent_format { 0 };
     @number_format_index_type@ scientific_format { 0 };
@@ -1037,9 +1027,6 @@ Vector<NumberFormat> get_compact_number_system_formats(StringView locale, String
             break;
         case CompactNumberFormatType::CurrencyUnit:
             number_format_list_index = number_system->currency_unit_formats;
-            break;
-        case CompactNumberFormatType::CurrencyShort:
-            number_format_list_index = number_system->currency_short_formats;
             break;
         }
 

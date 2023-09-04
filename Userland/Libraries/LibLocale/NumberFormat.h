@@ -33,7 +33,6 @@ enum class CompactNumberFormatType : u8 {
     DecimalLong,
     DecimalShort,
     CurrencyUnit,
-    CurrencyShort,
 };
 
 struct NumberFormat {
