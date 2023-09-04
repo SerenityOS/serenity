@@ -15,6 +15,7 @@
 #include <LibGfx/Painter.h>
 #include <LibWebView/SourceHighlighter.h>
 #include <QClipboard>
+#include <QColorDialog>
 #include <QCoreApplication>
 #include <QCursor>
 #include <QFileDialog>
@@ -211,6 +212,21 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     view().on_request_dismiss_dialog = [this]() {
         if (m_dialog)
             m_dialog->reject();
+    };
+
+    view().on_request_color_picker = [this](Color current_color) {
+        m_dialog = new QColorDialog(QColor(current_color.red(), current_color.green(), current_color.blue()), &view());
+        auto& dialog = static_cast<QColorDialog&>(*m_dialog);
+
+        dialog.setWindowTitle("Ladybird");
+        dialog.setOption(QColorDialog::ShowAlphaChannel, false);
+
+        if (dialog.exec() == QDialog::Accepted)
+            view().color_picker_closed(Color(dialog.selectedColor().red(), dialog.selectedColor().green(), dialog.selectedColor().blue()));
+        else
+            view().color_picker_closed({});
+
+        m_dialog = nullptr;
     };
 
     QObject::connect(focus_location_editor_action, &QAction::triggered, this, &Tab::focus_location_editor);
