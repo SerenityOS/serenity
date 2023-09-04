@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2023, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2023, Bastiaan van der Plaat <bastiaan.v.d.plaat@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -84,6 +85,8 @@ public:
     bool is_identity() const;
 
     JS::NonnullGCPtr<DOMMatrix> translate(Optional<double> const& tx, Optional<double> const& ty, Optional<double> const& tz) const;
+    JS::NonnullGCPtr<DOMMatrix> skew_x(double sx = 0) const;
+    JS::NonnullGCPtr<DOMMatrix> skew_y(double sy = 0) const;
     WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> multiply(DOMMatrixInit other = {});
     JS::NonnullGCPtr<DOMMatrix> inverse() const;
 

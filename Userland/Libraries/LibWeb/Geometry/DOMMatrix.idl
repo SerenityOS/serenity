@@ -44,8 +44,8 @@ interface DOMMatrix : DOMMatrixReadOnly {
     // FIXME: DOMMatrix rotateSelf(optional unrestricted double rotX = 0, optional unrestricted double rotY, optional unrestricted double rotZ);
     // FIXME: DOMMatrix rotateFromVectorSelf(optional unrestricted double x = 0, optional unrestricted double y = 0);
     // FIXME: DOMMatrix rotateAxisAngleSelf(optional unrestricted double x = 0, optional unrestricted double y = 0, optional unrestricted double z = 0, optional unrestricted double angle = 0);
-    // FIXME: DOMMatrix skewXSelf(optional unrestricted double sx = 0);
-    // FIXME: DOMMatrix skewYSelf(optional unrestricted double sy = 0);
+    DOMMatrix skewXSelf(optional unrestricted double sx = 0);
+    DOMMatrix skewYSelf(optional unrestricted double sy = 0);
     DOMMatrix invertSelf();
 
     // FIXME: [Exposed=Window] DOMMatrix setMatrixValue(DOMString transformList);

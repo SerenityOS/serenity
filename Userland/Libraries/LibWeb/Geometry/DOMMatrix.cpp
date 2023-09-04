@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2023, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2023, Bastiaan van der Plaat <bastiaan.v.d.plaat@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -302,6 +303,38 @@ JS::NonnullGCPtr<DOMMatrix> DOMMatrix::translate_self(Optional<double> tx, Optio
     // 2. If tz is specified and not 0 or -0, set is 2D of the current matrix to false.
     if (tz.has_value() && (tz != 0 || tz != -0))
         m_is_2d = false;
+
+    // 3. Return the current matrix.
+    return *this;
+}
+
+// https://drafts.fxtf.org/geometry/#dom-dommatrix-skewxself
+JS::NonnullGCPtr<DOMMatrix> DOMMatrix::skew_x_self(double sx)
+{
+    // 1. Post-multiply a skewX transformation on the current matrix by the specified angle sx in degrees. The 2D skewX matrix is described in CSS Transforms with alpha = sx in degrees. [CSS3-TRANSFORMS]
+    // clang-format off
+    Gfx::DoubleMatrix4x4 skew_matrix = { 1, tan(sx * M_PI / 180.0), 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1 };
+    // clang-format on
+    m_matrix = m_matrix * skew_matrix;
+
+    // 3. Return the current matrix.
+    return *this;
+}
+
+// https://drafts.fxtf.org/geometry/#dom-dommatrix-skewyself
+JS::NonnullGCPtr<DOMMatrix> DOMMatrix::skew_y_self(double sy)
+{
+    // 1. Post-multiply a skewX transformation on the current matrix by the specified angle sy in degrees. The 2D skewY matrix is described in CSS Transforms with beta = sy in degrees. [CSS3-TRANSFORMS]
+    // clang-format off
+    Gfx::DoubleMatrix4x4 skew_matrix = { 1, 0, 0, 0,
+        tan(sy * M_PI / 180.0), 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1 };
+    // clang-format on
+    m_matrix = m_matrix * skew_matrix;
 
     // 3. Return the current matrix.
     return *this;

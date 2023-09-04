@@ -29,5 +29,17 @@
 
         // 8. Translate DOMMatrix with preMultiplySelf
         testPart(() => new DOMMatrix([10, 20, 30, 40, 50, 60]).preMultiplySelf(new DOMMatrix().translate(25, 25)));
+
+        // 9. Skew X DOMMatrix
+        testPart(() => new DOMMatrix([10, 20, 30, 40, 50, 60]).skewXSelf(10));
+
+        // 10. Skew X DOMMatrix with multiply
+        testPart(() => new DOMMatrix([10, 20, 30, 40, 50, 60]).multiply(new DOMMatrix().skewX(10)));
+
+        // 11. Skew Y DOMMatrix
+        testPart(() => new DOMMatrix([10, 20, 30, 40, 50, 60]).skewYSelf(10));
+
+        // 12. Skew Y DOMMatrix with multiply
+        testPart(() => new DOMMatrix([10, 20, 30, 40, 50, 60]).multiply(new DOMMatrix().skewY(10)));
     });
 </script>
