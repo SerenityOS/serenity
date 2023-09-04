@@ -841,7 +841,7 @@ void GridFormattingContext::distribute_extra_space_across_spanned_tracks_base_si
     auto extra_space = max(CSSPixels(0), item_size_contribution - spanned_tracks_sizes_sum);
 
     // 2. Distribute space up to limits:
-    while (true) {
+    while (extra_space > 0) {
         auto all_frozen = all_of(affected_tracks, [](auto const& track) { return track.base_size_frozen; });
         if (all_frozen)
             break;
@@ -849,24 +849,22 @@ void GridFormattingContext::distribute_extra_space_across_spanned_tracks_base_si
         // Find the item-incurred increase for each spanned track with an affected size by: distributing the space
         // equally among such tracks, freezing a track’s item-incurred increase as its affected size + item-incurred
         // increase reaches its limit
-        CSSPixels increase_per_track = extra_space / affected_tracks.size();
-        if (increase_per_track == 0)
-            break;
+        CSSPixels increase_per_track = max(extra_space / affected_tracks.size(), CSSPixels::smallest_positive_value());
         for (auto& track : affected_tracks) {
             if (track.base_size_frozen)
                 continue;
 
+            auto increase = min(increase_per_track, extra_space);
+
             if (track.growth_limit.has_value()) {
                 auto maximum_increase = track.growth_limit.value() - track.base_size;
-                if (track.item_incurred_increase + increase_per_track >= maximum_increase) {
+                if (track.item_incurred_increase + increase >= maximum_increase) {
                     track.base_size_frozen = true;
-                    track.item_incurred_increase = maximum_increase;
-                    extra_space -= maximum_increase - track.item_incurred_increase;
-                    continue;
+                    increase = maximum_increase - track.item_incurred_increase;
                 }
             }
-            track.item_incurred_increase += increase_per_track;
-            extra_space -= increase_per_track;
+            track.item_incurred_increase += increase;
+            extra_space -= increase;
         }
     }
 
@@ -892,8 +890,11 @@ void GridFormattingContext::distribute_extra_space_across_spanned_tracks_base_si
         //        max-content max track sizing function; if there are no such tracks, then all affected tracks.
 
         CSSPixels increase_per_track = extra_space / affected_tracks.size();
-        for (auto& track : affected_tracks)
-            track.item_incurred_increase += increase_per_track;
+        for (auto& track : affected_tracks) {
+            auto increase = min(increase_per_track, extra_space);
+            track.item_incurred_increase += increase;
+            extra_space -= increase;
+        }
     }
 
     // 4. For each affected track, if the track’s item-incurred increase is larger than the track’s planned increase

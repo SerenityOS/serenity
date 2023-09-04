@@ -123,6 +123,11 @@ public:
         return from_raw(NumericLimits<int>::max());
     }
 
+    static constexpr CSSPixels smallest_positive_value()
+    {
+        return from_raw(1);
+    }
+
     float to_float() const;
     double to_double() const;
     int to_int() const;
