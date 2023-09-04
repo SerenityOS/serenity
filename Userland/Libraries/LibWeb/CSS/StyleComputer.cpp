@@ -2258,9 +2258,9 @@ void StyleComputer::transform_box_type_if_needed(StyleProperties& style, DOM::El
             // For legacy reasons, if an inline block box (inline flow-root) is blockified, it becomes a block box (losing its flow-root nature).
             // For consistency, a run-in flow-root box also blockifies to a block box.
             if (display.is_inline_block()) {
-                new_display = CSS::Display { CSS::Display::Outside::Block, CSS::Display::Inside::Flow, display.list_item() };
+                new_display = CSS::Display { CSS::DisplayOutside::Block, CSS::DisplayInside::Flow, display.list_item() };
             } else {
-                new_display = CSS::Display { CSS::Display::Outside::Block, display.inside(), display.list_item() };
+                new_display = CSS::Display { CSS::DisplayOutside::Block, display.inside(), display.list_item() };
             }
         }
         break;
@@ -2281,10 +2281,10 @@ void StyleComputer::transform_box_type_if_needed(StyleProperties& style, DOM::El
 
             // If a block box (block flow) is inlinified, its inner display type is set to flow-root so that it remains a block container.
             if (display.is_block_outside() && display.is_flow_inside()) {
-                new_display = CSS::Display { CSS::Display::Outside::Inline, CSS::Display::Inside::FlowRoot, display.list_item() };
+                new_display = CSS::Display { CSS::DisplayOutside::Inline, CSS::DisplayInside::FlowRoot, display.list_item() };
             }
 
-            new_display = CSS::Display { CSS::Display::Outside::Inline, display.inside(), display.list_item() };
+            new_display = CSS::Display { CSS::DisplayOutside::Inline, display.inside(), display.list_item() };
         }
         break;
     }

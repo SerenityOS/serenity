@@ -133,6 +133,43 @@
     "zoom-in",
     "zoom-out"
   ],
+  "display-box": [
+    "contents",
+    "none"
+  ],
+  "display-inside": [
+    "flow",
+    "flow-root",
+    "table",
+    "flex",
+    "grid",
+    "ruby"
+  ],
+  "display-internal": [
+    "table-row-group",
+    "table-header-group",
+    "table-footer-group",
+    "table-row",
+    "table-cell",
+    "table-column-group",
+    "table-column",
+    "table-caption",
+    "ruby-base",
+    "ruby-text",
+    "ruby-base-container",
+    "ruby-text-container"
+  ],
+  "display-legacy": [
+    "inline-block",
+    "inline-table",
+    "inline-flex",
+    "inline-grid"
+  ],
+  "display-outside": [
+    "block",
+    "inline",
+    "run-in"
+  ],
   "fill-rule": [
     "nonzero",
     "evenodd"

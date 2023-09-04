@@ -59,7 +59,7 @@ public:
     static CSS::TextDecorationStyle text_decoration_style() { return CSS::TextDecorationStyle::Solid; }
     static CSS::TextTransform text_transform() { return CSS::TextTransform::None; }
     static CSS::LengthPercentage text_indent() { return CSS::Length::make_px(0); }
-    static CSS::Display display() { return CSS::Display { CSS::Display::Outside::Inline, CSS::Display::Inside::Flow }; }
+    static CSS::Display display() { return CSS::Display { CSS::DisplayOutside::Inline, CSS::DisplayInside::Flow }; }
     static Color color() { return Color::Black; }
     static Color stop_color() { return Color::Black; }
     static CSS::BackdropFilter backdrop_filter() { return BackdropFilter::make_none(); }
