@@ -61,7 +61,7 @@ void Typeface::set_vector_font(RefPtr<VectorFont> font)
 
 RefPtr<Font> Typeface::get_font(float point_size, Font::AllowInexactSizeMatch allow_inexact_size_match) const
 {
-    VERIFY(point_size > 0);
+    VERIFY(point_size >= 0);
 
     if (m_vector_font)
         return adopt_ref(*new Gfx::ScaledFont(*m_vector_font, point_size, point_size));
