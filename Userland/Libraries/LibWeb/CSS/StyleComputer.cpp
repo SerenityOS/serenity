@@ -1057,10 +1057,6 @@ bool StyleComputer::expand_variables(DOM::Element& element, Optional<CSS::Select
 
 bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView property_name, Parser::TokenStream<Parser::ComponentValue>& source, Vector<Parser::ComponentValue>& dest) const
 {
-    // FIXME: Do this better!
-    // We build a copy of the tree of ComponentValues, with all var()s and attr()s replaced with their contents.
-    // This is a very naive solution, and we could do better if the CSS Parser could accept tokens one at a time.
-
     while (source.has_next_token()) {
         auto const& value = source.next_token();
         if (value.is_function()) {
@@ -1167,6 +1163,10 @@ NonnullRefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Ele
     VERIFY(unresolved.contains_var_or_attr());
 
     // If the value is invalid, we fall back to `unset`: https://www.w3.org/TR/css-variables-1/#invalid-at-computed-value-time
+
+    // FIXME: Do this better!
+    // We build a copy of the tree of ComponentValues, with all var()s and attr()s replaced with their contents.
+    // This is a very naive solution, and we could do better if the CSS Parser could accept tokens one at a time.
 
     Parser::TokenStream unresolved_values_without_variables_expanded { unresolved.values() };
     Vector<Parser::ComponentValue> values_with_variables_expanded;
