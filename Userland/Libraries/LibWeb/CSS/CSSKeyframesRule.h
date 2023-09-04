@@ -21,7 +21,7 @@ class CSSKeyframesRule final : public CSSRule {
     WEB_PLATFORM_OBJECT(CSSKeyframesRule, CSSRule);
 
 public:
-    [[nodiscard]] static JS::NonnullGCPtr<CSSKeyframesRule> create(JS::Realm&, FlyString name, Vector<JS::NonnullGCPtr<CSSKeyframeRule>>);
+    [[nodiscard]] static JS::NonnullGCPtr<CSSKeyframesRule> create(JS::Realm&, FlyString name, JS::MarkedVector<JS::NonnullGCPtr<CSSKeyframeRule>>);
 
     virtual ~CSSKeyframesRule() = default;
 
@@ -34,7 +34,7 @@ public:
     void set_name(String const& name) { m_name = name; }
 
 private:
-    CSSKeyframesRule(JS::Realm& realm, FlyString name, Vector<JS::NonnullGCPtr<CSSKeyframeRule>> keyframes)
+    CSSKeyframesRule(JS::Realm& realm, FlyString name, JS::MarkedVector<JS::NonnullGCPtr<CSSKeyframeRule>> keyframes)
         : CSSRule(realm)
         , m_name(move(name))
         , m_keyframes(move(keyframes))

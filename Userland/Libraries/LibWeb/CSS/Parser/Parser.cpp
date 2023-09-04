@@ -1505,7 +1505,7 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
 
             auto child_tokens = TokenStream { rule->block()->values() };
 
-            Vector<JS::NonnullGCPtr<CSSKeyframeRule>> keyframes;
+            JS::MarkedVector<JS::NonnullGCPtr<CSSKeyframeRule>> keyframes(m_context.realm().heap());
             while (child_tokens.has_next_token()) {
                 child_tokens.skip_whitespace();
                 // keyframe-selector = <keyframe-keyword> | <percentage>
