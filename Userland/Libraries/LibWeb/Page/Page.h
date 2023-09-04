@@ -120,6 +120,14 @@ public:
     void dismiss_dialog();
     void accept_dialog();
 
+    void did_request_color_picker(WeakPtr<HTML::HTMLInputElement> target, Color current_color);
+    void color_picker_closed(Optional<Color> picked_color);
+
+    enum class PendingNonBlockingDialog {
+        None,
+        ColorPicker,
+    };
+
     struct MediaContextMenu {
         AK::URL media_url;
         bool is_video { false };
@@ -167,6 +175,9 @@ private:
     Optional<Empty> m_pending_alert_response;
     Optional<bool> m_pending_confirm_response;
     Optional<Optional<String>> m_pending_prompt_response;
+
+    PendingNonBlockingDialog m_pending_non_blocking_dialog { PendingNonBlockingDialog::None };
+    WeakPtr<HTML::HTMLInputElement> m_pending_non_blocking_dialog_target;
 
     Optional<int> m_media_context_menu_element_id;
 
@@ -241,6 +252,7 @@ public:
 
     // https://html.spec.whatwg.org/multipage/input.html#show-the-picker,-if-applicable
     virtual void page_did_request_file_picker(WeakPtr<DOM::EventTarget>, [[maybe_unused]] bool multiple) {};
+    virtual void page_did_request_color_picker([[maybe_unused]] Color current_color) {};
 
     virtual void page_did_finish_text_test() {};
 

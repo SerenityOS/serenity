@@ -48,6 +48,7 @@ public:
     void alert_closed();
     void confirm_closed(bool accepted);
     void prompt_closed(Optional<String> response);
+    void color_picker_closed(Optional<Color> picked_color);
 
     Web::WebIDL::ExceptionOr<void> toggle_media_play_state();
     void toggle_media_mute_state();
@@ -113,6 +114,7 @@ private:
     virtual void page_did_request_activate_tab() override;
     virtual void page_did_close_browsing_context(Web::HTML::BrowsingContext const&) override;
     virtual void request_file(Web::FileRequest) override;
+    virtual void page_did_request_color_picker(Color current_color) override;
     virtual void page_did_finish_text_test() override;
 
     explicit PageHost(ConnectionFromClient&);

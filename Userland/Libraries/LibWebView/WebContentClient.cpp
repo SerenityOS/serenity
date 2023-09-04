@@ -384,6 +384,12 @@ void WebContentClient::did_request_file(DeprecatedString const& path, i32 reques
         m_view.on_request_file(path, request_id);
 }
 
+void WebContentClient::did_request_color_picker(Color const& current_color)
+{
+    if (m_view.on_request_color_picker)
+        m_view.on_request_color_picker(current_color);
+}
+
 void WebContentClient::did_finish_handling_input_event(bool event_was_accepted)
 {
     if (m_view.on_finish_handling_input_event)

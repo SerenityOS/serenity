@@ -59,6 +59,7 @@ endpoint WebContentClient
     did_request_minimize_window() => (Gfx::IntRect window_rect)
     did_request_fullscreen_window() => (Gfx::IntRect window_rect)
     did_request_file(DeprecatedString path, i32 request_id) =|
+    did_request_color_picker(Color current_color) =|
     did_finish_handling_input_event(bool event_was_accepted) =|
 
     did_output_js_console_message(i32 message_index) =|

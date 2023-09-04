@@ -207,6 +207,11 @@ void ViewImplementation::prompt_closed(Optional<String> response)
     client().async_prompt_closed(move(response));
 }
 
+void ViewImplementation::color_picker_closed(Optional<Color> picked_color)
+{
+    client().async_color_picker_closed(picked_color);
+}
+
 void ViewImplementation::toggle_media_play_state()
 {
     client().async_toggle_media_play_state();

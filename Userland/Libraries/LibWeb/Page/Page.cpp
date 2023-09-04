@@ -13,6 +13,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
+#include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/HTML/HTMLMediaElement.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
@@ -283,6 +284,28 @@ void Page::accept_dialog()
     case PendingDialog::Prompt:
         m_client.page_did_request_accept_dialog();
         break;
+    }
+}
+
+void Page::did_request_color_picker(WeakPtr<HTML::HTMLInputElement> target, Color current_color)
+{
+    if (m_pending_non_blocking_dialog == PendingNonBlockingDialog::None) {
+        m_pending_non_blocking_dialog = PendingNonBlockingDialog::ColorPicker;
+        m_pending_non_blocking_dialog_target = move(target);
+
+        m_client.page_did_request_color_picker(current_color);
+    }
+}
+
+void Page::color_picker_closed(Optional<Color> picked_color)
+{
+    if (m_pending_non_blocking_dialog == PendingNonBlockingDialog::ColorPicker) {
+        m_pending_non_blocking_dialog = PendingNonBlockingDialog::None;
+
+        if (m_pending_non_blocking_dialog_target) {
+            m_pending_non_blocking_dialog_target->did_pick_color(picked_color);
+            m_pending_non_blocking_dialog_target.clear();
+        }
     }
 }
 

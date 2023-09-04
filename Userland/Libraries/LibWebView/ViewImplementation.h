@@ -82,6 +82,7 @@ public:
     void alert_closed();
     void confirm_closed(bool accepted);
     void prompt_closed(Optional<String> response);
+    void color_picker_closed(Optional<Color> picked_color);
 
     void toggle_media_play_state();
     void toggle_media_mute_state();
@@ -150,6 +151,7 @@ public:
     Function<Gfx::IntRect()> on_maximize_window;
     Function<Gfx::IntRect()> on_minimize_window;
     Function<Gfx::IntRect()> on_fullscreen_window;
+    Function<void(Color current_color)> on_request_color_picker;
     Function<void(bool)> on_finish_handling_input_event;
     Function<void()> on_text_test_finish;
 
