@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2023, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2023, Bastiaan van der Plaat <bastiaan.v.d.plaat@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -248,6 +249,28 @@ JS::NonnullGCPtr<DOMMatrix> DOMMatrixReadOnly::translate(Optional<double> const&
     // 2. Perform a translateSelf() transformation on result with the arguments tx, ty, tz.
     // 3. Return result.
     return result->translate_self(tx, ty, tz);
+}
+
+// https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-skewx
+JS::NonnullGCPtr<DOMMatrix> DOMMatrixReadOnly::skew_x(double sx) const
+{
+    // 1. Let result be the resulting matrix initialized to the values of the current matrix.
+    auto result = DOMMatrix::create_from_dom_matrix_read_only(realm(), *this);
+
+    // 2. Perform a skewXSelf() transformation on result with the argument sx.
+    // 3. Return result.
+    return result->skew_x_self(sx);
+}
+
+// https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-skewy
+JS::NonnullGCPtr<DOMMatrix> DOMMatrixReadOnly::skew_y(double sy) const
+{
+    // 1. Let result be the resulting matrix initialized to the values of the current matrix.
+    auto result = DOMMatrix::create_from_dom_matrix_read_only(realm(), *this);
+
+    // 2. Perform a skewYSelf() transformation on result with the argument sy.
+    // 3. Return result.
+    return result->skew_y_self(sy);
 }
 
 // https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-multiply

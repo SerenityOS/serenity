@@ -46,8 +46,8 @@ interface DOMMatrixReadOnly {
     // FIXME: [NewObject] DOMMatrix rotate(optional unrestricted double rotX = 0, optional unrestricted double rotY, optional unrestricted double rotZ);
     // FIXME: [NewObject] DOMMatrix rotateFromVector(optional unrestricted double x = 0, optional unrestricted double y = 0);
     // FIXME: [NewObject] DOMMatrix rotateAxisAngle(optional unrestricted double x = 0, optional unrestricted double y = 0, optional unrestricted double z = 0, optional unrestricted double angle = 0);
-    // FIXME: [NewObject] DOMMatrix skewX(optional unrestricted double sx = 0);
-    // FIXME: [NewObject] DOMMatrix skewY(optional unrestricted double sy = 0);
+    [NewObject] DOMMatrix skewX(optional unrestricted double sx = 0);
+    [NewObject] DOMMatrix skewY(optional unrestricted double sy = 0);
     [NewObject] DOMMatrix multiply(optional DOMMatrixInit other = {});
     // FIXME: [NewObject] DOMMatrix flipX();
     // FIXME: [NewObject] DOMMatrix flipY();
