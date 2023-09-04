@@ -41,8 +41,8 @@ struct LayoutState {
     }
 
     struct UsedValues {
-        NodeWithStyleAndBoxModelMetrics const& node() const { return *m_node; }
-        void set_node(NodeWithStyleAndBoxModelMetrics&, UsedValues const* containing_block_used_values);
+        NodeWithStyle const& node() const { return *m_node; }
+        void set_node(NodeWithStyle&, UsedValues const* containing_block_used_values);
 
         CSSPixels content_width() const { return m_content_width; }
         CSSPixels content_height() const { return m_content_height; }
@@ -134,7 +134,7 @@ struct LayoutState {
         CSSPixels border_top_collapsed() const { return use_collapsing_borders_model() ? round(border_top / 2) : border_top; }
         CSSPixels border_bottom_collapsed() const { return use_collapsing_borders_model() ? round(border_bottom / 2) : border_bottom; }
 
-        JS::GCPtr<Layout::NodeWithStyleAndBoxModelMetrics> m_node { nullptr };
+        JS::GCPtr<Layout::NodeWithStyle> m_node { nullptr };
 
         CSSPixels m_content_width { 0 };
         CSSPixels m_content_height { 0 };
@@ -152,10 +152,10 @@ struct LayoutState {
     void commit(Box& root);
 
     // NOTE: get_mutable() will CoW the UsedValues if it's inherited from an ancestor state;
-    UsedValues& get_mutable(NodeWithStyleAndBoxModelMetrics const&);
+    UsedValues& get_mutable(NodeWithStyle const&);
 
     // NOTE: get() will not CoW the UsedValues.
-    UsedValues const& get(NodeWithStyleAndBoxModelMetrics const&) const;
+    UsedValues const& get(NodeWithStyle const&) const;
 
     HashMap<Layout::Node const*, NonnullOwnPtr<UsedValues>> used_values_per_layout_node;
 
@@ -169,7 +169,7 @@ struct LayoutState {
         HashMap<CSSPixels, Optional<CSSPixels>> max_content_height;
     };
 
-    HashMap<JS::GCPtr<NodeWithStyleAndBoxModelMetrics const>, NonnullOwnPtr<IntrinsicSizes>> mutable intrinsic_sizes;
+    HashMap<JS::GCPtr<NodeWithStyle const>, NonnullOwnPtr<IntrinsicSizes>> mutable intrinsic_sizes;
 
     LayoutState const* m_parent { nullptr };
     LayoutState const& m_root;
