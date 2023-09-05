@@ -53,6 +53,9 @@ ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> FATInode::compute_block_list()
 
     Vector<BlockBasedFileSystem::BlockIndex> block_list;
 
+    if (cluster == 0)
+        return block_list;
+
     while (cluster < no_more_clusters) {
         dbgln_if(FAT_DEBUG, "FATFS: Appending cluster {} to inode {}'s cluster chain", cluster, index());
 
