@@ -29,4 +29,154 @@ JS::GCPtr<HTML::HTMLSlotElement> SlottableMixin::assigned_slot()
     return nullptr;
 }
 
+JS::GCPtr<HTML::HTMLSlotElement> assigned_slot_for_node(JS::NonnullGCPtr<Node> node)
+{
+    if (!node->is_slottable())
+        return nullptr;
+
+    return node->as_slottable().visit([](auto const& slottable) {
+        return slottable->assigned_slot_internal();
+    });
+}
+
+// https://dom.spec.whatwg.org/#slotable-assigned
+bool is_an_assigned_slottable(JS::NonnullGCPtr<Node> node)
+{
+    if (!node->is_slottable())
+        return false;
+
+    // A slottable is assigned if its assigned slot is non-null.
+    return assigned_slot_for_node(node) != nullptr;
+}
+
+// https://dom.spec.whatwg.org/#find-a-slot
+JS::GCPtr<HTML::HTMLSlotElement> find_a_slot(Slottable const& slottable, OpenFlag open_flag)
+{
+    // 1. If slottable’s parent is null, then return null.
+    auto* parent = slottable.visit([](auto& node) { return node->parent_element(); });
+    if (!parent)
+        return nullptr;
+
+    // 2. Let shadow be slottable’s parent’s shadow root.
+    auto* shadow = parent->shadow_root_internal();
+
+    // 3. If shadow is null, then return null.
+    if (shadow == nullptr)
+        return nullptr;
+
+    // 4. If the open flag is set and shadow’s mode is not "open", then return null.
+    if (open_flag == OpenFlag::Set && shadow->mode() != Bindings::ShadowRootMode::Open)
+        return nullptr;
+
+    // 5. If shadow’s slot assignment is "manual", then return the slot in shadow’s descendants whose manually assigned
+    //    nodes contains slottable, if any; otherwise null.
+    if (shadow->slot_assignment() == Bindings::SlotAssignmentMode::Manual) {
+        JS::GCPtr<HTML::HTMLSlotElement> slot;
+
+        shadow->for_each_in_subtree_of_type<HTML::HTMLSlotElement>([&](auto& child) {
+            if (!child.manually_assigned_nodes().contains_slow(slottable))
+                return IterationDecision::Continue;
+
+            slot = child;
+            return IterationDecision::Break;
+        });
+
+        return slot;
+    }
+
+    // FIXME: 6. Return the first slot in tree order in shadow’s descendants whose name is slottable’s name, if any; otherwise null.
+    return nullptr;
+}
+
+// https://dom.spec.whatwg.org/#find-slotables
+Vector<Slottable> find_slottables(JS::NonnullGCPtr<HTML::HTMLSlotElement> slot)
+{
+    // 1. Let result be an empty list.
+    Vector<Slottable> result;
+
+    // 2. Let root be slot’s root.
+    auto& root = slot->root();
+
+    // 3. If root is not a shadow root, then return result.
+    if (!root.is_shadow_root())
+        return result;
+
+    // 4. Let host be root’s host.
+    auto& shadow_root = static_cast<ShadowRoot&>(root);
+    auto* host = shadow_root.host();
+
+    // 5. If root’s slot assignment is "manual", then:
+    if (shadow_root.slot_assignment() == Bindings::SlotAssignmentMode::Manual) {
+        // 1. Let result be « ».
+        // 2. For each slottable slottable of slot’s manually assigned nodes, if slottable’s parent is host, append slottable to result.
+        for (auto const& slottable : slot->manually_assigned_nodes()) {
+            auto const* parent = slottable.visit([](auto const& node) { return node->parent(); });
+
+            if (parent == host)
+                result.append(slottable);
+        }
+    }
+    // 6. Otherwise, for each slottable child slottable of host, in tree order:
+    else {
+        // FIXME: 1. Let foundSlot be the result of finding a slot given slottable.
+        // FIXME: 2. If foundSlot is slot, then append slottable to result.
+    }
+
+    // 7. Return result.
+    return result;
+}
+
+// https://dom.spec.whatwg.org/#assign-slotables
+void assign_slottables(JS::NonnullGCPtr<HTML::HTMLSlotElement> slot)
+{
+    // 1. Let slottables be the result of finding slottables for slot.
+    auto slottables = find_slottables(slot);
+
+    // 2. If slottables and slot’s assigned nodes are not identical, then run signal a slot change for slot.
+    if (slottables != slot->assigned_nodes_internal())
+        signal_a_slot_change(slot);
+
+    // 4. For each slottable in slottables, set slottable’s assigned slot to slot.
+    for (auto& slottable : slottables) {
+        slottable.visit([&](auto& node) {
+            node->set_assigned_slot(slot);
+        });
+    }
+
+    // 3. Set slot’s assigned nodes to slottables.
+    // NOTE: We do this step last so that we can move the slottables list.
+    slot->set_assigned_nodes(move(slottables));
+}
+
+// https://dom.spec.whatwg.org/#assign-slotables-for-a-tree
+void assign_slottables_for_a_tree(JS::NonnullGCPtr<Node> root)
+{
+    // To assign slottables for a tree, given a node root, run assign slottables for each slot slot in root’s inclusive
+    // descendants, in tree order.
+    root->for_each_in_inclusive_subtree_of_type<HTML::HTMLSlotElement>([](auto& slot) {
+        assign_slottables(slot);
+        return IterationDecision::Continue;
+    });
+}
+
+// https://dom.spec.whatwg.org/#assign-a-slot
+void assign_a_slot(Slottable const& slottable)
+{
+    // 1. Let slot be the result of finding a slot with slottable.
+    auto slot = find_a_slot(slottable);
+
+    // 2. If slot is non-null, then run assign slottables for slot.
+    if (slot != nullptr)
+        assign_slottables(*slot);
+}
+
+// https://dom.spec.whatwg.org/#signal-a-slot-change
+void signal_a_slot_change(JS::NonnullGCPtr<HTML::HTMLSlotElement> slottable)
+{
+    // FIXME: 1. Append slot to slot’s relevant agent’s signal slots.
+
+    // 2. Queue a mutation observer microtask.
+    Bindings::queue_mutation_observer_microtask(slottable->document());
+}
+
 }

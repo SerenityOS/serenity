@@ -47,4 +47,19 @@ private:
     JS::GCPtr<HTML::HTMLSlotElement> m_manual_slot_assignment;
 };
 
+enum class OpenFlag {
+    Set,
+    Unset,
+};
+
+JS::GCPtr<HTML::HTMLSlotElement> assigned_slot_for_node(JS::NonnullGCPtr<Node>);
+bool is_an_assigned_slottable(JS::NonnullGCPtr<Node>);
+
+JS::GCPtr<HTML::HTMLSlotElement> find_a_slot(Slottable const&, OpenFlag = OpenFlag::Unset);
+Vector<Slottable> find_slottables(JS::NonnullGCPtr<HTML::HTMLSlotElement>);
+void assign_slottables(JS::NonnullGCPtr<HTML::HTMLSlotElement>);
+void assign_slottables_for_a_tree(JS::NonnullGCPtr<Node>);
+void assign_a_slot(Slottable const&);
+void signal_a_slot_change(JS::NonnullGCPtr<HTML::HTMLSlotElement>);
+
 }

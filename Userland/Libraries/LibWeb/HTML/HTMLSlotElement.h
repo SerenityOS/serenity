@@ -7,10 +7,18 @@
 
 #pragma once
 
+#include <AK/Variant.h>
+#include <AK/Vector.h>
+#include <LibJS/Heap/Handle.h>
 #include <LibWeb/DOM/Slot.h>
+#include <LibWeb/DOM/Slottable.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
+
+struct AssignedNodesOptions {
+    bool flatten { false };
+};
 
 class HTMLSlotElement final
     : public HTMLElement
@@ -20,11 +28,22 @@ class HTMLSlotElement final
 public:
     virtual ~HTMLSlotElement() override;
 
+    Vector<JS::Handle<DOM::Node>> assigned_nodes(AssignedNodesOptions options = {});
+    Vector<JS::Handle<DOM::Element>> assigned_elements(AssignedNodesOptions options = {});
+
+    using SlottableHandle = Variant<JS::Handle<DOM::Element>, JS::Handle<DOM::Text>>;
+    void assign(Vector<SlottableHandle> nodes);
+
+    ReadonlySpan<DOM::Slottable> manually_assigned_nodes() const { return m_manually_assigned_nodes; }
+
 private:
     HTMLSlotElement(DOM::Document&, DOM::QualifiedName);
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(JS::Cell::Visitor&) override;
+
+    // https://html.spec.whatwg.org/multipage/scripting.html#manually-assigned-nodes
+    Vector<DOM::Slottable> m_manually_assigned_nodes;
 };
 
 }
