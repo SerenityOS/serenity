@@ -585,6 +585,7 @@ static void wrap_in_anonymous(Vector<JS::Handle<Node>>& sequence, Node* nearest_
     }
     wrapper->set_children_are_inline(parent.children_are_inline());
     wrapper->set_line_height(parent.line_height());
+    wrapper->set_font(parent.font());
     if (nearest_sibling)
         parent.insert_before(*wrapper, *nearest_sibling);
     else
@@ -664,13 +665,15 @@ Vector<JS::Handle<Box>> TreeBuilder::generate_missing_parents(NodeWithStyle& roo
         auto* nearest_sibling = table_box->next_sibling();
         auto& parent = *table_box->parent();
 
-        CSS::ComputedValues wrapper_computed_values;
+        CSS::ComputedValues wrapper_computed_values = table_box->computed_values().clone_inherited_values();
         table_box->transfer_table_box_computed_values_to_wrapper_computed_values(wrapper_computed_values);
 
         auto wrapper = parent.heap().allocate_without_realm<TableWrapper>(parent.document(), nullptr, move(wrapper_computed_values));
 
         parent.remove_child(*table_box);
         wrapper->append_child(*table_box);
+        wrapper->set_font(parent.font());
+        wrapper->set_line_height(parent.line_height());
 
         if (nearest_sibling)
             parent.insert_before(*wrapper, *nearest_sibling);
@@ -705,6 +708,8 @@ static void fixup_row(Box& row_box, TableGrid const& table_grid, size_t row_inde
         // Ensure that the cell (with zero content height) will have the same height as the row by setting vertical-align to middle.
         cell_computed_values.set_vertical_align(CSS::VerticalAlign::Middle);
         auto cell_box = row_box.heap().template allocate_without_realm<BlockContainer>(row_box.document(), nullptr, cell_computed_values);
+        cell_box->set_font(row_box.font());
+        cell_box->set_line_height(row_box.line_height());
         row_box.append_child(cell_box);
     }
 }
