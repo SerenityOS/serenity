@@ -140,10 +140,6 @@ msgstr "Öppna fil"
 msgid "P_in"
 msgstr "_Nåla"
 
-#: Application.cpp:188
-msgid "Path to WebDriver IPC for WebContent"
-msgstr ""
-
 #: shortcuts-dialog.blp:69
 msgid "Previous tab"
 msgstr "Föregående flik"

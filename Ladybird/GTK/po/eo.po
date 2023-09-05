@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ladybird wip\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-05 15:27+0300\n"
+"POT-Creation-Date: 2023-09-05 15:41+0300\n"
 "Language: eo\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -139,10 +139,6 @@ msgstr "Malfermi dosieron"
 #: window.blp:26
 msgid "P_in"
 msgstr "Al_pingli"
-
-#: Application.cpp:188
-msgid "Path to WebDriver IPC for WebContent"
-msgstr ""
 
 #: shortcuts-dialog.blp:69
 msgid "Previous tab"
