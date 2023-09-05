@@ -821,25 +821,25 @@ void Widget::set_font(Gfx::Font const* font)
 
 void Widget::set_font_family(String const& family)
 {
-    set_font(Gfx::FontDatabase::the().get(family.to_deprecated_string(), m_font->presentation_size(), m_font->weight(), m_font->width(), m_font->slope()));
+    set_font(Gfx::FontDatabase::the().get(family, m_font->presentation_size(), m_font->weight(), m_font->width(), m_font->slope()));
 }
 
 void Widget::set_font_size(unsigned size)
 {
-    set_font(Gfx::FontDatabase::the().get(m_font->family().to_deprecated_string(), size, m_font->weight(), m_font->width(), m_font->slope()));
+    set_font(Gfx::FontDatabase::the().get(m_font->family(), size, m_font->weight(), m_font->width(), m_font->slope()));
 }
 
 void Widget::set_font_weight(unsigned weight)
 {
-    set_font(Gfx::FontDatabase::the().get(m_font->family().to_deprecated_string(), m_font->presentation_size(), weight, m_font->width(), m_font->slope()));
+    set_font(Gfx::FontDatabase::the().get(m_font->family(), m_font->presentation_size(), weight, m_font->width(), m_font->slope()));
 }
 
 void Widget::set_font_fixed_width(bool fixed_width)
 {
     if (fixed_width)
-        set_font(Gfx::FontDatabase::the().get(Gfx::FontDatabase::the().default_fixed_width_font().family().to_deprecated_string(), m_font->presentation_size(), m_font->weight(), m_font->width(), m_font->slope()));
+        set_font(Gfx::FontDatabase::the().get(Gfx::FontDatabase::the().default_fixed_width_font().family(), m_font->presentation_size(), m_font->weight(), m_font->width(), m_font->slope()));
     else
-        set_font(Gfx::FontDatabase::the().get(Gfx::FontDatabase::the().default_font().family().to_deprecated_string(), m_font->presentation_size(), m_font->weight(), m_font->width(), m_font->slope()));
+        set_font(Gfx::FontDatabase::the().get(Gfx::FontDatabase::the().default_font().family(), m_font->presentation_size(), m_font->weight(), m_font->width(), m_font->slope()));
 }
 
 bool Widget::is_font_fixed_width()

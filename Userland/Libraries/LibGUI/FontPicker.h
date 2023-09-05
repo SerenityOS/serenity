@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <LibGUI/Dialog.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Forward.h>
@@ -37,12 +38,12 @@ private:
     RefPtr<SpinBox> m_size_spin_box;
     RefPtr<Label> m_sample_text_label;
 
-    Vector<DeprecatedString> m_families;
-    Vector<DeprecatedString> m_variants;
+    Vector<FlyString> m_families;
+    Vector<FlyString> m_variants;
     Vector<int> m_sizes;
 
-    Optional<DeprecatedString> m_family;
-    Optional<DeprecatedString> m_variant;
+    Optional<FlyString> m_family;
+    Optional<FlyString> m_variant;
     Optional<int> m_size;
 };
 

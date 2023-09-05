@@ -409,14 +409,14 @@ String BitmapFont::variant() const
 
 RefPtr<Font> BitmapFont::with_size(float point_size) const
 {
-    return Gfx::FontDatabase::the().get(family().to_deprecated_string(), point_size, weight(), width(), slope());
+    return Gfx::FontDatabase::the().get(family(), point_size, weight(), width(), slope());
 }
 
 Font const& Font::bold_variant() const
 {
     if (m_bold_variant)
         return *m_bold_variant;
-    m_bold_variant = Gfx::FontDatabase::the().get(family().to_deprecated_string(), presentation_size(), 700, Gfx::FontWidth::Normal, 0);
+    m_bold_variant = Gfx::FontDatabase::the().get(family(), presentation_size(), 700, Gfx::FontWidth::Normal, 0);
     if (!m_bold_variant)
         m_bold_variant = this;
     return *m_bold_variant;

@@ -1848,7 +1848,7 @@ RefPtr<Gfx::Font const> StyleComputer::font_matching_algorithm(FontFaceKey const
     Gfx::FontDatabase::the().for_each_typeface_with_family_name(key.family_name.to_string(), [&](Gfx::Typeface const& typeface) {
         matching_family_fonts.empend(
             FontFaceKey {
-                .family_name = MUST(FlyString::from_deprecated_fly_string(typeface.family())),
+                .family_name = typeface.family(),
                 .weight = static_cast<int>(typeface.weight()),
                 .slope = typeface.slope(),
             },
@@ -2022,7 +2022,7 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
         if (auto found_font = font_matching_algorithm(key, font_size_in_pt))
             return found_font;
 
-        if (auto found_font = Gfx::FontDatabase::the().get(family.to_deprecated_string(), font_size_in_pt, weight, width, slope, Gfx::Font::AllowInexactSizeMatch::Yes))
+        if (auto found_font = Gfx::FontDatabase::the().get(family, font_size_in_pt, weight, width, slope, Gfx::Font::AllowInexactSizeMatch::Yes))
             return found_font;
 
         return {};

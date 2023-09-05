@@ -5,6 +5,7 @@
  */
 
 #include <AK/DeprecatedFlyString.h>
+#include <AK/FlyString.h>
 #include <AK/Queue.h>
 #include <AK/QuickSort.h>
 #include <LibCore/DirIterator.h>
@@ -117,7 +118,7 @@ Font& FontDatabase::default_fixed_width_font()
 
 struct FontDatabase::Private {
     HashMap<DeprecatedString, NonnullRefPtr<Gfx::Font>, CaseInsensitiveStringTraits> full_name_to_font_map;
-    HashMap<DeprecatedFlyString, Vector<NonnullRefPtr<Typeface>>, CaseInsensitiveStringTraits> typefaces;
+    HashMap<FlyString, Vector<NonnullRefPtr<Typeface>>, AK::ASCIICaseInsensitiveFlyStringTraits> typefaces;
 };
 
 void FontDatabase::load_all_fonts_from_path(DeprecatedString const& root)
@@ -144,20 +145,20 @@ void FontDatabase::load_all_fonts_from_path(DeprecatedString const& root)
                 if (auto font_or_error = Gfx::BitmapFont::try_load_from_file(path); !font_or_error.is_error()) {
                     auto font = font_or_error.release_value();
                     m_private->full_name_to_font_map.set(font->qualified_name().to_deprecated_string(), *font);
-                    auto typeface = get_or_create_typeface(font->family().to_deprecated_string(), font->variant().to_deprecated_string());
+                    auto typeface = get_or_create_typeface(font->family(), font->variant());
                     typeface->add_bitmap_font(font);
                 }
             } else if (path.ends_with(".ttf"sv)) {
                 // FIXME: What about .otf
                 if (auto font_or_error = OpenType::Font::try_load_from_file(path); !font_or_error.is_error()) {
                     auto font = font_or_error.release_value();
-                    auto typeface = get_or_create_typeface(font->family().to_deprecated_string(), font->variant().to_deprecated_string());
+                    auto typeface = get_or_create_typeface(font->family(), font->variant());
                     typeface->set_vector_font(move(font));
                 }
             } else if (path.ends_with(".woff"sv)) {
                 if (auto font_or_error = WOFF::Font::try_load_from_file(path); !font_or_error.is_error()) {
                     auto font = font_or_error.release_value();
-                    auto typeface = get_or_create_typeface(font->family().to_deprecated_string(), font->variant().to_deprecated_string());
+                    auto typeface = get_or_create_typeface(font->family(), font->variant());
                     typeface->set_vector_font(move(font));
                 }
             }
@@ -204,7 +205,7 @@ RefPtr<Gfx::Font> FontDatabase::get_by_name(StringView name)
             auto slope = parts.take_last().to_int().value_or(0);
             auto weight = parts.take_last().to_int().value_or(0);
             auto size = parts.take_last().to_int().value_or(0);
-            auto family = DeprecatedString::join(' ', parts);
+            auto family = MUST(String::join(' ', parts));
             return get(family, size, weight, Gfx::FontWidth::Normal, slope);
         }
         dbgln("Font lookup failed: '{}'", name);
@@ -213,7 +214,7 @@ RefPtr<Gfx::Font> FontDatabase::get_by_name(StringView name)
     return it->value;
 }
 
-RefPtr<Gfx::Font> FontDatabase::get(DeprecatedFlyString const& family, float point_size, unsigned weight, unsigned width, unsigned slope, Font::AllowInexactSizeMatch allow_inexact_size_match)
+RefPtr<Gfx::Font> FontDatabase::get(FlyString const& family, float point_size, unsigned weight, unsigned width, unsigned slope, Font::AllowInexactSizeMatch allow_inexact_size_match)
 {
     auto it = m_private->typefaces.find(family);
     if (it == m_private->typefaces.end())
@@ -225,7 +226,7 @@ RefPtr<Gfx::Font> FontDatabase::get(DeprecatedFlyString const& family, float poi
     return nullptr;
 }
 
-RefPtr<Gfx::Font> FontDatabase::get(DeprecatedFlyString const& family, DeprecatedFlyString const& variant, float point_size, Font::AllowInexactSizeMatch allow_inexact_size_match)
+RefPtr<Gfx::Font> FontDatabase::get(FlyString const& family, FlyString const& variant, float point_size, Font::AllowInexactSizeMatch allow_inexact_size_match)
 {
     auto it = m_private->typefaces.find(family);
     if (it == m_private->typefaces.end())
@@ -237,7 +238,7 @@ RefPtr<Gfx::Font> FontDatabase::get(DeprecatedFlyString const& family, Deprecate
     return nullptr;
 }
 
-RefPtr<Typeface> FontDatabase::get_or_create_typeface(DeprecatedString const& family, DeprecatedString const& variant)
+RefPtr<Typeface> FontDatabase::get_or_create_typeface(FlyString const& family, FlyString const& variant)
 {
     auto it = m_private->typefaces.find(family);
     if (it != m_private->typefaces.end()) {
@@ -260,9 +261,9 @@ void FontDatabase::for_each_typeface(Function<void(Typeface const&)> callback)
     }
 }
 
-void FontDatabase::for_each_typeface_with_family_name(String const& family_name, Function<void(Typeface const&)> callback)
+void FontDatabase::for_each_typeface_with_family_name(FlyString const& family_name, Function<void(Typeface const&)> callback)
 {
-    auto it = m_private->typefaces.find(family_name.bytes_as_string_view());
+    auto it = m_private->typefaces.find(family_name);
     if (it == m_private->typefaces.end())
         return;
     for (auto const& typeface : it->value)
