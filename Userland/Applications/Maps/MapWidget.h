@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2023, Bastiaan van der Plaat <bastiaan.v.d.plaat@gmail.com>
+ * Copyright (c) 2023, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/Queue.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibProtocol/Request.h>
@@ -44,11 +46,7 @@ public:
     }
 
     int zoom() const { return m_zoom; }
-    void set_zoom(int zoom)
-    {
-        m_zoom = min(max(zoom, ZOOM_MIN), ZOOM_MAX);
-        update();
-    }
+    void set_zoom(int zoom);
 
     struct TileKey {
         int x;
@@ -80,6 +78,8 @@ private:
     virtual void paint_event(GUI::PaintEvent&) override;
 
     Optional<RefPtr<Gfx::Bitmap>> get_tile_image(int x, int y);
+    void process_tile_queue();
+    void clear_tile_queue();
 
     void paint_tiles(GUI::Painter&);
 
@@ -92,6 +92,7 @@ private:
     static int constexpr TILE_SIZE = 256;
     static double constexpr LATITUDE_MAX = 85.0511287798066;
     static size_t constexpr TILES_CACHE_MAX = 256;
+    static constexpr size_t TILES_DOWNLOAD_PARALLEL_MAX = 8;
     static int constexpr ZOOM_MIN = 2;
     static int constexpr ZOOM_MAX = 19;
     static float constexpr PANEL_PADDING_X = 6;
@@ -103,7 +104,8 @@ private:
     static Gfx::Color constexpr panel_foreground_color = { 51, 51, 51 };
 
     RefPtr<Protocol::RequestClient> m_request_client;
-    Vector<RefPtr<Protocol::Request>> m_active_requests;
+    Vector<RefPtr<Protocol::Request>, TILES_DOWNLOAD_PARALLEL_MAX> m_active_requests;
+    Queue<TileKey, 32> m_tile_queue;
     String m_tile_layer_url;
     LatLng m_center;
     int m_zoom {};
