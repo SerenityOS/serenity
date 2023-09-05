@@ -51,7 +51,7 @@ private:
     JS::GCPtr<Fetch::Infrastructure::Response> m_response;
 };
 
-static HashTable<Navigable*>& all_navigables()
+HashTable<Navigable*>& all_navigables()
 {
     static HashTable<Navigable*> set;
     return set;
@@ -728,8 +728,16 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(JS:
         }
     }
 
+    // NOTE: Not in the spec but queuing task on the next step will fail because active_window() does not exist for destroyed navigable.
+    if (has_been_destroyed())
+        return {};
+
     // 6. Queue a global task on the navigation and traversal task source, given navigable's active window, to run these steps:
     queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), [this, entry, navigation_params, navigation_id, completion_steps = move(completion_steps)] {
+        // NOTE: This check is not in the spec but we should not continue navigation if navigable has been destroyed.
+        if (has_been_destroyed())
+            return;
+
         // 1. If navigable's ongoing navigation no longer equals navigationId, then run completionSteps and return.
         if (navigation_id.has_value() && (!ongoing_navigation().has<String>() || ongoing_navigation().get<String>() != *navigation_id)) {
             completion_steps();
@@ -981,6 +989,10 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
 
     // 20. In parallel, run these steps:
     Platform::EventLoopPlugin::the().deferred_invoke([this, source_snapshot_params = move(source_snapshot_params), document_resource, url, navigation_id, referrer_policy, initiator_origin_snapshot, response, history_handling, initiator_base_url_snapshot] {
+        // NOTE: Not in the spec but subsequent steps will fail because destroyed navigable does not have active document.
+        if (has_been_destroyed())
+            return;
+
         // FIXME: 1. Let unloadPromptCanceled be the result of checking if unloading is user-canceled for navigable's active document's inclusive descendant navigables.
 
         // FIXME: 2. If unloadPromptCanceled is true, or navigable's ongoing navigation is no longer navigationId, then:
@@ -1035,7 +1047,11 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
         //     targetSnapshotParams, navigationId, navigationParams, cspNavigationType, with allowPOST
         //     set to true and completionSteps set to the following step:
         populate_session_history_entry_document(history_entry, navigation_params, navigation_id, source_snapshot_params, true, [this, history_entry, history_handling, navigation_id] {
-            traversable_navigable()->append_session_history_traversal_steps([this, history_entry, history_handling] {
+            traversable_navigable()->append_session_history_traversal_steps([this, history_entry, history_handling, navigation_id] {
+                if (this->has_been_destroyed()) {
+                    // NOTE: This check is not in the spec but we should not continue navigation if navigable has been destroyed.
+                    return;
+                }
                 finalize_a_cross_document_navigation(*this, to_history_handling_behavior(history_handling), history_entry);
             });
         }).release_value_but_fixme_should_propagate_errors();
@@ -1379,6 +1395,10 @@ TargetSnapshotParams Navigable::snapshot_target_snapshot_params()
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#finalize-a-cross-document-navigation
 void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable> navigable, HistoryHandlingBehavior history_handling, JS::NonnullGCPtr<SessionHistoryEntry> history_entry)
 {
+    // NOTE: This is not in the spec but we should not navigate destroyed navigable.
+    if (navigable->has_been_destroyed())
+        return;
+
     // 1. FIXME: Assert: this is running on navigable's traversable navigable's session history traversal queue.
 
     // 2. Set navigable's is delaying load events to false.

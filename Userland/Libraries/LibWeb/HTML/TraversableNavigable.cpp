@@ -278,6 +278,10 @@ void TraversableNavigable::apply_the_history_step(int step, Optional<SourceSnaps
     // 12. For each navigable of changingNavigables, queue a global task on the navigation and traversal task source of navigable's active window to run the steps:
     for (auto& navigable : changing_navigables) {
         queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), [&] {
+            // NOTE: This check is not in the spec but we should not continue navigation if navigable has been destroyed.
+            if (navigable->has_been_destroyed())
+                return;
+
             // 1. Let displayedEntry be navigable's active session history entry.
             auto displayed_entry = navigable->active_session_history_entry();
 
@@ -389,6 +393,10 @@ void TraversableNavigable::apply_the_history_step(int step, Optional<SourceSnaps
         // 6. Let navigable be changingNavigableContinuation's navigable.
         auto navigable = changing_navigable_continuation.navigable;
 
+        // NOTE: This check is not in the spec but we should not continue navigation if navigable has been destroyed.
+        if (navigable->has_been_destroyed())
+            continue;
+
         // 7. Set navigable's ongoing navigation to null.
         navigable->set_ongoing_navigation({});
 
@@ -401,6 +409,10 @@ void TraversableNavigable::apply_the_history_step(int step, Optional<SourceSnaps
 
         // 10. Queue a global task on the navigation and traversal task source given navigable's active window to run the steps:
         queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), [&, target_entry, navigable, displayed_document, update_only = changing_navigable_continuation.update_only] {
+            // NOTE: This check is not in the spec but we should not continue navigation if navigable has been destroyed.
+            if (navigable->has_been_destroyed())
+                return;
+
             // 1. If changingNavigableContinuation's update-only is false, then:
             if (!update_only) {
                 // 1. Unload displayedDocument given targetEntry's document.
@@ -582,6 +594,10 @@ void TraversableNavigable::destroy_top_level_traversable()
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#finalize-a-same-document-navigation
 void finalize_a_same_document_navigation(JS::NonnullGCPtr<TraversableNavigable> traversable, JS::NonnullGCPtr<Navigable> target_navigable, JS::NonnullGCPtr<SessionHistoryEntry> target_entry, JS::GCPtr<SessionHistoryEntry> entry_to_replace)
 {
+    // NOTE: This is not in the spec but we should not navigate destroyed navigable.
+    if (target_navigable->has_been_destroyed())
+        return;
+
     // FIXME: 1. Assert: this is running on traversable's session history traversal queue.
 
     // 2. If targetNavigable's active session history entry is not targetEntry, then return.
