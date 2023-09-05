@@ -128,6 +128,10 @@ public:
 
     void reload();
 
+    // https://github.com/whatwg/html/issues/9690
+    [[nodiscard]] bool has_been_destroyed() const { return m_has_been_destroyed; }
+    void set_has_been_destroyed() { m_has_been_destroyed = true; }
+
 protected:
     Navigable();
 
@@ -160,7 +164,11 @@ private:
 
     // Implied link between navigable and its container.
     JS::GCPtr<NavigableContainer> m_container;
+
+    bool m_has_been_destroyed { false };
 };
+
+HashTable<Navigable*>& all_navigables();
 
 bool navigation_must_be_a_replace(AK::URL const& url, DOM::Document const& document);
 void finalize_a_cross_document_navigation(JS::NonnullGCPtr<Navigable>, HistoryHandlingBehavior, JS::NonnullGCPtr<SessionHistoryEntry>);

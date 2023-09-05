@@ -334,6 +334,10 @@ void NavigableContainer::destroy_the_child_navigable()
     // 7. Let traversable be container's node navigable's traversable navigable.
     auto traversable = this->navigable()->traversable_navigable();
 
+    // Not in the spec
+    navigable->set_has_been_destroyed();
+    HTML::all_navigables().remove(navigable);
+
     // 8. Append the following session history traversal steps to traversable:
     traversable->append_session_history_traversal_steps([traversable] {
         // 1. Apply pending history changes to traversable.
