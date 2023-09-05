@@ -67,6 +67,12 @@ void MapWidget::set_zoom(int zoom)
     update();
 }
 
+void MapWidget::doubleclick_event(GUI::MouseEvent& event)
+{
+    int new_zoom = event.shift() ? m_zoom - 1 : m_zoom + 1;
+    set_zoom_for_mouse_event(new_zoom, event);
+}
+
 void MapWidget::mousedown_event(GUI::MouseEvent& event)
 {
     if (m_connection_failed)
@@ -139,16 +145,21 @@ void MapWidget::mousewheel_event(GUI::MouseEvent& event)
         return;
 
     int new_zoom = event.wheel_delta_y() > 0 ? m_zoom - 1 : m_zoom + 1;
-    if (new_zoom < ZOOM_MIN || new_zoom > ZOOM_MAX)
+    set_zoom_for_mouse_event(new_zoom, event);
+}
+
+void MapWidget::set_zoom_for_mouse_event(int zoom, GUI::MouseEvent& event)
+{
+    if (zoom == m_zoom || zoom < ZOOM_MIN || zoom > ZOOM_MAX)
         return;
-    if (event.wheel_delta_y() > 0) {
+    if (zoom < m_zoom) {
         set_center({ tile_y_to_latitude(latitude_to_tile_y(m_center.latitude, m_zoom) - static_cast<double>(event.y() - height() / 2) / TILE_SIZE, m_zoom),
             tile_x_to_longitude(longitude_to_tile_x(m_center.longitude, m_zoom) - static_cast<double>(event.x() - width() / 2) / TILE_SIZE, m_zoom) });
     } else {
-        set_center({ tile_y_to_latitude(latitude_to_tile_y(m_center.latitude, new_zoom) + static_cast<double>(event.y() - height() / 2) / TILE_SIZE, new_zoom),
-            tile_x_to_longitude(longitude_to_tile_x(m_center.longitude, new_zoom) + static_cast<double>(event.x() - width() / 2) / TILE_SIZE, new_zoom) });
+        set_center({ tile_y_to_latitude(latitude_to_tile_y(m_center.latitude, zoom) + static_cast<double>(event.y() - height() / 2) / TILE_SIZE, zoom),
+            tile_x_to_longitude(longitude_to_tile_x(m_center.longitude, zoom) + static_cast<double>(event.x() - width() / 2) / TILE_SIZE, zoom) });
     }
-    set_zoom(new_zoom);
+    set_zoom(zoom);
 }
 
 Optional<RefPtr<Gfx::Bitmap>> MapWidget::get_tile_image(int x, int y, int zoom, TileDownloadBehavior download_behavior)
