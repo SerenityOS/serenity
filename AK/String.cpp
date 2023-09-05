@@ -439,6 +439,11 @@ u32 String::hash() const
     return m_data->hash();
 }
 
+u32 String::ascii_case_insensitive_hash() const
+{
+    return case_insensitive_string_hash(reinterpret_cast<char const*>(bytes().data()), bytes().size());
+}
+
 Utf8View String::code_points() const
 {
     return Utf8View(bytes_as_string_view());

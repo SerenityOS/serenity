@@ -36,6 +36,7 @@ public:
 
     [[nodiscard]] bool is_empty() const;
     [[nodiscard]] unsigned hash() const;
+    [[nodiscard]] u32 ascii_case_insensitive_hash() const;
 
     explicit operator String() const;
     String to_string() const;
@@ -86,6 +87,11 @@ struct Traits<FlyString> : public GenericTraits<FlyString> {
 template<>
 struct Formatter<FlyString> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder&, FlyString const&);
+};
+
+struct ASCIICaseInsensitiveFlyStringTraits : public Traits<String> {
+    static unsigned hash(FlyString const& s) { return s.ascii_case_insensitive_hash(); }
+    static bool equals(FlyString const& a, FlyString const& b) { return a.bytes().data() == b.bytes().data() || a.bytes_as_string_view().equals_ignoring_ascii_case(b.bytes_as_string_view()); }
 };
 
 }
