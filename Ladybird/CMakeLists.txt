@@ -27,8 +27,6 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-include(use_linker)
-
 if (ENABLE_ADDRESS_SANITIZER)
     add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
     add_link_options(-fsanitize=address)
@@ -63,6 +61,7 @@ if (LADYBIRD_IS_TOP_LEVEL)
     )
     list(APPEND CMAKE_MODULE_PATH "${SERENITY_SOURCE_DIR}/Meta/CMake")
     include(cmake/EnableLagom.cmake)
+    include(use_linker)
     include(lagom_compile_options)
     include(lagom_install_options)
 else()
