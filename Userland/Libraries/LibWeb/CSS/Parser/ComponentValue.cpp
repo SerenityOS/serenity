@@ -26,6 +26,16 @@ ComponentValue::ComponentValue(NonnullRefPtr<Block> block)
 
 ComponentValue::~ComponentValue() = default;
 
+bool ComponentValue::is_function(StringView name) const
+{
+    return is_function() && function().name().equals_ignoring_ascii_case(name);
+}
+
+bool ComponentValue::is_ident(StringView ident) const
+{
+    return is(Token::Type::Ident) && token().ident().equals_ignoring_ascii_case(ident);
+}
+
 String ComponentValue::to_string() const
 {
     return m_value.visit(

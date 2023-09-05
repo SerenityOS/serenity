@@ -27,11 +27,13 @@ public:
     Block& block() const { return m_value.get<NonnullRefPtr<Block>>(); }
 
     bool is_function() const { return m_value.has<NonnullRefPtr<Function>>(); }
+    bool is_function(StringView name) const;
     Function& function() const { return m_value.get<NonnullRefPtr<Function>>(); }
 
     bool is_token() const { return m_value.has<Token>(); }
     bool is(Token::Type type) const { return is_token() && token().is(type); }
     bool is_delim(u32 delim) const { return is(Token::Type::Delim) && token().delim() == delim; }
+    bool is_ident(StringView ident) const;
     Token const& token() const { return m_value.get<Token>(); }
     operator Token() const { return m_value.get<Token>(); }
 
