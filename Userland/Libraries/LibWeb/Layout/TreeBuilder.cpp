@@ -21,6 +21,7 @@
 #include <LibWeb/HTML/HTMLButtonElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/HTML/HTMLProgressElement.h>
+#include <LibWeb/HTML/HTMLSlotElement.h>
 #include <LibWeb/Layout/ListItemBox.h>
 #include <LibWeb/Layout/ListItemMarkerBox.h>
 #include <LibWeb/Layout/Node.h>
@@ -340,6 +341,19 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
         static_cast<ListItemBox&>(*layout_node).set_marker(list_item_marker);
         element.set_pseudo_element_node({}, CSS::Selector::PseudoElement::Marker, list_item_marker);
         layout_node->append_child(*list_item_marker);
+    }
+
+    if (is<HTML::HTMLSlotElement>(dom_node)) {
+        auto slottables = static_cast<HTML::HTMLSlotElement&>(dom_node).assigned_nodes_internal();
+        push_parent(verify_cast<NodeWithStyle>(*layout_node));
+
+        for (auto const& slottable : slottables) {
+            TRY(slottable.visit([&](auto& node) -> ErrorOr<void> {
+                return create_layout_tree(node, context);
+            }));
+        }
+
+        pop_parent();
     }
 
     if (is<HTML::HTMLProgressElement>(dom_node)) {
