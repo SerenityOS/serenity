@@ -6,6 +6,7 @@
 
 #include "MapWidget.h"
 #include <LibConfig/Client.h>
+#include <LibCore/System.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
@@ -14,7 +15,15 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
+
     auto app = TRY(GUI::Application::create(arguments));
+
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/config", "rw"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/request", "rw"));
+    TRY(Core::System::unveil(nullptr, nullptr));
+
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-maps"sv));
     auto window = TRY(GUI::Window::try_create());
     window->set_title("Maps");
