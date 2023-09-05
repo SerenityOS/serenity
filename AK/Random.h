@@ -16,15 +16,11 @@
 #    include <unistd.h>
 #endif
 
-#if defined(AK_OS_MACOS)
-#    include <sys/random.h>
-#endif
-
 namespace AK {
 
 inline void fill_with_random([[maybe_unused]] Bytes bytes)
 {
-#if defined(AK_OS_SERENITY) || defined(AK_OS_ANDROID)
+#if defined(AK_OS_SERENITY) || defined(AK_OS_ANDROID) || defined(AK_OS_BSD_GENERIC)
     arc4random_buf(bytes.data(), bytes.size());
 #elif defined(OSS_FUZZ)
 #else
@@ -33,7 +29,7 @@ inline void fill_with_random([[maybe_unused]] Bytes bytes)
             byte = rand();
     };
 
-#    if defined(__unix__) or defined(AK_OS_MACOS)
+#    if defined(__unix__)
     // The maximum permitted value for the getentropy length argument.
     static constexpr size_t getentropy_length_limit = 256;
     auto iterations = bytes.size() / getentropy_length_limit;
