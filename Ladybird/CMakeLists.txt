@@ -27,7 +27,7 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-include(cmake/EnableLLD.cmake)
+include(use_linker)
 
 if (ENABLE_ADDRESS_SANITIZER)
     add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
