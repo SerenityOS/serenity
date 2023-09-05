@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2023, Bastiaan van der Plaat <bastiaan.v.d.plaat@gmail.com>
+ * Copyright (c) 2023, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -57,6 +58,13 @@ MapWidget::MapWidget(Options const& options)
     , m_attribution_url(options.attribution_url)
 {
     m_request_client = Protocol::RequestClient::try_create().release_value_but_fixme_should_propagate_errors();
+}
+
+void MapWidget::set_zoom(int zoom)
+{
+    m_zoom = min(max(zoom, ZOOM_MIN), ZOOM_MAX);
+    clear_tile_queue();
+    update();
 }
 
 void MapWidget::mousedown_event(GUI::MouseEvent& event)
@@ -145,30 +153,51 @@ void MapWidget::mousewheel_event(GUI::MouseEvent& event)
 
 Optional<RefPtr<Gfx::Bitmap>> MapWidget::get_tile_image(int x, int y)
 {
-    // Get the right tile from tiles cache
-    TileKey key = { x, y, m_zoom };
+    // Get the tile from tiles cache
+    TileKey const key = { x, y, m_zoom };
     if (auto it = m_tiles.find(key); it != m_tiles.end()) {
         if (it->value)
             return it->value;
         return {};
     }
 
-    // Add tile when not in tiles
+    // Register an empty tile so we don't send requests multiple times
     if (m_tiles.size() >= TILES_CACHE_MAX)
         m_tiles.remove(m_tiles.begin());
     m_tiles.set(key, nullptr);
+
+    // Schedule the tile download
+    m_tile_queue.enqueue(key);
+    process_tile_queue();
+    return {};
+}
+
+void MapWidget::process_tile_queue()
+{
+    if (m_active_requests.size() >= TILES_DOWNLOAD_PARALLEL_MAX)
+        return;
+    if (m_tile_queue.is_empty())
+        return;
+
+    auto tile_key = m_tile_queue.dequeue();
 
     // Start HTTP GET request to load image
     HashMap<DeprecatedString, DeprecatedString> headers;
     headers.set("User-Agent", "SerenityOS Maps");
     headers.set("Accept", "image/png");
-    URL url(MUST(String::formatted(m_tile_layer_url, m_zoom, x, y)));
+    URL url(MUST(String::formatted(m_tile_layer_url, tile_key.zoom, tile_key.x, tile_key.y)));
     auto request = m_request_client->start_request("GET", url, headers, {});
+    VERIFY(!request.is_null());
+
     m_active_requests.append(request);
-    request->on_buffered_request_finish = [this, request, url, key](bool success, auto, auto&, auto, ReadonlyBytes payload) {
-        m_active_requests.remove_all_matching([request](auto const& other_request) { return other_request->id() == request->id(); });
+    request->on_buffered_request_finish = [this, request, url, tile_key](bool success, auto, auto&, auto, ReadonlyBytes payload) {
+        auto was_active = m_active_requests.remove_first_matching([request](auto const& other_request) { return other_request->id() == request->id(); });
+        if (!was_active)
+            return;
+        deferred_invoke([this]() { this->process_tile_queue(); });
+
+        // When first image load fails set connection failed
         if (!success) {
-            // When first image load fails set connection failed
             if (!m_first_image_loaded) {
                 m_first_image_loaded = true;
                 m_connection_failed = true;
@@ -184,14 +213,24 @@ Optional<RefPtr<Gfx::Bitmap>> MapWidget::get_tile_image(int x, int y)
             dbgln("Maps: Can't decode image: {}", url);
             return;
         }
-        m_tiles.set(key, decoder->frame(0).release_value_but_fixme_should_propagate_errors().image);
+        m_tiles.set(tile_key, decoder->frame(0).release_value_but_fixme_should_propagate_errors().image);
+
+        // FIXME: only update the part of the screen that this tile covers
         update();
     };
     request->set_should_buffer_all_input(true);
     request->on_certificate_requested = []() -> Protocol::Request::CertificateAndKey { return {}; };
+}
 
-    // Return no image for now
-    return {};
+void MapWidget::clear_tile_queue()
+{
+    m_tile_queue.clear();
+
+    // FIXME: ideally we would like to abort all active requests here, but invoking `->stop()`
+    //        often causes hangs for me for some reason.
+    m_active_requests.clear_with_capacity();
+
+    m_tiles.remove_all_matching([](auto, auto const& value) -> bool { return !value; });
 }
 
 void MapWidget::paint_tiles(GUI::Painter& painter)
