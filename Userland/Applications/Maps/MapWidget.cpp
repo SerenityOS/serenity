@@ -59,6 +59,7 @@ MapWidget::MapWidget(Options const& options)
     m_request_client = Protocol::RequestClient::try_create().release_value_but_fixme_should_propagate_errors();
     if (options.attribution_enabled)
         add_panel({ options.attribution_text, Panel::Position::BottomRight, options.attribution_url, true });
+    m_marker_image = Gfx::Bitmap::load_from_file("/res/graphics/maps/marker-blue.png"sv).release_value_but_fixme_should_propagate_errors();
 }
 
 void MapWidget::set_zoom(int zoom)
@@ -114,6 +115,28 @@ void MapWidget::mousemove_event(GUI::MouseEvent& event)
         if (panel.url.has_value() && panel.rect.contains(event.x(), event.y()))
             return set_override_cursor(Gfx::StandardCursor::Hand);
     set_override_cursor(Gfx::StandardCursor::Arrow);
+
+    // Handle marker tooltip hover
+    double center_tile_x = floor(longitude_to_tile_x(m_center.longitude, m_zoom));
+    double center_tile_y = floor(latitude_to_tile_y(m_center.latitude, m_zoom));
+    double offset_x = (longitude_to_tile_x(m_center.longitude, m_zoom) - center_tile_x) * TILE_SIZE;
+    double offset_y = (latitude_to_tile_y(m_center.latitude, m_zoom) - center_tile_y) * TILE_SIZE;
+    for (auto const& marker : m_markers) {
+        if (!marker.tooltip.has_value())
+            continue;
+        RefPtr<Gfx::Bitmap> marker_image = marker.image ? marker.image : m_marker_image;
+        Gfx::IntRect marker_rect = {
+            static_cast<int>(width() / 2 + (longitude_to_tile_x(marker.latlng.longitude, m_zoom) - center_tile_x) * TILE_SIZE - offset_x) - marker_image->width() / 2,
+            static_cast<int>(height() / 2 + (latitude_to_tile_y(marker.latlng.latitude, m_zoom) - center_tile_y) * TILE_SIZE - offset_y) - marker_image->height(),
+            marker_image->width(),
+            marker_image->height()
+        };
+        if (marker_rect.contains(event.x(), event.y())) {
+            GUI::Application::the()->show_tooltip(marker.tooltip.value().to_deprecated_string(), this);
+            return;
+        }
+    }
+    GUI::Application::the()->hide_tooltip();
 }
 
 void MapWidget::mouseup_event(GUI::MouseEvent& event)
@@ -246,7 +269,7 @@ void MapWidget::clear_tile_queue()
     m_tiles.remove_all_matching([](auto, auto const& value) -> bool { return !value; });
 }
 
-void MapWidget::paint_tiles(GUI::Painter& painter)
+void MapWidget::paint_map(GUI::Painter& painter)
 {
     int center_tile_x = floor(longitude_to_tile_x(m_center.longitude, m_zoom));
     int center_tile_y = floor(latitude_to_tile_y(m_center.latitude, m_zoom));
@@ -322,6 +345,19 @@ void MapWidget::paint_tiles(GUI::Painter& painter)
                 }
             }
         }
+    }
+
+    // Draw markers
+    for (auto const& marker : m_markers) {
+        RefPtr<Gfx::Bitmap> marker_image = marker.image ? marker.image : m_marker_image;
+        Gfx::IntRect marker_rect = {
+            static_cast<int>(width() / 2 + (longitude_to_tile_x(marker.latlng.longitude, m_zoom) - center_tile_x) * TILE_SIZE - offset_x) - marker_image->width() / 2,
+            static_cast<int>(height() / 2 + (latitude_to_tile_y(marker.latlng.latitude, m_zoom) - center_tile_y) * TILE_SIZE - offset_y) - marker_image->height(),
+            marker_image->width(),
+            marker_image->height()
+        };
+        if (marker_rect.intersects(frame_inner_rect()))
+            painter.blit(marker_rect.location(), *marker_image, { 0, 0, marker_image->width(), marker_image->height() }, 1);
     }
 }
 
@@ -400,7 +436,7 @@ void MapWidget::paint_event(GUI::PaintEvent& event)
     if (m_connection_failed)
         return painter.draw_text(frame_inner_rect(), "Failed to fetch map tiles :^("sv, Gfx::TextAlignment::Center, panel_foreground_color);
 
-    paint_tiles(painter);
+    paint_map(painter);
     if (m_scale_enabled)
         paint_scale(painter);
     paint_panels(painter);

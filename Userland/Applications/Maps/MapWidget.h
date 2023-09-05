@@ -48,6 +48,22 @@ public:
     int zoom() const { return m_zoom; }
     void set_zoom(int zoom);
 
+    struct Marker {
+        LatLng latlng;
+        Optional<String> tooltip {};
+        RefPtr<Gfx::Bitmap> image { nullptr };
+    };
+    void add_marker(Marker const& marker)
+    {
+        m_markers.append(marker);
+        update();
+    }
+    void clear_markers()
+    {
+        m_markers.clear();
+        update();
+    }
+
     struct Panel {
         enum class Position {
             TopLeft,
@@ -93,9 +109,12 @@ public:
         Download,
     };
 
-private:
+protected:
     MapWidget(Options const&);
 
+    RefPtr<Protocol::RequestClient> request_client() const { return m_request_client; }
+
+private:
     virtual void doubleclick_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
@@ -109,7 +128,7 @@ private:
     void process_tile_queue();
     void clear_tile_queue();
 
-    void paint_tiles(GUI::Painter&);
+    void paint_map(GUI::Painter&);
     void paint_scale_line(GUI::Painter&, String label, Gfx::IntRect rect);
     void paint_scale(GUI::Painter&);
     void paint_panels(GUI::Painter&);
@@ -131,6 +150,7 @@ private:
     RefPtr<Protocol::RequestClient> m_request_client;
     Vector<RefPtr<Protocol::Request>, TILES_DOWNLOAD_PARALLEL_MAX> m_active_requests;
     Queue<TileKey, 32> m_tile_queue;
+    RefPtr<Gfx::Bitmap> m_marker_image;
     String m_tile_layer_url;
     LatLng m_center;
     int m_zoom {};
@@ -144,6 +164,7 @@ private:
     bool m_first_image_loaded { false };
     bool m_connection_failed { false };
     OrderedHashMap<TileKey, RefPtr<Gfx::Bitmap>> m_tiles;
+    Vector<Marker> m_markers;
     Vector<Panel> m_panels;
 };
 
