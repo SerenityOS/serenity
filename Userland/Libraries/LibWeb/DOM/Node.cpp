@@ -32,6 +32,7 @@
 #include <LibWeb/DOM/StaticNodeList.h>
 #include <LibWeb/HTML/CustomElements/CustomElementReactionNames.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
+#include <LibWeb/HTML/HTMLSlotElement.h>
 #include <LibWeb/HTML/HTMLStyleElement.h>
 #include <LibWeb/HTML/Navigable.h>
 #include <LibWeb/HTML/NavigableContainer.h>
@@ -442,9 +443,29 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
         else
             insert_before_impl(*node_to_insert, child);
 
-        // FIXME: 4. If parent is a shadow host and node is a slottable, then assign a slot for node.
-        // FIXME: 5. If parent’s root is a shadow root, and parent is a slot whose assigned nodes is the empty list, then run signal a slot change for parent.
-        // FIXME: 6. Run assign slottables for a tree with node’s root.
+        // 4. If parent is a shadow host whose shadow root’s slot assignment is "named" and node is a slottable, then
+        //    assign a slot for node.
+        if (is_element()) {
+            auto& element = static_cast<DOM::Element&>(*this);
+
+            auto is_named_shadow_host = element.is_shadow_host()
+                && element.shadow_root_internal()->slot_assignment() == Bindings::SlotAssignmentMode::Named;
+
+            if (is_named_shadow_host && node->is_slottable())
+                assign_a_slot(node->as_slottable());
+        }
+
+        // 5. If parent’s root is a shadow root, and parent is a slot whose assigned nodes is the empty list, then run
+        //    signal a slot change for parent.
+        if (root().is_shadow_root() && is<HTML::HTMLSlotElement>(*this)) {
+            auto& slot = static_cast<HTML::HTMLSlotElement&>(*this);
+
+            if (slot.assigned_nodes_internal().is_empty())
+                signal_a_slot_change(slot);
+        }
+
+        // 6. Run assign slottables for a tree with node’s root.
+        assign_slottables_for_a_tree(node->root());
 
         // 7. For each shadow-including inclusive descendant inclusiveDescendant of node, in shadow-including tree order:
         node_to_insert->for_each_shadow_including_inclusive_descendant([&](Node& inclusive_descendant) {
@@ -587,13 +608,34 @@ void Node::remove(bool suppress_observers)
     // 11. Remove node from its parent’s children.
     parent->remove_child_impl(*this);
 
-    // FIXME: 12. If node is assigned, then run assign slottables for node’s assigned slot.
+    // 12. If node is assigned, then run assign slottables for node’s assigned slot.
+    if (auto assigned_slot = assigned_slot_for_node(*this))
+        assign_slottables(*assigned_slot);
 
-    // FIXME: 13. If parent’s root is a shadow root, and parent is a slot whose assigned nodes is the empty list, then run signal a slot change for parent.
+    // 13. If parent’s root is a shadow root, and parent is a slot whose assigned nodes is the empty list, then run
+    //     signal a slot change for parent.
+    if (parent->root().is_shadow_root() && is<HTML::HTMLSlotElement>(parent)) {
+        auto& slot = static_cast<HTML::HTMLSlotElement&>(*parent);
 
-    // FIXME: 14. If node has an inclusive descendant that is a slot, then:
-    //     1. Run assign slottables for a tree with parent’s root.
-    //     2. Run assign slottables for a tree with node.
+        if (slot.assigned_nodes_internal().is_empty())
+            signal_a_slot_change(slot);
+    }
+
+    // 14. If node has an inclusive descendant that is a slot, then:
+    auto has_descendent_slot = false;
+
+    for_each_in_inclusive_subtree_of_type<HTML::HTMLSlotElement>([&](auto const&) {
+        has_descendent_slot = true;
+        return IterationDecision::Break;
+    });
+
+    if (has_descendent_slot) {
+        // 1. Run assign slottables for a tree with parent’s root.
+        assign_slottables_for_a_tree(parent->root());
+
+        // 2. Run assign slottables for a tree with node.
+        assign_slottables_for_a_tree(*this);
+    }
 
     // 15. Run the removing steps with node and parent.
     removed_from(parent);
