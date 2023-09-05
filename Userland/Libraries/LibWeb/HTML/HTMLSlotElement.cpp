@@ -15,6 +15,33 @@ namespace Web::HTML {
 HTMLSlotElement::HTMLSlotElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
+    // https://dom.spec.whatwg.org/#ref-for-concept-element-attributes-change-ext
+    add_attribute_change_steps([this](auto const& local_name, auto const& old_value, auto const& value, auto const& namespace_) {
+        // 1. If element is a slot, localName is name, and namespace is null, then:
+        if (local_name == AttributeNames::name && namespace_.is_null()) {
+            // 1. If value is oldValue, then return.
+            if (value == old_value)
+                return;
+
+            // 2. If value is null and oldValue is the empty string, then return.
+            if (value.is_null() && old_value == DeprecatedString::empty())
+                return;
+
+            // 3. If value is the empty string and oldValue is null, then return.
+            if (value == DeprecatedString::empty() && old_value.is_null())
+                return;
+
+            // 4. If value is null or the empty string, then set element’s name to the empty string.
+            if (value.is_empty())
+                set_slot_name({});
+            // 5. Otherwise, set element’s name to value.
+            else
+                set_slot_name(MUST(String::from_deprecated_string(value)));
+
+            // 6. Run assign slottables for a tree with element’s root.
+            DOM::assign_slottables_for_a_tree(root());
+        }
+    });
 }
 
 HTMLSlotElement::~HTMLSlotElement() = default;

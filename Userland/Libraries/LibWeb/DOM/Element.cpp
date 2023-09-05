@@ -71,6 +71,38 @@ Element::Element(Document& document, DOM::QualifiedName qualified_name)
     , m_qualified_name(move(qualified_name))
 {
     make_html_uppercased_qualified_name();
+
+    // https://dom.spec.whatwg.org/#ref-for-concept-element-attributes-change-ext①
+    add_attribute_change_steps([this](auto const& local_name, auto const& old_value, auto const& value, auto const& namespace_) {
+        // 1. If localName is slot and namespace is null, then:
+        if (local_name == HTML::AttributeNames::slot && namespace_.is_null()) {
+            // 1. If value is oldValue, then return.
+            if (value == old_value)
+                return;
+
+            // 2. If value is null and oldValue is the empty string, then return.
+            if (value.is_null() && old_value == DeprecatedString::empty())
+                return;
+
+            // 3. If value is the empty string and oldValue is null, then return.
+            if (value == DeprecatedString::empty() && old_value.is_null())
+                return;
+
+            // 4. If value is null or the empty string, then set element’s name to the empty string.
+            if (value.is_empty())
+                set_slottable_name({});
+            // 5. Otherwise, set element’s name to value.
+            else
+                set_slottable_name(MUST(String::from_deprecated_string(value)));
+
+            // 6. If element is assigned, then run assign slottables for element’s assigned slot.
+            if (auto assigned_slot = assigned_slot_internal())
+                assign_slottables(*assigned_slot);
+
+            // 7. Run assign a slot for element.
+            assign_a_slot(JS::NonnullGCPtr { *this });
+        }
+    });
 }
 
 Element::~Element() = default;

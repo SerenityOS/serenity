@@ -84,8 +84,19 @@ JS::GCPtr<HTML::HTMLSlotElement> find_a_slot(Slottable const& slottable, OpenFla
         return slot;
     }
 
-    // FIXME: 6. Return the first slot in tree order in shadow’s descendants whose name is slottable’s name, if any; otherwise null.
-    return nullptr;
+    // 6. Return the first slot in tree order in shadow’s descendants whose name is slottable’s name, if any; otherwise null.
+    auto const& slottable_name = slottable.visit([](auto const& node) { return node->slottable_name(); });
+    JS::GCPtr<HTML::HTMLSlotElement> slot;
+
+    shadow->for_each_in_subtree_of_type<HTML::HTMLSlotElement>([&](auto& child) {
+        if (child.slot_name() != slottable_name)
+            return IterationDecision::Continue;
+
+        slot = child;
+        return IterationDecision::Break;
+    });
+
+    return slot;
 }
 
 // https://dom.spec.whatwg.org/#find-slotables
@@ -118,8 +129,19 @@ Vector<Slottable> find_slottables(JS::NonnullGCPtr<HTML::HTMLSlotElement> slot)
     }
     // 6. Otherwise, for each slottable child slottable of host, in tree order:
     else {
-        // FIXME: 1. Let foundSlot be the result of finding a slot given slottable.
-        // FIXME: 2. If foundSlot is slot, then append slottable to result.
+        host->for_each_child([&](auto& node) {
+            if (!node.is_slottable())
+                return;
+
+            auto slottable = node.as_slottable();
+
+            // 1. Let foundSlot be the result of finding a slot given slottable.
+            auto found_slot = find_a_slot(slottable);
+
+            // 2. If foundSlot is slot, then append slottable to result.
+            if (found_slot == slot)
+                result.append(move(slottable));
+        });
     }
 
     // 7. Return result.
