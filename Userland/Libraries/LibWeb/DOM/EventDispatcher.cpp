@@ -10,13 +10,17 @@
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/ShadowRoot.h>
+#include <LibWeb/DOM/Slottable.h>
+#include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/EventNames.h>
+#include <LibWeb/HTML/HTMLSlotElement.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
@@ -241,7 +245,11 @@ bool EventDispatcher::dispatch(JS::NonnullGCPtr<EventTarget> target, Event& even
         if (is_activation_event && target->activation_behavior)
             activation_target = target;
 
-        // FIXME: 6. Let slottable be target, if target is a slottable and is assigned, and null otherwise.
+        // 6. Let slottable be target, if target is a slottable and is assigned, and null otherwise.
+        JS::GCPtr<EventTarget> slottable;
+
+        if (is<Node>(*target) && is_an_assigned_slottable(static_cast<Node&>(*target)))
+            slottable = target;
 
         // 7. Let slot-in-closed-tree be false
         bool slot_in_closed_tree = false;
@@ -251,11 +259,24 @@ bool EventDispatcher::dispatch(JS::NonnullGCPtr<EventTarget> target, Event& even
 
         // 9. While parent is non-null:
         while (parent) {
-            // FIXME: 1. If slottable is non-null:
-            //     1. Assert: parent is a slot.
-            //     2. Set slottable to null.
-            //     3. If parent’s root is a shadow root whose mode is "closed", then set slot-in-closed-tree to true.
-            // FIXME: 2. If parent is a slottable and is assigned, then set slottable to parent.
+            // 1. If slottable is non-null:
+            if (slottable != nullptr) {
+                // 1. Assert: parent is a slot.
+                VERIFY(is<HTML::HTMLSlotElement>(parent));
+
+                // 2. Set slottable to null.
+                slottable = nullptr;
+
+                // 3. If parent’s root is a shadow root whose mode is "closed", then set slot-in-closed-tree to true.
+                auto& parent_root = static_cast<Node&>(*parent).root();
+
+                if (parent_root.is_shadow_root() && static_cast<ShadowRoot&>(parent_root).mode() == Bindings::ShadowRootMode::Closed)
+                    slot_in_closed_tree = true;
+            }
+
+            // 2. If parent is a slottable and is assigned, then set slottable to parent.
+            if (is<Node>(*parent) && is_an_assigned_slottable(static_cast<Node&>(*parent)))
+                slottable = parent;
 
             // 3. Let relatedTarget be the result of retargeting event’s relatedTarget against parent.
             related_target = retarget(event.related_target(), parent);
