@@ -44,6 +44,8 @@ private:
     static constexpr u32 fs_info_signature_2 = 0x61417272;
     static constexpr u32 fs_info_signature_3 = 0xAA550000;
 
+    static constexpr u32 fs_info_data_unknown = 0xFFFFFFFF;
+
     static constexpr u32 first_data_cluster = 2;
 
     static constexpr u32 cluster_number_mask = 0x0FFFFFFF;
@@ -52,6 +54,7 @@ private:
     FATFSInfo const* fs_info() const { return reinterpret_cast<FATFSInfo const*>(m_fs_info->data()); }
 
     BlockBasedFileSystem::BlockIndex first_block_of_cluster(u32 cluster) const;
+    ErrorOr<u32> allocate_cluster();
 
     ErrorOr<u32> fat_read(u32 cluster);
     ErrorOr<void> fat_write(u32 cluster, u32 value);

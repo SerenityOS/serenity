@@ -117,6 +117,20 @@ u8 FATFS::internal_file_type_to_directory_entry_type(DirectoryEntryView const& e
     return DT_UNKNOWN;
 }
 
+ErrorOr<u32> FATFS::allocate_cluster()
+{
+    MutexLocker locker(m_lock);
+
+    for (u32 i = fs_info()->free_cluster_lookup_hint != fs_info_data_unknown ? fs_info()->free_cluster_lookup_hint : first_data_cluster; i < boot_record()->sector_count / boot_record()->sectors_per_cluster; i++) {
+        if (TRY(fat_read(i)) == 0) {
+            TRY(fat_write(i, FATInode::no_more_clusters));
+            return i;
+        }
+    }
+
+    return Error::from_errno(ENOSPC);
+}
+
 ErrorOr<u32> FATFS::fat_read(u32 cluster)
 {
     MutexLocker locker(m_lock);
