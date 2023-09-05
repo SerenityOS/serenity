@@ -151,15 +151,17 @@ void MapWidget::mousewheel_event(GUI::MouseEvent& event)
     set_zoom(new_zoom);
 }
 
-Optional<RefPtr<Gfx::Bitmap>> MapWidget::get_tile_image(int x, int y)
+Optional<RefPtr<Gfx::Bitmap>> MapWidget::get_tile_image(int x, int y, int zoom, TileDownloadBehavior download_behavior)
 {
     // Get the tile from tiles cache
-    TileKey const key = { x, y, m_zoom };
+    TileKey const key = { x, y, zoom };
     if (auto it = m_tiles.find(key); it != m_tiles.end()) {
         if (it->value)
             return it->value;
         return {};
     }
+    if (download_behavior == TileDownloadBehavior::DoNotDownload)
+        return {};
 
     // Register an empty tile so we don't send requests multiple times
     if (m_tiles.size() >= TILES_CACHE_MAX)
@@ -252,10 +254,62 @@ void MapWidget::paint_tiles(GUI::Painter& painter)
             if (tile_x < 0 || tile_y < 0 || tile_x > pow(2, m_zoom) - 1 || tile_y > pow(2, m_zoom) - 1)
                 continue;
 
+            auto tile_rect = Gfx::IntRect {
+                static_cast<int>(width() / 2 + dx * TILE_SIZE - offset_x),
+                static_cast<int>(height() / 2 + dy * TILE_SIZE - offset_y),
+                TILE_SIZE,
+                TILE_SIZE,
+            };
+            if (!painter.clip_rect().intersects(tile_rect))
+                continue;
+
             // Get tile, when it has a loaded image draw it at the right position
-            auto tile_image = get_tile_image(tile_x, tile_y);
-            if (tile_image.has_value())
-                painter.blit({ static_cast<int>(width() / 2 + dx * TILE_SIZE - offset_x), static_cast<int>(height() / 2 + dy * TILE_SIZE - offset_y) }, *tile_image.release_value(), { 0, 0, TILE_SIZE, TILE_SIZE }, 1);
+            auto tile_image = get_tile_image(tile_x, tile_y, m_zoom, TileDownloadBehavior::Download);
+            auto const tile_source = Gfx::IntRect { 0, 0, TILE_SIZE, TILE_SIZE };
+            if (tile_image.has_value()) {
+                painter.blit(tile_rect.location(), *tile_image.release_value(), tile_source, 1);
+                continue;
+            }
+
+            // Fallback: try to compose the tile from already cached tiles from a higher zoom level
+            auto cached_tiles_used = 0;
+            if (m_zoom < ZOOM_MAX) {
+                auto const child_top_left_tile_x = tile_x * 2;
+                auto const child_top_left_tile_y = tile_y * 2;
+                for (auto child_tile_x = child_top_left_tile_x; child_tile_x <= child_top_left_tile_x + 1; ++child_tile_x) {
+                    for (auto child_tile_y = child_top_left_tile_y; child_tile_y <= child_top_left_tile_y + 1; ++child_tile_y) {
+                        auto child_tile = get_tile_image(child_tile_x, child_tile_y, m_zoom + 1, TileDownloadBehavior::DoNotDownload);
+                        if (!child_tile.has_value())
+                            continue;
+
+                        auto target_rect = tile_rect;
+                        target_rect.set_size(TILE_SIZE / 2, TILE_SIZE / 2);
+                        if ((child_tile_x & 1) > 0)
+                            target_rect.translate_by(TILE_SIZE / 2, 0);
+                        if ((child_tile_y & 1) > 0)
+                            target_rect.translate_by(0, TILE_SIZE / 2);
+
+                        painter.draw_scaled_bitmap(target_rect, *child_tile.release_value(), tile_source, 1.f, Gfx::Painter::ScalingMode::BoxSampling);
+                        ++cached_tiles_used;
+                    }
+                }
+            }
+
+            // Fallback: try to use an already cached tile from a lower zoom level
+            // Note: we only want to try this if we did not find exactly 4 cached child tiles in the previous fallback (i.e. there are gaps)
+            if (m_zoom > ZOOM_MIN && cached_tiles_used < 4) {
+                auto const parent_tile_x = tile_x / 2;
+                auto const parent_tile_y = tile_y / 2;
+                auto larger_tile = get_tile_image(parent_tile_x, parent_tile_y, m_zoom - 1, TileDownloadBehavior::DoNotDownload);
+                if (larger_tile.has_value()) {
+                    auto source_rect = Gfx::IntRect { 0, 0, TILE_SIZE / 2, TILE_SIZE / 2 };
+                    if ((tile_x & 1) > 0)
+                        source_rect.translate_by(TILE_SIZE / 2, 0);
+                    if ((tile_y & 1) > 0)
+                        source_rect.translate_by(0, TILE_SIZE / 2);
+                    painter.draw_scaled_bitmap(tile_rect, *larger_tile.release_value(), source_rect, 1.f, Gfx::Painter::ScalingMode::BilinearBlend);
+                }
+            }
         }
     }
 }

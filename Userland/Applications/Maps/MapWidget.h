@@ -64,6 +64,11 @@ public:
         }
     };
 
+    enum class TileDownloadBehavior {
+        DoNotDownload,
+        Download,
+    };
+
 private:
     MapWidget(Options const&);
 
@@ -77,7 +82,7 @@ private:
 
     virtual void paint_event(GUI::PaintEvent&) override;
 
-    Optional<RefPtr<Gfx::Bitmap>> get_tile_image(int x, int y);
+    Optional<RefPtr<Gfx::Bitmap>> get_tile_image(int x, int y, int zoom, TileDownloadBehavior);
     void process_tile_queue();
     void clear_tile_queue();
 
