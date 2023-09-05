@@ -2223,8 +2223,7 @@ RefPtr<Gfx::Font const> StyleComputer::compute_font_for_style_values(DOM::Elemen
         }
         if (maybe_length.has_value()) {
             auto px = maybe_length.value().to_px(length_resolution_context).to_int();
-            if (px != 0)
-                font_size_in_px = px;
+            font_size_in_px = px;
         }
     }
 
