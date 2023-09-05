@@ -35,8 +35,8 @@ private:
         u8 presentation_size;
         u16 weight;
         u8 slope;
-        DeprecatedString name;
-        DeprecatedString family;
+        String name;
+        String family;
         bool is_fixed_width;
     } m_new_font_metadata;
 

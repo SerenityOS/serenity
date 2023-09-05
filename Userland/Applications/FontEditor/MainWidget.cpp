@@ -532,13 +532,13 @@ ErrorOr<void> MainWidget::create_widgets()
 
     m_name_textbox = find_descendant_of_type_named<GUI::TextBox>("name_textbox");
     m_name_textbox->on_change = [this] {
-        m_font->set_name(m_name_textbox->text());
+        m_font->set_name(MUST(String::from_deprecated_string(m_name_textbox->text())));
         did_modify_font();
     };
 
     m_family_textbox = find_descendant_of_type_named<GUI::TextBox>("family_textbox");
     m_family_textbox->on_change = [this] {
-        m_font->set_family(m_family_textbox->text());
+        m_font->set_family(MUST(String::from_deprecated_string(m_family_textbox->text())));
         did_modify_font();
     };
 

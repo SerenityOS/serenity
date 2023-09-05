@@ -321,14 +321,14 @@ static ErrorOr<FontInfo> load_font(StringView path, StringView mime_type, Nonnul
 {
     if (path.ends_with(".font"sv)) {
         auto font = TRY(Gfx::BitmapFont::try_load_from_mapped_file(mapped_file));
-        auto typeface = TRY(try_make_ref_counted<Gfx::Typeface>(font->family(), font->variant()));
+        auto typeface = TRY(try_make_ref_counted<Gfx::Typeface>(font->family().to_deprecated_string(), font->variant().to_deprecated_string()));
         typeface->add_bitmap_font(move(font));
         return FontInfo { FontInfo::Format::BitmapFont, move(typeface) };
     }
 
     if (mime_type == "font/otf" || mime_type == "font/ttf") {
         auto font = TRY(OpenType::Font::try_load_from_externally_owned_memory(mapped_file->bytes()));
-        auto typeface = TRY(try_make_ref_counted<Gfx::Typeface>(font->family(), font->variant()));
+        auto typeface = TRY(try_make_ref_counted<Gfx::Typeface>(font->family().to_deprecated_string(), font->variant().to_deprecated_string()));
         typeface->set_vector_font(move(font));
         return FontInfo {
             mime_type == "font/otf" ? FontInfo::Format::OpenType : FontInfo::Format::TrueType,
@@ -338,7 +338,7 @@ static ErrorOr<FontInfo> load_font(StringView path, StringView mime_type, Nonnul
 
     if (mime_type == "font/woff" || mime_type == "font/woff2") {
         auto font = TRY(WOFF::Font::try_load_from_externally_owned_memory(mapped_file->bytes()));
-        auto typeface = TRY(try_make_ref_counted<Gfx::Typeface>(font->family(), font->variant()));
+        auto typeface = TRY(try_make_ref_counted<Gfx::Typeface>(font->family().to_deprecated_string(), font->variant().to_deprecated_string()));
         typeface->set_vector_font(move(font));
         return FontInfo {
             mime_type == "font/woff" ? FontInfo::Format::WOFF : FontInfo::Format::WOFF2,

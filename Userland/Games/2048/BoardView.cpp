@@ -53,7 +53,7 @@ void BoardView::pick_font()
             return;
         auto size = font.pixel_size_rounded_up();
         if (size * 2 <= m_cell_size && size > best_font_size) {
-            best_font_name = String::from_deprecated_string(font.qualified_name()).release_value_but_fixme_should_propagate_errors();
+            best_font_name = font.qualified_name();
             best_font_size = size;
         }
     });

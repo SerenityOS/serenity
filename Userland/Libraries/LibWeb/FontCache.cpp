@@ -21,7 +21,7 @@ RefPtr<Gfx::Font const> FontCache::get(FontSelector const& font_selector) const
 NonnullRefPtr<Gfx::Font const> FontCache::scaled_font(Gfx::Font const& font, float scale_factor)
 {
     auto device_font_pt_size = font.point_size() * scale_factor;
-    FontSelector font_selector = { FlyString::from_deprecated_fly_string(font.family()).release_value_but_fixme_should_propagate_errors(), device_font_pt_size, font.weight(), font.width(), font.slope() };
+    FontSelector font_selector = { font.family(), device_font_pt_size, font.weight(), font.width(), font.slope() };
     if (auto cached_font = get(font_selector)) {
         return *cached_font;
     }

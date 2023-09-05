@@ -87,7 +87,7 @@ void FontPlugin::update_generic_fonts()
                 gfx_font = Gfx::FontDatabase::default_font();
         }
 
-        m_generic_font_names[static_cast<size_t>(generic_font)] = gfx_font->family();
+        m_generic_font_names[static_cast<size_t>(generic_font)] = gfx_font->family().to_deprecated_string();
     };
 
     // Fallback fonts to look for if Gfx::Font can't load expected font

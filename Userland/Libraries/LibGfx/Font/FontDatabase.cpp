@@ -143,21 +143,21 @@ void FontDatabase::load_all_fonts_from_path(DeprecatedString const& root)
             if (path.ends_with(".font"sv)) {
                 if (auto font_or_error = Gfx::BitmapFont::try_load_from_file(path); !font_or_error.is_error()) {
                     auto font = font_or_error.release_value();
-                    m_private->full_name_to_font_map.set(font->qualified_name(), *font);
-                    auto typeface = get_or_create_typeface(font->family(), font->variant());
+                    m_private->full_name_to_font_map.set(font->qualified_name().to_deprecated_string(), *font);
+                    auto typeface = get_or_create_typeface(font->family().to_deprecated_string(), font->variant().to_deprecated_string());
                     typeface->add_bitmap_font(font);
                 }
             } else if (path.ends_with(".ttf"sv)) {
                 // FIXME: What about .otf
                 if (auto font_or_error = OpenType::Font::try_load_from_file(path); !font_or_error.is_error()) {
                     auto font = font_or_error.release_value();
-                    auto typeface = get_or_create_typeface(font->family(), font->variant());
+                    auto typeface = get_or_create_typeface(font->family().to_deprecated_string(), font->variant().to_deprecated_string());
                     typeface->set_vector_font(move(font));
                 }
             } else if (path.ends_with(".woff"sv)) {
                 if (auto font_or_error = WOFF::Font::try_load_from_file(path); !font_or_error.is_error()) {
                     auto font = font_or_error.release_value();
-                    auto typeface = get_or_create_typeface(font->family(), font->variant());
+                    auto typeface = get_or_create_typeface(font->family().to_deprecated_string(), font->variant().to_deprecated_string());
                     typeface->set_vector_font(move(font));
                 }
             }

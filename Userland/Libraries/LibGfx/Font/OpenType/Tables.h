@@ -326,10 +326,10 @@ public:
     };
     static Optional<Name> from_slice(ReadonlyBytes);
 
-    DeprecatedString family_name() const { return string_for_id(NameId::FamilyName); }
-    DeprecatedString subfamily_name() const { return string_for_id(NameId::SubfamilyName); }
-    DeprecatedString typographic_family_name() const { return string_for_id(NameId::TypographicFamilyName); }
-    DeprecatedString typographic_subfamily_name() const { return string_for_id(NameId::TypographicSubfamilyName); }
+    String family_name() const { return string_for_id(NameId::FamilyName); }
+    String subfamily_name() const { return string_for_id(NameId::SubfamilyName); }
+    String typographic_family_name() const { return string_for_id(NameId::TypographicFamilyName); }
+    String typographic_subfamily_name() const { return string_for_id(NameId::TypographicSubfamilyName); }
 
 private:
     // https://learn.microsoft.com/en-us/typography/opentype/spec/name#name-records
@@ -373,7 +373,7 @@ private:
     {
     }
 
-    DeprecatedString string_for_id(NameId) const;
+    [[nodiscard]] String string_for_id(NameId) const;
 
     ReadonlyBytes m_slice;
 };

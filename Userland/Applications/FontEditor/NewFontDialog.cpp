@@ -218,8 +218,8 @@ NewFontDialog::NewFontDialog(GUI::Window* parent_window)
 
 void NewFontDialog::save_metadata()
 {
-    m_new_font_metadata.name = m_name_textbox->text();
-    m_new_font_metadata.family = m_family_textbox->text();
+    m_new_font_metadata.name = MUST(String::from_deprecated_string(m_name_textbox->text()));
+    m_new_font_metadata.family = MUST(String::from_deprecated_string(m_family_textbox->text()));
     m_new_font_metadata.weight = Gfx::name_to_weight(m_weight_combobox->text());
     m_new_font_metadata.slope = Gfx::name_to_slope(m_slope_combobox->text());
     m_new_font_metadata.presentation_size = m_presentation_spinbox->value();

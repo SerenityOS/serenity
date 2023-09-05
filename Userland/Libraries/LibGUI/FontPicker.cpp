@@ -190,15 +190,15 @@ void FontPicker::set_font(Gfx::Font const* font)
         return;
     }
 
-    m_family = font->family();
-    m_variant = font->variant();
+    m_family = font->family().to_deprecated_string();
+    m_variant = font->variant().to_deprecated_string();
     m_size = font->presentation_size();
 
-    auto family_index = m_families.find_first_index(m_font->family());
+    auto family_index = m_families.find_first_index(m_font->family().to_deprecated_string());
     if (family_index.has_value())
         m_family_list_view->set_cursor(m_family_list_view->model()->index(family_index.value()), GUI::AbstractView::SelectionUpdate::Set);
 
-    auto variant_index = m_variants.find_first_index(m_font->variant());
+    auto variant_index = m_variants.find_first_index(m_font->variant().to_deprecated_string());
     if (variant_index.has_value())
         m_variant_list_view->set_cursor(m_variant_list_view->model()->index(variant_index.value()), GUI::AbstractView::SelectionUpdate::Set);
 

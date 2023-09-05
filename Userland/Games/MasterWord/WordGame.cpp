@@ -63,7 +63,7 @@ void WordGame::pick_font()
             return;
         auto size = font.pixel_size_rounded_up();
         if (size * 2 <= m_letter_height && size > best_font_size) {
-            best_font_name = font.qualified_name();
+            best_font_name = font.qualified_name().to_deprecated_string();
             best_font_size = size;
         }
     });
