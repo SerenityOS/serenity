@@ -184,7 +184,7 @@ static void ladybird_application_init([[maybe_unused]] LadybirdApplication* self
     new (&self->incognito_cookie_jar) OwnPtr<WebView::CookieJar>;
 
     g_application_add_main_option(g_app, "webdriver-content-path", 0,
-        G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME,
+        G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_FILENAME,
         _("Path to WebDriver IPC for WebContent"), "path");
 
     g_action_map_add_action_entries(G_ACTION_MAP(self), app_entries, G_N_ELEMENTS(app_entries), self);
