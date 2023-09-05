@@ -183,6 +183,11 @@ unsigned Traits<FlyString>::hash(FlyString const& fly_string)
     return fly_string.hash();
 }
 
+int FlyString::operator<=>(FlyString const& other) const
+{
+    return bytes_as_string_view().compare(other.bytes_as_string_view());
+}
+
 ErrorOr<void> Formatter<FlyString>::format(FormatBuilder& builder, FlyString const& fly_string)
 {
     return Formatter<StringView>::format(builder, fly_string.bytes_as_string_view());

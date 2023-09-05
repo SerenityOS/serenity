@@ -50,6 +50,8 @@ public:
     [[nodiscard]] bool operator==(StringView) const;
     [[nodiscard]] bool operator==(char const*) const;
 
+    [[nodiscard]] int operator<=>(FlyString const& other) const;
+
     static void did_destroy_fly_string_data(Badge<Detail::StringData>, StringView);
     [[nodiscard]] uintptr_t data(Badge<String>) const;
 
