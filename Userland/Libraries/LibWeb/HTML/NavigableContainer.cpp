@@ -109,7 +109,8 @@ WebIDL::ExceptionOr<void> NavigableContainer::create_new_child_navigable()
         auto parent_doc_state = parent_navigable->active_session_history_entry()->document_state;
 
         // 2. Let targetStepSHE be the first session history entry in traversable's session history entries whose document state equals parentDocState.
-        auto target_step_she = *(traversable->session_history_entries().find_if([parent_doc_state](auto& entry) {
+        // NOTE: We need to look for parent document state in parent navigable instead of traversable as specification says. https://github.com/whatwg/html/issues/9686
+        auto target_step_she = *(parent_navigable->get_session_history_entries().find_if([parent_doc_state](auto& entry) {
             return entry->document_state == parent_doc_state;
         }));
 
