@@ -1,15 +1,21 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/ShadowRoot.h>
+#include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/EventLoop/TaskQueue.h>
 #include <LibWeb/HTML/HTMLDetailsElement.h>
+#include <LibWeb/HTML/HTMLSlotElement.h>
 #include <LibWeb/HTML/HTMLSummaryElement.h>
 #include <LibWeb/HTML/ToggleEvent.h>
+#include <LibWeb/Namespace.h>
 
 namespace Web::HTML {
 
@@ -20,10 +26,19 @@ HTMLDetailsElement::HTMLDetailsElement(DOM::Document& document, DOM::QualifiedNa
 
 HTMLDetailsElement::~HTMLDetailsElement() = default;
 
+void HTMLDetailsElement::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_summary_slot);
+    visitor.visit(m_descendants_slot);
+}
+
 void HTMLDetailsElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLDetailsElementPrototype>(realm, "HTMLDetailsElement"));
+
+    create_shadow_tree(realm).release_value_but_fixme_should_propagate_errors();
 }
 
 void HTMLDetailsElement::attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value)
@@ -40,7 +55,15 @@ void HTMLDetailsElement::attribute_changed(DeprecatedFlyString const& name, Depr
         else {
             queue_a_details_toggle_event_task("open"_string, "closed"_string);
         }
+
+        update_shadow_tree_style();
     }
+}
+
+void HTMLDetailsElement::children_changed()
+{
+    Base::children_changed();
+    update_shadow_tree_slots();
 }
 
 // https://html.spec.whatwg.org/multipage/interactive-elements.html#queue-a-details-toggle-event-task
@@ -79,6 +102,72 @@ void HTMLDetailsElement::queue_a_details_toggle_event_task(String old_state, Str
         .task_id = task_id,
         .old_state = move(old_state),
     };
+}
+
+// https://html.spec.whatwg.org/#the-details-and-summary-elements
+WebIDL::ExceptionOr<void> HTMLDetailsElement::create_shadow_tree(JS::Realm& realm)
+{
+    // The element is also expected to have an internal shadow tree with two slots.
+    auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm, document(), *this, Bindings::ShadowRootMode::Closed);
+    shadow_root->set_slot_assignment(Bindings::SlotAssignmentMode::Manual);
+
+    // The first slot is expected to take the details element's first summary element child, if any.
+    auto summary_slot = TRY(DOM::create_element(document(), HTML::TagNames::slot, Namespace::HTML));
+    MUST(shadow_root->append_child(summary_slot));
+
+    // The second slot is expected to take the details element's remaining descendants, if any.
+    auto descendants_slot = TRY(DOM::create_element(document(), HTML::TagNames::slot, Namespace::HTML));
+    MUST(shadow_root->append_child(descendants_slot));
+
+    m_summary_slot = static_cast<HTML::HTMLSlotElement&>(*summary_slot);
+    m_descendants_slot = static_cast<HTML::HTMLSlotElement&>(*descendants_slot);
+    set_shadow_root(shadow_root);
+
+    return {};
+}
+
+void HTMLDetailsElement::update_shadow_tree_slots()
+{
+    Vector<HTMLSlotElement::SlottableHandle> summary_assignment;
+    Vector<HTMLSlotElement::SlottableHandle> descendants_assignment;
+
+    auto* summary = first_child_of_type<HTMLSummaryElement>();
+    if (summary != nullptr)
+        summary_assignment.append(JS::make_handle(static_cast<DOM::Element&>(*summary)));
+
+    for_each_in_subtree([&](auto& child) {
+        if (&child == summary)
+            return IterationDecision::Continue;
+        if (!child.is_slottable())
+            return IterationDecision::Continue;
+
+        child.as_slottable().visit([&](auto& node) {
+            descendants_assignment.append(JS::make_handle(node));
+        });
+
+        return IterationDecision::Continue;
+    });
+
+    m_summary_slot->assign(move(summary_assignment));
+    m_descendants_slot->assign(move(descendants_assignment));
+
+    update_shadow_tree_style();
+}
+
+// https://html.spec.whatwg.org/#the-details-and-summary-elements:the-details-element-6
+void HTMLDetailsElement::update_shadow_tree_style()
+{
+    if (has_attribute(HTML::AttributeNames::open)) {
+        MUST(m_descendants_slot->set_attribute(HTML::AttributeNames::style, R"~~~(
+            display: block;
+        )~~~"));
+    } else {
+        // FIXME: Should be `display: block` but we do not support `content-visibility: hidden`.
+        MUST(m_descendants_slot->set_attribute(HTML::AttributeNames::style, R"~~~(
+            display: none;
+            content-visibility: hidden;
+        )~~~"));
+    }
 }
 
 }
