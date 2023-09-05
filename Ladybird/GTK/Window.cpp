@@ -11,6 +11,7 @@ struct _LadybirdWindow {
 
     AdwTabOverview* tab_overview;
     AdwTabView* tab_view;
+    AdwToastOverlay* toast_overlay;
     GtkEntry* location_entry;
 
     AdwTabPage* menu_page;
@@ -346,6 +347,43 @@ static void on_selected_page_changed(LadybirdWindow* self)
     self->activate_url_id = g_signal_connect_object(web_view, "activate-url", G_CALLBACK(on_activate_url), self, G_CONNECT_SWAPPED);
 }
 
+static void on_webview_close(LadybirdWindow* self, LadybirdWebView* web_view)
+{
+    g_assert(LADYBIRD_IS_WINDOW(self));
+    g_assert(LADYBIRD_IS_WEB_VIEW(web_view));
+
+    // No point in calling this twice.
+    g_signal_handlers_disconnect_by_func(web_view, reinterpret_cast<void*>(on_webview_close), self);
+
+    AdwTabPage* tab_page = adw_tab_view_get_page(self->tab_view, GTK_WIDGET(web_view));
+    // TODO: This will not close pinned pages. We probably should ask the user before closing anyway,
+    // but this needs support from LibJS side.
+    adw_tab_view_close_page(self->tab_view, tab_page);
+
+    // Let the user know what happened.
+    // TODO: Format the page host in here.
+    AdwToast* toast = adw_toast_new(_("A script closed the web page"));
+    adw_toast_overlay_add_toast(self->toast_overlay, toast);
+}
+
+static void on_tab_page_attached(LadybirdWindow* self, AdwTabPage* tab_page, [[maybe_unused]] int position)
+{
+    g_assert(LADYBIRD_IS_WINDOW(self));
+    g_assert(ADW_IS_TAB_PAGE(tab_page));
+
+    LadybirdWebView* web_view = get_web_view_from_tab_page(tab_page);
+    g_signal_connect_object(web_view, "close", G_CALLBACK(on_webview_close), self, G_CONNECT_SWAPPED);
+}
+
+static void on_tab_page_detached(LadybirdWindow* self, AdwTabPage* tab_page, [[maybe_unused]] int position)
+{
+    g_assert(LADYBIRD_IS_WINDOW(self));
+    g_assert(ADW_IS_TAB_PAGE(tab_page));
+
+    LadybirdWebView* web_view = get_web_view_from_tab_page(tab_page);
+    g_signal_handlers_disconnect_by_func(web_view, reinterpret_cast<void*>(on_webview_close), self);
+}
+
 static void page_zoom_in_action(GtkWidget* widget, [[maybe_unused]] char const* action_name, [[maybe_unused]] GVariant* param)
 {
     LadybirdWindow* self = LADYBIRD_WINDOW(widget);
@@ -413,10 +451,15 @@ static char* format_zoom_percent_label([[maybe_unused]] void* instance, int zoom
 static void ladybird_window_init(LadybirdWindow* self)
 {
     GtkWidget* widget = GTK_WIDGET(self);
+
     g_type_ensure(LADYBIRD_TYPE_TAB);
     g_type_ensure(LADYBIRD_TYPE_WEB_VIEW);
     g_type_ensure(LADYBIRD_TYPE_LOCATION_ENTRY);
+
     gtk_widget_init_template(widget);
+
+    g_signal_connect_object(self->tab_view, "page-attached", G_CALLBACK(on_tab_page_attached), self, G_CONNECT_SWAPPED);
+    g_signal_connect_object(self->tab_view, "page-detached", G_CALLBACK(on_tab_page_detached), self, G_CONNECT_SWAPPED);
 }
 
 static void ladybird_window_class_init(LadybirdWindowClass* klass)
@@ -436,6 +479,7 @@ static void ladybird_window_class_init(LadybirdWindowClass* klass)
     gtk_widget_class_bind_template_child(widget_class, LadybirdWindow, tab_overview);
     gtk_widget_class_bind_template_child(widget_class, LadybirdWindow, tab_view);
     gtk_widget_class_bind_template_child(widget_class, LadybirdWindow, location_entry);
+    gtk_widget_class_bind_template_child(widget_class, LadybirdWindow, toast_overlay);
     gtk_widget_class_bind_template_callback(widget_class, on_create_tab);
     gtk_widget_class_bind_template_callback(widget_class, on_url_entered);
     gtk_widget_class_bind_template_callback(widget_class, on_create_window);

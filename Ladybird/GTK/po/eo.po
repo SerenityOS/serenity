@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ladybird wip\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-03 14:55+0300\n"
+"POT-Creation-Date: 2023-09-05 15:27+0300\n"
 "Language: eo\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -12,12 +12,16 @@ msgstr ""
 
 #. Translators: this is a format string for the zoom-percent label in the main menu.
 #. For most languages, it doesn't need translating.
-#: Window.cpp:410
+#: Window.cpp:448
 #, c-format
 msgid "%d%%"
 msgstr ""
 
-#: window.blp:148 window.blp:247
+#: Window.cpp:365
+msgid "A script closed the web page"
+msgstr ""
+
+#: window.blp:148 window.blp:249
 msgid "Bookmarks"
 msgstr "Legosignoj"
 
@@ -49,7 +53,7 @@ msgstr ""
 msgid "Enter a JavaScript expression to evaluate"
 msgstr "Entajpi Ĝavoskriptan esprimon por plenumi"
 
-#: Window.cpp:154
+#: Window.cpp:155
 msgid "Failed to pick file"
 msgstr "Malsukcesis elekti dosieron"
 
@@ -79,11 +83,11 @@ msgstr ""
 msgid "Main Menu"
 msgstr "Ĉefa menuo"
 
-#: window.blp:100 window.blp:223
+#: window.blp:100 window.blp:225
 msgid "Navigate Back"
 msgstr "Navigi malantaŭ"
 
-#: window.blp:106 window.blp:229
+#: window.blp:106 window.blp:231
 msgid "Navigate Forward"
 msgstr "Navigi antaŭ"
 
@@ -111,7 +115,7 @@ msgstr "Nova _inkognita fenestro"
 msgid "New incognito window"
 msgstr "Nova inkognita fenestro"
 
-#: Window.cpp:81 shortcuts-dialog.blp:57
+#: Window.cpp:82 shortcuts-dialog.blp:57
 msgid "New tab"
 msgstr "Nova langeto"
 
@@ -123,7 +127,7 @@ msgstr "Nova fenestro"
 msgid "Next tab"
 msgstr "Sekva langeto"
 
-#: Window.cpp:156 Tab.cpp:194
+#: Window.cpp:157 Tab.cpp:194
 msgid "OK"
 msgstr "Bone"
 
@@ -148,7 +152,7 @@ msgstr "Antaŭa langeto"
 msgid "Quit"
 msgstr "Ĉesi"
 
-#: window.blp:112 window.blp:235
+#: window.blp:112 window.blp:237
 msgid "Reload Page"
 msgstr "Reŝargi paĝon"
 

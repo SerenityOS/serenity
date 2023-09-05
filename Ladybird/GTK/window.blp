@@ -201,11 +201,13 @@ template $LadybirdWindow : Adw.ApplicationWindow {
         view: tab_view;
       }
 
-      content: Adw.TabView tab_view {
-        menu-model: tab_menu;
-        create-window => $on_create_window(template) swapped;
-        setup-menu => $on_setup_tab_menu(template) swapped;
-        notify::selected-page => $on_selected_page_changed(template) swapped;
+      content: Adw.ToastOverlay toast_overlay {
+        child: Adw.TabView tab_view {
+          menu-model: tab_menu;
+          create-window => $on_create_window(template) swapped;
+          setup-menu => $on_setup_tab_menu(template) swapped;
+          notify::selected-page => $on_selected_page_changed(template) swapped;
+        };
       };
 
       [bottom]
