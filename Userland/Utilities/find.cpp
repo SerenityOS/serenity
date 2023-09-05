@@ -94,6 +94,59 @@ struct FileData {
     }
 };
 
+template<Unsigned T>
+class NumericRange {
+public:
+    NumericRange() = default;
+
+    static ErrorOr<NumericRange<T>> parse(StringView arg)
+    {
+        if (arg.is_empty())
+            return Error::from_errno(EINVAL);
+
+        auto comparison_type = ComparisonType::Equal;
+        if (arg[0] == '-') {
+            comparison_type = ComparisonType::LessThan;
+            arg = arg.substring_view(1);
+        } else if (arg[0] == '+') {
+            comparison_type = ComparisonType::GreaterThan;
+            arg = arg.substring_view(1);
+        }
+
+        auto maybe_value = arg.to_uint<T>();
+        if (!maybe_value.has_value())
+            return Error::from_errno(EINVAL);
+
+        return NumericRange<T>(maybe_value.release_value(), comparison_type);
+    }
+
+    bool contains(T other) const
+    {
+        if (m_comparison_type == ComparisonType::LessThan)
+            return other < m_value;
+        if (m_comparison_type == ComparisonType::GreaterThan)
+            return other > m_value;
+
+        return other == m_value;
+    }
+
+private:
+    enum class ComparisonType {
+        Equal,
+        LessThan,
+        GreaterThan
+    };
+
+    NumericRange(T value, ComparisonType comparison_type)
+        : m_value(value)
+        , m_comparison_type(comparison_type)
+    {
+    }
+
+    T m_value {};
+    ComparisonType m_comparison_type { ComparisonType::Equal };
+};
+
 class Command {
 public:
     virtual ~Command() = default;
@@ -163,19 +216,20 @@ class LinksCommand final : public StatCommand {
 public:
     LinksCommand(char const* arg)
     {
-        auto number = StringView { arg, strlen(arg) }.to_uint();
-        if (!number.has_value())
+        StringView arg_string { arg, strlen(arg) };
+        auto links_or_error = NumericRange<nlink_t>::parse(arg_string);
+        if (links_or_error.is_error())
             fatal_error("Invalid number: \033[1m{}", arg);
-        m_links = number.value();
+        m_links = links_or_error.release_value();
     }
 
 private:
     virtual bool evaluate(const struct stat& stat) const override
     {
-        return stat.st_nlink == m_links;
+        return m_links.contains(stat.st_nlink);
     }
 
-    nlink_t m_links { 0 };
+    NumericRange<nlink_t> m_links {};
 };
 
 class UserCommand final : public StatCommand {
@@ -258,24 +312,24 @@ public:
 
             view = view.substring_view(0, view.length() - 1);
         }
-        auto number = view.to_uint<u64>();
-        if (!number.has_value() || number.value() > AK::NumericLimits<off_t>::max())
+        auto number_or_error = NumericRange<u64>::parse(view);
+        if (number_or_error.is_error())
             fatal_error("Invalid size: \033[1m{}", arg);
-        m_number_of_units = number.value();
+        m_number_of_units = number_or_error.release_value();
     }
 
 private:
     virtual bool evaluate(const struct stat& stat) const override
     {
         if (m_unit_size == 1)
-            return stat.st_size == m_number_of_units;
+            return m_number_of_units.contains(stat.st_size);
 
         auto size_divided_by_unit_rounded_up = (stat.st_size + m_unit_size - 1) / m_unit_size;
-        return size_divided_by_unit_rounded_up == m_number_of_units;
+        return m_number_of_units.contains(size_divided_by_unit_rounded_up);
     }
 
-    off_t m_number_of_units { 0 };
-    off_t m_unit_size { 512 };
+    NumericRange<u64> m_number_of_units {};
+    u64 m_unit_size { 512 };
 };
 
 class EmptyCommand final : public Command {

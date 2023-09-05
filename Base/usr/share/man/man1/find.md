@@ -27,13 +27,17 @@ specified commands, a `-print` command is implicitly appended.
 * `-type t`: Checks if the file is of the specified type, which must be one of
   `b` (for block device), `c` (character device), `d` (directory), `l` (symbolic
   link), `p` (FIFO), `f` (regular file), and `s` (socket).
-* `-links number`: Checks if the file has the given number of hard links.
+* `-links [-|+]number`: Checks if the file has the given number of hard links.
 * `-user name`: Checks if the file is owned by the given user. Instead of a user
   name, a numerical UID may be specified.
 * `-group name`: Checks if the file is owned by the given group. Instead of a
   group name, a numerical GID may be specified.
-* `-size number[bcwkMG]`: Checks if the file uses the specified `n` units of
-space rounded up to the nearest whole unit.
+* `-size [-|+]number[bcwkMG]`: Checks if the file uses the specified `n` units of
+  space rounded up to the nearest whole unit.
+
+  The '+' and '-' prefixes denote greater than and less than, i.e an exact size
+  of `n` units doesn't match. Sizes are always rounded up to the nearest unit,
+  empty files, while the latter will match files from 0 to 1,048,575 bytes.
   
   The unit of space may be specified by any of these suffixes:
 
@@ -82,6 +86,11 @@ operators:
 * `command1 -o command2`: Logical OR.
 * `command1 -a command2`, `command1 command2`: Logical AND.
 * `( command )`: Groups commands together for operator priority purposes.
+
+Commands which take a numeric argument `n` (`-links` and `-size` for example),
+may be prefixed by a plus sign ('+') or a minus sign ('-'). A plus sign means
+"grater than `n`", while a minus sign means "less than `n`". A numeric argument
+with no prefix means "exactly equal".
 
 ## Examples
 
