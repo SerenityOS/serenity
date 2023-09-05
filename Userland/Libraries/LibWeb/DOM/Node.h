@@ -15,6 +15,7 @@
 #include <AK/Vector.h>
 #include <LibWeb/DOM/AccessibilityTreeNode.h>
 #include <LibWeb/DOM/EventTarget.h>
+#include <LibWeb/DOM/Slottable.h>
 #include <LibWeb/DOMParsing/XMLSerializer.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
@@ -265,6 +266,8 @@ public:
     // https://dom.spec.whatwg.org/#concept-shadow-including-descendant
     template<typename Callback>
     IterationDecision for_each_shadow_including_descendant(Callback);
+
+    Slottable as_slottable();
 
     Node* parent() { return m_parent.ptr(); }
     Node const* parent() const { return m_parent.ptr(); }

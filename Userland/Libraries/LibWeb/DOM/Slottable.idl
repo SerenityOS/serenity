@@ -1,0 +1,4 @@
+// https://dom.spec.whatwg.org/#mixin-slotable
+interface mixin Slottable {
+    readonly attribute HTMLSlotElement? assignedSlot;
+};

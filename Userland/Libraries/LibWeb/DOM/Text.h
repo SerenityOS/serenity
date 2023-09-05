@@ -10,6 +10,7 @@
 #include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
 #include <LibWeb/DOM/CharacterData.h>
+#include <LibWeb/DOM/Slottable.h>
 
 namespace Web::DOM {
 
@@ -19,7 +20,9 @@ public:
     virtual void did_edit_text_node(Badge<HTML::BrowsingContext>) = 0;
 };
 
-class Text : public CharacterData {
+class Text
+    : public CharacterData
+    , public SlottableMixin {
     WEB_PLATFORM_OBJECT(Text, CharacterData);
 
 public:
