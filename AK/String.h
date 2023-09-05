@@ -168,6 +168,7 @@ public:
     [[nodiscard]] bool contains(u32, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
 
     [[nodiscard]] u32 hash() const;
+    [[nodiscard]] u32 ascii_case_insensitive_hash() const;
 
     template<Arithmetic T>
     static ErrorOr<String> number(T value)
@@ -261,6 +262,11 @@ struct Traits<String> : public GenericTraits<String> {
 template<>
 struct Formatter<String> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder&, String const&);
+};
+
+struct ASCIICaseInsensitiveStringTraits : public Traits<String> {
+    static unsigned hash(String const& s) { return s.ascii_case_insensitive_hash(); }
+    static bool equals(String const& a, String const& b) { return a.bytes_as_string_view().equals_ignoring_ascii_case(b.bytes_as_string_view()); }
 };
 
 }

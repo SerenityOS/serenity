@@ -100,6 +100,11 @@ unsigned FlyString::hash() const
     return String::fly_string_data_to_hash({}, m_data);
 }
 
+u32 FlyString::ascii_case_insensitive_hash() const
+{
+    return case_insensitive_string_hash(reinterpret_cast<char const*>(bytes().data()), bytes().size());
+}
+
 FlyString::operator String() const
 {
     return to_string();
