@@ -84,4 +84,15 @@ struct [[gnu::packed]] FATLongFileNameEntry {
 };
 static_assert(sizeof(FATLongFileNameEntry) == 32);
 
+struct [[gnu::packed]] FATFSInfo {
+    u32 signature1;
+    u8 unused1[480];
+    u32 signature2;
+    u32 last_known_free_cluster;
+    u32 free_cluster_lookup_hint;
+    u8 unused2[12];
+    u32 signature3;
+};
+static_assert(sizeof(FATFSInfo) == 512);
+
 }

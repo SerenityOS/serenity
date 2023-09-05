@@ -78,6 +78,18 @@ ErrorOr<void> FATFS::initialize_while_locked()
     root_entry.attributes = FATAttributes::Directory;
     m_root_inode = TRY(FATInode::create(*this, root_entry, { 0, 1 }));
 
+    m_fs_info = TRY(KBuffer::try_create_with_size("FATFS: FSInfo struct"sv, m_device_block_size));
+    auto fs_info_buffer = UserOrKernelBuffer::for_kernel_buffer(m_fs_info->data());
+    TRY(raw_read(boot_record()->fs_info_sector, fs_info_buffer));
+
+    if (fs_info()->signature1 != fs_info_signature_1 || fs_info()->signature2 != fs_info_signature_2 || fs_info()->signature3 != fs_info_signature_3) {
+        dbgln("FATFS: Invalid FSInfo struct signature");
+        return Error::from_errno(EINVAL);
+    }
+
+    dbgln_if(FAT_DEBUG, "FATFS: fs_info.last_known_free_cluster: {}", fs_info()->last_known_free_cluster);
+    dbgln_if(FAT_DEBUG, "FATFS: fs_info.free_cluster_lookup_hint: {}", fs_info()->free_cluster_lookup_hint);
+
     return {};
 }
 
