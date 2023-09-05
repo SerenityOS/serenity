@@ -276,6 +276,14 @@
     "inside",
     "outside"
   ],
+  "math-shift": [
+    "normal",
+    "compact"
+  ],
+  "math-style": [
+    "normal",
+    "compact"
+  ],
   "object-fit": [
     "fill",
     "contain",
