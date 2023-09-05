@@ -929,7 +929,11 @@ void Node::detach_layout_node(Badge<Layout::TreeBuilder>)
 
 EventTarget* Node::get_parent(Event const&)
 {
-    // FIXME: returns the node’s assigned slot, if node is assigned, and node’s parent otherwise.
+    // A node’s get the parent algorithm, given an event, returns the node’s assigned slot, if node is assigned;
+    // otherwise node’s parent.
+    if (auto assigned_slot = assigned_slot_for_node(*this))
+        return assigned_slot.ptr();
+
     return parent();
 }
 
