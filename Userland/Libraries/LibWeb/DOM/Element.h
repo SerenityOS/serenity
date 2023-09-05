@@ -17,6 +17,7 @@
 #include <LibWeb/DOM/NonDocumentTypeChildNode.h>
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/DOM/QualifiedName.h>
+#include <LibWeb/DOM/Slottable.h>
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/EventLoop/Task.h>
 #include <LibWeb/HTML/ScrollOptions.h>
@@ -66,6 +67,7 @@ class Element
     : public ParentNode
     , public ChildNode<Element>
     , public NonDocumentTypeChildNode<Element>
+    , public SlottableMixin
     , public ARIA::ARIAMixin {
     WEB_PLATFORM_OBJECT(Element, ParentNode);
 

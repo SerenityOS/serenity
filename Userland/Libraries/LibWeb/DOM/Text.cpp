@@ -32,6 +32,8 @@ void Text::initialize(JS::Realm& realm)
 void Text::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
+    SlottableMixin::visit_edges(visitor);
+
     visitor.visit(dynamic_cast<JS::Cell*>(m_owner.ptr()));
 }
 

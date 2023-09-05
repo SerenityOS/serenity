@@ -930,6 +930,15 @@ Element* Node::parent_or_shadow_host_element()
     return nullptr;
 }
 
+Slottable Node::as_slottable()
+{
+    VERIFY(is_slottable());
+
+    if (is_element())
+        return JS::NonnullGCPtr { static_cast<Element&>(*this) };
+    return JS::NonnullGCPtr { static_cast<Text&>(*this) };
+}
+
 JS::NonnullGCPtr<NodeList> Node::child_nodes()
 {
     if (!m_child_nodes) {

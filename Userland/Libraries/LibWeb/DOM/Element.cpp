@@ -86,6 +86,8 @@ void Element::initialize(JS::Realm& realm)
 void Element::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
+    SlottableMixin::visit_edges(visitor);
+
     visitor.visit(m_attributes.ptr());
     visitor.visit(m_inline_style.ptr());
     visitor.visit(m_class_list.ptr());

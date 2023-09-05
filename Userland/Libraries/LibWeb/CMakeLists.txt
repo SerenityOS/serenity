@@ -175,6 +175,7 @@ set(SOURCES
     DOM/RadioNodeList.cpp
     DOM/Range.cpp
     DOM/ShadowRoot.cpp
+    DOM/Slottable.cpp
     DOM/StaticNodeList.cpp
     DOM/StaticRange.cpp
     DOM/StyleElementUtils.cpp

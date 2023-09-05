@@ -8,8 +8,10 @@
 #import <DOM/NodeList.idl>
 #import <DOM/ParentNode.idl>
 #import <DOM/ShadowRoot.idl>
+#import <DOM/Slottable.idl>
 #import <Geometry/DOMRect.idl>
 #import <Geometry/DOMRectList.idl>
+#import <HTML/HTMLSlotElement.idl>
 #import <HTML/Window.idl>
 
 enum ScrollLogicalPosition { "start", "center", "end", "nearest" };
@@ -99,3 +101,4 @@ Element includes ChildNode;
 Element includes InnerHTML;
 // https://www.w3.org/TR/wai-aria-1.2/#idl_element
 Element includes ARIAMixin;
+Element includes Slottable;
