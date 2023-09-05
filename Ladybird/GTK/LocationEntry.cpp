@@ -125,7 +125,7 @@ static void on_notify_text(LadybirdLocationEntry* self)
     update_primary_icon(self);
 }
 
-static void ladybird_location_entry_measure(GtkWidget* widget, GtkOrientation orientation, [[maybe_unused]] int for_size, int* minimum, int* natural, int* minimum_baseline, int* natural_baseline)
+static void ladybird_location_entry_measure(GtkWidget* widget, GtkOrientation orientation, int for_size, int* minimum, int* natural, int* minimum_baseline, int* natural_baseline)
 {
     // Workaround a GTK bug, which your version of GTK may or may not have.
     // GtkEntry, which we inherit from, can report its baseline wrongly in
