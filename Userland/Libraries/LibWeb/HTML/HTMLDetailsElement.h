@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +11,7 @@
 #include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/HTML/ToggleTaskTracker.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::HTML {
 
@@ -26,13 +28,22 @@ private:
     HTMLDetailsElement(DOM::Document&, DOM::QualifiedName);
 
     virtual void initialize(JS::Realm&) override;
+    virtual void visit_edges(Cell::Visitor&) override;
 
+    virtual void children_changed() override;
     virtual void attribute_changed(DeprecatedFlyString const& name, DeprecatedString const& value) override;
 
     void queue_a_details_toggle_event_task(String old_state, String new_state);
 
+    WebIDL::ExceptionOr<void> create_shadow_tree(JS::Realm&);
+    void update_shadow_tree_slots();
+    void update_shadow_tree_style();
+
     // https://html.spec.whatwg.org/multipage/interactive-elements.html#details-toggle-task-tracker
     Optional<ToggleTaskTracker> m_details_toggle_task_tracker;
+
+    JS::GCPtr<HTML::HTMLSlotElement> m_summary_slot;
+    JS::GCPtr<HTML::HTMLSlotElement> m_descendants_slot;
 };
 
 }
