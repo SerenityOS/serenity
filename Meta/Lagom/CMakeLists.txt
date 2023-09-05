@@ -19,6 +19,11 @@ endif()
 # https://cmake.org/cmake/help/latest/policy/CMP0058.html
 cmake_policy(SET CMP0058 NEW)
 
+# Make CMAKE_EXE_LINKER_FLAGS have an effect on `try_compile()` jobs.
+# This is required if we want to have the `LAGOM_USE_LINKER` option
+# take effect in `check_linker_flag` checks.
+cmake_policy(SET CMP0056 NEW)
+
 get_filename_component(
     SERENITY_PROJECT_ROOT "${PROJECT_SOURCE_DIR}/../.."
     ABSOLUTE CACHE
@@ -34,6 +39,7 @@ if(NOT COMMAND serenity_option)
 endif()
 
 include(check_for_dependencies)
+include(use_linker)
 include(lagom_options NO_POLICY_SCOPE)
 
 if(ENABLE_ALL_THE_DEBUG_MACROS)
@@ -104,10 +110,6 @@ endif()
 
 if (ENABLE_COMPILETIME_FORMAT_CHECK)
     add_compile_definitions(ENABLE_COMPILETIME_FORMAT_CHECK)
-endif()
-
-if (ENABLE_LAGOM_MOLD)
-    add_link_options(-fuse-ld=mold)
 endif()
 
 if (ENABLE_FUZZERS)
