@@ -176,7 +176,7 @@ ErrorOr<void> CharacterMapWidget::initialize_menubar(GUI::Window& window)
 void CharacterMapWidget::did_change_font()
 {
     m_glyph_map->set_font(font());
-    m_font_name_label->set_text(String::from_deprecated_string(font().human_readable_name()).release_value_but_fixme_should_propagate_errors());
+    m_font_name_label->set_text(font().human_readable_name());
     m_output_box->set_font(font());
 }
 

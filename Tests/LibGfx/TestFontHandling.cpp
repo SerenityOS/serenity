@@ -25,14 +25,14 @@ TEST_CASE(test_fontdatabase_get_by_name)
 
     auto name = "Family 12 400 0"sv;
     auto& font_database = Gfx::FontDatabase::the();
-    EXPECT(!font_database.get_by_name(name)->name().is_null());
+    EXPECT(!font_database.get_by_name(name)->name().is_empty());
 }
 
 TEST_CASE(test_fontdatabase_get)
 {
     Gfx::FontDatabase::set_default_fonts_lookup_path(TEST_INPUT(""));
     auto& font_database = Gfx::FontDatabase::the();
-    EXPECT(!font_database.get("Family", 12, 400, Gfx::FontWidth::Normal, 0)->name().is_null());
+    EXPECT(!font_database.get("Family", 12, 400, Gfx::FontWidth::Normal, 0)->name().is_empty());
 }
 
 TEST_CASE(test_fontdatabase_for_each_font)
@@ -41,9 +41,9 @@ TEST_CASE(test_fontdatabase_for_each_font)
 
     auto& font_database = Gfx::FontDatabase::the();
     font_database.for_each_font([&](Gfx::Font const& font) {
-        EXPECT(!font.name().is_null());
-        EXPECT(!font.qualified_name().is_null());
-        EXPECT(!font.family().is_null());
+        EXPECT(!font.name().is_empty());
+        EXPECT(!font.qualified_name().is_empty());
+        EXPECT(!font.family().is_empty());
         EXPECT(font.glyph_count() > 0);
     });
 }
@@ -55,9 +55,9 @@ TEST_CASE(test_clone)
     auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
 
     auto new_font = font->clone();
-    EXPECT(!new_font->name().is_null());
-    EXPECT(!new_font->qualified_name().is_null());
-    EXPECT(!new_font->family().is_null());
+    EXPECT(!new_font->name().is_empty());
+    EXPECT(!new_font->qualified_name().is_empty());
+    EXPECT(!new_font->family().is_empty());
     EXPECT(new_font->glyph_count() > 0);
 }
 
@@ -67,10 +67,10 @@ TEST_CASE(test_set_name)
     u8 glyph_width = 1;
     auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
 
-    auto name = "my newly created font"sv;
+    auto name = "my newly created font"_string;
     font->set_name(name);
 
-    EXPECT(!font->name().is_null());
+    EXPECT(!font->name().is_empty());
     EXPECT(font->name().contains(name));
 }
 
@@ -80,10 +80,10 @@ TEST_CASE(test_set_family)
     u8 glyph_width = 1;
     auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
 
-    auto family = "my newly created font family"sv;
+    auto family = "my newly created font family"_string;
     font->set_family(family);
 
-    EXPECT(!font->family().is_null());
+    EXPECT(!font->family().is_empty());
     EXPECT(font->family().contains(family));
 }
 
@@ -135,7 +135,7 @@ TEST_CASE(test_glyph_or_emoji_width)
 TEST_CASE(test_load_from_file)
 {
     auto font = Gfx::BitmapFont::load_from_file(TEST_INPUT("TestFont.font"sv));
-    EXPECT(!font->name().is_null());
+    EXPECT(!font->name().is_empty());
 }
 
 TEST_CASE(test_write_to_file)

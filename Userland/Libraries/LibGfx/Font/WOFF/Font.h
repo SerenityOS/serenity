@@ -31,8 +31,8 @@ public:
     virtual u32 glyph_count() const override { return m_input_font->glyph_count(); }
     virtual u16 units_per_em() const override { return m_input_font->units_per_em(); }
     virtual u32 glyph_id_for_code_point(u32 code_point) const override { return m_input_font->glyph_id_for_code_point(code_point); }
-    virtual DeprecatedString family() const override { return m_input_font->family(); }
-    virtual DeprecatedString variant() const override { return m_input_font->variant(); }
+    virtual String family() const override { return m_input_font->family(); }
+    virtual String variant() const override { return m_input_font->variant(); }
     virtual u16 weight() const override { return m_input_font->weight(); }
     virtual u16 width() const override { return m_input_font->width(); }
     virtual u8 slope() const override { return m_input_font->slope(); }

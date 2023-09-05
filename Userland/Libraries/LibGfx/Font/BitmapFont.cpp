@@ -85,7 +85,7 @@ ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_create(u8 glyph_height, u8 gl
     auto* new_widths = static_cast<u8*>(calloc(glyph_count, 1));
     if (!new_widths)
         return Error::from_errno(errno);
-    return adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont("Untitled", "Untitled", new_rows, new_widths, fixed, glyph_width, glyph_height, 1, range_mask_size, new_range_mask, 0, 0, 0, 400, 0, true));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont("Untitled"_string, "Untitled"_string, new_rows, new_widths, fixed, glyph_width, glyph_height, 1, range_mask_size, new_range_mask, 0, 0, 0, 400, 0, true));
 }
 
 ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::unmasked_character_set() const
@@ -148,7 +148,7 @@ ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::masked_character_set() const
     return adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont(m_name, m_family, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, new_range_mask_size, new_range_mask, m_baseline, m_mean_line, m_presentation_size, m_weight, m_slope, true));
 }
 
-BitmapFont::BitmapFont(DeprecatedString name, DeprecatedString family, u8* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing, u16 range_mask_size, u8* range_mask, u8 baseline, u8 mean_line, u8 presentation_size, u16 weight, u8 slope, bool owns_arrays)
+BitmapFont::BitmapFont(String name, String family, u8* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing, u16 range_mask_size, u8* range_mask, u8 baseline, u8 mean_line, u8 presentation_size, u16 weight, u8 slope, bool owns_arrays)
     : m_name(move(name))
     , m_family(move(family))
     , m_range_mask_size(range_mask_size)
@@ -223,7 +223,9 @@ ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::load_from_memory(u8 const* data)
         glyph_count += 256 * popcount(range_mask[i]);
     u8* rows = range_mask + header.range_mask_size;
     u8* widths = (u8*)(rows) + glyph_count * bytes_per_glyph;
-    return adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont(DeprecatedString(header.name), DeprecatedString(header.family), rows, widths, !header.is_variable_width, header.glyph_width, header.glyph_height, header.glyph_spacing, header.range_mask_size, range_mask, header.baseline, header.mean_line, header.presentation_size, header.weight, header.slope));
+    auto name = TRY(String::from_utf8(ReadonlyBytes { header.name, strlen(header.name) }));
+    auto family = TRY(String::from_utf8(ReadonlyBytes { header.family, strlen(header.family) }));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont(move(name), move(family), rows, widths, !header.is_variable_width, header.glyph_width, header.glyph_height, header.glyph_spacing, header.range_mask_size, range_mask, header.baseline, header.mean_line, header.presentation_size, header.weight, header.slope));
 }
 
 RefPtr<BitmapFont> BitmapFont::load_from_file(DeprecatedString const& path)
@@ -267,8 +269,8 @@ ErrorOr<void> BitmapFont::write_to_file(NonnullOwnPtr<Core::File> file)
     header.presentation_size = m_presentation_size;
     header.weight = m_weight;
     header.slope = m_slope;
-    memcpy(header.name, m_name.characters(), min(m_name.length(), sizeof(header.name) - 1));
-    memcpy(header.family, m_family.characters(), min(m_family.length(), sizeof(header.family) - 1));
+    memcpy(header.name, m_name.bytes().data(), min(m_name.bytes().size(), sizeof(header.name) - 1));
+    memcpy(header.family, m_family.bytes().data(), min(m_family.bytes().size(), sizeof(header.family) - 1));
 
     size_t bytes_per_glyph = sizeof(u32) * m_glyph_height;
     TRY(file->write_until_depleted({ &header, sizeof(header) }));
@@ -386,12 +388,12 @@ ALWAYS_INLINE int BitmapFont::unicode_view_width(T const& view) const
     return longest_width;
 }
 
-DeprecatedString BitmapFont::qualified_name() const
+String BitmapFont::qualified_name() const
 {
-    return DeprecatedString::formatted("{} {} {} {}", family(), presentation_size(), weight(), slope());
+    return MUST(String::formatted("{} {} {} {}", family(), presentation_size(), weight(), slope()));
 }
 
-DeprecatedString BitmapFont::variant() const
+String BitmapFont::variant() const
 {
     StringBuilder builder;
     builder.append(weight_to_name(weight()));
@@ -402,19 +404,19 @@ DeprecatedString BitmapFont::variant() const
             builder.append(' ');
         builder.append(slope_to_name(slope()));
     }
-    return builder.to_deprecated_string();
+    return MUST(builder.to_string());
 }
 
 RefPtr<Font> BitmapFont::with_size(float point_size) const
 {
-    return Gfx::FontDatabase::the().get(family(), point_size, weight(), width(), slope());
+    return Gfx::FontDatabase::the().get(family().to_deprecated_string(), point_size, weight(), width(), slope());
 }
 
 Font const& Font::bold_variant() const
 {
     if (m_bold_variant)
         return *m_bold_variant;
-    m_bold_variant = Gfx::FontDatabase::the().get(family(), presentation_size(), 700, Gfx::FontWidth::Normal, 0);
+    m_bold_variant = Gfx::FontDatabase::the().get(family().to_deprecated_string(), presentation_size(), 700, Gfx::FontWidth::Normal, 0);
     if (!m_bold_variant)
         m_bold_variant = this;
     return *m_bold_variant;

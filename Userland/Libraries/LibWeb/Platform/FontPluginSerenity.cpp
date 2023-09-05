@@ -37,10 +37,10 @@ DeprecatedString FontPluginSerenity::generic_font_name(GenericFont generic_font)
     case GenericFont::UiSansSerif:
     case GenericFont::Cursive:
     case GenericFont::UiRounded:
-        return default_font().family();
+        return default_font().family().to_deprecated_string();
     case GenericFont::Monospace:
     case GenericFont::UiMonospace:
-        return default_fixed_width_font().family();
+        return default_fixed_width_font().family().to_deprecated_string();
     case GenericFont::Serif:
     case GenericFont::UiSerif:
         return "Roman";

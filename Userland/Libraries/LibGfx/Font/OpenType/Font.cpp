@@ -292,7 +292,7 @@ Optional<i16> Kern::read_glyph_kerning_format0(ReadonlyBytes slice, u16 left_gly
     return pair->value;
 }
 
-DeprecatedString Name::string_for_id(NameId id) const
+String Name::string_for_id(NameId id) const
 {
     auto const count = header().count;
     auto const storage_offset = header().storage_offset;
@@ -306,7 +306,7 @@ DeprecatedString Name::string_for_id(NameId id) const
     }
 
     if (valid_ids.is_empty())
-        return DeprecatedString::empty();
+        return String {};
 
     auto it = valid_ids.find_if([this](auto const& i) {
         // check if font has naming table for en-US language id
@@ -326,10 +326,10 @@ DeprecatedString Name::string_for_id(NameId id) const
 
     if (platform_id == to_underlying(Platform::Windows)) {
         static auto& decoder = *TextCodec::decoder_for("utf-16be"sv);
-        return decoder.to_utf8(StringView { (char const*)m_slice.offset_pointer(storage_offset + offset), length }).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+        return decoder.to_utf8(StringView { (char const*)m_slice.offset_pointer(storage_offset + offset), length }).release_value_but_fixme_should_propagate_errors();
     }
 
-    return DeprecatedString((char const*)m_slice.offset_pointer(storage_offset + offset), length);
+    return String::from_utf8(m_slice.slice(storage_offset + offset, length)).release_value_but_fixme_should_propagate_errors();
 }
 
 GlyphHorizontalMetrics Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
@@ -763,7 +763,7 @@ u16 Font::units_per_em() const
     return m_head.units_per_em();
 }
 
-DeprecatedString Font::family() const
+String Font::family() const
 {
     auto string = m_name.typographic_family_name();
     if (!string.is_empty())
@@ -771,7 +771,7 @@ DeprecatedString Font::family() const
     return m_name.family_name();
 }
 
-DeprecatedString Font::variant() const
+String Font::variant() const
 {
     auto string = m_name.typographic_subfamily_name();
     if (!string.is_empty())

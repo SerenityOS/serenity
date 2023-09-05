@@ -183,7 +183,7 @@ void ScreenNumberOverlay::pick_font()
                     return;
                 }
             }
-            best_font_name = font.qualified_name();
+            best_font_name = font.qualified_name().to_deprecated_string();
             best_font_size = size;
         }
     });

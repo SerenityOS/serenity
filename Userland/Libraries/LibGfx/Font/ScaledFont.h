@@ -62,14 +62,14 @@ public:
     virtual float width(Utf8View const&) const override;
     virtual float width(Utf32View const&) const override;
     virtual int width_rounded_up(StringView) const override;
-    virtual DeprecatedString name() const override { return DeprecatedString::formatted("{} {}", family(), variant()); }
+    virtual String name() const override { return MUST(String::formatted("{} {}", family(), variant())); }
     virtual bool is_fixed_width() const override { return m_font->is_fixed_width(); }
     virtual u8 glyph_spacing() const override { return 0; }
     virtual size_t glyph_count() const override { return m_font->glyph_count(); }
-    virtual DeprecatedString family() const override { return m_font->family(); }
-    virtual DeprecatedString variant() const override { return m_font->variant(); }
-    virtual DeprecatedString qualified_name() const override { return DeprecatedString::formatted("{} {} {} {}", family(), presentation_size(), weight(), slope()); }
-    virtual DeprecatedString human_readable_name() const override { return DeprecatedString::formatted("{} {} {}", family(), variant(), presentation_size()); }
+    virtual String family() const override { return m_font->family(); }
+    virtual String variant() const override { return m_font->variant(); }
+    virtual String qualified_name() const override { return MUST(String::formatted("{} {} {} {}", family(), presentation_size(), weight(), slope())); }
+    virtual String human_readable_name() const override { return MUST(String::formatted("{} {} {}", family(), variant(), presentation_size())); }
 
     virtual RefPtr<Font> with_size(float point_size) const override;
 

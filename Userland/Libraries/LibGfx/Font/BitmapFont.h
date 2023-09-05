@@ -102,8 +102,8 @@ public:
 
     virtual int width_rounded_up(StringView) const override;
 
-    DeprecatedString name() const override { return m_name; }
-    void set_name(DeprecatedString name) { m_name = move(name); }
+    virtual String name() const override { return m_name; }
+    void set_name(String name) { m_name = move(name); }
 
     bool is_fixed_width() const override { return m_fixed_width; }
     void set_fixed_width(bool b) { m_fixed_width = b; }
@@ -123,17 +123,17 @@ public:
     u16 range_size() const { return m_range_mask_size; }
     bool is_range_empty(u32 code_point) const { return !(m_range_mask[code_point / 256 / 8] & 1 << (code_point / 256 % 8)); }
 
-    DeprecatedString family() const override { return m_family; }
-    void set_family(DeprecatedString family) { m_family = move(family); }
-    DeprecatedString variant() const override;
+    virtual String family() const override { return m_family; }
+    void set_family(String family) { m_family = move(family); }
+    virtual String variant() const override;
 
-    DeprecatedString qualified_name() const override;
-    DeprecatedString human_readable_name() const override { return DeprecatedString::formatted("{} {} {}", family(), variant(), presentation_size()); }
+    virtual String qualified_name() const override;
+    virtual String human_readable_name() const override { return MUST(String::formatted("{} {} {}", family(), variant(), presentation_size())); }
 
     virtual RefPtr<Font> with_size(float point_size) const override;
 
 private:
-    BitmapFont(DeprecatedString name, DeprecatedString family, u8* rows, u8* widths, bool is_fixed_width,
+    BitmapFont(String name, String family, u8* rows, u8* widths, bool is_fixed_width,
         u8 glyph_width, u8 glyph_height, u8 glyph_spacing, u16 range_mask_size, u8* range_mask,
         u8 baseline, u8 mean_line, u8 presentation_size, u16 weight, u8 slope, bool owns_arrays = false);
 
@@ -146,8 +146,8 @@ private:
 
     virtual bool has_color_bitmaps() const override { return false; }
 
-    DeprecatedString m_name;
-    DeprecatedString m_family;
+    String m_name;
+    String m_family;
     size_t m_glyph_count { 0 };
 
     u16 m_range_mask_size { 0 };
