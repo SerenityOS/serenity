@@ -30,11 +30,11 @@ FontPicker::FontPicker(Window* parent_window, Gfx::Font const* current_font, boo
     widget->load_from_gml(font_picker_dialog_gml).release_value_but_fixme_should_propagate_errors();
 
     m_family_list_view = *widget->find_descendant_of_type_named<ListView>("family_list_view");
-    m_family_list_view->set_model(ItemListModel<DeprecatedString>::create(m_families));
+    m_family_list_view->set_model(ItemListModel<FlyString>::create(m_families));
     m_family_list_view->horizontal_scrollbar().set_visible(false);
 
     m_variant_list_view = *widget->find_descendant_of_type_named<ListView>("variant_list_view");
-    m_variant_list_view->set_model(ItemListModel<DeprecatedString>::create(m_variants));
+    m_variant_list_view->set_model(ItemListModel<FlyString>::create(m_variants));
     m_variant_list_view->horizontal_scrollbar().set_visible(false);
 
     m_size_spin_box = *widget->find_descendant_of_type_named<SpinBox>("size_spin_box");
@@ -57,7 +57,7 @@ FontPicker::FontPicker(Window* parent_window, Gfx::Font const* current_font, boo
 
     m_family_list_view->on_selection_change = [this] {
         const auto& index = m_family_list_view->selection().first();
-        m_family = index.data().to_deprecated_string();
+        m_family = MUST(String::from_deprecated_string(index.data().to_deprecated_string()));
         m_variants.clear();
         Gfx::FontDatabase::the().for_each_typeface([&](auto& typeface) {
             if (m_fixed_width_only && !typeface.is_fixed_width())
@@ -78,7 +78,7 @@ FontPicker::FontPicker(Window* parent_window, Gfx::Font const* current_font, boo
     m_variant_list_view->on_selection_change = [this] {
         const auto& index = m_variant_list_view->selection().first();
         bool font_is_fixed_size = false;
-        m_variant = index.data().to_deprecated_string();
+        m_variant = MUST(String::from_deprecated_string(index.data().to_deprecated_string()));
         m_sizes.clear();
         Gfx::FontDatabase::the().for_each_typeface([&](auto& typeface) {
             if (m_fixed_width_only && !typeface.is_fixed_width())
@@ -190,15 +190,15 @@ void FontPicker::set_font(Gfx::Font const* font)
         return;
     }
 
-    m_family = font->family().to_deprecated_string();
-    m_variant = font->variant().to_deprecated_string();
+    m_family = font->family();
+    m_variant = font->variant();
     m_size = font->presentation_size();
 
-    auto family_index = m_families.find_first_index(m_font->family().to_deprecated_string());
+    auto family_index = m_families.find_first_index(m_font->family());
     if (family_index.has_value())
         m_family_list_view->set_cursor(m_family_list_view->model()->index(family_index.value()), GUI::AbstractView::SelectionUpdate::Set);
 
-    auto variant_index = m_variants.find_first_index(m_font->variant().to_deprecated_string());
+    auto variant_index = m_variants.find_first_index(m_font->variant());
     if (variant_index.has_value())
         m_variant_list_view->set_cursor(m_variant_list_view->model()->index(variant_index.value()), GUI::AbstractView::SelectionUpdate::Set);
 

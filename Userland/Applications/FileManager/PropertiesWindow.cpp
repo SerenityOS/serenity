@@ -321,14 +321,14 @@ static ErrorOr<FontInfo> load_font(StringView path, StringView mime_type, Nonnul
 {
     if (path.ends_with(".font"sv)) {
         auto font = TRY(Gfx::BitmapFont::try_load_from_mapped_file(mapped_file));
-        auto typeface = TRY(try_make_ref_counted<Gfx::Typeface>(font->family().to_deprecated_string(), font->variant().to_deprecated_string()));
+        auto typeface = TRY(try_make_ref_counted<Gfx::Typeface>(font->family(), font->variant()));
         typeface->add_bitmap_font(move(font));
         return FontInfo { FontInfo::Format::BitmapFont, move(typeface) };
     }
 
     if (mime_type == "font/otf" || mime_type == "font/ttf") {
         auto font = TRY(OpenType::Font::try_load_from_externally_owned_memory(mapped_file->bytes()));
-        auto typeface = TRY(try_make_ref_counted<Gfx::Typeface>(font->family().to_deprecated_string(), font->variant().to_deprecated_string()));
+        auto typeface = TRY(try_make_ref_counted<Gfx::Typeface>(font->family(), font->variant()));
         typeface->set_vector_font(move(font));
         return FontInfo {
             mime_type == "font/otf" ? FontInfo::Format::OpenType : FontInfo::Format::TrueType,
@@ -338,7 +338,7 @@ static ErrorOr<FontInfo> load_font(StringView path, StringView mime_type, Nonnul
 
     if (mime_type == "font/woff" || mime_type == "font/woff2") {
         auto font = TRY(WOFF::Font::try_load_from_externally_owned_memory(mapped_file->bytes()));
-        auto typeface = TRY(try_make_ref_counted<Gfx::Typeface>(font->family().to_deprecated_string(), font->variant().to_deprecated_string()));
+        auto typeface = TRY(try_make_ref_counted<Gfx::Typeface>(font->family(), font->variant()));
         typeface->set_vector_font(move(font));
         return FontInfo {
             mime_type == "font/woff" ? FontInfo::Format::WOFF : FontInfo::Format::WOFF2,
@@ -381,7 +381,7 @@ ErrorOr<void> PropertiesWindow::create_font_tab(GUI::TabWidget& tab_widget, Nonn
         break;
     }
     tab->find_descendant_of_type_named<GUI::Label>("font_format")->set_text(format_name);
-    tab->find_descendant_of_type_named<GUI::Label>("font_family")->set_text(TRY(String::from_deprecated_string(typeface->family())));
+    tab->find_descendant_of_type_named<GUI::Label>("font_family")->set_text(typeface->family().to_string());
     tab->find_descendant_of_type_named<GUI::Label>("font_fixed_width")->set_text(typeface->is_fixed_width() ? "Yes"_string : "No"_string);
     tab->find_descendant_of_type_named<GUI::Label>("font_width")->set_text(TRY(String::from_utf8(Gfx::width_to_name(static_cast<Gfx::FontWidth>(typeface->width())))));
 

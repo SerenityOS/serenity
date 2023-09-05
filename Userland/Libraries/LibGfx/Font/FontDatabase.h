@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
+#include <AK/FlyString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
@@ -48,14 +49,14 @@ public:
     static void set_fixed_width_font_query(DeprecatedString);
     static void set_default_fonts_lookup_path(DeprecatedString);
 
-    RefPtr<Gfx::Font> get(DeprecatedFlyString const& family, float point_size, unsigned weight, unsigned width, unsigned slope, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No);
-    RefPtr<Gfx::Font> get(DeprecatedFlyString const& family, DeprecatedFlyString const& variant, float point_size, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No);
+    RefPtr<Gfx::Font> get(FlyString const& family, float point_size, unsigned weight, unsigned width, unsigned slope, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No);
+    RefPtr<Gfx::Font> get(FlyString const& family, FlyString const& variant, float point_size, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No);
     RefPtr<Gfx::Font> get_by_name(StringView);
     void for_each_font(Function<void(Gfx::Font const&)>);
     void for_each_fixed_width_font(Function<void(Gfx::Font const&)>);
 
     void for_each_typeface(Function<void(Typeface const&)>);
-    void for_each_typeface_with_family_name(String const& family_name, Function<void(Typeface const&)>);
+    void for_each_typeface_with_family_name(FlyString const& family_name, Function<void(Typeface const&)>);
 
     void load_all_fonts_from_path(DeprecatedString const&);
 
@@ -63,7 +64,7 @@ private:
     FontDatabase();
     ~FontDatabase() = default;
 
-    RefPtr<Typeface> get_or_create_typeface(DeprecatedString const& family, DeprecatedString const& variant);
+    RefPtr<Typeface> get_or_create_typeface(FlyString const& family, FlyString const& variant);
 
     struct Private;
     OwnPtr<Private> m_private;

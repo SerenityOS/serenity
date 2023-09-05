@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedFlyString.h>
+#include <AK/FlyString.h>
 #include <AK/Function.h>
 #include <AK/RefCounted.h>
 #include <AK/Vector.h>
@@ -18,14 +19,14 @@ namespace Gfx {
 
 class Typeface : public RefCounted<Typeface> {
 public:
-    Typeface(DeprecatedString const& family, DeprecatedString const& variant)
-        : m_family(family)
-        , m_variant(variant)
+    Typeface(FlyString family, FlyString variant)
+        : m_family(move(family))
+        , m_variant(move(variant))
     {
     }
 
-    DeprecatedFlyString const& family() const { return m_family; }
-    DeprecatedFlyString const& variant() const { return m_variant; }
+    FlyString const& family() const { return m_family; }
+    FlyString const& variant() const { return m_variant; }
     unsigned weight() const;
     unsigned width() const;
     u8 slope() const;
@@ -40,8 +41,8 @@ public:
     RefPtr<Font> get_font(float point_size, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No) const;
 
 private:
-    DeprecatedFlyString m_family;
-    DeprecatedFlyString m_variant;
+    FlyString m_family;
+    FlyString m_variant;
 
     Vector<RefPtr<BitmapFont>> m_bitmap_fonts;
     RefPtr<VectorFont> m_vector_font;

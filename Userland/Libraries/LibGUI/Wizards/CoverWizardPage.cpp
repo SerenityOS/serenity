@@ -33,7 +33,7 @@ ErrorOr<void> CoverWizardPage::build(String title, String subtitle)
     m_content_widget->set_layout<VerticalBoxLayout>(20);
 
     m_header_label = TRY(m_content_widget->try_add<Label>(move(title)));
-    m_header_label->set_font(Gfx::FontDatabase::the().get("Pebbleton", 14, 700, Gfx::FontWidth::Normal, 0));
+    m_header_label->set_font(Gfx::FontDatabase::the().get("Pebbleton"_fly_string, 14, 700, Gfx::FontWidth::Normal, 0));
     m_header_label->set_text_alignment(Gfx::TextAlignment::TopLeft);
     m_header_label->set_fixed_height(48);
 

@@ -32,7 +32,7 @@ TEST_CASE(test_fontdatabase_get)
 {
     Gfx::FontDatabase::set_default_fonts_lookup_path(TEST_INPUT(""));
     auto& font_database = Gfx::FontDatabase::the();
-    EXPECT(!font_database.get("Family", 12, 400, Gfx::FontWidth::Normal, 0)->name().is_empty());
+    EXPECT(!font_database.get("Family"_fly_string, 12, 400, Gfx::FontWidth::Normal, 0)->name().is_empty());
 }
 
 TEST_CASE(test_fontdatabase_for_each_font)

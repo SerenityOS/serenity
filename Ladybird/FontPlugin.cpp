@@ -34,11 +34,11 @@ FontPlugin::FontPlugin(bool is_layout_test_mode)
     update_generic_fonts();
 
     auto default_font_name = generic_font_name(Web::Platform::GenericFont::UiSansSerif);
-    m_default_font = Gfx::FontDatabase::the().get(default_font_name, 12.0, 400, Gfx::FontWidth::Normal, 0);
+    m_default_font = Gfx::FontDatabase::the().get(MUST(String::from_deprecated_string(default_font_name)), 12.0, 400, Gfx::FontWidth::Normal, 0);
     VERIFY(m_default_font);
 
     auto default_fixed_width_font_name = generic_font_name(Web::Platform::GenericFont::UiMonospace);
-    m_default_fixed_width_font = Gfx::FontDatabase::the().get(default_fixed_width_font_name, 12.0, 400, Gfx::FontWidth::Normal, 0);
+    m_default_fixed_width_font = Gfx::FontDatabase::the().get(MUST(String::from_deprecated_string(default_fixed_width_font_name)), 12.0, 400, Gfx::FontWidth::Normal, 0);
     VERIFY(m_default_fixed_width_font);
 }
 
@@ -75,7 +75,7 @@ void FontPlugin::update_generic_fonts()
         RefPtr<Gfx::Font const> gfx_font;
 
         for (auto& fallback : fallbacks) {
-            gfx_font = Gfx::FontDatabase::the().get(fallback, 16, 400, Gfx::FontWidth::Normal, 0, Gfx::Font::AllowInexactSizeMatch::Yes);
+            gfx_font = Gfx::FontDatabase::the().get(MUST(String::from_deprecated_string(fallback)), 16, 400, Gfx::FontWidth::Normal, 0, Gfx::Font::AllowInexactSizeMatch::Yes);
             if (gfx_font)
                 break;
         }

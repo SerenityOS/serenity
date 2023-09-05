@@ -61,25 +61,25 @@ PDFErrorOr<NonnullRefPtr<Gfx::Font>> PDFFont::replacement_for(StringView name, f
     bool is_bold = name.contains("bold"sv, CaseSensitivity::CaseInsensitive);
     bool is_italic = name.contains("italic"sv, CaseSensitivity::CaseInsensitive);
 
-    DeprecatedString font_family;
+    FlyString font_family;
     if (name.contains("times"sv, CaseSensitivity::CaseInsensitive)) {
-        font_family = "Liberation Serif";
+        font_family = "Liberation Serif"_fly_string;
     } else if (name.contains("courier"sv, CaseSensitivity::CaseInsensitive)) {
-        font_family = "Liberation Mono";
+        font_family = "Liberation Mono"_fly_string;
     } else {
-        font_family = "Liberation Sans";
+        font_family = "Liberation Sans"_fly_string;
     }
 
-    DeprecatedString font_variant;
+    FlyString font_variant;
 
     if (is_bold && is_italic) {
-        font_variant = "BoldItalic";
+        font_variant = "BoldItalic"_fly_string;
     } else if (is_bold) {
-        font_variant = "Bold";
+        font_variant = "Bold"_fly_string;
     } else if (is_italic) {
-        font_variant = "Italic";
+        font_variant = "Italic"_fly_string;
     } else {
-        font_variant = "Regular";
+        font_variant = "Regular"_fly_string;
     }
 
     float point_size = (font_size * POINTS_PER_INCH) / DEFAULT_DPI;
