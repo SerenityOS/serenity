@@ -253,7 +253,7 @@ void NavigableContainer::destroy_the_child_navigable()
     navigable->active_document()->destroy();
 
     // 5. Let parentDocState be container's node navigable's active session history entry's document state.
-    auto parent_doc_state = this->navigable()->active_session_history_entry()->document_state;
+    auto parent_doc_state = navigable->active_session_history_entry()->document_state;
 
     // 6. Remove the nested history from parentDocState's nested histories whose id equals navigable's id.
     parent_doc_state->nested_histories().remove_all_matching([&](auto& nested_history) {
@@ -261,7 +261,7 @@ void NavigableContainer::destroy_the_child_navigable()
     });
 
     // 7. Let traversable be container's node navigable's traversable navigable.
-    auto traversable = this->navigable()->traversable_navigable();
+    auto traversable = navigable->traversable_navigable();
 
     // Not in the spec
     navigable->set_has_been_destroyed();
