@@ -25,8 +25,11 @@ void SlottableMixin::visit_edges(JS::Cell::Visitor& visitor)
 // https://dom.spec.whatwg.org/#dom-slotable-assignedslot
 JS::GCPtr<HTML::HTMLSlotElement> SlottableMixin::assigned_slot()
 {
-    // FIXME: The assignedSlot getter steps are to return the result of find a slot given this and with the open flag set.
-    return nullptr;
+    auto* node = dynamic_cast<DOM::Node*>(this);
+    VERIFY(node);
+
+    // The assignedSlot getter steps are to return the result of find a slot given this and with the open flag set.
+    return find_a_slot(node->as_slottable(), OpenFlag::Set);
 }
 
 JS::GCPtr<HTML::HTMLSlotElement> assigned_slot_for_node(JS::NonnullGCPtr<Node> node)

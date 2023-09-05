@@ -62,17 +62,41 @@ void HTMLSlotElement::visit_edges(JS::Cell::Visitor& visitor)
 }
 
 // https://html.spec.whatwg.org/multipage/scripting.html#dom-slot-assignednodes
-Vector<JS::Handle<DOM::Node>> HTMLSlotElement::assigned_nodes(AssignedNodesOptions)
+Vector<JS::Handle<DOM::Node>> HTMLSlotElement::assigned_nodes(AssignedNodesOptions options)
 {
-    // FIXME: 1. If options["flatten"] is false, then return this's assigned nodes.
+    // 1. If options["flatten"] is false, then return this's assigned nodes.
+    if (!options.flatten) {
+        Vector<JS::Handle<DOM::Node>> assigned_nodes;
+        assigned_nodes.ensure_capacity(assigned_nodes_internal().size());
+
+        for (auto const& node : assigned_nodes_internal()) {
+            node.visit([&](auto const& node) {
+                assigned_nodes.unchecked_append(*node);
+            });
+        }
+
+        return assigned_nodes;
+    }
+
     // FIXME: 2. Return the result of finding flattened slottables with this.
     return {};
 }
 
 // https://html.spec.whatwg.org/multipage/scripting.html#dom-slot-assignedelements
-Vector<JS::Handle<DOM::Element>> HTMLSlotElement::assigned_elements(AssignedNodesOptions)
+Vector<JS::Handle<DOM::Element>> HTMLSlotElement::assigned_elements(AssignedNodesOptions options)
 {
-    // FIXME: 1. If options["flatten"] is false, then return this's assigned nodes, filtered to contain only Element nodes.
+    // 1. If options["flatten"] is false, then return this's assigned nodes, filtered to contain only Element nodes.
+    if (!options.flatten) {
+        Vector<JS::Handle<DOM::Element>> assigned_nodes;
+
+        for (auto const& node : assigned_nodes_internal()) {
+            if (auto const* element = node.get_pointer<JS::NonnullGCPtr<DOM::Element>>())
+                assigned_nodes.append(*element);
+        }
+
+        return assigned_nodes;
+    }
+
     // FIXME: 2. Return the result of finding flattened slottables with this, filtered to contain only Element nodes.
     return {};
 }
