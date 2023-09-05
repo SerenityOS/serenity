@@ -120,6 +120,9 @@ public:
     static CSS::OutlineStyle outline_style() { return CSS::OutlineStyle::None; }
     static CSS::Length outline_width() { return CSS::Length::make_px(3); }
     static CSS::TableLayout table_layout() { return CSS::TableLayout::Auto; }
+
+    static CSS::MathShift math_shift() { return CSS::MathShift::Normal; }
+    static CSS::MathStyle math_style() { return CSS::MathStyle::Normal; }
 };
 
 enum class BackgroundSize {
@@ -346,6 +349,9 @@ public:
 
     CSS::TableLayout table_layout() const { return m_noninherited.table_layout; }
 
+    CSS::MathShift math_shift() const { return m_inherited.math_shift; }
+    CSS::MathStyle math_style() const { return m_inherited.math_style; }
+
     ComputedValues clone_inherited_values() const
     {
         ComputedValues clone;
@@ -385,6 +391,9 @@ protected:
         CSS::TextAnchor text_anchor { InitialValues::text_anchor() };
 
         Vector<ShadowData> text_shadow;
+
+        CSS::MathShift math_shift { InitialValues::math_shift() };
+        CSS::MathStyle math_style { InitialValues::math_style() };
     } m_inherited;
 
     struct {
@@ -579,6 +588,9 @@ public:
     void set_outline_offset(CSS::Length value) { m_noninherited.outline_offset = value; }
     void set_outline_style(CSS::OutlineStyle value) { m_noninherited.outline_style = value; }
     void set_outline_width(CSS::Length value) { m_noninherited.outline_width = value; }
+
+    void set_math_shift(CSS::MathShift value) { m_inherited.math_shift = value; }
+    void set_math_style(CSS::MathStyle value) { m_inherited.math_style = value; }
 };
 
 }

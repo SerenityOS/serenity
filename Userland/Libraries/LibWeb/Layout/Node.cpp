@@ -789,6 +789,14 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
         transfer_table_box_computed_values_to_wrapper_computed_values(wrapper_computed_values);
     }
 
+    auto math_shift_value = computed_style.property(CSS::PropertyID::MathShift);
+    if (auto math_shift = value_id_to_math_shift(math_shift_value->to_identifier()); math_shift.has_value())
+        computed_values.set_math_shift(math_shift.value());
+
+    auto math_style_value = computed_style.property(CSS::PropertyID::MathStyle);
+    if (auto math_style = value_id_to_math_style(math_style_value->to_identifier()); math_style.has_value())
+        computed_values.set_math_style(math_style.value());
+
     // Update any anonymous children that inherit from this node.
     // FIXME: This is pretty hackish. It would be nicer if they shared the inherited style
     //        data structure somehow, so this wasn't necessary.

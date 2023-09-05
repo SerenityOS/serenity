@@ -1479,6 +1479,20 @@
       "unitless-length"
     ]
   },
+  "math-shift": {
+    "inherited": true,
+    "initial": "normal",
+    "valid-types": [
+      "math-shift"
+    ]
+  },
+  "math-style": {
+    "inherited": true,
+    "initial": "normal",
+    "valid-types": [
+      "math-style"
+    ]
+  },
   "max-height": {
     "inherited": false,
     "initial": "none",
