@@ -72,26 +72,22 @@ public:
 private:
     MapWidget(Options const&);
 
+    virtual void doubleclick_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
-
     virtual void mousedown_event(GUI::MouseEvent&) override;
-
     virtual void mouseup_event(GUI::MouseEvent&) override;
-
     virtual void mousewheel_event(GUI::MouseEvent&) override;
-
     virtual void paint_event(GUI::PaintEvent&) override;
+
+    void set_zoom_for_mouse_event(int zoom, GUI::MouseEvent&);
 
     Optional<RefPtr<Gfx::Bitmap>> get_tile_image(int x, int y, int zoom, TileDownloadBehavior);
     void process_tile_queue();
     void clear_tile_queue();
 
     void paint_tiles(GUI::Painter&);
-
     void paint_scale_line(GUI::Painter&, String label, Gfx::IntRect rect);
-
     void paint_scale(GUI::Painter&);
-
     void paint_attribution(GUI::Painter&);
 
     static int constexpr TILE_SIZE = 256;
