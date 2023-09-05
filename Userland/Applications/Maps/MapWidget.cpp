@@ -8,6 +8,7 @@
 #include "MapWidget.h"
 #include <AK/URL.h>
 #include <LibDesktop/Launcher.h>
+#include <LibGUI/Application.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibProtocol/Request.h>
 
@@ -54,10 +55,10 @@ MapWidget::MapWidget(Options const& options)
     , m_scale_enabled(options.scale_enabled)
     , m_scale_max_width(options.scale_max_width)
     , m_attribution_enabled(options.attribution_enabled)
-    , m_attribution_text(options.attribution_text)
-    , m_attribution_url(options.attribution_url)
 {
     m_request_client = Protocol::RequestClient::try_create().release_value_but_fixme_should_propagate_errors();
+    if (options.attribution_enabled)
+        add_panel({ options.attribution_text, Panel::Position::BottomRight, options.attribution_url, true });
 }
 
 void MapWidget::set_zoom(int zoom)
@@ -79,9 +80,10 @@ void MapWidget::mousedown_event(GUI::MouseEvent& event)
         return;
 
     if (event.button() == GUI::MouseButton::Primary) {
-        // Ignore attribution click
-        if (m_attribution_enabled && static_cast<float>(event.x()) > frame_inner_rect().right() - m_attribution_width && static_cast<float>(event.y()) > frame_inner_rect().bottom() - m_attribution_height)
-            return;
+        // Ignore panels click
+        for (auto& panel : m_panels)
+            if (panel.rect.contains(event.x(), event.y()))
+                return;
 
         // Start map tiles dragging
         m_dragging = true;
@@ -107,14 +109,11 @@ void MapWidget::mousemove_event(GUI::MouseEvent& event)
         return;
     }
 
-    // Handle attribution hover
-    if (m_attribution_enabled) {
-        if (static_cast<float>(event.x()) > frame_inner_rect().right() - m_attribution_width && static_cast<float>(event.y()) > frame_inner_rect().bottom() - m_attribution_height) {
-            set_override_cursor(Gfx::StandardCursor::Hand);
-        } else {
-            set_override_cursor(Gfx::StandardCursor::Arrow);
-        }
-    }
+    // Handle panels hover
+    for (auto& panel : m_panels)
+        if (panel.url.has_value() && panel.rect.contains(event.x(), event.y()))
+            return set_override_cursor(Gfx::StandardCursor::Hand);
+    set_override_cursor(Gfx::StandardCursor::Arrow);
 }
 
 void MapWidget::mouseup_event(GUI::MouseEvent& event)
@@ -130,10 +129,12 @@ void MapWidget::mouseup_event(GUI::MouseEvent& event)
     }
 
     if (event.button() == GUI::MouseButton::Primary) {
-        // Handle attribution click
-        if (m_attribution_enabled && static_cast<float>(event.x()) > frame_inner_rect().right() - m_attribution_width && static_cast<float>(event.y()) > frame_inner_rect().bottom() - m_attribution_height) {
-            Desktop::Launcher::open(m_attribution_url);
-            return;
+        // Handle panels click
+        for (auto& panel : m_panels) {
+            if (panel.url.has_value() && panel.rect.contains(event.x(), event.y())) {
+                Desktop::Launcher::open(panel.url.value());
+                return;
+            }
         }
     }
 }
@@ -367,13 +368,24 @@ void MapWidget::paint_scale(GUI::Painter& painter)
     painter.fill_rect({ frame_inner_rect().x() + margin_x, frame_inner_rect().bottom() - margin_y - line_height, max(metric_width, imperial_width), 1.0f }, panel_foreground_color);
 }
 
-void MapWidget::paint_attribution(GUI::Painter& painter)
+void MapWidget::paint_panels(GUI::Painter& painter)
 {
-    m_attribution_width = PANEL_PADDING_X + painter.font().width(m_attribution_text) + PANEL_PADDING_X;
-    m_attribution_height = PANEL_PADDING_Y + painter.font().pixel_size() + PANEL_PADDING_Y;
-    painter.fill_rect({ frame_inner_rect().right() - m_attribution_width, frame_inner_rect().bottom() - m_attribution_height, m_attribution_width, m_attribution_height }, panel_background_color);
-    Gfx::FloatRect attribution_text_rect { 0.0f, 0.0f, frame_inner_rect().right() - PANEL_PADDING_X, frame_inner_rect().bottom() - PANEL_PADDING_Y };
-    painter.draw_text(attribution_text_rect, m_attribution_text, Gfx::TextAlignment::BottomRight, panel_foreground_color);
+    for (auto& panel : m_panels) {
+        int panel_width = PANEL_PADDING_X + painter.font().width(panel.text) + PANEL_PADDING_X;
+        int panel_height = PANEL_PADDING_Y + painter.font().pixel_size() + PANEL_PADDING_Y;
+        if (panel.position == Panel::Position::TopLeft)
+            panel.rect = { frame_inner_rect().x(), frame_inner_rect().y(), panel_width, panel_height };
+        if (panel.position == Panel::Position::TopRight)
+            panel.rect = { frame_inner_rect().right() - panel_width, frame_inner_rect().y(), panel_width, panel_height };
+        if (panel.position == Panel::Position::BottomLeft)
+            panel.rect = { frame_inner_rect().x(), frame_inner_rect().bottom() - panel_height, panel_width, panel_height };
+        if (panel.position == Panel::Position::BottomRight)
+            panel.rect = { frame_inner_rect().right() - panel_width, frame_inner_rect().bottom() - panel_height, panel_width, panel_height };
+        painter.fill_rect(panel.rect, panel_background_color);
+
+        Gfx::FloatRect text_rect = { panel.rect.x() + PANEL_PADDING_X, panel.rect.y() + PANEL_PADDING_Y, panel.rect.width(), panel.rect.height() };
+        painter.draw_text(text_rect, panel.text, Gfx::TextAlignment::TopLeft, panel_foreground_color);
+    }
 }
 
 void MapWidget::paint_event(GUI::PaintEvent& event)
@@ -391,6 +403,5 @@ void MapWidget::paint_event(GUI::PaintEvent& event)
     paint_tiles(painter);
     if (m_scale_enabled)
         paint_scale(painter);
-    if (m_attribution_enabled)
-        paint_attribution(painter);
+    paint_panels(painter);
 }

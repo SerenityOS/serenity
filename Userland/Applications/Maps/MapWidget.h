@@ -48,6 +48,30 @@ public:
     int zoom() const { return m_zoom; }
     void set_zoom(int zoom);
 
+    struct Panel {
+        enum class Position {
+            TopLeft,
+            TopRight,
+            BottomLeft,
+            BottomRight,
+        };
+        String text;
+        Position position;
+        Optional<URL> url {};
+        bool persistent { false };
+        Gfx::IntRect rect { 0, 0, 0, 0 };
+    };
+    void add_panel(Panel const& panel)
+    {
+        m_panels.append(panel);
+        update();
+    }
+    void clear_panels()
+    {
+        m_panels.remove_all_matching([](auto const& panel) { return !panel.persistent; });
+        update();
+    }
+
     struct TileKey {
         int x;
         int y;
@@ -88,7 +112,7 @@ private:
     void paint_tiles(GUI::Painter&);
     void paint_scale_line(GUI::Painter&, String label, Gfx::IntRect rect);
     void paint_scale(GUI::Painter&);
-    void paint_attribution(GUI::Painter&);
+    void paint_panels(GUI::Painter&);
 
     static int constexpr TILE_SIZE = 256;
     static double constexpr LATITUDE_MAX = 85.0511287798066;
@@ -96,8 +120,8 @@ private:
     static constexpr size_t TILES_DOWNLOAD_PARALLEL_MAX = 8;
     static int constexpr ZOOM_MIN = 2;
     static int constexpr ZOOM_MAX = 19;
-    static float constexpr PANEL_PADDING_X = 6;
-    static float constexpr PANEL_PADDING_Y = 4;
+    static int constexpr PANEL_PADDING_X = 6;
+    static int constexpr PANEL_PADDING_Y = 4;
 
     // These colors match the default OpenStreetMap map tiles style, so they don't depend on any system theme colors
     static Gfx::Color constexpr map_background_color = { 200, 200, 200 };
@@ -113,9 +137,6 @@ private:
     bool m_scale_enabled {};
     int m_scale_max_width {};
     bool m_attribution_enabled {};
-    String m_attribution_text;
-    float m_attribution_width {};
-    float m_attribution_height {};
     URL m_attribution_url;
     bool m_dragging { false };
     int m_last_mouse_x { 0 };
@@ -123,6 +144,7 @@ private:
     bool m_first_image_loaded { false };
     bool m_connection_failed { false };
     OrderedHashMap<TileKey, RefPtr<Gfx::Bitmap>> m_tiles;
+    Vector<Panel> m_panels;
 };
 
 template<>
