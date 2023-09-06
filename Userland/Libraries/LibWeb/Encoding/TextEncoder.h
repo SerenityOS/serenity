@@ -24,9 +24,9 @@ public:
 
     virtual ~TextEncoder() override;
 
-    JS::Uint8Array* encode(DeprecatedString const& input) const;
+    JS::Uint8Array* encode(String const& input) const;
 
-    static DeprecatedFlyString const& encoding();
+    static FlyString const& encoding();
 
 protected:
     // https://encoding.spec.whatwg.org/#dom-textencoder
