@@ -44,7 +44,7 @@ WebIDL::ExceptionOr<DeprecatedString> ShadowRoot::inner_html() const
 }
 
 // https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml
-WebIDL::ExceptionOr<void> ShadowRoot::set_inner_html(DeprecatedString const& markup)
+WebIDL::ExceptionOr<void> ShadowRoot::set_inner_html(StringView markup)
 {
     TRY(DOMParsing::inner_html_setter(*this, markup));
 
