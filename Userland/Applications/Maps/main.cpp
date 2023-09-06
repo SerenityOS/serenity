@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "MapWidget.h"
+#include "UsersMapWidget.h"
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibGUI/Action.h>
@@ -45,18 +45,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto toolbar = TRY(toolbar_container->try_add<GUI::Toolbar>());
 
     // Map widget
-    MapWidget::Options options {};
+    UsersMapWidget::Options options {};
     options.center.latitude = Config::read_string("Maps"sv, "MapView"sv, "CenterLatitude"sv, "30"sv).to_double().value_or(30.0);
     options.center.longitude = Config::read_string("Maps"sv, "MapView"sv, "CenterLongitude"sv, "0"sv).to_double().value_or(0.0);
     options.zoom = Config::read_i32("Maps"sv, "MapView"sv, "Zoom"sv, MAP_ZOOM_DEFAULT);
-    auto maps = TRY(root_widget->try_add<MapWidget>(options));
+    auto maps = TRY(root_widget->try_add<UsersMapWidget>(options));
     maps->set_frame_style(Gfx::FrameStyle::SunkenContainer);
+    maps->set_show_users(Config::read_bool("Maps"sv, "MapView"sv, "ShowUsers"sv, false));
 
     // Main menu actions
     auto file_menu = window->add_menu("&File"_string);
     file_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) { GUI::Application::the()->quit(); }));
 
     auto view_menu = window->add_menu("&View"_string);
+    auto show_users_action = GUI::Action::create_checkable(
+        "Show SerenityOS users", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/ladyball.png"sv)), [maps](auto& action) { maps->set_show_users(action.is_checked()); }, window);
+    show_users_action->set_checked(maps->show_users());
     auto zoom_in_action = GUI::CommonActions::make_zoom_in_action([maps](auto&) { maps->set_zoom(maps->zoom() + 1); }, window);
     auto zoom_out_action = GUI::CommonActions::make_zoom_out_action([maps](auto&) { maps->set_zoom(maps->zoom() - 1); }, window);
     auto reset_zoom_action = GUI::CommonActions::make_reset_zoom_action([maps](auto&) { maps->set_zoom(MAP_ZOOM_DEFAULT); }, window);
@@ -66,6 +70,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         maps->set_frame_style(window->is_fullscreen() ? Gfx::FrameStyle::NoFrame : Gfx::FrameStyle::SunkenContainer);
     },
         window);
+    view_menu->add_action(show_users_action);
+    view_menu->add_separator();
     view_menu->add_action(zoom_in_action);
     view_menu->add_action(zoom_out_action);
     view_menu->add_action(reset_zoom_action);
@@ -77,6 +83,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     help_menu->add_action(GUI::CommonActions::make_about_action("Maps", app_icon, window));
 
     // Main toolbar actions
+    toolbar->add_action(show_users_action);
+    toolbar->add_separator();
     toolbar->add_action(zoom_in_action);
     toolbar->add_action(zoom_out_action);
     toolbar->add_action(reset_zoom_action);
@@ -88,5 +96,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Config::write_string("Maps"sv, "MapView"sv, "CenterLatitude"sv, TRY(String::number(maps->center().latitude)));
     Config::write_string("Maps"sv, "MapView"sv, "CenterLongitude"sv, TRY(String::number(maps->center().longitude)));
     Config::write_i32("Maps"sv, "MapView"sv, "Zoom"sv, maps->zoom());
+    Config::write_bool("Maps"sv, "MapView"sv, "ShowUsers"sv, maps->show_users());
     return exec;
 }

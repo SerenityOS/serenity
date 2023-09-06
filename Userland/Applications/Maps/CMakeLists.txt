@@ -7,6 +7,7 @@ serenity_component(
 set(SOURCES
     main.cpp
     MapWidget.cpp
+    UsersMapWidget.cpp
 )
 
 serenity_app(Maps ICON app-maps)
