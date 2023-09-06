@@ -19,12 +19,12 @@ public:
 
     virtual Gfx::Font& default_font() override;
     virtual Gfx::Font& default_fixed_width_font() override;
-    virtual DeprecatedString generic_font_name(Web::Platform::GenericFont) override;
+    virtual FlyString generic_font_name(Web::Platform::GenericFont) override;
 
     void update_generic_fonts();
 
 private:
-    Vector<DeprecatedString> m_generic_font_names;
+    Vector<FlyString> m_generic_font_names;
     RefPtr<Gfx::Font> m_default_font;
     RefPtr<Gfx::Font> m_default_fixed_width_font;
     bool m_is_layout_test_mode { false };

@@ -29,7 +29,7 @@ Gfx::Font& FontPluginSerenity::default_fixed_width_font()
     return Gfx::FontDatabase::default_fixed_width_font();
 }
 
-DeprecatedString FontPluginSerenity::generic_font_name(GenericFont generic_font)
+FlyString FontPluginSerenity::generic_font_name(GenericFont generic_font)
 {
     // FIXME: Make these configurable at the browser settings level. Fall back to system defaults.
     switch (generic_font) {
@@ -37,15 +37,15 @@ DeprecatedString FontPluginSerenity::generic_font_name(GenericFont generic_font)
     case GenericFont::UiSansSerif:
     case GenericFont::Cursive:
     case GenericFont::UiRounded:
-        return default_font().family().to_deprecated_string();
+        return default_font().family();
     case GenericFont::Monospace:
     case GenericFont::UiMonospace:
-        return default_fixed_width_font().family().to_deprecated_string();
+        return default_fixed_width_font().family();
     case GenericFont::Serif:
     case GenericFont::UiSerif:
-        return "Roman";
+        return "Roman"_fly_string;
     case GenericFont::Fantasy:
-        return "Comic Book";
+        return "Comic Book"_fly_string;
     case GenericFont::__Count:
         VERIFY_NOT_REACHED();
     }
