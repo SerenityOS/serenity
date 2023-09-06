@@ -10,9 +10,11 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
 #include <AK/Time.h>
+#include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
 #include <LibRegex/Regex.h>
 #include <dirent.h>
@@ -30,6 +32,7 @@
 bool g_follow_symlinks = false;
 bool g_there_was_an_error = false;
 bool g_have_seen_action_command = false;
+bool g_print_hyperlinks = false;
 
 template<typename... Parameters>
 [[noreturn]] static void fatal_error(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
@@ -409,7 +412,20 @@ public:
 private:
     virtual bool evaluate(FileData& file_data) const override
     {
-        out("{}{}", file_data.full_path, m_terminator);
+        auto printed = false;
+        if (g_print_hyperlinks) {
+            auto full_path_or_error = FileSystem::real_path(file_data.full_path.string());
+            if (!full_path_or_error.is_error()) {
+                auto fullpath = full_path_or_error.release_value();
+                auto url = URL::create_with_file_scheme(fullpath.to_deprecated_string());
+                out("\033]8;;{}\033\\{}{}\033]8;;\033\\", url.serialize(), file_data.full_path, m_terminator);
+                printed = true;
+            }
+        }
+
+        if (!printed)
+            out("{}{}", file_data.full_path, m_terminator);
+
         return true;
     }
 
@@ -738,6 +754,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             command = parse_all_commands(args);
         }
     }
+
+    g_print_hyperlinks = TRY(Core::System::isatty(STDOUT_FILENO));
 
     if (!command)
         command = make<PrintCommand>();
