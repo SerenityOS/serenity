@@ -83,6 +83,7 @@ void ReadLoopReadRequest::on_chunk(JS::Value chunk)
         }
 
         m_failure_steps(exception.value());
+        return;
     }
 
     auto const& array = static_cast<JS::Uint8Array const&>(chunk.as_object());
